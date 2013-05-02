@@ -38,17 +38,20 @@ void linearRegression(arr& beta, const arr& X, const arr& y, const arr* weighted
 }
 
 void ridgeRegression(arr& beta, const arr& X, const arr& y, double lambda, const arr* weighted, arr* zScores) {
+  if(lambda<0.) lambda = MT::getParameter<double>("lambda",1e-10);
+
   CHECK(y.nd==1 && X.nd==2 && y.N==X.d0, "wrong dimensions");
-  arr Xt, XtXinv, I;
+  arr Xt, I;
   transpose(Xt, X);
   I.setDiag(lambda, X.d1);
   I(0, 0)=1e-10; //don't regularize beta_0 !!
   if(weighted) Xt = Xt * diag(*weighted);
-  inverse_SymPosDef(XtXinv, Xt*X + I);
-  beta = XtXinv*(Xt*y);
+  lapack_Ainv_b_sym(beta, Xt*X + I, Xt*y);
   if(zScores) {
     (*zScores).resize(beta.N);
     double sigma = sumOfSqr(X*beta-y)/(y.N - X.d1 - 1.);
+    arr XtXinv;
+    inverse_SymPosDef(XtXinv, Xt*X + I);
     for(uint i=0; i<beta.N; i++) {
       (*zScores)(i) = fabs(beta(i)) / (sigma * sqrt(XtXinv(i, i)));
     }
@@ -56,14 +59,16 @@ void ridgeRegression(arr& beta, const arr& X, const arr& y, double lambda, const
 }
 
 void logisticRegression2Class(arr& beta, const arr& X, const arr& y, double lambda) {
+  if(lambda<0.) lambda = MT::getParameter<double>("lambda",1e-10);
+
   CHECK(y.nd==1, "");
   uint n=y.N, d=X.d1;
   arr Xt;
   transpose(Xt, X);
   
-  arr XtWXinv, I;
+  arr I;
   I.setDiag(lambda, X.d1);
-  //I(0, 0)=1e-10; on classification is makes sense to include the bias in regularization, I think... (rescaling ov beta only changes the slope of the sigmoid, not the decision boundary)
+  //I(0, 0)=1e-10; on classification is makes sense to include the bias in regularization, I think... (rescaling one beta only changes the slope of the sigmoid, not the decision boundary)
   
   arr f(n), p(n), w(n), beta_update;
   double logLike, lastLogLike, alpha=1.;
@@ -71,6 +76,8 @@ void logisticRegression2Class(arr& beta, const arr& X, const arr& y, double lamb
   beta.setZero();
   for(uint k=0; k<100; k++) {
     f = X*beta;
+
+    //compute logLikelihood
     logLike=0.;
     for(uint i=0; i<n; i++) {
       if(f(i)<-100.) f(i)=-100.;  if(f(i)>100.) f(i)=100.;  //constrain the discriminative values to avoid NANs...
@@ -93,23 +100,25 @@ void logisticRegression2Class(arr& beta, const arr& X, const arr& y, double lamb
     }
     lastLogLike=logLike;
     
-    inverse_SymPosDef(XtWXinv, Xt*diagProduct(w, X) + 2.*I);        //inverse Hessian
-    beta_update = XtWXinv * (Xt*(y-p) - 2.*I*beta);   //beta update equation
+    lapack_Ainv_b_sym(beta_update, Xt*diagProduct(w, X) + 2.*I, Xt*(y-p) - 2.*I*beta);   //beta update equation
     beta += alpha*beta_update;
     
-    cout <<"logReg iter= " <<k <<" logLike= " <<logLike/n <<" beta_update= " <<absMax(beta_update) <<" alpha= " <<alpha <<endl;
+    //cout <<"logReg iter= " <<k <<" negLogLike= " <<-logLike/n <<" beta_update= " <<absMax(beta_update) <<" alpha= " <<alpha <<endl;
     
     if(alpha*absMax(beta_update)<1e-5) break;
   }
 }
 
 void logisticRegressionMultiClass(arr& beta, const arr& X, const arr& y, double lambda) {
+  if(lambda<0.) lambda = MT::getParameter<double>("lambda",1e-10);
+
+
   CHECK(y.nd==2 && y.d0==X.d0, "");
   uint n=y.d0, d=X.d1, M=y.d1;
   arr Xt;
   transpose(Xt, X);
   
-  arr XtWX, XtWXinv, I;
+  arr XtWX, I;
   I.setDiag(lambda, X.d1);
   I(0, 0)=1e-10;
   
@@ -147,14 +156,12 @@ void logisticRegressionMultiClass(arr& beta, const arr& X, const arr& y, double 
         for(uint i=0; i<n; i++) w(i) = p(i, c1)*((c1==c2?1.:0.)-p(i, c2));
         XtWX.setMatrixBlock(Xt*diagProduct(w, X) + (c1==c2?2.:0.)*I, c1*d, c2*d);
       }
-    inverse_SymPosDef(XtWXinv, XtWX);
     //compute the beta update
-    beta_update = (Xt*(y-p) - 2.*I*beta); //the gradient as d-times-M matrix
-    beta_update = ~beta_update;           //... as M-times-d matrix
-    beta_update.reshape(d*M);             //... as one big vector
-    beta_update = XtWXinv * beta_update;  //multiply the Hessian
-    beta_update.reshape(M, d);             //... as M-times-d matrix
-    beta_update = ~beta_update;           //... and back as d-times-M matrix
+    arr tmp = ~(Xt*(y-p) - 2.*I*beta); //the gradient as M-times-d matrix
+    tmp.reshape(M*d);                  //... as one big vector
+    lapack_Ainv_b_sym(beta_update, XtWX, tmp); //multiply the inv Hessian
+    beta_update.reshape(M, d);         //... as M-times-d matrix
+    beta_update = ~beta_update;        //... and back as d-times-M matrix
     
     beta += alpha*beta_update;
     
@@ -165,38 +172,45 @@ void logisticRegressionMultiClass(arr& beta, const arr& X, const arr& y, double 
 
 void CrossValidation::crossValidateSingleLambda(const arr& X, const arr& y, double lambda, uint k_fold, bool permute, arr* beta_k_fold, arr* beta_total, double *scoreMean, double *scoreSDV, double *scoreTrain) {
   arr Xtrain, Xtest, ytrain, ytest;
-  uint n=X.d0, blocksize;
-  CHECK(y.N==n, "");
-  CHECK(!(n%k_fold), "data size (" <<n <<") must be multiple of k_fold (" <<k_fold <<")");
-  blocksize = n/k_fold;
-  double cost, costM=0., costD=0.;
+  uint n=X.d0;
+
+  //permute data?
   arr X_perm, y_perm;
-  arr beta;
   if(permute){
     uintA perm;
     perm.setRandomPerm(X.d0);
     X_perm=X;  X_perm.permuteRows(perm);
     y_perm=y;  y_perm.permute(perm);
   }
+  //initialize
+  double cost, costM=0., costD=0.;
+  arr beta;
   if(beta_k_fold) beta_k_fold->clear();
   
+  //determine blocks
+  uintA blockStart(k_fold+1);
+  for(uint k=0;k<=k_fold;k++) blockStart(k) = (k*n)/k_fold;
+  
+  //go
   for(uint k=0; k<k_fold; k++){
     if(!permute){
       Xtrain = X;  ytrain = y;
     } else {
       Xtrain = X_perm;  ytrain = y_perm;
     }
-    Xtrain.delRows(k*blocksize, blocksize);
-    ytrain.remove(k*blocksize, blocksize);
-    Xtest.referToSubRange(X, k*blocksize, (k+1)*blocksize-1);
-    ytest.referToSubRange(y, k*blocksize, (k+1)*blocksize-1);
+    Xtrain.delRows(blockStart(k), blockStart(k+1)-blockStart(k));
+    ytrain.remove(blockStart(k), blockStart(k+1)-blockStart(k));
+    Xtest.referToSubRange(X, blockStart(k), blockStart(k+1)-1);
+    ytest.referToSubRange(y, blockStart(k), blockStart(k+1)-1);
     
+    cout <<k <<": train:";
     train(Xtrain, ytrain, lambda, beta);
     if(beta_k_fold) beta_k_fold->append(beta);
     
     cost = test(Xtest, ytest, beta);
     costM += cost;
     costD += cost*cost;
+    cout <<" test: " <<cost <<endl;
   }
   if(beta_k_fold) beta_k_fold->reshape(k_fold,beta.N);
   
@@ -206,14 +220,20 @@ void CrossValidation::crossValidateSingleLambda(const arr& X, const arr& y, doub
   costD = sqrt(costD)/sqrt((double)k_fold); //sdv of the mean estimator
   
   //on full training data:
+  cout <<"full: train:";
   train(X, y, lambda, beta);
   double costT = test(X, y, beta);
   if(beta_total) *beta_total = beta;
+  cout <<" test: " <<costT <<endl;
   
   if(scoreMean)  *scoreMean =costM; else scoreMeans =ARR(costM);
   if(scoreSDV)   *scoreSDV  =costD; else scoreSDVs  =ARR(costD);
   if(scoreTrain) *scoreTrain=costT; else scoreTrains=ARR(costT);
   cout <<"CV: lambda=" <<lambda <<" \tmean-on-rest=" <<costM <<" \tsdv=" <<costD <<" \ttrain-on-full=" <<costT <<endl;
+  cout <<"cross validation results:";
+  if(lambda!=-1) cout <<"\n  lambda = " <<lambda;
+  cout <<"\n  test-error  = " <<costM <<" (+- " <<costD <<", lower: " <<costM-costD <<")"
+  <<"\n  train-error = " <<costT <<endl;
 }
 
 void CrossValidation::crossValidateMultipleLambdas(const arr& X, const arr& y, const arr& _lambdas, uint k_fold, bool permute) {
@@ -227,8 +247,8 @@ void CrossValidation::crossValidateMultipleLambdas(const arr& X, const arr& y, c
 }
 
 void CrossValidation::plot() {
-  write(LIST(lambdas, scoreMeans, scoreSDVs, scoreTrains), "cv");
-  gnuplot("set log x; set xlabel 'lambda'; set ylabel 'mean squared error'; plot 'cv' us 1:2:3 w errorlines title 'cv error','cv' us 1:4 w l title 'training error'", "z.pdf", true);
+  write(LIST(lambdas, scoreMeans, scoreSDVs, scoreTrains), "z.cv");
+  gnuplot("set log x; set xlabel 'lambda'; set ylabel 'mean squared error'; plot 'z.cv' us 1:2:3 w errorlines title 'cv error','z.cv' us 1:4 w l title 'training error'", "z.pdf", true);
   
 }
 
@@ -293,14 +313,15 @@ void piecewiseLinearFeatures(arr& Z, const arr& X) {
 }
 
 
-void rbfFeatures(arr& Z, const arr& X, const arr& Xtrain, double sigma) {
-  int rbfConst = MT::getParameter<int>("rbfConst", 0);
-  Z.resize(X.d0, Xtrain.d0+rbfConst);
+void rbfFeatures(arr& Z, const arr& X, const arr& Xtrain) {
+  int rbfBias = MT::getParameter<int>("rbfBias", 0);
+  double rbfWidth = MT::getParameter<double>("rbfWidth", .2);
+  Z.resize(X.d0, Xtrain.d0+rbfBias);
   for(uint i=0; i<Z.d0; i++) {
-    if(rbfConst) Z(i, 0) = 1.; //constant feature also for rbfs
+    if(rbfBias) Z(i, 0) = 1.; //bias feature also for rbfs?
     for(uint j=0; j<Xtrain.d0; j++) {
-      double d=euclideanDistance(X[i], Xtrain[j])/sigma;
-      Z(i, j+rbfConst) = ::exp(-.5*d*d);
+      double d=euclideanDistance(X[i], Xtrain[j])/rbfWidth;
+      Z(i, j+rbfBias) = ::exp(-.5*d*d);
     }
   }
 }
@@ -311,7 +332,7 @@ void makeFeatures(arr& Z, const arr& X, const arr& Xtrain, FeatureType featureTy
     case linearFT:    linearFeatures(Z, X);  break;
     case quadraticFT: quadraticFeatures(Z, X);  break;
     case cubicFT:     cubicFeatures(Z, X);  break;
-    case rbfFT:       rbfFeatures(Z, X, Xtrain, MT::getParameter<double>("rbfSigma", .2));  break;
+    case rbfFT:       rbfFeatures(Z, X, Xtrain);  break;
     case piecewiseConstantFT:  piecewiseConstantFeatures(Z, X);  break;
     case piecewiseLinearFT:    piecewiseLinearFeatures(Z, X);  break;
     default: HALT("");

@@ -63,6 +63,10 @@ def make_test():
     with lcd("share/test/"):
         local("make")
 
+def unittests():
+    """Run the unittests"""
+    with lcd("share/unittest/orspy/"):
+        local("nosetests .")
 
 def jenkins_clean_build_main():
     """Jenkins builds share/ from sratch"""

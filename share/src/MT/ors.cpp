@@ -30,9 +30,9 @@
 #undef abs
 #include <algorithm>
 #include "ors.h"
-#include "registry.h"
 
 #ifndef MT_ORS_ONLY_BASICS
+#  include "registry.h"
 #  include "plot.h"
 #endif
 #ifdef MT_PLY
@@ -46,12 +46,15 @@
 
 #define Qstate
 
+#ifndef MT_ORS_ONLY_BASICS
 REGISTER_TYPE_Key(T, ors::Transformation);
+#endif
 
 const ors::Vector VEC_x(1, 0, 0);
 const ors::Vector VEC_y(0, 1, 0);
 const ors::Vector VEC_z(0, 0, 1);
 const ors::Transformation Transformation_Id(0);
+const ors::Quaternion Quaternion_Id(1, 0, 0, 0);
 
 //===========================================================================
 /** @brief The ors namespace contains the main data structures of ors.
@@ -150,6 +153,9 @@ void Vector::makeColinear(const Vector& b) {
 
 //! is zero?
 bool Vector::isZero() const { return (x==0. && y==0. && z==0.); }
+
+//! 1-norm to zero
+double Vector::diffZero() const { return fabs(x)+fabs(y)+fabs(z); }
 
 //! is it normalized?
 bool Vector::isNormalized() const { return fabs(lengthSqr()-1.)<1e-6; }
@@ -278,6 +284,42 @@ Vector operator-(const Vector& b) {
   return a;
 }
 
+// all operator== and operator!=
+bool operator==(const Quaternion& lhs, const Quaternion& rhs) {
+  return lhs.w == rhs.w && lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z;
+}
+bool operator!=(const Quaternion& lhs, const Quaternion& rhs) {
+  return !(lhs == rhs);
+}
+
+bool operator==(const Transformation& lhs, const Transformation& rhs) {
+  bool vel_equal = false;
+  if (lhs.zeroVels == rhs.zeroVels && rhs.zeroVels == false) 
+    vel_equal = lhs.vel == rhs.vel && lhs.angvel == rhs.angvel;
+  else if (lhs.zeroVels == rhs.zeroVels && rhs.zeroVels == true)
+    vel_equal = true;
+  return vel_equal && lhs.pos == rhs.pos && lhs.rot == rhs.rot;
+}
+bool operator!=(const Transformation& lhs, const Transformation& rhs) {
+  return !(lhs == rhs);
+}
+
+bool operator==(const Matrix& lhs, const Matrix& rhs) {
+  return lhs.m00 == rhs.m00 && lhs.m01 == rhs.m01 && lhs.m02 == rhs.m02 &&
+         lhs.m10 == rhs.m10 && lhs.m11 == rhs.m11 && lhs.m12 == rhs.m12 &&
+         lhs.m20 == rhs.m20 && lhs.m21 == rhs.m21 && lhs.m22 == rhs.m22;
+}
+bool operator!=(const Matrix& lhs, const Matrix& rhs) {
+  return !(lhs == rhs);
+}
+
+bool operator==(const Vector& lhs, const Vector& rhs) {
+  return lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z;
+}
+bool operator!=(const Vector& lhs, const Vector& rhs) {
+  return !(lhs == rhs);
+}
+
 //! const access via two row and column indices
 //const double& Matrix::operator()(int i, int j) const { return p()[i*3+j]; }
 ////! LHS access via two row and column indices
@@ -302,6 +344,13 @@ void Matrix::setRandom(double range) {
 void Matrix::setId() {
   m00=m11=m22=1.;
   m01=m02=m10=m12=m20=m21=0.;
+}
+
+//! set the matrix
+void Matrix::set(double* p) { 
+  m00=p[0]; m01=p[1]; m02=p[2];
+  m10=p[3]; m11=p[4]; m12=p[5];
+  m20=p[6]; m21=p[7]; m22=p[8];
 }
 
 //! assign the matrix to the transformation from unit frame to given XYZ frame
@@ -350,6 +399,13 @@ void Matrix::setTensorProduct(const Vector& b, const Vector& c) {
   m00=b.x*c.x; m01=b.x*c.y; m02=b.x*c.z;
   m10=b.y*c.x; m11=b.y*c.y; m12=b.y*c.z;
   m20=b.z*c.x; m21=b.z*c.y; m22=b.z*c.z;
+}
+
+//! 1-norm to zero
+double Matrix::diffZero() const {
+  double d=0.;
+  for(uint i=0;i<9;i++) d += (&m00)[i];
+  return d;
 }
 
 void Matrix::write(std::ostream& os) const {
@@ -553,8 +609,11 @@ void Quaternion::setDiff(const Vector& from, const Vector& to) {
   setRad(phi, axis);
 }
 
-//! is identical
+//! is zero (i.e., identical rotation)
 bool Quaternion::isZero() const { return w==1.; }
+
+//! 1-norm to zero (i.e., identical rotation)
+double Quaternion::diffZero() const { return (w>0.?fabs(w-1.):fabs(w+1.))+fabs(x)+fabs(y)+fabs(z); }
 
 #ifdef MT_MSVC
 //! double-pointer access
@@ -816,11 +875,18 @@ Transformation& Transformation::setText(const char* txt) { read(MT::String(txt)(
 //! resets the position to origin, rotation to identity, velocities to zero, scale to unit
 void Transformation::setZero() {
   pos.setZero(); vel.setZero(); rot.setZero(); angvel.setZero(); /*a.setZero(); b.setZero(); s=1.;*/
+  zeroVels = true;
 }
 
 //! randomize the frame
 void Transformation::setRandom() {
-  pos.setRandom(); vel.setRandom(); rot.setRandom(); angvel.setRandom(); /*a.setRandom(); b.setRandom(); s=rnd.uni();*/
+  rot.setRandom();
+  pos.setRandom();
+  if(rnd.uni()<.8){
+    vel.setZero(); angvel.setZero(); zeroVels=true;
+  }else{
+    vel.setRandom(); angvel.setRandom(); zeroVels = false;
+  }
 }
 
 /*!\brief moves the frame according to the current velocities \c v and \c w
@@ -844,88 +910,107 @@ void Transformation::addRelativeTranslation(double x, double y, double z) {
   //X=r*(s*X); //in global coords
   X=rot*X; //in global coords
   pos+=X;
-  vel+=angvel^X;
+  if(!zeroVels) vel+=angvel^X;
 }
+
 //! add a velocity to the turtle's inertial frame
 void Transformation::addRelativeVelocity(double x, double y, double z) {
   Vector X(x, y, z);
   //v+=r*(s*X);
   vel+=rot*X;
+  zeroVels = false;
 }
+
 //! add an angular velocity to the turtle inertial frame
 void Transformation::addRelativeAngVelocityDeg(double degree, double x, double y, double z) {
   Vector W(x, y, z); W.normalize();
   W*=degree*MT_PI/180.;
   angvel+=rot*W;
+  zeroVels = false;
 }
+
 //! add an angular velocity to the turtle inertial frame
 void Transformation::addRelativeAngVelocityRad(double rad, double x, double y, double z) {
   Vector W(x, y, z); W.normalize();
   W*=rad;
   angvel+=rot*W;
+  zeroVels = false;
 }
+
 //! add an angular velocity to the turtle inertial frame
 void Transformation::addRelativeAngVelocityRad(double wx, double wy, double wz) {
   Vector W(wx, wy, wz);
   angvel+=rot*W;
+  zeroVels = false;
 }
+
 //! rotate the turtle orientation by an angle (given in DEGREE) around the vector (x, y, z) (given relative to the current orientation)
 void Transformation::addRelativeRotationDeg(double degree, double x, double y, double z) {
   Quaternion R;
   R.setDeg(degree, x, y, z);
   rot=rot*R;
 }
+
 //! rotate the turtle orientation by an angle (given in radiants) around the vector (x, y, z) (given relative to the current orientation)
 void Transformation::addRelativeRotationRad(double rad, double x, double y, double z) {
   Quaternion R;
   R.setRad(rad, x, y, z);
   rot=rot*R;
 }
+
 //! rotate the turtle orientation as given by a quaternion
 void Transformation::addRelativeRotationQuat(double s, double x, double y, double z) {
   Quaternion R;
   R.w=s; R.x=x; R.y=y; R.z=z;
   rot=rot*R;
 }
+
 /*!\brief transform the turtle into the frame f,
     which is interpreted RELATIVE to the current frame
     (new = f * old) */
 void Transformation::appendTransformation(const Transformation& f) {
-#ifdef ORS_NO_DYNAMICS_IN_FRAMES
-  pos += rot*f.pos;
-  rot = rot*f.rot;
-#else
-  //Vector P(r*(s*f.p)); //relative offset in global coords
-  //Vector V(r*(s*f.v)); //relative vel in global coords
-  Matrix R = rot.getMatrix();
-  Vector P(R*f.pos); //relative offset in global coords
-  Vector V(R*f.vel); //relative vel in global coords
-  Vector W(R*f.angvel); //relative ang vel in global coords
-  pos += P;
-  vel += angvel^P;
-  vel += V;
-  //a += b^P;
-  //a += w^((w^P) + 2.*V);
-  //a += r*(s*f.a);
-  //b += w^W;
-  //b += r*f.b;
-  angvel += W;
-  rot = rot*f.rot;
-  //s*=f.s;
-#endif
+  if(zeroVels && f.zeroVels){
+    pos += rot*f.pos;
+    rot = rot*f.rot;
+  }else{
+    //Vector P(r*(s*f.p)); //relative offset in global coords
+    //Vector V(r*(s*f.v)); //relative vel in global coords
+    Matrix R = rot.getMatrix();
+    Vector P(R*f.pos); //relative offset in global coords
+    Vector V(R*f.vel); //relative vel in global coords
+    Vector W(R*f.angvel); //relative ang vel in global coords
+    pos += P;
+    vel += angvel^P;
+    vel += V;
+    //a += b^P;
+    //a += w^((w^P) + 2.*V);
+    //a += r*(s*f.a);
+    //b += w^W;
+    //b += r*f.b;
+    angvel += W;
+    rot = rot*f.rot;
+    //s*=f.s;
+    zeroVels = false;
+  }
 }
+
 //! inverse transform (new = f^{-1} * old) or (old = f * new)
 void Transformation::appendInvTransformation(const Transformation& f) {
-  //s/=f.s;
-  rot=rot/f.rot;
-  angvel-=rot*f.angvel;
-  vel-=rot*f.vel;
-  //v-=r*(s*f.v);
-  //Vector P(r*(s*f.p)); //frame offset in global coords
-  Vector P(rot*f.pos); //frame offset in global coords
-  vel-=angvel^P;
-  pos-=P;
+  if(zeroVels && f.zeroVels){
+    rot = rot/f.rot;
+    pos -= rot*f.pos;
+  }else{
+    rot=rot/f.rot;
+    Matrix R = rot.getMatrix();
+    Vector P(R*f.pos);
+    angvel -= R*f.angvel;
+    vel -= R*f.vel;
+    vel -= angvel^P;
+    pos -= P;
+    zeroVels = false;
+  }
 }
+
 //! new = old * f
 void Transformation::prependTransformation(const Transformation& f) {
   Transformation newf;
@@ -933,6 +1018,7 @@ void Transformation::prependTransformation(const Transformation& f) {
   newf.appendTransformation(*this);
   *this=newf;
 }
+
 //! new = old * f^{-1}
 void Transformation::prependInvTransformation(const Transformation& f) {
   Transformation newf;
@@ -940,8 +1026,22 @@ void Transformation::prependInvTransformation(const Transformation& f) {
   newf.appendTransformation(*this);
   *this=newf;
 }
+
 //! this = f^{-1}
-void Transformation::setInverse(const Transformation& f) { setZero(); appendInvTransformation(f); }
+void Transformation::setInverse(const Transformation& f) {
+  if(f.zeroVels){
+    rot = Quaternion_Id / f.rot;
+    pos = - (rot * f.pos);
+    zeroVels = true;
+  }else{
+    rot = Quaternion_Id / f.rot;
+    Matrix R = rot.getMatrix();
+    pos = - (R * f.pos);
+    vel = R * ((f.angvel^f.pos) - f.vel);
+    angvel = - (R * f.angvel);
+    zeroVels = false;
+  }
+}
 
 //! set double[4*4] to Transformation. Matrix needs to be orthogonal
 void Transformation::setAffineMatrix(const double *m) {
@@ -954,19 +1054,23 @@ void Transformation::setAffineMatrix(const double *m) {
   pos.x=m[3];  // set last column as translation
   pos.y=m[7];  // set last column as translation
   pos.z=m[11];  // set last column as translation
+  zeroVels=true;
 }
 
 //!  to = new * from
 void Transformation::setDifference(const Transformation& from, const Transformation& to) {
-  //rot=Quaternion()/from.rot *to.rot;
-  rot=to.rot / from.rot;
-  angvel=from.rot/(to.angvel-from.angvel);
-  /*v=(1./from.s) * (from.r/(to.v-from.v));
-  v-=(1./from.s) * (from.r/(from.w^(to.p-from.p)));
-  p=(1./from.s) * (from.r/(to.p-from.p));*/
-  vel = from.rot/(to.vel-from.vel);
-  vel-= from.rot/(from.angvel^(to.pos-from.pos));
-  pos = from.rot/(to.pos-from.pos);
+  if(from.zeroVels && to.zeroVels){
+    rot = Quaternion_Id / from.rot * to.rot;
+    pos = from.rot/(to.pos-from.pos);
+    zeroVels = true;
+  }else{
+    rot = Quaternion_Id / from.rot * to.rot;
+    angvel = from.rot/(to.angvel-from.angvel);
+    vel = from.rot/(to.vel-from.vel);
+    vel-= from.rot/(from.angvel^(to.pos-from.pos));
+    pos = from.rot/(to.pos-from.pos);
+    zeroVels = false;
+  }
 }
 
 //! get the current position/orientation/scale in an OpenGL format matrix (of type double[16])
@@ -1011,22 +1115,24 @@ double* Transformation::getInverseAffineMatrixGL(double *m) const {
   return m;
 }
 
+bool Transformation::isZero() const {
+  return pos.isZero() && rot.isZero() && vel.isZero() && angvel.isZero();
+}
+
+//! 1-norm to zero
+double Transformation::diffZero() const{
+  return pos.diffZero() + rot.diffZero() + vel.diffZero() + angvel.diffZero();
+}
+
 //! operator<<
 void Transformation::write(std::ostream& os) const {
-  bool space=false;
-  //os <<"<";
-#if 0
-  if(!pos.isZero()) { os <<"t" <<pos;  space=true; }
-  if(!rot.isZero()) { if(space) os <<' ';  os <<"q" <<rot;  space=true; }
-#else
   os <<pos.x <<' ' <<pos.y <<' ' <<pos.z <<' '
      <<rot.w <<' ' <<rot.x <<' ' <<rot.y <<' ' <<rot.z;
-  space=true;
-#endif
-  if(!vel.isZero()) { if(space) os <<' ';  os <<"v" <<vel;  space=true; }
-  if(!angvel.isZero()) { if(space) os <<' ';  os <<"w" <<angvel;  space=true; }
-  //os <<">";
+  if(!zeroVels){
+    os <<" v" <<vel <<" w" <<angvel;
+  }
 }
+
 //! operator>>
 void Transformation::read(std::istream& is) {
   setZero();
@@ -1058,6 +1164,7 @@ void Transformation::read(std::istream& is) {
     if(is.fail()) HALT("error reading '" <<c <<"' parameters in frame");
   }
   if(is.fail()) HALT("could not read Transformation struct");
+  zeroVels = vel.isZero() && angvel.isZero();
 }
 
 Mesh::Mesh() { }
@@ -2592,26 +2699,6 @@ void ors::Body::parseAts() {
   ats.getValue<Transformation>(X, "X");
   ats.getValue<Transformation>(X, "pose");
 
-  //move shape attributes to shape
-  Shape *s=NULL;
-  Item *it;
-  if(ats.getItem("type")){
-    CHECK(!shapes.N,"");
-    s=new Shape();
-    shapes.append(s);
-    s->body=this;
-    s->ibody=index;
-  }
-  it=ats.getItem("type");     if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  it=ats.getItem("size");     if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  it=ats.getItem("color");    if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  it=ats.getItem("rel");      if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  it=ats.getItem("mesh");     if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  it=ats.getItem("meshscale");if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  it=ats.getItem("contact");  if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  it=ats.getItem("submeshsizes"); if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  if(s) s->parseAts();
-
   //mass properties
   if(ats.getValue<double>(d, "mass")){
     mass=d;
@@ -2635,6 +2722,27 @@ void ors::Body::parseAts() {
   if(ats.getValue<bool>("static"))     type=staticBT;
   if(ats.getValue<bool>("kinematic"))  type=kinematicBT;
 
+  // SHAPE handling
+  // move shape attributes to shape
+  Shape *s=NULL;
+  Item *it;
+  if(ats.getItem("type")){
+    CHECK(!shapes.N,"");
+    s=new Shape();
+    shapes.append(s);
+    s->body=this;
+    s->ibody=index;
+  }
+  it=ats.getItem("type");         if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  it=ats.getItem("size");         if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  it=ats.getItem("color");        if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  it=ats.getItem("rel");          if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  it=ats.getItem("mesh");         if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  it=ats.getItem("meshscale");    if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  it=ats.getItem("contact");      if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  it=ats.getItem("submeshsizes"); if(it){ CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
+  if(s) s->parseAts();
+
 }
 
 void ors::Body::write(std::ostream& os) const {
@@ -2650,6 +2758,10 @@ void ors::Body::read(std::istream& is) {
   ats.read(is);
   if(!is.good()) HALT("body '" <<name <<"' read error: in ");
   parseAts();
+}
+void ors::Body::read(const char* string) {
+  std::istringstream str(string);
+  read(str);
 }
 
 
@@ -2677,12 +2789,13 @@ void ors::Shape::parseAts() {
   arr x;
   MT::String str;
   ats.getValue<Transformation>(rel, "rel");
-  if(ats.getValue<arr>(x, "size")) { CHECK(x.N==4,""); memmove(size, x.p, 4*sizeof(double)); }
-  if(ats.getValue<arr>(x, "color")){ CHECK(x.N==3,""); memmove(color, x.p, 3*sizeof(double)); }
-  if(ats.getValue<double>(d, "type")) type=(ShapeType)d;
-  if(ats.getValue<MT::String>(str, "mesh")) mesh.readFile(str);
-  if(ats.getValue<double>(d, "meshscale")) mesh.scale(d);
-  if(ats.getValue<bool>("contact"))    cont=true;
+  if(ats.getValue<arr>(x, "size"))          { CHECK(x.N==4,""); memmove(size, x.p, 4*sizeof(double)); }
+  if(ats.getValue<arr>(x, "color"))         { CHECK(x.N==3,""); memmove(color, x.p, 3*sizeof(double)); }
+  if(ats.getValue<double>(d, "type"))       { type=(ShapeType)d;}
+  if(ats.getValue<MT::String>(str, "mesh")) { mesh.readFile(str); }
+  if(ats.getValue<double>(d, "meshscale"))  { mesh.scale(d); }
+  if(ats.getValue<bool>("contact"))         { cont=true; }
+  if(ats.getValue<arr>(x, "submeshsizes"))  { copy(mesh.subMeshSizes, x); }
 }
 
 void ors::Shape::reset() {
@@ -2879,17 +2992,14 @@ void ors::Graph::calcBodyFramesFromJoints() {
   uint i, j;
   ors::Transformation f;
   for_list(j, n, bodies) {
+    CHECK(n->inLinks.N<=1,"loopy geometry - code missing: check if n->X and f are consistent!");
     for_list(i, e, n->inLinks) {
       f = e->from->X;
       f.appendTransformation(e->A);
       e->Xworld=f;
       f.appendTransformation(e->Q);
       if(!isLinkTree) f.appendTransformation(e->B);
-      if(e==n->inLinks(0))
-        n->X=f;
-      else {
-        MT_MSG("loopy geometry - code missing: check if n->X and f are consistent!");
-      }
+      n->X=f;
     }
   }
   calcShapeFramesFromBodies();
@@ -3985,6 +4095,11 @@ void ors::Graph::write(std::ostream& os) const {
 
 #define DEBUG(x) //x
 
+void ors::Graph::read(const char* string) {
+  std::istringstream is(string);
+  read(is);  
+}
+
 /*!\brief prototype for \c operator>> */
 void ors::Graph::read(std::istream& is) {
   uint i; Item *it;
@@ -4714,11 +4829,11 @@ template void MT::Parameter<ors::Vector>::initialize();
 template void MT::save<ors::Graph>(const ors::Graph&, const char*);
 template MT::Array<ors::Shape*>::Array(uint);
 template ors::Shape* listFindByName(const MT::Array<ors::Shape*>&,const char*);
-#endif
 
 #include "array_t.cxx"
 template MT::Array<ors::Joint*>::Array();
 inline std::istream& operator>>(std::istream& is, TaskVariable*&){NIY}
 inline std::ostream& operator<<(std::ostream& os, const TaskVariable*&){NIY}
 template struct MT::Array<TaskVariable*>;
+#endif
 /** @} */

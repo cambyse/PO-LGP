@@ -39,7 +39,7 @@ extern arr& NoGrad;
 extern SqrPotential& NoPot;
 extern PairSqrPotential& NoPairPot;
 
-struct ScalarFunction { virtual double fs(arr& grad, const arr& x) = 0; };
+struct ScalarFunction { virtual double fs(arr& g, arr& H, const arr& x) = 0; };
 
 struct VectorFunction { virtual void   fv(arr& y, arr& J, const arr& x) = 0; };
 

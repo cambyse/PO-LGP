@@ -37,8 +37,8 @@ namespace relational {
 
 
 class Literal;
-class SymbolicState;
-class StateTransition;
+struct SymbolicState;
+struct StateTransition;
 typedef MT::Array< Literal* > LitL;
 typedef MT::Array< SymbolicState* > SymbolicStateL;
 typedef MT::Array< StateTransition* > StateTransitionL;

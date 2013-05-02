@@ -122,7 +122,7 @@ struct Camera {
   float heightAngle;
   float whRatio;
   float zNear, zFar;
-  arr fixedProjectionMatrix;
+  //arr fixedProjectionMatrix;
   
   Camera();
   Camera(const Camera& c) { *this=c; }

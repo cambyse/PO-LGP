@@ -9,9 +9,6 @@ set hidden3d
 unset title
 #set table 'z.contour.dat'
 splot [-2:3][-2:3][0:1] \
-'z.model' matrix us ($1/10-2):($2/10-2):3 with lines notitle,\
+'z.model1' matrix us ($1/10-2):($2/10-2):3 with lines notitle,\
 'z.model2' matrix us ($1/10-2):($2/10-2):3 with lines notitle,\
 'z.model3' matrix us ($1/10-2):($2/10-2):3 with lines notitle
-
-
-#plot [-2:3][-2:3] 'z.train' us 1:2:3 with points pt 2 lc variable title 'z.train','./z.contour.dat' us 1:2:(abs($3-.5)/.4) with lines lc variable title 'decision boundary'

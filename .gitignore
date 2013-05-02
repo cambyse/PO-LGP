@@ -34,7 +34,18 @@ MT.log
 *_doc
 html
 *.tgz
-*_doc
+
+
+%%cmake
+CMakeCache.txt
+CMakeFiles
+cmake_install.cmake
+
+
+%% SWIG
+*_wrap.cxx
+ors.py
+orspy.py
 
 
 %% LATEX

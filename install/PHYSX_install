@@ -40,7 +40,7 @@ patch -p1 < $THIS_PATH/PHYSX_patch
 
 ## installing to $MLR_LIBPATH
 cd $MLR_LIBPATH
-mkdir include/physx
+mkdir -p include/physx
 cp -R $NAME/Include/* include/physx
 cp -R $NAME/Samples/PxToolkit/include include/physx/toolkit
 if [ "$(uname -m)" = "x86_64" ] ; then

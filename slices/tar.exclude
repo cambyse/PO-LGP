@@ -20,6 +20,7 @@ PROJ
 *.creator.user
 *.config
 *.includes
+course/*/main.cpp
 *solution*
 *ODE_0.11/ode-0.11
 *ODE_0.11/include

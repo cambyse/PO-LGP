@@ -49,5 +49,7 @@ struct PhysXInterface {
 void glPhysXInterface(void *classP);
 
 
+void bindOrsToPhysX(ors::Graph& graph, OpenGL& gl, PhysXInterface& physx);
+
 #endif
 /** @} */

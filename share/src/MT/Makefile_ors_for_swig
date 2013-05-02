@@ -1,0 +1,27 @@
+# SILLY makefile to wrap ors with swig.
+#
+# Experimental as of <2013-04-02 Tue>
+#
+# in python you can use ors simply by importing ors:
+# >>> import sys
+# >>> sys.path.append('../../lib/')
+# >>> import ors
+# >>> graph = ors.Graph()
+#
+# Also take a look at share/test/orspy/
+
+ifndef MLR_PATH
+	MLR_PATH=~/git/mlr
+endif
+
+main: python
+
+python:
+	swig2.0 -c++ -python ors.i
+	install -D orspy.py ~/.local/lib/python2.7/site-packages/orspy.py
+	g++ -c -fPIC -shared ors_wrap.cxx -I../ -I/usr/include/python2.7/
+	g++ -shared array.o ors_wrap.o -I../ -I/usr/include/python2.7/ -L../../lib -Xlinker -rpath $(MLR_PATH)/share/lib -lMT -o ~/.local/lib/python2.7/site-packages/_orspy.so
+	rm orspy.py
+
+clean:
+	rm -f _orspy.so ors_wrap.*

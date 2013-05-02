@@ -35,7 +35,9 @@
 #endif
 
 #include <errno.h>
-#include <sys/syscall.h>
+#ifndef MT_MSVC
+#  include <sys/syscall.h>
+#endif
 
 //===========================================================================
 //
@@ -807,26 +809,31 @@ void gnuplotClose() {
 void gnuplot(const char *command, bool pauseMouse, bool persist, const char *PDFfile) {
 #ifndef MT_MSVC
   if(!MT_gp) {
-    if(!persist) MT_gp=popen("env gnuplot -noraise -geometry 400x300-0-0 -display :0.0", "w");
-    else         MT_gp=popen("env gnuplot -noraise -persist -geometry 400x300-0-0 -display :0.0", "w");
+    if(!persist) MT_gp=popen("env gnuplot -noraise -geometry 600x600-0-0", "w");
+    else         MT_gp=popen("env gnuplot -noraise -persist -geometry 600x600-0-0", "w");
     CHECK(MT_gp, "could not open gnuplot pipe");
-    fprintf(MT_gp, "set style data lines\n");
   }
-  // run standard files
-  if(!access("~/gnuplot.cfg", R_OK)) fputs("load '~/gnuplot.cfg'\n", MT_gp);
-  if(!access("gnuplot.cfg", R_OK)) fputs("load 'gnuplot.cfg'\n", MT_gp);
+
   MT::String cmd;
+  cmd <<"set style data lines\n";
+
+  // run standard files
+  if(!access("~/gnuplot.cfg", R_OK)) cmd <<"load '~/gnuplot.cfg'\n";
+  if(!access("gnuplot.cfg", R_OK)) cmd <<"load 'gnuplot.cfg'\n";
   
-  cmd <<"set terminal pop\n"
-      <<"set title '(MT/plot.h -> gnuplot pipe)'\n"
+  cmd <<"set title '(MT/plot.h -> gnuplot pipe)'\n"
       <<command <<std::endl;
       
   if(PDFfile) {
-    cmd <<"set terminal pdfcairo\n"
+    cmd <<"set terminal push\n"
+	<<"set terminal pdfcairo\n"
         <<"set output '" <<PDFfile <<"'\n"
-        <<command <<std::endl;
+        <<command <<std::endl
+        <<"\nset terminal pop\n";
   }
+
   if(pauseMouse) cmd <<"\n pause mouse" <<std::endl;
+  ofstream gcmd("z.plotcmd"); gcmd <<cmd; gcmd.close(); //for debugging..
   fputs(cmd.p, MT_gp);
   fflush(MT_gp) ;
 #else
@@ -834,6 +841,7 @@ void gnuplot(const char *command, bool pauseMouse, bool persist, const char *PDF
 #endif
 }
 
+#ifndef MT_MSVC
 
 //===========================================================================
 //
@@ -1183,6 +1191,7 @@ void CycleTimer::cycleDone() {
   steps++;
 }
 
+#endif //MT_MSVC
 
 //===========================================================================
 //

@@ -1,0 +1,17 @@
+# TODO
+- TODO in the code
+- add friction in PhysX
+- learn limits
+- learn symbols for limits
+- learn properties of joints
+
+# DONE
+- orspy & physx @stefan
+- fake perception @johannes
+- ros structure @stefan
+- add joint limits in PhysX @johannes
+
+
+<!--
+vim: ft=markdown:
+-->

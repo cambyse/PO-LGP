@@ -28,9 +28,9 @@
 //
 
 void linearRegression(arr& beta, const arr& X, const arr& y, const arr* weighted=NULL);
-void ridgeRegression(arr& beta, const arr& X, const arr& y, double lambda, const arr* weighted=NULL, arr* zScores=NULL);
-void logisticRegression2Class(arr& beta, const arr& X, const arr& y, double lambda);
-void logisticRegressionMultiClass(arr& beta, const arr& X, const arr& y, double lambda);
+void ridgeRegression(arr& beta, const arr& X, const arr& y, double lambda=-1., const arr* weighted=NULL, arr* zScores=NULL);
+void logisticRegression2Class(arr& beta, const arr& X, const arr& y, double lambda=-1.);
+void logisticRegressionMultiClass(arr& beta, const arr& X, const arr& y, double lambda=-1.);
 
 
 //===========================================================================

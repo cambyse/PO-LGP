@@ -14,7 +14,6 @@ ANN = 1
 LAPACK = 1
 #NO_BLAS = 1
 
-
 CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES #causes all *.cpp to implement the used templates
 
 OBJS  = $(shell find . -maxdepth 1 \( -name '*.cpp' -and -not -name '*_t.cpp' -and -not -name '*_instantiate.cpp' \) )
