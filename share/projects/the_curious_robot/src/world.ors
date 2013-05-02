@@ -1,8 +1,16 @@
-body robot{ type=1 size=[.03 .03 .03 .03]  rel=<T t(0. -1. 1.)> kinematic}
-
-body door0{ type=3
-mesh="/home/johannes/mlr/git/share/projects/the_curious_robot/src/plys/door-0_x_hacd.ply" meshscale=.01 submeshsizes=[8 8 8] fixed }
-body door1{ type=3 mesh='/home/johannes/mlr/git/share/projects/the_curious_robot/src/plys/door-1_x_hacd.ply' meshscale=.01 submeshsizes=[8 36 41 36 41] color=[1 0 0]}
-body door2{ type=3 mesh='/home/johannes/mlr/git/share/projects/the_curious_robot/src/plys/door-2_x_hacd.ply' meshscale=.01 submeshsizes=[73 50 71 51] }
+// door
+body door0{ type=3 mesh="plys/door-0_x_hacd.ply" meshscale=.01 submeshsizes=[8 8 8] fixed }
+body door1{ type=3 mesh='plys/door-1_x_hacd.ply' meshscale=.01 submeshsizes=[8 36 41 36 41] color=[1 0 0]}
+body door2{ type=3 mesh='plys/door-2_x_hacd.ply' meshscale=.01 submeshsizes=[73 50 71 51] fixed}
 joint (door0, door1){ A=<T t(.46 0 0) d(90 0 1 0)> BinvA }
 joint (door1, door2){ A=<T t(-.39 0 1) d(90 0 0 1)> BinvA }
+
+
+// robot
+body robot{
+  type=1
+  size=[.03 .03 .03 .03]
+  X=<T t(0. -1. 1.)>
+  color=[0 1 0]
+  kinematic
+}
