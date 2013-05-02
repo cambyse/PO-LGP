@@ -113,7 +113,7 @@ class ObserveState(smach.State):
                     self.world_belief.getBodyByName(body.name).X = body.X
 
             self.world_belief.calcShapeFramesFromBodies()
-            #print self.world_belief
+            print self.world_belief
 
         else:
             self.world_changed = False
@@ -186,7 +186,7 @@ class MoveState(smach.State):
 
     def get_best_target(self, objects_of_interest):
         object_of_interest = random.choice(objects_of_interest)
-        pos = object_of_interest[0].com
+        pos = object_of_interest[0].X.pos
         rot = object_of_interest[0].X.rot
         msg = msgs.control()
         msg.pose = Pose(Point(pos.x, pos.y, 1),
