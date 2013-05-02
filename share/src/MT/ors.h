@@ -69,7 +69,7 @@ namespace ors {
  * @{
  */
 enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, meshST, cylinderST, markerST, pointCloudST };
-enum JointType { hingeJT=0, sliderJT, universalJT, fixedJT, ballJT, glueJT };
+enum JointType { JT_hinge=0, JT_transX=1, JT_transY=2, JT_transZ=3, JT_trans3, JT_universal, JT_fixed, JT_glue };
 enum BodyType  { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };
 /** @} */
 
@@ -355,7 +355,7 @@ struct Body {
 
   MT::String name;     //!< name
   Transformation X;    //!< body's absolute pose
-  KeyValueGraph ats;         //!< list of any-type attributes
+  KeyValueGraph ats;   //!< list of any-type attributes
 
   //dynamic properties
   BodyType type;          //!< is globally fixed?
@@ -384,14 +384,16 @@ struct Body {
 //! a joint
 struct Joint {
   uint index;          //!< unique identifier
+  uint qIndex;         //!< index where this joint appears in the q-state-vector
   int ifrom, ito;       //!< indices of from and to bodies
   Body *from, *to;      //!< pointers to from and to bodies
 
-  JointType type;               //!< joint type
-  Transformation A;             //!< transformation from parent body to joint (attachment, usually static)
-  Transformation Q;             //!< transformation within the joint (usually dynamic)
-  Transformation B;             //!< transformation from joint to child body (attachment, usually static)
-  Transformation Xworld;        //!< joint pose in world coordinates (same as from->X*A)
+  JointType type;            //!< joint type
+  Transformation A;          //!< transformation from parent body to joint (attachment, usually static)
+  Transformation Q;          //!< transformation within the joint (usually dynamic)
+  Transformation B;          //!< transformation from joint to child body (attachment, usually static)
+  Transformation X;          //!< joint pose in world coordinates (same as from->X*A)
+  Vector axis;               //!< joint axis (same as X.rot.getX() for standard hinge joints)
   KeyValueGraph ats;         //!< list of any-type attributes
 
   Joint();
@@ -399,12 +401,13 @@ struct Joint {
   explicit Joint(Graph& G, Body *f, Body *t, const Joint *copyJoint=NULL); //new Shape, being added to graph and body's joint lists
   ~Joint() { reset(); }
   void operator=(const Joint& j) {
-    index=j.index; ifrom=j.ifrom; ito=j.ito;
-    type=j.type; A=j.A; Q=j.Q; B=j.B; Xworld=j.Xworld;
+    index=j.index; qIndex=j.qIndex; ifrom=j.ifrom; ito=j.ito;
+    type=j.type; A=j.A; Q=j.Q; B=j.B; X=j.X; axis=j.axis;
     ats=j.ats;
   }
-  void reset() { listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); Xworld.setZero(); type=hingeJT; }
+  void reset() { listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); X.setZero(); axis.setZero(); type=JT_hinge; }
   void parseAts();
+  uint qDim();
   void write(std::ostream& os) const;
   void read(std::istream& is);
   Joint &data() { return *this; }
@@ -504,9 +507,9 @@ struct Graph {
   void fillInRelativeTransforms();
 
   //!@name kinematics & dynamics
-  void kinematics(arr& x, uint i, ors::Vector *rel=0) const;
-  void jacobian(arr& J, uint i, ors::Vector *rel=0) const;
-  void hessian(arr& H, uint i, ors::Vector *rel=0) const;
+  void kinematicsPos(arr& x, uint i, ors::Vector *rel=0) const;
+  void jacobianPos(arr& J, uint i, ors::Vector *rel=0) const;
+  void hessianPos (arr& H, uint i, ors::Vector *rel=0) const;
   void kinematicsVec(arr& z, uint i, ors::Vector *vec=0) const;
   void jacobianVec(arr& J, uint i, ors::Vector *vec=0) const;
   void jacobianR(arr& J, uint a) const;
@@ -519,9 +522,6 @@ struct Graph {
   uint getJointStateDimension(bool internal=false) const;
   void getJointState(arr& x, arr& v) const;
   void getJointState(arr& x) const;
-  uint getFullStateDimension() const;
-  void getFullState(arr& x) const;
-  void getFullState(arr& x, arr& v) const;
   void getContactConstraints(arr& y) const;
   void getContactConstraintsGradient(arr &dydq) const;
   void getContactMeasure(arr &x, double margin=.02, bool linear=false) const;
@@ -541,8 +541,6 @@ struct Graph {
   //!@name set state
   void setJointState(const arr& x, const arr& v, bool clearJointErrors=false);
   void setJointState(const arr& x, bool clearJointErrors=false);
-  void setFullState(const arr& x, bool clearJointErrors=false);
-  void setFullState(const arr& x, const arr& v, bool clearJointErrors=false);
   void setExternalState(const arr & x);//set array of body positions, sets all degrees of freedom except for the joint states
 
   //!@name forces and gravity
@@ -1099,8 +1097,7 @@ public:
   void pidJointVel(ors::Graph &C, ors::Joint *e, double v0, double vGain);
   void getGroundContact(ors::Graph &C, boolA& cts);
   void importProxiesFromOde(ors::Graph &C);
-  void step(ors::Graph &C, arr& in, arr& force, arr& out, uint steps=1);
-  void step(ors::Graph &C, arr& force, arr& out, uint steps=1);
+  void step(ors::Graph &C, arr& force, uint steps=1, double tau=.01);
   void step(ors::Graph &C, uint steps=1, double tau=.01);
   void slGetProxies(ors::Graph &C);
   //void slGetProxyGradient(arr &dx, const arr &x, ors::Graph &C);
@@ -1163,7 +1160,7 @@ struct Link {
   ors::Vector com, force, torque;
   double mass;
   ors::Matrix inertia;
-  uint dof() { if(type==hingeJT) return 1; else return 0; }
+  uint dof() { if(type==JT_hinge) return 1; else return 0; }
 
   arr _h, _A, _Q, _I, _f; //featherstone types
   void setFeatherstones();

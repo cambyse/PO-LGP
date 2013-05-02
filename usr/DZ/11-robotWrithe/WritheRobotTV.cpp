@@ -35,7 +35,7 @@ void GetRopes(arr& r1,arr& r2,ors::Graph& _ors,int rope_points,const char* _name
   ors::Vector rel; rel.set(0.,0.,0.0);// rel.setZero();
   
   for (int i=0;i<rope_points;i++) {// start with second body part
-      _ors.kinematics(ty,i+start_body,  &rel); 
+      _ors.kinematicsPos(ty,i+start_body,  &rel); 
       rope1[i]() = ty;;    
   } 
    arr xtarget;  
@@ -65,7 +65,7 @@ void WritheTaskVariable::userUpdate(){
     
     ///////////Jacobian
       for (int k=0;k<segments;k++){
-       this->ors->jacobian(Jp,k+2,&ors::Vector(0.,0.,.0)); // Zero jacobian? +1
+       this->ors->jacobianPos(Jp,k+2,&ors::Vector(0.,0.,.0)); // Zero jacobian? +1
 	 points.append(Jp);
        } 
        
@@ -98,7 +98,7 @@ transpose(Jt,J);
 // //cout <<y<<endl;
 //     ///////////Jacobian
 //       for (int k=0;k<segments;k++){
-//        this->ors->jacobian(Jp,k,&ors::Vector(0.,0.,.1)); // Zero jacobian? +1
+//        this->ors->jacobianPos(Jp,k,&ors::Vector(0.,0.,.1)); // Zero jacobian? +1
 // 	 points.append(Jp);
 //        } 
 //        ScalarJacobian(JM,rope1,rope2,points,segments);  
@@ -133,7 +133,7 @@ arr delta_y;
     
     ///////////Jacobian
   for (int k=0;k<segments;k++){
-       this->ors->jacobian(Jp,k+1,&ors::Vector(0.,0.,.1)); // Zero jacobian? +1
+       this->ors->jacobianPos(Jp,k+1,&ors::Vector(0.,0.,.1)); // Zero jacobian? +1
 	 points.append(Jp);
        } 
        WritheJacobian(JM,rope1,rope2,points,segments);  
@@ -178,7 +178,7 @@ void WritheTaskVariable::delta_check(arr& delta_q){
 
     ///////////Jacobian
       for (int k=0;k<segments;k++){
-       this->ors->jacobian(Jp,k,&ors::Vector(0.,0.,.1)); // Zero jacobian? +1
+       this->ors->jacobianPos(Jp,k,&ors::Vector(0.,0.,.1)); // Zero jacobian? +1
 	 points.append(Jp);
        } 
        ScalarJacobian(J,rope1,rope2,points,segments);  
@@ -217,8 +217,8 @@ void WritheTaskVariable::userUpdate(){
 
     ///////////Jacobian
       for (int k=0;k<11;k++){
-	 //ors->jacobian(Jp,k+1,NULL);
-         this->ors->jacobian(Jp,k+1);
+	 //ors->jacobianPos(Jp,k+1,NULL);
+         this->ors->jacobianPos(Jp,k+1);
 	 points.append(Jp);
        }
        WritheJacobian(JM,rope1,rope2,points);  

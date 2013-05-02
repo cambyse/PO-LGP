@@ -345,7 +345,7 @@ for n \in \{N+1..N+dN\}
 end
 *
 */
-void GaussianProcess::hessian(arr& hess, const arr& x){
+void GaussianProcess::hessianPos (arr& hess, const arr& x){
   CHECK(X.N || dX.N , "can't recompute Hessian without data");
   CHECK((X.N && x.N==X.d1) || (dX.N && x.N==dX.d1), "dimensions don't match!");
   uint i, j, n, N=Y.N, dN=dY.N, dim;

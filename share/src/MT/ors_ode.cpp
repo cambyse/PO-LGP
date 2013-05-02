@@ -357,21 +357,21 @@ void OdeInterface::exportStateToOde(ors::Graph &C) {
     CP3(b->avel, n->X.angvel.p());
     //n->copyFrameToOde();
 #ifndef MT_ode_nojoints
-    for_list(j, e, n->inLinks) if(e->type!=ors::glueJT) {
+    for_list(j, e, n->inLinks) if(e->type!=ors::JT_glue) {
       dxJointHinge* hj=(dxJointHinge*)joints(e->index);
       dxJointUniversal* uj=(dxJointUniversal*)joints(e->index);
       dxJointSlider* sj=(dxJointSlider*)joints(e->index);
       switch(e->type) { //16. Mar 06 (hh)
-        case ors::fixedJT:
+        case ors::JT_fixed:
           break;
-        case ors::hingeJT:
+        case ors::JT_hinge:
           CP4(hj->qrel, (e->A.rot*e->B.rot).p());
           CP3(hj->anchor1, (e->A.pos).p());
           CP3(hj->anchor2, (-(e->B.rot/e->B.pos)).p());
           CP3(hj->axis1, (e->A.rot*ors::Vector(1, 0, 0)).p());
           CP3(hj->axis2, (e->B.rot/ors::Vector(1, 0, 0)).p());
           break;
-        case ors::universalJT:
+        case ors::JT_universal:
           CP4(uj->qrel1, (e->A.rot).p());
           CP4(uj->qrel2, (e->B.rot).p());
           CP3(uj->anchor1, (e->A.pos).p());
@@ -379,7 +379,7 @@ void OdeInterface::exportStateToOde(ors::Graph &C) {
           CP3(uj->axis1, (e->A.rot*ors::Vector(1, 0, 0)).p());
           CP3(uj->axis2, (e->B.rot/ors::Vector(1, 0, 0)).p());
           break;
-        case ors::sliderJT:
+        case ors::JT_transX:
           CP4(sj->qrel, (e->A.rot*e->B.rot).p());
           CP3(sj->offset, (e->Q.pos).p());
           //printf("offset: (%lf; %lf; %lf)\n", (e->X.pos)[0], (e->X.pos)[1], (e->X.pos)[2]);
@@ -424,15 +424,15 @@ void OdeInterface::importStateFromOde(ors::Graph &C) {
 void OdeInterface::addJointForce(ors::Graph& C, ors::Joint *e, double f1, double f2) {
   switch(e->type) {
     default:
-    case ors::hingeJT:
+    case ors::JT_hinge:
       dJointAddHingeTorque(joints(e->index), -f1);
       break;
-    case ors::fixedJT: // no torque
+    case ors::JT_fixed: // no torque
       break;
-    case ors::universalJT:
+    case ors::JT_universal:
       dJointAddUniversalTorques(joints(e->index), -f1, -f2);
       break;
-    case ors::sliderJT:
+    case ors::JT_transX:
       dJointAddSliderForce(joints(e->index), -f1);
       break;
   }
@@ -445,17 +445,17 @@ void OdeInterface::addJointForce(ors::Graph& C, doubleA& x) {
   for_list(i, e, C.joints) { // loop over edges, 16. Mar 06 (hh)
     switch(e->type) { //  3. Apr 06 (hh)
       default:
-      case ors::hingeJT:
+      case ors::JT_hinge:
         dJointAddHingeTorque(joints(e->index), -x(n));
         n++;
         break;
-      case ors::fixedJT: // no torque
+      case ors::JT_fixed: // no torque
         break;
-      case ors::universalJT:
+      case ors::JT_universal:
         dJointAddUniversalTorques(joints(e->index), -x(n), -x(n+1));
         n+=2;
         break;
-      case ors::sliderJT:
+      case ors::JT_transX:
         dJointAddSliderForce(joints(e->index), -x(n));
         n++;
         break;
@@ -471,17 +471,17 @@ void OdeInterface::setMotorVel(ors::Graph& C, const arr& qdot, double maxF) {
   for_list(i, e, C.joints) {
     switch(e->type) {
       default:
-      case ors::hingeJT:
+      case ors::JT_hinge:
         dJointSetAMotorParam(motors(e->index), dParamVel, -qdot(i));
         dJointSetAMotorParam(motors(e->index), dParamFMax, maxF);
         n++;
         break;
-      case ors::fixedJT:
+      case ors::JT_fixed:
         break;
-      case ors::universalJT:
+      case ors::JT_universal:
         n+=2;
         break;
-      case ors::sliderJT:
+      case ors::JT_transX:
         n++;
         break;
     }
@@ -495,7 +495,7 @@ uint OdeInterface::getJointMotorDimension(ors::Graph& C) {
   uint i=0, j, k;
   for_list(k, n, C.bodies) {
     for_list(j, e, n->inLinks) { // if(!e->fixed && e->motor){ // 16. Mar 06 (hh)
-      if(e->type==ors::universalJT) i+=2;
+      if(e->type==ors::JT_universal) i+=2;
       else i++;
     }
   }
@@ -772,14 +772,14 @@ void OdeInterface::createOde(ors::Graph &C) {
   for_list(j, n, C.bodies) {
     for_list(i, e, n->inLinks) {
       switch(e->type) {
-        case ors::fixedJT:
+        case ors::JT_fixed:
           jointF=(dxJointFixed*)dJointCreateFixed(world, 0);
           dJointAttach(jointF, bodies(e->from->index), bodies(e->to->index));
           dJointSetFixed(jointF);
           joints(e->index)=jointF;
           //    e->fixed=true;
           break;
-        case ors::hingeJT:
+        case ors::JT_hinge:
           jointH=(dxJointHinge*)dJointCreateHinge(world, 0);
           /*if(e->p[1]!=e->p[0]){
             dJointSetHingeParam(jointH, dParamLoStop, e->p[0]);
@@ -791,13 +791,13 @@ void OdeInterface::createOde(ors::Graph &C) {
           joints(e->index)=jointH;
           //e->copyFramesToOdeHinge();
           break;
-        case ors::universalJT:
+        case ors::JT_universal:
           jointU=(dxJointUniversal*)dJointCreateUniversal(world, 0);
           dJointAttach(jointU, bodies(e->from->index), bodies(e->to->index));
           joints(e->index)=jointU;
           //e->copyFramesToOdeUniversal();
           break;
-        case ors::sliderJT:
+        case ors::JT_transX:
           jointS=(dxJointSlider*)dJointCreateSlider(world, 0);
           dJointAttach(jointS, bodies(e->from->index), bodies(e->to->index));
           joints(e->index)=jointS;
@@ -805,7 +805,7 @@ void OdeInterface::createOde(ors::Graph &C) {
           break;
         default: HALT("");
       }
-      if(e->type==ors::hingeJT) {
+      if(e->type==ors::JT_hinge) {
         jointM = (dxJointAMotor*)dJointCreateAMotor(world, 0);
         dJointSetAMotorNumAxes(jointM, 1);
         dJointAttach(jointM, bodies(e->from->index), bodies(e->to->index));
@@ -824,20 +824,10 @@ void OdeInterface::createOde(ors::Graph &C) {
   isOpen=true;
 }
 
-void OdeInterface::step(ors::Graph &C, doubleA& in, doubleA& force, doubleA& out, uint steps) {
-  C.setFullState(in);
-  exportStateToOde(C);
+void OdeInterface::step(ors::Graph &C, doubleA& force, uint steps, double tau) {
   addJointForce(C, force);
-  for(; steps--;) step();
+  for(; steps--;) step(tau);
   importStateFromOde(C);
-  C.getFullState(out);
-}
-
-void OdeInterface::step(ors::Graph &C, doubleA& force, doubleA& out, uint steps) {
-  addJointForce(C, force);
-  for(; steps--;) step();
-  importStateFromOde(C);
-  C.getFullState(out);
 }
 
 void OdeInterface::step(ors::Graph &C, uint steps, double tau) {

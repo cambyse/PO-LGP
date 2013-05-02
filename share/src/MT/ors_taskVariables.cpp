@@ -342,16 +342,16 @@ void DefaultTaskVariable::updateState(const ors::Graph& ors, double tau) {
   switch(type) {
     case posTVT:
       if(j==-1) {
-        ors.kinematics(y, i, &irel.pos);
-        ors.jacobian(J, i, &irel.pos);
+        ors.kinematicsPos(y, i, &irel.pos);
+        ors.jacobianPos(J, i, &irel.pos);
         break;
       }
       pi = ors.bodies(i)->X.pos + ors.bodies(i)->X.rot * irel.pos;
       pj = ors.bodies(j)->X.pos + ors.bodies(j)->X.rot * jrel.pos;
       c = ors.bodies(j)->X.rot / (pi-pj);
       y.resize(3); y = ARRAY(c);
-      ors.jacobian(Ji, i, &irel.pos);
-      ors.jacobian(Jj, j, &jrel.pos);
+      ors.jacobianPos(Ji, i, &irel.pos);
+      ors.jacobianPos(Jj, j, &jrel.pos);
       ors.jacobianR(JRj, j);
       J.resize(3, Jj.d1);
       for(k=0; k<Jj.d1; k++) {
@@ -408,7 +408,7 @@ void DefaultTaskVariable::updateState(const ors::Graph& ors, double tau) {
       J.clear();
       for(k=0; k<params.N; k++) {
         l=(uint)params(k);
-        ors.jacobian(Ji, l, NULL);
+        ors.jacobianPos(Ji, l, NULL);
         ors.bodies(l)->X.rot.getY(vi);
         vi *= -1.;
         zi = ARRAY(vi);
@@ -459,7 +459,7 @@ void DefaultTaskVariable::updateState(const ors::Graph& ors, double tau) {
 void DefaultTaskVariable::getHessian(const ors::Graph& ors, arr& H) {
   switch(type) {
     case posTVT:
-      if(j==-1) { ors.hessian(H, i, &irel.pos); break; }
+      if(j==-1) { ors.hessianPos (H, i, &irel.pos); break; }
     default:  NIY;
   }
 }
@@ -602,11 +602,11 @@ void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph& ors, 
   CHECK(p->normal.isNormalized(), "proxy normal is not normalized");
   dnormal.referTo(&p->normal.x, 3); dnormal.reshape(1, 3);
   if(!linear) {
-    ors.jacobian(Ja, a->body->index, &arel); J -= (2.*d/margin)*(dnormal*Ja);
-    ors.jacobian(Jb, b->body->index, &brel); J += (2.*d/margin)*(dnormal*Jb);
+    ors.jacobianPos(Ja, a->body->index, &arel); J -= (2.*d/margin)*(dnormal*Ja);
+    ors.jacobianPos(Jb, b->body->index, &brel); J += (2.*d/margin)*(dnormal*Jb);
   } else {
-    ors.jacobian(Ja, a->body->index, &arel); J -= (1./margin)*(dnormal*Ja);
-    ors.jacobian(Jb, b->body->index, &brel); J += (1./margin)*(dnormal*Jb);
+    ors.jacobianPos(Ja, a->body->index, &arel); J -= (1./margin)*(dnormal*Ja);
+    ors.jacobianPos(Jb, b->body->index, &brel); J += (1./margin)*(dnormal*Jb);
   }
 }
 

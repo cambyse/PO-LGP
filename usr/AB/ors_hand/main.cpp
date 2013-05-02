@@ -172,8 +172,8 @@ void testHand() {
             // Tracking the finger tips
             for(uint N=0;N<num_fings;N++) {
                 // finds current points
-                G.kinematics(y,fid_to_bid[N]);
-                G.jacobian(J,fid_to_bid[N]);
+                G.kinematicsPos(y,fid_to_bid[N]);
+                G.jacobianPos(J,fid_to_bid[N]);
                 G.kinematicsVec(yR,fid_to_bid[N],&morthoV);
                 G.jacobianVec(JR,fid_to_bid[N],&morthoV);
 

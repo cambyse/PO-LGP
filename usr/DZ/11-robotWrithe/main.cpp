@@ -118,7 +118,7 @@ void GetRopesTest(arr& r1,arr& r2,ors::Graph& _ors,int rope_points){
   ors::Vector rel; rel.setZero();
   
   for (int i=0;i<rope_points;i++) {// start with second body part
-      _ors.kinematics(ty,i+start_body,  &rel); 
+      _ors.kinematicsPos(ty,i+start_body,  &rel); 
       rope1[i]() = ty;
   } 
    arr xtarget;  

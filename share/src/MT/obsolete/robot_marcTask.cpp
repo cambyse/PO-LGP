@@ -356,7 +356,7 @@ void MarcsRobotTask::joystick(){
   controlMode = joystickCM;
   for(; !signalStop;){
     NIY; //();
-    //cout <<"tip3 inlink frame = " <<ors.getBodyByName("tip3")->inLinks(0)->Xworld.p <<endl;
+    //cout <<"tip3 inlink frame = " <<ors.getBodyByName("tip3")->inLinks(0)->X.p <<endl;
     if(joy.state(0)==16 || joy.state(0)==32) break;
   }
   controlMode = stopCM;

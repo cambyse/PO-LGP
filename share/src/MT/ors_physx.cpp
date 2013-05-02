@@ -303,7 +303,7 @@ void PhysXInterface::create() {
     PxTransform A = OrsTrans2PxTrans(jj->A);
     PxTransform B = OrsTrans2PxTrans(jj->B);
     switch (jj->type) {
-    case ors::hingeJT: {
+    case ors::JT_hinge: {
       PxRevoluteJoint* desc;
       //  CHECK(A.p!=B.p,"Something is horribly wrong!");
       desc = PxRevoluteJointCreate(*mPhysics, this->s->actors(jj->ifrom), A, this->s->actors(jj->ito), B.getInverse());
@@ -321,7 +321,7 @@ void PhysXInterface::create() {
       
     }
     break;
-    case ors::fixedJT: {
+    case ors::JT_fixed: {
       PxFixedJoint* desc;
       desc = PxFixedJointCreate(*mPhysics, this->s->actors(jj->ifrom), A, this->s->actors(jj->ito), B.getInverse());
       // desc->setProjectionLinearTolerance(1e10);

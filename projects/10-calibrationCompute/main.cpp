@@ -69,7 +69,7 @@ struct MyOptimizationProblem:public OptimizationProblem{
     for(uint i=0;i<N;i++){
       C.setJointState(qData[i]+q_offset);
       C.calcBodyFramesFromJoints();
-      C.kinematics(y, bodyIndex, &rel);
+      C.kinematicsPos(y, bodyIndex, &rel);
       X_data [i] = ARR(y(0), y(1), y(2), 1.);
       xL_data[i] = ARR(viewData(i+t_offset,0), viewData(i+t_offset,1), 1.);
       xR_data[i] = ARR(viewData(i+t_offset+3,2), viewData(i+t_offset+3,3), 1.);

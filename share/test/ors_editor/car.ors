@@ -1,7 +1,7 @@
 
-body world { X=<T t(0 0 .1)> type=-1 fixed }
-body transx { type=-1 }
-body transxy { type=-1 }
+body world { X=<T t(0 0 .1)> fixed }
+body transx {}
+body transxy {}
 body car {type=0  size=[0.2 0.5 .1 .0] color=[.8 0 0] }
 
 joint (world transx) { type=1 }

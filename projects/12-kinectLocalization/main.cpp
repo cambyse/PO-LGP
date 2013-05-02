@@ -466,7 +466,7 @@ void extractMode() {
     ////ors::Vector orsPos = geometricState.ors.getBodyByName("m9")->X.pos;
     ////std::cout << orsPos << std::endl;
     ////ors::Shape *s = geometricState.ors.getShapeByName("marker");
-    ////geometricState.ors.kinematics(orsPt,s->body->index,&s->rel.pos);
+    ////geometricState.ors.kinematicsPos(orsPt,s->body->index,&s->rel.pos);
     //geometricState.deAccess(NULL);
     ////std::cout << *orsPos << *(orsPos+1) << *(orsPos+2);
     //orsPt = ARR( *orsPos, *(orsPos+1), *(orsPos+2));

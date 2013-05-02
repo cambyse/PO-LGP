@@ -35,12 +35,12 @@ void GetRopes(arr& r1,arr& r2,const ors::Graph& _ors,int rope_points1,int rope_p
    
     ors::Vector shift,neg_shift; shift.set(0.,0.,.1); neg_shift.set(0.,0.,-.1);
   for (int i=0;i<rope_points1;i++) {// start with second body part
-     _ors.kinematics(ty,i,  &shift ); 
+     _ors.kinematicsPos(ty,i,  &shift ); 
       rope1[i] = ty;
     }
 
 
-  _ors.kinematics(ty,1,  &neg_shift ); // first body relative transformation
+  _ors.kinematicsPos(ty,1,  &neg_shift ); // first body relative transformation
    rope1[0] = ty;
    
   for (int i=0;i<rope_points2;i++) {// start with second body part
@@ -72,7 +72,7 @@ void WritheTaskVariable::userUpdate(const ors::Graph& ors){
      ors::Vector shift; shift.set(0.,0.,.1);
     ///////////Jacobian
       for (int k=0;k<segments1;k++){
-       ors.jacobian(Jp,k,&shift); // Zero jacobian? +1
+       ors.jacobianPos(Jp,k,&shift); // Zero jacobian? +1
 	 points.append(Jp);
        } 
        WritheJacobian(JM,rope1,rope2,points,segments1,segments2);  
@@ -103,7 +103,7 @@ transpose(Jt,J);
 // //cout <<y<<endl;
 //     ///////////Jacobian
 //       for (int k=0;k<segments;k++){
-//        this->ors->jacobian(Jp,k,&ors::Vector(0.,0.,.1)); // Zero jacobian? +1
+//        this->ors->jacobianPos(Jp,k,&ors::Vector(0.,0.,.1)); // Zero jacobian? +1
 // 	 points.append(Jp);
 //        } 
 //        ScalarJacobian(JM,rope1,rope2,points,segments);  
@@ -138,7 +138,7 @@ arr delta_y;
      ors::Vector shift; shift.set(0.,0.,.1);
     ///////////Jacobian
   for (int k=0;k<segments1;k++){
-       ors.jacobian(Jp,k,&shift); // Zero jacobian? +1
+       ors.jacobianPos(Jp,k,&shift); // Zero jacobian? +1
 	 points.append(Jp);
        } 
        WritheJacobian(JM,rope1,rope2,points,segments1,segments2);  
@@ -183,7 +183,7 @@ void WritheTaskVariable::delta_check(arr& delta_q, const ors::Graph& ors){
   ors::Vector shift; shift.set(0.,0.,.1);
     ///////////Jacobian
       for (int k=0;k<segments1;k++){
-       ors.jacobian(Jp,k,&shift); // Zero jacobian? +1
+       ors.jacobianPos(Jp,k,&shift); // Zero jacobian? +1
 	 points.append(Jp);
        } 
        ScalarJacobian(J,rope1,rope2,points,segments1);  
@@ -222,8 +222,8 @@ void WritheTaskVariable::userUpdate(){
 
     ///////////Jacobian
       for (int k=0;k<11;k++){
-	 //ors->jacobian(Jp,k+1,NULL);
-         ors.jacobian(Jp,k+1);
+	 //ors->jacobianPos(Jp,k+1,NULL);
+         ors.jacobianPos(Jp,k+1);
 	 points.append(Jp);
        }
        WritheJacobian(JM,rope1,rope2,points);  

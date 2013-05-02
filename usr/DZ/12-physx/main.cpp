@@ -160,7 +160,7 @@ void problem4(){
     uint i;
  /*
     for_list(i,jj,ors.joints) { 
-       jj->type  = ors::fixedJT; 
+       jj->type  = ors::JT_fixed; 
   }
    */
     for_list(i,bb,ors.bodies){

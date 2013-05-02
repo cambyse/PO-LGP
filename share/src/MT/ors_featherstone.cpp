@@ -264,7 +264,7 @@ void FrameToMatrix(arr &X, const ors::Transformation& f) {
 void ors::Link::setFeatherstones() {
   switch(type) {
     case -1:     CHECK(parent==-1, ""); _h.clear();  break;
-    case hingeJT: _h.resize(6); _h.setZero(); _h(0)=1.; break;
+    case JT_hinge: _h.resize(6); _h.setZero(); _h(0)=1.; break;
     default: NIY;
   }
   Featherstone::RBmci(_I, mass, com.p(), inertia);

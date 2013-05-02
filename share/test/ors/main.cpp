@@ -1,7 +1,7 @@
-#include<MT/ors.h>
-#include<MT/algos.h>
-#include<MT/opengl.h>
-#include<MT/plot.h>
+#include <MT/ors.h>
+#include <MT/algos.h>
+#include <MT/opengl.h>
+#include <MT/plot.h>
 #include <GL/gl.h>
 
 
@@ -63,12 +63,13 @@ namespace T1{
   ors::Graph *G;
   ors::Vector rel;
   ors::Vector axis;
-  static void f  (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematics(y,i,&rel);  if(J) G->jacobian(*J,i,&rel); }
-  static void f1 (arr &J, arr *H, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->jacobian(J,i,&rel);    if(H) G->hessian(*H,i,&rel); }
-  static void f2 (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsVec(y,i,&axis); if(J) G->jacobianVec(*J,i,&axis); }
+  static void f  (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsPos(y,i,&rel);  if(J) G->jacobianPos(*J,i,&rel); }
+  static void f_hess (arr &J, arr *H, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->jacobianPos(J,i,&rel);    if(H) G->hessianPos (*H,i,&rel); }
+  static void f_vec (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsVec(y,i,&axis); if(J) G->jacobianVec(*J,i,&axis); }
   //static void f3 (arr &y,const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsOri2(y,i,axis); }
   //static void df3(arr &J,const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->jacobianOri2(J,i,axis); }
 }
+
 void testKinematics(){
   ors::Graph G;
   OpenGL gl;
@@ -84,9 +85,8 @@ void testKinematics(){
     gl.text.clear() <<"k=" <<k <<"  gradient checks of kinematics on random postures";
     //gl.update();
     MT::checkGradient(T1::f ,NULL,x,1e-5);
-    MT::checkGradient(T1::f1,NULL,x,1e-5);
-    MT::checkGradient(T1::f2,NULL,x,1e-5);
-    //MT::checkGradient(T1::f3,T1::df3,NULL,x,1e-5);
+    MT::checkGradient(T1::f_hess,NULL,x,1e-5);
+    MT::checkGradient(T1::f_vec,NULL,x,1e-5);
   }
 }
 
@@ -296,7 +296,7 @@ void testFollowRedundantSequence(){
   T=Z.d0;
   G.setJointState(x);
   G.calcBodyFramesFromJoints();
-  G.kinematics(z,N,&rel);
+  G.kinematicsPos(z,N,&rel);
   for(t=0;t<T;t++) Z[t]() += z; //adjust coordinates to be inside the arm range
   plotLine(Z);
   gl.add(glDrawPlot,&plotModule);
@@ -305,13 +305,13 @@ void testFollowRedundantSequence(){
   for(t=0;t<T;t++){
     //Z[t] is the desired endeffector trajectory
     //x is the full joint state, z the endeffector position, J the Jacobian
-    G.jacobian(J,N,&rel);  //get the Jacobian wrt. the 7th body (endeffector)
+    G.jacobianPos(J,N,&rel);  //get the Jacobian wrt. the 7th body (endeffector)
     invJ = inverse(J);       //pseudo inverse
     v = invJ * (Z[t]-z);     //multiply endeffector velocity with inverse jacobian
     x += v;                  //simulate a time step (only kinematically)
     G.setJointState(x);
     G.calcBodyFramesFromJoints();
-    G.kinematics(z,N,&rel);  //get the new endeffector position
+    G.kinematicsPos(z,N,&rel);  //get the new endeffector position
     //cout <<J * invJ <<invJ <<v <<endl <<x <<endl <<"tracking error = " <<maxDiff(Z[t],z) <<endl;
     gl.text.clear() <<"follow redundant trajectory -- time " <<t;
     gl.update();
@@ -502,8 +502,9 @@ void testBlenderImport(){
 
 int main(int argc,char **argv){
 
-  testBasics();
+  testKinematics();
   return 0;
+  testBasics();
   testLoadSave();
   testPlayStateSequence();
   testKinematics();

@@ -11,7 +11,7 @@ viewing the model in the OpenGL window (after pressing ENTER).\n\
 Use the number keys 1 2 3 4 5 to toggle display options.\n\
 \n\
 enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, meshST, cylinderST, markerST, pointCloudST }; \n\
-enum JointType { hingeJT=0, sliderJT, universalJT, fixedJT, ballJT, glueJT };\n\
+enum JointType { JT_hinge=0, JT_transX, JT_universal, JT_fixed, ballJT, JT_glue };\n\
 enum BodyType  { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };\n\
 ";
 

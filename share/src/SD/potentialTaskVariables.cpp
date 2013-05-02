@@ -17,7 +17,7 @@ void PotentialValuesTaskVariable::userUpdate(const ors::Graph& ors){
   y.resize(refs.N);
   J.resize(refs.N,ors.getJointStateDimension());
   for_list(i,s,refs){
-    ors.kinematics(xi,s->body->index,&s->rel.pos);
+    ors.kinematicsPos(xi,s->body->index,&s->rel.pos);
     ors.jacobian  (Ji,s->body->index,&s->rel.pos);
     y(i) = f->psi(&grad,NULL,xi);
     J[i]() = ~grad*Ji;
@@ -78,7 +78,7 @@ void GPVarianceTaskVariable::userUpdate(const ors::Graph& ors){
   J.resize(refs.N,ors.getJointStateDimension());
   Ginv = &f->isf_gp.gp.Ginv;
   for_list(i,s,refs){
-    ors.kinematics(xi,s->body->index,&s->rel.pos);
+    ors.kinematicsPos(xi,s->body->index,&s->rel.pos);
     ors.jacobian  (Ji,s->body->index,&s->rel.pos);
     f->isf_gp.gp.k_star(xi,ki);
     f->isf_gp.gp.dk_star(xi,dki);

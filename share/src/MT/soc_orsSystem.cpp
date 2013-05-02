@@ -221,7 +221,7 @@ void OrsSystem::initStandardBenchmark(uint rand_seed){
     sh->cont=true;
     if(k){
       j=new ors::Joint(*s->ors, s->ors->bodies(k-1), s->ors->bodies(k));
-      j->type = ors::hingeJT;
+      j->type = ors::JT_hinge;
       j->Q.setText("<d(45 1 0 0)>");
       if(k&1){ //odd -> rotation around z
         j->A.setText(STRING("<t(0 0 " <<1./K <<") d(-90 0 1 0)>"));

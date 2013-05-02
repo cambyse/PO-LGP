@@ -142,9 +142,9 @@ void Simulator::setJointAnglesAndVels(const arr& q, const arr& qdot){
 void Simulator::kinematicsPos(arr& y, const char* bodyName, const arr* rel){
   if(rel){
     ors::Vector v;  v.set(rel->p);
-    s->G.kinematics(y, s->G.getBodyByName(bodyName)->index, &v);
+    s->G.kinematicsPos(y, s->G.getBodyByName(bodyName)->index, &v);
   }else{
-    s->G.kinematics(y, s->G.getBodyByName(bodyName)->index, NULL);
+    s->G.kinematicsPos(y, s->G.getBodyByName(bodyName)->index, NULL);
   }
 }
 
@@ -160,9 +160,9 @@ void Simulator::kinematicsVec(arr& y, const char* bodyName, const arr* vec){
 void Simulator::jacobianPos(arr& J, const char* bodyName, const arr* rel){
   if(rel){
     ors::Vector v;  v.set(rel->p);
-    s->G.jacobian(J, s->G.getBodyByName(bodyName)->index, &v);
+    s->G.jacobianPos(J, s->G.getBodyByName(bodyName)->index, &v);
   }else{
-    s->G.jacobian(J, s->G.getBodyByName(bodyName)->index, NULL);
+    s->G.jacobianPos(J, s->G.getBodyByName(bodyName)->index, NULL);
   }
 }
 
