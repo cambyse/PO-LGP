@@ -55,6 +55,7 @@ class FakeController():
             agent = self.world.getBodyByName("robot")
             if (agent.X.pos - self.goal.pos).length() > eps:
                 agent.X.pos = agent.X.pos + (self.goal.pos - agent.X.pos) * Kp
+                agent.X.vel = (self.goal.pos - agent.X.pos) * Kp
             else:
                 msg = msgs.control_done()
                 msg.header.frame_id = 'control done'
@@ -62,8 +63,9 @@ class FakeController():
                 self.goal = None
             #agent.X.rot = agent.X.rot + (self.goal.rot - agent.X.rot)*Kp
 
+        self.physx.step()
         self.world.calcBodyFramesFromJoints()
-        self.physx.step()  # this MUST be before serializing!
+        self.gl.update()
 
         msg = msgs.ors()
         msg.header.stamp = rospy.get_rostime()
@@ -72,7 +74,6 @@ class FakeController():
         msg.ors = str(self.world)
         self.pub.publish(msg)
 
-        self.gl.update()
 
     def control_cb(self, data):
         #print "Got control message.\n", data.pose.position 
