@@ -21,7 +21,7 @@ class FakeController():
     """
     def __init__(self):
         # init the node: test_fitting
-        rospy.init_node('tcr_controller')
+        rospy.init_node('tcr_controller', log_level=rospy.DEBUG)
 
         self.world = ors.Graph()
         worldfile = os.path.join(
@@ -35,6 +35,7 @@ class FakeController():
         ors.bindOrsToPhysX(self.world, self.gl, self.physx)
 
         self.pub = rospy.Publisher('geometric_state', msgs.ors)
+        self.control_done_pub = rospy.Publisher('control_done', msgs.control_done)
         self.traj_sub = rospy.Subscriber(name='control',
                                          data_class=msgs.control,
                                          callback=self.control_cb)
@@ -52,8 +53,13 @@ class FakeController():
             Kp = 10e-2
             eps = 10e-3
             agent = self.world.getBodyByName("robot")
-            if (agent.X.pos - self.goal.pos).length > eps:
+            if (agent.X.pos - self.goal.pos).length() > eps:
                 agent.X.pos = agent.X.pos + (self.goal.pos - agent.X.pos) * Kp
+            else:
+                msg = msgs.control_done()
+                msg.header.frame_id = 'control done'
+                self.control_done_pub.publish(msg)
+                self.goal = None
             #agent.X.rot = agent.X.rot + (self.goal.rot - agent.X.rot)*Kp
 
         self.world.calcBodyFramesFromJoints()
