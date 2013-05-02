@@ -2,18 +2,61 @@
 
 import roslib
 import rospy
+roslib.load_manifest('the_curious_robot')
 roslib.load_manifest('smach')
 roslib.load_manifest('smach_ros')
 import smach
 import smach_ros
 
 import copy
+import numpy as np
 
 import orspy as ors
 import random
 
 import the_curious_robot.msg as msgs
 from geometry_msgs.msg import Pose, Point, Quaternion
+
+from articulation_msgs.srv import TrackModelSrv, TrackModelSrvRequest
+from articulation_msgs.msg import ModelMsg, TrackMsg
+
+# different joint types
+PRISMATIC = 0
+ROTATIONAL = 1
+MODELS = {
+    PRISMATIC: 'prismatic',
+    ROTATIONAL: 'rotational'
+}
+
+
+def get_trajectory(model=PRISMATIC, n=100, noise=0.02):
+    """
+    Helper function to create a trajectory for the given `model` with `n`
+    samples and the noise of `noise`.
+    """
+    if model not in MODELS:
+        raise NameError("unknown model, cannot generate trajectory!")
+
+    msg = TrackMsg()
+    msg.header.stamp = rospy.get_rostime()
+    msg.header.frame_id = "/"
+    msg.id = model
+
+    for i in range(0, n):
+        q = i / float(n)
+        if model == PRISMATIC:
+            pose = Pose(Point(q, 0, 0),
+                        Quaternion(0, 0, 0, 1))
+        elif model == ROTATIONAL:
+            pose = Pose(Point(np.sin(q), np.cos(q) - 1.0, 0),
+                        Quaternion(0, 0, 0, 1))
+        # add noise
+        pose.position.x += np.random.rand() * noise
+        pose.position.y += np.random.rand() * noise
+        pose.position.z += np.random.rand() * noise
+
+        msg.pose.append(pose)
+    return msg
 
 
 class Gaussian():
