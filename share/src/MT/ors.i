@@ -86,12 +86,22 @@ struct Array{
 
   void clear();
 
-  // T& operator()(uint i) const;
-  // T& operator()(uint i, uint j) const;
-  // Array<T> sub(int i, int I) const;
   Array<T> sub(int i, int I, int j, int J) const;
   Array<T> sub(int i, int I) const;
 
+%extend {
+  T get1D(uint i) { return (*self).elem(i); };
+  T get2D(uint i, uint j) { return (*self)[i](j); };
+  void setElem2D(uint i, uint j, T value) {(*self)[i](j) = value; };
+  void setElem1D(uint i, T value) {(*self)(i) = value; };
+
+  std::string __str__() {
+    std::ostringstream oss(std::ostringstream::out);
+    oss << "Array<#elems=" << $self->N << ">";
+    oss << (*$self);
+    return oss.str();
+  }
+};
 %pythoncode %{
 def setWithList(self, data):
     if isinstance(data, list):
@@ -209,21 +219,6 @@ class ArrayIter:
 %typemap(out) MT::String {
     $result = PyString_FromString($1.p);
 }
-// Overload some operators
-%extend MT::Array {
-
-  T get1D(uint i) { return (*self).elem(i); };
-  T get2D(uint i, uint j) { return (*self)[i](j); };
-  void setElem2D(uint i, uint j, T value) {(*self)[i](j) = value; };
-  void setElem1D(uint i, T value) {(*self)(i) = value; };
-
-  std::string __str__() {
-    std::ostringstream oss(std::ostringstream::out);
-    oss << "Array<#elems=" << $self->N << ">";
-    oss << (*$self);
-    return oss.str();
-  }
-};
 
 // we need to typedef array. Otherwise python complains about arr.
 %inline %{
@@ -294,9 +289,8 @@ struct Vector {
 
   void write(std::ostream&) const;
   void read(std::istream&);
-};
 
-%extend Vector {
+%extend {
   std::string __str__() {
     std::ostringstream oss(std::ostringstream::out);
     oss << (*$self);
@@ -308,6 +302,8 @@ struct Vector {
   bool __eq__(const Vector& other) { return *$self == other; }
   bool __ne__(const Vector& other) { return *$self != other; }
 } // end %extend Vector
+
+}; // end of Vector
 
 
 //===========================================================================
@@ -332,6 +328,7 @@ struct Matrix {
 
   void write(std::ostream&) const;
   void read(std::istream&);
+
 %extend {
   Matrix __add__(const Matrix& other) { return *$self + other; };
   bool __eq__(const Matrix& other) { return *$self == other; }
@@ -353,6 +350,7 @@ def set(self, lst):
 };
 
 
+//===========================================================================
 struct Quaternion {
   double w, x, y, z;
 
@@ -447,9 +445,8 @@ struct Transformation {
 
   void write(std::ostream& os) const;
   void read(std::istream& is);
-};
 
-%extend Transformation {
+%extend {
   std::string __str__() {
     std::ostringstream oss(std::ostringstream::out);
     oss << (*$self);
@@ -458,6 +455,8 @@ struct Transformation {
   bool __eq__(const Transformation& other) { return *$self == other; }
   bool __ne__(const Transformation& other) { return *$self != other; }
 } // end %extend Transformation
+
+}; // end of Transformation
 
 
 //===========================================================================
@@ -527,6 +526,7 @@ struct Mesh {
 };
 
 
+//===========================================================================
 struct Spline {
   uint T, K, degree;
   arr points;
@@ -546,6 +546,7 @@ struct Spline {
 };
 
 
+//===========================================================================
 // forward decleration
 struct Joint;
 struct Shape;
@@ -553,6 +554,7 @@ struct Body;
 struct Graph;
 
 
+//===========================================================================
 struct Body {
   uint index;
   MT::Array<Joint*> inLinks;
@@ -574,18 +576,13 @@ struct Body {
   explicit Body(const Body& b);
   explicit Body(Graph& G, const Body *copyBody=NULL);
   ~Body();
-  // void operator=(const Body& b) {
-  //   index=b.index; name=b.name; X=b.X; ats=b.ats;
-  //   type=b.type; mass=b.mass; inertia=b.inertia; com=b.com; force=b.force; torque=b.torque;
-  // }
   void reset();
   void parseAts();
   void write(std::ostream& os) const;
   void read(std::istream& is);
   void read(const char* string);
-};
 
-%extend Body {
+%extend {
   void set_name(char* newName) {
     $self->name = MT::String(newName);
   };
@@ -596,10 +593,10 @@ struct Body {
     return oss.str();
   }
 }
+};
 
 
-%rename(from_) Joint::from;
-%rename(to_) Joint::to;
+//===========================================================================
 struct Joint {
   uint index;
   int ifrom, ito;
@@ -616,27 +613,24 @@ struct Joint {
   explicit Joint(const Joint& j);
   explicit Joint(Graph& G, Body *f, Body *t, const Joint *copyJoint=NULL);
   ~Joint();
-  // void operator=(const Joint& j) {
-  //   index=j.index; ifrom=j.ifrom; ito=j.ito;
-  //   type=j.type; A=j.A; Q=j.Q; B=j.B; Xworld=j.Xworld;
-  //   ats=j.ats;
-  // }
   void reset();
   void parseAts();
   void write(std::ostream& os) const;
   void read(std::istream& is);
   Joint &data();
-};
 
-%extend Joint {
+%extend {
   std::string __str__() {
     std::ostringstream oss(std::ostringstream::out);
     oss<<(*$self);
     return oss.str(); 
   }
-}
+} // end of %extend
+
+};
 
 
+//===========================================================================
 struct Shape {
   uint index;
   uint ibody;
@@ -657,28 +651,24 @@ struct Shape {
   explicit Shape(const Shape& s);
   explicit Shape(Graph& G, Body *b, const Shape *copyShape=NULL);
   ~Shape();
-  // void operator=(const Shape& s) {
-  //   index=s.index; ibody=s.ibody; body=NULL; name=s.name; X=s.X; rel=s.rel; type=s.type;
-  //   memmove(size, s.size, 4*sizeof(double)); memmove(color, s.color, 3*sizeof(double));
-  //   mesh=s.mesh; cont=s.cont; contactOrientation=s.contactOrientation;
-  //   ats=s.ats;
-  // }
   void reset();
   void parseAts();
   void write(std::ostream& os) const;
   void read(std::istream& is);
-};
 
-%extend Shape {
+%extend {
   void set_size(double a, double b, double c, double d) {
     $self->size[0] = a;
     $self->size[1] = b;
     $self->size[2] = c;
     $self->size[3] = d;
   };
+}; // end of %extend
+
 };
 
 
+//===========================================================================
 struct Proxy {
   int a;
   int b;
@@ -691,6 +681,8 @@ struct Proxy {
   Proxy();
 };
 
+
+//===========================================================================
 struct Graph {
   //!@name data fields
   uint sd, jd, td;
@@ -704,7 +696,6 @@ struct Graph {
   Graph();
   Graph(const char* filename);
   ~Graph();
-  // void operator=(const ors::Graph& G);
   Graph* newClone() const;
   void copyShapesAndJoints(const Graph& G);
 
@@ -807,16 +798,15 @@ def setJointStateList(self, jointState):
   void read(const char* string);
   void writePlyFile(const char* filename) const;
   void glDraw();
-};
 
-%extend Graph {
+%extend {
   std::string __str__() {
     std::ostringstream oss(std::ostringstream::out);
     oss << (*$self);
     return oss.str();
   }
-} // end %extend Graph
-
+}; // end of %extend
+}; // end of Graph
 }; // end of namespace: ors
 
 %pythoncode %{

@@ -9,24 +9,8 @@ try make
 
 2) Try compiling with the 'ubuntu' setting (requiring only ubuntu packages)
 
+execute
+
+install/INSTALL_DEPENDENCIES.sh
 
 set MAKEMODE = mlrlib_ubuntu in make-config
-
-try make... it will throw errors since you haven't installed the ubuntu packages yet. Roughly you need
-gnuplot
-doxygen
-libf2c2-dev
-libqhull-dev
-liblapack-dev
-freeglut3-dev
-libplib-dev
-libann-dev
-libgtkglext1-dev
-
-Using the newest ROS OpenCV version:
-
-include the ROS repository for your ubuntu version (http://www.ros.org/wiki/ROS/Installation)
-
-libopencv-dev
-
-Delete '${exec_prefix}/lib/lib' and '.so.2.3.1' everywhere from the /usr/lib/pkgconfig/opencv-2.3.1.pc

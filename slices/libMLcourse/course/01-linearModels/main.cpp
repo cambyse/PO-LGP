@@ -113,11 +113,6 @@ void testCV() {
   struct myCV:public CrossValidation {
     void  train(const arr& X, const arr& y, double param, arr& beta) {
       ridgeRegression(beta, X,y,param);
-      
-      //arr y_pred = X*beta;
-      //write(LIST<arr>(X, y, y_pred), "data");
-      //gnuplot("plot 'data' us 2:3 w p,'data' us 2:4 w l");
-      //MT::wait();
     };
     double test(const arr& X, const arr& y, const arr& beta) {
       arr y_pred = X*beta;
@@ -127,46 +122,84 @@ void testCV() {
   
   rnd.clockSeed();
   arr X,Phi,y;
-  artificialData(X,y,sinusData); //,20,10);
+  artificialData(X, y);
   makeFeatures(Phi,X,X);
-  
-  //cv.crossValidate(Phi,y,0.,10);
+  write(LIST<arr>(X, y), "z.train");
+
   cv.crossValidateMultipleLambdas(Phi, y, ARR(1e-3,1e-2,1e-1,1e0,1e1,1e2,1e3,1e4,1e5), 10, false);
   cv.plot();
   cout <<"10-fold CV:\n  costMeans= " <<cv.scoreMeans <<"\n  costSDVs= " <<cv.scoreSDVs <<endl;
-  
 }
 
-void exercise() {
+void exercise1() {
   arr X,Phi,y;
   arr beta;
-  
-  ifstream fil("./dataQuadReg2D.txt");
-  X.read(fil);
-  y = (~X)[X.d1-1];
+
+  //load the data, split in input and output
+  X.read("./dataQuadReg2D_noisy.txt");
+  y = (~X)[X.d1-1];    //last row of transposed X
   X.delColumns(X.d1-1);
-  //cout <<X <<y;
   
+  //compute optimal beta
   makeFeatures(Phi,X,X);
   ridgeRegression(beta, Phi, y);
   cout <<"estimated beta = "<< beta <<endl;
-  
+
+  //compute mean squared error
   arr y_pred = Phi*beta;
   cout <<"error = "<<sumOfSqr(y_pred-y)/y.N <<endl;
-  
+
+  //predict on grid
   arr X_grid,y_grid;
-  X_grid.setGrid(X.d1,-3,3,50);
+  X_grid.setGrid(X.d1,-3,3,30);
   makeFeatures(Phi,X_grid,X);
   y_grid = Phi*beta;
-  
+
+  //save and plot
   write(LIST<arr>(X, y), "z.train");
-  write(LIST<arr>(X_grid, y_grid), "z.model");
   if(X.d1==1) {
+    write(LIST<arr>(X_grid, y_grid), "z.model");
     gnuplot("plot 'z.train' us 1:2 w p,'z.model' us 1:2 w l", false, true, "z.pdf");
   } else {
-    gnuplot("splot 'z.train' w p,'z.model' w l", false, true, "z.pdf");
+    y_grid.reshape(31,31);
+    write(LIST<arr>(y_grid), "z.model");
+    gnuplot("splot [-3:3][-3:3] 'z.train' w p, 'z.model' matrix us ($1/5-3):($2/5-3):3 w l", false, true, "z.pdf");
   }
-  //MT::wait();
+}
+
+void exercise2() {
+  arr X,Phi,y;
+  arr beta;
+
+  //provide virtual train and test routines for CV
+  struct myCV:public CrossValidation {
+    void  train(const arr& X, const arr& y, double param, arr& beta) {
+      ridgeRegression(beta, X, y, param); //returns optimal beta for training data
+    };
+    double test(const arr& X, const arr& y, const arr& beta) {
+      arr y_pred = X*beta;
+      return sumOfSqr(y_pred-y)/y.N; //returns MSE on test data
+    };
+  } cv;
+
+  //load the data, split in input and output
+  X.read("./dataQuadReg2D_noisy.txt");
+  y = (~X)[X.d1-1];    //last row of transposed X
+  X.delColumns(X.d1-1);
+
+  //make data less
+  //COMMENT: the data has too little noise: when going down to 3 data points one sees the regularization need
+//  uint n=5;
+//  y.resizeCopy(n);
+//  X.resizeCopy(n,X.d1);
+
+  //cross valide
+  makeFeatures(Phi,X,X);
+  cv.crossValidateMultipleLambdas(Phi, y,
+				  ARR(1e-3,1e-2,1e-1,1e0,1e1,1e2,1e3,1e4,1e5),
+				  10, false);
+  cv.plot();
+  cout <<"10-fold CV:\n  costMeans= " <<cv.scoreMeans <<"\n  costSDVs= " <<cv.scoreSDVs <<endl;
 }
 
 
@@ -180,7 +213,9 @@ int main(int argc, char *argv[]) {
     case 2:  test2Class();  break;
     case 3:  testMultiClass();  break;
     case 4:  testCV();  break;
-    case 5:  exercise();  break;
+    case 5:  exercise1();  break;
+    case 6:  exercise2();  break;
+      break;
   }
   
   return 0;

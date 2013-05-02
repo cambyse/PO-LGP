@@ -1,6 +1,7 @@
 ## these are the options for compiling the lib
 ifeq ($(CONFIGMODE),mlrlib)
   CXXFLAGS += -fPIC -DMT_IMPLEMENT_TEMPLATES
+  LIBS   += -lrt
   OPTIM  = debug
   LAPACK = 1
 endif
@@ -8,5 +9,5 @@ endif
 
 ## these are the options for compiling the applications
 ifneq ($(CONFIGMODE),mlrlib)
-  LIBS += -lrt -lArray
+  LIBS += -lArray
 endif

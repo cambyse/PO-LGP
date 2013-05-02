@@ -1,7 +1,10 @@
+#!/bin/bash
+
 # install ubuntu packages
 sudo apt-get install \
 bison \
 build-essential \
+cmake \
 doxygen \
 fabric \
 flex \
@@ -21,7 +24,7 @@ libgl1-mesa-dev \
 libgl1-mesa-glx \
 libglu1-mesa \
 libglu1-mesa-dev \
-libgtest-dev\
+libgtest-dev \
 libgtkglext1-dev \
 libhighgui-dev \
 liblapack-dev \
