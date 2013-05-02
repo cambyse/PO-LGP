@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+# ROS imports
 import roslib
 import rospy
 roslib.load_manifest('the_curious_robot')
@@ -8,17 +9,23 @@ roslib.load_manifest('smach_ros')
 import smach
 import smach_ros
 
-import copy
-import numpy as np
-
-import orspy as ors
-import random
+from geometry_msgs.msg import Pose, Point, Quaternion
+import the_curious_robot.msg as msgs
+from util import Properties
 
 import the_curious_robot.msg as msgs
-from geometry_msgs.msg import Pose, Point, Quaternion
 
 from articulation_msgs.srv import TrackModelSrv, TrackModelSrvRequest
 from articulation_msgs.msg import ModelMsg, TrackMsg
+
+# python imports
+import copy
+import numpy as np
+import random
+
+# MLR imports
+import orspy as ors
+
 
 # different joint types
 PRISMATIC = 0
@@ -59,30 +66,20 @@ def get_trajectory(model=PRISMATIC, n=100, noise=0.02):
     return msg
 
 
-class Gaussian():
-    """
-    Represent Gaussians with this class.
-    TODO maybe there is a Gaussian class that we can recycle.
-    """
-    def __init__(self, mu=0, sigma=99999):
-        self.mu = mu
-        self.sigma = sigma
 
-
-class Properties():
-    def __init__(self):
-        self.joint = Gaussian()
-        self.friction = Gaussian()
-        self.weight = Gaussian()
-        self.limit_min = Gaussian()
-        self.limit_max = Gaussian()
+def parse_body_msg(msg):
+    body = ors.Body()
+    body_list = msg.split(' ', 1)
+    body.name = body_list[0]
+    body.read(body_list[1])
+    return body
 
 
 class ObserveState(smach.State):
     def __init__(self):
         smach.State.__init__(self,
-                outcomes=['world_change', 'no_world_change'],
-                output_keys=['trajectory'])
+                             outcomes=['world_change', 'no_world_change'],
+                             output_keys=['trajectory'])
         self.world_belief = None
         self.world_changed = False
         self.trajectory = list()
@@ -194,7 +191,7 @@ class MoveState(smach.State):
         rot = object_of_interest[0].X.rot
         msg = msgs.control()
         msg.pose = Pose(Point(pos.x, pos.y, 1),
-                    Quaternion(rot.x, rot.y, rot.z, rot.w))
+                        Quaternion(rot.x, rot.y, rot.z, rot.w))
         return msg
 
     def execute(self, userdata):
@@ -210,9 +207,9 @@ class WaitState(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['not_arrived', 'arrived'])
         self.control_done_sub = rospy.Subscriber(
-                name='control_done',
-                data_class=msgs.control_done,
-                callback=self.control_done_cb)
+            name='control_done',
+            data_class=msgs.control_done,
+            callback=self.control_done_cb)
         self.active = False
         self.arrived = False
 
@@ -236,19 +233,26 @@ def main():
     observer = ObserveState()
 
     with sm:
-        smach.StateMachine.add('OBSERVE', observer,
-                transitions={'world_change': 'OBSERVE',
-                             'no_world_change': 'LEARN'})
-        smach.StateMachine.add('LEARN', LearnState(),
-                transitions={'learned': 'MOVE'})
-        smach.StateMachine.add('MOVE', MoveState(observer),
-                transitions={'moving': 'WAIT',
-                             'not_initialized': 'MOVE'})
-        smach.StateMachine.add('WAIT', WaitState(),
-                transitions={'not_arrived': 'WAIT',
-                             'arrived': 'OBSERVE'})
+        smach.StateMachine.add(
+            'OBSERVE', observer,
+            transitions={'world_change': 'OBSERVE', 'no_world_change': 'LEARN'}
+        )
+        smach.StateMachine.add(
+            'LEARN', LearnState(),
+            transitions={'learned': 'MOVE'}
+        )
+        smach.StateMachine.add(
+            'MOVE', MoveState(observer),
+            transitions={'moving': 'WAIT', 'not_initialized': 'MOVE'}
+        )
+        smach.StateMachine.add(
+            'WAIT', WaitState(),
+            transitions={'not_arrived': 'WAIT', 'arrived': 'OBSERVE'}
+        )
 
     outcome = sm.execute()
+    print outcome
+
 
 if __name__ == '__main__':
     main()
