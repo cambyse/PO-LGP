@@ -1,8 +1,7 @@
 #include <signal.h>
 
 #include <biros/biros_internal.h>
-#include <NP/camera.h>
-#include <NP/uvccamera.h>
+#include <hardware/uvccamera.h>
 
 #include <MT/vision.h>
 #include <MT/earlyVisionModule.h>
@@ -21,10 +20,12 @@ int main(int argn,char** argv){
   //Variables
   CameraImages currentCameraImages;
   EarlyVisionOutput evisOutput;
+  Image imgL("CameraL");
+
 
   //Processes
   EarlyVisionModule evis;
-  CameraModule cam;
+  Process* camera = newUVCCamera();
   cam.output = &currentCameraImages;
   evis.input = &currentCameraImages;
   evis.output = &evisOutput;

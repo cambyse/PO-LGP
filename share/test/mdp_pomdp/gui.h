@@ -1,8 +1,8 @@
 #undef Unsorted
 #undef Bool
 #undef None
-#include <Qt/qmetatype.h>
-#include <Qt/qobject.h>
+//#include <Qt/qmetatype.h>
+//#include <Qt/qobject.h>
 #include <Qt/qfiledialog.h>
 #include "gui_ui.h"
 #define MT_IMPLEMENT_TEMPLATES

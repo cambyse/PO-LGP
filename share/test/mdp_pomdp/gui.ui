@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>559</width>
-    <height>597</height>
+    <width>546</width>
+    <height>620</height>
    </rect>
   </property>
   <property name="font">
@@ -22,70 +22,70 @@
   <widget class="QWidget" name="gridLayoutWidget">
    <property name="geometry">
     <rect>
-     <x>400</x>
-     <y>215</y>
-     <width>151</width>
-     <height>141</height>
+     <x>380</x>
+     <y>200</y>
+     <width>153</width>
+     <height>221</height>
     </rect>
    </property>
    <layout class="QGridLayout" name="gridLayout_5">
-    <item row="0" column="0">
-     <widget class="QPushButton" name="reportParams">
-      <property name="text">
-       <string>report parameters</string>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="0">
+    <item row="2" column="0">
      <widget class="QPushButton" name="gnuplotByTime">
       <property name="text">
        <string>gnuplot by time</string>
       </property>
      </widget>
     </item>
-    <item row="3" column="0">
+    <item row="4" column="0">
      <widget class="QPushButton" name="resetFsc">
       <property name="text">
        <string>reset FSC</string>
       </property>
      </widget>
     </item>
-    <item row="4" column="0">
+    <item row="5" column="0">
      <widget class="QPushButton" name="resetAll">
       <property name="text">
        <string>reset all</string>
       </property>
      </widget>
     </item>
-    <item row="2" column="0">
+    <item row="3" column="0">
      <widget class="QPushButton" name="gnuplotByIter">
       <property name="text">
        <string>gnuplot by iteration</string>
       </property>
      </widget>
     </item>
+    <item row="1" column="0">
+     <widget class="QPushButton" name="reportParams">
+      <property name="text">
+       <string>report parameters</string>
+      </property>
+     </widget>
+    </item>
+    <item row="6" column="0">
+     <widget class="QPushButton" name="go">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>GO</string>
+      </property>
+     </widget>
+    </item>
    </layout>
-  </widget>
-  <widget class="QPushButton" name="go">
-   <property name="geometry">
-    <rect>
-     <x>400</x>
-     <y>360</y>
-     <width>151</width>
-     <height>41</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>GO</string>
-   </property>
   </widget>
   <widget class="QWidget" name="gridLayout">
    <property name="geometry">
     <rect>
      <x>10</x>
      <y>10</y>
-     <width>455</width>
-     <height>391</height>
+     <width>451</width>
+     <height>409</height>
     </rect>
    </property>
    <layout class="QGridLayout">
@@ -376,8 +376,8 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>410</y>
-     <width>541</width>
+     <y>430</y>
+     <width>521</width>
      <height>181</height>
     </rect>
    </property>

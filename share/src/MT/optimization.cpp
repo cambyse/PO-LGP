@@ -644,7 +644,7 @@ uint optGradDescent(arr& x, ScalarFunction& f, optOptions o) {
     y = x - a*grad_x;
     fy = f.fs(grad_y, NoArr, y);  evals++;
     CHECK(fy==fy, "cost seems to be NAN: fy=" <<fy);
-    if(o.verbose>1) cout <<evals <<' ' <<eval_cost <<" \tprobing y=" <<y <<" \tf(y)=" <<fy <<" \t|grad|=" <<norm(grad_y) <<" \ta=" <<a;
+    if(o.verbose>1) cout <<"optGradDescent " <<evals <<' ' <<eval_cost <<" \tprobing y=" <<y <<" \tf(y)=" <<fy <<" \t|grad|=" <<norm(grad_y) <<" \ta=" <<a;
     
     if(fy <= fx) {
       if(o.verbose>1) cout <<" - ACCEPT" <<endl;
@@ -920,8 +920,9 @@ uint Rprop::loop(arr& _x,
   uint rejects=0, small_steps=0;
   x=_x;
   
+  if(verbose>1) cout <<"*** optRprop: starting point x=" <<x <<endl;
   ofstream fil;
-  if(verbose>0) fil.open("z.rprop");
+  if(verbose>0) fil.open("z.grad");
   
   uint evals=0;
   for(;;) {
@@ -949,14 +950,15 @@ uint Rprop::loop(arr& _x,
     
     //check stopping criterion based on step-length in x
     double diff=maxDiff(x, xmin);
-    if(verbose>0) fil <<evals <<' ' <<eval_cost <<' ' << fx <<' ' <<diff <<endl;
-    if(verbose>1) cout <<"optRprop " <<evals <<' ' << fx <<' ' <<diff <<endl;
+    if(verbose>0) fil <<evals <<' ' <<eval_cost <<' ' << fx <<' ' <<diff <<' ' <<x <<endl;
+    if(verbose>1) cout <<"optRprop " <<evals <<' ' <<eval_cost <<" \tf(x)=" <<fx <<" \tdiff=" <<diff <<" \tx=" <<x <<endl;
+
     if(diff<stoppingTolerance) { small_steps++; } else { small_steps=0; }
     if(small_steps>3)  break;
     if(evals>maxEvals) break;
   }
   if(verbose>0) fil.close();
-  if(verbose>1) gnuplot("plot 'z.rprop' us 1:3 w l", NULL, true);
+  if(verbose>1) gnuplot("plot 'z.grad' us 1:3 w l", NULL, true);
   if(fmin_return) *fmin_return= fxmin;
   _x=xmin;
   return evals;

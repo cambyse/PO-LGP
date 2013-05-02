@@ -4,7 +4,7 @@ OBJS = main.o
 
 LAPACK = 1
 TONY = 1
-QT = 1   ## comment this line if you don't want to compile the GUI
+QT = 1## comment this line if you don't want to compile the GUI
 
 default: mdp.exe
 
