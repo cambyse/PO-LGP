@@ -34,6 +34,7 @@ def set_build_full():
 def rm_lib():
     """rm all files in share/lib/"""
     local("rm -rf share/lib/*")
+    local("mkdir -p share/lib")
 
 
 def clean_src():
@@ -63,10 +64,12 @@ def make_test():
     with lcd("share/test/"):
         local("make")
 
+
 def unittests():
     """Run the unittests"""
     with lcd("share/unittest/orspy/"):
         local("nosetests .")
+
 
 def jenkins_clean_build_main():
     """Jenkins builds share/ from sratch"""
