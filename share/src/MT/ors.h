@@ -669,9 +669,9 @@ inline arr ARRAY(const ors::Matrix& m) {     return arr(&m.m00, 9); }
 // constants
 //
 
-extern const ors::Vector VEC_x;
-extern const ors::Vector VEC_y;
-extern const ors::Vector VEC_z;
+extern const ors::Vector Vector_x;
+extern const ors::Vector Vector_y;
+extern const ors::Vector Vector_z;
 extern const ors::Transformation Transformation_Id;
 extern const ors::Quaternion Quaternion_Id;
 

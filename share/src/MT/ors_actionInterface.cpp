@@ -377,14 +377,14 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id) 
   ors::Quaternion rot;
   rot = C->bodies(obj_index)->X.rot;
   ors::Vector upvec; double maxz=-2;
-  if((rot*VEC_x).z>maxz) { upvec=VEC_x; maxz=(rot*upvec).z; }
-  if((rot*VEC_y).z>maxz) { upvec=VEC_y; maxz=(rot*upvec).z; }
-  if((rot*VEC_z).z>maxz) { upvec=VEC_z; maxz=(rot*upvec).z; }
-  if((rot*(-VEC_x)).z>maxz) { upvec=-VEC_x; maxz=(rot*upvec).z; }
-  if((rot*(-VEC_y)).z>maxz) { upvec=-VEC_y; maxz=(rot*upvec).z; }
-  if((rot*(-VEC_z)).z>maxz) { upvec=-VEC_z; maxz=(rot*upvec).z; }
+  if((rot*Vector_x).z>maxz) { upvec=Vector_x; maxz=(rot*upvec).z; }
+  if((rot*Vector_y).z>maxz) { upvec=Vector_y; maxz=(rot*upvec).z; }
+  if((rot*Vector_z).z>maxz) { upvec=Vector_z; maxz=(rot*upvec).z; }
+  if((rot*(-Vector_x)).z>maxz) { upvec=-Vector_x; maxz=(rot*upvec).z; }
+  if((rot*(-Vector_y)).z>maxz) { upvec=-Vector_y; maxz=(rot*upvec).z; }
+  if((rot*(-Vector_z)).z>maxz) { upvec=-Vector_z; maxz=(rot*upvec).z; }
   ors::Transformation f;
-  f.rot.setDiff(VEC_z, upvec);
+  f.rot.setDiff(Vector_z, upvec);
   z.set("obj-z-align", *C, zalignTVT, obj_index, f, -1, ors::Transformation(), ARR());
   //
   DefaultTaskVariable r("full state", *C, qLinearTVT, 0, 0, 0, 0, I);
@@ -677,12 +677,12 @@ bool ActionInterface::isUpright(uint id) {
   ors::Quaternion rot;
   rot = C->bodies(id)->X.rot;
   ors::Vector upvec; double maxz=-2;
-  if((rot*VEC_x).z>maxz) { upvec=VEC_x; maxz=(rot*upvec).z; }
-  if((rot*VEC_y).z>maxz) { upvec=VEC_y; maxz=(rot*upvec).z; }
-  if((rot*VEC_z).z>maxz) { upvec=VEC_z; maxz=(rot*upvec).z; }
-  if((rot*(-VEC_x)).z>maxz) { upvec=-VEC_x; maxz=(rot*upvec).z; }
-  if((rot*(-VEC_y)).z>maxz) { upvec=-VEC_y; maxz=(rot*upvec).z; }
-  if((rot*(-VEC_z)).z>maxz) { upvec=-VEC_z; maxz=(rot*upvec).z; }
+  if((rot*Vector_x).z>maxz) { upvec=Vector_x; maxz=(rot*upvec).z; }
+  if((rot*Vector_y).z>maxz) { upvec=Vector_y; maxz=(rot*upvec).z; }
+  if((rot*Vector_z).z>maxz) { upvec=Vector_z; maxz=(rot*upvec).z; }
+  if((rot*(-Vector_x)).z>maxz) { upvec=-Vector_x; maxz=(rot*upvec).z; }
+  if((rot*(-Vector_y)).z>maxz) { upvec=-Vector_y; maxz=(rot*upvec).z; }
+  if((rot*(-Vector_z)).z>maxz) { upvec=-Vector_z; maxz=(rot*upvec).z; }
   double angle;
   angle = acos(maxz);
 

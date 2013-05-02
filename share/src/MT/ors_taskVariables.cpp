@@ -421,7 +421,7 @@ void DefaultTaskVariable::updateState(const ors::Graph& ors, double tau) {
       ors.jacobianVec(Ji, i, &irel.rot.getZ(vi));
       if(j==-1) {
         ors::Vector world_z;
-        if(params.N==3) world_z.set(params.p); else world_z=VEC_z;
+        if(params.N==3) world_z.set(params.p); else world_z=Vector_z;
         zj = ARRAY((jrel*world_z));
         Jj.resizeAs(Ji);
         Jj.setZero();

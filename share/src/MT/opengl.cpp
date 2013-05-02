@@ -1705,8 +1705,8 @@ void OpenGL::Mouse(int button, int downPressed, int _x, int _y) {
   if(!cont) { postRedrawEvent(true); return; }
   
   //mouse scroll wheel:
-  if(mouse_button==4 && !downPressed) cam->X->pos += s->downRot*VEC_z * (.2 * s->downPos.length());
-  if(mouse_button==5 && !downPressed) cam->X->pos -= s->downRot*VEC_z * (.2 * s->downPos.length());
+  if(mouse_button==4 && !downPressed) cam->X->pos += s->downRot*Vector_z * (.2 * s->downPos.length());
+  if(mouse_button==5 && !downPressed) cam->X->pos -= s->downRot*Vector_z * (.2 * s->downPos.length());
   
   if(mouse_button==3) {  //selection
     Select();
@@ -1718,8 +1718,8 @@ void OpenGL::Mouse(int button, int downPressed, int _x, int _y) {
 
 void OpenGL::MouseWheel(int wheel, int direction, int x, int y) {
   CALLBACK_DEBUG(printf("Window %d Mouse Wheel Callback:  %d %d %d %d\n", 0, wheel, direction, x, y));
-  if(direction>0) camera.X->pos += camera.X->rot*VEC_z * (.1 * (camera.X->pos-*camera.foc).length());
-  else            camera.X->pos -= camera.X->rot*VEC_z * (.1 * (camera.X->pos-*camera.foc).length());
+  if(direction>0) camera.X->pos += camera.X->rot*Vector_z * (.1 * (camera.X->pos-*camera.foc).length());
+  else            camera.X->pos -= camera.X->rot*Vector_z * (.1 * (camera.X->pos-*camera.foc).length());
   postRedrawEvent(true);
 }
 
@@ -1759,7 +1759,7 @@ void OpenGL::Motion(int _x, int _y) {
     if(s->downVec.z<.1) {
       rot.setDiff(vec, s->downVec);  //consider imagined sphere rotation of mouse-move
     } else {
-      rot.setVec((vec-s->downVec) ^ VEC_z); //consider only xy-mouse-move
+      rot.setVec((vec-s->downVec) ^ Vector_z); //consider only xy-mouse-move
     }
 #if 0 //rotate about origin
     cam->X->rot = s->downRot * rot;   //rotate camera's direction
@@ -1784,7 +1784,7 @@ void OpenGL::Motion(int _x, int _y) {
   if(mouse_button==2) {  //zooming || (mouse_button==1 && !(modifiers&GLUT_ACTIVE_SHIFT) && (modifiers&GLUT_ACTIVE_CTRL))){
     double dy = s->downVec.y - vec.y;
     if(dy<-.99) dy = -.99;
-    cam->X->pos = s->downPos + s->downRot*VEC_z * dy * s->downPos.length();
+    cam->X->pos = s->downPos + s->downRot*Vector_z * dy * s->downPos.length();
     postRedrawEvent(true);
   }
 #else

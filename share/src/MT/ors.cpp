@@ -50,9 +50,9 @@
 REGISTER_TYPE_Key(T, ors::Transformation);
 #endif
 
-const ors::Vector VEC_x(1, 0, 0);
-const ors::Vector VEC_y(0, 1, 0);
-const ors::Vector VEC_z(0, 0, 1);
+const ors::Vector Vector_x(1, 0, 0);
+const ors::Vector Vector_y(0, 1, 0);
+const ors::Vector Vector_z(0, 0, 1);
 const ors::Transformation Transformation_Id(0);
 const ors::Quaternion Quaternion_Id(1, 0, 0, 0);
 
@@ -103,7 +103,7 @@ void Vector::set(double _x, double _y, double _z) { x=_x; y=_y; z=_z; }
 void Vector::set(double* p) { x=p[0]; y=p[1]; z=p[2]; }
 
 //! set the vector
-void Vector::setZero() { x=y=z=0.; }
+void Vector::setZero() { memset(this, 0, sizeof(Vector) ); }
 
 //! a random vector in [-1, 1]^3
 void Vector::setRandom(double range) { x=rnd.uni(-range, range); y=rnd.uni(-range, range); z=rnd.uni(-range, range); }
@@ -331,10 +331,7 @@ bool operator!=(const Vector& lhs, const Vector& rhs) {
 }*/
 
 //! reset to zero
-void Matrix::setZero() {
-  m00=m11=m22=0.;
-  m01=m02=m10=m12=m20=m21=0.;
-}
+void Matrix::setZero() { memset(this, 0, sizeof(Matrix) ); }
 
 void Matrix::setRandom(double range) {
   for(uint i=0; i<9; i++) p()[i]=rnd.uni(-range, range);
@@ -517,7 +514,7 @@ void Quaternion::set(double* p) { w=p[0]; x=p[1]; y=p[2]; z=p[3]; }
 void Quaternion::set(double _w, double _x, double _y, double _z) { w=_w; x=_x; y=_y; z=_z; }
 
 //! reset the rotation to identity
-void Quaternion::setZero() { w=1; x=y=z=0; }
+void Quaternion::setZero() { memset(this, 0, sizeof(Quaternion));  w=1; }
 
 //! samples the rotation uniformly from the whole SO(3)
 void Quaternion::setRandom() {
@@ -874,7 +871,8 @@ Transformation& Transformation::setText(const char* txt) { read(MT::String(txt)(
 
 //! resets the position to origin, rotation to identity, velocities to zero, scale to unit
 void Transformation::setZero() {
-  pos.setZero(); vel.setZero(); rot.setZero(); angvel.setZero(); /*a.setZero(); b.setZero(); s=1.;*/
+  memset(this, 0, sizeof(Transformation) );
+  rot.w=1.;
   zeroVels = true;
 }
 
@@ -3215,10 +3213,10 @@ void ors::Graph::getFullState(arr& x) const {
         case hingeJT:
           e->Q.rot.getRad(x(i), rot);
           if(x(i)>MT_PI) x(i)-=MT_2PI;
-          if(rot*VEC_x<0.) x(i)=-x(i);  //MT_2PI-x(i);
+          if(rot*Vector_x<0.) x(i)=-x(i);  //MT_2PI-x(i);
           i+=1;
           x(i)=e->Q.angvel.length();
-          if(e->Q.angvel*VEC_x<0.) x(i)=-x(i);
+          if(e->Q.angvel*Vector_x<0.) x(i)=-x(i);
           i+=1;
           break;
         default: NIY;
@@ -3254,9 +3252,9 @@ void ors::Graph::getFullState(arr& x, arr& v) const {
         case hingeJT:
           e->Q.rot.getRad(x(i), rot);
           if(x(i)>MT_PI) x(i)-=MT_2PI;
-          if(rot*VEC_x<0.) x(i)=-x(i);  //MT_2PI-x(i);
+          if(rot*Vector_x<0.) x(i)=-x(i);  //MT_2PI-x(i);
           v(i)=e->Q.angvel.length();
-          if(e->Q.angvel*VEC_x<0.) v(i)=-v(i);
+          if(e->Q.angvel*Vector_x<0.) v(i)=-v(i);
           i+=1;
           break;
           /*
@@ -3312,8 +3310,8 @@ void ors::Graph::setFullState(const arr& x, bool clearJointErrors) {
         case hingeJT:
           e->Q.rot.setRadX(x(i));
           i+=1;
-          if(e->Q.angvel.isZero()) e->Q.angvel=VEC_x;
-          if(e->Q.angvel*VEC_x<0.) e->Q.angvel.setLength(-x(i)); else e->Q.angvel.setLength(x(i));
+          if(e->Q.angvel.isZero()) e->Q.angvel=Vector_x;
+          if(e->Q.angvel*Vector_x<0.) e->Q.angvel.setLength(-x(i)); else e->Q.angvel.setLength(x(i));
           if(clearJointErrors) {
             e->Q.pos.setZero();
             e->Q.vel.setZero();
@@ -3354,8 +3352,8 @@ void ors::Graph::setFullState(const arr& x, const arr& v, bool clearJointErrors)
       switch(e->type) {
         case hingeJT:
           e->Q.rot.setRadX(x(i));
-          if(e->Q.angvel.isZero()) e->Q.angvel=VEC_x;
-          if(e->Q.angvel*VEC_x<0.) e->Q.angvel.setLength(-v(i)); else e->Q.angvel.setLength(v(i));
+          if(e->Q.angvel.isZero()) e->Q.angvel=Vector_x;
+          if(e->Q.angvel*Vector_x<0.) e->Q.angvel.setLength(-v(i)); else e->Q.angvel.setLength(v(i));
           if(clearJointErrors) {
             e->Q.pos.setZero();
             e->Q.vel.setZero();
@@ -3433,10 +3431,10 @@ void ors::Graph::getJointState(arr& x, arr& v) const {
         //angle
         e->Q.rot.getRad(x(n), rotv);
         if(x(n)>MT_PI) x(n)-=MT_2PI;
-        if(rotv*VEC_x<0.) x(n)=-x(n);  //MT_2PI-x(i);
+        if(rotv*Vector_x<0.) x(n)=-x(n);  //MT_2PI-x(i);
         //velocity
         v(n)=e->Q.angvel.length();
-        if(e->Q.angvel*VEC_x<0.) v(n)=-v(n);
+        if(e->Q.angvel*Vector_x<0.) v(n)=-v(n);
         n++;
         break;
       case universalJT:
@@ -3506,18 +3504,18 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
         /*if(e->p[0] < e->p[1]){
         tempAngleDeg = q(n); //dm *180.0/MT_PI;
         if(tempAngleDeg <= e->p[0]){ // joint angle is smaller than lower bound (e->p[0])--> clip it
-        e->Q.r.setDeg(e->p[0], VEC_x);
+        e->Q.r.setDeg(e->p[0], Vector_x);
         //  cout <<"lower clipping " <<tempAngleDeg <<endl;
         }else if(tempAngleDeg >= e->p[1]){ // joint angle is larger than upper bound (e->p[1])--> clip it
-        e->Q.r.setDeg(e->p[1], VEC_x);
+        e->Q.r.setDeg(e->p[1], Vector_x);
         //  cout <<"upper clipping " <<tempAngleDeg <<endl;
         }
         }*/
 
         //velocity
         if(&_v) e->Q.angvel.set(v(n), 0., 0.);
-        //if(e->Q.w.isZero()) e->Q.w=VEC_x;
-        //if(e->Q.w*VEC_x<0.) e->Q.w.setLength(-v(n)); else e->Q.w.setLength(v(n));
+        //if(e->Q.w.isZero()) e->Q.w=Vector_x;
+        //if(e->Q.w*Vector_x<0.) e->Q.w.setLength(-v(n)); else e->Q.w.setLength(v(n));
 
         if(clearJointErrors) {
           e->Q.pos.setZero();
@@ -3559,22 +3557,22 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
         n+=2;
         break;
       case sliderJT:
-        e->Q.pos = q(n)*VEC_x;
+        e->Q.pos = q(n)*Vector_x;
 
         // check boundaries
         /*if(e->p[0] < e->p[1]){
         tempDeflection = q(n);
         if(tempDeflection <= e->p[0]){ // joint angle is smaller than lower bound (e->p[0])--> clip it
-        e->Q.p = e->p[0]*VEC_x;
+        e->Q.p = e->p[0]*Vector_x;
         cout <<"lower clipping " <<tempDeflection <<endl;
         }else if(tempDeflection >= e->p[1]){ // joint angle is larger than upper bound (e->p[1])--> clip it
-        e->Q.p = e->p[1]*VEC_x;
+        e->Q.p = e->p[1]*Vector_x;
         cout <<"upper clipping " <<tempDeflection <<endl;
         }
         }*/
 
         //velocity
-        e->Q.vel = v(n)*VEC_x;
+        e->Q.vel = v(n)*Vector_x;
         e->Q.rot.setZero();
         e->Q.angvel.setZero();
         n++;
@@ -4375,7 +4373,7 @@ void ors::Graph::frictionToForces(double coeff) {
     X.rot.getX(a);//rotation axis
 
     v=e->Q.angvel.length();
-    if(e->Q.angvel*VEC_x<0.) v=-v;
+    if(e->Q.angvel*Vector_x<0.) v=-v;
 
     e->from->torque -= (coeff*v)*a;
     e->to->torque   += (coeff*v)*a;

@@ -13,7 +13,6 @@
 #define TEST_DIFF_ZERO(expr) { double e=(expr).diffZero(); CHECK(e<1e-6, " Error="<<e <<" Expression=" <<(expr)); cout <<"Success: " <<e <<endl; }
 
 void testBasics(){
-  double e;
   for(uint k=0;k<10;k++){
     ors::Quaternion A,B,C;
     A.setRandom();

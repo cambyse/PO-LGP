@@ -255,7 +255,7 @@ double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center,
     c -= center;
 
     ors::Quaternion r;
-    r.setDiff(VEC_z, n);//rotate cone's z-axis into contact normal n
+    r.setDiff(Vector_z, n);//rotate cone's z-axis into contact normal n
 
     for(j=0; j<S; j++) {   //each sample, equidistant on a circle
       double angle = j*MT_2PI/S;

@@ -121,7 +121,7 @@ void RobotActionInterface::reachAndAlign(const char* shapeName, const arr& posGo
   
   DefaultTaskVariable TValign("align", *s->robotProcesses.ctrl.sys.ors, zalignTVT, shapeName, NULL, 0);
   ors::Vector vecGoalOrs; vecGoalOrs.set(vecGoal.p);
-  TValign.jrel.rot.setDiff(VEC_z, vecGoalOrs);
+  TValign.jrel.rot.setDiff(Vector_z, vecGoalOrs);
   TValign.setGainsAsNatural(2., 1., false);
   TValign.y_prec = 1e1;  TValign.y_target = ARR(1.);
   TValign.v_prec = 0.;   TValign.v_target = ARR(0.);
