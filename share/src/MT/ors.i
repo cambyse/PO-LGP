@@ -134,7 +134,10 @@ def __getitem__(self, pos):
     """
     if self.nd == 1:
         if isinstance(pos, int):
-            return self.get1D(pos)
+            if pos < self.d0:
+                return self.get1D(pos)
+            else:
+                raise Exception("index", str(pos), "out of bounds")
         elif isinstance(pos, slice):
             return self.sub(pos.start, pos.stop)
         else:
