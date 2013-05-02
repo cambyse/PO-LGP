@@ -4,6 +4,7 @@
 sudo apt-get install \
 bison \
 build-essential \
+cmake \
 doxygen \
 fabric \
 flex \
