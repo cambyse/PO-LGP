@@ -45,7 +45,7 @@ def main():
         t_start = datetime.datetime.now()
         r = envoy.run("make -C %s" % filename)
         t_end = datetime.datetime.now()
-        t_diff = str((t_end - t_start).total_seconds() / 1000.)
+        t_diff = str((t_end - t_start).total_seconds())
 
         testcase = SubElement(root, "testcase",
                               {"classname": "test",
