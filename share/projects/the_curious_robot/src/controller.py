@@ -38,7 +38,7 @@ class FakeController():
         self.traj_sub = rospy.Subscriber(name='control',
                                          data_class=msgs.control,
                                          callback=self.control_cb)
-        self.goal = ors.Transformation()
+        self.goal = None
         self.frame_id = 1
 
     def run(self):
@@ -48,8 +48,8 @@ class FakeController():
 
     def step(self):
         # P-Controller
-        if self.goal:
-            Kp = 10e-3
+        if self.goal is not None:
+            Kp = 10e-2
             eps = 10e-3
             agent = self.world.getBodyByName("robot")
             if (agent.X.pos - self.goal.pos).length > eps:
@@ -70,6 +70,7 @@ class FakeController():
 
     def control_cb(self, data):
         #print "Got control message.\n", data.pose.position 
+        self.goal = ors.Transformation()
         self.goal.pos.x = data.pose.position.x
         self.goal.pos.y = data.pose.position.y
         self.goal.pos.z = data.pose.position.z

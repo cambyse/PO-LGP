@@ -111,6 +111,7 @@ class Behavior():
         self.world_belief = None
         # a list of tuples of (link to ors object, Properties)
         self.objects_of_interest = None
+        self.set_target = False
 
     def run(self):
         """ the behavior loop """
@@ -148,9 +149,11 @@ class Behavior():
         if self.world_changed:
             # stop moving
             #target = self.get_stop_control()
+            print "wait"
             return;
 
         elif self.trajectory_completed:
+            print "learn!"
             # stop moving
             #target = self.get_stop_control()
 
@@ -165,19 +168,21 @@ class Behavior():
 
             del self.trajectory[:]
             self.trajectory_completed = False
+            self.set_target = True
             return
 
-        elif self.objects_of_interest is not None and len(self.objects_of_interest) > 0:
+        elif self.set_target and self.objects_of_interest is not None and len(self.objects_of_interest) > 0:
+            self.set_target = False
             object_of_interest = random.choice(self.objects_of_interest)
             target = self.get_best_target(object_of_interest)
+            print target
             self.control_pub.publish(target)
 
-
     def get_best_target(self, object_of_interest):
-        pos = object_of_interest[0].X.pos
+        pos = object_of_interest[0].com
         rot = object_of_interest[0].X.rot
         msg = msgs.control()
-        msg.pose = Pose(Point(pos.x, pos.y, pos.z),
+        msg.pose = Pose(Point(pos.x, pos.y, 1),
                     Quaternion(rot.x, rot.y, rot.z, rot.w))
         return msg
 
@@ -239,8 +244,6 @@ class Behavior():
 
             # otherwise log trajectory
             else:
-                self.world_changed = True
-                self.trajectory_completed = False
                 for body_str in data.bodies:
                     body = parse_body_msg(body_str)
                     pos = body.X.pos
