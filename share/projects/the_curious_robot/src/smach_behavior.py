@@ -66,7 +66,6 @@ def get_trajectory(model=PRISMATIC, n=100, noise=0.02):
     return msg
 
 
-
 def parse_body_msg(msg):
     body = ors.Body()
     body_list = msg.split(' ', 1)
