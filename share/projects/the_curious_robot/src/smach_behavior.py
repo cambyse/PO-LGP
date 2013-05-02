@@ -80,7 +80,8 @@ class Properties():
 
 class ObserveState(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['world_change', 'no_world_change'],
+        smach.State.__init__(self,
+                outcomes=['world_change', 'no_world_change'],
                 output_keys=['trajectory'])
         self.world_belief = None
         self.world_changed = False
@@ -89,7 +90,6 @@ class ObserveState(smach.State):
             name='perception_updates',
             data_class=msgs.percept,
             callback=self.percept_cb)
-        
 
     def percept_cb(self, data):
         # save the trajectory if somithing changed
@@ -126,28 +126,65 @@ class ObserveState(smach.State):
         if self.world_changed:
             return 'world_change'
         else:
-            #userdata.trajectory = copy.deepcopy(self.trajectory)  # clone!
+
+            userdata.trajectory = self.trajectory  # TODO: clone!
             del self.trajectory[:]
             return 'no_world_change'
+
 
 def parse_body_msg(msg):
     body = ors.Body()
     body_list = msg.split(' ', 1)
     body.name = body_list[0]
-    body.read(body_list[1]) 
+    body.read(body_list[1])
     return body
+
 
 class LearnState(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['learned'])
+        smach.State.__init__(self, outcomes=['learned'],
+                input_keys=['trajectory'])
+        self.dof_learner = rospy.ServiceProxy('model_select', TrackModelSrv)
+        self.model_pub = rospy.Publisher('model', ModelMsg)
 
     def execute(self, userdata):
         rospy.loginfo('LEARN!')
+        self.learn_dof(userdata.trajectory)
         return 'learned'
+
+    def learn_dof(self, trajectory=None):
+        """
+        Learn DOF
+        """
+        # test every model via the service and publish the result
+        for model_type, model_name in MODELS.items():
+            request = TrackModelSrvRequest()
+            # TODO replcace get_trajectory() with the percepts
+            request.model.track = get_trajectory(model_type)
+
+            try:
+                # here we learn
+                response = self.dof_learner(request)
+
+                logLH = [entry.value for entry in response.model.params
+                         if entry.name == 'loglikelihood'][0]
+                print "selected model: '%s' (n = %d, log LH = %f)" % (
+                    response.model.name,
+                    len(response.model.track.pose),
+                    logLH
+                )
+                self.model_pub.publish(response.model)
+            except rospy.ServiceException:
+                print "model selection failed"
+            if rospy.is_shutdown():
+                exit(0)
+            print
+            rospy.sleep(0.5)
+
 
 class MoveState(smach.State):
     def __init__(self, observer):
-        smach.State.__init__(self, outcomes=['moving','not_initialized'])
+        smach.State.__init__(self, outcomes=['moving', 'not_initialized'])
         self.control_pub = rospy.Publisher('control', msgs.control)
         self.observer = observer
 
@@ -167,6 +204,7 @@ class MoveState(smach.State):
         target = self.get_best_target(self.observer.objects_of_interest)
         self.control_pub.publish(target)
         return 'moving'
+
 
 class WaitState(smach.State):
     def __init__(self):
@@ -199,16 +237,16 @@ def main():
 
     with sm:
         smach.StateMachine.add('OBSERVE', observer,
-                transitions={'world_change':'OBSERVE',
-                             'no_world_change':'LEARN'})
+                transitions={'world_change': 'OBSERVE',
+                             'no_world_change': 'LEARN'})
         smach.StateMachine.add('LEARN', LearnState(),
-                transitions={'learned':'MOVE'})
+                transitions={'learned': 'MOVE'})
         smach.StateMachine.add('MOVE', MoveState(observer),
-                transitions={'moving':'WAIT',
-                             'not_initialized':'MOVE'})
+                transitions={'moving': 'WAIT',
+                             'not_initialized': 'MOVE'})
         smach.StateMachine.add('WAIT', WaitState(),
-                transitions={'not_arrived':'WAIT',
-                             'arrived':'OBSERVE'})
+                transitions={'not_arrived': 'WAIT',
+                             'arrived': 'OBSERVE'})
 
     outcome = sm.execute()
 
