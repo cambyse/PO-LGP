@@ -65,10 +65,17 @@ def make_test():
         local("make")
 
 
-def unittests():
+def make_orspy():
+    """Make the python bindings of ors: orspy"""
+    with lcd("share/src/MT/"):
+        local("make -f Makefile_ors_for_swig")
+
+
+def run_unittests():
     """Run the unittests"""
     with lcd("share/unittest/orspy/"):
-        local("nosetests .")
+        local("nosetests --with-xunit")
+    # TODO add gtest as well
 
 
 def jenkins_clean_build_main():
