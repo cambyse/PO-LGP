@@ -12,7 +12,7 @@ tags
 vc60.idb
 .*.config
 .*.creator
-.*.creator.user
+.*.creator.user*
 .*.files
 .*.includes
 

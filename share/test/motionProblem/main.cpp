@@ -55,7 +55,8 @@ int main(int argn,char** argv){
   //-- optimize
   for(;;){
     optGaussNewton(x, Convert(F), OPT4(verbose=2, stopIters=20, useAdaptiveDamping=.0, maxStep=1.));
-    costs.displayRedBlue(~sqr(F.costMatrix), false, 3);
+    costs.displayRedBlue(~sqr(P.costMatrix), false, 3);
+    P.costReport();
     write(LIST<arr>(x),"z.output");
     gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", false, true);
     displayTrajectory(x, 1, G, gl,"planned trajectory");
