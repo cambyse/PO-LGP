@@ -37,23 +37,23 @@ class FakePerception():
 
         self.not_published_once = True
 
-        #self.gl = ors.OpenGL()
-        #ors.bindOrsToOpenGL(self.world, self.gl)
-
         self.pub = rospy.Publisher('perception_updates', msgs.percept)
         self.ors_subs = rospy.Subscriber(name='geometric_state',
                                          data_class=msgs.ors,
                                          callback=self.ors_cb)
 
+        self.frame = 0
+
     def run(self):
         """ the perception loop """
+        rospy.sleep(1)
         while not rospy.is_shutdown():
             self.step()
 
     def step(self):
         if self.worlds.empty():
             return
-        self.old_world = self.world             # backup for change detection
+        self.old_world = self.world.newClone()  # backup for change detection
         self.world.read(self.worlds.get())
         self.world.calcShapeFramesFromBodies()  # don't use
                                                 # calcBodyFramesFromJoints
@@ -61,18 +61,19 @@ class FakePerception():
         agent = self.world.getBodyByName("robot")
         msg = msgs.percept()
         msg.changed = False
+
+        self.frame = self.frame + 1
         for p in self.world.bodies:
-            if agent.index is not p.index and self.has_moved(p):
+            if agent.index != p.index and self.has_moved(p):
+                msg.header.stamp = rospy.get_rostime()
+                msg.header.seq = self.frame
 
                 msg.bodies.append(p.name + " " + str(p))
                 msg.changed = True
-
-        #if self.not_published_once:
-            #print msg
+                rospy.logdebug(p.name)
 
         self.not_published_once = False
         self.pub.publish(msg)
-        #self.gl.update()
 
     def ors_cb(self, data):
         self.worlds.put(data.ors)  # simply backup ors data in a queue
@@ -81,7 +82,8 @@ class FakePerception():
         if self.not_published_once:
             return True
         old_body = self.old_world.getBodyByName(body.name)
-        return body.X == old_body.X
+        eps = 10e-5
+        return (body.X.pos - old_body.X.pos).length() > eps
 
 
 if __name__ == '__main__':

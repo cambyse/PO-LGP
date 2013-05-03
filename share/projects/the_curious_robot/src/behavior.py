@@ -111,6 +111,7 @@ class Behavior():
         self.world_belief = None
         # a list of tuples of (link to ors object, Properties)
         self.objects_of_interest = None
+        self.set_target = False
 
     def run(self):
         """ the behavior loop """
@@ -148,9 +149,11 @@ class Behavior():
         if self.world_changed:
             # stop moving
             #target = self.get_stop_control()
+            print "wait"
             return;
 
         elif self.trajectory_completed:
+            print "learn!"
             # stop moving
             #target = self.get_stop_control()
 
@@ -165,23 +168,21 @@ class Behavior():
 
             del self.trajectory[:]
             self.trajectory_completed = False
+            self.set_target = True
             return
 
-        elif self.objects_of_interest is not None and len(self.objects_of_interest) > 0:
+        elif self.set_target and self.objects_of_interest is not None and len(self.objects_of_interest) > 0:
+            self.set_target = False
             object_of_interest = random.choice(self.objects_of_interest)
             target = self.get_best_target(object_of_interest)
-
-        else:
-            return
-
-        self.control_pub.publish(target)
+            print target
+            self.control_pub.publish(target)
 
     def get_best_target(self, object_of_interest):
-        pos = object_of_interest[0].X.pos
-        print "Send control message.\n", pos
+        pos = object_of_interest[0].com
         rot = object_of_interest[0].X.rot
         msg = msgs.control()
-        msg.pose = Pose(Point(pos.x, pos.y, pos.z),
+        msg.pose = Pose(Point(pos.x, pos.y, 1),
                     Quaternion(rot.x, rot.y, rot.z, rot.w))
         return msg
 
@@ -229,33 +230,41 @@ class Behavior():
         # save the trajectory if somithing changed
         #print data
         if data.changed:
+            self.world_changed = True
             # No belief yet. Initialize belief with first messages
             if self.world_belief is None:
                 print "initializing world"
                 self.objects_of_interest = []
                 self.world_belief = ors.Graph()
-                print(data.bodies)
 
-                for body_ser in data.bodies:
-                    body = ors.Body()
-                    (body.name, body_str) = body_ser.split(" ", 1)
-                    body.read(body_str)
+                for body_str in data.bodies:
+                    body = parse_body_msg(body_str)
                     self.world_belief.addObject(body)
                     self.objects_of_interest.append((body, Properties()))
 
             # otherwise log trajectory
             else:
-                self.world_changed = True
-                self.trajectory_completed = False
                 for body_str in data.bodies:
-                    body = ors.Body()
-                    body.read(body_str)
+                    body = parse_body_msg(body_str)
                     pos = body.X.pos
                     self.trajectory.append(pos)
+                    self.world_belief.getBodyByName(body.name).X = body.X
+
+            self.world_belief.calcShapeFramesFromBodies()
+            #print self.world_belief
 
         else:
+            if self.world_changed:
+                print "end of trajectory"
+                self.trajectory_completed = True
             self.world_changed = False
-            self.trajectory_completed = True
+
+def parse_body_msg(msg):
+    body = ors.Body()
+    body_list = msg.split(' ', 1)
+    body.name = body_list[0]
+    body.read(body_list[1]) 
+    return body
 
 
 if __name__ == '__main__':

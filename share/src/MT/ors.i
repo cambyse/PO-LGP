@@ -134,7 +134,10 @@ def __getitem__(self, pos):
     """
     if self.nd == 1:
         if isinstance(pos, int):
-            return self.get1D(pos)
+            if pos < self.d0:
+                return self.get1D(pos)
+            else:
+                raise Exception("index", str(pos), "out of bounds")
         elif isinstance(pos, slice):
             return self.sub(pos.start, pos.stop)
         else:
@@ -214,7 +217,7 @@ class ArrayIter:
 }; // end of namespace MT
 
 %typemap(in) MT::String {
-    $1.p = PyString_AsString($input);
+    $1 = PyString_AsString($input);
 }
 %typemap(out) MT::String {
     $result = PyString_FromString($1.p);
@@ -802,7 +805,7 @@ def setJointStateList(self, jointState):
 %extend {
   std::string __str__() {
     std::ostringstream oss(std::ostringstream::out);
-    (*$self).write(oss);
+    oss << (*$self);
     return oss.str();
   }
 }; // end of %extend
