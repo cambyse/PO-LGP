@@ -3,8 +3,7 @@
 
 #define TEST_DIFF_ZERO(expr) { \
   double e=(expr).diffZero(); \
-  EXPECT_LE(e, 1e-6) << " Error="<<e <<" Expression=" <<(expr); \
-  cout <<"Success: " <<e <<endl; }
+  EXPECT_LE(e, 1e-6) << " Error="<<e <<" Expression=" <<(expr); }
 
 TEST(OrsTest, testQuaternions) {
   for(uint k=0;k<10;k++){
