@@ -31,6 +31,11 @@ def set_build_full():
     local("sed '0,/RE/s/^MAKEMODE = mlrlib_ubuntu$/MAKEMODE = mlrlib_full/' share/make-config.default > share/make-config")
 
 
+def enable_physx():
+    """Enable the use of PhysX in make-config"""
+    local("sed -i 's/PHYSX = 0/PHYSX = 1/g' share/make-config")
+
+
 def rm_lib():
     """rm all files in share/lib/"""
     local("rm -rf share/lib/*")
