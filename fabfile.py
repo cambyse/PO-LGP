@@ -57,6 +57,7 @@ def make_src():
         # TODO dirty trick: run it twice :(
         local("make")
         local("make > ../gcc_stdout.log")
+    make_orspy()
 
 
 def make_test():
