@@ -113,7 +113,7 @@ class ObserveState(smach.State):
                     self.world_belief.getBodyByName(body.name).X = body.X
 
             self.world_belief.calcShapeFramesFromBodies()
-            print self.world_belief
+            #print self.world_belief
 
         else:
             self.world_changed = False
@@ -225,6 +225,9 @@ class WaitState(smach.State):
             return 'not_arrived'
 
 
+def shut_up(msg):
+    pass
+
 def main():
     rospy.init_node('tcr_behavior', log_level=rospy.ERROR)
 
@@ -232,6 +235,7 @@ def main():
     observer = ObserveState()
 
     with sm:
+        smach.loginfo = shut_up
         smach.StateMachine.add(
             'OBSERVE', observer,
             transitions={'world_change': 'OBSERVE', 'no_world_change': 'LEARN'}
