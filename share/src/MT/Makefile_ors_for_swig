@@ -2,17 +2,16 @@
 #
 # Experimental as of <2013-04-02 Tue>
 #
-# in python you can use ors simply by importing ors:
-# >>> import sys
-# >>> sys.path.append('../../lib/')
-# >>> import ors
-# >>> graph = ors.Graph()
+# in python you can use ors simply by importing orspy:
+# >>> import orspy
+# >>> graph = orspy.Graph()
 #
 # Also take a look at share/test/orspy/
 
 ifndef MLR_PATH
 	MLR_PATH=~/git/mlr
 endif
+echo $MLR_PATH
 
 main: python
 
