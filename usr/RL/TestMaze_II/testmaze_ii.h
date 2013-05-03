@@ -4,6 +4,7 @@
 #include "ui_testmaze_ii.h"
 #include "Maze.h"
 #include "KMarkovCRF.h"
+#include "UTree.h"
 #include "LookAheadSearch.h"
 #include "Data.h"
 #include "Representation/Representation.h"
@@ -36,12 +37,13 @@ private:
     // Maze GUI etc. //
     //---------------//
 
-    enum ACTION_TYPE {
+    enum PLANNER_TYPE {
         NONE,
-        OPTIMAL_LOOK_AHEAD_TREE,
-        SPARSE_LOOK_AHEAD_TREE,
-        KMDP_LOOK_AHEAD_TREE
-    } action_type;
+        OPTIMAL_PLANNER,
+        SPARSE_PLANNER,
+        KMDP_PLANNER,
+        UTREE_PLANNER
+    } planner_type;
 
     Ui::TestMaze_IIClass ui;
     Maze maze;
@@ -59,8 +61,12 @@ private:
     // Models //
     //--------//
 
+    // CRF
     KMarkovCRF crf;
     double l1_factor;
+
+    // UTree
+    UTree utree;
 
     //----------//
     // Planners //

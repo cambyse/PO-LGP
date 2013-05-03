@@ -8,6 +8,7 @@
 
 #include <math.h>
 #include <QString>
+#include <vector>
 
 /** All utility functions etc are included in the util namespace. */
 namespace util {
@@ -31,23 +32,16 @@ namespace util {
      *  Returns true on success and false otherwise. */
     bool arg_string(const QString& string, const int& n, QString& s);
 
-    /** \brief Generic function that returns the smaller of c1 and c2 (c2 for
-     * equality). */
-    template < class C >
-        C min(const C& c1, const C& c2) { return c1<c2 ? c1 : c2; }
-
-    /** \brief Generic function that returns the greater of c1 and c2 (c2 for
-     * equality). */
-    template < class C >
-        C max(const C& c1, const C& c2) { return c1>c2 ? c1 : c2; }
-
-    /** \brief Generic sign function.
-     *
-     * Returns -1 if val is less than T(0), +1 for greater, and 0 for equality. */
-    template <class T>
-        int sgn(T val) { return ( (val < T(0)) ? -1 : ( (val > T(0)) ? 1 : 0 ) ); }
-
     int print_progress(const int& prog, const int& max_prog, const int& width, const char* label, const int& last_prog = -1);
+
+    /** \brief Tolerance for approximate comparison. */
+    double approx_equal_tolerance();
+
+    double kolmogorov_smirnov_test(const std::vector<double>& s1, const std::vector<double>& s2, bool sorted = false);
+
+    //========================================================//
+    //                      Classes                           //
+    //========================================================//
 
     /** \brief Base class to make a derived class assign-compatible with a type.
      *
@@ -172,6 +166,10 @@ namespace util {
         InvalidAdapter& operator=(const C& c) {}
     };
 
+    //========================================================//
+    //                  Global Variables                      //
+    //========================================================//
+
     /** \brief Globale object of Invalid class.
      *
      * Use this object to assignment and testing of objects of derived
@@ -182,11 +180,24 @@ namespace util {
     extern const InvalidBase INVALID;
 
     //========================================================//
-    //              Function Definitions                      //
+    //      Function Definitions and Template Functions       //
     //========================================================//
 
-    /** \brief Tolerance for approximate comparison. */
-    double approx_equal_tolerance();
+    /** \brief Generic function that returns the smaller of c1 and c2 (c2 for
+     * equality). */
+    template < class C >
+        C min(const C& c1, const C& c2) { return c1<c2 ? c1 : c2; }
+
+    /** \brief Generic function that returns the greater of c1 and c2 (c2 for
+     * equality). */
+    template < class C >
+        C max(const C& c1, const C& c2) { return c1>c2 ? c1 : c2; }
+
+    /** \brief Generic sign function.
+     *
+     * Returns -1 if val is less than T(0), +1 for greater, and 0 for equality. */
+    template <class T>
+        int sgn(T val) { return ( (val < T(0)) ? -1 : ( (val > T(0)) ? 1 : 0 ) ); }
 
     /** \brief Generic function to determine if c1 and c2 are approximately
      * equality.

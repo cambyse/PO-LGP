@@ -35,6 +35,10 @@ string Feature::identifier() const {
     return string("");
 }
 
+std::ostream& operator<<(std::ostream &out, const Feature& f) {
+    return out << f.identifier();
+}
+
 Feature::TYPE Feature::get_type() const {
     return type;
 }
@@ -132,11 +136,11 @@ NullFeature::NullFeature(){
 
 NullFeature::~NullFeature() {}
 
-double NullFeature::evaluate(const instance_t *) const {
+Feature::feature_return_value NullFeature::evaluate(const instance_t *) const {
     return 0;
 }
 
-double NullFeature::evaluate(const instance_t *, action_t, state_t, reward_t) const {
+Feature::feature_return_value NullFeature::evaluate(const instance_t *, action_t, state_t, reward_t) const {
     return 0;
 }
 
@@ -168,7 +172,7 @@ ActionFeature * ActionFeature::create(const action_t& a, const int& d) {
     return new_feature;
 }
 
-double ActionFeature::evaluate(const instance_t * instance) const {
+Feature::feature_return_value ActionFeature::evaluate(const instance_t * instance) const {
     const_instanceIt_t insIt(instance);
     if( (insIt+=delay)!=INVALID && insIt->action==action ) {
         return 1;
@@ -177,9 +181,9 @@ double ActionFeature::evaluate(const instance_t * instance) const {
     }
 }
 
-double ActionFeature::evaluate(const instance_t * instance, action_t action, state_t state, reward_t reward) const {
+Feature::feature_return_value ActionFeature::evaluate(const instance_t * instance, action_t action, state_t state, reward_t reward) const {
     instance_t * ins = instance_t::create(action,state,reward,instance);
-    double ret = evaluate(ins);
+    Feature::feature_return_value ret = evaluate(ins);
     delete ins;
     return ret;
 }
@@ -215,7 +219,7 @@ StateFeature * StateFeature::create(const state_t& s, const int& d) {
     return new_feature;
 }
 
-double StateFeature::evaluate(const instance_t * instance) const {
+Feature::feature_return_value StateFeature::evaluate(const instance_t * instance) const {
     const_instanceIt_t insIt(instance);
     if( (insIt+=delay)!=INVALID && insIt->state==state ) {
         return 1;
@@ -224,9 +228,9 @@ double StateFeature::evaluate(const instance_t * instance) const {
     }
 }
 
-double StateFeature::evaluate(const instance_t * instance, action_t action, state_t state, reward_t reward) const {
+Feature::feature_return_value StateFeature::evaluate(const instance_t * instance, action_t action, state_t state, reward_t reward) const {
     instance_t * ins = instance_t::create(action,state,reward,instance);
-    double ret = evaluate(ins);
+    Feature::feature_return_value ret = evaluate(ins);
     delete ins;
     return ret;
 }
@@ -261,7 +265,7 @@ RewardFeature * RewardFeature::create(const reward_t& r, const int& d) {
     return new_feature;
 }
 
-double RewardFeature::evaluate(const instance_t * instance) const {
+Feature::feature_return_value RewardFeature::evaluate(const instance_t * instance) const {
     const_instanceIt_t insIt(instance);
     if( (insIt+=delay)!=INVALID && insIt->reward==reward ) {
         return 1;
@@ -270,9 +274,9 @@ double RewardFeature::evaluate(const instance_t * instance) const {
     }
 }
 
-double RewardFeature::evaluate(const instance_t * instance, action_t action, state_t state, reward_t reward) const {
+Feature::feature_return_value RewardFeature::evaluate(const instance_t * instance, action_t action, state_t state, reward_t reward) const {
     instance_t * ins = instance_t::create(action,state,reward,instance);
-    double ret = evaluate(ins);
+    Feature::feature_return_value ret = evaluate(ins);
     delete ins;
     return ret;
 }
@@ -301,8 +305,8 @@ AndFeature::AndFeature(const Feature& f1, const Feature& f2, const Feature& f3, 
 
 AndFeature::~AndFeature() {}
 
-double AndFeature::evaluate(const instance_t * instance) const {
-    double prod = 1;
+Feature::feature_return_value AndFeature::evaluate(const instance_t * instance) const {
+    Feature::feature_return_value prod = 1;
     for(subfeature_const_iterator_t feature_iterator=subfeatures.begin();
             feature_iterator!=subfeatures.end();
             ++feature_iterator) {
@@ -311,8 +315,8 @@ double AndFeature::evaluate(const instance_t * instance) const {
     return prod;
 }
 
-double AndFeature::evaluate(const instance_t * instance, action_t action, state_t state, reward_t reward) const {
-    double prod = 1;
+Feature::feature_return_value AndFeature::evaluate(const instance_t * instance, action_t action, state_t state, reward_t reward) const {
+    Feature::feature_return_value prod = 1;
     for(subfeature_const_iterator_t feature_iterator=subfeatures.begin();
             feature_iterator!=subfeatures.end();
             ++feature_iterator) {

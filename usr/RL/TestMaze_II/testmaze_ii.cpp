@@ -11,8 +11,8 @@ using util::arg_string;
 
 TestMaze_II::TestMaze_II(QWidget *parent)
     : QWidget(parent),
-//      action_type(NONE),
-      action_type(OPTIMAL_LOOK_AHEAD_TREE),
+//      planner_type(NONE),
+      planner_type(OPTIMAL_PLANNER),
       maze(0.0),
       record(false), plot(false),
       current_instance(nullptr),
@@ -46,7 +46,6 @@ TestMaze_II::TestMaze_II(QWidget *parent)
 
     // initiate delayed render action
     QTimer::singleShot(0, this, SLOT(render()));
-
 }
 
 TestMaze_II::~TestMaze_II() {
@@ -64,6 +63,7 @@ void TestMaze_II::collect_episode(const int& length) {
         maze.perform_transition(action,state_to,reward);
         update_current_instance(action,state_to,reward);
         crf.add_action_state_reward_tripel(action,state_to,reward);
+        utree.add_action_state_reward_tripel(action,state_to,reward);
     }
 }
 
@@ -88,14 +88,17 @@ void TestMaze_II::random_action() {
     reward_t reward;
     maze.perform_transition(action,state_to,reward);
     update_current_instance(action,state_to,reward);
-    if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
+    if(record) {
+        crf.add_action_state_reward_tripel(action,state_to,reward);
+        utree.add_action_state_reward_tripel(action,state_to,reward);
+    }
     maze.render_update(ui.graphicsView);
 }
 
 void TestMaze_II::choose_action() {
     action_t action;
-    switch(action_type) {
-    case OPTIMAL_LOOK_AHEAD_TREE:
+    switch(planner_type) {
+    case OPTIMAL_PLANNER:
         look_ahead_search.clear_tree();
         look_ahead_search.build_tree<Maze>(
                 current_instance,
@@ -105,7 +108,7 @@ void TestMaze_II::choose_action() {
         );
         action = look_ahead_search.get_optimal_action();
         break;
-    case SPARSE_LOOK_AHEAD_TREE:
+    case SPARSE_PLANNER:
         look_ahead_search.clear_tree();
         look_ahead_search.build_tree<KMarkovCRF>(
                 current_instance,
@@ -115,13 +118,23 @@ void TestMaze_II::choose_action() {
         );
         action = look_ahead_search.get_optimal_action();
         break;
-    case KMDP_LOOK_AHEAD_TREE:
+    case KMDP_PLANNER:
         crf.update_prediction_map();
         look_ahead_search.clear_tree();
         look_ahead_search.build_tree<KMarkovCRF>(
                 current_instance,
                 crf,
                 crf.get_kmdp_prediction_ptr(),
+                max_tree_size
+        );
+        action = look_ahead_search.get_optimal_action();
+        break;
+    case UTREE_PLANNER:
+        look_ahead_search.clear_tree();
+        look_ahead_search.build_tree<UTree>(
+                current_instance,
+                utree,
+                utree.get_prediction_ptr(),
                 max_tree_size
         );
         action = look_ahead_search.get_optimal_action();
@@ -135,7 +148,10 @@ void TestMaze_II::choose_action() {
     reward_t reward;
     maze.perform_transition(action,state_to,reward);
     update_current_instance(action,state_to,reward);
-    if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
+    if(record) {
+        crf.add_action_state_reward_tripel(action,state_to,reward);
+        utree.add_action_state_reward_tripel(action,state_to,reward);
+    }
     maze.render_update(ui.graphicsView);
 }
 
@@ -177,51 +193,53 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     }
 
     // help strings
-    QString headline_s(                         "Available commands:\n    COMMAND . . .  ARGUMENTS . . . . . . . . . . . . . . . . -> ACTION");
+    QString headline_s(                         "Available commands:\n    COMMAND . . . . . . . . ARGUMENTS. . . . . . . . . . . . . . . . . .-> ACTION");
 
     QString general_s(                        "\n    -------------------------General---------------------------");
-    QString help_s(                             "    help  / h. . . . . . . . . . . . . . . . . . . . . . . . -> this help");
-    QString exit_s(                             "    exit/quit/q. . . . . . . . . . . . . . . . . . . . . . . -> quit application");
-    QString set_s(                              "    set/unset. . . . . . . . . <string>. . . . . . . . . . . -> set/unset options:");
-    QString option_1_s(                         "                               record. . . . . . . . . . . . -> start/stop recording movements");
-    QString option_2_s(                         "                               plot. . . . . . . . . . . . . -> write transitions into data file for plotting");
+    QString help_s(                             "    help  / h. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> this help");
+    QString exit_s(                             "    exit/quit/q. . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> quit application");
+    QString set_s(                              "    set/unset. . . . . . . . . <string>. . . . . . . . . . . . . . . . .-> set/unset options:");
+    QString option_1_s(                         "                               record. . . . . . . . . . . . . . . . . .-> start/stop recording movements");
+    QString option_2_s(                         "                               plot. . . . . . . . . . . . . . . . . . .-> write transitions into data file for plotting");
+    QString option_3_s(                         "                               p(lanner) {o(ptimal)|s(parse)|u(tree)}. .-> set planner to use");
 
     QString maze_s(                           "\n    ---------------------------Maze---------------------------");
-    QString left_s(                             "    left  / l. . . . . . . . . . . . . . . . . . . . . . . . -> move left");
-    QString right_s(                            "    right / r. . . . . . . . . . . . . . . . . . . . . . . . -> move right");
-    QString up_s(                               "    up    / u. . . . . . . . . . . . . . . . . . . . . . . . -> move up");
-    QString down_s(                             "    down  / d. . . . . . . . . . . . . . . . . . . . . . . . -> move down");
-    QString stay_s(                             "    stay  / s. . . . . . . . . . . . . . . . . . . . . . . . -> stay-action");
-    QString move_s(                             "    move . . . . . . . . . . . [<int>|stop]. . . . . . . . . -> start/stop moving using planner");
-    QString random_s(                           "    random . . . . . . . . . . [<int>|stop]. . . . . . . . . -> start/stop moving randomly");
-    QString delay_s(                            "    delay. . . . . . . . . . . [<int>] . . . . . . . . . . . -> get [set] reward delay");
-    QString epsilon_s(                          "    epsilon. . . . . . . . . . [<double>]. . . . . . . . . . -> get [set] random transition probability");
+    QString left_s(                             "    left  / l. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> move left");
+    QString right_s(                            "    right / r. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> move right");
+    QString up_s(                               "    up    / u. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> move up");
+    QString down_s(                             "    down  / d. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> move down");
+    QString stay_s(                             "    stay  / s. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> stay-action");
+    QString move_s(                             "    move . . . . . . . . . . . [<int>|stop]. . . . . . . . . . . . . . .-> start/stop moving using planner");
+    QString random_s(                           "    random . . . . . . . . . . [<int>|stop]. . . . . . . . . . . . . . .-> start/stop moving randomly");
+    QString delay_s(                            "    delay. . . . . . . . . . . [<int>] . . . . . . . . . . . . . . . . .-> get [set] reward delay");
+    QString epsilon_s(                          "    epsilon. . . . . . . . . . [<double>]. . . . . . . . . . . . . . . .-> get [set] random transition probability");
 
     QString learning_s(                       "\n    ----------------------Model Learning----------------------");
-    QString episode_s(                          "    episode / e. . . . . . . . [<int>|clear,c] . . . . . . . -> record length <int> episode or clear data");
-    QString optimize_s(                         "    optimize / o . . . . . . . [<int>|check, c]. . . . . . . -> optimize CRF [max_iterations | check derivatives]");
-    QString score_s(                            "    score. . . . . . . . . . . <int> . . . . . . . . . . . . -> score compound features with distance <int> by gradient");
-    QString add_s(                              "    add. . . . . . . . . . . . <int> . . . . . . . . . . . . -> add <int> highest scored compound features to active (0 for all non-zero scored)");
-    QString erase_s(                            "    erase. . . . . . . . . . . . . . . . . . . . . . . . . . -> erase features with zero weight");
-    QString l1_s(                               "    l1 . . . . . . . . . . . . <double>. . . . . . . . . . . -> coefficient for L1 regularization");
-    QString evaluate_s(                         "    evaluate . . . . . . . . . . . . . . . . . . . . . . . . -> evaluate features at current point");
-    QString validate_s(                         "    validate / v . . . . . . . {crf,kmdp}[exact|mc <int>]. . -> validate CRF or k-MDP model using exact (default) or Monte Carlo (with <int> samples) computation of the KL-divergence");
+    QString episode_s(                          "    episode / e. . . . . . . . [<int>|clear,c] . . . . . . . . . . . . .-> record length <int> episode or clear data");
+    QString optimize_s(                         "    optimize / o . . . . . . . [<int>|check, c]. . . . . . . . . . . . .-> optimize CRF [max_iterations | check derivatives]");
+    QString score_s(                            "    score. . . . . . . . . . . <int> . . . . . . . . . . . . . . . . . .-> score compound features with distance <int> by gradient");
+    QString add_s(                              "    add. . . . . . . . . . . . <int> . . . . . . . . . . . . . . . . . .-> add <int> highest scored compound features to active (0 for all non-zero scored)");
+    QString erase_s(                            "    erase. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> erase features with zero weight");
+    QString l1_s(                               "    l1 . . . . . . . . . . . . <double>. . . . . . . . . . . . . . . . .-> coefficient for L1 regularization");
+    QString evaluate_s(                         "    evaluate . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> evaluate features at current point");
+    QString validate_s(                         "    validate / v . . . . . . . {crf,kmdp}[exact|mc <int>]. . . . . . . .-> validate CRF or k-MDP model using exact (default) or Monte Carlo (with <int> samples) computation of the KL-divergence");
 
     QString planning_s(                       "\n    -------------------------Planning--------------------------");
-//    QString iterate_s(                          "    iterate / i. . . . . . . . [<int>|<double>,stop] . . . . -> run value iteration <int> times / until max diff small than <double> / stop running");
-    QString discount_s(                         "    discount . . . . . . . . . [<double>]. . . . . . . . . . -> get [set] discount");
-//    QString optimal_iteration_s(                "    optimal-iteration. . . . . . . . . . . . . . . . . . . . -> use known predictions for value iteration");
-//    QString sparse_iteration_s(                 "    sparse-iteration . . . . . . . . . . . . . . . . . . . . -> use sparse model for value iteration");
-//    QString kmdp_iteration_s(                   "    kmdp-iteration . . . . . . . . . . . . . . . . . . . . . -> use k-MDP model for value iteration");
-    QString optimal_look_ahead_tree_s(          "    optimal-look-ahead-tree. . [<int>[<double>]] . . . . . . -> use known predictions for Look-Ahead-Tree [ depth [ threshold ] ]");
-    QString sparse_look_ahead_tree_s(           "    sparse-look-ahead-tree . . [<int>[<double>]] . . . . . . -> use sparse model for Look-Ahead-Tree [ depth [ threshold ] ]");
-    QString kmdp_look_ahead_tree_s(             "    kmdp-look-ahead-tree . . . [<int>[<double>]] . . . . . . -> use k-MDP model for Look-Ahead-Tree [ depth [ threshold ] ]");
-    QString print_look_ahead_tree_s(            "    print-tree . . . . . . . . . . . . . . . . . . . . . . . -> print Look-Ahead-Tree");
-    QString print_look_ahead_tree_statistics_s( "    print-tree-statistics. . . . . . . . . . . . . . . . . . -> print Look-Ahead-Tree statistics");
-    QString max_tree_size_s(                    "    max-tree-size. . . . . . . <int> . . . . . . . . . . . . -> set maximum size of Look-Ahead-Tree (zero for infinite)");
+//    QString iterate_s(                          "    iterate / i. . . . . . . . [<int>|<double>,stop] . . . . . . . . . .-> run value iteration <int> times / until max diff small than <double> / stop running");
+    QString discount_s(                         "    discount . . . . . . . . . [<double>]. . . . . . . . . . . . . . . .-> get [set] discount");
+//    QString optimal_iteration_s(                "    optimal-iteration. . . . . . . . . . . . . . . . . . . . . . . . . .-> use known predictions for value iteration");
+//    QString sparse_iteration_s(                 "    sparse-iteration . . . . . . . . . . . . . . . . . . . . . . . . . .-> use sparse model for value iteration");
+//    QString kmdp_iteration_s(                   "    kmdp-iteration . . . . . . . . . . . . . . . . . . . . . . . . . . .-> use k-MDP model for value iteration");
+    // QString optimal_look_ahead_tree_s(          "    optimal-look-ahead-tree. . [<int>[<double>]] . . . . . . . . . . . .-> use known predictions for Look-Ahead-Tree [ depth [ threshold ] ]");
+    // QString sparse_look_ahead_tree_s(           "    sparse-look-ahead-tree . . [<int>[<double>]] . . . . . . . . . . . .-> use sparse model for Look-Ahead-Tree [ depth [ threshold ] ]");
+    // QString kmdp_look_ahead_tree_s(             "    kmdp-look-ahead-tree . . . [<int>[<double>]] . . . . . . . . . . . .-> use k-MDP model for Look-Ahead-Tree [ depth [ threshold ] ]");
+    QString print_look_ahead_tree_s(            "    print-tree . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> print Look-Ahead-Tree");
+    QString print_look_ahead_tree_statistics_s( "    print-tree-statistics. . . . . . . . . . . . . . . . . . . . . . . .-> print Look-Ahead-Tree statistics");
+    QString max_tree_size_s(                    "    max-tree-size. . . . . . . <int> . . . . . . . . . . . . . . . . . .-> set maximum size of Look-Ahead-Tree (zero for infinite)");
 
     set_s += "\n" + option_1_s;
     set_s += "\n" + option_2_s;
+    set_s += "\n" + option_3_s;
 
     QString invalid_s( "    invalid arguments" );
 
@@ -278,14 +296,14 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             ui._wConsoleOutput->appendPlainText( validate_s );
             // Planning
             ui._wConsoleOutput->appendPlainText( planning_s );
-//            ui._wConsoleOutput->appendPlainText( iterate_s );
+            // ui._wConsoleOutput->appendPlainText( iterate_s );
             ui._wConsoleOutput->appendPlainText( discount_s );
-//            ui._wConsoleOutput->appendPlainText( optimal_iteration_s );
-//            ui._wConsoleOutput->appendPlainText( sparse_iteration_s );
-//            ui._wConsoleOutput->appendPlainText( kmdp_iteration_s );
-            ui._wConsoleOutput->appendPlainText( optimal_look_ahead_tree_s );
-            ui._wConsoleOutput->appendPlainText( sparse_look_ahead_tree_s );
-            ui._wConsoleOutput->appendPlainText( kmdp_look_ahead_tree_s );
+            // ui._wConsoleOutput->appendPlainText( optimal_iteration_s );
+            // ui._wConsoleOutput->appendPlainText( sparse_iteration_s );
+            // ui._wConsoleOutput->appendPlainText( kmdp_iteration_s );
+            // ui._wConsoleOutput->appendPlainText( optimal_look_ahead_tree_s );
+            // ui._wConsoleOutput->appendPlainText( sparse_look_ahead_tree_s );
+            // ui._wConsoleOutput->appendPlainText( kmdp_look_ahead_tree_s );
             ui._wConsoleOutput->appendPlainText( print_look_ahead_tree_s );
             ui._wConsoleOutput->appendPlainText( print_look_ahead_tree_statistics_s );
             ui._wConsoleOutput->appendPlainText( max_tree_size_s );
@@ -295,7 +313,10 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             reward_t reward;
             maze.perform_transition(action,state_to,reward);
             update_current_instance(action,state_to,reward);
-            if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
+            if(record) {
+                crf.add_action_state_reward_tripel(action,state_to,reward);
+                utree.add_action_state_reward_tripel(action,state_to,reward);
+            }
             maze.render_update(ui.graphicsView);
         } else if(str_args[0]=="right" || str_args[0]=="r") { // right
             action_t action = action_t::RIGHT;
@@ -303,7 +324,10 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             reward_t reward;
             maze.perform_transition(action,state_to,reward);
             update_current_instance(action,state_to,reward);
-            if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
+            if(record) {
+                crf.add_action_state_reward_tripel(action,state_to,reward);
+                utree.add_action_state_reward_tripel(action,state_to,reward);
+            }
             maze.render_update(ui.graphicsView);
         } else if(str_args[0]=="up" || str_args[0]=="u") { // up
             action_t action = action_t::UP;
@@ -311,7 +335,10 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             reward_t reward;
             maze.perform_transition(action,state_to,reward);
             update_current_instance(action,state_to,reward);
-            if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
+            if(record) {
+                crf.add_action_state_reward_tripel(action,state_to,reward);
+                utree.add_action_state_reward_tripel(action,state_to,reward);
+            }
             maze.render_update(ui.graphicsView);
         } else if(str_args[0]=="down" || str_args[0]=="d") { // down
             action_t action = action_t::DOWN;
@@ -319,7 +346,10 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             reward_t reward;
             maze.perform_transition(action,state_to,reward);
             update_current_instance(action,state_to,reward);
-            if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
+            if(record) {
+                crf.add_action_state_reward_tripel(action,state_to,reward);
+                utree.add_action_state_reward_tripel(action,state_to,reward);
+            }
             maze.render_update(ui.graphicsView);
         } else if(str_args[0]=="stay" || str_args[0]=="s") { // stay
             action_t action = action_t::STAY;
@@ -327,7 +357,10 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             reward_t reward;
             maze.perform_transition(action,state_to,reward);
             update_current_instance(action,state_to,reward);
-            if(record) crf.add_action_state_reward_tripel(action,state_to,reward);
+            if(record) {
+                crf.add_action_state_reward_tripel(action,state_to,reward);
+                utree.add_action_state_reward_tripel(action,state_to,reward);
+            }
             maze.render_update(ui.graphicsView);
         } else if(str_args[0]=="move") { // start/stop moving
             if(str_args.size()==1) {
@@ -368,6 +401,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 ui._wConsoleOutput->appendPlainText( episode_s );
             } else if( str_args[1]=="clear" || str_args[1]=="c" ) {
                 crf.clear_data();
+                utree.clear_data();
             } else if(int_args_ok[1] && int_args[1]>=0){
                 collect_episode(int_args[1]);
             } else {
@@ -471,42 +505,42 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             crf.erase_zero_features();
         } else if(str_args[0]=="exit" || str_args[0]=="quit" || str_args[0]=="q") { // quit application
             QApplication::quit();
-        } else if(str_args[0]=="optimal-look-ahead-tree") {
-            action_type = OPTIMAL_LOOK_AHEAD_TREE;
-//            if(str_args.size()>1 && int_args_ok[1] && int_args[1]>0) {
-//                tree_depth = int_args[1];
-//                if(str_args.size()>2 && double_args_ok[2] && double_args[2]>=0) {
-//                    probability_threshold = double_args[2];
-//                } else {
-//                    ui._wConsoleOutput->appendPlainText( "    Please specify a valid probability threshold" );
-//                }
-//            } else {
-//                ui._wConsoleOutput->appendPlainText( "    Please specify a valid tree depth" );
-//            }
-        } else if(str_args[0]=="sparse-look-ahead-tree") {
-            action_type = SPARSE_LOOK_AHEAD_TREE;
-//            if(str_args.size()>1 && int_args_ok[1] && int_args[1]>0) {
-//                tree_depth = int_args[1];
-//                if(str_args.size()>2 && double_args_ok[2] && double_args[2]>=0) {
-//                    probability_threshold = double_args[2];
-//                } else {
-//                    ui._wConsoleOutput->appendPlainText( "    Please specify a valid probability threshold" );
-//                }
-//            } else {
-//                ui._wConsoleOutput->appendPlainText( "    Please specify a valid tree depth" );
-//            }
-        } else if(str_args[0]=="kmdp-look-ahead-tree") {
-            action_type = KMDP_LOOK_AHEAD_TREE;
-//            if(str_args.size()>1 && int_args_ok[1] && int_args[1]>0) {
-//                tree_depth = int_args[1];
-//                if(str_args.size()>2 && double_args_ok[2] && double_args[2]>=0) {
-//                    probability_threshold = double_args[2];
-//                } else {
-//                    ui._wConsoleOutput->appendPlainText( "    Please specify a valid probability threshold" );
-//                }
-//            } else {
-//                ui._wConsoleOutput->appendPlainText( "    Please specify a valid tree depth" );
-//            }
+        // } else if(str_args[0]=="optimal-look-ahead-tree") {
+        //     planner_type = OPTIMAL_PLANNER;
+        //    if(str_args.size()>1 && int_args_ok[1] && int_args[1]>0) {
+        //        tree_depth = int_args[1];
+        //        if(str_args.size()>2 && double_args_ok[2] && double_args[2]>=0) {
+        //            probability_threshold = double_args[2];
+        //        } else {
+        //            ui._wConsoleOutput->appendPlainText( "    Please specify a valid probability threshold" );
+        //        }
+        //    } else {
+        //        ui._wConsoleOutput->appendPlainText( "    Please specify a valid tree depth" );
+        //    }
+        // } else if(str_args[0]=="sparse-look-ahead-tree") {
+        //     planner_type = SPARSE_PLANNER;
+        //    if(str_args.size()>1 && int_args_ok[1] && int_args[1]>0) {
+        //        tree_depth = int_args[1];
+        //        if(str_args.size()>2 && double_args_ok[2] && double_args[2]>=0) {
+        //            probability_threshold = double_args[2];
+        //        } else {
+        //            ui._wConsoleOutput->appendPlainText( "    Please specify a valid probability threshold" );
+        //        }
+        //    } else {
+        //        ui._wConsoleOutput->appendPlainText( "    Please specify a valid tree depth" );
+        //    }
+        // } else if(str_args[0]=="kmdp-look-ahead-tree") {
+        //     planner_type = KMDP_PLANNER;
+        //    if(str_args.size()>1 && int_args_ok[1] && int_args[1]>0) {
+        //        tree_depth = int_args[1];
+        //        if(str_args.size()>2 && double_args_ok[2] && double_args[2]>=0) {
+        //            probability_threshold = double_args[2];
+        //        } else {
+        //            ui._wConsoleOutput->appendPlainText( "    Please specify a valid probability threshold" );
+        //        }
+        //    } else {
+        //        ui._wConsoleOutput->appendPlainText( "    Please specify a valid tree depth" );
+        //    }
         } else if(str_args[0]=="print-tree") { // print tree
             look_ahead_search.print_tree(true,true);
         } else if(str_args[0]=="print-tree-statistics") { // print tree statistics
@@ -541,6 +575,19 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     // close plot file
                     plot_file.close();
                     ui._wConsoleOutput->appendPlainText( "    plot off" );
+                }
+            } else if( (str_args[1]=="p" || str_args[1]=="planner") && str_args.size()>2) {
+                if(str_args[0]=="unset") {
+                    ui._wConsoleOutput->appendPlainText( "    set different planner to unset current" );
+                } else if(str_args[2]=="optimal" || str_args[2]=="o") {
+                    planner_type = OPTIMAL_PLANNER;
+                    ui._wConsoleOutput->appendPlainText( "    using optimal planner" );
+                } else if(str_args[2]=="sparse" || str_args[2]=="s") {
+                    planner_type = SPARSE_PLANNER;
+                    ui._wConsoleOutput->appendPlainText( "    using sparse planner" );
+                } else if(str_args[2]=="utree" || str_args[2]=="u") {
+                    planner_type = UTREE_PLANNER;
+                    ui._wConsoleOutput->appendPlainText( "    using UTree planner" );
                 }
             } else {
                 ui._wConsoleOutput->appendPlainText( invalid_s );
