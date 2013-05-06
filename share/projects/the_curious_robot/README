@@ -3,8 +3,6 @@ The Curious Robot
 
 This is the implementation of "The Curious Robot" (TCR) project.
 
-NOTE: it's not running yet :(
-
 
 # Prerequisites & Setup
 TCR uses ROS and the MLR code. This section explains how to setup everything.
@@ -41,6 +39,7 @@ TCR uses ROS and the MLR code. This section explains how to setup everything.
 
     cmake .
     make
+    rosmake the_curious_robot
 
 
 # Task
