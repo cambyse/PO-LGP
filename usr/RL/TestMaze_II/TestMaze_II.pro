@@ -17,7 +17,9 @@ HEADERS += LookAheadSearch.h \
     Representation/Action.h \
     Representation/State.h \
     Representation/Reward.h \
-    Representation/Instance.h
+    Representation/Instance.h \
+    util/KolmogorovSmirnovTest.h \
+    util/ChiSquareTest.h
 SOURCES += LookAheadSearch.cpp \
     util.cpp \
     BatchMaze.cpp \
@@ -31,7 +33,9 @@ SOURCES += LookAheadSearch.cpp \
     Representation/Action.cpp \
     Representation/State.cpp \
     Representation/Reward.cpp \
-    Representation/Instance.cpp
+    Representation/Instance.cpp \
+    util/KolmogorovSmirnovTest.cpp \
+    util/ChiSquareTest.cpp
 LIBS += -llbfgs \
     -lemon
 FORMS += testmaze_ii.ui

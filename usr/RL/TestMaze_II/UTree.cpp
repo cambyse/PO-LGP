@@ -1,12 +1,17 @@
 #include "UTree.h"
-
 #include "util.h"
+#include "util/KolmogorovSmirnovTest.h"
+#include "util/ChiSquareTest.h"
+
+#include <map>
+#include <float.h>
 
 #define DEBUG_STRING "UTree: "
 #define DEBUG_LEVEL 1
 #include "debug.h"
 
 using std::vector;
+using std::map;
 using std::cout;
 using std::endl;
 
@@ -175,8 +180,54 @@ void UTree::insert_instance(const instance_t * i, const node_t& node) {
 
         // no matching child node found --> create new one
         node_t new_child = graph.addNode();
+        leaf_nodes.push_back(new_child);
         graph.addArc(node,new_child);
         node_info_map[new_child].parent_return_value = ret;
         insert_instance(i,new_child); // will only add i and not descend further
+    }
+}
+
+double UTree::score_reward(const node_t leaf_node, const Feature* feature) {
+    // check if it's really a leaf node
+    if(graph_t::OutArcIt(graph,leaf_node)!=INVALID) {
+        DEBUG_OUT(0,"Error: Scoring non-leaf node");
+        return DBL_MAX;
+    }
+
+    // collect samples from instances
+    instance_vector_t& instance_vector = node_info_map[leaf_node].instance_vector;
+    map< f_ret_t, vector<double> > samples;
+    for(unsigned int idx=0; idx<instance_vector.size(); ++idx) {
+        const_instanceIt_t insIt = instance_vector[idx]->const_it()+1;
+        if(insIt==util::INVALID) { // instance has no successor
+            continue;
+        } else {
+            f_ret_t f_ret = feature->evaluate(instance_vector[idx]);
+            samples[f_ret].push_back(insIt->reward);
+        }
+    }
+
+    // compute score value
+    if(samples.size()>2) {
+        DEBUG_OUT(0,"Error: Got " << samples.size() << " different feature values. Expecting only two.");
+        return DBL_MAX;
+    } else if(samples.size()<2) { // nothing to compare
+        return DBL_MAX;
+    } else {
+        auto sIt = samples.begin();
+        vector<double>& sample_1 = sIt->second;
+        ++sIt;
+        vector<double>& sample_2 = sIt->second;
+        switch(test_type) {
+        case KOLMOGOROV_SMIRNOV:
+            return KolmogorovSmirnovTest::k_s_test(sample_1, sample_2, false);
+            break;
+        case CHI_SQUARE:
+            return ChiSquareTest::chi_square_statistic(sample_1, sample_2, false);
+            break;
+        default:
+            DEBUG_OUT(0,"Error: Unknown test type");
+            return DBL_MAX;
+        }
     }
 }

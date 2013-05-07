@@ -23,6 +23,9 @@ public:
     typedef std::vector<node_t>              node_vector_t;
     typedef std::vector<const instance_t *>  instance_vector_t;
 
+    enum TEST_TYPE { KOLMOGOROV_SMIRNOV, CHI_SQUARE };
+    TEST_TYPE test_type = KOLMOGOROV_SMIRNOV;
+
     struct NodeInfo {
         NodeInfo(const Feature * f = nullptr, const f_ret_t& r = f_ret_t());
         instance_vector_t instance_vector;
@@ -56,11 +59,15 @@ private:
     int k;
     instance_t * instance_data;
     std::vector<Feature*> basis_features;
+    std::vector<node_t> leaf_nodes;
     graph_t graph;
     node_t root_node;
     node_info_map_t node_info_map;
 
     void insert_instance(const instance_t *, const node_t& node);
+
+    double score_reward(const node_t leaf_node, const Feature* feature);
+
 };
 
 #endif /* UTREE_H_ */
