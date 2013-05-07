@@ -8,7 +8,6 @@
 #include "util.h"
 
 #include <iostream>
-#include <algorithm>
 #include <float.h>
 
 using std::cout;
@@ -18,6 +17,10 @@ using std::vector;
 using std::sort;
 
 #include <QtCore>
+
+#define DEBUG_STRING "util: "
+#define DEBUG_LEVEL 0
+#include "debug.h"
 
 namespace util {
 
@@ -67,40 +70,6 @@ namespace util {
     }
 
     double approx_equal_tolerance() { return 1e-10; }
-
-    double kolmogorov_smirnov_test(const std::vector<double>& s1, const std::vector<double>& s2, bool sorted) {
-        // copy data only of not sorted
-        const vector<double> *s1Ptr, *s2Ptr ;
-        if(sorted) {
-            s1Ptr = &s1;
-            s2Ptr = &s2;
-        } else {
-            vector<double> *tmp_s1 = new vector<double>(s1);
-            vector<double> *tmp_s2 = new vector<double>(s2);
-            sort(tmp_s1->begin(), tmp_s1->end());
-            sort(tmp_s2->begin(), tmp_s2->end());
-            s1Ptr = tmp_s1;
-            s2Ptr = tmp_s2;
-        }
-
-        // use reference to data
-        const vector<double> &samples_1 = *s1Ptr;
-        const vector<double> &samples_2 = *s2Ptr;
-
-        auto samples_1_it = samples_1.begin();
-        auto samples_2_it = samples_2.begin();
-        double max_diff = -DBL_MAX, current_point;
-        unsigned long int s1_cumulative = 0, s2_cumulative = 0;
-        while(samples_1_it!=samples_1.end() || samples_2_it!=samples_2.end()) {
-            // todo
-        }
-
-        // if data was copied to sort delete copies
-        if(!sorted) {
-            delete s1Ptr;
-            delete s2Ptr;
-        }
-    }
 
     const InvalidBase INVALID = InvalidBase(true);
 

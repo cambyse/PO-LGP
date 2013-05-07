@@ -175,7 +175,7 @@ void UTree::insert_instance(const instance_t * i, const node_t& node) {
 
         // no matching child node found --> create new one
         node_t new_child = graph.addNode();
-        arc_t new_arc = graph.addArc(node,new_child);
+        graph.addArc(node,new_child);
         node_info_map[new_child].parent_return_value = ret;
         insert_instance(i,new_child); // will only add i and not descend further
     }

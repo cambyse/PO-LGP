@@ -13,6 +13,10 @@
 class InstanceIt;
 class ConstInstanceIt;
 
+/** \example Instance_Example.cpp This is an an example of how to use the
+ * Instance class. It shows different ways of generating sequences of instances
+ * and iterating through them. */
+
 /** \brief Instance object.
  *
  * Instance objects are essentially triples of (Action, State, Reward)
@@ -88,11 +92,6 @@ protected:
     Instance(const Instance&);
     Instance & operator=(const Instance&);
 };
-
-/** \example Instance_Example.cpp This is an an example of how to use the
- * Instance class. It shows different ways of generating sequences of instances
- * and iterating through them. */
-
 
 /** \brief Instance iterator object. */
 class InstanceIt: public util::InvalidAdapter<InstanceIt> {

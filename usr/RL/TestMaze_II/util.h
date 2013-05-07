@@ -37,8 +37,6 @@ namespace util {
     /** \brief Tolerance for approximate comparison. */
     double approx_equal_tolerance();
 
-    double kolmogorov_smirnov_test(const std::vector<double>& s1, const std::vector<double>& s2, bool sorted = false);
-
     //========================================================//
     //                      Classes                           //
     //========================================================//
