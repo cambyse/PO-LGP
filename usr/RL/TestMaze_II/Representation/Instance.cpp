@@ -2,7 +2,8 @@
 
 #include <QTime>
 
-#define DEBUG_LEVEL 1
+#define DEBUG_STRING "Instance: "
+#define DEBUG_LEVEL 2
 #include "../debug.h"
 
 using util::INVALID;
@@ -243,6 +244,8 @@ std::ostream& operator<<(std::ostream &out, const Instance& i) {
         i.reward << ")";
     return out;
 }
+
+const char* Instance::print() PRINT_FROM_OSTREAM
 
 void Instance::check_performance_and_memory(bool memory) {
 
@@ -566,6 +569,9 @@ Instance::Instance(const Instance& i):
     container_idx(i.container_idx)
 {}
 
+#undef DEBUG_STRING
+#define DEBUG_STRING "InstanceIt: "
+
 InstanceIt::InstanceIt():
     util::InvalidAdapter<InstanceIt>(true),
     this_instance(nullptr)
@@ -613,7 +619,7 @@ InstanceIt & InstanceIt::operator--() {
 }
 
 InstanceIt & InstanceIt::operator+=(const int& c) {
-    if(c==0) {
+    if(c==0 || *this==INVALID) {
         return (*this);
     } else if(c<0) {
         return (*this) -= -c;
@@ -641,7 +647,7 @@ InstanceIt & InstanceIt::operator+=(const int& c) {
 }
 
 InstanceIt & InstanceIt::operator-=(const int& c) {
-    if(c==0) {
+    if(c==0 || *this==INVALID) {
         return (*this);
     } else if(c<0) {
         return (*this) += -c;
@@ -700,6 +706,9 @@ int InstanceIt::length_to_last() const {
     }
 }
 
+#undef DEBUG_STRING
+#define DEBUG_STRING "ConstInstanceIt: "
+
 ConstInstanceIt::ConstInstanceIt():
     util::InvalidAdapter<ConstInstanceIt>(true),
     this_instance(nullptr)
@@ -743,7 +752,7 @@ ConstInstanceIt & ConstInstanceIt::operator--() {
 }
 
 ConstInstanceIt & ConstInstanceIt::operator+=(const int& c) {
-    if(c==0) {
+    if(c==0 || *this==INVALID) {
         return (*this);
     } else if(c<0) {
         return (*this) -= -c;
@@ -773,7 +782,7 @@ ConstInstanceIt & ConstInstanceIt::operator+=(const int& c) {
 }
 
 ConstInstanceIt & ConstInstanceIt::operator-=(const int& c) {
-    if(c==0) {
+    if(c==0 || *this==INVALID) {
         return (*this);
     } else if(c<0) {
         return (*this) += -c;
@@ -782,6 +791,7 @@ ConstInstanceIt & ConstInstanceIt::operator-=(const int& c) {
         return (*this);
     } else {
         if(this_instance->container!=nullptr && this_instance->container_idx!=0) { // use container (random access)
+            DEBUG_OUT(2,"Using container to iterate");
             if(this_instance->container_idx - c < 0) {
                 int rest = c - this_instance->container_idx;
                 (*this)=ConstInstanceIt(this_instance->container->front());

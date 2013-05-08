@@ -9,6 +9,26 @@
 #include <math.h>
 #include <QString>
 #include <vector>
+#include <sstream>
+
+//========================================================//
+//                       Macros                           //
+//========================================================//
+
+/** \brief Shortcut to replace for loop where the index does not play a role. */
+#define repeat(n) for(unsigned long int repeat_index=0; repeat_index<(unsigned long int)n; ++repeat_index)
+
+/** \brief Shortcut to define a print() function for a class that has defined
+ * the outstream operator <<.
+ *
+ * Use this macro inside the cpp file to prevent inlining the function (which
+ * prevents it being used in a debugger). */
+#define PRINT_FROM_OSTREAM                      \
+    {                                           \
+        std::stringstream s;                    \
+        s << *this;                             \
+        return s.str().c_str();                 \
+    }
 
 /** All utility functions etc are included in the util namespace. */
 namespace util {

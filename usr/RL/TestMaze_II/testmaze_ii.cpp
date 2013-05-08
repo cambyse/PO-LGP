@@ -9,6 +9,8 @@ using util::arg_int;
 using util::arg_double;
 using util::arg_string;
 
+#define TO_CONSOLE(x) { ui._wConsoleOutput->appendPlainText(x); }
+
 TestMaze_II::TestMaze_II(QWidget *parent)
     : QWidget(parent),
 //      planner_type(NONE),
@@ -165,7 +167,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     } else {
         input = ui._wConsoleInput->text();
         ui._wConsoleInput->setText("");
-        ui._wConsoleOutput->appendPlainText(input);
+        TO_CONSOLE(input);
         console_history.push_back(input);
         history_position = console_history.size();
 
@@ -193,7 +195,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     }
 
     // help strings
-    QString headline_s(                         "Available commands:\n    COMMAND . . . . . . . . ARGUMENTS. . . . . . . . . . . . . . . . . .-> ACTION");
+    QString headline_s(    "Available commands:\n    COMMAND . . . . . . . . ARGUMENTS. . . . . . . . . . . . . . . . . .-> ACTION");
 
     QString general_s(                        "\n    -------------------------General---------------------------");
     QString help_s(                             "    help  / h. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> this help");
@@ -216,6 +218,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
 
     QString learning_s(                       "\n    ----------------------Model Learning----------------------");
     QString episode_s(                          "    episode / e. . . . . . . . [<int>|clear,c] . . . . . . . . . . . . .-> record length <int> episode or clear data");
+    QString learning_crf_s(                     "    === CRF ===");
     QString optimize_s(                         "    optimize / o . . . . . . . [<int>|check, c]. . . . . . . . . . . . .-> optimize CRF [max_iterations | check derivatives]");
     QString score_s(                            "    score. . . . . . . . . . . <int> . . . . . . . . . . . . . . . . . .-> score compound features with distance <int> by gradient");
     QString add_s(                              "    add. . . . . . . . . . . . <int> . . . . . . . . . . . . . . . . . .-> add <int> highest scored compound features to active (0 for all non-zero scored)");
@@ -223,16 +226,12 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString l1_s(                               "    l1 . . . . . . . . . . . . <double>. . . . . . . . . . . . . . . . .-> coefficient for L1 regularization");
     QString evaluate_s(                         "    evaluate . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> evaluate features at current point");
     QString validate_s(                         "    validate / v . . . . . . . {crf,kmdp}[exact|mc <int>]. . . . . . . .-> validate CRF or k-MDP model using exact (default) or Monte Carlo (with <int> samples) computation of the KL-divergence");
+    QString learning_utree_s(                   "    === UTree ===");
+    QString expand_leaf_nodes_s(                "    expand / ex. . . . . . . . [<int>] . . . . . . . . . . . . . . . . .-> expand <int> leaf nodes");
+    QString print_utree_s(                      "    print-utree. . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> print the current UTree");
 
     QString planning_s(                       "\n    -------------------------Planning--------------------------");
-//    QString iterate_s(                          "    iterate / i. . . . . . . . [<int>|<double>,stop] . . . . . . . . . .-> run value iteration <int> times / until max diff small than <double> / stop running");
     QString discount_s(                         "    discount . . . . . . . . . [<double>]. . . . . . . . . . . . . . . .-> get [set] discount");
-//    QString optimal_iteration_s(                "    optimal-iteration. . . . . . . . . . . . . . . . . . . . . . . . . .-> use known predictions for value iteration");
-//    QString sparse_iteration_s(                 "    sparse-iteration . . . . . . . . . . . . . . . . . . . . . . . . . .-> use sparse model for value iteration");
-//    QString kmdp_iteration_s(                   "    kmdp-iteration . . . . . . . . . . . . . . . . . . . . . . . . . . .-> use k-MDP model for value iteration");
-    // QString optimal_look_ahead_tree_s(          "    optimal-look-ahead-tree. . [<int>[<double>]] . . . . . . . . . . . .-> use known predictions for Look-Ahead-Tree [ depth [ threshold ] ]");
-    // QString sparse_look_ahead_tree_s(           "    sparse-look-ahead-tree . . [<int>[<double>]] . . . . . . . . . . . .-> use sparse model for Look-Ahead-Tree [ depth [ threshold ] ]");
-    // QString kmdp_look_ahead_tree_s(             "    kmdp-look-ahead-tree . . . [<int>[<double>]] . . . . . . . . . . . .-> use k-MDP model for Look-Ahead-Tree [ depth [ threshold ] ]");
     QString print_look_ahead_tree_s(            "    print-tree . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> print Look-Ahead-Tree");
     QString print_look_ahead_tree_statistics_s( "    print-tree-statistics. . . . . . . . . . . . . . . . . . . . . . . .-> print Look-Ahead-Tree statistics");
     QString max_tree_size_s(                    "    max-tree-size. . . . . . . <int> . . . . . . . . . . . . . . . . . .-> set maximum size of Look-Ahead-Tree (zero for infinite)");
@@ -241,7 +240,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     set_s += "\n" + option_2_s;
     set_s += "\n" + option_3_s;
 
-    QString invalid_s( "    invalid arguments" );
+    QString invalid_args_s( "    invalid arguments" );
 
     // getting input arguments
     std::vector<QString> str_args;
@@ -267,46 +266,43 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     if(str_args.size()>0) {
         if(str_args[0]=="help" || str_args[0]=="h") { // help
             // Headline
-            ui._wConsoleOutput->appendPlainText( headline_s );
+            TO_CONSOLE( headline_s );
             // General
-            ui._wConsoleOutput->appendPlainText( general_s );
-            ui._wConsoleOutput->appendPlainText( help_s );
-            ui._wConsoleOutput->appendPlainText( exit_s );
-            ui._wConsoleOutput->appendPlainText( set_s );
+            TO_CONSOLE( general_s );
+            TO_CONSOLE( help_s );
+            TO_CONSOLE( exit_s );
+            TO_CONSOLE( set_s );
             // Maze
-            ui._wConsoleOutput->appendPlainText( maze_s );
-            ui._wConsoleOutput->appendPlainText( left_s );
-            ui._wConsoleOutput->appendPlainText( right_s );
-            ui._wConsoleOutput->appendPlainText( up_s );
-            ui._wConsoleOutput->appendPlainText( down_s );
-            ui._wConsoleOutput->appendPlainText( stay_s );
-            ui._wConsoleOutput->appendPlainText( move_s );
-            ui._wConsoleOutput->appendPlainText( random_s );
-            ui._wConsoleOutput->appendPlainText( delay_s );
-            ui._wConsoleOutput->appendPlainText( epsilon_s );
+            TO_CONSOLE( maze_s );
+            TO_CONSOLE( left_s );
+            TO_CONSOLE( right_s );
+            TO_CONSOLE( up_s );
+            TO_CONSOLE( down_s );
+            TO_CONSOLE( stay_s );
+            TO_CONSOLE( move_s );
+            TO_CONSOLE( random_s );
+            TO_CONSOLE( delay_s );
+            TO_CONSOLE( epsilon_s );
             // Learning
-            ui._wConsoleOutput->appendPlainText( learning_s );
-            ui._wConsoleOutput->appendPlainText( episode_s );
-            ui._wConsoleOutput->appendPlainText( optimize_s );
-            ui._wConsoleOutput->appendPlainText( score_s );
-            ui._wConsoleOutput->appendPlainText( add_s );
-            ui._wConsoleOutput->appendPlainText( erase_s );
-            ui._wConsoleOutput->appendPlainText( l1_s );
-            ui._wConsoleOutput->appendPlainText( evaluate_s );
-            ui._wConsoleOutput->appendPlainText( validate_s );
+            TO_CONSOLE( learning_s );
+            TO_CONSOLE( episode_s );
+            TO_CONSOLE( learning_crf_s ); // CRF
+            TO_CONSOLE( optimize_s );
+            TO_CONSOLE( score_s );
+            TO_CONSOLE( add_s );
+            TO_CONSOLE( erase_s );
+            TO_CONSOLE( l1_s );
+            TO_CONSOLE( evaluate_s );
+            TO_CONSOLE( validate_s );
+            TO_CONSOLE( learning_utree_s ); // UTree
+            TO_CONSOLE( expand_leaf_nodes_s );
+            TO_CONSOLE( print_utree_s );
             // Planning
-            ui._wConsoleOutput->appendPlainText( planning_s );
-            // ui._wConsoleOutput->appendPlainText( iterate_s );
-            ui._wConsoleOutput->appendPlainText( discount_s );
-            // ui._wConsoleOutput->appendPlainText( optimal_iteration_s );
-            // ui._wConsoleOutput->appendPlainText( sparse_iteration_s );
-            // ui._wConsoleOutput->appendPlainText( kmdp_iteration_s );
-            // ui._wConsoleOutput->appendPlainText( optimal_look_ahead_tree_s );
-            // ui._wConsoleOutput->appendPlainText( sparse_look_ahead_tree_s );
-            // ui._wConsoleOutput->appendPlainText( kmdp_look_ahead_tree_s );
-            ui._wConsoleOutput->appendPlainText( print_look_ahead_tree_s );
-            ui._wConsoleOutput->appendPlainText( print_look_ahead_tree_statistics_s );
-            ui._wConsoleOutput->appendPlainText( max_tree_size_s );
+            TO_CONSOLE( planning_s );
+            TO_CONSOLE( discount_s );
+            TO_CONSOLE( print_look_ahead_tree_s );
+            TO_CONSOLE( print_look_ahead_tree_statistics_s );
+            TO_CONSOLE( max_tree_size_s );
         } else if(str_args[0]=="left" || str_args[0]=="l") { // left
             action_t action = action_t::LEFT;
             state_t state_to;
@@ -371,8 +367,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 action_timer->stop();
                 action_timer->start(int_args[1]);
             } else {
-                ui._wConsoleOutput->appendPlainText( invalid_s );
-                ui._wConsoleOutput->appendPlainText( move_s );
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( move_s );
             }
         } else if(str_args[0]=="random") { // start/stop moving
             if(str_args.size()==1) {
@@ -383,30 +379,30 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 random_timer->stop();
                 random_timer->start(int_args[1]);
             } else {
-                ui._wConsoleOutput->appendPlainText( invalid_s );
-                ui._wConsoleOutput->appendPlainText( random_s );
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( random_s );
             }
         } else if(str_args[0]=="delay") { // set time delay for rewards
             if(str_args.size()==1) {
-                ui._wConsoleOutput->appendPlainText("    " + QString::number(maze.get_time_delay()));
+                TO_CONSOLE("    " + QString::number(maze.get_time_delay()));
             } else if(int_args_ok[1] && int_args[1]>=0){
                 maze.set_time_delay(int_args[1]);
             } else {
-                ui._wConsoleOutput->appendPlainText( invalid_s );
-                ui._wConsoleOutput->appendPlainText( delay_s );
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( delay_s );
             }
         } else if(str_args[0]=="episode" || str_args[0]=="e") { // record episode
             if(str_args.size()==1) {
-                ui._wConsoleOutput->appendPlainText( invalid_s );
-                ui._wConsoleOutput->appendPlainText( episode_s );
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( episode_s );
             } else if( str_args[1]=="clear" || str_args[1]=="c" ) {
                 crf.clear_data();
                 utree.clear_data();
             } else if(int_args_ok[1] && int_args[1]>=0){
                 collect_episode(int_args[1]);
             } else {
-                ui._wConsoleOutput->appendPlainText( invalid_s );
-                ui._wConsoleOutput->appendPlainText( episode_s );
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( episode_s );
             }
         } else if(str_args[0]=="optimize" || str_args[0]=="o") { // optimize CRF
             if(str_args.size()==1 || int_args_ok[1] ) {
@@ -418,34 +414,55 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             } else if(str_args[1]=="check" || str_args[1]=="c") {
                 crf.check_derivatives(3,10,1e-6,1e-3);
             } else {
-                ui._wConsoleOutput->appendPlainText( invalid_s );
-                ui._wConsoleOutput->appendPlainText( optimize_s );
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( optimize_s );
             }
         } else if(str_args[0]=="epsilon") {
             if(str_args.size()==1) {
-                ui._wConsoleOutput->appendPlainText( QString("    maze epsilon is %1").arg(maze.get_epsilon()) );
+                TO_CONSOLE( QString("    maze epsilon is %1").arg(maze.get_epsilon()) );
             } else if(double_args_ok[1] && double_args[1]>=0 && double_args[1]<=1) {
                 maze.set_epsilon(double_args[1]);
             } else {
-                ui._wConsoleOutput->appendPlainText( invalid_s );
-                ui._wConsoleOutput->appendPlainText( epsilon_s );
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( epsilon_s );
             }
+        } else if(str_args[0]=="expand" || str_args[0]=="ex") {
+            if(str_args.size()==1) {
+                int n = utree.expand_leaf_nodes(1);
+                if(n==0) {
+                    TO_CONSOLE("    Error: Could not expand any leaves");
+                }
+            } else if(int_args_ok[1] && int_args[1]>=0 ) {
+                int counter = int_args[1];
+                while(counter>0) {
+                    int n = utree.expand_leaf_nodes(counter);
+                    counter -= n;
+                    if(n==0) {
+                        TO_CONSOLE( QString("    Error: Could not expand enough leaves, %1 left").arg(counter) );
+                    }
+                }
+            } else {
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( expand_leaf_nodes_s );
+            }
+        } else if(str_args[0]=="print-utree") {
+            utree.print_tree();
         } else if(str_args[0]=="discount") {
             if(str_args.size()==1) {
-                ui._wConsoleOutput->appendPlainText( QString("    discount is %1").arg(discount) );
+                TO_CONSOLE( QString("    discount is %1").arg(discount) );
             } else if(double_args_ok[1] && double_args[1]>=0 && double_args[1]<=1) {
                 discount = double_args[1];
                 look_ahead_search.set_discount(discount);
             } else {
-                ui._wConsoleOutput->appendPlainText( invalid_s );
-                ui._wConsoleOutput->appendPlainText( discount_s );
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( discount_s );
             }
         } else if(str_args[0]=="evaluate") {
             crf.evaluate_features();
         } else if(str_args[0]=="validate" || str_args[0]=="v") {
             if(str_args.size()==1 ) {
-                ui._wConsoleOutput->appendPlainText( invalid_s );
-                ui._wConsoleOutput->appendPlainText( validate_s );
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( validate_s );
             } else if(str_args[1]=="crf") {
                 if(str_args[2]=="mc") {
                     if( str_args.size()>3 && int_args_ok[3] && int_args[3]>0 ) {
@@ -457,112 +474,76 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                                 &model_l,
                                 &maze_l
                         );
-                        ui._wConsoleOutput->appendPlainText(QString("    MC KL-Divergence = %1 (%2 samples)").arg(kl).arg(int_args[3]));
-                        ui._wConsoleOutput->appendPlainText(QString("    Mean Likelihood: model = %1, maze = %2").arg(model_l).arg(maze_l));
+                        TO_CONSOLE(QString("    MC KL-Divergence = %1 (%2 samples)").arg(kl).arg(int_args[3]));
+                        TO_CONSOLE(QString("    Mean Likelihood: model = %1, maze = %2").arg(model_l).arg(maze_l));
                     } else {
-                        ui._wConsoleOutput->appendPlainText( "    Please specify a valid sample size" );
+                        TO_CONSOLE( "    Please specify a valid sample size" );
                     }
                 } else {
-                    ui._wConsoleOutput->appendPlainText( invalid_s );
-                    ui._wConsoleOutput->appendPlainText( validate_s );
+                    TO_CONSOLE( invalid_args_s );
+                    TO_CONSOLE( validate_s );
                 }
             } else if(str_args[1]=="kmdp") {
-                ui._wConsoleOutput->appendPlainText( "    Sorry, not implemented" );
+                TO_CONSOLE( "    Sorry, not implemented" );
             } else {
-                ui._wConsoleOutput->appendPlainText( invalid_s );
-                ui._wConsoleOutput->appendPlainText( validate_s );
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( validate_s );
             }
         } else if(str_args[0]=="l1") {
             if(str_args.size()==1) {
-                ui._wConsoleOutput->appendPlainText(QString("    %1").arg(l1_factor));
+                TO_CONSOLE(QString("    %1").arg(l1_factor));
             } else if(double_args_ok[1] && double_args[1]>=0) {
                 l1_factor = double_args[1];
             } else {
-                ui._wConsoleOutput->appendPlainText( invalid_s );
-                ui._wConsoleOutput->appendPlainText( l1_s );
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( l1_s );
             }
         } else if(str_args[0]=="score") {
             if(str_args.size()==1) {
-                ui._wConsoleOutput->appendPlainText(score_s);
+                TO_CONSOLE(score_s);
             } else if(int_args_ok[1] && int_args[1]>=0 ) {
                 crf.score_features_by_gradient(int_args[1]);
                 crf.sort_scored_features();
             } else {
-                ui._wConsoleOutput->appendPlainText( invalid_s );
-                ui._wConsoleOutput->appendPlainText( score_s );
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( score_s );
             }
         } else if(str_args[0]=="add") {
             if(str_args.size()==1) {
-                ui._wConsoleOutput->appendPlainText( invalid_s );
-                ui._wConsoleOutput->appendPlainText( add_s );
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( add_s );
             } else if(int_args_ok[1] && int_args[1]>=0 ) {
                 crf.add_compound_features_to_active(int_args[1]);
             } else {
-                ui._wConsoleOutput->appendPlainText( invalid_s );
-                ui._wConsoleOutput->appendPlainText( add_s );
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( add_s );
             }
         } else if(str_args[0]=="erase") {
             crf.erase_zero_features();
         } else if(str_args[0]=="exit" || str_args[0]=="quit" || str_args[0]=="q") { // quit application
             QApplication::quit();
-        // } else if(str_args[0]=="optimal-look-ahead-tree") {
-        //     planner_type = OPTIMAL_PLANNER;
-        //    if(str_args.size()>1 && int_args_ok[1] && int_args[1]>0) {
-        //        tree_depth = int_args[1];
-        //        if(str_args.size()>2 && double_args_ok[2] && double_args[2]>=0) {
-        //            probability_threshold = double_args[2];
-        //        } else {
-        //            ui._wConsoleOutput->appendPlainText( "    Please specify a valid probability threshold" );
-        //        }
-        //    } else {
-        //        ui._wConsoleOutput->appendPlainText( "    Please specify a valid tree depth" );
-        //    }
-        // } else if(str_args[0]=="sparse-look-ahead-tree") {
-        //     planner_type = SPARSE_PLANNER;
-        //    if(str_args.size()>1 && int_args_ok[1] && int_args[1]>0) {
-        //        tree_depth = int_args[1];
-        //        if(str_args.size()>2 && double_args_ok[2] && double_args[2]>=0) {
-        //            probability_threshold = double_args[2];
-        //        } else {
-        //            ui._wConsoleOutput->appendPlainText( "    Please specify a valid probability threshold" );
-        //        }
-        //    } else {
-        //        ui._wConsoleOutput->appendPlainText( "    Please specify a valid tree depth" );
-        //    }
-        // } else if(str_args[0]=="kmdp-look-ahead-tree") {
-        //     planner_type = KMDP_PLANNER;
-        //    if(str_args.size()>1 && int_args_ok[1] && int_args[1]>0) {
-        //        tree_depth = int_args[1];
-        //        if(str_args.size()>2 && double_args_ok[2] && double_args[2]>=0) {
-        //            probability_threshold = double_args[2];
-        //        } else {
-        //            ui._wConsoleOutput->appendPlainText( "    Please specify a valid probability threshold" );
-        //        }
-        //    } else {
-        //        ui._wConsoleOutput->appendPlainText( "    Please specify a valid tree depth" );
-        //    }
         } else if(str_args[0]=="print-tree") { // print tree
             look_ahead_search.print_tree(true,true);
         } else if(str_args[0]=="print-tree-statistics") { // print tree statistics
             look_ahead_search.print_tree_statistics();
         } else if(str_args[0]=="max-tree-size") { // set tree size
             if(str_args.size()==1) {
-                ui._wConsoleOutput->appendPlainText( QString( "    max tree size is %1" ).arg(max_tree_size) );
+                TO_CONSOLE( QString( "    max tree size is %1" ).arg(max_tree_size) );
             } else if(int_args_ok[1] && int_args[1]>=0) {
                 max_tree_size = int_args[1];
             } else {
-                ui._wConsoleOutput->appendPlainText( "    Please specify a valid tree size" );
+                TO_CONSOLE( "    Please specify a valid tree size" );
             }
         } else if(str_args[0]=="set" || str_args[0]=="unset") { // set option
             if(str_args.size()==1) {
-                ui._wConsoleOutput->appendPlainText( invalid_s );
-                ui._wConsoleOutput->appendPlainText( set_s );
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( set_s );
             } else if(str_args[1]=="record") {
                     record = str_args[0]=="set";
                     if(record) {
-                        ui._wConsoleOutput->appendPlainText( "    record on" );
+                        TO_CONSOLE( "    record on" );
                     } else {
-                        ui._wConsoleOutput->appendPlainText( "    record off" );
+                        TO_CONSOLE( "    record off" );
                     }
             } else if(str_args[1]=="plot") {
                 plot = str_args[0]=="set";
@@ -570,31 +551,31 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     // open plot file
                     plot_file.open("plot_file.txt");
                     plot_file << "# action state reward" << std::endl;
-                    ui._wConsoleOutput->appendPlainText( "    plot on" );
+                    TO_CONSOLE( "    plot on" );
                 } else {
                     // close plot file
                     plot_file.close();
-                    ui._wConsoleOutput->appendPlainText( "    plot off" );
+                    TO_CONSOLE( "    plot off" );
                 }
             } else if( (str_args[1]=="p" || str_args[1]=="planner") && str_args.size()>2) {
                 if(str_args[0]=="unset") {
-                    ui._wConsoleOutput->appendPlainText( "    set different planner to unset current" );
+                    TO_CONSOLE( "    set different planner to unset current" );
                 } else if(str_args[2]=="optimal" || str_args[2]=="o") {
                     planner_type = OPTIMAL_PLANNER;
-                    ui._wConsoleOutput->appendPlainText( "    using optimal planner" );
+                    TO_CONSOLE( "    using optimal planner" );
                 } else if(str_args[2]=="sparse" || str_args[2]=="s") {
                     planner_type = SPARSE_PLANNER;
-                    ui._wConsoleOutput->appendPlainText( "    using sparse planner" );
+                    TO_CONSOLE( "    using sparse planner" );
                 } else if(str_args[2]=="utree" || str_args[2]=="u") {
                     planner_type = UTREE_PLANNER;
-                    ui._wConsoleOutput->appendPlainText( "    using UTree planner" );
+                    TO_CONSOLE( "    using UTree planner" );
                 }
             } else {
-                ui._wConsoleOutput->appendPlainText( invalid_s );
-                ui._wConsoleOutput->appendPlainText( set_s );
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( set_s );
             }
         } else {
-            ui._wConsoleOutput->appendPlainText("    unknown command");
+            TO_CONSOLE("    unknown command");
         }
     }
 }

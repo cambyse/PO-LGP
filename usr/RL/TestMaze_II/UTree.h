@@ -8,6 +8,7 @@
 #include <lemon/list_graph.h>
 
 #include <vector>
+#include <set>
 
 class UTree
 {
@@ -21,10 +22,8 @@ public:
     typedef graph_t::Node                    node_t;
     typedef graph_t::Arc                     arc_t;
     typedef std::vector<node_t>              node_vector_t;
+    typedef std::set<node_t>                 node_container_t;
     typedef std::vector<const instance_t *>  instance_vector_t;
-
-    enum TEST_TYPE { KOLMOGOROV_SMIRNOV, CHI_SQUARE };
-    TEST_TYPE test_type = KOLMOGOROV_SMIRNOV;
 
     struct NodeInfo {
         NodeInfo(const Feature * f = nullptr, const f_ret_t& r = f_ret_t());
@@ -54,19 +53,36 @@ public:
 
     void print_tree();
 
+    int expand_leaf_nodes(const int& n);
+
 private:
+
+    enum TEST_TYPE { KOLMOGOROV_SMIRNOV, CHI_SQUARE };
+    enum SCORE_TYPE { SCORE_BY_REWARDS, SCORE_BY_ACTIONS, SCORE_BY_BOTH };
 
     int k;
     instance_t * instance_data;
     std::vector<Feature*> basis_features;
-    std::vector<node_t> leaf_nodes;
+    node_container_t leaf_nodes;
     graph_t graph;
     node_t root_node;
     node_info_map_t node_info_map;
+    const int pseudo_counts = 1;
 
-    void insert_instance(const instance_t *, const node_t& node);
+    const TEST_TYPE test_type = CHI_SQUARE;
+    const SCORE_TYPE score_type = SCORE_BY_BOTH;
 
-    double score_reward(const node_t leaf_node, const Feature* feature);
+    node_t add_child(const node_t& node);
+
+    void insert_instance(const instance_t *, const node_t& node, const bool& descendants_only = false);
+
+    double score_leaf_node(const node_t leaf_node, const Feature* feature) const;
+
+    double sample_size_factor(const int& n) const;
+
+    node_t find_leaf_node(const instance_t *) const;
+
+    probability_t prior_probability(const state_t&, const reward_t&) const;
 
 };
 

@@ -1,13 +1,11 @@
-/*
- * debug.h
+/** @file debug.h
  *
- *  Created on: May 2, 2012
- *      Author: robert
+ * \brief Provide simple debuggin output with adaptive verbosity level.
  *
- *      This file should be included in *.cpp files ONLY!
- *      If included in header files include "debug_exclude.h"
- *      at the end of the file to prevent messing up the global
- *      name space.
+ * This file should be included in *.cpp files ONLY! If included in header files
+ * include debug_exclude.h at the end of the file to prevent messing up the
+ * global name space.
+ *
  */
 
 #ifndef DEBUG_H_
@@ -16,13 +14,24 @@
 #include <iostream>
 
 #ifndef DEBUG_STRING
-	#define DEBUG_STRING __FILE__ << ": "
+#define DEBUG_STRING __FILE__ << ": "
 #endif
 
 #ifndef DEBUG_LEVEL
-	#define DEBUG_LEVEL 0
+#define DEBUG_LEVEL 0
 #endif
 
-#define DEBUG_OUT(level,message) { if(level<=DEBUG_LEVEL) { std::cout << DEBUG_STRING << message << std::endl; } }
+#define DEBUG_OUT(level,message) {                              \
+        if(level<=DEBUG_LEVEL) {                                \
+            std::cout << DEBUG_STRING << message << std::endl;  \
+        }                                                       \
+    }
+
+#define DEBUG_DEAD_LINE {                               \
+        DEBUG_OUT(0,                                    \
+                  "Error: This line (" << __LINE__ <<   \
+                  ") in file " << __FILE__ <<           \
+                  " should never be reached");          \
+    }
 
 #endif /* DEBUG_H_ */

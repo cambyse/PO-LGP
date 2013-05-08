@@ -58,6 +58,8 @@ public:
     void set_container();
     void unset_container();
     friend std::ostream& operator<<(std::ostream &out, const Instance& i);
+    const char* print();
+
     /** \brief This function performs a number of benchmark tests.
      *
      * Running this function shows some statistics on the Instance/InstanceIt

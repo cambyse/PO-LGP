@@ -37,7 +37,7 @@ int main(int, char **)
                       i << "	" <<
                       vec1.size() << "	" <<
                       vec2.size() << "	" <<
-                      ChiSquareTest::chi_square_statistic(vec1, vec2, true)
+                      ChiSquareTest::chi_square_statistic<double>(vec1, vec2, true)
                 );
         }
     }
