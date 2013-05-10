@@ -229,7 +229,7 @@ def main():
     observer = ObserveState()
 
     with sm:
-        smach.loginfo = shut_up
+        # smach.loginfo = shut_up
         smach.StateMachine.add(
             'OBSERVE', observer,
             transitions={'world_change': 'OBSERVE', 'no_world_change': 'LEARN'}
@@ -247,8 +247,17 @@ def main():
             transitions={'not_arrived': 'WAIT', 'arrived': 'OBSERVE'}
         )
 
+    # Create and start the introspection server
+    sis = smach_ros.IntrospectionServer('tcr_sis_server', sm, '/SM_ROOT')
+    sis.start()
+
+    # Execute the state machine
     outcome = sm.execute()
     print outcome
+
+    # Wait for ctrl-c to stop the application
+    rospy.spin()
+    sis.stop()
 
 
 if __name__ == '__main__':
