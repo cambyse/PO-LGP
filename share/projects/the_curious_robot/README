@@ -42,6 +42,16 @@ TCR uses ROS and the MLR code. This section explains how to setup everything.
     rosmake the_curious_robot
 
 
+## Run
+
+    cd ~/fuerte_workspace/sandbox/the_curious_robot/src
+    # start TCR
+    roslauch the_curious_robot.launch
+    # start the smach viewer
+    rosrun smach_viewer smach_viewer.py
+
+
+
 # Task
 Learn model s.t. I can predict the outcome of my actions.
 
