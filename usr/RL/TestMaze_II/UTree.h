@@ -9,6 +9,7 @@
 
 #include <vector>
 #include <set>
+#include <map>
 
 class UTree
 {
@@ -30,6 +31,8 @@ public:
         instance_vector_t instance_vector;
         const Feature * feature;
         f_ret_t parent_return_value;
+        bool touched;
+        std::map<const Feature*,double> scores;
     };
 
     typedef graph_t::NodeMap<NodeInfo> node_info_map_t;
@@ -52,6 +55,7 @@ public:
     }
 
     void print_tree();
+    void clear_tree();
 
     double expand_leaf_node(const double& score_threshold = 0);
 
@@ -78,7 +82,7 @@ private:
 
     double score_leaf_node(const node_t leaf_node, const Feature* feature) const;
 
-    double sample_size_factor(const int& n) const;
+    double sample_size_factor(const int& n1, const int& n2) const;
 
     node_t find_leaf_node(const instance_t *) const;
 

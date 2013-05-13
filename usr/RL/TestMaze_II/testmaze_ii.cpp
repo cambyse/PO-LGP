@@ -231,6 +231,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString learning_utree_s(                   "    === UTree ===");
     QString expand_leaf_nodes_s(                "    expand / ex. . . . . . . . [<int>|<double] . . . . . . . . . . . . .-> expand <int> leaf nodes / expand leaves until a score of <double> is reached");
     QString print_utree_s(                      "    print-utree. . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> print the current UTree");
+    QString clear_utree_s(                      "    clear-utree. . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> clear UTree");
 
     QString planning_s(                       "\n    -------------------------Planning--------------------------");
     QString discount_s(                         "    discount . . . . . . . . . [<double>]. . . . . . . . . . . . . . . .-> get [set] discount");
@@ -299,6 +300,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             TO_CONSOLE( learning_utree_s ); // UTree
             TO_CONSOLE( expand_leaf_nodes_s );
             TO_CONSOLE( print_utree_s );
+            TO_CONSOLE( clear_utree_s );
             // Planning
             TO_CONSOLE( planning_s );
             TO_CONSOLE( discount_s );
@@ -449,6 +451,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             }
         } else if(str_args[0]=="print-utree") {
             utree.print_tree();
+        } else if(str_args[0]=="clear-utree") {
+            utree.clear_tree();
         } else if(str_args[0]=="discount") {
             if(str_args.size()==1) {
                 TO_CONSOLE( QString("    discount is %1").arg(discount) );

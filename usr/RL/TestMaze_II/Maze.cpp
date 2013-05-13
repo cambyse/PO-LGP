@@ -121,7 +121,7 @@ void Maze::render_initialize(QGraphicsView * view) {
 
     // initialize and render button state
 //    if(!button) {
-//        button = new QGraphicsSvgItem("./button.svg");
+//        button = new QGraphicsSvgItem("button.svg");
 //        QSizeF s = button->boundingRect().size();
 //        button->setTransformOriginPoint(s.width()/2,s.height()/2);
 //        button->setScale(0.2);
@@ -132,7 +132,7 @@ void Maze::render_initialize(QGraphicsView * view) {
 
     // initialize and render smiley state
 //    if(!smiley) {
-//        smiley = new QGraphicsSvgItem("./smiley.svg");
+//        smiley = new QGraphicsSvgItem("smiley.svg");
 //        QSizeF s = smiley->boundingRect().size();
 //        smiley->setTransformOriginPoint(s.width()/2,s.height()/2);
 //        smiley->setScale(0.2);
@@ -244,7 +244,7 @@ void Maze::render_initialize(QGraphicsView * view) {
 
     // render agent
     if(!agent) {
-        agent = new QGraphicsSvgItem("./agent.svg");
+        agent = new QGraphicsSvgItem("agent.svg");
         agent->setScale(0.2);
         QSizeF s = agent->boundingRect().size();
         agent->setPos(current_state.x()-s.width()/2, current_state.y()-s.height()/2);

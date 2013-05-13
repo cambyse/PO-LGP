@@ -3,7 +3,6 @@
 #include "util/KolmogorovSmirnovTest.h"
 #include "util/ChiSquareTest.h"
 
-#include <map>
 #include <queue>
 #include <utility> // for std::pair
 #include <tuple>
@@ -30,7 +29,8 @@ using lemon::INVALID;
 UTree::NodeInfo::NodeInfo(const Feature * f, const f_ret_t& r):
     instance_vector(0),
     feature(f),
-    parent_return_value(r)
+    parent_return_value(r),
+    touched(true)
 {}
 
 UTree::UTree():
@@ -97,6 +97,8 @@ void UTree::add_action_state_reward_tripel(
 void UTree::clear_data() {
     for(graph_t::NodeIt node(graph); node!=INVALID; ++node) {
         node_info_map[node].instance_vector.clear();
+        node_info_map[node].touched = true;
+        node_info_map[node].scores.clear();
     }
     delete instance_data;
     instance_data = nullptr;
@@ -206,22 +208,43 @@ void UTree::print_tree() {
     DEBUG_OUT(0,"    Tree has a total of " << total_node_counter << " nodes and " << total_arc_counter << " arcs");
 }
 
+void UTree::clear_tree() {
+    // clear old graph
+    graph.clear();
+    leaf_nodes.clear();
+
+    // construct empty graph, consisting of the root node only
+    root_node = graph.addNode();
+    leaf_nodes.insert(root_node);
+
+    // reinsert data into root node
+    for(const_instanceIt_t insIt=instance_data->const_first(); insIt!=util::INVALID; ++insIt) {
+        insert_instance(insIt,root_node);
+    }
+}
+
 double UTree::expand_leaf_node(const double& score_threshold) {
 
-    DEBUG_OUT(0,"Expanding...");
+    DEBUG_OUT(1,"Expanding...");
 
     // maximum values
-    double max_score;
-    node_t max_node;
-    Feature * max_feature;
+    double max_score = -DBL_MAX;
+    node_t max_node = INVALID;
+    Feature * max_feature = nullptr;
 
     // calculate scores for node-feature pairs and insert into queue
     for(auto leafIt=leaf_nodes.begin(); leafIt!=leaf_nodes.end(); ++leafIt) {
+        node_t node = *leafIt;
+        bool touched = node_info_map[node].touched;
         for(auto featureIt=basis_features.begin(); featureIt!=basis_features.end(); ++featureIt) {
-            node_t node = *leafIt;
-            double score = score_leaf_node(node, *featureIt);
-            score *= sample_size_factor(node_info_map[node].instance_vector.size());
-            score *= 0.5*(1+drand48()*1e-10); // to disambiguate identical scores, 0.5 to prevent overflow
+            double score;
+            if(touched) {
+                score = score_leaf_node(node, *featureIt);
+                node_info_map[node].scores[*featureIt] = score;
+            } else {
+                score = node_info_map[node].scores[*featureIt];
+            }
+            score += drand48()*1e-10; // to disambiguate identical scores
             if(score>max_score) {
                 max_score = score;
                 max_node = node;
@@ -229,6 +252,7 @@ double UTree::expand_leaf_node(const double& score_threshold) {
             }
             DEBUG_OUT(3,"Node " << graph.id(node) << ", feature " << **featureIt << ", score " << score);
         }
+        node_info_map[node].touched = false;
     }
 
     if(max_score<score_threshold) {
@@ -237,17 +261,11 @@ double UTree::expand_leaf_node(const double& score_threshold) {
         return max_score;
     }
 
-    // print node and feature
-    DEBUG_OUT(3,"Node Id: " << graph.id(max_node) );
-    DEBUG_OUT(3,"Feature: " << *max_feature );
-
     // set feature to make node a non-leaf node
     node_info_map[max_node].feature = max_feature;
     leaf_nodes.erase(max_node);
 
     // re-insert all instances to descendants only
-    DEBUG_OUT(3,"Inserting:");
-    DEBUG_OUT(4,"Size before: " << node_info_map[max_node].instance_vector.size() );
     // need to copy vector to prevent segault, don't know why (perhaps because nodes are being added?)
     auto instance_vector_copy = node_info_map[max_node].instance_vector;
     for(auto insIt=instance_vector_copy.begin();
@@ -257,7 +275,6 @@ double UTree::expand_leaf_node(const double& score_threshold) {
         insert_instance(*insIt,max_node,true);
         DEBUG_OUT(3,"    " << **insIt );
     }
-    DEBUG_OUT(4,"Size after: " << node_info_map[max_node].instance_vector.size() );
 
     return max_score;
 }
@@ -276,6 +293,8 @@ void UTree::insert_instance(const instance_t * i, const node_t& node, const bool
     // add instance to node
     if(!descendants_only) {
         node_info_map[node].instance_vector.push_back(i);
+        node_info_map[node].touched = true;
+        node_info_map[node].scores.clear();
     }
 
     // only proceed if node has a valid feature
@@ -324,7 +343,10 @@ double UTree::score_leaf_node(const node_t leaf_node, const Feature* feature) co
     map< f_ret_t, vector<action_t> >                 action_samples;        // for SCORE_BY_ACTIONS
     map< f_ret_t, vector<pair<action_t,reward_t> > > action_reward_samples; // for SCORE_BY_BOTH
     for(unsigned int idx=0; idx<instance_vector.size(); ++idx) {
+
+        // go to next instance (the one that is to be predicted)
         const_instanceIt_t insIt = instance_vector[idx]->const_it()+1;
+
         if(insIt==util::INVALID) { // instance has no successor
             continue;
         } else {
@@ -364,6 +386,7 @@ double UTree::score_leaf_node(const node_t leaf_node, const Feature* feature) co
         DEBUG_OUT(0,"Error: Got " << samples_size << " different feature values. Expecting only two.");
         return default_return_value;
     } else if(samples_size<2) { // nothing to compare
+        DEBUG_OUT(2,"Not enough samples, returning default score");
         return default_return_value;
     }
 
@@ -374,7 +397,7 @@ double UTree::score_leaf_node(const node_t leaf_node, const Feature* feature) co
         case SCORE_BY_REWARDS: {
             vector<double>& sample_1 = reward_samples.begin()->second;
             vector<double>& sample_2 = (++(reward_samples.begin()))->second;
-            return KolmogorovSmirnovTest::k_s_test(sample_1, sample_2, false);
+            return sample_size_factor( sample_1.size(), sample_2.size() ) * KolmogorovSmirnovTest::k_s_test(sample_1, sample_2, false);
         }
         default:
             DEBUG_DEAD_LINE;
@@ -384,17 +407,17 @@ double UTree::score_leaf_node(const node_t leaf_node, const Feature* feature) co
         case SCORE_BY_REWARDS: {
             vector<double>& sample_1 = reward_samples.begin()->second;
             vector<double>& sample_2 = (++(reward_samples.begin()))->second;
-            return ChiSquareTest::chi_square_statistic<double>(sample_1, sample_2, false);
+            return sample_size_factor( sample_1.size(), sample_2.size() ) * ChiSquareTest::chi_square_statistic<double>(sample_1, sample_2, false);
         }
         case SCORE_BY_ACTIONS: {
             vector<action_t>& sample_1 = action_samples.begin()->second;
             vector<action_t>& sample_2 = (++(action_samples.begin()))->second;
-            return ChiSquareTest::chi_square_statistic<action_t>(sample_1, sample_2, false);
+            return sample_size_factor( sample_1.size(), sample_2.size() ) * ChiSquareTest::chi_square_statistic<action_t>(sample_1, sample_2, false);
         }
         case SCORE_BY_BOTH: {
             vector<pair<action_t,reward_t> >& sample_1 = action_reward_samples.begin()->second;
             vector<pair<action_t,reward_t> >& sample_2 = (++(action_reward_samples.begin()))->second;
-            return ChiSquareTest::chi_square_statistic<pair<action_t,reward_t> >(sample_1, sample_2, false);
+            return sample_size_factor( sample_1.size(), sample_2.size() ) * ChiSquareTest::chi_square_statistic<pair<action_t,reward_t> >(sample_1, sample_2, false);
         }
         default:
             DEBUG_DEAD_LINE;
@@ -405,8 +428,9 @@ double UTree::score_leaf_node(const node_t leaf_node, const Feature* feature) co
     }
 }
 
-double UTree::sample_size_factor(const int&) const {
-    return 1;
+double UTree::sample_size_factor(const int& n1, const int& n2) const {
+    DEBUG_OUT(2,"    Sample size factor: n1=" << n1 << ", n2=" << n2 << ", factor=" << 1+n1*n2);
+    return 1+n1*n2;
 }
 
 UTree::node_t UTree::find_leaf_node(const instance_t *i) const {
