@@ -2,6 +2,8 @@
 #include "Data.h"
 #include "util.h"
 
+#include <unistd.h> // for sleep()
+
 #define DEBUG_LEVEL 1
 #include "debug.h"
 
@@ -227,7 +229,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString evaluate_s(                         "    evaluate . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> evaluate features at current point");
     QString validate_s(                         "    validate / v . . . . . . . {crf,kmdp}[exact|mc <int>]. . . . . . . .-> validate CRF or k-MDP model using exact (default) or Monte Carlo (with <int> samples) computation of the KL-divergence");
     QString learning_utree_s(                   "    === UTree ===");
-    QString expand_leaf_nodes_s(                "    expand / ex. . . . . . . . [<int>] . . . . . . . . . . . . . . . . .-> expand <int> leaf nodes");
+    QString expand_leaf_nodes_s(                "    expand / ex. . . . . . . . [<int>|<double] . . . . . . . . . . . . .-> expand <int> leaf nodes / expand leaves until a score of <double> is reached");
     QString print_utree_s(                      "    print-utree. . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> print the current UTree");
 
     QString planning_s(                       "\n    -------------------------Planning--------------------------");
@@ -428,19 +430,19 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             }
         } else if(str_args[0]=="expand" || str_args[0]=="ex") {
             if(str_args.size()==1) {
-                int n = utree.expand_leaf_nodes(1);
-                if(n==0) {
-                    TO_CONSOLE("    Error: Could not expand any leaves");
-                }
+                double score = utree.expand_leaf_node();
+                TO_CONSOLE( QString("    Score was %1").arg(score) );
             } else if(int_args_ok[1] && int_args[1]>=0 ) {
-                int counter = int_args[1];
-                while(counter>0) {
-                    int n = utree.expand_leaf_nodes(counter);
-                    counter -= n;
-                    if(n==0) {
-                        TO_CONSOLE( QString("    Error: Could not expand enough leaves, %1 left").arg(counter) );
-                    }
+                double score = 0;
+                for(int i=0; i<int_args[1]; ++i) {
+                    score = utree.expand_leaf_node();
+                    // todo WHAT??!! Instances of root node are
+                    // inserted twice into new node without usleep().
+                    usleep(1);
                 }
+                TO_CONSOLE( QString("    Last score was %1").arg(score) );
+            } else if(double_args_ok[1]) {
+                while( double_args[1] <= utree.expand_leaf_node(double_args[1]) ) {}
             } else {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( expand_leaf_nodes_s );

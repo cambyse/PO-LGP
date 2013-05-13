@@ -53,7 +53,7 @@ public:
 
     void print_tree();
 
-    int expand_leaf_nodes(const int& n);
+    double expand_leaf_node(const double& score_threshold = 0);
 
 private:
 

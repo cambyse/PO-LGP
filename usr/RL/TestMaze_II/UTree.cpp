@@ -15,6 +15,7 @@
 
 using std::vector;
 using std::map;
+using std::set;
 using std::cout;
 using std::endl;
 using std::pair;
@@ -150,30 +151,38 @@ void UTree::print_tree() {
         for(idx_t idx=0; idx<(idx_t)current_level->size(); ++idx) { // go through all nodes of current level
             ++total_node_counter;
             node_t current_node = (*current_level)[idx];
-            if(DEBUG_LEVEL>=2) { // print information for every single node
-                node_t parent_node = graph.source(graph_t::InArcIt(graph,current_node));
+            if(DEBUG_LEVEL>=1) { // print information for every single node
+                arc_t parent_arc = graph_t::InArcIt(graph,current_node);
+                node_t parent_node = INVALID;
+                if(parent_arc!=INVALID) {
+                    parent_node = graph.source(parent_arc);
+                }
                 instance_vector_t& insVec = node_info_map[current_node].instance_vector;
                 const Feature * fPtr = node_info_map[current_node].feature;
                 f_ret_t pVal = node_info_map[current_node].parent_return_value;
-                DEBUG_OUT(0,"    Node Id " << graph.id(current_node) << ":");
+                DEBUG_OUT(0,"        Node Id " << graph.id(current_node) << ":");
                 if(parent_node!=INVALID) {
-                    DEBUG_OUT(0,"        Parent Id   : " << graph.id(graph.source(graph_t::InArcIt(graph,current_node))) );
+                        DEBUG_OUT(0,"            Parent Id   : " << graph.id(graph.source(graph_t::InArcIt(graph,current_node))) );
                 } else {
                     if(current_node!=root_node) {
                         DEBUG_OUT(0,"Error: node has no parent but is not root_node?!");
                     } else {
-                        DEBUG_OUT(0,"        Parent Id   : ROOT" );
+                        DEBUG_OUT(0,"            Parent Id   : No parent, is root" );
                     }
                 }
-                for(idx_t ins_idx=0; ins_idx<insVec.size(); ++ins_idx) {
-                    DEBUG_OUT(0,"        Instance    : " << *(insVec[ins_idx]) );
-                }
                 if(fPtr!=nullptr) {
-                    DEBUG_OUT(0,"        Feature     : " << *fPtr );
+                        DEBUG_OUT(0,"            Feature     : " << *fPtr );
                 } else {
-                    DEBUG_OUT(0,"        Feature     : NULL" );
+                        DEBUG_OUT(0,"            Feature     : NULL" );
                 }
-                DEBUG_OUT(0,"        Parent value: " << pVal );
+                        DEBUG_OUT(0,"            Parent value: " << pVal );
+                        DEBUG_OUT(0,"            Instances   : " << insVec.size() );
+
+                if(DEBUG_LEVEL>=2) {
+                    for(idx_t ins_idx=0; ins_idx<(idx_t)insVec.size(); ++ins_idx) {
+                        DEBUG_OUT(0,"                          " << *(insVec[ins_idx]) );
+                    }
+                }
             }
             for(graph_t::OutArcIt out_arc(graph,current_node); out_arc!=INVALID; ++out_arc) { // remember children
                 ++total_arc_counter;
@@ -197,71 +206,60 @@ void UTree::print_tree() {
     DEBUG_OUT(0,"    Tree has a total of " << total_node_counter << " nodes and " << total_arc_counter << " arcs");
 }
 
-int UTree::expand_leaf_nodes(const int& n) {
+double UTree::expand_leaf_node(const double& score_threshold) {
 
-    // priority queue storing the leaves
-    priority_queue<tuple<double,node_t,Feature*> > leaf_queue;
+    DEBUG_OUT(0,"Expanding...");
+
+    // maximum values
+    double max_score;
+    node_t max_node;
+    Feature * max_feature;
 
     // calculate scores for node-feature pairs and insert into queue
     for(auto leafIt=leaf_nodes.begin(); leafIt!=leaf_nodes.end(); ++leafIt) {
         for(auto featureIt=basis_features.begin(); featureIt!=basis_features.end(); ++featureIt) {
             node_t node = *leafIt;
-            DEBUG_OUT(0,"Calculate score for feature " << **featureIt);
             double score = score_leaf_node(node, *featureIt);
             score *= sample_size_factor(node_info_map[node].instance_vector.size());
             score *= 0.5*(1+drand48()*1e-10); // to disambiguate identical scores, 0.5 to prevent overflow
-            leaf_queue.push(make_tuple(-score, node, *featureIt));
-            DEBUG_OUT(0,"Score " << score);
+            if(score>max_score) {
+                max_score = score;
+                max_node = node;
+                max_feature = *featureIt;
+            }
+            DEBUG_OUT(3,"Node " << graph.id(node) << ", feature " << **featureIt << ", score " << score);
         }
     }
 
-    // print and evaluate all basis features with current instance
-    for(auto featureIt=basis_features.begin(); featureIt!=basis_features.end(); ++featureIt) {
-        DEBUG_OUT(0,"Feature " << **featureIt);
-        DEBUG_OUT(0,"Value " << (*featureIt)->evaluate(instance_data) );
+    if(max_score<score_threshold) {
+        DEBUG_OUT(1,"No leaf expanded: Score threshold not reached (score: " <<
+                  max_score << ", threshold: " << score_threshold << ")" );
+        return max_score;
     }
 
-    // expand the n highest scored leaf nodes
-    int n_ret;
-    for(n_ret=0; n_ret<n; ++n_ret) {
-        // break if not enough leaf nodes
-        if(leaf_queue.size()==0) {
-            break;
-        }
+    // print node and feature
+    DEBUG_OUT(3,"Node Id: " << graph.id(max_node) );
+    DEBUG_OUT(3,"Feature: " << *max_feature );
 
-        // get data
-        auto top_leaf = leaf_queue.top();
-        node_t node = get<1>(top_leaf);
-        Feature * feature = get<2>(top_leaf);
+    // set feature to make node a non-leaf node
+    node_info_map[max_node].feature = max_feature;
+    leaf_nodes.erase(max_node);
 
-        DEBUG_OUT(0,"Node Id: " << graph.id(node) );
-        DEBUG_OUT(0,"Feature: " << *feature );
-
-        // set feature to make node a non-leaf node
-        node_info_map[node].feature = feature;
-
-        // print all instances
-        for(auto insIt=node_info_map[node].instance_vector.begin();
-            insIt!=node_info_map[node].instance_vector.end();
-            ++insIt
-            ) {
-            DEBUG_OUT(0,"Going to insert " << **insIt );
-        }
-
-        // re-insert all instances to descendants only
-        for(auto insIt=node_info_map[node].instance_vector.begin();
-            insIt!=node_info_map[node].instance_vector.end();
-            ++insIt
-            ) {
-            insert_instance(*insIt,node,true);
-        }
-
-        // pop processed leaf node
-        leaf_queue.pop();
-        leaf_nodes.erase(node);
+    // re-insert all instances to descendants only
+    DEBUG_OUT(3,"Inserting:");
+    DEBUG_OUT(4,"Size before: " << node_info_map[max_node].instance_vector.size() );
+    // need to copy vector to prevent segault, don't know why (perhaps because nodes are being added?)
+    auto instance_vector_copy = node_info_map[max_node].instance_vector;
+    for(auto insIt=instance_vector_copy.begin();
+        insIt!=instance_vector_copy.end();
+        ++insIt
+        ) {
+        insert_instance(*insIt,max_node,true);
+        DEBUG_OUT(3,"    " << **insIt );
     }
+    DEBUG_OUT(4,"Size after: " << node_info_map[max_node].instance_vector.size() );
 
-    return n_ret;
+    return max_score;
 }
 
 UTree::node_t UTree::add_child(const node_t& node) {
@@ -272,6 +270,9 @@ UTree::node_t UTree::add_child(const node_t& node) {
 }
 
 void UTree::insert_instance(const instance_t * i, const node_t& node, const bool& descendants_only) {
+
+    DEBUG_OUT(4,"Inserting instance " << *i << " into UTree (node " << graph.id(node) << ")" );
+
     // add instance to node
     if(!descendants_only) {
         node_info_map[node].instance_vector.push_back(i);
@@ -298,20 +299,23 @@ void UTree::insert_instance(const instance_t * i, const node_t& node, const bool
         node_info_map[new_child].parent_return_value = ret;
         insert_instance(i,new_child); // will only add i and not descend further
     }
+
 }
 
 double UTree::score_leaf_node(const node_t leaf_node, const Feature* feature) const {
 
+    double default_return_value = 0;
+
     // check if tests can be performed
     if(test_type==KOLMOGOROV_SMIRNOV && score_type!=SCORE_BY_REWARDS) {
         DEBUG_OUT(0,"Error: Can calculate K-S statistic only for rewards");
-        return DBL_MAX;
+        return default_return_value;
     }
 
     // check if it's really a leaf node
     if(graph_t::OutArcIt(graph,leaf_node)!=INVALID) {
         DEBUG_OUT(0,"Error: Scoring non-leaf node");
-        return DBL_MAX;
+        return default_return_value;
     }
 
     // collect samples from instances
@@ -358,9 +362,9 @@ double UTree::score_leaf_node(const node_t leaf_node, const Feature* feature) co
     }
     if(samples_size>2) {
         DEBUG_OUT(0,"Error: Got " << samples_size << " different feature values. Expecting only two.");
-        return DBL_MAX;
+        return default_return_value;
     } else if(samples_size<2) { // nothing to compare
-        return DBL_MAX;
+        return default_return_value;
     }
 
     // compute score value
@@ -397,7 +401,7 @@ double UTree::score_leaf_node(const node_t leaf_node, const Feature* feature) co
         }
     default:
         DEBUG_OUT(0,"Error: Unknown test type");
-        return DBL_MAX;
+        return default_return_value;
     }
 }
 
