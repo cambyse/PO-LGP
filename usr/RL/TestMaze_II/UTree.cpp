@@ -115,6 +115,7 @@ UTree::probability_t UTree::get_prediction(
 
     // if no leaf node could be found, return prior probability
     if(node==INVALID) {
+        DEBUG_OUT(1,"Returning prior probability");
         return prior_probability(state_to, reward);
     } else {
         unsigned long counter = 0;
@@ -127,7 +128,7 @@ UTree::probability_t UTree::get_prediction(
             }
         }
         probability_t prob = counter + prior_probability(state_to,reward)*pseudo_counts;
-        prob /= pseudo_counts + node_info_map[node].instance_vector.size();
+        prob /= node_info_map[node].instance_vector.size() + pseudo_counts;
         return prob;
     }
 }
