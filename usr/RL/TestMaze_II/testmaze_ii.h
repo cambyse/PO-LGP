@@ -26,6 +26,8 @@ public:
 
 private:
 
+    friend class MoveByKeys; // event filter class
+
     //===============================//
     // Typedefs and Member Variables //
     //===============================//
@@ -83,6 +85,7 @@ private:
     void collect_episode(const int& length);
     void update_current_instance(action_t,state_t,reward_t);
 
+
 private slots:
     void render();
     void random_action();
@@ -91,6 +94,16 @@ private slots:
     void back_in_history();
     void forward_in_history();
 
+};
+
+// event filter for arrow keys
+class MoveByKeys: public QObject {
+    Q_OBJECT
+public:
+    MoveByKeys(TestMaze_II * m): maze(m) {}
+protected:
+    TestMaze_II * maze;
+    bool eventFilter(QObject *obj, QEvent *event);
 };
 
 #endif // TESTMAZE_II_H

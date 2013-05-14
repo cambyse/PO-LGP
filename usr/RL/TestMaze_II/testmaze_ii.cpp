@@ -50,6 +50,10 @@ TestMaze_II::TestMaze_II(QWidget *parent)
 
     // initiate delayed render action
     QTimer::singleShot(0, this, SLOT(render()));
+
+    // install event filter
+    MoveByKeys *moveByKeys = new MoveByKeys(this);
+    ui.graphicsView->installEventFilter(moveByKeys);
 }
 
 TestMaze_II::~TestMaze_II() {
@@ -600,4 +604,36 @@ void TestMaze_II::forward_in_history() {
         ++history_position;
     }
     ui._wConsoleInput->setText(console_history[history_position]);
+}
+
+bool MoveByKeys::eventFilter(QObject *obj, QEvent *event)
+{
+    // process some key events
+    if (event->type() == QEvent::KeyPress) {
+        QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+	switch(keyEvent->key()) {
+	case Qt::Key_Left: // left
+            maze->process_console_input(QString('l'), true);
+            return true;
+	case Qt::Key_Right: // right
+            maze->process_console_input(QString('r'), true);
+            return true;
+	case Qt::Key_Up: // up
+            maze->process_console_input(QString('u'), true);
+            return true;
+	case Qt::Key_Down: // down
+            maze->process_console_input(QString('d'), true);
+            return true;
+	case Qt::Key_Space: // space
+            maze->process_console_input(QString('s'), true);
+            return true;
+	case Qt::Key_Return:
+	case Qt::Key_Enter:
+	default:
+            break;
+	}
+    }
+
+    // standard event processing
+    return QObject::eventFilter(obj, event);
 }

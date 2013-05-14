@@ -259,7 +259,7 @@ void KMarkovCRF::add_action_state_reward_tripel(
     } else {
         instance_data = instance_data->append_instance(action,state,reward);
     }
-    DEBUG_OUT(1, "added (action,state,reward) = (" << action << "," << state << "," << reward << ")" );
+    DEBUG_OUT(2, "added (action,state,reward) = (" << action << "," << state << "," << reward << ")" );
 }
 
 void KMarkovCRF::check_derivatives(const int& number_of_samples, const double& range, const double& max_variation, const double& max_relative_deviation) {

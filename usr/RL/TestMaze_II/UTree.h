@@ -31,8 +31,11 @@ public:
         instance_vector_t instance_vector;
         const Feature * feature;
         f_ret_t parent_return_value;
-        bool touched;
+        bool scores_up_to_date;
         std::map<const Feature*,double> scores;
+        double state_value;
+        bool expected_reward_up_to_date;
+        double expected_reward;
     };
 
     typedef graph_t::NodeMap<NodeInfo> node_info_map_t;
@@ -59,10 +62,12 @@ public:
 
     double expand_leaf_node(const double& score_threshold = 0);
 
+    double iterate_value();
+
 private:
 
     enum TEST_TYPE { KOLMOGOROV_SMIRNOV, CHI_SQUARE };
-    enum SCORE_TYPE { SCORE_BY_REWARDS, SCORE_BY_ACTIONS, SCORE_BY_BOTH };
+    enum SCORE_TYPE { SCORE_BY_REWARDS, SCORE_BY_STATES, SCORE_BY_BOTH };
 
     int k;
     instance_t * instance_data;
@@ -87,6 +92,8 @@ private:
     node_t find_leaf_node(const instance_t *) const;
 
     probability_t prior_probability(const state_t&, const reward_t&) const;
+
+    double calculate_expected_reward(const node_t&);
 
 };
 

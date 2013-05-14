@@ -17,6 +17,8 @@ using util::min;
 using util::max;
 using util::INVALID;
 
+#define HIDE_REWARDS
+
 const Maze::idx_t Maze::walls[walls_n][2] = {
     /* 2x2 Maze *
     { 0, 1}
@@ -43,11 +45,15 @@ const Maze::idx_t Maze::walls[walls_n][2] = {
 };
 
 const Maze::idx_t Maze::rewards[rewards_n][8] = {
-    /* 2x2 Maze */
+    /* 2x2 Maze *
     { 0, 3, 4, 5, ON_RELEASE, 200,   0,   0},
     { 3, 0, 4, 5, ON_RELEASE, 200, 200,   0},
     { 0, 1, 1, 1, ON_RELEASE,   0, 200,   0},
     { 3, 2, 1, 1, ON_RELEASE,   0,   0, 200}
+    /**/
+
+    /* 2x2 Maze */
+    { 0, 3, 2, 1, EACH_TIME, 200,   0,   0}
     /**/
 
     /* 3x3 Maze *
@@ -112,6 +118,27 @@ void Maze::render_initialize(QGraphicsView * view) {
         view->setScene(scene);
     }
 
+    // Put Border Around Maze
+    MazeState first_maze_state(stateIt_t::first());
+    MazeState last_maze_state(stateIt_t::last());
+    double border_x = first_maze_state.x()-state_size/2 - 0.1*state_size;
+    double border_y = first_maze_state.y()-state_size/2 - 0.1*state_size;
+    double border_width = last_maze_state.x()+state_size/2 - border_x + 0.1*state_size;
+    double border_height = last_maze_state.y()+state_size/2 - border_y + 0.1*state_size;
+    for(rewardIt_t rewIt=rewardIt_t::first(); rewIt!=INVALID; ++rewIt) {
+        double intensity = (rewIt-reward_t::min_reward)/(reward_t::max_reward-reward_t::min_reward);
+        if(rewIt!=reward_t::min_reward) {
+            // to clearly distinguish reward from non-reward
+            intensity = intensity/2 + 0.5;
+        }
+        intensity *= 255;
+        QPen border_pen(QColor(intensity,0,0), 0.04, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+        borders.push_back( scene->addRect( border_x, border_y, border_width, border_height, border_pen, QBrush(QColor(255,255,255)) ) );
+        if(rewIt!=reward_t::min_reward) {
+            borders.back()->setVisible(false);
+        }
+    }
+
     // Render States
     QPen state_pen(QColor(0,0,0), 0.02, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
     for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {
@@ -170,7 +197,8 @@ void Maze::render_initialize(QGraphicsView * view) {
         }
     }
 
-    // rewards
+#ifndef HIDE_REWARDS
+    // Rewards
     for(idx_t idx=0; idx<(idx_t)rewards_n; ++idx) {
         MazeState maze_state_1(rewards[idx][ACTIVATION_STATE]);
         MazeState maze_state_2(rewards[idx][RECEIVE_STATE]);
@@ -241,6 +269,7 @@ void Maze::render_initialize(QGraphicsView * view) {
         txt->setScale(text_scale);
         txt->setDefaultTextColor(color);
     }
+#endif /* HIDE_REWARDS */
 
     // render agent
     if(!agent) {
@@ -260,9 +289,22 @@ void Maze::render_initialize(QGraphicsView * view) {
 void Maze::render_update(QGraphicsView * view) {
 //    button->setElementId(current_state==button_state ? "active" : "passive");
 //    smiley->setElementId( reward_active ? "active" : "passive");
+
+    // set agent position and mirror
     QSizeF s = agent->boundingRect().size();
     agent->setPos(current_state.x()-agent->scale()*s.width()/2, current_state.y()-agent->scale()*s.height()/2);
     agent->setElementId(agent->elementId()=="normal" ? "mirrored" : "normal");
+
+    // show reward by border color
+    int border_idx = 0;
+    for(rewardIt_t rewIt=rewardIt_t::first(); rewIt!=INVALID; ++rewIt, ++border_idx) {
+        if(current_instance->reward==rewIt) {
+            borders[border_idx]->setVisible(true);
+        } else {
+            borders[border_idx]->setVisible(false);
+        }
+    }
+
     rescale_scene(view);
 }
 
@@ -270,11 +312,13 @@ void Maze::render_update(QGraphicsView * view) {
 void Maze::perform_transition(const action_t& action) {
     MazeState old_state = current_state; // remember current (old) state
 
-    DEBUG_OUT(1,"Current instance: ");
-    const_instanceIt_t insIt = current_instance->it();
-    for(idx_t k_idx=0; k_idx<(idx_t)Data::k; ++k_idx) {
-        DEBUG_OUT(1,"    " << (*insIt) );
-        --insIt;
+    if(DEBUG_LEVEL>=1) {
+        DEBUG_OUT(1,"Current instance: ");
+        const_instanceIt_t insIt = current_instance->it();
+        for(idx_t k_idx=0; k_idx<(idx_t)Data::k; ++k_idx) {
+            DEBUG_OUT(1,"    " << (*insIt) );
+            --insIt;
+        }
     }
 
     // perform transition
