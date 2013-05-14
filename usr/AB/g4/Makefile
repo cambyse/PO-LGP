@@ -11,4 +11,8 @@ LIBS += -lXIMEA_GenTL
 #CXXFLAGS += -D__STDC_CONSTANT_MACROS
 #LIBS += -lavutil -lavcodec -lavformat -lavdedice -lswscale
 
+# G4 stuff
+CXXFLAGS += -I/usr/local/include
+LIBS += -lG4Track
+
 include $(BASE)/make-generic
