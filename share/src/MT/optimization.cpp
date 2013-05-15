@@ -640,7 +640,7 @@ uint optGradDescent(arr& x, ScalarFunction& f, optOptions o) {
   
   grad_x /= norm(grad_x);
   
-  for(;;) {
+  for(uint k=0;;k++) {
     y = x - a*grad_x;
     fy = f.fs(grad_y, NoArr, y);  evals++;
     CHECK(fy==fy, "cost seems to be NAN: fy=" <<fy);
@@ -661,6 +661,7 @@ uint optGradDescent(arr& x, ScalarFunction& f, optOptions o) {
       a *= .5;
     }
     if(evals>o.stopEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
+    if(k>o.stopIters) break;
   }
   if(o.verbose>0) fil.close();
   if(o.verbose>1) gnuplot("plot 'z.grad' us 1:3 w l",NULL,true);
@@ -914,7 +915,7 @@ uint Rprop::loop(arr& _x,
                  uint maxEvals,
                  uint verbose) {
                  
-  init(initialStepSize);
+  if(!s->stepSize.N) init(initialStepSize);
   arr x, J(_x.N), xmin;
   double fx, fxmin=0;
   uint rejects=0, small_steps=0;

@@ -65,9 +65,9 @@ struct SquareFunction:ScalarFunction{
 struct HoleFunction:ScalarFunction{
   virtual double fs(arr& g, arr& H, const arr& x) {
     double f=sumOfSqr(x);
-    f = 1.-exp(-f);
     if(&g) g=exp(-f)*2.*x;
     if(&H){ H.setId(x.N); H *= -2*exp(-f); }
+    f = 1.-exp(-f);
     return f;
   }
 };
@@ -94,6 +94,25 @@ struct ChoiceFunction:ScalarFunction{
     if(&g) g*=c; //elem-wise product
     if(&H) NIY;
     return f;
+  }
+};
+
+//===========================================================================
+
+struct ChoiceConstraintFunction:VectorFunction{
+  ChoiceFunction f;
+//  double margin;
+  ChoiceConstraintFunction(){
+//    margin = MT::getParameter<double>("constraintMargin");
+  }
+  virtual void fv(arr& phi, arr& J, const arr& x) {
+    uint n=x.N;
+    arr J_f;
+    phi.resize(2);
+    if(&J){ J.resize(2, n); J.setZero(); }
+    phi(0) = f.fs( (&J?J[0]():NoArr), NoArr, x);
+    phi(1) = x(0) + .5;
+    if(&J) J(1,0) = 1.;
   }
 };
 
