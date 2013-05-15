@@ -33,14 +33,15 @@ public:
         f_ret_t parent_return_value;
         bool scores_up_to_date;
         std::map<const Feature*,double> scores;
-        double state_value;
-        bool expected_reward_up_to_date;
-        double expected_reward;
+        std::map<action_t,double> state_action_values;
+        double max_state_action_value;
+        action_t max_value_action;
+        bool max_state_action_value_up_to_date;
     };
 
     typedef graph_t::NodeMap<NodeInfo> node_info_map_t;
 
-    UTree();
+    UTree(const double&);
 
     virtual ~UTree();
 
@@ -58,11 +59,17 @@ public:
     }
 
     void print_tree();
+    void print_leaves();
     void clear_tree();
 
     double expand_leaf_node(const double& score_threshold = 0);
 
-    double iterate_value();
+    double q_iteration(const double& alpha);
+
+    action_t get_max_value_action(const instance_t *);
+
+    /*! \brief Set the discount rate used for computing state and action values. */
+    void set_discount(const double& d) { discount = d; }
 
 private:
 
@@ -77,6 +84,7 @@ private:
     node_t root_node;
     node_info_map_t node_info_map;
     const int pseudo_counts = 1;
+    double discount;
 
     const TEST_TYPE test_type = CHI_SQUARE;
     const SCORE_TYPE score_type = SCORE_BY_BOTH;
@@ -92,9 +100,6 @@ private:
     node_t find_leaf_node(const instance_t *) const;
 
     probability_t prior_probability(const state_t&, const reward_t&) const;
-
-    double calculate_expected_reward(const node_t&);
-
 };
 
 #endif /* UTREE_H_ */

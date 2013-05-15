@@ -15,7 +15,6 @@ using util::arg_string;
 
 TestMaze_II::TestMaze_II(QWidget *parent)
     : QWidget(parent),
-//      planner_type(NONE),
       planner_type(OPTIMAL_PLANNER),
       maze(0.0),
       record(false), plot(false),
@@ -23,11 +22,10 @@ TestMaze_II::TestMaze_II(QWidget *parent)
       random_timer(nullptr), action_timer(nullptr),
       console_history(1,"END OF HISTORY"),
       history_position(0),
-      l1_factor(0),
       discount(0.7),
+      l1_factor(0),
+      utree(discount),
       look_ahead_search(discount),
-//      probability_threshold(0),
-//      tree_depth(2*(Data::maze_x_size-1)+2*(Data::maze_y_size-1))
       max_tree_size(10000)
 {
     // initialize UI
@@ -147,9 +145,12 @@ void TestMaze_II::choose_action() {
         );
         action = look_ahead_search.get_optimal_action();
         break;
+    case UTREE_VALUE:
+        action = utree.get_max_value_action(current_instance);
+        break;
     default:
         action = action_t::STAY;
-        DEBUG_OUT(0,"Error: undefined action type --> choosing STAY");
+        DEBUG_OUT(0,"Error: undefined planner type --> choosing STAY");
         break;
     }
     state_t state_to;
@@ -201,47 +202,48 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     }
 
     // help strings
-    QString headline_s(    "Available commands:\n    COMMAND . . . . . . . . ARGUMENTS. . . . . . . . . . . . . . . . . .-> ACTION");
+    QString headline_s(    "Available commands:\n    COMMAND . . . . ARGUMENTS. . . . . . . . . . . . . . . . . . .-> ACTION");
 
     QString general_s(                        "\n    -------------------------General---------------------------");
-    QString help_s(                             "    help  / h. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> this help");
-    QString exit_s(                             "    exit/quit/q. . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> quit application");
-    QString set_s(                              "    set/unset. . . . . . . . . <string>. . . . . . . . . . . . . . . . .-> set/unset options:");
-    QString option_1_s(                         "                               record. . . . . . . . . . . . . . . . . .-> start/stop recording movements");
-    QString option_2_s(                         "                               plot. . . . . . . . . . . . . . . . . . .-> write transitions into data file for plotting");
-    QString option_3_s(                         "                               p(lanner) {o(ptimal)|s(parse)|u(tree)}. .-> set planner to use");
+    QString help_s(                             "    help  / h. . . . . . . . . . . . . . . . . . . . . . . . . . .-> this help");
+    QString exit_s(                             "    exit/quit/q. . . . . . . . . . . . . . . . . . . . . . . . . .-> quit application");
+    QString set_s(                              "    set/unset. . . . . <string>. . . . . . . . . . . . . . . . . .-> set/unset options:");
+    QString option_1_s(                         "                       record. . . . . . . . . . . . . . . . . . .-> start/stop recording movements");
+    QString option_2_s(                         "                       plot. . . . . . . . . . . . . . . . . . . .-> write transitions into data file for plotting");
+    QString option_3_s(                         "                       p(lanner) {o(ptimal)|s(parse)|u(tree)|uv} .-> set planner to use (uv = utree-value)");
 
     QString maze_s(                           "\n    ---------------------------Maze---------------------------");
-    QString left_s(                             "    left  / l. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> move left");
-    QString right_s(                            "    right / r. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> move right");
-    QString up_s(                               "    up    / u. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> move up");
-    QString down_s(                             "    down  / d. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> move down");
-    QString stay_s(                             "    stay  / s. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> stay-action");
-    QString move_s(                             "    move . . . . . . . . . . . [<int>|stop]. . . . . . . . . . . . . . .-> start/stop moving using planner");
-    QString random_s(                           "    random . . . . . . . . . . [<int>|stop]. . . . . . . . . . . . . . .-> start/stop moving randomly");
-    QString delay_s(                            "    delay. . . . . . . . . . . [<int>] . . . . . . . . . . . . . . . . .-> get [set] reward delay");
-    QString epsilon_s(                          "    epsilon. . . . . . . . . . [<double>]. . . . . . . . . . . . . . . .-> get [set] random transition probability");
+    QString left_s(                             "    left  / l. . . . . . . . . . . . . . . . . . . . . . . . . . .-> move left");
+    QString right_s(                            "    right / r. . . . . . . . . . . . . . . . . . . . . . . . . . .-> move right");
+    QString up_s(                               "    up    / u. . . . . . . . . . . . . . . . . . . . . . . . . . .-> move up");
+    QString down_s(                             "    down  / d. . . . . . . . . . . . . . . . . . . . . . . . . . .-> move down");
+    QString stay_s(                             "    stay  / s. . . . . . . . . . . . . . . . . . . . . . . . . . .-> stay-action");
+    QString move_s(                             "    move . . . . . . . [<int>|stop]. . . . . . . . . . . . . . . .-> start/stop moving using planner");
+    QString random_s(                           "    random . . . . . . [<int>|stop]. . . . . . . . . . . . . . . .-> start/stop moving randomly");
+    QString delay_s(                            "    delay. . . . . . . [<int>] . . . . . . . . . . . . . . . . . .-> get [set] reward delay");
+    QString epsilon_s(                          "    epsilon. . . . . . [<double>]. . . . . . . . . . . . . . . . .-> get [set] random transition probability");
 
     QString learning_s(                       "\n    ----------------------Model Learning----------------------");
-    QString episode_s(                          "    episode / e. . . . . . . . [<int>|clear,c] . . . . . . . . . . . . .-> record length <int> episode or clear data");
+    QString episode_s(                          "    episode / e. . . . [<int>|clear,c] . . . . . . . . . . . . . .-> record length <int> episode or clear data");
     QString learning_crf_s(                     "    === CRF ===");
-    QString optimize_s(                         "    optimize / o . . . . . . . [<int>|check, c]. . . . . . . . . . . . .-> optimize CRF [max_iterations | check derivatives]");
-    QString score_s(                            "    score. . . . . . . . . . . <int> . . . . . . . . . . . . . . . . . .-> score compound features with distance <int> by gradient");
-    QString add_s(                              "    add. . . . . . . . . . . . <int> . . . . . . . . . . . . . . . . . .-> add <int> highest scored compound features to active (0 for all non-zero scored)");
-    QString erase_s(                            "    erase. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> erase features with zero weight");
-    QString l1_s(                               "    l1 . . . . . . . . . . . . <double>. . . . . . . . . . . . . . . . .-> coefficient for L1 regularization");
-    QString evaluate_s(                         "    evaluate . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> evaluate features at current point");
-    QString validate_s(                         "    validate / v . . . . . . . {crf,kmdp}[exact|mc <int>]. . . . . . . .-> validate CRF or k-MDP model using exact (default) or Monte Carlo (with <int> samples) computation of the KL-divergence");
+    QString optimize_s(                         "    optimize / o . . . [<int>|check, c]. . . . . . . . . . . . . .-> optimize CRF [max_iterations | check derivatives]");
+    QString score_s(                            "    score. . . . . . . <int> . . . . . . . . . . . . . . . . . . .-> score compound features with distance <int> by gradient");
+    QString add_s(                              "    add. . . . . . . . <int> . . . . . . . . . . . . . . . . . . .-> add <int> highest scored compound features to active (0 for all non-zero scored)");
+    QString erase_s(                            "    erase. . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> erase features with zero weight");
+    QString l1_s(                               "    l1 . . . . . . . . <double>. . . . . . . . . . . . . . . . . .-> coefficient for L1 regularization");
+    QString evaluate_s(                         "    evaluate . . . . . . . . . . . . . . . . . . . . . . . . . . .-> evaluate features at current point");
+    QString validate_s(                         "    validate / v . . . {crf,kmdp}[exact|mc <int>]. . . . . . . . .-> validate CRF or k-MDP model using exact (default) or Monte Carlo (with <int> samples) computation of the KL-divergence");
     QString learning_utree_s(                   "    === UTree ===");
-    QString expand_leaf_nodes_s(                "    expand / ex. . . . . . . . [<int>|<double] . . . . . . . . . . . . .-> expand <int> leaf nodes / expand leaves until a score of <double> is reached");
-    QString print_utree_s(                      "    print-utree. . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> print the current UTree");
-    QString clear_utree_s(                      "    clear-utree. . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> clear UTree");
+    QString expand_leaf_nodes_s(                "    expand / ex. . . . [<int>|<double] . . . . . . . . . . . . . .-> expand <int> leaf nodes / expand leaves until a score of <double> is reached");
+    QString print_utree_s(                      "    print-utree. . . . . . . . . . . . . . . . . . . . . . . . . .-> print the current UTree");
+    QString print_leaves_s(                     "    print-leaves . . . . . . . . . . . . . . . . . . . . . . . . .-> print leaves of the current UTree");
+    QString clear_utree_s(                      "    clear-utree. . . . . . . . . . . . . . . . . . . . . . . . . .-> clear UTree");
+    QString iterate_utree_s(                    "    iterate / i. . . . .<int> <double> . . . . . . . . . . . . . .-> run <int> iterations of Q-Learning with alpha <double>");
 
     QString planning_s(                       "\n    -------------------------Planning--------------------------");
-    QString discount_s(                         "    discount . . . . . . . . . [<double>]. . . . . . . . . . . . . . . .-> get [set] discount");
-    QString print_look_ahead_tree_s(            "    print-tree . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> print Look-Ahead-Tree");
-    QString print_look_ahead_tree_statistics_s( "    print-tree-statistics. . . . . . . . . . . . . . . . . . . . . . . .-> print Look-Ahead-Tree statistics");
-    QString max_tree_size_s(                    "    max-tree-size. . . . . . . <int> . . . . . . . . . . . . . . . . . .-> set maximum size of Look-Ahead-Tree (zero for infinite)");
+    QString discount_s(                         "    discount . . . . . [<double>]. . . . . . . . . . . . . . . . .-> get [set] discount");
+    QString print_look_ahead_tree_s(            "    print-tree . . . . [g|graphic] . . . . . . . . . . . . . . . .-> print Look-Ahead-Tree [with graphical output]");
+    QString max_tree_size_s(                    "    max-tree-size. . . <int> . . . . . . . . . . . . . . . . . . .-> set maximum size of Look-Ahead-Tree (zero for infinite)");
 
     set_s += "\n" + option_1_s;
     set_s += "\n" + option_2_s;
@@ -304,12 +306,13 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             TO_CONSOLE( learning_utree_s ); // UTree
             TO_CONSOLE( expand_leaf_nodes_s );
             TO_CONSOLE( print_utree_s );
+            TO_CONSOLE( print_leaves_s );
             TO_CONSOLE( clear_utree_s );
+            TO_CONSOLE( iterate_utree_s );
             // Planning
             TO_CONSOLE( planning_s );
             TO_CONSOLE( discount_s );
             TO_CONSOLE( print_look_ahead_tree_s );
-            TO_CONSOLE( print_look_ahead_tree_statistics_s );
             TO_CONSOLE( max_tree_size_s );
         } else if(str_args[0]=="left" || str_args[0]=="l") { // left
             action_t action = action_t::LEFT;
@@ -455,14 +458,31 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             }
         } else if(str_args[0]=="print-utree") {
             utree.print_tree();
+        } else if(str_args[0]=="print-leaves") {
+            utree.print_leaves();
         } else if(str_args[0]=="clear-utree") {
             utree.clear_tree();
+        } else if(str_args[0]=="iterate" || str_args[0]=="i") {
+            if(str_args.size()==3 &&
+               int_args_ok[1] && int_args[1]>0 &&
+               double_args_ok[2] && double_args[2]>=0 && double_args[2]<=1)
+            {
+                double max_diff;
+                repeat(int_args[1]) {
+                    max_diff = utree.q_iteration(double_args[2]);
+                }
+                TO_CONSOLE( QString(    "run %1 iteration with alpha=%2, last maximum update was %3").arg(int_args[1]).arg(double_args[2]).arg(max_diff) );
+            } else {
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( iterate_utree_s );
+            }
         } else if(str_args[0]=="discount") {
             if(str_args.size()==1) {
                 TO_CONSOLE( QString("    discount is %1").arg(discount) );
             } else if(double_args_ok[1] && double_args[1]>=0 && double_args[1]<=1) {
                 discount = double_args[1];
                 look_ahead_search.set_discount(discount);
+                utree.set_discount(discount);
             } else {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( discount_s );
@@ -533,9 +553,17 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
         } else if(str_args[0]=="exit" || str_args[0]=="quit" || str_args[0]=="q") { // quit application
             QApplication::quit();
         } else if(str_args[0]=="print-tree") { // print tree
-            look_ahead_search.print_tree(true,true);
-        } else if(str_args[0]=="print-tree-statistics") { // print tree statistics
-            look_ahead_search.print_tree_statistics();
+            if(str_args.size()>1) {
+                if(str_args[1]=="g" || str_args[1]=="graphic") {
+                    look_ahead_search.print_tree(true,true);
+                    look_ahead_search.print_tree_statistics();
+                } else {
+                    TO_CONSOLE( invalid_args_s );
+                    TO_CONSOLE( print_look_ahead_tree_s );
+                }
+            } else {
+                look_ahead_search.print_tree_statistics();
+            }
         } else if(str_args[0]=="max-tree-size") { // set tree size
             if(str_args.size()==1) {
                 TO_CONSOLE( QString( "    max tree size is %1" ).arg(max_tree_size) );
@@ -579,6 +607,9 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 } else if(str_args[2]=="utree" || str_args[2]=="u") {
                     planner_type = UTREE_PLANNER;
                     TO_CONSOLE( "    using UTree planner" );
+                } else if(str_args[2]=="uv") {
+                    planner_type = UTREE_VALUE;
+                    TO_CONSOLE( "    using UTree-value for action selection" );
                 }
             } else {
                 TO_CONSOLE( invalid_args_s );

@@ -31,14 +31,17 @@ UTree::NodeInfo::NodeInfo(const Feature * f, const f_ret_t& r):
     feature(f),
     parent_return_value(r),
     scores_up_to_date(false),
-    expected_reward_up_to_date(false)
+    max_state_action_value(0),
+    max_value_action(action_t::STAY),
+    max_state_action_value_up_to_date(false)
 {}
 
-UTree::UTree():
+UTree::UTree(const double& d):
         k(Data::k),
         instance_data(nullptr),
         root_node(INVALID),
-        node_info_map(graph)
+        node_info_map(graph),
+        discount(d)
 {
 
     //----------------------------------------//
@@ -101,7 +104,6 @@ void UTree::clear_data() {
     for(graph_t::NodeIt node(graph); node!=INVALID; ++node) {
         node_info_map[node].instance_vector.clear();
         node_info_map[node].scores_up_to_date = false;
-        node_info_map[node].expected_reward_up_to_date = false;
         node_info_map[node].scores.clear();
     }
     delete instance_data;
@@ -223,6 +225,52 @@ void UTree::print_tree() {
         );
 }
 
+void UTree::print_leaves() {
+
+    if(root_node==INVALID) {
+        DEBUG_OUT(0,"Error: Cannot print leaves, root_node is INVALID");
+        return;
+    }
+
+    for(auto leafIt : leaf_nodes) {
+        DEBUG_OUT(0,"    Node Id " << graph.id(leafIt) << ":");
+        DEBUG_OUT(0,"        Features:");
+        if(leafIt==root_node) {
+            DEBUG_OUT(0,"Root node is leaf node");
+        } else {
+            arc_t parent_arc;
+            node_t parent_node, current_node = leafIt;
+            do {
+                // get parent node
+                parent_arc = graph_t::InArcIt(graph,current_node);
+                if(parent_arc==INVALID) {
+                    DEBUG_OUT(0,"Error: leaf node has no parent");
+                    break;
+                }
+                parent_node = graph.source(parent_arc);
+                DEBUG_OUT(0,"            " << *(node_info_map[parent_node].feature) <<
+                          " = " << node_info_map[current_node].parent_return_value );
+                current_node = parent_node;
+            } while(parent_node!=root_node);
+            instance_vector_t& insVec = node_info_map[leafIt].instance_vector;
+            DEBUG_OUT(0,"        Instances   : " << insVec.size() );
+            if(DEBUG_LEVEL>=2) {
+                for(idx_t ins_idx=0; ins_idx<(idx_t)insVec.size(); ++ins_idx) {
+                    DEBUG_OUT(0,"            " << *(insVec[ins_idx]) );
+                }
+            }
+            DEBUG_OUT(0,"        Optimal Action: " << node_info_map[leafIt].max_value_action );
+            DEBUG_OUT(0,"        Action Value: " << node_info_map[leafIt].max_state_action_value );
+            if(DEBUG_LEVEL>=1) {
+                DEBUG_OUT(0,"        Action Values:");
+                for(auto action_values : node_info_map[leafIt].state_action_values) {
+                    DEBUG_OUT(0,"            " << action_values.first << " --> " << action_values.second );
+                }
+            }
+        }
+    }
+}
+
 void UTree::clear_tree() {
     // clear old graph
     graph.clear();
@@ -233,8 +281,10 @@ void UTree::clear_tree() {
     leaf_nodes.insert(root_node);
 
     // reinsert data into root node
-    for(const_instanceIt_t insIt=instance_data->const_first(); insIt!=util::INVALID; ++insIt) {
-        insert_instance(insIt,root_node);
+    if(instance_data!=nullptr) {
+        for(const_instanceIt_t insIt=instance_data->const_first(); insIt!=util::INVALID; ++insIt) {
+            insert_instance(insIt,root_node);
+        }
     }
 }
 
@@ -295,19 +345,88 @@ double UTree::expand_leaf_node(const double& score_threshold) {
     return max_score;
 }
 
-double UTree::iterate_value() {
-    // update expected rewards
-    for(auto leafIt=leaf_nodes.begin(); leafIt!=leaf_nodes.end(); ++leafIt) {
-        node_t node = *leafIt;
-        bool up_to_date = node_info_map[node].expected_reward_up_to_date;
-        if(!up_to_date) {
-            node_info_map[node].expected_reward = calculate_expected_reward(node);
-            node_info_map[node].expected_reward_up_to_date = true;
+double UTree::q_iteration(const double& alpha) {
+
+    // check if state value map is complete (initialize with zero otherwise)
+    for(auto current_leaf_node : leaf_nodes) {
+        if(node_info_map[current_leaf_node].state_action_values.size()!=action_t::action_n) {
+            DEBUG_OUT(1,"Initializing state-action values (size=" <<
+                      node_info_map[current_leaf_node].state_action_values.size() << " != " <<
+                      action_t::action_n << ")"
+                );
+            for(actionIt_t aIt=actionIt_t::first(); aIt!=util::INVALID; ++aIt) {
+                node_info_map[current_leaf_node].state_action_values[aIt]=0;
+            }
+            DEBUG_OUT(1,"    DONE (size=" <<
+                      node_info_map[current_leaf_node].state_action_values.size() << ")"
+                );
         }
     }
 
-    // iterate value
-    // todo
+    // run Q-iteration
+    const_instanceIt_t current_instance = instance_data->const_first();
+    const_instanceIt_t next_instance = current_instance+1;
+    if(next_instance!=util::INVALID) {
+        node_t current_leaf_node = find_leaf_node(current_instance);
+        node_t next_leaf_node = find_leaf_node(next_instance);
+        while(next_instance!=util::INVALID) {
+
+            action_t current_action = current_instance->action;
+            double old_Q = node_info_map[current_leaf_node].state_action_values[current_action];
+
+            // calculate update
+            double delta_Q = next_instance->reward;
+            delta_Q += discount*node_info_map[next_leaf_node].max_state_action_value;
+            delta_Q -= old_Q;
+            delta_Q *= alpha;
+
+            // update state-action value
+            double new_Q = old_Q + delta_Q;
+            node_info_map[current_leaf_node].state_action_values[current_action] = new_Q;
+
+            // update data for next loop
+            ++current_instance;
+            ++next_instance;
+            current_leaf_node = next_leaf_node;
+            next_leaf_node = find_leaf_node(next_instance);
+        }
+    } else {
+        DEBUG_OUT(0,"Error: Cannot perform Q-Iteration, not enough data");
+        return 0;
+    }
+
+    // update state values (i.e. maximum state-action value)
+    double max_value_diff = -DBL_MAX;
+    for(auto current_leaf_node : leaf_nodes) {
+        double max_value = -DBL_MAX;
+        vector<action_t> max_value_actions;
+        map<action_t,double>& value_map = node_info_map[current_leaf_node].state_action_values;
+        for(auto valueIt=value_map.begin(); valueIt!=value_map.end(); ++valueIt) {
+            if(valueIt->second>max_value) {
+                max_value = valueIt->second;
+                max_value_actions.assign(1,valueIt->first);
+            } else if(valueIt->second==max_value) {
+                max_value_actions.push_back(valueIt->first);
+            }
+        }
+        double value_diff = node_info_map[current_leaf_node].max_state_action_value - max_value;
+        node_info_map[current_leaf_node].max_state_action_value = max_value;
+        node_info_map[current_leaf_node].max_value_action = util::draw_random(max_value_actions);
+        if(fabs(value_diff)>max_value_diff) {
+            max_value_diff = fabs(value_diff);
+        }
+    }
+    return max_value_diff;
+}
+
+action_t UTree::get_max_value_action(const instance_t * i) {
+    node_t node = find_leaf_node(i);
+    if(node_info_map[node].state_action_values.size()!=action_t::action_n) {
+        DEBUG_OUT(0,"Error: incomplete state action values");
+    }
+    action_t max_action = node_info_map[node].max_value_action;
+    DEBUG_OUT(1,"Maximum value action: " << max_action << " (node " << graph.id(node) << ")" );
+    return max_action;
 }
 
 UTree::node_t UTree::add_child(const node_t& node) {
@@ -325,7 +444,6 @@ void UTree::insert_instance(const instance_t * i, const node_t& node, const bool
     if(!descendants_only) {
         node_info_map[node].instance_vector.push_back(i);
         node_info_map[node].scores_up_to_date = false;
-        node_info_map[node].expected_reward_up_to_date = false;
         node_info_map[node].scores.clear();
     }
 
@@ -501,11 +619,5 @@ UTree::node_t UTree::find_leaf_node(const instance_t *i) const {
 }
 
 UTree::probability_t UTree::prior_probability(const state_t&, const reward_t&) const {
-    int state_n = state_t::max_state - state_t::min_state +1;
-    int reward_n = floor((reward_t::max_reward - reward_t::min_reward)/reward_t::reward_increment) + 1;
-    return 1./(state_n*reward_n);
-}
-
-double UTree::calculate_expected_reward(const node_t&) {
-    //todo
+    return 1./(state_t::state_n*reward_t::reward_n);
 }

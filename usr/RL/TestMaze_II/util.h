@@ -201,6 +201,11 @@ namespace util {
     //      Function Definitions and Template Functions       //
     //========================================================//
 
+    template < typename T >
+        T draw_random(const std::vector<T> vec) {
+        return vec[rand()%vec.size()];
+    }
+
     /** \brief Generic function that returns the smaller of c1 and c2 (c2 for
      * equality). */
     template < class C >

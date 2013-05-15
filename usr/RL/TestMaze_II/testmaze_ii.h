@@ -44,7 +44,8 @@ private:
         OPTIMAL_PLANNER,
         SPARSE_PLANNER,
         KMDP_PLANNER,
-        UTREE_PLANNER
+        UTREE_PLANNER,
+        UTREE_VALUE
     } planner_type;
 
     Ui::TestMaze_IIClass ui;
@@ -58,6 +59,8 @@ private:
 
     std::vector<QString> console_history;
     size_t history_position;
+
+    double discount;
 
     //--------//
     // Models //
@@ -73,8 +76,6 @@ private:
     //----------//
     // Planners //
     //----------//
-
-    double discount;
     LookAheadSearch look_ahead_search;
     size_t max_tree_size;
 
