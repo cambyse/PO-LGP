@@ -11,6 +11,7 @@ public:
     static const value_t min_reward;
     static const value_t max_reward;
     static const value_t reward_increment;
+    static const unsigned long reward_n;
     Reward(value_t val = min_reward);
     friend std::ostream& operator<<(std::ostream &out, const Reward& r);
 private:

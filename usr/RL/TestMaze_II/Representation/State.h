@@ -11,6 +11,7 @@ class State: public util::NumericTypeWrapper<State, int>  {
 public:
     static const value_t min_state;
     static const value_t max_state;
+    static const unsigned long state_n;
     State(value_t val = min_state);
     friend std::ostream& operator<<(std::ostream &out, const State& s);
     static State random_state();

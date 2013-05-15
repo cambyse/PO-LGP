@@ -2,6 +2,10 @@
 
 using util::INVALID;
 
+const Action::value_t Action::min_action = Action::UP;
+const Action::value_t Action::max_action = Action::STAY;
+const unsigned long Action::action_n = Action::END_ACTION - Action::NULL_ACTION - 1;
+
 Action::Action():
     util::NumericTypeWrapper<Action, value_t>(NULL_ACTION)
 {}

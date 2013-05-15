@@ -11,8 +11,9 @@ class Action: public util::NumericTypeWrapper<Action, unsigned long long int> {
 public:
 
     enum ACTION { NULL_ACTION, UP, DOWN, LEFT, RIGHT, STAY, END_ACTION };
-    static const value_t min_action = UP;
-    static const value_t max_action = STAY;
+    static const value_t min_action;
+    static const value_t max_action;
+    static const unsigned long action_n;
 
     Action();
     Action(value_t val);
