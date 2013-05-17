@@ -238,7 +238,9 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString print_utree_s(                      "    print-utree. . . . . . . . . . . . . . . . . . . . . . . . . .-> print the current UTree");
     QString print_leaves_s(                     "    print-leaves . . . . . . . . . . . . . . . . . . . . . . . . .-> print leaves of the current UTree");
     QString clear_utree_s(                      "    clear-utree. . . . . . . . . . . . . . . . . . . . . . . . . .-> clear UTree");
-    QString iterate_utree_s(                    "    iterate / i. . . . .<int> <double> . . . . . . . . . . . . . .-> run <int> iterations of Q-Learning with alpha <double>");
+    QString utree_q_iteration_s(                "    q-iteration / qi . .<int> <double> . . . . . . . . . . . . . .-> run <int> iterations of Q-Learning with alpha <double>");
+    QString utree_value_iteration_s(            "    v-iteration / vi . .[<int>]. . . . . . . . . . . . . . . . . .-> run one [<int>] iteration(s) of Value-Iteration");
+    QString utree_expansion_type_s(             "    ex-type / ext. . . .[u(tility)|s(tate)r(eward)]. . . . . . . .-> get/set expansion type for UTree");
 
     QString planning_s(                       "\n    -------------------------Planning--------------------------");
     QString discount_s(                         "    discount . . . . . [<double>]. . . . . . . . . . . . . . . . .-> get [set] discount");
@@ -308,7 +310,9 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             TO_CONSOLE( print_utree_s );
             TO_CONSOLE( print_leaves_s );
             TO_CONSOLE( clear_utree_s );
-            TO_CONSOLE( iterate_utree_s );
+            TO_CONSOLE( utree_q_iteration_s );
+            TO_CONSOLE( utree_value_iteration_s );
+            TO_CONSOLE( utree_expansion_type_s );
             // Planning
             TO_CONSOLE( planning_s );
             TO_CONSOLE( discount_s );
@@ -462,7 +466,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             utree.print_leaves();
         } else if(str_args[0]=="clear-utree") {
             utree.clear_tree();
-        } else if(str_args[0]=="iterate" || str_args[0]=="i") {
+        } else if(str_args[0]=="q-iteration" || str_args[0]=="qi") {
             if(str_args.size()==3 &&
                int_args_ok[1] && int_args[1]>0 &&
                double_args_ok[2] && double_args[2]>=0 && double_args[2]<=1)
@@ -471,10 +475,42 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 repeat(int_args[1]) {
                     max_diff = utree.q_iteration(double_args[2]);
                 }
-                TO_CONSOLE( QString(    "run %1 iteration with alpha=%2, last maximum update was %3").arg(int_args[1]).arg(double_args[2]).arg(max_diff) );
+                TO_CONSOLE( QString(    "run %1 iteration(s) with alpha=%2, last maximum update was %3").arg(int_args[1]).arg(double_args[2]).arg(max_diff) );
             } else {
                 TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( iterate_utree_s );
+                TO_CONSOLE( utree_q_iteration_s );
+            }
+        } else if(str_args[0]=="v-iteration" || str_args[0]=="vi") {
+            if( str_args.size()==1 || (str_args.size()>1 && int_args_ok[1] && int_args[1]>0) ) {
+                double max_diff;
+                int rep = str_args.size()==1 ? 1 : int_args[1];
+                repeat(rep) {
+                    max_diff = utree.value_iteration();
+                }
+                TO_CONSOLE( QString(    "run %1 iteration(s), last maximum update was %2").arg(rep).arg(max_diff) );
+            } else {
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( utree_value_iteration_s );
+            }
+        } else if(str_args[0]=="ex-type" || str_args[0]=="ext") {
+            if(str_args.size()==1) {
+                switch(utree.get_expansion_type()) {
+                case UTree::UTILITY_EXPANSION:
+                    TO_CONSOLE("    expansion type: UTILITY_EXPANSION");
+                    break;
+                case UTree::STATE_REWARD_EXPANSION:
+                    TO_CONSOLE("    expansion type: STATE_REWARD_EXPANSION");
+                    break;
+                default:
+                    DEBUG_DEAD_LINE;
+                }
+            } else if(str_args[1]=="utility" || str_args[1]=="u") {
+                utree.set_expansion_type(UTree::UTILITY_EXPANSION);
+            } else if(str_args[1]=="statereward" ||str_args[1]=="sr") {
+                utree.set_expansion_type(UTree::STATE_REWARD_EXPANSION);
+            } else {
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( utree_expansion_type_s );
             }
         } else if(str_args[0]=="discount") {
             if(str_args.size()==1) {

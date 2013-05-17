@@ -28,18 +28,24 @@ public:
 
     struct NodeInfo {
         NodeInfo(const Feature * f = nullptr, const f_ret_t& r = f_ret_t());
-        instance_vector_t instance_vector;
-        const Feature * feature;
-        f_ret_t parent_return_value;
-        bool scores_up_to_date;
-        std::map<const Feature*,double> scores;
-        std::map<action_t,double> state_action_values;
-        double max_state_action_value;
-        action_t max_value_action;
-        bool max_state_action_value_up_to_date;
+        instance_vector_t instance_vector;                                      // data
+        const Feature * feature;                                                // discriminating feature for non-leaf nodes
+        f_ret_t parent_return_value;                                            // return value of parent-node's feature
+
+        std::map<const Feature*,double> scores;                                 // the scores for different features
+        bool scores_up_to_date;                                                 // whether leaf-node's scores are up-to-date
+
+        std::map<action_t,double> state_action_values;                          // Q(s,a)-function
+        double max_state_action_value;                                          // utility / state-value
+        action_t max_value_action;                                              // policy
+        std::map< std::pair<action_t,node_t>, probability_t > transition_table; // state transition table
+        std::map< std::pair<action_t,node_t>, double > expected_reward;         // expected reward
+        bool statistics_up_to_date;                                             // whether the above is up-to-date
     };
 
     typedef graph_t::NodeMap<NodeInfo> node_info_map_t;
+
+    enum EXPANSION_TYPE { UTILITY_EXPANSION, STATE_REWARD_EXPANSION };
 
     UTree(const double&);
 
@@ -66,15 +72,17 @@ public:
 
     double q_iteration(const double& alpha);
 
+    double value_iteration();
+
     action_t get_max_value_action(const instance_t *);
 
     /*! \brief Set the discount rate used for computing state and action values. */
     void set_discount(const double& d) { discount = d; }
 
-private:
+    void set_expansion_type(const EXPANSION_TYPE& ex) { expansion_type = ex; }
+    EXPANSION_TYPE get_expansion_type() const { return expansion_type; }
 
-    enum TEST_TYPE { KOLMOGOROV_SMIRNOV, CHI_SQUARE };
-    enum SCORE_TYPE { SCORE_BY_REWARDS, SCORE_BY_STATES, SCORE_BY_BOTH };
+private:
 
     int k;
     instance_t * instance_data;
@@ -86,8 +94,7 @@ private:
     const int pseudo_counts = 1;
     double discount;
 
-    const TEST_TYPE test_type = CHI_SQUARE;
-    const SCORE_TYPE score_type = SCORE_BY_BOTH;
+    EXPANSION_TYPE expansion_type = UTILITY_EXPANSION;
 
     node_t add_child(const node_t& node);
 
@@ -100,6 +107,10 @@ private:
     node_t find_leaf_node(const instance_t *) const;
 
     probability_t prior_probability(const state_t&, const reward_t&) const;
+
+    void update_statistics(const node_t& leaf_node);
+
+    void update_state_value_and_policy(const node_t& leaf_node);
 };
 
 #endif /* UTREE_H_ */

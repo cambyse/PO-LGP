@@ -33,7 +33,7 @@ UTree::NodeInfo::NodeInfo(const Feature * f, const f_ret_t& r):
     scores_up_to_date(false),
     max_state_action_value(0),
     max_value_action(action_t::STAY),
-    max_state_action_value_up_to_date(false)
+    statistics_up_to_date(false)
 {}
 
 UTree::UTree(const double& d):
@@ -50,21 +50,21 @@ UTree::UTree(const double& d):
 
     // delayed action, state, and reward features
     for(int k_idx = 0; k_idx>=-k; --k_idx) {
-        // actions
-        for(actionIt_t action=actionIt_t::first(); action!=util::INVALID; ++action) {
-            ActionFeature * action_feature = ActionFeature::create(action,k_idx);
-            basis_features.push_back(action_feature);
-            DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
-        }
-        if(k_idx<0) { // consider states and rewards from the past only (the present is to be predicted)
+        if(k_idx<0) { // the present should be predicted and should not be used to define leaf nodes
+            // actions
+            for(action_t action : actionIt_t::all) {
+                ActionFeature * action_feature = ActionFeature::create(action,k_idx);
+                basis_features.push_back(action_feature);
+                DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
+            }
             // states
-            for(stateIt_t state=stateIt_t::first(); state!=util::INVALID; ++state) {
+            for(state_t state : stateIt_t::all) {
                 StateFeature * state_feature = StateFeature::create(state,k_idx);
                 basis_features.push_back(state_feature);
                 DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
             }
             // reward
-            for(rewardIt_t reward=rewardIt_t::first(); reward!=util::INVALID; ++reward) {
+            for(reward_t reward : rewardIt_t::all) {
                 RewardFeature * reward_feature = RewardFeature::create(reward,k_idx);
                 basis_features.push_back(reward_feature);
                 DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
@@ -104,6 +104,7 @@ void UTree::clear_data() {
     for(graph_t::NodeIt node(graph); node!=INVALID; ++node) {
         node_info_map[node].instance_vector.clear();
         node_info_map[node].scores_up_to_date = false;
+        node_info_map[node].statistics_up_to_date = false;
         node_info_map[node].scores.clear();
     }
     delete instance_data;
@@ -292,12 +293,16 @@ double UTree::expand_leaf_node(const double& score_threshold) {
 
     DEBUG_OUT(1,"Expanding...");
 
-    // maximum values
+    //----------------//
+    // maximum values //
+    //----------------//
     double max_score = -DBL_MAX;
     node_t max_node = INVALID;
     Feature * max_feature = nullptr;
 
-    // calculate scores for node-feature pairs and insert into queue
+    //---------------------------------------------------------------//
+    // calculate scores for node-feature pairs and insert into queue //
+    //---------------------------------------------------------------//
     for(auto leafIt=leaf_nodes.begin(); leafIt!=leaf_nodes.end(); ++leafIt) {
         node_t node = *leafIt;
         bool up_to_date = node_info_map[node].scores_up_to_date;
@@ -320,26 +325,39 @@ double UTree::expand_leaf_node(const double& score_threshold) {
         node_info_map[node].scores_up_to_date = true;
     }
 
+    //---------------------------//
+    // check for score threshold //
+    //---------------------------//
     if(max_score<score_threshold) {
         DEBUG_OUT(1,"No leaf expanded: Score threshold not reached (score: " <<
                   max_score << ", threshold: " << score_threshold << ")" );
         return max_score;
     }
 
-    // set feature to make node a non-leaf node
+    //------------------------------------------//
+    // set feature to make node a non-leaf node //
+    //------------------------------------------//
     node_info_map[max_node].feature = max_feature;
     node_info_map[max_node].scores.clear();
     leaf_nodes.erase(max_node);
 
-    // re-insert all instances to descendants only
-    // need to copy vector to prevent segault, don't know why (perhaps because nodes are being added?)
+    //-------------------------------------------------//
+    // re-insert all instances to descendants only     //
+    // todo: need to copy vector to prevent segault,   //
+    // don't know why (perhaps because nodes are being //
+    // added?)                                         //
+    //-------------------------------------------------//
     auto instance_vector_copy = node_info_map[max_node].instance_vector;
-    for(auto insIt=instance_vector_copy.begin();
-        insIt!=instance_vector_copy.end();
-        ++insIt
-        ) {
-        insert_instance(*insIt,max_node,true);
-        DEBUG_OUT(3,"    " << **insIt );
+    for( auto insIt : instance_vector_copy ) {
+        insert_instance(insIt,max_node,true);
+        DEBUG_OUT(3,"    " << *insIt );
+    }
+
+    //---------------------------------------//
+    // statistics are not up to date anymore //
+    //---------------------------------------//
+    for( node_t node : leaf_nodes ) {
+        node_info_map[node].statistics_up_to_date = false;
     }
 
     return max_score;
@@ -419,6 +437,104 @@ double UTree::q_iteration(const double& alpha) {
     return max_value_diff;
 }
 
+double UTree::value_iteration() {
+
+    //-------------------------------//
+    // check if any leaf nodes exist //
+    //-------------------------------//
+    if(leaf_nodes.size()<=1) {
+        DEBUG_OUT(0,"Error: Cannot perform value iteration, not enough leaf nodes");
+        return 0;
+    }
+
+    //------------------------------------//
+    // check if statistics are up-to-date //
+    //------------------------------------//
+    for( node_t leaf : leaf_nodes ) {
+        // update statistics (needs up-to-date Q-function)
+        if(!node_info_map[leaf].statistics_up_to_date) {
+            DEBUG_OUT(2,"Updating statistics for leaf node " << graph.id(leaf) );
+            update_statistics(leaf);
+        }
+    }
+
+    //-------------------------//
+    // perform value iteration //
+    //-------------------------//
+    double max_diff = -DBL_MAX;
+    for( node_t leaf : leaf_nodes ) {
+
+        DEBUG_OUT(2,"Performing value iteration for leaf node " << graph.id(leaf) );
+
+        // reset Q-function but remember old values
+        auto old_q_values = node_info_map[leaf].state_action_values;
+        node_info_map[leaf].state_action_values.clear();
+
+        // update Q-values
+        for( auto transition : node_info_map[leaf].transition_table ) {
+
+            // get necessary data
+            action_t action = transition.first.first;
+            node_t state_to = transition.first.second;
+            double prob = transition.second;
+            double exp_rew = node_info_map[leaf].expected_reward[transition.first];
+            double state_value = node_info_map[state_to].max_state_action_value;
+
+            DEBUG_OUT(3,"    Transition " << action << " --> node:" << graph.id(state_to) <<
+                      " (prob=" << prob <<
+                      ",	exp_rew=" << exp_rew <<
+                      ",	state_value=" << state_value
+                );
+
+            // assign new value
+            auto q_value = node_info_map[leaf].state_action_values.find(action);
+            if(q_value==node_info_map[leaf].state_action_values.end()) { // not found --> insert
+                node_info_map[leaf].state_action_values[action] = prob * (exp_rew + discount*state_value);
+            } else { // was found --> increment
+                q_value->second += prob * (exp_rew + discount*state_value);
+            }
+        }
+
+        //---------------------------//
+        // update maximum difference //
+        //---------------------------//
+        // go through new Q-values
+        for( auto q_value : node_info_map[leaf].state_action_values ) {
+            DEBUG_OUT(4,"    Difference for " << q_value.first );
+            double diff;
+            auto old_value = old_q_values.find(q_value.first);
+            if(old_value==old_q_values.end()) { // not found
+                DEBUG_OUT(4,"        old = NOT_FOUND");
+                diff = q_value.second;
+            } else {                            // was found
+                DEBUG_OUT(4,"        old = " << old_value->second);
+                diff = q_value.second - old_value->second;
+                // erase from old
+                old_q_values.erase(old_value);
+            }
+            DEBUG_OUT(4,"        new = " << q_value.second);
+            if(fabs(diff)>max_diff) {
+                max_diff = fabs(diff);
+            }
+        }
+        // go through remaining old Q-values
+        for( auto q_value : old_q_values ) {
+            DEBUG_OUT(4,"    Old Q-Value not found " << q_value.first << " : " << q_value.second );
+            if(fabs(q_value.second)>max_diff) {
+                max_diff = fabs(q_value.second);
+            }
+        }
+
+        //-------------------------------//
+        // update state value and policy //
+        //-------------------------------//
+        update_state_value_and_policy(leaf);
+
+    }
+
+    return max_diff;
+}
+
 action_t UTree::get_max_value_action(const instance_t * i) {
     node_t node = find_leaf_node(i);
     if(node_info_map[node].state_action_values.size()!=action_t::action_n) {
@@ -444,6 +560,7 @@ void UTree::insert_instance(const instance_t * i, const node_t& node, const bool
     if(!descendants_only) {
         node_info_map[node].instance_vector.push_back(i);
         node_info_map[node].scores_up_to_date = false;
+        node_info_map[node].statistics_up_to_date = false;
         node_info_map[node].scores.clear();
     }
 
@@ -473,108 +590,110 @@ void UTree::insert_instance(const instance_t * i, const node_t& node, const bool
 
 double UTree::score_leaf_node(const node_t leaf_node, const Feature* feature) const {
 
+#define DEBUG_LEVEL 4
+
     double default_return_value = 0;
 
-    // check if tests can be performed
-    if(test_type==KOLMOGOROV_SMIRNOV && score_type!=SCORE_BY_REWARDS) {
-        DEBUG_OUT(0,"Error: Can calculate K-S statistic only for rewards");
-        return default_return_value;
-    }
-
-    // check if it's really a leaf node
+    //----------------------------------//
+    // check if it's really a leaf node //
+    //----------------------------------//
     if(graph_t::OutArcIt(graph,leaf_node)!=INVALID) {
         DEBUG_OUT(0,"Error: Scoring non-leaf node");
         return default_return_value;
     }
 
-    // collect samples from instances
+    DEBUG_OUT(3,"Scoring leaf node " << graph.id(leaf_node) << " with feature " << *feature);
+
+    //--------------------------------------------------------//
+    // collect samples from instances, discriminating between //
+    // different feature return values and different actions  //
+    //--------------------------------------------------------//
     const instance_vector_t& instance_vector = node_info_map[leaf_node].instance_vector;
-    map< f_ret_t, vector<double> >                  reward_samples;       // for SCORE_BY_REWARDS
-    map< f_ret_t, vector<state_t> >                 state_samples;        // for SCORE_BY_STATES
-    map< f_ret_t, vector<pair<state_t,reward_t> > > state_reward_samples; // for SCORE_BY_BOTH
+    map< pair<f_ret_t,action_t>, vector<double                 > > utility_samples;      // for UTILITY_EXPANSION
+    map< pair<f_ret_t,action_t>, vector<pair<state_t,reward_t> > > state_reward_samples; // for STATE_REWARD_EXPANSION
+    set<f_ret_t> feature_return_values; // corresponds to different child nodes
+
+    // iterate through instances
     for(unsigned int idx=0; idx<instance_vector.size(); ++idx) {
+
         const instance_t * instance = instance_vector[idx];
+
+        // construct state-action pair
         f_ret_t f_ret = feature->evaluate(instance_vector[idx]);
-        switch(score_type) {
-        case SCORE_BY_REWARDS:
-            reward_samples[f_ret].push_back(instance->reward);
-            break;
-        case SCORE_BY_STATES:
-            state_samples[f_ret].push_back(instance->state);
-            break;
-        case SCORE_BY_BOTH:
-            state_reward_samples[f_ret].push_back(make_pair(instance->state, instance->reward));
+        action_t action = instance->action;
+        pair<f_ret_t,action_t> state_action_pair = make_pair(f_ret,action);
+
+        // remember state/leaf
+        feature_return_values.insert(f_ret);
+
+        // update samples
+        switch(expansion_type) {
+        case UTILITY_EXPANSION:
+        {
+            const_instanceIt_t next_instance = instance->const_it()+1;
+            if(next_instance!=util::INVALID) {
+                node_t next_state = find_leaf_node(next_instance);
+                double util = instance->reward + discount*node_info_map[next_state].max_state_action_value;
+                utility_samples[state_action_pair].push_back(util);
+                DEBUG_OUT(4,"    Adding utility of " << util << " for f_ret=" << f_ret << "	" << action);
+            }
+        }
+        break;
+        case STATE_REWARD_EXPANSION:
+            state_reward_samples[state_action_pair].push_back(make_pair(instance->state, instance->reward));
             break;
         default:
             DEBUG_DEAD_LINE;
         }
     }
 
-    // check for number of samples
-    int samples_size = 0;
-    switch(score_type) {
-    case SCORE_BY_REWARDS:
-        samples_size = reward_samples.size();
-        break;
-    case SCORE_BY_STATES:
-        samples_size = state_samples.size();
-        break;
-    case SCORE_BY_BOTH:
-        samples_size = state_reward_samples.size();
-        break;
-    default:
-        DEBUG_DEAD_LINE;
-    }
-    if(samples_size>2) {
-        DEBUG_OUT(0,"Error: Got " << samples_size << " different feature values. Expecting only two.");
+    //--------------------------------------------------//
+    // check if number of samples equals two (currently //
+    // using binary features only)                      //
+    //--------------------------------------------------//
+    int reture_return_n = feature_return_values.size();
+    if(reture_return_n>2) {
+        DEBUG_OUT(0,"Error: Got " << reture_return_n << " different feature values. Expecting only two.");
         return default_return_value;
-    } else if(samples_size<2) { // nothing to compare
+    } else if(reture_return_n<2) { // nothing to compare
         DEBUG_OUT(2,"Not enough samples, returning default score");
         return default_return_value;
     }
 
-    // compute score value
-    switch(test_type) {
-    case KOLMOGOROV_SMIRNOV:
-        switch(score_type) {
-        case SCORE_BY_REWARDS: {
-            vector<double>& sample_1 = reward_samples.begin()->second;
-            vector<double>& sample_2 = (++(reward_samples.begin()))->second;
-            return sample_size_factor( sample_1.size(), sample_2.size() ) * KolmogorovSmirnovTest::k_s_test(sample_1, sample_2, false);
+    //---------------------//
+    // compute score value //
+    //---------------------//
+    f_ret_t f_val_1 = *(feature_return_values.begin());
+    f_ret_t f_val_2 = *(++(feature_return_values.begin()));
+    double score = 0;
+    for(actionIt_t action=actionIt_t::first(); action!=util::INVALID; ++action) {
+        switch(expansion_type) {
+        case UTILITY_EXPANSION:
+        {
+            vector<double>& sample_1 = utility_samples[make_pair(f_val_1,action)];
+            vector<double>& sample_2 = utility_samples[make_pair(f_val_2,action)];
+            double tmp_score = sample_size_factor( sample_1.size(), sample_2.size() );
+            tmp_score *= KolmogorovSmirnovTest::k_s_test(sample_1, sample_2, false);
+            score += tmp_score;
+            break;
+        }
+        case STATE_REWARD_EXPANSION:
+        {
+            vector<pair<state_t,reward_t> >& sample_1 = state_reward_samples[make_pair(f_val_1,action)];
+            vector<pair<state_t,reward_t> >& sample_2 = state_reward_samples[make_pair(f_val_2,action)];
+            double tmp_score = sample_size_factor( sample_1.size(), sample_2.size() );
+            tmp_score *= ChiSquareTest::chi_square_statistic<pair<state_t,reward_t> >(sample_1, sample_2, false);
+            score += tmp_score;
+            break;
         }
         default:
             DEBUG_DEAD_LINE;
         }
-    case CHI_SQUARE:
-        switch(score_type) {
-        case SCORE_BY_REWARDS: {
-            vector<double>& sample_1 = reward_samples.begin()->second;
-            vector<double>& sample_2 = (++(reward_samples.begin()))->second;
-            double ret = sample_size_factor( sample_1.size(), sample_2.size() );
-            ret *= ChiSquareTest::chi_square_statistic<double>(sample_1, sample_2, false);
-            return ret;
-        }
-        case SCORE_BY_STATES: {
-            vector<state_t>& sample_1 = state_samples.begin()->second;
-            vector<state_t>& sample_2 = (++(state_samples.begin()))->second;
-            double ret = sample_size_factor( sample_1.size(), sample_2.size() );
-            ret *= ChiSquareTest::chi_square_statistic<state_t>(sample_1, sample_2, false);
-            return ret;
-        }
-        case SCORE_BY_BOTH: {
-            vector<pair<state_t,reward_t> >& sample_1 = state_reward_samples.begin()->second;
-            vector<pair<state_t,reward_t> >& sample_2 = (++(state_reward_samples.begin()))->second;
-            double ret = sample_size_factor( sample_1.size(), sample_2.size() );
-            ret *= ChiSquareTest::chi_square_statistic<pair<state_t,reward_t> >(sample_1, sample_2, false);
-            return ret;
-        }
-        default:
-            DEBUG_DEAD_LINE;
-        }
-    default:
-        DEBUG_OUT(0,"Error: Unknown test type");
-        return default_return_value;
     }
+
+    return score;
+
+#define DEBUG_LEVEL 1
 }
 
 double UTree::sample_size_factor(const int& n1, const int& n2) const {
@@ -620,4 +739,83 @@ UTree::node_t UTree::find_leaf_node(const instance_t *i) const {
 
 UTree::probability_t UTree::prior_probability(const state_t&, const reward_t&) const {
     return 1./(state_t::state_n*reward_t::reward_n);
+}
+
+void UTree::update_statistics(const node_t& leaf_node) {
+
+    DEBUG_OUT(3,"Update statistics for node " << graph.id(leaf_node) );
+
+    // update maximum Q-value and policy
+    update_state_value_and_policy(leaf_node);
+
+    // number of times an action was performed
+    map< action_t, unsigned long int > action_counts;
+    // number of times a leaf node was reached with a specific action
+    map< pair<action_t,node_t>, unsigned long int > transition_counts;
+    // sum of rewards received for a specific transition (state and action specific)
+    map< pair<action_t,node_t>, double > reward_sums;
+
+    // go through instances
+    for( const instance_t * ins : node_info_map[leaf_node].instance_vector ) {
+        action_t action = ins->action;
+        reward_t reward = ins->reward;
+        node_t next_state = find_leaf_node(ins->const_it()+1);
+        action_counts[action] += 1;
+        transition_counts[make_pair(action,next_state)] += 1;
+        reward_sums[make_pair(action,next_state)] += reward;
+    }
+
+    // fill transition probabilities (stores only non-zero probabilities)
+    node_info_map[leaf_node].transition_table.clear();
+    for( auto transition : transition_counts ) {
+        double prob = transition.second;
+        prob /= action_counts[transition.first.first];
+        node_info_map[leaf_node].transition_table[transition.first] = prob;
+        DEBUG_OUT(4,"    Transition " << transition.first.first << " --> " <<
+                  graph.id(transition.first.second) << "	prob=" << prob
+        );
+    }
+
+    // fill expected rewards
+    node_info_map[leaf_node].expected_reward.clear();
+    for( auto reward_sum : reward_sums ) {
+        double exp_rew = reward_sum.second;
+        exp_rew /= transition_counts[reward_sum.first];
+        node_info_map[leaf_node].expected_reward[reward_sum.first] = exp_rew;
+        DEBUG_OUT(4,"    Transition " << reward_sum.first.first << " --> " <<
+                  graph.id(reward_sum.first.second) << "	rew=" << exp_rew
+            );
+    }
+
+    // mark as up-to-date
+    node_info_map[leaf_node].statistics_up_to_date = true;
+}
+
+void UTree::update_state_value_and_policy(const node_t& leaf_node) {
+
+    DEBUG_OUT(3,"Update state value and policy for node " << graph.id(leaf_node) );
+
+    double max_q_value = -DBL_MAX;
+    vector<action_t> max_value_action_vector;
+    for(auto current_q_value : node_info_map[leaf_node].state_action_values) {
+        if(current_q_value.second > max_q_value) {
+            max_q_value = current_q_value.second;
+            max_value_action_vector.assign(1,current_q_value.first);
+        } else if(current_q_value.second==max_q_value) {
+            max_value_action_vector.push_back(current_q_value.first);
+        }
+    }
+
+    // set state value and optimal action
+    if(max_value_action_vector.size()==0) { // state-action values were empty
+        DEBUG_OUT(4,"    Empty Q-values");
+        node_info_map[leaf_node].max_state_action_value = 0;
+        node_info_map[leaf_node].max_value_action = action_t::STAY;
+    } else {
+        action_t optimal_action = util::draw_random(max_value_action_vector);
+        DEBUG_OUT(4,"    state-value=" << max_q_value << "	action=" << optimal_action);
+        node_info_map[leaf_node].max_state_action_value = max_q_value;
+        node_info_map[leaf_node].max_value_action = optimal_action;
+    }
+
 }

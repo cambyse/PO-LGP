@@ -11,6 +11,10 @@
 #include <vector>
 #include <sstream>
 
+#define DEBUG_LEVEL 0
+#define DEBUG_STRING "util: "
+#include "debug.h"
+
 //========================================================//
 //                       Macros                           //
 //========================================================//
@@ -203,6 +207,9 @@ namespace util {
 
     template < typename T >
         T draw_random(const std::vector<T> vec) {
+        if(vec.size()==0) {
+            DEBUG_OUT(0,"Error: Cannot draw from an empty vector");
+        }
         return vec[rand()%vec.size()];
     }
 
@@ -245,5 +252,7 @@ namespace util {
         bool operator<<(const C& c1, const C& c2) { return c1>c2-approx_equal_tolerance(); }
 
 } // end namespace util
+
+#include "debug_exclude.h"
 
 #endif /* UTIL_H_ */
