@@ -27,6 +27,7 @@ int Reward::add_width() const {
     return max_width-this_width;
 }
 
+const RewardIt::All RewardIt::all = RewardIt::All();
 
 RewardIt::RewardIt() {}
 

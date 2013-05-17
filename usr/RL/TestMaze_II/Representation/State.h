@@ -27,6 +27,14 @@ private:
 class StateIt: public State, public util::InvalidAdapter<StateIt> {
 
 public:
+
+    // for compatibility with for( ... : ... ) constructs
+    struct All {
+        static StateIt begin() { return StateIt::first(); }
+        static StateIt end() { return StateIt(); }
+    };
+    static const All all;
+
     // Make operator resolution unambiguous.
     // Try using the Invalid adapter first.
     using util::InvalidAdapter<StateIt>::operator!=;
@@ -36,6 +44,7 @@ public:
 
     StateIt();
     StateIt(const State& s);
+    State operator*() { return *this; }
     StateIt & operator++();
     StateIt & operator--();
     StateIt & operator+=(const int& c);

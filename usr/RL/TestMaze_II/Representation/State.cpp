@@ -28,6 +28,8 @@ int State::add_width() const {
     return max_width-this_width;
 }
 
+const StateIt::All StateIt::all = StateIt::All();
+
 StateIt::StateIt() {}
 
 StateIt::StateIt(const State& s):

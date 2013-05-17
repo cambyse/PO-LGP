@@ -11,9 +11,9 @@ class Action: public util::NumericTypeWrapper<Action, unsigned long long int> {
 public:
 
     enum ACTION { NULL_ACTION, UP, DOWN, LEFT, RIGHT, STAY, END_ACTION };
+    static const unsigned long action_n;
     static const value_t min_action;
     static const value_t max_action;
-    static const unsigned long action_n;
 
     Action();
     Action(value_t val);
@@ -39,6 +39,13 @@ class ActionIt: public Action, public util::InvalidAdapter<ActionIt> {
 
 public:
 
+    // for compatibility with for( ... : ... ) constructs
+    struct All {
+        static ActionIt begin() { return ActionIt::first(); }
+        static ActionIt end() { return ActionIt(); }
+    };
+    static const All all;
+
     // Make operator resolution unambiguous.
     // Try using the Invalid adapter first.
     using util::InvalidAdapter<ActionIt>::operator!=;
@@ -48,6 +55,7 @@ public:
 
     ActionIt();
     ActionIt(const Action& a);
+    Action operator*() { return *this; }
     ActionIt & operator++();
     ActionIt & operator--();
     ActionIt & operator+=(const int& c);

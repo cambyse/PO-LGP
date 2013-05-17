@@ -27,6 +27,13 @@ class RewardIt: public Reward, public util::InvalidAdapter<RewardIt> {
 
 public:
 
+    // for compatibility with for( ... : ... ) constructs
+    struct All {
+        static RewardIt begin() { return RewardIt::first(); }
+        static RewardIt end() { return RewardIt(); }
+    };
+    static const All all;
+
     // Make operator resolution unambiguous.
     // Try using the Invalid adapter first.
     using util::InvalidAdapter<RewardIt>::operator!=;
@@ -36,6 +43,7 @@ public:
 
     RewardIt();
     RewardIt(const Reward& r);
+    Reward operator*() { return *this; }
     RewardIt & operator++();
     RewardIt & operator--();
     RewardIt & operator+=(const int& c);

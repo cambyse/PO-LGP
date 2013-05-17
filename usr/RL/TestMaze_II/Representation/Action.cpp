@@ -40,6 +40,8 @@ const char* Action::action_strings[END_ACTION] = {
     "STAY "
 };
 
+const ActionIt::All ActionIt::all = ActionIt::All();
+
 ActionIt::ActionIt() {}
 
 ActionIt::ActionIt(const Action& a):
