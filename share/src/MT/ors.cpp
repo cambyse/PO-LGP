@@ -4196,11 +4196,13 @@ void ors::Graph::getContactMeasure(arr &x, double margin, bool linear) const {
   x.resize(1);
   x=0.;
   uint i;
+  double cenMarg=2.;
   //Shape *a, *b;
   for(i=0; i<proxies.N; i++) if(proxies(i)->d<margin) {
 //      a=shapes(proxies(i)->a); b=shapes(proxies(i)->b);
       //NORMALS ALWAYS GO FROM b TO a !!
-      x(0) += (1.-proxies(i)->d/margin) * (1.-proxies(i)->cenD);
+      x(0) += (1.-proxies(i)->d/margin) * (1.-proxies(i)->cenD/cenMarg);
+      CHECK(proxies(i)->cenD<.8*cenMarg, "sorry I made assumption objects are not too large; rescale cenMarg");
     }
 #endif
 }
@@ -4258,13 +4260,14 @@ double ors::Graph::getContactGradient(arr &grad, double margin, bool linear) con
   uint i;
   Shape *a, *b;
   double cost=0.;
+  double cenMarg = 2.;
   arr J;
   grad.resize(1, getJointStateDimension(false));
   grad.setZero();
   for(i=0; i<proxies.N; i++) if(proxies(i)->d<margin) {
     a=shapes(proxies(i)->a); b=shapes(proxies(i)->b);
     double d1 = 1.-proxies(i)->d/margin;
-    double d2 = 1.-proxies(i)->cenD;
+    double d2 = 1.-proxies(i)->cenD/cenMarg;
     cost += d1*d2;
 
     if(proxies(i)->d>0.){ //we have a gradient on pos only when outside
@@ -4285,9 +4288,9 @@ double ors::Graph::getContactGradient(arr &grad, double margin, bool linear) con
     arr cenN; cenN.referTo(proxies(i)->cenN.p(), 3); cenN.reshape(1, 3);
 
     //grad on cenA
-    jacobianPos(J, a->body->index, &arel); grad -= d1*(cenN*J);
+    jacobianPos(J, a->body->index, &arel); grad -= d1/cenMarg*(cenN*J);
     //grad on cenB
-    jacobianPos(J, b->body->index, &brel); grad += d1*(cenN*J);
+    jacobianPos(J, b->body->index, &brel); grad += d1/cenMarg*(cenN*J);
 
   }
 
