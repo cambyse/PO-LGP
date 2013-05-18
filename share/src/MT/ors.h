@@ -450,12 +450,11 @@ struct Shape {
 struct Proxy {
   int a;              //!< index of shape A //TODO: would it be easier if this were ors::Shape* ? YES -> Do it!
   int b;              //!< index of shape B
-  Vector posA, velA;  //!< contact or closest point position on surface of shape A (in world coordinates) TODO: delete velocities!
-  Vector posB, velB;  //!< contact or closest point position on surface of shape B (in world coordinates)
-  Vector normal;      //!< contact normal, pointing from B to A (proportional to posA-posB)
-  double d;           //!< distance (positive) or penetration (negative) between A and B
-  Transformation rel; //!< relative pose from A to B WHEN the two shapes collided for the first time
-  uint age,colorCode;
+  Vector posA, cenA;  //!< contact or closest point position on surface of shape A (in world coordinates)
+  Vector posB, cenB;  //!< contact or closest point position on surface of shape B (in world coordinates)
+  Vector normal, cenN;   //!< contact normal, pointing from B to A (proportional to posA-posB)
+  double d, cenD;           //!< distance (positive) or penetration (negative) between A and B
+  uint colorCode;
   Proxy();
 };
 
@@ -555,7 +554,7 @@ struct Graph {
   void reportGlue(std::ostream *os=&std::cout);
 
   //!@name managing the data
-  void sortProxies(bool deleteMultiple=false, bool deleteOld=false);
+  void sortProxies(bool deleteMultiple=false);
   bool checkUniqueNames() const;
 
   Body *getBodyByName(const char* name) const;

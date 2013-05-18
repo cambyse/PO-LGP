@@ -144,8 +144,8 @@ namespace Ctest{
     G->setJointState(x); G->calcBodyFramesFromJoints();
     swift->computeProxies(*G,false);
     G->sortProxies(true);
-    G->getContactMeasure(c,.1);
-    if(dfdx) G->getContactGradient(*dfdx,.1);
+    G->getContactMeasure(c,.2);
+    if(dfdx) G->getContactGradient(*dfdx,.2);
   }
 }
 
@@ -177,10 +177,10 @@ void testContacts(){
     c=G.getContactGradient(grad,.2); //generate a gradient pushing away to 20cm distance
     cout <<"contact meassure = " <<con(0) <<' ' <<c <<endl;
     gl.text.clear() <<"t=" <<t <<"  movement along negative contact gradient (using SWIFT to get contacts)";
-    //gl.watch();
+    gl.watch();
     gl.update();
     //x += inverse(grad)*(-.1*c);
-    x -= 1e-4*grad; //.1 * (invJ * grad);
+    x -= 1e-3*grad; //.1 * (invJ * grad);
 
     MT::checkGradient(Ctest::f,NULL,x,1e10);
   }
@@ -502,7 +502,7 @@ void testBlenderImport(){
 
 int main(int argc,char **argv){
 
-  testKinematics();
+  testContacts();
   return 0;
   testBasics();
   testLoadSave();
@@ -512,7 +512,6 @@ int main(int argc,char **argv){
   testFollowRedundantSequence();
   testDynamics();
   testContacts();
-  testKinematicSpeed();
 #ifdef MT_ODE
   testMeshShapesInOde();
   testPlayTorqueSequenceInOde();

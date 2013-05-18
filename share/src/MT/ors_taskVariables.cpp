@@ -622,20 +622,20 @@ void ProxyTaskVariable::updateState(const ors::Graph& ors, double tau) {
 
   switch(type) {
     case allCTVT:
-      for_list(i,p,ors.proxies)  if(!p->age && p->d<margin) {
+      for_list(i,p,ors.proxies)  if(p->d<margin) {
         addAContact(y(0), J, p, ors, margin, linear);
         p->colorCode = 1;
       }
       break;
     case allListedCTVT:
-      for_list(i,p,ors.proxies)  if(!p->age && p->d<margin) {
+      for_list(i,p,ors.proxies)  if(p->d<margin) {
         if(shapes.contains(p->a) && shapes.contains(p->b)) {
           addAContact(y(0), J, p, ors, margin, linear);
           p->colorCode = 2;
         }
       }
     case allExceptListedCTVT:
-      for_list(i,p,ors.proxies)  if(!p->age && p->d<margin) {
+      for_list(i,p,ors.proxies)  if(p->d<margin) {
         if(!shapes.contains(p->a) && !shapes.contains(p->b)) {
           addAContact(y(0), J, p, ors, margin, linear);
           p->colorCode = 3;
@@ -643,7 +643,7 @@ void ProxyTaskVariable::updateState(const ors::Graph& ors, double tau) {
       }
       break;
     case bipartiteCTVT:
-      for_list(i,p,ors.proxies)  if(!p->age && p->d<margin) {
+      for_list(i,p,ors.proxies)  if(p->d<margin) {
         if((shapes.contains(p->a) && shapes2.contains(p->b)) ||
             (shapes.contains(p->b) && shapes2.contains(p->a))) {
           addAContact(y(0), J, p, ors, margin, linear);
@@ -654,7 +654,7 @@ void ProxyTaskVariable::updateState(const ors::Graph& ors, double tau) {
       shapes.reshape(shapes.N/2,2);
       // only explicit paris in 2D array shapes
       uint j;
-      for_list(i,p,ors.proxies)  if(!p->age && p->d<margin) {
+      for_list(i,p,ors.proxies)  if(p->d<margin) {
         for(j=0; j<shapes.d0; j++) {
           if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
             break;
@@ -669,7 +669,7 @@ void ProxyTaskVariable::updateState(const ors::Graph& ors, double tau) {
       shapes.reshape(shapes.N/2,2);
       // only explicit paris in 2D array shapes
       uint j;
-      for_list(i,p,ors.proxies)  if(!p->age && p->d<margin) {
+      for_list(i,p,ors.proxies)  if(p->d<margin) {
         for(j=0; j<shapes.d0; j++) {
           if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
             break;
@@ -686,7 +686,7 @@ void ProxyTaskVariable::updateState(const ors::Graph& ors, double tau) {
       y.resize(shapes.d0);  y.setZero();
       J.resize(shapes.d0,J.d1);  J.setZero();
       uint j;
-      for_list(i,p,ors.proxies)  if(!p->age && p->d<margin) {
+      for_list(i,p,ors.proxies)  if(p->d<margin) {
         for(j=0; j<shapes.d0; j++) {
           if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
             break;

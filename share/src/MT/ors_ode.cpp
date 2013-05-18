@@ -861,12 +861,10 @@ void OdeInterface::getGroundContact(ors::Graph &C, boolA& cts) {
 
 
 void OdeInterface::importProxiesFromOde(ors::Graph &C) {
-  uint i, Nold=C.proxies.N;
-  //Nold=0;
-  for(i=0; i<Nold; i++) C.proxies(i)->age++;
+  uint i;
   C.proxies.memMove=true;
-  C.proxies.resizeCopy(Nold+conts.N);
-  for(i=0; i<conts.N; i++) C.proxies(Nold+i) = new ors::Proxy;
+  C.proxies.resizeCopy(conts.N);
+  for(i=0; i<conts.N; i++) C.proxies(i) = new ors::Proxy;
   dContactGeom *c;
   int a, b;
   ors::Vector d, p;
@@ -883,20 +881,20 @@ void OdeInterface::importProxiesFromOde(ors::Graph &C) {
     d *= -c->depth/2.;
     p.set(c->pos);
 
-    C.proxies(Nold+i)->a = a;
-    C.proxies(Nold+i)->b = b;
-    C.proxies(Nold+i)->d = -c->depth;
-    C.proxies(Nold+i)->normal.set(c->normal);
-    C.proxies(Nold+i)->posA=p+d;
-    C.proxies(Nold+i)->posB=p-d;
-    if(a!=-1) C.proxies(Nold+i)->velA=C.bodies(a)->X.vel + (C.bodies(a)->X.angvel^(p+d-(C.bodies(a)->X.pos))); else C.proxies(Nold+i)->velA.setZero();
-    if(b!=-1) C.proxies(Nold+i)->velB=C.bodies(b)->X.vel + (C.bodies(b)->X.angvel^(p-d-(C.bodies(b)->X.pos))); else C.proxies(Nold+i)->velB.setZero();
-    C.proxies(Nold+i)->posB=p-d;
-    if(a!=-1 && b!=-1) C.proxies(Nold+i)->rel.setDifference(C.bodies(a)->X, C.bodies(b)->X);
-    else if(a!=-1) C.proxies(Nold+i)->rel.setInverse(C.bodies(a)->X);
-    else if(b!=-1) C.proxies(Nold+i)->rel = C.bodies(b)->X;
-    else           C.proxies(Nold+i)->rel.setZero();
-    C.proxies(Nold+i)->age=0;
+    C.proxies(i)->a = a;
+    C.proxies(i)->b = b;
+    C.proxies(i)->d = -c->depth;
+    C.proxies(i)->normal.set(c->normal);
+    C.proxies(i)->posA=p+d;
+    C.proxies(i)->posB=p-d;
+    //if(a!=-1) C.proxies(i)->velA=C.bodies(a)->X.vel + (C.bodies(a)->X.angvel^(p+d-(C.bodies(a)->X.pos))); else C.proxies(i)->velA.setZero();
+    //if(b!=-1) C.proxies(i)->velB=C.bodies(b)->X.vel + (C.bodies(b)->X.angvel^(p-d-(C.bodies(b)->X.pos))); else C.proxies(i)->velB.setZero();
+    C.proxies(i)->posB=p-d;
+//    if(a!=-1 && b!=-1) C.proxies(i)->rel.setDifference(C.bodies(a)->X, C.bodies(b)->X);
+//    else if(a!=-1) C.proxies(i)->rel.setInverse(C.bodies(a)->X);
+//    else if(b!=-1) C.proxies(i)->rel = C.bodies(b)->X;
+//    else           C.proxies(i)->rel.setZero();
+//    C.proxies(i)->age=0;
   }
 
   C.sortProxies();

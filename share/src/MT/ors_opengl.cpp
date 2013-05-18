@@ -410,7 +410,7 @@ void ors::Graph::glDraw() {
   }
 
   //proxies
-  if(orsDrawProxies) for(i=0; i<proxies.N; i++) if(!proxies(i)->age) {
+  if(orsDrawProxies) for(i=0; i<proxies.N; i++) {
     proxy = proxies(i);
     glLoadIdentity();
     if(!proxy->colorCode) glColor(.75,.75,.75);

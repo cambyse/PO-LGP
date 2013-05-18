@@ -92,7 +92,7 @@ void SwiftInterface::init(const ors::Graph& C, double _cutoff) {
         s->mesh.scale(s->size[3], s->size[3], s->size[3]);
         break;
       case ors::cylinderST:
-	CHECK(s->size[3]>1e-10,"");
+        CHECK(s->size[3]>1e-10,"");
         s->mesh.setCylinder(s->size[3], s->size[2]);
         break;
       case ors::cappedCylinderST:
@@ -284,17 +284,7 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
     if(num_contacts[i]==-1) k++;
   }
 
-  //resize old list
-#if 0
-  uint Nold=C.proxies.N;
-  for(i=0; i<(int)Nold; i++) C.proxies(i)->age++;
-  C.proxies.memMove=true;
-  C.proxies.resizeCopy(Nold+k);
-  for(i=0; i<k; i++) C.proxies(Nold+i) = new ors::Proxy;
-#else
-  uint Nold=0;
   listResize(C.proxies,k);
-#endif
 
   //add contacts to list
   ors::Proxy *proxy;
@@ -303,53 +293,48 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
     a=swift.INDEXswift2shape(oids[i <<1]);
     b=swift.INDEXswift2shape(oids[(i <<1)+1]);
     //CHECK(swift.ids(a)==a && swift.ids(b)==b, "shape index does not coincide with swift index");
+
     //non-penetrating pair of objects
     if(num_contacts[i]>=0) for(j=0; j<num_contacts[i]; j++, k++) {
-        proxy=C.proxies(Nold+k);
+        proxy=C.proxies(k);
         proxy->a=a;
         proxy->b=b;
-        proxy->age=0;
         proxy->d = dists[k];
         proxy->normal.set(&normals[3*k+0]);
         proxy->normal.normalize();
         //swift returns nearest points in the local frame -> transform them
         proxy->posA.set(&nearest_pts[6*k+0]);  proxy->posA = C.shapes(a)->X * proxy->posA;
         proxy->posB.set(&nearest_pts[6*k+3]);  proxy->posB = C.shapes(b)->X * proxy->posB;
-
-        //if(a!=-1) proxy->velA=C.bodies(a).X.v + (C.bodies(a).X.w^(p+d-(C.bodies(a).X.p))); else proxy->velA.setZero();
-        //if(b!=-1) proxy->velB=C.bodies(b).X.v + (C.bodies(b).X.w^(p-d-(C.bodies(b).X.p))); else proxy->velB.setZero();
-        proxy->velA.setZero();
-        proxy->velB.setZero();
-        if(a!=-1 && b!=-1) proxy->rel.setDifference(C.shapes(a)->X, C.shapes(b)->X);
-        else if(a!=-1) proxy->rel.setInverse(C.shapes(a)->X);
-        else if(b!=-1) proxy->rel = C.shapes(b)->X;
-        else           proxy->rel.setZero();
+        if(C.shapes(a)->type==ors::meshST) proxy->cenA = C.shapes(a)->X * C.shapes(a)->mesh.getMeanVertex(); else proxy->cenA = C.shapes(a)->X.pos;
+        if(C.shapes(b)->type==ors::meshST) proxy->cenB = C.shapes(b)->X * C.shapes(b)->mesh.getMeanVertex(); else proxy->cenB = C.shapes(b)->X.pos;
+        proxy->cenN = proxy->cenA - proxy->cenB; //normal always points from b to a
+        proxy->cenD = proxy->cenN.length();
+        proxy->cenN /= proxy->cenD;
       }
 
     //penetrating pair of objects
     if(num_contacts[i]==-1) {
-      proxy=C.proxies(Nold+k);
+      proxy=C.proxies(k);
       proxy->a=a;
       proxy->b=b;
-      proxy->age=0;
       proxy->d = -.0;
-      if(C.shapes(a)->type==ors::meshST) proxy->posA = C.shapes(a)->X * C.shapes(a)->mesh.getMeanVertex();
-      else proxy->posA = C.shapes(a)->X.pos;
-      if(C.shapes(b)->type==ors::meshST) proxy->posB = C.shapes(b)->X * C.shapes(b)->mesh.getMeanVertex();
-      else proxy->posB = C.shapes(b)->X.pos;
-      proxy->normal = proxy->posA - proxy->posB; //normal always points from b to a
-      proxy->normal.normalize();
+      if(C.shapes(a)->type==ors::meshST) proxy->cenA = C.shapes(a)->X * C.shapes(a)->mesh.getMeanVertex(); else proxy->cenA = C.shapes(a)->X.pos;
+      if(C.shapes(b)->type==ors::meshST) proxy->cenB = C.shapes(b)->X * C.shapes(b)->mesh.getMeanVertex(); else proxy->cenB = C.shapes(b)->X.pos;
+      proxy->cenN = proxy->cenA - proxy->cenB; //normal always points from b to a
+      proxy->cenD = proxy->cenN.length();
+      proxy->cenN /= proxy->cenD;
+
+      //copy to pos..
+      proxy->posA = proxy->cenA;
+      proxy->posB = proxy->cenB;
+      proxy->normal = proxy->cenN;
+
       //!! IN PENETRATION we measure d as -1+(distance between object centers) - that gives a well-defined (though non-smooth) gradient!
-      //proxy->d += (proxy->posA-proxy->posB).length();
-      //proxy->posA -= .5*proxy->normal;
-      //proxy->posB += .5*proxy->normal;
-      //CHECK(fabs(fabs(proxy->d+.1)-(proxy->posA-proxy->posB).length())<1e-10, "")
+//      proxy->d += -1.+(proxy->posA-proxy->posB).length();
       k++;
-//       cout <<".";
-      //MT_MSG("WARNING - swift penetration!!!");
     }
   }
-  CHECK(k+Nold == C.proxies.N, "");
+  CHECK(k == (int)C.proxies.N, "");
 
   //add pointClound stuff to list
   if(global_ANN) {
@@ -382,14 +367,11 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
       C.proxies.append(proxy);
       proxy->a=global_ANN_shape->index;
       proxy->b=s->index;
-      proxy->age=0;
       proxy->d = _dists(0);
       proxy->posA.set(&global_ANN_shape->mesh.V(_idx(0), 0));  proxy->posA = global_ANN_shape->X * proxy->posA;
       proxy->posB.set(&s->mesh.V(_i, 0));                      proxy->posB = s->X * proxy->posB;
       proxy->normal = proxy->posA - proxy->posB;
       proxy->normal.normalize();
-      proxy->velA.setZero();
-      proxy->velB.setZero();
     }
   }
 

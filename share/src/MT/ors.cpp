@@ -4004,8 +4004,7 @@ void ors::Graph::reportProxies(std::ostream *os) {
         <<i <<" ("
         <<a <<':' <<(a!=-1?shapes(a)->body->name.p:"earth") <<")-("
         <<b <<':' <<(b!=-1?shapes(b)->body->name.p:"earth")
-        <<") [" <<p->age
-        <<"] d=" <<p->d
+        <<") d=" <<p->d
         <<" |A-B|=" <<(p->posB-p->posA).length()
         <<" d^2=" <<(p->posB-p->posA).lengthSqr()
         <<" normal=" <<p->normal
@@ -4019,40 +4018,20 @@ bool ProxySortComp(const ors::Proxy *a, const ors::Proxy *b) {
   return (a->a < b->a) || (a->a==b->a && a->b<b->b) || (a->a==b->a && a->b==b->b && a->d < b->d);
 }
 
-void ors::Graph::sortProxies(bool deleteMultiple, bool deleteOld) {
+void ors::Graph::sortProxies(bool deleteMultiple) {
   uint i;
-  if(deleteOld) {
-    for(i=0; i<proxies.N; i++) if(proxies(i)->age) {
-        delete proxies(i);
-        proxies.remove(i);
-        i--;
-      }
-  }
 
   ors::Proxy **proxiesstop=proxies.p+proxies.N;
   std::sort(proxies.p, proxiesstop, ProxySortComp);
 
-  for(i=0; i<proxies.N; i++) if(proxies(i)->age) {
-      if(
-        (i+1==proxies.N) || //this is the last one
-        (i && proxies(i)->a==proxies(i-1)->a && proxies(i)->b==proxies(i-1)->b) || //the previous is older
-        (proxies(i)->a!=proxies(i+1)->a || proxies(i)->b!=proxies(i+1)->b) || //the next one is between different objects
-        (proxies(i+1)->d>=0.) //the next one is non-colliding
-      ) {
+  if(deleteMultiple) {
+    for(i=0; i<proxies.N; i++) {
+      if(i && proxies(i)->a==proxies(i-1)->a && proxies(i)->b==proxies(i-1)->b) {
         delete proxies(i);
         proxies.remove(i);
         i--;
       }
     }
-
-  if(deleteMultiple) {
-    for(i=0; i<proxies.N; i++) if(!proxies(i)->age) {
-        if(i && !proxies(i-1)->age && proxies(i)->a==proxies(i-1)->a && proxies(i)->b==proxies(i-1)->b) {
-          delete proxies(i);
-          proxies.remove(i);
-          i--;
-        }
-      }
   }
 }
 
@@ -4164,18 +4143,18 @@ void ors::Graph::contactsToForces(double hook, double damp) {
   ors::Vector trans, transvel, force;
   uint i;
   int a, b;
-  for(i=0; i<proxies.N; i++) if(!proxies(i)->age && proxies(i)->d<0.) {
+  for(i=0; i<proxies.N; i++) if(proxies(i)->d<0.) {
       a=proxies(i)->a; b=proxies(i)->b;
 
       //if(!i || proxies(i-1).a!=a || proxies(i-1).b!=b) continue; //no old reference sticking-frame
       //trans = proxies(i)->rel.p - proxies(i-1).rel.p; //translation relative to sticking-frame
       trans    = proxies(i)->posB-proxies(i)->posA;
-      transvel = proxies(i)->velB-proxies(i)->velA;
+      //transvel = proxies(i)->velB-proxies(i)->velA;
       //d=trans.length();
 
       force.setZero();
       force += (hook) * trans; //*(1.+ hook*hook*d*d)
-      force += damp * transvel;
+      //force += damp * transvel;
       SL_DEBUG(1, cout <<"applying force: [" <<a <<':' <<b <<"] " <<force <<endl);
 
       if(a!=-1) addForce(force, shapes(a)->body, proxies(i)->posA);
@@ -4185,6 +4164,7 @@ void ors::Graph::contactsToForces(double hook, double damp) {
 
 //! measure (=scalar kinematics) for the contact cost summed over all bodies
 void ors::Graph::getContactMeasure(arr &x, double margin, bool linear) const {
+#if 0
   x.resize(1);
   x=0.;
   uint i;
@@ -4212,10 +4192,22 @@ void ors::Graph::getContactMeasure(arr &x, double margin, bool linear) const {
       if(!linear) x(0) += discount*d*d;
       else        x(0) += discount*d;
     }
+#else
+  x.resize(1);
+  x=0.;
+  uint i;
+  //Shape *a, *b;
+  for(i=0; i<proxies.N; i++) if(proxies(i)->d<margin) {
+//      a=shapes(proxies(i)->a); b=shapes(proxies(i)->b);
+      //NORMALS ALWAYS GO FROM b TO a !!
+      x(0) += (1.-proxies(i)->d/margin) * (1.-proxies(i)->cenD);
+    }
+#endif
 }
 
 //! gradient (=scalar Jacobian) of this contact cost
 double ors::Graph::getContactGradient(arr &grad, double margin, bool linear) const {
+#if 0
   ors::Vector normal;
   uint i;
   Shape *a, *b;
@@ -4225,7 +4217,7 @@ double ors::Graph::getContactGradient(arr &grad, double margin, bool linear) con
   grad.resize(1, getJointStateDimension(false));
   grad.setZero();
   ors::Vector arel, brel;
-  for(i=0; i<proxies.N; i++) if(!proxies(i)->age && proxies(i)->d<margin) {
+  for(i=0; i<proxies.N; i++) if(proxies(i)->d<margin) {
       a=shapes(proxies(i)->a); b=shapes(proxies(i)->b);
       d=1.-proxies(i)->d/margin;
       discount = 1.;
@@ -4261,15 +4253,53 @@ double ors::Graph::getContactGradient(arr &grad, double margin, bool linear) con
     }
 
   return cost;
+#else
+  ors::Vector normal;
+  uint i;
+  Shape *a, *b;
+  double cost=0.;
+  arr J;
+  grad.resize(1, getJointStateDimension(false));
+  grad.setZero();
+  for(i=0; i<proxies.N; i++) if(proxies(i)->d<margin) {
+    a=shapes(proxies(i)->a); b=shapes(proxies(i)->b);
+    double d1 = 1.-proxies(i)->d/margin;
+    double d2 = 1.-proxies(i)->cenD;
+    cost += d1*d2;
+
+    if(proxies(i)->d>0.){ //we have a gradient on pos only when outside
+      ors::Vector arel=a->X.rot/(proxies(i)->posA-a->X.pos);
+      ors::Vector brel=b->X.rot/(proxies(i)->posB-b->X.pos);
+      CHECK(proxies(i)->normal.isNormalized(), "proxy normal is not normalized");
+      arr posN; posN.referTo(proxies(i)->normal.p(), 3); posN.reshape(1, 3);
+
+      //grad on posA
+      jacobianPos(J, a->body->index, &arel); grad -= d2/margin*(posN*J);
+      //grad on posA
+      jacobianPos(J, b->body->index, &brel); grad += d2/margin*(posN*J);
+    }
+
+    ors::Vector arel=a->X.rot/(proxies(i)->cenA-a->X.pos);
+    ors::Vector brel=b->X.rot/(proxies(i)->cenB-b->X.pos);
+    CHECK(proxies(i)->cenN.isNormalized(), "proxy normal is not normalized");
+    arr cenN; cenN.referTo(proxies(i)->cenN.p(), 3); cenN.reshape(1, 3);
+
+    //grad on cenA
+    jacobianPos(J, a->body->index, &arel); grad -= d1*(cenN*J);
+    //grad on cenB
+    jacobianPos(J, b->body->index, &brel); grad += d1*(cenN*J);
+
+  }
+
+  return cost;
+#endif
 }
 
 //! measure (=scalar kinematics) for the contact cost summed over all bodies
 void ors::Graph::getContactConstraints(arr& y) const {
   y.clear();
   uint i;
-  for(i=0; i<proxies.N; i++) if(!proxies(i)->age) {
-      y.append(proxies(i)->d);
-    }
+  for(i=0; i<proxies.N; i++) y.append(proxies(i)->d);
 }
 
 //! gradient (=scalar Jacobian) of this contact cost
@@ -4280,7 +4310,7 @@ void ors::Graph::getContactConstraintsGradient(arr &dydq) const {
   Shape *a, *b;
   arr J, dnormal, grad(1, jd);
   ors::Vector arel, brel;
-  for(i=0; i<proxies.N; i++) if(!proxies(i)->age) {
+  for(i=0; i<proxies.N; i++) {
       a=shapes(proxies(i)->a); b=shapes(proxies(i)->b);
 
       arel.setZero();  arel=a->X.rot/(proxies(i)->posA-a->X.pos);
@@ -4416,7 +4446,7 @@ void ors::Graph::getPenetrationState(arr &vec) const {
   vec.setZero();
   ors::Vector d;
   uint i;
-  for(i=0; i<proxies.N; i++) if(!proxies(i)->age && proxies(i)->d<0.) {
+  for(i=0; i<proxies.N; i++) if(proxies(i)->d<0.) {
       d=proxies(i)->posB - proxies(i)->posA;
 
       if(proxies(i)->a!=-1) vec(proxies(i)->a) += d.length();
@@ -4426,7 +4456,7 @@ void ors::Graph::getPenetrationState(arr &vec) const {
 
 ors::Proxy* ors::Graph::getContact(uint a, uint b) const {
   uint i;
-  for(i=0; i<proxies.N; i++) if(!proxies(i)->age && proxies(i)->d<0.) {
+  for(i=0; i<proxies.N; i++) if(proxies(i)->d<0.) {
       if(proxies(i)->a==(int)a && proxies(i)->b==(int)b) return proxies(i);
       if(proxies(i)->a==(int)b && proxies(i)->b==(int)a) return proxies(i);
     }
@@ -4443,7 +4473,7 @@ void ors::Graph::getGripState(arr& grip, uint j) const {
 
   p.setZero();
   uint i, n=0;
-  for(i=0; i<proxies.N; i++) if(!proxies(i)->age && proxies(i)->d<0.) {
+  for(i=0; i<proxies.N; i++) if(proxies(i)->d<0.) {
       if(proxies(i)->a!=(int)j && proxies(i)->b!=(int)j) continue;
 
       n++;

@@ -567,20 +567,19 @@ void ActionInterface::writeAllContacts(uint id) {
   //   cout <<obj <<std::flush;
   cout <<convertObjectID2name(id) <<" is in contact with ";
   for(i=0; i<C->proxies.N; i++)
-    if(!C->proxies(i)->age) // PROXIES SIND LEER!
-      if(C->proxies(i)->d<0.) {
-        p=C->proxies(i);
-        //      cout <<"DOES THIS EVER HAPPEN?" <<endl;
-        if(p->a==(int)obj && p->b!=(int)obj) {
-          // TODO look only for objects "o"
-          cout <<C->bodies(p->b)->name <<" ";
-          //        cout <<"!!!!!!!!!" <<C->bodies(p->b)->name <<" and " <<C->bodies(p->a)->name <<std::flush <<endl;
-        }
-        if(p->b==(int)obj && p->a!=(int)obj) {
-          // look only for objects "o"
-          cout <<C->bodies(p->a)->name <<" ";
-        }
+    if(C->proxies(i)->d<0.) {
+      p=C->proxies(i);
+      //      cout <<"DOES THIS EVER HAPPEN?" <<endl;
+      if(p->a==(int)obj && p->b!=(int)obj) {
+        // TODO look only for objects "o"
+        cout <<C->bodies(p->b)->name <<" ";
+        //        cout <<"!!!!!!!!!" <<C->bodies(p->b)->name <<" and " <<C->bodies(p->a)->name <<std::flush <<endl;
       }
+      if(p->b==(int)obj && p->a!=(int)obj) {
+        // look only for objects "o"
+        cout <<C->bodies(p->a)->name <<" ";
+      }
+    }
   cout <<endl;
 }
 
@@ -595,7 +594,7 @@ void ActionInterface::getObjectsAbove(uintA& list, const char *obj_id) {
   double obj_rad = 0.5 * getShape(convertObjectName2ID(obj_id))[2];
   double other_rad;
   double dist;
-  for(i=0; i<C->proxies.N; i++) if(!C->proxies(i)->age && C->proxies(i)->d<0.) {
+  for(i=0; i<C->proxies.N; i++) if(C->proxies(i)->d<0.) {
       p=C->proxies(i);
       if(p->b == -1 || p->a == -1) // on bottom
         continue;
