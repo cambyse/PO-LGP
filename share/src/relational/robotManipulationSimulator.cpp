@@ -333,7 +333,7 @@ void RobotManipulationSimulator::calcObjectNumber() {
 }
 
 
-void RobotManipulationSimulator::getObjects(uintA& objects) { //!< return list all objects
+void RobotManipulationSimulator::getObjects(uintA& objects) { ///< return list all objects
   objects.clear();
   
   objects.append(getTableID());

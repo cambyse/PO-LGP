@@ -51,7 +51,7 @@ void computeEPmessage(arr& a, arr &Ainv, const arr& b_from, const arr& Binv_from
 // methods
 //
 
-/*! \brief compute a single control step from current state to state
+/** \brief compute a single control step from current state to state
     at time t (taking into account all targets and precisions
     associated with all declared task variables) */
 void soc::bayesianIKControl(SocSystemAbstraction& sys,
@@ -130,7 +130,7 @@ void soc::bayesianIKControl2(SocSystemAbstraction& sys,
   q=b;
 }
                             
-/*! \brief standard IK -- follows the first (active) task variable
+/** \brief standard IK -- follows the first (active) task variable
     exactly, but fails if more than one task variable is
     active. regularization=make it singularity robust*/
 void soc::pseudoIKControl(SocSystemAbstraction& sys, arr& dq, uint t, double regularization){
@@ -154,7 +154,7 @@ void soc::pseudoIKControl(SocSystemAbstraction& sys, arr& dq, uint t, double reg
   }
 }
 
-/*! \brief hierarchical IK: follows the 1st task variable exactly, the
+/** \brief hierarchical IK: follows the 1st task variable exactly, the
     2nd exactly up to the 1st, etc.., might be come
     brittle. regularization=make it singularity robust */
 void soc::hierarchicalIKControl(SocSystemAbstraction& sys, arr& dq, uint t, double regularization){
@@ -180,7 +180,7 @@ void soc::hierarchicalIKControl(SocSystemAbstraction& sys, arr& dq, uint t, doub
 
 //===========================================================================
 
-/*! \brief compute a single control step from state at time t-1 to
+/** \brief compute a single control step from state at time t-1 to
     state at time t. If eps=0, this is equivalen to bayesianIKControl;
     for eps>0 the IK step is repeated until convergence up to
     tolerance eps. qt=output, qt_1=state at time t-1. */
@@ -205,7 +205,7 @@ void soc::bayesianIterateIKControl(SocSystemAbstraction& sys,
 //===========================================================================
 
 
-/*! \brief compute a single control step from current state to target of time t.
+/** \brief compute a single control step from current state to target of time t.
     x=output, x_1=state at time t-1 */
 void soc::bayesianDynamicControl(SocSystemAbstraction& sys, arr& x, const arr& x_1, uint t, arr *v, arr *Vinv){
   CHECK(sys.dynamic, "assumed dynamic SOC abstraction");
@@ -259,7 +259,7 @@ void soc::bayesianDynamicControl(SocSystemAbstraction& sys, arr& x, const arr& x
 
 //===========================================================================
 
-/*! \brief compute a trajectory using inverse kinematics (iterating
+/** \brief compute a trajectory using inverse kinematics (iterating
     bayesianIK forward). If eps=0, no IK step is repeated, for eps>0
     IK steps are repeated until they converge up to tolerance eps (see
     \ref bayesianIterateIKControl) */

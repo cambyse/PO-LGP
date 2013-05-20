@@ -32,15 +32,15 @@ typedef void (*Trans)(arr& x);
 
 extern bool useC;
 
-/*! Gaussian \ingroup infer1 */
+/** Gaussian \ingroup infer1 */
 struct Gaussian {
-  arr c; //!< center (normal representation)
-  arr C; //!< covariance (normal representation)
-  arr u; //!< `center-vector' in canonical representation
-  arr U; //!< precision matrix (canonical representation)
+  arr c; ///< center (normal representation)
+  arr C; ///< covariance (normal representation)
+  arr u; ///< `center-vector' in canonical representation
+  arr U; ///< precision matrix (canonical representation)
   
-  bool okC; //!< flag if normal representation is available
-  bool okU; //!< flag if canonical representation is available
+  bool okC; ///< flag if normal representation is available
+  bool okU; ///< flag if canonical representation is available
   
   //! okC=okU=false
   Gaussian(){ setCU(false, false); }
@@ -141,12 +141,12 @@ typedef MT::Array<Gaussian*> GaussianL;
 void estimate(Gaussian &g, const arr& X);
 void estimateWeighted(Gaussian& g, const arr& X, const arr& W);
 
-/*! collapses a mixture of gaussians (or weighted gaussians: P doesn't
+/** collapses a mixture of gaussians (or weighted gaussians: P doesn't
     have to be normalized) to a single gaussian via moment matching \ingroup infer1 */
 void collapseMoG(Gaussian& g, const arr& P, const GaussianA& G);
 void collapseMoG(Gaussian& g, const arr& P, const GaussianL& G, bool zeroMean=false);
 
-/*! similar to the unscented transform: first take systematically samples
+/** similar to the unscented transform: first take systematically samples
     from the Gaussian, then weight the samples proportional to f(x),
     then reestimate the Gaussian \ingroup infer1 */
 void resampleAndEstimate(Gaussian& g, double(*f)(const arr& x), uint N);
@@ -165,7 +165,7 @@ bool sameGaussian(const Gaussian &a, const Gaussian &b, double eps=1e-8);
 //! symmetric Kullback-Leibler divergence \ingroup infer1
 double KLDsym(const Gaussian &a, const Gaussian &b);
 
-/*! map an initial gaussian (a) to a new gaussian (b) via a non-linear function f
+/** map an initial gaussian (a) to a new gaussian (b) via a non-linear function f
     using the unscented transform \ingroup infer1 */
 void unscentedTransform(Gaussian &b, const Gaussian &a, Trans f);
 
@@ -204,16 +204,16 @@ void makeConditional(Gaussian& xi, uint dx);
 //! joint is P(x, y), returns P(x), dx is the dimensionality of x
 void getMarginal(Gaussian& x, const Gaussian& joint, uint dx);
 
-/*! get the marginal of (z_list(0), .., z_list(m-1)) from a joint over (z_0, .., z_(n-1)) \ingroup infer1 */
+/** get the marginal of (z_list(0), .., z_list(m-1)) from a joint over (z_0, .., z_(n-1)) \ingroup infer1 */
 void getMarginal(Gaussian& x, const Gaussian& joint, uintA& list);
 
-/*! -- note, this is not a proper marginal multiplication -- simply set the marginal entries (z_list(0), .., z_list(m-1)) in a joint over (z_0, .., z_(n-1)) \ingroup infer1 */
+/** -- note, this is not a proper marginal multiplication -- simply set the marginal entries (z_list(0), .., z_list(m-1)) in a joint over (z_0, .., z_(n-1)) \ingroup infer1 */
 void setMarginal(Gaussian& joint, const Gaussian& marg, uintA& list);
 
 // assumes middle split
 void getMarginalsFromJoint(Gaussian& x, Gaussian& y, Gaussian& xi);
 
-/*! given a joint (x, y)~{c, C} and a potential {b, B} for y|evidence,
+/** given a joint (x, y)~{c, C} and a potential {b, B} for y|evidence,
     this returns the updated joint (x, y)|evidence~{d, D} \ingroup infer1 */
 void multiplyToJoint(Gaussian& xi, Gaussian& b);
 

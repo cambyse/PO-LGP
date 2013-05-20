@@ -16,6 +16,10 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
+/** @file
+ * @ingroup group_optim
+ * @addtogroup group_optim
+ * @{ */
 
 #include "optimization.h"
 
@@ -277,11 +281,8 @@ optOptions::optOptions() {
 }
 
 optOptions global_optOptions;
-optOptions *opt;
-optOptions* accessOpt() { return &global_optOptions; }
-optOptions& deaccessOpt(optOptions *opt) { opt=NULL; return global_optOptions; }
 
-
+/// preliminary
 uint optNodewise(arr& x, VectorChainFunction& f, optOptions o) {
 
   struct MyVectorFunction:VectorFunction {
@@ -348,6 +349,8 @@ uint optNodewise(arr& x, VectorChainFunction& f, optOptions o) {
   return evals;
 }
 
+
+/// preliminary
 uint optDynamicProgramming(arr& x, QuadraticChainFunction& f, optOptions o) {
 
   uint T=x.d0-1,n=x.d1;
@@ -447,10 +450,14 @@ uint optDynamicProgramming(arr& x, QuadraticChainFunction& f, optOptions o) {
   return evals;
 }
 
+/// minimizes \f$f(x)\f$ using its gradient only
 uint optRprop(arr& x, ScalarFunction& f, optOptions o) {
   return Rprop().loop(x, f, o.fmin_return, o.stopTolerance, o.initStep, o.stopEvals, o.verbose);
 }
 
+/** \brief Minimizes \f$f(x) = \phi(x)^T \phi(x)$ using the Jacobian. The optional _user arguments specify,
+ * if f has already been evaluated at x (another initial evaluation is then omitted
+ * to increase performance) and the evaluation of the returned x is also returned */
 uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *addRegularizer, arr *fx_user, arr *Jx_user) {
   double alpha=1.;
   double lambda = 1e-10;
@@ -551,6 +558,9 @@ uint optGaussNewton(arr& x, VectorFunction& f, optOptions o, arr *addRegularizer
   return evals;
 }
 
+/** \brief Minimizes \f$f(x) = A(x)^T x A^T(x) - 2 a(x)^T x + c(x)\f$. The optional _user arguments specify,
+ * if f has already been evaluated at x (another initial evaluation is then omitted
+ * to increase performance) and the evaluation of the returned x is also returned */
 uint optNewton(arr& x, QuadraticFunction& f,  optOptions o, double *fx_user, SqrPotential *S_user) {
   double a=1.;
   double fx, fy;
@@ -626,6 +636,7 @@ uint optNewton(arr& x, QuadraticFunction& f,  optOptions o, double *fx_user, Sqr
   return evals;
 }
 
+/// minimizes \f$f(x)\f$ using its gradient only
 uint optGradDescent(arr& x, ScalarFunction& f, optOptions o) {
   uint evals=0;
   arr y, grad_x, grad_y;
@@ -696,6 +707,7 @@ void updateBwdMessage(SqrPotential& Vi, PairSqrPotential& fij, const SqrPotentia
   Vi.A = fij.A - C_Vbarinv * ~fij.C;
 }
 
+/// preliminary
 uint optMinSumGaussNewton(arr& x, QuadraticChainFunction& f, optOptions o) {
 
   struct LocalQuadraticFunction:QuadraticFunction {
@@ -964,3 +976,5 @@ uint Rprop::loop(arr& _x,
   _x=xmin;
   return evals;
 }
+
+/** @} */

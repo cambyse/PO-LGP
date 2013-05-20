@@ -18,7 +18,7 @@
 
 
 
-/*! \file opengl.h
+/** \file opengl.h
     \brief defines the OpenGL interface to freeglut or Qt */
 
 #ifndef MT_opengl_h
@@ -155,7 +155,7 @@ struct Camera {
 // OpenGL class
 //
 
-/*!\brief A class to display and control 3D scenes using OpenGL and Qt.
+/** \brief A class to display and control 3D scenes using OpenGL and Qt.
 
     Minimal use: call \ref add to add routines or objects to be drawn
     and \ref update or \ref watch to start the display. */
@@ -176,25 +176,25 @@ struct OpenGL {
   struct GLView     { double le, ri, bo, to;  MT::Array<GLDrawer> drawers;  ors::Camera camera;  byteA *img;  MT::String text;  GLView() { img=NULL; le=bo=0.; ri=to=1.; } };
   
   //!@name data fields
-  MT::Array<GLView> views;            //!< list of draw routines
-  MT::Array<GLDrawer> drawers;        //!< list of draw routines
-  MT::Array<GLInitCall> initCalls;    //!< list of initialization routines
-  MT::Array<GLHoverCall*> hoverCalls; //!< list of hover callbacks
-  MT::Array<GLClickCall*> clickCalls; //!< list of click callbacks
-  MT::Array<GLKeyCall*> keyCalls;     //!< list of click callbacks
-  ors::Camera camera;     //!< the camera used for projection
-  MT::String text;        //!< the text to be drawn as title within the opengl frame
-  float clearR, clearG, clearB, clearA;  //!< colors of the beackground (called in glClearColor(...))
-  bool reportEvents, reportSelects;    //!< flags for verbosity
-  int pressedkey;         //!< stores the key pressed
-  const char *exitkeys;   //!< additional keys to exit watch mode
+  MT::Array<GLView> views;            ///< list of draw routines
+  MT::Array<GLDrawer> drawers;        ///< list of draw routines
+  MT::Array<GLInitCall> initCalls;    ///< list of initialization routines
+  MT::Array<GLHoverCall*> hoverCalls; ///< list of hover callbacks
+  MT::Array<GLClickCall*> clickCalls; ///< list of click callbacks
+  MT::Array<GLKeyCall*> keyCalls;     ///< list of click callbacks
+  ors::Camera camera;     ///< the camera used for projection
+  MT::String text;        ///< the text to be drawn as title within the opengl frame
+  float clearR, clearG, clearB, clearA;  ///< colors of the beackground (called in glClearColor(...))
+  bool reportEvents, reportSelects;    ///< flags for verbosity
+  int pressedkey;         ///< stores the key pressed
+  const char *exitkeys;   ///< additional keys to exit watch mode
   uint width,height;
-  int mouse_button;       //!< stores which button was pressed
-  int mouseposx, mouseposy;  //!< current x- and y-position of mouse
+  int mouse_button;       ///< stores which button was pressed
+  int mouseposx, mouseposy;  ///< current x- and y-position of mouse
   int mouseView;
   bool mouseIsDown;
-  MT::Array<GLSelect> selection; //!< list of all selected objects
-  GLSelect *topSelection;        //!< top selected object
+  MT::Array<GLSelect> selection; ///< list of all selected objects
+  GLSelect *topSelection;        ///< top selected object
   bool immediateExitLoop;
   bool drawFocus;
   byteA background;
@@ -212,7 +212,7 @@ struct OpenGL {
   //!@name adding drawing routines and callbacks
   void add(void (*call)(void*), const void* classP=0);
   void remove(void (*call)(void*), const void* classP=0);
-  template<class T> void add(const T& x) { add(x.staticDraw, &x); } //!< add a class or struct with a staticDraw routine
+  template<class T> void add(const T& x) { add(x.staticDraw, &x); } ///< add a class or struct with a staticDraw routine
   void clear();
   void addHoverCall(GLHoverCall *c);
   void clearHoverCalls();

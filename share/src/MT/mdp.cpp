@@ -24,7 +24,7 @@
 
 
 
-/*! \defgroup mdp MDP and POMDP Module
+/** \defgroup mdp MDP and POMDP Module
 
  */
 
@@ -37,7 +37,7 @@ byteA mdp::global_maze;
 //! \name loading/saving problems
 //@{
 
-/*! \brief write an MDP into a file. For binary=false,
+/** \brief write an MDP into a file. For binary=false,
   the MDP arrays are dumped into the file in a fixed order in readable
   ASCII format. For binary=true the array tasgs are ASCII and
   readable, but the array contents are stored in binary double format

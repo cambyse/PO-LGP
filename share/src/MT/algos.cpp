@@ -195,7 +195,7 @@ void MT::bandpassEnergy(arr &y, const arr &x, double loWavelength, double hiWave
   }
 }
 
-/*! the Hamming distance between two matrices \c fix and \c fox when
+/** the Hamming distance between two matrices \c fix and \c fox when
 the nodes of \c fox are permuted according to \c p. If they don't
 match in size and \c sub=1, then only the upper left submatrices
 are compared; if \c sub=0, the missing entries of the smaller
@@ -210,7 +210,7 @@ double MT::matdistance(intA& fix, intA& fox, uintA& p, bool sub) {
   return ((double)n)/Nmax/Nmax;
 }
 
-/*! same as \c matdistance(A, B, identical-permutation, sub) */
+/** same as \c matdistance(A, B, identical-permutation, sub) */
 double MT::matdistance(intA& A, intA& B, bool sub) {
   uintA p;
   p.setStraightPerm(B.d0);
@@ -313,7 +313,7 @@ void MonSolver::solve(double& par, const double& err) {
 
 LinearStatistics::LinearStatistics() { lambda=0.; accum=0.; computed=false; }
 
-/*! NOTE: when data is added to the statistics, the means and
+/** NOTE: when data is added to the statistics, the means and
 variances are not yet normalized and centered (computed indicates that) */
 void LinearStatistics::compute() {
   if(computed) return;
@@ -335,7 +335,7 @@ void LinearStatistics::computeZeroMean() {
   computed=true;
 }
 
-/*! add a single new datum (x and y are 1D arrays)
+/** add a single new datum (x and y are 1D arrays)
 or a batch of data (x and y are 2D arrays) to the statistics in a weighed fashion */
 void LinearStatistics::learn(const arr& X, const arr& Y, double weight) {
   CHECK((X.nd==1 && Y.nd==1) || (X.nd==2 && Y.nd==2), "data must either be batch or online data");

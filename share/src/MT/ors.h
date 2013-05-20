@@ -190,11 +190,11 @@ struct Quaternion {
 
 //! a transformation in 3D (position, orientation, linear & angular velocities)
 struct Transformation {
-  Vector pos;     //!< position (translation)
-  Quaternion rot; //!< orientation
-  Vector vel;     //!< linear velocity
-  Vector angvel;  //!< angular velocity
-  bool zeroVels;    //!< velocities are identically zero
+  Vector pos;     ///< position (translation)
+  Quaternion rot; ///< orientation
+  Vector vel;     ///< linear velocity
+  Vector angvel;  ///< angular velocity
+  bool zeroVels;    ///< velocities are identically zero
 
   Transformation();
   Transformation(bool noInit);
@@ -239,13 +239,13 @@ struct Transformation {
  */
 //! a mesh (arrays of vertices, triangles, colors & normals)
 struct Mesh {
-  arr V;                //!< vertices
-  arr Vn;               //!< triangle normals
-  arr C;                //!< vertex colors
-  intA G;               //!< vertex groups
+  arr V;                ///< vertices
+  arr Vn;               ///< triangle normals
+  arr C;                ///< vertex colors
+  intA G;               ///< vertex groups
 
-  uintA T;              //!< triangles (faces)
-  arr   Tn;             //!< vertex normals
+  uintA T;              ///< triangles (faces)
+  arr   Tn;             ///< vertex normals
   /**
    * A mesh can consist of several convex sub-parts.
    * subMeshSizes[i] denotes the number of vertices from V which are part
@@ -253,9 +253,9 @@ struct Mesh {
    */
   uintA subMeshSizes;
   //-- groups: deprecated?
-  MT::Array<Transformation*> GF; //!< pose for each group (GF.N is number of groups)
-  MT::Array<uintA>  GT; //!< triangles for each group (GT.N=GF.N+1, last entry contains mixed group triangles)
-  //MT::Array<uintA> strips; //!< triangle strips (each with a 1D stripe index set)
+  MT::Array<Transformation*> GF; ///< pose for each group (GF.N is number of groups)
+  MT::Array<uintA>  GT; ///< triangles for each group (GT.N=GF.N+1, last entry contains mixed group triangles)
+  //MT::Array<uintA> strips; ///< triangle strips (each with a 1D stripe index set)
 
   Mesh();
 
@@ -350,19 +350,19 @@ namespace ors {
  */
 //! a rigid body (inertia properties, lists of attached joints & shapes)
 struct Body {
-  uint index;          //!< unique identifier
-  MT::Array<Joint*> inLinks, outLinks;       //!< lists of in and out joints
+  uint index;          ///< unique identifier
+  MT::Array<Joint*> inLinks, outLinks;       ///< lists of in and out joints
 
-  MT::String name;     //!< name
-  Transformation X;    //!< body's absolute pose
-  KeyValueGraph ats;   //!< list of any-type attributes
+  MT::String name;     ///< name
+  Transformation X;    ///< body's absolute pose
+  KeyValueGraph ats;   ///< list of any-type attributes
 
   //dynamic properties
-  BodyType type;          //!< is globally fixed?
-  double mass;           //!< its mass
-  Matrix inertia;      //!< its inertia tensor
-  Vector com;          //!< its center of gravity
-  Vector force, torque; //!< current forces applying on the body
+  BodyType type;          ///< is globally fixed?
+  double mass;           ///< its mass
+  Matrix inertia;      ///< its inertia tensor
+  Vector com;          ///< its center of gravity
+  Vector force, torque; ///< current forces applying on the body
 
   MT::Array<Shape*> shapes;
 
@@ -383,18 +383,18 @@ struct Body {
 
 //! a joint
 struct Joint {
-  uint index;          //!< unique identifier
-  uint qIndex;         //!< index where this joint appears in the q-state-vector
-  int ifrom, ito;       //!< indices of from and to bodies
-  Body *from, *to;      //!< pointers to from and to bodies
+  uint index;          ///< unique identifier
+  uint qIndex;         ///< index where this joint appears in the q-state-vector
+  int ifrom, ito;       ///< indices of from and to bodies
+  Body *from, *to;      ///< pointers to from and to bodies
 
-  JointType type;            //!< joint type
-  Transformation A;          //!< transformation from parent body to joint (attachment, usually static)
-  Transformation Q;          //!< transformation within the joint (usually dynamic)
-  Transformation B;          //!< transformation from joint to child body (attachment, usually static)
-  Transformation X;          //!< joint pose in world coordinates (same as from->X*A)
-  Vector axis;               //!< joint axis (same as X.rot.getX() for standard hinge joints)
-  KeyValueGraph ats;         //!< list of any-type attributes
+  JointType type;            ///< joint type
+  Transformation A;          ///< transformation from parent body to joint (attachment, usually static)
+  Transformation Q;          ///< transformation within the joint (usually dynamic)
+  Transformation B;          ///< transformation from joint to child body (attachment, usually static)
+  Transformation X;          ///< joint pose in world coordinates (same as from->X*A)
+  Vector axis;               ///< joint axis (same as X.rot.getX() for standard hinge joints)
+  KeyValueGraph ats;         ///< list of any-type attributes
 
   Joint();
   explicit Joint(const Joint& j);
@@ -419,16 +419,16 @@ struct Shape {
   uint ibody;
   Body *body;
 
-  MT::String name;     //!< name
+  MT::String name;     ///< name
   Transformation X;
-  Transformation rel;      //!< relative translation/rotation of the bodies geometry
+  Transformation rel;      ///< relative translation/rotation of the bodies geometry
   ShapeType type;
   double size[4];
   double color[3];
   Mesh mesh;
-  bool cont;      //!< are contacts registered (or filtered in the callback)
+  bool cont;      ///< are contacts registered (or filtered in the callback)
   Vector contactOrientation;
-  KeyValueGraph ats;    //!< list of any-type attributes
+  KeyValueGraph ats;    ///< list of any-type attributes
 
   Shape();
   explicit Shape(const Shape& s);
@@ -448,12 +448,12 @@ struct Shape {
 
 //! proximity information (when two shapes become close)
 struct Proxy {
-  int a;              //!< index of shape A //TODO: would it be easier if this were ors::Shape* ? YES -> Do it!
-  int b;              //!< index of shape B
-  Vector posA, cenA;  //!< contact or closest point position on surface of shape A (in world coordinates)
-  Vector posB, cenB;  //!< contact or closest point position on surface of shape B (in world coordinates)
-  Vector normal, cenN;   //!< contact normal, pointing from B to A (proportional to posA-posB)
-  double d, cenD;           //!< distance (positive) or penetration (negative) between A and B
+  int a;              ///< index of shape A //TODO: would it be easier if this were ors::Shape* ? YES -> Do it!
+  int b;              ///< index of shape B
+  Vector posA, cenA;  ///< contact or closest point position on surface of shape A (in world coordinates)
+  Vector posB, cenB;  ///< contact or closest point position on surface of shape B (in world coordinates)
+  Vector normal, cenN;   ///< contact normal, pointing from B to A (proportional to posA-posB)
+  double d, cenD;           ///< distance (positive) or penetration (negative) between A and B
   uint colorCode;
   Proxy();
 };
@@ -466,7 +466,7 @@ struct Graph {
   MT::Array<Body*>  bodies;
   MT::Array<Joint*> joints;
   MT::Array<Shape*> shapes;
-  MT::Array<Proxy*> proxies; //!< list of current proximities between bodies
+  MT::Array<Proxy*> proxies; ///< list of current proximities between bodies
   arr Qlin, Qoff, Qinv; //linear transformations of q
   bool isLinkTree;
 
@@ -506,7 +506,7 @@ struct Graph {
   void fillInRelativeTransforms();
 
   //!@name kinematics & dynamics
-  void kinematicsPos(arr& x, uint i, ors::Vector *rel=0) const;
+  void kinematicsPos(arr& y, uint i, ors::Vector *rel=0) const;
   void jacobianPos(arr& J, uint i, ors::Vector *rel=0) const;
   void hessianPos (arr& H, uint i, ors::Vector *rel=0) const;
   void kinematicsVec(arr& z, uint i, ors::Vector *vec=0) const;
@@ -517,14 +517,17 @@ struct Graph {
   void dynamics(arr& qdd, const arr& qd, const arr& tau);
   void inverseDynamics(arr& tau, const arr& qd, const arr& qdd);
 
+  //!@name special 'kinematic maps'
+  void phiCollision(arr &y, arr& J, double margin=.02) const;
+
   //!@name get state
   uint getJointStateDimension(bool internal=false) const;
   void getJointState(arr& x, arr& v) const;
   void getJointState(arr& x) const;
   void getContactConstraints(arr& y) const;
   void getContactConstraintsGradient(arr &dydq) const;
-  void getContactMeasure(arr &x, double margin=.02, bool linear=false) const;
-  double getContactGradient(arr &grad, double margin=.02, bool linear=false) const;
+  //void getContactMeasure(arr &x, double margin=.02, bool linear=false) const;
+  //double getContactGradient(arr &grad, double margin=.02, bool linear=false) const;
   void getLimitsMeasure(arr &x, const arr& limits, double margin=.1) const;
   double getLimitsGradient(arr &grad, const arr& limits, double margin=.1) const;
   void getComGradient(arr &grad) const;
@@ -699,21 +702,21 @@ struct TaskVariable;
  * @todo move this to Default task variable?
  */
 enum TVtype {
-  noneTVT,     //!< undefined
-  posTVT,      //!< 3D position of reference, can have 2nd reference, no param
-  zoriTVT,     //!< 3D z-axis orientation, no 2nd reference, no param
-  zalignTVT,   //!< 1D z-axis alignment, can have 2nd reference, param (optional) determins alternative reference world vector
-  qItselfTVT,  //!< q itself as task variable, no param
-  qLinearTVT,  //!< k-dim variable linear in q, no references, param: k-times-n matrix
-  qSingleTVT,  //!< 1D entry of q, reference-integer=index, no param
-  qSquaredTVT, //!< 1D square norm of q, no references, param: n-times-n matrix
-  qLimitsTVT,  //!< 1D meassure for joint limit violation, no references, param: n-times-2 matrix with lower and upper limits for each joint
-  collTVT,     //!< 1D meassure for collision violation, no references, param: 1D number defining the distance margin
-  colConTVT,   //!< 1D meassure collision CONSTRAINT meassure, no references, param: 1D number defining the distance margin
-  comTVT,      //!< 2D vector of the horizontal center of mass, no refs, no param
-  skinTVT,     //!< vector of skin pressures...
+  noneTVT,     ///< undefined
+  posTVT,      ///< 3D position of reference, can have 2nd reference, no param
+  zoriTVT,     ///< 3D z-axis orientation, no 2nd reference, no param
+  zalignTVT,   ///< 1D z-axis alignment, can have 2nd reference, param (optional) determins alternative reference world vector
+  qItselfTVT,  ///< q itself as task variable, no param
+  qLinearTVT,  ///< k-dim variable linear in q, no references, param: k-times-n matrix
+  qSingleTVT,  ///< 1D entry of q, reference-integer=index, no param
+  qSquaredTVT, ///< 1D square norm of q, no references, param: n-times-n matrix
+  qLimitsTVT,  ///< 1D meassure for joint limit violation, no references, param: n-times-2 matrix with lower and upper limits for each joint
+  collTVT,     ///< 1D meassure for collision violation, no references, param: 1D number defining the distance margin
+  colConTVT,   ///< 1D meassure collision CONSTRAINT meassure, no references, param: 1D number defining the distance margin
+  comTVT,      ///< 2D vector of the horizontal center of mass, no refs, no param
+  skinTVT,     ///< vector of skin pressures...
   gripTVT, rotTVT, contactTVT, //PRELIMINARY OR OBSOLETE
-  userTVT      //!< fully user defined: derive from TaskVariable and overload userUpdate(...)
+  userTVT      ///< fully user defined: derive from TaskVariable and overload userUpdate(...)
 };
 
 enum TargetType { noneTT, directTT, positionGainsTT, pdGainOnRealTT, pdGainOnReferenceTT, trajectoryTT };
@@ -723,20 +726,20 @@ enum TargetType { noneTT, directTT, positionGainsTT, pdGainOnRealTT, pdGainOnRef
 /** basic task variable */
 struct TaskVariable {
   //!@name data fields
-  bool active;          //!< active?
-  TVtype type;          //!< which type has this variable (arguably: this could be member of DefaultTV -- but useful here)
-  TargetType targetType;//!< what target type
-  MT::String name;      //!< its name
+  bool active;          ///< active?
+  TVtype type;          ///< which type has this variable (arguably: this could be member of DefaultTV -- but useful here)
+  TargetType targetType;///< what target type
+  MT::String name;      ///< its name
 
-  arr y, y_old, v, v_old, y_target, v_target; //!< current state and final target of this variable
-  arr J, Jt;                                  //!< current Jacobian and its transpose
-  double y_prec, v_prec;                      //!< precision (=1/variance) associated with this variable
-  arr y_trajectory, y_prec_trajectory;        //!< target & precision over a whole trajectory
-  arr v_trajectory, v_prec_trajectory;        //!< target & precision over a whole trajectory
+  arr y, y_old, v, v_old, y_target, v_target; ///< current state and final target of this variable
+  arr J, Jt;                                  ///< current Jacobian and its transpose
+  double y_prec, v_prec;                      ///< precision (=1/variance) associated with this variable
+  arr y_trajectory, y_prec_trajectory;        ///< target & precision over a whole trajectory
+  arr v_trajectory, v_prec_trajectory;        ///< target & precision over a whole trajectory
 
   //used for feedback control:
-  arr y_ref, v_ref;                           //!< immediate (next step) desired target reference
-  double Pgain, Dgain;                        //!< parameters of the PD controller or attractor dynamics
+  arr y_ref, v_ref;                           ///< immediate (next step) desired target reference
+  double Pgain, Dgain;                        ///< parameters of the PD controller or attractor dynamics
 
   //a bit obsolete
   double err, derr;
@@ -789,9 +792,9 @@ stdOutPipe(TaskVariable);
 /** The default implementation of standard task variables. */
 struct DefaultTaskVariable:public TaskVariable {
   //!@name data fields
-  int i, j;             //!< which body(-ies) does it refer to?
-  ors::Transformation irel, jrel; //!< relative position to the body
-  arr params;           //!< parameters of the variable (e.g., liner coefficients, limits, etc)
+  int i, j;             ///< which body(-ies) does it refer to?
+  ors::Transformation irel, jrel; ///< relative position to the body
+  arr params;           ///< parameters of the variable (e.g., liner coefficients, limits, etc)
 
   //!@name initialization
   DefaultTaskVariable();
@@ -1052,7 +1055,7 @@ public:
 
   void createOde(ors::Graph &C);
 
-  /*!\brief reinstantiates a new ODE world (and space) clear of all previous objects */
+  /** \brief reinstantiates a new ODE world (and space) clear of all previous objects */
   void clear();
 
   /**
@@ -1069,7 +1072,7 @@ public:
   //! sets gravity to zero (or back to -9.81)
   void setForceFree(bool free);
 
-  /*!\brief main method: process one time step by calling SpaceCollide and WorldQuickStep */
+  /** \brief main method: process one time step by calling SpaceCollide and WorldQuickStep */
   void step(double dtime=.01);
 
   void printInfo(std::ostream& os, dxBody *b);

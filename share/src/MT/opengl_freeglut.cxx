@@ -89,8 +89,8 @@ struct sOpenGL {
 
   //-- engine specific data
   static uint nrWins;
-  static MT::Array<OpenGL*> glwins;    //!< global window list
-  int windowID;                        //!< id of this window in the global glwins list
+  static MT::Array<OpenGL*> glwins;    ///< global window list
+  int windowID;                        ///< id of this window in the global glwins list
   
   //-- callbacks
   

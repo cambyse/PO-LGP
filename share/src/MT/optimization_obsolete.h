@@ -24,11 +24,11 @@ struct OptimizationProblem {
   uint N;
   arr x;
   //virtual void model(arr& output, const arr& input, const arr& x, BinaryBPNet& bp){NIY;}
-  virtual double loss(const arr& x, uint i, arr *grad, double *err) {NIY;} //!< loss and gradient for i-th datum and parameters x
-  virtual double totalLoss(const arr& x, arr *grad, double *err) {NIY;} //!< loss and gradient for i-th datum and parameters x
+  virtual double loss(const arr& x, uint i, arr *grad, double *err) {NIY;} ///< loss and gradient for i-th datum and parameters x
+  virtual double totalLoss(const arr& x, arr *grad, double *err) {NIY;} ///< loss and gradient for i-th datum and parameters x
   
-  virtual double f(arr *grad, const arr& x, int i=-1) {NIY;}   //!< scalar valued function
-  virtual void   F(arr& F, arr *grad, const arr& x, int i=-1) {NIY;} //!< vector valued function
+  virtual double f(arr *grad, const arr& x, int i=-1) {NIY;}   ///< scalar valued function
+  virtual void   F(arr& F, arr *grad, const arr& x, int i=-1) {NIY;} ///< vector valued function
   OptimizationProblem() { N=0; }
 };
 

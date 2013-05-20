@@ -639,7 +639,7 @@ void ActionInterface::getObjectsAbove(uintA& list, const uint obj_id) {
 //   getObjectsBelow(list, convertObjectID2name(obj_id));
 // }
 
-void ActionInterface::getObjects(uintA& objects) { //!< return list all objects
+void ActionInterface::getObjects(uintA& objects) { ///< return list all objects
   objects.clear();
   getManipulableObjects(objects);
   objects.append(getTableID());

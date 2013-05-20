@@ -18,7 +18,7 @@
 
 
 
-/*! \file util.h
+/** \file util.h
     \brief many utilities: contains a bunch of standard includes, macros, operators,
     etc. that are used by most of my code */
 #ifndef MT_util_h
@@ -73,9 +73,9 @@
 #define MT_LnSqrt2Pi -0.9189385332046727417803296
 #define MT_SQRT2 1.414213562373095049
 #define MT_SQRTPI 1.772453850905516027
-typedef unsigned char byte;            //!< byte
-typedef unsigned short int uint16;     //!< 2 bytes
-typedef unsigned int uint;             //!< unsigned integer
+typedef unsigned char byte;            ///< byte
+typedef unsigned short int uint16;     ///< 2 bytes
+typedef unsigned int uint;             ///< unsigned integer
 typedef const char* charp;
 
 //----- macros to define the standard <<and >>operatos for most my classes:
@@ -104,8 +104,8 @@ typedef const char* charp;
 namespace MT {
 extern int argc;
 extern char** argv;
-extern bool IOraw;  //!< stream modifier for some classes (Mem in particular)
-extern bool noLog;  //!< no logfile: default=true, becomes false when MT::init is called
+extern bool IOraw;  ///< stream modifier for some classes (Mem in particular)
+extern bool noLog;  ///< no logfile: default=true, becomes false when MT::init is called
 extern uint lineCount;
 extern int verboseLevel;
 
@@ -209,7 +209,7 @@ std::istream& operator>>(std::istream& is, const PARSE&);
 #define STREAM(x) (((MT::String&)(MT::String().stream() <<x)).stream())
 
 namespace MT {
-/*!\brief String implements the functionalities of an ostream and an
+/** \brief String implements the functionalities of an ostream and an
 istream, but also can be send to an ostream or read from an
 istream. It is based on a simple streambuf derived from the
 MT::Mem class */
@@ -226,12 +226,12 @@ private:
   
 public:
   //!@name data fields
-  char *p;    //!< pointer to memory
-  uint N;     //!< \# elements (excluding zero)
-  uint M;     //!< actual buffer size (in terms of # elements)
-  static const char *readSkipSymbols; //!< default argument to read method (also called by operator>>)
-  static const char *readStopSymbols; //!< default argument to read method (also called by operator>>)
-  static int readEatStopSymbol;       //!< default argument to read method (also called by operator>>)
+  char *p;    ///< pointer to memory
+  uint N;     ///< \# elements (excluding zero)
+  uint M;     ///< actual buffer size (in terms of # elements)
+  static const char *readSkipSymbols; ///< default argument to read method (also called by operator>>)
+  static const char *readStopSymbols; ///< default argument to read method (also called by operator>>)
+  static int readEatStopSymbol;       ///< default argument to read method (also called by operator>>)
   void (*flushCallback)(String&);
   
   //!@name constructors
@@ -244,8 +244,8 @@ public:
   operator char*();
   operator const char*() const;
   char &operator()(uint i) const;
-  std::iostream& stream();             //!< explicitly returns this as an std::iostream&
-  String& operator()();           //!< explicitly return this as a (non-const!) String&
+  std::iostream& stream();             ///< explicitly returns this as an std::iostream&
+  String& operator()();           ///< explicitly return this as a (non-const!) String&
   
   //!@name setting
   String& operator=(const String& s);
@@ -335,7 +335,7 @@ inline void breakPoint() {
 //
 
 namespace MT {
-/*!\brief A parameter that initializes itself from the command line
+/** \brief A parameter that initializes itself from the command line
   (use \c MT::init), parameter file, or a default value (priority in
   this order).  Initialization is done on the fly the _first_ time
   its value is queried (i.e., referenced by the cast operators).*/
@@ -358,7 +358,7 @@ public:
     hasDefault=false;
   };
   
-  /*!\brief specifies also a default value -- parameter does not have to but
+  /** \brief specifies also a default value -- parameter does not have to but
     can be specified in the parameter file/command line */
   Parameter(const char *_tag, const type& _default) {
     typeName=typeid(type).name();
@@ -387,7 +387,7 @@ public:
   //! set the tag (replacing the one from the constructor)
   void setTag(char *_tag) { tag=_tag; }
   
-  /*!\brief enforces that the parameter is reinitialized from the parameter
+  /** \brief enforces that the parameter is reinitialized from the parameter
     file/command line, the next time it is referenced -- even if it
     has been initialized before */
   void reInitialize() { initialized=false; }
@@ -409,7 +409,7 @@ private:
 //
 
 namespace MT {
-/*!\brief A random number generator. An global instantiation \c
+/** \brief A random number generator. An global instantiation \c
   MT::rnd of a \c Rnd object is created. Use this one object to get
   random numbers.*/
 class Rnd {
@@ -453,7 +453,7 @@ public://!@name access
   double uni(double low, double high) { return low+uni()*(high-low); }
   //! a gaussian random variable with mean zero
   double gauss();
-  /*!\brief a positive integer drawn from a poisson distribution with given
+  /** \brief a positive integer drawn from a poisson distribution with given
     \c mean; is case \c mean>100, a (positive) gauss number
     \c floor(mean+gauss(sqrt(mean))+.5) is returned */
   uint32_t poisson(double mean);
@@ -597,12 +597,12 @@ struct Metronome {
   uint tics;
   const char* name;                   ///< name
   
-  Metronome(const char* name, long _targetDt); //!< set tic tac time in milli seconds
+  Metronome(const char* name, long _targetDt); ///< set tic tac time in milli seconds
   ~Metronome();
   
   void reset(long _targetDt);
-  void waitForTic();              //!< waits until the next tic
-  double getTimeSinceTic();       //!< time since last tic
+  void waitForTic();              ///< waits until the next tic
+  double getTimeSinceTic();       ///< time since last tic
 };
 
 //! a really simple thing to meassure cycle and busy times

@@ -144,8 +144,7 @@ namespace Ctest{
     G->setJointState(x); G->calcBodyFramesFromJoints();
     swift->computeProxies(*G,false);
     G->sortProxies(true);
-    G->getContactMeasure(c,.2);
-    if(dfdx) G->getContactGradient(*dfdx,.2);
+    G->phiCollision(c, (dfdx?*dfdx:NoArr), .2);
   }
 }
 
@@ -173,9 +172,8 @@ void testContacts(){
 
     G.reportProxies();
 
-    G.getContactMeasure(con,.2);
-    c=G.getContactGradient(grad,.2); //generate a gradient pushing away to 20cm distance
-    cout <<"contact meassure = " <<con(0) <<' ' <<c <<endl;
+    G.phiCollision(con, grad, .2);
+    cout <<"contact meassure = " <<con(0) <<endl;
     gl.text.clear() <<"t=" <<t <<"  movement along negative contact gradient (using SWIFT to get contacts)";
     gl.watch();
     gl.update();

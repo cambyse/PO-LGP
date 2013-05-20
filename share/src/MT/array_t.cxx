@@ -27,7 +27,7 @@
 #include <algorithm>
 
 #define maxRank 30
-  /*!\brief if flexiMem is true (which is default!) the resize method will
+  /** \brief if flexiMem is true (which is default!) the resize method will
     (1) at the first call allocate the exact amount of memory, (2)
     at further calls of increasing memory allocate twice the memory
     needed or (3) at further calls of decreasing memory only free
@@ -42,7 +42,7 @@
 template<class T> char MT::Array<T>::memMove=-1;
 template<class T> int MT::Array<T>::sizeT=-1;
 
-/*!\brief Simple array container to store arbitrary-dimensional arrays
+/** \brief Simple array container to store arbitrary-dimensional arrays
   (tensors); can buffer more memory than necessary for faster
   resize; enables non-const reference of subarrays; enables fast
   memove for elementary types; implements many standard
@@ -520,7 +520,7 @@ template<class T> void MT::Array<T>::removeAllValues(const T& x) {
   for(i=0; i<N; i++) if(p[i]==x) { remove(i, 1); i--; }
 }
 
-/*!\brief remove (delete) a subsequence of the array -- the array becomes 1D!  [only with memMove!]
+/** \brief remove (delete) a subsequence of the array -- the array becomes 1D!  [only with memMove!]
  Returns true if value was found and deleted.
  Returns false if value was not found.*/
 template<class T> bool MT::Array<T>::removeValueSafe(const T& x) {
@@ -750,15 +750,15 @@ template<class T> T maxA(const MT::Array<T>& v, uint & ind, uint start, uint end
 */
 
 
-/*!\brief the index of the maxium; precondition: the comparision operator
+/** \brief the index of the maxium; precondition: the comparision operator
   > exists for type T */
 template<class T> uint MT::Array<T>::maxIndex() const { uint i, m=0; for(i=0; i<N; i++) if(p[i]>p[m]) m=i; return m; }
 
-/*!\brief the index of the maxium; precondition: the comparision operator
+/** \brief the index of the maxium; precondition: the comparision operator
   > exists for type T */
 template<class T> void MT::Array<T>::maxIndex(uint& i, uint& j) const { CHECK(nd==2, "needs 2D array"); j=maxIndex(); i=j/d1; j=j%d1; }
 
-/*!\brief the index of the maxium; precondition: the comparision operator
+/** \brief the index of the maxium; precondition: the comparision operator
   > exists for type T */
 template<class T> void MT::Array<T>::maxIndex(uint& i, uint& j, uint& k) const { CHECK(nd==3, "needs 3D array"); k=maxIndex(); i=k/(d1*d2); k=k%(d1*d2); j=k/d2; k=k%d2; }
 
@@ -793,7 +793,7 @@ template<class T> void MT::Array<T>::findValues(MT::Array<uint>& indices, const 
 }
 
 // TL 17.07.08
-/*!\brief whether at least one object is contained more than once
+/** \brief whether at least one object is contained more than once
    */
 template<class T> bool MT::Array<T>::containsDoubles() const {
   if(N < 2)
@@ -809,7 +809,7 @@ template<class T> bool MT::Array<T>::containsDoubles() const {
 }
 
 
-/*!\brief a sub array of a 1D Array (corresponds to matlab [i:I]); when
+/** \brief a sub array of a 1D Array (corresponds to matlab [i:I]); when
   the upper limit I is -1, it is replaced by the max limit (like
   [i:]) */
 template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I) const {
@@ -824,7 +824,7 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I) const {
   return x;
 }
 
-/*!\brief copies a sub array of a 2D Array (corresponds to matlab [i:I, j:J]);
+/** \brief copies a sub array of a 2D Array (corresponds to matlab [i:I, j:J]);
   when the upper limits I or J are -1, they are replaced by the
   max limit (like [i:, j:]) */
 template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, int j, int J) const {
@@ -841,7 +841,7 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, int j, int J) con
   return x;
 }
 
-/*!\brief copies a sub array of a 3D Array (corresponds to matlab [i:I, j:J]);
+/** \brief copies a sub array of a 3D Array (corresponds to matlab [i:I, j:J]);
   when the upper limits I or J are -1, they are replaced by the
   max limit (like [i:, j:]) */
 template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, int j, int J, int k, int K) const {
@@ -860,7 +860,7 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, int j, int J, int
   return x;
 }
 
-/*!\brief copies a selection of columns from a 2D array, the first index (rows)
+/** \brief copies a selection of columns from a 2D array, the first index (rows)
   runs from i to I (as explained above) while the second index runs
   over the columns explicitly referred to by cols. (col doesn't have
   to be ordered or could also contain some columns multiply) */
@@ -903,7 +903,7 @@ template<class T> void MT::Array<T>::referTo(const T *buffer, uint n) {
   p=(T*)buffer;
 }
 
-/*!\brief returns an ordinary 2-dimensional C-pointer to the Array content.
+/** \brief returns an ordinary 2-dimensional C-pointer to the Array content.
   Requires the Array<T*> as buffer. */
 template<class T> T** MT::Array<T>::getCarray(Array<T*>& Cpointers) const {
   CHECK(nd==2, "only 2D array gives C-array of type T**");
@@ -955,7 +955,7 @@ template<class T> void MT::Array<T>::setText(const char* str) {
   read(s);
 }
 
-/*!\brief same as memset(p, 0, sizeT*N); precondition: memMove is
+/** \brief same as memset(p, 0, sizeT*N); precondition: memMove is
   true! */
 template<class T> void MT::Array<T>::setZero(byte zero) {
   CHECK(memMove, "can set array's memory to zero only if memMove option is true");
@@ -980,7 +980,7 @@ template<class T> void MT::Array<T>::setUni(const T& x, int d) {
   for(i=0; i<N; i++) elem(i)=x;
 }
 
-/*!\brief becomes the n-dim identity matrix [default:
+/** \brief becomes the n-dim identity matrix [default:
   don't change dimension (already has to be squared matrix)] */
 template<class T> void MT::Array<T>::setId(int d) {
   CHECK(d!=-1 || (nd==2 && d0==d1), "need squared matrix to set to identity");
@@ -1202,7 +1202,7 @@ template<class T> void MT::Array<T>::referToSubDim(const MT::Array<T>& a, uint i
   }
 }
 
-/*!\brief takes over the memory buffer from a; afterwards, this is a
+/** \brief takes over the memory buffer from a; afterwards, this is a
   proper array with own memory and a is only a reference on the
   memory */
 template<class T> void MT::Array<T>::takeOver(MT::Array<T>& a) {
@@ -1215,7 +1215,7 @@ template<class T> void MT::Array<T>::takeOver(MT::Array<T>& a) {
   a.M=0;
 }
 
-/*!\brief return a `dim'-dimensional grid with `steps' intervals
+/** \brief return a `dim'-dimensional grid with `steps' intervals
   filling the range [lo, hi] in each dimension. Note: returned array is
   `flat', rather than grid-shaped. */
 template<class T> void
@@ -1373,7 +1373,7 @@ template<class T> void MT::Array<T>::shift(int offset, bool wrapAround) {
 
 //***** I/O
 
-/*!\brief prototype for operator<<, writes the array by separating elements with ELEMSEP, separating rows with LINESEP, using BRACKETS[0] and BRACKETS[1] to brace the data, optionally writs a dimensionality tag before the data (see below), and optinally in binary format */
+/** \brief prototype for operator<<, writes the array by separating elements with ELEMSEP, separating rows with LINESEP, using BRACKETS[0] and BRACKETS[1] to brace the data, optionally writs a dimensionality tag before the data (see below), and optinally in binary format */
 template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP, const char *LINESEP, const char *BRACKETS, bool dimTag, bool binary) const {
   CHECK(!binary || memMove, "binary write works only for memMoveable data");
   uint i, j, k;
@@ -1430,7 +1430,7 @@ template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP
   }
 }
 
-/*!\brief prototype for operator>>, if there is a dimensionality tag: fast reading of ascii (if there is brackets[]) or binary (if there is \\0\\0 brackets) data; otherwise slow ascii read */
+/** \brief prototype for operator>>, if there is a dimensionality tag: fast reading of ascii (if there is brackets[]) or binary (if there is \\0\\0 brackets) data; otherwise slow ascii read */
 template<class T> void MT::Array<T>::read(std::istream& is) {
   uint d, i;
   char c;
@@ -1690,7 +1690,7 @@ template<class T> MT::Array<T> skew(const MT::Array<T>& v) {
 //!@name probability distribution operations
 //
 
-/*!\brief entropy \f$H_i = - \sum_x p(X_i=x) \ln p(X_i=x)\f$, where \f$x\f$ ranges
+/** \brief entropy \f$H_i = - \sum_x p(X_i=x) \ln p(X_i=x)\f$, where \f$x\f$ ranges
   from \c 0 to \c range-1, of the \c ith variable */
 template<class T> T entropy(const MT::Array<T>& v) {
   T t(0);
@@ -1986,7 +1986,7 @@ template<class T> T product(const MT::Array<T>& v) {
   return t;
 }
 
-/*!\brief inner product (also ordinary matrix or scalar product):
+/** \brief inner product (also ordinary matrix or scalar product):
   \f$\forall_{ik}:~ x_{ik} = \sum_j v_{ij}\, w_{jk}\f$ but also:
   \f$\forall_{i}:~ x_{i} = \sum_j v_{ij}\, w_{j}\f$*/
 template<class T>
@@ -2107,7 +2107,7 @@ void innerProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z)
   HALT("inner product - not yet implemented for these dimensions: " <<y.nd <<" " <<z.nd);
 }
 
-/*!\brief outer product (also exterior or tensor product): \f$\forall_{ijk}:~
+/** \brief outer product (also exterior or tensor product): \f$\forall_{ijk}:~
   x_{ijk} = v_{ij}\, w_{k}\f$ */
 template<class T>
 void outerProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z) {
@@ -2191,7 +2191,7 @@ void getIndexTuple(uintA &I, uint i, const uintA &d);
 #define DEBUG_TENSOR(x) //x
 //!@name tensor
 
-/*! makes X to be a distribution over the left leftmost-indexed
+/** makes X to be a distribution over the left leftmost-indexed
   variables and normalizes it */
 template<class T> void tensorCondNormalize(MT::Array<T>& X, int left) {
   uint i, j, dl=1, dr;
@@ -2219,7 +2219,7 @@ template<class T> void tensorCondNormalize(MT::Array<T>& X, int left) {
   }
 }
 
-/*! makes X to be a distribution over the left leftmost-indexed
+/** makes X to be a distribution over the left leftmost-indexed
   variables and normalizes it */
 template<class T> void tensorCondMax(MT::Array<T>& X, uint left) {
   uint i, j, dl=1, dr, jmax;
@@ -2261,7 +2261,7 @@ template<class T> void tensorCond11Rule(MT::Array<T>& X, uint left, double rate)
   if(amin>1.) for(i=0; i<X.N; i++) X.elem(i) = pow(X.elem(i), amin);
 }
 
-/*! makes X to be a distribution over the left leftmost-indexed
+/** makes X to be a distribution over the left leftmost-indexed
   variables and normalizes it */
 template<class T> void tensorCondSoftMax(MT::Array<T>& X, uint left, double beta) {
   uint i;
@@ -2269,7 +2269,7 @@ template<class T> void tensorCondSoftMax(MT::Array<T>& X, uint left, double beta
   tensorCondNormalize(X, left);
 }
 
-/*!\brief checks whether X is a normalized distribution over the left leftmost-indexed
+/** \brief checks whether X is a normalized distribution over the left leftmost-indexed
   variables */
 template<class T> void tensorCheckCondNormalization(const MT::Array<T>& X, uint left, double tol) {
   uint i, j, dl=1, dr;
@@ -2298,7 +2298,7 @@ template<class T> void tensorCheckCondNormalization_with_logP(const MT::Array<T>
   }
 }
 
-/*! X becomes a tensor product (maybe with some variables summed out)
+/** X becomes a tensor product (maybe with some variables summed out)
   of A and B. pickA and pickB indicate which slots of A and B are
   associated with which slots of C and the summation sign. More
   precisely, if we have \f$C_{i_0i_1i_2} = \sum_{i_3i_4}
@@ -2434,7 +2434,7 @@ inline void getMultiDimIncrement(const uintA& Xdim, const uintA &Yid, uint* Ydim
   //cout <<"Xdim=" <<Xdim <<"\nYid =" <<Yid <<"\nYdim=" <<uintA(Ydim, Yid.N) <<"\nYinc=" <<uintA(Yinc, Xdim.N) <<"\nYdec=" <<uintA(Ydec, Xdim.N) <<endl;
 }
 
-/*! \f$Y_{i_Yid(0), i_Yid(1)} = \sum_{i_1} X_{i_0, i_1, i_2}\f$. Get the marginal Y
+/** \f$Y_{i_Yid(0), i_Yid(1)} = \sum_{i_1} X_{i_0, i_1, i_2}\f$. Get the marginal Y
   from X, where Y will share the slots `Yid' with X */
 template<class T> void tensorMarginal(MT::Array<T> &Y, const MT::Array<T> &X, const uintA &Yid) {
   uint Xcount, Ycount;
@@ -2468,7 +2468,7 @@ template<class T> void tensorMarginal(MT::Array<T> &Y, const MT::Array<T> &X, co
   }
 }
 
-/*! \f$Y_{i_Yid(0), i_Yid(1)} = \sum_{i_1} X_{i_0, i_1, i_2}\f$. Get the marginal Y
+/** \f$Y_{i_Yid(0), i_Yid(1)} = \sum_{i_1} X_{i_0, i_1, i_2}\f$. Get the marginal Y
   from X, where Y will share the slots `Yid' with X */
 template<class T> void tensorPermutation(MT::Array<T> &Y, const MT::Array<T> &X, const uintA &Yid) {
   uint Xcount, Ycount;
@@ -2488,7 +2488,7 @@ template<class T> void tensorPermutation(MT::Array<T> &Y, const MT::Array<T> &X,
 }
 
 
-/*! \f$Y_{i_2, i_0} = {\rm max}_{i_1} X_{i_0, i_1, i_2}\f$. Get the ``max-marginal'' Y
+/** \f$Y_{i_2, i_0} = {\rm max}_{i_1} X_{i_0, i_1, i_2}\f$. Get the ``max-marginal'' Y
   from X, where Y will share the slots `Yid' with X (basis of max-product BP) */
 template<class T> void tensorMaxMarginal(MT::Array<T> &Y, const MT::Array<T> &X, const uintA &Yid) {
   uint Xcount, Ycount;
@@ -2509,7 +2509,7 @@ template<class T> void tensorMaxMarginal(MT::Array<T> &Y, const MT::Array<T> &X,
   }
 }
 
-/*!\brief \f$X_{i_0, i_1, i_2} \gets X_{i_0, i_1, i_2}~ Y_{i_Yid(0), i_Yid(1)}\f$. Multiply Y onto X,
+/** \brief \f$X_{i_0, i_1, i_2} \gets X_{i_0, i_1, i_2}~ Y_{i_Yid(0), i_Yid(1)}\f$. Multiply Y onto X,
   where Y shares the slots `Yid' with X */
 template<class T> void tensorAdd_old(MT::Array<T> &X, const MT::Array<T> &Y, const uintA &Yid) {
   uint Xcount, Ycount;
@@ -2554,7 +2554,7 @@ template<class T> void tensorMarginal_old(MT::Array<T> &y, const MT::Array<T> &x
   }
 }
 
-/*! \f$X_{i_0, i_1, i_2} \gets X_{i_0, i_1, i_2}~ Y_{i_Yid(0), i_Yid(1)}\f$. Multiply Y onto X,
+/** \f$X_{i_0, i_1, i_2} \gets X_{i_0, i_1, i_2}~ Y_{i_Yid(0), i_Yid(1)}\f$. Multiply Y onto X,
   where Y shares the slots `Yid' with X */
 template<class T> void tensorMultiply(MT::Array<T> &X, const MT::Array<T> &Y, const uintA &Yid) {
   uint Xcount, Ycount;
@@ -2576,7 +2576,7 @@ template<class T> void tensorMultiply(MT::Array<T> &X, const MT::Array<T> &Y, co
   }
 }
 
-/*! \f$X_{i_0, i_1, i_2} \gets X_{i_0, i_1, i_2}~ Y_{i_Yid(0), i_Yid(1)}\f$. Multiply Y onto X,
+/** \f$X_{i_0, i_1, i_2} \gets X_{i_0, i_1, i_2}~ Y_{i_Yid(0), i_Yid(1)}\f$. Multiply Y onto X,
   where Y shares the slots `Yid' with X */
 // TODO cope with division by 0, in particular 0/0
 template<class T> void tensorDivide(MT::Array<T> &X, const MT::Array<T> &Y, const uintA &Yid) {
@@ -2620,7 +2620,7 @@ template<class T> void tensorAdd(MT::Array<T> &X, const MT::Array<T> &Y, const u
   }
 }
 
-/*! multiply y onto x, where x has dimensions `d' and y shares the
+/** multiply y onto x, where x has dimensions `d' and y shares the
   dimensions `ids' with x */
 template<class T> void tensorMultiply_old(MT::Array<T> &x, const MT::Array<T> &y, const uintA &d, const uintA &ids) {
   uint i, j, k, n=x.N;
@@ -2711,7 +2711,7 @@ template<class T> void rndNegLogUniform(MT::Array<T>& a, double low, double high
   else     for(uint i=0; i<a.N; i++) a.p[i]+=(T)(-::log(rnd.uni(low, high)));
 }
 
-/*! Assign all elements of x to a Gaussian random variable where
+/** Assign all elements of x to a Gaussian random variable where
     _each_ elelemt has the given stdDev -- devide by sqrt(N) if you
     want the multivariate Gaussian to have a given standard deviation!
     If add is true, the Gaussian noise is added to the existing
@@ -2737,7 +2737,7 @@ template<class T> void rndGauss(MT::Array<T>& x, double stdDev, bool add) {
   return z;
   }*/
 
-/*!\brief from a vector of numbers, calculates the softmax distribution
+/** \brief from a vector of numbers, calculates the softmax distribution
   soft(i) = exp(beta*a(i)), and returns a random sample from
   this distribution (an index in {0, .., a.N-1}) */
 template<class T> uint softMax(const MT::Array<T>& a, arr& soft, double beta) {

@@ -2,10 +2,10 @@
 #include <MT/opengl.h>
 
 struct MDP{
-  arr Ps;    //!< start distribution
-  arr Psas;  //!< transition probs
-  arr Ras;   //!< reward expectation as a function of (action,x_before)
-  double gamma; //!< discounting factor
+  arr Ps;    ///< start distribution
+  arr Psas;  ///< transition probs
+  arr Ras;   ///< reward expectation as a function of (action,x_before)
+  double gamma; ///< discounting factor
 };
 
 void loadMdpFile(MDP& mdp, const char* filename){

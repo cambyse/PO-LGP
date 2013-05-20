@@ -14,7 +14,7 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/> */
 
-/*! \file imgproc.h
+/** \file imgproc.h
     \brief Image Processing */
 
 #ifndef _IMGPROC_H
@@ -26,7 +26,7 @@ namespace np {
 const int opp[8] = {4, 5, 6, 7, 0, 1, 2, 3}; //<! mapping from t to t_old
 const int nids[8][2] = {{ 0, 1}, { 1, 1}, { 1, 0}, { 1,-1}, { 0,-1},
                         {-1,-1}, {-1, 0}, {-1, 1}}; //<! neighbor indices
-/*! \brief Helper for clabel(): determine next contour point s of p
+/** \brief Helper for clabel(): determine next contour point s of p
  *
  *  This function is the implementation of the contour tracing algorithm
  *  described in
@@ -112,7 +112,7 @@ inline void tracer(int& t, int& tn, int s, int sn, const MT::Array<S>& binimg, b
   }
 };
 
-/*! \brief Find an external or internal contour at a given point p
+/** \brief Find an external or internal contour at a given point p
  *
  *  This function is the implementation of the contour tracing algorithm
  *  described in
@@ -132,7 +132,7 @@ inline void tracer(int& t, int& tn, int s, int sn, const MT::Array<S>& binimg, b
 template <class S>
 void ctrace(MT::Array<S>& contour, const MT::Array<S>& binimg, int s, bool internal=true);
 
-/*! \brief Connected component labeling of a binary image
+/** \brief Connected component labeling of a binary image
  *
  *  This function is a re-implementation of Matlab's bwlabel function. The
  *  implementation follows
@@ -151,7 +151,7 @@ void ctrace(MT::Array<S>& contour, const MT::Array<S>& binimg, int s, bool inter
  */
 void cclabel(uintA& lb, const byteA& b, int n = 8, bool sort = true);
 
-/*! \brief Make binary pixel values
+/** \brief Make binary pixel values
  *
  *  Set pixels with values t to 1 all other to 0
  *
@@ -165,7 +165,7 @@ void cclabel(uintA& lb, const byteA& b, int n = 8, bool sort = true);
  */
 void mkbinary(byteA& bw, const byteA& img, int t = 0);
 
-/*! \brief Generate an array of points on a regular grid
+/** \brief Generate an array of points on a regular grid
  *
  *  @param points  array with 2D points, size: (N,2)
  *  @param width   image width > 0
@@ -186,7 +186,7 @@ void regular_grid
  bool center = true
 );
 
-/*! \brief Distortion displacement maps
+/** \brief Distortion displacement maps
  *
  *  Creates two displacement maps, one for the x- and one for y-coordinates,
  *  simulating Radial and Tangential Distortion.
@@ -233,7 +233,7 @@ int distortion_maps
  float p2
 );
 
-/*! \brief Map to reverse distortion displacements
+/** \brief Map to reverse distortion displacements
  *
  *  Creates two displacement maps, one for the x- and one for y-coordinates,
  *  compensating Radial and Tangential Distortion.
@@ -280,7 +280,7 @@ int undistortion_maps
  float p2
 );
 
-/*! \brief Transforms RGB image to RGBA one
+/** \brief Transforms RGB image to RGBA one
  *
  *  NOTE: needed this to add byteA to revel videos.
  *
@@ -314,7 +314,7 @@ inline void pixel_intensities(MT::Array<S>& intensities, const MT::Array<T>& map
       intensities.append(i);
 };
 
-/*! \brief Determine lists of pixel indices given a set of pixel values
+/** \brief Determine lists of pixel indices given a set of pixel values
  *
  *  Generate one list of pixel indices for every supplied pixel value
  *

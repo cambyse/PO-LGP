@@ -6,9 +6,9 @@ typedef MT::Array<Rule*> RuleList;
 StateVariableList globalVars;
 
 struct StateVariable {
-  uint id;          //!< unique identifyer
-  uint dim;         //!< cardinality of domain
-  MT::String name;  //!< up to you...
+  uint id;          ///< unique identifyer
+  uint dim;         ///< cardinality of domain
+  MT::String name;  ///< up to you...
   MT::Array<MT::String> valueNames;
   
   StateVariable();

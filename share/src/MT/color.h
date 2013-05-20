@@ -24,9 +24,9 @@ namespace MT {
 class Color {
 public:
   float
-  r, //!< red
-  g, //!< green
-  b; //!< blue
+  r, ///< red
+  g, ///< green
+  b; ///< blue
   
   //! ...
   friend inline Color operator+(const Color& c1, const Color& c2) {

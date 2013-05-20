@@ -14,7 +14,7 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/> */
 
-/*! \file surf.h
+/** \file surf.h
     \brief SURF image features */
 
 #ifndef NP_EXTERNAL_SURF_H
@@ -25,7 +25,7 @@
 namespace np {
 namespace wrappers {
 
-/*! \brief Extract SURF keypoints + descriptors from image
+/** \brief Extract SURF keypoints + descriptors from image
  *
  *  Description of columns of the SURF keypoint matrix:
  *    1: x-coordinate
@@ -60,7 +60,7 @@ void surf
   bool upright = true
 );
 
-/*! \brief Compute SURF descriptors for given set of points
+/** \brief Compute SURF descriptors for given set of points
  *
  *  Computes SURF descriptors for any set of points. No keypoints will be
  *  extracted.

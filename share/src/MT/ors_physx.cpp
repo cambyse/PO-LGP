@@ -322,8 +322,8 @@ void PhysXInterface::create() {
     }
     break;
     case ors::JT_fixed: {
-      PxFixedJoint* desc;
-      desc = PxFixedJointCreate(*mPhysics, this->s->actors(jj->ifrom), A, this->s->actors(jj->ito), B.getInverse());
+      // PxFixedJoint* desc =
+      PxFixedJointCreate(*mPhysics, this->s->actors(jj->ifrom), A, this->s->actors(jj->ito), B.getInverse());
       // desc->setProjectionLinearTolerance(1e10);
       // desc->setProjectionAngularTolerance(3.14);
     }

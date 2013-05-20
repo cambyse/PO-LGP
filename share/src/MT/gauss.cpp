@@ -901,7 +901,7 @@ void linBwd(arr& c, arr& C, arr& b, arr& B, arr& f, arr& F, arr& Q){
   C = Finv*(B+Q)*~Finv;
 }
 
-/*! given x~{a, A} and y|x~{Fx+f, Q} and given evidence for y,
+/** given x~{a, A} and y|x~{Fx+f, Q} and given evidence for y,
     this returns a potential U(x) = {c, C} such that x|y~{c, C}*P(x) given a prior P(x) */
 void LinGaussPotential(arr& c, arr& C, arr& y, arr& f, arr& F, arr& Q){
   arr Finv=inverse(F);
@@ -909,7 +909,7 @@ void LinGaussPotential(arr& c, arr& C, arr& y, arr& f, arr& F, arr& Q){
   c = Finv*(y-f);
 }
 
-/*! given x~{a, A} and y|x~{f(x), Q} and given evidence for y,
+/** given x~{a, A} and y|x~{f(x), Q} and given evidence for y,
     this returns a potential U(x) = {c, C} such that x|y~{c, C}*P(x) given a prior P(x) */
 void FctGaussPotential(arr& c, arr& C, arr& y, Trans b, arr& Q){
   c=y; C=Q;
@@ -923,7 +923,7 @@ void jointFwd(arr& c, arr& C, arr& a, arr& A, arr& f, arr& F, arr& Q){
   c.setBlockVector(a, F*a + f);
 }
 
-/*! given a joint (x, y)~{c, C} and a potential {b, B} for y|evidence,
+/** given a joint (x, y)~{c, C} and a potential {b, B} for y|evidence,
     this returns the updated joint (x, y)|evidence~{d, D} */
 void multiplyToJoint(arr& d, arr& D, arr& c, arr& C, arr& b, arr& B){
   uint i, j, n2=b.N, n1=c.N-b.N;

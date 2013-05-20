@@ -194,11 +194,12 @@ void Simulator::setContactMargin(double margin){
 }
 
 void Simulator::kinematicsContacts(arr& y){
-  s->G.getContactMeasure(y, s->margin);
+  s->G.phiCollision(y, NoArr, s->margin);
 }
 
 void Simulator::jacobianContacts(arr& J){
-  s->G.getContactGradient(J, s->margin);
+  arr y;
+  s->G.phiCollision(y, J, s->margin);
 }
 
 void Simulator::getDynamics(arr& M, arr& F){

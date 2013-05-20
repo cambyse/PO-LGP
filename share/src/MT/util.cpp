@@ -259,7 +259,7 @@ double MIN(double a, double b) { return a<b?a:b; }
 double MAX(double a, double b) { return a>b?a:b; }
 uint MAX(uint a, uint b) { return a>b?a:b; }
 
-/*!\brief the distance between x and y w.r.t.\ a circular topology
+/** \brief the distance between x and y w.r.t.\ a circular topology
     (e.g. modMetric(1, 8, 10)=3) */
 double modMetric(double x, double y, double mod) {
   double d=fabs(x-y);
@@ -295,7 +295,7 @@ double dphi(double x, double y, double dx, double dy) {
   return 1./(1.+f*f)*(dy/x - f/x*dx);
 }
 
-/*!\brief save division, checks for division by zero; force=true will return
+/** \brief save division, checks for division by zero; force=true will return
   zero if y=0 */
 double DIV(double x, double y, bool force) {
   if(x==0.) return 0.;
@@ -362,7 +362,7 @@ double cosc(double x) {
   return ::cos(x)/x;
 }
 
-/*!\brief double time since start of the process in floating-point seconds
+/** \brief double time since start of the process in floating-point seconds
   (probably in micro second resolution) -- Windows checked! */
 double realTime() {
 #ifndef MT_TIMEB
@@ -376,7 +376,7 @@ double realTime() {
 #endif
 }
 
-/*!\brief user CPU time of this process in floating-point seconds (pure
+/** \brief user CPU time of this process in floating-point seconds (pure
   processor time) -- Windows checked! */
 double cpuTime() {
 #ifndef MT_TIMEB
@@ -387,7 +387,7 @@ double cpuTime() {
 #endif
 }
 
-/*!\brief system CPU time of this process in floating-point seconds (the
+/** \brief system CPU time of this process in floating-point seconds (the
   time spend for file input/output, x-server stuff, etc.)
   -- not implemented for Windows! */
 double sysTime() {
@@ -400,7 +400,7 @@ double sysTime() {
 #endif
 }
 
-/*!\brief total CPU time of this process in floating-point seconds (same
+/** \brief total CPU time of this process in floating-point seconds (same
   as cpuTime + sysTime) -- not implemented for Windows! */
 double totalTime() {
 #ifndef MT_TIMEB
@@ -541,7 +541,7 @@ char *getCmdLineArgument(const char *tag) {
   return NULL;
 }
 
-/*!\brief Open a (possibly new) config file with name '\c name'.<br> If
+/** \brief Open a (possibly new) config file with name '\c name'.<br> If
   \c name is not specified, it searches for a command line-option
   '-cfg' and, if not found, it assumes \c name=MT.cfg */
 void openConfigFile(const char *name) {
@@ -642,7 +642,7 @@ std::iostream& MT::String::stream() { return (std::iostream&)(*this); }
 //! returns a reference to this
 MT::String& MT::String::operator()() { return *this; }
 
-/*!\brief returns the true memory buffer (C-string) of this class (which is
+/** \brief returns the true memory buffer (C-string) of this class (which is
 always kept 0-terminated) */
 MT::String::operator char*() { return p; }
 
@@ -683,7 +683,7 @@ MT::String& MT::String::clear() { resize(0, false); return *this; }
 //! call IOstream::clear();
 MT::String& MT::String::clearStream() { std::iostream::clear(); return *this; }
 
-/*!\brief when using this String as an istream (to read other variables
+/** \brief when using this String as an istream (to read other variables
   from it), this method resets the reading-pointer to the beginning
   of the string and also clears all flags of the stream */
 MT::String& MT::String::resetIstream() { buffer.setIpos(p); clearStream(); return *this; }
@@ -691,7 +691,7 @@ MT::String& MT::String::resetIstream() { buffer.setIpos(p); clearStream(); retur
 //! writes the string into some ostream
 void MT::String::write(std::ostream& os) const { if(N) os <<p; }
 
-/*!\brief reads the string from some istream: first skip until one of the stopSymbols
+/** \brief reads the string from some istream: first skip until one of the stopSymbols
 is encountered (default: newline symbols) */
 uint MT::String::read(std::istream& is, const char* skipSymbols, const char *stopSymbols, int eatStopSymbol) {
   if(!skipSymbols) skipSymbols=readSkipSymbols;

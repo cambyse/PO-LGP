@@ -400,7 +400,7 @@ void DefaultTaskVariable::updateState(const ors::Graph& ors, double tau) {
       break;
     case qLimitsTVT:   ors.getLimitsMeasure(y, params);  ors.getLimitsGradient(J, params);   break;
     case comTVT:       ors.getCenterOfMass(y);     y.resizeCopy(2); ors.getComGradient(J);  J.resizeCopy(2, J.d1);  break;
-    case collTVT:      ors.getContactMeasure(y, params(0)); ors.getContactGradient(J, params(0));  break;
+    case collTVT:      ors.phiCollision(y, J, params(0));  break;
     case colConTVT:    ors.getContactConstraints(y);  ors.getContactConstraintsGradient(J); break;
     case skinTVT:
       y.resize(params.N);

@@ -70,7 +70,7 @@ void soc::getPositionTrajectory(arr& q, const arr& _q){
   for(t=0; t<T; t++) for(i=0; i<n; i++) q(t, i)=_q(t, i);
 }
 
-/*! \brief use regularized Inverse Kinematics to compute a joint
+/** \brief use regularized Inverse Kinematics to compute a joint
     trajectory from the task trajectory previously specifies for the
     taskid-th task variable */
 void soc::straightTaskTrajectory(SocSystemAbstraction& sys, arr& q, uint taskid){
@@ -103,7 +103,7 @@ void soc::interpolateTrajectory(arr& qNew, const arr& q, double step){
   }
 }
 
-/*! \brief use regularized Inverse Kinematics to compute a joint
+/** \brief use regularized Inverse Kinematics to compute a joint
     trajectory from a given task trajectory x for the 0-th task variable */
 void soc::getJointFromTaskTrajectory(SocSystemAbstraction& soci, arr& q, const arr& x){
   uint t, T=x.d0, n=soci.qDim();

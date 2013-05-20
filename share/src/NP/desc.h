@@ -14,7 +14,7 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/> */
 
-/*! \file desc.h
+/** \file desc.h
     \brief Descriptors and utils */
 
 #ifndef _NP_DESC_H
@@ -28,7 +28,7 @@
 namespace np {
 static const char* label_types[] ={"exact", "contains", "part-of", "has-overlap", NULL};
 
-/*! \brief Shape descriptors for an UCM tree
+/** \brief Shape descriptors for an UCM tree
  *
  *  Computes for all N patches of an UCM segmentation tree the following
  *  descriptors:
@@ -54,7 +54,7 @@ void ucm_shapedesc
  unsigned int num_coef = 20
 );
 
-/*! \brief Load the shape descriptors of an UCM tree
+/** \brief Load the shape descriptors of an UCM tree
  *
  *  Load the file that store the Elliptic Fourier descriptors (EFD), sizes, and
  *  centers of each patch in an UCM segmentation tree. Sizes and centers are
@@ -77,7 +77,7 @@ int load_ucm_shapedesc
  const char *filename
 );
 
-/*! \brief Save the shape descriptors of an UCM tree
+/** \brief Save the shape descriptors of an UCM tree
  *
  *  Save the Elliptic Fourier descriptors (EFD), sizes, and centers of each
  *  patch in an UCM segmentation tree to a file. Sizes and centers are assumed
@@ -101,7 +101,7 @@ int save_ucm_shapedesc
  const char *filename
 );
 
-/*! \brief Color descriptors for patches in an UCM tree
+/** \brief Color descriptors for patches in an UCM tree
  *
  *  Computes for all N patches of an UCM segmentation tree the following
  *  color descriptors:
@@ -128,7 +128,7 @@ int ucm_colordesc_hsv
   uint num_bV = 10
 );
 
-/*! \brief Load HSV color descriptors
+/** \brief Load HSV color descriptors
  *
  *  @param desc_HS   binned H+S values, size: (N, num_bH*num_bS), N>0, num_bH/S>0
  *  @param num_bH    number of bins for Hue
@@ -147,7 +147,7 @@ int ucm_colordesc_hsv_load
  const char* filename
 );
 
-/*! \brief Save HSV color descriptors
+/** \brief Save HSV color descriptors
  *
  *  @param desc_HS   binned H+S values, size: (N, num_bH*num_bS), N>0, num_bH/S>0
  *  @param num_bH    number of bins for Hue
@@ -166,7 +166,7 @@ int ucm_colordesc_hsv_save
  const char* filename
 );
 
-/*! \brief SURF texture descriptors for vertices on regular grid
+/** \brief SURF texture descriptors for vertices on regular grid
  *
  *  Lays out a pyramid of regular grids over an image and computes SURF
  *  descriptors on vertices at a specified SURF scale. The SURF scales are
@@ -192,7 +192,7 @@ int img_texturedesc
   bool upright = true
 );
 
-/*! \brief Load a set of texture descriptors of an image
+/** \brief Load a set of texture descriptors of an image
  *
  *  @param desc      descriptors matrix, row-wise, size: (N,D), N>0, D>0
  *  @param grid      grid points, size: (N,2), N>0
@@ -203,7 +203,7 @@ int img_texturedesc
  */
 int img_texturedesc_load(floatA& desc, intA& grid, floatA& scales, const char* filename);
 
-/*! \brief Save a set of texture descriptors of an image
+/** \brief Save a set of texture descriptors of an image
  *
  *  @param desc      descriptors matrix, row-wise, size: (N,D), N>0, D>0
  *  @param grid      grid points, size: (N,2), N>0
@@ -220,7 +220,7 @@ int img_texturedesc_save
  const char* filename
 );
 
-/*! \brief Write all features into one matrix
+/** \brief Write all features into one matrix
  *
  *  @param desc      descriptors matrix, row-wise, size: (N,D), N>0, D>0
  *  @param grid      grid points, size: (N,2), N>0
@@ -237,7 +237,7 @@ int img_texturedesc2block
  const stringA& list
 );
 
-/*! \brief Write all features into one matrix
+/** \brief Write all features into one matrix
  *
  *  @param desc      descriptors matrix, row-wise, size: (N,D), N>0, D>0
  *  @param list      a list of filenames (e.g., *.texturedesc.array), size: (M), M>0
@@ -250,7 +250,7 @@ int final_features2block
  const stringA& list
 );
 
-/*! \brief Generate an unique name for a codebook
+/** \brief Generate an unique name for a codebook
  *
  *  @see np::kmeans()
  *  @param name          name suggestion
@@ -268,7 +268,7 @@ void codebook_name
  const char* path = NULL
 );
 
-/*! \brief Save a visual codebook
+/** \brief Save a visual codebook
  *
  *  @param codebook  matrix with visual words, size: (N,D), N>0, D>0
  *  @param filename  path and filename
@@ -277,7 +277,7 @@ void codebook_name
  */
 int codebook_save(const floatA& codebook, const char* filename);
 
-/*! \brief Load a visual codebook
+/** \brief Load a visual codebook
  *
  *  @param codebook  matrix with visual words, size: (N,D), N>0, D>0
  *  @param filename  path and filename
@@ -286,7 +286,7 @@ int codebook_save(const floatA& codebook, const char* filename);
  */
 int codebook_load(floatA& codebook, const char* filename);
 
-/*! \brief Generate an unique name for a codebook
+/** \brief Generate an unique name for a codebook
  *
  *  Quantization of a set of descriptors given a visual codebook. The result
  *  is a (N-by-4) float-array. Colums 1 and 2 are the x- and y- position of the
@@ -311,7 +311,7 @@ int quantization
  const floatA& scales
 );
 
-/*! \brief Load a set of quantized descriptors
+/** \brief Load a set of quantized descriptors
  *
  *  @param xysc      quantized features, size: (N,4), N>0
  *  @param filename  path and filename
@@ -325,7 +325,7 @@ int quantization_load
  const char* filename
 );
 
-/*! \brief Save a set of quantized descriptors
+/** \brief Save a set of quantized descriptors
  *
  *  @param xysc      quantized features, size: (N,4), N>0
  *  @param filename  path and filename
@@ -346,7 +346,7 @@ enum LabelType {
   CONTAINSORPARTOF = 3
 };
 
-/*! \brief Generate labels for patches in an UCM tree
+/** \brief Generate labels for patches in an UCM tree
  *
  *  Generate labels for patches in an UCM tree. Each patch is assigned a value o
  *  from the interval [0,1] according to the type label:
@@ -382,7 +382,7 @@ int labels
  uint num_classes
 );
 
-/*! \brief Load labels
+/** \brief Load labels
  *
  *  @param labels    the label array, size: (N), N>0
  *  @param filename  path and filename
@@ -391,7 +391,7 @@ int labels
  */
 int labels_load(floatA& labels, const char* filename);
 
-/*! \brief Save labels
+/** \brief Save labels
  *
  *  @param labels    the label array, size: (N), N>0
  *  @param filename  path and filename
@@ -400,7 +400,7 @@ int labels_load(floatA& labels, const char* filename);
  */
 int labels_save(const floatA& labels, const char* filename);
 
-/*! \brief Write all label vectors into one matrix
+/** \brief Write all label vectors into one matrix
  *
  *  @param labels  labels matrix, row-wise, size: (N,4), N>0
  *  @param list    a list of filenames (e.g., *.labels.array), size: (M), M>0
@@ -413,7 +413,7 @@ int labels2block
  const stringA& list
 );
 
-/*! \brief Compute texture histograms
+/** \brief Compute texture histograms
  *
  *  @see quantization(), ucm_gen_tree(), img_texturedesc()
  *  @param hist  histogram of visual codewords, size: (N,nc), N>0, nc>0
@@ -430,7 +430,7 @@ int ucm_texturehist
  const seg::UcmTree& tree
 );
 
-/*! \brief Load texture histograms
+/** \brief Load texture histograms
  *
  *  @param hist      histogram of visual codewords, size: (N,nc), N>0, nc>0
  *  @param filename  path and filename
@@ -439,7 +439,7 @@ int ucm_texturehist
  */
 int ucm_texturehist_load(floatA& hist, const char* filename);
 
-/*! \brief Save texture histograms
+/** \brief Save texture histograms
  *
  *  @param hist      histogram of visual codewords, size: (N,nc), N>0, nc>0
  *  @param filename  path and filename
@@ -448,7 +448,7 @@ int ucm_texturehist_load(floatA& hist, const char* filename);
  */
 int ucm_texturehist_save(const floatA& hist, const char* filename);
 
-/*! \brief Save final feature of an UCM tree
+/** \brief Save final feature of an UCM tree
  *
  *  @param ff        concatenated, normalized features
  *  @param tree      UCM segmentation tree
@@ -473,7 +473,7 @@ int ucm_final_features
  const floatA& sizes
 );
 
-/*! \brief Load final features of an UCM tree
+/** \brief Load final features of an UCM tree
  *
  *  @param ff        concatenated, normalized features
  *  @param filename  path and filename
@@ -482,7 +482,7 @@ int ucm_final_features
  */
 int ucm_final_features_load(floatA& ff, const char* filename);
 
-/*! \brief Save final features of an UCM tree
+/** \brief Save final features of an UCM tree
  *
  *  @param ff        concatenated, normalized features
  *  @param filename  path and filename

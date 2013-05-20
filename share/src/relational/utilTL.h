@@ -153,7 +153,7 @@ double REPLACE_SIZE(double val);
 // Rprop (taken from Marc Toussaint)
 //
 
-/*! Rprop, a fast gradient-based minimization */
+/** Rprop, a fast gradient-based minimization */
 class Rprop{
 public:
   double incr;
