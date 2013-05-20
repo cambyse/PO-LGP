@@ -6,6 +6,9 @@ CXXFLAGS += -DSWIFT_DECOMP -DDECOMP_GRAPHICS -O3 -fPIC -Wno-deprecated -Wno-writ
 OBJS      = $(shell find . \( -name '*.cpp' \) )
 OBJS     := $(OBJS:%.cpp=%.o)
 LIBS	= -L../../../../lib -lSWIFT++ -lqhull -lm -ltcl -ltk -lglut -lGLU -lXmu
+# Fixes compiling problem (occurred only with Baisero), possibly
+# due to Ubuntu 13.04
+LIBS += -lX11 -lGL
 
 default: $(OUTPUT)
 
