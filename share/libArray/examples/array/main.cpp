@@ -1,6 +1,6 @@
-#include<algorithm>
-#include<MT/util.h>
-#include<MT/array.h>
+#include <algorithm>
+#include <MT/util.h>
+#include <MT/array.h>
 //#include<MT/algos.h>
 
 using namespace std;

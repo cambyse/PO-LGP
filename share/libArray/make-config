@@ -1,0 +1,10 @@
+ifeq ($(OUTPUT),$(BASE)/lib/$(NAME).so)
+    ## these are the options for compiling the lib
+  CXXFLAGS += -fPIC
+  LIBS   += -lrt
+  OPTIM  = debug
+  LAPACK = 1
+else
+    ## these are the options for compiling the examples
+  LIBS += -lArray
+endif

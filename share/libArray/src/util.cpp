@@ -18,7 +18,7 @@
 
 
 
-#include "util.h"
+#include "MT/util.h"
 
 #ifdef MT_QT
 #  undef scroll
@@ -36,6 +36,7 @@
 
 #include <errno.h>
 #ifndef MT_MSVC
+#  include <unistd.h>
 #  include <sys/syscall.h>
 #endif
 
@@ -1228,3 +1229,39 @@ double gaussIntExpectation(double x) {
   return - norm*MT::approxExp(-.5*x*x);
 }
 }
+
+//===========================================================================
+//
+// explicit instantiations
+//
+
+#include "MT/util_t.h"
+template void MT::getParameter(double&, const char*);
+template float MT::getParameter<float>(const char*);
+template void MT::getParameter(uint&, const char*);
+template int MT::getParameter<int>(const char*);
+template void MT::getParameter(int&, const char*);
+template void MT::getParameter(int&, const char*, const int&);
+template void MT::getParameter(bool&, const char*, const bool&);
+template int  MT::getParameter(const char*, const int&);
+template uint MT::getParameter(const char*, const uint&);
+template bool MT::getParameter(const char*, const bool&);
+template double MT::getParameter(const char*, const double&);
+template long MT::getParameter(const char*);
+template MT::String MT::getParameter(const char*);
+template MT::String MT::getParameter(const char*, const MT::String&);
+template bool MT::checkParameter<uint>(const char*);
+
+template void MT::Parameter<MT::String>::initialize();
+template void MT::Parameter<bool>::initialize();
+template void MT::Parameter<double>::initialize();
+template void MT::Parameter<int>::initialize();
+
+template std::map<std::string,int> MT::ParameterMap<int>::m;
+template std::map<std::string,double> MT::ParameterMap<double>::m;
+template std::map<std::string,unsigned int> MT::ParameterMap<unsigned int>::m;
+template std::map<std::string,float> MT::ParameterMap<float>::m;
+template std::map<std::string,bool> MT::ParameterMap<bool>::m;
+template std::map<std::string,long> MT::ParameterMap<long>::m;
+template std::map<std::string,MT::String> MT::ParameterMap<MT::String>::m;
+template std::map<std::string,std::string> MT::ParameterMap<std::string>::m;

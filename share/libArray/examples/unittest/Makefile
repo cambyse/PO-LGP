@@ -1,5 +1,5 @@
 BASE = ../..
 
-LIBS += -lgtest
+LIBS += -lgtest -lpthread
 
 include $(BASE)/make-generic

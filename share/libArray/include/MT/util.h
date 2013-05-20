@@ -648,7 +648,7 @@ struct ConditionVariable {
 //
 
 #if defined MT_IMPLEMENTATION | defined MT_IMPLEMENT_TEMPLATES
-#  include "util_t.cxx"
+#  include "util_t.h"
 #endif
 
 #ifdef  MT_IMPLEMENTATION

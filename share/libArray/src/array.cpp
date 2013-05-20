@@ -23,8 +23,8 @@
 /// @{
 
 
-#include "array.h"
-#include "util.h"
+#include "MT/array.h"
+#include "MT/util.h"
 
 static double MT_SIGN_SVD(double a, double b) { return b>0 ? ::fabs(a) : -::fabs(a); }
 #define MT_max_SVD(a, b) ( (a)>(b) ? (a) : (b) )
@@ -1419,3 +1419,57 @@ void graphRandomFixedDegree(uintA& E, uint N, uint d) {
 }
 
 ///@}
+
+//===========================================================================
+//
+// explicit instantiations
+//
+
+#include "MT/array_t.h"
+#define T double
+#  include "array_instantiate.cxx"
+#undef T
+
+#define NOFLOAT
+#define T float
+#  include "array_instantiate.cxx"
+#undef T
+
+#define T uint
+#  include "array_instantiate.cxx"
+#undef T
+
+#define T uint16
+#  include "array_instantiate.cxx"
+#undef T
+
+#define T int
+#  include "array_instantiate.cxx"
+#undef T
+
+#define T long
+#  include "array_instantiate.cxx"
+#undef T
+#define T byte
+#  include "array_instantiate.cxx"
+#undef T
+#undef NOFLOAT
+
+template MT::Array<MT::String>::Array();
+template MT::Array<MT::String>::~Array();
+
+template MT::Array<arr*>::Array();
+template MT::Array<arr*>::Array(uint);
+template MT::Array<arr*>::~Array();
+
+template MT::Array<MT::Array<uint> >::~Array();
+
+template MT::Array<char const*>::Array();
+template MT::Array<char const*>::Array(uint);
+template MT::Array<char const*>::~Array();
+
+#include "MT/util_t.h"
+template void MT::save<uintA>(const uintA&, const char*);
+template void MT::load<arr>(arr&,const char*, bool);
+
+void linkArray(){ cout <<"*** libArray.so linked ***" <<endl; }
