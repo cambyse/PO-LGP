@@ -75,7 +75,7 @@ struct HoleFunction:ScalarFunction{
 //===========================================================================
 
 struct ChoiceFunction:ScalarFunction{
-  enum Which{ none=0, square, hole, rosenbrock, rastrigin } which;
+  enum Which{ none=0, sum, square, hole, rosenbrock, rastrigin } which;
   double condition;
   ChoiceFunction(){
     which = (Which) MT::getParameter<int>("fctChoice");
@@ -87,6 +87,11 @@ struct ChoiceFunction:ScalarFunction{
     for(uint i=0;i<c.N;i++) c(i) = pow(condition,(double)i/(x.N-1));
     y *= c; //elem-wise product
     switch(which){
+    case sum:{
+      f = ::sum(x);
+      if(&g){ g.resize(x.N); g=1.; }
+      if(&H){ H.resize(x.N,x.N); H.setZero(); }
+    } break;
     case square: f = SquareFunction().fs(g, H, y); break;
     case hole: f = HoleFunction().fs(g, H, y); break;
     default: NIY;
@@ -108,11 +113,11 @@ struct ChoiceConstraintFunction:VectorFunction{
   virtual void fv(arr& phi, arr& J, const arr& x) {
     uint n=x.N;
     arr J_f;
-    phi.resize(2);
-    if(&J){ J.resize(2, n); J.setZero(); }
+    phi.resize(3);
+    if(&J){ J.resize(phi.N, n); J.setZero(); }
     phi(0) = f.fs( (&J?J[0]():NoArr), NoArr, x);
-    phi(1) = x(0) + .5;
-    if(&J) J(1,0) = 1.;
+    phi(1) = sumOfSqr(x)-1.;   if(&J) J[1]() = 2.*x;
+    phi(2) = -x(0);            if(&J) J(2,0) = -1.;
   }
 };
 
