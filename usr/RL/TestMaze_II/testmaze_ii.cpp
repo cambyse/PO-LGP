@@ -506,8 +506,10 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 }
             } else if(str_args[1]=="utility" || str_args[1]=="u") {
                 utree.set_expansion_type(UTree::UTILITY_EXPANSION);
+                TO_CONSOLE("    expansion type: UTILITY_EXPANSION");
             } else if(str_args[1]=="statereward" ||str_args[1]=="sr") {
                 utree.set_expansion_type(UTree::STATE_REWARD_EXPANSION);
+                TO_CONSOLE("    expansion type: STATE_REWARD_EXPANSION");
             } else {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( utree_expansion_type_s );
