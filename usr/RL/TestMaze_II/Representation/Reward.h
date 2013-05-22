@@ -14,6 +14,7 @@ public:
     static const unsigned long reward_n;
     Reward(value_t val = min_reward);
     friend std::ostream& operator<<(std::ostream &out, const Reward& r);
+    unsigned long index() const { return floor((*this - min_reward)/reward_increment); }
 private:
     int add_width() const;
 };

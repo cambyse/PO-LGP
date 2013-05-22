@@ -21,6 +21,7 @@ public:
     static const char* action_string(const Action& a);
     const char* action_string() const;
     static Action random_action();
+    unsigned long index() const { return *this-NULL_ACTION-1; }
 
     friend std::ostream& operator<<(std::ostream &out, const Action& a);
 

@@ -15,6 +15,7 @@ public:
     State(value_t val = min_state);
     friend std::ostream& operator<<(std::ostream &out, const State& s);
     static State random_state();
+    unsigned long index() const { return *this - min_state; }
 private:
     int add_width() const;
 };
