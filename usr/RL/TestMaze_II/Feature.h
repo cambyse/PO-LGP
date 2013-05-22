@@ -19,7 +19,6 @@
 #include "Data.h"
 
 class Feature {
-
 public:
     typedef std::list<Feature * >                  subfeature_container_t;
     typedef subfeature_container_t::iterator       subfeature_iterator_t;
@@ -27,27 +26,24 @@ public:
     typedef std::set<std::unique_ptr<Feature> >    basis_feature_container_t;
     typedef double                                 feature_return_value;
     enum TYPE { ABSTRACT, NULL_FEATURE, ACTION, STATE, REWARD, AND };
-
     Feature();
     virtual ~Feature();
-
     virtual feature_return_value evaluate(const instance_t *) const = 0;
     virtual feature_return_value evaluate(const instance_t *, action_t, state_t, reward_t) const = 0;
     virtual std::string identifier() const;
     friend std::ostream& operator<<(std::ostream&, const Feature&);
-
-    TYPE get_type() const;
-    int get_id() const;
-    unsigned int get_complexity() const;
-    bool operator==(const Feature& other) const;
-    bool operator!=(const Feature& other) const;
-    bool operator<(const Feature& other) const;
+    virtual TYPE get_type() const;
+    virtual int get_id() const;
+    virtual unsigned int get_complexity() const;
+    virtual bool operator==(const Feature& other) const;
+    virtual bool operator!=(const Feature& other) const;
+    virtual bool operator<(const Feature& other) const;
     static bool pComp(Feature const * first, Feature const * second);
-
-    subfeature_const_iterator_t get_subfeatures_begin() const;
-    subfeature_const_iterator_t get_subfeatures_end() const;
-    uint get_subfeatures_size() const;
-
+    virtual subfeature_const_iterator_t get_subfeatures_begin() const;
+    virtual subfeature_const_iterator_t get_subfeatures_end() const;
+    virtual uint get_subfeatures_size() const;
+    virtual bool is_const_feature() const { return const_feature; }
+    virtual bool contradicts(const Feature&) { return false; }
 protected:
     TYPE type;
     long id;
@@ -56,13 +52,12 @@ protected:
     static long id_counter;
     subfeature_container_t subfeatures;
     static basis_feature_container_t basis_features;
-
-    void clean_up_subfeatures();
-
+    bool const_feature;
+    feature_return_value const_return_value;
+    virtual void clean_up_subfeatures();
 };
 
 class NullFeature: public Feature {
-
 public:
     NullFeature();
     virtual ~NullFeature();
@@ -72,49 +67,49 @@ public:
 };
 
 class ActionFeature: public Feature {
-
 private:
     ActionFeature(const action_t& a, const int& d);
     virtual ~ActionFeature();
-
 public:
     static ActionFeature * create(const action_t& a, const int& d);
     virtual feature_return_value evaluate(const instance_t *) const;
     virtual feature_return_value evaluate(const instance_t *, action_t, state_t, reward_t) const;
     virtual std::string identifier() const;
-private:
+    static bool features_contradict(const ActionFeature& f1, const ActionFeature& f2);
+    bool contradicts(const ActionFeature& f) { return features_contradict(*this,f); }
+protected:
     action_t action;
     int delay;
 };
 
 class StateFeature: public Feature {
-
 private:
     StateFeature(const state_t& s, const int& d);
     virtual ~StateFeature();
-
 public:
     static StateFeature * create(const state_t& s, const int& d);
     virtual feature_return_value evaluate(const instance_t *) const;
     virtual feature_return_value evaluate(const instance_t *, action_t, state_t, reward_t) const;
     virtual std::string identifier() const;
-private:
+    static bool features_contradict(const StateFeature& f1, const StateFeature& f2);
+    bool contradicts(const StateFeature& f) { return features_contradict(*this,f); }
+protected:
     state_t state;
     int delay;
 };
 
 class RewardFeature: public Feature {
-
 private:
     RewardFeature(const reward_t& r, const int& d);
     virtual ~RewardFeature();
-
 public:
     static RewardFeature * create(const reward_t& r, const int& d);
     virtual feature_return_value evaluate(const instance_t *) const;
     virtual feature_return_value evaluate(const instance_t *, action_t, state_t, reward_t) const;
     virtual std::string identifier() const;
-private:
+    static bool features_contradict(const RewardFeature& f1, const RewardFeature& f2);
+    bool contradicts(const RewardFeature& f) { return features_contradict(*this,f); }
+protected:
     reward_t reward;
     int delay;
 };

@@ -256,6 +256,7 @@ void KMarkovCRF::add_action_state_reward_tripel(
 ) {
     if(instance_data==nullptr) {
         instance_data = instance_t::create(action,state,reward);
+        instance_data->set_container();
     } else {
         instance_data = instance_data->append_instance(action,state,reward);
     }

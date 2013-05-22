@@ -17,7 +17,7 @@ using util::min;
 using util::max;
 using util::INVALID;
 
-#define HIDE_REWARDS
+// #define HIDE_REWARDS
 
 const Maze::idx_t Maze::walls[walls_n][2] = {
     /* 2x2 Maze *
@@ -52,15 +52,15 @@ const Maze::idx_t Maze::rewards[rewards_n][8] = {
     { 3, 2, 1, 1, ON_RELEASE,   0,   0, 200}
     /**/
 
-    /* 2x2 Maze */
+    /* 2x2 Maze *
     { 0, 3, 2, 1, EACH_TIME, 200,   0,   0}
     /**/
 
-    /* 3x3 Maze *
+    /* 3x3 Maze */
     { 3, 5, 4, 8, ON_RELEASE,   0, 200,   0},
     { 5, 3, 6, 8, ON_RELEASE,   0, 200, 200},
     { 4, 1, 1, 1, ON_RELEASE, 200, 200,   0},
-    { 4, 7, 1, 1, ON_RELEASE, 200,   0,   0}
+    { 4, 7, 3, 3, ON_RELEASE, 200,   0,   0}
     /**/
 
     /* 4x4 Maze *

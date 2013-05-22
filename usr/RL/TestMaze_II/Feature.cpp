@@ -21,7 +21,7 @@ int Feature::field_width[2] = {0,0};
 long Feature::id_counter = 0;
 Feature::basis_feature_container_t Feature::basis_features = Feature::basis_feature_container_t();
 
-Feature::Feature(): type(ABSTRACT), id(id_counter), complexity(0), subfeatures(0) {
+Feature::Feature(): type(ABSTRACT), id(id_counter), complexity(0), subfeatures(0), const_feature(false) {
     ++id_counter;
 }
 
@@ -199,6 +199,14 @@ string ActionFeature::identifier() const {
     return id_string.toStdString()+Feature::identifier();
 }
 
+bool ActionFeature::features_contradict(const ActionFeature& f1, const ActionFeature& f2) {
+    if(f1.delay==f2.delay && f1.action!=f2.action) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 StateFeature::StateFeature(const state_t& s, const int& d): state(s), delay(d) {
     type = STATE;
     complexity = 1;
@@ -243,6 +251,14 @@ string StateFeature::identifier() const {
             +")"
     );
     return id_string.toStdString()+Feature::identifier();
+}
+
+bool StateFeature::features_contradict(const StateFeature& f1, const StateFeature& f2) {
+    if(f1.delay==f2.delay && f1.state!=f2.state) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 RewardFeature::RewardFeature(const reward_t& r, const int& d): reward(r), delay(d) {
@@ -291,6 +307,14 @@ string RewardFeature::identifier() const {
     return id_string.toStdString()+Feature::identifier();
 }
 
+bool RewardFeature::features_contradict(const RewardFeature& f1, const RewardFeature& f2) {
+    if(f1.delay==f2.delay && f1.reward!=f2.reward) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 AndFeature::AndFeature(const Feature& f1, const Feature& f2, const Feature& f3, const Feature& f4, const Feature& f5) {
     type = AND;
     subfeatures.insert(subfeatures.begin(),f1.get_subfeatures_begin(),f1.get_subfeatures_end());
@@ -301,28 +325,48 @@ AndFeature::AndFeature(const Feature& f1, const Feature& f2, const Feature& f3, 
     subfeatures.sort(&(pComp));
     clean_up_subfeatures();
     complexity = subfeatures.size();
+    // check for contradicting subfeatures
+    for( auto sub_1 : subfeatures ) {
+        for( auto sub_2 : subfeatures ) {
+            if(sub_1->get_type()==sub_2->get_type() && sub_1->contradicts(*sub_2)) {
+                const_feature = true;
+                const_return_value = 0;
+                return;
+            }
+        }
+    }
 }
 
 AndFeature::~AndFeature() {}
 
 Feature::feature_return_value AndFeature::evaluate(const instance_t * instance) const {
-    Feature::feature_return_value prod = 1;
-    for(subfeature_const_iterator_t feature_iterator=subfeatures.begin();
-            feature_iterator!=subfeatures.end();
-            ++feature_iterator) {
-        prod *= (*feature_iterator)->evaluate(instance);
+    if(const_feature) {
+        return const_return_value;
+    } else {
+        Feature::feature_return_value prod = 1;
+        for(auto feature_iterator : subfeatures) {
+            prod *= feature_iterator->evaluate(instance);
+            if(prod==0) {
+                break;
+            }
+        }
+        return prod;
     }
-    return prod;
 }
 
 Feature::feature_return_value AndFeature::evaluate(const instance_t * instance, action_t action, state_t state, reward_t reward) const {
-    Feature::feature_return_value prod = 1;
-    for(subfeature_const_iterator_t feature_iterator=subfeatures.begin();
-            feature_iterator!=subfeatures.end();
-            ++feature_iterator) {
-        prod *= (*feature_iterator)->evaluate(instance,action,state,reward);
+    if(const_feature) {
+        return const_return_value;
+    } else {
+        Feature::feature_return_value prod = 1;
+        for(auto feature_iterator : subfeatures) {
+            prod *= feature_iterator->evaluate(instance,action,state,reward);
+            if(prod==0) {
+                break;
+            }
+        }
+        return prod;
     }
-    return prod;
 }
 
 string AndFeature::identifier() const {
