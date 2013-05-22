@@ -318,10 +318,10 @@ int BatchMaze::run(int argc, char *argv[]) {
                 // learn sparse model
                 crf.erase_all_features();                       // erase all features from last iteration
                 crf.score_features_by_gradient(1);              // score single
-                crf.add_compound_features_to_active(0);         // add single
+                crf.add_candidate_features_to_active(0);        // add single
                 ret = crf.optimize_model(0,0);                  // optimize
                 crf.score_features_by_gradient(1);              // score pairs
-                crf.add_compound_features_to_active(0);         // add pairs
+                crf.add_candidate_features_to_active(0);        // add pairs
 
                 if(ret!=0 && ret!=2) {
                     LOG_COMMENT("Error: lbfgs returned " << ret);

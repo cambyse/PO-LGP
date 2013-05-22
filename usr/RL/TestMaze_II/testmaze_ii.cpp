@@ -581,7 +581,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( add_s );
             } else if(int_args_ok[1] && int_args[1]>=0 ) {
-                crf.add_compound_features_to_active(int_args[1]);
+                crf.add_candidate_features_to_active(int_args[1]);
             } else {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( add_s );

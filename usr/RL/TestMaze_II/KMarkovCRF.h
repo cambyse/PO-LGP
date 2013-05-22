@@ -95,7 +95,7 @@ public:
 
     void sort_scored_features(bool divide_by_complexity = false);
 
-    void add_compound_features_to_active(const int& n);
+    void add_candidate_features_to_active(const int& n);
 
     void erase_zero_features();
 
@@ -129,14 +129,14 @@ private:
     instance_t * instance_data;
     lbfgsfloatval_t * lambda;
     std::vector<Feature*> basis_features;
-    std::vector<AndFeature> active_features, compound_features;
-    std::vector<double> compound_feature_scores;
-    bool compound_features_sorted, kmdp_prediction_up_to_data;
+    std::vector<AndFeature> active_features, candidate_features;
+    std::vector<double> candidate_feature_scores;
+    bool candidate_features_sorted, kmdp_prediction_up_to_data;
     prediction_map_t prediction_map;
     input_set_t input_set;
 
     void check_lambda_size();
-    void construct_compound_features(const int& n);
+    void construct_candidate_features(const int& n);
 };
 
 #endif /* KMARKOVCRF_H_ */
