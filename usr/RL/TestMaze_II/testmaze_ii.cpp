@@ -211,6 +211,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString option_1_s(                         "                       record. . . . . . . . . . . . . . . . . . .-> start/stop recording movements");
     QString option_2_s(                         "                       plot. . . . . . . . . . . . . . . . . . . .-> write transitions into data file for plotting");
     QString option_3_s(                         "                       p(lanner) {o(ptimal)|s(parse)|u(tree)|uv} .-> set planner to use (uv = utree-value)");
+    QString test_s(                             "    test . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> test");
 
     QString maze_s(                           "\n    ---------------------------Maze---------------------------");
     QString left_s(                             "    left  / l. . . . . . . . . . . . . . . . . . . . . . . . . . .-> move left");
@@ -283,6 +284,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             TO_CONSOLE( help_s );
             TO_CONSOLE( exit_s );
             TO_CONSOLE( set_s );
+            TO_CONSOLE( test_s );
             // Maze
             TO_CONSOLE( maze_s );
             TO_CONSOLE( left_s );
@@ -653,6 +655,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( set_s );
             }
+        } else if(str_args[0]=="test") { // test
+            crf.test();
         } else {
             TO_CONSOLE("    unknown command");
         }

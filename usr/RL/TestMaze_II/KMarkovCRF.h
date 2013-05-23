@@ -128,6 +128,8 @@ public:
 
     void update_prediction_map();
 
+    void test();
+
 private:
 
     typedef std::tuple<const instance_t*, action_t, state_t, reward_t> prediction_tuple_t;
@@ -158,7 +160,7 @@ private:
     //--------------------------//
     bool use_precomputed_feature_values;             ///< Whether to use precomputed feature values.
     bool feature_values_precomputed;                 ///< Whether feature values are precomputed.
-    std::vector<f_ret_t> precomputed_feature_values; ///< The precomputed feature values.
+    std::vector<f_ret_t> feature_values;             ///< The precomputed feature values.
 
     //------------------//
     // k-MDP Prediction //
