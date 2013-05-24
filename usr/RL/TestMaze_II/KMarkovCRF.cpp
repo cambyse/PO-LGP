@@ -552,13 +552,16 @@ void KMarkovCRF::add_candidate_features_to_active(const int& n) {
         DEBUG_OUT(1, "Adding " << n << " highest scored candidate features to active...");
     }
 
+    // sort candidate features by score if necessary
     if(!candidate_features_sorted) sort_scored_features();
 
+    // choose n highest scored candidates and erase from candidate list
     int counter = 0;
     for(int cf_idx=(int)candidate_features.size()-1; cf_idx>=0; --cf_idx) {
         if(candidate_feature_scores[cf_idx]>0) {
             active_features.push_back(candidate_features[cf_idx]);
             DEBUG_OUT(1, "added   (idx = " << cf_idx << ", score = " << candidate_feature_scores[cf_idx] << "): " << candidate_features[cf_idx].identifier());
+            candidate_features.erase(candidate_features.begin() + cf_idx);
             if(++counter>=n && n>0) break;
         } else {
             DEBUG_OUT(1, "ignored (idx = " << cf_idx << ", score = " << candidate_feature_scores[cf_idx] << "): " << candidate_features[cf_idx].identifier());
@@ -781,7 +784,7 @@ void KMarkovCRF::test() {
             // with setting specific state and reward
             for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {
                 for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
-                    precomputed_index = precomputed_feature_idx(instance_idx,f_idx,feature_n,state,reward,true);
+                    precomputed_index = precomputed_feature_idx(instance_idx,f_idx,feature_n,state,reward);
                     f_ret_t pre_ret = feature_values[precomputed_index];
                     f_ret_t true_ret = active_features[f_idx].evaluate(insIt-1,action,state,reward);
                     DEBUG_OUT(0, precomputed_index << "	-->	" << pre_ret << "/" << true_ret <<
@@ -930,9 +933,25 @@ KMarkovCRF::idx_t KMarkovCRF::precomputed_feature_idx(
     }
 }
 
-void KMarkovCRF::precompute_feature_values() {
+KMarkovCRF::idx_t KMarkovCRF::precomputed_feature_idx(
+    const idx_t& instance_idx,
+    const idx_t& feature_idx,
+    const idx_t& feature_n
+    ) {
+    return precomputed_feature_idx(instance_idx,feature_idx,feature_n,state_t(),reward_t(),false);
+}
 
-#define DEBUG_LEVEL 3
+KMarkovCRF::idx_t KMarkovCRF::precomputed_feature_idx(
+    const idx_t& instance_idx,
+    const idx_t& feature_idx,
+    const idx_t& feature_n,
+    const state_t& state,
+    const reward_t& reward
+    ) {
+    return precomputed_feature_idx(instance_idx,feature_idx,feature_n,state,reward,true);
+}
+
+void KMarkovCRF::precompute_feature_values() {
 
     DEBUG_OUT(1,"Precomputing feature values...");
 
@@ -960,15 +979,10 @@ void KMarkovCRF::precompute_feature_values() {
 
         // iterate through features
         action_t action = insIt->action;
-        for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
+        for(uint f_idx=0; f_idx<feature_n; ++f_idx) {
 
             // for instance itself without setting specific state and reward
             idx_t precomputed_index = precomputed_feature_idx(instance_idx,f_idx,feature_n);
-            // if(precomputed_index!=pre_idx) {
-            //     DEBUG_OUT(0,"Error: Discontinuous index");
-            // } else {
-            //     ++pre_idx;
-            // }
             feature_values[precomputed_index] = active_features[f_idx].evaluate(insIt);
             DEBUG_OUT(3,"    Feature " << active_features[f_idx] <<
                       " --> " << feature_values[precomputed_index] <<
@@ -978,12 +992,7 @@ void KMarkovCRF::precompute_feature_values() {
             // with setting specific state and reward
             for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {
                 for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
-                    precomputed_index = precomputed_feature_idx(instance_idx,f_idx,feature_n,state,reward,true);
-                    // if(precomputed_index!=pre_idx) {
-                    //     DEBUG_OUT(0,"Error: Discontinuous index");
-                    // } else {
-                    //     ++pre_idx;
-                    // }
+                    precomputed_index = precomputed_feature_idx(instance_idx,f_idx,feature_n,state,reward);
                     feature_values[precomputed_index] = active_features[f_idx].evaluate(insIt-1,action,state,reward);
                     DEBUG_OUT(3,"    Feature " << active_features[f_idx] <<
                               " with state=" << state << " reward=" << reward <<
@@ -999,7 +1008,4 @@ void KMarkovCRF::precompute_feature_values() {
     if(DEBUG_LEVEL>0) {
         std::cout << std::endl;
     }
-
-#define DEBUG_LEVEL 1
-
 }

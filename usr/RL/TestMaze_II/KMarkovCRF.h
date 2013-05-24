@@ -187,9 +187,21 @@ private:
         const idx_t& instance_idx,
         const idx_t& feature_idx,
         const idx_t& feature_n,
-        const state_t& state = state_t(),
-        const reward_t& reward = reward_t(),
-        const bool& use_state_and_reward = false
+        const state_t& state,
+        const reward_t& reward,
+        const bool& use_state_and_reward
+        );
+    idx_t precomputed_feature_idx(
+        const idx_t& instance_idx,
+        const idx_t& feature_idx,
+        const idx_t& feature_n
+        );
+    idx_t precomputed_feature_idx(
+        const idx_t& instance_idx,
+        const idx_t& feature_idx,
+        const idx_t& feature_n,
+        const state_t& state,
+        const reward_t& reward
         );
 
     /** \brief Precompute feature values. */
