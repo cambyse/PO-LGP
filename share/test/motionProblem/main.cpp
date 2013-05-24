@@ -22,10 +22,10 @@ int main(int argn,char** argv){
 //                          ARRAY(0.,0.,0.), 1e3, //final desired velocity: v_y=-1 (hit ball from behind)
 //                          ARRAY(0.,0.,0.), 0.);
 
-  c = P.addDefaultTaskMap("collision", collTMT, 0, Transformation_Id, 0, 0, ARR(.1));
+  c = P.addDefaultTaskMap("collision", collTMT, 0, Transformation_Id, 0, Transformation_Id, ARR(.1));
   P.setInterpolatingCosts(c, MotionProblem::constFinalMid, ARRAY(0.), 1e-0);
 
-  c = P.addDefaultTaskMap("qitself", qItselfTMT, (int)0, Transformation_Id, 0, 0, 0);
+  c = P.addDefaultTaskMap("qitself", qItselfTMT, (int)0, Transformation_Id, 0, Transformation_Id, 0);
   P.setInterpolatingCosts(   c, MotionProblem::constFinalMid, ARRAY(0.), 1e-4);
   //P.setInterpolatingVelCosts(c, MotionProblem::constFinalMid, ARRAY(0.), 1e4, ARRAY(0.), 1e-2);
   
