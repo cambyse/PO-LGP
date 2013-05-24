@@ -43,18 +43,22 @@ void Item::write(std::ostream& os) const {
     os <<" {";
     value<KeyValueGraph>()->write(os, " ");
     os <<" }";
+  }else if(valueType()==typeid(ItemL)){
+    os <<"=(";
+    for_list_(Item, it, (*value<ItemL>())) os <<' ' <<it->keys.last();
+    os <<" )";
   }else if(valueType()==typeid(MT::String)){ os <<"='" <<*value<MT::String>() <<'\'';
   }else if(valueType()==typeid(arr)){        os <<'=' <<*value<arr>();
   }else if(valueType()==typeid(double)){     os <<'=' <<*value<double>();
-  }else if(valueType()==typeid(bool)){       os <<',';
+  }else if(valueType()==typeid(bool)){       os <<'=' <<(*value<bool>()?"true":"false");
   }else{
     Item *it = reg_findType(valueType().name());
     if(it && it->keys.N>1){
-      os <<"=<" <<it->keys(1) <<' ';
+      os <<" = <" <<it->keys(1) <<' ';
       writeValue(os);
       os <<'>';
     }else{
-      os <<"=< ";
+      os <<" = < ";
       writeValue(os);
       os <<'>';
     }
@@ -104,10 +108,12 @@ bool readItem(KeyValueGraph& list, std::istream& is, bool verbose=false){
   //-- read value
   if(c=='=' || c=='{'){
     if(c=='=') c=MT::getNextChar(is);
-    if((c>='a' && c<='z') || (c>='A' && c<='Z')) { //MT::String
+    if((c>='a' && c<='z') || (c>='A' && c<='Z')) { //MT::String or boolean
       is.putback(c);
       str.read(is, "", " \n\r\t,;}", false);
-      item = new Item_typed<MT::String>(keys, parents, new MT::String(str));
+      if(str=="true") item = new Item_typed<bool>(keys, parents, new bool(true));
+      else if(str=="false") item = new Item_typed<bool>(keys, parents, new bool(false));
+      else item = new Item_typed<MT::String>(keys, parents, new MT::String(str));
     }else if(MT::contains("-.0123456789", c)) {  //single double
       is.putback(c);
       double d;
@@ -165,12 +171,12 @@ bool readItem(KeyValueGraph& list, std::istream& is, bool verbose=false){
       MT::parse(is, ")");
       item = new Item_typed<ItemL>(keys, parents, new ItemL(refs));
     } break;
-    default: { //boolean
+    default: { //error
       is.putback(c);
-      PARSERR("unknown value indicator '" <<c <<"' (booleans need comma or semicolon)");
+      PARSERR("unknown value indicator '" <<c <<"'");
     }
     }
-  }else{ //boolean
+  }else{ //no '=' or '{' -> boolean
     is.putback(c);
     item = new Item_typed<bool>(keys, parents, new bool(true));
   }

@@ -36,5 +36,5 @@ uint decompose(ors::Mesh& mesh, const char* filename, intA& triangleAssignments,
   Save_Decomposition_File( filename, &smesh, piece_ids,
                            model_faces, virtual_faces );
 
-  return piece_ids.N;
+  return piece_ids.Length();
 }

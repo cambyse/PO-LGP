@@ -69,7 +69,7 @@ namespace ors {
  * @{
  */
 enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, meshST, cylinderST, markerST, pointCloudST };
-enum JointType { JT_hinge=0, JT_transX=1, JT_transY=2, JT_transZ=3, JT_trans3, JT_universal, JT_fixed, JT_glue };
+enum JointType { JT_none=-1, JT_hingeX=0, JT_hingeY=1, JT_hingeZ=2, JT_transX=3, JT_transY=4, JT_transZ=5, JT_trans3, JT_universal, JT_fixed=10, JT_glue };
 enum BodyType  { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };
 /** @} */
 
@@ -138,7 +138,7 @@ struct Matrix {
   void read(std::istream&);
 };
 
-//! a quaterion (double[4])
+//! a quaternion (double[4])
 struct Quaternion {
   double w, x, y, z;
 
@@ -158,11 +158,13 @@ struct Quaternion {
   void setRad(double angle);
   void setRadX(double angle);
   void setRadY(double angle);
+  void setRadZ(double angle);
+  Quaternion& setRpy(double r, double p, double y);
   void setVec(Vector w);
   void setMatrix(double* m);
   void setDiff(const Vector& from, const Vector& to);
   void setInterpolate(double t, const Quaternion& a, const Quaternion b);
-  void invert();
+  Quaternion& invert();
   void normalize();
   void multiply(double f);
   void alignWith(const Vector& v);
@@ -210,6 +212,7 @@ struct Transformation {
   double diffZero() const;
 
   void addRelativeTranslation(double x, double y, double z);
+  void addRelativeRotation(const Quaternion&);
   void addRelativeRotationDeg(double degree, double x, double y, double z);
   void addRelativeRotationRad(double rad, double x, double y, double z);
   void addRelativeRotationQuat(double s, double x, double y, double z);
@@ -220,8 +223,6 @@ struct Transformation {
 
   void appendTransformation(const Transformation& f);     // this = this * f
   void appendInvTransformation(const Transformation& f);     // this = this * f^{-1}
-  void prependTransformation(const Transformation& f);         // this = f * this
-  void prependInvTransformation(const Transformation& f);    // this = f^{-1} * this
 
   double* getAffineMatrix(double *m) const;         // 4x4 matrix with 3x3=rotation and right-column=translation
   double* getInverseAffineMatrix(double *m) const;  // 4x4 matrix with 3x3=R^{-1}   and bottom-row=R^{-1}*translation
@@ -350,7 +351,7 @@ namespace ors {
  */
 //! a rigid body (inertia properties, lists of attached joints & shapes)
 struct Body {
-  uint index;          ///< unique identifier
+  uint index;          ///< unique identifier TODO:do we really need index, ifrom, ito, ibody??
   MT::Array<Joint*> inLinks, outLinks;       ///< lists of in and out joints
 
   MT::String name;     ///< name
@@ -399,13 +400,13 @@ struct Joint {
   Joint();
   explicit Joint(const Joint& j);
   explicit Joint(Graph& G, Body *f, Body *t, const Joint *copyJoint=NULL); //new Shape, being added to graph and body's joint lists
-  ~Joint() { reset(); }
+  ~Joint();
   void operator=(const Joint& j) {
     index=j.index; qIndex=j.qIndex; ifrom=j.ifrom; ito=j.ito;
     type=j.type; A=j.A; Q=j.Q; B=j.B; X=j.X; axis=j.axis;
     ats=j.ats;
   }
-  void reset() { listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); X.setZero(); axis.setZero(); type=JT_hinge; }
+  void reset() { listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); X.setZero(); axis.setZero(); type=JT_none; }
   void parseAts();
   uint qDim();
   void write(std::ostream& os) const;
@@ -433,7 +434,7 @@ struct Shape {
   Shape();
   explicit Shape(const Shape& s);
   explicit Shape(Graph& G, Body *b, const Shape *copyShape=NULL); //new Shape, being added to graph and body's shape lists
-  ~Shape() { reset(); }
+  ~Shape();
   void operator=(const Shape& s) {
     index=s.index; ibody=s.ibody; body=NULL; name=s.name; X=s.X; rel=s.rel; type=s.type;
     memmove(size, s.size, 4*sizeof(double)); memmove(color, s.color, 3*sizeof(double));
@@ -494,6 +495,8 @@ struct Graph {
   void glueBodies(Body *a, Body *b);
   void glueTouchingBodies();
   void addObject(Body *b);
+  void removeNonShapeBodies();
+  void meldFixedJoint();
 
   //!@name computations on the DoFs
   void calcBodyFramesFromJoints();
@@ -613,12 +616,14 @@ bool    operator==(const Matrix&, const Matrix&);
 bool    operator!=(const Matrix&, const Matrix&);
 
 // QUATERNION
+Quaternion operator-(const Quaternion&);
 Quaternion operator*(const Quaternion& b, const Quaternion& c);
 Quaternion operator/(const Quaternion& b, const Quaternion& c);
 bool       operator==(const Quaternion&, const Quaternion&);
 bool       operator!=(const Quaternion&, const Quaternion&);
 
 // TRANSFORMATION
+Transformation operator-(const Transformation&);
 Transformation operator*(const Transformation& b, const Transformation& c);
 Transformation operator/(const Transformation& b, const Transformation& c);
 bool           operator==(const Transformation&, const Transformation&);
@@ -1162,7 +1167,7 @@ struct Link {
   ors::Vector com, force, torque;
   double mass;
   ors::Matrix inertia;
-  uint dof() { if(type==JT_hinge) return 1; else return 0; }
+  uint dof() { if(type>=JT_hingeX && type<=JT_transZ) return 1; else return 0; }
 
   arr _h, _A, _Q, _I, _f; //featherstone types
   void setFeatherstones();

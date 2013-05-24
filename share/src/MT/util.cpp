@@ -171,20 +171,18 @@ char skip(std::istream& is, const char *skipchars, bool skipCommentLines) {
   char c;
   for(;;) {
     c=is.get();
-    if(skipCommentLines && c=='#') { skipLine(is); continue; }
+    if(skipCommentLines && c=='#') { skipRestOfLine(is); continue; }
+    if(!contains(skipchars, c)){ is.putback(c); break; }
     if(c=='\n') lineCount++;
-    if(contains(skipchars, c)) continue;
-    break;
   }
-  is.putback(c);
   return c;
 }
 
 //! skips a newline character (same as skip(is, "\n");)
-void skipLine(std::istream& is) {
+void skipRestOfLine(std::istream& is) {
   char c;
   do { c=is.get(); } while(c!='\n');
-  lineCount++;
+  is.putback(c);
 }
 
 //! skips the next character
@@ -226,8 +224,8 @@ bool skipUntil(std::istream& is, const char *tag) {
 }
 
 //! a global operator to scan (parse) strings from a stream
-void parse(std::istream& is, const char *str) {
-  if(!is.good()) { MT_MSG("bad stream tag when scanning for `" <<str <<"'"); return; }  //is.clear(); }
+bool parse(std::istream& is, const char *str, bool silent) {
+  if(!is.good()) { if(!silent) MT_MSG("bad stream tag when scanning for `" <<str <<"'"); return false; }  //is.clear(); }
   uint i, n=strlen(str);
   char *buf=new char [n+1]; buf[n]=0;
   MT::skip(is, " \n\r\t");
@@ -235,10 +233,12 @@ void parse(std::istream& is, const char *str) {
   if(!is.good() || strcmp(str, buf)) {
     for(i=n; i--;) is.putback(buf[i]);
     is.setstate(std::ios::failbit);
-    MT_MSG("(LINE=" <<MT::lineCount <<") parsing of constant string `" <<str
+    if(!silent)  MT_MSG("(LINE=" <<MT::lineCount <<") parsing of constant string `" <<str
            <<"' failed! (read instead: `" <<buf <<"')");
+    return false;
   }
   delete[] buf;
+  return true;
 }
 
 

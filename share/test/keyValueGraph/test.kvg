@@ -16,9 +16,10 @@ c="string"   #string
 d=-0.1234   #double
 e=[1 2 3 0.5]   #arr
 f=(c d e)   #tuple of other items (referred to by their key)
+bol0=false bol1 bol2, bol3  #3 booleans with keys 'bol0', 'bol1 bol2' and 'bol3'
 g={ a, b=0.2, x="hallo"   #keyValueGraph
   y=filename.org
-  z } 
+  z }
 
 ## any types
 trans=<T t(10 0 0)>  #'T' is the tag for an arbitrary, an ors::Transformation here

@@ -914,7 +914,7 @@ void read_ppm(byteA &img, const char *file_name, bool swap_rows) {
   if(!is.good()) HALT("could not open file `" <<file_name <<"' for input");
   if(is.get()!='P') HALT("NO PPM FILE:" <<file_name);
   is >>mode;
-  if(MT::peerNextChar(is)=='#') MT::skipLine(is);
+  if(MT::peerNextChar(is)=='#') MT::skipRestOfLine(is);
   is >>width >>height >>max;
   is.get(); //MUST be a white character if everything went ok
   switch(mode) {

@@ -212,7 +212,7 @@ void soc::SocSystem_Ors::initStandardBenchmark(uint rand_seed){
     s->cont=true;
     if(k){
       j=new ors::Joint(*ors, ors->bodies(k-1), ors->bodies(k));
-      j->type = ors::JT_hinge;
+      j->type = ors::JT_hingeX;
       j->Q.setText("<d(45 1 0 0)>");
       if(k&1){ //odd -> rotation around z
         j->A.setText(STRING("<t(0 0 " <<1./K <<") d(-90 0 1 0)>"));

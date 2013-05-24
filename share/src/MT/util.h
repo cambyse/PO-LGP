@@ -120,11 +120,11 @@ std::ofstream& log(const char *name="MT.log");
 //----- strings and streams
 bool contains(const char *s, char c);
 char skip(std::istream& is, const char *skipchars=" \n\r\t", bool skipCommentLines=true);
-void skipLine(std::istream& is);
+void skipRestOfLine(std::istream& is);
 void skipOne(std::istream& is);
 char getNextChar(std::istream& is, const char *skipchars=" \n\r\t", bool skipCommentLines=true);
 char peerNextChar(std::istream& is, const char *skipchars=" \n\r\t", bool skipCommentLines=true);
-void parse(std::istream& is, const char *str);
+bool parse(std::istream& is, const char *str, bool silent=false);
 bool skipUntil(std::istream& is, const char *tag);
 
 //----- functions

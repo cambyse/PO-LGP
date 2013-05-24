@@ -601,8 +601,8 @@ void animateConfiguration(ors::Graph& C, OpenGL& gl) {
       x(i)=x0(i) + .5*sin(MT_2PI*t/20);
       C.setJointState(x, v0);
       C.calcBodyFramesFromJoints();
-      MT::wait(0.01);
       if(!gl.update()) { return; }
+      MT::wait(0.01);
     }
   }
   C.setJointState(x0, v0);

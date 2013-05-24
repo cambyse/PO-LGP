@@ -39,9 +39,9 @@ void testDot(const char *filename="coffee_shop.fg"){
 int main(int argc, char** argv){
   cout <<registry() <<endl;
 
-  //testRead(argc<2?"test.kvg":argv[1]);
+  testRead(argc<2?"test.kvg":argv[1]);
 
-  testDot();
+  //testDot();
 
   return 0;
 }

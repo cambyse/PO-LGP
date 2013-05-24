@@ -364,7 +364,7 @@ void OdeInterface::exportStateToOde(ors::Graph &C) {
       switch(e->type) { //16. Mar 06 (hh)
         case ors::JT_fixed:
           break;
-        case ors::JT_hinge:
+        case ors::JT_hingeX:
           CP4(hj->qrel, (e->A.rot*e->B.rot).p());
           CP3(hj->anchor1, (e->A.pos).p());
           CP3(hj->anchor2, (-(e->B.rot/e->B.pos)).p());
@@ -385,7 +385,7 @@ void OdeInterface::exportStateToOde(ors::Graph &C) {
           //printf("offset: (%lf; %lf; %lf)\n", (e->X.pos)[0], (e->X.pos)[1], (e->X.pos)[2]);
           CP3(sj->axis1, (e->A.rot*ors::Vector(1, 0, 0)).p());
           break;
-        default: HALT("");
+        default: NIY;
       }
     }
 #endif
@@ -423,8 +423,7 @@ void OdeInterface::importStateFromOde(ors::Graph &C) {
 
 void OdeInterface::addJointForce(ors::Graph& C, ors::Joint *e, double f1, double f2) {
   switch(e->type) {
-    default:
-    case ors::JT_hinge:
+    case ors::JT_hingeX:
       dJointAddHingeTorque(joints(e->index), -f1);
       break;
     case ors::JT_fixed: // no torque
@@ -435,6 +434,7 @@ void OdeInterface::addJointForce(ors::Graph& C, ors::Joint *e, double f1, double
     case ors::JT_transX:
       dJointAddSliderForce(joints(e->index), -f1);
       break;
+  default: NIY;
   }
 }
 
@@ -444,8 +444,7 @@ void OdeInterface::addJointForce(ors::Graph& C, doubleA& x) {
 
   for_list(i, e, C.joints) { // loop over edges, 16. Mar 06 (hh)
     switch(e->type) { //  3. Apr 06 (hh)
-      default:
-      case ors::JT_hinge:
+      case ors::JT_hingeX:
         dJointAddHingeTorque(joints(e->index), -x(n));
         n++;
         break;
@@ -459,6 +458,7 @@ void OdeInterface::addJointForce(ors::Graph& C, doubleA& x) {
         dJointAddSliderForce(joints(e->index), -x(n));
         n++;
         break;
+    default: NIY;
     }
   }
   CHECK(n==x.N, "wrong dimensionality");
@@ -470,8 +470,7 @@ void OdeInterface::setMotorVel(ors::Graph& C, const arr& qdot, double maxF) {
 
   for_list(i, e, C.joints) {
     switch(e->type) {
-      default:
-      case ors::JT_hinge:
+      case ors::JT_hingeX:
         dJointSetAMotorParam(motors(e->index), dParamVel, -qdot(i));
         dJointSetAMotorParam(motors(e->index), dParamFMax, maxF);
         n++;
@@ -484,6 +483,7 @@ void OdeInterface::setMotorVel(ors::Graph& C, const arr& qdot, double maxF) {
       case ors::JT_transX:
         n++;
         break;
+    default: NIY;
     }
   }
   CHECK(n==qdot.N, "wrong dimensionality");
@@ -779,7 +779,7 @@ void OdeInterface::createOde(ors::Graph &C) {
           joints(e->index)=jointF;
           //    e->fixed=true;
           break;
-        case ors::JT_hinge:
+        case ors::JT_hingeX:
           jointH=(dxJointHinge*)dJointCreateHinge(world, 0);
           /*if(e->p[1]!=e->p[0]){
             dJointSetHingeParam(jointH, dParamLoStop, e->p[0]);
@@ -803,9 +803,9 @@ void OdeInterface::createOde(ors::Graph &C) {
           joints(e->index)=jointS;
           //e->copyFramesToOdeSlider();
           break;
-        default: HALT("");
+        default: NIY;
       }
-      if(e->type==ors::JT_hinge) {
+      if(e->type==ors::JT_hingeX) {
         jointM = (dxJointAMotor*)dJointCreateAMotor(world, 0);
         dJointSetAMotorNumAxes(jointM, 1);
         dJointAttach(jointM, bodies(e->from->index), bodies(e->to->index));
