@@ -53,7 +53,7 @@ REGISTER_TYPE_Key(T, ors::Transformation);
 const ors::Vector Vector_x(1, 0, 0);
 const ors::Vector Vector_y(0, 1, 0);
 const ors::Vector Vector_z(0, 0, 1);
-const ors::Transformation Transformation_Id(0);
+const ors::Transformation Transformation_Id(ors::Transformation().setZero());
 const ors::Quaternion Quaternion_Id(1, 0, 0, 0);
 
 //===========================================================================
@@ -881,10 +881,6 @@ Vector operator/(const Transformation& X, const Vector& c) {
   return a;
 }
 
-//! constructor
-Transformation::Transformation() { setZero(); }
-Transformation::Transformation(bool noInit) { if(!noInit) setZero(); }
-
 //! copy operator
 //Transformation& Transformation::operator=(const Transformation& f){
 //  p=f.p; v=f.v; r=f.r; w=f.w; /*a=f.a; b=f.b; s=f.s;*/ return *this; }
@@ -900,10 +896,11 @@ Transformation& Transformation::setText(const char* txt) { read(MT::String(txt)(
 //Transformation& Transformation::set(istream &is){ setZero(); read(is); return *this; }
 
 //! resets the position to origin, rotation to identity, velocities to zero, scale to unit
-void Transformation::setZero() {
+Transformation& Transformation::setZero() {
   memset(this, 0, sizeof(Transformation) );
   rot.w=1.;
   zeroVels = true;
+  return *this;
 }
 
 //! randomize the frame
@@ -1003,8 +1000,8 @@ void Transformation::addRelativeRotationQuat(double s, double x, double y, doubl
     (new = f * old) */
 void Transformation::appendTransformation(const Transformation& f) {
   if(zeroVels && f.zeroVels){
-    pos += rot*f.pos;
-    rot = rot*f.rot;
+    if(!f.pos.isZero()) pos += rot*f.pos;
+    if(!f.rot.isZero()) rot = rot*f.rot;
   }else{
     //Vector P(r*(s*f.p)); //relative offset in global coords
     //Vector V(r*(s*f.v)); //relative vel in global coords
@@ -2142,7 +2139,7 @@ void ors::Mesh::writePLY(const char *fn, bool bin) {
 void ors::Mesh::readPLY(const char *fn) {
   struct PlyFace {    unsigned char nverts;  int *verts; };
   struct Vertex {    double x,  y,  z ;  };
-  uint _nverts, _ntrigs;
+  uint _nverts=0, _ntrigs=0;
   Vertex   *_vertices   ;  /**< vertex   buffer */
 
   PlyProperty vert_props[]  = { /* list of property information for a PlyVertex */
@@ -2920,7 +2917,7 @@ void ors::Joint::parseAts() {
   ats.getValue<Transformation>(Q, "Q");
   ats.getValue<Transformation>(Q, "q");
   ats.getValue<Transformation>(X, "X");
-  if(ats.getValue<double>(d, "type")) type=(JointType)d; else type=JT_fixed;
+  if(ats.getValue<double>(d, "type")) type=(JointType)d; else type=JT_hingeX;
   arr axis;
   ats.getValue<arr>(axis, "axis");
   if(axis.N){

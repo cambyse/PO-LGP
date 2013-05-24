@@ -385,7 +385,7 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id) 
   if((rot*(-Vector_z)).z>maxz) { upvec=-Vector_z; maxz=(rot*upvec).z; }
   ors::Transformation f;
   f.rot.setDiff(Vector_z, upvec);
-  z.set("obj-z-align", *C, zalignTVT, obj_index, f, -1, ors::Transformation(), ARR());
+  z.set("obj-z-align", *C, zalignTVT, obj_index, f, -1, Transformation_Id, ARR());
   //
   DefaultTaskVariable r("full state", *C, qLinearTVT, 0, 0, 0, 0, I);
   DefaultTaskVariable c("collision", *C, collTVT, 0, 0, 0, 0, ARR());

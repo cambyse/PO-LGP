@@ -50,7 +50,7 @@ ImitateTaskVariable::ImitateTaskVariable(const char* _name, ors::Graph& _ors){
 	nCounter = 1;//change time for dynamic case
 	nIterations = MT::getParameter<int>("iterations");
 
-	set(_name, _ors, userTVT, -1, ors::Transformation(), -1, ors::Transformation(), ARR());
+	set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, ARR());
 
 
 	userUpdate();//initial values...

@@ -52,9 +52,9 @@ DefaultTaskVariable::DefaultTaskVariable(
   set(
     _name, _ors, _type,
     iname  ? (int)_ors.getBodyByName(iname)->index      : -1,
-    iframe ? ors::Transformation().setText(iframe) : ors::Transformation(),
+    iframe ? ors::Transformation().setText(iframe) : Transformation_Id,
     jname  ? (int)_ors.getBodyByName(jname)->index      : -1,
-    jframe ? ors::Transformation().setText(jframe) : ors::Transformation(),
+    jframe ? ors::Transformation().setText(jframe) : Transformation_Id,
     _params);
 }
 
@@ -70,9 +70,9 @@ DefaultTaskVariable::DefaultTaskVariable(
   set(
     _name, _ors, _type,
     a ? (int)a->body->index : -1,
-    a ? a->rel : ors::Transformation(),
+    a ? a->rel : Transformation_Id,
     b ? (int)b->body->index : -1,
-    b ? b->rel : ors::Transformation(),
+    b ? b->rel : Transformation_Id,
     _params);
 }
 

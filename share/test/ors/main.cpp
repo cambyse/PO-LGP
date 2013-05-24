@@ -96,11 +96,10 @@ void testKinematics(){
 //
 
 void testKinematicSpeed(){
-#define NUM 100000
+#define NUM 10000
 #if 1
   ors::Graph G;
-  OpenGL gl;
-  init(G,gl,"arm3.ors");
+  G.init("pr2_clean.ors");
   G.makeLinkTree();
   uint n=G.getJointStateDimension();
   arr x(n);
@@ -154,7 +153,6 @@ void testContacts(){
   init(G,gl,"arm7.ors");
   
   arr x,v,con,grad;
-  double c;
   uint t;
 
   SwiftInterface swift;
@@ -500,8 +498,9 @@ void testBlenderImport(){
 
 int main(int argc,char **argv){
 
-  testContacts();
-  return 0;
+  //testKinematicSpeed();
+  //testContacts();
+  //return 0;
   testBasics();
   testLoadSave();
   testPlayStateSequence();
