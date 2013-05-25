@@ -304,11 +304,13 @@ ItemL& KeyValueGraph::getParents(uint i){
 }
 
 void KeyValueGraph::sortByDotOrder(){
-  uintA perm(N);
+  uintA perm(N); perm.setZero();
   for_list_(Item, it, list()){
-    double *order = it->value<KeyValueGraph>()->getValue<double>("dot_order");
-    if(!order){ MT_MSG("doesn't have dot_order attribute"); return; }
-    perm(it_COUNT) = (uint)*order;
+    if(it->valueType()==typeid(KeyValueGraph)){
+      double *order = it->value<KeyValueGraph>()->getValue<double>("dot_order");
+      if(!order){ MT_MSG("doesn't have dot_order attribute"); return; }
+      perm(it_COUNT) = (uint)*order;
+    }
   }
   permuteInv(perm);
   for_list_(Item, it2, list()) it2->index=it2_COUNT;

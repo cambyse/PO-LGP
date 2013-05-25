@@ -31,7 +31,7 @@
 
 #include "graphview.h"
 
-#define INFO(x) printf("CALLBACK: %s\n",#x);
+#define INFO(x) //printf("CALLBACK: %s\n",#x);
 
 extern "C"{
   GVJ_t *gvjobs_first(GVC_t * gvc);
@@ -378,4 +378,3 @@ GraphView::~GraphView(){ NICO }
 void GraphView::watch(){ NICO }
 
 #endif
-
