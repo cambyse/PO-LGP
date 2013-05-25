@@ -52,9 +52,9 @@ DefaultTaskVariable::DefaultTaskVariable(
   set(
     _name, _ors, _type,
     iname  ? (int)_ors.getBodyByName(iname)->index      : -1,
-    iframe ? ors::Transformation().setText(iframe) : ors::Transformation(),
+    iframe ? ors::Transformation().setText(iframe) : Transformation_Id,
     jname  ? (int)_ors.getBodyByName(jname)->index      : -1,
-    jframe ? ors::Transformation().setText(jframe) : ors::Transformation(),
+    jframe ? ors::Transformation().setText(jframe) : Transformation_Id,
     _params);
 }
 
@@ -70,9 +70,9 @@ DefaultTaskVariable::DefaultTaskVariable(
   set(
     _name, _ors, _type,
     a ? (int)a->body->index : -1,
-    a ? a->rel : ors::Transformation(),
+    a ? a->rel : Transformation_Id,
     b ? (int)b->body->index : -1,
-    b ? b->rel : ors::Transformation(),
+    b ? b->rel : Transformation_Id,
     _params);
 }
 
@@ -400,7 +400,7 @@ void DefaultTaskVariable::updateState(const ors::Graph& ors, double tau) {
       break;
     case qLimitsTVT:   ors.getLimitsMeasure(y, params);  ors.getLimitsGradient(J, params);   break;
     case comTVT:       ors.getCenterOfMass(y);     y.resizeCopy(2); ors.getComGradient(J);  J.resizeCopy(2, J.d1);  break;
-    case collTVT:      ors.getContactMeasure(y, params(0)); ors.getContactGradient(J, params(0));  break;
+    case collTVT:      ors.phiCollision(y, J, params(0));  break;
     case colConTVT:    ors.getContactConstraints(y);  ors.getContactConstraintsGradient(J); break;
     case skinTVT:
       y.resize(params.N);

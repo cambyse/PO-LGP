@@ -115,7 +115,7 @@ struct SURFfeatures {
 inline void operator>>(istream& is,SURFfeatures& hl){}
 inline void operator<<(ostream& os,const SURFfeatures& hl){}
 
-/*! The RigidObjectRepresentation List output of perception */
+/** The RigidObjectRepresentation List output of perception */
 struct PerceptionOutput {
   MT::Array<RigidObjectRepresentation> objects;
   FIELD(byteA, display);

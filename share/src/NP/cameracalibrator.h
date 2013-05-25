@@ -14,7 +14,7 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/> */
 
-/*! \file cameracalibrator.h
+/** \file cameracalibrator.h
     \brief Lens calibration for mono/stereo cameras */
 
 #ifndef NP_CAMERACALIBRATOR_H

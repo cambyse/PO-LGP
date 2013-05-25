@@ -37,7 +37,7 @@ struct AICO {
   ~AICO();
 
   //initialization
-  void init(ControlledSystem& sys); //!< reads parameters from cfg file
+  void init(ControlledSystem& sys); ///< reads parameters from cfg file
   void init_messages();
   void init_trajectory(const arr& x_init);
   void prepare_for_changed_task();

@@ -57,7 +57,7 @@ template MT::Array<glUI::Button>::~Array();
 // camera class
 //
 
-/*!\brief constructor; specify a frame if the camera is to be attached
+/** \brief constructor; specify a frame if the camera is to be attached
    to an existing frame. Otherwise the camera creates its own
       frame */
 ors::Camera::Camera() {
@@ -164,7 +164,7 @@ void ors::Camera::setCameraProjectionMatrix(const arr& P) {
   //fixedProjectionMatrix = glP;
 }
 
-/*! sets OpenGL's GL_PROJECTION matrix accordingly -- should be
+/** sets OpenGL's GL_PROJECTION matrix accordingly -- should be
     called in an opengl draw routine */
 void ors::Camera::glSetProjectionMatrix() {
 #ifdef MT_GL
@@ -837,7 +837,7 @@ void glDrawTexQuad(uint texture,
 }
 
 #ifdef MT_GLUT
-/*!\brief return the RGBA-image of scenery drawn just before; the image
+/** \brief return the RGBA-image of scenery drawn just before; the image
   buffer has to have either 2 dimensions [width, height] for a
   gray-scale luminance image or 3 dimensions [width, height, 4] for an
   RGBA-image. */
@@ -884,7 +884,7 @@ void glGrabImage(byteA& image) {
 void glGrabImage(byteA& image) { NICO }
 #endif
 
-/*!\brief return the depth map of the scenery drawn just before; the depth
+/** \brief return the depth map of the scenery drawn just before; the depth
     buffer has to be a 2-dimensional [width, height] and is filled with
     depth values between 0 and 1. */
 void glGrabDepth(byteA& depth) {
@@ -894,7 +894,7 @@ void glGrabDepth(byteA& depth) {
   glReadPixels(0, 0, w, h, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, depth.p);
 }
 
-/*!\brief return the depth map of the scenery drawn just before; the depth
+/** \brief return the depth map of the scenery drawn just before; the depth
     buffer has to be a 2-dimensional [width, height] and is filled with
     depth values between 0 and 1. */
 void glGrabDepth(floatA& depth) {
@@ -1369,7 +1369,7 @@ void OpenGL::Select(){
     camera.glSetProjectionMatrix();
   } else {
     GLView *vi=&views(mouseView);
-    GLint viewport[4] = {vi->le*w, vi->bo*h, (vi->ri-vi->le)*w, (vi->to-vi->bo)*h};
+    GLint viewport[4] = { (GLint)vi->le*w, (GLint)vi->bo*h, (GLint)(vi->ri-vi->le)*w, (GLint)(vi->to-vi->bo)*h};
     gluPickMatrix((GLdouble)mouseposx, (GLdouble)mouseposy, 2., 2., viewport);
     vi->camera.glSetProjectionMatrix();
   }
@@ -1427,7 +1427,7 @@ void OpenGL::Select(){
 #endif
 }
 
-/*!\brief watch in interactive mode and wait for an exiting event
+/** \brief watch in interactive mode and wait for an exiting event
   (key pressed or right mouse) */
 int OpenGL::watch(const char *txt) {
   update(txt);
@@ -1468,7 +1468,7 @@ void OpenGL::setClearColors(float r, float g, float b, float a) {
   clearR=r; clearG=g; clearB=b; clearA=a;
 }
 
-/*!\brief inverse projection: given a 2D+depth coordinates in the
+/** \brief inverse projection: given a 2D+depth coordinates in the
   camera view (e.g. as a result of selection) computes the world 3D
   coordinates */
 void OpenGL::unproject(double &x, double &y, double &z,bool resetCamera) {
@@ -1477,7 +1477,7 @@ void OpenGL::unproject(double &x, double &y, double &z,bool resetCamera) {
   GLdouble modelMatrix[16], projMatrix[16];
   GLint viewPort[4];
   if(resetCamera) {
-    GLint viewport[4] = {0, 0, width, height};
+    GLint viewport[4] = {0, 0, (GLint)width, (GLint)height};
     glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -1576,7 +1576,7 @@ void OpenGL::reportSelection() {
 }
 
 #ifdef MT_GL2PS
-/*!\brief generates a ps from the current OpenGL display, using gl2ps */
+/** \brief generates a ps from the current OpenGL display, using gl2ps */
 void OpenGL::saveEPS(const char *filename) {
   FILE *fp = fopen(filename, "wb");
   GLint buffsize = 0, state = GL2PS_OVERFLOW;
@@ -1602,7 +1602,7 @@ void OpenGL::saveEPS(const char*) {
 #endif
 
 #ifndef MT_QTGL
-/*!\brief report on the OpenGL capabilities (the QGLFormat) */
+/** \brief report on the OpenGL capabilities (the QGLFormat) */
 void OpenGL::about(std::ostream& os) { MT_MSG("NICO"); }
 #endif
 

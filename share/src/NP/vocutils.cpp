@@ -20,7 +20,7 @@
 #include "nputils.h"
 #include "vocutils.h"
 
-/*! \brief Load a segmentation mask
+/** \brief Load a segmentation mask
  *
  *  Loads a PNG-file and converts the colors to the respective indices, cf.
  *  color codes of the VOC challenge.

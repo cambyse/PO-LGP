@@ -364,7 +364,7 @@ void OdeInterface::exportStateToOde(ors::Graph &C) {
       switch(e->type) { //16. Mar 06 (hh)
         case ors::JT_fixed:
           break;
-        case ors::JT_hinge:
+        case ors::JT_hingeX:
           CP4(hj->qrel, (e->A.rot*e->B.rot).p());
           CP3(hj->anchor1, (e->A.pos).p());
           CP3(hj->anchor2, (-(e->B.rot/e->B.pos)).p());
@@ -385,7 +385,7 @@ void OdeInterface::exportStateToOde(ors::Graph &C) {
           //printf("offset: (%lf; %lf; %lf)\n", (e->X.pos)[0], (e->X.pos)[1], (e->X.pos)[2]);
           CP3(sj->axis1, (e->A.rot*ors::Vector(1, 0, 0)).p());
           break;
-        default: HALT("");
+        default: NIY;
       }
     }
 #endif
@@ -423,8 +423,7 @@ void OdeInterface::importStateFromOde(ors::Graph &C) {
 
 void OdeInterface::addJointForce(ors::Graph& C, ors::Joint *e, double f1, double f2) {
   switch(e->type) {
-    default:
-    case ors::JT_hinge:
+    case ors::JT_hingeX:
       dJointAddHingeTorque(joints(e->index), -f1);
       break;
     case ors::JT_fixed: // no torque
@@ -435,6 +434,7 @@ void OdeInterface::addJointForce(ors::Graph& C, ors::Joint *e, double f1, double
     case ors::JT_transX:
       dJointAddSliderForce(joints(e->index), -f1);
       break;
+  default: NIY;
   }
 }
 
@@ -444,8 +444,7 @@ void OdeInterface::addJointForce(ors::Graph& C, doubleA& x) {
 
   for_list(i, e, C.joints) { // loop over edges, 16. Mar 06 (hh)
     switch(e->type) { //  3. Apr 06 (hh)
-      default:
-      case ors::JT_hinge:
+      case ors::JT_hingeX:
         dJointAddHingeTorque(joints(e->index), -x(n));
         n++;
         break;
@@ -459,6 +458,7 @@ void OdeInterface::addJointForce(ors::Graph& C, doubleA& x) {
         dJointAddSliderForce(joints(e->index), -x(n));
         n++;
         break;
+    default: NIY;
     }
   }
   CHECK(n==x.N, "wrong dimensionality");
@@ -470,8 +470,7 @@ void OdeInterface::setMotorVel(ors::Graph& C, const arr& qdot, double maxF) {
 
   for_list(i, e, C.joints) {
     switch(e->type) {
-      default:
-      case ors::JT_hinge:
+      case ors::JT_hingeX:
         dJointSetAMotorParam(motors(e->index), dParamVel, -qdot(i));
         dJointSetAMotorParam(motors(e->index), dParamFMax, maxF);
         n++;
@@ -484,6 +483,7 @@ void OdeInterface::setMotorVel(ors::Graph& C, const arr& qdot, double maxF) {
       case ors::JT_transX:
         n++;
         break;
+    default: NIY;
     }
   }
   CHECK(n==qdot.N, "wrong dimensionality");
@@ -779,7 +779,7 @@ void OdeInterface::createOde(ors::Graph &C) {
           joints(e->index)=jointF;
           //    e->fixed=true;
           break;
-        case ors::JT_hinge:
+        case ors::JT_hingeX:
           jointH=(dxJointHinge*)dJointCreateHinge(world, 0);
           /*if(e->p[1]!=e->p[0]){
             dJointSetHingeParam(jointH, dParamLoStop, e->p[0]);
@@ -803,9 +803,9 @@ void OdeInterface::createOde(ors::Graph &C) {
           joints(e->index)=jointS;
           //e->copyFramesToOdeSlider();
           break;
-        default: HALT("");
+        default: NIY;
       }
-      if(e->type==ors::JT_hinge) {
+      if(e->type==ors::JT_hingeX) {
         jointM = (dxJointAMotor*)dJointCreateAMotor(world, 0);
         dJointSetAMotorNumAxes(jointM, 1);
         dJointAttach(jointM, bodies(e->from->index), bodies(e->to->index));
@@ -1023,44 +1023,44 @@ void OdeInterface::slGetProxyGradient(arr &dx, const arr &x, ors::Graph &C, OdeI
 //
 
 #if 0 //documentation...
-/*!\brief copy all frame variables (positions, velocities, etc)
+/** \brief copy all frame variables (positions, velocities, etc)
 into the ODE engine (createOde had to be called before) */
 void OdeInterface::exportStateToOde(ors::Graph &C);
 
-/*!\brief copy the current state of the ODE engine into
+/** \brief copy the current state of the ODE engine into
 the frame variables (positions, velocities, etc) */
 void OdeInterface::importStateFromOde(ors::Graph &C);
 
-/*!\brief copy all frame variables (positions, velocities, etc)
+/** \brief copy all frame variables (positions, velocities, etc)
 into the ODE engine (createOde had to be called before) */
 void OdeInterface::exportForcesToOde(ors::Graph &C);
 
 void OdeInterface::setJointForce(ors::Graph &C, ors::Joint *e, double f1, double f2);
 
-/*!\brief applies forces on the configuration as given by the force vector x */
+/** \brief applies forces on the configuration as given by the force vector x */
 void OdeInterface::setJointForce(ors::Graph &C, arr& f);
 
-/*!\brief returns the number of motors attached to joints */
+/** \brief returns the number of motors attached to joints */
 uint getJointMotorDimension(ors::Graph &C);
 
-/*!\brief set the desired positions of all motor joints */
+/** \brief set the desired positions of all motor joints */
 void OdeInterface::setJointMotorPos(ors::Graph &C, arr& x, double maxF, double tau);
-/*!\brief set the desired position of a specific motor joint */
+/** \brief set the desired position of a specific motor joint */
 void OdeInterface::setJointMotorPos(ors::Graph &C, ors::Joint *e, double x0, double maxF, double tau);
 
-/*!\brief set the desired velocities of all motor joints */
+/** \brief set the desired velocities of all motor joints */
 void OdeInterface::setJointMotorVel(ors::Graph &C, arr& v, double maxF=1.);
-/*!\brief set the desired velocity of a specific motor joint */
+/** \brief set the desired velocity of a specific motor joint */
 void OdeInterface::setJointMotorVel(ors::Graph &C, ors::Joint *e, double v0, double maxF=1.);
 
-/*!\brief disable motors by setting maxForce parameter to zero */
+/** \brief disable motors by setting maxForce parameter to zero */
 void OdeInterface::unsetJointMotors(ors::Graph &C, OdeInterface& ode);
-/*!\brief disable motor by setting maxForce parameter to zero */
+/** \brief disable motor by setting maxForce parameter to zero */
 void OdeInterface::unsetJointMotor(ors::Graph &C, ors::Joint *e);
 
-/*!\brief get the forces induced by all motor motor joints */
+/** \brief get the forces induced by all motor motor joints */
 void OdeInterface::getJointMotorForce(ors::Graph &C, arr& f);
-/*!\brief get the force induced by a specific motor joint */
+/** \brief get the force induced by a specific motor joint */
 void OdeInterface::getJointMotorForce(ors::Graph &C, ors::Joint *e, double& f);
 
 void OdeInterface::pidJointPos(ors::Graph &C, ors::Joint *e, double x0, double v0, double xGain, double vGain, double iGain=0, double* eInt=0);
@@ -1073,18 +1073,18 @@ void OdeInterface::getGroundContact(ors::Graph &C, boolA& cts);
 //! import the information from ODE's contact list into the proximity list \ingroup sl
 void OdeInterface::importProxiesFromOde(ors::Graph &C, OdeInterface& ode);
 
-/*!\brief simulates one time step with the ODE engine, starting from state
+/** \brief simulates one time step with the ODE engine, starting from state
     vector in, returns state vector out \ingroup sl */
 void OdeInterface::step(ors::Graph &C, arr& in, arr& force, arr& out, uint steps=1);
 
-/*!\brief simulates one time step with the ODE engine, starting from state
+/** \brief simulates one time step with the ODE engine, starting from state
     vector in, returns state vector out \ingroup sl */
 void OdeInterface::step(ors::Graph &C, arr& force, arr& out, uint steps=1);
 
 //! \ingroup sl
 void OdeInterface::step(ors::Graph &C, uint steps=1, double tau=.01);
 
-/*!\brief instantiate the configuration in an ODE engine (first clears the
+/** \brief instantiate the configuration in an ODE engine (first clears the
     ODE engine from all other objects) \ingroup sl */
 void OdeInterface::createOde(ors::Graph &C, OdeInterface& ode);
 

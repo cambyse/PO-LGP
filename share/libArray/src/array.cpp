@@ -138,7 +138,7 @@ uint own_SVD(
   const arr& A,
   bool sort);
 
-/*!\brief Singular Value Decomposition (from Numerical Recipes);
+/** \brief Singular Value Decomposition (from Numerical Recipes);
   computes \f$U, D, V\f$ with \f$A = U D V^T\f$ from \f$A\f$ such that
   \f$U\f$ and \f$V\f$ are orthogonal and \f$D\f$ diagonal (the
   returned array d is 1-dimensional) -- uses LAPACK if MT_LAPACK is
@@ -326,7 +326,7 @@ void pseudoInverse(arr& Ainv, const arr& A, const arr& Winv, double eps) {
 //! the determinant of a 2D squared matrix
 double determinant(const arr& A);
 
-/*!\brief the cofactor is the determinant of a 2D squared matrix after removing
+/** \brief the cofactor is the determinant of a 2D squared matrix after removing
   the ith row and the jth column */
 double cofactor(const arr& A, uint i, uint j);
 
@@ -387,12 +387,12 @@ void write(const arr& X, const arr& Y, const arr& Z, const char* name);
 //!@name simple image formats
 //
 
-/*! save data as ppm or pgm. Images are (height, width, [0, 2, 3, 4])-dim
+/** save data as ppm or pgm. Images are (height, width, [0, 2, 3, 4])-dim
   byte arrays, where the 3rd dimension determines whether it's a grey
   (0), grey-alpha (2), RGB (3), or RGBA (4) image */
 void write_ppm(const byteA &img, const char *file_name, bool swap_rows);
 
-/*! read data from an ppm or pgm file */
+/** read data from an ppm or pgm file */
 void read_ppm(byteA &img, const char *file_name, bool swap_rows);
 
 //! add an alpha channel to an image array
@@ -751,7 +751,7 @@ double cofactor(const arr& A, uint i, uint j) {
   return ((i&1)^(j&1)?-1.:1) * determinant(B);
 }
 
-/*! Given a distribution p over a discrete domain {0, .., p.N-1}
+/** Given a distribution p over a discrete domain {0, .., p.N-1}
     Stochastic Universal Sampling draws n samples from this
     distribution, stored as integers in s */
 void SUS(const arr& p, uint n, uintA& s) {
@@ -914,7 +914,7 @@ void read_ppm(byteA &img, const char *file_name, bool swap_rows) {
   if(!is.good()) HALT("could not open file `" <<file_name <<"' for input");
   if(is.get()!='P') HALT("NO PPM FILE:" <<file_name);
   is >>mode;
-  if(MT::peerNextChar(is)=='#') MT::skipLine(is);
+  if(MT::peerNextChar(is)=='#') MT::skipRestOfLine(is);
   is >>width >>height >>max;
   is.get(); //MUST be a white character if everything went ok
   switch(mode) {

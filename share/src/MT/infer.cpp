@@ -1264,7 +1264,7 @@ double robustDivide(double a, double b){
   return 0;
 }
 
-/*!\brief If id is a tuple of k variable identifiers, and mid is a _subset_ of l of those,
+/** \brief If id is a tuple of k variable identifiers, and mid is a _subset_ of l of those,
 then pick will contain l indices, shouting which slot of id corresponds to each slot of mid. For instance
 if we have a product of two sensors \f$A_{ijklm} B_{kli}\f$ then pick will be <2 3 0> shouting that
 the 0th slot of B is the 2nd of A, that the 1st slot of B is the 3rd of A, and that the 3rd slot of B is the 0th of A. */
@@ -1421,7 +1421,7 @@ void infer::getJoint(infer::Factor& joint, const infer::FactorList& factors){
   for(i=0; i<factors.N; i++) tensorMultiply(joint, *(factors(i)));
 }
 
-/*! Computes an order for the elimination of variables.
+/** Computes an order for the elimination of variables.
 The order is such that in each iteration among all variables that have not been eliminated yet
 the one which has the fewest links to other not-deleted variables is chosen.
 This is equivalent to saying that per iteration the variable chosen for elimination is the one
@@ -1488,7 +1488,7 @@ void infer::computeEliminationOrder(infer::VariableList& elimOrder, const infer:
   DEBUG_INFER(1, cout <<"elimination order: " <<elimOrder <<endl);
 }
 
-/*! eliminates a single variable from the factor list.
+/** eliminates a single variable from the factor list.
 
 At input, factors describes the full model; at output, factors contains the reduced model which include unchanged old factors and some newed factors.
 The newed factors are additionally appended to the newed_factors (to allow for external cleanup) */
@@ -1529,7 +1529,7 @@ void infer::eliminateVariable(infer::FactorList& factors, infer::FactorList& new
   //DEBUG_INFER(1, checkSpaceRegistry());
 }
 
-/*! marginalizes a factor list over all variables except the "remaining_vars". The output is a
+/** marginalizes a factor list over all variables except the "remaining_vars". The output is a
 single factor over the remaining_vars with the marginal. The factors list remains unchanged. */
 void infer::eliminationAlgorithm(infer::Factor& posterior, const infer::FactorList& factors, const infer::VariableList& remaining_vars){
   DEBUG_INFER(1, cout <<MT_HERE <<endl);
@@ -2156,7 +2156,7 @@ Jordan, Chap. 17, p.22: "In a junction tree, local consistency implies global co
 
 
 
-/*! Start message collecting from all children-subtrees (i.e., except its parent subtree). !*/
+/** Start message collecting from all children-subtrees (i.e., except its parent subtree). !*/
 void recursiveCollectEvidence(infer::Factor* node, infer::Factor* parent, infer::FactorGraph& junctionTree){
   uint DEBUG = 0;
   if(DEBUG > 0)
@@ -2194,7 +2194,7 @@ void recursiveCollectEvidence(infer::Factor* node, infer::Factor* parent, infer:
 }
 
 
-/*! Starts message distributing on node into the direction of all its children (i.e., except its parent). */
+/** Starts message distributing on node into the direction of all its children (i.e., except its parent). */
 void recursiveDistributeEvidence(infer::Factor* node, infer::Factor* parent, infer::FactorGraph& junctionTree){
   uint DEBUG = 0;
   if(DEBUG > 0)

@@ -5,43 +5,36 @@
 
 REGISTER_TYPE_Key(T, ors::Transformation)
 
-void testRead(const char *filename){
+void testRead(const char *filename=NULL){
   KeyValueGraph G;
 
-  cout <<"reading graph..." <<flush;
-  MT::load(G, filename);
+  cout <<"\n** reading graph..." <<flush;
+  MT::load(G, filename?filename:"example.kvg");
   cout <<"done" <<endl;
-
-  GraphView gv(G);
-  gv.watch();
-
   cout <<G <<endl;
-  cout <<"access to individual items:" <<endl;
-  cout <<*G["g"] <<endl;
-  cout <<*G["g"]->value<KeyValueGraph>() <<endl;
-  cout <<*G.getValue<KeyValueGraph>("g")->getValue<MT::String>("y") <<endl;
+
+  if(filename) return; //below only for "example.kvg"
+  cout <<"\n** access to individual items:" <<endl;
+  cout <<*G["k"] <<endl;
+  cout <<*G["k"]->value<KeyValueGraph>() <<endl;
+  cout <<*G.getValue<KeyValueGraph>("k")->getValue<MT::String>("z") <<endl;
 }
 
-void testDot(const char *filename="coffee_shop.fg"){
+void testDot(const char *filename=NULL){
   KeyValueGraph G;
-
-  cout <<"reading graph..." <<endl;
-  MT::load(G,filename);
-  cout <<G <<endl;
+  MT::load(G, filename?filename:"coffee_shop.fg");
   G.sortByDotOrder();
   G.writeDot();
-
   GraphView gv(G);
   gv.watch();
 }
 
-
 int main(int argc, char** argv){
-  cout <<registry() <<endl;
+  cout <<"GLOBAL LATENT REGISTRY:\n" <<registry() <<endl;
 
-  //testRead(argc<2?"test.kvg":argv[1]);
+  testRead(argc<2?NULL:argv[1]);
 
-  testDot();
+  testDot(argc<2?NULL:argv[1]);
 
   return 0;
 }

@@ -97,19 +97,19 @@ public:
   ************************************************/
  
   void calcObjectNumber();  // do only once
-  void getObjects(uintA& objects); //!< return list all objects
+  void getObjects(uintA& objects); ///< return list all objects
   uint getTableID();
   void getBlocks(uintA& blocks);
   void getBalls(uintA& balls);
   void getBoxes(uintA& boxes);
   void getCylinders(uintA& cylinders);
   bool isBox(uint id);
-  uint convertObjectName2ID(const char* name); //!< returns the graph-index of the object named "name"
-  const char* convertObjectID2name(uint ID); //!< returns the name of the object with index "ID" in graph
+  uint convertObjectName2ID(const char* name); ///< returns the graph-index of the object named "name"
+  const char* convertObjectID2name(uint ID); ///< returns the name of the object with index "ID" in graph
 #define OBJECT_TYPE__BOX 6
   int getOrsType(uint id); // this is the ORS type
-  double* getSize(uint id);     //!< when using symmetric objects, take getSize(id)[0]
-  double* getColor(uint id);    //!< returns 3-dim array with RGB values
+  double* getSize(uint id);     ///< when using symmetric objects, take getSize(id)[0]
+  double* getColor(uint id);    ///< returns 3-dim array with RGB values
   MT::String getColorString(uint obj); 
   
   
@@ -121,34 +121,34 @@ public:
   ************************************************/
 
   // object specific
-  double* getPosition(uint id);   //!< returns 3-dim array with x/y/z-coordinates
+  double* getPosition(uint id);   ///< returns 3-dim array with x/y/z-coordinates
   void getTablePosition(double& x1, double& x2, double& y1, double& y2);
   void getObjectPositions(arr& positions);
   // orientation is 2d:  orientation(0) = angle to z axis,  orientation(1) = angle of projection to x/y plane
   void getOrientation(arr& orientation, uint id);
   void getObjectAngles(arr& angles);
-  bool isUpright(uint id);        //!< check if id is upright
+  bool isUpright(uint id);        ///< check if id is upright
   double getHeight(uint id);
   double getOverallHeight(uintA& objects);
-  uint getInhand(uint man_id); //!< get id of the object catched by man_id
-  uint getInhand(); //!< get id of object catched with finger of right hand
+  uint getInhand(uint man_id); ///< get id of the object catched by man_id
+  uint getInhand(); ///< get id of object catched with finger of right hand
   uint getHandID();
   // pile info
-  void getObjectsOn(uintA& list,const char *obj_id); //!< return list of objects above and in contact with id
+  void getObjectsOn(uintA& list,const char *obj_id); ///< return list of objects above and in contact with id
   void getObjectsOn(uintA& list,const uint obj_id);
-  bool isClear(uint id);        //!< check if id is clear
+  bool isClear(uint id);        ///< check if id is clear
   bool onGround(uint id);
-  void getObjectsClose(uintA& objects_close, uint obj); //!< return list of close by objects (with vertical level)
+  void getObjectsClose(uintA& objects_close, uint obj); ///< return list of close by objects (with vertical level)
   // table
   bool freePosition(double x, double y, double radius);
   double highestPosition(double x, double y, double radius, uint id_ignored);
   // box
   uint getContainedObject(uint box_id);
   bool isClosed(uint box_id);
-  bool containedInBox(uint id);        //!< check if id is contained in some box
-  bool containedInClosedBox(uint id);        //!< check if id is contained in some closed box
+  bool containedInBox(uint id);        ///< check if id is contained in some box
+  bool containedInClosedBox(uint id);        ///< check if id is contained in some closed box
   // low-level
-  bool inContact(uint a,uint b);  //!< check if a and b are in contact
+  bool inContact(uint a,uint b);  ///< check if a and b are in contact
   void writeAllContacts(uint id);
   
   void printObjectInfo();
@@ -170,14 +170,14 @@ public:
   void grab(const char* obj_grabbed, const char* message = "");
   void grabHere(const char* message = "");
   // dropping (putting)
-  void dropObjectAbove_final(const char *obj_dropped, const char *obj_below, const char* message = "");    //!< drop the body part obj_id above the object rel_id
+  void dropObjectAbove_final(const char *obj_dropped, const char *obj_below, const char* message = "");    ///< drop the body part obj_id above the object rel_id
   void dropObjectAbove(uint obj_dropped, uint obj_below, const char* message = "");
-  void dropObjectAbove(uint obj_below, const char* message = ""); //!< drop obj hold in finger of right hand above the object rel_id
-  void dropObject(uint manipulator_id); //!<drop object held by "manipulator_id"
+  void dropObjectAbove(uint obj_below, const char* message = ""); ///< drop obj hold in finger of right hand above the object rel_id
+  void dropObject(uint manipulator_id); ///<drop object held by "manipulator_id"
   void dropInhandObjectOnTable(const char* message = "");
   void calcTargetPositionForDrop(double& x, double& y, uint obj_dropped, uint obj_below);
   // posture control
-  void relaxPosition(const char* message = "");   //!< move into a relaxed position
+  void relaxPosition(const char* message = "");   ///< move into a relaxed position
 	void moveToPosition(const arr& pos, const char* message = "");
   // boxes
   void openBox(uint id, const char* message = "");

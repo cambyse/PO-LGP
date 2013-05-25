@@ -333,7 +333,7 @@ void RobotManipulationSimulator::calcObjectNumber() {
 }
 
 
-void RobotManipulationSimulator::getObjects(uintA& objects) { //!< return list all objects
+void RobotManipulationSimulator::getObjects(uintA& objects) { ///< return list all objects
   objects.clear();
   
   objects.append(getTableID());
@@ -1205,7 +1205,7 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   if((rot*(-Vector_z)).z>maxz){ upvec=-Vector_z; maxz=(rot*upvec).z; }
   ors::Transformation tf;
   tf.rot.setDiff(Vector_z, upvec);
-  z.set("obj-z-align",*C,zalignTVT,obj_dropped1_index,tf,-1,ors::Transformation(),0);
+  z.set("obj-z-align",*C,zalignTVT,obj_dropped1_index,tf,-1,Transformation_Id,0);
   //
   DefaultTaskVariable r("full state",*C,qLinearTVT,0,0,0,0,I);
   DefaultTaskVariable c("collision",*C,collTVT,0,0,0,0,ARR(.02));

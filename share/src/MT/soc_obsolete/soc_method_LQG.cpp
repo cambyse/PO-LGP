@@ -45,7 +45,7 @@ void soc::LQG::shiftSolution(int offset){
 }
 
 
-/*! \brief iterated LQG (linear quadratic Gaussian) applied to the
+/** \brief iterated LQG (linear quadratic Gaussian) applied to the
     kinematic trajectory optimization case. This means that we assume
     A=B=1 (simple additive control) with control cost H=W
     (corresponding directly to the q-space metric). The quadratic cost
@@ -150,7 +150,7 @@ double soc::LQG::stepKinematic(){
 
 //===========================================================================
 
-/*! \brief iterated LQG (linear quadratic Gaussian) for the general
+/** \brief iterated LQG (linear quadratic Gaussian) for the general
     Stochastic Optimal Control case */
 double soc::LQG::stepGeneral(){
   CHECK(sys->dynamic, "assumed dynamic SOC abstraction");

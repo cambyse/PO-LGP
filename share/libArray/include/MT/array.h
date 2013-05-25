@@ -46,8 +46,8 @@
 #define for_list_(Type, it, X)     Type *it=NULL; for(uint it##_COUNT=0;   it##_COUNT<X.N && ((it=X(it##_COUNT)) || true); it##_COUNT++)
 #define for_list_rev_(Type, it, X) Type *it=NULL; for(uint it##_COUNT=X.N; it##_COUNT--   && ((it=X(it##_COUNT)) || true); )
 
-#define ARR ARRAY<double> //!< write ARR(1., 4., 5., 7.) to generate a double-Array
-#define TUP ARRAY<uint> //!< write TUP(1, 2, 3) to generate a uint-Array
+#define ARR ARRAY<double> ///< write ARR(1., 4., 5., 7.) to generate a double-Array
+#define TUP ARRAY<uint> ///< write TUP(1, 2, 3) to generate a uint-Array
 
 typedef unsigned char byte;
 typedef unsigned int uint;
@@ -87,13 +87,13 @@ namespace MT {
 template<class T> struct Array {
   typedef bool (*ElemCompare)(const T& a, const T& b);
   
-  T *p;     //!< the pointer on the linear memory allocated
-  uint N;   //!< number of elements
-  uint nd;  //!< number of dimensions
-  uint d0,d1,d2;  //!< 0th, 1st, 2nd dim
-  uint *d;  //!< pointer to dimensions (for nd<=3 points to d0)
-  uint M;   //!< size of actually allocated memory (may be greater than N)
-  bool reference;//!< true if this refers to some external memory
+  T *p;     ///< the pointer on the linear memory allocated
+  uint N;   ///< number of elements
+  uint nd;  ///< number of dimensions
+  uint d0,d1,d2;  ///< 0th, 1st, 2nd dim
+  uint *d;  ///< pointer to dimensions (for nd<=3 points to d0)
+  uint M;   ///< size of actually allocated memory (may be greater than N)
+  bool reference;///< true if this refers to some external memory
   
   static int  sizeT;   //! constant for each type T: stores the sizeof(T)
   static char memMove; //! constant for each type T: decides whether memmove can be used instead of individual copies
@@ -101,7 +101,7 @@ template<class T> struct Array {
   //-- special: arrays can be sparse/packed/etc and augmented with aux data to support this
   enum SpecialType { noneST, hasCarrayST, sparseST, diagST, RowShiftedPackedMatrixST, CpointerST };
   SpecialType special;
-  void *aux;
+  void *aux; //! arbitrary auxiliary data, depends on special
   
   //!@name constructors
   Array();
@@ -120,25 +120,25 @@ template<class T> struct Array {
   
   //!@name resizing
   Array<T>& resize(uint D0);
-  Array<T>& resizeCopy(uint D0);
-  Array<T>& reshape(uint D0);
   Array<T>& resize(uint D0, uint D1);
-  Array<T>& resizeCopy(uint D0, uint D1);
-  Array<T>& reshape(uint D0, uint D1);
   Array<T>& resize(uint D0, uint D1, uint D2);
-  Array<T>& resizeCopy(uint D0, uint D1, uint D2);
-  Array<T>& reshape(uint D0, uint D1, uint D2);
   Array<T>& resize(uint ND, uint *dim);
-  Array<T>& resizeCopy(uint ND, uint *dim);
+  Array<T>& resize(const Array<uint> &dim);
+  Array<T>& reshape(uint D0);
+  Array<T>& reshape(uint D0, uint D1);
+  Array<T>& reshape(uint D0, uint D1, uint D2);
   Array<T>& reshape(uint ND, uint *dim);
-  Array<T>& resize(const Array<uint> &newD);
-  Array<T>& resizeCopy(const Array<uint> &newD);
-  Array<T>& reshape(const Array<uint> &newD);
+  Array<T>& reshape(const Array<uint> &dim);
+  Array<T>& resizeCopy(uint D0);
+  Array<T>& resizeCopy(uint D0, uint D1);
+  Array<T>& resizeCopy(uint D0, uint D1, uint D2);
+  Array<T>& resizeCopy(uint ND, uint *dim);
+  Array<T>& resizeCopy(const Array<uint> &dim);
   Array<T>& resizeAs(const Array<T>& a);
-  Array<T>& resizeCopyAs(const Array<T>& a);
   Array<T>& reshapeAs(const Array<T>& a);
-  
-  //!@name initializing/setting entries
+  Array<T>& resizeCopyAs(const Array<T>& a);
+
+  //!@name initializing/assigning entries
   void clear();
   void setZero(byte zero=0);
   void setUni(const T& scalar, int d=-1);
@@ -162,7 +162,7 @@ template<class T> struct Array {
   void referToSubDim(const Array<T>& a, uint i, uint j);
   void takeOver(Array<T>& a);                   //a becomes a reference to its previously owned memory!
   void setGrid(uint dim, T lo, T hi, uint steps);
-  void setText(const char* str);
+  void setText(const char* str); //TODO: remove
   
   //!@name access by reference (direct memory access)
   T& elem(uint i) const;

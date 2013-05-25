@@ -32,14 +32,14 @@
 //
 
 struct GaussianProcess {
-  arr X, Y;   //!< data
-  arr dX, dY; //!< derivative data
-  uintA dI;  //!< derivative data (derivative indexes)
-  arr Ginv, GinvY, ig2;  //!< inverse gram matrix (and a second buffer for push/pop)
+  arr X, Y;   ///< data
+  arr dX, dY; ///< derivative data
+  uintA dI;  ///< derivative data (derivative indexes)
+  arr Ginv, GinvY, ig2;  ///< inverse gram matrix (and a second buffer for push/pop)
   
   //--prior function
-  double mu; //!< const bias of the GP
-  double(*mu_func)(const arr &x, const void *param);  //!< prior of the GP (variable bias)
+  double mu; ///< const bias of the GP
+  double(*mu_func)(const arr &x, const void *param);  ///< prior of the GP (variable bias)
   void *priorP;
 
   double obsVar;
@@ -65,7 +65,7 @@ struct GaussianProcess {
   /* covariance between 2nd derivative and 1st derivative */
   double(*covDD_D)(uint e, uint l, uint s, void *P, const arr& a, const arr& b);
   
-  void *kernelP;                      //!< pointer to parameters (a struct or so) passed to the kernel function
+  void *kernelP;                      ///< pointer to parameters (a struct or so) passed to the kernel function
   
   GaussianProcess();
   
@@ -89,7 +89,7 @@ struct GaussianProcess {
     kernelP=f.kernelP; obsVar=f.obsVar;
   }
   
-  /*! set an arbitrary covariance function,
+  /** set an arbitrary covariance function,
       P is a pointer to parameters (a struct) that is passed
       everytime when the _cov is called */
   void setKernel(double(*_cov)(void *P, const arr& x, const arr& y), void *_kernelP){
@@ -102,7 +102,7 @@ struct GaussianProcess {
     cov=_cov;
     dcov=_dcov;
   }
-  /*! set a covariance function,
+  /** set a covariance function,
    * gradient of the cov,
    * cov of function value and
    * derivative,
@@ -128,17 +128,17 @@ struct GaussianProcess {
   void setGaussKernelGP(void *_kernelP, double(*_mu)(const arr&, const void*), void*);
   void setGaussKernelGP(void *_kernelP, double _mu);
   
-  void recompute(const arr& X, const arr&Y);              //!< calculates the inv Gram matrix for the given data
-  void recompute();                                      //!< recalculates the inv Gram matrix for the current data
-  void appendObservation(const arr& x, double y);     //!< add a new datum to the data and updates the inv Gram matrix
+  void recompute(const arr& X, const arr&Y);              ///< calculates the inv Gram matrix for the given data
+  void recompute();                                      ///< recalculates the inv Gram matrix for the current data
+  void appendObservation(const arr& x, double y);     ///< add a new datum to the data and updates the inv Gram matrix
   void appendDerivativeObservation(const arr& x, double dy, uint i);
   void appendGradientObservation(const arr& x, const arr& dydx);
-  void evaluate(const arr& x, double& y, double& sig);   //!< evaluate the GP at some point - returns y and sig (=standard deviation)
-  void evaluate(const arr& X, arr& Y, arr& S);   //!< evaluate the GP at some array of points - returns all y's and sig's
+  void evaluate(const arr& x, double& y, double& sig);   ///< evaluate the GP at some point - returns y and sig (=standard deviation)
+  void evaluate(const arr& X, arr& Y, arr& S);   ///< evaluate the GP at some array of points - returns all y's and sig's
   double log_likelihood();
   double max_var(); // the variance when no data present
-  void gradient(arr& grad, const arr& x);           //!< evaluate the gradient dy/dx of the mean at some point
-  void hessianPos (arr& hess, const arr& x);           //!< evaluate the hessian dy/dx1dx2 of the mean at some point
+  void gradient(arr& grad, const arr& x);           ///< evaluate the gradient dy/dx of the mean at some point
+  void hessianPos (arr& hess, const arr& x);           ///< evaluate the hessian dy/dx1dx2 of the mean at some point
   void k_star(const arr& x, arr& k);
   void dk_star(const arr& x, arr& k);
   
@@ -170,7 +170,7 @@ inline double GaussKernel(void *P, const arr& a, const arr& b){
   return K.priorVar*::exp(-.5 * d/K.widthVar);
 }
 
-/*! \brief return gradient of the covariance function, i.e.
+/** \brief return gradient of the covariance function, i.e.
   for i \in {vector dimensions}: \dfdx{k(a, b)}{x_i}  w.r.t.
   In other words: for all components invoke covD_F(i, P, a, b)
   you can also pass a double[3] as parameters */
@@ -182,7 +182,7 @@ inline void dGaussKernel(arr& grad, void *P, const arr& a, const arr& b){
   //MT_MSG("gamma=" <<gamma <<"; b-a" <<b -a <<"; gauss=" <<gauss<<"; grad=" <<grad);
 }
 
-/*! \brief covariance between derivative at point a and function value at
+/** \brief covariance between derivative at point a and function value at
  * point b
   you can also pass a double[3] as parameters */
 inline double GaussKernelF_D(uint e, void *P, const arr& a, const arr& b){
@@ -193,7 +193,7 @@ inline double GaussKernelF_D(uint e, void *P, const arr& a, const arr& b){
   return gamma * de * gauss;
 }
 
-/*! \brief covariance between derivatives at points \vec a and \vec b
+/** \brief covariance between derivatives at points \vec a and \vec b
   you can also pass a double[3] as parameters */
 inline double GaussKernelD_D(uint e, uint l, void *P, const arr& a, const arr& b){
   GaussKernelParams& K = *((GaussKernelParams*)P);
@@ -203,13 +203,13 @@ inline double GaussKernelD_D(uint e, uint l, void *P, const arr& a, const arr& b
   return gamma *(KRONEKER(e, l) - gamma*de*dl) * gauss;
 }
 
-/*! \brief covariance between 2nd derivative at \vec a and fun value at \vec b
+/** \brief covariance between 2nd derivative at \vec a and fun value at \vec b
   you can also pass a double[3] as parameters */
 inline double GaussKernelDD_F(uint e, uint l, void *P, const arr& a, const arr& b){
   return - GaussKernelD_D(e, l, P, a, b);
 }
 
-/*! \brief covariance between second derivative at point \vec a and  1st
+/** \brief covariance between second derivative at point \vec a and  1st
  * derivative at \vec b
   you can also pass a double[3] as parameters */
 inline double GaussKernelDD_D(uint e, uint l, uint s, void *P, const arr& a, const arr& b){

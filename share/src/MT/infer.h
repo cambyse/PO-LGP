@@ -60,16 +60,16 @@ extern uint VarCount;
 }
 
 namespace infer {
-/*! a discrete random variable */
+/** a discrete random variable */
 struct Variable {
   //core defining properties
-  uint id;          //!< unique identifyer
-  uint dim;         //!< cardinality
+  uint id;          ///< unique identifyer
+  uint dim;         ///< cardinality
   
   // auxilliary & connectivity
-  MT::String name;  //!< up to you...
-  infer::FactorList factors;    //!< each variable knows all factors it is part of
-  MessagePairList messages;  //!< each variable knows all the messages it directly connects to
+  MT::String name;  ///< up to you...
+  infer::FactorList factors;    ///< each variable knows all factors it is part of
+  MessagePairList messages;  ///< each variable knows all the messages it directly connects to
   KeyValueGraph ats; //any convenience information (e.g. for dot);
   
   Variable();
@@ -82,7 +82,7 @@ struct Variable {
 }
 
 namespace infer {
-/*! a factor (=probability table) over a tuple of variable; a list of
+/** a factor (=probability table) over a tuple of variable; a list of
     factors readily defines a proper factored joint distribution
 
     Probability tables are multi-dimensional arrays (tensors), per
@@ -90,17 +90,17 @@ namespace infer {
     then true). */
 struct Factor {
   //core defining properties
-  uintA varIds; //!< f=f(x_1, x_3, x_7) => id=[1, 3, 7]; array of variables (their id's) this factor depends on
-  uintA dim;    //!< f=f(x_1, x_3, x_7) => dim=[dim(x_1), dim(x_3), dim(x_7)];  array of dimensionalities of the variables this factor depends on
-  arr P;        //!< the (probability) table
-  double logP;  //!< the log-scaling of the table, such that true_factor = exp(logP) * P
+  uintA varIds; ///< f=f(x_1, x_3, x_7) => id=[1, 3, 7]; array of variables (their id's) this factor depends on
+  uintA dim;    ///< f=f(x_1, x_3, x_7) => dim=[dim(x_1), dim(x_3), dim(x_7)];  array of dimensionalities of the variables this factor depends on
+  arr P;        ///< the (probability) table
+  double logP;  ///< the log-scaling of the table, such that true_factor = exp(logP) * P
   
   // auxilliary & connectivity
   MT::String name;
   SpecialFactorType specialType;
   infer::VariableList variables;
   infer::FactorList factors;
-  MessagePairList messages;          //!< each factor knows all the msg_pairs it connects to
+  MessagePairList messages;          ///< each factor knows all the msg_pairs it connects to
   KeyValueGraph ats; //any convenience information (e.g. for dot);
   
   Factor();
@@ -110,14 +110,14 @@ struct Factor {
   void init(const infer::VariableList& variables);
   void relinkTo(const infer::VariableList& variables);
   void operator=(const infer::Factor& q);
-  void setP(const arr& q);           //!< f(x) = q(x)
-  void setText(const char* text);    //!< f(x) = q(x)
-  void setOne();                     //!< f(x) = 1
-  void setUniform();                 //!< sum(x_i) f(x_i) = 1  only if factor.P is set by hand (as a conditional)
-  void setRandom();                  //!< randomize f (e.g., for automatic testing)
-  void setEvidence(uint e);          //!< f(e) = 1,  f(x!=e) = 0
-  bool operator==(infer::Factor& q);        //!< check if f==q (also checks for logP)
-  void getP(arr& p) const;           //!< p = exp(logP)*P
+  void setP(const arr& q);           ///< f(x) = q(x)
+  void setText(const char* text);    ///< f(x) = q(x)
+  void setOne();                     ///< f(x) = 1
+  void setUniform();                 ///< sum(x_i) f(x_i) = 1  only if factor.P is set by hand (as a conditional)
+  void setRandom();                  ///< randomize f (e.g., for automatic testing)
+  void setEvidence(uint e);          ///< f(e) = 1,  f(x!=e) = 0
+  bool operator==(infer::Factor& q);        ///< check if f==q (also checks for logP)
+  void getP(arr& p) const;           ///< p = exp(logP)*P
   void normalize(){ lognormScale(P, logP); logP=0.; }
   void write(std::ostream& os = std::cout, bool brief=false) const;
   void writeNice(std::ostream& os = std::cout) const;
@@ -125,24 +125,24 @@ struct Factor {
   
   void makeLogZero(){ P *= ::exp(logP); logP=0.; }
   
-  double entry(uint i);              //!< returns logP * P.elem(i)
+  double entry(uint i);              ///< returns logP * P.elem(i)
   void checkCondNormalization(uint left=1, double tol=1e-10);
   uint numberNonZeroEntries();
 };
 }
 
 namespace infer {
-/*! a pair of messages (fwd and bwd) which connects two
+/** a pair of messages (fwd and bwd) which connects two
     factors. Depending on the context this can be a separator (JTA), a
     link from factor to a single-variable-factor (bi-partite factor
     graph), or a links between arbitrary factors (loopy BP) */
 struct MessagePair {
   //core defining properties
-  infer::Factor m12, m21;      //!< the forward and backward message
-  infer::Factor   *f1, *f2;    //!< the first and second factor it is attached to (if at all..)
-  infer::Variable *v1, *v2;    //!< the first and second variable it is attached to (if at all..)
-  infer::Factor   *v_to_v_fac; //!< in case of variable-to-variable message: the factor it is one-to-one associated with
-  infer::VariableList variables;       //!< the variables the messages are defined over
+  infer::Factor m12, m21;      ///< the forward and backward message
+  infer::Factor   *f1, *f2;    ///< the first and second factor it is attached to (if at all..)
+  infer::Variable *v1, *v2;    ///< the first and second variable it is attached to (if at all..)
+  infer::Factor   *v_to_v_fac; ///< in case of variable-to-variable message: the factor it is one-to-one associated with
+  infer::VariableList variables;       ///< the variables the messages are defined over
   
   MessagePair();
   MessagePair(infer::Factor *_f1, infer::Factor *_f2);  //factor-to-factor message (e.g., separate in JTA)
@@ -360,26 +360,26 @@ void getMarginal(infer::Factor& marginal, const infer::VariableList& marginalVar
 
 namespace infer {
 namespace JunctionTree {
-/*! triangulates graph based on factors; ensures that resulting factors are max cliques;
+/** triangulates graph based on factors; ensures that resulting factors are max cliques;
 corresponds to UNDIRECTED_GRAPH_ELIMINATE Jordan, Chapter 3, p. 13 */
 void buildTriangulatedCliques(const infer::FactorList& factors, infer::FactorList& triangulatedCliques);
 
-/*! Builds max spanning tree (weights of edges according to size of set of MessagePair variables */
+/** Builds max spanning tree (weights of edges according to size of set of MessagePair variables */
 void buildMaxSpanningTree(infer::FactorList& factors, const infer::VariableList& vars, FactorGraph& cliqueTree);
 
 // main method
-/*! Constructs a junction tree: triangulates original graph, builds max spanning tree
+/** Constructs a junction tree: triangulates original graph, builds max spanning tree
 and updates probabilities &*/
 void constructJunctionTree(FactorGraph& junctionTree, const infer::FactorList& factors, const infer::VariableList& vars);
 
-/*! Update prob dist on graph by passing messages */
+/** Update prob dist on graph by passing messages */
 void collectAndDistributeInference(FactorGraph& junctionTree);
 
 void junctionTreeInference(FactorGraph& junctionTree, const infer::FactorList& factors, const infer::VariableList& vars);
 
 void checkJunctionTreeProperty(FactorGraph& junctionTree);
 
-/*! adds evidence node to graph !*/
+/** adds evidence node to graph !*/
 void addEvidence(FactorGraph& junctionTree, infer::Factor& evid);
 }
 }
@@ -402,7 +402,7 @@ enum PassType { PARALLEL };
 
 double passAllEdges_parallel(FactorGraph& fg);
 double passAllEdges(FactorGraph& fg, PassType type);
-/*! computes all outgoing messages of belief */
+/** computes all outgoing messages of belief */
 void shoutMessages(infer::Factor& f, MsgCalc calcMsgType = NO_DIV);
 
 // main method
@@ -422,22 +422,22 @@ void loopy_belief_propagation(FactorGraph& fg, const infer::FactorList& factors)
 #if 1
 
 // OLD STUFF COPIED FROM MARC'S OLD CODE
-/*! automatically allocate message factors for mu_fwd and mu_bwd at each edge with the
+/** automatically allocate message factors for mu_fwd and mu_bwd at each edge with the
 correct factor types (derived from the nodes) \ingroup infer2 */
 void allocateEdgeFactors(infer::FactorGraph& G);
-/*! test the factor graph for equilibrium (which means converged inference) \ingroup infer2 */
+/** test the factor graph for equilibrium (which means converged inference) \ingroup infer2 */
 bool checkEquilibrium(infer::FactorGraph& G);
 void getIndices(uintA& list, const uintA& id, const uintA& dim, const uintA& mid);
 void getPick(uintA& pick, const uintA& id, const uintA& mid);
 void fb(infer::FactorGraph& G);
-/*! calls message passing for a certain selection of edges.
+/** calls message passing for a certain selection of edges.
 seq gives the indices of the edges in the first time slice.
 Those indices are extrapolated over a whole DBN of time length T with Mod
 edges in each time slice. A negative indes means that the esge passes backward.
 dir=BACKWARD means that one starts with the last time slice of the DBN going
 towards the first. \ingroup infer2 */
 //void passCertainEdges(infer::FactorGraph& G, intA seq, uint T, uint Mod, FwdBwd dir);
-/*! \ingroup infer2 */
+/** \ingroup infer2 */
 //void passLabeledEdges(infer::FactorGraph& G, int label, FwdBwd dir);
 void clearLabeledEdges(infer::FactorGraph& G, int label);
 void resetLabeledNodes(infer::FactorGraph& G, const char *name);
@@ -460,7 +460,7 @@ void checkMessagePairConsistency(infer::MessagePairList msg_pairs);
 infer::MessagePair* getMessagePair(const infer::Factor* f1, const infer::Factor* f2);
 infer::Factor* getMessage(const infer::Factor* f_from, const infer::Factor* f_to);
 void writeMessage(const infer::Factor* f_from, const infer::Factor* f_to, ostream& os = cout);
-void sample(infer::Factor& f, uintA& samples);//!< sample (s=discrete, x=continuous)
+void sample(infer::Factor& f, uintA& samples);///< sample (s=discrete, x=continuous)
 
 // Accessing global objects [mt] shouldn't be visible anymore
 //iSpace* get_global_space();
@@ -473,32 +473,32 @@ void print_global_vars(uintA ids);
 
 namespace infer {
 // 2 types of calculating messages
-/*! calculate new message */
+/** calculate new message */
 void computeMessage_withDiv(infer::Factor& f_from, infer::Factor& f_to); // based on Marc's eq (5) / (7)
 void computeMessage_noDiv(infer::Factor& f_from, infer::Factor& f_to); // based on Marc's eq (4) / (6)
 // using already calculated belief of f_from
 void computeMessage_noDiv(infer::Factor& f_from, infer::Factor& b_from, infer::Factor& f_to);
 
-/*! computes all incoming messages of belief */
+/** computes all incoming messages of belief */
 void askForMessages(infer::Factor& f, MsgCalc calcMsgType = NO_DIV); //[mt] similar to collectBelief?
 // BELIEF BASED
 // --> using belief factors for storage
 
-/*! Updates belief according to original factor and incoming messages */
+/** Updates belief according to original factor and incoming messages */
 void collectBelief(infer::Factor& belief, const infer::Factor& f, const MessagePair *exclude);
 
-/*! pass message from f_from to f_to and write it into b_to*/
+/** pass message from f_from to f_to and write it into b_to*/
 // based on Marc's eq (2) / (3)
 // if calcMsgType==with_division, the incoming msgs to f_from are not used to calc the message.
 // --> important if we do a mixture of belief propagation and setting certain factors inbetween by hand
 double passMessage(infer::Factor& f_from, infer::Factor& f_to, infer::Factor& b_to, MsgCalc calcMsgType);
 
-/*! computes messages to all neighbors and updates these accordingly; should only
+/** computes messages to all neighbors and updates these accordingly; should only
 be used in case of loopy BP (for efficiency reasons) */
 // NIY
 // double distributeMessages(FactorGraph& fg, infer::Factor& f, MsgCalc calcMsgType = NO_DIV);
 
-/*! Calculates posterior over the variables given in "post" using the elimination algorithm. */
+/** Calculates posterior over the variables given in "post" using the elimination algorithm. */
 //void posteriorByElimination(infer::FactorList& factors, infer::Factor& post);
 }
 #endif

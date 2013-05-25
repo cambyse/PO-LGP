@@ -53,7 +53,7 @@ REGISTER_TYPE_Key(T, ors::Transformation);
 const ors::Vector Vector_x(1, 0, 0);
 const ors::Vector Vector_y(0, 1, 0);
 const ors::Vector Vector_z(0, 0, 1);
-const ors::Transformation Transformation_Id(0);
+const ors::Transformation Transformation_Id(ors::Transformation().setZero());
 const ors::Quaternion Quaternion_Id(1, 0, 0, 0);
 
 //===========================================================================
@@ -174,7 +174,7 @@ double Vector::angle(const Vector& b) const {
   return ::acos(a);
 }
 
-/*!\brief if \c this and \c b are colinear, it returns the factor c such
+/** \brief if \c this and \c b are colinear, it returns the factor c such
     that this=c*b; otherwise it returns zero */
 double Vector::isColinear(const Vector& b) const {
   double c=x/b.x;
@@ -471,7 +471,7 @@ Matrix& operator+=(Matrix& a, const Matrix& b) {
 }
 
 //! inverts the current rotation
-void Quaternion::invert() { w=-w; }
+Quaternion& Quaternion::invert() { w=-w; return *this; }
 
 //! multiplies the rotation by a factor f (i.e., makes f-times the rotation)
 void Quaternion::multiply(double f) {
@@ -494,7 +494,7 @@ void Quaternion::normalize() {
   w/=n; x/=n; y/=n; z/=n;
 }
 
-/*!\brief roughly, removes all ``components'' of the rotation that are not
+/** \brief roughly, removes all ``components'' of the rotation that are not
     around the given vector v. More precisely, aligns/projects
     the rotation axis (given by q[1], q[2], q[3] of the quaternion)
     with v and re-normalizes afterwards. */
@@ -583,12 +583,31 @@ void Quaternion::setRadX(double angle) {
   y=z=0.;
 }
 
-//! rotation around X-axis by given radiants
+//! rotation around Y-axis by given radiants
 void Quaternion::setRadY(double angle) {
   angle/=2.;
   w=cos(angle);
   y=sin(angle);
   x=z=0.;
+}
+
+//! rotation around Z-axis by given radiants
+void Quaternion::setRadZ(double angle) {
+  angle/=2.;
+  w=cos(angle);
+  z=sin(angle);
+  x=y=0.;
+}
+
+Quaternion& Quaternion::setRpy(double r, double p, double y) {
+  double cr=::cos(.5*r), sr=::sin(.5*r);
+  double cp=::cos(.5*p), sp=::sin(.5*p);
+  double cy=::cos(.5*y), sy=::sin(.5*y);
+  w = cr*cp*cy + sr*sp*sy;
+  x = sr*cp*cy - cr*sp*sy;
+  y = cr*sp*cy + sr*cp*sy;
+  z = cr*cp*sy - sr*sp*cy;
+  return *this;
 }
 
 //! rotation around the given vector with angle (in rad) equal to norm of the vector
@@ -607,7 +626,7 @@ void Quaternion::setDiff(const Vector& from, const Vector& to) {
 }
 
 //! is zero (i.e., identical rotation)
-bool Quaternion::isZero() const { return w==1.; }
+bool Quaternion::isZero() const { return w==1. || w==-1.; }
 
 //! 1-norm to zero (i.e., identical rotation)
 double Quaternion::diffZero() const { return (w>0.?fabs(w-1.):fabs(w+1.))+fabs(x)+fabs(y)+fabs(z); }
@@ -767,6 +786,11 @@ void Quaternion::write(std::ostream& os) const {
 void Quaternion::read(std::istream& is) { is >>PARSE("(") >>w >>x >>y  >>z >>PARSE(")"); normalize();}
 //}
 
+//! inverse rotation
+Quaternion operator-(const Quaternion& b) {
+  return Quaternion(b).invert();
+}
+
 //! compound of two rotations (A=B*C)
 Quaternion operator*(const Quaternion& b, const Quaternion& c) {
   Quaternion a;
@@ -823,6 +847,12 @@ Vector operator/(const Quaternion& b, const Vector& c) {
   return a;
 }
 
+Transformation operator-(const Transformation& X) {
+  Transformation Y;
+  Y.setInverse(X);
+  return Y;
+}
+
 Transformation operator*(const Transformation& X, const Transformation& c) {
   Transformation f(X);
   f.appendTransformation(c);
@@ -851,10 +881,6 @@ Vector operator/(const Transformation& X, const Vector& c) {
   return a;
 }
 
-//! constructor
-Transformation::Transformation() { setZero(); }
-Transformation::Transformation(bool noInit) { if(!noInit) setZero(); }
-
 //! copy operator
 //Transformation& Transformation::operator=(const Transformation& f){
 //  p=f.p; v=f.v; r=f.r; w=f.w; /*a=f.a; b=f.b; s=f.s;*/ return *this; }
@@ -870,10 +896,11 @@ Transformation& Transformation::setText(const char* txt) { read(MT::String(txt)(
 //Transformation& Transformation::set(istream &is){ setZero(); read(is); return *this; }
 
 //! resets the position to origin, rotation to identity, velocities to zero, scale to unit
-void Transformation::setZero() {
+Transformation& Transformation::setZero() {
   memset(this, 0, sizeof(Transformation) );
   rot.w=1.;
   zeroVels = true;
+  return *this;
 }
 
 //! randomize the frame
@@ -887,7 +914,7 @@ void Transformation::setRandom() {
   }
 }
 
-/*!\brief moves the frame according to the current velocities \c v and \c w
+/** \brief moves the frame according to the current velocities \c v and \c w
     and the time span \c time (if time is given in seconds, v has
     dimension units/sec, and w has dimension rad/sec) */
 /*void Transformation::step(double time){
@@ -942,6 +969,11 @@ void Transformation::addRelativeAngVelocityRad(double wx, double wy, double wz) 
   zeroVels = false;
 }
 
+//! rotate the turtle orientation
+void Transformation::addRelativeRotation(const Quaternion& q) {
+  rot=rot*q;
+}
+
 //! rotate the turtle orientation by an angle (given in DEGREE) around the vector (x, y, z) (given relative to the current orientation)
 void Transformation::addRelativeRotationDeg(double degree, double x, double y, double z) {
   Quaternion R;
@@ -963,13 +995,13 @@ void Transformation::addRelativeRotationQuat(double s, double x, double y, doubl
   rot=rot*R;
 }
 
-/*!\brief transform the turtle into the frame f,
+/** \brief transform the turtle into the frame f,
     which is interpreted RELATIVE to the current frame
     (new = f * old) */
 void Transformation::appendTransformation(const Transformation& f) {
   if(zeroVels && f.zeroVels){
-    pos += rot*f.pos;
-    rot = rot*f.rot;
+    if(!f.pos.isZero()) pos += rot*f.pos;
+    if(!f.rot.isZero()) rot = rot*f.rot;
   }else{
     //Vector P(r*(s*f.p)); //relative offset in global coords
     //Vector V(r*(s*f.v)); //relative vel in global coords
@@ -1007,22 +1039,6 @@ void Transformation::appendInvTransformation(const Transformation& f) {
     pos -= P;
     zeroVels = false;
   }
-}
-
-//! new = old * f
-void Transformation::prependTransformation(const Transformation& f) {
-  Transformation newf;
-  newf=f;
-  newf.appendTransformation(*this);
-  *this=newf;
-}
-
-//! new = old * f^{-1}
-void Transformation::prependInvTransformation(const Transformation& f) {
-  Transformation newf;
-  newf.setInverse(f);
-  newf.appendTransformation(*this);
-  *this=newf;
 }
 
 //! this = f^{-1}
@@ -1152,6 +1168,7 @@ void Transformation::read(std::istream& is) {
         case 'q': is>>PARSE("(")>>x[0]>>x[1]>>x[2]>>x[3]>>PARSE(")"); addRelativeRotationQuat(x[0], x[1], x[2], x[3]); break;
         case 'r': is>>PARSE("(")>>x[0]>>x[1]>>x[2]>>x[3]>>PARSE(")"); addRelativeRotationRad(x[0], x[1], x[2], x[3]); break;
         case 'd': is>>PARSE("(")>>x[0]>>x[1]>>x[2]>>x[3]>>PARSE(")"); addRelativeRotationDeg(x[0], x[1], x[2], x[3]); break;
+        case 'E': is>>PARSE("(")>>x[0]>>x[1]>>x[2]>>PARSE(")"); addRelativeRotation(Quaternion().setRpy(x[0], x[1], x[2])); break;
         case 'v': is>>PARSE("(")>>x[0]>>x[1]>>x[2]>>PARSE(")");       addRelativeVelocity(x[0], x[1], x[2]); break;
         case 'w': is>>PARSE("(")>>x[0]>>x[1]>>x[2]>>PARSE(")");       addRelativeAngVelocityRad(x[0], x[1], x[2]); break;
           //case 's': is>>PARSE("(")>>x[0]>>PARSE(")");                   scale(x[0]); break;
@@ -1387,7 +1404,7 @@ void ors::Mesh::setCappedCylinder(double r, double l, uint fineness) {
   translate(0, 0, -.5*l);
 }
 
-/*!\brief add triangles according to the given grid; grid has to be a 2D
+/** \brief add triangles according to the given grid; grid has to be a 2D
   Array, the elements of which are indices referring to vertices in
   the vertex list (V) */
 void ors::Mesh::setGrid(uint X, uint Y) {
@@ -1481,7 +1498,7 @@ void ors::Mesh::makeConvexHull() {
 }
 
 
-/*!\brief calculate the normals of all triangles (Tn) and the average
+/** \brief calculate the normals of all triangles (Tn) and the average
   normals of the vertices (N); average normals are averaged over
   all adjacent triangles that are in the triangle list or member of
   a strip */
@@ -1505,7 +1522,7 @@ void ors::Mesh::computeNormals() {
   for(i=0; i<Vn.d0; i++) { d=(Vector*)&Vn(i, 0); d->normalize(); }
 }
 
-/*!\brief add triangles according to the given grid; grid has to be a 2D
+/** \brief add triangles according to the given grid; grid has to be a 2D
   Array, the elements of which are indices referring to vertices in
   the vertex list (V) */
 /*void ors::Mesh::gridToTriangles(const uintA &grid){
@@ -1534,7 +1551,7 @@ void ors::Mesh::computeNormals() {
   }
 }*/
 
-/*!\brief add strips according to the given grid (sliced in strips along
+/** \brief add strips according to the given grid (sliced in strips along
   the x-axis (the first index)); grid has to be a 2D Array, the
   elements of which are indices referring to vertices in the vertex
   list (V) */
@@ -1561,7 +1578,7 @@ void ors::Mesh::computeNormals() {
   }
 }*/
 
-/*!\brief add strips according to the given grid (sliced in strips along
+/** \brief add strips according to the given grid (sliced in strips along
   the x-axis (the first index)); it is assumed that the vertices in
   the list V linearly correspond to points in the XxY grid */
 /*void ors::Mesh::gridToStrips(uint X, uint Y){
@@ -1614,7 +1631,7 @@ void permuteVertices(ors::Mesh& m, uintA& p) {
   m.T=y;
 }
 
-/*!\brief delete all void triangles (with vertex indices (0, 0, 0)) and void
+/** \brief delete all void triangles (with vertex indices (0, 0, 0)) and void
   vertices (not used for triangles or strips) */
 void ors::Mesh::deleteUnusedVertices() {
   if(!V.N) return;
@@ -1645,7 +1662,7 @@ bool COMP(uint i, uint j) {
   return r;
 }
 
-/*!\brief delete all void triangles (with vertex indices (0, 0, 0)) and void
+/** \brief delete all void triangles (with vertex indices (0, 0, 0)) and void
   vertices (not used for triangles or strips) */
 void ors::Mesh::fuseNearVertices(double tol) {
   if(!V.N) return;
@@ -2122,7 +2139,7 @@ void ors::Mesh::writePLY(const char *fn, bool bin) {
 void ors::Mesh::readPLY(const char *fn) {
   struct PlyFace {    unsigned char nverts;  int *verts; };
   struct Vertex {    double x,  y,  z ;  };
-  uint _nverts, _ntrigs;
+  uint _nverts=0, _ntrigs=0;
   Vertex   *_vertices   ;  /**< vertex   buffer */
 
   PlyProperty vert_props[]  = { /* list of property information for a PlyVertex */
@@ -2205,44 +2222,65 @@ void ors::Mesh::readPLY(const char *fn ){ NICO }
 void ors::Mesh::readStlFile(const char* filename) {
   ifstream is;
   MT::open(is, filename);
-  MT::String name;
-  is >>PARSE("solid") >>name;
-  uint i, k=0, k0;
-  double x, y, z;
-  cout <<"reading STL file '" <<filename <<"' object name '" <<name <<"'..." <<endl;
-  V.resize(10000);
-  //1st pass
-  for(i=0, k=0;; i++) {
-    k0=k;
-    if(k>V.N-10) V.resizeCopy(2*V.N);
-    if(!(i%100)) cout <<"\r" <<i <<' ' <<i*7;
-    if(MT::peerNextChar(is)!='f') break;
-    is >>PARSE("facet");
-    is >>PARSE("normal") >>x >>y >>z;  MT::skip(is);
-    is >>PARSE("outer") >>PARSE("loop");      MT::skip(is);
-    is >>PARSE("vertex")>>V(k++); is>>V(k++); is>>V(k++);   MT::skip(is);
-    is >>PARSE("vertex")>>V(k++); is>>V(k++); is>>V(k++);   MT::skip(is);
-    is >>PARSE("vertex")>>V(k++); is>>V(k++); is>>V(k++);   MT::skip(is);
-    is >>PARSE("endloop");             MT::skip(is);
-    is >>PARSE("endfacet");            MT::skip(is);
-    if(!is.good()) {
-      MT_MSG("reading error - skipping facet " <<i <<" (line " <<i*7+2 <<")");
-      is.clear();
-      cout <<1 <<endl;
-      MT::skipUntil(is, "endfacet");
-      cout <<2 <<endl;
-      k=k0;
+  //first check if binary
+  if(MT::parse(is, "solid", true)){ //is ascii
+    MT::String name;
+    is >>name;
+    uint i, k=0, k0;
+    double x, y, z;
+    cout <<"reading STL file '" <<filename <<"' object name '" <<name <<"'..." <<endl;
+    V.resize(10000);
+    //1st pass
+    for(i=0, k=0;; i++) {
+      k0=k;
+      if(k>V.N-10) V.resizeCopy(2*V.N);
+      if(!(i%100)) cout <<"\r" <<i <<' ' <<i*7;
+      if(MT::peerNextChar(is)!='f') break;
+      is >>PARSE("facet");
+      is >>PARSE("normal") >>x >>y >>z;  MT::skip(is);
+      is >>PARSE("outer") >>PARSE("loop");      MT::skip(is);
+      is >>PARSE("vertex")>>V(k++); is>>V(k++); is>>V(k++);   MT::skip(is);
+      is >>PARSE("vertex")>>V(k++); is>>V(k++); is>>V(k++);   MT::skip(is);
+      is >>PARSE("vertex")>>V(k++); is>>V(k++); is>>V(k++);   MT::skip(is);
+      is >>PARSE("endloop");             MT::skip(is);
+      is >>PARSE("endfacet");            MT::skip(is);
+      if(!is.good()) {
+        MT_MSG("reading error - skipping facet " <<i <<" (line " <<i*7+2 <<")");
+        is.clear();
+        cout <<1 <<endl;
+        MT::skipUntil(is, "endfacet");
+        cout <<2 <<endl;
+        k=k0;
+      }
     }
+    is >>PARSE("endsolid");
+    if(!is.good()) MT_MSG("couldn't read STL end tag (line" <<i*7+2);
+    cout <<"... STL file read: #tris=" <<i <<" #lines=" <<i*7+2 <<endl;
+    CHECK(!(k%9), "not mod 9..");
+    V.resizeCopy(k/3, 3);
+    T.resize(k/9, 3);
+    for(i=0; i<T.N; i++) { T.elem(i)=i; }
+  }else{ //is binary
+    is.clear();
+    is.seekg(0, std::ios::beg);
+    char header[80];
+    is.read(header, 80);
+    uint ntri;
+    is.read((char*)&ntri, sizeof(ntri));
+    T.resize(ntri,3);
+    floatA Vfloat(3*ntri,3);
+    float normal[3];
+    uint16 att;
+    for(uint i=0;i<ntri;i++){
+      is.read((char*)&normal, 3*Vfloat.sizeT);
+      is.read((char*)&Vfloat(3*i,0), 9*Vfloat.sizeT);
+      T(i,0)=3*i+0;  T(i,1)=3*i+1;  T(i,2)=3*i+2;
+      is.read((char*)&att, 2);
+      CHECK(att==0,"");
+    }
+    copy(V,Vfloat);
   }
-  is >>PARSE("endsolid");
-  if(!is.good()) MT_MSG("couldn't read STL end tag (line" <<i*7+2);
-  cout <<"... STL file read: #tris=" <<i <<" #lines=" <<i*7+2 <<endl;
-  CHECK(!(k%9), "not mod 9..");
-  V.resizeCopy(k/3, 3);
-  T.resize(k/9, 3);
-  for(i=0; i<T.N; i++) { T.elem(i)=i; }
 }
-
 /*void ors::Mesh::getOBJ(char* filename){
   if(!glm){
   glm = glmReadOBJ(filename);
@@ -2264,7 +2302,7 @@ uint& Tti(uint, uint) { static uint dummy; return dummy; } //texture index
 
 
 // dm 07.06.2006
-/*!\ initialises the ascii-obj file "filename"*/
+/**\ initialises the ascii-obj file "filename"*/
 void ors::Mesh::readObjFile(const char* filename) {
   FILE* file;
 
@@ -2676,7 +2714,12 @@ ors::Body::Body(Graph& G, const Body* copyBody) {
   G.bodies.append(this);
 }
 
-ors::Body::~Body() { reset(); }
+ors::Body::~Body() {
+  reset();
+  listDelete(inLinks);
+  listDelete(outLinks);
+  listDelete(shapes);
+}
 
 void ors::Body::reset() {
   listDelete(ats);
@@ -2744,11 +2787,10 @@ void ors::Body::parseAts() {
 }
 
 void ors::Body::write(std::ostream& os) const {
-  os <<"pose=<T " <<X <<" > ";
+  if(!X.isZero()) os <<"pose=<T " <<X <<" > ";
   uint i; Item *a;
   for_list(i, a, ats)
       if(a->keys(0)!="X" && a->keys(0)!="pose") os <<*a <<' ';
-  //listWrite(os);
 }
 
 void ors::Body::read(std::istream& is) {
@@ -2782,6 +2824,11 @@ ors::Shape::Shape(Graph& G, Body *b, const Shape *copyShape) {
   ibody=b->index;
 }
 
+ors::Shape::~Shape(){
+  reset();
+  body->shapes.removeValue(this);
+}
+
 void ors::Shape::parseAts() {
   double d;
   arr x;
@@ -2809,11 +2856,10 @@ void ors::Shape::reset() {
 
 void ors::Shape::write(std::ostream& os) const {
   os <<"type=" <<type <<' ';
-  os <<"rel=<T " <<rel <<" > ";
+  if(!rel.isZero()) os <<"rel=<T " <<rel <<" > ";
   uint i; Item *a;
   for_list(i,a,ats)
       if(a->keys(0)!="rel" && a->keys(0)!="type") os <<*a <<' ';
-  //listWrite(ats, os);
 }
 
 void ors::Shape::read(std::istream& is) {
@@ -2854,6 +2900,12 @@ ors::Joint::Joint(Graph& G, Body *f, Body *t, const Joint* copyJoint) {
   t-> inLinks.append(this);
 }
 
+ors::Joint::~Joint() {
+  reset();
+  from->outLinks.removeValue(this);
+  to->inLinks.removeValue(this);
+}
+
 void ors::Joint::parseAts() {
   //interpret some of the attributes
   double d;
@@ -2865,11 +2917,20 @@ void ors::Joint::parseAts() {
   ats.getValue<Transformation>(Q, "Q");
   ats.getValue<Transformation>(Q, "q");
   ats.getValue<Transformation>(X, "X");
-  if(ats.getValue<double>(d, "type")) type=(JointType)d; else type=JT_hinge;
+  if(ats.getValue<double>(d, "type")) type=(JointType)d; else type=JT_hingeX;
+  arr axis;
+  ats.getValue<arr>(axis, "axis");
+  if(axis.N){
+    CHECK(axis.N==3,"");
+    Vector ax(axis);
+    Quaternion rot;  rot.setDiff(Vector_x, ax);
+    A.rot = A.rot * rot;
+    B.rot = -rot * B.rot;
+  }
 }
 
 uint ors::Joint::qDim(){
-  if(type>=JT_hinge && type<=JT_transZ) return 1;
+  if(type>=JT_hingeX && type<=JT_transZ) return 1;
   if(type==JT_trans3) return 3;
   if(type==JT_universal) return 2;
   if(type==JT_glue || type==JT_fixed) return 0;
@@ -2878,15 +2939,15 @@ uint ors::Joint::qDim(){
 }
 
 void ors::Joint::write(std::ostream& os) const {
-  os <<"from=<T " <<A <<" > ";
-  os <<"to=<T " <<B <<" > ";
+  if(!A.isZero()) os <<"from=<T " <<A <<" > ";
+  if(!B.isZero()) os <<"to=<T " <<B <<" > ";
   if(!Q.isZero()) os <<"q=<T " <<Q <<" > ";
   uint i; Item *a;
   for_list(i,a,ats)
-  if(a->keys(0)!="A" && a->keys(0)!="from"
-      && a->keys(0)!="B" && a->keys(0)!="to"
-      && a->keys(0)!="Q" && a->keys(0)!="q") os <<*a <<' ';
-  //listWrite(ats, os);
+      if(a->keys(0)!="A" && a->keys(0)!="from"
+         && a->keys(0)!="axis" //because this was subsumed in A during read
+         && a->keys(0)!="B" && a->keys(0)!="to"
+         && a->keys(0)!="Q" && a->keys(0)!="q") os <<*a <<' ';
 }
 
 void ors::Joint::read(std::istream& is) {
@@ -2908,7 +2969,7 @@ ors::Proxy::Proxy() {
 
 void ors::Graph::init(const char* filename) {
   MT::load(*this, filename, true);
-  calcBodyFramesFromJoints();
+  //calcBodyFramesFromJoints();
 }
 
 void ors::Graph::clear() {
@@ -2966,19 +3027,17 @@ void ors::Graph::copyShapesAndJoints(const Graph& G) {
   calcBodyFramesFromJoints();
 }
 
-/*!\brief transforms (e.g., translates or rotates) the joints coordinate system):
+/** \brief transforms (e.g., translates or rotates) the joints coordinate system):
   `adds' the transformation f to A and its inverse to B */
 void ors::Graph::transformJoint(ors::Joint *e, const ors::Transformation &f) {
-  e->A.appendTransformation(f);
-  e->B.prependInvTransformation(f);
+  e->A = e->A * f;
+  e->B = -f * e->B;
 }
 
 void ors::Graph::makeLinkTree() {
-  uint i, k;  Joint *j, *j2;  Shape *s;  Body *b;
-  for_list(i, j, joints) {
-    b = j->to;
-    for_list(k, s, b->shapes)  s->rel.prependTransformation(j->B);
-    for_list(k, j2, b->outLinks) j2->A.prependTransformation(j->B);
+  for_list_(Joint, j, joints) {
+    for_list_(Shape, s, j->to->shapes)  s->rel = j->B * s->rel;
+    for_list_(Joint, j2, j->to->outLinks) j2->A = j->B * j2->A;
     j->B.setZero();
   }
   isLinkTree=true;
@@ -2990,7 +3049,7 @@ void ors::Graph::getGyroscope(ors::Vector& up) const {
   up=bodies(0)->X.rot*up;
 }
 
-/*!\brief KINEMATICS: given the (absolute) frames of root nodes and the relative frames
+/** \brief KINEMATICS: given the (absolute) frames of root nodes and the relative frames
     on the edges, this calculates the absolute frames of all other nodes (propagating forward
     through trees and testing consistency of loops). */
 void ors::Graph::calcBodyFramesFromJoints() {
@@ -2999,14 +3058,14 @@ void ors::Graph::calcBodyFramesFromJoints() {
   uint i, j;
   ors::Transformation f;
   for_list(j, n, bodies) {
-    CHECK(n->inLinks.N<=1,"loopy geometry - code missing: check if n->X and f are consistent!");
+    CHECK(n->inLinks.N<=1,"loopy geometry - body '" <<n->name <<"' has more than 1 input link");
     for_list(i, e, n->inLinks) {
       f = e->from->X;
       f.appendTransformation(e->A);
       e->X = f;
-      if(e->type==JT_hinge || e->type==JT_transX)  e->X.rot.getX(e->axis);
-      if(e->type==JT_transY) e->X.rot.getY(e->axis);
-      if(e->type==JT_transZ) e->X.rot.getZ(e->axis);
+      if(e->type==JT_hingeX || e->type==JT_transX)  e->X.rot.getX(e->axis);
+      if(e->type==JT_hingeY || e->type==JT_transY)  e->X.rot.getY(e->axis);
+      if(e->type==JT_hingeZ || e->type==JT_transZ)  e->X.rot.getZ(e->axis);
       f.appendTransformation(e->Q);
       if(!isLinkTree) f.appendTransformation(e->B);
       n->X=f;
@@ -3016,19 +3075,10 @@ void ors::Graph::calcBodyFramesFromJoints() {
 }
 
 void ors::Graph::fillInRelativeTransforms() {
-  Joint *e;
-  uint i;
-  ors::Transformation f;
-  for_list(i, e, joints) {
+  for_list_(Joint, e, joints) {
     if(!e->X.isZero() && e->A.isZero() && e->B.isZero()){
       e->A.setDifference(e->from->X, e->X);
       e->B.setDifference(e->X, e->to->X);
-      ors::Transformation t=e->from->X;
-      t.appendTransformation(e->A);
-      cout <<e->from->X <<e->X <<e->to->X <<endl;
-      cout <<t;
-      t.appendTransformation(e->B);
-      cout <<t <<endl;
     }
   }
 }
@@ -3046,7 +3096,7 @@ void ors::Graph::calcShapeFramesFromBodies() {
   }
 }
 
-/*!\brief given the absolute frames of all nodes and the two rigid (relative)
+/** \brief given the absolute frames of all nodes and the two rigid (relative)
     frames A & B of each edge, this calculates the dynamic (relative) joint
     frame X for each edge (which includes joint transformation and errors) */
 void ors::Graph::calcJointsFromBodyFrames() {
@@ -3060,7 +3110,7 @@ void ors::Graph::calcJointsFromBodyFrames() {
   }
 }
 
-/*!\brief in all edge frames: remove any displacements, velocities and non-x rotations.
+/** \brief in all edge frames: remove any displacements, velocities and non-x rotations.
     After this, edges and nodes are not coherent anymore. You might want to call
     calcBodyFramesFromJoints() */
 void ors::Graph::clearJointErrors() {
@@ -3075,7 +3125,7 @@ void ors::Graph::clearJointErrors() {
   }
 }
 
-/*!\brief invert all velocity variables of all frames */
+/** \brief invert all velocity variables of all frames */
 void ors::Graph::invertTime() {
   Body *n;
   Joint *e;
@@ -3112,14 +3162,14 @@ void ors::Graph::computeNaturalQmetric(arr& W) {
   if(Qlin.N) W = ~Qlin*W*Qlin;
 }
 
-/*!\brief revert the topological orientation of a joint (edge),
+/** \brief revert the topological orientation of a joint (edge),
    e.g., when choosing another body as root of a tree */
 void ors::Graph::revertJoint(ors::Joint *e) {
   cout <<"reverting edge (" <<e->from->name <<' ' <<e->to->name <<")" <<endl;
   //revert
   uint i=e->ifrom;  e->ifrom=e->ito;  e->ito=i;
   graphMakeLists(bodies, joints);
-  ors::Transformation f;     //!< transformation from parent body to joint (attachment, usually static)
+  ors::Transformation f;     ///< transformation from parent body to joint (attachment, usually static)
   f=e->A;
   e->A.setInverse(e->B);
   e->B.setInverse(f);
@@ -3127,7 +3177,7 @@ void ors::Graph::revertJoint(ors::Joint *e) {
   e->Q.setInverse(f);
 }
 
-/*!\brief re-orient all joints (edges) such that n becomes
+/** \brief re-orient all joints (edges) such that n becomes
   the root of the configuration */
 void ors::Graph::reconfigureRoot(Body *n) {
   MT::Array<Body*> list, list2;
@@ -3157,7 +3207,7 @@ void ors::Graph::reconfigureRoot(Body *n) {
   graphTopsort(bodies, joints);
 }
 
-/*!\brief returns the joint (actuator) dimensionality */
+/** \brief returns the joint (actuator) dimensionality */
 uint ors::Graph::getJointStateDimension(bool internal) const {
   Joint *e;
   uint i;
@@ -3202,7 +3252,7 @@ void ors::Graph::zeroGaugeJoints() {
   }
 }
 
-/*!\brief returns the joint state vectors separated in positions and
+/** \brief returns the joint state vectors separated in positions and
   velocities */
 void ors::Graph::getJointState(arr& x, arr& v) const {
   Joint *e;
@@ -3215,16 +3265,22 @@ void ors::Graph::getJointState(arr& x, arr& v) const {
 
   for_list(i, e, joints) {
     switch(e->type) {
-      case JT_hinge:
-        //angle
-        e->Q.rot.getRad(x(n), rotv);
-        if(x(n)>MT_PI) x(n)-=MT_2PI;
-        if(rotv*Vector_x<0.) x(n)=-x(n);  //MT_2PI-x(i);
-        //velocity
-        v(n)=e->Q.angvel.length();
-        if(e->Q.angvel*Vector_x<0.) v(n)=-v(n);
-        n++;
-        break;
+    case JT_hingeX:
+    case JT_hingeY:
+    case JT_hingeZ: {
+      //angle
+      e->Q.rot.getRad(x(n), rotv);
+      if(x(n)>MT_PI) x(n)-=MT_2PI;
+      if(e->type==JT_hingeX && rotv*Vector_x<0.) x(n)=-x(n);  //MT_2PI-x(i);
+      if(e->type==JT_hingeY && rotv*Vector_y<0.) x(n)=-x(n);  //MT_2PI-x(i);
+      if(e->type==JT_hingeZ && rotv*Vector_z<0.) x(n)=-x(n);  //MT_2PI-x(i);
+      //velocity
+      v(n)=e->Q.angvel.length();
+      if(e->type==JT_hingeX && e->Q.angvel*Vector_x<0.) v(n)=-v(n);
+      if(e->type==JT_hingeY && e->Q.angvel*Vector_y<0.) v(n)=-v(n);
+      if(e->type==JT_hingeZ && e->Q.angvel*Vector_z<0.) v(n)=-v(n);
+      n++;
+    } break;
       case JT_universal:
         //angle
         rot = e->Q.rot;
@@ -3277,10 +3333,10 @@ void ors::Graph::getJointState(arr& x, arr& v) const {
   }
 }
 
-/*!\brief returns the joint positions only */
+/** \brief returns the joint positions only */
 void ors::Graph::getJointState(arr& x) const { arr v; getJointState(x, v); }
 
-/*!\brief sets the joint state vectors separated in positions and
+/** \brief sets the joint state vectors separated in positions and
   velocities */
 void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErrors) {
   Joint *e;
@@ -3303,7 +3359,7 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
 
   for_list(i, e, joints) {
     switch(e->type) {
-      case JT_hinge:
+      case JT_hingeX:
         //angle
         e->Q.rot.setRadX(q(n));
 
@@ -3331,6 +3387,25 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
         }
         n++;
         break;
+    case JT_hingeY:{
+      e->Q.rot.setRadY(q(n));
+      if(&_v) e->Q.angvel.set(0., v(n), 0.);
+      if(clearJointErrors) {
+        e->Q.pos.setZero();
+        e->Q.vel.setZero();
+      }
+      n++;
+    } break;
+    case JT_hingeZ:{
+      e->Q.rot.setRadZ(q(n));
+      if(&_v) e->Q.angvel.set(0., 0., v(n));
+      if(clearJointErrors) {
+        e->Q.pos.setZero();
+        e->Q.vel.setZero();
+      }
+      n++;
+    } break;
+
 
       case JT_universal:
         //angle
@@ -3423,7 +3498,7 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
   }
 }
 
-/*!\brief sets the joint angles with velocity zero - e.g. for kinematic
+/** \brief sets the joint angles with velocity zero - e.g. for kinematic
   simulation only */
 void ors::Graph::setJointState(const arr& x, bool clearJointErrors) {
   setJointState(x, NoArr, clearJointErrors);
@@ -3439,14 +3514,14 @@ void ors::Graph::setJointState(const arr& x, bool clearJointErrors) {
 // David Baraff: "Linear-Time Dynamics using Lagrange Multipliers"
 // Roy Featherstone, David Orin: "Robot Dynamics: Equations and Algorithms"
 
-/*!\brief return the position \f$x = \phi_i(q)\f$ of the i-th body (3 vector) */
+/** \brief return the position \f$x = \phi_i(q)\f$ of the i-th body (3 vector) */
 void ors::Graph::kinematicsPos(arr& y, uint a, ors::Vector *rel) const {
   ors::Vector pos=bodies(a)->X.pos;
   if(rel) pos += bodies(a)->X.rot*(*rel);
   y = ARRAY(pos);
 }
 
-/*!\brief return the jacobian \f$J = \frac{\partial\phi_i(q)}{\partial q}\f$ of the position
+/** \brief return the jacobian \f$J = \frac{\partial\phi_i(q)}{\partial q}\f$ of the position
   of the i-th body (3 x n tensor)*/
 void ors::Graph::jacobianPos(arr& J, uint a, ors::Vector *rel) const {
   uint i;
@@ -3476,7 +3551,7 @@ void ors::Graph::jacobianPos(arr& J, uint a, ors::Vector *rel) const {
     CHECK(ei->type!=JT_glue && ei->type!=JT_fixed, "resort joints so that fixed and glued are last");
 
 
-    if(ei->type==JT_hinge){
+    if(ei->type==JT_hingeX || ei->type==JT_hingeY || ei->type==JT_hingeZ){
       tmp = ei->axis ^ (pos-ei->X.pos);
       J(0, i) = tmp.x;
       J(1, i) = tmp.y;
@@ -3498,7 +3573,7 @@ void ors::Graph::jacobianPos(arr& J, uint a, ors::Vector *rel) const {
   if(Qlin.N) J=J*Qlin;
 }
 
-/*!\brief return the Hessian \f$H = \frac{\partial^2\phi_i(q)}{\partial q\partial q}\f$ of the position
+/** \brief return the Hessian \f$H = \frac{\partial^2\phi_i(q)}{\partial q\partial q}\f$ of the position
   of the i-th body (3 x n x n tensor) */
 void ors::Graph::hessianPos (arr& H, uint a, ors::Vector *rel) const {
   uint i, j;
@@ -3524,19 +3599,19 @@ void ors::Graph::hessianPos (arr& H, uint a, ors::Vector *rel) const {
     while(ej) {
       j=ej->qIndex;
 
-      if(ei->type==JT_hinge && ej->type==JT_hinge){
+      if(ei->type>=JT_hingeX && ei->type<=JT_hingeZ && ej->type>=JT_hingeX && ej->type<=JT_hingeZ){ //both are hinges
         r = ej->axis ^(ei->axis ^(pos-ei->X.pos));
         H(0, i, j) = H(0, j, i) = r.x;
         H(1, i, j) = H(1, j, i) = r.y;
         H(2, i, j) = H(2, j, i) = r.z;
       }
-      if(ei->type==JT_transX && ej->type==JT_hinge){
+      if(ei->type>=JT_transX && ei->type<=JT_transZ && ej->type>=JT_hingeX && ej->type<=JT_hingeZ){ //i=trans, j=hinge
         r = ei->axis ^ ej->axis;
         H(0, i, j) = H(0, j, i) = r.x;
         H(1, i, j) = H(1, j, i) = r.y;
         H(2, i, j) = H(2, j, i) = r.z;
       }
-      if(ei->type==JT_trans3 && ej->type==JT_hinge){
+      if(ei->type==JT_trans3 && ej->type>=JT_hingeX && ej->type<=JT_hingeZ){ //i=trans3, j=hinge
         Matrix R,A;
         ei->X.rot.getMatrix(R.p());
         A.setSkew(ej->axis);
@@ -3551,7 +3626,7 @@ void ors::Graph::hessianPos (arr& H, uint a, ors::Vector *rel) const {
         H(1, i+2, j) = H(1, j, i+2) = R.m12;
         H(2, i+2, j) = H(2, j, i+2) = R.m22;
       }
-      if(ei->type==JT_hinge && (ej->type==JT_transX || ej->type==JT_transY || ej->type==JT_transZ || ej->type==JT_trans3)){
+      if(ei->type>=JT_hingeX && ei->type<=JT_hingeZ && ej->type>=JT_transX && ej->type<=JT_trans3){ //i=hinge, j=trans
         //nothing! Hessian is zero (ej is closer to root than ei)
       }
 
@@ -3602,14 +3677,13 @@ void ors::Graph::jacobianVec(arr& J, uint a, ors::Vector *vec) const {
     }
     CHECK(ei->type!=JT_glue && ei->type!=JT_fixed, "resort joints so that fixed and glued are last");
 
-    if(ei->type==JT_hinge){
-
+    if(ei->type>=JT_hingeX && ei->type<=JT_hingeZ){ //i=hinge
       r = ei->axis ^ ta;
       J(0, i) = r.x;
       J(1, i) = r.y;
       J(2, i) = r.z;
     }
-    if(ei->type==JT_transX || ei->type==JT_transY || ei->type==JT_transZ || ei->type==JT_trans3){
+    if(ei->type>=JT_transX && ei->type<=JT_trans3){ //i=trans
       //J(0, i) = J(1, i) = J(2, i) = 0.; /was set zero already
     }
 
@@ -3664,7 +3738,7 @@ void ors::Graph::jacobianR(arr& J, uint a) const {
   if(Qlin.N) J=J*Qlin;
 }
 
-/*!\brief return the configuration's inertia tensor $M$ (n x n tensor)*/
+/** \brief return the configuration's inertia tensor $M$ (n x n tensor)*/
 void ors::Graph::inertia(arr& M) {
   uint a, i, j;
   ors::Transformation Xa, Xi, Xj;
@@ -3726,7 +3800,7 @@ void ors::Graph::equationOfMotion(arr& M, arr& F, const arr& qd) {
   ors::equationOfMotion(M, F, tree, qd);
 }
 
-/*!\brief return the joint accelerations \f$\ddot q\f$ given the
+/** \brief return the joint accelerations \f$\ddot q\f$ given the
   joint torques \f$\tau\f$ (computed via Featherstone's Articulated Body Algorithm in O(n)) */
 void ors::Graph::dynamics(arr& qdd, const arr& qd, const arr& tau) {
   static ors::LinkTree tree;
@@ -3738,7 +3812,7 @@ void ors::Graph::dynamics(arr& qdd, const arr& qd, const arr& tau) {
   ors::fwdDynamics_MF(qdd, tree, qd, tau);
 }
 
-/*!\brief return the necessary joint torques \f$\tau\f$ to achieve joint accelerations
+/** \brief return the necessary joint torques \f$\tau\f$ to achieve joint accelerations
   \f$\ddot q\f$ (computed via the Recursive Newton-Euler Algorithm in O(n)) */
 void ors::Graph::inverseDynamics(arr& tau, const arr& qd, const arr& qdd) {
   static ors::LinkTree tree;
@@ -3766,7 +3840,7 @@ double ors::Graph::getJointErrors() const {
   return ::sqrt(err);
 }
 
-/*!\brief checks if all names of the bodies are disjoint */
+/** \brief checks if all names of the bodies are disjoint */
 bool ors::Graph::checkUniqueNames() const {
   Body *n, *m;
   uint i, j;
@@ -3833,14 +3907,14 @@ ors::Joint* ors::Graph::getJointByBodyNames(const char* from, const char* to) co
   return graphGetEdge<Body, Joint>(f, t);
 }
 
-/*!\brief creates uniques names by prefixing the node-index-number to each name */
+/** \brief creates uniques names by prefixing the node-index-number to each name */
 void ors::Graph::prefixNames() {
   Body *n;
   uint j;
   for_list(j, n, bodies) n->name=STRING(n->index<< n->name);
 }
 
-/*!\brief prototype for \c operator<< */
+/** \brief prototype for \c operator<< */
 void ors::Graph::write(std::ostream& os) const {
   Body *n;
   Joint *e;
@@ -3870,7 +3944,7 @@ void ors::Graph::read(const char* string) {
   read(is);  
 }
 
-/*!\brief prototype for \c operator>> */
+/** \brief prototype for \c operator>> */
 void ors::Graph::read(std::istream& is) {
   uint i; Item *it;
   KeyValueGraph G;
@@ -3919,6 +3993,8 @@ void ors::Graph::read(std::istream& is) {
 
     Body *from=listFindByName(bodies, it->parents(0)->keys(1));
     Body *to=listFindByName(bodies, it->parents(1)->keys(1));
+    CHECK(from,"JOINT: from '" <<it->parents(0)->keys(1) <<"' does not exist ["<<*it <<"]");
+    CHECK(to,"JOINT: to '" <<it->parents(1)->keys(1) <<"' does not exist ["<<*it <<"]");
     Joint *j=new Joint(*this, from, to);
     j->ats = *it->value<KeyValueGraph>();
     j->parseAts();
@@ -4035,7 +4111,7 @@ void ors::Graph::sortProxies(bool deleteMultiple) {
   }
 }
 
-/*!\brief dump a list body pairs for which the upper conditions hold */
+/** \brief dump a list body pairs for which the upper conditions hold */
 void ors::Graph::reportGlue(std::ostream *os) {
   uint i, A, B;
   Body *a, *b;
@@ -4073,7 +4149,7 @@ void ors::Graph::glueBodies(Body *f, Body *t) {
   e->B.setZero();
 }
 
-/*!\brief if two bodies touch, the are not yet connected, and one of them has
+/** \brief if two bodies touch, the are not yet connected, and one of them has
   the `glue' attribute, add a new edge of FIXED type between them */
 void ors::Graph::glueTouchingBodies() {
   uint i, A, B;
@@ -4163,8 +4239,55 @@ void ors::Graph::contactsToForces(double hook, double damp) {
 }
 
 //! measure (=scalar kinematics) for the contact cost summed over all bodies
+void ors::Graph::phiCollision(arr &y, arr& J, double margin) const {
+  y.resize(1);
+  y=0.;
+  uint i;
+  Shape *a, *b;
+  ors::Vector normal;
+  double cenMarg = 2.;
+  arr Jpos;
+  if(&J) J.resize(1, getJointStateDimension(false)).setZero();
+  for(i=0; i<proxies.N; i++) if(proxies(i)->d<margin) {
+    CHECK(proxies(i)->cenD<.8*cenMarg, "sorry I made assumption objects are not too large; rescale cenMarg");
+    a=shapes(proxies(i)->a); b=shapes(proxies(i)->b);
+
+    //costs
+    double d1 = 1.-proxies(i)->d/margin;
+    double d2 = 1.-proxies(i)->cenD/cenMarg;
+    //NORMALS ALWAYS GO FROM b TO a !!
+    y(0) += d1*d2;
+
+    //Jacobian
+    if(&J){
+      if(proxies(i)->d>0.){ //we have a gradient on pos only when outside
+        ors::Vector arel=a->X.rot/(proxies(i)->posA-a->X.pos);
+        ors::Vector brel=b->X.rot/(proxies(i)->posB-b->X.pos);
+        CHECK(proxies(i)->normal.isNormalized(), "proxy normal is not normalized");
+        arr posN; posN.referTo(proxies(i)->normal.p(), 3); posN.reshape(1, 3);
+
+        //grad on posA
+        jacobianPos(Jpos, a->body->index, &arel); J -= d2/margin*(posN*Jpos);
+        //grad on posA
+        jacobianPos(Jpos, b->body->index, &brel); J += d2/margin*(posN*Jpos);
+      }
+
+      ors::Vector arel=a->X.rot/(proxies(i)->cenA-a->X.pos);
+      ors::Vector brel=b->X.rot/(proxies(i)->cenB-b->X.pos);
+      CHECK(proxies(i)->cenN.isNormalized(), "proxy normal is not normalized");
+      arr cenN; cenN.referTo(proxies(i)->cenN.p(), 3); cenN.reshape(1, 3);
+
+      //grad on cenA
+      jacobianPos(Jpos, a->body->index, &arel); J -= d1/cenMarg*(cenN*Jpos);
+      //grad on cenB
+      jacobianPos(Jpos, b->body->index, &brel); J += d1/cenMarg*(cenN*Jpos);
+    }
+
+  }
+}
+
+#if 0 //obsolete:
 void ors::Graph::getContactMeasure(arr &x, double margin, bool linear) const {
-#if 0
   x.resize(1);
   x=0.;
   uint i;
@@ -4192,24 +4315,10 @@ void ors::Graph::getContactMeasure(arr &x, double margin, bool linear) const {
       if(!linear) x(0) += discount*d*d;
       else        x(0) += discount*d;
     }
-#else
-  x.resize(1);
-  x=0.;
-  uint i;
-  double cenMarg=2.;
-  //Shape *a, *b;
-  for(i=0; i<proxies.N; i++) if(proxies(i)->d<margin) {
-//      a=shapes(proxies(i)->a); b=shapes(proxies(i)->b);
-      //NORMALS ALWAYS GO FROM b TO a !!
-      x(0) += (1.-proxies(i)->d/margin) * (1.-proxies(i)->cenD/cenMarg);
-      CHECK(proxies(i)->cenD<.8*cenMarg, "sorry I made assumption objects are not too large; rescale cenMarg");
-    }
-#endif
 }
 
 //! gradient (=scalar Jacobian) of this contact cost
 double ors::Graph::getContactGradient(arr &grad, double margin, bool linear) const {
-#if 0
   ors::Vector normal;
   uint i;
   Shape *a, *b;
@@ -4255,48 +4364,8 @@ double ors::Graph::getContactGradient(arr &grad, double margin, bool linear) con
     }
 
   return cost;
-#else
-  ors::Vector normal;
-  uint i;
-  Shape *a, *b;
-  double cost=0.;
-  double cenMarg = 2.;
-  arr J;
-  grad.resize(1, getJointStateDimension(false));
-  grad.setZero();
-  for(i=0; i<proxies.N; i++) if(proxies(i)->d<margin) {
-    a=shapes(proxies(i)->a); b=shapes(proxies(i)->b);
-    double d1 = 1.-proxies(i)->d/margin;
-    double d2 = 1.-proxies(i)->cenD/cenMarg;
-    cost += d1*d2;
-
-    if(proxies(i)->d>0.){ //we have a gradient on pos only when outside
-      ors::Vector arel=a->X.rot/(proxies(i)->posA-a->X.pos);
-      ors::Vector brel=b->X.rot/(proxies(i)->posB-b->X.pos);
-      CHECK(proxies(i)->normal.isNormalized(), "proxy normal is not normalized");
-      arr posN; posN.referTo(proxies(i)->normal.p(), 3); posN.reshape(1, 3);
-
-      //grad on posA
-      jacobianPos(J, a->body->index, &arel); grad -= d2/margin*(posN*J);
-      //grad on posA
-      jacobianPos(J, b->body->index, &brel); grad += d2/margin*(posN*J);
-    }
-
-    ors::Vector arel=a->X.rot/(proxies(i)->cenA-a->X.pos);
-    ors::Vector brel=b->X.rot/(proxies(i)->cenB-b->X.pos);
-    CHECK(proxies(i)->cenN.isNormalized(), "proxy normal is not normalized");
-    arr cenN; cenN.referTo(proxies(i)->cenN.p(), 3); cenN.reshape(1, 3);
-
-    //grad on cenA
-    jacobianPos(J, a->body->index, &arel); grad -= d1/cenMarg*(cenN*J);
-    //grad on cenB
-    jacobianPos(J, b->body->index, &brel); grad += d1/cenMarg*(cenN*J);
-
-  }
-
-  return cost;
-#endif
 }
+#endif
 
 //! measure (=scalar kinematics) for the contact cost summed over all bodies
 void ors::Graph::getContactConstraints(arr& y) const {
@@ -4443,7 +4512,7 @@ void ors::Graph::getComGradient(arr &grad) const {
   grad/=M;
 }
 
-/*!\brief returns a k-dim vector containing the penetration depths of all bodies */
+/** \brief returns a k-dim vector containing the penetration depths of all bodies */
 void ors::Graph::getPenetrationState(arr &vec) const {
   vec.resize(bodies.N);
   vec.setZero();
@@ -4466,7 +4535,7 @@ ors::Proxy* ors::Graph::getContact(uint a, uint b) const {
   return NULL;
 }
 
-/*!\brief a vector describing the incoming forces (penetrations) on one object */
+/** \brief a vector describing the incoming forces (penetrations) on one object */
 void ors::Graph::getGripState(arr& grip, uint j) const {
   ors::Vector d, p;
   ors::Vector sumOfD; sumOfD.setZero();
@@ -4538,7 +4607,7 @@ void ors::Graph::getTouchState(arr& touch) {
 }
 #endif
 
-/*!\brief */
+/** \brief */
 double ors::Graph::getEnergy() const {
   Body *n;
   uint j;
@@ -4572,6 +4641,41 @@ void ors::Graph::addObject(ors::Body *b) {
   }
 }
 
+void ors::Graph::removeNonShapeBodies(){
+  for_list_rev_(Body, b, bodies) if(!b->shapes.N && !b->outLinks.N){
+    for_list_rev_(Joint, j, b->inLinks) joints.removeValue(j);
+    bodies.remove(b_COUNT);
+    delete b;
+  }
+  for_list_(Body, bb, bodies) bb->index=bb_COUNT;
+  for_list_(Joint, j, joints){ j->index=j_COUNT;  j->ifrom = j->from->index;  j->ito = j->to->index;  }
+  for_list_(Shape, s, shapes) s->ibody = s->body->index;
+  proxies.clear();
+}
+
+void ors::Graph::meldFixedJoint(){
+  for_list_(Joint, j, joints) if(j->type==JT_fixed){
+    Body *a = j->from;
+    Body *b = j->to;
+    //reassociate shapes with a
+    for_list_(Shape, s, b->shapes){
+      s->body=a;
+      s->ibody = a->index;
+      s->rel = j->A * s->rel;
+      a->shapes.append(s);
+    }
+    b->shapes.clear();
+    //reassociate out-joints with a
+    for_list_(Joint, jj, b->outLinks){
+      jj->from=a;
+      jj->ifrom=a->index;
+      jj->A = j->A * j->B * jj->A;
+      a->outLinks.append(jj);
+    }
+    b->outLinks.clear();
+  }
+}
+
 // ------------------ end slGraph ---------------------
 
 
@@ -4582,7 +4686,7 @@ void ors::Graph::addObject(ors::Body *b) {
 
 
 
-/*!\brief get the center of mass, total velocity, and total angular momemtum */
+/** \brief get the center of mass, total velocity, and total angular momemtum */
 void ors::Graph::getTotals(ors::Vector& c, ors::Vector& v, ors::Vector& l, ors::Quaternion& ori) const {
   Body *n;
   uint j;

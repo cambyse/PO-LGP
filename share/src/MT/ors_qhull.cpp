@@ -429,7 +429,7 @@ void getDelaunayEdges(uintA& E, const arr& V) {
 #ifdef OLD_CODE
 #include "graph.h"
 
-/*! this calls the delaunay triangulation of the qhull library
+/** this calls the delaunay triangulation of the qhull library
 
     It first deletes all existing edges! Then adds edges according to
     the delaunay triangulation.

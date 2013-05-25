@@ -389,7 +389,7 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id){
   if((rot*(-Vector_z))(2)>maxz){ upvec=-Vector_z; maxz=(rot*upvec)(2); }
   ors::Transformation f;
   f.rot.setDiff(Vector_z, upvec);
-  z.set("obj-z-align",*C,zalignTVT,obj_index,f,-1,ors::Transformation(),ARR());
+  z.set("obj-z-align",*C,zalignTVT,obj_index,f,-1,Transformation_Id,ARR());
   //
   TaskVariable r("full state",*C,qLinearTVT,0,0,0,0,I);
   TaskVariable c("collision",*C,collTVT,0,0,0,0,ARR());
@@ -654,7 +654,7 @@ void ActionInterface::getObjectsAbove(uintA& list,const uint obj_id) {
 //   getObjectsBelow(list, convertObjectID2name(obj_id));
 // }
 
-void ActionInterface::getObjects(uintA& objects) { //!< return list all objects
+void ActionInterface::getObjects(uintA& objects) { ///< return list all objects
   objects.clear();
   getManipulableObjects(objects);
   objects.append(getTableID());

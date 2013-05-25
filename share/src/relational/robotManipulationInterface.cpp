@@ -248,7 +248,7 @@ void RobotManipulationInterface::executeAction(Literal* action, RobotManipulatio
 
 
 
-void RobotManipulationInterface::getTypes(relational::ArgumentTypeL& objects_types, const uintA& objects, const relational::ArgumentTypeL& types, RobotManipulationSimulator* sim) { //!< return list of all object types
+void RobotManipulationInterface::getTypes(relational::ArgumentTypeL& objects_types, const uintA& objects, const relational::ArgumentTypeL& types, RobotManipulationSimulator* sim) { ///< return list of all object types
   objects_types.resize(objects.N);
   uint i;
   relational::ArgumentType* type_box = NULL, *type_block = NULL, *type_ball = NULL, *type_table = NULL;

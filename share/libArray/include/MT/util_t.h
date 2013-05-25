@@ -35,7 +35,7 @@ namespace MT {
 }
 
 namespace MT {
-/*!\brief a standard method to save an object into a file. The same as
+/** \brief a standard method to save an object into a file. The same as
   std::ofstream file; MT::open(file, filename); file <<x;
   file.close(); */
 template<class T> void save(const T& x, const char *filename) {
@@ -45,7 +45,7 @@ template<class T> void save(const T& x, const char *filename) {
   file.close();
 }
 
-/*!\brief a standard method to load object from a file. The same as
+/** \brief a standard method to load object from a file. The same as
 std::ifstream file; MT::open(file, filename); file >>x;
 file.close(); */
 template<class T> void load(T& x, const char *filename, bool change_directory) {
@@ -72,7 +72,7 @@ template<class T> void load(T& x, const char *filename, bool change_directory) {
   }
 }
 
-/*!\brief Search for a command line option \c -tag and, if found, pipe the
+/** \brief Search for a command line option \c -tag and, if found, pipe the
  next command line option into \c value by the
  \c operator>>(istream&, type&). Returns false on failure. */
 template<class T>
@@ -86,7 +86,7 @@ bool getFromCmdLine(T& x, const char *tag) {
 }
 
 
-/*!\brief Search the first occurence of a sequence '\c tag:'
+/** \brief Search the first occurence of a sequence '\c tag:'
 in the config file (opened automatically) and, if found, pipes
 it in \c value. Returns false if parameter is not found. */
 template<class T>

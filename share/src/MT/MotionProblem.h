@@ -11,19 +11,19 @@
   */
 
 enum DefaultTaskMapType {
-  noneTMT,     //!< undefined
-  posTMT,      //!< 3D position of reference, can have 2nd reference, no param
-  zoriTMT,     //!< 3D z-axis orientation, no 2nd reference, no param
-  zalignTMT,   //!< 1D z-axis alignment, can have 2nd reference, param (optional) determins alternative reference world vector
-  qItselfTMT,  //!< q itself as task variable, no param
-  qLinearTMT,  //!< k-dim variable linear in q, no references, param: k-times-n matrix
-  qSingleTMT,  //!< 1D entry of q, reference-integer=index, no param
-  qSquaredTMT, //!< 1D square norm of q, no references, param: n-times-n matrix
-  qLimitsTMT,  //!< 1D meassure for joint limit violation, no references, param: n-times-2 matrix with lower and upper limits for each joint
-  collTMT,     //!< 1D meassure for collision violation, no references, param: 1D number defining the distance margin
-  colConTMT,   //!< 1D meassure collision CONSTRAINT meassure, no references, param: 1D number defining the distance margin
-  comTMT,      //!< 2D vector of the horizontal center of mass, no refs, no param
-  skinTMT      //!< vector of skin pressures...
+  noneTMT,     ///< undefined
+  posTMT,      ///< 3D position of reference, can have 2nd reference, no param
+  zoriTMT,     ///< 3D z-axis orientation, no 2nd reference, no param
+  zalignTMT,   ///< 1D z-axis alignment, can have 2nd reference, param (optional) determins alternative reference world vector
+  qItselfTMT,  ///< q itself as task variable, no param
+  qLinearTMT,  ///< k-dim variable linear in q, no references, param: k-times-n matrix
+  qSingleTMT,  ///< 1D entry of q, reference-integer=index, no param
+  qSquaredTMT, ///< 1D square norm of q, no references, param: n-times-n matrix
+  qLimitsTMT,  ///< 1D meassure for joint limit violation, no references, param: n-times-2 matrix with lower and upper limits for each joint
+  collTMT,     ///< 1D meassure for collision violation, no references, param: 1D number defining the distance margin
+  colConTMT,   ///< 1D meassure collision CONSTRAINT meassure, no references, param: 1D number defining the distance margin
+  comTMT,      ///< 2D vector of the horizontal center of mass, no refs, no param
+  skinTMT      ///< vector of skin pressures...
 };
 
 struct TaskMap {
@@ -35,8 +35,8 @@ struct TaskCost {
   TaskMap& map;
   MT::String name;
   bool active;
-  arr y_target, y_prec;  //!< target & precision over a whole trajectory
-  arr v_target, v_prec;  //!< target & precision over a whole trajectory
+  arr y_target, y_prec;  ///< target & precision over a whole trajectory
+  arr v_target, v_prec;  ///< target & precision over a whole trajectory
   //void cost(arr& y, arr& J, const ors::Graph& G, uint t); ///< returns the weighted costs in time t, ASSUMING that G is in state x_t
   
   TaskCost(TaskMap* m):map(*m), active(true) {}

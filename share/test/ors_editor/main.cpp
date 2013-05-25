@@ -9,10 +9,6 @@ Iterate between editing the file (with an external editor) and\n\
 viewing the model in the OpenGL window (after pressing ENTER).\n\
 \n\
 Use the number keys 1 2 3 4 5 to toggle display options.\n\
-\n\
-enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, meshST, cylinderST, markerST, pointCloudST }; \n\
-enum JointType { JT_hinge=0, JT_transX, JT_universal, JT_fixed, ballJT, JT_glue };\n\
-enum BodyType  { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };\n\
 ";
 
 void drawBase(void*){
@@ -22,6 +18,7 @@ void drawBase(void*){
 }
 
 int main(int argn,char **argv){
+  MT::initCmdLine(argn, argv);
   cout <<USAGE <<endl;
 
   MT::String file=MT::getParameter<MT::String>("file",STRING("test.ors"));
@@ -35,6 +32,12 @@ int main(int argn,char **argv){
   gl.add(ors::glDrawGraph,&C);
   //gl.reportEvents=true;
   //gl.reportSelects=true;
+  gl.watch();
+
+  C.meldFixedJoint();
+  C.removeNonShapeBodies();
+  C.makeLinkTree();
+  MT::save(C,"z.ors");
 
   editConfiguration(file,C,gl);
 

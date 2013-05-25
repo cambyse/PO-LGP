@@ -3,9 +3,9 @@
 
 struct DefaultTaskMap:TaskMap{
   DefaultTaskMapType type;
-  int i, j;             //!< which body(-ies) does it refer to?
-  ors::Transformation irel, jrel; //!< relative position to the body
-  arr params;           //!< parameters of the variable (e.g., liner coefficients, limits, etc)
+  int i, j;             ///< which body(-ies) does it refer to?
+  ors::Transformation irel, jrel; ///< relative position to the body
+  arr params;           ///< parameters of the variable (e.g., liner coefficients, limits, etc)
 
   virtual void phi(arr& y, arr& J, const ors::Graph& G);
   virtual uint phiDim(const ors::Graph& G);
@@ -83,7 +83,7 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::Graph& G){
       break;
     case qLimitsTMT:   G.getLimitsMeasure(y, params);  if(&J) G.getLimitsGradient(J, params);   break;
     case comTMT:       G.getCenterOfMass(y);     y.resizeCopy(2); if(&J){ G.getComGradient(J);  J.resizeCopy(2, J.d1); }  break;
-    case collTMT:      G.getContactMeasure(y, params(0)); if(&J) G.getContactGradient(J, params(0));  break;
+    case collTMT:      G.phiCollision(y, J, params(0));  break;
     case colConTMT:    G.getContactConstraints(y);  if(&J) G.getContactConstraintsGradient(J); break;
     case skinTMT:
       y.resize(params.N);

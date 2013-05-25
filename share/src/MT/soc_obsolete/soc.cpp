@@ -25,7 +25,7 @@ uint countMsg=0, countSetq=0;
 // general documentation
 //
 
-/*! \brief libSOC -- Stochastic Optimal Control library
+/** \brief libSOC -- Stochastic Optimal Control library
 
     This is the core namespace of libSOC.  See the <a
     href="../guide.pdf">guide</a> for an introduction.
@@ -79,7 +79,7 @@ void soc::interpolateTrajectory(arr& qNew, const arr& q, double step){
   }
 }
 
-/*! \brief use regularized Inverse Kinematics to compute a joint
+/** \brief use regularized Inverse Kinematics to compute a joint
     trajectory from a given task trajectory x for the 0-th task variable */
 void soc::getJointFromTaskTrajectory(SocSystemAbstraction& soci, arr& q, const arr& x){
   uint t, T=x.d0, n=soci.qDim();
@@ -97,7 +97,7 @@ void soc::getJointFromTaskTrajectory(SocSystemAbstraction& soci, arr& q, const a
   }
 }
 
-/*! \brief use regularized Inverse Kinematics to compute a joint
+/** \brief use regularized Inverse Kinematics to compute a joint
     trajectory from the task trajectory previously specifies for the
     taskid-th task variable */
 void soc::straightTaskTrajectory(SocSystemAbstraction& soci, arr& q, uint taskid){

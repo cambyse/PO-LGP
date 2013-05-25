@@ -576,6 +576,7 @@ info: force
 	@echo "  LIBPATH =" "$(LIBPATH)"
 	@echo "  EXTERNALS =" "$(EXTERNALS)"
 	@echo "  CXX =" "$(CXX)"
+	@echo "  OPTIM =" "$(OPTIM)"
 	@echo "  CXXFLAGS =" "$(CXXFLAGS)"
 	@echo "  LINK =" "$(LINK)"
 	@echo "  LDFLAGS =" "$(LDFLAGS)"

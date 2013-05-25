@@ -30,7 +30,7 @@ GaussianProcess::GaussianProcess() :
   kernelP(NULL)
 {}
 
-/*! set Gauss cov function, its parameters, and GP prior
+/** set Gauss cov function, its parameters, and GP prior
  */
 void GaussianProcess::setGaussKernelGP(
   void *_kernelP,
@@ -47,7 +47,7 @@ void GaussianProcess::setGaussKernelGP(
   covDD_D=GaussKernelDD_D;
 }
 
-/*! set Gauss cov function, its parameters, and GP prior
+/** set Gauss cov function, its parameters, and GP prior
  */
 void GaussianProcess::setGaussKernelGP(
   void *_kernelP,

@@ -45,12 +45,12 @@ namespace mdp {
 
 //! struct to store an MDP or POMDP (when the observation model Pyxa is given as well) \ingroup mdp
 struct MDP {
-  arr Px;    //!< start distribution
-  arr Pxax;  //!< transition probs
-  arr Pyxa;  //!< observation probs
-  arr Rax;   //!< reward expectation as a function of (action, x_before)
-  double gamma; //!< discounting factor
-  MT::Array<uintA> neighbors; //!< state neighbor lists (for sparse worlds)
+  arr Px;    ///< start distribution
+  arr Pxax;  ///< transition probs
+  arr Pyxa;  ///< observation probs
+  arr Rax;   ///< reward expectation as a function of (action, x_before)
+  double gamma; ///< discounting factor
+  MT::Array<uintA> neighbors; ///< state neighbor lists (for sparse worlds)
 };
 
 //! struct to store a generic structured MDP or POMDP
@@ -66,18 +66,18 @@ struct MDP_structured {
 
 //! struct to store a standard FSC with one hidden node variable \ingroup mdp
 struct FSC_lev1 {
-  arr P0;    //!< initialization of node
-  arr Pa0;   //!< action probs
-  arr P0y0;  //!< node transition probs
+  arr P0;    ///< initialization of node
+  arr Pa0;   ///< action probs
+  arr P0y0;  ///< node transition probs
 };
 
 //! struct to store a 2-level FSC with two hidden node variables \ingroup mdp
 struct FSC_lev2 {
-  arr P0;    //!< initialization of level 0 node
-  arr P1;    //!< initialization of level 1 node
-  arr Pa0;   //!< action probs
-  arr P01y0; //!< level 0 transition probs P(n0'| y0, n1, n0)
-  arr P1y01; //!< level 1 transition probs P(n1'| y0, n1, n0);
+  arr P0;    ///< initialization of level 0 node
+  arr P1;    ///< initialization of level 1 node
+  arr Pa0;   ///< action probs
+  arr P01y0; ///< level 0 transition probs P(n0'| y0, n1, n0)
+  arr P1y01; ///< level 1 transition probs P(n1'| y0, n1, n0);
   
   bool hierarchical;
   arr Pe0;     //P(exit|n0) is fixed!

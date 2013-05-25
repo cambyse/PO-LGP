@@ -12,7 +12,7 @@ WritheTaskVariable::WritheTaskVariable(const char* _name,
   param=_param;
   segments1=_segments1;
   segments2=_segments2;
-  set(_name, _ors, userTVT, -1, ors::Transformation(), -1, ors::Transformation(), ARR());
+  set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, ARR());
 }
 
 

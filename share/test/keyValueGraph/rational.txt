@@ -1,5 +1,6 @@
+## A KeyValueGraph is..
 
-A KeyValueGraph is.. (three ways to describe what a KeyValueGraph is):
+Three ways to describe what a KeyValueGraph is:
 
 -- a graph, where each item (node/edge) has some keys and can store a
    value of any type
@@ -8,7 +9,7 @@ A KeyValueGraph is.. (three ways to describe what a KeyValueGraph is):
    nodes), or higher-order objects (linking arbitrary other items)]
 
 -- a key-value list, where items can have parent/child relations and
-   values can be of any type an
+   values can be of any type
 
    [Actually a multi-map: items can have multiple keys, but at most
    one value]
@@ -16,43 +17,57 @@ A KeyValueGraph is.. (three ways to describe what a KeyValueGraph is):
 -- the data structure which is one-to-one with the following file
    format
 
-=== File format:
+
+## File format
 
 item:
-[multiple tags] [(multiple parents)] [=] [value]
+[multiple keys] [(multiple parents)] [=] [value]
 
 value:
 none -> boolean
+true,false -> boolean
 number -> double
 'string' -> MT::String
+"string" -> MT::String
 [doubles] -> arr
-<TypeKey ...> -> arbitrary type
+<TypeTag ...> -> arbitrary type
 (item-names) -> ItemL (subset of previously defined items)
 { item-list } -> KeyValueGraph (new subgraph of this item)
 
-predefined TypeKeys:
+predefined TypeTags:
 <T ...> -> Transformation
 <d ...> -> arr
 <u ...> -> uintA
 
 
-=== Examples
+## XML alike
 
-see the test.kvg for examples
+Nesting KeyValueGraphs (item values are sub-KeyValueGraphs) leads to
+XML-type data structure with the following differences: values have
+explicit C++-types (instead of just strings); items (may) have
+explicit parents (graph structure). Converting from and to XML is
+rather simple. [To be done generically.]
 
 
-=== FUTURE features:
+## Example
 
-* values from files
+See the example.kvg!
+
+
+## FUTURE features
+
+* values that are read from files:
 
 <Mesh:meshfile.off>
 
-* include
+* include other files:
 
 #include "..."
 
+* conversions to XML
 
-=== relational graphs
+
+## relational factor graphs
 
 item-name[range-variables](parent-names){ properties }
 

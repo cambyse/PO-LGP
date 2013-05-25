@@ -56,8 +56,8 @@ void testDynamicProgramming(){
 }
 
 int main(int argn,char** argv){
-  //testSqrProblem();
-  testDynamicProgramming();
+  testSqrProblem();
+//  testDynamicProgramming();
   
   return 0;
 }

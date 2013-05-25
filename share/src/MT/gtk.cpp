@@ -78,7 +78,7 @@ void gtkCheckInitialized(){
       argv[0] = (char*)"x.exe";
       
       XInitThreads();
-      g_thread_init(NULL);
+//      g_thread_init(NULL);
       gdk_threads_init();
       gdk_threads_enter();
       gtk_init(&argc, &argv);

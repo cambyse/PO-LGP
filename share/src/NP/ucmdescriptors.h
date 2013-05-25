@@ -6,7 +6,7 @@
 #include "ucm.h"
 
 namespace np {
-/*! \brief Elliptic Fourier Descriptors (EFD) for an UCM tree
+/** \brief Elliptic Fourier Descriptors (EFD) for an UCM tree
  *
  *  Computes for all N patches of an UCM segmentation tree the following
  *  shape descriptors:
@@ -21,7 +21,7 @@ namespace np {
 template <class S>
 void ucm_descriptors_efd(MT::Array<S>& d, const UcmTree& tree, uint num_coef=20);
 
-/*! \brief HSV volor descriptors for patches in an UCM tree
+/** \brief HSV volor descriptors for patches in an UCM tree
  *
  *  Computes for all N patches of an UCM segmentation tree the following
  *  color descriptors:
@@ -45,7 +45,7 @@ void ucm_descriptors_hsv
  unsigned char h=10, unsigned char s=10, unsigned char v=10
 );
 
-/*! \brief Gabor wavelet features for patches in an UCM tree
+/** \brief Gabor wavelet features for patches in an UCM tree
  *
  *  Computes for all N patches of an UCM segmentation tree features based
  *  on the intensities of Gabor wavelet responses.
@@ -75,7 +75,7 @@ void ucm_descriptors_gabor
  uint num_bin=10
 );
 
-/*! \brief Patch descriptors made of visual words based on SURF descriptors
+/** \brief Patch descriptors made of visual words based on SURF descriptors
  *
  *  Computes for all N patches of an UCM segmentation tree features based
  *  on SURF descriptors. Internally, a scale space pyramid with <num_scales>

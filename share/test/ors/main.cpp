@@ -96,11 +96,10 @@ void testKinematics(){
 //
 
 void testKinematicSpeed(){
-#define NUM 100000
+#define NUM 10000
 #if 1
   ors::Graph G;
-  OpenGL gl;
-  init(G,gl,"arm3.ors");
+  G.init("pr2_clean.ors");
   G.makeLinkTree();
   uint n=G.getJointStateDimension();
   arr x(n);
@@ -144,8 +143,7 @@ namespace Ctest{
     G->setJointState(x); G->calcBodyFramesFromJoints();
     swift->computeProxies(*G,false);
     G->sortProxies(true);
-    G->getContactMeasure(c,.2);
-    if(dfdx) G->getContactGradient(*dfdx,.2);
+    G->phiCollision(c, (dfdx?*dfdx:NoArr), .2);
   }
 }
 
@@ -155,7 +153,6 @@ void testContacts(){
   init(G,gl,"arm7.ors");
   
   arr x,v,con,grad;
-  double c;
   uint t;
 
   SwiftInterface swift;
@@ -173,9 +170,8 @@ void testContacts(){
 
     G.reportProxies();
 
-    G.getContactMeasure(con,.2);
-    c=G.getContactGradient(grad,.2); //generate a gradient pushing away to 20cm distance
-    cout <<"contact meassure = " <<con(0) <<' ' <<c <<endl;
+    G.phiCollision(con, grad, .2);
+    cout <<"contact meassure = " <<con(0) <<endl;
     gl.text.clear() <<"t=" <<t <<"  movement along negative contact gradient (using SWIFT to get contacts)";
     gl.watch();
     gl.update();
@@ -502,8 +498,9 @@ void testBlenderImport(){
 
 int main(int argc,char **argv){
 
-  testContacts();
-  return 0;
+  //testKinematicSpeed();
+  //testContacts();
+  //return 0;
   testBasics();
   testLoadSave();
   testPlayStateSequence();

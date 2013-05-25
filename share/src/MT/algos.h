@@ -73,7 +73,7 @@ void rk4(arr& x1, const arr& x0,
 void rk4dd(arr& x1, arr& v1, const arr& x0, const arr& v0,
            void (*ddf)(arr& xdd, const arr& x, const arr& v),
            double dt);
-/*! RK with discrete event localization (zero-crossing detection):
+/** RK with discrete event localization (zero-crossing detection):
     the function sf computes some
     double-valued indicators. If one of these indicators crosses zero this is interpreted
     as a discontinuity in the dynamics. The algorithm iteratively tries to find the
@@ -107,7 +107,7 @@ double matannealing(intA& fix, intA& fox, uintA& p, bool sub, double annealingRe
 // MonSolver
 //
 
-/*! a trivial solver for monotonic unimodal 1D functions */
+/** a trivial solver for monotonic unimodal 1D functions */
 class MonSolver {
 public:
   double min, max;
@@ -123,21 +123,21 @@ public:
 // Linear Statistics
 //
 
-/*! collects means and (co-)variances of data, also input-output data.
+/** collects means and (co-)variances of data, also input-output data.
     This class is the basis for linear regression techniques, like
     Least Squares, Partial Least Squares, but can also be used on its
     own, simply to average or calculate (co-)variances \ingroup
     regression */
 class LinearStatistics {
 public:
-  double accum;  //!< the accumulation norm (=number of collected data points if not weighted)
+  double accum;  ///< the accumulation norm (=number of collected data points if not weighted)
   arr meanX, meanY, varX, covXY; //<! these are not normalized or centered bufferes
-  arr MeanX; //!< X mean
-  arr MeanY; //!< Y mean
-  arr VarX;  //!< X variance
-  arr CovXY; //!< XY covariance
-  double lambda; //!< forgetting rate [default=0]
-  bool computed; //!< internal indicator whether recomputation is needed
+  arr MeanX; ///< X mean
+  arr MeanY; ///< Y mean
+  arr VarX;  ///< X variance
+  arr CovXY; ///< XY covariance
+  double lambda; ///< forgetting rate [default=0]
+  bool computed; ///< internal indicator whether recomputation is needed
   
   LinearStatistics();
   
@@ -190,7 +190,7 @@ public:
 // Kalman filter
 //
 
-/*! a Kalman filter */
+/** a Kalman filter */
 class Kalman {
   arr
   A, a, //linear forward transition
@@ -235,7 +235,7 @@ public:
 // Partial Least Squares (PLS, SIMPLS, de Jong)
 //
 
-/*! An implementation of Partial Least Squares following the SIMPLS algorithm (de Jong).
+/** An implementation of Partial Least Squares following the SIMPLS algorithm (de Jong).
     This PLS implementation finds an optimal linear regression (from n to m dimensions)
     by first calculating input projections `with higest correlation to the output'. This
     implementation uses the Singular Value Decomposition routine MT::svd and

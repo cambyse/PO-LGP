@@ -61,7 +61,6 @@ endif
 ifeq ($(MAKEMODE),mlrlib_full)
 CXXFLAGS += -fPIC -DMT_IMPLEMENT_TEMPLATES
 LIBS   += -lrt
-OPTIM  = debug
 FREEGLUT = 0
 GTKGL = 1
 ANN = 1
@@ -90,7 +89,6 @@ endif
 ifeq ($(MAKEMODE),mlrlib_minimal)
 CXXFLAGS += -fPIC -DMT_IMPLEMENT_TEMPLATES
 LIBS   += -lrt
-OPTIM  = debug
 endif
 
 
@@ -99,7 +97,6 @@ endif
 ifeq ($(MAKEMODE),mlrlib_ubuntu)
 CXXFLAGS += -fPIC -DMT_IMPLEMENT_TEMPLATES
 LIBS   += -lrt
-OPTIM  = debug
 FREEGLUT = 0
 GTKGL = 1
 QT = 0

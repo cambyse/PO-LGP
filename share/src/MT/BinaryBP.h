@@ -31,7 +31,7 @@
 
 #define HIST 200
 
-struct BinaryPairFG;  //!<minimalistic representation of a binary pair-wise FG
+struct BinaryPairFG;  ///<minimalistic representation of a binary pair-wise FG
 struct BinaryBPNet;
 struct BinaryBPGrid;
 

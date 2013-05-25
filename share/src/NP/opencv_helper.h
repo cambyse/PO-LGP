@@ -14,7 +14,7 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/> */
 
-/*! \file opencv_helper.h
+/** \file opencv_helper.h
     \brief Wrappers around OpenCV routines. */
 
 #ifndef NP_OPENCV_HELPER_H

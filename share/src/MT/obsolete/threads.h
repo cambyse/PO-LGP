@@ -54,12 +54,12 @@ struct Metronome{
   uint tics;
   const char* name;                   ///< name
 
-  Metronome(const char* name, long _targetDt); //!< set tic tac time in milli seconds
+  Metronome(const char* name, long _targetDt); ///< set tic tac time in milli seconds
   ~Metronome();
 
   void reset();
-  void waitForTic();              //!< waits until the next tic
-  double getTimeSinceTic();       //!< time since last tic
+  void waitForTic();              ///< waits until the next tic
+  double getTimeSinceTic();       ///< time since last tic
 };
 
 //! a really simple thing to meassure cycle and busy times
@@ -76,7 +76,7 @@ struct CycleTimer{
   void cycleDone();
 };
   
-/*!\brief a threading template: classes should derived from this can easily be threaded.
+/** \brief a threading template: classes should derived from this can easily be threaded.
    Every thread needs to implement an open, step and close method -- nothing more. The thread
    can be set to loop endlessly and with maximum speed, or be stepped (strict synchronization with
    the calling process). Threads should have public variables for input/output/parameters; the step() method

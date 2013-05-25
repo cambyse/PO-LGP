@@ -240,11 +240,11 @@ struct LQG{
   double convergenceRate;
   uint display;
   //messages & state info
-  arr q, q_phase;                  //!< current trajectory in position and phase space
-  arr vbar, Vbar, r, R, Vinv, v;       //!< bwd, and task messages
-  double cost;                      //!< cost of MAP trajectory
-  uint sweep;                     //!< #sweeps so far
-  uint scale;                     //!< scale of this LQG in a multi-scale approach
+  arr q, q_phase;                  ///< current trajectory in position and phase space
+  arr vbar, Vbar, r, R, Vinv, v;       ///< bwd, and task messages
+  double cost;                      ///< cost of MAP trajectory
+  uint sweep;                     ///< #sweeps so far
+  uint scale;                     ///< scale of this LQG in a multi-scale approach
   
   LQG(){ sweep=0; scale=0; }
   
@@ -286,19 +286,19 @@ struct AICO{
   arr bwdMsg_v, bwdMsg_Vinv;
 
   //messages (OUTPUT)
-  arr s, Sinv, v, Vinv, r, R;          //!< fwd, bwd, and task messages
-  MT::Array<arr> phiBar, JBar;     //!< all task cost terms
-  arr Psi;                        //!< all transition cost terms
-  arr b, Binv;                     //!< beliefs
-  arr q, qhat;                     //!< trajectory (MAP), and point of linearization
+  arr s, Sinv, v, Vinv, r, R;          ///< fwd, bwd, and task messages
+  MT::Array<arr> phiBar, JBar;     ///< all task cost terms
+  arr Psi;                        ///< all transition cost terms
+  arr b, Binv;                     ///< beliefs
+  arr q, qhat;                     ///< trajectory (MAP), and point of linearization
   arr dampingReference;
-  double cost;                      //!< cost of MAP trajectory
+  double cost;                      ///< cost of MAP trajectory
 
   // INTERNAL
   bool useFwdMessageAsQhat;
-  arr A, tA, Ainv, invtA, a, B, tB, Winv, Hinv, Q; //!< processes...
-  uint sweep;                     //!< #sweeps so far
-  uint scale;                     //!< scale of this AICO in a multi-scale approach
+  arr A, tA, Ainv, invtA, a, B, tB, Winv, Hinv, Q; ///< processes...
+  uint sweep;                     ///< #sweeps so far
+  uint scale;                     ///< scale of this AICO in a multi-scale approach
   
   AICO(){ sweep=0; scale=0; maxStep=.1; }
   
