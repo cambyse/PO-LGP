@@ -56,9 +56,9 @@
 #undef min
 #include <fstream>
 
-#include <SWIFT_config.h>
-#include <SWIFT_common.h>
-#include <SWIFT_array.h>
+#include <SWIFT/SWIFT_config.h>
+#include <SWIFT/SWIFT_common.h>
+#include <SWIFT/SWIFT_array.h>
 
 using std::ifstream;
 using std::ofstream;

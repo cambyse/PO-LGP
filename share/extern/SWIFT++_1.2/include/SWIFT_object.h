@@ -53,12 +53,12 @@
 #define _SWIFT_OBJECT_H_
 
 #include <iostream>
-#include <SWIFT_config.h>
-#include <SWIFT_common.h>
-#include <SWIFT_linalg.h>
-#include <SWIFT_mesh.h>
-#include <SWIFT_pair.h>
-#include <SWIFT_boxnode.h>
+#include <SWIFT/SWIFT_config.h>
+#include <SWIFT/SWIFT_common.h>
+#include <SWIFT/SWIFT_linalg.h>
+#include <SWIFT/SWIFT_mesh.h>
+#include <SWIFT/SWIFT_pair.h>
+#include <SWIFT/SWIFT_boxnode.h>
 
 //////////////////////////////////////////////////////////////////////////////
 // SWIFT_Object

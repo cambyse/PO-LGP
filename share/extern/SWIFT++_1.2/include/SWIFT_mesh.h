@@ -55,11 +55,11 @@
 #include <math.h>
 
 
-#include <SWIFT_config.h>
-#include <SWIFT_common.h>
-#include <SWIFT_linalg.h>
-#include <SWIFT_array.h>
-#include <SWIFT_lut.h>
+#include <SWIFT/SWIFT_config.h>
+#include <SWIFT/SWIFT_common.h>
+#include <SWIFT/SWIFT_linalg.h>
+#include <SWIFT/SWIFT_array.h>
+#include <SWIFT/SWIFT_lut.h>
 
 //////////////////////////////////////////////////////////////////////////////
 // Types

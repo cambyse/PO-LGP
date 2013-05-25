@@ -52,12 +52,12 @@
 #ifndef _SWIFT_PQUEUE_H_
 #define _SWIFT_PQUEUE_H_
 
-#include <SWIFT_config.h>
-#include <SWIFT_common.h>
-#include <SWIFT_linalg.h>
-#include <SWIFT_array.h>
+#include <SWIFT/SWIFT_config.h>
+#include <SWIFT/SWIFT_common.h>
+#include <SWIFT/SWIFT_linalg.h>
+#include <SWIFT/SWIFT_array.h>
 #ifdef SWIFT_FRONT_TRACKING
-#include <SWIFT_front.h>
+#include <SWIFT/SWIFT_front.h>
 #endif
 
 #define PQ_SIZE 1000

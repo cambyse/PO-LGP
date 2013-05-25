@@ -52,8 +52,8 @@
 #ifndef _VIEWER_H_
 #define _VIEWER_H_
 
-#include <SWIFT_common.h>
-#include <SWIFT_linalg.h>
+#include <SWIFT/SWIFT_common.h>
+#include <SWIFT/SWIFT_linalg.h>
 
 //////////////////////////////////////////////////////////////////////////////
 // Camera
