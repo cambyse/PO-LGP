@@ -5,6 +5,7 @@
 #include "Maze.h"
 #include "KMarkovCRF.h"
 #include "UTree.h"
+#include "LinearQ.h"
 #include "LookAheadSearch.h"
 #include "Data.h"
 #include "Representation/Representation.h"
@@ -45,7 +46,8 @@ private:
         SPARSE_PLANNER,
         KMDP_PLANNER,
         UTREE_PLANNER,
-        UTREE_VALUE
+        UTREE_VALUE,
+        LINEAR_Q_VALUE
     } planner_type;
 
     Ui::TestMaze_IIClass ui;
@@ -72,6 +74,9 @@ private:
 
     // UTree
     UTree utree;
+
+    // Linear_Q
+    LinearQ linQ;
 
     //----------//
     // Planners //

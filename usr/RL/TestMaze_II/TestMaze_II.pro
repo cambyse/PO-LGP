@@ -13,6 +13,7 @@ HEADERS += LookAheadSearch.h \
     testmaze_ii.h \
     KMarkovCRF.h \
     UTree.h \
+    LinearQ.h \
     Feature.h \
     Representation/Action.h \
     Representation/State.h \
@@ -29,6 +30,7 @@ SOURCES += LookAheadSearch.cpp \
     testmaze_ii.cpp \
     KMarkovCRF.cpp \
     UTree.cpp \
+    LinearQ.cpp \
     Feature.cpp \
     Representation/Action.cpp \
     Representation/State.cpp \
@@ -37,7 +39,8 @@ SOURCES += LookAheadSearch.cpp \
     util/KolmogorovSmirnovTest.cpp \
     util/ChiSquareTest.cpp
 LIBS += -llbfgs \
-    -lemon
+    -lemon \
+    -larmadillo
 FORMS += testmaze_ii.ui
 RESOURCES +=
 QMAKE_CXXFLAGS += -std=c++0x

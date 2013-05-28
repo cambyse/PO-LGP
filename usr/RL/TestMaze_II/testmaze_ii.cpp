@@ -25,6 +25,7 @@ TestMaze_II::TestMaze_II(QWidget *parent)
       discount(0.7),
       l1_factor(0),
       utree(discount),
+      linQ(discount),
       look_ahead_search(discount),
       max_tree_size(10000)
 {
@@ -70,6 +71,7 @@ void TestMaze_II::collect_episode(const int& length) {
         update_current_instance(action,state_to,reward);
         crf.add_action_state_reward_tripel(action,state_to,reward);
         utree.add_action_state_reward_tripel(action,state_to,reward);
+        linQ.add_action_state_reward_tripel(action,state_to,reward);
     }
 }
 
@@ -97,6 +99,7 @@ void TestMaze_II::random_action() {
     if(record) {
         crf.add_action_state_reward_tripel(action,state_to,reward);
         utree.add_action_state_reward_tripel(action,state_to,reward);
+        linQ.add_action_state_reward_tripel(action,state_to,reward);
     }
     maze.render_update(ui.graphicsView);
 }
@@ -148,6 +151,9 @@ void TestMaze_II::choose_action() {
     case UTREE_VALUE:
         action = utree.get_max_value_action(current_instance);
         break;
+    case LINEAR_Q_VALUE:
+        action = linQ.get_max_value_action(current_instance);
+        break;
     default:
         action = action_t::STAY;
         DEBUG_OUT(0,"Error: undefined planner type --> choosing STAY");
@@ -160,6 +166,7 @@ void TestMaze_II::choose_action() {
     if(record) {
         crf.add_action_state_reward_tripel(action,state_to,reward);
         utree.add_action_state_reward_tripel(action,state_to,reward);
+        linQ.add_action_state_reward_tripel(action,state_to,reward);
     }
     maze.render_update(ui.graphicsView);
 }
@@ -210,7 +217,12 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString set_s(                              "    set/unset. . . . . <string>. . . . . . . . . . . . . . . . . .-> set/unset options:");
     QString option_1_s(                         "                       record. . . . . . . . . . . . . . . . . . .-> start/stop recording movements");
     QString option_2_s(                         "                       plot. . . . . . . . . . . . . . . . . . . .-> write transitions into data file for plotting");
-    QString option_3_s(                         "                       p(lanner) {o(ptimal)|s(parse)|u(tree)|uv} .-> set planner to use (uv = utree-value)");
+    QString option_3_s(                         "                       p/planner .<string> . . . . . . . . . . . .-> set planner to use");
+    QString option_3a_s(                        "                                  o/optimal. . . . . . . . . . . .-> use optimal predictions (give by maze)");
+    QString option_3b_s(                        "                                  s/sparse . . . . . . . . . . . .-> use sparse predictions (given by CRF)");
+    QString option_3c_s(                        "                                  u/utree. . . . . . . . . . . . .-> use UTree predictions");
+    QString option_3d_s(                        "                                  uv/utree-value . . . . . . . . .-> use UTree state-action values");
+    QString option_3e_s(                        "                                  lq/linear-q. . . . . . . . . . .-> use linear Q-function approximation");
     QString test_s(                             "    test . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> test");
 
     QString maze_s(                           "\n    ---------------------------Maze---------------------------");
@@ -227,7 +239,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString learning_s(                       "\n    ----------------------Model Learning----------------------");
     QString episode_s(                          "    episode / e. . . . [<int>|clear,c] . . . . . . . . . . . . . .-> record length <int> episode or clear data");
     QString learning_crf_s(                     "    === CRF ===");
-    QString optimize_s(                         "    optimize / o . . . [<int>|check, c]. . . . . . . . . . . . . .-> optimize CRF [max_iterations | check derivatives]");
+    QString optimize_crf_s(                     "    optimize-crf / oc. [<int>|check, c]. . . . . . . . . . . . . .-> optimize CRF [max_iterations | check derivatives]");
     QString score_s(                            "    score. . . . . . . <int> . . . . . . . . . . . . . . . . . . .-> score compound features with distance <int> by gradient");
     QString add_s(                              "    add. . . . . . . . <int> . . . . . . . . . . . . . . . . . . .-> add <int> highest scored compound features to active (0 for all non-zero scored)");
     QString erase_s(                            "    erase. . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> erase features with zero weight");
@@ -242,6 +254,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString utree_q_iteration_s(                "    q-iteration / qi . .<int> <double> . . . . . . . . . . . . . .-> run <int> iterations of Q-Learning with alpha <double>");
     QString utree_value_iteration_s(            "    v-iteration / vi . .[<int>]. . . . . . . . . . . . . . . . . .-> run one [<int>] iteration(s) of Value-Iteration");
     QString utree_expansion_type_s(             "    ex-type / ext. . . .[u(tility)|s(tate)r(eward)]. . . . . . . .-> get/set expansion type for UTree");
+    QString learning_linQ_s(                    "    === Linear-Q ===");
+    QString optimize_linQ_s(                    "    optimize-lq / olq   [<double>] . . . . . . . . . . . . . . . .-> optimize Linear-Q [ with L2-regularization coefficient <double> ]");
 
     QString planning_s(                       "\n    -------------------------Planning--------------------------");
     QString discount_s(                         "    discount . . . . . [<double>]. . . . . . . . . . . . . . . . .-> get [set] discount");
@@ -251,6 +265,11 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     set_s += "\n" + option_1_s;
     set_s += "\n" + option_2_s;
     set_s += "\n" + option_3_s;
+    set_s += "\n" + option_3a_s;
+    set_s += "\n" + option_3b_s;
+    set_s += "\n" + option_3c_s;
+    set_s += "\n" + option_3d_s;
+    set_s += "\n" + option_3e_s;
 
     QString invalid_args_s( "    invalid arguments" );
 
@@ -300,7 +319,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             TO_CONSOLE( learning_s );
             TO_CONSOLE( episode_s );
             TO_CONSOLE( learning_crf_s ); // CRF
-            TO_CONSOLE( optimize_s );
+            TO_CONSOLE( optimize_crf_s );
             TO_CONSOLE( score_s );
             TO_CONSOLE( add_s );
             TO_CONSOLE( erase_s );
@@ -315,6 +334,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             TO_CONSOLE( utree_q_iteration_s );
             TO_CONSOLE( utree_value_iteration_s );
             TO_CONSOLE( utree_expansion_type_s );
+            TO_CONSOLE( learning_linQ_s ); // linear-Q
+            TO_CONSOLE( optimize_linQ_s );
             // Planning
             TO_CONSOLE( planning_s );
             TO_CONSOLE( discount_s );
@@ -329,6 +350,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             if(record) {
                 crf.add_action_state_reward_tripel(action,state_to,reward);
                 utree.add_action_state_reward_tripel(action,state_to,reward);
+                linQ.add_action_state_reward_tripel(action,state_to,reward);
             }
             maze.render_update(ui.graphicsView);
         } else if(str_args[0]=="right" || str_args[0]=="r") { // right
@@ -340,6 +362,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             if(record) {
                 crf.add_action_state_reward_tripel(action,state_to,reward);
                 utree.add_action_state_reward_tripel(action,state_to,reward);
+                linQ.add_action_state_reward_tripel(action,state_to,reward);
             }
             maze.render_update(ui.graphicsView);
         } else if(str_args[0]=="up" || str_args[0]=="u") { // up
@@ -351,6 +374,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             if(record) {
                 crf.add_action_state_reward_tripel(action,state_to,reward);
                 utree.add_action_state_reward_tripel(action,state_to,reward);
+                linQ.add_action_state_reward_tripel(action,state_to,reward);
             }
             maze.render_update(ui.graphicsView);
         } else if(str_args[0]=="down" || str_args[0]=="d") { // down
@@ -362,6 +386,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             if(record) {
                 crf.add_action_state_reward_tripel(action,state_to,reward);
                 utree.add_action_state_reward_tripel(action,state_to,reward);
+                linQ.add_action_state_reward_tripel(action,state_to,reward);
             }
             maze.render_update(ui.graphicsView);
         } else if(str_args[0]=="stay" || str_args[0]=="s") { // stay
@@ -373,6 +398,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             if(record) {
                 crf.add_action_state_reward_tripel(action,state_to,reward);
                 utree.add_action_state_reward_tripel(action,state_to,reward);
+                linQ.add_action_state_reward_tripel(action,state_to,reward);
             }
             maze.render_update(ui.graphicsView);
         } else if(str_args[0]=="move") { // start/stop moving
@@ -415,13 +441,14 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             } else if( str_args[1]=="clear" || str_args[1]=="c" ) {
                 crf.clear_data();
                 utree.clear_data();
+                linQ.clear_data();
             } else if(int_args_ok[1] && int_args[1]>=0){
                 collect_episode(int_args[1]);
             } else {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( episode_s );
             }
-        } else if(str_args[0]=="optimize" || str_args[0]=="o") { // optimize CRF
+        } else if(str_args[0]=="optimize-crf" || str_args[0]=="oc") { // optimize CRF
             if(str_args.size()==1 || int_args_ok[1] ) {
                 if(int_args_ok[1]) {
                     crf.optimize_model(l1_factor, int_args[1]);
@@ -432,7 +459,18 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 crf.check_derivatives(3,10,1e-6,1e-3);
             } else {
                 TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( optimize_s );
+                TO_CONSOLE( optimize_crf_s );
+            }
+        } else if(str_args[0]=="optimize-lq" || str_args[0]=="olq") { // optimize linear-Q
+            if(str_args.size()==1 || double_args_ok[1] ) {
+                if(double_args_ok[1]) {
+                    linQ.optimize(double_args[1]);
+                } else {
+                    linQ.optimize(0);
+                }
+            } else {
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( optimize_crf_s );
             }
         } else if(str_args[0]=="epsilon") {
             if(str_args.size()==1) {
@@ -523,6 +561,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 discount = double_args[1];
                 look_ahead_search.set_discount(discount);
                 utree.set_discount(discount);
+                linQ.set_discount(discount);
             } else {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( discount_s );
@@ -647,9 +686,12 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 } else if(str_args[2]=="utree" || str_args[2]=="u") {
                     planner_type = UTREE_PLANNER;
                     TO_CONSOLE( "    using UTree planner" );
-                } else if(str_args[2]=="uv") {
+                } else if(str_args[2]=="uv" || str_args[2]=="utree-value") {
                     planner_type = UTREE_VALUE;
                     TO_CONSOLE( "    using UTree-value for action selection" );
+                } else if(str_args[2]=="lq" || str_args[2]=="linear-q") {
+                    planner_type = LINEAR_Q_VALUE;
+                    TO_CONSOLE( "    using linear Q-approximation for action selection" );
                 }
             } else {
                 TO_CONSOLE( invalid_args_s );
