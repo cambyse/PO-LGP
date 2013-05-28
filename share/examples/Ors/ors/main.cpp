@@ -1,5 +1,5 @@
 #include <Ors/ors.h>
-#include <Array/algos.h>
+#include <Core/algos.h>
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
 #include <GL/gl.h>

@@ -14,8 +14,8 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/> */
 
-/** \file nputils.h
-    \brief Set of small commonly used routines */
+/** @file nputils.h
+    @brief Set of small commonly used routines */
 
 #ifndef _NPUTILS_H
 #define _NPUTILS_H
@@ -108,7 +108,7 @@ void load_array(MT::Array<T>& array, const char* filename, const char* tag)
   is.close();
 };
 
-/** \brief Break a string or char array into tokens
+/** @brief Break a string or char array into tokens
  *
  *  @param tokens     string array with tokens
  *  @param str        the input string
@@ -118,7 +118,7 @@ void load_array(MT::Array<T>& array, const char* filename, const char* tag)
  */
 void tokenize(stringA& tokens, const std::string& str, char delimiter);
 
-/** \brief Break a global path into 3 tokens: path, file name, and file extension
+/** @brief Break a global path into 3 tokens: path, file name, and file extension
  *
  *  @param tokens         three strings: path, file name, and file extension
  *  @param path2filename  global path and filename, e.g. "/home/foo/bar.c"

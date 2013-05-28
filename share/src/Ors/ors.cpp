@@ -32,8 +32,8 @@
 #include "ors.h"
 
 #ifndef MT_ORS_ONLY_BASICS
-#  include <Kvg/registry.h>
-#  include <Gui/plot.h>
+#  include <Core/registry.h>
+//#  include <Gui/plot.h>
 #endif
 #ifdef MT_PLY
 #  include <ply/ply.h>
@@ -403,7 +403,7 @@ void ors::Graph::copyShapesAndJoints(const Graph& G) {
   calcBodyFramesFromJoints();
 }
 
-/** \brief transforms (e.g., translates or rotates) the joints coordinate system):
+/** @brief transforms (e.g., translates or rotates) the joints coordinate system):
   `adds' the transformation f to A and its inverse to B */
 void ors::Graph::transformJoint(ors::Joint *e, const ors::Transformation &f) {
   e->A = e->A * f;
@@ -419,13 +419,13 @@ void ors::Graph::makeLinkTree() {
   isLinkTree=true;
 }
 
-//! [prelim] some kind of gyroscope
+/// [prelim] some kind of gyroscope
 void ors::Graph::getGyroscope(ors::Vector& up) const {
   up.set(0, 0, 1);
   up=bodies(0)->X.rot*up;
 }
 
-/** \brief KINEMATICS: given the (absolute) frames of root nodes and the relative frames
+/** @brief KINEMATICS: given the (absolute) frames of root nodes and the relative frames
     on the edges, this calculates the absolute frames of all other nodes (propagating forward
     through trees and testing consistency of loops). */
 void ors::Graph::calcBodyFramesFromJoints() {
@@ -472,7 +472,7 @@ void ors::Graph::calcShapeFramesFromBodies() {
   }
 }
 
-/** \brief given the absolute frames of all nodes and the two rigid (relative)
+/** @brief given the absolute frames of all nodes and the two rigid (relative)
     frames A & B of each edge, this calculates the dynamic (relative) joint
     frame X for each edge (which includes joint transformation and errors) */
 void ors::Graph::calcJointsFromBodyFrames() {
@@ -486,7 +486,7 @@ void ors::Graph::calcJointsFromBodyFrames() {
   }
 }
 
-/** \brief in all edge frames: remove any displacements, velocities and non-x rotations.
+/** @brief in all edge frames: remove any displacements, velocities and non-x rotations.
     After this, edges and nodes are not coherent anymore. You might want to call
     calcBodyFramesFromJoints() */
 void ors::Graph::clearJointErrors() {
@@ -501,7 +501,7 @@ void ors::Graph::clearJointErrors() {
   }
 }
 
-/** \brief invert all velocity variables of all frames */
+/** @brief invert all velocity variables of all frames */
 void ors::Graph::invertTime() {
   Body *n;
   Joint *e;
@@ -538,7 +538,7 @@ void ors::Graph::computeNaturalQmetric(arr& W) {
   if(Qlin.N) W = ~Qlin*W*Qlin;
 }
 
-/** \brief revert the topological orientation of a joint (edge),
+/** @brief revert the topological orientation of a joint (edge),
    e.g., when choosing another body as root of a tree */
 void ors::Graph::revertJoint(ors::Joint *e) {
   cout <<"reverting edge (" <<e->from->name <<' ' <<e->to->name <<")" <<endl;
@@ -553,7 +553,7 @@ void ors::Graph::revertJoint(ors::Joint *e) {
   e->Q.setInverse(f);
 }
 
-/** \brief re-orient all joints (edges) such that n becomes
+/** @brief re-orient all joints (edges) such that n becomes
   the root of the configuration */
 void ors::Graph::reconfigureRoot(Body *n) {
   MT::Array<Body*> list, list2;
@@ -583,7 +583,7 @@ void ors::Graph::reconfigureRoot(Body *n) {
   graphTopsort(bodies, joints);
 }
 
-/** \brief returns the joint (actuator) dimensionality */
+/** @brief returns the joint (actuator) dimensionality */
 uint ors::Graph::getJointStateDimension(bool internal) const {
   Joint *e;
   uint i;
@@ -628,7 +628,7 @@ void ors::Graph::zeroGaugeJoints() {
   }
 }
 
-/** \brief returns the joint state vectors separated in positions and
+/** @brief returns the joint state vectors separated in positions and
   velocities */
 void ors::Graph::getJointState(arr& x, arr& v) const {
   Joint *e;
@@ -709,10 +709,10 @@ void ors::Graph::getJointState(arr& x, arr& v) const {
   }
 }
 
-/** \brief returns the joint positions only */
+/** @brief returns the joint positions only */
 void ors::Graph::getJointState(arr& x) const { arr v; getJointState(x, v); }
 
-/** \brief sets the joint state vectors separated in positions and
+/** @brief sets the joint state vectors separated in positions and
   velocities */
 void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErrors) {
   Joint *e;
@@ -874,7 +874,7 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
   }
 }
 
-/** \brief sets the joint angles with velocity zero - e.g. for kinematic
+/** @brief sets the joint angles with velocity zero - e.g. for kinematic
   simulation only */
 void ors::Graph::setJointState(const arr& x, bool clearJointErrors) {
   setJointState(x, NoArr, clearJointErrors);
@@ -890,14 +890,14 @@ void ors::Graph::setJointState(const arr& x, bool clearJointErrors) {
 // David Baraff: "Linear-Time Dynamics using Lagrange Multipliers"
 // Roy Featherstone, David Orin: "Robot Dynamics: Equations and Algorithms"
 
-/** \brief return the position \f$x = \phi_i(q)\f$ of the i-th body (3 vector) */
+/** @brief return the position \f$x = \phi_i(q)\f$ of the i-th body (3 vector) */
 void ors::Graph::kinematicsPos(arr& y, uint a, ors::Vector *rel) const {
   ors::Vector pos=bodies(a)->X.pos;
   if(rel) pos += bodies(a)->X.rot*(*rel);
   y = ARRAY(pos);
 }
 
-/** \brief return the jacobian \f$J = \frac{\partial\phi_i(q)}{\partial q}\f$ of the position
+/** @brief return the jacobian \f$J = \frac{\partial\phi_i(q)}{\partial q}\f$ of the position
   of the i-th body (3 x n tensor)*/
 void ors::Graph::jacobianPos(arr& J, uint a, ors::Vector *rel) const {
   uint i;
@@ -949,7 +949,7 @@ void ors::Graph::jacobianPos(arr& J, uint a, ors::Vector *rel) const {
   if(Qlin.N) J=J*Qlin;
 }
 
-/** \brief return the Hessian \f$H = \frac{\partial^2\phi_i(q)}{\partial q\partial q}\f$ of the position
+/** @brief return the Hessian \f$H = \frac{\partial^2\phi_i(q)}{\partial q\partial q}\f$ of the position
   of the i-th body (3 x n x n tensor) */
 void ors::Graph::hessianPos (arr& H, uint a, ors::Vector *rel) const {
   uint i, j;
@@ -1015,7 +1015,7 @@ void ors::Graph::hessianPos (arr& H, uint a, ors::Vector *rel) const {
   if(Qlin.N) H=~Qlin*H*Qlin;
 }
 
-//! kinematis of the i-th body's z-orientation vector
+/// kinematis of the i-th body's z-orientation vector
 void ors::Graph::kinematicsVec(arr& y, uint a, ors::Vector *vec) const {
   ors::Transformation f=bodies(a)->X;
   ors::Vector v;
@@ -1025,7 +1025,7 @@ void ors::Graph::kinematicsVec(arr& y, uint a, ors::Vector *vec) const {
 
 /* takes the joint state x and returns the jacobian dz of
    the position of the ith body (w.r.t. all joints) -> 2D array */
-//! Jacobian of the i-th body's z-orientation vector
+/// Jacobian of the i-th body's z-orientation vector
 void ors::Graph::jacobianVec(arr& J, uint a, ors::Vector *vec) const {
   uint i;
   Joint *ei;
@@ -1114,7 +1114,7 @@ void ors::Graph::jacobianR(arr& J, uint a) const {
   if(Qlin.N) J=J*Qlin;
 }
 
-/** \brief return the configuration's inertia tensor $M$ (n x n tensor)*/
+/** @brief return the configuration's inertia tensor $M$ (n x n tensor)*/
 void ors::Graph::inertia(arr& M) {
   uint a, i, j;
   ors::Transformation Xa, Xi, Xj;
@@ -1176,7 +1176,7 @@ void ors::Graph::equationOfMotion(arr& M, arr& F, const arr& qd) {
   ors::equationOfMotion(M, F, tree, qd);
 }
 
-/** \brief return the joint accelerations \f$\ddot q\f$ given the
+/** @brief return the joint accelerations \f$\ddot q\f$ given the
   joint torques \f$\tau\f$ (computed via Featherstone's Articulated Body Algorithm in O(n)) */
 void ors::Graph::dynamics(arr& qdd, const arr& qd, const arr& tau) {
   static ors::LinkTree tree;
@@ -1188,7 +1188,7 @@ void ors::Graph::dynamics(arr& qdd, const arr& qd, const arr& tau) {
   ors::fwdDynamics_MF(qdd, tree, qd, tau);
 }
 
-/** \brief return the necessary joint torques \f$\tau\f$ to achieve joint accelerations
+/** @brief return the necessary joint torques \f$\tau\f$ to achieve joint accelerations
   \f$\ddot q\f$ (computed via the Recursive Newton-Euler Algorithm in O(n)) */
 void ors::Graph::inverseDynamics(arr& tau, const arr& qd, const arr& qdd) {
   static ors::LinkTree tree;
@@ -1205,7 +1205,7 @@ void ors::Graph::inverseDynamics(arr& tau, const arr& qd, const arr& qdd) {
   Featherstone::RF_abd(qdd, tree, qd, tau);
 }*/
 
-//! [prelim] some heuristic measure for the joint errors
+/// [prelim] some heuristic measure for the joint errors
 double ors::Graph::getJointErrors() const {
   Joint *e;
   double err=0.0;
@@ -1216,7 +1216,7 @@ double ors::Graph::getJointErrors() const {
   return ::sqrt(err);
 }
 
-/** \brief checks if all names of the bodies are disjoint */
+/** @brief checks if all names of the bodies are disjoint */
 bool ors::Graph::checkUniqueNames() const {
   Body *n, *m;
   uint i, j;
@@ -1227,7 +1227,7 @@ bool ors::Graph::checkUniqueNames() const {
   return true;
 }
 
-//! find body with specific name
+/// find body with specific name
 ors::Body* ors::Graph::getBodyByName(const char* name) const {
   Body *n;
   uint j;
@@ -1239,7 +1239,7 @@ ors::Body* ors::Graph::getBodyByName(const char* name) const {
   return 0;
 }
 
-//! find body index with specific name
+/// find body index with specific name
 uint ors::Graph::getBodyIndexByName(const char* name) const {
   Body *n;
   uint j;
@@ -1251,7 +1251,7 @@ uint ors::Graph::getBodyIndexByName(const char* name) const {
   return 0;
 }
 
-//! find shape with specific name
+/// find shape with specific name
 ors::Shape* ors::Graph::getShapeByName(const char* name) const {
   Shape *s;
   uint j;
@@ -1262,7 +1262,7 @@ ors::Shape* ors::Graph::getShapeByName(const char* name) const {
   return NULL;
 }
 
-//! find shape index with specific name
+/// find shape index with specific name
 uint ors::Graph::getShapeIndexByName(const char* name) const {
   Shape *s;
   uint j;
@@ -1273,7 +1273,7 @@ uint ors::Graph::getShapeIndexByName(const char* name) const {
   return 0;
 }
 
-//! find joint connecting two bodies with specific names
+/// find joint connecting two bodies with specific names
 ors::Joint* ors::Graph::getJointByBodyNames(const char* from, const char* to) const {
   Body *f=NULL, *t=NULL;
   uint j;
@@ -1283,14 +1283,14 @@ ors::Joint* ors::Graph::getJointByBodyNames(const char* from, const char* to) co
   return graphGetEdge<Body, Joint>(f, t);
 }
 
-/** \brief creates uniques names by prefixing the node-index-number to each name */
+/** @brief creates uniques names by prefixing the node-index-number to each name */
 void ors::Graph::prefixNames() {
   Body *n;
   uint j;
   for_list(j, n, bodies) n->name=STRING(n->index<< n->name);
 }
 
-/** \brief prototype for \c operator<< */
+/** @brief prototype for \c operator<< */
 void ors::Graph::write(std::ostream& os) const {
   Body *n;
   Joint *e;
@@ -1320,7 +1320,7 @@ void ors::Graph::read(const char* string) {
   read(is);  
 }
 
-/** \brief prototype for \c operator>> */
+/** @brief prototype for \c operator>> */
 void ors::Graph::read(std::istream& is) {
   uint i; Item *it;
   KeyValueGraph G;
@@ -1443,7 +1443,7 @@ end_header\n";
   }
 }
 
-//! dump the list of current proximities on the screen
+/// dump the list of current proximities on the screen
 void ors::Graph::reportProxies(std::ostream *os) {
   uint i;
   int a, b;
@@ -1487,7 +1487,7 @@ void ors::Graph::sortProxies(bool deleteMultiple) {
   }
 }
 
-/** \brief dump a list body pairs for which the upper conditions hold */
+/** @brief dump a list body pairs for which the upper conditions hold */
 void ors::Graph::reportGlue(std::ostream *os) {
   uint i, A, B;
   Body *a, *b;
@@ -1525,7 +1525,7 @@ void ors::Graph::glueBodies(Body *f, Body *t) {
   e->B.setZero();
 }
 
-/** \brief if two bodies touch, the are not yet connected, and one of them has
+/** @brief if two bodies touch, the are not yet connected, and one of them has
   the `glue' attribute, add a new edge of FIXED type between them */
 void ors::Graph::glueTouchingBodies() {
   uint i, A, B;
@@ -1546,7 +1546,7 @@ void ors::Graph::glueTouchingBodies() {
   }
 }
 
-//! clear all forces currently stored at bodies
+/// clear all forces currently stored at bodies
 void ors::Graph::clearForces() {
   Body *n;
   uint j;
@@ -1556,7 +1556,7 @@ void ors::Graph::clearForces() {
   }
 }
 
-//! apply a force on body n at position pos (in world coordinates)
+/// apply a force on body n at position pos (in world coordinates)
 void ors::Graph::addForce(ors::Vector force, Body *n, ors::Vector pos) {
   n->force += force;
   NIY;
@@ -1590,7 +1590,7 @@ void ors::Graph::gravityToForces() {
   for_list(j, n, bodies) n->force += n->mass * g;
 }
 
-//! compute forces from the current contacts
+/// compute forces from the current contacts
 void ors::Graph::contactsToForces(double hook, double damp) {
   ors::Vector trans, transvel, force;
   uint i;
@@ -1614,7 +1614,7 @@ void ors::Graph::contactsToForces(double hook, double damp) {
     }
 }
 
-//! measure (=scalar kinematics) for the contact cost summed over all bodies
+/// measure (=scalar kinematics) for the contact cost summed over all bodies
 void ors::Graph::phiCollision(arr &y, arr& J, double margin) const {
   y.resize(1);
   y=0.;
@@ -1693,7 +1693,7 @@ void ors::Graph::getContactMeasure(arr &x, double margin, bool linear) const {
     }
 }
 
-//! gradient (=scalar Jacobian) of this contact cost
+/// gradient (=scalar Jacobian) of this contact cost
 double ors::Graph::getContactGradient(arr &grad, double margin, bool linear) const {
   ors::Vector normal;
   uint i;
@@ -1743,14 +1743,14 @@ double ors::Graph::getContactGradient(arr &grad, double margin, bool linear) con
 }
 #endif
 
-//! measure (=scalar kinematics) for the contact cost summed over all bodies
+/// measure (=scalar kinematics) for the contact cost summed over all bodies
 void ors::Graph::getContactConstraints(arr& y) const {
   y.clear();
   uint i;
   for(i=0; i<proxies.N; i++) y.append(proxies(i)->d);
 }
 
-//! gradient (=scalar Jacobian) of this contact cost
+/// gradient (=scalar Jacobian) of this contact cost
 void ors::Graph::getContactConstraintsGradient(arr &dydq) const {
   dydq.clear();
   ors::Vector normal;
@@ -1857,7 +1857,7 @@ double ors::Graph::getLimitsGradient(arr &grad, const arr& limits, double margin
   return cost;
 }
 
-//! center of mass of the whole configuration (3 vector)
+/// center of mass of the whole configuration (3 vector)
 double ors::Graph::getCenterOfMass(arr& x_) const {
   double M=0.;
   Body *n;
@@ -1873,7 +1873,7 @@ double ors::Graph::getCenterOfMass(arr& x_) const {
   return M;
 }
 
-//! gradient (Jacobian) of the COM w.r.t. q (3 x n tensor)
+/// gradient (Jacobian) of the COM w.r.t. q (3 x n tensor)
 void ors::Graph::getComGradient(arr &grad) const {
   double M=0.;
   Body *n;
@@ -1888,7 +1888,7 @@ void ors::Graph::getComGradient(arr &grad) const {
   grad/=M;
 }
 
-/** \brief returns a k-dim vector containing the penetration depths of all bodies */
+/** @brief returns a k-dim vector containing the penetration depths of all bodies */
 void ors::Graph::getPenetrationState(arr &vec) const {
   vec.resize(bodies.N);
   vec.setZero();
@@ -1911,7 +1911,7 @@ ors::Proxy* ors::Graph::getContact(uint a, uint b) const {
   return NULL;
 }
 
-/** \brief a vector describing the incoming forces (penetrations) on one object */
+/** @brief a vector describing the incoming forces (penetrations) on one object */
 void ors::Graph::getGripState(arr& grip, uint j) const {
   ors::Vector d, p;
   ors::Vector sumOfD; sumOfD.setZero();
@@ -1955,7 +1955,7 @@ void ors::Graph::getGripState(arr& grip, uint j) const {
 }
 
 #if 0 //OBSOLETE
-//! returns the number of touch-sensors
+/// returns the number of touch-sensors
 uint ors::Graph::getTouchDimension() {
   Body *n;
   uint i=0, j;
@@ -1966,7 +1966,7 @@ uint ors::Graph::getTouchDimension() {
   return i;
 }
 
-//! returns the touch vector (penetrations) of all touch-sensors
+/// returns the touch vector (penetrations) of all touch-sensors
 void ors::Graph::getTouchState(arr& touch) {
   if(!td) td=getTouchDimension();
   arr pen;
@@ -1983,7 +1983,7 @@ void ors::Graph::getTouchState(arr& touch) {
 }
 #endif
 
-/** \brief */
+/** @brief */
 double ors::Graph::getEnergy() const {
   Body *n;
   uint j;
@@ -2062,7 +2062,7 @@ void ors::Graph::meldFixedJoint(){
 
 
 
-/** \brief get the center of mass, total velocity, and total angular momemtum */
+/** @brief get the center of mass, total velocity, and total angular momemtum */
 void ors::Graph::getTotals(ors::Vector& c, ors::Vector& v, ors::Vector& l, ors::Quaternion& ori) const {
   Body *n;
   uint j;
@@ -2105,7 +2105,7 @@ void ors::Graph::getTotals(ors::Vector& c, ors::Vector& v, ors::Vector& l, ors::
 
 //-- template instantiations
 
-#include <Array/util_t.h>
+#include <Core/util_t.h>
 template void MT::Parameter<ors::Vector>::initialize();
 
 #ifndef  MT_ORS_ONLY_BASICS
@@ -2113,7 +2113,7 @@ template void MT::save<ors::Graph>(const ors::Graph&, const char*);
 template MT::Array<ors::Shape*>::Array(uint);
 template ors::Shape* listFindByName(const MT::Array<ors::Shape*>&,const char*);
 
-#include <Array/array_t.h>
+#include <Core/array_t.h>
 template MT::Array<ors::Joint*>::Array();
 inline std::istream& operator>>(std::istream& is, TaskVariable*&){NIY}
 inline std::ostream& operator<<(std::ostream& os, const TaskVariable*&){NIY}

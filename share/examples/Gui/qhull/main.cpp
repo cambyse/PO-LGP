@@ -1,6 +1,6 @@
-#include <Gui/geo.h>
+#include <Gui/mesh.h>
 #include <Gui/opengl.h>
-#include <Array/algos.h>
+#include <Core/algos.h>
 #include <Gui/plot.h>
 #include <qhull/qhull.h>
 

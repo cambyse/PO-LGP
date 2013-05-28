@@ -297,7 +297,7 @@ void PhysXInterface::create() {
     //WARNING: actors must be aligned (indexed) exactly as G->bodies
   }
 
-  //! ADD joints here!
+  /// ADD joints here!
   ors::Joint* jj;
   for_list(i, jj, G->joints) {
     PxTransform A = OrsTrans2PxTrans(jj->A);
@@ -332,7 +332,7 @@ void PhysXInterface::create() {
       NIY;
     }
   }
-  //! end of joints
+  /// end of joints
 }
 
 void PhysXInterface::pullState() {

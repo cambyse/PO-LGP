@@ -54,7 +54,7 @@ typedef MT::Array<Object*> ObjectList;
 // Variables
 //
 
-/** \brief q_state_Variable: the current state of all joints of a robot and how these
+/** @brief q_state_Variable: the current state of all joints of a robot and how these
   DoFs map to motor indices and hand indices */
 struct q_currentReferenceVar:public Variable {
   arr q_reference, v_reference;

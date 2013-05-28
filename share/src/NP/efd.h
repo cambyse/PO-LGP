@@ -14,13 +14,13 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/> */
 
-/** \file efd.h
-    \brief Elliptic Fourier Descriptors (EFD) */
+/** @file efd.h
+    @brief Elliptic Fourier Descriptors (EFD) */
 
 #include <MT/array.h>
 
 namespace np {
-/** \brief Compute the Elliptic Fourier Descriptors for a contour
+/** @brief Compute the Elliptic Fourier Descriptors for a contour
  *
  *  This function is the implementation of the EFD algorithm described in
  *

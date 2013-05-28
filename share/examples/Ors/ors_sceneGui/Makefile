@@ -1,5 +1,5 @@
 BASE = ../../..
 
-DEPEND = Ors Array Gui Kvg
+DEPEND = Ors Core Gui
 
 include $(BASE)/make-generic

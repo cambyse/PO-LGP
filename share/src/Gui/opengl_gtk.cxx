@@ -25,8 +25,8 @@
 #include <X11/Xlib.h>
 #include <GL/glx.h>
 
+#include <Core/geo.h>
 #include "opengl.h"
-#include "geo.h"
 #include "gtk.h"
 
 void initGlEngine(){
@@ -76,7 +76,7 @@ struct sOpenGL{
 // OpenGL implementations
 //
 
-//! constructor
+/// constructor
 
 void OpenGL::postRedrawEvent(bool fromWithinCallback){
   if(!fromWithinCallback) gtkLock();
@@ -95,7 +95,7 @@ void OpenGL::processEvents(){
 void OpenGL::enterEventLoop(){ watching.setValue(1); watching.waitForValueEq(0); } //loopExit=false; while(!loopExit){ gtkLock(); gtk_main_iteration(); gtkUnlock(); } }
 void OpenGL::exitEventLoop(){  watching.setValue(0); }
 
-//! resize the window
+/// resize the window
 void OpenGL::resize(int w,int h){
   gtkLock();
   gtk_widget_set_size_request(s->glArea, w, h);

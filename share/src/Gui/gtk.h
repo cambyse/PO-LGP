@@ -20,7 +20,7 @@
 #ifndef MT_gtk_h
 #define MT_gtk_h
 
-#include <Array/array.h>
+#include <Core/array.h>
 
 typedef struct _GtkWidget GtkWidget;
 

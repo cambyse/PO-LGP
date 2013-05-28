@@ -139,13 +139,13 @@ void displayTrajectory(ControlledSystem& sys, const arr& x, const arr *Binv, int
     sys.displayCurrentState(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p, true);
 }
 
-//! \brief get the velocity vt of a trajectory q at time t
+/// @brief get the velocity vt of a trajectory q at time t
 void getVelocity(arr& vt, const arr& q, uint t, double tau){
   if(!t) vt = (q[0]-q[0])/tau;
   else   vt = (q[t]-q[t-1])/tau;
 }
 
-//! compute the full (q, v) trajectory from a trajectory q
+/// compute the full (q, v) trajectory from a trajectory q
 void getPhaseTrajectory(arr& x, const arr& q, double tau){
   uint T=q.d0-1, n=q.d1, t;
   x.resize(T+1, 2, n);
@@ -157,7 +157,7 @@ void getPhaseTrajectory(arr& x, const arr& q, double tau){
   x.reshape(T+1, 2*n);
 }
 
-//! simply get the q-trajectory from a (q, v)-trajectory
+/// simply get the q-trajectory from a (q, v)-trajectory
 void getPositionTrajectory(arr& q, const arr& _q){
   uint T=_q.d0, n=_q.d1/2, i, t;
   CHECK(2*n==_q.d1, "")
@@ -165,7 +165,7 @@ void getPositionTrajectory(arr& q, const arr& _q){
   for(t=0; t<T; t++) for(i=0; i<n; i++) q(t, i)=_q(t, i);
 }
 
-/** \brief use regularized Inverse Kinematics to compute a joint
+/** @brief use regularized Inverse Kinematics to compute a joint
     trajectory from the task trajectory previously specifies for the
     taskid-th task variable */
 void straightTaskTrajectory(ControlledSystem& sys, arr& x){

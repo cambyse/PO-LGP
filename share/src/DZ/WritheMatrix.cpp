@@ -12,8 +12,8 @@ ors::Vector n_a =  (r_ac^r_ad)/ (r_ac^r_ad).length();
 ors::Vector n_b =  (r_ad^r_bd)/ (r_ad^r_bd).length();
 ors::Vector n_c =  (r_bd^r_bc)/ (r_bd^r_bc).length();
 ors::Vector n_d =  (r_bc^r_ac)/ (r_bc^r_ac).length();
-//! TRICK
-double eps = 1e-10; n_a*=(1.0 - eps);n_b*=(1.0 - eps);n_c*=(1.0 - eps);n_d*=(1.0 - eps);//! trick against greater then 1.0 values
+/// TRICK
+double eps = 1e-10; n_a*=(1.0 - eps);n_b*=(1.0 - eps);n_c*=(1.0 - eps);n_d*=(1.0 - eps);/// trick against greater then 1.0 values
 
  writhe = asin(n_a*n_b) + asin(n_b*n_c) + asin(n_c*n_d)+asin(n_d*n_a);
 }
@@ -38,8 +38,8 @@ double B,D;
 arr A_prime, B_prime, C_prime, D_prime,A,C;
 uint n=Jab.d2;
 A = ARRAY(r1^r2); B=(r1^r2).length(); C=ARRAY(r2^r3); D=(r2^r3).length();
-//! TRICK
-B*=(1.0+1e-10); D*=(1.0+1e-10);//! trick against greater then 1.0 values
+/// TRICK
+B*=(1.0+1e-10); D*=(1.0+1e-10);/// trick against greater then 1.0 values
 
 A_prime = cwcp(Jab[d1], r2) - cwcp(Jab[d2], r1);
 B_prime = ~A*A_prime/B;
@@ -95,7 +95,7 @@ void WritheJacobian(arr& JM, const arr& rope1, const arr& rope2,arr& pointsJ,int
   JM.resize(dim1*dim2,total_joint_number);
   int cnt=0;
   for (int i=0;i<dim1;i++) {
-    //! TODO check it!
+    /// TODO check it!
     if (i>0) Jab[0] = pointsJ[i-1];
     else Jab[0]=zeros(3,total_joint_number);
     
@@ -111,31 +111,31 @@ void WritheJacobian(arr& JM, const arr& rope1, const arr& rope2,arr& pointsJ,int
   }} 
 }
 
-//! Scalar experiments
+/// Scalar experiments
 void GetScalarWrithe(arr& WS, const arr& rope1, const arr& rope2,int dim){
   arr Matr,vect;
   double scalar=0.;
    WS.resize(1);//=zeros(dim); //(1,1);
    WS.setZero();
   GetWritheMatrix(Matr,rope1,rope2,dim,dim);
-  //!diagonal
+  ///diagonal
 //   Matr.reshape(dim,dim);
 //   for (int k=0;k<dim;k++){
 //     WS(0) += Matr(k,k);
 //   }
 
-  //! all
+  /// all
   Matr.reshape(dim*dim);
   for (int k=0;k<dim*dim;k++){
     WS(0) += Matr(k);
   }
-  //!diagonal
-  //! diagonal vector
+  ///diagonal
+  /// diagonal vector
 /*  Matr.reshape(dim,dim);
   for (int k=0;k<dim;k++){
      WS(k) = Matr(k,k);
   }*/
-  //!end of  vector
+  ///end of  vector
 // WS =vect;
 }
 
@@ -145,21 +145,21 @@ void ScalarJacobian(arr& SJ, const arr& rope1, const arr& rope2,arr& pointsJ,int
   WritheJacobian(MatrJ,rope1,rope2,pointsJ,dim,dim);
   SJ.resize(1,total_joint_number);//SJ.resize(1,total_joint_number);
   SJ.setZero();
-  //!diagonal
+  ///diagonal
 //   MatrJ.reshape(dim,dim,total_joint_number);
 //   for (int i=0;i<dim;i++) {
 //     SJ[0]() += MatrJ[i][i];
 //   } 
-  //!all
+  ///all
   MatrJ.reshape(dim*dim,total_joint_number);
   for (int i=0;i<dim*dim;i++) {
     SJ[0]() += MatrJ[i]();
   } 
-    //!diagonal
-  //! diagonal vector
+    ///diagonal
+  /// diagonal vector
 /*   for (int i=0;i<dim;i++) {
      SJ[i]() = MatrJ[i][i];
    }*/
-  //!end of vector
+  ///end of vector
 //  CHECK(SJ.nd==2 && SJ.d1==total_joint_number,"dimensions!");
 }

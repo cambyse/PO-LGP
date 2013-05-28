@@ -53,18 +53,18 @@ void GetRopes(arr& r1,arr& r2,const ors::Graph& _ors,int rope_points1,int rope_p
  // cout<<rope1<<endl;
 //  cout<<rope2<<endl;
 }
-//! Matrix
+/// Matrix
 
 void WritheTaskVariable::userUpdate(const ors::Graph& ors){
     arr rope1,rope2,yy,Jp,JM,points;
     GetRopes(rope1,rope2,ors,segments1+1,segments2+1,obj_name);
     GetWritheMatrix(yy,rope1,rope2,segments1,segments2);
-    //! VECTOR
+    /// VECTOR
 //     y  = zeros(segments,1);
 //     //y.reshape(segments,1);
 //     y=yy[0];
 //     int wrsize = segments;
-    //! MATRIX
+    /// MATRIX
     y=zeros(segments1,segments2);
     y=yy;
     int wrsize = (segments1)* (segments2);
@@ -88,10 +88,10 @@ void WritheTaskVariable::userUpdate(const ors::Graph& ors){
 transpose(Jt,J);
 }
 
-//!end of matrix
+///end of matrix
 
 
-//! Scalar
+/// Scalar
 // void WritheTaskVariable::userUpdate(){
 //     arr rope1,rope2,yy,Jp,JM,points;
 //     GetRopes(rope1,rope2,*this->ors,segments+1,obj_name);
@@ -118,7 +118,7 @@ transpose(Jt,J);
 //    J=JM;
 // transpose(Jt,J);
 // }
-//! End of scalar
+/// End of scalar
 
 void WritheTaskVariable::epsilon_check(arr& delta_q, const ors::Graph& ors){
     arr rope1,rope2,yy,Jp,JM,points,y1,y2;

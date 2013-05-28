@@ -14,8 +14,8 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/> */
 
-/** \file vocutils.h
-    \brief Utility routines specifically for the VOC Challenge */
+/** @file vocutils.h
+    @brief Utility routines specifically for the VOC Challenge */
 
 #ifndef _NP_VOCUTILS_H
 #define _NP_VOCUTILS_H
@@ -49,7 +49,7 @@ static const uint voc_num_classes = 20;
 //   "tvmonitor"
 //  };
 
-/** \brief The VOC label colormap
+/** @brief The VOC label colormap
  *
  *  Generates a Look-up-table (LUT). Each index corresponds to a class index
  *  and gives the corresponding color for image coloration.
@@ -81,7 +81,7 @@ inline uintA voc_labelcolormap(uint size=256)
   return lut;
 }
 
-/** \brief Load a segmentation mask
+/** @brief Load a segmentation mask
  *
  *  Takes a PNG-file and converts the colors to the respective VOC class indices,
  *  cf. color codes of the VOC challenge.

@@ -15,7 +15,7 @@ typedef unsigned int uint;
 void reportNice();
 bool setNice(int);
 
-//! a basic read/write access lock
+/// a basic read/write access lock
 struct RWLock{
   int state;
   const char* msg;
@@ -29,7 +29,7 @@ struct RWLock{
   void unlock();                          ///< thread must unlock when they're done
 };
 
-//! a basic condition variable
+/// a basic condition variable
 struct ConditionVariable{
   int state;
   pthread_mutex_t mutex;
@@ -47,7 +47,7 @@ struct ConditionVariable{
   void waitUntil(double absTime);
 };
 
-//! a simple struct to realized a strict tic tac timing (call step() once in a loop)
+/// a simple struct to realized a strict tic tac timing (call step() once in a loop)
 struct Metronome{
   long targetDt;
   timespec ticTime, lastTime;
@@ -62,7 +62,7 @@ struct Metronome{
   double getTimeSinceTic();       ///< time since last tic
 };
 
-//! a really simple thing to meassure cycle and busy times
+/// a really simple thing to meassure cycle and busy times
 struct CycleTimer{
   uint steps;
   double cyclDt, cyclDtMean, cyclDtMax;  ///< internal variables to measure step time
@@ -76,7 +76,7 @@ struct CycleTimer{
   void cycleDone();
 };
   
-/** \brief a threading template: classes should derived from this can easily be threaded.
+/** @brief a threading template: classes should derived from this can easily be threaded.
    Every thread needs to implement an open, step and close method -- nothing more. The thread
    can be set to loop endlessly and with maximum speed, or be stepped (strict synchronization with
    the calling process). Threads should have public variables for input/output/parameters; the step() method

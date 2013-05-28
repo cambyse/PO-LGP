@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 
-#include <Gui/geo.h>
+#include <Gui/mesh.h>
 #include <Gui/opengl.h>
 
 #include "swift_decomposer.cpp"

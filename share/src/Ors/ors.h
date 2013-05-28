@@ -18,10 +18,11 @@
 #ifndef MT_ors_h
 #define MT_ors_h
 
-#include <Array/array.h>
-#include <Array/util.h>
-#include <Kvg/keyValueGraph.h>
-#include <Gui/geo.h>
+#include <Core/array.h>
+#include <Core/util.h>
+#include <Core/keyValueGraph.h>
+#include <Core/geo.h>
+#include <Gui/mesh.h>
 
 /**
  * @file
@@ -91,7 +92,7 @@ namespace ors {
 /** @addtogroup ors_basic_data_structures
  * @{
  */
-//! a rigid body (inertia properties, lists of attached joints & shapes)
+/// a rigid body (inertia properties, lists of attached joints & shapes)
 struct Body {
   uint index;          ///< unique identifier TODO:do we really need index, ifrom, ito, ibody??
   MT::Array<Joint*> inLinks, outLinks;       ///< lists of in and out joints
@@ -124,7 +125,7 @@ struct Body {
   void read(const char* string);
 };
 
-//! a joint
+/// a joint
 struct Joint {
   uint index;          ///< unique identifier
   uint qIndex;         ///< index where this joint appears in the q-state-vector
@@ -156,7 +157,7 @@ struct Joint {
   Joint &data() { return *this; }
 };
 
-//! a shape (geometric shape like cylinder/mesh, associated to a body)
+/// a shape (geometric shape like cylinder/mesh, associated to a body)
 struct Shape {
   uint index;
   uint ibody;
@@ -189,7 +190,7 @@ struct Shape {
   void read(std::istream& is);
 };
 
-//! proximity information (when two shapes become close)
+/// proximity information (when two shapes become close)
 struct Proxy {
   int a;              ///< index of shape A //TODO: would it be easier if this were ors::Shape* ? YES -> Do it!
   int b;              ///< index of shape B
@@ -202,9 +203,9 @@ struct Proxy {
 };
 
 //===========================================================================
-//! data structure to store a whole physical situation (lists of bodies, joints, shapes, proxies)
+/// data structure to store a whole physical situation (lists of bodies, joints, shapes, proxies)
 struct Graph {
-  //!@name data fields
+  /// @name data fields
   uint sd, jd, td; // added jd (joint dim.), 16. Mar 06 (hh)
   MT::Array<Body*>  bodies;
   MT::Array<Joint*> joints;
@@ -213,7 +214,7 @@ struct Graph {
   arr Qlin, Qoff, Qinv; //linear transformations of q
   bool isLinkTree;
 
-  //!@name constructors
+  /// @name constructors
   Graph() { sd=jd=0; bodies.memMove=joints.memMove=shapes.memMove=proxies.memMove=true; isLinkTree=false; }
   Graph(const char* filename) {
     sd=jd=0; bodies.memMove=joints.memMove=shapes.memMove=proxies.memMove=true; isLinkTree=false;
@@ -224,10 +225,10 @@ struct Graph {
   Graph* newClone() const;
   void copyShapesAndJoints(const Graph& G);
 
-  //!@name initializations
+  /// @name initializations
   void init(const char* filename);
 
-  //!@name changes of configuration
+  /// @name changes of configuration
   void clear();
   void revertJoint(Joint *e);
   void reconfigureRoot(Body *n);
@@ -240,7 +241,7 @@ struct Graph {
   void removeNonShapeBodies();
   void meldFixedJoint();
 
-  //!@name computations on the DoFs
+  /// @name computations on the DoFs
   void calcBodyFramesFromJoints();
   void calcShapeFramesFromBodies();
   void calcJointsFromBodyFrames();
@@ -250,7 +251,7 @@ struct Graph {
   void computeNaturalQmetric(arr& W);
   void fillInRelativeTransforms();
 
-  //!@name kinematics & dynamics
+  /// @name kinematics & dynamics
   void kinematicsPos(arr& y, uint i, ors::Vector *rel=0) const;
   void jacobianPos(arr& J, uint i, ors::Vector *rel=0) const;
   void hessianPos (arr& H, uint i, ors::Vector *rel=0) const;
@@ -262,10 +263,10 @@ struct Graph {
   void dynamics(arr& qdd, const arr& qd, const arr& tau);
   void inverseDynamics(arr& tau, const arr& qd, const arr& qdd);
 
-  //!@name special 'kinematic maps'
+  /// @name special 'kinematic maps'
   void phiCollision(arr &y, arr& J, double margin=.02) const;
 
-  //!@name get state
+  /// @name get state
   uint getJointStateDimension(bool internal=false) const;
   void getJointState(arr& x, arr& v) const;
   void getJointState(arr& x) const;
@@ -285,23 +286,23 @@ struct Graph {
   void getGripState(arr& grip, uint j) const;
   ors::Proxy* getContact(uint a, uint b) const;
 
-  //!@name set state
+  /// @name set state
   void setJointState(const arr& x, const arr& v, bool clearJointErrors=false);
   void setJointState(const arr& x, bool clearJointErrors=false);
   void setExternalState(const arr & x);//set array of body positions, sets all degrees of freedom except for the joint states
 
-  //!@name forces and gravity
+  /// @name forces and gravity
   void clearForces();
   void addForce(ors::Vector force, Body *n, ors::Vector pos);
   void contactsToForces(double hook=.01, double damp=.0003);
   void gravityToForces();
   void frictionToForces(double coeff);
 
-  //!@name I/O
+  /// @name I/O
   void reportProxies(std::ostream *os=&std::cout);
   void reportGlue(std::ostream *os=&std::cout);
 
-  //!@name managing the data
+  /// @name managing the data
   void sortProxies(bool deleteMultiple=false);
   bool checkUniqueNames() const;
 
@@ -387,7 +388,7 @@ enum TargetType { noneTT, directTT, positionGainsTT, pdGainOnRealTT, pdGainOnRef
 //===========================================================================
 /** basic task variable */
 struct TaskVariable {
-  //!@name data fields
+  /// @name data fields
   bool active;          ///< active?
   TVtype type;          ///< which type has this variable (arguably: this could be member of DefaultTV -- but useful here)
   TargetType targetType;///< what target type
@@ -406,17 +407,17 @@ struct TaskVariable {
   //a bit obsolete
   double err, derr;
 
-  //!@name initialization
+  /// @name initialization
   TaskVariable();
   virtual ~TaskVariable() = 0;
   virtual TaskVariable* newClone() = 0;
 
-  //!@name online target parameters
+  /// @name online target parameters
   void setGains(double Pgain, double Dgain, bool onReal=true);
   void setGainsAsNatural(double decaySteps, double dampingRatio, bool onReal=true);
   void setGainsAsAttractor(double decaySteps, double oscillations=.2, bool onReal=true);
 
-  //!@name trajectory target parameters
+  /// @name trajectory target parameters
   /// @todo REMOVE ALL of the following options:
   void setConstantTargetTrajectory(uint T);
   void setInterpolatedTargetTrajectory(uint T);
@@ -439,12 +440,12 @@ struct TaskVariable {
 
   void shiftTargets(int offset);
 
-  //!@name updates
+  /// @name updates
   virtual void updateState(const ors::Graph &ors, double tau=1.) = 0; //updates both, state and Jacobian -> TODO: rename update(..)
   void updateChange(int t=-1, double tau=1.);
   virtual void getHessian(const ors::Graph& ors, arr& H) { NIY; }
 
-  //!@name I/O
+  /// @name I/O
   virtual void write(ostream& os, const ors::Graph& ors) const;
   void write(ostream& os) const {NIY};
 };
@@ -453,12 +454,12 @@ stdOutPipe(TaskVariable);
 //===========================================================================
 /** The default implementation of standard task variables. */
 struct DefaultTaskVariable:public TaskVariable {
-  //!@name data fields
+  /// @name data fields
   int i, j;             ///< which body(-ies) does it refer to?
   ors::Transformation irel, jrel; ///< relative position to the body
   arr params;           ///< parameters of the variable (e.g., liner coefficients, limits, etc)
 
-  //!@name initialization
+  /// @name initialization
   DefaultTaskVariable();
   DefaultTaskVariable(
     const char* _name,
@@ -486,15 +487,15 @@ struct DefaultTaskVariable:public TaskVariable {
     const arr& _params);
   //void set(const char* _name, ors::Graph& _ors, TVtype _type, const char *iname, const char *jname, const char *reltext);
 
-  //!@name updates
+  /// @name updates
   void updateState(const ors::Graph& ors, double tau=1.);
   void getHessian(const ors::Graph& ors, arr& H);
 
-  //!@name virtual user update
+  /// @name virtual user update
   virtual void userUpdate(const ors::Graph& ors) { NIY; } //updates both, state and Jacobian
 
 
-  //!@name I/O
+  /// @name I/O
   void write(ostream& os, const ors::Graph& ors) const;
 };
 //stdOutPipe(DefaultTaskVariable);
@@ -513,13 +514,13 @@ enum CTVtype {
 
 /** Proxy task variable */
 struct ProxyTaskVariable:public TaskVariable {
-  //!@name data fields
+  /// @name data fields
   CTVtype type;
   uintA shapes,shapes2;
   double margin;
   bool linear;
 
-  //!@name initialization
+  /// @name initialization
   ProxyTaskVariable();
   ProxyTaskVariable(const char* _name,
                     ors::Graph& _ors,
@@ -529,19 +530,19 @@ struct ProxyTaskVariable:public TaskVariable {
                     bool _linear=false);
   TaskVariable* newClone() { return new ProxyTaskVariable(*this); }
 
-  //!@name updates
+  /// @name updates
   void updateState(const ors::Graph& ors, double tau=1.);
 };
 
 /** proxy align task variable */
 struct ProxyAlignTaskVariable:public TaskVariable {
-  //!@name data fields
+  /// @name data fields
   CTVtype type;
   uintA shapes,shapes2;
   double margin;
   bool linear;
 
-  //!@name initialization
+  /// @name initialization
   ProxyAlignTaskVariable();
   ProxyAlignTaskVariable(const char* _name,
                          ors::Graph& _ors,
@@ -551,7 +552,7 @@ struct ProxyAlignTaskVariable:public TaskVariable {
                          bool _linear=true);
   TaskVariable* newClone() { return new ProxyAlignTaskVariable(*this); }
 
-  //!@name updates
+  /// @name updates
   void updateState(const ors::Graph& ors, double tau=1.);
 };
 
@@ -717,7 +718,7 @@ public:
 
   void createOde(ors::Graph &C);
 
-  /** \brief reinstantiates a new ODE world (and space) clear of all previous objects */
+  /** @brief reinstantiates a new ODE world (and space) clear of all previous objects */
   void clear();
 
   /**
@@ -731,10 +732,10 @@ public:
    */
   static void staticCallback(void *classP, dxGeom *g1, dxGeom *g2);
 
-  //! sets gravity to zero (or back to -9.81)
+  /// sets gravity to zero (or back to -9.81)
   void setForceFree(bool free);
 
-  /** \brief main method: process one time step by calling SpaceCollide and WorldQuickStep */
+  /** @brief main method: process one time step by calling SpaceCollide and WorldQuickStep */
   void step(double dtime=.01);
 
   void printInfo(std::ostream& os, dxBody *b);

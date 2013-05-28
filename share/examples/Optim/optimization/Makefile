@@ -1,5 +1,5 @@
 BASE = ../../..
 
-DEPEND = Array Optim
+DEPEND = Core Optim
 
 include $(BASE)/make-generic

@@ -49,7 +49,7 @@ namespace soc {
  */
 struct SocSystemAbstraction:VectorChainFunction {
 
-  ///@name data fields
+  /// @name data fields
   std::ostream *os; ///< if non-NULL, some routines might give output
   OpenGL *gl;       ///< if non-NULL, some routines might give output
   bool dynamic;     ///< determines whether this problem is dynamic or not
@@ -58,12 +58,12 @@ struct SocSystemAbstraction:VectorChainFunction {
   uintA stepScale;   ///< the scale of each step (time interval between i-th and (i+1)-th step=2^scale)
   float checkGrad;   ///<the probability by which the gradients are checked in each call of getTaskCost[Terms]
 
-  ///@name initialization
+  /// @name initialization
   SocSystemAbstraction();
   virtual ~SocSystemAbstraction();
   virtual SocSystemAbstraction *newClone() const; ///< creates a new clone of this SocAbstraction (deep copy of simulators etc)
 
-  ///@name low level access routines: need to be implemented by the simulator
+  /// @name low level access routines: need to be implemented by the simulator
 
   // access general problem information
   bool isKinematic(){ return !dynamic; }
@@ -109,7 +109,7 @@ struct SocSystemAbstraction:VectorChainFunction {
   //virtual void getLinearConstraint(arr& c, double& coff, uint i, uint t); ///< defines a cost 1 iff [[c^T y_i + coff>0]]
 
 
-  ///@name high level methods: they are being accessed by the solvers
+  /// @name high level methods: they are being accessed by the solvers
 
   // abstract SOC interface
   virtual void getTaskCostTerms(arr& Phi, arr& PhiJ, const arr& xt, uint t); ///< the general (`big') task vector and its Jacobian
@@ -129,7 +129,7 @@ struct SocSystemAbstraction:VectorChainFunction {
   virtual void fv_i (arr& y, arr& J, uint i, const arr& x_i);
   virtual void fv_ij(arr& y, arr& Ji, arr& Jj, uint i, uint j, const arr& x_i, const arr& x_j);
 
-  ///@name utilities:
+  /// @name utilities:
 
   virtual void displayState(const arr *q, const arr *Qinv=NULL, const char *text=NULL, bool reportVariables=false);
   virtual void recordTrajectory(const arr& q,const char *variable,const char *file);
@@ -146,7 +146,7 @@ struct SocSystemAbstraction:VectorChainFunction {
 
 
 //===========================================================================
-///@name     trivial helpers
+/// @name     trivial helpers
 /// @{
 
 void getVelocity(arr& vt, const arr& q, uint t, double tau);

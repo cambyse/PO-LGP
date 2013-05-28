@@ -395,10 +395,10 @@ IplImage* CvGabor::get_image(int Type)
            }
            break; 
         case 3:  //Magnitude
-           ///@todo  
+           /// @todo  
            break;
         case 4:  //Phase
-          ///@todo
+          /// @todo
            break;
     }
    

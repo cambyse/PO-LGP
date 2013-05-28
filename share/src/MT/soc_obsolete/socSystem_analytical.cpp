@@ -17,7 +17,7 @@
 #include "socSystem_analytical.h"
 #include "plot.h"
 
-/** \brief very preliminary... */
+/** @brief very preliminary... */
 struct soc::sSocSystem_Analytical{
   uint T;
   arr x0, x1, x, W;

@@ -33,7 +33,7 @@
 #ifndef MT_ors_actionInterface_h
 #define MT_ors_actionInterface_h
 
-#include <Array/array.h>
+#include <Core/array.h>
 
 //(``private'') space used by the implementation but hidden from this header
 class OrsTutorial {

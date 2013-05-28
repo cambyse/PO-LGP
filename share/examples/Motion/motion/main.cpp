@@ -1,4 +1,4 @@
-#include <Array/util.h>
+#include <Core/util.h>
 #include <Motion/motion.h>
 #include <Gui/opengl.h>
 

@@ -1,6 +1,6 @@
 /*
-    \file  og_font_data.c
-    \brief Bitmapped font data for OpenGLUT fonts.
+    @file  og_font_data.c
+    @brief Bitmapped font data for OpenGLUT fonts.
 */
 
 /*

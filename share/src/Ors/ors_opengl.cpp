@@ -90,12 +90,12 @@ void bindOrsToOpenGL(ors::Graph& graph, OpenGL& gl) {
 }
 #endif
 
-//! static GL routine to draw a ors::Mesh
+/// static GL routine to draw a ors::Mesh
 void ors::glDrawMesh(void *classP) {
   ((ors::Mesh*)classP)->glDraw();
 }
 
-//! GL routine to draw a ors::Mesh
+/// GL routine to draw a ors::Mesh
 void ors::Mesh::glDraw() {
   if(V.d0!=Vn.d0 || T.d0!=Tn.d0) {
     computeNormals();
@@ -244,7 +244,7 @@ void ors::Mesh::glDraw() {
 }
 
 #ifndef MT_ORS_ONLY_BASICS
-//! static GL routine to draw a ors::Graph
+/// static GL routine to draw a ors::Graph
 void ors::glDrawGraph(void *classP) {
   ((ors::Graph*)classP)->glDraw();
 }
@@ -344,7 +344,7 @@ void glDrawShape(ors::Shape *s) {
   glPopName();
 }
 
-//! GL routine to draw a ors::Graph
+/// GL routine to draw a ors::Graph
 void ors::Graph::glDraw() {
   ors::Joint *e;
   ors::Shape *s;
@@ -763,7 +763,7 @@ void testSim(const char* filename, ors::Graph *C, Ode *ode, OpenGL *gl) {
 #endif
 #endif
 
-#else //!MT_GL
+#else ///MT_GL
 void ors::Mesh::glDraw() { NICO }
 void ors::glDrawMesh(void*) { NICO }
 #ifndef MT_ORS_ONLY_BASICS

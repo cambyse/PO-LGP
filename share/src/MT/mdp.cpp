@@ -34,10 +34,10 @@ byteA mdp::global_maze;
 
 //===========================================================================
 //
-//! \name loading/saving problems
+/// \name loading/saving problems
 //@{
 
-/** \brief write an MDP into a file. For binary=false,
+/** @brief write an MDP into a file. For binary=false,
   the MDP arrays are dumped into the file in a fixed order in readable
   ASCII format. For binary=true the array tasgs are ASCII and
   readable, but the array contents are stored in binary double format
@@ -100,7 +100,7 @@ void mdp::readMDP(MDP_structured& mdp, const char *filename){
   else HALT("don't know extension of file '" <<filename <<"'");
 }
 
-//! read and MDP from a file (see writeMDP)
+/// read and MDP from a file (see writeMDP)
 void mdp::readMDP_arr(MDP& mdp, const char *filename, bool binary){
   ifstream is;
   if(binary) is.open(filename, std::ios::binary);
@@ -397,7 +397,7 @@ void mdp::readMDP_ddgm_tabular(MDP_structured& mdp, const char *filename){
   }
 }
 
-//! .
+/// .
 void mdp::writeFSC_lev1(const char *filename, FSC_lev1& fsc, bool binary){
   ofstream os;
   if(binary) os.open(filename, std::ios::binary);
@@ -407,7 +407,7 @@ void mdp::writeFSC_lev1(const char *filename, FSC_lev1& fsc, bool binary){
   fsc.P0y0.writeTagged(os, "P0y0", binary);  os <<endl;
 }
 
-//! .
+/// .
 void mdp::writeFSC_lev2(const char *filename, FSC_lev2& fsc, bool binary){
   ofstream os;
   if(binary) os.open(filename, std::ios::binary);
@@ -419,7 +419,7 @@ void mdp::writeFSC_lev2(const char *filename, FSC_lev2& fsc, bool binary){
   fsc.P1y01.writeTagged(os, "P1y01", binary); os <<endl;
 }
 
-//! .
+/// .
 void mdp::readFSC_lev1(const char *filename, FSC_lev1& fsc, bool binary){
   ifstream is;
   if(binary) is.open(filename, std::ios::binary);
@@ -429,14 +429,14 @@ void mdp::readFSC_lev1(const char *filename, FSC_lev1& fsc, bool binary){
   fsc.P0y0.readTagged(is, "P0y0");
 }
 
-//! .
+/// .
 void mdp::convertTonyToMDP(const char* POMDP_file){
   MDP mdp;
   readMDP_POMDP(mdp, POMDP_file);
   writeMDP_arr(mdp, STRING(POMDP_file <<".arr"));
 }
 
-//! .
+/// .
 void mdp::reportMDP(const MDP& mdp){
   uint xx, y, x, a;
   //
@@ -458,7 +458,7 @@ void mdp::reportMDP(const MDP& mdp){
   cout <<"\nmax observations =\n" <<ym;
 }
 
-//! .
+/// .
 void mdp::readImageMaze(MDP& mdp, const char* filename){
   byteA img;
   read_ppm(img, filename);
@@ -478,7 +478,7 @@ void mdp::readImageMaze(MDP& mdp, const char* filename){
 
 // @}
 
-//! .
+/// .
 void mazeToP(const byteA& maze, arr& Px, arr& Pxax, arr& Pyxa, arr& Rax, bool trapWalls){
   CHECK(maze.nd==2, "");
   mdp::global_maze = maze;
@@ -530,7 +530,7 @@ void mazeToP(const byteA& maze, arr& Px, arr& Pxax, arr& Pyxa, arr& Rax, bool tr
   //::checkNormalization(Px);
 }
 
-//! .
+/// .
 void mdp::mazeToMDP(MDP& mdp, const byteA& maze){
   ::mazeToP(maze, mdp.Px, mdp.Pxax, mdp.Pyxa, mdp.Rax, true);
 }
@@ -548,7 +548,7 @@ void mdp::addActionNoise(arr& Pxax, double eps){
   //::checkNormalization(Pxax);
 }
 
-//! .
+/// .
 void mdp::tunnel(arr& Pxax, int from, int to){
   uint nx=Pxax.d0, na=Pxax.d1;
   if(from<0) from+=nx;
@@ -561,7 +561,7 @@ void mdp::tunnel(arr& Pxax, int from, int to){
   //::checkNormalization(Pxax);
 }
 
-//! .
+/// .
 void mdp::tunnelToPx(arr& Pxax, int from, const arr& Px){
   uint nx=Pxax.d0, na=Pxax.d1;
   if(from<0) from+=nx;
@@ -572,7 +572,7 @@ void mdp::tunnelToPx(arr& Pxax, int from, const arr& Px){
   //::checkNormalization(Pxax);
 }
 
-//! .
+/// .
 void mdp::tunnelRaxToPx(arr& Pxax, const arr& Rax, const arr& Px){
   uint nx=Pxax.d0, na=Pxax.d1;
   uint x, y, a;
@@ -584,7 +584,7 @@ void mdp::tunnelRaxToPx(arr& Pxax, const arr& Rax, const arr& Px){
   //::checkNormalization(Pxax);
 }
 
-//! .
+/// .
 void mdp::tunnelRaxTo(arr& Pxax, const arr& Rax, int to){
   uint nx=Pxax.d0, na=Pxax.d1;
   if(to  <0) to  +=nx;
@@ -598,7 +598,7 @@ void mdp::tunnelRaxTo(arr& Pxax, const arr& Rax, int to){
   //::checkNormalization(Pxax);
 }
 
-//! .
+/// .
 void mdp::neutralSplit(arr& P0y0, arr& Pa0, uint i, double eps){
   uint n0=P0y0.d0, ny=P0y0.d1, na=Pa0.d0;
   uint a, y, j;
@@ -629,7 +629,7 @@ void mdp::neutralSplit(arr& P0y0, arr& Pa0, uint i, double eps){
   ::checkNormalization(P0y0);
 }
 
-//! .
+/// .
 void generateStandardProblem(mdp::MDPProblem problem, arr& Px, arr& Pxax, arr& Pyxa, arr& Rax){
   byteA maze;
   switch(problem){
@@ -1065,7 +1065,7 @@ void mdp::oneNodeOneAction(arr& Pa0, uint da, uint d0, double uni, double noise,
   tensorCheckCondNormalization(Pa0, 1, 1e-10);
 }
 
-//! .
+/// .
 void mdp::zeroNodeStart(arr& P0, uint d0, double uni, double noise, double zero){
   P0.resize(d0);
   P0 = uni;
@@ -1104,7 +1104,7 @@ void mdp::generalNodeTransition(arr& P, double uni, double noise, double stay){
   P.reshape(org_dim);
 }
 
-//! .
+/// .
 void mdp::generalNodeTransitions(arr& P0y0, double uni, double noise, double stay){
   CHECK(P0y0.nd>=3 && P0y0.d0==P0y0.d[P0y0.nd-1], "array must be sized before this...");
   uintA oldDim;
@@ -1121,7 +1121,7 @@ void mdp::generalNodeTransitions(arr& P0y0, double uni, double noise, double sta
   P0y0.reshape(oldDim);
 }
 
-//! .
+/// .
 void mdp::generalNode0Transition(arr& P01y0,
                                  uint d0, uint d1, uint dy,
                                  double uni, double noise, double stay){
@@ -1134,7 +1134,7 @@ void mdp::generalNode0Transition(arr& P01y0,
   tensorCheckCondNormalization(P01y0, 1, 1e-10);
 }
 
-//! .
+/// .
 void mdp::generalNode1Transition(arr& P1y01,
                                  uint d1, uint dy, uint d0,
                                  double uni, double noise, double stay){

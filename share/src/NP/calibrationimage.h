@@ -14,8 +14,8 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/> */
 
-/** \file calibrationimage.h
-    \brief Data structure for camera calibration. */
+/** @file calibrationimage.h
+    @brief Data structure for camera calibration. */
 
 #ifndef NP_CALIBRATIONIMAGE_H
 #define NP_CALIBRATIONIMAGE_H

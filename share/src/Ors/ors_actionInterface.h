@@ -33,7 +33,7 @@
 #ifndef MT_ors_actionInterface_h
 #define MT_ors_actionInterface_h
 
-#include <Array/array.h>
+#include <Core/array.h>
 
 
 // huepfen der bloecke, falls sie zb runterfallen

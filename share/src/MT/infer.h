@@ -444,7 +444,7 @@ void resetLabeledNodes(infer::FactorGraph& G, const char *name);
 void resetCertainNodes(infer::FactorGraph& G, intA seq);
 void resetAllNodes(infer::FactorGraph& G);
 void uniformCertainNodes(infer::FactorGraph& G, intA seq, uint T, uint Mod);
-//! \ingroup infer2
+/// \ingroup infer2
 
 
 //////////////////////////////////////////////

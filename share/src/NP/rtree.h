@@ -14,8 +14,8 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/> */
 
-/** \file rtree.h
-    \brief OpenCV Random Trees */
+/** @file rtree.h
+    @brief OpenCV Random Trees */
 
 #ifndef _RTREE_H
 #define _RTREE_H
@@ -28,7 +28,7 @@ class CvRTrees;                                        // defined in opencv/ml.h
 
 namespace np {
 
-/** \brief Trains a Random Forest
+/** @brief Trains a Random Forest
  *
  *  For details search OpenCV docs for "CvRTrees::train".
  *
@@ -49,7 +49,7 @@ CvRTrees* rtree_train
  bool  is_regression = true
 );
 
-/** \brief Loads a Random Forest from file
+/** @brief Loads a Random Forest from file
  *
  *  Wraps around CvStatModel::load().
  *  "The method loads the complete model state with the specified name 
@@ -62,7 +62,7 @@ CvRTrees* rtree_train
  */
 CvRTrees* rtree_load(const char* filename);
 
-/** \brief Saves a Random Forest from file
+/** @brief Saves a Random Forest from file
  *
  *  Wraps around CvStatModel::save().
  *  "The method save stores the complete model state to the specified XML or 
@@ -74,7 +74,7 @@ CvRTrees* rtree_load(const char* filename);
  */
 void rtree_save(const char* filename, const CvRTrees* forest);
 
-/** \brief Predicts the output for the input samples
+/** @brief Predicts the output for the input samples
  *
  *  This method returns the cumulative result from all the trees in the forest 
  *  (the class that receives the majority of voices, or the mean of the 
@@ -91,7 +91,7 @@ void rtree_save(const char* filename, const CvRTrees* forest);
  */
 void rtree_predict(floatA& p, const CvRTrees* forest, const floatA& samples);
 
-/** \brief Saves prediction results
+/** @brief Saves prediction results
  *
  *  @param filename any file name, e.g. train.rtree.prediction.array
  *  @param p        prediction output
@@ -101,7 +101,7 @@ void rtree_predict(floatA& p, const CvRTrees* forest, const floatA& samples);
  */
 int rtree_predict_save(const char* filename, const floatA& p, const floatA& err);
 
-/** \brief Load prediction results
+/** @brief Load prediction results
  *
  *  @param filename any file name, e.g. train.rtree.prediction.array
  *  @param p        prediction output

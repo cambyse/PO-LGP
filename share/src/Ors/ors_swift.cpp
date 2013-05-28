@@ -28,7 +28,7 @@
 
 
 #include "ors.h"
-#include <Array/ann.h>
+#include <Core/ann.h>
 
 #ifdef MT_SWIFT
 
@@ -329,7 +329,7 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
       proxy->posB = proxy->cenB;
       proxy->normal = proxy->cenN;
 
-      //!! IN PENETRATION we measure d as -1+(distance between object centers) - that gives a well-defined (though non-smooth) gradient!
+      ///! IN PENETRATION we measure d as -1+(distance between object centers) - that gives a well-defined (though non-smooth) gradient!
 //      proxy->d += -1.+(proxy->posA-proxy->posB).length();
       k++;
     }
@@ -398,7 +398,7 @@ void swiftQueryExactDistance(SwiftInterface& swift) {
 }
 
 #else
-#include <Array/util.h>
+#include <Core/util.h>
 //#warning "MT_SWIFT undefined - using HALT implementations"
 void SwiftInterface::init(const ors::Graph& C, double _cutoff) { MT_MSG("WARNING - creating dummy SwiftInterface"); }
 void SwiftInterface::initActivations(const ors::Graph& C, uint parentLevelsToDeactivate) {}

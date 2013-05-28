@@ -14,8 +14,8 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/> */
 
-/** \file camera.h
-    \brief Access to webcams (USB/UVC) and to PTG Bumblebee2 (libdc1394) */
+/** @file camera.h
+    @brief Access to webcams (USB/UVC) and to PTG Bumblebee2 (libdc1394) */
 
 #ifndef NP_CAMERA_H
 #define NP_CAMERA_H

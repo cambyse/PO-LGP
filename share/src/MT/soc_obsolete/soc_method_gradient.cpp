@@ -87,7 +87,7 @@ struct SocProblem:public OptimizationProblem{
 
 //===========================================================================
 
-//! compute an optimized trajectory using gradient descent
+/// compute an optimized trajectory using gradient descent
 void soc::gradientOptimization(SocSystemAbstraction& soci,
                                 arr& q,
                                 uint maxIterations,

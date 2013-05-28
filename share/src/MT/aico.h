@@ -18,8 +18,8 @@
 
 
 
-/** \file aico.h
-    \brief Approximate Inference Control */
+/** @file aico.h
+    @brief Approximate Inference Control */
 
 #ifndef MT_aico_h
 #define MT_aico_h
@@ -28,7 +28,7 @@
 
 //#define ControlledSystem soc::SocSystemAbstraction
 
-/** \brief Apprioximate Inference Control */
+/** @brief Apprioximate Inference Control */
 struct AICO {
   struct sAICO *self;
   

@@ -14,8 +14,8 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/> */
 
-/** \file paralleljobs.h
-    \brief Parallelize a simple routine using multiple threads */
+/** @file paralleljobs.h
+    @brief Parallelize a simple routine using multiple threads */
 
 #ifndef NP_PARALLELJOBS_H
 #define NP_PARALLELJOBS_H

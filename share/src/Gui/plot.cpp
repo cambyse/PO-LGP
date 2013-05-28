@@ -18,9 +18,10 @@
 
 
 
-#include <Array/array_t.h>
+#include <Core/array_t.h>
 #include "plot.h"
-#include "geo.h"
+#include <Core/geo.h>
+#include "mesh.h"
 #include "opengl.h"
 #include "color.h"
 

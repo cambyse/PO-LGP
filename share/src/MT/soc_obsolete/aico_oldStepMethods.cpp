@@ -15,7 +15,7 @@ NOTE: the stepKinematic includes still the code for the truncated Gaussians
 #include "MinSumGaussNewton.h"
 
 
-//! Approximate Inference Control (AICO_clean) in the kinematic case
+/// Approximate Inference Control (AICO_clean) in the kinematic case
 double AICO_clean::stepKinematic(){
   CHECK(!sys->dynamic, "assumed dynamic SOC abstraction");
   uint n=sys->qDim();
@@ -264,7 +264,7 @@ double AICO_clean::stepKinematic(){
   return diff;
 }
 
-//! Approximate Inference Control (AICO) in the general (e.g. dynamic) case
+/// Approximate Inference Control (AICO) in the general (e.g. dynamic) case
 double AICO_clean::stepClean(){
   //CHECK(sys->dynamic, "assumed dynamic SOC abstraction");
   uint T=sys->get_T();
@@ -399,7 +399,7 @@ double AICO_clean::stepClean(){
 //==============================================================================
 
 
-//! Approximate Inference Control (AICO) in the general (e.g. dynamic) case
+/// Approximate Inference Control (AICO) in the general (e.g. dynamic) case
 double AICO_clean::stepDynamic(){
   //CHECK(sys->dynamic, "assumed dynamic SOC abstraction");
   uint T=sys->get_T();

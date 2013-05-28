@@ -3,6 +3,6 @@ BASE = ../../..
 LIBS += -lSWIFTdecomp
 SWIFT = 1
 LIBS += -lglut -lGL
-DEPEND = Array Gui Kvg
+DEPEND = Core Gui
 
 include $(BASE)/make-generic

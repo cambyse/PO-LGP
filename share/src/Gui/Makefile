@@ -6,6 +6,7 @@ GTK = 1
 GTKGL = 1
 QHULL = 1
 PLY = 1
+GRAPHVIZ = 1
 DEPENDS = Array Kvg
 
 OBJS  = $(shell find . -maxdepth 1 -name '*.cpp' )

@@ -6,15 +6,15 @@
 
 //===========================================================================
 //
-//!@name Gaussian Process code
+/// @name Gaussian Process code
 //
 
 struct GaussianProcess{
-  //! pointer to kernel function
+  /// pointer to kernel function
   double (*kernel)(const doubleA& x,const doubleA& y);
-  //! pointers to data
+  /// pointers to data
   doubleA *X,*Y;
-  //! inverse gram matrix
+  /// inverse gram matrix
   doubleA invGram;
 };
 

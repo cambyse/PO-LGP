@@ -8,7 +8,7 @@ void GetWritheJacobianSegment(arr& JTscalar,const ors::Vector& p_a,const ors::Ve
 		       
 void WritheJacobian(arr& JM, const arr& rope1, const arr& rope2,arr& pointsJ,int dim1,int dim2);
 
-//! Scalar experiments
+/// Scalar experiments
 void GetScalarWrithe(arr& WS, const arr& rope1, const arr& rope2,int dim);
 
 void ScalarJacobian(arr& SJ, const arr& rope1, const arr& rope2,arr& pointsJ,int dim);

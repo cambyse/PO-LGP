@@ -1,4 +1,4 @@
-#include <Array/array.h>
+#include <Core/array.h>
 #include <Gui/plot.h>
 
 

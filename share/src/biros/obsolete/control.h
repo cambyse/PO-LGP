@@ -34,6 +34,6 @@ namespace b{
   VariableL getVariables();
   ParameterL getParameters();
 
-  //! get a hypergraph of communicating processes-variables-parameters
+  /// get a hypergraph of communicating processes-variables-parameters
   void getGraph();
 }

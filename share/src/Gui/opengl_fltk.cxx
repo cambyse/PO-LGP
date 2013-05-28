@@ -69,7 +69,7 @@ void OpenGL::processEvents(){  Fl::check(); }
 void OpenGL::enterEventLoop(){ loopExit=false; while(!loopExit) Fl::wait(); }
 void OpenGL::exitEventLoop(){  loopExit=true; }
 
-//! resize the window
+/// resize the window
 void OpenGL::resize(int w,int h){
   s->size(w,h);
 }

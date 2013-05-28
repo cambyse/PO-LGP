@@ -1023,80 +1023,80 @@ void OdeInterface::slGetProxyGradient(arr &dx, const arr &x, ors::Graph &C, OdeI
 //
 
 #if 0 //documentation...
-/** \brief copy all frame variables (positions, velocities, etc)
+/** @brief copy all frame variables (positions, velocities, etc)
 into the ODE engine (createOde had to be called before) */
 void OdeInterface::exportStateToOde(ors::Graph &C);
 
-/** \brief copy the current state of the ODE engine into
+/** @brief copy the current state of the ODE engine into
 the frame variables (positions, velocities, etc) */
 void OdeInterface::importStateFromOde(ors::Graph &C);
 
-/** \brief copy all frame variables (positions, velocities, etc)
+/** @brief copy all frame variables (positions, velocities, etc)
 into the ODE engine (createOde had to be called before) */
 void OdeInterface::exportForcesToOde(ors::Graph &C);
 
 void OdeInterface::setJointForce(ors::Graph &C, ors::Joint *e, double f1, double f2);
 
-/** \brief applies forces on the configuration as given by the force vector x */
+/** @brief applies forces on the configuration as given by the force vector x */
 void OdeInterface::setJointForce(ors::Graph &C, arr& f);
 
-/** \brief returns the number of motors attached to joints */
+/** @brief returns the number of motors attached to joints */
 uint getJointMotorDimension(ors::Graph &C);
 
-/** \brief set the desired positions of all motor joints */
+/** @brief set the desired positions of all motor joints */
 void OdeInterface::setJointMotorPos(ors::Graph &C, arr& x, double maxF, double tau);
-/** \brief set the desired position of a specific motor joint */
+/** @brief set the desired position of a specific motor joint */
 void OdeInterface::setJointMotorPos(ors::Graph &C, ors::Joint *e, double x0, double maxF, double tau);
 
-/** \brief set the desired velocities of all motor joints */
+/** @brief set the desired velocities of all motor joints */
 void OdeInterface::setJointMotorVel(ors::Graph &C, arr& v, double maxF=1.);
-/** \brief set the desired velocity of a specific motor joint */
+/** @brief set the desired velocity of a specific motor joint */
 void OdeInterface::setJointMotorVel(ors::Graph &C, ors::Joint *e, double v0, double maxF=1.);
 
-/** \brief disable motors by setting maxForce parameter to zero */
+/** @brief disable motors by setting maxForce parameter to zero */
 void OdeInterface::unsetJointMotors(ors::Graph &C, OdeInterface& ode);
-/** \brief disable motor by setting maxForce parameter to zero */
+/** @brief disable motor by setting maxForce parameter to zero */
 void OdeInterface::unsetJointMotor(ors::Graph &C, ors::Joint *e);
 
-/** \brief get the forces induced by all motor motor joints */
+/** @brief get the forces induced by all motor motor joints */
 void OdeInterface::getJointMotorForce(ors::Graph &C, arr& f);
-/** \brief get the force induced by a specific motor joint */
+/** @brief get the force induced by a specific motor joint */
 void OdeInterface::getJointMotorForce(ors::Graph &C, ors::Joint *e, double& f);
 
 void OdeInterface::pidJointPos(ors::Graph &C, ors::Joint *e, double x0, double v0, double xGain, double vGain, double iGain=0, double* eInt=0);
 
 void OdeInterface::pidJointVel(ors::Graph &C, ors::Joint *e, double v0, double vGain);
 
-//! [obsolete] \ingroup sl
+/// [obsolete] \ingroup sl
 void OdeInterface::getGroundContact(ors::Graph &C, boolA& cts);
 
-//! import the information from ODE's contact list into the proximity list \ingroup sl
+/// import the information from ODE's contact list into the proximity list \ingroup sl
 void OdeInterface::importProxiesFromOde(ors::Graph &C, OdeInterface& ode);
 
-/** \brief simulates one time step with the ODE engine, starting from state
+/** @brief simulates one time step with the ODE engine, starting from state
     vector in, returns state vector out \ingroup sl */
 void OdeInterface::step(ors::Graph &C, arr& in, arr& force, arr& out, uint steps=1);
 
-/** \brief simulates one time step with the ODE engine, starting from state
+/** @brief simulates one time step with the ODE engine, starting from state
     vector in, returns state vector out \ingroup sl */
 void OdeInterface::step(ors::Graph &C, arr& force, arr& out, uint steps=1);
 
-//! \ingroup sl
+/// \ingroup sl
 void OdeInterface::step(ors::Graph &C, uint steps=1, double tau=.01);
 
-/** \brief instantiate the configuration in an ODE engine (first clears the
+/** @brief instantiate the configuration in an ODE engine (first clears the
     ODE engine from all other objects) \ingroup sl */
 void OdeInterface::createOde(ors::Graph &C, OdeInterface& ode);
 
-//! \ingroup sl
+/// \ingroup sl
 void OdeInterface::slGetProxies(ors::Graph &C, OdeInterface &ode);
 
-//! \ingroup sl
+/// \ingroup sl
 //void OdeInterface::slGetProxyGradient(arr &dx, const arr &x, ors::Graph &C, OdeInterface &ode);
 
-//! \ingroup sl
+/// \ingroup sl
 void OdeInterface::reportContacts(OdeInterface& ode);
-//! \ingroup sl
+/// \ingroup sl
 bool inFloorContacts(ors::Vector& x);
 #endif
 

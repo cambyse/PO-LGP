@@ -1,7 +1,7 @@
 BASE = ../../..
 
 LIBS += -lglut -lGL
-DEPEND = Array Gui Kvg
+DEPEND = Core Gui
 
 include $(BASE)/make-generic
 

@@ -936,7 +936,7 @@ void infer::LoopyBP_obsolete::constructBipartiteFactorGraph(infer::FactorGraph& 
 //
 
 
-//! collects a belief at a factor, optionally exluding one incoming message
+/// collects a belief at a factor, optionally exluding one incoming message
 void infer::collectBelief(infer::Factor& belief, const infer::Factor& f, const infer::MessagePair *exclude){
   infer::MessagePair *s;
   uint i;
@@ -952,7 +952,7 @@ void infer::collectBelief(infer::Factor& belief, const infer::Factor& f, const i
   }
 }
 
-//! collects a belief at a factor, optionally exluding one incoming message
+/// collects a belief at a factor, optionally exluding one incoming message
 void infer::collectBelief(infer::Factor& belief, infer::Variable *v, const MessagePair *exclude){
   infer::MessagePair *s;
   uint i;
@@ -969,7 +969,7 @@ void infer::collectBelief(infer::Factor& belief, infer::Variable *v, const Messa
   }
 }
 
-//! collects a belief at f1 and assigned m12 to its marginal
+/// collects a belief at f1 and assigned m12 to its marginal
 void infer::recomputeMessage_12(MessagePair& sep){
   CHECK((sep.f1 && !sep.v1) || (!sep.f1 && sep.v1), "");
   CHECK((sep.f2 && !sep.v2) || (!sep.f2 && sep.v2), "");
@@ -985,7 +985,7 @@ void infer::recomputeMessage_12(MessagePair& sep){
   }else{ NIY; }
 }
 
-//! collects a belief at f2 and assigned m21 to its marginal
+/// collects a belief at f2 and assigned m21 to its marginal
 void infer::recomputeMessage_21(MessagePair& sep){
   CHECK((sep.f1 && !sep.v1) || (!sep.f1 && sep.v1), "");
   CHECK((sep.f2 && !sep.v2) || (!sep.f2 && sep.v2), "");
@@ -1001,7 +1001,7 @@ void infer::recomputeMessage_21(MessagePair& sep){
   }else{ NIY; }
 }
 
-//! checks that marginals of connected factors are equal and the same as m12*m21
+/// checks that marginals of connected factors are equal and the same as m12*m21
 bool infer::checkConsistency(const MessagePair& sep){
   infer::Factor fmu1, fmu2, f1_marg, f2_marg, m12_m21;
   
@@ -1020,7 +1020,7 @@ bool infer::checkConsistency(const MessagePair& sep){
   return true;
 }
 
-//! checks a whole list of messages
+/// checks a whole list of messages
 bool infer::checkConsistencyBatch(const MessagePairList& msgs){
   uint i;
   FOR1D(msgs, i) checkConsistency(*msgs(i));
@@ -1264,7 +1264,7 @@ double robustDivide(double a, double b){
   return 0;
 }
 
-/** \brief If id is a tuple of k variable identifiers, and mid is a _subset_ of l of those,
+/** @brief If id is a tuple of k variable identifiers, and mid is a _subset_ of l of those,
 then pick will contain l indices, shouting which slot of id corresponds to each slot of mid. For instance
 if we have a product of two sensors \f$A_{ijklm} B_{kli}\f$ then pick will be <2 3 0> shouting that
 the 0th slot of B is the 2nd of A, that the 1st slot of B is the 3rd of A, and that the 3rd slot of B is the 0th of A. */
@@ -2657,14 +2657,14 @@ void write(Tree& tree){
    as a list of messages and a directionality with each of them. */
 
 
-//! compute a series of messages in a given order, optionally inversely (also inverting each message's directionality)
+/// compute a series of messages in a given order, optionally inversely (also inverting each message's directionality)
 void infer::recomputeBatchOfMessages(MessagePairList &msgs, bool invert_order){
   uint i, N=msgs.N;
   if(!invert_order) for(i=0; i<N; i++) recomputeMessage_12(*msgs(i));
   else              for(i=N; i--;)    recomputeMessage_21(*msgs(i));
 }
 
-//! compute a series of messages in a given order, optionally inversely (also inverting each message's directionality)
+/// compute a series of messages in a given order, optionally inversely (also inverting each message's directionality)
 void infer::recomputeBatchOfMessages(MessagePairList &msgs, const boolA &msgFlips, bool invert_order){
   uint i, N=msgs.N;
   if(!invert_order) for(i=0; i<N; i++){
@@ -2676,7 +2676,7 @@ void infer::recomputeBatchOfMessages(MessagePairList &msgs, const boolA &msgFlip
     }
 }
 
-//! for inference in a tree, we first construct an ordering descending from the root
+/// for inference in a tree, we first construct an ordering descending from the root
 void infer::constructTreeMessageOrder(MessagePairList& msgs, boolA &msgFlips, const infer::Factor *root){
   uint i, j;
   infer::Factor *f;
@@ -2703,9 +2703,9 @@ void infer::constructTreeMessageOrder(MessagePairList& msgs, boolA &msgFlips, co
   }
 }
 
-//! inference on a tree is then trivial: compute a descending-from-root order,
-//! pass all messages backward (collecting towards the root)
-//! pass all messages forward  (distributing from the root)
+/// inference on a tree is then trivial: compute a descending-from-root order,
+/// pass all messages backward (collecting towards the root)
+/// pass all messages forward  (distributing from the root)
 void infer::treeInference(const infer::Factor *root, bool check_consitency){
   MessagePairList msgs;
   boolA msgFlips;
