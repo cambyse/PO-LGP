@@ -2,7 +2,7 @@
 #define VIEWS_H_
 
 #include <MT/util.h>
-#include <MT/array.h>
+#include <Core/array.h>
 #include <MT/registry.h>
 
 typedef struct _GtkWidget GtkWidget;

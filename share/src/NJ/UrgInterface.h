@@ -13,7 +13,7 @@
 //
 
 #include <biros/biros.h>
-#include <MT/array.h>
+#include <Core/array.h>
 #include <MT/util.h>
 
 struct UrgWorkspace;

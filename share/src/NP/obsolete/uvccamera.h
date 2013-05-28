@@ -1,7 +1,7 @@
 #ifndef _SRC_CAMERA_UVCCAMERA_H
 #define _SRC_CAMERA_UVCCAMERA_H
 
-#include <MT/array.h>
+#include <Core/array.h>
 #include <biros/biros.h>
 #include <MT/robot_variables.h>
 

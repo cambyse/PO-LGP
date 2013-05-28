@@ -1,4 +1,4 @@
-#include <MT/array.h>
+#include <Core/array.h>
 #include <MT/MinSumGaussNewton.h>
 #include <MT/util.h>
 #include <MT/array_t.cxx>

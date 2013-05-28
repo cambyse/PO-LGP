@@ -1,7 +1,7 @@
 
 //#define MT_IMPLEMENTATION
 #include <MT/util.h>
-#include <MT/array.h>
+#include <Core/array.h>
 #include <signal.h>
 
 #include <hardware/schunk.h>

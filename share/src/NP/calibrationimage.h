@@ -20,7 +20,7 @@
 #ifndef NP_CALIBRATIONIMAGE_H
 #define NP_CALIBRATIONIMAGE_H
 
-#include <MT/array.h>
+#include <Core/array.h>
 #include "cvutils.h"
 namespace np {
 

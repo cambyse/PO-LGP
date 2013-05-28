@@ -3,7 +3,7 @@
 
 #include <biros/biros.h>
 #include <devTools/logging.h>
-#include <MT/array.h>
+#include <Core/array.h>
 #include <queue>
 
 template<class Job, class Result> class sMaster;

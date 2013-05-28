@@ -25,7 +25,7 @@
 #include <typeinfo>
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
-#include <MT/array.h>
+#include <Core/array.h>
 class CvBoost;                                         // defined in opencv/ml.h
 
 #include "nputils.h"

@@ -1,5 +1,5 @@
 #include <MT/roboticsCourse.h>
-#include <MT/array.h>
+#include <Core/array.h>
 
 void testDynamics(){
   Simulator S("pin_balancing.ors");

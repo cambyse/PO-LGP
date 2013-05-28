@@ -35,8 +35,8 @@
 #  include <Core/registry.h>
 //#  include <Gui/plot.h>
 #endif
-#ifdef MT_PLY
-#  include <ply/ply.h>
+#ifdef MT_extern_ply
+#  include <extern_ply/ply.h>
 #endif
 
 #define ORS_NO_DYNAMICS_IN_FRAMES

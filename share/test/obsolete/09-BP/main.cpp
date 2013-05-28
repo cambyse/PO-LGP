@@ -2,7 +2,7 @@
 
 #include <MT/BinaryBP.h>
 
-#include <MT/array.h>
+#include <Core/array.h>
 //#include <MT/algos.h>
 #include <MT/infer.h>
 

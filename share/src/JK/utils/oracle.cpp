@@ -1,5 +1,5 @@
 #include "oracle.h"
-#include <MT/array.h>
+#include <Core/array.h>
 
 const int OnOracle::classify(const MT::Array<arr>& data, const int set) const {
 	double epsilon = 10e-3;

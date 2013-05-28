@@ -6,7 +6,7 @@
 #include <limits>
 
 #include <biros/biros.h>
-#include <MT/array.h>
+#include <Core/array.h>
 
 #include <pcl/point_cloud.h>
 #include <pcl/features/normal_3d.h>

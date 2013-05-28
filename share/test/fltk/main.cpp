@@ -1,7 +1,7 @@
 #define MT_IMPLEMENTATION
 
 #include <MT/util.h>
-#include <MT/array.h>
+#include <Core/array.h>
 //#include <FL/fl_draw.H>
 #include <MT/opengl.h>
 #include <biros/biros.h>

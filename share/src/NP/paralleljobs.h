@@ -20,7 +20,7 @@
 #ifndef NP_PARALLELJOBS_H
 #define NP_PARALLELJOBS_H
 
-#include <MT/array.h>
+#include <Core/array.h>
 #include <pthread.h>
 
 namespace np

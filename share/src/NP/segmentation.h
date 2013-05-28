@@ -2,7 +2,7 @@
 #ifndef _SEGMENTATION_H
 #define _SEGMENTATION_H
 
-#include <MT/array.h>
+#include <Core/array.h>
 
 namespace np {
 enum OverlapType {

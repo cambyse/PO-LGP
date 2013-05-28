@@ -2,7 +2,7 @@ BASE   = ../..
 NAME   = lib$(shell basename `pwd`)
 OUTPUT := $(BASE)/lib/$(NAME).so
 
-DEPEND = Array Ors Optim
+DEPEND = Core Ors Optim
 
 OBJS  = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS := $(OBJS:%.cpp=%.o)

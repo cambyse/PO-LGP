@@ -2,7 +2,7 @@
 #ifndef SD_rbf_h
 #define SD_rbf_h
 
-#include <MT/array.h>
+#include <Core/array.h>
 
 /*RBF params*/
 struct RBF_param_t {

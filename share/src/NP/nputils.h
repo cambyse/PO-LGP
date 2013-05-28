@@ -28,7 +28,7 @@
 #include <vector>
 #include <cstdlib>
 
-#include <MT/array.h>
+#include <Core/array.h>
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)

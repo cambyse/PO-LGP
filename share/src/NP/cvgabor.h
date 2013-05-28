@@ -23,7 +23,7 @@
 #include <iostream>
 
 
-#include <MT/array.h>
+#include <Core/array.h>
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
 

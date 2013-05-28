@@ -1,6 +1,6 @@
 #define MT_IMPLEMENT_TEMPLATES
 
-#include<MT/array.h>
+#include<Core/array.h>
 #include<MT/plot.h>
 #include<MT/gaussianProcess.h>
 

@@ -20,7 +20,7 @@
 #ifndef _NP_DESC_H
 #define _NP_DESC_H
 
-#include <MT/array.h>
+#include <Core/array.h>
 #include "nputils.h"
 #include "ucm.h"
 

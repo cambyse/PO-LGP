@@ -14,7 +14,7 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/> */
 
-#include <MT/array.h>
+#include <Core/array.h>
 #include <MT/util.h>
 #include <iostream>
 #include <iomanip>

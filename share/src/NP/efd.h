@@ -17,7 +17,7 @@
 /** @file efd.h
     @brief Elliptic Fourier Descriptors (EFD) */
 
-#include <MT/array.h>
+#include <Core/array.h>
 
 namespace np {
 /** @brief Compute the Elliptic Fourier Descriptors for a contour

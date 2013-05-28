@@ -1,7 +1,7 @@
 #include "mesh.h"
 
-#ifdef MT_PLY
-#  include <ply/ply.h>
+#ifdef MT_extern_ply
+#  include <extern_ply/ply.h>
 #endif
 
 namespace ors{
@@ -868,7 +868,7 @@ void Mesh::readPlyFile(const char* filename) {
   }
 }
 
-#ifdef MT_PLY
+#ifdef MT_extern_ply
 void Mesh::writePLY(const char *fn, bool bin) {
   struct PlyFace { unsigned char nverts;  int *verts; };
   struct Vertex { float x,  y,  z ;  };

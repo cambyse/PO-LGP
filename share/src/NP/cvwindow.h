@@ -21,7 +21,7 @@
 #define NP_CVWINDOW_H
 
 #include <string>
-#include <MT/array.h>
+#include <Core/array.h>
 
 namespace np {
 class CvWindow

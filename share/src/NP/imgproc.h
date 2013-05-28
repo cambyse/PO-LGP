@@ -20,7 +20,7 @@
 #ifndef _IMGPROC_H
 #define _IMGPROC_H
 
-#include <MT/array.h>
+#include <Core/array.h>
 
 namespace np {
 const int opp[8] = {4, 5, 6, 7, 0, 1, 2, 3}; //<! mapping from t to t_old

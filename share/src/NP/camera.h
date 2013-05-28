@@ -20,7 +20,7 @@
 #ifndef NP_CAMERA_H
 #define NP_CAMERA_H
 
-#include <MT/array.h>
+#include <Core/array.h>
 #include <system/module.h>
 #include <MT/robot_variables.h>
 

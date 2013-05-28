@@ -20,7 +20,7 @@
 #ifndef _NP_VOCUTILS_H
 #define _NP_VOCUTILS_H
 
-#include <MT/array.h>
+#include <Core/array.h>
 
 namespace np {
 static const uint voc_num_classes = 20;

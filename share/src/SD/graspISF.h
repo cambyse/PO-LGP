@@ -1,7 +1,7 @@
 #ifndef SD_graspISF_h
 #define SD_graspISF_h
 
-#include <MT/array.h>
+#include <Core/array.h>
 #include <MT/robot.h>
 #include "potentialTaskVariables.h"
 #include "miscTaskVariables.h"

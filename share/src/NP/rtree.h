@@ -20,7 +20,7 @@
 #ifndef _RTREE_H
 #define _RTREE_H
 
-#include <MT/array.h>
+#include <Core/array.h>
 
 // TODO mv all OpenCV-wrapping methods to directory wrappers/opencv{.h/.cpp}
 

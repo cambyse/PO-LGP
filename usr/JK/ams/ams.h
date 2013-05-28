@@ -1,7 +1,7 @@
 #ifndef _HEADER_GUARD_AMS_H_
 #define _HEADER_GUARD_AMS_H_
 
-#include <MT/array.h>
+#include <Core/array.h>
 
 /**
  * References:

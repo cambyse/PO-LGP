@@ -30,13 +30,13 @@
 #include "ors.h"
 #include <Core/ann.h>
 
-#ifdef MT_SWIFT
+#ifdef MT_extern_SWIFT
 
 #ifdef MT_SINGLE
 #  define SWIFT_USE_FLOAT
 #endif
 
-#include <SWIFT/SWIFT.h>
+#include <extern_SWIFT/SWIFT.h>
 #undef min
 #undef max
 
@@ -399,7 +399,7 @@ void swiftQueryExactDistance(SwiftInterface& swift) {
 
 #else
 #include <Core/util.h>
-//#warning "MT_SWIFT undefined - using HALT implementations"
+//#warning "MT_extern_SWIFT undefined - using HALT implementations"
 void SwiftInterface::init(const ors::Graph& C, double _cutoff) { MT_MSG("WARNING - creating dummy SwiftInterface"); }
 void SwiftInterface::initActivations(const ors::Graph& C, uint parentLevelsToDeactivate) {}
 void SwiftInterface::close() {}

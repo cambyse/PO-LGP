@@ -20,7 +20,7 @@
 #ifndef NP_EXTERNAL_SURF_H
 #define NP_EXTERNAL_SURF_H
 
-#include <MT/array.h>
+#include <Core/array.h>
 
 namespace np {
 namespace wrappers {

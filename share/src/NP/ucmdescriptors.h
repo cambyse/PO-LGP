@@ -2,7 +2,7 @@
 #ifndef _UCMDESCRIPTORS_H
 #define _UCMDESCRIPTORS_H
 
-#include <MT/array.h>
+#include <Core/array.h>
 #include "ucm.h"
 
 namespace np {

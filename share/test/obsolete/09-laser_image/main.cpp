@@ -1,6 +1,6 @@
 #define MT_IMPLEMENTATION
 
-#include<MT/array.h>
+#include<Core/array.h>
 #include<MT/ors.h>
 #include<MT/opengl.h>
 #include<MT/plot.h>

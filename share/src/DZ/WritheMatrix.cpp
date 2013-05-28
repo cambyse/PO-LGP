@@ -1,5 +1,5 @@
 #include <MT/ors.h>
-#include <MT/array.h>
+#include <Core/array.h>
 
 void GetWritheSegment(double& writhe,const ors::Vector& A,const ors::Vector& B,const ors::Vector& C,const ors::Vector& D){
 //  writhe between vectors AB and CD

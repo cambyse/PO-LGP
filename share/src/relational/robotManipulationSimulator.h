@@ -22,7 +22,7 @@
 #ifndef robotManipulationSimulator_h
 #define robotManipulationSimulator_h
 
-#include <MT/array.h>
+#include <Core/array.h>
 #include <MT/ors.h>
 
 

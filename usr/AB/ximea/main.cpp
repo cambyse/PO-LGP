@@ -15,7 +15,7 @@
 
 // ML code
 #include<MT/util.h>
-#include<MT/array.h>
+#include<Core/array.h>
 #include<MT/opengl.h>
 #include<MT/opencv.h>
 #include<MT/videoWriter.h>

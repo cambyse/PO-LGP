@@ -6,7 +6,7 @@
 // http://www.ximea.com/support/wiki/apis/XiApi_Manual
 
 #include <MT/util.h>
-#include <MT/array.h>
+#include <Core/array.h>
 #include <MT/opengl.h>
 #include <MT/opencv.h>
 

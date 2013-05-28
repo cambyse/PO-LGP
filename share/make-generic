@@ -23,7 +23,7 @@ ARCH = $(shell uname -m)
 # load user options from the local make-config
 #
 ################################################################################
-include $(BASE)/make-config
+#-include $(BASE)/make-config
 
 
 ################################################################################
@@ -509,6 +509,7 @@ endif
 
 BUILDS := $(DEPEND:%=buildComponent/%) $(BUILDS)
 LIBS := $(DEPEND:%=-l%) $(LIBS)
+CXXFLAGS := $(DEPEND:%=-DMT_%) $(CXXFLAGS)
 
 
 ################################################################################

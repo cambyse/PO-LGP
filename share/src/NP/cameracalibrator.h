@@ -20,7 +20,7 @@
 #ifndef NP_CAMERACALIBRATOR_H
 #define NP_CAMERACALIBRATOR_H
 
-#include <MT/array.h>
+#include <Core/array.h>
 #include <MT/vision.h>
 #include <opencv/cv.h>
 #include <opencv/cxtypes.h>

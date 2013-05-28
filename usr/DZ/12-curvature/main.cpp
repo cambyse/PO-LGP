@@ -3,7 +3,7 @@
 #include <MT/opengl.h>
 #include <MT/ors.h>     
 #include <MT/plot.h>    
-#include <MT/array.h> 
+#include <Core/array.h> 
 #include "TriMesh.h"
 //#include "TriMesh_algo.h"
 //#include "strutil.h"
