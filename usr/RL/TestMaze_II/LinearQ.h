@@ -44,8 +44,9 @@ public:
     /*! \brief Set the discount rate used for computing state and action values. */
     void set_discount(const double& d) { discount = d; }
 
-    /** \brief Constructs new candidate features. */
-    void construct_candidate_features(const int& n);
+    void add_candidates(const int& n);
+
+    void erase_zero_features(const double& threshold = 0);
 
 private:
 
@@ -67,6 +68,9 @@ private:
     //------------------//
     // Member Functions //
     //------------------//
+
+    /** \brief Constructs new candidate features. */
+    void construct_candidate_features(const int& n);
 
     probability_t prior_probability(const state_t&, const reward_t&) const;
 };
