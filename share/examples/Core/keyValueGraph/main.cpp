@@ -1,9 +1,5 @@
 #include <Core/keyValueGraph.h>
-//#include <MT/ors.h>
 #include <Core/registry.h>
-#include <Gui/graphview.h>
-
-//REGISTER_TYPE_Key(T, ors::Transformation)
 
 void testRead(const char *filename=NULL){
   KeyValueGraph G;
@@ -25,8 +21,6 @@ void testDot(const char *filename=NULL){
   MT::load(G, filename?filename:"coffee_shop.fg");
   G.sortByDotOrder();
   G.writeDot();
-  GraphView gv(G);
-  gv.watch();
 }
 
 int main(int argc, char** argv){
