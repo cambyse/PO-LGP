@@ -27,9 +27,19 @@ Feature::Feature(): type(ABSTRACT), id(id_counter), complexity(0), subfeatures(0
 
 Feature::~Feature() {}
 
-//string Feature::identifier() const {
+Feature::feature_return_value Feature::evaluate(const instance_t *) const {
+    DEBUG_OUT(0,"Error: Evaluating abstract type Feature");
+    return 0;
+}
+
+Feature::feature_return_value Feature::evaluate(const instance_t *, action_t, state_t, reward_t) const {
+    DEBUG_OUT(0,"Error: Evaluating abstract type Feature");
+    return 0;
+}
+
+// string Feature::identifier() const {
 //    return QString("(%1)").arg(id).toStdString();
-//}
+// }
 
 string Feature::identifier() const {
     return string("");
@@ -115,12 +125,20 @@ uint Feature::get_subfeatures_size() const {
 }
 
 void Feature::clean_up_subfeatures() {
+    // make sure subfeatures are sorted
+    subfeatures.sort(&(pComp));
+
+    // erase duplicates
     subfeature_const_iterator_t it_1;
     subfeature_iterator_t it_2;
     it_1 = it_2 = subfeatures.begin();
     ++it_2;
     while(it_2!=subfeatures.end()) {
-        if(**it_2==**it_1 || (*it_2)->get_type()==NULL_FEATURE) {
+        if(
+            **it_2==**it_1 ||
+            (*it_2)->get_type()==NULL_FEATURE ||
+            ( (*it_2)->const_feature && (*it_2)->const_return_value==1 )
+            ) {
             it_2 = subfeatures.erase(it_2);
         } else {
             ++it_1;
@@ -149,6 +167,39 @@ string NullFeature::identifier() const {
             +QString(field_width[0]+field_width[1]+1,' ')
             +")"
     );
+    return id_string.toStdString()+Feature::identifier();
+}
+
+ConstFeature::ConstFeature(const long long int& v) {
+    type = CONST_FEATURE;
+    complexity = 0;
+    const_feature = true;
+    const_return_value = v;
+    subfeatures.push_back(this);
+}
+
+ConstFeature * ConstFeature::create(const long long int& v) {
+    ConstFeature * new_feature = new ConstFeature(v);
+    basis_features.insert(unique_f_ptr(new_feature));
+    return new_feature;
+}
+
+ConstFeature::~ConstFeature() {}
+
+Feature::feature_return_value ConstFeature::evaluate(const instance_t *) const {
+    return const_return_value;
+}
+
+Feature::feature_return_value ConstFeature::evaluate(const instance_t *, action_t, state_t, reward_t) const {
+    return const_return_value;
+}
+
+string ConstFeature::identifier() const {
+    QString id_string("c("
+                      +QString(field_width[0]+2,' ')
+                      +QString("%1").arg(const_return_value,field_width[1])
+                      +")"
+        );
     return id_string.toStdString()+Feature::identifier();
 }
 
@@ -322,7 +373,6 @@ AndFeature::AndFeature(const Feature& f1, const Feature& f2, const Feature& f3, 
     subfeatures.insert(subfeatures.begin(),f3.get_subfeatures_begin(),f3.get_subfeatures_end());
     subfeatures.insert(subfeatures.begin(),f4.get_subfeatures_begin(),f4.get_subfeatures_end());
     subfeatures.insert(subfeatures.begin(),f5.get_subfeatures_begin(),f5.get_subfeatures_end());
-    subfeatures.sort(&(pComp));
     clean_up_subfeatures();
     complexity = subfeatures.size();
     // check for contradicting subfeatures

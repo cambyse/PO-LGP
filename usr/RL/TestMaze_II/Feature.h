@@ -25,11 +25,11 @@ public:
     typedef subfeature_container_t::const_iterator subfeature_const_iterator_t;
     typedef std::set<std::unique_ptr<Feature> >    basis_feature_container_t;
     typedef double                                 feature_return_value;
-    enum TYPE { ABSTRACT, NULL_FEATURE, ACTION, STATE, REWARD, AND };
+    enum TYPE { ABSTRACT, CONST_FEATURE, NULL_FEATURE, ACTION, STATE, REWARD, AND };
     Feature();
     virtual ~Feature();
-    virtual feature_return_value evaluate(const instance_t *) const = 0;
-    virtual feature_return_value evaluate(const instance_t *, action_t, state_t, reward_t) const = 0;
+    virtual feature_return_value evaluate(const instance_t *) const;
+    virtual feature_return_value evaluate(const instance_t *, action_t, state_t, reward_t) const;
     virtual std::string identifier() const;
     friend std::ostream& operator<<(std::ostream&, const Feature&);
     virtual TYPE get_type() const;
@@ -61,6 +61,17 @@ class NullFeature: public Feature {
 public:
     NullFeature();
     virtual ~NullFeature();
+    virtual feature_return_value evaluate(const instance_t *) const;
+    virtual feature_return_value evaluate(const instance_t *, action_t, state_t, reward_t) const;
+    virtual std::string identifier() const;
+};
+
+class ConstFeature: public Feature {
+private:
+    ConstFeature(const long long int& v);
+    virtual ~ConstFeature();
+public:
+    static ConstFeature * create(const long long int& v = 0);
     virtual feature_return_value evaluate(const instance_t *) const;
     virtual feature_return_value evaluate(const instance_t *, action_t, state_t, reward_t) const;
     virtual std::string identifier() const;

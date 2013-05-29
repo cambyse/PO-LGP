@@ -24,6 +24,7 @@ HEADERS += LookAheadSearch.h \
 SOURCES += LookAheadSearch.cpp \
     util.cpp \
     BatchMaze.cpp \
+    lbfgs_codes.cpp \
     Data.cpp \
     main.cpp \
     Maze.cpp \

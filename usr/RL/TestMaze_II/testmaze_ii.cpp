@@ -209,60 +209,62 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     }
 
     // help strings
-    QString headline_s(    "Available commands:\n    COMMAND . . . . ARGUMENTS. . . . . . . . . . . . . . . . . . .-> ACTION");
+    QString headline_s(    "Available commands:\n    COMMAND . . . . ARGUMENTS. . . . . . . . . . . . . . . . . . . . .-> ACTION");
 
-    QString general_s(                        "\n    -------------------------General---------------------------");
-    QString help_s(                             "    help  / h. . . . . . . . . . . . . . . . . . . . . . . . . . .-> this help");
-    QString exit_s(                             "    exit/quit/q. . . . . . . . . . . . . . . . . . . . . . . . . .-> quit application");
-    QString set_s(                              "    set/unset. . . . . <string>. . . . . . . . . . . . . . . . . .-> set/unset options:");
-    QString option_1_s(                         "                       record. . . . . . . . . . . . . . . . . . .-> start/stop recording movements");
-    QString option_2_s(                         "                       plot. . . . . . . . . . . . . . . . . . . .-> write transitions into data file for plotting");
-    QString option_3_s(                         "                       p/planner .<string> . . . . . . . . . . . .-> set planner to use");
-    QString option_3a_s(                        "                                  o/optimal. . . . . . . . . . . .-> use optimal predictions (give by maze)");
-    QString option_3b_s(                        "                                  s/sparse . . . . . . . . . . . .-> use sparse predictions (given by CRF)");
-    QString option_3c_s(                        "                                  u/utree. . . . . . . . . . . . .-> use UTree predictions");
-    QString option_3d_s(                        "                                  uv/utree-value . . . . . . . . .-> use UTree state-action values");
-    QString option_3e_s(                        "                                  lq/linear-q. . . . . . . . . . .-> use linear Q-function approximation");
-    QString test_s(                             "    test . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> test");
+    QString general_s(                        "\n    ---------------------------------General-----------------------------------");
+    QString help_s(                             "    help  / h. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> this help");
+    QString exit_s(                             "    exit/quit/q. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> quit application");
+    QString set_s(                              "    set/unset. . . . . . . . . <string>. . . . . . . . . . . . . . . . . .-> set/unset options:");
+    QString option_1_s(                         "                               record. . . . . . . . . . . . . . . . . . .-> start/stop recording movements");
+    QString option_2_s(                         "                               plot. . . . . . . . . . . . . . . . . . . .-> write transitions into data file for plotting");
+    QString option_3_s(                         "                               p/planner .<string> . . . . . . . . . . . .-> set planner to use");
+    QString option_3a_s(                        "                                          o/optimal. . . . . . . . . . . .-> use optimal predictions (give by maze)");
+    QString option_3b_s(                        "                                          s/sparse . . . . . . . . . . . .-> use sparse predictions (given by CRF)");
+    QString option_3c_s(                        "                                          u/utree. . . . . . . . . . . . .-> use UTree predictions");
+    QString option_3d_s(                        "                                          uv/utree-value . . . . . . . . .-> use UTree state-action values");
+    QString option_3e_s(                        "                                          lq/linear-q. . . . . . . . . . .-> use linear Q-function approximation");
+    QString test_s(                             "    test . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> test");
 
-    QString maze_s(                           "\n    ---------------------------Maze---------------------------");
-    QString left_s(                             "    left  / l. . . . . . . . . . . . . . . . . . . . . . . . . . .-> move left");
-    QString right_s(                            "    right / r. . . . . . . . . . . . . . . . . . . . . . . . . . .-> move right");
-    QString up_s(                               "    up    / u. . . . . . . . . . . . . . . . . . . . . . . . . . .-> move up");
-    QString down_s(                             "    down  / d. . . . . . . . . . . . . . . . . . . . . . . . . . .-> move down");
-    QString stay_s(                             "    stay  / s. . . . . . . . . . . . . . . . . . . . . . . . . . .-> stay-action");
-    QString move_s(                             "    move . . . . . . . [<int>|stop]. . . . . . . . . . . . . . . .-> start/stop moving using planner");
-    QString random_s(                           "    random . . . . . . [<int>|stop]. . . . . . . . . . . . . . . .-> start/stop moving randomly");
-    QString delay_s(                            "    delay. . . . . . . [<int>] . . . . . . . . . . . . . . . . . .-> get [set] reward delay");
-    QString epsilon_s(                          "    epsilon. . . . . . [<double>]. . . . . . . . . . . . . . . . .-> get [set] random transition probability");
+    QString maze_s(                           "\n    -----------------------------------Maze-----------------------------------");
+    QString left_s(                             "    left  / l. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> move left");
+    QString right_s(                            "    right / r. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> move right");
+    QString up_s(                               "    up    / u. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> move up");
+    QString down_s(                             "    down  / d. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> move down");
+    QString stay_s(                             "    stay  / s. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> stay-action");
+    QString move_s(                             "    move . . . . . . . . . . . [<int>|stop]. . . . . . . . . . . . . . . .-> start/stop moving using planner");
+    QString random_s(                           "    random . . . . . . . . . . [<int>|stop]. . . . . . . . . . . . . . . .-> start/stop moving randomly");
+    QString delay_s(                            "    delay. . . . . . . . . . . [<int>] . . . . . . . . . . . . . . . . . .-> get [set] reward delay");
+    QString epsilon_s(                          "    epsilon. . . . . . . . . . [<double>]. . . . . . . . . . . . . . . . .-> get [set] random transition probability");
 
-    QString learning_s(                       "\n    ----------------------Model Learning----------------------");
-    QString episode_s(                          "    episode / e. . . . [<int>|clear,c] . . . . . . . . . . . . . .-> record length <int> episode or clear data");
+    QString learning_s(                       "\n    ------------------------------Model Learning------------------------------");
+    QString episode_s(                          "    episode / e. . . . . . . . [<int>|clear,c] . . . . . . . . . . . . . .-> record length <int> episode or clear data");
     QString learning_crf_s(                     "    === CRF ===");
-    QString optimize_crf_s(                     "    crf-optimize / co. [<int>|check, c]. . . . . . . . . . . . . .-> optimize CRF [max_iterations | check derivatives]");
-    QString score_s(                            "    score. . . . . . . <int> . . . . . . . . . . . . . . . . . . .-> score candidate features with distance <int> by gradient");
-    QString add_s(                              "    add. . . . . . . . <int> . . . . . . . . . . . . . . . . . . .-> add <int> highest scored candidate features to active (0 for all non-zero scored)");
-    QString crf_erase_s(                        "    crf-erase / ce . . . . . . . . . . . . . . . . . . . . . . . .-> erase features with zero weight");
-    QString l1_s(                               "    l1 . . . . . . . . <double>. . . . . . . . . . . . . . . . . .-> coefficient for L1 regularization");
-    QString evaluate_s(                         "    evaluate . . . . . . . . . . . . . . . . . . . . . . . . . . .-> evaluate features at current point");
-    QString validate_s(                         "    validate / v . . . {crf,kmdp}[exact|mc <int>]. . . . . . . . .-> validate CRF or k-MDP model using exact (default) or Monte Carlo (with <int> samples) computation of the KL-divergence");
+    QString optimize_crf_s(                     "    crf-optimize / co. . . . . [<int>|check, c]. . . . . . . . . . . . . .-> optimize CRF [max_iterations | check derivatives]");
+    QString score_s(                            "    score. . . . . . . . . . . <int> . . . . . . . . . . . . . . . . . . .-> score candidate features with distance <int> by gradient");
+    QString add_s(                              "    add. . . . . . . . . . . . <int> . . . . . . . . . . . . . . . . . . .-> add <int> highest scored candidate features to active (0 for all non-zero scored)");
+    QString crf_erase_s(                        "    crf-erase / ce . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> erase features with zero weight");
+    QString l1_s(                               "    l1 . . . . . . . . . . . . <double>. . . . . . . . . . . . . . . . . .-> coefficient for L1 regularization");
+    QString evaluate_s(                         "    evaluate . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> evaluate features at current point");
+    QString validate_s(                         "    validate / v . . . . . . . {crf,kmdp}[exact|mc <int>]. . . . . . . . .-> validate CRF or k-MDP model using exact (default) or Monte Carlo (with <int> samples) computation of the KL-divergence");
     QString learning_utree_s(                   "    === UTree ===");
-    QString expand_leaf_nodes_s(                "    expand / ex. . . . [<int>|<double] . . . . . . . . . . . . . .-> expand <int> leaf nodes / expand leaves until a score of <double> is reached");
-    QString print_utree_s(                      "    print-utree. . . . . . . . . . . . . . . . . . . . . . . . . .-> print the current UTree");
-    QString print_leaves_s(                     "    print-leaves . . . . . . . . . . . . . . . . . . . . . . . . .-> print leaves of the current UTree");
-    QString clear_utree_s(                      "    clear-utree. . . . . . . . . . . . . . . . . . . . . . . . . .-> clear UTree");
-    QString utree_q_iteration_s(                "    q-iteration / qi . <int> <double>. . . . . . . . . . . . . . .-> run <int> iterations of Q-Learning with alpha <double>");
-    QString utree_value_iteration_s(            "    v-iteration / vi . [<int>] . . . . . . . . . . . . . . . . . .-> run one [<int>] iteration(s) of Value-Iteration");
-    QString utree_expansion_type_s(             "    ex-type / ext. . . [u(tility)|s(tate)r(eward)] . . . . . . . .-> get/set expansion type for UTree");
+    QString expand_leaf_nodes_s(                "    expand / ex. . . . . . . . [<int>|<double] . . . . . . . . . . . . . .-> expand <int> leaf nodes / expand leaves until a score of <double> is reached");
+    QString print_utree_s(                      "    print-utree. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> print the current UTree");
+    QString print_leaves_s(                     "    print-leaves . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> print leaves of the current UTree");
+    QString clear_utree_s(                      "    clear-utree. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> clear UTree");
+    QString utree_q_iteration_s(                "    q-iteration / qi . . . . . <int> <double>. . . . . . . . . . . . . . .-> run <int> iterations of Q-Learning with alpha <double>");
+    QString utree_value_iteration_s(            "    v-iteration / vi . . . . . [<int>] . . . . . . . . . . . . . . . . . .-> run one [<int>] iteration(s) of Value-Iteration");
+    QString utree_expansion_type_s(             "    ex-type / ext. . . . . . . [u(tility)|s(tate)r(eward)] . . . . . . . .-> get/set expansion type for UTree");
     QString learning_linQ_s(                    "    === Linear-Q ===");
-    QString optimize_linQ_s(                    "    lq-optimize / lqo  [<double>]. . . . . . . . . . . . . . . . .-> optimize Linear-Q [ with L2-regularization coefficient <double> ]");
-    QString construct_s(                        "    construct / con. . <int> . . . . . . . . . . . . . . . . . . .-> construct candidate features with distance <int>");
-    QString lq_erase_s(                         "    lq-erase / lqe . . [<double>]. . . . . . . . . . . . . . . . .-> erase features with zero weight [ weight below or equal to <double> ]");
+    QString optimize_linQ_ridge_s(              "    lq-optimize-ridge / lqor . [<double>]. . . . . . . . . . . . . . . . .-> optimize Linear-Q [ with L2-regularization coefficient <double> ]");
+    QString optimize_linQ_l1_s(                 "    lq-optimize-l1 / lqol1 . . <double> [<int>]. . . . . . . . . . . . . .-> optimize Linear-Q with L1-regularization coefficient <double> [ and max <int> iterations ]");
+    QString construct_s(                        "    construct / con. . . . . . <int> . . . . . . . . . . . . . . . . . . .-> construct candidate features with distance <int>");
+    QString lq_erase_zero_weight_s(             "    lq-erase / lqe . . . . . . [<double>]. . . . . . . . . . . . . . . . .-> erase features with zero weight [ weight below or equal to <double> ]");
+    QString lq_erase_zero_s(                    "    lq-erase-zero / lqez . . . . . . . . . . . . . . . . . . . . . . . . .-> erase features which are never non-zero");
 
-    QString planning_s(                       "\n    -------------------------Planning--------------------------");
-    QString discount_s(                         "    discount . . . . . [<double>]. . . . . . . . . . . . . . . . .-> get [set] discount");
-    QString print_look_ahead_tree_s(            "    print-tree . . . . [g|graphic] . . . . . . . . . . . . . . . .-> print Look-Ahead-Tree [with graphical output]");
-    QString max_tree_size_s(                    "    max-tree-size. . . <int> . . . . . . . . . . . . . . . . . . .-> set maximum size of Look-Ahead-Tree (zero for infinite)");
+    QString planning_s(                       "\n    ---------------------------------Planning----------------------------------");
+    QString discount_s(                         "    discount . . . . . . . . . [<double>]. . . . . . . . . . . . . . . . .-> get [set] discount");
+    QString print_look_ahead_tree_s(            "    print-tree . . . . . . . . [g|graphic] . . . . . . . . . . . . . . . .-> print Look-Ahead-Tree [with graphical output]");
+    QString max_tree_size_s(                    "    max-tree-size. . . . . . . <int> . . . . . . . . . . . . . . . . . . .-> set maximum size of Look-Ahead-Tree (zero for infinite)");
 
     set_s += "\n" + option_1_s;
     set_s += "\n" + option_2_s;
@@ -337,9 +339,11 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             TO_CONSOLE( utree_value_iteration_s );
             TO_CONSOLE( utree_expansion_type_s );
             TO_CONSOLE( learning_linQ_s ); // linear-Q
-            TO_CONSOLE( optimize_linQ_s );
+            TO_CONSOLE( optimize_linQ_ridge_s );
+            TO_CONSOLE( optimize_linQ_l1_s );
             TO_CONSOLE( construct_s );
-            TO_CONSOLE( lq_erase_s );
+            TO_CONSOLE( lq_erase_zero_weight_s );
+            TO_CONSOLE( lq_erase_zero_s );
             // Planning
             TO_CONSOLE( planning_s );
             TO_CONSOLE( discount_s );
@@ -465,28 +469,41 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( optimize_crf_s );
             }
-        } else if(str_args[0]=="lq-optimize" || str_args[0]=="lqo") { // optimize linear-Q
+        } else if(str_args[0]=="lq-optimize-ridge" || str_args[0]=="lqor") { // optimize linear-Q
             if(str_args.size()==1 || double_args_ok[1] ) {
                 if(double_args_ok[1]) {
-                    linQ.optimize(double_args[1]);
+                    linQ.optimize_ridge(double_args[1]);
                 } else {
-                    linQ.optimize(0);
+                    linQ.optimize_ridge(0);
                 }
             } else {
                 TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( optimize_crf_s );
+                TO_CONSOLE( optimize_linQ_ridge_s );
+            }
+        } else if(str_args[0]=="lq-optimize-l1" || str_args[0]=="lqol1") { // optimize linear-Q
+            if(str_args.size()>1 && double_args_ok[1] ) {
+                if(str_args.size()>2 && int_args_ok[2] ) {
+                    linQ.optimize_l1(double_args[1], int_args[2]);
+                } else {
+                    linQ.optimize_l1(double_args[1]);
+                }
+            } else {
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( optimize_linQ_l1_s );
             }
         } else if(str_args[0]=="lq-erase" || str_args[0]=="lqe") {
             if(str_args.size()==1 || double_args_ok[1]) {
                 if(str_args.size()>1) {
-                    linQ.erase_zero_features(double_args[1]);
+                    linQ.erase_zero_weighted_features(double_args[1]);
                 } else {
-                    linQ.erase_zero_features();
+                    linQ.erase_zero_weighted_features();
                 }
             } else {
                 TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( lq_erase_s );
+                TO_CONSOLE( lq_erase_zero_weight_s );
             }
+        } else if(str_args[0]=="lq-erase-zero" || str_args[0]=="lqez") {
+            linQ.erase_zero_features();
         } else if(str_args[0]=="epsilon") {
             if(str_args.size()==1) {
                 TO_CONSOLE( QString("    maze epsilon is %1").arg(maze.get_epsilon()) );
