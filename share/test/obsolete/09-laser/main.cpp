@@ -2,9 +2,9 @@
 
 #define NIKOLAY
 
-#include <MT/ors.h>
-#include <MT/opengl.h>
-#include <MT/plot.h>
+#include <Ors/ors.h>
+#include <Gui/opengl.h>
+#include <Gui/plot.h>
 //#include <MT/top_methods.h>
 //#include <MT/top_orsImplementation.cpp>
 //#include <MT/top_interface.h>

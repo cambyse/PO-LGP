@@ -1,6 +1,6 @@
-#include <MT/util.h>
-#include <MT/plot.h>
-#include <MT/ann.h>
+#include <Core/util.h>
+#include <Gui/plot.h>
+#include <Core/ann.h>
 
 void testRRT(){
   uint dim=2;

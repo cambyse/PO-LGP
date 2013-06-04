@@ -1,11 +1,11 @@
 #include <MT/robot.h>
 #include <signal.h>
-#include<SD/ISF_GP.h>
-#include<SD/graspISF.h>
-#include<SD/utils.h>
-#include<SD/surface_helpers.h>
-#include<SD/percept_ISF_process.h>
-#include<SD/build_mesh_process.h>
+#include <SD/ISF_GP.h>
+#include <SD/graspISF.h>
+#include <SD/utils.h>
+#include <SD/surface_helpers.h>
+#include <SD/percept_ISF_process.h>
+#include <SD/build_mesh_process.h>
 
 #include <MT/earlyVisionModule.h>
 #include <MT/perceptionModule.h>

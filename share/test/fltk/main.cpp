@@ -1,9 +1,9 @@
 #define MT_IMPLEMENTATION
 
-#include <MT/util.h>
+#include <Core/util.h>
 #include <Core/array.h>
 //#include <FL/fl_draw.H>
-#include <MT/opengl.h>
+#include <Gui/opengl.h>
 #include <biros/biros.h>
 #include <unistd.h>
 #include "start.h"

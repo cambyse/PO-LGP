@@ -1,9 +1,9 @@
 #define MT_IMPLEMENTATION
 
-#include<Core/array.h>
-#include<MT/ors.h>
-#include<MT/opengl.h>
-#include<MT/plot.h>
+#include <Core/array.h>
+#include <Ors/ors.h>
+#include <Gui/opengl.h>
+#include <Gui/plot.h>
 
 void displayLaserFile(const char *filename){
   uint t,j;

@@ -1,4 +1,4 @@
-#include <MT/opengl.h>
+#include <Gui/opengl.h>
 
 int main(int argn,char** argv){
   MT::initCmdLine(argn, argv);

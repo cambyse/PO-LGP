@@ -1,6 +1,6 @@
 #include <biros/biros.h>
-#include <MT/util.h>
-#include <MT/array_t.cxx>
+#include <Core/util.h>
+#include <Core/array_t.h>
 
 //===========================================================================
 //

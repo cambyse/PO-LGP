@@ -4,7 +4,7 @@
  #include <stdlib.h>
  #include <string.h>
 
-#include <MT/util.h>
+#include <Core/util.h>
  
  int main(void) {
    Display *d;

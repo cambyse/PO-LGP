@@ -2,7 +2,7 @@
 #include <JK/utils/util.h>
 #include <iostream>
 #include <Core/array.h>
-#include <MT/util.h>
+#include <Core/util.h>
 #include <MT/gauss.h>
 
 arr pos;

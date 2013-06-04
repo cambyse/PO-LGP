@@ -1,7 +1,7 @@
 #define MT_IMPLEMENTATION
 
 #include <MT/serial.h>
-#include <MT/util.h>
+#include <Core/util.h>
 
 void sendCommand(byte address,byte command,byte speed){
   PutSerialChar(address);

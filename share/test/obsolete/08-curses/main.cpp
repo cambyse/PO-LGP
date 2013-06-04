@@ -2,7 +2,7 @@
 
 #include <curses.h>
 #include <signal.h>
-#include <MT/util.h>
+#include <Core/util.h>
 
 struct Curses{
   WINDOW *win;

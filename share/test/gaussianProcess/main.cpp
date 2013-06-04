@@ -1,8 +1,8 @@
 #define MT_IMPLEMENT_TEMPLATES
 
-#include<Core/array.h>
-#include<MT/plot.h>
-#include<MT/gaussianProcess.h>
+#include <Core/array.h>
+#include <Gui/plot.h>
+#include <MT/gaussianProcess.h>
 
 bool pltPause=true;
 

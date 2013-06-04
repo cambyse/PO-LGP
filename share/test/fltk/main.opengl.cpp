@@ -6,9 +6,9 @@
 //#define MT_FREEGLUT
 //#define MT_QT
 
-#include<MT/plot.h>
-#include<MT/opengl.h>
-#include<MT/ors.h>
+#include <Gui/plot.h>
+#include <Gui/opengl.h>
+#include <Ors/ors.h>
 
 
 

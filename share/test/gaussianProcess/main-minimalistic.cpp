@@ -1,7 +1,7 @@
 #define MT_IMPLEMENTATION
 
-#include<Core/array.h>
-#include<MT/plot.h>
+#include <Core/array.h>
+#include <Gui/plot.h>
 
 
 //===========================================================================

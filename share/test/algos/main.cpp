@@ -1,9 +1,9 @@
-#include<MT/util.h>
-#include<MT/algos.h>
-#include<MT/functions.h>
-//#include<MT/dynamics.h>
+#include <Core/util.h>
+#include <Core/algos.h>
+#include <MT/functions.h>
+//#include <MT/dynamics.h>
 #include <MT/optimization.h>
-#include <MT/plot.h>
+#include <Gui/plot.h>
 
 using namespace std;
 
