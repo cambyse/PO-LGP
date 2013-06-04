@@ -16,9 +16,8 @@ class LinearQ
 {
 public:
 
-    typedef Data::idx_t                      idx_t;
-    typedef Data::size_t                     size_t;
-    typedef Data::probability_t              probability_t;
+    USE_DATA_TYPEDEFS;
+    USE_REPRESENTATION_TYPEDEFS;
     typedef Feature::feature_return_value    f_ret_t;
     typedef std::vector<const instance_t *>  instance_vector_t;
 

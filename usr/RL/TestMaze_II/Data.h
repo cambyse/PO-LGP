@@ -1,6 +1,16 @@
 #ifndef DATA_H_
 #define DATA_H_
 
+#define USE_DATA_TYPEDEFS                                       \
+    typedef Data::idx_t         idx_t;                          \
+    typedef Data::size_t        size_t;                         \
+    typedef Data::probability_t probability_t;
+#define USE_DATA_CONSTS                                         \
+    using Data::maze_x_size;                                    \
+    using Data::maze_y_size;                                    \
+    using Data::k;
+
+
 class Data {
 
 public:

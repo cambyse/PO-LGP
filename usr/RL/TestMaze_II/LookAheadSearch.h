@@ -14,10 +14,9 @@ class LookAheadSearch {
 
 public:
 
-    typedef Data::size_t        size_t;
-    typedef Data::idx_t         idx_t;
-    typedef Data::probability_t probability_t;
-    typedef reward_t::value_t   value_t;
+    USE_DATA_TYPEDEFS;
+    USE_REPRESENTATION_TYPEDEFS;
+    typedef reward_t::value_t value_t;
 
     enum NODE_TYPE { NONE, STATE, ACTION };
     enum EXPANSION_TYPE { NOT_DEFINED, NOT_EXPANDED, FULLY_EXPANDED };
@@ -243,7 +242,7 @@ void LookAheadSearch::build_tree(
         const size_t& max_node_counter
 ) {
 
-    DEBUG_OUT(1,"Building new search tree");
+    DEBUG_OUT(2,"Building new search tree");
 
     // clear tree
     clear_tree();
@@ -271,17 +270,17 @@ void LookAheadSearch::build_tree(
                 DEBUG_OUT(0,"Abort: Tree has more than " << max_node_counter << " nodes (" << number_of_nodes << ")");
                 break;
             } else {
-                if(DEBUG_LEVEL==1) {
+                if(DEBUG_LEVEL>=1) {
                     last_progress = util::print_progress(number_of_nodes, max_node_counter, 50, "Building Tree", last_progress);
                 }
             }
         }
     }
-    if(DEBUG_LEVEL==1) {
+    if(DEBUG_LEVEL>=1) {
         std::cout << std::endl;
     }
 
-    if(DEBUG_LEVEL>=3) {
+    if(DEBUG_LEVEL>=4) {
         print_tree(false,true);
     }
 }
@@ -321,8 +320,8 @@ void LookAheadSearch::expand_leaf_node(
         probability_t(Model::*prediction)(const instance_t *, const action_t&, const state_t&, const reward_t&) const
 ) {
 
-    DEBUG_OUT(2,"Expanding leaf node");
-    if(DEBUG_LEVEL>=2) {
+    DEBUG_OUT(3,"Expanding leaf node");
+    if(DEBUG_LEVEL>=3) {
         print_node(state_node);
     }
 
@@ -352,8 +351,8 @@ void LookAheadSearch::expand_leaf_node(
         arc_t state_to_action_arc = graph.addArc(state_node,action_node);
         arc_info_map[state_to_action_arc] = ArcInfo(0,0); // never used
 
-        DEBUG_OUT(3,"    Added action node:");
-        if(DEBUG_LEVEL>=3) {
+        DEBUG_OUT(4,"    Added action node:");
+        if(DEBUG_LEVEL>=4) {
             print_node(action_node);
         }
     }
@@ -379,8 +378,8 @@ void LookAheadSearch::expand_action_node(
         probability_t(Model::*prediction)(const instance_t *, const action_t&, const state_t&, const reward_t&) const
 ) {
 
-    DEBUG_OUT(2,"Expanding action node");
-    if(DEBUG_LEVEL>=3) {
+    DEBUG_OUT(3,"Expanding action node");
+    if(DEBUG_LEVEL>=4) {
         print_node(action_node);
     }
 
@@ -420,8 +419,8 @@ void LookAheadSearch::expand_action_node(
         }
 
         if(new_state_node!=lemon::INVALID){
-            DEBUG_OUT(3,"    Added state node");
-            if(DEBUG_LEVEL>=3) {
+            DEBUG_OUT(4,"    Added state node");
+            if(DEBUG_LEVEL>=4) {
                 print_node(new_state_node);
             }
         }

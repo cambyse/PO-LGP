@@ -69,9 +69,7 @@ void TestMaze_II::collect_episode(const int& length) {
         reward_t reward;
         maze.perform_transition(action,state_to,reward);
         update_current_instance(action,state_to,reward);
-        crf.add_action_state_reward_tripel(action,state_to,reward);
-        utree.add_action_state_reward_tripel(action,state_to,reward);
-        linQ.add_action_state_reward_tripel(action,state_to,reward);
+        add_action_state_reward_tripel(action,state_to,reward);
     }
 }
 
@@ -86,6 +84,24 @@ void TestMaze_II::update_current_instance(action_t action, state_t state, reward
     }
 }
 
+void TestMaze_II::add_action_state_reward_tripel(
+    const action_t& action,
+    const state_t& state,
+    const reward_t& reward
+    ) {
+    crf.add_action_state_reward_tripel(action,state,reward);
+    utree.add_action_state_reward_tripel(action,state,reward);
+    linQ.add_action_state_reward_tripel(action,state,reward);
+    delay_dist.add_action_state_reward_tripel(action,state,reward);
+}
+
+void TestMaze_II::clear_data() {
+    crf.clear_data();
+    utree.clear_data();
+    linQ.clear_data();
+    delay_dist.clear_data();
+}
+
 void TestMaze_II::render() {
     maze.render_update(ui.graphicsView);
 }
@@ -97,9 +113,7 @@ void TestMaze_II::random_action() {
     maze.perform_transition(action,state_to,reward);
     update_current_instance(action,state_to,reward);
     if(record) {
-        crf.add_action_state_reward_tripel(action,state_to,reward);
-        utree.add_action_state_reward_tripel(action,state_to,reward);
-        linQ.add_action_state_reward_tripel(action,state_to,reward);
+        add_action_state_reward_tripel(action,state_to,reward);
     }
     maze.render_update(ui.graphicsView);
 }
@@ -164,9 +178,7 @@ void TestMaze_II::choose_action() {
     maze.perform_transition(action,state_to,reward);
     update_current_instance(action,state_to,reward);
     if(record) {
-        crf.add_action_state_reward_tripel(action,state_to,reward);
-        utree.add_action_state_reward_tripel(action,state_to,reward);
-        linQ.add_action_state_reward_tripel(action,state_to,reward);
+        add_action_state_reward_tripel(action,state_to,reward);
     }
     maze.render_update(ui.graphicsView);
 }
@@ -233,7 +245,6 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString stay_s(                             "    stay  / s. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> stay-action");
     QString move_s(                             "    move . . . . . . . . . . . [<int>|stop]. . . . . . . . . . . . . . . .-> start/stop moving using planner");
     QString random_s(                           "    random . . . . . . . . . . [<int>|stop]. . . . . . . . . . . . . . . .-> start/stop moving randomly");
-    QString delay_s(                            "    delay. . . . . . . . . . . [<int>] . . . . . . . . . . . . . . . . . .-> get [set] reward delay");
     QString epsilon_s(                          "    epsilon. . . . . . . . . . [<double>]. . . . . . . . . . . . . . . . .-> get [set] random transition probability");
 
     QString learning_s(                       "\n    ------------------------------Model Learning------------------------------");
@@ -265,6 +276,10 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString discount_s(                         "    discount . . . . . . . . . [<double>]. . . . . . . . . . . . . . . . .-> get [set] discount");
     QString print_look_ahead_tree_s(            "    print-tree . . . . . . . . [g|graphic] . . . . . . . . . . . . . . . .-> print Look-Ahead-Tree [with graphical output]");
     QString max_tree_size_s(                    "    max-tree-size. . . . . . . <int> . . . . . . . . . . . . . . . . . . .-> set maximum size of Look-Ahead-Tree (zero for infinite)");
+
+    QString new_s(                            "\n    ---------------------------------New Stuff----------------------------------");
+    QString color_states_s(                     "    col-states . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> color states (random)");
+    QString delay_distribution_s(               "    delay-distribution / dd. . <int> . . . . . . . . . . . . . . . . . . .-> show temporal delay distribution for delay <int>");
 
     set_s += "\n" + option_1_s;
     set_s += "\n" + option_2_s;
@@ -317,7 +332,6 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             TO_CONSOLE( stay_s );
             TO_CONSOLE( move_s );
             TO_CONSOLE( random_s );
-            TO_CONSOLE( delay_s );
             TO_CONSOLE( epsilon_s );
             // Learning
             TO_CONSOLE( learning_s );
@@ -349,6 +363,10 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             TO_CONSOLE( discount_s );
             TO_CONSOLE( print_look_ahead_tree_s );
             TO_CONSOLE( max_tree_size_s );
+            // New
+            TO_CONSOLE( new_s );
+            TO_CONSOLE( color_states_s );
+            TO_CONSOLE( delay_distribution_s );
         } else if(str_args[0]=="left" || str_args[0]=="l") { // left
             action_t action = action_t::LEFT;
             state_t state_to;
@@ -356,9 +374,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             maze.perform_transition(action,state_to,reward);
             update_current_instance(action,state_to,reward);
             if(record) {
-                crf.add_action_state_reward_tripel(action,state_to,reward);
-                utree.add_action_state_reward_tripel(action,state_to,reward);
-                linQ.add_action_state_reward_tripel(action,state_to,reward);
+                add_action_state_reward_tripel(action,state_to,reward);
             }
             maze.render_update(ui.graphicsView);
         } else if(str_args[0]=="right" || str_args[0]=="r") { // right
@@ -368,9 +384,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             maze.perform_transition(action,state_to,reward);
             update_current_instance(action,state_to,reward);
             if(record) {
-                crf.add_action_state_reward_tripel(action,state_to,reward);
-                utree.add_action_state_reward_tripel(action,state_to,reward);
-                linQ.add_action_state_reward_tripel(action,state_to,reward);
+                add_action_state_reward_tripel(action,state_to,reward);
             }
             maze.render_update(ui.graphicsView);
         } else if(str_args[0]=="up" || str_args[0]=="u") { // up
@@ -380,9 +394,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             maze.perform_transition(action,state_to,reward);
             update_current_instance(action,state_to,reward);
             if(record) {
-                crf.add_action_state_reward_tripel(action,state_to,reward);
-                utree.add_action_state_reward_tripel(action,state_to,reward);
-                linQ.add_action_state_reward_tripel(action,state_to,reward);
+                add_action_state_reward_tripel(action,state_to,reward);
             }
             maze.render_update(ui.graphicsView);
         } else if(str_args[0]=="down" || str_args[0]=="d") { // down
@@ -392,9 +404,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             maze.perform_transition(action,state_to,reward);
             update_current_instance(action,state_to,reward);
             if(record) {
-                crf.add_action_state_reward_tripel(action,state_to,reward);
-                utree.add_action_state_reward_tripel(action,state_to,reward);
-                linQ.add_action_state_reward_tripel(action,state_to,reward);
+                add_action_state_reward_tripel(action,state_to,reward);
             }
             maze.render_update(ui.graphicsView);
         } else if(str_args[0]=="stay" || str_args[0]=="s") { // stay
@@ -404,9 +414,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             maze.perform_transition(action,state_to,reward);
             update_current_instance(action,state_to,reward);
             if(record) {
-                crf.add_action_state_reward_tripel(action,state_to,reward);
-                utree.add_action_state_reward_tripel(action,state_to,reward);
-                linQ.add_action_state_reward_tripel(action,state_to,reward);
+                add_action_state_reward_tripel(action,state_to,reward);
             }
             maze.render_update(ui.graphicsView);
         } else if(str_args[0]=="move") { // start/stop moving
@@ -433,23 +441,12 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( random_s );
             }
-        } else if(str_args[0]=="delay") { // set time delay for rewards
-            if(str_args.size()==1) {
-                TO_CONSOLE("    " + QString::number(maze.get_time_delay()));
-            } else if(int_args_ok[1] && int_args[1]>=0){
-                maze.set_time_delay(int_args[1]);
-            } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( delay_s );
-            }
         } else if(str_args[0]=="episode" || str_args[0]=="e") { // record episode
             if(str_args.size()==1) {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( episode_s );
             } else if( str_args[1]=="clear" || str_args[1]=="c" ) {
-                crf.clear_data();
-                utree.clear_data();
-                linQ.clear_data();
+                clear_data();
             } else if(int_args_ok[1] && int_args[1]>=0){
                 collect_episode(int_args[1]);
             } else {
@@ -739,7 +736,31 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 TO_CONSOLE( construct_s );
             }
         } else if(str_args[0]=="test") { // test
-            crf.test();
+            state_t s1 = state_t::random_state();
+            state_t s2 = state_t::random_state();
+            idx_t delay = rand()%10;
+            probability_t prob = delay_dist.get_delay_probability(s1,s2,delay);
+            DEBUG_OUT(0,"State " << s1 << " --" << delay << "--> State " << s2 << " : " << prob );
+        } else if(str_args[0]=="col-states") { // color states
+            std::vector<std::tuple<double,double,double> > cols;
+            for(stateIt_t state=stateIt_t::first(); state!=util::INVALID; ++state) {
+                cols.push_back( std::make_tuple(drand48(),drand48(),drand48()) );
+            }
+            maze.render_update(ui.graphicsView, &cols);
+        } else if(str_args[0]=="delay-distribution" || str_args[0]=="dd") { // show delay distribution
+            if(str_args.size()!=2 || !int_args_ok[1]) {
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( delay_distribution_s );
+            } else {
+                state_t s1 = current_instance->state;
+                idx_t delay = int_args[1];
+                std::vector<std::tuple<double,double,double> > cols;
+                for(stateIt_t state=stateIt_t::first(); state!=util::INVALID; ++state) {
+                    probability_t prob = delay_dist.get_delay_probability(s1,state,delay);
+                    cols.push_back( std::make_tuple(1,1-prob,1-prob) );
+                }
+                maze.render_update(ui.graphicsView, &cols);
+            }
         } else {
             TO_CONSOLE("    unknown command");
         }

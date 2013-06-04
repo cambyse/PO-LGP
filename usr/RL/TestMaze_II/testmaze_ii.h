@@ -9,6 +9,7 @@
 #include "LookAheadSearch.h"
 #include "Data.h"
 #include "Representation/Representation.h"
+#include "DelayDistribution.h"
 
 #include <QWidget>
 #include <QTimer>
@@ -33,8 +34,8 @@ private:
     // Typedefs and Member Variables //
     //===============================//
 
-    typedef Data::size_t        size_t;
-    typedef Data::probability_t probability_t;
+    USE_DATA_TYPEDEFS;
+    USE_REPRESENTATION_TYPEDEFS;
 
     //---------------//
     // Maze GUI etc. //
@@ -84,13 +85,23 @@ private:
     LookAheadSearch look_ahead_search;
     size_t max_tree_size;
 
+    //-------//
+    // Other //
+    //-------//
+    DelayDistribution delay_dist;
+
     //==================//
     // Member Functions //
     //==================//
 
     void collect_episode(const int& length);
     void update_current_instance(action_t,state_t,reward_t);
-
+    void add_action_state_reward_tripel(
+            const action_t& action,
+            const state_t& state,
+            const reward_t& reward
+    );
+    void clear_data();
 
 private slots:
     void render();

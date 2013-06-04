@@ -205,7 +205,7 @@ void LinearQ::clear_data() {
     loss_terms_up_to_date = false;
 }
 
-action_t LinearQ::get_max_value_action(const instance_t * i) {
+LinearQ::action_t LinearQ::get_max_value_action(const instance_t * i) {
     vector<action_t> max_actions;
     double max_value = -DBL_MAX;
     for( auto action : actionIt_t::all ) {

@@ -22,6 +22,8 @@
 #define DEBUG_LEVEL 0
 #include "debug.h"
 
+USE_REPRESENTATION_TYPEDEFS;
+
 #define LOG_COMMENT(x) DEBUG_OUT(1,x); log_file << "# " << x << std::endl;
 #define LOG(x) DEBUG_OUT(1,x); log_file << x << std::endl;
 

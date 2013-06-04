@@ -10,6 +10,13 @@ using util::INVALID;
 using std::cout;
 using std::endl;
 
+Instance::All::All(Instance * i): instance(i) {}
+InstanceIt Instance::All::begin() { return instance->first(); }
+InstanceIt Instance::All::end() { return InstanceIt(); }
+Instance::ConstAll::ConstAll(const Instance * i): instance(i) {}
+ConstInstanceIt Instance::ConstAll::begin() { return instance->const_first(); }
+ConstInstanceIt Instance::ConstAll::end() { return ConstInstanceIt(); }
+
 Instance * Instance::create(
     const Action& a,
     const State& s,
@@ -549,6 +556,8 @@ Instance::Instance(
     action(a),
     state(s),
     reward(r),
+    all(this),
+    const_all(this),
     previous_instance(nullptr),
     next_instance(nullptr),
     const_previous_instance(nullptr),
@@ -561,6 +570,8 @@ Instance::Instance(const Instance& i):
     action(i.action),
     state(i.state),
     reward(i.reward),
+    all(this),
+    const_all(this),
     previous_instance(i.previous_instance),
     next_instance(i.next_instance),
     const_previous_instance(i.const_previous_instance),

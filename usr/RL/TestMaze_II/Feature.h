@@ -20,6 +20,8 @@
 
 class Feature {
 public:
+    USE_DATA_TYPEDEFS;
+    USE_REPRESENTATION_TYPEDEFS;
     typedef std::list<Feature * >                  subfeature_container_t;
     typedef subfeature_container_t::iterator       subfeature_iterator_t;
     typedef subfeature_container_t::const_iterator subfeature_const_iterator_t;

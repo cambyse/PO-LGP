@@ -19,17 +19,16 @@
 
 #include <lbfgs.h>
 
+#include "HistoryObserver.h"
 #include "Data.h"
 #include "Representation/Representation.h"
 #include "Feature.h"
 
-class KMarkovCRF
+class KMarkovCRF: public HistoryObserver
 {
 public:
 
-    typedef Data::idx_t                   idx_t;
-    typedef Data::size_t                  size_t;
-    typedef Data::probability_t           probability_t;
+    USE_DATA_TYPEDEFS
     typedef Feature::feature_return_value f_ret_t;
 
     KMarkovCRF();
@@ -87,17 +86,6 @@ public:
      * */
     int optimize_model(lbfgsfloatval_t l1 = 0, unsigned int max_iter = 0, lbfgsfloatval_t * mean_likelihood = nullptr);
 
-    void add_action_state_reward_tripel(
-            const action_t& action,
-            const state_t& state,
-            const reward_t& reward
-    );
-
-    void clear_data() {
-        delete instance_data;
-        instance_data = nullptr;
-    }
-
     void check_derivatives(const int& number_of_samples, const double& range, const double& max_variation, const double& max_relative_deviation);
 
     void evaluate_features();
@@ -142,7 +130,6 @@ private:
     // General Data //
     //--------------//
     int k;                                           ///< Number of time steps in the past to be considered.
-    instance_t * instance_data;                      ///< Data used for maximazing the likelihood.
 
     //------------------------//
     // Features, Weights etc. //

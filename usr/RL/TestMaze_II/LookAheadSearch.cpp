@@ -92,7 +92,7 @@ number_of_nodes(0)
 LookAheadSearch::~LookAheadSearch() {}
 
 void LookAheadSearch::clear_tree() {
-    DEBUG_OUT(1,"Clearing graph");
+    DEBUG_OUT(2,"Clearing graph");
     for(graph_t::NodeIt node(graph); node!=INVALID; ++node) {
         // DEBUG_OUT(0,"Deleting instance of:");
         // print_node(node);
@@ -103,13 +103,13 @@ void LookAheadSearch::clear_tree() {
     root_node = INVALID;
 }
 
-action_t LookAheadSearch::get_optimal_action() const {
-    DEBUG_OUT(1,"Determining optimal action");
+LookAheadSearch::action_t LookAheadSearch::get_optimal_action() const {
+    DEBUG_OUT(2,"Determining optimal action");
     node_vector_t optimal_action_nodes;
     switch(optimal_action_selection_type) {
     case MAX_LOWER_BOUND:
     {
-        DEBUG_OUT(2,"    Using maximum lower bound as criterion");
+        DEBUG_OUT(3,"    Using maximum lower bound as criterion");
         value_t max_lower_bound = -DBL_MAX, current_lower_bound;
         node_t current_action_node;
         for(graph_t::OutArcIt out_arc(graph,root_node); out_arc!=INVALID; ++out_arc) {
@@ -127,7 +127,7 @@ action_t LookAheadSearch::get_optimal_action() const {
     }
     case MAX_WEIGHTED_BOUNDS:
     {
-        DEBUG_OUT(2,"    Using maximum weighted bounds as criterion");
+        DEBUG_OUT(3,"    Using maximum weighted bounds as criterion");
         value_t max_value = -DBL_MAX, current_value;
         node_t current_action_node;
         for(graph_t::OutArcIt out_arc(graph,root_node); out_arc!=INVALID; ++out_arc) {
@@ -153,14 +153,14 @@ action_t LookAheadSearch::get_optimal_action() const {
     // select action
     idx_t actionIt = rand()%optimal_action_nodes.size();
     node_t selected_action_node = optimal_action_nodes[actionIt];
-    DEBUG_OUT(2, "    choosing nr " << actionIt << " from " << optimal_action_nodes.size() << " actions");
+    DEBUG_OUT(3, "    choosing nr " << actionIt << " from " << optimal_action_nodes.size() << " actions");
 
     // check
     if(node_info_map[selected_action_node].type!=ACTION) {
         DEBUG_OUT(0,"Error: Next action node is not of type ACTION");
     }
     action_t selected_action = node_info_map[selected_action_node].action;
-    DEBUG_OUT(2,"    Optimal action: " << selected_action);
+    DEBUG_OUT(3,"    Optimal action: " << selected_action);
     return selected_action;
 }
 
@@ -249,7 +249,7 @@ void LookAheadSearch::print_tree(const bool& text, const bool& eps_export) const
         // optimize positions
         double decay = 1-1e-4;
         double scale_factor = 0.01;
-        DEBUG_OUT(3,"Heat:");
+        DEBUG_OUT(4,"Heat:");
         size_t counter = 0;
         for(double heat=10; heat>1e-20; heat*=decay) {
             double x_shift = scale_factor*(2*drand48()-1);
@@ -266,15 +266,15 @@ void LookAheadSearch::print_tree(const bool& text, const bool& eps_export) const
                     coords[node] = coord_before;
                 }
             }
-            if(DEBUG_LEVEL>=3) {
+            if(DEBUG_LEVEL>=4) {
                 std::cout << "|" << heat;
             }
             ++counter;
         }
-        if(DEBUG_LEVEL>=3) {
+        if(DEBUG_LEVEL>=4) {
             std::cout << "|" << std::endl;
         }
-        DEBUG_OUT(1,counter << " iterations");
+        DEBUG_OUT(2,counter << " iterations");
 
         // center root node and orient graph
         Point root_coords = coords[root_node];
@@ -293,7 +293,7 @@ void LookAheadSearch::print_tree(const bool& text, const bool& eps_export) const
                 mean_deviation_angle += 3.14195;
             }
         } else {
-            DEBUG_OUT(1,"Mean x-deviation too small (" << mean_deviation.x << ") --> setting angle manually");
+            DEBUG_OUT(2,"Mean x-deviation too small (" << mean_deviation.x << ") --> setting angle manually");
             mean_deviation_angle = util::sgn(mean_deviation.y)*3.14195/2;
         }
         mean_deviation_angle += 3.14195/2;
@@ -413,14 +413,14 @@ void LookAheadSearch::print_tree_statistics() const {
 
 LookAheadSearch::node_t LookAheadSearch::select_next_action_node(node_t state_node) {
 
-    DEBUG_OUT(2,"Selecting next action");
+    DEBUG_OUT(3,"Selecting next action");
 
     // selection action(s)
     node_vector_t next_action_nodes;
     switch(tree_action_selection_type) {
     case MAX_UPPER_BOUND:
     {
-        DEBUG_OUT(3,"    using maximum upper bound as criterion");
+        DEBUG_OUT(4,"    using maximum upper bound as criterion");
         value_t max_upper_bound = -DBL_MAX, current_upper_bound;
         node_t current_action_node;
         for(graph_t::OutArcIt out_arc(graph,state_node); out_arc!=INVALID; ++out_arc) {
@@ -438,7 +438,7 @@ LookAheadSearch::node_t LookAheadSearch::select_next_action_node(node_t state_no
     }
     case MAX_LOWER_BOUND:
     {
-        DEBUG_OUT(3,"    using maximum lower bound as criterion");
+        DEBUG_OUT(4,"    using maximum lower bound as criterion");
         value_t max_lower_bound = -DBL_MAX, current_lower_bound;
         node_t current_action_node;
         for(graph_t::OutArcIt out_arc(graph,state_node); out_arc!=INVALID; ++out_arc) {
@@ -468,20 +468,20 @@ LookAheadSearch::node_t LookAheadSearch::select_next_action_node(node_t state_no
         DEBUG_OUT(0,"Error: Next action node is not of type ACTION");
     }
 
-    DEBUG_OUT(3,"    Next action:");
-    if(DEBUG_LEVEL>=3) {
+    DEBUG_OUT(4,"    Next action:");
+    if(DEBUG_LEVEL>=4) {
         print_node(selected_action_node);
     }
     return selected_action_node;
 }
 
 LookAheadSearch::node_t LookAheadSearch::select_next_state_node(node_t action_node) {
-    DEBUG_OUT(2,"Selecting next state");
+    DEBUG_OUT(3,"Selecting next state");
     node_vector_t next_state_nodes;
     switch(tree_state_selection_type) {
     case MAX_WEIGHTED_UNCERTAINTY:
     {
-        DEBUG_OUT(3,"    using maximum uncertainty as criterion");
+        DEBUG_OUT(4,"    using maximum uncertainty as criterion");
         value_t max_uncertainty = -DBL_MAX, current_uncertainty;
         node_t current_state_node;
         for(graph_t::OutArcIt out_arc(graph,action_node); out_arc!=INVALID; ++out_arc) {
@@ -511,8 +511,8 @@ LookAheadSearch::node_t LookAheadSearch::select_next_state_node(node_t action_no
     if(node_info_map[selected_state_node].type!=STATE) {
         DEBUG_OUT(0,"Error: Next state node is not of type STATE");
     }
-    DEBUG_OUT(3,"    Next state:");
-    if(DEBUG_LEVEL>=3) {
+    DEBUG_OUT(4,"    Next state:");
+    if(DEBUG_LEVEL>=4) {
         print_node(selected_state_node);
     }
     return selected_state_node;
@@ -543,8 +543,8 @@ LookAheadSearch::node_t LookAheadSearch::update_action_node(node_t action_node) 
         break;
     }
 
-    DEBUG_OUT(2,"Updated action node");
-    if(DEBUG_LEVEL>=2) {
+    DEBUG_OUT(3,"Updated action node");
+    if(DEBUG_LEVEL>=3) {
         print_node(action_node);
     }
 
@@ -560,8 +560,8 @@ LookAheadSearch::node_t LookAheadSearch::update_action_node(node_t action_node) 
     if(node_info_map[parent_state_node].type!=STATE) {
         DEBUG_OUT(0,"Error: Parent state node is not of type STATE");
     }
-    DEBUG_OUT(3,"    Parent state node:");
-    if(DEBUG_LEVEL>=3) {
+    DEBUG_OUT(4,"    Parent state node:");
+    if(DEBUG_LEVEL>=4) {
         print_node(parent_state_node);
     }
     return parent_state_node;
@@ -614,8 +614,8 @@ LookAheadSearch::node_t LookAheadSearch::update_state_node(node_t state_node) {
         break;
     }
 
-    DEBUG_OUT(2,"Updated state node");
-    if(DEBUG_LEVEL>=3) {
+    DEBUG_OUT(3,"Updated state node");
+    if(DEBUG_LEVEL>=4) {
         print_node(state_node);
     }
 
@@ -632,8 +632,8 @@ LookAheadSearch::node_t LookAheadSearch::update_state_node(node_t state_node) {
         if(node_info_map[parent_action_node].type!=ACTION) {
             DEBUG_OUT(0,"Error: Parent action node is not of type ACTION");
         }
-        DEBUG_OUT(3,"    Parent action node:");
-        if(DEBUG_LEVEL>=3) {
+        DEBUG_OUT(4,"    Parent action node:");
+        if(DEBUG_LEVEL>=4) {
             print_node(parent_action_node);
         }
         return parent_action_node;
@@ -643,7 +643,7 @@ LookAheadSearch::node_t LookAheadSearch::update_state_node(node_t state_node) {
 }
 
 bool LookAheadSearch::tree_needs_further_expansion() {
-    DEBUG_OUT(2,"Determining whether tree needs further expansion");
+    DEBUG_OUT(3,"Determining whether tree needs further expansion");
     value_t max_upper_bound        = -DBL_MAX;
     value_t max_upper_lower_bound  = -DBL_MAX;
     value_t second_max_upper_bound = -DBL_MAX;
@@ -659,16 +659,16 @@ bool LookAheadSearch::tree_needs_further_expansion() {
         } else if(current_upper_bound>second_max_upper_bound){
             second_max_upper_bound=current_upper_bound;
         }
-        DEBUG_OUT(3,"    " << node_info_map[current_action_node].action <<
+        DEBUG_OUT(4,"    " << node_info_map[current_action_node].action <<
                 ": [" << current_lower_bound << " <--> " << current_upper_bound << "]");
     }
-    DEBUG_OUT(3,"           max upper: " << max_upper_bound );
-    DEBUG_OUT(3,"     max upper lower: " << max_upper_lower_bound );
-    DEBUG_OUT(3,"    second max upper: " << second_max_upper_bound );
+    DEBUG_OUT(4,"           max upper: " << max_upper_bound );
+    DEBUG_OUT(4,"     max upper lower: " << max_upper_lower_bound );
+    DEBUG_OUT(4,"    second max upper: " << second_max_upper_bound );
     if(max_upper_bound>second_max_upper_bound) {
-        DEBUG_OUT(3,"    " << max_upper_bound << ">" << second_max_upper_bound );
+        DEBUG_OUT(4,"    " << max_upper_bound << ">" << second_max_upper_bound );
     } else if(max_upper_bound==second_max_upper_bound) {
-        DEBUG_OUT(3,"    " << max_upper_bound << "==" << second_max_upper_bound );
+        DEBUG_OUT(4,"    " << max_upper_bound << "==" << second_max_upper_bound );
     } else {
         DEBUG_OUT(0,"    " << max_upper_bound << ">" << second_max_upper_bound << " !!!What has happened here???" );
     }
@@ -678,13 +678,13 @@ bool LookAheadSearch::tree_needs_further_expansion() {
         return true;
     }
     if(second_max_upper_bound==-DBL_MAX) {
-        DEBUG_OUT(3,"    Only one action available from root node");
+        DEBUG_OUT(4,"    Only one action available from root node");
     }
     if(max_upper_lower_bound>second_max_upper_bound) {
-        DEBUG_OUT(2,"    No");
+        DEBUG_OUT(3,"    No");
         return false;
     } else {
-        DEBUG_OUT(2,"    Yes");
+        DEBUG_OUT(3,"    Yes");
         return true;
     }
 }

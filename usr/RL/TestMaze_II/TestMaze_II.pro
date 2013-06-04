@@ -20,7 +20,9 @@ HEADERS += LookAheadSearch.h \
     Representation/Reward.h \
     Representation/Instance.h \
     util/KolmogorovSmirnovTest.h \
-    util/ChiSquareTest.h
+    util/ChiSquareTest.h \
+    DelayDistribution.h \
+    HistoryObserver.h
 SOURCES += LookAheadSearch.cpp \
     util.cpp \
     BatchMaze.cpp \
@@ -38,7 +40,9 @@ SOURCES += LookAheadSearch.cpp \
     Representation/Reward.cpp \
     Representation/Instance.cpp \
     util/KolmogorovSmirnovTest.cpp \
-    util/ChiSquareTest.cpp
+    util/ChiSquareTest.cpp \
+    DelayDistribution.cpp \
+    HistoryObserver.cpp
 LIBS += -llbfgs \
     -lemon \
     -larmadillo

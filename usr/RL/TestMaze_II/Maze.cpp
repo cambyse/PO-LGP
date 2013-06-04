@@ -5,6 +5,14 @@
 #define DEBUG_LEVEL 0
 #include "debug.h"
 
+using std::tuple;
+using std::get;
+using std::vector;
+
+using util::min;
+using util::max;
+using util::INVALID;
+
 const double Maze::state_size = 0.9;
 const double Maze::wall_width = 0.05;
 const double Maze::reward_start_size = 0.1;
@@ -12,10 +20,6 @@ const double Maze::reward_end_size = 0.2;
 const double Maze::reward_end_ratio = 0.5;
 const double Maze::text_scale = 0.01;
 const double Maze::text_center = 0.3;
-
-using util::min;
-using util::max;
-using util::INVALID;
 
 // #define HIDE_REWARDS
 
@@ -42,6 +46,13 @@ const Maze::idx_t Maze::walls[walls_n][2] = {
     { 6,10},
     {10,11}
     /**/
+
+    /* 10x10 Maze */
+    {  2,  3},
+    { 12, 13},
+    { 22, 23},
+    { 32, 33}
+    /**/
 };
 
 const Maze::idx_t Maze::rewards[rewards_n][8] = {
@@ -56,7 +67,7 @@ const Maze::idx_t Maze::rewards[rewards_n][8] = {
     { 0, 3, 2, 1, EACH_TIME, 200,   0,   0}
     /**/
 
-    /* 3x3 Maze */
+    /* 3x3 Maze *
     { 3, 5, 4, 8, ON_RELEASE,   0, 200,   0},
     { 5, 3, 6, 8, ON_RELEASE,   0, 200, 200},
     { 4, 1, 1, 1, ON_RELEASE, 200, 200,   0},
@@ -74,17 +85,12 @@ const Maze::idx_t Maze::rewards[rewards_n][8] = {
 };
 
 Maze::Maze(const double& eps):
-        time_delay(Data::k),
         current_instance(nullptr),
 //        reward_active(false),
         epsilon(eps),
 //        button(NULL), smiley(NULL),
         agent(NULL)
 {
-    if(time_delay<=0) {
-        DEBUG_OUT(0,"Error: Time delay must be larger than zero --> setting to one");
-        time_delay = 1;
-    }
 
     // setting button and smiley state
 //    if(Data::maze_x_size>0 || Data::maze_y_size>0) {
@@ -141,9 +147,11 @@ void Maze::render_initialize(QGraphicsView * view) {
 
     // Render States
     QPen state_pen(QColor(0,0,0), 0.02, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+    state_rects.clear();
     for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {
         MazeState maze_state(state);
-        scene->addRect( maze_state.x()-state_size/2, maze_state.y()-state_size/2, state_size, state_size, state_pen, QBrush(QColor(230,230,230)) );
+        QGraphicsRectItem * rect = scene->addRect( maze_state.x()-state_size/2, maze_state.y()-state_size/2, state_size, state_size, state_pen, QBrush(QColor(230,230,230)) );
+        state_rects.push_back(rect);
     }
 
     // initialize and render button state
@@ -286,7 +294,7 @@ void Maze::render_initialize(QGraphicsView * view) {
 }
 
 
-void Maze::render_update(QGraphicsView * view) {
+void Maze::render_update(QGraphicsView * view, const vector<tuple<double,double,double>> * color) {
 //    button->setElementId(current_state==button_state ? "active" : "passive");
 //    smiley->setElementId( reward_active ? "active" : "passive");
 
@@ -302,6 +310,15 @@ void Maze::render_update(QGraphicsView * view) {
             borders[border_idx]->setVisible(true);
         } else {
             borders[border_idx]->setVisible(false);
+        }
+    }
+
+    // Change State Color
+    if(color!=nullptr) {
+        idx_t col_idx = 0;
+        for( auto rect_ptr : state_rects ) {
+            rect_ptr->setBrush( QColor( get<0>((*color)[col_idx])*255, get<1>((*color)[col_idx])*255, get<2>((*color)[col_idx])*255 ) );
+            ++col_idx;
         }
     }
 
@@ -478,16 +495,6 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
     }
 
     return prob;
-}
-
-void Maze::set_time_delay(const int& new_time_delay) {
-    if(new_time_delay>(idx_t)Data::k) {
-        DEBUG_OUT(0,"Error: Reward time delays larger than history length 'k' not allowed");
-    } else if(new_time_delay<0){
-        DEBUG_OUT(0,"Error: Time delay must be larger than zero --> keeping old value");
-    } else {
-        time_delay = new_time_delay;
-    }
 }
 
 void Maze::set_epsilon(const double& e) {

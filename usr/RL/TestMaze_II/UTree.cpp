@@ -553,7 +553,7 @@ double UTree::value_iteration() {
     return max_diff;
 }
 
-action_t UTree::get_max_value_action(const instance_t * i) {
+UTree::action_t UTree::get_max_value_action(const instance_t * i) {
     node_t node = find_leaf_node(i);
     if(node_info_map[node].state_action_values.size()!=action_t::action_n) {
         DEBUG_OUT(0,"Error: incomplete state action values");

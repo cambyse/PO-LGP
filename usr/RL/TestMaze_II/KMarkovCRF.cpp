@@ -25,7 +25,6 @@ using util::INVALID;
 
 KMarkovCRF::KMarkovCRF():
         k(Data::k),
-        instance_data(nullptr),
         lambda(nullptr),
         old_active_features_size(0),
         candidate_features_sorted(false),
@@ -62,7 +61,6 @@ KMarkovCRF::KMarkovCRF():
 
 KMarkovCRF::~KMarkovCRF() {
     lbfgs_free(lambda);
-    delete instance_data;
 }
 
 lbfgsfloatval_t KMarkovCRF::static_evaluate_model(
@@ -296,20 +294,6 @@ int KMarkovCRF::optimize_model(lbfgsfloatval_t l1, unsigned int max_iter, lbfgsf
     }
 
     return ret;
-}
-
-void KMarkovCRF::add_action_state_reward_tripel(
-        const action_t& action,
-        const state_t& state,
-        const reward_t& reward
-) {
-    if(instance_data==nullptr) {
-        instance_data = instance_t::create(action,state,reward);
-        instance_data->set_container();
-    } else {
-        instance_data = instance_data->append_instance(action,state,reward);
-    }
-    DEBUG_OUT(2, "added (action,state,reward) = (" << action << "," << state << "," << reward << ")" );
 }
 
 void KMarkovCRF::check_derivatives(const int& number_of_samples, const double& range, const double& max_variation, const double& max_relative_deviation) {

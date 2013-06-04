@@ -25,9 +25,8 @@
 class Maze {
 public:
 
-    typedef Data::idx_t           idx_t;
-    typedef Data::size_t          size_t;
-    typedef Data::probability_t   probability_t;
+    USE_DATA_TYPEDEFS;
+    USE_REPRESENTATION_TYPEDEFS;
 
     Maze(const double& eps = 0);
 
@@ -56,7 +55,7 @@ public:
     };
 
     void render_initialize(QGraphicsView * view); ///< Renders the complete maze.
-    void render_update(QGraphicsView * view);
+    void render_update(QGraphicsView * view, const std::vector<std::tuple<double,double,double>> * color = nullptr);
 
     void perform_transition(const action_t& action);
     void perform_transition(const action_t& a, state_t& final_state, reward_t& r );
@@ -75,9 +74,6 @@ public:
             probability_t * mean_maze_likelihood
     );
 
-    void set_time_delay(const int& new_time_delay);
-    int get_time_delay() { return time_delay; }
-
     void set_epsilon(const double& e);
     double get_epsilon() const { return epsilon; }
 
@@ -85,7 +81,6 @@ public:
 
 private:
 
-    int time_delay;
 //    bool reward_active;
     instance_t * current_instance;
     static const double state_size;
@@ -101,11 +96,12 @@ private:
 //    QGraphicsSvgItem *button, *smiley;
     QGraphicsSvgItem *agent;
     std::vector<QGraphicsItem*> borders;
+    std::vector<QGraphicsRectItem*> state_rects;
 
-    static const size_t walls_n = 0;
+    static const size_t walls_n = 4;
     static const idx_t walls[walls_n][2];
 
-    static const size_t rewards_n = 4;
+    static const size_t rewards_n = 0;
     static const idx_t rewards[rewards_n][8];
     enum REWARD_COMPONENTS { ACTIVATION_STATE, RECEIVE_STATE, TIME_DELAY, REWARD_IDX, ACTIVATION_TYPE, R, G, B };
     enum REWARD_ACTIVATION { EACH_TIME, ON_RELEASE };

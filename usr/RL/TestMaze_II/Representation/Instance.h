@@ -27,13 +27,31 @@ class Instance {
 
 public:
 
-    typedef Data::idx_t idx_t;
+    USE_DATA_TYPEDEFS;
 
     friend class InstanceIt;
     friend class ConstInstanceIt;
     Action action;
     State state;
     Reward reward;
+
+    // for compatibility with for( ... : ... ) constructs
+    class All {
+    public:
+        All(Instance * i);
+        InstanceIt begin();
+        InstanceIt end();
+    protected:
+        Instance * instance;
+    } all;
+    class ConstAll {
+    public:
+        ConstAll(const Instance * i);
+        ConstInstanceIt begin();
+        ConstInstanceIt end();
+    protected:
+        const Instance * instance;
+    } const_all;
 
     static Instance * create(
         const Action& a = Action(),
