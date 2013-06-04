@@ -55,7 +55,10 @@ class FakeController():
             agent = self.world.getBodyByName("robot")
             if (agent.X.pos - self.goal.pos).length() > eps:
                 agent.X.pos = agent.X.pos + (self.goal.pos - agent.X.pos) * Kp
-                agent.X.vel = (self.goal.pos - agent.X.pos) * Kp
+                #agent.X.vel = (self.goal.pos - agent.X.pos) * Kp
+                #agent.X.addRelativeVelocity(Kp *(self.goal.pos.x - agent.X.pos.x),
+                                            #Kp *(self.goal.pos.y - agent.X.pos.y),
+                                            #Kp *(self.goal.pos.z - agent.X.pos.z))
             else:
                 msg = msgs.control_done()
                 msg.header.frame_id = 'control done'
