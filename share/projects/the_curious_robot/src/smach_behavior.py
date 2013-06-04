@@ -78,8 +78,10 @@ class ObserveState(smach.State):
     def __init__(self):
         smach.State.__init__(self,
                              outcomes=['world_change', 'no_world_change'],
+                             input_keys=['object_of_interest'],
                              output_keys=['trajectory'])
         self.world_belief = None
+        self.object_of_interest = None
         self.world_changed = False
         self.trajectory = list()
         self.perception_sub = rospy.Subscriber(
@@ -91,7 +93,7 @@ class ObserveState(smach.State):
         # save the trajectory if somithing changed
         #print data
         if data.changed:
-            rospy.logdebug("received perception msg with changed data")
+            #rospy.logdebug("received perception msg with changed data")
             self.world_changed = True
             # No belief yet. Initialize belief with first messages
             if self.world_belief is None:
@@ -108,6 +110,8 @@ class ObserveState(smach.State):
             else:
                 for body_str in data.bodies:
                     body = parse_body_msg(body_str)
+                    if body.name != self.object_of_interest:
+                        continue
                     pos = body.X.pos
                     self.trajectory.append(pos)
                     self.world_belief.getBodyByName(body.name).X = body.X
@@ -119,11 +123,14 @@ class ObserveState(smach.State):
             self.world_changed = False
 
     def execute(self, userdata):
+        self.object_of_interest = userdata.object_of_interest
         if self.world_changed:
             return 'world_change'
         else:
-
             userdata.trajectory = self.trajectory  # TODO: clone!
+            rospy.logdebug(self.object_of_interest)
+            rospy.logdebug(self.trajectory)
+
             del self.trajectory[:]
             return 'no_world_change'
 
@@ -180,7 +187,8 @@ class LearnState(smach.State):
 
 class MoveState(smach.State):
     def __init__(self, observer):
-        smach.State.__init__(self, outcomes=['moving', 'not_initialized'])
+        smach.State.__init__(self, outcomes=['moving', 'not_initialized'],
+                output_keys=['object_of_interest'])
         self.control_pub = rospy.Publisher('control', msgs.control)
         self.observer = observer
 
@@ -191,14 +199,15 @@ class MoveState(smach.State):
         msg = msgs.control()
         msg.pose = Pose(Point(pos.x, pos.y, 1),
                         Quaternion(rot.x, rot.y, rot.z, rot.w))
-        return msg
+        return (object_of_interest[0].name, msg)
 
     def execute(self, userdata):
         if self.observer.world_belief is None:
             rospy.sleep(1)
             return 'not_initialized'
-        target = self.get_best_target(self.observer.objects_of_interest)
-        self.control_pub.publish(target)
+        target, msg = self.get_best_target(self.observer.objects_of_interest)
+        userdata.object_of_interest = target
+        self.control_pub.publish(msg)
         return 'moving'
 
 
@@ -232,13 +241,19 @@ def main():
     rospy.init_node('tcr_behavior', log_level=rospy.ERROR)
 
     sm = smach.StateMachine(outcomes=['arrived'])
+    sm.userdata.sm_object_of_interest = None
+
     observer = ObserveState()
+
+    #sis = smach_ros.IntrospectionServer('server_name', sm, '/SM_ROOT')
+    #sis.start()
 
     with sm:
         smach.loginfo = shut_up
         smach.StateMachine.add(
             'OBSERVE', observer,
-            transitions={'world_change': 'OBSERVE', 'no_world_change': 'LEARN'}
+            transitions={'world_change': 'OBSERVE', 'no_world_change': 'LEARN'},
+            remapping={'object_of_interest':'sm_object_of_interest'}
         )
         smach.StateMachine.add(
             'LEARN', LearnState(),
@@ -246,7 +261,8 @@ def main():
         )
         smach.StateMachine.add(
             'MOVE', MoveState(observer),
-            transitions={'moving': 'WAIT', 'not_initialized': 'MOVE'}
+            transitions={'moving': 'WAIT', 'not_initialized': 'MOVE'},
+            remapping={'object_of_interest':'sm_object_of_interest'}
         )
         smach.StateMachine.add(
             'WAIT', WaitState(),
