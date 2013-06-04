@@ -1,6 +1,6 @@
-#include <extern_SWIFT/SWIFT.h>
-#include <extern_SWIFT/SWIFT_mesh.h>
-#include <extern_SWIFT/SWIFT_mesh_utils.h>
+#include <extern/SWIFT/SWIFT.h>
+#include <extern/SWIFT/SWIFT_mesh.h>
+#include <extern/SWIFT/SWIFT_mesh_utils.h>
 #include <extern_SWIFT_decomposer/convex.h>
 #include <extern_SWIFT_decomposer/io.h>
 

@@ -36,7 +36,7 @@
 #  define SWIFT_USE_FLOAT
 #endif
 
-#include <extern_SWIFT/SWIFT.h>
+#include <extern/SWIFT/SWIFT.h>
 #undef min
 #undef max
 

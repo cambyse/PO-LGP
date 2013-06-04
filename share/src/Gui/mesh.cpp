@@ -1,7 +1,7 @@
 #include "mesh.h"
 
 #ifdef MT_extern_ply
-#  include <extern_ply/ply.h>
+#  include <extern/ply/ply.h>
 #endif
 
 namespace ors{

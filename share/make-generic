@@ -625,7 +625,7 @@ endif
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 %.o: %.c
-	$(CC) $(CXXFLAGS) -o $@ -c $<
+	$(CC) $(CFLAGS) -o $@ -c $<
 
 %.obj: %.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
@@ -652,8 +652,12 @@ endif
 	cd $(*D); $(MOC) -o $(*F)_$(SYS).moccpp $(<F)
 
 ## build a local component
+buildComponent/extern_%:
+	$(MAKE) -C $(BASE)/src/extern/$*
+
 buildComponent/%:
 	$(MAKE) -C $(BASE)/src/$*
+
 
 ## generate the make-config from the default make-config.default
 $(BASE)/make-config:
