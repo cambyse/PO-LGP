@@ -31,6 +31,11 @@ def set_build_full():
     local("sed '0,/RE/s/^MAKEMODE = mlrlib_ubuntu$/MAKEMODE = mlrlib_full/' share/make-config.default > share/make-config")
 
 
+def enable_physx():
+    """Enable the use of PhysX in make-config"""
+    local("sed -i 's/PHYSX = 0/PHYSX = 1/g' share/make-config")
+
+
 def rm_lib():
     """rm all files in share/lib/"""
     local("rm -rf share/lib/*")
@@ -57,6 +62,7 @@ def make_src():
         # TODO dirty trick: run it twice :(
         local("make")
         local("make > ../gcc_stdout.log")
+    make_orspy()
 
 
 def make_test():
@@ -65,10 +71,17 @@ def make_test():
         local("make")
 
 
-def unittests():
+def make_orspy():
+    """Make the python bindings of ors: orspy"""
+    with lcd("share/src/MT/"):
+        local("make -f Makefile_ors_for_swig")
+
+
+def run_unittests():
     """Run the unittests"""
     with lcd("share/unittest/orspy/"):
-        local("nosetests .")
+        local("nosetests --with-xunit")
+    # TODO add gtest as well
 
 
 def jenkins_clean_build_main():

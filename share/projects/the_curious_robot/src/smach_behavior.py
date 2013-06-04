@@ -19,7 +19,7 @@ from articulation_msgs.srv import TrackModelSrv, TrackModelSrvRequest
 from articulation_msgs.msg import ModelMsg, TrackMsg
 
 # python imports
-import copy
+# import copy
 import numpy as np
 import random
 
@@ -27,6 +27,7 @@ import random
 import orspy as ors
 
 
+###############################################################################
 # different joint types
 PRISMATIC = 0
 ROTATIONAL = 1
@@ -74,6 +75,9 @@ def parse_body_msg(msg):
     return body
 
 
+###############################################################################
+# STATES
+###############################################################################
 class ObserveState(smach.State):
     def __init__(self):
         smach.State.__init__(self,
@@ -135,18 +139,11 @@ class ObserveState(smach.State):
             return 'no_world_change'
 
 
-def parse_body_msg(msg):
-    body = ors.Body()
-    body_list = msg.split(' ', 1)
-    body.name = body_list[0]
-    body.read(body_list[1])
-    return body
-
-
+###############################################################################
 class LearnState(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['learned'],
-                input_keys=['trajectory'])
+                             input_keys=['trajectory'])
         self.dof_learner = rospy.ServiceProxy('model_select', TrackModelSrv)
         self.model_pub = rospy.Publisher('model', ModelMsg)
 
@@ -156,19 +153,15 @@ class LearnState(smach.State):
         return 'learned'
 
     def learn_dof(self, trajectory=None):
-        """
-        Learn DOF
-        """
+        """ Learn DOF """
         # test every model via the service and publish the result
         for model_type, model_name in MODELS.items():
             request = TrackModelSrvRequest()
             # TODO replcace get_trajectory() with the percepts
             request.model.track = get_trajectory(model_type)
-
             try:
                 # here we learn
                 response = self.dof_learner(request)
-
                 logLH = [entry.value for entry in response.model.params
                          if entry.name == 'loglikelihood'][0]
                 print "selected model: '%s' (n = %d, log LH = %f)" % (
@@ -234,8 +227,10 @@ class WaitState(smach.State):
             return 'not_arrived'
 
 
+###############################################################################
 def shut_up(msg):
     pass
+
 
 def main():
     rospy.init_node('tcr_behavior', log_level=rospy.ERROR)
@@ -249,7 +244,7 @@ def main():
     #sis.start()
 
     with sm:
-        smach.loginfo = shut_up
+        # smach.loginfo = shut_up
         smach.StateMachine.add(
             'OBSERVE', observer,
             transitions={'world_change': 'OBSERVE', 'no_world_change': 'LEARN'},
@@ -269,8 +264,17 @@ def main():
             transitions={'not_arrived': 'WAIT', 'arrived': 'OBSERVE'}
         )
 
+    # Create and start the introspection server
+    sis = smach_ros.IntrospectionServer('tcr_sis_server', sm, '/SM_ROOT')
+    sis.start()
+
+    # Execute the state machine
     outcome = sm.execute()
     print outcome
+
+    # Wait for ctrl-c to stop the application
+    rospy.spin()
+    sis.stop()
 
 
 if __name__ == '__main__':
