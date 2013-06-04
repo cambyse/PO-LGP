@@ -23,7 +23,7 @@ ARCH = $(shell uname -m)
 # load user options from the local make-config
 #
 ################################################################################
-#-include $(BASE)/make-config
+-include $(BASE)/make-config
 
 
 ################################################################################
