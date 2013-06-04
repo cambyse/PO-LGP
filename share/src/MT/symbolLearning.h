@@ -17,7 +17,7 @@
     -----------------------------------------------------------------  */
 
 
-#include "ors.h"
+#include <Ors/ors.h>
 
 //implemented in ors_opengl.cpp
 void editConfiguration(const char* filename, ors::Graph& C, OpenGL& gl);

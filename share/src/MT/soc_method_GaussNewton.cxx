@@ -19,7 +19,7 @@
 
 
 #include "soc.h"
-#include "util.h"
+#include <Core/util.h>
 
 void soc::GaussNewtonSoc::init(SocSystemAbstraction& _sys,
                                double _tolerance, uint _display,

@@ -1,7 +1,7 @@
 #ifndef MT_joystick_h
 #define MT_joystick_h
 
-#include "array.h"
+#include <Core/array.h>
 #include <biros/biros.h>
 
 class jsJoystick;

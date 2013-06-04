@@ -21,11 +21,11 @@
 #define MT_mexmagic_h
 
 #include <mex.h>
-#include "util.h"
+#include <Core/util.h>
 extern MT::String mout;
 #undef MT_MSG
 #define MT_MSG(msg){ mout <<MT_HERE <<msg <<endl; }
-#include "array.h"
+#include <Core/array.h>
 
 
 //----- init and goodbye, to be called in the mexFunction

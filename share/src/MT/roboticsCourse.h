@@ -20,8 +20,8 @@
 #ifndef MT_roboticsCourse_h
 #define MT_roboticsCourse_h
 
-#include "ors.h"
-#include "array.h"
+#include <Ors/ors.h>
+#include <Core/array.h>
 
 struct Simulator {
   struct sSimulator *s; //hidden (private) space

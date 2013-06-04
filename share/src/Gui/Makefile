@@ -1,6 +1,6 @@
 BASE   = ../..
 NAME   = lib$(shell basename `pwd`)
-OUTPUT := $(BASE)/lib/$(NAME).so
+OUTPUT = $(BASE)/lib/$(NAME).so
 
 GTK = 1
 GTKGL = 1

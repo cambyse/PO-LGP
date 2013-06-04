@@ -24,8 +24,8 @@
 #include <octave/oct.h>
 #include <octave/parse.h>
 
-#include "array.h"
-#include "util.h"
+#include <Core/array.h>
+#include <Core/util.h>
 
 void octaveCheckInitialized();
 

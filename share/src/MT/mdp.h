@@ -20,7 +20,7 @@
 #ifndef MT_mdp_help_h
 #define MT_mdp_help_h
 
-#include "array.h"
+#include <Core/array.h>
 
 //===========================================================================
 //

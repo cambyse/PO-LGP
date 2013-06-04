@@ -36,7 +36,7 @@ void octaveCheckInitialized(){
 
 #else
 
-#include "util.h"
+#include <Core/util.h>
 void octaveCheckInitialized(){ NICO }
 
 #endif

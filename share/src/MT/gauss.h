@@ -24,8 +24,8 @@
 #ifndef MT_gauss_h
 #define MT_gauss_h
 
-#include "util.h"
-#include "array.h"
+#include <Core/util.h>
+#include <Core/array.h>
 #include "functions.h"
 
 typedef void (*Trans)(arr& x);

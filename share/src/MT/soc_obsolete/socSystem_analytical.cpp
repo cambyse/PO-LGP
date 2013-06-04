@@ -15,7 +15,7 @@
     -----------------------------------------------------------------  */
 
 #include "socSystem_analytical.h"
-#include "plot.h"
+#include <Gui/plot.h>
 
 /** @brief very preliminary... */
 struct soc::sSocSystem_Analytical{

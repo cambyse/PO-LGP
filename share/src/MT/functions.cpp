@@ -19,7 +19,7 @@
 
 
 #include "functions.h"
-#include "algos.h"
+#include <Core/algos.h>
 
 double NNsdv(const double& a, const double& b, double sdv){
   double d=(a-b)/sdv;

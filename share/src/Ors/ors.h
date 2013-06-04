@@ -321,7 +321,6 @@ struct Graph {
   void writePlyFile(const char* filename) const;
   void glDraw();
 };
-#endif
 /** @} */ // END of group ors_basic_data_structures
 } // END ors namespace
 
@@ -832,7 +831,9 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl);
 //===========================================================================
 /** @} */ // END of group ors_interfaces
 //===========================================================================
-#endif
+#endif //MT_ORS_ONLY_BASICS
 
 
 /** @} */
+
+#endif //MT_ors_h

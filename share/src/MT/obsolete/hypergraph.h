@@ -20,8 +20,8 @@
 #ifndef MT_hypergraph_h
 #define MT_hypergraph_h
 
-#include "util.h"
-#include "array.h"
+#include <Core/util.h>
+#include <Core/array.h>
 
 #define maxDegree 10
 

@@ -18,8 +18,8 @@
 
 
 
-#include "array.h"
-#include "util.h"
+#include <Core/array.h>
+#include <Core/util.h>
 
 /** @brief input z: determines the heavyside function [[x>z]], output: mean
    and variances of the remaining probability mass when everything

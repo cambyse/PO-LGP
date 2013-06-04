@@ -20,7 +20,7 @@
 #ifndef MT_vision_h
 #define MT_vision_h
 
-#include "array.h"
+#include <Core/array.h>
 //#include "threads.h"
 
 extern arr camera_calibration;

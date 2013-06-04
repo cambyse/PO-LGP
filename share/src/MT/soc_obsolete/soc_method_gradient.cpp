@@ -15,8 +15,8 @@
     -----------------------------------------------------------------  */
 
 #include "soc.h"
-#include "ors.h"
-#include "optimization.h"
+#include <Ors/ors.h>
+#include <Optim/optimization.h>
 #ifdef MT_HSL
 #  include "hslModule.h"
 #endif

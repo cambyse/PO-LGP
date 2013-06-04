@@ -15,7 +15,7 @@
     -----------------------------------------------------------------  */
 
 #include "soc.h"
-#include "util.h"
+#include <Core/util.h>
 
 void soc::LQG::init(SocSystemAbstraction& _sys,
                      double _convergenceRate, uint _display,

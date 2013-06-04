@@ -23,9 +23,9 @@
  * @ingroup group_soc
  */
 
-#include "util.h"
-#include "array.h"
-#include "optimization.h"
+#include <Core/util.h>
+#include <Core/array.h>
+#include <Optim/optimization.h>
 
 //-- fwd declarations
 struct OpenGL;

@@ -271,21 +271,4 @@ public:
   void SIMPLS();
 };
 
-
-//===========================================================================
-//
-// implementations
-//
-
-#ifdef  MT_IMPLEMENTATION
-#  include "algos.cpp"
-#ifdef MT_algos_extern
-#  include "algos_LU.cpp"
-#  include "algos_CG.cpp"
-//#  include "algos_LM.c"
-#  include "algos_rk.cpp"
-#endif
-#include "algos_rk.cpp"
-#endif
-
 #endif

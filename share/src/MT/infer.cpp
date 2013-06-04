@@ -2872,4 +2872,4 @@ void infer::inferMixLengthStructured(
 
 
 
-#include "array_t.cxx"
+#include <Core/array_t.h>

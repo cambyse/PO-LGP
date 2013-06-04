@@ -20,7 +20,7 @@
 
 
 #include "aico.h"
-#include "optimization.h"
+#include <Optim/optimization.h>
 
 struct sAICO{
   //parameters

@@ -32,9 +32,5 @@ struct UrgInterface:public Process{
   void close();
 };
 
-#ifdef MT_IMPLEMENTATION
-#  include "UrgInterface.cpp"
-#endif
-
 #endif
  

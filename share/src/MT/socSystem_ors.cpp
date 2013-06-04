@@ -24,10 +24,10 @@
  * @{
  */
 //===========================================================================
-#include "ors.h"
-#include "opengl.h"
+#include <Ors/ors.h>
+#include <Gui/opengl.h>
 #include "socSystem_ors.h"
-#include "plot.h"
+#include <Gui/plot.h>
 
 //===========================================================================
 //

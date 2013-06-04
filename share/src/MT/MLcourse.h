@@ -20,7 +20,7 @@
 #ifndef MT_linearRegression_h
 #define MT_linearRegression_h
 
-#include "array.h"
+#include <Core/array.h>
 
 //===========================================================================
 //
@@ -81,9 +81,5 @@ void load_data(arr& X, const char* filename, bool whiten);
 //
 
 double NormalSdv(const double& a, const double& b, double sdv);
-
-#ifdef MT_IMPLEMENTATION
-#  include "MLcourse.cpp"
-#endif
 
 #endif

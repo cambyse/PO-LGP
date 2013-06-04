@@ -21,7 +21,7 @@
 #ifndef MT_functions_h
 #define MT_functions_h
 
-#include "array.h"
+#include <Core/array.h>
 
 #define EXP ::exp //MT::approxExp
 

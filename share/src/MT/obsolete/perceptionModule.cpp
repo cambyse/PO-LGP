@@ -26,7 +26,7 @@
 #endif
 
 #include "perceptionModule.h"
-#include "optimization.h"
+#include <Optim/optimization.h>
 //#include "../src/NJ/VisionTrackRoutines.h"
 #include "calibration.h"
 

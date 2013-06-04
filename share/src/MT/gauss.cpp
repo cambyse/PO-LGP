@@ -19,7 +19,7 @@
 #include <algorithm>
 
 #include "gauss.h"
-#include "util.h"
+#include <Core/util.h>
 
 #define takeC 1
 #define takeU 2

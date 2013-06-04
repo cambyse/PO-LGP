@@ -20,9 +20,9 @@
 #ifndef MT_robot_variables_h
 #define MT_robot_variables_h
 
-#include "array.h"
+#include <Core/array.h>
 #include <system/module.h>
-#include "ors.h"
+#include <Ors/ors.h>
 
 //===========================================================================
 //

@@ -21,7 +21,7 @@
 #define MT_MinSumGaussNewton_h
 
 #include <fstream>
-#include "array.h"
+#include <Core/array.h>
 
 struct Fij { arr A, B, C, a, b; double hata; };
 struct Mu { arr M, m;       double hatm; };

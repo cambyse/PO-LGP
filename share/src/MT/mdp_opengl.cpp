@@ -19,8 +19,8 @@
 
 #include "mdp.h"
 
-#  include "opengl.h"
-#  include "plot.h"
+#  include <Gui/opengl.h>
+#  include <Gui/plot.h>
 
 #ifdef MT_GL
 
@@ -86,7 +86,7 @@ void mdp::plotPolicyAndValue(const arr& pi, const arr& V, const MDP& mdp, bool w
 
 #else //MT_GL
 
-#include "util.h"
+#include <Core/util.h>
 void mdp::showMaze(){ MT_MSG("display only implemented when compiling with some glut"); }
 void mdp::showAB(const arr& alpha, const arr& beta){}
 void mdp::plotPolicyAndValue(const arr& pi, const arr& V, const MDP& mdp, bool wait){}

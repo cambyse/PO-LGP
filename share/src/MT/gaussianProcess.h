@@ -20,11 +20,11 @@
 #ifndef MT_gaussianProcess_h
 #define MT_gaussianProcess_h
 
-#include "array.h"
-#include "MT/util.h"
+#include <Core/array.h>
+#include <Core/util.h>
 
 #define MT_GP_DEBUG 0
-#include "plot.h"
+#include <Gui/plot.h>
 
 //===========================================================================
 //

@@ -19,10 +19,10 @@
 
 
 #include "soc.h"
-#include "opengl.h"
-#include "plot.h"
-#include "ors.h"
-#include "optimization.h"
+#include <Gui/opengl.h>
+#include <Gui/plot.h>
+#include <Ors/ors.h>
+#include <Optim/optimization.h>
 
 //===========================================================================
 /**

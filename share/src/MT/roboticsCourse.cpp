@@ -18,9 +18,9 @@
 
 
 #include "roboticsCourse.h"
-#include "ors.h"
-#include "opengl.h"
-#include "plot.h"
+#include <Ors/ors.h>
+#include <Gui/opengl.h>
+#include <Gui/plot.h>
 
 void drawEnv(void*){ glStandardLight(NULL); glDrawFloor(10., .9, .9, .9); }
 void drawBase(void*){ glDrawAxes(1.); }
@@ -459,5 +459,5 @@ void glDrawCarSimulator(void *classP){
 #endif
 }
 
-#include "array_t.cxx"
+#include <Core/array_t.h>
 template MT::Array<CarSimulator::Gaussian>& MT::Array<CarSimulator::Gaussian>::resize(uint);

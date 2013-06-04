@@ -10,7 +10,7 @@ NOTE: the stepKinematic includes still the code for the truncated Gaussians
   check out r3261 so see old code parts -- I cleaned them away
 */
 
-//#include "util.h"
+//#include <Core/util.h>
 //#include "truncatedGaussian.h"
 #include "MinSumGaussNewton.h"
 

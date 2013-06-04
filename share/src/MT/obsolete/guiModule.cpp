@@ -18,10 +18,10 @@
 
 
 #include "guiModule.h"
-#include "ors.h"
+#include <Ors/ors.h>
 #include "perceptionModule.h"
-#include "plot.h"
-#include "opengl.h"
+#include <Gui/plot.h>
+#include <Gui/opengl.h>
 #include <NP/camera.h>
 
 GuiModule::GuiModule():Process("GuiProcess"){

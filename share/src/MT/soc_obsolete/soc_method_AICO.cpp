@@ -19,9 +19,9 @@
 */
 
 #include "soc.h"
-#include "util.h"
+#include <Core/util.h>
 #include "truncatedGaussian.h"
-#include "optimization.h"
+#include <Optim/optimization.h>
 #include "MinSumGaussNewton.h"
 
 //#define TightMode

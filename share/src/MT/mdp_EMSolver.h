@@ -20,7 +20,7 @@
 #ifndef MT_solver_h
 #define MT_solver_h
 
-#include "util.h"
+#include <Core/util.h>
 #include "mdp.h"
 
 namespace mdp {

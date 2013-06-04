@@ -22,7 +22,7 @@
  */
 
 #include "soc_exampleProblems.h"
-#include "plot.h"
+#include <Gui/plot.h>
 
 ControlledSystem_PointMass::ControlledSystem_PointMass(){
   T = MT::getParameter<uint>("T",10);
