@@ -153,7 +153,7 @@ void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b) {
   }
   if(INFO) {
     HALT("lapack_Ainv_b_sym error info = " <<INFO
-         <<"\n typically this is because A is not invertible,\nA=" <<A);
+         <<"\n typically this is because A is not invertible or sym-pos-def,\nA=" <<A <<"\nb=" <<b);
   }
   
 #if 0

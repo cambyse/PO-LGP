@@ -55,7 +55,7 @@ struct SquareFunction:ScalarFunction{
   virtual double fs(arr& g, arr& H, const arr& x) {
     double f=sumOfSqr(x);
     if(&g) g=2.*x;
-    if(&H) H.setId(x.N);
+    if(&H) H.setDiag(2., x.N);
     return f;
   }
 };
@@ -64,10 +64,10 @@ struct SquareFunction:ScalarFunction{
 
 struct HoleFunction:ScalarFunction{
   virtual double fs(arr& g, arr& H, const arr& x) {
-    double f=sumOfSqr(x);
-    if(&g) g=exp(-f)*2.*x;
-    if(&H){ H.setId(x.N); H *= -2*exp(-f); }
-    f = 1.-exp(-f);
+    double f=exp(-sumOfSqr(x));
+    if(&g) g=2.*f*x;
+    if(&H){ H.setDiag(2.*f, x.N); H -= 4.*f*(x^x); }
+    f = 1.-f;
     return f;
   }
 };
@@ -97,7 +97,7 @@ struct ChoiceFunction:ScalarFunction{
     default: NIY;
     }
     if(&g) g*=c; //elem-wise product
-    if(&H) NIY;
+    if(&H){ arr C; C.setDiag(c); H = C*H*C; }
     return f;
   }
 };

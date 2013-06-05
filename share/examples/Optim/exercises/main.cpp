@@ -47,6 +47,7 @@ void testGradDescent(ScalarFunction& F){
     x0=x;
     cout <<"x0=" <<x0 <<endl;
     checkGradient(F, x, 1e-4);
+    checkHessian(F, x, 1e-4);
 
     optGradDescent(x, F, OPT2(verbose=2, stopTolerance=1e-3));
     cout <<"x_opt=" <<x <<endl;
@@ -55,6 +56,12 @@ void testGradDescent(ScalarFunction& F){
 
     x=x0;
     optRprop(x, F, OPT2(verbose=2, stopTolerance=1e-3));
+    cout <<"x_opt=" <<x <<endl;
+    gnuplot("load 'plt'", false, true);
+    MT::wait();
+
+    x=x0;
+    optNewton(x, F, OPT2(verbose=2, stopTolerance=1e-3));
     cout <<"x_opt=" <<x <<endl;
     gnuplot("load 'plt'", false, true);
     MT::wait();
