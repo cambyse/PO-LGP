@@ -294,7 +294,7 @@ void Maze::render_initialize(QGraphicsView * view) {
 }
 
 
-void Maze::render_update(QGraphicsView * view, const vector<tuple<double,double,double>> * color) {
+void Maze::render_update(QGraphicsView * view, const color_vector_t * color) {
 //    button->setElementId(current_state==button_state ? "active" : "passive");
 //    smiley->setElementId( reward_active ? "active" : "passive");
 

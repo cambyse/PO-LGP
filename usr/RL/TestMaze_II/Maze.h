@@ -28,6 +28,9 @@ public:
     USE_DATA_TYPEDEFS;
     USE_REPRESENTATION_TYPEDEFS;
 
+    typedef std::tuple<double,double,double> color_t;
+    typedef std::vector<color_t>             color_vector_t;
+
     Maze(const double& eps = 0);
 
     virtual ~Maze();
@@ -55,7 +58,7 @@ public:
     };
 
     void render_initialize(QGraphicsView * view); ///< Renders the complete maze.
-    void render_update(QGraphicsView * view, const std::vector<std::tuple<double,double,double>> * color = nullptr);
+    void render_update(QGraphicsView * view, const color_vector_t * color = nullptr);
 
     void perform_transition(const action_t& action);
     void perform_transition(const action_t& a, state_t& final_state, reward_t& r );

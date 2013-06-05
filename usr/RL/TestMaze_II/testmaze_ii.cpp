@@ -2,6 +2,7 @@
 #include "Data.h"
 #include "util.h"
 
+#include <float.h>  // for DBL_MAX
 #include <unistd.h> // for sleep()
 
 #define DEBUG_LEVEL 1
@@ -13,24 +14,32 @@ using util::arg_string;
 
 #define TO_CONSOLE(x) { ui._wConsoleOutput->appendPlainText(x); }
 
-TestMaze_II::TestMaze_II(QWidget *parent)
-    : QWidget(parent),
-      planner_type(OPTIMAL_PLANNER),
-      maze(0.0),
-      record(false), plot(false),
-      current_instance(nullptr),
-      random_timer(nullptr), action_timer(nullptr),
-      console_history(1,"END OF HISTORY"),
-      history_position(0),
-      discount(0.7),
-      l1_factor(0),
-      utree(discount),
-      linQ(discount),
-      look_ahead_search(discount),
-      max_tree_size(10000)
+TestMaze_II::TestMaze_II(QWidget *parent):
+    QWidget(parent),
+    planner_type(OPTIMAL_PLANNER),
+    maze(0.0),
+    record(false), plot(false),
+    current_instance(nullptr),
+    random_timer(nullptr), action_timer(nullptr),
+    console_history(1,"END OF HISTORY"),
+    history_position(0),
+    discount(0.7),
+    l1_factor(0),
+    utree(discount),
+    linQ(discount),
+    look_ahead_search(discount),
+    max_tree_size(10000),
+    target_activated(false)
 {
+
     // initialize UI
     ui.setupUi(this);
+
+    // add graph widget
+    plotter = new QCustomPlot(ui._wGraphDockWidgetContent);
+    plotter->setObjectName(QStringLiteral("PlotWidget"));
+    plotter->addGraph();
+    ui._lGraphWidgetLayout->addWidget(plotter, 0, 0, 1, 1);
 
     // focus on command line
     ui._wConsoleInput->setFocus();
@@ -235,6 +244,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString option_3c_s(                        "                                          u/utree. . . . . . . . . . . . .-> use UTree predictions");
     QString option_3d_s(                        "                                          uv/utree-value . . . . . . . . .-> use UTree state-action values");
     QString option_3e_s(                        "                                          lq/linear-q. . . . . . . . . . .-> use linear Q-function approximation");
+    QString option_4_s(                         "                               target. . . . . . . . . . . . . . . . . . .-> activate a target state");
     QString test_s(                             "    test . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> test");
 
     QString maze_s(                           "\n    -----------------------------------Maze-----------------------------------");
@@ -289,6 +299,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     set_s += "\n" + option_3c_s;
     set_s += "\n" + option_3d_s;
     set_s += "\n" + option_3e_s;
+    set_s += "\n" + option_4_s;
 
     QString invalid_args_s( "    invalid arguments" );
 
@@ -722,6 +733,32 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     planner_type = LINEAR_Q_VALUE;
                     TO_CONSOLE( "    using linear Q-approximation for action selection" );
                 }
+            } else if(str_args[1]=="target") {
+                if(str_args[0]=="set") {
+                    if(target_activated) {
+                        TO_CONSOLE( "    target already active" );
+                    } else {
+                        target_activated = true;
+                        target_state = current_instance->state;
+                        Maze::color_vector_t cols;
+                        for( auto state : stateIt_t::all ) {
+                            if(state==target_state) {
+                                cols.push_back( Maze::color_t(0,1,0) );
+                            } else {
+                                cols.push_back( Maze::color_t(1,1,1) );
+                            }
+                        }
+                        maze.render_update(ui.graphicsView, &cols);
+                        TO_CONSOLE( "    target active" );
+                    }
+                } else {
+                    if(!target_activated) {
+                        TO_CONSOLE( "    target already inactive" );
+                    } else {
+                        target_activated = false;
+                        TO_CONSOLE( "    target inactive" );
+                    }
+                }
             } else {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( set_s );
@@ -736,13 +773,28 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 TO_CONSOLE( construct_s );
             }
         } else if(str_args[0]=="test") { // test
-            state_t s1 = state_t::random_state();
-            state_t s2 = state_t::random_state();
-            idx_t delay = rand()%10;
-            probability_t prob = delay_dist.get_delay_probability(s1,s2,delay);
-            DEBUG_OUT(0,"State " << s1 << " --" << delay << "--> State " << s2 << " : " << prob );
+            // generate some data:
+            QVector<double> x(101), y(101); // initialize with entries 0..100
+            double a = 2*drand48() - 1;
+            double b = 2*drand48() - 1;
+            double c = 2*drand48() - 1;
+            double d = 2*drand48() - 1;
+            for (int i=0; i<101; ++i)
+            {
+                x[i] = i/50.0 - 1; // x goes from -1 to 1
+                y[i] = a + b*x[i] + c*x[i]*x[i] + d*x[i]*x[i]*x[i];
+            }
+            // create graph and assign data to it:
+            plotter->graph(0)->setData(x, y);
+            // give the axes some labels:
+            plotter->xAxis->setLabel("x");
+            plotter->yAxis->setLabel("y");
+            // set axes ranges, so we see all data:
+            plotter->xAxis->setRange(-1, 1);
+            plotter->yAxis->setRange(-4, 4);
+            plotter->replot();
         } else if(str_args[0]=="col-states") { // color states
-            std::vector<std::tuple<double,double,double> > cols;
+            Maze::color_vector_t  cols;
             for(stateIt_t state=stateIt_t::first(); state!=util::INVALID; ++state) {
                 cols.push_back( std::make_tuple(drand48(),drand48(),drand48()) );
             }
@@ -752,13 +804,24 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( delay_distribution_s );
             } else {
+                // get probabilites for all states
                 state_t s1 = current_instance->state;
                 idx_t delay = int_args[1];
-                std::vector<std::tuple<double,double,double> > cols;
+                std::vector<double> probs;
+                double max_prob = -DBL_MAX;
                 for(stateIt_t state=stateIt_t::first(); state!=util::INVALID; ++state) {
                     probability_t prob = delay_dist.get_delay_probability(s1,state,delay);
-                    cols.push_back( std::make_tuple(1,1-prob,1-prob) );
+                    probs.push_back(prob);
+                    if(prob>max_prob) {
+                        max_prob = prob;
+                    }
                 }
+                // rescale and define colors
+                Maze::color_vector_t cols;
+                for( double prob : probs ) {
+                    cols.push_back( std::make_tuple(1,1-prob/max_prob,1-prob/max_prob) );
+                }
+                // render
                 maze.render_update(ui.graphicsView, &cols);
             }
         } else {

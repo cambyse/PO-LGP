@@ -23,7 +23,7 @@ const char* Action::action_string() const {
 }
 
 Action Action::random_action() {
-    return min_action + rand()%(max_action-min_action);
+    return min_action + rand()%(max_action - min_action + 1);
 }
 
 std::ostream& operator<<(std::ostream &out, const Action& a) {

@@ -11,6 +11,8 @@
 #include "Representation/Representation.h"
 #include "DelayDistribution.h"
 
+#include "qcustomplot.h"
+
 #include <QWidget>
 #include <QTimer>
 
@@ -40,6 +42,8 @@ private:
     //---------------//
     // Maze GUI etc. //
     //---------------//
+
+    QCustomPlot * plotter;
 
     enum PLANNER_TYPE {
         NONE,
@@ -89,6 +93,8 @@ private:
     // Other //
     //-------//
     DelayDistribution delay_dist;
+    bool target_activated;
+    state_t target_state;
 
     //==================//
     // Member Functions //

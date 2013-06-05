@@ -3,7 +3,8 @@ TEMPLATE = app
 TARGET = TestMaze_II
 QT += core \
     gui \
-    svg
+    svg \
+    printsupport
 HEADERS += LookAheadSearch.h \
     BatchMaze.h \
     lbfgs_codes.h \
@@ -22,7 +23,8 @@ HEADERS += LookAheadSearch.h \
     util/KolmogorovSmirnovTest.h \
     util/ChiSquareTest.h \
     DelayDistribution.h \
-    HistoryObserver.h
+    HistoryObserver.h \
+    qcustomplot.h
 SOURCES += LookAheadSearch.cpp \
     util.cpp \
     BatchMaze.cpp \
@@ -42,10 +44,12 @@ SOURCES += LookAheadSearch.cpp \
     util/KolmogorovSmirnovTest.cpp \
     util/ChiSquareTest.cpp \
     DelayDistribution.cpp \
-    HistoryObserver.cpp
+    HistoryObserver.cpp \
+    qcustomplot.cpp
 LIBS += -llbfgs \
     -lemon \
     -larmadillo
+INCLUDEPATH +=
 FORMS += testmaze_ii.ui
 RESOURCES +=
 QMAKE_CXXFLAGS += -std=c++0x

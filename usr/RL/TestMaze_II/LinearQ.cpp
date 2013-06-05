@@ -210,7 +210,7 @@ LinearQ::action_t LinearQ::get_max_value_action(const instance_t * i) {
     double max_value = -DBL_MAX;
     for( auto action : actionIt_t::all ) {
         double value = 0;
-        for(idx_t f_idx=0; f_idx<active_features.size(); ++f_idx) {
+        for(idx_t f_idx=0; f_idx<(idx_t)active_features.size(); ++f_idx) {
             value += feature_weights[f_idx]*active_features[f_idx].evaluate(i, action, state_t(), reward_t() );
         }
         if(value>max_value) {
@@ -300,7 +300,7 @@ void LinearQ::erase_zero_weighted_features(const double& threshold) {
     feature_weights.clear();
 
     // iterate trough features to select non-zero weighted
-    for(idx_t f_idx=0; f_idx<old_active.size(); ++f_idx) {
+    for(idx_t f_idx=0; f_idx<(idx_t)old_active.size(); ++f_idx) {
         if(fabs(old_weights[f_idx])>threshold) {
             active_features.push_back(old_active[f_idx]);
             feature_weights.push_back(old_weights[f_idx]);

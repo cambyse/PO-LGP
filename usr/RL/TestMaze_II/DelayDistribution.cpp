@@ -6,12 +6,14 @@
 
 using util::INVALID;
 
+using std::vector;
+
 DelayDistribution::probability_t DelayDistribution::get_delay_probability(
     const state_t& s1,
     const state_t& s2,
     const idx_t& delay
     ) {
-
+    // determine unnormalized delay probability
     probability_t prob = 0;
     size_t normalization = 0;
     if(instance_data!=nullptr) {
@@ -34,11 +36,96 @@ DelayDistribution::probability_t DelayDistribution::get_delay_probability(
             ++insIt_2;
         }
     }
-
+    // normalize and return
     if(normalization!=0) {
         return prob/normalization;
     } else {
         DEBUG_OUT(1,"Warning: Not enough data to determine probability");
         return 0;
     }
+}
+
+void DelayDistribution::get_delay_distribution(
+    const state_t& s1,
+    const state_t& s2,
+    vector<probability_t> * forward,
+    vector<probability_t> * backward,
+    const idx_t& max_delay
+    ) {
+
+    //---------------------------------------------------//
+    // handle identical states and initialize containers //
+    //---------------------------------------------------//
+    if(s1==s2) {
+        DEBUG_OUT(1,"Warning: States given to calculate delay distribution are identical");
+        forward->assign(1,1);
+        backward->assign(1,1);
+        return;
+    } else {
+        forward->assign(1,0);
+        backward->assign(1,0);
+    }
+
+    //-------------------//
+    // count occurrences //
+    //-------------------//
+    size_t counter = 0;
+
+    idx_t idx_1 = 0;
+    for( auto& instance_1 : instance_data->const_all ) {
+
+        idx_t idx_2 = 0;
+        for( auto& instance_2 : instance_data->const_all ) {
+
+            // determine delay and handel max_delay requirements
+            idx_t delay = idx_1 - idx_2;
+            if(max_delay>=0 && abs(delay)>max_delay) {
+                if(delay>0) {
+                    continue;
+                } else {
+                    break;
+                }
+            }
+
+            // update if states match
+            if(instance_1.state==s1 && instance_2.state==s2) {
+                if(delay==0) {
+                    DEBUG_DEAD_LINE;
+                } else if(delay<0) {
+                    if((idx_t)backward->size()<1-delay) {
+                        backward->resize(1-delay,0);
+                    }
+                    (*backward)[-delay] += 1;
+                } else {
+                    if((idx_t)forward->size()<1+delay) {
+                        forward->resize(1+delay,0);
+                    }
+                    (*forward)[-delay] += 1;
+                }
+                ++counter;
+            }
+
+            ++idx_2;
+        }
+
+        ++idx_1;
+    }
+
+    //--------------------------------//
+    // normalize to get probabilities //
+    //--------------------------------//
+    for( auto& prob : (*forward) ) {
+        prob /= counter;
+    }
+    for( auto& prob : (*backward) ) {
+        prob /= counter;
+    }
+}
+
+vector<DelayDistribution::probability_t> DelayDistribution::get_mediator_probability(
+    const state_t& s1,
+    const state_t& s2,
+    const state_t& s3
+    ) {
+    return vector<probability_t>();
 }
