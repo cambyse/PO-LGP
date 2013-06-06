@@ -17,6 +17,11 @@ class Properties():
         self.limit_min = Gaussian()
         self.limit_max = Gaussian()
 
+    def members(self):
+        return [attr for attr in dir(self)
+                if not (attr.startswith("__") or
+                        callable(getattr(self, attr)))]
+
 
 def parse_body_msg(msg):
     body = ors.Body()
