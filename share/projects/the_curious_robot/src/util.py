@@ -16,3 +16,11 @@ class Properties():
         self.weight = Gaussian()
         self.limit_min = Gaussian()
         self.limit_max = Gaussian()
+
+
+def parse_body_msg(msg):
+    body = ors.Body()
+    body_list = msg.split(' ', 1)
+    body.name = body_list[0]
+    body.read(body_list[1])
+    return body
