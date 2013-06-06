@@ -1,3 +1,4 @@
+import orspy as ors
 class Gaussian():
     """
     Represent Gaussians with this class.
@@ -17,7 +18,7 @@ class Properties():
         self.limit_min = Gaussian()
         self.limit_max = Gaussian()
 
-    def members(self):
+    def property_names(self):
         return [attr for attr in dir(self)
                 if not (attr.startswith("__") or
                         callable(getattr(self, attr)))]
