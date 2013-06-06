@@ -20,6 +20,12 @@ def main():
     
     with sm:
         smach.StateMachine.add(
+                'INIT', smach_ros.SimpleActionState('init',
+                    msgs.PickOOIAction),
+                transitions={'succeeded':'PICK_OOI', 'preempted':'INIT',
+                    'aborted':'INIT'}
+        )
+        smach.StateMachine.add(
                 'PICK_OOI', smach_ros.SimpleActionState('pick_ooi',
                     msgs.PickOOIAction),
                 transitions={'succeeded':'GOTO_OOI', 'preempted':'GOTO_OOI',
