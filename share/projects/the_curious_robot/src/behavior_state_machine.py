@@ -70,4 +70,5 @@ def main():
     rospy.spin()
 
 if __name__ == '__main__':
+    rospy.sleep(1)
     main()
