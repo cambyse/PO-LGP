@@ -29,7 +29,7 @@ def main():
                 'PICK_OOI', smach_ros.SimpleActionState('pick_ooi',
                     msgs.PickOOIAction),
                 transitions={'succeeded':'GOTO_OOI', 'preempted':'GOTO_OOI',
-                    'aborted':'GOTO_OOI'}
+                    'aborted':'PICK_OOI'}
         )
         smach.StateMachine.add(
                 'GOTO_OOI', smach_ros.SimpleActionState('goto_ooi',
