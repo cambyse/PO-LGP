@@ -22,15 +22,11 @@ class InitServer:
         self.server.start()
 
     def execute(self, msg):
-        rospy.logdebug("1")
         rospy.wait_for_service('percept_all')
-        rospy.logdebug("2")
         self.graph = orspy.Graph()
         oois = []
         try:
-            rospy.logdebug("3")
             world_init = rospy.ServiceProxy('percept_all', srvs.percept_all)
-            rospy.logdebug("4")
             world = world_init()
             for p in world.bodies:
                 b = util.parse_body_msg(p)
@@ -44,13 +40,14 @@ class InitServer:
         oois_msg = msgs.Objects()
         for ooi in oois:
             ooi_msg = msgs.Object()
-            ooi_msg.body = str(ooi[0])
+            ooi_msg.body = ooi[0].name + ' ' + str(ooi[0])
             for prop_name in ooi[1].property_names():
                 prop_msg = msgs.Property()
                 prop_msg.name = prop_name
                 prop_msg.values = [ getattr(ooi[1], prop_name).mu, 
                                     getattr(ooi[1], prop_name).sigma ]
                 ooi_msg.properties.append(prop_msg)
+            oois_msg.objects.append(ooi_msg)
 
         self.oois_pub.publish(oois_msg)
 
