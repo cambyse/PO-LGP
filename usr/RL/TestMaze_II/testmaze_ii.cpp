@@ -14,6 +14,12 @@ using util::arg_string;
 
 #define TO_CONSOLE(x) { ui._wConsoleOutput->appendPlainText(x); }
 
+#if QT_VERSION < QT_VERSION_CHECK(4, 9, 9)
+#define MY_QT_STR QString::fromUtf8
+#else
+#define MY_QT_STR QStringLiteral
+#endif
+
 TestMaze_II::TestMaze_II(QWidget *parent):
     QWidget(parent),
     planner_type(OPTIMAL_PLANNER),
@@ -37,7 +43,7 @@ TestMaze_II::TestMaze_II(QWidget *parent):
 
     // add graph widget
     plotter = new QCustomPlot(ui._wGraphDockWidgetContent);
-    plotter->setObjectName(QStringLiteral("PlotWidget"));
+    plotter->setObjectName(MY_QT_STR("PlotWidget"));
     plotter->addGraph();
     ui._lGraphWidgetLayout->addWidget(plotter, 0, 0, 1, 1);
 
