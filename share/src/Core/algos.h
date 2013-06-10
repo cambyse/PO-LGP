@@ -17,7 +17,8 @@
     -----------------------------------------------------------------  */
 
 /// @file
-/// @ingroup Core
+/// @ingroup group_Core
+/// @addtogroup group_Core
 /// @{
 
 #ifndef MT_algos_h

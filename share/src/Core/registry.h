@@ -17,9 +17,8 @@
     -----------------------------------------------------------------  */
 
 /// @file
-/// @brief file registry
-/// @ingroup Core
-/// @addtogroup Core
+/// @ingroup group_Core
+/// @addtogroup group_Core
 /// @{
 
 #ifndef MT_registry_h
@@ -49,7 +48,7 @@ KeyValueGraph& registry();
 // define a type registry
 //
 
-struct Type:TypeBase{
+struct Type:RootType{
   MT::Array<Type*> parents; //TODO -> remove; replace functionality from registry
   virtual const std::type_info& typeId() const {NIY}; //TODO -> typeid()
   virtual struct Item* readItem(istream&) const {NIY}; //TODO -> readIntoNewItem

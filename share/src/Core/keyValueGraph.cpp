@@ -16,7 +16,6 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
-
 #include <map>
 
 #include "util_t.h"
@@ -24,7 +23,7 @@
 #include "keyValueGraph.h"
 #include "registry.h"
 
-const ItemL& NULLItemL=*((ItemL*)NULL);
+const ItemL& NoItemL=*((ItemL*)NULL);
 
 /*struct Parser{
   virtual ~Parser(){};

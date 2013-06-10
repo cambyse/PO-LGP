@@ -17,7 +17,8 @@
     -----------------------------------------------------------------  */
 
 /// @file
-/// @ingroup Core
+/// @ingroup group_Core
+/// @addtogroup group_Core
 /// @{
 
 #ifndef MT_keyValueGraph_h
@@ -30,10 +31,10 @@ struct Item;
 struct KeyValueGraph;
 typedef MT::Array<Item*> ItemL;
 typedef MT::Array<MT::String> StringA;
-extern const ItemL& NULLItemL;
-struct TypeBase{ virtual ~TypeBase(){}; }; //if types derive from TypeBase, more tricks are possible
-inline std::istream& operator>>(std::istream&, TypeBase&){ NIY; }
-inline std::ostream& operator<<(std::ostream&, const TypeBase&){ NIY; }
+extern const ItemL& NoItemL;
+struct RootType{ virtual ~RootType(){}; }; ///< if types derive from RootType, more tricks are possible
+inline std::istream& operator>>(std::istream&, RootType&){ NIY; }
+inline std::ostream& operator<<(std::ostream&, const RootType&){ NIY; }
 
 struct Item {
   StringA keys;
@@ -46,7 +47,7 @@ struct Item {
   void write(std::ostream &os) const;
   virtual void writeValue(std::ostream &os) const {NIY}
   virtual const std::type_info& valueType() const {NIY}
-  virtual bool is_derived_from_TypeBase() const {NIY}
+  virtual bool is_derived_from_RootType() const {NIY}
   virtual Item *newClone() const {NIY}
 };
 stdOutPipe(Item);
@@ -95,7 +96,7 @@ struct KeyValueGraph:ItemL{
 };
 stdPipes(KeyValueGraph);
 
-#include "keyValueGraph_t.cxx"
+#include "keyValueGraph_t.h"
 
 #endif
 

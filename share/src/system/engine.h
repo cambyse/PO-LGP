@@ -23,7 +23,7 @@ struct SystemDescription{
   Item* getVar(uint i){ ItemL vars = system.getTypedItems<VariableEntry>("Variable"); return vars(i); }
   template<class T> T& getValue(uint i){ return *((T*)getVar(i)->value<VariableEntry>()->var->data); }
 
-  void addModule(const char *dclName, const char *name=NULL, const ItemL& vars=NULLItemL, StepMode mode=listenRead, double beat=0.);
+  void addModule(const char *dclName, const char *name=NULL, const ItemL& vars=NoItemL, StepMode mode=listenRead, double beat=0.);
   void report();
   void complete();
 };

@@ -3448,5 +3448,3 @@ void maximumSpanningTree(MT::Array<vert*>& V, MT::Array<edge*>& E, const Compare
 
 
 #endif
-
-/// @} //end group

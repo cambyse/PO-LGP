@@ -16,10 +16,6 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
-
-
-
-
 // file:///usr/share/doc/liblapack-doc/lug/index.html
 
 #ifdef MT_LAPACK

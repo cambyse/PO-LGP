@@ -17,7 +17,8 @@
     -----------------------------------------------------------------  */
 
 /// @file
-/// @ingroup Core
+/// @ingroup group_Core
+/// @addtogroup group_Core
 /// @{
 
 #ifndef MT_geo_h
@@ -26,17 +27,9 @@
 #include "array.h"
 #include "util.h"
 
-/**
- * @file
- * @ingroup group_geo
- */
-
 namespace ors {
 
 //===========================================================================
-/** @addtogroup group_geo
- * @{
- */
 /// a 3D vector (double[3])
 struct Vector {
   double x, y, z;
@@ -276,10 +269,6 @@ extern const ors::Vector Vector_y;
 extern const ors::Vector Vector_z;
 extern const ors::Transformation Transformation_Id;
 extern const ors::Quaternion Quaternion_Id;
-
-
-/** @} */
-
 
 #endif
 

@@ -16,18 +16,6 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
-
-
-/**
- * @file
- * @ingroup group_ors
- */
-
-/**
- * @addtogroup group_ors
- * @{
- */
-
 #undef abs
 #include <algorithm>
 #include "array_t.h"
@@ -1119,8 +1107,6 @@ std::ostream& operator<<(std::ostream& os, const Transformation& x)     { x.writ
 //#include "util_t.h"
 
 //template void MT::Parameter<ors::Vector>::initialize();
-
-/** @} */
 
 
 //===========================================================================

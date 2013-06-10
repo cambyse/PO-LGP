@@ -16,11 +16,6 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
-/// @file
-/// @ingroup Core
-/// @addtogroup Core
-/// @{
-
 #ifndef MT_util_t_cpp
 #define MT_util_t_cpp
 
@@ -202,5 +197,3 @@ template<class T> void Parameter<T>::initialize() {
 }
 
 #endif
-
-/// @} //end group

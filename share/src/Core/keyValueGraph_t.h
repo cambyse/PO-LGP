@@ -48,8 +48,8 @@ struct Item_typed:Item {
     return typeid(T);
   }
 
-  virtual bool is_derived_from_TypeBase() const {
-    return is_base_of<TypeBase, T>::value;
+  virtual bool is_derived_from_RootType() const {
+    return is_base_of<RootType, T>::value;
   }
 
   virtual Item *newClone() const { return new Item_typed<T>(keys, parents, value); }
@@ -113,8 +113,8 @@ template<class T> Item *KeyValueGraph::append(const StringA& keys, const ItemL& 
 template <class T> MT::Array<T*> KeyValueGraph::getDerivedValues(){
   MT::Array<T*> ret;
   for_list_(Item, it, (*this)){
-    if(it->is_derived_from_TypeBase()){
-      T *val= dynamic_cast<T*>(((Item_typed<TypeBase>*)it)->value);
+    if(it->is_derived_from_RootType()){
+      T *val= dynamic_cast<T*>(((Item_typed<RootType>*)it)->value);
       if(val) ret.append(val);
     }
   }
@@ -124,8 +124,8 @@ template <class T> MT::Array<T*> KeyValueGraph::getDerivedValues(){
 template <class T> ItemL KeyValueGraph::getDerivedItems(){
   ItemL ret;
   for_list_(Item, it, (*this)){
-    if(it->is_derived_from_TypeBase()){
-      T *val= dynamic_cast<T*>(((Item_typed<TypeBase>*)it)->value);
+    if(it->is_derived_from_RootType()){
+      T *val= dynamic_cast<T*>(((Item_typed<RootType>*)it)->value);
       if(val) ret.append(it);
     }
   }
