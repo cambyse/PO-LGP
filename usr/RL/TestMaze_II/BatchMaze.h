@@ -10,7 +10,7 @@ public:
     USE_REPRESENTATION_TYPEDEFS;
     BatchMaze();
     virtual ~BatchMaze();
-    int run(int argc, char *argv[]);
+    int run(int argn, char ** argarr);
 private:
     int file_id;
 };

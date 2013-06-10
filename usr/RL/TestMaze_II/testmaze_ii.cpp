@@ -12,13 +12,9 @@ using util::arg_int;
 using util::arg_double;
 using util::arg_string;
 
-#define TO_CONSOLE(x) { ui._wConsoleOutput->appendPlainText(x); }
+#include "QtVersionAdapt.h"
 
-#if QT_VERSION < QT_VERSION_CHECK(4, 9, 9)
-#define MY_QT_STR QString::fromUtf8
-#else
-#define MY_QT_STR QStringLiteral
-#endif
+#define TO_CONSOLE(x) { ui._wConsoleOutput->appendPlainText(x); }
 
 TestMaze_II::TestMaze_II(QWidget *parent):
     QWidget(parent),
