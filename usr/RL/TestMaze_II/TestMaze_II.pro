@@ -48,8 +48,10 @@ SOURCES += LookAheadSearch.cpp \
     qcustomplot.cpp
 LIBS += -llbfgs \
     -lemon \
-    -larmadillo
+    -larmadillo \
+    -lgomp
 INCLUDEPATH +=
 FORMS += testmaze_ii.ui
 RESOURCES +=
-QMAKE_CXXFLAGS += -std=c++0x
+QMAKE_CXXFLAGS += -std=c++0x \
+    -fopenmp

@@ -5,10 +5,10 @@
     typedef Data::idx_t         idx_t;                          \
     typedef Data::size_t        size_t;                         \
     typedef Data::probability_t probability_t;
-#define USE_DATA_CONSTS                                         \
-    using Data::maze_x_size;                                    \
-    using Data::maze_y_size;                                    \
-    using Data::k;
+#define USE_DATA_CONSTS                                                 \
+    static const size_t maze_x_size = Data::maze_x_size;                \
+    static const size_t maze_y_size = Data::maze_y_size;                \
+    static const size_t k = Data::k;
 
 
 class Data {
