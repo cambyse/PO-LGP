@@ -7,7 +7,7 @@
 #include "Data.h"
 #include "Representation/Representation.h"
 
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 0
 #include "debug.h"
 
 class LookAheadSearch {
@@ -267,7 +267,7 @@ void LookAheadSearch::build_tree(
     if(tree_needs_further_expansion()) {
         while(expand_tree(model,prediction)) {
             if(max_node_counter>0 && number_of_nodes>max_node_counter) {
-                DEBUG_OUT(0,"Abort: Tree has more than " << max_node_counter << " nodes (" << number_of_nodes << ")");
+                DEBUG_OUT(1,"Abort: Tree has more than " << max_node_counter << " nodes (" << number_of_nodes << ")");
                 break;
             } else {
                 if(DEBUG_LEVEL>=1) {
