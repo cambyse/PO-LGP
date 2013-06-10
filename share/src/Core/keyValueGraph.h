@@ -16,6 +16,10 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
+/// @file
+/// @ingroup Core
+/// @{
+
 #ifndef MT_keyValueGraph_h
 #define MT_keyValueGraph_h
 
@@ -94,3 +98,5 @@ stdPipes(KeyValueGraph);
 #include "keyValueGraph_t.cxx"
 
 #endif
+
+/// @} //end group

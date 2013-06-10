@@ -16,6 +16,9 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
+/// @file
+/// @ingroup Core
+/// @{
 
 #ifndef MT_geo_h
 #define MT_geo_h
@@ -279,3 +282,5 @@ extern const ors::Quaternion Quaternion_Id;
 
 
 #endif
+
+/// @} //end group

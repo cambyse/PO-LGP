@@ -16,6 +16,12 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
+/// @file
+/// @brief file registry
+/// @ingroup Core
+/// @addtogroup Core
+/// @{
+
 #ifndef MT_registry_h
 #define MT_registry_h
 
@@ -120,3 +126,5 @@ struct Type_typed:Type{
   REGISTER_ITEM2(Type, Decl_Type, T, new Type_typed<T KO Base>(#Base,NULL));
 
 #endif
+
+/// @} //end group

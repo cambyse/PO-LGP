@@ -16,9 +16,6 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
-
-
-
 #ifndef MT_array_t_cpp
 #define MT_array_t_cpp
 
@@ -3451,3 +3448,5 @@ void maximumSpanningTree(MT::Array<vert*>& V, MT::Array<edge*>& E, const Compare
 
 
 #endif
+
+/// @} //end group

@@ -16,7 +16,9 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
-
+/// @file
+/// @ingroup Core
+/// @{
 
 #ifndef MT_ann_h
 #define MT_ann_h
@@ -51,3 +53,5 @@ struct ANN {
 };
 
 #endif
+
+/// @} //end group

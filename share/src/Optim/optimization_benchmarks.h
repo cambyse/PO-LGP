@@ -1,5 +1,5 @@
 /*  ---------------------------------------------------------------------
-    Copyright 2012 Marc Toussaint
+    Copyright 2013 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
     
     This program is free software: you can redistribute it and/or modify
@@ -15,6 +15,13 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
+/// @file
+/// @ingroup group_Optim
+/// @addtogroup group_Optim
+/// @{
+#ifndef MT_optimization_benchmarks_h
+#define MT_optimization_benchmarks_h
 
 #include "optimization.h"
 
@@ -174,3 +181,6 @@ struct SlalomProblem:VectorChainFunction {
   void fv_i(arr& y, arr& J, uint i, const arr& x_i);
   void fv_ij(arr& y, arr& Ji, arr& Jj, uint i, uint j, const arr& x_i, const arr& x_j);
 };
+
+#endif
+/// @}

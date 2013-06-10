@@ -18,6 +18,7 @@
 
 
 
+
 /*  Copyright (C) 2000, 2006  Marc Toussaint (mtoussai@inf.ed.ac.uk)
     under the terms of the GNU LGPL (http://www.gnu.org/copyleft/lesser.html)
     see the `util.h' file for a full copyright statement  */
