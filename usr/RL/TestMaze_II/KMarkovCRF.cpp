@@ -7,7 +7,7 @@
 #include <tuple>
 
 #define DEBUG_STRING "CRF: "
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 0
 #include "debug.h"
 
 using std::vector;

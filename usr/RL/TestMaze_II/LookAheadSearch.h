@@ -7,7 +7,7 @@
 #include "Data.h"
 #include "Representation/Representation.h"
 
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 0
 #include "debug.h"
 
 class LookAheadSearch {

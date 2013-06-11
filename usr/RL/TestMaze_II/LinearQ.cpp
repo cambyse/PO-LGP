@@ -11,7 +11,7 @@
 #include "lbfgs_codes.h"
 
 #define DEBUG_STRING "LinearQ: "
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 0
 #include "debug.h"
 
 using std::vector;

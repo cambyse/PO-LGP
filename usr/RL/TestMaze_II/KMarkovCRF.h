@@ -1,10 +1,3 @@
-/*
- * KMarkovCRF.h
- *
- *  Created on: Oct 30, 2012
- *      Author: robert
- */
-
 #ifndef KMARKOVCRF_H_
 #define KMARKOVCRF_H_
 

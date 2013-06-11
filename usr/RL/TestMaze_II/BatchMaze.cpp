@@ -16,7 +16,7 @@
 
 #include <QString>
 
-#define DEBUG_LEVEL 2
+#define DEBUG_LEVEL 0
 #include "debug.h"
 
 #define LOG_COMMENT(x) DEBUG_OUT(1,x); log_file << "# " << x << std::endl;
