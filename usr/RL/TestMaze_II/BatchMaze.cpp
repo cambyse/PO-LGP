@@ -133,7 +133,9 @@ int BatchMaze::run(int argn, char ** argarr) {
                     reward_t reward;
                     maze->perform_transition(action,state,reward);
                     current_instance = current_instance->append_instance(action,state,reward);
-                    if(option==SPARSE) {
+                    if(option==OPTIMAL) {
+                        // no training data
+                    } else if(option==SPARSE) {
                         crf->add_action_state_reward_tripel(action,state,reward);
                     } else if(option==UTREE_VALUE || option==UTREE_PROB) {
                         utree->add_action_state_reward_tripel(action,state,reward);
