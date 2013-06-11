@@ -90,30 +90,39 @@ int BatchMaze::run(int argn, char ** argarr) {
 #endif
     for(int training_idx=0; training_idx<training_steps; ++training_idx) {
         for(int episode_counter=1; episode_counter<=max_episodes; ++episode_counter) {
+
+            // use pointers to serialize initialization
+            Maze * maze;
+            instance_t * current_instance;
+            LookAheadSearch * look_ahead_search;
+            KMarkovCRF * crf;
+            UTree * utree;
+            LinearQ * linQ;
+
 #ifdef USE_OMP
 #pragma omp critical
 #endif
             {
                 // initialize maze
                 state_t start_state = state_t::random_state();
-                Maze maze(epsilon);
-                maze.set_current_state(start_state);
-                instance_t * current_instance = instance_t::create(action_t::STAY,start_state,reward_t::min_reward);
+                maze = new Maze(epsilon);
+                maze->set_current_state(start_state);
+                current_instance = instance_t::create(action_t::STAY,start_state,reward_t::min_reward);
 
                 // initialize look ahead search
-                LookAheadSearch look_ahead_search(discount);
+                look_ahead_search = new LookAheadSearch(discount);
 
                 // initialize learners
-                KMarkovCRF crf;
-                UTree utree(discount);
-                LinearQ linQ(discount);
+                crf = new KMarkovCRF();
+                utree = new UTree(discount);
+                linQ = new LinearQ(discount);
 
                 // initialize to minimal length history
                 for(unsigned long state_counter=0; state_counter<k; ++state_counter) {
                     action_t action = action_t::STAY;
                     state_t state;
                     reward_t reward;
-                    maze.perform_transition(action,state,reward);
+                    maze->perform_transition(action,state,reward);
                     current_instance = current_instance->append_instance(action,state,reward);
                 }
 
@@ -122,14 +131,14 @@ int BatchMaze::run(int argn, char ** argarr) {
                     action_t action = action_t::random_action();
                     state_t state;
                     reward_t reward;
-                    maze.perform_transition(action,state,reward);
+                    maze->perform_transition(action,state,reward);
                     current_instance = current_instance->append_instance(action,state,reward);
                     if(option==SPARSE) {
-                        crf.add_action_state_reward_tripel(action,state,reward);
+                        crf->add_action_state_reward_tripel(action,state,reward);
                     } else if(option==UTREE_VALUE || option==UTREE_PROB) {
-                        utree.add_action_state_reward_tripel(action,state,reward);
+                        utree->add_action_state_reward_tripel(action,state,reward);
                     } else if(option==LINEAR_Q) {
-                        linQ.add_action_state_reward_tripel(action,state,reward);
+                        linQ->add_action_state_reward_tripel(action,state,reward);
                     } else {
                         DEBUG_DEAD_LINE;
                     }
@@ -141,55 +150,55 @@ int BatchMaze::run(int argn, char ** argarr) {
                 // nothing to train
             } else if(option==SPARSE) {
                 // complexity 1
-                crf.score_features_by_gradient(1);
-                crf.sort_scored_features(false);
-                crf.add_candidate_features_to_active(0);
-                crf.optimize_model(l1_factor,0,nullptr);
-                crf.erase_zero_features();
+                crf->score_features_by_gradient(1);
+                crf->sort_scored_features(false);
+                crf->add_candidate_features_to_active(0);
+                crf->optimize_model(l1_factor,0,nullptr);
+                crf->erase_zero_features();
                 // complexity 2
-                crf.score_features_by_gradient(1);
-                crf.sort_scored_features(false);
-                crf.add_candidate_features_to_active(0);
-                crf.optimize_model(l1_factor,0,nullptr);
-                crf.erase_zero_features();
+                crf->score_features_by_gradient(1);
+                crf->sort_scored_features(false);
+                crf->add_candidate_features_to_active(0);
+                crf->optimize_model(l1_factor,0,nullptr);
+                crf->erase_zero_features();
                 // finalize
-                crf.optimize_model(0,0,nullptr);
+                crf->optimize_model(0,0,nullptr);
             } else if(option==UTREE_PROB) {
-                utree.set_expansion_type(UTree::STATE_REWARD_EXPANSION);
+                utree->set_expansion_type(UTree::STATE_REWARD_EXPANSION);
                 double score_threshold = 1e-3;
                 double max_score = DBL_MAX;
                 while(max_score>score_threshold) {
-                    max_score = utree.expand_leaf_node(score_threshold);
+                    max_score = utree->expand_leaf_node(score_threshold);
                 }
             } else if(option==UTREE_VALUE) {
-                utree.set_expansion_type(UTree::UTILITY_EXPANSION);
+                utree->set_expansion_type(UTree::UTILITY_EXPANSION);
                 double score_threshold = 1e-3;
                 double max_score = DBL_MAX;
                 while(max_score>score_threshold) {
                     double max_update = DBL_MAX;
                     while(max_update>1e-10) {
-                        max_update = utree.value_iteration();
+                        max_update = utree->value_iteration();
                     }
-                    max_score = utree.expand_leaf_node(score_threshold);
+                    max_score = utree->expand_leaf_node(score_threshold);
                 }
             } else if(option==LINEAR_Q) {
                 // complexity 1
-                linQ.add_candidates(1);
-                linQ.erase_zero_features();
-                linQ.optimize_l1(l1_factor);
-                linQ.erase_zero_weighted_features();
+                linQ->add_candidates(1);
+                linQ->erase_zero_features();
+                linQ->optimize_l1(l1_factor);
+                linQ->erase_zero_weighted_features();
                 // complexity 2
-                linQ.add_candidates(1);
-                linQ.erase_zero_features();
-                linQ.optimize_l1(l1_factor);
-                linQ.erase_zero_weighted_features();
+                linQ->add_candidates(1);
+                linQ->erase_zero_features();
+                linQ->optimize_l1(l1_factor);
+                linQ->erase_zero_weighted_features();
                 // complexity 3
-                linQ.add_candidates(1);
-                linQ.erase_zero_features();
-                linQ.optimize_l1(l1_factor);
-                linQ.erase_zero_weighted_features();
+                linQ->add_candidates(1);
+                linQ->erase_zero_features();
+                linQ->optimize_l1(l1_factor);
+                linQ->erase_zero_weighted_features();
                 // finalize
-                linQ.optimize_ridge(0);
+                linQ->optimize_ridge(0);
             } else {
                 DEBUG_DEAD_LINE;
             }
@@ -206,42 +215,42 @@ int BatchMaze::run(int argn, char ** argarr) {
 
                 // choose the action
                 if(option==OPTIMAL) {
-                    look_ahead_search.clear_tree();
-                    look_ahead_search.build_tree<Maze>(
+                    look_ahead_search->clear_tree();
+                    look_ahead_search->build_tree<Maze>(
                         current_instance,
-                        maze,
-                        maze.get_prediction_ptr(),
+                        *maze,
+                        maze->get_prediction_ptr(),
                         max_tree_size
                         );
-                    action = look_ahead_search.get_optimal_action();
+                    action = look_ahead_search->get_optimal_action();
                 } else if(option==SPARSE) {
-                    look_ahead_search.clear_tree();
-                    look_ahead_search.build_tree<KMarkovCRF>(
+                    look_ahead_search->clear_tree();
+                    look_ahead_search->build_tree<KMarkovCRF>(
                         current_instance,
-                        crf,
-                        crf.get_prediction_ptr(),
+                        *crf,
+                        crf->get_prediction_ptr(),
                         max_tree_size
                         );
-                    action = look_ahead_search.get_optimal_action();
+                    action = look_ahead_search->get_optimal_action();
                 } else if(option==UTREE_PROB) {
-                    look_ahead_search.clear_tree();
-                    look_ahead_search.build_tree<UTree>(
+                    look_ahead_search->clear_tree();
+                    look_ahead_search->build_tree<UTree>(
                         current_instance,
-                        utree,
-                        utree.get_prediction_ptr(),
+                        *utree,
+                        utree->get_prediction_ptr(),
                         max_tree_size
                         );
-                    action = look_ahead_search.get_optimal_action();
+                    action = look_ahead_search->get_optimal_action();
                 } else if(option==UTREE_VALUE) {
-                    action = utree.get_max_value_action(current_instance);
+                    action = utree->get_max_value_action(current_instance);
                 } else if(option==LINEAR_Q) {
-                    action = linQ.get_max_value_action(current_instance);
+                    action = linQ->get_max_value_action(current_instance);
                 } else {
                     DEBUG_DEAD_LINE;
                 }
 
                 // perform transition
-                maze.perform_transition(action,state,reward);
+                maze->perform_transition(action,state,reward);
                 current_instance = current_instance->append_instance(action,state,reward);
 
                 // increment reward
@@ -257,14 +266,24 @@ int BatchMaze::run(int argn, char ** argarr) {
 #pragma omp critical
 #endif
             {
+                // update global reward sum
                 global_reward_sum += reward_sum;
 
+                // write data to log file
                 LOG(episode_counter << " 	" <<
                     training_lengths[training_idx] << "	" <<
-                    (option==SPARSE ? crf.get_number_of_features() : 0) << "	" <<
-                    ( (option==UTREE_VALUE || option==UTREE_PROB) ? utree.get_tree_size() : 0) << "	" <<
+                    (option==SPARSE ? crf->get_number_of_features() : 0) << "	" <<
+                    ( (option==UTREE_VALUE || option==UTREE_PROB) ? utree->get_tree_size() : 0) << "	" <<
                     reward_sum/max_transitions
                     );
+
+                // delete pointers
+                delete maze;
+                delete current_instance;
+                delete look_ahead_search;
+                delete crf;
+                delete utree;
+                delete linQ;
             }
         }
     }
