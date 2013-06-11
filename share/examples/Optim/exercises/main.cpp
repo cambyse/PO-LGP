@@ -27,7 +27,7 @@ void displayFunction(VectorFunction& F){
   arr X, Y;
   X.setGrid(2,-1.2,1.2,100);
   Y.resize(X.d0);
-  for(uint i=0;i<X.d0;i++){ F.fv(phi, NoArr, X[i]); Y(i) = phi(0); }
+  for(uint i=0;i<X.d0;i++){ F.fv(phi, NoArr, X[i]); Y(i) = sumOfSqr(phi); } //phi(0); }
   Y.reshape(101,101);
   write(LIST<arr>(Y),"z.fct");
   gnuplot("splot [-1:1][-1:1] 'z.fct' matrix us (1.2*($1/50-1)):(1.2*($2/50-1)):3 w l", false, true);
@@ -49,19 +49,19 @@ void testGradDescent(ScalarFunction& F){
     checkGradient(F, x, 1e-4);
     checkHessian(F, x, 1e-4);
 
-    optGradDescent(x, F, OPT2(verbose=2, stopTolerance=1e-3));
+    optGradDescent(x, F, OPT(verbose=2, stopTolerance=1e-3));
     cout <<"x_opt=" <<x <<endl;
     gnuplot("load 'plt'", false, true);
     MT::wait();
 
     x=x0;
-    optRprop(x, F, OPT2(verbose=2, stopTolerance=1e-3));
+    optRprop(x, F, OPT(verbose=2, stopTolerance=1e-3));
     cout <<"x_opt=" <<x <<endl;
     gnuplot("load 'plt'", false, true);
     MT::wait();
 
     x=x0;
-    optNewton(x, F, OPT2(verbose=2, stopTolerance=1e-3));
+    optNewton(x, F, OPT(verbose=2, stopTolerance=1e-3));
     cout <<"x_opt=" <<x <<endl;
     gnuplot("load 'plt'", false, true);
     MT::wait();
@@ -107,7 +107,15 @@ struct UnconstrainedProblem:ScalarFunction{
       g.reshape(x.N);
     }
 
-    if(&H) NIY;
+    if(&H){
+      ///TODO: Here we assume the hessian of phi(0) and all phi(i) ZERO!!! Only the J^T J terms are considered (as in Gauss-Newton type)
+      H.resize(x.N,x.N);
+      H.setZero();
+      if(muLB)     for(uint i=1;i<phi.N;i++) H += (muLB/MT::sqr(phi(i)))*(J[i]^J[i]);  //log barrier
+      if(mu)       for(uint i=1;i<phi.N;i++) if(phi(i)>0. || (lambda.N && lambda(i)>0.)) H += (mu*2.)*(J[i]^J[i]);  //penalty
+      if(lambda.N) for(uint i=1;i<phi.N;i++) if(lambda(i)>0.) H += 0.; //augments
+      H.reshape(x.N,x.N);
+    }
 
     return f;
   }
@@ -160,8 +168,9 @@ void testConstraint(VectorFunction& f, arr& x_start=NoArr, uint iters=10){
   for(uint k=0;k<iters;k++){
     checkGradient(F, x, 1e-4); //very convenient: check numerically whether the gradient is correctly implemented
 
-    optRprop(x, F, OPT3(verbose=2, stopTolerance=1e-3, initStep=1e-1));
-    //optGradDescent(x, F, OPT3(verbose=2, stopTolerance=1e-3, initStep=1e-1));
+    //optRprop(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
+    //optGradDescent(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
+    optNewton(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
 
     displayFunction(F);
     MT::wait();
@@ -240,12 +249,32 @@ void testPhaseOne(VectorFunction& f){
 
 //==============================================================================
 
+void testGaussNewton(VectorFunction& F){
+  uint d=2;
+  arr x(d),x0;
+  rnd.clockSeed();
+  for(uint k=0;k<3;k++){
+    rndUniform(x, -1., 1.);
+    x0=x;
+    cout <<"x0=" <<x0 <<endl;
+    checkJacobian(F, x, 1e-4);
+
+    optGaussNewton(x, F, OPT(verbose=2, stopTolerance=1e-3));
+    cout <<"x_opt=" <<x <<endl;
+    gnuplot("load 'plt'", false, true);
+    MT::wait();
+  }
+}
+
+
+//==============================================================================
+
 int main(int argn,char** argv){
   MT::initCmdLine(argn,argv);
 
   cout <<USE <<endl;
 
-  enum TestType { unconstrained=1, constrained, phaseOne };
+  enum TestType { unconstrained=1, constrained, phaseOne, gaussNewton };
 
   switch((TestType)MT::getParameter<int>("exercise")){
   case unconstrained: {
@@ -262,6 +291,12 @@ int main(int argn,char** argv){
     ChoiceConstraintFunction F;
     testPhaseOne(F);
   } break;
+  case gaussNewton: {
+    SinusesFunction F;
+    displayFunction(F);
+    MT::wait();
+    testGaussNewton(F);
+  }
   }
 
   return 0;

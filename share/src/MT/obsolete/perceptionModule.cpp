@@ -331,7 +331,7 @@ bool getShapeParamsFromEvidence(arr& params, arr& points, const uint& type, cons
     rprop.loop(params, problem, &cost, 1.e-1, 1., 100, 0);
     // cout <<"*** cost=" <<cost <<" params=" <<params <<" time=" <<MT::timerRead() <<endl;
     
-    problem.fs(NoGrad, NoArr, params);
+    problem.fs(NoArr, NoArr, params);
     byteA img; copy(img, 10.f*problem.distImage);
     cvDrawPoints(img, problem.points);
     //cvShow(img, "shape optimization", false);

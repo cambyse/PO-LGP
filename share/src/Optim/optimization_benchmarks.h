@@ -130,6 +130,33 @@ struct ChoiceConstraintFunction:VectorFunction{
 
 //===========================================================================
 
+struct SinusesFunction:VectorFunction{
+  double a;
+  double condition;
+  SinusesFunction(){
+    a = MT::getParameter<double>("SinusesFunction_a");
+    condition = MT::getParameter<double>("condition");
+  }
+  virtual void fv(arr& phi, arr& J, const arr& x) {
+    CHECK(x.N==2,"");
+    phi.resize(4);
+    phi(0) = sin(a*x(0));
+    phi(1) = sin(a*condition*x(1));
+    phi(2) = 2.*x(0);
+    phi(3) = 2.*condition*x(1);
+    if(&J){
+      J.resize(4,2);
+      J.setZero();
+      J(0,0) = cos(a*x(0))*a;
+      J(1,1) = cos(a*condition*x(1))*a*condition;
+      J(2,0) = 2.;
+      J(3,1) = 2.*condition;
+    }
+  }
+};
+
+//===========================================================================
+
 /// $f(x) = x^T C x$ where C has eigen values ranging from 1 to 'condition'
 struct SquaredCost:public ScalarFunction,VectorFunction {
   arr M,C; /// $C = M^T M $

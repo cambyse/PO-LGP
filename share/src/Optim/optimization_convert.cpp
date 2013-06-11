@@ -159,14 +159,14 @@ double sConvert::VectorChainFunction_ScalarFunction::fs(arr& grad, arr& H, const
   }
   if(&H) NIY;
   for(uint t=0; t<=T; t++) { //node potentials
-    f->fv_i(y, (&grad?J:NoGrad), t, z[t]);
+    f->fv_i(y, (&grad?J:NoArr), t, z[t]);
     cost += sumOfSqr(y);
     if(&grad) {
       grad[t]() += 2.*(~y)*J;
     }
   }
   for(uint t=0; t<T; t++) {
-    f->fv_ij(y, (&grad?Ji:NoGrad), (&grad?Jj:NoGrad), t, t+1, z[t], z[t+1]);
+    f->fv_ij(y, (&grad?Ji:NoArr), (&grad?Jj:NoArr), t, t+1, z[t], z[t+1]);
     cost += sumOfSqr(y);
     if(&grad) {
       grad[t]()   += 2.*(~y)*Ji;
@@ -183,9 +183,9 @@ void sConvert::VectorChainFunction_VectorFunction::fv(arr& y, arr& J, const arr&
 
   //probing dimensionality (ugly..)
   arr tmp;
-  f->fv_i(tmp, NoGrad, 0, z[0]);
+  f->fv_i(tmp, NoArr, 0, z[0]);
   uint di=tmp.N; //dimensionality at nodes
-  if(T>0) f->fv_ij(tmp, NoGrad, NoGrad, 0, 1, z[0], z[1]);
+  if(T>0) f->fv_ij(tmp, NoArr, NoArr, 0, 1, z[0], z[1]);
   uint dij=tmp.N; //dimensionality at pairs
 
   //resizing things:
@@ -200,7 +200,7 @@ void sConvert::VectorChainFunction_VectorFunction::fv(arr& y, arr& J, const arr&
   uint t,i,j;
   //first collect all node potentials
   for(t=0; t<=T; t++) {
-    f->fv_i(y_loc, (&J?J_loc:NoGrad), t, z[t]);
+    f->fv_i(y_loc, (&J?J_loc:NoArr), t, z[t]);
     yi[t] = y_loc;
     if(&J) {
       for(i=0; i<di; i++) for(j=0; j<z.d1; j++) //copy into the right place...
@@ -209,7 +209,7 @@ void sConvert::VectorChainFunction_VectorFunction::fv(arr& y, arr& J, const arr&
   }
   //then collect all pair potentials
   for(t=0; t<T; t++) {
-    f->fv_ij(y_loc, (&J?Ji_loc:NoGrad), (&J?Jj_loc:NoGrad), t, t+1, z[t], z[t+1]);
+    f->fv_ij(y_loc, (&J?Ji_loc:NoArr), (&J?Jj_loc:NoArr), t, t+1, z[t], z[t+1]);
     yij[t] = y_loc;
     if(&J) {
       for(i=0; i<dij; i++) for(j=0; j<z.d1; j++) //copy into the right place...
@@ -228,7 +228,7 @@ void sConvert::VectorChainFunction_VectorFunction::fv(arr& y, arr& J, const arr&
 
 double sConvert::VectorChainFunction_QuadraticChainFunction::fq_i(SqrPotential& S, uint i, const arr& x_i) {
   arr y,J;
-  f->fv_i(y, (&S?J:NoGrad), i, x_i);
+  f->fv_i(y, (&S?J:NoArr), i, x_i);
   if(&S) {
     S.A=~J * J;
     S.a=~J * (J*x_i - y);
@@ -239,7 +239,7 @@ double sConvert::VectorChainFunction_QuadraticChainFunction::fq_i(SqrPotential& 
 
 double sConvert::VectorChainFunction_QuadraticChainFunction::fq_ij(PairSqrPotential& S, uint i, uint j, const arr& x_i, const arr& x_j) {
   arr y,Ji,Jj;
-  f->fv_ij(y, (&S?Ji:NoGrad), (&S?Jj:NoGrad), i, j, x_i, x_j);
+  f->fv_ij(y, (&S?Ji:NoArr), (&S?Jj:NoArr), i, j, x_i, x_j);
   if(&S) {
     S.A=~Ji*Ji;
     S.B=~Jj*Jj;
