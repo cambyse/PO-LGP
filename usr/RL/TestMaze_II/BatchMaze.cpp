@@ -90,45 +90,49 @@ int BatchMaze::run(int argn, char ** argarr) {
 #endif
     for(int training_idx=0; training_idx<training_steps; ++training_idx) {
         for(int episode_counter=1; episode_counter<=max_episodes; ++episode_counter) {
+#ifdef USE_OMP
+#pragma omp critical
+#endif
+            {
+                // initialize maze
+                state_t start_state = state_t::random_state();
+                Maze maze(epsilon);
+                maze.set_current_state(start_state);
+                instance_t * current_instance = instance_t::create(action_t::STAY,start_state,reward_t::min_reward);
 
-            // initialize maze
-            state_t start_state = state_t::random_state();
-            Maze maze(epsilon);
-            maze.set_current_state(start_state);
-            instance_t * current_instance = instance_t::create(action_t::STAY,start_state,reward_t::min_reward);
+                // initialize look ahead search
+                LookAheadSearch look_ahead_search(discount);
 
-            // initialize look ahead search
-            LookAheadSearch look_ahead_search(discount);
+                // initialize learners
+                KMarkovCRF crf;
+                UTree utree(discount);
+                LinearQ linQ(discount);
 
-            // initialize learners
-            KMarkovCRF crf;
-            UTree utree(discount);
-            LinearQ linQ(discount);
+                // initialize to minimal length history
+                for(unsigned long state_counter=0; state_counter<k; ++state_counter) {
+                    action_t action = action_t::STAY;
+                    state_t state;
+                    reward_t reward;
+                    maze.perform_transition(action,state,reward);
+                    current_instance = current_instance->append_instance(action,state,reward);
+                }
 
-            // initialize to minimal length history
-            for(unsigned long state_counter=0; state_counter<k; ++state_counter) {
-                action_t action = action_t::STAY;
-                state_t state;
-                reward_t reward;
-                maze.perform_transition(action,state,reward);
-                current_instance = current_instance->append_instance(action,state,reward);
-            }
-
-            // get training data
-            for(int train_step=0; train_step<training_lengths[training_idx]; ++train_step) {
-                action_t action = action_t::random_action();
-                state_t state;
-                reward_t reward;
-                maze.perform_transition(action,state,reward);
-                current_instance = current_instance->append_instance(action,state,reward);
-                if(option==SPARSE) {
-                    crf.add_action_state_reward_tripel(action,state,reward);
-                } else if(option==UTREE_VALUE || option==UTREE_PROB) {
-                    utree.add_action_state_reward_tripel(action,state,reward);
-                } else if(option==LINEAR_Q) {
-                    linQ.add_action_state_reward_tripel(action,state,reward);
-                } else {
-                    DEBUG_DEAD_LINE;
+                // get training data
+                for(int train_step=0; train_step<training_lengths[training_idx]; ++train_step) {
+                    action_t action = action_t::random_action();
+                    state_t state;
+                    reward_t reward;
+                    maze.perform_transition(action,state,reward);
+                    current_instance = current_instance->append_instance(action,state,reward);
+                    if(option==SPARSE) {
+                        crf.add_action_state_reward_tripel(action,state,reward);
+                    } else if(option==UTREE_VALUE || option==UTREE_PROB) {
+                        utree.add_action_state_reward_tripel(action,state,reward);
+                    } else if(option==LINEAR_Q) {
+                        linQ.add_action_state_reward_tripel(action,state,reward);
+                    } else {
+                        DEBUG_DEAD_LINE;
+                    }
                 }
             }
 
