@@ -1,21 +1,20 @@
 /*  ---------------------------------------------------------------------
     Copyright 2013 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-    
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
-
 
 #ifndef _MT_motionProblem_h
 #define _MT_motionProblem_h
@@ -117,7 +116,7 @@ struct MotionProblem {
   void setInterpolatingVelCosts(TaskCost *c,
                                 TaskCostInterpolationType inType,
                                 const arr& v_finalTarget, double v_finalPrec, const arr& v_midTarget, double v_midPrec);
-
+                                
   //-- cost infos
   uint get_phiDim(uint t);
   void getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t); ///< the general (`big') task vector and its Jacobian

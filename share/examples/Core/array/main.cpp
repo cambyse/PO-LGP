@@ -157,7 +157,7 @@ void testBinaryIO(){
   cout <<"binary IO exactly restores double array and is much faster" <<endl;
 }
 
-//#include"expressions.cpp"
+//#include "expressions.cpp"
 
 void testExpression(){
   cout <<"\n*** matrix expressions\n";

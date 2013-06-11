@@ -1,39 +1,34 @@
 /*  ---------------------------------------------------------------------
     Copyright 2013 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-    
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
-
-
-#ifndef MT_geo_ext_h
-#define MT_geo_ext_h
+#ifndef MT_mesh_h
+#define MT_mesh_h
 
 #include <Core/geo.h>
 
-/**
- * @file
- * @ingroup group_geo
- */
+/// @file
+/// @ingroup group_geo
+/// @addtogroup group_geo
+/// @{
 
 namespace ors {
 
 //===========================================================================
-/** @addtogroup group_geo
- * @{
- */
 /// a mesh (arrays of vertices, triangles, colors & normals)
 struct Mesh {
   arr V;                ///< vertices
@@ -154,7 +149,7 @@ void inertiaCylinder(double *Inertia, double& mass, double density, double heigh
 
 } //END of namespace
 
-/** @} end of group_geo */ 
+/// @} end of group_geo
 
 
 //===========================================================================

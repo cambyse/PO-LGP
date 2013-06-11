@@ -1,17 +1,17 @@
 /*  ---------------------------------------------------------------------
     Copyright 2013 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-    
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
@@ -25,11 +25,11 @@
 #include <algorithm>
 
 #define maxRank 30
-  /** @brief if flexiMem is true (which is default!) the resize method will
-    (1) at the first call allocate the exact amount of memory, (2)
-    at further calls of increasing memory allocate twice the memory
-    needed or (3) at further calls of decreasing memory only free
-    the memory if the new size is smaller than a fourth */
+/** @brief if flexiMem is true (which is default!) the resize method will
+  (1) at the first call allocate the exact amount of memory, (2)
+  at further calls of increasing memory allocate twice the memory
+  needed or (3) at further calls of decreasing memory only free
+  the memory if the new size is smaller than a fourth */
 #define ARRAY_flexiMem true
 
 //===========================================================================
@@ -57,7 +57,7 @@ template<class T> void MT::Array<T>::init() {
   if(sizeT==-1) sizeT=sizeof(T);
   if(memMove==-1) {
     memMove=0;
-    if (typeid(T)==typeid(bool) ||
+    if(typeid(T)==typeid(bool) ||
         typeid(T)==typeid(char) ||
         typeid(T)==typeid(unsigned char) ||
         typeid(T)==typeid(int) ||
@@ -1259,8 +1259,8 @@ template<class T> void MT::Array<T>::sort(ElemCompare comp) {
 /// check whether list is sorted
 template<class T> bool MT::Array<T>::isSorted(ElemCompare comp) const {
   uint i;
-  for (i=0; i<N-1; i++) {
-    if (!comp(elem(i), elem(i+1))) return false;
+  for(i=0; i<N-1; i++) {
+    if(!comp(elem(i), elem(i+1))) return false;
   }
   return true;
 }
@@ -1272,9 +1272,9 @@ template<class T> uint MT::Array<T>::rankInSorted(const T& x, ElemCompare comp) 
   if(comp(x, elem(0))) return 0;
   if(comp(elem(N-1), x)) return N;
   uint lo=0, up=N-1, mi=lo+(up-lo)/2;
-  while (lo<=up) {
+  while(lo<=up) {
     mi=lo+(up-lo)/2;
-    if (elem(mi) == x) return mi;
+    if(elem(mi) == x) return mi;
     if(comp(x, elem(mi))) up=mi-1; else lo=mi+1;
     if(comp(x, elem(lo))) return lo;
     if(comp(elem(up), x)) return up+1;
@@ -1285,8 +1285,8 @@ template<class T> uint MT::Array<T>::rankInSorted(const T& x, ElemCompare comp) 
 /// fast find method in a sorted array, returns index to element equal to x
 template<class T> int MT::Array<T>::findValueInSorted(const T& x, ElemCompare comp) const {
   uint cand_pos = rankInSorted(x, comp);
-  if (cand_pos == N) return -1;
-  else if (elem(cand_pos) != x) return -1;
+  if(cand_pos == N) return -1;
+  else if(elem(cand_pos) != x) return -1;
   else return cand_pos;
 }
 
@@ -1302,7 +1302,7 @@ template<class T> uint MT::Array<T>::insertInSorted(const T& x, ElemCompare comp
 template<class T> uint MT::Array<T>::setAppendInSorted(const T& x, ElemCompare comp) {
   CHECK(memMove, "");
   uint cand_pos = rankInSorted(x, comp);
-  if (cand_pos == N  ||  elem(cand_pos) != x) insert(cand_pos, x);
+  if(cand_pos == N  ||  elem(cand_pos) != x) insert(cand_pos, x);
   return cand_pos;
 }
 
@@ -1375,11 +1375,11 @@ template<class T> void MT::Array<T>::shift(int offset, bool wrapAround) {
 template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP, const char *LINESEP, const char *BRACKETS, bool dimTag, bool binary) const {
   CHECK(!binary || memMove, "binary write works only for memMoveable data");
   uint i, j, k;
-
+  
   if(!ELEMSEP) ELEMSEP=MT::arrayElemsep;
   if(!LINESEP) LINESEP=MT::arrayLinesep;
   if(!BRACKETS) BRACKETS=MT::arrayBrackets;
-
+  
   if(binary) {
     writeDim(os);
     os <<std::endl;
@@ -1875,7 +1875,7 @@ template<class T> T sqrDistance(const MT::Array<T>& g, const MT::Array<T>& v, co
 
 /// \f$\sqrt{\sum_i (v^i-w^i)^2}\f$
 template<class T>
-T euclideanDistance(const MT::Array<T>& v, const MT::Array<T>& w){
+T euclideanDistance(const MT::Array<T>& v, const MT::Array<T>& w) {
   return (T)::sqrt((double)sqrDistance(v, w));
 }
 
@@ -2787,9 +2787,9 @@ template<class T> Array<T> operator^(const Array<T>& y, const Array<T>& z) { Arr
 /// inner product
 template<class T> Array<T> operator*(const Array<T>& y, const Array<T>& z) { Array<T> x; innerProduct(x, y, z); return x; }
 /// scalar multiplication
-  template<class T> Array<T> operator*(const Array<T>& y, T z) {             Array<T> x(y); x*=z; return x; }
+template<class T> Array<T> operator*(const Array<T>& y, T z) {             Array<T> x(y); x*=z; return x; }
 /// scalar multiplication
-  template<class T> Array<T> operator*(T y, const Array<T>& z) {             Array<T> x(z); x*=y; return x; }
+template<class T> Array<T> operator*(T y, const Array<T>& z) {             Array<T> x(z); x*=y; return x; }
 
 
 #define UpdateOperator( op )        \
@@ -2881,11 +2881,11 @@ template<class T> bool operator<(const Array<T>& v, const Array<T>& w) {
 /// @name arithmetic operators
 //
 
-template<class T> void negative(MT::Array<T>& x, const MT::Array<T>& y){
+template<class T> void negative(MT::Array<T>& x, const MT::Array<T>& y) {
   if(&x!=&y) x.resizeAs(y);
   T *xp=x.p, *xstop=xp+x.N;
   const T *yp=y.p;
-  for(; xp!=xstop; xp++, yp++) *xp = - ( *yp );
+  for(; xp!=xstop; xp++, yp++) *xp = - (*yp);
 }
 
 
@@ -3060,7 +3060,7 @@ template<class T> void listCopy(MT::Array<T*>& L, const MT::Array<T*>& M) {
 
 template<class T> void listDelete(MT::Array<T*>& L) {
   uint i;
-  for(i=L.N; i--; ) delete L.elem(i);
+  for(i=L.N; i--;) delete L.elem(i);
   L.clear();
 }
 

@@ -1,17 +1,17 @@
 /*  ---------------------------------------------------------------------
     Copyright 2013 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-    
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
@@ -80,8 +80,8 @@ void ors::Mesh::glDraw() {
 #if 1
   if(!GF.N) { //no group frames  ->  use OpenGL's Arrays for fast drawing...
     GLboolean turnOnLight=false;
-    if(C.N){ glGetBooleanv(GL_LIGHTING, &turnOnLight); glDisable(GL_LIGHTING); }
-
+    if(C.N) { glGetBooleanv(GL_LIGHTING, &turnOnLight); glDisable(GL_LIGHTING); }
+    
     glShadeModel(GL_FLAT);
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
@@ -89,10 +89,10 @@ void ors::Mesh::glDraw() {
     glVertexPointer(3, GL_DOUBLE, 0, V.p);
     if(C.N) glColorPointer(3, GL_DOUBLE, 0, C.p);
     glNormalPointer(GL_DOUBLE, 0, Vn.p);
-
+    
     glDrawElements(GL_TRIANGLES, T.N, GL_UNSIGNED_INT, T.p);
-
-    if(turnOnLight){ glEnable(GL_LIGHTING); }
+    
+    if(turnOnLight) { glEnable(GL_LIGHTING); }
   } else {
     int g;
     uint v, t, i, j;

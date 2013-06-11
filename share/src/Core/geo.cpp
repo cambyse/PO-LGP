@@ -1,17 +1,17 @@
 /*  ---------------------------------------------------------------------
     Copyright 2013 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-    
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
@@ -30,7 +30,7 @@ const ors::Vector Vector_z(0, 0, 1);
 const ors::Transformation Transformation_Id(ors::Transformation().setZero());
 const ors::Quaternion Quaternion_Id(1, 0, 0, 0);
 
-namespace ors{
+namespace ors {
 double scalarProduct(const ors::Quaternion& a, const ors::Quaternion& b);
 }
 

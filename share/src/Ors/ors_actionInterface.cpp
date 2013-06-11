@@ -1,17 +1,17 @@
 /*  ---------------------------------------------------------------------
     Copyright 2013 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-    
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
@@ -81,7 +81,7 @@ void oneStep(const arr &q, ors::Graph *C, OdeInterface *ode, SwiftInterface *swi
     if(ode) ode->importProxiesFromOde(*C);
 #endif
   }
-
+  
 }
 
 void controlledStep(arr &q, arr &W, ors::Graph *C, OdeInterface *ode, SwiftInterface *swift, TaskVariableList& TVs) {
@@ -98,7 +98,7 @@ ActionInterface::ActionInterface() {
   gl=0;
   ode=0;
   swift=0;
-
+  
   Tabort = SEC_ACTION_ABORT;
 }
 
@@ -121,17 +121,17 @@ void ActionInterface::loadConfiguration(const char* ors_filename) {
   MT::decomposeFilename(path, name, ors_filename);
   getcwd(cwd, 200);
   chdir(path);
-
+  
   if(C) delete C;
   C = new ors::Graph();
   MT::load(*C, name);
   C->calcBodyFramesFromJoints();
   //C->reconfigureRoot(C->getName("rfoot"));
-
+  
   chdir(cwd);
-
+  
   C->getJointState(q0);
-
+  
   //compute generic q-metric depending on tree depth
   uint i;
   arr BM(C->bodies.N);
@@ -147,7 +147,7 @@ void ActionInterface::loadConfiguration(const char* ors_filename) {
   //Wdiag <<"[20 20 20 10 10 10 10 1 1 1 1 10 10 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
 // 1 1 20 20 10 10 10 10 10 10 ]";
   W.setDiag(Wdiag);
-
+  
   // determine number of objects
   noObjects = 0;
   // assuming that all objects start with "o"
@@ -160,7 +160,7 @@ void ActionInterface::loadConfiguration(const char* ors_filename) {
       break;
     noObjects++;
   }
-
+  
   if(gl) return;
   gl=new OpenGL;
   gl->add(drawOrsActionInterfaceEnv, 0);
@@ -187,7 +187,7 @@ void ActionInterface::startOde(double ode_coll_bounce, double ode_coll_erp,
   if(ode) delete ode;
   ode = new OdeInterface;
 #endif
-
+  
   // SIMULATOR PARAMETER
 #ifdef MT_ODE
   ode->coll_bounce = ode_coll_bounce; // huepfen der bloecke, falls sie zb runterfallen
@@ -201,7 +201,7 @@ void ActionInterface::startOde(double ode_coll_bounce, double ode_coll_erp,
 void ActionInterface::startSwift() {
   if(swift) delete swift;
   swift = new SwiftInterface;
-
+  
   swift->init(*C);
 }
 
@@ -229,14 +229,14 @@ void ActionInterface::simulate(uint t) {
 void ActionInterface::relaxPosition() {
   arr q, dq;
   C->getJointState(q);
-
+  
   arr I(q.N, q.N); I.setId();
-
+  
   DefaultTaskVariable x("full state", *C, qLinearTVT, 0, 0, 0, 0, I);
   x.setGainsAsAttractor(20, .1);
   x.y_prec=1000.;
   x.y_target=q0;
-
+  
 //   /*DefaultTaskVariable c("collision", *C, collTVT, 0, 0, 0, 0, ARR());*/
 //   c.setGainsAsAttractor(20, .1);
 //   c.y_prec=10000.;
@@ -285,7 +285,7 @@ void ActionInterface::moveTo(const char *man_id, const arr& target) {
   DefaultTaskVariable x("endeffector", *C, posTVT, man_id, 0, 0, 0, ARR());
   x.setGainsAsAttractor(20, .2);
   x.y_prec=1000.;
-
+  
   uint t;
   arr q, dq;
   C->getJointState(q);
@@ -301,11 +301,11 @@ void ActionInterface::moveTo(const char *man_id, const arr& target) {
 
 void ActionInterface::grab(const char *man_id, const char *obj_id) {
   ors::Body *obj=C->getBodyByName(obj_id);
-
+  
   DefaultTaskVariable x("endeffector", *C, posTVT, man_id, 0, 0, 0, ARR());
   x.setGainsAsAttractor(20, .2);
   x.y_prec=1000.;
-
+  
 //   DefaultTaskVariable c("collision", *C, collTVT, 0, 0, 0, 0, ARR());
 //   c.setGainsAsAttractor(20, .1);
 //   c.y_prec=10000.;
@@ -319,7 +319,7 @@ void ActionInterface::grab(const char *man_id, const char *obj_id) {
     NIY;
     //C->del_edge(e);
   }
-
+  
   // (2) move towards new object
   uint t;
   arr q, dq;
@@ -332,14 +332,14 @@ void ActionInterface::grab(const char *man_id, const char *obj_id) {
     if(x.err<.05 || C->getContact(x.i, obj->index)) break;
   }
   if(t==Tabort) { indicateFailure(); return; }
-
+  
   // (3) grasp if not table or world
   if(obj->index!=getTableID()) {
     C->glueBodies(C->bodies(x.i), obj);
   } else {
     //indicateFailure()?
   }
-
+  
   // (4) move upwards (to avoid collisions)
   for(t=0; t<Tabort; t++) {
     x.y_target = ARRAY(obj->X.pos);
@@ -371,7 +371,7 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id) 
     strcpy(obj_id1, obj_id55);
   } else
     obj_id1 = (char*) "fing1c";
-
+    
   DefaultTaskVariable x("obj", *C, posTVT, obj_id1, 0, 0, 0, ARR());
   DefaultTaskVariable z;
   //
@@ -392,7 +392,7 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id) 
   //
   DefaultTaskVariable r("full state", *C, qLinearTVT, 0, 0, 0, 0, I);
   DefaultTaskVariable c("collision", *C, collTVT, 0, 0, 0, 0, ARR());
-
+  
   r.setGainsAsAttractor(50, .1);
   r.y_prec=1.;
   r.y_target=q0;
@@ -402,15 +402,15 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id) 
   z.setGainsAsAttractor(20, .2);
   z.y_prec=1000.;
   z.y_target.resize(1);  z.y_target = 1.;
-
+  
   c.setGainsAsAttractor(20, .1);
   c.y_prec=10000.;
   if(!swift) c.active=false;
-
+  
   uint t;
   arr q, dq;
   C->getJointState(q);
-
+  
   // tl, 02 july 08
   // Noise for puton position
   double x_noise, y_noise;
@@ -440,7 +440,7 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id) 
     y_noise = std_dev_noise * rnd.gauss();
   }
   // hard noise [END]
-
+  
   //phase 1: up
   updateState(TVs, *C);
   x.y_target(2) += .3;
@@ -453,10 +453,10 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id) 
     if(x.err<.05) break;
   }
   if(t==Tabort) { indicateFailure(); return; }
-
+  
   //phase 2: above object
   double HARD_LIMIT_DIST_Y = -0.8;
-
+  
   double z_target;
   for(t=0; t<Tabort; t++) {
     x.y_target = ARRAY(C->getBodyByName(rel_id)->X.pos);
@@ -475,10 +475,10 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id) 
     if(x.err<.05) break;
   }
   if(t==Tabort) { indicateFailure(); return; }
-
+  
   //turn off collision avoidance
   c.active=false;
-
+  
   //phase 3: down
   double* obj_shape = getShape(obj_index);
   for(t=0; t<Tabort; t++) {
@@ -500,7 +500,7 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id) 
     if(x.err<.002 && z.err<.002) break;
   }
   if(t==Tabort) { indicateFailure(); return; }
-
+  
   if(obj_is_inhand) {
     NIY;
     //ors::Joint *e=C->bodies(x.i)->inLinks(0);
@@ -675,7 +675,7 @@ bool ActionInterface::inContact(uint a, uint b) {
 
 bool ActionInterface::isUpright(uint id) {
   double TOLERANCE = 0.05; // in radians
-
+  
   ors::Quaternion rot;
   rot = C->bodies(id)->X.rot;
   ors::Vector upvec; double maxz=-2;
@@ -687,7 +687,7 @@ bool ActionInterface::isUpright(uint id) {
   if((rot*(-Vector_z)).z>maxz) { upvec=-Vector_z; maxz=(rot*upvec).z; }
   double angle;
   angle = acos(maxz);
-
+  
 //   cout <<id <<" angle = " <<angle <<endl;
   if(fabs(angle) < TOLERANCE)
     return true;

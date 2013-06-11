@@ -20,9 +20,9 @@
 #ifndef _NP_CVORS_H
 #define _NP_CVORS_H
 
-#include<Core/array.h>
-#include<MT/opengl.h>
-#include<MT/ors.h>
+#include <Core/array.h>
+#include <MT/opengl.h>
+#include <MT/ors.h>
 
 namespace np {
 

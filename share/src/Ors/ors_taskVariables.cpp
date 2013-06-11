@@ -1,17 +1,17 @@
 /*  ---------------------------------------------------------------------
     Copyright 2013 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-    
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
@@ -147,7 +147,7 @@ void TaskVariable::setTrajectory(uint T, double funnelsdv, double funnelvsdv) {
     a = (double)t/(T-1);
     y_trajectory[t]()  = ((double)1.-a)*y + a*y_target;
     y_prec_trajectory(t) = (double)1./MT::sqr(sqrt((double)1./y_prec) + ((double)1.-a)*funnelsdv);
-
+    
     v_trajectory[t]()  = ((double)1.-a)*v + a*v_target;
     v_prec_trajectory(t) = (double)1./MT::sqr(sqrt((double)1./v_prec) + ((double)1.-a)*funnelvsdv);
   }
@@ -302,13 +302,13 @@ void TaskVariable::setIntervalPrecisions(uint T, arr& y_precs, arr& v_precs) {
   CHECK(y_precs.nd==1 && v_precs.nd==1 && y_precs.N>0 && v_precs.N>0
         && y_precs.N<=T+1 && y_precs.N<=T+1,
         "number of intervals needs to be in [1, T+1].");
-
+        
   uint t;
   active=true;
-
+  
   v_prec_trajectory.resize(T+1);
   y_prec_trajectory.resize(T+1);
-
+  
   for(t=0; t<=T; ++t) {
     y_prec_trajectory(t) = y_precs(t * y_precs.N/(T+1));
     v_prec_trajectory(t) = v_precs(t * v_precs.N/(T+1));
@@ -336,10 +336,10 @@ void DefaultTaskVariable::updateState(const ors::Graph& ors, double tau) {
   ors::Transformation f, fi, fj;
   ors::Vector vi, vj, r, jk;
   uint k,l;
-
+  
   v_old=v;
   y_old=y;
-
+  
   //get state
   switch(type) {
     case posTVT:
@@ -364,7 +364,7 @@ void DefaultTaskVariable::updateState(const ors::Graph& ors, double tau) {
         jk -= ors.bodies(j)->X.rot / (r ^(pi - pj));
         J(0, k)=jk.x; J(1, k)=jk.y; J(2, k)=jk.z;
       }
-
+      
       break;
     case zoriTVT:
       if(j==-1) {
@@ -442,16 +442,16 @@ void DefaultTaskVariable::updateState(const ors::Graph& ors, double tau) {
     default:  HALT("no such TVT");
   }
   transpose(Jt, J);
-
+  
   if(y_old.N!=y.N) {
     y_old=y;
     v.resizeAs(y); v.setZero();
     v_old=v;
   }
-
+  
   //v = .5*v + .5*(y - y_old);
   v = (y - y_old)/tau; //TODO: the velocity should be evaluated from the joint angle velocity (J*dq) to be consistent with the whole soc code!
-
+  
   if(y_target.N==y.N) {
     err=norm(y - y_target);
     derr=err - norm(y_old - y_target);
@@ -461,7 +461,7 @@ void DefaultTaskVariable::updateState(const ors::Graph& ors, double tau) {
 void DefaultTaskVariable::getHessian(const ors::Graph& ors, arr& H) {
   switch(type) {
     case posTVT:
-      if(j==-1) { ors.hessianPos (H, i, &irel.pos); break; }
+      if(j==-1) { ors.hessianPos(H, i, &irel.pos); break; }
     default:  NIY;
   }
 }
@@ -591,16 +591,16 @@ void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph& ors, 
   ors::Shape *a, *b;
   ors::Vector arel, brel;
   arr Ja, Jb, dnormal;
-
+  
   a=ors.shapes(p->a); b=ors.shapes(p->b);
   d=1.-p->d/margin;
-
+  
   if(!linear) y += d*d;
   else        y += d;
-
+  
   arel.setZero();  arel=a->X.rot/(p->posA-a->X.pos);
   brel.setZero();  brel=b->X.rot/(p->posB-b->X.pos);
-
+  
   CHECK(p->normal.isNormalized(), "proxy normal is not normalized");
   dnormal.referTo(&p->normal.x, 3); dnormal.reshape(1, 3);
   if(!linear) {
@@ -615,13 +615,13 @@ void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph& ors, 
 void ProxyTaskVariable::updateState(const ors::Graph& ors, double tau) {
   v_old=v;
   y_old=y;
-
+  
   uint i;
   ors::Proxy *p;
-
+  
   y.resize(1);  y.setZero();
   J.resize(1, ors.getJointStateDimension(false));  J.setZero();
-
+  
   switch(type) {
     case allCTVT:
       for_list(i,p,ors.proxies)  if(p->d<margin) {
@@ -702,14 +702,14 @@ void ProxyTaskVariable::updateState(const ors::Graph& ors, double tau) {
     default: NIY;
   }
   transpose(Jt, J);
-
+  
   if(y_old.N!=y.N) {
     y_old=y;
     v.resizeAs(y); v.setZero();
     v_old=v;
   }
   v = (y - y_old)/tau; //TODO: the velocity should be evaluated from the joint angle velocity (J*dq) to be consistent with the whole soc code!
-
+  
   if(y_target.N==y.N) {
     err=norm(y - y_target);
     derr=err - norm(y_old - y_target);
@@ -841,7 +841,7 @@ void TaskVariableTable::init(const ors::Graph& ors) {
   phi.resize(T,m);
   J.resize(T,m,qdim);
   rho.resize(T,m);
-
+  
   updateState(0, ors, true);
 }
 

@@ -1,17 +1,17 @@
 /*  ---------------------------------------------------------------------
     Copyright 2013 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-    
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
@@ -50,17 +50,16 @@ extern void glDrawText(const char* txt, float x, float y, float z);
 //void glColor(float *rgb);//{ glColor(rgb[0], rgb[1], rgb[2], 1.); }
 
 #ifndef MT_ORS_ONLY_BASICS
-void init(ors::Graph& G, OpenGL& gl, const char* orsFile){
+void init(ors::Graph& G, OpenGL& gl, const char* orsFile) {
   if(orsFile) G.init(orsFile);
   gl.add(glStandardScene,0);
   gl.add(ors::glDrawGraph,&G);
   gl.setClearColors(1.,1.,1.,1.);
-
+  
   ors::Body* glCamera = G.getBodyByName("glCamera");
   if(glCamera) {
     *(gl.camera.X) = glCamera->X;
-  }
-  else {
+  } else {
     gl.camera.setPosition(10.,-15.,8.);
     gl.camera.focus(0,0,1.);
     gl.camera.upright();
@@ -79,9 +78,9 @@ void bindOrsToOpenGL(ors::Graph& graph, OpenGL& gl) {
   gl.add(glStandardScene, 0);
   gl.add(ors::glDrawGraph, &graph);
   gl.setClearColors(1., 1., 1., 1.);
-
+  
   ors::Body* glCamera = graph.getBodyByName("glCamera");
-  if (glCamera) {
+  if(glCamera) {
     *(gl.camera.X) = glCamera->X;
   } else {
     gl.camera.setPosition(10., -15., 8.);
@@ -126,8 +125,8 @@ void ors::Mesh::glDraw() {
 #if 1
   if(!GF.N) { //no group frames  ->  use OpenGL's Arrays for fast drawing...
     GLboolean turnOnLight=false;
-    if(C.N){ glGetBooleanv(GL_LIGHTING, &turnOnLight); glDisable(GL_LIGHTING); }
-
+    if(C.N) { glGetBooleanv(GL_LIGHTING, &turnOnLight); glDisable(GL_LIGHTING); }
+    
     glShadeModel(GL_FLAT);
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
@@ -135,10 +134,10 @@ void ors::Mesh::glDraw() {
     glVertexPointer(3, GL_DOUBLE, 0, V.p);
     if(C.N) glColorPointer(3, GL_DOUBLE, 0, C.p);
     glNormalPointer(GL_DOUBLE, 0, Vn.p);
-
+    
     glDrawElements(GL_TRIANGLES, T.N, GL_UNSIGNED_INT, T.p);
-
-    if(turnOnLight){ glEnable(GL_LIGHTING); }
+    
+    if(turnOnLight) { glEnable(GL_LIGHTING); }
   } else {
     int g;
     uint v, t, i, j;
@@ -255,44 +254,44 @@ void glDrawShape(ors::Shape *s) {
   //set name (for OpenGL selection)
   glPushName((s->index <<2) | 1);
   glColor(s->color[0], s->color[1], s->color[2], orsDrawAlpha);
-
+  
   double scale=.33*(s->size[0]+s->size[1]+s->size[2] + 2.*s->size[3]); //some scale
   if(!scale) scale=1.;
   scale*=.3;
-
+  
   double GLmatrix[16];
   s->X.getAffineMatrixGL(GLmatrix);
   glLoadMatrixd(GLmatrix);
-
+  
   if(!orsDrawShapes) {
     glDrawAxes(scale);
     glColor(0, 0, .5);
     glDrawSphere(.1*scale);
   }
-  if(orsDrawShapes){
-    if(orsDrawMeshes && !s->mesh.V.N){
+  if(orsDrawShapes) {
+    if(orsDrawMeshes && !s->mesh.V.N) {
       switch(s->type) {
-      case ors::noneST: HALT("shapes should have a type - somehow wrong initialization..."); break;
-      case ors::boxST:
-        s->mesh.setBox();
-        s->mesh.scale(s->size[0], s->size[1], s->size[2]);
-        break;
-      case ors::sphereST:
-        s->mesh.setSphere();
-        s->mesh.scale(s->size[3], s->size[3], s->size[3]);
-        break;
-      case ors::cylinderST:
-        s->mesh.setCylinder(s->size[3], s->size[2]);
-        break;
-      case ors::cappedCylinderST:
-        s->mesh.setCappedCylinder(s->size[3], s->size[2]);
-        break;
-      case ors::markerST:
-	break;
-      case ors::meshST:
-      case ors::pointCloudST:
-        CHECK(s->mesh.V.N, "mesh needs to be loaded to draw mesh object");
-	break;
+        case ors::noneST: HALT("shapes should have a type - somehow wrong initialization..."); break;
+        case ors::boxST:
+          s->mesh.setBox();
+          s->mesh.scale(s->size[0], s->size[1], s->size[2]);
+          break;
+        case ors::sphereST:
+          s->mesh.setSphere();
+          s->mesh.scale(s->size[3], s->size[3], s->size[3]);
+          break;
+        case ors::cylinderST:
+          s->mesh.setCylinder(s->size[3], s->size[2]);
+          break;
+        case ors::cappedCylinderST:
+          s->mesh.setCappedCylinder(s->size[3], s->size[2]);
+          break;
+        case ors::markerST:
+          break;
+        case ors::meshST:
+        case ors::pointCloudST:
+          CHECK(s->mesh.V.N, "mesh needs to be loaded to draw mesh object");
+          break;
       }
     }
     switch(s->type) {
@@ -314,7 +313,7 @@ void glDrawShape(ors::Shape *s) {
         else glDrawCappedCylinder(s->size[3], s->size[2]);
         break;
       case ors::markerST:
-	glDrawAxes(s->size[0]);  glDrawDiamond(s->size[0]/5., s->size[0]/5., s->size[0]/5.);
+        glDrawAxes(s->size[0]);  glDrawDiamond(s->size[0]/5., s->size[0]/5., s->size[0]/5.);
         break;
       case ors::meshST:
         CHECK(s->mesh.V.N, "mesh needs to be loaded to draw mesh object");
@@ -354,24 +353,24 @@ void ors::Graph::glDraw() {
   uint i=0, j, k;
   ors::Transformation f;
   double GLmatrix[16];
-
+  
   glPushMatrix();
-
+  
   //bodies
-  if(orsDrawBodies) for_list(k, s, shapes){
+  if(orsDrawBodies) for_list(k, s, shapes) {
     glDrawShape(s);
     i++;
     if(orsDrawLimit && i>=orsDrawLimit) break;
   }
-
+  
   //joints
   if(orsDrawJoints) for_list(j, e, joints) {
     //set name (for OpenGL selection)
     glPushName((e->index <<2) | 2);
-
+    
     double s=e->A.pos.length()+e->B.pos.length(); //some scale
     s*=.25;
-
+    
     //from body to joint
     f=e->from->X;
     f.getAffineMatrixGL(GLmatrix);
@@ -382,7 +381,7 @@ void ors::Graph::glDraw() {
     glVertex3f(0, 0, 0);
     glVertex3f(e->A.pos.x, e->A.pos.y, e->A.pos.z);
     glEnd();
-
+    
     //joint frame A
     f.appendTransformation(e->A);
     f.getAffineMatrixGL(GLmatrix);
@@ -390,13 +389,13 @@ void ors::Graph::glDraw() {
     glDrawAxes(s);
     glColor(1, 0, 0);
     glRotatef(90, 0, 1, 0);  glDrawCylinder(.05*s, .3*s);  glRotatef(-90, 0, 1, 0);
-
+    
     //joint frame B
     f.appendTransformation(e->Q);
     f.getAffineMatrixGL(GLmatrix);
     glLoadMatrixd(GLmatrix);
     glDrawAxes(s);
-
+    
     //from joint to body
     glColor(1, 0, 1);
     glBegin(GL_LINES);
@@ -405,46 +404,46 @@ void ors::Graph::glDraw() {
     glEnd();
     glTranslatef(e->B.pos.x, e->B.pos.y, e->B.pos.z);
     //glDrawSphere(.1*s);
-
+    
     glPopName();
     i++;
     if(orsDrawLimit && i>=orsDrawLimit) break;
   }
-
+  
   //proxies
   if(orsDrawProxies) for(i=0; i<proxies.N; i++) {
-    proxy = proxies(i);
-    glLoadIdentity();
-    if(!proxy->colorCode) glColor(.75,.75,.75);
-    else glColor(proxy->colorCode);
-    glBegin(GL_LINES);
-    glVertex3dv(proxy->posA.p());
-    glVertex3dv(proxy->posB.p());
-    glEnd();
-    ors::Transformation f;
-    f.pos=proxy->posA;
-    f.rot.setDiff(ors::Vector(0, 0, 1), proxy->posA-proxy->posB);
-    f.getAffineMatrixGL(GLmatrix);
-    glLoadMatrixd(GLmatrix);
-    glDisable(GL_CULL_FACE);
-    glDrawDisk(.02);
-    glEnable(GL_CULL_FACE);
-
-    f.pos=proxy->posB;
-    f.getAffineMatrixGL(GLmatrix);
-    glLoadMatrixd(GLmatrix);
-    glDrawDisk(.02);
-  }
-
+      proxy = proxies(i);
+      glLoadIdentity();
+      if(!proxy->colorCode) glColor(.75,.75,.75);
+      else glColor(proxy->colorCode);
+      glBegin(GL_LINES);
+      glVertex3dv(proxy->posA.p());
+      glVertex3dv(proxy->posB.p());
+      glEnd();
+      ors::Transformation f;
+      f.pos=proxy->posA;
+      f.rot.setDiff(ors::Vector(0, 0, 1), proxy->posA-proxy->posB);
+      f.getAffineMatrixGL(GLmatrix);
+      glLoadMatrixd(GLmatrix);
+      glDisable(GL_CULL_FACE);
+      glDrawDisk(.02);
+      glEnable(GL_CULL_FACE);
+      
+      f.pos=proxy->posB;
+      f.getAffineMatrixGL(GLmatrix);
+      glLoadMatrixd(GLmatrix);
+      glDrawDisk(.02);
+    }
+    
   glPopMatrix();
 }
 
-void displayTrajectory(const arr& x, int steps, ors::Graph& G, OpenGL& gl, const char *tag){
+void displayTrajectory(const arr& x, int steps, ors::Graph& G, OpenGL& gl, const char *tag) {
   uint k, t, T=x.d0-1;
   if(!steps) return;
   uint num;
   if(steps==1 || steps==-1) num=T; else num=steps;
-  for(k=0; k<=(uint)num; k++){
+  for(k=0; k<=(uint)num; k++) {
     t = k*T/num;
     G.setJointState(x[t]);
     G.calcBodyFramesFromJoints();
@@ -633,7 +632,7 @@ struct EditConfigurationHoverCall:OpenGL::GLHoverCall {
       if((i&3)==2) j=ors->joints(i>>2);
       gl.text.clear();
       if(s) {
-	gl.text <<"shape selection: body=" <<s->body->name <<" X=" <<s->body->X <<" ats=" <<endl;
+        gl.text <<"shape selection: body=" <<s->body->name <<" X=" <<s->body->X <<" ats=" <<endl;
         listWrite(s->ats, gl.text, "\n");
       }
       if(j) {
@@ -683,7 +682,7 @@ struct EditConfigurationKeyCall:OpenGL::GLKeyCall {
       selpos = s->body->X.pos;
       movingBody=s->body;
     }
-    if(j){
+    if(j) {
       cout <<"selected joint " <<j->index <<" connecting " <<j->from->name <<"--" <<j->to->name <<endl;
     }
     return true;
@@ -695,7 +694,7 @@ void editConfiguration(const char* filename, ors::Graph& C, OpenGL& gl) {
   gl.addHoverCall(new EditConfigurationHoverCall(C));
   gl.addKeyCall(new EditConfigurationKeyCall(C));
   bool exit=false;
-  for(;!exit;) {
+  for(; !exit;) {
     cout <<"reloading `" <<filename <<"' ... " <<std::endl;
     try {
       MT::lineCount=1;
@@ -734,9 +733,9 @@ void editConfiguration(const char* filename, ors::Graph& C, OpenGL& gl) {
             ) * .01;
           break;
         case 'q' :
-	  cout <<"EXITING" <<endl;
-	  exit=true;
-	  break;
+          cout <<"EXITING" <<endl;
+          exit=true;
+          break;
       }
       if(!exit) gl.watch();
     }
@@ -752,12 +751,12 @@ void testSim(const char* filename, ors::Graph *C, Ode *ode, OpenGL *gl) {
   ors->getJointState(x, v);
   for(t=0; t<T; t++) {
     ode->step();
-
+    
     importStateFromOde(*C, *ode);
     ors->setJointState(x, v);
     ors->calcBodyFramesFromJoints();
     exportStateToOde(*C, *ode);
-
+    
     gl.text.clear() <<"time " <<t;
     gl.timedupdate(10);
   }
@@ -771,11 +770,11 @@ void ors::glDrawMesh(void*) { NICO }
 #ifndef MT_ORS_ONLY_BASICS
 void ors::Graph::glDraw() { NICO }
 void ors::glDrawGraph(void *classP) { NICO }
-void editConfiguration(const char* orsfile, ors::Graph& C, OpenGL& gl){ NICO }
-void init(ors::Graph& G, OpenGL& gl, const char* orsFile){
+void editConfiguration(const char* orsfile, ors::Graph& C, OpenGL& gl) { NICO }
+void init(ors::Graph& G, OpenGL& gl, const char* orsFile) {
   if(orsFile) G.init(orsFile);
 }
-void animateConfiguration(ors::Graph& C, OpenGL& gl){ NICO }
+void animateConfiguration(ors::Graph& C, OpenGL& gl) { NICO }
 #endif
 #endif
 /** @} */

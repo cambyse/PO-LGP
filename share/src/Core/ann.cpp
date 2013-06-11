@@ -1,17 +1,17 @@
 /*  ---------------------------------------------------------------------
     Copyright 2013 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-    
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
@@ -69,7 +69,7 @@ void ANN::calculate() {
   s->treeSize = X.d0;
 }
 
-void ANN::getNN(arr& dists, intA& idx, const arr& x, uint k, double eps, bool verbose) {
+void ANN::getkNN(arr& dists, intA& idx, const arr& x, uint k, double eps, bool verbose) {
   CHECK(X.d0>=k, "data has less (" <<X.d0 <<") than k=" <<k <<" points");
   CHECK(x.N==X.d1, "query point has wrong dimension");
   
@@ -122,59 +122,33 @@ void ANN::getNN(arr& dists, intA& idx, const arr& x, uint k, double eps, bool ve
 }
 
 uint ANN::getNN(const arr& x, double eps, bool verbose) {
-  intA idx(1);
-  arr dists(1);
-  getNN(dists, idx, x, 1, eps, verbose);
+  intA idx;
+  arr dists;
+  getkNN(dists, idx, x, 1, eps, verbose);
   return idx(0);
 }
 
-void ANN::getNN(intA& idx, const arr& x, uint k, double eps, bool verbose) {
-  arr dists(k);
-  getNN(dists, idx, x, k, eps, verbose);
+void ANN::getkNN(intA& idx, const arr& x, uint k, double eps, bool verbose) {
+  arr dists;
+  getkNN(dists, idx, x, k, eps, verbose);
 }
 
-void ANN::getNN(arr& xx             , const arr& x, uint k, double eps, bool verbose) {
-  intA idx(k);
-  arr dists(k);
-  getNN(dists, idx, x, k, eps, verbose);
+void ANN::getkNN(arr& xx             , const arr& x, uint k, double eps, bool verbose) {
+  intA idx;
+  arr dists;
+  getkNN(dists, idx, x, k, eps, verbose);
   xx.resize(idx.N, X.d1);
   for(uint i=0; i<idx.N; i++) xx[i]=X[idx(i)];
 }
 
-void ANN::map(arr& y, const arr& x, const arr& Y) {
-  //if(x.nd==2){ y.resize(x.d0, Y.d1); for(uint k=0;k<x.d0;k++) map(x[k], y[k]()); return; }
-  if(!X.N) return;
-  uint k=20;
-  if(k>X.d0) k=X.d0;
-  arr dists(k);
-  intA idx(k);
-  getNN(dists, idx, x, k);
-  
-  LinearStatistics S;
-  uint i;
-  for(i=0; i<k; i++) S.learn(X[idx(i)]-x);
-  //S.computeZeroMean();
-  double d=.1*S.variance(), w;
-  if(!d) d=1.;
-  //pls.S.forget();
-  S.forget();
-  for(i=0; i<k; i++) {
-    //w=::exp(-.5*dists(i)/d);
-    w=(k-i)*(k-i); //1./(k+i);
-    S.learn(Y[idx(i)], w);
-    //pls.learn(X(idx(i))->x, X(idx(i))->y, w);
-  }
-  S.compute();
-  y=S.MeanX;
-  //pls.map(x, y);
-}
-
 #else //MT_ANN
+
 ANN::ANN() { NICO }
-void ANN::append(const arr& x) { NICO }
-void ANN::getNN(arr& dists, intA& idx, const arr& x, uint k, double eps, bool verbose) { NICO }
-uint ANN::getNN(const arr& x, double eps, bool verbose) { NICO }
-void ANN::getNN(arr& xx             , const arr& x, uint k, double eps, bool verbose) { NICO }
-void ANN::setX(const arr& _XX) { NICO }
 ANN::~ANN() { NICO }
+void ANN::setX(const arr& _XX) { NICO }
+void ANN::append(const arr& x) { NICO }
+void ANN::getkNN(arr& dists, intA& idx, const arr& x, uint k, double eps, bool verbose) { NICO }
+uint ANN::getkNN(const arr& x, double eps, bool verbose) { NICO }
+void ANN::getkNN(arr& xx             , const arr& x, uint k, double eps, bool verbose) { NICO }
+
 #endif

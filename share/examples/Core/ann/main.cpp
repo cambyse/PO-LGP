@@ -16,7 +16,7 @@ void testANN(){
   MT::timerStart();
   ann.setX(X);
   rndUniform(x,0.,1.,false); //x=.5;
-  ann.getNN(dists,idx,x,10,.0, true);
+  ann.getkNN(dists,idx,x,10,.0, true);
   Y.resize(idx.N,x.N);
   for(uint i=0;i<Y.d0;i++) Y[i] = X[idx(i)];
   std::cout <<"build time (#" <<ann.X.N <<") = " <<MT::timerRead() <<"sec" <<std::endl;
@@ -40,7 +40,7 @@ void testANNIncremental(){
     rndUniform(x,0.,1.,false);
     ann.append(x);
     if(i>10){
-      ann.getNN(Q,q,10,.0, true);
+      ann.getkNN(Q,q,10,.0, true);
       //MT::wait();
     }
   }

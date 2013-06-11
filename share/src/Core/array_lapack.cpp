@@ -1,17 +1,17 @@
 /*  ---------------------------------------------------------------------
     Copyright 2013 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-    
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
@@ -59,11 +59,11 @@ void blas_MM(arr& X, const arr& A, const arr& B) {
   CHECK(A.d1==B.d0, "matrix multiplication: wrong dimensions");
   X.resize(A.d0, B.d1);
   cblas_dgemm(CblasRowMajor,
-	     CblasNoTrans, CblasNoTrans,
-	     A.d0, B.d1, A.d1,
-	     1., A.p, A.d1,
-	     B.p, B.d1,
-	     0., X.p, X.d1);
+              CblasNoTrans, CblasNoTrans,
+              A.d0, B.d1, A.d1,
+              1., A.p, A.d1,
+              B.p, B.d1,
+              0., X.p, X.d1);
 #if 0//test
   MT::useLapack=false;
   std::cout  <<"blas_MM error = " <<maxDiff(A*B, X, 0) <<std::endl;
@@ -74,10 +74,10 @@ void blas_MM(arr& X, const arr& A, const arr& B) {
 void blas_A_At(arr& X, const arr& A) {
   X.resize(A.d0, A.d0);
   cblas_dsyrk(CblasRowMajor, CblasUpper, CblasNoTrans,
-	     X.d0, A.d1,
-	     1.f, A.p, A.d1,
-	     0., X.p, X.d1);
-  for(uint i=0;i<X.d0;i++) for(uint j=0;j<i;j++) X(i,j) = X(j,i);
+              X.d0, A.d1,
+              1.f, A.p, A.d1,
+              0., X.p, X.d1);
+  for(uint i=0; i<X.d0; i++) for(uint j=0; j<i; j++) X(i,j) = X(j,i);
 #if 0//test
   MT::useLapack=false;
   std::cout  <<"blas_MM error = " <<maxDiff(A*~A, X, 0) <<std::endl;
@@ -88,10 +88,10 @@ void blas_A_At(arr& X, const arr& A) {
 void blas_At_A(arr& X, const arr& A) {
   X.resize(A.d1, A.d1);
   cblas_dsyrk(CblasRowMajor, CblasUpper, CblasTrans,
-	     X.d0, A.d0,
-	     1.f, A.p, A.d1,
-	     0., X.p, X.d1);
-  for(uint i=0;i<X.d0;i++) for(uint j=0;j<i;j++) X(i,j) = X(j,i);
+              X.d0, A.d0,
+              1.f, A.p, A.d1,
+              0., X.p, X.d1);
+  for(uint i=0; i<X.d0; i++) for(uint j=0; j<i; j++) X(i,j) = X(j,i);
 #if 0//test
   MT::useLapack=false;
   std::cout  <<"blas_MM error = " <<maxDiff(~A*A, X, 0) <<std::endl;
@@ -104,11 +104,11 @@ void blas_Mv(arr& y, const arr& A, const arr& x) {
   y.resize(A.d0);
   if(!x.N && !A.d1) { y.setZero(); return; }
   cblas_dgemv(CblasRowMajor,
-	     CblasNoTrans,
-	     A.d0, A.d1,
-	     1., A.p, A.d1,
-	     x.p, 1,
-	     0., y.p, 1);
+              CblasNoTrans,
+              A.d0, A.d1,
+              1., A.p, A.d1,
+              x.p, 1,
+              0., y.p, 1);
 #if 0 //test
   MT::useLapack=false;
   std::cout  <<"blas_Mv error = " <<maxDiff(A*x, y, 0) <<std::endl;
@@ -120,11 +120,11 @@ void blas_MsymMsym(arr& X, const arr& A, const arr& B) {
   CHECK(A.d1==B.d0, "matrix multiplication: wrong dimensions");
   X.resize(A.d0, B.d1);
   cblas_dsymm(CblasRowMajor,
-	     CblasLeft, CblasUpper,
-	     A.d0, B.d1,
-	     1., A.p, A.d1,
-	     B.p, B.d1,
-	     0., X.p, X.d1);
+              CblasLeft, CblasUpper,
+              A.d0, B.d1,
+              1., A.p, A.d1,
+              B.p, B.d1,
+              0., X.p, X.d1);
 #if 0 //test
   arr Y(A.d0, B.d1);
   uint i, j, k;
@@ -137,16 +137,16 @@ void blas_MsymMsym(arr& X, const arr& A, const arr& B) {
 #endif
 
 void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b) {
-  if(A.special==arr::RowShiftedPackedMatrixST){
+  if(A.special==arr::RowShiftedPackedMatrixST) {
     RowShiftedPackedMatrix *Aaux = (RowShiftedPackedMatrix*) A.aux;
-    for(uint i=0;i<A.d0;i++) if(Aaux->rowShift(i)!=i) HALT("this is not shifted as an upper triangle");
+    for(uint i=0; i<A.d0; i++) if(Aaux->rowShift(i)!=i) HALT("this is not shifted as an upper triangle");
   }
   x=b;
   arr Acol=A;
   integer N=A.d0, KD=A.d1-1, NRHS=1, LDAB=A.d1, INFO;
-  if(A.special!=arr::RowShiftedPackedMatrixST){
+  if(A.special!=arr::RowShiftedPackedMatrixST) {
     dposv_((char*)"L", &N, &NRHS, Acol.p, &N, x.p, &N, &INFO);
-  }else{
+  } else {
     dpbsv_((char*)"L", &N, &KD, &NRHS, Acol.p, &LDAB, x.p, &N, &INFO);
   }
   if(INFO) {
@@ -212,7 +212,7 @@ void lapack_EigenDecomp(const arr& symmA, arr& Evals, arr& Evecs) {
   work.resize(10*(3*N));
   integer info, wn=work.N;
   dsyev_((char*)"V", (char*)"U", &N, Evecs.p,
-                &N, Evals.p, work.p, &wn, &info);
+         &N, Evals.p, work.p, &wn, &info);
   transpose(Evecs);
   CHECK(!info, "lapack_EigenDecomp error info = " <<info);
 }
@@ -294,13 +294,13 @@ double lapack_determinantSymPosDef(const arr& A) {
   return det;
 }
 
-void lapack_min_Ax_b(arr& x,const arr& A, const arr& b){
+void lapack_min_Ax_b(arr& x,const arr& A, const arr& b) {
   CHECK(A.d0>=A.d1 && A.d0==b.N && b.nd==1 && A.nd==2, "");
   arr At = ~A;
   x=b;
   integer M=A.d0, N=A.d1, NRHS=1, LWORK=2*M*N, info;
   arr work(LWORK);
-  dgels_((char*)"N", &M, &N, &NRHS, At.p, &M, x.p, &M, work.p, &LWORK, &info );
+  dgels_((char*)"N", &M, &N, &NRHS, At.p, &M, x.p, &M, work.p, &LWORK, &info);
   CHECK(!info, "dgels_ error info = " <<info);
   x.resizeCopy(A.d1);
 }
@@ -334,6 +334,6 @@ void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b) {
   inverse(invA, A);
   x = invA*b;
 };
-double lapack_determinantSymPosDef(const arr& A){ NICO };
+double lapack_determinantSymPosDef(const arr& A) { NICO };
 void lapack_mldivide(arr& X, const arr& A, const arr& b) { NICO };
 #endif

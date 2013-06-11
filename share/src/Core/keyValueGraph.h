@@ -1,17 +1,17 @@
 /*  ---------------------------------------------------------------------
     Copyright 2013 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-    
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
@@ -25,16 +25,15 @@
 #define MT_keyValueGraph_h
 
 #include "array.h"
-#include "util.h"
 
 struct Item;
 struct KeyValueGraph;
 typedef MT::Array<Item*> ItemL;
 typedef MT::Array<MT::String> StringA;
 extern const ItemL& NoItemL;
-struct RootType{ virtual ~RootType(){}; }; ///< if types derive from RootType, more tricks are possible
-inline std::istream& operator>>(std::istream&, RootType&){ NIY; }
-inline std::ostream& operator<<(std::ostream&, const RootType&){ NIY; }
+struct RootType { virtual ~RootType() {}; }; ///< if types derive from RootType, more tricks are possible
+inline std::istream& operator>>(std::istream&, RootType&) { NIY; }
+inline std::ostream& operator<<(std::ostream&, const RootType&) { NIY; }
 
 struct Item {
   StringA keys;
@@ -53,43 +52,43 @@ struct Item {
 stdOutPipe(Item);
 
 
-struct KeyValueGraph:ItemL{
+struct KeyValueGraph:ItemL {
   struct sKeyValueGraph *s;
-
+  
   KeyValueGraph();
   ~KeyValueGraph();
-
+  
   KeyValueGraph& operator=(const KeyValueGraph&);
-  ItemL& list(){ return *this; }
-
+  ItemL& list() { return *this; }
+  
   //-- get items
   Item* getItem(const char *key);
   Item* getItem(const char *key1, const char *key2);
-  Item* operator[](const char *key){ return getItem(key); }
-
+  Item* operator[](const char *key) { return getItem(key); }
+  
   //-- get values directly
   template<class T> T* getValue(const char *key);
-  template<class T> bool getValue(T& x, const char *key){ T* y=getValue<T>(key); if(y){ x=*y; return true; } return false; }
-
+  template<class T> bool getValue(T& x, const char *key) { T* y=getValue<T>(key); if(y) { x=*y; return true; } return false; }
+  
   //-- get lists of items
   KeyValueGraph getItems(const char*);
   template<class T> KeyValueGraph getTypedItems(const char*);
   template<class T> MT::Array<T*> getTypedValues(const char*);
-
+  
   //-- get lists of values
   template<class T> MT::Array<T*> getDerivedValues();
   template<class T> ItemL getDerivedItems();
-
-  Item *append(Item* it){ ItemL::append(it); return it; }
+  
+  Item *append(Item* it) { ItemL::append(it); return it; }
   template<class T> Item *append(const StringA& keys, const ItemL& parents, T *x);
-  template<class T> Item *append(const StringA& keys, T *x){ return append(keys, ItemL(), x); }
-  template<class T> Item *append(const char *key, T *x){ return append(ARRAY<MT::String>(MT::String(key)), ItemL(), x); }
-
+  template<class T> Item *append(const StringA& keys, T *x) { return append(keys, ItemL(), x); }
+  template<class T> Item *append(const char *key, T *x) { return append(ARRAY<MT::String>(MT::String(key)), ItemL(), x); }
+  
   Item *add(const uintA& tuple);
   ItemL& getParents(uint i);
-
+  
   void sortByDotOrder();
-
+  
   void read(std::istream& is);
   void write(std::ostream& os=std::cout, const char *ELEMSEP="\n", const char *delim=NULL) const;
   void writeDot(const char* filename="z.dot");

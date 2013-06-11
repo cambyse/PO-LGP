@@ -1,17 +1,17 @@
 /*  ---------------------------------------------------------------------
     Copyright 2013 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-    
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
@@ -22,14 +22,17 @@
 #include "util.h"
 #include <map>
 #include <string>
+#include <sstream>
+#include <string.h>
+#include <iomanip>
 #ifndef MT_MSVC
 #  include <unistd.h>
 #endif
 
 namespace MT {
-  extern std::ifstream cfgFile;
-  extern bool cfgFileOpen;
-  extern Mutex cfgFileMutex;
+extern std::ifstream cfgFile;
+extern bool cfgFileOpen;
+extern Mutex cfgFileMutex;
 }
 
 namespace MT {
@@ -109,7 +112,7 @@ bool getFromCfgFile(T& x, const char *tag) {
   cfgFile >>x;
   
   if(cfgFile.fail()) HALT("error when reading parameter " <<tag);
-  cfgFileMutex.unlock(); 
+  cfgFileMutex.unlock();
   return true;
 }
 
@@ -135,7 +138,7 @@ bool getFromMap(T& x, const char* tag) {
 }
 
 template<class T>
-bool getParameterBase(T& x, const char *tag, bool hasDefault, const T* Default){
+bool getParameterBase(T& x, const char *tag, bool hasDefault, const T* Default) {
   log() <<std::setw(20) <<tag <<" = " <<std::setw(5);
   log().flush();
   
@@ -144,7 +147,7 @@ bool getParameterBase(T& x, const char *tag, bool hasDefault, const T* Default){
     return true;
   }
   
-  if(getFromCmdLine(x, tag)){
+  if(getFromCmdLine(x, tag)) {
     log() <<x <<" [" <<typeid(x).name() <<"] (cmd line!)" <<std::endl;
     return true;
   }

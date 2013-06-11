@@ -1,17 +1,17 @@
 /*  ---------------------------------------------------------------------
     Copyright 2013 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
-    
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
@@ -66,22 +66,22 @@ static bool ODEinitialized=false;
 OdeInterface::OdeInterface() {
   isOpen=false;
   time=0.;
-
-
+  
+  
   noGravity=noContactJoints=false;
-
+  
   ERP= 0.2;     //in [0, 1]: rate of error correction (makes more brittle) [default=.2]
   CFM=1e-5;  // >0: softness (makes more robust) [default=1e-10]
-
+  
   coll_bounce = .0;
   coll_ERP = 0.2;   //usually .2!! stiffness (time-scale of contact reaction)
   coll_CFM = 1e-5;  //softness
   friction = 0.1;   //alternative: dInfinity;
-
+  
   world=NULL;
   space=NULL;
   contactgroup=0;
-
+  
   if(!ODEinitialized) {  dInitODE();  ODEinitialized=true; }
   clear();
 }
@@ -96,7 +96,7 @@ void OdeInterface::clear() {
   if(contactgroup) dJointGroupDestroy(contactgroup);
   if(space) dSpaceDestroy(space);
   if(world) dWorldDestroy(world);
-
+  
   world=dWorldCreate();
   space=dSimpleSpaceCreate(0);
   contactgroup=dJointGroupCreate(0);
@@ -112,9 +112,9 @@ void OdeInterface::clear() {
   double DAMPING_LINEAR_SCALE = 0.03;
   double DAMPING_ANGULAR_SCALE = 0.03;
   dWorldSetDamping(world, DAMPING_LINEAR_SCALE, DAMPING_ANGULAR_SCALE);
-
+  
   plane0=dCreatePlane(space, 0, 0, 1, 0);
-
+  
   // removed vertical planes,  5. Mar 06 (hh)
   //planex1=dCreatePlane(space, 1, 0, 0, -10);
   //planex2=dCreatePlane(space, -1, 0, 0, -10);
@@ -127,41 +127,41 @@ void OdeInterface::staticCallback(void *classP, dGeomID g1, dGeomID g2) {
   static dContact contacts[100]; // array with maximum number of contacts
   uint i, n;
   dJointID c;
-
+  
   dBodyID b1 = dGeomGetBody(g1);
   dBodyID b2 = dGeomGetBody(g2);
-
+  
   ors::Body *db1 = b1?(ors::Body*)b1->userdata:0;
   ors::Body *db2 = b2?(ors::Body*)b2->userdata:0;
-
+  
   //-- rule out irrelevant contacts
   // exit without doing anything if the geoms stem from the same body
   if(b1==b2) return;
-
+  
   // exit without doing anything if the two bodies are connected by a joint
   if(b1 && b2 && dAreConnectedExcluding(b1, b2, dJointTypeSlider)) return;
-
+  
   // exit if fixed body intersects with earth,  4. Mar 06 (hh)
   if(b1==0 && db2->type==ors::staticBT) return;
   if(b2==0 && db1->type==ors::staticBT) return;
-
+  
   // exit if we have two fixed bodies,  6. Mar 06 (hh)
   if(db1 && db2 && db1->type==ors::staticBT && db2->type==ors::staticBT) return;
-
+  
   // exit if none of the bodies have cont enabled (mt)
   //if(db1 && !db1->cont && db2 && !db2->cont) return;
   if(db1 && db2 && (!db1->shapes(0)->cont || !db2->shapes(0)->cont)) return;
-
+  
   //-- ok, now compute the contact exactly
   // get contacts:
   n=dCollide(g1, g2, 100, &(contacts[0].geom), sizeof(dContact));
-
+  
   if(!n) return;
-
+  
   for(i=0; i<n; i++)((OdeInterface*)classP)->conts.append(&contacts[i].geom);
-
+  
   if(((OdeInterface*)classP)->noContactJoints) return;
-
+  
   for(i=0; i<n; i++) {
     contacts[i].surface.mode = dContactSoftCFM | dContactSoftERP | dContactBounce;
     //if(b1 && b2)
@@ -170,7 +170,7 @@ void OdeInterface::staticCallback(void *classP, dGeomID g1, dGeomID g2) {
     contacts[i].surface.bounce   = ((OdeInterface*)classP)->coll_bounce;
     contacts[i].surface.soft_erp = ((OdeInterface*)classP)->coll_ERP;   //usually .2!! stiffness (time-scale of contact reaction)
     contacts[i].surface.soft_cfm = ((OdeInterface*)classP)->coll_CFM;  //softness
-
+    
     if(!db1 || !db2 || (db1->shapes(0)->cont && db2->shapes(0)->cont)) {
       //normal contact:
       c=dJointCreateContact(((OdeInterface*)classP)->world, ((OdeInterface*)classP)->contactgroup, &contacts[i]);
@@ -253,7 +253,7 @@ void OdeInterface::penetration(ors::Vector &p) {
   dContactGeom *c;
   double d;
   dBodyID b1, b2;
-
+  
   for(uint i=0; i<conts.N; i++) {
     c = conts(i);
     b1 = dGeomGetBody(c->g1);
@@ -262,7 +262,7 @@ void OdeInterface::penetration(ors::Vector &p) {
     double *touch1=0, *touch2=0;
     if(b1) touch1=anyListGet<double>(((ors::Body*)b1->userdata)->ats, "touchsensor", 0);
     if(b2) touch2=anyListGet<double>(((ors::Body*)b2->userdata)->ats, "touchsensor", 0);
-
+    
     if(touch1 || touch2) {
       d = c->depth;
       p.set(c->normal);
@@ -294,7 +294,7 @@ void OdeInterface::contactForces() {
     b2 = dGeomGetBody(c->g2);
     if(b1) { v1.set(b1->lvel); dBodyGetMass(b1, &mass); m1=mass.mass; } else { v1.setZero(); m1=0.; }
     if(b2) { v2.set(b1->lvel); dBodyGetMass(b2, &mass); m2=mass.mass; } else { v2.setZero(); m2=0.; }
-
+    
     // ** normal force:
     force=0.;
     vrel=v2-v1; //inaccurate: should also include rotational velocities at contact point!
@@ -304,7 +304,7 @@ void OdeInterface::contactForces() {
     if(b2) dBodyAddForceAtPos(b2, force*normal.x, force*normal.y, force*normal.z, pos.x, pos.y, pos.z);
     force *= -1.; //invert on other body
     if(b1) dBodyAddForceAtPos(b1, force*normal.x, force*normal.y, force*normal.z, pos.x, pos.y, pos.z);
-
+    
     //inward viscosity
     if(vrel * normal <= 0) {
       force += 10.*vrel.length();
@@ -312,9 +312,9 @@ void OdeInterface::contactForces() {
       force *= -1.; //invert on other body
       if(b1) dBodyAddForceAtPos(b1, force*m1*normal.x, force*m1*normal.y, force*m1*normal.z, pos.x, pos.y, pos.z);
     }
-
+    
     if(!b2) std::cout <<"bodyForce = " <<force*normal <<std::endl;
-
+    
 #if 1
     // ** parallel (slip) force:
     force=0.;
@@ -322,13 +322,13 @@ void OdeInterface::contactForces() {
     vrel.makeNormal(normal);
     //viscosity
     force += 10.*vrel.length();
-
+    
     vrel.normalize();
     force *= -1.;
     if(b2) dBodyAddForceAtPos(b2, force*m2*vrel.x, force*m2*vrel.y, force*m2*vrel.z, pos.x, pos.y, pos.z);
     force *= -1.;
     if(b1) dBodyAddForceAtPos(b1, force*m1*vrel.x, force*m1*vrel.y, force*m1*vrel.z, pos.x, pos.y, pos.z);
-
+    
     if(!b2) std::cout <<"bodyForce = " <<force*normal <<std::endl;
     std::cout <<"slip force " <<force <<std::endl;
 #endif
@@ -347,9 +347,9 @@ void OdeInterface::exportStateToOde(ors::Graph &C) {
   ors::Joint *e;
   uint j, i;
   dBodyID b;
-
+  
   C.calcBodyFramesFromJoints();
-
+  
   for_list(i, n, C.bodies) {
     CHECK(n->X.rot.isNormalized(), "quaternion is not normalized!");
     b = bodies(n->index);
@@ -436,14 +436,14 @@ void OdeInterface::addJointForce(ors::Graph& C, ors::Joint *e, double f1, double
     case ors::JT_transX:
       dJointAddSliderForce(joints(e->index), -f1);
       break;
-  default: NIY;
+    default: NIY;
   }
 }
 
 void OdeInterface::addJointForce(ors::Graph& C, doubleA& x) {
   ors::Joint *e;
   uint i=0, n=0;
-
+  
   for_list(i, e, C.joints) { // loop over edges, 16. Mar 06 (hh)
     switch(e->type) { //  3. Apr 06 (hh)
       case ors::JT_hingeX:
@@ -460,7 +460,7 @@ void OdeInterface::addJointForce(ors::Graph& C, doubleA& x) {
         dJointAddSliderForce(joints(e->index), -x(n));
         n++;
         break;
-    default: NIY;
+      default: NIY;
     }
   }
   CHECK(n==x.N, "wrong dimensionality");
@@ -469,7 +469,7 @@ void OdeInterface::addJointForce(ors::Graph& C, doubleA& x) {
 void OdeInterface::setMotorVel(ors::Graph& C, const arr& qdot, double maxF) {
   ors::Joint *e;
   uint i=0, n=0;
-
+  
   for_list(i, e, C.joints) {
     switch(e->type) {
       case ors::JT_hingeX:
@@ -485,7 +485,7 @@ void OdeInterface::setMotorVel(ors::Graph& C, const arr& qdot, double maxF) {
       case ors::JT_transX:
         n++;
         break;
-    default: NIY;
+      default: NIY;
     }
   }
   CHECK(n==qdot.N, "wrong dimensionality");
@@ -588,7 +588,7 @@ void OdeInterface::getJointMotorForce(ors::Graph &C, doubleA& f) {
 void OdeInterface::pidJointPos(ors::Graph &C, ors::Joint *e, double x0, double v0, double xGain, double vGain, double iGain, double* eInt) {
   double x, v, f;
   //double a, b, c, dAcc;
-
+  
   x=-dJointGetHingeAngle(joints(e->index));
   v=-dJointGetHingeAngleRate(joints(e->index));
   f = xGain*(x0-x) + vGain*(v0-v);
@@ -603,7 +603,7 @@ void OdeInterface::pidJointPos(ors::Graph &C, ors::Joint *e, double x0, double v
 
 void OdeInterface::pidJointVel(ors::Graph &C, ors::Joint *e, double v0, double vGain) {
   double v, f;
-
+  
   v=-dJointGetHingeAngleRate(joints(e->index));
   f = vGain*(v0-v);
   if(fabs(f)>vGain) f=MT::sign(f)*vGain;
@@ -635,28 +635,28 @@ void OdeInterface::createOde(ors::Graph &C) {
   //double *mass, *shape, *type, *fixed, *cont, typeD=cappedCylinderST;
   //, *inertiaTensor, *realMass, *centerOfMass;
   uint i, j;
-
+  
   clear();
   C.calcBodyFramesFromJoints();
-
+  
   bodies.resize(C.bodies.N); bodies=0;
   geoms .resize(C.shapes.N); geoms =0;
   joints.resize(C.joints.N); joints=0;
   motors.resize(C.joints.N); motors=0;
-
+  
   for_list(j, n, C.bodies) {
     b=dBodyCreate(world);
-
+    
     bodies(n->index)=b;
     b->userdata=n;
-
+    
     //n->copyFrameToOde();
     CHECK(n->X.rot.isNormalized(), "quaternion is not normalized!");
     CP3(b->posr.pos, n->X.pos.p());                // dxBody changed in ode-0.6 ! 14. Jun 06 (hh)
     CP4(b->q, n->X.rot.p()); dQtoR(b->q, b->posr.R);
     CP3(b->lvel, n->X.vel.p());
     CP3(b->avel, n->X.angvel.p());
-
+    
     // need to fix: "mass" is not a mass but a density (in dMassSetBox)
     ors::Shape *s;
     for_list(i, s, n->shapes) {
@@ -667,34 +667,34 @@ void OdeInterface::createOde(ors::Graph &C) {
         trans = NULL;
         myspace = space; //the object is added normally to the main space
       }
-
+      
       switch(s->type) {
-      default:
-        for (int i=0; i<3; ++i) {
-          if (s->size[i] == 0) s->size[i] = 0.001;
-        }
-      case ors::boxST:
-        dMassSetBox(&odeMass, n->mass, s->size[0], s->size[1], s->size[2]);
-        dBodySetMass(b, &odeMass);
-        geom=dCreateBox(myspace, s->size[0], s->size[1], s->size[2]);
-        break;
-      case ors::sphereST:
-        dMassSetSphere(&odeMass, n->mass, s->size[3]);
-        dBodySetMass(b, &odeMass);
-        geom=dCreateSphere(myspace, s->size[3]);
-        break;
-      case ors::cylinderST:
-        dMassSetCylinder(&odeMass, n->mass, 3, s->size[3], s->size[2]);
-        dBodySetMass(b, &odeMass);
-        geom=dCreateCylinder(myspace, s->size[3], s->size[2]);
-        break;
-      case ors::cappedCylinderST:
-        dMassSetCylinder(&odeMass, n->mass, 3, s->size[3], s->size[2]);
-        //                 MT_MSG("ODE: setting Cylinder instead of capped cylinder mass");
-        dBodySetMass(b, &odeMass);
-        geom=dCreateCCylinder(myspace, s->size[3], s->size[2]);
-        break;
-      case ors::meshST:{
+        default:
+          for(int i=0; i<3; ++i) {
+            if(s->size[i] == 0) s->size[i] = 0.001;
+          }
+        case ors::boxST:
+          dMassSetBox(&odeMass, n->mass, s->size[0], s->size[1], s->size[2]);
+          dBodySetMass(b, &odeMass);
+          geom=dCreateBox(myspace, s->size[0], s->size[1], s->size[2]);
+          break;
+        case ors::sphereST:
+          dMassSetSphere(&odeMass, n->mass, s->size[3]);
+          dBodySetMass(b, &odeMass);
+          geom=dCreateSphere(myspace, s->size[3]);
+          break;
+        case ors::cylinderST:
+          dMassSetCylinder(&odeMass, n->mass, 3, s->size[3], s->size[2]);
+          dBodySetMass(b, &odeMass);
+          geom=dCreateCylinder(myspace, s->size[3], s->size[2]);
+          break;
+        case ors::cappedCylinderST:
+          dMassSetCylinder(&odeMass, n->mass, 3, s->size[3], s->size[2]);
+          //                 MT_MSG("ODE: setting Cylinder instead of capped cylinder mass");
+          dBodySetMass(b, &odeMass);
+          geom=dCreateCCylinder(myspace, s->size[3], s->size[2]);
+          break;
+        case ors::meshST: {
 #if 0
           NIY;
 #else
@@ -703,55 +703,54 @@ void OdeInterface::createOde(ors::Graph &C) {
           //n->ats.get("I", inertiaTensor, 9);
           //n->ats.get("w", realMass, 1);
           //n->ats.get("X", centerOfMass, 3);
-
+          
           // transform the mesh to ODE trimesh format;
           //i=0; j=0;
-
+          
 #if 0 //correct mass/density stuff
-	  trimeshPhysics triPhys;
+          trimeshPhysics triPhys;
           triPhys.reset(s->mesh.T.N);
-          if(inertiaTensor && realMass && centerOfMass) // are all important params set in the dcg file
-          {
-	    triPhys._mass = *realMass;
-	    triPhys.r[0]=centerOfMass[0];
-	    triPhys.r[1]=centerOfMass[1];
-	    triPhys.r[2]=centerOfMass[2];
-	    triPhys.J[0][0]= inertiaTensor[0];
-	    triPhys.J[1][1]= inertiaTensor[4];
-	    triPhys.J[2][2]= inertiaTensor[8];
-	    triPhys.J[0][1]= inertiaTensor[1];
-	    triPhys.J[0][2]= inertiaTensor[2];
-	    triPhys.J[1][2]= inertiaTensor[5];
-	  } else { // not all parametrs specified in dcg file....need to calculate them
+          if(inertiaTensor && realMass && centerOfMass) { // are all important params set in the dcg file
+            triPhys._mass = *realMass;
+            triPhys.r[0]=centerOfMass[0];
+            triPhys.r[1]=centerOfMass[1];
+            triPhys.r[2]=centerOfMass[2];
+            triPhys.J[0][0]= inertiaTensor[0];
+            triPhys.J[1][1]= inertiaTensor[4];
+            triPhys.J[2][2]= inertiaTensor[8];
+            triPhys.J[0][1]= inertiaTensor[1];
+            triPhys.J[0][2]= inertiaTensor[2];
+            triPhys.J[1][2]= inertiaTensor[5];
+          } else { // not all parametrs specified in dcg file....need to calculate them
             triPhys.calculateODEparams(&s->mesh, s->mass); // note: 2nd parameter is the density
           }
-
-          dMassSetParameters (&odeMass, triPhys._mass,
-			      triPhys.r[0], triPhys.r[1], triPhys.r[2],
-			      triPhys.J[0][0], triPhys.J[1][1], triPhys.J[2][2],
-			      triPhys.J[0][1], triPhys.J[0][2], triPhys.J[1][2]);
-
+          
+          dMassSetParameters(&odeMass, triPhys._mass,
+                             triPhys.r[0], triPhys.r[1], triPhys.r[2],
+                             triPhys.J[0][0], triPhys.J[1][1], triPhys.J[2][2],
+                             triPhys.J[0][1], triPhys.J[0][2], triPhys.J[1][2]);
+          
           dBodySetMass(b, &odeMass);
 #else //don't care about mass...
           n->mass = .001;
           dMassSetBox(&odeMass, n->mass, s->size[0], s->size[1], s->size[2]);
           dBodySetMass(b, &odeMass);
 #endif
-
-	  dTriMeshDataID TriData;
-	  TriData = dGeomTriMeshDataCreate();
-	  dGeomTriMeshDataBuildDouble(TriData,
-				      s->mesh.V.p, 3*sizeof(double), s->mesh.V.d0,
-				      s->mesh.T.p, s->mesh.T.d0, 3*sizeof(uint));
-	  dGeomTriMeshDataPreprocess(TriData);
-
-	  geom = dCreateTriMesh(myspace, TriData, 0, 0, 0);
-
-	  dGeomTriMeshClearTCCache(geom);
+          
+          dTriMeshDataID TriData;
+          TriData = dGeomTriMeshDataCreate();
+          dGeomTriMeshDataBuildDouble(TriData,
+                                      s->mesh.V.p, 3*sizeof(double), s->mesh.V.d0,
+                                      s->mesh.T.p, s->mesh.T.d0, 3*sizeof(uint));
+          dGeomTriMeshDataPreprocess(TriData);
+          
+          geom = dCreateTriMesh(myspace, TriData, 0, 0, 0);
+          
+          dGeomTriMeshClearTCCache(geom);
 #endif
-	}break; //end of mesh
+        } break; //end of mesh
       }
-
+      
       geoms(s->index) = geom;
       if(trans) {
         //geoms(s->index) = trans;
@@ -763,7 +762,7 @@ void OdeInterface::createOde(ors::Graph &C) {
         dGeomSetBody(geom, b); //attaches the geom to the body
       }
     }//loop through shapes
-
+    
     if(n->type==ors::staticBT) {
       jointF=(dxJointFixed*)dJointCreateFixed(world, 0);
       dJointAttach(jointF, b, 0);
@@ -786,7 +785,7 @@ void OdeInterface::createOde(ors::Graph &C) {
           /*if(e->p[1]!=e->p[0]){
             dJointSetHingeParam(jointH, dParamLoStop, e->p[0]);
             dJointSetHingeParam(jointH, dParamHiStop, e->p[1]);
-
+          
             //dJointSetHingeParam(jointH, dParamCFM, CFM);
             }*/
           dJointAttach(jointH, bodies(e->from->index), bodies(e->to->index));
@@ -821,7 +820,7 @@ void OdeInterface::createOde(ors::Graph &C) {
     }
   }
 #endif
-
+  
   exportStateToOde(C);
   isOpen=true;
 }
@@ -848,7 +847,7 @@ void OdeInterface::getGroundContact(ors::Graph &C, boolA& cts) {
     dBodyID b1, b2;
     b1 = dGeomGetBody(c->g1);
     b2 = dGeomGetBody(c->g2);
-
+    
     if(!b1 && b2) cts(((ors::Body*)b2->userdata)->index)=true;
     if(b1 && !b2) cts(((ors::Body*)b1->userdata)->index)=true;
   }
@@ -875,14 +874,14 @@ void OdeInterface::importProxiesFromOde(ors::Graph &C) {
     dBodyID b1, b2;
     b1 = dGeomGetBody(c->g1);
     b2 = dGeomGetBody(c->g2);
-
+    
     a = b1 ? (((ors::Body*)b1->userdata)->index) : (uint)-1;
     b = b2 ? (((ors::Body*)b2->userdata)->index) : (uint)-1;
-
+    
     d.set(c->normal);
     d *= -c->depth/2.;
     p.set(c->pos);
-
+    
     C.proxies(i)->a = a;
     C.proxies(i)->b = b;
     C.proxies(i)->d = -c->depth;
@@ -898,7 +897,7 @@ void OdeInterface::importProxiesFromOde(ors::Graph &C) {
 //    else           C.proxies(i)->rel.setZero();
 //    C.proxies(i)->age=0;
   }
-
+  
   C.sortProxies();
 }
 
@@ -934,9 +933,9 @@ bool OdeInterface::inFloorContacts(ors::Vector& x) {
   dBodyID b1, b2;
   dContactGeom* c;
   ors::Vector y;
-
+  
   x.z=0.;
-
+  
   MT::Array<ors::Vector> v;
   //collect list of floor contacts
   for(i=0; i<conts.N; i++) {
@@ -948,12 +947,12 @@ bool OdeInterface::inFloorContacts(ors::Vector& x) {
       v.append(y);
     }
   }
-
+  
   std::cout <<"\nfloor points: ";
   for(i=0; i<v.N; i++) std::cout <<v(i) <<'\n';
-
+  
   if(!v.N) return false;
-
+  
   //construct boundaries
   Bound b;
   MT::Array<Bound> bounds;
@@ -972,10 +971,10 @@ bool OdeInterface::inFloorContacts(ors::Vector& x) {
         }
       if(k==v.N) bounds.append(b);
     }
-
+    
   std::cout <<"\nbounds: ";
   for(i=0; i<bounds.N; i++) std::cout <<bounds(i).p <<' ' <<bounds(i).n <<'\n';
-
+  
   std::cout <<"\nquery: " <<x <<std::endl;
   //check for internal
   for(i=0; i<bounds.N; i++) {
