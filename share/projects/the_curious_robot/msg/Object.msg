@@ -1,0 +1,3 @@
+string body
+Property[] properties
+

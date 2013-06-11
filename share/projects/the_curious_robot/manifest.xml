@@ -9,6 +9,8 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/the_curious_robot</url>
 
+  <depend package="actionlib"/>
+  <depend package="actionlib_msgs"/>
   <depend package="articulation_models"/>
   <depend package="articulation_msgs"/>
   <depend package="roscpp"/>
