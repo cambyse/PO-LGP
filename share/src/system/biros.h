@@ -1,7 +1,7 @@
 #ifndef MT_biros_h
 #define MT_biros_h
 
-#include <MT/array.h>
+#include <Core/array.h>
 #include <MT/util.h>
 #include "module.h"
 #include "engine_internal.h"

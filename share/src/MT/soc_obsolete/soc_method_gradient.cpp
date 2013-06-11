@@ -15,8 +15,8 @@
     -----------------------------------------------------------------  */
 
 #include "soc.h"
-#include "ors.h"
-#include "optimization.h"
+#include <Ors/ors.h>
+#include <Optim/optimization.h>
 #ifdef MT_HSL
 #  include "hslModule.h"
 #endif
@@ -87,7 +87,7 @@ struct SocProblem:public OptimizationProblem{
 
 //===========================================================================
 
-//! compute an optimized trajectory using gradient descent
+/// compute an optimized trajectory using gradient descent
 void soc::gradientOptimization(SocSystemAbstraction& soci,
                                 arr& q,
                                 uint maxIterations,

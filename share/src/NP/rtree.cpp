@@ -20,7 +20,7 @@
 #include <opencv/cv.h>
 #include <opencv/ml.h>
 
-/** \brief Trains a Random Forest
+/** @brief Trains a Random Forest
  *
  *  For details search OpenCV docs for "CvRTrees::train".
  *
@@ -100,7 +100,7 @@ CvRTrees* np::rtree_train
   return forest;
 }
 
-/** \brief Predicts the output for the input samples
+/** @brief Predicts the output for the input samples
  *
  *  This method returns the cumulative result from all the trees in the forest 
  *  (the class that receives the majority of voices, or the mean of the 
@@ -139,7 +139,7 @@ void np::rtree_predict(floatA& p, const CvRTrees* forest, const floatA& samples)
   array2array(p,p_t);
 }
 
-/** \brief Saves a Random Forest from file
+/** @brief Saves a Random Forest from file
  *
  *  Wraps around CvStatModel::save().
  *  "The method save stores the complete model state to the specified XML or 
@@ -157,7 +157,7 @@ void np::rtree_save(const char* filename, const CvRTrees* forest)
   cvReleaseFileStorage(&fs);
 }
 
-/** \brief Loads a Random Forest from file
+/** @brief Loads a Random Forest from file
  *
  *  Wraps around CvStatModel::load().
  *  "The method loads the complete model state with the specified name 
@@ -177,7 +177,7 @@ CvRTrees* np::rtree_load(const char* filename)
   return ret;
 }
 
-/** \brief Saves prediction results
+/** @brief Saves prediction results
  *
  *  @param filename any file name, e.g. train.rtree.prediction.array
  *  @param p        prediction output
@@ -202,7 +202,7 @@ int np::rtree_predict_save(const char* filename, const floatA& p, const floatA& 
   return 0;
 }
 
-/** \brief Load prediction results
+/** @brief Load prediction results
  *
  *  @param filename any file name, e.g. train.rtree.prediction.array
  *  @param p        prediction output

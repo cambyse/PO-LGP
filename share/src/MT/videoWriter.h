@@ -20,7 +20,7 @@
 #ifndef MT_videoWriter_h
 #define MT_videoWriter_h
 
-#include "array.h"
+#include <Core/array.h>
 
 struct OpenGL;
 
@@ -32,9 +32,5 @@ struct VideoWriter{
   void addFrameFromOpengl(OpenGL& gl);
   void close();
 };
-
-#ifdef MT_IMPLEMENTATION
-#  include "videoWriter.cpp"
-#endif
 
 #endif

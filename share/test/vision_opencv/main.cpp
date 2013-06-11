@@ -3,7 +3,7 @@
 #undef MAX
 
 #include <MT/vision.h>
-#include <MT/util.h>
+#include <Core/util.h>
 
 ENABLE_CVMAT
 

@@ -1,5 +1,5 @@
 #include <iostream>
-#include <MT/array.h>
+#include <Core/array.h>
 #include <MT/plot.h>
 #include <MT/util.h>
 

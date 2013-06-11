@@ -4,5 +4,7 @@ GTKGL = 1
 
 OBJS = main.o graspEvaluation.o
 
+DEPEND = Gui Core Ors MT
+
 include $(BASE)/make-generic
 

@@ -1,7 +1,7 @@
 #ifndef SD_superquadrics_h
 #define SD_superquadrics_h
 
-#include <MT/array.h>
+#include <Core/array.h>
 
 /* parameters for superquadrics: kx*|x|^px + ky*|y|^py +kz*|z|^pz = b */
 struct sq_param{

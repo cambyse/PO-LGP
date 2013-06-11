@@ -1,20 +1,20 @@
 #define MT_IMPLEMENTATION
 
-#include<MT/array.h>
-#include<MT/plot.h>
+#include <Core/array.h>
+#include <Gui/plot.h>
 
 
 //===========================================================================
 //
-//!@name Gaussian Process code
+/// @name Gaussian Process code
 //
 
 struct GaussianProcess{
-  //! pointer to kernel function
+  /// pointer to kernel function
   double (*kernel)(const doubleA& x,const doubleA& y);
-  //! pointers to data
+  /// pointers to data
   doubleA *X,*Y;
-  //! inverse gram matrix
+  /// inverse gram matrix
   doubleA invGram;
 };
 

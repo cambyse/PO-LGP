@@ -1,67 +1,54 @@
 NAME   = $(shell basename $(PWD))
 
-# The order of the libs matters!
-MLR_LIBS = \
-	src/views \
-	src/JK \
-	src/biros \
-	src/motion \
-	src/MT \
-	src/hardware \
-	src/perception \
-	src/relational \
+#srcs =  $(shell find src -mindepth 1 -maxdepth 1 -type d)
+srcs += $(shell find src/extern -mindepth 1 -maxdepth 1 -type d)
+exas = $(shell find examples -mindepth 2 -maxdepth 2 -type d)
 
-EXTERN = \
-	extern/libcolorseg/src \
-	extern/Lewiner \
-	extern/ply \
-	extern/tony_mdp \
-	extern/SWIFT++_1.2/src \
-	extern/SWIFT++_1.2/decomposer/src \
+################################################################################
 
+all: $(srcs:%=make/%) $(exas:%=make/%)
 
-all: extern $(MLR_LIBS:%=make/%)
+src: $(srcs:%=make/%)
 
-depend: $(MLR_LIBS:%=depend/%)
+depend: $(srcs:%=depend/%)
 
-extern: $(EXTERN:%=make/%)
+clean: $(srcs:%=clean/%) $(srcs:%=clean/%) 
 
-cleanAll: $(MLR_LIBS:%=clean/%) cleanProjects
-	find . -maxdepth 3 -name 'Makefile.dep' -delete
-
-cleanDepend:
-	find . -maxdepth 3 -name 'Makefile.dep' -delete
-
-cleanExtern: $(EXTERN:%=clean/%)
-
-
-reformatSources:
-	astyle --options=src/style.astyle "src/MT/*.h" "src/MT/*.cpp" "src/MT/*.cxx"
-	cd src; find MT/ \( -name "*.h" -or -name "*.cpp" -or -name "*.cxx" \) -exec ./style.sed.sh {} \;
+################################################################################
 
 make/%::
-	$(MAKE) -w -C $*
+	@echo
+	@echo "                                                  ***** make " $*
+	$(MAKE) -C $* --no-print-directory
 
 depend/%::
-	$(MAKE) -w -C $* depend
+	$(MAKE) -C $* depend --no-print-directory
 
 clean/%::
 	-rm -f $*/Makefile.dep
-	$(MAKE) clean -w -C $*
+	$(MAKE) -C $* clean --no-print-directory 
 
-tests::
-	-@find test -maxdepth 1 -follow -type d -not -name 'test' -not -name 'SHARE' -exec $(MAKE) -w -C {} \;
-
-demo::
-	-@find demo -maxdepth 1 -follow -type d -not -name 'demo' -not -name 'SHARE' -exec $(MAKE) -w -C {} \;
-
-cleanProjects::
-	-@find test -maxdepth 1 -follow -type d -not -name 'test' -not -name 'SHARE' -exec $(MAKE) -C {} clean \;
-	-@find demo -maxdepth 1 -follow -type d -not -name 'demo' -not -name 'SHARE' -exec $(MAKE) -C {} clean \;
+################################################################################
 
 doc::
 	#$(MAKE) -w -C doc guide doxy
 	cd doc; doxygen MLR.doxy;
 
+reformatSources:
+	astyle --options=src/style.astyle "src/MT/*.h" "src/MT/*.cpp" "src/MT/*.cxx"
+	cd src; find MT/ \( -name "*.h" -or -name "*.cpp" -or -name "*.cxx" \) -exec ./style.sed.sh {} \;
+
+
 zip::
 	cd ..;  rm -f $(NAME).tgz;  tar cvzf $(NAME).tgz $(NAME) --dereference --exclude "SHARE" --exclude ".git" --exclude "*.kdev4" --exclude "xx-*" --exclude "MT.log" --exclude "*solution*" --exclude "course/*/main.cpp"  --exclude "pics" --exclude "*ODE_0.11/ode-0.11" --exclude "*ODE_0.11/include" --exclude "*ODE_0.11/lib" --exclude "*/IBDS*" --exclude "*ors_mesh*"
+
+%.tgz:: force
+	rm -f $*.tgz;
+	cd ..; \
+	tar cvzf $*.tgz --exclude-vcs \
+	--files-from $(PWD)/slices/tar.incl \
+	--files-from $(PWD)/slices/$*.tar.incl \
+	--exclude-from $(PWD)/slices/tar.excl \
+	--exclude-from $(PWD)/slices/$*.tar.excl
+
+force: ;

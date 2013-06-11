@@ -1,5 +1,5 @@
 #include <MT/videoWriter.h>
-#include <MT/opengl.h>
+#include <Gui/opengl.h>
 
 float angle;
 

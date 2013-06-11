@@ -20,7 +20,7 @@
 #ifndef MT_mstep_h
 #define MT_mstep_h
 
-#include "array.h"
+#include <Core/array.h>
 
 //enum MstepType{ MstepNoisyMax, MstepExact, MstepNone, MstepCopyExpectations };
 

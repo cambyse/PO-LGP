@@ -10,7 +10,7 @@
 #ifndef MT_module_h
 #define MT_module_h
 
-#include <MT/array.h>
+#include <Core/array.h>
 #include <MT/registry.h>
 #include <stddef.h>
 

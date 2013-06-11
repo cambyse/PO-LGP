@@ -15,8 +15,8 @@
     -----------------------------------------------------------------  */
 
 #include "soc.h"
-#include "opengl.h"
-#include "plot.h"
+#include <Gui/opengl.h>
+#include <Gui/plot.h>
 
 uint countMsg=0, countSetq=0;
 
@@ -25,7 +25,7 @@ uint countMsg=0, countSetq=0;
 // general documentation
 //
 
-/** \brief libSOC -- Stochastic Optimal Control library
+/** @brief libSOC -- Stochastic Optimal Control library
 
     This is the core namespace of libSOC.  See the <a
     href="../guide.pdf">guide</a> for an introduction.
@@ -39,13 +39,13 @@ namespace soc{};
 // trivial helpers
 //
 
-//! \brief get the velocity vt of a trajectory q at time t
+/// @brief get the velocity vt of a trajectory q at time t
 void soc::getVelocity(arr& vt, const arr& q, uint t, double tau){
   if(!t) vt = (q[0]-q[0])/tau;
   else   vt = (q[t]-q[t-1])/tau;
 }
 
-  //! compute the full (q, v) trajectory from a trajectory q
+  /// compute the full (q, v) trajectory from a trajectory q
 void soc::getPhaseTrajectory(arr& _q, const arr& q, double tau){
   uint T=q.d0, n=q.d1, t;
   arr vt;
@@ -59,7 +59,7 @@ void soc::getPhaseTrajectory(arr& _q, const arr& q, double tau){
   _q.reshape(T, 2*n);
 }
 
-//! simply get the q-trajectory from a (q, v)-trajectory
+/// simply get the q-trajectory from a (q, v)-trajectory
 void soc::getPositionTrajectory(arr& q, const arr& _q){
   uint T=_q.d0, n=_q.d1/2, i, t;
   CHECK(2*n==_q.d1, "")
@@ -79,7 +79,7 @@ void soc::interpolateTrajectory(arr& qNew, const arr& q, double step){
   }
 }
 
-/** \brief use regularized Inverse Kinematics to compute a joint
+/** @brief use regularized Inverse Kinematics to compute a joint
     trajectory from a given task trajectory x for the 0-th task variable */
 void soc::getJointFromTaskTrajectory(SocSystemAbstraction& soci, arr& q, const arr& x){
   uint t, T=x.d0, n=soci.qDim();
@@ -97,7 +97,7 @@ void soc::getJointFromTaskTrajectory(SocSystemAbstraction& soci, arr& q, const a
   }
 }
 
-/** \brief use regularized Inverse Kinematics to compute a joint
+/** @brief use regularized Inverse Kinematics to compute a joint
     trajectory from the task trajectory previously specifies for the
     taskid-th task variable */
 void soc::straightTaskTrajectory(SocSystemAbstraction& soci, arr& q, uint taskid){
@@ -119,7 +119,7 @@ void soc::straightTaskTrajectory(SocSystemAbstraction& soci, arr& q, uint taskid
   
 }
 
-//! not-yet-implemented
+/// not-yet-implemented
 void soc::partialJointFromTaskTrajectory(SocSystemAbstraction& soci, arr& dCdx, const arr& delCdelq, const arr& q, const arr& x){
   NIY;
 }
@@ -613,7 +613,7 @@ void soc::SocSystemAbstraction::costChecks(const arr& x){
 }
 
 
-//! play the trajectory using OpenGL
+/// play the trajectory using OpenGL
 void soc::SocSystemAbstraction::displayState(const arr& q, const arr *Qinv, const char *text){
   if(gl){
     setq(q);
@@ -638,7 +638,7 @@ void soc::SocSystemAbstraction::displayTrajectory(const arr& q, const arr *Qinv,
   if(steps==1) gl->watch();
 }
 
-//! computes separate costs for each ctrl variable
+/// computes separate costs for each ctrl variable
 double soc::SocSystemAbstraction::analyzeTrajectory(const arr& q, bool plot){
   uint t, T=get_T(), i, m=nTasks();
   CHECK(q.nd==2 && q.d0==T+1 && q.d1==qDim(), "");

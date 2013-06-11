@@ -21,7 +21,7 @@
 #define MT_BinaryBP_h
 
 #include <math.h>
-#include "array.h"
+#include <Core/array.h>
 
 #ifdef GradTypeArr
 #define GradType arr

@@ -14,7 +14,7 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/> */
 
-#include <MT/array.h>
+#include <Core/array.h>
 #include <MT/util.h>
 #include <iostream>
 #include <iomanip>
@@ -26,7 +26,7 @@
 #include <string>
 #include "nputils.h"
 
-/** \brief Break a string or char array into tokens
+/** @brief Break a string or char array into tokens
  *
  *  @param tokens     string array with tokens
  *  @param str        the input string
@@ -52,7 +52,7 @@ void np::tokenize(stringA& tokens, const std::string& str, char delimiter)
    }
 }
 
-/** \brief Break a global path into path, file name, and file extension
+/** @brief Break a global path into path, file name, and file extension
  *
  *  @param tokens         three strings: path, file name, and file extension
  *  @param path2filename  global path and filename, e.g. "/home/foo/bar.c"

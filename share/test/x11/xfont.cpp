@@ -7,7 +7,7 @@
 #include <X11/Xutil.h>
 
 #define MT_IMPLEMENTATION
-#include <MT/util.h>
+#include <Core/util.h>
 
 #define WINDOW_WIDTH 600
 #define WINDOW_HEIGHT 450

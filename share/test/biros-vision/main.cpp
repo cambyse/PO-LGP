@@ -24,7 +24,7 @@ int main(int argn,char **argv) {
 //  HoughLines houghLines("hough_lines");
   
   SystemDescription S;
-  S.addModule("OpencvCamera",NULL,NULLItemL,SystemDescription::loopFull,0);
+  S.addModule("OpencvCamera",NULL,NoItemL,SystemDescription::loopFull,0);
   S.addModule("CvtGray");
   S.complete();
   S.report();

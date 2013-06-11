@@ -20,7 +20,7 @@
 #ifdef MT_TONY
 
 #include <tony_mdp/mdp.h>
-#include "array.h"
+#include <Core/array.h>
 #include "mdp.h"
 
 void MatrixToArray(arr& X, Matrix M, uint d0, uint d1){
@@ -83,7 +83,7 @@ void mdp::readMDP_POMDP(MDP& mdp, const char *filename){
 
 #else
 
-#include "util.h"
+#include <Core/util.h>
 #include "mdp.h"
 void mdp::readMDP_POMDP(MDP& mdp, const char *filename){
   HALT("reading Tony's POMDP file only works for Linux");

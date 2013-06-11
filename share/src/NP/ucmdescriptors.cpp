@@ -20,7 +20,7 @@ inline void enforce_sum_one(MT::Array<S>& d)
 };
 }; // namespace np
 
-/** \brief Elliptic Fourier Descriptors (EFD) for an UCM tree
+/** @brief Elliptic Fourier Descriptors (EFD) for an UCM tree
  *
  *  Computes for all N patches of an UCM segmentation tree the following
  *  shape descriptors:
@@ -73,7 +73,7 @@ void np::ucm_descriptors_efd(MT::Array<S>& d, const UcmTree& tree, uint num_coef
 template void np::ucm_descriptors_efd(MT::Array<float>& d, const np::UcmTree& tree, uint num_coef);
 template void np::ucm_descriptors_efd(MT::Array<double>& d, const np::UcmTree& tree, uint num_coef);
 
-/** \brief HSV volor descriptors for patches in an UCM tree
+/** @brief HSV volor descriptors for patches in an UCM tree
  *
  *  Computes for all N patches of an UCM segmentation tree the following
  *  color descriptors:
@@ -164,7 +164,7 @@ inline void ucm_gabor_binning
 };
 }; // namespace np
 
-/** \brief Gabor wavelet features for patches in an UCM tree
+/** @brief Gabor wavelet features for patches in an UCM tree
  *
  *  Computes for all N patches of an UCM segmentation tree features based
  *  on the intensities of Gabor wavelet responses.
@@ -257,7 +257,7 @@ void ucm_surf_region(MT::Array<S>& d, const uintA& region, const MT::Array<T>& q
 };
 }; // namespace np
 
-/** \brief Patch descriptors made of visual words based on SURF descriptors
+/** @brief Patch descriptors made of visual words based on SURF descriptors
  *
  *  Computes for all N patches of an UCM segmentation tree features based
  *  on SURF descriptors. Internally, a scale space pyramid with <num_scales>

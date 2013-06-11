@@ -15,8 +15,8 @@
 #include <FL/fl_draw.H>
 #include <FL/Fl_Window.H>
 
-#include "util.h"
-#include "array.h"
+#include <Core/util.h>
+#include <Core/array.h>
 
 //===========================================================================
 //

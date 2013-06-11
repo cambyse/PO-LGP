@@ -21,7 +21,7 @@
 #ifndef MT_truncatedGaussian_h
 #define MT_truncatedGaussian_h
 
-#include "array.h"
+#include <Core/array.h>
 
 void TruncatedStandardGaussian(double& mean, double& var, double z);
 void TruncateGaussian(arr& a, arr& A, const arr& c, double d);

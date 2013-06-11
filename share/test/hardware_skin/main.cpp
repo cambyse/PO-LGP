@@ -1,5 +1,5 @@
 #include <signal.h>
-#include <MT/opengl.h>
+#include <Gui/opengl.h>
 #include <hardware/schunk.h>
 
 int main( int argc, char **argv ){

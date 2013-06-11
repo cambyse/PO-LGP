@@ -25,7 +25,7 @@
 #include <X11/Xlib.h>
 
 #include <MT/util.h>
-#include <MT/array.h>
+#include <Core/array.h>
 
 
 //===========================================================================

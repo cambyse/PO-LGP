@@ -217,7 +217,7 @@ void RobotManipulationSimulator::startOde(double ode_coll_bounce, double ode_col
 
 
 void RobotManipulationSimulator::startSwift(){
-#ifdef MT_SWIFT
+#ifdef MT_extern_SWIFT
   if(swift) delete swift;
   swift = new SwiftInterface;
   swift->init(*C);
@@ -242,7 +242,7 @@ void RobotManipulationSimulator::shutdownAll(){
 #ifdef MT_FREEGLUT
   if(gl) delete gl;        gl=0;
 #endif
-#ifdef MT_SWIFT
+#ifdef MT_extern_SWIFT
   if(swift) delete swift;  swift=0;
 #endif
 #ifdef MT_REVEL
@@ -1109,7 +1109,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
   // reset contact of grabbed object
   if (s!=NULL) {
     s->cont = true;
-#ifdef MT_SWIFT
+#ifdef MT_extern_SWIFT
     swift->initActivations(*C);
 #endif
   }
@@ -1128,7 +1128,7 @@ void RobotManipulationSimulator::grab(const char* obj, const char* message) {
 
 
 void RobotManipulationSimulator::grabHere(const char* message) {
-  #ifdef MT_SWIFT
+  #ifdef MT_extern_SWIFT
   MT::String msg_string(message);
   if (msg_string.N == 0) {
     msg_string << "grabHere: ";
@@ -1489,7 +1489,7 @@ void RobotManipulationSimulator::relaxPosition(const char* message) {
   // simplification: set on contacts for inhand-object
   if (s!=NULL) {
     s->cont = true;
-#ifdef MT_SWIFT
+#ifdef MT_extern_SWIFT
     swift->initActivations(*C);
 #endif
   }
@@ -1529,7 +1529,7 @@ void RobotManipulationSimulator::moveToPosition(const arr& pos, const char* mess
   if(t==Tabort){ indicateFailure(); return; }
   simulate(30, msg_string);
   
-#ifdef MT_SWIFT
+#ifdef MT_extern_SWIFT
   swift->initActivations(*C);
 #endif
 #endif
@@ -1594,7 +1594,7 @@ void RobotManipulationSimulator::openBox(uint id, const char* message) {
   // open it
   ors::Shape* s = C->bodies(id)->shapes(5);
   s->rel.setText("<t(0 0 .075) t(0 -.05 0) d(80 1 0 0) t(0 .05 .0)>");
-#ifdef MT_SWIFT
+#ifdef MT_extern_SWIFT
   swift->initActivations(*C);
 #endif
   
@@ -1639,7 +1639,7 @@ void RobotManipulationSimulator::closeBox(uint id, const char* message) {
   // close it
   ors::Shape* s = C->bodies(id)->shapes(5);
   s->rel.setText("<t(0 0 .075)>");
-#ifdef MT_SWIFT
+#ifdef MT_extern_SWIFT
   swift->initActivations(*C);
 #endif
 

@@ -1,4 +1,4 @@
-#include <MT/opengl.h>
+#include <Gui/opengl.h>
 #include <biros/biros.h>
 
 void draw1(void*){

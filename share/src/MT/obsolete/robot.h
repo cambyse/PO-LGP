@@ -1,11 +1,11 @@
 #ifndef MT_robot_h
 #define MT_robot_h
 
-#include "opengl.h"
+#include <Gui/opengl.h>
 
 #include "robot_variables.h"
 
-#include "ors.h"
+#include <Ors/ors.h>
 #include "joystick.h"
 #include "socSystem_ors.h"
 #include <NJ/UrgInterface.h>

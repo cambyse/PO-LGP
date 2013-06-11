@@ -20,9 +20,9 @@
 #ifndef MT_robot_variables_h
 #define MT_robot_variables_h
 
-#include "array.h"
+#include <Core/array.h>
 #include <system/module.h>
-#include "ors.h"
+#include <Ors/ors.h>
 
 //===========================================================================
 //
@@ -54,7 +54,7 @@ typedef MT::Array<Object*> ObjectList;
 // Variables
 //
 
-/** \brief q_state_Variable: the current state of all joints of a robot and how these
+/** @brief q_state_Variable: the current state of all joints of a robot and how these
   DoFs map to motor indices and hand indices */
 struct q_currentReferenceVar:public Variable {
   arr q_reference, v_reference;

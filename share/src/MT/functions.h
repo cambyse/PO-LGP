@@ -21,7 +21,7 @@
 #ifndef MT_functions_h
 #define MT_functions_h
 
-#include "array.h"
+#include <Core/array.h>
 
 #define EXP ::exp //MT::approxExp
 
@@ -33,13 +33,13 @@ double logNNinv(const doubleA& a, const doubleA& b, const doubleA& Cinv);
 double NN(const doubleA& a, const doubleA& b, const doubleA& C);
 double logNN(const doubleA& a, const doubleA& b, const doubleA& C);
 
-//! non-normalized!! Gaussian function (f(0)=1)
+/// non-normalized!! Gaussian function (f(0)=1)
 double NNNNinv(const doubleA& a, const doubleA& b, const doubleA& Cinv);
 double NNNN(const doubleA& a, const doubleA& b, const doubleA& C);
 double NNzeroinv(const doubleA& x, const doubleA& Cinv);
-//! gradient of a Gaussian
+/// gradient of a Gaussian
 double dNNinv(const doubleA& x, const doubleA& a, const doubleA& Ainv, doubleA& grad);
-//! gradient of a non-normalized Gaussian
+/// gradient of a non-normalized Gaussian
 double dNNNNinv(const doubleA& x, const doubleA& a, const doubleA& Ainv, doubleA& grad);
 double NNsdv(const doubleA& a, const doubleA& b, double sdv);
 double NNzerosdv(const doubleA& x, double sdv);

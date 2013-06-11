@@ -31,7 +31,7 @@
 #ifndef MT_IMPLEMENT_TEMPLATES
 #define MT_IMPLEMENT_TEMPLATES
 #endif
-#include <MT/array.h>
+#include <Core/array.h>
 #include <MT/util.h>
 #include <cmath>
 

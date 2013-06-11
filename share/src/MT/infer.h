@@ -24,9 +24,9 @@ see the `util.h' file for a full copyright statement  */
 #ifndef MT_inference_h
 #define MT_inference_h
 
-#include "array.h"
-#include "util.h"
-#include "keyValueGraph.h"
+#include <Core/array.h>
+#include <Core/util.h>
+#include <Core/keyValueGraph.h>
 #include <map>
 //#include <set>
 
@@ -444,7 +444,7 @@ void resetLabeledNodes(infer::FactorGraph& G, const char *name);
 void resetCertainNodes(infer::FactorGraph& G, intA seq);
 void resetAllNodes(infer::FactorGraph& G);
 void uniformCertainNodes(infer::FactorGraph& G, intA seq, uint T, uint Mod);
-//! \ingroup infer2
+/// \ingroup infer2
 
 
 //////////////////////////////////////////////

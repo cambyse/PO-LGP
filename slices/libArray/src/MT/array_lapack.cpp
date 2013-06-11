@@ -1,1 +1,0 @@
-SHARE/array_lapack.cpp

@@ -1,6 +1,6 @@
 #ifndef PARTICLE_FILTER_H_
 #define PARTICLE_FILTER_H_
-#include <MT/array.h>
+#include <Core/array.h>
 #include <MT/array_t.cxx>
 #include <biros/biros.h>
 

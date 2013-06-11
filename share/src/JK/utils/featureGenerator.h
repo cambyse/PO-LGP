@@ -1,7 +1,7 @@
 #ifndef _FEATURE_GENERATOR_H_
 #define _FEATURE_GENERATOR_H_
 
-#include <MT/array.h>
+#include <Core/array.h>
 
 template<class Sample>
 class FeatureGenerator {

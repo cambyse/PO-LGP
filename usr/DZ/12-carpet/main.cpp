@@ -3,7 +3,7 @@
 #include <MT/opengl.h>
 #include <MT/ors.h>     
 #include <MT/plot.h>    
-#include <MT/array.h> 
+#include <Core/array.h> 
 
 //===========================================================================
  const double PI = 3.1415926535897932384626; 

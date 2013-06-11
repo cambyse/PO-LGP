@@ -14,8 +14,8 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/> */
 
-/** \file cvutils.h
-    \brief Routines to ease use of MT::Array with OpenCV */
+/** @file cvutils.h
+    @brief Routines to ease use of MT::Array with OpenCV */
 
 #ifndef _NP_CVUTILS_H
 #define _NP_CVUTILS_H
@@ -25,7 +25,7 @@
 #include <typeinfo>
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
-#include <MT/array.h>
+#include <Core/array.h>
 class CvBoost;                                         // defined in opencv/ml.h
 
 #include "nputils.h"
@@ -85,7 +85,7 @@ void map_cvmat2mtarray(CvMat& cvmat, MT::Array<T>& mtarray)
     cvmat = cvMat(d0, d1, cvtype, mtarray.p);
 };
 
-/** \brief KMeans clustering algorithm
+/** @brief KMeans clustering algorithm
  *
  *  Wrapper for the OpenCV implementation of KMeans.
  *
@@ -117,7 +117,7 @@ int kmeans
   bool use_labels = false
 );
 
-/** \brief Trains a Boosted Decision Forest
+/** @brief Trains a Boosted Decision Forest
  *
  *  For details search OpenCV docs for "CvDTrees::train".
  *
@@ -145,7 +145,7 @@ CvBoost* boostDTrees_train
  const float* priors     = 0
 );
 
-/** \brief Prediction with Boosted Decision Forest
+/** @brief Prediction with Boosted Decision Forest
  *
  *  For details search OpenCV docs for "CvDTrees::predict".
  *
@@ -166,7 +166,7 @@ int boostDTrees_predict
  uint num_classes
 );
 
-/** \brief Remaps image pixels and interpolates
+/** @brief Remaps image pixels and interpolates
  *
  *  For details search OpenCV docs for "cvRemap()".
  *
@@ -179,7 +179,7 @@ int boostDTrees_predict
  */
 int remap(byteA& rimg, const byteA& img, const floatA& mapx, const floatA& mapy);
 
-/** \brief Tracks colored ball
+/** @brief Tracks colored ball
  *
  *  Tracks colored ball by thresholding HSV space of input image between 
  *  min_{h,s,v} and max_{h,s,v}, followed by a Hough Transform to detect 
@@ -213,7 +213,7 @@ void track_ball
  bool draw = false
 );
 
-/** \brief Tracks {red,green,blue} ball
+/** @brief Tracks {red,green,blue} ball
  *
  *  Tracks any reasonably {red,green,blue} ball by thresholding HSV space.
  *
@@ -229,7 +229,7 @@ void track_red_ball(floatA& centers, floatA& r, byteA& image, bool is_hsv = fals
 void track_green_ball(floatA& centers, floatA& r, byteA& image, bool is_hsv = false, bool draw = false);
 void track_blue_ball(floatA& centers, floatA& r, byteA& image, bool is_hsv = false, bool draw = false);
 
-/** \brief Tracks a red, a green, and a blue ball
+/** @brief Tracks a red, a green, and a blue ball
  *
  *  Tracks one instance of each a red, a green, and a blue ball.
  *
@@ -253,7 +253,7 @@ bool track_RGB_balls
   floatA& rad_right
 );
 
-/** \brief Detects the chessboard corners
+/** @brief Detects the chessboard corners
  *
  *  Detects the inner (num_x-1)x(num_y-1) corners of a chessboard pattern
  *  with subpixel accuracy.

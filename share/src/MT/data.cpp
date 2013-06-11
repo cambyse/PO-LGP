@@ -17,7 +17,7 @@
     -----------------------------------------------------------------  */
 
 
-#include "opengl.h"
+#include <Gui/opengl.h>
 #include "data.h"
 
 void Data::loadSpecific(bool test){

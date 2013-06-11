@@ -19,7 +19,7 @@
 */
 
 #include <MT/mdp.h>
-#include <MT/util.h>
+#include <Core/util.h>
 
 enum { ValueIteration, PrioritizedSweeping, PolicyIteration, EM, POMDP_EM, POMDP_EM_hierarchical };
 

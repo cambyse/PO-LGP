@@ -1,7 +1,7 @@
 #ifndef SD_skin_h
 #define SD_skin_h
 
-#include <MT/array.h>
+#include <Core/array.h>
 #include <MT/ors.h>
 #include <MT/schunk.h>
 

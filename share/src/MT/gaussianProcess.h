@@ -20,15 +20,15 @@
 #ifndef MT_gaussianProcess_h
 #define MT_gaussianProcess_h
 
-#include "array.h"
-#include "MT/util.h"
+#include <Core/array.h>
+#include <Core/util.h>
 
 #define MT_GP_DEBUG 0
-#include "plot.h"
+#include <Gui/plot.h>
 
 //===========================================================================
 //
-//!@name Gaussian Process code
+/// @name Gaussian Process code
 //
 
 struct GaussianProcess {
@@ -150,7 +150,7 @@ struct GaussianProcess {
 
 //===========================================================================
 //
-//!@name standard Gaussian covariance function
+/// @name standard Gaussian covariance function
 //
 
 struct GaussKernelParams {
@@ -159,7 +159,7 @@ struct GaussKernelParams {
   GaussKernelParams(double _priorSDV, double _widthSDV, double _derivSDV){ priorVar=_priorSDV*_priorSDV; widthVar=_widthSDV*_widthSDV; derivVar=_derivSDV*_derivSDV;}
 };
 
-//! you can also pass a double[3] as parameters
+/// you can also pass a double[3] as parameters
 /* covariance between functionvalues at \vec a and \vec b */
 inline double GaussKernel(void *P, const arr& a, const arr& b){
   GaussKernelParams& K = *((GaussKernelParams*)P);
@@ -170,7 +170,7 @@ inline double GaussKernel(void *P, const arr& a, const arr& b){
   return K.priorVar*::exp(-.5 * d/K.widthVar);
 }
 
-/** \brief return gradient of the covariance function, i.e.
+/** @brief return gradient of the covariance function, i.e.
   for i \in {vector dimensions}: \dfdx{k(a, b)}{x_i}  w.r.t.
   In other words: for all components invoke covD_F(i, P, a, b)
   you can also pass a double[3] as parameters */
@@ -182,7 +182,7 @@ inline void dGaussKernel(arr& grad, void *P, const arr& a, const arr& b){
   //MT_MSG("gamma=" <<gamma <<"; b-a" <<b -a <<"; gauss=" <<gauss<<"; grad=" <<grad);
 }
 
-/** \brief covariance between derivative at point a and function value at
+/** @brief covariance between derivative at point a and function value at
  * point b
   you can also pass a double[3] as parameters */
 inline double GaussKernelF_D(uint e, void *P, const arr& a, const arr& b){
@@ -193,7 +193,7 @@ inline double GaussKernelF_D(uint e, void *P, const arr& a, const arr& b){
   return gamma * de * gauss;
 }
 
-/** \brief covariance between derivatives at points \vec a and \vec b
+/** @brief covariance between derivatives at points \vec a and \vec b
   you can also pass a double[3] as parameters */
 inline double GaussKernelD_D(uint e, uint l, void *P, const arr& a, const arr& b){
   GaussKernelParams& K = *((GaussKernelParams*)P);
@@ -203,13 +203,13 @@ inline double GaussKernelD_D(uint e, uint l, void *P, const arr& a, const arr& b
   return gamma *(KRONEKER(e, l) - gamma*de*dl) * gauss;
 }
 
-/** \brief covariance between 2nd derivative at \vec a and fun value at \vec b
+/** @brief covariance between 2nd derivative at \vec a and fun value at \vec b
   you can also pass a double[3] as parameters */
 inline double GaussKernelDD_F(uint e, uint l, void *P, const arr& a, const arr& b){
   return - GaussKernelD_D(e, l, P, a, b);
 }
 
-/** \brief covariance between second derivative at point \vec a and  1st
+/** @brief covariance between second derivative at point \vec a and  1st
  * derivative at \vec b
   you can also pass a double[3] as parameters */
 inline double GaussKernelDD_D(uint e, uint l, uint s, void *P, const arr& a, const arr& b){

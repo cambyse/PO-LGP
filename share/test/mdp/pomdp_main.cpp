@@ -6,9 +6,9 @@
 #include <string>
 #include <map>
 
-//#include<MT/plot.h>
-#include<MT/infer.h>
-#include<MT/mdp_help.h>
+//#include <Gui/plot.h>
+#include <MT/infer.h>
+#include <MT/mdp_help.h>
 
 #include "pomdp.h"
 #include "mdpInterface.h"

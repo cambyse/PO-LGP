@@ -3,7 +3,7 @@
 
 #include <relational/symbolGrounding.h>
 
-#include <MT/array.h>
+#include <Core/array.h>
 
 class Oracle {
   public:

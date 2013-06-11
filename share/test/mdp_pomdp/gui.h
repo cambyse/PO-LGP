@@ -6,7 +6,7 @@
 #include <Qt/qfiledialog.h>
 #include "gui_ui.h"
 #define MT_IMPLEMENT_TEMPLATES
-#include <MT/util.h>
+#include <Core/util.h>
 #include <MT/mdp_EMSolver.h>
 
 class Gui:public QDialog{

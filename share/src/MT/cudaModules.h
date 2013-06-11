@@ -17,7 +17,7 @@
     -----------------------------------------------------------------  */
 
 
-#include "array.h"
+#include <Core/array.h>
 
 struct CudaInterface {
   void initMapping();

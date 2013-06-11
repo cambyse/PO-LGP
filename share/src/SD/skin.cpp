@@ -1,5 +1,5 @@
 #include "skin.h"
-#include <MT/array.h>
+#include <Core/array.h>
 #include <MT/ors.h>
 #include <MT/schunk.h>
 

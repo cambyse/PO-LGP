@@ -1,7 +1,7 @@
 #define MT_IMPLEMENT_TEMPLATES
-#include <MT/opengl.h>
-#include <MT/ors.h>
-#include <MT/ors_physx.h>
+#include <Gui/opengl.h>
+#include <Ors/ors.h>
+#include <Ors/ors_physx.h>
 
 #include "graspEvaluation.h"
 

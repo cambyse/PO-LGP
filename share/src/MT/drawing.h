@@ -1,4 +1,4 @@
-#include "array.h"
+#include <Core/array.h>
 
 #include <gtk/gtk.h>
 //struct cairo_t;

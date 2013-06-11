@@ -20,7 +20,7 @@
 #ifndef MT_mdp_help_h
 #define MT_mdp_help_h
 
-#include "array.h"
+#include <Core/array.h>
 
 //===========================================================================
 //
@@ -43,7 +43,7 @@ namespace mdp {
 // structs for problems and controllers
 //
 
-//! struct to store an MDP or POMDP (when the observation model Pyxa is given as well) \ingroup mdp
+/// struct to store an MDP or POMDP (when the observation model Pyxa is given as well) \ingroup mdp
 struct MDP {
   arr Px;    ///< start distribution
   arr Pxax;  ///< transition probs
@@ -53,7 +53,7 @@ struct MDP {
   MT::Array<uintA> neighbors; ///< state neighbor lists (for sparse worlds)
 };
 
-//! struct to store a generic structured MDP or POMDP
+/// struct to store a generic structured MDP or POMDP
 struct MDP_structured {
   infer::VariableList vars;
   infer::VariableList leftVars, rightVars;
@@ -64,14 +64,14 @@ struct MDP_structured {
   ~MDP_structured();
 };
 
-//! struct to store a standard FSC with one hidden node variable \ingroup mdp
+/// struct to store a standard FSC with one hidden node variable \ingroup mdp
 struct FSC_lev1 {
   arr P0;    ///< initialization of node
   arr Pa0;   ///< action probs
   arr P0y0;  ///< node transition probs
 };
 
-//! struct to store a 2-level FSC with two hidden node variables \ingroup mdp
+/// struct to store a 2-level FSC with two hidden node variables \ingroup mdp
 struct FSC_lev2 {
   arr P0;    ///< initialization of level 0 node
   arr P1;    ///< initialization of level 1 node

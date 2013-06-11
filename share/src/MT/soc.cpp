@@ -19,10 +19,10 @@
 
 
 #include "soc.h"
-#include "opengl.h"
-#include "plot.h"
-#include "ors.h"
-#include "optimization.h"
+#include <Gui/opengl.h>
+#include <Gui/plot.h>
+#include <Ors/ors.h>
+#include <Optim/optimization.h>
 
 //===========================================================================
 /**
@@ -44,13 +44,13 @@ namespace soc {};
 // trivial helpers
 //
 
-//! \brief get the velocity vt of a trajectory q at time t
+/// @brief get the velocity vt of a trajectory q at time t
 void soc::getVelocity(arr& vt, const arr& q, uint t, double tau){
   if(!t) vt = (q[0]-q[0])/tau;
   else   vt = (q[t]-q[t-1])/tau;
 }
 
-//! compute the full (q, v) trajectory from a trajectory q
+/// compute the full (q, v) trajectory from a trajectory q
 void soc::getPhaseTrajectory(arr& x, const arr& q, double tau){
   uint T=q.d0-1, n=q.d1, t;
   x.resize(T+1, 2, n);
@@ -62,7 +62,7 @@ void soc::getPhaseTrajectory(arr& x, const arr& q, double tau){
   x.reshape(T+1, 2*n);
 }
 
-//! simply get the q-trajectory from a (q, v)-trajectory
+/// simply get the q-trajectory from a (q, v)-trajectory
 void soc::getPositionTrajectory(arr& q, const arr& _q){
   uint T=_q.d0, n=_q.d1/2, i, t;
   CHECK(2*n==_q.d1, "")
@@ -70,7 +70,7 @@ void soc::getPositionTrajectory(arr& q, const arr& _q){
   for(t=0; t<T; t++) for(i=0; i<n; i++) q(t, i)=_q(t, i);
 }
 
-/** \brief use regularized Inverse Kinematics to compute a joint
+/** @brief use regularized Inverse Kinematics to compute a joint
     trajectory from the task trajectory previously specifies for the
     taskid-th task variable */
 void soc::straightTaskTrajectory(SocSystemAbstraction& sys, arr& q, uint taskid){
@@ -103,7 +103,7 @@ void soc::interpolateTrajectory(arr& qNew, const arr& q, double step){
   }
 }
 
-/** \brief use regularized Inverse Kinematics to compute a joint
+/** @brief use regularized Inverse Kinematics to compute a joint
     trajectory from a given task trajectory x for the 0-th task variable */
 void soc::getJointFromTaskTrajectory(SocSystemAbstraction& soci, arr& q, const arr& x){
   uint t, T=x.d0, n=soci.qDim();
@@ -122,7 +122,7 @@ void soc::getJointFromTaskTrajectory(SocSystemAbstraction& soci, arr& q, const a
 }
 
 
-//! not-yet-implemented
+/// not-yet-implemented
 void soc::partialJointFromTaskTrajectory(SocSystemAbstraction& soci, arr& dCdx, const arr& delCdelq, const arr& q, const arr& x){
   NIY;
 }
@@ -695,7 +695,7 @@ void soc::SocSystemAbstraction::costChecks(const arr& x){
 }
 
 
-//! play the trajectory using OpenGL
+/// play the trajectory using OpenGL
 void soc::SocSystemAbstraction::displayState(const arr *q, const arr *Qinv, const char *text, bool reportVariables){
   if(gl){
     if(q) setq(*q);
@@ -720,7 +720,7 @@ void soc::SocSystemAbstraction::displayTrajectory(const arr& q, const arr *Qinv,
   if(steps==1) gl->watch();
 }
 
-//! computes separate costs for each ctrl variable
+/// computes separate costs for each ctrl variable
 double soc::SocSystemAbstraction::analyzeTrajectory(const arr& x, bool plot){
   uint t, T=get_T(), i, m=nTasks();
   CHECK(x.nd==2 && x.d0==T+1 && x.d1==(dynamic?2.:1.)*qDim(), "");

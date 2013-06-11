@@ -180,7 +180,7 @@ void earlyVision(CudaWorkspace WS, int N, int threads_per_block){
   cuda_error("cudaThreadSynchronize");
 }
 
-#else //!def MT_CUDA
+#else ///def MT_CUDA
 /* This is an empty file.
 
    In case CUDA=1 is not set in Makefile, the linker will still want

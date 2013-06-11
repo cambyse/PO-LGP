@@ -1,7 +1,7 @@
 #include "al_logistic_regression.h"
 #include "al_util.h"
 
-#include <MT/array.h>
+#include <Core/array.h>
 #include <JK/utils/util.h>
 #include <JK/utils/sampler.h>
 #include <JK/utils/featureGenerator.h>

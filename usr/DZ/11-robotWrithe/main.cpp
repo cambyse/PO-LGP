@@ -1,7 +1,7 @@
 #include <MT/soc.h>
 #include <MT/ors.h>
 #include <MT/util.h>
-#include <MT/array.h>
+#include <Core/array.h>
 #include <MT/specialTaskVariables.h>
 #include <MT/opengl.h>
 #include <MT/aico.h> 

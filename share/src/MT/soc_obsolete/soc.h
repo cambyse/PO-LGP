@@ -14,14 +14,14 @@
     You should have received a COPYING file of the GNU General Public License
     -----------------------------------------------------------------  */    -----------------------------------------------------------------  */
 
-/** \file soc.h
-    \brief Stochastic Optimal Control library */
+/** @file soc.h
+    @brief Stochastic Optimal Control library */
 
 #ifndef MT_soc_h
 #define MT_soc_h
 
-#include "array.h"
-#include "util.h"
+#include <Core/array.h>
+#include <Core/util.h>
 
 //-- fwd declarations
 class OpenGL;
@@ -44,12 +44,12 @@ enum { ConjGrad=0, LevMar=1, Rprop=2, RpropConjGrad=3, SQP=4, Attractor=5 };
 // SocSystemAbstraction
 //
 
-/** \brief defines an abstraction of stochastic optimal control
+/** @brief defines an abstraction of stochastic optimal control
     problems which interfaces between solution methods and system simulators
     -- see section 3.2 of the <a href="../guide.pdf">guide</a> */
 struct SocSystemAbstraction{
 
-  ///@name data fields
+  /// @name data fields
   std::ostream *os; ///< if non-NULL, some routines might give output
   OpenGL *gl;       ///< if non-NULL, some routines might give output
   bool dynamic;     ///< determines whether this problem is dynamic or not
@@ -57,12 +57,12 @@ struct SocSystemAbstraction{
   
   uintA stepScale;    ///< the scale of each step (time interval between i-th and (i+1)-th step=2^scale)
 
-  ///@name initialization
+  /// @name initialization
   SocSystemAbstraction();
   virtual ~SocSystemAbstraction();
   virtual SocSystemAbstraction *newClone() const; ///< creates a new clone of this SocAbstraction (deep copy of simulators etc)
     
-  ///@name low level access routines: need to be implemented by the simulator
+  /// @name low level access routines: need to be implemented by the simulator
 
   // access general problem information
   virtual uint get_T() = 0;            ///< total time steps of the trajectory
@@ -110,7 +110,7 @@ struct SocSystemAbstraction{
 
 
 
-  ///@name high level methods: they are being accessed by the solvers
+  /// @name high level methods: they are being accessed by the solvers
 
   // abstract SOC interface
   virtual void getTaskCostTerms(arr& Phi, arr& PhiJ, const arr& xt, uint t); ///< the general (`big') task vector and its Jacobian
@@ -158,7 +158,7 @@ struct SocSolver{
 
 //===========================================================================
 //
-///@name     trivial helpers
+/// @name     trivial helpers
 // @{
 
 void getVelocity(arr& vt, const arr& q, uint t, double tau);
@@ -174,7 +174,7 @@ void straightTaskTrajectory(SocSystemAbstraction& soci, arr& q, uint taskid);
 
 //===========================================================================
 // @}
-///@name     inverse kinematics control
+/// @name     inverse kinematics control
 // @{
 
 void bayesianIKControl(SocSystemAbstraction& soci, arr& dq, uint t);
@@ -190,7 +190,7 @@ void bayesianIKControl2    (SocSystemAbstraction& soci, arr& q , const arr& q_1 
 
 //===========================================================================
 // @}
-///@name     gradient optimization
+/// @name     gradient optimization
 // @{
 
 void gradientOptimization(SocSystemAbstraction& soci,
@@ -231,7 +231,7 @@ void SQPOptimization(SocSystemAbstraction& soci,
 
 //===========================================================================
 // @}
-///@name     LQG methods
+/// @name     LQG methods
 // @{
 
 struct LQG{
@@ -272,10 +272,10 @@ LQG* LQG_multiScaleSolver(SocSystemAbstraction& sys,
 
 //===========================================================================
 // @}
-///@name     bayesian inference methods
+/// @name     bayesian inference methods
 // @{
 
-/** \brief Apprioximate Inference Control */
+/** @brief Apprioximate Inference Control */
 struct AICO{
   //parameters (INPUT)
   SocSystemAbstraction *sys;
@@ -388,7 +388,7 @@ inline void getControlledTrajectory(arr& q, const soc::AICO& aico){
 
 //===========================================================================
 // @}
-///@name preliminary or obsolete
+/// @name preliminary or obsolete
 // @{
 
 #if 1
@@ -430,7 +430,7 @@ void createDynamicProblem(SocSystem_Toy &soci,
 // ORS simulator implementation of the SocAbstration
 //
 
-/** \brief an implementation of the SocSystemAbstraction using the \ref ors
+/** @brief an implementation of the SocSystemAbstraction using the \ref ors
     simulator */
 struct SocSystem_Ors: public virtual SocSystemAbstraction{
   ors::Graph *ors;
@@ -503,7 +503,7 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction{
 // toy implementation of the SocAbstration
 //
 
-/** \brief an implementation of the SocSystemAbstraction that simulates a
+/** @brief an implementation of the SocSystemAbstraction that simulates a
     single 1D point mass on a spring */
 struct SocSystem_Toy: public virtual SocSystemAbstraction{
   struct sSocSystem_Toy *s;

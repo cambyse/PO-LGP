@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
 #else
 
 
-#include <MT/array.h>
+#include <Core/array.h>
 #include <MT/drawing.h>
 #include <MT/gtk.h>
 #include <gtk/gtk.h>

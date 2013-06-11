@@ -1,5 +1,5 @@
-#include <MT/opengl.h>
-#include <MT/ors.h>
+#include <Gui/opengl.h>
+#include <Ors/ors.h>
 
 struct GraspEvaluation{
   struct sGraspEvaluation *s;

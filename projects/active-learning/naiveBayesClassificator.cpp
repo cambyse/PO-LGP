@@ -8,7 +8,7 @@
 #include <cstdlib>
 
 #include <MT/util.h>
-#include <MT/array.h>
+#include <Core/array.h>
 #include <MT/gauss.h>
 class sNaiveBayesClassificator {
 public:

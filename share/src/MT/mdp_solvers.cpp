@@ -17,7 +17,7 @@
     -----------------------------------------------------------------  */
 
 
-#include "util.h"
+#include <Core/util.h>
 #include "mdp.h"
 #include "mstep.h"
 
@@ -391,7 +391,7 @@ void mdp::mdpEM(const MDP& mdp, arr& pi, arr& hatBeta, uint Tmax, float cutoffTi
   //glDisplayRedBlue(hat_alpha, global_maze.d0, global_maze.d1, true);
 }
 
-//! calculates Gvis correctly with the posterior over states
+/// calculates Gvis correctly with the posterior over states
 void mdp::calcPvisited(arr& Pvisited, const MDP& mdp){
   uint t, T, x, Tmax=ALPHA.d0, X=mdp.Px.N;
   double Z, p;

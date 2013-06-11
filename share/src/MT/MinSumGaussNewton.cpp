@@ -17,7 +17,7 @@
     -----------------------------------------------------------------  */
 
 
-#include "util.h"
+#include <Core/util.h>
 #include "MinSumGaussNewton.h"
 
 void MinSumGaussNewton::setUndirectedGraph(uint n,const uintA& E){
@@ -319,7 +319,7 @@ void MinSumGaussNewton::step(uint steps){
   }
 }
 
-#include "array_t.cxx"
+#include <Core/array_t.h>
 template MT::Array<Fij>::Array();
 template MT::Array<Fij>::~Array();
 template MT::Array<Mu>::Array();

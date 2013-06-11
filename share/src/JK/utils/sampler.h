@@ -1,7 +1,7 @@
 #ifndef _SAMPLER_H_
 #define _SAMPLER_H_
 
-#include <MT/array.h>
+#include <Core/array.h>
 #include <relational/robotManipulationSimulator.h>
 #include <devTools/logging.h>
 SET_LOG(sampler, INFO);

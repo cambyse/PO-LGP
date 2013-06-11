@@ -1,5 +1,5 @@
 #include "graspObjects.h"
-#include <MT/array.h>
+#include <Core/array.h>
 #include <MT/util.h>
 
 double

@@ -1,7 +1,7 @@
 #define MT_IMPLEMENTATION
 
 #include <MT/revelModule.h>
-#include <MT/opengl.h>
+#include <Gui/opengl.h>
 
 float angle;
 

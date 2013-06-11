@@ -1,5 +1,5 @@
 #define MT_IMPLEMENTATION
-#include <MT/array.h>
+#include <Core/array.h>
 #include <MT/util.h>
 #include <MT/infer.h>
 

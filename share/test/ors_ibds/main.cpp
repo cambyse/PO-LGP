@@ -1,6 +1,6 @@
 #include <stdlib.h>
-#include <MT/ors.h>
-#include <MT/opengl.h>
+#include <Ors/ors.h>
+#include <Gui/opengl.h>
 
 #include "ors_ibds.h"
 
