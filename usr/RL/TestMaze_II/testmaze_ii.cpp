@@ -279,7 +279,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString utree_expansion_type_s(             "    ex-type / ext. . . . . . . [u(tility)|s(tate)r(eward)] . . . . . . . .-> get/set expansion type for UTree");
     QString learning_linQ_s(                    "    === Linear-Q ===");
     QString optimize_linQ_ridge_s(              "    lq-optimize-ridge / lqor . [<double>]. . . . . . . . . . . . . . . . .-> optimize Linear-Q [ with L2-regularization coefficient <double> ]");
-    QString optimize_linQ_l1_s(                 "    lq-optimize-l1 / lqol1 . . <double> [<int>]. . . . . . . . . . . . . .-> optimize Linear-Q with L1-regularization coefficient <double> [ and max <int> iterations ]");
+    QString optimize_linQ_l1_s(                 "    lq-optimize-l1 / lqol1 . . [<double> [<int>] | check | c ] . . . . . .-> optimize Linear-Q with L1-regularization coefficient <double> [ and max <int> iterations ] or check derivatives");
     QString construct_s(                        "    construct / con. . . . . . <int> . . . . . . . . . . . . . . . . . . .-> construct candidate features with distance <int>");
     QString lq_erase_zero_weight_s(             "    lq-erase / lqe . . . . . . [<double>]. . . . . . . . . . . . . . . . .-> erase features with zero weight [ weight below or equal to <double> ]");
     QString lq_erase_zero_s(                    "    lq-erase-zero / lqez . . . . . . . . . . . . . . . . . . . . . . . . .-> erase features which are never non-zero");
@@ -497,6 +497,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 } else {
                     linQ.optimize_l1(double_args[1]);
                 }
+            } else if(str_args.size()>1 && (str_args[1]=="check" || str_args[1]=="c") ) {
+                linQ.check_derivatives(3,10,1e-6,1e-3);
             } else {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( optimize_linQ_l1_s );

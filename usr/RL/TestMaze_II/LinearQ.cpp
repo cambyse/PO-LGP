@@ -406,6 +406,74 @@ int LinearQ::progress_model(
     return 0;
 }
 
+void LinearQ::check_derivatives(const int& number_of_samples, const double& range, const double& max_variation, const double& max_relative_deviation) {
+
+    // initialize arrays
+    lbfgsfloatval_t * x = lbfgs_malloc(active_features.size());
+    lbfgsfloatval_t * dx = lbfgs_malloc(active_features.size());
+    lbfgsfloatval_t * grad = lbfgs_malloc(active_features.size());
+    lbfgsfloatval_t * grad_dummy = lbfgs_malloc(active_features.size());
+
+    // remember deviations
+    lbfgsfloatval_t relative_deviation = 0;
+
+    DEBUG_OUT(0,"Checking first derivative (#samples="<<number_of_samples<<", range=+/-"<<range<<", max_var="<<max_variation<<", max_rel_dev="<<max_relative_deviation);
+    for(int count=0; count<number_of_samples; ++count) {
+
+        // set test point
+        for(uint x_idx=0; x_idx<active_features.size(); ++x_idx) {
+            x[x_idx] = range * (2*drand48()-1);
+            dx[x_idx] = (2*drand48()-1)*max_variation;
+        }
+
+        lbfgsfloatval_t fx = evaluate_model(x,grad,active_features.size());
+        DEBUG_OUT(1, "fx = " << fx );
+        for(uint x_idx=0; x_idx<active_features.size(); ++x_idx) {
+
+            // go in positive direction
+            x[x_idx] += dx[x_idx]/2.;
+            lbfgsfloatval_t fx_plus = evaluate_model(x,grad_dummy,active_features.size());
+            // go in negative direction
+            x[x_idx] -= dx[x_idx];
+            lbfgsfloatval_t fx_minus = evaluate_model(x,grad_dummy,active_features.size());
+            // reset x
+            x[x_idx] += dx[x_idx]/2.;
+
+            // numerical gradient
+            lbfgsfloatval_t ngrad = (fx_plus-fx_minus)/dx[x_idx];
+
+            // check for deviations
+            lbfgsfloatval_t current_relative_deviation = fabs(ngrad-grad[x_idx])/fabs(grad[x_idx]);
+            if(current_relative_deviation>relative_deviation) {
+                relative_deviation=current_relative_deviation;
+            }
+
+            // print result
+            DEBUG_OUT(1,
+                      "    diff[" << x_idx << "] = " << grad[x_idx]-ngrad <<
+                      ", grad["   << x_idx << "] = " << grad[x_idx] <<
+                      ", ngrad["  << x_idx << "] = " << ngrad <<
+                      ", x["      << x_idx << "] = " << x[x_idx] <<
+                      ", dx["     << x_idx << "] = " << dx[x_idx] <<
+                      ", rel_dev["     << x_idx << "] = " << current_relative_deviation
+                );
+
+
+        }
+    }
+    if(relative_deviation>max_relative_deviation) {
+        DEBUG_OUT(0, "ERRORS in first derivative found: max relative deviation = " << relative_deviation << " (tolerance = " << max_relative_deviation << ")" );
+        DEBUG_OUT(0, "");
+    } else {
+        DEBUG_OUT(0, "No error in first derivative found (no relative deviations larger that " << max_relative_deviation << ").");
+        DEBUG_OUT(0, "");
+    }
+    lbfgs_free(x);
+    lbfgs_free(dx);
+    lbfgs_free(grad);
+    lbfgs_free(grad_dummy);
+}
+
 void LinearQ::update_loss_terms() {
     //---------------//
     // get dimension //

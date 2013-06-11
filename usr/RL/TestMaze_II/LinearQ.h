@@ -109,6 +109,12 @@ public:
             int ls
     );
 
+    void check_derivatives(const int& number_of_samples,
+                           const double& range,
+                           const double& max_variation,
+                           const double& max_relative_deviation
+        );
+
 private:
 
     //--------------//

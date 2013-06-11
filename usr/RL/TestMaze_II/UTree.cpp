@@ -296,6 +296,14 @@ void UTree::clear_tree() {
     }
 }
 
+int UTree::get_tree_size() const {
+    int size = 0;
+    for(graph_t::NodeIt node(graph); node!=INVALID; ++node) {
+        ++size;
+    }
+    return size;
+}
+
 double UTree::expand_leaf_node(const double& score_threshold) {
 
     DEBUG_OUT(1,"Expanding...");

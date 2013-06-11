@@ -50,6 +50,8 @@ public:
     StateIt & operator--();
     StateIt & operator+=(const int& c);
     StateIt & operator-=(const int& c);
+    StateIt operator+(const int& c) const { return StateIt(*this)+=c; }
+    StateIt operator-(const int& c) const { return StateIt(*this)-=c; }
 
     static const StateIt first();
     static const StateIt last();

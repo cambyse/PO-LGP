@@ -49,6 +49,8 @@ public:
     RewardIt & operator--();
     RewardIt & operator+=(const int& c);
     RewardIt & operator-=(const int& c);
+    RewardIt operator+(const int& c) const { return RewardIt(*this)+=c; }
+    RewardIt operator-(const int& c) const { return RewardIt(*this)-=c; }
 
     static const RewardIt first();
     static const RewardIt last();

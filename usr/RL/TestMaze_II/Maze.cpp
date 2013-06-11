@@ -131,7 +131,7 @@ void Maze::render_initialize(QGraphicsView * view) {
     double border_width = last_maze_state.x()+state_size/2 - border_x + 0.1*state_size;
     double border_height = last_maze_state.y()+state_size/2 - border_y + 0.1*state_size;
     for(rewardIt_t rewIt=rewardIt_t::first(); rewIt!=INVALID; ++rewIt) {
-        double intensity = (rewIt-reward_t::min_reward)/(reward_t::max_reward-reward_t::min_reward);
+        double intensity = ((reward_t)rewIt-reward_t::min_reward)/(reward_t::max_reward-reward_t::min_reward);
         if(rewIt!=reward_t::min_reward) {
             // to clearly distinguish reward from non-reward
             intensity = intensity/2 + 0.5;
@@ -506,6 +506,30 @@ void Maze::set_current_state(const state_t& state) {
         current_instance = current_instance->append_instance(action_t::STAY, current_state.state_idx(), reward_t::min_reward);
     }
     DEBUG_OUT(1,"Set current state to (" << current_state.x() << "," << current_state.y() << ")");
+}
+
+std::string Maze::get_rewards() {
+    std::stringstream ss;
+    for(int r_idx=0; r_idx<(int)rewards_n; ++r_idx) {
+        rewardIt_t rewIt = rewardIt_t::first();
+        rewIt += rewards[r_idx][REWARD_IDX];
+        ss << "Reward " << r_idx << std::endl;
+        ss << "    ACTIVATION_STATE : " << rewards[r_idx][ACTIVATION_STATE] << std::endl;
+        ss << "    RECEIVE_STATE    : " << rewards[r_idx][RECEIVE_STATE] << std::endl;
+        ss << "    TIME_DELAY       : " << rewards[r_idx][TIME_DELAY] << std::endl;
+        ss << "    reward           : " <<  rewIt << std::endl;
+        ss << "    activation       : " <<
+            (rewards[r_idx][ACTIVATION_TYPE]==EACH_TIME ? "EACH_TIME" : "ON_RELEASE") << std::endl;
+    }
+    return ss.str();
+}
+
+std::string Maze::get_walls() {
+    std::stringstream ss;
+    for(int w_idx=0; w_idx<(int)walls_n; ++w_idx) {
+        ss << "Wall " << w_idx << ": (" << walls[w_idx][0] << "|" << walls[w_idx][1] << ")" << std::endl;
+    }
+    return ss.str();
 }
 
 void Maze::rescale_scene(QGraphicsView * view) {

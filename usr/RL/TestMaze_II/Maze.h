@@ -75,6 +75,9 @@ public:
 
     void set_current_state(const state_t&);
 
+    static std::string get_rewards();
+    static std::string get_walls();
+
 private:
 
 //    bool reward_active;

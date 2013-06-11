@@ -61,6 +61,8 @@ public:
     ActionIt & operator--();
     ActionIt & operator+=(const int& c);
     ActionIt & operator-=(const int& c);
+    ActionIt operator+(const int& c) const { return ActionIt(*this)+=c; }
+    ActionIt operator-(const int& c) const { return ActionIt(*this)-=c; }
 
     static const ActionIt first();
     static const ActionIt last();

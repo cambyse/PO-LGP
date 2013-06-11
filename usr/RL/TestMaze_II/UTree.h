@@ -79,6 +79,9 @@ public:
     /** \brief Clear the tree but not the data (instances). */
     void clear_tree();
 
+    /** \brief Return the current tree size. */
+    int get_tree_size() const;
+
     /** \brief Expand the highest scored leaf by using corresponding feature.
      *
      * Scores are updated if necessary. For every leaf-feature pair a score is
