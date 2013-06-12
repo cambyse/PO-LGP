@@ -187,7 +187,7 @@ int BatchMaze::run(int argn, char ** argarr) {
                     linQ->erase_zero_weighted_features();
                 }
                 // finalize
-                linQ->optimize_ridge(0);
+                linQ->optimize_ridge(1e-10);
             } else {
                 DEBUG_DEAD_LINE;
             }

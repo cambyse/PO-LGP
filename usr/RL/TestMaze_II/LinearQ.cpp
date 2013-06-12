@@ -158,8 +158,8 @@ int LinearQ::optimize_l1(const double& reg, const int& max_iter, double * loss) 
     }
 
     // todo what values
-    param.delta = 1e-4;
-    param.epsilon = 1e-5;
+    param.delta = 1e-3;   // change of objective (f-f')/f (default 0)
+    param.epsilon = 1e-3; // change of parameters ||g||/max(1,||x||) (default 1e-5)
 
     // Start the L-BFGS optimization
     lbfgsfloatval_t fx;
