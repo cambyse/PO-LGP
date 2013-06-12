@@ -151,6 +151,12 @@ private:
     void construct_candidate_features(const int& n);
 
     probability_t prior_probability(const state_t&, const reward_t&) const;
+
+    /** \brief Calculate loss function. */
+    double loss_function(const arma::vec& w) const { return arma::as_scalar(c + 2*rho.t()*w + w.t()*L*w); }
+
+    /** \brief Calculate gradient of the loss function. */
+    arma::vec loss_gradient(const arma::vec& w) const { return 2 * rho + 2 * L * w; }
 };
 
 #endif /* LINEARQ_H_ */

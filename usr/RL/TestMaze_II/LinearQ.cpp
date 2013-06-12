@@ -140,7 +140,7 @@ double LinearQ::optimize_ridge(const double& reg) {
     }
 
     // calculate loss
-    double loss = arma::as_scalar(c + 2*rho.t()*w + w.t()*L*w);
+    double loss = loss_function(w);
     DEBUG_OUT(1,"    Loss = " << loss << " (sqrt = " << sqrt(loss) << ")" );
 
     return loss;
@@ -348,10 +348,10 @@ lbfgsfloatval_t LinearQ::evaluate_model(
     }
 
     // get loss for given weights
-    lbfgsfloatval_t fx = arma::as_scalar(c + 2*rho.t()*w + w.t()*L*w);
+    lbfgsfloatval_t fx = loss_function(w);
 
     // get gradient for given weights
-    vec dw = 2 * rho + 2 * L * w;
+    vec dw = loss_gradient(w);
 
     // transfer gradient back
     for(int i=0; i<n; i++) {
@@ -522,7 +522,7 @@ void LinearQ::update_loss_terms() {
         //--------------------//
 
         // constant
-        c += ins_t0->reward;
+        c += pow(ins_t0->reward,2);
 
         // iterate through rows
         for(int j=0; j<feature_n; ++j) {
