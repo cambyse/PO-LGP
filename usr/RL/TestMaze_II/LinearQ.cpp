@@ -14,6 +14,11 @@
 #define DEBUG_LEVEL 0
 #include "debug.h"
 
+// maze_x_size
+// maze_y_size
+// k
+USE_DATA_CONSTS;
+
 using std::vector;
 using std::set;
 using std::list;
@@ -35,8 +40,6 @@ using arma::zeros;
 using util::INVALID;
 
 LinearQ::LinearQ(const double& d):
-        k(Data::k),
-        instance_data(nullptr),
         discount(d),
         lambda(nullptr),
         loss_terms_up_to_date(false)
@@ -46,7 +49,7 @@ LinearQ::LinearQ(const double& d):
     //----------------------------------------//
 
     // delayed action, state, and reward features
-    for(int k_idx = 0; k_idx>=-k; --k_idx) {
+    for(int k_idx = 0; k_idx>=-(int)k; --k_idx) {
         // actions
         for(action_t action : actionIt_t::all) {
             ActionFeature * action_feature = ActionFeature::create(action,k_idx);
@@ -75,22 +78,15 @@ LinearQ::LinearQ(const double& d):
     DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
 }
 
-LinearQ::~LinearQ() {
-    delete instance_data;
-}
+LinearQ::~LinearQ() {}
 
 void LinearQ::add_action_state_reward_tripel(
         const action_t& action,
         const state_t& state,
         const reward_t& reward
 ) {
-    // create instance data or append to existing
-    if(instance_data==nullptr) {
-        instance_data = instance_t::create(action,state,reward);
-    } else {
-        instance_data = instance_data->append_instance(action,state,reward);
-    }
-    DEBUG_OUT(2, "added (action,state,reward) = (" << action << "," << state << "," << reward << ")" );
+    // call function of parent class
+    HistoryObserver::add_action_state_reward_tripel(action,state,reward);
 
     // mark loss terms as out-of-date
     loss_terms_up_to_date = false;
@@ -143,10 +139,9 @@ double LinearQ::optimize_ridge(const double& reg) {
             );
     }
 
-    // calculate loss (remove regularization term)
-    L.diag() -= reg;
+    // calculate loss
     double loss = arma::as_scalar(c + 2*rho.t()*w + w.t()*L*w);
-    DEBUG_OUT(1,"    sqrt(Loss) = " << sqrt(loss) );
+    DEBUG_OUT(1,"    Loss = " << loss << " (sqrt = " << sqrt(loss) << ")" );
 
     return loss;
 }
@@ -183,7 +178,7 @@ int LinearQ::optimize_l1(const double& reg, const int& max_iter, double * loss) 
         feature_weights[f_idx] = lambda[f_idx];
     }
     DEBUG_OUT(1, "L-BFGS optimization terminated with status code = " << ret << " ( " << lbfgs_code(ret) << " )");
-    DEBUG_OUT(1,"loss = " << fx );
+    DEBUG_OUT(1,"Loss = " << fx << " (sqrt = " << sqrt(fx) << ")" );
     DEBUG_OUT(1,"");
 
     // free lambda
@@ -198,8 +193,8 @@ int LinearQ::optimize_l1(const double& reg, const int& max_iter, double * loss) 
 }
 
 void LinearQ::clear_data() {
-    delete instance_data;
-    instance_data = nullptr;
+    // call function of parent class
+    HistoryObserver::clear_data();
 
     // mark loss terms as out-of-date
     loss_terms_up_to_date = false;

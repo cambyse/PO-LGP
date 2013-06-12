@@ -3,7 +3,6 @@
 #include "util.h"
 
 #include <float.h>  // for DBL_MAX
-#include <unistd.h> // for sleep()
 
 #define DEBUG_LEVEL 1
 #include "debug.h"
@@ -271,6 +270,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString validate_s(                         "    validate / v . . . . . . . {crf,kmdp}[exact|mc <int>]. . . . . . . . .-> validate CRF or k-MDP model using exact (default) or Monte Carlo (with <int> samples) computation of the KL-divergence");
     QString learning_utree_s(                   "    === UTree ===");
     QString expand_leaf_nodes_s(                "    expand / ex. . . . . . . . [<int>|<double] . . . . . . . . . . . . . .-> expand <int> leaf nodes / expand leaves until a score of <double> is reached");
+    QString expand_via_value_iteration_s(       "    expand-vi / exvi . . . . . . . . . . . . . . . . . . . . . . . . . . .-> run value iteration and leaf expansion alternating until convergence (only for UTILITY_EXPANSION)");
     QString print_utree_s(                      "    print-utree. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> print the current UTree");
     QString print_leaves_s(                     "    print-leaves . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> print leaves of the current UTree");
     QString clear_utree_s(                      "    clear-utree. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> clear UTree");
@@ -359,6 +359,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             TO_CONSOLE( validate_s );
             TO_CONSOLE( learning_utree_s ); // UTree
             TO_CONSOLE( expand_leaf_nodes_s );
+            TO_CONSOLE( expand_via_value_iteration_s );
             TO_CONSOLE( print_utree_s );
             TO_CONSOLE( print_leaves_s );
             TO_CONSOLE( clear_utree_s );
@@ -533,13 +534,31 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 double score = 0;
                 for(int i=0; i<int_args[1]; ++i) {
                     score = utree.expand_leaf_node();
-                    // todo WHAT??!! Instances of root node are
-                    // inserted twice into new node without usleep().
-                    usleep(1);
                 }
                 TO_CONSOLE( QString("    Last score was %1").arg(score) );
             } else if(double_args_ok[1]) {
                 while( double_args[1] <= utree.expand_leaf_node(double_args[1]) ) {}
+            } else {
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( expand_leaf_nodes_s );
+            }
+        } else if(str_args[0]=="expand-vi" || str_args[0]=="exvi") {
+            if(str_args.size()==1) {
+                if(utree.get_expansion_type()!=UTree::UTILITY_EXPANSION) {
+                    TO_CONSOLE("    expansion type is not UTILITY_EXPANSION, aborting");
+                } else {
+                    double score_threshold = 1e-3;
+                    double max_score = DBL_MAX;
+                    double max_update = DBL_MAX;
+                    while(max_score>score_threshold) {
+                        max_update = DBL_MAX;
+                        while(max_update>1e-10) {
+                            max_update = utree.value_iteration();
+                        }
+                        max_score = utree.expand_leaf_node(score_threshold);
+                    }
+                    TO_CONSOLE( QString("    last vi-update: %1, last score: %2").arg(max_update).arg(max_score) );
+                }
             } else {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( expand_leaf_nodes_s );
@@ -559,7 +578,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 repeat(int_args[1]) {
                     max_diff = utree.q_iteration(double_args[2]);
                 }
-                TO_CONSOLE( QString(    "run %1 iteration(s) with alpha=%2, last maximum update was %3").arg(int_args[1]).arg(double_args[2]).arg(max_diff) );
+                TO_CONSOLE( QString("    run %1 iteration(s) with alpha=%2, last maximum update was %3").arg(int_args[1]).arg(double_args[2]).arg(max_diff) );
             } else {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( utree_q_iteration_s );

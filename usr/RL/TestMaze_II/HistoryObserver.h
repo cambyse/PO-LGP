@@ -9,12 +9,12 @@ public:
     USE_REPRESENTATION_TYPEDEFS;
     HistoryObserver();
     virtual ~HistoryObserver();
-    void add_action_state_reward_tripel(
+    virtual void add_action_state_reward_tripel(
             const action_t& action,
             const state_t& state,
             const reward_t& reward
     );
-    void clear_data() {
+    virtual void clear_data() {
         delete instance_data;
         instance_data = nullptr;
     }

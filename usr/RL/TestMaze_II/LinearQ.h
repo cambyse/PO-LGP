@@ -4,6 +4,7 @@
 #include "Data.h"
 #include "Representation/Representation.h"
 #include "Feature.h"
+#include "HistoryObserver.h"
 
 #define ARMA_NO_DEBUG
 #include <armadillo>
@@ -12,7 +13,7 @@
 
 #include <vector>
 
-class LinearQ
+class LinearQ: public HistoryObserver
 {
 public:
 
@@ -25,7 +26,7 @@ public:
     virtual ~LinearQ();
 
     /** \brief Add a new instance to the tree. */
-    void add_action_state_reward_tripel(
+    virtual void add_action_state_reward_tripel(
             const action_t& action,
             const state_t& state,
             const reward_t& reward
@@ -53,7 +54,7 @@ public:
     int optimize_l1(const double& reg, const int& max_iter = 0, double * loss = nullptr);
 
     /** \brief Clears all data (all instances). */
-    void clear_data();
+    virtual void clear_data();
 
     action_t get_max_value_action(const instance_t *);
 
@@ -120,8 +121,6 @@ private:
     //--------------//
     // General Data //
     //--------------//
-    int k;                                           ///< Number of time steps in the past to be considered.
-    instance_t * instance_data;                      ///< Data used for maximazing the likelihood.
     double discount;                                 ///< Discount for computing value.
 
     //------------------------//

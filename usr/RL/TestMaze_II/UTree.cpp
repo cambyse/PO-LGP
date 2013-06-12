@@ -12,6 +12,11 @@
 #define DEBUG_LEVEL 0
 #include "debug.h"
 
+// maze_x_size
+// maze_y_size
+// k
+USE_DATA_CONSTS;
+
 using std::vector;
 using std::map;
 using std::set;
@@ -37,8 +42,6 @@ UTree::NodeInfo::NodeInfo(const Feature * f, const f_ret_t& r):
 {}
 
 UTree::UTree(const double& d):
-        k(Data::k),
-        instance_data(nullptr),
         root_node(INVALID),
         node_info_map(graph),
         discount(d)
@@ -49,7 +52,7 @@ UTree::UTree(const double& d):
     //----------------------------------------//
 
     // delayed action, state, and reward features
-    for(int k_idx = 0; k_idx>-k; --k_idx) {
+    for(int k_idx = 0; k_idx>(int)-k; --k_idx) {
         // actions
         for(action_t action : actionIt_t::all) {
             ActionFeature * action_feature = ActionFeature::create(action,k_idx);
@@ -71,22 +74,15 @@ UTree::UTree(const double& d):
     }
 }
 
-UTree::~UTree() {
-    delete instance_data;
-}
+UTree::~UTree() {}
 
 void UTree::add_action_state_reward_tripel(
         const action_t& action,
         const state_t& state,
         const reward_t& reward
 ) {
-    // create instance data or append to existing
-    if(instance_data==nullptr) {
-        instance_data = instance_t::create(action,state,reward);
-    } else {
-        instance_data = instance_data->append_instance(action,state,reward);
-    }
-    DEBUG_OUT(2, "added (action,state,reward) = (" << action << "," << state << "," << reward << ")" );
+    // call function of parent class
+    HistoryObserver::add_action_state_reward_tripel(action,state,reward);
 
     // create root node if necessary
     if(root_node==INVALID) {
@@ -105,8 +101,9 @@ void UTree::clear_data() {
         node_info_map[node].statistics_up_to_date = false;
         node_info_map[node].scores.clear();
     }
-    delete instance_data;
-    instance_data = nullptr;
+
+    // call function of parent class
+    HistoryObserver::clear_data();
 }
 
 UTree::probability_t UTree::get_prediction(

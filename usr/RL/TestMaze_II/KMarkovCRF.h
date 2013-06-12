@@ -119,11 +119,6 @@ private:
     typedef std::tuple<const instance_t*, action_t> input_tuple_t;
     typedef std::set<input_tuple_t> input_set_t;
 
-    //--------------//
-    // General Data //
-    //--------------//
-    int k;                                           ///< Number of time steps in the past to be considered.
-
     //------------------------//
     // Features, Weights etc. //
     //------------------------//

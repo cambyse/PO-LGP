@@ -4,6 +4,7 @@
 #include "Data.h"
 #include "Representation/Representation.h"
 #include "Feature.h"
+#include "HistoryObserver.h"
 
 #include <lemon/list_graph.h>
 
@@ -11,7 +12,7 @@
 #include <set>
 #include <map>
 
-class UTree
+class UTree: public HistoryObserver
 {
 public:
 
@@ -54,7 +55,7 @@ public:
     virtual ~UTree();
 
     /** \brief Add a new instance to the tree. */
-    void add_action_state_reward_tripel(
+    virtual void add_action_state_reward_tripel(
             const action_t& action,
             const state_t& state,
             const reward_t& reward
@@ -62,7 +63,7 @@ public:
 
     /** \brief Clears all data (all instances) from tree, but does not clear the
      * tree. */
-    void clear_data();
+    virtual void clear_data();
 
     /** \brief Returns a prediction of how probable the state and reward are
      * give the instance and action. */
@@ -105,8 +106,6 @@ public:
 
 private:
 
-    int k;
-    instance_t * instance_data;
     std::vector<Feature*> basis_features;
     node_container_t leaf_nodes;
     graph_t graph;

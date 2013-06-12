@@ -10,6 +10,11 @@
 #define DEBUG_LEVEL 0
 #include "debug.h"
 
+// maze_x_size
+// maze_y_size
+// k
+USE_DATA_CONSTS;
+
 using std::vector;
 using std::list;
 using std::tuple;
@@ -24,7 +29,6 @@ using std::endl;
 using util::INVALID;
 
 KMarkovCRF::KMarkovCRF():
-        k(Data::k),
         lambda(nullptr),
         old_active_features_size(0),
         candidate_features_sorted(false),
@@ -37,7 +41,7 @@ KMarkovCRF::KMarkovCRF():
     //----------------------------------------//
 
     // delayed action, state, and reward features
-    for(int k_idx = 0; k_idx>=-k; --k_idx) {
+    for(int k_idx = 0; k_idx>=-(int)k; --k_idx) {
         // actions
         for(actionIt_t action=actionIt_t::first(); action!=INVALID; ++action) {
             ActionFeature * action_feature = ActionFeature::create(action,k_idx);
