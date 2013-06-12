@@ -432,6 +432,7 @@ void BatchMaze::initialize_log_file() {
     LOG_COMMENT("max training length    = " << max_training_length );
     LOG_COMMENT("training length factor = " << training_length_factor );
     LOG_COMMENT("L1 coefficient         = " << l1_factor );
+    LOG_COMMENT("max tree size          = " << max_tree_size );
     LOG_COMMENT("");
     LOG_COMMENT("Episode	training_length	feature_n	utree_size	episode_mean_reward");
     LOG_COMMENT("");
