@@ -39,6 +39,7 @@ static int min_training_length = 100;
 static double training_length_factor = 2;
 static double l1_factor = 0.0001;
 static int max_tree_size = 10000;
+static int feature_complx = 2;
 
 BatchMaze::BatchMaze(): file_id(10000001) {}
 
@@ -151,18 +152,13 @@ int BatchMaze::run(int argn, char ** argarr) {
             if(option==OPTIMAL) {
                 // nothing to train
             } else if(option==SPARSE) {
-                // complexity 1
-                crf->score_features_by_gradient(1);
-                crf->sort_scored_features(false);
-                crf->add_candidate_features_to_active(0);
-                crf->optimize_model(l1_factor,0,nullptr);
-                crf->erase_zero_features();
-                // complexity 2
-                crf->score_features_by_gradient(1);
-                crf->sort_scored_features(false);
-                crf->add_candidate_features_to_active(0);
-                crf->optimize_model(l1_factor,0,nullptr);
-                crf->erase_zero_features();
+                for(int complx=1; complx<=feature_complx; ++complx) {
+                    crf->score_features_by_gradient(1);
+                    crf->sort_scored_features(false);
+                    crf->add_candidate_features_to_active(0);
+                    crf->optimize_model(l1_factor,0,nullptr);
+                    crf->erase_zero_features();
+                }
                 // finalize
                 crf->optimize_model(0,0,nullptr);
             } else if(option==UTREE_PROB) {
@@ -184,21 +180,12 @@ int BatchMaze::run(int argn, char ** argarr) {
                     max_score = utree->expand_leaf_node(score_threshold);
                 }
             } else if(option==LINEAR_Q) {
-                // complexity 1
-                linQ->add_candidates(1);
-                linQ->erase_zero_features();
-                linQ->optimize_l1(l1_factor);
-                linQ->erase_zero_weighted_features();
-                // complexity 2
-                linQ->add_candidates(1);
-                linQ->erase_zero_features();
-                linQ->optimize_l1(l1_factor);
-                linQ->erase_zero_weighted_features();
-                // complexity 3
-                linQ->add_candidates(1);
-                linQ->erase_zero_features();
-                linQ->optimize_l1(l1_factor);
-                linQ->erase_zero_weighted_features();
+                for(int complx=1; complx<=feature_complx; ++complx) {
+                    linQ->add_candidates(1);
+                    linQ->erase_zero_features();
+                    linQ->optimize_l1(l1_factor);
+                    linQ->erase_zero_weighted_features();
+                }
                 // finalize
                 linQ->optimize_ridge(0);
             } else {
@@ -313,6 +300,7 @@ void BatchMaze::print_help() {
     DEBUG_OUT(0,"    -llf        <double>    set factor to increase length of training data");
     DEBUG_OUT(0,"    -l1         <double>    set coefficient for L1 regularization");
     DEBUG_OUT(0,"    -maxtree    <int>       set maximum size of search tree");
+    DEBUG_OUT(0,"    -fcomplx    <int>       set feature complexity for CRF and Linear-Q");
 }
 
 void BatchMaze::parse_command_line_arguments(int argn, char ** argarr) {
@@ -390,6 +378,14 @@ void BatchMaze::parse_command_line_arguments(int argn, char ** argarr) {
             } else {
                 DEBUG_OUT(0, "-maxtree requires <int> as argument");
             }
+        } else if(arg_switch=="-fcomplx" && arg_idx<argn-1) {
+            int tmp_int;
+            if(util::arg_int(argarr[arg_idx+1],0,tmp_int)) {
+                feature_complx = tmp_int;
+                ++arg_idx;
+            } else {
+                DEBUG_OUT(0, "-fcomplx requires <int> as argument");
+            }
         } else {
             DEBUG_OUT(0,"Invalid switch " << (const char*)arg_switch.toLatin1());
         }
@@ -433,6 +429,7 @@ void BatchMaze::initialize_log_file() {
     LOG_COMMENT("training length factor = " << training_length_factor );
     LOG_COMMENT("L1 coefficient         = " << l1_factor );
     LOG_COMMENT("max tree size          = " << max_tree_size );
+    LOG_COMMENT("feature complexity     = " << feature_complx );
     LOG_COMMENT("");
     LOG_COMMENT("Episode	training_length	feature_n	utree_size	episode_mean_reward");
     LOG_COMMENT("");
