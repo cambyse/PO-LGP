@@ -48,8 +48,8 @@ DelayDistribution::probability_t DelayDistribution::get_delay_probability(
 void DelayDistribution::get_delay_distribution(
     const state_t& s1,
     const state_t& s2,
-    vector<probability_t> * forward,
-    vector<probability_t> * backward,
+    vector<probability_t> & forward,
+    vector<probability_t> & backward,
     const idx_t& max_delay
     ) {
 
@@ -58,12 +58,12 @@ void DelayDistribution::get_delay_distribution(
     //---------------------------------------------------//
     if(s1==s2) {
         DEBUG_OUT(1,"Warning: States given to calculate delay distribution are identical");
-        forward->assign(1,1);
-        backward->assign(1,1);
+        forward.assign(1,1);
+        backward.assign(1,1);
         return;
     } else {
-        forward->assign(1,0);
-        backward->assign(1,0);
+        forward.assign(1,0);
+        backward.assign(1,0);
     }
 
     //-------------------//
@@ -72,10 +72,10 @@ void DelayDistribution::get_delay_distribution(
     size_t counter = 0;
 
     idx_t idx_1 = 0;
-    for( auto& instance_1 : instance_data->const_all ) {
+    for(const_instanceIt_t instance_1=instance_data->const_first(); instance_1!=INVALID; ++instance_1) {
 
         idx_t idx_2 = 0;
-        for( auto& instance_2 : instance_data->const_all ) {
+        for(const_instanceIt_t instance_2=instance_data->const_first(); instance_2!=INVALID; ++instance_2) {
 
             // determine delay and handel max_delay requirements
             idx_t delay = idx_1 - idx_2;
@@ -88,19 +88,19 @@ void DelayDistribution::get_delay_distribution(
             }
 
             // update if states match
-            if(instance_1.state==s1 && instance_2.state==s2) {
+            if(instance_1->state==s1 && instance_2->state==s2) {
                 if(delay==0) {
-                    DEBUG_DEAD_LINE;
+                    DEBUG_DEAD_LINE; // identical states should be handeld above
                 } else if(delay<0) {
-                    if((idx_t)backward->size()<1-delay) {
-                        backward->resize(1-delay,0);
+                    if((idx_t)backward.size()<1-delay) {
+                        backward.resize(1-delay,0);
                     }
-                    (*backward)[-delay] += 1;
+                    backward[-delay] += 1;
                 } else {
-                    if((idx_t)forward->size()<1+delay) {
-                        forward->resize(1+delay,0);
+                    if((idx_t)forward.size()<1+delay) {
+                        forward.resize(1+delay,0);
                     }
-                    (*forward)[-delay] += 1;
+                    forward[-delay] += 1;
                 }
                 ++counter;
             }
@@ -114,18 +114,38 @@ void DelayDistribution::get_delay_distribution(
     //--------------------------------//
     // normalize to get probabilities //
     //--------------------------------//
-    for( auto& prob : (*forward) ) {
+    for( auto& prob : forward ) {
         prob /= counter;
     }
-    for( auto& prob : (*backward) ) {
+    for( auto& prob : backward ) {
         prob /= counter;
     }
 }
 
-vector<DelayDistribution::probability_t> DelayDistribution::get_mediator_probability(
+DelayDistribution::probability_t DelayDistribution::get_mediator_probability(
     const state_t& s1,
     const state_t& s2,
-    const state_t& s3
+    const state_t& s3,
+    const int& max_window
     ) {
-    return vector<probability_t>();
+    //-------------------//
+    // count occurrences //
+    //-------------------//
+    probability_t prob = 0;
+    size_t counter = 0;
+    for(const_instanceIt_t ins_1=instance_data->first(); ins_1!=INVALID; ++ins_1 ) {
+        if(ins_1->state!=s1) { continue; }
+        idx_t window = 1;
+        for(const_instanceIt_t ins_3=ins_1+2; ins_3!=INVALID; ++ins_3 , ++window) {
+            if(ins_3->state!=s3 || (max_window>0 && window>max_window)) { continue; }
+            for(const_instanceIt_t ins_2=ins_1+1; (const instance_t *)ins_2!=(const instance_t *)ins_3; ++ins_2 ) {
+                if(ins_2->state==s2) {
+                    prob += 1;
+                }
+                ++counter;
+            }
+        }
+    }
+
+    return counter!=0 ? prob/counter : 0;
 }

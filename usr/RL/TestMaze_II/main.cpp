@@ -1,7 +1,7 @@
 #include "testmaze_ii.h"
 #include "BatchMaze.h"
 
-#define BATCH_MODE
+//#define BATCH_MODE
 
 #include <QtGui>
 #include <QApplication>

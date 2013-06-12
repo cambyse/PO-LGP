@@ -31,8 +31,8 @@ public:
     void get_delay_distribution(
         const state_t& s1,
         const state_t& s2,
-        std::vector<probability_t> * forward,
-        std::vector<probability_t> * backward,
+        std::vector<probability_t> & forward,
+        std::vector<probability_t> & backward,
         const idx_t& max_delay = -1
         );
 
@@ -40,9 +40,10 @@ public:
      *
      * Return the probability p(s2|s1,s3) of having visited state s2 on the way
      * from state s1 to state s3. */
-    std::vector<probability_t> get_mediator_probability(
+    probability_t get_mediator_probability(
         const state_t& s1,
         const state_t& s2,
-        const state_t& s3
+        const state_t& s3,
+        const int& max_window = -1
         );
 };

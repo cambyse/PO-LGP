@@ -291,7 +291,9 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
 
     QString new_s(                            "\n    ---------------------------------New Stuff----------------------------------");
     QString color_states_s(                     "    col-states . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> color states (random)");
-    QString delay_distribution_s(               "    delay-distribution / dd. . <int> . . . . . . . . . . . . . . . . . . .-> show temporal delay distribution for delay <int>");
+    QString delay_probability_s(                "    delay-probability / dp . . <int> . . . . . . . . . . . . . . . . . . .-> show probability for a state to occur <int> steps after current state");
+    QString delay_distribution_s(               "    delay-distribution / dd. . . . . . . . . . . . . . . . . . . . . . . .-> show temporal delay distribution from current state to target state");
+    QString mediator_probability_s(             "    mediator-probability / mp. <int> . . . . . . . . . . . . . . . . . . .-> show probability for a state to occurr between current state and target state given a time window of width <int>");
 
     set_s += "\n" + option_1_s;
     set_s += "\n" + option_2_s;
@@ -380,7 +382,9 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             // New
             TO_CONSOLE( new_s );
             TO_CONSOLE( color_states_s );
+            TO_CONSOLE( delay_probability_s );
             TO_CONSOLE( delay_distribution_s );
+            TO_CONSOLE( mediator_probability_s );
         } else if(str_args[0]=="left" || str_args[0]=="l") { // left
             action_t action = action_t::LEFT;
             state_t state_to;
@@ -822,30 +826,122 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 cols.push_back( std::make_tuple(drand48(),drand48(),drand48()) );
             }
             maze.render_update(ui.graphicsView, &cols);
-        } else if(str_args[0]=="delay-distribution" || str_args[0]=="dd") { // show delay distribution
+        } else if(str_args[0]=="delay-probability" || str_args[0]=="dp") { // show delay probability
             if(str_args.size()!=2 || !int_args_ok[1]) {
                 TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( delay_distribution_s );
+                TO_CONSOLE( delay_probability_s );
             } else {
                 // get probabilites for all states
                 state_t s1 = current_instance->state;
                 idx_t delay = int_args[1];
                 std::vector<double> probs;
                 double max_prob = -DBL_MAX;
-                for(stateIt_t state=stateIt_t::first(); state!=util::INVALID; ++state) {
+                idx_t target_idx = 0, state_idx = 0;
+                for(stateIt_t state=stateIt_t::first(); state!=util::INVALID; ++state, ++state_idx) {
+                    util::print_progress(state_idx,state_t::state_n,50,"Calculating delay distribution: ");
                     probability_t prob = delay_dist.get_delay_probability(s1,state,delay);
                     probs.push_back(prob);
                     if(prob>max_prob) {
                         max_prob = prob;
                     }
+                    if(state==target_state) {
+                        target_idx=state_idx;
+                    }
                 }
+                std::cout << std::endl; // terminate progress bar
                 // rescale and define colors
                 Maze::color_vector_t cols;
                 for( double prob : probs ) {
-                    cols.push_back( std::make_tuple(1,1-prob/max_prob,1-prob/max_prob) );
+                    if(max_prob!=0) {
+                        cols.push_back( std::make_tuple(1,1-prob/max_prob,1-prob/max_prob) );
+                    } else {
+                        cols.push_back( std::make_tuple(1,1,1) );
+                    }
+                }
+                if(target_activated) {
+                    cols[target_idx]=std::make_tuple(0,1,0);
                 }
                 // render
                 maze.render_update(ui.graphicsView, &cols);
+            }
+        } else if(str_args[0]=="delay-distribution" || str_args[0]=="dd") { // show delay distribution
+            if(str_args.size()!=1) {
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( delay_distribution_s );
+            } else {
+                if(!target_activated) {
+                    TO_CONSOLE( "    Target state must be activated to calculate delay distribution" );
+                } else {
+                    // get distribution
+                    state_t s1 = current_instance->state;
+                    state_t s2 = target_state;
+                    std::vector<double> forward;
+                    std::vector<double> backward;
+                    delay_dist.get_delay_distribution(s1,s2,forward,backward);
+                    // prepare for plotting
+                    size_t back_size = backward.size();
+                    size_t forw_size = forward.size();
+                    size_t point_n = forw_size + back_size - 1;
+                    QVector<double> x(point_n), y(point_n);
+                    probability_t max_y = -DBL_MAX;
+                    for (int i=0; i<(int)point_n; ++i) {
+                        x[i] = i - back_size + 1;
+                        y[i] = i<(int)back_size ? backward[back_size-i-1] : forward[i-back_size];
+                        if(y[i]>max_y) {
+                            max_y = y[i];
+                        }
+                    }
+                    // assign data to graph
+                    plotter->graph(0)->setData(x, y);
+                    // give the axes some labels:
+                    plotter->xAxis->setLabel("delay/steps");
+                    plotter->yAxis->setLabel("probability");
+                    // set axes ranges, so we see all data:
+                    plotter->xAxis->setRange(backward.back(),forward.back());
+                    plotter->yAxis->setRange(0,max_y);
+                    plotter->replot();
+                }
+            }
+        } else if(str_args[0]=="mediator-probability" || str_args[0]=="mp") { // show mediator probability
+            if(str_args.size()==2 && int_args_ok[1]) {
+                if(!target_activated) {
+                    TO_CONSOLE( "    Target state must be activated to calculate mediator probabilities" );
+                } else {
+                    // get probabilites for all states
+                    DEBUG_OUT(2,"Calculating mediator distribution...");
+                    state_t s1 = current_instance->state;
+                    state_t s3 = target_state;
+                    std::vector<double> probs;
+                    double max_prob = -DBL_MAX;
+                    idx_t target_idx = 0, state_idx = 0;
+                    for(stateIt_t state=stateIt_t::first(); state!=util::INVALID; ++state, ++state_idx) {
+                        probability_t prob = delay_dist.get_mediator_probability(s1,state,s3,int_args[1]);
+                        probs.push_back(prob);
+                        if(prob>max_prob) {
+                            max_prob = prob;
+                        }
+                        if(state==target_state) {
+                            target_idx=state_idx;
+                        }
+                        DEBUG_OUT(3,"    " << s1 << " --> " << state << " --> " << s3 << " : " << prob);
+                    }
+                    DEBUG_OUT(2,"DONE");
+                    // rescale and define colors
+                    Maze::color_vector_t cols;
+                    for( double prob : probs ) {
+                        if(max_prob!=0) {
+                            cols.push_back( std::make_tuple(1,1-prob/max_prob,1-prob/max_prob) );
+                        } else {
+                            cols.push_back( std::make_tuple(1,1,1) );
+                        }
+                    }
+                    cols[target_idx]=std::make_tuple(0,1,0);
+                    // render
+                    maze.render_update(ui.graphicsView, &cols);
+                }
+            } else {
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( mediator_probability_s );
             }
         } else {
             TO_CONSOLE("    unknown command");

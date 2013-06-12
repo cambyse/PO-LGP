@@ -97,11 +97,8 @@ private:
     std::vector<QGraphicsItem*> borders;
     std::vector<QGraphicsRectItem*> state_rects;
 
-    static const size_t walls_n = 0;
-    static const idx_t walls[walls_n][2];
-
-    static const size_t rewards_n = 4;
-    static const idx_t rewards[rewards_n][8];
+    static const std::vector<std::vector<idx_t> > walls;
+    static const std::vector<std::vector<idx_t> > rewards;
     enum REWARD_COMPONENTS { ACTIVATION_STATE, RECEIVE_STATE, TIME_DELAY, REWARD_IDX, ACTIVATION_TYPE, R, G, B };
     enum REWARD_ACTIVATION { EACH_TIME, ON_RELEASE };
 

@@ -9,7 +9,7 @@
 #include <float.h> // for DBL_MAX
 
 #define DEBUG_STRING "UTree: "
-#define DEBUG_LEVEL 0
+#define DEBUG_LEVEL 1
 #include "debug.h"
 
 // maze_x_size

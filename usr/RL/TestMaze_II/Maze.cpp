@@ -13,7 +13,7 @@ using util::max;
 using util::INVALID;
 
 const double Maze::state_size = 0.9;
-const double Maze::wall_width = 0.05;
+const double Maze::wall_width = 0.08;
 const double Maze::reward_start_size = 0.1;
 const double Maze::reward_end_size = 0.2;
 const double Maze::reward_end_ratio = 0.5;
@@ -22,7 +22,8 @@ const double Maze::text_center = 0.3;
 
 // #define HIDE_REWARDS
 
-const Maze::idx_t Maze::walls[walls_n][2] = {
+const vector<vector<Maze::idx_t> > Maze::walls = {
+
     /* 2x2 Maze *
     { 0, 1}
     /**/
@@ -46,16 +47,46 @@ const Maze::idx_t Maze::walls[walls_n][2] = {
     {10,11}
     /**/
 
-    /* 10x10 Maze *
+    /* 10x10 Maze */
     {  2,  3},
     { 12, 13},
     { 22, 23},
-    { 32, 33}
+    { 32, 33},
+    { 30, 40},
+    { 31, 41},
+    { 33, 34},
+    { 43, 44},
+    { 53, 54},
+    { 63, 64},
+    { 73, 74},
+    { 83, 84},
+    { 61, 71},
+    { 62, 72},
+    { 63, 73},
+    { 44, 45},
+    { 54, 55},
+    { 74, 75},
+    { 84, 85},
+    { 75, 85},
+    { 76, 86},
+    { 77, 87},
+    { 23, 24},
+    { 25, 35},
+    { 26, 36},
+    { 27, 37},
+    { 28, 38},
+    {  6,  7},
+    { 16, 17},
+    { 78, 88},
+    { 59, 69},
+    { 58, 68},
+    { 57, 67},
+    { 56, 66}
     /**/
 };
 
-const Maze::idx_t Maze::rewards[rewards_n][8] = {
-    /* 2x2 Maze */
+const vector<vector<Maze::idx_t> > Maze::rewards = {
+    /* 2x2 Maze *
     { 0, 3, 4, 5, ON_RELEASE, 200,   0,   0},
     { 3, 0, 4, 5, ON_RELEASE, 200, 200,   0},
     { 0, 1, 1, 1, ON_RELEASE,   0, 200,   0},
@@ -178,7 +209,7 @@ void Maze::render_initialize(QGraphicsView * view) {
     // Render Walls
     QPen wall_pen(QColor(50,50,50), 0.02, Qt::SolidLine, Qt::RoundCap);
     QBrush wall_brush(QColor(50,50,50));
-    for(idx_t idx=0; idx<(idx_t)walls_n; ++idx) {
+    for(idx_t idx=0; idx<(idx_t)walls.size(); ++idx) {
         MazeState maze_state_1(walls[idx][0]);
         MazeState maze_state_2(walls[idx][1]);
         idx_t x_1 = maze_state_1.x();
@@ -206,7 +237,7 @@ void Maze::render_initialize(QGraphicsView * view) {
 
 #ifndef HIDE_REWARDS
     // Rewards
-    for(idx_t idx=0; idx<(idx_t)rewards_n; ++idx) {
+    for(idx_t idx=0; idx<(idx_t)rewards.size(); ++idx) {
         MazeState maze_state_1(rewards[idx][ACTIVATION_STATE]);
         MazeState maze_state_2(rewards[idx][RECEIVE_STATE]);
         double x_start   = maze_state_1.x();
@@ -395,7 +426,7 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
 
     // check for matching reward
     reward_t matching_reward = reward_t::min_reward;
-    for(idx_t idx=0; idx<(idx_t)rewards_n; ++idx) {
+    for(idx_t idx=0; idx<(idx_t)rewards.size(); ++idx) {
         state_t activate_state = rewards[idx][ACTIVATION_STATE];
         state_t receive_state = rewards[idx][RECEIVE_STATE];
         state_t state_back_then = (instance_from->const_it() - (rewards[idx][TIME_DELAY]-1))->state;
@@ -448,7 +479,7 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
     MazeState state_down( clamp(0,Data::maze_x_size-1,state_from.x()  ),clamp(0,Data::maze_y_size-1,state_from.y()+1));
 
     // consider walls
-    for(idx_t idx=0; idx<(idx_t)walls_n; ++idx) {
+    for(idx_t idx=0; idx<(idx_t)walls.size(); ++idx) {
         MazeState maze_state_1(walls[idx][0]);
         MazeState maze_state_2(walls[idx][1]);
         if( state_from == maze_state_1 ) {
@@ -510,7 +541,7 @@ void Maze::set_current_state(const state_t& state) {
 
 std::string Maze::get_rewards() {
     std::stringstream ss;
-    for(int r_idx=0; r_idx<(int)rewards_n; ++r_idx) {
+    for(int r_idx=0; r_idx<(int)rewards.size(); ++r_idx) {
         rewardIt_t rewIt = rewardIt_t::first();
         rewIt += rewards[r_idx][REWARD_IDX];
         ss << "Reward " << r_idx << std::endl;
@@ -526,7 +557,7 @@ std::string Maze::get_rewards() {
 
 std::string Maze::get_walls() {
     std::stringstream ss;
-    for(int w_idx=0; w_idx<(int)walls_n; ++w_idx) {
+    for(int w_idx=0; w_idx<(int)walls.size(); ++w_idx) {
         ss << "Wall " << w_idx << ": (" << walls[w_idx][0] << "|" << walls[w_idx][1] << ")" << std::endl;
     }
     return ss.str();
