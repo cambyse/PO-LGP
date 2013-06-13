@@ -103,6 +103,7 @@ void TestMaze_II::add_action_state_reward_tripel(
     utree.add_action_state_reward_tripel(action,state,reward);
     linQ.add_action_state_reward_tripel(action,state,reward);
     delay_dist.add_action_state_reward_tripel(action,state,reward);
+    DEBUG_OUT(1,"Add (" << action << ", " << state << ", " << reward << ")" );
 }
 
 void TestMaze_II::clear_data() {
