@@ -1,6 +1,8 @@
 #include <Core/util.h>
 #include <Motion/motion.h>
 #include <Gui/opengl.h>
+#include <Optim/optimization.h>
+#include <Optim/optimization_benchmarks.h>
 
 int main(int argn,char** argv){
   MT::initCmdLine(argn,argv);
@@ -54,7 +56,7 @@ int main(int argn,char** argv){
   OpenGL costs(STRING("PHI ("<<F.get_m(0)<<" tasks)"), 3*T+10, 3*F.get_m(0)+10 );
   //-- optimize
   for(;;){
-    optGaussNewton(x, Convert(F), OPT4(verbose=2, stopIters=20, useAdaptiveDamping=.0, maxStep=1.));
+    optGaussNewton(x, Convert(F), OPT(verbose=2, stopIters=20, useAdaptiveDamping=false, maxStep=1.));
     costs.displayRedBlue(~sqr(P.costMatrix), false, 3);
     P.costReport();
     write(LIST<arr>(x),"z.output");
