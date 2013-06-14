@@ -1,8 +1,7 @@
 #ifndef BATCHMAZE_H_
 #define BATCHMAZE_H_
 
-#include "Data.h"
-#include "Representation/Representation.h"
+#include "Config.h"
 
 class BatchMaze {
 public:

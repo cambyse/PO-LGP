@@ -8,7 +8,7 @@ QT += core \
 HEADERS += LookAheadSearch.h \
     BatchMaze.h \
     lbfgs_codes.h \
-    Data.h \
+    Config.h \
     util.h \
     Maze.h \
     testmaze_ii.h \
@@ -29,7 +29,7 @@ SOURCES += LookAheadSearch.cpp \
     util.cpp \
     BatchMaze.cpp \
     lbfgs_codes.cpp \
-    Data.cpp \
+    Config.cpp \
     main.cpp \
     Maze.cpp \
     testmaze_ii.cpp \

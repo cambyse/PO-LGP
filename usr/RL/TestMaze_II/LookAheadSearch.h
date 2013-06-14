@@ -4,7 +4,7 @@
 #include <lemon/list_graph.h>
 #include <lemon/dim2.h>
 
-#include "Data.h"
+#include "Config.h"
 #include "Representation/Representation.h"
 
 #define DEBUG_LEVEL 1
@@ -14,8 +14,7 @@ class LookAheadSearch {
 
 public:
 
-    USE_DATA_TYPEDEFS;
-    USE_REPRESENTATION_TYPEDEFS;
+    USE_CONFIG_TYPEDEFS;
     typedef reward_t::value_t value_t;
 
     enum NODE_TYPE { NONE, STATE, ACTION };

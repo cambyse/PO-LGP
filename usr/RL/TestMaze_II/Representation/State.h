@@ -2,7 +2,6 @@
 #define STATE_H_
 
 #include "../util.h"
-#include "../Data.h"
 
 #include <ostream>
 

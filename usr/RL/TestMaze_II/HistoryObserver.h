@@ -1,7 +1,7 @@
 #ifndef HISTORYOBSERVER_H_
 #define HISTORYOBSERVER_H_
 
-#include "Representation/Representation.h"
+#include "Config.h"
 
 class HistoryObserver
 {

@@ -2,7 +2,7 @@
 #define INSTANCE_H_
 
 #include "../util.h"
-#include "../Data.h"
+#include "../Config.h"
 #include "Action.h"
 #include "State.h"
 #include "Reward.h"
@@ -27,7 +27,7 @@ class Instance {
 
 public:
 
-    USE_DATA_TYPEDEFS;
+    USE_CONFIG_TYPEDEFS;
 
     friend class InstanceIt;
     friend class ConstInstanceIt;
@@ -116,7 +116,7 @@ protected:
 /** \brief Instance iterator object. */
 class InstanceIt: public util::InvalidAdapter<InstanceIt> {
 public:
-    typedef Data::idx_t idx_t;
+    USE_CONFIG_TYPEDEFS;
     InstanceIt();
     InstanceIt(Instance *);
     operator Instance*() const;
@@ -139,7 +139,7 @@ protected:
 /** \brief Const Instance iterator object. */
 class ConstInstanceIt: public util::InvalidAdapter<ConstInstanceIt> {
 public:
-    typedef Data::idx_t idx_t;
+    USE_CONFIG_TYPEDEFS;
     ConstInstanceIt();
     ConstInstanceIt(const Instance *);
     operator const Instance*() const;

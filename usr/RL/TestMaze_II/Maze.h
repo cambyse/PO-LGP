@@ -10,8 +10,8 @@
 #include <string>
 #include <sstream>
 
-#include "Representation/Representation.h"
-#include "Data.h"
+#include "Config.h"
+USE_CONFIG_CONSTS;
 
 #include "debug.h"
 
@@ -31,13 +31,13 @@ public:
     class MazeState {
     public:
         MazeState(const int& idx = 0): index(idx) {}
-        MazeState(const int& x, const int& y): index(x+Data::maze_x_size*y) {}
+        MazeState(const int& x, const int& y): index(x+maze_x_size*y) {}
         bool operator==(const MazeState& other) const { return this->index==other.index; }
         bool operator!=(const MazeState& other) const { return !((*this)==other); }
         bool operator<(const MazeState& other) const { return this->index<other.index; }
         idx_t state_idx() const { return index; }
-        idx_t x() const { return index%Data::maze_x_size; }
-        idx_t y() const { return index/Data::maze_x_size; }
+        idx_t x() const { return index%maze_x_size; }
+        idx_t y() const { return index/maze_x_size; }
         std::string print() const {
             std::stringstream ss;
             ss << "(" << x() << "," << y() << ")";
