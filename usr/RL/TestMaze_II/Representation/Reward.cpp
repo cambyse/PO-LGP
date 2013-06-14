@@ -1,12 +1,14 @@
 #include "Reward.h"
 
+#include "Config.h"
+
 #include <math.h>
 
 using util::INVALID;
 
-const Reward::value_t Reward::min_reward = 0;
-const Reward::value_t Reward::max_reward = 5;
-const Reward::value_t Reward::reward_increment = 1;
+const Reward::value_t Reward::min_reward = Config::min_reward;
+const Reward::value_t Reward::max_reward = Config::max_reward;
+const Reward::value_t Reward::reward_increment = Config::reward_increment;
 const unsigned long Reward::reward_n = floor((Reward::max_reward - Reward::min_reward)/Reward::reward_increment) + 1;
 
 Reward::Reward(value_t val):

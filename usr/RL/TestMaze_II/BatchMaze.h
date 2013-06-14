@@ -2,10 +2,11 @@
 #define BATCHMAZE_H_
 
 #include "Config.h"
+#include "Representation/Representation.h"
 
 class BatchMaze {
 public:
-    USE_DATA_TYPEDEFS;
+    USE_CONFIG_TYPEDEFS;
     USE_REPRESENTATION_TYPEDEFS;
     BatchMaze();
     virtual ~BatchMaze();

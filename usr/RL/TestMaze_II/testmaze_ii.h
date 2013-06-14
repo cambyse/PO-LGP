@@ -2,13 +2,14 @@
 #define TESTMAZE_II_H
 
 #include "ui_testmaze_ii.h"
+
+#include "Config.h"
+#include "Representation/Representation.h"
 #include "Maze.h"
 #include "KMarkovCRF.h"
 #include "UTree.h"
 #include "LinearQ.h"
 #include "LookAheadSearch.h"
-#include "Data.h"
-#include "Representation/Representation.h"
 #include "DelayDistribution.h"
 
 #include "qcustomplot.h"
@@ -36,7 +37,7 @@ private:
     // Typedefs and Member Variables //
     //===============================//
 
-    USE_DATA_TYPEDEFS;
+    USE_CONFIG_TYPEDEFS;
     USE_REPRESENTATION_TYPEDEFS;
 
     //---------------//

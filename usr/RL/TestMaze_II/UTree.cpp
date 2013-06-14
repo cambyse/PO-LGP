@@ -15,7 +15,7 @@
 // maze_x_size
 // maze_y_size
 // k
-USE_DATA_CONSTS;
+USE_CONFIG_CONSTS;
 
 using std::vector;
 using std::map;

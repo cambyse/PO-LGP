@@ -13,7 +13,7 @@
 #include <lbfgs.h>
 
 #include "HistoryObserver.h"
-#include "Data.h"
+#include "Config.h"
 #include "Representation/Representation.h"
 #include "Feature.h"
 
@@ -21,7 +21,7 @@ class KMarkovCRF: public HistoryObserver
 {
 public:
 
-    USE_DATA_TYPEDEFS
+    USE_CONFIG_TYPEDEFS;
     typedef Feature::feature_return_value f_ret_t;
 
     KMarkovCRF();

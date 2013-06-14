@@ -15,12 +15,12 @@
 #include <string>
 #include <memory>
 
+#include "Config.h"
 #include "Representation/Representation.h"
-#include "Data.h"
 
 class Feature {
 public:
-    USE_DATA_TYPEDEFS;
+    USE_CONFIG_TYPEDEFS;
     USE_REPRESENTATION_TYPEDEFS;
     typedef std::list<Feature * >                  subfeature_container_t;
     typedef subfeature_container_t::iterator       subfeature_iterator_t;

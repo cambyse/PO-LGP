@@ -1,7 +1,7 @@
 #ifndef UTREE_H_
 #define UTREE_H_
 
-#include "Data.h"
+#include "Config.h"
 #include "Representation/Representation.h"
 #include "Feature.h"
 #include "HistoryObserver.h"
@@ -16,7 +16,7 @@ class UTree: public HistoryObserver
 {
 public:
 
-    USE_DATA_TYPEDEFS;
+    USE_CONFIG_TYPEDEFS;
     USE_REPRESENTATION_TYPEDEFS;
     typedef Feature::feature_return_value    f_ret_t;
     typedef lemon::ListDigraph               graph_t;

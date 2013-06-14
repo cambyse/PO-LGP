@@ -11,14 +11,14 @@
 #include <sstream>
 
 #include "Config.h"
-USE_CONFIG_CONSTS;
+#include "Representation/Representation.h"
 
 #include "debug.h"
 
 class Maze {
 public:
 
-    USE_DATA_TYPEDEFS;
+    USE_CONFIG_TYPEDEFS;
     USE_REPRESENTATION_TYPEDEFS;
 
     typedef std::tuple<double,double,double> color_t;
@@ -30,14 +30,14 @@ public:
 
     class MazeState {
     public:
-        MazeState(const int& idx = 0): index(idx) {}
-        MazeState(const int& x, const int& y): index(x+maze_x_size*y) {}
+    MazeState(const int& idx = 0): index(idx) {}
+    MazeState(const int& x, const int& y): index(x+Config::maze_x_size*y) {}
         bool operator==(const MazeState& other) const { return this->index==other.index; }
         bool operator!=(const MazeState& other) const { return !((*this)==other); }
         bool operator<(const MazeState& other) const { return this->index<other.index; }
         idx_t state_idx() const { return index; }
-        idx_t x() const { return index%maze_x_size; }
-        idx_t y() const { return index/maze_x_size; }
+        idx_t x() const { return index%Config::maze_x_size; }
+        idx_t y() const { return index/Config::maze_x_size; }
         std::string print() const {
             std::stringstream ss;
             ss << "(" << x() << "," << y() << ")";

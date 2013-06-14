@@ -1,5 +1,6 @@
 #include "testmaze_ii.h"
-#include "Data.h"
+
+#include "Config.h"
 #include "util.h"
 
 #include <float.h>  // for DBL_MAX

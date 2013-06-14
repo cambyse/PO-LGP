@@ -1,5 +1,6 @@
 #include "HistoryObserver.h"
-#include "Data.h"
+
+#include "Config.h"
 #include "Representation/Representation.h"
 
 
@@ -7,7 +8,7 @@ class DelayDistribution: public HistoryObserver {
 
 public:
 
-    USE_DATA_TYPEDEFS;
+    USE_CONFIG_TYPEDEFS;
     USE_REPRESENTATION_TYPEDEFS;
 
     DelayDistribution() {}

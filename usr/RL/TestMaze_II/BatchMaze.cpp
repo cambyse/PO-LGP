@@ -22,7 +22,7 @@
 #define LOG_COMMENT(x) DEBUG_OUT(1,x); log_file << "# " << x << std::endl;
 #define LOG(x) DEBUG_OUT(1,x); log_file << x << std::endl;
 
-USE_DATA_CONSTS;
+USE_CONFIG_CONSTS;
 
 #define USE_OMP
 

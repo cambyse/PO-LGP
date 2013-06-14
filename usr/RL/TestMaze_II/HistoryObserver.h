@@ -2,6 +2,7 @@
 #define HISTORYOBSERVER_H_
 
 #include "Config.h"
+#include "Representation/Representation.h"
 
 class HistoryObserver
 {

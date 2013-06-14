@@ -1,23 +1,6 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 
-/* #include "Representation/Action.h" */
-class Action;
-class ActionIt;
-
-/* #include "Representation/State.h" */
-class State;
-class StateIt;
-
-#include "Representation/Reward.h"
-/* class Reward; */
-/* class RewardIt; */
-
-/* #include "Representation/Instance.h" */
-class Instance;
-class InstanceIt;
-class ConstInstanceIt;
-
 #define USE_CONFIG_TYPEDEFS                                     \
     typedef Config::idx_t              idx_t;                   \
     typedef Config::size_t             size_t;                  \
@@ -26,8 +9,9 @@ class ConstInstanceIt;
 #define USE_CONFIG_CONSTS                                               \
     static const Config::size_t   maze_x_size = Config::maze_x_size;    \
     static const Config::size_t   maze_y_size = Config::maze_y_size;    \
-    static const Config::size_t   k           = Config::k;              \
-    static const Config::reward_t max_reward  = Config::max_reward;
+    static const Config::size_t   k           = Config::k;
+
+class Reward;
 
 class Config {
 
@@ -52,7 +36,9 @@ public:
     //-----------------//
     //   Max Reward    //
     //-----------------//
-    static const reward_t max_reward;
+    static const Reward min_reward;
+    static const Reward max_reward;
+    static const Reward reward_increment;
 
     //----------------------//
     //   k-Markov Horizon   //

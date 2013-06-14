@@ -19,6 +19,7 @@ const double Maze::reward_end_size = 0.2;
 const double Maze::reward_end_ratio = 0.5;
 const double Maze::text_scale = 0.01;
 const double Maze::text_center = 0.3;
+USE_CONFIG_CONSTS;
 
 // #define HIDE_REWARDS
 
@@ -123,8 +124,8 @@ Maze::Maze(const double& eps):
 {
 
     // setting button and smiley state
-//    if(Data::maze_x_size>0 || Data::maze_y_size>0) {
-//        button_state = MazeState(Data::maze_x_size-1,Data::maze_y_size-1);
+//    if(maze_x_size>0 || maze_y_size>0) {
+//        button_state = MazeState(maze_x_size-1,maze_y_size-1);
 //    } else {
 //        button_state = MazeState(0,0);
 //    }
@@ -132,7 +133,7 @@ Maze::Maze(const double& eps):
 
     // setting current state
     current_instance = instance_t::create(action_t::STAY, current_state.state_idx(), reward_t::min_reward);
-    current_state = MazeState(Data::maze_x_size/2, Data::maze_y_size/2);
+    current_state = MazeState(maze_x_size/2, maze_y_size/2);
     DEBUG_OUT(1,"Current Maze State: " << current_state << " (Index: " << current_state.state_idx() << ")" );
     set_current_state(current_state.state_idx());
 }
@@ -362,7 +363,7 @@ void Maze::perform_transition(const action_t& action) {
     if(DEBUG_LEVEL>=1) {
         DEBUG_OUT(1,"Current instance: ");
         const_instanceIt_t insIt = current_instance->it();
-        for(idx_t k_idx=0; k_idx<(idx_t)Data::k; ++k_idx) {
+        for(idx_t k_idx=0; k_idx<(idx_t)k; ++k_idx) {
             DEBUG_OUT(1,"    " << (*insIt) );
             --insIt;
         }
@@ -473,10 +474,10 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
     // check for matching state
     MazeState maze_state_to( state_to );
     MazeState state_from( instance_from->state);
-    MazeState state_left( clamp(0,Data::maze_x_size-1,state_from.x()-1),clamp(0,Data::maze_y_size-1,state_from.y()  ));
-    MazeState state_right(clamp(0,Data::maze_x_size-1,state_from.x()+1),clamp(0,Data::maze_y_size-1,state_from.y()  ));
-    MazeState state_up(   clamp(0,Data::maze_x_size-1,state_from.x()  ),clamp(0,Data::maze_y_size-1,state_from.y()-1));
-    MazeState state_down( clamp(0,Data::maze_x_size-1,state_from.x()  ),clamp(0,Data::maze_y_size-1,state_from.y()+1));
+    MazeState state_left( clamp(0,maze_x_size-1,state_from.x()-1),clamp(0,maze_y_size-1,state_from.y()  ));
+    MazeState state_right(clamp(0,maze_x_size-1,state_from.x()+1),clamp(0,maze_y_size-1,state_from.y()  ));
+    MazeState state_up(   clamp(0,maze_x_size-1,state_from.x()  ),clamp(0,maze_y_size-1,state_from.y()-1));
+    MazeState state_down( clamp(0,maze_x_size-1,state_from.x()  ),clamp(0,maze_y_size-1,state_from.y()+1));
 
     // consider walls
     for(idx_t idx=0; idx<(idx_t)walls.size(); ++idx) {
@@ -533,7 +534,7 @@ void Maze::set_epsilon(const double& e) {
 
 void Maze::set_current_state(const state_t& state) {
     current_state = MazeState(state);
-    for(idx_t k_idx=0; k_idx<(idx_t)Data::k; ++k_idx) {
+    for(idx_t k_idx=0; k_idx<(idx_t)k; ++k_idx) {
         current_instance = current_instance->append_instance(action_t::STAY, current_state.state_idx(), reward_t::min_reward);
     }
     DEBUG_OUT(1,"Set current state to (" << current_state.x() << "," << current_state.y() << ")");
