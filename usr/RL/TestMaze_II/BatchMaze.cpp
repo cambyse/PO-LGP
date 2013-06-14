@@ -37,6 +37,7 @@ static double discount = 0.5;
 static int max_training_length = 10000;
 static int min_training_length = 100;
 static double training_length_factor = 2;
+static double training_length_incr = 0;
 static double l1_factor = 0.0001;
 static int max_tree_size = 10000;
 static int feature_complx = 2;
@@ -295,9 +296,10 @@ void BatchMaze::print_help() {
     DEBUG_OUT(0,"    -d          <double>    set discount");
     DEBUG_OUT(0,"    -maxEp      <int>       set number of episodes");
     DEBUG_OUT(0,"    -maxTran    <int>       set length of episode / number of transition");
-    DEBUG_OUT(0,"    -minll      <int>       set minimum length of training data");
-    DEBUG_OUT(0,"    -maxll      <int>       set maximum length of training data");
-    DEBUG_OUT(0,"    -llf        <double>    set factor to increase length of training data");
+    DEBUG_OUT(0,"    -mintl      <int>       set minimum length of training data");
+    DEBUG_OUT(0,"    -maxtl      <int>       set maximum length of training data");
+    DEBUG_OUT(0,"    -tlf        <double>    set factor to increase length of training data");
+    DEBUG_OUT(0,"    -tli        <int>       set increment to increase length of training data");
     DEBUG_OUT(0,"    -l1         <double>    set coefficient for L1 regularization");
     DEBUG_OUT(0,"    -maxtree    <int>       set maximum size of search tree");
     DEBUG_OUT(0,"    -fcomplx    <int>       set feature complexity for CRF and Linear-Q");
@@ -338,15 +340,15 @@ void BatchMaze::parse_command_line_arguments(int argn, char ** argarr) {
             } else {
                 DEBUG_OUT(0, "-maxTran requires <int> as argument");
             }
-        } else if(arg_switch=="-minll" && arg_idx<argn-1) {
+        } else if(arg_switch=="-mintl" && arg_idx<argn-1) {
             int tmp_int;
             if(util::arg_int(argarr[arg_idx+1],0,tmp_int)) {
                 min_training_length = tmp_int;
                 ++arg_idx;
             } else {
-                DEBUG_OUT(0, "-minll requires <int> as argument");
+                DEBUG_OUT(0, "-mintl requires <int> as argument");
             }
-        } else if(arg_switch=="-maxll" && arg_idx<argn-1) {
+        } else if(arg_switch=="-maxtl" && arg_idx<argn-1) {
             int tmp_int;
             if(util::arg_int(argarr[arg_idx+1],0,tmp_int)) {
                 max_training_length = tmp_int;
@@ -354,13 +356,21 @@ void BatchMaze::parse_command_line_arguments(int argn, char ** argarr) {
             } else {
                 DEBUG_OUT(0, "-maxTran requires <int> as argument");
             }
-        } else if(arg_switch=="-llf" && arg_idx<argn-1) {
+        } else if(arg_switch=="-tlf" && arg_idx<argn-1) {
             double tmp_double;
             if(util::arg_double(argarr[arg_idx+1],0,tmp_double)) {
                 training_length_factor = tmp_double;
                 ++arg_idx;
             } else {
-                DEBUG_OUT(0, "-llf requires <double> as argument");
+                DEBUG_OUT(0, "-tlf requires <double> as argument");
+            }
+        } else if(arg_switch=="-tli" && arg_idx<argn-1) {
+            int tmp_int;
+            if(util::arg_int(argarr[arg_idx+1],0,tmp_int)) {
+                training_length_incr = tmp_int;
+                ++arg_idx;
+            } else {
+                DEBUG_OUT(0, "-tli requires <int> as argument");
             }
         } else if(arg_switch=="-l1" && arg_idx<argn-1) {
             double tmp_double;
@@ -418,8 +428,7 @@ void BatchMaze::initialize_log_file() {
     }
 
     LOG_COMMENT("Maze size:               " << maze_x_size << "x" << maze_y_size);
-    LOG_COMMENT(reward_str);
-    LOG_COMMENT(wall_str);
+    LOG_COMMENT("strategy               = " << (const char*)option_str.toLatin1() );
     LOG_COMMENT("epsilon                = " << epsilon );
     LOG_COMMENT("discount               = " << discount );
     LOG_COMMENT("episodes               = " << max_episodes );
@@ -427,9 +436,13 @@ void BatchMaze::initialize_log_file() {
     LOG_COMMENT("min training length    = " << min_training_length );
     LOG_COMMENT("max training length    = " << max_training_length );
     LOG_COMMENT("training length factor = " << training_length_factor );
+    LOG_COMMENT("training length incr.  = " << training_length_incr );
     LOG_COMMENT("L1 coefficient         = " << l1_factor );
     LOG_COMMENT("max tree size          = " << max_tree_size );
     LOG_COMMENT("feature complexity     = " << feature_complx );
+    LOG_COMMENT("");
+    LOG_COMMENT(reward_str);
+    LOG_COMMENT(wall_str);
     LOG_COMMENT("");
     LOG_COMMENT("Episode	training_length	feature_n	utree_size	episode_mean_reward");
     LOG_COMMENT("");
@@ -439,14 +452,14 @@ void BatchMaze::precompute_training_lengths(int * & training_lengths, int & trai
     training_steps = 0;
     for(int tmp_training_length=min_training_length;
         tmp_training_length<=max_training_length;
-        tmp_training_length*=training_length_factor) {
+        tmp_training_length=tmp_training_length*training_length_factor+training_length_incr) {
         ++training_steps;
     }
     training_lengths = (int*)malloc(training_steps*sizeof(int));
     int training_idx = 0;
     for(int tmp_training_length=min_training_length;
         tmp_training_length<=max_training_length;
-        tmp_training_length*=training_length_factor) {
+        tmp_training_length=tmp_training_length*training_length_factor+training_length_incr) {
         training_lengths[training_idx] = tmp_training_length;
         ++training_idx;
     }
