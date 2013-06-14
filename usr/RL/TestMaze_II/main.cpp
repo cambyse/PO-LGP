@@ -1,7 +1,6 @@
 #include "testmaze_ii.h"
 #include "BatchMaze.h"
-
-//#define BATCH_MODE
+#include "Config.h"
 
 #include <QtGui>
 #include <QApplication>
@@ -12,7 +11,7 @@ int main(int argc, char *argv[])
     srand(time(nullptr));
     srand48(time(nullptr));
 
-#ifdef BATCH_MODE
+#if defined(BATCH_MODE) || defined(BATCH_MODE_QUIET)
     BatchMaze batchmaze;
     return batchmaze.run(argc,argv);
 #else

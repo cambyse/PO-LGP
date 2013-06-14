@@ -8,8 +8,12 @@
 #include <tuple>
 #include <float.h> // for DBL_MAX
 
-#define DEBUG_STRING "UTree: "
+#ifdef BATCH_MODE_QUIET
+#define DEBUG_LEVEL 0
+#else
 #define DEBUG_LEVEL 1
+#endif
+#define DEBUG_STRING "UTree: "
 #include "debug.h"
 
 // maze_x_size

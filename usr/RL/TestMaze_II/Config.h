@@ -1,6 +1,9 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 
+//#define BATCH_MODE
+#define BATCH_MODE_QUIET
+
 #define USE_CONFIG_TYPEDEFS                                     \
     typedef Config::idx_t              idx_t;                   \
     typedef Config::size_t             size_t;                  \

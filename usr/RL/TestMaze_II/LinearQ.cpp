@@ -10,8 +10,12 @@
 
 #include "lbfgs_codes.h"
 
-#define DEBUG_STRING "LinearQ: "
+#ifdef BATCH_MODE_QUIET
+#define DEBUG_LEVEL 0
+#else
 #define DEBUG_LEVEL 1
+#endif
+#define DEBUG_STRING "LinearQ: "
 #include "debug.h"
 
 // maze_x_size

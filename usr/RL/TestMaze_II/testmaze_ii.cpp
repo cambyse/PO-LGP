@@ -5,7 +5,11 @@
 
 #include <float.h>  // for DBL_MAX
 
+#ifdef BATCH_MODE_QUIET
+#define DEBUG_LEVEL 0
+#else
 #define DEBUG_LEVEL 1
+#endif
 #include "debug.h"
 
 using util::arg_int;

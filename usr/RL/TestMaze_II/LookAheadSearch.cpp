@@ -1,10 +1,3 @@
-/*
- * LookAheadSearch.cpp
- *
- *  Created on: Feb 4, 2013
- *      Author: robert
- */
-
 #include "LookAheadSearch.h"
 
 #include <float.h>

@@ -5,8 +5,12 @@
 #include <list>
 #include <tuple>
 
-#define DEBUG_STRING "CRF: "
+#ifdef BATCH_MODE_QUIET
+#define DEBUG_LEVEL 0
+#else
 #define DEBUG_LEVEL 1
+#endif
+#define DEBUG_STRING "CRF: "
 #include "debug.h"
 
 // maze_x_size

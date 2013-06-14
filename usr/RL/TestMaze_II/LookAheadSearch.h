@@ -7,7 +7,11 @@
 #include "Config.h"
 #include "Representation/Representation.h"
 
+#ifdef BATCH_MODE_QUIET
+#define DEBUG_LEVEL 0
+#else
 #define DEBUG_LEVEL 1
+#endif
 #include "debug.h"
 
 class LookAheadSearch {
