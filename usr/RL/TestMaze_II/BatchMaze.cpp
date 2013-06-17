@@ -27,8 +27,8 @@ USE_CONFIG_CONSTS;
 #define USE_OMP
 
 static std::ofstream log_file;
-static enum OPTION { OPTIMAL, SPARSE, UTREE_PROB, UTREE_VALUE, LINEAR_Q, OPTION_N } option;
-static const char * option_arr[5] = {"optimal", "sparse", "utree-prob", "utree-value", "linear-q"};
+static enum OPTION { RANDOM, OPTIMAL, SPARSE, UTREE_PROB, UTREE_VALUE, LINEAR_Q, OPTION_N } option;
+static const char * option_arr[OPTION_N] = {"random", "optimal", "sparse", "utree-prob", "utree-value", "linear-q"};
 static QString option_str;
 static int max_episodes = 100;
 static int max_transitions = 1000;
@@ -135,7 +135,7 @@ int BatchMaze::run(int argn, char ** argarr) {
                     reward_t reward;
                     maze->perform_transition(action,state,reward);
                     current_instance = current_instance->append_instance(action,state,reward);
-                    if(option==OPTIMAL) {
+                    if(option==OPTIMAL || option==RANDOM) {
                         // no training data
                     } else if(option==SPARSE) {
                         crf->add_action_state_reward_tripel(action,state,reward);
@@ -150,7 +150,7 @@ int BatchMaze::run(int argn, char ** argarr) {
             }
 
             // train the learners
-            if(option==OPTIMAL) {
+            if(option==OPTIMAL || option==RANDOM) {
                 // nothing to train
             } else if(option==SPARSE) {
                 for(int complx=1; complx<=feature_complx; ++complx) {
@@ -213,6 +213,8 @@ int BatchMaze::run(int argn, char ** argarr) {
                         max_tree_size
                         );
                     action = look_ahead_search->get_optimal_action();
+                } else if(option==RANDOM) {
+                    action = action_t::random_action();
                 } else if(option==SPARSE) {
                     look_ahead_search->clear_tree();
                     look_ahead_search->build_tree<KMarkovCRF>(
