@@ -3,6 +3,9 @@
 #include "Config.h"
 #include "Representation/Representation.h"
 
+#include <vector>
+#include <map>
+#include <tuple>
 
 class DelayDistribution: public HistoryObserver {
 
@@ -10,6 +13,8 @@ public:
 
     USE_CONFIG_TYPEDEFS;
     USE_REPRESENTATION_TYPEDEFS;
+
+    typedef std::map<std::tuple<state_t,state_t,unsigned int>,probability_t> pair_dist_map_t;
 
     DelayDistribution() {}
 
@@ -19,9 +24,18 @@ public:
      *
      * Return the probability p(s2|s1,delay) of reaching state s2 given one was
      * in state s1 delay time steps ago. */
-    probability_t get_delay_probability(
+    probability_t get_fixed_delay_probability(
         const state_t& s1,
         const state_t& s2,
+        const idx_t& delay
+        );
+
+    /** \brief Return delay probability.
+     *
+     * Return the probability distribution p(s2|s1,delay) of reaching state s2 given one was
+     * in state s1 delay time steps ago. */
+    std::vector<probability_t> get_fixed_delay_probability_distribution(
+        const state_t& s1,
         const idx_t& delay
         );
 
@@ -46,5 +60,13 @@ public:
         const state_t& s2,
         const state_t& s3,
         const int& max_window = -1
+        );
+
+    /** \brief Return pairwise delay distribution.
+     *
+     * Return the probability distribution p(dt|s1,s2) of visiting states s1 and s2 with a time delay of dt. */
+    void get_pairwise_delay_distribution(
+        pair_dist_map_t & dist_map,
+        const int& max_dt = -1
         );
 };
