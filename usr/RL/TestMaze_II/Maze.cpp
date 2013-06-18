@@ -48,7 +48,7 @@ const vector<vector<Maze::idx_t> > Maze::walls = {
     {10,11}
     /**/
 
-    /* 10x10 Maze *
+    /* 10x10 Maze */
     {  2,  3},
     { 12, 13},
     { 22, 23},
@@ -94,7 +94,7 @@ const vector<vector<Maze::idx_t> > Maze::rewards = {
     { 3, 2, 1, 1, ON_RELEASE,   0,   0, 200}
     /**/
 
-    /* 2x2 Maze */
+    /* 2x2 Maze *
     { 0, 3, 2, 1, EACH_TIME, 200,   0,   0}
     /**/
 

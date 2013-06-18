@@ -1,5 +1,7 @@
 #include "DelayDistribution.h"
 
+#include <map>
+
 #define DEBUG_STRING "DelayDist: "
 #define DEBUG_LEVEL 1
 #include "debug.h"
@@ -7,8 +9,12 @@
 using util::INVALID;
 
 using std::vector;
+using std::map;
+using std::tuple;
+using std::make_tuple;
+using std::get;
 
-DelayDistribution::probability_t DelayDistribution::get_delay_probability(
+DelayDistribution::probability_t DelayDistribution::get_fixed_delay_probability(
     const state_t& s1,
     const state_t& s2,
     const idx_t& delay
@@ -43,6 +49,52 @@ DelayDistribution::probability_t DelayDistribution::get_delay_probability(
         DEBUG_OUT(1,"Warning: Not enough data to determine probability");
         return 0;
     }
+}
+
+vector<DelayDistribution::probability_t> DelayDistribution::get_fixed_delay_probability_distribution(
+    const state_t& s1,
+    const idx_t& delay
+    ) {
+    // initialize unnormalized probabilities
+    vector<probability_t> prob;
+    map<state_t,idx_t> idx_map;
+    idx_t state_idx = 0;
+    for( state_t state : stateIt_t::all ) {
+        prob.push_back(0);
+        idx_map[state] = state_idx;
+        ++state_idx;
+    }
+    size_t normalization = 0;
+
+    // iterate through instances
+    if(instance_data!=nullptr) {
+        const_instanceIt_t insIt_1 = instance_data->const_first();
+        const_instanceIt_t insIt_2 = insIt_1;
+        if(delay<0) {
+            DEBUG_OUT(1,"Warning: Using negative delay");
+            insIt_1 -= delay;
+        } else {
+            insIt_2 += delay;
+        }
+        while(insIt_1!=INVALID && insIt_2!=INVALID) {
+            if(insIt_1->state==s1) {
+                ++normalization;
+                prob[idx_map[insIt_2->state]] += 1;
+            }
+            ++insIt_1;
+            ++insIt_2;
+        }
+    }
+
+    // normalize and return
+    if(normalization!=0) {
+        for( auto& p : prob ) {
+            p/=normalization;
+        }
+    } else {
+        DEBUG_OUT(1,"Warning: Not enough data to determine probability");
+    }
+    return prob;
 }
 
 void DelayDistribution::get_delay_distribution(
@@ -148,4 +200,32 @@ DelayDistribution::probability_t DelayDistribution::get_mediator_probability(
     }
 
     return counter!=0 ? prob/counter : 0;
+}
+
+void DelayDistribution::get_pairwise_delay_distribution(
+    pair_dist_map_t & dist_map,
+    const int& max_dt
+    ) {
+
+    // clear map
+    dist_map.clear();
+
+    // fill map
+    for(const_instanceIt_t ins_1=instance_data->first(); ins_1!=INVALID; ++ins_1 ) {
+        idx_t dt = 1;
+        for(const_instanceIt_t ins_2=ins_1+1; ins_2!=INVALID && (max_dt==-1 || dt<=max_dt); ++ins_2, ++dt) {
+            // increment counts (construct if necessary, relies on default
+            // constructor int()==0 for initialization)
+            dist_map[make_tuple(ins_1->state, ins_2->state, dt)] += 1;
+            dist_map[make_tuple(ins_1->state, ins_2->state, 0)] += 1;
+        }
+    }
+
+    // normalize
+    for( auto el=dist_map.begin(); el!=dist_map.end(); ++el ) {
+        auto tup = el->first;
+        if(get<2>(tup)!=0) {
+            el->second /= dist_map[make_tuple(get<0>(tup),get<1>(tup),0)];
+        }
+    }
 }
