@@ -11,7 +11,7 @@
 #include <system/module.h>
 #include <views/views.h>
 #include <MT/ors.h>
-#include <MT/array_t.cxx>
+#include <MT/array_t.h>
 
 //===========================================================================
 //

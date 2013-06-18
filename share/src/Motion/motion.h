@@ -16,8 +16,8 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
-#ifndef _MT_motionProblem_h
-#define _MT_motionProblem_h
+#ifndef _MT_motion_h
+#define _MT_motion_h
 
 #include <Ors/ors.h>
 #include <Optim/optimization.h>
@@ -67,7 +67,7 @@ struct MotionProblem {
   SwiftInterface *swift;
   
   //task cost descriptions
-  enum TaskCostInterpolationType { constFinalMid, linearInterpolation };
+  enum TaskCostInterpolationType { constFinalMid, constEarlyMid, linearInterpolation };
   MT::Array<TaskCost*> taskCosts;
   
   //transition cost descriptions
@@ -94,24 +94,26 @@ struct MotionProblem {
   
   //adding add task spaces
   TaskCost* addDefaultTaskMap(const char* name, DefaultTaskMapType type,
-                              int iBody, const ors::Transformation& irel,
-                              int jBody, const ors::Transformation& jrel,
-                              const arr& params);
+                              int iBody=-1, const ors::Transformation& irel=NoTransformation,
+                              int jBody=-1, const ors::Transformation& jrel=NoTransformation,
+                              const arr& params=NoArr);
                               
-  TaskCost* addDefaultTaskMap(const char* name, DefaultTaskMapType type,
-                              const char *iBodyName, const char *iframe,
-                              const char *jBodyName, const char *jframe,
-                              const arr& params);
+  TaskCost* addDefaultTaskMap_Bodies(const char* name, DefaultTaskMapType type,
+                                     const char *iBodyName=NULL, const ors::Transformation& irel=NoTransformation,
+                                     const char *jBodyName=NULL, const ors::Transformation& jrel=NoTransformation,
+                                     const arr& params=NoArr);
                               
-  TaskCost* addDefaultTaskMap(const char* name, DefaultTaskMapType type,
-                              const char *iShapeName,
-                              const char *jShapeName,
-                              const arr& params);
-                              
+  TaskCost* addDefaultTaskMap_Shapes(const char* name, DefaultTaskMapType type,
+                                     const char *iShapeName=NULL, const ors::Transformation& irel=NoTransformation,
+                                     const char *jShapeName=NULL, const ors::Transformation& jrel=NoTransformation,
+                                     const arr& param=NoArr);
+
+  TaskCost* addCustomTaskMap(const char* name, TaskMap *map);
+
   //setting costs in a task space
   void setInterpolatingCosts(TaskCost *c,
                              TaskCostInterpolationType inType,
-                             const arr& y_finalTarget, double y_finalPrec, const arr& y_midTarget=NoArr, double y_midPrec=-1.);
+                             const arr& y_finalTarget, double y_finalPrec, const arr& y_midTarget=NoArr, double y_midPrec=-1., double earlyFraction=-1.);
                              
   void setInterpolatingVelCosts(TaskCost *c,
                                 TaskCostInterpolationType inType,
@@ -123,7 +125,8 @@ struct MotionProblem {
   uint get_psiDim();
   void costReport();
   
-  void setState(const arr& q, const arr& v);
+  void setState(const arr& x, const arr& v);
+  void activateAllTaskCosts(bool activate=true);
 };
 
 struct MotionProblemFunction:KOrderMarkovFunction {

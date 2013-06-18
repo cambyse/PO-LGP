@@ -29,6 +29,7 @@ const ors::Vector Vector_y(0, 1, 0);
 const ors::Vector Vector_z(0, 0, 1);
 const ors::Transformation Transformation_Id(ors::Transformation().setZero());
 const ors::Quaternion Quaternion_Id(1, 0, 0, 0);
+ors::Transformation& NoTransformation = *((ors::Transformation*)NULL);
 
 namespace ors {
 double scalarProduct(const ors::Quaternion& a, const ors::Quaternion& b);

@@ -26,8 +26,8 @@ struct sConvert {
   VectorChainFunction* vcf;
   QuadraticChainFunction* qcf;
   KOrderMarkovFunction *kom;
-  ControlledSystem *cs;
-  sConvert():sf(NULL),vf(NULL),vcf(NULL),qcf(NULL),kom(NULL),cs(NULL) {};
+//  ControlledSystem *cs;
+  sConvert():sf(NULL),vf(NULL),vcf(NULL),qcf(NULL),kom(NULL)/*,cs(NULL)*/ {};
   
   struct VectorChainFunction_ScalarFunction:ScalarFunction { //actual converter objects
     VectorChainFunction *f;
@@ -86,7 +86,7 @@ Convert::Convert(VectorChainFunction& p) { s=new sConvert(); s->vcf=&p; }
 Convert::Convert(QuadraticChainFunction& p) { s=new sConvert(); s->qcf=&p; }
 Convert::Convert(KOrderMarkovFunction& p) { s=new sConvert(); s->kom=&p; }
 #ifndef libRoboticsCourse
-Convert::Convert(ControlledSystem& p) { s=new sConvert(); s->cs=&p; }
+//Convert::Convert(ControlledSystem& p) { s=new sConvert(); s->cs=&p; }
 #endif
 
 Convert::~Convert() {
@@ -108,7 +108,7 @@ Convert::operator ScalarFunction&() {
 
 Convert::operator VectorFunction&() {
   if(!s->vf) {
-    if(s->cs) operator KOrderMarkovFunction&();
+//    if(s->cs) operator KOrderMarkovFunction&();
     if(s->kom) s->vf = new sConvert::KOrderMarkovFunction_VectorFunction(*s->kom);
     if(s->vcf) s->vf = new sConvert::VectorChainFunction_VectorFunction(*s->vcf);
   }

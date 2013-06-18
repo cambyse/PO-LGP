@@ -631,6 +631,7 @@ struct OpenGL;
 extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines;
 extern uint orsDrawLimit;
 
+void displayState(const arr& x, ors::Graph& G, OpenGL& gl, const char *tag);
 void displayTrajectory(const arr& x, int steps, ors::Graph& G, OpenGL& gl, const char *tag);
 void editConfiguration(const char* orsfile, ors::Graph& C, OpenGL& gl);
 void animateConfiguration(ors::Graph& C, OpenGL& gl);
