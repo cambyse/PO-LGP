@@ -10,7 +10,7 @@ import smach
 import smach_ros
 
 import the_curious_robot.msg as msgs
-
+import require_provide as rp
 #TODO: import ActionServer
 
 def main():
@@ -65,10 +65,11 @@ def main():
     sis = smach_ros.IntrospectionServer('tcr_sis_server', sm, '/SM_ROOT')
     sis.start()
 
+    rp.Require(["Controller", "Perception"])
+
     outcome = sm.execute()
 
     rospy.spin()
 
 if __name__ == '__main__':
-    rospy.sleep(1)
     main()

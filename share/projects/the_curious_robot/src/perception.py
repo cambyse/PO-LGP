@@ -17,6 +17,8 @@ import orspy as ors
 import Queue
 import time
 
+import require_provide as rp
+
 
 class FakePerception():
     """
@@ -54,6 +56,7 @@ class FakePerception():
         return msg
 
     def run(self):
+        rp.Provide("Perception")
         """ the perception loop """
         while not rospy.is_shutdown():
             self.step()
