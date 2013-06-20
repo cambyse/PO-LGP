@@ -143,7 +143,7 @@ void setGraspGoals(MotionProblem& M, uint T, uint shapeId, uint side, uint phase
 //  V->appendConstTargetsAndPrecs(T);
 //  M.vars().append(V);
   M.setInterpolatingCosts(c, MotionProblem::constEarlyMid,
-                          target, alignmentPrec, NoArr, -1., .8);
+                          ARR(1.), alignmentPrec, NoArr, -1., .8);
 
   if (phase==0) return;
   
@@ -159,7 +159,7 @@ void setGraspGoals(MotionProblem& M, uint T, uint shapeId, uint side, uint phase
   double grip=.8; //specifies the desired proxy value
   target = ARR(grip,grip,grip);
   M.setInterpolatingCosts(c, MotionProblem::constEarlyMid,
-                          target, fingerDistPrec);
+                          target, fingerDistPrec, ARR(0.,0.,0.), 0., 0.8);
   //V->setInterpolatedTargetsEndPrecisions(T,colPrec,fingerDistPrec,0.,0.);
   for (uint t=0; t<=T; t++) { //interpolation: 0 up to 4/5 of the trajectory, then interpolating in the last 1/5
     if (5*t<4*T) c->y_target[t]()=0.;
@@ -211,7 +211,7 @@ void setGraspGoals(MotionProblem& M, uint T, uint shapeId, uint side, uint phase
       -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5 ]";
   //TODO: limits as parameter!
   //V = new DefaultTaskVariable("limits", *M.ors, qLimitsTVT, 0, 0, 0, 0, limits);
-  c = M.addDefaultTaskMap("limits", qLimitsTMT);
+  c = M.addDefaultTaskMap("limits", qLimitsTMT, -1, NoTransformation, -1, NoTransformation, limits);
   target=0.;  //V->y_prec=limPrec;  V->setConstTargetsConstPrecisions(T);
   M.setInterpolatingCosts(c, MotionProblem::constFinalMid,
                           target, limPrec, target, limPrec);

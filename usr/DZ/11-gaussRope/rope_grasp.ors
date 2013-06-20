@@ -1,4 +1,4 @@
-#QlinFile schunk.ors.qlin
+#QlinFile='schunk.ors.qlin'
 
 body stem { X=<T t(0 0 1)>  type=2 mass=.1 size=[0.1 0.1 1 .025] fixed }
 body arm1 { type=2 mass=.05 size=[0.1 0.1 .2 .025] contact}

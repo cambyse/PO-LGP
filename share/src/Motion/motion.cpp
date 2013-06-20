@@ -56,21 +56,25 @@ void MotionProblem::setx0v0(const arr& x, const arr& v) {
   x0=x; v0=v;
 }
 
-TaskCost* MotionProblem::addDefaultTaskMap(
-  const char* name,
-  DefaultTaskMapType type,
-  int iBody, const ors::Transformation& irel,
-  int jBody, const ors::Transformation& jrel,
-  const arr& params) {
-  DefaultTaskMap *m = new DefaultTaskMap();
-  m->type=type;
-  m->i=iBody;  m->irel=irel;
-  m->j=jBody;  m->jrel=jrel;
-  if(&params) m->params=params;
+TaskCost* MotionProblem::addCustomTaskMap(const char* name, TaskMap *m){
   TaskCost *t = new TaskCost(m);
   t->name=name;
   taskCosts.append(t);
   return t;
+}
+
+TaskCost* MotionProblem::addDefaultTaskMap(
+    const char* name,
+    DefaultTaskMapType type,
+    int iBody, const ors::Transformation& irel,
+    int jBody, const ors::Transformation& jrel,
+    const arr& params) {
+  DefaultTaskMap *m = new DefaultTaskMap();
+  m->type=type;
+  m->i=iBody;  if(&irel) m->irel=irel;
+  m->j=jBody;  if(&jrel) m->jrel=jrel;
+  if(&params) m->params=params;
+  return addCustomTaskMap(name, m);
 }
 
 TaskCost* MotionProblem::addDefaultTaskMap_Bodies(
@@ -111,7 +115,6 @@ void MotionProblem::setInterpolatingCosts(
   TaskCost *c,
   TaskCostInterpolationType inType,
   const arr& y_finalTarget, double y_finalPrec, const arr& y_midTarget, double y_midPrec, double earlyFraction) {
-  if(earlyFraction>=0) NIY;
   uint m=c->map.phiDim(*ors);
   setState(x0,v0);
   arr y0;
@@ -139,7 +142,21 @@ void MotionProblem::setInterpolatingCosts(
       c->y_prec = y_midPrec<0. ? y_finalPrec : y_midPrec;
       c->y_prec(T) = y_finalPrec;
     } break;
-  case constEarlyMid: NIY;
+  case constEarlyMid: {
+    c->y_target.resize(T+1, m);
+    CHECK(earlyFraction>=0. && earlyFraction<=1.,"");
+    uint Tearly=earlyFraction*T;
+    for(uint t=0; t<=Tearly; t++) {
+      double a = (double)t/Tearly;
+      c->y_target[t]() = ((double)1.-a)*y0 + a*finTarget;
+    }
+    c->y_prec.resize(T+1);
+    c->y_prec = y_midPrec<0. ? y_finalPrec : y_midPrec;
+    for(uint t=Tearly; t<=T; t++) {
+      c->y_target[t]() = finTarget;
+      c->y_prec(t) = y_finalPrec;
+    }
+  } break;
   }
 }
 
@@ -179,7 +196,7 @@ void MotionProblem::setInterpolatingVelCosts(
 }
 
 void MotionProblem::setState(const arr& q, const arr& v) {
-  v_current = v;
+  if(&v) v_current = v;
   x_current = q;
   ors->setJointState(q);
 //  if(q_external.N)
@@ -232,6 +249,10 @@ void MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
 
 uint MotionProblem::get_psiDim() {
   return x0.N;
+}
+
+void MotionProblem::activateAllTaskCosts(bool active) {
+  for_list_(TaskCost, c, taskCosts) c->active=active;
 }
 
 void MotionProblem::costReport() {

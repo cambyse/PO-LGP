@@ -532,12 +532,17 @@ arr ors::Graph::naturalQmetric() {
   for_list_(Joint, j, joints) {
     for(uint i=0; i<j->qDim(); i++) Wdiag(j->qIndex+i)=::pow(BM(j->to->index), 1.);
   }
+  if(Qlin.N){
+    arr W;
+    W.setDiag(Wdiag);
+    if(Qlin.N) W = ~Qlin*W*Qlin;
+    getDiag(Wdiag, W);
+  }
   return Wdiag;
 }
 
 void ors::Graph::computeNaturalQmetric(arr& W) {
   W.setDiag(naturalQmetric());
-  if(Qlin.N) W = ~Qlin*W*Qlin;
 }
 
 /** @brief revert the topological orientation of a joint (edge),
@@ -1234,7 +1239,7 @@ ors::Body* ors::Graph::getBodyByName(const char* name) const {
   Body *n;
   uint j;
   for_list(j, n, bodies) {
-    if(strcmp(n->name, name)==0) return n;
+    if(n->name==name) return n;
   }
   if(strcmp("glCamera", name)!=0)
     MT_MSG("cannot find Body named '" <<name <<"' in Graph");
@@ -1243,10 +1248,10 @@ ors::Body* ors::Graph::getBodyByName(const char* name) const {
 
 /// find body index with specific name
 uint ors::Graph::getBodyIndexByName(const char* name) const {
-  Body *n;
+  Body *b;
   uint j;
-  for_list(j, n, bodies) {
-    if(strcmp(n->name, name)==0) return n->index;
+  for_list(j, b, bodies) {
+    if(b->name==name) return b->index;
   }
   if(strcmp("glCamera", name)!=0)
     MT_MSG("cannot find Body named '" <<name <<"' in Graph");
@@ -1258,7 +1263,7 @@ ors::Shape* ors::Graph::getShapeByName(const char* name) const {
   Shape *s;
   uint j;
   for_list(j, s, shapes) {
-    if(strcmp(s->name, name)==0) return s;
+    if(s->name==name) return s;
   }
   MT_MSG("cannot find Shape named '" <<name <<"' in Graph");
   return NULL;
@@ -1269,7 +1274,7 @@ uint ors::Graph::getShapeIndexByName(const char* name) const {
   Shape *s;
   uint j;
   for_list(j, s, shapes) {
-    if(strcmp(s->name, name)==0) return s->index;
+    if(s->name==name) return s->index;
   }
   MT_MSG("cannot find Shape named '" <<name <<"' in Graph");
   return 0;
@@ -1279,8 +1284,8 @@ uint ors::Graph::getShapeIndexByName(const char* name) const {
 ors::Joint* ors::Graph::getJointByBodyNames(const char* from, const char* to) const {
   Body *f=NULL, *t=NULL;
   uint j;
-  for_list(j, f, bodies) if(strcmp(f->name, from)==0) break;
-  for_list(j, t, bodies) if(strcmp(t->name, to)==0) break;
+  for_list(j, f, bodies) if(f->name==from) break;
+  for_list(j, t, bodies) if(t->name==to) break;
   if(!f || !t) return 0;
   return graphGetEdge<Body, Joint>(f, t);
 }

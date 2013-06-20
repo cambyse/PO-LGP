@@ -5,7 +5,7 @@
 ## Qlin file
 ###########
 
-QlinFile ../../../share/configurations/schunk.ors.qlin
+QlinFile='../../../share/configurations/schunk.ors.qlin'
 
 ###########
 ## base

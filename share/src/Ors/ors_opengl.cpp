@@ -438,6 +438,12 @@ void ors::Graph::glDraw() {
   glPopMatrix();
 }
 
+void displayState(const arr& x, ors::Graph& G, OpenGL& gl, const char *tag){
+  G.setJointState(x);
+  G.calcBodyFramesFromJoints();
+  gl.watch(tag);
+}
+
 void displayTrajectory(const arr& x, int steps, ors::Graph& G, OpenGL& gl, const char *tag) {
   uint k, t, T=x.d0-1;
   if(!steps) return;

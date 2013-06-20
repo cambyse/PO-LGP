@@ -16,7 +16,7 @@ int main(int argn,char** argv){
 
   //-- setup the motion problem
   TaskCost *c;
-  c = P.addDefaultTaskMap("position", posTMT,"endeff","<t(0 0 .2)>",0,0,ARR());
+  c = P.addDefaultTaskMap_Bodies("position", posTMT,"endeff",ors::Transformation().setText("<t(0 0 .2)>"));
   P.setInterpolatingCosts(c, MotionProblem::constFinalMid,
                           ARRAY(P.ors->getBodyByName("target")->X.pos), 1e3,
                           ARRAY(0.,0.,0.), 1e-3);
@@ -56,7 +56,7 @@ int main(int argn,char** argv){
   OpenGL costs(STRING("PHI ("<<F.get_m(0)<<" tasks)"), 3*T+10, 3*F.get_m(0)+10 );
   //-- optimize
   for(;;){
-    optGaussNewton(x, Convert(F), OPT(verbose=2, stopIters=20, useAdaptiveDamping=false, maxStep=1.));
+    optGaussNewton(x, Convert(F), OPT(verbose=2, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
     costs.displayRedBlue(~sqr(P.costMatrix), false, 3);
     P.costReport();
     write(LIST<arr>(x),"z.output");

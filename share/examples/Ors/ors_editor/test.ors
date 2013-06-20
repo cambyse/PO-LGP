@@ -3,7 +3,7 @@
 ## base
 ###########
 
-QlinFile = 'orsQlin'
+QlinFile='orsQlin'
 
 body base { X=<T t(0 0 .25)> }
 

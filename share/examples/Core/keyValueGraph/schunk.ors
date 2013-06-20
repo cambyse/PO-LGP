@@ -5,7 +5,7 @@
 ## Qlin file
 ###########
 
-QlinFile = 'schunk.ors.qlin'
+QlinFile='schunk.ors.qlin'
 
 ###########
 ## base

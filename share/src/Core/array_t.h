@@ -3067,7 +3067,7 @@ template<class T> void listDelete(MT::Array<T*>& L) {
 template<class T> T* listFindByName(const MT::Array<T*>& L, const char* name) {
   uint i;
   T *e;
-  for_list(i, e, L) if(!strcmp(e->name, name)) return e;
+  for_list(i, e, L) if(e->name==name) return e;
   //std::cerr <<"\n*** name '" <<name <<"' not in this list!" <<std::endl;
   return NULL;
 }
