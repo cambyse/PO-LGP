@@ -601,14 +601,16 @@ void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph& ors, 
   arel.setZero();  arel=a->X.rot/(p->posA-a->X.pos);
   brel.setZero();  brel=b->X.rot/(p->posB-b->X.pos);
   
-  CHECK(p->normal.isNormalized(), "proxy normal is not normalized");
-  dnormal.referTo(&p->normal.x, 3); dnormal.reshape(1, 3);
-  if(!linear) {
-    ors.jacobianPos(Ja, a->body->index, &arel); J -= (2.*d/margin)*(dnormal*Ja);
-    ors.jacobianPos(Jb, b->body->index, &brel); J += (2.*d/margin)*(dnormal*Jb);
-  } else {
-    ors.jacobianPos(Ja, a->body->index, &arel); J -= (1./margin)*(dnormal*Ja);
-    ors.jacobianPos(Jb, b->body->index, &brel); J += (1./margin)*(dnormal*Jb);
+  if(&J){
+    CHECK(p->normal.isNormalized(), "proxy normal is not normalized");
+    dnormal.referTo(&p->normal.x, 3); dnormal.reshape(1, 3);
+    if(!linear) {
+      ors.jacobianPos(Ja, a->body->index, &arel); J -= (2.*d/margin)*(dnormal*Ja);
+      ors.jacobianPos(Jb, b->body->index, &brel); J += (2.*d/margin)*(dnormal*Jb);
+    } else {
+      ors.jacobianPos(Ja, a->body->index, &arel); J -= (1./margin)*(dnormal*Ja);
+      ors.jacobianPos(Jb, b->body->index, &brel); J += (1./margin)*(dnormal*Jb);
+    }
   }
 }
 

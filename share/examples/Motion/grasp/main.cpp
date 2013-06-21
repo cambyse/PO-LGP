@@ -30,12 +30,14 @@ void testGraspHeuristic(){
   for(uint k=0;k<10;k++){
 
 #if 1
-    arr x, x0=P.x0;
-    threeStepGraspHeuristic(x, P, x0, s->index, 2);
-    
+    arr x, xT, x0=P.x0;
+    threeStepGraspHeuristic(xT, P, x0, s->index, 2);
+
     MotionProblemFunction F(P);
 
-    optGaussNewton(x, Convert(F), OPT(verbose=2, stopIters=20, useAdaptiveDamping=false, maxStep=1.));
+    sineProfile(x, x0, xT, P.T);
+
+    optGaussNewton(x, Convert(F), OPT(verbose=2, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
     //costs.displayRedBlue(~sqr(P.costMatrix), false, 3);
     P.costReport();
     write(LIST<arr>(x),"z.output");
