@@ -73,6 +73,8 @@ ifeq ($(OPTIM),callgrind)
 CXXFLAGS := -O3 -g -Wall -DMT_NOCHECK -fno-inline $(CXXFLAGS)
 endif
 
+CXXFLAGS += -fPIC
+
 
 ################################################################################
 #
@@ -304,6 +306,9 @@ endif
 ifeq ($(QHULL),1)
 CXXFLAGS  += -DMT_QHULL
 LIBS      += -lqhull
+ifeq ($(ARCH_LINUX),1)
+CXXFLAGS += -DARCH_LINUX
+endif
 endif
 
 ifeq ($(OpenML),1)
@@ -377,11 +382,6 @@ ifeq ($(OPENCV),1)
     %CPATH := $(CPATH):$(IFLAGS:\-I%=\:%\:) % is it possible to add the includes to the CPATH?
     LIBS      += `pkg-config --libs opencv`
   endif
-endif
-
-# newer qhull version?
-ifeq ($(ARCH_LINUX),1)
-CXXFLAGS += -DARCH_LINUX
 endif
 
 ifeq ($(HSL),1)
