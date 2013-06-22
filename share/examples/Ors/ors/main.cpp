@@ -3,7 +3,7 @@
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
 #include <GL/gl.h>
-
+#include <Optim/optimization.h>
 
 //===========================================================================
 //
@@ -64,8 +64,8 @@ namespace T1{
   ors::Vector rel;
   ors::Vector axis;
   static void f  (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsPos(y,i,&rel);  if(J) G->jacobianPos(*J,i,&rel); }
-  static void f_hess (arr &J, arr *H, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->jacobianPos(J,i,&rel);    if(H) G->hessianPos (*H,i,&rel); }
-  static void f_vec (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsVec(y,i,&axis); if(J) G->jacobianVec(*J,i,&axis); }
+  static void f_hess (arr &J, arr *H, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->jacobianPos(J,i,&rel);  if(H) G->hessianPos (*H,i,&rel); }
+  static void f_vec (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsVec(y,i,&axis);  if(J) G->jacobianVec(*J,i,&axis); }
   //static void f3 (arr &y,const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsOri2(y,i,axis); }
   //static void df3(arr &J,const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->jacobianOri2(J,i,axis); }
 }
@@ -84,9 +84,9 @@ void testKinematics(){
     rndUniform(x,-.5,.5,false);
     gl.text.clear() <<"k=" <<k <<"  gradient checks of kinematics on random postures";
     //gl.update();
-    MT::checkGradient(T1::f ,NULL,x,1e-5);
-    MT::checkGradient(T1::f_hess,NULL,x,1e-5);
-    MT::checkGradient(T1::f_vec,NULL,x,1e-5);
+    checkJacobian(Convert(T1::f, NULL), x, 1e-5);
+    checkJacobian(Convert(T1::f_hess, NULL), x, 1e-5);
+    checkJacobian(Convert(T1::f_vec, NULL), x, 1e-5);
   }
 }
 
@@ -178,7 +178,7 @@ void testContacts(){
     //x += inverse(grad)*(-.1*c);
     x -= 1e-3*grad; //.1 * (invJ * grad);
 
-    MT::checkGradient(Ctest::f,NULL,x,1e10);
+    checkJacobian(Convert(Ctest::f, NULL), x, 1e10);
   }
 }
 
@@ -188,7 +188,7 @@ void testContacts(){
 // set state test
 //
 
-void generateSequence(arr &X,arr &V,uint n){
+void generateSequence(arr &X, uint T, uint n){
   uint i;
   rnd.seed(0);
   arr P(10,n);
@@ -205,7 +205,8 @@ void generateSequence(arr &X,arr &V,uint n){
   }
   
   //convert into a smooth spline (1/0.03 points per via point):
-  MT::makeSpline(X,V,P,(int)(1/0.03));
+//  MT::makeSpline(X,V,P,(int)(1/0.03));
+  MT::Spline(T,P).eval(X);
 }
 
 void testPlayStateSequence(){
@@ -213,8 +214,8 @@ void testPlayStateSequence(){
   OpenGL gl;
   init(G, gl, "arm7.ors");
   uint n=G.getJointStateDimension();
-  arr X,V;
-  generateSequence(X,V,n);
+  arr X;
+  generateSequence(X, 200, n);
   arr v(X.d1); v=0.;
   for(uint t=0;t<X.d0;t++){
     G.setJointState(X[t](),v);
@@ -287,8 +288,7 @@ void testFollowRedundantSequence(){
 
   //-- generate a random endeffector trajectory
   arr Z,Zt; //desired and true endeffector trajectories
-  arr V;
-  generateSequence(Z,V,3); //3D random sequence with limits [-1,1]
+  generateSequence(Z, 200, 3); //3D random sequence with limits [-1,1]
   T=Z.d0;
   G.setJointState(x);
   G.calcBodyFramesFromJoints();

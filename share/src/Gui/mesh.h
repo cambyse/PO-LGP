@@ -102,24 +102,6 @@ struct Mesh {
   void glDraw();
 };
 
-/// a spline
-struct Spline {
-  uint T, K, degree;
-  arr points;
-  arr times;
-  arr weights;
-  arr basis, basis_trans, basis_timeGradient;
-  
-  void plotBasis();
-  void setBasis();
-  void setBasisAndTimeGradient();
-  void setUniformNonperiodicBasis(uint T, uint K, uint degree);
-  void evalF(arr& f_t, uint t) const;
-  void evalF(arr& f) const;
-  
-  void partial(arr& dCdx, const arr& dCdf) const;
-  void partial(arr& dCdx, arr& dCdt, const arr& dCdf, bool constrain=true) const;
-};
 
 
 //===========================================================================

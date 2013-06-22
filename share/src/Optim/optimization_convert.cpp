@@ -26,8 +26,11 @@ struct sConvert {
   VectorChainFunction* vcf;
   QuadraticChainFunction* qcf;
   KOrderMarkovFunction *kom;
+  double(*fs)(arr*, const arr&, void*);
+  void (*fv)(arr&, arr*, const arr&, void*);
+  void *data;
 //  ControlledSystem *cs;
-  sConvert():sf(NULL),vf(NULL),vcf(NULL),qcf(NULL),kom(NULL)/*,cs(NULL)*/ {};
+  sConvert():sf(NULL),vf(NULL),vcf(NULL),qcf(NULL),kom(NULL),fs(NULL),fv(NULL),data(NULL)/*,cs(NULL)*/ {};
   
   struct VectorChainFunction_ScalarFunction:ScalarFunction { //actual converter objects
     VectorChainFunction *f;
@@ -52,7 +55,21 @@ struct sConvert {
   struct KOrderMarkovFunction_VectorFunction:VectorFunction {
     KOrderMarkovFunction *f;
     KOrderMarkovFunction_VectorFunction(KOrderMarkovFunction& _f):f(&_f) {}
-    void fv(arr& y, arr& J, const arr& x);
+    virtual void fv(arr& y, arr& J, const arr& x);
+  };
+
+  struct cfunc_ScalarFunction:ScalarFunction { //actual converter objects
+    double (*f)(arr*, const arr&, void*);
+    void *data;
+    cfunc_ScalarFunction(double (*_f)(arr*, const arr&, void*),void *_data):f(_f), data(_data) {}
+    virtual double fs(arr& grad, arr& H, const arr& x){  if(&H) NIY;    return f(&grad, x, data); }
+  };
+
+  struct cfunc_VectorFunction:VectorFunction { //actual converter objects
+    void (*f)(arr&, arr*, const arr&, void*);
+    void *data;
+    cfunc_VectorFunction(void (*_f)(arr&, arr*, const arr&, void*),void *_data):f(_f), data(_data) {}
+    virtual void fv(arr& y, arr& J, const arr& x){  f(y, &J, x, data);  }
   };
   
 // #ifndef libRoboticsCourse
@@ -85,6 +102,9 @@ Convert::Convert(VectorFunction& p) { s=new sConvert(); s->vf=&p; }
 Convert::Convert(VectorChainFunction& p) { s=new sConvert(); s->vcf=&p; }
 Convert::Convert(QuadraticChainFunction& p) { s=new sConvert(); s->qcf=&p; }
 Convert::Convert(KOrderMarkovFunction& p) { s=new sConvert(); s->kom=&p; }
+Convert::Convert(double(*fs)(arr*, const arr&, void*),void *data) {  s=new sConvert(); s->fs=fs; s->data=data; }
+Convert::Convert(void (*fv)(arr&, arr*, const arr&, void*),void *data) {  s=new sConvert(); s->fv=fv; s->data=data; }
+
 #ifndef libRoboticsCourse
 //Convert::Convert(ControlledSystem& p) { s=new sConvert(); s->cs=&p; }
 #endif
@@ -101,6 +121,7 @@ Convert::~Convert() {
 Convert::operator ScalarFunction&() {
   if(!s->sf) {
     if(s->vcf) s->sf = new sConvert::VectorChainFunction_ScalarFunction(*s->vcf);
+    if(s->fs)  s->sf = new sConvert::cfunc_ScalarFunction(s->fs, s->data);
   }
   if(!s->sf) HALT("");
   return *s->sf;
@@ -111,6 +132,7 @@ Convert::operator VectorFunction&() {
 //    if(s->cs) operator KOrderMarkovFunction&();
     if(s->kom) s->vf = new sConvert::KOrderMarkovFunction_VectorFunction(*s->kom);
     if(s->vcf) s->vf = new sConvert::VectorChainFunction_VectorFunction(*s->vcf);
+    if(s->fv)  s->vf = new sConvert::cfunc_VectorFunction(s->fv, s->data);
   }
   if(!s->vf) HALT("");
   return *s->vf;
@@ -326,6 +348,7 @@ void sConvert::KOrderMarkovFunction_VectorFunction::fv(arr& phi, arr& J, const a
   //if(&J) J=Jaux->unpack();
 #endif
 }
+
 
 // #ifndef libRoboticsCourse
 // uint sConvert::ControlledSystem_1OrderMarkovFunction::get_m(uint t){

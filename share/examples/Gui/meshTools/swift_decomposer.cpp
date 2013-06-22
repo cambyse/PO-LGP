@@ -1,8 +1,8 @@
 #include <extern/SWIFT/SWIFT.h>
 #include <extern/SWIFT/SWIFT_mesh.h>
 #include <extern/SWIFT/SWIFT_mesh_utils.h>
-#include <extern_SWIFT_decomposer/convex.h>
-#include <extern_SWIFT_decomposer/io.h>
+#include <extern/SWIFT_decomposer/convex.h>
+#include <extern/SWIFT_decomposer/io.h>
 
 uint decompose(ors::Mesh& mesh, const char* filename, intA& triangleAssignments, MT::Array<MT::Array<uint> >& shapes){
   SWIFT_Scene swift;

@@ -12,15 +12,15 @@ void testSqrProblem(){
   checkGradient((ScalarFunction&)P, x, 1e-3);
   checkJacobian((VectorFunction&)P, x, 1e-3);
 
-/*  optRprop(x, P, OPT4(initStep=.01, stopTolerance=1e-5, stopEvals=1000, verbose=2));
+/*  optRprop(x, P, OPT(initStep=.01, stopTolerance=1e-5, stopEvals=1000, verbose=2));
   MT::wait();
 
   x=x0;
-  optGradDescent(x, P, OPT1(stopEvals=10000));
+  optGradDescent(x, P, OPT(stopEvals=10000));
   MT::wait();
 */
   x=x0;
-  optGaussNewton(x, P, OPT4(stopEvals=1000, stopTolerance=1e-5, useAdaptiveDamping=0., verbose=2));
+  optGaussNewton(x, P, OPT(stopEvals=1000, stopTolerance=1e-5, useAdaptiveDamping=0., verbose=2));
   //MT::wait();
 
   gnuplot("set log y; plot 'z.gaussNewton' us 1:3 w l,'z.grad' us 1:3 w l,'z.rprop' us 1:3 w l",NULL,true);
@@ -41,7 +41,7 @@ void testDynamicProgramming(){
   //checkGradient((ScalarFunction&)P2, x, 1e-4);
   checkJacobian(Convert(P), x, 1e-4);
 
-  optOptions o;  o.stopTolerance=1e-3;
+  OptOptions o;  o.stopTolerance=1e-3;
   
   //eval_cost=0;  x=x0;  optRprop(x, P2, .1, NULL, 1e-3, 1000, 1);  cout <<"-- evals=" <<eval_cost <<endl;
   //eval_cost=0;  x=x0;  optGradDescent(x, P2, .1, NULL, 1e-3, 1000, -1., 1);  cout <<"-- evals=" <<eval_cost <<endl;

@@ -1,6 +1,6 @@
 BASE = ../../..
 
-DEPEND = Core Gui
+DEPEND = Core Gui Optim
 
 include $(BASE)/make-generic
 

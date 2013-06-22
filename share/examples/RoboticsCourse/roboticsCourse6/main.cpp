@@ -75,7 +75,7 @@ void TrajectoryOptimizationProblem::getPhi(arr& Phi, arr& PhiJ, const arr& q, ui
 
   //1st task: avoid collisions
   y_target = ARR(.0);
-  y = ARR(S.kinematicsContacts());
+  S.kinematicsContacts(y);
   S.jacobianContacts(J);
 
   Phi  =( (y - y_target)/1e-0 );

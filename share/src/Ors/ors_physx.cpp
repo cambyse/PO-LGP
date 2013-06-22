@@ -531,6 +531,7 @@ void PhysXInterface::pushState() { NICO }
 void PhysXInterface::pullState() { NICO }
 void PhysXInterface::ShutdownPhysX() { NICO }
 void glPhysXInterface(void *classP) { NICO }
+void bindOrsToPhysX(ors::Graph& graph, OpenGL& gl, PhysXInterface& physx) { NICO }
 
 #endif
 /** @} */

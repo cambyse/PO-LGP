@@ -3,7 +3,7 @@
 #include <Core/algos.h>
 #include <Gui/plot.h>
 #include <qhull/qhull.h>
-
+#include <Optim/optimization.h>
 
 //===========================================================================
 //
@@ -58,7 +58,7 @@ void testConvexHull(){
   for(uint k=0;k<20;k++){
     rndUniform(Qtest::origin,-1.2,1.2,false);
     rndUniform(X,-1.,1.,false);
-    MT::checkGradient(Qtest::f,NULL,X,1e-4);
+    checkGradient(Convert(Qtest::f, NULL), X, 1e-4);
   }
 }
 
@@ -112,7 +112,7 @@ void testForceClosure(){
 
     FCtest::center=center;
     FCtest::Xn=Xn;
-    MT::checkGradient(FCtest::f,NULL,X,1e-4);
+    checkGradient(Convert(FCtest::f, NULL), X, 1e-4);
   }
 }
 

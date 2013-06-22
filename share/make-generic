@@ -507,7 +507,7 @@ endif
 ################################################################################
 # (a tag like `buildAndLink_NILS = 1' in a Makefile triggers make to also build NILS and then link to is)
 
-BUILDS := $(DEPEND:%=makePath/src/%) $(BUILDS)
+BUILDS := $(DEPEND:%=$(BASE)/lib/lib%.so) $(BUILDS)
 LIBS := $(DEPEND:%=-l%) $(LIBS)
 CXXFLAGS := $(DEPEND:%=-DMT_%) $(CXXFLAGS)
 
@@ -592,7 +592,9 @@ all: default
 %.exe: $(PREOBJS) $(BUILDS) $(OBJS)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
-%.so: $(PREOBJS) $(BUILDS) $(OBJS)
+## this RULE only applies to $(NAME).so
+## other %.so files are created by calling make in their directory
+$(BASE)/lib/$(NAME).so: $(PREOBJS) $(BUILDS) $(OBJS)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) $(SHAREFLAG)
 
 %.lib: $(PREOBJS) $(BUILDS) $(OBJS)
@@ -659,31 +661,38 @@ includeAll.cxx: force
 
 ################################################################################
 #
+# rules
+#
+################################################################################
+
+$(BASE)/lib/libextern_%.so: $(BASE)/src/extern/%
+	@echo "                                                 ***** build " $*
+	@$(MAKE) -C $(BASE)/src/extern/$* --no-print-directory
+
+$(BASE)/lib/lib%.so: $(BASE)/src/%
+	@echo "                                                 ***** build " $*
+	@$(MAKE) -C $(BASE)/src/$* --no-print-directory
+
+
+################################################################################
+#
 # meta rules -- for calling make in other directories
 #
 ################################################################################
 
 #.NOTPARALLEL: makePath/*
 
-makePath/src/extern_%: $(BASE)/src/extern/%
-	@echo "\n                                                ***** make " $*
-	@$(MAKE) -C $(BASE)/src/extern/$* --no-print-directory
-
-makePath/src/%: $(BASE)/src/%
-	@echo "\n                                                ***** make " $*
-	@$(MAKE) -C $(BASE)/src/$* --no-print-directory
-
 makePath/%: %
-	@echo "\n                                                ***** make " $*
+	@echo "                                                  ***** make " $*
 	@$(MAKE) -C $* --no-print-directory
 
 cleanPath/%: %
-	@echo "\n                                               ***** clean " $*
+	@echo "                                                 ***** clean " $*
 	@-rm -f $*/Makefile.dep
 	@$(MAKE) -C $* clean --no-print-directory
 
 dependPath/%: %
-	@echo "\n                                              ***** depend " $*
+	@echo "                                                ***** depend " $*
 	@-rm -f $*/Makefile.dep
 	@$(MAKE) -C $* depend --no-print-directory
 
