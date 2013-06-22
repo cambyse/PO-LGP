@@ -27,7 +27,7 @@ int main(int argn,char **argv){
 
   ors::Graph C;
   OpenGL gl;
-  init(C, gl,file );
+  init(C, gl, file);
   gl.add(drawBase,0);
   gl.add(ors::glDrawGraph,&C);
   //gl.reportEvents=true;
@@ -36,7 +36,7 @@ int main(int argn,char **argv){
 
   C.meldFixedJoint();
   C.removeNonShapeBodies();
-  C.makeLinkTree();
+  //C.makeLinkTree();
   MT::save(C,"z.ors");
 
   editConfiguration(file,C,gl);

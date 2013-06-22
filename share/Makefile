@@ -1,32 +1,26 @@
+default: all
+
+################################################################################
+
 NAME   = $(shell basename $(PWD))
 
-#srcs =  $(shell find src -mindepth 1 -maxdepth 1 -type d)
+srcs =  $(shell find src -mindepth 1 -maxdepth 1 -type d)
 srcs += $(shell find src/extern -mindepth 1 -maxdepth 1 -type d)
 exas = $(shell find examples -mindepth 2 -maxdepth 2 -type d)
 
 ################################################################################
 
-all: $(srcs:%=make/%) $(exas:%=make/%)
+.NOTPARALLEL: all src examples depend clean
 
-src: $(srcs:%=make/%)
+all: $(srcs:%=makePath/%) $(exas:%=makePath/%)
 
-depend: $(srcs:%=depend/%)
+src: $(srcs:%=makePath/%)
 
-clean: $(srcs:%=clean/%) $(srcs:%=clean/%) 
+examples: $(exas:%=makePath/%)
 
-################################################################################
+depend: $(srcs:%=dependPath/%)
 
-make/%::
-	@echo
-	@echo "                                                  ***** make " $*
-	$(MAKE) -C $* --no-print-directory
-
-depend/%::
-	$(MAKE) -C $* depend --no-print-directory
-
-clean/%::
-	-rm -f $*/Makefile.dep
-	$(MAKE) -C $* clean --no-print-directory 
+clean: $(srcs:%=cleanPath/%) $(exas:%=cleanPath/%)
 
 ################################################################################
 
@@ -51,4 +45,4 @@ zip::
 	--exclude-from $(PWD)/slices/tar.excl \
 	--exclude-from $(PWD)/slices/$*.tar.excl
 
-force: ;
+include make-generic

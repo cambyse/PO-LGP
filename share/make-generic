@@ -507,7 +507,7 @@ endif
 ################################################################################
 # (a tag like `buildAndLink_NILS = 1' in a Makefile triggers make to also build NILS and then link to is)
 
-BUILDS := $(DEPEND:%=buildComponent/%) $(BUILDS)
+BUILDS := $(DEPEND:%=makePath/src/%) $(BUILDS)
 LIBS := $(DEPEND:%=-l%) $(LIBS)
 CXXFLAGS := $(DEPEND:%=-DMT_%) $(CXXFLAGS)
 
@@ -589,21 +589,16 @@ all: default
 #
 ################################################################################
 
-%.exe: $(PREOBJS) $(OBJS) $(BUILDS)
+%.exe: $(PREOBJS) $(BUILDS) $(OBJS)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
-ifeq ($(compileWithIncludeAll),1)
-%.so: $(PREOBJS) includeAll.o $(BUILDS)
-	$(LINK) $(LDFLAGS) -o $@ includeAll.o $(LIBS) $(SHAREFLAG)
-else
-%.so: $(PREOBJS) $(OBJS) $(BUILDS)
+%.so: $(PREOBJS) $(BUILDS) $(OBJS)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) $(SHAREFLAG)
-endif
 
-%.lib: $(PREOBJS) $(OBJS) $(BUILDS)
+%.lib: $(PREOBJS) $(BUILDS) $(OBJS)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) -static ### $(SHAREFLAG)
 
-%.a: $(PREOBJS) $(OBJS) $(BUILDS)
+%.a: $(PREOBJS) $(BUILDS) $(OBJS)
 	ar -crvs $@ $(OBJS)
 
 %.mexglx: $(PREOBJS) $(OBJS)
@@ -651,14 +646,6 @@ endif
 %_$(SYS).moccpp: %.h force
 	cd $(*D); $(MOC) -o $(*F)_$(SYS).moccpp $(<F)
 
-## build a local component
-buildComponent/extern_%:
-	$(MAKE) -C $(BASE)/src/extern/$*
-
-buildComponent/%:
-	$(MAKE) -C $(BASE)/src/$*
-
-
 ## generate the make-config from the default make-config.default
 $(BASE)/make-config:
 	cp $(BASE)/make-config.default $(BASE)/make-config
@@ -676,11 +663,30 @@ includeAll.cxx: force
 #
 ################################################################################
 
-makePath/%::
-	$(MAKE) -C $*
+#.NOTPARALLEL: makePath/*
 
-cleanPath/%::
-	$(MAKE) clean -C $*
+makePath/src/extern_%: $(BASE)/src/extern/%
+	@echo "\n                                                ***** make " $*
+	@$(MAKE) -C $(BASE)/src/extern/$* --no-print-directory
+
+makePath/src/%: $(BASE)/src/%
+	@echo "\n                                                ***** make " $*
+	@$(MAKE) -C $(BASE)/src/$* --no-print-directory
+
+makePath/%: %
+	@echo "\n                                                ***** make " $*
+	@$(MAKE) -C $* --no-print-directory
+
+cleanPath/%: %
+	@echo "\n                                               ***** clean " $*
+	@-rm -f $*/Makefile.dep
+	@$(MAKE) -C $* clean --no-print-directory
+
+dependPath/%: %
+	@echo "\n                                              ***** depend " $*
+	@-rm -f $*/Makefile.dep
+	@$(MAKE) -C $* depend --no-print-directory
+
 
 makeSubpaths/%::
 	-@find -L $* -maxdepth 1 -follow -type d -not -name '$*' -not -name 'SHARE' -exec $(MAKE) -C {} \;
