@@ -30,21 +30,19 @@ public:
         NodeInfo(
                 const NODE_TYPE&,
                 const EXPANSION_TYPE&,
-                const instance_t *,
+                instance_t *,
                 const action_t&,
                 const value_t&,
-                const value_t&,
-                const bool& del = false
+                const value_t&
         );
         NodeInfo(const NodeInfo&);
         ~NodeInfo();
         NodeInfo& operator=(const NodeInfo&);
         NODE_TYPE type;
         EXPANSION_TYPE expansion;
-        const instance_t * instance;
+        instance_t * instance; // !!!Needs to be deleted manually when erasing a node!!!
         action_t action;
         value_t upper_value_bound, lower_value_bound;
-        bool delete_instance;
     };
 
     struct ArcInfo {
@@ -85,8 +83,21 @@ public:
             probability_t(Model::*prediction)(const instance_t *, const action_t&, const state_t&, const reward_t&) const
     );
 
+    /*! \brief Repeatedly expand tree until either the optimal action is
+     *  unambiguous or the maximum tree size is reached. */
+    template < class Model >
+    void fully_expand_tree(
+            const Model& model,
+            probability_t(Model::*prediction)(const instance_t *, const action_t&, const state_t&, const reward_t&) const,
+            const size_t& max_node_counter = 0
+    );
+
     /*! \brief Returns the best action for the root state. */
     action_t get_optimal_action() const;
+
+    /*! \brief Prune obsolete branches after performing action a into state s
+     *  and reset root node. */
+    void prune_tree(const action_t& a, const instance_t * i);
 
     /*! \brief Set the discount rate used for computing state and action values. */
     void set_discount(const double& d) { discount = d; }
@@ -96,6 +107,8 @@ public:
 
     /*! \brief Print the tree statistics to console. */
     void print_tree_statistics() const;
+
+    size_t get_number_of_nodes() const { return number_of_nodes; }
 
 protected:
 
@@ -267,26 +280,7 @@ void LookAheadSearch::build_tree(
     update_state_node(root_node);
 
     // fully expand tree
-    idx_t last_progress = -1;
-    if(tree_needs_further_expansion()) {
-        while(expand_tree(model,prediction)) {
-            if(max_node_counter>0 && number_of_nodes>max_node_counter) {
-                DEBUG_OUT(1,"Abort: Tree has more than " << max_node_counter << " nodes (" << number_of_nodes << ")");
-                break;
-            } else {
-                if(DEBUG_LEVEL>=1) {
-                    last_progress = util::print_progress(number_of_nodes, max_node_counter, 50, "Building Tree", last_progress);
-                }
-            }
-        }
-    }
-    if(DEBUG_LEVEL>=1) {
-        std::cout << std::endl;
-    }
-
-    if(DEBUG_LEVEL>=4) {
-        print_tree(false,true);
-    }
+    fully_expand_tree(model, prediction, max_node_counter);
 }
 
 template < class Model >
@@ -315,6 +309,36 @@ bool LookAheadSearch::expand_tree(
     update_state_node(root_node);
 
     return tree_needs_further_expansion();
+}
+
+template < class Model >
+void LookAheadSearch::fully_expand_tree(
+        const Model& model,
+        probability_t(Model::*prediction)(const instance_t *, const action_t&, const state_t&, const reward_t&) const,
+        const size_t& max_node_counter
+) {
+
+    // fully expand tree
+    idx_t last_progress = -1;
+    if(tree_needs_further_expansion()) {
+        while(expand_tree(model,prediction)) {
+            if(max_node_counter>0 && number_of_nodes>max_node_counter) {
+                DEBUG_OUT(1,"Abort: Tree has more than " << max_node_counter << " nodes (" << number_of_nodes << ")");
+                break;
+            } else {
+                if(DEBUG_LEVEL>=1) {
+                    last_progress = util::print_progress(number_of_nodes, max_node_counter, 50, "Building Tree", last_progress);
+                }
+            }
+        }
+    }
+    if(DEBUG_LEVEL>=1) {
+        std::cout << std::endl;
+    }
+
+    if(DEBUG_LEVEL>=4) {
+        print_tree(false,true);
+    }
 }
 
 template < class Model >

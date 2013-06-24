@@ -144,13 +144,20 @@ void TestMaze_II::choose_action() {
     action_t action;
     switch(planner_type) {
     case OPTIMAL_PLANNER:
-        look_ahead_search.clear_tree();
-        look_ahead_search.build_tree<Maze>(
+        if(look_ahead_search.get_number_of_nodes()==0) {
+            look_ahead_search.build_tree<Maze>(
                 current_instance,
                 maze,
                 maze.get_prediction_ptr(),
                 max_tree_size
-        );
+                );
+        } else {
+            look_ahead_search.fully_expand_tree<Maze>(
+                maze,
+                maze.get_prediction_ptr(),
+                max_tree_size
+                );
+        }
         action = look_ahead_search.get_optimal_action();
         break;
     case SPARSE_PLANNER:
@@ -202,6 +209,22 @@ void TestMaze_II::choose_action() {
     if(record) {
         add_action_state_reward_tripel(action,state_to,reward);
     }
+
+    // prune tree
+    switch(planner_type) {
+    case OPTIMAL_PLANNER:
+    case SPARSE_PLANNER:
+    case UTREE_PLANNER:
+        look_ahead_search.prune_tree(action,current_instance);
+        break;
+    case UTREE_VALUE:
+    case LINEAR_Q_VALUE:
+        // no search tree
+        break;
+    default:
+        DEBUG_DEAD_LINE;
+    }
+
     maze.render_update(ui.graphicsView);
 }
 
@@ -884,7 +907,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 if(!target_activated) {
                     TO_CONSOLE( "    Target state must be activated to calculate delay distribution" );
                 } else {
-#define DEBUG_LEVEL 3
+
                     // get distribution
                     int time_window = -1;
                     if(int_args_ok[1]) {
@@ -944,7 +967,6 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     plotter->yAxis->setRange(0,max_y);
                     DEBUG_OUT(3,"Ranges: [" << -(int)backward.size() << ":" << forward.size() << "][" << 0 << ":" << max_y << "]");
                     plotter->replot();
-#define DEBUG_LEVEL 1
                 }
             }
         } else if(str_args[0]=="mediator-probability" || str_args[0]=="mp") { // show mediator probability

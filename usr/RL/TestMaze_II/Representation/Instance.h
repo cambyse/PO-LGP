@@ -77,6 +77,8 @@ public:
     void unset_container();
     friend std::ostream& operator<<(std::ostream &out, const Instance& i);
     const char* print();
+    void set_const_previous(const Instance * prev) { const_previous_instance = prev; }
+    void set_const_next(const Instance * next) { const_next_instance = next; }
 
     /** \brief This function performs a number of benchmark tests.
      *
