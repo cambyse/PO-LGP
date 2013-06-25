@@ -184,20 +184,6 @@ void loopWithBeat(const ProcessL& P, double sec) {
   for_list(i, p, P) p->threadLoopWithBeat(sec);
 }
 
-void stop(const ProcessL& P) {
-  Process *p; uint i;
-  for_list(i, p, P) p->threadStop();
-}
-
-void wait(const ProcessL& P) {
-  Process *p; uint i;
-  for_list(i, p, P) p->waitForIdle();
-}
-
-void close(const ProcessL& P) {
-  Process *p; uint i;
-  for_list(i, p, P) p->threadClose();
-}
 
 //===========================================================================
 //

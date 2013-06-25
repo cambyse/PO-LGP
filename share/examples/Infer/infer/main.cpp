@@ -2,9 +2,9 @@
 
 #include <iostream>
 #include <map>
-#include <MT/infer.h>
+#include <Infer/infer.h>
 #ifdef MT_DAI
-#  include <MT/daiModule.h>
+#  include <Infer/daiModule.h>
 #endif
 #include <stdlib.h>
 

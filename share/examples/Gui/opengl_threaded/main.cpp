@@ -1,5 +1,5 @@
 #include <Gui/opengl.h>
-#include <biros/biros.h>
+#include <Core/thread.h>
 
 void draw1(void*){
   glStandardLight(NULL);
@@ -7,18 +7,18 @@ void draw1(void*){
   glutSolidTeapot(1.);
 }
 
-struct Proc:public Process{
-  Proc(const char* name):Process(name){};
+struct Proc:public Thread{
   OpenGL *gl;
+  Proc(const char* name):Thread(name){};
   void open(){
     gl = new OpenGL(name);
     gl->add(draw1);
   }
-  void step(){
-    gl->update();
-  }
   void close(){
     delete gl;
+  }
+  void step(){
+    gl->update();
   }
 };
 
@@ -35,7 +35,7 @@ int main(int argc, char **argv){
 
   Proc *gli;
   MT::Array<MT::String> names;
-  ProcessL procs;
+  ThreadL procs;
   for (int i=0; i<20; ++i){
     names.append(STRING("many_"<<i));
     gli = new Proc(names(i));

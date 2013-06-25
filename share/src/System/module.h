@@ -12,6 +12,7 @@
 
 #include <Core/array.h>
 #include <Core/registry.h>
+#include <Core/thread.h>
 #include <stddef.h>
 
 #ifndef FIELD
