@@ -649,8 +649,8 @@ endif
 	cd $(*D); $(MOC) -o $(*F)_$(SYS).moccpp $(<F)
 
 ## generate the make-config from the default make-config.default
-$(BASE)/make-config:
-	cp $(BASE)/make-config.default $(BASE)/make-config
+#$(BASE)/make-config:
+#	cp $(BASE)/make-config.default $(BASE)/make-config
 
 ## generate a make dependency file
 generate_Makefile.dep: $(OBJS:%.o=%.cpp)
