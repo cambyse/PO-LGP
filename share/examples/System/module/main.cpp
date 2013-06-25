@@ -1,5 +1,5 @@
-#include <system/engine.h>
-#include <MT/graphview.h>
+#include <System/engine.h>
+#include <Gui/graphview.h>
 
 //NOTE: ComputeSum is in no way included, still we can create it
 

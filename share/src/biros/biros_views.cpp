@@ -3,7 +3,7 @@
  * @ingroup group_biros
  */
 #include "biros_views.h"
-#include <system/biros.h>
+#include <System/biros.h>
 
 void GenericTextView_Process  ::write(std::ostream& os) { writeInfo(os, *((Process*)object), false); }
 void GenericTextView_Variable ::write(std::ostream& os) { writeInfo(os, *((Variable*)object), false); }

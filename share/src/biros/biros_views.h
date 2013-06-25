@@ -10,7 +10,7 @@
 #ifndef MT_biros_views_h
 #define MT_biros_views_h
 
-#include <system/biros.h>
+#include <System/biros.h>
 #include <views/views.h>
 
 struct GenericTextView_Process  :View{ void write(std::ostream& os);  };

@@ -19,12 +19,12 @@
 
 #include "mdp.h"
 #include "mstep.h"
-#include "infer.h"
+#include <Infer/infer.h>
 
 
 
 double mdp::pomdpEM_structured(
-  const MDP& mdp,
+  const MDP_structured& mdp,
   FSC_structured& fsc,
   uint estepHorizon,
   bool estepStructured,
@@ -36,12 +36,18 @@ double mdp::pomdpEM_structured(
   arr* alpha, arr* beta,
   ostream *os){
   
+  checkConsistent(mdp.facs);
+  checkConsistent(fsc.facs);
+  
   MT::timerStart();
   
   uint i;
   //----- rescale rewards if necessary
-  arr mdp_Rax = mdp.Rax;
 #if rescaleRewards
+  infer::Factor *Rax=listFindName(mdp.facs, "Rax");
+  arr mdp_Rax_org;
+  Rax->getP(mdp_Rax_org);
+  arr mdp_Rax = mdp_Rax_org;
   double Rmin=mdp_Rax.min(), Rmax=mdp_Rax.max();
   if(rescaleRewards || (mstepType!=MstepNoisyMax && Rmin<0.)){
     //if(!rescaleRewards) MT_MSG("can't handle neg rewards in case of exact M-step -- I'm enforcing rescaling of rewards!");
@@ -49,41 +55,16 @@ double mdp::pomdpEM_structured(
   }else{
     Rmin=0.; Rmax=1.;
   }
+  Rax->setP(mdp_Rax);
 #endif
   
-  
-  //----- find the variable ids for the mdp world:
-  infer::Variable *x=NULL, *y=NULL, *a=NULL, *x_=NULL, *y_=NULL;
-  for(i=0; i<fsc.vars.N; i++) if(fsc.vars(i)->name=="state(t)"){         x =fsc.vars(i); break; }  if(i==fsc.vars.N) HALT("something's really wrong!");
-  for(i=0; i<fsc.vars.N; i++) if(fsc.vars(i)->name=="observation(t)"){   y =fsc.vars(i); break; }  if(i==fsc.vars.N) HALT("something's really wrong!");
-  for(i=0; i<fsc.vars.N; i++) if(fsc.vars(i)->name=="action(t)"){        a =fsc.vars(i); break; }  if(i==fsc.vars.N) HALT("something's really wrong!");
-  for(i=0; i<fsc.vars.N; i++) if(fsc.vars(i)->name=="state(t+1)"){       x_=fsc.vars(i); break; }  if(i==fsc.vars.N) HALT("something's really wrong!");
-  for(i=0; i<fsc.vars.N; i++) if(fsc.vars(i)->name=="observation(t+1)"){ y_=fsc.vars(i); break; }  if(i==fsc.vars.N) HALT("something's really wrong!");
-  
-  infer::VariableList mdp_leftVars=ARRAY(x);
-  infer::VariableList mdp_rightVars=ARRAY(x_);
-  
-  //----- define factors for the mdp components
-  //start
-  infer::Factor Fx(ARRAY(x));       Fx.setP(mdp.Px);
-  infer::Factor Fy(ARRAY(y));       Fy.setUniform();
-  //transition
-  infer::Factor Fxax(ARRAY(x_, a, x));  Fxax.setP(mdp.Pxax);
-  infer::Factor Fyxa(ARRAY(y_, x_, a)); Fyxa.setP(mdp.Pyxa);
-  //reward
-  infer::Factor FRax(ARRAY(a, x));     FRax.setP(mdp_Rax);
-  
-  infer::FactorList mdp_transitions = ARRAY(&Fyxa, &Fxax);
-  infer::FactorList mdp_inits       = ARRAY(&Fy, &Fx);
-  infer::FactorList mdp_rewards     = ARRAY(&FRax);
-  
-  infer::VariableList leftVars=cat(fsc.leftVars, mdp_leftVars);
-  infer::VariableList rightVars=cat(fsc.rightVars, mdp_rightVars);
+  infer::VariableList leftVars=cat(fsc.leftVars, mdp.leftVars);
+  infer::VariableList rightVars=cat(fsc.rightVars, mdp.rightVars);
   infer::VariableList tail_headVars=cat(rightVars, leftVars);
   
-  infer::FactorList allTransitions = cat(fsc.transFacs, mdp_transitions);
-  infer::FactorList allRewards = cat(mdp_rewards, allTransitions);
-  infer::FactorList allInits = cat(fsc.initFacs, mdp_inits);
+  infer::FactorList allTransitions = cat(fsc.transFacs, mdp.obsFacs, mdp.transFacs);
+  infer::FactorList allRewards = cat(mdp.rewardFacs, allTransitions);
+  infer::FactorList allInits = cat(fsc.initFacs, mdp.initFacs);
   
   infer::Factor Falpha(leftVars);
   infer::Factor Fbeta(rightVars);
@@ -105,9 +86,9 @@ double mdp::pomdpEM_structured(
     eliminationAlgorithm(Fz, allInits, leftVars);
     Fz.P.reshape(dz);
     
-    //MT::save(Fz, "z.gFz");
-    //MT::save(FRz, "z.gFRz");
-    //MT::save(Fzz, "z.gFzz");
+    //MT::save(Fz, "z.sFz");
+    //MT::save(FRz, "z.sFRz");
+    //MT::save(Fzz, "z.sFzz");
     
     //----- E-STEP
     arr _alpha, _beta;
@@ -156,10 +137,10 @@ double mdp::pomdpEM_structured(
   
   //----- M-STEP
   //term2: derived from the full two-time-slice model (beta*P_(x'|x)*alpha)
-  infer::FactorList twotimeslice = cat(ARRAY(&Fbeta), fsc.transFacs, mdp_transitions, ARRAY(&Falpha));
+  infer::FactorList twotimeslice = cat(ARRAY(&Fbeta), fsc.transFacs, mdp.obsFacs, mdp.transFacs, ARRAY(&Falpha));
   
   //term1: derived from the immediate reward model
-  infer::FactorList immediateR = cat(mdp_rewards, fsc.transFacs, mdp_transitions, ARRAY(&Falpha));
+  infer::FactorList immediateR = cat(mdp.rewardFacs, fsc.transFacs, mdp.obsFacs, mdp.transFacs, ARRAY(&Falpha));
   
   //loop through all transition factors of the controller
   for(i=0; i<fsc.transFacs.N; i++){
@@ -201,6 +182,7 @@ double mdp::pomdpEM_structured(
   //in case we rescaled, reset
   double expR;
 #if rescaleRewards
+  Rax->setP(mdp_Rax_org);
   expR=(PR*(Rmax-Rmin)+Rmin)/(1.-mdp.gamma);
 #else
   expR=PR/(1.-mdp.gamma);

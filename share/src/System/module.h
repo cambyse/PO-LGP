@@ -11,7 +11,7 @@
 #define MT_module_h
 
 #include <Core/array.h>
-#include <MT/registry.h>
+#include <Core/registry.h>
 #include <stddef.h>
 
 #ifndef FIELD
@@ -214,7 +214,7 @@ template<class T, class N, class P> struct Registrator{
         nam = &nam[i+2];
         for(i=strlen(nam);;i--) if(nam[i]=='_' && nam[i+1]=='_') break;
         name.set(nam,i);
-        cout <<name <<endl;
+        MT_MSG("StaticRegistrator of type " <<typeid(N).name() <<" named " <<name);
       }else{
         name = typeid(T).name();
       }
@@ -235,19 +235,7 @@ template<class T,class N,class P> typename Registrator<T,N,P>::StaticRegistrator
 
 // the force...() forces the staticRegistrator to be created in pre-main
 // and its constructor executed, which does the registration
-
-#define ACCESS(type, name) \
-  struct __##name##__Access:Access_typed<type>, Registrator<type, __##name##__Access, __MODULE_TYPE__>{ \
-  __##name##__Access():Access_typed<type>(#name){ \
-      uint offset = offsetof(__MODULE_BASE_TYPE__, name); \
-      __MODULE_BASE_TYPE__ *thisModule = (__MODULE_BASE_TYPE__*)((char*)this - (char*)offset); \
-      thisModule->accesses.append(this); \
-      reg = registerItem<__##name##__Access, __MODULE_TYPE__>(this, "Access", #name, thisModule->reg, staticRegistrator.reg); \
-      module = thisModule; \
-    } \
-  } name; \
-  inline const type& get_##name(){ return name.get(); } \
-  inline void  set_##name(const type& _x){ name.set()=_x; }
+#define OFFSETOF(T,F) ((unsigned int)((char *)&((T*)1L)->F - (char*)1L))
 
 #define BEGIN_MODULE(name) \
   struct name; \
@@ -256,8 +244,22 @@ template<class T,class N,class P> typename Registrator<T,N,P>::StaticRegistrator
     typedef name##_Base __MODULE_BASE_TYPE__; \
     inline void name##_forceModuleReg(){ staticRegistrator.force(); } \
     name##_Base(): Module(#name) { \
-    reg = registerItem<name, void>((name*)this, "Module", #name, NULL, staticRegistrator.reg); \
+      reg = registerItem<name, void>((name*)this, "Module", #name, NULL, staticRegistrator.reg); \
     } \
+
+#define ACCESS(type, name) \
+  struct __##name##__Access:Access_typed<type>, Registrator<type, __##name##__Access, __MODULE_TYPE__>{ \
+    __##name##__Access():Access_typed<type>(#name){ \
+      uint offset = OFFSETOF(__MODULE_BASE_TYPE__, name); \
+      __MODULE_BASE_TYPE__ *thisModule = (__MODULE_BASE_TYPE__*)((char*)this - (char*)offset); \
+      CHECK(&(thisModule->name)==this,"offset didn't work!"); \
+      thisModule->accesses.append(this); \
+      reg = registerItem<__##name##__Access, __MODULE_TYPE__>(this, "Access", #name, thisModule->reg, staticRegistrator.reg); \
+      module = thisModule; \
+    } \
+  } name; \
+  inline const type& get_##name(){ return name.get(); } \
+  inline void  set_##name(const type& _x){ name.set()=_x; }
 
 #define END_MODULE() };
 
@@ -274,3 +276,6 @@ template<class T,class N,class P> typename Registrator<T,N,P>::StaticRegistrator
     virtual bool test();
 
 #endif
+
+//uint offset = offsetof(__MODULE_BASE_TYPE__, name);
+

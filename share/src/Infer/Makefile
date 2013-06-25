@@ -1,8 +1,8 @@
 BASE   = ../..
-NAME   = libsystem
-OUTPUT = $(BASE)/lib/$(NAME).so
+NAME   = lib$(shell basename `pwd`)
+OUTPUT := $(BASE)/lib/$(NAME).so
 
-MAKEMODE = mlrlib
+DEPEND = Core
 
 OBJS  = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS := $(OBJS:%.cpp=%.o)

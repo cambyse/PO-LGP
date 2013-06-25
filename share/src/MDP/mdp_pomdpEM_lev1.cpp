@@ -19,7 +19,7 @@
 
 #include "mdp.h"
 #include "mstep.h"
-#include "infer.h"
+#include <Infer/infer.h>
 
 
 

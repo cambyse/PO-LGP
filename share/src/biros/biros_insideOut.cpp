@@ -1,5 +1,5 @@
-#include <system/biros.h>
-#include <system/engine.h>
+#include <System/biros.h>
+#include <System/engine.h>
 
 #ifdef MT_GTK
 /**

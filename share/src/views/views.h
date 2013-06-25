@@ -1,9 +1,9 @@
 #ifndef VIEWS_H_
 #define VIEWS_H_
 
-#include <MT/util.h>
+#include <Core/util.h>
 #include <Core/array.h>
-#include <MT/registry.h>
+#include <Core/registry.h>
 
 typedef struct _GtkWidget GtkWidget;
 

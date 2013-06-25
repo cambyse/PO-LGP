@@ -1,7 +1,7 @@
-#include <system/module.h>
-#include <system/engine.h>
-#include <MT/graphview.h>
-#include <biros/biros_views.h>
+#include <System/module.h>
+#include <System/engine.h>
+#include <Gui/graphview.h>
+//#include <biros/biros_views.h>
 
 BEGIN_MODULE(PairSorter)
 ACCESS(int, a)
@@ -23,7 +23,7 @@ int main(int argn, char **argv) {
 
   engine().create(S);
 
-  new InsideOut();                 //create an explicit view
+  //new InsideOut();                 //create an explicit view
 
 
   for(uint i=0;i<N;i++) S.getValue<int>(i) = MT::rnd(100);

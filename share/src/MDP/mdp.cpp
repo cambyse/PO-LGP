@@ -18,7 +18,7 @@
 
 
 #include "mdp.h"
-#include "infer.h"
+#include <Infer/infer.h>
 #include <vector>
 #include <map>
 

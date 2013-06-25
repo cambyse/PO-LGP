@@ -7,9 +7,9 @@
  * @{
  */
 #include "biros_views.h"
-#include <system/engine.h>
-#include <system/biros.h>
-#include <system/biros_internal.h>
+#include <System/engine.h>
+#include <System/biros.h>
+#include <System/biros_internal.h>
 
 #ifdef MT_GTK
 

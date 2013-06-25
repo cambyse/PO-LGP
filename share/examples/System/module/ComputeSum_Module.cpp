@@ -1,4 +1,4 @@
-#include <system/module.h>
+#include <System/module.h>
 
 BEGIN_MODULE(ComputeSum)
 ACCESS(arr, x);    //input

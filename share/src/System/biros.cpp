@@ -24,7 +24,7 @@
 #include <iostream>
 #include <X11/Xlib.h>
 
-#include <MT/util.h>
+#include <Core/util.h>
 #include <Core/array.h>
 
 
