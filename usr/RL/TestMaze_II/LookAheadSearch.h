@@ -40,7 +40,7 @@ public:
         NodeInfo& operator=(const NodeInfo&);
         NODE_TYPE type;
         EXPANSION_TYPE expansion;
-        instance_t * instance; // !!!Needs to be deleted manually when erasing a node!!!
+        instance_t * instance; // !!!Needs to be set and deleted manually!!!
         action_t action;
         value_t upper_value_bound, lower_value_bound;
     };
@@ -97,7 +97,7 @@ public:
 
     /*! \brief Prune obsolete branches after performing action a into state s
      *  and reset root node. */
-    void prune_tree(const action_t& a, const instance_t * i);
+    void prune_tree(const action_t& a, const instance_t * new_root_instance);
 
     /*! \brief Set the discount rate used for computing state and action values. */
     void set_discount(const double& d) { discount = d; }
@@ -360,7 +360,7 @@ void LookAheadSearch::expand_leaf_node(
         DEBUG_OUT(0,"Error: trying to expand state node with expansion other than NOT_EXPANDED");
     }
 
-    const instance_t * instance_from = node_info_map[state_node].instance;
+    instance_t * instance_from = node_info_map[state_node].instance;
 
     // create action nodes
     for(actionIt_t action=actionIt_t::first(); action!=util::INVALID; ++action) {
@@ -371,7 +371,8 @@ void LookAheadSearch::expand_leaf_node(
         node_info_map[action_node] = NodeInfo(
                 ACTION,
                 NOT_EXPANDED,
-                instance_t::create(instance_from->action, instance_from->state, instance_from->reward, instance_from->const_it()-1),
+                /* instance_t::create(instance_from->action, instance_from->state, instance_from->reward, instance_from->const_it()-1), */
+                instance_from, // use instance from parent state node
                 action,
                 get_upper_value_bound(),
                 get_lower_value_bound()

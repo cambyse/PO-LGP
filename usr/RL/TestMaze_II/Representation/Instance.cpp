@@ -35,6 +35,21 @@ Instance * Instance::create(
 //     return ins;
 // }
 
+Instance & Instance::operator=(const Instance& other) {
+    action = other.action;
+    state = other.state;
+    reward = other.reward;
+    all = All(this);
+    const_all =  ConstAll(this);
+    previous_instance = other.previous_instance;
+    next_instance = other.next_instance;
+    const_previous_instance = other.const_previous_instance;
+    const_next_instance = other.const_next_instance;
+    container = other.container;
+    container_idx = other.container_idx;
+    return *this;
+}
+
 Instance::~Instance() {
 
     container_t garbage;
@@ -252,7 +267,39 @@ std::ostream& operator<<(std::ostream &out, const Instance& i) {
     return out;
 }
 
-const char* Instance::print() PRINT_FROM_OSTREAM
+const char* Instance::print() PRINT_FROM_OSTREAM;
+
+// void Instance::set_previous(const Instance * prev) {
+//     if(const_previous_instance!=nullptr) {
+//         const_previous_instance=prev;
+//     } else if(previous_instance!=nullptr) {
+//         if(container!=nullptr) {
+//             Instance * old_previous = previous_instance;
+//             this->unset_container();
+//             previous_instance = prev;
+//             old_previous->set_container();
+//             this->set_container();
+//         } else {
+//             previous_instance = prev;
+//         }
+//     }
+// }
+
+// void Instance::set_next(const Instance * next) {
+//     if(const_next_instance!=nullptr) {
+//         const_next_instance=next;
+//     } else if(next_instance!=nullptr) {
+//         if(container!=nullptr) {
+//             Instance * old_next = next_instance;
+//             this->unset_container();
+//             next_instance = next;
+//             old_next->set_container();
+//             this->set_container();
+//         } else {
+//             next_instance = next;
+//         }
+//     }
+// }
 
 void Instance::check_performance_and_memory(bool memory) {
 
@@ -476,6 +523,38 @@ void Instance::check_performance_and_memory(bool memory) {
     // DEBUG_OUT(0,"Took " << timer.elapsed() << " milliseconds to unset container.");
 }
 
+Instance::Instance(const Instance& i):
+    action(i.action),
+    state(i.state),
+    reward(i.reward),
+    all(this),
+    const_all(this),
+    previous_instance(i.previous_instance),
+    next_instance(i.next_instance),
+    const_previous_instance(i.const_previous_instance),
+    const_next_instance(i.const_next_instance),
+    container(i.container),
+    container_idx(i.container_idx)
+{}
+
+Instance::Instance(
+    const Action& a,
+    const State& s,
+    const Reward& r
+    ):
+    action(a),
+    state(s),
+    reward(r),
+    all(this),
+    const_all(this),
+    previous_instance(nullptr),
+    next_instance(nullptr),
+    const_previous_instance(nullptr),
+    const_next_instance(nullptr),
+    container(nullptr),
+    container_idx(-1)
+{}
+
 const Instance * Instance::get_previous() const {
     return (const_previous_instance!=nullptr ? const_previous_instance : previous_instance);
 }
@@ -547,38 +626,6 @@ void Instance::fill_container(Instance * ins) {
     // shrink container if too large
     used_container->resize(idx);
 }
-
-Instance::Instance(
-    const Action& a,
-    const State& s,
-    const Reward& r
-    ):
-    action(a),
-    state(s),
-    reward(r),
-    all(this),
-    const_all(this),
-    previous_instance(nullptr),
-    next_instance(nullptr),
-    const_previous_instance(nullptr),
-    const_next_instance(nullptr),
-    container(nullptr),
-    container_idx(-1)
-{}
-
-Instance::Instance(const Instance& i):
-    action(i.action),
-    state(i.state),
-    reward(i.reward),
-    all(this),
-    const_all(this),
-    previous_instance(i.previous_instance),
-    next_instance(i.next_instance),
-    const_previous_instance(i.const_previous_instance),
-    const_next_instance(i.const_next_instance),
-    container(i.container),
-    container_idx(i.container_idx)
-{}
 
 #undef DEBUG_STRING
 #define DEBUG_STRING "InstanceIt: "

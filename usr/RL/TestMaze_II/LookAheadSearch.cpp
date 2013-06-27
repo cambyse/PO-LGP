@@ -82,7 +82,9 @@ void LookAheadSearch::clear_tree() {
     for(graph_t::NodeIt node(graph); node!=INVALID; ++node) {
         // DEBUG_OUT(0,"Deleting instance of:");
         // print_node(node);
-        delete node_info_map[node].instance;
+        if(node_info_map[node].type==STATE) {
+            delete node_info_map[node].instance;
+        }
     }
     graph.clear();
     number_of_nodes = 0;
@@ -150,7 +152,7 @@ LookAheadSearch::action_t LookAheadSearch::get_optimal_action() const {
     return selected_action;
 }
 
-void LookAheadSearch::prune_tree(const action_t& a, const instance_t * i) {
+void LookAheadSearch::prune_tree(const action_t& a, const instance_t * new_root_instance) {
 
     vector<node_t> nodes_to_delete;
     vector<arc_t> arcs_to_delete;
@@ -191,7 +193,7 @@ void LookAheadSearch::prune_tree(const action_t& a, const instance_t * i) {
         arcs_to_delete.push_back(arc_to_state);
 
         // add states that were not reached
-        if(node_info_map[state_node].instance->state!=i->state) {
+        if(node_info_map[state_node].instance->state!=new_root_instance->state) {
             nodes_to_delete.push_back(state_node);
             DEBUG_OUT(3,"            add node " << graph.id(state_node) << " not reached");
         } else {
@@ -228,11 +230,12 @@ void LookAheadSearch::prune_tree(const action_t& a, const instance_t * i) {
     DEBUG_OUT(3,"    Deleting nodes...");
     for( node_t node : nodes_to_delete ) {
         DEBUG_OUT(3,"        node " << graph.id(node));
-        delete node_info_map[node].instance;
+        if(node_info_map[node].type==STATE) {
+            delete node_info_map[node].instance;
+        }
         graph.erase(node);
     }
     DEBUG_OUT(3,"    Deleting chosen action node...");
-    delete node_info_map[chosen_action_node].instance;
     graph.erase(chosen_action_node);
     DEBUG_OUT(3,"    Deleting root node...");
     delete node_info_map[root_node].instance;
@@ -247,11 +250,9 @@ void LookAheadSearch::prune_tree(const action_t& a, const instance_t * i) {
 
     // update root node
     root_node = new_root_node;
-    node_info_map[new_root_node].instance = instance_t::create(i->action, i->state, i->reward, i->const_it()-1);
-    node_info_map[new_root_node].instance->action = i->action;
-    node_info_map[new_root_node].instance->state = i->state;
-    node_info_map[new_root_node].instance->reward = i->reward;
-    node_info_map[new_root_node].instance->set_const_previous(i->const_it()-1);
+    instance_t * new_root_instance_copy = instance_t::create(new_root_instance->action, new_root_instance->state, new_root_instance->reward, new_root_instance->const_it()-1);
+    *(node_info_map[root_node].instance) = *new_root_instance_copy;
+    delete new_root_instance_copy;
 
     DEBUG_OUT(2,"DONE");
 }
@@ -766,7 +767,7 @@ bool LookAheadSearch::tree_needs_further_expansion() {
     }
 
     if(max_upper_bound==-DBL_MAX) {
-        DEBUG_OUT(0,"Error: No actions available from root node");
+        DEBUG_OUT(1,"Error: No actions available from root node");
         return true;
     }
     if(second_max_upper_bound==-DBL_MAX) {
