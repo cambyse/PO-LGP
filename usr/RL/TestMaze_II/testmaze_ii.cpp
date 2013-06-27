@@ -41,6 +41,7 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     linQ(discount),
     look_ahead_search(discount),
     max_tree_size(10000),
+    prune_search_tree(true),
     target_activated(false)
 {
 
@@ -144,23 +145,39 @@ void TestMaze_II::choose_action() {
     action_t action;
     switch(planner_type) {
     case OPTIMAL_PLANNER:
-        look_ahead_search.clear_tree();
-        look_ahead_search.build_tree<Maze>(
+        if(look_ahead_search.get_number_of_nodes()==0 || !prune_search_tree) {
+            look_ahead_search.clear_tree();
+            look_ahead_search.build_tree<Maze>(
                 current_instance,
                 maze,
                 maze.get_prediction_ptr(),
                 max_tree_size
-        );
+                );
+        } else {
+            look_ahead_search.fully_expand_tree<Maze>(
+                maze,
+                maze.get_prediction_ptr(),
+                max_tree_size
+                );
+        }
         action = look_ahead_search.get_optimal_action();
         break;
     case SPARSE_PLANNER:
-        look_ahead_search.clear_tree();
-        look_ahead_search.build_tree<KMarkovCRF>(
+        if(look_ahead_search.get_number_of_nodes()==0 || !prune_search_tree) {
+            look_ahead_search.clear_tree();
+            look_ahead_search.build_tree<KMarkovCRF>(
                 current_instance,
                 crf,
                 crf.get_prediction_ptr(),
                 max_tree_size
-        );
+                );
+        } else {
+            look_ahead_search.fully_expand_tree<KMarkovCRF>(
+                crf,
+                crf.get_prediction_ptr(),
+                max_tree_size
+                );
+        }
         action = look_ahead_search.get_optimal_action();
         break;
     case KMDP_PLANNER:
@@ -175,13 +192,21 @@ void TestMaze_II::choose_action() {
         action = look_ahead_search.get_optimal_action();
         break;
     case UTREE_PLANNER:
-        look_ahead_search.clear_tree();
-        look_ahead_search.build_tree<UTree>(
+        if(look_ahead_search.get_number_of_nodes()==0 || !prune_search_tree) {
+            look_ahead_search.clear_tree();
+            look_ahead_search.build_tree<UTree>(
                 current_instance,
                 utree,
                 utree.get_prediction_ptr(),
                 max_tree_size
-        );
+                );
+        } else {
+            look_ahead_search.fully_expand_tree<UTree>(
+                utree,
+                utree.get_prediction_ptr(),
+                max_tree_size
+                );
+        }
         action = look_ahead_search.get_optimal_action();
         break;
     case UTREE_VALUE:
@@ -202,6 +227,24 @@ void TestMaze_II::choose_action() {
     if(record) {
         add_action_state_reward_tripel(action,state_to,reward);
     }
+
+    // prune tree
+    if(prune_search_tree) {
+        switch(planner_type) {
+        case OPTIMAL_PLANNER:
+        case SPARSE_PLANNER:
+        case UTREE_PLANNER:
+            look_ahead_search.prune_tree(action,current_instance);
+            break;
+        case UTREE_VALUE:
+        case LINEAR_Q_VALUE:
+            // no search tree
+            break;
+        default:
+            DEBUG_DEAD_LINE;
+        }
+    }
+
     maze.render_update(ui.graphicsView);
 }
 
@@ -258,6 +301,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString option_3d_s(                     "                                          uv/utree-value . . . . . . . . .-> use UTree state-action values");
     QString option_3e_s(                     "                                          lq/linear-q. . . . . . . . . . .-> use linear Q-function approximation");
     QString option_4_s(                      "                               target. . . . . . . . . . . . . . . . . . .-> activate a target state");
+    QString option_5_s(                      "                               prune-tree. . . . . . . . . . . . . . . . .-> prune search tree");
     QString test_s(                          "    test . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> test");
 
     QString maze_s(                        "\n    -----------------------------------Maze-----------------------------------");
@@ -316,6 +360,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     set_s += "\n" + option_3d_s;
     set_s += "\n" + option_3e_s;
     set_s += "\n" + option_4_s;
+    set_s += "\n" + option_5_s;
 
     QString invalid_args_s( "    invalid arguments" );
 
@@ -798,6 +843,15 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                         TO_CONSOLE( "    target inactive" );
                     }
                 }
+            } else if(str_args[1]=="prune-tree") {
+                if(str_args[0]=="set") {
+                    prune_search_tree=true;
+                    look_ahead_search.clear_tree();
+                    TO_CONSOLE( "    prune search tree" );
+                } else {
+                    prune_search_tree=false;
+                    TO_CONSOLE( "    don't prune search tree" );
+                }
             } else {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( set_s );
@@ -884,7 +938,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 if(!target_activated) {
                     TO_CONSOLE( "    Target state must be activated to calculate delay distribution" );
                 } else {
-#define DEBUG_LEVEL 3
+
                     // get distribution
                     int time_window = -1;
                     if(int_args_ok[1]) {
@@ -944,7 +998,6 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     plotter->yAxis->setRange(0,max_y);
                     DEBUG_OUT(3,"Ranges: [" << -(int)backward.size() << ":" << forward.size() << "][" << 0 << ":" << max_y << "]");
                     plotter->replot();
-#define DEBUG_LEVEL 1
                 }
             }
         } else if(str_args[0]=="mediator-probability" || str_args[0]=="mp") { // show mediator probability

@@ -10,6 +10,7 @@
 #include <ostream>
 #include <vector>
 
+class Instance;
 class InstanceIt;
 class ConstInstanceIt;
 
@@ -31,6 +32,7 @@ public:
 
     friend class InstanceIt;
     friend class ConstInstanceIt;
+
     Action action;
     State state;
     Reward reward;
@@ -60,8 +62,10 @@ public:
         const Instance * prev = nullptr,
         const Instance * next = nullptr
         );
+
     /* static Instance * create(const Instance&); */
     ~Instance();
+    Instance & operator=(const Instance&);
     bool operator<(const Instance& other) const;
     Instance * insert_instance_after  (const Action& a, const State& s, const Reward& r);
     Instance * insert_instance_before (const Action& a, const State& s, const Reward& r);
@@ -77,6 +81,8 @@ public:
     void unset_container();
     friend std::ostream& operator<<(std::ostream &out, const Instance& i);
     const char* print();
+    /* void set_previous(const Instance * prev); */
+    /* void set_next(const Instance * next); */
 
     /** \brief This function performs a number of benchmark tests.
      *
@@ -98,19 +104,18 @@ protected:
     container_t * container;
     idx_t container_idx;
 
+    Instance(const Instance&);
+    Instance(
+        const Action& a = Action(),
+        const State& s = State(),
+        const Reward& r = Reward()
+        );
     const Instance * get_previous() const;
     const Instance * get_next() const;
     Instance * get_non_const_previous() const;
     Instance * get_non_const_next() const;
     void  unset_container_elements();
     void fill_container(Instance *);
-    Instance(
-        const Action& a = Action(),
-        const State& s = State(),
-        const Reward& r = Reward()
-        );
-    Instance(const Instance&);
-    Instance & operator=(const Instance&);
 };
 
 /** \brief Instance iterator object. */

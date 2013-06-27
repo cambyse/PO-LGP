@@ -3,6 +3,7 @@
 #include <float.h>
 #include <math.h>
 #include <lemon/graph_to_eps.h>
+#include <vector>
 
 #include "util.h"
 #include "Maze.h"
@@ -12,6 +13,7 @@
 
 using lemon::INVALID;
 using util::approx;
+using std::vector;
 
 const double LookAheadSearch::lower_bound_weight = 0.8;
 
@@ -21,26 +23,23 @@ LookAheadSearch::NodeInfo::NodeInfo():
         instance(nullptr),
         action(action_t()),
         upper_value_bound(0),
-        lower_value_bound(0),
-        delete_instance(false)
+        lower_value_bound(0)
 {}
 
 LookAheadSearch::NodeInfo::NodeInfo(
         const NODE_TYPE& t,
         const EXPANSION_TYPE& e,
-        const instance_t * i,
+        instance_t * i,
         const action_t& a,
         const value_t& uv,
-        const value_t& lv,
-        const bool& del
+        const value_t& lv
 ):
         type(t),
         expansion(e),
         instance(i),
         action(a),
         upper_value_bound(uv),
-        lower_value_bound(lv),
-        delete_instance(del)
+        lower_value_bound(lv)
 {
     if(lower_value_bound>upper_value_bound) {
         DEBUG_OUT(0,"Error: Lower value bound above upper value bound");
@@ -53,15 +52,10 @@ LookAheadSearch::NodeInfo::NodeInfo(const NodeInfo& other):
     instance(other.instance),
     action(other.action),
     upper_value_bound(other.upper_value_bound),
-    lower_value_bound(other.lower_value_bound),
-    delete_instance(other.delete_instance)
+    lower_value_bound(other.lower_value_bound)
 {}
 
-LookAheadSearch::NodeInfo::~NodeInfo() {
-    if(delete_instance) {
-        delete instance;
-    }
-}
+LookAheadSearch::NodeInfo::~NodeInfo() {}
 
 LookAheadSearch::NodeInfo& LookAheadSearch::NodeInfo::operator=(const NodeInfo& other) {
     type = other.type;
@@ -70,7 +64,6 @@ LookAheadSearch::NodeInfo& LookAheadSearch::NodeInfo::operator=(const NodeInfo& 
     action = other.action;
     upper_value_bound = other.upper_value_bound;
     lower_value_bound = other.lower_value_bound;
-    delete_instance = other.delete_instance;
     return (*this);
 }
 
@@ -89,7 +82,9 @@ void LookAheadSearch::clear_tree() {
     for(graph_t::NodeIt node(graph); node!=INVALID; ++node) {
         // DEBUG_OUT(0,"Deleting instance of:");
         // print_node(node);
-        delete node_info_map[node].instance;
+        if(node_info_map[node].type==STATE) {
+            delete node_info_map[node].instance;
+        }
     }
     graph.clear();
     number_of_nodes = 0;
@@ -155,6 +150,111 @@ LookAheadSearch::action_t LookAheadSearch::get_optimal_action() const {
     action_t selected_action = node_info_map[selected_action_node].action;
     DEBUG_OUT(3,"    Optimal action: " << selected_action);
     return selected_action;
+}
+
+void LookAheadSearch::prune_tree(const action_t& a, const instance_t * new_root_instance) {
+
+    vector<node_t> nodes_to_delete;
+    vector<arc_t> arcs_to_delete;
+    node_t chosen_action_node;
+    node_t new_root_node;
+
+    DEBUG_OUT(2,"Pruning tree...");
+
+    // insert actions that were not chosen
+    DEBUG_OUT(3,"    Actions not chosen:");
+    for(graph_t::OutArcIt arc_to_action(graph,root_node); arc_to_action!=INVALID; ++arc_to_action) {
+
+        node_t action_node = graph.target(arc_to_action);
+
+        // all arcs must be deleted
+        DEBUG_OUT(3,"            add arc " << graph.id(arc_to_action));
+        arcs_to_delete.push_back(arc_to_action);
+
+        // chosen action is treated separately since all but one following state
+        // node must be delete
+        if(node_info_map[action_node].action!=a) {
+            nodes_to_delete.push_back(action_node);
+            DEBUG_OUT(3,"            add node " << graph.id(action_node) << " not chosen");
+        } else {
+            chosen_action_node = action_node;
+            DEBUG_OUT(3,"        node " << graph.id(action_node) << " CHOSEN");
+        }
+    }
+
+    // insert states that were not reached by chosen action
+    DEBUG_OUT(3,"    States not reached by chosen action:");
+    for(graph_t::OutArcIt arc_to_state(graph,chosen_action_node); arc_to_state!=INVALID; ++arc_to_state) {
+
+        node_t state_node = graph.target(arc_to_state);
+
+        // again all arcs must be deleted
+        DEBUG_OUT(3,"            add arc " << graph.id(arc_to_state));
+        arcs_to_delete.push_back(arc_to_state);
+
+        // add states that were not reached
+        if(node_info_map[state_node].instance->state!=new_root_instance->state) {
+            nodes_to_delete.push_back(state_node);
+            DEBUG_OUT(3,"            add node " << graph.id(state_node) << " not reached");
+        } else {
+            new_root_node = state_node;
+            DEBUG_OUT(3,"        node " << graph.id(state_node) << " REACHED");
+        }
+    }
+
+    DEBUG_OUT(3,"    Current nodes to delete:");
+    for( node_t current_node_to_delete : nodes_to_delete ) {
+        DEBUG_OUT(3,"        node " << graph.id(current_node_to_delete));
+    }
+
+    // insert all childern from nodes that are to be deleted
+    DEBUG_OUT(3,"    Inserting all children:");
+    for(unsigned long node_idx=0; node_idx<nodes_to_delete.size(); ++node_idx ) {
+        node_t current_node_to_delete = nodes_to_delete[node_idx];
+        DEBUG_OUT(3,"        children of node " << graph.id(current_node_to_delete));
+        for(graph_t::OutArcIt arc_to_node(graph,current_node_to_delete); arc_to_node!=INVALID; ++arc_to_node) {
+            node_t new_node_to_delete = graph.target(arc_to_node);
+            DEBUG_OUT(3,"            add arc " << graph.id(arc_to_node));
+            arcs_to_delete.push_back(arc_to_node);
+            DEBUG_OUT(3,"            add node " << graph.id(new_node_to_delete));
+            nodes_to_delete.push_back(new_node_to_delete);
+        }
+    }
+
+    // actually delete the nodes and arcs
+    DEBUG_OUT(3,"    Deleting arcs...");
+    for( arc_t arc : arcs_to_delete ) {
+        DEBUG_OUT(3,"        arc " << graph.id(arc));
+        graph.erase(arc);
+    }
+    DEBUG_OUT(3,"    Deleting nodes...");
+    for( node_t node : nodes_to_delete ) {
+        DEBUG_OUT(3,"        node " << graph.id(node));
+        if(node_info_map[node].type==STATE) {
+            delete node_info_map[node].instance;
+        }
+        graph.erase(node);
+    }
+    DEBUG_OUT(3,"    Deleting chosen action node...");
+    graph.erase(chosen_action_node);
+    DEBUG_OUT(3,"    Deleting root node...");
+    delete node_info_map[root_node].instance;
+    graph.erase(root_node);
+
+    // update number of nodes
+    DEBUG_OUT(3,"    Updating number of nodes...");
+    number_of_nodes = 0;
+    for(graph_t::NodeIt node(graph); node!=INVALID; ++node) {
+        ++number_of_nodes;
+    }
+
+    // update root node
+    root_node = new_root_node;
+    instance_t * new_root_instance_copy = instance_t::create(new_root_instance->action, new_root_instance->state, new_root_instance->reward, new_root_instance->const_it()-1);
+    *(node_info_map[root_node].instance) = *new_root_instance_copy;
+    delete new_root_instance_copy;
+
+    DEBUG_OUT(2,"DONE");
 }
 
 void LookAheadSearch::print_tree(const bool& text, const bool& eps_export) const {
@@ -667,7 +767,7 @@ bool LookAheadSearch::tree_needs_further_expansion() {
     }
 
     if(max_upper_bound==-DBL_MAX) {
-        DEBUG_OUT(0,"Error: No actions available from root node");
+        DEBUG_OUT(1,"Error: No actions available from root node");
         return true;
     }
     if(second_max_upper_bound==-DBL_MAX) {

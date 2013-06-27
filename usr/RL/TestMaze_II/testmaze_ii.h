@@ -89,6 +89,7 @@ private:
     //----------//
     LookAheadSearch look_ahead_search;
     size_t max_tree_size;
+    bool prune_search_tree;
 
     //-------//
     // Other //
