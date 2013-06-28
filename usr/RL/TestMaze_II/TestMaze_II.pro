@@ -22,6 +22,7 @@ HEADERS += LookAheadSearch.h \
     Representation/Instance.h \
     util/KolmogorovSmirnovTest.h \
     util/ChiSquareTest.h \
+    util/ProgressBar.h \
     DelayDistribution.h \
     HistoryObserver.h \
     qcustomplot.h
@@ -43,6 +44,7 @@ SOURCES += LookAheadSearch.cpp \
     Representation/Instance.cpp \
     util/KolmogorovSmirnovTest.cpp \
     util/ChiSquareTest.cpp \
+    util/ProgressBar.cpp \
     DelayDistribution.cpp \
     HistoryObserver.cpp \
     qcustomplot.cpp

@@ -10,6 +10,8 @@
 
 #include "lbfgs_codes.h"
 
+#include "util/ProgressBar.h"
+
 #ifdef BATCH_MODE_QUIET
 #define DEBUG_LEVEL 0
 #else
@@ -505,10 +507,13 @@ void LinearQ::update_loss_terms() {
     //----------------//
     size_t data_idx = 0;
     size_t data_size = instance_data->const_it().length_to_first() - 2;
+    if(DEBUG_LEVEL>0) {
+        ProgressBar::init("Updating Loss Terms");
+    }
     while(ins_t1!=INVALID) {
 
         if(DEBUG_LEVEL>=1) {
-            util::print_progress(data_idx, data_size, 40, "Updating Loss Terms: ");
+            ProgressBar::print(data_idx, data_size);
         }
 
         // count data
@@ -559,7 +564,7 @@ void LinearQ::update_loss_terms() {
 
     // terminate progress bar
     if(DEBUG_LEVEL>=1) {
-        cout << " DONE" << endl;
+        ProgressBar::terminate();
     }
 
     // delete precomputed feature values

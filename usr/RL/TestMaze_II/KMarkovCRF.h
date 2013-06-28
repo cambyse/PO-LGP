@@ -181,6 +181,10 @@ private:
 
     /** \brief Precompute feature values. */
     void precompute_feature_values();
+
+    /** \brief Erase all features that never become non-zero from active
+     * features. */
+    void erase_const_zero_candidate_features();
 };
 
 #endif /* KMARKOVCRF_H_ */

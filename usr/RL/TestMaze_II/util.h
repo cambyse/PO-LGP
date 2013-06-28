@@ -56,8 +56,6 @@ namespace util {
      *  Returns true on success and false otherwise. */
     bool arg_string(const QString& string, const int& n, QString& s);
 
-    int print_progress(const int& prog, const int& max_prog, const int& width, const char* label, const int& last_prog = -1);
-
     /** \brief Tolerance for approximate comparison. */
     double approx_equal_tolerance();
 

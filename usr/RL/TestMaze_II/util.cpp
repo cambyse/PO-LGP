@@ -43,32 +43,6 @@ namespace util {
         return true;
     }
 
-    int print_progress(const int& prog, const int& max_prog, const int& width, const char* label, const int& last_prog) {
-        int this_progress = width*prog/max_prog;
-        if(width*prog/max_prog>last_prog) {
-            cout << '\xd' << label << ": |";
-            bool before = true;
-            for(int idx=0; idx<width; ++idx) {
-                if((double)idx/width<(double)prog/max_prog) {
-                    cout << "-";
-                } else {
-                    if(before) {
-                        cout << "o";
-                        before = false;
-                    }
-                    cout << " ";
-                }
-            }
-            if(before) {
-                cout << "o";
-            }
-            cout << "|" << flush;
-            return this_progress;
-        } else {
-            return last_prog;
-        }
-    }
-
     double approx_equal_tolerance() { return 1e-10; }
 
     const InvalidBase INVALID = InvalidBase(true);

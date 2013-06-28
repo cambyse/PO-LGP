@@ -1,6 +1,7 @@
 #include "KMarkovCRF.h"
 #include "lbfgs_codes.h"
 #include "util.h"
+#include "util/ProgressBar.h"
 
 #include <list>
 #include <tuple>
@@ -46,10 +47,12 @@ KMarkovCRF::KMarkovCRF():
     // delayed action, state, and reward features
     for(int k_idx = 0; k_idx>=-(int)k; --k_idx) {
         // actions
-        for(actionIt_t action=actionIt_t::first(); action!=INVALID; ++action) {
-            ActionFeature * action_feature = ActionFeature::create(action,k_idx);
-            basis_features.push_back(action_feature);
-            DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
+        if(k_idx==0) { // take only the current action into account
+            for(actionIt_t action=actionIt_t::first(); action!=INVALID; ++action) {
+                ActionFeature * action_feature = ActionFeature::create(action,k_idx);
+                basis_features.push_back(action_feature);
+                DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
+            }
         }
         // states
         for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {
@@ -58,10 +61,12 @@ KMarkovCRF::KMarkovCRF():
             DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
         }
         // reward
-        for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
-            RewardFeature * reward_feature = RewardFeature::create(reward,k_idx);
-            basis_features.push_back(reward_feature);
-            DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
+        if(k_idx==0) { // take only the current reward into account
+            for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
+                RewardFeature * reward_feature = RewardFeature::create(reward,k_idx);
+                basis_features.push_back(reward_feature);
+                DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
+            }
         }
     }
 }
@@ -118,18 +123,21 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
     double sumFNN;                     // sumF(x(n),y(n))
     double sumExpN;                    // normalization Z(x)
     vector<double> sumFExpNF(n,0.0);   // sumFExp(x(n),F)
-    idx_t instance_idx = 0, last_progress = -1;
+    idx_t instance_idx = 0;
     idx_t feature_n = active_features.size();
     if(feature_n!=n) {
         DEBUG_OUT(0,"Error: number of features is different from number of parameters but no parameter bining allowed");
     }
 
     // iterate through data
+    if(DEBUG_LEVEL>0) {
+        ProgressBar::init("Evaluating");
+    }
     for(const_instanceIt_t insIt=instance_data->first()+k; insIt!=INVALID; ++insIt, ++instance_idx) {
 
         // print progress information
         if(DEBUG_LEVEL>0) {
-            last_progress = util::print_progress(instance_idx, number_of_data_points, 50, "Evaluating", last_progress);
+            ProgressBar::print(instance_idx, number_of_data_points);
         }
 
         // reset sums
@@ -206,7 +214,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
 
     // terminate progress bar
     if(DEBUG_LEVEL>0) {
-        cout << endl;
+        ProgressBar::terminate();
     }
 
     // use NEGATIVE log likelihood (blfgs minimizes the objective)
@@ -275,7 +283,7 @@ int KMarkovCRF::optimize_model(lbfgsfloatval_t l1, unsigned int max_iter, lbfgsf
 
     // todo what values
     param.delta = 1e-3;   // change of objective (f-f')/f (default 0)
-    param.epsilon = 1e-3; // change of parameters ||g||/max(1,||x||) (default 1e-5)
+    param.epsilon = 1e-5; // change of parameters ||g||/max(1,||x||) (default 1e-5)
 
     // Start the L-BFGS optimization
     lbfgsfloatval_t fx;
@@ -285,15 +293,15 @@ int KMarkovCRF::optimize_model(lbfgsfloatval_t l1, unsigned int max_iter, lbfgsf
     // Report the result.
     DEBUG_OUT(1, "L-BFGS optimization terminated with status code = " << ret << " ( " << lbfgs_code(ret) << " )");
     DEBUG_OUT(1,"mean likelihood = " << exp(-fx) );
-    for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
-        DEBUG_OUT(1, "    " <<
-                active_features[f_idx].identifier() <<
-                " --> t[" <<
-                f_idx << "] = " <<
-                lambda[f_idx]);
-    }
-    DEBUG_OUT(1, "L-BFGS optimization terminated with status code = " << ret << " ( " << lbfgs_code(ret) << " )");
-    DEBUG_OUT(1,"mean likelihood = " << exp(-fx) );
+    // for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
+    //     DEBUG_OUT(1, "    " <<
+    //             active_features[f_idx].identifier() <<
+    //             " --> t[" <<
+    //             f_idx << "] = " <<
+    //             lambda[f_idx]);
+    // }
+    // DEBUG_OUT(1, "L-BFGS optimization terminated with status code = " << ret << " ( " << lbfgs_code(ret) << " )");
+    // DEBUG_OUT(1,"mean likelihood = " << exp(-fx) );
     DEBUG_OUT(1,"");
 
     if(mean_likelihood!=nullptr) {
@@ -398,9 +406,9 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
         return;
     }
 
-    //---------------------//
-    // Construct Features  //
-    //---------------------//
+    //--------------------//
+    // Construct Features //
+    //--------------------//
 
     construct_candidate_features(n);
 
@@ -431,11 +439,14 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
     double sumFN; // sumF(x(n),y') is independent of candidate features since they have zero coefficient (no parameter binding!)
     double sumExpN; // normalization Z(x) is independent of candidate features since sumF(x(n),y') is independent
     vector<double> sumFExpNF(cf_size,0.0); // sumFExp(x(n),F) for all candidate features F
-    idx_t instance_idx = 1, last_progress = -1;
+    idx_t instance_idx = 1;
+    if(DEBUG_LEVEL>0) {
+        ProgressBar::init("Scoring");
+    }
     for(const_instanceIt_t instance=instance_data->first()+k; instance!=INVALID; ++instance, ++instance_idx) {
 
         if(DEBUG_LEVEL>0) {
-            last_progress = util::print_progress(instance_idx, number_of_data_points, 50, "Scoring", last_progress);
+            ProgressBar::print(instance_idx, number_of_data_points);
         }
 
         action_t action = instance->action;
@@ -473,8 +484,8 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
             g[lambda_cf_idx] += candidate_features[lambda_cf_idx].evaluate(instance);
         }
     }
-    if(DEBUG_LEVEL>=1) {
-        std::cout << std::endl;
+    if(DEBUG_LEVEL>0) {
+        ProgressBar::terminate();
     }
 
     // use absolute mean value per data point
@@ -892,9 +903,9 @@ void KMarkovCRF::construct_candidate_features(const int& n) {
 
     DEBUG_OUT(1, "    Constructed " << candidate_features.size() << " features");
 
-    candidate_feature_scores.assign(candidate_features.size(),0.0);
+    erase_const_zero_candidate_features();
 
-    DEBUG_OUT(1, "DONE");
+    candidate_feature_scores.assign(candidate_features.size(),0.0);
 }
 
 KMarkovCRF::idx_t KMarkovCRF::precomputed_feature_idx(
@@ -957,13 +968,16 @@ void KMarkovCRF::precompute_feature_values() {
     feature_values.resize(value_n);
 
     // iterate through data
-    idx_t instance_idx = 0, last_progress = -1;
+    idx_t instance_idx = 0;
+    if(DEBUG_LEVEL>0) {
+        ProgressBar::init("Precomputing");
+    }
     // idx_t pre_idx = 0;
     for(const_instanceIt_t insIt=instance_data->first()+k; insIt!=INVALID; ++insIt, ++instance_idx) {
 
         // print progress information
         if(DEBUG_LEVEL>0) {
-            last_progress = util::print_progress(instance_idx, instance_n, 50, "Precomputing", last_progress);
+            ProgressBar::print(instance_idx, instance_n);
         }
 
         DEBUG_OUT(3,"    Instance " << *insIt );
@@ -997,6 +1011,47 @@ void KMarkovCRF::precompute_feature_values() {
 
     // terminate progress bar
     if(DEBUG_LEVEL>0) {
-        std::cout << std::endl;
+        ProgressBar::terminate();
     }
+}
+
+void KMarkovCRF::erase_const_zero_candidate_features() {
+    DEBUG_OUT(1, "Erasing const-zero features from candidates...");
+
+    size_t candidate_features_n = candidate_features.size();
+    size_t new_candidate_features_n = 0;
+
+    // identify features to erase
+    vector<bool> erase_feature(candidate_features_n,true);
+    for( const_instanceIt_t insIt=instance_data->const_first(); insIt!=INVALID; ++insIt ) {
+        for(uint f_idx=0; f_idx<candidate_features_n; ++f_idx) {
+            if(erase_feature[f_idx] && candidate_features[f_idx].evaluate(insIt)!=0) {
+                erase_feature[f_idx]=false;
+                ++new_candidate_features_n;
+            }
+        }
+    }
+
+    if( new_candidate_features_n == candidate_features_n ) {
+        DEBUG_OUT(1, "    No const-zero features to erase");
+        return;
+    }
+
+    // Create new candidate_features, parameter_indices, and parameters (lambda)
+    vector<AndFeature>  new_candidate_features(new_candidate_features_n,AndFeature());
+    int new_f_idx = 0;
+    for(uint f_idx=0; f_idx<candidate_features_n; ++f_idx) {
+        if(!erase_feature[f_idx]) {
+            new_candidate_features[new_f_idx] = candidate_features[f_idx];
+            DEBUG_OUT(2,"Added " << new_candidate_features[new_f_idx].identifier() << " (new_idx = " << new_f_idx << ", old_idx = " << f_idx << ") to new candidate features");
+            ++new_f_idx;
+        }
+    }
+
+    // Swap new and old data
+    candidate_features.swap(new_candidate_features);
+
+    DEBUG_OUT(1, "    Reduced from " << candidate_features_n << " to " <<
+              new_candidate_features_n << " non-const-zero features"
+        );
 }

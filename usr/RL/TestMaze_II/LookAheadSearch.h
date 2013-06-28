@@ -6,6 +6,7 @@
 
 #include "Config.h"
 #include "Representation/Representation.h"
+#include "util/ProgressBar.h"
 
 #ifdef BATCH_MODE_QUIET
 #define DEBUG_LEVEL 0
@@ -319,7 +320,9 @@ void LookAheadSearch::fully_expand_tree(
 ) {
 
     // fully expand tree
-    idx_t last_progress = -1;
+    if(DEBUG_LEVEL>=1) {
+        ProgressBar::init("Building Tree");
+    }
     if(tree_needs_further_expansion()) {
         while(expand_tree(model,prediction)) {
             if(max_node_counter>0 && number_of_nodes>max_node_counter) {
@@ -327,13 +330,13 @@ void LookAheadSearch::fully_expand_tree(
                 break;
             } else {
                 if(DEBUG_LEVEL>=1) {
-                    last_progress = util::print_progress(number_of_nodes, max_node_counter, 50, "Building Tree", last_progress);
+                    ProgressBar::print(number_of_nodes, max_node_counter);
                 }
             }
         }
     }
     if(DEBUG_LEVEL>=1) {
-        std::cout << std::endl;
+        ProgressBar::terminate();
     }
 
     if(DEBUG_LEVEL>=4) {
