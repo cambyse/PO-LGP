@@ -24,7 +24,7 @@
 
 USE_CONFIG_CONSTS;
 
-#define USE_OMP
+//#define USE_OMP
 
 static std::ofstream log_file;
 static enum OPTION { RANDOM, OPTIMAL, SPARSE, UTREE_PROB, UTREE_VALUE, LINEAR_Q, OPTION_N } option;
@@ -205,13 +205,20 @@ int BatchMaze::run(int argn, char ** argarr) {
 
                 // choose the action
                 if(option==OPTIMAL) {
-                    look_ahead_search->clear_tree();
-                    look_ahead_search->build_tree<Maze>(
-                        current_instance,
-                        *maze,
-                        maze->get_prediction_ptr(),
-                        max_tree_size
-                        );
+                    if(look_ahead_search->get_number_of_nodes()==0) {
+                        look_ahead_search->build_tree<Maze>(
+                            current_instance,
+                            *maze,
+                            maze->get_prediction_ptr(),
+                            max_tree_size
+                            );
+                    } else {
+                        look_ahead_search->fully_expand_tree<Maze>(
+                            *maze,
+                            maze->get_prediction_ptr(),
+                            max_tree_size
+                            );
+                    }
                     action = look_ahead_search->get_optimal_action();
                 } else if(option==RANDOM) {
                     action = action_t::random_action();
@@ -244,6 +251,15 @@ int BatchMaze::run(int argn, char ** argarr) {
                 // perform transition
                 maze->perform_transition(action,state,reward);
                 current_instance = current_instance->append_instance(action,state,reward);
+
+                // prune search tree
+                if(option==OPTIMAL || option==SPARSE || option==UTREE_PROB) {
+                    look_ahead_search->prune_tree(action,current_instance);
+                } else if(option==RANDOM || option==UTREE_VALUE || option==LINEAR_Q) {
+                    // no search tree
+                } else {
+                    DEBUG_DEAD_LINE;
+                }
 
                 // increment reward
                 reward_sum += reward;
