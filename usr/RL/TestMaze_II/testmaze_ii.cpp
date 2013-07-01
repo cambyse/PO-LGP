@@ -866,26 +866,27 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 TO_CONSOLE( construct_s );
             }
         } else if(str_args[0]=="test") { // test
-            // generate some data:
-            QVector<double> x(101), y(101); // initialize with entries 0..100
-            double a = 2*drand48() - 1;
-            double b = 2*drand48() - 1;
-            double c = 2*drand48() - 1;
-            double d = 2*drand48() - 1;
-            for (int i=0; i<101; ++i)
-            {
-                x[i] = i/50.0 - 1; // x goes from -1 to 1
-                y[i] = a + b*x[i] + c*x[i]*x[i] + d*x[i]*x[i]*x[i];
-            }
-            // create graph and assign data to it:
-            plotter->graph(0)->setData(x, y);
-            // give the axes some labels:
-            plotter->xAxis->setLabel("x");
-            plotter->yAxis->setLabel("y");
-            // set axes ranges, so we see all data:
-            plotter->xAxis->setRange(-1, 1);
-            plotter->yAxis->setRange(-4, 4);
-            plotter->replot();
+            crf.test();
+            // // generate some data:
+            // QVector<double> x(101), y(101); // initialize with entries 0..100
+            // double a = 2*drand48() - 1;
+            // double b = 2*drand48() - 1;
+            // double c = 2*drand48() - 1;
+            // double d = 2*drand48() - 1;
+            // for (int i=0; i<101; ++i)
+            // {
+            //     x[i] = i/50.0 - 1; // x goes from -1 to 1
+            //     y[i] = a + b*x[i] + c*x[i]*x[i] + d*x[i]*x[i]*x[i];
+            // }
+            // // create graph and assign data to it:
+            // plotter->graph(0)->setData(x, y);
+            // // give the axes some labels:
+            // plotter->xAxis->setLabel("x");
+            // plotter->yAxis->setLabel("y");
+            // // set axes ranges, so we see all data:
+            // plotter->xAxis->setRange(-1, 1);
+            // plotter->yAxis->setRange(-4, 4);
+            // plotter->replot();
         } else if(str_args[0]=="col-states") { // color states
             Maze::color_vector_t  cols;
             for(stateIt_t state=stateIt_t::first(); state!=util::INVALID; ++state) {

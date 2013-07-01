@@ -12,9 +12,12 @@
 #define USE_CONFIG_CONSTS                                               \
     static const Config::size_t   maze_x_size = Config::maze_x_size;    \
     static const Config::size_t   maze_y_size = Config::maze_y_size;    \
-    static const Config::size_t   k           = Config::k;
+    static const Config::size_t   k           = Config::k;              \
+    static const Config::reward_t min_reward  = Config::min_reward;     \
+    static const Config::reward_t max_reward  = Config::max_reward;
 
-class Reward;
+/* #include "Representation/SequentialReward.h" */
+#include "Representation/EnumeratedReward.h"
 
 class Config {
 
@@ -39,9 +42,12 @@ public:
     //-----------------//
     //   Max Reward    //
     //-----------------//
-    static const Reward min_reward;
-    static const Reward max_reward;
-    static const Reward reward_increment;
+    /* typedef SequentialReward reward_t; */
+    /* typedef SequentialRewardIt rewardIt_t; */
+    typedef EnumeratedReward reward_t;
+    typedef EnumeratedRewardIt rewardIt_t;
+    static const reward_t min_reward;
+    static const reward_t max_reward;
 
     //----------------------//
     //   k-Markov Horizon   //

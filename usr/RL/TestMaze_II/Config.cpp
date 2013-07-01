@@ -1,10 +1,7 @@
 #include "Config.h"
 
-#include "Representation/Reward.h"
-
-const Config::size_t   Config::maze_x_size       = 10;
-const Config::size_t   Config::maze_y_size       = 10;
-const Config::size_t   Config::k                 = 1;
-const         Reward   Config::min_reward        = 0;
-const         Reward   Config::max_reward        = 1;
-const         Reward   Config::reward_increment  = 1;
+const Config::size_t   Config::maze_x_size       = 3;
+const Config::size_t   Config::maze_y_size       = 3;
+const Config::size_t   Config::k                 = 6;
+const Config::reward_t Config::min_reward        = reward_t::min_reward;
+const Config::reward_t Config::max_reward        = reward_t::max_reward;

@@ -321,7 +321,7 @@ void LookAheadSearch::fully_expand_tree(
 
     // fully expand tree
     if(DEBUG_LEVEL>=1) {
-        ProgressBar::init("Building Tree");
+        ProgressBar::init("Building Tree: ");
     }
     if(tree_needs_further_expansion()) {
         while(expand_tree(model,prediction)) {

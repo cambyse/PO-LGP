@@ -18,7 +18,8 @@ HEADERS += LookAheadSearch.h \
     Feature.h \
     Representation/Action.h \
     Representation/State.h \
-    Representation/Reward.h \
+    Representation/SequentialReward.h \
+    Representation/EnumeratedReward.h \
     Representation/Instance.h \
     util/KolmogorovSmirnovTest.h \
     util/ChiSquareTest.h \
@@ -40,7 +41,8 @@ SOURCES += LookAheadSearch.cpp \
     Feature.cpp \
     Representation/Action.cpp \
     Representation/State.cpp \
-    Representation/Reward.cpp \
+    Representation/SequentialReward.cpp \
+    Representation/EnumeratedReward.cpp \
     Representation/Instance.cpp \
     util/KolmogorovSmirnovTest.cpp \
     util/ChiSquareTest.cpp \

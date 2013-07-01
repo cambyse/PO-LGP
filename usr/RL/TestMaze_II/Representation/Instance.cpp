@@ -18,9 +18,9 @@ ConstInstanceIt Instance::ConstAll::begin() { return instance->const_first(); }
 ConstInstanceIt Instance::ConstAll::end() { return ConstInstanceIt(); }
 
 Instance * Instance::create(
-    const Action& a,
-    const State& s,
-    const Reward& r,
+    const action_t& a,
+    const state_t& s,
+    const reward_t& r,
     const Instance * prev,
     const Instance * next
     ) {
@@ -102,9 +102,9 @@ bool Instance::operator<(const Instance& other) const {
 }
 
 Instance * Instance::insert_instance_after(
-    const Action& a,
-    const State& s,
-    const Reward& r
+    const action_t& a,
+    const state_t& s,
+    const reward_t& r
     ) {
 
     // create new instance
@@ -135,9 +135,9 @@ Instance * Instance::insert_instance_after(
 }
 
 Instance * Instance::insert_instance_before(
-    const Action& a,
-    const State& s,
-    const Reward& r
+    const action_t& a,
+    const state_t& s,
+    const reward_t& r
     ) {
 
     // create new instance
@@ -168,17 +168,17 @@ Instance * Instance::insert_instance_before(
 }
 
 Instance * Instance::append_instance(
-    const Action& a,
-    const State& s,
-    const Reward& r
+    const action_t& a,
+    const state_t& s,
+    const reward_t& r
     ) {
     return this->last()->insert_instance_after(a,s,r);
 }
 
 Instance * Instance::prepend_instance(
-    const Action& a,
-    const State& s,
-    const Reward& r
+    const action_t& a,
+    const state_t& s,
+    const reward_t& r
     ) {
     return this->first()->insert_instance_before(a,s,r);
 }
@@ -310,9 +310,9 @@ void Instance::check_performance_and_memory(bool memory) {
     if(memory) {
         int del_counter = 1;
         while(true) {
-            Instance * in = Instance::create(Action::STAY, 0, 0);
+            Instance * in = Instance::create(action_t::STAY, 0, 0);
             for(int i=1; i<=1000000; ++i) {
-                in = in->append_instance(Action::STAY, i, 0);
+                in = in->append_instance(action_t::STAY, i, 0);
 
             }
             in->set_container();
@@ -337,12 +337,12 @@ void Instance::check_performance_and_memory(bool memory) {
     cout << endl << endl << "# without assignment (no container)" << endl;
     for(int create_counter=0 ; create_counter<items_to_create; ++create_counter) {
         timer.restart();
-        Instance * ins = Instance::create(Action::STAY, 0, 0);
+        Instance * ins = Instance::create(action_t::STAY, 0, 0);
         int counter = 1;
         int time = timer.elapsed();
         cout << 0 << "	" << 0 << endl;
         while(timer.elapsed()<min_ms) {
-            ins->append_instance(Action::STAY, 0, 0);
+            ins->append_instance(action_t::STAY, 0, 0);
             if(timer.elapsed()!=time && timer.elapsed()%100==0) {
                 time = timer.elapsed();
                 cout << time << "	" << counter << endl;
@@ -356,12 +356,12 @@ void Instance::check_performance_and_memory(bool memory) {
     cout << endl << endl << "# with assignment (no container)" << endl;
     for(int create_counter=0 ; create_counter<items_to_create; ++create_counter) {
         timer.restart();
-        Instance * ins = Instance::create(Action::STAY, 0, 0);
+        Instance * ins = Instance::create(action_t::STAY, 0, 0);
         int counter = 1;
         int time = timer.elapsed();
         cout << 0 << "	" << 0 << endl;
         while(timer.elapsed()<min_ms) {
-            ins = ins->append_instance(Action::STAY, 0, 0);
+            ins = ins->append_instance(action_t::STAY, 0, 0);
             if(timer.elapsed()!=time && timer.elapsed()%100==0) {
                 time = timer.elapsed();
                 cout << time << "	" << counter << endl;
@@ -375,13 +375,13 @@ void Instance::check_performance_and_memory(bool memory) {
     cout << endl << endl << "# without assignment (with container)" << endl;
     for(int create_counter=0 ; create_counter<items_to_create; ++create_counter) {
         timer.restart();
-        Instance * ins = Instance::create(Action::STAY, 0, 0);
+        Instance * ins = Instance::create(action_t::STAY, 0, 0);
         ins->set_container();
         int counter = 1;
         int time = timer.elapsed();
         cout << 0 << "	" << 0 << endl;
         while(timer.elapsed()<min_ms) {
-            ins->append_instance(Action::STAY, 0, 0);
+            ins->append_instance(action_t::STAY, 0, 0);
             if(timer.elapsed()!=time && timer.elapsed()%100==0) {
                 time = timer.elapsed();
                 cout << time << "	" << counter << endl;
@@ -395,13 +395,13 @@ void Instance::check_performance_and_memory(bool memory) {
     cout << endl << endl << "# with assignment (with container)" << endl;
     for(int create_counter=0 ; create_counter<items_to_create; ++create_counter) {
         timer.restart();
-        Instance * ins = Instance::create(Action::STAY, 0, 0);
+        Instance * ins = Instance::create(action_t::STAY, 0, 0);
         ins->set_container();
         int counter = 1;
         int time = timer.elapsed();
         cout << 0 << "	" << 0 << endl;
         while(timer.elapsed()<min_ms) {
-            ins = ins->append_instance(Action::STAY, 0, 0);
+            ins = ins->append_instance(action_t::STAY, 0, 0);
             if(timer.elapsed()!=time && timer.elapsed()%100==0) {
                 time = timer.elapsed();
                 cout << time << "	" << counter << endl;
@@ -424,12 +424,12 @@ void Instance::check_performance_and_memory(bool memory) {
     cout << endl << endl << "# Creating container, iterating through it, and random accesing (sum of ten) item for at most " << items_to_iterate << " items" << endl;
     cout << "# item	time/ms (create from last)	time/ms (create from first)	time/ms (iterate with container)	time/ms (random with container)	time/ms (iterate without container)	time/ms (random without container)" << endl << endl;
 
-    Instance * ins = Instance::create(Action::STAY, 0, 0);
+    Instance * ins = Instance::create(action_t::STAY, 0, 0);
     int counter = 1;
     cout << 0 << "	" << 0 << "	" << 0 << "	" << 0 << "	" << 0 << "	" << 0 << "	" << 0 << endl;
     while(counter<items_to_iterate && timer.elapsed()<max_ms) {
         do {
-            ins = ins->append_instance(Action::STAY, 0, 0);
+            ins = ins->append_instance(action_t::STAY, 0, 0);
             ++counter;
         } while(counter%steps!=0);
         // set from last
@@ -478,11 +478,11 @@ void Instance::check_performance_and_memory(bool memory) {
     // cout << endl << endl << "# without assignment (no container)" << endl;
     // for(int create_counter=0 ; create_counter<items_to_create; ++create_counter) {
     //     timer.restart();
-    //     Instance * ins = Instance::create(Action::STAY, 0, 0);
+    //     Instance * ins = Instance::create(action_t::STAY, 0, 0);
     //     int counter = 1;
     //     int time = timer.elapsed();
     //     while(timer.elapsed()<min_ms) {
-    //         ins->append_instance(Action::STAY, 0, 0);
+    //         ins->append_instance(action_t::STAY, 0, 0);
     //         if(timer.elapsed()!=time && timer.elapsed()%100==0) {
     //             time = timer.elapsed();
     //             cout << time << "	" << counter << endl;
@@ -538,9 +538,9 @@ Instance::Instance(const Instance& i):
 {}
 
 Instance::Instance(
-    const Action& a,
-    const State& s,
-    const Reward& r
+    const action_t& a,
+    const state_t& s,
+    const reward_t& r
     ):
     action(a),
     state(s),

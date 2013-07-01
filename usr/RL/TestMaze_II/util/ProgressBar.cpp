@@ -53,7 +53,7 @@ void ProgressBar::terminate() {
 
 void ProgressBar::print() {
     // go to beginning of line and print start marker
-    cout << '\r' << progress_label << ": |";
+    cout << '\r' << progress_label << "|";
 
     // print processed part
     for(uint idx=0; idx<current_progress; ++idx) {

@@ -48,7 +48,7 @@ const vector<vector<Maze::idx_t> > Maze::walls = {
     {10,11}
     /**/
 
-    /* 10x10 Maze */
+    /* 10x10 Maze *
     {  2,  3},
     { 12, 13},
     { 22, 23},
@@ -98,7 +98,7 @@ const vector<vector<Maze::idx_t> > Maze::rewards = {
     { 0, 3, 2, 1, EACH_TIME, 200,   0,   0}
     /**/
 
-    /* 3x3 Maze *
+    /* 3x3 Maze */
     { 3, 5, 4, 8, ON_RELEASE,   0, 200,   0},
     { 5, 3, 6, 8, ON_RELEASE,   0, 200, 200},
     { 4, 1, 1, 1, ON_RELEASE, 200, 200,   0},
@@ -132,7 +132,7 @@ Maze::Maze(const double& eps):
 //    smiley_state = MazeState(0,0);
 
     // setting current state
-    current_instance = instance_t::create(action_t::STAY, current_state.state_idx(), reward_t::min_reward);
+    current_instance = instance_t::create(action_t::STAY, current_state.state_idx(), min_reward);
     current_state = MazeState(maze_x_size/2, maze_y_size/2);
     DEBUG_OUT(1,"Current Maze State: " << current_state << " (Index: " << current_state.state_idx() << ")" );
     set_current_state(current_state.state_idx());
@@ -163,15 +163,15 @@ void Maze::render_initialize(QGraphicsView * view) {
     double border_width = last_maze_state.x()+state_size/2 - border_x + 0.1*state_size;
     double border_height = last_maze_state.y()+state_size/2 - border_y + 0.1*state_size;
     for(rewardIt_t rewIt=rewardIt_t::first(); rewIt!=INVALID; ++rewIt) {
-        double intensity = ((reward_t)rewIt-reward_t::min_reward)/(reward_t::max_reward-reward_t::min_reward);
-        if(rewIt!=reward_t::min_reward) {
+        double intensity = ((reward_t)rewIt-min_reward)/(max_reward-min_reward);
+        if(rewIt!=min_reward) {
             // to clearly distinguish reward from non-reward
             intensity = intensity/2 + 0.5;
         }
         intensity *= 255;
         QPen border_pen(QColor(intensity,0,0), 0.04, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
         borders.push_back( scene->addRect( border_x, border_y, border_width, border_height, border_pen, QBrush(QColor(255,255,255)) ) );
-        if(rewIt!=reward_t::min_reward) {
+        if(rewIt!=min_reward) {
             borders.back()->setVisible(false);
         }
     }
@@ -295,7 +295,7 @@ void Maze::render_initialize(QGraphicsView * view) {
         double mid_point_x = x_start + (x_end - x_start)/2;
         double mid_point_y = y_start + (y_end - y_start)/2;
         size_t time_delay = rewards[idx][TIME_DELAY];
-        reward_t reward = reward_t::min_reward+reward_t::reward_increment*rewards[idx][REWARD_IDX];
+        reward_t reward = (reward_t)(rewardIt_t::first()+(int)rewards[idx][REWARD_IDX]);
         QGraphicsTextItem * txt = scene->addText(
                 QString("t=%1,r=%2").arg(QString::number(time_delay)).arg(QString::number(reward)),
                 QFont("",12)
@@ -412,10 +412,10 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
     // check for matching reward
 //    if(instance_from[time_delay-1].state==button_state.state_idx()
 //            && state_to==smiley_state.state_idx()
-//            && reward!=reward_t::max_reward ) {
+//            && reward!=max_reward ) {
 //        return 0;
 //    } else if( ( instance_from[time_delay-1].state!=button_state.state_idx() || state_to!=smiley_state.state_idx() )
-//            && reward==reward_t::max_reward ) {
+//            && reward==max_reward ) {
 //        return 0;
 //    }
 
@@ -426,13 +426,13 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
     DEBUG_OUT(2,"    ------------------------------");
 
     // check for matching reward
-    reward_t matching_reward = reward_t::min_reward;
+    reward_t matching_reward = min_reward;
     for(idx_t idx=0; idx<(idx_t)rewards.size(); ++idx) {
         state_t activate_state = rewards[idx][ACTIVATION_STATE];
         state_t receive_state = rewards[idx][RECEIVE_STATE];
         state_t state_back_then = (instance_from->const_it() - (rewards[idx][TIME_DELAY]-1))->state;
         state_t state_now = state_to;
-        reward_t single_reward = reward_t::min_reward+reward_t::reward_increment*rewards[idx][REWARD_IDX];
+        reward_t single_reward = (reward_t)(rewardIt_t::first()+(int)rewards[idx][REWARD_IDX]);
         DEBUG_OUT(2,"    reward index               :" << idx);
         DEBUG_OUT(2,"    time delay                 :" << rewards[idx][TIME_DELAY]);
         DEBUG_OUT(2,"    activation  (target/actual):" << activate_state << "/" << state_back_then);
@@ -462,8 +462,8 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
     }
 
     // crop to max reward
-    if(matching_reward>reward_t::max_reward) {
-        matching_reward = reward_t::max_reward;
+    if(matching_reward>max_reward) {
+        matching_reward = max_reward;
         DEBUG_OUT(2,"    Cropping matching reward to " << matching_reward);
     }
     if(reward!=matching_reward) {
@@ -535,7 +535,7 @@ void Maze::set_epsilon(const double& e) {
 void Maze::set_current_state(const state_t& state) {
     current_state = MazeState(state);
     for(idx_t k_idx=0; k_idx<(idx_t)k; ++k_idx) {
-        current_instance = current_instance->append_instance(action_t::STAY, current_state.state_idx(), reward_t::min_reward);
+        current_instance = current_instance->append_instance(action_t::STAY, current_state.state_idx(), min_reward);
     }
     DEBUG_OUT(1,"Set current state to (" << current_state.x() << "," << current_state.y() << ")");
 }

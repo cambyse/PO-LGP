@@ -508,7 +508,7 @@ void LinearQ::update_loss_terms() {
     size_t data_idx = 0;
     size_t data_size = instance_data->const_it().length_to_first() - 2;
     if(DEBUG_LEVEL>0) {
-        ProgressBar::init("Updating Loss Terms");
+        ProgressBar::init("Updating Loss Terms: ");
     }
     while(ins_t1!=INVALID) {
 

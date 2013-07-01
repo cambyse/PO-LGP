@@ -4,7 +4,7 @@
 #include "util/ProgressBar.h"
 
 #include <list>
-#include <tuple>
+#include <map>
 
 #ifdef BATCH_MODE_QUIET
 #define DEBUG_LEVEL 0
@@ -29,6 +29,7 @@ using std::make_pair;
 using std::set;
 using std::cout;
 using std::endl;
+using std::map;
 
 using util::INVALID;
 
@@ -43,6 +44,13 @@ KMarkovCRF::KMarkovCRF():
     //----------------------------------------//
     // Constructing basis indicator features  //
     //----------------------------------------//
+
+    DEBUG_OUT(0,"Min reward: " << min_reward);
+    DEBUG_OUT(0,"Max reward: " << max_reward);
+    DEBUG_OUT(0,"Min reward: " << Config::min_reward);
+    DEBUG_OUT(0,"Max reward: " << Config::max_reward);
+    DEBUG_OUT(0,"Min reward: " << EnumeratedReward::min_reward);
+    DEBUG_OUT(0,"Max reward: " << EnumeratedReward::max_reward);
 
     // delayed action, state, and reward features
     for(int k_idx = 0; k_idx>=-(int)k; --k_idx) {
@@ -96,7 +104,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
         g[i] = 0;
     }
 
-    int number_of_data_points = instance_data->it().length_to_first()-k;
+    int number_of_data_points = instance_data->it().length_to_first()-k+1;
     if(number_of_data_points<=0) {
         DEBUG_OUT(0,"Not enough data to evaluate model (" << number_of_data_points << ").");
         return fx;
@@ -131,7 +139,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
 
     // iterate through data
     if(DEBUG_LEVEL>0) {
-        ProgressBar::init("Evaluating");
+        ProgressBar::init("Evaluating: ");
     }
     for(const_instanceIt_t insIt=instance_data->first()+k; insIt!=INVALID; ++insIt, ++instance_idx) {
 
@@ -380,7 +388,7 @@ void KMarkovCRF::check_derivatives(const int& number_of_samples, const double& r
 }
 
 void KMarkovCRF::evaluate_features() {
-    int number_of_data_points = instance_data->it().length_to_first()-k;
+    int number_of_data_points = instance_data->it().length_to_first()-k+1;
     if(number_of_data_points<=0) {
         DEBUG_OUT(0,"Not enough data to evaluate model (" << number_of_data_points << ").");
         return;
@@ -421,7 +429,7 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
     // to make the code more readable and comparable to evaluate_model() function
     vector<double> &g = candidate_feature_scores;
 
-    int number_of_data_points = instance_data->it().length_to_first()-k;
+    int number_of_data_points = instance_data->it().length_to_first()-k+1;
     if(number_of_data_points<=0) {
         DEBUG_OUT(0,"Not enough data to evaluate features (" << number_of_data_points << ").");
         return;
@@ -441,7 +449,7 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
     vector<double> sumFExpNF(cf_size,0.0); // sumFExp(x(n),F) for all candidate features F
     idx_t instance_idx = 1;
     if(DEBUG_LEVEL>0) {
-        ProgressBar::init("Scoring");
+        ProgressBar::init("Scoring: ");
     }
     for(const_instanceIt_t instance=instance_data->first()+k; instance!=INVALID; ++instance, ++instance_idx) {
 
@@ -758,44 +766,68 @@ void KMarkovCRF::update_prediction_map() {
 
 void KMarkovCRF::test() {
 
-    //----------------------------------//
-    // test precomputed feature indices //
-    //----------------------------------//
+    // get number of data points and return if not enough
+    int number_of_data_points = instance_data->it().length_to_first()-k+1;
+    if(number_of_data_points<=0) {
+        DEBUG_OUT(0,"Not enough data to evaluate features (" << number_of_data_points << ").");
+        return;
+    }
 
-    // precompute
-    precompute_feature_values();
+    // initialize progress bar
+    if(DEBUG_LEVEL>0) {
+        ProgressBar::init("Testing: ");
+    }
 
-    idx_t feature_n = active_features.size();
+    // set of unique feature values
+    set<vector<vector<f_ret_t> > > feature_value_set;
 
     // iterate through data
-    idx_t instance_idx = 0;
-    for(const_instanceIt_t insIt=instance_data->first()+k; insIt!=INVALID; ++insIt, ++instance_idx) {
+    size_t instance_idx = k;
+    for(const_instanceIt_t instance=instance_data->first()+k; instance!=INVALID; ++instance, ++instance_idx) {
 
-        // iterate through features
-        action_t action = insIt->action;
-        for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
+        // update progress bar
+        if(DEBUG_LEVEL>0) {
+            ProgressBar::print(instance_idx, number_of_data_points);
+        }
 
-            // for instance itself without setting specific state and reward
-            idx_t precomputed_index = precomputed_feature_idx(instance_idx,f_idx,feature_n);
-            f_ret_t pre_ret = feature_values[precomputed_index];
-            f_ret_t true_ret = active_features[f_idx].evaluate(insIt);
-            DEBUG_OUT(0, precomputed_index << "	-->	" << pre_ret << "/" << true_ret <<
-                      (pre_ret==true_ret ? "" : "FALSE")
-                );
+        // current feature values
+        vector<vector<f_ret_t> > feature_value_element;
 
-            // with setting specific state and reward
-            for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {
-                for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
-                    precomputed_index = precomputed_feature_idx(instance_idx,f_idx,feature_n,state,reward);
-                    f_ret_t pre_ret = feature_values[precomputed_index];
-                    f_ret_t true_ret = active_features[f_idx].evaluate(insIt-1,action,state,reward);
-                    DEBUG_OUT(0, precomputed_index << "	-->	" << pre_ret << "/" << true_ret <<
-                              (pre_ret==true_ret ? "" : "FALSE")
-                        );
+        // remember action for being able to only change state and reward below
+        action_t action = instance->action;
+
+        // iterate through all possible states and rewards (keeping action the same)
+        for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {
+            for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
+
+                // add new element for this state-reward combination
+                feature_value_element.push_back(vector<f_ret_t>());
+
+                // iterate through all features
+                for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
+                    // add new return value for current feature
+                    feature_value_element.back().push_back(active_features[f_idx].evaluate(instance-1,action,state,reward));
                 }
+
             }
         }
+
+        // for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
+        //     active_features[f_idx].evaluate(instance);
+        // }
+
+        // add feature value to set of unique values
+        feature_value_set.insert(feature_value_element);
+
     }
+
+    // terminate progress bar
+    if(DEBUG_LEVEL>0) {
+        ProgressBar::terminate();
+    }
+
+    DEBUG_OUT(0,"Number of data points:           " << number_of_data_points );
+    DEBUG_OUT(0,"Number of unique feature values: " << feature_value_set.size() );
 }
 
 void KMarkovCRF::check_lambda_size() {
@@ -970,7 +1002,7 @@ void KMarkovCRF::precompute_feature_values() {
     // iterate through data
     idx_t instance_idx = 0;
     if(DEBUG_LEVEL>0) {
-        ProgressBar::init("Precomputing");
+        ProgressBar::init("Precomputing: ");
     }
     // idx_t pre_idx = 0;
     for(const_instanceIt_t insIt=instance_data->first()+k; insIt!=INVALID; ++insIt, ++instance_idx) {

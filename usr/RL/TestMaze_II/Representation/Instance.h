@@ -5,7 +5,6 @@
 #include "../Config.h"
 #include "Action.h"
 #include "State.h"
-#include "Reward.h"
 
 #include <ostream>
 #include <vector>
@@ -20,7 +19,7 @@ class ConstInstanceIt;
 
 /** \brief Instance object.
  *
- * Instance objects are essentially triples of (Action, State, Reward)
+ * Instance objects are essentially triples of (action_t, state_t, reward_t)
  * representing all information associated with one time step in a reinforcement
  * learning process. Additionally every Instance stores pointers to the Instance
  * before and after, so one can iterate through time. */
@@ -33,9 +32,13 @@ public:
     friend class InstanceIt;
     friend class ConstInstanceIt;
 
-    Action action;
-    State state;
-    Reward reward;
+    typedef Action action_t;
+    typedef State state_t;
+    typedef Config::reward_t reward_t;
+
+    action_t action;
+    state_t state;
+    reward_t reward;
 
     // for compatibility with for( ... : ... ) constructs
     class All {
@@ -56,9 +59,9 @@ public:
     } const_all;
 
     static Instance * create(
-        const Action& a = Action(),
-        const State& s = State(),
-        const Reward& r = Reward(),
+        const action_t& a = action_t(),
+        const state_t& s = state_t(),
+        const reward_t& r = reward_t(),
         const Instance * prev = nullptr,
         const Instance * next = nullptr
         );
@@ -67,10 +70,10 @@ public:
     ~Instance();
     Instance & operator=(const Instance&);
     bool operator<(const Instance& other) const;
-    Instance * insert_instance_after  (const Action& a, const State& s, const Reward& r);
-    Instance * insert_instance_before (const Action& a, const State& s, const Reward& r);
-    Instance * append_instance        (const Action& a, const State& s, const Reward& r);
-    Instance * prepend_instance       (const Action& a, const State& s, const Reward& r);
+    Instance * insert_instance_after  (const action_t& a, const state_t& s, const reward_t& r);
+    Instance * insert_instance_before (const action_t& a, const state_t& s, const reward_t& r);
+    Instance * append_instance        (const action_t& a, const state_t& s, const reward_t& r);
+    Instance * prepend_instance       (const action_t& a, const state_t& s, const reward_t& r);
     InstanceIt it();
     ConstInstanceIt const_it() const;
     InstanceIt first();
@@ -106,9 +109,9 @@ protected:
 
     Instance(const Instance&);
     Instance(
-        const Action& a = Action(),
-        const State& s = State(),
-        const Reward& r = Reward()
+        const action_t& a = action_t(),
+        const state_t& s = state_t(),
+        const reward_t& r = reward_t()
         );
     const Instance * get_previous() const;
     const Instance * get_next() const;
