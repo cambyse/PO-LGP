@@ -33,12 +33,12 @@ class PickOOIActionServer:
 
         ooi = random.choice(self.oois)
         ooi_id_msg = msgs.ObjectID()
-        ooi_id_msg.id = ooi[0].name
+        ooi_id_msg.id = ooi['body'].name
         self.ooi_id_pub.publish(ooi_id_msg)
         self.server.set_succeeded()
 
     def oois_cb(self, msg):
-        rospy.logdebug("callback")
+        #rospy.logdebug("callback")
         self.oois = util.parse_oois_msg(msg)
 
 def main():

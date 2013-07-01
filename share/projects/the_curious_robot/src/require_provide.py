@@ -11,7 +11,7 @@ class Require:
         self.alive_sub = rospy.Subscriber("alive", msgs.Alive, self.alive_cb)
         self.is_alive_pub = rospy.Publisher("is_alive", msgs.Alive)
 
-        while self.wait:
+        while self.wait and not rospy.is_shutdown():
             for module in self.modules:
                 if not self.modules[module]:
                     msg = msgs.Alive()
@@ -33,6 +33,7 @@ class Provide:
 
     def is_alive_cb(self, msg):
         if msg.module == self.module:
+            rospy.logdebug("send alive msg from " + self.module)
             msg = msgs.Alive()
             msg.module = self.module
             self.alive_pub.publish(msg)

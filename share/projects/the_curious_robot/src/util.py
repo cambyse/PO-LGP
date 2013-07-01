@@ -23,6 +23,9 @@ class Properties():
                 if not (attr.startswith("__") or
                         callable(getattr(self, attr)))]
 
+
+
+
 # msg parser/builder
 
 def parse_body_msg(msg):
@@ -41,10 +44,12 @@ def parse_property_msg(msg):
 def parse_ooi_msg(msg):
     body = parse_body_msg(msg.body)
     properties = parse_property_msg(msg.properties)
-    return (body, properties)
+    return {"body": body, "properties": properties}
 
 def parse_oois_msg(msg):
     objects = []
     for obj in msg.objects:
         objects.append(parse_ooi_msg(obj))
     return objects
+
+
