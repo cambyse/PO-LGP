@@ -1,0 +1,11 @@
+START
+xiGetNumberDevices: 
+ - return value = 0 (Function call succeeded)
+xiNumDevices: 1
+xiOpenDevice: 
+mm40api: adding   camera context: dwID=20300851  ptr=B1667000 processID=00005DFB
+mm40api: found camera context: dwID=20300851 ptr=B1667000 processID=00005DFB
+mm40api: Set frequency 110
+mm40api: Error parsing Profile (34)
+[2]    24059 segmentation fault (core dumped)  ./grabAndCompress
+

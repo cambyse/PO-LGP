@@ -1,0 +1,46 @@
+START
+xiGetNumberDevices: 
+ - return value = 0 (Function call succeeded)
+xiNumDevices: 1
+xiOpenDevice: 
+mm40api: adding   camera context: dwID=20300851  ptr=D694A000 processID=0000603A
+mm40api: found camera context: dwID=20300851 ptr=D694A000 processID=0000603A
+mm40api: Set frequency 110
+mm40api: Error parsing Profile (34)
+mm40api: Time of BPL read 117
+mm40api: Successfully parsed BPL file, 1775 total bad pixels
+mm40api: CalculateResources : Context D694A000 ID 20300851 m_maxBytes=1024 m_maxBufferSize=1048576
+mm40api: Current bandwidth limit auto-set to 3218 MBps (max 3576 MBps)
+ - return value = 0 (Function call succeeded)
+xiSetParam(Exposure): 5000
+ - return value = 0 (Function call succeeded)
+xiStartAcquisition(): 
+mm40api: CalculateResources : Context D694A000 ID 20300851 m_maxBytes=1024 m_maxBufferSize=1048576
+ - return value = 0 (Function call succeeded)
+xiGetImage() [0]
+ - return value = 0 (Function call succeeded)
+xiGetImage() [1]
+ - return value = 0 (Function call succeeded)
+xiGetImage() [2]
+ - return value = 0 (Function call succeeded)
+xiGetImage() [3]
+ - return value = 0 (Function call succeeded)
+xiGetImage() [4]
+ - return value = 0 (Function call succeeded)
+xiGetImage() [5]
+ - return value = 0 (Function call succeeded)
+xiGetImage() [6]
+ - return value = 0 (Function call succeeded)
+xiGetImage() [7]
+ - return value = 0 (Function call succeeded)
+xiGetImage() [8]
+ - return value = 0 (Function call succeeded)
+xiGetImage() [9]
+ - return value = 0 (Function call succeeded)
+xiStopAcquisition(): 
+ - return value = 0 (Function call succeeded)
+xiCloseDevice()
+mm40api: deleting camera context: dwID=20300851, ptr=d694a000 processID=0000603A
+ - return value = 0 (Function call succeeded)
+DONE
+
