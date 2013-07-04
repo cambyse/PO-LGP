@@ -23,7 +23,7 @@ class FakeController():
     """
     def __init__(self):
         # init the node: test_fitting
-        rospy.init_node('tcr_controller', log_level=rospy.DEBUG)
+        rospy.init_node('tcr_controller')
 
         self.world = ors.Graph()
         worldfile = os.path.join(
