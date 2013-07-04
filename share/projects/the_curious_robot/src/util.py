@@ -55,8 +55,8 @@ def create_properties_msg(properties):
     for prop_name in properties.property_names():
         msg = msgs.Property()
         msg.name = prop_name
-        msg.values = [ getattr(ooi[1], prop_name).mu,
-                       getattr(ooi[1], prop_name),sigma ]
+        msg.values = [ getattr(properties, prop_name).mu,
+                       getattr(properties, prop_name).sigma ]
         result.append(msg)
     return result
 
@@ -82,7 +82,7 @@ def parse_oois_msg(msg):
 def create_oois_msg(objects):
     msg = msgs.Objects()
     for obj in objects:
-        msg.objects.append(create_ooi_msg(obj))
+        msg.objects.append(create_ooi_msg(obj['body'], obj['properties']))
     return msg
 
 def create_trajectory_msg(obj_id, pos):
