@@ -24,6 +24,7 @@ class PickOOIActionServer:
         # Actionlib Server
         self.server = SimpleActionServer(name, msgs.PickOOIAction,
                 execute_cb=self.execute)
+        self.server.register_preempt_callback(self.preempt_cb)
         self.server.start()
 
     def execute(self, msg):
@@ -33,7 +34,8 @@ class PickOOIActionServer:
 
         ooi = random.choice(self.oois)
         ooi_id_msg = msgs.ObjectID()
-        ooi_id_msg.id = ooi['body'].name
+        #ooi_id_msg.id = ooi['body'].name
+        ooi_id_msg.id = 'door1-door'
         self.ooi_id_pub.publish(ooi_id_msg)
         self.server.set_succeeded()
 
@@ -41,8 +43,11 @@ class PickOOIActionServer:
         #rospy.logdebug("callback")
         self.oois = util.parse_oois_msg(msg)
 
+    def preempt_cb(self):
+        self.server.set_preempted()
+
 def main():
-    rospy.init_node('tcr_sas_pick_ooi', log_level=rospy.DEBUG)
+    rospy.init_node('tcr_sas_pick_ooi')
     server = PickOOIActionServer('pick_ooi')
 
 if __name__ == '__main__':

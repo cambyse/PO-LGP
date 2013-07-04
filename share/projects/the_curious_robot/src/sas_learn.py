@@ -11,12 +11,16 @@ class LearnActionServer:
     def __init__(self, name):
         self.server = SimpleActionServer(name, LearnAction,
                 execute_cb=self.execute)
+        self.server.register_preempt_callback(self.preempt_cb)
         self.server.start()
 
     def execute(self, msg):
         rospy.sleep(.33)
         rospy.logdebug('Learn')
         self.server.set_succeeded()
+
+    def preempt_cb(self):
+        self.server.set_preempted()
 
 def main():
     rospy.init_node('tcr_sas_learn')

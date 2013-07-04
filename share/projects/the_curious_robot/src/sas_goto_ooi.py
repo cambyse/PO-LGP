@@ -15,15 +15,18 @@ class GotoOOIActionServer:
         self.control_done = False
         self.react_to_controller = False
 
+        # subscriber
         self.oois_sub = rospy.Subscriber('oois', msgs.Objects, self.oois_cb)
         self.ooi_id_sub = rospy.Subscriber('ooi_id', msgs.ObjectID, self.ooi_id_cb)
         self.control_done_sub = rospy.Subscriber('control_done',
                 msgs.control_done, self.control_done_cb)
 
+        # publisher
         self.control_pub = rospy.Publisher('control', msgs.control)
 
         self.server = SimpleActionServer(name, msgs.GotoOOIAction,
                 execute_cb=self.execute)
+        self.server.register_preempt_callback(self.preempt_cb)
         self.server.start()
 
     def execute(self, msg):
@@ -32,16 +35,17 @@ class GotoOOIActionServer:
                 msg = msgs.control()
                 msg.pose.position.x = ooi['body'].X.pos.x
                 msg.pose.position.y = ooi['body'].X.pos.y
-                msg.pose.position.z = ooi['body'].X.pos.z
+                msg.pose.position.z = 1
                 break
 
         self.react_to_controller = True #TODO: rather block?
         self.control_pub.publish(msg)
         
-        while not self.control_done:
+        while not self.control_done and not rospy.is_shutdown():
             rospy.sleep(.1)
         self.react_to_controller = False
         self.control_done = False
+
         self.server.set_succeeded()
 
     def ooi_id_cb(self, msg):
@@ -54,6 +58,9 @@ class GotoOOIActionServer:
     def control_done_cb(self, msg):
         if self.react_to_controller:
             self.control_done = True
+
+    def preempt_cb(self):
+        self.server.set_preempted()
 
 def main():
     rospy.init_node('tcr_sas_goto_ooi')
