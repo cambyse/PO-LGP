@@ -154,6 +154,9 @@ LookAheadSearch::action_t LookAheadSearch::get_optimal_action() const {
 
 void LookAheadSearch::prune_tree(const action_t& a, const instance_t * new_root_instance) {
 
+    // TODO: There is still something wrong with this function. print_tree()
+    // shows that the number of nodes in the graph is not updated correctely.
+
     vector<node_t> nodes_to_delete;
     vector<arc_t> arcs_to_delete;
     node_t chosen_action_node;

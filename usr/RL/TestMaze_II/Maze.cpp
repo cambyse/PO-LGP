@@ -135,6 +135,8 @@ Maze::Maze(const double& eps):
     current_state = MazeState(Config::maze_x_size/2, Config::maze_y_size/2);
     DEBUG_OUT(1,"Current Maze State: " << current_state << " (Index: " << current_state.state_idx() << ")" );
     set_current_state(current_state.state_idx());
+
+    // TODO: Test if all reward are actually valid!
 }
 
 
