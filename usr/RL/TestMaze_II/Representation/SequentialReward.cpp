@@ -1,7 +1,5 @@
 #include "SequentialReward.h"
 
-#include "Config.h"
-
 #include <math.h>
 
 using util::INVALID;

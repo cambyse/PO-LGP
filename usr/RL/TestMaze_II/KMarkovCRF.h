@@ -12,10 +12,10 @@
 
 #include <lbfgs.h>
 
-#include "HistoryObserver.h"
 #include "Config.h"
-#include "Representation/Representation.h"
+
 #include "Feature.h"
+#include "HistoryObserver.h"
 
 class KMarkovCRF: public HistoryObserver
 {
@@ -133,9 +133,12 @@ private:
     //--------------------------//
     // Performance Optimization //
     //--------------------------//
-    bool use_precomputed_feature_values;             ///< Whether to use precomputed feature values.
-    bool feature_values_precomputed;                 ///< Whether feature values are precomputed.
-    std::vector<f_ret_t> feature_values;             ///< The precomputed feature values.
+    enum PRECOMPUTATION_TYPE { NONE, COMPOUND_LOOK_UP, BASE_LOOK_UP };
+    const PRECOMPUTATION_TYPE precomputation_type = BASE_LOOK_UP;               ///< Technique for precomputing feature values.
+    bool                      feature_values_precomputed;                       ///< Whether feature values are up-to-date.
+    std::vector<f_ret_t>      compound_feature_values;                          ///< The precomputed feature values (COMPOUND_LOOK_UP).
+    std::vector<std::vector<Feature::look_up_map_t> >  base_feature_values;     ///< The precomputed feature values (BASE_LOOK_UP).
+    std::vector<idx_t>        base_feature_indices;                             ///< State-reward index for given instance.
 
     //------------------//
     // k-MDP Prediction //
@@ -179,8 +182,11 @@ private:
         const reward_t& reward
         );
 
-    /** \brief Precompute feature values. */
-    void precompute_feature_values();
+    /** \brief Precompute compound feature values. */
+    void precompute_compound_feature_values();
+
+    /** \brief Precompute base feature values. */
+    void precompute_base_feature_values();
 
     /** \brief Erase all features that never become non-zero from active
      * features. */

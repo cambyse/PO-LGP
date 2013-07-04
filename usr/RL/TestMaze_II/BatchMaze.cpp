@@ -22,8 +22,6 @@
 #define LOG_COMMENT(x) DEBUG_OUT(1,x); log_file << "# " << x << std::endl;
 #define LOG(x) DEBUG_OUT(1,x); log_file << x << std::endl;
 
-USE_CONFIG_CONSTS;
-
 //#define USE_OMP
 
 static std::ofstream log_file;
@@ -120,7 +118,7 @@ int BatchMaze::run(int argn, char ** argarr) {
                 linQ = new LinearQ(discount);
 
                 // initialize to minimal length history
-                for(unsigned long state_counter=0; state_counter<k; ++state_counter) {
+                for(unsigned long state_counter=0; state_counter<Config::k; ++state_counter) {
                     action_t action = action_t::STAY;
                     state_t state;
                     reward_t reward;
@@ -445,7 +443,7 @@ void BatchMaze::initialize_log_file() {
         }
     }
 
-    LOG_COMMENT("Maze size:               " << maze_x_size << "x" << maze_y_size);
+    LOG_COMMENT("Maze size:               " << Config::maze_x_size << "x" << Config::maze_y_size);
     LOG_COMMENT("strategy               = " << (const char*)option_str.toLatin1() );
     LOG_COMMENT("epsilon                = " << epsilon );
     LOG_COMMENT("discount               = " << discount );

@@ -1,10 +1,13 @@
 #ifndef INSTANCE_H_
 #define INSTANCE_H_
 
+class Instance;
+class InstanceIt;
+class ConstInstanceIt;
+
+#include "Config.h"
+
 #include "../util.h"
-#include "../Config.h"
-#include "Action.h"
-#include "State.h"
 
 #include <ostream>
 #include <vector>
@@ -26,15 +29,10 @@ class ConstInstanceIt;
 class Instance {
 
 public:
-
-    USE_CONFIG_TYPEDEFS;
-
     friend class InstanceIt;
     friend class ConstInstanceIt;
 
-    typedef Action action_t;
-    typedef State state_t;
-    typedef Config::reward_t reward_t;
+    USE_CONFIG_TYPEDEFS;
 
     action_t action;
     state_t state;

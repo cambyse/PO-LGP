@@ -11,7 +11,6 @@
 #include <sstream>
 
 #include "Config.h"
-#include "Representation/Representation.h"
 
 #include "debug.h"
 
@@ -19,7 +18,6 @@ class Maze {
 public:
 
     USE_CONFIG_TYPEDEFS;
-    USE_REPRESENTATION_TYPEDEFS;
 
     typedef std::tuple<double,double,double> color_t;
     typedef std::vector<color_t>             color_vector_t;
@@ -98,7 +96,7 @@ private:
     std::vector<QGraphicsRectItem*> state_rects;
 
     static const std::vector<std::vector<idx_t> > walls;
-    static const std::vector<std::vector<idx_t> > rewards;
+    static const std::vector<std::vector<double> > rewards;
     enum REWARD_COMPONENTS { ACTIVATION_STATE, RECEIVE_STATE, TIME_DELAY, REWARD_IDX, ACTIVATION_TYPE, R, G, B };
     enum REWARD_ACTIVATION { EACH_TIME, ON_RELEASE };
 

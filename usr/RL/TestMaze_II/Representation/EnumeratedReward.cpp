@@ -1,7 +1,5 @@
 #include "EnumeratedReward.h"
 
-#include "Config.h"
-
 #include <math.h>
 
 #define DEBUG_LEVEL 0
@@ -13,9 +11,9 @@ using std::vector;
 
 const vector<EnumeratedReward::value_t> EnumeratedReward::reward_vector = {
     0,
-    1,
-    3,
-    8
+    1
+    // 3,
+    // 8
 };
 const EnumeratedReward::value_t EnumeratedReward::min_reward = EnumeratedReward::reward_vector.front();
 const EnumeratedReward::value_t EnumeratedReward::max_reward = EnumeratedReward::reward_vector.back();

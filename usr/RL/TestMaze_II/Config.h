@@ -1,64 +1,64 @@
+//===================================================================
+
+#ifndef BATCH_MODE
+//#define BATCH_MODE
+#endif
+
+#ifndef BATCH_MODE_QUIET
+//#define BATCH_MODE_QUIET
+#endif
+
+//===================================================================
+
+#ifndef CONFIG_TYPEDEFS_H_
+#define CONFIG_TYPEDEFS_H_
+
+#define USE_CONFIG_TYPEDEFS                             \
+    typedef unsigned long long int size_t;              \
+    typedef long long int          idx_t;               \
+    typedef double                 probability_t;       \
+    typedef Action                 action_t;            \
+    typedef ActionIt               actionIt_t;          \
+    typedef State                  state_t;             \
+    typedef StateIt                stateIt_t;           \
+    typedef EnumeratedReward       reward_t;            \
+    typedef EnumeratedRewardIt     rewardIt_t;          \
+    typedef Instance               instance_t;          \
+    typedef InstanceIt             instanceIt_t;        \
+    typedef ConstInstanceIt        const_instanceIt_t;
+
+#endif /* CONFIG_TYPEDEFS_H_ */
+
+//===================================================================
+
+#ifndef CONFIG_TYPE_INCLUDES_H_
+#define CONFIG_TYPE_INCLUDES_H_
+
+#include "Representation/Action.h"
+#include "Representation/State.h"
+#include "Representation/EnumeratedReward.h"
+#include "Representation/Instance.h"
+
+#endif /* CONFIG_TYPE_INCLUDES_H_ */
+
+//===================================================================
+
 #ifndef CONFIG_H_
 #define CONFIG_H_
 
-//#define BATCH_MODE
-//#define BATCH_MODE_QUIET
-
-#define USE_CONFIG_TYPEDEFS                                     \
-    typedef Config::idx_t              idx_t;                   \
-    typedef Config::size_t             size_t;                  \
-    typedef Config::probability_t      probability_t;           \
-
-#define USE_CONFIG_CONSTS                                               \
-    static const Config::size_t   maze_x_size = Config::maze_x_size;    \
-    static const Config::size_t   maze_y_size = Config::maze_y_size;    \
-    static const Config::size_t   k           = Config::k;              \
-    static const Config::reward_t min_reward  = Config::min_reward;     \
-    static const Config::reward_t max_reward  = Config::max_reward;
-
-/* #include "Representation/SequentialReward.h" */
-#include "Representation/EnumeratedReward.h"
-
 class Config {
-
 public:
-
-    //==========================//
-    //  Typedefs and Constants  //
-    //==========================//
-
-    //----------------------//
-    //   General Typedefs   //
-    //----------------------//
-    typedef long long int          idx_t;
-    typedef unsigned long long int size_t;
-
-    //----------------------//
-    //   Maze Dimensions    //
-    //----------------------//
-    static const size_t maze_x_size;
-    static const size_t maze_y_size;
-
-    //-----------------//
-    //   Max Reward    //
-    //-----------------//
-    /* typedef SequentialReward reward_t; */
-    /* typedef SequentialRewardIt rewardIt_t; */
-    typedef EnumeratedReward reward_t;
-    typedef EnumeratedRewardIt rewardIt_t;
-    static const reward_t min_reward;
-    static const reward_t max_reward;
-
-    //----------------------//
-    //   k-Markov Horizon   //
-    //----------------------//
-    static const size_t k;
-
-    //-----------------//
-    //   Probability   //
-    //-----------------//
-    typedef double probability_t;
-
+    // typedefs
+    typedef unsigned long long int   size_t;
+    // constants
+    static const size_t    maze_x_size;
+    static const size_t    maze_y_size;
+    static const size_t    k;
 };
 
 #endif /* CONFIG_H_ */
+
+//===================================================================
+
+
+

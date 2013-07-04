@@ -4,7 +4,7 @@
 #include "ui_testmaze_ii.h"
 
 #include "Config.h"
-#include "Representation/Representation.h"
+
 #include "Maze.h"
 #include "KMarkovCRF.h"
 #include "UTree.h"
@@ -38,7 +38,6 @@ private:
     //===============================//
 
     USE_CONFIG_TYPEDEFS;
-    USE_REPRESENTATION_TYPEDEFS;
 
     //---------------//
     // Maze GUI etc. //

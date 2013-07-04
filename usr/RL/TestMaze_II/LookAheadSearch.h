@@ -5,7 +5,6 @@
 #include <lemon/dim2.h>
 
 #include "Config.h"
-#include "Representation/Representation.h"
 #include "util/ProgressBar.h"
 
 #ifdef BATCH_MODE_QUIET
@@ -20,7 +19,6 @@ class LookAheadSearch {
 public:
 
     USE_CONFIG_TYPEDEFS;
-    USE_REPRESENTATION_TYPEDEFS;
     typedef reward_t::value_t value_t;
 
     enum NODE_TYPE { NONE, STATE, ACTION };

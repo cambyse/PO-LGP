@@ -37,6 +37,11 @@ Feature::feature_return_value Feature::evaluate(const instance_t *, action_t, st
     return 0;
 }
 
+Feature::feature_return_value Feature::evaluate(const look_up_map_t&) const {
+    DEBUG_OUT(0,"Error: Evaluating abstract type Feature");
+    return 0;
+}
+
 // string Feature::identifier() const {
 //    return QString("(%1)").arg(id).toStdString();
 // }
@@ -109,11 +114,7 @@ bool Feature::pComp(Feature const * first, Feature const * second) {
 }
 
 Feature::subfeature_const_iterator_t Feature::get_subfeatures_begin() const {
-    if(subfeatures.size()==0) {
-        return subfeatures.end();
-    } else {
-        return subfeatures.begin();
-    }
+    return subfeatures.begin();
 }
 
 Feature::subfeature_const_iterator_t Feature::get_subfeatures_end() const {
@@ -136,7 +137,6 @@ void Feature::clean_up_subfeatures() {
     while(it_2!=subfeatures.end()) {
         if(
             **it_2==**it_1 ||
-            (*it_2)->get_type()==NULL_FEATURE ||
             ( (*it_2)->const_feature && (*it_2)->const_return_value==1 )
             ) {
             it_2 = subfeatures.erase(it_2);
@@ -145,29 +145,6 @@ void Feature::clean_up_subfeatures() {
             ++it_2;
         }
     }
-}
-
-NullFeature::NullFeature(){
-    type = NULL_FEATURE;
-    complexity = 0;
-}
-
-NullFeature::~NullFeature() {}
-
-Feature::feature_return_value NullFeature::evaluate(const instance_t *) const {
-    return 0;
-}
-
-Feature::feature_return_value NullFeature::evaluate(const instance_t *, action_t, state_t, reward_t) const {
-    return 0;
-}
-
-string NullFeature::identifier() const {
-    QString id_string("n("
-            +QString(field_width[0]+field_width[1]+1,' ')
-            +")"
-    );
-    return id_string.toStdString()+Feature::identifier();
 }
 
 ConstFeature::ConstFeature(const long long int& v) {
@@ -366,25 +343,25 @@ bool RewardFeature::features_contradict(const RewardFeature& f1, const RewardFea
     }
 }
 
-AndFeature::AndFeature(const Feature& f1, const Feature& f2, const Feature& f3, const Feature& f4, const Feature& f5) {
+AndFeature::AndFeature() {
+    type = AND;
+}
+
+AndFeature::AndFeature(const Feature& f1) {
+    type = AND;
+    subfeatures.insert(subfeatures.begin(),f1.get_subfeatures_begin(),f1.get_subfeatures_end());
+    clean_up_subfeatures();
+    complexity = subfeatures.size();
+    check_for_contradicting_subfeatures();
+}
+
+AndFeature::AndFeature(const Feature& f1, const Feature& f2) {
     type = AND;
     subfeatures.insert(subfeatures.begin(),f1.get_subfeatures_begin(),f1.get_subfeatures_end());
     subfeatures.insert(subfeatures.begin(),f2.get_subfeatures_begin(),f2.get_subfeatures_end());
-    subfeatures.insert(subfeatures.begin(),f3.get_subfeatures_begin(),f3.get_subfeatures_end());
-    subfeatures.insert(subfeatures.begin(),f4.get_subfeatures_begin(),f4.get_subfeatures_end());
-    subfeatures.insert(subfeatures.begin(),f5.get_subfeatures_begin(),f5.get_subfeatures_end());
     clean_up_subfeatures();
     complexity = subfeatures.size();
-    // check for contradicting subfeatures
-    for( auto sub_1 : subfeatures ) {
-        for( auto sub_2 : subfeatures ) {
-            if(sub_1->get_type()==sub_2->get_type() && sub_1->contradicts(*sub_2)) {
-                const_feature = true;
-                const_return_value = 0;
-                return;
-            }
-        }
-    }
+    check_for_contradicting_subfeatures();
 }
 
 AndFeature::~AndFeature() {}
@@ -419,6 +396,27 @@ Feature::feature_return_value AndFeature::evaluate(const instance_t * instance, 
     }
 }
 
+AndFeature::feature_return_value AndFeature::evaluate(const look_up_map_t& look_up_map) const {
+    if(const_feature) {
+        return const_return_value;
+    } else {
+        Feature::feature_return_value prod = 1;
+        for(auto feature_iterator : subfeatures) {
+            auto it = look_up_map.find(feature_iterator);
+            if(it==look_up_map.end()) {
+                DEBUG_OUT(0,"Error: Subfeature not in look-up map");
+                break;
+            } else {
+                prod *= it->second;
+                if(prod==0) {
+                    break;
+                }
+            }
+        }
+        return prod;
+    }
+}
+
 string AndFeature::identifier() const {
     string id_string("^(");
     bool first = true;
@@ -433,3 +431,15 @@ string AndFeature::identifier() const {
     }
     return id_string+")"+Feature::identifier();
 };
+
+void AndFeature::check_for_contradicting_subfeatures() {
+    for( auto sub_1 : subfeatures ) {
+        for( auto sub_2 : subfeatures ) {
+            if(sub_1->get_type()==sub_2->get_type() && sub_1->contradicts(*sub_2)) {
+                const_feature = true;
+                const_return_value = 0;
+                return;
+            }
+        }
+    }
+}

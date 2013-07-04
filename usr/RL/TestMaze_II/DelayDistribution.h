@@ -1,7 +1,6 @@
 #include "HistoryObserver.h"
 
 #include "Config.h"
-#include "Representation/Representation.h"
 
 #include <vector>
 #include <map>
@@ -12,7 +11,6 @@ class DelayDistribution: public HistoryObserver {
 public:
 
     USE_CONFIG_TYPEDEFS;
-    USE_REPRESENTATION_TYPEDEFS;
 
     typedef std::map<std::tuple<state_t,state_t,unsigned int>,probability_t> pair_dist_map_t;
 

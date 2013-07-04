@@ -1,10 +1,3 @@
-/*
- * Feature.h
- *
- *  Created on: Nov 8, 2012
- *      Author: robert
- */
-
 #ifndef FEATURE_H_
 #define FEATURE_H_
 
@@ -14,24 +7,27 @@
 #include <set>
 #include <string>
 #include <memory>
+#include <unordered_map>
 
 #include "Config.h"
-#include "Representation/Representation.h"
 
 class Feature {
 public:
+    // types
     USE_CONFIG_TYPEDEFS;
-    USE_REPRESENTATION_TYPEDEFS;
-    typedef std::list<Feature * >                  subfeature_container_t;
-    typedef subfeature_container_t::iterator       subfeature_iterator_t;
-    typedef subfeature_container_t::const_iterator subfeature_const_iterator_t;
-    typedef std::set<std::unique_ptr<Feature> >    basis_feature_container_t;
-    typedef double                                 feature_return_value;
-    enum TYPE { ABSTRACT, CONST_FEATURE, NULL_FEATURE, ACTION, STATE, REWARD, AND };
+    typedef std::list<Feature * >                               subfeature_container_t;
+    typedef subfeature_container_t::iterator                    subfeature_iterator_t;
+    typedef subfeature_container_t::const_iterator              subfeature_const_iterator_t;
+    typedef std::set<std::unique_ptr<Feature> >                 basis_feature_container_t;
+    typedef double                                              feature_return_value;
+    typedef std::unordered_map<Feature*,feature_return_value>   look_up_map_t;
+    enum TYPE { ABSTRACT, CONST_FEATURE, ACTION, STATE, REWARD, AND };
+    // functions
     Feature();
     virtual ~Feature();
     virtual feature_return_value evaluate(const instance_t *) const;
     virtual feature_return_value evaluate(const instance_t *, action_t, state_t, reward_t) const;
+    virtual feature_return_value evaluate(const look_up_map_t&) const;
     virtual std::string identifier() const;
     friend std::ostream& operator<<(std::ostream&, const Feature&);
     virtual TYPE get_type() const;
@@ -47,6 +43,7 @@ public:
     virtual bool is_const_feature() const { return const_feature; }
     virtual bool contradicts(const Feature&) { return false; }
 protected:
+    // member variables
     TYPE type;
     long id;
     unsigned int complexity;
@@ -56,16 +53,8 @@ protected:
     static basis_feature_container_t basis_features;
     bool const_feature;
     feature_return_value const_return_value;
+    // member functions
     virtual void clean_up_subfeatures();
-};
-
-class NullFeature: public Feature {
-public:
-    NullFeature();
-    virtual ~NullFeature();
-    virtual feature_return_value evaluate(const instance_t *) const;
-    virtual feature_return_value evaluate(const instance_t *, action_t, state_t, reward_t) const;
-    virtual std::string identifier() const;
 };
 
 class ConstFeature: public Feature {
@@ -129,11 +118,16 @@ protected:
 
 class AndFeature: public Feature {
 public:
-    AndFeature(const Feature& f1 = NullFeature(), const Feature& f2 = NullFeature(), const Feature& f3 = NullFeature(), const Feature& f4 = NullFeature(), const Feature& f5 = NullFeature());
+    AndFeature();
+    AndFeature(const Feature& f1);
+    AndFeature(const Feature& f1, const Feature& f2);
     virtual ~AndFeature();
     virtual feature_return_value evaluate(const instance_t *) const;
     virtual feature_return_value evaluate(const instance_t *, action_t, state_t, reward_t) const;
+    virtual feature_return_value evaluate(const look_up_map_t&) const;
     virtual std::string identifier() const;
+protected:
+    void check_for_contradicting_subfeatures();
 };
 
 #endif /* FEATURE_H_ */

@@ -16,11 +16,6 @@
 #define DEBUG_STRING "UTree: "
 #include "debug.h"
 
-// maze_x_size
-// maze_y_size
-// k
-USE_CONFIG_CONSTS;
-
 using std::vector;
 using std::map;
 using std::set;
@@ -56,7 +51,7 @@ UTree::UTree(const double& d):
     //----------------------------------------//
 
     // delayed action, state, and reward features
-    for(int k_idx = 0; k_idx>(int)-k; --k_idx) {
+    for(int k_idx = 0; k_idx>(int)-Config::k; --k_idx) {
         // actions
         for(action_t action : actionIt_t::all) {
             ActionFeature * action_feature = ActionFeature::create(action,k_idx);

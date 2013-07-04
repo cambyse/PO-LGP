@@ -2,12 +2,11 @@
 #define HISTORYOBSERVER_H_
 
 #include "Config.h"
-#include "Representation/Representation.h"
 
 class HistoryObserver
 {
 public:
-    USE_REPRESENTATION_TYPEDEFS;
+    USE_CONFIG_TYPEDEFS;
     HistoryObserver();
     virtual ~HistoryObserver();
     virtual void add_action_state_reward_tripel(

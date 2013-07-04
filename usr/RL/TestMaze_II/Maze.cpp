@@ -19,7 +19,6 @@ const double Maze::reward_end_size = 0.2;
 const double Maze::reward_end_ratio = 0.5;
 const double Maze::text_scale = 0.01;
 const double Maze::text_center = 0.3;
-USE_CONFIG_CONSTS;
 
 // #define HIDE_REWARDS
 
@@ -86,7 +85,7 @@ const vector<vector<Maze::idx_t> > Maze::walls = {
     /**/
 };
 
-const vector<vector<Maze::idx_t> > Maze::rewards = {
+const vector<vector<double> > Maze::rewards = {
     /* 2x2 Maze *
     { 0, 3, 4, 5, ON_RELEASE, 200,   0,   0},
     { 3, 0, 4, 5, ON_RELEASE, 200, 200,   0},
@@ -94,11 +93,11 @@ const vector<vector<Maze::idx_t> > Maze::rewards = {
     { 3, 2, 1, 1, ON_RELEASE,   0,   0, 200}
     /**/
 
-    /* 2x2 Maze *
+    /* 2x2 Maze */
     { 0, 3, 2, 1, EACH_TIME, 200,   0,   0}
     /**/
 
-    /* 3x3 Maze */
+    /* 3x3 Maze *
     { 3, 5, 4, 8, ON_RELEASE,   0, 200,   0},
     { 5, 3, 6, 8, ON_RELEASE,   0, 200, 200},
     { 4, 1, 1, 1, ON_RELEASE, 200, 200,   0},
@@ -124,16 +123,16 @@ Maze::Maze(const double& eps):
 {
 
     // setting button and smiley state
-//    if(maze_x_size>0 || maze_y_size>0) {
-//        button_state = MazeState(maze_x_size-1,maze_y_size-1);
+//    if(Config::maze_x_size>0 || Config::maze_y_size>0) {
+//        button_state = MazeState(Config::maze_x_size-1,Config::maze_y_size-1);
 //    } else {
 //        button_state = MazeState(0,0);
 //    }
 //    smiley_state = MazeState(0,0);
 
     // setting current state
-    current_instance = instance_t::create(action_t::STAY, current_state.state_idx(), min_reward);
-    current_state = MazeState(maze_x_size/2, maze_y_size/2);
+    current_instance = instance_t::create(action_t::STAY, current_state.state_idx(), reward_t::min_reward);
+    current_state = MazeState(Config::maze_x_size/2, Config::maze_y_size/2);
     DEBUG_OUT(1,"Current Maze State: " << current_state << " (Index: " << current_state.state_idx() << ")" );
     set_current_state(current_state.state_idx());
 }
@@ -163,15 +162,15 @@ void Maze::render_initialize(QGraphicsView * view) {
     double border_width = last_maze_state.x()+state_size/2 - border_x + 0.1*state_size;
     double border_height = last_maze_state.y()+state_size/2 - border_y + 0.1*state_size;
     for(rewardIt_t rewIt=rewardIt_t::first(); rewIt!=INVALID; ++rewIt) {
-        double intensity = ((reward_t)rewIt-min_reward)/(max_reward-min_reward);
-        if(rewIt!=min_reward) {
+        double intensity = ((reward_t)rewIt-reward_t::min_reward)/(reward_t::max_reward-reward_t::min_reward);
+        if(rewIt!=reward_t::min_reward) {
             // to clearly distinguish reward from non-reward
             intensity = intensity/2 + 0.5;
         }
         intensity *= 255;
         QPen border_pen(QColor(intensity,0,0), 0.04, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
         borders.push_back( scene->addRect( border_x, border_y, border_width, border_height, border_pen, QBrush(QColor(255,255,255)) ) );
-        if(rewIt!=min_reward) {
+        if(rewIt!=reward_t::min_reward) {
             borders.back()->setVisible(false);
         }
     }
@@ -239,8 +238,8 @@ void Maze::render_initialize(QGraphicsView * view) {
 #ifndef HIDE_REWARDS
     // Rewards
     for(idx_t idx=0; idx<(idx_t)rewards.size(); ++idx) {
-        MazeState maze_state_1(rewards[idx][ACTIVATION_STATE]);
-        MazeState maze_state_2(rewards[idx][RECEIVE_STATE]);
+        MazeState maze_state_1((int)rewards[idx][ACTIVATION_STATE]);
+        MazeState maze_state_2((int)rewards[idx][RECEIVE_STATE]);
         double x_start   = maze_state_1.x();
         double y_start   = maze_state_1.y();
         double x_end     = maze_state_2.x();
@@ -249,10 +248,10 @@ void Maze::render_initialize(QGraphicsView * view) {
         double y_shift   = (x_end-x_start)/5;
         double x_control = (x_start+x_end)/2+x_shift;
         double y_control = (y_start+y_end)/2+y_shift;
-        QColor color(   rewards[idx][R],rewards[idx][G],rewards[idx][B]);
+        QColor color( (int)rewards[idx][R], (int)rewards[idx][G], (int)rewards[idx][B]);
         QPen   arc_pen( color,0.02,Qt::SolidLine,Qt::RoundCap );
         QPen   end_pen( color,0.02,Qt::SolidLine,Qt::RoundCap,Qt::MiterJoin );
-        QBrush brush(   color );
+        QBrush brush( color );
 
         // arc
         QPainterPath arc_path;
@@ -294,8 +293,8 @@ void Maze::render_initialize(QGraphicsView * view) {
         // text
         double mid_point_x = x_start + (x_end - x_start)/2;
         double mid_point_y = y_start + (y_end - y_start)/2;
-        size_t time_delay = rewards[idx][TIME_DELAY];
-        reward_t reward = (reward_t)(rewardIt_t::first()+(int)rewards[idx][REWARD_IDX]);
+        size_t time_delay = (size_t)rewards[idx][TIME_DELAY];
+        reward_t reward = (reward_t)rewards[idx][REWARD_IDX];
         QGraphicsTextItem * txt = scene->addText(
                 QString("t=%1,r=%2").arg(QString::number(time_delay)).arg(QString::number(reward)),
                 QFont("",12)
@@ -363,7 +362,7 @@ void Maze::perform_transition(const action_t& action) {
     if(DEBUG_LEVEL>=1) {
         DEBUG_OUT(1,"Current instance: ");
         const_instanceIt_t insIt = current_instance->it();
-        for(idx_t k_idx=0; k_idx<(idx_t)k; ++k_idx) {
+        for(idx_t k_idx=0; k_idx<(idx_t)Config::k; ++k_idx) {
             DEBUG_OUT(1,"    " << (*insIt) );
             --insIt;
         }
@@ -412,10 +411,10 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
     // check for matching reward
 //    if(instance_from[time_delay-1].state==button_state.state_idx()
 //            && state_to==smiley_state.state_idx()
-//            && reward!=max_reward ) {
+//            && reward!=reward_t::max_reward ) {
 //        return 0;
 //    } else if( ( instance_from[time_delay-1].state!=button_state.state_idx() || state_to!=smiley_state.state_idx() )
-//            && reward==max_reward ) {
+//            && reward==reward_t::max_reward ) {
 //        return 0;
 //    }
 
@@ -426,15 +425,15 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
     DEBUG_OUT(2,"    ------------------------------");
 
     // check for matching reward
-    reward_t matching_reward = min_reward;
+    reward_t matching_reward = reward_t::min_reward;
     for(idx_t idx=0; idx<(idx_t)rewards.size(); ++idx) {
-        state_t activate_state = rewards[idx][ACTIVATION_STATE];
-        state_t receive_state = rewards[idx][RECEIVE_STATE];
-        state_t state_back_then = (instance_from->const_it() - (rewards[idx][TIME_DELAY]-1))->state;
+        state_t activate_state = (state_t)rewards[idx][ACTIVATION_STATE];
+        state_t receive_state = (state_t)rewards[idx][RECEIVE_STATE];
+        state_t state_back_then = (instance_from->const_it() - ((int)rewards[idx][TIME_DELAY]-1))->state;
         state_t state_now = state_to;
-        reward_t single_reward = (reward_t)(rewardIt_t::first()+(int)rewards[idx][REWARD_IDX]);
+        reward_t single_reward = (reward_t)rewards[idx][REWARD_IDX];
         DEBUG_OUT(2,"    reward index               :" << idx);
-        DEBUG_OUT(2,"    time delay                 :" << rewards[idx][TIME_DELAY]);
+        DEBUG_OUT(2,"    time delay                 :" << (int)rewards[idx][TIME_DELAY]);
         DEBUG_OUT(2,"    activation  (target/actual):" << activate_state << "/" << state_back_then);
         DEBUG_OUT(2,"    reception   (target/actual):" << receive_state << "/" << state_now);
         DEBUG_OUT(2,"    activation type            :" << (rewards[idx][ACTIVATION_TYPE]==EACH_TIME ? "EACH_TIME" : "ON_RELEASE") );
@@ -462,8 +461,8 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
     }
 
     // crop to max reward
-    if(matching_reward>max_reward) {
-        matching_reward = max_reward;
+    if(matching_reward>reward_t::max_reward) {
+        matching_reward = reward_t::max_reward;
         DEBUG_OUT(2,"    Cropping matching reward to " << matching_reward);
     }
     if(reward!=matching_reward) {
@@ -474,10 +473,10 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
     // check for matching state
     MazeState maze_state_to( state_to );
     MazeState state_from( instance_from->state);
-    MazeState state_left( clamp(0,maze_x_size-1,state_from.x()-1),clamp(0,maze_y_size-1,state_from.y()  ));
-    MazeState state_right(clamp(0,maze_x_size-1,state_from.x()+1),clamp(0,maze_y_size-1,state_from.y()  ));
-    MazeState state_up(   clamp(0,maze_x_size-1,state_from.x()  ),clamp(0,maze_y_size-1,state_from.y()-1));
-    MazeState state_down( clamp(0,maze_x_size-1,state_from.x()  ),clamp(0,maze_y_size-1,state_from.y()+1));
+    MazeState state_left( clamp(0,Config::maze_x_size-1,state_from.x()-1),clamp(0,Config::maze_y_size-1,state_from.y()  ));
+    MazeState state_right(clamp(0,Config::maze_x_size-1,state_from.x()+1),clamp(0,Config::maze_y_size-1,state_from.y()  ));
+    MazeState state_up(   clamp(0,Config::maze_x_size-1,state_from.x()  ),clamp(0,Config::maze_y_size-1,state_from.y()-1));
+    MazeState state_down( clamp(0,Config::maze_x_size-1,state_from.x()  ),clamp(0,Config::maze_y_size-1,state_from.y()+1));
 
     // consider walls
     for(idx_t idx=0; idx<(idx_t)walls.size(); ++idx) {
@@ -534,8 +533,8 @@ void Maze::set_epsilon(const double& e) {
 
 void Maze::set_current_state(const state_t& state) {
     current_state = MazeState(state);
-    for(idx_t k_idx=0; k_idx<(idx_t)k; ++k_idx) {
-        current_instance = current_instance->append_instance(action_t::STAY, current_state.state_idx(), min_reward);
+    for(idx_t k_idx=0; k_idx<(idx_t)Config::k; ++k_idx) {
+        current_instance = current_instance->append_instance(action_t::STAY, current_state.state_idx(), reward_t::min_reward);
     }
     DEBUG_OUT(1,"Set current state to (" << current_state.x() << "," << current_state.y() << ")");
 }
@@ -543,13 +542,11 @@ void Maze::set_current_state(const state_t& state) {
 std::string Maze::get_rewards() {
     std::stringstream ss;
     for(int r_idx=0; r_idx<(int)rewards.size(); ++r_idx) {
-        rewardIt_t rewIt = rewardIt_t::first();
-        rewIt += rewards[r_idx][REWARD_IDX];
         ss << "Reward " << r_idx << std::endl;
-        ss << "    ACTIVATION_STATE : " << rewards[r_idx][ACTIVATION_STATE] << std::endl;
-        ss << "    RECEIVE_STATE    : " << rewards[r_idx][RECEIVE_STATE] << std::endl;
-        ss << "    TIME_DELAY       : " << rewards[r_idx][TIME_DELAY] << std::endl;
-        ss << "    reward           : " <<  rewIt << std::endl;
+        ss << "    ACTIVATION_STATE : " << (state_t)rewards[r_idx][ACTIVATION_STATE] << std::endl;
+        ss << "    RECEIVE_STATE    : " << (state_t)rewards[r_idx][RECEIVE_STATE] << std::endl;
+        ss << "    TIME_DELAY       : " << (int)rewards[r_idx][TIME_DELAY] << std::endl;
+        ss << "    reward           : " << (reward_t)rewards[r_idx][REWARD_IDX] << std::endl;
         ss << "    activation       : " <<
             (rewards[r_idx][ACTIVATION_TYPE]==EACH_TIME ? "EACH_TIME" : "ON_RELEASE") << std::endl;
     }
