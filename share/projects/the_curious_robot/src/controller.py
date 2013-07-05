@@ -14,6 +14,8 @@ import os
 # import numpy as np
 import orspy as ors
 
+import require_provide as rp
+
 
 class FakeController():
     """
@@ -21,7 +23,7 @@ class FakeController():
     """
     def __init__(self):
         # init the node: test_fitting
-        rospy.init_node('tcr_controller', log_level=rospy.DEBUG)
+        rospy.init_node('tcr_controller')
 
         self.world = ors.Graph()
         worldfile = os.path.join(
@@ -43,6 +45,7 @@ class FakeController():
         self.frame_id = 1
 
     def run(self):
+        rp.Provide("Controller")
         """ the controller loop """
         while not rospy.is_shutdown():
             self.step()
