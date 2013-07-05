@@ -26,7 +26,7 @@ class ObserveOOITrajActionServer:
         self.oois_sub = rospy.Subscriber('oois', msgs.Objects, self.oois_cb)
 
         # Publisher
-        self.trajectory_pub = rospy.Publisher('trajectory', msgs.Trajectory)
+        self.trajectory_pub = rospy.Publisher('ooi_trajectory', msgs.Trajectory)
         self.oois_pub = rospy.Publisher('oois', msgs.Objects)
 
         # real members
@@ -51,7 +51,7 @@ class ObserveOOITrajActionServer:
                 msg = util.create_trajectory_msg(self.ooi_id, self.trajectory)
                 self.trajectory_pub.publish(msg)
 
-                get_ooi(self.oois, self.ooi_id)['body'].X.pos = self.trajectory[-1]
+                get_ooi(self.oois, self.ooi_id)['body'].X = self.trajectory[-1]
                 msg = util.create_oois_msg(self.oois)
                 self.oois_pub.publish(msg)
 
@@ -73,7 +73,7 @@ class ObserveOOITrajActionServer:
                 if body.name != self.ooi_id:
                     continue
                 with self.trajectory_lock:
-                    self.trajectory.append(orspy.Vector(body.X.pos))
+                    self.trajectory.append(orspy.Transformation(body.X))
 
         self.send = not data.changed
 
