@@ -4,6 +4,7 @@ import roslib
 import rospy
 import the_curious_robot.msg as msgs
 import geometry_msgs.msg
+from articulation_msgs.msg import ModelMsg, TrackMsg
 
 class Gaussian():
     """
@@ -85,13 +86,34 @@ def create_oois_msg(objects):
         msg.objects.append(create_ooi_msg(obj['body'], obj['properties']))
     return msg
 
+def parse_trajectory_msg(msg):
+    trajectory = []
+    for p in msg.pos:
+        pose = ors.Transformation()
+        pose.pos.x = p.position.x
+        pose.pos.y = p.position.y
+        pose.pos.z = p.position.z
+        trajectory.append(pose)
+    return (msg.object, trajectory)
+
 def create_trajectory_msg(obj_id, pos):
     msg = msgs.Trajectory()
     for p in pos:
         pose = geometry_msgs.msg.Pose()
-        pose.position.x = p.x
-        pose.position.y = p.y
-        pose.position.z = p.z
+        pose.position.x = p.pos.x
+        pose.position.y = p.pos.y
+        pose.position.z = p.pos.z
         msg.pos.append(pose)
     msg.object = obj_id
+    return msg
+
+def create_track_msg(trajectory, model):
+    msg = TrackMsg()
+    msg.header.stamp = rospy.get_rostime()
+    msg.header.frame_id = '/'
+    msg.id = model
+
+    for t in trajectory:
+        pose = geometry_msgs.msg.Pose(t.pos, t.rot)
+        msg.pose.append(pose)
     return msg
