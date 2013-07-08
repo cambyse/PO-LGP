@@ -16,7 +16,7 @@
 
 #ifdef MT_OPENCV
 
-#include <MT/array.h>
+#include <Core/array.h>
 #include <MT/util.h>
 
 #include "nputils.h"
@@ -172,7 +172,7 @@ void np::convert(byteA& out, byteA& in, int mode)
  cvCvtColor(&incv, &outcv, mode);
 }
 
-/*! \brief KMeans clustering algorithm
+/** @brief KMeans clustering algorithm
  *
  *  Wrapper for the OpenCV implementation of KMeans.
  *
@@ -244,7 +244,7 @@ int np::kmeans
   return status;
 }
 
-/*! \brief Trains a Boosted Decision Forest
+/** @brief Trains a Boosted Decision Forest
  *
  *  For details search OpenCV docs for "CvDTrees::train".
  *
@@ -359,7 +359,7 @@ CvBoost* np::boostDTrees_train
   return boost;
 };
 
-/*! \brief Prediction with Boosted Decision Forest
+/** @brief Prediction with Boosted Decision Forest
  *
  *  For details search OpenCV docs for "CvDTrees::predict".
  *
@@ -444,7 +444,7 @@ int np::boostDTrees_predict
   return 0;
 }
 
-/*! \brief Remaps image pixels and interpolates
+/** @brief Remaps image pixels and interpolates
  *
  *  For details search OpenCV docs for "cvRemap()".
  *
@@ -472,7 +472,7 @@ int np::remap(byteA& rimg, const byteA& img, const floatA& mapx, const floatA& m
   return 0;
 }
 
-/*! \brief Tracks colored ball
+/** @brief Tracks colored ball
  *
  *  Tracks colored ball by thresholding HSV space of input image between 
  *  min_{h,s,v} and max_{h,s,v}, followed by a Hough Transform to detect 
@@ -624,7 +624,7 @@ void np::track_ball
 //  cvReleaseMemStorage(&storage);
 };
 
-/*! \brief Tracks red ball
+/** @brief Tracks red ball
  *
  *  Tracks any reasonably red ball by thresholding HSV space.
  *
@@ -643,7 +643,7 @@ void np::track_red_ball(floatA& centers, floatA& r, byteA& image, bool is_hsv, b
   track_ball(centers, r, image, 0, 120, 120, 30, 256, 256, is_hsv, false);
 }
 
-/*! \brief Tracks green ball
+/** @brief Tracks green ball
  *
  *  Tracks any reasonably green ball by thresholding HSV space.
  *
@@ -658,7 +658,7 @@ void np::track_red_ball(floatA& centers, floatA& r, byteA& image, bool is_hsv, b
 void np::track_green_ball(floatA& centers, floatA& r, byteA& image, bool is_hsv, bool draw)
 {track_ball(centers, r, image, 60, 0, 0, 90, 256, 256, is_hsv, false);}
 
-/*! \brief Tracks blue ball
+/** @brief Tracks blue ball
  *
  *  Tracks any reasonably blue ball by thresholding HSV space.
  *
@@ -673,7 +673,7 @@ void np::track_green_ball(floatA& centers, floatA& r, byteA& image, bool is_hsv,
 void np::track_blue_ball(floatA& centers, floatA& r, byteA& image, bool is_hsv, bool draw)
 {track_ball(centers, r, image, 120, 120, 120, 150, 256, 256, is_hsv, false);}
 
-/*! \brief Tracks a red, a green, and a blue ball
+/** @brief Tracks a red, a green, and a blue ball
  *
  *  Tracks one instance of each a red, a green, and a blue ball.
  *
@@ -819,7 +819,7 @@ bool np::track_RGB_balls
 };
 
 
-/*! \brief Detects the chessboard corners
+/** @brief Detects the chessboard corners
  *
  *  Detects the inner (num_x-1)x(num_y-1) corners of a chessboard pattern
  *  with subpixel accuracy.

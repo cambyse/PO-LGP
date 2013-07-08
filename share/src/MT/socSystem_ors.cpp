@@ -24,10 +24,10 @@
  * @{
  */
 //===========================================================================
-#include "ors.h"
-#include "opengl.h"
+#include <Ors/ors.h>
+#include <Gui/opengl.h>
 #include "socSystem_ors.h"
-#include "plot.h"
+#include <Gui/plot.h>
 
 //===========================================================================
 //
@@ -212,7 +212,7 @@ void soc::SocSystem_Ors::initStandardBenchmark(uint rand_seed){
     s->cont=true;
     if(k){
       j=new ors::Joint(*ors, ors->bodies(k-1), ors->bodies(k));
-      j->type = ors::hingeJT;
+      j->type = ors::JT_hingeX;
       j->Q.setText("<d(45 1 0 0)>");
       if(k&1){ //odd -> rotation around z
         j->A.setText(STRING("<t(0 0 " <<1./K <<") d(-90 0 1 0)>"));
@@ -352,7 +352,7 @@ void soc::SocSystem_Ors::setTaskVariables(const TaskVariableList& _CVlist){
   for_list(i, v, vars) v->updateState(*ors);
 }
 
-//! report on some
+/// report on some
 void soc::SocSystem_Ors::reportOnState(ostream& os){
   os <<"OrsSocImplementat - state report:\n";
   os <<"** control variables:" <<endl;
@@ -361,7 +361,7 @@ void soc::SocSystem_Ors::reportOnState(ostream& os){
   ors->reportProxies(&os);
 }
 
-//! DZ: write trajectory of task variable into the file
+/// DZ: write trajectory of task variable into the file
 void soc::SocSystem_Ors::recordTrajectory(const arr& q, const char *variable, const char *file){
   uint i, k, m, T=get_T();
   int ind = -1;

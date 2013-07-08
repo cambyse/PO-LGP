@@ -1,0 +1,109 @@
+
+body r_gripper_palm_link {
+	mass=0.58007
+	rel=<T t(0 0 0) E(0 0 0)>
+	type=3
+	mesh="pr2_meshes/gripper_v0/gripper_palm.stl"
+}
+
+body r_gripper_led_frame {
+}
+
+body r_gripper_motor_accelerometer_link {
+	mass=0.001
+	rel=<T t(0 0 0) E(0 0 0)>
+	type=0
+	size=[0.001 0.001 0.001 0]
+}
+
+body r_gripper_tool_frame {
+}
+
+body r_gripper_motor_slider_link {
+	mass=0.01
+}
+
+body r_gripper_motor_screw_link {
+	mass=0.01
+}
+
+body r_gripper_l_finger_link {
+	mass=0.17126
+	rel=<T t(0 0 0) E(0 0 0)>
+	type=3
+	mesh="pr2_meshes/gripper_v0/l_finger.stl"
+}
+
+body r_gripper_r_finger_link {
+	mass=0.17389
+	rel=<T t(0 0 0) E(3.14159265359 0 0)>
+	type=3
+	mesh="pr2_meshes/gripper_v0/l_finger.stl"
+}
+
+body r_gripper_l_finger_tip_link {
+	mass=0.04419
+	rel=<T t(0 0 0) E(0 0 0)>
+	type=3
+	mesh="pr2_meshes/gripper_v0/l_finger_tip.stl"
+}
+
+body r_gripper_r_finger_tip_link {
+	mass=0.04419
+	rel=<T t(0 0 0) E(3.14159265359 0 0)>
+	type=3
+	mesh="pr2_meshes/gripper_v0/l_finger_tip.stl"
+}
+
+body r_gripper_l_finger_tip_frame {
+}
+
+
+joint r_gripper_led_joint (r_gripper_palm_link r_gripper_led_frame) {
+	type=10
+	A=<T t(0.0513 0.0 .0244)>
+}
+
+joint r_gripper_motor_accelerometer_joint (r_gripper_palm_link r_gripper_motor_accelerometer_link) {
+	type=10
+	A=<T t(0 0 0) E(0 0 0)>
+}
+
+joint r_gripper_tool_joint (r_gripper_palm_link r_gripper_tool_frame) {
+	type=10
+	A=<T t(0.18 0 0) E(0 0 0)>
+}
+
+joint r_gripper_motor_slider_joint (r_gripper_palm_link r_gripper_motor_slider_link) {
+	type=3
+	A=<T t(0.16828 0 0) E(0 0 0)>
+}
+
+joint r_gripper_motor_screw_joint (r_gripper_motor_slider_link r_gripper_motor_screw_link) {
+	type=1
+	A=<T t(0.0 0 0) E(0 0 0)>
+}
+
+joint r_gripper_l_finger_joint (r_gripper_palm_link r_gripper_l_finger_link) {
+	type=2
+	A=<T t(0.07691 0.01 0) E(0 0 0)>
+}
+
+joint r_gripper_r_finger_joint (r_gripper_palm_link r_gripper_r_finger_link) {
+	type=2
+	A=<T t(0.07691 -0.01 0) E(0 0 0)>
+}
+
+joint r_gripper_l_finger_tip_joint (r_gripper_l_finger_link r_gripper_l_finger_tip_link) {
+	A=<T t(0.09137 0.00495 0) E(0 0 0)>
+}
+
+joint r_gripper_r_finger_tip_joint (r_gripper_r_finger_link r_gripper_r_finger_tip_link) {
+	type=2
+	A=<T t(0.09137 -0.00495 0) E(0 0 0)>
+}
+
+joint r_gripper_joint (r_gripper_r_finger_tip_link r_gripper_l_finger_tip_frame) {
+	type=4
+}
+

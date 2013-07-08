@@ -1,7 +1,7 @@
 #ifndef PARTICLE_FILTER_H_
 #define PARTICLE_FILTER_H_
-#include <MT/array.h>
-#include <MT/array_t.cxx>
+#include <Core/array.h>
+#include <MT/array_t.h>
 #include <biros/biros.h>
 
 class Particles : public Variable {

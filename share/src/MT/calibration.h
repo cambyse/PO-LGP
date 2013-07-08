@@ -20,7 +20,7 @@
 #ifndef MT_calibration_h
 #define MT_calibration_h
 
-#include "array.h"
+#include <Core/array.h>
 
 void decomposeCameraProjectionMatrix(arr& K, arr& R, arr& t, const arr& P, bool verbose);
 double projectionError(const arr& P, const arr& x, const arr& X);

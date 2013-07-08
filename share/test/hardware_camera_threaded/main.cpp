@@ -1,6 +1,6 @@
 #include <perception/perception.h>
 #include <hardware/uvccamera.h>
-#include <MT/opengl.h>
+#include <Gui/opengl.h>
 
 int main(int argn,char** argv){
   Image imgL("CameraL"), imgR("CameraR");

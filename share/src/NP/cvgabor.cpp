@@ -110,7 +110,7 @@ cvReleaseMat( &Imag );
 
 
 
-/*!
+/**
     \fn CvGabor::CvGabor(int iMu, int iNu, double dSigma)
 Construct a gabor
 
@@ -131,7 +131,7 @@ CvGabor::CvGabor(int iMu, int iNu, double dSigma)
 }
 
 
-/*!
+/**
     \fn CvGabor::CvGabor(int iMu, int iNu, double dSigma, double dF)
 Construct a gabor
 
@@ -154,7 +154,7 @@ Create a gabor with a orientation iMu*PI/8, a scale iNu, a sigma value dSigma, a
 }
 
 
-/*!
+/**
     \fn CvGabor::CvGabor(double dPhi, int iNu)
 Construct a gabor
 
@@ -175,7 +175,7 @@ Create a gabor with a orientation dPhi, and with a scale iNu. The sigma (Sigma) 
 }
 
 
-/*!
+/**
     \fn CvGabor::CvGabor(double dPhi, int iNu, double dSigma)
 Construct a gabor
 
@@ -197,7 +197,7 @@ Create a gabor with a orientation dPhi, a scale iNu, and a sigma value dSigma. T
 }
 
 
-/*!
+/**
     \fn CvGabor::CvGabor(double dPhi, int iNu, double dSigma, double dF)
 Construct a gabor
 
@@ -218,7 +218,7 @@ Create a gabor with a orientation dPhi, a scale iNu, a sigma value dSigma, and a
    Init(dPhi, iNu, dSigma,dF);
 }
 
-/*!
+/**
     \fn CvGabor::IsInit()
 Determine the gabor is initilised or not
 
@@ -236,7 +236,7 @@ bool CvGabor::IsInit()
     return bInitialised;
 }
 
-/*!
+/**
     \fn CvGabor::mask_width()
 Give out the width of the mask
 
@@ -269,7 +269,7 @@ long CvGabor::mask_width()
 }
 
 
-/*!
+/**
     \fn CvGabor::creat_kernel()
 Create gabor kernel
 
@@ -327,7 +327,7 @@ void CvGabor::creat_kernel()
 }
 
 
-/*!
+/**
     \fn CvGabor::get_image(int Type)
 Get the speific type of image of Gabor
 
@@ -395,10 +395,10 @@ IplImage* CvGabor::get_image(int Type)
            }
            break; 
         case 3:  //Magnitude
-           ///@todo  
+           /// @todo  
            break;
         case 4:  //Phase
-          ///@todo
+          /// @todo
            break;
     }
    
@@ -416,7 +416,7 @@ IplImage* CvGabor::get_image(int Type)
 }
 
 
-/*!
+/**
     \fn CvGabor::IsKernelCreate()
 Determine the gabor kernel is created or not
 
@@ -435,7 +435,7 @@ bool CvGabor::IsKernelCreate()
 }
 
 
-/*!
+/**
     \fn CvGabor::get_mask_width()
 Reads the width of Mask
 
@@ -451,7 +451,7 @@ long CvGabor::get_mask_width()
 }
 
 
-/*!
+/**
     \fn CvGabor::Init(int iMu, int iNu, double dSigma, double dF)
 Initilize the.gabor
 
@@ -486,7 +486,7 @@ void CvGabor::Init(int iMu, int iNu, double dSigma, double dF)
     creat_kernel();  
 }
 
-/*!
+/**
     \fn CvGabor::Init(double dPhi, int iNu, double dSigma, double dF)
 Initilize the.gabor
 
@@ -527,7 +527,7 @@ void CvGabor::Init(double dPhi, int iNu, double dSigma, double dF)
 
 
 
-/*!
+/**
     \fn CvGabor::get_matrix(int Type)
 Get a matrix by the type of kernel
 
@@ -563,7 +563,7 @@ CvMat* CvGabor::get_matrix(int Type)
 
 
 
-/*!
+/**
     \fn CvGabor::output_file(const char *filename, Gan_ImageFileFormat file_format, int Type)
 Writes a gabor kernel as an image file.
 
@@ -596,7 +596,7 @@ void CvGabor::output_file(const char *filename, int Type)
 
 
 
-/*!
+/**
     \fn CvGabor::show(int Type)
  */
 void CvGabor::show(int Type)
@@ -619,7 +619,7 @@ void CvGabor::show(int Type)
 
 
 
-/*!
+/**
     \fn CvGabor::conv_img_a(IplImage *src, IplImage *dst, int Type)
  */
 void CvGabor::conv_img_a(IplImage *src, IplImage *dst, int Type)
@@ -710,7 +710,7 @@ void CvGabor::conv_img_a(IplImage *src, IplImage *dst, int Type)
 }
 
 
-/*!
+/**
     \fn CvGabor::CvGabor(int iMu, int iNu)
  */
  CvGabor::CvGabor(int iMu, int iNu)
@@ -721,7 +721,7 @@ void CvGabor::conv_img_a(IplImage *src, IplImage *dst, int Type)
 }
 
 
-/*!
+/**
     \fn CvGabor::normalize( const CvArr* src, CvArr* dst, double a, double b, int norm_type, const CvArr* mask )
  */
 void CvGabor::normalize( const CvArr* src, CvArr* dst, double a, double b, int norm_type, const CvArr* mask )
@@ -769,7 +769,7 @@ void CvGabor::normalize( const CvArr* src, CvArr* dst, double a, double b, int n
 }
 
 
-/*!
+/**
     \fn CvGabor::conv_img(IplImage *src, IplImage *dst, int Type)
  */
 void CvGabor::conv_img(IplImage *src, IplImage *dst, int Type)

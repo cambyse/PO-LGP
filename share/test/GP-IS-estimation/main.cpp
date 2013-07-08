@@ -9,9 +9,9 @@
  */
 
 
-#include <MT/ors.h>
+#include <Ors/ors.h>
 #include <MT/gaussianProcess.h>
-#include <MT/opengl.h>
+#include <Gui/opengl.h>
 #include <SD/ISF_GP.h>
 #include <SD/utils.h>
 #include <SD/surface_helpers.h>

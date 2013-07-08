@@ -20,7 +20,7 @@
 #include <opencv/cv.h>
 #include <surflib.h>
 
-/*! \brief Extract SURF keypoints + descriptors from image
+/** @brief Extract SURF keypoints + descriptors from image
  *
  *  Description of columns of the SURF keypoint matrix:
  *    1: x-coordinate
@@ -97,7 +97,7 @@ void np::wrappers::surf
   cvReleaseImageHeader(&image_cv);
 }
 
-/*! \brief Compute SURF descriptors for given set of points
+/** @brief Compute SURF descriptors for given set of points
  *
  *  Computes SURF descriptors for any set of points. No keypoints will be
  *  extracted.

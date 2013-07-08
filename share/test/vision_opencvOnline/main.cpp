@@ -2,8 +2,8 @@
 
 #include <signal.h>
 
-#include <MT/ors.h>
-#include <MT/opengl.h>
+#include <Ors/ors.h>
+#include <Gui/opengl.h>
 #include <MT/BinaryBP.h>
 #include <MT/vision.h>
 

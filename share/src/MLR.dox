@@ -57,6 +57,13 @@ Here is a overview of the mlr project structure:
 -# if it's useful put it under share/USER/. Everybody can use it but USER is still responsible for it.
 -# move packages that are useful and a coherent unit to share/PACKAGE. Everybody owns it.
 
+@subsection dev_principal general principle when developing stuff
+We have a three staged development process:
+-# develop your code isolated under usr/USER
+-# once it works put your code under share/USER, then it can be used by everyone.
+   USER is still responsible for the code.
+-# useful packages can be extracted to share/PACKAGE.
+   Then they belong to everybody.
 
 
 @section doxygen Documentation
@@ -101,7 +108,7 @@ mlr offers quite a few useful features:
 
 
 @subsection misc_hardware Guide to the robot hardware (Marc)
-This is for the Schunk arm in Berlin.
+@note This is only valid for the Schunk arm.
 
 - Startup hardware
   - turn on robot
@@ -192,6 +199,12 @@ Machine Learning methods (as introduced in the ML lecture). Ask Marc.
 - libPRADA, a library for relational planning and rule learning: http://userpage.fu-berlin.de/tlang/prada/
 
 
+@subsection misc_coding coding utilities
+
+- String class
+- Parameters read from cmd line or config file
+- plotting in opengl & gnuplot
+- opengl using freeglut, fltk or qt
 
 
 */

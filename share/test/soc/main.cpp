@@ -1,8 +1,8 @@
 #include <MT/socNew.h>
-#include <MT/ors.h>
+#include <Ors/ors.h>
 #include <MT/soc_orsSystem.h> //socSystem_ors.h>
-#include <MT/opengl.h>
-#include <MT/util.h>
+#include <Gui/opengl.h>
+#include <Core/util.h>
 #include <MT/aico.h>
 
 const char* USAGE="usage: ./x.exe -orsfile test.ors -dynamic 1 -Hrate 1e-0";

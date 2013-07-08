@@ -1,5 +1,5 @@
-#include <MT/array.h>
-#include <MT/ors.h>
+#include <Core/array.h>
+#include <Ors/ors.h>
 
 #include <motion/motion.h>
 

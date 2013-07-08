@@ -46,8 +46,8 @@ arr GetRelJacobian(ors::Shape* a,ors::Shape* b,ors::Graph * G){
 	uint k;
 	pi = a->body->X.pos + a->body->X.rot * a->rel.pos;
 	pj = b->body->X.pos + b->body->X.rot * b->rel.pos;
-	G->jacobian(Ji,a->body->index,&a->rel);
-	G->jacobian(Jj,b->body->index,&b->rel);
+	G->jacobianPos(Ji,a->body->index,&a->rel);
+	G->jacobianPos(Jj,b->body->index,&b->rel);
 	G->jacobianR(JRj,b->body->index);
 	J.resize(3,Jj.d1);
 	for(k=0;k<Jj.d1;k++){

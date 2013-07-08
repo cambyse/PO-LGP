@@ -1,32 +1,34 @@
-#include <biros/biros.h>
+#include <system/engine.h>
 #include <views/views.h>
-#include <MT/ors.h>
+#include <Ors/ors.h>
 #include <MT/gtk.h>
 #include <gtk/gtk.h>
+
 
 struct ExampleVar:Variable {
   FIELD(int, i);
   FIELD(byteA, rgb);
   FIELD(ors::Mesh, mesh);
-  ExampleVar():Variable("ExampleVar") { reg_i(); reg_rgb(); reg_mesh(); }
+  ExampleVar():Variable("ExampleVar") { } // reg_i(); reg_rgb(); reg_mesh(); }
 };
 
 
 int main(int argn,char** argv) {
   MT::initCmdLine(argn, argv);
-  
-  dumpViews(); //before anything has been done!
+
+  cout <<registry() <<endl;
+
   //b::openInsideOut();
-  biros();
+  engine();
   gtkCheckInitialized();
   
   ExampleVar v;
 
-  biros().dump();
+  //biros().dump();
 
-  new InsideOut();                 //create an explicit view
+  //new InsideOut();                 //create an explicit view
   View *v2 = new MeshView(v.mesh); //create an explicit view
-  View *v0 = newView<GenericTextView_FieldInfo>(v.get_field(0));  //try to use given template as view
+  //View *v0 = newView<GenericTextView_FieldInfo>(v.get_field(0));  //try to use given template as view
   View *v1 = newView(v.rgb);       //find a view from the list
 
   //set some values for the variables
@@ -50,7 +52,7 @@ int main(int argn,char** argv) {
   gtk_container_add(GTK_CONTAINER(win), box);
   gtkUnlock();
   
-  View *v4 = newView<GenericTextView_FieldInfo>(v.get_field(0), box);
+  //View *v4 = newView<GenericTextView_FieldInfo>(v.get_field(0), box);
   View *v5 = newView(v.rgb, box);
   View *v6 = new MeshView(v.mesh, &v.rwlock, box);
   

@@ -1,4 +1,4 @@
-//#include<MT/image.h>
+//#include <MT/image.h>
 
 #if 0
 struct CopyStruct{

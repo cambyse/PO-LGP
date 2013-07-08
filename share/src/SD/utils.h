@@ -32,9 +32,4 @@ unsigned long lgp2(unsigned long a);
 /* least greater than A or equal power of 2 */
 unsigned long lgep2(unsigned long a);
 
-#ifdef MT_IMPLEMENTATION
-# include "utils.cpp"
-#endif
-
-
 #endif// header ifdef

@@ -1,9 +1,6 @@
-#include <MT/util.h>
-#include <MT/optimization.h>
-#include "exampleProblem.h"
-#include <MT/soc_exampleProblems.h>
+#include <Core/util.h>
 #include <MT/soc_orsSystem.h>
-#include <MT/opengl.h>
+#include <Gui/opengl.h>
 
 int main(int argn,char** argv){
   MT::initCmdLine(argn,argv);

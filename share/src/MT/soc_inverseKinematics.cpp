@@ -78,7 +78,7 @@ void soc::bayesianIKControl2(SocSystemAbstraction& sys,
 }
 
 
-/*! \brief compute a single control step from current state to target of time t.
+/** @brief compute a single control step from current state to target of time t.
     x=output, x_1=state at time t-1 */
 void soc::bayesianDynamicControl(SocSystemAbstraction& sys, arr& x, const arr& x_1, uint t, arr *v, arr *Vinv){
   CHECK(sys.dynamic, "assumed dynamic SOC abstraction");

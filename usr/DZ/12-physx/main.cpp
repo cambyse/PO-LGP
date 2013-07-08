@@ -3,7 +3,7 @@
 #include <MT/opengl.h>
 #include <MT/ors.h>     
 #include <MT/plot.h>    
-#include <MT/array.h> 
+#include <Core/array.h> 
 #include <MT/ors_physx.h>
 
 #define DMITRY
@@ -160,7 +160,7 @@ void problem4(){
     uint i;
  /*
     for_list(i,jj,ors.joints) { 
-       jj->type  = ors::fixedJT; 
+       jj->type  = ors::JT_fixed; 
   }
    */
     for_list(i,bb,ors.bodies){

@@ -1,7 +1,7 @@
 #ifndef SD_isf_gp_h
 #define SD_isf_gp_h
 
-#include <MT/array.h>
+#include <Core/array.h>
 #include <MT/gaussianProcess.h>
 
 /** type of saling of gaussian process */

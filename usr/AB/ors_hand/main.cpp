@@ -172,8 +172,8 @@ void testHand() {
             // Tracking the finger tips
             for(uint N=0;N<num_fings;N++) {
                 // finds current points
-                G.kinematics(y,fid_to_bid[N]);
-                G.jacobian(J,fid_to_bid[N]);
+                G.kinematicsPos(y,fid_to_bid[N]);
+                G.jacobianPos(J,fid_to_bid[N]);
                 G.kinematicsVec(yR,fid_to_bid[N],&morthoV);
                 G.jacobianVec(JR,fid_to_bid[N],&morthoV);
 
@@ -195,7 +195,7 @@ void testHand() {
 
 #ifdef LOSS_ORTHO_POSITION
                 // visualize sensor orthogonal points
-                sortho=getRotationT(T_model_set*T_set_track[N])*-VEC_z;
+                sortho=getRotationT(T_model_set*T_set_track[N])*-Vector_z;
                 bSorthoP->X.pos=Y[N]+.05*sortho;
                 // visualize model orthogonal points
                 bMorthoP->X.pos=y+yR;
@@ -207,7 +207,7 @@ void testHand() {
 
 #ifdef LOSS_ORTHO_ALIGN_ANY
                 // visualize sensor orthogonal points
-                sortho=getRotationT(T_model_set*T_set_track[N])*-VEC_z;
+                sortho=getRotationT(T_model_set*T_set_track[N])*-Vector_z;
                 bSorthoV->X.setZero();
                 bSorthoV->X.appendTransformation(getRotationT(T_model_set*T_set_track[N]));
                 bSorthoV->X.pos=Y[N]+(.05*sortho)*.5;

@@ -132,7 +132,7 @@ int QIT_NUMBER = 4;
     rope2.append( ARRAY(-0.1,-0.27*i, 1.85));
     rope1.append( ARRAY(-0.1-0.1*i,-0.28*i, 2.15-0.1*i));
 
-    col->ors->jacobian(J,11,NULL);
+    col->ors->jacobianPos(J,11,NULL);
     //points.append( ARRAY(0.,0., 0.1));
   
     points.append( ARRAY(J(0,i-1),J(1,i-1),J(2,i-1 )));

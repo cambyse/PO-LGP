@@ -2,7 +2,7 @@
 #define _CELL_VIEWER_H_
 
 #include <biros/biros.h>
-#include <MT/array.h>
+#include <Core/array.h>
 
 class Cell;
 

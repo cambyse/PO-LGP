@@ -1,0 +1,11 @@
+
+This directory is ONLY for sources that we maintain!
+
+When linking to a proper external library, which is properly
+maintained, then create an install script (template: PHYSX).
+
+This directory only contains sources by libs or source code, developed
+usually by other researchers, which are not properly maintained and
+which we therefore totally reorganize to be aligned with our make
+system.
+

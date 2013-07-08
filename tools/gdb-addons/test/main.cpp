@@ -1,4 +1,4 @@
-#include <MT/array.h>
+#include <Core/array.h>
 
 int main(int argc, const char** argv) {
   arr testarray;

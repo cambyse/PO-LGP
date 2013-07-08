@@ -18,8 +18,8 @@
 
 
 
-/** \file aico.h
-    \brief Approximate Inference Control */
+/** @file aico.h
+    @brief Approximate Inference Control */
 
 #ifndef MT_aico_h
 #define MT_aico_h
@@ -28,7 +28,7 @@
 
 //#define ControlledSystem soc::SocSystemAbstraction
 
-/** \brief Apprioximate Inference Control */
+/** @brief Apprioximate Inference Control */
 struct AICO {
   struct sAICO *self;
   
@@ -37,7 +37,7 @@ struct AICO {
   ~AICO();
 
   //initialization
-  void init(ControlledSystem& sys); //!< reads parameters from cfg file
+  void init(ControlledSystem& sys); ///< reads parameters from cfg file
   void init_messages();
   void init_trajectory(const arr& x_init);
   void prepare_for_changed_task();

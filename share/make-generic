@@ -6,8 +6,7 @@
 
 .SECONDARY:
 
-BASE := $(shell cd $(BASE);pwd -L)
-LIBPATH = $(BASE)/extern
+#BASE := $(shell cd $(BASE);pwd -L)
 ifndef MLR_LIBPATH
 MLR_LIBPATH = /home/lib
 endif
@@ -24,7 +23,7 @@ ARCH = $(shell uname -m)
 # load user options from the local make-config
 #
 ################################################################################
-include $(BASE)/make-config
+-include $(BASE)/make-config
 
 
 ################################################################################
@@ -52,7 +51,7 @@ OPTIM = debug#(leave no space!)
 endif
 
 ifeq ($(OPTIM),debug)
-CXXFLAGS := -g -Wall $(CXXFLAGS)
+CXXFLAGS := -g -Wall $(CXXFLAGS)#-Wno-invalid-offsetof
 endif
 ifeq ($(OPTIM),fast_debug)
 CXXFLAGS := -g -O3 -Wall $(CXXFLAGS)
@@ -73,6 +72,8 @@ endif
 ifeq ($(OPTIM),callgrind)
 CXXFLAGS := -O3 -g -Wall -DMT_NOCHECK -fno-inline $(CXXFLAGS)
 endif
+
+CXXFLAGS += -fPIC
 
 
 ################################################################################
@@ -198,6 +199,10 @@ LIBS += -lcudart -lcublas -lcutil
 endif
 endif
 
+ifeq ($(GTEST),1)
+LIBS += -lgtest
+endif
+
 ifeq ($(SCHUNK),1)
 CXXFLAGS += -DMT_SCHUNK -DWITH_ESD_CAN=1 -DOSNAME_LINUX=1 -D__LINUX__
 CPATH   := $(CPATH):$(MLR_LIBPATH)/schunkSDH-11-05-11/include:$(MLR_LIBPATH)/schunkLWA/include
@@ -217,19 +222,25 @@ endif
 
 ifeq ($(GTKGL),1)
 CXXFLAGS  += -DMT_GTKGL
-LIBS += -lglut -lGLU -lGL -lX11
+GL := 1
 GTK := 1
 endif
 
 ifeq ($(FLTK),1)
 CXXFLAGS  += -DMT_FLTK
-LIBS += -lfltk -lfltk_gl -lGLU -lGL
+LIBS += -lfltk -lfltk_gl
+GL := 1
 endif
 
 ifeq ($(QTGL),1)
 CXXFLAGS  += -DMT_QTGL -DMT_QT -DQT_DLL# -DNOUNICODE
-LIBS += -lglut -lGLU -lGL -lX11
+GL := 1
 QT := 1
+endif
+
+ifeq ($(GL),1)
+CXXFLAGS  += -DMT_GL
+LIBS += -lglut -lGLU -lGL -lX11
 endif
 
 ifeq ($(QT),1)
@@ -268,7 +279,6 @@ CXXFLAGS  += -DMT_SWIFT
 CPATH	  := $(CPATH):$(LIBPATH)/SWIFT++_1.2/include
 LIBS += -lSWIFT++
 QHULL := 1
-ANN := 1
 endif
 
 ifeq ($(LEWINER),1)
@@ -296,6 +306,9 @@ endif
 ifeq ($(QHULL),1)
 CXXFLAGS  += -DMT_QHULL
 LIBS      += -lqhull
+ifeq ($(ARCH_LINUX),1)
+CXXFLAGS += -DARCH_LINUX
+endif
 endif
 
 ifeq ($(OpenML),1)
@@ -369,11 +382,6 @@ ifeq ($(OPENCV),1)
     %CPATH := $(CPATH):$(IFLAGS:\-I%=\:%\:) % is it possible to add the includes to the CPATH?
     LIBS      += `pkg-config --libs opencv`
   endif
-endif
-
-# newer qhull version?
-ifeq ($(ARCH_LINUX),1)
-CXXFLAGS += -DARCH_LINUX
 endif
 
 ifeq ($(HSL),1)
@@ -499,40 +507,9 @@ endif
 ################################################################################
 # (a tag like `buildAndLink_NILS = 1' in a Makefile triggers make to also build NILS and then link to is)
 
-#ifeq ($(buildAndLink_NILS),1)
-#BUILDS += buildComponent/NP
-#LIBS += -lNP -ldc1394
-#endif
-
-ifeq ($(buildAndLink_NIKOLAY),1)
-BUILDS += buildComponent/NJ
-LIBS += -lNJ
-endif
-
-ifeq ($(buildAndLink_RELATIONAL),1)
-BUILDS += buildComponent/relational
-LIBS += -lrelational
-endif
-
-ifeq ($(buildAndLink_STANIMIR),1)
-BUILDS += buildComponent/SD
-LIBS += -lSD
-endif
-
-ifeq ($(buildAndLink_DMITRY),1)
-BUILDS += buildComponent/DZ
-LIBS += -lDZ
-endif
-
-ifeq ($(buildAndLink_JOHANNES),1)
-BUILDS += buildComponent/JK
-LinuxLibs += -lJK
-endif
-
-ifeq ($(buildAndLink_MTLIB),1)
-BUILDS += buildComponent/MT
-LIBS += -lMT
-endif
+BUILDS := $(DEPEND:%=$(BASE)/lib/lib%.so) $(BUILDS)
+LIBS := $(DEPEND:%=-l%) $(LIBS)
+CXXFLAGS := $(DEPEND:%=-DMT_%) $(CXXFLAGS)
 
 
 ################################################################################
@@ -576,6 +553,7 @@ info: force
 	@echo "  LIBPATH =" "$(LIBPATH)"
 	@echo "  EXTERNALS =" "$(EXTERNALS)"
 	@echo "  CXX =" "$(CXX)"
+	@echo "  OPTIM =" "$(OPTIM)"
 	@echo "  CXXFLAGS =" "$(CXXFLAGS)"
 	@echo "  LINK =" "$(LINK)"
 	@echo "  LDFLAGS =" "$(LDFLAGS)"
@@ -589,6 +567,7 @@ info: force
 	@echo "  LIBS =" "$(LIBS)"
 	@echo "  PREOBJS =" "$(PREOBJS)"
 	@echo "  OUTPUT =" "$(OUTPUT)"
+	@echo "  DEPEND =" "$(DEPEND)"
 	@echo "  BUILDS =" "$(BUILDS)"
 	@echo "  MAKEMODE =" "$(MAKEMODE)"
 	@echo
@@ -610,21 +589,18 @@ all: default
 #
 ################################################################################
 
-%.exe: $(PREOBJS) $(OBJS) $(BUILDS)
+%.exe: $(PREOBJS) $(BUILDS) $(OBJS)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
-ifeq ($(compileWithIncludeAll),1)
-%.so: $(PREOBJS) includeAll.o $(BUILDS)
-	$(LINK) $(LDFLAGS) -o $@ includeAll.o $(LIBS) $(SHAREFLAG)
-else
-%.so: $(PREOBJS) $(OBJS) $(BUILDS)
+## this RULE only applies to $(NAME).so
+## other %.so files are created by calling make in their directory
+$(BASE)/lib/$(NAME).so: $(PREOBJS) $(BUILDS) $(OBJS)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) $(SHAREFLAG)
-endif
 
-%.lib: $(PREOBJS) $(OBJS) $(BUILDS)
+%.lib: $(PREOBJS) $(BUILDS) $(OBJS)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) -static ### $(SHAREFLAG)
 
-%.a: $(PREOBJS) $(OBJS) $(BUILDS)
+%.a: $(PREOBJS) $(BUILDS) $(OBJS)
 	ar -crvs $@ $(OBJS)
 
 %.mexglx: $(PREOBJS) $(OBJS)
@@ -646,7 +622,7 @@ endif
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 %.o: %.c
-	$(CC) $(CXXFLAGS) -o $@ -c $<
+	$(CC) $(CFLAGS) -o $@ -c $<
 
 %.obj: %.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
@@ -672,13 +648,9 @@ endif
 %_$(SYS).moccpp: %.h force
 	cd $(*D); $(MOC) -o $(*F)_$(SYS).moccpp $(<F)
 
-## build a local component
-buildComponent/%:
-	$(MAKE) -C $(BASE)/src/$*
-
 ## generate the make-config from the default make-config.default
-$(BASE)/make-config:
-	cp $(BASE)/make-config.default $(BASE)/make-config
+#$(BASE)/make-config:
+#	cp $(BASE)/make-config.default $(BASE)/make-config
 
 ## generate a make dependency file
 generate_Makefile.dep: $(OBJS:%.o=%.cpp)
@@ -689,15 +661,41 @@ includeAll.cxx: force
 
 ################################################################################
 #
+# rules
+#
+################################################################################
+
+$(BASE)/lib/libextern_%.so: $(BASE)/src/extern/%
+	@echo "                                                 ***** build " $*
+	@$(MAKE) -C $(BASE)/src/extern/$* --no-print-directory
+
+$(BASE)/lib/lib%.so: $(BASE)/src/%
+	@echo "                                                 ***** build " $*
+	@$(MAKE) -C $(BASE)/src/$* --no-print-directory
+
+
+################################################################################
+#
 # meta rules -- for calling make in other directories
 #
 ################################################################################
 
-makePath/%::
-	$(MAKE) -C $*
+#.NOTPARALLEL: makePath/*
 
-cleanPath/%::
-	$(MAKE) clean -C $*
+makePath/%: %
+	@echo "                                                  ***** make " $*
+	@$(MAKE) -C $* --no-print-directory
+
+cleanPath/%: %
+	@echo "                                                 ***** clean " $*
+	@-rm -f $*/Makefile.dep
+	@$(MAKE) -C $* clean --no-print-directory
+
+dependPath/%: %
+	@echo "                                                ***** depend " $*
+	@-rm -f $*/Makefile.dep
+	@$(MAKE) -C $* depend --no-print-directory
+
 
 makeSubpaths/%::
 	-@find -L $* -maxdepth 1 -follow -type d -not -name '$*' -not -name 'SHARE' -exec $(MAKE) -C {} \;

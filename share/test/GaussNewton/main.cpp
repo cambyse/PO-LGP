@@ -1,5 +1,5 @@
-#include <MT/array.h>
-#include <MT/util.h>
+#include <Core/array.h>
+#include <Core/util.h>
 #include <MT/optimization.h>
 
 struct ExampleFunction:public VectorFunction{

@@ -1,7 +1,7 @@
 #ifndef DATAREADER_H_
 #define DATAREADER_H_
 
-#include <MT/array.h>
+#include <Core/array.h>
 #include <string>
 
 class sDataReader;

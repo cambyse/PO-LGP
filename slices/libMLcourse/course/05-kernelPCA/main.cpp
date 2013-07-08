@@ -1,4 +1,4 @@
-#include<MT/array.h>
+#include<Core/array.h>
 #include<MT/util.h>
 #include<MT/plot.h>
 
@@ -100,7 +100,7 @@ void testEmbedding(){
   ann.setX(X);
   intA idx;
   for(uint i=0;i<n;i++){
-    ann.getNN(idx, X[i], k+1);
+    ann.getkNN(idx, X[i], k+1);
     for(uint j=0;j<idx.N;j++){
       uint jj=idx(j);
       double d = sumOfSqr(X[i]-X[jj]);

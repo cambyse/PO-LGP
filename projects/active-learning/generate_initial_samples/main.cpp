@@ -1,6 +1,6 @@
 #include <JK/utils/sampler.h>
 #include <JK/utils/oracle.h>
-#include <MT/array.h>
+#include <Core/array.h>
 #include <iostream>
 int main(int, const char**) {
   ofstream os("samples.data");

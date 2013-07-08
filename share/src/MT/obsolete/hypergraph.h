@@ -20,8 +20,8 @@
 #ifndef MT_hypergraph_h
 #define MT_hypergraph_h
 
-#include "util.h"
-#include "array.h"
+#include <Core/util.h>
+#include <Core/array.h>
 
 #define maxDegree 10
 
@@ -32,12 +32,12 @@ struct Element;
 typedef MT::Array<Element*> ElementL;
 
 struct Element {
-  uint index;              //!< index of this element
-  MT::String type, name;   //!< type & name
-  ElementL parents;        //!< this element has a set of parents (e.g., an edge has two parents)
-  ElementL parentOf[maxDegree]; //!< this elememt is the parent of ... in a certain 'slot'
+  uint index;              ///< index of this element
+  MT::String type, name;   ///< type & name
+  ElementL parents;        ///< this element has a set of parents (e.g., an edge has two parents)
+  ElementL parentOf[maxDegree]; ///< this elememt is the parent of ... in a certain 'slot'
 
-  KeyValueGraph ats;             //!< list of any-type attributes
+  KeyValueGraph ats;             ///< list of any-type attributes
   
   void write(std::ostream& os) const;
   void read(std::istream& is, ElementL& list);

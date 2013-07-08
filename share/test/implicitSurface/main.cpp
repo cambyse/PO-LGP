@@ -1,5 +1,5 @@
-#include <MT/ors.h>
-#include <MT/opengl.h>
+#include <Ors/ors.h>
+#include <Gui/opengl.h>
 
 double blooby(double x,double y,double z,void*){
   return x*x*x*x - 5*x*x+ y*y*y*y - 5*y*y + z*z*z*z - 5*z*z + 11.8;

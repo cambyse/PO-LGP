@@ -1,6 +1,6 @@
 #include <perception/perception.h>
 #include <hardware/uvccamera.h>
-#include <MT/opengl.h>
+#include <Gui/opengl.h>
 
 int main(int argc, char** argv){
   Image imgL("CameraL"), imgR("CameraR");
@@ -9,7 +9,7 @@ int main(int argc, char** argv){
   
   camera->open();
   OpenGL gl;
-   
+
   byteA frame, right_frame;
   double time=MT::realTime();
   uint i;

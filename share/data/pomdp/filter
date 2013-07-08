@@ -1,0 +1,10 @@
+s/variable \([a-zA-Z]*\) (\([^)]*\))/variable \1 { values=(\2) }/
+s/mdt \([^ ]*\) (\([^)]*\))/factor \1 (\2) {/
+s/\[/P=\n[/
+s/\]/]\n}/
+s/controllable/controlVars =/
+s/observable/observationVars =/
+s/discount (\([^)]*\))/discount = \1/
+s/horizon (\([^)]*\))/horizon = \1/
+s/pomdp \([a-zA-Z]*\)/mdp \1 () {/
+s/endpomdp/}/

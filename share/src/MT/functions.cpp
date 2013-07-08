@@ -19,7 +19,7 @@
 
 
 #include "functions.h"
-#include "algos.h"
+#include <Core/algos.h>
 
 double NNsdv(const double& a, const double& b, double sdv){
   double d=(a-b)/sdv;
@@ -61,7 +61,7 @@ double NN(const arr& a, const arr& b, const arr& C){
   inverse_SymPosDef(Cinv, C);
   return NNinv(a, b, Cinv);
 }
-//! non-normalized!! Gaussian function (f(0)=1)
+/// non-normalized!! Gaussian function (f(0)=1)
 double NNNNinv(const arr& a, const arr& b, const arr& Cinv){
   double d=sqrDistance(Cinv, a, b);
   return EXP(-.5*d);
@@ -75,13 +75,13 @@ double NNzeroinv(const arr& x, const arr& Cinv){
   double norm = ::sqrt(lapack_determinantSymPosDef((1./MT_2PI)*Cinv));
   return norm*EXP(-.5*scalarProduct(Cinv, x, x));
 }
-//! gradient of a Gaussian
+/// gradient of a Gaussian
 double dNNinv(const arr& x, const arr& a, const arr& Ainv, arr& grad){
   double y=NNinv(x, a, Ainv);
   grad = y * Ainv * (a-x);
   return y;
 }
-//! gradient of a non-normalized Gaussian
+/// gradient of a non-normalized Gaussian
 double dNNNNinv(const arr& x, const arr& a, const arr& Ainv, arr& grad){
   double y=NNNNinv(x, a, Ainv);
   grad = y * Ainv * (a-x);

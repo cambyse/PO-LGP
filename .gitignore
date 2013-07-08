@@ -1,3 +1,4 @@
+%% C++/IDEs
 *.o
 *.a
 *.so
@@ -11,25 +12,32 @@ tags
 vc60.idb
 .*.config
 .*.creator
-.*.creator.user
+.*.creator.user*
 .*.files
 .*.includes
 
-*~
-*.pyc
-*.tgz
-
-z.*
-
-*.zip
-*_doc
-html
-
+Makefile.dep
 *_moc.cpp
 *_ui.h
 
+*.pyc
+
+
+%% backup/temporary files
+*~
+z.*
+z/
 MT.log
-Makefile.dep
+
+
+%% PECULIAR ???
+*.zip
+*_doc
+html
+*.tgz
+
+
+%%cmake
 CMakeCache.txt
 CMakeFiles
 cmake_install.cmake

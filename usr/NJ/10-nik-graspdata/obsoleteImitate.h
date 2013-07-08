@@ -143,7 +143,7 @@ arr GetRawJacobianOLD(const MT::Array<ors::Shape*> & landmarks,ors::Graph * G){
 	arr ans(landmarks.N*3,G->getJointStateDimension());
 	for(uint i = 0; i < landmarks.N; i++){
 		arr J;
-		G->jacobian(J,landmarks(i)->body->index,&landmarks(i)->rel);
+		G->jacobianPos(J,landmarks(i)->body->index,&landmarks(i)->rel);
 		for(uint j = 0; j < 3; j++)
 			ans[i*3+j]= J[j];
 	}

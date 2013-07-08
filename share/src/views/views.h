@@ -1,8 +1,9 @@
 #ifndef VIEWS_H_
 #define VIEWS_H_
 
-#include <MT/util.h>
-#include <MT/array.h>
+#include <Core/util.h>
+#include <Core/array.h>
+#include <Core/registry.h>
 
 typedef struct _GtkWidget GtkWidget;
 
@@ -16,7 +17,7 @@ struct View {
   void *object;         //the thing that is being viewed
   GtkWidget *widget;    //which gtk widget has this view created?
   struct OpenGL *gl;    //which gl has this view created?
-  struct ViewRegistration *info; //the registration info for this view type
+  Item *reg; //the registration info for this view type
   RWLock *objectLock;
   
   View();
@@ -33,42 +34,12 @@ struct View {
   void gtkNewText(GtkWidget *container); //implementation of gtkNew using the text write/read virtuals
   void loop(uint msec);
 };
-
-
-//===========================================================================
-//
-// ViewRegistration: a little struct that describes an existing view type and
-// will be accessible in a global list 'ViewRegistry'
-//
-
-struct ViewRegistration{
-  const char* userType;
-  const char* sysType;
-  const char* appliesOn_userType;
-  const char* appliesOn_sysType;
-  virtual View *newInstance() = 0;
-};
-
-void registerView(ViewRegistration* v);
-
-template<class ViewT, class AppliesOnT>
-struct ViewRegistration_typed:ViewRegistration{
-  ViewRegistration_typed(const char *_userType,
-                         const char* _appliesOn_userType){
-    userType = _userType;
-    sysType = typeid(ViewT).name();
-    appliesOn_userType = _appliesOn_userType;
-    appliesOn_sysType = typeid(AppliesOnT).name();
-    registerView(this);
-    //cout <<"registrating a view!" <<endl;
-  }
-  View *newInstance(){ View *v=new ViewT(); v->info=this; return v; }
-};
+inline void operator>>(istream&,View&){NIY}
+inline void operator<<(ostream&,const View&){NIY}
 
 #define REGISTER_VIEW(ViewT, AppliesOnT)\
-  ViewRegistration_typed<ViewT, AppliesOnT> ViewT##_registrationDummy(#ViewT,#AppliesOnT);
+  Item_typed<Type> ViewT##_ViewRegistryEntry(ARRAY<MT::String>(MT::String("View"),MT::String(#ViewT),MT::String(typeid(AppliesOnT).name())), ItemL(), new Type_typed<ViewT KO void>(NULL,NULL), &registry());
 
-typedef MT::Array<ViewRegistration*> ViewRegistrationL;
 
 
 //===========================================================================
@@ -76,31 +47,27 @@ typedef MT::Array<ViewRegistration*> ViewRegistrationL;
 // access to available views (that have been registered globally)
 //
 
-//-- dump all registered views to cout
-void dumpViews();
-
 //-- query available views for specific objects
-ViewRegistrationL getViews();
-ViewRegistrationL getViews(const char* appliesOn_sysType);
-ViewRegistration* getViewByName(const char *name);
+ItemL getViews(const char* appliesOn_sysType);
+Item* getViewByName(const char *name);
 
 
 //-- create new views
 
 // general generation of a new view (all others call this)
 template<class T>
-View* newViewBase(T* object, ViewRegistration *vi, GtkWidget *container){
+View* newViewBase(T* object, Item *vi, GtkWidget *container){
   if(!vi){
-    ViewRegistrationL vis=getViews(typeid(T).name());
+    ItemL vis=getViews(typeid(T).name());
     if(!vis.N){
       MT_MSG("No View for sysType '" << typeid(T).name() <<"' found");
       return NULL;
     }
-    vi = vis(0);
+    vi = vis.last();
   }
-  cout <<"Creating new view '" <<vi->sysType
+  cout <<"Creating new view '" <<vi->keys(0) <<(*vi)
        <<"' for object of type '" <<typeid(T).name() <<"'" <<endl;
-  View *v = vi->newInstance();
+  View *v = (View*)vi->value<Type>()->newInstance();
   v->object = object;
   v->gtkNew(container);
   return v;

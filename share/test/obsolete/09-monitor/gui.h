@@ -3,9 +3,9 @@
 #include <Qt/qfiledialog.h>
 #include <Qt/qtimer.h>
 #include "gui_ui.h"
-#include <MT/array.h>
+#include <Core/array.h>
 #include <MT/schunk.h>
-#include <MT/util.h>
+#include <Core/util.h>
 #include <lwa/Device/Device.h>
 
 class Gui:public QDialog{

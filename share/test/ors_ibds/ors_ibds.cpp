@@ -337,7 +337,7 @@ void drawEnv(void*) {
 void IbdsModule::create(ors::Graph& C) { NICO }
 void IbdsModule::step(){ NICO }
 
-#include <MT/array_t.cxx>
+#include <Core/array_t.h>
 template MT::Array<IBDS::RigidBody*>::Array();
 template MT::Array<IBDS::RigidBody*>::~Array();
 

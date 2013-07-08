@@ -21,7 +21,7 @@
 #include "opencv_helper.h"
 
 namespace np {
-/*! \brief Prior neighbors for pixel I(row, col)
+/** @brief Prior neighbors for pixel I(row, col)
  *
  *  Returns the indices of the neighboring pixels above and to the left 
  *  (4-neighborhood) or the indices of the west, northwest, north, and northeast
@@ -79,7 +79,7 @@ inline int prior_neighbors(uintA& pn, const byteA& b, int row, int col, int n)
   return 0;
 };
 
-/*! \brief Retrieves component labels of prior neighbors pn
+/** @brief Retrieves component labels of prior neighbors pn
  *
  *  @param pl  int array containing component labels of prior neighbors
  *  @param lb  binary image with currently labeled components
@@ -114,7 +114,7 @@ inline int prior_labels(uintA& pl, const uintA& lb, const uintA& pn, uint num_pn
   return min;
 };
 
-/*! \brief Construct a union of two components/sets
+/** @brief Construct a union of two components/sets
  *
  *  @param x       label of first set
  *  @param y       label of second set
@@ -133,7 +133,7 @@ inline void union_parent(int x, int y, uintA& parent)
     parent(y) = x;
 };
 
-/*! \brief Find parent label of a set
+/** @brief Find parent label of a set
  *
  *  @param x       label of set
  *  @param parent  union_parent data structure
@@ -152,7 +152,7 @@ inline int find_parent(int x, const uintA& parent)
 };
 } // namespace np
 
-/*! \brief Connected component labeling of a binary image
+/** @brief Connected component labeling of a binary image
  *
  *  This function is a re-implementation of Matlab's bwlabel function. The
  *  implementation follows
@@ -302,7 +302,7 @@ void np::cclabel(uintA& lb, const byteA& b, int n, bool sort)
   }
 }
 
-/*! \brief Make binary pixel values
+/** @brief Make binary pixel values
  *
  *  Set pixels with values t to 1 all other to 0
  *
@@ -344,7 +344,7 @@ void np::mkbinary(byteA& bw, const byteA& img, int t)
 namespace np {
 } // namespace np
 
-/*! \brief Find an external or internal contour at a given point p
+/** @brief Find an external or internal contour at a given point p
  *
  *  This function is the implementation of the contour tracing algorithm
  *  described in
@@ -422,7 +422,7 @@ template void np::ctrace(MT::Array<float>& contour, const MT::Array<float>& bini
 template void np::ctrace(MT::Array<double>& contour, const MT::Array<double>& binimg, int s, bool internal);
 
 
-/*! \brief Generate an array of points on a regular grid
+/** @brief Generate an array of points on a regular grid
  *
  *  @param points  array with 2D points, size: (N,2)
  *  @param width   image width > 0
@@ -466,7 +466,7 @@ template void np::regular_grid(MT::Array<uint>&, uint, uint, uint, bool);
 template void np::regular_grid(MT::Array<float>&, float, float, float, bool);
 template void np::regular_grid(MT::Array<double>&, double, double, double, bool);
 
-/*! \brief Distortion displacement maps
+/** @brief Distortion displacement maps
  *
  *  Creates two displacement maps, one for the x- and one for y-coordinates,
  *  simulating Radial and Tangential Distortion.
@@ -551,7 +551,7 @@ int np::distortion_maps
   return 0;
 }
 
-/*! \brief Map to reverse distortion displacements
+/** @brief Map to reverse distortion displacements
  *
  *  Creates two displacement maps, one for the x- and one for y-coordinates,
  *  compensating Radial and Tangential Distortion.
@@ -636,7 +636,7 @@ int np::undistortion_maps
   return 0;
 };
 
-/*! \brief Transforms RGB image to RGBA one
+/** @brief Transforms RGB image to RGBA one
  *
  *  NOTE: needed this to add byteA to revel videos.
  *

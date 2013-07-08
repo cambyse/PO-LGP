@@ -20,7 +20,7 @@
 #ifndef MT_specialTaskVariables_h
 #define MT_specialTaskVariables_h
 
-#include "ors.h"
+#include <Ors/ors.h>
 #include "socNew.h"
 #include "soc_orsSystem.h"
 

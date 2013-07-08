@@ -4,7 +4,7 @@ zOpposeTaskVariable::zOpposeTaskVariable(const char* _name,
                                          ors::Graph& _ors,
                                          ShapeList& _refs){
   refs=_refs;
-  set(_name, _ors, userTVT, -1, ors::Transformation(), -1, ors::Transformation(), ARR());
+  set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, ARR());
 }
 
 void zOpposeTaskVariable::userUpdate(const ors::Graph& ors){
@@ -33,7 +33,7 @@ zFocusTargetTaskVariable::zFocusTargetTaskVariable(const char* _name,
     ors::Graph& _ors,
     ShapeList& _refs){
   refs=_refs;
-  set(_name, _ors, userTVT, -1, ors::Transformation(), -1, ors::Transformation(), ARR());
+  set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, ARR());
 }
 
 void zFocusTargetTaskVariable::userUpdate(const ors::Graph& ors){

@@ -212,7 +212,7 @@ void SchunkSkin::close() {
 
 //--- emergency shutdown (call signal)
 struct shutdownFct { void *classP; void (*call)(void*); };
-static MT::Array<shutdownFct> shutdownFunctions; //!< list of shutdown functions
+static MT::Array<shutdownFct> shutdownFunctions; ///< list of shutdown functions
 static void addShutdown(void *classP, void (*call)(void*)) { shutdownFunctions.memMove=true; shutdownFct f; f.classP=classP; f.call=call; shutdownFunctions.append(f); }
 bool schunkShutdown=false;
 void schunkEmergencyShutdown(int) {

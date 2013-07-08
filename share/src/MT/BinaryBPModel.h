@@ -19,7 +19,7 @@
 
 #include "BinaryBP.h"
 #include "data.h"
-#include "optimization_obsolete.h"
+#include <Optim/optimization_obsolete.h>
 
 struct BinaryBPNetModel:virtual public OptimizationProblem {
   Data *data;

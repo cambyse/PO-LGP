@@ -20,7 +20,7 @@
 #ifndef MT_libcolorseg_h
 #define MT_libcolorseg_h
 
-#include <MT/array.h>
+#include <Core/array.h>
 
 //----- patch analysis
 void pch2img(byteA &img, const uintA &pch, floatA &pch_colormap);

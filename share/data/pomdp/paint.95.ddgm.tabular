@@ -1,0 +1,31 @@
+variable action (paint inspect ship reject)
+variable obs (NBL BL)
+variable state (NFL-NBL-NPA NFL-NBL-PA FL-NBL-PA FL-BL-NPA)
+variable reward (-1.0 1.0 0.0)
+
+mdt state'_cpt (action state state')
+[0.1 0.9 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.9 0.1 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.5 0.0 0.0 0.5 0.5 0.0 0.0 0.5 0.5 0.0 0.0 0.5 0.5 0.0 0.0 0.5 0.5 0.0 0.0 0.5 0.5 0.0 0.0 0.5 0.5 0.0 0.0 0.5 0.5 0.0 0.0 0.5]
+
+mdt reward'_cpt (action reward' state)
+[0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 1.0 1.0 1.0 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 1.0 1.0 1.0 1.0 1.0 0.0 1.0 1.0 0.0 1.0 0.0 0.0 0.0 0.0 0.0 0.0 1.0 1.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 1.0 0.0]
+
+mdt state_cpt (state)
+[0.5 0.0 0.0 0.5]
+
+mdt obs'_cpt (action obs' state')
+[1.0 1.0 1.0 1.0 0.0 0.0 0.0 0.0 0.75 0.75 0.75 0.25 0.25 0.25 0.25 0.75 1.0 1.0 1.0 1.0 0.0 0.0 0.0 0.0 1.0 1.0 1.0 1.0 0.0 0.0 0.0 0.0]
+
+pomdp paintPOMDP
+    observable (obs)
+    hidden (state reward)
+    controllable (action)
+    utility (reward)
+
+    state' (state'_cpt)
+    reward' (reward'_cpt)
+    state (state_cpt)
+    obs' (obs'_cpt)
+
+    discount (0.95)
+    horizon (100.0)
+endpomdp

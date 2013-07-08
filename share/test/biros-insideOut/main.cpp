@@ -1,17 +1,17 @@
-#include <biros/biros.h>
-#include <biros/biros_views.h>
+#include <system/engine.h>
+#include <views/views.h>
 
 //-- standard Variable containing only an integer
 struct Integer:public Variable {
   FIELD(int, x);
   
-  Integer():Variable("IntVar") { reg_x(); x=rnd(100); }
+  Integer():Variable("IntVar") { x=rnd(100); }
 };
 
 
 int main(int argn, char **argv) {
 
-  biros().dump();
+  //  biros().dump();
 
   Integer Int;
 

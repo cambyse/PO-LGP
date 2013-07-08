@@ -1,10 +1,10 @@
-#include <MT/opengl.h>
-#include <MT/ors.h>
+#include <Gui/opengl.h>
+#include <Ors/ors.h>
 
 struct GraspEvaluation{
   struct sGraspEvaluation *s;
   
-  ors::Graph grasp; //!< the isolated grasp with only two bodies: hand and object
+  ors::Graph grasp; ///< the isolated grasp with only two bodies: hand and object
   OpenGL gl;
   arr contactPoints, contactNormals;
 

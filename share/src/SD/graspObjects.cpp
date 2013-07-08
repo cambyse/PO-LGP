@@ -1,5 +1,5 @@
 #include "graspObjects.h"
-#include <MT/array.h>
+#include <Core/array.h>
 #include <MT/util.h>
 
 double
@@ -425,7 +425,7 @@ GraspObject_GP::phi(arr *grad, arr *hess, double *var, const arr& x){
     *grad /= norm(*grad);
   }
 
-  if (hess) isf_gp.gp.hessian(*hess, x);
+  if (hess) isf_gp.gp.hessianPos (*hess, x);
 
   if (var) *var = sig ;
 

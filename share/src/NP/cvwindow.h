@@ -14,14 +14,14 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/> */
 
-/*! \file cvwindow.h
-    \brief Window/GUI class. */
+/** @file cvwindow.h
+    @brief Window/GUI class. */
 
 #ifndef NP_CVWINDOW_H
 #define NP_CVWINDOW_H
 
 #include <string>
-#include <MT/array.h>
+#include <Core/array.h>
 
 namespace np {
 class CvWindow

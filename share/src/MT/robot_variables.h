@@ -20,9 +20,9 @@
 #ifndef MT_robot_variables_h
 #define MT_robot_variables_h
 
-#include "array.h"
-#include <biros/biros.h>
-#include "ors.h"
+#include <Core/array.h>
+#include <system/module.h>
+#include <Ors/ors.h>
 
 //===========================================================================
 //
@@ -54,7 +54,7 @@ typedef MT::Array<Object*> ObjectList;
 // Variables
 //
 
-/*!\brief q_state_Variable: the current state of all joints of a robot and how these
+/** @brief q_state_Variable: the current state of all joints of a robot and how these
   DoFs map to motor indices and hand indices */
 struct q_currentReferenceVar:public Variable {
   arr q_reference, v_reference;
@@ -81,28 +81,28 @@ struct SkinPressureVar:public Variable {
   }
 };
 
-/*! The list of current proxies (=near-to-collisions) */
+/** The list of current proxies (=near-to-collisions) */
 struct currentProxiesVar:public Variable {
   MT::Array<ors::Proxy*> proxies;
   
   currentProxiesVar():Variable("proxies"){}
 };
 
-/*! The current camera images */
+/** The current camera images */
 struct CameraImages:public Variable {
   byteA rgbL, rgbR;
   CameraImages():Variable("camera_images"){}
   void loadDummyImages(){ read_ppm(rgbL, "left.ppm");  read_ppm(rgbR, "right.ppm"); }
 };
 
-/*! The hsv output of early vision */
+/** The hsv output of early vision */
 struct EarlyVisionOutput:public Variable {
   floatA hsvThetaL, hsvThetaR;
   
   EarlyVisionOutput():Variable("EarlyVisionOutput"){}
 };
 
-/*! The Object List output of perception */
+/** The Object List output of perception */
 struct PerceptionOutput:public Variable {
   MT::Array<Object> objects;
   byteA disp;
@@ -110,7 +110,7 @@ struct PerceptionOutput:public Variable {
   PerceptionOutput():Variable("PerceptionOutput"){};
 };
 
-/*! The output of a motion planner */
+/** The output of a motion planner */
 struct FutureMotionPlan:public Variable {
   bool converged, executed;
   arr q, x, bwdMsg_v, bwdMsg_Vinv;
@@ -120,7 +120,7 @@ struct FutureMotionPlan:public Variable {
   void write(ostream& os){ os <<"FutureMotionPlan converged= " <<converged <<" cost= " <<cost <<" ctrlTime= " <<ctrlTime; }
 };
 
-/*! The definition of the motion problem */
+/** The definition of the motion problem */
 struct FutureMotionGoal:public Variable {
   enum GoalType { noGoalT=0, graspGoalT, placeGoalT, homingGoalT };
   GoalType goalType;

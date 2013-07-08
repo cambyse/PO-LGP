@@ -2,7 +2,7 @@
 #define _HEADER_GUARD_GP_AMS_H_
 
 #include "ams.h"
-#include <MT/array.h>
+#include <Core/array.h>
 
 /**
  * gp_ams_model implementation for classification problems.

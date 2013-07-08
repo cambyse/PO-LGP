@@ -27,7 +27,7 @@
 #undef MAX
 #endif
 #include "vision.h"
-#include "opengl.h"
+#include <Gui/opengl.h>
 
 struct sVideoWriter{
   CvVideoWriter *video;
@@ -64,7 +64,7 @@ void VideoWriter::addFrameFromOpengl(OpenGL& gl){
 }
 
 #else
-#include "util.h"
+#include <Core/util.h>
   void VideoWriter::open(uint width,uint height,const char* filename,double fps){ MT_MSG("WARNING - using dummy Revel module"); };
   void VideoWriter::addFrame(const byteA& img){};
   void VideoWriter::addFrameFromOpengl(OpenGL& gl){};

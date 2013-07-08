@@ -24,37 +24,37 @@
 #ifndef MT_gauss_h
 #define MT_gauss_h
 
-#include "util.h"
-#include "array.h"
+#include <Core/util.h>
+#include <Core/array.h>
 #include "functions.h"
 
 typedef void (*Trans)(arr& x);
 
 extern bool useC;
 
-/*! Gaussian \ingroup infer1 */
+/** Gaussian \ingroup infer1 */
 struct Gaussian {
-  arr c; //!< center (normal representation)
-  arr C; //!< covariance (normal representation)
-  arr u; //!< `center-vector' in canonical representation
-  arr U; //!< precision matrix (canonical representation)
+  arr c; ///< center (normal representation)
+  arr C; ///< covariance (normal representation)
+  arr u; ///< `center-vector' in canonical representation
+  arr U; ///< precision matrix (canonical representation)
   
-  bool okC; //!< flag if normal representation is available
-  bool okU; //!< flag if canonical representation is available
+  bool okC; ///< flag if normal representation is available
+  bool okU; ///< flag if canonical representation is available
   
-  //! okC=okU=false
+  /// okC=okU=false
   Gaussian(){ setCU(false, false); }
   Gaussian(const arr& mean, const arr& cov){ setC(mean, cov); }
 
-  //! dimensionality
+  /// dimensionality
   uint N() const { CHECK(okC || okU, "non-initialized Gaussian (no C or U)"); if(okC) return c.N; else return u.N; }
-  //! make canonical representation available
+  /// make canonical representation available
   void makeU() const; //make sure the canonical rep is ok
-  //! make normal representation available
+  /// make normal representation available
   void makeC() const; //make sure the normal rep is ok
   void setCU(bool okc, bool oku){ okC=okc; okU=oku; }
   
-  //! copy operator
+  /// copy operator
   void operator=(const Gaussian& x);
   
   void setC(const arr& cc, const arr& CC){ c=cc; C=CC; setCU(true, false); }
@@ -137,83 +137,83 @@ inPipe(Gaussian);
 typedef MT::Array<Gaussian> GaussianA;
 typedef MT::Array<Gaussian*> GaussianL;
 
-//! estimate a gaussian from a table of data points \ingroup infer1
+/// estimate a gaussian from a table of data points \ingroup infer1
 void estimate(Gaussian &g, const arr& X);
 void estimateWeighted(Gaussian& g, const arr& X, const arr& W);
 
-/*! collapses a mixture of gaussians (or weighted gaussians: P doesn't
+/** collapses a mixture of gaussians (or weighted gaussians: P doesn't
     have to be normalized) to a single gaussian via moment matching \ingroup infer1 */
 void collapseMoG(Gaussian& g, const arr& P, const GaussianA& G);
 void collapseMoG(Gaussian& g, const arr& P, const GaussianL& G, bool zeroMean=false);
 
-/*! similar to the unscented transform: first take systematically samples
+/** similar to the unscented transform: first take systematically samples
     from the Gaussian, then weight the samples proportional to f(x),
     then reestimate the Gaussian \ingroup infer1 */
 void resampleAndEstimate(Gaussian& g, double(*f)(const arr& x), uint N);
 
-//! generate a single sample from a gaussian \ingroup infer1
+/// generate a single sample from a gaussian \ingroup infer1
 arr sample(const Gaussian &g);
 
-//! generate a table of N samples from a gaussian \ingroup infer1
+/// generate a table of N samples from a gaussian \ingroup infer1
 void sample(arr& X, uint N, const Gaussian &g);
 
 void systematicWeightedSamples(arr& X, arr& W, const Gaussian& g);
 
-//! check if a and b are the same gaussian [approximately - prelim] \ingroup infer1
+/// check if a and b are the same gaussian [approximately - prelim] \ingroup infer1
 bool sameGaussian(const Gaussian &a, const Gaussian &b, double eps=1e-8);
 
-//! symmetric Kullback-Leibler divergence \ingroup infer1
+/// symmetric Kullback-Leibler divergence \ingroup infer1
 double KLDsym(const Gaussian &a, const Gaussian &b);
 
-/*! map an initial gaussian (a) to a new gaussian (b) via a non-linear function f
+/** map an initial gaussian (a) to a new gaussian (b) via a non-linear function f
     using the unscented transform \ingroup infer1 */
 void unscentedTransform(Gaussian &b, const Gaussian &a, Trans f);
 
-//! given x~{a, A} and y|x~{Fx+f, Q}, this returns y~{c, C} \ingroup infer1
+/// given x~{a, A} and y|x~{Fx+f, Q}, this returns y~{c, C} \ingroup infer1
 void forward(Gaussian& y, const Gaussian& x, arr& f, arr& F, arr& Q);
 
-//! given y~{b, B} and y|x~{Fx+f, Q}, this returns x~{c, C} \ingroup infer1
+/// given y~{b, B} and y|x~{Fx+f, Q}, this returns x~{c, C} \ingroup infer1
 void backward(Gaussian& x, const Gaussian& y, arr& f, arr& F, arr& Q, double updateStep=1.);
 
-//! given y~{b, B} and y|x~{Fx+f, Q}, this returns x~{c, C}
+/// given y~{b, B} and y|x~{Fx+f, Q}, this returns x~{c, C}
 //void linBwd(Gaussian& x, Gaussian& y, arr& f, arr& F);
 
-//! multiplication: {a, A} * {b, B} = {x, X} * norm \ingroup infer1
+/// multiplication: {a, A} * {b, B} = {x, X} * norm \ingroup infer1
 void product(Gaussian& x, const Gaussian& a, const Gaussian& b, double *logNorm=0);
 
-//! division: {a, A} / {b, B} = {x, X} + norm \ingroup infer1
+/// division: {a, A} / {b, B} = {x, X} + norm \ingroup infer1
 void division(Gaussian& x, const Gaussian& a, const Gaussian& b, double *logNorm=0);
 
-//! given x~{a, A} and y|x~{f(x), Q}, this returns y~{c, C} \ingroup infer1
+/// given x~{a, A} and y|x~{f(x), Q}, this returns y~{c, C} \ingroup infer1
 void forward(Gaussian& y, const Gaussian& x, Trans f, arr& Q);
 
-//! given x~{a, A} and y|x~{f(x), Q}, this returns y~{c, C} \ingroup infer1
+/// given x~{a, A} and y|x~{f(x), Q}, this returns y~{c, C} \ingroup infer1
 //void fctFwd(Gaussian& y, Gaussian& x, Trans f);
 
 void getLinFwdFromJoint(arr& f, arr& F, arr& Q, uint n1, uint n2, Gaussian& x);
 
-//! given x~{a, A} and y|x~{Fx+f, Q}, this returns the joint (x, y)~{c, C} \ingroup infer1
+/// given x~{a, A} and y|x~{Fx+f, Q}, this returns the joint (x, y)~{c, C} \ingroup infer1
 void joinMarginalAndConditional(Gaussian& xi, Gaussian& a, arr& f, arr& F, arr& Q);
 
-//! xi is P(x, y), returns P(y|x)={Fx+f, Q}, dx is dimensionality of x
+/// xi is P(x, y), returns P(y|x)={Fx+f, Q}, dx is dimensionality of x
 void getConditional(const Gaussian& xi, uint cut, arr& f, arr& F, arr& Q);
 
-//! given P(x, y), return P(y|x)*UU(x) where UU(x) is uniform
+/// given P(x, y), return P(y|x)*UU(x) where UU(x) is uniform
 void makeConditional(Gaussian& xi, uint dx);
 
-//! joint is P(x, y), returns P(x), dx is the dimensionality of x
+/// joint is P(x, y), returns P(x), dx is the dimensionality of x
 void getMarginal(Gaussian& x, const Gaussian& joint, uint dx);
 
-/*! get the marginal of (z_list(0), .., z_list(m-1)) from a joint over (z_0, .., z_(n-1)) \ingroup infer1 */
+/** get the marginal of (z_list(0), .., z_list(m-1)) from a joint over (z_0, .., z_(n-1)) \ingroup infer1 */
 void getMarginal(Gaussian& x, const Gaussian& joint, uintA& list);
 
-/*! -- note, this is not a proper marginal multiplication -- simply set the marginal entries (z_list(0), .., z_list(m-1)) in a joint over (z_0, .., z_(n-1)) \ingroup infer1 */
+/** -- note, this is not a proper marginal multiplication -- simply set the marginal entries (z_list(0), .., z_list(m-1)) in a joint over (z_0, .., z_(n-1)) \ingroup infer1 */
 void setMarginal(Gaussian& joint, const Gaussian& marg, uintA& list);
 
 // assumes middle split
 void getMarginalsFromJoint(Gaussian& x, Gaussian& y, Gaussian& xi);
 
-/*! given a joint (x, y)~{c, C} and a potential {b, B} for y|evidence,
+/** given a joint (x, y)~{c, C} and a potential {b, B} for y|evidence,
     this returns the updated joint (x, y)|evidence~{d, D} \ingroup infer1 */
 void multiplyToJoint(Gaussian& xi, Gaussian& b);
 

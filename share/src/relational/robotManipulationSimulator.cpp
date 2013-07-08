@@ -217,7 +217,7 @@ void RobotManipulationSimulator::startOde(double ode_coll_bounce, double ode_col
 
 
 void RobotManipulationSimulator::startSwift(){
-#ifdef MT_SWIFT
+#ifdef MT_extern_SWIFT
   if(swift) delete swift;
   swift = new SwiftInterface;
   swift->init(*C);
@@ -242,7 +242,7 @@ void RobotManipulationSimulator::shutdownAll(){
 #ifdef MT_FREEGLUT
   if(gl) delete gl;        gl=0;
 #endif
-#ifdef MT_SWIFT
+#ifdef MT_extern_SWIFT
   if(swift) delete swift;  swift=0;
 #endif
 #ifdef MT_REVEL
@@ -333,7 +333,7 @@ void RobotManipulationSimulator::calcObjectNumber() {
 }
 
 
-void RobotManipulationSimulator::getObjects(uintA& objects) { //!< return list all objects
+void RobotManipulationSimulator::getObjects(uintA& objects) { ///< return list all objects
   objects.clear();
   
   objects.append(getTableID());
@@ -597,41 +597,41 @@ void RobotManipulationSimulator::getOrientation(arr& orientation, uint id) {
   rot = C->bodies(id)->X.rot;
   
   ors::Vector upvec_z; double maxz=-2;
-  if((rot*VEC_x).z>maxz){ upvec_z=VEC_x; maxz=(rot*upvec_z).z; }
-  if((rot*VEC_y).z>maxz){ upvec_z=VEC_y; maxz=(rot*upvec_z).z; }
-  if((rot*VEC_z).z>maxz){ upvec_z=VEC_z; maxz=(rot*upvec_z).z; }
-  if((rot*(-VEC_x)).z>maxz){ upvec_z=-VEC_x; maxz=(rot*upvec_z).z; }
-  if((rot*(-VEC_y)).z>maxz){ upvec_z=-VEC_y; maxz=(rot*upvec_z).z; }
-  if((rot*(-VEC_z)).z>maxz){ upvec_z=-VEC_z; maxz=(rot*upvec_z).z; }
+  if((rot*Vector_x).z>maxz){ upvec_z=Vector_x; maxz=(rot*upvec_z).z; }
+  if((rot*Vector_y).z>maxz){ upvec_z=Vector_y; maxz=(rot*upvec_z).z; }
+  if((rot*Vector_z).z>maxz){ upvec_z=Vector_z; maxz=(rot*upvec_z).z; }
+  if((rot*(-Vector_x)).z>maxz){ upvec_z=-Vector_x; maxz=(rot*upvec_z).z; }
+  if((rot*(-Vector_y)).z>maxz){ upvec_z=-Vector_y; maxz=(rot*upvec_z).z; }
+  if((rot*(-Vector_z)).z>maxz){ upvec_z=-Vector_z; maxz=(rot*upvec_z).z; }
   double angle_z = acos(maxz);
   if (angle_z < 0.0001)
     angle_z = 0.;
 //   if (angle_z>MT_PI/4) {
 //     PRINT(MT_PI/4);
-//     PRINT((rot*VEC_x).z);
-//     PRINT((rot*VEC_y).z);
-//     PRINT((rot*VEC_z).z);
-//     PRINT((rot*(-VEC_x)).z);
-//     PRINT((rot*(-VEC_y)).z);
-//     PRINT((rot*(-VEC_z)).z);
-//     PRINT(acos((rot*VEC_x).z));
-//     PRINT(acos((rot*VEC_y).z));
-//     PRINT(acos((rot*VEC_z).z));
-//     PRINT(acos((rot*(-VEC_x)).z));
-//     PRINT(acos((rot*(-VEC_y)).z));
-//     PRINT(acos((rot*(-VEC_z)).z));
+//     PRINT((rot*Vector_x).z);
+//     PRINT((rot*Vector_y).z);
+//     PRINT((rot*Vector_z).z);
+//     PRINT((rot*(-Vector_x)).z);
+//     PRINT((rot*(-Vector_y)).z);
+//     PRINT((rot*(-Vector_z)).z);
+//     PRINT(acos((rot*Vector_x).z));
+//     PRINT(acos((rot*Vector_y).z));
+//     PRINT(acos((rot*Vector_z).z));
+//     PRINT(acos((rot*(-Vector_x)).z));
+//     PRINT(acos((rot*(-Vector_y)).z));
+//     PRINT(acos((rot*(-Vector_z)).z));
 //     watch();
 //   }
 //   CHECK((angle_z<=MT_PI/2)  &&  (angle_z>=0), "invalid angle_z  (upvec_z="<<upvec_z<<", z="<<maxz<<")");
   orientation(0) = angle_z;
   
   ors::Vector upvec_x; double maxx=-2;
-  if((rot*VEC_x).x>maxx){ upvec_x=VEC_x; maxx=(rot*upvec_x).x; }
-  if((rot*VEC_y).x>maxx){ upvec_x=VEC_y; maxx=(rot*upvec_x).x; }
-  if((rot*VEC_z).x>maxx){ upvec_x=VEC_z; maxx=(rot*upvec_x).x; }
-  if((rot*(-VEC_x)).x>maxx){ upvec_x=-VEC_x; maxx=(rot*upvec_x).x; }
-  if((rot*(-VEC_y)).x>maxx){ upvec_x=-VEC_y; maxx=(rot*upvec_x).x; }
-  if((rot*(-VEC_z)).x>maxx){ upvec_x=-VEC_z; maxx=(rot*upvec_x).x; }
+  if((rot*Vector_x).x>maxx){ upvec_x=Vector_x; maxx=(rot*upvec_x).x; }
+  if((rot*Vector_y).x>maxx){ upvec_x=Vector_y; maxx=(rot*upvec_x).x; }
+  if((rot*Vector_z).x>maxx){ upvec_x=Vector_z; maxx=(rot*upvec_x).x; }
+  if((rot*(-Vector_x)).x>maxx){ upvec_x=-Vector_x; maxx=(rot*upvec_x).x; }
+  if((rot*(-Vector_y)).x>maxx){ upvec_x=-Vector_y; maxx=(rot*upvec_x).x; }
+  if((rot*(-Vector_z)).x>maxx){ upvec_x=-Vector_z; maxx=(rot*upvec_x).x; }
   double angle_xy = atan((rot*upvec_x).y / maxx);
   if (angle_xy < 0.0001)
     angle_xy = 0.;
@@ -1109,7 +1109,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
   // reset contact of grabbed object
   if (s!=NULL) {
     s->cont = true;
-#ifdef MT_SWIFT
+#ifdef MT_extern_SWIFT
     swift->initActivations(*C);
 #endif
   }
@@ -1128,7 +1128,7 @@ void RobotManipulationSimulator::grab(const char* obj, const char* message) {
 
 
 void RobotManipulationSimulator::grabHere(const char* message) {
-  #ifdef MT_SWIFT
+  #ifdef MT_extern_SWIFT
   MT::String msg_string(message);
   if (msg_string.N == 0) {
     msg_string << "grabHere: ";
@@ -1197,15 +1197,15 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   ors::Quaternion rot;
   rot = C->bodies(obj_dropped1_index)->X.rot;
   ors::Vector upvec; double maxz=-2;
-  if((rot*VEC_x).z>maxz){ upvec=VEC_x; maxz=(rot*upvec).z; }
-  if((rot*VEC_y).z>maxz){ upvec=VEC_y; maxz=(rot*upvec).z; }
-  if((rot*VEC_z).z>maxz){ upvec=VEC_z; maxz=(rot*upvec).z; }
-  if((rot*(-VEC_x)).z>maxz){ upvec=-VEC_x; maxz=(rot*upvec).z; }
-  if((rot*(-VEC_y)).z>maxz){ upvec=-VEC_y; maxz=(rot*upvec).z; }
-  if((rot*(-VEC_z)).z>maxz){ upvec=-VEC_z; maxz=(rot*upvec).z; }
+  if((rot*Vector_x).z>maxz){ upvec=Vector_x; maxz=(rot*upvec).z; }
+  if((rot*Vector_y).z>maxz){ upvec=Vector_y; maxz=(rot*upvec).z; }
+  if((rot*Vector_z).z>maxz){ upvec=Vector_z; maxz=(rot*upvec).z; }
+  if((rot*(-Vector_x)).z>maxz){ upvec=-Vector_x; maxz=(rot*upvec).z; }
+  if((rot*(-Vector_y)).z>maxz){ upvec=-Vector_y; maxz=(rot*upvec).z; }
+  if((rot*(-Vector_z)).z>maxz){ upvec=-Vector_z; maxz=(rot*upvec).z; }
   ors::Transformation tf;
-  tf.rot.setDiff(VEC_z, upvec);
-  z.set("obj-z-align",*C,zalignTVT,obj_dropped1_index,tf,-1,ors::Transformation(),0);
+  tf.rot.setDiff(Vector_z, upvec);
+  z.set("obj-z-align",*C,zalignTVT,obj_dropped1_index,tf,-1,Transformation_Id,0);
   //
   DefaultTaskVariable r("full state",*C,qLinearTVT,0,0,0,0,I);
   DefaultTaskVariable c("collision",*C,collTVT,0,0,0,0,ARR(.02));
@@ -1489,7 +1489,7 @@ void RobotManipulationSimulator::relaxPosition(const char* message) {
   // simplification: set on contacts for inhand-object
   if (s!=NULL) {
     s->cont = true;
-#ifdef MT_SWIFT
+#ifdef MT_extern_SWIFT
     swift->initActivations(*C);
 #endif
   }
@@ -1529,7 +1529,7 @@ void RobotManipulationSimulator::moveToPosition(const arr& pos, const char* mess
   if(t==Tabort){ indicateFailure(); return; }
   simulate(30, msg_string);
   
-#ifdef MT_SWIFT
+#ifdef MT_extern_SWIFT
   swift->initActivations(*C);
 #endif
 #endif
@@ -1594,7 +1594,7 @@ void RobotManipulationSimulator::openBox(uint id, const char* message) {
   // open it
   ors::Shape* s = C->bodies(id)->shapes(5);
   s->rel.setText("<t(0 0 .075) t(0 -.05 0) d(80 1 0 0) t(0 .05 .0)>");
-#ifdef MT_SWIFT
+#ifdef MT_extern_SWIFT
   swift->initActivations(*C);
 #endif
   
@@ -1639,7 +1639,7 @@ void RobotManipulationSimulator::closeBox(uint id, const char* message) {
   // close it
   ors::Shape* s = C->bodies(id)->shapes(5);
   s->rel.setText("<t(0 0 .075)>");
-#ifdef MT_SWIFT
+#ifdef MT_extern_SWIFT
   swift->initActivations(*C);
 #endif
 

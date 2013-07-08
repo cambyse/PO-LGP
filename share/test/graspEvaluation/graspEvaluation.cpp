@@ -1,7 +1,7 @@
 #include "graspEvaluation.h"
-#include <MT/ors.h>
+#include <Ors/ors.h>
 
-#include <MT/ors_physx.h>
+#include <Ors/ors_physx.h>
 
 struct sGraspEvaluation{
   SwiftInterface swift;
@@ -176,5 +176,5 @@ void GraspEvaluation::simulateInPhysX(){
   }
 }
 
-#include <MT/array_t.cxx>
+#include <Core/array_t.h>
 template MT::Array<ors::Body*>::Array(uint);

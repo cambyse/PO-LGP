@@ -1,7 +1,7 @@
 #ifndef _AL_PROBLEM_H_
 #define _AL_PROBLEM_H_
 
-#include <MT/array.h>
+#include <Core/array.h>
 
 template<class S> class Sampler;
 class Oracle;

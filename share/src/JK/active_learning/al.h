@@ -1,7 +1,7 @@
 #ifndef _ACTIVELEARNER_H_
 #define _ACTIVELEARNER_H_
 
-#include <MT/array.h>
+#include <Core/array.h>
 #include "al_problem.h"
 
 class ActiveLearner {

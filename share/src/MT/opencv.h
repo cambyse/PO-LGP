@@ -29,8 +29,8 @@
 #include <opencv2/opencv.hpp>
 #undef MIN
 #undef MAX
-#include "array.h"
-#include "util.h"
+#include <Core/array.h>
+#include <Core/util.h>
 
 inline cv::Mat cvMAT(const byteA& img){
   if(img.nd==2) return cv::Mat(img.d0, img.d1, CV_8UC1, img.p);

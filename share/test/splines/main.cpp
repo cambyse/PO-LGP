@@ -1,6 +1,6 @@
-#include<MT/algos.h>
-#include<MT/plot.h>
-#include<MT/ors.h>
+#include <MT/algos.h>
+#include <Gui/plot.h>
+#include <Ors/ors.h>
 
 
 double cost(arr *grad,const arr& f,void*){

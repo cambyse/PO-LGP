@@ -1,11 +1,11 @@
 #ifndef MT_robot_h
 #define MT_robot_h
 
-#include "opengl.h"
+#include <Gui/opengl.h>
 
 #include "robot_variables.h"
 
-#include "ors.h"
+#include <Ors/ors.h>
 #include "joystick.h"
 #include "socSystem_ors.h"
 #include <NJ/UrgInterface.h>
@@ -40,7 +40,7 @@ void q_hand_home(arr &);
 // Task Abstraction
 //
 
-/*! A collection of TaskVariables and their target/precision information */
+/** A collection of TaskVariables and their target/precision information */
 struct TaskAbstraction {
   JoystickInterface *joyVar;
   FutureMotionPlan *planVar;
@@ -76,7 +76,7 @@ struct TaskAbstraction {
 // Robot Controller Module
 //
 
-/*! given a task (=TaskVariable configuration) computed the desired next joint state of the robot */
+/** given a task (=TaskVariable configuration) computed the desired next joint state of the robot */
 struct ControllerProcess:public Process { //--non-threaded!!
   q_currentReferenceVar *q_referenceVar;
   SkinPressureVar *skinPressureVar;
@@ -117,7 +117,7 @@ struct ControllerProcess:public Process { //--non-threaded!!
 // Robot Controller
 //
 
-/*! simply a collection of standard robot processes: open() opens them all,
+/** simply a collection of standard robot processes: open() opens them all,
     close() closes them all, step() communicates between them and steps them all */
 
 struct RobotProcessGroup {

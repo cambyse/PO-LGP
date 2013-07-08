@@ -13,7 +13,7 @@
 //
 
 #include <biros/biros.h>
-#include <MT/array.h>
+#include <Core/array.h>
 #include <MT/util.h>
 
 struct UrgWorkspace;
@@ -31,10 +31,6 @@ struct UrgInterface:public Process{
   void step(){ scanLine(scanline); }
   void close();
 };
-
-#ifdef MT_IMPLEMENTATION
-#  include "UrgInterface.cpp"
-#endif
 
 #endif
  

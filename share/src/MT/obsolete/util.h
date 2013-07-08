@@ -115,7 +115,7 @@ template<class T> T* anyListGet(const AnyList& L, const char *tag, uint n) {
   return NULL;
 }
 
-/*#include <MT/array.h>
+/*#include <Core/array.h>
 void testAny(){
   AnyList bag;
   bag.append(anyNew<double>("bla0",.125));

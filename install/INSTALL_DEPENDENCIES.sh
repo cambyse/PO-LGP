@@ -51,3 +51,4 @@ tk8.5-dev \
 cd /usr/src/gtest
 sudo cmake .
 sudo make
+sudo ln -s -f /usr/src/gtest/libgtest.a /home/lib/lib/

@@ -1,7 +1,7 @@
 #include <MT/soc.h>
-#include <MT/util.h>
+#include <Core/util.h>
 #include <MT/specialTaskVariables.h>
-#include <MT/opengl.h>
+#include <Gui/opengl.h>
 #include <MT/aico.h>
 #include <DZ/aico_key_frames.h>
 

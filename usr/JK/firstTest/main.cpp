@@ -13,7 +13,7 @@ void MyTask::updateTaskVariables(ControllerProcess *ctrl){
 
   TV_eff->active=true;
   arr pos;
-  ctrl->ors.kinematics(pos, 13);
+  ctrl->ors.kinematicsPos(pos, 13);
   std::cout << pos << std::endl;
   TV_eff->y_target = pos;
   if(oldPos.N == 0) oldPos = pos; 

@@ -20,7 +20,7 @@
 
 
 #include "aico.h"
-#include "optimization.h"
+#include <Optim/optimization.h>
 
 struct sAICO{
   //parameters
@@ -42,22 +42,22 @@ struct sAICO{
   uint iterations_till_convergence;
   
   //messages
-  arr s, Sinv, v, Vinv, r, R, rhat; //!< fwd, bwd, and task messages
-  MT::Array<arr> phiBar, JBar;      //!< all task cost terms
-  arr Psi;                          //!< all transition cost terms
-  arr b, Binv;                      //!< beliefs
-  arr xhat;                         //!< point of linearization
+  arr s, Sinv, v, Vinv, r, R, rhat; ///< fwd, bwd, and task messages
+  MT::Array<arr> phiBar, JBar;      ///< all task cost terms
+  arr Psi;                          ///< all transition cost terms
+  arr b, Binv;                      ///< beliefs
+  arr xhat;                         ///< point of linearization
   arr s_old, Sinv_old, v_old, Vinv_old, r_old, R_old, rhat_old, b_old, Binv_old, xhat_old;
   arr dampingReference;
-  double cost, cost_old;            //!< cost of MAP trajectory
+  double cost, cost_old;            ///< cost of MAP trajectory
   double b_step;
-  arr A, tA, Ainv, invtA, a, B, tB, Hinv, Q; //!< processes...
-  uint sweep;                       //!< #sweeps so far
-  uint scale;                       //!< scale of this AICO in a multi-scale approach
+  arr A, tA, Ainv, invtA, a, B, tB, Hinv, Q; ///< processes...
+  uint sweep;                       ///< #sweeps so far
+  uint scale;                       ///< scale of this AICO in a multi-scale approach
 
   sAICO(){ sys=NULL; }
   
-  void init(ControlledSystem& sys); //!< reads parameters from cfg file
+  void init(ControlledSystem& sys); ///< reads parameters from cfg file
   void init_messages();
   void init_trajectory(const arr& x_init);
   void shift_solution(int offset);

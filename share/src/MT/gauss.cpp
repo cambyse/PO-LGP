@@ -19,7 +19,7 @@
 #include <algorithm>
 
 #include "gauss.h"
-#include "util.h"
+#include <Core/util.h>
 
 #define takeC 1
 #define takeU 2
@@ -638,7 +638,7 @@ void getConditional(const Gaussian& xi, uint dx, arr& f, arr& F, arr& Q){
   }
 }
 
-//! given P(x, y), return P(y|x)*UU(x) where UU(x) is uniform
+/// given P(x, y), return P(y|x)*UU(x) where UU(x) is uniform
 void makeConditional(Gaussian& xi, uint dx){
   if(useC){
     NIY;
@@ -861,7 +861,7 @@ void equal(arr& c, arr& C, arr& a, arr& A){
 
 void unscentedTransform(arr& a, arr& A, Trans f);
 
-//! multiplication: {a, A} * {b, B} = {c, C} * norm
+/// multiplication: {a, A} * {b, B} = {c, C} * norm
 void product(arr& c, arr& C, arr& a, arr& A, arr& b, arr& B, double *norm=0){
   CHECK(&C != &B, "only C and A can be the same matrix");
   arr X, Y;
@@ -874,13 +874,13 @@ void product(arr& c, arr& C, arr& a, arr& A, arr& b, arr& B, double *norm=0){
   }
 }
 
-//! given x~{a, A} and y|x~{Fx+f, Q}, this returns y~{c, C}
+/// given x~{a, A} and y|x~{Fx+f, Q}, this returns y~{c, C}
 void linFwd(arr& c, arr& C, arr& a, arr& A, arr& f, arr& F, arr& Q){
   c = F*a + f;
   C = F*A*~F + Q;
 }
 
-//! given x~{a, A} and y|x~{f(x), Q}, this returns y~{c, C}
+/// given x~{a, A} and y|x~{f(x), Q}, this returns y~{c, C}
 void fctFwd(arr& c, arr& C, arr& a, arr& A, Trans f, arr& Q){
   c=a; C=A;
   unscentedTransform(c, C, f);
@@ -894,14 +894,14 @@ void fctFwd(arr& c, arr& C, arr& a, arr& A, Trans f, arr& Q){
   }
 }
 
-//! given y~{b, B} and y|x~{Fx+f, Q}, this returns x~{c, C}
+/// given y~{b, B} and y|x~{Fx+f, Q}, this returns x~{c, C}
 void linBwd(arr& c, arr& C, arr& b, arr& B, arr& f, arr& F, arr& Q){
   arr Finv=inverse(F);
   c = Finv*(b-f);
   C = Finv*(B+Q)*~Finv;
 }
 
-/*! given x~{a, A} and y|x~{Fx+f, Q} and given evidence for y,
+/** given x~{a, A} and y|x~{Fx+f, Q} and given evidence for y,
     this returns a potential U(x) = {c, C} such that x|y~{c, C}*P(x) given a prior P(x) */
 void LinGaussPotential(arr& c, arr& C, arr& y, arr& f, arr& F, arr& Q){
   arr Finv=inverse(F);
@@ -909,21 +909,21 @@ void LinGaussPotential(arr& c, arr& C, arr& y, arr& f, arr& F, arr& Q){
   c = Finv*(y-f);
 }
 
-/*! given x~{a, A} and y|x~{f(x), Q} and given evidence for y,
+/** given x~{a, A} and y|x~{f(x), Q} and given evidence for y,
     this returns a potential U(x) = {c, C} such that x|y~{c, C}*P(x) given a prior P(x) */
 void FctGaussPotential(arr& c, arr& C, arr& y, Trans b, arr& Q){
   c=y; C=Q;
   unscentedTransform(c, C, b);
 }
 
-//! given x~{a, A} and y|x~{Fx+f, Q}, this returns the joint (x, y)~{c, C}
+/// given x~{a, A} and y|x~{Fx+f, Q}, this returns the joint (x, y)~{c, C}
 void jointFwd(arr& c, arr& C, arr& a, arr& A, arr& f, arr& F, arr& Q){
   arr FA=F*A, tFA=~FA;
   C.setBlockMatrix(A, tFA, FA, Q + F*tFA);
   c.setBlockVector(a, F*a + f);
 }
 
-/*! given a joint (x, y)~{c, C} and a potential {b, B} for y|evidence,
+/** given a joint (x, y)~{c, C} and a potential {b, B} for y|evidence,
     this returns the updated joint (x, y)|evidence~{d, D} */
 void multiplyToJoint(arr& d, arr& D, arr& c, arr& C, arr& b, arr& B){
   uint i, j, n2=b.N, n1=c.N-b.N;

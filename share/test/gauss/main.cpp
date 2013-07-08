@@ -1,8 +1,8 @@
 #define MT_IMPLEMENT_TEMPLATES
 
-#include <MT/util.h>
+#include <Core/util.h>
 #include <MT/gauss.h>
-#include <MT/plot.h>
+#include <Gui/plot.h>
 
 static double TAU=.1;
 

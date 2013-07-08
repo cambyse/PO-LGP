@@ -1,7 +1,7 @@
 #ifndef _UCM_H
 #define _UCM_H
 
-#include <MT/array.h>
+#include <Core/array.h>
 
 typedef MT::Array<uintA>      PixelArray;
 

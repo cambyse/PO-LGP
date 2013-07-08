@@ -1,6 +1,8 @@
 #include "perception.h"
 #include <MT/opengl.h>
 
+#if 0
+
 //===========================================================================
 
 #define REG_VIEW(VAR) REGISTER_VIEW(VAR##_View, VAR)
@@ -76,3 +78,4 @@ void PerceptionOutput_View::glDraw() {
 
 
 
+#endif

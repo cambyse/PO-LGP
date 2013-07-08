@@ -1,0 +1,10 @@
+
+body obj1 { type=3 mesh='../../Gui/meshTools/m494_x.off' swiftfile='../../Gui/meshTools/m494_x.dcp' contact }
+
+#body obj2 { X=<T t(0 .7 2) d(90 1 0 0)>  type=3 mesh='../../Gui/meshTools/m494_x.off' swiftfile='../../Gui/meshTools/m494_x.dcp' contact }
+body obj2 { X=<T t(0 .7 2) d(90 1 0 0)>  type=6 mesh='../../Gui/meshTools/m494_x.off' }
+
+body cyl1  { X=<T t(-1 0 0)>  type=2 size=[.1 .1 1. .2] contact }
+
+body ball  { X=<T t(.2 .2 .7)>  type=1 size=[.1 .1 1. .02] color=[0 .5 0] contact }
+

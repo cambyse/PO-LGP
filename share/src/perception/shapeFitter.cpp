@@ -4,6 +4,8 @@
 #include <MT/ors.h>
 #include <MT/calibration.h>
 
+#if 0
+
 struct ShapeFitter: Process {
   FloatImage *eviL, *eviR;
   PerceptionOutput *percOut;
@@ -518,7 +520,7 @@ bool getShapeParamsFromEvidence(arr& params, arr& points,
     rprop.loop(params, problem, &cost, 1.e-1, 1., 100, 0); //Andreas: was 1.e-1
     // cout <<"*** cost=" <<cost <<" params=" <<params <<" time=" <<MT::timerRead() <<endl;
     
-    problem.fs(NoGrad, NoArr, params);
+    problem.fs(NoArr, NoArr, params);
     byteA img; copy(img, 10.f*problem.distImage);
     cvDrawPoints(img, problem.points);
     
@@ -752,4 +754,6 @@ void copyBodyInfos(ors::Graph& A, const ors::Graph& B){
 
 #ifndef MT_OPENCV
 void ShapeFitter::step(){ NICO }
+#endif
+
 #endif

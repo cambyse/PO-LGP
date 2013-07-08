@@ -1,0 +1,52 @@
+variable obs' <2>
+variable state' <4>
+variable action <4>
+variable state <4>
+
+factor Fobs (obs' state' action) [ 1 0.75 1 1
+      1 0.75 1 1
+      1 0.75 1 1
+      1 0.25 1 1
+     
+      0 0.25 0 0
+      0 0.25 0 0
+      0 0.25 0 0
+      0 0.75 0 0
+      ]
+factor Ftrans (state' action state) [ 0.1 0 0 0
+      1 0 0 0
+      0.5 0.5 0.5 0.5
+      0.5 0.5 0.5 0.5
+     
+      0.9 1 0 0
+      0 1 0 0
+      0 0 0 0
+      0 0 0 0
+     
+      0 0 1 0.9
+      0 0 1 0
+      0 0 0 0
+      0 0 0 0
+     
+      0 0 0 0.1
+      0 0 0 1
+      0.5 0.5 0.5 0.5
+      0.5 0.5 0.5 0.5
+      ]
+factor Finit (state) [ 0.5 0 0 0.5 ]
+factor Freward (action state) [ 0 0 0 0
+      0 0 0 0
+      -1 1 -1 -1
+      -1 -1 0 1 ]
+
+mdp . {
+  leftVars   (state)
+  rightVars  (state')
+  obsVars    (obs')
+  ctrlVars   (action)
+  initFacs   (Finit)
+  transFacs  (Ftrans)
+  obsFacs    (Fobs)
+  rewardFacs (Freward)
+  gamma      [0.95]
+}

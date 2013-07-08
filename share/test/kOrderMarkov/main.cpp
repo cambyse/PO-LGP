@@ -1,9 +1,9 @@
-#include <MT/util.h>
+#include <Core/util.h>
 #include <MT/optimization.h>
 #include "exampleProblem.h"
 #include <MT/soc_exampleProblems.h>
 #include <MT/gauss.h>
-#include <MT/plot.h>
+#include <Gui/plot.h>
 
 arr buildKernelMatrix(KOrderMarkovFunction& P){
   CHECK(P.hasKernel(),"");

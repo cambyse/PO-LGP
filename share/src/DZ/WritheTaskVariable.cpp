@@ -12,7 +12,7 @@ WritheTaskVariable::WritheTaskVariable(const char* _name,
   param=_param;
   segments1=_segments1;
   segments2=_segments2;
-  set(_name, _ors, userTVT, -1, ors::Transformation(), -1, ors::Transformation(), ARR());
+  set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, ARR());
 }
 
 
@@ -35,12 +35,12 @@ void GetRopes(arr& r1,arr& r2,const ors::Graph& _ors,int rope_points1,int rope_p
    
     ors::Vector shift,neg_shift; shift.set(0.,0.,.1); neg_shift.set(0.,0.,-.1);
   for (int i=0;i<rope_points1;i++) {// start with second body part
-     _ors.kinematics(ty,i,  &shift ); 
+     _ors.kinematicsPos(ty,i,  &shift ); 
       rope1[i] = ty;
     }
 
 
-  _ors.kinematics(ty,1,  &neg_shift ); // first body relative transformation
+  _ors.kinematicsPos(ty,1,  &neg_shift ); // first body relative transformation
    rope1[0] = ty;
    
   for (int i=0;i<rope_points2;i++) {// start with second body part
@@ -53,18 +53,18 @@ void GetRopes(arr& r1,arr& r2,const ors::Graph& _ors,int rope_points1,int rope_p
  // cout<<rope1<<endl;
 //  cout<<rope2<<endl;
 }
-//! Matrix
+/// Matrix
 
 void WritheTaskVariable::userUpdate(const ors::Graph& ors){
     arr rope1,rope2,yy,Jp,JM,points;
     GetRopes(rope1,rope2,ors,segments1+1,segments2+1,obj_name);
     GetWritheMatrix(yy,rope1,rope2,segments1,segments2);
-    //! VECTOR
+    /// VECTOR
 //     y  = zeros(segments,1);
 //     //y.reshape(segments,1);
 //     y=yy[0];
 //     int wrsize = segments;
-    //! MATRIX
+    /// MATRIX
     y=zeros(segments1,segments2);
     y=yy;
     int wrsize = (segments1)* (segments2);
@@ -72,7 +72,7 @@ void WritheTaskVariable::userUpdate(const ors::Graph& ors){
      ors::Vector shift; shift.set(0.,0.,.1);
     ///////////Jacobian
       for (int k=0;k<segments1;k++){
-       ors.jacobian(Jp,k,&shift); // Zero jacobian? +1
+       ors.jacobianPos(Jp,k,&shift); // Zero jacobian? +1
 	 points.append(Jp);
        } 
        WritheJacobian(JM,rope1,rope2,points,segments1,segments2);  
@@ -88,10 +88,10 @@ void WritheTaskVariable::userUpdate(const ors::Graph& ors){
 transpose(Jt,J);
 }
 
-//!end of matrix
+///end of matrix
 
 
-//! Scalar
+/// Scalar
 // void WritheTaskVariable::userUpdate(){
 //     arr rope1,rope2,yy,Jp,JM,points;
 //     GetRopes(rope1,rope2,*this->ors,segments+1,obj_name);
@@ -103,7 +103,7 @@ transpose(Jt,J);
 // //cout <<y<<endl;
 //     ///////////Jacobian
 //       for (int k=0;k<segments;k++){
-//        this->ors->jacobian(Jp,k,&ors::Vector(0.,0.,.1)); // Zero jacobian? +1
+//        this->ors->jacobianPos(Jp,k,&ors::Vector(0.,0.,.1)); // Zero jacobian? +1
 // 	 points.append(Jp);
 //        } 
 //        ScalarJacobian(JM,rope1,rope2,points,segments);  
@@ -118,7 +118,7 @@ transpose(Jt,J);
 //    J=JM;
 // transpose(Jt,J);
 // }
-//! End of scalar
+/// End of scalar
 
 void WritheTaskVariable::epsilon_check(arr& delta_q, const ors::Graph& ors){
     arr rope1,rope2,yy,Jp,JM,points,y1,y2;
@@ -138,7 +138,7 @@ arr delta_y;
      ors::Vector shift; shift.set(0.,0.,.1);
     ///////////Jacobian
   for (int k=0;k<segments1;k++){
-       ors.jacobian(Jp,k,&shift); // Zero jacobian? +1
+       ors.jacobianPos(Jp,k,&shift); // Zero jacobian? +1
 	 points.append(Jp);
        } 
        WritheJacobian(JM,rope1,rope2,points,segments1,segments2);  
@@ -183,7 +183,7 @@ void WritheTaskVariable::delta_check(arr& delta_q, const ors::Graph& ors){
   ors::Vector shift; shift.set(0.,0.,.1);
     ///////////Jacobian
       for (int k=0;k<segments1;k++){
-       ors.jacobian(Jp,k,&shift); // Zero jacobian? +1
+       ors.jacobianPos(Jp,k,&shift); // Zero jacobian? +1
 	 points.append(Jp);
        } 
        ScalarJacobian(J,rope1,rope2,points,segments1);  
@@ -222,8 +222,8 @@ void WritheTaskVariable::userUpdate(){
 
     ///////////Jacobian
       for (int k=0;k<11;k++){
-	 //ors->jacobian(Jp,k+1,NULL);
-         ors.jacobian(Jp,k+1);
+	 //ors->jacobianPos(Jp,k+1,NULL);
+         ors.jacobianPos(Jp,k+1);
 	 points.append(Jp);
        }
        WritheJacobian(JM,rope1,rope2,points);  

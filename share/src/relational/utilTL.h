@@ -31,7 +31,7 @@
 #ifndef MT_IMPLEMENT_TEMPLATES
 #define MT_IMPLEMENT_TEMPLATES
 #endif
-#include <MT/array.h>
+#include <Core/array.h>
 #include <MT/util.h>
 #include <cmath>
 
@@ -153,7 +153,7 @@ double REPLACE_SIZE(double val);
 // Rprop (taken from Marc Toussaint)
 //
 
-/*! Rprop, a fast gradient-based minimization */
+/** Rprop, a fast gradient-based minimization */
 class Rprop{
 public:
   double incr;

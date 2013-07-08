@@ -14,15 +14,15 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/> */
 
-/*! \file npors.h
-    \brief Routines for and around Marc's ORS and ORS-OpenGL code */
+/** @file npors.h
+    @brief Routines for and around Marc's ORS and ORS-OpenGL code */
 
 #ifndef _NP_CVORS_H
 #define _NP_CVORS_H
 
-#include<MT/array.h>
-#include<MT/opengl.h>
-#include<MT/ors.h>
+#include <Core/array.h>
+#include <MT/opengl.h>
+#include <MT/ors.h>
 
 namespace np {
 
