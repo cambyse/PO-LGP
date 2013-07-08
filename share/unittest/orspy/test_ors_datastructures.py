@@ -47,6 +47,20 @@ class Test_VectorOperatorOverloading(unittest.TestCase):
         self.assertFalse(v2 != v3)
 
 
+class Test_ListOfOrsDatastuctures(unittest.TestCase):
+    def test_vector(self):
+        v1 = orspy.Vector(1, 2, 3)
+        v2 = orspy.Vector(3, 2, 1)
+        l = []
+        l.append(v1)
+        l.append(v2)
+
+        self.assertTrue(v1 == l[0])
+        self.assertTrue(v2 == l[1])
+        self.assertTrue(v1 != l[1])
+        self.assertTrue(v2 != l[0])
+
+
 class Test_MatrixOperatorOverloading(unittest.TestCase):
     def test_add(self):
         m1, m2 = orspy.Matrix(), orspy.Matrix()
