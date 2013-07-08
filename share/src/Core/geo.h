@@ -35,6 +35,7 @@ struct Vector {
   
   Vector() {}
   Vector(double x, double y, double z) { set(x, y, z); }
+  Vector(const Vector& v) { set(v.x, v.y, v.z); }
   Vector(const arr& x) { CHECK(x.N==3, "");  set(x.p); }
   double *p() { return &x; }
   
@@ -70,6 +71,7 @@ struct Matrix {
   
   Matrix() {}
   Matrix(const arr& m) { CHECK(m.N==9, "");  set(m.p); };
+  Matrix(const Matrix& m) { set(&m.m00); }
   double *p() { return &m00; }
   
   void set(double* m);
@@ -97,6 +99,7 @@ struct Quaternion {
   Quaternion() {}
   Quaternion(double w, double x, double y, double z) { set(w,x,y,z); }
   Quaternion(const arr& q) { CHECK(q.N==4, "");  set(q.p); };
+  Quaternion(const Quaternion& q) { set(q.w, q.x, q.y, q.y); };
   double *p() { return &w; }
   
   void set(double w, double x, double y, double z);
@@ -151,6 +154,7 @@ struct Transformation {
   bool zero,zeroVels;    ///< velocities are identically zero
   
   Transformation() {}
+  Transformation(const &Transformation t) : pos(t.pos), rot(t.rot), vel(t.vel), angvel(t.angvel), zero(t.zero), zeroVels(t.zeroVels) {}
   
   Transformation& setZero();
   Transformation& setText(const char* txt);
