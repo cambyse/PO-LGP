@@ -267,6 +267,7 @@ struct Vector {
   Vector() {}
   Vector(double x, double y, double z);
   Vector(const arr& x);
+  Vector(const Vector& v);
   double *p();
 
   void set(double, double, double);
@@ -360,6 +361,7 @@ struct Quaternion {
   Quaternion();
   Quaternion(double w, double x, double y, double z);
   Quaternion(const arr& q);
+  Quaternion(const Quaternion& q);
   double *p();
 
   void set(double w, double x, double y, double z);
@@ -417,6 +419,7 @@ struct Transformation {
   Vector angvel;
 
   Transformation();
+  Transformation(const Transformation& t);
 
   void setZero();
   Transformation& setText(const char* txt);
