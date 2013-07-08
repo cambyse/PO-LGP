@@ -71,7 +71,7 @@ struct Matrix {
   
   Matrix() {}
   Matrix(const arr& m) { CHECK(m.N==9, "");  set(m.p); };
-  Matrix(const Matrix& m) { set(&m.m00); }
+  Matrix(const Matrix& m) : m00(m.m00), m01(m.m01), m02(m.m02), m10(m.m10), m11(m.m11), m12(m.m12), m20(m.m20), m21(m.m21), m22(m.m22) {};
   double *p() { return &m00; }
   
   void set(double* m);
@@ -153,8 +153,8 @@ struct Transformation {
   Vector angvel;  ///< angular velocity
   bool zero,zeroVels;    ///< velocities are identically zero
   
-  Transformation() {}
-  Transformation(const &Transformation t) : pos(t.pos), rot(t.rot), vel(t.vel), angvel(t.angvel), zero(t.zero), zeroVels(t.zeroVels) {}
+  Transformation() {};
+  Transformation(const Transformation &t) : pos(t.pos), rot(t.rot), vel(t.vel), angvel(t.angvel), zero(t.zero), zeroVels(t.zeroVels) {};
   
   Transformation& setZero();
   Transformation& setText(const char* txt);
