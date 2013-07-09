@@ -9,6 +9,7 @@ import the_curious_robot.msg as msgs
 from articulation_msgs.msg import ModelMsg, TrackMsg
 from articulation_msgs.srv import TrackModelSrv, TrackModelSrvRequest
 import util
+import require_provide as rp
 
 # different joint types
 PRISMATIC = 0
@@ -35,23 +36,27 @@ class LearnActionServer:
 
         # action server
         self.server = SimpleActionServer(name, msgs.LearnAction,
-                execute_cb=self.execute)
+                execute_cb=self.execute, auto_start=False)
         self.server.register_preempt_callback(self.preempt_cb)
         self.server.start()
+
+        rp.Provide("Learn")
 
     def execute(self, msg):
         if not self.trajectory:
             self.server.set_aborted()
             return
 
-        for model_type, model_name in MODELS.items():
-            request = TrackModelSrvRequest()
-            request.model.track = util.create_track_msg(self.trajectory, model_type)
+        request = TrackModelSrvRequest()
+        request.model.track = util.create_track_msg(self.trajectory)
 
-            try:
-                # here we learn
-                response = self.dof_learner(request)
+        try:
+            # here we learn
+            response = self.dof_learner(request)
 
+            #rospy.loginfo(response.model)
+
+            if response.model.params:
                 logLH = [entry.value for entry in response.model.params
                          if entry.name == 'loglikelihood'][0]
                 rospy.loginfo("selected model: '%s' (n = %d, log LH = %f)" % (
@@ -59,11 +64,10 @@ class LearnActionServer:
                     len(response.model.track.pose),
                     logLH
                 ))
-                # TODO: add to world_belief and publish
-                self.server.set_succeeded()
-            except rospy.ServiceException:
-                print "model selection failed"
-                self.server.set_aborted()
+            # TODO: add to world_belief and publish
+        except rospy.ServiceException:
+            self.server.set_aborted()
+        self.server.set_succeeded()
 
     def preempt_cb(self):
         self.server.set_preempted()

@@ -2,6 +2,8 @@
 
 import roslib
 import orspy
+import corepy
+
 roslib.load_manifest('the_curious_robot')
 roslib.load_manifest('actionlib')
 import rospy
@@ -9,6 +11,8 @@ from actionlib import SimpleActionServer
 import the_curious_robot.msg as msgs
 import util
 import threading
+
+import require_provide as rp
 
 def get_ooi(oois, ooi_id):
     for ooi in oois:
@@ -34,16 +38,18 @@ class ObserveOOITrajActionServer:
         self.oois = []
         self.trajectory = []
         self.trajectory_lock = threading.Lock()
-        self.send = False
+        self.data_changed = True
 
         #ActionLib Server
         self.server = SimpleActionServer(name, msgs.ObserveOOITrajAction,
-                execute_cb=self.execute)
+                execute_cb=self.execute, auto_start=False)
         self.server.register_preempt_callback(self.preempt_cb)
         self.server.start()
 
+        rp.Provide('ObserveOOITraj')
+
     def execute(self, msg):
-        while not self.send and not rospy.is_shutdown():
+        while self.data_changed and not rospy.is_shutdown():
             rospy.sleep(.1)
 
         with self.trajectory_lock:
@@ -61,11 +67,9 @@ class ObserveOOITrajActionServer:
                 self.send = False
             else:
                 rospy.loginfo("empty trajectory")
+
         self.server.set_succeeded()
         
-    def ooi_id_cb(self, msg):
-        self.ooi_id = msg.id
-
     def percept_cb(self, data):
         if data.changed:
             for body_str in data.bodies:
@@ -73,9 +77,9 @@ class ObserveOOITrajActionServer:
                 if body.name != self.ooi_id:
                     continue
                 with self.trajectory_lock:
-                    self.trajectory.append(orspy.Transformation(body.X))
+                    self.trajectory.append(corepy.Transformation(body.X))
 
-        self.send = not data.changed
+        self.data_changed = data.changed
 
     def preempt_cb(self):
         self.server.set_preempted()
@@ -83,6 +87,8 @@ class ObserveOOITrajActionServer:
     def oois_cb(self, msg):
         self.oois = util.parse_oois_msg(msg)
 
+    def ooi_id_cb(self, msg):
+        self.ooi_id = msg.id
 
 def main():
     rospy.init_node('tcr_sas_observe_ooi_traj')

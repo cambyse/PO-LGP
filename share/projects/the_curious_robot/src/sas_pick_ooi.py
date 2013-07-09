@@ -9,6 +9,8 @@ import the_curious_robot.msg as msgs
 import random
 import util
 
+import require_provide as rp
+
 class PickOOIActionServer:
     def __init__(self, name):
         self.oois = None
@@ -23,9 +25,10 @@ class PickOOIActionServer:
 
         # Actionlib Server
         self.server = SimpleActionServer(name, msgs.PickOOIAction,
-                execute_cb=self.execute)
+                execute_cb=self.execute, auto_start=False)
         self.server.register_preempt_callback(self.preempt_cb)
         self.server.start()
+        rp.Provide("PickOOI")
 
     def execute(self, msg):
         if self.oois is None:

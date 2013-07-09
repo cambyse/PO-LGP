@@ -8,12 +8,15 @@ import random
 from actionlib import SimpleActionServer
 from the_curious_robot.msg import ArticulateOOIAction
 
+import require_provide as rp
+
 class ArticulateOOIActionServer:
     def __init__(self, name):
         self.server = SimpleActionServer(name, ArticulateOOIAction,
-                execute_cb=self.execute)
+                execute_cb=self.execute, auto_start=False)
         self.server.register_preempt_callback(self.preempt_cb)
         self.server.start()
+        rp.Provide("ArticulateOOI")
 
     def execute(self, msg):
         rospy.sleep(.33)
