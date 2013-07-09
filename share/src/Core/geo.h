@@ -43,8 +43,8 @@ struct Vector {
   void set(double*);
   void setZero();
   void setRandom(double range=1.);
-  void add(double, double, double);
-  void subtract(double, double, double);
+  //void add(double, double, double);
+  //void subtract(double, double, double);
   void normalize();
   void setLength(double);
   void makeNormal(const Vector&);
