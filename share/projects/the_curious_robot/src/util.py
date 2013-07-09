@@ -1,4 +1,5 @@
 import orspy as ors
+import corepy
 
 import roslib
 import rospy
@@ -89,7 +90,7 @@ def create_oois_msg(objects):
 def parse_trajectory_msg(msg):
     trajectory = []
     for p in msg.pos:
-        pose = ors.Transformation()
+        pose = corepy.Transformation()
         pose.pos.x = p.position.x
         pose.pos.y = p.position.y
         pose.pos.z = p.position.z
@@ -107,13 +108,14 @@ def create_trajectory_msg(obj_id, pos):
     msg.object = obj_id
     return msg
 
-def create_track_msg(trajectory, model):
+def create_track_msg(trajectory):
     msg = TrackMsg()
     msg.header.stamp = rospy.get_rostime()
     msg.header.frame_id = '/'
-    msg.id = model
+    #msg.id = model
 
     for t in trajectory:
-        pose = geometry_msgs.msg.Pose(t.pos, t.rot)
+        pose = geometry_msgs.msg.Pose(t.pos, geometry_msgs.msg.Quaternion(0, 0,
+            0, 1))
         msg.pose.append(pose)
     return msg
