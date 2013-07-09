@@ -17,6 +17,8 @@ import orspy as ors
 import Queue
 import time
 
+import require_provide as rp
+
 
 class FakePerception():
     """
@@ -24,7 +26,7 @@ class FakePerception():
     """
     def __init__(self):
         # init the node: test_fitting
-        rospy.init_node('tcr_perception', log_level = rospy.DEBUG)
+        rospy.init_node('tcr_perception')
 
         self.world = ors.Graph()
         worldfile = os.path.join(
@@ -54,6 +56,7 @@ class FakePerception():
         return msg
 
     def run(self):
+        rp.Provide("Perception")
         """ the perception loop """
         while not rospy.is_shutdown():
             self.step()

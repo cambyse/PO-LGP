@@ -31,6 +31,7 @@
 
 #undef abs
 #include <algorithm>
+#include <sstream>
 #include "ors.h"
 
 #ifndef MT_ORS_ONLY_BASICS

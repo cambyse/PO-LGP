@@ -52,11 +52,12 @@ def get_mlr_path():
 %module orspy
 %{
   #include "ors.h"
-  #include "array.h"
-  #include "array_t.cxx"
-  #include "opengl.h"
-  #include "algos.h"
   #include "ors_physx.h"
+  #include "Core/geo.h"
+  #include "Core/array.h"
+  #include "Core/array_t.h"
+  #include "Core/algos.h"
+  #include "Gui/opengl.h"
   #include <sstream>
 %}
 
@@ -256,7 +257,7 @@ public:
 namespace ors {
 
 enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, meshST, cylinderST, markerST, pointCloudST };
-enum JointType { hingeJT=0, sliderJT, universalJT, fixedJT, ballJT, glueJT };
+enum JointType { JT_none=-1, JT_hingeX=0, JT_hingeY=1, JT_hingeZ=2, JT_transX=3, JT_transY=4, JT_transZ=5, JT_trans3, JT_universal, JT_fixed=10, JT_glue };
 enum BodyType  { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };
 
 
@@ -267,6 +268,7 @@ struct Vector {
   Vector() {}
   Vector(double x, double y, double z);
   Vector(const arr& x);
+  Vector(const Vector& v);
   double *p();
 
   void set(double, double, double);
@@ -360,6 +362,7 @@ struct Quaternion {
   Quaternion();
   Quaternion(double w, double x, double y, double z);
   Quaternion(const arr& q);
+  Quaternion(const Quaternion& q);
   double *p();
 
   void set(double w, double x, double y, double z);
@@ -417,6 +420,7 @@ struct Transformation {
   Vector angvel;
 
   Transformation();
+  Transformation(const Transformation& t);
 
   void setZero();
   Transformation& setText(const char* txt);
@@ -438,8 +442,6 @@ struct Transformation {
 
   void appendTransformation(const Transformation& f);
   void appendInvTransformation(const Transformation& f);
-  void prependTransformation(const Transformation& f);
-  void prependInvTransformation(const Transformation& f);
 
   double* getAffineMatrix(double *m) const;
   double* getInverseAffineMatrix(double *m) const;
@@ -530,23 +532,23 @@ struct Mesh {
 
 
 //===========================================================================
-struct Spline {
-  uint T, K, degree;
-  arr points;
-  arr times;
-  arr weights;
-  arr basis, basis_trans, basis_timeGradient;
+/*struct Spline {*/
+  /*uint T, K, degree;*/
+  /*arr points;*/
+  /*arr times;*/
+  /*arr weights;*/
+  /*arr basis, basis_trans, basis_timeGradient;*/
 
-  void plotBasis();
-  void setBasis();
-  void setBasisAndTimeGradient();
-  void setUniformNonperiodicBasis(uint T, uint K, uint degree);
-  void evalF(arr& f_t, uint t) const;
-  void evalF(arr& f) const;
+  /*void plotBasis();*/
+  /*void setBasis();*/
+  /*void setBasisAndTimeGradient();*/
+  /*void setUniformNonperiodicBasis(uint T, uint K, uint degree);*/
+  /*void evalF(arr& f_t, uint t) const;*/
+  /*void evalF(arr& f) const;*/
 
-  void partial(arr& dCdx, const arr& dCdf) const;
-  void partial(arr& dCdx, arr& dCdt, const arr& dCdf, bool constrain=true) const;
-};
+  /*void partial(arr& dCdx, const arr& dCdf) const;*/
+  /*void partial(arr& dCdx, arr& dCdt, const arr& dCdf, bool constrain=true) const;*/
+/*};*/
 
 
 //===========================================================================
@@ -609,7 +611,7 @@ struct Joint {
   Transformation A;
   Transformation Q;
   Transformation B;
-  Transformation Xworld;
+  Transformation X;
   KeyValueGraph ats;
 
   Joint();
@@ -672,18 +674,17 @@ struct Shape {
 
 
 //===========================================================================
+
 struct Proxy {
   int a;
   int b;
-  Vector posA, velA;
-  Vector posB, velB;
-  Vector normal;
-  double d;
-  Transformation rel;
-  uint age,colorCode;
+  Vector posA, cenA;
+  Vector posB, cenB;
+  Vector normal, cenN;
+  double d, cenD;
+  uint colorCode;
   Proxy();
 };
-
 
 //===========================================================================
 struct Graph {
@@ -725,9 +726,9 @@ struct Graph {
   void fillInRelativeTransforms();
 
   //!@name kinematics & dynamics
-  void kinematics(arr& x, uint i, ors::Vector *rel=0) const;
-  void jacobian(arr& J, uint i, ors::Vector *rel=0) const;
-  void hessian(arr& H, uint i, ors::Vector *rel=0) const;
+  void kinematicsPos(arr& x, uint i, ors::Vector *rel=0) const;
+  void jacobianPos(arr& J, uint i, ors::Vector *rel=0) const;
+  void hessianPos(arr& H, uint i, ors::Vector *rel=0) const;
   void kinematicsVec(arr& z, uint i, ors::Vector *vec=0) const;
   void jacobianVec(arr& J, uint i, ors::Vector *vec=0) const;
   void jacobianR(arr& J, uint a) const;
@@ -738,15 +739,15 @@ struct Graph {
 
   //!@name get state
   uint getJointStateDimension(bool internal=false) const;
-  // void getJointState(arr& x, arr& v) const;
+  void getJointState(arr& x, arr& v) const;
   void getJointState(arr& x) const;
-  uint getFullStateDimension() const;
-  void getFullState(arr& x) const;
-  void getFullState(arr& x, arr& v) const;
+  /*uint getFullStateDimension() const;*/
+  /*void getFullState(arr& x) const;*/
+  /*void getFullState(arr& x, arr& v) const;*/
   void getContactConstraints(arr& y) const;
   void getContactConstraintsGradient(arr &dydq) const;
-  void getContactMeasure(arr &x, double margin=.02, bool linear=false) const;
-  double getContactGradient(arr &grad, double margin=.02, bool linear=false) const;
+  /*void getContactMeasure(arr &x, double margin=.02, bool linear=false) const;*/
+  /*double getContactGradient(arr &grad, double margin=.02, bool linear=false) const;*/
   void getLimitsMeasure(arr &x, const arr& limits, double margin=.1) const;
   double getLimitsGradient(arr &grad, const arr& limits, double margin=.1) const;
   void getComGradient(arr &grad) const;
@@ -768,8 +769,8 @@ def setJointStateList(self, jointState):
     tmp.setWithList(jointState)
     self.setJointState(tmp)
 %} //end of %pythoncode
-  void setFullState(const arr& x, bool clearJointErrors=false);
-  void setFullState(const arr& x, const arr& v, bool clearJointErrors=false);
+  /*void setFullState(const arr& x, bool clearJointErrors=false);*/
+  /*void setFullState(const arr& x, const arr& v, bool clearJointErrors=false);*/
   void setExternalState(const arr & x);//set array of body positions, sets all degrees of freedom except for the joint states
 
   //!@name forces and gravity
@@ -784,7 +785,7 @@ def setJointStateList(self, jointState):
   void reportGlue(std::ostream *os=&std::cout);
 
   //!@name managing the data
-  void sortProxies(bool deleteMultiple=false, bool deleteOld=false);
+  void sortProxies(bool deleteMultiple=false);
   bool checkUniqueNames() const;
 
   Body *getBodyByName(const char* name) const;
@@ -859,7 +860,7 @@ void generateSequence(arr& X, arr& V, uint n) {
   //a set of random via points with zero start and end:
   rndUniform(P, -1., 1., false); P[0] = 0.; P[P.d0 - 1] = 0.;
   //convert into a smooth spline (1/0.03 points per via point):
-  MT::makeSpline(X, V, P, (int)(1 / 0.03));
+  /*MT::makeSpline(X, V, P, (int)(1 / 0.03));*/
 };
 %}
 

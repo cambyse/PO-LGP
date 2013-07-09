@@ -74,7 +74,6 @@ enum JointType { JT_none=-1, JT_hingeX=0, JT_hingeY=1, JT_hingeZ=2, JT_transX=3,
 enum BodyType  { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };
 /** @} */
 
-
 struct Joint;
 struct Shape;
 struct Body;

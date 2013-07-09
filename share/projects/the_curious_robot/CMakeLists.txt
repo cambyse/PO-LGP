@@ -51,13 +51,13 @@ link_directories(
 	${MLR_PATH}/share/lib
 )
 
-rosbuild_add_executable(the_curious_robot
-	src/main.cpp
-)
+# rosbuild_add_executable(the_curious_robot
+# 	src/main.cpp
+# )
 
 # Link against the MLR libs
-target_link_libraries(${PROJECT_NAME}
-	libMT.so
-	libbiros.so
-	libmotion.so
-)
+# target_link_libraries(${PROJECT_NAME}
+# 	libMT.so
+# 	libbiros.so
+# 	libmotion.so
+# )

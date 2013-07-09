@@ -30,25 +30,12 @@ class InitServer:
             world = world_init()
             for p in world.bodies:
                 b = util.parse_body_msg(p)
-                oois.append( (b, util.Properties()) )
+                oois.append( {'body': b, 'properties': util.Properties()} )
                 self.graph.addObject(b)
         except rospy.ServiceException, e:
             self.server.set_aborted()
 
-        rospy.logdebug("5")
-
-        oois_msg = msgs.Objects()
-        for ooi in oois:
-            ooi_msg = msgs.Object()
-            ooi_msg.body = ooi[0].name + ' ' + str(ooi[0])
-            for prop_name in ooi[1].property_names():
-                prop_msg = msgs.Property()
-                prop_msg.name = prop_name
-                prop_msg.values = [ getattr(ooi[1], prop_name).mu, 
-                                    getattr(ooi[1], prop_name).sigma ]
-                ooi_msg.properties.append(prop_msg)
-            oois_msg.objects.append(ooi_msg)
-
+        oois_msg = util.create_oois_msg(oois)
         self.oois_pub.publish(oois_msg)
 
         belief_msg = msgs.ors()
@@ -60,7 +47,7 @@ class InitServer:
         self.server.set_succeeded()
 
 def main():
-    rospy.init_node('tcr_sas_init', log_level = rospy.DEBUG)
+    rospy.init_node('tcr_sas_init')
     server = InitServer('init')
 
 if __name__ == '__main__':
