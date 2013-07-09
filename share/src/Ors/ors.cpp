@@ -183,6 +183,11 @@ void ors::Body::read(const char* string) {
   read(str);
 }
 
+namespace ors {
+std::ostream& operator<<(std::ostream& os, const Body& x) { x.write(os); return os; }
+std::ostream& operator<<(std::ostream& os, const Shape& x) { x.write(os); return os; }
+std::ostream& operator<<(std::ostream& os, const Joint& x) { x.write(os); return os; }
+}
 
 //===========================================================================
 //
