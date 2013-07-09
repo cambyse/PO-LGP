@@ -293,6 +293,7 @@ void PhysXInterface::create() {
     if (b->type == ors::dynamicBT) {
       if(!b->ats.getValue<double>("mass")) 
         PxRigidBodyExt::updateMassAndInertia(*actor, 1.f);
+    }
     if(b->type == ors::dynamicBT) {
       PxRigidBodyExt::updateMassAndInertia(*actor, 1.f);
       actor->setAngularDamping(0.75);
