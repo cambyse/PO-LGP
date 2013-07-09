@@ -1,50 +1,67 @@
 #! /bin/sh
 
-NAME=ode-0.11
+## parameters for this install
 FILE=ode-0.11.tar.gz
+SRC_PATH=ode-0.11
+URL='https://mlr-owncloud.informatik.uni-stuttgart.de/public.php?service=files&t=c55ce4f1ee54e4da95aa8eaa5ea48b02&download'
 THIS_PATH=$PWD
 
-[ -z $MLR_URL ] && MLR_URL=http://userpage.fu-berlin.de/mtoussai/smScpB076X
 [ -z $MLR_LIBPATH ] && MLR_LIBPATH=/home/lib
 
-echo "*** Installing" $NAME "into" $MLR_LIBPATH
+echo "*** Installing" $SRC_PATH "into" $MLR_LIBPATH
 echo
 
-## download file
+## download
+echo -n "  * Checking for file" /tmp/$FILE "-> download"
+read -p " -- [Enter] to continue..." yn
 if [ ! -f /tmp/$FILE ] ; then
-  wget -O /tmp/$FILE $MLR_URL/$FILE
+  wget -O /tmp/$FILE $URL --no-check-certificate
   if [ ! -f /tmp/$FILE ] ; then
-    echo "You need to download " $MLR_URL/$FILE " and store it in " $FILE
+    echo "Automatic Download failed. You need to download " $URL " and store it in " /tmp/$FILE
     exit
   fi
 fi
 
 ## check existance of lib path
+echo -n "  * Checking for directory" $MLR_LIBPATH
+read -p " -- [Enter] to continue..." yn
 if [ ! -d $MLR_LIBPATH ] ; then
-  exit
+  mkdir -p $MLR_LIBPATH
 fi
 
 ## delete & unpack
-cd $MLR_LIBPATH
-echo "unpacking in path:" $PWD
-rm -R $NAME
-tar xvzf /tmp/$FILE
-cd $NAME
+echo -n "  * Delete" $MLR_LIBPATH/src/$SRC_PATH "and unpack" /tmp/$FILE "?"
+read -p " -- y/[n] ?" yn
+case $yn in
+    y|Y)
+	mkdir -p $MLR_LIBPATH/src
+	cd $MLR_LIBPATH/src
+	rm -R $SRC_PATH
+	tar xvzf /tmp/$FILE
+	;;
+    *) ;;
+esac
 
 ## make
-cd $MLR_LIBPATH/$NAME
+echo -n "  * Compiling in" $MLR_LIBPATH/src/$SRC_PATH
+read -p " -- [Enter] to continue..." yn
+cd $MLR_LIBPATH/src/$SRC_PATH
 sh autogen.sh
 #./configure --help
 ./configure --prefix=$MLR_LIBPATH --enable-double-precision --with-trimesh=opcode --with-pic
 make -j2
 make install
 
-## cp internal includes
+## install
+echo -n "  * Copying additional headers to" $MLR_LIBPATH/include/ode/internal
+read -p " -- [Enter] to continue..." yn
 cd $MLR_LIBPATH
 mkdir -p include/ode/internal include/ode/internal/joints
-cp ode-0.11/ode/src/*.h include/ode/internal
-cp ode-0.11/ode/src/joints/*.h include/ode/internal/joints
+cp src/$SRC_PATH/ode/src/*.h include/ode/internal
+cp src/$SRC_PATH/ode/src/joints/*.h include/ode/internal/joints
 
 ## clean
-cd $MLR_LIBPATH/$NAME
+echo -n "  * Make clean in" $MLR_LIBPATH/src/$SRC_PATH
+read -p " -- [Enter] to continue..." yn
+cd $MLR_LIBPATH/src/$SRC_PATH
 find . -name '*.o' -delete

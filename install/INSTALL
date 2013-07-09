@@ -15,6 +15,6 @@ fi
 sh INSTALL_DEPENDENCIES.sh
 
 #install external libraries
-./PHYSX_install
+./PhysX_install
 ./ODE_install
 #./IBDS_install
