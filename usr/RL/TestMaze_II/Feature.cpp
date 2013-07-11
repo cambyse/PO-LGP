@@ -1,10 +1,3 @@
-/*
- * Feature.cpp
- *
- *  Created on: Nov 9, 2012
- *      Author: robert
- */
-
 #include "Feature.h"
 
 #define DEBUG_LEVEL 1
@@ -172,7 +165,7 @@ Feature::feature_return_value ConstFeature::evaluate(const instance_t *, action_
 }
 
 string ConstFeature::identifier() const {
-    QString id_string("c("
+    QString id_string(" c("
                       +QString(field_width[0]+2,' ')
                       +QString("%1").arg(const_return_value,field_width[1])
                       +")"
@@ -217,7 +210,7 @@ Feature::feature_return_value ActionFeature::evaluate(const instance_t * instanc
 }
 
 string ActionFeature::identifier() const {
-    QString id_string("a("
+    QString id_string(" a("
                       +QString(5-field_width[0],' ')
                       +QString(action_t::action_string(action))
                       +", "
@@ -272,7 +265,7 @@ Feature::feature_return_value StateFeature::evaluate(const instance_t * instance
 }
 
 string StateFeature::identifier() const {
-    QString id_string("s("
+    QString id_string(" s("
             +QString("%1").arg(state,field_width[0])
             +", "
             +QString("%1").arg(delay,field_width[1])
@@ -283,6 +276,70 @@ string StateFeature::identifier() const {
 
 bool StateFeature::features_contradict(const StateFeature& f1, const StateFeature& f2) {
     if(f1.delay==f2.delay && f1.state!=f2.state) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+RelativeStateFeature::RelativeStateFeature(const int& dx, const int& dy, const int& d1, const int& d2):
+    delta_x(dx), delta_y(dy), delay_1(d1), delay_2(d2)
+{
+    type = RELATIVE_STATE;
+    complexity = 1;
+    subfeatures.push_back(this);
+}
+
+RelativeStateFeature::~RelativeStateFeature() {}
+
+RelativeStateFeature * RelativeStateFeature::create(const int& dx, const int& dy, const int& d1, const int& d2) {
+    RelativeStateFeature * new_feature = new RelativeStateFeature(dx,dy,d1,d2);
+    basis_features.insert(unique_f_ptr(new_feature));
+    return new_feature;
+}
+
+Feature::feature_return_value RelativeStateFeature::evaluate(const instance_t * instance) const {
+    const_instanceIt_t insIt_1 = instance->const_it()+delay_1;
+    const_instanceIt_t insIt_2 = instance->const_it()+delay_2;
+    if(insIt_1==INVALID || insIt_2==INVALID) {
+        return 0;
+    }
+    state_t s_1 = insIt_1->state;
+    state_t s_2 = insIt_2->state;
+    idx_t x_1 = s_1%Config::maze_x_size;
+    idx_t y_1 = s_1/Config::maze_x_size;
+    idx_t x_2 = s_2%Config::maze_x_size;
+    idx_t y_2 = s_2/Config::maze_x_size;
+    if(x_1-x_2==delta_x && y_1-y_2==delta_y) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+Feature::feature_return_value RelativeStateFeature::evaluate(const instance_t * instance, action_t action, state_t state, reward_t reward) const {
+    instance_t * ins = instance_t::create(action,state,reward,instance);
+    Feature::feature_return_value ret = evaluate(ins);
+    delete ins;
+    return ret;
+}
+
+string RelativeStateFeature::identifier() const {
+    QString id_string = QString("rs(dx=%1,dy=%2,i1=%3,i2=%4)")
+        .arg(delta_x)
+        .arg(delta_y)
+        .arg(delay_1)
+        .arg(delay_2);
+    return id_string.toStdString()+Feature::identifier();
+}
+
+bool RelativeStateFeature::features_contradict(const RelativeStateFeature& f1, const RelativeStateFeature& f2) {
+    if(
+        f1.delay_1!=f2.delay_1 ||
+        f1.delay_2!=f2.delay_2 ||
+        f1.delta_x!=f2.delta_x ||
+        f1.delta_y!=f2.delta_y
+        ) {
         return true;
     } else {
         return false;
@@ -326,7 +383,7 @@ Feature::feature_return_value RewardFeature::evaluate(const instance_t * instanc
 }
 
 string RewardFeature::identifier() const {
-    QString id_string("r("
+    QString id_string(" r("
             +QString("%1").arg(reward,field_width[0])
             +", "
             +QString("%1").arg(delay,field_width[1])
@@ -418,7 +475,7 @@ AndFeature::feature_return_value AndFeature::evaluate(const look_up_map_t& look_
 }
 
 string AndFeature::identifier() const {
-    string id_string("^(");
+    string id_string(" ^(");
     bool first = true;
     for(subfeature_const_iterator_t feature_iterator=subfeatures.begin();
             feature_iterator!=subfeatures.end();

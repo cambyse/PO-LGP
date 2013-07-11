@@ -41,7 +41,7 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     linQ(discount),
     look_ahead_search(discount),
     max_tree_size(10000),
-    prune_search_tree(true),
+    prune_search_tree(false),
     target_activated(false)
 {
 

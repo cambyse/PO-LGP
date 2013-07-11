@@ -64,6 +64,24 @@ KMarkovCRF::KMarkovCRF():
             }
         }
     }
+
+    //relative state features
+    RelativeStateFeature * relative_state_feature;
+    relative_state_feature = RelativeStateFeature::create(1,0,-1,0);
+    basis_features.push_back(relative_state_feature);
+    DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
+    relative_state_feature = RelativeStateFeature::create(0,1,-1,0);
+    basis_features.push_back(relative_state_feature);
+    DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
+    relative_state_feature = RelativeStateFeature::create(-1,0,-1,0);
+    basis_features.push_back(relative_state_feature);
+    DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
+    relative_state_feature = RelativeStateFeature::create(0,-1,-1,0);
+    basis_features.push_back(relative_state_feature);
+    DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
+    relative_state_feature = RelativeStateFeature::create(0,0,-1,0);
+    basis_features.push_back(relative_state_feature);
+    DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
 }
 
 KMarkovCRF::~KMarkovCRF() {

@@ -21,7 +21,7 @@ public:
     typedef std::set<std::unique_ptr<Feature> >                 basis_feature_container_t;
     typedef double                                              feature_return_value;
     typedef std::unordered_map<Feature*,feature_return_value>   look_up_map_t;
-    enum TYPE { ABSTRACT, CONST_FEATURE, ACTION, STATE, REWARD, AND };
+    enum TYPE { ABSTRACT, CONST_FEATURE, ACTION, RELATIVE_STATE, STATE, REWARD, AND };
     // functions
     Feature();
     virtual ~Feature();
@@ -98,6 +98,24 @@ public:
 protected:
     state_t state;
     int delay;
+};
+
+class RelativeStateFeature: public Feature {
+private:
+    RelativeStateFeature(const int& dx, const int& dy, const int& d1, const int& d2);
+    virtual ~RelativeStateFeature();
+public:
+    static RelativeStateFeature * create(const int& dx, const int& dy, const int& d1, const int& d2);
+    virtual feature_return_value evaluate(const instance_t *) const;
+    virtual feature_return_value evaluate(const instance_t *, action_t, state_t, reward_t) const;
+    virtual std::string identifier() const;
+    static bool features_contradict(const RelativeStateFeature& f1, const RelativeStateFeature& f2);
+    bool contradicts(const RelativeStateFeature& f) { return features_contradict(*this,f); }
+protected:
+    int delta_x;
+    int delta_y;
+    int delay_1;
+    int delay_2;
 };
 
 class RewardFeature: public Feature {
