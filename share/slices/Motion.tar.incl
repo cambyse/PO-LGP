@@ -4,7 +4,6 @@ share/src/Ors
 share/src/Optim
 share/src/Motion
 
-
 share/examples/Core
 share/examples/Gui
 share/examples/Ors
@@ -12,6 +11,6 @@ share/examples/Optim
 share/examples/Motion
 
 share/include/lapack
-share/src/extern_ply
-share/src/extern_SWIFT
-share/src/extern_SWIFT_decomposer
+share/src/extern/ply
+share/src/extern/SWIFT
+share/src/extern/SWIFT_decomposer

@@ -10,6 +10,7 @@ x.exe
 MT.log
 
 *_doc/*
+html
 Makefile.dep
 
 SHARE

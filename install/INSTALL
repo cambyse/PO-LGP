@@ -2,7 +2,6 @@
 
 ## parameters for this install
 MLR_LIBPATH=/home/lib
-MLR_URL=http://userpage.fu-berlin.de/mtoussai/smScpB076X
 
 if [ ! -d $MLR_LIBPATH ] ; then
   echo "Creating lib directory: " $MLR_LIBPATH

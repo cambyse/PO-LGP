@@ -23,6 +23,7 @@
 #include "util.h"
 #include <math.h>
 #include <algorithm>
+#include <sstream>
 
 #define maxRank 30
 /** @brief if flexiMem is true (which is default!) the resize method will
