@@ -105,7 +105,7 @@ public:
     void print_tree(const bool& text, const bool& eps_export) const;
 
     /*! \brief Print the tree statistics to console. */
-    void print_tree_statistics() const;
+    void print_tree_statistics();
 
     size_t get_number_of_nodes() const { return number_of_nodes; }
 

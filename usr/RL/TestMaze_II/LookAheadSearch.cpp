@@ -3,6 +3,8 @@
 #include <float.h>
 #include <math.h>
 #include <lemon/graph_to_eps.h>
+#include <lemon/connectivity.h>
+#include <lemon/adaptors.h>
 #include <vector>
 
 #include "util.h"
@@ -139,116 +141,219 @@ LookAheadSearch::action_t LookAheadSearch::get_optimal_action() const {
     }
 
     // select action
-    idx_t actionIt = rand()%optimal_action_nodes.size();
-    node_t selected_action_node = optimal_action_nodes[actionIt];
-    DEBUG_OUT(3, "    choosing nr " << actionIt << " from " << optimal_action_nodes.size() << " actions");
+    action_t selected_action;
+    if(optimal_action_nodes.size()==0) {
+        DEBUG_OUT(0,"Error: No action available from root node (choosing STAY)");
+        selected_action = action_t::STAY;
+    } else {
+        idx_t actionIt = rand()%optimal_action_nodes.size();
+        node_t selected_action_node = optimal_action_nodes[actionIt];
+        DEBUG_OUT(3, "    choosing nr " << actionIt << " from " << optimal_action_nodes.size() << " actions");
 
-    // check
-    if(node_info_map[selected_action_node].type!=ACTION) {
-        DEBUG_OUT(0,"Error: Next action node is not of type ACTION");
+        // check
+        if(node_info_map[selected_action_node].type!=ACTION) {
+            DEBUG_OUT(0,"Error: Next action node is not of type ACTION");
+        }
+        selected_action = node_info_map[selected_action_node].action;
     }
-    action_t selected_action = node_info_map[selected_action_node].action;
     DEBUG_OUT(3,"    Optimal action: " << selected_action);
     return selected_action;
 }
 
+// void LookAheadSearch::prune_tree(const action_t& a, const instance_t * new_root_instance) {
+
+//     // TODO: There is still something wrong with this function. print_tree()
+//     // shows that the number of nodes in the graph is not updated correctely.
+
+//     // get undirected graph for using standard algorithms
+//     lemon::Undirector<graph_t> ugraph(graph);
+
+//     // some variables
+//     vector<node_t> nodes_to_delete;
+//     vector<arc_t> arcs_to_delete;
+//     node_t chosen_action_node;
+//     node_t new_root_node;
+
+//     DEBUG_OUT(2,"Pruning tree...");
+
+//     // insert actions that were not chosen
+//     DEBUG_OUT(3,"    Actions not chosen:");
+//     for(graph_t::OutArcIt arc_to_action(graph,root_node); arc_to_action!=INVALID; ++arc_to_action) {
+
+//         node_t action_node = graph.target(arc_to_action);
+
+//         // all arcs must be deleted
+//         DEBUG_OUT(3,"            add arc " << graph.id(arc_to_action));
+//         arcs_to_delete.push_back(arc_to_action);
+
+//         // chosen action is treated separately since all but one following state
+//         // node must be delete
+//         if(node_info_map[action_node].action!=a) {
+//             nodes_to_delete.push_back(action_node);
+//             DEBUG_OUT(3,"            add node " << graph.id(action_node) << " not chosen");
+//         } else {
+//             chosen_action_node = action_node;
+//             DEBUG_OUT(3,"        node " << graph.id(action_node) << " CHOSEN");
+//         }
+//     }
+
+//     // insert states that were not reached by chosen action
+//     DEBUG_OUT(3,"    States not reached by chosen action:");
+//     for(graph_t::OutArcIt arc_to_state(graph,chosen_action_node); arc_to_state!=INVALID; ++arc_to_state) {
+
+//         node_t state_node = graph.target(arc_to_state);
+
+//         // again all arcs must be deleted
+//         DEBUG_OUT(3,"            add arc " << graph.id(arc_to_state));
+//         arcs_to_delete.push_back(arc_to_state);
+
+//         // add states that were not reached
+//         if(node_info_map[state_node].instance->state!=new_root_instance->state) {
+//             nodes_to_delete.push_back(state_node);
+//             DEBUG_OUT(3,"            add node " << graph.id(state_node) << " not reached");
+//         } else {
+//             new_root_node = state_node;
+//             DEBUG_OUT(3,"        node " << graph.id(state_node) << " REACHED");
+//         }
+//     }
+
+//     DEBUG_OUT(3,"    Current nodes to delete:");
+//     for( node_t current_node_to_delete : nodes_to_delete ) {
+//         DEBUG_OUT(3,"        node " << graph.id(current_node_to_delete));
+//     }
+
+//     // insert all childern from nodes that are to be deleted
+//     DEBUG_OUT(3,"    Inserting all children:");
+//     for(unsigned long node_idx=0; node_idx<nodes_to_delete.size(); ++node_idx ) {
+//         node_t current_node_to_delete = nodes_to_delete[node_idx];
+//         DEBUG_OUT(3,"        children of node " << graph.id(current_node_to_delete));
+//         for(graph_t::OutArcIt arc_to_node(graph,current_node_to_delete); arc_to_node!=INVALID; ++arc_to_node) {
+//             node_t new_node_to_delete = graph.target(arc_to_node);
+//             DEBUG_OUT(3,"            add arc " << graph.id(arc_to_node));
+//             arcs_to_delete.push_back(arc_to_node);
+//             DEBUG_OUT(3,"            add node " << graph.id(new_node_to_delete));
+//             nodes_to_delete.push_back(new_node_to_delete);
+//         }
+//     }
+
+//     // actually delete the nodes and arcs
+//     DEBUG_OUT(3,"    Deleting arcs...");
+//     for( arc_t arc : arcs_to_delete ) {
+//         DEBUG_OUT(3,"        arc " << graph.id(arc));
+//         graph.erase(arc);
+//     }
+//     DEBUG_OUT(3,"    Deleting nodes...");
+//     for( node_t node : nodes_to_delete ) {
+//         DEBUG_OUT(3,"        node " << graph.id(node));
+//         if(node_info_map[node].type==STATE) {
+//             delete node_info_map[node].instance;
+//         }
+//         graph.erase(node);
+//     }
+
+//     // delete chosen action node
+//     DEBUG_OUT(3,"    Deleting chosen action node...");
+//     graph.erase(chosen_action_node);
+
+//     // delete old root node
+//     DEBUG_OUT(3,"    Deleting root node...");
+//     delete node_info_map[root_node].instance;
+//     graph.erase(root_node);
+
+//     // update root node
+//     root_node = new_root_node;
+//     instance_t * new_root_instance_copy = instance_t::create(new_root_instance->action, new_root_instance->state, new_root_instance->reward, new_root_instance->const_it()-1);
+//     *(node_info_map[root_node].instance) = *new_root_instance_copy;
+//     delete new_root_instance_copy;
+
+//     // update number of nodes
+//     DEBUG_OUT(3,"    Updating number of nodes...");
+//     number_of_nodes = 0;
+//     for(graph_t::NodeIt node(graph); node!=INVALID; ++node) {
+//         ++number_of_nodes;
+//     }
+
+//     // check graph structure
+//     if(!lemon::tree(ugraph)) {
+//         DEBUG_OUT(0,"Error: Search graph is not a tree");
+//     } else {
+//         DEBUG_OUT(0,"Search graph IS a tree");
+//     }
+
+//     DEBUG_OUT(2,"DONE");
+// }
+
 void LookAheadSearch::prune_tree(const action_t& a, const instance_t * new_root_instance) {
 
-    // TODO: There is still something wrong with this function. print_tree()
-    // shows that the number of nodes in the graph is not updated correctely.
+    // get undirected graph for using standard algorithms
+    typedef lemon::Undirector<graph_t> ugraph_t;
+    ugraph_t ugraph(graph);
 
+    // some variables
     vector<node_t> nodes_to_delete;
-    vector<arc_t> arcs_to_delete;
-    node_t chosen_action_node;
     node_t new_root_node;
 
     DEBUG_OUT(2,"Pruning tree...");
 
-    // insert actions that were not chosen
-    DEBUG_OUT(3,"    Actions not chosen:");
-    for(graph_t::OutArcIt arc_to_action(graph,root_node); arc_to_action!=INVALID; ++arc_to_action) {
-
+    // remove selected action node from tree to split into two components (we
+    // don't need to worry about arcs since they are erased along with the
+    // corresponding nodes)
+    graph_t::OutArcIt arc_to_action;
+    for(arc_to_action = graph_t::OutArcIt(graph,root_node); arc_to_action!=INVALID; ++arc_to_action) {
         node_t action_node = graph.target(arc_to_action);
+        if(node_info_map[action_node].action==a) {
+            DEBUG_OUT(2,"    Found chosen action node (" << graph.id(action_node) << ")");
+            // find new root node
+            state_t state = new_root_instance->state;
+            graph_t::OutArcIt arc_to_state;
+            for(arc_to_state = graph_t::OutArcIt(graph,action_node); arc_to_state!=INVALID; ++arc_to_state) {
+                node_t state_node = graph.target(arc_to_state);
+                if(node_info_map[state_node].instance->state==state) {
+                    DEBUG_OUT(2,"    Found new root node (" << graph.id(state_node) << ")");
+                    new_root_node=state_node;
+                    break;
+                }
+            }
+            if(arc_to_state==INVALID) {
+                DEBUG_OUT(0,"Error: Could not identify new root node");
+                return;
+            }
+            graph.erase(action_node);
+            break;
+        }
+    }
+    if(arc_to_action==INVALID) {
+        DEBUG_OUT(0,"Error: Could not identify choosen action");
+        return;
+    }
 
-        // all arcs must be deleted
-        DEBUG_OUT(3,"            add arc " << graph.id(arc_to_action));
-        arcs_to_delete.push_back(arc_to_action);
-
-        // chosen action is treated separately since all but one following state
-        // node must be delete
-        if(node_info_map[action_node].action!=a) {
-            nodes_to_delete.push_back(action_node);
-            DEBUG_OUT(3,"            add node " << graph.id(action_node) << " not chosen");
+    // identify and remember nodes that are not in the same component as the new
+    // root node
+    ugraph_t::NodeMap<int> component_map(ugraph);
+    int component_n = lemon::connectedComponents(ugraph,component_map);
+    if(component_n<2) {
+        DEBUG_OUT(0,"Error: Search tree was not split by removing chosen action node");
+        return;
+    } else {
+        DEBUG_OUT(2,"    " << component_n << " connected components");
+    }
+    int main_component = component_map[new_root_node];
+    DEBUG_OUT(2,"    main component: " << main_component);
+    for(ugraph_t::NodeIt node(ugraph); node!=INVALID; ++node) {
+        if(component_map[node]!=main_component) {
+            nodes_to_delete.push_back(node);
+            DEBUG_OUT(3,"    node " << graph.id(node) << " NOT in main component");
         } else {
-            chosen_action_node = action_node;
-            DEBUG_OUT(3,"        node " << graph.id(action_node) << " CHOSEN");
+            DEBUG_OUT(3,"    node " << graph.id(node) << " IS in main component");
         }
     }
 
-    // insert states that were not reached by chosen action
-    DEBUG_OUT(3,"    States not reached by chosen action:");
-    for(graph_t::OutArcIt arc_to_state(graph,chosen_action_node); arc_to_state!=INVALID; ++arc_to_state) {
-
-        node_t state_node = graph.target(arc_to_state);
-
-        // again all arcs must be deleted
-        DEBUG_OUT(3,"            add arc " << graph.id(arc_to_state));
-        arcs_to_delete.push_back(arc_to_state);
-
-        // add states that were not reached
-        if(node_info_map[state_node].instance->state!=new_root_instance->state) {
-            nodes_to_delete.push_back(state_node);
-            DEBUG_OUT(3,"            add node " << graph.id(state_node) << " not reached");
-        } else {
-            new_root_node = state_node;
-            DEBUG_OUT(3,"        node " << graph.id(state_node) << " REACHED");
-        }
-    }
-
-    DEBUG_OUT(3,"    Current nodes to delete:");
-    for( node_t current_node_to_delete : nodes_to_delete ) {
-        DEBUG_OUT(3,"        node " << graph.id(current_node_to_delete));
-    }
-
-    // insert all childern from nodes that are to be deleted
-    DEBUG_OUT(3,"    Inserting all children:");
-    for(unsigned long node_idx=0; node_idx<nodes_to_delete.size(); ++node_idx ) {
-        node_t current_node_to_delete = nodes_to_delete[node_idx];
-        DEBUG_OUT(3,"        children of node " << graph.id(current_node_to_delete));
-        for(graph_t::OutArcIt arc_to_node(graph,current_node_to_delete); arc_to_node!=INVALID; ++arc_to_node) {
-            node_t new_node_to_delete = graph.target(arc_to_node);
-            DEBUG_OUT(3,"            add arc " << graph.id(arc_to_node));
-            arcs_to_delete.push_back(arc_to_node);
-            DEBUG_OUT(3,"            add node " << graph.id(new_node_to_delete));
-            nodes_to_delete.push_back(new_node_to_delete);
-        }
-    }
-
-    // actually delete the nodes and arcs
-    DEBUG_OUT(3,"    Deleting arcs...");
-    for( arc_t arc : arcs_to_delete ) {
-        DEBUG_OUT(3,"        arc " << graph.id(arc));
-        graph.erase(arc);
-    }
-    DEBUG_OUT(3,"    Deleting nodes...");
-    for( node_t node : nodes_to_delete ) {
-        DEBUG_OUT(3,"        node " << graph.id(node));
+    // erase node that are not in the main component
+    for(node_t node : nodes_to_delete) {
         if(node_info_map[node].type==STATE) {
             delete node_info_map[node].instance;
         }
         graph.erase(node);
-    }
-    DEBUG_OUT(3,"    Deleting chosen action node...");
-    graph.erase(chosen_action_node);
-    DEBUG_OUT(3,"    Deleting root node...");
-    delete node_info_map[root_node].instance;
-    graph.erase(root_node);
-
-    // update number of nodes
-    DEBUG_OUT(3,"    Updating number of nodes...");
-    number_of_nodes = 0;
-    for(graph_t::NodeIt node(graph); node!=INVALID; ++node) {
-        ++number_of_nodes;
     }
 
     // update root node
@@ -256,6 +361,18 @@ void LookAheadSearch::prune_tree(const action_t& a, const instance_t * new_root_
     instance_t * new_root_instance_copy = instance_t::create(new_root_instance->action, new_root_instance->state, new_root_instance->reward, new_root_instance->const_it()-1);
     *(node_info_map[root_node].instance) = *new_root_instance_copy;
     delete new_root_instance_copy;
+
+    // update number of nodes
+    DEBUG_OUT(3,"    Updating number of nodes...");
+    number_of_nodes = 0;
+    for(graph_t::NodeIt node(graph); node!=INVALID; ++node) {
+        ++number_of_nodes;
+    }
+    DEBUG_OUT(3,"        " << number_of_nodes << " nodes");
+
+    // check graph structure
+    if(!lemon::tree(ugraph)) {
+        DEBUG_OUT(0,"Error: Search graph is not a tree");
 
     DEBUG_OUT(2,"DONE");
 }
@@ -413,7 +530,13 @@ void LookAheadSearch::print_tree(const bool& text, const bool& eps_export) const
     }
 }
 
-void LookAheadSearch::print_tree_statistics() const {
+void LookAheadSearch::print_tree_statistics() {
+
+    // check for invalid root node
+    if(root_node==INVALID) {
+        DEBUG_OUT(0,"Root node is INVALID");
+        return;
+    }
 
     // count nodes and arcs
     node_vector_t * current_level = new node_vector_t();
@@ -449,7 +572,8 @@ void LookAheadSearch::print_tree_statistics() const {
 
     // error check
     if(total_node_counter!=number_of_nodes) {
-        DEBUG_OUT(0,"Error: Total node counter (" << total_node_counter << ") is different from number of nodes " << number_of_nodes);
+        DEBUG_OUT(0,"Error: Total node counter (" << total_node_counter << ") is different from number of nodes " << number_of_nodes << " (correcting)");
+        number_of_nodes = total_node_counter;
     }
 
     // print result

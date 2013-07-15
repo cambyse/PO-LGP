@@ -142,6 +142,12 @@ void TestMaze_II::random_action() {
 }
 
 void TestMaze_II::choose_action() {
+
+    if(DEBUG_LEVEL>2) {
+        DEBUG_OUT(0,"Before planning:");
+        look_ahead_search.print_tree_statistics();
+    }
+
     action_t action;
     switch(planner_type) {
     case OPTIMAL_PLANNER:
@@ -228,6 +234,11 @@ void TestMaze_II::choose_action() {
         add_action_state_reward_tripel(action,state_to,reward);
     }
 
+    if(DEBUG_LEVEL>2) {
+        DEBUG_OUT(0,"After planning, before pruning:");
+        look_ahead_search.print_tree_statistics();
+    }
+
     // prune tree
     if(prune_search_tree) {
         switch(planner_type) {
@@ -243,6 +254,11 @@ void TestMaze_II::choose_action() {
         default:
             DEBUG_DEAD_LINE;
         }
+    }
+
+    if(DEBUG_LEVEL>2) {
+        DEBUG_OUT(0,"After pruning:");
+        look_ahead_search.print_tree_statistics();
     }
 
     maze.render_update(ui.graphicsView);
@@ -803,12 +819,15 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     TO_CONSOLE( "    set different planner to unset current" );
                 } else if(str_args[2]=="optimal" || str_args[2]=="o") {
                     planner_type = OPTIMAL_PLANNER;
+                    look_ahead_search.clear_tree();
                     TO_CONSOLE( "    using optimal planner" );
                 } else if(str_args[2]=="sparse" || str_args[2]=="s") {
                     planner_type = SPARSE_PLANNER;
+                    look_ahead_search.clear_tree();
                     TO_CONSOLE( "    using sparse planner" );
                 } else if(str_args[2]=="utree" || str_args[2]=="u") {
                     planner_type = UTREE_PLANNER;
+                    look_ahead_search.clear_tree();
                     TO_CONSOLE( "    using UTree planner" );
                 } else if(str_args[2]=="uv" || str_args[2]=="utree-value") {
                     planner_type = UTREE_VALUE;

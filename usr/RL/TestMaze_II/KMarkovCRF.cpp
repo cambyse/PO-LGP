@@ -65,7 +65,7 @@ KMarkovCRF::KMarkovCRF():
         }
     }
 
-    //relative state features
+    // relative state features
     RelativeStateFeature * relative_state_feature;
     relative_state_feature = RelativeStateFeature::create(1,0,-1,0);
     basis_features.push_back(relative_state_feature);
