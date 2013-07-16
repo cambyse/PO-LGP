@@ -1,13 +1,11 @@
-#include<Core/array.h>
-#include<MT/util.h>
-#include<MT/plot.h>
+#include <Core/array.h>
+#include <Core/util.h>
+#include <Core/ann.h>
+#include <Gui/plot.h>
+#include <CourseML/MLcourse.h>
 
 using namespace std;
 
-#include <MT/MLcourse.h>
-#include <MT/ann.h>
-#include <MT/util.h>
-#include <MT/plot.h>
 
 
 void generateArtificialGauss(){
@@ -48,7 +46,7 @@ void exercise1(){
   lines[2] = mu;
   lines[3] = mu + sqrt(d(1))*U[1];
   MT::save(lines,"z.lines");
-  gnuplot("plot './gauss.txt' with points,'./z.lines' with lines lw 5");
+  gnuplot("plot './gauss.txt' with points,'./z.lines' with lines lw 5", true, true);
 }
 
 double NN(const arr& a,const arr& b,const arr& C){
@@ -115,6 +113,13 @@ void gaussianMixture(const arr& X){
     if(LL_last) CHECK(LL+1e-10 > LL_last,"likelihood is not increasing! BUG ALERT!");
     if(LL_last && LL-LL_last < 1e-6) break;
     LL_last = LL;
+
+    //plot
+    plotClear();
+    plotPoints(X);
+    plotPoints(mu);
+    for(k=0;k<K;k++)  plotCovariance(mu[k],S[k]);
+    plot();
   }
 
   //plot
@@ -128,7 +133,7 @@ void gaussianMixture(const arr& X){
 void exercise2(){
   arr X;
   MT::load(X,"mixture.txt");
-  gnuplot("plot 'mixture.txt' w p",NULL,true);
+  gnuplot("plot 'mixture.txt' w p", false, true);
   for(uint k=0;k<10;k++)
     gaussianMixture(X);
 }
