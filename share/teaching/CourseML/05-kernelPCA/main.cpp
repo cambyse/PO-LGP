@@ -5,7 +5,7 @@
 using namespace std;
 
 #include <MT/MLcourse.h>
-#include <MT/ann.h>
+#include <Algo/ann.h>
 #include <MT/util.h>
 #include <MT/plot.h>
 

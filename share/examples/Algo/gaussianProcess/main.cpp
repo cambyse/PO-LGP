@@ -2,7 +2,7 @@
 
 #include <Core/array.h>
 #include <Gui/plot.h>
-#include <MT/gaussianProcess.h>
+#include <Algo/gaussianProcess.h>
 
 bool pltPause=true;
 

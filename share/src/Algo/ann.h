@@ -24,7 +24,7 @@
 #ifndef MT_ann_h
 #define MT_ann_h
 
-#include "array.h"
+#include <Core/array.h>
 
 //===========================================================================
 //

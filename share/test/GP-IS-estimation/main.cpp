@@ -10,7 +10,7 @@
 
 
 #include <Ors/ors.h>
-#include <MT/gaussianProcess.h>
+#include <Algo/gaussianProcess.h>
 #include <Gui/opengl.h>
 #include <SD/ISF_GP.h>
 #include <SD/utils.h>

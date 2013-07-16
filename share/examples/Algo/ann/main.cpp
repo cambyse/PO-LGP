@@ -1,5 +1,5 @@
 #include <Core/util.h>
-#include <Core/ann.h>
+#include <Algo/ann.h>
 
 void testANN(){
   uint N=1000,dim=2;

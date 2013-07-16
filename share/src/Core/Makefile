@@ -3,7 +3,6 @@ NAME   = lib$(shell basename `pwd`)
 OUTPUT := $(BASE)/lib/$(NAME).so
 
 LAPACK = 1
-ANN = 1
 GTEST = 1
 DEPEND = 
 

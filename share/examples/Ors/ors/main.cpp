@@ -1,5 +1,5 @@
 #include <Ors/ors.h>
-#include <Core/algos.h>
+#include <Algo/algos.h>
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
 #include <GL/gl.h>
@@ -28,6 +28,8 @@ void testBasics(){
     A.setRandom();
     B.setRandom();
     C.setDifference(A,B);
+    TEST_DIFF_ZERO(A/A);
+    TEST_DIFF_ZERO(A*A/A/A);
     TEST_DIFF_ZERO(A*C/B);
   }
 }

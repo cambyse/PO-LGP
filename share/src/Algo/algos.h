@@ -24,7 +24,7 @@
 #ifndef MT_algos_h
 #define MT_algos_h
 
-#include "array.h"
+#include <Core/array.h>
 
 namespace MT {
 
