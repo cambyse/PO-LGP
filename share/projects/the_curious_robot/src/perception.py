@@ -14,6 +14,7 @@ import the_curious_robot.srv as srvs
 # import numpy as np
 import os
 import orspy as ors
+import corepy
 import Queue
 import time
 

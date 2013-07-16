@@ -43,7 +43,8 @@ add_definitions(-DMT_IMPLEMENT_TEMPLATES)
 include_directories(
 	${PROJECT_SOURCE_DIR}/src
 	${MLR_PATH}/share/src
-	${MLR_PATH}/share/src/MT
+  ${MLR_PATH}/share/src/Core
+  ${MLR_PATH}/share/src/Ors
 	${MLR_PATH}/share/src/biros
 )
 # Include the MLR libs

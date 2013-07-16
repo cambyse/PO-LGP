@@ -10,16 +10,20 @@ import the_curious_robot.msg as msgs
 import the_curious_robot.srv as srvs
 
 import orspy
+import corepy
 import util
+
+import require_provide as rp
 
 class InitServer:
     def __init__(self, name):
         self.server = SimpleActionServer(name, msgs.EmptyAction,
-                execute_cb=self.execute)
+                execute_cb=self.execute, auto_start=False)
         self.oois_pub = rospy.Publisher('oois', msgs.Objects)
         self.belief_pub = rospy.Publisher('world_belief', msgs.ors)
 
         self.server.start()
+        rp.Provide("Init")
 
     def execute(self, msg):
         rospy.wait_for_service('percept_all')
@@ -41,8 +45,6 @@ class InitServer:
         belief_msg = msgs.ors()
         belief_msg.ors = str(self.graph)
         self.belief_pub.publish(belief_msg)
-
-        rospy.logdebug("init done")
 
         self.server.set_succeeded()
 

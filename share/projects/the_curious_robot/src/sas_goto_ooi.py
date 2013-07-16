@@ -8,10 +8,12 @@ from actionlib import SimpleActionServer
 import the_curious_robot.msg as msgs
 import util
 
+import require_provide as rp
+
 class GotoOOIActionServer:
     def __init__(self, name):
         self.ooi_id = ""
-        self.oois = None
+        self.oois = []
         self.control_done = False
         self.react_to_controller = False
 
@@ -25,11 +27,15 @@ class GotoOOIActionServer:
         self.control_pub = rospy.Publisher('control', msgs.control)
 
         self.server = SimpleActionServer(name, msgs.GotoOOIAction,
-                execute_cb=self.execute)
+                execute_cb=self.execute, auto_start=False)
         self.server.register_preempt_callback(self.preempt_cb)
         self.server.start()
+        rp.Provide("GotoOOI")
 
     def execute(self, msg):
+        if not self.ooi_id:
+            server.set_aborted()
+            return
         for ooi in self.oois:
             if ooi['body'].name == self.ooi_id:
                 msg = msgs.control()

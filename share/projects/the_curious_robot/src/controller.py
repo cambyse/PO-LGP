@@ -13,6 +13,7 @@ import the_curious_robot.msg as msgs
 import os
 # import numpy as np
 import orspy as ors
+import corepy
 
 import require_provide as rp
 
@@ -32,7 +33,7 @@ class FakeController():
         )
         self.world.init(worldfile)
 
-        self.gl = ors.OpenGL()
+        self.gl = corepy.OpenGL()
         self.physx = ors.PhysXInterface()
         ors.bindOrsToPhysX(self.world, self.gl, self.physx)
 
@@ -82,8 +83,7 @@ class FakeController():
 
 
     def control_cb(self, data):
-        #print "Got control message.\n", data.pose.position 
-        self.goal = ors.Transformation()
+        self.goal = corepy.Transformation()
         self.goal.pos.x = data.pose.position.x
         self.goal.pos.y = data.pose.position.y
         self.goal.pos.z = data.pose.position.z
