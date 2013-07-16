@@ -20,28 +20,28 @@ using std::vector;
 const double LookAheadSearch::lower_bound_weight = 0.8;
 
 LookAheadSearch::NodeInfo::NodeInfo():
-        type(NONE),
-        expansion(NOT_DEFINED),
-        instance(nullptr),
-        action(action_t()),
-        upper_value_bound(0),
-        lower_value_bound(0)
+    type(NONE),
+    expansion(NOT_DEFINED),
+    instance(nullptr),
+    action(action_t()),
+    upper_value_bound(0),
+    lower_value_bound(0)
 {}
 
 LookAheadSearch::NodeInfo::NodeInfo(
-        const NODE_TYPE& t,
-        const EXPANSION_TYPE& e,
-        instance_t * i,
-        const action_t& a,
-        const value_t& uv,
-        const value_t& lv
-):
-        type(t),
-        expansion(e),
-        instance(i),
-        action(a),
-        upper_value_bound(uv),
-        lower_value_bound(lv)
+    const NODE_TYPE& t,
+    const EXPANSION_TYPE& e,
+    instance_t * i,
+    const action_t& a,
+    const value_t& uv,
+    const value_t& lv
+    ):
+    type(t),
+    expansion(e),
+    instance(i),
+    action(a),
+    upper_value_bound(uv),
+    lower_value_bound(lv)
 {
     if(lower_value_bound>upper_value_bound) {
         DEBUG_OUT(0,"Error: Lower value bound above upper value bound");
@@ -70,11 +70,11 @@ LookAheadSearch::NodeInfo& LookAheadSearch::NodeInfo::operator=(const NodeInfo& 
 }
 
 LookAheadSearch::LookAheadSearch(const double& d):
-root_node(INVALID),
-node_info_map(graph),
-arc_info_map(graph),
-discount(d),
-number_of_nodes(0)
+    root_node(INVALID),
+    node_info_map(graph),
+    arc_info_map(graph),
+    discount(d),
+    number_of_nodes(0)
 {}
 
 LookAheadSearch::~LookAheadSearch() {}
@@ -374,7 +374,8 @@ void LookAheadSearch::prune_tree(const action_t& a, const instance_t * new_root_
     if(!lemon::tree(ugraph)) {
         DEBUG_OUT(0,"Error: Search graph is not a tree");
 
-    DEBUG_OUT(2,"DONE");
+        DEBUG_OUT(2,"DONE");
+    }
 }
 
 void LookAheadSearch::print_tree(const bool& text, const bool& eps_export) const {
@@ -513,9 +514,9 @@ void LookAheadSearch::print_tree(const bool& text, const bool& eps_export) const
         for(graph_t::NodeIt node(graph); node!=INVALID; ++node) {
             Point old_coords = coords[node];
             coords[node] = Point(
-                    old_coords.x*cos(mean_deviation_angle)+old_coords.y*sin(mean_deviation_angle),
-                    (-1)*old_coords.x*sin(mean_deviation_angle)+old_coords.y*cos(mean_deviation_angle)
-            );
+                old_coords.x*cos(mean_deviation_angle)+old_coords.y*sin(mean_deviation_angle),
+                (-1)*old_coords.x*sin(mean_deviation_angle)+old_coords.y*cos(mean_deviation_angle)
+                );
         }
 
         lemon::graphToEps(graph, "look_ahead_tree.eps")
@@ -597,11 +598,11 @@ void LookAheadSearch::print_tree_statistics() {
     int width = 60;
     DEBUG_OUT(0,"    Values at root node:");
     DEBUG_OUT(0,QString("    %1|%2|%3")
-            .arg(min_lower_bound,11,'e',5,'0')
-            .arg(QString(' ').repeated(width-1))
-            .arg(max_upper_bound,11,'e',5,'0')
-            .toStdString()
-    );
+              .arg(min_lower_bound,11,'e',5,'0')
+              .arg(QString(' ').repeated(width-1))
+              .arg(max_upper_bound,11,'e',5,'0')
+              .toStdString()
+        );
     action_t optimal_action = get_optimal_action();
     for(graph_t::OutArcIt out_arc(graph,root_node); out_arc!=INVALID; ++out_arc) {
         node_t action_node = graph.target(out_arc);
@@ -617,17 +618,17 @@ void LookAheadSearch::print_tree_statistics() {
         weighted_count = weighted_count==lower_count ? weighted_count+1 : weighted_count;
         upper_count = upper_count==weighted_count ? upper_count+1 : upper_count;
         DEBUG_OUT(0, QString("    %1%2|%3%4%5|%6%7 %8%9")
-                .arg(lower_bound,11,'e',5,'0')
-                .arg(QString(' ').repeated(lower_count))
-                .arg(QString('-').repeated(weighted_count-lower_count-1))
-                .arg((optimal_action_selection_type==MAX_WEIGHTED_BOUNDS) ? 'x' : '-')
-                .arg(QString('-').repeated(upper_count-weighted_count-1))
-                .arg(QString(' ').repeated(width-upper_count))
-                .arg(upper_bound,11,'e',5,'0')
-                .arg(node_info_map[action_node].action.action_string())
-                .arg(node_info_map[action_node].action==optimal_action ? '*' : ' ')
-                .toStdString()
-        );
+                  .arg(lower_bound,11,'e',5,'0')
+                  .arg(QString(' ').repeated(lower_count))
+                  .arg(QString('-').repeated(weighted_count-lower_count-1))
+                  .arg((optimal_action_selection_type==MAX_WEIGHTED_BOUNDS) ? 'x' : '-')
+                  .arg(QString('-').repeated(upper_count-weighted_count-1))
+                  .arg(QString(' ').repeated(width-upper_count))
+                  .arg(upper_bound,11,'e',5,'0')
+                  .arg(node_info_map[action_node].action.action_string())
+                  .arg(node_info_map[action_node].action==optimal_action ? '*' : ' ')
+                  .toStdString()
+            );
     }
 }
 
@@ -801,11 +802,11 @@ LookAheadSearch::node_t LookAheadSearch::update_state_node(node_t state_node) {
             current_upper_bound = node_info_map[action_node].upper_value_bound;
             current_lower_bound = node_info_map[action_node].lower_value_bound;
             if(
-                    (!approx(current_upper_bound,max_upper_bound) && // if upper bounds are NOT equal
-                            current_upper_bound>max_upper_bound ) || // primary criterion: upper bound
-                    ( approx(current_upper_bound,max_upper_bound) && // if upper bounds are equal
-                            current_lower_bound>node_info_map[state_node].lower_value_bound ) // secondary criterion: lower bounds
-            ) {
+                (!approx(current_upper_bound,max_upper_bound) && // if upper bounds are NOT equal
+                 current_upper_bound>max_upper_bound ) || // primary criterion: upper bound
+                ( approx(current_upper_bound,max_upper_bound) && // if upper bounds are equal
+                  current_lower_bound>node_info_map[state_node].lower_value_bound ) // secondary criterion: lower bounds
+                ) {
                 max_upper_bound=current_upper_bound;
                 node_info_map[state_node].upper_value_bound = current_upper_bound;
                 node_info_map[state_node].lower_value_bound = current_lower_bound;
@@ -880,7 +881,7 @@ bool LookAheadSearch::tree_needs_further_expansion() {
             second_max_upper_bound=current_upper_bound;
         }
         DEBUG_OUT(4,"    " << node_info_map[current_action_node].action <<
-                ": [" << current_lower_bound << " <--> " << current_upper_bound << "]");
+                  ": [" << current_lower_bound << " <--> " << current_upper_bound << "]");
     }
     DEBUG_OUT(4,"           max upper: " << max_upper_bound );
     DEBUG_OUT(4,"     max upper lower: " << max_upper_lower_bound );
