@@ -66,6 +66,8 @@ void open() {
   cout << "SetImageMem" << endl;
   camStatus = is_SetImageMem(camID, camBuff, camBuffID);
   query_status(camID, &camStatus);
+
+  // TODO set frame rate
 }
 
 void close() {
@@ -113,7 +115,7 @@ void query_status(HIDS camID, INT *status) {
     INT ret = is_GetError(camID, status, &msg);
     if(ret != IS_SUCCESS)
       // OH NOES indicates is_GetError has incurred into an error itself
-      msg = (IS_CHAR*)"OH NOES";
+      msg = (IS_CHAR*)"OH THE IRONY..";
     cout << " -> return value = " << *status << " (" << msg << ")" << endl;
   }
 }
