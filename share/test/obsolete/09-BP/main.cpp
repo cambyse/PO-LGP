@@ -3,7 +3,7 @@
 #include <MT/BinaryBP.h>
 
 #include <Core/array.h>
-//#include <MT/algos.h>
+//#include <Algo/algos.h>
 #include <MT/infer.h>
 
 void convert(LoopyBP& lbp,BinaryBPNet& net){

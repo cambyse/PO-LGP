@@ -4,7 +4,7 @@ OUTPUT := $(BASE)/lib/$(NAME).so
 
 GL = 1
 PHYSX = 1
-DEPEND = Core Gui extern_SWIFT
+DEPEND = Core Algo Gui extern_SWIFT
 
 OBJS  = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS := $(OBJS:%.cpp=%.o)

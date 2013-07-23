@@ -1,6 +1,6 @@
 #include <Gui/mesh.h>
 #include <Gui/opengl.h>
-#include <Core/algos.h>
+#include <Algo/algos.h>
 #include <Gui/plot.h>
 #include <qhull/qhull.h>
 #include <Optim/optimization.h>

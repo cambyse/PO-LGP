@@ -1,4 +1,4 @@
-#include <MT/algos.h>
+#include <Algo/algos.h>
 #include <Gui/plot.h>
 #include <Ors/ors.h>
 

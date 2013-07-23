@@ -4,7 +4,7 @@
 
 #include <cmath>
 
-#include <MT/gaussianProcess.h>
+#include <Algo/gaussianProcess.h>
 #include <Core/array.h>
 #include <JK/utils/util.h>
 #include <JK/utils/sampler.h>

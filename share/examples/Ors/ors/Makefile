@@ -1,6 +1,6 @@
 BASE = ../../..
 
-DEPEND = Ors Core Gui extern_SWIFT Optim
+DEPEND = Ors Core Algo Gui extern_SWIFT Optim
 
 include $(BASE)/make-generic
 

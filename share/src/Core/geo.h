@@ -43,8 +43,6 @@ struct Vector {
   void set(double*);
   void setZero();
   void setRandom(double range=1.);
-  //void add(double, double, double);
-  //void subtract(double, double, double);
   void normalize();
   void setLength(double);
   void makeNormal(const Vector&);
@@ -99,7 +97,7 @@ struct Quaternion {
   Quaternion() {}
   Quaternion(double w, double x, double y, double z) { set(w,x,y,z); }
   Quaternion(const arr& q) { CHECK(q.N==4, "");  set(q.p); };
-  Quaternion(const Quaternion& q) { set(q.w, q.x, q.y, q.y); };
+  Quaternion(const Quaternion& q) { set(q.w, q.x, q.y, q.z); };
   double *p() { return &w; }
   
   void set(double w, double x, double y, double z);
@@ -153,8 +151,8 @@ struct Transformation {
   Vector angvel;  ///< angular velocity
   bool zero,zeroVels;    ///< velocities are identically zero
   
-  Transformation() {};
-  Transformation(const Transformation &t) : pos(t.pos), rot(t.rot), vel(t.vel), angvel(t.angvel), zero(t.zero), zeroVels(t.zeroVels) {};
+  Transformation() {}
+  Transformation(const Transformation &t) : pos(t.pos), rot(t.rot), vel(t.vel), angvel(t.angvel), zero(t.zero), zeroVels(t.zeroVels) {}
   
   Transformation& setZero();
   Transformation& setText(const char* txt);

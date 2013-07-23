@@ -2,7 +2,7 @@
 #define SD_isf_gp_h
 
 #include <Core/array.h>
-#include <MT/gaussianProcess.h>
+#include <Algo/gaussianProcess.h>
 
 /** type of saling of gaussian process */
 enum SD_scale_t {scX=1, scY=2, scXY=3}; //scXY is short for (scX|scY)

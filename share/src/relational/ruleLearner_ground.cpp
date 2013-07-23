@@ -4,7 +4,7 @@
 #include "logicReasoning.h"
 #include "ruleReasoning.h"
 #include <math.h>
-#include <MT/algos.h>
+#include <Algo/algos.h>
 
 
 namespace PRADA {

@@ -1,5 +1,5 @@
 #include <Core/util.h>
-#include <Core/algos.h>
+#include <Algo/algos.h>
 #include <MT/functions.h>
 //#include <MT/dynamics.h>
 #include <MT/optimization.h>

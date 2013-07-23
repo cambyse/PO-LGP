@@ -941,7 +941,7 @@ void ors::Graph::jacobianPos(arr& J, uint a, ors::Vector *rel) const {
     
     
     if(ei->type==JT_hingeX || ei->type==JT_hingeY || ei->type==JT_hingeZ) {
-      tmp = ei->axis ^(pos-ei->X.pos);
+      tmp = ei->axis ^ (pos-ei->X.pos);
       J(0, i) = tmp.x;
       J(1, i) = tmp.y;
       J(2, i) = tmp.z;
@@ -989,7 +989,7 @@ void ors::Graph::hessianPos(arr& H, uint a, ors::Vector *rel) const {
       j=ej->qIndex;
       
       if(ei->type>=JT_hingeX && ei->type<=JT_hingeZ && ej->type>=JT_hingeX && ej->type<=JT_hingeZ) { //both are hinges
-        r = ej->axis ^(ei->axis ^(pos-ei->X.pos));
+        r = ej->axis ^ (ei->axis ^ (pos-ei->X.pos));
         H(0, i, j) = H(0, j, i) = r.x;
         H(1, i, j) = H(1, j, i) = r.y;
         H(2, i, j) = H(2, j, i) = r.z;
