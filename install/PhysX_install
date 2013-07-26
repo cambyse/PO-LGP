@@ -1,5 +1,8 @@
 #! /bin/sh
 
+# Fail early. Abort on any error!
+set -e
+
 ## parameters for this install
 FILE=PhysX-3.2_LINUX_SDK_Core.zip
 SRC_PATH=PhysX
