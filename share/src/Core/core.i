@@ -1,5 +1,5 @@
 // Read DOCSTRING to get an idea of corepy!
-%define DOCSTRING
+%define DOCSTRING_COREPY
 "
 This is a simple SWIG wrapper to be able to use the mlr Core
 within python
@@ -30,7 +30,7 @@ author: Stefan Otte
 created: <2013-03-20 Wed>
 "
 %enddef
-%module(docstring=DOCSTRING) corepy
+%module(docstring=DOCSTRING_COREPY) corepy
 
 %feature("autodoc", "1");
 %include "typemaps.i"

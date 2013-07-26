@@ -1,5 +1,5 @@
 // Read DOCSTRING to get an idea of orspy!
-%define DOCSTRING
+%define DOCSTRING_ORSPY
 "
 This is a simple SWIG wrapper to be able to use the ors datastructures
 within python.
@@ -10,7 +10,7 @@ author: Stefan Otte
 created: <2013-03-20 Wed>
 "
 %enddef
-%module(docstring=DOCSTRING) orspy
+%module(docstring=DOCSTRING_ORSPY) orspy
 
 %feature("autodoc", "1");
 %include "typemaps.i"
