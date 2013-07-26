@@ -1,10 +1,8 @@
 BASE=../../../../share
 
-OPENCV=1
+DEPEND = Core Gui
 
 CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES
-LPATHS += " "
-
-LIBS += -l
+LIBS += -lueye_api
 
 include $(BASE)/make-generic
