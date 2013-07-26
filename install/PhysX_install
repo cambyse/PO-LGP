@@ -42,7 +42,7 @@ echo -n "  * Deleting" $MLR_LIBPATH/src/$SRC_PATH "and unpacking" /tmp/$FILE
 read -p " -- [Enter] to continue..." yn
 mkdir -p $MLR_LIBPATH/src
 cd $MLR_LIBPATH/src
-rm -R $SRC_PATH
+rm -rf $SRC_PATH
 mkdir -p $SRC_PATH
 cd $SRC_PATH
 unzip -q /tmp/$FILE
