@@ -10,7 +10,9 @@ TCR uses ROS and the MLR code. This section explains how to setup everything.
 
 ## Prerequisites
 
-- use Ubuntu 12.04
+This explains how to setup ROS and articulation which is used by TCR.
+
+- use Ubuntu 12.04 and ROS fuerte!
 - install libgsl0-dev to make it work
 
     sudo apt-get install libgsl0-dev
@@ -20,12 +22,20 @@ TCR uses ROS and the MLR code. This section explains how to setup everything.
     sudo apt-get install ros-fuerte-desktop-full ros-fuerte-rqt
 
   see http://www.ros.org/wiki/fuerte/Installation/Ubuntu
-- create a ros fuerte workspace in ~/fuerte_workspace and a sandbox directory
-  ~/fuerte_workspace/sandbox
+- create a ros fuerte workspace in `~/fuerte_workspace` and a sandbox directory
+  `~/fuerte_workspace/sandbox`
   see http://www.ros.org/wiki/ROS/Tutorials/InstallingandConfiguringROSEnvironment
-- install the ros articulation package by Sturm
 
+    rosws init ~/fuerte_workspace /opt/ros/fuerte
+    mkdir ~/fuerte_workspace/sandbox
+    rosws set ~/fuerte_workspace/sandbox
+    source ~/fuerte_workspace/setup.bash
+
+- install the ros articulation package by Sturm in the sandbox
+
+    cd ~/fuerte_workspace/sandbox
     rosws set alufr-ros-pkg --svn http://alufr-ros-pkg.googlecode.com/svn/trunk/
+    rosws update
 
 - compile articulation
 
@@ -33,8 +43,12 @@ TCR uses ROS and the MLR code. This section explains how to setup everything.
 
 
 ## Setup
-- create a link from ~/git/mlr/share/projects/the_curious_robot/ to ~/fuerte_workspace/sandbox/the_curious_robot
-- call cmake and in ~/fuerte_workspace/sandbox/the_curious_robot/ to compile
+- create a link from TCR project `~/git/mlr/share/projects/the_curious_robot/` to
+  `~/fuerte_workspace/sandbox/the_curious_robot`
+
+    ln -s ~/git/mlr/share/projects/the_curious_robot/ ~/fuerte_workspace/sandbox/the_curious_robot
+
+- call cmake and in `~/fuerte_workspace/sandbox/the_curious_robot/` to compile
   the project
 
     cmake .
