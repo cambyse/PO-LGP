@@ -1,6 +1,7 @@
 from corepy import Vector, Matrix, Quaternion
 import orspy
 
+import os
 import unittest
 
 
@@ -136,7 +137,9 @@ class Test_QuaternionOperatorOverload(unittest.TestCase):
 
 class Test_Graph_serialization(unittest.TestCase):
     def test_graph_de_serialization(self):
-        graph1 = orspy.Graph("world.ors")
+        p = os.path.dirname(os.path.realpath(__file__))
+        f = os.path.join(p, "world.ors")
+        graph1 = orspy.Graph(f)
         g1_str = str(graph1)
 
         graph2 = orspy.Graph()
