@@ -29,7 +29,12 @@ fi
 echo -n "  * Checking for directory" $MLR_LIBPATH
 read -p " -- [Enter] to continue..." yn
 if [ ! -d $MLR_LIBPATH ] ; then
-  mkdir -p $MLR_LIBPATH
+  # only root can create the folder in /home
+  sudo mkdir -p $MLR_LIBPATH
+  # but everybody needs access to /home/lib
+  sudo chmod o+r+w+x $MLR_LIBPATH
+  # and also /home/lib/lib
+  mkdir -p $MLR_LIBPATH/lib
 fi
 
 ## delete & unpack
