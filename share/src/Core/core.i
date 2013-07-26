@@ -1,8 +1,8 @@
 // Read DOCSTRING to get an idea of corepy!
 %define DOCSTRING
 "
-This is a simple SWIG wrapper to be able to use the ors datastructures
-within other languages (primarily python)
+This is a simple SWIG wrapper to be able to use the mlr Core
+within python
 
 Note:
 - There is also a VERY SIMPLE interface for the array class
@@ -54,7 +54,7 @@ def get_mlr_path():
   #include "Core/geo.h"
   #include "Core/array.h"
   #include "Core/array_t.h"
-  #include "Core/algos.h"
+  // #include "Core/algos.h"
   #include "Gui/opengl.h"
   #include <sstream>
 %}
