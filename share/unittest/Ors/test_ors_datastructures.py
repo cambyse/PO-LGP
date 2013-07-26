@@ -157,7 +157,7 @@ class Test_Graph_serialization(unittest.TestCase):
                     a, b = float(a), float(b)
                     assert (a, b) < 0.001
                 except:
-                    self.assertEqual(a, b)
+                    assert a == b
 
 
 if __name__ == '__main__':
