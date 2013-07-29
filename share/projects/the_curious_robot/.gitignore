@@ -1,3 +1,5 @@
 Makefile
 bin
 msg_gen
+srv_gen
+the_curious_robot
