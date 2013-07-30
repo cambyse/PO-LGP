@@ -33,7 +33,10 @@ VideoWriter_x264::VideoWriter_x264(const char *filename,
 
   /////////// OPEN ENCODER
 
-  AVCodec *codec = avcodec_find_encoder_by_name("libx264");
+  //AVCodec *codec = avcodec_find_encoder_by_name("raw");
+  //AVCodec *codec = avcodec_find_encoder_by_name("mp4");
+  //AVCodec *codec = avcodec_find_encoder(AV_CODEC_ID_H264);
+  AVCodec *codec = avcodec_find_encoder(AV_CODEC_ID_MPEG2VIDEO);
 
   if (!codec) {
     fprintf(stderr, "Encoder libx264 not found\n");

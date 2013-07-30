@@ -6,12 +6,19 @@
 #include<wchar.h>
 #include<cstdlib>
 
-//#include<opencv2/opencv.hpp>
 #include<ueye.h>
 
 #include<Core/array.h>
 #include<Gui/opengl.h>
 #include<GL/glut.h>
+
+#include"VideoWriter_x264.h"
+
+extern "C" {
+#include<libavcodec/avcodec.h>
+#include<libavformat/avformat.h>
+#include<libswscale/swscale.h>
+}
 
 using namespace std;
 
@@ -19,7 +26,7 @@ struct Recorder : OpenGL::GLKeyCall {
   static const int MAX_CAMS_PER_ROW = 2;
 
   // for visualization
-  OpenGL gl;
+  //OpenGL gl;
   byteA **img;
 
   HIDS camID;
@@ -45,11 +52,17 @@ struct Recorder : OpenGL::GLKeyCall {
   IMAGE_FILE_PARAMS fParams;
   wchar_t fname[255];
 
+  VideoWriter_x264 *vw;
+
   bool quit;
   bool play;
 
   Recorder() {
-    gl.addKeyCall(this);
+    //gl.addKeyCall(this);
+  }
+
+  ~Recorder() {
+    delete vw;
   }
 
   void record() {
@@ -87,7 +100,9 @@ struct Recorder : OpenGL::GLKeyCall {
     play = true;
     quit = false;
 
-    initGL();
+    //initGL();
+
+    vw = new VideoWriter_x264("video.avi", w, h, fps, 20, "superfast");
   }
 
   void initGL() {
@@ -102,12 +117,12 @@ struct Recorder : OpenGL::GLKeyCall {
     int nc = MAX_CAMS_PER_ROW;
     float r, c;
     for(int cam = 0; cam < numCams; cam++) {
-      gl.addView(cam, &nothing, 0);
+      //gl.addView(cam, &nothing, 0);
       r = cam / nc;
       c = cam % nc;
-      gl.setViewPort(cam, c/nc, (c+1)/nc, r/nr, (r+1)/nr);
+      //gl.setViewPort(cam, c/nc, (c+1)/nc, r/nr, (r+1)/nr);
       // TODO only for test purposes
-      gl.views(cam).img = img[0];
+      //gl.views(cam).img = img[0];
       //gl.views(cam).img = img[cam];
     }
 
@@ -225,25 +240,12 @@ struct Recorder : OpenGL::GLKeyCall {
 
         for(int cam = 0; cam < numCams; cam++) {
           img[cam]->p = (byte*)image;
-          gl.views(cam).text = STRING("fps: " << fps);
+          //gl.views(cam).text = STRING("fps: " << fps);
         }
-        gl.update(); // all time spent here.. problem: usb2
+        //gl.update(); // all time spent here.. problem: usb2
+
+        vw->addFrame((uint8_t*)image);
       }
-
-      /*
-      wss.str(wstring());
-      wss << "file_" << i << flush;
-      //memset(fname, 0, sizeof(fname));
-      wcscpy(fname, wss.str().c_str());
-
-      fParams.pwchFileName = fname;
-      wcout << "ImageFile (" << wss.str() << ")" << endl;
-      camStatus = is_ImageFile(camID,
-                                IS_IMAGE_FILE_CMD_SAVE,
-                                (void*)&fParams,
-                                sizeof(fParams));
-      query_status(camID, "ImageFile", &camStatus);
-      */
     }
 
     cout << "StopLiveVideo" << endl;
@@ -278,6 +280,8 @@ struct Recorder : OpenGL::GLKeyCall {
   }
 
   bool keyCallback(OpenGL &) {
+    return true;
+    /*
     switch(gl.pressedkey) {
       case 'p':
         play = !play;
@@ -289,12 +293,15 @@ struct Recorder : OpenGL::GLKeyCall {
         cout << "Unknown key pressed: " << gl.pressedkey << endl;
         break;
     }
+    */
     return true;
   }
 
 };
 
 int main(int argc, char *argv[]) {
+  avcodec_register_all();
+  av_register_all();
   Recorder r;
   r.record();
 }
