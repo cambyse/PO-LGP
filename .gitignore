@@ -28,6 +28,7 @@ Makefile.dep
 
 # EXECUTION
 core
+CORE
 *.log
 
 
