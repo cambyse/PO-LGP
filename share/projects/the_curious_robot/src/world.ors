@@ -81,7 +81,7 @@ body door3-door {
   meshscale=.01
   submeshsizes=[8 36 41 36 41]
   color=[1 0 0]
-  mass=2000000
+  fixed
 }
 #body door3-handle {
 #  X=<T t(2 0 0)>
