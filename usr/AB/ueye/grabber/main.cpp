@@ -26,7 +26,7 @@ struct Recorder : OpenGL::GLKeyCall {
   static const int MAX_CAMS_PER_ROW = 2;
 
   // for visualization
-  //OpenGL gl;
+  OpenGL gl;
   byteA **img;
 
   HIDS camID;
@@ -54,11 +54,10 @@ struct Recorder : OpenGL::GLKeyCall {
 
   VideoWriter_x264 *vw;
 
-  bool quit;
-  bool play;
+  bool quit, play, rec;
 
   Recorder() {
-    //gl.addKeyCall(this);
+    gl.addKeyCall(this);
   }
 
   ~Recorder() {
@@ -97,10 +96,11 @@ struct Recorder : OpenGL::GLKeyCall {
 
     // TODO is_GetCameraList
     
-    play = true;
     quit = false;
+    play = true;
+    rec = false;
 
-    //initGL();
+    initGL();
 
     vw = new VideoWriter_x264("video.avi", w, h, fps, 20, "superfast");
   }
@@ -117,13 +117,13 @@ struct Recorder : OpenGL::GLKeyCall {
     int nc = MAX_CAMS_PER_ROW;
     float r, c;
     for(int cam = 0; cam < numCams; cam++) {
-      //gl.addView(cam, &nothing, 0);
+      gl.addView(cam, &nothing, 0);
       r = cam / nc;
       c = cam % nc;
-      //gl.setViewPort(cam, c/nc, (c+1)/nc, r/nr, (r+1)/nr);
+      gl.setViewPort(cam, c/nc, (c+1)/nc, r/nr, (r+1)/nr);
       // TODO only for test purposes
       //gl.views(cam).img = img[0];
-      //gl.views(cam).img = img[cam];
+      gl.views(cam).img = img[cam];
     }
 
     // TODO only for test purposes
@@ -234,17 +234,18 @@ struct Recorder : OpenGL::GLKeyCall {
       camStatus = is_GetActSeqBuf(camID, NULL, NULL, &image);
       query_status(camID, "GetActSeqBuf", &camStatus);
 
+      if(rec)
+        vw->addFrame((uint8_t*)image);
+
       if(play) {
         camStatus = is_GetFramesPerSecond(camID, &fps);
         query_status(camID, "GetFramesPerSecond", &camStatus);
 
         for(int cam = 0; cam < numCams; cam++) {
           img[cam]->p = (byte*)image;
-          //gl.views(cam).text = STRING("fps: " << fps);
+          gl.views(cam).text = STRING("frame: 1" << "\nfps: " << fps);
         }
-        //gl.update(); // all time spent here.. problem: usb2
-
-        vw->addFrame((uint8_t*)image);
+        gl.update(); // all time spent here.. problem: usb2
       }
     }
 
@@ -280,8 +281,6 @@ struct Recorder : OpenGL::GLKeyCall {
   }
 
   bool keyCallback(OpenGL &) {
-    return true;
-    /*
     switch(gl.pressedkey) {
       case 'p':
         play = !play;
@@ -289,19 +288,18 @@ struct Recorder : OpenGL::GLKeyCall {
       case 'q':
         quit = true;
         break;
+      case 'r':
+        rec = !rec;
+        break;
       default:
         cout << "Unknown key pressed: " << gl.pressedkey << endl;
         break;
     }
-    */
     return true;
   }
-
 };
 
 int main(int argc, char *argv[]) {
-  avcodec_register_all();
-  av_register_all();
   Recorder r;
   r.record();
 }

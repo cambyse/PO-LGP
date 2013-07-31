@@ -115,14 +115,23 @@ VideoWriter_x264::~VideoWriter_x264() {
   av_free(pFrame);
 
   // flush encoder
+  AVPacket packet;
 
+  int got_packet, fail;
   while (1) {
-    /* flush buffered remainings */
-    int out_size = avcodec_encode_video(enc, video_outbuf, video_outbuf_size, NULL);
-    if (out_size <= 0)
+    // flush buffered remainings
+    av_init_packet(&packet);
+    packet.data = NULL;
+    packet.size = 0;
+    fail = avcodec_encode_video2(enc, &packet, NULL, &got_packet);
+
+    if (fail)
+      fprintf(stderr, "Error while encoding frame\n");
+
+    if (!(got_packet > 0 && packet.size))
       break;
-//    printf("flushing encoder\n");
-    writeEncodedFrame(out_size);
+
+    writeEncodedFrame(&packet);
   }
 
   av_write_trailer(out);
@@ -132,11 +141,14 @@ VideoWriter_x264::~VideoWriter_x264() {
   av_free(video_outbuf);
   avio_close(out->pb);
   avformat_free_context(out);
-
 }
 
 
 void VideoWriter_x264::addFrame(uint8_t *buffer) {
+  AVPacket packet;
+  av_init_packet(&packet);
+  packet.data = NULL;
+  packet.size = 0;
 
   // convert frame to encoder format (PIX_FMT_YUV420P)
   int src_stride = enc->width*3;
@@ -147,18 +159,21 @@ void VideoWriter_x264::addFrame(uint8_t *buffer) {
   pFrame->pts = frames_in++;
 
   // encode the image
-  int out_size = avcodec_encode_video(enc, video_outbuf, video_outbuf_size, pFrame);
+  int got_packet;
+  int fail = avcodec_encode_video2(enc, &packet, pFrame, &got_packet);
 
-//  printf("pkt_dts %d, pkt_pts %d\n",enc->coded_frame->pkt_dts,enc->coded_frame->pkt_pts);
+  if (fail)
+    fprintf(stderr, "Error while encoding frame\n");
 
   // if zero size, it means the image was buffered
-  if (out_size > 0)
-    writeEncodedFrame(out_size);
-
+  if (got_packet > 0 && packet.size) 
+    writeEncodedFrame(&packet);
 }
 
-int VideoWriter_x264::writeEncodedFrame(int encoded_size) {
+int VideoWriter_x264::writeEncodedFrame(AVPacket *pPacket) {
+  // removed encoded size
 
+  /*
   // write to stream
   AVPacket pkt;
   av_init_packet(&pkt);
@@ -185,7 +200,26 @@ int VideoWriter_x264::writeEncodedFrame(int encoded_size) {
   }
 
   return(r);
+  */
 
+  // write to stream
+  pPacket->pts = frames_out++ * pts_step;
+  pPacket->dts = pPacket->pts;
+
+//  printf("stream pts %d - stream.curr_dts %d - packet pts %d\n",out->streams[0]->pts.val,out->streams[0]->cur_dts,pkt.dts);
+
+
+
+  // write the compressed frame in the media file
+  int r = av_interleaved_write_frame(out, pPacket);
+  av_free_packet(pPacket);
+
+  if (r) {
+    fprintf(stderr, "Error while writing video frame\n");
+    return -1;
+  }
+
+  return 0;
 }
 
 

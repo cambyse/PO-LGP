@@ -3,9 +3,9 @@
 #include <QMutex>
 
 extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libswscale/swscale.h>
+#include<libavcodec/avcodec.h>
+#include<libavformat/avformat.h>
+#include<libswscale/swscale.h>
 }
 
 class VideoWriter_x264
@@ -33,7 +33,7 @@ private:
   void init();
 
   static int lockManagerQt(void **mutex, enum AVLockOp op);
-  int writeEncodedFrame(int out_size);
+  int writeEncodedFrame(AVPacket *pPacket);
 
   static bool initialized;
   static QMutex initMutex;
