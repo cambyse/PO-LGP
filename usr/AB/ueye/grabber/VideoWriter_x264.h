@@ -44,4 +44,5 @@ class VideoWriter_x264
     int video_outbuf_size;
     unsigned int pts_step;
     int frames_in, frames_out;
+
 };
