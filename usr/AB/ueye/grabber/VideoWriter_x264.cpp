@@ -10,13 +10,14 @@ VideoWriter_x264::VideoWriter_x264(const char *filename,
                                     int crf,
                                     const char *preset) {
   init();
-  // auto detect the output format from the name
+
+  /* auto detect the output format from the name */
   AVOutputFormat *fmt = av_guess_format(NULL, filename, NULL);
   if (!fmt) {
     fprintf(stderr, "Could not find suitable output format\n");
     exit(EXIT_FAILURE);
   }
-  // allocate the output media context
+  /* allocate the output media context */
   out = avformat_alloc_context();
   if (!out) {
     fprintf(stderr, "Memory error\n");
@@ -32,24 +33,12 @@ VideoWriter_x264::VideoWriter_x264(const char *filename,
 
   /////////// OPEN ENCODER
 
-  //AVCodec *codec = avcodec_find_encoder_by_name("raw");
-  //AVCodec *codec = avcodec_find_encoder_by_name("mp4");
-  //AVCodec *codec = avcodec_find_encoder(AV_CODEC_ID_H264);
-  AVCodec *codec = avcodec_find_encoder(AV_CODEC_ID_MPEG2VIDEO);
+  AVCodec *codec = avcodec_find_encoder_by_name("libx264");
 
   if (!codec) {
     fprintf(stderr, "Encoder libx264 not found\n");
     exit(EXIT_FAILURE);
   }
-   av_dict_set(&opts, "b", "2.5M", 0);
-    codec = avcodec_find_decoder(AV_CODEC_ID_H264);
-     if (!codec)
-            exit(1);
-
-      context = avcodec_alloc_context3(codec);
-
-       if (avcodec_open2(context, codec, opts) < 0)
-              exit(1);
 
   AVStream *st = avformat_new_stream(out, codec);
   if (!st) {
@@ -73,8 +62,8 @@ VideoWriter_x264::VideoWriter_x264(const char *filename,
   enc->sample_aspect_ratio.den = 1;
   enc->sample_aspect_ratio.num = 1;
 
-  enc->thread_count = 0; // use several threads for encoding
-  if (avcodec_open2(enc, codec, &opts) < 0) {
+  enc->thread_count = 0; /* use several threads for encoding */
+
   AVDictionary *opts = NULL;
   char crf_str[4];
   sprintf(crf_str,"%d",crf);
@@ -82,14 +71,14 @@ VideoWriter_x264::VideoWriter_x264(const char *filename,
 //  av_dict_set(&opts, "preset", "superfast", 0);
   av_dict_set(&opts, "preset", preset, 0);
 
-  // open the codec
+  /* open the codec */
   if (avcodec_open2(enc, codec, &opts) < 0) {
     fprintf(stderr, "could not open codec\n");
     exit(EXIT_FAILURE);
   }
 
-  // allocate output buffer
-  video_outbuf_size = enc->width * enc->height * 4; // upper bound
+  /* allocate output buffer */
+  video_outbuf_size = enc->width * enc->height * 4; /* upper bound */
   video_outbuf = (uint8_t *)av_malloc(video_outbuf_size);
   if (!video_outbuf) {
     fprintf(stderr, "Alloc outbuf fail\n");
