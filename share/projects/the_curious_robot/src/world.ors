@@ -18,6 +18,7 @@ body door1-handle {
   type=3
   mesh='plys/door-handle.ply'
   meshscale=.01
+  color=[0 0 0]
   submeshsizes=[73 50 71 51]
 }
 joint (door1-frame, door1-door) {
@@ -53,6 +54,7 @@ body door2-handle {
   type=3
   mesh='plys/door-handle.ply'
   meshscale=.01
+  color=[0 0 0]
   submeshsizes=[73 50 71 51]
 }
 joint (door2-frame, door2-door) {
