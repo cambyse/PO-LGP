@@ -359,7 +359,7 @@ void PhysXInterface::ShutdownPhysX() {
   mPhysics->release();
 }
 
-void DrawActor(PxRigidActor* actor,ors::Body *body) {
+void DrawActor(PxRigidActor* actor, ors::Body *body) {
   PxU32 nShapes = actor->getNbShapes();
   PxShape** shapes=new PxShape*[nShapes];
   //cout <<"#shapes=" <<nShapes;
@@ -367,8 +367,11 @@ void DrawActor(PxRigidActor* actor,ors::Body *body) {
   actor->getShapes(shapes, nShapes);
   while(nShapes--) {
     PxShape *shape = shapes[nShapes];
-    //ors::Shape *s = body->shapes(nShapes);
-    //glColor(s->color[0], s->color[1], s->color[2], 1.);
+
+    // use the color of the first shape of the body for the entire body
+    ors::Shape *s = body->shapes(0);
+    glColor(s->color[0], s->color[1], s->color[2], .8);
+
     ors::Transformation f;
     double mat[16];
     PxTrans2OrsTrans(f, PxShapeExt::getGlobalPose(*shape));

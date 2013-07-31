@@ -17,10 +17,11 @@ import wrlparse
 
 
 def main(f):
-    cmds = ["meshconv %s -c off" % f,
-            "hacd_decomposer %s 2 100 0 1 1 30 2000" % (f[:-4] + '.off'),
-            "meshconv %s -c ply -kd" % (f[:-4] + '_hacd.wrl')
-            ]
+    cmds = [
+        "meshconv %s -c off" % f,
+        "hacd_decomposer %s 2 100 0 1 1 30 2000" % (f[:-4] + '.off'),
+        "meshconv %s -c ply -kd" % (f[:-4] + '_hacd.wrl'),
+    ]
     for cmd in cmds:
         print cmd
         envoy.run(cmd)

@@ -1,14 +1,14 @@
 # door1 {{{
 body door1-frame {
   type=3
-  mesh="plys/door-0_x_hacd.ply"
+  mesh="plys/door-frame.ply"
   meshscale=.01
   submeshsizes=[8 8 8]
   fixed
 }
 body door1-door {
   type=3
-  mesh='plys/door-1_x_hacd.ply'
+  mesh='plys/door-door.ply'
   meshscale=.01
   submeshsizes=[8 36 41 36 41]
   color=[1 0 0]
@@ -16,8 +16,9 @@ body door1-door {
 }
 body door1-handle {
   type=3
-  mesh='plys/door-2_x_hacd.ply'
+  mesh='plys/door-handle.ply'
   meshscale=.01
+  color=[0 0 0]
   submeshsizes=[73 50 71 51]
 }
 joint (door1-frame, door1-door) {
@@ -35,14 +36,14 @@ joint (door1-door, door1-handle) {
 body door2-frame {
   X=<T t(-2 -2 0) d(90 0 0 1)>
   type=3
-  mesh="plys/door-0_x_hacd.ply"
+  mesh="plys/door-frame.ply"
   meshscale=.01
   submeshsizes=[8 8 8]
   fixed
 }
 body door2-door {
   X=<T t(-2 -2 0) d(90 0 0 1)>
-  type=3 mesh='plys/door-1_x_hacd.ply'
+  type=3 mesh='plys/door-door.ply'
   meshscale=.01
   submeshsizes=[8 36 41 36 41]
   color=[1 0 0]
@@ -51,8 +52,9 @@ body door2-door {
 body door2-handle {
   X=<T t(-2 -2 0) d(90 0 0 1)>
   type=3
-  mesh='plys/door-2_x_hacd.ply'
+  mesh='plys/door-handle.ply'
   meshscale=.01
+  color=[0 0 0]
   submeshsizes=[73 50 71 51]
 }
 joint (door2-frame, door2-door) {
@@ -70,23 +72,23 @@ joint (door2-door, door2-handle) {
 body door3-frame {
   X=<T t(2 0 0)>
   type=3
-  mesh="plys/door-0_x_hacd.ply"
+  mesh="plys/door-frame.ply"
   meshscale=.01
   submeshsizes=[8 8 8]
   fixed
 }
 body door3-door {
   X=<T t(2 0 0)>
-  type=3 mesh='plys/door-1_x_hacd.ply'
+  type=3 mesh='plys/door-door.ply'
   meshscale=.01
   submeshsizes=[8 36 41 36 41]
   color=[1 0 0]
-  mass=2000000
+  fixed
 }
 #body door3-handle {
 #  X=<T t(2 0 0)>
 #  type=3
-#  mesh='plys/door-2_x_hacd.ply'
+#  mesh='plys/door-handle.ply'
 #  meshscale=.01
 #  submeshsizes=[73 50 71 51]
 #}
