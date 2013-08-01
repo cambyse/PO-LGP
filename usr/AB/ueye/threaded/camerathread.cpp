@@ -3,69 +3,63 @@
 //#include <sys/time.h>
 #include<time.h>
 
-CameraThread::CameraThread(AbstractCamera *camera, bool recordData, QString outputPath) {
-  _stopped = false;
-
-  _camera = camera;
-  _recordData = recordData;
-  _outputPath = outputPath;
-
+CameraThread::CameraThread(AbstractCamera *_camera,
+                            bool _record,
+                            const char *_path):
+                                                  camera(_camera),
+                                                  record(_record),
+                                                  path(_path),
+                                                  stopped(false) {
   // create output buffer (updated at each frame by grabber thread)
-  _grabberOutputBuffer = (uchar *)
-                          malloc(3*_camera->getWidth()*_camera->getHeight());
+  grabberBuff = (uchar*)malloc(3*camera->getWidth()*camera->getHeight());
 
   // create image buffer (only updated when new image is requested by other
   // external threads)
-  _imageOutputBuffer = (uchar *)
-                          malloc(3*_camera->getWidth()*_camera->getHeight());
+  imageBuff = (uchar*)malloc(3*camera->getWidth()*camera->getHeight());
 }
 
 CameraThread::~CameraThread() {
-  free(_imageOutputBuffer);
-  free(_grabberOutputBuffer);
+  free(grabberBuff);
+  free(imageBuff);
 }
 
-QImage CameraThread::getImage() {
-  if (_bufferMutex.tryLock()) {
-    memcpy(_imageOutputBuffer,
-            _grabberOutputBuffer,
-            3*_camera->getWidth()*_camera->getHeight());
-    _bufferMutex.unlock();
+byteA CameraThread::getImage() {
+  if(buffMutex.tryLock()) {
+    memcpy(imageBuff, grabberBuff, 3*camera->getWidth()*camera->getHeight());
+    buffMutex.unlock();
   }
-  QImage img(_imageOutputBuffer,
-              _camera->getWidth(),
-              _camera->getHeight(),
-              QImage::Format_RGB888);
-  return img;
+  byteA image(camera->getHeight(), camera->getWidth(), 3);
+  byteA.p = imageBuff;
+
+  return image;
 }
 
 void CameraThread::stop() {
-  _stopped = true;
+  stopped = true;
 }
 
 void CameraThread::run() {
   std::cout << "RUN_START()" << std::endl;
-  FILE * timestamp_file;
+  FILE *timestamp_file;
   VideoWriter_x264 *videoWriter;
 
-  if(_recordData) {
+  if(record) {
     // create timestamp file
     char fileName[200];
     sprintf(fileName,
-            "%s/%s_timestamps.txt",
-            _outputPath.toStdString().c_str(),
-            _camera->getName().toStdString().c_str());
+            "%s/%s_timestamps.txt", path,
+            camera->getName().toStdString().c_str());
     timestamp_file = fopen(fileName,"w");
 
     // open video file
     sprintf(fileName,
             "%s/%s_video.mp4",
-            _outputPath.toStdString().c_str(),
-            _camera->getName().toStdString().c_str());
+            path,
+            camera->getName().toStdString().c_str());
     videoWriter = new VideoWriter_x264(fileName,
-                                        _camera->getWidth(),
-                                        _camera->getHeight(),
-                                        _camera->getFPS(),
+                                        camera->getWidth(),
+                                        camera->getHeight(),
+                                        camera->getFPS(),
                                         20,
                                         "superfast");
   }
@@ -74,42 +68,44 @@ void CameraThread::run() {
 
   int frameCount = 0;
 
-  _camera->open();
+  camera->open();
 
   bool success_time, success;
   Mat frameMat;
-  while(!_stopped) {
-    _camera->grab();
+  while(!stopped) {
+    camera->grab();
     //frameTime = getTime();
     bool success_time = getTime(&frameTime);
-    bool success_frame = _camera->retrieve(frameMat);
+    bool success_frame = camera->retrieve(frameMat);
 
     if(success_frame && success_time) {
-      if(_recordData) {
+      if(record) {
         // save timestamp
         fprintf(timestamp_file,"%07d %2.16f\n", frameCount, frameTime);
         // encode
         videoWriter->addFrame(frameMat.data);
       }
 
-      _bufferMutex.lock();
-      memcpy(_grabberOutputBuffer, frameMat.data, 3*_camera->getWidth()*_camera->getHeight());
-      _bufferMutex.unlock();
+      buffMutex.lock();
+      memcpy(grabberBuff,
+              frameMat.data,
+              3*camera->getWidth()*camera->getHeight());
+      buffMutex.unlock();
 
       frameCount++;
     }
 //    msleep(5);
   }
 
-  _camera->close();
+  camera->close();
 
-  if (_recordData) {
+  if(record) {
     delete videoWriter;
-    fclose (timestamp_file);
+    fclose(timestamp_file);
   }
 
   // prepare for next run
-  _stopped = false;
+  stopped = false;
 
   std::cout << "RUN_FINISHED()." << std::endl;
 }

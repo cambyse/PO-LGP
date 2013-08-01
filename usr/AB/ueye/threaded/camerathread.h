@@ -17,7 +17,7 @@ public:
   void stop();
 
   // called from other threads, will try to update the internal image buffer, unless the grabbing stage has locked it (in that case the current image in the buffer is returned)
-  QImage getImage();
+  byteA getImage();
 
 protected:
   void run();
@@ -27,17 +27,16 @@ private:
   //double getTime();
   bool getTime(double *time);
 
-  volatile bool _stopped;
-  QMutex _bufferMutex;
+  volatile bool stopped;
+  QMutex buffMutex;
 
-  QString _outputPath;
+  const char *path;
 
-  bool _recordData;
+  bool record;
 
-  AbstractCamera *_camera;
+  AbstractCamera *camera;
 
-  uchar *_grabberOutputBuffer, *_imageOutputBuffer;
-
+  uchar *grabberBuff, *imageBuf;
 };
 
 #endif // CAMERATHREAD_H

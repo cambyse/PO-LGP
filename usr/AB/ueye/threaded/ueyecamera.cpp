@@ -3,27 +3,11 @@
 
 using namespace std;
 
-UEyeCamera::UEyeCamera(int _camID, int _w, int _h, int _fps, const char *_fname):
+UEyeCamera::UEyeCamera(int _camID, int _w, int _h, int _fps):
                         camID(_camID),
-                        width(_w), height(_h), fps(_fps),
-                        fname(_fname),
-                        quit(false), play(true), rec(false) {
-
-    numBuff = 5;
-
-    vw = new VideoWriter_x264(STRING(camID << "_" << fname),
-                              width,
-                              height,
-                              fps,
-                              20,
-                              "superfast");
-}
-
-UEyeCamera::~UEyeCamera() { }
-
-void UEyeCamera::open() {
-  cout << "InitCamera" << endl;
+                        width(_w), height(_h), fps(_fps) {
 // TODO check out how to initialize a specific camera
+  cout << "InitCamera" << endl;
   camStatus = is_InitCamera(&camID, NULL);
   query_status(camID, "InitCamera", &camStatus);
 
@@ -59,8 +43,8 @@ void UEyeCamera::open() {
   camBuffID = (int*)malloc(numBuff*sizeof(int));
   for(int i = 0; i < numBuff; i++) {
     camStatus = is_AllocImageMem(camID,
-                                  w,
-                                  h,
+                                  width,
+                                  height,
                                   bpp,
                                   &camBuff[i],
                                   &camBuffID[i]);
@@ -76,6 +60,8 @@ void UEyeCamera::open() {
 
   setParams();
 }
+
+UEyeCamera::~UEyeCamera() { }
 
 void UEyeCamera::setParams() {
   cout << "Setting Parameters" << endl;
@@ -102,7 +88,21 @@ void UEyeCamera::setParams() {
   cout << " - exposure = " << exposure << endl;
 }
 
+void UEyeCamera::open() {
+  cout << "CaptureVideo" << endl;
+  camStatus = is_CaptureVideo(camID, IS_DONT_WAIT);
+  query_status(camID, "CaptureVideo", &camStatus);
+}
+
 void UEyeCamera::close() {
+  cout << "StopLiveVideo" << endl;
+  camStatus = is_StopLiveVideo(camID, IS_FORCE_VIDEO_STOP);
+  query_status(camID, "StopLiveVideo", &camStatus);
+
+  cout << "ClearSequence" << endl;
+  camStatus = is_ClearSequence(camID);
+  query_status(camID, "ClearSequence", &camStatus);
+
   for(int i = 0; i < numBuff; i++) {
     camStatus = is_FreeImageMem(camID, camBuff[i], camBuffID[i]);
     query_status(camID, "FreeImageMem", &camStatus);
@@ -118,40 +118,32 @@ void UEyeCamera::close() {
   query_status(camID, "ExitCamera", &camStatus);
 }
 
-void UEyeCamera::capture() {
-  cout << "CaptureVideo" << endl;
-  camStatus = is_CaptureVideo(camID, IS_DONT_WAIT);
-  query_status(camID, "CaptureVideo", &camStatus);
+void UEyeCamera::grab() {
+  camStatus = is_GetActSeqBuf(camID, &imageBuffNum, NULL, &image);
+  query_status(camID, "GetActSeqBuf", &camStatus);
 
-  while(!quit) {
-    camStatus = is_GetActSeqBuf(camID, NULL, NULL, &image);
-    query_status(camID, "GetActSeqBuf", &camStatus);
+  camStatus = is_LockSeqBuf(camID, imageBuffNum, image);
+  query_status(camID, "LockSeqBuf", &camStatus);
 
-    if(rec)
-      vw->addFrame((uint8_t*)image);
-
-    if(play) {
-      camStatus = is_GetFramesPerSecond(camID, &fps);
-      query_status(camID, "GetFramesPerSecond", &camStatus);
-
-      for(int cam = 0; cam < numCams; cam++) {
-        img[cam]->p = (byte*)image;
-        gl.views(cam).text = STRING("frame: 1" << "\nfps: " << fps);
-      }
-      gl.update(); // all time spent here.. problem: usb2
-    }
-  }
-
-  cout << "StopLiveVideo" << endl;
-  camStatus = is_StopLiveVideo(camID, IS_FORCE_VIDEO_STOP);
-  query_status(camID, "StopLiveVideo", &camStatus);
-
-  cout << "ClearSequence" << endl;
-  camStatus = is_ClearSequence(camID);
-  query_status(camID, "ClearSequence", &camStatus);
+  /*
+  camStatus = is_GetFramesPerSecond(camID, &fps);
+  query_status(camID, "GetFramesPerSecond", &camStatus);
+  */
 }
 
-void UEyeCamera::query_status(HIDS camID, const char *method, INT *status) {
+void UEyeCamera::retrieve(byte *img) {
+  img = (byte*)image;
+// TODO unlock sequence buffer!!!
+// probably I first have to really copy the array, not the pointer only..
+// maybe already use byteA here?
+ 
+  /*
+  camStatus = is_UnlockSeqBuf(camID, imageBuffNum, image);
+  query_status(camID, "UnlockSeqBuf", &camStatus);
+  */
+}
+
+bool UEyeCamera::query_status(HIDS camID, const char *method, INT *status) {
   if(*status != IS_SUCCESS) {
     IS_CHAR* msg;
     INT ret = is_GetError(camID, status, &msg);
@@ -160,7 +152,9 @@ void UEyeCamera::query_status(HIDS camID, const char *method, INT *status) {
       msg = (IS_CHAR*)"OH THE IRONY..";
     cout << method << " failed with status " << *status
           << " (" << msg << ")" << endl;
+    return true;
   }
+  return false;
 }
 
 INT UEyeCamera::getImageID(char *buff) {

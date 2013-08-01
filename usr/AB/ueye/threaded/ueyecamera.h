@@ -1,17 +1,18 @@
+#ifndef _UEYE_CAMERA_H_
+#define _UEYE_CAMERA_H_
+
 #include<ueye.h>
-#include"VideoWriter_x264.h"
 
 class UEyeCamera: public AbstractCamera {
   public:
     UEyeCamera(int camIndex, int width, int height, int fps, const char *fname);
     ~UEyeCamera();
 
-    void init();
-    void open();
     void setParams();
+    void open();
     void close();
     void grab();
-    bool retrieve();
+    bool retrieve(byte *img);
 
     static unsigned int getNumCameras();
 
@@ -22,7 +23,9 @@ class UEyeCamera: public AbstractCamera {
     HIDS camID;
     INT camStatus;
     SENSORINFO camInfo;
+
     char *image;
+    INT imageBuffNum;
 
     int numBuff;
     char **camBuff;
@@ -38,10 +41,8 @@ class UEyeCamera: public AbstractCamera {
     double real_fps;
     double exposure;
 
-    const char *fname;
-    VideoWriter_x264 *vw;
-
-    bool quit, play, rec;
-
-    void query_status(HIDS camID, const char *method, INT *status);
+    bool query_status(HIDS camID, const char *method, INT *status);
 }
+
+#endif // _UEYE_CAMERA_H_
+
