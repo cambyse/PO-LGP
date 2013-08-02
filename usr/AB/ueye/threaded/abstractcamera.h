@@ -21,7 +21,7 @@ public:
   virtual void grab() = 0;
 
   // decode frame
-  virtual bool retrieve(Mat &frameMat) = 0;
+  virtual bool retrieve(char *img) = 0;
 
   int getWidth() const { return _width; }
   int getHeight() const { return _height; }

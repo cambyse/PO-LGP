@@ -1,5 +1,5 @@
-#include<iostream>
-#include"ueyecamera.h"
+#include <iostream>
+#include "ueyecamera.h"
 
 using namespace std;
 
@@ -131,8 +131,8 @@ void UEyeCamera::grab() {
   */
 }
 
-void UEyeCamera::retrieve(byte *img) {
-  img = (byte*)image;
+bool UEyeCamera::retrieve(char *img) {
+  img = image;
 // TODO unlock sequence buffer!!!
 // probably I first have to really copy the array, not the pointer only..
 // maybe already use byteA here?
@@ -141,6 +141,9 @@ void UEyeCamera::retrieve(byte *img) {
   camStatus = is_UnlockSeqBuf(camID, imageBuffNum, image);
   query_status(camID, "UnlockSeqBuf", &camStatus);
   */
+
+  // TODO might not require boolean
+  return true;
 }
 
 bool UEyeCamera::query_status(HIDS camID, const char *method, INT *status) {
@@ -162,4 +165,11 @@ INT UEyeCamera::getImageID(char *buff) {
     if(camBuff[i] == buff)
       return camBuffID[i];
   return -1;
+}
+
+int UEyeCamera::getNumCameras() {
+  INT numCams, status;
+  status = is_GetNumberOfCameras(&numCams);
+  query_status(-1, "GetNumberOfCameras", &status);
+  return (int)numCams;
 }

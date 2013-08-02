@@ -1,20 +1,21 @@
 #ifndef _UEYE_CAMERA_H_
 #define _UEYE_CAMERA_H_
 
-#include<ueye.h>
+#include <ueye.h>
+#include "abstractcamera.h"
 
 class UEyeCamera: public AbstractCamera {
   public:
-    UEyeCamera(int camIndex, int width, int height, int fps, const char *fname);
+    UEyeCamera(int camIndex, int width, int height, int fps);
     ~UEyeCamera();
 
     void setParams();
     void open();
     void close();
     void grab();
-    bool retrieve(byte *img);
+    bool retrieve(char *img);
 
-    static unsigned int getNumCameras();
+    static int getNumCameras();
 
   private:
     int camIndex;
@@ -41,8 +42,10 @@ class UEyeCamera: public AbstractCamera {
     double real_fps;
     double exposure;
 
-    bool query_status(HIDS camID, const char *method, INT *status);
-}
+    static bool query_status(HIDS camID, const char *method, INT *status);
+
+    INT getImageID(char *buff);
+};
 
 #endif // _UEYE_CAMERA_H_
 

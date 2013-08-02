@@ -1,29 +1,39 @@
 #ifndef _RECORDER_H_
 #define _RECORDER_H_
 
-#include<Core/array.h>
-#include<Gui/opengl.h>
-#include<GL/glut.h>
+#include <Core/array.h>
+#include <Gui/opengl.h>
+#include <GL/glut.h>
+#include <QTimer>
 
-#include<QTimer>
+#include "camerathread.h"
+#include "ueyecamera.h"
 
-struct Recorder : OpenGL::GLKeyCall {
-  static const int MAX_CAMS_PER_ROW = 2;
+class Recorder: OpenGL::GLKeyCall, QObject {
+  Q_OBJECT
 
   // for visualization
+  static const int MAX_CAMS_PER_ROW = 2;
   OpenGL gl;
   byteA **img;
 
-  unsigned int numCams;
+  int width, height, fps;
+
+  int numCams;
+  UEyeCamera **cameras;
+  CameraThread **cameraThreads;
+
   bool quit, play, rec;
+  bool kinect;
 
   QTimer timer;
+
 
   private slots:
     void updateDisplay();
 
   public:
-    Recorder();
+    Recorder(int w, int h, int f, bool k);
     ~Recorder();
 
     void record();

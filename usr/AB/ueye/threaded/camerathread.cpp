@@ -1,15 +1,12 @@
 #include "camerathread.h"
 #include "VideoWriter_x264.h"
 //#include <sys/time.h>
-#include<time.h>
+#include <time.h>
 
-CameraThread::CameraThread(AbstractCamera *_camera,
-                            bool _record,
-                            const char *_path):
-                                                  camera(_camera),
-                                                  record(_record),
-                                                  path(_path),
-                                                  stopped(false) {
+CameraThread::CameraThread(AbstractCamera *c, bool r, const char *p):
+                            camera(c), record(r), path(p) { 
+  stopped = false;
+
   // create output buffer (updated at each frame by grabber thread)
   grabberBuff = (uchar*)malloc(3*camera->getWidth()*camera->getHeight());
 
@@ -29,7 +26,7 @@ byteA CameraThread::getImage() {
     buffMutex.unlock();
   }
   byteA image(camera->getHeight(), camera->getWidth(), 3);
-  byteA.p = imageBuff;
+  image.p = imageBuff;
 
   return image;
 }
@@ -71,24 +68,24 @@ void CameraThread::run() {
   camera->open();
 
   bool success_time, success;
-  Mat frameMat;
+  char *frame;
   while(!stopped) {
     camera->grab();
     //frameTime = getTime();
     bool success_time = getTime(&frameTime);
-    bool success_frame = camera->retrieve(frameMat);
+    bool success_frame = camera->retrieve(frame);
 
     if(success_frame && success_time) {
       if(record) {
         // save timestamp
         fprintf(timestamp_file,"%07d %2.16f\n", frameCount, frameTime);
         // encode
-        videoWriter->addFrame(frameMat.data);
+        videoWriter->addFrame((uint8_t*)frame);
       }
 
       buffMutex.lock();
       memcpy(grabberBuff,
-              frameMat.data,
+              frame,
               3*camera->getWidth()*camera->getHeight());
       buffMutex.unlock();
 

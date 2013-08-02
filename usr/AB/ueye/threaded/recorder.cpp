@@ -1,18 +1,28 @@
 using namespace std;
 
-Recorder::Recorder(): quit(false), play(true), rec(false) {
+#include "recorder.h"
+#include "ueyecamera.h"
+
+Recorder::Recorder(int w, int h, int f, bool k): width(w),
+                                                  height(h),
+                                                  fps(f),
+                                                  kinect(k) {
+  quit = false;
+  play = true;
+  rec = false;
+
   gl.addKeyCall(this);
 
-  numCams = UeyeCamera::getNumCameras();
+  numCams = UEyeCamera::getNumCameras();
 
   cameras = new UEyeCamera*[numCams];
   cameraThreads = new CameraThread*[numCams];
 
   for(int c = 0; c < numCams; c++)
-    cameras[i] = new UeyeCamera(c, 1280, 1024, 60, "video.avi");
+    cameras[c] = new UEyeCamera(c, 1280, 1024, 60);
 
   for(int c = 0; c < numCams; c++)
-    cameraThreads = new CameraThread(cameras[i]);
+    cameraThreads[c] = new CameraThread(cameras[c], true, "./rec/");
 
   /*
   if(kinect)
@@ -35,7 +45,7 @@ Recorder::Recorder(): quit(false), play(true), rec(false) {
     gl.views(cam).img = img[cam];
   }
 
-  connect(&times, SIGNAL(timeout()), this, SLOT(updateDisplay()));
+  connect(&timer, SIGNAL(timeout()), this, SLOT(updateDisplay()));
 }
 
 Recorder::~Recorder() {
@@ -55,12 +65,7 @@ Recorder::~Recorder() {
   */
 }
 
-void Recorder::record() {
-  initAll();
-  openAll();
-  captureAll();
-  closeAll();
-}
+void Recorder::record() { }
 
 bool Recorder::keyCallback(OpenGL &) {
   switch(gl.pressedkey) {
@@ -83,14 +88,16 @@ bool Recorder::keyCallback(OpenGL &) {
 void Recorder::pressPlay() {
   play = !play;
   if(play) {
-    for(int c=0;c<n_cameras;c++)
+    for(int c = 0; c < numCams; c++)
       cameraThreads[c]->start();
 
-    if (useKinect)
+    /*
+    if(kinect)
       kinectThread->start();
+    */
 
     //display frequency (does not affect recording)
-    displayTimer.start(1000/30);
+    timer.start(1000/30);
   }
 }
 
@@ -101,13 +108,15 @@ void Recorder::pressRecord() {
 void Recorder::pressQuit() {
   quit = true;
 
-  for(int c=0;c<n_cameras;c++)
+  for(int c = 0; c < numCams; c++)
     cameraThreads[c]->stop();
 
-  if (useKinect)
+  /*
+  if(kinect)
     kinectThread->stop();
+  */
 
-  _displayTimer.stop();
+  timer.stop();
 }
 
 void Recorder::updateDisplay() {

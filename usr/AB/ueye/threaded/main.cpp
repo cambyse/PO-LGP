@@ -18,10 +18,10 @@ extern "C" {
 }
 */
 
-#include"recorder.h"
+#include "recorder.h"
 
 int main(int argc, char *argv[]) {
-  Recorder r;
+  Recorder r(1280, 1024, 60, false);
   r.record();
 }
 

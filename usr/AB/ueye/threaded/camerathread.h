@@ -3,40 +3,37 @@
 
 #include <QtCore>
 #include <QImage>
+#include <Core/array.h>
+
 #include "abstractcamera.h"
 
-class CameraThread : public QThread
-{
-  Q_OBJECT
+class CameraThread : public QThread {
+  public:
+    CameraThread(AbstractCamera *c, bool r, const char *p);
+    ~CameraThread();
 
-public:
-  CameraThread(AbstractCamera *camera, bool recordData, QString outputPath);
+    void stop();
 
-  ~CameraThread();
+    // called from other threads, will try to update the internal image buffer, unless the grabbing stage has locked it (in that case the current image in the buffer is returned)
+    byteA getImage();
 
-  void stop();
+  protected:
+    void run();
 
-  // called from other threads, will try to update the internal image buffer, unless the grabbing stage has locked it (in that case the current image in the buffer is returned)
-  byteA getImage();
+  private:
 
-protected:
-  void run();
+    //double getTime();
+    bool getTime(double *time);
 
-private:
+    volatile bool stopped;
+    QMutex buffMutex;
 
-  //double getTime();
-  bool getTime(double *time);
+    AbstractCamera *camera;
+    uchar *grabberBuff, *imageBuff;
 
-  volatile bool stopped;
-  QMutex buffMutex;
+    bool record;
 
-  const char *path;
-
-  bool record;
-
-  AbstractCamera *camera;
-
-  uchar *grabberBuff, *imageBuf;
+    const char *path;
 };
 
 #endif // CAMERATHREAD_H

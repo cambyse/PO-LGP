@@ -3,7 +3,10 @@ BASE=../../../../share
 DEPEND = Core Gui
 QT = 1
 
-OBJS = main.o VideoWriter_x264.o
+#OBJS = main.o recorder.o ueyecamera.o camerathread.o VideoWriter_x264.o
+OBJS  = $(shell find . -maxdepth 1 -name '*.cpp')
+OBJS := $(OBJS:%.cpp=%.o)
+OBJS := $(filter-out ./mainwindow.o,$(OBJS))
 
 CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES -D__STDC_CONSTANT_MACROS
 LPATHS += /usr/local/lib

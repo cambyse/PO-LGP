@@ -3,49 +3,44 @@
 #include <QMutex>
 
 extern "C" {
-#include<libavcodec/avcodec.h>
-#include<libavformat/avformat.h>
-#include<libswscale/swscale.h>
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libswscale/swscale.h>
 }
 
-class VideoWriter_x264
-{
+class VideoWriter_x264 {
+  public:
+    // setup and open file
+    VideoWriter_x264(const char *filename,
+                      int width,
+                      int height,
+                      int frame_rate,
+                      int crf,
+                      const char *preset);
 
-public:
+    // close file and clean-up
+    ~VideoWriter_x264();
 
-  // setup and open file
-  VideoWriter_x264(const char *filename,
-                    int width,
-                    int height,
-                    int frame_rate,
-                    int crf,
-                    const char *preset);
+    // assuming width*height*3 bytes rgb interleaved data
+    void addFrame(uint8_t *buffer);
 
-  // close file and clean-up
-  ~VideoWriter_x264();
+  private:
+    // register lock manager and initialize libav
+    void init();
 
-  // assuming width*height*3 bytes rgb interleaved data
-  void addFrame(uint8_t *buffer);
+    static int lockManagerQt(void **mutex, enum AVLockOp op);
+    int writeEncodedFrame(AVPacket *pPacket);
 
-private:
+    static bool initialized;
+    static QMutex initMutex;
 
-  // register lock manager and initialize libav
-  void init();
-
-  static int lockManagerQt(void **mutex, enum AVLockOp op);
-  int writeEncodedFrame(AVPacket *pPacket);
-
-  static bool initialized;
-  static QMutex initMutex;
-
-  AVFormatContext *out;
-  AVCodecContext *enc;
-  struct SwsContext *sws_ctx;
-  AVFrame *pFrame;
-  uint8_t *buffer;
-  uint8_t *video_outbuf;
-  int video_outbuf_size;
-  unsigned int pts_step;
-  int frames_in, frames_out;
-
+    AVFormatContext *out;
+    AVCodecContext *enc;
+    struct SwsContext *sws_ctx;
+    AVFrame *pFrame;
+    uint8_t *buffer;
+    uint8_t *video_outbuf;
+    int video_outbuf_size;
+    unsigned int pts_step;
+    int frames_in, frames_out;
 };
