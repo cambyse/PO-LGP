@@ -9,6 +9,7 @@ struct RecorderKeys: public OpenGL::GLKeyCall {
   Recorder *rec;
 
   RecorderKeys(Recorder *r): rec(r) {};
+  ~RecorderKeys() {};
   bool keyCallback(OpenGL &);
 };
 

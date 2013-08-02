@@ -3,15 +3,14 @@ BASE=../../../../share
 DEPEND = Core Gui
 QT = 1
 
-CXX = clang
+CXX = clang++
 
 PREOBJS = ./recorder_moc.cpp
-CLEAN = *_moc.cpp
 
 #OBJS = main.o recorder.o ueyecamera.o camerathread.o VideoWriter_x264.o
 OBJS  = $(shell find . -maxdepth 1 -name '*.cpp')
 OBJS := $(filter-out ./mainwindow.cpp,$(OBJS))
-#OBJS := $(filter-out ./recorder.cpp,$(OBJS))
+OBJS := $(filter-out ./recorder.cpp,$(OBJS))
 #OBJS := $(filter-out ./recorder_moc.cpp,$(OBJS))
 #OBJS := $(filter-out ./recorder.cpp,$(OBJS))
 OBJS := $(OBJS:%.cpp=%.o)
