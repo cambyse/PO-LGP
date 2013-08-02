@@ -50,6 +50,7 @@ class PickOOIActionServer:
         self.ooi_id_pub = rospy.Publisher('ooi_id', msgs.ObjectID)
 
         # Select the Strategies
+        #self.select_ooi = _random_select_strategy
         self.select_ooi = _random_select_strategy
 
         # Actionlib Server
