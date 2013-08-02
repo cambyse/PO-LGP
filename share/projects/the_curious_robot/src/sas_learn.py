@@ -60,6 +60,8 @@ class LearnActionServer:
             # rospy.loginfo(response.model)
 
             if response.model.params:
+                print response
+
                 logLH = [entry.value for entry in response.model.params
                          if entry.name == 'loglikelihood'][0]
                 rospy.loginfo("selected model: '%s' (n = %d, log LH = %f)" % (
@@ -78,9 +80,7 @@ class LearnActionServer:
     def trajectory_cb(self, msg):
         del self.trajectory[:]
         self.trajectory = []
-        trajectory = util.parse_trajectory_msg(msg)
-        self.ooi = trajectory[0]
-        self.trajectory = trajectory[1]
+        self.ooi, self.trajectory = util.parse_trajectory_msg(msg)
 
 
 def main():
