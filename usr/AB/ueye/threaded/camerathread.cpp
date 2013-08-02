@@ -67,13 +67,13 @@ void CameraThread::run() {
 
   camera->open();
 
-  bool success_time, success;
-  char *frame;
+  bool success_time, success_frame;
+  char *frame = NULL;
   while(!stopped) {
     camera->grab();
     //frameTime = getTime();
-    bool success_time = getTime(&frameTime);
-    bool success_frame = camera->retrieve(frame);
+    success_time = getTime(&frameTime);
+    success_frame = camera->retrieve(frame);
 
     if(success_frame && success_time) {
       if(record) {

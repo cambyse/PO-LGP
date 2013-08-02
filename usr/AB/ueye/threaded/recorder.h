@@ -9,25 +9,32 @@
 #include "camerathread.h"
 #include "ueyecamera.h"
 
-class Recorder: OpenGL::GLKeyCall, QObject {
+struct RecorderKeys;
+
+class Recorder: public QObject {
   Q_OBJECT
 
   // for visualization
   static const int MAX_CAMS_PER_ROW = 2;
-  OpenGL gl;
-  byteA **img;
+  public:
+    OpenGL gl;
 
-  int width, height, fps;
+  private:
+    byteA **img;
 
-  int numCams;
-  UEyeCamera **cameras;
-  CameraThread **cameraThreads;
+    // keys
+    RecorderKeys *keys;
 
-  bool quit, play, rec;
-  bool kinect;
+    int width, height, fps;
 
-  QTimer timer;
+    int numCams;
+    UEyeCamera **cameras;
+    CameraThread **cameraThreads;
 
+    bool quit, play, rec;
+    bool kinect;
+
+    QTimer timer;
 
   private slots:
     void updateDisplay();
@@ -40,7 +47,6 @@ class Recorder: OpenGL::GLKeyCall, QObject {
 
     static void nothing(void*) {}
 
-    bool keyCallback(OpenGL &);
     void pressPlay();
     void pressRecord();
     void pressQuit();

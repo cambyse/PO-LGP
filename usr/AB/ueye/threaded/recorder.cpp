@@ -1,17 +1,43 @@
-using namespace std;
+#include<iostream>
 
 #include "recorder.h"
 #include "ueyecamera.h"
 
-Recorder::Recorder(int w, int h, int f, bool k): width(w),
-                                                  height(h),
-                                                  fps(f),
-                                                  kinect(k) {
+using namespace std;
+
+struct RecorderKeys: public OpenGL::GLKeyCall {
+  Recorder *rec;
+
+  RecorderKeys(Recorder *r): rec(r) {};
+  bool keyCallback(OpenGL &);
+};
+
+bool RecorderKeys::keyCallback(OpenGL &) {
+  switch(rec->gl.pressedkey) {
+    case 'p':
+      rec->pressPlay();
+      break;
+    case 'q':
+      rec->pressQuit();
+      break;
+    case 'r':
+      rec->pressRecord();
+      break;
+    default:
+      cout << "Unknown key pressed: " << rec->gl.pressedkey << endl;
+      break;
+  }
+  return true;
+}
+
+Recorder::Recorder(int w, int h, int f, bool k):
+                    width(w), height(h), fps(f), kinect(k) {
   quit = false;
   play = true;
   rec = false;
 
-  gl.addKeyCall(this);
+  keys = new RecorderKeys(this);
+  gl.addKeyCall(keys);
 
   numCams = UEyeCamera::getNumCameras();
 
@@ -63,27 +89,11 @@ Recorder::~Recorder() {
   if(kinect)
     delete kinectThread;
   */
+
+  delete keys;
 }
 
 void Recorder::record() { }
-
-bool Recorder::keyCallback(OpenGL &) {
-  switch(gl.pressedkey) {
-    case 'p':
-      pressPlay();
-      break;
-    case 'q':
-      pressQuit();
-      break;
-    case 'r':
-      pressRecord();
-      break;
-    default:
-      cout << "Unknown key pressed: " << gl.pressedkey << endl;
-      break;
-  }
-  return true;
-}
 
 void Recorder::pressPlay() {
   play = !play;
