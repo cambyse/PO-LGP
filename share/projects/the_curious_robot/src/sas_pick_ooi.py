@@ -12,6 +12,16 @@ import util
 import require_provide as rp
 
 
+###############################################################
+# different strategies for selecting OOIs
+###############################################################
+def _random_select_strategy(oois):
+    ooi = random.choice(oois)
+    ooi_id_msg = msgs.ObjectID()
+    ooi_id_msg.id = ooi['body'].name
+    return ooi_id_msg
+
+
 class PickOOIActionServer:
 
     def __init__(self, name):
@@ -24,6 +34,9 @@ class PickOOIActionServer:
 
         # Publisher
         self.ooi_id_pub = rospy.Publisher('ooi_id', msgs.ObjectID)
+
+        # Select Strategies
+        self.select_ooi = _random_select_strategy
 
         # Actionlib Server
         self.server = SimpleActionServer(
@@ -38,10 +51,9 @@ class PickOOIActionServer:
             self.server.set_aborted()
             return
 
-        ooi = random.choice(self.oois)
-        ooi_id_msg = msgs.ObjectID()
-        # ooi_id_msg.id = ooi['body'].name
-        ooi_id_msg.id = 'door1-door'
+        # select an ooi
+        ooi_id_msg = self.select_ooi(self.oois)
+
         self.ooi_id_pub.publish(ooi_id_msg)
         self.server.set_succeeded()
 
@@ -56,6 +68,7 @@ class PickOOIActionServer:
 def main():
     rospy.init_node('tcr_sas_pick_ooi')
     server = PickOOIActionServer('pick_ooi')
+
 
 if __name__ == '__main__':
     main()
