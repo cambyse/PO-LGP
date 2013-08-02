@@ -12,16 +12,30 @@ import util
 import require_provide as rp
 
 
-###############################################################
+#########################################################################
 # different strategies for selecting OOIs
-###############################################################
+#########################################################################
+#
+# to add new strategies add a method that takes the the list of oois. the
+# `select_ooi` in `PickOOIActionServer` must be set to this method.
+#
+# TODO selecting the strategy should be done via dynamic reconfigure.
 def _random_select_strategy(oois):
+    """select a random object of all possibes objects"""
     ooi = random.choice(oois)
     ooi_id_msg = msgs.ObjectID()
     ooi_id_msg.id = ooi['body'].name
     return ooi_id_msg
 
 
+def _door1_select_strategy(oois):
+    """always go for the door1-door"""
+    ooi_id_msg = msgs.ObjectID()
+    ooi_id_msg.id = "door1-door"
+    return ooi_id_msg
+
+
+#########################################################################
 class PickOOIActionServer:
 
     def __init__(self, name):
@@ -35,7 +49,7 @@ class PickOOIActionServer:
         # Publisher
         self.ooi_id_pub = rospy.Publisher('ooi_id', msgs.ObjectID)
 
-        # Select Strategies
+        # Select the Strategies
         self.select_ooi = _random_select_strategy
 
         # Actionlib Server
