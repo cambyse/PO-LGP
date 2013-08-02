@@ -4,7 +4,6 @@
 #include <QtCore>
 #include <QImage>
 #include <Core/array.h>
-
 #include "abstractcamera.h"
 
 class CameraThread : public QThread {

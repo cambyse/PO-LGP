@@ -6,8 +6,8 @@
 
 class UEyeCamera: public AbstractCamera {
   public:
-    UEyeCamera(int camIndex, int width, int height, int fps);
-    ~UEyeCamera();
+    UEyeCamera(int _camID, int _w, int _h, int _fps);
+    virtual ~UEyeCamera();
 
     void setParams();
     void open();
@@ -32,13 +32,10 @@ class UEyeCamera: public AbstractCamera {
     char **camBuff;
     INT *camBuffID;
 
-    INT width;
-    INT height;
-    INT bpp;  // bits per pixel
+    int bpp;  // bits per pixel
 
     UINT old_pixelclock;
     UINT pixelclock;
-    double fps;
     double real_fps;
     double exposure;
 

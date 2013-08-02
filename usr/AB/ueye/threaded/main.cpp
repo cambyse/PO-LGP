@@ -22,6 +22,13 @@ extern "C" {
 
 int main(int argc, char *argv[]) {
   Recorder r(1280, 1024, 60, false);
-  //r.record();
+
+  cout << "Start threads" << endl;
+  r.start();
+
+  cout << "Wait threads" << endl;
+  r.wait();
+
+  cout << "Closing up." << endl;
 }
 

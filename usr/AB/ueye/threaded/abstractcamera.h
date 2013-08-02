@@ -1,39 +1,30 @@
 #ifndef ABSTRACTCAMERA_H
 #define ABSTRACTCAMERA_H
 
-#include <QtCore>
-#include "opencv2/opencv.hpp"
+#include <string>
 
-using namespace cv;
+class AbstractCamera {
+  public:
+    // open camera (can be issued from differen thread)
+    virtual void open() = 0;
 
-class AbstractCamera
-{
+    // release camera buffers
+    virtual void close() = 0;
 
-public:
+    // grab frame (fast)
+    virtual void grab() = 0;
 
-  // open camera (can be issued from differen thread)
-  virtual void open() = 0;
+    // decode frame
+    virtual bool retrieve(char *img) = 0;
 
-  // release camera buffers
-  virtual void close() = 0;
+    int getWidth() const { return width; }
+    int getHeight() const { return height; }
+    int getFPS() const { return fps; }
+    std::string getName() const { return name; }
 
-  // grab frame (fast)
-  virtual void grab() = 0;
-
-  // decode frame
-  virtual bool retrieve(char *img) = 0;
-
-  int getWidth() const { return _width; }
-  int getHeight() const { return _height; }
-  int getFPS() const { return _fps; }
-
-  QString getName() const { return _cameraName; }
-
-protected:
-
-  int _width, _height, _fps;
-  QString _cameraName;
-
+  protected:
+    int width, height, fps;
+    std::string name;
 };
 
 #endif // ABSTRACTCAMERA_H

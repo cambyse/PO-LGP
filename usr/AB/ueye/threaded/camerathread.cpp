@@ -1,7 +1,7 @@
-#include "camerathread.h"
-#include "VideoWriter_x264.h"
 //#include <sys/time.h>
 #include <time.h>
+#include "camerathread.h"
+#include "VideoWriter_x264.h"
 
 CameraThread::CameraThread(AbstractCamera *c, bool r, const char *p):
                             camera(c), record(r), path(p) { 
@@ -43,16 +43,12 @@ void CameraThread::run() {
   if(record) {
     // create timestamp file
     char fileName[200];
-    sprintf(fileName,
-            "%s/%s_timestamps.txt", path,
-            camera->getName().toStdString().c_str());
+    sprintf(fileName, "%s/%s_timestamps.txt", path, camera->getName().c_str());
     timestamp_file = fopen(fileName,"w");
 
     // open video file
-    sprintf(fileName,
-            "%s/%s_video.mp4",
-            path,
-            camera->getName().toStdString().c_str());
+    sprintf(fileName, "%s/%s_video.mp4", path, camera->getName().c_str());
+
     videoWriter = new VideoWriter_x264(fileName,
                                         camera->getWidth(),
                                         camera->getHeight(),

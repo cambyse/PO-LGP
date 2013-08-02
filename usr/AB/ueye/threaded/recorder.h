@@ -43,7 +43,8 @@ class Recorder: public QObject {
     Recorder(int w, int h, int f, bool k);
     ~Recorder();
 
-    void record();
+    void start();
+    void wait();
 
     static void nothing(void*) {}
 
@@ -63,7 +64,8 @@ struct RecorderKeys: public OpenGL::GLKeyCall {
   Recorder *rec;
 
   RecorderKeys(Recorder *r): rec(r) {};
-  ~RecorderKeys() {};
+  virtual ~RecorderKeys() {};
+
   bool keyCallback(OpenGL &);
 };
 
@@ -99,11 +101,15 @@ Recorder::Recorder(int w, int h, int f, bool k):
   cameras = new UEyeCamera*[numCams];
   cameraThreads = new CameraThread*[numCams];
 
-  for(int c = 0; c < numCams; c++)
+  for(int c = 0; c < numCams; c++) {
     cameras[c] = new UEyeCamera(c, 1280, 1024, 60);
+    cout << "AFTER CONSTRUCTOR" << endl;
+    cout << "w = " << cameras[c]->getWidth() << endl;
+    cout << "h = " << cameras[c]->getHeight() << endl;
+  }
 
   for(int c = 0; c < numCams; c++)
-    cameraThreads[c] = new CameraThread(cameras[c], true, "./rec/");
+    cameraThreads[c] = new CameraThread(cameras[c], true, "./rec");
 
   /*
   if(kinect)
@@ -148,13 +154,10 @@ Recorder::~Recorder() {
   delete keys;
 }
 
-void Recorder::record() { }
-
 void Recorder::pressPlay() {
   play = !play;
   if(play) {
-    for(int c = 0; c < numCams; c++)
-      cameraThreads[c]->start();
+    start();
 
     /*
     if(kinect)
@@ -186,6 +189,16 @@ void Recorder::pressQuit() {
 
 void Recorder::updateDisplay() {
   gl.update();
+}
+
+void Recorder::start() {
+  for(int c = 0; c < numCams; c++)
+    cameraThreads[c]->start();
+}
+
+void Recorder::wait() {
+  for(int c = 0; c < numCams; c++)
+    cameraThreads[c]->wait();
 }
 
 #include "recorder_moc.cpp"

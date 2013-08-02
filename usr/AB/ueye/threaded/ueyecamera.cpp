@@ -1,11 +1,16 @@
 #include <iostream>
+#include <cstdlib>
 #include "ueyecamera.h"
 
 using namespace std;
 
-UEyeCamera::UEyeCamera(int _camID, int _w, int _h, int _fps):
-                        camID(_camID),
-                        width(_w), height(_h), fps(_fps) {
+UEyeCamera::UEyeCamera(int _camID, int _w, int _h, int _fps): camID(_camID) {
+  width = _w;
+  height = _h;
+  fps = _fps;
+
+  name = string("video_");
+
 // TODO check out how to initialize a specific camera
   cout << "InitCamera" << endl;
   camStatus = is_InitCamera(&camID, NULL);
@@ -72,6 +77,8 @@ void UEyeCamera::setParams() {
   query_status(camID, "PixelClock", &camStatus);
   cout << " - old_pixelclock = " << old_pixelclock << endl;
 
+  // TODO how to determine this from the fps?
+  pixelclock = 35;
   camStatus = is_PixelClock(camID, IS_PIXELCLOCK_CMD_SET,
                             (void*)&pixelclock, sizeof(pixelclock));
   query_status(camID, "PixelClock", &camStatus);
@@ -90,7 +97,8 @@ void UEyeCamera::setParams() {
 
 void UEyeCamera::open() {
   cout << "CaptureVideo" << endl;
-  camStatus = is_CaptureVideo(camID, IS_DONT_WAIT);
+  camStatus = is_CaptureVideo(camID, IS_GET_LIVE);
+  //camStatus = is_CaptureVideo(camID, IS_DONT_WAIT);
   query_status(camID, "CaptureVideo", &camStatus);
 }
 
@@ -119,6 +127,9 @@ void UEyeCamera::close() {
 }
 
 void UEyeCamera::grab() {
+  cout << "DEBUG" << endl;
+  cout << " - camID = " << camID << endl;
+
   camStatus = is_GetActSeqBuf(camID, &imageBuffNum, NULL, &image);
   query_status(camID, "GetActSeqBuf", &camStatus);
 
