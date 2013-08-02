@@ -59,7 +59,8 @@ class FakeController():
     def step(self):
         # P-Controller
         if self.goal is not None:
-            Kp = 10e-2
+            Kp = 10e-3
+            # tolerance for he movement
             eps = 10e-3
             agent = self.world.getBodyByName("robot")
             if (agent.X.pos - self.goal.pos).length() > eps:
