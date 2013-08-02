@@ -25,6 +25,7 @@ class FakeController():
         # init the node: test_fitting
         rospy.init_node('tcr_controller')
 
+        # World & PhysX & OpenGL
         self.world = ors.Graph()
         worldfile = os.path.join(
             ors.get_mlr_path(),
@@ -36,12 +37,16 @@ class FakeController():
         self.physx = ors.PhysXInterface()
         ors.bindOrsToPhysX(self.world, self.gl, self.physx)
 
+        # Subscriber & Publisher
         self.pub = rospy.Publisher('geometric_state', msgs.ors)
         self.control_done_pub = rospy.Publisher(
             'control_done', msgs.control_done)
-        self.traj_sub = rospy.Subscriber(name='control',
-                                         data_class=msgs.control,
-                                         callback=self.control_cb)
+        self.traj_sub = rospy.Subscriber(
+            name='control',
+            data_class=msgs.control,
+            callback=self.control_cb)
+
+        # Misc
         self.goal = None
         self.frame_id = 1
 
@@ -58,7 +63,9 @@ class FakeController():
             eps = 10e-3
             agent = self.world.getBodyByName("robot")
             if (agent.X.pos - self.goal.pos).length() > eps:
-                agent.X.pos = agent.X.pos + (self.goal.pos - agent.X.pos) * Kp
+
+                agent.X.pos = (agent.X.pos +
+                               (self.goal.pos - agent.X.pos) * Kp)
                 # agent.X.vel = (self.goal.pos - agent.X.pos) * Kp
                 # agent.X.addRelativeVelocity(
                     # Kp *(self.goal.pos.x - agent.X.pos.x),
