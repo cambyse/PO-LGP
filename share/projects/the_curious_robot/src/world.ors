@@ -156,7 +156,7 @@ body wall_right_to_right {
 # robot {{{
 body robot {
   type=1
-  size=[.03 .03 .03 .03]
+  size=[.1 .1 .1 .1]
   X=<T t(0. -1. 1.)>
   color=[0 1 0]
   mass=100
