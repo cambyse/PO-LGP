@@ -1,36 +1,42 @@
 #!/usr/bin/env python
 
 import roslib
-import orspy
-import corepy
 
 roslib.load_manifest('the_curious_robot')
 roslib.load_manifest('actionlib')
 import rospy
-from actionlib import SimpleActionServer
-import the_curious_robot.msg as msgs
-import util
 import threading
 
+from actionlib import SimpleActionServer
+import the_curious_robot.msg as msgs
+import orspy
+import corepy
+import util
 import require_provide as rp
+
 
 def get_ooi(oois, ooi_id):
     for ooi in oois:
         if ooi["body"].name == ooi_id:
             return ooi
 
+
 class ObserveOOITrajActionServer:
+
     def __init__(self, name):
         # Subscriber
         self.perception_sub = rospy.Subscriber(
             name='perception_updates',
             data_class=msgs.percept,
             callback=self.percept_cb)
-        self.ooi_id_sub = rospy.Subscriber('ooi_id', msgs.ObjectID, self.ooi_id_cb)
-        self.oois_sub = rospy.Subscriber('oois', msgs.Objects, self.oois_cb)
+        self.ooi_id_sub = rospy.Subscriber(
+            'ooi_id', msgs.ObjectID, self.ooi_id_cb)
+        self.oois_sub = rospy.Subscriber(
+            'oois', msgs.Objects, self.oois_cb)
 
         # Publisher
-        self.trajectory_pub = rospy.Publisher('ooi_trajectory', msgs.Trajectory)
+        self.trajectory_pub = rospy.Publisher(
+            'ooi_trajectory', msgs.Trajectory)
         self.oois_pub = rospy.Publisher('oois', msgs.Objects)
 
         # real members
@@ -40,9 +46,10 @@ class ObserveOOITrajActionServer:
         self.trajectory_lock = threading.Lock()
         self.data_changed = True
 
-        #ActionLib Server
-        self.server = SimpleActionServer(name, msgs.ObserveOOITrajAction,
-                execute_cb=self.execute, auto_start=False)
+        # ActionLib Server
+        self.server = SimpleActionServer(
+            name, msgs.ObserveOOITrajAction,
+            execute_cb=self.execute, auto_start=False)
         self.server.register_preempt_callback(self.preempt_cb)
         self.server.start()
 
@@ -69,7 +76,7 @@ class ObserveOOITrajActionServer:
                 rospy.loginfo("empty trajectory")
 
         self.server.set_succeeded()
-        
+
     def percept_cb(self, data):
         if data.changed:
             for body_str in data.bodies:
@@ -89,6 +96,7 @@ class ObserveOOITrajActionServer:
 
     def ooi_id_cb(self, msg):
         self.ooi_id = msg.id
+
 
 def main():
     rospy.init_node('tcr_sas_observe_ooi_traj')

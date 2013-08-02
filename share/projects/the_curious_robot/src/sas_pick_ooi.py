@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import roslib 
+import roslib
 roslib.load_manifest('the_curious_robot')
 roslib.load_manifest('actionlib')
 import rospy
@@ -11,7 +11,9 @@ import util
 
 import require_provide as rp
 
+
 class PickOOIActionServer:
+
     def __init__(self, name):
         self.oois = None
 
@@ -24,8 +26,9 @@ class PickOOIActionServer:
         self.ooi_id_pub = rospy.Publisher('ooi_id', msgs.ObjectID)
 
         # Actionlib Server
-        self.server = SimpleActionServer(name, msgs.PickOOIAction,
-                execute_cb=self.execute, auto_start=False)
+        self.server = SimpleActionServer(
+            name, msgs.PickOOIAction,
+            execute_cb=self.execute, auto_start=False)
         self.server.register_preempt_callback(self.preempt_cb)
         self.server.start()
         rp.Provide("PickOOI")
@@ -37,17 +40,18 @@ class PickOOIActionServer:
 
         ooi = random.choice(self.oois)
         ooi_id_msg = msgs.ObjectID()
-        #ooi_id_msg.id = ooi['body'].name
+        # ooi_id_msg.id = ooi['body'].name
         ooi_id_msg.id = 'door1-door'
         self.ooi_id_pub.publish(ooi_id_msg)
         self.server.set_succeeded()
 
     def oois_cb(self, msg):
-        #rospy.logdebug("callback")
+        # rospy.logdebug("callback")
         self.oois = util.parse_oois_msg(msg)
 
     def preempt_cb(self):
         self.server.set_preempted()
+
 
 def main():
     rospy.init_node('tcr_sas_pick_ooi')

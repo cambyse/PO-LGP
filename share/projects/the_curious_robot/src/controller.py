@@ -2,8 +2,6 @@
 
 """
 The fake controller of the curious robot.
-
-NOTE: this does not work yet!
 """
 
 import roslib
@@ -19,6 +17,7 @@ import require_provide as rp
 
 
 class FakeController():
+
     """
     The actual behavior of the robot.
     """
@@ -38,7 +37,8 @@ class FakeController():
         ors.bindOrsToPhysX(self.world, self.gl, self.physx)
 
         self.pub = rospy.Publisher('geometric_state', msgs.ors)
-        self.control_done_pub = rospy.Publisher('control_done', msgs.control_done)
+        self.control_done_pub = rospy.Publisher(
+            'control_done', msgs.control_done)
         self.traj_sub = rospy.Subscriber(name='control',
                                          data_class=msgs.control,
                                          callback=self.control_cb)
@@ -59,16 +59,18 @@ class FakeController():
             agent = self.world.getBodyByName("robot")
             if (agent.X.pos - self.goal.pos).length() > eps:
                 agent.X.pos = agent.X.pos + (self.goal.pos - agent.X.pos) * Kp
-                #agent.X.vel = (self.goal.pos - agent.X.pos) * Kp
-                #agent.X.addRelativeVelocity(Kp *(self.goal.pos.x - agent.X.pos.x),
-                                            #Kp *(self.goal.pos.y - agent.X.pos.y),
-                                            #Kp *(self.goal.pos.z - agent.X.pos.z))
+                # agent.X.vel = (self.goal.pos - agent.X.pos) * Kp
+                # agent.X.addRelativeVelocity(
+                    # Kp *(self.goal.pos.x - agent.X.pos.x),
+                    # Kp *(self.goal.pos.y - agent.X.pos.y),
+                    # Kp *(self.goal.pos.z -
+                    # agent.X.pos.z))
             else:
                 msg = msgs.control_done()
                 msg.header.frame_id = 'control done'
                 self.control_done_pub.publish(msg)
                 self.goal = None
-            #agent.X.rot = agent.X.rot + (self.goal.rot - agent.X.rot)*Kp
+            # agent.X.rot = agent.X.rot + (self.goal.rot - agent.X.rot)*Kp
 
         self.physx.step()
         self.world.calcBodyFramesFromJoints()
@@ -81,13 +83,12 @@ class FakeController():
         msg.ors = str(self.world)
         self.pub.publish(msg)
 
-
     def control_cb(self, data):
         self.goal = corepy.Transformation()
         self.goal.pos.x = data.pose.position.x
         self.goal.pos.y = data.pose.position.y
         self.goal.pos.z = data.pose.position.z
-        #self.goal.rot = data.pose.orientation
+        # self.goal.rot = data.pose.orientation
 
 
 if __name__ == '__main__':
