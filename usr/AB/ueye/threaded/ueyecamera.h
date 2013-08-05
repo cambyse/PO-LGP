@@ -13,7 +13,8 @@ class UEyeCamera: public AbstractCamera {
     void open();
     void close();
     void grab();
-    bool retrieve(char *img);
+    bool retrieve(char **img);
+    void postGrab();
 
     static int getNumCameras();
 

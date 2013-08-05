@@ -20,15 +20,12 @@ CameraThread::~CameraThread() {
   free(imageBuff);
 }
 
-byteA CameraThread::getImage() {
+uchar* CameraThread::getImage() {
   if(buffMutex.tryLock()) {
     memcpy(imageBuff, grabberBuff, 3*camera->getWidth()*camera->getHeight());
     buffMutex.unlock();
   }
-  byteA image(camera->getHeight(), camera->getWidth(), 3);
-  image.p = imageBuff;
-
-  return image;
+  return imageBuff;
 }
 
 void CameraThread::stop() {
@@ -64,12 +61,12 @@ void CameraThread::run() {
   camera->open();
 
   bool success_time, success_frame;
-  char *frame = NULL;
+  char *frame;
   while(!stopped) {
     camera->grab();
     //frameTime = getTime();
     success_time = getTime(&frameTime);
-    success_frame = camera->retrieve(frame);
+    success_frame = camera->retrieve(&frame);
 
     if(success_frame && success_time) {
       if(record) {
@@ -80,14 +77,13 @@ void CameraThread::run() {
       }
 
       buffMutex.lock();
-      memcpy(grabberBuff,
-              frame,
-              3*camera->getWidth()*camera->getHeight());
+      memcpy(grabberBuff, frame, 3*camera->getWidth()*camera->getHeight());
       buffMutex.unlock();
 
       frameCount++;
     }
-//    msleep(5);
+    camera->postGrab();
+    //msleep(5);
   }
 
   camera->close();

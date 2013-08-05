@@ -22,7 +22,7 @@ extern "C" {
 
 using namespace std;
 
-struct Recorder : OpenGL::GLKeyCall {
+struct Recorder: public OpenGL::GLKeyCall {
   static const int MAX_CAMS_PER_ROW = 2;
 
   // for visualization
@@ -202,7 +202,6 @@ struct Recorder : OpenGL::GLKeyCall {
   void params() {
     cout << "Setting Parameters" << endl;
     
-
     camStatus = is_PixelClock(camID, IS_PIXELCLOCK_CMD_GET,
                               (void*)&old_pixelclock, sizeof(old_pixelclock));
     query_status(camID, "PixelClock", &camStatus);

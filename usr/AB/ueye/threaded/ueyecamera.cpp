@@ -44,8 +44,14 @@ UEyeCamera::UEyeCamera(int _camID, int _w, int _h, int _fps): camID(_camID) {
   cout << " - max height = " << camInfo.nMaxHeight << endl;
   cout << " - pixel size = " << (float)camInfo.wPixelSize/100 << " µm" << endl;
 
+  bpp = 24;
+  cout << "width = " << width << endl;
+  cout << "height = " << height << endl;
+  cout << "bpp = " << bpp << endl;
+
+  numBuff = 10;
   camBuff = (char**)malloc(numBuff*sizeof(char*));
-  camBuffID = (int*)malloc(numBuff*sizeof(int));
+  camBuffID = (INT*)malloc(numBuff*sizeof(INT));
   for(int i = 0; i < numBuff; i++) {
     camStatus = is_AllocImageMem(camID,
                                   width,
@@ -70,7 +76,6 @@ UEyeCamera::~UEyeCamera() { }
 
 void UEyeCamera::setParams() {
   cout << "Setting Parameters" << endl;
-  
 
   camStatus = is_PixelClock(camID, IS_PIXELCLOCK_CMD_GET,
                             (void*)&old_pixelclock, sizeof(old_pixelclock));
@@ -97,8 +102,8 @@ void UEyeCamera::setParams() {
 
 void UEyeCamera::open() {
   cout << "CaptureVideo" << endl;
-  camStatus = is_CaptureVideo(camID, IS_GET_LIVE);
-  //camStatus = is_CaptureVideo(camID, IS_DONT_WAIT);
+  //camStatus = is_CaptureVideo(camID, IS_GET_LIVE);
+  camStatus = is_CaptureVideo(camID, IS_DONT_WAIT);
   query_status(camID, "CaptureVideo", &camStatus);
 }
 
@@ -127,13 +132,13 @@ void UEyeCamera::close() {
 }
 
 void UEyeCamera::grab() {
-  cout << "DEBUG" << endl;
-  cout << " - camID = " << camID << endl;
-
+  imageBuffNum = 0;
+  image = NULL;
   camStatus = is_GetActSeqBuf(camID, &imageBuffNum, NULL, &image);
   query_status(camID, "GetActSeqBuf", &camStatus);
 
-  camStatus = is_LockSeqBuf(camID, imageBuffNum, image);
+  //camStatus = is_LockSeqBuf(camID, imageBuffNum, image);
+  camStatus = is_LockSeqBuf(camID, IS_IGNORE_PARAMETER, image);
   query_status(camID, "LockSeqBuf", &camStatus);
 
   /*
@@ -142,19 +147,15 @@ void UEyeCamera::grab() {
   */
 }
 
-bool UEyeCamera::retrieve(char *img) {
-  img = image;
-// TODO unlock sequence buffer!!!
-// probably I first have to really copy the array, not the pointer only..
-// maybe already use byteA here?
- 
-  /*
+bool UEyeCamera::retrieve(char **img) {
+  *img = image;
+
+  return true;
+}
+
+void UEyeCamera::postGrab() {
   camStatus = is_UnlockSeqBuf(camID, imageBuffNum, image);
   query_status(camID, "UnlockSeqBuf", &camStatus);
-  */
-
-  // TODO might not require boolean
-  return true;
 }
 
 bool UEyeCamera::query_status(HIDS camID, const char *method, INT *status) {
@@ -166,6 +167,7 @@ bool UEyeCamera::query_status(HIDS camID, const char *method, INT *status) {
       msg = (IS_CHAR*)"OH THE IRONY..";
     cout << method << " failed with status " << *status
           << " (" << msg << ")" << endl;
+    exit(0);
     return true;
   }
   return false;

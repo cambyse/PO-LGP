@@ -15,7 +15,10 @@ class AbstractCamera {
     virtual void grab() = 0;
 
     // decode frame
-    virtual bool retrieve(char *img) = 0;
+    virtual bool retrieve(char **img) = 0;
+
+    // after grab
+    virtual void postGrab() = 0;
 
     int getWidth() const { return width; }
     int getHeight() const { return height; }

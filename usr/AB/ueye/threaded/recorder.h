@@ -7,6 +7,7 @@
 #include <QTimer>
 
 #include "camerathread.h"
+#include "guithread.h"
 #include "ueyecamera.h"
 
 struct RecorderKeys;
@@ -155,9 +156,13 @@ Recorder::~Recorder() {
 }
 
 void Recorder::pressPlay() {
+  cout << "PRESS PLAY" << endl;
   play = !play;
   if(play) {
-    start();
+    cout << "entered" << endl;
+
+    for(int c = 0; c < numCams; c++)
+      cameraThreads[c]->start();
 
     /*
     if(kinect)
@@ -165,8 +170,10 @@ void Recorder::pressPlay() {
     */
 
     //display frequency (does not affect recording)
+    cout << "starting timer" << endl;
     timer.start(1000/30);
   }
+  cout << "END PRESS PLAY" << endl;
 }
 
 void Recorder::pressRecord() {
@@ -188,12 +195,19 @@ void Recorder::pressQuit() {
 }
 
 void Recorder::updateDisplay() {
+  for(int c = 0; c < numCams; c++)
+    img[c]->p = cameraThreads[c]->getImage();
   gl.update();
 }
 
 void Recorder::start() {
-  for(int c = 0; c < numCams; c++)
-    cameraThreads[c]->start();
+  cout << "START" << endl;
+  play = false; // will be switched in pressPlay()
+  pressPlay();
+  cout << "END START" << endl;
+
+  // start event loop
+  exec();
 }
 
 void Recorder::wait() {
