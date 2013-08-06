@@ -1,21 +1,28 @@
+#!/usr/local/env python
+# -*- coding: UTF-8 -*-
+
 """
 Test orspy with physx and objects which onsist of convex submeshes.
 """
 
-# add path of orspy lib to be able to import orspy
-import sys
-sys.path.append('../../lib/')
+import corepy
 import orspy
 
 
 if __name__ == '__main__':
     graph = orspy.Graph()
-    graph.init("world.ors")
-    robot = graph.getBodyByName("robot")
+    import os
+    print os.path.exists("door.ors")
+    print os.path.exists("door_model/door-frame.ply")
+    print os.path.exists("door_model/door-door.ply")
+    graph.init("door.ors")
 
+    import sys
+    sys.exit()
+    robot = graph.getBodyByName("robot")
     # view and physx
-    openGL = orspy.OpenGL()
-    physxGL = orspy.OpenGL()
+    openGL = corepy.OpenGL()
+    physxGL = corepy.OpenGL()
     physX = orspy.PhysXInterface()
 
     orspy.bindOrsToOpenGL(graph, openGL)

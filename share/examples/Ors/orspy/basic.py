@@ -1,3 +1,6 @@
+#!/usr/local/env python
+# -*- coding: UTF-8 -*-
+
 """
 Simple orspy test.
 

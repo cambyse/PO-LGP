@@ -19,11 +19,14 @@ MODELS = {
     ROTATIONAL: 'rotational'
 }
 
+
 class LearnActionServer:
+
     def __init__(self, name):
         # subscriber
-        self.trajectory_sub = rospy.Subscriber("ooi_trajectory",
-                msgs.Trajectory, self.trajectory_cb)
+        self.trajectory_sub = rospy.Subscriber(
+            "ooi_trajectory", msgs.Trajectory, self.trajectory_cb
+        )
 
         # publisher
         self.world_belief_pub = rospy.Publisher('world_belief', msgs.ors)
@@ -35,8 +38,8 @@ class LearnActionServer:
         self.trajectory = []
 
         # action server
-        self.server = SimpleActionServer(name, msgs.LearnAction,
-                execute_cb=self.execute, auto_start=False)
+        self.server = SimpleActionServer(
+            name, msgs.LearnAction, execute_cb=self.execute, auto_start=False)
         self.server.register_preempt_callback(self.preempt_cb)
         self.server.start()
 
@@ -54,9 +57,11 @@ class LearnActionServer:
             # here we learn
             response = self.dof_learner(request)
 
-            #rospy.loginfo(response.model)
+            # rospy.loginfo(response.model)
 
             if response.model.params:
+                print response
+
                 logLH = [entry.value for entry in response.model.params
                          if entry.name == 'loglikelihood'][0]
                 rospy.loginfo("selected model: '%s' (n = %d, log LH = %f)" % (
@@ -75,13 +80,13 @@ class LearnActionServer:
     def trajectory_cb(self, msg):
         del self.trajectory[:]
         self.trajectory = []
-        trajectory = util.parse_trajectory_msg(msg)
-        self.ooi = trajectory[0]
-        self.trajectory = trajectory[1]
+        self.ooi, self.trajectory = util.parse_trajectory_msg(msg)
+
 
 def main():
     rospy.init_node('tcr_sas_learn')
     server = LearnActionServer('learn')
+
 
 if __name__ == '__main__':
     main()
