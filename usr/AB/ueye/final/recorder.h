@@ -19,6 +19,8 @@ class Recorder: public QObject {
     static const int MAX_CAMS_PER_ROW = 2;
 
   private:
+    int test;
+
     // camera stuff
     OpenGL *gl;
     byteA **image;
@@ -50,7 +52,7 @@ class Recorder: public QObject {
     void setKinect(bool k);
     OpenGL* getGL();
 
-    void init();
+    void setup();
     void initImages();
     void initThreads();
     void initGui();
@@ -63,6 +65,7 @@ class Recorder: public QObject {
     static void nothing(void*);
 
   private slots:
+    void startedCam();
     void collectCam(int c);
     void updateDisplay();
 };

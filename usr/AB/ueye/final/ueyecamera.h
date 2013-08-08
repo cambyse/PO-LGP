@@ -40,7 +40,7 @@ class UEyeCamera: public QObject {
     int camIndex;
     int frameIndex;
 
-    char *image;
+    char *image, *image_copy;
     INT imageBuffNum;
 
     int numBuff;
@@ -64,6 +64,7 @@ class UEyeCamera: public QObject {
     void process();
 
   signals:
+    void started();
     void finished();
 };
 

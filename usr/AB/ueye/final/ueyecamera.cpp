@@ -5,7 +5,10 @@
 using namespace std;
 
 UEyeCamera::UEyeCamera(int cid, int w, int h, int f):
-                camID(cid+1), width(w), height(h), fps(f) {
+                camID(cid), width(w), height(h), fps(f) {
+
+  // TODO remove
+  camID = 0;
 
   name = QString("video_");
   image = NULL;
@@ -29,9 +32,10 @@ QString UEyeCamera::getName() {
 
 void UEyeCamera::init() {
 // TODO check out how to initialize a specific camera
-  cout << "InitCamera" << endl;
+  cout << "UEyeCamera(" << camID << ")::InitCamera()" << endl;
   camStatus = is_InitCamera(&camID, NULL);
   query_status(camID, "InitCamera", &camStatus);
+  cout << " - camID = " << camID << endl;
 
   camStatus = is_SetColorMode(camID, IS_CM_BGR8_PACKED);
   query_status(camID, "SetColorMode", &camStatus);
@@ -42,29 +46,25 @@ void UEyeCamera::init() {
   query_status(camID, "SetColorConverter", &camStatus);
 
   // should be default anyway.. plus it gives me an error
-  /*
-  camStatus = is_SetDisplayMode(camID, IS_SET_DM_DIB);
-  query_status(camID, "SetDisplayMode", &camStatus);
-  */
+  //camStatus = is_SetDisplayMode(camID, IS_SET_DM_DIB);
+  //query_status(camID, "SetDisplayMode", &camStatus);
 
   // probably not necessary, but better make sure..
-  /*
-  camStatus = is_SetExternalTrigger(camID, IS_SET_TRIGGER_OFF);
-  query_status(camID, "SetExternalTrigger", &camStatus);
-  */
+  //camStatus = is_SetExternalTrigger(camID, IS_SET_TRIGGER_OFF);
+  //query_status(camID, "SetExternalTrigger", &camStatus);
 
-  camStatus = is_GetSensorInfo(camID, &camInfo);
-  query_status(camID, "GetSensorInfo", &camStatus);
-  cout << " - sensor ID = " << camInfo.SensorID << endl;
-  cout << " - camera model = " << camInfo.strSensorName << endl;
-  cout << " - max width = " << camInfo.nMaxWidth << endl;
-  cout << " - max height = " << camInfo.nMaxHeight << endl;
-  cout << " - pixel size = " << (float)camInfo.wPixelSize/100 << " µm" << endl;
+  //camStatus = is_GetSensorInfo(camID, &camInfo);
+  //query_status(camID, "GetSensorInfo", &camStatus);
+  //cout << " - sensor ID = " << camInfo.SensorID << endl;
+  //cout << " - camera model = " << camInfo.strSensorName << endl;
+  //cout << " - max width = " << camInfo.nMaxWidth << endl;
+  //cout << " - max height = " << camInfo.nMaxHeight << endl;
+  //cout << " - pixel size = " << (float)camInfo.wPixelSize/100 << " µm" << endl;
 
   bpp = 24;
-  cout << "width = " << width << endl;
-  cout << "height = " << height << endl;
-  cout << "bpp = " << bpp << endl;
+  //cout << "width = " << width << endl;
+  //cout << "height = " << height << endl;
+  //cout << "bpp = " << bpp << endl;
 
   numBuff = 10;
   camBuff = (char**)malloc(numBuff*sizeof(char*));
@@ -78,6 +78,7 @@ void UEyeCamera::init() {
                                   &camBuffID[i]);
     query_status(camID, "AllocImageMem", &camStatus);
   }
+  image_copy = (char*)malloc(3*width*height*sizeof(char));
 
   camStatus = is_ClearSequence(camID);
   query_status(camID, "ClearSequence", &camStatus);
@@ -85,8 +86,8 @@ void UEyeCamera::init() {
     camStatus = is_AddToSequence(camID, camBuff[i], camBuffID[i]);
     query_status(camID, "AddToSequence", &camStatus);
   }
+
   // SEPARATION
-  cout << "Setting Parameters" << endl;
 
   camStatus = is_PixelClock(camID, IS_PIXELCLOCK_CMD_GET,
                             (void*)&old_pixelclock, sizeof(old_pixelclock));
@@ -94,7 +95,7 @@ void UEyeCamera::init() {
   cout << " - old_pixelclock = " << old_pixelclock << endl;
 
   // TODO how to determine this from the fps?
-  pixelclock = 35;
+  pixelclock = 80;
   camStatus = is_PixelClock(camID, IS_PIXELCLOCK_CMD_SET,
                             (void*)&pixelclock, sizeof(pixelclock));
   query_status(camID, "PixelClock", &camStatus);
@@ -112,18 +113,16 @@ void UEyeCamera::init() {
 }
 
 void UEyeCamera::open() {
-  cout << "CaptureVideo" << endl;
+  cout << "UEyeCamera(" << camID << ")::CaptureVideo" << endl;
   //camStatus = is_CaptureVideo(camID, IS_GET_LIVE);
   camStatus = is_CaptureVideo(camID, IS_DONT_WAIT);
   query_status(camID, "CaptureVideo", &camStatus);
 }
 
 void UEyeCamera::close() {
-  cout << "StopLiveVideo" << endl;
   camStatus = is_StopLiveVideo(camID, IS_FORCE_VIDEO_STOP);
   query_status(camID, "StopLiveVideo", &camStatus);
-
-  cout << "ClearSequence" << endl;
+  
   camStatus = is_ClearSequence(camID);
   query_status(camID, "ClearSequence", &camStatus);
 
@@ -133,60 +132,62 @@ void UEyeCamera::close() {
   }
   free(camBuff);
   free(camBuffID);
+  free(image_copy);
 
-  camStatus = is_ClearSequence(camID);
-  query_status(camID, "ClearSequence", &camStatus);
-
-  cout << "ExitCamera" << endl;
   camStatus = is_ExitCamera(camID);
   query_status(camID, "ExitCamera", &camStatus);
 }
 
 void UEyeCamera::grab() {
-  mutex.lock();
-  imageBuffNum = 0;
-  image = NULL;
-  camStatus = is_GetActSeqBuf(camID, &imageBuffNum, NULL, &image);
+  imageBuffNum = 0; image = NULL;
+  camStatus = is_GetActSeqBuf(camID, NULL, NULL, &image);
   query_status(camID, "GetActSeqBuf", &camStatus);
-  mutex.unlock();
 
-  /*
   //camStatus = is_LockSeqBuf(camID, imageBuffNum, image);
   camStatus = is_LockSeqBuf(camID, IS_IGNORE_PARAMETER, image);
   query_status(camID, "LockSeqBuf", &camStatus);
 
+  mutex.lock();
+  memcpy(image_copy, image, 3*width*height);
+  mutex.unlock();
+  //cout << "x";
+  usleep(1000); //between 1000 and 5000 should be fine
+  
+  //camStatus = is_UnlockSeqBuf(camID, imageBuffNum, image);
+  camStatus = is_UnlockSeqBuf(camID, IS_IGNORE_PARAMETER, image);
+  query_status(camID, "UnlockSeqBuf", &camStatus);
+
+  /*
   //camStatus = is_GetFramesPerSecond(camID, &fps);
   //query_status(camID, "GetFramesPerSecond", &camStatus);
-
-  camStatus = is_UnlockSeqBuf(camID, imageBuffNum, image);
-  query_status(camID, "UnlockSeqBuf", &camStatus);
   */
 }
 
 void UEyeCamera::getImage(char *p) {
   mutex.lock();
-  if(image != NULL)
-    memcpy(p, image, 3*width*height);
+  memcpy(p, image_copy, 3*width*height);
   mutex.unlock();
 }
 
 void UEyeCamera::process() {
-  init();
-  open();
+  // moved to the recorder so that the beginning is serialized
+  //init();
+  //open();
+
+  cout << "UEyeCamera(" << camID << ")::started() emitted" << endl;
+  emit started();
   
   quit_flag = false;
-  while(!quit_flag) {
+  while(!quit_flag)
     grab();
-  }
   close();
 
-  cout << "UEyeCamera::finished() being sent" << endl;
+  cout << "UEyeCamera(" << camID << ")::finished() emitted" << endl;
   emit finished();
-  cout << "UEyeCamera::finished() sent" << endl;
 }
 
 void UEyeCamera::quit() {
-  cout << "UEyeCamera::quit()" << endl;
+  cout << "UEyeCamera(" << camID << ")::quit()" << endl;
   quit_flag = true;
 }
 

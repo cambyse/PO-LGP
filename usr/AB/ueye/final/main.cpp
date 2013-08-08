@@ -8,8 +8,7 @@ int main(int argc, char *argv[]) {
   // to change some parameters
   // rec->setSize(w, h);
   // rec->setKinect(true);
-  rec->init();
-  rec->play();
+  rec->setup();
 
   return app->exec();
 }

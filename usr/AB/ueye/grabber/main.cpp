@@ -73,7 +73,7 @@ struct Recorder: public OpenGL::GLKeyCall {
   }
 
   void init() {
-    camID = 1;
+    camID = 0;
     numBuff = 5;
 
     w = 1280;
@@ -110,9 +110,6 @@ struct Recorder: public OpenGL::GLKeyCall {
     for(int c = 0; c < numCams; c++)
       img[c] = new byteA(h, w, 3);
 
-    // TODO only for test purposes
-    numCams++;
-
     int nr = (numCams-1) / MAX_CAMS_PER_ROW + 1;
     int nc = MAX_CAMS_PER_ROW;
     float r, c;
@@ -121,13 +118,9 @@ struct Recorder: public OpenGL::GLKeyCall {
       r = cam / nc;
       c = cam % nc;
       gl.setViewPort(cam, c/nc, (c+1)/nc, r/nr, (r+1)/nr);
-      // TODO only for test purposes
-      //gl.views(cam).img = img[0];
       gl.views(cam).img = img[cam];
     }
 
-    // TODO only for test purposes
-    numCams--;
   }
 
   void open() {
@@ -191,9 +184,6 @@ struct Recorder: public OpenGL::GLKeyCall {
     free(camBuff);
     free(camBuffID);
 
-    camStatus = is_ClearSequence(camID);
-    query_status(camID, "ClearSequence", &camStatus);
-
     cout << "ExitCamera" << endl;
     camStatus = is_ExitCamera(camID);
     query_status(camID, "ExitCamera", &camStatus);
@@ -242,6 +232,8 @@ struct Recorder: public OpenGL::GLKeyCall {
 
         for(int cam = 0; cam < numCams; cam++) {
           img[cam]->p = (byte*)image;
+          //cout << "img[" << cam << "] = " << (int)img[cam]->p[0] << endl;
+          //cout << "image = " << (int)image[0] << endl;
           gl.views(cam).text = STRING("frame: 1" << "\nfps: " << fps);
         }
         gl.update(); // all time spent here.. problem: usb2

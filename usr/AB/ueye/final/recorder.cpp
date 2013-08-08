@@ -39,6 +39,8 @@ Recorder::Recorder() {
   height = 1024;
   fps = 60;
   kinect = false;
+
+  test = 0;
 }
 
 Recorder::~Recorder() {
@@ -71,9 +73,9 @@ OpenGL* Recorder::getGL() {
   return gl;
 }
 
-void Recorder::init() {
+void Recorder::setup() {
   numCams = UEyeCamera::getNumCameras();
-  cout << "numCams = " << numCams << endl;
+  cout << "Recorder::numCams = " << numCams << endl;
 
   if(numCams == 0) {
     cout << "!! No cams connected !!" << endl;
@@ -101,12 +103,12 @@ void Recorder::initThreads() {
   map = new QSignalMapper(this);
 
   for(int c = 0; c < numCams; c++) {
-    camera[c] = new UEyeCamera(c, width, height, fps);
+    camera[c] = new UEyeCamera(c+1, width, height, fps);
     thread[c] = new QThread();
 
     connect(thread[c], SIGNAL(started()), camera[c], SLOT(process()));
+    connect(camera[c], SIGNAL(started()), this, SLOT(startedCam()));
     connect(camera[c], SIGNAL(finished()), thread[c], SLOT(quit()));
-    //connect(thread[c], SIGNAL(finished()), this, SLOT(collectCam()));
     connect(thread[c], SIGNAL(finished()), map, SLOT(map()));
     map->setMapping(thread[c], c);
 
@@ -115,12 +117,20 @@ void Recorder::initThreads() {
     camera[c]->moveToThread(thread[c]);
   }
   connect(map, SIGNAL(mapped(int)), this, SLOT(collectCam(int)));
-  openCams = numCams;
+  openCams = 0;
 
   // start cameras
+  for(int c = 0; c < numCams; c++) {
+    cout << endl;
+    camera[c]->init();
+    camera[c]->open();
+  }
+  cout << endl;
+
+  // start threads
+  cout << "Recorder:: starting threads." << endl;
   for(int c = 0; c < numCams; c++)
     thread[c]->start();
-
 }
 
 void Recorder::initGui() {
@@ -138,9 +148,8 @@ void Recorder::initGui() {
   }
 
   keys = new RecorderKeys(this);
-  gl->addKeyCall(keys);
 
-  timer.setInterval(1000/25);
+  timer.setInterval(1000/30);
   connect(&timer, SIGNAL(timeout()), this, SLOT(updateDisplay()));
 }
 
@@ -164,9 +173,23 @@ void Recorder::quit() {
     camera[c]->quit();
 }
 
+void Recorder::startedCam() {
+  openCams++;
+  cout << "Recorder::startedCam(), remaining: " << (numCams-openCams) << endl;
+
+  if(openCams == numCams) {
+    play();
+    gl->addKeyCall(keys);
+  }
+}
+
 void Recorder::collectCam(int c) {
+  // for some reason this doens't work
+  // camera[c]->close();
+  
   thread[c]->wait();
   openCams--;
+  cout << "Recorder::collectCam(), remaining: " << openCams << endl;
 
   if(openCams == 0)
     QCoreApplication::quit();
