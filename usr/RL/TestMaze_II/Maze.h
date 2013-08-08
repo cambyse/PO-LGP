@@ -11,6 +11,7 @@
 #include <sstream>
 
 #include "Config.h"
+#include "util.h"
 
 #include "debug.h"
 
@@ -23,9 +24,9 @@ public:
     typedef std::vector<color_t>             color_vector_t;
 
     Maze(const double& eps = 0);
-
     virtual ~Maze();
 
+    /** \brief State, which has 2D semantic, used by the Maze class. */
     class MazeState {
     public:
     MazeState(const int& idx = 0): index(idx) {}
@@ -48,17 +49,29 @@ public:
         idx_t index;
     };
 
-    void render_initialize(QGraphicsView * view); ///< Renders the complete maze.
-    void render_update(QGraphicsView * view, const color_vector_t * color = nullptr);
+    /** \brief Renders the complete maze. */
+    void render_initialize(QGraphicsView * v);
 
+    /** \brief Updates the graphical representation. */
+    void render_update(const color_vector_t * color = nullptr);
+
+    /** \brief Perform a transition by executing an action. */
     void perform_transition(const action_t& action);
+
+    /** \brief Perform a transition by executing an action and return resulting
+     * state and reward by reference. */
     void perform_transition(const action_t& a, state_t& final_state, reward_t& r );
 
+    /** \brief Returns the transition probability. */
     probability_t get_prediction(const instance_t*, const action_t&, const state_t&, const reward_t&) const;
+
+    /** \brief Returns a function pointer to the get_prediction() function. */
     probability_t (Maze::*get_prediction_ptr())(const instance_t*, const action_t&, const state_t&, const reward_t&) const {
         return &Maze::get_prediction;
     }
 
+    /** \brief Validates a model by performing random transitions and comparing
+     * the result to the model predicitons. */
     template < class Model >
     probability_t validate_model(
             const Model& model,
@@ -68,49 +81,130 @@ public:
             probability_t * mean_maze_likelihood
     );
 
+    /** \brief Set epsilon to a value in [0,1]. */
     void set_epsilon(const double& e);
+
+    /** \brief Get epsilon. */
     double get_epsilon() const { return epsilon; }
 
+    /** \brief Set the current state of the agent. */
     void set_current_state(const state_t&);
 
+    /** \brief Get a string describing all rewards. */
     static std::string get_rewards();
+
+    /** \brief Get a string describing all walls. */
     static std::string get_walls();
 
 private:
 
-//    bool reward_active;
-    instance_t * current_instance;
-    static const double state_size;
-    static const double wall_width;
-    static const double reward_start_size;
-    static const double reward_end_size;
-    static const double reward_end_ratio;
-    static const double text_scale;
-    static const double text_center;
-    double epsilon;
-    MazeState current_state;
-//    MazeState button_state, smiley_state;
-//    QGraphicsSvgItem *button, *smiley;
-    QGraphicsSvgItem *agent;
-    std::vector<QGraphicsItem*> borders;
-    std::vector<QGraphicsRectItem*> state_rects;
+    //==========//
+    // Typedefs //
+    //==========//
 
-    static const std::vector<std::vector<idx_t> > walls;
-    static const std::vector<std::vector<double> > rewards;
-    enum REWARD_COMPONENTS { ACTIVATION_STATE, RECEIVE_STATE, TIME_DELAY, REWARD_IDX, ACTIVATION_TYPE, R, G, B };
-    enum REWARD_ACTIVATION { EACH_TIME, ON_RELEASE };
+    /** \brief Types of keys for opening doors. */
+    enum KEY_TYPE {
+        PASS_BUTTON, ///< Simply pass the field.
+        STAY_BUTTON, ///< Perform STAY action on the field.
+        UP_BUTTON,   ///< Perform UP action on the field.
+        DOWN_BUTTON, ///< Perform DOWN action on the field.
+        LEFT_BUTTON, ///< Perform LEFT action on the field.
+        RIGHT_BUTTON ///< Perform RIGHT action on the field.
+    };
+    typedef std::tuple<MazeState, MazeState, MazeState, KEY_TYPE, idx_t, color_t> door_t;
+
+    /* \brief Enum to identify the components for defining a reward. */
+    enum REWARD_COMPONENTS {
+        ACTIVATION_STATE, ///< Index of state where the reward is activated.
+        RECEIVE_STATE,    ///< Index of state where the reward is received.
+        TIME_DELAY,       ///< Index of time delay between activation and reception.
+        REWARD_VALUE,     ///< Index of value of reward.
+        ACTIVATION_TYPE,  ///< Index of activation type.
+        R,                ///< Index of red component in [0,255] for displaying the reward.
+        G,                ///< Index of green component in [0,255] for displaying the reward.
+        B                 ///< Index of blue component in [0,255] for displaying the reward.
+    };
+
+    /** \brief Type of reward activation. */
+    enum REWARD_ACTIVATION_TYPE {
+        /** \brief Each time the agent passes the activation state a reward is
+         * activated. */
+        EACH_TIME,
+        /** \brief Only the last pass over the activation state activates a
+         * reward. */
+        ON_RELEASE,
+        /** \brief Each time the agent passes the activation state a reward is
+         * activated. The agent receives the negative reward if it does not
+         * collect to reward (stowaway scenario). */
+        EACH_TIME_PUNISH_FAILURE,
+        /** \brief Only the last pass over the activation state activates a
+         * reward. The agent receives the negative reward if it does not collect
+         * to reward (stowaway scenario). */
+        ON_RELEASE_PUNISH_FAILURE
+    };
+    typedef std::vector<double> maze_reward_t;
+
+    typedef std::vector<idx_t> wall_t;
+
+    //==============//
+    // Data Members //
+    //==============//
+
+    /** \brief The current state of the maze including the complete past. */
+    instance_t * current_instance;
+
+    QGraphicsView * view;                            ///< QGraphicsView to render the maze;
+
+    static const double state_size;                  ///< Size of states for rendering.
+    static const double wall_width;                  ///< Width of walls for rendering.
+    static const double reward_start_size;           ///< Size of reward start marker for rendering.
+    static const double reward_end_size;             ///< Size of reward end marker for rendering.
+    static const double reward_end_ratio;            ///< Length-to-width ratio of reward end marker (arrow) for rendering.
+    static const double text_scale;                  ///< Scale factor for text size.
+    static const double text_center;                 ///< How close the text should be positioned to the midpoint between start and end marker.
+
+    double epsilon;                                  ///< Amount of stochasticity in transitions.
+    MazeState current_state;                         ///< Current state of the agent in the maze.
+    QGraphicsSvgItem *agent;                         ///< Svg image for rendering the agent.
+    std::vector<QGraphicsItem*> borders;             ///< Graphic items for rendering the maze borders.
+    std::vector<QGraphicsRectItem*> state_rects;     ///< Graphic items containing the state rects for rendering the states.
+
+    static const std::vector<wall_t> walls;          ///< Defines the walls.
+    static const std::vector<maze_reward_t> rewards; ///< Defines the rewards.
+    static const std::vector<door_t> doors;          ///< Defines the doors.
+
+    //==================//
+    // Member Functions //
+    //==================//
+
+    /** \brief Add a frame around the maze in the graphics.
+     *
+     * Multiple frames with different colors encode the reward received in the
+     * last time step.*/
+    void frame_maze();
+
+    /** \brief Add a state in the graphics. */
+    void render_state(state_t s);
+
+    /** \brief Add a wall in the graphics. */
+    void render_wall(wall_t);
+
+    /** \brief Add a door in the graphics. */
+    void render_door(door_t);
+
+    /** \brief Add a reward in the graphics. */
+    void render_reward(maze_reward_t);
 
     /*! \brief Rescale the scene to fit into view. */
     void rescale_scene(QGraphicsView * view);
 
+    /** \brief Simple helper function. */
     static int clamp(const int& lower, const int& upper, const int& value) {
-        if(value<lower) {
-            return lower;
-        } else if(value>upper) {
-            return upper;
-        }
-        return value;
+        return util::clamp<int>(lower,upper,value);
     }
+
+    /** \brief Returns the reward activation type as string. */
+    static const char* reward_activation_type_str(REWARD_ACTIVATION_TYPE);
 };
 
 template < class Model >

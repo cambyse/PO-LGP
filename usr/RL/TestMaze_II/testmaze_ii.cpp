@@ -126,7 +126,7 @@ void TestMaze_II::clear_data() {
 }
 
 void TestMaze_II::render() {
-    maze.render_update(ui.graphicsView);
+    maze.render_update();
 }
 
 void TestMaze_II::random_action() {
@@ -138,7 +138,7 @@ void TestMaze_II::random_action() {
     if(record) {
         add_action_state_reward_tripel(action,state_to,reward);
     }
-    maze.render_update(ui.graphicsView);
+    maze.render_update();
 }
 
 void TestMaze_II::choose_action() {
@@ -261,7 +261,7 @@ void TestMaze_II::choose_action() {
         look_ahead_search.print_tree_statistics();
     }
 
-    maze.render_update(ui.graphicsView);
+    maze.render_update();
 }
 
 void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
@@ -467,7 +467,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             if(record) {
                 add_action_state_reward_tripel(action,state_to,reward);
             }
-            maze.render_update(ui.graphicsView);
+            maze.render_update();
         } else if(str_args[0]=="right" || str_args[0]=="r") { // right
             action_t action = action_t::RIGHT;
             state_t state_to;
@@ -477,7 +477,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             if(record) {
                 add_action_state_reward_tripel(action,state_to,reward);
             }
-            maze.render_update(ui.graphicsView);
+            maze.render_update();
         } else if(str_args[0]=="up" || str_args[0]=="u") { // up
             action_t action = action_t::UP;
             state_t state_to;
@@ -487,7 +487,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             if(record) {
                 add_action_state_reward_tripel(action,state_to,reward);
             }
-            maze.render_update(ui.graphicsView);
+            maze.render_update();
         } else if(str_args[0]=="down" || str_args[0]=="d") { // down
             action_t action = action_t::DOWN;
             state_t state_to;
@@ -497,7 +497,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             if(record) {
                 add_action_state_reward_tripel(action,state_to,reward);
             }
-            maze.render_update(ui.graphicsView);
+            maze.render_update();
         } else if(str_args[0]=="stay" || str_args[0]=="s") { // stay
             action_t action = action_t::STAY;
             state_t state_to;
@@ -507,7 +507,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             if(record) {
                 add_action_state_reward_tripel(action,state_to,reward);
             }
-            maze.render_update(ui.graphicsView);
+            maze.render_update();
         } else if(str_args[0]=="move") { // start/stop moving
             if(str_args.size()==1) {
                 choose_action();
@@ -851,7 +851,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                                 cols.push_back( Maze::color_t(1,1,1) );
                             }
                         }
-                        maze.render_update(ui.graphicsView, &cols);
+                        maze.render_update(&cols);
                         TO_CONSOLE( "    target active" );
                     }
                 } else {
@@ -911,7 +911,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             for(stateIt_t state=stateIt_t::first(); state!=util::INVALID; ++state) {
                 cols.push_back( std::make_tuple(drand48(),drand48(),drand48()) );
             }
-            maze.render_update(ui.graphicsView, &cols);
+            maze.render_update(&cols);
         } else if(str_args[0]=="fixed-dt-dist" || str_args[0]=="fdd") { // show delay probability
             if(str_args.size()!=2 || !int_args_ok[1]) {
                 TO_CONSOLE( invalid_args_s );
@@ -948,7 +948,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 }
 
                 // render
-                maze.render_update(ui.graphicsView, &cols);
+                maze.render_update(&cols);
             }
         } else if(str_args[0]=="pair-delay-dist" || str_args[0]=="pdd") { // show delay distribution
             if(str_args.size()>1 && !int_args_ok[1]) {
@@ -1055,7 +1055,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     }
                     cols[target_idx]=std::make_tuple(0,1,0);
                     // render
-                    maze.render_update(ui.graphicsView, &cols);
+                    maze.render_update(&cols);
                 }
             } else {
                 TO_CONSOLE( invalid_args_s );

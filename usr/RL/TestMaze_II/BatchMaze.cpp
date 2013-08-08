@@ -107,7 +107,7 @@ int BatchMaze::run(int argn, char ** argarr) {
                 state_t start_state = state_t::random_state();
                 maze = new Maze(epsilon);
                 maze->set_current_state(start_state);
-                current_instance = instance_t::create(action_t::STAY,start_state,reward_t::min_reward);
+                current_instance = instance_t::create(action_t::STAY,start_state,reward_t(0));
 
                 // initialize look ahead search
                 look_ahead_search = new LookAheadSearch(discount);

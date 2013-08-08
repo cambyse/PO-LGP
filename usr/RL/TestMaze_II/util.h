@@ -203,6 +203,25 @@ namespace util {
     //      Function Definitions and Template Functions       //
     //========================================================//
 
+
+    /** \brief Simple helper function that returns \a value clamped to the
+     * interval [\a lower,\a upper].
+     *
+     * @param lower The lower bound for value.
+     * @param upper The upper bound for value.
+     * @param value Value that is to be clamped.
+     * */
+    template < typename T >
+        T clamp(const T& lower, const T& upper, const T& value) {
+        if(value<lower) {
+            return lower;
+        } else if(value>upper) {
+            return upper;
+        }
+        return value;
+    }
+
+    /** \brief Select a random element from a vector. */
     template < typename T >
         T draw_random(const std::vector<T> vec) {
         if(vec.size()==0) {
