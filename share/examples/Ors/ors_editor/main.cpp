@@ -25,21 +25,21 @@ int main(int argn,char **argv){
   if(argn==2) file=argv[1];
   cout <<"opening file `" <<file <<"'" <<endl;
 
-  ors::Graph C;
+  ors::Graph G;
   OpenGL gl;
-  init(C, gl, file);
+  init(G, gl, file);
   gl.add(drawBase,0);
-  gl.add(ors::glDrawGraph,&C);
+  gl.add(ors::glDrawGraph,&G);
   //gl.reportEvents=true;
   //gl.reportSelects=true;
   gl.watch();
 
-  C.meldFixedJoint();
-  C.removeNonShapeBodies();
+  G.meldFixedJoint();
+  G.removeNonShapeBodies();
   //C.makeLinkTree();
-  MT::save(C,"z.ors");
+  MT::save(G,"z.ors");
 
-  editConfiguration(file,C,gl);
+  editConfiguration(file, G, gl);
 
   return 0;
 }

@@ -33,7 +33,7 @@ void threeStepGraspHeuristic(arr& x, MotionProblem& M, const arr& x0, uint shape
   if (M.ors->shapes(shapeId)->type==ors::boxST) {
     arr cost_side(3),x_side(3,x0.N);
     for (side=0; side<3; side++) {
-      setGraspGoals(M, T, shapeId, side, 0);
+      setGraspGoals_PR2(M, T, shapeId, side, 0);
       cost_side(side) = keyframeOptimizer(x, M, 1e-2, false, verbose);
       listDelete(M.taskCosts());
       if (verbose>=2) {
@@ -47,7 +47,7 @@ void threeStepGraspHeuristic(arr& x, MotionProblem& M, const arr& x0, uint shape
     side = cost_side.minIndex();
     x = x_side[side];
   } else {
-    setGraspGoals(M, T, shapeId, side, 0);
+    setGraspGoals_PR2(M, T, shapeId, side, 0);
     keyframeOptimizer(x, M, 1e-2, false, verbose);
     listDelete(M.taskCosts());
     if (verbose>=2) {
@@ -58,16 +58,16 @@ void threeStepGraspHeuristic(arr& x, MotionProblem& M, const arr& x0, uint shape
   }
   
   //-- open hand
-  x.subRange(7,13) = ARR(0,-1.,.8,-1.,.8,-1.,.8);
-//  M.setx(x);
+  //x.subRange(7,13) = ARR(0,-1.,.8,-1.,.8,-1.,.8);
+  x(M.ors->getJointByName("finger_l_l")->qIndex) = 1.;
+  x(M.ors->getJointByName("finger_l_r")->qIndex) = 1.;
+
   if (verbose>=2) {
     displayState(x, *M.ors, gl, "posture estimate phase 1");
-//    M.displayCurrentState("posture estimate phase 1", false, false);
-    //M.gl->watch();
   }
   
   //-- reoptimize with close hand
-  setGraspGoals(M,T,shapeId, side, 1);
+  setGraspGoals_PR2(M,T,shapeId, side, 1);
   keyframeOptimizer(x, M, 1e-2, true, verbose);
   //listDelete(M.vars); //DON'T delete the grasp goals - the system should keep them for the planner
   if (verbose>=1) displayState(x, *M.ors, gl, "posture estimate phase 2");
@@ -75,7 +75,7 @@ void threeStepGraspHeuristic(arr& x, MotionProblem& M, const arr& x0, uint shape
   //if (verbose>=2) M.gl->watch();
 }
 
-void setGraspGoals(MotionProblem& M, uint T, uint shapeId, uint side, uint phase) {
+void setGraspGoals_Schunk(MotionProblem& M, uint T, uint shapeId, uint side, uint phase) {
   M.setState(M.x0, M.v0);;
   
   //load parameters only once!
@@ -182,6 +182,125 @@ void setGraspGoals(MotionProblem& M, uint T, uint shapeId, uint side, uint phase
   
   //MT_MSG("TODO: fingers should be in relaxed position, or aligned with surface (otherwise they remain ``hooked'' as in previous posture)");
   
+  //-- limits
+  arr limits;
+  limits <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \
+      -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5 ]";
+  c = M.addDefaultTaskMap("limits", qLimitsTMT, -1, NoTransformation, -1, NoTransformation, limits);
+  target=0.;
+  M.setInterpolatingCosts(c, MotionProblem::constFinalMid, target, limPrec, target, limPrec);
+
+  //-- homing
+  c = M.addDefaultTaskMap("qitself", qItselfTMT);
+  M.setInterpolatingCosts(c, MotionProblem::constFinalMid, target, zeroQPrec, target, zeroQPrec);
+}
+
+void setGraspGoals_PR2(MotionProblem& M, uint T, uint shapeId, uint side, uint phase) {
+  M.setState(M.x0, M.v0);;
+
+  //load parameters only once!
+  double positionPrec = MT::getParameter<double>("graspPlanPositionPrec");
+  double oppositionPrec = MT::getParameter<double>("graspPlanOppositionPrec");
+  double alignmentPrec = MT::getParameter<double>("graspPlanAlignmentPrec");
+  double fingerDistPrec = MT::getParameter<double>("graspPlanFingerDistPrec");
+  double colPrec = MT::getParameter<double>("graspPlanColPrec");
+  double limPrec = MT::getParameter<double>("graspPlanLimPrec");
+  double zeroQPrec = MT::getParameter<double>("graspPlanZeroQPrec");
+
+  //set the time horizon
+  CHECK(T==M.T, "");
+
+  //deactivate all variables
+  M.activateAllTaskCosts(false);
+
+  //activate collision testing with target shape
+  ors::Shape *target_shape = M.ors->shapes(shapeId);
+  target_shape->cont=true;
+  M.swift->initActivations(*M.ors);
+
+  //
+  arr target,initial;
+  ors::Transformation irel,jrel;
+
+  //general target
+  target = ARRAY(target_shape->X.pos);
+
+  //-- graspCenter -> predefined point (xtarget)
+  TaskCost *c;
+  c = M.addDefaultTaskMap_Shapes("graspCenter", posTMT, "graspCenter");
+  M.setInterpolatingCosts(c, MotionProblem::constEarlyMid,
+                          target, positionPrec, NoArr, -1., .8);
+
+  //-- up: align either with cylinder axis or one of the box sides -- works good
+  irel.setText("<d(90 1 0 0)>"); //we want to align the y-axis of the hand with something
+  jrel.setZero();
+  switch (target_shape->type) {
+    case ors::cylinderST:
+      target = ARR(0.);  //y-axis of m9 is orthogonal to world z-axis (tricky :-) )
+      break;
+    case ors::boxST: {
+      //jrel=target_shape->X;
+      if (side==1) jrel.addRelativeRotationDeg(90,1,0,0);
+      if (side==2) jrel.addRelativeRotationDeg(90,0,1,0);
+      target = ARR(1.);  //y-axis of m9 is aligned with one of the 3 sides of the cube
+    } break;
+    default: NIY;
+  }
+  c = M.addDefaultTaskMap_Shapes("upAlign", zalignTMT, "graspCenter", irel, target_shape->name, jrel, NoArr);
+  M.setInterpolatingCosts(c, MotionProblem::constEarlyMid,
+                          target, alignmentPrec, NoArr, -1., .8);
+  //test current state: flip if necessary
+  c->map.phi(initial, NoArr, *M.ors);
+  if (initial(0)<0.) ((DefaultTaskMap*)&c->map)->irel.addRelativeRotationDeg(180,1,0,0); //flip vector to become positive
+
+
+  if (phase==0) return;
+
+
+  //-- finger tips close to surface : using ProxyTaskVariable
+  uintA shapes = stringListToShapeIndices(
+                   ARRAY<const char*>("tip1Shape",
+                                      "tip2Shape",
+                                      "tip3Shape"), M.ors->shapes);
+  shapes.append(shapeId); shapes.append(shapeId); shapes.append(shapeId);
+  shapes.reshape(2,3); shapes = ~shapes;
+  c = M.addCustomTaskMap("graspContacts", new ProxyTaskMap(vectorPTMT, shapes, .05, true));
+  double grip=.8; //specifies the desired proxy value
+  target = ARR(grip,grip,grip);
+  M.setInterpolatingCosts(c, MotionProblem::constEarlyMid,
+                          target, fingerDistPrec, ARR(0.,0.,0.), 0., 0.8);
+  for (uint t=0; t<=T; t++) { //interpolation: 0 up to 4/5 of the trajectory, then interpolating in the last 1/5
+    if (5*t<4*T) c->y_target[t]()=0.;
+    else c->y_target[t]() = (grip*double(5*t-4*T))/T;
+  }
+
+  //-- collisions with other objects
+  shapes = ARRAY<uint>(shapeId);
+  c = M.addCustomTaskMap("otherCollisions", new ProxyTaskMap(allExceptListedPTMT, shapes, .04, true));
+  target = ARR(0.);
+  M.setInterpolatingCosts(c, MotionProblem::constFinalMid, target, colPrec, target, colPrec);
+  c->map.phi(initial, NoArr, *M.ors);
+  if (initial(0)>0.) { //we are in collision/proximity -> depart slowly
+    double a=initial(0);
+    for (uint t=0; t<=T/5; t++)
+      c->y_target[t]() = a*double(T-5*t)/T;
+  }
+
+  //-- opposing fingers
+  c = M.addDefaultTaskMap_Shapes("oppose12", zalignTMT, "tipNormal1", NoTransformation, "tipNormal2", NoTransformation);
+  target = ARR(-1.);
+  M.setInterpolatingCosts(c, MotionProblem::constEarlyMid,
+                          target, oppositionPrec, ARR(0.,0.,0.), 0., 0.8);
+  //M.setInterpolatingCosts(c, MotionProblem::constFinalMid, target, oppositionPrec);
+
+
+  c = M.addDefaultTaskMap_Shapes("oppose13", zalignTMT, "tipNormal1", NoTransformation, "tipNormal3", NoTransformation);
+  target = ARR(-1.);
+  M.setInterpolatingCosts(c, MotionProblem::constFinalMid, target, oppositionPrec);
+
+
+  //MT_MSG("TODO: fingers should be in relaxed position, or aligned with surface (otherwise they remain ``hooked'' as in previous posture)");
+
   //-- limits
   arr limits;
   limits <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \

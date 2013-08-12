@@ -127,11 +127,13 @@ struct Body {
 
 /// a joint
 struct Joint {
-  uint index;          ///< unique identifier
-  uint qIndex;         ///< index where this joint appears in the q-state-vector
+  uint index;           ///< unique identifier
+  uint qIndex;          ///< index where this joint appears in the q-state-vector
   int ifrom, ito;       ///< indices of from and to bodies
   Body *from, *to;      ///< pointers to from and to bodies
-  
+  Joint *coupledTo;     ///< if non-NULL, this joint's state is identical to another's
+
+  MT::String name;      ///< name
   JointType type;            ///< joint type
   Transformation A;          ///< transformation from parent body to joint (attachment, usually static)
   Transformation Q;          ///< transformation within the joint (usually dynamic)
@@ -145,7 +147,7 @@ struct Joint {
   explicit Joint(Graph& G, Body *f, Body *t, const Joint *copyJoint=NULL); //new Shape, being added to graph and body's joint lists
   ~Joint();
   void operator=(const Joint& j) {
-    index=j.index; qIndex=j.qIndex; ifrom=j.ifrom; ito=j.ito;
+    index=j.index; qIndex=j.qIndex; ifrom=j.ifrom; ito=j.ito; coupledTo=(Joint*)(j.coupledTo?1:0);
     type=j.type; A=j.A; Q=j.Q; B=j.B; X=j.X; axis=j.axis;
     ats=j.ats;
   }
@@ -206,7 +208,7 @@ struct Proxy {
 /// data structure to store a whole physical situation (lists of bodies, joints, shapes, proxies)
 struct Graph {
   /// @name data fields
-  uint sd, jd, td; // added jd (joint dim.), 16. Mar 06 (hh)
+  uint q_dim;
   MT::Array<Body*>  bodies;
   MT::Array<Joint*> joints;
   MT::Array<Shape*> shapes;
@@ -215,9 +217,9 @@ struct Graph {
   bool isLinkTree;
   
   /// @name constructors
-  Graph() { sd=jd=0; bodies.memMove=joints.memMove=shapes.memMove=proxies.memMove=true; isLinkTree=false; }
+  Graph() { q_dim=0; bodies.memMove=joints.memMove=shapes.memMove=proxies.memMove=true; isLinkTree=false; }
   Graph(const char* filename) {
-    sd=jd=0; bodies.memMove=joints.memMove=shapes.memMove=proxies.memMove=true; isLinkTree=false;
+    q_dim=0; bodies.memMove=joints.memMove=shapes.memMove=proxies.memMove=true; isLinkTree=false;
     init(filename);
   }
   ~Graph() { clear(); }
@@ -306,13 +308,13 @@ struct Graph {
   void sortProxies(bool deleteMultiple=false);
   bool checkUniqueNames() const;
   
+  
   Body *getBodyByName(const char* name) const;
-  uint getBodyIndexByName(const char* name) const;
-  
   Shape *getShapeByName(const char* name) const;
-  uint getShapeIndexByName(const char* name) const;
-  
+  Joint *getJointByName(const char* name) const;
   Joint *getJointByBodyNames(const char* from, const char* to) const;
+  //uint getBodyIndexByName(const char* name) const;
+  //uint getShapeIndexByName(const char* name) const;
   void prefixNames();
   
   void write(std::ostream& os) const;
@@ -606,10 +608,7 @@ struct TaskVariableTable {
 // C-style functions
 //
 
-void inertiaSphere(double *Inertia, double& mass, double density, double radius);
-void inertiaBox(double *Inertia, double& mass, double density, double dx, double dy, double dz);
-void inertiaCylinder(double *Inertia, double& mass, double density, double height, double radius);
-
+void makeConvexHulls(ShapeL& shapes);
 
 //===========================================================================
 // routines using external interfaces.

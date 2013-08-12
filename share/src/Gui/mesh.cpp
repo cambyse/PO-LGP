@@ -278,6 +278,7 @@ void Mesh::addMesh(const Mesh& mesh2) {
 }
 
 void Mesh::makeConvexHull() {
+  if(!T.N) return;
 #ifndef  MT_ORS_ONLY_BASICS
   getTriangulatedHull(T, V);
 #else

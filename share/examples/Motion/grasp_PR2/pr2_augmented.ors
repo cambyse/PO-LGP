@@ -131,3 +131,7 @@ joint finger_l_l (l_wrist_roll_link l_gripper_l_finger_link){ from=<T 0.07691 0.
 joint finger_l_r (l_wrist_roll_link l_gripper_r_finger_link){ from=<T 0.07691 -0.01 0 -0.707107 0 -0.707107 0 >  type=0  }
 joint (l_gripper_l_finger_link l_gripper_l_finger_tip_link){ from=<T 2.02882e-17 0.00495 -0.09137 -1.5702e-16 0 -1 0 >  coupledTo=finger_l_l }
 joint (l_gripper_r_finger_link l_gripper_r_finger_tip_link){ from=<T 2.02882e-17 -0.00495 0.09137 -1.5702e-16 0 1 0 >  coupledTo=finger_l_r }
+
+#augmentations
+
+shape graspCenter (l_wrist_roll_link) { rel=<T t(.18 .0 -.0)>, type=5, size=[.05 .0 .0 .5] color = [0 1 0] }

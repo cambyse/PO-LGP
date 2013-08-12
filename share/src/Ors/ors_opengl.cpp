@@ -595,24 +595,22 @@ void _glDrawOdeWorld(dWorldID world)
 */
 
 void animateConfiguration(ors::Graph& C, OpenGL& gl) {
-  arr x, x0, v0;
+  arr x, x0;
   uint t, i;
   C.calcBodyFramesFromJoints();
-  x0.resize(C.getJointStateDimension());
-  v0.resizeAs(x0);
-  C.getJointState(x0, v0);
+  C.getJointState(x0);
   for(i=x0.N; i--;) {
     //for(i=20;i<x0.N;i++){
     x=x0;
     for(t=0; t<20; t++) {
       x(i)=x0(i) + .5*sin(MT_2PI*t/20);
-      C.setJointState(x, v0);
+      C.setJointState(x);
       C.calcBodyFramesFromJoints();
       if(!gl.update()) { return; }
       MT::wait(0.01);
     }
   }
-  C.setJointState(x0, v0);
+  C.setJointState(x0);
   C.calcBodyFramesFromJoints();
 }
 
