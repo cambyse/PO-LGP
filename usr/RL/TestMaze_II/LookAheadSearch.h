@@ -45,8 +45,8 @@ public:
     };
 
     struct ArcInfo {
-        ArcInfo(const reward_t& r = 0, const probability_t& p = 0): expected_reward(r), prob(p) {}
-        reward_t expected_reward;
+        ArcInfo(const reward_t& r = 0, const probability_t& p = 0): transition_reward(r), prob(p) {}
+        reward_t transition_reward;
         probability_t prob;
     };
 
@@ -136,8 +136,15 @@ protected:
         /*! Use expected lower and upper bounds. */
         EXPECTED_BOUNDS,
 
-        /*! Use maximum upper bound for the upper bound and maximum lower bound for lower bound. */
+        /*! Use maximum upper bound for the upper bound and maximum lower bound
+         *  for lower bound. This is the 'optimistic' or best-case assumption
+         *  for estimating the bounds. */
         MAX_UPPER_FOR_UPPER_MAX_LOWER_FOR_LOWER,
+
+        /*! Use maximum upper bound for the upper bound and minimum lower bound
+         *  for lower bound. This is the worst-case assumption in terms of
+         *  certainty, the bounds are as wide as possible. */
+        MAX_UPPER_FOR_UPPER_MIN_LOWER_FOR_LOWER,
 
         /*! Use maximum upper bound for the upper bound and the corresponding lower bound for lower bound. */
         MAX_UPPER_FOR_UPPER_CORRESPONDING_LOWER_FOR_LOWER,
@@ -183,16 +190,23 @@ protected:
     /*! \brief Defines how state bounds are used for calculating
      * action bounds in back-propagation.
      *
-     * Currently only LookAheadSearch::EXPECTED_BOUNDS is supported. */
-    static const BOUND_USAGE_TYPE action_back_propagation_type  = EXPECTED_BOUNDS;
+     * Currently only LookAheadSearch::EXPECTED_BOUNDS and
+     * LookAheadSearch::MAX_UPPER_FOR_UPPER_MIN_LOWER_FOR_LOWER are
+     * supported. */
+    static const BOUND_USAGE_TYPE action_back_propagation_type  = MAX_UPPER_FOR_UPPER_MIN_LOWER_FOR_LOWER;
 
     /*! \brief Defines how action bounds are used for calculating
      * state bounds in back-propagation.
      *
-     * Currently LookAheadSearch::MAX_UPPER_FOR_UPPER_CORRESPONDING_LOWER_FOR_LOWER,
-     * LookAheadSearch::MAX_WEIGHTED_BOUNDS, and SAME_AS_OPTIMAL_SCTION_SELECTION
-     * are supported (LookAheadSearch::optimal_action_selection_type
-     * must match on of the implemented strategies). */
+     * Currently
+     * LookAheadSearch::MAX_UPPER_FOR_UPPER_CORRESPONDING_LOWER_FOR_LOWER,
+     * LookAheadSearch::MAX_WEIGHTED_BOUNDS, and
+     * LookAheadSearch::SAME_AS_OPTIMAL_ACTION_SELECTION are supported
+     * (LookAheadSearch::optimal_action_selection_type must match on of the
+     * implemented strategies). In the case of
+     * LookAheadSearch::MAX_WEIGHTED_BOUNDS the action node with highes weighted
+     * bounds is chosen and the bounds of this action node are used for the
+     * state node. */
     static const BOUND_USAGE_TYPE state_back_propagation_type   = SAME_AS_OPTIMAL_ACTION_SELECTION;
 
     /*! \brief Select the next action node for finding the leaf that is to be expanded. */
@@ -444,7 +458,7 @@ void LookAheadSearch::expand_action_node(
                 );
                 arc_t action_to_state_arc = graph.addArc(action_node,new_state_node);
                 arc_info_map[action_to_state_arc].prob = prob;
-                arc_info_map[action_to_state_arc].expected_reward = new_reward;
+                arc_info_map[action_to_state_arc].transition_reward = new_reward;
             }
         }
 

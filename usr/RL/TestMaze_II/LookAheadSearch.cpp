@@ -17,7 +17,7 @@ using lemon::INVALID;
 using util::approx;
 using std::vector;
 
-const double LookAheadSearch::lower_bound_weight = 0.8;
+const double LookAheadSearch::lower_bound_weight = 0.5;
 
 LookAheadSearch::NodeInfo::NodeInfo():
     type(NONE),
@@ -446,7 +446,7 @@ void LookAheadSearch::print_tree(const bool& text, const bool& eps_export) const
         for(graph_t::ArcIt arc(graph); arc!=INVALID; ++arc) {
             if(node_info_map[graph.source(arc)].type==ACTION) {
                 widths[arc] = arc_width*arc_info_map[arc].prob;
-                double color_scale = (arc_info_map[arc].expected_reward-reward_t::min_reward)/(reward_t::max_reward-reward_t::min_reward);
+                double color_scale = (arc_info_map[arc].transition_reward-reward_t::min_reward)/(reward_t::max_reward-reward_t::min_reward);
                 arc_colors[arc] = lemon::Color(color_scale,0,0);
             } else {
                 widths[arc] = arc_width*0.5;
@@ -750,13 +750,36 @@ LookAheadSearch::node_t LookAheadSearch::update_action_node(node_t action_node) 
             node_t state_node = graph.target(out_arc);
             probability_t state_prob = arc_info_map[out_arc].prob;
             prob_sum += state_prob;
-            reward_t expected_transition_reward = arc_info_map[out_arc].expected_reward;
-            node_info_map[action_node].upper_value_bound += state_prob * (expected_transition_reward + discount*node_info_map[state_node].upper_value_bound);
-            node_info_map[action_node].lower_value_bound += state_prob * (expected_transition_reward + discount*node_info_map[state_node].lower_value_bound);
+            reward_t transition_reward = arc_info_map[out_arc].transition_reward;
+            node_info_map[action_node].upper_value_bound += state_prob * (transition_reward + discount*node_info_map[state_node].upper_value_bound);
+            node_info_map[action_node].lower_value_bound += state_prob * (transition_reward + discount*node_info_map[state_node].lower_value_bound);
         }
         if(fabs(prob_sum-1)>1e-10) {
             DEBUG_OUT(0,"Error: Unnormalized state transition probabilities (p_sum=" << prob_sum << ")");
         }
+        break;
+    }
+    case MAX_UPPER_FOR_UPPER_MIN_LOWER_FOR_LOWER:
+    {
+        value_t max_upper = -DBL_MAX;
+        value_t min_lower =  DBL_MAX;
+        for(graph_t::OutArcIt out_arc(graph,action_node); out_arc!=INVALID; ++out_arc) {
+            node_t state_node = graph.target(out_arc);
+            reward_t transition_reward = arc_info_map[out_arc].transition_reward;
+            value_t upper = transition_reward + discount*node_info_map[state_node].upper_value_bound;
+            value_t lower = transition_reward + discount*node_info_map[state_node].lower_value_bound;
+            if(upper>max_upper) {
+                max_upper = upper;
+            }
+            if(lower<min_lower) {
+                min_lower = lower;
+            }
+        }
+        if(max_upper==-DBL_MAX||min_lower==DBL_MAX) {
+            DEBUG_OUT(0,"Error: No outgoing state node");
+        }
+        node_info_map[action_node].upper_value_bound = max_upper;
+        node_info_map[action_node].lower_value_bound = min_lower;
         break;
     }
     default:
@@ -816,12 +839,12 @@ LookAheadSearch::node_t LookAheadSearch::update_state_node(node_t state_node) {
     }
     case MAX_WEIGHTED_BOUNDS:
     {
-        value_t max_value= -DBL_MAX, current_upper_bound, current_lower_bound, current_value;
+        value_t max_value= -DBL_MAX;
         for(graph_t::OutArcIt out_arc(graph,state_node); out_arc!=INVALID; ++out_arc) {
             node_t action_node = graph.target(out_arc);
-            current_upper_bound = node_info_map[action_node].upper_value_bound;
-            current_lower_bound = node_info_map[action_node].lower_value_bound;
-            current_value = lower_bound_weight*current_lower_bound + (1-lower_bound_weight)*current_upper_bound;
+            value_t current_upper_bound = node_info_map[action_node].upper_value_bound;
+            value_t current_lower_bound = node_info_map[action_node].lower_value_bound;
+            value_t current_value = lower_bound_weight*current_lower_bound + (1-lower_bound_weight)*current_upper_bound;
             if(current_value>max_value) { // no randomization needed for equal values since actual action is not considered
                 max_value=current_value;
                 node_info_map[state_node].upper_value_bound = current_upper_bound;

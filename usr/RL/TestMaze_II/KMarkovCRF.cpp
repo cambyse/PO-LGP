@@ -42,12 +42,10 @@ KMarkovCRF::KMarkovCRF():
     // delayed action, state, and reward features
     for(int k_idx = 0; k_idx>=-(int)Config::k; --k_idx) {
         // actions
-        if(k_idx==0) { // take only the current action into account
-            for(actionIt_t action=actionIt_t::first(); action!=INVALID; ++action) {
-                ActionFeature * action_feature = ActionFeature::create(action,k_idx);
-                basis_features.push_back(action_feature);
-                DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
-            }
+        for(actionIt_t action=actionIt_t::first(); action!=INVALID; ++action) {
+            ActionFeature * action_feature = ActionFeature::create(action,k_idx);
+            basis_features.push_back(action_feature);
+            DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
         }
         // states
         for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {

@@ -48,6 +48,9 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     // initialize UI
     ui.setupUi(this);
 
+    // disable graph view
+    ui._wGraphDockWidget->setVisible(false);
+
     // add graph widget
     plotter = new QCustomPlot(ui._wGraphDockWidgetContent);
     plotter->setObjectName(MY_QT_STR("PlotWidget"));

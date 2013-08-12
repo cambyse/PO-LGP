@@ -18,13 +18,14 @@ const double Maze::wall_width = 0.08;
 const double Maze::reward_start_size = 0.15;
 const double Maze::reward_end_size = 0.2;
 const double Maze::reward_end_ratio = 0.5;
-const double Maze::text_scale = 0.01;
+const double Maze::text_scale = 0.015;
+const QFont  Maze::text_font = QFont("Helvetica [Cronyx]", 12);
 const double Maze::text_center = 0.3;
 
 const vector<Maze::wall_t> Maze::walls = {
 
-    /* 2x2 Maze *
-    { 0, 1}
+    /* 2x2 Maze */
+    { 1, 3}
     /**/
 
     /* 3x3 Maze *
@@ -46,7 +47,7 @@ const vector<Maze::wall_t> Maze::walls = {
     {10,11}
     /**/
 
-    /* 10x10 Maze */
+    /* 10x10 Maze *
     {  2,  3},
     { 12, 13},
     { 22, 23},
@@ -92,8 +93,8 @@ const vector<Maze::maze_reward_t> Maze::rewards = {
     { 3, 2, 1, 1, ON_RELEASE,   0,   0, 200}
     /**/
 
-    /* 2x2 Maze *
-    { 0, 3, 2, 1, EACH_TIME, 200,   0,   0}
+    /* 2x2 Maze */
+    { 3, 1, 3, 1, EACH_TIME, 200,   0,   0}
     /**/
 
     /* 3x3 Maze *
@@ -112,7 +113,7 @@ const vector<Maze::maze_reward_t> Maze::rewards = {
     //{  8,  4,  4, 1, ON_RELEASE, 200,   0, 200}
     /**/
 
-    /* 10x10 Maze */
+    /* 10x10 Maze *
     {  0, 21,  3, 1, ON_RELEASE, 200,   0,   0},
     { 30, 43,  4, 1, ON_RELEASE,   0, 200,   0},
     { 43, 62,  3, 1, ON_RELEASE, 200,   0,   0},
@@ -137,7 +138,11 @@ const vector<Maze::maze_reward_t> Maze::rewards = {
 };
 
 const vector<Maze::door_t> Maze::doors = {
-    /* 10x10 Maze */
+    /* 2x2 Maze */
+    door_t(MazeState(1,0), MazeState(1,1), MazeState(1,1),  RIGHT_BUTTON,-3, color_t(0.0,0.8,0.0) ),
+    /**/
+
+    /* 10x10 Maze *
     door_t(MazeState(0,3), MazeState(0,4), MazeState(0,4),  PASS_BUTTON, 0, color_t(1.0,0.5,0.0) ),
     door_t(MazeState(1,3), MazeState(1,4), MazeState(1,5),  STAY_BUTTON, 2, color_t(0.0,1.0,0.0) ),
     door_t(MazeState(2,2), MazeState(3,2), MazeState(2,3),    UP_BUTTON, 2, color_t(0.0,1.0,0.0) ),
@@ -764,7 +769,7 @@ void Maze::render_door(door_t dt) {
     // add text
     QGraphicsTextItem * txt = scene->addText(
         QString("t=%1").arg(QString::number(delay)),
-        QFont("",12)
+        text_font
         );
     QRectF box = txt->boundingRect();
     txt->setPos(
@@ -876,7 +881,7 @@ void Maze::render_reward(maze_reward_t r) {
     reward_t reward = (reward_t)r[REWARD_VALUE];
     QGraphicsTextItem * txt = scene->addText(
         QString("t=%1,r=%2").arg(QString::number(time_delay)).arg(QString::number(reward)),
-        QFont("",12)
+        text_font
         );
     QRectF box = txt->boundingRect();
     txt->setPos(

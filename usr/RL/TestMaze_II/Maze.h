@@ -161,6 +161,7 @@ private:
     static const double reward_end_size;             ///< Size of reward end marker for rendering.
     static const double reward_end_ratio;            ///< Length-to-width ratio of reward end marker (arrow) for rendering.
     static const double text_scale;                  ///< Scale factor for text size.
+    static const QFont  text_font;                   ///< Font for texts.
     static const double text_center;                 ///< How close the text should be positioned to the midpoint between start and end marker.
 
     double epsilon;                                  ///< Amount of stochasticity in transitions.
