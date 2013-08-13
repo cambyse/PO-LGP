@@ -313,7 +313,7 @@ void glDrawShape(ors::Shape *s) {
         else glDrawCappedCylinder(s->size[3], s->size[2]);
         break;
       case ors::markerST:
-        glDrawAxes(s->size[0]);  glDrawDiamond(s->size[0]/5., s->size[0]/5., s->size[0]/5.);
+        glDrawDiamond(s->size[0]/5., s->size[0]/5., s->size[0]/5.); glDrawAxes(s->size[0]);
         break;
       case ors::meshST:
         CHECK(s->mesh.V.N, "mesh needs to be loaded to draw mesh object");

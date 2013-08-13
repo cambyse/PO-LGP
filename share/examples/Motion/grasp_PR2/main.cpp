@@ -38,7 +38,7 @@ void testGraspHeuristic(){
 
     if(k%2) s=G.getShapeByName("target1");
     else    s=G.getShapeByName("target2");
-    s->rel.pos.setRandom(.3);
+    s->rel.pos.setRandom(.1);
     s->rel.rot.setRandom();
     for(uint l=0;l<3;l++) s->size[l] = rnd.uni(.05,.15);
     s->size[3] = rnd.uni(.02,.07);

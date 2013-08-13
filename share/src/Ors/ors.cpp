@@ -535,6 +535,12 @@ void ors::Graph::invertTime() {
 }
 
 arr ors::Graph::naturalQmetric() {
+#if 1
+  if(!q_dim) getJointStateDimension(true);
+  arr Wdiag(q_dim);
+  Wdiag=1.;
+  return Wdiag;
+#else
   //compute generic q-metric depending on tree depth
   arr BM(bodies.N);
   BM=1.;
@@ -555,6 +561,7 @@ arr ors::Graph::naturalQmetric() {
     getDiag(Wdiag, W);
   }
   return Wdiag;
+#endif
 }
 
 void ors::Graph::computeNaturalQmetric(arr& W) {

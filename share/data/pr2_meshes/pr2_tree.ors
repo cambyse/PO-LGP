@@ -90,8 +90,8 @@ shape (l_wrist_roll_link){ type=3  mesh='pr2_meshes/gripper_v0/gripper_palm.stl'
 shape (l_wrist_roll_link){ type=0  size=[ 0.001 0.001 0.001 0 ]  }
 shape (l_gripper_l_finger_link){ type=3 rel=<T 0 0 0 -0.707107 0 -0.707107 0 >  mesh='pr2_meshes/gripper_v0/l_finger.stl'  }
 shape (l_gripper_r_finger_link){ type=3 rel=<T 0 0 0 7.3123e-14 -0.707107 -7.3123e-14 -0.707107 >  mesh='pr2_meshes/gripper_v0/l_finger.stl'  }
-shape (l_gripper_l_finger_tip_link){ type=3 rel=<T 0 0 0 -0.707107 0 0.707107 0 >  mesh='pr2_meshes/gripper_v0/l_finger_tip.stl'  }
-shape (l_gripper_r_finger_tip_link){ type=3 rel=<T 0 0 0 7.3123e-14 -0.707107 7.3123e-14 0.707107 >  mesh='pr2_meshes/gripper_v0/l_finger_tip.stl'  }
+shape tip1 (l_gripper_l_finger_tip_link){ contact, type=3 rel=<T 0 0 0 -0.707107 0 0.707107 0 >  mesh='pr2_meshes/gripper_v0/l_finger_tip.stl'  }
+shape tip2 (l_gripper_r_finger_tip_link){ contact, type=3 rel=<T 0 0 0 7.3123e-14 -0.707107 7.3123e-14 0.707107 >  mesh='pr2_meshes/gripper_v0/l_finger_tip.stl'  }
 
 joint (base_footprint fl_caster_rotation_link){ from=<T 0.2246 0.2246 0.0792 0.707107 0 -0.707107 0 >  type=0  }
 joint (fl_caster_rotation_link fl_caster_l_wheel_link){ from=<T 0 0.049 0 -0.5 -0.5 -0.5 -0.5 >  type=0  }

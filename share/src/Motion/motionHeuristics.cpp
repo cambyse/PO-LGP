@@ -256,48 +256,41 @@ void setGraspGoals_PR2(MotionProblem& M, uint T, uint shapeId, uint side, uint p
 
   if (phase==0) return;
 
-
   //-- finger tips close to surface : using ProxyTaskVariable
   uintA shapes = stringListToShapeIndices(
-                   ARRAY<const char*>("tip1Shape",
-                                      "tip2Shape",
-                                      "tip3Shape"), M.ors->shapes);
-  shapes.append(shapeId); shapes.append(shapeId); shapes.append(shapeId);
-  shapes.reshape(2,3); shapes = ~shapes;
+                   ARRAY<const char*>("tip1",
+                                      "tip2"), M.ors->shapes);
+  shapes.append(shapeId); shapes.append(shapeId);
+  shapes.reshape(2,2); shapes = ~shapes;
   c = M.addCustomTaskMap("graspContacts", new ProxyTaskMap(vectorPTMT, shapes, .05, true));
+  for_(uint, i, shapes) cout <<' ' <<M.ors->shapes(*i)->name;
   double grip=.8; //specifies the desired proxy value
-  target = ARR(grip,grip,grip);
+  target = ARR(grip,grip);
   M.setInterpolatingCosts(c, MotionProblem::constEarlyMid,
-                          target, fingerDistPrec, ARR(0.,0.,0.), 0., 0.8);
-  for (uint t=0; t<=T; t++) { //interpolation: 0 up to 4/5 of the trajectory, then interpolating in the last 1/5
-    if (5*t<4*T) c->y_target[t]()=0.;
-    else c->y_target[t]() = (grip*double(5*t-4*T))/T;
-  }
+                          target, fingerDistPrec, ARR(0.,0.), 0., 0.8);
 
+#if 0
   //-- collisions with other objects
   shapes = ARRAY<uint>(shapeId);
   c = M.addCustomTaskMap("otherCollisions", new ProxyTaskMap(allExceptListedPTMT, shapes, .04, true));
   target = ARR(0.);
   M.setInterpolatingCosts(c, MotionProblem::constFinalMid, target, colPrec, target, colPrec);
-  c->map.phi(initial, NoArr, *M.ors);
-  if (initial(0)>0.) { //we are in collision/proximity -> depart slowly
-    double a=initial(0);
-    for (uint t=0; t<=T/5; t++)
-      c->y_target[t]() = a*double(T-5*t)/T;
-  }
+//  c->map.phi(initial, NoArr, *M.ors);
+//  if (initial(0)>0.) { //we are in collision/proximity -> depart slowly
+//    double a=initial(0);
+//    for (uint t=0; t<=T/5; t++)
+//      c->y_target[t]() = a*double(T-5*t)/T;
+//  }
+#endif
 
-  //-- opposing fingers
-  c = M.addDefaultTaskMap_Shapes("oppose12", zalignTMT, "tipNormal1", NoTransformation, "tipNormal2", NoTransformation);
-  target = ARR(-1.);
-  M.setInterpolatingCosts(c, MotionProblem::constEarlyMid,
-                          target, oppositionPrec, ARR(0.,0.,0.), 0., 0.8);
-  //M.setInterpolatingCosts(c, MotionProblem::constFinalMid, target, oppositionPrec);
+//  //-- opposing fingers -- PR2-fingers always oppose!
+//  c = M.addDefaultTaskMap_Shapes("oppose12", zalignTMT, "tipNormal1", NoTransformation, "tipNormal2", NoTransformation);
+//  target = ARR(-1.);
+//  M.setInterpolatingCosts(c, MotionProblem::constEarlyMid,
+//                          target, oppositionPrec, ARR(0.,0.,0.), 0., 0.8);
 
 
-  c = M.addDefaultTaskMap_Shapes("oppose13", zalignTMT, "tipNormal1", NoTransformation, "tipNormal3", NoTransformation);
-  target = ARR(-1.);
-  M.setInterpolatingCosts(c, MotionProblem::constFinalMid, target, oppositionPrec);
-
+  return;
 
   //MT_MSG("TODO: fingers should be in relaxed position, or aligned with surface (otherwise they remain ``hooked'' as in previous posture)");
 

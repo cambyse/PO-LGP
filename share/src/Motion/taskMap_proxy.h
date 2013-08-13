@@ -22,13 +22,13 @@
 #include "motion.h"
 
 enum PTMtype {
-  allPTMT,
-  allListedPTMT,
-  allExceptListedPTMT,
-  bipartitePTMT,
-  pairsPTMT,
-  allExceptPairsPTMT,
-  vectorPTMT
+  allPTMT, //phi=sum over all proxies (as is standard)
+  allListedPTMT, //phi=sum over all proxies between listed shapes
+  allExceptListedPTMT, //as above, but excluding listed shapes
+  bipartitePTMT, //sum over proxies between the two sets of shapes (shapes, shapes2)
+  pairsPTMT, //sum over proxies of explicitly listed pairs (shapes is n-times-2)
+  allExceptPairsPTMT, //sum excluding these pairs
+  vectorPTMT //vector of all pair proxies (this is the only case where dim(phi)>1)
 };
 
 /** Proxy task variable */

@@ -8,6 +8,7 @@ ProxyTaskMap::ProxyTaskMap(PTMtype _type,
   shapes=_shapes;
   margin=_margin;
   linear=_linear;
+  cout <<"creating ProxyTaskMap with shape list" <<shapes <<endl;
 }
 
 //TODO: defined in Ors/ors_taskVariables.cpp !!
