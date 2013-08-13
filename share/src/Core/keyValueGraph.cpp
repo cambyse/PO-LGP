@@ -291,9 +291,10 @@ void KeyValueGraph::read(std::istream& is) {
 	read(is2);
 	is2.close();
       }else HALT("don't know special command " <<str);
+    }else{
+      if(!is.good() || c=='}') { is.clear(); break; }
+      if(!readItem(*this, is)) break;
     }
-    if(!is.good() || c=='}') { is.clear(); break; }
-    if(!readItem(*this, is)) break;
   }
 }
 

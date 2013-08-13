@@ -36,7 +36,8 @@ int main(int argn,char **argv){
 
   G.meldFixedJoint();
   G.removeNonShapeBodies();
-  //C.makeLinkTree();
+  G.topSort();
+  G.makeLinkTree();
   MT::save(G,"z.ors");
 
   editConfiguration(file, G, gl);

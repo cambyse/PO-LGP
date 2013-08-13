@@ -208,12 +208,12 @@ struct Proxy {
 /// data structure to store a whole physical situation (lists of bodies, joints, shapes, proxies)
 struct Graph {
   /// @name data fields
-  uint q_dim;
   MT::Array<Body*>  bodies;
   MT::Array<Joint*> joints;
   MT::Array<Shape*> shapes;
   MT::Array<Proxy*> proxies; ///< list of current proximities between bodies
-  arr Qlin, Qoff, Qinv; //linear transformations of q
+  uint q_dim; ///< numer of degrees of freedom IN the joints (not counting root body)
+  arr Qlin, Qoff, Qinv; ///< linear transformations of q
   bool isLinkTree;
   
   /// @name constructors
@@ -237,6 +237,7 @@ struct Graph {
   void transformJoint(Joint *e, const ors::Transformation &f); //A <- A*f, B <- f^{-1}*B
   void zeroGaugeJoints();                          //A <- A*Q, Q <- Id
   void makeLinkTree(); //modify transformations so that B's become identity
+  void topSort(){ graphTopsort(bodies, joints); for_list_(Shape, s, shapes) s->ibody=s->body->index; }
   void glueBodies(Body *a, Body *b);
   void glueTouchingBodies();
   void addObject(Body *b);

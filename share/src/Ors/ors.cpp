@@ -364,10 +364,13 @@ void ors::Graph::init(const char* filename) {
 }
 
 void ors::Graph::clear() {
-  q_dim=0;
   listDelete(proxies);
-  listDelete(joints);  listDelete(shapes);
+  listDelete(shapes);
+  listDelete(joints);
   listDelete(bodies);
+  q_dim=0;
+  Qlin.clear(); Qoff.clear(); Qinv.clear();
+  isLinkTree=false;
 }
 
 ors::Graph* ors::Graph::newClone() const {
@@ -1337,25 +1340,22 @@ void ors::Graph::prefixNames() {
 
 /** @brief prototype for \c operator<< */
 void ors::Graph::write(std::ostream& os) const {
-  Body *n;
-  Joint *e;
-  Shape *s;
-  uint i, j;
-  for_list(j, n, bodies) {
-    os <<"body " <<n->name <<" { ";
-    n->write(os);  os <<" }\n";
+  for_list_(Body, b, bodies) {
+    os <<"body " <<b->name <<" { ";
+    b->write(os);  os <<" }\n";
   }
   os <<std::endl;
-  for_list(i, s, shapes) {
+  for_list_(Shape, s, shapes) {
     os <<"shape (" <<s->body->name <<"){ ";
     s->write(os);  os <<" }\n";
   }
   os <<std::endl;
-  for_list(i, e, joints) {
-    os <<"joint (" <<e->from->name <<' ' <<e->to->name <<"){ ";
-    e->write(os);  os <<" }\n";
+  for_list_(Joint, j, joints) {
+    os <<"joint ";
+    if (j->name.N) os <<j->name.p <<' ';
+    os <<"(" <<j->from->name <<' ' <<j->to->name <<"){ ";
+    j->write(os);  os <<" }\n";
   }
-//   os <<"</slGraph>" <<std::endl;
 }
 
 #define DEBUG(x) //x

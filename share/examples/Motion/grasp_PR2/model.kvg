@@ -1,4 +1,8 @@
-%include pr2_augmented.ors
+
+%include pr2_meshes/pr2_tree.ors
+
+%include pr2_augmentations.ors
+
 
 body  OBJECTS{ X=<T t(.0 -.8 .69)> }
 
