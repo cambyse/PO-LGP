@@ -23,6 +23,12 @@
 #  include <extern/ply/ply.h>
 #endif
 
+#ifdef MT_extern_GJK
+extern "C"{
+#  include <extern/GJK/gjk.h>
+}
+#endif
+
 namespace ors {
 
 //==============================================================================
@@ -210,6 +216,12 @@ void Mesh::setGrid(uint X, uint Y) {
   }
 }
 
+void Mesh::setRandom(uint vertices){
+  V.resize(10,3);
+  rndUniform(V, -1., 1.);
+  makeConvexHull();
+}
+
 void Mesh::subDevide() {
   uint v=V.d0, t=T.d0;
   V.resizeCopy(v+3*t, 3);
@@ -278,7 +290,7 @@ void Mesh::addMesh(const Mesh& mesh2) {
 }
 
 void Mesh::makeConvexHull() {
-  if(!T.N) return;
+  if(!V.N) return;
 #ifndef  MT_ORS_ONLY_BASICS
   getTriangulatedHull(T, V);
 #else
@@ -1359,3 +1371,25 @@ void inertiaCylinder(double *I, double& mass, double density, double height, dou
 }
 
 }//END of namespace
+
+
+//===========================================================================
+//
+// GJK interface
+//
+
+double GJK_distance(ors::Mesh& mesh1, ors::Mesh& mesh2, ors::Vector& p1, ors::Vector& p2){
+  Object_structure m1,m2;
+  //typedef double (*strangearray)[3];
+  MT::Array<double*> help1, help2;
+  m1.numpoints = mesh1.V.d0;  m1.vertices = mesh1.V.getCarray(help1);  m1.rings=NULL;
+  m2.numpoints = mesh2.V.d0;  m2.vertices = mesh2.V.getCarray(help2);  m2.rings=NULL;
+
+  cout <<"OBJ1=" <<mesh1.V <<endl;
+  cout <<"OBJ2=" <<mesh2.V <<endl;
+
+  double d = gjk_distance(&m1, NULL, &m2, NULL, (&p1?p1.p():NULL), (&p2?p2.p():NULL), NULL, 0);
+  return sqrt(d);
+
+}
+
