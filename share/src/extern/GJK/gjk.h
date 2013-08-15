@@ -87,8 +87,8 @@ extern int gjk_num_g_test, gjk_num_simplices, gjk_num_backups,
 /** Object structure: holds basic information about each object */
 struct Object_structure {
   int numpoints;
-  REAL ** vertices; //)[DIM];
-  int * rings;
+  REAL **vertices;
+  int *rings;
 };
 typedef struct Object_structure * Object;
 
@@ -136,7 +136,7 @@ typedef struct Object_structure * Object;
  * x to the vector y, where
  *   y[i] = M[i][0]*x[0] + M[i][1]*x[1] + M[i][2]*x[2] + M[i][3]
  */
-typedef double (* Transform)[DIM+1];
+typedef double **Transform;
 #define IdentityTransform( t)	((t)==0)
 #define ExtractTranslation( t, v) { int i; overd(i) v[i] = t[i][DIM]; }
 #define ApplyTransform( t, obj, v, tgt) apply_trans( t, obj->vertices[v], tgt)
@@ -343,8 +343,8 @@ int gjk_extract_point( struct simplex_point *simp,
  *
  */
 REAL gjk_distance(
-   Object obj1, REAL (* tr1)[DIM+1],
-   Object obj2, REAL (* tr2)[DIM+1],
-   REAL wpt1[DIM], REAL wpt2[DIM],
+   Object obj1, REAL **tr1,
+   Object obj2, REAL **tr2,
+   REAL *wpt1, REAL *wpt2,
    struct simplex_point * simplex, int use_seed
    );

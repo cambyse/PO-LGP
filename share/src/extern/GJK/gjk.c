@@ -296,7 +296,7 @@ static void add_simplex_vertex( struct simplex_point * s, int pos,
 REAL gjk_distance(
    Object obj1, Transform tr1,
    Object obj2, Transform tr2,
-   REAL wpt1[DIM], REAL wpt2[DIM],
+   REAL *wpt1, REAL *wpt2,
    struct simplex_point * simplex, int use_seed
    ) {
 

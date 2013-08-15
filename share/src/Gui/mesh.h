@@ -174,7 +174,9 @@ void getDelaunayEdges(uintA& E, const arr& V);
 // GJK interface
 //
 
-double GJK_distance(ors::Mesh& mesh1, ors::Mesh& mesh2, ors::Vector& p1, ors::Vector& p2);
+double GJK_distance(ors::Mesh& mesh1, ors::Mesh& mesh2,
+                    ors::Transformation& t1, ors::Transformation& t2,
+                    ors::Vector& p1, ors::Vector& p2);
 
 
 #endif
