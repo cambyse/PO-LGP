@@ -449,7 +449,7 @@ double UTree::q_iteration(const double& alpha) {
         }
         double value_diff = node_info_map[current_leaf_node].max_state_action_value - max_value;
         node_info_map[current_leaf_node].max_state_action_value = max_value;
-        node_info_map[current_leaf_node].max_value_action = util::draw_random(max_value_actions);
+        node_info_map[current_leaf_node].max_value_action = util::random_select(max_value_actions);
         if(fabs(value_diff)>max_value_diff) {
             max_value_diff = fabs(value_diff);
         }
@@ -879,7 +879,7 @@ void UTree::update_state_value_and_policy(const node_t& leaf_node) {
         node_info_map[leaf_node].max_state_action_value = 0;
         node_info_map[leaf_node].max_value_action = action_t::STAY;
     } else {
-        action_t optimal_action = util::draw_random(max_value_action_vector);
+        action_t optimal_action = util::random_select(max_value_action_vector);
         DEBUG_OUT(4,"    state-value=" << max_q_value << "	action=" << optimal_action);
         node_info_map[leaf_node].max_state_action_value = max_q_value;
         node_info_map[leaf_node].max_value_action = optimal_action;

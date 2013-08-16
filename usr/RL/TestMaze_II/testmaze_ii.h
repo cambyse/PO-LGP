@@ -66,6 +66,7 @@ private:
 
     std::vector<QString> console_history;
     size_t history_position;
+    QFile history_file;
 
     double discount;
 

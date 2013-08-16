@@ -2,6 +2,7 @@
 #define LOOKAHEADSEARCH_H_
 
 #include <lemon/list_graph.h>
+#include <lemon/graph_to_eps.h>
 #include <lemon/dim2.h>
 
 #include "Config.h"
@@ -50,11 +51,12 @@ public:
         probability_t prob;
     };
 
-    typedef lemon::ListDigraph graph_t;
-    typedef graph_t::Node node_t;
-    typedef graph_t::Arc arc_t;
-    typedef graph_t::NodeMap<NodeInfo> node_info_map_t;
-    typedef graph_t::ArcMap<ArcInfo> arc_info_map_t;
+    typedef lemon::ListDigraph                graph_t;
+    typedef graph_t::Node                     node_t;
+    typedef graph_t::Arc                      arc_t;
+    typedef graph_t::NodeMap<NodeInfo>        node_info_map_t;
+    typedef graph_t::ArcMap<ArcInfo>          arc_info_map_t;
+    typedef graph_t::NodeMap<lemon::Color>    node_color_map_t;
 
     typedef std::vector<node_t> node_vector_t;
 
@@ -102,7 +104,11 @@ public:
     void set_discount(const double& d) { discount = d; }
 
     /*! \brief Print the tree to console and/or as eps file. */
-    void print_tree(const bool& text, const bool& eps_export) const;
+    void print_tree(const bool& text,
+                    const bool& eps_export,
+                    const char* file_name = "look_ahead_tree.eps",
+                    const node_color_map_t * color_map = nullptr
+        ) const;
 
     /*! \brief Print the tree statistics to console. */
     void print_tree_statistics();
@@ -184,7 +190,12 @@ protected:
 
     /*! \brief Defines how state nodes are selected for further examination.
      *
-     * Currently only LookAheadSearch::MAX_WEIGHTED_UNCERTAINTY is supported. */
+     * Currently only LookAheadSearch::MAX_WEIGHTED_UNCERTAINTY is
+     * supported. LookAheadSearch::MAX_WEIGHTED_UNCERTAINTY means that the
+     * uncertainty of each state is multiplied with the probability of reaching
+     * this state by executing the action. This product -- the weighted
+     * uncertainty -- is evaluated to determine the state with a maximum
+     * weighted uncertainty, which is further explored. */
     static const BOUND_USAGE_TYPE tree_state_selection_type     = MAX_WEIGHTED_UNCERTAINTY;
 
     /*! \brief Defines how state bounds are used for calculating
@@ -193,7 +204,7 @@ protected:
      * Currently only LookAheadSearch::EXPECTED_BOUNDS and
      * LookAheadSearch::MAX_UPPER_FOR_UPPER_MIN_LOWER_FOR_LOWER are
      * supported. */
-    static const BOUND_USAGE_TYPE action_back_propagation_type  = MAX_UPPER_FOR_UPPER_MIN_LOWER_FOR_LOWER;
+    static const BOUND_USAGE_TYPE action_back_propagation_type  = EXPECTED_BOUNDS;
 
     /*! \brief Defines how action bounds are used for calculating
      * state bounds in back-propagation.
@@ -230,6 +241,9 @@ protected:
             const Model& model,
             probability_t(Model::*prediction)(const instance_t *, const action_t&, const state_t&, const reward_t&) const
     );
+
+    /** \brief Select the optimal action from a given state node. */
+    node_vector_t optimal_action_nodes(const node_t& state_node) const;
 
     /*! \brief Update the given action node when back-propagating after leaf expansion.
      * Return parent state node. */

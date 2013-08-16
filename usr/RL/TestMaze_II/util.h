@@ -223,7 +223,7 @@ namespace util {
 
     /** \brief Select a random element from a vector. */
     template < typename T >
-        T draw_random(const std::vector<T> vec) {
+        T random_select(const std::vector<T> vec) {
         if(vec.size()==0) {
             DEBUG_OUT(0,"Error: Cannot draw from an empty vector");
         }
@@ -252,7 +252,7 @@ namespace util {
      * Returns true if the difference is smaller than the value returned by
      * util::approx_equal_tolerance(). */
     template < class C >
-        bool approx(const C& c1, const C& c2) { return fabs(c1-c2)<approx_equal_tolerance(); }
+        bool approx_eq(const C& c1, const C& c2) { return fabs(c1-c2)<approx_equal_tolerance(); }
 
     /** \brief Generic function to determine if c1 is much greater than c2.
      *

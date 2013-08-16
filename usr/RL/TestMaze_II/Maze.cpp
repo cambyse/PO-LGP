@@ -815,11 +815,11 @@ void Maze::render_reward(maze_reward_t r) {
             reward_start_size,
             reward_start_size,
             marker_pen,
-            no_brush
+            brush
             );
         break;
     case EACH_TIME_PUNISH_FAILURE:
-        scene->addEllipse(
+        scene->addRect(
             x_start-reward_start_size/2,
             y_start-reward_start_size/2,
             reward_start_size,
@@ -829,7 +829,7 @@ void Maze::render_reward(maze_reward_t r) {
             );
         break;
     case ON_RELEASE:
-        scene->addRect(
+        scene->addEllipse(
             x_start-reward_start_size/2,
             y_start-reward_start_size/2,
             reward_start_size,
@@ -845,7 +845,7 @@ void Maze::render_reward(maze_reward_t r) {
             reward_start_size,
             reward_start_size,
             marker_pen,
-            brush
+            no_brush
             );
         break;
     default:

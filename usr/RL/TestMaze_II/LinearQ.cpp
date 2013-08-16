@@ -216,7 +216,7 @@ LinearQ::action_t LinearQ::get_max_value_action(const instance_t * i) {
             max_actions.push_back(action);
         }
     }
-    return util::draw_random(max_actions);
+    return util::random_select(max_actions);
 }
 
 void LinearQ::add_candidates(const int& n) {

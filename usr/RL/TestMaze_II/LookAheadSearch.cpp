@@ -1,21 +1,26 @@
 #include "LookAheadSearch.h"
 
+#include <unistd.h> // for sleep()
 #include <float.h>
 #include <math.h>
-#include <lemon/graph_to_eps.h>
 #include <lemon/connectivity.h>
 #include <lemon/adaptors.h>
 #include <vector>
+#include <tuple>
 
 #include "util.h"
 #include "Maze.h"
 
-#define DEBUG_LEVEL 0
+#define DEBUG_LEVEL 1
 #include "debug.h"
 
 using lemon::INVALID;
-using util::approx;
+using lemon::Color;
+using util::approx_eq;
 using std::vector;
+using std::tuple;
+using std::make_tuple;
+using std::get;
 
 const double LookAheadSearch::lower_bound_weight = 0.5;
 
@@ -95,69 +100,29 @@ void LookAheadSearch::clear_tree() {
 
 LookAheadSearch::action_t LookAheadSearch::get_optimal_action() const {
     DEBUG_OUT(2,"Determining optimal action");
-    node_vector_t optimal_action_nodes;
-    switch(optimal_action_selection_type) {
-    case MAX_LOWER_BOUND:
-    {
-        DEBUG_OUT(3,"    Using maximum lower bound as criterion");
-        value_t max_lower_bound = -DBL_MAX, current_lower_bound;
-        node_t current_action_node;
-        for(graph_t::OutArcIt out_arc(graph,root_node); out_arc!=INVALID; ++out_arc) {
-            current_action_node = graph.target(out_arc);
-            current_lower_bound = node_info_map[current_action_node].lower_value_bound;
-            if(approx(current_lower_bound,max_lower_bound)) {
-                optimal_action_nodes.push_back(current_action_node);
-            } else if(current_lower_bound>max_lower_bound) {
-                optimal_action_nodes.clear();
-                optimal_action_nodes.push_back(current_action_node);
-                max_lower_bound=current_lower_bound;
-            }
-        }
-        break;
-    }
-    case MAX_WEIGHTED_BOUNDS:
-    {
-        DEBUG_OUT(3,"    Using maximum weighted bounds as criterion");
-        value_t max_value = -DBL_MAX, current_value;
-        node_t current_action_node;
-        for(graph_t::OutArcIt out_arc(graph,root_node); out_arc!=INVALID; ++out_arc) {
-            current_action_node = graph.target(out_arc);
-            current_value = 0;
-            current_value +=    lower_bound_weight  * node_info_map[current_action_node].lower_value_bound;
-            current_value += (1-lower_bound_weight) * node_info_map[current_action_node].upper_value_bound;
-            if(approx(current_value,max_value)) {
-                optimal_action_nodes.push_back(current_action_node);
-            } else if(current_value>max_value) {
-                optimal_action_nodes.clear();
-                optimal_action_nodes.push_back(current_action_node);
-                max_value=current_value;
-            }
-        }
-        break;
-    }
-    default:
-        DEBUG_OUT(0,"Error: Optimal action selection type not implemented");
-        break;
-    }
 
-    // select action
-    action_t selected_action;
-    if(optimal_action_nodes.size()==0) {
-        DEBUG_OUT(0,"Error: No action available from root node (choosing STAY)");
-        selected_action = action_t::STAY;
+    node_vector_t optimal_action_node_vector = optimal_action_nodes(root_node);
+
+    // select one action randomly
+    action_t selected_action = action_t::STAY;
+    if(optimal_action_node_vector.size()==0) {
+        DEBUG_OUT(0,"Error: No action available from root node. Choosing " << selected_action << ".");
+        return selected_action;
     } else {
-        idx_t actionIt = rand()%optimal_action_nodes.size();
-        node_t selected_action_node = optimal_action_nodes[actionIt];
-        DEBUG_OUT(3, "    choosing nr " << actionIt << " from " << optimal_action_nodes.size() << " actions");
+        // random select action
+        node_t selected_action_node = util::random_select(optimal_action_node_vector);
 
         // check
         if(node_info_map[selected_action_node].type!=ACTION) {
             DEBUG_OUT(0,"Error: Next action node is not of type ACTION");
         }
+
+        // get action
         selected_action = node_info_map[selected_action_node].action;
+        DEBUG_OUT(3, "    choosing " << selected_action << " from " << optimal_action_node_vector.size() << " actions");
+
+        return selected_action;
     }
-    DEBUG_OUT(3,"    Optimal action: " << selected_action);
-    return selected_action;
 }
 
 // void LookAheadSearch::prune_tree(const action_t& a, const instance_t * new_root_instance) {
@@ -295,30 +260,13 @@ void LookAheadSearch::prune_tree(const action_t& a, const instance_t * new_root_
 
     DEBUG_OUT(2,"Pruning tree...");
 
-    // remove selected action node from tree to split into two components (we
-    // don't need to worry about arcs since they are erased along with the
-    // corresponding nodes)
+    // identify action node
     graph_t::OutArcIt arc_to_action;
+    node_t action_node;
     for(arc_to_action = graph_t::OutArcIt(graph,root_node); arc_to_action!=INVALID; ++arc_to_action) {
-        node_t action_node = graph.target(arc_to_action);
+        action_node = graph.target(arc_to_action);
         if(node_info_map[action_node].action==a) {
             DEBUG_OUT(2,"    Found chosen action node (" << graph.id(action_node) << ")");
-            // find new root node
-            state_t state = new_root_instance->state;
-            graph_t::OutArcIt arc_to_state;
-            for(arc_to_state = graph_t::OutArcIt(graph,action_node); arc_to_state!=INVALID; ++arc_to_state) {
-                node_t state_node = graph.target(arc_to_state);
-                if(node_info_map[state_node].instance->state==state) {
-                    DEBUG_OUT(2,"    Found new root node (" << graph.id(state_node) << ")");
-                    new_root_node=state_node;
-                    break;
-                }
-            }
-            if(arc_to_state==INVALID) {
-                DEBUG_OUT(0,"Error: Could not identify new root node");
-                return;
-            }
-            graph.erase(action_node);
             break;
         }
     }
@@ -327,8 +275,47 @@ void LookAheadSearch::prune_tree(const action_t& a, const instance_t * new_root_
         return;
     }
 
+    // find new root node
+    state_t state = new_root_instance->state;
+    graph_t::OutArcIt arc_to_state;
+    for(arc_to_state = graph_t::OutArcIt(graph,action_node); arc_to_state!=INVALID; ++arc_to_state) {
+        node_t state_node = graph.target(arc_to_state);
+        if(node_info_map[state_node].instance->state==state) {
+            DEBUG_OUT(2,"    Found new root node (" << graph.id(state_node) << ")");
+            new_root_node=state_node;
+            break;
+        }
+    }
+    if(arc_to_state==INVALID) {
+        DEBUG_OUT(0,"Error: Could not identify new root node");
+        if(DEBUG_LEVEL>0) {
+            DEBUG_OUT(0,"    Need state " << state);
+            for(arc_to_state = graph_t::OutArcIt(graph,action_node); arc_to_state!=INVALID; ++arc_to_state) {
+                node_t state_node = graph.target(arc_to_state);
+                DEBUG_OUT(0,"        Found state " << node_info_map[state_node].instance->state);
+            }
+        }
+    }
+
+    // remember successor states and other data for debugging purposes
+    vector<tuple<node_t,ArcInfo> > successor_states;
+    NodeInfo action_node_info;
+    ArcInfo arc_to_action_info;
+    for(graph_t::OutArcIt arc_to_state(graph,action_node); arc_to_state!=INVALID; ++arc_to_state) {
+        node_t successor = graph.target(arc_to_state);
+        successor_states.push_back(make_tuple(successor,arc_info_map[arc_to_state]));
+    }
+    action_node_info = node_info_map[action_node];
+    arc_to_action_info = arc_info_map[graph_t::InArcIt(graph,action_node)];
+
+    // remove selected action node from tree to split into two components (we
+    // don't need to worry about arcs since they are erased along with the
+    // corresponding nodes)
+    graph.erase(action_node);
+
     // identify and remember nodes that are not in the same component as the new
     // root node
+    node_color_map_t pruning_map(graph);
     ugraph_t::NodeMap<int> component_map(ugraph);
     int component_n = lemon::connectedComponents(ugraph,component_map);
     if(component_n<2) {
@@ -341,14 +328,31 @@ void LookAheadSearch::prune_tree(const action_t& a, const instance_t * new_root_
     DEBUG_OUT(2,"    main component: " << main_component);
     for(ugraph_t::NodeIt node(ugraph); node!=INVALID; ++node) {
         if(component_map[node]!=main_component) {
-            nodes_to_delete.push_back(node);
+            nodes_to_delete.push_back(node); // remember
             DEBUG_OUT(3,"    node " << graph.id(node) << " NOT in main component");
+            pruning_map[node] = Color(1,0.5,0.5);
         } else {
             DEBUG_OUT(3,"    node " << graph.id(node) << " IS in main component");
+            pruning_map[node] = Color(0.5,1,0.5);
         }
     }
 
-    // erase node that are not in the main component
+    // print the pruning tree to a file
+    if(DEBUG_LEVEL>2 || true) {
+        node_t tmp_action_node = graph.addNode();
+        arc_t tmp_arc = graph.addArc(root_node,tmp_action_node);
+        node_info_map[tmp_action_node] = action_node_info;
+        arc_info_map[tmp_arc] = arc_to_action_info;
+        pruning_map[tmp_action_node] = Color(0.5,0.5,1);
+        for( auto successor : successor_states ) {
+            arc_t arc = graph.addArc(tmp_action_node, get<0>(successor));
+            arc_info_map[arc] = get<1>(successor);
+        }
+        print_tree(false,true,"pruning_tree.eps",&pruning_map);
+        graph.erase(tmp_action_node);
+    }
+
+    // erase nodes that are not in the main component
     for(node_t node : nodes_to_delete) {
         if(node_info_map[node].type==STATE) {
             delete node_info_map[node].instance;
@@ -378,7 +382,11 @@ void LookAheadSearch::prune_tree(const action_t& a, const instance_t * new_root_
     }
 }
 
-void LookAheadSearch::print_tree(const bool& text, const bool& eps_export) const {
+void LookAheadSearch::print_tree(const bool& text,
+                                 const bool& eps_export,
+                                 const char* file_name,
+                                 const node_color_map_t * color_map
+    ) const {
 
     if(root_node==INVALID) return;
 
@@ -408,24 +416,81 @@ void LookAheadSearch::print_tree(const bool& text, const bool& eps_export) const
 
     if(eps_export) {
 
-        DEBUG_OUT(0,"Printing tree to file");
+        DEBUG_OUT(0,"Printing tree to file '" << file_name << "'");
 
         // for graphical output
-        double arc_width = 0.01;
-        graph_t::NodeMap<Point> coords(graph,Point(0,0));
-        graph_t::NodeMap<double> sizes(graph);
-        graph_t::NodeMap<std::string> lables(graph);
-        graph_t::NodeMap<int> shapes(graph);
-        graph_t::NodeMap<lemon::Color> node_colors(graph);
-        graph_t::ArcMap<lemon::Color> arc_colors(graph);
-        graph_t::ArcMap<double> widths(graph);
-        for(graph_t::NodeIt node(graph); node!=INVALID; ++node) {
-            if(node==root_node) {
-                node_colors[node] = lemon::Color(1.0,0.7,0.7);
-            } else {
-                node_colors[node] = lemon::Color(1.0,1.0,1.0);
+        double arc_width = 0.05;
+        double node_size = 0.4;
+        graph_t::NodeMap<Point>          coords(graph,Point(0,0));
+        graph_t::NodeMap<double>         sizes(graph);
+        graph_t::NodeMap<std::string>    lables(graph);
+        graph_t::NodeMap<int>            shapes(graph);
+        node_color_map_t                 node_colors(graph);
+        graph_t::NodeMap<double>         node_color_weights(graph);
+        graph_t::ArcMap<Color>           arc_colors(graph);
+        graph_t::ArcMap<double>          widths(graph);
+
+        // go through tree from root and assign coordinates and color weights
+        typedef vector<tuple<node_t,double> > level_vector_t;
+        enum { NODE, WEIGHT };
+        graph_t::NodeMap<node_t> left_neighbor(graph);
+        graph_t::NodeMap<node_t> right_neighbor(graph);
+        level_vector_t * current_level = new level_vector_t();
+        level_vector_t * next_level = new level_vector_t();
+        NODE_TYPE current_level_type = NONE;
+        size_t level_counter = 0;
+        current_level->push_back(make_tuple(root_node,1));
+        current_level_type = node_info_map[root_node].type;
+        node_color_weights[root_node] = 1;
+        while(current_level->size()>0) {
+            current_level_type=node_info_map[get<NODE>(current_level->front())].type;
+            idx_t current_level_size = current_level->size();
+            for(idx_t idx=0; idx<current_level_size; ++idx) {
+                node_t current_node = get<NODE>((*current_level)[idx]);
+                double current_weight = get<WEIGHT>((*current_level)[idx]);
+                left_neighbor[current_node] = idx==0 ? INVALID : get<NODE>((*current_level)[idx-1]);
+                right_neighbor[current_node] = idx==current_level_size-1 ? INVALID : get<NODE>((*current_level)[idx+1]);
+                coords[current_node] = Point(3*((double)idx-(double)current_level_size/2), level_counter);
+                if(current_level_type!=node_info_map[current_node].type) {
+                    DEBUG_OUT(0,"Error: Level of mixed type");
+                }
+                node_vector_t optimal_action_node_vector;
+                if(current_level_type==STATE) {
+                    optimal_action_node_vector = optimal_action_nodes(current_node);
+                }
+                for(graph_t::OutArcIt out_arc(graph,current_node); out_arc!=INVALID; ++out_arc) {
+                    node_t next_level_node = graph.target(out_arc);
+                    double weight_factor = 0;
+                    if(current_level_type==STATE) {
+                        for( auto optimal_node : optimal_action_node_vector ) {
+                            if(next_level_node==optimal_node) {
+                                weight_factor = 1;
+                                break;
+                            }
+                        }
+                    } else {
+                        weight_factor = arc_info_map[out_arc].prob;
+                    }
+                    double next_level_node_weight = current_weight*weight_factor;
+                    if(next_level_node_weight>1 || next_level_node_weight<0) {
+                        DEBUG_OUT(0,"Error: Invalid node weight (" << next_level_node_weight << ")");
+                    }
+                    node_color_weights[next_level_node] = next_level_node_weight;
+                    next_level->push_back(make_tuple(next_level_node, next_level_node_weight));
+                }
             }
-            sizes[node] = 0.9;
+            current_level->clear();
+            level_vector_t * tmp = current_level;
+            current_level = next_level;
+            next_level = tmp;
+            ++level_counter;
+        }
+        delete current_level;
+        delete next_level;
+
+        // go through graph and assign sizes, shapes, lables, colors
+        for(graph_t::NodeIt node(graph); node!=INVALID; ++node) {
+            sizes[node] = node_size;
             lables[node] = QString::number(graph.id(node)).toStdString();
             lables[node] += ": ";
             if(node_info_map[node].type==STATE) {
@@ -441,91 +506,143 @@ void LookAheadSearch::print_tree(const bool& text, const bool& eps_export) const
                 lables[node] = "";
                 shapes[node] = 1;
             }
-            coords[node] = Point(drand48()-0.5,drand48()-0.5);
+            // assign color
+            node_colors[node] = Color(1., 1-node_color_weights[node], 1-node_color_weights[node]);
+            // flip so that root is at top
+            coords[node] = Point(coords[node].x, level_counter - coords[node].y);
         }
         for(graph_t::ArcIt arc(graph); arc!=INVALID; ++arc) {
-            if(node_info_map[graph.source(arc)].type==ACTION) {
+            node_t source_node = graph.source(arc);
+            node_t target_node = graph.target(arc);
+            if(node_info_map[source_node].type==ACTION) {
                 widths[arc] = arc_width*arc_info_map[arc].prob;
-                double color_scale = (arc_info_map[arc].transition_reward-reward_t::min_reward)/(reward_t::max_reward-reward_t::min_reward);
-                arc_colors[arc] = lemon::Color(color_scale,0,0);
             } else {
                 widths[arc] = arc_width*0.5;
-                arc_colors[arc] = lemon::Color(0,0,0);
             }
+            arc_colors[arc] = Color(node_color_weights[target_node], 0, 0);
         }
 
-        // node indices for randomization
-        node_vector_t node_vector;
-        for(graph_t::NodeIt node(graph); node!=INVALID; ++node) {
-            node_vector.push_back(node);
-        }
+        // optimize node horizontal position
+        double min_x, max_x, max_dx=1, max_dx_average=100, max_max_dx=-DBL_MAX, max_dx_threshold=0.0001, node_margin=3*node_size;
+        ProgressBar::init("Optimizing positions: ");
+        while(fabs(max_dx-max_dx_average)>max_dx_threshold) {
+            min_x =  DBL_MAX;
+            max_x = -DBL_MAX;
+            max_dx = -DBL_MAX;
+            for(graph_t::NodeIt node(graph); node!=INVALID; ++node) {
 
-        // optimize positions
-        double decay = 1-1e-4;
-        double scale_factor = 0.01;
-        DEBUG_OUT(4,"Heat:");
-        size_t counter = 0;
-        for(double heat=10; heat>1e-20; heat*=decay) {
-            double x_shift = scale_factor*(2*drand48()-1);
-            double y_shift = scale_factor*(2*drand48()-1);
-            node_t node = node_vector[rand()%node_vector.size()];
-            Point coord_before = coords[node];
-            double energy_before = node_energy(node,coords);
-            coords[node] = coord_before + Point(x_shift,y_shift);
-            double energy_after = node_energy(node,coords);
-            if(energy_after>energy_before) {
-                double test_prob = drand48();
-                double prob = exp(-(energy_after-energy_before)/heat);
-                if(test_prob>prob) { // discard move
-                    coords[node] = coord_before;
+                // nodes x position
+                double node_x = coords[node].x;
+
+                // min and max position determined by the neighbors
+                bool  left_ok =  left_neighbor[node]!=INVALID;
+                bool right_ok = right_neighbor[node]!=INVALID;
+                double min_x_allowed, max_x_allowed;
+                if( !left_ok && !right_ok) {
+                    min_x_allowed = -DBL_MAX;
+                    max_x_allowed =  DBL_MAX;
+                } else if( !left_ok) {
+                    min_x_allowed = -DBL_MAX;
+                    max_x_allowed = coords[right_neighbor[node]].x - node_margin;
+                } else if(!right_ok) {
+                    min_x_allowed = coords[ left_neighbor[node]].x + node_margin;
+                    max_x_allowed = DBL_MAX;
+                } else {
+                    min_x_allowed = coords[ left_neighbor[node]].x + node_margin;
+                    max_x_allowed = coords[right_neighbor[node]].x - node_margin;
+                }
+
+                // optimal node position with respect to parents
+                double parents_x_sum = 0;
+                int parents_counter = 0;
+                for(graph_t::OutArcIt out_arc(graph,node); out_arc!=INVALID; ++out_arc) {
+                    parents_x_sum += coords[graph.target(out_arc)].x;
+                    ++parents_counter;
+                }
+
+                // optimal node position with respect to children
+                double children_x_sum = 0;
+                int children_counter = 0;
+                for(graph_t::InArcIt in_arc(graph,node); in_arc!=INVALID; ++in_arc) {
+                    children_x_sum += coords[graph.source(in_arc)].x;
+                    ++children_counter;
+                }
+
+                // calculate new position
+                double x_target = 0;
+                int summands = 0;
+                if(parents_counter>0) {
+                    x_target += parents_x_sum/parents_counter;
+                    ++summands;
+                }
+                if(children_counter>0) {
+                    x_target += children_x_sum/children_counter;
+                    ++summands;
+                }
+                if(left_ok) {
+                    x_target += min_x_allowed;
+                    ++summands;
+                }
+                if(right_ok) {
+                    x_target += max_x_allowed;
+                    ++summands;
+                }
+                if(summands==0) { DEBUG_DEAD_LINE; }
+                x_target /= summands;
+                if(x_target<min_x_allowed && x_target>max_x_allowed) {
+                    x_target = (min_x_allowed + max_x_allowed)/2;
+                } else if(x_target<min_x_allowed) {
+                    x_target = min_x_allowed;
+                } else if(x_target>max_x_allowed) {
+                    x_target = max_x_allowed;
+                }
+                x_target = 0.2*x_target + 0.8*node_x; // only go a small step towards target
+                double dx = fabs(x_target - node_x);
+                coords[node] = Point(x_target, coords[node].y);
+
+                // updates
+                if(dx>max_dx) {
+                    max_dx = dx;
+                    if(max_dx>max_max_dx) {
+                        max_max_dx = max_dx;
+                    }
+                }
+                if(x_target<min_x) {
+                    min_x = x_target;
+                }
+                if(x_target>max_x) {
+                    max_x = x_target;
                 }
             }
-            if(DEBUG_LEVEL>=4) {
-                std::cout << "|" << heat;
-            }
-            ++counter;
+            max_dx_average = 0.99*max_dx_average + 0.01*max_dx;
+            double progress_value = 1-max_dx/max_max_dx; // goes from 0 to 1
+            progress_value = 0.1*progress_value + 0.9*pow(progress_value,4);
+            ProgressBar::print(progress_value);
         }
-        if(DEBUG_LEVEL>=4) {
-            std::cout << "|" << std::endl;
-        }
-        DEBUG_OUT(2,counter << " iterations");
+        ProgressBar::terminate();
 
-        // center root node and orient graph
-        Point root_coords = coords[root_node];
-        Point mean_deviation(0,0);
-        size_t node_counter = 0;
-        for(graph_t::NodeIt node(graph); node!=INVALID; ++node) {
-            coords[node] -= root_coords;
-            mean_deviation += coords[node];
-            ++node_counter;
+        // make coords positive and rescale to square
+        double y_scale_factor = 1;
+        if(max_x-min_x>level_counter) {
+            y_scale_factor = (max_x-min_x)/level_counter;
         }
-        mean_deviation /= node_counter;
-        double mean_deviation_angle;
-        if(fabs(mean_deviation.x)>1e-10) {
-            mean_deviation_angle = atan(mean_deviation.y/mean_deviation.x);
-            if(mean_deviation.x<0) {
-                mean_deviation_angle += 3.14195;
-            }
-        } else {
-            DEBUG_OUT(2,"Mean x-deviation too small (" << mean_deviation.x << ") --> setting angle manually");
-            mean_deviation_angle = util::sgn(mean_deviation.y)*3.14195/2;
-        }
-        mean_deviation_angle += 3.14195/2;
         for(graph_t::NodeIt node(graph); node!=INVALID; ++node) {
-            Point old_coords = coords[node];
-            coords[node] = Point(
-                old_coords.x*cos(mean_deviation_angle)+old_coords.y*sin(mean_deviation_angle),
-                (-1)*old_coords.x*sin(mean_deviation_angle)+old_coords.y*cos(mean_deviation_angle)
-                );
+            coords[node] = Point(coords[node].x - min_x + 2, y_scale_factor*coords[node].y);
+            // DEBUG_OUT(0, "Node " << graph.id(node) << " (" << coords[node].x << "," << coords[node].y << ")" );
         }
 
-        lemon::graphToEps(graph, "look_ahead_tree.eps")
+        // actually print the graph
+        const node_color_map_t * use_color_map = color_map;
+        if(color_map==nullptr) {
+            use_color_map = &node_colors;
+        }
+        lemon::graphToEps(graph, file_name)
             .coords(coords)
             .title("Look Ahead Tree")
-            .absoluteNodeSizes().nodeScale(0.1).nodeSizes(sizes)
-            .nodeShapes(shapes).nodeColors(node_colors)
-            .nodeTexts(lables).nodeTextSize(0.03)
-            .absoluteArcWidths(true).arcWidthScale(1).arcWidths(widths)
+            .absoluteNodeSizes().nodeScale(1).nodeSizes(sizes)
+            .nodeShapes(shapes).nodeColors(*use_color_map)
+            .nodeTexts(lables).nodeTextSize(0.1)
+            .absoluteArcWidths(true).arcWidthScale(1).arcWidths(widths).arcColors(arc_colors)
             .drawArrows(true).arrowWidth(4*arc_width).arrowLength(4*arc_width)
             .run();
     }
@@ -647,7 +764,7 @@ LookAheadSearch::node_t LookAheadSearch::select_next_action_node(node_t state_no
         for(graph_t::OutArcIt out_arc(graph,state_node); out_arc!=INVALID; ++out_arc) {
             current_action_node = graph.target(out_arc);
             current_upper_bound = node_info_map[current_action_node].upper_value_bound;
-            if(approx(current_upper_bound,max_upper_bound)) {
+            if(approx_eq(current_upper_bound,max_upper_bound)) {
                 next_action_nodes.push_back(current_action_node);
             } else if(current_upper_bound>max_upper_bound) {
                 next_action_nodes.clear();
@@ -665,7 +782,7 @@ LookAheadSearch::node_t LookAheadSearch::select_next_action_node(node_t state_no
         for(graph_t::OutArcIt out_arc(graph,state_node); out_arc!=INVALID; ++out_arc) {
             current_action_node = graph.target(out_arc);
             current_lower_bound = node_info_map[current_action_node].lower_value_bound;
-            if(approx(current_lower_bound,max_lower_bound)) {
+            if(approx_eq(current_lower_bound,max_lower_bound)) {
                 next_action_nodes.push_back(current_action_node);
             } else if(current_lower_bound>max_lower_bound) {
                 next_action_nodes.clear();
@@ -709,7 +826,7 @@ LookAheadSearch::node_t LookAheadSearch::select_next_state_node(node_t action_no
             current_state_node = graph.target(out_arc);
             current_uncertainty = node_info_map[current_state_node].upper_value_bound - node_info_map[current_state_node].lower_value_bound;
             current_uncertainty *= arc_info_map[out_arc].prob;
-            if(approx(current_uncertainty,max_uncertainty)) {
+            if(approx_eq(current_uncertainty,max_uncertainty)) {
                 next_state_nodes.push_back(current_state_node);
             } else if(current_uncertainty>max_uncertainty) {
                 next_state_nodes.clear();
@@ -737,6 +854,61 @@ LookAheadSearch::node_t LookAheadSearch::select_next_state_node(node_t action_no
         print_node(selected_state_node);
     }
     return selected_state_node;
+}
+
+LookAheadSearch::node_vector_t LookAheadSearch::optimal_action_nodes(const node_t& state_node) const {
+    // check
+    if(node_info_map[state_node].type!=STATE) {
+        DEBUG_OUT(0,"Error: Given state node is not of type STATE");
+    }
+
+    // determine optimal actions
+    node_vector_t optimal_action_node_vector;
+    switch(optimal_action_selection_type) {
+    case MAX_LOWER_BOUND:
+    {
+        DEBUG_OUT(3,"    Using maximum lower bound as criterion");
+        value_t max_lower_bound = -DBL_MAX, current_lower_bound;
+        node_t current_action_node;
+        for(graph_t::OutArcIt out_arc(graph,state_node); out_arc!=INVALID; ++out_arc) {
+            current_action_node = graph.target(out_arc);
+            current_lower_bound = node_info_map[current_action_node].lower_value_bound;
+            if(approx_eq(current_lower_bound,max_lower_bound)) {
+                optimal_action_node_vector.push_back(current_action_node);
+            } else if(current_lower_bound>max_lower_bound) {
+                optimal_action_node_vector.clear();
+                optimal_action_node_vector.push_back(current_action_node);
+                max_lower_bound=current_lower_bound;
+            }
+        }
+        break;
+    }
+    case MAX_WEIGHTED_BOUNDS:
+    {
+        DEBUG_OUT(3,"    Using maximum weighted bounds as criterion");
+        value_t max_value = -DBL_MAX, current_value;
+        node_t current_action_node;
+        for(graph_t::OutArcIt out_arc(graph,state_node); out_arc!=INVALID; ++out_arc) {
+            current_action_node = graph.target(out_arc);
+            current_value = 0;
+            current_value +=    lower_bound_weight  * node_info_map[current_action_node].lower_value_bound;
+            current_value += (1-lower_bound_weight) * node_info_map[current_action_node].upper_value_bound;
+            if(approx_eq(current_value,max_value)) {
+                optimal_action_node_vector.push_back(current_action_node);
+            } else if(current_value>max_value) {
+                optimal_action_node_vector.clear();
+                optimal_action_node_vector.push_back(current_action_node);
+                max_value=current_value;
+            }
+        }
+        break;
+    }
+    default:
+        DEBUG_OUT(0,"Error: Optimal action selection type not implemented");
+        break;
+    }
+
+    return optimal_action_node_vector;
 }
 
 LookAheadSearch::node_t LookAheadSearch::update_action_node(node_t action_node) {
@@ -825,9 +997,9 @@ LookAheadSearch::node_t LookAheadSearch::update_state_node(node_t state_node) {
             current_upper_bound = node_info_map[action_node].upper_value_bound;
             current_lower_bound = node_info_map[action_node].lower_value_bound;
             if(
-                (!approx(current_upper_bound,max_upper_bound) && // if upper bounds are NOT equal
+                (!approx_eq(current_upper_bound,max_upper_bound) && // if upper bounds are NOT equal
                  current_upper_bound>max_upper_bound ) || // primary criterion: upper bound
-                ( approx(current_upper_bound,max_upper_bound) && // if upper bounds are equal
+                ( approx_eq(current_upper_bound,max_upper_bound) && // if upper bounds are equal
                   current_lower_bound>node_info_map[state_node].lower_value_bound ) // secondary criterion: lower bounds
                 ) {
                 max_upper_bound=current_upper_bound;

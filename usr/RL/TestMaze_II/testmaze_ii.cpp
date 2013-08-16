@@ -35,13 +35,14 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     random_timer(nullptr), action_timer(nullptr),
     console_history(1,"END OF HISTORY"),
     history_position(0),
+    history_file("console_history.txt"),
     discount(0.7),
     l1_factor(0),
     utree(discount),
     linQ(discount),
     look_ahead_search(discount),
     max_tree_size(10000),
-    prune_search_tree(false),
+    prune_search_tree(true),
     target_activated(false)
 {
 
@@ -50,6 +51,18 @@ TestMaze_II::TestMaze_II(QWidget *parent):
 
     // disable graph view
     ui._wGraphDockWidget->setVisible(false);
+
+    // open console history file
+    if(!history_file.open(QIODevice::ReadWrite | QIODevice::Text)) {
+        DEBUG_OUT(0,"Error: Could not open console history file");
+    } else {
+        QTextStream history_file_stream(&history_file);
+        while ( !history_file_stream.atEnd() ) {
+            QString line = history_file_stream.readLine();
+            console_history.push_back(line);
+            history_position = console_history.size();
+        }
+    }
 
     // add graph widget
     plotter = new QCustomPlot(ui._wGraphDockWidgetContent);
@@ -280,6 +293,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
         TO_CONSOLE(input);
         console_history.push_back(input);
         history_position = console_history.size();
+        QTextStream history_file_stream(&history_file);
+        history_file_stream << input << "\n";
 
         // check for sequence
         QStringList command_list = input.split(";");
@@ -361,7 +376,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
 
     QString planning_s(                    "\n    ---------------------------------Planning----------------------------------");
     QString discount_s(                      "    discount . . . . . . . . . [<double>]. . . . . . . . . . . . . . . . .-> get [set] discount");
-    QString print_look_ahead_tree_s(         "    print-tree . . . . . . . . [g|graphic] . . . . . . . . . . . . . . . .-> print Look-Ahead-Tree [with graphical output]");
+    QString print_look_ahead_tree_s(         "    print-tree . . . . . . . . {g|graphic|t|text}. . . . . . . . . . . . .-> print Look-Ahead-Tree with graphical or text output");
     QString max_tree_size_s(                 "    max-tree-size. . . . . . . <int> . . . . . . . . . . . . . . . . . . .-> set maximum size of Look-Ahead-Tree (zero for infinite)");
 
     QString new_s(                         "\n    ---------------------------------New Stuff----------------------------------");
@@ -775,17 +790,19 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
         } else if(str_args[0]=="exit" || str_args[0]=="quit" || str_args[0]=="q") { // quit application
             QApplication::quit();
         } else if(str_args[0]=="print-tree") { // print tree
+            bool graphic = false, text = false;
             if(str_args.size()>1) {
                 if(str_args[1]=="g" || str_args[1]=="graphic") {
-                    look_ahead_search.print_tree(true,true);
-                    look_ahead_search.print_tree_statistics();
+                    graphic = true;
+                } else if(str_args[1]=="t" || str_args[1]=="text") {
+                    text = true;
                 } else {
                     TO_CONSOLE( invalid_args_s );
                     TO_CONSOLE( print_look_ahead_tree_s );
                 }
-            } else {
-                look_ahead_search.print_tree_statistics();
             }
+            look_ahead_search.print_tree_statistics();
+            look_ahead_search.print_tree(text, graphic);
         } else if(str_args[0]=="max-tree-size") { // set tree size
             if(str_args.size()==1) {
                 TO_CONSOLE( QString( "    max tree size is %1" ).arg(max_tree_size) );
