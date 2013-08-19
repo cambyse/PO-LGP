@@ -16,6 +16,12 @@ vc60.idb
 .*.files
 .*.includes
 
+*.config
+*.creator
+*.creator.user
+*.files
+*.includes
+
 .cproject
 .project
 *eclipse*
