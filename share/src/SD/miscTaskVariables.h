@@ -1,7 +1,7 @@
 #ifndef SD_miscTaskVariables_h
 #define SD_miscTaskVariables_h
 
-#include "MT/ors.h"
+#include <Ors/ors.h>
 
 typedef MT::Array<ors::Shape*> ShapeList;
 

@@ -8,7 +8,7 @@ QHULL = 1
 GRAPHVIZ = 1
 DEPEND = Core extern_ply extern_GJK
 
-OBJS  = $(shell find . -maxdepth 1 -name '*.cpp' )
-OBJS := $(OBJS:%.cpp=%.o)
+SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
+OBJS = $(SRCS:%.cpp=%.o)
 
 include $(BASE)/make-generic

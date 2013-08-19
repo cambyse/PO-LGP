@@ -1,7 +1,7 @@
 #ifndef SD_potentialTaskVariables_h
 #define SD_potentialTaskVariables_h
 
-#include "MT/ors.h"
+#include <Ors/ors.h>
 
 struct PotentialField;
 struct GraspObject_GP;

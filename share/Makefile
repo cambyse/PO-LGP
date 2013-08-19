@@ -1,3 +1,5 @@
+BASE = .
+
 target: examples
 
 MAKEFLAGS :=
@@ -12,8 +14,6 @@ exas = $(shell find examples -mindepth 2 -maxdepth 2 -type d)
 
 ################################################################################
 
-.NOTPARALLEL: all src examples depend clean
-
 all: $(srcs:%=makePath/%) $(exas:%=makePath/%)
 
 src: $(srcs:%=makePath/%)
@@ -27,12 +27,15 @@ clean: $(srcs:%=cleanPath/%) $(exas:%=cleanPath/%)
 ################################################################################
 
 doc::
-	#$(MAKE) -w -C doc guide doxy
 	cd doc; doxygen MLR.doxy;
+#	$(MAKE) -w -C doc guide doxy
 
 reformatSources:
 	astyle --options=src/style.astyle "src/MT/*.h" "src/MT/*.cpp" "src/MT/*.cxx"
 	cd src; find MT/ \( -name "*.h" -or -name "*.cpp" -or -name "*.cxx" \) -exec ./style.sed.sh {} \;
+
+cleanLocks: force
+	find . -name 'Make.lock' -type d -delete
 
 %.tgz:: force
 	rm -f $*.tgz;

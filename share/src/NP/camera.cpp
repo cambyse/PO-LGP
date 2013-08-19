@@ -25,7 +25,7 @@
 #include <MT/vision.h>
 
 #include "camera.h"
-#include "uvccamera.h"
+#include <hardware/uvccamera.h>
 
 
 

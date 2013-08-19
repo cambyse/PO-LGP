@@ -2,7 +2,7 @@
 #ifndef SD_percept_ISF_Process_h
 #define SD_percept_ISF_Process_h
 
-#include "biros/biros.h"
+#include <system/biros.h>
 #include "MT/robot_variables.h"
 #include "graspObjects.h"
 

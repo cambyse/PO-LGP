@@ -2,7 +2,7 @@
 #ifndef MT_graspObjects_h
 #define MT_graspObjects_h
 
-#include "MT/ors.h"
+#include <Ors/ors.h>
 #include "ISF_GP.h"
 
 //MT: move this to cpp file

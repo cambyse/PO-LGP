@@ -538,7 +538,8 @@ export MSVC_LPATH
 default: $(OUTPUT)
 
 clean:
-	rm -f $(OUTPUT) $(OBJS) $(PREOBJS) callgrind.out.* includeAll.o $(CLEAN)
+	@rm -f $(OUTPUT) $(OBJS) $(PREOBJS) callgrind.out.* $(CLEAN)
+	@find . -type d -name 'Make.lock' -delete
 
 depend: generate_Makefile.dep
 
@@ -563,6 +564,7 @@ info: force
 	@echo "  LD_RUN_PATH =" "$(LD_RUN_PATH)"
 	@echo "  MSVC_CPATH =" "$(MSVC_CPATH)"
 	@echo "  MSVC_LPATH =" "$(MSVC_LPATH)"
+	@echo "  SRCS =" "$(SRCS)"
 	@echo "  OBJS =" "$(OBJS)"
 	@echo "  LIBS =" "$(LIBS)"
 	@echo "  PREOBJS =" "$(PREOBJS)"
@@ -653,25 +655,11 @@ endif
 #	cp $(BASE)/make-config.default $(BASE)/make-config
 
 ## generate a make dependency file
-generate_Makefile.dep: $(OBJS:%.o=%.cpp)
-	-$(CXX) -MM $(OBJS:%.o=%.cpp) $(CXXFLAGS) > Makefile.dep
+generate_Makefile.dep: $(SRCS)
+	-$(CXX) -MM $(SRCS) $(CXXFLAGS) > Makefile.dep
 
 includeAll.cxx: force
 	find . -maxdepth 1 -name '*.cpp' -exec echo "#include \"{}\"" \; > includeAll.cxx
-
-################################################################################
-#
-# rules
-#
-################################################################################
-
-$(BASE)/lib/libextern_%.so: $(BASE)/src/extern/%
-	@echo "                                                 ***** build " $*
-	@$(MAKE) -C $(BASE)/src/extern/$* --no-print-directory
-
-$(BASE)/lib/lib%.so: $(BASE)/src/%
-	@echo "                                                 ***** build " $*
-	@$(MAKE) -C $(BASE)/src/$* --no-print-directory
 
 
 ################################################################################
@@ -680,14 +668,17 @@ $(BASE)/lib/lib%.so: $(BASE)/src/%
 #
 ################################################################################
 
-#.NOTPARALLEL: makePath/*
+$(BASE)/lib/libextern_%.so: $(BASE)/src/extern/%
+	+@$(BASE)/make-locked.sh $<
+
+$(BASE)/lib/lib%.so: $(BASE)/src/%
+	+@$(BASE)/make-locked.sh $<
 
 makePath/%: %
-	@echo "                                                  ***** make " $*
-	@$(MAKE) -C $* --no-print-directory
+	+@$(BASE)/make-locked.sh $<
 
 cleanPath/%: %
-	@echo "                                                 ***** clean " $*
+	@echo "                                                ***** clean " $*
 	@-rm -f $*/Makefile.dep
 	@$(MAKE) -C $* clean --no-print-directory
 

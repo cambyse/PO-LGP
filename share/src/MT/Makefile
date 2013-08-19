@@ -8,8 +8,8 @@ QHULL = 1
 GRAPHVIZ = 1
 DEPEND = Core Ors Gui Optim extern_ply
 
-OBJS  = $(shell find . -maxdepth 1 -name '*.cpp' )
-OBJS := $(OBJS:%.cpp=%.o)
+SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
+OBJS = $(SRCS:%.cpp=%.o)
 
 #OPTIM=fast
 

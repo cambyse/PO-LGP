@@ -4,13 +4,15 @@ OUTPUT = $(BASE)/lib/$(NAME).so
 
 MAKEMODE = mlrlib
 
+SRCS = bumblebee2.cpp camera.cpp
+
 OBJS         = \
 	bumblebee2.o \
-	uvccamera.o \
 	camera.o \
-	pgr_conversions.o \
-	pgr_registers.o \
-	pgr_stereocam.o
+#	uvccamera.o \
+#	pgr_conversions.o \
+#	pgr_registers.o \
+#	pgr_stereocam.o
 #	../MT/process.o
 #	libcolorseg.o \
 #	cvwindow.o \

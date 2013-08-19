@@ -1,7 +1,7 @@
 #include "WritheTaskVariable.h"
 #include "WritheMatrix.h"
 #include <sstream>
-#include "MT/plot.h"
+#include <Gui/plot.h>
 
 WritheTaskVariable::WritheTaskVariable(const char* _name,
                                          ors::Graph& _ors,

@@ -6,7 +6,7 @@ ANN = 1
 LAPACK = 1
 DEPEND = Core
 
-OBJS  = $(shell find . -maxdepth 1 -name '*.cpp' )
-OBJS := $(OBJS:%.cpp=%.o)
+SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
+OBJS = $(SRCS:%.cpp=%.o)
 
 include $(BASE)/make-generic

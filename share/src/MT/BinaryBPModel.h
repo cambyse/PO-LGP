@@ -17,7 +17,7 @@
     -----------------------------------------------------------------  */
 
 
-#include "BinaryBP.h"
+#include <Infer/BinaryBP.h>
 #include "data.h"
 #include <Optim/optimization_obsolete.h>
 

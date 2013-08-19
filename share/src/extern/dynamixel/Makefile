@@ -4,7 +4,7 @@ OUTPUT := $(BASE)/lib/libextern_$(NAME).a
 
 CFLAGS += -O3 -fPIC
 
-OBJS  = $(shell find . -maxdepth 1 -name '*.c' )
-OBJS := $(OBJS:%.c=%.o)
+SRCS = $(shell find . -maxdepth 1 -name '*.c' )
+OBJS = $(SRCS:%.c=%.o)
 
 include $(BASE)/make-generic

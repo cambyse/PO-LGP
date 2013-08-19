@@ -26,7 +26,7 @@
 
 #include "vision.h"
 #include "vision_cuda.h"
-#include "BinaryBP.h"
+#include <Infer/BinaryBP.h>
 #ifdef MT_NILS
 #  include <NP/transformations.h>
 #endif
