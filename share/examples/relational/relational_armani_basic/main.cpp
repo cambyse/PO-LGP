@@ -1,5 +1,3 @@
-#define MT_IMPLEMENT_TEMPLATES
-
 #include <relational/robotManipulationSimulator.h>
 #include <relational/utilTL.h>
 

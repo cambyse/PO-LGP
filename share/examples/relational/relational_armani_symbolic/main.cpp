@@ -1,5 +1,3 @@
-#define MT_IMPLEMENT_TEMPLATES
-
 #include <relational/reason.h>
 #include <relational/robotManipulationSymbols.h>
 #include <relational/robotManipulationInterface.h>

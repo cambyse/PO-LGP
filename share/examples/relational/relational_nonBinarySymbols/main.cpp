@@ -1,5 +1,3 @@
-#define MT_IMPLEMENT_TEMPLATES
-
 #include <ios>
 #include <relational/learn.h>
 #include <relational/prada.h>
