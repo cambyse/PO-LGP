@@ -255,6 +255,17 @@ void TestMaze_II::choose_action() {
         look_ahead_search.print_tree_statistics();
     }
 
+    // sanity check
+    if(DEBUG_LEVEL>=1) {
+        probability_t prob = look_ahead_search.get_predicted_transition_probability<Maze>(action, state_to, reward, maze, maze.get_prediction_ptr());
+        if(prob==0) {
+            probability_t prob_maze = maze.get_prediction(current_instance->const_it()-1, action, state_to, reward);
+            DEBUG_OUT(0,"Warning: Transition with predicted probability of zero for (" << action << "," << state_to << "," << reward << ") (Maze predicts " << prob_maze << ")" );
+            DEBUG_OUT(0,"        History:");
+            (current_instance->const_it()-1)->print_history();
+        }
+    }
+
     // prune tree
     if(prune_search_tree) {
         switch(planner_type) {

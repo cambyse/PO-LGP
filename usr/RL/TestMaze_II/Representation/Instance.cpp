@@ -101,6 +101,25 @@ bool Instance::operator<(const Instance& other) const {
     else return false;
 }
 
+bool Instance::same_history(const Instance* other) const {
+    ConstInstanceIt  thisIt =  this->const_it();
+    ConstInstanceIt otherIt = other->const_it();
+    while(thisIt!=INVALID && otherIt!=INVALID) {
+        if(thisIt->action!=otherIt->action ||
+           thisIt->state!=otherIt->state ||
+           thisIt->reward!=otherIt->reward) {
+            return false;
+        }
+        --thisIt;
+        --otherIt;
+    }
+    if(thisIt!=INVALID || otherIt!=INVALID) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
 Instance * Instance::insert_instance_after(
     const action_t& a,
     const state_t& s,
@@ -268,6 +287,12 @@ std::ostream& operator<<(std::ostream &out, const Instance& i) {
 }
 
 const char* Instance::print() PRINT_FROM_OSTREAM;
+
+void Instance::print_history() const {
+    for(ConstInstanceIt insIt = this->const_it(); insIt!=util::INVALID; --insIt) {
+        cout << "(" << insIt->action << "," << insIt->state << "," << insIt->reward << ")" << endl;
+    }
+}
 
 // void Instance::set_previous(const Instance * prev) {
 //     if(const_previous_instance!=nullptr) {

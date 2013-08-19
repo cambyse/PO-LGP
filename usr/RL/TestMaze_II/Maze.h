@@ -65,6 +65,9 @@ public:
     /** \brief Returns the transition probability. */
     probability_t get_prediction(const instance_t*, const action_t&, const state_t&, const reward_t&) const;
 
+    /** \brief Same as Maze::get_prediction but with debug output. */
+    probability_t get_prediction_debug(const instance_t*, const action_t&, const state_t&, const reward_t&) const;
+
     /** \brief Returns a function pointer to the get_prediction() function. */
     probability_t (Maze::*get_prediction_ptr())(const instance_t*, const action_t&, const state_t&, const reward_t&) const {
         return &Maze::get_prediction;

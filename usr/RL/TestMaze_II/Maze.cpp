@@ -586,6 +586,286 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
     return prob;
 }
 
+Maze::probability_t Maze::get_prediction_debug(const instance_t* instance_from, const action_t& action, const state_t& state_to, const reward_t& reward) const {
+
+    // for debugging
+    if(true) {
+        DEBUG_OUT(0,"History for calculating prediction:");
+        instance_from->print_history();
+    }
+
+    // state 'from' and 'to'
+    MazeState maze_state_from(instance_from->state);
+    MazeState maze_state_to(state_to);
+    int x_from = maze_state_from.x();
+    int y_from = maze_state_from.y();
+
+    // states that can in principle be reached (ignoring walls and doors)
+    MazeState maze_state_stay(                               x_from   ,                                y_from   );
+    MazeState maze_state_left( clamp(0,Config::maze_x_size-1,x_from-1),                                y_from   );
+    MazeState maze_state_right(clamp(0,Config::maze_x_size-1,x_from+1),                                y_from   );
+    MazeState maze_state_up(                                 x_from   , clamp(0,Config::maze_y_size-1, y_from-1));
+    MazeState maze_state_down(                               x_from   , clamp(0,Config::maze_y_size-1, y_from+1));
+
+    // check if state_to can be reached at all
+    if( maze_state_to!=maze_state_stay  &&
+        maze_state_to!=maze_state_left  &&
+        maze_state_to!=maze_state_right &&
+        maze_state_to!=maze_state_up    &&
+        maze_state_to!=maze_state_down ) {
+        return 0;
+    }
+
+    // check and remember blocking/unblocking (store references as array for
+    // later manipulation, ignore 'stay' which cannot be blocked/unblocked)
+    MazeState reachable_states[4] = { maze_state_left, maze_state_right, maze_state_up, maze_state_down };
+    bool  left_unblocked_by_door = false;
+    bool right_unblocked_by_door = false;
+    bool    up_unblocked_by_door = false;
+    bool  down_unblocked_by_door = false;
+    bool* unblocked_by_door[4] = { &left_unblocked_by_door, &right_unblocked_by_door, &up_unblocked_by_door, &down_unblocked_by_door };
+    bool  left_blocked_by_wall = false;
+    bool right_blocked_by_wall = false;
+    bool    up_blocked_by_wall = false;
+    bool  down_blocked_by_wall = false;
+    bool* blocked_by_wall[4] = { &left_blocked_by_wall, &right_blocked_by_wall, &up_blocked_by_wall, &down_blocked_by_wall };
+
+    // check for doors (unblocking doors take precedence over closed doors)
+    for( auto d : doors ) {
+        MazeState s1 = get<0>(d);
+        MazeState s2 = get<1>(d);
+        MazeState s3 = get<2>(d);
+        KEY_TYPE kt =  get<3>(d);
+        idx_t delay =  get<4>(d);
+
+        // iterate through reachable state
+        for(int idx=0; idx<4; ++idx) {
+            MazeState tmp_maze_state_to = reachable_states[idx];
+
+            // check if transition was unblocked already
+            if(*unblocked_by_door[idx]) {
+                continue;
+            }
+
+            // check if the door connects the two states
+            if( (tmp_maze_state_to==s1 && maze_state_from==s2) || (tmp_maze_state_to==s2 && maze_state_from==s1) ) {
+
+                // check if key was activated
+                idx_t steps_in_past = 0;
+                for( const_instanceIt_t insIt = instance_from->const_it(); insIt!=INVALID && steps_in_past<=abs(delay); --insIt, ++steps_in_past) {
+
+                    // check if delay matches
+                    if(delay<0 || steps_in_past==delay) { // exact match for positve delay less-equal match for negative
+
+                        // check if key state was visited at that time
+                        if(MazeState(insIt->state)==s3) {
+
+                            // check action
+                            action_t past_action = action;
+                            if(steps_in_past>0) {
+                                past_action = (insIt+1)->action;
+                            }
+                            switch(kt) {
+                            case PASS_BUTTON:
+                                // action does not matter
+                                *unblocked_by_door[idx]=true;
+                                break;
+                            case STAY_BUTTON:
+                                if(past_action==(action_t)action_t::STAY) {
+                                    *unblocked_by_door[idx]=true;
+                                }
+                                break;
+                            case UP_BUTTON:
+                                if(past_action==(action_t)action_t::UP) {
+                                    *unblocked_by_door[idx]=true;
+                                }
+                                break;
+                            case DOWN_BUTTON:
+                                if(past_action==(action_t)action_t::DOWN) {
+                                    *unblocked_by_door[idx]=true;
+                                }
+                                break;
+                            case LEFT_BUTTON:
+                                if(past_action==(action_t)action_t::LEFT) {
+                                    *unblocked_by_door[idx]=true;
+                                }
+                                break;
+                            case RIGHT_BUTTON:
+                                if(past_action==(action_t)action_t::RIGHT) {
+                                    *unblocked_by_door[idx]=true;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // check for walls (ignore walls when transition was unblocked by a door)
+    for(auto w : walls) {
+        MazeState s1(w[0]);
+        MazeState s2(w[1]);
+
+        // iterate through reachable states
+        for(int idx=0; idx<4; ++idx) {
+            MazeState tmp_maze_state_to = reachable_states[idx];
+
+            // check if transition was unblocked by door or already blocked by wall
+            if(*unblocked_by_door[idx] || *blocked_by_wall[idx]) {
+                continue;
+            }
+
+            // check if wall is between the two states
+            if( (maze_state_from==s1 && tmp_maze_state_to==s2) || (maze_state_from==s2 && tmp_maze_state_to==s1) ) {
+                *blocked_by_wall[idx] = true;
+            }
+        }
+    }
+
+    // determine effective states (by considering blocking/unblocking)
+    MazeState effective_maze_state_stay  = maze_state_stay;
+    MazeState effective_maze_state_left  = ( left_unblocked_by_door || ! left_blocked_by_wall) ? maze_state_left  : maze_state_stay;
+    MazeState effective_maze_state_right = (right_unblocked_by_door || !right_blocked_by_wall) ? maze_state_right : maze_state_stay;
+    MazeState effective_maze_state_up    = (   up_unblocked_by_door || !   up_blocked_by_wall) ? maze_state_up    : maze_state_stay;
+    MazeState effective_maze_state_down  = ( down_unblocked_by_door || ! down_blocked_by_wall) ? maze_state_down  : maze_state_stay;
+
+    // determine state transition probabilites via effective states
+    probability_t prob = 0;
+    {
+        // random action
+        if(maze_state_to==effective_maze_state_stay ) prob += epsilon/5;
+        if(maze_state_to==effective_maze_state_left ) prob += epsilon/5;
+        if(maze_state_to==effective_maze_state_right) prob += epsilon/5;
+        if(maze_state_to==effective_maze_state_up   ) prob += epsilon/5;
+        if(maze_state_to==effective_maze_state_down ) prob += epsilon/5;
+
+        // intended action
+        switch(action) {
+        case action_t::STAY:
+            if(maze_state_to==effective_maze_state_stay ) prob += 1-epsilon;
+            break;
+        case action_t::LEFT:
+            if(maze_state_to==effective_maze_state_left ) prob += 1-epsilon;
+            break;
+        case action_t::RIGHT:
+            if(maze_state_to==effective_maze_state_right) prob += 1-epsilon;
+            break;
+        case action_t::UP:
+            if(maze_state_to==effective_maze_state_up   ) prob += 1-epsilon;
+            break;
+        case action_t::DOWN:
+            if(maze_state_to==effective_maze_state_down ) prob += 1-epsilon;
+            break;
+        default:
+            DEBUG_OUT(0,"Error: unknown action");
+            return 0;
+        }
+
+        // return if state transition impossible
+        if(prob==0) {
+            return 0;
+        }
+    }
+
+    // calculate accumulated reward
+    reward_t accumulated_reward = 0;
+    for(auto r : rewards) {
+        MazeState activate_state(r[ACTIVATION_STATE]);
+        MazeState receive_state(r[RECEIVE_STATE]);
+        idx_t delay = r[TIME_DELAY];
+        REWARD_ACTIVATION_TYPE rat = (REWARD_ACTIVATION_TYPE)r[ACTIVATION_TYPE];
+
+        // check if reward could be received
+        bool receive_reward = false;
+        if(maze_state_to==receive_state) {
+            receive_reward = true;
+        }
+
+        // check if reward was activated (if it can be received or activation
+        // type is with punishment for failure)
+        if(receive_reward || rat==EACH_TIME_PUNISH_FAILURE || rat==ON_RELEASE_PUNISH_FAILURE) {
+            idx_t steps_in_past = 1;
+            bool reward_invalidated = false;
+            for( const_instanceIt_t insIt = instance_from->const_it(); insIt!=INVALID && steps_in_past<=abs(delay); --insIt, ++steps_in_past) {
+
+                // check if delay matches
+                bool delay_matches = false;
+                if(delay<0 || steps_in_past==delay) {
+                // exact match for positve delay less-equal match for negative
+                    delay_matches = true;
+                }
+
+                // check if agent was on activation state
+                bool activation_state = false;
+                if(MazeState(insIt->state)==activate_state) {
+                    activation_state = true;
+                }
+
+                // handle different types of rewards
+                switch(rat) {
+                case EACH_TIME:
+                    if(activation_state && receive_reward && delay_matches ) {
+                        // receive reward whenever everything matches
+                        accumulated_reward += r[REWARD_VALUE];
+                    }
+                    break;
+                case ON_RELEASE:
+                    if(activation_state && receive_reward && delay_matches && !reward_invalidated) {
+                        // successfully receive reward
+                        accumulated_reward += r[REWARD_VALUE];
+                    }
+                    if(activation_state) {
+                        // agent passed activation state and invalidated later
+                        // rewards (even if it received this one)
+                        reward_invalidated = true;
+                    }
+                    break;
+                case EACH_TIME_PUNISH_FAILURE:
+                    if(activation_state && delay_matches ) {
+                        // receive reward whenever everything matches, punish if
+                        // not on receive-state
+                        if(receive_reward) {
+                            accumulated_reward += r[REWARD_VALUE];
+                        } else {
+                            accumulated_reward -= r[REWARD_VALUE];
+                        }
+                    }
+                    break;
+                case ON_RELEASE_PUNISH_FAILURE:
+                    if(activation_state && delay_matches && !reward_invalidated) {
+                        // receive reward when everything matches and reward was
+                        // not invalidated, punish if not on receive-state
+                        if(receive_reward) {
+                            accumulated_reward += r[REWARD_VALUE];
+                        } else {
+                            accumulated_reward -= r[REWARD_VALUE];
+                        }
+                    }
+                    if(activation_state) {
+                        // agent passed activation state and invalidated later
+                        // rewards (even if it received this one or got punished
+                        // for missing it)
+                        reward_invalidated = true;
+                    }
+                    break;
+                default:
+                    DEBUG_DEAD_LINE;
+                }
+
+            }
+        }
+    }
+
+    // check for matching reward
+    if(reward!=accumulated_reward) {
+        return 0;
+    }
+
+    return prob;
+}
+
 void Maze::set_epsilon(const double& e) {
     epsilon = e;
 }

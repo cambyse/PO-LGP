@@ -68,6 +68,7 @@ public:
     ~Instance();
     Instance & operator=(const Instance&);
     bool operator<(const Instance& other) const;
+    bool same_history(const Instance* other) const;
     Instance * insert_instance_after  (const action_t& a, const state_t& s, const reward_t& r);
     Instance * insert_instance_before (const action_t& a, const state_t& s, const reward_t& r);
     Instance * append_instance        (const action_t& a, const state_t& s, const reward_t& r);
@@ -82,6 +83,7 @@ public:
     void unset_container();
     friend std::ostream& operator<<(std::ostream &out, const Instance& i);
     const char* print();
+    void print_history() const;
     /* void set_previous(const Instance * prev); */
     /* void set_next(const Instance * next); */
 
