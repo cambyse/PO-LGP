@@ -172,13 +172,11 @@ void TestMaze_II::choose_action() {
             look_ahead_search.build_tree<Maze>(
                 current_instance,
                 maze,
-                maze.get_prediction_ptr(),
                 max_tree_size
                 );
         } else {
             look_ahead_search.fully_expand_tree<Maze>(
                 maze,
-                maze.get_prediction_ptr(),
                 max_tree_size
                 );
         }
@@ -190,27 +188,14 @@ void TestMaze_II::choose_action() {
             look_ahead_search.build_tree<KMarkovCRF>(
                 current_instance,
                 crf,
-                crf.get_prediction_ptr(),
                 max_tree_size
                 );
         } else {
             look_ahead_search.fully_expand_tree<KMarkovCRF>(
                 crf,
-                crf.get_prediction_ptr(),
                 max_tree_size
                 );
         }
-        action = look_ahead_search.get_optimal_action();
-        break;
-    case KMDP_PLANNER:
-        crf.update_prediction_map();
-        look_ahead_search.clear_tree();
-        look_ahead_search.build_tree<KMarkovCRF>(
-                current_instance,
-                crf,
-                crf.get_kmdp_prediction_ptr(),
-                max_tree_size
-        );
         action = look_ahead_search.get_optimal_action();
         break;
     case UTREE_PLANNER:
@@ -219,13 +204,11 @@ void TestMaze_II::choose_action() {
             look_ahead_search.build_tree<UTree>(
                 current_instance,
                 utree,
-                utree.get_prediction_ptr(),
                 max_tree_size
                 );
         } else {
             look_ahead_search.fully_expand_tree<UTree>(
                 utree,
-                utree.get_prediction_ptr(),
                 max_tree_size
                 );
         }
@@ -257,12 +240,10 @@ void TestMaze_II::choose_action() {
 
     // sanity check
     if(DEBUG_LEVEL>=1) {
-        probability_t prob = look_ahead_search.get_predicted_transition_probability<Maze>(action, state_to, reward, maze, maze.get_prediction_ptr());
+        probability_t prob = look_ahead_search.get_predicted_transition_probability<Maze>(action, state_to, reward, maze);
         if(prob==0) {
             probability_t prob_maze = maze.get_prediction(current_instance->const_it()-1, action, state_to, reward);
             DEBUG_OUT(0,"Warning: Transition with predicted probability of zero for (" << action << "," << state_to << "," << reward << ") (Maze predicts " << prob_maze << ")" );
-            DEBUG_OUT(0,"        History:");
-            (current_instance->const_it()-1)->print_history();
         }
     }
 
@@ -270,9 +251,13 @@ void TestMaze_II::choose_action() {
     if(prune_search_tree) {
         switch(planner_type) {
         case OPTIMAL_PLANNER:
+            look_ahead_search.prune_tree(action,current_instance,maze);
+            break;
         case SPARSE_PLANNER:
+            look_ahead_search.prune_tree(action,current_instance,crf);
+            break;
         case UTREE_PLANNER:
-            look_ahead_search.prune_tree(action,current_instance);
+            look_ahead_search.prune_tree(action,current_instance,utree);
             break;
         case UTREE_VALUE:
         case LINEAR_Q_VALUE:
@@ -747,7 +732,6 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                         probability_t model_l, maze_l;
                         probability_t kl = maze.validate_model<KMarkovCRF>(
                                 crf,
-                                crf.get_prediction_ptr(),
                                 int_args[3],
                                 &model_l,
                                 &maze_l

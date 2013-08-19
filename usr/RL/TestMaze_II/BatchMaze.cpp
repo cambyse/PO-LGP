@@ -207,13 +207,11 @@ int BatchMaze::run(int argn, char ** argarr) {
                         look_ahead_search->build_tree<Maze>(
                             current_instance,
                             *maze,
-                            maze->get_prediction_ptr(),
                             max_tree_size
                             );
                     } else {
                         look_ahead_search->fully_expand_tree<Maze>(
                             *maze,
-                            maze->get_prediction_ptr(),
                             max_tree_size
                             );
                     }
@@ -225,7 +223,6 @@ int BatchMaze::run(int argn, char ** argarr) {
                     look_ahead_search->build_tree<KMarkovCRF>(
                         current_instance,
                         *crf,
-                        crf->get_prediction_ptr(),
                         max_tree_size
                         );
                     action = look_ahead_search->get_optimal_action();
@@ -234,7 +231,6 @@ int BatchMaze::run(int argn, char ** argarr) {
                     look_ahead_search->build_tree<UTree>(
                         current_instance,
                         *utree,
-                        utree->get_prediction_ptr(),
                         max_tree_size
                         );
                     action = look_ahead_search->get_optimal_action();
@@ -251,8 +247,12 @@ int BatchMaze::run(int argn, char ** argarr) {
                 current_instance = current_instance->append_instance(action,state,reward);
 
                 // prune search tree
-                if(option==OPTIMAL || option==SPARSE || option==UTREE_PROB) {
-                    look_ahead_search->prune_tree(action,current_instance);
+                if(option==OPTIMAL) {
+                    look_ahead_search->prune_tree(action,current_instance,*maze);
+                } else if(option==SPARSE) {
+                    look_ahead_search->prune_tree(action,current_instance,*crf);
+                } else if(option==UTREE_PROB) {
+                    look_ahead_search->prune_tree(action,current_instance,*utree);
                 } else if(option==RANDOM || option==UTREE_VALUE || option==LINEAR_Q) {
                     // no search tree
                 } else {

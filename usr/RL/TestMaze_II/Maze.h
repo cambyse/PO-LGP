@@ -63,22 +63,13 @@ public:
     void perform_transition(const action_t& a, state_t& final_state, reward_t& r );
 
     /** \brief Returns the transition probability. */
-    probability_t get_prediction(const instance_t*, const action_t&, const state_t&, const reward_t&) const;
-
-    /** \brief Same as Maze::get_prediction but with debug output. */
-    probability_t get_prediction_debug(const instance_t*, const action_t&, const state_t&, const reward_t&) const;
-
-    /** \brief Returns a function pointer to the get_prediction() function. */
-    probability_t (Maze::*get_prediction_ptr())(const instance_t*, const action_t&, const state_t&, const reward_t&) const {
-        return &Maze::get_prediction;
-    }
+    probability_t get_prediction(const instance_t*, const action_t&, const state_t&, const reward_t&, const bool& debug = false) const;
 
     /** \brief Validates a model by performing random transitions and comparing
      * the result to the model predicitons. */
     template < class Model >
     probability_t validate_model(
             const Model& model,
-            probability_t(Model::*prediction)(const instance_t *, const action_t&, const state_t&, const reward_t&) const,
             size_t samples,
             probability_t * mean_model_likelihood,
             probability_t * mean_maze_likelihood
@@ -214,7 +205,6 @@ private:
 template < class Model >
 Maze::probability_t Maze::validate_model(
         const Model& model,
-        probability_t(Model::*prediction)(const instance_t *, const action_t&, const state_t&, const reward_t&) const,
         size_t samples,
         probability_t * mean_model_likelihood,
         probability_t * mean_maze_likelihood
@@ -229,7 +219,7 @@ Maze::probability_t Maze::validate_model(
         instance_t * last_instance = current_instance;
         perform_transition(action,state,reward);
         probability_t p_maze = get_prediction(last_instance,action,state,reward);
-        probability_t p_model = (model.*prediction)(last_instance,action,state,reward);
+        probability_t p_model = model.get_prediction(last_instance,action,state,reward);
         kl_divergence += log(p_maze/p_model);
         *mean_model_likelihood += p_model;
         *mean_maze_likelihood += p_maze;

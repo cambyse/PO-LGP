@@ -3,8 +3,6 @@
 #include <unistd.h> // for sleep()
 #include <float.h>
 #include <math.h>
-#include <lemon/connectivity.h>
-#include <lemon/adaptors.h>
 #include <vector>
 #include <tuple>
 
@@ -128,185 +126,6 @@ LookAheadSearch::action_t LookAheadSearch::get_optimal_action() const {
         DEBUG_OUT(3, "    choosing " << selected_action << " from " << optimal_action_node_vector.size() << " actions");
 
         return selected_action;
-    }
-}
-
-void LookAheadSearch::prune_tree(const action_t& a, const instance_t * new_root_instance) {
-
-    // get undirected graph for using standard algorithms
-    typedef lemon::Undirector<graph_t> ugraph_t;
-    ugraph_t ugraph(graph);
-
-    // some variables
-    vector<node_t> nodes_to_delete;
-    node_t new_root_node;
-
-    DEBUG_OUT(2,"Pruning tree...");
-
-    // identify action node
-    graph_t::OutArcIt arc_to_action;
-    node_t action_node;
-    for(arc_to_action = graph_t::OutArcIt(graph,root_node); arc_to_action!=INVALID; ++arc_to_action) {
-        action_node = graph.target(arc_to_action);
-        if(node_info_map[action_node].action==a) {
-            DEBUG_OUT(2,"    Found chosen action node (" << graph.id(action_node) << ")");
-            break;
-        }
-    }
-    if(arc_to_action==INVALID) {
-        DEBUG_OUT(0,"Error: Could not identify choosen action");
-        clear_tree();
-        root_node = graph.addNode();
-        ++number_of_nodes;
-        node_info_map[root_node] = NodeInfo(
-            STATE,
-            NOT_EXPANDED,
-            instance_t::create(new_root_instance->action, new_root_instance->state, new_root_instance->reward, new_root_instance->const_it()-1),
-            action_t::NULL_ACTION,
-            get_upper_value_bound(),
-            get_lower_value_bound()
-            );
-        return;
-    }
-
-    // find new root node
-    state_t state = new_root_instance->state;
-    reward_t reward = new_root_instance->reward;
-    graph_t::OutArcIt arc_to_state;
-    for(arc_to_state = graph_t::OutArcIt(graph,action_node); arc_to_state!=INVALID; ++arc_to_state) {
-        node_t state_node = graph.target(arc_to_state);
-        if(node_info_map[state_node].instance->state==state &&
-           node_info_map[state_node].instance->reward==reward) {
-            DEBUG_OUT(2,"    Found new root node (" << graph.id(state_node) << ")");
-            new_root_node=state_node;
-            break;
-        }
-    }
-    if(arc_to_state==INVALID) {
-        DEBUG_OUT(0,"Error: Could not identify new root node");
-        if(DEBUG_LEVEL>0) {
-            DEBUG_OUT(0,"    Need state " << state << ", reward " << reward);
-            for(arc_to_state = graph_t::OutArcIt(graph,action_node); arc_to_state!=INVALID; ++arc_to_state) {
-                node_t state_node = graph.target(arc_to_state);
-                DEBUG_OUT(0,"        Found state " << node_info_map[state_node].instance->state <<
-                          ", reward " << node_info_map[state_node].instance->reward );
-            }
-            DEBUG_OUT(0,"    Old root instance " );
-            for( const_instanceIt_t old_instance(node_info_map[root_node].instance); old_instance!=util::INVALID; --old_instance) {
-                DEBUG_OUT(0,"        " << *old_instance );
-            }
-            DEBUG_OUT(0,"    New root instance " );
-            for( const_instanceIt_t new_instance(new_root_instance); new_instance!=util::INVALID; --new_instance) {
-                DEBUG_OUT(0,"        " << *new_instance );
-            }
-            // print_tree(false,true,"pruning_tree_error.eps");
-            // clear_tree();
-            // root_node = graph.addNode();
-            // ++number_of_nodes;
-            // node_info_map[root_node] = NodeInfo(
-            //     STATE,
-            //     NOT_EXPANDED,
-            //     instance_t::create(new_root_instance->action, new_root_instance->state, new_root_instance->reward, new_root_instance->const_it()-1),
-            //     action_t::NULL_ACTION,
-            //     get_upper_value_bound(),
-            //     get_lower_value_bound()
-            //     );
-        }
-        return;
-    }
-
-    // remember successor states and other data for debugging purposes
-    vector<tuple<node_t,ArcInfo> > successor_states;
-    NodeInfo action_node_info;
-    ArcInfo arc_to_action_info;
-    for(graph_t::OutArcIt arc_to_state(graph,action_node); arc_to_state!=INVALID; ++arc_to_state) {
-        node_t successor = graph.target(arc_to_state);
-        successor_states.push_back(make_tuple(successor,arc_info_map[arc_to_state]));
-    }
-    action_node_info = node_info_map[action_node];
-    arc_to_action_info = arc_info_map[graph_t::InArcIt(graph,action_node)];
-
-    // remove selected action node from tree to split into two components (we
-    // don't need to worry about arcs since they are erased along with the
-    // corresponding nodes)
-    graph.erase(action_node);
-
-    // identify and remember nodes that are not in the same component as the new
-    // root node
-    node_color_map_t pruning_map(graph);
-    ugraph_t::NodeMap<int> component_map(ugraph);
-    int component_n = lemon::connectedComponents(ugraph,component_map);
-    if(component_n<2) {
-        DEBUG_OUT(0,"Error: Search tree was not split by removing chosen action node");
-        return;
-    } else {
-        DEBUG_OUT(2,"    " << component_n << " connected components");
-    }
-    int main_component = component_map[new_root_node];
-    DEBUG_OUT(2,"    main component: " << main_component);
-    for(ugraph_t::NodeIt node(ugraph); node!=INVALID; ++node) {
-        if(component_map[node]!=main_component) {
-            nodes_to_delete.push_back(node); // remember
-            DEBUG_OUT(3,"    node " << graph.id(node) << " NOT in main component");
-            pruning_map[node] = Color(1,0.5,0.5);
-        } else {
-            DEBUG_OUT(3,"    node " << graph.id(node) << " IS in main component");
-            pruning_map[node] = Color(0.5,1,0.5);
-        }
-    }
-
-    // print the pruning tree to a file
-    if(DEBUG_LEVEL>2) {
-        node_t tmp_action_node = graph.addNode();
-        arc_t tmp_arc = graph.addArc(root_node,tmp_action_node);
-        node_info_map[tmp_action_node] = action_node_info;
-        arc_info_map[tmp_arc] = arc_to_action_info;
-        pruning_map[tmp_action_node] = Color(0.5,0.5,1);
-        for( auto successor : successor_states ) {
-            arc_t arc = graph.addArc(tmp_action_node, get<0>(successor));
-            arc_info_map[arc] = get<1>(successor);
-        }
-        print_tree(false,true,"pruning_tree.eps",&pruning_map);
-        graph.erase(tmp_action_node);
-    }
-
-    // erase nodes that are not in the main component
-    for(node_t node : nodes_to_delete) {
-        if(node_info_map[node].type==STATE) {
-            delete node_info_map[node].instance;
-        }
-        graph.erase(node);
-    }
-
-    // update root node
-    if(DEBUG_LEVEL>=1) {
-        // sanity check
-        instance_t * ins = node_info_map[new_root_node].instance;
-        if(new_root_instance->action!=ins->action ||
-           new_root_instance->state!=ins->state ||
-           new_root_instance->reward!=ins->reward) {
-            DEBUG_OUT(0,"Error: Old and new instance of new root node do not match");
-            DEBUG_OUT(0,"    old: " << *ins << ", new: " << *new_root_instance);
-        }
-    }
-    root_node = new_root_node;
-    instance_t * new_root_instance_copy = instance_t::create(new_root_instance->action, new_root_instance->state, new_root_instance->reward, new_root_instance->const_it()-1);
-    *(node_info_map[root_node].instance) = *new_root_instance_copy;
-    delete new_root_instance_copy;
-
-    // update number of nodes
-    DEBUG_OUT(3,"    Updating number of nodes...");
-    number_of_nodes = 0;
-    for(graph_t::NodeIt node(graph); node!=INVALID; ++node) {
-        ++number_of_nodes;
-    }
-    DEBUG_OUT(3,"        " << number_of_nodes << " nodes");
-
-    // check graph structure
-    if(!lemon::tree(ugraph)) {
-        DEBUG_OUT(0,"Error: Search graph is not a tree");
-
-        DEBUG_OUT(2,"DONE");
     }
 }
 
@@ -1121,4 +940,9 @@ double LookAheadSearch::node_energy(node_t node, const graph_t::NodeMap<Point>& 
     }
 
     return energy;
+}
+
+template <>
+LookAheadSearch::probability_t LookAheadSearch::get_predict_debug(const Maze& model, const instance_t * i, const action_t&a, const state_t& s, const reward_t& r) const {
+    return model.get_prediction(i, a, s, r, true);
 }

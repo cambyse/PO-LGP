@@ -4,9 +4,12 @@
 #include <lemon/list_graph.h>
 #include <lemon/graph_to_eps.h>
 #include <lemon/dim2.h>
+#include <lemon/connectivity.h>
+#include <lemon/adaptors.h>
 
 #include "Config.h"
 #include "util/ProgressBar.h"
+#include "Maze.h"
 
 #ifdef BATCH_MODE_QUIET
 #define DEBUG_LEVEL 0
@@ -71,7 +74,6 @@ public:
     void build_tree(
             const instance_t * root,
             const Model& model,
-            probability_t(Model::*prediction)(const instance_t *, const action_t&, const state_t&, const reward_t&) const,
             const size_t& max_node_counter = 0
     );
 
@@ -79,17 +81,13 @@ public:
      * node and back-propagating changes. Return whether
      * tree needs further expansion. */
     template < class Model >
-    bool expand_tree(
-            const Model& model,
-            probability_t(Model::*prediction)(const instance_t *, const action_t&, const state_t&, const reward_t&) const
-    );
+    bool expand_tree(const Model&);
 
     /*! \brief Repeatedly expand tree until either the optimal action is
      *  unambiguous or the maximum tree size is reached. */
     template < class Model >
     void fully_expand_tree(
             const Model& model,
-            probability_t(Model::*prediction)(const instance_t *, const action_t&, const state_t&, const reward_t&) const,
             const size_t& max_node_counter = 0
     );
 
@@ -102,15 +100,13 @@ public:
     probability_t get_predicted_transition_probability(const action_t&,
                                                        const state_t&,
                                                        const reward_t& ,
-                                                       const Model& model,
-                                                       probability_t(Model::*prediction)(const instance_t *,
-                                                                                         const action_t&,
-                                                                                         const state_t&,
-                                                                                         const reward_t&) const) const;
+                                                       const Model& model
+        ) const;
 
     /*! \brief Prune obsolete branches after performing action a into state s
      *  and reset root node. */
-    void prune_tree(const action_t& a, const instance_t * new_root_instance);
+    template < class Model >
+    void prune_tree(const action_t& a, const instance_t * new_root_instance, const Model& model);
 
     /*! \brief Set the discount rate used for computing state and action values. */
     void set_discount(const double& d) { discount = d; }
@@ -243,16 +239,14 @@ protected:
     template < class Model >
     void expand_leaf_node(
             node_t state_node,
-            const Model& model,
-            probability_t(Model::*prediction)(const instance_t *, const action_t&, const state_t&, const reward_t&) const
+            const Model& model
     );
 
     /*! \brief Expand the action node given a predictive model. */
     template < class Model >
     void expand_action_node(
             node_t action_node,
-            const Model& model,
-            probability_t(Model::*prediction)(const instance_t *, const action_t&, const state_t&, const reward_t&) const
+            const Model& model
     );
 
     /** \brief Select the optimal action from a given state node. */
@@ -285,6 +279,10 @@ protected:
 
     /*! \brief Node energy function. */
     double node_energy(node_t node, const graph_t::NodeMap<Point>& coords) const;
+
+    template < class Model >
+        probability_t get_predict_debug(const Model& model, const instance_t * i, const action_t&a, const state_t& s, const reward_t& r) const;
+
 };
 
 //=================================================================//
@@ -295,7 +293,6 @@ template < class Model >
 void LookAheadSearch::build_tree(
         const instance_t * root_instance,
         const Model& model,
-        probability_t(Model::*prediction)(const instance_t *, const action_t&, const state_t&, const reward_t&) const,
         const size_t& max_node_counter
 ) {
 
@@ -316,18 +313,15 @@ void LookAheadSearch::build_tree(
             get_lower_value_bound()
     );
 
-    expand_leaf_node(root_node,model,prediction);
+    expand_leaf_node(root_node,model);
     update_state_node(root_node);
 
     // fully expand tree
-    fully_expand_tree(model, prediction, max_node_counter);
+    fully_expand_tree(model, max_node_counter);
 }
 
 template < class Model >
-bool LookAheadSearch::expand_tree(
-        const Model& model,
-        probability_t(Model::*prediction)(const instance_t *, const action_t&, const state_t&, const reward_t&) const
-) {
+bool LookAheadSearch::expand_tree(const Model& model) {
 
     node_t current_state_node = root_node;
     node_t current_action_node = lemon::INVALID;
@@ -339,7 +333,7 @@ bool LookAheadSearch::expand_tree(
     }
 
     // expand leaf
-    expand_leaf_node(current_state_node, model, prediction);
+    expand_leaf_node(current_state_node, model);
 
     // back propagation
     while(current_state_node!=root_node) {
@@ -354,7 +348,6 @@ bool LookAheadSearch::expand_tree(
 template < class Model >
 void LookAheadSearch::fully_expand_tree(
         const Model& model,
-        probability_t(Model::*prediction)(const instance_t *, const action_t&, const state_t&, const reward_t&) const,
         const size_t& max_node_counter
 ) {
 
@@ -363,7 +356,7 @@ void LookAheadSearch::fully_expand_tree(
         ProgressBar::init("Building Tree: ");
     }
     if(tree_needs_further_expansion()) {
-        while(expand_tree(model,prediction)) {
+        while(expand_tree(model)) {
             if(max_node_counter>0 && number_of_nodes>max_node_counter) {
                 DEBUG_OUT(1,"Abort: Tree has more than " << max_node_counter << " nodes (" << number_of_nodes << ")");
                 break;
@@ -387,11 +380,11 @@ template < class Model >
 LookAheadSearch::probability_t LookAheadSearch::get_predicted_transition_probability(const action_t& action,
                                                                                      const state_t& state,
                                                                                      const reward_t& reward,
-                                                                                     const Model& model,
-                                                                                     probability_t(Model::*prediction)(const instance_t *,
-                                                                                                                       const action_t&,
-                                                                                                                       const state_t&,
-                                                                                                                       const reward_t&) const) const {
+                                                                                     const Model& model
+    ) const {
+
+    DEBUG_OUT(2,"Get predicted transition probability for (" << action << "," << state << "," << reward << ")" );
+
     // find action node
     node_t action_node = lemon::INVALID;
     for(graph_t::OutArcIt out_arc(graph,root_node); out_arc!=lemon::INVALID; ++out_arc) {
@@ -418,12 +411,12 @@ LookAheadSearch::probability_t LookAheadSearch::get_predicted_transition_probabi
                 break;
             }
         }
-        DEBUG_OUT(1,"        Found state " << node_info_map[tmp_state_node].instance->state <<
+        DEBUG_OUT(2,"        Found state " << node_info_map[tmp_state_node].instance->state <<
                   ", reward " << node_info_map[tmp_state_node].instance->reward <<
                   ", prob " << arc_info_map[out_arc].prob);
     }
     if(state_node==lemon::INVALID) {
-        probability_t prob = (model.*prediction)(node_info_map[root_node].instance, action, state, reward);
+        probability_t prob = get_predict_debug(model, node_info_map[root_node].instance, action, state, reward);
         DEBUG_OUT(0,"Error: Node with state " << state << ", reward " << reward << " could not be found (Maze probability: " << prob << ")" );
         return 0;
     }
@@ -433,10 +426,202 @@ LookAheadSearch::probability_t LookAheadSearch::get_predicted_transition_probabi
 }
 
 template < class Model >
+void LookAheadSearch::prune_tree(const action_t& a, const instance_t * new_root_instance, const Model& model) {
+
+    // get undirected graph for using standard algorithms
+    typedef lemon::Undirector<graph_t> ugraph_t;
+    ugraph_t ugraph(graph);
+
+    // some variables
+    std::vector<node_t> nodes_to_delete;
+    node_t new_root_node;
+
+    DEBUG_OUT(2,"Pruning tree...");
+
+    // identify action node
+    graph_t::OutArcIt arc_to_action;
+    node_t action_node;
+    for(arc_to_action = graph_t::OutArcIt(graph,root_node); arc_to_action!=lemon::INVALID; ++arc_to_action) {
+        action_node = graph.target(arc_to_action);
+        if(node_info_map[action_node].action==a) {
+            DEBUG_OUT(2,"    Found chosen action node (" << graph.id(action_node) << ")");
+            break;
+        }
+    }
+    if(arc_to_action==lemon::INVALID) {
+        DEBUG_OUT(0,"Error: Could not identify choosen action");
+        clear_tree();
+        root_node = graph.addNode();
+        ++number_of_nodes;
+        node_info_map[root_node] = NodeInfo(
+            STATE,
+            NOT_EXPANDED,
+            instance_t::create(new_root_instance->action, new_root_instance->state, new_root_instance->reward, new_root_instance->const_it()-1),
+            action_t::NULL_ACTION,
+            get_upper_value_bound(),
+            get_lower_value_bound()
+            );
+        return;
+    }
+
+    // find new root node
+    state_t state = new_root_instance->state;
+    reward_t reward = new_root_instance->reward;
+    graph_t::OutArcIt arc_to_state;
+    for(arc_to_state = graph_t::OutArcIt(graph,action_node); arc_to_state!=lemon::INVALID; ++arc_to_state) {
+        node_t state_node = graph.target(arc_to_state);
+        if(node_info_map[state_node].instance->state==state &&
+           node_info_map[state_node].instance->reward==reward) {
+            DEBUG_OUT(2,"    Found new root node (" << graph.id(state_node) << ")");
+            new_root_node=state_node;
+            break;
+        }
+    }
+    if(arc_to_state==lemon::INVALID) {
+        DEBUG_OUT(0,"Error: Could not identify new root node");
+        if(DEBUG_LEVEL>0) {
+            DEBUG_OUT(0,"    Need state " << state << ", reward " << reward);
+            for(arc_to_state = graph_t::OutArcIt(graph,action_node); arc_to_state!=lemon::INVALID; ++arc_to_state) {
+                node_t state_node = graph.target(arc_to_state);
+                DEBUG_OUT(0,"        Found state " << node_info_map[state_node].instance->state <<
+                          ", reward " << node_info_map[state_node].instance->reward );
+            }
+            DEBUG_OUT(0,"    Old root instance " );
+            for( const_instanceIt_t old_instance(node_info_map[root_node].instance); old_instance!=util::INVALID; --old_instance) {
+                DEBUG_OUT(0,"        " << *old_instance );
+            }
+            DEBUG_OUT(0,"    New root instance " );
+            for( const_instanceIt_t new_instance(new_root_instance); new_instance!=util::INVALID; --new_instance) {
+                DEBUG_OUT(0,"        " << *new_instance );
+            }
+            // print_tree(false,true,"pruning_tree_error.eps");
+            // clear_tree();
+            // root_node = graph.addNode();
+            // ++number_of_nodes;
+            // node_info_map[root_node] = NodeInfo(
+            //     STATE,
+            //     NOT_EXPANDED,
+            //     instance_t::create(new_root_instance->action, new_root_instance->state, new_root_instance->reward, new_root_instance->const_it()-1),
+            //     action_t::NULL_ACTION,
+            //     get_upper_value_bound(),
+            //     get_lower_value_bound()
+            //     );
+        }
+        return;
+    }
+
+    // remember successor states and other data for debugging purposes
+    std::vector<std::tuple<node_t,ArcInfo> > successor_states;
+    NodeInfo action_node_info;
+    ArcInfo arc_to_action_info;
+    for(graph_t::OutArcIt arc_to_state(graph,action_node); arc_to_state!=lemon::INVALID; ++arc_to_state) {
+        node_t successor = graph.target(arc_to_state);
+        successor_states.push_back(std::make_tuple(successor,arc_info_map[arc_to_state]));
+    }
+    action_node_info = node_info_map[action_node];
+    arc_to_action_info = arc_info_map[graph_t::InArcIt(graph,action_node)];
+
+    // remove selected action node from tree to split into two components (we
+    // don't need to worry about arcs since they are erased along with the
+    // corresponding nodes)
+    graph.erase(action_node);
+
+    // identify and remember nodes that are not in the same component as the new
+    // root node
+    node_color_map_t pruning_map(graph);
+    ugraph_t::NodeMap<int> component_map(ugraph);
+    int component_n = lemon::connectedComponents(ugraph,component_map);
+    if(component_n<2) {
+        DEBUG_OUT(0,"Error: Search tree was not split by removing chosen action node");
+        return;
+    } else {
+        DEBUG_OUT(2,"    " << component_n << " connected components");
+    }
+    int main_component = component_map[new_root_node];
+    DEBUG_OUT(2,"    main component: " << main_component);
+    for(ugraph_t::NodeIt node(ugraph); node!=lemon::INVALID; ++node) {
+        if(component_map[node]!=main_component) {
+            nodes_to_delete.push_back(node); // remember
+            DEBUG_OUT(3,"    node " << graph.id(node) << " NOT in main component");
+            pruning_map[node] = lemon::Color(1,0.5,0.5);
+        } else {
+            DEBUG_OUT(3,"    node " << graph.id(node) << " IS in main component");
+            pruning_map[node] = lemon::Color(0.5,1,0.5);
+        }
+    }
+
+    // print the pruning tree to a file
+    if(DEBUG_LEVEL>2) {
+        node_t tmp_action_node = graph.addNode();
+        arc_t tmp_arc = graph.addArc(root_node,tmp_action_node);
+        node_info_map[tmp_action_node] = action_node_info;
+        arc_info_map[tmp_arc] = arc_to_action_info;
+        pruning_map[tmp_action_node] = lemon::Color(0.5,0.5,1);
+        for( auto successor : successor_states ) {
+            arc_t arc = graph.addArc(tmp_action_node, std::get<0>(successor));
+            arc_info_map[arc] = std::get<1>(successor);
+        }
+        print_tree(false,true,"pruning_tree.eps",&pruning_map);
+        graph.erase(tmp_action_node);
+    }
+
+    // erase nodes that are not in the main component
+    for(node_t node : nodes_to_delete) {
+        if(node_info_map[node].type==STATE) {
+            delete node_info_map[node].instance;
+        }
+        graph.erase(node);
+    }
+
+    // update root node
+    if(DEBUG_LEVEL>=1) {
+        // sanity check
+        instance_t * ins = node_info_map[new_root_node].instance;
+        if(new_root_instance->action!=ins->action ||
+           new_root_instance->state!=ins->state ||
+           new_root_instance->reward!=ins->reward) {
+            DEBUG_OUT(0,"Error: Old and new instance of new root node do not match");
+            DEBUG_OUT(0,"    old: " << *ins << ", new: " << *new_root_instance);
+        }
+    }
+    root_node = new_root_node;
+    instance_t * new_root_instance_copy = instance_t::create(new_root_instance->action, new_root_instance->state, new_root_instance->reward, new_root_instance->const_it()-1);
+    *(node_info_map[root_node].instance) = *new_root_instance_copy;
+    delete new_root_instance_copy;
+
+    // update number of nodes
+    DEBUG_OUT(3,"    Updating number of nodes...");
+    number_of_nodes = 0;
+    for(graph_t::NodeIt node(graph); node!=lemon::INVALID; ++node) {
+        ++number_of_nodes;
+    }
+    DEBUG_OUT(3,"        " << number_of_nodes << " nodes");
+
+    // make sure root node is expanded
+    switch(node_info_map[root_node].expansion) {
+    case FULLY_EXPANDED:
+        // everythin fine
+        break;
+    case NOT_EXPANDED:
+        DEBUG_OUT(2,"Expanding root node");
+        expand_leaf_node(root_node, model);
+        break;
+    default:
+        DEBUG_DEAD_LINE;
+    }
+
+    // check graph structure
+    if(!lemon::tree(ugraph)) {
+        DEBUG_OUT(0,"Error: Search graph is not a tree");
+    }
+
+    DEBUG_OUT(2,"DONE");
+}
+
+template < class Model >
 void LookAheadSearch::expand_leaf_node(
         node_t state_node,
-        const Model& model,
-        probability_t(Model::*prediction)(const instance_t *, const action_t&, const state_t&, const reward_t&) const
+        const Model& model
 ) {
 
     DEBUG_OUT(3,"Expanding leaf node");
@@ -477,57 +662,18 @@ void LookAheadSearch::expand_leaf_node(
     // expand and update all newly added action nodes
     for(graph_t::OutArcIt out_arc(graph,state_node); out_arc!=lemon::INVALID; ++out_arc) {
         node_t action_node = graph.target(out_arc);
-        expand_action_node(action_node, model, prediction);
+        expand_action_node(action_node, model);
         update_action_node(action_node);
     }
 
     // set to fully expanded
     node_info_map[state_node].expansion = FULLY_EXPANDED;
-
-    //=========================================================//
-    // DEBUGGING BLOCK                                         //
-
-    instance_t * debugg_instance = instance_t::create(action_t::STAY, 1, 1);
-    debugg_instance->prepend_instance(action_t::STAY , 1, 1);
-    debugg_instance->prepend_instance(action_t::UP   , 1, 1);
-    debugg_instance->prepend_instance(action_t::RIGHT, 3, 0);
-    debugg_instance->prepend_instance(action_t::STAY , 3, 0);
-    debugg_instance->prepend_instance(action_t::RIGHT, 3, 0);
-    debugg_instance->prepend_instance(action_t::DOWN , 2, 0);
-    debugg_instance->prepend_instance(action_t::LEFT , 0, 0);
-    debugg_instance->prepend_instance(action_t::STAY , 1, 1);
-    debugg_instance->prepend_instance(action_t::STAY , 1, 1);
-    debugg_instance->prepend_instance(action_t::UP   , 1, 1);
-    debugg_instance->prepend_instance(action_t::STAY , 3, 0);
-    debugg_instance->prepend_instance(action_t::RIGHT, 3, 0);
-    debugg_instance->prepend_instance(action_t::STAY , 3, 0);
-
-    if(instance_from->same_history(debugg_instance)) {
-        DEBUG_OUT(0,"    Found future invalid root node (Nr. " << graph.id(state_node) << ")");
-        DEBUG_OUT(0,"        History:");
-        instance_from->print_history();
-        DEBUG_OUT(0,"        Transition probabilities:");
-        for( auto a : actionIt_t::all ) {
-            for( auto s : stateIt_t::all ) {
-                for( auto r : rewardIt_t::all ) {
-                    probability_t prob = (model.*prediction)(instance_from, a, s, r);
-                    DEBUG_OUT(0,"            (" << a << "," << s << "," << r << ") " << prob);
-                }
-            }
-        }
-        probability_t prob = (model.*prediction)(instance_from, action_t::DOWN, 1, 0);
-        DEBUG_OUT(0,"        For (DOWN, 1, 0): " << prob);
-    }
-
-    delete debugg_instance;
-    //=========================================================//
 }
 
 template < class Model >
 void LookAheadSearch::expand_action_node(
         node_t action_node,
-        const Model& model,
-        probability_t(Model::*prediction)(const instance_t *, const action_t&, const state_t&, const reward_t&) const
+        const Model& model
 ) {
 
     DEBUG_OUT(3,"Expanding action node");
@@ -552,7 +698,7 @@ void LookAheadSearch::expand_action_node(
 
         for(reward_t new_reward : rewardIt_t::all) {
 
-            probability_t prob = (model.*prediction)(instance_from, action, new_state, new_reward);
+            probability_t prob = model.get_prediction(instance_from, action, new_state, new_reward);
             if(prob>0) {
                 new_state_node = graph.addNode();
                 ++number_of_nodes;
@@ -584,6 +730,14 @@ void LookAheadSearch::expand_action_node(
 
     node_info_map[action_node].expansion = FULLY_EXPANDED;
 }
+
+template < class Model >
+LookAheadSearch::probability_t LookAheadSearch::get_predict_debug(const Model& model, const instance_t * i, const action_t&a, const state_t& s, const reward_t& r) const {
+    return model.get_prediction(i, a, s, r);
+}
+
+template <>
+LookAheadSearch::probability_t LookAheadSearch::get_predict_debug(const Maze& model, const instance_t * i, const action_t&a, const state_t& s, const reward_t& r) const;
 
 #include "debug_exclude.h"
 
