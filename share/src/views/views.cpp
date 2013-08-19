@@ -2,9 +2,9 @@
 
 #ifdef MT_GTK
 
-#include <MT/gtk.h>
-#include <MT/ors.h>
-#include <MT/opengl.h>
+#include <Gui/gtk.h>
+#include <Ors/ors.h>
+#include <Gui/opengl.h>
 #include <gtk/gtk.h>
 
 //===========================================================================

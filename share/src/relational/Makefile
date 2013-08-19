@@ -1,11 +1,8 @@
 BASE   = ../..
-NAME   = librelational
-OUTPUT = $(BASE)/lib/$(NAME).so
+NAME   = lib$(shell basename `pwd`)
+OUTPUT := $(BASE)/lib/$(NAME).so
 
-MAKEMODE = mlrlib
-
-BUILDS += buildComponent/MT
-LIBS += -lMT
+DEPEND = Core Ors
 
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS = $(SRCS:%.cpp=%.o)

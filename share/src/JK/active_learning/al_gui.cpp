@@ -1,7 +1,7 @@
 #include "al_gui.h"
 
-#include <MT/opengl.h>
-#include <MT/ors.h>
+#include <Gui/opengl.h>
+#include <Ors/ors.h>
 #include <relational/robotManipulationSimulator.h>
 
 class sGui {

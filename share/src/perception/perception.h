@@ -10,8 +10,8 @@
 
 #include <system/module.h>
 #include <views/views.h>
-#include <MT/ors.h>
-#include <MT/array_t.h>
+#include <Ors/ors.h>
+#include <Core/array_t.h>
 
 //===========================================================================
 //

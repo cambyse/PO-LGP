@@ -1,6 +1,6 @@
 #include <Core/array.h>
-#include <MT/ors.h>
-#include <biros/biros.h>
+#include <Ors/ors.h>
+#include <System/biros.h>
 
 struct DecisionMakingModule:public Process{
   

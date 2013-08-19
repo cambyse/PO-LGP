@@ -18,6 +18,7 @@
 
 
 #include "mdp_EMSolver.h"
+#include <iomanip>
 
 void mdp::EMSolver::getParameters(){
   MT::getParameter(problemFile, "problemFile", MT::String("paint.95.POMDP.arr"));

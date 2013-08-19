@@ -1,6 +1,6 @@
 #include "motion.h"
 
-#include <MT/opengl.h>
+#include <Gui/opengl.h>
 
 REGISTER_VIEW(PoseView, arr);
 

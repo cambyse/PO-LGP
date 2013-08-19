@@ -1,6 +1,6 @@
 #include "graspObjects.h"
 #include <Core/array.h>
-#include <MT/util.h>
+#include <Core/util.h>
 
 double
 staticPhi(arr *grad, arr *hess, const arr &x, void *p){

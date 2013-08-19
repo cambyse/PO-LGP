@@ -3,7 +3,7 @@
 
 #include <MT/aico.h>
 #include <MT/socNew.h>
-#include <MT/opengl.h>
+#include <Gui/opengl.h>
 #include <unistd.h>
 
 Process* newMotionPlanner(MotionPrimitive& m){

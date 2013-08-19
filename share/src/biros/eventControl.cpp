@@ -14,7 +14,7 @@
 #ifdef MT_GTK
 
 #include <gtk/gtk.h>
-#include <MT/gtk.h>
+#include <Gui/gtk.h>
 
 struct sEventControl{
   GtkBuilder *builder;

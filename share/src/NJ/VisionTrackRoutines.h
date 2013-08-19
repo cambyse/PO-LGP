@@ -2,7 +2,7 @@
 
 #define NJVis
 
-#include <MT/ors.h>
+#include <Ors/ors.h>
 
 //from camera parameters to camera center, cf. Zisserman
 ors::Vector CameraLocation(const arr & p){

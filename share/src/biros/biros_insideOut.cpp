@@ -14,7 +14,7 @@
 #include "biros_views.h"
 #include <system/biros_internal.h>
 #include <gtk/gtk.h>
-#include <MT/gtk.h>
+#include <Gui/gtk.h>
 
 REGISTER_VIEW(InsideOut, void)
 

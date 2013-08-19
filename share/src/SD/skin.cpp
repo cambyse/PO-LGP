@@ -1,6 +1,6 @@
 #include "skin.h"
 #include <Core/array.h>
-#include <MT/ors.h>
+#include <Ors/ors.h>
 #include <MT/schunk.h>
 
 #define SD_SIZE(s, s1, s2, s3, s4)  s[0]=(s1); s[1]=(s2); s[2]=(s3); s[3]=(s4);

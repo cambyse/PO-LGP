@@ -19,6 +19,7 @@
     along with libPRADA.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <map>
 #include "utilTL.h"
 
 double TL::REPLACE_SIZE(double val) {

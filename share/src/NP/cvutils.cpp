@@ -17,7 +17,7 @@
 #ifdef MT_OPENCV
 
 #include <Core/array.h>
-#include <MT/util.h>
+#include <Core/util.h>
 
 #include "nputils.h"
 #include "cvutils.h"

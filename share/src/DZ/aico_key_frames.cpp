@@ -1,7 +1,7 @@
 #include <MT/soc.h>
 #include <Core/array.h>
-#include <MT/array_t.h>
-#include <MT/opengl.h>
+#include <Core/array_t.h>
+#include <Gui/opengl.h>
 #include <aico_key_frames.h>
 
 double OneStepKinematic(arr& q, arr& _Binv, uint& counter, soc::SocSystemAbstraction& sys, double stopTolerance, bool q_is_initialized){

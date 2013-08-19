@@ -15,7 +15,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/> */
 
 #include <Core/array.h>
-#include <MT/util.h>
+#include <Core/util.h>
 #include <iostream>
 #include <iomanip>
 #include <cstring>

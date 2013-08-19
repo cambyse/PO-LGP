@@ -3,9 +3,9 @@
 
 //#undef _FORTIFY_SOURCE
 //#include <cstdlib>
-#include <MT/opengl.h>
+#include <Gui/opengl.h>
 
-#include <MT/ors.h>
+#include <Ors/ors.h>
 #include <MT/joystick.h>
 #include <MT/soc.h>
 #include <NJ/UrgInterface.h>

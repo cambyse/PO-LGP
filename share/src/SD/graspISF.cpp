@@ -1,6 +1,6 @@
 #include "graspISF.h"
-#include <MT/plot.h>
-#include <MT/util.h>
+#include <Gui/plot.h>
+#include <Core/util.h>
 #include "utils.h"
 #include "graspObjects.h"
 
