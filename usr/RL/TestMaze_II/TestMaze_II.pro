@@ -26,7 +26,9 @@ HEADERS += LookAheadSearch.h \
     util/ProgressBar.h \
     DelayDistribution.h \
     HistoryObserver.h \
-    qcustomplot.h
+    qcustomplot.h \
+    ActiveSigmoidOptimization.h \
+    SplineInterpolation.h
 SOURCES += LookAheadSearch.cpp \
     util.cpp \
     BatchMaze.cpp \
@@ -49,7 +51,9 @@ SOURCES += LookAheadSearch.cpp \
     util/ProgressBar.cpp \
     DelayDistribution.cpp \
     HistoryObserver.cpp \
-    qcustomplot.cpp
+    qcustomplot.cpp \
+    ActiveSigmoidOptimization.cpp \
+    SplineInterpolation.cpp
 LIBS += -llbfgs \
     -lemon \
     -larmadillo \

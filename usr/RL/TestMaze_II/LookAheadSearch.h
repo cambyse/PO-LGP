@@ -603,7 +603,7 @@ void LookAheadSearch::prune_tree(const action_t& a, const instance_t * new_root_
         // everythin fine
         break;
     case NOT_EXPANDED:
-        DEBUG_OUT(2,"Expanding root node");
+        DEBUG_OUT(1,"Expanding root node");
         expand_leaf_node(root_node, model);
         break;
     default:

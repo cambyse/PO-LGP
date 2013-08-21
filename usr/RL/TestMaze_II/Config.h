@@ -8,6 +8,10 @@
 //#define BATCH_MODE_QUIET
 #endif
 
+#ifndef NO_RANDOM
+//#define NO_RANDOM
+#endif
+
 //===================================================================
 
 #ifndef CONFIG_TYPEDEFS_H_

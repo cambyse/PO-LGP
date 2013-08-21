@@ -25,8 +25,8 @@ public:
     // functions
     Feature();
     virtual ~Feature();
-    virtual feature_return_value evaluate(const instance_t *) const;
-    virtual feature_return_value evaluate(const instance_t *, action_t, state_t, reward_t) const;
+    virtual feature_return_value evaluate(const_instanceIt_t) const;
+    virtual feature_return_value evaluate(const_instanceIt_t, action_t, state_t, reward_t) const;
     virtual feature_return_value evaluate(const look_up_map_t&) const;
     virtual std::string identifier() const;
     friend std::ostream& operator<<(std::ostream&, const Feature&);
@@ -63,8 +63,8 @@ private:
     virtual ~ConstFeature();
 public:
     static ConstFeature * create(const long long int& v = 0);
-    virtual feature_return_value evaluate(const instance_t *) const;
-    virtual feature_return_value evaluate(const instance_t *, action_t, state_t, reward_t) const;
+    virtual feature_return_value evaluate(const_instanceIt_t) const;
+    virtual feature_return_value evaluate(const_instanceIt_t, action_t, state_t, reward_t) const;
     virtual std::string identifier() const;
 };
 
@@ -74,8 +74,7 @@ private:
     virtual ~ActionFeature();
 public:
     static ActionFeature * create(const action_t& a, const int& d);
-    virtual feature_return_value evaluate(const instance_t *) const;
-    virtual feature_return_value evaluate(const instance_t *, action_t, state_t, reward_t) const;
+    virtual feature_return_value evaluate(const_instanceIt_t) const;
     virtual std::string identifier() const;
     static bool features_contradict(const ActionFeature& f1, const ActionFeature& f2);
     bool contradicts(const ActionFeature& f) { return features_contradict(*this,f); }
@@ -90,8 +89,7 @@ private:
     virtual ~StateFeature();
 public:
     static StateFeature * create(const state_t& s, const int& d);
-    virtual feature_return_value evaluate(const instance_t *) const;
-    virtual feature_return_value evaluate(const instance_t *, action_t, state_t, reward_t) const;
+    virtual feature_return_value evaluate(const_instanceIt_t) const;
     virtual std::string identifier() const;
     static bool features_contradict(const StateFeature& f1, const StateFeature& f2);
     bool contradicts(const StateFeature& f) { return features_contradict(*this,f); }
@@ -106,8 +104,7 @@ private:
     virtual ~RelativeStateFeature();
 public:
     static RelativeStateFeature * create(const int& dx, const int& dy, const int& d1, const int& d2);
-    virtual feature_return_value evaluate(const instance_t *) const;
-    virtual feature_return_value evaluate(const instance_t *, action_t, state_t, reward_t) const;
+    virtual feature_return_value evaluate(const_instanceIt_t) const;
     virtual std::string identifier() const;
     static bool features_contradict(const RelativeStateFeature& f1, const RelativeStateFeature& f2);
     bool contradicts(const RelativeStateFeature& f) { return features_contradict(*this,f); }
@@ -124,8 +121,7 @@ private:
     virtual ~RewardFeature();
 public:
     static RewardFeature * create(const reward_t& r, const int& d);
-    virtual feature_return_value evaluate(const instance_t *) const;
-    virtual feature_return_value evaluate(const instance_t *, action_t, state_t, reward_t) const;
+    virtual feature_return_value evaluate(const_instanceIt_t) const;
     virtual std::string identifier() const;
     static bool features_contradict(const RewardFeature& f1, const RewardFeature& f2);
     bool contradicts(const RewardFeature& f) { return features_contradict(*this,f); }
@@ -136,12 +132,12 @@ protected:
 
 class AndFeature: public Feature {
 public:
+    using Feature::evaluate; // so the compiler finds them
     AndFeature();
     AndFeature(const Feature& f1);
     AndFeature(const Feature& f1, const Feature& f2);
     virtual ~AndFeature();
-    virtual feature_return_value evaluate(const instance_t *) const;
-    virtual feature_return_value evaluate(const instance_t *, action_t, state_t, reward_t) const;
+    virtual feature_return_value evaluate(const_instanceIt_t) const;
     virtual feature_return_value evaluate(const look_up_map_t&) const;
     virtual std::string identifier() const;
 protected:

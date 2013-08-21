@@ -107,12 +107,6 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
         g[i] = 0;
     }
 
-    int number_of_data_points = instance_data->it().length_to_first()-Config::k+1;
-    if(number_of_data_points<=0) {
-        DEBUG_OUT(0,"Not enough data to evaluate model (" << number_of_data_points << ").");
-        return fx;
-    }
-
     // Print parameter vector //
     if(DEBUG_LEVEL>=2) {
         DEBUG_OUT(2, "Parameter vector:");
@@ -159,126 +153,128 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
     double sumExpN;                    // normalization Z(x)
     vector<double> sumFExpNF(n,0.0);   // sumFExp(x(n),F)
     idx_t instance_idx = 0;
-    for(const_instanceIt_t insIt=instance_data->first()+Config::k; insIt!=INVALID; ++insIt, ++instance_idx) {
+    for(instance_t * current_episode : instance_data) {
+        for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
 
-        // print progress information
-        if(DEBUG_LEVEL>0) {
-            ProgressBar::print(instance_idx, number_of_data_points);
-        }
-
-        // reset sums
-        sumFNN = 0;
-        sumExpN = 0;
-        sumFExpNF.assign(n,0.0);
-
-        // calculate sumF(x(n),y(n))
-        for(uint f_idx=0; f_idx<feature_n; ++f_idx) { // sum over features
-            f_ret_t f_ret;
-            switch(precomputation_type) {
-            case NONE:
-                f_ret = active_features[f_idx].evaluate(insIt);
-                break;
-            case COMPOUND_LOOK_UP:
-            {
-                idx_t pre_idx = precomputed_feature_idx(instance_idx,f_idx,feature_n);
-                f_ret = compound_feature_values[pre_idx];
-                break;
+            // print progress information
+            if(DEBUG_LEVEL>0) {
+                ProgressBar::print(instance_idx, number_of_data_points);
             }
-            case BASE_LOOK_UP:
-                f_ret = active_features[f_idx].evaluate(base_feature_values[instance_idx][base_feature_indices[instance_idx]]);
-                break;
-            default:
-                DEBUG_DEAD_LINE;
-            }
-            sumFNN += x[f_idx]*f_ret;
-        }
 
-        // calculate sumExp(x(n))
-        action_t action = insIt->action;
-        idx_t state_reward_idx=0;
-        for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {
-            for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
+            // reset sums
+            sumFNN = 0;
+            sumExpN = 0;
+            sumFExpNF.assign(n,0.0);
 
-                // calculate sumF(x(n),y')
-                double sumFN = 0;
-                for(uint f_idx=0; f_idx<feature_n; ++f_idx) { // sum over features
-                    f_ret_t f_ret;
-                    switch(precomputation_type) {
-                    case NONE:
-                        f_ret = active_features[f_idx].evaluate(insIt-1,action,state,reward);
-                        break;
-                    case COMPOUND_LOOK_UP:
-                    {
-                        idx_t pre_idx = precomputed_feature_idx(instance_idx,f_idx,feature_n,state,reward);
-                        f_ret = compound_feature_values[pre_idx];
-                        break;
-                    }
-                    case BASE_LOOK_UP:
-                        f_ret = active_features[f_idx].evaluate(base_feature_values[instance_idx][state_reward_idx]);
-                        break;
-                    default:
-                        DEBUG_DEAD_LINE;
-                    }
-                    sumFN += x[f_idx]*f_ret;
+            // calculate sumF(x(n),y(n))
+            for(uint f_idx=0; f_idx<feature_n; ++f_idx) { // sum over features
+                f_ret_t f_ret;
+                switch(precomputation_type) {
+                case NONE:
+                    f_ret = active_features[f_idx].evaluate(insIt);
+                    break;
+                case COMPOUND_LOOK_UP:
+                {
+                    idx_t pre_idx = precomputed_feature_idx(instance_idx,f_idx,feature_n);
+                    f_ret = compound_feature_values[pre_idx];
+                    break;
                 }
-
-                // increment sumExp(x(n))
-                sumExpN += exp( sumFN );
-
-                // increment sumFExp(x(n),F)
-                for(int lambda_idx=0; lambda_idx<n; ++lambda_idx) { // for all parameters/gradient components
-                    // in case of parameter binding additionally sum over all features belonging to this parameter
-                    f_ret_t f_ret;
-                    switch(precomputation_type) {
-                    case NONE:
-                        f_ret = active_features[lambda_idx].evaluate(insIt-1,action,state,reward);
-                        break;
-                    case COMPOUND_LOOK_UP:
-                    {
-                        idx_t pre_idx = precomputed_feature_idx(instance_idx,lambda_idx,feature_n,state,reward);
-                        f_ret = compound_feature_values[pre_idx];
-                        break;
-                    }
-                    case BASE_LOOK_UP:
-                        f_ret = active_features[lambda_idx].evaluate(base_feature_values[instance_idx][state_reward_idx]);
-                        break;
-                    default:
-                        DEBUG_DEAD_LINE;
-                    }
-                    sumFExpNF[lambda_idx] += f_ret * exp( sumFN );
+                case BASE_LOOK_UP:
+                    f_ret = active_features[f_idx].evaluate(base_feature_values[instance_idx][base_feature_indices[instance_idx]]);
+                    break;
+                default:
+                    DEBUG_DEAD_LINE;
                 }
-
-                // increment state-reward index
-                ++state_reward_idx;
+                sumFNN += x[f_idx]*f_ret;
             }
-        }
 
-        // increment fx
-        fx += sumFNN - log( sumExpN );
+            // calculate sumExp(x(n))
+            action_t action = insIt->action;
+            idx_t state_reward_idx=0;
+            for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {
+                for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
 
-        // increment gradient
-        for(int lambda_idx=0; lambda_idx<n; ++lambda_idx) { // for all parameters/gradient components
-            g[lambda_idx] -= sumFExpNF[lambda_idx]/sumExpN;
+                    // calculate sumF(x(n),y')
+                    double sumFN = 0;
+                    for(uint f_idx=0; f_idx<feature_n; ++f_idx) { // sum over features
+                        f_ret_t f_ret;
+                        switch(precomputation_type) {
+                        case NONE:
+                            f_ret = active_features[f_idx].evaluate(insIt-1,action,state,reward);
+                            break;
+                        case COMPOUND_LOOK_UP:
+                        {
+                            idx_t pre_idx = precomputed_feature_idx(instance_idx,f_idx,feature_n,state,reward);
+                            f_ret = compound_feature_values[pre_idx];
+                            break;
+                        }
+                        case BASE_LOOK_UP:
+                            f_ret = active_features[f_idx].evaluate(base_feature_values[instance_idx][state_reward_idx]);
+                            break;
+                        default:
+                            DEBUG_DEAD_LINE;
+                        }
+                        sumFN += x[f_idx]*f_ret;
+                    }
 
-            // in case of parameter binding additionally sum over all features belonging to this parameter
-            f_ret_t f_ret;
-            switch(precomputation_type) {
-            case NONE:
-                f_ret = active_features[lambda_idx].evaluate(insIt);
-                break;
-            case COMPOUND_LOOK_UP:
-            {
-                idx_t pre_idx = precomputed_feature_idx(instance_idx,lambda_idx,feature_n);
-                f_ret = compound_feature_values[pre_idx];
-                break;
+                    // increment sumExp(x(n))
+                    sumExpN += exp( sumFN );
+
+                    // increment sumFExp(x(n),F)
+                    for(int lambda_idx=0; lambda_idx<n; ++lambda_idx) { // for all parameters/gradient components
+                        // in case of parameter binding additionally sum over all features belonging to this parameter
+                        f_ret_t f_ret;
+                        switch(precomputation_type) {
+                        case NONE:
+                            f_ret = active_features[lambda_idx].evaluate(insIt-1,action,state,reward);
+                            break;
+                        case COMPOUND_LOOK_UP:
+                        {
+                            idx_t pre_idx = precomputed_feature_idx(instance_idx,lambda_idx,feature_n,state,reward);
+                            f_ret = compound_feature_values[pre_idx];
+                            break;
+                        }
+                        case BASE_LOOK_UP:
+                            f_ret = active_features[lambda_idx].evaluate(base_feature_values[instance_idx][state_reward_idx]);
+                            break;
+                        default:
+                            DEBUG_DEAD_LINE;
+                        }
+                        sumFExpNF[lambda_idx] += f_ret * exp( sumFN );
+                    }
+
+                    // increment state-reward index
+                    ++state_reward_idx;
+                }
             }
-            case BASE_LOOK_UP:
-                f_ret = active_features[lambda_idx].evaluate(base_feature_values[instance_idx][base_feature_indices[instance_idx]]);
-                break;
-            default:
-                DEBUG_DEAD_LINE;
+
+            // increment fx
+            fx += sumFNN - log( sumExpN );
+
+            // increment gradient
+            for(int lambda_idx=0; lambda_idx<n; ++lambda_idx) { // for all parameters/gradient components
+                g[lambda_idx] -= sumFExpNF[lambda_idx]/sumExpN;
+
+                // in case of parameter binding additionally sum over all features belonging to this parameter
+                f_ret_t f_ret;
+                switch(precomputation_type) {
+                case NONE:
+                    f_ret = active_features[lambda_idx].evaluate(insIt);
+                    break;
+                case COMPOUND_LOOK_UP:
+                {
+                    idx_t pre_idx = precomputed_feature_idx(instance_idx,lambda_idx,feature_n);
+                    f_ret = compound_feature_values[pre_idx];
+                    break;
+                }
+                case BASE_LOOK_UP:
+                    f_ret = active_features[lambda_idx].evaluate(base_feature_values[instance_idx][base_feature_indices[instance_idx]]);
+                    break;
+                default:
+                    DEBUG_DEAD_LINE;
+                }
+                g[lambda_idx] += f_ret;
             }
-            g[lambda_idx] += f_ret;
         }
     }
 
@@ -450,15 +446,13 @@ void KMarkovCRF::check_derivatives(const int& number_of_samples, const double& r
 }
 
 void KMarkovCRF::evaluate_features() {
-    int number_of_data_points = instance_data->it().length_to_first()-Config::k+1;
-    if(number_of_data_points<=0) {
-        DEBUG_OUT(0,"Not enough data to evaluate model (" << number_of_data_points << ").");
-        return;
-    }
-
-    DEBUG_OUT(0,"Evaluating features:");
-    for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
-        DEBUG_OUT(0, "    " << active_features[f_idx].identifier() << " = " << active_features[f_idx].evaluate(instance_data) );
+    if(number_of_data_points==0) {
+        DEBUG_OUT(0,"No data to evaluate features");
+    } else {
+        DEBUG_OUT(0,"Evaluating features:");
+        for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
+            DEBUG_OUT(0, "    " << active_features[f_idx].identifier() << " = " << active_features[f_idx].evaluate(instance_data.back()) );
+        }
     }
 }
 
@@ -470,9 +464,8 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
     //  Check for Data  //
     //------------------//
 
-    int N = instance_data->it().length_to_first()-Config::k;
-    if(N<=0) {
-        DEBUG_OUT(0,"Not enough data to score features (" << N << ").");
+    if(number_of_data_points<=0) {
+        DEBUG_OUT(0,"Not enough data to score features (" << number_of_data_points << ").");
         return;
     }
 
@@ -491,13 +484,7 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
     // to make the code more readable and comparable to evaluate_model() function
     vector<double> &g = candidate_feature_scores;
 
-    int number_of_data_points = instance_data->it().length_to_first()-Config::k+1;
-    if(number_of_data_points<=0) {
-        DEBUG_OUT(0,"Not enough data to evaluate features (" << number_of_data_points << ").");
-        return;
-    }
-
-    // Print parameter vector //
+    // Print parameter vector
     if(DEBUG_LEVEL>=2) {
         DEBUG_OUT(2, "Parameter vector:");
         for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
@@ -509,49 +496,51 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
     double sumFN; // sumF(x(n),y') is independent of candidate features since they have zero coefficient (no parameter binding!)
     double sumExpN; // normalization Z(x) is independent of candidate features since sumF(x(n),y') is independent
     vector<double> sumFExpNF(cf_size,0.0); // sumFExp(x(n),F) for all candidate features F
-    idx_t instance_idx = 1;
+    idx_t instance_idx = 0;
     if(DEBUG_LEVEL>0) {
         ProgressBar::init("Scoring: ");
     }
-    for(const_instanceIt_t instance=instance_data->first()+Config::k; instance!=INVALID; ++instance, ++instance_idx) {
+    for(instance_t * current_episode : instance_data) {
+        for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
 
-        if(DEBUG_LEVEL>0) {
-            ProgressBar::print(instance_idx, number_of_data_points);
-        }
+            if(DEBUG_LEVEL>0) {
+                ProgressBar::print(instance_idx, number_of_data_points);
+            }
 
-        action_t action = instance->action;
+            action_t action = insIt->action;
 
-        sumExpN = 0.0;
-        sumFExpNF.assign(cf_size,0.0);
+            sumExpN = 0.0;
+            sumFExpNF.assign(cf_size,0.0);
 
-        // calculate sumExp(x(n))
-        for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {
-            for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
+            // calculate sumExp(x(n))
+            for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {
+                for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
 
-                // calculate sumF(x(n),y')
-                sumFN = 0.0;
-                for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
-                    sumFN += lambda[f_idx]*active_features[f_idx].evaluate(instance-1,action,state,reward);
-                    // candidate features have zero coefficient (no parameter binding possible)!
-                }
+                    // calculate sumF(x(n),y')
+                    sumFN = 0.0;
+                    for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
+                        sumFN += lambda[f_idx]*active_features[f_idx].evaluate(insIt-1,action,state,reward);
+                        // candidate features have zero coefficient (no parameter binding possible)!
+                    }
 
-                // increment sumExp(x(n))
-                sumExpN += exp( sumFN );
+                    // increment sumExp(x(n))
+                    sumExpN += exp( sumFN );
 
-                // increment sumFExp(x(n),F)
-                for(int lambda_cf_idx=0; lambda_cf_idx<cf_size; ++lambda_cf_idx) { // for all parameters/gradient components (i.e. for all candidate features)
-                    // in case of parameter binding additionally sum over all features belonging to this parameter (not allowed!)
-                    sumFExpNF[lambda_cf_idx] += candidate_features[lambda_cf_idx].evaluate(instance-1,action,state,reward) * exp( sumFN );
+                    // increment sumFExp(x(n),F)
+                    for(int lambda_cf_idx=0; lambda_cf_idx<cf_size; ++lambda_cf_idx) { // for all parameters/gradient components (i.e. for all candidate features)
+                        // in case of parameter binding additionally sum over all features belonging to this parameter (not allowed!)
+                        sumFExpNF[lambda_cf_idx] += candidate_features[lambda_cf_idx].evaluate(insIt-1,action,state,reward) * exp( sumFN );
+                    }
                 }
             }
-        }
 
-        // increment gradient
-        for(int lambda_cf_idx=0; lambda_cf_idx<cf_size; ++lambda_cf_idx) { // for all parameters/gradient components
-            g[lambda_cf_idx] -= sumFExpNF[lambda_cf_idx]/sumExpN;
+            // increment gradient
+            for(int lambda_cf_idx=0; lambda_cf_idx<cf_size; ++lambda_cf_idx) { // for all parameters/gradient components
+                g[lambda_cf_idx] -= sumFExpNF[lambda_cf_idx]/sumExpN;
 
-            // in case of parameter binding additionally sum over all features belonging to this parameter (not allowed!)
-            g[lambda_cf_idx] += candidate_features[lambda_cf_idx].evaluate(instance);
+                // in case of parameter binding additionally sum over all features belonging to this parameter (not allowed!)
+                g[lambda_cf_idx] += candidate_features[lambda_cf_idx].evaluate(insIt);
+            }
         }
     }
     if(DEBUG_LEVEL>0) {
@@ -764,12 +753,7 @@ const {
 }
 
 unsigned long int KMarkovCRF::get_training_data_length() {
-    unsigned long int n = instance_data->it().length_to_first()-Config::k;
-    if(n<=0) {
-        return 0;
-    } else {
-        return n;
-    }
+    return number_of_data_points;
 }
 
 void KMarkovCRF::update_prediction_map() {
@@ -784,29 +768,31 @@ void KMarkovCRF::update_prediction_map() {
     std::map<input_tuple_t, size_t > counts;
 
     // go through instance and count frequencies for transitions
-    for(instanceIt_t instance=instance_data->first()+Config::k; instance!=INVALID; ++instance) {
+    for(instance_t * current_episode : instance_data) {
+        for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt) {
 
-        // get data
-        action_t action = instance->action;
-        state_t state = instance->state;
-        reward_t reward = instance->reward;
+            // get data
+            action_t action = insIt->action;
+            state_t state = insIt->state;
+            reward_t reward = insIt->reward;
 
-        // increment frequency
-        prediction_tuple_t predict_tuple = std::make_tuple(instance, action, state, reward);
-        auto ret_predict = prediction_map.insert(std::make_pair(predict_tuple,1)); // initialize with one count
-        if(!ret_predict.second) { // if element already existed increment instead
-            ret_predict.first->second += 1;
+            // increment frequency
+            prediction_tuple_t predict_tuple = std::make_tuple(insIt, action, state, reward);
+            auto ret_predict = prediction_map.insert(std::make_pair(predict_tuple,1)); // initialize with one count
+            if(!ret_predict.second) { // if element already existed increment instead
+                ret_predict.first->second += 1;
+            }
+
+            // increment counter for input
+            auto input_tuple = std::make_tuple(insIt, action);
+            auto ret_input = counts.insert(std::make_pair(input_tuple,1)); // initialize with one count
+            if(!ret_input.second) { // if element already existed increment instead
+                ret_input.first->second += 1;
+            }
+
+            // update input set
+            input_set.insert(input_tuple);
         }
-
-        // increment counter for input
-        auto input_tuple = std::make_tuple(instance, action);
-        auto ret_input = counts.insert(std::make_pair(input_tuple,1)); // initialize with one count
-        if(!ret_input.second) { // if element already existed increment instead
-            ret_input.first->second += 1;
-        }
-
-        // update input set
-        input_set.insert(input_tuple);
     }
 
     // normalize to get a probability distribution
@@ -828,8 +814,7 @@ void KMarkovCRF::update_prediction_map() {
 
 void KMarkovCRF::test() {
 
-    // get number of data points and return if not enough
-    int number_of_data_points = instance_data->it().length_to_first()-Config::k+1;
+    // return if not enough data available
     if(number_of_data_points<=0) {
         DEBUG_OUT(0,"Not enough data to evaluate features (" << number_of_data_points << ").");
         return;
@@ -844,43 +829,45 @@ void KMarkovCRF::test() {
     set<vector<vector<f_ret_t> > > feature_value_set;
 
     // iterate through data
-    size_t instance_idx = Config::k;
-    for(const_instanceIt_t instance=instance_data->first()+Config::k; instance!=INVALID; ++instance, ++instance_idx) {
+    size_t instance_idx = 0;
+    for(instance_t * current_episode : instance_data) {
+        for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
 
-        // update progress bar
-        if(DEBUG_LEVEL>0) {
-            ProgressBar::print(instance_idx, number_of_data_points);
-        }
-
-        // current feature values
-        vector<vector<f_ret_t> > feature_value_element;
-
-        // remember action for being able to only change state and reward below
-        action_t action = instance->action;
-
-        // iterate through all possible states and rewards (keeping action the same)
-        for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {
-            for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
-
-                // add new element for this state-reward combination
-                feature_value_element.push_back(vector<f_ret_t>());
-
-                // iterate through all features
-                for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
-                    // add new return value for current feature
-                    feature_value_element.back().push_back(active_features[f_idx].evaluate(instance-1,action,state,reward));
-                }
-
+            // update progress bar
+            if(DEBUG_LEVEL>0) {
+                ProgressBar::print(instance_idx, number_of_data_points);
             }
+
+            // current feature values
+            vector<vector<f_ret_t> > feature_value_element;
+
+            // remember action for being able to only change state and reward below
+            action_t action = insIt->action;
+
+            // iterate through all possible states and rewards (keeping action the same)
+            for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {
+                for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
+
+                    // add new element for this state-reward combination
+                    feature_value_element.push_back(vector<f_ret_t>());
+
+                    // iterate through all features
+                    for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
+                        // add new return value for current feature
+                        feature_value_element.back().push_back(active_features[f_idx].evaluate(insIt-1,action,state,reward));
+                    }
+
+                }
+            }
+
+            // for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
+            //     active_features[f_idx].evaluate(insIt);
+            // }
+
+            // add feature value to set of unique values
+            feature_value_set.insert(feature_value_element);
+
         }
-
-        // for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
-        //     active_features[f_idx].evaluate(instance);
-        // }
-
-        // add feature value to set of unique values
-        feature_value_set.insert(feature_value_element);
-
     }
 
     // terminate progress bar
@@ -1052,7 +1039,7 @@ void KMarkovCRF::precompute_compound_feature_values() {
     DEBUG_OUT(1,"Precomputing feature values...");
 
     // get number of instances and features
-    idx_t instance_n = instance_data->const_it().length_to_first() + 1 - Config::k;
+    idx_t instance_n = number_of_data_points;
     idx_t feature_n = active_features.size();
 
     // resize vector
@@ -1066,38 +1053,39 @@ void KMarkovCRF::precompute_compound_feature_values() {
     if(DEBUG_LEVEL>0) {
         ProgressBar::init("Precomputing: ");
     }
-    // idx_t pre_idx = 0;
-    for(const_instanceIt_t insIt=instance_data->first()+Config::k; insIt!=INVALID; ++insIt, ++instance_idx) {
+    for(instance_t * current_episode : instance_data) {
+        for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
 
-        // print progress information
-        if(DEBUG_LEVEL>0) {
-            ProgressBar::print(instance_idx, instance_n);
-        }
+            // print progress information
+            if(DEBUG_LEVEL>0) {
+                ProgressBar::print(instance_idx, instance_n);
+            }
 
-        DEBUG_OUT(3,"    Instance " << *insIt );
+            DEBUG_OUT(3,"    Instance " << *insIt );
 
-        // iterate through features
-        action_t action = insIt->action;
-        for(uint f_idx=0; f_idx<feature_n; ++f_idx) {
+            // iterate through features
+            action_t action = insIt->action;
+            for(uint f_idx=0; f_idx<feature_n; ++f_idx) {
 
-            // for instance itself without setting specific state and reward
-            idx_t precomputed_index = precomputed_feature_idx(instance_idx,f_idx,feature_n);
-            compound_feature_values[precomputed_index] = active_features[f_idx].evaluate(insIt);
-            DEBUG_OUT(3,"    Feature " << active_features[f_idx] <<
-                      " --> " << compound_feature_values[precomputed_index] <<
-                      " (idx=" << precomputed_index << ")"
-                );
+                // for instance itself without setting specific state and reward
+                idx_t precomputed_index = precomputed_feature_idx(instance_idx,f_idx,feature_n);
+                compound_feature_values[precomputed_index] = active_features[f_idx].evaluate(insIt);
+                DEBUG_OUT(3,"    Feature " << active_features[f_idx] <<
+                          " --> " << compound_feature_values[precomputed_index] <<
+                          " (idx=" << precomputed_index << ")"
+                    );
 
-            // with setting specific state and reward
-            for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {
-                for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
-                    precomputed_index = precomputed_feature_idx(instance_idx,f_idx,feature_n,state,reward);
-                    compound_feature_values[precomputed_index] = active_features[f_idx].evaluate(insIt-1,action,state,reward);
-                    DEBUG_OUT(3,"    Feature " << active_features[f_idx] <<
-                              " with state=" << state << " reward=" << reward <<
-                              " --> " << compound_feature_values[precomputed_index] <<
-                              " (idx=" << precomputed_index << ")"
-                        );
+                // with setting specific state and reward
+                for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {
+                    for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
+                        precomputed_index = precomputed_feature_idx(instance_idx,f_idx,feature_n,state,reward);
+                        compound_feature_values[precomputed_index] = active_features[f_idx].evaluate(insIt-1,action,state,reward);
+                        DEBUG_OUT(3,"    Feature " << active_features[f_idx] <<
+                                  " with state=" << state << " reward=" << reward <<
+                                  " --> " << compound_feature_values[precomputed_index] <<
+                                  " (idx=" << precomputed_index << ")"
+                            );
+                    }
                 }
             }
         }
@@ -1114,7 +1102,7 @@ void KMarkovCRF::precompute_base_feature_values() {
     DEBUG_OUT(1,"Precomputing feature values...");
 
     // get number of instances and features
-    idx_t instance_n = instance_data->const_it().length_to_first() + 1 - Config::k;
+    idx_t instance_n = number_of_data_points;
     idx_t basis_feature_n = basis_features.size();
 
     // clear values
@@ -1126,40 +1114,42 @@ void KMarkovCRF::precompute_base_feature_values() {
     if(DEBUG_LEVEL>0) {
         ProgressBar::init("Precomputing: ");
     }
-    for(const_instanceIt_t insIt=instance_data->first()+Config::k; insIt!=INVALID; ++insIt, ++instance_idx) {
+    for(instance_t * current_episode : instance_data) {
+        for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
 
-        // print progress information
-        if(DEBUG_LEVEL>0) {
-            ProgressBar::print(instance_idx, instance_n);
-        }
-        DEBUG_OUT(3,"    Instance " << *insIt );
+            // print progress information
+            if(DEBUG_LEVEL>0) {
+                ProgressBar::print(instance_idx, instance_n);
+            }
+            DEBUG_OUT(3,"    Instance " << *insIt );
 
-        // add entry on instance level
-        base_feature_values.push_back(vector<Feature::look_up_map_t>());
+            // add entry on instance level
+            base_feature_values.push_back(vector<Feature::look_up_map_t>());
 
-        // remember action, state, and reward
-        action_t current_action = insIt->action;
-        state_t current_state = insIt->state;
-        reward_t current_reward = insIt->reward;
+            // remember action, state, and reward
+            action_t current_action = insIt->action;
+            state_t current_state = insIt->state;
+            reward_t current_reward = insIt->reward;
 
-        // iterate through states and rewards
-        idx_t state_reward_idx=0;
-        for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {
-            for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
+            // iterate through states and rewards
+            idx_t state_reward_idx=0;
+            for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {
+                for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
 
-                // add entry on state-reward level
-                base_feature_values[instance_idx].push_back(Feature::look_up_map_t());
+                    // add entry on state-reward level
+                    base_feature_values[instance_idx].push_back(Feature::look_up_map_t());
 
-                // remember index of actual configuration
-                if(state==current_state && reward==current_reward) {
-                    base_feature_indices.push_back(state_reward_idx);
+                    // remember index of actual configuration
+                    if(state==current_state && reward==current_reward) {
+                        base_feature_indices.push_back(state_reward_idx);
+                    }
+
+                    // iterate through features
+                    for(uint f_idx=0; f_idx<basis_feature_n; ++f_idx) {
+                        base_feature_values[instance_idx][state_reward_idx][basis_features[f_idx]] = basis_features[f_idx]->evaluate(insIt-1,current_action,state,reward);
+                    }
+                    ++state_reward_idx;
                 }
-
-                // iterate through features
-                for(uint f_idx=0; f_idx<basis_feature_n; ++f_idx) {
-                    base_feature_values[instance_idx][state_reward_idx][basis_features[f_idx]] = basis_features[f_idx]->evaluate(insIt-1,current_action,state,reward);
-                }
-                ++state_reward_idx;
             }
         }
     }
@@ -1178,11 +1168,13 @@ void KMarkovCRF::erase_const_zero_candidate_features() {
 
     // identify features to erase
     vector<bool> erase_feature(candidate_features_n,true);
-    for( const_instanceIt_t insIt=instance_data->const_first(); insIt!=INVALID; ++insIt ) {
-        for(uint f_idx=0; f_idx<candidate_features_n; ++f_idx) {
-            if(erase_feature[f_idx] && candidate_features[f_idx].evaluate(insIt)!=0) {
-                erase_feature[f_idx]=false;
-                ++new_candidate_features_n;
+    for(instance_t * current_episode : instance_data) {
+        for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt) {
+            for(uint f_idx=0; f_idx<candidate_features_n; ++f_idx) {
+                if(erase_feature[f_idx] && candidate_features[f_idx].evaluate(insIt)!=0) {
+                    erase_feature[f_idx]=false;
+                    ++new_candidate_features_n;
+                }
             }
         }
     }

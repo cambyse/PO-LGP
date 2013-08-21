@@ -3,6 +3,8 @@
 #include "Config.h"
 #include "util.h"
 
+#include "SplineInterpolation.h"
+
 #include <float.h>  // for DBL_MAX
 #include <vector>
 
@@ -30,7 +32,7 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     QWidget(parent),
     planner_type(OPTIMAL_PLANNER),
     maze(0.0),
-    record(false), plot(false),
+    record(false), plot(false), start_new_episode(false), search_tree_invalid(false),
     current_instance(nullptr),
     random_timer(nullptr), action_timer(nullptr),
     console_history(1,"END OF HISTORY"),
@@ -91,6 +93,11 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     // install event filter
     MoveByKeys *moveByKeys = new MoveByKeys(this);
     ui.graphicsView->installEventFilter(moveByKeys);
+
+    // set maze initial state
+    state_t initial_state = Maze::MazeState(Config::maze_x_size/2,Config::maze_y_size/2).state_idx();
+    maze.set_current_state(initial_state);
+    update_current_instance(action_t::STAY,initial_state,0);
 }
 
 TestMaze_II::~TestMaze_II() {
@@ -101,6 +108,7 @@ TestMaze_II::~TestMaze_II() {
 }
 
 void TestMaze_II::collect_episode(const int& length) {
+    start_new_episode = true;
     for(int idx=0; idx<length; ++idx) {
         action_t action = (action_t)(action_t::random_action());
         state_t state_to;
@@ -111,7 +119,7 @@ void TestMaze_II::collect_episode(const int& length) {
     }
 }
 
-void TestMaze_II::update_current_instance(action_t action, state_t state, reward_t reward) {
+void TestMaze_II::update_current_instance(action_t action, state_t state, reward_t reward, bool invalidate_search_tree) {
     if(current_instance==nullptr) {
         current_instance = instance_t::create(action,state,reward);
     } else {
@@ -120,6 +128,7 @@ void TestMaze_II::update_current_instance(action_t action, state_t state, reward
     if(plot) {
         plot_file << action << " " << state << " " << reward << endl;
     }
+    search_tree_invalid = invalidate_search_tree;
 }
 
 void TestMaze_II::add_action_state_reward_tripel(
@@ -127,11 +136,13 @@ void TestMaze_II::add_action_state_reward_tripel(
     const state_t& state,
     const reward_t& reward
     ) {
-    crf.add_action_state_reward_tripel(action,state,reward);
-    utree.add_action_state_reward_tripel(action,state,reward);
-    linQ.add_action_state_reward_tripel(action,state,reward);
-    delay_dist.add_action_state_reward_tripel(action,state,reward);
-    DEBUG_OUT(1,"Add (" << action << ", " << state << ", " << reward << ")" );
+           crf.add_action_state_reward_tripel(action,state,reward,start_new_episode);
+         utree.add_action_state_reward_tripel(action,state,reward,start_new_episode);
+          linQ.add_action_state_reward_tripel(action,state,reward,start_new_episode);
+    delay_dist.add_action_state_reward_tripel(action,state,reward,start_new_episode);
+    DEBUG_OUT(1,"Add (" << action << ", " << state << ", " << reward << ")" <<
+              (start_new_episode?" new episode":""));
+    start_new_episode = false;
 }
 
 void TestMaze_II::clear_data() {
@@ -139,6 +150,29 @@ void TestMaze_II::clear_data() {
     utree.clear_data();
     linQ.clear_data();
     delay_dist.clear_data();
+}
+
+void TestMaze_II::fully_expand_utree() {
+    double score_threshold = 1e-3;
+    double max_score = DBL_MAX;
+    switch(utree.get_expansion_type()) {
+    case UTree::STATE_REWARD_EXPANSION:
+        while(max_score>score_threshold) {
+            max_score = utree.expand_leaf_node(score_threshold);
+        }
+        break;
+    case UTree::UTILITY_EXPANSION:
+        while(max_score>score_threshold) {
+            double max_update = DBL_MAX;
+            while(max_update>1e-10) {
+                max_update = utree.value_iteration();
+            }
+            max_score = utree.expand_leaf_node(score_threshold);
+        }
+        break;
+    default:
+        DEBUG_DEAD_LINE;
+    }
 }
 
 void TestMaze_II::render() {
@@ -165,15 +199,17 @@ void TestMaze_II::choose_action() {
     }
 
     action_t action;
+    bool clear_seach_tree = (look_ahead_search.get_number_of_nodes()==0 || !prune_search_tree || search_tree_invalid);
     switch(planner_type) {
     case OPTIMAL_PLANNER:
-        if(look_ahead_search.get_number_of_nodes()==0 || !prune_search_tree) {
+        if(clear_seach_tree) {
             look_ahead_search.clear_tree();
             look_ahead_search.build_tree<Maze>(
                 current_instance,
                 maze,
                 max_tree_size
                 );
+            search_tree_invalid = false;
         } else {
             look_ahead_search.fully_expand_tree<Maze>(
                 maze,
@@ -183,13 +219,14 @@ void TestMaze_II::choose_action() {
         action = look_ahead_search.get_optimal_action();
         break;
     case SPARSE_PLANNER:
-        if(look_ahead_search.get_number_of_nodes()==0 || !prune_search_tree) {
+        if(clear_seach_tree) {
             look_ahead_search.clear_tree();
             look_ahead_search.build_tree<KMarkovCRF>(
                 current_instance,
                 crf,
                 max_tree_size
                 );
+            search_tree_invalid = false;
         } else {
             look_ahead_search.fully_expand_tree<KMarkovCRF>(
                 crf,
@@ -199,13 +236,14 @@ void TestMaze_II::choose_action() {
         action = look_ahead_search.get_optimal_action();
         break;
     case UTREE_PLANNER:
-        if(look_ahead_search.get_number_of_nodes()==0 || !prune_search_tree) {
+        if(clear_seach_tree) {
             look_ahead_search.clear_tree();
             look_ahead_search.build_tree<UTree>(
                 current_instance,
                 utree,
                 max_tree_size
                 );
+            search_tree_invalid = false;
         } else {
             look_ahead_search.fully_expand_tree<UTree>(
                 utree,
@@ -228,23 +266,35 @@ void TestMaze_II::choose_action() {
     state_t state_to;
     reward_t reward;
     maze.perform_transition(action,state_to,reward);
-    update_current_instance(action,state_to,reward);
+    update_current_instance(action,state_to,reward,false);
     if(record) {
         add_action_state_reward_tripel(action,state_to,reward);
     }
 
-    if(DEBUG_LEVEL>2) {
-        DEBUG_OUT(0,"After planning, before pruning:");
-        look_ahead_search.print_tree_statistics();
-    }
-
-    // sanity check
-    if(DEBUG_LEVEL>=1) {
-        probability_t prob = look_ahead_search.get_predicted_transition_probability<Maze>(action, state_to, reward, maze);
-        if(prob==0) {
-            probability_t prob_maze = maze.get_prediction(current_instance->const_it()-1, action, state_to, reward);
-            DEBUG_OUT(0,"Warning: Transition with predicted probability of zero for (" << action << "," << state_to << "," << reward << ") (Maze predicts " << prob_maze << ")" );
+    // debugging
+    switch(planner_type) {
+    case OPTIMAL_PLANNER:
+    case SPARSE_PLANNER:
+    case UTREE_PLANNER:
+        if(DEBUG_LEVEL>2) {
+            DEBUG_OUT(0,"After planning, before pruning:");
+            look_ahead_search.print_tree_statistics();
         }
+        // sanity check
+        if(DEBUG_LEVEL>=1) {
+            probability_t prob = look_ahead_search.get_predicted_transition_probability<Maze>(action, state_to, reward, maze);
+            if(prob==0) {
+                probability_t prob_maze = maze.get_prediction(current_instance->const_it()-1, action, state_to, reward);
+                DEBUG_OUT(0,"Warning: Transition with predicted probability of zero for (" << action << "," << state_to << "," << reward << ") (Maze predicts " << prob_maze << ")" );
+            }
+        }
+        break;
+    case UTREE_VALUE:
+    case LINEAR_Q_VALUE:
+        // no search tree
+        break;
+    default:
+        DEBUG_DEAD_LINE;
     }
 
     // prune tree
@@ -356,6 +406,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString validate_s(                      "    validate / v . . . . . . . {crf,kmdp}[exact|mc <int>]. . . . . . . . .-> validate CRF or k-MDP model using exact (default) or Monte Carlo (with <int> samples) computation of the KL-divergence");
     QString learning_utree_s(                "    === UTree ===");
     QString expand_leaf_nodes_s(             "    expand / ex. . . . . . . . [<int>|<double] . . . . . . . . . . . . . .-> expand <int> leaf nodes / expand leaves until a score of <double> is reached");
+    QString fully_expand_utree_s(            "    fully-expand / fex . . . . . . . . . . . . . . . . . . . . . . . . . .-> fully expand UTree");
     QString expand_via_value_iteration_s(    "    expand-vi / exvi . . . . . . . . . . . . . . . . . . . . . . . . . . .-> run value iteration and leaf expansion alternating until convergence (only for UTILITY_EXPANSION)");
     QString print_utree_s(                   "    print-utree. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> print the current UTree");
     QString print_leaves_s(                  "    print-leaves . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> print leaves of the current UTree");
@@ -448,6 +499,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             TO_CONSOLE( validate_s );
             TO_CONSOLE( learning_utree_s ); // UTree
             TO_CONSOLE( expand_leaf_nodes_s );
+            TO_CONSOLE( fully_expand_utree_s );
             TO_CONSOLE( expand_via_value_iteration_s );
             TO_CONSOLE( print_utree_s );
             TO_CONSOLE( print_leaves_s );
@@ -633,6 +685,13 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( expand_leaf_nodes_s );
             }
+        } else if(str_args[0]=="fully-expand" || str_args[0]=="fex") {
+            if(str_args.size()==1) {
+                fully_expand_utree();
+            } else {
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( expand_leaf_nodes_s );
+            }
         } else if(str_args[0]=="expand-vi" || str_args[0]=="exvi") {
             if(str_args.size()==1) {
                 if(utree.get_expansion_type()!=UTree::UTILITY_EXPANSION) {
@@ -811,12 +870,16 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( set_s );
             } else if(str_args[1]=="record") {
-                    record = str_args[0]=="set";
-                    if(record) {
-                        TO_CONSOLE( "    record on" );
-                    } else {
-                        TO_CONSOLE( "    record off" );
-                    }
+                if(str_args[0]=="set") {
+                    record = true;
+                    start_new_episode = true;
+                    TO_CONSOLE( "    record on" );
+                } else if(str_args[0]=="unset") {
+                    record = false;
+                    TO_CONSOLE( "    record off" );
+                } else {
+                    DEBUG_DEAD_LINE;
+                }
             } else if(str_args[1]=="plot") {
                 plot = str_args[0]=="set";
                 if(plot) {
@@ -834,15 +897,15 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     TO_CONSOLE( "    set different planner to unset current" );
                 } else if(str_args[2]=="optimal" || str_args[2]=="o") {
                     planner_type = OPTIMAL_PLANNER;
-                    look_ahead_search.clear_tree();
+                    search_tree_invalid = true;
                     TO_CONSOLE( "    using optimal planner" );
                 } else if(str_args[2]=="sparse" || str_args[2]=="s") {
                     planner_type = SPARSE_PLANNER;
-                    look_ahead_search.clear_tree();
+                    search_tree_invalid = true;
                     TO_CONSOLE( "    using sparse planner" );
                 } else if(str_args[2]=="utree" || str_args[2]=="u") {
                     planner_type = UTREE_PLANNER;
-                    look_ahead_search.clear_tree();
+                    search_tree_invalid = true;
                     TO_CONSOLE( "    using UTree planner" );
                 } else if(str_args[2]=="uv" || str_args[2]=="utree-value") {
                     planner_type = UTREE_VALUE;
@@ -880,10 +943,11 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             } else if(str_args[1]=="prune-tree") {
                 if(str_args[0]=="set") {
                     prune_search_tree=true;
-                    look_ahead_search.clear_tree();
+                    search_tree_invalid = true;
                     TO_CONSOLE( "    prune search tree" );
                 } else {
                     prune_search_tree=false;
+                    search_tree_invalid = true;
                     TO_CONSOLE( "    don't prune search tree" );
                 }
             } else {
@@ -900,27 +964,18 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 TO_CONSOLE( construct_s );
             }
         } else if(str_args[0]=="test") { // test
-            crf.test();
-            // // generate some data:
-            // QVector<double> x(101), y(101); // initialize with entries 0..100
-            // double a = 2*drand48() - 1;
-            // double b = 2*drand48() - 1;
-            // double c = 2*drand48() - 1;
-            // double d = 2*drand48() - 1;
-            // for (int i=0; i<101; ++i)
-            // {
-            //     x[i] = i/50.0 - 1; // x goes from -1 to 1
-            //     y[i] = a + b*x[i] + c*x[i]*x[i] + d*x[i]*x[i]*x[i];
-            // }
-            // // create graph and assign data to it:
-            // plotter->graph(0)->setData(x, y);
-            // // give the axes some labels:
-            // plotter->xAxis->setLabel("x");
-            // plotter->yAxis->setLabel("y");
-            // // set axes ranges, so we see all data:
-            // plotter->xAxis->setRange(-1, 1);
-            // plotter->yAxis->setRange(-4, 4);
-            // plotter->replot();
+            vector<double> x_data;
+            for(int i=0; i<30; ++i) {
+                double x = drand48();
+                x_data.push_back(x);
+            }
+            sort(x_data.begin(), x_data.end());
+            vector<double> y_data;
+            for(int i=0; i<30; ++i) {
+                double y = sin(10*x_data[i])+x_data[i]*x_data[i]-x_data[i];
+                y_data.push_back(y);
+            }
+            SplineInterpolation::print_curve_to_file(x_data,y_data,"print_file.txt");
         } else if(str_args[0]=="col-states") { // color states
             Maze::color_vector_t  cols;
             for(stateIt_t state=stateIt_t::first(); state!=util::INVALID; ++state) {

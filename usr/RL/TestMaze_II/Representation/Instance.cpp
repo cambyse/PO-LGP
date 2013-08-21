@@ -711,7 +711,6 @@ InstanceIt & InstanceIt::operator+=(const int& c) {
         return (*this);
     } else {
         if(this_instance->container!=nullptr) { // use container (random access)
-            DEBUG_OUT(0,"USING CONTAINER!!");
             if(this_instance->container_idx+c>=(idx_t)this_instance->container->size()) {
                 this->invalidate();
             } else {
@@ -845,7 +844,6 @@ ConstInstanceIt & ConstInstanceIt::operator+=(const int& c) {
         return (*this);
     } else {
         if(this_instance->container!=nullptr && this_instance->container_idx!=(idx_t)this_instance->container->size()-1) { // use container (random access)
-            DEBUG_OUT(0,"USING CONTAINER!!");
             if(this_instance->container_idx+c>=(idx_t)this_instance->container->size()) {
                 int rest = c - this_instance->container->size() + this_instance->container_idx + 1;
                 (*this)=ConstInstanceIt(this_instance->container->back());

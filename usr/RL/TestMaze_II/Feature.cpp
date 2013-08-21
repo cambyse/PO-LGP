@@ -20,14 +20,20 @@ Feature::Feature(): type(ABSTRACT), id(id_counter), complexity(0), subfeatures(0
 
 Feature::~Feature() {}
 
-Feature::feature_return_value Feature::evaluate(const instance_t *) const {
+Feature::feature_return_value Feature::evaluate(const_instanceIt_t) const {
     DEBUG_OUT(0,"Error: Evaluating abstract type Feature");
     return 0;
 }
 
-Feature::feature_return_value Feature::evaluate(const instance_t *, action_t, state_t, reward_t) const {
-    DEBUG_OUT(0,"Error: Evaluating abstract type Feature");
-    return 0;
+Feature::feature_return_value Feature::evaluate(const_instanceIt_t insIt, action_t action, state_t state, reward_t reward) const {
+    if(insIt!=INVALID) {
+        const instance_t * new_ins = instance_t::create(action,state,reward,insIt);
+        Feature::feature_return_value ret = this->evaluate(new_ins);
+        delete new_ins;
+        return ret;
+    } else {
+        return 0;
+    }
 }
 
 Feature::feature_return_value Feature::evaluate(const look_up_map_t&) const {
@@ -156,12 +162,13 @@ ConstFeature * ConstFeature::create(const long long int& v) {
 
 ConstFeature::~ConstFeature() {}
 
-Feature::feature_return_value ConstFeature::evaluate(const instance_t *) const {
-    return const_return_value;
+Feature::feature_return_value ConstFeature::evaluate(const_instanceIt_t insIt) const {
+    return insIt==INVALID ? 0 : const_return_value;
 }
 
-Feature::feature_return_value ConstFeature::evaluate(const instance_t *, action_t, state_t, reward_t) const {
-    return const_return_value;
+Feature::feature_return_value ConstFeature::evaluate(const_instanceIt_t insIt, action_t, state_t, reward_t) const {
+    // re-implement because it's more efficient
+    return insIt==INVALID ? 0 : const_return_value;
 }
 
 string ConstFeature::identifier() const {
@@ -193,20 +200,12 @@ ActionFeature * ActionFeature::create(const action_t& a, const int& d) {
     return new_feature;
 }
 
-Feature::feature_return_value ActionFeature::evaluate(const instance_t * instance) const {
-    const_instanceIt_t insIt(instance);
-    if( (insIt+=delay)!=INVALID && insIt->action==action ) {
+Feature::feature_return_value ActionFeature::evaluate(const_instanceIt_t insIt) const {
+    if( insIt!=INVALID && (insIt+=delay)!=INVALID && insIt->action==action ) {
         return 1;
     } else {
         return 0;
     }
-}
-
-Feature::feature_return_value ActionFeature::evaluate(const instance_t * instance, action_t action, state_t state, reward_t reward) const {
-    instance_t * ins = instance_t::create(action,state,reward,instance);
-    Feature::feature_return_value ret = evaluate(ins);
-    delete ins;
-    return ret;
 }
 
 string ActionFeature::identifier() const {
@@ -248,20 +247,12 @@ StateFeature * StateFeature::create(const state_t& s, const int& d) {
     return new_feature;
 }
 
-Feature::feature_return_value StateFeature::evaluate(const instance_t * instance) const {
-    const_instanceIt_t insIt(instance);
-    if( (insIt+=delay)!=INVALID && insIt->state==state ) {
+Feature::feature_return_value StateFeature::evaluate(const_instanceIt_t insIt) const {
+    if( insIt!=INVALID && (insIt+=delay)!=INVALID && insIt->state==state ) {
         return 1;
     } else {
         return 0;
     }
-}
-
-Feature::feature_return_value StateFeature::evaluate(const instance_t * instance, action_t action, state_t state, reward_t reward) const {
-    instance_t * ins = instance_t::create(action,state,reward,instance);
-    Feature::feature_return_value ret = evaluate(ins);
-    delete ins;
-    return ret;
 }
 
 string StateFeature::identifier() const {
@@ -298,30 +289,28 @@ RelativeStateFeature * RelativeStateFeature::create(const int& dx, const int& dy
     return new_feature;
 }
 
-Feature::feature_return_value RelativeStateFeature::evaluate(const instance_t * instance) const {
-    const_instanceIt_t insIt_1 = instance->const_it()+delay_1;
-    const_instanceIt_t insIt_2 = instance->const_it()+delay_2;
-    if(insIt_1==INVALID || insIt_2==INVALID) {
-        return 0;
-    }
-    state_t s_1 = insIt_1->state;
-    state_t s_2 = insIt_2->state;
-    idx_t x_1 = s_1%Config::maze_x_size;
-    idx_t y_1 = s_1/Config::maze_x_size;
-    idx_t x_2 = s_2%Config::maze_x_size;
-    idx_t y_2 = s_2/Config::maze_x_size;
-    if(x_1-x_2==delta_x && y_1-y_2==delta_y) {
-        return 1;
+Feature::feature_return_value RelativeStateFeature::evaluate(const_instanceIt_t insIt) const {
+    if(insIt!=INVALID) {
+        const_instanceIt_t insIt_1 = insIt+delay_1;
+        const_instanceIt_t insIt_2 = insIt+delay_2;
+        if(insIt_1!=INVALID && insIt_2!=INVALID) {
+            state_t s_1 = insIt_1->state;
+            state_t s_2 = insIt_2->state;
+            idx_t x_1 = s_1%Config::maze_x_size;
+            idx_t y_1 = s_1/Config::maze_x_size;
+            idx_t x_2 = s_2%Config::maze_x_size;
+            idx_t y_2 = s_2/Config::maze_x_size;
+            if(x_1-x_2==delta_x && y_1-y_2==delta_y) {
+                return 1;
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
     } else {
         return 0;
     }
-}
-
-Feature::feature_return_value RelativeStateFeature::evaluate(const instance_t * instance, action_t action, state_t state, reward_t reward) const {
-    instance_t * ins = instance_t::create(action,state,reward,instance);
-    Feature::feature_return_value ret = evaluate(ins);
-    delete ins;
-    return ret;
 }
 
 string RelativeStateFeature::identifier() const {
@@ -366,20 +355,12 @@ RewardFeature * RewardFeature::create(const reward_t& r, const int& d) {
     return new_feature;
 }
 
-Feature::feature_return_value RewardFeature::evaluate(const instance_t * instance) const {
-    const_instanceIt_t insIt(instance);
-    if( (insIt+=delay)!=INVALID && insIt->reward==reward ) {
+Feature::feature_return_value RewardFeature::evaluate(const_instanceIt_t insIt) const {
+    if( insIt!=INVALID && (insIt+=delay)!=INVALID && insIt->reward==reward ) {
         return 1;
     } else {
         return 0;
     }
-}
-
-Feature::feature_return_value RewardFeature::evaluate(const instance_t * instance, action_t action, state_t state, reward_t reward) const {
-    instance_t * ins = instance_t::create(action,state,reward,instance);
-    Feature::feature_return_value ret = evaluate(ins);
-    delete ins;
-    return ret;
 }
 
 string RewardFeature::identifier() const {
@@ -423,55 +404,39 @@ AndFeature::AndFeature(const Feature& f1, const Feature& f2) {
 
 AndFeature::~AndFeature() {}
 
-Feature::feature_return_value AndFeature::evaluate(const instance_t * instance) const {
-    if(const_feature) {
-        return const_return_value;
-    } else {
-        Feature::feature_return_value prod = 1;
-        for(auto feature_iterator : subfeatures) {
-            prod *= feature_iterator->evaluate(instance);
-            if(prod==0) {
-                break;
-            }
-        }
-        return prod;
-    }
-}
-
-Feature::feature_return_value AndFeature::evaluate(const instance_t * instance, action_t action, state_t state, reward_t reward) const {
-    if(const_feature) {
-        return const_return_value;
-    } else {
-        Feature::feature_return_value prod = 1;
-        for(auto feature_iterator : subfeatures) {
-            prod *= feature_iterator->evaluate(instance,action,state,reward);
-            if(prod==0) {
-                break;
-            }
-        }
-        return prod;
-    }
-}
-
-AndFeature::feature_return_value AndFeature::evaluate(const look_up_map_t& look_up_map) const {
-    if(const_feature) {
-        return const_return_value;
-    } else {
-        Feature::feature_return_value prod = 1;
-        for(auto feature_iterator : subfeatures) {
-            auto it = look_up_map.find(feature_iterator);
-            if(it==look_up_map.end()) {
-                DEBUG_OUT(0,"Error: Subfeature not in look-up map");
-                break;
-            } else {
-                prod *= it->second;
+Feature::feature_return_value AndFeature::evaluate(const_instanceIt_t insIt) const {
+    if(insIt!=INVALID) {
+        if(const_feature) {
+            return const_return_value;
+        } else {
+            Feature::feature_return_value prod = 1;
+            for(auto feature_iterator : subfeatures) {
+                prod *= feature_iterator->evaluate(insIt);
                 if(prod==0) {
                     break;
                 }
             }
+            return prod;
         }
-        return prod;
+    } else {
+        return 0;
     }
+}
+
+AndFeature::feature_return_value AndFeature::evaluate(const look_up_map_t& look_up_map) const {
+    Feature::feature_return_value prod = 1;
+    for(auto feature_iterator : subfeatures) {
+        auto it = look_up_map.find(feature_iterator);
+        DEBUG_IF(it==look_up_map.end()) {
+            DEBUG_OUT(0,"Error: Subfeature not in look-up map");
+            return 0;
+        }
+        prod *= it->second;
+        if(prod==0) {
+            break;
+        }
+    }
+    return prod;
 }
 
 string AndFeature::identifier() const {

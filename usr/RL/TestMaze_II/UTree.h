@@ -57,7 +57,8 @@ public:
     virtual void add_action_state_reward_tripel(
             const action_t& action,
             const state_t& state,
-            const reward_t& reward
+            const reward_t& reward,
+            const bool& new_episode
     );
 
     /** \brief Clears all data (all instances) from tree, but does not clear the

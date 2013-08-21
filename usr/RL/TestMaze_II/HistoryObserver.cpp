@@ -4,20 +4,42 @@
 #define DEBUG_LEVEL 1
 #include "debug.h"
 
-HistoryObserver::HistoryObserver(): instance_data(nullptr) {}
-
-HistoryObserver::~HistoryObserver() { delete instance_data; }
+HistoryObserver::HistoryObserver():
+    number_of_data_points(0)
+{}
 
 void HistoryObserver::add_action_state_reward_tripel(
         const action_t& action,
         const state_t& state,
-        const reward_t& reward
+        const reward_t& reward,
+        const bool& new_episode
     ) {
-    if(instance_data==nullptr) {
-        instance_data = instance_t::create(action,state,reward);
-        instance_data->set_container();
+
+    if(instance_data.size()==0 || new_episode) {
+        // start new episode
+        instance_t * new_instance = instance_t::create(action,state,reward);
+        new_instance->set_container();
+        instance_data.push_back(new_instance);
     } else {
-        instance_data = instance_data->append_instance(action,state,reward);
+        // add to existing episode
+        instance_t * current_instance = instance_data.back();
+        instance_t * new_instance = current_instance->append_instance(action,state,reward);
+        instance_data.back() = new_instance;
     }
-    DEBUG_OUT(2, "added (action,state,reward) = (" << action << "," << state << "," << reward << ")" );
+
+    DEBUG_OUT(2, "added (action,state,reward) = (" <<
+              action << "," <<
+              state << "," <<
+              reward << ") to " << (new_episode?"new":"old") << " epsisode" );
+
+    // increment number of data points
+    ++number_of_data_points;
+}
+
+void HistoryObserver::clear_data() {
+    for(auto ins : instance_data) {
+        delete ins;
+    }
+    instance_data.clear();
+    number_of_data_points = 0;
 }

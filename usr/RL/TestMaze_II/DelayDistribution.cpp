@@ -22,24 +22,26 @@ DelayDistribution::probability_t DelayDistribution::get_fixed_delay_probability(
     // determine unnormalized delay probability
     probability_t prob = 0;
     size_t normalization = 0;
-    if(instance_data!=nullptr) {
-        const_instanceIt_t insIt_1 = instance_data->const_first();
-        const_instanceIt_t insIt_2 = insIt_1;
-        if(delay<0) {
-            DEBUG_OUT(1,"Warning: Using negative delay");
-            insIt_1 -= delay;
-        } else {
-            insIt_2 += delay;
-        }
-        while(insIt_1!=INVALID && insIt_2!=INVALID) {
-            if(insIt_1->state==s1) {
-                ++normalization;
-                if(insIt_2->state==s2) {
-                    prob += 1;
-                }
+    if(number_of_data_points>0) {
+        for(instance_t * current_episode : instance_data) {
+            const_instanceIt_t insIt_1 = current_episode->const_first();
+            const_instanceIt_t insIt_2 = insIt_1;
+            if(delay<0) {
+                DEBUG_OUT(1,"Warning: Using negative delay");
+                insIt_1 -= delay;
+            } else {
+                insIt_2 += delay;
             }
-            ++insIt_1;
-            ++insIt_2;
+            while(insIt_1!=INVALID && insIt_2!=INVALID) {
+                if(insIt_1->state==s1) {
+                    ++normalization;
+                    if(insIt_2->state==s2) {
+                        prob += 1;
+                    }
+                }
+                ++insIt_1;
+                ++insIt_2;
+            }
         }
     }
     // normalize and return
@@ -67,22 +69,24 @@ vector<DelayDistribution::probability_t> DelayDistribution::get_fixed_delay_prob
     size_t normalization = 0;
 
     // iterate through instances
-    if(instance_data!=nullptr) {
-        const_instanceIt_t insIt_1 = instance_data->const_first();
-        const_instanceIt_t insIt_2 = insIt_1;
-        if(delay<0) {
-            DEBUG_OUT(1,"Warning: Using negative delay");
-            insIt_1 -= delay;
-        } else {
-            insIt_2 += delay;
-        }
-        while(insIt_1!=INVALID && insIt_2!=INVALID) {
-            if(insIt_1->state==s1) {
-                ++normalization;
-                prob[idx_map[insIt_2->state]] += 1;
+    if(number_of_data_points>0) {
+        for(instance_t * current_episode : instance_data) {
+            const_instanceIt_t insIt_1 = current_episode->const_first();
+            const_instanceIt_t insIt_2 = insIt_1;
+            if(delay<0) {
+                DEBUG_OUT(1,"Warning: Using negative delay");
+                insIt_1 -= delay;
+            } else {
+                insIt_2 += delay;
             }
-            ++insIt_1;
-            ++insIt_2;
+            while(insIt_1!=INVALID && insIt_2!=INVALID) {
+                if(insIt_1->state==s1) {
+                    ++normalization;
+                    prob[idx_map[insIt_2->state]] += 1;
+                }
+                ++insIt_1;
+                ++insIt_2;
+            }
         }
     }
 
@@ -123,44 +127,50 @@ void DelayDistribution::get_delay_distribution(
     //-------------------//
     size_t counter = 0;
 
-    idx_t idx_1 = 0;
-    for(const_instanceIt_t instance_1=instance_data->const_first(); instance_1!=INVALID; ++instance_1) {
+    // iterate through episodes
+    for(instance_t * current_episode : instance_data) {
 
-        idx_t idx_2 = 0;
-        for(const_instanceIt_t instance_2=instance_data->const_first(); instance_2!=INVALID; ++instance_2) {
+        // iterate through current episode -- first time
+        idx_t idx_1 = 0;
+        for(const_instanceIt_t instance_1=current_episode->const_first(); instance_1!=INVALID; ++instance_1) {
 
-            // determine delay and handel max_delay requirements
-            idx_t delay = idx_1 - idx_2;
-            if(max_delay>=0 && abs(delay)>max_delay) {
-                if(delay>0) {
-                    continue;
-                } else {
-                    break;
+            // iterate through current episode -- second time
+            idx_t idx_2 = 0;
+            for(const_instanceIt_t instance_2=current_episode->const_first(); instance_2!=INVALID; ++instance_2) {
+
+                // determine delay and handel max_delay requirements
+                idx_t delay = idx_1 - idx_2;
+                if(max_delay>=0 && abs(delay)>max_delay) {
+                    if(delay>0) {
+                        continue;
+                    } else {
+                        break;
+                    }
                 }
+
+                // update if states match
+                if(instance_1->state==s1 && instance_2->state==s2) {
+                    if(delay==0) {
+                        DEBUG_DEAD_LINE; // identical states should be handeld above
+                    } else if(delay<0) {
+                        if((idx_t)backward.size()<1-delay) {
+                            backward.resize(1-delay,0);
+                        }
+                        backward[-delay] += 1;
+                    } else {
+                        if((idx_t)forward.size()<1+delay) {
+                            forward.resize(1+delay,0);
+                        }
+                        forward[-delay] += 1;
+                    }
+                    ++counter;
+                }
+
+                ++idx_2;
             }
 
-            // update if states match
-            if(instance_1->state==s1 && instance_2->state==s2) {
-                if(delay==0) {
-                    DEBUG_DEAD_LINE; // identical states should be handeld above
-                } else if(delay<0) {
-                    if((idx_t)backward.size()<1-delay) {
-                        backward.resize(1-delay,0);
-                    }
-                    backward[-delay] += 1;
-                } else {
-                    if((idx_t)forward.size()<1+delay) {
-                        forward.resize(1+delay,0);
-                    }
-                    forward[-delay] += 1;
-                }
-                ++counter;
-            }
-
-            ++idx_2;
+            ++idx_1;
         }
-
-        ++idx_1;
     }
 
     //--------------------------------//
@@ -185,16 +195,18 @@ DelayDistribution::probability_t DelayDistribution::get_mediator_probability(
     //-------------------//
     probability_t prob = 0;
     size_t counter = 0;
-    for(const_instanceIt_t ins_1=instance_data->first(); ins_1!=INVALID; ++ins_1 ) {
-        if(ins_1->state!=s1) { continue; }
-        idx_t window = 1;
-        for(const_instanceIt_t ins_3=ins_1+2; ins_3!=INVALID; ++ins_3 , ++window) {
-            if(ins_3->state!=s3 || (max_window>0 && window>max_window)) { continue; }
-            for(const_instanceIt_t ins_2=ins_1+1; (const instance_t *)ins_2!=(const instance_t *)ins_3; ++ins_2 ) {
-                if(ins_2->state==s2) {
-                    prob += 1;
+    for(instance_t * current_episode : instance_data) {
+        for(const_instanceIt_t ins_1=current_episode->first(); ins_1!=INVALID; ++ins_1 ) {
+            if(ins_1->state!=s1) { continue; }
+            idx_t window = 1;
+            for(const_instanceIt_t ins_3=ins_1+2; ins_3!=INVALID; ++ins_3 , ++window) {
+                if(ins_3->state!=s3 || (max_window>0 && window>max_window)) { continue; }
+                for(const_instanceIt_t ins_2=ins_1+1; (const instance_t *)ins_2!=(const instance_t *)ins_3; ++ins_2 ) {
+                    if(ins_2->state==s2) {
+                        prob += 1;
+                    }
+                    ++counter;
                 }
-                ++counter;
             }
         }
     }
@@ -211,13 +223,16 @@ void DelayDistribution::get_pairwise_delay_distribution(
     dist_map.clear();
 
     // fill map
-    for(const_instanceIt_t ins_1=instance_data->first(); ins_1!=INVALID; ++ins_1 ) {
-        idx_t dt = 1;
-        for(const_instanceIt_t ins_2=ins_1+1; ins_2!=INVALID && (max_dt==-1 || dt<=max_dt); ++ins_2, ++dt) {
-            // increment counts (construct if necessary, relies on default
-            // constructor int()==0 for initialization)
-            dist_map[make_tuple(ins_1->state, ins_2->state, dt)] += 1;
-            dist_map[make_tuple(ins_1->state, ins_2->state, 0)] += 1;
+    for(instance_t * current_episode : instance_data) {
+        for(const_instanceIt_t ins_1=current_episode->first(); ins_1!=INVALID; ++ins_1 ) {
+            idx_t dt = 1;
+            for(const_instanceIt_t ins_2=ins_1+1; ins_2!=INVALID && (max_dt==-1 || dt<=max_dt); ++ins_2, ++dt) {
+                // increment counts, perhaps explicitely call constructor when
+                // element does not exist? (relies on default constructor
+                // int()==0 for initialization)
+                dist_map[make_tuple(ins_1->state, ins_2->state, dt)] += 1;
+                dist_map[make_tuple(ins_1->state, ins_2->state, 0)] += 1;
+            }
         }
     }
 

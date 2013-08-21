@@ -20,7 +20,12 @@ using std::tuple;
 using std::make_tuple;
 using std::get;
 
+#ifdef NO_RANDOM
 const bool LookAheadSearch::random_tie_break = false;
+#else
+const bool LookAheadSearch::random_tie_break = true;
+#endif
+
 const double LookAheadSearch::lower_bound_weight = 0.5;
 
 LookAheadSearch::NodeInfo::NodeInfo():

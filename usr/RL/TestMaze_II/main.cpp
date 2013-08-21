@@ -8,8 +8,13 @@
 int main(int argc, char *argv[])
 {
     // seed random generator
+#ifdef NO_RANDOM
+    srand(0);
+    srand48(0);
+#else
     srand(time(nullptr));
     srand48(time(nullptr));
+#endif
 
 #if defined(BATCH_MODE) || defined(BATCH_MODE_QUIET)
     BatchMaze batchmaze;

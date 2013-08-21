@@ -84,10 +84,11 @@ LinearQ::~LinearQ() {}
 void LinearQ::add_action_state_reward_tripel(
         const action_t& action,
         const state_t& state,
-        const reward_t& reward
+        const reward_t& reward,
+        const bool& new_episode
 ) {
     // call function of parent class
-    HistoryObserver::add_action_state_reward_tripel(action,state,reward);
+    HistoryObserver::add_action_state_reward_tripel(action,state,reward,new_episode);
 
     // mark loss terms as out-of-date
     loss_terms_up_to_date = false;
@@ -256,10 +257,12 @@ void LinearQ::erase_zero_features() {
     // find non-zero features
     idx_t feature_n = active_features.size();
     vector<bool> is_non_zero(feature_n,false);
-    for(const_instanceIt_t insIt=instance_data->const_first(); insIt!=INVALID; ++insIt) {
-        for(idx_t f_idx=0; f_idx<feature_n; ++f_idx) {
-            if(is_non_zero[f_idx]==false && active_features[f_idx].evaluate(insIt)!=0) {
-                is_non_zero[f_idx] = true;
+    for(instance_t * current_episode : instance_data) {
+        for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=util::INVALID; ++insIt) {
+            for(idx_t f_idx=0; f_idx<feature_n; ++f_idx) {
+                if(is_non_zero[f_idx]==false && active_features[f_idx].evaluate(insIt)!=0) {
+                    is_non_zero[f_idx] = true;
+                }
             }
         }
     }
@@ -476,20 +479,6 @@ void LinearQ::update_loss_terms() {
     //---------------//
     idx_t feature_n = active_features.size();
 
-    //-----------------------//
-    // prepare for computing //
-    //-----------------------//
-    vector<f_ret_t> * f_ret_t0 = new vector<f_ret_t>(feature_n);
-    vector<f_ret_t> * f_ret_t1 = new vector<f_ret_t>(feature_n);
-    const_instanceIt_t ins_t0 = instance_data->const_first();
-    const_instanceIt_t ins_t1 = ins_t0 + 1;
-    const_instanceIt_t ins_t2 = ins_t0 + 2;
-    idx_t f_idx = 0;
-    for( auto f : active_features ) {
-        (*f_ret_t0)[f_idx] = f.evaluate(ins_t0, ins_t1->action, state_t(), reward_t());
-        ++f_idx;
-    }
-
     //-----------------//
     // reset variables //
     //-----------------//
@@ -497,64 +486,83 @@ void LinearQ::update_loss_terms() {
     rho = zeros(feature_n);
     L = zeros(feature_n,feature_n);
 
+    //-----------------------//
+    // prepare for computing //
+    //-----------------------//
+    size_t data_idx = 0;
+    vector<f_ret_t> * f_ret_t0 = new vector<f_ret_t>(feature_n);
+    vector<f_ret_t> * f_ret_t1 = new vector<f_ret_t>(feature_n);
+
     //----------------//
     // fill variables //
     //----------------//
-    size_t data_idx = 0;
-    size_t data_size = instance_data->const_it().length_to_first() - 2;
     if(DEBUG_LEVEL>0) {
         ProgressBar::init("Updating Loss Terms: ");
     }
-    while(ins_t1!=INVALID) {
+    for(instance_t * current_episode : instance_data) {
 
-        if(DEBUG_LEVEL>=1) {
-            ProgressBar::print(data_idx, data_size);
-        }
-
-        // count data
-        ++data_idx;
-
-        // precompute feature values
-        f_idx = 0;
+        // iterators with delay of one
+        const_instanceIt_t ins_t0 = current_episode->const_first();
+        const_instanceIt_t ins_t1 = ins_t0 + 1;
+        const_instanceIt_t ins_t2 = ins_t0 + 2;
+        idx_t f_idx = 0;
         for( auto f : active_features ) {
-            (*f_ret_t1)[f_idx] = f.evaluate(ins_t1, ins_t2->action, state_t(), reward_t());
+            (*f_ret_t0)[f_idx] = f.evaluate(ins_t0, ins_t1->action, state_t(), reward_t());
             ++f_idx;
         }
 
-        //--------------------//
-        // increment elements //
-        //--------------------//
+        // iterate through current episode
+        while(ins_t2!=INVALID) {
 
-        // constant
-        c += pow(ins_t0->reward,2);
-
-        // iterate through rows
-        for(int j=0; j<feature_n; ++j) {
-
-            double factor1 = discount * (*f_ret_t1)[j] - (*f_ret_t0)[j];
-
-            // increment linear term
-            rho(j) += ins_t0->reward * factor1;
-
-            // iterate through columns
-            for(int k=0; k<feature_n; ++k) {
-
-                double factor2 = discount * (*f_ret_t1)[k] - (*f_ret_t0)[k];
-
-                L(j,k) += factor1 * factor2;
+            if(DEBUG_LEVEL>=1) {
+                ProgressBar::print(data_idx, number_of_data_points);
             }
+
+            // count data
+            ++data_idx;
+
+            // precompute feature values
+            f_idx = 0;
+            for( auto f : active_features ) {
+                (*f_ret_t1)[f_idx] = f.evaluate(ins_t1, ins_t2->action, state_t(), reward_t());
+                ++f_idx;
+            }
+
+            //--------------------//
+            // increment elements //
+            //--------------------//
+
+            // constant
+            c += pow(ins_t0->reward,2);
+
+            // iterate through rows
+            for(int j=0; j<feature_n; ++j) {
+
+                double factor1 = discount * (*f_ret_t1)[j] - (*f_ret_t0)[j];
+
+                // increment linear term
+                rho(j) += ins_t0->reward * factor1;
+
+                // iterate through columns
+                for(int k=0; k<feature_n; ++k) {
+
+                    double factor2 = discount * (*f_ret_t1)[k] - (*f_ret_t0)[k];
+
+                    L(j,k) += factor1 * factor2;
+                }
+            }
+
+            // swap precomputed feature values (f_ret_t0
+            // does not need to be recomputed )
+            vector<f_ret_t> * tmp = f_ret_t0;
+            f_ret_t0 = f_ret_t1;
+            f_ret_t1 = tmp;
+
+            // increment instance iterators
+            ++ins_t0;
+            ++ins_t1;
+            ++ins_t2;
         }
-
-        // swap precomputed feature values (f_ret_t0
-        // does not need to be recomputed )
-        vector<f_ret_t> * tmp = f_ret_t0;
-        f_ret_t0 = f_ret_t1;
-        f_ret_t1 = tmp;
-
-        // increment instance iterators
-        ++ins_t0;
-        ++ins_t1;
-        ++ins_t2;
     }
 
     // terminate progress bar

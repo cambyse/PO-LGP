@@ -136,11 +136,11 @@ int BatchMaze::run(int argn, char ** argarr) {
                     if(option==OPTIMAL || option==RANDOM) {
                         // no training data
                     } else if(option==SPARSE) {
-                        crf->add_action_state_reward_tripel(action,state,reward);
+                        crf->add_action_state_reward_tripel(action,state,reward,false);
                     } else if(option==UTREE_VALUE || option==UTREE_PROB) {
-                        utree->add_action_state_reward_tripel(action,state,reward);
+                        utree->add_action_state_reward_tripel(action,state,reward,false);
                     } else if(option==LINEAR_Q) {
-                        linQ->add_action_state_reward_tripel(action,state,reward);
+                        linQ->add_action_state_reward_tripel(action,state,reward,false);
                     } else {
                         DEBUG_DEAD_LINE;
                     }

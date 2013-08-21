@@ -58,7 +58,7 @@ private:
     Ui::TestMaze_IIClass ui;
     Maze maze;
 
-    bool record, plot;
+    bool record, plot, start_new_episode, search_tree_invalid;
     instance_t * current_instance;
     std::ofstream plot_file;
 
@@ -103,13 +103,14 @@ private:
     //==================//
 
     void collect_episode(const int& length);
-    void update_current_instance(action_t,state_t,reward_t);
+    void update_current_instance(action_t, state_t, reward_t, bool invalidate_search_tree = true);
     void add_action_state_reward_tripel(
             const action_t& action,
             const state_t& state,
             const reward_t& reward
     );
     void clear_data();
+    void fully_expand_utree();
 
 private slots:
     void render();

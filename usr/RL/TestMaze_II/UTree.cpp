@@ -78,10 +78,11 @@ UTree::~UTree() {}
 void UTree::add_action_state_reward_tripel(
         const action_t& action,
         const state_t& state,
-        const reward_t& reward
+        const reward_t& reward,
+        const bool& new_episode
 ) {
     // call function of parent class
-    HistoryObserver::add_action_state_reward_tripel(action,state,reward);
+    HistoryObserver::add_action_state_reward_tripel(action,state,reward,new_episode);
 
     // create root node if necessary
     if(root_node==INVALID) {
@@ -90,7 +91,7 @@ void UTree::add_action_state_reward_tripel(
     }
 
     // insert instance at root
-    insert_instance(instance_data,root_node);
+    insert_instance(instance_data.back(),root_node);
 }
 
 void UTree::clear_data() {
@@ -285,9 +286,11 @@ void UTree::clear_tree() {
     leaf_nodes.insert(root_node);
 
     // reinsert data into root node
-    if(instance_data!=nullptr) {
-        for(const_instanceIt_t insIt=instance_data->const_first(); insIt!=util::INVALID; ++insIt) {
-            insert_instance(insIt,root_node);
+    if(number_of_data_points>0) {
+        for(instance_t * current_episode : instance_data) {
+            for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=util::INVALID; ++insIt) {
+                insert_instance(insIt,root_node);
+            }
         }
     }
 }
@@ -402,33 +405,38 @@ double UTree::q_iteration(const double& alpha) {
     }
 
     // run Q-iteration
-    const_instanceIt_t current_instance = instance_data->const_first();
-    const_instanceIt_t next_instance = current_instance+1;
-    if(next_instance!=util::INVALID) {
-        node_t current_leaf_node = find_leaf_node(current_instance);
-        node_t next_leaf_node = find_leaf_node(next_instance);
-        while(next_instance!=util::INVALID) {
+    bool enought_data = false;
+    for(instance_t * current_episode : instance_data) {
+        const_instanceIt_t current_instance = current_episode->const_first();
+        const_instanceIt_t next_instance = current_instance+1;
+        if(next_instance!=util::INVALID) {
+            enought_data = true;
+            node_t current_leaf_node = find_leaf_node(current_instance);
+            node_t next_leaf_node = find_leaf_node(next_instance);
+            while(next_instance!=util::INVALID) {
 
-            action_t current_action = current_instance->action;
-            double old_Q = node_info_map[current_leaf_node].state_action_values[current_action];
+                action_t current_action = current_instance->action;
+                double old_Q = node_info_map[current_leaf_node].state_action_values[current_action];
 
-            // calculate update
-            double delta_Q = next_instance->reward;
-            delta_Q += discount*node_info_map[next_leaf_node].max_state_action_value;
-            delta_Q -= old_Q;
-            delta_Q *= alpha;
+                // calculate update
+                double delta_Q = next_instance->reward;
+                delta_Q += discount*node_info_map[next_leaf_node].max_state_action_value;
+                delta_Q -= old_Q;
+                delta_Q *= alpha;
 
-            // update state-action value
-            double new_Q = old_Q + delta_Q;
-            node_info_map[current_leaf_node].state_action_values[current_action] = new_Q;
+                // update state-action value
+                double new_Q = old_Q + delta_Q;
+                node_info_map[current_leaf_node].state_action_values[current_action] = new_Q;
 
-            // update data for next loop
-            ++current_instance;
-            ++next_instance;
-            current_leaf_node = next_leaf_node;
-            next_leaf_node = find_leaf_node(next_instance);
+                // update data for next loop
+                ++current_instance;
+                ++next_instance;
+                current_leaf_node = next_leaf_node;
+                next_leaf_node = find_leaf_node(next_instance);
+            }
         }
-    } else {
+    }
+    if(!enought_data) {
         DEBUG_OUT(0,"Error: Cannot perform Q-Iteration, not enough data");
         return 0;
     }
