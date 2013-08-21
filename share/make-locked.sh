@@ -3,7 +3,7 @@
 if mkdir $1/Make.lock 2> /dev/null
 then    # directory did not exist, but was created successfully
     echo "                                         ***** Make " $1
-    make --silent -C $1
+    make -C $1
     rm -rf $1/Make.lock
 else
     echo "                                         ***** Waiting " $1

@@ -1434,6 +1434,9 @@ template<class T> void MT::Array<T>::read(std::istream& is) {
   uint d, i;
   char c;
   T x;
+
+#define PARSERR(x) HALT("Error in parsing Array of type '" <<typeid(T).name() <<"' (line=" <<MT::lineCount <<"):\n" <<x)
+
   c=MT::peerNextChar(is);
   switch(c) {
     case '<':
@@ -1442,19 +1445,19 @@ template<class T> void MT::Array<T>::read(std::istream& is) {
       if(c=='[') {  //fast ascii read
         is >>PARSE("[");
         for(i=0; i<N; i++) {
-          if(is.fail()) HALT("could not read " <<i <<"-th element of an array");
+          if(is.fail()) PARSERR("could not read " <<i <<"-th element of an array");
           is >>p[i];
         }
         is >>PARSE("]");
-        if(is.fail()) HALT("could not read array end tag");
+        if(is.fail()) PARSERR("could not read array end tag");
       } else if(c==0) {  //binary read
-        c=is.get(); CHECK(c==0, "couldn't read newline before binary data block :-(");
+        c=is.get();  if(c!=0) PARSERR("couldn't read newline before binary data block :-(");
         is.read((char*)p, sizeT*N);
-        if(is.fail()) HALT("could not binary data");
-        c=is.get(); CHECK(c==0, "couldn't read newline after binary data block :-(");
+        if(is.fail()) PARSERR("could not binary data");
+        c=is.get(); if(c!=0) PARSERR("couldn't read newline after binary data block :-(");
       } else { //just directly read numbers
         for(i=0; i<N; i++) {
-          if(is.fail()) HALT("could not read " <<i <<"-th element of an array");
+          if(is.fail()) PARSERR("could not read " <<i <<"-th element of an array");
           is >>p[i];
         }
       }
@@ -1469,7 +1472,7 @@ template<class T> void MT::Array<T>::read(std::istream& is) {
         is.get(c);
         if(c==']' || !is.good()) { is.clear(); break; }
         if(c==';' || c=='\n') {  //set an array width
-          if(!d) d=i; else CHECK(!(i%d), "Array::read: mis-structured array in row " <<i/d);
+          if(!d) d=i; else if(i%d) PARSERR("mis-structured array in row " <<i/d);
           continue;
         }
         if(c!=',') is.putback(c);
@@ -1481,11 +1484,14 @@ template<class T> void MT::Array<T>::read(std::istream& is) {
       }
       resizeCopy(i);
       if(d) {
-        CHECK(!(N%d), "Array::read: mis-structured array in last row");
+        if(N%d) PARSERR("mis-structured array in last row");
         reshape(N/d, d);
       }
       break;
   }
+
+#undef PARSERR
+
 }
 
 template<class T> void MT::Array<T>::read(const char* filename) {
