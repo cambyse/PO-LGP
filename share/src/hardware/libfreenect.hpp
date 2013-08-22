@@ -26,10 +26,12 @@
 
 #pragma once
 
-#include <libfreenect.h>
+#include <libfreenect/libfreenect.h>
 #include <stdexcept>
+#include <sstream>
 #include <map>
 #include <pthread.h>
+#include <libusb-1.0/libusb.h>
 
 namespace Freenect {
 	class Noncopyable {
@@ -132,6 +134,9 @@ namespace Freenect {
 		freenect_resolution getDepthResolution() {
 			return m_depth_resolution;
 		}
+		const freenect_device *getDevice() {
+			return m_dev;
+		}
 		// Do not call directly even in child
 		virtual void VideoCallback(void *video, uint32_t timestamp) = 0;
 		// Do not call directly even in child
@@ -209,7 +214,20 @@ namespace Freenect {
 		// Do not call directly, thread runs here
 		void operator()() {
 			while(!m_stop) {
-				if(freenect_process_events(m_ctx) < 0) throw std::runtime_error("Cannot process freenect events");
+				int res = freenect_process_events(m_ctx);
+				if (res < 0)
+				{
+					// libusb signals an error has occurred
+					if (res == LIBUSB_ERROR_INTERRUPTED)
+					{
+						// This happens sometimes, it means that a system call in libusb was interrupted somehow (perhaps due to a signal)
+						// The simple solution seems to be just ignore it.
+						continue;
+					}
+					std::stringstream ss;
+					ss << "Cannot process freenect events (libusb error code: " << res << ")";
+					throw std::runtime_error(ss.str());
+				}
 			}
 		}
 		static void *pthread_callback(void *user_data) {

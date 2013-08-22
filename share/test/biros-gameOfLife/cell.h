@@ -1,7 +1,7 @@
 #ifndef _CELL_H_
 #define _CELL_H_
 
-#include <biros/biros.h>
+#include <System/biros.h>
 
 class Cell : public Variable {
 	public:

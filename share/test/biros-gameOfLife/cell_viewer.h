@@ -1,7 +1,7 @@
 #ifndef _CELL_VIEWER_H_
 #define _CELL_VIEWER_H_
 
-#include <biros/biros.h>
+#include <System/biros.h>
 #include <Core/array.h>
 
 class Cell;

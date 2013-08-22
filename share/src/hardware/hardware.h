@@ -1,7 +1,7 @@
 #ifndef MT_hardware_h
 #define MT_hardware_h
 
-#include <biros/biros.h>
+#include <System/biros.h>
 
 //===========================================================================
 //

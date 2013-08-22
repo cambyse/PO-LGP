@@ -4,7 +4,7 @@
 #include <Core/array.h>
 //#include <FL/fl_draw.H>
 #include <Gui/opengl.h>
-#include <biros/biros.h>
+#include <System/biros.h>
 #include <unistd.h>
 #include "start.h"
 #include "start.cpp"

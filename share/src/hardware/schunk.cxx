@@ -16,8 +16,8 @@
     You should have received a copy of the GNU General Public License
     along with libSOC.  If not, see <http://www.gnu.org/licenses/> */
 
-#include <biros/biros.h>
-#include <motion/motion.h>
+#include <System/biros.h>
+#include <Motion/motion.h>
 
 #include "schunk.h"
 

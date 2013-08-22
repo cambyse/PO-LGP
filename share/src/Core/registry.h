@@ -52,6 +52,7 @@ struct Type:RootType {
   virtual const std::type_info& typeId() const {NIY}; //TODO -> typeid()
   virtual struct Item* readItem(istream&) const {NIY}; //TODO -> readIntoNewItem
   virtual void* newInstance() const {NIY}
+  virtual Type* clone() const {NIY}
   void write(std::ostream& os) const {
     os <<"Type '" <<typeId().name() <<"' ";
     if(parents.N) {
@@ -63,6 +64,8 @@ struct Type:RootType {
   void read(std::istream& is) const { NIY; }
 };
 stdPipes(Type);
+
+inline bool operator!=(Type& t1, Type& t2){ return t1.typeId()!= t2.typeId(); }
 
 typedef MT::Array<Type*> TypeInfoL;
 
@@ -108,6 +111,7 @@ struct Type_typed:Type {
   virtual const std::type_info& typeId() const { return typeid(T); }
   virtual Item* readItem(istream& is) const { T *x=new T(); is >>*x; return new Item_typed<T>(x); }
   virtual void* newInstance() const { return new T(); }
+  virtual Type* clone() const { return new Type_typed<T, void>(*this); }
 };
 
 

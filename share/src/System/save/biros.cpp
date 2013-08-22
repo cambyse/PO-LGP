@@ -137,18 +137,18 @@ Parameter::Parameter() {
 // Group
 //
 
-void open(const ModuleThreadL& P) {
-  ModuleThread *p; uint i;
+void open(const ProcessL& P) {
+  Process *p; uint i;
   for_list(i, p, P) p->threadOpen();
 }
 
-void step(const ModuleThreadL& P) {
-  ModuleThread *p; uint i;
+void step(const ProcessL& P) {
+  Process *p; uint i;
   for_list(i, p, P) p->threadStep();
 }
 
-void loop(const ModuleThreadL& P) {
-  ModuleThread *p; uint i;
+void loop(const ProcessL& P) {
+  Process *p; uint i;
   for_list(i, p, P) p->threadLoop();
 }
 
@@ -160,8 +160,8 @@ void loop(const ModuleThreadL& P) {
  *
  * @param P list of processes.
  */
-void stepInSequence(const ModuleThreadL& P) {
-  //ModuleThread *p; uint i;
+void stepInSequence(const ProcessL& P) {
+  //Process *p; uint i;
   NIY//for_list(i, p, P) p->step();
 }
 
@@ -171,16 +171,16 @@ void stepInSequence(const ModuleThreadL& P) {
  *
  * @param P list of processes.
  */
-void stepInSequenceThreaded(const ModuleThreadL& P) {
-  ModuleThread *p; uint i;
+void stepInSequenceThreaded(const ProcessL& P) {
+  Process *p; uint i;
   for_list(i, p, P) {
     p->threadStep();
     p->waitForIdle();
   }
 }
 
-void loopWithBeat(const ModuleThreadL& P, double sec) {
-  ModuleThread *p; uint i;
+void loopWithBeat(const ProcessL& P, double sec) {
+  Process *p; uint i;
   for_list(i, p, P) p->threadLoopWithBeat(sec);
 }
 
@@ -199,9 +199,9 @@ Biros::~Biros(){
   //delete acc;
 }
 
-ModuleThread *Biros::getProcessFromPID() {
+Process *Biros::getProcessFromPID() {
   pid_t tid = syscall(SYS_gettid);
-  uint i;  ModuleThread *p;
+  uint i;  Process *p;
   for_list(i, p, processes) {
     if(p->tid==tid) break;
   }
@@ -216,7 +216,7 @@ void Biros::dump() {
   cout <<" +++ VARIABLES +++" <<endl;
   uint i, j;
   Variable *v;
-  ModuleThread *p;
+  Process *p;
   Parameter *par;
   FieldRegistration *f;
   readAccess(NULL);
@@ -231,7 +231,7 @@ void Biros::dump() {
   }
   cout <<"\n +++ PROCESSES +++" <<endl;
   for_list(i, p, processes) {
-    cout <<"ModuleThread " <<p->name <<" {\n  ";
+    cout <<"Process " <<p->module->name <<" {\n  ";
     writeInfo(cout, *p, false, ' ');
     cout <<"\n}" <<endl;
     /*<<" ("; //process doesn't contain list of variables anymore
@@ -246,7 +246,7 @@ void Biros::dump() {
     cout <<"Parameter " <<par->name <<" {\n  ";
     writeInfo(cout, *par, false, ' ');
     cout <<"\n  accessed by=";
-    ModuleThread *m;
+    Module *m;
     for_list(j, m, par->dependers) {
       if(j) cout <<',';
       cout <<' ' <<(m?m->name:STRING("NULL"));
@@ -262,12 +262,12 @@ void Biros::dump() {
 // implementation of helpers
 //
 
-void writeInfo(ostream& os, ModuleThread& p, bool brief, char nl){
+void writeInfo(ostream& os, Process& p, bool brief, char nl){
   if(brief){
-    os <<p.step_count <<endl;
+    os <<p.module->step_count <<endl;
   }else{
     os <<"tid=" <<p.tid <<nl
-       <<"steps=" <<p.step_count
+       <<"steps=" <<p.module->step_count
        <<"state=";
     int state=p.state.getValue();
     if (state>0) os <<state; else switch (state) {

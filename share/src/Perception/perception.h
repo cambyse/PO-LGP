@@ -8,8 +8,8 @@
 #  undef MAX
 #endif
 
-#include <system/module.h>
-#include <views/views.h>
+#include <System/module.h>
+//#include <views/views.h>
 #include <Ors/ors.h>
 #include <Core/array_t.h>
 
@@ -21,8 +21,6 @@
 extern void loadPerception();
 
 //-- Variables
-struct Image;
-struct FloatImage;
 struct Colors;
 struct HoughLines;
 struct Patching;
@@ -30,17 +28,18 @@ struct SURFfeatures;
 struct PerceptionOutput;
 
 //-- Process creators
-Process *newOpencvCamera();
-Process* newCvtGray(Image& rgb, Image& gray);
-Process* newCvtHsv(Image& rgb, Image& hsv);
-Process* newHsvFilter(Image& hsv, FloatImage& evi);
-Process* newMotionFilter(Image& rgb, Image& motion);
-Process* newDifferenceFilter(Image& i1,Image& i2, Image& diff);
-Process* newCannyFilter(Image& grayImage, Image& cannyImage, float cannyThreshold=50.f);
-Process* newPatcher(Image& rgbImage, Patching& patchImage);
-Process* newSURFer(Image& grayImage, SURFfeatures& features);
-Process* newHoughLineFilter(Image& grayImage, HoughLines& houghLines);
-Process* newShapeFitter(FloatImage& eviL, FloatImage& eviR, PerceptionOutput& perc);
+BEGIN_MODULE1(ImageViewer)      ACCESS(byteA, img)       END_MODULE()
+BEGIN_MODULE1(OpencvCamera)     ACCESS(byteA, rgb)       END_MODULE()
+BEGIN_MODULE (CvtGray)          ACCESS(byteA, rgb)       ACCESS(byteA, gray)     END_MODULE()
+BEGIN_MODULE (CvtHsv)           ACCESS(byteA, rgb)       ACCESS(byteA, hsv)       END_MODULE()
+BEGIN_MODULE1(HsvFilter)        ACCESS(byteA, hsv)       ACCESS(floatA, evi)      END_MODULE()
+BEGIN_MODULE1(MotionFilter)     ACCESS(byteA, rgb)       ACCESS(byteA, motion)    END_MODULE()
+BEGIN_MODULE (DifferenceFilter) ACCESS(byteA, i1)        ACCESS(byteA, i2)        ACCESS(byteA, diffImage) END_MODULE()
+BEGIN_MODULE (CannyFilter)      ACCESS(byteA, grayImage) ACCESS(byteA, cannyImage)       END_MODULE()
+BEGIN_MODULE (Patcher)          ACCESS(byteA, rgbImage)  ACCESS(Patching, patchImage)    END_MODULE()
+BEGIN_MODULE1(SURFer)           ACCESS(byteA, grayImage) ACCESS(SURFfeatures, features)  END_MODULE()
+BEGIN_MODULE (HoughLineFilter)  ACCESS(byteA, grayImage) ACCESS(HoughLines, houghLines)  END_MODULE()
+BEGIN_MODULE1(ShapeFitter)      ACCESS(floatA, eviL) ACCESS(floatA, eviR) ACCESS(PerceptionOutput, perc) END_MODULE()
 
 
 //===========================================================================
@@ -70,16 +69,6 @@ typedef MT::Array<RigidObjectRepresentation*> RigidObjectRepresentationL;
 //
 // Variables
 //
-
-struct Image:Variable {
-  FIELD(byteA, img);
-  Image(const char* name):Variable(name) {}
-};
-
-struct FloatImage:Variable {
-  FIELD(floatA, img);
-  FloatImage(const char* name):Variable(name) {}
-};
 
 struct ColorChoice{
   FIELD(byteA, rgb);
@@ -120,7 +109,7 @@ struct PerceptionOutput {
   MT::Array<RigidObjectRepresentation> objects;
   FIELD(byteA, display);
 };
-
+niyPipes(PerceptionOutput)
 
 //===========================================================================
 //
@@ -145,12 +134,12 @@ struct VAR##_View:View{ \
 };
 
 
-DECLARE_VIEW(Image)
-//DECLARE_VIEW(FloatImage)
-DECLARE_VIEW(HoughLines)
-DECLARE_VIEW(Patching)
-DECLARE_VIEW(SURFfeatures)
-DECLARE_VIEW(PerceptionOutput)
+//DECLARE_VIEW(Image)
+////DECLARE_VIEW(floatA)
+//DECLARE_VIEW(HoughLines)
+//DECLARE_VIEW(Patching)
+//DECLARE_VIEW(SURFfeatures)
+//DECLARE_VIEW(PerceptionOutput)
 
 
 //===========================================================================

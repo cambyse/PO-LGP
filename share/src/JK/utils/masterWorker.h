@@ -1,7 +1,7 @@
 #ifndef _MASTERWORKER_H_
 #define _MASTERWORKER_H_
 
-#include <biros/biros.h>
+#include <System/biros.h>
 #include <devTools/logging.h>
 #include <Core/array.h>
 #include <queue>

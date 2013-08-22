@@ -64,8 +64,8 @@
 
 namespace TL {
   const uint UINT_NIL = std::numeric_limits<uint>::max();
-  //const double TL_DOUBLE_NIL = -98765.43211234589;
-  //const double TL_DOUBLE_MIN = -1. * std::numeric_limits<double>::max();
+  const double TL_DOUBLE_NIL = -98765.43211234589;
+  const double TL_DOUBLE_MIN = -1. * std::numeric_limits<double>::max();
 
 #ifdef MT_MSVC
     #define TL_INFINITY numeric_limits<double>::infinity();

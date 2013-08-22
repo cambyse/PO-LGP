@@ -83,7 +83,8 @@ struct KeyValueGraph:ItemL {
   template<class T> Item *append(const StringA& keys, const ItemL& parents, T *x);
   template<class T> Item *append(const StringA& keys, T *x) { return append(keys, ItemL(), x); }
   template<class T> Item *append(const char *key, T *x) { return append(ARRAY<MT::String>(MT::String(key)), ItemL(), x); }
-  
+  template<class T> Item *append(const char *key1, const char* key2, T *x) {  return append(ARRAY<MT::String>(MT::String(key1), MT::String(key2)), ItemL(), x); }
+
   Item *add(const uintA& tuple);
   ItemL& getParents(uint i);
   

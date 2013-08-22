@@ -1214,6 +1214,14 @@ template<class T> void MT::Array<T>::takeOver(MT::Array<T>& a) {
   a.M=0;
 }
 
+template<class T> void MT::Array<T>::swap(Array<T>& a) {
+  CHECK(!a.reference, "can't swap with a reference");
+  if(N!=a.N) resizeAs(a);
+  T* p_tmp = p;
+  p=a.p;
+  a.p=p_tmp;
+}
+
 /** @brief return a `dim'-dimensional grid with `steps' intervals
   filling the range [lo, hi] in each dimension. Note: returned array is
   `flat', rather than grid-shaped. */

@@ -20,7 +20,7 @@
 #define MT_schunk_h
 
 #include <Core/array.h>
-#include <biros/biros.h>
+#include <System/biros.h>
 #include "robot_variables.h"
 
 //fwd declarations

@@ -424,8 +424,8 @@ FREENECT = 1
 endif
 
 ifeq ($(FREENECT),1)
-CPATH := $(CPATH):$(MLR_LIBPATH)/libfreenect/include
-LPATHS += $(MLR_LIBPATH)/libfreenect/lib
+#CPATH := $(CPATH):$(MLR_LIBPATH)/libfreenect/include
+#LPATHS += $(MLR_LIBPATH)/libfreenect/lib
 LIBS += -lfreenect
 endif
 

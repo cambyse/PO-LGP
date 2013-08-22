@@ -1,7 +1,7 @@
 #ifndef ACTIVE_LEARNING_PROCESS_H_
 #define ACTIVE_LEARNING_PROCESS_H_
 
-#include <biros/biros.h>
+#include <System/biros.h>
 #include <Ors/ors.h>
 
 class ActiveLearner;
