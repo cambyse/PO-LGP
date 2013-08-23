@@ -2,10 +2,12 @@
 
 #include "util.h"
 
+#include "qcustomplot.h"
+
 #include <float.h> // for DBL_MAX
 #include <fstream>
 
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 0
 #include "debug.h"
 
 using std::ofstream;
@@ -22,8 +24,6 @@ double SplineInterpolation::f(const std::vector<double>& x_data,
     if(x_data_n!=y_data_n) {
         DEBUG_OUT(0,"Error: x- and y-data have unequal size:");
     }
-
-    // use the smaler of both if equal
     int data_n = util::min<int>(x_data_n,y_data_n);
 
     // special cases
@@ -88,7 +88,10 @@ double SplineInterpolation::f(const std::vector<double>& x_data,
         double y3 = y_data[idx_3];
 
         // get tangent at point 2
-        double d2 = (y3-y1)/(x3-x1);
+        // quadratic polynom connecting point and its neighbors
+        double d2 = (pow(x1,2)*(y2-y3)-2*x2*(x1*(y2-y3)+x3*(y1-y2))+pow(x2,2)*(y1-y3)+pow(x3,2)*(y1-y2))/((x1-x2)*(x1-x3)*(x2-x3));
+        // straigt line between neighboring points
+        // double d2 = (y3-y1)/(x3-x1);
 
         // compute coefficents y = a + b x + c x^2
         double a = (-d2*pow(x1,2)*x2+d2*x1*pow(x2,2)+pow(x1,2)*y2-2*x1*x2*y2+pow(x2,2)*y1)/pow(x1-x2,2);
@@ -107,7 +110,10 @@ double SplineInterpolation::f(const std::vector<double>& x_data,
         double y2 = y_data[idx_2];
 
         // get tangent at point 1
-        double d1 = (y0-y1)/(x0-x1);
+        // quadratic polynom connecting point and its neighbors
+        double d1 = (pow(x0,2)*(y1-y2)-2*x1*(x0*(y1-y2)+x2*(y0-y1))+pow(x1,2)*(y0-y2)+pow(x2,2)*(y0-y1))/((x0-x1)*(x0-x2)*(x1-x2));
+        // straigt line between neighboring points
+        // double d1 = (y0-y1)/(x0-x1);
 
         // compute coefficents y = a + b x + c x^2
         double a = (d1*pow(x1,2)*x2-d1*x1*pow(x2,2)+pow(x1,2)*y2-2*x1*x2*y1+pow(x2,2)*y1)/pow(x1-x2,2);
@@ -128,8 +134,12 @@ double SplineInterpolation::f(const std::vector<double>& x_data,
         double y3 = y_data[idx_3];
 
         // get tangent at point 1 and point 2
-        double d1 = (y0-y1)/(x0-x1);
-        double d2 = (y3-y1)/(x3-x1);
+        // quadratic polynom connecting point and its neighbors
+        double d2 = (pow(x1,2)*(y2-y3)-2*x2*(x1*(y2-y3)+x3*(y1-y2))+pow(x2,2)*(y1-y3)+pow(x3,2)*(y1-y2))/((x1-x2)*(x1-x3)*(x2-x3));
+        double d1 = (pow(x0,2)*(y1-y2)-2*x1*(x0*(y1-y2)+x2*(y0-y1))+pow(x1,2)*(y0-y2)+pow(x2,2)*(y0-y1))/((x0-x1)*(x0-x2)*(x1-x2));
+        // straigt line between neighboring points
+        // double d1 = (y0-y1)/(x0-x1);
+        // double d2 = (y3-y1)/(x3-x1);
 
         // third order polynomial in symmetrical form:
         // y = (1-t)y1 + t y2 + t(1-t)(a(1-t)+b t)
@@ -152,8 +162,6 @@ void SplineInterpolation::print_curve_to_file(const std::vector<double>& x_data,
     if(x_data_n!=y_data_n) {
         DEBUG_OUT(0,"Error: x- and y-data have unequal size:");
     }
-
-    // use the smaler of both if equal
     int data_n = util::min<int>(x_data_n,y_data_n);
 
     // open file
@@ -194,6 +202,72 @@ void SplineInterpolation::print_curve_to_file(const std::vector<double>& x_data,
     double x_min = x_data.front();
     double x_max = x_data.back();
     print_curve_to_file(x_data,y_data,file_name,x_min,x_max,points);
+}
+
+void SplineInterpolation::print_curve_to_QCP(const std::vector<double>& x_data,
+                                             const std::vector<double>& y_data,
+                                             QCustomPlot * plotter,
+                                             const unsigned int& interp_n) {
+    // number of data points
+    int x_data_n = x_data.size();
+    int y_data_n = y_data.size();
+    if(x_data_n!=y_data_n) {
+        DEBUG_OUT(0,"Error: x- and y-data have unequal size:");
+    }
+    int data_n = util::min<int>(x_data_n,y_data_n);
+
+    // initialize data
+    QVector<double> qx_data(data_n), qy_data(data_n), qx_interp(interp_n), qy_interp(interp_n);
+
+    // transfer raw data to QVector
+    for(int i=0; i<data_n; ++i) {
+        qx_data[i] = x_data[i];
+        qy_data[i] = y_data[i];
+    }
+
+    // generate interpolating data
+    for(unsigned int i=0; i<interp_n; ++i) {
+        double x = (double)i/(interp_n-1);
+        double y = f(x_data,y_data,x);
+        qx_interp[i] = x;
+        qy_interp[i] = y;
+    }
+
+    // clear graphs
+    plotter->clearGraphs();
+
+    // create graph for raw data
+    plotter->addGraph();
+    plotter->graph(0)->setPen(QColor(200, 0, 0, 255));
+    plotter->graph(0)->setLineStyle(QCPGraph::lsNone);
+    plotter->graph(0)->setScatterStyle(QCP::ScatterStyle::ssCircle);
+    plotter->graph(0)->setName("Raw Data");
+    plotter->graph(0)->setData(qx_data, qy_data);
+
+    // create graph for interpolated data
+    plotter->addGraph();
+    plotter->graph(1)->setPen(QColor(0, 200, 0, 255));
+    plotter->graph(1)->setLineStyle(QCPGraph::lsLine);
+    plotter->graph(1)->setScatterStyle(QCP::ScatterStyle::ssNone);
+    plotter->graph(1)->setName("Interpolated\nData");
+    plotter->graph(1)->setData(qx_interp, qy_interp);
+
+    // give the axes some labels:
+    plotter->xAxis->setLabel("x");
+    plotter->yAxis->setLabel("y");
+
+    // add title and legend
+    plotter->setTitle("Spline Interpolation");
+    plotter->legend->setVisible(true);
+    QFont legendFont;
+    legendFont.setPointSize(7);
+    plotter->legend->setFont(legendFont);
+    plotter->legend->setBrush(QBrush(QColor(255,255,255,150)));
+    plotter->legend->setBorderPen(QPen(QColor(0,0,0,150)));
+
+    // rescale axes and replot
+    plotter->rescaleAxes();
+    plotter->replot();
 }
 
 void SplineInterpolation::find_enclosing_points(const std::vector<double>& x_data,
