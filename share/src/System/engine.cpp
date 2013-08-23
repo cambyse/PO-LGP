@@ -1,3 +1,21 @@
+/*  ---------------------------------------------------------------------
+    Copyright 2013 Marc Toussaint
+    email: mtoussai@cs.tu-berlin.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a COPYING file of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
 #include <sys/syscall.h>
 #include <map>
 
@@ -11,7 +29,7 @@ Singleton<Engine> singleton_Engine;
 // Variable
 //
 
-Variable::Variable(const char *_name):DataAccess(_name), s(NULL), revision(0), reg(NULL) {
+Variable::Variable(const char *_name):VariableAccess(_name), s(NULL), revision(0), reg(NULL) {
   s = new sVariable();
   listeners.memMove=true;
   //MT logValues = false;
@@ -283,7 +301,7 @@ void System::complete(){
 
 KeyValueGraph System::graph() const{
   KeyValueGraph g;
-  std::map<DataAccess*, Item*> vit;
+  std::map<VariableAccess*, Item*> vit;
   for_list_(Variable, v, vars) vit[v] = g.append("Variable", v->name.p, v);
   for_list_(ModuleThread, m, mts){
     Item *mit = g.append("ModuleThread", m->name, m);

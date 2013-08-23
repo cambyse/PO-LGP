@@ -3,7 +3,7 @@
 
 #include <Core/array.h>
 #include <Core/util.h>
-#include "module.h"
+#include <Core/module.h>
 #include "engine_internal.h"
 
 /**

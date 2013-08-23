@@ -26,7 +26,7 @@ int main(int argn,char **argv) {
 //  KeyValueGraph g = S.graph();
 //  GraphView gv(g); gv.watch();
 
-  MT::wait(5.);
+  MT::wait(10.);
 
   engine().close(S);
 

@@ -1,4 +1,4 @@
-#include <System/module.h>
+#include <Core/module.h>
 
 struct ComputeSum:Module {
   ACCESS(arr, x);    //input
