@@ -34,7 +34,6 @@ using std::priority_queue;
 
 using arma::mat;
 using arma::vec;
-using arma::randu;
 using arma::mat44;
 using arma::zeros;
 

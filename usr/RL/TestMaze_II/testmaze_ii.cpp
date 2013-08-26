@@ -4,6 +4,7 @@
 #include "util.h"
 
 #include "ActiveSigmoidOptimization.h"
+#include "GPReg.h"
 
 #include <float.h>  // for DBL_MAX
 #include <vector>
@@ -967,14 +968,42 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             }
         } else if(str_args[0]=="test") { // test
             if(str_args_n==4 && int_args_ok[1] && int_args_ok[2] && double_args_ok[3]) {
+                // // number of random samples and iterations
+                // int data_n = int_args[1];
+                // int iteration_n = int_args[2];
+                // double strength = double_args[3];
+                // // generate random data
+                // double min_x = DBL_MAX;
+                // double max_x = -DBL_MAX;
+                // vector<double> x_data(data_n), y_data(data_n);
+                // for(int i=0; i<data_n; ++i) {
+                //     double x = drand48();
+                //     double y = ( 2*tanh(10*(x-0.6)) + 1*tanh(5*(x-0.25)) ) / 3;
+                //     x_data[i] = x;
+                //     y_data[i] = y;
+                //     min_x = min<double>(min_x,x);
+                //     max_x = max<double>(max_x,x);
+                // }
+                // // create sigmoid object
+                // ActiveSigmoidOptimization aso(min_x,max_x,0.5,100);
+                // for(int i=0; i<data_n; ++i) {
+                //     aso.add_new_point(x_data[i],y_data[i]);
+                // }
+                // // optimize and plot sigmoid
+                // aso.optimize_sigmoid(iteration_n);
+                // aso.print_to_QCP(plotter,false,false);
+                // aso.optimize_upper_bound(strength,iteration_n);
+                // aso.print_to_QCP(plotter,true,false);
+                // aso.optimize_lower_bound(strength,iteration_n);
+                // aso.print_to_QCP(plotter,true,true);
+            } else if(str_args_n==2 && int_args_ok[1]) {
                 // number of random samples and iterations
                 int data_n = int_args[1];
-                int iteration_n = int_args[2];
-                double strength = double_args[3];
-                // generate random data
                 double min_x = DBL_MAX;
                 double max_x = -DBL_MAX;
-                vector<double> x_data(data_n), y_data(data_n);
+                // generate data
+                GPReg gp(2,0.2,0,0.1);
+                QVector<double> x_data(data_n), y_data(data_n), x_gp(1000), y_gp(1000);
                 for(int i=0; i<data_n; ++i) {
                     double x = drand48();
                     double y = ( 2*tanh(10*(x-0.6)) + 1*tanh(5*(x-0.25)) ) / 3;
@@ -982,19 +1011,42 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     y_data[i] = y;
                     min_x = min<double>(min_x,x);
                     max_x = max<double>(max_x,x);
+                    gp.add_new_point(x,y);
                 }
-                // create sigmoid object
-                ActiveSigmoidOptimization aso(min_x,max_x,0.5,100);
-                for(int i=0; i<data_n; ++i) {
-                    aso.add_new_point(x_data[i],y_data[i]);
+                for(int i=0; i<1000; ++i) {
+                    double x = (double)i/(999);
+                    x_gp[i] = x;
+                    y_gp[i] = gp.get_mean(x);
                 }
-                // optimize and plot sigmoid
-                aso.optimize_sigmoid(iteration_n);
-                aso.print_to_QCP(plotter,false,false);
-                aso.optimize_upper_bound(strength,iteration_n);
-                aso.print_to_QCP(plotter,true,false);
-                aso.optimize_lower_bound(strength,iteration_n);
-                aso.print_to_QCP(plotter,true,true);
+                // plot data
+                plotter->clearGraphs();
+                QCPGraph * data_graph = plotter->addGraph();
+                data_graph->setPen(QColor(200, 0, 0, 255));
+                data_graph->setLineStyle(QCPGraph::lsNone);
+                data_graph->setScatterStyle(QCP::ScatterStyle::ssDisc);
+                data_graph->setScatterSize(4);
+                data_graph->setName("Data");
+                data_graph->setData(x_data, y_data);
+                QCPGraph * gp_graph = plotter->addGraph();
+                gp_graph->setPen(QColor(0, 200, 0, 255));
+                gp_graph->setLineStyle(QCPGraph::lsLine);
+                gp_graph->setScatterStyle(QCP::ScatterStyle::ssNone);
+                gp_graph->setName("GP");
+                gp_graph->setData(x_gp, y_gp);
+                // give the axes some labels:
+                plotter->xAxis->setLabel("x");
+                plotter->yAxis->setLabel("y");
+                // add title and legend
+                plotter->setTitle("GP Test");
+                plotter->legend->setVisible(true);
+                QFont legendFont;
+                legendFont.setPointSize(7);
+                plotter->legend->setFont(legendFont);
+                plotter->legend->setBrush(QBrush(QColor(255,255,255,150)));
+                plotter->legend->setBorderPen(QPen(QColor(0,0,0,150)));
+                // rescale axes and replot
+                plotter->rescaleAxes();
+                plotter->replot();
             }
         } else if(str_args[0]=="col-states") { // color states
             Maze::color_vector_t  cols;

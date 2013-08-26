@@ -15,9 +15,11 @@ public:
 
     ~GPReg();
 
-    void add_new_point(const mat& x, const double& y);
+    void add_new_point(const vec& x, const double& y);
+    void add_new_point(const double& x, const double& y); ///< Overload for 1D
 
-    double get_mean(const mat& x);
+    double get_mean(const vec& x);
+    double get_mean(const double& x); ///< Overload for 1D
 
 protected:
     bool data_changed;
@@ -27,7 +29,7 @@ protected:
 
     void update_data();
     double kernel(const vec& x1, const vec& x2) const;
-    mat kernel_matrix(const mat& x1, const mat& x2) const;
+    vec querry_covariance_vector(const vec& x) const;
 };
 
 #endif // GPREG_H
