@@ -28,7 +28,8 @@ HEADERS += LookAheadSearch.h \
     HistoryObserver.h \
     qcustomplot.h \
     ActiveSigmoidOptimization.h \
-    SplineInterpolation.h
+    SplineInterpolation.h \
+    GPReg.h
 SOURCES += LookAheadSearch.cpp \
     util.cpp \
     BatchMaze.cpp \
@@ -53,7 +54,8 @@ SOURCES += LookAheadSearch.cpp \
     HistoryObserver.cpp \
     qcustomplot.cpp \
     ActiveSigmoidOptimization.cpp \
-    SplineInterpolation.cpp
+    SplineInterpolation.cpp \
+    GPReg.cpp
 LIBS += -llbfgs \
     -lemon \
     -larmadillo \
