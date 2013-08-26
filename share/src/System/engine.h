@@ -53,7 +53,7 @@ inline void operator<<(ostream& os, const ModuleThread& m){ os <<"ModuleThread "
  */
 struct Variable : VariableAccess {
   struct sVariable *s;        ///< private
-  ModuleThreadL listeners;
+  ModuleL listeners;
   ConditionVariable revision; ///< revision (= number of write accesses) number
   RWLock rwlock;              ///< rwLock (usually handled via read/writeAccess -- but views may access directly...)
   Item *reg;
@@ -97,12 +97,17 @@ struct sVariable {
  * A System is an interconnected list of Modules and Variables.
  */
 
-struct System{
-  ModuleThreadL mts;
+struct System:Module{
+  ModuleL mts;
   VariableL vars;
-//  KeyValueGraph system;
 
-//  SystemDescription() {}
+  System(const char* name=NULL):Module(name){}
+
+  virtual void step(){
+    for_list_(Module, m, mts) m->step();
+  }
+  virtual void open(){}
+  virtual void close(){}
 
   Variable* addVariable(Access *a){
     Variable *v = new Variable(a->name);
@@ -129,8 +134,8 @@ struct System{
     return new Access_typed<T>(varName, NULL, v);
   }
 
-  template<class T> ModuleThread* addModule(const char *name=NULL, ModuleThread::StepMode mode=ModuleThread::listenFirst, double beat=0.);
-  ModuleThread* addModule(const char *dclName, const char *name=NULL, ModuleThread::StepMode mode=ModuleThread::listenFirst, double beat=0.);
+  template<class T> Module* addModule(const char *name=NULL, ModuleThread::StepMode mode=ModuleThread::listenFirst, double beat=0.);
+  Module* addModule(const char *dclName, const char *name=NULL, ModuleThread::StepMode mode=ModuleThread::listenFirst, double beat=0.);
   void addModule(const char *dclName, const char *name, const uintA& accIdxs, ModuleThread::StepMode mode=ModuleThread::listenFirst, double beat=0.);
   void addModule(const char *dclName, const char *name, const StringA& accNames, ModuleThread::StepMode mode=ModuleThread::listenFirst, double beat=0.);
   KeyValueGraph graph() const;
@@ -154,7 +159,7 @@ struct Engine{
   virtual ~Engine();
 
   void open(System& S);
-  void step(ModuleThread &m, bool threadedOnly=false);
+  void step(Module &m, bool threadedOnly=false);
   void step(System& S);
   void test(System& S);
   void close(System& S);
@@ -231,14 +236,16 @@ struct EventController{
 };
 
 
-template<class T> ModuleThread* System::addModule(const char *name, ModuleThread::StepMode mode, double beat){
+template<class T> Module* System::addModule(const char *name, ModuleThread::StepMode mode, double beat){
   Module *m = new T;
+  currentlyCreating=NULL;
   for_list_(Access, a, m->accesses) a->module = m;
-  ModuleThread *mt = new ModuleThread(m, name);
-  mt->mode = mode;
-  mt->beat = beat;
-  mts.append(mt);
-  return mt;
+  mts.append(m);
+
+  m->thread = new ModuleThread(m, name);
+  m->thread->mode = mode;
+  m->thread->beat = beat;
+  return m;
 }
 
 #endif

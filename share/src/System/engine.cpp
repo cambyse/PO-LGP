@@ -70,8 +70,7 @@ int Variable::writeAccess(Module *m) {
   rwlock.writeLock();
   int r = revision.incrementValue();
   engine().acc->logWriteAccess(this, p);
-  uint i; ModuleThread *l;
-  for_list(i, l, listeners) if(l!=p) engine().step(*l, true);
+  for_list_(Module, l, listeners) if(l!=m) engine().step(*l, true);
   return r;
 }
 
@@ -164,7 +163,7 @@ void sVariable::deSerializeFromString(const MT::String &string) {
 // SystemDescription
 //
 
-ModuleThread *System::addModule(const char *dclName, const char *name, ModuleThread::StepMode mode, double beat){
+Module* System::addModule(const char *dclName, const char *name, ModuleThread::StepMode mode, double beat){
   //find the dcl in the registry
   Item *modReg = registry().getItem("Decl_Module", dclName);
   if(!modReg){
@@ -172,72 +171,31 @@ ModuleThread *System::addModule(const char *dclName, const char *name, ModuleThr
     return NULL;
   }
   Module *m = (Module*)modReg->value<Type>()->newInstance();
+  currentlyCreating = NULL;
   for_list_(Access, a, m->accesses) a->module = m;
-  ModuleThread *mt = new ModuleThread(m, name?name:dclName);
-  mt->mode = mode;
-  mt->beat = beat;
-  mts.append(mt);
-  return mt;
+  mts.append(m);
+
+  m->thread = new ModuleThread(m, name?name:dclName);
+  m->thread->mode = mode;
+  m->thread->beat = beat;
+  return m;
 }
 
 void System::addModule(const char *dclName, const char *name, const uintA& accIdxs, ModuleThread::StepMode mode, double beat){
-  ModuleThread *mt = addModule(dclName, name, mode, beat);
-  if(accIdxs.N != mt->m->accesses.N) HALT("given and needed #acc mismatch");
-  for_list_(Access, a, mt->m->accesses) a->var = vars(accIdxs(a_COUNT));
+  Module *m = addModule(dclName, name, mode, beat);
+  if(accIdxs.N != m->accesses.N) HALT("given and needed #acc mismatch");
+  for_list_(Access, a, m->accesses) a->var = vars(accIdxs(a_COUNT));
 }
 
 void System::addModule(const char *dclName, const char *name, const StringA& accNames, ModuleThread::StepMode mode, double beat){
-  ModuleThread *mt = addModule(dclName, name, mode, beat);
-  if(accNames.N != mt->m->accesses.N) HALT("given and needed #acc mismatch");
-  for_list_(Access, a, mt->m->accesses) a->name = accNames(a_COUNT);
+  Module *m = addModule(dclName, name, mode, beat);
+  if(accNames.N != m->accesses.N) HALT("given and needed #acc mismatch");
+  for_list_(Access, a, m->accesses) a->name = accNames(a_COUNT);
 }
 
-//  Item* modIt = system.append<ModuleEntry>(STRINGS("Module", (name?name:modReg->keys(1))), m);
-
-//  for_list_(Item, accReg, modReg->parentOf){
-//    AccessEntry *a = new AccessEntry;
-//    a->reg = accReg;
-//    a->type = accReg->value<Type>();
-//    if(!&vars || !vars.N){
-//      system.append<AccessEntry>(STRINGS("Access", accReg->keys(1)), ARRAY(modIt), a);
-//    }else{
-//      Item *varIt = vars(accReg_COUNT);
-//      VariableEntry *v = varIt->value<VariableEntry>();
-//      cout <<"linking access " <<modIt->keys(1) <<"->" <<accReg->keys(1)
-//           <<" with Variable (" <<*(v->type) <<")" <<endl;
-//      system.append<AccessEntry>(STRINGS("Access", varIt->keys(1)), ARRAY(modIt, varIt), new AccessEntry());
-//    }
-//  }
-
 void System::complete(){
-//#if 0
-//  ItemL modules = system.getTypedItems<ModuleEntry>("Module");
-//  for_list_(Item, it, modules){
-//    ModuleEntry *m=it->value<ModuleEntry>();
-//    Item *reg=m->reg;
-//    if(!m->accs.N && reg->parentOf.N){ //declaration has children but description no accesses...
-//      for_list_(Item, acc, reg->parentOf){
-//        CHECK(acc->keys(0)=="Decl_Access","");
-//        Item* varIt = getVariableEntry(acc->keys(1), *acc->value<Type>());
-//        VariableEntry *v=NULL;
-//        if(!varIt){ //we need to add a variable
-//          cout <<"adding-on-complete Variable " <<acc->keys(1) <<": " <<*(acc->value<Type>()) <<endl;
-//          v = new SystemDescription::VariableEntry;
-//          v->type = acc->value<Type>();
-//          varIt = system.append<VariableEntry>(STRINGS("Variable", acc->keys(1)), v);
-//        }else{
-//          v = varIt->value<VariableEntry>();
-//        }
-//        cout <<"linking-on-complete access " <<it->keys(1) <<"->" <<acc->keys(1)
-//             <<" with Variable " <<varIt->keys(1) <<"(" <<*(v->type) <<")" <<endl;
-//        m->accs.append(v);
-//        system.append<AccessEntry>(STRINGS("Access", acc->keys(1)), ARRAY(it, varIt), new AccessEntry());
-//      }
-//    }
-//  }
-//#else
-  for_list_(ModuleThread, m, mts){
-    for_list_(Access, a, m->m->accesses){
+  for_list_(Module, m, mts){
+    for_list_(Access, a, m->accesses){
       Variable *v = NULL;
       if(!a->var){ //access is not connected yet
          v = listFindByName(vars, a->name);
@@ -251,61 +209,39 @@ void System::complete(){
       }else{
         v = dynamic_cast<Variable*>(a->var);
       }
-      if(m->mode==ModuleThread::listenAll || (m->mode==ModuleThread::listenFirst && !a_COUNT)){
+      if(m->thread->mode==ModuleThread::listenAll || (m->thread->mode==ModuleThread::listenFirst && !a_COUNT)){
         v->listeners.setAppend(m);
       }
     }
   }
-
-//  ItemL accesses = system.getTypedItems<AccessEntry>("Access");
-//  for_list_(Item, accIt, accesses){
-//    AccessEntry *a=accIt->value<AccessEntry>();
-//    CHECK(accIt->parents.N==1 || accIt->parents.N==2,"");
-//    if(accIt->parents.N==1){ //access has no variable yet...
-//      Item* varIt = getVariableEntry(accIt->keys(1), *a->type);
-//      VariableEntry *v=NULL;
-//      if(!varIt){ //we need to add a variable
-//        cout <<"adding-on-complete Variable " <<accIt->keys(1) <<": " <<*a->type <<endl;
-//        v = new SystemDescription::VariableEntry;
-//        v->type = a->type;
-//        varIt = system.append<VariableEntry>(STRINGS("Variable", accIt->keys(1)), v);
-//      }else{
-//        v = varIt->value<VariableEntry>();
-//      }
-//      cout <<"linking-on-complete access " <<accIt->parents(0)->keys(1) <<"->" <<accIt->keys(1)
-//          <<" with Variable (" <<*(v->type) <<")" <<endl;
-//      accIt->parents.append(varIt);
-//      varIt->parentOf.append(accIt);
-//    }
-//  }
-//#endif
+  for_list_(Access, a, accesses){
+    Variable *v = NULL;
+    if(!a->var){ //access is not connected yet
+       v = listFindByName(vars, a->name);
+      if(v){ //variable exists -> check type
+        if(*v->type != *a->type) HALT("dammit!");
+        //good: just connect
+        a->var = v;
+      }else{ //variable does not exist yet
+        a->var = v = addVariable(a);
+      }
+    }else{
+      v = dynamic_cast<Variable*>(a->var);
+    }
+    if(m->thread->mode==ModuleThread::listenAll || (m->thread->mode==ModuleThread::listenFirst && !a_COUNT)){
+      v->listeners.setAppend(m);
+    }
+  }
 }
-
-//Item* SystemDescription::getVariableEntry(const Access& acc){
-//  return getVariableEntry(acc.name, *acc.reg->value<Type>());
-//}
-
-//Item* SystemDescription::getVariableEntry(const char* name, const Type& type){
-//  ItemL variables = system.getTypedItems<VariableEntry>("Variable");
-//  for_list_(Item, it, variables){
-//    VariableEntry *v = it->value<VariableEntry>();
-//    if(it->keys(1)==name){
-//      if(v->type->typeId()!=type.typeId())
-//        HALT("mist");
-//      return it;
-//    }
-//  }
-//  return NULL;
-//}
-
 
 KeyValueGraph System::graph() const{
   KeyValueGraph g;
+  g.append<bool>("SystemModule", name, NULL);
   std::map<VariableAccess*, Item*> vit;
-  for_list_(Variable, v, vars) vit[v] = g.append("Variable", v->name.p, v);
-  for_list_(ModuleThread, m, mts){
-    Item *mit = g.append("ModuleThread", m->name, m);
-    for_list_(Access, a, m->m->accesses){
+  for_list_(Variable, v, vars) vit[v] = g.append("Variable", v->name, v);
+  for_list_(Module, m, mts){
+    Item *mit = g.append("Module", m->name, m);
+    for_list_(Access, a, m->accesses){
       Item *ait = g.append("Access", a->name, a);
       ait->parents.append(mit);
       if(a->var) ait->parents.append(vit[a->var]);
@@ -387,44 +323,40 @@ void Engine::open(System& S){
 
   //open modules
   if(mode==threaded){
-    for_list_(ModuleThread, m, S.mts){
-      m->threadOpen();
+    for_list_(Module, m, S.mts){
+      m->thread->threadOpen();
       //start looping if in loop mode:
-      switch(m->mode){
-      case ModuleThread::loopWithBeat:  m->threadLoopWithBeat(m->beat);  break;
-      case ModuleThread::loopFull:  m->threadLoop();  break;
+      switch(m->thread->mode){
+      case ModuleThread::loopWithBeat:  m->thread->threadLoopWithBeat(m->thread->beat);  break;
+      case ModuleThread::loopFull:  m->thread->threadLoop();  break;
       default:  break;
       }
     }
   }
 
   if(mode==serial){
-    for_list_(ModuleThread, m, S.mts) m->open();
+    for_list_(Module, m, S.mts) m->open();
   }
 }
 
-void Engine::step(ModuleThread &m, bool threadedOnly){
+void Engine::step(Module &m, bool threadedOnly){
   if(threadedOnly && mode!=threaded) return;
   if(mode==none) MT_MSG("ommiting stepping: no step mode");
-  if(mode==threaded) m.threadStep();
+  if(mode==threaded) m.thread->threadStep();
   if(mode==serial)   m.step();
-}
-
-void Engine::step(System& S){
-  for_list_(ModuleThread, m, S.mts) step(*m);
 }
 
 void Engine::test(System& S){
   CHECK(mode!=threaded,"");
   mode=serial;
   open(S);
-  for_list_(ModuleThread, m, S.mts) m->m->test();
+  for_list_(Module, m, S.mts) m->test();
   close(S);
 }
 
 void Engine::close(System& S){
-  for_list_(ModuleThread, m, S.mts){
-    if(mode==threaded) m->threadClose();
+  for_list_(Module, m, S.mts){
+    if(mode==threaded) m->thread->threadClose();
     if(mode==serial)   m->close();
   }
 }

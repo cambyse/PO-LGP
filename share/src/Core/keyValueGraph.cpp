@@ -59,6 +59,7 @@ void Item::write(std::ostream& os) const {
   }
   
   //-- write value
+  if(!hasValue()) return;
   if(valueType()==typeid(KeyValueGraph)) {
     os <<" {";
     value<KeyValueGraph>()->write(os, " ");

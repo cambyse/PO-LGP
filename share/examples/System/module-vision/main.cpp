@@ -1,7 +1,9 @@
-#include <Perception/perception.h>
-//#include <views/views.h>
 #include <System/engine.h>
-#include <Gui/graphview.h>
+//#include <Gui/graphview.h>
+
+//NOTE: no actual perception code is includes - only system!
+
+extern void loadPerception(); //this is enough to ensure the linking and loading of registry entries
 
 int main(int argn,char **argv) {
   MT::initCmdLine(argn,argv);

@@ -24,7 +24,8 @@
     standardized. This is also the reason why this file resides in
     'Core' instead of 'System' -- package that want to provide Modules
     only need to load 'Core' -- not any specific lib for running
-    modules. The design aim is to be as minimalistic as possible. */
+    modules. In fact, libs providing Modules should NOT link to
+    'System'. The design aim is to be as minimalistic as possible. */
 
 #ifndef Core_module_h
 #define Core_module_h
@@ -40,13 +41,13 @@ typedef MT::Array<Access*> AccessL;
 //
 /** VariableAccess is an abstraction of how a module may access
     variables. Its implementation is engine dependent. Currently a
-    shared memory (mutexed and revisioned) is used. ROS topics would
+    shared memory (mutexed and revisioned) is used. ROS topics could
     equally be used. */
 
 struct VariableAccess{
   MT::String name;  ///< Variable name
   Type *type;       ///< Variable type
-  void *data;       ///< pointer to data struct; Access_typed knows how to cast this
+  void *data;       ///< pointer to data struct; Access_typed knows how to cast it
   VariableAccess(const char* _name):name(_name), type(NULL), data(NULL){}
   virtual int writeAccess(Module*) = 0; ///< tell the engine that a module accesses -> mutex or publish
   virtual int readAccess(Module*) = 0; ///< tell the engine that a module accesses
@@ -62,13 +63,13 @@ extern Module *currentlyCreating;
     from this class (and perhaps REGISTER_MODULE(...)) to enable the
     engine to instantiate your module and run/schedule it. The
     accesses stores all accesses of this module; the engine can
-    automatically analyze them and instantiate repective variables if
+    automatically analyze them and instantiate respective variables if
     necessary */
 
 struct Module{
   MT::String name;
   AccessL accesses;
-  void *thread;
+  struct ModuleThread *thread;
   /** DON'T open drivers/devices/files or so here in the constructor,
       but in open(). Sometimes a module might be created only to see
       which accesses it needs. The default constructure should really
@@ -126,7 +127,7 @@ struct Access_typed:Access{
     T& operator()(){ return (*a)(); }
   };
 
-  Access_typed(const char* name, Module *m=NULL, VariableAccess *d=NULL):Access(name){ type=new Type_typed<T, void>();  module=currentlyCreating; var=d; currentlyCreating->accesses.append(this); }
+  Access_typed(const char* name, Module *m=NULL, VariableAccess *d=NULL):Access(name){ type=new Type_typed<T, void>();  module=currentlyCreating; var=d; if(module) module->accesses.append(this); }
   void readAccess(){CHECK(var,""); var->readAccess(module); }
   void writeAccess(){ CHECK(var,""); var->writeAccess(module); }
   void deAccess(){ CHECK(var,""); var->deAccess(module); }
@@ -189,7 +190,7 @@ struct name : Module { \
 //
 
 inline void operator>>(istream&, Module&){ NIY }
-inline void operator<<(ostream&, const Module&){ NIY }
+inline void operator<<(ostream& os, const Module& m){ os <<"Module '" <<m.name <<'\''; }
 
 inline void operator>>(istream&, Access&){ NIY }
 inline void operator<<(ostream& os, const Access& a){ os <<"Access '" <<a.name <<"' from '" <<a.module->name <<"' to '" <<(a.var?a.var->name:"??") <<'\''; }

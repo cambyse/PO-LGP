@@ -6,20 +6,21 @@
 
 //===========================================================================
 //
-// direct execution
+// direct execution - way1
 //
 
-void testExec(){
+void way1(){
   System S;
 
-#if 1
-  ModuleThread *mt = S.addModule<ComputeSum> ("funnyName");
+//  Module *m = S.addModule<ComputeSum> ("funnyName");
+  Module *m = S.addModule("ComputeSum", "funnyName");
   S.complete(); //this will create the respective variables!
+  cout <<S <<endl;
 
   Access_typed<arr> *x = S.getAccess<arr>("x");
   Access_typed<double> *s = S.getAccess<double>("s");
 
-#else
+#if 0
   ComputeSum C;
   arr x;
   double s;
@@ -28,17 +29,15 @@ void testExec(){
   S.addVariable(&s, "s");
 #endif
 
-  cout <<S <<endl;
-
   x->set() = ARRAY(1., 2., 3.);
 
 #if 1 //serial
-  mt->open();
-  mt->step();
-  mt->close();
+  m->open();
+  m->step();
+  m->close();
 #else //threaded
-  mt->threadOpen();
-  mt->threadStep();
+  m->thread->threadOpen();
+  m->thread->threadStep();
   MT::wait(.001); //give it a tiny tiny bit of time to at least step once (it could happen that the condition variable has not waken up to detect the step BEFORE threadClose chanes the state again)
   mt->threadClose();
 #endif
@@ -46,6 +45,34 @@ void testExec(){
   cout <<"result = " <<s->get() <<endl;
 
 }
+
+//===========================================================================
+//
+// direct execution - way2
+//
+
+struct MySystem:System{
+  ACCESS(arr, x);
+  ACCESS(double, s);
+  MySystem():System("hallo"){
+    addModule<ComputeSum> ("funnyName");
+    complete(); //this will create the respective variables!
+  }
+};
+
+void way2(){
+  MySystem S;
+
+  cout <<S <<endl;
+
+  S.x.set() = ARRAY(1., 2., 3.);
+
+  S.open();
+  S.step();
+  S.close();
+
+  cout <<"result = " <<S.s.get() <<endl;
+};
 
 //===========================================================================
 //
@@ -78,7 +105,8 @@ void basicTesting(){
 
 //-- this is how the top-level manager should get access
 int main(int argc, char** argv){
-//  testExec();
-  basicTesting();
+//  way1();
+  way2();
+//  basicTesting();
   return 0;
 }

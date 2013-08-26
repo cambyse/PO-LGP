@@ -44,6 +44,7 @@ struct Item {
   template<class T> T *value();    //access the value
   template<class T> const T *value() const;
   void write(std::ostream &os) const;
+  virtual bool hasValue() const {NIY};
   virtual void writeValue(std::ostream &os) const {NIY}
   virtual const std::type_info& valueType() const {NIY}
   virtual bool is_derived_from_RootType() const {NIY}
