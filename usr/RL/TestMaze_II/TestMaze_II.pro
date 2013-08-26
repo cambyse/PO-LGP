@@ -31,7 +31,8 @@ HEADERS += LookAheadSearch.h \
     SplineInterpolation.h \
     GPReg.h \
     util/Nelder_Mead_Simplex.h \
-    util/Matrix.h
+    util/Matrix.h \
+    SmoothingKernelSigmoid.h
 SOURCES += LookAheadSearch.cpp \
     util.cpp \
     BatchMaze.cpp \
@@ -58,7 +59,8 @@ SOURCES += LookAheadSearch.cpp \
     ActiveSigmoidOptimization.cpp \
     SplineInterpolation.cpp \
     GPReg.cpp \
-    util/Nelder_Mead_Simplex.cpp
+    util/Nelder_Mead_Simplex.cpp \
+    SmoothingKernelSigmoid.cpp
 LIBS += -llbfgs \
     -lemon \
     -larmadillo \
