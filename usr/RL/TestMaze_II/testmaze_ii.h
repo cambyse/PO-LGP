@@ -119,7 +119,6 @@ private slots:
     void process_console_input(QString sequence_input = QString(), bool sequence = false);
     void back_in_history();
     void forward_in_history();
-
 };
 
 // event filter for arrow keys

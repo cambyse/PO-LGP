@@ -29,7 +29,9 @@ HEADERS += LookAheadSearch.h \
     qcustomplot.h \
     ActiveSigmoidOptimization.h \
     SplineInterpolation.h \
-    GPReg.h
+    GPReg.h \
+    util/Nelder_Mead_Simplex.h \
+    util/Matrix.h
 SOURCES += LookAheadSearch.cpp \
     util.cpp \
     BatchMaze.cpp \
@@ -55,7 +57,8 @@ SOURCES += LookAheadSearch.cpp \
     qcustomplot.cpp \
     ActiveSigmoidOptimization.cpp \
     SplineInterpolation.cpp \
-    GPReg.cpp
+    GPReg.cpp \
+    util/Nelder_Mead_Simplex.cpp
 LIBS += -llbfgs \
     -lemon \
     -larmadillo \
