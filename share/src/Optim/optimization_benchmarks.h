@@ -160,7 +160,7 @@ struct SinusesFunction:VectorFunction {
 
 /// $f(x) = x^T C x$ where C has eigen values ranging from 1 to 'condition'
 struct SquaredCost:public ScalarFunction,VectorFunction {
-  arr M,C; /// $C = M^T M $
+  arr M; /// $C = M^T M $
   uint n;  /// dimensionality of $x$
   
   SquaredCost(uint n, double condition=100.);

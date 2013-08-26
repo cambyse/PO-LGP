@@ -167,6 +167,7 @@ void testConstraint(VectorFunction& f, arr& x_start=NoArr, uint iters=10){
 
   for(uint k=0;k<iters;k++){
     checkGradient(F, x, 1e-4); //very convenient: check numerically whether the gradient is correctly implemented
+    checkHessian (F, x, 1e-4);
 
     //optRprop(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
     //optGradDescent(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));

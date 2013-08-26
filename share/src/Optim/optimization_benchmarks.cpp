@@ -42,7 +42,7 @@ void SquaredCost::initRandom(uint _n, double condition) {
   n=_n;
   generateConditionedRandomProjection(M, n, condition);
   //the metric is equal M^T*M
-  C=~M*M;
+  //C=~M*M;
   //arr U,d,V;    svd(U, d, V, C);    cout <<U <<d <<V <<M <<C <<endl;
 }
 
@@ -50,6 +50,7 @@ double SquaredCost::fs(arr& grad, arr& H, const arr& x) {
   arr y;
   fv(y, grad, x);
   if(&grad) grad=2.*~y*grad;
+  if(&H) H = 2.*(~M*M);
   return sumOfSqr(y);
 }
 
