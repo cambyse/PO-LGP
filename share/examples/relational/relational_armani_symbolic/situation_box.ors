@@ -232,8 +232,7 @@ shape (o2){ type=0 mass=1. rel=<T t(0 .075 0)> size=[.15 .01 .15 .0] color=[0.0 
 shape (o2){ type=0 mass=1. rel=<T t(0 -.075 0)> size=[.15 .01 .15 .0] color=[0.0 0.8 1.4] contact }
 shape (o2){ type=0 mass=1. rel=<T t(0 0 -.08)> size=[.15 .15 .01 .0] color=[0.0 0.8 1.4] contact }
 #shape (o2){ type=0 mass=1. rel=<T t(0 0 .075)> size=[.15 .15 .01 .0] color=[0.0 0.0 0.0] contact }
-shape (o2){ type=0 mass=1. rel=<T t(0 0 .075) t(0 -.05 0) d(80 1 0 0) t(0 .05 .0)> size=[.15 .15 .01
-.0] color=[0.0 0.0 0.0] contact }
+shape (o2){ type=0 mass=1. rel=<T t(0 0 .075) t(0 -.05 0) d(80 1 0 0) t(0 .05 .0)> size=[.15 .15 .01 .0] color=[0.0 0.0 0.0] contact }
 
 
 # BOX 3
