@@ -1,8 +1,11 @@
-#include "G4Tracker.h"
+#include "G4.h"
+#include <G4TrackIncl.h>
 
-REGISTER_MODULE(G4Tracker)
+REGISTER_MODULE(G4Poller)
 
-void G4Tracker::open(){
+void lib_hardware_G4(){ cout <<"force loading lib/hardware/G4" <<endl; }
+
+void G4Poller::open(){
   const char *src_cfg_file = "../../../configurations/g4_source_configuration.g4c";
 
   //-- initialization
@@ -37,9 +40,9 @@ void G4Tracker::open(){
   cs.cds.pParam = hubList;
   res = g4_set_query(&cs);
   if(res!=G4_ERROR_NONE){ close(); HALT(""); }
-  fd = new G4_FRAMEDATA[hubs];
-  data.resize(hubs, G4_SENSORS_PER_HUB, 7);
-  data.setZero();
+  framedata = new G4_FRAMEDATA[hubs];
+  poses.resize(hubs, G4_SENSORS_PER_HUB, 7);
+  poses.setZero();
 
   //-- configure: set quaternions and meters
   int quat_unit=G4_TYPE_QUATERNION;
@@ -59,8 +62,8 @@ void G4Tracker::open(){
 
 }
 
-void G4Tracker::step(){
-  int res=g4_get_frame_data(fd, sysId, hubList, hubs);
+void G4Poller::step(){
+  int res=g4_get_frame_data(framedata, sysId, hubList, hubs);
   int num_hubs_read=res&0xffff;
 //  int tot_sys_hubs=res>>16;
 
@@ -71,23 +74,22 @@ void G4Tracker::step(){
 
   for(int h=0; h<num_hubs_read; h++) {
     for(uint s=0; s<G4_SENSORS_PER_HUB; s++) {
-      if(fd[h].stationMap&(0x01<<s)){ // we have data on hub h and sensor s
-        cout <<" hub " <<fd[h].hub
-            <<" sensor " <<s
-           <<" frame " <<fd[h].frame
-          <<" id=" <<fd[h].sfd[s].id
-         <<" pos=" <<fd[h].sfd[s].pos[0] <<' '<<fd[h].sfd[s].pos[1] <<' ' <<fd[h].sfd[s].pos[2]
-        <<" ori=" <<fd[h].sfd[s].ori[0] <<' '<<fd[h].sfd[s].ori[1] <<' ' <<fd[h].sfd[s].ori[2] <<' ' <<fd[h].sfd[s].ori[3]
-        <<endl;
-
-        memmove(&data(h,s,0), fd[h].sfd[s].pos, 7*data.sizeT); //low level copy of data
+      if(framedata[h].stationMap&(0x01<<s)){ // we have data on hub h and sensor s
+//        cout <<" hub " <<fd[h].hub
+//            <<" sensor " <<s
+//           <<" frame " <<fd[h].frame
+//          <<" id=" <<fd[h].sfd[s].id
+//         <<" pos=" <<fd[h].sfd[s].pos[0] <<' '<<fd[h].sfd[s].pos[1] <<' ' <<fd[h].sfd[s].pos[2]
+//        <<" ori=" <<fd[h].sfd[s].ori[0] <<' '<<fd[h].sfd[s].ori[1] <<' ' <<fd[h].sfd[s].ori[2] <<' ' <<fd[h].sfd[s].ori[3]
+//        <<endl;
+        memmove(&poses(h,s,0), framedata[h].sfd[s].pos, 7*poses.sizeT); //low level copy of data
       }
     }
   }
 
-  currentPoses.set() = data;
+  currentPoses.set() = poses;
 }
 
-void G4Tracker::close(){
+void G4Poller::close(){
   g4_close_tracker();
 }

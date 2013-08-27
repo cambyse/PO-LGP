@@ -201,8 +201,10 @@ ors::Shape::Shape(Graph& G, Body *b, const Shape *copyShape) {
   index=G.shapes.N;
   G.shapes.append(this);
   body=b;
-  b->shapes.append(this);
-  ibody=b->index;
+  if(b){
+    b->shapes.append(this);
+    ibody=b->index;
+  }
 }
 
 ors::Shape::~Shape() {
@@ -215,8 +217,8 @@ void ors::Shape::parseAts() {
   arr x;
   MT::String str;
   ats.getValue<Transformation>(rel, "rel");
-  if(ats.getValue<arr>(x, "size"))          { CHECK(x.N==4,""); memmove(size, x.p, 4*sizeof(double)); }
-  if(ats.getValue<arr>(x, "color"))         { CHECK(x.N==3,""); memmove(color, x.p, 3*sizeof(double)); }
+  if(ats.getValue<arr>(x, "size"))          { CHECK(x.N==4,"size=[] needs 4 entries"); memmove(size, x.p, 4*sizeof(double)); }
+  if(ats.getValue<arr>(x, "color"))         { CHECK(x.N==3,"color=[] needs 3 entries"); memmove(color, x.p, 3*sizeof(double)); }
   if(ats.getValue<double>(d, "type"))       { type=(ShapeType)d;}
   if(ats.getValue<MT::String>(str, "mesh")) { mesh.readFile(str); }
   if(ats.getValue<double>(d, "meshscale"))  { mesh.scale(d); }
@@ -1402,12 +1404,17 @@ void ors::Graph::read(std::istream& is) {
   ItemL ss = G.getItems("shape");
   for_list(i, it, ss) {
     CHECK(it->keys(0)=="shape","");
-    CHECK(it->parents.N==1,"shapes must have one parent");
+    CHECK(it->parents.N<=1,"shapes must have no or one parent");
     CHECK(it->valueType()==typeid(KeyValueGraph),"shape must have value KeyValueGraph");
     
-    Body *b = listFindByName(bodies, it->parents(0)->keys(1));
-    CHECK(b,"");
-    Shape *s=new Shape(*this, b);
+    Shape *s;
+    if(it->parents.N==1){
+      Body *b = listFindByName(bodies, it->parents(0)->keys(1));
+      CHECK(b,"");
+      s=new Shape(*this, b);
+    }else{
+      s=new Shape(*this, NULL);
+    }
     if(it->keys.N>1) s->name=it->keys(1);
     s->ats = *it->value<KeyValueGraph>();
     s->parseAts();

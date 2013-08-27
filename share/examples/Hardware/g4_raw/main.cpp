@@ -17,11 +17,6 @@
 
 using namespace std;
 
-int init(string src_cfg);
-void close();
-void log(string msg);
-void err(string msg);
-void test(bool t, string msg);
 
 int main(int argc, char **argv) {
   string src_cfg;
@@ -36,7 +31,7 @@ int main(int argc, char **argv) {
   usleep(10000);
 
   //-- initialization
-  log("Initializing.");
+  cout <<"Initializing." <<endl;
   int res;
   int c = -1;
   do {
@@ -50,9 +45,6 @@ int main(int argc, char **argv) {
 
 
   usleep(10000);
-
-  G4_FRAMEDATA frames;
-
 
   G4_CMD_STRUCT cs;
   int hubs = 1;
@@ -92,7 +84,7 @@ int main(int argc, char **argv) {
   res = g4_set_query(&cs);         // sets orientation units to quaternions
 
   //    for(int i = 0; i < 10000; i++) {
-  for(int i = 0; i < 10000; i++) {
+  for(int i = 0; i < 1000; i++) {
     res=g4_get_frame_data(fd,sysId,hubList,hubs);
     int num_hubs_read=res&0xffff;
     int tot_sys_hubs=res>>16;
@@ -119,30 +111,8 @@ int main(int argc, char **argv) {
     usleep(855000000l);
   }
 
-  close();
-
-  return 0;
-}
-
-int init(string src_cfg) {
-}
-
-void close() {
   cout << "Closing." << endl;
   g4_close_tracker();
-}
 
-void log(string msg) {
-  cout << msg << endl;
-}
-
-void err(string msg) {
-  cout << "Error: " << msg << endl;
-}
-
-void test(bool t, string msg) {
-  if(!t) {
-    err(msg);
-    exit(1);
-  }
+  return 0;
 }

@@ -1,8 +1,8 @@
-#include <hardware/G4/G4Tracker.h>
+#include <hardware/G4/G4.h>
 #include <System/engine.h>
 
 void miniTest(){
-  G4Tracker g4;
+  G4Poller g4;
 
   g4.open();
 
@@ -18,7 +18,7 @@ void miniTest(){
 struct G4System:System{
   ACCESS(floatA, currentPoses);
   G4System(){
-    addModule("G4Tracker", "G4Tracker", ModuleThread::loopWithBeat, .001);
+    addModule("G4Poller", "G4Poller", ModuleThread::loopWithBeat, .001);
     complete();
   }
 };
