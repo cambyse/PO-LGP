@@ -1,4 +1,4 @@
-#include "G4Tracker.h"
+#include <hardware/G4/G4Tracker.h>
 #include <System/engine.h>
 
 void miniTest(){

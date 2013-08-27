@@ -1,9 +1,7 @@
 BASE = ../../..
 
-LIBS += -lG4Track
+OBJS = main.o
 
-OBJS = main.o G4Tracker.o
-
-DEPEND = Core System
+DEPEND = Core System hardware_G4
 
 include $(BASE)/make-generic

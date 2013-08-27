@@ -671,6 +671,9 @@ includeAll.cxx: force
 $(BASE)/lib/libextern_%.so: $(BASE)/src/extern/%
 	+@-$(BASE)/make-locked.sh $<
 
+$(BASE)/lib/libhardware_%.so: $(BASE)/src/hardware/%
+	+@-$(BASE)/make-locked.sh $<
+
 $(BASE)/lib/lib%.so: $(BASE)/src/%
 	+@-$(BASE)/make-locked.sh $<
 
