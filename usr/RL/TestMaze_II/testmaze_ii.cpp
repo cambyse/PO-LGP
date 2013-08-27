@@ -1014,7 +1014,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     max_x = max<double>(max_x,x);
                 }
                 // create sigmoid object
-                SmoothingKernelSigmoid sks(min_x,max_x,100,0.07,2);
+                SmoothingKernelSigmoid sks(min_x,max_x,10,0.05,1);
                 for(int i=0; i<data_n; ++i) {
                     sks.add_new_point(x_data[i],y_data[i]);
                 }

@@ -14,6 +14,7 @@
 using util::min;
 using util::max;
 using util::clamp;
+using util::sgn;
 using std::vector;
 using std::pair;
 using std::make_pair;
@@ -31,6 +32,8 @@ SmoothingKernelSigmoid::SmoothingKernelSigmoid(const double& min_x,
     bias_factor(0),
     kernel_width(width),
     gamma(g),
+    infinity(DBL_MAX/1e10),
+    bound_scaling(1e-100),
     x_sig(control_point_n),
     y_sig(control_point_n),
     y_sig_upper(y_sig),
@@ -66,15 +69,26 @@ void SmoothingKernelSigmoid::print_to_QCP(QCustomPlot * plotter,
                                           const bool& print_lower
     ) const {
     // initialize data
+    int smooth_data_n = 1000;
     QVector<double> qx_raw_data(raw_data_n), qy_raw_data(raw_data_n);
     QVector<double> qx_sig(control_point_n), qy_sig(control_point_n);
     QVector<double> qx_sig_upper(control_point_n), qy_sig_upper(control_point_n);
     QVector<double> qx_sig_lower(control_point_n), qy_sig_lower(control_point_n);
+    QVector<double> qx_smooth_data(smooth_data_n), qy_smooth_data(smooth_data_n);
 
     // transfer raw data to QVector
     for(int i=0; i<raw_data_n; ++i) {
         qx_raw_data[i] = x_data[i];
         qy_raw_data[i] = y_data[i];
+    }
+
+    // create smooth data
+    for(int i=0; i<smooth_data_n; ++i) {
+        double x = (double)i/(smooth_data_n-1);
+        x *= x_sig.back()-x_sig.front();
+        x += x_sig.front();
+        qx_smooth_data[i] = x;
+        qy_smooth_data[i] = kernel_smoothed_data(x);
     }
 
     // transfer points to QVector
@@ -127,6 +141,14 @@ void SmoothingKernelSigmoid::print_to_QCP(QCustomPlot * plotter,
     raw_data_graph->setName("Raw Data");
     raw_data_graph->setData(qx_raw_data, qy_raw_data);
 
+    // create graph for smoothed data
+    QCPGraph * smooth_data_graph = plotter->addGraph();
+    smooth_data_graph->setPen(QColor(255, 155, 0, 255));
+    smooth_data_graph->setLineStyle(QCPGraph::lsLine);
+    smooth_data_graph->setScatterStyle(QCP::ScatterStyle::ssNone);
+    smooth_data_graph->setName("Smoothed Data");
+    smooth_data_graph->setData(qx_smooth_data, qy_smooth_data);
+
     // fill bounds or remove (removing changes indices)
     if(print_upper) {
         upper_graph->setChannelFillGraph(sig_graph);
@@ -146,6 +168,7 @@ void SmoothingKernelSigmoid::print_to_QCP(QCustomPlot * plotter,
     // add title and legend
     plotter->setTitle("Smoothig Kernel Sigmoid");
     plotter->legend->setVisible(true);
+    plotter->legend->setPositionStyle(QCPLegend::psBottomRight);
     QFont legendFont;
     legendFont.setPointSize(7);
     plotter->legend->setFont(legendFont);
@@ -212,30 +235,48 @@ lbfgsfloatval_t SmoothingKernelSigmoid::evaluate_model(
     // // terminate progress bar
     // if(DEBUG_LEVEL>0) {ProgressBar::terminate();}
 
-    // precomputing n_eff
-    DEBUG_OUT(3,"Precomputing n_eff:");
+    // precomputing n_eff and nu_eff
+    DEBUG_OUT(3,"Precomputing n_eff and nu_eff:");
     vector<double> n_eff_vec(control_point_n,0);
+    vector<double> nu_eff_vec(control_point_n,0);
     for(int point_idx=0; point_idx<control_point_n; ++point_idx) {
         for(int data_idx=0; data_idx<raw_data_n; ++data_idx) {
             n_eff_vec[point_idx] += kernel(x_sig[point_idx],x_data[data_idx]);
         }
-        DEBUG_OUT(3,"    " << point_idx << ": " << n_eff_vec[point_idx]);
+        for(int point_2_idx=0; point_2_idx<raw_data_n; ++point_2_idx) {
+            if(point_2_idx==point_idx) {
+                continue;
+            } else {
+                nu_eff_vec[point_idx] += kernel(x_sig[point_idx],x_sig[point_2_idx]);
+            }
+        }
+        DEBUG_OUT(3,"    " << point_idx << "	n_eff:	" << n_eff_vec[point_idx] <<
+                  "	nu_eff:	" << nu_eff_vec[point_idx]);
     }
 
-    // calculate cost function and gradient
+    // compute cost function and gradient
     for(int point_idx=0; point_idx<control_point_n; ++point_idx) {
         double cx = x_sig[point_idx];
         double cy = y[point_idx];
         double n_eff = n_eff_vec[point_idx];
 
         // data loss
-        double weighted_y_sum = 0;
-        for(int data_idx=0; data_idx<raw_data_n; ++data_idx) {
-            weighted_y_sum += kernel(x_data[data_idx],cx)*y_data[data_idx];
+        double y_smooth = kernel_smoothed_data(cx);
+        fx += pow((y_smooth-cy)*n_eff,2);
+        g[point_idx] += -2*n_eff*n_eff*(y_smooth-cy);
+
+        // monotony bounds
+        double cost, grad;
+        if(point_idx>0) {
+            bounds(0, 0, y[point_idx-1], y[point_idx], cost, grad);
+            fx += cost / 2;
+            g[point_idx] += -grad;
         }
-        double error = n_eff*cy - weighted_y_sum;
-        fx += error*error;
-        g[point_idx] += 2*n_eff*error;
+        if(point_idx<control_point_n-1) {
+            bounds(0, 0, y[point_idx], y[point_idx+1], cost, grad);
+            fx += cost / 2;
+            g[point_idx] += grad;
+        }
 
         // bias
         fx += cy*bias_factor;
@@ -278,8 +319,8 @@ int SmoothingKernelSigmoid::progress_model(
             DEBUG_OUT(0, "    control point " << p_idx << ": " << x[p_idx]);
         }
         DEBUG_OUT(0,"Iteration " << k << " (fx = " << fx << ")");
+        DEBUG_OUT(1,"");
     }
-    DEBUG_OUT(1,"");
 
     return 0;
 }
@@ -424,4 +465,34 @@ double SmoothingKernelSigmoid::kernel(const double& x1, const double& x2) const 
     double d = fabs(x1-x2);
     double e = pow(d/kernel_width,gamma);
     return exp(-e);
+}
+
+double SmoothingKernelSigmoid::kernel_smoothed_data(const double& x) const {
+    double n_eff = 0;
+    double y_sum = 0;
+    for(int data_idx=0; data_idx<raw_data_n; ++data_idx) {
+        double k = kernel(x_data[data_idx],x);
+        y_sum += k*y_data[data_idx];
+        n_eff += k;
+    }
+    return y_sum/n_eff;
+}
+
+void SmoothingKernelSigmoid::bounds(const double& /*x1*/,
+                                    const double& /*x2*/,
+                                    const double& y1,
+                                    const double& y2,
+                                    double& cost,
+                                    double& grad) const {
+    double d_scale = 1e-2;
+    double sig_scale = 1e1;
+    double d = (y1 - y2);
+    cost = d/(d_scale*sqrt(1+pow(d/d_scale,2)));
+    grad = d_scale/(sqrt(pow(d,2)/pow(d_scale,2)+1)*(pow(d,2)+pow(d_scale,2)));
+    // cost += d;
+    // grad += 1;
+    cost *= sig_scale;
+    grad *= sig_scale;
+    // cost = sig_scale*d/sqrt(1+d*d);
+    // grad = sig_scale/sqrt(pow(1+d*d,3));
 }

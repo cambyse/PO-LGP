@@ -86,6 +86,8 @@ protected:
     int raw_data_n;
     bool initialized;
     double bias_factor, kernel_width, gamma;
+    double infinity; // used when the objective is has infinite values
+    double bound_scaling;
     std::vector<double> x_data, y_data, x_sig, y_sig, y_sig_upper, y_sig_lower;
     lbfgsfloatval_t * y_values;
 
@@ -94,6 +96,13 @@ protected:
     void lbfgs_to_vec();
     void vec_to_lbfgs();
     double kernel(const double& x1, const double& x2) const;
+    double kernel_smoothed_data(const double& x) const;
+    void bounds(const double& x1,
+                const double& x2,
+                const double& y1,
+                const double& y2,
+                double& cost,
+                double& grad) const;
 };
 
 #endif // SMOOTHINGKERNELSIGMOID_H
