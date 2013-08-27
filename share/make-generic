@@ -423,12 +423,6 @@ CPATH := $(CPATH):/usr/include/pcl-1.6
 FREENECT = 1
 endif
 
-ifeq ($(FREENECT),1)
-#CPATH := $(CPATH):$(MLR_LIBPATH)/libfreenect/include
-#LPATHS += $(MLR_LIBPATH)/libfreenect/lib
-LIBS += -lfreenect
-endif
-
 ifeq ($URGLASER),1)
 CPATH     := $(CPATH):$(LIBPATH)/urg-0.8.16/include/c
 CPATH     := $(CPATH):$(LIBPATH)/urg-0.8.16/include/cpp

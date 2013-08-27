@@ -1,0 +1,4 @@
+sudo modprobe -r gspca_kinect
+sudo modprobe -r gspca_main
+echo "blacklist gspca_kinect" | sudo tee -a /etc/modprobe.d/blacklist.conf
+sudo adduser $USER plugdev

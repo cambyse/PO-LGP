@@ -200,7 +200,7 @@ void System::complete(){
       if(!a->var){ //access is not connected yet
          v = listFindByName(vars, a->name);
         if(v){ //variable exists -> check type
-          if(*v->type != *a->type) HALT("dammit!");
+          if(*v->type != *a->type) HALT("trying to connect an access " <<m->name <<'-' <<a->name <<*a->type <<" with a variable " <<v->name <<*v->type);
           //good: just connect
           a->var = v;
         }else{ //variable does not exist yet
