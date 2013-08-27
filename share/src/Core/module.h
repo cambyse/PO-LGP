@@ -52,6 +52,8 @@ struct VariableAccess{
   virtual int writeAccess(Module*) = 0; ///< tell the engine that a module accesses -> mutex or publish
   virtual int readAccess(Module*) = 0; ///< tell the engine that a module accesses
   virtual int deAccess(Module*) = 0;    ///< tell the engine that the module de-accesses
+  virtual void waitForNextWriteAccess() = 0;
+  virtual int  waitForRevisionGreaterThan(int rev) = 0; //returns the revision
 };
 
 

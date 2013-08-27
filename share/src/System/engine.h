@@ -103,11 +103,9 @@ struct System:Module{
 
   System(const char* name=NULL):Module(name){}
 
-  virtual void step(){
-    for_list_(Module, m, mts) m->step();
-  }
-  virtual void open(){}
-  virtual void close(){}
+  virtual void step(){  for_list_(Module, m, mts) m->step();  }
+  virtual void open(){  for_list_(Module, m, mts) m->open();  }
+  virtual void close(){  for_list_(Module, m, mts) m->close();  }
 
   Variable* addVariable(Access *a){
     Variable *v = new Variable(a->name);

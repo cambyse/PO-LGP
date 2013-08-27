@@ -274,7 +274,7 @@ Engine::~Engine(){
 void Engine::open(System& S){
   S.complete();
 
-  if(mode==none) mode=serial;
+  if(mode==none) mode=threaded;
 
 //  //create pre-defined variables
 //  ItemL variables = S.system.getTypedItems<SystemDescription::VariableEntry>("Variable");
@@ -337,6 +337,10 @@ void Engine::open(System& S){
   if(mode==serial){
     for_list_(Module, m, S.mts) m->open();
   }
+}
+
+void Engine::step(System &S){
+  for_list_(Module, m, S.mts) step(*m);
 }
 
 void Engine::step(Module &m, bool threadedOnly){
