@@ -12,11 +12,10 @@
 
 #include"G4TrackIncl.h"
 
+#include <Core/util.h>
+
 // built with
 // g++ main.cpp -O2 -g -o test_app -lG4Track
-
-// Default file names
-#define DEFAULT_SRC_CFG "g4_setup.g4c"
 
 using namespace std;
 
@@ -31,7 +30,7 @@ int main(int argc, char **argv) {
     int sysId;
 
     if(argc < 2)
-        src_cfg = DEFAULT_SRC_CFG;
+        src_cfg = "g4_setup.g4c";
     else
         src_cfg = argv[1];
 
@@ -55,6 +54,7 @@ int main(int argc, char **argv) {
         res = g4_set_query(&cs);
         hubs = cs.cds.iParam;      // number of hubs in cs.cds.iParam
         cout << "Hubs from thing = " << hubs << endl;
+	usleep(10000);
     //} while(hubs != 2);
     } while(hubs != 1);
     cout << "Final hubs from thing = " << hubs << endl;
@@ -65,26 +65,48 @@ int main(int argc, char **argv) {
     res=g4_set_query(&cs);
     G4_FRAMEDATA* fd=new G4_FRAMEDATA[hubs];
 
-    res=g4_get_frame_data(fd,sysId,hubList,hubs);
-    int num_hubs_read=res&0xffff;
-    int tot_sys_hubs=res>>16;
+
+    int quat_unit=G4_TYPE_QUATERNION;
+    cs.cmd=G4_CMD_UNITS;
+    cs.cds.id=G4_CREATE_ID(sysId,0,0);
+    cs.cds.action=G4_ACTION_SET;
+    cs.cds.iParam=G4_DATA_ORI;
+    cs.cds.pParam=(void*)&quat_unit;
+    res = g4_set_query(&cs);         // sets orientation units to quaternions
+
+    int meter_unit=G4_TYPE_METER;
+    cs.cds.iParam=G4_DATA_POS;
+    cs.cds.pParam=(void*)&meter_unit;
+    res = g4_set_query(&cs);         // sets orientation units to quaternions
     
     //    for(int i = 0; i < 10000; i++) {
-    for(int i = 0; i < 100; i++) {
-        res = g4_get_frame_data(fd, sysId, hubList, hubs);
-        cout<< "num_hubs="<<(res&0xffff)<<endl;
+    for(int i = 0; i < 10000; i++) {
+      res=g4_get_frame_data(fd,sysId,hubList,hubs);
+      int num_hubs_read=res&0xffff;
+      int tot_sys_hubs=res>>16;
 
-        //cout << "Low Bits   = " << (res & 0xffff) << endl;
-        //cout << "High Bits  = " << (res >> 16) << endl;
+      // cout <<"#existing hubs=" <<tot_sys_hubs
+      // 	   <<" #data-avail hubs=" <<num_hubs_read <<endl;
 
-        for(int h = 0; h < (res&0xffff); h++) {
-            cout << "[" << h << "] Hub        = " << fd[h].hub << endl;
-            cout << "[" << h << "] Frame      = " << fd[h].frame << endl;
-            cout << "[" << h << "] StationMap = " << fd[h].stationMap << endl;
-        }
-        usleep(8550);
+      for(int h = 0; h < num_hubs_read; h++) {
+	// cout << "[" << h << "] Hub        = " << fd[h].hub << endl;
+	// cout << "[" << h << "] Frame      = " << fd[h].frame << endl;
+	// cout << "[" << h << "] StationMap = " << fd[h].stationMap << endl;
+	for(uint s=0; s<G4_SENSORS_PER_HUB; s++){
+	  if(fd[h].stationMap&(0x01<<s)){
+	    cout <<" hub " <<fd[h].hub
+		 <<" sensor " <<s
+		 <<" frame " <<fd[h].frame
+		 <<" id=" <<fd[h].sfd[s].id
+		 <<" pos=" <<fd[h].sfd[s].pos[0] <<' '<<fd[h].sfd[s].pos[1] <<' ' <<fd[h].sfd[s].pos[2]
+		 <<" ori=" <<fd[h].sfd[s].ori[0] <<' '<<fd[h].sfd[s].ori[1] <<' ' <<fd[h].sfd[s].ori[2] <<' ' <<fd[h].sfd[s].ori[3]
+		 <<endl;
+	  }
+	}
+      }
+      usleep(855000000l);
     }
-
+ 
     close();
 
     return 0;

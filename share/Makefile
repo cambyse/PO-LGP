@@ -22,7 +22,7 @@ examples: $(exas:%=makePath/%)
 
 depend: $(srcs:%=dependPath/%)
 
-clean: $(srcs:%=cleanPath/%) $(exas:%=cleanPath/%)
+clean: $(srcs:%=cleanPath/%) $(exas:%=cleanPath/%) cleanLocks
 
 ################################################################################
 
