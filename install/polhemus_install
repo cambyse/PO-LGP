@@ -4,9 +4,9 @@
 set -e
 
 ## parameters for this install
-FILE=ode-0.11.tar.gz
-SRC_PATH=ode-0.11
-URL='https://mlr-owncloud.informatik.uni-stuttgart.de/public.php?service=files&t=c55ce4f1ee54e4da95aa8eaa5ea48b02&download'
+FILE=g4track_lib_dist-0.0.2.tar.gz
+SRC_PATH=g4track_lib_dist-0.0.2
+URL='https://mlr-owncloud.informatik.uni-stuttgart.de/public.php?service=files&t=e6b1fb741ce10462a7f7154296399bc9&download'
 THIS_PATH=$PWD
 
 [ -z $MLR_LIBPATH ] && MLR_LIBPATH=/home/lib
@@ -50,26 +50,10 @@ case $yn in
     *) ;;
 esac
 
-## make
-echo -n "  * Compiling in" $MLR_LIBPATH/src/$SRC_PATH
-read -p " -- [Enter] to continue..." yn
-cd $MLR_LIBPATH/src/$SRC_PATH
-sh autogen.sh
-#./configure --help
-./configure --prefix=$MLR_LIBPATH --enable-double-precision --with-trimesh=opcode --with-pic
-make -j2
-make install
-
 ## install
-echo -n "  * Copying additional headers to" $MLR_LIBPATH/include/ode/internal
-read -p " -- [Enter] to continue..." yn
-cd $MLR_LIBPATH
-mkdir -p include/ode/internal include/ode/internal/joints
-cp src/$SRC_PATH/ode/src/*.h include/ode/internal
-cp src/$SRC_PATH/ode/src/joints/*.h include/ode/internal/joints
-
-## clean
-echo -n "  * Make clean in" $MLR_LIBPATH/src/$SRC_PATH
+echo -n "  * Installing into" /usr/local/include "and" /usr/local/lib
 read -p " -- [Enter] to continue..." yn
 cd $MLR_LIBPATH/src/$SRC_PATH
-find . -name '*.o' -delete
+#./configure --help
+./configure
+sudo make install sysconfdir=/etc
