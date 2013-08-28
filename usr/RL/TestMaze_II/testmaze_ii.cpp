@@ -974,13 +974,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 // generate random data
                 for(int i=0; i<data_n; ++i) {
                     double x;
-                    if(i==0) {
-                        x = 0.2;
-                    } else if(i==1) {
-                        x = 0.8;
-                    } else {
-                        x = sks.get_max_uncertain(1000);
-                    }
+                    x = sks.get_max_uncertain(1000);
                     x += (drand48()-0.5)/100;
                     double y;
                     double s1 = 0.4;

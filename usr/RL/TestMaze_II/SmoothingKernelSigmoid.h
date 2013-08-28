@@ -20,12 +20,12 @@ public:
                         const bool& smooth_data = true,
                         const bool& bounds = true,
                         const bool& deviation = true) const;
+    void mean_dev(const double& x, double& mean, double& dev) const;
 protected:
     int raw_data_n;
     double kernel_width, gamma, min_x, max_x;
     std::vector<double> x_data, y_data;
     double kernel(const double& x1, const double& x2) const;
-    void mean_dev(const double& x, double& mean, double& dev) const;
 };
 
 #endif // SMOOTHINGKERNELSIGMOID_H

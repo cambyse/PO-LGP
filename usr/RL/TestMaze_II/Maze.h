@@ -123,10 +123,10 @@ private:
     enum REWARD_ACTIVATION_TYPE {
         /** \brief Each time the agent passes the activation state a reward is
          * activated. */
-        EACH_TIME,
+        EACH_TIME_NO_PUNISH,
         /** \brief Only the last pass over the activation state activates a
          * reward. */
-        ON_RELEASE,
+        ON_RELEASE_NO_PUNISH,
         /** \brief Each time the agent passes the activation state a reward is
          * activated. The agent receives the negative reward if it does not
          * collect to reward (stowaway scenario). */

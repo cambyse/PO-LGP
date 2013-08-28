@@ -10,7 +10,6 @@ using util::INVALID;
 using std::vector;
 
 const vector<EnumeratedReward::value_t> EnumeratedReward::reward_vector = {
-   -1,
     0,
     1
 };

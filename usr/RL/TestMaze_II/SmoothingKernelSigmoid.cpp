@@ -187,15 +187,15 @@ double SmoothingKernelSigmoid::print_to_QCP(QCustomPlot * plotter,
     return util::random_select(x_max_dev_vec);
 }
 
-double SmoothingKernelSigmoid::kernel(const double& x1, const double& x2) const {
-    double d = fabs(x1-x2);
-    double e = pow(d/kernel_width,gamma);
-    return exp(-e);
-}
-
 void SmoothingKernelSigmoid::mean_dev(const double& x,
                                       double& mean,
                                       double& dev) const {
+    // when no data are available
+    if(raw_data_n==0) {
+        mean = 0;
+        dev = 1;
+        return;
+    }
 
     mean = 0;                                    // sample mean
     double sq_mean = 0;                          // mean of squared samples
@@ -215,4 +215,10 @@ void SmoothingKernelSigmoid::mean_dev(const double& x,
     dev = sqrt(mean_var);                        // standard deviaion of the mean
 
     dev /= sq_w_sum;                             // force a large deviation for unsampled points
+}
+
+double SmoothingKernelSigmoid::kernel(const double& x1, const double& x2) const {
+    double d = fabs(x1-x2);
+    double e = pow(d/kernel_width,gamma);
+    return exp(-e);
 }

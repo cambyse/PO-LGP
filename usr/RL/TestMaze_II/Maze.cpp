@@ -24,7 +24,7 @@ const double Maze::text_center = 0.3;
 
 const vector<Maze::wall_t> Maze::walls = {
 
-    /* 2x2 Maze */
+    /* 2x2 Maze *
     { 1, 3}
     /**/
 
@@ -87,58 +87,59 @@ const vector<Maze::wall_t> Maze::walls = {
 
 const vector<Maze::maze_reward_t> Maze::rewards = {
     /* 2x2 Maze *
-    { 0, 3, 4, 5, ON_RELEASE, 200,   0,   0},
-    { 3, 0, 4, 5, ON_RELEASE, 200, 200,   0},
-    { 0, 1, 1, 1, ON_RELEASE,   0, 200,   0},
-    { 3, 2, 1, 1, ON_RELEASE,   0,   0, 200}
+    { 0, 3, 4, 5, ON_RELEASE_NO_PUNISH, 200,   0,   0},
+    { 3, 0, 4, 5, ON_RELEASE_NO_PUNISH, 200, 200,   0},
+    { 0, 1, 1, 1, ON_RELEASE_NO_PUNISH,   0, 200,   0},
+    { 3, 2, 1, 1, ON_RELEASE_NO_PUNISH,   0,   0, 200}
     /**/
 
     /* 2x2 Maze */
-    { 3, 1, 3, 1, EACH_TIME, 200,   0,   0}
+    // { 3, 1, 3, 1, EACH_TIME_NO_PUNISH, 200,   0,   0}
+    { 0, 3, 2, 1, EACH_TIME_NO_PUNISH, 200,   0,   0}
     /**/
 
     /* 3x3 Maze *
-    { 3, 5, 4, 8, ON_RELEASE,   0, 200,   0},
-    { 5, 3, 6, 8, ON_RELEASE,   0, 200, 200},
-    { 4, 1, 1, 1, ON_RELEASE, 200, 200,   0},
-    { 4, 7, 3, 3, ON_RELEASE, 200,   0,   0}
+    { 3, 5, 4, 8, ON_RELEASE_NO_PUNISH,   0, 200,   0},
+    { 5, 3, 6, 8, ON_RELEASE_NO_PUNISH,   0, 200, 200},
+    { 4, 1, 1, 1, ON_RELEASE_NO_PUNISH, 200, 200,   0},
+    { 4, 7, 3, 3, ON_RELEASE_NO_PUNISH, 200,   0,   0}
     /**/
 
     /* 4x4 Maze *
-    {  4,  2,  3, 1, ON_RELEASE, 200,   0,   0},
-    {  6,  7,  3, 1, ON_RELEASE, 200, 200,   0},
-    { 11, 14,  2, 1, ON_RELEASE,   0, 200,   0},
-    { 13,  8,  2, 1, ON_RELEASE,   0, 200, 200},
-    {  8,  1,  3, 1, ON_RELEASE,   0,   0, 200}
-    //{  8,  4,  4, 1, ON_RELEASE, 200,   0, 200}
+    {  4,  2,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
+    {  6,  7,  3, 1, ON_RELEASE_NO_PUNISH, 200, 200,   0},
+    { 11, 14,  2, 1, ON_RELEASE_NO_PUNISH,   0, 200,   0},
+    { 13,  8,  2, 1, ON_RELEASE_NO_PUNISH,   0, 200, 200},
+    {  8,  1,  3, 1, ON_RELEASE_NO_PUNISH,   0,   0, 200}
+    //{  8,  4,  4, 1, ON_RELEASE_NO_PUNISH, 200,   0, 200}
     /**/
 
     /* 10x10 Maze *
-    {  0, 21,  3, 1, ON_RELEASE, 200,   0,   0},
-    { 30, 43,  4, 1, ON_RELEASE,   0, 200,   0},
-    { 43, 62,  3, 1, ON_RELEASE, 200,   0,   0},
-    { 61, 92, -4, 1, ON_RELEASE,   0, 200,   0},
-    { 94, 86,  3, 1, ON_RELEASE, 200,   0,   0},
-    { 87, 66,  3, 1, ON_RELEASE, 200,   0,   0},
-    { 67, 59,  3, 1, ON_RELEASE, 200,   0,   0},
-    { 48, 56,  3, 1, ON_RELEASE, 200,   0,   0},
-    { 55, 36,  3, 1, ON_RELEASE, 200,   0,   0},
-    { 59, 38,  3, 1, ON_RELEASE, 200,   0,   0},
-    { 28,  9,  3, 1, ON_RELEASE, 200,   0,   0},
-    { 18, 37,  3, 1, ON_RELEASE, 200,   0,   0},
-    { 25, 33,  3, 1, ON_RELEASE, 200,   0,   0},
-    { 33,  3,  3, 1, ON_RELEASE, 200,   0,   0},
-    {  4,  1,  3, 1, ON_RELEASE, 200,   0,   0},
-    {  8, 17,  2, 1, ON_RELEASE,   0,   0, 200},
-    { 40, 50,  2, 1, ON_RELEASE,   0, 200, 200}, // test
-    { 41, 51,  2, 1,  EACH_TIME,   0, 200, 200}, // test
+    {  0, 21,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
+    { 30, 43,  4, 1, ON_RELEASE_NO_PUNISH,   0, 200,   0},
+    { 43, 62,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
+    { 61, 92, -4, 1, ON_RELEASE_NO_PUNISH,   0, 200,   0},
+    { 94, 86,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
+    { 87, 66,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
+    { 67, 59,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
+    { 48, 56,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
+    { 55, 36,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
+    { 59, 38,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
+    { 28,  9,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
+    { 18, 37,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
+    { 25, 33,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
+    { 33,  3,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
+    {  4,  1,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
+    {  8, 17,  2, 1, ON_RELEASE_NO_PUNISH,   0,   0, 200},
+    { 40, 50,  2, 1, ON_RELEASE_NO_PUNISH,   0, 200, 200}, // test
+    { 41, 51,  2, 1,  EACH_TIME_NO_PUNISH,   0, 200, 200}, // test
     { 60, 70,  2, 1, ON_RELEASE_PUNISH_FAILURE,   0, 200, 200}, // test
     { 80, 90,  2, 1,  EACH_TIME_PUNISH_FAILURE,   0, 200, 200}  // test
     /**/
 };
 
 const vector<Maze::door_t> Maze::doors = {
-    /* 2x2 Maze */
+    /* 2x2 Maze *
     door_t(MazeState(1,0), MazeState(1,1), MazeState(1,1),  RIGHT_BUTTON,-3, color_t(0.0,0.8,0.0) ),
     /**/
 
@@ -545,13 +546,13 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
 
                 // handle different types of rewards
                 switch(rat) {
-                case EACH_TIME:
+                case EACH_TIME_NO_PUNISH:
                     if(activation_state && receive_reward && delay_matches ) {
                         // receive reward whenever everything matches
                         accumulated_reward += r[REWARD_VALUE];
                     }
                     break;
-                case ON_RELEASE:
+                case ON_RELEASE_NO_PUNISH:
                     if(activation_state && receive_reward && delay_matches && !reward_invalidated) {
                         // successfully receive reward
                         accumulated_reward += r[REWARD_VALUE];
@@ -830,7 +831,7 @@ void Maze::render_reward(maze_reward_t r) {
 
     // start
     switch((REWARD_ACTIVATION_TYPE)r[ACTIVATION_TYPE]) {
-    case EACH_TIME:
+    case EACH_TIME_NO_PUNISH:
         scene->addEllipse(
             x_start-reward_start_size/2,
             y_start-reward_start_size/2,
@@ -850,7 +851,7 @@ void Maze::render_reward(maze_reward_t r) {
             brush
             );
         break;
-    case ON_RELEASE:
+    case ON_RELEASE_NO_PUNISH:
         scene->addEllipse(
             x_start-reward_start_size/2,
             y_start-reward_start_size/2,
@@ -923,10 +924,10 @@ void Maze::rescale_scene(QGraphicsView * view) {
 
 const char* Maze::reward_activation_type_str(REWARD_ACTIVATION_TYPE ra) {
     switch(ra) {
-    case EACH_TIME:
-        return "EACH_TIME";
-    case ON_RELEASE:
-        return "ON_RELEASE";
+    case EACH_TIME_NO_PUNISH:
+        return "EACH_TIME_NO_PUNISH";
+    case ON_RELEASE_NO_PUNISH:
+        return "ON_RELEASE_NO_PUNISH";
     case EACH_TIME_PUNISH_FAILURE:
         return "EACH_TIME_PUNISH_FAILURE";
     case ON_RELEASE_PUNISH_FAILURE:

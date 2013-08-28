@@ -11,6 +11,8 @@ public:
     int run(int argn, char ** argarr);
 private:
     int file_id;
+    int run_active(int argn, char ** argarr);
+    int run_predefined(int argn, char ** argarr);
     void print_help();
     void parse_command_line_arguments(int argn, char ** argarr);
     void initialize_log_file();
