@@ -27,11 +27,6 @@ HEADERS += LookAheadSearch.h \
     DelayDistribution.h \
     HistoryObserver.h \
     qcustomplot.h \
-    ActiveSigmoidOptimization.h \
-    SplineInterpolation.h \
-    GPReg.h \
-    util/Nelder_Mead_Simplex.h \
-    util/Matrix.h \
     SmoothingKernelSigmoid.h
 SOURCES += LookAheadSearch.cpp \
     util.cpp \
@@ -56,10 +51,6 @@ SOURCES += LookAheadSearch.cpp \
     DelayDistribution.cpp \
     HistoryObserver.cpp \
     qcustomplot.cpp \
-    ActiveSigmoidOptimization.cpp \
-    SplineInterpolation.cpp \
-    GPReg.cpp \
-    util/Nelder_Mead_Simplex.cpp \
     SmoothingKernelSigmoid.cpp
 LIBS += -llbfgs \
     -lemon \
