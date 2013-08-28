@@ -997,35 +997,76 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 // aso.optimize_lower_bound(strength,iteration_n);
                 // aso.print_to_QCP(plotter,true,true);
                 //========================================//
+                // // number of random samples and iterations
+                // int data_n = int_args[1];
+                // int iteration_n = int_args[2];
+                // double strength = double_args[3];
+                // // generate random data
+                // double min_x = DBL_MAX;
+                // double max_x = -DBL_MAX;
+                // vector<double> x_data(data_n), y_data(data_n);
+                // for(int i=0; i<data_n; ++i) {
+                //     double x = drand48();
+                //     double y;
+                //     int draw = rand()%3;
+                //     double s1 = 0.4;
+                //     double s2 = 0.6;
+                //     if(x<s1) {
+                //         y = 0;
+                //     } else if(x>s2) {
+                //         y = 1;
+                //     } else {
+                //         y = drand48()>((x-s1)/(s2-s1))?0:1;
+                //     }
+                //     x_data[i] = x;
+                //     y_data[i] = y;
+                //     min_x = min<double>(min_x,x);
+                //     max_x = max<double>(max_x,x);
+                // }
+                // // create sigmoid object
+                // SmoothingKernelSigmoid sks(min_x,max_x,100,0.1,2);
+                // for(int i=0; i<data_n; ++i) {
+                //     sks.add_new_point(x_data[i],y_data[i]);
+                // }
+                // // optimize and plot sigmoid
+                // // sks.check_derivatives(3,10,1e-6,1e-3);
+                // // sks.optimize_sigmoid(iteration_n);
+                // // sks.print_to_QCP(plotter,false,false);
+                // // sks.optimize_upper_bound(strength,iteration_n);
+                // // sks.print_to_QCP(plotter,true,false);
+                // // sks.optimize_lower_bound(strength,iteration_n);
+                // sks.print_to_QCP(plotter,true,true);
+                //========================================//
                 // number of random samples and iterations
                 int data_n = int_args[1];
-                int iteration_n = int_args[2];
-                double strength = double_args[3];
-                // generate random data
-                double min_x = DBL_MAX;
-                double max_x = -DBL_MAX;
-                vector<double> x_data(data_n), y_data(data_n);
-                for(int i=0; i<data_n; ++i) {
-                    double x = drand48();
-                    double y = ( 2*tanh(10*(x-0.6)) + 1*tanh(5*(x-0.25)) ) / 3;
-                    x_data[i] = x;
-                    y_data[i] = y;
-                    min_x = min<double>(min_x,x);
-                    max_x = max<double>(max_x,x);
-                }
                 // create sigmoid object
-                SmoothingKernelSigmoid sks(min_x,max_x,10,0.05,1);
+                SmoothingKernelSigmoid sks(0,1,100,0.1,2);
+                // generate random data
                 for(int i=0; i<data_n; ++i) {
-                    sks.add_new_point(x_data[i],y_data[i]);
+                    double x;
+                    if(i==0) {
+                        x = 0.2;
+                    } else if(i==1) {
+                        x = 0.8;
+                    } else {
+                        x = sks.print_to_QCP(plotter,true,true);
+                        QApplication::processEvents();
+                    }
+                    x += (drand48()-0.5)/100;
+                    double y;
+                    double s1 = 0.4;
+                    double s2 = 0.6;
+                    if(x<s1) {
+                        y = 0;
+                    } else if(x>s2) {
+                        y = 1;
+                    } else {
+                        double trans = (x-s1)/(s2-s1);
+                        y = pow(drand48(),2-1.5*trans);
+                    }
+                    sks.add_new_point(x,y);
+                    DEBUG_OUT(0,i);
                 }
-                // optimize and plot sigmoid
-                sks.check_derivatives(1,10,1e-6,1e-3);
-                sks.optimize_sigmoid(iteration_n);
-                sks.print_to_QCP(plotter,false,false);
-                sks.optimize_upper_bound(strength,iteration_n);
-                sks.print_to_QCP(plotter,true,false);
-                sks.optimize_lower_bound(strength,iteration_n);
-                sks.print_to_QCP(plotter,true,true);
             }
         } else if(str_args[0]=="col-states") { // color states
             Maze::color_vector_t  cols;

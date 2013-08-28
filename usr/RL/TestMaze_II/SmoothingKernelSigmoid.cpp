@@ -64,17 +64,20 @@ void SmoothingKernelSigmoid::add_new_point(const double& x, const double& y) {
     initialized = false;
 }
 
-void SmoothingKernelSigmoid::print_to_QCP(QCustomPlot * plotter,
+double SmoothingKernelSigmoid::print_to_QCP(QCustomPlot * plotter,
                                           const bool& print_upper,
                                           const bool& print_lower
     ) const {
     // initialize data
     int smooth_data_n = 1000;
     QVector<double> qx_raw_data(raw_data_n), qy_raw_data(raw_data_n);
-    QVector<double> qx_sig(control_point_n), qy_sig(control_point_n);
-    QVector<double> qx_sig_upper(control_point_n), qy_sig_upper(control_point_n);
-    QVector<double> qx_sig_lower(control_point_n), qy_sig_lower(control_point_n);
+    // QVector<double> qx_sig(control_point_n), qy_sig(control_point_n);
+    // QVector<double> qx_sig_upper(control_point_n), qy_sig_upper(control_point_n);
+    // QVector<double> qx_sig_lower(control_point_n), qy_sig_lower(control_point_n);
     QVector<double> qx_smooth_data(smooth_data_n), qy_smooth_data(smooth_data_n);
+    QVector<double> qx_smooth_upper(smooth_data_n), qy_smooth_upper(smooth_data_n);
+    QVector<double> qx_smooth_lower(smooth_data_n), qy_smooth_lower(smooth_data_n);
+    QVector<double> qx_smooth_dev(smooth_data_n), qy_smooth_dev(smooth_data_n);
 
     // transfer raw data to QVector
     for(int i=0; i<raw_data_n; ++i) {
@@ -83,59 +86,93 @@ void SmoothingKernelSigmoid::print_to_QCP(QCustomPlot * plotter,
     }
 
     // create smooth data
+    vector<double> x_max_dev_vec;
+    double max_dev = -DBL_MAX;
     for(int i=0; i<smooth_data_n; ++i) {
         double x = (double)i/(smooth_data_n-1);
         x *= x_sig.back()-x_sig.front();
         x += x_sig.front();
+        double mean, dev;
+        mean_dev(x, mean, dev);
         qx_smooth_data[i] = x;
-        qy_smooth_data[i] = kernel_smoothed_data(x);
+        qy_smooth_data[i] = mean;
+        qx_smooth_upper[i] = x;
+        qy_smooth_upper[i] = mean+dev;
+        qx_smooth_lower[i] = x;
+        qy_smooth_lower[i] = mean-dev;
+        qx_smooth_dev[i] = x;
+        qy_smooth_dev[i] = dev;
+        if(dev>max_dev) {
+            max_dev = dev;
+            x_max_dev_vec.assign(1,x);
+        } else if(dev==max_dev) {
+            x_max_dev_vec.push_back(x);
+        }
     }
 
-    // transfer points to QVector
-    for(int i=0; i<control_point_n; ++i) {
-        qx_sig[i]       = x_sig[i];
-        qx_sig_upper[i] = x_sig[i];
-        qx_sig_lower[i] = x_sig[i];
-        qy_sig[i]       = y_sig[i];
-        qy_sig_upper[i] = y_sig_upper[i];
-        qy_sig_lower[i] = y_sig_lower[i];
-    }
+    // // transfer points to QVector
+    // for(int i=0; i<control_point_n; ++i) {
+    //     qx_sig[i]       = x_sig[i];
+    //     qx_sig_upper[i] = x_sig[i];
+    //     qx_sig_lower[i] = x_sig[i];
+    //     qy_sig[i]       = y_sig[i];
+    //     qy_sig_upper[i] = y_sig_upper[i];
+    //     qy_sig_lower[i] = y_sig_lower[i];
+    // }
 
     // clear graphs
     plotter->clearGraphs();
 
-    // create graph for upper bounds
-    QCPGraph * upper_graph = plotter->addGraph();
-    upper_graph->setPen(QColor(200, 0, 0, 200));
-    upper_graph->setBrush(QColor(200, 0, 0, 50));
-    upper_graph->setLineStyle(QCPGraph::lsLine);
-    upper_graph->setScatterStyle(QCP::ScatterStyle::ssDisc);
-    upper_graph->setScatterSize(2);
-    upper_graph->setName("Upper Bound");
-    upper_graph->setData(qx_sig, qy_sig_upper);
+    // // create graph for upper bounds
+    // QCPGraph * upper_graph = plotter->addGraph();
+    // upper_graph->setPen(QColor(200, 0, 0, 200));
+    // upper_graph->setBrush(QColor(200, 0, 0, 50));
+    // upper_graph->setLineStyle(QCPGraph::lsLine);
+    // upper_graph->setScatterStyle(QCP::ScatterStyle::ssDisc);
+    // upper_graph->setScatterSize(2);
+    // upper_graph->setName("Upper Bound");
+    // upper_graph->setData(qx_sig, qy_sig_upper);
 
-    // create graph for lower bounds
-    QCPGraph * lower_graph = plotter->addGraph();
-    lower_graph->setPen(QColor(200, 0, 0, 200));
-    lower_graph->setBrush(QColor(200, 0, 0, 50));
-    lower_graph->setLineStyle(QCPGraph::lsLine);
-    lower_graph->setScatterStyle(QCP::ScatterStyle::ssDisc);
-    lower_graph->setScatterSize(2);
-    lower_graph->setName("Lower Bound");
-    lower_graph->setData(qx_sig, qy_sig_lower);
+    // // create graph for lower bounds
+    // QCPGraph * lower_graph = plotter->addGraph();
+    // lower_graph->setPen(QColor(200, 0, 0, 200));
+    // lower_graph->setBrush(QColor(200, 0, 0, 50));
+    // lower_graph->setLineStyle(QCPGraph::lsLine);
+    // lower_graph->setScatterStyle(QCP::ScatterStyle::ssDisc);
+    // lower_graph->setScatterSize(2);
+    // lower_graph->setName("Lower Bound");
+    // lower_graph->setData(qx_sig, qy_sig_lower);
 
-    // create graph for sigmoid
-    QCPGraph * sig_graph = plotter->addGraph();
-    sig_graph->setPen(QColor(0, 200, 0, 255));
-    sig_graph->setLineStyle(QCPGraph::lsLine);
-    sig_graph->setScatterStyle(QCP::ScatterStyle::ssDiamond);
-    lower_graph->setScatterSize(3);
-    sig_graph->setName("Mean");
-    sig_graph->setData(qx_sig, qy_sig);
+    // // create graph for sigmoid
+    // QCPGraph * sig_graph = plotter->addGraph();
+    // sig_graph->setPen(QColor(0, 200, 0, 255));
+    // sig_graph->setLineStyle(QCPGraph::lsLine);
+    // sig_graph->setScatterStyle(QCP::ScatterStyle::ssDiamond);
+    // lower_graph->setScatterSize(3);
+    // sig_graph->setName("Mean");
+    // sig_graph->setData(qx_sig, qy_sig);
+
+    // create graph for smoothed upper bounds
+    QCPGraph * smooth_upper_graph = plotter->addGraph();
+    smooth_upper_graph->setPen(QColor(200, 0, 0, 200));
+    smooth_upper_graph->setBrush(QColor(200, 0, 0, 50));
+    smooth_upper_graph->setLineStyle(QCPGraph::lsLine);
+    smooth_upper_graph->setScatterStyle(QCP::ScatterStyle::ssNone);
+    smooth_upper_graph->setName("Upper Bound");
+    smooth_upper_graph->setData(qx_smooth_upper, qy_smooth_upper);
+
+    // create graph for smoothed lower bounds
+    QCPGraph * smooth_lower_graph = plotter->addGraph();
+    smooth_lower_graph->setPen(QColor(200, 0, 0, 200));
+    smooth_lower_graph->setBrush(QColor(200, 0, 0, 50));
+    smooth_lower_graph->setLineStyle(QCPGraph::lsLine);
+    smooth_lower_graph->setScatterStyle(QCP::ScatterStyle::ssNone);
+    smooth_lower_graph->setName("Lower Bound");
+    smooth_lower_graph->setData(qx_smooth_lower, qy_smooth_lower);
 
     // create graph for raw data
     QCPGraph * raw_data_graph = plotter->addGraph();
-    raw_data_graph->setPen(QColor(255, 155, 0, 255));
+    raw_data_graph->setPen(QColor(255, 250, 0, 255));
     raw_data_graph->setLineStyle(QCPGraph::lsNone);
     raw_data_graph->setScatterStyle(QCP::ScatterStyle::ssDisc);
     raw_data_graph->setName("Raw Data");
@@ -143,23 +180,35 @@ void SmoothingKernelSigmoid::print_to_QCP(QCustomPlot * plotter,
 
     // create graph for smoothed data
     QCPGraph * smooth_data_graph = plotter->addGraph();
-    smooth_data_graph->setPen(QColor(255, 155, 0, 255));
+    smooth_data_graph->setPen(QColor(255, 250, 0, 255));
     smooth_data_graph->setLineStyle(QCPGraph::lsLine);
     smooth_data_graph->setScatterStyle(QCP::ScatterStyle::ssNone);
     smooth_data_graph->setName("Smoothed Data");
     smooth_data_graph->setData(qx_smooth_data, qy_smooth_data);
 
-    // fill bounds or remove (removing changes indices)
-    if(print_upper) {
-        upper_graph->setChannelFillGraph(sig_graph);
-    } else {
-        plotter->removeGraph(upper_graph);
-    }
-    if(print_lower) {
-        lower_graph->setChannelFillGraph(sig_graph);
-    } else {
-        plotter->removeGraph(lower_graph);
-    }
+    // create graph for dev
+    QCPGraph * smooth_dev_graph = plotter->addGraph();
+    smooth_dev_graph->setPen(QColor(0, 0, 255, 255));
+    smooth_dev_graph->setLineStyle(QCPGraph::lsLine);
+    smooth_dev_graph->setScatterStyle(QCP::ScatterStyle::ssNone);
+    smooth_dev_graph->setName("Deviation");
+    smooth_dev_graph->setData(qx_smooth_dev, qy_smooth_dev);
+
+    // fill smoothed bounds
+    smooth_upper_graph->setChannelFillGraph(smooth_data_graph);
+    smooth_lower_graph->setChannelFillGraph(smooth_data_graph);
+
+    // // fill bounds or remove (removing changes indices)
+    // if(print_upper) {
+    //     upper_graph->setChannelFillGraph(sig_graph);
+    // } else {
+    //     plotter->removeGraph(upper_graph);
+    // }
+    // if(print_lower) {
+    //     lower_graph->setChannelFillGraph(sig_graph);
+    // } else {
+    //     plotter->removeGraph(lower_graph);
+    // }
 
     // give the axes some labels:
     plotter->xAxis->setLabel("x");
@@ -178,6 +227,8 @@ void SmoothingKernelSigmoid::print_to_QCP(QCustomPlot * plotter,
     // rescale axes and replot
     plotter->rescaleAxes();
     plotter->replot();
+
+    return util::random_select(x_max_dev_vec);
 }
 
 void SmoothingKernelSigmoid::optimize_sigmoid(const int& iterations) {
@@ -255,32 +306,34 @@ lbfgsfloatval_t SmoothingKernelSigmoid::evaluate_model(
     }
 
     // compute cost function and gradient
-    for(int point_idx=0; point_idx<control_point_n; ++point_idx) {
-        double cx = x_sig[point_idx];
-        double cy = y[point_idx];
-        double n_eff = n_eff_vec[point_idx];
+    for(int point_1_idx=0; point_1_idx<control_point_n; ++point_1_idx) {
+        double cx = x_sig[point_1_idx];
+        double cy = y[point_1_idx];
+        double n_eff = n_eff_vec[point_1_idx];
 
         // data loss
         double y_smooth = kernel_smoothed_data(cx);
         fx += pow((y_smooth-cy)*n_eff,2);
-        g[point_idx] += -2*n_eff*n_eff*(y_smooth-cy);
+        g[point_1_idx] += -2*n_eff*n_eff*(y_smooth-cy);
 
         // monotony bounds
-        double cost, grad;
-        if(point_idx>0) {
-            bounds(0, 0, y[point_idx-1], y[point_idx], cost, grad);
-            fx += cost / 2;
-            g[point_idx] += -grad;
-        }
-        if(point_idx<control_point_n-1) {
-            bounds(0, 0, y[point_idx], y[point_idx+1], cost, grad);
-            fx += cost / 2;
-            g[point_idx] += grad;
+        for(int point_2_idx=0; point_2_idx<control_point_n; ++point_2_idx) {
+            double cost_1, cost_2, grad_1, grad_2;
+            // one way
+            bounds(y[point_1_idx] - y[point_2_idx], cost_1, grad_1);
+            fx += cost_1;
+            g[point_1_idx] += grad_1;
+            g[point_2_idx] += -grad_1;
+            // other way
+            bounds(y[point_2_idx] - y[point_1_idx], cost_2, grad_2);
+            fx += cost_2;
+            g[point_1_idx] += -grad_2;
+            g[point_2_idx] += grad_2;
         }
 
         // bias
         fx += cy*bias_factor;
-        g[point_idx] += bias_factor;
+        g[point_1_idx] += bias_factor;
     }
 
     return fx;
@@ -478,21 +531,67 @@ double SmoothingKernelSigmoid::kernel_smoothed_data(const double& x) const {
     return y_sum/n_eff;
 }
 
-void SmoothingKernelSigmoid::bounds(const double& /*x1*/,
-                                    const double& /*x2*/,
-                                    const double& y1,
-                                    const double& y2,
+void SmoothingKernelSigmoid::bounds(const double& d,
                                     double& cost,
                                     double& grad) const {
-    double d_scale = 1e-2;
-    double sig_scale = 1e1;
-    double d = (y1 - y2);
-    cost = d/(d_scale*sqrt(1+pow(d/d_scale,2)));
-    grad = d_scale/(sqrt(pow(d,2)/pow(d_scale,2)+1)*(pow(d,2)+pow(d_scale,2)));
-    // cost += d;
-    // grad += 1;
-    cost *= sig_scale;
-    grad *= sig_scale;
-    // cost = sig_scale*d/sqrt(1+d*d);
-    // grad = sig_scale/sqrt(pow(1+d*d,3));
+    //=========================================================//
+    // 1/(1+r^2) sigmoid
+    //=========================================================//
+    // double d_scale = 1e-2;
+    // double sig_scale = 1e1;
+    // cost = d/(d_scale*sqrt(1+pow(d/d_scale,2)));
+    // grad = d_scale/(sqrt(pow(d,2)/pow(d_scale,2)+1)*(pow(d,2)+pow(d_scale,2)));
+    // cost *= sig_scale;
+    // grad *= sig_scale;
+    //=========================================================//
+    // linear
+    //=========================================================//
+    // double factor = 1e1;
+    // if(d>0) {
+    //     cost = factor*d*d;
+    //     grad = 2*factor*d;
+    // } else {
+    //     cost = 0;
+    //     grad = 0;
+    // }
+    //=========================================================//
+    // linear
+    //=========================================================//
+    double l = 1e1;
+    double f = 1e-1;
+    if(d<-l) {
+        cost = 1-2*((d+l)/l);
+        grad = -2/l;
+    } else if(d>-l && d<0) {
+        cost = pow(d/l,2);
+        grad = 2*d/(l*l);
+    } else {
+        cost = 0;
+        grad = 0;
+    }
+    cost *= f;
+    grad *= f;
+}
+
+void SmoothingKernelSigmoid::mean_dev(const double& x,
+                                      double& mean,
+                                      double& dev) const {
+    mean = 0;                // sample mean
+    double sq_mean = 0;      // mean of squared samples
+    double w_sum = 0;        // sum of weights
+    double sq_w_sum = 0;     // sum of squared weights
+    for(int data_idx=0; data_idx<raw_data_n; ++data_idx) {
+        double w = kernel(x_data[data_idx],x);
+        mean += w*y_data[data_idx];
+        sq_mean += w*pow(y_data[data_idx],2);
+        w_sum += w;
+        sq_w_sum += pow(w,2);
+    }
+    mean /= w_sum;                               // normalize
+    sq_mean /= w_sum;                            // normalize
+    double sample_var = sq_mean - pow(mean,2);   // sample variance
+    double mean_var = sample_var * sq_w_sum;     // variance of the mean
+    dev = sqrt(mean_var);                        // standard deviaion of the mean
+
+    dev /= sq_w_sum;
 }

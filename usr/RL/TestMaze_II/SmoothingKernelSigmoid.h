@@ -20,7 +20,7 @@ public:
     ~SmoothingKernelSigmoid();
     void add_new_point(const double& x, const double& y);
     void initialize_data();
-    void print_to_QCP(QCustomPlot * plotter,
+    double print_to_QCP(QCustomPlot * plotter,
                       const bool& print_upper = true,
                       const bool& print_lower = true
         ) const;
@@ -97,12 +97,10 @@ protected:
     void vec_to_lbfgs();
     double kernel(const double& x1, const double& x2) const;
     double kernel_smoothed_data(const double& x) const;
-    void bounds(const double& x1,
-                const double& x2,
-                const double& y1,
-                const double& y2,
+    void bounds(const double& d,
                 double& cost,
                 double& grad) const;
+    void mean_dev(const double& x, double& mean, double& dev) const;
 };
 
 #endif // SMOOTHINGKERNELSIGMOID_H
