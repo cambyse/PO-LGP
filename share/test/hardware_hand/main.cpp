@@ -4,12 +4,13 @@
 #include <Core/array.h>
 #include <signal.h>
 
-#include <hardware/schunk.h>
+#include <Hardware/schunk/schunk.h>
+#define OSNAME_LINUX 1
 #include <sdh/sdh.h>
 
 void testMove(){
   signal(SIGINT,schunkEmergencyShutdown);
-  sSchunkHand sdh;
+  SchunkHand sdh;
   sdh.open();
 
   /*cout <<"** pinch" <<endl;

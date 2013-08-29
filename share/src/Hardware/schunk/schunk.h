@@ -19,38 +19,41 @@
 #ifndef MT_schunk_internal_h
 #define MT_schunk_internal_h
 
-#include "hardware.h"
 #include <vector>
+#include <Core/module.h>
 
 //fwd declarations
 class CDevice;
 namespace SDH { class cSDH; class cDSA; }
 void schunkEmergencyShutdown(int);
+void addShutdown(void *classP, void (*call)(void*));
+void shutdownLWA(void* p);
+void shutdownSDH(void* p);
+void shutdownDSA(void* p);
 extern bool schunkShutdown;
 
 
 //===========================================================================
-struct sSchunkArm {
-  //INPUT
-  floatA q_reference;
-  //OUTPUT
-  floatA q_real;
-  
-  //Parameter
+
+struct SchunkArm:Module {
+  ACCESS(floatA, q_reference);
+  ACCESS(floatA, q_real);
+
+  //-- internal
+  floatA q_ref,q_rea;
   bool openArm;
-  
-  //INTERAL
   CDevice* pDev;
   bool isOpen;
   float stepHorizon, maxStep;
   bool sendMotion, readPositions;
   uintA motorIndex;
   
-  sSchunkArm();
+  SchunkArm();
   void open();
   void step();
   void close();
-  
+
+  //-- low level
   void reportParameters(std::ostream& os);
   int waitForEnd(int iMod);
   void setVel(uint motor, float vel);
@@ -62,13 +65,12 @@ struct sSchunkArm {
   void getState(floatA& q, floatA& v, floatA& c);
 };
 
+
 //===========================================================================
-struct sSchunkHand {
-  //INPUT
-  arr v_reference;
-  //OUTPUT
-  arr q_real;
-  arr v_real;
+struct SchunkHand:Module {
+  ACCESS(arr, v_reference);
+  ACCESS(arr, q_real);
+  ACCESS(arr, v_real);
   
   //Parameter
   bool openHand;
@@ -79,7 +81,7 @@ struct sSchunkHand {
   uintA motorIndex;
   std::vector<int> fingers;
   
-  sSchunkHand();
+  SchunkHand();
   void open();
   void step();
   void close();
@@ -99,15 +101,15 @@ struct sSchunkHand {
   //-- things to hide..
   SDH::cSDH* hand;
   //std::vector<int> fingers;
-  static sSchunkHand *global_this;
+  static SchunkHand *global_this;
   static void signalStop(int);
 };
 
 //===========================================================================
-struct sSchunkSkin {
+struct SchunkSkin:public Module {
   //OUTPUT
   MT::Array<uint16> emul_data;
-  arr y_real;
+  ACCESS(arr, y_real);
 
   //Parameter
   bool openSkin;
@@ -117,7 +119,7 @@ struct sSchunkSkin {
   bool isOpen;
   bool isEmulation;
   
-  sSchunkSkin();
+  SchunkSkin();
   void open();
   void step();
   void close();
@@ -129,8 +131,8 @@ struct sSchunkSkin {
   void getIntegrals(arr& y);
 };
 
-void testPerformance(sSchunkArm &schunk, int iMod);
-void testCube(sSchunkArm &schunk, int iMod);
+void testPerformance(SchunkArm &schunk, int iMod);
+void testCube(SchunkArm &schunk, int iMod);
 
 #ifdef  MT_IMPLEMENTATION
 #  include "schunk.cpp"

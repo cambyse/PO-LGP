@@ -54,17 +54,6 @@ PROCESS(Laser)
 
 PROCESS(Kinect)
 
-struct SchunkArm:public Process {
-  struct sSchunkArm *s;
-  
-  HardwareReference *hardwareReference;
-  
-  SchunkArm();
-  ~SchunkArm();
-  void open();
-  void step();
-  void close();
-};
 
 
 struct SchunkHand:public Process {

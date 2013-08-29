@@ -1,12 +1,6 @@
 BASE = ../..
 
-CXXFLAGS += -w
-
-OBJS = main.o
-
-buildAndLink_MTLIB = 1
-SCHUNK = 1
-LIBS += -lhardware
+DEPEND = Hardware_schunk
 
 include $(BASE)/make-generic
 

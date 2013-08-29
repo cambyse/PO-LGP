@@ -222,7 +222,6 @@ void schunkEmergencyShutdown(int) {
   MT_MSG("...done");
 }
 
-void shutdownLWA(void* p) { MT_MSG("...");  sSchunkArm *lwa=(sSchunkArm*)p;  lwa->close(); }
 void shutdownSDH(void* p) { MT_MSG("...");  sSchunkHand *sdh=(sSchunkHand*)p;  sdh->stop();  sdh->close(); }
 void shutdownDSA(void* p) { MT_MSG("...");  sSchunkSkin *dsa=(sSchunkSkin*)p;  dsa->close(); }
 

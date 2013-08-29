@@ -203,14 +203,6 @@ ifeq ($(GTEST),1)
 LIBS += -lgtest
 endif
 
-ifeq ($(SCHUNK),1)
-CXXFLAGS += -DMT_SCHUNK -DWITH_ESD_CAN=1 -DOSNAME_LINUX=1 -D__LINUX__
-CPATH   := $(CPATH):$(MLR_LIBPATH)/schunkSDH-11-05-11/include:$(MLR_LIBPATH)/schunkLWA/include
-CPATH   := $(CPATH):/usr/src/linux-headers-$(KERNEL_RELEASE)/include:/usr/src/linux-headers-$(KERNEL_RELEASE)/arch/x86/include
-LPATHS  += $(MLR_LIBPATH)/schunkSDH-11-05-11/lib $(MLR_LIBPATH)/schunkLWA/lib $(MLR_LIBPATH)/ntcan/lib
-LIBS += -lschunkSDH -lm5api -ldevice -lutil -lntcan -lpthread -lX11 #-lvs_can_api
-endif
-
 ifeq ($(FREEGLUT),1)
 CXXFLAGS  += -DMT_FREEGLUT
 MSVC_CPATH := $(MSVC_CPATH);$(LIBPATH)/freeglut/include
@@ -665,7 +657,7 @@ includeAll.cxx: force
 $(BASE)/lib/libextern_%.so: $(BASE)/src/extern/%
 	+@-$(BASE)/make-locked.sh $<
 
-$(BASE)/lib/libhardware_%.so: $(BASE)/src/hardware/%
+$(BASE)/lib/libHardware_%.so: $(BASE)/src/Hardware/%
 	+@-$(BASE)/make-locked.sh $<
 
 $(BASE)/lib/lib%.so: $(BASE)/src/%

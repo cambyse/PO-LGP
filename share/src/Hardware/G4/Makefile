@@ -1,5 +1,5 @@
 BASE   = ../../..
-NAME   = libhardware_$(shell basename `pwd`)
+NAME   = libHardware_$(shell basename `pwd`)
 OUTPUT := $(BASE)/lib/$(NAME).so
 
 LIBS += -lG4Track -lusb-1.0
