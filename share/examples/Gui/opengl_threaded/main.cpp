@@ -29,9 +29,11 @@ int main(int argc, char **argv){
   Proc gl1("gl1"),gl2("gl2"),gl3("gl3");
   gl1.threadOpen();
   gl2.threadOpen();
-  MT::wait(2.);
+  MT::wait(10.);
   gl1.threadClose();
   gl2.threadClose();
+
+  return 0;
 
   Proc *gli;
   MT::Array<MT::String> names;
