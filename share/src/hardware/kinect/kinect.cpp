@@ -1,4 +1,5 @@
 #include "kinect.h"
+#include <libfreenect.hpp>
 
 void lib_hardware_kinect(){ MT_MSG("loading"); }
 
@@ -51,6 +52,7 @@ KinectPoller::~KinectPoller() {
 }
 
 void KinectPoller::open() {
+  cout <<"KinectPoller opening..." <<endl;
   kinect_rgb.set().resize(image_height, image_width, 3);
   kinect_depth.set().resize(image_height, image_width);
 
@@ -61,6 +63,8 @@ void KinectPoller::open() {
   s->startVideo();
   s->startDepth();
   s->setDepthFormat(FREENECT_DEPTH_REGISTERED);  // use hardware registration
+
+  cout <<"KinectPoller opened successfully" <<endl;
 }
 
 void KinectPoller::step() {
@@ -72,6 +76,7 @@ void KinectPoller::close() {
   s->stopDepth();
   freenect->deleteDevice(0);
   s = NULL;
+  cout <<"KinectPoller closed successfully" <<endl;
 }
 
 //===========================================================================

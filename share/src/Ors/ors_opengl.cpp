@@ -321,7 +321,7 @@ void glDrawShape(ors::Shape *s) {
         break;
       case ors::pointCloudST:
         CHECK(s->mesh.V.N, "mesh needs to be loaded to draw point cloud object");
-        glDrawDots(s->mesh.V);
+        glDrawPointCloud(s->mesh.V, NoArr);
         break;
       default: HALT("can't draw that geom yet");
     }
@@ -342,6 +342,10 @@ void glDrawShape(ors::Shape *s) {
     glVertex3d(.1*s->contactOrientation.x, .1*s->contactOrientation.y, .1*s->contactOrientation.z);
     glEnd();
   }
+
+  glColor(1,1,1);
+  glDrawText(s->body->name, 0, 0, 0);
+
   glPopName();
 }
 

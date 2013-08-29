@@ -1,26 +1,25 @@
 #include <System/engine.h>
 //#include <Gui/graphview.h>
 
-//NOTE: no actual perception code is includes - only system!
-
-extern void loadPerception(); //this is enough to ensure the linking and loading of registry entries
+//NOTE: no actual perception code is included - only system!
+void lib_Perception(); //this is enough to ensure the linking and loading of registry entries
 
 int main(int argn,char **argv) {
   MT::initCmdLine(argn,argv);
-  loadPerception();
+  lib_Perception();
   cout <<registry() <<endl;
 
   System S;
-  S.addModule("OpencvCamera",NULL,ModuleThread::loopFull,0);
+  S.addModule("OpencvCamera", NULL, ModuleThread::loopFull);
   S.addModule("CvtGray");
   S.addModule("MotionFilter");
-  S.addModule("ImageViewer",NULL,STRINGS("motion"), ModuleThread::listenFirst,.0);
-  S.complete();
+  S.addModule("ImageViewer", NULL, STRINGS("motion"), ModuleThread::listenFirst, .0);
+  S.connect();
 
   cout <<S <<endl;
 
   engine().enableAccessLog();
-  //engine().mode=Engine::serial;
+//  engine().mode=Engine::serial;
   engine().mode=Engine::threaded;
 
   engine().open(S);
@@ -28,7 +27,11 @@ int main(int argn,char **argv) {
 //  KeyValueGraph g = S.graph();
 //  GraphView gv(g); gv.watch();
 
-  MT::wait(10.);
+  if(engine().mode==Engine::serial){
+    for(uint i=0;i<100;i++){ engine().step(S); }
+  }else{
+    MT::wait(10.);
+  }
 
   engine().close(S);
 

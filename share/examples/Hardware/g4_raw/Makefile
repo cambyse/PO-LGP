@@ -1,5 +1,5 @@
 BASE = ../../..
 
-LIBS += -lG4Track
+LIBS += -lG4Track -lusb-1.0
 
 include $(BASE)/make-generic

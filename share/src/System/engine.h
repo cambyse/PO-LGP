@@ -29,6 +29,7 @@ typedef MT::Array<ModuleThread*> ModuleThreadL;
 typedef MT::Array<Variable*> VariableL;
 typedef MT::Array<Access*> AccessL;
 
+VariableL createVariables(const ModuleL& ms);
 
 struct ModuleThread:Thread{
   enum StepMode { listenFirst=0, listenAll, loopWithBeat, loopFull };
@@ -138,9 +139,11 @@ struct System:Module{
   void addModule(const char *dclName, const char *name, const StringA& accNames, ModuleThread::StepMode mode=ModuleThread::listenFirst, double beat=0.);
   KeyValueGraph graph() const;
   void write(ostream& os) const;
-  void complete();
+  void connect();
 };
 stdOutPipe(System);
+
+extern System& NoSystem;
 
 //===========================================================================
 /**
@@ -150,17 +153,18 @@ stdOutPipe(System);
 struct Engine{
   struct EventController *acc;
   enum { none=0, serial, threaded } mode;
-  KeyValueGraph *system;
+  System *system;
   AccessL createdAccesses;
+  bool shutdown;
 
   Engine();
   virtual ~Engine();
 
   void open(System& S);
   void step(Module &m, bool threadedOnly=false);
-  void step(System& S);
-  void test(System& S);
-  void close(System& S);
+  void step(System& S=NoSystem);
+  void test(System& S=NoSystem);
+  void close(System& S=NoSystem);
 
   /// @name event control
   void enableAccessLog();

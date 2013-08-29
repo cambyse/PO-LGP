@@ -18,11 +18,14 @@
 
 #include <sys/syscall.h>
 #include <map>
+#include <signal.h>
 
 #include "engine.h"
 #include "engine_internal.h"
 
 Singleton<Engine> singleton_Engine;
+
+System& NoSystem = *((System*)NULL);
 
 //===========================================================================
 //
@@ -193,33 +196,20 @@ void System::addModule(const char *dclName, const char *name, const StringA& acc
   for_list_(Access, a, m->accesses) a->name = accNames(a_COUNT);
 }
 
-void System::complete(){
-  for_list_(Module, m, mts){
-    for_list_(Access, a, m->accesses){
-      Variable *v = NULL;
-      if(!a->var){ //access is not connected yet
-         v = listFindByName(vars, a->name);
-        if(v){ //variable exists -> check type
-          if(*v->type != *a->type) HALT("trying to connect an access " <<m->name <<'-' <<a->name <<*a->type <<" with a variable " <<v->name <<*v->type);
-          //good: just connect
-          a->var = v;
-        }else{ //variable does not exist yet
-          a->var = v = addVariable(a);
-        }
-      }else{
-        v = dynamic_cast<Variable*>(a->var);
-      }
-      if(m->thread->mode==ModuleThread::listenAll || (m->thread->mode==ModuleThread::listenFirst && !a_COUNT)){
-        v->listeners.setAppend(m);
-      }
-    }
-  }
-  for_list_(Access, a, accesses){
+void System::connect(){
+  //first collect all accesses
+  AccessL as;
+
+  { for_list_(Module, m, mts){ for_list_(Access, a, m->accesses) as.append(a); } }
+  { for_list_(Access, a, accesses) as.append(a); }
+
+  for_list_(Access, a, as){
+    Module *m=a->module;
     Variable *v = NULL;
     if(!a->var){ //access is not connected yet
-       v = listFindByName(vars, a->name);
+      v = listFindByName(vars, a->name);
       if(v){ //variable exists -> check type
-        if(*v->type != *a->type) HALT("dammit!");
+        if(*v->type != *a->type) HALT("trying to connect an access " <<m->name <<'-' <<a->name <<*a->type <<" with a variable " <<v->name <<*v->type);
         //good: just connect
         a->var = v;
       }else{ //variable does not exist yet
@@ -228,10 +218,22 @@ void System::complete(){
     }else{
       v = dynamic_cast<Variable*>(a->var);
     }
-    if(m->thread->mode==ModuleThread::listenAll || (m->thread->mode==ModuleThread::listenFirst && !a_COUNT)){
+
+    if(m->thread &&
+       ( m->thread->mode==ModuleThread::listenAll ||
+         (m->thread->mode==ModuleThread::listenFirst &&
+          a==m->accesses(0)))){
       v->listeners.setAppend(m);
     }
   }
+}
+
+VariableL createVariables(const ModuleL& ms){
+  System S;
+  S.mts=ms;
+  S.connect();
+  cout <<"completed system: " <<S <<endl;
+  return S.vars;
 }
 
 KeyValueGraph System::graph() const{
@@ -260,9 +262,17 @@ void System::write(ostream& os) const{
 // Engine
 //
 
+void signalhandler(int s){
+  cerr <<"\n*** System/Engine received signal " <<s <<" -- trying to shutdown all threads" <<endl;
+  engine().shutdown=true;
+  engine().close();
+  cerr <<"*** Shutdown successful - bye bye!" <<endl;
+  exit(1);
+}
+
 Engine& engine(){  return singleton_Engine.obj(); }
 
-Engine::Engine(): mode(none), system(NULL) {
+Engine::Engine(): mode(none), system(NULL), shutdown(false) {
   acc = new EventController;
 };
 
@@ -272,7 +282,11 @@ Engine::~Engine(){
 }
 
 void Engine::open(System& S){
-  S.complete();
+  system = &S;
+
+  S.connect();
+
+  signal(SIGINT, signalhandler);
 
   if(mode==none) mode=threaded;
 
@@ -340,6 +354,7 @@ void Engine::open(System& S){
 }
 
 void Engine::step(System &S){
+  if(&S) system=&S;
   for_list_(Module, m, S.mts) step(*m);
 }
 
@@ -351,6 +366,7 @@ void Engine::step(Module &m, bool threadedOnly){
 }
 
 void Engine::test(System& S){
+  if(&S) system=&S;
   CHECK(mode!=threaded,"");
   mode=serial;
   open(S);
@@ -359,7 +375,8 @@ void Engine::test(System& S){
 }
 
 void Engine::close(System& S){
-  for_list_(Module, m, S.mts){
+  if(&S) system=&S;
+  for_list_(Module, m, system->mts){
     if(mode==threaded) m->thread->threadClose();
     if(mode==serial)   m->close();
   }

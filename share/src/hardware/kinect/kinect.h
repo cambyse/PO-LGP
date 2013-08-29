@@ -36,8 +36,4 @@ struct Kinect2PointCloud: Module {
   void close(){};
 };
 
-
-#include <libfreenect.hpp>
-
-
 #endif

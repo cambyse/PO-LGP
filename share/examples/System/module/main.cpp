@@ -4,6 +4,22 @@
 //NOTE: ComputeSum does not need to be included when using registry only!
 #include "ComputeSum_Module.h"
 
+
+//===========================================================================
+//
+// not using any 'system' code, directly creating the modules and 'completing'
+// the variables
+
+void way0(){
+  ComputeSum C;
+  createVariables(LIST<Module>(C));
+  C.x.set() = ARR(1., 2., 3.);
+  C.open();
+  C.step();
+  C.close();
+  cout <<C.s.get() <<endl;
+}
+
 //===========================================================================
 //
 // direct execution - way1
@@ -14,7 +30,7 @@ void way1(){
 
 //  Module *m = S.addModule<ComputeSum> ("funnyName");
   Module *m = S.addModule("ComputeSum", "funnyName");
-  S.complete(); //this will create the respective variables!
+  S.connect(); //this will create the respective variables!
   cout <<S <<endl;
 
   Access_typed<arr> *x = S.getAccess<arr>("x");
@@ -56,7 +72,7 @@ struct MySystem:System{
   ACCESS(double, s);
   MySystem():System("hallo"){
     addModule<ComputeSum> ("funnyName");
-    complete(); //this will create the respective variables!
+    connect(); //this will create the respective variables!
   }
 };
 
@@ -79,7 +95,7 @@ void way2(){
 // testing
 //
 
-void basicTesting(){
+void autotest(){
   cout <<"**** ENTER_MAIN" <<endl;
 
   cout <<registry() <<endl;
@@ -89,7 +105,7 @@ void basicTesting(){
 
   cout <<S <<endl;
 
-  S.complete();
+  S.connect();
   cout <<S <<endl;
 
   engine().test(S);
@@ -105,8 +121,14 @@ void basicTesting(){
 
 //-- this is how the top-level manager should get access
 int main(int argc, char** argv){
-//  way1();
-  way2();
-//  basicTesting();
+  int mode=0;
+  if(argc>1) mode=atoi(argv[1]);
+  switch(mode){
+    case 0: way0(); break;
+    case 1: way1(); break;
+    case 2: way2(); break;
+    case 3: autotest(); break;
+  }
+
   return 0;
 }

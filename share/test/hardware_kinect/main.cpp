@@ -2,20 +2,14 @@
 #include <Gui/opengl.h>
 #include <signal.h>
 
+#include <hardware/kinect/kinect.h>
+
 void lib_hardware_kinect();
 void lib_Perception();
 
-bool stopnow=false;
-void STOP(int){
-  MT_MSG("SIGINT callback");
-  stopnow=true;
-}
-
-int main(int argc, char **argv) {
+void threadedRun() {
   lib_hardware_kinect();
   lib_Perception();
-
-  signal(SIGINT,STOP);
 
   struct MySystem:System{
     ACCESS(byteA, kinect_rgb);
@@ -24,9 +18,9 @@ int main(int argc, char **argv) {
     MySystem(){
       addModule("KinectPoller", NULL, ModuleThread::loopWithBeat, .1);
       addModule("ImageViewer",NULL,STRINGS("kinect_rgb"), ModuleThread::listenFirst, 0);
-      addModule("Kinect2PointCloud", NULL, ModuleThread::loopWithBeat, 1.);
-      addModule("PointCloudViewer",NULL,STRINGS("kinect_points", "kinect_pointColors"), ModuleThread::listenFirst, 0);
-      complete();
+//      addModule("Kinect2PointCloud", NULL, ModuleThread::loopWithBeat, 1.);
+//      addModule("PointCloudViewer",NULL,STRINGS("kinect_points", "kinect_pointColors"), ModuleThread::listenFirst, 0);
+      connect();
     }
   } S;
 
@@ -38,8 +32,8 @@ int main(int argc, char **argv) {
   engine().open(S);
 
   MT::timerStart();
-  for(uint i=0;i<1000;i++){
-    if(stopnow) break;
+  for(uint i=0;i<100;i++){
+    if(engine().shutdown) break;
     S.kinect_depth.var->waitForNextWriteAccess();
     copy(gl.background, S.kinect_depth.get()/10.f);
     gl.update();
@@ -51,3 +45,15 @@ int main(int argc, char **argv) {
   cout <<"bye bye" <<endl;
 }
 
+void rawTest(){
+  KinectPoller kin;
+//  complete(LIST<Module>(kin));
+  kin.open();
+  kin.close();
+}
+
+int main(int argn,char **argv){
+  //  rawTest();
+  threadedRun();
+  return 0;
+};

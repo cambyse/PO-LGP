@@ -19,7 +19,7 @@ struct G4System:System{
   ACCESS(floatA, currentPoses);
   G4System(){
     addModule("G4Poller", "G4Poller", ModuleThread::loopWithBeat, .001);
-    complete();
+    connect();
   }
 };
 
