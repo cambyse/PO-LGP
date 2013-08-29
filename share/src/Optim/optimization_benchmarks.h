@@ -114,9 +114,7 @@ struct ChoiceFunction:ScalarFunction {
 
 struct ChoiceConstraintFunction:VectorFunction {
   ChoiceFunction f;
-//  double margin;
   ChoiceConstraintFunction() {
-//    margin = MT::getParameter<double>("constraintMargin");
   }
   virtual void fv(arr& phi, arr& J, const arr& x) {
     uint n=x.N;
@@ -127,6 +125,28 @@ struct ChoiceConstraintFunction:VectorFunction {
     phi(1) = sumOfSqr(x)-1.;   if(&J) J[1]() = 2.*x;
     phi(2) = -x(0);            if(&J) J(2,0) = -1.;
   }
+  virtual uint get_c(){ return 2; }
+};
+
+//===========================================================================
+
+struct SimpleConstraintFunction:VectorFunction {
+  SimpleConstraintFunction() {
+  }
+  virtual void fv(arr& phi, arr& J, const arr& x) {
+    uint n=x.N;
+    arr J_f;
+
+    //simple squared potential, displaced by 1
+    x(0) -= 1.;
+    phi = x;
+    if(&J) J.setId(n);
+    x(0) += 1.;
+
+    phi.append(1.-sumOfSqr(x));  if(&J) J.append(-2.*x); //OUTSIDE the circle
+    phi.append(x(0));            if(&J){ J.append(0.*x); J(J.d0-1,0) = 1.; }
+  }
+  virtual uint get_c(){ return 2; }
 };
 
 //===========================================================================
@@ -159,21 +179,21 @@ struct SinusesFunction:VectorFunction {
 //===========================================================================
 
 /// $f(x) = x^T C x$ where C has eigen values ranging from 1 to 'condition'
-struct SquaredCost:public ScalarFunction,VectorFunction {
+struct SquaredCost : VectorFunction {
   arr M; /// $C = M^T M $
   uint n;  /// dimensionality of $x$
   
   SquaredCost(uint n, double condition=100.);
   void initRandom(uint n, double condition=100.);
   
-  double fs(arr& g, arr& H, const arr& x);
+//  double fs(arr& g, arr& H, const arr& x);
   void fv(arr& y, arr& J,const arr& x);
 };
 
 //===========================================================================
 
 /// Same as SquaredCost but $x_i \gets atan(x_i)$ before evaluating the squared cost
-struct NonlinearlyWarpedSquaredCost:public ScalarFunction,VectorFunction {
+struct NonlinearlyWarpedSquaredCost : ScalarFunction,VectorFunction {
   uint n;  /// dimensionality of $x$
   SquaredCost sq;
   

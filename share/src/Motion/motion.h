@@ -52,12 +52,12 @@ struct TaskMap {
 struct TaskCost {
   TaskMap& map;
   MT::String name;
-  bool active;
+  bool active, constraint;
   arr y_target, y_prec;  ///< target & precision over a whole trajectory
   arr v_target, v_prec;  ///< target & precision over a whole trajectory
   //void cost(arr& y, arr& J, const ors::Graph& G, uint t); ///< returns the weighted costs in time t, ASSUMING that G is in state x_t
   
-  TaskCost(TaskMap* m):map(*m), active(true) {}
+  TaskCost(TaskMap* m):map(*m), active(true), constraint(false) {}
 };
 
 /// This class allows you to DESCRIBE a motion problem, nothing more

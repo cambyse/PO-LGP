@@ -944,7 +944,13 @@ template<class T> MT::Array<T>& MT::Array<T>::operator=(const MT::Array<T>& a) {
   if(memMove) memmove(p, a.p, sizeT*N);
   else for(i=0; i<N; i++) p[i]=a.p[i];
   special = a.special;
-  //CHECK(special==noneST,"NIY");
+  if(special == noneST) return *this;
+  if(special == RowShiftedPackedMatrixST){
+    CHECK(typeid(T)==typeid(double),"");
+    aux = new RowShiftedPackedMatrix(*((arr*)this),*((RowShiftedPackedMatrix*)a.aux));
+    return *this;
+  }
+  NIY;
   return *this;
 }
 

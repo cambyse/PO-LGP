@@ -1,8 +1,6 @@
 #include <Core/util.h>
-#include <MT/optimization.h>
+#include <Optim/optimization.h>
 #include "exampleProblem.h"
-#include <MT/soc_exampleProblems.h>
-#include <MT/gauss.h>
 #include <Gui/plot.h>
 
 arr buildKernelMatrix(KOrderMarkovFunction& P){
@@ -26,31 +24,12 @@ arr buildKernelMatrix(KOrderMarkovFunction& P){
   return Kinv;
 }
 
-void createRandom(arr& x,const arr& kernel){
-  Gaussian G;
-  G.setU(zeros(kernel.d0,1),kernel);
-  arr X;
-  sample(X,20,G);
-
-  plotGnuplot();
-  plotFunctions(~X);
-  plot(true);
-  //write(LIST<arr>(~X),"z.output");
-  //gnuplot("plot 'z.output' us 1,'z.output' us 1", true, true);
-}
-
 int main(int argn,char** argv){
   MT::initCmdLine(argn,argv);
 
-#if 0
-  ControlledSystem_PointMass sys;
-  //KOrderMarkovFunction_ControlledSystem problem(sys);
-  ControlledSystem_as_KOrderMarkovFunction P(sys);
-#else
   ParticleAroundWalls P;
-  P.k=1;
-  P.kern=true;
-#endif
+  P.k=2;
+  P.kern=false; //true;
   
   //-- print some info on the P
   uint T=P.get_T();
@@ -90,9 +69,10 @@ int main(int argn,char** argv){
   if(P.hasKernel()){
     arr K=buildKernelMatrix(P);
 //    createRandom(x, K);  //return 0;
-    optGaussNewton(x, Convert(P), OPT2(verbose=2, useAdaptiveDamping=0), &K);
+    optGaussNewton(x, Convert(P), OPT(verbose=2, useAdaptiveDamping=1), &K);
   }else{
-    optGaussNewton(x, Convert(P), OPT2(verbose=2, useAdaptiveDamping=0));
+//    optGaussNewton(x, Convert(P), OPT(verbose=2, useAdaptiveDamping=1));
+    optNewton(x, Convert(P), OPT(verbose=2, useAdaptiveDamping=1));
   }
 
   //analyzeTrajectory(sys, x, true, &cout);

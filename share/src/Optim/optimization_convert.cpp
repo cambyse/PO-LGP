@@ -24,14 +24,20 @@ struct sConvert {
   ScalarFunction* sf;
   VectorFunction* vf;
   VectorChainFunction* vcf;
-  QuadraticChainFunction* qcf;
+//  QuadraticChainFunction* qcf;
   KOrderMarkovFunction *kom;
-  double(*fs)(arr*, const arr&, void*);
-  void (*fv)(arr&, arr*, const arr&, void*);
+  double(*cstyle_fs)(arr*, const arr&, void*);
+  void (*cstyle_fv)(arr&, arr*, const arr&, void*);
   void *data;
 //  ControlledSystem *cs;
-  sConvert():sf(NULL),vf(NULL),vcf(NULL),qcf(NULL),kom(NULL),fs(NULL),fv(NULL),data(NULL)/*,cs(NULL)*/ {};
+  sConvert():sf(NULL),vf(NULL),vcf(NULL),/*qcf(NULL),*/kom(NULL),cstyle_fs(NULL),cstyle_fv(NULL),data(NULL)/*,cs(NULL)*/ {};
   
+    struct VectorFunction_ScalarFunction:ScalarFunction { //actual converter objects
+      VectorFunction *f;
+      VectorFunction_ScalarFunction(VectorFunction& _f):f(&_f) {}
+      virtual double fs(arr& grad, arr& H, const arr& x);
+    };
+
   struct VectorChainFunction_ScalarFunction:ScalarFunction { //actual converter objects
     VectorChainFunction *f;
     VectorChainFunction_ScalarFunction(VectorChainFunction& _f):f(&_f) {}
@@ -44,13 +50,13 @@ struct sConvert {
     virtual void   fv(arr& y, arr& J, const arr& x);
   };
   
-  struct VectorChainFunction_QuadraticChainFunction:QuadraticChainFunction {
-    VectorChainFunction *f;
-    VectorChainFunction_QuadraticChainFunction(VectorChainFunction& _f):f(&_f) {}
-    virtual uint get_T() { return f->get_T(); }
-    virtual double fq_i(SqrPotential& S, uint i, const arr& x_i);
-    virtual double fq_ij(PairSqrPotential& S, uint i, uint j, const arr& x_i, const arr& x_j);
-  };
+//  struct VectorChainFunction_QuadraticChainFunction:QuadraticChainFunction {
+//    VectorChainFunction *f;
+//    VectorChainFunction_QuadraticChainFunction(VectorChainFunction& _f):f(&_f) {}
+//    virtual uint get_T() { return f->get_T(); }
+//    virtual double fq_i(SqrPotential& S, uint i, const arr& x_i);
+//    virtual double fq_ij(PairSqrPotential& S, uint i, uint j, const arr& x_i, const arr& x_j);
+//  };
   
   struct KOrderMarkovFunction_VectorFunction:VectorFunction {
     KOrderMarkovFunction *f;
@@ -100,10 +106,10 @@ Convert::Convert(ScalarFunction& p) { s=new sConvert(); s->sf=&p; }
 Convert::Convert(VectorFunction& p) { s=new sConvert(); s->vf=&p; }
 //Convert::Convert(QuadraticFunction& p){ s=new sConvert(); s->sf=&p; }
 Convert::Convert(VectorChainFunction& p) { s=new sConvert(); s->vcf=&p; }
-Convert::Convert(QuadraticChainFunction& p) { s=new sConvert(); s->qcf=&p; }
+//Convert::Convert(QuadraticChainFunction& p) { s=new sConvert(); s->qcf=&p; }
 Convert::Convert(KOrderMarkovFunction& p) { s=new sConvert(); s->kom=&p; }
-Convert::Convert(double(*fs)(arr*, const arr&, void*),void *data) {  s=new sConvert(); s->fs=fs; s->data=data; }
-Convert::Convert(void (*fv)(arr&, arr*, const arr&, void*),void *data) {  s=new sConvert(); s->fv=fv; s->data=data; }
+Convert::Convert(double(*fs)(arr*, const arr&, void*),void *data) {  s=new sConvert(); s->cstyle_fs=fs; s->data=data; }
+Convert::Convert(void (*fv)(arr&, arr*, const arr&, void*),void *data) {  s=new sConvert(); s->cstyle_fv=fv; s->data=data; }
 
 #ifndef libRoboticsCourse
 //Convert::Convert(ControlledSystem& p) { s=new sConvert(); s->cs=&p; }
@@ -121,7 +127,9 @@ Convert::~Convert() {
 Convert::operator ScalarFunction&() {
   if(!s->sf) {
     if(s->vcf) s->sf = new sConvert::VectorChainFunction_ScalarFunction(*s->vcf);
-    if(s->fs)  s->sf = new sConvert::cfunc_ScalarFunction(s->fs, s->data);
+    if(s->kom) s->vf = new sConvert::KOrderMarkovFunction_VectorFunction(*s->kom);
+    if(s->vf)  s->sf = new sConvert::VectorFunction_ScalarFunction(*s->vf);
+    if(s->cstyle_fs)  s->sf = new sConvert::cfunc_ScalarFunction(s->cstyle_fs, s->data);
   }
   if(!s->sf) HALT("");
   return *s->sf;
@@ -132,7 +140,7 @@ Convert::operator VectorFunction&() {
 //    if(s->cs) operator KOrderMarkovFunction&();
     if(s->kom) s->vf = new sConvert::KOrderMarkovFunction_VectorFunction(*s->kom);
     if(s->vcf) s->vf = new sConvert::VectorChainFunction_VectorFunction(*s->vcf);
-    if(s->fv)  s->vf = new sConvert::cfunc_VectorFunction(s->fv, s->data);
+    if(s->cstyle_fv)  s->vf = new sConvert::cfunc_VectorFunction(s->cstyle_fv, s->data);
   }
   if(!s->vf) HALT("");
   return *s->vf;
@@ -145,13 +153,13 @@ Convert::operator VectorChainFunction&() {
   return *s->vcf;
 }
 
-Convert::operator QuadraticChainFunction&() {
-  if(!s->qcf) {
-    if(s->vcf) s->qcf = new sConvert::VectorChainFunction_QuadraticChainFunction(*s->vcf);
-  }
-  if(!s->qcf) HALT("");
-  return *s->qcf;
-}
+//Convert::operator QuadraticChainFunction&() {
+//  if(!s->qcf) {
+//    if(s->vcf) s->qcf = new sConvert::VectorChainFunction_QuadraticChainFunction(*s->vcf);
+//  }
+//  if(!s->qcf) HALT("");
+//  return *s->qcf;
+//}
 
 Convert::operator KOrderMarkovFunction&() {
   if(!s->kom) {
@@ -167,6 +175,15 @@ Convert::operator KOrderMarkovFunction&() {
 //
 // actual convertion routines
 //
+
+double sConvert::VectorFunction_ScalarFunction::fs(arr& grad, arr& H, const arr& x) {
+  arr y,J;
+  f->fv(y, (&grad?J:NoArr), x);
+//  if(J.special==arr::RowShiftedPackedMatrixST) J = unpack(J);
+  if(&grad){ grad = comp_At_x(J, y); grad *= 2.; }
+  if(&H){ H = comp_At_A(J); H *= 2.; }
+  return sumOfSqr(y);
+}
 
 double sConvert::VectorChainFunction_ScalarFunction::fs(arr& grad, arr& H, const arr& x) {
   uint T=f->get_T();
@@ -248,30 +265,30 @@ void sConvert::VectorChainFunction_VectorFunction::fv(arr& y, arr& J, const arr&
   if(&J) { J=Ji;  J.append(Jij); }
 }
 
-double sConvert::VectorChainFunction_QuadraticChainFunction::fq_i(SqrPotential& S, uint i, const arr& x_i) {
-  arr y,J;
-  f->fv_i(y, (&S?J:NoArr), i, x_i);
-  if(&S) {
-    S.A=~J * J;
-    S.a=~J * (J*x_i - y);
-    S.c=sumOfSqr(J*x_i - y);
-  }
-  return sumOfSqr(y);
-}
+//double sConvert::VectorChainFunction_QuadraticChainFunction::fq_i(SqrPotential& S, uint i, const arr& x_i) {
+//  arr y,J;
+//  f->fv_i(y, (&S?J:NoArr), i, x_i);
+//  if(&S) {
+//    S.A=~J * J;
+//    S.a=~J * (J*x_i - y);
+//    S.c=sumOfSqr(J*x_i - y);
+//  }
+//  return sumOfSqr(y);
+//}
 
-double sConvert::VectorChainFunction_QuadraticChainFunction::fq_ij(PairSqrPotential& S, uint i, uint j, const arr& x_i, const arr& x_j) {
-  arr y,Ji,Jj;
-  f->fv_ij(y, (&S?Ji:NoArr), (&S?Jj:NoArr), i, j, x_i, x_j);
-  if(&S) {
-    S.A=~Ji*Ji;
-    S.B=~Jj*Jj;
-    S.C=~Ji*Jj;
-    S.a=~Ji*(Ji*x_i + Jj*x_j - y);
-    S.b=~Jj*(Ji*x_i + Jj*x_j - y);
-    S.c=sumOfSqr(Ji*x_i + Jj*x_j - y);
-  }
-  return sumOfSqr(y);
-}
+//double sConvert::VectorChainFunction_QuadraticChainFunction::fq_ij(PairSqrPotential& S, uint i, uint j, const arr& x_i, const arr& x_j) {
+//  arr y,Ji,Jj;
+//  f->fv_ij(y, (&S?Ji:NoArr), (&S?Jj:NoArr), i, j, x_i, x_j);
+//  if(&S) {
+//    S.A=~Ji*Ji;
+//    S.B=~Jj*Jj;
+//    S.C=~Ji*Jj;
+//    S.a=~Ji*(Ji*x_i + Jj*x_j - y);
+//    S.b=~Jj*(Ji*x_i + Jj*x_j - y);
+//    S.c=sumOfSqr(Ji*x_i + Jj*x_j - y);
+//  }
+//  return sumOfSqr(y);
+//}
 
 void sConvert::KOrderMarkovFunction_VectorFunction::fv(arr& phi, arr& J, const arr& x) {
 #if 0 //non-packed Jacobian

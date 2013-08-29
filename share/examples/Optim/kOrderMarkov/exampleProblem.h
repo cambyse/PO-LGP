@@ -1,5 +1,5 @@
-#include <MT/optimization.h>
-#include <MT/functions.h>
+#include <Optim/optimization.h>
+#include <Core/functions.h>
 
 #define DIM 3
 
@@ -17,7 +17,7 @@ struct ParticleAroundWalls:KOrderMarkovFunction {
 //      if(t==0 || t==T/2 || t==T/4 || t==3*T/4 || t==T-get_k()) return DIM;
 //      return 0;
 //    }
-    if(t==0 || t==T/2 || t==T/4 || t==3*T/4 || t==T-get_k()) return 2*DIM;
+    if(t==T/2 || t==T/4 || t==3*T/4 || t==T) return 2*DIM;
     return DIM;
   }
 
@@ -34,8 +34,9 @@ void ParticleAroundWalls::phi_t(arr& phi, arr& J, uint t, const arr& x_bar){
   //assert some dimensions
   CHECK(x_bar.d0==k+1,"");
   CHECK(x_bar.d1==n,"");
-  CHECK(t<=T-k,"");
+  CHECK(t<=T,"");
 
+  //-- transition costs
 //  if(!hasKernel()){
     if(k==1)  phi = x_bar[1]-x_bar[0]; //penalize velocity
     if(k==2)  phi = x_bar[2]-2.*x_bar[1]+x_bar[0]; //penalize acceleration
@@ -44,14 +45,13 @@ void ParticleAroundWalls::phi_t(arr& phi, arr& J, uint t, const arr& x_bar){
     //phi only captures task costs
 //  }
 
-  //walls
+  //-- wall costs
   double eps=.1, power=2.;
   for(uint i=0;i<n;i++){ //add barrier costs to each dimension
-    if(t==0)   phi.append(barrier(x_bar(0,i)+i+1., eps, power));    //first factor: ``lower than -i''
-    if(t==T/4) phi.append(barrier(i+1.-x_bar(0,i), eps, power)); //middle factor: ``greater than i''
+    if(t==T/4) phi.append(barrier(i+1.-x_bar(k,i), eps, power));    //middle factor: ``greater than i''
     if(t==T/2) phi.append(barrier(x_bar(k,i)+i+1., eps, power));    //last factor: ``lower than -i''
-    if(t==3*T/4) phi.append(barrier(i+1.-x_bar(0,i), eps, power)); //middle factor: ``greater than i''
-    if(t==T-k) phi.append(barrier(x_bar(k,i)+i+1., eps, power));    //last factor: ``lower than -i''
+    if(t==3*T/4) phi.append(barrier(i+1.-x_bar(k,i), eps, power));  //middle factor: ``greater than i''
+    if(t==T) phi.append(barrier(x_bar(k,i)+i+1., eps, power));    //last factor: ``lower than -i''
   }
 
   uint m=phi.N;
@@ -74,11 +74,10 @@ void ParticleAroundWalls::phi_t(arr& phi, arr& J, uint t, const arr& x_bar){
 //    if(hasKernel()) nn=0;
 
     for(uint i=0;i<n;i++){ //add barrier costs to each dimension
-      if(t==0)   J(nn+i,0,i) =  d_barrier(x_bar(0,i)+i+1., eps, power);
-      if(t==T/4) J(nn+i,0,i) = -d_barrier(i+1.-x_bar(0,i), eps, power);
-      if(t==T/2) J(nn+i,k,i) =  d_barrier(x_bar(k,i)+i+1., eps, power);
-      if(t==3*T/4) J(nn+i,0,i) = -d_barrier(i+1.-x_bar(0,i), eps, power);
-      if(t==T-k) J(nn+i,k,i) =  d_barrier(x_bar(k,i)+i+1., eps, power);
+      if(t==T/4)   J(nn+i,k,i) = -d_barrier(i+1.-x_bar(k,i), eps, power);
+      if(t==T/2)   J(nn+i,k,i) =  d_barrier(x_bar(k,i)+i+1., eps, power);
+      if(t==3*T/4) J(nn+i,k,i) = -d_barrier(i+1.-x_bar(k,i), eps, power);
+      if(t==T)     J(nn+i,k,i) =  d_barrier(x_bar(k,i)+i+1., eps, power);
     }
   }
 }

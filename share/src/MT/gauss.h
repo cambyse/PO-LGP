@@ -26,7 +26,7 @@
 
 #include <Core/util.h>
 #include <Core/array.h>
-#include "functions.h"
+#include <Core/functions.h>
 
 typedef void (*Trans)(arr& x);
 
