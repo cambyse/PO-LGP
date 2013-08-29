@@ -12,6 +12,7 @@
 
 #include "qcustomplot.h"
 #include <QApplication>
+#include <QDateTime>
 
 #include <iostream>
 #include <fstream>
@@ -37,7 +38,7 @@ using std::tuple;
 using std::make_tuple;
 using std::get;
 
-static QString file_name_base;
+static QString date_time_string;
 static std::ofstream log_file;
 static enum OPTION { RANDOM, OPTIMAL, SPARSE, UTREE_PROB, UTREE_VALUE, LINEAR_Q, OPTION_N } option;
 static const char * option_arr[OPTION_N] = {"random", "optimal", "sparse", "utree-prob", "utree-value", "linear-q"};
@@ -326,6 +327,8 @@ int BatchMaze::run_predefined(int argn, char ** argarr) {
 
 int BatchMaze::run_active(int argn, char ** argarr) {
 
+    QApplication a(argn,argarr);
+
     //------------------------//
     // check for valid option //
     //------------------------//
@@ -419,8 +422,7 @@ int BatchMaze::run_active(int argn, char ** argarr) {
             training_length = round(virtual_sks.get_max_uncertain(max_training_length-min_training_length));
             training_length += rand()%5-2; // +/- two steps of noise
             training_length = util::clamp<int>(min_training_length,max_training_length,training_length);
-            double dummy_dev;
-            virtual_sks.mean_dev(training_length,virtual_reward,dummy_dev);
+            virtual_sks.mean_dev_weights(training_length,virtual_reward);
             virtual_data.insert(make_tuple(episode_counter,training_length,virtual_reward));
 
             // generate training data
@@ -589,15 +591,17 @@ int BatchMaze::run_active(int argn, char ** argarr) {
             sks.add_new_point(training_length,reward_sum/max_transitions);
 
             // print graph to file
-            QString plot_file_name = file_name_base;
-            plot_file_name.prepend("print_file_");
-            plot_file_name.append(QString("_%1.png").arg(QString::number(episode_counter),(int)floor(log10(max_episodes)+1),QChar('0')));
-            // QApplication a(argn, argarr);
-            // QWidget * w = new QWidget();
-            // QCustomPlot * plotter = new QCustomPlot(w);
-            // plotter->savePng(plot_file_name,1000,700,1,-1);
-            // // plotter->savePdf(plot_file_name,true,1000,700);
-            // delete plotter;
+            QCustomPlot * plotter = new QCustomPlot();
+            sks.print_to_QCP(plotter);
+            QString plot_file_name = date_time_string;
+            plot_file_name.append("_");
+            plot_file_name.append(option_str);
+            plot_file_name.append("_print_file_");
+            plot_file_name.append(QString("%1.png").arg(QString::number(episode_counter),(int)floor(log10(max_episodes)+1),QChar('0')));
+            plotter->savePng(plot_file_name,1000,700,1,-1);
+            // plot_file_name.append(QString("%1.pdf").arg(QString::number(episode_counter),(int)floor(log10(max_episodes)+1),QChar('0')));
+            // plotter->savePdf(plot_file_name,true,1000,700);
+            delete plotter;
 
             // delete pointers
             delete maze;
@@ -732,16 +736,15 @@ void BatchMaze::parse_command_line_arguments(int argn, char ** argarr) {
 }
 
 void BatchMaze::initialize_log_file() {
-    // base name
-    file_name_base = QString("");
-    file_name_base.append(option_str);
-    file_name_base.append("_");
-    file_name_base.append(QString::number(time(nullptr)));
+    // date and time
+    QDateTime dateTime = QDateTime::currentDateTime();
+    date_time_string = dateTime.toString("yyyy-MM-dd_hh:mm:ss");
 
     // log file name
-    QString log_file_name = file_name_base;
-    log_file_name.prepend("log_file_");
-    log_file_name.append(".txt");
+    QString log_file_name = date_time_string;
+    log_file_name.append("_");
+    log_file_name.append(option_str);
+    log_file_name.append("_log_file.txt");
     log_file.open((const char*)log_file_name.toLatin1());
 
     std::string tmp_reward_str = Maze::get_rewards(), reward_str;

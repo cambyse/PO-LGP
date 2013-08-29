@@ -990,8 +990,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     sks.add_new_point(x,y);
                     sks.print_to_QCP(plotter);
                     QApplication::processEvents();
-                    QString file_name = QString("Sigmoid_%1.png").arg(QString::number(i),(int)4,QChar('0'));
-                    plotter->savePng(file_name,1000,500,1,-1);
+                    // QString file_name = QString("Sigmoid_%1.png").arg(QString::number(i),(int)4,QChar('0'));
+                    // plotter->savePng(file_name,1000,500,1,-1);
                 }
             }
         } else if(str_args[0]=="col-states") { // color states

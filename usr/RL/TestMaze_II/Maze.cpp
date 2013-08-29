@@ -24,7 +24,7 @@ const double Maze::text_center = 0.3;
 
 const vector<Maze::wall_t> Maze::walls = {
 
-    /* 2x2 Maze *
+    /* 2x2 Maze */
     { 1, 3}
     /**/
 
@@ -94,8 +94,8 @@ const vector<Maze::maze_reward_t> Maze::rewards = {
     /**/
 
     /* 2x2 Maze */
-    // { 3, 1, 3, 1, EACH_TIME_NO_PUNISH, 200,   0,   0}
-    { 0, 3, 2, 1, EACH_TIME_NO_PUNISH, 200,   0,   0}
+    { 3, 1, 3, 1, EACH_TIME_NO_PUNISH, 200,   0,   0}
+    // { 0, 3, 2, 1, EACH_TIME_NO_PUNISH, 200,   0,   0}
     /**/
 
     /* 3x3 Maze *
@@ -139,7 +139,7 @@ const vector<Maze::maze_reward_t> Maze::rewards = {
 };
 
 const vector<Maze::door_t> Maze::doors = {
-    /* 2x2 Maze *
+    /* 2x2 Maze */
     door_t(MazeState(1,0), MazeState(1,1), MazeState(1,1),  RIGHT_BUTTON,-3, color_t(0.0,0.8,0.0) ),
     /**/
 
