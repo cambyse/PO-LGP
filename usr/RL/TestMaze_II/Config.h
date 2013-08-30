@@ -1,11 +1,11 @@
 //===================================================================
 
 #ifndef BATCH_MODE
-#define BATCH_MODE
+//#define BATCH_MODE
 #endif
 
 #ifndef BATCH_MODE_QUIET
-//#define BATCH_MODE_QUIET
+#define BATCH_MODE_QUIET
 #endif
 
 #ifndef NO_RANDOM

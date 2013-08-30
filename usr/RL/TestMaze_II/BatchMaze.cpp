@@ -23,14 +23,14 @@
 
 #include <QString>
 
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 0
 #include "debug.h"
 
 #define LOG_COMMENT(x) DEBUG_OUT(1,x); log_file << "# " << x << std::endl;
 #define LOG(x) DEBUG_OUT(1,x); log_file << x << std::endl;
 
 #define RUN_ACTIVE
-
+//#define X_SERVER
 #define USE_OMP
 
 using std::set;
@@ -327,7 +327,9 @@ int BatchMaze::run_predefined(int argn, char ** argarr) {
 
 int BatchMaze::run_active(int argn, char ** argarr) {
 
+#ifdef X_SERVER
     QApplication a(argn,argarr);
+#endif
 
     //------------------------//
     // check for valid option //
@@ -582,6 +584,7 @@ int BatchMaze::run_active(int argn, char ** argarr) {
             sks.add_new_point(training_length,reward_sum/max_transitions);
 
             // print graph to file only for more than 3 points
+#ifdef X_SERVER
             if(episode_counter>3*omp_get_num_threads()) {
                 QCustomPlot * plotter = new QCustomPlot();
                 sks.print_to_QCP(plotter);
@@ -596,6 +599,7 @@ int BatchMaze::run_active(int argn, char ** argarr) {
                 // plotter->savePdf(plot_file_name,true,1000,700);
                 delete plotter;
             }
+#endif
 
             // delete pointers
             delete maze;
