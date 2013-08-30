@@ -56,19 +56,19 @@ UTree::UTree(const double& d):
         for(action_t action : actionIt_t::all) {
             ActionFeature * action_feature = ActionFeature::create(action,k_idx);
             basis_features.push_back(action_feature);
-            DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
+            DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
         }
         // states
         for(state_t state : stateIt_t::all) {
             StateFeature * state_feature = StateFeature::create(state,k_idx);
             basis_features.push_back(state_feature);
-            DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
+            DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
         }
         // reward
         for(reward_t reward : rewardIt_t::all) {
             RewardFeature * reward_feature = RewardFeature::create(reward,k_idx);
             basis_features.push_back(reward_feature);
-            DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
+            DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
         }
     }
 }

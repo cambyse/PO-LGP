@@ -23,7 +23,7 @@
 
 #include <QString>
 
-#define DEBUG_LEVEL 0
+#define DEBUG_LEVEL 1
 #include "debug.h"
 
 #define LOG_COMMENT(x) DEBUG_OUT(1,x); log_file << "# " << x << std::endl;
@@ -31,7 +31,7 @@
 
 #define RUN_ACTIVE
 
-//#define USE_OMP
+#define USE_OMP
 
 using std::set;
 using std::tuple;
@@ -373,7 +373,7 @@ int BatchMaze::run_active(int argn, char ** argarr) {
     // run episodes in parallel //
     //--------------------------//
 #ifdef USE_OMP
-#pragma omp parallel for schedule(dynamic,1) collapse(2)
+#pragma omp parallel for schedule(dynamic,1) collapse(1)
 #endif
     for(int episode_counter=1; episode_counter<=max_episodes; ++episode_counter) {
         double virtual_reward;
@@ -404,15 +404,6 @@ int BatchMaze::run_active(int argn, char ** argarr) {
             crf = new KMarkovCRF();
             utree = new UTree(discount);
             linQ = new LinearQ(discount);
-
-            // initialize to minimal length history
-            for(unsigned long state_counter=0; state_counter<Config::k; ++state_counter) {
-                action_t action = action_t::STAY;
-                state_t state;
-                reward_t reward;
-                maze->perform_transition(action,state,reward);
-                current_instance = current_instance->append_instance(action,state,reward);
-            }
 
             // get training length
             SmoothingKernelSigmoid virtual_sks = sks;
@@ -590,18 +581,21 @@ int BatchMaze::run_active(int argn, char ** argarr) {
             }
             sks.add_new_point(training_length,reward_sum/max_transitions);
 
-            // print graph to file
-            QCustomPlot * plotter = new QCustomPlot();
-            sks.print_to_QCP(plotter);
-            QString plot_file_name = date_time_string;
-            plot_file_name.append("_");
-            plot_file_name.append(option_str);
-            plot_file_name.append("_print_file_");
-            plot_file_name.append(QString("%1.png").arg(QString::number(episode_counter),(int)floor(log10(max_episodes)+1),QChar('0')));
-            plotter->savePng(plot_file_name,1000,700,1,-1);
-            // plot_file_name.append(QString("%1.pdf").arg(QString::number(episode_counter),(int)floor(log10(max_episodes)+1),QChar('0')));
-            // plotter->savePdf(plot_file_name,true,1000,700);
-            delete plotter;
+            // print graph to file only for more than 3 points
+            if(episode_counter>3*omp_get_num_threads()) {
+                QCustomPlot * plotter = new QCustomPlot();
+                sks.print_to_QCP(plotter);
+                QString plot_file_name = date_time_string;
+                plot_file_name.append("_");
+                plot_file_name.append(option_str);
+                plot_file_name.append("_print_file_");
+                plot_file_name.append(QString("%1.png").arg(QString::number(episode_counter),(int)floor(log10(max_episodes)+1),QChar('0')));
+                DEBUG_OUT(1,"Plotting to file " << (const char*)plot_file_name.toLatin1() );
+                plotter->savePng(plot_file_name,1000,700,1,-1);
+                // plot_file_name.append(QString("%1.pdf").arg(QString::number(episode_counter),(int)floor(log10(max_episodes)+1),QChar('0')));
+                // plotter->savePdf(plot_file_name,true,1000,700);
+                delete plotter;
+            }
 
             // delete pointers
             delete maze;

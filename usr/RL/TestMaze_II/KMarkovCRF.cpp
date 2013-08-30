@@ -45,20 +45,20 @@ KMarkovCRF::KMarkovCRF():
         for(actionIt_t action=actionIt_t::first(); action!=INVALID; ++action) {
             ActionFeature * action_feature = ActionFeature::create(action,k_idx);
             basis_features.push_back(action_feature);
-            DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
+            DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
         }
         // states
         for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {
             StateFeature * state_feature = StateFeature::create(state,k_idx);
             basis_features.push_back(state_feature);
-            DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
+            DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
         }
         // reward
         if(k_idx==0) { // take only the current reward into account
             for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
                 RewardFeature * reward_feature = RewardFeature::create(reward,k_idx);
                 basis_features.push_back(reward_feature);
-                DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
+                DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
             }
         }
     }
@@ -67,19 +67,19 @@ KMarkovCRF::KMarkovCRF():
     RelativeStateFeature * relative_state_feature;
     relative_state_feature = RelativeStateFeature::create(1,0,-1,0);
     basis_features.push_back(relative_state_feature);
-    DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
+    DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
     relative_state_feature = RelativeStateFeature::create(0,1,-1,0);
     basis_features.push_back(relative_state_feature);
-    DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
+    DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
     relative_state_feature = RelativeStateFeature::create(-1,0,-1,0);
     basis_features.push_back(relative_state_feature);
-    DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
+    DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
     relative_state_feature = RelativeStateFeature::create(0,-1,-1,0);
     basis_features.push_back(relative_state_feature);
-    DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
+    DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
     relative_state_feature = RelativeStateFeature::create(0,0,-1,0);
     basis_features.push_back(relative_state_feature);
-    DEBUG_OUT(1,"Added " << basis_features.back()->identifier() << " to basis features");
+    DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
 }
 
 KMarkovCRF::~KMarkovCRF() {
