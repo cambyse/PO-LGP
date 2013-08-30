@@ -61,10 +61,9 @@ struct RastriginFunction:ScalarFunction {
 
 struct SquareFunction:ScalarFunction {
   virtual double fs(arr& g, arr& H, const arr& x) {
-    double f=sumOfSqr(x);
     if(&g) g=2.*x;
     if(&H) H.setDiag(2., x.N);
-    return f;
+    return sumOfSqr(x);
   }
 };
 
@@ -112,41 +111,47 @@ struct ChoiceFunction:ScalarFunction {
 
 //===========================================================================
 
-struct ChoiceConstraintFunction:VectorFunction {
+struct ChoiceConstraintFunction:ConstrainedProblem {
   ChoiceFunction f;
   ChoiceConstraintFunction() {
   }
-  virtual void fv(arr& phi, arr& J, const arr& x) {
-    uint n=x.N;
-    arr J_f;
-    phi.resize(3);
-    if(&J) { J.resize(phi.N, n); J.setZero(); }
-    phi(0) = f.fs((&J?J[0]():NoArr), NoArr, x);
-    phi(1) = sumOfSqr(x)-1.;   if(&J) J[1]() = 2.*x;
-    phi(2) = -x(0);            if(&J) J(2,0) = -1.;
+  virtual double fs(arr& g, arr& H, const arr& x) {
+    return f.fs(g, H, x);
   }
-  virtual uint get_c(){ return 2; }
+
+  virtual void fv(arr& phi, arr& J, const arr& x) {
+    phi.resize(get_m());
+    if(&J) { J.resize(phi.N, x.N); J.setZero(); }
+    phi(0) = sumOfSqr(x)-.25;   if(&J) J[0]() = 2.*x;
+    phi(1) = -x(0);             if(&J) J(1,0) = -1.;
+  }
+  virtual uint get_n(){ return 2; }
+  virtual uint get_m(){ return 2; }
 };
 
 //===========================================================================
 
-struct SimpleConstraintFunction:VectorFunction {
+struct SimpleConstraintFunction:ConstrainedProblem {
   SimpleConstraintFunction() {
+  }
+  virtual double fs(arr& g, arr& H, const arr& x) {
+    //simple squared potential, displaced by 1
+    x(0) -= 1.;
+    double f=sumOfSqr(x)-1.;
+    if(&g) g=2.*x;
+    if(&H) H.setDiag(2., x.N);
+    x(0) += 1.;
+    return f;
   }
   virtual void fv(arr& phi, arr& J, const arr& x) {
     uint n=x.N;
-    arr J_f;
-
-    //simple squared potential, displaced by 1
-    x(0) -= 1.;
-    phi = x;
-    if(&J) J.setId(n);
-    x(0) += 1.;
-
-    phi.append(1.-sumOfSqr(x));  if(&J) J.append(-2.*x); //OUTSIDE the circle
-    phi.append(x(0));            if(&J){ J.append(0.*x); J(J.d0-1,0) = 1.; }
+    phi.resize(2);
+    if(&J) { J.resize(phi.N, n); J.setZero(); }
+    phi(0) = .25-sumOfSqr(x);  if(&J) J[0]() = -2.*x; //OUTSIDE the circle
+    phi(1) = x(0);             if(&J) J(1,0) = 1.;
   }
-  virtual uint get_c(){ return 2; }
+  virtual uint get_n(){ return 2; }
+  virtual uint get_m(){ return 2; }
 };
 
 //===========================================================================

@@ -32,12 +32,12 @@ void displayFunction(VectorFunction& F){
 // test standard constrained optimizers
 //
 
-void testConstraint(VectorFunction& f, arr& x_start=NoArr, uint iters=10){
+void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=10){
   enum MethodType { squaredPenalty=1, augmentedLag, logBarrier };
 
   MethodType method = (MethodType)MT::getParameter<int>("method");
 
-  UnconstrainedProblem F(f);
+  UnconstrainedProblem F(p);
 
   //switch on penalty terms
   switch(method){
@@ -59,17 +59,17 @@ void testConstraint(VectorFunction& f, arr& x_start=NoArr, uint iters=10){
   system("rm -f z.grad_all");
 
   for(uint k=0;k<iters;k++){
-    checkJacobian(f, x, 1e-4);
-    //checkGradient(F, x, 1e-4); //very convenient: check numerically whether the gradient is correctly implemented
-    //checkHessian (F, x, 1e-4);
-    checkJacobian(F, x, 1e-4);
+    cout <<"x_start=" <<x <<" mu=" <<F.mu <<" lambda=" <<F.lambda <<endl;
+    checkGradient((ScalarFunction&)p, x, 1e-4);
+    checkHessian ((ScalarFunction&)p, x, 1e-4);
+    checkJacobian((VectorFunction&)p, x, 1e-4);
 
-    //optRprop(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
+//    optRprop(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
     //optGradDescent(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
-//    optNewton(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
-    optGaussNewton(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
+    optNewton(x, F, OPT(verbose=2, stopTolerance=1e-3, maxStep=1e-1, stopIters=20, damping=1e-3, useAdaptiveDamping=true));
+//    optGaussNewton(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
 
-    displayFunction((VectorFunction&)F);
+    displayFunction((ScalarFunction&)F);
     MT::wait();
     gnuplot("load 'plt'", false, true);
     MT::wait();
@@ -98,7 +98,7 @@ void testConstraint(VectorFunction& f, arr& x_start=NoArr, uint iters=10){
 // test the phase one optimization
 //
 
-void testPhaseOne(VectorFunction& f){
+void testPhaseOne(ConstrainedProblem& f){
   PhaseOneProblem metaF(f);
 
   arr x;
@@ -118,8 +118,8 @@ void testPhaseOne(VectorFunction& f){
 int main(int argn,char** argv){
   MT::initCmdLine(argn,argv);
 
-//  ChoiceConstraintFunction F;
-  SimpleConstraintFunction F;
+  ChoiceConstraintFunction F;
+  //SimpleConstraintFunction F;
   testConstraint(F);
 
   return 0;
