@@ -7,7 +7,7 @@ using namespace std;
 UEyeCamera::UEyeCamera(int cid, int w, int h, int f):
                 camID(cid), width(w), height(h), fps(f) {
 
-  // TODO remove
+  // TODO remove. Gets any available camera.
   camID = 0;
 
   name = QString("video_");
@@ -32,7 +32,7 @@ QString UEyeCamera::getName() {
 
 void UEyeCamera::init() {
 // TODO check out how to initialize a specific camera
-  cout << "UEyeCamera(" << camID << ")::InitCamera()" << endl;
+  cout << "UEyeCamera()::InitCamera()" << endl;
   camStatus = is_InitCamera(&camID, NULL);
   query_status(camID, "InitCamera", &camStatus);
   cout << " - camID = " << camID << endl;
@@ -50,8 +50,9 @@ void UEyeCamera::init() {
   //query_status(camID, "SetDisplayMode", &camStatus);
 
   // probably not necessary, but better make sure..
-  //camStatus = is_SetExternalTrigger(camID, IS_SET_TRIGGER_OFF);
-  //query_status(camID, "SetExternalTrigger", &camStatus);
+  camStatus = is_SetExternalTrigger(camID, IS_SET_TRIGGER_OFF);
+  //camStatus = is_SetExternalTrigger(camID, IS_SET_TRIGGER_SOFTWARE);
+  query_status(camID, "SetExternalTrigger", &camStatus);
 
   //camStatus = is_GetSensorInfo(camID, &camInfo);
   //query_status(camID, "GetSensorInfo", &camStatus);
@@ -94,8 +95,17 @@ void UEyeCamera::init() {
   query_status(camID, "PixelClock", &camStatus);
   cout << " - old_pixelclock = " << old_pixelclock << endl;
 
+  UINT nRange[3];
+  memset(nRange, 0, 3*sizeof(UINT));
+  camStatus = is_PixelClock(camID, IS_PIXELCLOCK_CMD_GET_RANGE,
+                            (void*)nRange, sizeof(nRange));
+  query_status(camID, "PixelClock", &camStatus);
+  cout << " - min_pixelclock = " << nRange[0] << endl;
+  cout << " - max_pixelclock = " << nRange[1] << endl;
+  cout << " - step_pixelclock = " << nRange[2] << endl;
+
   // TODO how to determine this from the fps?
-  pixelclock = 80;
+  pixelclock = 86; // nRange[1];
   camStatus = is_PixelClock(camID, IS_PIXELCLOCK_CMD_SET,
                             (void*)&pixelclock, sizeof(pixelclock));
   query_status(camID, "PixelClock", &camStatus);
@@ -115,11 +125,18 @@ void UEyeCamera::init() {
 void UEyeCamera::open() {
   cout << "UEyeCamera(" << camID << ")::CaptureVideo" << endl;
   //camStatus = is_CaptureVideo(camID, IS_GET_LIVE);
-  camStatus = is_CaptureVideo(camID, IS_DONT_WAIT);
+  //camStatus = is_CaptureVideo(camID, IS_DONT_WAIT);
+  camStatus = is_CaptureVideo(camID, IS_WAIT);
   query_status(camID, "CaptureVideo", &camStatus);
+
+  camStatus = is_EnableEvent(camID, IS_SET_EVENT_FRAME);
+  query_status(camID, "EnableEvent", &camStatus);
 }
 
 void UEyeCamera::close() {
+  camStatus = is_DisableEvent(camID, IS_SET_EVENT_FRAME);
+  query_status(camID, "DisableEvent", &camStatus);
+
   camStatus = is_StopLiveVideo(camID, IS_FORCE_VIDEO_STOP);
   query_status(camID, "StopLiveVideo", &camStatus);
   
@@ -150,8 +167,6 @@ void UEyeCamera::grab() {
   mutex.lock();
   memcpy(image_copy, image, 3*width*height);
   mutex.unlock();
-  //cout << "x";
-  usleep(1000); //between 1000 and 5000 should be fine
   
   //camStatus = is_UnlockSeqBuf(camID, imageBuffNum, image);
   camStatus = is_UnlockSeqBuf(camID, IS_IGNORE_PARAMETER, image);
@@ -170,16 +185,16 @@ void UEyeCamera::getImage(char *p) {
 }
 
 void UEyeCamera::process() {
-  // moved to the recorder so that the beginning is serialized
-  //init();
-  //open();
-
   cout << "UEyeCamera(" << camID << ")::started() emitted" << endl;
   emit started();
   
   quit_flag = false;
-  while(!quit_flag)
+  while(!quit_flag) {
+    camStatus = is_WaitEvent(camID, IS_SET_EVENT_FRAME, INFINITE);
+    query_status(camID, "WaitEvent", &camStatus);
+
     grab();
+  }
   close();
 
   cout << "UEyeCamera(" << camID << ")::finished() emitted" << endl;
@@ -214,8 +229,8 @@ INT UEyeCamera::getImageID(char *buff) {
 }
 
 int UEyeCamera::getNumCameras() {
-  INT numCams, status;
-  status = is_GetNumberOfCameras(&numCams);
+  INT numCams = -1;
+  INT status = is_GetNumberOfCameras(&numCams);
   query_status(-1, "GetNumberOfCameras", &status);
   return (int)numCams;
 }

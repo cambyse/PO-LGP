@@ -76,6 +76,7 @@ OpenGL* Recorder::getGL() {
 void Recorder::setup() {
   numCams = UEyeCamera::getNumCameras();
   cout << "Recorder::numCams = " << numCams << endl;
+  cout << endl;
 
   if(numCams == 0) {
     cout << "!! No cams connected !!" << endl;
@@ -121,11 +122,14 @@ void Recorder::initThreads() {
 
   // start cameras
   for(int c = 0; c < numCams; c++) {
-    cout << endl;
     camera[c]->init();
-    camera[c]->open();
+    cout << endl;
   }
   cout << endl;
+  for(int c = 0; c < numCams; c++) {
+    camera[c]->open();
+    cout << endl;
+  }
 
   // start threads
   cout << "Recorder:: starting threads." << endl;
