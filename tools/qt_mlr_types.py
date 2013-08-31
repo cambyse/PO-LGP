@@ -9,10 +9,11 @@ def qdump__MT__String(d, value):
         p += 1
     d.putValue("'%s' [%i]" % (s,N))
 
-    d.putNumChild(1)
+    d.putNumChild(2)
     if d.isExpanded():
         with Children(d):
             d.putSubItem("N", N)
+            d.putSubItem("p", p)
 
 def qdump__MT__Array(d, value):
     p = value["p"]
@@ -21,21 +22,36 @@ def qdump__MT__Array(d, value):
     d0 = value["d0"]
     d1 = value["d1"]
     d2 = value["d2"]
-    s = "[ "
-    for i in xrange(N):
-        s += str(p.dereference()) + " "
-        p += 1
-    s += "]"
+    if nd==0:
+        s = "<>"
+    if nd==1:
+        s = "<%i>" %d0
+    if nd==2:
+        s = "<%i %i>"%(d0,d1)
+    # for i in xrange(N):
+    #     s += str(p.dereference()) + " "
+    #     p += 1
+    # s += "]"
     d.putValue(s)
-    d.putNumChild(1)
+    m=N
+    if m>10:
+        m=10
+    d.putNumChild(m+4)
     if d.isExpanded():
         with Children(d):
-            if nd==0:
-                d.putSubItem("<>", N)
-            if nd==1:
-                d.putSubItem("<%i>"%d0, N)
-            if nd==2:
-                d.putSubItem("<%i %i>"%(d0,d1), N)
+            d.putSubItem("N", N)
+            for i in xrange(m):
+                if nd==1:
+                    s = "(%i)" %(i)
+                if nd==2:
+                    s = "(%i,%i)"%(i/d1,i%d1)
+                if nd==3:
+                    s = "(%i,%i,%i)"%(i/d1,(i/d2)%d1,i%d2)
+                d.putSubItem(s, (p+i).dereference())
+            d.putSubItem("p", p)
+            d.putSubItem("reference", value["reference"])
+            d.putSubItem("special", value["special"])
+            d.putSubItem("aux", value["aux"])
             
 
 end
