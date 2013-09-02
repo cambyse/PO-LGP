@@ -149,18 +149,11 @@ private:
 
     QGraphicsView * view;                            ///< QGraphicsView to render the maze;
 
-    static const double state_size;                  ///< Size of states for rendering.
-    static const double wall_width;                  ///< Width of walls for rendering.
-    static const double reward_start_size;           ///< Size of reward start marker for rendering.
-    static const double reward_end_size;             ///< Size of reward end marker for rendering.
-    static const double reward_end_ratio;            ///< Length-to-width ratio of reward end marker (arrow) for rendering.
-    static const double text_scale;                  ///< Scale factor for text size.
-    static const QFont  text_font;                   ///< Font for texts.
-    static const double text_center;                 ///< How close the text should be positioned to the midpoint between start and end marker.
-
     double epsilon;                                  ///< Amount of stochasticity in transitions.
     MazeState current_state;                         ///< Current state of the agent in the maze.
     QGraphicsSvgItem *agent;                         ///< Svg image for rendering the agent.
+    QGraphicsLineItem *action_line;                  ///< Line showing the last action.
+    QGraphicsEllipseItem *action_point;              ///< Circle showing the last position for showing the last action.
     std::vector<QGraphicsItem*> borders;             ///< Graphic items for rendering the maze borders.
     std::vector<QGraphicsRectItem*> state_rects;     ///< Graphic items containing the state rects for rendering the states.
 

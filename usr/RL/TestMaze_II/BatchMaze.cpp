@@ -30,7 +30,7 @@
 #define LOG(x) DEBUG_OUT(1,x); log_file << x << std::endl;
 
 #define RUN_ACTIVE
-//#define X_SERVER
+#define X_SERVER
 #define USE_OMP
 
 using std::set;

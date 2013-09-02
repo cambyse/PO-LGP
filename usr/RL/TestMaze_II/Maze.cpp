@@ -13,18 +13,21 @@ using util::min;
 using util::max;
 using util::INVALID;
 
-const double Maze::state_size = 0.9;
-const double Maze::wall_width = 0.08;
-const double Maze::reward_start_size = 0.15;
-const double Maze::reward_end_size = 0.2;
-const double Maze::reward_end_ratio = 0.5;
-const double Maze::text_scale = 0.015;
-const QFont  Maze::text_font = QFont("Helvetica [Cronyx]", 12);
-const double Maze::text_center = 0.3;
+static const double state_size = 0.9;                             // Size of states for rendering.
+static const double wall_width = 0.08;                            // Width of walls for rendering.
+static const double reward_start_size = 0.15;                     // Size of reward start marker for rendering.
+static const double reward_end_size = 0.2;                        // Size of reward end marker for rendering.
+static const double reward_end_ratio = 0.5;                       // Length-to-width ratio of reward end marker (arrow) for rendering.
+static const double reward_end_notch = 0.1;                       // Depth of the arrow notch.
+static const double text_scale = 0.008;                           // Scale factor for text size.
+static const QFont  text_font = QFont("Helvetica [Cronyx]", 12);  // Font for texts.
+static const double text_center = 0.3;                            // How close the text should be positioned to the midpoint between start and end marker.
+static const double action_line_length_factor = 0.8;              // How long the action line is relative to the state size.
+static const double action_point_size_factor = 0.1;               // How large the action point is relative to the state size.
 
 const vector<Maze::wall_t> Maze::walls = {
 
-    /* 2x2 Maze */
+    /* 2x2 Maze *
     { 1, 3}
     /**/
 
@@ -45,6 +48,37 @@ const vector<Maze::wall_t> Maze::walls = {
     { 4, 5},
     { 6,10},
     {10,11}
+    /**/
+
+    /* 6x6 Maze */
+    {12, 18},
+    {13, 19},
+    {14, 20},
+    {15, 21},
+    {16, 22},
+    {17, 23},
+    { 2,  3},
+    { 8,  9},
+    {14, 15},
+    {20, 21},
+    {26, 27},
+    {32, 33},
+    {19, 25},
+    {25, 26},
+    {24, 30},
+    {25, 31},
+    {27, 33},
+    {28, 34},
+    {29, 35},
+    {27, 28},
+    {33, 34},
+    {28, 29},
+    {34, 35},
+    {22, 28},
+    {23, 29},
+    { 3,  9},
+    { 4, 10},
+    { 5, 11}
     /**/
 
     /* 10x10 Maze *
@@ -93,7 +127,7 @@ const vector<Maze::maze_reward_t> Maze::rewards = {
     { 3, 2, 1, 1, ON_RELEASE_NO_PUNISH,   0,   0, 200}
     /**/
 
-    /* 2x2 Maze */
+    /* 2x2 Maze *
     { 3, 1, 3, 1, EACH_TIME_NO_PUNISH, 200,   0,   0}
     // { 0, 3, 2, 1, EACH_TIME_NO_PUNISH, 200,   0,   0}
     /**/
@@ -112,6 +146,28 @@ const vector<Maze::maze_reward_t> Maze::rewards = {
     { 13,  8,  2, 1, ON_RELEASE_NO_PUNISH,   0, 200, 200},
     {  8,  1,  3, 1, ON_RELEASE_NO_PUNISH,   0,   0, 200}
     //{  8,  4,  4, 1, ON_RELEASE_NO_PUNISH, 200,   0, 200}
+    /**/
+
+    /* 6x6 Maze */
+    {13, 19, 1, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
+    {19, 25, 3, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
+    {25, 31, 2, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
+    {26, 27, 1, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
+    {28, 29, 1, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
+    {29, 35, 1, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
+    {35, 34, 1, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
+    {34, 33, 1, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
+    {33, 21, 3, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
+    {21, 23, 2, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
+    {22, 16, 3, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
+    {17, 11, 3, 1, ON_RELEASE_NO_PUNISH,  10,  10,  10},
+    {11,  4, 3, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
+    { 4, 10, 1, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
+    { 9,  8, 1, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
+    { 2,  7, 2, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
+    { 1,  0, 3, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
+    { 7,  6, 3, 1, ON_RELEASE_NO_PUNISH,  10,  10,  10},
+    { 0, 12, 2, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10}
     /**/
 
     /* 10x10 Maze *
@@ -139,8 +195,25 @@ const vector<Maze::maze_reward_t> Maze::rewards = {
 };
 
 const vector<Maze::door_t> Maze::doors = {
-    /* 2x2 Maze */
+    /* 2x2 Maze *
     door_t(MazeState(1,0), MazeState(1,1), MazeState(1,1),  RIGHT_BUTTON,-3, color_t(0.0,0.8,0.0) ),
+    /**/
+
+    /* 6x6 Maze */
+    door_t(MazeState(13), MazeState(19), MazeState(13),  DOWN_BUTTON, 0, color_t(0.8,0.0,0.0) ),
+    door_t(MazeState(19), MazeState(25), MazeState(19),    UP_BUTTON, 1, color_t(0.0,0.8,0.0) ),
+    door_t(MazeState(25), MazeState(31), MazeState(25),  DOWN_BUTTON, 0, color_t(0.8,0.0,0.0) ),
+    door_t(MazeState(26), MazeState(27), MazeState(26), RIGHT_BUTTON, 0, color_t(0.8,0.0,0.0) ),
+    door_t(MazeState(27), MazeState(28), MazeState(27), RIGHT_BUTTON, 0, color_t(0.8,0.0,0.0) ),
+    door_t(MazeState(28), MazeState(29), MazeState(28), RIGHT_BUTTON, 0, color_t(0.8,0.0,0.0) ),
+    door_t(MazeState(29), MazeState(35), MazeState(29),    UP_BUTTON, 1, color_t(0.0,0.8,0.0) ),
+    door_t(MazeState(35), MazeState(34), MazeState(35),  DOWN_BUTTON, 1, color_t(0.0,0.8,0.0) ),
+    door_t(MazeState(34), MazeState(33), MazeState(34),    UP_BUTTON, 1, color_t(0.0,0.8,0.0) ),
+    door_t(MazeState(33), MazeState(27), MazeState(33),  LEFT_BUTTON, 1, color_t(0.0,0.8,0.0) ),
+    door_t(MazeState(22), MazeState(16), MazeState(22),    UP_BUTTON, 0, color_t(0.8,0.0,0.0) ),
+    door_t(MazeState(10), MazeState( 4), MazeState(11), RIGHT_BUTTON,-4, color_t(0.0,0.0,1.0) ),
+    door_t(MazeState( 5), MazeState(11), MazeState( 3),  LEFT_BUTTON,-4, color_t(0.0,0.8,0.0) ),
+    door_t(MazeState( 9), MazeState( 8), MazeState( 9),  LEFT_BUTTON, 0, color_t(0.8,0.0,0.0) )
     /**/
 
     /* 10x10 Maze *
@@ -208,6 +281,11 @@ void Maze::render_initialize(QGraphicsView * v) {
         render_door(d);
     }
 
+    // Render action line and circle
+    double ap_size = state_size*action_point_size_factor;
+    action_line = scene->addLine(current_state.x(),current_state.y(),current_state.x(),current_state.y());
+    action_point = scene->addEllipse(current_state.x()-ap_size/2,current_state.y()-ap_size/2,ap_size,ap_size);
+
     // Rewards
     for(auto reward : rewards ) {
         render_reward(reward);
@@ -233,6 +311,29 @@ void Maze::render_update(const color_vector_t * color) {
     QSizeF s = agent->boundingRect().size();
     agent->setPos(current_state.x()-agent->scale()*s.width()/2, current_state.y()-agent->scale()*s.height()/2);
     agent->setElementId(agent->elementId()=="normal" ? "mirrored" : "normal");
+
+    // set action line and circle
+    MazeState last_state((current_instance->const_it()-1)->state);
+    double al_length = state_size*action_line_length_factor;
+    double ap_size = state_size*action_point_size_factor;
+    action_point->setRect(last_state.x()-ap_size/2,last_state.y()-ap_size/2,ap_size,ap_size);
+    switch((current_instance->const_it()-1)->action) {
+    case action_t::STAY:
+        action_line->setLine(last_state.x(),last_state.y(),last_state.x(),last_state.y());
+        break;
+    case action_t::UP:
+        action_line->setLine(last_state.x(),last_state.y(),last_state.x(),last_state.y()-al_length);
+        break;
+    case action_t::DOWN:
+        action_line->setLine(last_state.x(),last_state.y(),last_state.x(),last_state.y()+al_length);
+        break;
+    case action_t::LEFT:
+        action_line->setLine(last_state.x(),last_state.y(),last_state.x()-al_length,last_state.y());
+        break;
+    case action_t::RIGHT:
+        action_line->setLine(last_state.x(),last_state.y(),last_state.x()+al_length,last_state.y());
+        break;
+    }
 
     // show reward by border color
     int border_idx = 0;
@@ -800,7 +901,7 @@ void Maze::render_door(door_t dt) {
         text_y-text_scale*box.height()/2
         );
     txt->setScale(text_scale);
-    txt->setDefaultTextColor(QColor(0,0,0));
+    txt->setDefaultTextColor(door_color);
 }
 
 void Maze::render_reward(maze_reward_t r) {
@@ -875,26 +976,34 @@ void Maze::render_reward(maze_reward_t r) {
         DEBUG_DEAD_LINE;
     }
 
-
-    // end
+    //========================//
+    // drawing the end marker //
+    //========================//
+    // normal vector in end direction
     double end_vector_x = x_end-x_control;
     double end_vector_y = y_end-y_control;
     double end_vector_norm = sqrt( pow(end_vector_x,2) + pow(end_vector_y,2) );
     end_vector_x /= end_vector_norm;
     end_vector_y /= end_vector_norm;
+    // normal vector perpendicular to end direction
     double end_cross_vector_x = +end_vector_y;
     double end_cross_vector_y = -end_vector_x;
+    // draw arrow
     QPainterPath end_path;
-    end_path.moveTo(x_end, y_end);
+    end_path.moveTo(x_end, y_end); // point
     end_path.lineTo(
         x_end-reward_end_size*(end_vector_x+end_cross_vector_x*reward_end_ratio/2),
         y_end-reward_end_size*(end_vector_y+end_cross_vector_y*reward_end_ratio/2)
-        );
+        ); // first wing
+    end_path.lineTo(
+        x_end-reward_end_size*(end_vector_x*(1-reward_end_notch)),
+        y_end-reward_end_size*(end_vector_y*(1-reward_end_notch))
+        ); // notch
     end_path.lineTo(
         x_end-reward_end_size*(end_vector_x-end_cross_vector_x*reward_end_ratio/2),
         y_end-reward_end_size*(end_vector_y-end_cross_vector_y*reward_end_ratio/2)
-        );
-    end_path.lineTo(x_end, y_end);
+        ); // second wing
+    end_path.lineTo(x_end, y_end); // close at point
     scene->addPath(end_path,marker_pen,QBrush(color));
 
     // text
