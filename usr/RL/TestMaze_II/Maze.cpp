@@ -22,8 +22,10 @@ static const double reward_end_notch = 0.25;                      // Depth of th
 static const double text_scale = 0.008;                           // Scale factor for text size.
 static const QFont  text_font = QFont("Helvetica [Cronyx]", 12);  // Font for texts.
 static const double text_center = 0.3;                            // How close the text should be positioned to the midpoint between start and end marker.
+static const double border_margin = 0.4*state_size;               // Margin for drawing the border around the maze.
 static const double action_line_length_factor = 0.8;              // How long the action line is relative to the state size.
 static const double action_point_size_factor = 0.5;               // How large the action point is relative to the state size.
+static const bool draw_text = false;                              // Whether to draw texts.
 
 const vector<Maze::wall_t> Maze::walls = {
 
@@ -149,25 +151,25 @@ const vector<Maze::maze_reward_t> Maze::rewards = {
     /**/
 
     /* 6x6 Maze */
-    {13, 19, 1, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
-    {19, 25, 3, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
-    {25, 31, 2, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
-    {26, 27, 1, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
-    {28, 29, 1, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
-    {29, 35, 1, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
-    {35, 34, 1, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
-    {34, 33, 1, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
-    {33, 21, 2, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
-    {21, 23, 2, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
-    {22, 16, 3, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
-    {17, 11, 3, 1, ON_RELEASE_NO_PUNISH,  10,  10,  10},
-    {11,  4, 3, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
-    { 4, 10, 1, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
-    { 9,  8, 1, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
-    { 2,  7, 2, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
-    { 1,  0, 3, 1, ON_RELEASE_NO_PUNISH,  10,  10,  10},
-    { 7,  6, 3, 1, ON_RELEASE_NO_PUNISH,  10,  10,  10},
-    { 0, 12, 2, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10}
+    {25, 31, 2, 1,  EACH_TIME_NO_PUNISH, 100,   0,   0},
+    {19, 25, 3, 1,  EACH_TIME_NO_PUNISH,  50,   0,   0},
+    {13, 19, 1, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
+    {26, 27, 1, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
+    {28, 29, 1, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
+    {29, 35, 1, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
+    {35, 34, 1, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
+    {33, 21, 2, 1,  EACH_TIME_NO_PUNISH, 100,   0,   0},
+    {34, 33, 1, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
+    {21, 23, 2, 1,  EACH_TIME_NO_PUNISH, 100,   0,   0},
+    {22, 16, 3, 1,  EACH_TIME_NO_PUNISH,  50,   0,   0},
+    {17, 11, 3, 1, ON_RELEASE_NO_PUNISH,  50,   0,   0},
+    { 4, 10, 1, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
+    {11,  4, 3, 1,  EACH_TIME_NO_PUNISH,  50,   0,   0},
+    { 9,  8, 1, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
+    { 7,  6, 3, 1, ON_RELEASE_NO_PUNISH,  50,   0,   0},
+    { 2,  7, 2, 1,  EACH_TIME_NO_PUNISH, 100,   0,   0},
+    { 0, 12, 2, 1,  EACH_TIME_NO_PUNISH, 100,   0,   0},
+    { 1,  0, 3, 1, ON_RELEASE_NO_PUNISH,  50,   0,   0}
     /**/
 
     /* 10x10 Maze *
@@ -200,20 +202,20 @@ const vector<Maze::door_t> Maze::doors = {
     /**/
 
     /* 6x6 Maze */
-    door_t(MazeState(13), MazeState(19), MazeState(13),  DOWN_BUTTON, 0, color_t(0.8,0.0,0.0) ),
-    door_t(MazeState(19), MazeState(25), MazeState(19),    UP_BUTTON, 1, color_t(0.0,0.8,0.0) ),
-    door_t(MazeState(25), MazeState(31), MazeState(25),  DOWN_BUTTON, 0, color_t(0.8,0.0,0.0) ),
-    door_t(MazeState(26), MazeState(27), MazeState(26), RIGHT_BUTTON, 0, color_t(0.8,0.0,0.0) ),
-    door_t(MazeState(27), MazeState(28), MazeState(27), RIGHT_BUTTON, 0, color_t(0.8,0.0,0.0) ),
-    door_t(MazeState(28), MazeState(29), MazeState(28), RIGHT_BUTTON, 0, color_t(0.8,0.0,0.0) ),
-    door_t(MazeState(29), MazeState(35), MazeState(29),    UP_BUTTON, 1, color_t(0.0,0.8,0.0) ),
-    door_t(MazeState(35), MazeState(34), MazeState(35),  DOWN_BUTTON, 1, color_t(0.0,0.8,0.0) ),
-    door_t(MazeState(34), MazeState(33), MazeState(34),    UP_BUTTON, 1, color_t(0.0,0.8,0.0) ),
-    door_t(MazeState(33), MazeState(27), MazeState(33),  LEFT_BUTTON, 1, color_t(0.0,0.8,0.0) ),
-    door_t(MazeState(22), MazeState(16), MazeState(22),    UP_BUTTON, 0, color_t(0.8,0.0,0.0) ),
-    door_t(MazeState(10), MazeState( 4), MazeState(11), RIGHT_BUTTON,-4, color_t(0.0,0.0,1.0) ),
-    door_t(MazeState( 5), MazeState(11), MazeState( 3),  LEFT_BUTTON,-4, color_t(0.0,0.8,0.0) ),
-    door_t(MazeState( 9), MazeState( 8), MazeState( 9),  LEFT_BUTTON, 0, color_t(0.8,0.0,0.0) )
+    door_t(MazeState(13), MazeState(19), MazeState(13),  DOWN_BUTTON,-0, color_t(0.0,0.8,0.0) ),
+    door_t(MazeState(19), MazeState(25), MazeState(19),    UP_BUTTON,-1, color_t(0.0,0.4,0.0) ),
+    door_t(MazeState(25), MazeState(31), MazeState(25),  DOWN_BUTTON,-0, color_t(0.0,0.8,0.0) ),
+    door_t(MazeState(26), MazeState(27), MazeState(26), RIGHT_BUTTON,-0, color_t(0.0,0.8,0.0) ),
+    door_t(MazeState(27), MazeState(28), MazeState(27), RIGHT_BUTTON,-0, color_t(0.0,0.8,0.0) ),
+    door_t(MazeState(28), MazeState(29), MazeState(28), RIGHT_BUTTON,-0, color_t(0.0,0.8,0.0) ),
+    door_t(MazeState(29), MazeState(35), MazeState(29),    UP_BUTTON,-1, color_t(0.0,0.4,0.0) ),
+    door_t(MazeState(35), MazeState(34), MazeState(35),  DOWN_BUTTON,-1, color_t(0.0,0.4,0.0) ),
+    door_t(MazeState(34), MazeState(33), MazeState(34),    UP_BUTTON,-1, color_t(0.0,0.4,0.0) ),
+    door_t(MazeState(33), MazeState(27), MazeState(33),  LEFT_BUTTON,-1, color_t(0.0,0.4,0.0) ),
+    door_t(MazeState(22), MazeState(16), MazeState(22),    UP_BUTTON,-0, color_t(0.0,0.8,0.0) ),
+    door_t(MazeState(10), MazeState( 4), MazeState(11), RIGHT_BUTTON,-4, color_t(0.0,0.2,0.8) ),
+    door_t(MazeState( 5), MazeState(11), MazeState( 3),  LEFT_BUTTON,-4, color_t(0.6,0.0,0.8) ),
+    door_t(MazeState( 9), MazeState( 8), MazeState( 9),  LEFT_BUTTON,-0, color_t(0.0,0.8,0.0) )
     /**/
 
     /* 10x10 Maze *
@@ -752,10 +754,10 @@ void Maze::frame_maze() {
 
     MazeState first_maze_state(stateIt_t::first());
     MazeState last_maze_state(stateIt_t::last());
-    double border_x = first_maze_state.x()-state_size/2 - 0.1*state_size;
-    double border_y = first_maze_state.y()-state_size/2 - 0.1*state_size;
-    double border_width = last_maze_state.x()+state_size/2 - border_x + 0.1*state_size;
-    double border_height = last_maze_state.y()+state_size/2 - border_y + 0.1*state_size;
+    double border_x = first_maze_state.x()-state_size/2 - border_margin;
+    double border_y = first_maze_state.y()-state_size/2 - border_margin;
+    double border_width = last_maze_state.x()+state_size/2 - border_x + border_margin;
+    double border_height = last_maze_state.y()+state_size/2 - border_y + border_margin;
     double reward_magnitude = util::max<double>(fabs(reward_t::max_reward), fabs(reward_t::min_reward));
     for(rewardIt_t rewIt=rewardIt_t::first(); rewIt!=INVALID; ++rewIt) {
         double intensity = ((reward_t)rewIt)/reward_magnitude;
@@ -894,17 +896,19 @@ void Maze::render_door(door_t dt) {
     }
 
     // add text
-    QGraphicsTextItem * txt = scene->addText(
-        QString("t=%1").arg(QString::number(delay)),
-        text_font
-        );
-    QRectF box = txt->boundingRect();
-    txt->setPos(
-        text_x-text_scale*box.width()/2,
-        text_y-text_scale*box.height()/2
-        );
-    txt->setScale(text_scale);
-    txt->setDefaultTextColor(door_color);
+    if(draw_text) {
+        QGraphicsTextItem * txt = scene->addText(
+            QString("t=%1").arg(QString::number(delay)),
+            text_font
+            );
+        QRectF box = txt->boundingRect();
+        txt->setPos(
+            text_x-text_scale*box.width()/2,
+            text_y-text_scale*box.height()/2
+            );
+        txt->setScale(text_scale);
+        txt->setDefaultTextColor(door_color);
+    }
 }
 
 void Maze::render_reward(maze_reward_t r) {
@@ -1010,21 +1014,23 @@ void Maze::render_reward(maze_reward_t r) {
     scene->addPath(end_path,marker_pen,QBrush(color));
 
     // text
-    double mid_point_x = x_start + (x_end - x_start)/2;
-    double mid_point_y = y_start + (y_end - y_start)/2;
-    idx_t time_delay = (idx_t)r[TIME_DELAY];
-    reward_t reward = (reward_t)r[REWARD_VALUE];
-    QGraphicsTextItem * txt = scene->addText(
-        QString("t=%1,r=%2").arg(QString::number(time_delay)).arg(QString::number(reward)),
-        text_font
-        );
-    QRectF box = txt->boundingRect();
-    txt->setPos(
-        x_control+(mid_point_x-x_control)*text_center-text_scale*box.width()/2,
-        y_control+(mid_point_y-y_control)*text_center-text_scale*box.height()/2
-        );
-    txt->setScale(text_scale);
-    txt->setDefaultTextColor(color);
+    if(draw_text) {
+        double mid_point_x = x_start + (x_end - x_start)/2;
+        double mid_point_y = y_start + (y_end - y_start)/2;
+        idx_t time_delay = (idx_t)r[TIME_DELAY];
+        reward_t reward = (reward_t)r[REWARD_VALUE];
+        QGraphicsTextItem * txt = scene->addText(
+            QString("t=%1,r=%2").arg(QString::number(time_delay)).arg(QString::number(reward)),
+            text_font
+            );
+        QRectF box = txt->boundingRect();
+        txt->setPos(
+            x_control+(mid_point_x-x_control)*text_center-text_scale*box.width()/2,
+            y_control+(mid_point_y-y_control)*text_center-text_scale*box.height()/2
+            );
+        txt->setScale(text_scale);
+        txt->setDefaultTextColor(color);
+    }
 }
 
 void Maze::rescale_scene(QGraphicsView * view) {
