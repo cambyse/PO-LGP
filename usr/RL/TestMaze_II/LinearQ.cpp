@@ -72,6 +72,24 @@ LinearQ::LinearQ(const double& d):
         }
     }
 
+    // relative state features
+    RelativeStateFeature * relative_state_feature;
+    relative_state_feature = RelativeStateFeature::create(1,0,-1,0);
+    basis_features.push_back(relative_state_feature);
+    DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+    relative_state_feature = RelativeStateFeature::create(0,1,-1,0);
+    basis_features.push_back(relative_state_feature);
+    DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+    relative_state_feature = RelativeStateFeature::create(-1,0,-1,0);
+    basis_features.push_back(relative_state_feature);
+    DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+    relative_state_feature = RelativeStateFeature::create(0,-1,-1,0);
+    basis_features.push_back(relative_state_feature);
+    DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+    relative_state_feature = RelativeStateFeature::create(0,0,-1,0);
+    basis_features.push_back(relative_state_feature);
+    DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+
     // also add a unit feature
     ConstFeature * const_feature = ConstFeature::create(1);
     basis_features.push_back(const_feature);

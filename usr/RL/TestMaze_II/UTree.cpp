@@ -65,12 +65,31 @@ UTree::UTree(const double& d):
             DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
         }
         // reward
-        for(reward_t reward : rewardIt_t::all) {
-            RewardFeature * reward_feature = RewardFeature::create(reward,k_idx);
-            basis_features.push_back(reward_feature);
-            DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
-        }
+        // Don't discriminate based on rewards
+        // for(reward_t reward : rewardIt_t::all) {
+        //     RewardFeature * reward_feature = RewardFeature::create(reward,k_idx);
+        //     basis_features.push_back(reward_feature);
+        //     DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+        // }
     }
+
+    // relative state features
+    RelativeStateFeature * relative_state_feature;
+    relative_state_feature = RelativeStateFeature::create(1,0,-1,0);
+    basis_features.push_back(relative_state_feature);
+    DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+    relative_state_feature = RelativeStateFeature::create(0,1,-1,0);
+    basis_features.push_back(relative_state_feature);
+    DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+    relative_state_feature = RelativeStateFeature::create(-1,0,-1,0);
+    basis_features.push_back(relative_state_feature);
+    DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+    relative_state_feature = RelativeStateFeature::create(0,-1,-1,0);
+    basis_features.push_back(relative_state_feature);
+    DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+    relative_state_feature = RelativeStateFeature::create(0,0,-1,0);
+    basis_features.push_back(relative_state_feature);
+    DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
 }
 
 UTree::~UTree() {}
@@ -115,7 +134,8 @@ UTree::probability_t UTree::get_prediction(
     //--------------------------//
     // find the right leaf node //
     //--------------------------//
-    node_t node = find_leaf_node(instance);
+    instance_t * new_instance = instance_t::create(action, state_to, reward, instance, nullptr);
+    node_t node = find_leaf_node(new_instance);
 
     //----------------------------------//
     // calculate transition probability //
@@ -130,14 +150,11 @@ UTree::probability_t UTree::get_prediction(
         // number of times action a was performed.
         unsigned long transition_counter = 0;
         unsigned long action_counter = 0;
-        for( const instance_t * insPtr : node_info_map[node].instance_vector ) {
-            const_instanceIt_t next_instance = insPtr->const_it()+1;
-            if(next_instance!=util::INVALID) {
-                if(next_instance->action==action) {
-                    ++action_counter;
-                    if(next_instance->state==state_to && next_instance->reward==reward) {
-                        ++transition_counter;
-                    }
+        for( const instance_t * current_instance : node_info_map[node].instance_vector ) {
+            if(current_instance->action==action) {
+                ++action_counter;
+                if(current_instance->state==state_to && current_instance->reward==reward) {
+                    ++transition_counter;
                 }
             }
         }
@@ -651,28 +668,25 @@ double UTree::score_leaf_node(const node_t leaf_node, const Feature* feature) co
     // iterate through instances
     for(const instance_t * instance : instance_vector) {
 
-        // next instance (that provides the actual data)
-        const_instanceIt_t next_instance = instance->const_it()+1;
-        if(next_instance==util::INVALID) {
-            continue;
-        }
-
-        // construct state-action pair
-        f_ret_t f_ret = feature->evaluate(instance); // feature return value defining the potential new leaf node
-        action_t action = next_instance->action;     // action that was performed from current node
-        pair<f_ret_t,action_t> node_action_pair = make_pair(f_ret,action);
-
-        // remember state/leaf
-        feature_return_values.insert(f_ret);
-
         // update samples
-
         switch(expansion_type) {
         case UTILITY_EXPANSION:
             // A sample consists of the reward actually received after
             // performing the action plus the discounted state value of the leaf
             // node that was actually reached.
         {
+            // next instance (that provides the actual data)
+            const_instanceIt_t next_instance = instance->const_it()+1;
+            if(next_instance==util::INVALID) {
+                continue;
+            }
+            // construct state-action pair
+            f_ret_t f_ret = feature->evaluate(instance); // feature return value defining the potential new leaf node
+            action_t action = next_instance->action;     // action that was performed from current node
+            pair<f_ret_t,action_t> node_action_pair = make_pair(f_ret,action);
+            // remember state/leaf
+            feature_return_values.insert(f_ret);
+            // compute utility and add sample
             node_t next_state = find_leaf_node(next_instance);
             double util = next_instance->reward + discount*node_info_map[next_state].max_state_action_value;
             utility_samples[node_action_pair].push_back(util);
@@ -683,10 +697,22 @@ double UTree::score_leaf_node(const node_t leaf_node, const Feature* feature) co
             // A sample consists of the state (not leaf node) that was actually
             // reached after performing the action and the reward that was
             // actually received.
-            if(next_instance!=util::INVALID) {
-                state_reward_samples[node_action_pair].push_back(make_pair(next_instance->state, next_instance->reward));
+        {
+            // previous instance
+            const_instanceIt_t previous_instance = instance->const_it()-1;
+            if(previous_instance==util::INVALID) {
+                continue;
             }
-            break;
+            // construct state-action pair
+            f_ret_t f_ret = feature->evaluate(instance); // feature return value defining the leaf node used for calculating predictions
+            action_t action = previous_instance->action; // action that was performed to current node
+            pair<f_ret_t,action_t> node_action_pair = make_pair(f_ret,action);
+            // remember state/leaf
+            feature_return_values.insert(f_ret);
+            // add sample
+            state_reward_samples[node_action_pair].push_back(make_pair(instance->state, instance->reward));
+        }
+        break;
         default:
             DEBUG_DEAD_LINE;
         }

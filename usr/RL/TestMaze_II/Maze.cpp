@@ -52,7 +52,7 @@ const vector<Maze::wall_t> Maze::walls = {
     {10,11}
     /**/
 
-    /* 6x6 Maze */
+    /* 6x6 Maze *
     {12, 18},
     {13, 19},
     {14, 20},
@@ -150,7 +150,7 @@ const vector<Maze::maze_reward_t> Maze::rewards = {
     //{  8,  4,  4, 1, ON_RELEASE_NO_PUNISH, 200,   0, 200}
     /**/
 
-    /* 6x6 Maze */
+    /* 6x6 Maze *
     {25, 31, 2, 1,  EACH_TIME_NO_PUNISH, 100,   0,   0},
     {19, 25, 3, 1,  EACH_TIME_NO_PUNISH,  50,   0,   0},
     {13, 19, 1, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
@@ -201,7 +201,7 @@ const vector<Maze::door_t> Maze::doors = {
     door_t(MazeState(1,0), MazeState(1,1), MazeState(1,1),  RIGHT_BUTTON,-3, color_t(0.0,0.8,0.0) ),
     /**/
 
-    /* 6x6 Maze */
+    /* 6x6 Maze *
     door_t(MazeState(13), MazeState(19), MazeState(13),  DOWN_BUTTON,-0, color_t(0.0,0.8,0.0) ),
     door_t(MazeState(19), MazeState(25), MazeState(19),    UP_BUTTON,-1, color_t(0.0,0.4,0.0) ),
     door_t(MazeState(25), MazeState(31), MazeState(25),  DOWN_BUTTON,-0, color_t(0.0,0.8,0.0) ),

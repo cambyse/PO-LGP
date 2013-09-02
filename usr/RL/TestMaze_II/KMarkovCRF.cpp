@@ -54,7 +54,7 @@ KMarkovCRF::KMarkovCRF():
             DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
         }
         // reward
-        if(k_idx==0) { // take only the current reward into account
+        if(k_idx==0) { // take only the current reward into account (for predicting only)
             for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
                 RewardFeature * reward_feature = RewardFeature::create(reward,k_idx);
                 basis_features.push_back(reward_feature);

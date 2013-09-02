@@ -119,6 +119,7 @@ void TestMaze_II::collect_episode(const int& length) {
         update_current_instance(action,state_to,reward);
         add_action_state_reward_tripel(action,state_to,reward);
     }
+    maze.render_update();
 }
 
 void TestMaze_II::update_current_instance(action_t action, state_t state, reward_t reward, bool invalidate_search_tree) {
