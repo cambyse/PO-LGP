@@ -43,8 +43,10 @@ private:
     // Maze GUI etc. //
     //---------------//
 
+    // for the plotting window
     QCustomPlot * plotter;
 
+    // for setting the different planers
     enum PLANNER_TYPE {
         NONE,
         OPTIMAL_PLANNER,
@@ -55,19 +57,33 @@ private:
         LINEAR_Q_VALUE
     } planner_type;
 
+    // the user interface
     Ui::TestMaze_IIClass ui;
+
+    // the maze / the world
     Maze maze;
 
-    bool record, plot, start_new_episode, search_tree_invalid;
+    // current instance (essentially the same as the maze instance)
     instance_t * current_instance;
+
+    // state flags
+    bool record, plot, start_new_episode, search_tree_invalid, save_png_on_transition;
+
+    // file for writing out transitions
     std::ofstream plot_file;
 
+    // counter for saved png files
+    unsigned int png_counter;
+
+    // time for repeated execution of actions
     QTimer * random_timer, * action_timer;
 
+    // stuff for a persistent console history
     std::vector<QString> console_history;
     size_t history_position;
     QFile history_file;
 
+    // this discout that is used
     double discount;
 
     //--------//
@@ -111,6 +127,9 @@ private:
     );
     void clear_data();
     void fully_expand_utree();
+    void save_to_png(QString file_name) const;
+    void perform_transition(const action_t& action);
+    void perform_transition(const action_t& action, state_t& state_to, reward_t& reward);
 
 private slots:
     void render();

@@ -18,12 +18,12 @@ static const double wall_width = 0.08;                            // Width of wa
 static const double reward_start_size = 0.15;                     // Size of reward start marker for rendering.
 static const double reward_end_size = 0.2;                        // Size of reward end marker for rendering.
 static const double reward_end_ratio = 0.5;                       // Length-to-width ratio of reward end marker (arrow) for rendering.
-static const double reward_end_notch = 0.1;                       // Depth of the arrow notch.
+static const double reward_end_notch = 0.25;                      // Depth of the arrow notch.
 static const double text_scale = 0.008;                           // Scale factor for text size.
 static const QFont  text_font = QFont("Helvetica [Cronyx]", 12);  // Font for texts.
 static const double text_center = 0.3;                            // How close the text should be positioned to the midpoint between start and end marker.
 static const double action_line_length_factor = 0.8;              // How long the action line is relative to the state size.
-static const double action_point_size_factor = 0.1;               // How large the action point is relative to the state size.
+static const double action_point_size_factor = 0.5;               // How large the action point is relative to the state size.
 
 const vector<Maze::wall_t> Maze::walls = {
 
@@ -157,7 +157,7 @@ const vector<Maze::maze_reward_t> Maze::rewards = {
     {29, 35, 1, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
     {35, 34, 1, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
     {34, 33, 1, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
-    {33, 21, 3, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
+    {33, 21, 2, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
     {21, 23, 2, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
     {22, 16, 3, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
     {17, 11, 3, 1, ON_RELEASE_NO_PUNISH,  10,  10,  10},
@@ -165,7 +165,7 @@ const vector<Maze::maze_reward_t> Maze::rewards = {
     { 4, 10, 1, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
     { 9,  8, 1, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
     { 2,  7, 2, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
-    { 1,  0, 3, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10},
+    { 1,  0, 3, 1, ON_RELEASE_NO_PUNISH,  10,  10,  10},
     { 7,  6, 3, 1, ON_RELEASE_NO_PUNISH,  10,  10,  10},
     { 0, 12, 2, 1,  EACH_TIME_NO_PUNISH,  10,  10,  10}
     /**/
@@ -282,9 +282,12 @@ void Maze::render_initialize(QGraphicsView * v) {
     }
 
     // Render action line and circle
+    QPen action_line_pen(QColor(0,0,0,50),0.1,Qt::SolidLine,Qt::RoundCap);
+    QPen action_point_pen(QColor(0,0,0),0.01,Qt::SolidLine,Qt::RoundCap);
+    QBrush action_point_brush(QColor(0,0,0,30));
+    action_line = scene->addLine(current_state.x(),current_state.y(),current_state.x(),current_state.y(),action_line_pen);
     double ap_size = state_size*action_point_size_factor;
-    action_line = scene->addLine(current_state.x(),current_state.y(),current_state.x(),current_state.y());
-    action_point = scene->addEllipse(current_state.x()-ap_size/2,current_state.y()-ap_size/2,ap_size,ap_size);
+    action_point = scene->addEllipse(current_state.x()-ap_size/2,current_state.y()-ap_size/2,ap_size,ap_size,action_point_pen,action_point_brush);
 
     // Rewards
     for(auto reward : rewards ) {
@@ -317,7 +320,7 @@ void Maze::render_update(const color_vector_t * color) {
     double al_length = state_size*action_line_length_factor;
     double ap_size = state_size*action_point_size_factor;
     action_point->setRect(last_state.x()-ap_size/2,last_state.y()-ap_size/2,ap_size,ap_size);
-    switch((current_instance->const_it()-1)->action) {
+    switch(current_instance->action) {
     case action_t::STAY:
         action_line->setLine(last_state.x(),last_state.y(),last_state.x(),last_state.y());
         break;

@@ -34,8 +34,9 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     QWidget(parent),
     planner_type(OPTIMAL_PLANNER),
     maze(0.0),
-    record(false), plot(false), start_new_episode(false), search_tree_invalid(false),
     current_instance(nullptr),
+    record(false), plot(false), start_new_episode(false), search_tree_invalid(false), save_png_on_transition(false),
+    png_counter(0),
     random_timer(nullptr), action_timer(nullptr),
     console_history(1,"END OF HISTORY"),
     history_position(0),
@@ -176,20 +177,44 @@ void TestMaze_II::fully_expand_utree() {
     }
 }
 
+void TestMaze_II::save_to_png(QString file_name) const {
+    DEBUG_OUT(1,"Saving Maze to file '" << (const char*)file_name.toLatin1() << "'");
+    QGraphicsScene * scene = ui.graphicsView->scene();
+    QImage img(2000,2000,QImage::Format_ARGB32_Premultiplied);
+    QPainter p(&img);
+    scene->render(&p);
+    p.end();
+    bool ok = img.save(file_name);
+    if(!ok) {
+        DEBUG_OUT(1,"    Error: could not save maze");
+    }
+}
+
+void TestMaze_II::perform_transition(const action_t& action) {
+    state_t s;
+    reward_t r;
+    perform_transition(action, s, r);
+}
+
+void TestMaze_II::perform_transition(const action_t& action, state_t& state_to, reward_t& reward) {
+    maze.perform_transition(action,state_to,reward);
+    update_current_instance(action,state_to,reward);
+    maze.render_update();
+    if(record) {
+        add_action_state_reward_tripel(action,state_to,reward);
+    }
+    if(save_png_on_transition) {
+        QString file_name = QString("Maze_%1.png").arg(QString::number(png_counter++),(int)4,QChar('0'));
+        save_to_png(file_name);
+    }
+}
+
 void TestMaze_II::render() {
     maze.render_update();
 }
 
 void TestMaze_II::random_action() {
-    action_t action = (action_t)(action_t::random_action());
-    state_t state_to;
-    reward_t reward;
-    maze.perform_transition(action,state_to,reward);
-    update_current_instance(action,state_to,reward);
-    if(record) {
-        add_action_state_reward_tripel(action,state_to,reward);
-    }
-    maze.render_update();
+    perform_transition(action_t::random_action());
 }
 
 void TestMaze_II::choose_action() {
@@ -266,11 +291,7 @@ void TestMaze_II::choose_action() {
     }
     state_t state_to;
     reward_t reward;
-    maze.perform_transition(action,state_to,reward);
-    update_current_instance(action,state_to,reward,false);
-    if(record) {
-        add_action_state_reward_tripel(action,state_to,reward);
-    }
+    perform_transition(action,state_to,reward);
 
     // debugging
     switch(planner_type) {
@@ -323,8 +344,6 @@ void TestMaze_II::choose_action() {
         DEBUG_OUT(0,"After pruning:");
         look_ahead_search.print_tree_statistics();
     }
-
-    maze.render_update();
 }
 
 void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
@@ -383,6 +402,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString option_3e_s(                     "                                          lq/linear-q. . . . . . . . . . .-> use linear Q-function approximation");
     QString option_4_s(                      "                               target. . . . . . . . . . . . . . . . . . .-> activate a target state");
     QString option_5_s(                      "                               prune-tree. . . . . . . . . . . . . . . . .-> prune search tree");
+    QString option_6_s(                      "                               png . . . . . . . . . . . . . . . . . . . .-> save a png image of the maze on transition");
     QString test_s(                          "    test . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> test");
 
     QString maze_s(                        "\n    -----------------------------------Maze-----------------------------------");
@@ -443,6 +463,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     set_s += "\n" + option_3e_s;
     set_s += "\n" + option_4_s;
     set_s += "\n" + option_5_s;
+    set_s += "\n" + option_6_s;
 
     QString invalid_args_s( "    invalid arguments" );
 
@@ -527,55 +548,15 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             TO_CONSOLE( pair_delay_distribution_s );
             TO_CONSOLE( mediator_probability_s );
         } else if(str_args[0]=="left" || str_args[0]=="l") { // left
-            action_t action = action_t::LEFT;
-            state_t state_to;
-            reward_t reward;
-            maze.perform_transition(action,state_to,reward);
-            update_current_instance(action,state_to,reward);
-            if(record) {
-                add_action_state_reward_tripel(action,state_to,reward);
-            }
-            maze.render_update();
+            perform_transition(action_t::LEFT);
         } else if(str_args[0]=="right" || str_args[0]=="r") { // right
-            action_t action = action_t::RIGHT;
-            state_t state_to;
-            reward_t reward;
-            maze.perform_transition(action,state_to,reward);
-            update_current_instance(action,state_to,reward);
-            if(record) {
-                add_action_state_reward_tripel(action,state_to,reward);
-            }
-            maze.render_update();
+            perform_transition(action_t::RIGHT);
         } else if(str_args[0]=="up" || str_args[0]=="u") { // up
-            action_t action = action_t::UP;
-            state_t state_to;
-            reward_t reward;
-            maze.perform_transition(action,state_to,reward);
-            update_current_instance(action,state_to,reward);
-            if(record) {
-                add_action_state_reward_tripel(action,state_to,reward);
-            }
-            maze.render_update();
+            perform_transition(action_t::UP);
         } else if(str_args[0]=="down" || str_args[0]=="d") { // down
-            action_t action = action_t::DOWN;
-            state_t state_to;
-            reward_t reward;
-            maze.perform_transition(action,state_to,reward);
-            update_current_instance(action,state_to,reward);
-            if(record) {
-                add_action_state_reward_tripel(action,state_to,reward);
-            }
-            maze.render_update();
+            perform_transition(action_t::DOWN);
         } else if(str_args[0]=="stay" || str_args[0]=="s") { // stay
-            action_t action = action_t::STAY;
-            state_t state_to;
-            reward_t reward;
-            maze.perform_transition(action,state_to,reward);
-            update_current_instance(action,state_to,reward);
-            if(record) {
-                add_action_state_reward_tripel(action,state_to,reward);
-            }
-            maze.render_update();
+            perform_transition(action_t::STAY);
         } else if(str_args[0]=="move") { // start/stop moving
             if(str_args_n==1) {
                 choose_action();
@@ -951,6 +932,14 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     prune_search_tree=false;
                     search_tree_invalid = true;
                     TO_CONSOLE( "    don't prune search tree" );
+                }
+            } else if(str_args[1]=="png") {
+                if(str_args[0]=="set") {
+                    save_png_on_transition=true;
+                    TO_CONSOLE( "    save png on transition" );
+                } else {
+                    save_png_on_transition=false;
+                    TO_CONSOLE( "    don't save png on transition" );
                 }
             } else {
                 TO_CONSOLE( invalid_args_s );
