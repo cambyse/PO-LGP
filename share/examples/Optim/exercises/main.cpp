@@ -30,7 +30,7 @@ void displayFunction(VectorFunction& F){
   for(uint i=0;i<X.d0;i++){ F.fv(phi, NoArr, X[i]); Y(i) = sumOfSqr(phi); } //phi(0); }
   Y.reshape(101,101);
   write(LIST<arr>(Y),"z.fct");
-  gnuplot("splot [-1:1][-1:1] 'z.fct' matrix us (1.2*($1/50-1)):(1.2*($2/50-1)):3 w l", false, true);
+  gnuplot("reset; splot [-1:1][-1:1] 'z.fct' matrix us (1.2*($1/50-1)):(1.2*($2/50-1)):3 w l", false, true);
 }
 
 //==============================================================================

@@ -16,7 +16,65 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
+//===========================================================================
+//added Sep 2013
 
+//-- return types
+//struct     SqrPotential { arr A, a;          double c; }; ///< return type representing \f$x'A x - 2x'a + c\f$
+//struct PairSqrPotential { arr A, B, C, a, b; double c; }; ///< return type representing \f$(x,y)' [A C, C' B] (x,y) - 2(x,y)'(a,b) + c\f$
+//extern SqrPotential& NoPot; ///< reference to NULL! used for optional arguments
+//extern PairSqrPotential& NoPairPot; ///< reference to NULL! used for optional arguments
+
+/// a locally quadratic function TODO: replace by scalar with hessian!
+//struct QuadraticFunction { virtual double fq(SqrPotential& S, const arr& x) = 0; };
+
+///// functions \f$f_i:x_i \mapsto y\f$ and \f$f_{ij}: x_i,x_j \mapsto y\f$ over a chain \f$x_0,..,x_T\f$ of variables
+struct VectorChainFunction {
+  virtual uint get_T() = 0;
+  virtual void fv_i(arr& y, arr& J, uint i, const arr& x_i) = 0;
+  virtual void fv_ij(arr& y, arr& Ji, arr& Jj, uint i, uint j, const arr& x_i, const arr& x_j) = 0;
+};
+
+//struct QuadraticChainFunction {
+//  virtual uint get_T() = 0;
+//  virtual double fq_i(SqrPotential& S, uint i, const arr& x_i) = 0;
+//  virtual double fq_ij(PairSqrPotential& S, uint i, uint j, const arr& x_i, const arr& x_j) = 0;
+//};
+
+/*
+struct VectorGraphFunction {
+  virtual uintA edges() = 0;
+  virtual double fi (arr* grad, uint i, const arr& x_i) = 0;
+  virtual double fij(arr* gradi, arr* gradj, uint i, uint j, const arr& x_i, const arr& x_j) = 0;
+  double f_total(const arr& X);
+};*/
+
+
+struct VectorChainCost:VectorChainFunction {
+  uint T,n;
+  arr A,a;
+  arr Wi,Wj,w;
+  bool nonlinear;
+
+  VectorChainCost(uint _T,uint _n);
+  uint get_T() { return T; }
+  void fv_i(arr& y, arr* J, uint i, const arr& x_i);
+  void fv_ij(arr& y, arr* Ji, arr* Jj, uint i, uint j, const arr& x_i, const arr& x_j);
+};
+
+//===========================================================================
+
+struct SlalomProblem:VectorChainFunction {
+  uint T,K,n;
+  double margin,w,power;
+
+  SlalomProblem(uint _T, uint _K, double _margin, double _w, double _power);
+  uint get_T() { return T; }
+  void fv_i(arr& y, arr& J, uint i, const arr& x_i);
+  void fv_ij(arr& y, arr& Ji, arr& Jj, uint i, uint j, const arr& x_i, const arr& x_j);
+};
+
+//===========================================================================
 
 #include "optimization.h"
 
