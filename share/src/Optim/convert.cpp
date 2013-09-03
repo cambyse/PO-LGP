@@ -17,31 +17,37 @@
     -----------------------------------------------------------------  */
 
 
-
 #include "optimization.h"
 
 struct sConvert {
-  ScalarFunction* sf;
-  VectorFunction* vf;
-//  VectorChainFunction* vcf;
-//  QuadraticChainFunction* qcf;
+  ScalarFunction *sf;
+  VectorFunction *vf;
+  ConstrainedProblem *cp;
   KOrderMarkovFunction *kom;
   double(*cstyle_fs)(arr*, const arr&, void*);
   void (*cstyle_fv)(arr&, arr*, const arr&, void*);
   void *data;
-//  ControlledSystem *cs;
-  sConvert():sf(NULL),vf(NULL),/*vcf(NULL),qcf(NULL),*/kom(NULL),cstyle_fs(NULL),cstyle_fv(NULL),data(NULL)/*,cs(NULL)*/ {};
+  sConvert():sf(NULL),vf(NULL),cp(NULL),kom(NULL),cstyle_fs(NULL),cstyle_fv(NULL),data(NULL)/*,cs(NULL)*/ {};
   
-    struct VectorFunction_ScalarFunction:ScalarFunction { //actual converter objects
-      VectorFunction *f;
-      VectorFunction_ScalarFunction(VectorFunction& _f):f(&_f) {}
-      virtual double fs(arr& grad, arr& H, const arr& x);
-    };
+  struct VectorFunction_ScalarFunction:ScalarFunction { //actual converter objects
+    VectorFunction *f;
+    VectorFunction_ScalarFunction(VectorFunction& _f):f(&_f) {}
+    virtual double fs(arr& grad, arr& H, const arr& x);
+  };
 
   struct KOrderMarkovFunction_VectorFunction:VectorFunction {
     KOrderMarkovFunction *f;
     KOrderMarkovFunction_VectorFunction(KOrderMarkovFunction& _f):f(&_f) {}
     virtual void fv(arr& y, arr& J, const arr& x);
+  };
+
+  struct KOrderMarkovFunction_ConstrainedProblem:ConstrainedProblem {
+    KOrderMarkovFunction *f;
+    KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& _f):f(&_f) {}
+    virtual double fc(arr& df, arr& Hf, arr& g, arr& Jg, const arr& x);
+    virtual uint dim_x();
+    virtual uint dim_g();
+    uint dim_phi();
   };
 
   struct cfunc_ScalarFunction:ScalarFunction { //actual converter objects
@@ -105,6 +111,14 @@ Convert::operator VectorFunction&() {
   return *s->vf;
 }
 
+Convert::operator ConstrainedProblem&() {
+  if(!s->cp) {
+    if(s->kom) s->cp = new sConvert::KOrderMarkovFunction_ConstrainedProblem(*s->kom);
+  }
+  if(!s->cp) HALT("");
+  return *s->cp;
+}
+
 Convert::operator KOrderMarkovFunction&() {
   if(!s->kom) {
 // #ifndef libRoboticsCourse
@@ -160,10 +174,10 @@ void sConvert::KOrderMarkovFunction_VectorFunction::fv(arr& phi, arr& J, const a
   //probing dimensionality
   uint T=f->get_T();
   uint k=f->get_k();
-  uint n=f->get_n();
+  uint n=f->dim_x();
   uint M=0;
   arr x_pre=f->get_prefix();
-  for(uint t=0; t<=T; t++) M+=f->get_m(t);
+  for(uint t=0; t<=T; t++) M+=f->dim_phi(t);
   CHECK(x.nd==2 && x.d1==n && x.d0==(T+1),"");
   CHECK(x_pre.nd==2 && x_pre.d1==n && x_pre.d0==k,"prefix is of wrong dim");
   
@@ -174,7 +188,7 @@ void sConvert::KOrderMarkovFunction_VectorFunction::fv(arr& phi, arr& J, const a
   M=0;
   uint m_t;
   for(uint t=0; t<=T; t++) {
-    m_t = f->get_m(t);
+    m_t = f->dim_phi(t);
     if(!m_t) continue;
     arr phi_t,J_t;
     if(t>=k) {
@@ -200,9 +214,128 @@ void sConvert::KOrderMarkovFunction_VectorFunction::fv(arr& phi, arr& J, const a
     }
     M += m_t;
   }
+  CHECK(M==phi.N,"");
   if(&J) Jaux->computeColPatches(true);
   //if(&J) J=Jaux->unpack();
 #endif
 }
 
+//collect the constraints from a KOrderMarkovFunction
+double sConvert::KOrderMarkovFunction_ConstrainedProblem::fc(arr& df, arr& Hf, arr& meta_g, arr& meta_Jg, const arr& x) {
+  //probing dimensionality
+  uint T=f->get_T();
+  uint k=f->get_k();
+  uint n=f->dim_x();
+  CHECK(x.nd==2 && x.d1==n && x.d0==(T+1),"");
 
+  arr x_pre=f->get_prefix();
+  CHECK(x_pre.nd==2 && x_pre.d1==n && x_pre.d0==k,"prefix is of wrong dim");
+
+  //resizing things:
+  uint meta_phid = dim_phi();
+  uint meta_gd = dim_g();
+  uint meta_yd = meta_phid - meta_gd;
+
+  bool getJ = (&df || &Hf || &meta_Jg);
+
+  arr meta_y, meta_Jy;
+  RowShiftedPackedMatrix *Jy_aux, *Jg_aux;
+  meta_y.resize(meta_yd);
+  meta_g.resize(meta_gd);
+  if(getJ) Jy_aux = auxRowShifted(meta_Jy, meta_yd, (k+1)*n, x.N);
+  if(getJ) Jg_aux = auxRowShifted(meta_Jg, meta_gd, (k+1)*n, x.N);
+
+  uint y_count=0;
+  uint g_count=0;
+
+  for(uint t=0; t<=T; t++) {
+    uint phid = f->dim_phi(t);
+    uint gd   = f->dim_g(t);
+    uint yd   = phid-gd;
+    if(!phid) continue;
+    arr x_bar, phi, Jphi, y, Jy, g, Jg;
+
+    //construct x_bar
+    if(t>=k) {
+      x_bar.referToSubRange(x, t-k, t);
+    } else { //x_bar includes the prefix
+      x_bar.resize(k+1,n);
+      for(int i=t-k; i<=(int)t; i++) x_bar[i-t+k]() = (i<0)? x_pre[k+i] : x[i];
+    }
+
+    //query the phi
+    f->phi_t(phi, (getJ?Jphi:NoArr), t, x_bar);
+    if(getJ) if(Jphi.nd==3) Jphi.reshape(Jphi.d0, Jphi.d1*Jphi.d2);
+    CHECK(phi.N==phid,"");
+    if(getJ) CHECK(Jphi.d0==phid && Jphi.d1==(k+1)*n,"");
+
+    //insert in meta_y
+    y.referToSubRange(phi, 0, yd-1);
+    CHECK(y.N==yd,"");
+    meta_y.setVectorBlock(y, y_count);
+    if(getJ) {
+      Jy.referToSubRange(Jphi, 0, yd-1);
+      if(t>=k) {
+        meta_Jy.setMatrixBlock(Jy, y_count, 0);
+        for(uint i=0; i<Jy.d0; i++) Jy_aux->rowShift(y_count+i) = (t-k)*n;
+      } else { //cut away the Jacobian w.r.t. the prefix
+        Jy.dereference();
+        Jy.delColumns(0,(k-t)*n);
+        meta_Jy.setMatrixBlock(Jy, y_count, 0);
+        for(uint i=0; i<Jy.d0; i++) Jy_aux->rowShift(y_count+i) = 0;
+      }
+    }
+    y_count += yd;
+
+
+    //insert in meta_g
+    if(gd){
+      g.referToSubRange(phi, yd, -1);
+      CHECK(g.N==gd,"");
+      meta_g.setVectorBlock(g, g_count);
+      if(getJ) {
+        Jg.referToSubRange(Jphi, yd, -1);
+        if(t>=k) {
+          meta_Jg.setMatrixBlock(Jg, g_count, 0);
+          for(uint i=0; i<Jg.d0; i++) Jg_aux->rowShift(g_count+i) = (t-k)*n;
+        } else { //cut away the Jacobian w.r.t. the prefix
+          Jg.dereference();
+          Jg.delColumns(0,(k-t)*n);
+          meta_Jg.setMatrixBlock(Jg, g_count, 0);
+          for(uint i=0; i<Jg.d0; i++) Jg_aux->rowShift(g_count+i) = 0;
+        }
+      }
+      g_count += gd;
+    }
+  }
+  CHECK(y_count==meta_y.N,"");
+  CHECK(g_count==meta_g.N,"");
+  if(getJ) Jy_aux->computeColPatches(true);
+  if(getJ) Jg_aux->computeColPatches(true);
+  //if(&J) J=Jaux->unpack();
+
+  //finally, compute the scalar function
+  if(&df){ df = comp_At_x(meta_Jy, meta_y); df *= 2.; }
+  if(&Hf){ Hf = comp_At_A(meta_Jy); Hf *= 2.; }
+  return sumOfSqr(meta_y);
+}
+
+uint sConvert::KOrderMarkovFunction_ConstrainedProblem::dim_x() {
+  uint T=f->get_T();
+  uint n=f->dim_x();
+  return (T+1)*n;
+}
+
+uint sConvert::KOrderMarkovFunction_ConstrainedProblem::dim_phi() {
+  uint T =f->get_T();
+  uint gphi=0;
+  for(uint t=0; t<=T; t++) gphi += f->dim_phi(t);
+  return gphi;
+}
+
+uint sConvert::KOrderMarkovFunction_ConstrainedProblem::dim_g() {
+  uint T =f->get_T();
+  uint gd=0;
+  for(uint t=0; t<=T; t++) gd += f->dim_g(t);
+  return gd;
+}

@@ -115,18 +115,18 @@ struct ChoiceConstraintFunction:ConstrainedProblem {
   ChoiceFunction f;
   ChoiceConstraintFunction() {
   }
-  virtual double fs(arr& g, arr& H, const arr& x) {
-    return f.fs(g, H, x);
-  }
+  virtual double fc(arr& df, arr& Hf, arr& g, arr& Jg, const arr& x) {
+    double fx =  f.fs(df, Hf, x);
 
-  virtual void fv(arr& phi, arr& J, const arr& x) {
-    phi.resize(get_m());
-    if(&J) { J.resize(phi.N, x.N); J.setZero(); }
-    phi(0) = sumOfSqr(x)-.25;   if(&J) J[0]() = 2.*x;
-    phi(1) = -x(0);             if(&J) J(1,0) = -1.;
+    g.resize(dim_g());
+    if(&Jg) { Jg.resize(g.N, x.N); Jg.setZero(); }
+    g(0) = sumOfSqr(x)-.25;   if(&Jg) Jg[0]() = 2.*x;
+    g(1) = -x(0);             if(&Jg) Jg(1,0) = -1.;
+
+    return fx;
   }
-  virtual uint get_n(){ return 2; }
-  virtual uint get_m(){ return 2; }
+  virtual uint dim_x(){ return 2; }
+  virtual uint dim_g(){ return 2; }
 };
 
 //===========================================================================
@@ -134,24 +134,23 @@ struct ChoiceConstraintFunction:ConstrainedProblem {
 struct SimpleConstraintFunction:ConstrainedProblem {
   SimpleConstraintFunction() {
   }
-  virtual double fs(arr& g, arr& H, const arr& x) {
+  virtual double fc(arr& df, arr& Hf, arr& g, arr& Jg, const arr& x) {
     //simple squared potential, displaced by 1
     x(0) -= 1.;
     double f=sumOfSqr(x)-1.;
-    if(&g) g=2.*x;
-    if(&H) H.setDiag(2., x.N);
+    if(&df) df=2.*x;
+    if(&Hf) Hf.setDiag(2., x.N);
     x(0) += 1.;
+
+    g.resize(2);
+    if(&Jg) { Jg.resize(g.N, x.N); Jg.setZero(); }
+    g(0) = .25-sumOfSqr(x);  if(&Jg) Jg[0]() = -2.*x; //OUTSIDE the circle
+    g(1) = x(0);             if(&Jg) Jg(1,0) = 1.;
+
     return f;
   }
-  virtual void fv(arr& phi, arr& J, const arr& x) {
-    uint n=x.N;
-    phi.resize(2);
-    if(&J) { J.resize(phi.N, n); J.setZero(); }
-    phi(0) = .25-sumOfSqr(x);  if(&J) J[0]() = -2.*x; //OUTSIDE the circle
-    phi(1) = x(0);             if(&J) J(1,0) = 1.;
-  }
-  virtual uint get_n(){ return 2; }
-  virtual uint get_m(){ return 2; }
+  virtual uint dim_x(){ return 2; }
+  virtual uint dim_g(){ return 2; }
 };
 
 //===========================================================================
@@ -211,6 +210,26 @@ struct NonlinearlyWarpedSquaredCost : ScalarFunction,VectorFunction {
 
 //===========================================================================
 
+struct ParticleAroundWalls:KOrderMarkovFunction {
+  uint k;
+  bool kern, constrained;
+  void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);
+
+  uint get_T(){ return 100; }
+  uint get_k(){ return k; }
+  uint dim_x(){ return 3; }
+  uint dim_phi(uint t);
+  uint dim_g(uint t);
+
+  bool isConstrained(){ return constrained; }
+  bool hasKernel(){ return kern; }
+  double kernel(uint t0, uint t1){
+    //if(t0==t1) return 1e3;
+    return 1e0*::exp(-.001*MT::sqr((double)t0-t1));
+  }
+};
+
+//===========================================================================
 
 #endif
 /// @}

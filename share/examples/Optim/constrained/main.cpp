@@ -1,7 +1,7 @@
-#include "constrained.h"
+#include <Optim/constrained.h>
 
 #include <Optim/optimization.h>
-#include <Optim/optimization_benchmarks.h>
+#include <Optim/benchmarks.h>
 
 
 void displayFunction(ScalarFunction& F){
@@ -60,9 +60,9 @@ void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=10){
 
   for(uint k=0;k<iters;k++){
     cout <<"x_start=" <<x <<" mu=" <<F.mu <<" lambda=" <<F.lambda <<endl;
-    checkGradient((ScalarFunction&)p, x, 1e-4);
-    checkHessian ((ScalarFunction&)p, x, 1e-4);
-    checkJacobian((VectorFunction&)p, x, 1e-4);
+    //checkGradient(p, x, 1e-4);
+    //checkHessian (p, x, 1e-4);
+    //checkJacobian(p, x, 1e-4);
 
 //    optRprop(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
     //optGradDescent(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
@@ -119,7 +119,7 @@ int main(int argn,char** argv){
   MT::initCmdLine(argn,argv);
 
   ChoiceConstraintFunction F;
-  //SimpleConstraintFunction F;
+//  SimpleConstraintFunction F;
   testConstraint(F);
 
   return 0;

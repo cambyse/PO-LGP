@@ -191,7 +191,6 @@ template<class T> MT::Array<T>& MT::Array<T>::reshape(uint ND, uint *dim) {
   return *this;
 }
 
-
 /// resize to multi-dimensional tensor
 template<class T> MT::Array<T>& MT::Array<T>::resize(const Array<uint> &newD) { resize(newD.N, newD.p); return *this; }
 
@@ -310,7 +309,7 @@ template<class T> void MT::Array<T>::makeSparse() {
 /// allocate memory (maybe using \ref flexiMem)
 template<class T> void MT::Array<T>::resizeMEM(uint n, bool copy) {
   if(n==N) return;
-  CHECK(!reference, "double resize of subarray is not allowed! (only a resize without changing memory size)");
+  CHECK(!reference, "resize of a reference (e.g. subarray) is not allowed! (only a resize without changing memory size)");
   uint i;
   T *pold=p;
   uint Mold=M, Mnew;
@@ -326,30 +325,24 @@ template<class T> void MT::Array<T>::resizeMEM(uint n, bool copy) {
       Mnew=Mold;   //small down-size: don't really resize memory
     }
   }
-  //if M changed, allocate the memory
-  if(Mnew!=Mold) {
+  if(Mnew!=Mold) {  //if M changed, allocate the memory
     uint64_t memoryNew = ((uint64_t)Mnew)*sizeT;
 #ifdef MT_GLOBALMEM
     globalMemoryTotal -= ((uint64_t)Mold)*sizeT;
     globalMemoryTotal += memoryNew;
 #endif
     if(Mnew) {
-      if(globalMemoryTotal>globalMemoryBound) {
-        //HALT("bugger");
-        if(globalMemoryStrict) {
+      if(globalMemoryTotal>globalMemoryBound) { //helpers to limit global memory (e.g. to avoid crashing a machine)
+        if(globalMemoryStrict) { //undo changes then throw an error
           MT_MSG("allocating " <<(memoryNew>>20) <<"MB (total=" <<(globalMemoryTotal>>20) <<"M, bound=" <<(globalMemoryBound>>20) <<"M)... (in THREADING applications: undefine the MT_GLOBALMEM compile flag)");
-          //first undo changes...
           globalMemoryTotal += ((uint64_t)Mold)*sizeT;
           globalMemoryTotal -= memoryNew;
           p=pold; M=Mold;
-          //...then throw an error...
-          HALT("...throwing exception");
-        } else {
+          HALT("strict memory limit exceeded");
+        } else { //just give a warning
           if(memoryNew>>20 || globalMemoryTotal-memoryNew<=globalMemoryBound) {
             MT_MSG("allocating " <<(memoryNew>>20) <<"MB (total=" <<(globalMemoryTotal>>20) <<"M, bound=" <<(globalMemoryBound>>20) <<"M)... (in THREADING applications: undefine the MT_GLOBALMEM compile flag)");
           }
-          //MT_MSG("...are you sure?");
-          //MT::wait();
         }
       }
       p=new T [Mnew];      //p=(T*)malloc(M*sizeT);
@@ -364,6 +357,21 @@ template<class T> void MT::Array<T>::resizeMEM(uint n, bool copy) {
     if(Mold) delete[] pold;  //if(Mold) free(pold);
   }
   N=n;
+}
+
+
+///this was a reference; becomes a copy
+template<class T> MT::Array<T>& MT::Array<T>::dereference(){
+  CHECK(reference,"can only dereference a reference!");
+  uint n=N;
+  T* pold=p;
+  reference=false;
+  N=M=0;
+  p=NULL;
+  resizeMEM(n, false);
+  CHECK(memMove==1,"only with memmove");
+  memmove(p, pold, sizeT*N);
+  return *this;
 }
 
 /// free all memory and reset all pointers and sizes

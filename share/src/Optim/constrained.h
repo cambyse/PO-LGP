@@ -1,4 +1,4 @@
-#include <Optim/optimization.h>
+#include "optimization.h"
 
 //==============================================================================
 //
@@ -19,7 +19,7 @@ struct UnconstrainedProblem : ScalarFunction{
 
   UnconstrainedProblem(ConstrainedProblem &_P):P(_P), muLB(0.), mu(0.) {}
 
-  virtual double fs(arr& g, arr& H, const arr& x); ///< this assumes that only the first entry is costs, rest constraints
+  virtual double fs(arr& df, arr& Hf, const arr& x); ///< this assumes that only the first entry is costs, rest constraints
 //  virtual void fv(arr& y, arr& J, const arr& x); ///< first entries: GaussNewton-type costs, following entries: constraints
   void augmentedLagrangian_LambdaUpdate(const arr& x);
 };
@@ -38,9 +38,10 @@ struct PhaseOneProblem:ConstrainedProblem{
 
   PhaseOneProblem(ConstrainedProblem &_f):f(_f) {}
 
-  virtual double fs(arr& g, arr& H, const arr& x);
-  virtual void fv(arr& metaPhi, arr& metaJ, const arr& x);
-  virtual uint get_n(){ return f.get_n()+1; }
-  virtual uint get_m(){ return f.get_m()+1; }
+  virtual double fc(arr& df, arr& Hf, arr& g, arr& Jg, const arr& x);
+//  virtual double fs(arr& g, arr& H, const arr& x);
+//  virtual void fv(arr& metaPhi, arr& metaJ, const arr& x);
+  virtual uint dim_x(){ return f.dim_x()+1; }
+  virtual uint dim_g(){ return f.dim_g()+1; }
 };
 

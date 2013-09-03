@@ -1,12 +1,13 @@
 #include <Core/util.h>
 #include <Optim/optimization.h>
-#include "exampleProblem.h"
+#include <Optim/benchmarks.h>
+#include <Optim/constrained.h>
 #include <Gui/plot.h>
 
 arr buildKernelMatrix(KOrderMarkovFunction& P){
   CHECK(P.hasKernel(),"");
   uint T = P.get_T();
-  uint n = P.get_n();
+  uint n = P.dim_x();
   arr K((T+1)*n,(T+1)*n);
   K.setZero();
   for(uint t=0;t<=T;t++){
@@ -29,12 +30,13 @@ int main(int argn,char** argv){
 
   ParticleAroundWalls P;
   P.k=2;
-  P.kern=false; //true;
-  
+  P.kern = false; //true;
+  P.constrained = true;
+
   //-- print some info on the P
   uint T=P.get_T();
   uint k=P.get_k();
-  uint n=P.get_n();
+  uint n=P.dim_x();
   cout <<"P parameters:"
        <<"\n T=" <<T
        <<"\n k=" <<k
@@ -66,13 +68,22 @@ int main(int argn,char** argv){
 
   //-- optimize
   rndUniform(x,-10.,-1.);
-  if(P.hasKernel()){
-    arr K=buildKernelMatrix(P);
-//    createRandom(x, K);  //return 0;
-    optGaussNewton(x, Convert(P), OPT(verbose=2, useAdaptiveDamping=1), &K);
+  arr K;
+  if(P.hasKernel()) K = buildKernelMatrix(P);
+  if(P.isConstrained()){
+    Convert CP(P);
+    UnconstrainedProblem UCP(CP);
+    UCP.mu=1.;
+    for(uint k=0;k<10;k++){
+      cout <<" mu=" <<UCP.mu <<" lambda=" <<UCP.lambda <<endl;
+      optNewton(x, UCP, OPT(verbose=2, useAdaptiveDamping=false, damping=1., stopIters=20), (K.N? &K : NULL));
+      UCP.augmentedLagrangian_LambdaUpdate(x);
+      write(LIST<arr>(x),"z.output");
+      gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", true, true);
+      MT::wait();
+    }
   }else{
-//    optGaussNewton(x, Convert(P), OPT(verbose=2, useAdaptiveDamping=1));
-    optNewton(x, Convert(P), OPT(verbose=2, useAdaptiveDamping=1));
+    optNewton(x, Convert(P), OPT(verbose=2, useAdaptiveDamping=true), (K.N? &K : NULL));
   }
 
   //analyzeTrajectory(sys, x, true, &cout);
