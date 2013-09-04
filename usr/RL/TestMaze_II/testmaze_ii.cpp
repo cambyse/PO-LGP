@@ -26,7 +26,7 @@ using util::arg_string;
 using util::min;
 using util::max;
 
-#include "QtVersionAdapt.h"
+#include "QtUtil.h"
 
 #define TO_CONSOLE(x) { ui._wConsoleOutput->appendPlainText(x); }
 
@@ -179,7 +179,7 @@ void TestMaze_II::fully_expand_utree() {
 }
 
 void TestMaze_II::save_to_png(QString file_name) const {
-    DEBUG_OUT(1,"Saving Maze to file '" << (const char*)file_name.toLatin1() << "'");
+    DEBUG_OUT(1,"Saving Maze to file '" << file_name << "'");
     QGraphicsScene * scene = ui.graphicsView->scene();
     QImage img(2000,2000,QImage::Format_ARGB32_Premultiplied);
     QPainter p(&img);
@@ -876,27 +876,33 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     plot_file.close();
                     TO_CONSOLE( "    plot off" );
                 }
-            } else if( (str_args[1]=="p" || str_args[1]=="planner") && str_args_n>2) {
-                if(str_args[0]=="unset") {
-                    TO_CONSOLE( "    set different planner to unset current" );
-                } else if(str_args[2]=="optimal" || str_args[2]=="o") {
-                    planner_type = OPTIMAL_PLANNER;
-                    search_tree_invalid = true;
-                    TO_CONSOLE( "    using optimal planner" );
-                } else if(str_args[2]=="sparse" || str_args[2]=="s") {
-                    planner_type = SPARSE_PLANNER;
-                    search_tree_invalid = true;
-                    TO_CONSOLE( "    using sparse planner" );
-                } else if(str_args[2]=="utree" || str_args[2]=="u") {
-                    planner_type = UTREE_PLANNER;
-                    search_tree_invalid = true;
-                    TO_CONSOLE( "    using UTree planner" );
-                } else if(str_args[2]=="uv" || str_args[2]=="utree-value") {
-                    planner_type = UTREE_VALUE;
-                    TO_CONSOLE( "    using UTree-value for action selection" );
-                } else if(str_args[2]=="lq" || str_args[2]=="linear-q") {
-                    planner_type = LINEAR_Q_VALUE;
-                    TO_CONSOLE( "    using linear Q-approximation for action selection" );
+            } else if( (str_args[1]=="p" || str_args[1]=="planner") ) {
+                if(str_args_n>2) {
+                    if(str_args[0]=="unset") {
+                        TO_CONSOLE( "    set different planner to unset current" );
+                    } else if(str_args[2]=="optimal" || str_args[2]=="o") {
+                        planner_type = OPTIMAL_PLANNER;
+                        search_tree_invalid = true;
+                        TO_CONSOLE( "    using optimal planner" );
+                    } else if(str_args[2]=="sparse" || str_args[2]=="s") {
+                        planner_type = SPARSE_PLANNER;
+                        search_tree_invalid = true;
+                        TO_CONSOLE( "    using sparse planner" );
+                    } else if(str_args[2]=="utree" || str_args[2]=="u") {
+                        planner_type = UTREE_PLANNER;
+                        search_tree_invalid = true;
+                        TO_CONSOLE( "    using UTree planner" );
+                    } else if(str_args[2]=="uv" || str_args[2]=="utree-value") {
+                        planner_type = UTREE_VALUE;
+                        TO_CONSOLE( "    using UTree-value for action selection" );
+                    } else if(str_args[2]=="lq" || str_args[2]=="linear-q") {
+                        planner_type = LINEAR_Q_VALUE;
+                        TO_CONSOLE( "    using linear Q-approximation for action selection" );
+                    } else {
+                        TO_CONSOLE( "    unknown planner" );
+                    }
+                } else {
+                    TO_CONSOLE( "    please supply a planner to use" );
                 }
             } else if(str_args[1]=="target") {
                 if(str_args[0]=="set") {

@@ -14,14 +14,13 @@
 #include <QApplication>
 #include <QDateTime>
 
-#include <iostream>
-#include <fstream>
 #include <algorithm>
 #include <float.h> // for DBL_MAX
 #include <set>
 #include <tuple>
 
 #include <QString>
+#include "QtUtil.h" // for << operator
 
 #define DEBUG_LEVEL 0
 #include "debug.h"
@@ -29,8 +28,6 @@
 #define LOG_COMMENT(x) DEBUG_OUT(1,x); log_file << "# " << x << std::endl;
 #define LOG(x) DEBUG_OUT(1,x); log_file << x << std::endl;
 
-#define RUN_ACTIVE
-#define X_SERVER
 #define USE_OMP
 
 using std::set;
@@ -38,337 +35,192 @@ using std::tuple;
 using std::make_tuple;
 using std::get;
 
-static QString date_time_string;
-static std::ofstream log_file;
-static enum OPTION { RANDOM, OPTIMAL, SPARSE, UTREE_PROB, UTREE_VALUE, LINEAR_Q, OPTION_N } option;
-static const char * option_arr[OPTION_N] = {"random", "optimal", "sparse", "utree-prob", "utree-value", "linear-q"};
-static QString option_str;
-static int max_episodes = 100;
-static int max_transitions = 1000;
-static double epsilon = 0.0;
-static double discount = 0.5;
-static int max_training_length = 10000;
-static int min_training_length = 100;
-static double training_length_factor = 2;
-static double training_length_incr = 0;
-static double l1_factor = 0.0001;
-static int max_tree_size = 10000;
-static int feature_complx = 2;
+const std::vector<QString> BatchMaze::mode_vector = {
+    "RANDOM",
+    "OPTIMAL",
+    "SPARSE",
+    "UTREE_PROB",
+    "UTREE_VALUE",
+    "LINEAR_Q",
+    "SEARCH_TREE",
+    "TRANSITIONS"
+};
 
-BatchMaze::BatchMaze(): file_id(10000001) {}
+const std::vector<BatchMaze::switch_t> BatchMaze::switch_vector = {
+    switch_t("-mode",      "char",   "",      "major mode BatchMaze runs in"),
+    switch_t("-nEp",       "int",    "100",   "number of episodes to run"),
+    switch_t("-minTran",   "int",    "10",    "minimum number of transitions (mode 'TRANSITIONS' only)"),
+    switch_t("-maxTran",   "int",    "1000",  "maximum number of transitions"),
+    switch_t("-e",         "double", "0.0",   "epsilon (probability for unintended random actions)"),
+    switch_t("-d",         "double", "0.5",   "discount"),
+    switch_t("-minTrain",  "int",    "100",   "minimum length of traning data"),
+    switch_t("-maxTrain",  "int",    "10000", "maximum length of traning data"),
+    switch_t("-minTree",   "int",    "1000",  "minimum size of search tree (mode 'SEARCH_TREE' only)"),
+    switch_t("-maxTree",   "int",    "10000", "maximum size of search tree"),
+    switch_t("-f",         "int",    "2",     "number of feature conjunctions"),
+    switch_t("-l1",        "double", "0.001", "L1-regularization factor"),
+    switch_t("-pruneTree", "bool",   "true",  "whether to prune the search tree"),
+    switch_t("-kWidth",    "double", "0",     "kernel width (0 for auto)"),
+};
+
+BatchMaze::BatchMaze() {
+    // date and time
+    QDateTime dateTime = QDateTime::currentDateTime();
+    date_time_string = dateTime.toString("yyyy-MM-dd_hh:mm:ss");
+}
 
 BatchMaze::~BatchMaze() {}
 
 int BatchMaze::run(int argn, char ** argarr) {
-#ifdef RUN_ACTIVE
-    return run_active(argn,argarr);
-#else
-    return run_predefined(argn,argarr);
-#endif
-}
-
-int BatchMaze::run_predefined(int argn, char ** argarr) {
-
-    //------------------------//
-    // check for valid option //
-    //------------------------//
-
-    bool valid_option = false;
-    if(argn>=1) {
-        option_str = argarr[1];
-        for(int op_idx=0; op_idx<OPTION_N; ++op_idx) {
-            if(option_str==option_arr[op_idx]) {
-                valid_option = true;
-                option = (OPTION)op_idx;
-                break;
-            }
-        }
-    }
-
-    // terminate if no valid option was passed
-    if(!valid_option) {
-        print_help();
-        return 0;
-    }
-
-    // parse command line arguments
-    parse_command_line_arguments(argn,argarr);
-
-    // initialize log file
-    initialize_log_file();
-
-    //-----------------------------//
-    // precompute training lengths //
-    //-----------------------------//
-    int * training_lengths;
-    int training_steps;
-    precompute_training_lengths(training_lengths, training_steps);
-
-    //--------------//
-    // run episodes //
-    //--------------//
-    double global_reward_sum = 0;
-#ifdef USE_OMP
-#pragma omp parallel for schedule(dynamic,1) collapse(2)
-#endif
-    for(int training_idx=0; training_idx<training_steps; ++training_idx) {
-        for(int episode_counter=1; episode_counter<=max_episodes; ++episode_counter) {
-
-            // use pointers to serialize initialization
-            Maze * maze;
-            instance_t * current_instance;
-            LookAheadSearch * look_ahead_search;
-            KMarkovCRF * crf;
-            UTree * utree;
-            LinearQ * linQ;
-
-#ifdef USE_OMP
-#pragma omp critical
-#endif
-            {
-                // initialize maze
-                state_t start_state = state_t::random_state();
-                maze = new Maze(epsilon);
-                maze->set_current_state(start_state);
-                current_instance = instance_t::create(action_t::STAY,start_state,reward_t(0));
-
-                // initialize look ahead search
-                look_ahead_search = new LookAheadSearch(discount);
-
-                // initialize learners
-                crf = new KMarkovCRF();
-                utree = new UTree(discount);
-                linQ = new LinearQ(discount);
-
-                // initialize to minimal length history
-                for(unsigned long state_counter=0; state_counter<Config::k; ++state_counter) {
-                    action_t action = action_t::STAY;
-                    state_t state;
-                    reward_t reward;
-                    maze->perform_transition(action,state,reward);
-                    current_instance = current_instance->append_instance(action,state,reward);
-                }
-
-                // get training data
-                for(int train_step=0; train_step<training_lengths[training_idx]; ++train_step) {
-                    action_t action = action_t::random_action();
-                    state_t state;
-                    reward_t reward;
-                    maze->perform_transition(action,state,reward);
-                    current_instance = current_instance->append_instance(action,state,reward);
-                    if(option==OPTIMAL || option==RANDOM) {
-                        // no training data
-                    } else if(option==SPARSE) {
-                        crf->add_action_state_reward_tripel(action,state,reward,false);
-                    } else if(option==UTREE_VALUE || option==UTREE_PROB) {
-                        utree->add_action_state_reward_tripel(action,state,reward,false);
-                    } else if(option==LINEAR_Q) {
-                        linQ->add_action_state_reward_tripel(action,state,reward,false);
-                    } else {
-                        DEBUG_DEAD_LINE;
-                    }
-                }
-            }
-
-            // train the learners
-            if(option==OPTIMAL || option==RANDOM) {
-                // nothing to train
-            } else if(option==SPARSE) {
-                for(int complx=1; complx<=feature_complx; ++complx) {
-                    crf->score_features_by_gradient(1);
-                    crf->sort_scored_features(false);
-                    crf->add_candidate_features_to_active(0);
-                    crf->optimize_model(complx==1?0:l1_factor,0,nullptr); // no l1 in first run
-                    crf->erase_zero_features();
-                }
-                // finalize
-                crf->optimize_model(0,0,nullptr);
-            } else if(option==UTREE_PROB) {
-                utree->set_expansion_type(UTree::STATE_REWARD_EXPANSION);
-                double score_threshold = 1e-3;
-                double max_score = DBL_MAX;
-                while(max_score>score_threshold) {
-                    max_score = utree->expand_leaf_node(score_threshold);
-                }
-            } else if(option==UTREE_VALUE) {
-                utree->set_expansion_type(UTree::UTILITY_EXPANSION);
-                double score_threshold = 1e-3;
-                double max_score = DBL_MAX;
-                while(max_score>score_threshold) {
-                    double max_update = DBL_MAX;
-                    while(max_update>1e-10) {
-                        max_update = utree->value_iteration();
-                    }
-                    max_score = utree->expand_leaf_node(score_threshold);
-                }
-            } else if(option==LINEAR_Q) {
-                for(int complx=1; complx<=feature_complx; ++complx) {
-                    linQ->add_candidates(1);
-                    linQ->erase_zero_features();
-                    linQ->optimize_l1(l1_factor);
-                    linQ->erase_zero_weighted_features();
-                }
-                // finalize
-                linQ->optimize_ridge(1e-10);
-            } else {
-                DEBUG_DEAD_LINE;
-            }
-
-            // perform transitions
-            double reward_sum = 0;
-            int transition_counter;
-            for(transition_counter=1; transition_counter<=max_transitions; ++transition_counter) {
-
-                // transition variables
-                action_t action;
-                state_t state;
-                reward_t reward;
-
-                // choose the action
-                if(option==OPTIMAL) {
-                    if(look_ahead_search->get_number_of_nodes()==0) {
-                        look_ahead_search->build_tree<Maze>(
-                            current_instance,
-                            *maze,
-                            max_tree_size
-                            );
-                    } else {
-                        look_ahead_search->fully_expand_tree<Maze>(
-                            *maze,
-                            max_tree_size
-                            );
-                    }
-                    action = look_ahead_search->get_optimal_action();
-                } else if(option==RANDOM) {
-                    action = action_t::random_action();
-                } else if(option==SPARSE) {
-                    look_ahead_search->clear_tree();
-                    look_ahead_search->build_tree<KMarkovCRF>(
-                        current_instance,
-                        *crf,
-                        max_tree_size
-                        );
-                    action = look_ahead_search->get_optimal_action();
-                } else if(option==UTREE_PROB) {
-                    look_ahead_search->clear_tree();
-                    look_ahead_search->build_tree<UTree>(
-                        current_instance,
-                        *utree,
-                        max_tree_size
-                        );
-                    action = look_ahead_search->get_optimal_action();
-                } else if(option==UTREE_VALUE) {
-                    action = utree->get_max_value_action(current_instance);
-                } else if(option==LINEAR_Q) {
-                    action = linQ->get_max_value_action(current_instance);
-                } else {
-                    DEBUG_DEAD_LINE;
-                }
-
-                // perform transition
-                maze->perform_transition(action,state,reward);
-                current_instance = current_instance->append_instance(action,state,reward);
-
-                // prune search tree
-                if(option==OPTIMAL) {
-                    look_ahead_search->prune_tree(action,current_instance,*maze);
-                } else if(option==SPARSE) {
-                    look_ahead_search->prune_tree(action,current_instance,*crf);
-                } else if(option==UTREE_PROB) {
-                    look_ahead_search->prune_tree(action,current_instance,*utree);
-                } else if(option==RANDOM || option==UTREE_VALUE || option==LINEAR_Q) {
-                    // no search tree
-                } else {
-                    DEBUG_DEAD_LINE;
-                }
-
-                // increment reward
-                reward_sum += reward;
-
-                DEBUG_OUT(2, "Episode " << episode_counter <<
-                          ",	training length " << training_lengths[training_idx] <<
-                          ",	transition " << transition_counter <<
-                          ":	current mean reward = " << reward_sum/transition_counter
-                    );
-            }
-#ifdef USE_OMP
-#pragma omp critical
-#endif
-            {
-                // update global reward sum
-                global_reward_sum += reward_sum;
-
-                // write data to log file
-                LOG(episode_counter << " 	" <<
-                    training_lengths[training_idx] << "	" <<
-                    (option==SPARSE ? crf->get_number_of_features() : 0) << "	" <<
-                    ( (option==UTREE_VALUE || option==UTREE_PROB) ? utree->get_tree_size() : 0) << "	" <<
-                    reward_sum/max_transitions
-                    );
-
-                // delete pointers
-                delete maze;
-                delete current_instance;
-                delete look_ahead_search;
-                delete crf;
-                delete utree;
-                delete linQ;
-            }
-        }
-    }
-
-    delete training_lengths;
-
-    LOG_COMMENT("Global mean reward " << global_reward_sum/(max_episodes*max_transitions*training_steps));
-    log_file.close();
-
-    return 0;
-}
-
-int BatchMaze::run_active(int argn, char ** argarr) {
-
+    // start a qApplication if an X server is available
 #ifdef X_SERVER
     QApplication a(argn,argarr);
 #endif
 
-    //------------------------//
-    // check for valid option //
-    //------------------------//
+    // parse command line switches
+    parse_switches(argn, argarr);
 
-    bool valid_option = false;
-    if(argn>=1) {
-        option_str = argarr[1];
-        for(int op_idx=0; op_idx<OPTION_N; ++op_idx) {
-            if(option_str==option_arr[op_idx]) {
-                valid_option = true;
-                option = (OPTION)op_idx;
-                break;
-            }
+    // check for valid mode
+    QString mode_str = switch_char("-mode");
+    mode = "";
+    for(auto m : mode_vector) {
+        if(mode_str==m) {
+            mode=m;
         }
     }
-
-    // terminate if no valid option was passed
-    if(!valid_option) {
+    if(mode=="") {
+        DEBUG_ERROR("No valid mode given ('" << switch_char("-mode") << "')" );
         print_help();
-        return 0;
+        return 1;
     }
-
-    // parse command line arguments
-    parse_command_line_arguments(argn,argarr);
 
     // initialize log file
     initialize_log_file();
 
+    // start data acquisition
+    return run_active();
+}
+
+void BatchMaze::parse_switches(int argn, char ** argarr) {
+    for(switch_t sw : switch_vector) {
+        QString switch_value = sw.default_value;
+        // find switches
+        for(int arg_idx=1; arg_idx<argn-1; ++arg_idx) {
+            if(sw.switch_string==argarr[arg_idx]) {
+                switch_value = argarr[arg_idx+1];
+                break;
+            }
+        }
+        // assign value to switch
+        if(sw.type=="int") {
+            bool ok;
+            int_switches[sw.switch_string] = switch_value.toInt(&ok);
+            if(!ok) {
+                DEBUG_OUT(0,"Error: could no parse value for switch '" <<
+                          sw.switch_string << "' (" <<
+                          switch_value << ")"
+                    );
+            }
+        } else if(sw.type=="double") {
+            bool ok;
+            double_switches[sw.switch_string] = switch_value.toDouble(&ok);
+            if(!ok) {
+                DEBUG_OUT(0,"Error: could no parse value for switch '" <<
+                          sw.switch_string << "' (" <<
+                          switch_value << ")"
+                    );
+            }
+        } else if(sw.type=="bool") {
+            if(switch_value=="true" || switch_value=="t") {
+                bool_switches[sw.switch_string] = true;
+            } else if(switch_value=="false" || switch_value=="f") {
+                bool_switches[sw.switch_string] = false;
+            } else {
+                DEBUG_OUT(0,"Error: could no parse value for switch '" <<
+                          sw.switch_string << "' (" <<
+                          switch_value << ")"
+                    );
+            }
+        } else if(sw.type=="char") {
+            char_switches[sw.switch_string] = switch_value;
+        } else {
+            DEBUG_DEAD_LINE;
+        }
+    }
+}
+
+int BatchMaze::switch_int(QString s) const {
+    auto elem = int_switches.find(s);
+    if(elem==int_switches.end()) {
+        DEBUG_OUT(0,"Error: Could not find <int> switch '" << s << "'");
+    }
+    return elem->second;
+}
+
+double BatchMaze::switch_double(QString s) const {
+    auto elem = double_switches.find(s);
+    if(elem==double_switches.end()) {
+        DEBUG_OUT(0,"Error: Could not find <double> switch '" << s << "'");
+    }
+    return elem->second;
+}
+
+bool BatchMaze::switch_bool(QString s) const {
+    auto elem = bool_switches.find(s);
+    if(elem==bool_switches.end()) {
+        DEBUG_OUT(0,"Error: Could not find <bool> switch '" << s << "'");
+    }
+    return elem->second;
+}
+
+QString BatchMaze::switch_char(QString s) const {
+    auto elem = char_switches.find(s);
+    if(elem==char_switches.end()) {
+        DEBUG_OUT(0,"Error: Could not find <char> switch '" << s << "'");
+    }
+    return elem->second;
+}
+
+BatchMaze::switch_t::switch_t(QString sstr,
+                              QString t,
+                              QString dv,
+                              QString hdesc):
+    switch_string(sstr),
+    type(t),
+    default_value(dv),
+    help_description(hdesc) {}
+
+int BatchMaze::run_active() {
     //--------------------------------------------//
     // setup smoothing kernel for active sampling //
     //--------------------------------------------//
+
     // smoothing kernel containing the actual data points
-    SmoothingKernelSigmoid sks(training_length_incr,  // use as kernel width
-                               2,                     // squared exponential
-                               min_training_length,   // lower bound for sampling region
-                               max_training_length    // upper bound for sampling region
-        );
-    // store virtual data points for parallelization
+    double k_width = switch_double("-kWidth"), k_exp = 2, sks_min = 0, sks_max = 1;
+    if(mode=="OPTIMAL" || mode=="RANDOM") {
+        // nothing to do
+    } else if(mode=="SEARCH_TREE") {
+        if(k_width==0) {
+            k_width = (switch_int("-maxTree")-switch_int("-minTree"))/10;
+        }
+        sks_min = switch_int("-minTree");
+        sks_max = switch_int("-maxTree");
+    } else if(mode=="TRANSITIONS") {
+        if(k_width==0) {
+            k_width = (switch_int("-maxTran")-switch_int("-minTran"))/10;
+        }
+        sks_min = switch_int("-minTran");
+        sks_max = switch_int("-maxTran");
+    } else {
+        if(k_width==0) {
+            k_width = (switch_int("-maxTrain")-switch_int("-minTrain"))/10;
+        }
+        sks_min = switch_int("-minTrain");
+        sks_max = switch_int("-maxTrain");
+    }
+    SmoothingKernelSigmoid * sks = new SmoothingKernelSigmoid(k_width, k_exp, sks_min, sks_max);
+
+    // virtual data points for parallelization
     set<tuple<int,int,double> > virtual_data;
 
     //--------------------------//
@@ -377,17 +229,23 @@ int BatchMaze::run_active(int argn, char ** argarr) {
 #ifdef USE_OMP
 #pragma omp parallel for schedule(dynamic,1) collapse(1)
 #endif
-    for(int episode_counter=1; episode_counter<=max_episodes; ++episode_counter) {
-        double virtual_reward;
-        int training_length;
+    for(int episode_counter=1; episode_counter<=switch_int("-nEp"); ++episode_counter) {
 
         // use pointers to serialize initialization
-        Maze             * maze                 = nullptr;
-        instance_t       * current_instance     = nullptr;
-        LookAheadSearch  * look_ahead_search    = nullptr;
-        KMarkovCRF       * crf                  = nullptr;
-        UTree            * utree                = nullptr;
-        LinearQ          * linQ                 = nullptr;
+        Maze                   * maze                 = nullptr;
+        instance_t             * current_instance     = nullptr;
+        LookAheadSearch        * look_ahead_search    = nullptr;
+        KMarkovCRF             * crf                  = nullptr;
+        UTree                  * utree                = nullptr;
+        LinearQ                * linQ                 = nullptr;
+        SmoothingKernelSigmoid * virtual_sks          = nullptr;
+
+        // virtual (preliminary) point
+        int virtual_x;
+        double virtual_reward;
+
+        // the quantities that may be varied
+        int training_length = 0, search_tree_size = switch_int("-maxTree"), transition_length = switch_int("-maxTran");
 
 #ifdef USE_OMP
 #pragma omp critical
@@ -395,71 +253,85 @@ int BatchMaze::run_active(int argn, char ** argarr) {
         {
             // initialize maze
             state_t start_state = state_t::random_state();
-            maze = new Maze(epsilon);
+            maze = new Maze(switch_double("-e"));
             maze->set_current_state(start_state);
             current_instance = instance_t::create(action_t::STAY,start_state,reward_t(0));
 
             // initialize look ahead search
-            look_ahead_search = new LookAheadSearch(discount);
+            look_ahead_search = new LookAheadSearch(switch_double("-d"));
 
             // initialize learners
             crf = new KMarkovCRF();
-            utree = new UTree(discount);
-            linQ = new LinearQ(discount);
+            utree = new UTree(switch_double("-d"));
+            linQ = new LinearQ(switch_double("-d"));
 
-            // get training length
-            SmoothingKernelSigmoid virtual_sks = sks;
-            for(auto data_point : virtual_data) {
-                virtual_sks.add_new_point(get<1>(data_point),get<2>(data_point));
+            // initialize virtual sks, get sample location, update virtual data
+            if(mode!="OPTIMAL" && mode!="RANDOM") {
+                // insert old points into virtual sks
+                virtual_sks = new SmoothingKernelSigmoid(*sks);
+                for(auto data_point : virtual_data) {
+                    virtual_sks->add_new_point(get<1>(data_point),get<2>(data_point));
+                }
+                // get sample location
+                virtual_x = round(virtual_sks->get_max_uncertain(sks_max-sks_min));
+                    /*virtual_x += rand()%5-2; // +/- two steps of noise*/
+                    /*virtual_x = util::clamp<int>(min_sks,max_sks,virtual_x);*/
+                // get virtual reward and add point to virtual data
+                virtual_sks->mean_dev_weights(virtual_x,virtual_reward);
+                virtual_data.insert(make_tuple(episode_counter,virtual_x,virtual_reward));
             }
-            training_length = round(virtual_sks.get_max_uncertain(max_training_length-min_training_length));
-            training_length += rand()%5-2; // +/- two steps of noise
-            training_length = util::clamp<int>(min_training_length,max_training_length,training_length);
-            virtual_sks.mean_dev_weights(training_length,virtual_reward);
-            virtual_data.insert(make_tuple(episode_counter,training_length,virtual_reward));
 
-            // generate training data
-            for(int train_step=0; train_step<training_length; ++train_step) {
-                action_t action = action_t::random_action();
-                state_t state;
-                reward_t reward;
-                maze->perform_transition(action,state,reward);
-                current_instance = current_instance->append_instance(action,state,reward);
-                if(option==OPTIMAL || option==RANDOM) {
-                    // no training data
-                } else if(option==SPARSE) {
-                    crf->add_action_state_reward_tripel(action,state,reward,false);
-                } else if(option==UTREE_VALUE || option==UTREE_PROB) {
-                    utree->add_action_state_reward_tripel(action,state,reward,false);
-                } else if(option==LINEAR_Q) {
-                    linQ->add_action_state_reward_tripel(action,state,reward,false);
-                } else {
-                    DEBUG_DEAD_LINE;
+            if(mode=="OPTIMAL" || mode=="RANDOM") {
+                // nothing to do
+            } else if(mode=="SEARCH_TREE") {
+                search_tree_size = virtual_x;
+            } else if(mode=="TRANSITIONS") {
+                transition_length = virtual_x;
+            } else {
+                training_length = virtual_x;
+
+                // generate training data
+                for(int train_step=0; train_step<training_length; ++train_step) {
+                    action_t action = action_t::random_action();
+                    state_t state;
+                    reward_t reward;
+                    maze->perform_transition(action,state,reward);
+                    current_instance = current_instance->append_instance(action,state,reward);
+                    if(mode=="SPARSE") {
+                        crf->add_action_state_reward_tripel(action,state,reward,false);
+                    } else if(mode=="UTREE_VALUE" || mode=="UTREE_PROB") {
+                        utree->add_action_state_reward_tripel(action,state,reward,false);
+                    } else if(mode=="LINEAR_Q") {
+                        linQ->add_action_state_reward_tripel(action,state,reward,false);
+                    } else {
+                        DEBUG_DEAD_LINE;
+                    }
                 }
             }
         }
+// end omp critical
 
         // train the learner
-        if(option==OPTIMAL || option==RANDOM) {
+        if(mode=="OPTIMAL" || mode=="RANDOM" || mode=="SEARCH_TREE" || mode=="TRANSITIONS") {
             // nothing to train
-        } else if(option==SPARSE) {
-            for(int complx=1; complx<=feature_complx; ++complx) {
+        } else if(mode=="SPARSE") {
+            for(int complx=1; complx<=switch_int("-f"); ++complx) {
                 crf->score_features_by_gradient(1);
                 crf->sort_scored_features(false);
                 crf->add_candidate_features_to_active(0);
-                crf->optimize_model(complx==1?0:l1_factor,0,nullptr); // no l1 in first run
+                crf->optimize_model(complx==1?0:switch_double("-l1"),0,nullptr); // no l1 in first run
                 crf->erase_zero_features();
             }
             // finalize
             crf->optimize_model(0,0,nullptr);
-        } else if(option==UTREE_PROB) {
+        } else if(mode=="UTREE_PROB") {
             utree->set_expansion_type(UTree::STATE_REWARD_EXPANSION);
             double score_threshold = 1e-3;
             double max_score = DBL_MAX;
             while(max_score>score_threshold) {
                 max_score = utree->expand_leaf_node(score_threshold);
             }
-        } else if(option==UTREE_VALUE) {
+        } else if(mode=="UTREE_VALUE") {
             utree->set_expansion_type(UTree::UTILITY_EXPANSION);
             double score_threshold = 1e-3;
             double max_score = DBL_MAX;
@@ -470,11 +342,11 @@ int BatchMaze::run_active(int argn, char ** argarr) {
                 }
                 max_score = utree->expand_leaf_node(score_threshold);
             }
-        } else if(option==LINEAR_Q) {
-            for(int complx=1; complx<=feature_complx; ++complx) {
+        } else if(mode=="LINEAR_Q") {
+            for(int complx=1; complx<=switch_int("-f"); ++complx) {
                 linQ->add_candidates(1);
                 linQ->erase_zero_features();
-                linQ->optimize_l1(l1_factor);
+                linQ->optimize_l1(switch_double("-l1"));
                 linQ->erase_zero_weighted_features();
             }
             // finalize
@@ -486,7 +358,7 @@ int BatchMaze::run_active(int argn, char ** argarr) {
         // perform transitions
         double reward_sum = 0;
         int transition_counter;
-        for(transition_counter=1; transition_counter<=max_transitions; ++transition_counter) {
+        for(transition_counter=1; transition_counter<=transition_length; ++transition_counter) {
 
             // transition variables
             action_t action;
@@ -494,42 +366,43 @@ int BatchMaze::run_active(int argn, char ** argarr) {
             reward_t reward;
 
             // choose the action
-            if(option==OPTIMAL) {
-                if(look_ahead_search->get_number_of_nodes()==0) {
-                    look_ahead_search->build_tree<Maze>(
-                        current_instance,
-                        *maze,
-                        max_tree_size
-                        );
+            if(mode=="OPTIMAL" || mode=="TRANSITIONS") {
+                if(look_ahead_search->get_number_of_nodes()==0 || !switch_bool("-pruneTree")) {
+                    look_ahead_search->clear_tree();
+                    look_ahead_search->build_tree<Maze>(current_instance, *maze, switch_int("-maxTree"));
                 } else {
-                    look_ahead_search->fully_expand_tree<Maze>(
-                        *maze,
-                        max_tree_size
-                        );
+                    look_ahead_search->fully_expand_tree<Maze>(*maze, switch_int("-maxTree"));
                 }
                 action = look_ahead_search->get_optimal_action();
-            } else if(option==RANDOM) {
+            } else if(mode=="RANDOM") {
                 action = action_t::random_action();
-            } else if(option==SPARSE) {
-                look_ahead_search->clear_tree();
-                look_ahead_search->build_tree<KMarkovCRF>(
-                    current_instance,
-                    *crf,
-                    max_tree_size
-                    );
+            } else if(mode=="SPARSE") {
+                if(look_ahead_search->get_number_of_nodes()==0 || !switch_bool("-pruneTree")) {
+                    look_ahead_search->clear_tree();
+                    look_ahead_search->build_tree<KMarkovCRF>(current_instance, *crf, switch_int("-maxTree"));
+                } else {
+                    look_ahead_search->fully_expand_tree<KMarkovCRF>(*crf, switch_int("-maxTree"));
+                }
                 action = look_ahead_search->get_optimal_action();
-            } else if(option==UTREE_PROB) {
+            } else if(mode=="UTREE_PROB") {
                 look_ahead_search->clear_tree();
-                look_ahead_search->build_tree<UTree>(
-                    current_instance,
-                    *utree,
-                    max_tree_size
-                    );
+                if(look_ahead_search->get_number_of_nodes()==0 || !switch_bool("-pruneTree")) {
+                    look_ahead_search->build_tree<UTree>(current_instance, *utree, switch_int("-maxTree"));
+                } else {
+                    look_ahead_search->fully_expand_tree<UTree>(*utree, switch_int("-maxTree"));
+                }
                 action = look_ahead_search->get_optimal_action();
-            } else if(option==UTREE_VALUE) {
+            } else if(mode=="UTREE_VALUE") {
                 action = utree->get_max_value_action(current_instance);
-            } else if(option==LINEAR_Q) {
+            } else if(mode=="LINEAR_Q") {
                 action = linQ->get_max_value_action(current_instance);
+            } else if(mode=="SEARCH_TREE") {
+                if(look_ahead_search->get_number_of_nodes()==0 || !switch_bool("-pruneTree")) {
+                    look_ahead_search->build_tree<Maze>(current_instance, *maze, search_tree_size);
+                } else {
+                    look_ahead_search->fully_expand_tree<Maze>(*maze, search_tree_size);
+                }
+                action = look_ahead_search->get_optimal_action();
             } else {
                 DEBUG_DEAD_LINE;
             }
@@ -539,16 +412,18 @@ int BatchMaze::run_active(int argn, char ** argarr) {
             current_instance = current_instance->append_instance(action,state,reward);
 
             // prune search tree
-            if(option==OPTIMAL) {
-                look_ahead_search->prune_tree(action,current_instance,*maze);
-            } else if(option==SPARSE) {
-                look_ahead_search->prune_tree(action,current_instance,*crf);
-            } else if(option==UTREE_PROB) {
-                look_ahead_search->prune_tree(action,current_instance,*utree);
-            } else if(option==RANDOM || option==UTREE_VALUE || option==LINEAR_Q) {
-                // no search tree
-            } else {
-                DEBUG_DEAD_LINE;
+            if(switch_bool("-pruneTree")) {
+                if(mode=="OPTIMAL" || mode=="SEARCH_TREE" || mode=="TRANSITIONS") {
+                    look_ahead_search->prune_tree(action,current_instance,*maze);
+                } else if(mode=="SPARSE") {
+                    look_ahead_search->prune_tree(action,current_instance,*crf);
+                } else if(mode=="UTREE_PROB") {
+                    look_ahead_search->prune_tree(action,current_instance,*utree);
+                } else if(mode=="RANDOM" || mode=="UTREE_VALUE" || mode=="LINEAR_Q") {
+                    // no search tree
+                } else {
+                    DEBUG_DEAD_LINE;
+                }
             }
 
             // increment reward
@@ -556,6 +431,7 @@ int BatchMaze::run_active(int argn, char ** argarr) {
 
             DEBUG_OUT(2, "Episode " << episode_counter <<
                       ",	training length " << training_length <<
+                      ",	tree size " << search_tree_size <<
                       ",	transition " << transition_counter <<
                       ":	current mean reward = " << reward_sum/transition_counter
                 );
@@ -568,38 +444,63 @@ int BatchMaze::run_active(int argn, char ** argarr) {
             // write data to log file
             LOG(episode_counter << " 	" <<
                 training_length << "	" <<
-                (option==SPARSE ? crf->get_number_of_features() : 0) << "	" <<
-                ( (option==UTREE_VALUE || option==UTREE_PROB) ? utree->get_tree_size() : 0) << "	" <<
-                reward_sum/max_transitions
+                transition_length << "	" <<
+                search_tree_size << "	" <<
+                (mode=="SPARSE" ? crf->get_number_of_features() : 0) << "	" <<
+                ( (mode=="UTREE_VALUE" || mode=="UTREE_PROB") ? utree->get_tree_size() : 0) << "	" <<
+                reward_sum/transition_length
                 );
 
             // update smoothing kernel and virtual data
-            bool success = virtual_data.erase(make_tuple(episode_counter,training_length,virtual_reward));
-            if(!success) {
-                DEBUG_OUT(0,"Error: Could not remove virtual data point (" << episode_counter << "," <<
-                          training_length << "," <<
-                          virtual_reward << ")"
-                    );
-            }
-            sks.add_new_point(training_length,reward_sum/max_transitions);
+            if(mode!="OPTIMAL" && mode!="RANDOM") {
+                if(mode=="SEARCH_TREE") {
+                    bool success = virtual_data.erase(make_tuple(episode_counter,search_tree_size,virtual_reward));
+                    if(!success) {
+                        DEBUG_OUT(0,"Error: Could not remove virtual data point (" << episode_counter << "," <<
+                                  search_tree_size << "," <<
+                                  virtual_reward << ")"
+                            );
+                    }
+                    sks->add_new_point(search_tree_size,reward_sum/transition_length);
+                } else if(mode=="TRANSITIONS") {
+                    bool success = virtual_data.erase(make_tuple(episode_counter,transition_length,virtual_reward));
+                    if(!success) {
+                        DEBUG_OUT(0,"Error: Could not remove virtual data point (" << episode_counter << "," <<
+                                  transition_length << "," <<
+                                  virtual_reward << ")"
+                            );
+                    }
+                    sks->add_new_point(transition_length,reward_sum/transition_length);
+                } else {
+                    bool success = virtual_data.erase(make_tuple(episode_counter,training_length,virtual_reward));
+                    if(!success) {
+                        DEBUG_OUT(0,"Error: Could not remove virtual data point (" << episode_counter << "," <<
+                                  training_length << "," <<
+                                  virtual_reward << ")"
+                            );
+                    }
+                    sks->add_new_point(training_length,reward_sum/transition_length);
+                }
 
-            // print graph to file only for more than 3 points
+
+                // print graph to file (only for more than 3 data points)
 #ifdef X_SERVER
-            if(episode_counter>3*omp_get_num_threads()) {
-                QCustomPlot * plotter = new QCustomPlot();
-                sks.print_to_QCP(plotter);
-                QString plot_file_name = date_time_string;
-                plot_file_name.append("_");
-                plot_file_name.append(option_str);
-                plot_file_name.append("_print_file_");
-                plot_file_name.append(QString("%1.png").arg(QString::number(episode_counter),(int)floor(log10(max_episodes)+1),QChar('0')));
-                DEBUG_OUT(1,"Plotting to file " << (const char*)plot_file_name.toLatin1() );
-                plotter->savePng(plot_file_name,1000,700,1,-1);
-                // plot_file_name.append(QString("%1.pdf").arg(QString::number(episode_counter),(int)floor(log10(max_episodes)+1),QChar('0')));
-                // plotter->savePdf(plot_file_name,true,1000,700);
-                delete plotter;
-            }
+                if(episode_counter>3*omp_get_num_threads()) {
+                    QCustomPlot * plotter = new QCustomPlot();
+                    sks->print_to_QCP(plotter);
+                    QString plot_file_name = date_time_string;
+                    plot_file_name.append("_");
+                    plot_file_name.append(mode);
+                    plot_file_name.append("_print_file_");
+                    plot_file_name.append(QString("%1.png").arg(QString::number(episode_counter),(int)floor(log10(switch_int("-nEp"))+1),QChar('0')));
+                    DEBUG_OUT(1,"Plotting to file " << plot_file_name );
+                    plotter->savePng(plot_file_name,1000,700,1,-1);
+                    // plot_file_name.append(QString("%1.pdf").arg(QString::number(episode_counter),(int)floor(log10(switch_int("-nEp"))+1),QChar('0')));
+                    // plotter->savePdf(plot_file_name,true,1000,700);
+                    delete plotter;
+                }
 #endif
+            }
 
             // delete pointers
             delete maze;
@@ -608,145 +509,40 @@ int BatchMaze::run_active(int argn, char ** argarr) {
             delete crf;
             delete utree;
             delete linQ;
+            delete virtual_sks;
         }
+// end omp critical
     }
-
-    // close log file
-    log_file.close();
+    delete sks;
 
     return 0;
 }
 
 void BatchMaze::print_help() {
-    DEBUG_OUT(0,"No valid option given. Please use one of:");
-    for( const char * opt : option_arr ) {
-        DEBUG_OUT(0,"    " << opt);
+    DEBUG_OUT(0,"----------------------------BatchMaze----------------------------");
+    DEBUG_OUT(0,"switch		type		default_value		description"                       );
+    DEBUG_OUT(0,"-----------------------------------------------------------------");
+    for(auto sw : switch_vector) {
+        DEBUG_OUT(0,sw.switch_string << "		" << sw.type << "		" << sw.default_value << "		" << sw.help_description);
     }
-    DEBUG_OUT(0,"Switches:");
-    DEBUG_OUT(0,"    -e          <double>    set epsilon");
-    DEBUG_OUT(0,"    -d          <double>    set discount");
-    DEBUG_OUT(0,"    -maxEp      <int>       set number of episodes");
-    DEBUG_OUT(0,"    -maxTran    <int>       set length of episode / number of transition");
-    DEBUG_OUT(0,"    -mintl      <int>       set minimum length of training data");
-    DEBUG_OUT(0,"    -maxtl      <int>       set maximum length of training data");
-    DEBUG_OUT(0,"    -tlf        <double>    set factor to increase length of training data");
-    DEBUG_OUT(0,"    -tli        <int>       set increment to increase length of training data");
-    DEBUG_OUT(0,"    -l1         <double>    set coefficient for L1 regularization");
-    DEBUG_OUT(0,"    -maxtree    <int>       set maximum size of search tree");
-    DEBUG_OUT(0,"    -fcomplx    <int>       set feature complexity for CRF and Linear-Q");
-}
-
-void BatchMaze::parse_command_line_arguments(int argn, char ** argarr) {
-    for(int arg_idx=2; arg_idx<argn; ++arg_idx) {
-        QString arg_switch = argarr[arg_idx];
-        if(arg_switch=="-e" && arg_idx<argn-1) {
-            double tmp_epsilon;
-            if(util::arg_double(argarr[arg_idx+1],0,tmp_epsilon)) {
-                epsilon = tmp_epsilon;
-                ++arg_idx;
-            } else {
-                DEBUG_OUT(0, "-e requires <double> as argument");
-            }
-        } else if(arg_switch=="-d" && arg_idx<argn-1) {
-            double tmp_discount;
-            if(util::arg_double(argarr[arg_idx+1],0,tmp_discount)) {
-                discount = tmp_discount;
-                ++arg_idx;
-            } else {
-                DEBUG_OUT(0, "-d requires <double> as argument");
-            }
-        } else if(arg_switch=="-maxEp" && arg_idx<argn-1) {
-            int tmp_int;
-            if(util::arg_int(argarr[arg_idx+1],0,tmp_int)) {
-                max_episodes = tmp_int;
-                ++arg_idx;
-            } else {
-                DEBUG_OUT(0, "-maxEp requires <int> as argument");
-            }
-        } else if(arg_switch=="-maxTran" && arg_idx<argn-1) {
-            int tmp_int;
-            if(util::arg_int(argarr[arg_idx+1],0,tmp_int)) {
-                max_transitions = tmp_int;
-                ++arg_idx;
-            } else {
-                DEBUG_OUT(0, "-maxTran requires <int> as argument");
-            }
-        } else if(arg_switch=="-mintl" && arg_idx<argn-1) {
-            int tmp_int;
-            if(util::arg_int(argarr[arg_idx+1],0,tmp_int)) {
-                min_training_length = tmp_int;
-                ++arg_idx;
-            } else {
-                DEBUG_OUT(0, "-mintl requires <int> as argument");
-            }
-        } else if(arg_switch=="-maxtl" && arg_idx<argn-1) {
-            int tmp_int;
-            if(util::arg_int(argarr[arg_idx+1],0,tmp_int)) {
-                max_training_length = tmp_int;
-                ++arg_idx;
-            } else {
-                DEBUG_OUT(0, "-maxTran requires <int> as argument");
-            }
-        } else if(arg_switch=="-tlf" && arg_idx<argn-1) {
-            double tmp_double;
-            if(util::arg_double(argarr[arg_idx+1],0,tmp_double)) {
-                training_length_factor = tmp_double;
-                ++arg_idx;
-            } else {
-                DEBUG_OUT(0, "-tlf requires <double> as argument");
-            }
-        } else if(arg_switch=="-tli" && arg_idx<argn-1) {
-            int tmp_int;
-            if(util::arg_int(argarr[arg_idx+1],0,tmp_int)) {
-                training_length_incr = tmp_int;
-                ++arg_idx;
-            } else {
-                DEBUG_OUT(0, "-tli requires <int> as argument");
-            }
-        } else if(arg_switch=="-l1" && arg_idx<argn-1) {
-            double tmp_double;
-            if(util::arg_double(argarr[arg_idx+1],0,tmp_double)) {
-                l1_factor = tmp_double;
-                ++arg_idx;
-            } else {
-                DEBUG_OUT(0, "-l1 requires <double> as argument");
-            }
-        } else if(arg_switch=="-maxtree" && arg_idx<argn-1) {
-            int tmp_int;
-            if(util::arg_int(argarr[arg_idx+1],0,tmp_int)) {
-                max_tree_size = tmp_int;
-                ++arg_idx;
-            } else {
-                DEBUG_OUT(0, "-maxtree requires <int> as argument");
-            }
-        } else if(arg_switch=="-fcomplx" && arg_idx<argn-1) {
-            int tmp_int;
-            if(util::arg_int(argarr[arg_idx+1],0,tmp_int)) {
-                feature_complx = tmp_int;
-                ++arg_idx;
-            } else {
-                DEBUG_OUT(0, "-fcomplx requires <int> as argument");
-            }
-        } else {
-            DEBUG_OUT(0,"Invalid switch " << (const char*)arg_switch.toLatin1());
-        }
+    DEBUG_OUT(0,"-----------------------------------------------------------------");
+    DEBUG_OUT(0,"Valid modes are");
+    for(QString m : mode_vector) {
+        DEBUG_OUT(0,"    " << m);
     }
+    DEBUG_OUT(0,"-----------------------------------------------------------------");
 }
 
 void BatchMaze::initialize_log_file() {
-    // date and time
-    QDateTime dateTime = QDateTime::currentDateTime();
-    date_time_string = dateTime.toString("yyyy-MM-dd_hh:mm:ss");
-
-    // log file name
     QString log_file_name = date_time_string;
     log_file_name.append("_");
-    log_file_name.append(option_str);
+    log_file_name.append(mode);
     log_file_name.append("_log_file.txt");
     log_file.open((const char*)log_file_name.toLatin1());
 
     std::string tmp_reward_str = Maze::get_rewards(), reward_str;
     std::string tmp_wall_str = Maze::get_walls(), wall_str;
+    std::string tmp_door_str = Maze::get_doors(), door_str;
     for( auto c : tmp_reward_str ) {
         if(c!='\n') {
             reward_str += c;
@@ -761,41 +557,33 @@ void BatchMaze::initialize_log_file() {
             wall_str += "\n# ";
         }
     }
+    for( auto c : tmp_door_str ) {
+        if(c!='\n') {
+            door_str += c;
+        } else {
+            door_str += "\n# ";
+        }
+    }
 
     LOG_COMMENT("Maze size:               " << Config::maze_x_size << "x" << Config::maze_y_size);
-    LOG_COMMENT("strategy               = " << (const char*)option_str.toLatin1() );
-    LOG_COMMENT("epsilon                = " << epsilon );
-    LOG_COMMENT("discount               = " << discount );
-    LOG_COMMENT("episodes               = " << max_episodes );
-    LOG_COMMENT("transitions            = " << max_transitions );
-    LOG_COMMENT("min training length    = " << min_training_length );
-    LOG_COMMENT("max training length    = " << max_training_length );
-    LOG_COMMENT("training length factor = " << training_length_factor );
-    LOG_COMMENT("training length incr.  = " << training_length_incr );
-    LOG_COMMENT("L1 coefficient         = " << l1_factor );
-    LOG_COMMENT("max tree size          = " << max_tree_size );
-    LOG_COMMENT("feature complexity     = " << feature_complx );
+    LOG_COMMENT("mode                   = " << mode );
+    LOG_COMMENT("epsilon                = " << switch_double("-e") );
+    LOG_COMMENT("discount               = " << switch_double("-d") );
+    LOG_COMMENT("episodes               = " << switch_int("-nEp") );
+    LOG_COMMENT("min transitions        = " << switch_int("-minTran") );
+    LOG_COMMENT("(max) transitions      = " << switch_int("-maxTran") );
+    LOG_COMMENT("min training length    = " << switch_int("-minTrain") );
+    LOG_COMMENT("max training length    = " << switch_int("-maxTrain") );
+    LOG_COMMENT("L1 coefficient         = " << switch_double("-l1") );
+    LOG_COMMENT("min tree size          = " << switch_int("-minTree") );
+    LOG_COMMENT("(max) tree size        = " << switch_int("-maxTree") );
+    LOG_COMMENT("feature complexity     = " << switch_int("-f") );
+    LOG_COMMENT("prune search tree      = " << (switch_bool("-pruneTree")?"Yes":"No") );
     LOG_COMMENT("");
     LOG_COMMENT(reward_str);
     LOG_COMMENT(wall_str);
+    LOG_COMMENT(door_str);
     LOG_COMMENT("");
-    LOG_COMMENT("Episode	training_length	feature_n	utree_size	episode_mean_reward");
+    LOG_COMMENT("Episode	training_length	transition_length	search_tree_size	feature_n	utree_size	episode_mean_reward");
     LOG_COMMENT("");
-}
-
-void BatchMaze::precompute_training_lengths(int * & training_lengths, int & training_steps) {
-    training_steps = 0;
-    for(int tmp_training_length=min_training_length;
-        tmp_training_length<=max_training_length;
-        tmp_training_length=tmp_training_length*training_length_factor+training_length_incr) {
-        ++training_steps;
-    }
-    training_lengths = (int*)malloc(training_steps*sizeof(int));
-    int training_idx = 0;
-    for(int tmp_training_length=min_training_length;
-        tmp_training_length<=max_training_length;
-        tmp_training_length=tmp_training_length*training_length_factor+training_length_incr) {
-        training_lengths[training_idx] = tmp_training_length;
-        ++training_idx;
-    }
 }

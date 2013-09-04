@@ -21,6 +21,10 @@
 #define DEBUG_LEVEL 0
 #endif
 
+#define DEBUG_ERROR(message) {                                          \
+        std::cout << DEBUG_STRING << "Error: " << message << std::endl; \
+    }
+
 #define DEBUG_OUT(level,message) {                              \
         if(level<=DEBUG_LEVEL) {                                \
             std::cout << DEBUG_STRING << message << std::endl;  \

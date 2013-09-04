@@ -27,7 +27,8 @@ HEADERS += LookAheadSearch.h \
     DelayDistribution.h \
     HistoryObserver.h \
     qcustomplot.h \
-    SmoothingKernelSigmoid.h
+    SmoothingKernelSigmoid.h \
+    QtUtil.h
 SOURCES += LookAheadSearch.cpp \
     util.cpp \
     BatchMaze.cpp \
@@ -51,7 +52,8 @@ SOURCES += LookAheadSearch.cpp \
     DelayDistribution.cpp \
     HistoryObserver.cpp \
     qcustomplot.cpp \
-    SmoothingKernelSigmoid.cpp
+    SmoothingKernelSigmoid.cpp \
+    QtUtil.cpp
 LIBS += -llbfgs \
     -lemon \
     -larmadillo \

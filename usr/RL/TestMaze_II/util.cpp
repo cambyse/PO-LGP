@@ -8,7 +8,6 @@
 #include "util.h"
 
 #include <iostream>
-#include <float.h>
 
 using std::cout;
 using std::endl;

@@ -12,6 +12,7 @@ using util::min;
 using util::max;
 using util::clamp;
 using util::sgn;
+using util::is_finite_number;
 using std::vector;
 using std::pair;
 using std::make_pair;
@@ -31,12 +32,17 @@ SmoothingKernelSigmoid::SmoothingKernelSigmoid(const double& width,
 SmoothingKernelSigmoid::~SmoothingKernelSigmoid() {}
 
 void SmoothingKernelSigmoid::add_new_point(const double& x, const double& y) {
-    // add point
-    x_data.push_back(x);
-    y_data.push_back(y);
-    ++raw_data_n;
-
-    DEBUG_OUT(2,"Added " << x_data.back() << "	" << y_data.back());
+    // sanity check
+    if(is_finite_number(x) && is_finite_number(y)) {
+        // add point
+        x_data.push_back(x);
+        y_data.push_back(y);
+        ++raw_data_n;
+        DEBUG_OUT(2,"Added " << x_data.back() << "	" << y_data.back());
+    } else {
+        // invalid data
+        DEBUG_ERROR("Invalid data (" << x << ", " << y << ")" );
+    }
 }
 
 double SmoothingKernelSigmoid::get_max_uncertain(const int& sample_n) const {
@@ -269,14 +275,6 @@ void SmoothingKernelSigmoid::mean_dev_weights(const double& x,
                                               double& mean_dev,
                                               double& dev) const {
 
-    // when no data are available
-    if(raw_data_n==0) {
-        mean = 0;
-        mean_dev = 1;
-        dev = 1;
-        return;
-    }
-
     double mean_sq = 0;                          // mean of squared samples
     mean = 0;                                    // sample mean
     double w_sum = 0;                            // sum of weights
@@ -291,6 +289,15 @@ void SmoothingKernelSigmoid::mean_dev_weights(const double& x,
         w_sq_sum += w*w;
     }
 
+    // no data are available or weights are too small
+    double threshold = 1e-10;
+    if(raw_data_n==0 || w_sum<threshold || w_sq_sum<threshold) {
+        mean = 0;
+        mean_dev = 1;
+        dev = 1;
+        return;
+    }
+
     mean /= w_sum;                               // normalize
     mean_sq /= w_sum;                            // normalize
     double sample_var = mean_sq - pow(mean,2);   // sample variance
@@ -302,5 +309,9 @@ void SmoothingKernelSigmoid::mean_dev_weights(const double& x,
 double SmoothingKernelSigmoid::kernel(const double& x1, const double& x2) const {
     double d = fabs(x1-x2);
     double e = pow(d/kernel_width,gamma);
-    return exp(-e);
+    double w = exp(-e);
+    if(!is_finite_number(w)) {
+        w = 0;
+    }
+    return w+1e-10; // hack to force finite weights
 }

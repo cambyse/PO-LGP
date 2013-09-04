@@ -49,8 +49,8 @@ void ProgressBar::print(const int& progress, const int& max_progress) {
 
 void ProgressBar::terminate() {
     // print a full bar
-    current_progress = bar_width;
-    print();
+    // current_progress = bar_width;
+    // print();
     // open new line for further output
     cout << endl;
 }

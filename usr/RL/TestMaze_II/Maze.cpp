@@ -8,6 +8,9 @@ using std::tuple;
 using std::get;
 using std::vector;
 using std::get;
+using std::string;
+using std::stringstream;
+using std::endl;
 
 using util::min;
 using util::max;
@@ -25,7 +28,7 @@ static const double text_center = 0.3;                            // How close t
 static const double border_margin = 0.4*state_size;               // Margin for drawing the border around the maze.
 static const double action_line_length_factor = 0.8;              // How long the action line is relative to the state size.
 static const double action_point_size_factor = 0.5;               // How large the action point is relative to the state size.
-static const bool draw_text = false;                              // Whether to draw texts.
+static const bool draw_text = true;                               // Whether to draw texts.
 
 const vector<Maze::wall_t> Maze::walls = {
 
@@ -52,7 +55,7 @@ const vector<Maze::wall_t> Maze::walls = {
     {10,11}
     /**/
 
-    /* 6x6 Maze *
+    /* 6x6 Maze */
     {12, 18},
     {13, 19},
     {14, 20},
@@ -122,6 +125,10 @@ const vector<Maze::wall_t> Maze::walls = {
 };
 
 const vector<Maze::maze_reward_t> Maze::rewards = {
+    /* 1x5 Maze *
+    { 0, 4, 4, 1, EACH_TIME_NO_PUNISH,   0,   0,   0}
+    /**/
+
     /* 2x2 Maze *
     { 0, 3, 4, 5, ON_RELEASE_NO_PUNISH, 200,   0,   0},
     { 3, 0, 4, 5, ON_RELEASE_NO_PUNISH, 200, 200,   0},
@@ -130,8 +137,8 @@ const vector<Maze::maze_reward_t> Maze::rewards = {
     /**/
 
     /* 2x2 Maze *
-    { 3, 1, 3, 1, EACH_TIME_NO_PUNISH, 200,   0,   0}
-    // { 0, 3, 2, 1, EACH_TIME_NO_PUNISH, 200,   0,   0}
+    //{ 3, 1, 3, 1, EACH_TIME_NO_PUNISH, 200,   0,   0}
+    { 0, 3, 2, 1, EACH_TIME_NO_PUNISH, 200,   0,   0}
     /**/
 
     /* 3x3 Maze *
@@ -150,7 +157,7 @@ const vector<Maze::maze_reward_t> Maze::rewards = {
     //{  8,  4,  4, 1, ON_RELEASE_NO_PUNISH, 200,   0, 200}
     /**/
 
-    /* 6x6 Maze *
+    /* 6x6 Maze */
     {25, 31, 2, 1,  EACH_TIME_NO_PUNISH, 100,   0,   0},
     {19, 25, 3, 1,  EACH_TIME_NO_PUNISH,  50,   0,   0},
     {13, 19, 1, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
@@ -201,7 +208,7 @@ const vector<Maze::door_t> Maze::doors = {
     door_t(MazeState(1,0), MazeState(1,1), MazeState(1,1),  RIGHT_BUTTON,-3, color_t(0.0,0.8,0.0) ),
     /**/
 
-    /* 6x6 Maze *
+    /* 6x6 Maze */
     door_t(MazeState(13), MazeState(19), MazeState(13),  DOWN_BUTTON,-0, color_t(0.0,0.8,0.0) ),
     door_t(MazeState(19), MazeState(25), MazeState(19),    UP_BUTTON,-1, color_t(0.0,0.4,0.0) ),
     door_t(MazeState(25), MazeState(31), MazeState(25),  DOWN_BUTTON,-0, color_t(0.0,0.8,0.0) ),
@@ -360,7 +367,7 @@ void Maze::render_update(const color_vector_t * color) {
     if(color!=nullptr) {
         idx_t col_idx = 0;
         for( auto rect_ptr : state_rects ) {
-            rect_ptr->setBrush( QColor( get<0>((*color)[col_idx])*255, get<1>((*color)[col_idx])*255, get<2>((*color)[col_idx])*255 ) );
+            rect_ptr->setBrush( QColor( get<COLOR_R>((*color)[col_idx])*255, get<COLOR_G>((*color)[col_idx])*255, get<COLOR_B>((*color)[col_idx])*255 ) );
             ++col_idx;
         }
     }
@@ -466,11 +473,11 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
 
     // check for doors (unblocking doors take precedence over closed doors)
     for( auto d : doors ) {
-        MazeState s1 = get<0>(d);
-        MazeState s2 = get<1>(d);
-        MazeState s3 = get<2>(d);
-        KEY_TYPE kt =  get<3>(d);
-        idx_t delay =  get<4>(d);
+        MazeState s1 = get<DOOR_STATE_FROM>(d);
+        MazeState s2 = get<DOOR_STATE_TO>(d);
+        MazeState s3 = get<DOOR_KEY_STATE>(d);
+        KEY_TYPE kt =  get<DOOR_KEY>(d);
+        idx_t delay =  get<DOOR_TIME_DELAY>(d);
 
         // iterate through reachable state
         for(int idx=0; idx<4; ++idx) {
@@ -619,10 +626,10 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
     // calculate accumulated reward
     reward_t accumulated_reward = 0;
     for(auto r : rewards) {
-        MazeState activate_state(r[ACTIVATION_STATE]);
-        MazeState receive_state(r[RECEIVE_STATE]);
-        idx_t delay = r[TIME_DELAY];
-        REWARD_ACTIVATION_TYPE rat = (REWARD_ACTIVATION_TYPE)r[ACTIVATION_TYPE];
+        MazeState activate_state(r[REWARD_ACTIVATION_STATE]);
+        MazeState receive_state(r[REWARD_RECEIVE_STATE]);
+        idx_t delay = r[REWARD_TIME_DELAY];
+        REWARD_ACTIVATION_TYPE rat = (REWARD_ACTIVATION_TYPE)r[REWARD_ACTIVATION];
 
         // check if reward could be received
         bool receive_reward = false;
@@ -727,23 +734,56 @@ void Maze::set_current_state(const state_t& state) {
     DEBUG_OUT(1,"Set current state to (" << current_state.x() << "," << current_state.y() << ")");
 }
 
-std::string Maze::get_rewards() {
-    std::stringstream ss;
+string Maze::get_rewards() {
+    stringstream ss;
     for(int r_idx=0; r_idx<(int)rewards.size(); ++r_idx) {
-        ss << "Reward " << r_idx << std::endl;
-        ss << "    ACTIVATION_STATE : " << (state_t)rewards[r_idx][ACTIVATION_STATE] << std::endl;
-        ss << "    RECEIVE_STATE    : " << (state_t)rewards[r_idx][RECEIVE_STATE] << std::endl;
-        ss << "    TIME_DELAY       : " << (int)rewards[r_idx][TIME_DELAY] << std::endl;
-        ss << "    reward           : " << (reward_t)rewards[r_idx][REWARD_VALUE] << std::endl;
-        ss << "    activation       : " << reward_activation_type_str((REWARD_ACTIVATION_TYPE)rewards[r_idx][ACTIVATION_TYPE]) << std::endl;
+        ss << "Reward " << r_idx << endl;
+        ss << "    ACTIVATION_STATE : " << (state_t)rewards[r_idx][REWARD_ACTIVATION_STATE] << endl;
+        ss << "    RECEIVE_STATE    : " << (state_t)rewards[r_idx][REWARD_RECEIVE_STATE] << endl;
+        ss << "    TIME_DELAY       : " << (int)rewards[r_idx][REWARD_TIME_DELAY] << endl;
+        ss << "    reward           : " << (reward_t)rewards[r_idx][REWARD_VALUE] << endl;
+        ss << "    activation       : " << reward_activation_type_str((REWARD_ACTIVATION_TYPE)rewards[r_idx][REWARD_ACTIVATION]) << endl;
     }
     return ss.str();
 }
 
-std::string Maze::get_walls() {
-    std::stringstream ss;
+string Maze::get_walls() {
+    stringstream ss;
     for(int w_idx=0; w_idx<(int)walls.size(); ++w_idx) {
-        ss << "Wall " << w_idx << ": (" << walls[w_idx][0] << "|" << walls[w_idx][1] << ")" << std::endl;
+        ss << "Wall " << w_idx << ": (" << walls[w_idx][0] << "|" << walls[w_idx][1] << ")" << endl;
+    }
+    return ss.str();
+}
+
+string Maze::get_doors() {
+    stringstream ss;
+    for(door_t d : doors) {
+        ss << "Door (" << get<DOOR_STATE_FROM>(d) << "/" << get<DOOR_STATE_TO>(d) << ")" << endl;
+        ss << "    key : " << get<DOOR_KEY_STATE>(d) << " : ";
+        switch(get<DOOR_KEY>(d)) {
+        case PASS_BUTTON:
+            ss << "PASS_BUTTON";
+            break;
+        case STAY_BUTTON:
+            ss << "STAY_BUTTON";
+            break;
+        case UP_BUTTON:
+            ss << "UP_BUTTON";
+            break;
+        case DOWN_BUTTON:
+            ss << "DOWN_BUTTON";
+            break;
+        case LEFT_BUTTON:
+            ss << "LEFT_BUTTON";
+            break;
+        case RIGHT_BUTTON:
+            ss << "RIGHT_BUTTON";
+            break;
+        default:
+            DEBUG_DEAD_LINE;
+        }
+        ss << endl;
+        ss << "    dt : " << get<DOOR_TIME_DELAY>(d) << endl;
     }
     return ss.str();
 }
@@ -828,14 +868,14 @@ void Maze::render_door(door_t dt) {
 
     QGraphicsScene * scene = view->scene();
 
-    MazeState s1 = get<0>(dt);
-    MazeState s2 = get<1>(dt);
-    MazeState s3 = get<2>(dt);
-    KEY_TYPE kt =  get<3>(dt);
-    idx_t delay =  get<4>(dt);
-    color_t c = get<5>(dt);
+    MazeState s1 = get<DOOR_STATE_FROM>(dt);
+    MazeState s2 = get<DOOR_STATE_TO>(dt);
+    MazeState s3 = get<DOOR_KEY_STATE>(dt);
+    KEY_TYPE kt =  get<DOOR_KEY>(dt);
+    idx_t delay =  get<DOOR_TIME_DELAY>(dt);
+    color_t c = get<DOOR_COLOR>(dt);
 
-    QColor door_color(255*get<0>(c),255*get<1>(c),255*get<2>(c));
+    QColor door_color(255*get<COLOR_R>(c),255*get<COLOR_G>(c),255*get<COLOR_B>(c));
     QPen door_pen(door_color, 0.05, Qt::SolidLine, Qt::RoundCap);
     QBrush door_brush(door_color);
 
@@ -915,8 +955,8 @@ void Maze::render_reward(maze_reward_t r) {
 
     QGraphicsScene * scene = view->scene();
 
-    MazeState maze_state_1((int)r[ACTIVATION_STATE]);
-    MazeState maze_state_2((int)r[RECEIVE_STATE]);
+    MazeState maze_state_1((int)r[REWARD_ACTIVATION_STATE]);
+    MazeState maze_state_2((int)r[REWARD_RECEIVE_STATE]);
     double x_start   = maze_state_1.x();
     double y_start   = maze_state_1.y();
     double x_end     = maze_state_2.x();
@@ -925,7 +965,7 @@ void Maze::render_reward(maze_reward_t r) {
     double y_shift   = (x_end-x_start)/5;
     double x_control = (x_start+x_end)/2+x_shift;
     double y_control = (y_start+y_end)/2+y_shift;
-    QColor color( (int)r[R], (int)r[G], (int)r[B]);
+    QColor color( (int)r[REWARD_R], (int)r[REWARD_G], (int)r[REWARD_B]);
     QPen   arc_pen( color,0.02,Qt::SolidLine,Qt::RoundCap );
     QPen   marker_pen( color,0.02,Qt::SolidLine,Qt::RoundCap,Qt::MiterJoin );
     QBrush brush( color );
@@ -938,7 +978,7 @@ void Maze::render_reward(maze_reward_t r) {
     scene->addPath(arc_path,arc_pen,QBrush(QColor(0,0,0,0)));
 
     // start
-    switch((REWARD_ACTIVATION_TYPE)r[ACTIVATION_TYPE]) {
+    switch((REWARD_ACTIVATION_TYPE)r[REWARD_ACTIVATION]) {
     case EACH_TIME_NO_PUNISH:
         scene->addEllipse(
             x_start-reward_start_size/2,
@@ -1017,7 +1057,7 @@ void Maze::render_reward(maze_reward_t r) {
     if(draw_text) {
         double mid_point_x = x_start + (x_end - x_start)/2;
         double mid_point_y = y_start + (y_end - y_start)/2;
-        idx_t time_delay = (idx_t)r[TIME_DELAY];
+        idx_t time_delay = (idx_t)r[REWARD_TIME_DELAY];
         reward_t reward = (reward_t)r[REWARD_VALUE];
         QGraphicsTextItem * txt = scene->addText(
             QString("t=%1,r=%2").arg(QString::number(time_delay)).arg(QString::number(reward)),

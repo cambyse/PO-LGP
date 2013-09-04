@@ -7,6 +7,7 @@
 #define UTIL_H_
 
 #include <math.h>
+#include <float.h> // DBL_MAX
 #include <QString>
 #include <vector>
 #include <sstream>
@@ -58,6 +59,16 @@ namespace util {
 
     /** \brief Tolerance for approximate comparison. */
     double approx_equal_tolerance();
+
+    /** \brief Return true if x compares equal to itself. */
+    inline bool is_number(double x) {
+        return (x == x);
+    }
+
+    /** \brief Return true if x<=DBL_MAX and x>=-DBL_MAX. */
+    inline bool is_finite_number(double x) {
+        return (x <= DBL_MAX && x >= -DBL_MAX);
+    }
 
     //========================================================//
     //                      Classes                           //

@@ -22,6 +22,7 @@ public:
 
     typedef std::tuple<double,double,double> color_t;
     typedef std::vector<color_t>             color_vector_t;
+    enum COLOR_IDX { COLOR_R, COLOR_G, COLOR_B };
 
     Maze(const double& eps = 0);
     virtual ~Maze();
@@ -90,11 +91,24 @@ public:
     /** \brief Get a string describing all walls. */
     static std::string get_walls();
 
+    /** \brief Get a string describing all doors. */
+    static std::string get_doors();
+
 private:
 
     //==========//
     // Typedefs //
     //==========//
+
+    /* \brief Enum to identify the components for defining a door. */
+    enum DOOR_COMPONENTS {
+        DOOR_STATE_FROM,
+        DOOR_STATE_TO,
+        DOOR_KEY_STATE,
+        DOOR_KEY,
+        DOOR_TIME_DELAY,
+        DOOR_COLOR
+    };
 
     /** \brief Types of keys for opening doors. */
     enum KEY_TYPE {
@@ -109,14 +123,14 @@ private:
 
     /* \brief Enum to identify the components for defining a reward. */
     enum REWARD_COMPONENTS {
-        ACTIVATION_STATE, ///< Index of state where the reward is activated.
-        RECEIVE_STATE,    ///< Index of state where the reward is received.
-        TIME_DELAY,       ///< Index of time delay between activation and reception.
-        REWARD_VALUE,     ///< Index of value of reward.
-        ACTIVATION_TYPE,  ///< Index of activation type.
-        R,                ///< Index of red component in [0,255] for displaying the reward.
-        G,                ///< Index of green component in [0,255] for displaying the reward.
-        B                 ///< Index of blue component in [0,255] for displaying the reward.
+        REWARD_ACTIVATION_STATE, ///< Index of state where the reward is activated.
+        REWARD_RECEIVE_STATE,    ///< Index of state where the reward is received.
+        REWARD_TIME_DELAY,       ///< Index of time delay between activation and reception.
+        REWARD_VALUE,            ///< Index of value of reward.
+        REWARD_ACTIVATION,       ///< Index of activation type.
+        REWARD_R,                ///< Index of red component in [0,255] for displaying the reward.
+        REWARD_G,                ///< Index of green component in [0,255] for displaying the reward.
+        REWARD_B                 ///< Index of blue component in [0,255] for displaying the reward.
     };
 
     /** \brief Type of reward activation. */
