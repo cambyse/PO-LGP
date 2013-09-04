@@ -5,6 +5,7 @@
 #include <QObject>
 #include <QMutex>
 #include <QString>
+#include <Core/util.h>
 
 class UEyeCamera: public QObject {
   Q_OBJECT
@@ -15,13 +16,16 @@ class UEyeCamera: public QObject {
     int getWidth();
     int getHeight();
     int getFPS();
-    QString getName();
+    MT::String getName();
 
     void init();
     void open();
     void close();
     void grab();
     void getImage(char *p);
+
+    void startRec(MT::String fname);
+    void stopRec();
 
     void quit();
 
@@ -33,7 +37,7 @@ class UEyeCamera: public QObject {
     SENSORINFO camInfo;
 
     int width, height, fps;
-    QString name;
+    MT::String name;
 
     bool quit_flag;
 
@@ -49,7 +53,6 @@ class UEyeCamera: public QObject {
 
     int bpp;  // bits per pixel
 
-    UINT old_pixelclock;
     UINT pixelclock;
     double real_fps;
     double exposure;

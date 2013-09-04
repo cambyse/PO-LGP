@@ -19,8 +19,6 @@ class Recorder: public QObject {
     static const int MAX_CAMS_PER_ROW = 2;
 
   private:
-    int test;
-
     // camera stuff
     OpenGL *gl;
     byteA **image;
@@ -37,6 +35,8 @@ class Recorder: public QObject {
     UEyeCamera **camera;
     QThread **thread;
     QSignalMapper *map;
+
+    MT::String foldername;
 
     QTimer timer;
 
@@ -63,6 +63,7 @@ class Recorder: public QObject {
 
   private:
     static void nothing(void*);
+    void newSession();
 
   private slots:
     void startedCam();

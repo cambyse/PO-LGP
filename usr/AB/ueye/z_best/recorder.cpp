@@ -2,6 +2,9 @@
 #include <QCoreApplication>
 #include <QThread>
 #include <unistd.h>
+#include <ctime>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include "ueyecamera.h"
 #include "recorder.h"
 
@@ -39,8 +42,6 @@ Recorder::Recorder() {
   height = 1024;
   fps = 60;
   kinect = false;
-
-  test = 0;
 }
 
 Recorder::~Recorder() {
@@ -169,6 +170,14 @@ void Recorder::play() {
 
 void Recorder::rec() {
   rec_flag = !rec_flag;
+  if(rec_flag) {
+    newSession();
+    for(int c = 0; c < numCams; c++)
+      camera[c]->startRec(foldername);
+  }
+  else
+    for(int c = 0; c < numCams; c++)
+      camera[c]->stopRec();
 }
 
 void Recorder::quit() {
@@ -205,6 +214,23 @@ void Recorder::updateDisplay() {
   for(int c = 0; c < numCams; c++)
     camera[c]->getImage((char*)image[c]->p);
   gl->update();
+}
+
+void Recorder::newSession() {
+  time_t t = time(0);
+  struct tm *now = localtime(&t);
+
+  for(int fnum = 0; ; fnum++) {
+    foldername.clear() << "./rec/session_"
+                      << (now->tm_year-100) << "."
+                      << (now->tm_mon + 1) << "."
+                      << (now->tm_mday) << "_"
+                      << (now->tm_hour) << ":"
+                      << (now->tm_min) << "_"
+                      << fnum << "/";
+    if(mkdir(foldername, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == 0)
+      break;
+  }
 }
 
 #include "recorder_moc.cpp"

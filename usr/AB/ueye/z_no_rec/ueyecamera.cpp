@@ -10,7 +10,6 @@ UEyeCamera::UEyeCamera(int cid, int w, int h, int f):
   // TODO remove. Gets any available camera.
   camID = 0;
 
-  name = QString("video_");
   image = NULL;
 }
 
@@ -26,7 +25,7 @@ int UEyeCamera::getFPS() {
   return fps;
 }
 
-QString UEyeCamera::getName() {
+MT::String UEyeCamera::getName() {
   return name;
 }
 
@@ -35,7 +34,9 @@ void UEyeCamera::init() {
   cout << "UEyeCamera()::InitCamera()" << endl;
   camStatus = is_InitCamera(&camID, NULL);
   query_status(camID, "InitCamera", &camStatus);
+  name.clear() << "video_" << camID;
   cout << " - camID = " << camID << endl;
+  cout << " - name = " << name << endl;
 
   camStatus = is_SetColorMode(camID, IS_CM_BGR8_PACKED);
   query_status(camID, "SetColorMode", &camStatus);
@@ -49,9 +50,7 @@ void UEyeCamera::init() {
   //camStatus = is_SetDisplayMode(camID, IS_SET_DM_DIB);
   //query_status(camID, "SetDisplayMode", &camStatus);
 
-  // probably not necessary, but better make sure..
   camStatus = is_SetExternalTrigger(camID, IS_SET_TRIGGER_OFF);
-  //camStatus = is_SetExternalTrigger(camID, IS_SET_TRIGGER_SOFTWARE);
   query_status(camID, "SetExternalTrigger", &camStatus);
 
   //camStatus = is_GetSensorInfo(camID, &camInfo);
@@ -63,9 +62,6 @@ void UEyeCamera::init() {
   //cout << " - pixel size = " << (float)camInfo.wPixelSize/100 << " µm" << endl;
 
   bpp = 24;
-  //cout << "width = " << width << endl;
-  //cout << "height = " << height << endl;
-  //cout << "bpp = " << bpp << endl;
 
   numBuff = 10;
   camBuff = (char**)malloc(numBuff*sizeof(char*));
@@ -90,44 +86,56 @@ void UEyeCamera::init() {
 
   // SEPARATION
 
-  camStatus = is_PixelClock(camID, IS_PIXELCLOCK_CMD_GET,
-                            (void*)&old_pixelclock, sizeof(old_pixelclock));
-  query_status(camID, "PixelClock", &camStatus);
-  cout << " - old_pixelclock = " << old_pixelclock << endl;
-
-  UINT nRange[3];
-  memset(nRange, 0, 3*sizeof(UINT));
+  UINT pr[3];
+  memset(pr, 0, 3*sizeof(UINT));
   camStatus = is_PixelClock(camID, IS_PIXELCLOCK_CMD_GET_RANGE,
-                            (void*)nRange, sizeof(nRange));
+                            (void*)pr, sizeof(pr));
   query_status(camID, "PixelClock", &camStatus);
-  cout << " - min_pixelclock = " << nRange[0] << endl;
-  cout << " - max_pixelclock = " << nRange[1] << endl;
-  cout << " - step_pixelclock = " << nRange[2] << endl;
+  cout << " - pixelclock range = " << pr[0] << ":" << pr[2] << ":" << pr[1] << endl;
 
-  // TODO how to determine this from the fps?
-  pixelclock = 86; // nRange[1];
+  pixelclock = pr[1];
   camStatus = is_PixelClock(camID, IS_PIXELCLOCK_CMD_SET,
                             (void*)&pixelclock, sizeof(pixelclock));
   query_status(camID, "PixelClock", &camStatus);
-  cout << " - pixelclock = " << pixelclock << endl;
+  cout << " - set pixelclock = " << pixelclock << endl;
 
-  // TODO check out how to fix fps issue. I want 60fps.
+  camStatus = is_PixelClock(camID, IS_PIXELCLOCK_CMD_GET,
+                            (void*)&pixelclock, sizeof(pixelclock));
+  query_status(camID, "PixelClock", &camStatus);
+  cout << " - real pixelclock = " << pixelclock << endl;
+
   camStatus = is_SetFrameRate(camID, fps, &real_fps);
   query_status(camID, "SetFrameRate", &camStatus);
-  cout << " - real_fps = " << real_fps << endl;
+  cout << " - set fps = " << fps << endl;
+  cout << " - real fps = " << real_fps << endl;
 
+  double er[3];
+  camStatus = is_Exposure(camID, IS_EXPOSURE_CMD_GET_EXPOSURE_RANGE,
+                          (void*)er, sizeof(er));
+  query_status(camID, "Exposure", &camStatus);
+  cout << " - exposure range = " << er[0] << ":" << er[2] << ":" << er[1] << endl;
+
+  exposure = er[1];
   camStatus = is_Exposure(camID, IS_EXPOSURE_CMD_SET_EXPOSURE,
                           (void*)&exposure, sizeof(exposure));
   query_status(camID, "Exposure", &camStatus);
-  cout << " - exposure = " << exposure << endl;
+  cout << " - set exposure = " << exposure << endl;
+
+  camStatus = is_Exposure(camID, IS_EXPOSURE_CMD_GET_EXPOSURE,
+                          (void*)&exposure, sizeof(exposure));
+  query_status(camID, "Exposure", &camStatus);
+  cout << " - real exposure = " << exposure << endl;
 }
 
 void UEyeCamera::open() {
   cout << "UEyeCamera(" << camID << ")::CaptureVideo" << endl;
-  //camStatus = is_CaptureVideo(camID, IS_GET_LIVE);
-  //camStatus = is_CaptureVideo(camID, IS_DONT_WAIT);
-  camStatus = is_CaptureVideo(camID, IS_WAIT);
+  camStatus = is_CaptureVideo(camID, IS_DONT_WAIT);
   query_status(camID, "CaptureVideo", &camStatus);
+
+  //camStatus = is_CaptureVideo(camID, IS_DONT_WAIT);
+  //camStatus = is_CaptureVideo(camID, IS_WAIT);
+  //camStatus = is_CaptureVideo(camID, IS_GET_LIVE);
+  //camStatus = is_CaptureVideo(camID, 300);
 
   camStatus = is_EnableEvent(camID, IS_SET_EVENT_FRAME);
   query_status(camID, "EnableEvent", &camStatus);
@@ -153,6 +161,12 @@ void UEyeCamera::close() {
 
   camStatus = is_ExitCamera(camID);
   query_status(camID, "ExitCamera", &camStatus);
+}
+
+void UEyeCamera::startRec(MT::String fname) {
+}
+
+void UEyeCamera::stopRec() {
 }
 
 void UEyeCamera::grab() {
