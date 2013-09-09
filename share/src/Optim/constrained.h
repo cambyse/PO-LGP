@@ -21,7 +21,7 @@ struct UnconstrainedProblem : ScalarFunction{
 
   virtual double fs(arr& df, arr& Hf, const arr& x); ///< this assumes that only the first entry is costs, rest constraints
 //  virtual void fv(arr& y, arr& J, const arr& x); ///< first entries: GaussNewton-type costs, following entries: constraints
-  void augmentedLagrangian_LambdaUpdate(const arr& x);
+  void augmentedLagrangian_LambdaUpdate(const arr& x, double lambdaStepsize=1.);
 };
 
 

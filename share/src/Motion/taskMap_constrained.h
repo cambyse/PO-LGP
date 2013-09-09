@@ -16,19 +16,19 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
-#ifndef _MT_taskMap_default_h
-#define _MT_taskMap_default_h
+#ifndef _MT_taskMap_constrained_h
+#define _MT_taskMap_constrained_h
 
 #include "motion.h"
 
-struct DefaultTaskMap:TaskMap {
-  DefaultTaskMapType type;
-  int i, j;             ///< which body(-ies) does it refer to?
-  ors::Transformation irel, jrel; ///< relative position to the body
-  arr params;           ///< parameters of the variable (e.g., liner coefficients, limits, etc)
+/** Proxy task variable */
+struct CollisionConstraint:public TaskMap {
+  double margin;
+
+  CollisionConstraint():margin(.1){ constraint=true; }
 
   virtual void phi(arr& y, arr& J, const ors::Graph& G);
-  virtual uint dim_phi(const ors::Graph& G);
+  virtual uint dim_phi(const ors::Graph& G){ return 1; }
 };
 
 #endif

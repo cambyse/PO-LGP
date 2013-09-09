@@ -43,17 +43,17 @@ double UnconstrainedProblem::fs(arr& df, arr& Hf, const arr& x){
   return f;
 }
 
-void UnconstrainedProblem::augmentedLagrangian_LambdaUpdate(const arr& x){
+void UnconstrainedProblem::augmentedLagrangian_LambdaUpdate(const arr& x, double lambdaStepsize){
   arr g;
   P.fc(NoArr, NoArr, g, NoArr, x);
 
   if(!lambda.N){ lambda.resize(g.N); lambda.setZero(); }
 
-  for(uint i=0;i<g.N;i++) if(g(i)>0. || lambda(i)>0.) lambda(i) += mu * 2.*g(i);
+  for(uint i=0;i<g.N;i++) if(g(i)>0. || lambda(i)>0.) lambda(i) += lambdaStepsize * mu * 2.*g(i);
 
   for(uint i=0;i<g.N;i++) if(lambda(i)<0.) lambda(i)=0.;
 
-  cout <<"Update Lambda: phi=" <<g <<" lambda=" <<lambda <<endl;
+  cout <<"Update Lambda: g=" <<g <<" lambda=" <<lambda <<endl;
 }
 
 //==============================================================================
