@@ -29,7 +29,7 @@ int main(int argn,char** argv){
   MT::initCmdLine(argn,argv);
 
   ParticleAroundWalls P;
-  P.k=2;
+  P.k=1;
   P.kern = false; //true;
   P.constrained = true;
 
@@ -45,7 +45,7 @@ int main(int argn,char** argv){
 
   //-- gradient check
   arr x(T+1,n);
-  for(uint k=0;k<2;k++){
+  for(uint k=0;k<0;k++){
     rndUniform(x,-1.,1.);
     checkJacobian(Convert(P), x, 1e-4);
   }
@@ -75,11 +75,15 @@ int main(int argn,char** argv){
     UnconstrainedProblem UCP(CP);
     UCP.mu=1.;
     for(uint k=0;k<10;k++){
+//      checkJacobian(CP, x, 1e-4);
+//      checkAll(CP, x, 1e-4);
+      //checkGradient(UCP, x, 1e-4);
       cout <<" mu=" <<UCP.mu <<" lambda=" <<UCP.lambda <<endl;
       optNewton(x, UCP, OPT(verbose=2, useAdaptiveDamping=false, damping=1., stopIters=20), (K.N? &K : NULL));
       UCP.augmentedLagrangian_LambdaUpdate(x);
+//      UCP.mu *= 10;
       write(LIST<arr>(x),"z.output");
-      gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", true, true);
+      gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", false, true);
       MT::wait();
     }
   }else{

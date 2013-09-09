@@ -37,13 +37,13 @@ void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=10){
 
   MethodType method = (MethodType)MT::getParameter<int>("method");
 
-  UnconstrainedProblem F(p);
+  UnconstrainedProblem UCP(p);
 
   //switch on penalty terms
   switch(method){
-  case squaredPenalty: F.mu=10.;  break;
-  case augmentedLag:   F.mu=10.;  break;
-  case logBarrier:     F.muLB=1.;  break;
+  case squaredPenalty: UCP.mu=10.;  break;
+  case augmentedLag:   UCP.mu=10.;  break;
+  case logBarrier:     UCP.muLB=1.;  break;
   }
 
   uint d=MT::getParameter<uint>("dim", 2);
@@ -59,30 +59,31 @@ void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=10){
   system("rm -f z.grad_all");
 
   for(uint k=0;k<iters;k++){
-    cout <<"x_start=" <<x <<" mu=" <<F.mu <<" lambda=" <<F.lambda <<endl;
-    //checkGradient(p, x, 1e-4);
-    //checkHessian (p, x, 1e-4);
+    cout <<"x_start=" <<x <<" mu=" <<UCP.mu <<" lambda=" <<UCP.lambda <<endl;
+    checkGradient(UCP, x, 1e-4);
+    //checkHessian (UCP, x, 1e-4); //will throw errors: no Hessians for g!
+    checkAll(p, x, 1e-4);
     //checkJacobian(p, x, 1e-4);
 
 //    optRprop(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
     //optGradDescent(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
-    optNewton(x, F, OPT(verbose=2, stopTolerance=1e-3, maxStep=1e-1, stopIters=20, damping=1e-3, useAdaptiveDamping=true));
+    optNewton(x, UCP, OPT(verbose=2, stopTolerance=1e-3, maxStep=1e-1, stopIters=20, damping=1e-3, useAdaptiveDamping=true));
 //    optGaussNewton(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
 
-    displayFunction((ScalarFunction&)F);
+    displayFunction((ScalarFunction&)UCP);
     MT::wait();
     gnuplot("load 'plt'", false, true);
     MT::wait();
 
     //upate unconstraint problem parameters
     switch(method){
-    case squaredPenalty: F.mu *= 10;  break;
-    case augmentedLag:   F.augmentedLagrangian_LambdaUpdate(x);  break;
-    case logBarrier:     F.muLB /= 2;  break;
+    case squaredPenalty: UCP.mu *= 10;  break;
+    case augmentedLag:   UCP.augmentedLagrangian_LambdaUpdate(x);  break;
+    case logBarrier:     UCP.muLB /= 2;  break;
     }
 
     system("cat z.grad >>z.grad_all");
-    cout <<"x_opt=" <<x <<" mu=" <<F.mu <<" lambda=" <<F.lambda <<endl;
+    cout <<"x_opt=" <<x <<" mu=" <<UCP.mu <<" lambda=" <<UCP.lambda <<endl;
   }
 
   system("mv z.grad_all z.grad");

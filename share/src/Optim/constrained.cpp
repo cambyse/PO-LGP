@@ -7,11 +7,11 @@
 
 double UnconstrainedProblem::fs(arr& df, arr& Hf, const arr& x){
   arr g, Jg;
-  double f = P.fc(df, Hf, g, (&df || &Hf?Jg:NoArr), x);
+  double f = P.fc(df, Hf, g, (&df||&Hf ? Jg : NoArr), x);
   CHECK(P.dim_g()==g.N,"this conversion requires phi.N to be m-dimensional");
 
-  if(Hf.special) Hf = unpack(Hf);
-  if(Jg.special) Jg = unpack(Jg);
+//  if(&Hf && Hf.special) Hf = unpack(Hf);
+//  if(Jg.special) Jg = unpack(Jg);
 
   //in log barrier case, check feasibility
   if(muLB)     for(uint i=0;i<g.N;i++) if(g(i)>0.) return NAN; //CHECK(phi(i)<=0., "log barrier: constraints must be fulfiled!");
@@ -21,50 +21,27 @@ double UnconstrainedProblem::fs(arr& df, arr& Hf, const arr& x){
   if(lambda.N) for(uint i=0;i<g.N;i++) if(lambda(i)>0.) f += lambda(i) * g(i);  //augments
 
   if(&df){
-    if(muLB)     for(uint i=0;i<g.N;i++) df -= (muLB/g(i))*Jg[i];  //log barrier
-    if(mu)       for(uint i=0;i<g.N;i++) if(g(i)>0. || (lambda.N && lambda(i)>0.)) df += (mu*2.*g(i))*Jg[i];  //penalty
-    if(lambda.N) for(uint i=0;i<g.N;i++) if(lambda(i)>0.) df += lambda(i)*Jg[i];  //augments
-    if(!df.special) df.reshape(x.N);
+    arr coeff(Jg.d0); coeff.setZero();
+    if(muLB)     for(uint i=0;i<g.N;i++) coeff(i) -= (muLB/g(i));  //log barrier
+    if(mu)       for(uint i=0;i<g.N;i++) if(g(i)>0. || (lambda.N && lambda(i)>0.)) coeff(i) += (mu*2.*g(i));  //penalty
+    if(lambda.N) for(uint i=0;i<g.N;i++) if(lambda(i)>0.) coeff(i) += lambda(i);  //augments
+    df += comp_At_x(Jg, coeff);
+    df.reshape(x.N);
   }
 
   if(&Hf){
     /// the 2.*Jg^T Jg terms are considered as in Gauss-Newton type; no real Hg used
-    if(muLB)     for(uint i=0;i<g.N;i++) Hf += (muLB/MT::sqr(g(i)))*(Jg[i]^Jg[i]);  //log barrier
-    if(mu)       for(uint i=0;i<g.N;i++) if(g(i)>0. || (lambda.N && lambda(i)>0.)) Hf += (mu*2.)*(Jg[i]^Jg[i]);  //penalty
-    if(lambda.N) for(uint i=0;i<g.N;i++) if(lambda(i)>0.) Hf += 0.; //augments
+    arr coeff(Jg.d0); coeff.setZero();
+    if(muLB)     for(uint i=0;i<g.N;i++) coeff(i) += (muLB/MT::sqr(g(i)));  //log barrier
+    if(mu)       for(uint i=0;i<g.N;i++) if(g(i)>0. || (lambda.N && lambda(i)>0.)) coeff(i) += (mu*2.);  //penalty
+    if(lambda.N) for(uint i=0;i<g.N;i++) if(lambda(i)>0.) coeff(i) += 0.; //augments
+    for(uint i=0;i<g.N;i++) Jg[i]() *= sqrt(coeff(i));
+    Hf += comp_At_A(Jg); //Gauss-Newton type!
     if(!Hf.special) Hf.reshape(x.N,x.N);
   }
 
   return f;
 }
-
-//void UnconstrainedProblem::fv(arr& y, arr& Jy, const arr& x){
-//  arr phi, J;
-//  f.fv(phi, (&Jy?J:NoArr), x);
-
-//  //can't handle log barriers in GaussNewton case yet
-//  if(muLB) NIY;
-//  uint c=f.get_c(); //#constraints
-//  uint m=phi.N-c;   //#costs
-//  CHECK(m>=1 && c>=1,"");
-
-//  //costs
-//  y.resize(m + (mu?c:0) + (lambda.N?c:0)); y.setZero();
-//  uint j=0;
-//  for(uint i=0;i<m;i++,j++) y(j) = phi(i); //copy the plain GaussNewton costs
-//  //if(muLB)     for(uint i=0;i<phi.N;i++,j++) f -= muLB * ::log(-phi(i));  //log barrier
-//  if(mu)       for(uint i=m;i<phi.N;i++,j++) if(phi(i)>0. || (lambda.N && lambda(i)>0.)) y(j) = sqrt(mu) * phi(i);  //penalty
-//  if(lambda.N) for(uint i=m;i<phi.N;i++,j++) if(lambda(i)>0.) y(j) = sqrt(lambda(i) * phi(i));  //augments
-
-//  if(&Jy){
-//    Jy.resize(y.N, x.N); Jy.setZero();
-//    uint j=0;
-//    for(uint i=0;i<m;i++,j++) Jy[j]() = J[i]; //copy the plain GaussNewton costs gradients
-////    if(muLB)     for(uint i=m;i<phi.N;i++,j++) g -= (muLB/phi(i))*J[i];  //log barrier
-//    if(mu)       for(uint i=m;i<phi.N;i++,j++) if(phi(i)>0. || (lambda.N && lambda(i)>0.)) Jy[j]() = sqrt(mu) * J[i];  //penalty
-//    if(lambda.N) for(uint i=m;i<phi.N;i++,j++) if(lambda(i)>0.) Jy[j]() = .5*sqrt(lambda(i)/phi(i)) * J[i];  //augments
-//  }
-//}
 
 void UnconstrainedProblem::augmentedLagrangian_LambdaUpdate(const arr& x){
   arr g;
