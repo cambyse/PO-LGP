@@ -32,10 +32,9 @@
     }
 
 #define DEBUG_DEAD_LINE {                               \
-        DEBUG_OUT(0,                                    \
-                  "Error: This line (" << __LINE__ <<   \
-                  ") in file " << __FILE__ <<           \
-                  " should never be reached");          \
+        DEBUG_ERROR("This line (" << __LINE__ <<        \
+                    ") in file " << __FILE__ <<         \
+                    " should never be reached");        \
     }
 
 #define DEBUG_IF(check) if(DEBUG_LEVEL>0 && (check))

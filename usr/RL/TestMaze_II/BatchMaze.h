@@ -32,6 +32,12 @@ private:
     /** \brief The mode BatchMaze is run in. */
     QString mode;
 
+    /** \brief Available sampling methods. */
+    static const std::vector<QString> sample_method_vector;
+
+    /** \brief The method how BatchMaze draws samples. */
+    QString sample_method;
+
     /** \brief Contains the command line switches with default value, type, and
      * help description. */
     static const std::vector<switch_t> switch_vector;
@@ -77,6 +83,12 @@ private:
 
     /** \brief Set the log file name and write the header with general information. */
     void initialize_log_file();
+
+    /** \brief Generate samples with uniform spacing. */
+    void generate_uniform_samples(std::vector<int>& sample_vector) const;
+
+    /** \brief Generate samples with exponential spacing. */
+    void generate_exp_samples(std::vector<int>& sample_vector) const;
 };
 
 #endif /* BATCHMAZE_H_ */

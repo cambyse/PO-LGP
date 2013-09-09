@@ -18,6 +18,7 @@
 #include <float.h> // for DBL_MAX
 #include <set>
 #include <tuple>
+#include <iomanip> // for std::setw
 
 #include <QString>
 #include "QtUtil.h" // for << operator
@@ -34,8 +35,13 @@ using std::set;
 using std::tuple;
 using std::make_tuple;
 using std::get;
+using std::vector;
 
-const std::vector<QString> BatchMaze::mode_vector = {
+using util::clamp;
+using util::min;
+using util::max;
+
+const vector<QString> BatchMaze::mode_vector = {
     "RANDOM",
     "OPTIMAL",
     "SPARSE",
@@ -46,21 +52,32 @@ const std::vector<QString> BatchMaze::mode_vector = {
     "TRANSITIONS"
 };
 
-const std::vector<BatchMaze::switch_t> BatchMaze::switch_vector = {
-    switch_t("-mode",      "char",   "",      "major mode BatchMaze runs in"),
-    switch_t("-nEp",       "int",    "100",   "number of episodes to run"),
-    switch_t("-minTran",   "int",    "10",    "minimum number of transitions (mode 'TRANSITIONS' only)"),
-    switch_t("-maxTran",   "int",    "1000",  "maximum number of transitions"),
-    switch_t("-e",         "double", "0.0",   "epsilon (probability for unintended random actions)"),
-    switch_t("-d",         "double", "0.5",   "discount"),
-    switch_t("-minTrain",  "int",    "100",   "minimum length of traning data"),
-    switch_t("-maxTrain",  "int",    "10000", "maximum length of traning data"),
-    switch_t("-minTree",   "int",    "1000",  "minimum size of search tree (mode 'SEARCH_TREE' only)"),
-    switch_t("-maxTree",   "int",    "10000", "maximum size of search tree"),
-    switch_t("-f",         "int",    "2",     "number of feature conjunctions"),
-    switch_t("-l1",        "double", "0.001", "L1-regularization factor"),
-    switch_t("-pruneTree", "bool",   "true",  "whether to prune the search tree"),
-    switch_t("-kWidth",    "double", "0",     "kernel width (0 for auto)"),
+const vector<QString> BatchMaze::sample_method_vector = {
+    "ACTIVE",
+    "RANDOM",
+    "UNIFORM",
+    "EXP"
+};
+
+const vector<BatchMaze::switch_t> BatchMaze::switch_vector = {
+    switch_t("-mode",         "char",   "",      "major mode BatchMaze runs in"),
+    switch_t("-sample",       "char",   "",      "the way samples are selected"),
+    switch_t("-nEp",          "int",    "100",   "number of episodes to run"),
+    switch_t("-minTran",      "int",    "10",    "minimum number of transitions (mode 'TRANSITIONS' only)"),
+    switch_t("-maxTran",      "int",    "1000",  "maximum number of transitions"),
+    switch_t("-e",            "double", "0.0",   "epsilon (probability for unintended random actions)"),
+    switch_t("-d",            "double", "0.5",   "discount"),
+    switch_t("-minTrain",     "int",    "100",   "minimum length of traning data"),
+    switch_t("-maxTrain",     "int",    "10000", "maximum length of traning data"),
+    switch_t("-minTree",      "int",    "1000",  "minimum size of search tree (mode 'SEARCH_TREE' only)"),
+    switch_t("-maxTree",      "int",    "10000", "maximum size of search tree"),
+    switch_t("-f",            "int",    "2",     "number of feature conjunctions"),
+    switch_t("-l1",           "double", "0.001", "L1-regularization factor"),
+    switch_t("-pruneTree",    "bool",   "true",  "whether to prune the search tree"),
+    switch_t("-kWidth",       "double", "0",     "kernel width for 'ACTIVE' sampling (0 for auto)"),
+    switch_t("-incr",         "int",    "0",     "increment for 'UNIFORM' and 'EXP' sampling (0 for auto, negative for resampling)"),
+    switch_t("-exp",          "double", "0",     "factor for 'EXP' sampling"),
+    switch_t("-printSamples", "bool",   "false", "don't run, only print sampling locations")
 };
 
 BatchMaze::BatchMaze() {
@@ -88,8 +105,24 @@ int BatchMaze::run(int argn, char ** argarr) {
             mode=m;
         }
     }
+
+    // check for valid sample method
+    QString sample_str = switch_char("-sample");
+    sample_method = "";
+    for(auto s : sample_method_vector) {
+        if(sample_str==s) {
+            sample_method=s;
+        }
+    }
+
+    // print help and exit in case of errors
     if(mode=="") {
         DEBUG_ERROR("No valid mode given ('" << switch_char("-mode") << "')" );
+    }
+    if(sample_method=="") {
+        DEBUG_ERROR("No valid sample method given ('" << switch_char("-sample") << "')" );
+    }
+    if(mode=="" || sample_method=="") {
         print_help();
         return 1;
     }
@@ -191,37 +224,59 @@ BatchMaze::switch_t::switch_t(QString sstr,
     help_description(hdesc) {}
 
 int BatchMaze::run_active() {
-    //--------------------------------------------//
-    // setup smoothing kernel for active sampling //
-    //--------------------------------------------//
 
-    // smoothing kernel containing the actual data points
-    double k_width = switch_double("-kWidth"), k_exp = 2, sks_min = 0, sks_max = 1;
-    if(mode=="OPTIMAL" || mode=="RANDOM") {
-        // nothing to do
-    } else if(mode=="SEARCH_TREE") {
-        if(k_width==0) {
-            k_width = (switch_int("-maxTree")-switch_int("-minTree"))/10;
+    //---------------------//
+    // setup sampling data //
+    //---------------------//
+    // "ACTIVE"
+    SmoothingKernelSigmoid * sks = nullptr;
+    set<tuple<int,int,double> > virtual_data; // virtual data points for parallelization
+    double k_width = switch_double("-kWidth"), k_exp = 2, min_sample = 0, max_sample = 1;
+    // "UNIFORM" and "EXP"
+    vector<int> sample_vector;
+    if(sample_method=="ACTIVE" || sample_method=="RANDOM") {
+        // smoothing kernel containing the actual data points
+        if(mode=="OPTIMAL" || mode=="RANDOM") {
+            // nothing to do
+        } else if(mode=="SEARCH_TREE") {
+            if(k_width==0) {
+                k_width = (switch_int("-maxTree")-switch_int("-minTree"))/10;
+            }
+            min_sample = switch_int("-minTree");
+            max_sample = switch_int("-maxTree");
+        } else if(mode=="TRANSITIONS") {
+            if(k_width==0) {
+                k_width = (switch_int("-maxTran")-switch_int("-minTran"))/10;
+            }
+            min_sample = switch_int("-minTran");
+            max_sample = switch_int("-maxTran");
+        } else {
+            if(k_width==0) {
+                k_width = (switch_int("-maxTrain")-switch_int("-minTrain"))/10;
+            }
+            min_sample = switch_int("-minTrain");
+            max_sample = switch_int("-maxTrain");
         }
-        sks_min = switch_int("-minTree");
-        sks_max = switch_int("-maxTree");
-    } else if(mode=="TRANSITIONS") {
-        if(k_width==0) {
-            k_width = (switch_int("-maxTran")-switch_int("-minTran"))/10;
+        sks = new SmoothingKernelSigmoid(k_width, k_exp, min_sample, max_sample);
+    } else if(sample_method=="UNIFORM") {
+        generate_uniform_samples(sample_vector);
+        if(switch_bool("-printSamples")) {
+            for(int s : sample_vector) {
+                LOG(s);
+            }
+            return 0;
         }
-        sks_min = switch_int("-minTran");
-        sks_max = switch_int("-maxTran");
+    } else if(sample_method=="EXP") {
+        generate_exp_samples(sample_vector);
+        if(switch_bool("-printSamples")) {
+            for(int s : sample_vector) {
+                LOG(s);
+            }
+            return 0;
+        }
     } else {
-        if(k_width==0) {
-            k_width = (switch_int("-maxTrain")-switch_int("-minTrain"))/10;
-        }
-        sks_min = switch_int("-minTrain");
-        sks_max = switch_int("-maxTrain");
+        DEBUG_DEAD_LINE;
     }
-    SmoothingKernelSigmoid * sks = new SmoothingKernelSigmoid(k_width, k_exp, sks_min, sks_max);
-
-    // virtual data points for parallelization
-    set<tuple<int,int,double> > virtual_data;
 
     //--------------------------//
     // run episodes in parallel //
@@ -265,31 +320,64 @@ int BatchMaze::run_active() {
             utree = new UTree(switch_double("-d"));
             linQ = new LinearQ(switch_double("-d"));
 
-            // initialize virtual sks, get sample location, update virtual data
-            if(mode!="OPTIMAL" && mode!="RANDOM") {
-                // insert old points into virtual sks
-                virtual_sks = new SmoothingKernelSigmoid(*sks);
-                for(auto data_point : virtual_data) {
-                    virtual_sks->add_new_point(get<1>(data_point),get<2>(data_point));
-                }
-                // get sample location
-                virtual_x = round(virtual_sks->get_max_uncertain(sks_max-sks_min));
+            // compute varying quantity
+            if(sample_method=="ACTIVE") {
+                // initialize virtual sks, get sample location, update virtual data
+                if(mode!="OPTIMAL" && mode!="RANDOM") {
+                    // insert old points into virtual sks
+                    virtual_sks = new SmoothingKernelSigmoid(*sks);
+                    for(auto data_point : virtual_data) {
+                        virtual_sks->add_new_point(get<1>(data_point),get<2>(data_point));
+                    }
+                    // get sample location
+                    virtual_x = round(virtual_sks->get_max_uncertain(max_sample-min_sample));
                     /*virtual_x += rand()%5-2; // +/- two steps of noise*/
-                    /*virtual_x = util::clamp<int>(min_sks,max_sks,virtual_x);*/
-                // get virtual reward and add point to virtual data
-                virtual_sks->mean_dev_weights(virtual_x,virtual_reward);
-                virtual_data.insert(make_tuple(episode_counter,virtual_x,virtual_reward));
+                    /*virtual_x = clamp<int>(min_sks,max_sks,virtual_x);*/
+                    // get virtual reward and add point to virtual data
+                    virtual_sks->mean_dev_weights(virtual_x,virtual_reward);
+                    virtual_data.insert(make_tuple(episode_counter,virtual_x,virtual_reward));
+                }
+
+                // set varying quantity
+                if(mode=="OPTIMAL" || mode=="RANDOM") {
+                    // nothing to do
+                } else if(mode=="SEARCH_TREE") {
+                    search_tree_size = virtual_x;
+                } else if(mode=="TRANSITIONS") {
+                    transition_length = virtual_x;
+                } else {
+                    training_length = virtual_x;
+                }
+            } else if(sample_method=="UNIFORM" || sample_method=="EXP") {
+                // set varying quantity
+                if(mode=="OPTIMAL" || mode=="RANDOM") {
+                    // nothing to do
+                } else if(mode=="SEARCH_TREE") {
+                    search_tree_size = sample_vector[episode_counter-1];
+                } else if(mode=="TRANSITIONS") {
+                    transition_length = sample_vector[episode_counter-1];
+                } else {
+                    training_length = sample_vector[episode_counter-1];
+                }
+            } else if(sample_method=="RANDOM") {
+                // set varying quantity
+                int sample = (int)round(drand48()*(max_sample-min_sample)+min_sample);
+                if(mode=="OPTIMAL" || mode=="RANDOM") {
+                    // nothing to do
+                } else if(mode=="SEARCH_TREE") {
+                    search_tree_size = sample;
+                } else if(mode=="TRANSITIONS") {
+                    transition_length = sample;
+                } else {
+                    training_length = sample;
+                }
+            } else {
+                DEBUG_DEAD_LINE;
             }
 
-            if(mode=="OPTIMAL" || mode=="RANDOM") {
-                // nothing to do
-            } else if(mode=="SEARCH_TREE") {
-                search_tree_size = virtual_x;
-            } else if(mode=="TRANSITIONS") {
-                transition_length = virtual_x;
+            if(mode=="OPTIMAL" || mode=="RANDOM" || mode=="SEARCH_TREE" || mode=="TRANSITIONS") {
+                // nothing more to do
             } else {
-                training_length = virtual_x;
-
                 // generate training data
                 for(int train_step=0; train_step<training_length; ++train_step) {
                     action_t action = action_t::random_action();
@@ -311,7 +399,9 @@ int BatchMaze::run_active() {
         }
 // end omp critical
 
-        // train the learner
+        //-------------------//
+        // train the learner //
+        //-------------------//
         if(mode=="OPTIMAL" || mode=="RANDOM" || mode=="SEARCH_TREE" || mode=="TRANSITIONS") {
             // nothing to train
         } else if(mode=="SPARSE") {
@@ -355,7 +445,9 @@ int BatchMaze::run_active() {
             DEBUG_DEAD_LINE;
         }
 
-        // perform transitions
+        //---------------------//
+        // perform transitions //
+        //---------------------//
         double reward_sum = 0;
         int transition_counter;
         for(transition_counter=1; transition_counter<=transition_length; ++transition_counter) {
@@ -451,55 +543,63 @@ int BatchMaze::run_active() {
                 reward_sum/transition_length
                 );
 
-            // update smoothing kernel and virtual data
-            if(mode!="OPTIMAL" && mode!="RANDOM") {
-                if(mode=="SEARCH_TREE") {
-                    bool success = virtual_data.erase(make_tuple(episode_counter,search_tree_size,virtual_reward));
-                    if(!success) {
-                        DEBUG_OUT(0,"Error: Could not remove virtual data point (" << episode_counter << "," <<
-                                  search_tree_size << "," <<
-                                  virtual_reward << ")"
-                            );
+            // for "ACTIVE" sampling: update smoothing kernel and virtual data,
+            // print data if X server available
+            if(sample_method=="ACTIVE") {
+                // update smoothing kernel and virtual data
+                if(mode!="OPTIMAL" && mode!="RANDOM") {
+                    if(mode=="SEARCH_TREE") {
+                        bool success = virtual_data.erase(make_tuple(episode_counter,search_tree_size,virtual_reward));
+                        if(!success) {
+                            DEBUG_OUT(0,"Error: Could not remove virtual data point (" << episode_counter << "," <<
+                                      search_tree_size << "," <<
+                                      virtual_reward << ")"
+                                );
+                        }
+                        sks->add_new_point(search_tree_size,reward_sum/transition_length);
+                    } else if(mode=="TRANSITIONS") {
+                        bool success = virtual_data.erase(make_tuple(episode_counter,transition_length,virtual_reward));
+                        if(!success) {
+                            DEBUG_OUT(0,"Error: Could not remove virtual data point (" << episode_counter << "," <<
+                                      transition_length << "," <<
+                                      virtual_reward << ")"
+                                );
+                        }
+                        sks->add_new_point(transition_length,reward_sum/transition_length);
+                    } else {
+                        bool success = virtual_data.erase(make_tuple(episode_counter,training_length,virtual_reward));
+                        if(!success) {
+                            DEBUG_OUT(0,"Error: Could not remove virtual data point (" << episode_counter << "," <<
+                                      training_length << "," <<
+                                      virtual_reward << ")"
+                                );
+                        }
+                        sks->add_new_point(training_length,reward_sum/transition_length);
                     }
-                    sks->add_new_point(search_tree_size,reward_sum/transition_length);
-                } else if(mode=="TRANSITIONS") {
-                    bool success = virtual_data.erase(make_tuple(episode_counter,transition_length,virtual_reward));
-                    if(!success) {
-                        DEBUG_OUT(0,"Error: Could not remove virtual data point (" << episode_counter << "," <<
-                                  transition_length << "," <<
-                                  virtual_reward << ")"
-                            );
-                    }
-                    sks->add_new_point(transition_length,reward_sum/transition_length);
-                } else {
-                    bool success = virtual_data.erase(make_tuple(episode_counter,training_length,virtual_reward));
-                    if(!success) {
-                        DEBUG_OUT(0,"Error: Could not remove virtual data point (" << episode_counter << "," <<
-                                  training_length << "," <<
-                                  virtual_reward << ")"
-                            );
-                    }
-                    sks->add_new_point(training_length,reward_sum/transition_length);
-                }
 
 
-                // print graph to file (only for more than 3 data points)
+                    // print graph to file (only for more than 3 data points)
 #ifdef X_SERVER
-                if(episode_counter>3*omp_get_num_threads()) {
-                    QCustomPlot * plotter = new QCustomPlot();
-                    sks->print_to_QCP(plotter);
-                    QString plot_file_name = date_time_string;
-                    plot_file_name.append("_");
-                    plot_file_name.append(mode);
-                    plot_file_name.append("_print_file_");
-                    plot_file_name.append(QString("%1.png").arg(QString::number(episode_counter),(int)floor(log10(switch_int("-nEp"))+1),QChar('0')));
-                    DEBUG_OUT(1,"Plotting to file " << plot_file_name );
-                    plotter->savePng(plot_file_name,1000,700,1,-1);
-                    // plot_file_name.append(QString("%1.pdf").arg(QString::number(episode_counter),(int)floor(log10(switch_int("-nEp"))+1),QChar('0')));
-                    // plotter->savePdf(plot_file_name,true,1000,700);
-                    delete plotter;
-                }
+                    if(episode_counter>3*omp_get_num_threads()) {
+                        QCustomPlot * plotter = new QCustomPlot();
+                        sks->print_to_QCP(plotter);
+                        QString plot_file_name = date_time_string;
+                        plot_file_name.append("_");
+                        plot_file_name.append(mode);
+                        plot_file_name.append("_");
+                        plot_file_name.append(sample_method);
+                        plot_file_name.append("_print_file_");
+                        plot_file_name.append(QString("%1.png").arg(QString::number(episode_counter),(int)floor(log10(switch_int("-nEp"))+1),QChar('0')));
+                        DEBUG_OUT(1,"Plotting to file " << plot_file_name );
+                        plotter->savePng(plot_file_name,1000,700,1,-1);
+                        // plot_file_name.append(QString("%1.pdf").arg(QString::number(episode_counter),(int)floor(log10(switch_int("-nEp"))+1),QChar('0')));
+                        // plotter->savePdf(plot_file_name,true,1000,700);
+                        delete plotter;
+                    }
 #endif
+                } else {
+                    // nothing to do for other sampling methods
+                }
             }
 
             // delete pointers
@@ -520,15 +620,24 @@ int BatchMaze::run_active() {
 
 void BatchMaze::print_help() {
     DEBUG_OUT(0,"----------------------------BatchMaze----------------------------");
-    DEBUG_OUT(0,"switch		type		default_value		description"                       );
+    DEBUG_OUT(0,"switch            type      default_value description"                       );
     DEBUG_OUT(0,"-----------------------------------------------------------------");
     for(auto sw : switch_vector) {
-        DEBUG_OUT(0,sw.switch_string << "		" << sw.type << "		" << sw.default_value << "		" << sw.help_description);
+        DEBUG_OUT(0, std::setw(18) << std::left << sw.switch_string <<
+                  std::setw(10) << std::left << sw.type <<
+                  std::setw(14) << std::left << sw.default_value <<
+                  sw.help_description
+            );
     }
     DEBUG_OUT(0,"-----------------------------------------------------------------");
     DEBUG_OUT(0,"Valid modes are");
     for(QString m : mode_vector) {
         DEBUG_OUT(0,"    " << m);
+    }
+    DEBUG_OUT(0,"-----------------------------------------------------------------");
+    DEBUG_OUT(0,"Valid sample methods are");
+    for(QString s : sample_method_vector) {
+        DEBUG_OUT(0,"    " << s);
     }
     DEBUG_OUT(0,"-----------------------------------------------------------------");
 }
@@ -537,6 +646,8 @@ void BatchMaze::initialize_log_file() {
     QString log_file_name = date_time_string;
     log_file_name.append("_");
     log_file_name.append(mode);
+    log_file_name.append("_");
+    log_file_name.append(sample_method);
     log_file_name.append("_log_file.txt");
     log_file.open((const char*)log_file_name.toLatin1());
 
@@ -565,20 +676,39 @@ void BatchMaze::initialize_log_file() {
         }
     }
 
-    LOG_COMMENT("Maze size:               " << Config::maze_x_size << "x" << Config::maze_y_size);
-    LOG_COMMENT("mode                   = " << mode );
-    LOG_COMMENT("epsilon                = " << switch_double("-e") );
-    LOG_COMMENT("discount               = " << switch_double("-d") );
-    LOG_COMMENT("episodes               = " << switch_int("-nEp") );
-    LOG_COMMENT("min transitions        = " << switch_int("-minTran") );
-    LOG_COMMENT("(max) transitions      = " << switch_int("-maxTran") );
-    LOG_COMMENT("min training length    = " << switch_int("-minTrain") );
-    LOG_COMMENT("max training length    = " << switch_int("-maxTrain") );
-    LOG_COMMENT("L1 coefficient         = " << switch_double("-l1") );
-    LOG_COMMENT("min tree size          = " << switch_int("-minTree") );
-    LOG_COMMENT("(max) tree size        = " << switch_int("-maxTree") );
-    LOG_COMMENT("feature complexity     = " << switch_int("-f") );
-    LOG_COMMENT("prune search tree      = " << (switch_bool("-pruneTree")?"Yes":"No") );
+    LOG_COMMENT("Switches:");
+    for(switch_t sw : switch_vector) {
+        QString ss = sw.switch_string;
+        QString st = sw.type;
+        if(st=="int") {
+            LOG_COMMENT(std::setw(18) << std::left << ss << " = " << switch_int(ss) );
+        } else if(st=="double") {
+            LOG_COMMENT(std::setw(18) << std::left << ss << " = " << switch_double(ss) );
+        } else if(st=="bool") {
+            LOG_COMMENT(std::setw(18) << std::left << ss << " = " << switch_bool(ss) );
+        } else if(st=="char") {
+            LOG_COMMENT(std::setw(18) << std::left << ss << " = " << switch_char(ss) );
+        } else {
+            DEBUG_DEAD_LINE;
+        }
+    }
+    // LOG_COMMENT("mode                   = " << mode );
+    // LOG_COMMENT("sample method          = " << sample_method );
+    // LOG_COMMENT("epsilon                = " << switch_double("-e") );
+    // LOG_COMMENT("discount               = " << switch_double("-d") );
+    // LOG_COMMENT("episodes               = " << switch_int("-nEp") );
+    // LOG_COMMENT("min transitions        = " << switch_int("-minTran") );
+    // LOG_COMMENT("(max) transitions      = " << switch_int("-maxTran") );
+    // LOG_COMMENT("min training length    = " << switch_int("-minTrain") );
+    // LOG_COMMENT("max training length    = " << switch_int("-maxTrain") );
+    // LOG_COMMENT("L1 coefficient         = " << switch_double("-l1") );
+    // LOG_COMMENT("min tree size          = " << switch_int("-minTree") );
+    // LOG_COMMENT("(max) tree size        = " << switch_int("-maxTree") );
+    // LOG_COMMENT("feature complexity     = " << switch_int("-f") );
+    // LOG_COMMENT("prune search tree      = " << (switch_bool("-pruneTree")?"Yes":"No") );
+    // LOG_COMMENT("print samples          = " << (switch_bool("-printSamples")?"Yes":"No") );
+    LOG_COMMENT("");
+    LOG_COMMENT("Maze size: " << Config::maze_x_size << "x" << Config::maze_y_size);
     LOG_COMMENT("");
     LOG_COMMENT(reward_str);
     LOG_COMMENT(wall_str);
@@ -586,4 +716,74 @@ void BatchMaze::initialize_log_file() {
     LOG_COMMENT("");
     LOG_COMMENT("Episode	training_length	transition_length	search_tree_size	feature_n	utree_size	episode_mean_reward");
     LOG_COMMENT("");
+}
+
+void BatchMaze::generate_uniform_samples(vector<int>& sample_vector) const {
+    // get minimum and maximum
+    int min = 0, max = 0;
+    if(mode=="OPTIMAL" || mode=="RANDOM") {
+        // nothing to do
+    } else if(mode=="SEARCH_TREE") {
+        min = switch_int("-minTree");
+        max = switch_int("-maxTree");
+    } else if(mode=="TRANSITIONS") {
+        min = switch_int("-minTran");
+        max = switch_int("-maxTran");
+    } else {
+        min = switch_int("-minTrain");
+        max = switch_int("-maxTrain");
+    }
+    // get number of episodes
+    int episodes = switch_int("-nEp");
+    sample_vector.resize(episodes);
+    // get increment
+    int incr = switch_int("-incr");
+    if(incr==0) {
+        incr = (int)ceil((double)(max-min)/(episodes-1));
+    } else if(incr<0) {
+        incr = (int)ceil((double)(max-min)/((-episodes/incr)-1));
+    }
+    for(int i=0; i<episodes; ++i) {
+        int incr_factor = i%(1+(int)ceil((double)(max-min)/incr));
+        sample_vector[i] = util::min<int>(max,min+incr_factor*incr);
+    }
+}
+
+void BatchMaze::generate_exp_samples(vector<int>& sample_vector) const {
+    // get minimum and maximum
+    int min = 0, max = 0;
+    if(mode=="OPTIMAL" || mode=="RANDOM") {
+        // nothing to do
+    } else if(mode=="SEARCH_TREE") {
+        min = switch_int("-minTree");
+        max = switch_int("-maxTree");
+    } else if(mode=="TRANSITIONS") {
+        min = switch_int("-minTran");
+        max = switch_int("-maxTran");
+    } else {
+        min = switch_int("-minTrain");
+        max = switch_int("-maxTrain");
+    }
+
+    // get number of episodes
+    int episodes = switch_int("-nEp");
+    sample_vector.resize(episodes);
+
+    // get factor
+    double exp_factor = switch_double("-exp");
+
+    // get increment
+    int incr = switch_int("-incr");
+
+    // get maximum idx
+    int max_i = 0;
+    while((int)round(min + max_i*incr + pow(exp_factor,max_i) - 1) < max) {
+        ++max_i;
+    }
+
+    // generate samples
+    for(int i=0; i<episodes; ++i) {
+        int idx = i%(max_i+1);
+        sample_vector[i] = util::min<int>((int)round(min + idx*incr + pow(exp_factor,idx) - 1),max);
+    }
 }
