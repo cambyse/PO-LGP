@@ -48,10 +48,8 @@ Recorder::~Recorder() {
   delete gl;
   delete keys;
 
-  for(int c = 0; c < numCams; c++) {
+  for(int c = 0; c < numCams; c++)
     delete image[c];
-    delete thread[c];
-  }
   delete[] image;
   delete[] thread;
   delete map;
@@ -106,6 +104,12 @@ void Recorder::initThreads() {
 
   for(int c = 0; c < numCams; c++) {
     camera[c] = new UEyeCamera(c+1, width, height, fps);
+    camera[c]->camInit();
+    camera[c]->open();
+    cout << endl;
+  }
+
+  for(int c = 0; c < numCams; c++) {
     thread[c] = new QThread();
 
     connect(thread[c], SIGNAL(started()), camera[c], SLOT(process()));
@@ -115,22 +119,12 @@ void Recorder::initThreads() {
     map->setMapping(thread[c], c);
 
     connect(camera[c], SIGNAL(finished()), camera[c], SLOT(deleteLater()));
+    connect(thread[c], SIGNAL(finished()), thread[c], SLOT(deleteLater()));
 
     camera[c]->moveToThread(thread[c]);
   }
   connect(map, SIGNAL(mapped(int)), this, SLOT(collectCam(int)));
   openCams = 0;
-
-  // start cameras
-  for(int c = 0; c < numCams; c++) {
-    camera[c]->init();
-    cout << endl;
-  }
-  cout << endl;
-  for(int c = 0; c < numCams; c++) {
-    camera[c]->open();
-    cout << endl;
-  }
 
   // start threads
   cout << "Recorder:: starting threads." << endl;
@@ -170,9 +164,11 @@ void Recorder::play() {
 
 void Recorder::rec() {
   rec_flag = !rec_flag;
-  if(rec_flag)
+  if(rec_flag) {
+    newSession();
     for(int c = 0; c < numCams; c++)
       camera[c]->startRec(foldername);
+  }
   else
     for(int c = 0; c < numCams; c++)
       camera[c]->stopRec();
@@ -195,15 +191,36 @@ void Recorder::startedCam() {
 }
 
 void Recorder::collectCam(int c) {
-  // for some reason this doens't work
-  // camera[c]->close();
-  
-  thread[c]->wait();
   openCams--;
   cout << "Recorder::collectCam(), remaining: " << openCams << endl;
 
   if(openCams == 0)
     QCoreApplication::quit();
+  /*
+  if(openCams == 0)
+    collectThreads();
+  */
+  /*
+  cout << "c = " << c << endl;
+  thread[c]->wait();
+  camera[c]->camExit();
+  openCams--;
+  cout << "Recorder::collectCam(), remaining: " << openCams << endl;
+
+  if(openCams == 0) {
+    cout << endl;
+    cout << "You can now safely quit." << endl;
+    //QCoreApplication::quit();
+  }
+  */
+}
+
+void Recorder::collectThreads() {
+  for(int c = 0; c < numCams; c++)
+    thread[c]->wait();
+
+  cout << endl;
+  cout << "You can now safely quit" << endl;
 }
 
 void Recorder::nothing(void*) {}
