@@ -1,0 +1,5 @@
+#!/bin/bash
+
+ueye_daemon force-stop
+ueye_daemon start
+
