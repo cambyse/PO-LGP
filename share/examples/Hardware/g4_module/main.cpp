@@ -1,4 +1,4 @@
-#include <hardware/G4/G4.h>
+#include <Hardware/G4/G4.h>
 #include <System/engine.h>
 
 void miniTest(){
