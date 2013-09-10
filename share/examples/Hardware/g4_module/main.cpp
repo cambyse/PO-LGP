@@ -40,7 +40,7 @@ void threadedRun(){
   G4System S;
 
   engine().open(S);
-  for(uint i=0;i<100;i++){
+  for(uint i=0;i<10;i++){
     S.currentPoses.var->waitForNextWriteAccess();
     cout <<i <<' ' <<S.currentPoses.get() <<endl;
   }
