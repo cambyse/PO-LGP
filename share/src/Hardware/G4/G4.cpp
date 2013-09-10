@@ -28,7 +28,7 @@ void G4Poller::open(){
   for(uint i=0;i<100;i++){
     res = g4_set_query(&cs);
     hubs = cs.cds.iParam;
-    if(hubs) break; //success!
+    //if(hubs) break; //success!
 //    cout << "Hubs from thing = " << hubs << endl;
     MT::wait(.001, false);
   }
@@ -71,17 +71,20 @@ void G4Poller::step(){
   // 	   <<" #data-avail hubs=" <<num_hubs_read <<endl;
 
   if(!num_hubs_read) return;
+  poses.setZero();
 
   for(int h=0; h<num_hubs_read; h++) {
     for(uint s=0; s<G4_SENSORS_PER_HUB; s++) {
       if(framedata[h].stationMap&(0x01<<s)){ // we have data on hub h and sensor s
-//        cout <<" hub " <<fd[h].hub
-//            <<" sensor " <<s
-//           <<" frame " <<fd[h].frame
-//          <<" id=" <<fd[h].sfd[s].id
-//         <<" pos=" <<fd[h].sfd[s].pos[0] <<' '<<fd[h].sfd[s].pos[1] <<' ' <<fd[h].sfd[s].pos[2]
-//        <<" ori=" <<fd[h].sfd[s].ori[0] <<' '<<fd[h].sfd[s].ori[1] <<' ' <<fd[h].sfd[s].ori[2] <<' ' <<fd[h].sfd[s].ori[3]
-//        <<endl;
+#if 0
+        cout <<" hub " <<framedata[h].hub
+            <<" sensor " <<s
+           <<" frame " <<framedata[h].frame
+          <<" id=" <<framedata[h].sfd[s].id
+         <<" pos=" <<framedata[h].sfd[s].pos[0] <<' '<<framedata[h].sfd[s].pos[1] <<' ' <<framedata[h].sfd[s].pos[2]
+        <<" ori=" <<framedata[h].sfd[s].ori[0] <<' '<<framedata[h].sfd[s].ori[1] <<' ' <<framedata[h].sfd[s].ori[2] <<' ' <<framedata[h].sfd[s].ori[3]
+        <<endl;
+#endif
         memmove(&poses(h,s,0), framedata[h].sfd[s].pos, 7*poses.sizeT); //low level copy of data
       }
     }
