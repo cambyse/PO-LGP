@@ -1,9 +1,8 @@
 BASE = ../../../share
 
-OPENCV=1
-
 # G4 stuff
-CXXFLAGS += -I/usr/local/include
+#CXXFLAGS += -I/usr/local/include
+CXXFLAGS += -fPIC
 LIBS += -lG4Track
 
 DEPEND = Core
