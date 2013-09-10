@@ -40,14 +40,14 @@ int main(int argn,char** argv){
   MotionProblemFunction F(P);
   Convert CP(F);
   UnconstrainedProblem UCP(CP);
-  UCP.mu = 1.;
+  UCP.mu = 10.;
 
   arr x(F.get_T()+1,F.dim_x());
   x.setZero();
 
   if(con){
     for(uint k=0;k<10;k++){
-      //checkAll(CP, x, 1e-4);
+      checkAll(CP, x, 1e-4);
       optNewton(x, UCP, OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
       P.costReport();
       write(LIST<arr>(x),"z.output");

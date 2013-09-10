@@ -2,7 +2,7 @@
 #include <Gui/opengl.h>
 #include <signal.h>
 
-#include <hardware/kinect/kinect.h>
+#include <Hardware/kinect/kinect.h>
 
 void lib_hardware_kinect();
 void lib_Perception();
