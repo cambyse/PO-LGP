@@ -1,4 +1,4 @@
-BASE = ../..
+BASE = ../../..
 
 DEPEND = Core System Hardware_kinect Perception Gui
 
