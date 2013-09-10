@@ -3,6 +3,9 @@
 
 #include <Core/module.h>
 
+#define Kinect_image_width 640
+#define Kinect_image_height 480
+
 struct KinectPoller : Module {
   struct sKinectInterface *s;
 
