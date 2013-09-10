@@ -241,9 +241,9 @@ double sConvert::KOrderMarkovFunction_ConstrainedProblem::fc(arr& df, arr& Hf, a
   arr meta_y, meta_Jy;
   RowShiftedPackedMatrix *Jy_aux, *Jg_aux;
   meta_y.resize(meta_yd);
-  meta_g.resize(meta_gd);
+  if(&meta_g) meta_g.resize(meta_gd);
   if(getJ) Jy_aux = auxRowShifted(meta_Jy, meta_yd, (k+1)*n, x.N);
-  if(getJ) Jg_aux = auxRowShifted(meta_Jg, meta_gd, (k+1)*n, x.N);
+  if(&meta_Jg) Jg_aux = auxRowShifted(meta_Jg, meta_gd, (k+1)*n, x.N);
 
   uint y_count=0;
   uint g_count=0;
@@ -292,8 +292,8 @@ double sConvert::KOrderMarkovFunction_ConstrainedProblem::fc(arr& df, arr& Hf, a
     if(gd){
       g.referToSubRange(phi, yd, -1);
       CHECK(g.N==gd,"");
-      meta_g.setVectorBlock(g, g_count);
-      if(getJ) {
+      if(&meta_g) meta_g.setVectorBlock(g, g_count);
+      if(&meta_Jg) {
         Jg.referToSubRange(Jphi, yd, -1);
         if(t>=k) {
           meta_Jg.setMatrixBlock(Jg, g_count, 0);
@@ -309,9 +309,9 @@ double sConvert::KOrderMarkovFunction_ConstrainedProblem::fc(arr& df, arr& Hf, a
     }
   }
   CHECK(y_count==meta_y.N,"");
-  CHECK(g_count==meta_g.N,"");
+  if(&meta_g) CHECK(g_count==meta_g.N,"");
   if(getJ) Jy_aux->computeColPatches(true);
-  if(getJ) Jg_aux->computeColPatches(true);
+  if(&meta_Jg) Jg_aux->computeColPatches(true);
   //if(&J) J=Jaux->unpack();
 
   //finally, compute the scalar function

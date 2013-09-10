@@ -46,7 +46,7 @@ struct ProxyTaskMap:public TaskMap {
                bool _linear=false);
   
   virtual void phi(arr& y, arr& J, const ors::Graph& G);
-  virtual uint phiDim(const ors::Graph& G);
+  virtual uint dim_phi(const ors::Graph& G);
 };
 
 /** proxy align task variable */
@@ -64,7 +64,7 @@ struct ProxyAlignTaskMap:public TaskMap {
                     bool _linear=true);
   
   virtual void phi(arr& y, arr& J, const ors::Graph& G);
-  virtual uint phiDim(const ors::Graph& G);
+  virtual uint dim_phi(const ors::Graph& G);
 };
 
 #endif

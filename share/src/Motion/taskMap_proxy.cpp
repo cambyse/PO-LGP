@@ -102,7 +102,7 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::Graph& G){
   }
 }
 
-uint ProxyTaskMap::phiDim(const ors::Graph& G){
+uint ProxyTaskMap::dim_phi(const ors::Graph& G){
   switch(type) {
   case allCTVT:
   case allListedCTVT:
