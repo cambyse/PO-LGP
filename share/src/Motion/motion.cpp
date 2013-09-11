@@ -217,6 +217,10 @@ uint MotionProblem::dim_phi(uint t) {
     if(c->active) {
       if(c->y_target.N || c->map.constraint) m += c->map.dim_phi(*ors);
       if(transitionType!=kinematic && c->v_target.N)  m += c->map.dim_phi(*ors);
+#define STICK 1
+#ifdef STICK
+      if(c->active && c->map.constraint)  m += c->map.dim_phi(*ors);
+#endif
     }
   }
   return m;
@@ -226,9 +230,7 @@ uint MotionProblem::dim_g(uint t) {
   uint m=0;
   for(uint i=0; i<taskCosts.N; i++) {
     TaskCost *c = taskCosts(i);
-    if(c->active && c->map.constraint) {
-      m += c->map.dim_phi(*ors);
-    }
+    if(c->active && c->map.constraint)  m += c->map.dim_phi(*ors);
   }
   return m;
 }
@@ -256,6 +258,18 @@ void MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
         if(&J_v) J_v.append(sqrt(c->v_prec(t))*J);
       }
     }
+#ifdef STICK //sticky: push into constraints
+    if(c->active && c->map.constraint) {
+      CHECK(!c->y_target.N && !c->v_target.N,"constraints cannot have targets");
+      c->map.phi(y, J, *ors);
+      CHECK(y.N==J.d0,"");
+      for(uint j=0;j<y.N;j++) y(j) = -::exp(y(j));
+      if(J.N) for(uint j=0;j<J.d0;j++) J[j]() *= y(j);
+      phi.append(y);
+      if(&J_x) J_x.append(J);
+      if(&J_v) J_v.append(0.*J);
+    }
+#endif
   }
   for(uint i=0; i<taskCosts.N; i++) {
     TaskCost *c = taskCosts(i);
@@ -310,6 +324,12 @@ void MotionProblem::costReport() {
       m += d;
     }
     if(c->map.constraint){
+#ifdef STICK
+      double tc=sumOfSqr(costMatrix.sub(0,-1,m,m+d-1));
+      taskC+=tc;
+      cout <<"\t sticky=" <<tc;
+      m += d;
+#endif
       double gpos=0.;
       for(uint t=0;t<=T;t++) for(uint j=0;j<d;j++){
         double g=costMatrix(t,m+j);
