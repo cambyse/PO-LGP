@@ -28,6 +28,8 @@ using std::map;
 
 using util::INVALID;
 
+//#define USE_RELATIVE_FEATURES
+
 KMarkovCRF::KMarkovCRF():
         lambda(nullptr),
         old_active_features_size(0),
@@ -63,6 +65,7 @@ KMarkovCRF::KMarkovCRF():
         }
     }
 
+#ifdef USE_RELATIVE_FEATURES
     // relative state features
     RelativeStateFeature * relative_state_feature;
     relative_state_feature = RelativeStateFeature::create(1,0,-1,0);
@@ -80,6 +83,7 @@ KMarkovCRF::KMarkovCRF():
     relative_state_feature = RelativeStateFeature::create(0,0,-1,0);
     basis_features.push_back(relative_state_feature);
     DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+#endif
 }
 
 KMarkovCRF::~KMarkovCRF() {

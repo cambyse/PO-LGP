@@ -23,13 +23,17 @@
 #include <QString>
 #include "QtUtil.h" // for << operator
 
+#ifdef BATCH_MODE_QUIET
 #define DEBUG_LEVEL 0
+#else
+#define DEBUG_LEVEL 1
+#endif
 #include "debug.h"
 
-#define LOG_COMMENT(x) DEBUG_OUT(1,x); log_file << "# " << x << std::endl;
-#define LOG(x) DEBUG_OUT(1,x); log_file << x << std::endl;
+#define LOG_COMMENT(x) DEBUG_OUT(2,x); log_file << "# " << x << std::endl;
+#define LOG(x) DEBUG_OUT(2,x); log_file << x << std::endl;
 
-#define USE_OMP
+//#define USE_OMP
 
 using std::set;
 using std::tuple;
@@ -409,7 +413,17 @@ int BatchMaze::run_active() {
                 crf->score_features_by_gradient(1);
                 crf->sort_scored_features(false);
                 crf->add_candidate_features_to_active(0);
-                crf->optimize_model(complx==1?0:switch_double("-l1"),0,nullptr); // no l1 in first run
+		if(complx==1) {
+		  // no l1 in first run
+		  crf->optimize_model(0,0,nullptr);
+		} else {
+		  // sparsify feature to speed up optimization
+		  crf->optimize_model(switch_double("-l1")/10,10);
+		  crf->erase_zero_features();
+		  crf->optimize_model(switch_double("-l1")/10,20);
+		  crf->erase_zero_features();
+		  crf->optimize_model(switch_double("-l1"),100);
+		}
                 crf->erase_zero_features();
             }
             // finalize
@@ -436,8 +450,18 @@ int BatchMaze::run_active() {
             for(int complx=1; complx<=switch_int("-f"); ++complx) {
                 linQ->add_candidates(1);
                 linQ->erase_zero_features();
-                linQ->optimize_l1(switch_double("-l1"));
-                linQ->erase_zero_weighted_features();
+		if(complx==1) {
+		  // no l1 in first run
+		  linQ->optimize_ridge(1e-10);
+		  linQ->erase_zero_weighted_features();
+		} else {
+		  // sparsify feature to speed up optimization
+		  linQ->optimize_l1(switch_double("-l1")/10,10);
+		  linQ->erase_zero_weighted_features();
+		  linQ->optimize_l1(switch_double("-l1")/10,20);
+		  linQ->erase_zero_weighted_features();
+		  linQ->optimize_l1(switch_double("-l1"),100);
+		}
             }
             // finalize
             linQ->optimize_ridge(1e-10);
@@ -521,11 +545,12 @@ int BatchMaze::run_active() {
             // increment reward
             reward_sum += reward;
 
-            DEBUG_OUT(2, "Episode " << episode_counter <<
+            DEBUG_OUT(1, "Episode	" << episode_counter <<
                       ",	training length " << training_length <<
                       ",	tree size " << search_tree_size <<
                       ",	transition " << transition_counter <<
-                      ":	current mean reward = " << reward_sum/transition_counter
+                      ",	current mean reward = " << reward_sum/transition_counter <<
+                      ",	(a,s,r) = (" << action << "," << state << "," << reward << ")"
                 );
         }
 #ifdef USE_OMP

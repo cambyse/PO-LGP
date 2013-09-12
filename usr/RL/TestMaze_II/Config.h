@@ -1,7 +1,7 @@
 //===================================================================
 
 #ifndef X_SERVER
-#define X_SERVER
+//#define X_SERVER
 #endif
 
 #ifndef BATCH_MODE
