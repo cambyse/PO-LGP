@@ -81,7 +81,8 @@ const vector<BatchMaze::switch_t> BatchMaze::switch_vector = {
     switch_t("-kWidth",       "double", "0",     "kernel width for 'ACTIVE' sampling (0 for auto)"),
     switch_t("-incr",         "int",    "0",     "increment for 'UNIFORM' and 'EXP' sampling (0 for auto, negative for resampling)"),
     switch_t("-exp",          "double", "0",     "factor for 'EXP' sampling"),
-    switch_t("-printSamples", "bool",   "false", "don't run, only print sampling locations")
+    switch_t("-printSamples", "bool",   "false", "don't run, only print sampling locations"),
+    switch_t("-optTran",      "double", "0",     "probability of optimal training transitions (vs. random)")
 };
 
 BatchMaze::BatchMaze() {
@@ -99,7 +100,11 @@ int BatchMaze::run(int argn, char ** argarr) {
 #endif
 
     // parse command line switches
-    parse_switches(argn, argarr);
+    bool ok = parse_switches(argn, argarr);
+    if(!ok) {
+        DEBUG_ERROR("invalid command line arguments");
+        return 1;
+    }
 
     // check for valid mode
     QString mode_str = switch_char("-mode");
@@ -138,58 +143,108 @@ int BatchMaze::run(int argn, char ** argarr) {
     return run_active();
 }
 
-void BatchMaze::parse_switches(int argn, char ** argarr) {
+bool BatchMaze::parse_switches(int argn, char ** argarr) {
+    bool errors = false;
+
+    // assign default values
     for(switch_t sw : switch_vector) {
         QString switch_value = sw.default_value;
-        // find switches
-        for(int arg_idx=1; arg_idx<argn-1; ++arg_idx) {
-            if(sw.switch_string==argarr[arg_idx]) {
-                switch_value = argarr[arg_idx+1];
-                break;
-            }
-        }
-        // assign value to switch
+        bool ok;
         if(sw.type=="int") {
-            bool ok;
             int_switches[sw.switch_string] = switch_value.toInt(&ok);
-            if(!ok) {
-                DEBUG_OUT(0,"Error: could no parse value for switch '" <<
-                          sw.switch_string << "' (" <<
-                          switch_value << ")"
-                    );
-            }
         } else if(sw.type=="double") {
-            bool ok;
             double_switches[sw.switch_string] = switch_value.toDouble(&ok);
-            if(!ok) {
-                DEBUG_OUT(0,"Error: could no parse value for switch '" <<
-                          sw.switch_string << "' (" <<
-                          switch_value << ")"
-                    );
-            }
         } else if(sw.type=="bool") {
             if(switch_value=="true" || switch_value=="t") {
                 bool_switches[sw.switch_string] = true;
+                ok = true;
             } else if(switch_value=="false" || switch_value=="f") {
                 bool_switches[sw.switch_string] = false;
+                ok = true;
             } else {
-                DEBUG_OUT(0,"Error: could no parse value for switch '" <<
-                          sw.switch_string << "' (" <<
-                          switch_value << ")"
-                    );
+                ok = false;
             }
         } else if(sw.type=="char") {
             char_switches[sw.switch_string] = switch_value;
+            ok = true;
         } else {
             DEBUG_DEAD_LINE;
         }
+        if(!ok) {
+            DEBUG_ERROR("Switch '" << sw.switch_string << "' has invalid default value '" << sw.default_value << "'");
+            errors = true;
+        }
     }
+
+    // parse command line arguments
+    for(int arg_idx=1; arg_idx<argn; ++arg_idx) {
+
+        bool match_found = false;
+        for(switch_t sw : switch_vector) {
+
+            // look for match
+            QString switch_value = sw.default_value;
+            if(sw.switch_string!=argarr[arg_idx]) {
+                continue;
+            } else {
+                ++arg_idx;
+                switch_value = argarr[arg_idx];
+                match_found = true;
+            }
+
+            // assign value to switch
+            if(sw.type=="int") {
+                bool ok;
+                int_switches[sw.switch_string] = switch_value.toInt(&ok);
+                if(!ok) {
+                    DEBUG_ERROR("could no parse value for switch '" <<
+                              sw.switch_string << "' (" <<
+                              switch_value << ")"
+                        );
+                    errors = true;
+                }
+            } else if(sw.type=="double") {
+                bool ok;
+                double_switches[sw.switch_string] = switch_value.toDouble(&ok);
+                if(!ok) {
+                    DEBUG_ERROR("could no parse value for switch '" <<
+                              sw.switch_string << "' (" <<
+                              switch_value << ")"
+                        );
+                    errors = true;
+                }
+            } else if(sw.type=="bool") {
+                if(switch_value=="true" || switch_value=="t") {
+                    bool_switches[sw.switch_string] = true;
+                } else if(switch_value=="false" || switch_value=="f") {
+                    bool_switches[sw.switch_string] = false;
+                } else {
+                    DEBUG_ERROR("could no parse value for switch '" <<
+                              sw.switch_string << "' (" <<
+                              switch_value << ")"
+                        );
+                    errors = true;
+                }
+            } else if(sw.type=="char") {
+                char_switches[sw.switch_string] = switch_value;
+            } else {
+                DEBUG_DEAD_LINE;
+            }
+        }
+
+        if(!match_found) {
+            DEBUG_ERROR("Command line parameter '" << argarr[arg_idx] << "' not recognized");
+            errors = true;
+        }
+    }
+
+    return !errors;
 }
 
 int BatchMaze::switch_int(QString s) const {
     auto elem = int_switches.find(s);
     if(elem==int_switches.end()) {
-        DEBUG_OUT(0,"Error: Could not find <int> switch '" << s << "'");
+        DEBUG_ERROR("Could not find <int> switch '" << s << "'");
     }
     return elem->second;
 }
@@ -197,7 +252,7 @@ int BatchMaze::switch_int(QString s) const {
 double BatchMaze::switch_double(QString s) const {
     auto elem = double_switches.find(s);
     if(elem==double_switches.end()) {
-        DEBUG_OUT(0,"Error: Could not find <double> switch '" << s << "'");
+        DEBUG_ERROR("Could not find <double> switch '" << s << "'");
     }
     return elem->second;
 }
@@ -205,7 +260,7 @@ double BatchMaze::switch_double(QString s) const {
 bool BatchMaze::switch_bool(QString s) const {
     auto elem = bool_switches.find(s);
     if(elem==bool_switches.end()) {
-        DEBUG_OUT(0,"Error: Could not find <bool> switch '" << s << "'");
+        DEBUG_ERROR("Could not find <bool> switch '" << s << "'");
     }
     return elem->second;
 }
@@ -213,7 +268,7 @@ bool BatchMaze::switch_bool(QString s) const {
 QString BatchMaze::switch_char(QString s) const {
     auto elem = char_switches.find(s);
     if(elem==char_switches.end()) {
-        DEBUG_OUT(0,"Error: Could not find <char> switch '" << s << "'");
+        DEBUG_ERROR("Could not find <char> switch '" << s << "'");
     }
     return elem->second;
 }
@@ -384,9 +439,16 @@ int BatchMaze::run_active() {
             } else {
                 // generate training data
                 for(int train_step=0; train_step<training_length; ++train_step) {
-                    action_t action = action_t::random_action();
+                    action_t action;
                     state_t state;
                     reward_t reward;
+                    if(drand48()<switch_double("-optTran")) {
+                        look_ahead_search->clear_tree();
+                        look_ahead_search->build_tree<Maze>(current_instance, *maze, switch_int("-maxTree"));
+                        action = look_ahead_search->get_optimal_action();
+                    } else {
+                        action = action_t::random_action();
+                    }
                     maze->perform_transition(action,state,reward);
                     current_instance = current_instance->append_instance(action,state,reward);
                     if(mode=="SPARSE") {
@@ -398,6 +460,7 @@ int BatchMaze::run_active() {
                     } else {
                         DEBUG_DEAD_LINE;
                     }
+                    DEBUG_OUT(1,"Learning: (" << action << "," << state << "," << reward << ")");
                 }
             }
         }
@@ -418,9 +481,9 @@ int BatchMaze::run_active() {
 		  crf->optimize_model(0,0,nullptr);
 		} else {
 		  // sparsify feature to speed up optimization
-		  crf->optimize_model(switch_double("-l1")/10,10);
+		  crf->optimize_model(switch_double("-l1")/2,10);
 		  crf->erase_zero_features();
-		  crf->optimize_model(switch_double("-l1")/10,20);
+		  crf->optimize_model(switch_double("-l1")/2,20);
 		  crf->erase_zero_features();
 		  crf->optimize_model(switch_double("-l1"),100);
 		}
@@ -456,9 +519,9 @@ int BatchMaze::run_active() {
 		  linQ->erase_zero_weighted_features();
 		} else {
 		  // sparsify feature to speed up optimization
-		  linQ->optimize_l1(switch_double("-l1")/10,10);
+		  linQ->optimize_l1(switch_double("-l1")/2,10);
 		  linQ->erase_zero_weighted_features();
-		  linQ->optimize_l1(switch_double("-l1")/10,20);
+		  linQ->optimize_l1(switch_double("-l1")/2,20);
 		  linQ->erase_zero_weighted_features();
 		  linQ->optimize_l1(switch_double("-l1"),100);
 		}
@@ -576,7 +639,7 @@ int BatchMaze::run_active() {
                     if(mode=="SEARCH_TREE") {
                         bool success = virtual_data.erase(make_tuple(episode_counter,search_tree_size,virtual_reward));
                         if(!success) {
-                            DEBUG_OUT(0,"Error: Could not remove virtual data point (" << episode_counter << "," <<
+                            DEBUG_ERROR("Could not remove virtual data point (" << episode_counter << "," <<
                                       search_tree_size << "," <<
                                       virtual_reward << ")"
                                 );
@@ -585,7 +648,7 @@ int BatchMaze::run_active() {
                     } else if(mode=="TRANSITIONS") {
                         bool success = virtual_data.erase(make_tuple(episode_counter,transition_length,virtual_reward));
                         if(!success) {
-                            DEBUG_OUT(0,"Error: Could not remove virtual data point (" << episode_counter << "," <<
+                            DEBUG_ERROR("Could not remove virtual data point (" << episode_counter << "," <<
                                       transition_length << "," <<
                                       virtual_reward << ")"
                                 );
@@ -594,7 +657,7 @@ int BatchMaze::run_active() {
                     } else {
                         bool success = virtual_data.erase(make_tuple(episode_counter,training_length,virtual_reward));
                         if(!success) {
-                            DEBUG_OUT(0,"Error: Could not remove virtual data point (" << episode_counter << "," <<
+                            DEBUG_ERROR("Could not remove virtual data point (" << episode_counter << "," <<
                                       training_length << "," <<
                                       virtual_reward << ")"
                                 );

@@ -60,8 +60,8 @@ private:
     /** \brief The output file data is written to. */
     std::ofstream log_file;
 
-    /** \brief Parse the command line switches. */
-    void parse_switches(int argn, char ** argarr);
+    /** \brief Parse the command line switches, return false on errors. */
+    bool parse_switches(int argn, char ** argarr);
 
     /** \brief Return the value of a command line switch of type int. */
     int switch_int(QString) const;
