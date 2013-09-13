@@ -28,7 +28,7 @@ static const double text_center = 0.3;                            // How close t
 static const double border_margin = 0.4*state_size;               // Margin for drawing the border around the maze.
 static const double action_line_length_factor = 0.8;              // How long the action line is relative to the state size.
 static const double action_point_size_factor = 0.5;               // How large the action point is relative to the state size.
-static const bool draw_text = true;                               // Whether to draw texts.
+static const bool draw_text = false;                              // Whether to draw texts.
 
 const vector<Maze::wall_t> Maze::walls = {
 
@@ -169,16 +169,16 @@ const vector<Maze::maze_reward_t> Maze::rewards = {
     /**/
 
     /* 4x4 Maze (Paper) */
-    { 0,  4, 3, 1, ON_RELEASE_NO_PUNISH, 100,   0,   0},
-    { 5,  0, 2, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
-    { 1,  5, 3, 1, ON_RELEASE_NO_PUNISH, 100,   0,   0},
-    { 2,  1, 1, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0},
-    { 7,  6, 1, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0},
-    {11,  7, 4, 1,  EACH_TIME_NO_PUNISH,  50,   0,   0},
-    {10, 15, 3, 1,  EACH_TIME_NO_PUNISH, 100,   0,   0},
-    {13, 14, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-    { 8,  9, 4, 1,  EACH_TIME_NO_PUNISH,  50,   0,   0},
-    { 4,  8, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0}
+    { 0,  4, 3, 1, ON_RELEASE_NO_PUNISH, 255, 100,  0},
+    { 5,  0, 2, 1, ON_RELEASE_NO_PUNISH, 200,   0,  0},
+    { 1,  5, 3, 1, ON_RELEASE_NO_PUNISH, 255, 100,  0},
+    { 2,  1, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,  0},
+    { 7,  6, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,  0},
+    {11,  7, 4, 1,  EACH_TIME_NO_PUNISH, 255, 200,  0},
+    {10, 15, 3, 1,  EACH_TIME_NO_PUNISH, 255, 100,  0},
+    {13, 14, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,  0},
+    { 8,  9, 4, 1,  EACH_TIME_NO_PUNISH, 255, 200,  0},
+    { 4,  8, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,  0}
     /**/
 
     /* 6x6 Maze (Paper) *
@@ -238,16 +238,16 @@ const vector<Maze::door_t> Maze::doors = {
     /**/
 
     /* 4x4 Maze (Paper) */
-    door_t(MazeState( 4), MazeState( 8), MazeState( 4),  DOWN_BUTTON,  0, color_t(0.5,0.0,0.0) ),
+    door_t(MazeState( 4), MazeState( 8), MazeState( 4),  DOWN_BUTTON,  0, color_t(0.6,0.0,1.0) ),
     door_t(MazeState( 8), MazeState( 9), MazeState( 8),  LEFT_BUTTON, -3, color_t(0.0,0.5,0.0) ),
-    door_t(MazeState(13), MazeState(14), MazeState(13), RIGHT_BUTTON,  0, color_t(0.5,0.0,0.0) ),
+    door_t(MazeState(13), MazeState(14), MazeState(13), RIGHT_BUTTON,  0, color_t(0.6,0.0,1.0) ),
     door_t(MazeState(14), MazeState(15), MazeState(10),    UP_BUTTON, -3, color_t(0.0,0.5,0.0) ),
     door_t(MazeState(15), MazeState(11), MazeState(15), RIGHT_BUTTON, -3, color_t(0.0,0.0,1.0) ),
-    door_t(MazeState(11), MazeState( 7), MazeState(11),    UP_BUTTON,  0, color_t(0.5,0.0,0.0) ),
+    door_t(MazeState(11), MazeState( 7), MazeState(11),    UP_BUTTON,  0, color_t(0.6,0.0,1.0) ),
     door_t(MazeState( 7), MazeState( 3), MazeState( 7), RIGHT_BUTTON, -3, color_t(0.0,0.5,0.0) ),
     door_t(MazeState( 3), MazeState( 7), MazeState( 3), RIGHT_BUTTON, -3, color_t(0.0,0.5,0.0) ),
     door_t(MazeState( 7), MazeState( 6), MazeState( 3),  LEFT_BUTTON, -3, color_t(0.0,0.0,1.0) ),
-    door_t(MazeState( 2), MazeState( 1), MazeState( 2),  LEFT_BUTTON,  0, color_t(0.5,0.0,0.0) )
+    door_t(MazeState( 2), MazeState( 1), MazeState( 2),  LEFT_BUTTON,  0, color_t(0.6,0.0,1.0) )
 
     /**/
 
