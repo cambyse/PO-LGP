@@ -210,6 +210,7 @@ MSVC_LPATH := $(MSVC_LPATH);$(LIBPATH)/freeglut/DebugStatic
 LIBS += -lglut -lGLU# -lGL -lX11
 CygwinLibs+= -lglut -lGLU -lGL
 MSVCLibs  += opengl32.lib glu32.lib vfw32.lib
+GL := 1
 endif
 
 ifeq ($(GTKGL),1)

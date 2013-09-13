@@ -5,6 +5,18 @@
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
 #include <Optim/constrained.h>
+#include <Perception/videoWriter.h>
+
+void saveTrajectory(const arr& x, ors::Graph& G, OpenGL& gl) {
+  for(uint t=0; t<x.d0; t++) {
+    G.setJointState(x[t]);
+    G.calcBodyFramesFromJoints();
+    gl.update(STRING("step " <<std::setw(3) <<t <<'/' <<x.d0-1).p);
+    byteA img;
+    gl.capture(img);
+    write_ppm(img,STRING("vid/t"<<t<<".ppm"));
+  }
+}
 
 int main(int argn,char** argv){
   MT::initCmdLine(argn,argv);
@@ -47,11 +59,12 @@ int main(int argn,char** argv){
 
   if(con){
     for(uint k=0;k<10;k++){
-      checkAll(CP, x, 1e-4);
+//      checkAll(CP, x, 1e-4);
       optNewton(x, UCP, OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
       P.costReport();
       write(LIST<arr>(x),"z.output");
       gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", false, true);
+      saveTrajectory(x, G, gl);
       displayTrajectory(x, 1, G, gl,"planned trajectory");
 
       //UCP.mu *= 10;

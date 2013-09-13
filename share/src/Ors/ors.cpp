@@ -1718,11 +1718,13 @@ void ors::Graph::phiCollision(arr &y, arr& J, double margin) const {
   for(i=0; i<proxies.N; i++) if(proxies(i)->d<margin) {
       CHECK(proxies(i)->cenD<.8*cenMarg, "sorry I made assumption objects are not too large; rescale cenMarg");
       a=shapes(proxies(i)->a); b=shapes(proxies(i)->b);
-      
+
+      bool used2=false;
       //costs
       double d1 = 1.-proxies(i)->d/margin;
       double d2 = 1.-proxies(i)->cenD/cenMarg;
       //NORMALS ALWAYS GO FROM b TO a !!
+      if(!used2) d2=1.;
       y(0) += d1*d2;
       
       //Jacobian
@@ -1739,15 +1741,17 @@ void ors::Graph::phiCollision(arr &y, arr& J, double margin) const {
           jacobianPos(Jpos, b->body->index, &brel); J += d2/margin*(posN*Jpos);
         }
         
-        ors::Vector arel=a->X.rot/(proxies(i)->cenA-a->X.pos);
-        ors::Vector brel=b->X.rot/(proxies(i)->cenB-b->X.pos);
-        CHECK(proxies(i)->cenN.isNormalized(), "proxy normal is not normalized");
-        arr cenN; cenN.referTo(proxies(i)->cenN.p(), 3); cenN.reshape(1, 3);
+        if(used2){
+          ors::Vector arel=a->X.rot/(proxies(i)->cenA-a->X.pos);
+          ors::Vector brel=b->X.rot/(proxies(i)->cenB-b->X.pos);
+          CHECK(proxies(i)->cenN.isNormalized(), "proxy normal is not normalized");
+          arr cenN; cenN.referTo(proxies(i)->cenN.p(), 3); cenN.reshape(1, 3);
         
-        //grad on cenA
-        jacobianPos(Jpos, a->body->index, &arel); J -= d1/cenMarg*(cenN*Jpos);
-        //grad on cenB
-        jacobianPos(Jpos, b->body->index, &brel); J += d1/cenMarg*(cenN*Jpos);
+          //grad on cenA
+          jacobianPos(Jpos, a->body->index, &arel); J -= d1/cenMarg*(cenN*Jpos);
+          //grad on cenB
+          jacobianPos(Jpos, b->body->index, &brel); J += d1/cenMarg*(cenN*Jpos);
+        }
       }
       
     }

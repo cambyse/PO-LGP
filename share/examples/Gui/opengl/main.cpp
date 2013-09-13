@@ -59,7 +59,8 @@ void testGrab(){
   gl.add(draw1,0);
   cout <<"normal view - written to z.ppm " <<endl;
   byteA img,depth;
-  gl.capture(img,300,300);
+  gl.update();
+  gl.capture(img);
   gl.captureDepth(depth,300,300);
   write_ppm(img,"z.1.ppm");
   write_ppm(depth,"z.2.ppm");
@@ -281,8 +282,8 @@ int main(int argc,char **argv){
 
   //qtCheckInitialized();
   
-  testTeapot();
   testGrab();
+  testTeapot();
   testMultipleViews();
   testTeapot();
   testObj();

@@ -17,6 +17,7 @@ void G4Poller::open(){
   }
   if(res) HALT("G4Tracker initialization failed 100 times. g4_init_sys returned " <<res);
   cout <<"G4Tracker opened" <<endl;
+  MT::wait(.1);
 
   //-- query #hubs
   G4_CMD_STRUCT cs;
@@ -29,7 +30,6 @@ void G4Poller::open(){
     res = g4_set_query(&cs);
     hubs = cs.cds.iParam;
     //if(hubs) break; //success!
-//    cout << "Hubs from thing = " << hubs << endl;
     MT::wait(.001, false);
   }
   cout <<"#hubs from G4Tracker = " <<hubs <<endl;
@@ -59,13 +59,12 @@ void G4Poller::open(){
   cs.cds.pParam=(void*)&meter_unit;
   res = g4_set_query(&cs);
   if(res!=G4_ERROR_NONE){ close(); HALT(""); }
-
 }
 
 void G4Poller::step(){
   int res=g4_get_frame_data(framedata, sysId, hubList, hubs);
   int num_hubs_read=res&0xffff;
-//  int tot_sys_hubs=res>>16;
+  //  int tot_sys_hubs=res>>16;
 
   // cout <<"#existing hubs=" <<tot_sys_hubs
   // 	   <<" #data-avail hubs=" <<num_hubs_read <<endl;
