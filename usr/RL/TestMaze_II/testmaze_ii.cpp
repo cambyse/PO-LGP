@@ -674,7 +674,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 fully_expand_utree();
             } else {
                 TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( expand_leaf_nodes_s );
+                TO_CONSOLE( fully_expand_utree_s );
             }
         } else if(str_args[0]=="expand-vi" || str_args[0]=="exvi") {
             if(str_args_n==1) {
