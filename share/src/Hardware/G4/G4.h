@@ -12,6 +12,9 @@ struct G4Poller : Module{
   G4_FRAMEDATA* framedata;
   floatA poses;
 
+  int* hubMap;
+  int hubMapSize;
+
   G4Poller():Module("G4Tracker"){}
 
   virtual void open();
