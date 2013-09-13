@@ -111,10 +111,10 @@ private:
     graph_t graph;
     node_t root_node;
     node_info_map_t node_info_map;
-    const int pseudo_counts = 1;
+    static const int pseudo_counts = 1;
     double discount;
 
-    EXPANSION_TYPE expansion_type = UTILITY_EXPANSION;
+    EXPANSION_TYPE expansion_type;
 
     node_t add_child(const node_t& node);
 

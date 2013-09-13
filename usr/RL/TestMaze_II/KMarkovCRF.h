@@ -134,7 +134,7 @@ private:
     // Performance Optimization //
     //--------------------------//
     enum PRECOMPUTATION_TYPE { NONE, COMPOUND_LOOK_UP, BASE_LOOK_UP };
-    const PRECOMPUTATION_TYPE precomputation_type = BASE_LOOK_UP;               ///< Technique for precomputing feature values.
+    static const PRECOMPUTATION_TYPE precomputation_type = BASE_LOOK_UP;        ///< Technique for precomputing feature values.
     bool                      feature_values_precomputed;                       ///< Whether feature values are up-to-date.
     std::vector<f_ret_t>      compound_feature_values;                          ///< The precomputed feature values (COMPOUND_LOOK_UP).
     std::vector<std::vector<Feature::look_up_map_t> >  base_feature_values;     ///< The precomputed feature values (BASE_LOOK_UP).

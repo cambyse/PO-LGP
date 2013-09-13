@@ -43,7 +43,8 @@ UTree::NodeInfo::NodeInfo(const Feature * f, const f_ret_t& r):
 UTree::UTree(const double& d):
         root_node(INVALID),
         node_info_map(graph),
-        discount(d)
+        discount(d),	
+	expansion_type(UTILITY_EXPANSION)
 {
 
     //----------------------------------------//
