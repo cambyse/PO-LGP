@@ -283,6 +283,7 @@ int main(int argc,char **argv){
   //qtCheckInitialized();
   
   testGrab();
+  return 0;
   testTeapot();
   testMultipleViews();
   testTeapot();
