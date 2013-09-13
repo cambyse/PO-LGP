@@ -169,13 +169,13 @@ const vector<Maze::maze_reward_t> Maze::rewards = {
     /**/
 
     /* 4x4 Maze (Paper) */
-    { 0,  4, 3, 1, ON_RELEASE_NO_PUNISH, 255, 100,  0},
+    { 0,  4, 3, 1, ON_RELEASE_NO_PUNISH, 255, 120,  0},
     { 5,  0, 2, 1, ON_RELEASE_NO_PUNISH, 200,   0,  0},
-    { 1,  5, 3, 1, ON_RELEASE_NO_PUNISH, 255, 100,  0},
+    { 1,  5, 3, 1, ON_RELEASE_NO_PUNISH, 255, 120,  0},
     { 2,  1, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,  0},
     { 7,  6, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,  0},
     {11,  7, 4, 1,  EACH_TIME_NO_PUNISH, 255, 200,  0},
-    {10, 15, 3, 1,  EACH_TIME_NO_PUNISH, 255, 100,  0},
+    {10, 15, 3, 1,  EACH_TIME_NO_PUNISH, 255, 120,  0},
     {13, 14, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,  0},
     { 8,  9, 4, 1,  EACH_TIME_NO_PUNISH, 255, 200,  0},
     { 4,  8, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,  0}
