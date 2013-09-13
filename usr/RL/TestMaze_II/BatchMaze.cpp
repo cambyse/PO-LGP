@@ -33,7 +33,7 @@
 #define LOG_COMMENT(x) DEBUG_OUT(2,x); log_file << "# " << x << std::endl;
 #define LOG(x) DEBUG_OUT(2,x); log_file << x << std::endl;
 
-//#define USE_OMP
+#define USE_OMP
 
 using std::set;
 using std::tuple;
@@ -103,6 +103,7 @@ int BatchMaze::run(int argn, char ** argarr) {
     bool ok = parse_switches(argn, argarr);
     if(!ok) {
         DEBUG_ERROR("invalid command line arguments");
+	print_help();
         return 1;
     }
 
@@ -193,43 +194,36 @@ bool BatchMaze::parse_switches(int argn, char ** argarr) {
             }
 
             // assign value to switch
+	    bool ok;
             if(sw.type=="int") {
-                bool ok;
-                int_switches[sw.switch_string] = switch_value.toInt(&ok);
-                if(!ok) {
-                    DEBUG_ERROR("could no parse value for switch '" <<
-                              sw.switch_string << "' (" <<
-                              switch_value << ")"
-                        );
-                    errors = true;
-                }
+	      int_switches[sw.switch_string] = switch_value.toInt(&ok);
             } else if(sw.type=="double") {
-                bool ok;
-                double_switches[sw.switch_string] = switch_value.toDouble(&ok);
-                if(!ok) {
-                    DEBUG_ERROR("could no parse value for switch '" <<
-                              sw.switch_string << "' (" <<
-                              switch_value << ")"
-                        );
-                    errors = true;
-                }
+	      double_switches[sw.switch_string] = switch_value.toDouble(&ok);
             } else if(sw.type=="bool") {
-                if(switch_value=="true" || switch_value=="t") {
-                    bool_switches[sw.switch_string] = true;
-                } else if(switch_value=="false" || switch_value=="f") {
-                    bool_switches[sw.switch_string] = false;
-                } else {
-                    DEBUG_ERROR("could no parse value for switch '" <<
-                              sw.switch_string << "' (" <<
-                              switch_value << ")"
-                        );
-                    errors = true;
-                }
+	      if(switch_value=="true" || switch_value=="t") {
+		bool_switches[sw.switch_string] = true;
+		ok = true;
+	      } else if(switch_value=="false" || switch_value=="f") {
+		bool_switches[sw.switch_string] = false;
+		ok = true;
+	      } else {
+		ok = false;
+	      }
             } else if(sw.type=="char") {
-                char_switches[sw.switch_string] = switch_value;
+	      char_switches[sw.switch_string] = switch_value;
+	      ok = true;
             } else {
-                DEBUG_DEAD_LINE;
+	      DEBUG_DEAD_LINE;
             }
+
+	    // check for success
+	    if(!ok) {
+	      DEBUG_ERROR("could not parse value for switch '" <<
+			  sw.switch_string << "' ('" <<
+			  switch_value << "')"
+			  );
+	      errors = true;
+	    }
         }
 
         if(!match_found) {
@@ -434,37 +428,39 @@ int BatchMaze::run_active() {
                 DEBUG_DEAD_LINE;
             }
 
-            if(mode=="OPTIMAL" || mode=="RANDOM" || mode=="SEARCH_TREE" || mode=="TRANSITIONS") {
-                // nothing more to do
-            } else {
-                // generate training data
-                for(int train_step=0; train_step<training_length; ++train_step) {
-                    action_t action;
-                    state_t state;
-                    reward_t reward;
-                    if(drand48()<switch_double("-optTran")) {
-                        look_ahead_search->clear_tree();
-                        look_ahead_search->build_tree<Maze>(current_instance, *maze, switch_int("-maxTree"));
-                        action = look_ahead_search->get_optimal_action();
-                    } else {
-                        action = action_t::random_action();
-                    }
-                    maze->perform_transition(action,state,reward);
-                    current_instance = current_instance->append_instance(action,state,reward);
-                    if(mode=="SPARSE") {
-                        crf->add_action_state_reward_tripel(action,state,reward,false);
-                    } else if(mode=="UTREE_VALUE" || mode=="UTREE_PROB") {
-                        utree->add_action_state_reward_tripel(action,state,reward,false);
-                    } else if(mode=="LINEAR_Q") {
-                        linQ->add_action_state_reward_tripel(action,state,reward,false);
-                    } else {
-                        DEBUG_DEAD_LINE;
-                    }
-                    DEBUG_OUT(1,"Learning: (" << action << "," << state << "," << reward << ")");
-                }
-            }
         }
 // end omp critical
+
+	if(mode=="OPTIMAL" || mode=="RANDOM" || mode=="SEARCH_TREE" || mode=="TRANSITIONS") {
+	  // nothing more to do
+	} else {
+	  // generate training data
+	  for(int train_step=0; train_step<training_length; ++train_step) {
+	    action_t action;
+	    state_t state;
+	    reward_t reward;
+	    if(drand48()<switch_double("-optTran")) {
+	      look_ahead_search->clear_tree();
+	      look_ahead_search->build_tree<Maze>(current_instance, *maze, switch_int("-maxTree"));
+	      action = look_ahead_search->get_optimal_action();
+	    } else {
+	      action = action_t::random_action();
+	    }
+	    maze->perform_transition(action,state,reward);
+	    current_instance = current_instance->append_instance(action,state,reward);
+	    if(mode=="SPARSE") {
+	      crf->add_action_state_reward_tripel(action,state,reward,false);
+	    } else if(mode=="UTREE_VALUE" || mode=="UTREE_PROB") {
+	      utree->add_action_state_reward_tripel(action,state,reward,false);
+	    } else if(mode=="LINEAR_Q") {
+	      linQ->add_action_state_reward_tripel(action,state,reward,false);
+	    } else {
+	      DEBUG_DEAD_LINE;
+	    }
+	    DEBUG_OUT(1,"Learning: (" << action << "," << state << "," << reward << ")");
+	  }
+	}
+
 
         //-------------------//
         // train the learner //
