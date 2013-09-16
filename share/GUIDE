@@ -1,0 +1,53 @@
+* src include lib:
+  * the three core paths, including sources, extra includes, compiled so
+
+* make-generic:
+  * a (too?) long file containing generic make rules
+  * is included by ALL other Makefiles
+  * we can now simplify many parts
+
+* make-locked.sh:
+  * parallelized make somtimes calls make twice in the same directory
+  * this script avoids it
+
+* src:
+  * each subfolder contains a pice of code that is compiled in libPathName.so
+  * this contains the bulk of the code
+
+* include:
+  * src paths include the headers
+  * but for some external libs there are extra headers here
+
+* lib:
+  * compiled libs
+
+* slices:
+  * I call parts of the code that I publish on my webpage as 'slices'
+  * we have slices for the ML and Robotics lecture
+  * slices for Array, MotionPlanning, Ors, etc
+  * Tobias' code is a slice (Armani, etc)
+
+* unittest:
+  * the sorry state of a first attempt to unit test
+
+* projects:
+  * things that go beyond being small examples
+  * see also /mlr/retired/projects
+
+* teaching:
+  * exercises and solutions for lectures (distributed with slices)
+
+* data:
+  * we have a separate data repos - should be clarified
+
+* configurations:
+  * ors configurations (kinematic descriptions of robots)
+  * mesh files for robot descriptions
+  * other configuration stuff
+
+* bin:
+  * some useful scripts (e.g. hardware startup)
+  * sym_links (e.g. ors_editor/x.exe)
+
+* retired/test:
+  * older folder including many older examples - not to be forgotton
