@@ -11,10 +11,9 @@ void saveTrajectory(const arr& x, ors::Graph& G, OpenGL& gl) {
   for(uint t=0; t<x.d0; t++) {
     G.setJointState(x[t]);
     G.calcBodyFramesFromJoints();
-    gl.update(STRING("step " <<std::setw(3) <<t <<'/' <<x.d0-1).p);
-    byteA img;
-    gl.capture(img);
-    write_ppm(img,STRING("vid/t"<<t<<".ppm"));
+    gl.update(STRING("step " <<std::setw(3) <<t <<'/' <<x.d0-1).p, true, false);
+    flip_image(gl.captureImage);
+    write_ppm(gl.captureImage, STRING("vid/t"<<t<<".ppm"));
   }
 }
 

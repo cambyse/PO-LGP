@@ -58,12 +58,9 @@ void testGrab(){
   OpenGL gl("title",300,300);
   gl.add(draw1,0);
   cout <<"normal view - written to z.ppm " <<endl;
-  byteA img,depth;
-  gl.update();
-  gl.capture(img);
-  gl.captureDepth(depth,300,300);
-  write_ppm(img,"z.1.ppm");
-  write_ppm(depth,"z.2.ppm");
+  gl.update("title", true, true);
+  write_ppm(gl.captureImage,"z.1.ppm");
+  write_ppm(gl.captureDepth,"z.2.ppm");
 
   gl.watch();
 
@@ -75,9 +72,9 @@ void testGrab(){
 
 
   //grap the depth image from current view:
-  gl.captureDepth(depth,300,300);
-  cout <<"max " <<(int)depth.max() <<" min " <<(int)depth.min() <<endl;
-  gl.watchImage(depth,true,1);
+  gl.update(NULL, false, true);
+  cout <<"max " <<(int)gl.captureDepth.max() <<" min " <<(int)gl.captureDepth.min() <<endl;
+  gl.watchImage(gl.captureDepth,true,1);
 }
 
 

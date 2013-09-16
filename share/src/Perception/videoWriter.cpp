@@ -46,7 +46,8 @@ void VideoWriter::open(uint width,uint height,const char* filename,double fps){
 void VideoWriter::addFrame(const byteA& img){
   IplImage ipl_img;
   cv::Mat ref=cvMAT(img);
-  cvWriteFrame(s->video, cvGetImage(&ref, &ipl_img) );
+  cvGetImage(&ref, &ipl_img);
+  cvWriteFrame(s->video, &ipl_img);
 //  s->video <<cvMAT(img);
   s->numFrames++;
 }
@@ -56,11 +57,9 @@ void VideoWriter::close(){
 }
 
 void VideoWriter::addFrameFromOpengl(OpenGL& gl){
-  byteA img;
-  img.resize(s->height,s->width,3);
-  gl.capture(img,s->height,s->width);
-  flip_image(img);
-  addFrame(img);
+  gl.update(NULL, true, false);
+  flip_image(gl.captureImage);
+  addFrame(gl.captureImage);
 }
 
 #else
