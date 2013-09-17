@@ -476,14 +476,15 @@ int BatchMaze::run_active() {
 		  // no l1 in first run
 		  crf->optimize_model(0,0,nullptr);
 		} else {
-		  // sparsify feature to speed up optimization
-		  crf->optimize_model(switch_double("-l1")/2,10);
-		  crf->erase_zero_features();
-		  crf->optimize_model(switch_double("-l1")/2,20);
-		  crf->erase_zero_features();
-		  crf->optimize_model(switch_double("-l1"),100);
+		  // // sparsify features to speed up optimization
+		  // crf->optimize_model(switch_double("-l1")/2,10);
+		  // crf->erase_zero_features();
+		  // crf->optimize_model(switch_double("-l1")/2,20);
+		  // crf->erase_zero_features();
+		  // crf->optimize_model(switch_double("-l1"),100);
+		  crf->optimize_model(switch_double("-l1"),500);
 		}
-                crf->erase_zero_features();
+		crf->erase_zero_features();
             }
             // finalize
             crf->optimize_model(0,0,nullptr);
@@ -512,15 +513,16 @@ int BatchMaze::run_active() {
 		if(complx==1) {
 		  // no l1 in first run
 		  linQ->optimize_ridge(1e-10);
-		  linQ->erase_zero_weighted_features();
 		} else {
-		  // sparsify feature to speed up optimization
-		  linQ->optimize_l1(switch_double("-l1")/2,10);
-		  linQ->erase_zero_weighted_features();
-		  linQ->optimize_l1(switch_double("-l1")/2,20);
-		  linQ->erase_zero_weighted_features();
-		  linQ->optimize_l1(switch_double("-l1"),100);
+		  // // sparsify features to speed up optimization
+		  // linQ->optimize_l1(switch_double("-l1")/2,10);
+		  // linQ->erase_zero_weighted_features();
+		  // linQ->optimize_l1(switch_double("-l1")/2,20);
+		  // linQ->erase_zero_weighted_features();
+		  // linQ->optimize_l1(switch_double("-l1"),100);
+		  linQ->optimize_l1(switch_double("-l1"),500);
 		}
+		linQ->erase_zero_weighted_features();
             }
             // finalize
             linQ->optimize_ridge(1e-10);
