@@ -6,9 +6,9 @@ MAKEFLAGS :=
 
 NAME   = $(shell basename $(PWD))
 
-srcs =  $(shell find src -mindepth 1 -maxdepth 1 -type d -not -name 'extern')
+srcs =  $(shell find src -mindepth 1 -maxdepth 1 -type d -not -name 'extern' )
 srcs += $(shell find src/extern -mindepth 1 -maxdepth 1 -type d)
-exas = $(shell find examples -mindepth 2 -maxdepth 2 -type d)
+exas = $(shell find examples -mindepth 2 -maxdepth 2 -type d -not -name '*py')
 
 ################################################################################
 
