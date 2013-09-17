@@ -17,6 +17,3 @@ LIBS += -lueye_api -lavformat -lavcodec -lavutil -lswscale -lx264 -lz
 
 include $(BASE)/make-generic
 
-# to make api-example
-# gcc api-example.c -o api-example -lavcodec -lavutil -lx264 -lz
-# -L/usr/local/lib -D__STDC_CONSTANT_MACROS

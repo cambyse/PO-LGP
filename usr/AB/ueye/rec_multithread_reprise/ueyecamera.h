@@ -4,9 +4,8 @@
 #include <QObject>
 #include <QMutex>
 #include <QString>
-#include <Core/util.h>
 
-#include "videowriter.h"
+#include "recworker.h"
 
 class UEyeCamera: public QObject {
   Q_OBJECT
@@ -28,7 +27,7 @@ class UEyeCamera: public QObject {
     void grab();
     void getImage(char *p);
 
-    void startRec(MT::String fname);
+    void startRec();
     void stopRec();
 
     void quit();
@@ -67,14 +66,19 @@ class UEyeCamera: public QObject {
 
     QMutex imgMutex, recMutex, quitMutex;
 
-    VideoWriter_x264 *vw;
+    QThread *recthread;
+    RecWorker *recworker;
+    bool recflag;
+    int curr_frame, nskipped_frames;
 
     static bool query_status(HIDS camID, const char *method, INT *status);
+    static void getNowString(MT::String &str);
 
     INT getImageID(char *buff);
 
     INT CaptureVideo_wrapper(INT wait);
     void ExitCamera_wrapper();
+    void WaitForNextImage_wrapper(char **p, INT *pID);
 
     void waitUntilExit();
 

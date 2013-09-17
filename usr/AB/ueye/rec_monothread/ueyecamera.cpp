@@ -10,9 +10,11 @@ UEyeCamera::UEyeCamera(int cid, int w, int h, int f):
   // TODO remove. Gets any available camera.
   camID = 0;
 
-  vw = NULL;
-
   image = NULL;
+
+  recthread = NULL;
+  recworker = NULL;
+  recflag = false;
 
   nrecframes = 0;
 }
@@ -152,7 +154,7 @@ void UEyeCamera::open() {
 }
 
 void UEyeCamera::close() {
-  if(vw != NULL)
+  if(recflag)
     stopRec();
 
   camStatus = is_DisableEvent(camID, IS_SET_EVENT_FRAME);
@@ -173,8 +175,6 @@ void UEyeCamera::close() {
   free(camBuffID);
   free(image_copy);
 
-  // should be executed in the main thread... but this is the only way to make
-  // it work..
   camExit();
 }
 
@@ -190,23 +190,61 @@ void UEyeCamera::waitUntilExit() {
   msg("Finally Exited");
 }
 
-void UEyeCamera::startRec(MT::String fname) {
+void UEyeCamera::getNowString(MT::String &str) {
+  time_t t = time(0);
+  struct tm *now = localtime(&t);
+
+  char s[19]; //-- just enough
+  sprintf(s, "%02d-%02d-%02d--%02d-%02d-%02d",
+    now->tm_year-100,
+    now->tm_mon+1,
+    now->tm_mday,
+    now->tm_hour,
+    now->tm_min,
+    now->tm_sec);
+
+  str.clear() << s;
+}
+
+void UEyeCamera::startRec() {
   recMutex.lock();
-  if(vw == NULL) {
-    fname << name << ".avi";
-    vw = new VideoWriter_x264((const char*)fname, width, height, fps, 20, "superfast");
+  if(!recflag && recworker == NULL) {
+    MT::String nowStr, nameStr;
+    getNowString(nowStr);
+    nameStr << "z." << nowStr << "." << name << ".avi";
+    recworker = new RecWorker(nameStr, width, height, fps);
+    recflag = true;
+    /*
+    MT::String nowStr, nameStr;
+    getNowString(nowStr);
+    nameStr << "z." << nowStr << "." << name << ".avi";
+    recworker = new RecWorker(nameStr, width, height, fps);
+    recthread = new QThread();
+
+    //connect(recthread, SIGNAL(started()), recworker, SLOT(process()));
+    //connect(recworker, SIGNAL(finished()), recthread, SLOT(quit()));
+
+    //connect(recworker, SIGNAL(finished()), recworker, SLOT(deleteLater()));
+    //connect(recthread, SIGNAL(finished()), recthread, SLOT(deleteLater()));
+
+    //connect(this, SIGNAL(frame()), recworker, SLOT(processFrame()));
+
+    recworker->moveToThread(recthread);
+    recthread->start();
+    nrecframes = 0;
+    */
   }
-  nrecframes = 0;
   recMutex.unlock();
 }
 
 void UEyeCamera::stopRec() {
   recMutex.lock();
-  delete vw;
-  vw = NULL;
-  MT::String m;
-  m << "num recorded frames: " << nrecframes;
-  msg(m);
+  recflag = false;
+
+  recworker->quit();
+  recworker->processBuffer();
+  delete recworker;
+  recworker = NULL;
   recMutex.unlock();
 }
 
@@ -215,7 +253,6 @@ void UEyeCamera::grab() {
   camStatus = is_GetActSeqBuf(camID, NULL, NULL, &image);
   query_status(camID, "GetActSeqBuf", &camStatus);
 
-  //camStatus = is_LockSeqBuf(camID, imageBuffNum, image);
   camStatus = is_LockSeqBuf(camID, IS_IGNORE_PARAMETER, image);
   query_status(camID, "LockSeqBuf", &camStatus);
 
@@ -223,13 +260,19 @@ void UEyeCamera::grab() {
   memcpy(image_copy, image, 3*width*height);
   imgMutex.unlock();
   
+  /*
   MT::String m;
   m.clear() << "imageID = " << getImageID(image);
   msg(m);
+  */
 
   recMutex.lock();
-  if(vw != NULL)
-    vw->addFrame((uint8_t*)image_copy);
+  if(recflag) {
+    char *p = (char*)malloc(3*width*height*sizeof(char));
+    memcpy(p, image_copy, 3*width*height);
+    recworker->bufferFrame(p);
+    emit frame();
+  }
   nrecframes++;
   recMutex.unlock();
   
@@ -255,12 +298,11 @@ void UEyeCamera::getImage(char *p) {
 void UEyeCamera::process() {
   emit started();
   
-  bool quit;
-
   quitMutex.lock();
   quit_flag = false;
   quitMutex.unlock();
-  for(;;) {
+
+  for(bool quit = false; !quit; ) {
     camStatus = is_WaitEvent(camID, IS_SET_EVENT_FRAME, INFINITE);
     query_status(camID, "WaitEvent", &camStatus);
 
@@ -269,9 +311,6 @@ void UEyeCamera::process() {
     quitMutex.lock();
     quit = quit_flag;
     quitMutex.unlock();
-
-    if(quit)
-      break;
   }
   close();
 
