@@ -5,6 +5,8 @@
 #include <ctime>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <Core/util.h>
+
 #include "ueyecamera.h"
 #include "recorder.h"
 
@@ -164,11 +166,9 @@ void Recorder::play() {
 
 void Recorder::rec() {
   rec_flag = !rec_flag;
-  if(rec_flag) {
-    newSession();
+  if(rec_flag)
     for(int c = 0; c < numCams; c++)
-      camera[c]->startRec(foldername);
-  }
+      camera[c]->startRec();
   else
     for(int c = 0; c < numCams; c++)
       camera[c]->stopRec();
@@ -229,23 +229,6 @@ void Recorder::updateDisplay() {
   for(int c = 0; c < numCams; c++)
     camera[c]->getImage((char*)image[c]->p);
   gl->update();
-}
-
-void Recorder::newSession() {
-  time_t t = time(0);
-  struct tm *now = localtime(&t);
-
-  for(int fnum = 0; ; fnum++) {
-    foldername.clear() << "./rec/session_"
-                      << (now->tm_year-100) << "."
-                      << (now->tm_mon + 1) << "."
-                      << (now->tm_mday) << "_"
-                      << (now->tm_hour) << ":"
-                      << (now->tm_min) << "_"
-                      << fnum << "/";
-    if(mkdir(foldername, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == 0)
-      break;
-  }
 }
 
 #include "recorder_moc.cpp"

@@ -35,8 +35,6 @@ class Recorder: public QObject {
     QThread **thread;
     QSignalMapper *map;
 
-    MT::String foldername;
-
     QTimer timer;
 
     // control flags
@@ -62,7 +60,6 @@ class Recorder: public QObject {
 
   private:
     static void nothing(void*);
-    void newSession();
 
     void collectThreads();
 

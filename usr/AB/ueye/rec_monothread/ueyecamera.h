@@ -1,17 +1,18 @@
-#ifndef _UEYE_CAMERA_H_
-#define _UEYE_CAMERA_H_
+#pragma once
 
 #include <ueye.h>
 #include <QObject>
 #include <QMutex>
 #include <QString>
-#include <Core/util.h>
-#include "videowriter.h"
+
+#include "recworker.h"
 
 class UEyeCamera: public QObject {
   Q_OBJECT
 
   public:
+    static QMutex msgMutex;
+
     UEyeCamera(int cid, int w, int h, int fps);
 
     int getWidth();
@@ -19,13 +20,14 @@ class UEyeCamera: public QObject {
     int getFPS();
     MT::String getName();
 
-    void init();
+    void camInit();
     void open();
     void close();
+    void camExit();
     void grab();
     void getImage(char *p);
 
-    void startRec(MT::String fname);
+    void startRec();
     void stopRec();
 
     void quit();
@@ -33,13 +35,16 @@ class UEyeCamera: public QObject {
     static int getNumCameras();
 
   private:
+    int nrecframes;
+
     HIDS camID;
     INT camStatus;
     SENSORINFO camInfo;
-    UEYE_CAPTURE_STATUS_INFO ueyeStatus;
 
     int width, height, fps;
     MT::String name;
+
+    MT::String m;
 
     bool quit_flag;
 
@@ -59,14 +64,25 @@ class UEyeCamera: public QObject {
     double real_fps;
     double exposure;
 
-    QMutex mutex, rec_mutex;
+    QMutex imgMutex, recMutex, quitMutex;
 
-    VideoWriter_x264 *vw;
+    QThread *recthread;
+    RecWorker *recworker;
+    bool recflag;
 
     static bool query_status(HIDS camID, const char *method, INT *status);
-    void analyse_status();
+    static void getNowString(MT::String &str);
 
     INT getImageID(char *buff);
+
+    INT CaptureVideo_wrapper(INT wait);
+    void ExitCamera_wrapper();
+
+    void waitUntilExit();
+
+    void msg(const char *m);
+    void msg(const MT::String &m);
+    void err();
 
   private slots:
     void process();
@@ -74,7 +90,6 @@ class UEyeCamera: public QObject {
   signals:
     void started();
     void finished();
+    void frame();
 };
-
-#endif // _UEYE_CAMERA_H_
 

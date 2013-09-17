@@ -1,5 +1,4 @@
-#ifndef _RECORDER_H_
-#define _RECORDER_H_
+#pragma once
 
 #include <Core/array.h>
 #include <Gui/opengl.h>
@@ -36,8 +35,6 @@ class Recorder: public QObject {
     QThread **thread;
     QSignalMapper *map;
 
-    MT::String foldername;
-
     QTimer timer;
 
     // control flags
@@ -63,13 +60,12 @@ class Recorder: public QObject {
 
   private:
     static void nothing(void*);
-    void newSession();
+
+    void collectThreads();
 
   private slots:
     void startedCam();
     void collectCam(int c);
     void updateDisplay();
 };
-
-#endif // _RECORDER_H_
 

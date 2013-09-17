@@ -5,7 +5,7 @@ QT = 1
 
 CXX = clang++
 
-PREOBJS = ./recorder_moc.cpp ./ueyecamera_moc.cpp
+PREOBJS = ./recorder_moc.cpp ./ueyecamera_moc.cpp ./recworker_moc.cpp
 
 OBJS  = $(shell find . -maxdepth 1 -name '*.cpp')
 OBJS := $(filter-out $(PREOBJS),$(OBJS))
