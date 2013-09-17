@@ -449,7 +449,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString max_tree_size_s(                 "    max-tree-size. . . . . . . <int> . . . . . . . . . . . . . . . . . . .-> set maximum size of Look-Ahead-Tree (zero for infinite)");
 
     QString new_s(                         "\n    ---------------------------------New Stuff----------------------------------");
-    QString random_distribution_s(           "    random-distribution. . . . <int> . . . . . . . . . . . . . . . . . . .-> run <int> random transitions and display relative counts for all states");
+    QString random_distribution_s(           "    random-distribution / rd . <int> . . . . . . . . . . . . . . . . . . .-> run <int> random transitions and display relative counts for all states");
     QString color_states_s(                  "    col-states . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> color states (random)");
     QString fixed_dt_distribution_s(         "    fixed-dt-dist / fdd. . . . <int> . . . . . . . . . . . . . . . . . . .-> show probability for a state to occur <int> steps after current state");
     QString pair_delay_distribution_s(       "    pair-delay-dist / pdd. . . [<int>] . . . . . . . . . . . . . . . . . .-> show temporal delay distribution from current state to target state (restrict to time window of width <int>");
@@ -965,7 +965,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             }
         } else if(str_args[0]=="test") { // test
             TO_CONSOLE( "    currently no test function implemented" );
-        } else if(str_args[0]=="random-distribution") { // test
+        } else if(str_args[0]=="random-distribution" | str_args[0]=="rd") { // test
             if(str_args_n==2 && int_args_ok[1]) {
                 // initialize state counts to zero
                 vector<int> state_counts;
@@ -974,7 +974,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 }
                 // get state counts
                 int n = int_args[1];
-                int max_count = -1;
+                int max_count = 1;
                 for(int idx=0; idx<n; ++idx) {
                     action_t action = (action_t)(action_t::random_action());
                     state_t state_to;
@@ -987,7 +987,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 Maze::color_vector_t cols;
                 for(stateIt_t state=stateIt_t::first(); state!=util::INVALID; ++state) {
                     double p = state_counts[state];
-                    DEBUG_OUT(0,"State " << state << ": p = " << p/n );
+                    DEBUG_OUT(0,"State " << state << ": p = " << p/util::max<int>(n,1) );
                     p /= max_count;
                     cols.push_back( std::make_tuple(1,1-p,1-p) );
                 }
