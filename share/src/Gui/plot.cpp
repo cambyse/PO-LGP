@@ -122,9 +122,7 @@ void plotClear() {
   plotModule.s->array.clear();
   plotModule.s->points.clear();
   plotModule.s->lines.clear();
-#ifdef MT_ors_h
   plotModule.s->planes.clear();
-#endif
 }
 
 void plotGnuplot() { plotModule.mode=gnupl; }
@@ -215,13 +213,11 @@ void plotFunctionPrecision(const arr& x, const arr& f, const arr& h, const arr& 
 
 void plotSurface(const arr& X) {
   plotModule.s->array.append(X);
-#ifdef MT_ors_h
   plotModule.s->mesh.clear();
   plotModule.s->mesh.V.resize(X.N, 3);
   plotModule.s->mesh.C.resize(X.N, 3);
   plotModule.s->mesh.setGrid(X.d1, X.d0);
   //plotModule.s->mesh.gridToStrips(X.d1, X.d0);
-#endif
 }
 
 void plotPoint(double x, double y, double z) {

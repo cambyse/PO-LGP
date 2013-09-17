@@ -29,7 +29,7 @@ void G4Poller::open(){
   cs.cds.pParam=NULL;
   hubs=-1;
   cout << "Looking for " << numHubs << "hubs. Found: ";
-  while(hubs != numHubs) {
+  while(hubs != (int)numHubs) {
     res = g4_set_query(&cs);
     hubs = cs.cds.iParam;
     cout << hubs << ", ";
@@ -80,10 +80,6 @@ void G4Poller::open(){
 void G4Poller::step(){
   int res=g4_get_frame_data(framedata, sysId, hubList, hubs);
   int num_hubs_read=res&0xffff;
-<<<<<<< HEAD
-  //  int tot_sys_hubs=res>>16;
-=======
->>>>>>> 58532b75d703ac5301ecdb48442e1937cd784a4b
 
   /*
   int tot_sys_hubs=res>>16;

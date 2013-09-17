@@ -279,9 +279,8 @@ int main(int argc,char **argv){
 
   //qtCheckInitialized();
   
-  testGrab();
-  return 0;
   testTeapot();
+  testGrab();
   testMultipleViews();
   testTeapot();
   testObj();

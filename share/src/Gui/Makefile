@@ -2,10 +2,11 @@ BASE   = ../..
 NAME   = lib$(shell basename `pwd`)
 OUTPUT = $(BASE)/lib/$(NAME).so
 
-GTK = 0
-FREEGLUT = 1
+GTK = 1
+GTKGL = 1
+FREEGLUT = 0
 QHULL = 1
-GRAPHVIZ = 0
+GRAPHVIZ = 1
 DEPEND = Core extern_ply extern_GJK
 
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )

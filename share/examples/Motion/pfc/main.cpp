@@ -2,7 +2,7 @@
 #include <Motion/motion.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
-#include <Optim/optimization_benchmarks.h>
+#include <Optim/benchmarks.h>
 #include "mobject.h"
 #include <vector>
 #include <GL/glu.h>
@@ -43,7 +43,7 @@ void pfcPosition() {
   MotionProblemFunction F(P);
   uint T=F.get_T();
   uint k=F.get_k();
-  uint n=F.get_n();
+  uint n=F.dim_x();
   cout <<"Problem parameters:"<<"\n T=" <<T<<"\n k=" <<k<<"\n n=" <<n<<"\n # joints=" <<G.getJointStateDimension()<<endl;
 
   //mini evaluation test:
@@ -278,7 +278,7 @@ void pfcObstacle() {
   MotionProblemFunction F(P);
   uint T=F.get_T();
   uint k=F.get_k();
-  uint n=F.get_n();
+  uint n=F.dim_x();
   cout <<"Problem parameters:"<<"\n T=" <<T<<"\n k=" <<k<<"\n n=" <<n<<"\n # joints=" <<G.getJointStateDimension()<<endl;
 
   //mini evaluation test:

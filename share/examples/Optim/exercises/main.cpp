@@ -1,5 +1,6 @@
 #include <Optim/optimization.h>
-#include <Optim/optimization_benchmarks.h>
+#include <Optim/benchmarks.h>
+#include <Optim/constrained.h>
 #include <stdlib.h>
 
 const char* USE="\n\
@@ -75,64 +76,64 @@ void testGradDescent(ScalarFunction& F){
 // that can include penalties, log barriers, and augmented lagrangian terms
 //
 
-struct UnconstrainedProblem:ScalarFunction{
-  VectorFunction &f; // see below for the meaning of the VectorFunction
-  double muLB;   // log barrier weight
-  double mu;     // squared penalty weight
-  arr lambda;    // lagrange multiplier in augmented lagrangian
+// struct UnconstrainedProblem:ScalarFunction{
+//   VectorFunction &f; // see below for the meaning of the VectorFunction
+//   double muLB;   // log barrier weight
+//   double mu;     // squared penalty weight
+//   arr lambda;    // lagrange multiplier in augmented lagrangian
 
-  UnconstrainedProblem(VectorFunction &_f):f(_f), muLB(0.), mu(0.) {}
+//   UnconstrainedProblem(VectorFunction &_f):f(_f), muLB(0.), mu(0.) {}
 
-  virtual double fs(arr& g, arr& H, const arr& x){
-    //the VectorFunction F describes the cost function f(x) as well as the constraints g(x)
-    //concatenated to one vector:
-    // phi(0) = cost,   phi(1,..,phi.N-1) = constraints
+//   virtual double fs(arr& g, arr& H, const arr& x){
+//     //the VectorFunction F describes the cost function f(x) as well as the constraints g(x)
+//     //concatenated to one vector:
+//     // phi(0) = cost,   phi(1,..,phi.N-1) = constraints
 
-    arr phi, J;
-    f.fv(phi, (&g?J:NoArr), x);
+//     arr phi, J;
+//     f.fv(phi, (&g?J:NoArr), x);
 
-    //in log barrier case, check feasibility
-    if(muLB)     for(uint i=1;i<phi.N;i++) if(phi(i)>0.) return NAN; //CHECK(phi(i)<=0., "log barrier: constraints must be fulfiled!");
+//     //in log barrier case, check feasibility
+//     if(muLB)     for(uint i=1;i<phi.N;i++) if(phi(i)>0.) return NAN; //CHECK(phi(i)<=0., "log barrier: constraints must be fulfiled!");
 
-    double f = phi(0); //costs
-    if(muLB)     for(uint i=1;i<phi.N;i++) f -= muLB * ::log(-phi(i));  //log barrier
-    if(mu)       for(uint i=1;i<phi.N;i++) if(phi(i)>0. || (lambda.N && lambda(i)>0.)) f += mu * MT::sqr(phi(i));  //penalty
-    if(lambda.N) for(uint i=1;i<phi.N;i++) if(lambda(i)>0.) f += lambda(i) * phi(i);  //augments
+//     double f = phi(0); //costs
+//     if(muLB)     for(uint i=1;i<phi.N;i++) f -= muLB * ::log(-phi(i));  //log barrier
+//     if(mu)       for(uint i=1;i<phi.N;i++) if(phi(i)>0. || (lambda.N && lambda(i)>0.)) f += mu * MT::sqr(phi(i));  //penalty
+//     if(lambda.N) for(uint i=1;i<phi.N;i++) if(lambda(i)>0.) f += lambda(i) * phi(i);  //augments
 
-    if(&g){
-      g = J[0]; //costs
-      if(muLB)     for(uint i=1;i<phi.N;i++) g -= (muLB/phi(i))*J[i];  //log barrier
-      if(mu)       for(uint i=1;i<phi.N;i++) if(phi(i)>0. || (lambda.N && lambda(i)>0.)) g += (mu*2.*phi(i))*J[i];  //penalty
-      if(lambda.N) for(uint i=1;i<phi.N;i++) if(lambda(i)>0.) g += lambda(i)*J[i];  //augments
-      g.reshape(x.N);
-    }
+//     if(&g){
+//       g = J[0]; //costs
+//       if(muLB)     for(uint i=1;i<phi.N;i++) g -= (muLB/phi(i))*J[i];  //log barrier
+//       if(mu)       for(uint i=1;i<phi.N;i++) if(phi(i)>0. || (lambda.N && lambda(i)>0.)) g += (mu*2.*phi(i))*J[i];  //penalty
+//       if(lambda.N) for(uint i=1;i<phi.N;i++) if(lambda(i)>0.) g += lambda(i)*J[i];  //augments
+//       g.reshape(x.N);
+//     }
 
-    if(&H){
-      ///TODO: Here we assume the hessian of phi(0) and all phi(i) ZERO!!! Only the J^T J terms are considered (as in Gauss-Newton type)
-      H.resize(x.N,x.N);
-      H.setZero();
-      if(muLB)     for(uint i=1;i<phi.N;i++) H += (muLB/MT::sqr(phi(i)))*(J[i]^J[i]);  //log barrier
-      if(mu)       for(uint i=1;i<phi.N;i++) if(phi(i)>0. || (lambda.N && lambda(i)>0.)) H += (mu*2.)*(J[i]^J[i]);  //penalty
-      if(lambda.N) for(uint i=1;i<phi.N;i++) if(lambda(i)>0.) H += 0.; //augments
-      H.reshape(x.N,x.N);
-    }
+//     if(&H){
+//       ///TODO: Here we assume the hessian of phi(0) and all phi(i) ZERO!!! Only the J^T J terms are considered (as in Gauss-Newton type)
+//       H.resize(x.N,x.N);
+//       H.setZero();
+//       if(muLB)     for(uint i=1;i<phi.N;i++) H += (muLB/MT::sqr(phi(i)))*(J[i]^J[i]);  //log barrier
+//       if(mu)       for(uint i=1;i<phi.N;i++) if(phi(i)>0. || (lambda.N && lambda(i)>0.)) H += (mu*2.)*(J[i]^J[i]);  //penalty
+//       if(lambda.N) for(uint i=1;i<phi.N;i++) if(lambda(i)>0.) H += 0.; //augments
+//       H.reshape(x.N,x.N);
+//     }
 
-    return f;
-  }
+//     return f;
+//   }
 
-  void augmentedLagrangian_LambdaUpdate(const arr& x){
-    arr phi;
-    f.fv(phi, NoArr, x);
+//   void augmentedLagrangian_LambdaUpdate(const arr& x){
+//     arr phi;
+//     f.fv(phi, NoArr, x);
 
-    if(!lambda.N){ lambda.resize(phi.N); lambda.setZero(); }
+//     if(!lambda.N){ lambda.resize(phi.N); lambda.setZero(); }
 
-    for(uint i=1;i<phi.N;i++) if(phi(i)>0. || lambda(i)>0.) lambda(i) += mu * 2.*phi(i);
+//     for(uint i=1;i<phi.N;i++) if(phi(i)>0. || lambda(i)>0.) lambda(i) += mu * 2.*phi(i);
 
-    for(uint i=1;i<phi.N;i++) if(lambda(i)<0.) lambda(i)=0.;
+//     for(uint i=1;i<phi.N;i++) if(lambda(i)<0.) lambda(i)=0.;
 
-    cout <<"Update Lambda: phi=" <<phi <<" lambda=" <<lambda <<endl;
-  }
-};
+//     cout <<"Update Lambda: phi=" <<phi <<" lambda=" <<lambda <<endl;
+//   }
+// };
 
 
 //==============================================================================
@@ -140,7 +141,7 @@ struct UnconstrainedProblem:ScalarFunction{
 // test standard constrained optimizers
 //
 
-void testConstraint(VectorFunction& f, arr& x_start=NoArr, uint iters=10){
+void testConstraint(ConstrainedProblem& f, arr& x_start=NoArr, uint iters=10){
   enum MethodType { squaredPenalty=1, augmentedLag, logBarrier };
 
   MethodType method = (MethodType)MT::getParameter<int>("method");
@@ -202,29 +203,29 @@ void testConstraint(VectorFunction& f, arr& x_start=NoArr, uint iters=10){
 // to the phase one problem of another constraint problem
 //
 
-struct PhaseOneProblem:VectorFunction{
-  VectorFunction &f;
+// struct PhaseOneProblem:VectorFunction{
+//   VectorFunction &f;
 
-  PhaseOneProblem(VectorFunction &_f):f(_f) {}
+//   PhaseOneProblem(VectorFunction &_f):f(_f) {}
 
-  virtual void fv(arr& metaPhi, arr& metaJ, const arr& x){
-    arr phi, J;
-    f.fv(phi, (&metaJ?J:NoArr), x.sub(0,-2)); //the underlying problem only receives a x.N-1 dimensional x
+//   virtual void fv(arr& metaPhi, arr& metaJ, const arr& x){
+//     arr phi, J;
+//     f.fv(phi, (&metaJ?J:NoArr), x.sub(0,-2)); //the underlying problem only receives a x.N-1 dimensional x
 
-    metaPhi.resize(phi.N+1);
-    metaPhi(0) = x.last();                                     //cost
-    for(uint i=1;i<phi.N;i++) metaPhi(i) = phi(i)-x.last();    //slack constraints
-    metaPhi.last() = -x.last();                                //last constraint
+//     metaPhi.resize(phi.N+1);
+//     metaPhi(0) = x.last();                                     //cost
+//     for(uint i=1;i<phi.N;i++) metaPhi(i) = phi(i)-x.last();    //slack constraints
+//     metaPhi.last() = -x.last();                                //last constraint
 
-    if(&metaJ){
-      metaJ.resize(metaPhi.N, x.N);  metaJ.setZero();
-      metaJ(0,x.N-1) = 1.; //cost
-      for(uint i=1;i<phi.N;i++) for(uint j=0;j<x.N-1;j++) metaJ(i,j) = J(i,j);
-      for(uint i=1;i<phi.N;i++) metaJ(i,x.N-1) = -1.;
-      metaJ(phi.N, x.N-1) = -1.;
-    }
-  }
-};
+//     if(&metaJ){
+//       metaJ.resize(metaPhi.N, x.N);  metaJ.setZero();
+//       metaJ(0,x.N-1) = 1.; //cost
+//       for(uint i=1;i<phi.N;i++) for(uint j=0;j<x.N-1;j++) metaJ(i,j) = J(i,j);
+//       for(uint i=1;i<phi.N;i++) metaJ(i,x.N-1) = -1.;
+//       metaJ(phi.N, x.N-1) = -1.;
+//     }
+//   }
+// };
 
 
 //==============================================================================
@@ -232,7 +233,7 @@ struct PhaseOneProblem:VectorFunction{
 // test the phase one optimization
 //
 
-void testPhaseOne(VectorFunction& f){
+void testPhaseOne(ConstrainedProblem& f){
   PhaseOneProblem metaF(f);
 
   arr x;
