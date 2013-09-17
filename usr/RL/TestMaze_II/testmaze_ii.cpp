@@ -55,7 +55,7 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     ui.setupUi(this);
 
     // disable graph view
-    // ui._wGraphDockWidget->setVisible(false);
+    ui._wGraphDockWidget->setVisible(false);
 
     // open console history file
     if(!history_file.open(QIODevice::ReadWrite | QIODevice::Text)) {
@@ -449,6 +449,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString max_tree_size_s(                 "    max-tree-size. . . . . . . <int> . . . . . . . . . . . . . . . . . . .-> set maximum size of Look-Ahead-Tree (zero for infinite)");
 
     QString new_s(                         "\n    ---------------------------------New Stuff----------------------------------");
+    QString random_distribution_s(           "    random-distribution. . . . <int> . . . . . . . . . . . . . . . . . . .-> run <int> random transitions and display relative counts for all states");
     QString color_states_s(                  "    col-states . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> color states (random)");
     QString fixed_dt_distribution_s(         "    fixed-dt-dist / fdd. . . . <int> . . . . . . . . . . . . . . . . . . .-> show probability for a state to occur <int> steps after current state");
     QString pair_delay_distribution_s(       "    pair-delay-dist / pdd. . . [<int>] . . . . . . . . . . . . . . . . . .-> show temporal delay distribution from current state to target state (restrict to time window of width <int>");
@@ -544,6 +545,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             TO_CONSOLE( max_tree_size_s );
             // New
             TO_CONSOLE( new_s );
+            TO_CONSOLE( random_distribution_s );
             TO_CONSOLE( color_states_s );
             TO_CONSOLE( fixed_dt_distribution_s );
             TO_CONSOLE( pair_delay_distribution_s );
@@ -962,36 +964,40 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 TO_CONSOLE( construct_s );
             }
         } else if(str_args[0]=="test") { // test
-            if(str_args_n==4 && int_args_ok[1] && double_args_ok[2] && double_args_ok[3]) {
-                // number of random samples and iterations
-                int data_n = int_args[1];
-                // create sigmoid object
-                SmoothingKernelSigmoid sks(double_args[2],double_args[3],0,1);
-                // generate random data
-                for(int i=0; i<data_n; ++i) {
-                    double x;
-                    x = sks.get_max_uncertain(1000);
-                    x += (drand48()-0.5)/100;
-                    double y;
-                    double s1 = 0.4;
-                    double s2 = 0.6;
-                    if(x<s1) {
-                        y = 0;
-                    } else if(x>s2) {
-                        y = 1;
-                    } else {
-                        double trans = (x-s1)/(s2-s1);
-                        y = pow(drand48(),2-1.5*trans);
-                    }
-                    sks.add_new_point(x,y);
-                    sks.print_to_QCP(plotter);
-                    QApplication::processEvents();
-                    // QString file_name = QString("Sigmoid_%1.png").arg(QString::number(i),(int)4,QChar('0'));
-                    // plotter->savePng(file_name,1000,500,1,-1);
+            TO_CONSOLE( "    currently no test function implemented" );
+        } else if(str_args[0]=="random-distribution") { // test
+            if(str_args_n==2 && int_args_ok[1]) {
+                // initialize state counts to zero
+                vector<int> state_counts;
+                for(stateIt_t state=stateIt_t::first(); state!=util::INVALID; ++state) {
+                    state_counts.push_back(0);
                 }
+                // get state counts
+                int n = int_args[1];
+                int max_count = -1;
+                for(int idx=0; idx<n; ++idx) {
+                    action_t action = (action_t)(action_t::random_action());
+                    state_t state_to;
+                    reward_t reward;
+                    maze.perform_transition(action,state_to,reward);
+                    ++state_counts[state_to];
+                    max_count = util::max<int>(state_counts[state_to],max_count);
+                }
+                // transform into colors
+                Maze::color_vector_t cols;
+                for(stateIt_t state=stateIt_t::first(); state!=util::INVALID; ++state) {
+                    double p = state_counts[state];
+                    DEBUG_OUT(0,"State " << state << ": p = " << p/n );
+                    p /= max_count;
+                    cols.push_back( std::make_tuple(1,1-p,1-p) );
+                }
+                maze.render_update(&cols);
+            } else {
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( random_distribution_s );
             }
         } else if(str_args[0]=="col-states") { // color states
-            Maze::color_vector_t  cols;
+            Maze::color_vector_t cols;
             for(stateIt_t state=stateIt_t::first(); state!=util::INVALID; ++state) {
                 cols.push_back( std::make_tuple(drand48(),drand48(),drand48()) );
             }
