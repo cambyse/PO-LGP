@@ -1,0 +1,1 @@
+convert -quality 100 ${1%.*}.ppm ${1%.*}.jpg

@@ -39,6 +39,7 @@ CORE
 
 
 %% BACKUP/temporary files
+nogit*
 *~
 z.*
 z/
