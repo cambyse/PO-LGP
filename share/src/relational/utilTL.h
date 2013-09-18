@@ -32,7 +32,7 @@
 #define MT_IMPLEMENT_TEMPLATES
 #endif
 #include <Core/array.h>
-#include <MT/util.h>
+#include <Core/util.h>
 #include <cmath>
 
 #define PRINT(x) cout << #x << "=" << x << endl;
@@ -63,10 +63,9 @@
 #endif
 
 namespace TL {
-const uint UINT_NIL = std::numeric_limits<uint>::max();
-
-const double TL_DOUBLE_NIL = -98765.43211234589;
-const double TL_DOUBLE_MIN = -1. * std::numeric_limits<double>::max();
+  const uint UINT_NIL = std::numeric_limits<uint>::max();
+  const double TL_DOUBLE_NIL = -98765.43211234589;
+  const double TL_DOUBLE_MIN = -1. * std::numeric_limits<double>::max();
 
 #ifdef MT_MSVC
     #define TL_INFINITY numeric_limits<double>::infinity();

@@ -1,9 +1,28 @@
+/*  ---------------------------------------------------------------------
+    Copyright 2013 Marc Toussaint
+    email: mtoussai@cs.tu-berlin.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a COPYING file of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
 #ifndef MT_biros_h
 #define MT_biros_h
 
 #include <Core/array.h>
 #include <Core/util.h>
-#include "module.h"
+#include <Core/module.h>
+#include "engine.h"
 #include "engine_internal.h"
 
 /**
@@ -28,10 +47,8 @@
 //
 
 struct Variable;
-struct Process;
 struct Parameter;
 typedef MT::Array<Variable*> VariableL;
-typedef MT::Array<Process*> ProcessL;
 typedef MT::Array<Parameter*> ParameterL;
 
 
@@ -101,7 +118,7 @@ void registerField(Variable *v, FieldRegistration* f);
 struct Parameter {
   void *pvalue;
   const char* name;
-  ModuleL dependers;
+  ModuleThreadL dependers;
   Parameter();
   virtual void writeValue(ostream& os) const = 0;
   virtual const char* typeName() const = 0;
@@ -161,7 +178,7 @@ struct Parameter_typed:Parameter {
  */
 struct Biros:Variable {
   VariableL variables;
-  ProcessL processes;
+  ModuleThreadL processes;
   ParameterL parameters;
 
   /// @name c'tor/d'tor
@@ -169,13 +186,13 @@ struct Biros:Variable {
   ~Biros();
 
   /// @name access existing processes, variables and parameters.
-  Process *getProcessFromPID();
-  template<class T> T* getVariable(const char* name, Module *p, bool required = false);
-  template<class T> T* getOrCreateVariable(const char* name, Module *p);
-  template<class T> void getVariable(T*& v, const char* name, Module *p, bool required = false);
-  template<class T> T* getProcess (const char* name, Module *p, bool required = false);
-  template<class T> T getParameter(const char *name, Module *p=NULL);
-  template<class T> T getParameter(const char *name, const T& _default, Module *p=NULL);
+  ModuleThread *getProcessFromPID();
+  template<class T> T* getVariable(const char* name, ModuleThread *p, bool required = false);
+  template<class T> T* getOrCreateVariable(const char* name, ModuleThread *p);
+  template<class T> void getVariable(T*& v, const char* name, ModuleThread *p, bool required = false);
+  template<class T> T* getProcess (const char* name, ModuleThread *p, bool required = false);
+  template<class T> T getParameter(const char *name, ModuleThread *p=NULL);
+  template<class T> T getParameter(const char *name, const T& _default, ModuleThread *p=NULL);
   template<class T> void setParameter(const char *name, T value);
 
   /// @name dump ALL available information
@@ -195,22 +212,22 @@ template<class T>
 struct WorkingCopy {
   T *var;             ///< pointer to the Variable (T must be derived from Variable)
   T copy;
-  Process *p;         ///< pointer to the Process that might want to access the Variable
+  ModuleThread *p;         ///< pointer to the Process that might want to access the Variable
   int last_revision; ///< last revision of a read/write access
 
   WorkingCopy() { p=NULL; var=NULL; last_revision = 0;  }
   T& operator()() { return copy; }
 
-  void init(T *_v, Process *_p) {
+  void init(T *_v, ModuleThread *_p) {
     p=_p;
     var=_v;
     var->readAccess(p);
     copy = *var;
     last_revision = var->revision.getValue();
     var->deAccess(p);
-    copy.name <<"_WorkingCopy_" <<(p?p->module->name:STRING("GLOBAL"));
+    copy.name <<"_WorkingCopy_" <<(p?p->name:STRING("GLOBAL"));
   }
-  void init(const char* var_name, Process *_p) {
+  void init(const char* var_name, ModuleThread *_p) {
     T *_v = biros().getVariable<T>(var_name, _p);
     init(_v, _p);
   }
@@ -240,7 +257,7 @@ struct WorkingCopy {
  * @name  Helpers to print out information
  * @{
  */
-void writeInfo(ostream& os, Process& p, bool brief, char nl='\n');
+void writeInfo(ostream& os, ModuleThread& p, bool brief, char nl='\n');
 void writeInfo(ostream& os, Variable& v, bool brief, char nl='\n');
 void writeInfo(ostream& os, FieldRegistration& f, bool brief, char nl='\n');
 void writeInfo(ostream& os, Parameter& pa, bool brief, char nl='\n');

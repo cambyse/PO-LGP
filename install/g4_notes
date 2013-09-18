@@ -1,0 +1,22 @@
+unzip
+./configure
+sudo make install sysconfig=/etc
+ldconfig /usr/local/lib
+[now man exists]
+copy the drivers from the A and B sender
+
+CreateSrcCfg
+stick dongel in
+G4DevConfig
+
+create a configuration file for the sources
+g4src_cfg
+
+
+configure hub
+g4hub_cfg
+
+* create new
+
+
+ftp://ftp.polhemus.com/pub/G4/G4_Linux/

@@ -1,0 +1,10 @@
+
+%include pr2_meshes/pr2_tree.ors
+
+%include pr2_augmentations.ors
+
+
+body  OBJECTS{ X=<T t(.5 .2 .7)> }
+
+shape target2(OBJECTS){ contact, type=0, rel=<T t( .0 .1 0) d(50 0 0 1) d(30 0 1 0)>, size=[.1 .1 .15 .0], color=[.3 .9 .1] }
+shape target1(OBJECTS){ contact, type=4, rel=<T t( .1 -.1 0) d(50 0 0 1) d(30 0 1 0)>, size=[.0 .0 .108 .0375], color=[.3 .9 .1] }

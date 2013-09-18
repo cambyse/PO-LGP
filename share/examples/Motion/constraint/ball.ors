@@ -1,0 +1,9 @@
+
+body base { X=<T t(0 0 0)>  type=0 size=[0.1 0.1 .1 0] color=[0 0 0] fixed, }
+body endeff { type=1 size=[0.1 0.1 .1 .2] contact, }
+
+joint (base endeff) { type=6 Q=<T t(1. -2. 1.)> }
+
+body target { X=<T t(1. -.5 2.0)>  type=1 size=[.1 .1 .1 .05] color=[0 .5 0] fixed, }
+body obstacle { X=<T t(1.1 -1. 1.)>  type=0 size=[1. .1 1. .1] color=[1 0 0] contact, fixed, }
+

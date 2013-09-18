@@ -45,6 +45,7 @@ swig2.0 \
 tcl8.5-dev \
 tk-dev \
 tk8.5-dev \
+libfreenect-dev \
 
 
 # install google test
