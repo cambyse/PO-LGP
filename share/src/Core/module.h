@@ -195,6 +195,6 @@ inline void operator>>(istream&, Module&){ NIY }
 inline void operator<<(ostream& os, const Module& m){ os <<"Module '" <<m.name <<'\''; }
 
 inline void operator>>(istream&, Access&){ NIY }
-inline void operator<<(ostream& os, const Access& a){ os <<"Access '" <<a.name <<"' from '" <<a.module->name <<"' to '" <<(a.var?a.var->name:"??") <<'\''; }
+inline void operator<<(ostream& os, const Access& a){ os <<"Access '" <<a.name <<"' from '" <<a.module->name <<"' to '" << (a.var ? a.var->name : String("??")) <<'\''; }
 
 #endif
