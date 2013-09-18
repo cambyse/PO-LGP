@@ -116,10 +116,10 @@ joint (r_elbow_flex_link r_forearm_roll_link){ from=<T 0 0 0 -0.707107 0 0 0.707
 joint (r_upper_arm_roll_link r_elbow_flex_link){ from=<T 0.4 0 0 -0.707107 0 0 -0.707107 >  type=0  }
 joint (r_forearm_roll_link r_wrist_flex_link){ from=<T 0.321 0 0 -0.707107 0 0 -0.707107 >  type=0  }
 joint (r_wrist_flex_link r_wrist_roll_link){ from=<T 0 0 0 -0.707107 0 0 0.707107 >  type=0  }
-joint (r_wrist_roll_link r_gripper_l_finger_link){ from=<T 0.07691 0.01 0 -0.707107 0 0.707107 0 >  type=0  }
-joint (r_wrist_roll_link r_gripper_r_finger_link){ from=<T 0.07691 -0.01 0 -0.707107 0 -0.707107 0 >  type=0  }
-joint (r_gripper_l_finger_link r_gripper_l_finger_tip_link){ from=<T 2.02882e-17 0.00495 -0.09137 -1.5702e-16 0 -1 0 >  type=0  }
-joint (r_gripper_r_finger_link r_gripper_r_finger_tip_link){ from=<T 2.02882e-17 -0.00495 0.09137 -1.5702e-16 0 1 0 >  type=0  }
+joint finger_r_l (r_wrist_roll_link r_gripper_l_finger_link){ from=<T 0.07691 0.01 0 -0.707107 0 0.707107 0 >  type=0  }
+joint finger_r_r (r_wrist_roll_link r_gripper_r_finger_link){ from=<T 0.07691 -0.01 0 -0.707107 0 -0.707107 0 >  type=0  }
+joint (r_gripper_l_finger_link r_gripper_l_finger_tip_link){ from=<T 2.02882e-17 0.00495 -0.09137 -1.5702e-16 0 -1 0 >  coupledTo=finger_r_l  }
+joint (r_gripper_r_finger_link r_gripper_r_finger_tip_link){ from=<T 2.02882e-17 -0.00495 0.09137 -1.5702e-16 0 1 0 >  coupledTo=finger_r_r  }
 joint (torso_lift_link l_shoulder_pan_link){ from=<T 0 0.188 0 -1 0 0 0 >  type=0  }
 joint (l_shoulder_pan_link l_shoulder_lift_link){ from=<T 2.22045e-17 0 -0.1 -0.5 -0.5 -0.5 -0.5 >  type=0  }
 joint (l_shoulder_lift_link l_upper_arm_roll_link){ from=<T 0 0 0 -0.707107 0 0 0.707107 >  type=0  }
@@ -127,7 +127,7 @@ joint (l_elbow_flex_link l_forearm_roll_link){ from=<T 0 0 0 -0.707107 0 0 0.707
 joint (l_upper_arm_roll_link l_elbow_flex_link){ from=<T 0.4 0 0 -0.707107 0 0 -0.707107 >  type=0  }
 joint (l_forearm_roll_link l_wrist_flex_link){ from=<T 0.321 0 0 -0.707107 0 0 -0.707107 >  type=0  }
 joint (l_wrist_flex_link l_wrist_roll_link){ from=<T 0 0 0 -0.707107 0 0 0.707107 >  type=0  }
-joint (l_wrist_roll_link l_gripper_l_finger_link){ from=<T 0.07691 0.01 0 -0.707107 0 0.707107 0 >  type=0  }
-joint (l_wrist_roll_link l_gripper_r_finger_link){ from=<T 0.07691 -0.01 0 -0.707107 0 -0.707107 0 >  type=0  }
-joint (l_gripper_l_finger_link l_gripper_l_finger_tip_link){ from=<T 2.02882e-17 0.00495 -0.09137 -1.5702e-16 0 -1 0 >  type=0  }
-joint (l_gripper_r_finger_link l_gripper_r_finger_tip_link){ from=<T 2.02882e-17 -0.00495 0.09137 -1.5702e-16 0 1 0 >  type=0  }
+joint finger_l_l (l_wrist_roll_link l_gripper_l_finger_link){ from=<T 0.07691 0.01 0 -0.707107 0 0.707107 0 >  type=0  }
+joint finger_l_r (l_wrist_roll_link l_gripper_r_finger_link){ from=<T 0.07691 -0.01 0 -0.707107 0 -0.707107 0 >  type=0  }
+joint (l_gripper_l_finger_link l_gripper_l_finger_tip_link){ from=<T 2.02882e-17 0.00495 -0.09137 -1.5702e-16 0 -1 0 >  coupledTo=finger_l_l }
+joint (l_gripper_r_finger_link l_gripper_r_finger_tip_link){ from=<T 2.02882e-17 -0.00495 0.09137 -1.5702e-16 0 1 0 >  coupledTo=finger_l_r }

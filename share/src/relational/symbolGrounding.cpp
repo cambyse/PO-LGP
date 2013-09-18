@@ -587,7 +587,7 @@ relational::FullExperience* relational::FullExperience::read_continuous(ifstream
   relational::FullExperience* e = new relational::FullExperience;
   
   MT::skip(in);
-  MT::skipLine(in);  // "{"
+  //MT::skipLine(in);  // "{"
   if (DEBUG>0) {PRINT(MT::peerNextChar(in));}
   
   MT::String line;
@@ -608,7 +608,7 @@ relational::FullExperience* relational::FullExperience::read_continuous(ifstream
   // post
   e->state_continuous_post.read(in);
   MT::skip(in);
-  MT::skipLine(in);  // "}"
+  //MT::skipLine(in);  // "}"
   
   if (DEBUG>0) {e->write_continuous(cout);}
   if (DEBUG>0) {cout<<"read_continuous [END]"<<endl;}

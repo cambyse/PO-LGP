@@ -23,7 +23,7 @@
 #ifndef RELATIONAL_symbols_h
 #define RELATIONAL_symbols_h
 
-#include <MT/util.h>
+#include <Core/util.h>
 #include <relational/utilTL.h>
 
 

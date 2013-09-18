@@ -24,7 +24,7 @@
 #include <GL/glx.h>
 
 #include "opengl.h"
-#include "ors.h"
+#include <Core/geo.h>
 
 void initGlEngine(){}
 static Mutex globalOpenglLock;

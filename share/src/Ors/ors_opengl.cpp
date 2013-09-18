@@ -16,8 +16,6 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
-
-
 /**
  * @file
  * @ingroup group_ors
@@ -26,7 +24,6 @@
  * @ingroup group_ors
  * @{
  */
-
 
 
 #include "ors.h"
@@ -313,7 +310,7 @@ void glDrawShape(ors::Shape *s) {
         else glDrawCappedCylinder(s->size[3], s->size[2]);
         break;
       case ors::markerST:
-        glDrawAxes(s->size[0]);  glDrawDiamond(s->size[0]/5., s->size[0]/5., s->size[0]/5.);
+        glDrawDiamond(s->size[0]/5., s->size[0]/5., s->size[0]/5.); glDrawAxes(s->size[0]);
         break;
       case ors::meshST:
         CHECK(s->mesh.V.N, "mesh needs to be loaded to draw mesh object");
@@ -321,7 +318,7 @@ void glDrawShape(ors::Shape *s) {
         break;
       case ors::pointCloudST:
         CHECK(s->mesh.V.N, "mesh needs to be loaded to draw point cloud object");
-        glDrawDots(s->mesh.V);
+        glDrawPointCloud(s->mesh.V, NoArr);
         break;
       default: HALT("can't draw that geom yet");
     }
@@ -342,6 +339,10 @@ void glDrawShape(ors::Shape *s) {
     glVertex3d(.1*s->contactOrientation.x, .1*s->contactOrientation.y, .1*s->contactOrientation.z);
     glEnd();
   }
+
+  glColor(1,1,1);
+  glDrawText(s->body->name, 0, 0, 0);
+
   glPopName();
 }
 
@@ -595,24 +596,22 @@ void _glDrawOdeWorld(dWorldID world)
 */
 
 void animateConfiguration(ors::Graph& C, OpenGL& gl) {
-  arr x, x0, v0;
+  arr x, x0;
   uint t, i;
   C.calcBodyFramesFromJoints();
-  x0.resize(C.getJointStateDimension());
-  v0.resizeAs(x0);
-  C.getJointState(x0, v0);
+  C.getJointState(x0);
   for(i=x0.N; i--;) {
     //for(i=20;i<x0.N;i++){
     x=x0;
     for(t=0; t<20; t++) {
       x(i)=x0(i) + .5*sin(MT_2PI*t/20);
-      C.setJointState(x, v0);
+      C.setJointState(x);
       C.calcBodyFramesFromJoints();
       if(!gl.update()) { return; }
       MT::wait(0.01);
     }
   }
-  C.setJointState(x0, v0);
+  C.setJointState(x0);
   C.calcBodyFramesFromJoints();
 }
 

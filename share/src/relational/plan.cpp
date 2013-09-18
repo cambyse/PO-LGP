@@ -1019,4 +1019,59 @@ void NotTheseStatesReward::write(const char* filename) const {
 }
 
 
+
+
+
+
+
+/************************************************
+ * 
+ *     RewardConjunction
+ * 
+ ************************************************/
+
+void RewardConjunction::addReward(Reward *reward) {
+  rewards.append(reward);
+}
+
+double RewardConjunction::evaluate(const SymbolicState& s) const {
+  double product = 1;
+  for (uint i = 0; i < rewards.N; i++) {
+    product *= rewards(i)->evaluate(s);
+  }
+  return product;
+}
+
+bool RewardConjunction::satisfied(const SymbolicState& s) const {
+  for (uint i = 0; i < rewards.N; i++) {
+    if (!rewards(i)->satisfied(s)) return false;
+  }
+  return true;
+}
+bool RewardConjunction::possible(const SymbolicState& s) const {
+  for (uint i = 0; i < rewards.N; i++) {
+    if (!rewards(i)->possible(s)) return false;
+  }
+  return true;
+}
+
+void RewardConjunction::getRewardConstants(uintA& constants, const SymbolicState* s) const {
+  for (uint i = 0; i < rewards.N; i++) {
+    uintA rewardConstants;
+    rewards(i)->getRewardConstants(rewardConstants, s);
+    constants.setAppend(rewardConstants);
+  }
+}
+
+void RewardConjunction::write(ostream& out) const {
+  cout << "Conjunction of rewards:" << endl;
+  for (uint i = 0; i < rewards.N; i++)
+    rewards(i)->write(out);
+}
+void RewardConjunction::write(const char* filename) const {
+}
+
+
+
+
 }  // namespace PRADA

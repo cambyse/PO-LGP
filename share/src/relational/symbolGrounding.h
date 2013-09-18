@@ -3,7 +3,7 @@
 
 #include <relational/symbols.h>
 #include <relational/literals.h>
-#include <MT/ors.h>
+#include <Ors/ors.h>
 
 
 
