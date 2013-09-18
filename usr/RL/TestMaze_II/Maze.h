@@ -64,7 +64,7 @@ public:
     void perform_transition(const action_t& a, state_t& final_state, reward_t& r );
 
     /** \brief Returns the transition probability. */
-    probability_t get_prediction(const instance_t*, const action_t&, const state_t&, const reward_t&, const bool& debug = false) const;
+    probability_t get_prediction(const instance_t*, const action_t&, const state_t&, const reward_t&) const;
 
     /** \brief Validates a model by performing random transitions and comparing
      * the result to the model predicitons. */

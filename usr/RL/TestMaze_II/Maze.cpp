@@ -532,13 +532,7 @@ void Maze::perform_transition(const action_t& a, state_t& final_state, reward_t&
     r = current_instance->reward;
 }
 
-Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const action_t& action, const state_t& state_to, const reward_t& reward, const bool& debug) const {
-
-    // for debugging
-    if(debug) {
-        DEBUG_OUT(0,"Transition probability (" << action << "," << state_to << "," << reward << ") for history:" );
-        instance_from->print_history();
-    }
+Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const action_t& action, const state_t& state_to, const reward_t& reward) const {
 
     // state 'from' and 'to'
     MazeState maze_state_from(instance_from->state);
@@ -559,7 +553,6 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
         maze_state_to!=maze_state_right &&
         maze_state_to!=maze_state_up    &&
         maze_state_to!=maze_state_down ) {
-        if(debug) { DEBUG_OUT(0,"    (1) " << 0 ); }
         return 0;
     }
 
@@ -709,22 +702,10 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
             break;
         default:
             DEBUG_OUT(0,"Error: unknown action");
-            if(debug) { DEBUG_OUT(0,"    (2) " << 0 ); }
             return 0;
         }
 
-        // return if state transition impossible
-        // if(debug) {
-        //     DEBUG_OUT(0,"    eff. stay  " << effective_maze_state_stay );
-        //     DEBUG_OUT(0,"    eff. left  " << effective_maze_state_left );
-        //     DEBUG_OUT(0,"    eff. right " << effective_maze_state_right );
-        //     DEBUG_OUT(0,"    eff. up    " << effective_maze_state_up );
-        //     DEBUG_OUT(0,"    eff. down  " << effective_maze_state_down );
-        // }
         if(prob==0) {
-            if(debug) {
-                DEBUG_OUT(0,"    (3) " << 0 );
-            }
             return 0;
         }
     }
@@ -743,8 +724,8 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
             receive_reward = true;
         }
 
-        // check if reward was activated (if it can be received or activation
-        // type is with punishment for failure)
+        // check reward only if it can be received or activation type is with
+        // punishment for failure
         if(receive_reward || rat==EACH_TIME_PUNISH_FAILURE || rat==ON_RELEASE_PUNISH_FAILURE) {
             idx_t steps_in_past = 1;
             bool reward_invalidated = false;
@@ -753,7 +734,7 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
                 // check if delay matches
                 bool delay_matches = false;
                 if(delay<0 || steps_in_past==delay) {
-                // exact match for positve delay less-equal match for negative
+                    // exact match for positve delay, less-equal match for negative
                     delay_matches = true;
                 }
 
@@ -820,11 +801,9 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
 
     // check for matching reward
     if(reward!=accumulated_reward) {
-        if(debug) { DEBUG_OUT(0,"    (4) " << 0 ); }
         return 0;
     }
 
-    if(debug) { DEBUG_OUT(0,"    (5) " << prob ); }
     return prob;
 }
 

@@ -946,8 +946,3 @@ double LookAheadSearch::node_energy(node_t node, const graph_t::NodeMap<Point>& 
 
     return energy;
 }
-
-template <>
-LookAheadSearch::probability_t LookAheadSearch::get_predict_debug(const Maze& model, const instance_t * i, const action_t&a, const state_t& s, const reward_t& r) const {
-    return model.get_prediction(i, a, s, r, true);
-}

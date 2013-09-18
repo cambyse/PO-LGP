@@ -965,7 +965,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             }
         } else if(str_args[0]=="test") { // test
             TO_CONSOLE( "    currently no test function implemented" );
-        } else if(str_args[0]=="random-distribution" | str_args[0]=="rd") { // test
+        } else if(str_args[0]=="random-distribution" || str_args[0]=="rd") { // test
             if(str_args_n==2 && int_args_ok[1]) {
                 // initialize state counts to zero
                 vector<int> state_counts;

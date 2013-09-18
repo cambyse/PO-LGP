@@ -280,9 +280,6 @@ protected:
     /*! \brief Node energy function. */
     double node_energy(node_t node, const graph_t::NodeMap<Point>& coords) const;
 
-    template < class Model >
-        probability_t get_predict_debug(const Model& model, const instance_t * i, const action_t&a, const state_t& s, const reward_t& r) const;
-
 };
 
 //=================================================================//
@@ -416,7 +413,7 @@ LookAheadSearch::probability_t LookAheadSearch::get_predicted_transition_probabi
                   ", prob " << arc_info_map[out_arc].prob);
     }
     if(state_node==lemon::INVALID) {
-        probability_t prob = get_predict_debug(model, node_info_map[root_node].instance, action, state, reward);
+        probability_t prob = model.get_prediction(node_info_map[root_node].instance, action, state, reward);
         DEBUG_OUT(0,"Error: Node with state " << state << ", reward " << reward << " could not be found (Maze probability: " << prob << ")" );
         return 0;
     }
@@ -730,14 +727,6 @@ void LookAheadSearch::expand_action_node(
 
     node_info_map[action_node].expansion = FULLY_EXPANDED;
 }
-
-template < class Model >
-LookAheadSearch::probability_t LookAheadSearch::get_predict_debug(const Model& model, const instance_t * i, const action_t&a, const state_t& s, const reward_t& r) const {
-    return model.get_prediction(i, a, s, r);
-}
-
-template <>
-LookAheadSearch::probability_t LookAheadSearch::get_predict_debug(const Maze& model, const instance_t * i, const action_t&a, const state_t& s, const reward_t& r) const;
 
 #include "debug_exclude.h"
 
