@@ -63,8 +63,18 @@ public:
      * state and reward by reference. */
     void perform_transition(const action_t& a, state_t& final_state, reward_t& r );
 
+    /** \brief Perform a transition by executing an action and return which rewards
+     * were active. */
+    void perform_transition(const action_t& a, std::vector<std::pair<int,int> > * reward_vector);
+
     /** \brief Returns the transition probability. */
     probability_t get_prediction(const instance_t*, const action_t&, const state_t&, const reward_t&) const;
+
+    /** \brief Returns the transition probability and which rewards were active.
+     *
+     * The first counter in each pair counts positive rewards, the second
+     * punishments (for not collecting an activated reward). */
+    probability_t get_prediction(const instance_t*, const action_t&, const state_t&, const reward_t&, std::vector<std::pair<int,int> > * reward_vector) const;
 
     /** \brief Validates a model by performing random transitions and comparing
      * the result to the model predicitons. */
@@ -75,6 +85,8 @@ public:
             probability_t * mean_model_likelihood,
             probability_t * mean_maze_likelihood
     );
+
+    void print_reward_activation_on_random_walk(const int& walk_length);
 
     /** \brief Set epsilon to a value in [0,1]. */
     void set_epsilon(const double& e);

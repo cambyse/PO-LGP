@@ -5,6 +5,8 @@
 #include "debug.h"
 
 using std::tuple;
+using std::pair;
+using std::make_pair;
 using std::get;
 using std::vector;
 using std::get;
@@ -405,7 +407,7 @@ void Maze::render_initialize(QGraphicsView * v) {
     action_point = scene->addEllipse(current_state.x()-ap_size/2,current_state.y()-ap_size/2,ap_size,ap_size,action_point_pen,action_point_brush);
 
     // Rewards
-    for(auto reward : rewards ) {
+    for(maze_reward_t reward : rewards ) {
         render_reward(reward);
     }
 
@@ -482,7 +484,8 @@ void Maze::render_update(const color_vector_t * color) {
 }
 
 
-void Maze::perform_transition(const action_t& action) {
+void Maze::perform_transition(const action_t& action, std::vector<std::pair<int,int> > * reward_vector) {
+
     MazeState old_state = current_state; // remember current (old) state
 
     if(DEBUG_LEVEL>=1) {
@@ -501,7 +504,7 @@ void Maze::perform_transition(const action_t& action) {
     bool was_set = false;
     for(stateIt_t state_to=stateIt_t::first(); state_to!=INVALID && !was_set; ++state_to) {
         for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID && !was_set; ++reward) {
-            probability_t prob = get_prediction(current_instance, action, state_to, reward);
+            probability_t prob = get_prediction(current_instance, action, state_to, reward, reward_vector);
             DEBUG_OUT(2,"state(" << state_to << "), reward(" << reward << ") --> prob=" << prob);
             prob_accum += prob;
             if(prob_accum>prob_threshold) {
@@ -525,6 +528,9 @@ void Maze::perform_transition(const action_t& action) {
         );
 }
 
+void Maze::perform_transition(const action_t& action) {
+    perform_transition(action, nullptr);
+}
 
 void Maze::perform_transition(const action_t& a, state_t& final_state, reward_t& r) {
     perform_transition(a);
@@ -533,6 +539,10 @@ void Maze::perform_transition(const action_t& a, state_t& final_state, reward_t&
 }
 
 Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const action_t& action, const state_t& state_to, const reward_t& reward) const {
+    return get_prediction(instance_from, action, state_to, reward, nullptr);
+}
+
+Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const action_t& action, const state_t& state_to, const reward_t& reward, vector<pair<int,int> > * reward_vector) const {
 
     // state 'from' and 'to'
     MazeState maze_state_from(instance_from->state);
@@ -712,7 +722,11 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
 
     // calculate accumulated reward
     reward_t accumulated_reward = 0;
-    for(auto r : rewards) {
+    if(reward_vector!=nullptr) {
+        reward_vector->assign(rewards.size(),make_pair(0,0));
+    }
+    for(int r_idx=0; r_idx<(int)rewards.size(); ++r_idx) {
+        maze_reward_t r = rewards[r_idx];
         MazeState activate_state(r[REWARD_ACTIVATION_STATE]);
         MazeState receive_state(r[REWARD_RECEIVE_STATE]);
         idx_t delay = r[REWARD_TIME_DELAY];
@@ -750,12 +764,18 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
                     if(activation_state && receive_reward && delay_matches ) {
                         // receive reward whenever everything matches
                         accumulated_reward += r[REWARD_VALUE];
+                        if(reward_vector!=nullptr) {
+                            ++((*reward_vector)[r_idx].first);
+                        }
                     }
                     break;
                 case ON_RELEASE_NO_PUNISH:
                     if(activation_state && receive_reward && delay_matches && !reward_invalidated) {
                         // successfully receive reward
                         accumulated_reward += r[REWARD_VALUE];
+                        if(reward_vector!=nullptr) {
+                            ++((*reward_vector)[r_idx].first);
+                        }
                     }
                     if(activation_state) {
                         // agent passed activation state and invalidated later
@@ -769,8 +789,14 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
                         // not on receive-state
                         if(receive_reward) {
                             accumulated_reward += r[REWARD_VALUE];
+                            if(reward_vector!=nullptr) {
+                                ++((*reward_vector)[r_idx].first);
+                            }
                         } else {
                             accumulated_reward -= r[REWARD_VALUE];
+                            if(reward_vector!=nullptr) {
+                                ++((*reward_vector)[r_idx].second);
+                            }
                         }
                     }
                     break;
@@ -780,8 +806,14 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
                         // not invalidated, punish if not on receive-state
                         if(receive_reward) {
                             accumulated_reward += r[REWARD_VALUE];
+                            if(reward_vector!=nullptr) {
+                                ++((*reward_vector)[r_idx].first);
+                            }
                         } else {
                             accumulated_reward -= r[REWARD_VALUE];
+                            if(reward_vector!=nullptr) {
+                                ++((*reward_vector)[r_idx].second);
+                            }
                         }
                     }
                     if(activation_state) {
@@ -805,6 +837,30 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
     }
 
     return prob;
+}
+
+void Maze::print_reward_activation_on_random_walk(const int& walk_length) {
+    // collect data
+    vector<pair<long,long> > reward_vector(rewards.size(),make_pair(0,0));
+    for(int i=0; i<walk_length; ++i) {
+        action_t action = action_t::random_action();
+        vector<pair<int,int> > tmp_reward_vector;
+        perform_transition(action,&tmp_reward_vector);
+        for(int r_idx=0; r_idx<(int)reward_vector.size(); ++r_idx) {
+            reward_vector[r_idx].first += tmp_reward_vector[r_idx].first;
+            reward_vector[r_idx].second += tmp_reward_vector[r_idx].second;
+        }
+    }
+
+    // print relativ counts
+    DEBUG_OUT(0,"Relative frequencies for reward activation on a length " << walk_length << " random walk");
+    for(int r_idx=0; r_idx<(int)reward_vector.size(); ++r_idx) {
+        DEBUG_OUT(0,"    Reward " << r_idx <<
+                  " (" << (state_t)rewards[r_idx][REWARD_ACTIVATION_STATE] << "," << (state_t)rewards[r_idx][REWARD_RECEIVE_STATE] <<
+                  ")	p+ = " << (double)reward_vector[r_idx].first/walk_length <<
+                  "	p- = " << (double)reward_vector[r_idx].second/walk_length
+            );
+    }
 }
 
 void Maze::set_epsilon(const double& e) {

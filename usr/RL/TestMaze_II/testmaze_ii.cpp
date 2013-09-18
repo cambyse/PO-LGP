@@ -964,7 +964,11 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 TO_CONSOLE( construct_s );
             }
         } else if(str_args[0]=="test") { // test
-            TO_CONSOLE( "    currently no test function implemented" );
+            if(str_args_n==2 && int_args_ok[1]) {
+                maze.print_reward_activation_on_random_walk(int_args[1]);
+                maze.render_update();
+            }
+            //TO_CONSOLE( "    currently no test function implemented" );
         } else if(str_args[0]=="random-distribution" || str_args[0]=="rd") { // test
             if(str_args_n==2 && int_args_ok[1]) {
                 // initialize state counts to zero
