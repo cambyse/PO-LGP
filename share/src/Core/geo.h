@@ -178,6 +178,7 @@ struct Transformation {
   void appendInvTransformation(const Transformation& f);     // this = this * f^{-1}
   
   double* getAffineMatrix(double *m) const;         // 4x4 matrix with 3x3=rotation and right-column=translation
+  arr getAffineMatrix() const;                      // 4x4 matrix with 3x3=rotation and right-column=translation
   double* getInverseAffineMatrix(double *m) const;  // 4x4 matrix with 3x3=R^{-1}   and bottom-row=R^{-1}*translation
   double* getAffineMatrixGL(double *m) const;       // in OpenGL format (transposed memory storage!!)
   double* getInverseAffineMatrixGL(double *m) const;// in OpenGL format (transposed memory storage!!)

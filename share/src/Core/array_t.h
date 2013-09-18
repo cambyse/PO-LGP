@@ -191,7 +191,6 @@ template<class T> MT::Array<T>& MT::Array<T>::reshape(uint ND, uint *dim) {
   return *this;
 }
 
-
 /// resize to multi-dimensional tensor
 template<class T> MT::Array<T>& MT::Array<T>::resize(const Array<uint> &newD) { resize(newD.N, newD.p); return *this; }
 
@@ -310,7 +309,7 @@ template<class T> void MT::Array<T>::makeSparse() {
 /// allocate memory (maybe using \ref flexiMem)
 template<class T> void MT::Array<T>::resizeMEM(uint n, bool copy) {
   if(n==N) return;
-  CHECK(!reference, "double resize of subarray is not allowed! (only a resize without changing memory size)");
+  CHECK(!reference, "resize of a reference (e.g. subarray) is not allowed! (only a resize without changing memory size)");
   uint i;
   T *pold=p;
   uint Mold=M, Mnew;
@@ -326,30 +325,24 @@ template<class T> void MT::Array<T>::resizeMEM(uint n, bool copy) {
       Mnew=Mold;   //small down-size: don't really resize memory
     }
   }
-  //if M changed, allocate the memory
-  if(Mnew!=Mold) {
+  if(Mnew!=Mold) {  //if M changed, allocate the memory
     uint64_t memoryNew = ((uint64_t)Mnew)*sizeT;
 #ifdef MT_GLOBALMEM
     globalMemoryTotal -= ((uint64_t)Mold)*sizeT;
     globalMemoryTotal += memoryNew;
 #endif
     if(Mnew) {
-      if(globalMemoryTotal>globalMemoryBound) {
-        //HALT("bugger");
-        if(globalMemoryStrict) {
+      if(globalMemoryTotal>globalMemoryBound) { //helpers to limit global memory (e.g. to avoid crashing a machine)
+        if(globalMemoryStrict) { //undo changes then throw an error
           MT_MSG("allocating " <<(memoryNew>>20) <<"MB (total=" <<(globalMemoryTotal>>20) <<"M, bound=" <<(globalMemoryBound>>20) <<"M)... (in THREADING applications: undefine the MT_GLOBALMEM compile flag)");
-          //first undo changes...
           globalMemoryTotal += ((uint64_t)Mold)*sizeT;
           globalMemoryTotal -= memoryNew;
           p=pold; M=Mold;
-          //...then throw an error...
-          HALT("...throwing exception");
-        } else {
+          HALT("strict memory limit exceeded");
+        } else { //just give a warning
           if(memoryNew>>20 || globalMemoryTotal-memoryNew<=globalMemoryBound) {
             MT_MSG("allocating " <<(memoryNew>>20) <<"MB (total=" <<(globalMemoryTotal>>20) <<"M, bound=" <<(globalMemoryBound>>20) <<"M)... (in THREADING applications: undefine the MT_GLOBALMEM compile flag)");
           }
-          //MT_MSG("...are you sure?");
-          //MT::wait();
         }
       }
       p=new T [Mnew];      //p=(T*)malloc(M*sizeT);
@@ -364,6 +357,21 @@ template<class T> void MT::Array<T>::resizeMEM(uint n, bool copy) {
     if(Mold) delete[] pold;  //if(Mold) free(pold);
   }
   N=n;
+}
+
+
+///this was a reference; becomes a copy
+template<class T> MT::Array<T>& MT::Array<T>::dereference(){
+  CHECK(reference,"can only dereference a reference!");
+  uint n=N;
+  T* pold=p;
+  reference=false;
+  N=M=0;
+  p=NULL;
+  resizeMEM(n, false);
+  CHECK(memMove==1,"only with memmove");
+  memmove(p, pold, sizeT*N);
+  return *this;
 }
 
 /// free all memory and reset all pointers and sizes
@@ -944,7 +952,13 @@ template<class T> MT::Array<T>& MT::Array<T>::operator=(const MT::Array<T>& a) {
   if(memMove) memmove(p, a.p, sizeT*N);
   else for(i=0; i<N; i++) p[i]=a.p[i];
   special = a.special;
-  //CHECK(special==noneST,"NIY");
+  if(special == noneST) return *this;
+  if(special == RowShiftedPackedMatrixST){
+    CHECK(typeid(T)==typeid(double),"");
+    aux = new RowShiftedPackedMatrix(*((arr*)this),*((RowShiftedPackedMatrix*)a.aux));
+    return *this;
+  }
+  NIY;
   return *this;
 }
 
@@ -1214,6 +1228,14 @@ template<class T> void MT::Array<T>::takeOver(MT::Array<T>& a) {
   a.M=0;
 }
 
+template<class T> void MT::Array<T>::swap(Array<T>& a) {
+  CHECK(!a.reference, "can't swap with a reference");
+  if(N!=a.N) resizeAs(a);
+  T* p_tmp = p;
+  p=a.p;
+  a.p=p_tmp;
+}
+
 /** @brief return a `dim'-dimensional grid with `steps' intervals
   filling the range [lo, hi] in each dimension. Note: returned array is
   `flat', rather than grid-shaped. */
@@ -1434,6 +1456,9 @@ template<class T> void MT::Array<T>::read(std::istream& is) {
   uint d, i;
   char c;
   T x;
+
+#define PARSERR(x) HALT("Error in parsing Array of type '" <<typeid(T).name() <<"' (line=" <<MT::lineCount <<"):\n" <<x)
+
   c=MT::peerNextChar(is);
   switch(c) {
     case '<':
@@ -1442,19 +1467,19 @@ template<class T> void MT::Array<T>::read(std::istream& is) {
       if(c=='[') {  //fast ascii read
         is >>PARSE("[");
         for(i=0; i<N; i++) {
-          if(is.fail()) HALT("could not read " <<i <<"-th element of an array");
+          if(is.fail()) PARSERR("could not read " <<i <<"-th element of an array");
           is >>p[i];
         }
         is >>PARSE("]");
-        if(is.fail()) HALT("could not read array end tag");
+        if(is.fail()) PARSERR("could not read array end tag");
       } else if(c==0) {  //binary read
-        c=is.get(); CHECK(c==0, "couldn't read newline before binary data block :-(");
+        c=is.get();  if(c!=0) PARSERR("couldn't read newline before binary data block :-(");
         is.read((char*)p, sizeT*N);
-        if(is.fail()) HALT("could not binary data");
-        c=is.get(); CHECK(c==0, "couldn't read newline after binary data block :-(");
+        if(is.fail()) PARSERR("could not binary data");
+        c=is.get(); if(c!=0) PARSERR("couldn't read newline after binary data block :-(");
       } else { //just directly read numbers
         for(i=0; i<N; i++) {
-          if(is.fail()) HALT("could not read " <<i <<"-th element of an array");
+          if(is.fail()) PARSERR("could not read " <<i <<"-th element of an array");
           is >>p[i];
         }
       }
@@ -1469,7 +1494,7 @@ template<class T> void MT::Array<T>::read(std::istream& is) {
         is.get(c);
         if(c==']' || !is.good()) { is.clear(); break; }
         if(c==';' || c=='\n') {  //set an array width
-          if(!d) d=i; else CHECK(!(i%d), "Array::read: mis-structured array in row " <<i/d);
+          if(!d) d=i; else if(i%d) PARSERR("mis-structured array in row " <<i/d);
           continue;
         }
         if(c!=',') is.putback(c);
@@ -1481,11 +1506,14 @@ template<class T> void MT::Array<T>::read(std::istream& is) {
       }
       resizeCopy(i);
       if(d) {
-        CHECK(!(N%d), "Array::read: mis-structured array in last row");
+        if(N%d) PARSERR("mis-structured array in last row");
         reshape(N/d, d);
       }
       break;
   }
+
+#undef PARSERR
+
 }
 
 template<class T> void MT::Array<T>::read(const char* filename) {

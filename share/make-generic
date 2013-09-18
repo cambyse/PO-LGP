@@ -51,7 +51,7 @@ OPTIM = debug#(leave no space!)
 endif
 
 ifeq ($(OPTIM),debug)
-CXXFLAGS := -g -Wall $(CXXFLAGS)#-Wno-invalid-offsetof
+CXXFLAGS := -g -Wall $(CXXFLAGS) -Wno-int-to-pointer-cast#-Wno-invalid-offsetof
 endif
 ifeq ($(OPTIM),fast_debug)
 CXXFLAGS := -g -O3 -Wall $(CXXFLAGS)
@@ -73,7 +73,7 @@ ifeq ($(OPTIM),callgrind)
 CXXFLAGS := -O3 -g -Wall -DMT_NOCHECK -fno-inline $(CXXFLAGS)
 endif
 
-CXXFLAGS += -fPIC
+CXXFLAGS += -fPIC $(EXTRA_CXXFLAGS)
 
 
 ################################################################################
@@ -203,14 +203,6 @@ ifeq ($(GTEST),1)
 LIBS += -lgtest
 endif
 
-ifeq ($(SCHUNK),1)
-CXXFLAGS += -DMT_SCHUNK -DWITH_ESD_CAN=1 -DOSNAME_LINUX=1 -D__LINUX__
-CPATH   := $(CPATH):$(MLR_LIBPATH)/schunkSDH-11-05-11/include:$(MLR_LIBPATH)/schunkLWA/include
-CPATH   := $(CPATH):/usr/src/linux-headers-$(KERNEL_RELEASE)/include:/usr/src/linux-headers-$(KERNEL_RELEASE)/arch/x86/include
-LPATHS  += $(MLR_LIBPATH)/schunkSDH-11-05-11/lib $(MLR_LIBPATH)/schunkLWA/lib $(MLR_LIBPATH)/ntcan/lib
-LIBS += -lschunkSDH -lm5api -ldevice -lutil -lntcan -lpthread -lX11 #-lvs_can_api
-endif
-
 ifeq ($(FREEGLUT),1)
 CXXFLAGS  += -DMT_FREEGLUT
 MSVC_CPATH := $(MSVC_CPATH);$(LIBPATH)/freeglut/include
@@ -218,6 +210,7 @@ MSVC_LPATH := $(MSVC_LPATH);$(LIBPATH)/freeglut/DebugStatic
 LIBS += -lglut -lGLU# -lGL -lX11
 CygwinLibs+= -lglut -lGLU -lGL
 MSVCLibs  += opengl32.lib glu32.lib vfw32.lib
+GL := 1
 endif
 
 ifeq ($(GTKGL),1)
@@ -423,12 +416,6 @@ CPATH := $(CPATH):/usr/include/pcl-1.6
 FREENECT = 1
 endif
 
-ifeq ($(FREENECT),1)
-CPATH := $(CPATH):$(MLR_LIBPATH)/libfreenect/include
-LPATHS += $(MLR_LIBPATH)/libfreenect/lib
-LIBS += -lfreenect
-endif
-
 ifeq ($URGLASER),1)
 CPATH     := $(CPATH):$(LIBPATH)/urg-0.8.16/include/c
 CPATH     := $(CPATH):$(LIBPATH)/urg-0.8.16/include/cpp
@@ -538,7 +525,8 @@ export MSVC_LPATH
 default: $(OUTPUT)
 
 clean:
-	rm -f $(OUTPUT) $(OBJS) $(PREOBJS) callgrind.out.* includeAll.o $(CLEAN)
+	@rm -f $(OUTPUT) $(OBJS) $(PREOBJS) callgrind.out.* $(CLEAN)
+	@find . -type d -name 'Make.lock' -delete
 
 depend: generate_Makefile.dep
 
@@ -563,6 +551,7 @@ info: force
 	@echo "  LD_RUN_PATH =" "$(LD_RUN_PATH)"
 	@echo "  MSVC_CPATH =" "$(MSVC_CPATH)"
 	@echo "  MSVC_LPATH =" "$(MSVC_LPATH)"
+	@echo "  SRCS =" "$(SRCS)"
 	@echo "  OBJS =" "$(OBJS)"
 	@echo "  LIBS =" "$(LIBS)"
 	@echo "  PREOBJS =" "$(PREOBJS)"
@@ -653,25 +642,11 @@ endif
 #	cp $(BASE)/make-config.default $(BASE)/make-config
 
 ## generate a make dependency file
-generate_Makefile.dep: $(OBJS:%.o=%.cpp)
-	-$(CXX) -MM $(OBJS:%.o=%.cpp) $(CXXFLAGS) > Makefile.dep
+generate_Makefile.dep: $(SRCS)
+	-$(CXX) -MM $(SRCS) $(CXXFLAGS) > Makefile.dep
 
 includeAll.cxx: force
 	find . -maxdepth 1 -name '*.cpp' -exec echo "#include \"{}\"" \; > includeAll.cxx
-
-################################################################################
-#
-# rules
-#
-################################################################################
-
-$(BASE)/lib/libextern_%.so: $(BASE)/src/extern/%
-	@echo "                                                 ***** build " $*
-	@$(MAKE) -C $(BASE)/src/extern/$* --no-print-directory
-
-$(BASE)/lib/lib%.so: $(BASE)/src/%
-	@echo "                                                 ***** build " $*
-	@$(MAKE) -C $(BASE)/src/$* --no-print-directory
 
 
 ################################################################################
@@ -680,21 +655,27 @@ $(BASE)/lib/lib%.so: $(BASE)/src/%
 #
 ################################################################################
 
-#.NOTPARALLEL: makePath/*
+$(BASE)/lib/libextern_%.so: $(BASE)/src/extern/%
+	+@-$(BASE)/make-locked.sh $<
+
+$(BASE)/lib/libHardware_%.so: $(BASE)/src/Hardware/%
+	+@-$(BASE)/make-locked.sh $<
+
+$(BASE)/lib/lib%.so: $(BASE)/src/%
+	+@-$(BASE)/make-locked.sh $<
 
 makePath/%: %
-	@echo "                                                  ***** make " $*
-	@$(MAKE) -C $* --no-print-directory
+	+@-$(BASE)/make-locked.sh $<
 
 cleanPath/%: %
-	@echo "                                                 ***** clean " $*
+	@echo "                                                ***** clean " $*
 	@-rm -f $*/Makefile.dep
-	@$(MAKE) -C $* clean --no-print-directory
+	@-$(MAKE) -C $* clean --no-print-directory
 
 dependPath/%: %
 	@echo "                                                ***** depend " $*
 	@-rm -f $*/Makefile.dep
-	@$(MAKE) -C $* depend --no-print-directory
+	@-$(MAKE) -C $* depend --no-print-directory
 
 
 makeSubpaths/%::
@@ -703,8 +684,8 @@ makeSubpaths/%::
 cleanSubpaths/%::
 	-@find -L $* -maxdepth 1 -follow -type d -not -name '$*' -not -name 'SHARE' -exec $(MAKE) -C {} clean \;
 
-doc::
-	$(MAKE) -C doc doxy_array
+#doc::
+#	$(MAKE) -C doc doxy_array
 
 zip::
 	cd ..;  rm -f $(NAME).tgz;  tar cvzf $(NAME).tgz $(NAME) --dereference --exclude-vcs --exclude-from tar.exclude --exclude-from $(NAME)/tar.exclude

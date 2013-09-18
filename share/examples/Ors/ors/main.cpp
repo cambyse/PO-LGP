@@ -66,7 +66,7 @@ namespace T1{
   ors::Vector rel;
   ors::Vector axis;
   static void f  (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsPos(y,i,&rel);  if(J) G->jacobianPos(*J,i,&rel); }
-  static void f_hess (arr &J, arr *H, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->jacobianPos(J,i,&rel);  if(H) G->hessianPos (*H,i,&rel); }
+  //static void f_hess (arr &J, arr *H, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->jacobianPos(J,i,&rel);  if(H) G->hessianPos (*H,i,&rel); }
   static void f_vec (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsVec(y,i,&axis);  if(J) G->jacobianVec(*J,i,&axis); }
   //static void f3 (arr &y,const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsOri2(y,i,axis); }
   //static void df3(arr &J,const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->jacobianOri2(J,i,axis); }
@@ -87,7 +87,7 @@ void testKinematics(){
     gl.text.clear() <<"k=" <<k <<"  gradient checks of kinematics on random postures";
     //gl.update();
     checkJacobian(Convert(T1::f, NULL), x, 1e-5);
-    checkJacobian(Convert(T1::f_hess, NULL), x, 1e-5);
+    //checkJacobian(Convert(T1::f_hess, NULL), x, 1e-5);
     checkJacobian(Convert(T1::f_vec, NULL), x, 1e-5);
   }
 }
@@ -191,23 +191,14 @@ void testContacts(){
 //
 
 void generateSequence(arr &X, uint T, uint n){
-  uint i;
   rnd.seed(0);
   arr P(10,n);
-  switch(0){
-  case 0:
-    //a random spline
-    //a set of random via points with zero start and end:
-    rndUniform(P,-1.,1.,false); P[0]=0.; P[P.d0-1]=0.; 
-    break;
-  case 1:
-    //a sinus sequence
-    for(i=0;i<P.d0;i++) P[i] = -5.*sin(4*i);
-    break;
-  }
+
+  //a random spline
+  //a set of random via points with zero start and end:
+  rndUniform(P,-1.,1.,false); P[0]=0.; P[P.d0-1]=0.;
   
   //convert into a smooth spline (1/0.03 points per via point):
-//  MT::makeSpline(X,V,P,(int)(1/0.03));
   MT::Spline(T,P).eval(X);
 }
 
@@ -291,10 +282,11 @@ void testFollowRedundantSequence(){
   //-- generate a random endeffector trajectory
   arr Z,Zt; //desired and true endeffector trajectories
   generateSequence(Z, 200, 3); //3D random sequence with limits [-1,1]
+  Z *= .8;
   T=Z.d0;
   G.setJointState(x);
   G.calcBodyFramesFromJoints();
-  G.kinematicsPos(z,N,&rel);
+  G.kinematicsPos(z, N, &rel);
   for(t=0;t<T;t++) Z[t]() += z; //adjust coordinates to be inside the arm range
   plotLine(Z);
   gl.add(glDrawPlot,&plotModule);

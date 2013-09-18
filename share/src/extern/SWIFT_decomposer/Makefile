@@ -4,10 +4,10 @@ OUTPUT := $(BASE)/lib/libextern_$(NAME).a
 
 CXXFLAGS += -DSWIFT_DECOMP -DDECOMP_GRAPHICS -O3 -fPIC -w -IRAPID -I/usr/include/tcl8.5
 
-LIBS = -lqhull -lm -ltcl -ltk -lglut -lGLU -lXmu -lX11 -lGL
+LIBS += -lqhull -lm -ltcl -ltk -lglut -lGLU -lXmu -lX11 -lGL
 
-OBJS  = $(shell find . -maxdepth 2 -name '*.cpp' )
-OBJS := $(OBJS:%.cpp=%.o)
+SRCS = $(shell find . -maxdepth 2 -name '*.cpp' )
+OBJS = $(SRCS:%.cpp=%.o)
 
 target: $(OUTPUT) ./decomposer.exe
 ./decomposer.exe: main.o

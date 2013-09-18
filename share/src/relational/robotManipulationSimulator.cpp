@@ -20,8 +20,8 @@
 */
 
 #include <stdlib.h>
-#include <MT/opengl.h>
-#include <MT/plot.h>
+#include <Gui/opengl.h>
+#include <Gui/plot.h>
 #include <relational/utilTL.h>
 
 #include "robotManipulationSimulator.h"
@@ -947,17 +947,16 @@ void RobotManipulationSimulator::writeAllContacts(uint id) {
   uint i;
   cout << convertObjectID2name(id) << " is in contact with ";
   for(i=0;i<C->proxies.N;i++)
-    if(!C->proxies(i)->age)  // PROXIES SIND LEER!
-      if (C->proxies(i)->d<0.02){
-        p=C->proxies(i);
-        if(p->a==(int)obj && p->b!=(int)obj) {
-          cout << C->bodies(p->b)->name << " ";
-        }
-        if(p->b==(int)obj && p->a!=(int)obj) {
-          cout << C->bodies(p->a)->name << " ";
-        }
+    if (C->proxies(i)->d<0.02){
+      p=C->proxies(i);
+      if(p->a==(int)obj && p->b!=(int)obj) {
+	cout << C->bodies(p->b)->name << " ";
+      }
+      if(p->b==(int)obj && p->a!=(int)obj) {
+	cout << C->bodies(p->a)->name << " ";
+      }
     }
-    cout << endl;
+  cout << endl;
 }
 
 

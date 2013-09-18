@@ -58,6 +58,7 @@ struct sOpenGL{
   GdkGLDrawable *gldrawable;
   GdkGLConfig  *glconfig;
   Display *xdisplay;
+  GLXDrawable xdraw;
   bool ownWin,ownViewport;
   
   //-- callbacks
@@ -106,6 +107,8 @@ void OpenGL::resize(int w,int h){
 //int OpenGL::width(){  GtkAllocation allo; gtk_widget_get_allocation(s->glArea, &allo); return allo.width; }
 //int OpenGL::height(){ GtkAllocation allo; gtk_widget_get_allocation(s->glArea, &allo); return allo.height; }
 
+Display* OpenGL::xdisplay(){ return s->xdisplay; }
+Drawable OpenGL::xdraw(){ return s->xdraw; }
 
 sOpenGL::sOpenGL(OpenGL *_gl,const char* title,int w,int h,int posx,int posy){
   gtkCheckInitialized();
@@ -176,6 +179,7 @@ void sOpenGL::init(OpenGL *_gl, void *_container){
   glcontext = gtk_widget_get_gl_context(glArea);
   gldrawable = gtk_widget_get_gl_drawable(glArea);
   xdisplay = gdk_x11_gl_config_get_xdisplay(glconfig);
+  xdraw = glXGetCurrentDrawable();
   GtkAllocation allo;
   gtk_widget_get_allocation(container, &allo);
   gl->width=allo.width;
@@ -225,6 +229,7 @@ bool sOpenGL::expose(GtkWidget *widget, GdkEventExpose *event) {
 
 void sOpenGL::beginGlContext(){
   if (!gdk_gl_drawable_gl_begin(gldrawable, glcontext)) HALT("failed to open context: sOpenGL="<<this);
+  xdraw = glXGetCurrentDrawable();
 }
 
 void sOpenGL::endGlContext(){

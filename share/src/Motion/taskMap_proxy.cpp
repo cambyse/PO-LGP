@@ -8,6 +8,7 @@ ProxyTaskMap::ProxyTaskMap(PTMtype _type,
   shapes=_shapes;
   margin=_margin;
   linear=_linear;
+  cout <<"creating ProxyTaskMap with shape list" <<shapes <<endl;
 }
 
 //TODO: defined in Ors/ors_taskVariables.cpp !!
@@ -101,7 +102,7 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::Graph& G){
   }
 }
 
-uint ProxyTaskMap::phiDim(const ors::Graph& G){
+uint ProxyTaskMap::dim_phi(const ors::Graph& G){
   switch(type) {
   case allCTVT:
   case allListedCTVT:

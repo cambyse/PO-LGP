@@ -40,7 +40,11 @@ struct Item_typed:Item {
     parents=_parents;
     if(container) container->append(this);
   }
-  
+
+  virtual bool hasValue() const {
+    return value!=NULL;
+  }
+
   virtual void writeValue(std::ostream &os) const {
     if(typeid(T)==typeid(ItemL)) listWrite(*(ItemL*)(value), os, " ");
     else os <<*value;
