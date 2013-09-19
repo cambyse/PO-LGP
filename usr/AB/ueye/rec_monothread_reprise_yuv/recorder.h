@@ -25,7 +25,6 @@ class Recorder: public QObject {
 
     // camera parameters
     int width, height, fps;
-    bool kinect;
 
     // keys
     RecorderKeys *keys;
@@ -46,7 +45,6 @@ class Recorder: public QObject {
 
     void setSize(int w, int h);
     void setFPS(int f);
-    void setKinect(bool k);
     OpenGL* getGL();
 
     void setup();

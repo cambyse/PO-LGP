@@ -43,7 +43,6 @@ Recorder::Recorder() {
   width = 1280;
   height = 1024;
   fps = 60;
-  kinect = false;
 }
 
 Recorder::~Recorder() {
@@ -66,10 +65,6 @@ void Recorder::setFPS(int f) {
   fps = f;
 }
 
-void Recorder::setKinect(bool k) {
-  kinect = k;
-}
-
 OpenGL* Recorder::getGL() {
   return gl;
 }
@@ -79,7 +74,7 @@ void Recorder::setup() {
   cout << "Recorder::numCams = " << numCams << endl;
   cout << endl;
 
-  if(numCams == 0) {
+  if(numCams <= 0) {
     cout << "!! No cams connected !!" << endl;
     exit(1);
   }
@@ -90,6 +85,16 @@ void Recorder::setup() {
 
   play_flag = false;
   rec_flag = false;
+
+  bool err_flag = false;
+  for(int c = 0; c < numCams; c++) {
+    if(camera[c]->getErrFlag()) {
+      cout << "!! Errors encountered while opening camera " << c+1 << " !!" << endl;
+      err_flag = true;
+    }
+  }
+  if(err_flag)
+    exit(1);
 }
 
 void Recorder::initImages() {

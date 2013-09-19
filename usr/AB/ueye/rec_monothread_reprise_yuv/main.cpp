@@ -7,7 +7,7 @@ int main(int argc, char *argv[]) {
   Recorder *rec = new Recorder();
   // to change some parameters
   // rec->setSize(w, h);
-  // rec->setKinect(true);
+  // rec->setFPS(f);
   rec->setup();
 
   return app->exec();
