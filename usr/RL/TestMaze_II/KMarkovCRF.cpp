@@ -357,7 +357,6 @@ int KMarkovCRF::optimize_model(lbfgsfloatval_t l1, unsigned int max_iter, lbfgsf
 
     // Start the L-BFGS optimization
     lbfgsfloatval_t fx;
-    feature_values_precomputed = false;
     int ret = lbfgs(active_features.size(), lambda, &fx, static_evaluate_model, static_progress_model, this, &param);
 
     // Report the result.
@@ -379,6 +378,16 @@ int KMarkovCRF::optimize_model(lbfgsfloatval_t l1, unsigned int max_iter, lbfgsf
     }
 
     return ret;
+}
+
+void KMarkovCRF::add_action_state_reward_tripel(
+    const action_t& action,
+    const state_t& state,
+    const reward_t& reward,
+    const bool& new_episode
+    ) {
+    HistoryObserver::add_action_state_reward_tripel(action, state, reward, new_episode);
+    feature_values_precomputed = false;
 }
 
 void KMarkovCRF::check_derivatives(const int& number_of_samples, const double& range, const double& max_variation, const double& max_relative_deviation) {

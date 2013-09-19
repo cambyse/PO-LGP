@@ -79,6 +79,13 @@ public:
      * */
     int optimize_model(lbfgsfloatval_t l1 = 0, unsigned int max_iter = 0, lbfgsfloatval_t * mean_likelihood = nullptr);
 
+    virtual void add_action_state_reward_tripel(
+        const action_t& action,
+        const state_t& state,
+        const reward_t& reward,
+        const bool& new_episode
+        );
+
     void check_derivatives(const int& number_of_samples, const double& range, const double& max_variation, const double& max_relative_deviation);
 
     void evaluate_features();
