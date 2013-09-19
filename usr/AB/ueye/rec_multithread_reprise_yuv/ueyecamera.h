@@ -60,6 +60,7 @@ class UEyeCamera: public QObject {
     INT *camBuffID;
 
     int bpp;  // bits per pixel
+    int bypp; // bytes per pixel
 
     UINT pixelclock;
     double real_fps;
@@ -76,6 +77,8 @@ class UEyeCamera: public QObject {
 
     INT getImageID(char *buff);
 
+    void SetColorMode_wrapper(INT mode);
+    void SetColorConverter_wrapper(INT ColorMode, INT ConvertMode);
     INT CaptureVideo_wrapper(INT wait);
     void ExitCamera_wrapper();
     void WaitForNextImage_wrapper(char **p, INT *pID);

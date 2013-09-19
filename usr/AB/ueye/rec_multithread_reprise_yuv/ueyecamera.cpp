@@ -50,21 +50,15 @@ void UEyeCamera::camInit() {
   msg(m);
   m.clear() << "-- name " << name;
   msg(m);
-  /*
-  msg("-- camID ", camID);
-  msg("-- name ", name);
-  */
 
-  camStatus = is_SetColorMode(camID, IS_CM_BGR8_PACKED);
-  //camStatus = is_SetColorMode(camID, IS_CM_UYVY_PACKED);
-  query_status(camID, "SetColorMode", &camStatus);
+  //SetColorMode_wrapper(IS_CM_BGR8_PACKED);
+  SetColorMode_wrapper(IS_CM_UYVY_PACKED);
 
-  camStatus = is_SetColorConverter(camID, IS_CM_BGR8_PACKED, IS_CONV_MODE_SOFTWARE_5X5);
-  //camStatus = is_SetColorConverter(camID, IS_CM_BGR8_PACKED, IS_CONV_MODE_SOFTWARE_3X3);
-  //camStatus = is_SetColorConverter(camID, IS_CM_BGR8_PACKED, IS_CONV_MODE_HARDWARE_3X3);
-  //camStatus = is_SetColorConverter(camID, IS_CM_BGR8_PACKED, IS_CONV_MODE_OPENCL_3X3);
-  //camStatus = is_SetColorConverter(camID, IS_CM_BGR8_PACKED, IS_CONV_MODE_OPENCL_5X5);
-  query_status(camID, "SetColorConverter", &camStatus);
+  //SetColorConverter_wrapper(IS_CM_UYVY_PACKED, IS_CONV_MODE_SOFTWARE_5X5);
+  //SetColorConverter_wrapper(IS_CM_UYVY_PACKED, IS_CONV_MODE_SOFTWARE_3X3);
+  SetColorConverter_wrapper(IS_CM_UYVY_PACKED, IS_CONV_MODE_HARDWARE_3X3);
+  //SetColorConverter_wrapper(IS_CM_UYVY_PACKED, IS_CONV_MODE_OPENCL_3X3);
+  //SetColorConverter_wrapper(IS_CM_UYVY_PACKED, IS_CONV_MODE_OPENCL_5X5);
 
   // should be default anyway.. plus it gives me an error
   //camStatus = is_SetDisplayMode(camID, IS_SET_DM_DIB);
@@ -81,9 +75,10 @@ void UEyeCamera::camInit() {
   //cout << " - max height = " << camInfo.nMaxHeight << endl;
   //cout << " - pixel size = " << (float)camInfo.wPixelSize/100 << " µm" << endl;
 
-  bpp = 24;
+  bpp = 16;
+  bypp = bpp/8;
 
-  numBuff = 30;
+  numBuff = 9;
   camBuff = (char**)malloc(numBuff*sizeof(char*));
   camBuffID = (INT*)malloc(numBuff*sizeof(INT));
   for(int i = 0; i < numBuff; i++) {
@@ -95,7 +90,7 @@ void UEyeCamera::camInit() {
                                   &camBuffID[i]);
     query_status(camID, "AllocImageMem", &camStatus);
   }
-  image_copy = (char*)malloc(3*width*height*sizeof(char));
+  image_copy = (char*)malloc(bypp*width*height*sizeof(char));
 
   camStatus = is_ClearSequence(camID);
   query_status(camID, "ClearSequence", &camStatus);
@@ -255,26 +250,29 @@ void UEyeCamera::grab() {
   query_status(camID, "LockSeqBuf", &camStatus);
   */
 
-  ct.cycleDone();
+  //ct.cycleDone();
   MT::String m;
+  /*
   m << "busyDt: " << ct.busyDt << " busyDtMax: " << ct.busyDtMax << " cyclDt: " << ct.cyclDt;
   msg(m);
+  */
 
   WaitForNextImage_wrapper(&image, &imageBuffNum);
 
-  ct.cycleStart();
+  //ct.cycleStart();
 
-  //MT::String m;
-  //m << "got " << imageBuffNum;
+  /*
+  m << "got " << imageBuffNum;
   if(imageBuffNum != (curr_frame%numBuff+1)) {
-    //m << " instead of " << (curr_frame%numBuff+1);
+    m << " instead of " << (curr_frame%numBuff+1);
     nskipped_frames++;
   }
-  //msg(m);
+  msg(m);
   curr_frame = imageBuffNum;
+  */
 
   imgMutex.lock();
-  memcpy(image_copy, image, 3*width*height);
+  memcpy(image_copy, image, bypp*width*height);
   imgMutex.unlock();
   
   /*
@@ -286,8 +284,8 @@ void UEyeCamera::grab() {
 
   recMutex.lock();
   if(recflag) {
-    char *p = (char*)malloc(3*width*height*sizeof(char));
-    memcpy(p, image_copy, 3*width*height);
+    char *p = (char*)malloc(bypp*width*height*sizeof(char));
+    memcpy(p, image_copy, bypp*width*height);
     recworker->bufferFrame(p);
   }
   nrecframes++;
@@ -296,20 +294,20 @@ void UEyeCamera::grab() {
   camStatus = is_UnlockSeqBuf(camID, IS_IGNORE_PARAMETER, image);
   query_status(camID, "UnlockSeqBuf", &camStatus);
 
-  /*
   double fps;
   camStatus = is_GetFramesPerSecond(camID, &fps);
   query_status(camID, "GetFramesPerSecond", &camStatus);
-  if(fps < 59) {
+  if(fps < 55) {
     m.clear() << "fps = " << fps;
     msg(m);
   }
-  */
+  else
+    msg("===============");
 }
 
 void UEyeCamera::getImage(char *p) {
   imgMutex.lock();
-  memcpy(p, image_copy, 3*width*height);
+  memcpy(p, image_copy, bypp*width*height);
   imgMutex.unlock();
 }
 
@@ -360,6 +358,78 @@ bool UEyeCamera::query_status(HIDS camID, const char *method, INT *status) {
   return false;
 }
 
+void UEyeCamera::SetColorMode_wrapper(INT mode) {
+  camStatus = is_SetColorMode(camID, mode);
+  if(camStatus != IS_SUCCESS) {
+    msg("SetColorMode() failed");
+    if(camStatus == IS_NO_SUCCESS)
+      err();
+    else if(camStatus == IS_CANT_COMMUNICATE_WITH_DRIVER)
+      msg("IS_CANT_COMMUNICATE_WITH_DRIVER");
+    else if(camStatus == IS_CAPTURE_RUNNING)
+      msg("IS_CAPTURE_RUNNING");
+    else if(camStatus == IS_INVALID_CAMERA_TYPE)
+      msg("IS_INVALID_CAMERA_TYPE");
+    else if(camStatus == IS_INVALID_COLOR_FORMAT)
+      msg("IS_INVALID_COLOR_FORMAT");
+    else if(camStatus == IS_INVALID_CAMERA_HANDLE)
+      msg("IS_INVALID_CAMERA_HANDLE");
+    else if(camStatus == IS_INVALID_MODE)
+      msg("IS_INVALID_MODE");
+    else if(camStatus == IS_INVALID_PARAMETER)
+      msg("IS_INVALID_PARAMETER");
+    else if(camStatus == IS_IO_REQUEST_FAILED)
+      msg("IS_IO_REQUEST_FAILED");
+    else if(camStatus == IS_NO_IR_FILTER)
+      msg("IS_NO_IR_FILTER");
+    else if(camStatus == IS_NOT_CALIBRATED)
+      msg("IS_NOT_CALIBRATED");
+    else if(camStatus == IS_NOT_SUPPORTED)
+      msg("IS_NOT_SUPPORTED");
+    else if(camStatus == IS_NULL_POINTER)
+      msg("IS_NULL_POINTER");
+    else if(camStatus == IS_OUT_OF_MEMORY)
+      msg("IS_OUT_OF_MEMORY");
+    else if(camStatus == IS_TIMED_OUT)
+      msg("IS_TIMED_OUT");
+    else
+      msg(NULL);
+    QCoreApplication::quit();
+  }
+}
+
+void UEyeCamera::SetColorConverter_wrapper(INT ColorMode, INT ConvertMode) {
+  camStatus = is_SetColorConverter(camID, ColorMode, ConvertMode);
+  if(camStatus != IS_SUCCESS) {
+    msg("SetColorConverter() failed");
+    if(camStatus == IS_NO_SUCCESS)
+      err();
+    else if(camStatus == IS_CANT_COMMUNICATE_WITH_DRIVER)
+      msg("IS_CANT_COMMUNICATE_WITH_DRIVER");
+    else if(camStatus == IS_CANT_OPEN_DEVICE)
+      msg("IS_CANT_OPEN_DEVICE");
+    else if(camStatus == IS_CAPTURE_RUNNING)
+      msg("IS_CAPTURE_RUNNING");
+    else if(camStatus == IS_INVALID_COLOR_FORMAT)
+      msg("IS_INVALID_COLOR_FORMAT");
+    else if(camStatus == IS_INVALID_CAMERA_HANDLE)
+      msg("IS_INVALID_CAMERA_HANDLE");
+    else if(camStatus == IS_INVALID_PARAMETER)
+      msg("IS_INVALID_PARAMETER");
+    else if(camStatus == IS_IO_REQUEST_FAILED)
+      msg("IS_IO_REQUEST_FAILED");
+    else if(camStatus == IS_NO_IR_FILTER)
+      msg("IS_NO_IR_FILTER");
+    else if(camStatus == IS_NOT_SUPPORTED)
+      msg("IS_NOT_SUPPORTED");
+    else if(camStatus == IS_OUT_OF_MEMORY)
+      msg("IS_OUT_OF_MEMORY");
+    else
+      msg(NULL);
+    QCoreApplication::quit();
+  }
+}
+
 INT UEyeCamera::CaptureVideo_wrapper(INT wait) {
   camStatus = is_CaptureVideo(camID, wait);
   if(camStatus == TRUE)
@@ -376,7 +446,7 @@ INT UEyeCamera::CaptureVideo_wrapper(INT wait) {
 }
 
 void UEyeCamera::WaitForNextImage_wrapper(char **p, INT *pID) {
-  camStatus = is_WaitForNextImage(camID, 1<<30, p, pID); // TODO check to avoid for timeout
+  camStatus = is_WaitForNextImage(camID, 1<<20, p, pID); // TODO check to avoid for timeout
   if(camStatus == IS_CAPTURE_STATUS)
     WaitForNextImage_wrapper(p, pID);
   else if(camStatus != IS_SUCCESS) {
