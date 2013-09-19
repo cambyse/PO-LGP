@@ -1,0 +1,12 @@
+BASE   = ../..
+NAME   = libbiros
+OUTPUT = $(BASE)/lib/$(NAME).so
+
+MAKEMODE = mlrlib
+
+LIBS += -lviews
+
+SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
+OBJS = $(SRCS:%.cpp=%.o)
+
+include $(BASE)/make-generic

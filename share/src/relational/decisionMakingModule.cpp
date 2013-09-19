@@ -20,7 +20,7 @@
     along with libPRADA.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <MT/ors.h>
+#include <Ors/ors.h>
 #include "relational/robotManipulationSymbols.h"
 #include "relational/robotManipulationInterface.h"
 #include "relational/reason.h"
@@ -44,6 +44,8 @@ double discountFactor = 0.95;
 
 using namespace relational;
   
+
+#if 0 //this should definitely not depends on System/biros.h!!!!!
   
 DecisionMakingModule::DecisionMakingModule():Process("DecisionMaking") {
   prada = NULL;
@@ -159,3 +161,5 @@ void DecisionMakingModule::step() {
 
   actionIsReady=true;
 }
+
+#endif

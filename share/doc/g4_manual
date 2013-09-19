@@ -1,0 +1,24 @@
+install:
+* lib
+* CreateSourceCfg
+* devcfg --prefix=/home/lib/
+* A & B files in mlr/share/configuration
+
+generate configurations:
+* source: CreateSource
+  * always both sources!
+  * load the A & B files!
+* dongle
+  * configure with ALL hubs
+  * enumerate all hubs from 0
+
+batteries:
+* charge hubs over usb
+* we might hook them all up on a power usb-hub
+
+
+module
+* get config files from share/configurations
+* save as float
+* buffer?
+  

@@ -2,7 +2,7 @@
 #include <Motion/motion.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
-#include <Optim/optimization_benchmarks.h>
+#include <Optim/benchmarks.h>
 
 int main(int argn,char** argv){
   MT::initCmdLine(argn,argv);
@@ -35,7 +35,7 @@ int main(int argn,char** argv){
   MotionProblemFunction F(P);
   uint T=F.get_T();
   uint k=F.get_k();
-  uint n=F.get_n();
+  uint n=F.dim_x();
   cout <<"Problem parameters:"
        <<"\n T=" <<T
        <<"\n k=" <<k
@@ -53,7 +53,7 @@ int main(int argn,char** argv){
     checkJacobian(Convert(F), x, 1e-5);
   }
   
-  OpenGL costs(STRING("PHI ("<<F.get_m(0)<<" tasks)"), 3*T+10, 3*F.get_m(0)+10 );
+  OpenGL costs(STRING("PHI ("<<F.dim_phi(0)<<" tasks)"), 3*T+10, 3*F.dim_phi(0)+10 );
   //-- optimize
   for(;;){
     optGaussNewton(x, Convert(F), OPT(verbose=2, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));

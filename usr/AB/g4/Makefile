@@ -5,4 +5,6 @@ BASE = ../../../share
 CXXFLAGS += -fPIC
 LIBS += -lG4Track
 
+DEPEND = Core
+
 include $(BASE)/make-generic

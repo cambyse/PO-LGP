@@ -115,7 +115,7 @@ void MotionProblem::setInterpolatingCosts(
   TaskCost *c,
   TaskCostInterpolationType inType,
   const arr& y_finalTarget, double y_finalPrec, const arr& y_midTarget, double y_midPrec, double earlyFraction) {
-  uint m=c->map.phiDim(*ors);
+  uint m=c->map.dim_phi(*ors);
   setState(x0,v0);
   arr y0;
   c->map.phi(y0, NoArr, *ors);
@@ -164,7 +164,7 @@ void MotionProblem::setInterpolatingVelCosts(
   TaskCost *c,
   TaskCostInterpolationType inType,
   const arr& v_finalTarget, double v_finalPrec, const arr& v_midTarget, double v_midPrec) {
-  uint m=c->map.phiDim(*ors);
+  uint m=c->map.dim_phi(*ors);
   setState(x0,v0);
   arr y0,yv0,J;
   c->map.phi(y0, J, *ors);
@@ -210,14 +210,27 @@ void MotionProblem::setState(const arr& q, const arr& v) {
 }
 
 
-uint MotionProblem::get_phiDim(uint t) {
+uint MotionProblem::dim_phi(uint t) {
   uint m=0;
   for(uint i=0; i<taskCosts.N; i++) {
     TaskCost *c = taskCosts(i);
     if(c->active) {
-      if(c->y_target.N) m += c->map.phiDim(*ors);
-      if(transitionType!=kinematic && c->v_target.N)  m += c->map.phiDim(*ors);
+      if(c->y_target.N || c->map.constraint) m += c->map.dim_phi(*ors);
+      if(transitionType!=kinematic && c->v_target.N)  m += c->map.dim_phi(*ors);
+#define STICK 1
+#ifdef STICK
+      if(c->active && c->map.constraint)  m += c->map.dim_phi(*ors);
+#endif
     }
+  }
+  return m;
+}
+
+uint MotionProblem::dim_g(uint t) {
+  uint m=0;
+  for(uint i=0; i<taskCosts.N; i++) {
+    TaskCost *c = taskCosts(i);
+    if(c->active && c->map.constraint)  m += c->map.dim_phi(*ors);
   }
   return m;
 }
@@ -229,8 +242,11 @@ void MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
   arr y,J;
   for(uint i=0; i<taskCosts.N; i++) {
     TaskCost *c = taskCosts(i);
-    if(c->active) {
+    if(c->active && !c->map.constraint) {
       c->map.phi(y, J, *ors);
+      if(!c->y_target.N && !c->v_target.N){
+        MT_MSG("active task costs "<< c->name <<" have no targets defined - ignoring");
+      }
       if(c->y_target.N) { //pose costs
         phi.append(sqrt(c->y_prec(t))*(y - c->y_target[t]));
         if(&J_x) J_x.append(sqrt(c->y_prec(t))*J);
@@ -242,12 +258,34 @@ void MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
         if(&J_v) J_v.append(sqrt(c->v_prec(t))*J);
       }
     }
+#ifdef STICK //sticky: push into constraints
+    if(c->active && c->map.constraint) {
+      CHECK(!c->y_target.N && !c->v_target.N,"constraints cannot have targets");
+      c->map.phi(y, J, *ors);
+      CHECK(y.N==J.d0,"");
+      for(uint j=0;j<y.N;j++) y(j) = -y(j); //MT::sigmoid(y(j));
+      if(J.N) for(uint j=0;j<J.d0;j++) J[j]() *= -1.; // ( y(j)*(1.-y(j)) );
+      phi.append(y);
+      if(&J_x) J_x.append(J);
+      if(&J_v) J_v.append(0.*J);
+    }
+#endif
+  }
+  for(uint i=0; i<taskCosts.N; i++) {
+    TaskCost *c = taskCosts(i);
+    if(c->active && c->map.constraint) {
+      CHECK(!c->y_target.N && !c->v_target.N,"constraints cannot have targets");
+      c->map.phi(y, J, *ors);
+      phi.append(y);
+      if(&J_x) J_x.append(J);
+      if(&J_v) J_v.append(0.*J);
+    }
   }
   if(&J_x) J_x.reshape(phi.N, x_current.N);
   if(&J_v) J_v.reshape(phi.N, x_current.N);
 }
 
-uint MotionProblem::get_psiDim() {
+uint MotionProblem::dim_psi() {
   return x0.N;
 }
 
@@ -256,58 +294,71 @@ void MotionProblem::activateAllTaskCosts(bool active) {
 }
 
 void MotionProblem::costReport() {
-  CHECK(costMatrix.d1 == get_psiDim() + get_phiDim(0),"");
+  CHECK(costMatrix.d1 == dim_psi() + dim_phi(0),"");
   cout <<"*** MotionProblem -- CostReport" <<endl;
   
-  double transC=0., taskC=0., tc;
+  double transC=0., taskC=0., constraintViolations=0.;
   cout <<" * transition costs:" <<endl;
-  transC=sumOfSqr(costMatrix.sub(0,-1,0,get_psiDim()-1));
+  transC=sumOfSqr(costMatrix.sub(0,-1,0,dim_psi()-1));
   cout <<"\t total=" <<transC <<endl;
   
-  uint m=get_psiDim();
+  uint m=dim_psi();
   
   cout <<" * task costs:" <<endl;
   for(uint i=0; i<taskCosts.N; i++) {
     TaskCost *c = taskCosts(i);
-    uint d=c->map.phiDim(*ors);
+    uint d=c->map.dim_phi(*ors);
     
     cout <<"\t '" <<c->name <<"' [" <<d <<"] ";
     
     if(c->y_target.N) {
-      taskC+=tc=sumOfSqr(costMatrix.sub(0,-1,m,m+d-1));
+      double tc=sumOfSqr(costMatrix.sub(0,-1,m,m+d-1));
+      taskC+=tc;
       cout <<"\t state=" <<tc;
       m += d;
     }
     if(transitionType!=kinematic && c->v_target.N) {
-      taskC+=tc=sumOfSqr(costMatrix.sub(0,-1,m,m+d-1));
+      double tc=sumOfSqr(costMatrix.sub(0,-1,m,m+d-1));
+      taskC+=tc;
       cout <<"\t vel=" <<tc;
+      m += d;
+    }
+    if(c->map.constraint){
+#ifdef STICK
+      double tc=sumOfSqr(costMatrix.sub(0,-1,m,m+d-1));
+      taskC+=tc;
+      cout <<"\t sticky=" <<tc;
+      m += d;
+#endif
+      double gpos=0.;
+      for(uint t=0;t<=T;t++) for(uint j=0;j<d;j++){
+        double g=costMatrix(t,m+j);
+        if(g>0.) gpos+=g;
+      }
+      constraintViolations+=gpos;
+      cout <<"\t cons=" <<gpos;
       m += d;
     }
     cout <<endl;
   }
-  cout <<"\t total=" <<taskC <<endl;
-  
-  cout <<" * task+transition=" <<taskC+transC <<endl;
-  
+  cout <<"\t total task        = " <<taskC <<endl;
+  cout <<"\t total trans       = " <<transC <<endl;
+  cout <<"\t total task+trans  = " <<taskC+transC <<endl;
+  cout <<"\t total constraints = " <<constraintViolations <<endl;
+
   CHECK(m == costMatrix.d1, "");
 }
 
-uint MotionProblemFunction::get_T() { return P.T; }
-uint MotionProblemFunction::get_k() { if(P.transitionType==MotionProblem::kinematic) return 1;  return 2; }
-uint MotionProblemFunction::get_n() { return P.x0.N; }
-uint MotionProblemFunction::get_m(uint t) {
-  uint nq = get_n();
-  return nq + P.get_phiDim(t+1);
-}
+//===========================================================================
 
 arr MotionProblemFunction::get_prefix() {
-  arr x_pre(get_k(), get_n());
+  arr x_pre(get_k(), dim_x());
   for(uint i=0; i<x_pre.d0; i++) x_pre[i]() = P.x0;
   return x_pre;
 }
 
 void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
-  uint n=get_n();
+  uint n=dim_x();
   CHECK(x_bar.d0==3 && x_bar.d1==n,"");
   arr q_2(x_bar,0); //this is q(t-2)
   arr q_1(x_bar,1);

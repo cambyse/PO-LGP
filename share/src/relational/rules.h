@@ -22,7 +22,7 @@
 #ifndef RELATIONAL_rules_h
 #define RELATIONAL_rules_h
 
-#include <MT/util.h>
+#include <Core/util.h>
 #include <relational/utilTL.h>
 #include <relational/symbols.h>
 #include <relational/literals.h>

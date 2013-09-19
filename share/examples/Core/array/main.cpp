@@ -11,7 +11,7 @@ void testBasics(){
   arr a;     //'arr' is a macro for MT::Array<double>
   intA ints; //a macro for MT::Array<int>
 
-  a.resize(7,10);
+  a.resize(7,5);
   double *ap=a.p, *astop=ap+a.N;
   for(; ap!=astop; ap++) *ap=ap-a.p; //assign pointer offsets to entries
   cout <<"\narray filled with pointer offsets (-> memory is linear):" <<a <<endl;

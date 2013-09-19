@@ -1,0 +1,13 @@
+cd /home/lib
+git clone git://git.libav.org/libav.git
+cd libav
+./configure --enable-gpl --enable-version3 --enable-libx264
+make
+sudo make install
+
+cd /home/lib
+git clone git://git.videolan.org/x264.git
+cd x264
+./configure --disable-asm
+make
+sudo make install

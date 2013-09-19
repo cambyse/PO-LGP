@@ -1,0 +1,29 @@
+body base{}
+shape (base) { type=5 }
+
+body marker1 {}
+shape (marker1){ type=0 size=[.02 .01 .005 0] color=[1 0 0] }
+
+body marker2 {}
+shape (marker2){ type=0 size=[.02 .01 .005 0] color=[1 0 0] }
+
+body marker3 {}
+shape (marker3){ type=0 size=[.02 .01 .005 0] color=[1 0 0] }
+
+body marker4 {}
+shape (marker4){ type=0 size=[.02 .01 .005 0] color=[1 0 0] }
+
+body marker5 {}
+shape (marker5){ type=0 size=[.02 .01 .005 0] color=[1 0 0] }
+
+body marker6 {}
+shape (marker6){ type=0 size=[.02 .01 .005 0] color=[1 0 0] }
+
+body marker7 {}
+shape (marker7){ type=0 size=[.02 .01 .005 0] color=[1 0 0] }
+
+body marker8 {}
+shape (marker8){ type=0 size=[.02 .01 .005 0] color=[1 0 0] }
+
+body marker9 {}
+shape (marker9){ type=0 size=[.02 .01 .005 0] color=[1 0 0] }

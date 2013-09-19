@@ -113,7 +113,7 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::Graph& G) {
   }
 }
 
-uint DefaultTaskMap::phiDim(const ors::Graph& G) {
+uint DefaultTaskMap::dim_phi(const ors::Graph& G) {
   //get state
   switch(type) {
     case posTMT: return 3;
@@ -128,6 +128,6 @@ uint DefaultTaskMap::phiDim(const ors::Graph& G) {
     case colConTMT: return 1;
     case skinTMT: return params.N;
     case zalignTMT: return 1;
-    default:  HALT("no such TVT");
+    default:  HALT("no such TMT");
   }
 }
