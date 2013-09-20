@@ -14,11 +14,13 @@ endif
 
 main: python
 
+LDFLAGS+=-L../../lib -Xlinker -rpath $(MLR_PATH)/share/lib
+
 python:
 	swig2.0 -c++ -python core.i
 	install -D corepy.py ~/.local/lib/python2.7/site-packages/corepy.py
-	$(CXX) -c -fPIC -shared core_wrap.cxx -I../ -I/usr/include/python2.7/
-	$(CXX) -shared core_wrap.o -I../ -I/usr/include/python2.7/ -L../../lib -Xlinker -rpath $(MLR_PATH)/share/lib -lCore -lGui -o ~/.local/lib/python2.7/site-packages/_corepy.so
+	$(CXX) $(EXTRA_CXXFLAGS) -c -fPIC -shared core_wrap.cxx -I../ -I/usr/include/python2.7/
+	$(CXX) -shared core_wrap.o -I../ -I/usr/include/python2.7/ $(LDFLAGS) -lCore -lGui -o ~/.local/lib/python2.7/site-packages/_corepy.so
 	rm corepy.py
 
 clean:
