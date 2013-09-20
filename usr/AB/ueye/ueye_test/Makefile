@@ -1,0 +1,12 @@
+BASE=../../../../share
+
+CXX = clang++
+
+OBJS  = $(shell find . -maxdepth 1 -name '*.cpp')
+OBJS := $(OBJS:%.cpp=%.o)
+
+CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES -D__STDC_CONSTANT_MACROS #-march=native
+LPATHS += /usr/local/lib
+LIBS += -lueye_api
+
+include $(BASE)/make-generic
