@@ -12,8 +12,9 @@ class UEyeCamera: public QObject {
   Q_OBJECT
 
   public:
-    UEyeCamera(int w, int h, int fps);
-    ~UEyeCamera();
+    static QMutex msgMutex;
+
+    UEyeCamera(int cid, int w, int h, int fps);
 
     int getWidth();
     int getHeight();
@@ -21,33 +22,12 @@ class UEyeCamera: public QObject {
     MT::String getName();
     bool getErrFlag();
 
-    bool setup(int c1);
-    bool setup(int c1, int c2);
-    bool setup(int c1, int c2, int c3);
-    bool setup(int c1, int c2, int c3, int c4);
-
-    void init();
+    void camInit();
     void open();
     void close();
-    void exit();
-    void grab(char **p);
-
-  private:
-    void setupCommon();
-    bool camInit(int cid);
-    bool camOpen(int cid);
-    bool camClose(int cid);
-    bool camExit(int cid);
-    bool grabImage(int cid, char *p);
-
-  private:
-    bool setup_flag, init_flag, open_flag;
-
-  public:
-
-
-    private:
-      void grab(int cid);
+    void camExit();
+    void grab();
+    void getImage(char *p);
 
     void startRec();
     void stopRec();
@@ -57,28 +37,28 @@ class UEyeCamera: public QObject {
     static int getNumCameras();
 
   private:
-    int width, height, fps;
-
     int nrecframes;
 
-    int nUsedCams;
-    HIDS *camID;
-    SENSORINFO *camInfo;
-    MT::String name; // TODO list of strings?
-
-    int cid;
+    HIDS camID;
     INT camStatus;
+    SENSORINFO camInfo;
+
+    int width, height, fps;
+    MT::String name;
 
     bool quit_flag, err_flag;
 
-    char **img, **imgCopy;
-    INT *imgBuffNum;
-    UEYEIMAGEINFO *imgInfo;
-    UEYE_CAPTURE_STATUS_INFO *captInfo;
+    int camIndex;
+    int frameIndex;
+
+    char *image, *image_copy;
+    INT imageBuffNum;
+    UEYEIMAGEINFO imgInfo;
+    UEYE_CAPTURE_STATUS_INFO captInfo;
 
     int numBuff;
-    char ***camBuff;
-    INT **camBuffID;
+    char **camBuff;
+    INT *camBuffID;
 
     // bits per pixel, bytes per pixel, bytes per image
     int bpp, bypp, bypimg;  // bits per pixel, bytes
