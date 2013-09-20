@@ -76,6 +76,8 @@ public:
      * punishments (for not collecting an activated reward). */
     probability_t get_prediction(const instance_t*, const action_t&, const state_t&, const reward_t&, std::vector<std::pair<int,int> > * reward_vector) const;
 
+    void get_features(std::vector<Feature*> & basis_features, const char* type) const;
+
     /** \brief Validates a model by performing random transitions and comparing
      * the result to the model predicitons. */
     template < class Model >

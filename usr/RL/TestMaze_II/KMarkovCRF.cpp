@@ -34,7 +34,8 @@ KMarkovCRF::KMarkovCRF():
         lambda(nullptr),
         old_active_features_size(0),
         candidate_features_sorted(false),
-        feature_values_precomputed(false)
+        feature_values_precomputed(false),
+        use_stochastic_sparsification(false)
 {
 
     //----------------------------------------//
@@ -157,8 +158,18 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
     double sumExpN;                    // normalization Z(x)
     vector<double> sumFExpNF(n,0.0);   // sumFExp(x(n),F)
     idx_t instance_idx = 0;
+    ignored_data = 0;
     for(instance_t * current_episode : instance_data) {
         for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
+
+            // sparsify data
+            if(use_stochastic_sparsification) {
+                if(pow(data_probabilities[instance_idx],sparse_beta)>drand48()) {
+                    data_probabilities[instance_idx] /= sparse_alpha;
+                    ++ignored_data;
+                    continue;
+                }
+            }
 
             // print progress information
             if(DEBUG_LEVEL>0) {
@@ -169,6 +180,10 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
             sumFNN = 0;
             sumExpN = 0;
             sumFExpNF.assign(n,0.0);
+
+            //-------------------------------//
+            // calculate the different terms //
+            //-------------------------------//
 
             // calculate sumF(x(n),y(n))
             for(uint f_idx=0; f_idx<feature_n; ++f_idx) { // sum over features
@@ -252,12 +267,28 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
                 }
             }
 
-            // increment fx
-            fx += sumFNN - log( sumExpN );
+            //----------------------------------//
+            // increment objective and gradient //
+            //----------------------------------//
+
+            // log-probability for this datum
+            double log_prob = sumFNN - log( sumExpN );
+
+            // weight for this datum
+            double weight = 1;
+
+            // update probability for data sparsification
+            if(use_stochastic_sparsification) {
+                weight = 1./(1-pow(data_probabilities[instance_idx],sparse_beta));
+                data_probabilities[instance_idx] = exp(log_prob);
+            }
+
+            // increment fx (objective)
+            fx += weight * log_prob;
 
             // increment gradient
             for(int lambda_idx=0; lambda_idx<n; ++lambda_idx) { // for all parameters/gradient components
-                g[lambda_idx] -= sumFExpNF[lambda_idx]/sumExpN;
+                g[lambda_idx] -= weight * sumFExpNF[lambda_idx]/sumExpN;
 
                 // in case of parameter binding additionally sum over all features belonging to this parameter
                 f_ret_t f_ret;
@@ -277,7 +308,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
                 default:
                     DEBUG_DEAD_LINE;
                 }
-                g[lambda_idx] += f_ret;
+                g[lambda_idx] += weight * f_ret;
             }
         }
     }
@@ -285,6 +316,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
     // terminate progress bar
     if(DEBUG_LEVEL>0) {
         ProgressBar::terminate();
+        DEBUG_OUT(0,"    Ignored " << ignored_data << " out of " << number_of_data_points << " data points");
     }
 
     // use NEGATIVE log likelihood (blfgs minimizes the objective)
@@ -332,12 +364,18 @@ int KMarkovCRF::progress_model(
                 x[f_idx]);
     }
     DEBUG_OUT(1,"Iteration " << k << " (fx = " << fx << ", xnorm = " << xnorm << ", p = " << exp(-fx) << "):");
+    DEBUG_OUT(1,"    Ignored " << ignored_data << " out of " << number_of_data_points << " data points");
     DEBUG_OUT(1,"");
 
     return 0;
 }
 
-int KMarkovCRF::optimize_model(lbfgsfloatval_t l1, unsigned int max_iter, lbfgsfloatval_t * mean_likelihood) {
+int KMarkovCRF::optimize_model(lbfgsfloatval_t l1,
+                               unsigned int max_iter,
+                               lbfgsfloatval_t * mean_likelihood,
+                               bool stochastic_sparsification,
+                               double alpha,
+                               double beta) {
 
     // Check size of parameter vector //
     check_lambda_size();
@@ -353,7 +391,17 @@ int KMarkovCRF::optimize_model(lbfgsfloatval_t l1, unsigned int max_iter, lbfgsf
 
     // todo what values
     param.delta = 1e-3;   // change of objective (f-f')/f (default 0)
-    param.epsilon = 1e-4; // change of parameters ||g||/max(1,||x||) (default 1e-5)
+    param.epsilon = 1e-5; // change of parameters ||g||/max(1,||x||) (default 1e-5)
+
+    // stochastic sparsification
+    if(stochastic_sparsification) {
+        use_stochastic_sparsification = true;
+        data_probabilities.assign(number_of_data_points,0);
+        sparse_alpha = alpha;
+        sparse_beta = beta;
+    } else {
+        use_stochastic_sparsification = false;
+    }
 
     // Start the L-BFGS optimization
     lbfgsfloatval_t fx;

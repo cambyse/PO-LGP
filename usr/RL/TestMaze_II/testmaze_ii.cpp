@@ -419,7 +419,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString learning_s(                    "\n    ------------------------------Model Learning------------------------------");
     QString episode_s(                       "    episode / e. . . . . . . . [<int>|clear,c] . . . . . . . . . . . . . .-> record length <int> episode or clear data");
     QString learning_crf_s(                  "    === CRF ===");
-    QString optimize_crf_s(                  "    crf-optimize / co. . . . . [<int>|check, c]. . . . . . . . . . . . . .-> optimize CRF [max_iterations | check derivatives]");
+    QString optimize_crf_s(                  "    crf-optimize / co. . . . . [<int> [<d> <d>]|check, c]. . . . . . . . .-> optimize CRF [max_iterations [ alpha beta ] | check derivatives]");
     QString score_s(                         "    score. . . . . . . . . . . <int> . . . . . . . . . . . . . . . . . . .-> score candidate features with distance <int> by gradient");
     QString add_s(                           "    add. . . . . . . . . . . . <int> . . . . . . . . . . . . . . . . . . .-> add <int> highest scored candidate features to active (0 for all non-zero scored)");
     QString crf_erase_s(                     "    crf-erase / ce . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> erase features with zero weight");
@@ -599,7 +599,11 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
         } else if(str_args[0]=="crf-optimize" || str_args[0]=="co") { // optimize CRF
             if(str_args_n==1 || int_args_ok[1] ) {
                 if(int_args_ok[1]) {
-                    crf.optimize_model(l1_factor, int_args[1]);
+                    if(str_args_n==4 && double_args_ok[2] && double_args_ok[3] ) {
+                        crf.optimize_model(l1_factor, int_args[1], nullptr, true, double_args[2], double_args[3]);
+                    } else {
+                        crf.optimize_model(l1_factor, int_args[1]);
+                    }
                 } else {
                     crf.optimize_model(l1_factor, 0);
                 }

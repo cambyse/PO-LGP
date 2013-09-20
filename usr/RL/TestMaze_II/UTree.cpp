@@ -43,7 +43,7 @@ UTree::NodeInfo::NodeInfo(const Feature * f, const f_ret_t& r):
 UTree::UTree(const double& d):
         root_node(INVALID),
         node_info_map(graph),
-        discount(d),	
+        discount(d),
 	expansion_type(UTILITY_EXPANSION)
 {
 
@@ -642,32 +642,29 @@ double UTree::score_leaf_node(const node_t leaf_node, const Feature* feature) co
 
     //--------------------------------------------------------//
     // collect samples from instances, discriminating between //
-    // different feature return values and different actions  //
+    // different feature return values                        //
     //--------------------------------------------------------//
     const instance_vector_t& instance_vector = node_info_map[leaf_node].instance_vector;
-    map< pair<f_ret_t,action_t>, vector<double                 > > utility_samples;      // for UTILITY_EXPANSION
-    map< pair<f_ret_t,action_t>, vector<pair<state_t,reward_t> > > state_reward_samples; // for STATE_REWARD_EXPANSION
+    map<f_ret_t, vector<double                 > > utility_samples;      // for UTILITY_EXPANSION
+    map<f_ret_t, vector<pair<state_t,reward_t> > > state_reward_samples; // for STATE_REWARD_EXPANSION
     set<f_ret_t> feature_return_values; // corresponds to different child nodes
 
     // iterate through instances
     for(const instance_t * instance : instance_vector) {
 
-        // next instance (that provides the actual data)
+        // next instance (needed for UTILITY_EXPANSION only)
         const_instanceIt_t next_instance = instance->const_it()+1;
-        if(next_instance==util::INVALID) {
+        if(next_instance==util::INVALID && expansion_type==UTILITY_EXPANSION) {
             continue;
         }
 
-        // construct state-action pair
-        f_ret_t f_ret = feature->evaluate(instance); // feature return value defining the potential new leaf node
-        action_t action = next_instance->action;     // action that was performed from current node
-        pair<f_ret_t,action_t> node_action_pair = make_pair(f_ret,action);
+        // feature return value defining the potential new leaf node
+        f_ret_t f_ret = feature->evaluate(instance);
 
         // remember state/leaf
         feature_return_values.insert(f_ret);
 
         // update samples
-
         switch(expansion_type) {
         case UTILITY_EXPANSION:
             // A sample consists of the reward actually received after
@@ -675,8 +672,8 @@ double UTree::score_leaf_node(const node_t leaf_node, const Feature* feature) co
             // node that was actually reached.
         {
             node_t next_state = find_leaf_node(next_instance);
-            double util = next_instance->reward + discount*node_info_map[next_state].max_state_action_value;
-            utility_samples[node_action_pair].push_back(util);
+            double util = instance->reward + discount*node_info_map[next_state].max_state_action_value;
+            utility_samples[f_ret].push_back(util);
             DEBUG_OUT(4,"    Adding utility of " << util << " for f_ret=" << f_ret << "	" << action);
         }
         break;
@@ -685,7 +682,7 @@ double UTree::score_leaf_node(const node_t leaf_node, const Feature* feature) co
             // reached after performing the action and the reward that was
             // actually received.
             if(next_instance!=util::INVALID) {
-                state_reward_samples[node_action_pair].push_back(make_pair(next_instance->state, next_instance->reward));
+                state_reward_samples[f_ret].push_back(make_pair(next_instance->state, next_instance->reward));
             }
             break;
         default:

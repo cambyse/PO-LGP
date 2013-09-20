@@ -77,7 +77,13 @@ public:
      * \param max_iter        Maximum number of iterations (zero for unlimited until convergence).
      * \param mean_likelihood For returning the mean likelihood after the last iteration.
      * */
-    int optimize_model(lbfgsfloatval_t l1 = 0, unsigned int max_iter = 0, lbfgsfloatval_t * mean_likelihood = nullptr);
+    int optimize_model(lbfgsfloatval_t l1 = 0,
+                       unsigned int max_iter = 0,
+                       lbfgsfloatval_t * mean_likelihood = nullptr,
+                       bool stochastic_sparsification = false,
+                       double alpha = 10,
+                       double beta = 1
+        );
 
     virtual void add_action_state_reward_tripel(
         const action_t& action,
@@ -143,9 +149,13 @@ private:
     enum PRECOMPUTATION_TYPE { NONE, COMPOUND_LOOK_UP, BASE_LOOK_UP };
     static const PRECOMPUTATION_TYPE precomputation_type = BASE_LOOK_UP;        ///< Technique for precomputing feature values.
     bool                      feature_values_precomputed;                       ///< Whether feature values are up-to-date.
+    bool                      use_stochastic_sparsification;                    ///< Whether to use stochastic data sparsification (SDS).
+    double                    sparse_alpha, sparse_beta;                        ///< decay and exponent for SDS.
+    unsigned int              ignored_data;                                     ///< Number of ignored data in last iteration.
     std::vector<f_ret_t>      compound_feature_values;                          ///< The precomputed feature values (COMPOUND_LOOK_UP).
     std::vector<std::vector<Feature::look_up_map_t> >  base_feature_values;     ///< The precomputed feature values (BASE_LOOK_UP).
     std::vector<idx_t>        base_feature_indices;                             ///< State-reward index for given instance.
+    std::vector<double>       data_probabilities;                               ///< Predicted probabilities for individual data points.
 
     //------------------//
     // k-MDP Prediction //

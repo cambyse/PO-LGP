@@ -18,6 +18,7 @@ HEADERS += LookAheadSearch.h \
     Feature.h \
     Representation/Action.h \
     Representation/State.h \
+    Representation/AugmentedState.h \
     Representation/SequentialReward.h \
     Representation/EnumeratedReward.h \
     Representation/Instance.h \
@@ -43,6 +44,7 @@ SOURCES += LookAheadSearch.cpp \
     Feature.cpp \
     Representation/Action.cpp \
     Representation/State.cpp \
+    Representation/AugmentedState.cpp \
     Representation/SequentialReward.cpp \
     Representation/EnumeratedReward.cpp \
     Representation/Instance.cpp \

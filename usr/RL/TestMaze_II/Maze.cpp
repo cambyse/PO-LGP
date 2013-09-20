@@ -839,6 +839,53 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
     return prob;
 }
 
+void Maze::get_features(std::vector<Feature*> & basis_features, const char* type) const {
+    for(int k_idx = 0; k_idx>=-(int)Config::k; --k_idx) {
+        if(type=="CRF" || (type=="UTree"&&k_idx>-(int)Config::k) || type=="LinQ") {
+            // actions
+            for(action_t action : actionIt_t::all) {
+                ActionFeature * action_feature = ActionFeature::create(action,k_idx);
+                basis_features.push_back(action_feature);
+            }
+        }
+        if(type=="CRF" || (type=="UTree"&&k_idx>-(int)Config::k) || (type=="LinQ"&&k_idx<0)) {
+            // states
+            for(state_t state : stateIt_t::all) {
+                StateFeature * state_feature = StateFeature::create(state,k_idx);
+                basis_features.push_back(state_feature);
+            }
+        }
+        if((type=="CRF"&&k_idx==0) || (type=="UTree"&&k_idx>-(int)Config::k) || (type=="LinQ"&&false)) {
+            // reward
+            for(reward_t reward : rewardIt_t::all) {
+                RewardFeature * reward_feature = RewardFeature::create(reward,k_idx);
+                basis_features.push_back(reward_feature);
+            }
+        }
+    }
+
+    if(type=="CRF") {
+        // relative state features
+        RelativeStateFeature * relative_state_feature;
+        relative_state_feature = RelativeStateFeature::create(1,0,-1,0);
+        basis_features.push_back(relative_state_feature);
+        relative_state_feature = RelativeStateFeature::create(0,1,-1,0);
+        basis_features.push_back(relative_state_feature);
+        relative_state_feature = RelativeStateFeature::create(-1,0,-1,0);
+        basis_features.push_back(relative_state_feature);
+        relative_state_feature = RelativeStateFeature::create(0,-1,-1,0);
+        basis_features.push_back(relative_state_feature);
+        relative_state_feature = RelativeStateFeature::create(0,0,-1,0);
+        basis_features.push_back(relative_state_feature);
+    }
+    if(type=="LinQ") {
+        // also add a unit feature
+        ConstFeature * const_feature = ConstFeature::create(1);
+        basis_features.push_back(const_feature);
+        DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+    }
+}
+
 void Maze::print_reward_activation_on_random_walk(const int& walk_length) {
     // collect data
     vector<pair<long,long> > reward_vector(rewards.size(),make_pair(0,0));
