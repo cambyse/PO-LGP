@@ -310,9 +310,9 @@ REAL gjk_distance(
    int d, compute_both_witnesses, use_default, first_iteration, max_iterations;
    double oldsqrd;
 
-   int i;
-   for(i=0; i<obj1->numpoints; i++) printf("obj1 v%i x=%g y=%g z=%g\n", i, obj1->vertices[i][0], obj1->vertices[i][1], obj1->vertices[i][2]);
-   for(i=0; i<obj2->numpoints; i++) printf("obj2 v%i x=%g y=%g z=%g\n", i, obj2->vertices[i][0], obj2->vertices[i][1], obj2->vertices[i][2]);
+//   int i;
+//   for(i=0; i<obj1->numpoints; i++) printf("obj1 v%i x=%g y=%g z=%g\n", i, obj1->vertices[i][0], obj1->vertices[i][1], obj1->vertices[i][2]);
+//   for(i=0; i<obj2->numpoints; i++) printf("obj2 v%i x=%g y=%g z=%g\n", i, obj2->vertices[i][0], obj2->vertices[i][1], obj2->vertices[i][2]);
 
    assert( NumVertices( obj1)>0 && NumVertices( obj2)>0 );
 
@@ -422,7 +422,7 @@ REAL gjk_distance(
 	between them being too small. */
      if ( sqrd<EPSILON ) {
        simplex->error = EPSILON;
-       return sqrd;                 
+       return sqrd;
      }
 
      if ( ! IdentityTransform( tr1) )

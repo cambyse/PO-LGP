@@ -656,16 +656,16 @@ includeAll.cxx: force
 ################################################################################
 
 $(BASE)/lib/libextern_%.so: $(BASE)/src/extern/%
-	+@-$(BASE)/make-locked.sh $<
+	+@-$(BASE)/make-locked.sh $< $@
 
 $(BASE)/lib/libHardware_%.so: $(BASE)/src/Hardware/%
-	+@-$(BASE)/make-locked.sh $<
+	+@-$(BASE)/make-locked.sh $< $@
 
 $(BASE)/lib/lib%.so: $(BASE)/src/%
-	+@-$(BASE)/make-locked.sh $<
+	+@-$(BASE)/make-locked.sh $< $@
 
 makePath/%: %
-	+@-$(BASE)/make-locked.sh $<
+	+@-$(BASE)/make-locked.sh $< $<
 
 cleanPath/%: %
 	@echo "                                                ***** clean " $*
