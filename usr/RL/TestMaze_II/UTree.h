@@ -74,7 +74,7 @@ public:
      * correpsonding leaf is expanded. */
     double expand_leaf_node(const double& score_threshold = 0);
 
-    double q_iteration(const double& alpha);
+    /* double q_iteration(const double& alpha); */
 
     double value_iteration();
 

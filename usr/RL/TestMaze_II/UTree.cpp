@@ -376,87 +376,89 @@ double UTree::expand_leaf_node(const double& score_threshold) {
         DEBUG_OUT(3,"    " << *insIt );
     }
 
+    DEBUG_OUT(1,"    DONE (" << max_score << ")");
+
     return max_score;
 }
 
-double UTree::q_iteration(const double& alpha) {
+// double UTree::q_iteration(const double& alpha) {
 
-    // check if state value map is complete (initialize with zero otherwise)
-    for(auto current_leaf_node : leaf_nodes) {
-        if(node_info_map[current_leaf_node].state_action_values.size()!=action_t::action_n) {
-            DEBUG_OUT(1,"Initializing state-action values (size=" <<
-                      node_info_map[current_leaf_node].state_action_values.size() << " != " <<
-                      action_t::action_n << ")"
-                );
-            for(actionIt_t aIt=actionIt_t::first(); aIt!=util::INVALID; ++aIt) {
-                node_info_map[current_leaf_node].state_action_values[aIt]=0;
-            }
-            DEBUG_OUT(1,"    DONE (size=" <<
-                      node_info_map[current_leaf_node].state_action_values.size() << ")"
-                );
-        }
-    }
+//     // check if state value map is complete (initialize with zero otherwise)
+//     for(auto current_leaf_node : leaf_nodes) {
+//         if(node_info_map[current_leaf_node].state_action_values.size()!=action_t::action_n) {
+//             DEBUG_OUT(1,"Initializing state-action values (size=" <<
+//                       node_info_map[current_leaf_node].state_action_values.size() << " != " <<
+//                       action_t::action_n << ")"
+//                 );
+//             for(actionIt_t aIt=actionIt_t::first(); aIt!=util::INVALID; ++aIt) {
+//                 node_info_map[current_leaf_node].state_action_values[aIt]=0;
+//             }
+//             DEBUG_OUT(1,"    DONE (size=" <<
+//                       node_info_map[current_leaf_node].state_action_values.size() << ")"
+//                 );
+//         }
+//     }
 
-    // run Q-iteration
-    bool enought_data = false;
-    for(instance_t * current_episode : instance_data) {
-        const_instanceIt_t current_instance = current_episode->const_first();
-        const_instanceIt_t next_instance = current_instance+1;
-        if(next_instance!=util::INVALID) {
-            enought_data = true;
-            node_t current_leaf_node = find_leaf_node(current_instance);
-            node_t next_leaf_node = find_leaf_node(next_instance);
-            while(next_instance!=util::INVALID) {
+//     // run Q-iteration
+//     bool enought_data = false;
+//     for(instance_t * current_episode : instance_data) {
+//         const_instanceIt_t current_instance = current_episode->const_first();
+//         const_instanceIt_t next_instance = current_instance+1;
+//         if(next_instance!=util::INVALID) {
+//             enought_data = true;
+//             node_t current_leaf_node = find_leaf_node(current_instance);
+//             node_t next_leaf_node = find_leaf_node(next_instance);
+//             while(next_instance!=util::INVALID) {
 
-                action_t current_action = current_instance->action;
-                double old_Q = node_info_map[current_leaf_node].state_action_values[current_action];
+//                 action_t current_action = current_instance->action;
+//                 double old_Q = node_info_map[current_leaf_node].state_action_values[current_action];
 
-                // calculate update
-                double delta_Q = next_instance->reward;
-                delta_Q += discount*node_info_map[next_leaf_node].max_state_action_value;
-                delta_Q -= old_Q;
-                delta_Q *= alpha;
+//                 // calculate update
+//                 double delta_Q = next_instance->reward;
+//                 delta_Q += discount*node_info_map[next_leaf_node].max_state_action_value;
+//                 delta_Q -= old_Q;
+//                 delta_Q *= alpha;
 
-                // update state-action value
-                double new_Q = old_Q + delta_Q;
-                node_info_map[current_leaf_node].state_action_values[current_action] = new_Q;
+//                 // update state-action value
+//                 double new_Q = old_Q + delta_Q;
+//                 node_info_map[current_leaf_node].state_action_values[current_action] = new_Q;
 
-                // update data for next loop
-                ++current_instance;
-                ++next_instance;
-                current_leaf_node = next_leaf_node;
-                next_leaf_node = find_leaf_node(next_instance);
-            }
-        }
-    }
-    if(!enought_data) {
-        DEBUG_OUT(0,"Error: Cannot perform Q-Iteration, not enough data");
-        return 0;
-    }
+//                 // update data for next loop
+//                 ++current_instance;
+//                 ++next_instance;
+//                 current_leaf_node = next_leaf_node;
+//                 next_leaf_node = find_leaf_node(next_instance);
+//             }
+//         }
+//     }
+//     if(!enought_data) {
+//         DEBUG_OUT(0,"Error: Cannot perform Q-Iteration, not enough data");
+//         return 0;
+//     }
 
-    // update state values (i.e. maximum state-action value)
-    double max_value_diff = -DBL_MAX;
-    for(auto current_leaf_node : leaf_nodes) {
-        double max_value = -DBL_MAX;
-        vector<action_t> max_value_actions;
-        map<action_t,double>& value_map = node_info_map[current_leaf_node].state_action_values;
-        for(auto valueIt=value_map.begin(); valueIt!=value_map.end(); ++valueIt) {
-            if(valueIt->second>max_value) {
-                max_value = valueIt->second;
-                max_value_actions.assign(1,valueIt->first);
-            } else if(valueIt->second==max_value) {
-                max_value_actions.push_back(valueIt->first);
-            }
-        }
-        double value_diff = node_info_map[current_leaf_node].max_state_action_value - max_value;
-        node_info_map[current_leaf_node].max_state_action_value = max_value;
-        node_info_map[current_leaf_node].max_value_action = util::random_select(max_value_actions);
-        if(fabs(value_diff)>max_value_diff) {
-            max_value_diff = fabs(value_diff);
-        }
-    }
-    return max_value_diff;
-}
+//     // update state values (i.e. maximum state-action value)
+//     double max_value_diff = -DBL_MAX;
+//     for(auto current_leaf_node : leaf_nodes) {
+//         double max_value = -DBL_MAX;
+//         vector<action_t> max_value_actions;
+//         map<action_t,double>& value_map = node_info_map[current_leaf_node].state_action_values;
+//         for(auto valueIt=value_map.begin(); valueIt!=value_map.end(); ++valueIt) {
+//             if(valueIt->second>max_value) {
+//                 max_value = valueIt->second;
+//                 max_value_actions.assign(1,valueIt->first);
+//             } else if(valueIt->second==max_value) {
+//                 max_value_actions.push_back(valueIt->first);
+//             }
+//         }
+//         double value_diff = node_info_map[current_leaf_node].max_state_action_value - max_value;
+//         node_info_map[current_leaf_node].max_state_action_value = max_value;
+//         node_info_map[current_leaf_node].max_value_action = util::random_select(max_value_actions);
+//         if(fabs(value_diff)>max_value_diff) {
+//             max_value_diff = fabs(value_diff);
+//         }
+//     }
+//     return max_value_diff;
+// }
 
 double UTree::value_iteration() {
 
