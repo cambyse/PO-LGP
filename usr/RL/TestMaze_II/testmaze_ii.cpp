@@ -155,29 +155,6 @@ void TestMaze_II::clear_data() {
     delay_dist.clear_data();
 }
 
-void TestMaze_II::fully_expand_utree() {
-    double score_threshold = 1e-3;
-    double max_score = DBL_MAX;
-    switch(utree.get_expansion_type()) {
-    case UTree::STATE_REWARD_EXPANSION:
-        while(max_score>score_threshold) {
-            max_score = utree.expand_leaf_node(score_threshold);
-        }
-        break;
-    case UTree::UTILITY_EXPANSION:
-        while(max_score>score_threshold) {
-            double max_update = DBL_MAX;
-            while(max_update>1e-10) {
-                max_update = utree.value_iteration();
-            }
-            max_score = utree.expand_leaf_node(score_threshold);
-        }
-        break;
-    default:
-        DEBUG_DEAD_LINE;
-    }
-}
-
 void TestMaze_II::save_to_png(QString file_name) const {
     DEBUG_OUT(1,"Saving Maze to file '" << file_name << "'");
     QGraphicsScene * scene = ui.graphicsView->scene();
@@ -428,8 +405,6 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString validate_s(                      "    validate / v . . . . . . . {crf,kmdp}[exact|mc <int>]. . . . . . . . .-> validate CRF or k-MDP model using exact (default) or Monte Carlo (with <int> samples) computation of the KL-divergence");
     QString learning_utree_s(                "    === UTree ===");
     QString expand_leaf_nodes_s(             "    expand / ex. . . . . . . . [<int>|<double] . . . . . . . . . . . . . .-> expand <int> leaf nodes / expand leaves until a score of <double> is reached");
-    QString fully_expand_utree_s(            "    fully-expand / fex . . . . . . . . . . . . . . . . . . . . . . . . . .-> fully expand UTree");
-    QString expand_via_value_iteration_s(    "    expand-vi / exvi . . . . . . . . . . . . . . . . . . . . . . . . . . .-> run value iteration and leaf expansion alternating until convergence (only for UTILITY_EXPANSION)");
     QString print_utree_s(                   "    print-utree. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> print the current UTree");
     QString print_leaves_s(                  "    print-leaves . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> print leaves of the current UTree");
     QString clear_utree_s(                   "    clear-utree. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> clear UTree");
@@ -524,8 +499,6 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             TO_CONSOLE( validate_s );
             TO_CONSOLE( learning_utree_s ); // UTree
             TO_CONSOLE( expand_leaf_nodes_s );
-            TO_CONSOLE( fully_expand_utree_s );
-            TO_CONSOLE( expand_via_value_iteration_s );
             TO_CONSOLE( print_utree_s );
             TO_CONSOLE( print_leaves_s );
             TO_CONSOLE( clear_utree_s );
@@ -671,34 +644,6 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 TO_CONSOLE( QString("    Last score was %1").arg(score) );
             } else if(double_args_ok[1]) {
                 while( double_args[1] <= utree.expand_leaf_node(double_args[1]) ) {}
-            } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( expand_leaf_nodes_s );
-            }
-        } else if(str_args[0]=="fully-expand" || str_args[0]=="fex") {
-            if(str_args_n==1) {
-                fully_expand_utree();
-            } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( fully_expand_utree_s );
-            }
-        } else if(str_args[0]=="expand-vi" || str_args[0]=="exvi") {
-            if(str_args_n==1) {
-                if(utree.get_expansion_type()!=UTree::UTILITY_EXPANSION) {
-                    TO_CONSOLE("    expansion type is not UTILITY_EXPANSION, aborting");
-                } else {
-                    double score_threshold = 1e-3;
-                    double max_score = DBL_MAX;
-                    double max_update = DBL_MAX;
-                    while(max_score>score_threshold) {
-                        max_update = DBL_MAX;
-                        while(max_update>1e-10) {
-                            max_update = utree.value_iteration();
-                        }
-                        max_score = utree.expand_leaf_node(score_threshold);
-                    }
-                    TO_CONSOLE( QString("    last vi-update: %1, last score: %2").arg(max_update).arg(max_score) );
-                }
             } else {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( expand_leaf_nodes_s );

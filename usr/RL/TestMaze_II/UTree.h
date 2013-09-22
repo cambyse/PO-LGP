@@ -14,8 +14,10 @@
 
 class UTree: public HistoryObserver
 {
-public:
+private:
+    struct NodeInfo; // forward declaration of private type
 
+public:
     USE_CONFIG_TYPEDEFS;
     typedef Feature::feature_return_value    f_ret_t;
     typedef lemon::ListDigraph               graph_t;
@@ -24,24 +26,6 @@ public:
     typedef std::vector<node_t>              node_vector_t;
     typedef std::set<node_t>                 node_container_t;
     typedef std::vector<const instance_t *>  instance_vector_t;
-
-    /** \brief Stores data associated with the single nodes. */
-    struct NodeInfo {
-        NodeInfo(const Feature * f = nullptr, const f_ret_t& r = f_ret_t());
-        instance_vector_t instance_vector;                                      ///< data
-        const Feature * feature;                                                ///< discriminating feature for non-leaf nodes
-        f_ret_t parent_return_value;                                            ///< return value of parent-node's feature
-
-        std::map<const Feature*,double> scores;                                 ///< the scores for different features
-        bool scores_up_to_date;                                                 ///< whether leaf-node's scores are up-to-date
-
-        std::map<action_t,double> state_action_values;                          ///< Q(s,a)-function
-        double max_state_action_value;                                          ///< utility / state-value
-        action_t max_value_action;                                              ///< policy
-        std::map< std::pair<action_t,node_t>, probability_t > transition_table; ///< state transition table
-        std::map< std::pair<action_t,node_t>, double > expected_reward;         ///< expected reward
-        bool statistics_up_to_date;                                             ///< whether the above is up-to-date
-    };
 
     /** \brief Type of the map storing the NodeInfo objects. */
     typedef graph_t::NodeMap<NodeInfo> node_info_map_t;
@@ -106,6 +90,60 @@ public:
 
 private:
 
+    /** \brief Stores data associated with the single nodes.
+     *
+     * Scores, values, and statistics need to be updated in mutual dependence
+     * and depending on new data and leaf-expansion. Assuming a fully connected
+     * transition structur, all values are couples and are thus up-to-date or
+     * invalid all at the same time. @code
+     *
+     *  =====> leaf-expansion <-----------------\
+     *              |   \                        \
+     *              |    \ (new children only)    \
+     *              |     V                        \
+     *  (all nodes) |   new data <=======           \
+     *              |    /                           |
+     *              |   / (affected leaves only)     |
+     *              |  /                             |
+     *              V V                              |
+     *           statistics                          |
+     *           /    |                              |
+     *     (VB) /     |                              |
+     *         /      |                              |
+     *  /-->  V       | (affected leaves only)       |
+     * |    values    | (SR)                         |
+     *  \--<   \      |                              |
+     *          \     |                              |
+     *      (VB) \    |                             /
+     *            V   V                            /
+     *            scores -------------------------/
+     *
+     * @endcode In case of new data the statistics of the affected leaf nodes
+     * need to be updated. New statistics imply a change of state-action values
+     * (for value base (VB) UTree) and scores (for state-reward (SR) prediction
+     * UTree) for the affected leaf nodes. Changed values affect the scores and
+     * values of all other leaves (VB UTree only). Leaf expansion inserts new
+     * data to the new child nodes, which changes its statistics, and also
+     * modifies the transition structure (and therefore the statistics of ALL
+     * nodes). */
+    struct NodeInfo {
+        NodeInfo(const Feature * f = nullptr, const f_ret_t& r = f_ret_t());
+        instance_vector_t instance_vector;                                      ///< data
+        const Feature * feature;                                                ///< discriminating feature for non-leaf nodes
+        f_ret_t parent_return_value;                                            ///< return value of parent-node's feature
+
+        std::map<const Feature*,double> scores;                                 ///< the scores for different features
+        bool scores_up_to_date;                                                 ///< whether leaf-node's scores are up-to-date
+
+        std::map<action_t,double> state_action_values;                          ///< Q(s,a)-function
+        double max_state_action_value;                                          ///< utility / state-value
+        action_t max_value_action;                                              ///< policy
+
+        std::map< std::pair<action_t,node_t>, probability_t > transition_table; ///< state transition table
+        std::map< std::pair<action_t,node_t>, double > expected_reward;         ///< expected reward
+        bool statistics_up_to_date;                                             ///< whether the preceding two are up-to-date
+    };
+
     std::vector<Feature*> basis_features;
     node_container_t leaf_nodes;
     graph_t graph;
@@ -113,8 +151,33 @@ private:
     node_info_map_t node_info_map;
     static const int pseudo_counts = 1;
     double discount;
-
     EXPANSION_TYPE expansion_type;
+
+    /** \brief Whether for all nodes NodeInfo::state_action_values,
+     * NodeInfo::max_state_action_value, and NodeInfo::max_value_action are
+     * up-to-date. */
+    bool values_up_to_date;
+
+    /** \brief Sets NodeInfo::scores_up_to_date to false and takes care of the
+     * consequences (other things not up-to-data). */
+    void invalidate_scores(const node_t leaf);
+
+    /** \brief Assert the scores are up-to-date. */
+    void assert_scores_up_to_date(const node_t leaf);
+
+    /** \brief Sets values_up_to_date to false and takes care of the
+     * consequences (other things not up-to-data). */
+    void invalidate_values();
+
+    /** \brief Assert the values are up-to-date. */
+    void assert_values_up_to_date();
+
+    /** \brief Sets NodeInfo::statistics_up_to_date to false and takes care of
+     * the consequences (other things not up-to-data). */
+    void invalidate_statistics(const node_t leaf);
+
+    /** \brief Assert the statistics are up-to-date. */
+    void assert_statistics_up_to_date(const node_t leaf);
 
     node_t add_child(const node_t& node);
 
@@ -133,9 +196,9 @@ private:
 
     probability_t prior_probability(const state_t&, const reward_t&) const;
 
+    /** \brief Updates expected_reward and transition_table based on the
+     * instance data. */
     void update_statistics(const node_t& leaf_node);
-
-    void update_state_value_and_policy(const node_t& leaf_node);
 };
 
 #endif /* UTREE_H_ */
