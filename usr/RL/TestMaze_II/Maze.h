@@ -12,6 +12,7 @@
 
 #include "Config.h"
 #include "util.h"
+#include "Feature.h"
 
 #include "debug.h"
 
