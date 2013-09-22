@@ -13,22 +13,6 @@ struct G4System:System{
   }
 };
 
-void getNowString(MT::String &str) {
-  time_t t = time(0);
-  struct tm *now = localtime(&t);
-
-  char s[19]; //-- just enough
-  sprintf(s, "%02d-%02d-%02d--%02d-%02d-%02d",
-    now->tm_year-100,
-    now->tm_mon+1,
-    now->tm_mday,
-    now->tm_hour,
-    now->tm_min,
-    now->tm_sec);
-
-  str.clear() << s;
-}
-
 void threadedRun(){
   G4System S;
   OpenGL gl;
@@ -37,7 +21,7 @@ void threadedRun(){
   floatA poses;
   timeval time;
   MT::String nowStr, timesStr, poseStr;
-  getNowString(nowStr);
+  MT::getNowString(nowStr);
   timesStr << "z." << nowStr << ".g4_times.dat";
   poseStr << "z." << nowStr << ".g4_pose.dat";
   FILE *fil = fopen((const char*)timesStr,"w");
