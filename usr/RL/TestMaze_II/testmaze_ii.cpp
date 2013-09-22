@@ -408,7 +408,6 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString print_utree_s(                   "    print-utree. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> print the current UTree");
     QString print_leaves_s(                  "    print-leaves . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> print leaves of the current UTree");
     QString clear_utree_s(                   "    clear-utree. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> clear UTree");
-    QString utree_q_iteration_s(             "    q-iteration / qi . . . . . <int> <double>. . . . . . . . . . . . . . .-> run <int> iterations of Q-Learning with alpha <double>");
     QString utree_value_iteration_s(         "    v-iteration / vi . . . . . [<int>] . . . . . . . . . . . . . . . . . .-> run one [<int>] iteration(s) of Value-Iteration");
     QString utree_expansion_type_s(          "    ex-type / ext. . . . . . . [u(tility)|s(tate)r(eward)] . . . . . . . .-> get/set expansion type for UTree");
     QString learning_linQ_s(                 "    === Linear-Q ===");
@@ -502,7 +501,6 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             TO_CONSOLE( print_utree_s );
             TO_CONSOLE( print_leaves_s );
             TO_CONSOLE( clear_utree_s );
-            TO_CONSOLE( utree_q_iteration_s );
             TO_CONSOLE( utree_value_iteration_s );
             TO_CONSOLE( utree_expansion_type_s );
             TO_CONSOLE( learning_linQ_s ); // linear-Q
@@ -654,20 +652,6 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             utree.print_leaves();
         } else if(str_args[0]=="clear-utree") {
             utree.clear_tree();
-        } else if(str_args[0]=="q-iteration" || str_args[0]=="qi") {
-            if(str_args_n==3 &&
-               int_args_ok[1] && int_args[1]>0 &&
-               double_args_ok[2] && double_args[2]>=0 && double_args[2]<=1)
-            {
-                double max_diff;
-                repeat(int_args[1]) {
-                    max_diff = utree.q_iteration(double_args[2]);
-                }
-                TO_CONSOLE( QString("    run %1 iteration(s) with alpha=%2, last maximum update was %3").arg(int_args[1]).arg(double_args[2]).arg(max_diff) );
-            } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( utree_q_iteration_s );
-            }
         } else if(str_args[0]=="v-iteration" || str_args[0]=="vi") {
             if( str_args_n==1 || (str_args_n>1 && int_args_ok[1] && int_args[1]>0) ) {
                 double max_diff;

@@ -36,7 +36,6 @@ UTree::NodeInfo::NodeInfo(const Feature * f, const f_ret_t& r):
     parent_return_value(r),
     scores_up_to_date(false),
     max_state_action_value(0),
-    max_value_action(action_t::STAY),
     statistics_up_to_date(false)
 {}
 
@@ -116,10 +115,14 @@ UTree::probability_t UTree::get_prediction(
         const state_t& state_to,
         const reward_t& reward) const {
 
-    //--------------------------//
-    // find the right leaf node //
-    //--------------------------//
-    node_t node = find_leaf_node(instance);
+    // create instance
+    const instance_t * next_instance = instance_t::create(action, state_to, reward, instance);
+
+    // find leaf node
+    node_t node = find_leaf_node(next_instance);
+
+    // delete instance
+    delete next_instance;
 
     //----------------------------------//
     // calculate transition probability //
@@ -134,14 +137,11 @@ UTree::probability_t UTree::get_prediction(
         // number of times action a was performed.
         unsigned long transition_counter = 0;
         unsigned long action_counter = 0;
-        for( const instance_t * insPtr : node_info_map[node].instance_vector ) {
-            const_instanceIt_t next_instance = insPtr->const_it()+1;
-            if(next_instance!=util::INVALID) {
-                if(next_instance->action==action) {
-                    ++action_counter;
-                    if(next_instance->state==state_to && next_instance->reward==reward) {
-                        ++transition_counter;
-                    }
+        for( const instance_t * next_instance : node_info_map[node].instance_vector ) {
+            if(next_instance->action==action) {
+                ++action_counter;
+                if(next_instance->state==state_to && next_instance->reward==reward) {
+                    ++transition_counter;
                 }
             }
         }
@@ -269,7 +269,6 @@ void UTree::print_leaves() {
                 DEBUG_OUT(0,"            " << *(insVec[ins_idx]) );
             }
         }
-        DEBUG_OUT(0,"        Optimal Action: " << node_info_map[current_leaf_node].max_value_action );
         DEBUG_OUT(0,"        Action Value: " << node_info_map[current_leaf_node].max_state_action_value );
         if(DEBUG_LEVEL>=1) {
             DEBUG_OUT(0,"        Action Values:");
@@ -542,30 +541,21 @@ double UTree::value_iteration() {
     }
 
     //-------------------------------//
-    // update state value and policy //
+    // update state value
     //-------------------------------//
     for( node_t leaf : leaf_nodes ) {
         // find maximum value
         double max_q_value = -DBL_MAX;
-        vector<action_t> max_value_action_vector;
         for(auto current_q_value : node_info_map[leaf].state_action_values) {
             if(current_q_value.second > max_q_value) {
                 max_q_value = current_q_value.second;
-                max_value_action_vector.assign(1,current_q_value.first);
-            } else if(current_q_value.second==max_q_value) {
-                max_value_action_vector.push_back(current_q_value.first);
             }
         }
-        // set state value and optimal action
-        if(max_value_action_vector.size()==0) { // state-action values were empty
-            DEBUG_OUT(4,"    Empty Q-values");
+        if(max_q_value==-DBL_MAX) {
+            DEBUG_ERROR("No state-action values in leaf node " << graph.id(leaf) );
             node_info_map[leaf].max_state_action_value = 0;
-            node_info_map[leaf].max_value_action = action_t::STAY;
         } else {
-            action_t optimal_action = util::random_select(max_value_action_vector);
-            DEBUG_OUT(4,"    state-value=" << max_q_value << "	action=" << optimal_action);
             node_info_map[leaf].max_state_action_value = max_q_value;
-            node_info_map[leaf].max_value_action = optimal_action;
         }
     }
 
@@ -575,19 +565,31 @@ double UTree::value_iteration() {
 }
 
 UTree::action_t UTree::get_max_value_action(const instance_t * i) {
+    // assert values are up-to-date
     assert_values_up_to_date();
+
+    // get leaf node
     const instance_t * next_instance = instance_t::create(action_t(),
                                                           state_t(),
                                                           reward_t(),
                                                           i);
     node_t node = find_leaf_node(next_instance);
     delete next_instance;
-    if(node_info_map[node].state_action_values.size()!=action_t::action_n) {
-        DEBUG_OUT(0,"Error: incomplete state action values");
+
+    // find maximum-value action (random tie break)
+    if(node_info_map[node].state_action_values.size()==0) {
+        DEBUG_ERROR("Incomplete state action values");
     }
-    action_t max_action = node_info_map[node].max_value_action;
-    DEBUG_OUT(1,"Maximum value action: " << max_action << " (node " << graph.id(node) << ")" );
-    return max_action;
+    vector<action_t> max_value_action_vector;
+    double max_q_value = node_info_map[node].max_state_action_value;
+    for(auto current_q_value : node_info_map[node].state_action_values) {
+        if(current_q_value.second==max_q_value) {
+            max_value_action_vector.push_back(current_q_value.first);
+        }
+    }
+    action_t optimal_action = util::random_select(max_value_action_vector);
+    DEBUG_OUT(1,"Maximum value action: " << optimal_action << " (node " << graph.id(node) << ")" );
+    return optimal_action;
 }
 
 void UTree::set_expansion_type(const EXPANSION_TYPE& ex) {
@@ -665,15 +667,7 @@ void UTree::invalidate_statistics(const node_t leaf) {
     if(node_info_map[leaf].statistics_up_to_date==true) {
         DEBUG_OUT(2,"Invalidate statistics for leaf " << graph.id(leaf));
         node_info_map[leaf].statistics_up_to_date = false;
-        if(expansion_type==STATE_REWARD_EXPANSION) {
-            // invalidate score for this node
-            node_info_map[leaf].scores_up_to_date = false;
-        } else if(expansion_type==UTILITY_EXPANSION) {
-            // invalidate value for all leaves
-            invalidate_values();
-        } else {
-            DEBUG_DEAD_LINE;
-        }
+        invalidate_values();
     }
 }
 

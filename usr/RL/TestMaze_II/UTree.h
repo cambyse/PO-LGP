@@ -97,35 +97,33 @@ private:
      * transition structur, all values are couples and are thus up-to-date or
      * invalid all at the same time. @code
      *
-     *  =====> leaf-expansion <-----------------\
-     *              |   \                        \
-     *              |    \ (new children only)    \
-     *              |     V                        \
-     *  (all nodes) |   new data <=======           \
-     *              |    /                           |
-     *              |   / (affected leaves only)     |
-     *              |  /                             |
-     *              V V                              |
-     *           statistics                          |
-     *           /    |                              |
-     *     (VB) /     |                              |
-     *         /      |                              |
-     *  /-->  V       | (affected leaves only)       |
-     * |    values    | (SR)                         |
-     *  \--<   \      |                              |
-     *          \     |                              |
-     *      (VB) \    |                             /
-     *            V   V                            /
-     *            scores -------------------------/
+     *  ===================> leaf-expansion
+     *                         | | \
+     *                        /  |  \ (new children only)
+     *                       /   |   V
+     *          (all nodes) /    |   new data <=======
+     *                     /     |  /   /
+     *                    / /----+--   /
+     *                   / /     |    /
+     *                  V V     /    /
+     *           statistics    /    /
+     *           /            /    /
+     *     (VB) /            /    /
+     *         /            /    /
+     *  /-->  V      (affected leaves only (SR))
+     * |    values        /    /
+     *  \--<   \         /    /
+     *          \       /    /
+     *      (VB) \     /    /
+     *            V   V    V
+     *              scores
      *
      * @endcode In case of new data the statistics of the affected leaf nodes
      * need to be updated. New statistics imply a change of state-action values
-     * (for value base (VB) UTree) and scores (for state-reward (SR) prediction
-     * UTree) for the affected leaf nodes. Changed values affect the scores and
-     * values of all other leaves (VB UTree only). Leaf expansion inserts new
-     * data to the new child nodes, which changes its statistics, and also
-     * modifies the transition structure (and therefore the statistics of ALL
-     * nodes). */
+     * for the affected leaf nodes, which affect the values and scores of all
+     * other leaves as well (VB UTree only). Leaf expansion inserts new data to
+     * the new child nodes, which changes its statistics, and also modifies the
+     * transition structure (and therefore the statistics of ALL nodes). */
     struct NodeInfo {
         NodeInfo(const Feature * f = nullptr, const f_ret_t& r = f_ret_t());
         instance_vector_t instance_vector;                                      ///< data
@@ -137,7 +135,6 @@ private:
 
         std::map<action_t,double> state_action_values;                          ///< Q(s,a)-function
         double max_state_action_value;                                          ///< utility / state-value
-        action_t max_value_action;                                              ///< policy
 
         std::map< std::pair<action_t,node_t>, probability_t > transition_table; ///< state transition table
         std::map< std::pair<action_t,node_t>, double > expected_reward;         ///< expected reward
