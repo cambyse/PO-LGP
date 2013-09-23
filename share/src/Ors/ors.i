@@ -456,4 +456,4 @@ void generateSequence(arr& X, arr& V, uint n) {
 %}
 
 
-// vim: ft=cpp
+// vim: ft=swig
