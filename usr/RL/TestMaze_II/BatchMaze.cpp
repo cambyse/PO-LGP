@@ -457,7 +457,7 @@ int BatchMaze::run_active() {
 	    } else {
 	      DEBUG_DEAD_LINE;
 	    }
-	    DEBUG_OUT(1,"Learning: (" << action << "," << state << "," << reward << ")");
+	    DEBUG_OUT(2,"Learning: (" << action << "," << state << "," << reward << ")");
 	  }
 	}
 
@@ -490,22 +490,12 @@ int BatchMaze::run_active() {
             crf->optimize_model(0,0,nullptr);
         } else if(mode=="UTREE_PROB") {
             utree->set_expansion_type(UTree::STATE_REWARD_EXPANSION);
-            double score_threshold = 1e-3;
-            double max_score = DBL_MAX;
-            while(max_score>score_threshold) {
-                max_score = utree->expand_leaf_node(score_threshold);
-            }
+            double score_threshold = 1e-5;
+            while(score_threshold <= utree->expand_leaf_node(score_threshold)) {}
         } else if(mode=="UTREE_VALUE") {
             utree->set_expansion_type(UTree::UTILITY_EXPANSION);
-            double score_threshold = 1e-3;
-            double max_score = DBL_MAX;
-            while(max_score>score_threshold) {
-                double max_update = DBL_MAX;
-                while(max_update>1e-10) {
-                    max_update = utree->value_iteration();
-                }
-                max_score = utree->expand_leaf_node(score_threshold);
-            }
+            double score_threshold = 1e-5;
+            while(score_threshold <= utree->expand_leaf_node(score_threshold)) {}
         } else if(mode=="LINEAR_Q") {
             for(int complx=1; complx<=switch_int("-f"); ++complx) {
                 linQ->add_candidates(1);

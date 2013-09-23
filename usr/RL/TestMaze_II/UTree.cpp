@@ -11,7 +11,7 @@
 #ifdef BATCH_MODE_QUIET
 #define DEBUG_LEVEL 0
 #else
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 2
 #endif
 #define DEBUG_STRING "UTree: "
 #include "debug.h"
@@ -319,6 +319,27 @@ double UTree::expand_leaf_node(const double& score_threshold) {
     double max_score = -DBL_MAX;
     vector<node_t> max_nodes;
     vector<Feature*> max_features;
+
+
+    //------------------------------------------------------------//
+    // TODO: This should be done automatically and more efficient
+    //------------------------------------------------------------//
+    // update statistics
+    for(node_t leaf : leaf_nodes) {
+      update_statistics(leaf);
+      node_info_map[leaf].statistics_up_to_date = true;
+    }
+    // update values
+    while(1e-10 < value_iteration()) {}
+    values_up_to_date = true;
+    // update scores
+    for(node_t leaf : leaf_nodes) {
+      for(auto featurePtr : basis_features) {
+	double score = score_leaf_node(leaf, featurePtr);
+	node_info_map[leaf].scores[featurePtr] = score;
+      }
+      node_info_map[leaf].scores_up_to_date = true;
+    }
 
     //-----------------------------------//
     // get scores for node-feature pairs //
@@ -655,10 +676,7 @@ void UTree::assert_values_up_to_date() {
             assert_statistics_up_to_date(leaf);
         }
         // update values
-        double max_update = DBL_MAX;
-        while(max_update>1e-10) {
-            max_update = value_iteration();
-        }
+        while(1e-10 < value_iteration()) {}
         values_up_to_date = true;
     }
 }
@@ -861,8 +879,8 @@ double UTree::score_leaf_node(const node_t leaf_node, const Feature* feature) co
 
 double UTree::sample_size_factor(const int& n1, const int& n2) const {
     double factor = 1;
-    if(n1<10) factor = 0;
-    if(n2<10) factor = 0;
+    if(n1<1) factor = 0;
+    if(n2<1) factor = 0;
     DEBUG_OUT(3,"    Sample size factor: n1=" << n1 << ", n2=" << n2 << ", factor=" << factor);
     return factor;
 }
