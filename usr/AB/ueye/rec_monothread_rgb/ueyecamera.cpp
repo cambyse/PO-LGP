@@ -1,18 +1,14 @@
-#include <iostream>
 #include <QCoreApplication>
 #include <cstdlib>
+#include <Core/thread.h>
 #include "ueyecamera.h"
 
-using namespace std;
-
 UEyeCamera::UEyeCamera(int w, int h, int f): width(w), height(h), fps(f) {
-  image = NULL;
+  img = NULL;
 
   recthread = NULL;
   recworker = NULL;
   recflag = false;
-
-  nrecframes = 0;
 
   curr_frame = 0;
   nskipped_frames = 0;
@@ -23,12 +19,38 @@ UEyeCamera::UEyeCamera(int w, int h, int f): width(w), height(h), fps(f) {
   init_flag = false;
   open_flag = false;
 
-  ct.cycleStart();
+  throut::throutRegHeading(this, "UEyeCamera(*): ");
+
+  //ct.cycleStart();
 }
 
 UEyeCamera::~UEyeCamera() {
-  // TODO free all resources,
   // TODO close and exit cams
+  close();
+  exit();
+
+  for(int c = 0; c < nUsedCams; c++)
+    throut::throutUnregHeading(&camID[c]);
+  throut::throutUnregHeading(this);
+
+  delete[] camID;
+  delete[] camInfo;
+
+  for(int c = 0; c < nUsedCams; c++) {
+    delete name(c);
+    delete[] imgCopy[c];
+    delete[] camBuff[c];
+    delete[] camBuffID[c];
+  }
+
+  delete[] img;
+  delete[] imgCopy;
+  delete[] imgBuffNum;
+  delete[] imgInfo;
+  delete[] captInfo;
+
+  delete[] camBuff;
+  delete[] camBuffID;
 }
 
 int UEyeCamera::getNumCameras() {
@@ -38,84 +60,119 @@ int UEyeCamera::getNumCameras() {
   if(status == IS_SUCCESS)
     return (int)numCams;
 
-  cout << "UEyeCamera::getNumCameras() An error of some sort" << endl;
+  throut::throut("UEyeCamera(*): getNumCameras() An error of some sort");
   return -1;
 }
 
 void UEyeCamera::setup(int c1) {
+  throut::throut(this, "setup(int)");
+
   if(setup_flag)
     return;
 
   nUsedCams = 1;
   setupCommon();
   camID[0] = c1;
+
+  throut::throut(this, "setup(int) done");
 }
 
 void UEyeCamera::setup(int c1, int c2) {
+  throut::throut(this, "setup(int, int)");
+
   if(setup_flag)
     return;
+
   nUsedCams = 2;
   setupCommon();
   camID[0] = c1;
   camID[1] = c2;
+
+  throut::throut(this, "setup(int, int) done");
 }
 
 void UEyeCamera::setup(int c1, int c2, int c3) {
+  throut::throut(this, "setup(int, int, int)");
+
   if(setup_flag)
     return;
+
   nUsedCams = 3;
   setupCommon();
   camID[0] = c1;
   camID[1] = c2;
   camID[2] = c3;
+
+  throut::throut(this, "setup(int, int, int) done");
 }
 
 void UEyeCamera::setup(int c1, int c2, int c3, int c4) {
+  throut::throut(this, "setup(int, int, int, int)");
+
   if(setup_flag)
     return;
+
   nUsedCams = 4;
   setupCommon();
   camID[0] = c1;
   camID[1] = c2;
   camID[2] = c3;
   camID[3] = c4;
+
+  throut::throut(this, "setup(int, int, int, int) done");
+}
+
+// TODO where to put this
+void UEyeCamera::setdown() {
 }
 
 void UEyeCamera::init() {
-  if(!setup_flag || init_flag || open_flag)
+  if(!setup_flag || init_flag || open_flag) {
+    err_flag = true;
     return;
+  }
   for(cid = 0; cid < nUsedCams; cid++)
     camInit();
   init_flag = true;
 }
 
 void UEyeCamera::open() {
-  if(!setup_flag || !init_flag || open_flag)
+  if(!setup_flag || !init_flag || open_flag) {
+    err_flag = true;
     return;
+  }
   for(cid = 0; cid < nUsedCams; cid++)
     camOpen();
   open_flag = true;
 }
 
 void UEyeCamera::close() {
-  if(!setup_flag || !init_flag || !open_flag)
-    return true;
+  if(!setup_flag || !init_flag || !open_flag) {
+    err_flag = true;
+    return;
+  }
   for(cid = 0; cid < nUsedCams; cid++)
     camClose();
   open_flag = false;
 }
 
 void UEyeCamera::exit() {
-  if(!setup_flag || !init_flag || open_flag)
+  if(!setup_flag || !init_flag || open_flag) {
+    err_flag = true;
     return;
+  }
   for(cid = 0; cid < nUsedCams; cid++)
-    camExit(i);
+    camExit();
   init_flag = false;
+
+  throut::throut("Waiting 5 seconds..");
+  MT::wait(5.);
 }
 
 void UEyeCamera::setupCommon() {
   camID = new HIDS[nUsedCams];
   camInfo = new SENSORINFO[nUsedCams];
+  name.resize(nUsedCams);
 
   img = new char*[nUsedCams];
   imgCopy = new char*[nUsedCams];
@@ -130,34 +187,42 @@ void UEyeCamera::setupCommon() {
 }
 
 void UEyeCamera::camInit() {
-  msg("camInit()");
+  throut::throut(this, "camInit()");
   InitCamera_wr();
+  if(err_flag) return;
 
-  //SetColorMode_wr(IS_CM_BGR8_PACKED);
-  SetColorMode_wr(IS_CM_UYVY_PACKED);
-  bpp = 16; // ONLY CHANGE THIS
+  throut::throutRegHeading(&camID[cid], STRING("UEyeCamera(" << cid << "): "));
+
+  name(cid) = new String(STRING("video_" << camID[cid])); // TODO free the names too
+  throut::throut(&camID[cid], STRING("- camID " << camID[cid]));
+  throut::throut(&camID[cid], STRING("- name " << *name(cid)));
+
+  SetColorMode_wr(IS_CM_BGR8_PACKED);
+  if(err_flag) return;
+  bpp = 24;
   bypp = bpp/8;
   bypimg = bypp * width * height;
 
-  //SetColorConverter_wr(IS_CM_UYVY_PACKED, IS_CONV_MODE_SOFTWARE_5X5);
-  SetColorConverter_wr(IS_CM_UYVY_PACKED, IS_CONV_MODE_SOFTWARE_3X3);
-  //SetColorConverter_wr(IS_CM_UYVY_PACKED, IS_CONV_MODE_HARDWARE_3X3);
-  //SetColorConverter_wr(IS_CM_UYVY_PACKED, IS_CONV_MODE_OPENCL_3X3);
-  //SetColorConverter_wr(IS_CM_UYVY_PACKED, IS_CONV_MODE_OPENCL_5X5);
+  //SetColorConverter_wr(IS_CM_BGR8_PACKED, IS_CONV_MODE_SOFTWARE_5X5);
+  SetColorConverter_wr(IS_CM_BGR8_PACKED, IS_CONV_MODE_SOFTWARE_3X3);
+  //SetColorConverter_wr(IS_CM_BGR8_PACKED, IS_CONV_MODE_HARDWARE_3X3);
+  //SetColorConverter_wr(IS_CM_BGR8_PACKED, IS_CONV_MODE_OPENCL_3X3);
+  //SetColorConverter_wr(IS_CM_BGR8_PACKED, IS_CONV_MODE_OPENCL_5X5);
+  if(err_flag) return;
 
   // TODO optimize using opengl
   //SetDisplayMode_wr(IS_SET_DM_DIB); // Default anyway..
 
   SetExternalTrigger_wr(IS_SET_TRIGGER_OFF);
-  //SetExternalTrigger_wr(IS_SET_TRIGGER_HI_LO);
+  if(err_flag) return;
 
   /*
   GetSensorInfo_wr();
-  msg(STRING(" - sensor ID = " << camInfo.SensorID));
-  msg(STRING(" - camera model = " << camInfo.strSensorName));
-  msg(STRING(" - max width = " << camInfo.nMaxWidth));
-  msg(STRING(" - max height = " << camInfo.nMaxHeight));
-  msg(STRING(" - pixel size = " << (float)camInfo.wPixelSize/100 << " µm"));
+  throut::throut(&camID[cid], STRING("- sensor ID = " << camInfo[cid].SensorID));
+  throut::throut(&camID[cid], STRING("- camera model = " << camInfo[cid].strSensorName));
+  throut::throut(&camID[cid], STRING("- max width = " << camInfo[cid].nMaxWidth));
+  throut::throut(&camID[cid], STRING("- max height = " << camInfo[cid].nMaxHeight));
+  throut::throut(&camID[cid], STRING("- pixel size = " << (float)camInfo[cid].wPixelSize/100 << " µm"));
   */
 
   numBuff = 9;
@@ -166,9 +231,12 @@ void UEyeCamera::camInit() {
   imgCopy[cid] = new char[bypimg];
 
   ClearSequence_wr();
+  if(err_flag) return;
   for(int i = 0; i < numBuff; i++) {
     AllocImageMem_wr(&camBuff[cid][i], &camBuffID[cid][i]);
+    if(err_flag) return;
     AddToSequence_wr(camBuff[cid][i], camBuffID[cid][i]);
+    if(err_flag) return;
   }
 
   // SEPARATION
@@ -178,69 +246,80 @@ void UEyeCamera::camInit() {
 
   // query possible values
   PixelClock_wr(IS_PIXELCLOCK_CMD_GET_RANGE, (void*)pr, sizeof(pr));
-  msg(STRING(" - pixelclock range = " << pr[0] << ":" << pr[2] << ":" << pr[1]));
+  if(err_flag) return;
+  throut::throut(&camID[cid], STRING("- pixelclock range = " << pr[0] << ":" << pr[2] << ":" << pr[1]));
 
   // set value
   pixelclock = pr[1];
   PixelClock_wr(IS_PIXELCLOCK_CMD_SET, (void*)&pixelclock, sizeof(pixelclock));
-  msg(STRING(" - set pixelclock = " << pixelclock));
+  if(err_flag) return;
+  throut::throut(&camID[cid], STRING("- set pixelclock = " << pixelclock));
 
   // check/read value
   PixelClock_wr(IS_PIXELCLOCK_CMD_GET, (void*)&pixelclock, sizeof(pixelclock));
-  msg(STRING(" - real pixelclock = " << pixelclock));
+  if(err_flag) return;
+  throut::throut(&camID[cid], STRING("- real pixelclock = " << pixelclock));
 
   SetFrameRate_wr();
-  msg(STRING(" - set fps = " << fps));
-  msg(STRING(" - real fps = " << real_fps));
+  if(err_flag) return;
+  throut::throut(&camID[cid], STRING("- set fps = " << fps));
+  throut::throut(&camID[cid], STRING("- real fps = " << real_fps));
 
   double er[3];
   memset(er, 0, 3*sizeof(double));
 
   // query possible values
   Exposure_wr(IS_EXPOSURE_CMD_GET_EXPOSURE_RANGE, (void*)er, sizeof(er));
-  msg(STRING(" - exposure range = " << er[0] << ":" << er[2] << ":" << er[1]));
+  if(err_flag) return;
+  throut::throut(&camID[cid], STRING("- exposure range = " << er[0] << ":" << er[2] << ":" << er[1]));
 
   // set value
   exposure = er[1];
   Exposure_wr(IS_EXPOSURE_CMD_SET_EXPOSURE, (void*)&exposure, sizeof(exposure));
-  msg(STRING(" - set exposure = " << exposure));
+  if(err_flag) return;
+  throut::throut(&camID[cid], STRING("- set exposure = " << exposure));
 
   // check/read value
   Exposure_wr(IS_EXPOSURE_CMD_GET_EXPOSURE, (void*)&exposure, sizeof(exposure));
-  msg(STRING(" - real exposure = " << exposure));
+  if(err_flag) return;
+  throut::throut(&camID[cid], STRING("- real exposure = " << exposure));
 }
 
 void UEyeCamera::camOpen() {
-  msg("CaptureVideo()");
-  CaptureVideo_wr(IS_DONT_WAIT);
+  throut::throut(&camID[cid], "camOpen()");
+  CaptureVideo_wr(100);//IS_WAIT); // IS_WAIT or IS_DONT_WAIT
+  if(err_flag) return;
+  InitImageQueue_wr();
+  if(err_flag) return;
 }
 
 void UEyeCamera::camClose() {
+  throut::throut(&camID[cid], "camClose()");
   if(recflag)
     stopRec();
 
+  ExitImageQueue_wr();
   StopLiveVideo_wr(IS_WAIT);
   
   ClearSequence_wr();
   for(int i = 0; i < numBuff; i++)
     FreeImageMem_wr(camBuff[cid][i], camBuffID[cid][i]);
-  delete camBuff[cid];
-  delete camBuffID[cid];
-  delete imgCopy[cid];
-
-  camExit();
 }
 
 void UEyeCamera::camExit() {
+  throut::throut(&camID[cid], "camExit()");
   ExitCamera_wr();
 }
 
 void UEyeCamera::startRec() {
+  /*
   recMutex.lock();
   if(!recflag && recworker == NULL) {
-    MT::String nowStr, nameStr;
+    MT::String nowStr, nameStr, timeStr;
     MT::getNowString(nowStr);
-    nameStr << "z." << nowStr << "." << name << ".avi";
+    nameStr << "z." << nowStr << "." << name(cid) << ".avi";
+    timeStr << "z." << nowStr << ".time.txt";
+    // TODO do something with timeStr;
     recworker = new RecWorker(nameStr, width, height, fps);
     recflag = true;
 
@@ -256,14 +335,15 @@ void UEyeCamera::startRec() {
 
     recworker->moveToThread(recthread);
     recthread->start();
-    nrecframes = 0;
   }
 
   nskipped_frames = 0;
   recMutex.unlock();
+  */
 }
 
 void UEyeCamera::stopRec() {
+  /*
   recMutex.lock();
   recflag = false;
 
@@ -272,32 +352,34 @@ void UEyeCamera::stopRec() {
   delete recworker;
   recworker = NULL;
 
-  msg(STRING("Number of skipped frames = " << nskipped_frames));
+  throut::throut(&camID[cid], STRING("Number of skipped frames = " << nskipped_frames));
 
   recMutex.unlock();
+  */
 }
 
-void UEyeCamera::grab() {
-  imageBuffNum = 0; image = NULL;
+void UEyeCamera::camGrab() { // TODO process uses cid
+  img[cid] = NULL;
+  imgBuffNum[cid] = 0;
 
-  ct.cycleDone();
-  msg(STRING("busyDt: " << ct.busyDt << " busyDtMax: " << ct.busyDtMax << " cyclDt: " << ct.cyclDt));
+  //ct.cycleDone();
+  //throut::throut(&camID[cid], STRING("busyDt: " << ct.busyDt << " busyDtMax: " << ct.busyDtMax << " cyclDt: " << ct.cyclDt));
 
   WaitForNextImage_wr();
   GetImageInfo_wr();
-    // TODO how to handle the time?
+    // TODO what to do with this timestamp
   char s[100];
   sprintf(s, "%02d-%02d-%02d--%02d-%02d-%02d-%03d",
-    imgInfo.TimestampSystem.wYear - 2000,
-    imgInfo.TimestampSystem.wMonth,
-    imgInfo.TimestampSystem.wDay,
-    imgInfo.TimestampSystem.wHour,
-    imgInfo.TimestampSystem.wMinute,
-    imgInfo.TimestampSystem.wSecond,
-    imgInfo.TimestampSystem.wMilliseconds);
-  msg(STRING(s));
+    imgInfo[cid].TimestampSystem.wYear - 2000,
+    imgInfo[cid].TimestampSystem.wMonth,
+    imgInfo[cid].TimestampSystem.wDay,
+    imgInfo[cid].TimestampSystem.wHour,
+    imgInfo[cid].TimestampSystem.wMinute,
+    imgInfo[cid].TimestampSystem.wSecond,
+    imgInfo[cid].TimestampSystem.wMilliseconds);
+  throut::throut(&camID[cid], s);
 
-  ct.cycleStart();
+  //ct.cycleStart();
 
   /*
   MT::String m << "got " << imageBuffNum;
@@ -305,63 +387,69 @@ void UEyeCamera::grab() {
     m << " instead of " << (curr_frame%numBuff+1);
     nskipped_frames++;
   }
-  msg(m);
+  throut::throut(&camID[cid], m);
   curr_frame = imageBuffNum;
   */
 
   imgMutex.lock();
-  memcpy(image_copy, image, bypimg);
+  memcpy(imgCopy[cid], img[cid], bypimg);
   imgMutex.unlock();
 
+  /*
   recMutex.lock();
   if(recflag) {
     char *p = new char[bypimg];
-    memcpy(p, image_copy, bypimg);
-    recworker->bufferFrame(p);
+    memcpy(p, imgCopy[cid], bypimg);
+    recworker[cid]->bufferFrame(p);
   }
-  nrecframes++;
   recMutex.unlock();
+  */
   
-  UnlockSeqBuf_wr(imageBuffNum, image);
+  UnlockSeqBuf_wr(imgBuffNum[cid], img[cid]);
 
   /*
   GetFramesPerSecond_wr();
   if(live_fps < 55)
-    msg(STRING("fps = " << live_fps));
+    throut::throut(&camID[cid], STRING("fps = " << live_fps));
   else
-    msg("===============");
+    throut::throut(&camID[cid], "===============");
   */
 }
 
-void UEyeCamera::getImage(char *p) {
+void UEyeCamera::queryImage(int c, char *p) {
   imgMutex.lock();
-  memcpy(p, image_copy, bypimg);
+  memcpy(p, imgCopy[c], bypimg);
   imgMutex.unlock();
 }
 
-void UEyeCamera::process() {
+bool UEyeCamera::queryError() {
+  return err_flag;
+}
+
+void UEyeCamera::camProcess() {
   emit started();
   
   quitMutex.lock();
   quit_flag = false;
   quitMutex.unlock();
 
-  InitImageQueue_wr();
   for(bool quit = false; !quit; ) {
-    grab();
+    for(cid = 0; cid < nUsedCams; cid++) // TODO is this safe? who else can access to cid?
+      camGrab();
 
     quitMutex.lock();
     quit = quit_flag;
     quitMutex.unlock();
   }
-  ExitImageQueue_wr();
+
   close();
+  exit();
 
   emit finished();
 }
 
 void UEyeCamera::quit() {
-  msg("quit()");
+  throut::throut(this, "quit()");
   quitMutex.lock();
   quit_flag = true;
   quitMutex.unlock();
@@ -369,13 +457,9 @@ void UEyeCamera::quit() {
 
 void UEyeCamera::InitCamera_wr() {
   camStatus = is_InitCamera(&camID[cid], NULL);
-  if(camStatus == IS_SUCCESS) {
-    msg(STRING("video_" << camID[cid]));
-    msg(STRING("-- camID " << camID[cid]));
-    msg(STRING("-- name " << name[cid]));
+  if(camStatus == IS_SUCCESS)
     return;
-  }
-  msg("InitCamera() failed");
+  throut::throut(&camID[cid], "InitCamera() failed");
   handleCamStatus();
 }
 
@@ -383,7 +467,7 @@ void UEyeCamera::SetColorMode_wr(INT mode) {
   camStatus = is_SetColorMode(camID[cid], mode);
   if(camStatus == IS_SUCCESS)
     return;
-  msg("SetColorMode() failed");
+  throut::throut(&camID[cid], "SetColorMode() failed");
   handleCamStatus();
 }
 
@@ -391,7 +475,7 @@ void UEyeCamera::SetColorConverter_wr(INT ColorMode, INT ConvertMode) {
   camStatus = is_SetColorConverter(camID[cid], ColorMode, ConvertMode);
   if(camStatus == IS_SUCCESS)
     return;
-  msg("SetColorConverter() failed");
+  throut::throut(&camID[cid], "SetColorConverter() failed");
   handleCamStatus();
 }
 
@@ -399,7 +483,7 @@ void UEyeCamera::SetDisplayMode_wr(INT Mode) {
   camStatus = is_SetDisplayMode(camID[cid], Mode);
   if(camStatus == IS_SUCCESS)
     return;
-  msg("SetDisplayMode() failed");
+  throut::throut(&camID[cid], "SetDisplayMode() failed");
   handleCamStatus();
 }
 
@@ -407,15 +491,15 @@ void UEyeCamera::SetExternalTrigger_wr(INT nTriggerMode) {
   camStatus = is_SetExternalTrigger(camID[cid], nTriggerMode);
   if(camStatus == IS_SUCCESS)
     return;
-  msg("SetExternalTrigger() failed");
+  throut::throut(&camID[cid], "SetExternalTrigger() failed");
   handleCamStatus();
 }
 
 void UEyeCamera::GetSensorInfo_wr() {
-  camStatus = is_GetSensorInfo(camID[cid], &camInfo);
+  camStatus = is_GetSensorInfo(camID[cid], &camInfo[cid]);
   if(camStatus == IS_SUCCESS)
     return;
-  msg("GetSensorInfo() failed");
+  throut::throut(&camID[cid], "GetSensorInfo() failed");
   handleCamStatus();
 }
 
@@ -423,7 +507,7 @@ void UEyeCamera::AllocImageMem_wr(char **buff, INT *buffID) {
   camStatus = is_AllocImageMem(camID[cid], width, height, bpp, buff, buffID);
   if(camStatus == IS_SUCCESS)
     return;
-  msg("AllocImageMem() failed");
+  throut::throut(&camID[cid], "AllocImageMem() failed");
   handleCamStatus();
 }
 
@@ -431,7 +515,7 @@ void UEyeCamera::FreeImageMem_wr(char *buff, INT buffID) {
   camStatus = is_FreeImageMem(camID[cid], buff, buffID);
   if(camStatus == IS_SUCCESS)
     return;
-  msg("FreeImageMem() failed");
+  throut::throut(&camID[cid], "FreeImageMem() failed");
   handleCamStatus();
 }
 
@@ -439,7 +523,7 @@ void UEyeCamera::ClearSequence_wr() {
   camStatus = is_ClearSequence(camID[cid]);
   if(camStatus == IS_SUCCESS)
     return;
-  msg("ClearSequence() failed");
+  throut::throut(&camID[cid], "ClearSequence() failed");
   handleCamStatus();
 }
 
@@ -447,7 +531,7 @@ void UEyeCamera::AddToSequence_wr(char *buff, INT buffID) {
   camStatus = is_AddToSequence(camID[cid], buff, buffID);
   if(camStatus == IS_SUCCESS)
     return;
-  msg("AddToSequence() failed");
+  throut::throut(&camID[cid], "AddToSequence() failed");
   handleCamStatus();
 }
 
@@ -455,7 +539,7 @@ void UEyeCamera::PixelClock_wr(UINT nCommand, void *pParam, UINT cbSizeOfParam) 
   camStatus = is_PixelClock(camID[cid], nCommand, pParam, cbSizeOfParam);
   if(camStatus == IS_SUCCESS)
     return;
-  msg("PixelClock() failed");
+  throut::throut(&camID[cid], "PixelClock() failed");
   handleCamStatus();
 }
 
@@ -463,7 +547,7 @@ void UEyeCamera::SetFrameRate_wr() {
   camStatus = is_SetFrameRate(camID[cid], fps, &real_fps);
   if(camStatus == IS_SUCCESS)
     return;
-  msg("SetFrameRate() failed");
+  throut::throut(&camID[cid], "SetFrameRate() failed");
   handleCamStatus();
 }
 
@@ -471,7 +555,7 @@ void UEyeCamera::Exposure_wr(UINT nCommand, void *pParam, UINT cbSizeOfParam) {
   camStatus = is_Exposure(camID[cid], nCommand, pParam, cbSizeOfParam);
   if(camStatus == IS_SUCCESS)
     return;
-  msg("Exposure() failed");
+  throut::throut(&camID[cid], "Exposure() failed");
   handleCamStatus();
 }
 
@@ -479,7 +563,7 @@ void UEyeCamera::CaptureVideo_wr(INT wait) {
   camStatus = is_CaptureVideo(camID[cid], wait);
   if(camStatus == IS_SUCCESS)
     return;
-  msg("CaptureVideo() failed");
+  throut::throut(&camID[cid], "CaptureVideo() failed");
   handleCamStatus();
 }
 
@@ -487,7 +571,7 @@ void UEyeCamera::InitImageQueue_wr() {
   camStatus = is_InitImageQueue(camID[cid], 0);
   if(camStatus == IS_SUCCESS)
     return;
-  msg("InitImageQueue() failed");
+  throut::throut(&camID[cid], "InitImageQueue() failed");
   handleCamStatus();
 }
 
@@ -495,12 +579,12 @@ void UEyeCamera::ExitImageQueue_wr() {
   camStatus = is_ExitImageQueue(camID[cid]);
   if(camStatus == IS_SUCCESS)
     return;
-  msg("ExitImageQueue() failed");
+  throut::throut(&camID[cid], "ExitImageQueue() failed");
   handleCamStatus();
 }
 
 void UEyeCamera::WaitForNextImage_wr() {
-  camStatus = is_WaitForNextImage(camID[cid], 1<<31, &image, &imageBuffNum);
+  camStatus = is_WaitForNextImage(camID[cid], 1<<31, &img[cid], &imgBuffNum[cid]);
   switch(camStatus) {
     case IS_CAPTURE_STATUS:
       CaptureStatus_wr(IS_CAPTURE_STATUS_INFO_CMD_GET);
@@ -510,23 +594,23 @@ void UEyeCamera::WaitForNextImage_wr() {
     case IS_SUCCESS:
       return;
   }
-  msg("WaitForNextImage() failed");
+  throut::throut(&camID[cid], "WaitForNextImage() failed");
   handleCamStatus();
 }
 
 void UEyeCamera::CaptureStatus_wr(UINT nCommand) {
-  camStatus = is_CaptureStatus(camID[cid], nCommand, (void*)&captInfo, sizeof(captInfo));
+  camStatus = is_CaptureStatus(camID[cid], nCommand, (void*)&captInfo[cid], sizeof(captInfo[cid]));
   if(camStatus == IS_SUCCESS)
     return;
-  msg("CaptureStatus() failed");
+  throut::throut(&camID[cid], "CaptureStatus() failed");
   handleCamStatus();
 }
 
 void UEyeCamera::GetImageInfo_wr() {
-  camStatus = is_GetImageInfo(camID[cid], imageBuffNum, &imgInfo, sizeof(imgInfo));
+  camStatus = is_GetImageInfo(camID[cid], imgBuffNum[cid], &imgInfo[cid], sizeof(imgInfo[cid]));
   if(camStatus == IS_SUCCESS)
     return;
-  msg("GetImageInfo() failed");
+  throut::throut(&camID[cid], "GetImageInfo() failed");
   handleCamStatus();
 }
 
@@ -534,7 +618,7 @@ void UEyeCamera::UnlockSeqBuf_wr(INT buffID, char *buff) {
   camStatus = is_UnlockSeqBuf(camID[cid], buffID, buff);
   if(camStatus == IS_SUCCESS)
     return;
-  msg("UnlockSeqBuf() failed");
+  throut::throut(&camID[cid], "UnlockSeqBuf() failed");
   handleCamStatus();
 }
 
@@ -542,7 +626,7 @@ void UEyeCamera::GetFramesPerSecond_wr() {
   camStatus = is_GetFramesPerSecond(camID[cid], &live_fps);
   if(camStatus == IS_SUCCESS)
     return;
-  msg("GetFramesPerSecond() failed");
+  throut::throut(&camID[cid], "GetFramesPerSecond() failed");
   handleCamStatus();
 }
 
@@ -550,15 +634,15 @@ void UEyeCamera::StopLiveVideo_wr(INT wait) {
   camStatus = is_StopLiveVideo(camID[cid], wait);
   if(camStatus == IS_SUCCESS)
     return;
-  msg("StopLiveVideo() failed");
+  throut::throut(&camID[cid], "StopLiveVideo() failed");
   handleCamStatus();
 }
 
 void UEyeCamera::ExitCamera_wr() {
   camStatus = is_ExitCamera(camID[cid]);
   if(camStatus == IS_SUCCESS)
-    return
-  msg("ExitCamera() failed");
+    return;
+  throut::throut(&camID[cid], "ExitCamera() failed");
   handleCamStatus();
 }
 
@@ -566,14 +650,14 @@ void UEyeCamera::GetError_wr() {
   IS_CHAR *m;
   camStatus = is_GetError(camID[cid], &camStatus, &m);
   if(camStatus == IS_SUCCESS) {
-    msg((const char *)m);
+    throut::throut(&camID[cid], (const char *)m);
     return;
   }
-  msg("GetError() failed");
+  throut::throut(&camID[cid], "GetError() failed");
   handleCamStatus();
 }
 
-#define _UEYE_ERRCASE(XXX) case XXX: msg(#XXX); break;
+#define _UEYE_ERRCASE(X) case X: throut::throut(&camID[cid], #X); break;
 
 void UEyeCamera::handleCamStatus() {
   switch(camStatus) {
@@ -629,18 +713,18 @@ void UEyeCamera::handleCamStatus() {
     _UEYE_ERRCASE(IS_TIMED_OUT)
     _UEYE_ERRCASE(IS_TRIGGER_ACTIVATED)
     default:
-      msg(NULL);
+      throut::throut(&camID[cid], "error - unhandled camStatus");
   }
   // TODO fix.. QCore loop not started yet, so quitting doesn't work.
   err_flag = true;
   QCoreApplication::quit();
 }
 
-#define _UEYE_ERRIF(XXX) if(captInfo.adwCapStatusCnt_Detail[XXX]) \
-  msg(STRING("CaptureStatus: " << captInfo.adwCapStatusCnt_Detail[XXX] << " of " << #XXX));
+#define _UEYE_ERRIF(X) if(captInfo[cid].adwCapStatusCnt_Detail[X]) \
+  throut::throut(&camID[cid], STRING("CaptureStatus: " << captInfo[cid].adwCapStatusCnt_Detail[X] << " of " << #X));
 
 void UEyeCamera::handleCaptStatus() {
-  msg(STRING("CaptureStatus: " << captInfo.dwCapStatusCnt_Total << " elements"));
+  throut::throut(&camID[cid], STRING("CaptureStatus: " << captInfo[cid].dwCapStatusCnt_Total << " elements"));
   _UEYE_ERRIF(IS_CAP_STATUS_API_NO_DEST_MEM)
   _UEYE_ERRIF(IS_CAP_STATUS_API_CONVERSION_FAILED)
   _UEYE_ERRIF(IS_CAP_STATUS_API_IMAGE_LOCKED)
@@ -650,22 +734,6 @@ void UEyeCamera::handleCaptStatus() {
   _UEYE_ERRIF(IS_CAP_STATUS_DEV_TIMEOUT)
   _UEYE_ERRIF(IS_CAP_STATUS_ETH_BUFFER_OVERRUN)
   _UEYE_ERRIF(IS_CAP_STATUS_ETH_MISSED_IMAGES)
-}
-
-void UEyeCamera::msg(const char *m) {
-  if(m == NULL) {
-    msg("no message");
-    return;
-  }
-  cout << "UEyeCamera(" << camID[cid] << ") - " << m << endl;
-}
-
-void UEyeCamera::msg(const MT::String &m) {
-  if(m.N == 0) {
-    msg("no message");
-    return;
-  }
-  cout << "UEyeCamera(" << camID[cid] << ") - " << m << endl;
 }
 
 int UEyeCamera::getWidth() {
@@ -678,10 +746,6 @@ int UEyeCamera::getHeight() {
 
 int UEyeCamera::getFPS() {
   return fps;
-}
-
-MT::String UEyeCamera::getName() {
-  return name;
 }
 
 bool UEyeCamera::getErrFlag() {
