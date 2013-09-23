@@ -221,7 +221,7 @@ struct Joint {
   std::string __str__() {
     std::ostringstream oss(std::ostringstream::out);
     oss<<(*$self);
-    return oss.str(); 
+    return oss.str();
   }
 } // end of %extend
 
