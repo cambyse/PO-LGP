@@ -11,7 +11,7 @@
 #ifdef BATCH_MODE_QUIET
 #define DEBUG_LEVEL 0
 #else
-#define DEBUG_LEVEL 2
+#define DEBUG_LEVEL 1
 #endif
 #define DEBUG_STRING "UTree: "
 #include "debug.h"
@@ -52,7 +52,7 @@ UTree::UTree(const double& d):
     //----------------------------------------//
 
     // delayed action, state, and reward features
-    for(int k_idx = 1; k_idx>=(int)-Config::k; --k_idx) {
+    for(int k_idx = -1; k_idx>=(int)-Config::k; --k_idx) {
         // actions
         for(action_t action : actionIt_t::all) {
             ActionFeature * action_feature = ActionFeature::create(action,k_idx);
@@ -202,7 +202,7 @@ void UTree::print_tree() {
                         DEBUG_OUT(0,"            Parent value: " << pVal );
                         DEBUG_OUT(0,"            Instances   : " << insVec.size() );
 
-                if(DEBUG_LEVEL>=2) {
+                if(DEBUG_LEVEL>=3) {
                     for(idx_t ins_idx=0; ins_idx<(idx_t)insVec.size(); ++ins_idx) {
                         DEBUG_OUT(0,"                          " << *(insVec[ins_idx]) );
                     }
@@ -396,7 +396,7 @@ double UTree::expand_leaf_node(const double& score_threshold) {
         DEBUG_OUT(3,"    " << *insIt );
     }
 
-    DEBUG_OUT(1,"    DONE (" << max_score << ")");
+    DEBUG_OUT(1,"    Expansion DONE (" << max_score << ")");
 
     return max_score;
 }
@@ -872,6 +872,8 @@ double UTree::score_leaf_node(const node_t leaf_node, const Feature* feature) co
             DEBUG_DEAD_LINE;
         }
     }
+
+    DEBUG_OUT(2,"    Scoring DONE (" << score << ")");
 
     return score;
 
