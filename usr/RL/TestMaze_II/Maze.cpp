@@ -839,23 +839,32 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
     return prob;
 }
 
-void Maze::get_features(std::vector<Feature*> & basis_features, const char* type) const {
+void Maze::get_features(std::vector<Feature*> & basis_features, LEARNER_TYPE type) const {
     for(int k_idx = 0; k_idx>=-(int)Config::k; --k_idx) {
-        if(type=="CRF" || (type=="UTree"&&k_idx>-(int)Config::k) || type=="LinQ") {
+        if((type==CRF_LEARNER) ||
+           (type==UTREE_VALUE_LEARNER && k_idx>-(int)Config::k) ||
+           (type==UTREE_STATE_REWARD_LEARNER && k_idx>-(int)Config::k) ||
+           (type==LINEAR_Q_LEARNER)) {
             // actions
             for(action_t action : actionIt_t::all) {
                 ActionFeature * action_feature = ActionFeature::create(action,k_idx);
                 basis_features.push_back(action_feature);
             }
         }
-        if(type=="CRF" || (type=="UTree"&&k_idx>-(int)Config::k) || (type=="LinQ"&&k_idx<0)) {
+        if((type==CRF_LEARNER) ||
+           (type==UTREE_VALUE_LEARNER && k_idx>-(int)Config::k) ||
+           (type==UTREE_STATE_REWARD_LEARNER && k_idx>-(int)Config::k) ||
+           (type==LINEAR_Q_LEARNER && k_idx<0)) {
             // states
             for(state_t state : stateIt_t::all) {
                 StateFeature * state_feature = StateFeature::create(state,k_idx);
                 basis_features.push_back(state_feature);
             }
         }
-        if((type=="CRF"&&k_idx==0) || (type=="UTree"&&k_idx>-(int)Config::k) || (type=="LinQ"&&false)) {
+        if((type==CRF_LEARNER && k_idx==0) ||
+           (type==UTREE_VALUE_LEARNER && k_idx>-(int)Config::k) ||
+           (type==UTREE_STATE_REWARD_LEARNER && k_idx>-(int)Config::k) ||
+           (type==LINEAR_Q_LEARNER && false)) {
             // reward
             for(reward_t reward : rewardIt_t::all) {
                 RewardFeature * reward_feature = RewardFeature::create(reward,k_idx);
@@ -864,7 +873,7 @@ void Maze::get_features(std::vector<Feature*> & basis_features, const char* type
         }
     }
 
-    if(type=="CRF") {
+    if(type==CRF_LEARNER) {
         // relative state features
         RelativeStateFeature * relative_state_feature;
         relative_state_feature = RelativeStateFeature::create(1,0,-1,0);
@@ -878,7 +887,7 @@ void Maze::get_features(std::vector<Feature*> & basis_features, const char* type
         relative_state_feature = RelativeStateFeature::create(0,0,-1,0);
         basis_features.push_back(relative_state_feature);
     }
-    if(type=="LinQ") {
+    if(type==LINEAR_Q_LEARNER) {
         // also add a unit feature
         ConstFeature * const_feature = ConstFeature::create(1);
         basis_features.push_back(const_feature);

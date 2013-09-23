@@ -24,6 +24,11 @@ public:
     typedef std::tuple<double,double,double> color_t;
     typedef std::vector<color_t>             color_vector_t;
     enum COLOR_IDX { COLOR_R, COLOR_G, COLOR_B };
+    enum LEARNER_TYPE {CRF_LEARNER,
+                       UTREE_VALUE_LEARNER,
+                       UTREE_STATE_REWARD_LEARNER,
+                       LINEAR_Q_LEARNER
+    };
 
     Maze(const double& eps = 0);
     virtual ~Maze();
@@ -77,7 +82,7 @@ public:
      * punishments (for not collecting an activated reward). */
     probability_t get_prediction(const instance_t*, const action_t&, const state_t&, const reward_t&, std::vector<std::pair<int,int> > * reward_vector) const;
 
-    void get_features(std::vector<Feature*> & basis_features, const char* type) const;
+    void get_features(std::vector<Feature*> & basis_features, LEARNER_TYPE type) const;
 
     /** \brief Validates a model by performing random transitions and comparing
      * the result to the model predicitons. */
