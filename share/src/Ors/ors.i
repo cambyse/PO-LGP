@@ -282,7 +282,6 @@ struct Proxy {
 //===========================================================================
 struct Graph {
   //!@name data fields
-  uint sd, jd, td;
   MT::Array<Body*>  bodies;
   MT::Array<Joint*> joints;
   MT::Array<Shape*> shapes;
@@ -382,10 +381,8 @@ def setJointStateList(self, jointState):
   bool checkUniqueNames() const;
 
   Body *getBodyByName(const char* name) const;
-  uint getBodyIndexByName(const char* name) const;
 
   Shape *getShapeByName(const char* name) const;
-  uint getShapeIndexByName(const char* name) const;
 
   Joint *getJointByBodyNames(const char* from, const char* to) const;
   void prefixNames();
