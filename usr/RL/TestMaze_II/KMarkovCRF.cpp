@@ -149,7 +149,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
 
     idx_t feature_n = active_features.size();
     if(feature_n!=n) {
-        DEBUG_OUT(0,"Error: number of features is different from number of parameters but no parameter bining allowed");
+        DEBUG_OUT(0,"Error: number of features is different from number of parameters but no parameter binding allowed");
     }
 
     // iterate through data
@@ -356,7 +356,7 @@ int KMarkovCRF::optimize_model(lbfgsfloatval_t l1,
                                double beta) {
 
     // Check size of parameter vector //
-    check_lambda_size();
+    check_lambda_size(lambda,active_features,old_active_features_size);
 
     // Initialize the parameters for the L-BFGS optimization.
     lbfgs_parameter_t param;
@@ -384,6 +384,326 @@ int KMarkovCRF::optimize_model(lbfgsfloatval_t l1,
     // Start the L-BFGS optimization
     lbfgsfloatval_t fx;
     int ret = lbfgs(active_features.size(), lambda, &fx, static_evaluate_model, static_progress_model, this, &param);
+
+    // Report the result.
+    DEBUG_OUT(1, "L-BFGS optimization terminated with status code = " << ret << " ( " << lbfgs_code(ret) << " )");
+    DEBUG_OUT(1,"mean likelihood = " << exp(-fx) );
+    // for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
+    //     DEBUG_OUT(1, "    " <<
+    //             active_features[f_idx].identifier() <<
+    //             " --> t[" <<
+    //             f_idx << "] = " <<
+    //             lambda[f_idx]);
+    // }
+    // DEBUG_OUT(1, "L-BFGS optimization terminated with status code = " << ret << " ( " << lbfgs_code(ret) << " )");
+    // DEBUG_OUT(1,"mean likelihood = " << exp(-fx) );
+    DEBUG_OUT(1,"");
+
+    if(mean_likelihood!=nullptr) {
+        *mean_likelihood = exp(-fx);
+    }
+
+    return ret;
+}
+
+lbfgsfloatval_t KMarkovCRF::static_evaluate_candidates(
+        void *instance,
+        const lbfgsfloatval_t *x,
+        lbfgsfloatval_t *g,
+        const int n,
+        const lbfgsfloatval_t /*step*/
+) {
+    return ((KMarkovCRF*)instance)->evaluate_candidates(x,g,n);
+}
+
+lbfgsfloatval_t KMarkovCRF::evaluate_candidates(
+        const lbfgsfloatval_t *x,
+        lbfgsfloatval_t *g,
+        const int n
+) {
+
+    lbfgsfloatval_t fx = 0;
+    for(int i=0; i<n; i++) {
+        g[i] = 0;
+    }
+
+    // Print parameter vector //
+    if(DEBUG_LEVEL>=2) {
+        DEBUG_OUT(2, "Parameter vector:");
+        for(uint f_idx=0; f_idx<candidate_features.size(); ++f_idx) {
+            DEBUG_OUT(2, "    t[" << f_idx << "] = " << x[f_idx] );
+        }
+    }
+
+    //--------------------------------------//
+    // Compute data likelihood and gradient //
+    //--------------------------------------//
+
+    // precompute feature value if not already done
+    switch(precomputation_type) {
+    case NONE:
+        // Nothing to do
+        break;
+    case COMPOUND_LOOK_UP:
+        if(!feature_values_precomputed) {
+            precompute_compound_feature_values();
+            feature_values_precomputed = true;
+        }
+        break;
+    case BASE_LOOK_UP:
+        if(!feature_values_precomputed) {
+            precompute_base_feature_values();
+            feature_values_precomputed = true;
+        }
+        break;
+    default:
+        DEBUG_DEAD_LINE;
+    }
+
+    // number of features
+    idx_t active_n = active_features.size();
+    idx_t candidate_n = candidate_features.size();
+    if(candidate_n!=n) {
+        DEBUG_OUT(0,"Error: number of candidate features is different from number of parameters but no parameter binding allowed");
+    }
+
+    // reset scores
+    candidate_feature_scores.assign(candidate_n,0);
+
+    // iterate through data
+    if(DEBUG_LEVEL>0) {
+        ProgressBar::init("Evaluating: ");
+    }
+    vector<double> candidate_sumFNN;    // sumF(x(n),y(n)) for each candidate
+    vector<double> candidate_sumExpN;   // normalization Z(x) for each candidate
+    vector<double> candidate_sumFExpNF; // sumFExp(x(n),F) for each candidate
+    idx_t instance_idx = 0;
+    ignored_data = 0;
+    for(instance_t * current_episode : instance_data) {
+        for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
+
+            // last action is not changed while iterating through states and rewards
+            action_t action = insIt->action;
+
+            // print progress information
+            if(DEBUG_LEVEL>0) {
+                ProgressBar::print(instance_idx, number_of_data_points);
+            }
+
+            // store evaluations for this instance in array (for speed up)
+            /* vector<f_ret_t> active_instance_evaluations(active_n,0); */
+            vector<f_ret_t> candidate_instance_evaluations(candidate_n,0);
+            /* vector<vector<f_ret_t> > active_state_reward_evaluations(active_n,vector<f_ret_t>(state_t::state_n*reward_t::reward_n,0)); */
+            /* vector<vector<f_ret_t> > candidate_state_reward_evaluations(candidate_n,vector<f_ret_t>(state_t::state_n*reward_t::reward_n,0)); */
+
+            //-------------------------------//
+            // calculate the different terms //
+            //-------------------------------//
+
+            // calculate sumF(x(n),y(n))
+            double active_sumFNN = 0;
+            for(uint f_idx=0; f_idx<active_n; ++f_idx) { // sum over active features
+                // compute and store
+                f_ret_t f_ret;
+                switch(precomputation_type) {
+                case NONE:
+                    f_ret = active_features[f_idx].evaluate(insIt-1, insIt->action, insIt->state, insIt->reward);
+                    break;
+                case COMPOUND_LOOK_UP:
+                {
+                    idx_t pre_idx = precomputed_feature_idx(instance_idx,f_idx,active_n);
+                    f_ret = compound_feature_values[pre_idx];
+                    break;
+                }
+                case BASE_LOOK_UP:
+                    f_ret = active_features[f_idx].evaluate(base_feature_values[instance_idx][base_feature_indices[instance_idx]]);
+                    break;
+                default:
+                    DEBUG_DEAD_LINE;
+                }
+                /* active_instance_evaluations[f_idx] = f_ret; */
+                active_sumFNN += lambda[f_idx]*f_ret;
+            }
+            candidate_sumFNN.assign(n,active_sumFNN); // initialize with commond terms in sum
+            for(uint f_idx=0; f_idx<candidate_n; ++f_idx) { // sum over candidate features
+                // compute and store
+                f_ret_t f_ret;
+                switch(precomputation_type) {
+                case NONE:
+                case COMPOUND_LOOK_UP:
+                    f_ret = candidate_features[f_idx].evaluate(insIt-1, insIt->action, insIt->state, insIt->reward);
+                    break;
+                case BASE_LOOK_UP:
+                    f_ret = candidate_features[f_idx].evaluate(base_feature_values[instance_idx][base_feature_indices[instance_idx]]);
+                    break;
+                default:
+                    DEBUG_DEAD_LINE;
+                }
+                candidate_instance_evaluations[f_idx] = f_ret;
+                candidate_sumFNN[f_idx] += x[f_idx]*f_ret; // add individual terms for candidates
+            }
+
+            // calculate sumExp(x(n)) and sumFExp(x(n),F)
+            candidate_sumExpN.assign(n,0.0);
+            candidate_sumFExpNF.assign(n,0.0);
+            idx_t state_reward_idx=0;
+            for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {
+                for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
+
+                    // calculate sumF(x(n),y')
+                    double active_sumFN = 0; // common terms for all candidate features
+                    for(uint f_idx=0; f_idx<active_n; ++f_idx) { // sum over features
+                        // compute and store
+                        f_ret_t f_ret;
+                        switch(precomputation_type) {
+                        case NONE:
+                            f_ret = active_features[f_idx].evaluate(insIt-1,action,state,reward);
+                            break;
+                        case COMPOUND_LOOK_UP:
+                        {
+                            idx_t pre_idx = precomputed_feature_idx(instance_idx,f_idx,active_n,state,reward);
+                            f_ret = compound_feature_values[pre_idx];
+                            break;
+                        }
+                        case BASE_LOOK_UP:
+                            f_ret = active_features[f_idx].evaluate(base_feature_values[instance_idx][state_reward_idx]);
+                            break;
+                        default:
+                            DEBUG_DEAD_LINE;
+                        }
+                        /* active_state_reward_evaluations[f_idx][state_reward_idx] = f_ret; */
+                        active_sumFN += lambda[f_idx]*f_ret;
+                    }
+                    vector<double> candidate_sumFN(candidate_n,active_sumFN); // individual terms for candidate features
+                    for(uint f_idx=0; f_idx<candidate_n; ++f_idx) { // sum over features
+                        // compute and store
+                        f_ret_t f_ret;
+                        switch(precomputation_type) {
+                        case NONE:
+                        case COMPOUND_LOOK_UP:
+                            f_ret = candidate_features[f_idx].evaluate(insIt-1,action,state,reward);
+                            break;
+                        case BASE_LOOK_UP:
+                            f_ret = candidate_features[f_idx].evaluate(base_feature_values[instance_idx][state_reward_idx]);
+                            break;
+                        default:
+                            DEBUG_DEAD_LINE;
+                        }
+                        /* candidate_state_reward_evaluations[f_idx][state_reward_idx] = f_ret; */
+                        candidate_sumFN[f_idx] += x[f_idx]*f_ret;                            // increment sumF(x(n),y')
+                        candidate_sumExpN[f_idx] += exp( candidate_sumFN[f_idx] );           // increment sumExp(x(n))
+                        candidate_sumFExpNF[f_idx] += f_ret * exp( candidate_sumFN[f_idx] ); // increment sumFExp(x(n),F)
+                    }
+
+                    // increment state-reward index
+                    ++state_reward_idx;
+                }
+            }
+
+            //----------------------------------//
+            // increment objective and gradient //
+            //----------------------------------//
+
+            // objective is sum over candidate features
+            for(uint f_idx=0; f_idx<candidate_n; ++f_idx) { // sum over features
+                // log-probability for this datum
+                double log_prob = candidate_sumFNN[f_idx] - log( candidate_sumExpN[f_idx] );
+
+                // increment fx (objective)
+                fx += log_prob;
+
+                // increment score
+                candidate_feature_scores[f_idx] += exp( log_prob );
+
+                // increment gradient
+                g[f_idx] -= candidate_sumFExpNF[f_idx]/candidate_sumExpN[f_idx];
+
+                // in case of parameter binding additionally sum over all features belonging to this parameter
+                g[f_idx] += candidate_instance_evaluations[f_idx];
+            }
+        }
+    }
+
+    // terminate progress bar
+    if(DEBUG_LEVEL>0) {
+        ProgressBar::terminate();
+    }
+
+    // use NEGATIVE log likelihood (blfgs minimizes the objective)
+    // use mean value per data point
+    fx *= -1./number_of_data_points;
+    for(int i=0; i<n; i++) {
+        g[i] *= -1./number_of_data_points;
+    }
+
+    return fx;
+}
+
+int KMarkovCRF::static_progress_candidates(
+        void *instance,
+        const lbfgsfloatval_t *x,
+        const lbfgsfloatval_t *g,
+        const lbfgsfloatval_t fx,
+        const lbfgsfloatval_t xnorm,
+        const lbfgsfloatval_t gnorm,
+        const lbfgsfloatval_t step,
+        int n,
+        int k,
+        int ls
+) {
+    return ((KMarkovCRF*)instance)->progress_candidates(x,g,fx,xnorm,gnorm,step,n,k,ls);
+}
+
+int KMarkovCRF::progress_candidates(
+        const lbfgsfloatval_t *x,
+        const lbfgsfloatval_t * /*g*/,
+        const lbfgsfloatval_t fx,
+        const lbfgsfloatval_t xnorm,
+        const lbfgsfloatval_t /*gnorm*/,
+        const lbfgsfloatval_t /*step*/,
+        int /*n*/,
+        int k,
+        int /*ls*/
+) {
+    DEBUG_OUT(1,"Iteration " << k << " (fx = " << fx << ", xnorm = " << xnorm << ", p = " << exp(-fx) << "):");
+    for(uint f_idx=0; f_idx<candidate_features.size(); ++f_idx) {
+        DEBUG_OUT(1, "    " <<
+                candidate_features[f_idx].identifier() <<
+                " --> t[" <<
+                f_idx << "] = " <<
+                x[f_idx]);
+    }
+    DEBUG_OUT(1,"Iteration " << k << " (fx = " << fx << ", xnorm = " << xnorm << ", p = " << exp(-fx) << "):");
+    DEBUG_OUT(1,"    Ignored " << ignored_data << " out of " << number_of_data_points << " data points");
+    DEBUG_OUT(1,"");
+
+    return 0;
+}
+
+int KMarkovCRF::optimize_candidates(lbfgsfloatval_t l1,
+                                    unsigned int max_iter,
+                                    lbfgsfloatval_t * mean_likelihood) {
+
+    // Check size of parameter vector
+    lbfgs_free(lambda_candidates);
+    lambda_candidates = lbfgs_malloc(candidate_features.size());
+
+    // Initialize the parameters for the L-BFGS optimization.
+    lbfgs_parameter_t param;
+    lbfgs_parameter_init(&param);
+    param.orthantwise_c = l1;
+    param.linesearch = LBFGS_LINESEARCH_BACKTRACKING;
+    if(max_iter>0) {
+        param.max_iterations = max_iter;
+    }
+
+    // todo what values
+    param.delta = 1e-5;   // change of objective (f-f')/f (default 0)
+    param.epsilon = 1e-5; // change of parameters ||g||/max(1,||x||) (default 1e-5)
+
+    // Start the L-BFGS optimization
+    lbfgsfloatval_t fx;
+    int ret = lbfgs(candidate_features.size(), lambda_candidates, &fx, static_evaluate_candidates, static_progress_candidates, this, &param);
 
     // Report the result.
     DEBUG_OUT(1, "L-BFGS optimization terminated with status code = " << ret << " ( " << lbfgs_code(ret) << " )");
@@ -531,7 +851,6 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
         }
     }
 
-
     double sumFN; // sumF(x(n),y') is independent of candidate features since they have zero coefficient (no parameter binding!)
     double sumExpN; // normalization Z(x) is independent of candidate features since sumF(x(n),y') is independent
     vector<double> sumFExpNF(cf_size,0.0); // sumFExp(x(n),F) for all candidate features F
@@ -592,56 +911,37 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
     }
 
     candidate_features_sorted = false;
+    sort_scored_features(false);
 
     DEBUG_OUT(1, "DONE");
 }
 
-void KMarkovCRF::sort_scored_features(bool divide_by_complexity) {
+void KMarkovCRF::score_candidates_by_1D_optimization(const int& n) {
+    DEBUG_OUT(1, "Scoring features by 1D optimization...");
 
-    if(divide_by_complexity) {
-        DEBUG_OUT(1, "Sorting scored features (considering complexity)...");
-    } else {
-        DEBUG_OUT(1, "Sorting scored features (NOT considering complexity)...");
+    //------------------//
+    //  Check for Data  //
+    //------------------//
+
+    if(number_of_data_points<=0) {
+        DEBUG_OUT(0,"Not enough data to score features (" << number_of_data_points << ").");
+        return;
     }
 
-    // number of candidate features;
-    int n = candidate_features.size();
+    //--------------------//
+    // Construct Features //
+    //--------------------//
+    construct_candidate_features(n);
 
-    // sort indices by score
-    list<pair<double,int> > scored_indices;
-    for(int cf_idx=0; cf_idx<n; ++cf_idx) {
-        if(divide_by_complexity) {
-            scored_indices.push_back(make_pair(candidate_feature_scores[cf_idx]/candidate_features[cf_idx].get_complexity(),cf_idx));
-        } else {
-            scored_indices.push_back(make_pair(candidate_feature_scores[cf_idx],cf_idx));
-        }
-    }
-    scored_indices.sort();
+    //------------------------------------//
+    // 1D optimization for all candidates //
+    //------------------------------------//
+    optimize_candidates(0, 0,nullptr);
 
-    // construct new feature and score lists
-    vector<AndFeature> new_candidate_features(n);
-    vector<double> new_candidate_feature_scores(n);
-    int new_idx = 0;
-    DEBUG_OUT(1, "Feature Scores:")
-    for(list<pair<double,int> >::iterator it = scored_indices.begin(); it!=scored_indices.end(); ++it) {
-        int old_idx = it->second;
-        new_candidate_features[new_idx]       = candidate_features[old_idx];
-        new_candidate_feature_scores[new_idx] = candidate_feature_scores[old_idx];
-        if(divide_by_complexity) {
-            DEBUG_OUT(1, "    " << QString("%1 (%2) <-- ").arg(candidate_feature_scores[old_idx],7,'f',5).arg(candidate_features[old_idx].get_complexity(),2).toStdString() << candidate_features[old_idx].identifier() );
-        } else {
-            DEBUG_OUT(1, "    " << QString("%1 <-- ").arg(candidate_feature_scores[old_idx],7,'f',5).toStdString() << candidate_features[old_idx].identifier() );
-        }
-        ++new_idx;
-    }
-
-    // swap lists
-    candidate_features.swap(new_candidate_features);
-    candidate_feature_scores.swap(new_candidate_feature_scores);
-
-    candidate_features_sorted = true;
-
-    DEBUG_OUT(1, "DONE");
+    //-----------------//
+    // sort candidates //
+    //-----------------//
+    sort_scored_features(false);
 }
 
 void KMarkovCRF::add_candidate_features_to_active(const int& n) {
@@ -933,30 +1233,30 @@ void KMarkovCRF::test() {
     DEBUG_OUT(0,"Number of unique feature values: " << feature_value_set.size() );
 }
 
-void KMarkovCRF::check_lambda_size() {
+void KMarkovCRF::check_lambda_size(lbfgsfloatval_t* & parameters, vector<AndFeature> & feature_vector, int old_feature_vector_size) {
 
     DEBUG_OUT(1, "Checking size of parameter vector...");
 
-    if((int)active_features.size()!=old_active_features_size) {
+    if((int)feature_vector.size()!=old_feature_vector_size) {
 
-        int new_active_features_size = active_features.size();
-        DEBUG_OUT(2, "    old size = " << old_active_features_size);
-        DEBUG_OUT(2, "    new size = " << new_active_features_size);
+        int new_feature_vector_size = feature_vector.size();
+        DEBUG_OUT(2, "    old size = " << old_feature_vector_size);
+        DEBUG_OUT(2, "    new size = " << new_feature_vector_size);
 
-        lbfgsfloatval_t * old_lambda = lambda;
+        lbfgsfloatval_t * old_parameters = parameters;
 
-        int max_size = new_active_features_size>=old_active_features_size ? new_active_features_size : old_active_features_size;
-        lambda = lbfgs_malloc(new_active_features_size);
+        int max_size = new_feature_vector_size>=old_feature_vector_size ? new_feature_vector_size : old_feature_vector_size;
+        parameters = lbfgs_malloc(new_feature_vector_size);
         for(int f_idx=0; f_idx<max_size; ++f_idx) {
-            if(f_idx<old_active_features_size) {
-                lambda[f_idx] = old_lambda[f_idx];
+            if(f_idx<old_feature_vector_size) {
+                parameters[f_idx] = old_parameters[f_idx];
             } else {
-                lambda[f_idx] = 0;
+                parameters[f_idx] = 0;
             }
         }
 
-        lbfgs_free(old_lambda);
-        old_active_features_size = new_active_features_size;
+        lbfgs_free(old_parameters);
+        old_feature_vector_size = new_feature_vector_size;
         DEBUG_OUT(1, "    RESIZED");
     } else {
         DEBUG_OUT(1, "    OK");
@@ -1041,6 +1341,54 @@ void KMarkovCRF::construct_candidate_features(const int& n) {
     erase_const_zero_candidate_features();
 
     candidate_feature_scores.assign(candidate_features.size(),0.0);
+}
+
+void KMarkovCRF::sort_scored_features(bool divide_by_complexity) {
+
+    if(divide_by_complexity) {
+        DEBUG_OUT(1, "Sorting scored features (considering complexity)...");
+    } else {
+        DEBUG_OUT(1, "Sorting scored features (NOT considering complexity)...");
+    }
+
+    // number of candidate features;
+    int n = candidate_features.size();
+
+    // sort indices by score
+    list<pair<double,int> > scored_indices;
+    for(int cf_idx=0; cf_idx<n; ++cf_idx) {
+        if(divide_by_complexity) {
+            scored_indices.push_back(make_pair(candidate_feature_scores[cf_idx]/candidate_features[cf_idx].get_complexity(),cf_idx));
+        } else {
+            scored_indices.push_back(make_pair(candidate_feature_scores[cf_idx],cf_idx));
+        }
+    }
+    scored_indices.sort();
+
+    // construct new feature and score lists
+    vector<AndFeature> new_candidate_features(n);
+    vector<double> new_candidate_feature_scores(n);
+    int new_idx = 0;
+    DEBUG_OUT(1, "Feature Scores:")
+    for(list<pair<double,int> >::iterator it = scored_indices.begin(); it!=scored_indices.end(); ++it) {
+        int old_idx = it->second;
+        new_candidate_features[new_idx]       = candidate_features[old_idx];
+        new_candidate_feature_scores[new_idx] = candidate_feature_scores[old_idx];
+        if(divide_by_complexity) {
+            DEBUG_OUT(1, "    " << QString("%1 (%2) <-- ").arg(candidate_feature_scores[old_idx],7,'f',5).arg(candidate_features[old_idx].get_complexity(),2).toStdString() << candidate_features[old_idx].identifier() );
+        } else {
+            DEBUG_OUT(1, "    " << QString("%1 <-- ").arg(candidate_feature_scores[old_idx],7,'f',5).toStdString() << candidate_features[old_idx].identifier() );
+        }
+        ++new_idx;
+    }
+
+    // swap lists
+    candidate_features.swap(new_candidate_features);
+    candidate_feature_scores.swap(new_candidate_feature_scores);
+
+    candidate_features_sorted = true;
+
+    DEBUG_OUT(1, "DONE");
 }
 
 KMarkovCRF::idx_t KMarkovCRF::precomputed_feature_idx(

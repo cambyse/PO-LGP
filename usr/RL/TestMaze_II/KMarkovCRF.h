@@ -85,6 +85,60 @@ public:
                        double beta = 1
         );
 
+    /** \brief Calls evaluate_candidates() on instance. */
+    static lbfgsfloatval_t static_evaluate_candidates(
+            void *instance,
+            const lbfgsfloatval_t *x,
+            lbfgsfloatval_t *g,
+            const int n,
+            const lbfgsfloatval_t step
+    );
+
+    /** \brief Evaluate objective and gradient. */
+    lbfgsfloatval_t evaluate_candidates(
+            const lbfgsfloatval_t *x,
+            lbfgsfloatval_t *g,
+            const int n
+    );
+
+    /** \brief Calls progress_candidates() on instance. */
+    static int static_progress_candidates(
+            void *instance,
+            const lbfgsfloatval_t *x,
+            const lbfgsfloatval_t *g,
+            const lbfgsfloatval_t fx,
+            const lbfgsfloatval_t xnorm,
+            const lbfgsfloatval_t gnorm,
+            const lbfgsfloatval_t step,
+            int n,
+            int k,
+            int ls
+    );
+
+    /** \brief Prints progress information during optimization. */
+    int progress_candidates(
+            const lbfgsfloatval_t *x,
+            const lbfgsfloatval_t *g,
+            const lbfgsfloatval_t fx,
+            const lbfgsfloatval_t xnorm,
+            const lbfgsfloatval_t gnorm,
+            const lbfgsfloatval_t step,
+            int n,
+            int k,
+            int ls
+    );
+
+    /** \brief Optimize the candidates.
+     *
+     * \param l1              Coefficient for \f$L^1\f$-regularization.
+     * \param max_iter        Maximum number of iterations (zero for unlimited until convergence).
+     * \param mean_likelihood For returning the mean likelihood after the last iteration.
+     * */
+    int optimize_candidates(lbfgsfloatval_t l1 = 0,
+                       unsigned int max_iter = 0,
+                       lbfgsfloatval_t * mean_likelihood = nullptr
+        );
+
     virtual void add_action_state_reward_tripel(
         const action_t& action,
         const state_t& state,
@@ -98,7 +152,7 @@ public:
 
     void score_features_by_gradient(const int& n = 1);
 
-    void sort_scored_features(bool divide_by_complexity = false);
+    void score_candidates_by_1D_optimization(const int& n = 1);
 
     void add_candidate_features_to_active(const int& n);
 
@@ -136,6 +190,7 @@ private:
     // Features, Weights etc. //
     //------------------------//
     lbfgsfloatval_t * lambda;                        ///< Coefficients for active features.
+    lbfgsfloatval_t * lambda_candidates;             ///< Coefficients for candidate features.
     std::vector<Feature*> basis_features;            ///< Basis features used to construct new candidates.
     std::vector<AndFeature> active_features;         ///< Set of currently active features.
     std::vector<AndFeature> candidate_features;      ///< Set of candidate features.
@@ -169,10 +224,12 @@ private:
 
     /** \brief Check whether the size of parameter vector matches number of
      * active features and adjust otherwise. */
-    void check_lambda_size();
+    void check_lambda_size(lbfgsfloatval_t* & parameters, std::vector<AndFeature> & feature_vector, int old_feature_vector_size);
 
     /** \brief Constructs new candidate features. */
     void construct_candidate_features(const int& n);
+
+    void sort_scored_features(bool divide_by_complexity = false);
 
     /** \brief Get index for precomputed feature values.
      *
