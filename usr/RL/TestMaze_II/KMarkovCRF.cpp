@@ -30,6 +30,8 @@ using util::INVALID;
 
 //#define USE_RELATIVE_FEATURES
 
+const KMarkovCRF::PRECOMPUTATION_TYPE KMarkovCRF::precomputation_type = KMarkovCRF::BASE_LOOK_UP;
+
 KMarkovCRF::KMarkovCRF():
         lambda(nullptr),
         old_active_features_size(0),
@@ -162,6 +164,9 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
     for(instance_t * current_episode : instance_data) {
         for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
 
+            // last action is not changed while iterating through states and rewards
+            action_t action = insIt->action;
+
             // sparsify data
             if(use_stochastic_sparsification) {
                 if(pow(data_probabilities[instance_idx],sparse_beta)>drand48()) {
@@ -176,6 +181,10 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
                 ProgressBar::print(instance_idx, number_of_data_points);
             }
 
+            // store evaluations for this instance in array (for speed up)
+            vector<f_ret_t> instance_evaluations(feature_n,0);
+            vector<vector<f_ret_t> > state_reward_evaluations(feature_n,vector<f_ret_t>(state_t::state_n*reward_t::reward_n,0));
+
             // reset sums
             sumFNN = 0;
             sumExpN = 0;
@@ -187,10 +196,11 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
 
             // calculate sumF(x(n),y(n))
             for(uint f_idx=0; f_idx<feature_n; ++f_idx) { // sum over features
+                // compute and store
                 f_ret_t f_ret;
                 switch(precomputation_type) {
                 case NONE:
-                    f_ret = active_features[f_idx].evaluate(insIt);
+                    f_ret = active_features[f_idx].evaluate(insIt-1, insIt->action, insIt->state, insIt->reward);
                     break;
                 case COMPOUND_LOOK_UP:
                 {
@@ -204,11 +214,11 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
                 default:
                     DEBUG_DEAD_LINE;
                 }
+                instance_evaluations[f_idx] = f_ret;
                 sumFNN += x[f_idx]*f_ret;
             }
 
             // calculate sumExp(x(n))
-            action_t action = insIt->action;
             idx_t state_reward_idx=0;
             for(stateIt_t state=stateIt_t::first(); state!=INVALID; ++state) {
                 for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
@@ -216,6 +226,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
                     // calculate sumF(x(n),y')
                     double sumFN = 0;
                     for(uint f_idx=0; f_idx<feature_n; ++f_idx) { // sum over features
+                        // compute and store
                         f_ret_t f_ret;
                         switch(precomputation_type) {
                         case NONE:
@@ -233,6 +244,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
                         default:
                             DEBUG_DEAD_LINE;
                         }
+                        state_reward_evaluations[f_idx][state_reward_idx] = f_ret;
                         sumFN += x[f_idx]*f_ret;
                     }
 
@@ -242,24 +254,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
                     // increment sumFExp(x(n),F)
                     for(int lambda_idx=0; lambda_idx<n; ++lambda_idx) { // for all parameters/gradient components
                         // in case of parameter binding additionally sum over all features belonging to this parameter
-                        f_ret_t f_ret;
-                        switch(precomputation_type) {
-                        case NONE:
-                            f_ret = active_features[lambda_idx].evaluate(insIt-1,action,state,reward);
-                            break;
-                        case COMPOUND_LOOK_UP:
-                        {
-                            idx_t pre_idx = precomputed_feature_idx(instance_idx,lambda_idx,feature_n,state,reward);
-                            f_ret = compound_feature_values[pre_idx];
-                            break;
-                        }
-                        case BASE_LOOK_UP:
-                            f_ret = active_features[lambda_idx].evaluate(base_feature_values[instance_idx][state_reward_idx]);
-                            break;
-                        default:
-                            DEBUG_DEAD_LINE;
-                        }
-                        sumFExpNF[lambda_idx] += f_ret * exp( sumFN );
+                        sumFExpNF[lambda_idx] += state_reward_evaluations[lambda_idx][state_reward_idx] * exp( sumFN );
                     }
 
                     // increment state-reward index
@@ -291,24 +286,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
                 g[lambda_idx] -= weight * sumFExpNF[lambda_idx]/sumExpN;
 
                 // in case of parameter binding additionally sum over all features belonging to this parameter
-                f_ret_t f_ret;
-                switch(precomputation_type) {
-                case NONE:
-                    f_ret = active_features[lambda_idx].evaluate(insIt);
-                    break;
-                case COMPOUND_LOOK_UP:
-                {
-                    idx_t pre_idx = precomputed_feature_idx(instance_idx,lambda_idx,feature_n);
-                    f_ret = compound_feature_values[pre_idx];
-                    break;
-                }
-                case BASE_LOOK_UP:
-                    f_ret = active_features[lambda_idx].evaluate(base_feature_values[instance_idx][base_feature_indices[instance_idx]]);
-                    break;
-                default:
-                    DEBUG_DEAD_LINE;
-                }
-                g[lambda_idx] += weight * f_ret;
+                g[lambda_idx] += weight * instance_evaluations[lambda_idx];
             }
         }
     }
@@ -390,7 +368,7 @@ int KMarkovCRF::optimize_model(lbfgsfloatval_t l1,
     }
 
     // todo what values
-    param.delta = 1e-3;   // change of objective (f-f')/f (default 0)
+    param.delta = 1e-5;   // change of objective (f-f')/f (default 0)
     param.epsilon = 1e-5; // change of parameters ||g||/max(1,||x||) (default 1e-5)
 
     // stochastic sparsification
@@ -690,6 +668,11 @@ void KMarkovCRF::add_candidate_features_to_active(const int& n) {
         }
     }
 
+    // need to precompute feature values for COMPOUND_LOOK_UP
+    if(precomputation_type==COMPOUND_LOOK_UP) {
+        feature_values_precomputed = false;
+    }
+
     DEBUG_OUT(1, "DONE");
 }
 
@@ -729,6 +712,11 @@ void KMarkovCRF::erase_zero_features() {
     active_features.swap(new_active_features);
     old_active_features_size = active_features.size();
 
+    // need to precompute feature values for COMPOUND_LOOK_UP
+    if(precomputation_type==COMPOUND_LOOK_UP) {
+        feature_values_precomputed = false;
+    }
+
     DEBUG_OUT(1, "DONE");
 }
 
@@ -739,6 +727,11 @@ void KMarkovCRF::erase_all_features() {
     lambda = lbfgs_malloc(0);
     active_features.clear();
     old_active_features_size = 0;
+
+    // need to precompute feature values for COMPOUND_LOOK_UP
+    if(precomputation_type==COMPOUND_LOOK_UP) {
+        feature_values_precomputed = false;
+    }
 
     DEBUG_OUT(1, "DONE");
 }
@@ -1130,7 +1123,7 @@ void KMarkovCRF::precompute_compound_feature_values() {
 
                 // for instance itself without setting specific state and reward
                 idx_t precomputed_index = precomputed_feature_idx(instance_idx,f_idx,feature_n);
-                compound_feature_values[precomputed_index] = active_features[f_idx].evaluate(insIt);
+                compound_feature_values[precomputed_index] = active_features[f_idx].evaluate(insIt-1, insIt->action, insIt->state, insIt->reward);
                 DEBUG_OUT(3,"    Feature " << active_features[f_idx] <<
                           " --> " << compound_feature_values[precomputed_index] <<
                           " (idx=" << precomputed_index << ")"

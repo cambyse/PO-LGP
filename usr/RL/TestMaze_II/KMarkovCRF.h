@@ -147,7 +147,7 @@ private:
     // Performance Optimization //
     //--------------------------//
     enum PRECOMPUTATION_TYPE { NONE, COMPOUND_LOOK_UP, BASE_LOOK_UP };
-    static const PRECOMPUTATION_TYPE precomputation_type = BASE_LOOK_UP;        ///< Technique for precomputing feature values.
+    static const PRECOMPUTATION_TYPE precomputation_type;                       ///< Technique for precomputing feature values.
     bool                      feature_values_precomputed;                       ///< Whether feature values are up-to-date.
     bool                      use_stochastic_sparsification;                    ///< Whether to use stochastic data sparsification (SDS).
     double                    sparse_alpha, sparse_beta;                        ///< decay and exponent for SDS.
