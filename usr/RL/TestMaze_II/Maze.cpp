@@ -175,7 +175,6 @@ const vector<Maze::maze_reward_t> Maze::rewards = {
     /**/
 
     /* 2x2 Maze *
-    //{ 3, 1, 3, 1, EACH_TIME_NO_PUNISH, 200,   0,   0}
     { 0, 3, 2, 1, EACH_TIME_NO_PUNISH, 200,   0,   0}
     /**/
 

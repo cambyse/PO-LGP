@@ -744,7 +744,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             if(str_args_n==1) {
                 TO_CONSOLE(score_s);
             } else if(int_args_ok[1] && int_args[1]>=0 ) {
-                crf.score_features_by_gradient(int_args[1]);
+                crf.construct_candidate_features(int_args[1]);
+                crf.score_candidates_by_gradient();
             } else {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( score_s );
@@ -753,7 +754,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             if(str_args_n==1) {
                 TO_CONSOLE(score1D_s);
             } else if(int_args_ok[1] && int_args[1]>=0 ) {
-                crf.score_candidates_by_1D_optimization(int_args[1]);
+                crf.construct_candidate_features(int_args[1]);
+                crf.score_candidates_by_1D_optimization();
             } else {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( score1D_s );

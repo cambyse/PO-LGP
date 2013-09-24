@@ -5,6 +5,8 @@
 #include <QtGui>
 #include <QApplication>
 
+//#define FORCE_BATCH
+
 int main(int argc, char *argv[])
 {
     // seed random generator
@@ -16,7 +18,7 @@ int main(int argc, char *argv[])
     srand48(time(nullptr));
 #endif
 
-#if defined(BATCH_MODE) || defined(BATCH_MODE_QUIET)
+#if defined(BATCH_MODE) || defined(BATCH_MODE_QUIET) || defined(FORCE_BATCH)
     BatchMaze batchmaze;
     return batchmaze.run(argc,argv);
 #else

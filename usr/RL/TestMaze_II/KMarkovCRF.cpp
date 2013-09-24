@@ -34,8 +34,8 @@ const KMarkovCRF::PRECOMPUTATION_TYPE KMarkovCRF::precomputation_type = KMarkovC
 
 KMarkovCRF::KMarkovCRF():
         lambda(nullptr),
+        lambda_candidates(nullptr),
         old_active_features_size(0),
-        candidate_features_sorted(false),
         feature_values_precomputed(false),
         use_stochastic_sparsification(false)
 {
@@ -91,6 +91,7 @@ KMarkovCRF::KMarkovCRF():
 
 KMarkovCRF::~KMarkovCRF() {
     lbfgs_free(lambda);
+    lbfgs_free(lambda_candidates);
 }
 
 lbfgsfloatval_t KMarkovCRF::static_evaluate_model(
@@ -613,7 +614,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_candidates(
                 fx += log_prob;
 
                 // increment score
-                candidate_feature_scores[f_idx] += exp( log_prob );
+                candidate_feature_scores[f_idx] += log_prob;
 
                 // increment gradient
                 g[f_idx] -= candidate_sumFExpNF[f_idx]/candidate_sumExpN[f_idx];
@@ -708,15 +709,6 @@ int KMarkovCRF::optimize_candidates(lbfgsfloatval_t l1,
     // Report the result.
     DEBUG_OUT(1, "L-BFGS optimization terminated with status code = " << ret << " ( " << lbfgs_code(ret) << " )");
     DEBUG_OUT(1,"mean likelihood = " << exp(-fx) );
-    // for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
-    //     DEBUG_OUT(1, "    " <<
-    //             active_features[f_idx].identifier() <<
-    //             " --> t[" <<
-    //             f_idx << "] = " <<
-    //             lambda[f_idx]);
-    // }
-    // DEBUG_OUT(1, "L-BFGS optimization terminated with status code = " << ret << " ( " << lbfgs_code(ret) << " )");
-    // DEBUG_OUT(1,"mean likelihood = " << exp(-fx) );
     DEBUG_OUT(1,"");
 
     if(mean_likelihood!=nullptr) {
@@ -815,7 +807,87 @@ void KMarkovCRF::evaluate_features() {
     }
 }
 
-void KMarkovCRF::score_features_by_gradient(const int& n) {
+void KMarkovCRF::construct_candidate_features(const int& n) {
+
+    DEBUG_OUT(1, "Constructing candidate features...");
+
+    candidate_features.clear();
+
+    if(n<0) {
+        DEBUG_OUT(0, "    Multiplicity must be non-negative");
+        return;
+    }
+    if(n==0) {
+        DEBUG_OUT(1, "    Multiplicity is zero, no features constructed");
+        return;
+    }
+
+    // Temporally use list structure to make sorting and erasing more efficient
+    list<AndFeature> candidate_feature_list;
+
+    // Add active features
+    for(uint f_idx = 0; f_idx < active_features.size(); ++f_idx) {
+        DEBUG_OUT(2,"Including " << active_features[f_idx].identifier() << " in base set");
+        candidate_feature_list.push_back(AndFeature(active_features[f_idx]));
+    }
+
+    // Add NullFeature if active features were empty
+    if(candidate_feature_list.size()==0) {
+        candidate_feature_list.push_back(AndFeature());
+        DEBUG_OUT(2,"Used " <<  candidate_feature_list.front().identifier() << " as base");
+    }
+
+    // Replace current features by those that can
+    // be reached by combining one of the current
+    // features with n basis features.
+    for(int order=1; order<=n; ++order) {
+        int counter = candidate_feature_list.size();
+        list<AndFeature>::iterator cf_it = candidate_feature_list.begin();
+        while( counter>0 ) {
+            for(uint bf_idx = 0; bf_idx < basis_features.size(); ++bf_idx) {
+                DEBUG_OUT(2,"Candidate: " << cf_it->identifier() << ", Basis(" << bf_idx << "): " << basis_features[bf_idx]->identifier() )
+                AndFeature and_feature(*basis_features[bf_idx],*cf_it);
+                DEBUG_OUT(2,"    --> " << and_feature.identifier() );
+                // make sure the basis feature is not already
+                // part of the candidate feature (duplicates
+                // are removed below)
+                if(and_feature!=*cf_it) {
+                    candidate_feature_list.push_back(and_feature);
+                    DEBUG_OUT(2,"    accepted");
+                } else {
+                    DEBUG_OUT(2,"    rejected");
+                }
+            }
+            ++cf_it;
+            --counter;
+            candidate_feature_list.pop_front();
+        }
+    }
+
+    candidate_feature_list.sort();
+    list<AndFeature>::iterator cf_it_1 = candidate_feature_list.begin();
+    list<AndFeature>::iterator cf_it_2 = candidate_feature_list.begin();
+    ++cf_it_2;
+    while( cf_it_1!=candidate_feature_list.end() ) {
+        if(cf_it_2!=candidate_feature_list.end() && *cf_it_2==*cf_it_1) {
+            DEBUG_OUT(2, "    Remove " << cf_it_2->identifier() );
+            cf_it_2 = candidate_feature_list.erase(cf_it_2);
+        } else {
+            DEBUG_OUT(2, "    Keep   " << cf_it_1->identifier() );
+            candidate_features.push_back(*cf_it_1);
+            ++cf_it_1;
+            ++cf_it_2;
+        }
+    }
+
+    DEBUG_OUT(1, "    Constructed " << candidate_features.size() << " features");
+
+    erase_const_zero_candidate_features();
+
+    candidate_feature_scores.assign(candidate_features.size(),0.0);
+}
+
+void KMarkovCRF::score_candidates_by_gradient() {
 
     DEBUG_OUT(1, "Scoring features by gradient...");
 
@@ -827,12 +899,6 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
         DEBUG_OUT(0,"Not enough data to score features (" << number_of_data_points << ").");
         return;
     }
-
-    //--------------------//
-    // Construct Features //
-    //--------------------//
-
-    construct_candidate_features(n);
 
     //---------------------------------------------//
     // Compute Gradient for all Candidate Features //
@@ -910,13 +976,12 @@ void KMarkovCRF::score_features_by_gradient(const int& n) {
         g[i] = fabs(g[i])/number_of_data_points;
     }
 
-    candidate_features_sorted = false;
     sort_scored_features(false);
 
     DEBUG_OUT(1, "DONE");
 }
 
-void KMarkovCRF::score_candidates_by_1D_optimization(const int& n) {
+void KMarkovCRF::score_candidates_by_1D_optimization() {
     DEBUG_OUT(1, "Scoring features by 1D optimization...");
 
     //------------------//
@@ -928,11 +993,6 @@ void KMarkovCRF::score_candidates_by_1D_optimization(const int& n) {
         return;
     }
 
-    //--------------------//
-    // Construct Features //
-    //--------------------//
-    construct_candidate_features(n);
-
     //------------------------------------//
     // 1D optimization for all candidates //
     //------------------------------------//
@@ -941,6 +1001,9 @@ void KMarkovCRF::score_candidates_by_1D_optimization(const int& n) {
     //-----------------//
     // sort candidates //
     //-----------------//
+    for(double& score : candidate_feature_scores) { // convert scores from log-likelihood to likelihood
+        score = exp(score);
+    }
     sort_scored_features(false);
 }
 
@@ -951,9 +1014,6 @@ void KMarkovCRF::add_candidate_features_to_active(const int& n) {
     } else {
         DEBUG_OUT(1, "Adding " << n << " highest scored candidate features to active...");
     }
-
-    // sort candidate features by score if necessary
-    if(!candidate_features_sorted) sort_scored_features();
 
     // choose n highest scored candidates and erase from candidate list
     int counter = 0;
@@ -1024,7 +1084,7 @@ void KMarkovCRF::erase_all_features() {
     DEBUG_OUT(1, "Erasing all features from active...");
 
     lbfgs_free(lambda);
-    lambda = lbfgs_malloc(0);
+    lambda = nullptr;
     active_features.clear();
     old_active_features_size = 0;
 
@@ -1263,86 +1323,6 @@ void KMarkovCRF::check_lambda_size(lbfgsfloatval_t* & parameters, vector<AndFeat
     }
 }
 
-void KMarkovCRF::construct_candidate_features(const int& n) {
-
-    DEBUG_OUT(1, "Constructing candidate features...");
-
-    candidate_features.clear();
-
-    if(n<0) {
-        DEBUG_OUT(0, "    Multiplicity must be non-negative");
-        return;
-    }
-    if(n==0) {
-        DEBUG_OUT(1, "    Multiplicity is zero, no features constructed");
-        return;
-    }
-
-    // Temporally use list structure to make sorting and erasing more efficient
-    list<AndFeature> candidate_feature_list;
-
-    // Add active features
-    for(uint f_idx = 0; f_idx < active_features.size(); ++f_idx) {
-        DEBUG_OUT(2,"Including " << active_features[f_idx].identifier() << " in base set");
-        candidate_feature_list.push_back(AndFeature(active_features[f_idx]));
-    }
-
-    // Add NullFeature if active features were empty
-    if(candidate_feature_list.size()==0) {
-        candidate_feature_list.push_back(AndFeature());
-        DEBUG_OUT(2,"Used " <<  candidate_feature_list.front().identifier() << " as base");
-    }
-
-    // Replace current features by those that can
-    // be reached by combining one of the current
-    // features with n basis features.
-    for(int order=1; order<=n; ++order) {
-        int counter = candidate_feature_list.size();
-        list<AndFeature>::iterator cf_it = candidate_feature_list.begin();
-        while( counter>0 ) {
-            for(uint bf_idx = 0; bf_idx < basis_features.size(); ++bf_idx) {
-                DEBUG_OUT(2,"Candidate: " << cf_it->identifier() << ", Basis(" << bf_idx << "): " << basis_features[bf_idx]->identifier() )
-                AndFeature and_feature(*basis_features[bf_idx],*cf_it);
-                DEBUG_OUT(2,"    --> " << and_feature.identifier() );
-                // make sure the basis feature is not already
-                // part of the candidate feature (duplicates
-                // are removed below)
-                if(and_feature!=*cf_it) {
-                    candidate_feature_list.push_back(and_feature);
-                    DEBUG_OUT(2,"    accepted");
-                } else {
-                    DEBUG_OUT(2,"    rejected");
-                }
-            }
-            ++cf_it;
-            --counter;
-            candidate_feature_list.pop_front();
-        }
-    }
-
-    candidate_feature_list.sort();
-    list<AndFeature>::iterator cf_it_1 = candidate_feature_list.begin();
-    list<AndFeature>::iterator cf_it_2 = candidate_feature_list.begin();
-    ++cf_it_2;
-    while( cf_it_1!=candidate_feature_list.end() ) {
-        if(cf_it_2!=candidate_feature_list.end() && *cf_it_2==*cf_it_1) {
-            DEBUG_OUT(2, "    Remove " << cf_it_2->identifier() );
-            cf_it_2 = candidate_feature_list.erase(cf_it_2);
-        } else {
-            DEBUG_OUT(2, "    Keep   " << cf_it_1->identifier() );
-            candidate_features.push_back(*cf_it_1);
-            ++cf_it_1;
-            ++cf_it_2;
-        }
-    }
-
-    DEBUG_OUT(1, "    Constructed " << candidate_features.size() << " features");
-
-    erase_const_zero_candidate_features();
-
-    candidate_feature_scores.assign(candidate_features.size(),0.0);
-}
-
 void KMarkovCRF::sort_scored_features(bool divide_by_complexity) {
 
     if(divide_by_complexity) {
@@ -1385,8 +1365,6 @@ void KMarkovCRF::sort_scored_features(bool divide_by_complexity) {
     // swap lists
     candidate_features.swap(new_candidate_features);
     candidate_feature_scores.swap(new_candidate_feature_scores);
-
-    candidate_features_sorted = true;
 
     DEBUG_OUT(1, "DONE");
 }

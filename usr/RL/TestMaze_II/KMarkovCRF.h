@@ -150,9 +150,12 @@ public:
 
     void evaluate_features();
 
-    void score_features_by_gradient(const int& n = 1);
+    /** \brief Constructs new candidate features. */
+    void construct_candidate_features(const int& n);
 
-    void score_candidates_by_1D_optimization(const int& n = 1);
+    void score_candidates_by_gradient();
+
+    void score_candidates_by_1D_optimization();
 
     void add_candidate_features_to_active(const int& n);
 
@@ -196,7 +199,6 @@ private:
     std::vector<AndFeature> candidate_features;      ///< Set of candidate features.
     std::vector<double> candidate_feature_scores;    ///< Scores for candidate features.
     int old_active_features_size;                    ///< Number of active features before adding new candidates.
-    bool candidate_features_sorted;                  ///< Whether the candidate features are sorted.
 
     //--------------------------//
     // Performance Optimization //
@@ -225,9 +227,6 @@ private:
     /** \brief Check whether the size of parameter vector matches number of
      * active features and adjust otherwise. */
     void check_lambda_size(lbfgsfloatval_t* & parameters, std::vector<AndFeature> & feature_vector, int old_feature_vector_size);
-
-    /** \brief Constructs new candidate features. */
-    void construct_candidate_features(const int& n);
 
     void sort_scored_features(bool divide_by_complexity = false);
 

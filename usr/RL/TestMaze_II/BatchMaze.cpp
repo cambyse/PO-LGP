@@ -64,25 +64,28 @@ const vector<QString> BatchMaze::sample_method_vector = {
 };
 
 const vector<BatchMaze::switch_t> BatchMaze::switch_vector = {
-    switch_t("-mode",         "char",   "",      "major mode BatchMaze runs in"),
-    switch_t("-sample",       "char",   "",      "the way samples are selected"),
-    switch_t("-nEp",          "int",    "100",   "number of episodes to run"),
-    switch_t("-minTran",      "int",    "10",    "minimum number of transitions (mode 'TRANSITIONS' only)"),
-    switch_t("-maxTran",      "int",    "1000",  "maximum number of transitions"),
-    switch_t("-e",            "double", "0.0",   "epsilon (probability for unintended random actions)"),
-    switch_t("-d",            "double", "0.5",   "discount"),
-    switch_t("-minTrain",     "int",    "100",   "minimum length of traning data"),
-    switch_t("-maxTrain",     "int",    "10000", "maximum length of traning data"),
-    switch_t("-minTree",      "int",    "1000",  "minimum size of search tree (mode 'SEARCH_TREE' only)"),
-    switch_t("-maxTree",      "int",    "10000", "maximum size of search tree"),
-    switch_t("-f",            "int",    "2",     "number of feature conjunctions"),
-    switch_t("-l1",           "double", "0.001", "L1-regularization factor"),
-    switch_t("-pruneTree",    "bool",   "true",  "whether to prune the search tree"),
-    switch_t("-kWidth",       "double", "0",     "kernel width for 'ACTIVE' sampling (0 for auto)"),
-    switch_t("-incr",         "int",    "0",     "increment for 'UNIFORM' and 'EXP' sampling (0 for auto, negative for resampling)"),
-    switch_t("-exp",          "double", "0",     "factor for 'EXP' sampling"),
-    switch_t("-printSamples", "bool",   "false", "don't run, only print sampling locations"),
-    switch_t("-optTran",      "double", "0",     "probability of optimal training transitions (vs. random)")
+    switch_t("-mode",         "char",   "",       "major mode BatchMaze runs in"),
+    switch_t("-sample",       "char",   "",       "the way samples are selected"),
+    switch_t("-nEp",          "int",    "100",    "number of episodes to run"),
+    switch_t("-minTran",      "int",    "10",     "minimum number of transitions (mode 'TRANSITIONS' only)"),
+    switch_t("-maxTran",      "int",    "1000",   "maximum number of transitions"),
+    switch_t("-e",            "double", "0.0",    "epsilon (probability for unintended random actions)"),
+    switch_t("-d",            "double", "0.5",    "discount"),
+    switch_t("-minTrain",     "int",    "100",    "minimum length of traning data"),
+    switch_t("-maxTrain",     "int",    "10000",  "maximum length of traning data"),
+    switch_t("-minTree",      "int",    "1000",   "minimum size of search tree (mode 'SEARCH_TREE' only)"),
+    switch_t("-maxTree",      "int",    "10000",  "maximum size of search tree"),
+    switch_t("-f",            "int",    "2",      "number of feature conjunctions"),
+    switch_t("-l1",           "double", "0.001",  "L1-regularization factor"),
+    switch_t("-pruneTree",    "bool",   "true",   "whether to prune the search tree"),
+    switch_t("-kWidth",       "double", "0",      "kernel width for 'ACTIVE' sampling (0 for auto)"),
+    switch_t("-incr",         "int",    "0",      "increment for 'UNIFORM' and 'EXP' sampling (0 for auto, negative for resampling)"),
+    switch_t("-exp",          "double", "0",      "factor for 'EXP' sampling"),
+    switch_t("-printSamples", "bool",   "false",  "don't run, only print sampling locations"),
+    switch_t("-optTran",      "double", "0",      "probability of optimal training transitions (vs. random)"),
+    switch_t("-fincr",        "int",    "0",      "feature increment (positive value for incremental feature discovery)"),
+    switch_t("-like",         "double", "0.99",   "minimum data likelihood (only for incremental feature discovery with CRFs)"),
+    switch_t("-tderr",        "double", "0.0001", "minimum TD-error (only for incremental feature discovery with Linear-Q)")
 };
 
 BatchMaze::BatchMaze() {
@@ -468,26 +471,38 @@ int BatchMaze::run_active() {
         if(mode=="OPTIMAL" || mode=="RANDOM" || mode=="SEARCH_TREE" || mode=="TRANSITIONS") {
             // nothing to train
         } else if(mode=="SPARSE") {
-            for(int complx=1; complx<=switch_int("-f"); ++complx) {
-                crf->score_features_by_gradient(1);
-                crf->sort_scored_features(false);
-                crf->add_candidate_features_to_active(0);
-		if(complx==1) {
-		  // no l1 in first run
-		  crf->optimize_model(0,0,nullptr);
-		} else {
-		  // // sparsify features to speed up optimization
-		  // crf->optimize_model(switch_double("-l1")/2,10);
-		  // crf->erase_zero_features();
-		  // crf->optimize_model(switch_double("-l1")/2,20);
-		  // crf->erase_zero_features();
-		  // crf->optimize_model(switch_double("-l1"),100);
-		  crf->optimize_model(switch_double("-l1"),500);
-		}
-		crf->erase_zero_features();
+            if(switch_int("-fincr")>0) {
+                double likelihood;
+                do {
+                    crf->construct_candidate_features(1);
+                    crf->score_candidates_by_gradient();
+                    crf->add_candidate_features_to_active(switch_int("-fincr"));
+                    crf->optimize_model(switch_double("-l1"),500);
+                    crf->erase_zero_features();
+                    crf->optimize_model(0,500,&likelihood);
+                } while(likelihood<switch_double("-like"));
+            } else {
+                for(int complx=1; complx<=switch_int("-f"); ++complx) {
+                    crf->construct_candidate_features(1);
+                    crf->score_candidates_by_gradient();
+                    crf->add_candidate_features_to_active(0);
+                    if(complx==1) {
+                        // no l1 in first run
+                        crf->optimize_model(0,500,nullptr);
+                    } else {
+                        // // sparsify features to speed up optimization
+                        // crf->optimize_model(switch_double("-l1")/2,10);
+                        // crf->erase_zero_features();
+                        // crf->optimize_model(switch_double("-l1")/2,20);
+                        // crf->erase_zero_features();
+                        // crf->optimize_model(switch_double("-l1"),100);
+                        crf->optimize_model(switch_double("-l1"),500);
+                    }
+                    crf->erase_zero_features();
+                }
+                // finalize
+                crf->optimize_model(0,500,nullptr);
             }
-            // finalize
-            crf->optimize_model(0,0,nullptr);
         } else if(mode=="UTREE_PROB") {
             utree->set_expansion_type(UTree::STATE_REWARD_EXPANSION);
             double score_threshold = 1e-5;
@@ -497,25 +512,36 @@ int BatchMaze::run_active() {
             double score_threshold = 1e-5;
             while(score_threshold <= utree->expand_leaf_node(score_threshold)) {}
         } else if(mode=="LINEAR_Q") {
-            for(int complx=1; complx<=switch_int("-f"); ++complx) {
-                linQ->add_candidates(1);
-                linQ->erase_zero_features();
-		if(complx==1) {
-		  // no l1 in first run
-		  linQ->optimize_ridge(1e-10);
-		} else {
-		  // // sparsify features to speed up optimization
-		  // linQ->optimize_l1(switch_double("-l1")/2,10);
-		  // linQ->erase_zero_weighted_features();
-		  // linQ->optimize_l1(switch_double("-l1")/2,20);
-		  // linQ->erase_zero_weighted_features();
-		  // linQ->optimize_l1(switch_double("-l1"),100);
-		  linQ->optimize_l1(switch_double("-l1"),500);
-		}
-		linQ->erase_zero_weighted_features();
+            if(switch_int("-fincr")>0) {
+                double loss;
+                do {
+                    linQ->add_candidates(1);
+                    linQ->erase_zero_features();
+                    linQ->optimize_l1(switch_double("-l1"),500);
+                    linQ->erase_zero_weighted_features();
+                    loss = linQ->optimize_ridge(1e-10);
+                } while(loss>switch_double("-tderr"));
+            } else {
+                for(int complx=1; complx<=switch_int("-f"); ++complx) {
+                    linQ->add_candidates(1);
+                    linQ->erase_zero_features();
+                    if(complx==1) {
+                        // no l1 in first run
+                        linQ->optimize_ridge(1e-10);
+                    } else {
+                        // // sparsify features to speed up optimization
+                        // linQ->optimize_l1(switch_double("-l1")/2,10);
+                        // linQ->erase_zero_weighted_features();
+                        // linQ->optimize_l1(switch_double("-l1")/2,20);
+                        // linQ->erase_zero_weighted_features();
+                        // linQ->optimize_l1(switch_double("-l1"),100);
+                        linQ->optimize_l1(switch_double("-l1"),500);
+                    }
+                    linQ->erase_zero_weighted_features();
+                }
+                // finalize
+                linQ->optimize_ridge(1e-10);
             }
-            // finalize
-            linQ->optimize_ridge(1e-10);
         } else {
             DEBUG_DEAD_LINE;
         }
@@ -768,21 +794,6 @@ void BatchMaze::initialize_log_file() {
             DEBUG_DEAD_LINE;
         }
     }
-    // LOG_COMMENT("mode                   = " << mode );
-    // LOG_COMMENT("sample method          = " << sample_method );
-    // LOG_COMMENT("epsilon                = " << switch_double("-e") );
-    // LOG_COMMENT("discount               = " << switch_double("-d") );
-    // LOG_COMMENT("episodes               = " << switch_int("-nEp") );
-    // LOG_COMMENT("min transitions        = " << switch_int("-minTran") );
-    // LOG_COMMENT("(max) transitions      = " << switch_int("-maxTran") );
-    // LOG_COMMENT("min training length    = " << switch_int("-minTrain") );
-    // LOG_COMMENT("max training length    = " << switch_int("-maxTrain") );
-    // LOG_COMMENT("L1 coefficient         = " << switch_double("-l1") );
-    // LOG_COMMENT("min tree size          = " << switch_int("-minTree") );
-    // LOG_COMMENT("(max) tree size        = " << switch_int("-maxTree") );
-    // LOG_COMMENT("feature complexity     = " << switch_int("-f") );
-    // LOG_COMMENT("prune search tree      = " << (switch_bool("-pruneTree")?"Yes":"No") );
-    // LOG_COMMENT("print samples          = " << (switch_bool("-printSamples")?"Yes":"No") );
     LOG_COMMENT("");
     LOG_COMMENT("Maze size: " << Config::maze_x_size << "x" << Config::maze_y_size);
     LOG_COMMENT("");
