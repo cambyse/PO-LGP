@@ -477,10 +477,12 @@ int BatchMaze::run_active() {
                     crf->construct_candidate_features(1);
                     crf->score_candidates_by_gradient();
                     crf->add_candidate_features_to_active(switch_int("-fincr"));
-                    crf->optimize_model(switch_double("-l1"),500);
-                    crf->erase_zero_features();
                     crf->optimize_model(0,500,&likelihood);
                 } while(likelihood<switch_double("-like"));
+                crf->optimize_model(switch_double("-l1"),500);
+                crf->erase_zero_features();
+                crf->optimize_model(0,500,&likelihood);
+
             } else {
                 for(int complx=1; complx<=switch_int("-f"); ++complx) {
                     crf->construct_candidate_features(1);
