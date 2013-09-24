@@ -57,7 +57,8 @@ class Recorder: public QObject {
 
   private slots:
     void cameraStarted();
-    void cameraFinished();
+    void closeAndExitCamera();
+    void quitQCore();
     void updateDisplay();
 };
 

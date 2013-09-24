@@ -10,9 +10,6 @@ UEyeCamera::UEyeCamera(int w, int h, int f): width(w), height(h), fps(f) {
   recworker = NULL;
   recflag = false;
 
-  curr_frame = 0;
-  nskipped_frames = 0;
-
   err_flag = false;
 
   setup_flag = false;
@@ -25,10 +22,6 @@ UEyeCamera::UEyeCamera(int w, int h, int f): width(w), height(h), fps(f) {
 }
 
 UEyeCamera::~UEyeCamera() {
-  // TODO close and exit cams
-  close();
-  exit();
-
   for(int c = 0; c < nUsedCams; c++)
     throut::throutUnregHeading(&camID[c]);
   throut::throutUnregHeading(this);
@@ -51,6 +44,9 @@ UEyeCamera::~UEyeCamera() {
 
   delete[] camBuff;
   delete[] camBuffID;
+
+  delete[] recworker;
+  delete[] recthread;
 }
 
 int UEyeCamera::getNumCameras() {
@@ -122,10 +118,6 @@ void UEyeCamera::setup(int c1, int c2, int c3, int c4) {
   throut::throut(this, "setup(int, int, int, int) done");
 }
 
-// TODO where to put this
-void UEyeCamera::setdown() {
-}
-
 void UEyeCamera::init() {
   if(!setup_flag || init_flag || open_flag) {
     err_flag = true;
@@ -134,6 +126,7 @@ void UEyeCamera::init() {
   for(cid = 0; cid < nUsedCams; cid++)
     camInit();
   init_flag = true;
+  emit inited();
 }
 
 void UEyeCamera::open() {
@@ -144,6 +137,7 @@ void UEyeCamera::open() {
   for(cid = 0; cid < nUsedCams; cid++)
     camOpen();
   open_flag = true;
+  emit opened();
 }
 
 void UEyeCamera::close() {
@@ -154,6 +148,7 @@ void UEyeCamera::close() {
   for(cid = 0; cid < nUsedCams; cid++)
     camClose();
   open_flag = false;
+  emit closed();
 }
 
 void UEyeCamera::exit() {
@@ -164,9 +159,7 @@ void UEyeCamera::exit() {
   for(cid = 0; cid < nUsedCams; cid++)
     camExit();
   init_flag = false;
-
-  throut::throut("Waiting 5 seconds..");
-  MT::wait(5.);
+  emit exited();
 }
 
 void UEyeCamera::setupCommon() {
@@ -183,6 +176,9 @@ void UEyeCamera::setupCommon() {
   camBuff = new char**[nUsedCams];
   camBuffID = new INT*[nUsedCams];
 
+  recthread = new QThread*[nUsedCams];
+  recworker = new RecWorker*[nUsedCams];
+
   setup_flag = true;
 }
 
@@ -193,9 +189,9 @@ void UEyeCamera::camInit() {
 
   throut::throutRegHeading(&camID[cid], STRING("UEyeCamera(" << cid << "): "));
 
-  name(cid) = new String(STRING("video_" << camID[cid])); // TODO free the names too
-  throut::throut(&camID[cid], STRING("- camID " << camID[cid]));
-  throut::throut(&camID[cid], STRING("- name " << *name(cid)));
+  name(cid) = new String(STRING("video_" << camID[cid]));
+  throut::throut(&camID[cid], STRING("- camID = " << camID[cid]));
+  throut::throut(&camID[cid], STRING("- name = " << *name(cid)));
 
   SetColorMode_wr(IS_CM_BGR8_PACKED);
   if(err_flag) return;
@@ -203,11 +199,7 @@ void UEyeCamera::camInit() {
   bypp = bpp/8;
   bypimg = bypp * width * height;
 
-  //SetColorConverter_wr(IS_CM_BGR8_PACKED, IS_CONV_MODE_SOFTWARE_5X5);
   SetColorConverter_wr(IS_CM_BGR8_PACKED, IS_CONV_MODE_SOFTWARE_3X3);
-  //SetColorConverter_wr(IS_CM_BGR8_PACKED, IS_CONV_MODE_HARDWARE_3X3);
-  //SetColorConverter_wr(IS_CM_BGR8_PACKED, IS_CONV_MODE_OPENCL_3X3);
-  //SetColorConverter_wr(IS_CM_BGR8_PACKED, IS_CONV_MODE_OPENCL_5X5);
   if(err_flag) return;
 
   // TODO optimize using opengl
@@ -287,7 +279,7 @@ void UEyeCamera::camInit() {
 
 void UEyeCamera::camOpen() {
   throut::throut(&camID[cid], "camOpen()");
-  CaptureVideo_wr(100);//IS_WAIT); // IS_WAIT or IS_DONT_WAIT
+  CaptureVideo_wr(IS_DONT_WAIT);
   if(err_flag) return;
   InitImageQueue_wr();
   if(err_flag) return;
@@ -295,8 +287,7 @@ void UEyeCamera::camOpen() {
 
 void UEyeCamera::camClose() {
   throut::throut(&camID[cid], "camClose()");
-  if(recflag)
-    stopRec();
+  stopRec();
 
   ExitImageQueue_wr();
   StopLiveVideo_wr(IS_WAIT);
@@ -312,53 +303,52 @@ void UEyeCamera::camExit() {
 }
 
 void UEyeCamera::startRec() {
-  /*
   recMutex.lock();
-  if(!recflag && recworker == NULL) {
-    MT::String nowStr, nameStr, timeStr;
+  if(!recflag) {
+    MT::String nowStr;
     MT::getNowString(nowStr);
-    nameStr << "z." << nowStr << "." << name(cid) << ".avi";
-    timeStr << "z." << nowStr << ".time.txt";
-    // TODO do something with timeStr;
-    recworker = new RecWorker(nameStr, width, height, fps);
+
+    for(int c = 0; c < nUsedCams; c++) {
+      MT::String nameStr(STRING("z." << nowStr << "." << (*name(c)) << ".avi"));
+      MT::String timeStr(STRING("z." << nowStr << "." << (*name(c)) << ".ts.txt"));
+
+      recworker[c] = new RecWorker(nameStr, timeStr, width, height, fps);
+      recthread[c] = new QThread();
+
+      connect(recthread[c], SIGNAL(started()), recworker[c], SLOT(process()));
+      connect(recworker[c], SIGNAL(finished()), recthread[c], SLOT(quit()));
+
+      connect(recthread[c], SIGNAL(finished()), recthread[c], SLOT(deleteLater()));
+
+      recworker[c]->moveToThread(recthread[c]);
+    }
+    for(int c = 0; c < nUsedCams; c++)
+      recthread[c]->start();
+
     recflag = true;
-
-    recthread = new QThread();
-
-    connect(recthread, SIGNAL(started()), recworker, SLOT(process()));
-    //connect(recworker, SIGNAL(finished()), recthread, SLOT(quit()));
-
-    //connect(recworker, SIGNAL(finished()), recworker, SLOT(deleteLater()));
-    //connect(recthread, SIGNAL(finished()), recthread, SLOT(deleteLater()));
-
-    //connect(this, SIGNAL(frame()), recworker, SLOT(processFrame()));
-
-    recworker->moveToThread(recthread);
-    recthread->start();
   }
-
-  nskipped_frames = 0;
   recMutex.unlock();
-  */
 }
 
 void UEyeCamera::stopRec() {
-  /*
   recMutex.lock();
-  recflag = false;
+  if(recflag) {
+    for(int c = 0; c < nUsedCams; c++)
+      recworker[c]->quit();
 
-  recworker->quit();
-  recworker->processBuffer();
-  delete recworker;
-  recworker = NULL;
+    for(int c = 0; c < nUsedCams; c++)
+      recworker[c]->processBuffer();
 
-  throut::throut(&camID[cid], STRING("Number of skipped frames = " << nskipped_frames));
-
+    for(int c = 0; c < nUsedCams; c++) {
+      recworker[c]->deleteLater();
+      recworker[c] = NULL;
+    }
+    recflag = false;
+  }
   recMutex.unlock();
-  */
 }
 
-void UEyeCamera::camGrab() { // TODO process uses cid
+void UEyeCamera::camGrab() {
   img[cid] = NULL;
   imgBuffNum[cid] = 0;
 
@@ -366,54 +356,91 @@ void UEyeCamera::camGrab() { // TODO process uses cid
   //throut::throut(&camID[cid], STRING("busyDt: " << ct.busyDt << " busyDtMax: " << ct.busyDtMax << " cyclDt: " << ct.cyclDt));
 
   WaitForNextImage_wr();
-  GetImageInfo_wr();
-    // TODO what to do with this timestamp
-  char s[100];
-  sprintf(s, "%02d-%02d-%02d--%02d-%02d-%02d-%03d",
-    imgInfo[cid].TimestampSystem.wYear - 2000,
-    imgInfo[cid].TimestampSystem.wMonth,
-    imgInfo[cid].TimestampSystem.wDay,
-    imgInfo[cid].TimestampSystem.wHour,
-    imgInfo[cid].TimestampSystem.wMinute,
-    imgInfo[cid].TimestampSystem.wSecond,
-    imgInfo[cid].TimestampSystem.wMilliseconds);
-  throut::throut(&camID[cid], s);
-
   //ct.cycleStart();
-
-  /*
-  MT::String m << "got " << imageBuffNum;
-  if(imageBuffNum != (curr_frame%numBuff+1)) {
-    m << " instead of " << (curr_frame%numBuff+1);
-    nskipped_frames++;
-  }
-  throut::throut(&camID[cid], m);
-  curr_frame = imageBuffNum;
-  */
 
   imgMutex.lock();
   memcpy(imgCopy[cid], img[cid], bypimg);
   imgMutex.unlock();
 
-  /*
   recMutex.lock();
   if(recflag) {
     char *p = new char[bypimg];
     memcpy(p, imgCopy[cid], bypimg);
-    recworker[cid]->bufferFrame(p);
+
+    GetImageInfo_wr();
+    char *s = getTimeStamp();
+    //throut::throut(&camID[cid], s);
+    
+    recworker[cid]->bufferFrame(p, s);
   }
   recMutex.unlock();
-  */
   
   UnlockSeqBuf_wr(imgBuffNum[cid], img[cid]);
 
   /*
   GetFramesPerSecond_wr();
-  if(live_fps < 55)
-    throut::throut(&camID[cid], STRING("fps = " << live_fps));
-  else
-    throut::throut(&camID[cid], "===============");
+  throut::throut(&camID[cid], STRING("fps = " << live_fps));
   */
+}
+
+char* UEyeCamera::getTimeStamp() {
+  /*
+  sec = 0-59
+  min = 0-59
+  hour = 0-23
+  day = 1-31
+  month = 0-11
+  year = years since 1900
+  yday = day of the year, 0-365
+  */
+
+  //sec + 60*min + 3600*hour + 86400*yday + (year-70)*31536000 + ((year-69)/4)*86400 - ((year-1)/100)*86400 + ((year+299)/400)*86400
+
+  long int s = imgInfo[cid].TimestampSystem.wSecond;
+  long int m = imgInfo[cid].TimestampSystem.wMinute;
+  long int h = imgInfo[cid].TimestampSystem.wHour;
+  long int y = imgInfo[cid].TimestampSystem.wYear;
+  long int d = imgInfo[cid].TimestampSystem.wDay;
+  
+  switch(imgInfo[cid].TimestampSystem.wMonth) {
+    case 12:
+      d += 30;
+    case 11:
+      d += 31;
+    case 10:
+      d += 30;
+    case 9:
+      d += 31;
+    case 8:
+      d += 31;
+    case 7:
+      d += 30;
+    case 6:
+      d += 31;
+    case 5:
+      d += 30;
+    case 4:
+      d += 31;
+    case 3:
+      d += 28;
+      if( ((y%4 == 0) && (y%100 != 0)) || y%400 == 0 ) // leap year
+        ++d;
+    case 2:
+      d += 31; // day in current year
+  }
+  --d; // first day is 0
+  y -= 1900; // year since 1900
+
+  long int sec = s + 60*m + 3600*h + 86400*d + \
+                  (y-70)*31536000 + ((y-69)/4)*86400 - \
+                  ((y-1)/100)*86400 + ((y+299)/400)*86400;
+
+  long int usec = 1000*imgInfo[cid].TimestampSystem.wMilliseconds;
+
+  char *ts = new char[30];
+  sprintf(ts, "%8li.%06li", sec, usec);
+
+  return ts;
 }
 
 void UEyeCamera::queryImage(int c, char *p) {
@@ -724,16 +751,18 @@ void UEyeCamera::handleCamStatus() {
   throut::throut(&camID[cid], STRING("CaptureStatus: " << captInfo[cid].adwCapStatusCnt_Detail[X] << " of " << #X));
 
 void UEyeCamera::handleCaptStatus() {
-  throut::throut(&camID[cid], STRING("CaptureStatus: " << captInfo[cid].dwCapStatusCnt_Total << " elements"));
-  _UEYE_ERRIF(IS_CAP_STATUS_API_NO_DEST_MEM)
-  _UEYE_ERRIF(IS_CAP_STATUS_API_CONVERSION_FAILED)
-  _UEYE_ERRIF(IS_CAP_STATUS_API_IMAGE_LOCKED)
-  _UEYE_ERRIF(IS_CAP_STATUS_DRV_OUT_OF_BUFFERS)
-  _UEYE_ERRIF(IS_CAP_STATUS_DRV_DEVICE_NOT_READY)
-  _UEYE_ERRIF(IS_CAP_STATUS_USB_TRANSFER_FAILED)
-  _UEYE_ERRIF(IS_CAP_STATUS_DEV_TIMEOUT)
-  _UEYE_ERRIF(IS_CAP_STATUS_ETH_BUFFER_OVERRUN)
-  _UEYE_ERRIF(IS_CAP_STATUS_ETH_MISSED_IMAGES)
+  if(captInfo[cid].dwCapStatusCnt_Total > 0) {
+    throut::throut(&camID[cid], STRING("CaptureStatus: " << captInfo[cid].dwCapStatusCnt_Total << " elements"));
+    _UEYE_ERRIF(IS_CAP_STATUS_API_NO_DEST_MEM)
+    _UEYE_ERRIF(IS_CAP_STATUS_API_CONVERSION_FAILED)
+    _UEYE_ERRIF(IS_CAP_STATUS_API_IMAGE_LOCKED)
+    _UEYE_ERRIF(IS_CAP_STATUS_DRV_OUT_OF_BUFFERS)
+    _UEYE_ERRIF(IS_CAP_STATUS_DRV_DEVICE_NOT_READY)
+    _UEYE_ERRIF(IS_CAP_STATUS_USB_TRANSFER_FAILED)
+    _UEYE_ERRIF(IS_CAP_STATUS_DEV_TIMEOUT)
+    _UEYE_ERRIF(IS_CAP_STATUS_ETH_BUFFER_OVERRUN)
+    _UEYE_ERRIF(IS_CAP_STATUS_ETH_MISSED_IMAGES)
+  }
 }
 
 int UEyeCamera::getWidth() {

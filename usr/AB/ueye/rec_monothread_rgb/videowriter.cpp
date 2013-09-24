@@ -99,18 +99,7 @@ VideoWriter_x264::VideoWriter_x264(const char *filename,
   frames_in = 0;
   frames_out = 0;
 
-  //sws_ctx = sws_getContext(enc->width, enc->height, PIX_FMT_UYVY422, enc->width, enc->height, enc->pix_fmt, SWS_BILINEAR, NULL, NULL, NULL);
-  /*
-  sws_ctx = sws_alloc_context();
-  sws_ctx->srcW = enc->width;
-  sws_ctx->srcH = enc->height;
-  sws_ctx->srcFormat = PIX_FMT_UYVY422;
-  sws_ctx->dstFormat = enc->pix_fmt;
-  sws_ctx->flags = SWS_BILINEAR;
-  sws_ctx->param = NULL;
-  sws_init_context(sws_ctx , NULL, NULL);
-  */
-  sws_ctx = sws_getCachedContext(NULL, enc->width, enc->height, PIX_FMT_UYVY422, enc->width, enc->height, enc->pix_fmt, SWS_BILINEAR, NULL, NULL, NULL);
+  sws_ctx = sws_getCachedContext(NULL, enc->width, enc->height, PIX_FMT_BGR24, enc->width, enc->height, enc->pix_fmt, SWS_BILINEAR, NULL, NULL, NULL);
 
   pFrame = avcodec_alloc_frame();
   int numBytes = avpicture_get_size(enc->pix_fmt, enc->width, enc->height);
@@ -159,7 +148,7 @@ void VideoWriter_x264::addFrame(uint8_t *buffer) {
   packet.size = 0;
 
   // convert frame to encoder format (PIX_FMT_YUV420P)
-  int src_stride = enc->width*2;
+  int src_stride = enc->width*3;
   sws_scale(sws_ctx, &buffer, &src_stride, 0, enc->height, pFrame->data,pFrame->linesize);
 
   pFrame->width = enc->width;

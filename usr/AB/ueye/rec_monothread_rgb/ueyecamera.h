@@ -17,6 +17,14 @@ class UEyeCamera: public QObject {
     SENSORINFO *camInfo;
     StringL name;
 
+    int numBuff;
+    char ***camBuff;
+    INT **camBuffID;
+
+    UINT pixelclock;
+    double real_fps, live_fps;
+    double exposure;
+
     int cid;
     INT camStatus;
 
@@ -27,9 +35,22 @@ class UEyeCamera: public QObject {
     UEYEIMAGEINFO *imgInfo;
     UEYE_CAPTURE_STATUS_INFO *captInfo;
 
+    // bits per pixel, bytes per pixel, bytes per image
+    int bpp, bypp, bypimg;
+
+    QMutex imgMutex, recMutex, quitMutex;
+
+    QThread **recthread;
+    RecWorker **recworker;
+    bool recflag;
+
+    CycleTimer ct;
+
   public:
     UEyeCamera(int w, int h, int fps);
     ~UEyeCamera();
+
+    static int getNumCameras();
 
     int getWidth();
     int getHeight();
@@ -40,7 +61,6 @@ class UEyeCamera: public QObject {
     void setup(int c1, int c2);
     void setup(int c1, int c2, int c3);
     void setup(int c1, int c2, int c3, int c4);
-    void setdown(); // TODO public or private?
 
     // NB very important, never call these if process is underway
     void init();
@@ -65,6 +85,9 @@ class UEyeCamera: public QObject {
     void camGrab();
     void camClose();
     void camExit();
+
+    // UNIX timestamp from camera timestamp, in string format
+    char *getTimeStamp();
 
     // UEye API wrappers
     void InitCamera_wr();
@@ -104,33 +127,12 @@ class UEyeCamera: public QObject {
     void handleCaptStatus();
 
   signals:
+    void inited();
+    void opened();
+    void closed();
+    void exited();
+
     void started();
     void finished();
-
-  public:
-    // TODO fix
-
-    static int getNumCameras();
-
-    int numBuff;
-    char ***camBuff;
-    INT **camBuffID;
-
-    // bits per pixel, bytes per pixel, bytes per image
-    int bpp, bypp, bypimg;  // bits per pixel, bytes
-
-    UINT pixelclock;
-    double real_fps, live_fps;
-    double exposure;
-
-    QMutex imgMutex, recMutex, quitMutex;
-
-    QThread *recthread;
-    RecWorker *recworker;
-    bool recflag;
-    int curr_frame, nskipped_frames;
-
-    CycleTimer ct;
-
 };
 

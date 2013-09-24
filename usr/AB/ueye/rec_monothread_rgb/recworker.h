@@ -4,26 +4,29 @@
 #include <QMutex>
 #include <QThread>
 #include <Core/array.h>
+#include <fstream>
 
 #include "videowriter.h"
 
 class RecWorker: public QObject {
   Q_OBJECT
 
-  MT::Array<char *> frames;
-  int nframes, pframes;
+  private:
+    MT::Array<char *> frames, timestamps;
+    int nframes, pframes;
 
-  QMutex frameMutex, quitMutex;
+    QMutex frameMutex, quitMutex;
 
-  VideoWriter_x264 *vw;
+    VideoWriter_x264 *vw;
+    FILE *tsfile;
 
-  bool quit_flag;
+    bool quit_flag;
 
   public:
-    RecWorker(char *fname, int w, int h, int f);
+    RecWorker(char *vname, char *sname, int w, int h, int f);
     ~RecWorker();
 
-    void bufferFrame(char *p);
+    void bufferFrame(char *p, char *s);
     void processBuffer();
 
     void quit();

@@ -11,7 +11,6 @@
 #include "ueyecamera.h"
 #include "recorder.h"
 
-using namespace throut;
 using namespace std;
 
 struct RecorderKeys: public OpenGL::GLKeyCall {
@@ -126,11 +125,12 @@ void Recorder::initCameras() {
 
   connect(thread, SIGNAL(started()), camera, SLOT(camProcess()));
   connect(camera, SIGNAL(started()), this, SLOT(cameraStarted()));
-
   connect(camera, SIGNAL(finished()), thread, SLOT(quit()));
-  connect(camera, SIGNAL(finished()), camera, SLOT(deleteLater()));
+  connect(camera, SIGNAL(finished()), this, SLOT(closeAndExitCamera()));
+  connect(camera, SIGNAL(exited()), this, SLOT(quitQCore()));
+
   connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
-  connect(thread, SIGNAL(finished()), this, SLOT(cameraFinished()));
+  connect(camera, SIGNAL(exited()), camera, SLOT(deleteLater()));
 
   camera->moveToThread(thread);
   thread->start();
@@ -182,7 +182,12 @@ void Recorder::cameraStarted() {
   gl->addKeyCall(keys);
 }
 
-void Recorder::cameraFinished() {
+void Recorder::closeAndExitCamera() {
+  camera->close();
+  camera->exit();
+}
+
+void Recorder::quitQCore() {
   QCoreApplication::quit();
 }
 
