@@ -84,7 +84,7 @@ const vector<BatchMaze::switch_t> BatchMaze::switch_vector = {
     switch_t("-printSamples", "bool",   "false",  "don't run, only print sampling locations"),
     switch_t("-optTran",      "double", "0",      "probability of optimal training transitions (vs. random)"),
     switch_t("-fincr",        "int",    "0",      "feature increment (positive value for incremental feature discovery)"),
-    switch_t("-like",         "double", "0.99",   "minimum data likelihood (only for incremental feature discovery with CRFs)"),
+    switch_t("-dl",           "double", "0.001",  "minimum change of data likelihood (only for incremental feature discovery with CRFs)"),
     switch_t("-tderr",        "double", "0.0001", "minimum TD-error (only for incremental feature discovery with Linear-Q)")
 };
 
@@ -468,21 +468,24 @@ int BatchMaze::run_active() {
         //-------------------//
         // train the learner //
         //-------------------//
+        double likelihood, loss;
         if(mode=="OPTIMAL" || mode=="RANDOM" || mode=="SEARCH_TREE" || mode=="TRANSITIONS") {
             // nothing to train
         } else if(mode=="SPARSE") {
             if(switch_int("-fincr")>0) {
-                double likelihood;
+                likelihood = 0;
+                double old_likelihood = 0;
                 do {
+                    old_likelihood = likelihood;
                     crf->construct_candidate_features(1);
                     crf->score_candidates_by_gradient();
                     crf->add_candidate_features_to_active(switch_int("-fincr"));
                     crf->optimize_model(0,500,&likelihood);
-                } while(likelihood<switch_double("-like"));
+
+                } while((likelihood-old_likelihood)>switch_double("-dl"));
                 crf->optimize_model(switch_double("-l1"),500);
                 crf->erase_zero_features();
                 crf->optimize_model(0,500,&likelihood);
-
             } else {
                 for(int complx=1; complx<=switch_int("-f"); ++complx) {
                     crf->construct_candidate_features(1);
@@ -503,7 +506,7 @@ int BatchMaze::run_active() {
                     crf->erase_zero_features();
                 }
                 // finalize
-                crf->optimize_model(0,500,nullptr);
+                crf->optimize_model(0,500,&likelihood);
             }
         } else if(mode=="UTREE_PROB") {
             utree->set_expansion_type(UTree::STATE_REWARD_EXPANSION);
@@ -515,7 +518,6 @@ int BatchMaze::run_active() {
             while(score_threshold <= utree->expand_leaf_node(score_threshold)) {}
         } else if(mode=="LINEAR_Q") {
             if(switch_int("-fincr")>0) {
-                double loss;
                 do {
                     linQ->add_candidates(1);
                     linQ->erase_zero_features();
@@ -542,7 +544,7 @@ int BatchMaze::run_active() {
                     linQ->erase_zero_weighted_features();
                 }
                 // finalize
-                linQ->optimize_ridge(1e-10);
+                loss = linQ->optimize_ridge(1e-10);
             }
         } else {
             DEBUG_DEAD_LINE;
@@ -637,6 +639,23 @@ int BatchMaze::run_active() {
 #endif
         {
 
+            // extra info for some methods
+            QString extra_info("");
+            if(mode=="SPARSE") {
+                extra_info = QString("data likelihood: %1").arg(likelihood);
+            } else if(mode=="LINEAR_Q") {
+                extra_info = QString("TD loss: %1").arg(loss);
+            } else if(mode=="UTREE_PROB"  ||
+                      mode=="OPTIMAL"     ||
+                      mode=="SEARCH_TREE" ||
+                      mode=="TRANSITIONS" ||
+                      mode=="RANDOM"      ||
+                      mode=="UTREE_VALUE") {
+                // no extra info
+            } else {
+                DEBUG_DEAD_LINE;
+            }
+
             // write data to log file
             LOG(episode_counter << " 	" <<
                 training_length << "	" <<
@@ -644,7 +663,8 @@ int BatchMaze::run_active() {
                 search_tree_size << "	" <<
                 (mode=="SPARSE" ? crf->get_number_of_features() : 0) << "	" <<
                 ( (mode=="UTREE_VALUE" || mode=="UTREE_PROB") ? utree->get_tree_size() : 0) << "	" <<
-                reward_sum/transition_length
+                reward_sum/transition_length << "	" <<
+                extra_info
                 );
 
             // for "ACTIVE" sampling: update smoothing kernel and virtual data,
