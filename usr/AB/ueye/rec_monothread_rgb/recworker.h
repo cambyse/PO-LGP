@@ -1,12 +1,12 @@
 #pragma once
 
+#include <fstream>
 #include <QObject>
 #include <QMutex>
 #include <QThread>
 #include <Core/array.h>
-#include <fstream>
 
-#include "videowriter.h"
+#include <Hardware/VideoWriter/videowriter.h>
 
 class RecWorker: public QObject {
   Q_OBJECT

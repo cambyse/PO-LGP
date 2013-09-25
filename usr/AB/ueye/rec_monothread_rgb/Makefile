@@ -1,6 +1,6 @@
 BASE=../../../../share
 
-DEPEND = Core Gui
+DEPEND = Core Gui Hardware_VideoWriter
 QT = 1
 
 CXX = clang++

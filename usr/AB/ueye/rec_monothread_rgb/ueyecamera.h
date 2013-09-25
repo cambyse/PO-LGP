@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QMutex>
 #include <Core/array.h>
+#include <Core/thread.h>
 #include <ueye.h>
 #include "recworker.h"
 

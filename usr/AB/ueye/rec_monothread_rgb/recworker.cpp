@@ -23,13 +23,16 @@ void RecWorker::process() {
     /*
     if(processFrame() == 0)
       usleep(16667);
-    */
-    processFrame();
+      */
+    processBuffer();
+    usleep(16667);
 
     quitMutex.lock();
     quit = quit_flag;
     quitMutex.unlock();
   }
+
+  processBuffer();
 
   emit finished();
 }
@@ -55,24 +58,23 @@ int RecWorker::processFrame() {
 
   if(hasFrame) {
     frameMutex.lock();
-    //throut::throut(this, STRING("Processing frame " << pframes << "/" << nframes));
-
     char *p = frames.popFirst();
+    char *s = timestamps.popFirst();
+    //throut::throut(this, STRING("Processing frame " << pframes << "/" << nframes << ", with timestamp " << s));
+    frameMutex.unlock();
+
     vw->addFrame((uint8_t*)p);
     delete p;
 
-    char *s = timestamps.popFirst();
     fprintf(tsfile, "%4i %s\n", pframes, s);
     fflush(tsfile);
     delete s;
 
     pframes++;
-    frameMutex.unlock();
   }
   
   frameMutex.lock();
-  // number of unprocessed frames
-  int rf = nframes - pframes;
+  int rf = nframes - pframes; // number of unprocessed frames as of now
   frameMutex.unlock();
 
   return rf; 

@@ -1,6 +1,5 @@
 #include <QCoreApplication>
 #include <cstdlib>
-#include <Core/thread.h>
 #include "ueyecamera.h"
 
 UEyeCamera::UEyeCamera(int w, int h, int f): width(w), height(h), fps(f) {
@@ -18,7 +17,7 @@ UEyeCamera::UEyeCamera(int w, int h, int f): width(w), height(h), fps(f) {
 
   throut::throutRegHeading(this, "UEyeCamera(*): ");
 
-  //ct.cycleStart();
+  ct.reset();
 }
 
 UEyeCamera::~UEyeCamera() {
@@ -61,21 +60,15 @@ int UEyeCamera::getNumCameras() {
 }
 
 void UEyeCamera::setup(int c1) {
-  throut::throut(this, "setup(int)");
-
   if(setup_flag)
     return;
 
   nUsedCams = 1;
   setupCommon();
   camID[0] = c1;
-
-  throut::throut(this, "setup(int) done");
 }
 
 void UEyeCamera::setup(int c1, int c2) {
-  throut::throut(this, "setup(int, int)");
-
   if(setup_flag)
     return;
 
@@ -83,13 +76,9 @@ void UEyeCamera::setup(int c1, int c2) {
   setupCommon();
   camID[0] = c1;
   camID[1] = c2;
-
-  throut::throut(this, "setup(int, int) done");
 }
 
 void UEyeCamera::setup(int c1, int c2, int c3) {
-  throut::throut(this, "setup(int, int, int)");
-
   if(setup_flag)
     return;
 
@@ -98,13 +87,9 @@ void UEyeCamera::setup(int c1, int c2, int c3) {
   camID[0] = c1;
   camID[1] = c2;
   camID[2] = c3;
-
-  throut::throut(this, "setup(int, int, int) done");
 }
 
 void UEyeCamera::setup(int c1, int c2, int c3, int c4) {
-  throut::throut(this, "setup(int, int, int, int)");
-
   if(setup_flag)
     return;
 
@@ -114,8 +99,6 @@ void UEyeCamera::setup(int c1, int c2, int c3, int c4) {
   camID[1] = c2;
   camID[2] = c3;
   camID[3] = c4;
-
-  throut::throut(this, "setup(int, int, int, int) done");
 }
 
 void UEyeCamera::init() {
@@ -189,7 +172,7 @@ void UEyeCamera::camInit() {
 
   throut::throutRegHeading(&camID[cid], STRING("UEyeCamera(" << cid << "): "));
 
-  name(cid) = new String(STRING("video_" << camID[cid]));
+  name(cid) = new String(STRING("Video_" << camID[cid]));
   throut::throut(&camID[cid], STRING("- camID = " << camID[cid]));
   throut::throut(&camID[cid], STRING("- name = " << *name(cid)));
 
@@ -217,7 +200,7 @@ void UEyeCamera::camInit() {
   throut::throut(&camID[cid], STRING("- pixel size = " << (float)camInfo[cid].wPixelSize/100 << " µm"));
   */
 
-  numBuff = 9;
+  numBuff = 30;
   camBuff[cid] = new char*[numBuff];
   camBuffID[cid] = new INT[numBuff];
   imgCopy[cid] = new char[bypimg];
@@ -279,7 +262,7 @@ void UEyeCamera::camInit() {
 
 void UEyeCamera::camOpen() {
   throut::throut(&camID[cid], "camOpen()");
-  CaptureVideo_wr(IS_DONT_WAIT);
+  CaptureVideo_wr(IS_WAIT);//DONT_WAIT);
   if(err_flag) return;
   InitImageQueue_wr();
   if(err_flag) return;
@@ -310,14 +293,16 @@ void UEyeCamera::startRec() {
 
     for(int c = 0; c < nUsedCams; c++) {
       MT::String nameStr(STRING("z." << nowStr << "." << (*name(c)) << ".avi"));
-      MT::String timeStr(STRING("z." << nowStr << "." << (*name(c)) << ".ts.txt"));
+      MT::String timeStr(STRING("z." << nowStr << ".Times" << (*name(c)) << ".dat"));
 
       recworker[c] = new RecWorker(nameStr, timeStr, width, height, fps);
       recthread[c] = new QThread();
 
       connect(recthread[c], SIGNAL(started()), recworker[c], SLOT(process()));
       connect(recworker[c], SIGNAL(finished()), recthread[c], SLOT(quit()));
-
+      
+      // just inserted
+      connect(recworker[c], SIGNAL(finished()), recworker[c], SLOT(deleteLater()));
       connect(recthread[c], SIGNAL(finished()), recthread[c], SLOT(deleteLater()));
 
       recworker[c]->moveToThread(recthread[c]);
@@ -336,6 +321,7 @@ void UEyeCamera::stopRec() {
     for(int c = 0; c < nUsedCams; c++)
       recworker[c]->quit();
 
+    /*
     for(int c = 0; c < nUsedCams; c++)
       recworker[c]->processBuffer();
 
@@ -343,6 +329,7 @@ void UEyeCamera::stopRec() {
       recworker[c]->deleteLater();
       recworker[c] = NULL;
     }
+    */
     recflag = false;
   }
   recMutex.unlock();
@@ -353,7 +340,7 @@ void UEyeCamera::camGrab() {
   imgBuffNum[cid] = 0;
 
   //ct.cycleDone();
-  //throut::throut(&camID[cid], STRING("busyDt: " << ct.busyDt << " busyDtMax: " << ct.busyDtMax << " cyclDt: " << ct.cyclDt));
+  //throut::throut(&camID[cid], STRING("busyDt: " << ct.busyDt << " cyclDt: " << ct.cyclDt));
 
   WaitForNextImage_wr();
   //ct.cycleStart();
@@ -369,12 +356,13 @@ void UEyeCamera::camGrab() {
 
     GetImageInfo_wr();
     char *s = getTimeStamp();
-    //throut::throut(&camID[cid], s);
+    //throut::throut(&camID[cid], STRING("timestamp = " << s));
     
     recworker[cid]->bufferFrame(p, s);
   }
   recMutex.unlock();
   
+  //throut::throut(&camID[cid], STRING("unlocking imgBuffNum = " << imgBuffNum[cid]));
   UnlockSeqBuf_wr(imgBuffNum[cid], img[cid]);
 
   /*
@@ -393,8 +381,6 @@ char* UEyeCamera::getTimeStamp() {
   year = years since 1900
   yday = day of the year, 0-365
   */
-
-  //sec + 60*min + 3600*hour + 86400*yday + (year-70)*31536000 + ((year-69)/4)*86400 - ((year-1)/100)*86400 + ((year+299)/400)*86400
 
   long int s = imgInfo[cid].TimestampSystem.wSecond;
   long int m = imgInfo[cid].TimestampSystem.wMinute;
@@ -428,9 +414,10 @@ char* UEyeCamera::getTimeStamp() {
     case 2:
       d += 31; // day in current year
   }
-  --d; // first day is 0
+  --d; // 0-based number of days
   y -= 1900; // year since 1900
 
+  //sec + 60*min + 3600*hour + 86400*yday + (year-70)*31536000 + ((year-69)/4)*86400 - ((year-1)/100)*86400 + ((year+299)/400)*86400
   long int sec = s + 60*m + 3600*h + 86400*d + \
                   (y-70)*31536000 + ((y-69)/4)*86400 - \
                   ((y-1)/100)*86400 + ((y+299)/400)*86400;
