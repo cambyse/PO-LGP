@@ -1,3 +1,5 @@
+#pragma once
+
 #include <Core/module.h>
 
 typedef struct _G4_FRAMEDATA G4_FRAMEDATA;
