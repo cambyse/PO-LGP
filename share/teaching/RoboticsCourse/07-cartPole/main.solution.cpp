@@ -57,7 +57,6 @@ void glDrawCartPole(void *classP){
   CartPoleState *s=(CartPoleState*)classP;
   double GLmatrix[16];
   ors::Transformation f;
-  f.setZero();
   //cart
   f.addRelativeTranslation(s->x,0.,1.);
   f.getAffineMatrixGL(GLmatrix);
@@ -71,7 +70,6 @@ void glDrawCartPole(void *classP){
   glLoadMatrixd(GLmatrix);
   glColor(.2,.2,.2);
   glDrawBox(.1, .1, 1.);
-  glLoadIdentity();
 }
 
 void testDraw(){
@@ -82,8 +80,8 @@ void testDraw(){
 void TestMove(){
   CartPoleState s;
   for (uint t=0; t<400000; t++){
-    s.step(0.0);
     s.gl.text.clear() <<t <<" ; " <<s.x1 << " ; " <<s.th1;
+    s.step(0.0);
     s.gl.update();
   }
 }
