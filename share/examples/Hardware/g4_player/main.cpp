@@ -1,11 +1,13 @@
 #include <System/engine.h>
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
+#include <Hardware/VideoWriter/video.h>
 #include <sys/time.h>
 
 void lib_hardware_G4();
 
 void display(const arr& X){
+  VideoEncoder vid;
   OpenGL gl;
   ors::Graph ors;
   bindOrsToOpenGL(ors, gl);
@@ -31,8 +33,11 @@ void display(const arr& X){
       ors.shapes(b+1)->X.rot.set(X(t,b,3), X(t,b,4), X(t,b,5), X(t,b,6));
     }
     gl.text.clear() <<"frame " <<t;
-    gl.update();
+    gl.update(NULL, true);
+    flip_image(gl.captureImage);
+    vid.addFrame(gl.captureImage);
   }
+  vid.close();
 }
 
 void loadData(arr &X){
