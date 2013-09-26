@@ -122,7 +122,9 @@ VideoWriter_x264::~VideoWriter_x264() {
     av_init_packet(&packet);
     packet.data = NULL;
     packet.size = 0;
+#if 0
     fail = avcodec_encode_video2(enc, &packet, NULL, &got_packet);
+#endif
 
     if(fail)
       fprintf(stderr, "Error while encoding frame\n");
@@ -158,10 +160,12 @@ void VideoWriter_x264::addFrame(uint8_t *buffer) {
 
   // encode the image
   int got_packet;
+#if 0
   int fail = avcodec_encode_video2(enc, &packet, pFrame, &got_packet);
 
   if(fail)
     fprintf(stderr, "Error while encoding frame\n");
+#endif
 
   // if zero size, it means the image was buffered
   if(got_packet > 0 && packet.size) 
