@@ -20,9 +20,9 @@ int main(int argn,char** argv){
   P.setInterpolatingCosts(c, MotionProblem::constFinalMid,
                           ARRAY(P.ors->getBodyByName("target")->X.pos), 1e3,
                           ARRAY(0.,0.,0.), 1e-3);
-//  P.setInterpolatingVelCosts(c, MotionProblem::constFinalMid,
-//                          ARRAY(0.,0.,0.), 1e3, //final desired velocity: v_y=-1 (hit ball from behind)
-//                          ARRAY(0.,0.,0.), 0.);
+  P.setInterpolatingVelCosts(c, MotionProblem::constFinalMid,
+                          ARRAY(0.,-1.,0.), 1e-0, //final desired velocity: v_y=-1 (hit ball from behind)
+                          ARRAY(0.,0.,0.), 0.);
 
   c = P.addDefaultTaskMap("collision", collTMT, 0, Transformation_Id, 0, Transformation_Id, ARR(.1));
   P.setInterpolatingCosts(c, MotionProblem::constFinalMid, ARRAY(0.), 1e-0);
@@ -55,13 +55,13 @@ int main(int argn,char** argv){
   
   OpenGL costs(STRING("PHI ("<<F.dim_phi(0)<<" tasks)"), 3*T+10, 3*F.dim_phi(0)+10 );
   //-- optimize
-  for(;;){
-    optGaussNewton(x, Convert(F), OPT(verbose=2, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
-    costs.displayRedBlue(~sqr(P.costMatrix), false, 3);
-    P.costReport();
-    write(LIST<arr>(x),"z.output");
-    gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", false, true);
-    displayTrajectory(x, 1, G, gl,"planned trajectory");
+  for(uint k=0;k<1;k++){
+    optNewton(x, Convert(F), OPT(verbose=2, stopIters=40, useAdaptiveDamping=false, damping=1e-0, maxStep=1.));
+//    costs.displayRedBlue(~sqr(P.costMatrix), false, 3);
+//    P.costReport();
+//    write(LIST<arr>(x),"z.output");
+//    gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", false, true);
+//    displayTrajectory(x, 1, G, gl,"planned trajectory");
   }
   
   return 0;

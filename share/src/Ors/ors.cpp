@@ -209,7 +209,7 @@ ors::Shape::Shape(Graph& G, Body *b, const Shape *copyShape) {
 
 ors::Shape::~Shape() {
   reset();
-  body->shapes.removeValue(this);
+  if(body) body->shapes.removeValue(this);
 }
 
 void ors::Shape::parseAts() {
