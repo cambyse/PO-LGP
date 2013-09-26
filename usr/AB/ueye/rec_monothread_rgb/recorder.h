@@ -4,7 +4,6 @@
 #include <Gui/opengl.h>
 #include <GL/glut.h>
 
-#include <QSignalMapper>
 #include <QThread>
 #include <QTimer>
 
@@ -15,25 +14,23 @@ struct RecorderKeys;
 class Recorder: public QObject {
   Q_OBJECT
   public:
-    static const int MAX_CAMS_PER_ROW = 2;
+    static const int CAMS_PER_ROW = 2;
 
   private:
+    // camera parameters
+    int width, height, fps;
+
     // camera stuff
     OpenGL *gl;
     byteA **image;
-    int numCams, openCams;
-
-    // camera parameters
-    int width, height, fps;
-    bool kinect;
+    int numCams;
 
     // keys
     RecorderKeys *keys;
 
     // camera threads
-    UEyeCamera **camera;
-    QThread **thread;
-    QSignalMapper *map;
+    UEyeCamera *camera;
+    QThread *thread;
 
     QTimer timer;
 
@@ -41,17 +38,14 @@ class Recorder: public QObject {
     bool play_flag, rec_flag;
 
   public:
-    Recorder();
+    Recorder(int w, int h, int f);
     ~Recorder();
 
-    void setSize(int w, int h);
-    void setFPS(int f);
-    void setKinect(bool k);
     OpenGL* getGL();
 
     void setup();
     void initImages();
-    void initThreads();
+    void initCameras();
     void initGui();
 
     void play();
@@ -61,11 +55,10 @@ class Recorder: public QObject {
   private:
     static void nothing(void*);
 
-    void collectThreads();
-
   private slots:
-    void startedCam();
-    void collectCam(int c);
+    void cameraStarted();
+    void closeAndExitCamera();
+    void quitQCore();
     void updateDisplay();
 };
 

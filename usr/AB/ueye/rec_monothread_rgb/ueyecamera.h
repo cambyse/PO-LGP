@@ -1,99 +1,95 @@
 #pragma once
 
-#include <ueye.h>
 #include <QObject>
 #include <QMutex>
-#include <QString>
-#include <Core/thread.h>
-
+#include <Core/array.h>
+#include <ueye.h>
 #include "recworker.h"
 
 class UEyeCamera: public QObject {
   Q_OBJECT
 
-  public:
-    UEyeCamera(int w, int h, int fps);
-    ~UEyeCamera();
-
-    int getWidth();
-    int getHeight();
-    int getFPS();
-    MT::String getName();
-    bool getErrFlag();
-
-    bool setup(int c1);
-    bool setup(int c1, int c2);
-    bool setup(int c1, int c2, int c3);
-    bool setup(int c1, int c2, int c3, int c4);
-
-    void init();
-    void open();
-    void close();
-    void exit();
-    void grab(char **p);
-
-  private:
-    void setupCommon();
-    bool camInit(int cid);
-    bool camOpen(int cid);
-    bool camClose(int cid);
-    bool camExit(int cid);
-    bool grabImage(int cid, char *p);
-
-  private:
-    bool setup_flag, init_flag, open_flag;
-
-  public:
-
-
-    private:
-      void grab(int cid);
-
-    void startRec();
-    void stopRec();
-
-    void quit();
-
-    static int getNumCameras();
-
   private:
     int width, height, fps;
-
-    int nrecframes;
 
     int nUsedCams;
     HIDS *camID;
     SENSORINFO *camInfo;
-    MT::String name; // TODO list of strings?
+    StringL name;
+
+    int numBuff;
+    char ***camBuff;
+    INT **camBuffID;
+
+    UINT pixelclock;
+    double real_fps, live_fps;
+    double exposure;
 
     int cid;
     INT camStatus;
 
-    bool quit_flag, err_flag;
+    bool setup_flag, init_flag, open_flag, quit_flag, err_flag;
 
     char **img, **imgCopy;
     INT *imgBuffNum;
     UEYEIMAGEINFO *imgInfo;
     UEYE_CAPTURE_STATUS_INFO *captInfo;
 
-    int numBuff;
-    char ***camBuff;
-    INT **camBuffID;
-
     // bits per pixel, bytes per pixel, bytes per image
-    int bpp, bypp, bypimg;  // bits per pixel, bytes
-
-    UINT pixelclock;
-    double real_fps, live_fps;
-    double exposure;
+    int bpp, bypp, bypimg;
 
     QMutex imgMutex, recMutex, quitMutex;
 
-    QThread *recthread;
-    RecWorker *recworker;
+    QThread **recthread;
+    RecWorker **recworker;
     bool recflag;
-    int curr_frame, nskipped_frames;
 
+    CycleTimer ct;
+
+  public:
+    UEyeCamera(int w, int h, int fps);
+    ~UEyeCamera();
+
+    static int getNumCameras();
+
+    int getWidth();
+    int getHeight();
+    int getFPS();
+    bool getErrFlag();
+
+    void setup(int c1);
+    void setup(int c1, int c2);
+    void setup(int c1, int c2, int c3);
+    void setup(int c1, int c2, int c3, int c4);
+
+    // NB very important, never call these if process is underway
+    void init();
+    void open();
+    void close();
+    void exit();
+
+    void quit();
+    void queryImage(int c, char *p);
+    bool queryError();
+
+    void startRec();
+    void stopRec();
+
+  private slots:
+    void camProcess();
+
+  private:
+    void setupCommon();
+    void camInit();
+    void camOpen();
+    void camGrab();
+    void camClose();
+    void camExit();
+
+    // UNIX timestamp from camera timestamp, in string format
+    char *getTimeStamp();
+
+    // UEye API wrappers
     void InitCamera_wr();
     void SetColorMode_wr(INT Mode);
     void SetColorConverter_wr(INT ColorMode, INT ConvertMode);
@@ -126,17 +122,16 @@ class UEyeCamera: public QObject {
 
     void GetError_wr();
 
+    // check camera and capture status codes
     void handleCamStatus();
     void handleCaptStatus();
-    void msg(const char *m);
-    void msg(const MT::String &m);
-
-    CycleTimer ct;
-
-  private slots:
-    void process();
 
   signals:
+    void inited();
+    void opened();
+    void closed();
+    void exited();
+
     void started();
     void finished();
 };

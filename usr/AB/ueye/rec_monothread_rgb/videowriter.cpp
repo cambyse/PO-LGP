@@ -100,7 +100,6 @@ VideoWriter_x264::VideoWriter_x264(const char *filename,
   frames_out = 0;
 
   sws_ctx = sws_getCachedContext(NULL, enc->width, enc->height, PIX_FMT_BGR24, enc->width, enc->height, enc->pix_fmt, SWS_BILINEAR, NULL, NULL, NULL);
-  //sws_ctx = sws_getCachedContext(NULL, enc->width, enc->height, PIX_FMT_UYVY422, enc->width, enc->height, enc->pix_fmt, SWS_BILINEAR, NULL, NULL, NULL);
 
   pFrame = avcodec_alloc_frame();
   int numBytes = avpicture_get_size(enc->pix_fmt, enc->width, enc->height);
