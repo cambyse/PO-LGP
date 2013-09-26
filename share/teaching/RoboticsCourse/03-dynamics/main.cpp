@@ -29,7 +29,7 @@ void TestPD(double xi, double waveLength){
 
 
 //for 500 steps gravity effects, than control back to home position
-void testDynamicSimulation(){
+void holdSteady(){
   Simulator S("../02-pegInAHole/pegInAHole.ors");
   S.setDynamicSimulationNoise(2.);
   S.setDynamicGravity(true);
@@ -47,7 +47,7 @@ void testDynamicSimulation(){
   S.watch();        //pause and watch initial posture
   
   double tau = .01; //duration of one time step = .01sec
-  bool control = 1;
+  bool control = false;
   
   for(uint i=0;i<1000;i++){
     //** CONTROLLER part
@@ -56,7 +56,7 @@ void testDynamicSimulation(){
     if(!control){
       //pure friction
       u = -.1 * qdot; //pure friction
-      if(i > 500)control = 1;
+      if(i > 500) control = 1;
     }else{
       //separate PDs in each joint separately:
       double lambda = .5/MT_2PI; //corresponds to 1 second period
@@ -78,7 +78,6 @@ void testDynamicSimulation(){
     <<" q = " <<q <<endl;
   }
 }
-
 
 void sineProfile(arr& q, const arr& q0, const arr& qT,uint T){
   q.resize(T+1,q0.N);
@@ -109,11 +108,16 @@ void followReferenceTrajectory(){
   double tau=.01;
   uint T=100; //we simulate for 5 seconds
 
-  //-- compute a stupid reference trajectory
+  //-- compute a reference trajectory using simple sine profiles
   arr q0(7); q0.setZero();
-  arr qT = ARRAY(0.945499, 0.431195, -1.97155, 0.623969, 2.22355, -0.665206, -1.48356);
-  arr q_ref,v_ref,a_ref;
-  sineProfile(q_ref, q0, qT, T);
+  arr q1 = ARRAY( 1.24355, -0.982934, -0.750849, 1.23252, 1.63246, -0.587617, -1.93586 );
+  arr q2 = ARRAY( 1.38892, -0.764261, -1.68085, 1.82817, 1.3722, -1.01587, -0.992539 );
+  // arr qT = ARRAY(0.945499, 0.431195, -1.97155, 0.623969, 2.22355, -0.665206, -1.48356);
+
+  arr q_ref,q_tmp,v_ref,a_ref;
+  sineProfile(q_ref, q0, q1, T);
+  sineProfile(q_tmp, q1, q2, T);
+  q_ref.append(q_tmp);
   getVel(v_ref,q_ref,tau);
   getAcc(a_ref,q_ref,tau);
 
@@ -122,20 +126,20 @@ void followReferenceTrajectory(){
   S.getJointAnglesAndVels(q, qdot);
   cout <<"initial posture (hit ENTER in the OpenGL window to continue!!)" <<endl;
   //initial perturbation
-  q(2) = .3;
-  S.setJointAnglesAndVels(q, qdot);
+  //q(2) = .3;
+  //S.setJointAnglesAndVels(q, qdot);
 
   S.watch();        //pause and watch initial posture
 
   arr plot;
   
-  for(uint t=0;t<=T;t++){
+  for(uint t=0;t<q_ref.d0;t++){
     //get system equation
     S.getDynamics(M,F);
 
     //PD parameters
-    double lambda = .2/MT_2PI; //corresponds to 1 second wavelength
-    double xi = .2; //oscillatory or critically damped
+    double lambda = .2/MT_2PI; //corresponds to .2 second wavelength
+    double xi = .5; //oscillatory or critically damped
     double Kp,Kd;
     Kp = 1./(lambda*lambda);
     Kd = 2.*xi/lambda;
@@ -145,7 +149,7 @@ void followReferenceTrajectory(){
     arr u = M*qddot + F;
 
     //PD heuristic, hardly works
-    //u = 1e1 * (q_ref[t] - q) - 1e+0 * qdot;
+    //u = 100. * (q_ref[t] - q) - 1. * qdot;
 
     //dynamic simulation (simple Euler integration of the system dynamics, look into the code)
     S.stepDynamic(u, tau);
@@ -159,13 +163,13 @@ void followReferenceTrajectory(){
 }
 
 int main(int argc,char **argv){
-  int mode=5;
-  if(argc>1) mode = atoi(argv[1]);
-  switch(mode){
+  MT::initCmdLine(argc,argv);
+
+  switch(MT::getParameter<int>("mode",5)){
     case 1:  TestPD(1., .5);  break;
     case 2:  TestPD(5., .5);  break;
     case 3:  TestPD(.1, .5);  break;
-    case 4:  testDynamicSimulation();  break;
+    case 4:  holdSteady();  break;
     case 5:  followReferenceTrajectory();  break;
   }
   if(true)

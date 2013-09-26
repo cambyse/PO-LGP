@@ -762,7 +762,7 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
   arr q=_q, v;
   if(&_v) v=_v;
 
-if(Qlin.N) {
+  if(Qlin.N) {
     CHECK(_q.N==Qlin.d1,"wrong joint dimensions: ors expected " <<Qlin.d1 <<" joints; you gave " <<_q.N <<" joints");
     q = Qlin*_q + Qoff;
     if(&_v) { v = Qlin*_v;  v.reshape(v.N); }
@@ -792,7 +792,13 @@ if(Qlin.N) {
         }*/
         
         //velocity
-        if(&_v) j->Q.angvel.set(v(n), 0., 0.);
+        if(&_v){
+          j->Q.angvel.set(v(n), 0., 0.);
+          j->Q.zeroVels=false;
+        }else{
+          j->Q.angvel.setZero();
+          j->Q.zeroVels=true;
+        }
         //if(e->Q.w.isZero()) e->Q.w=Vector_x;
         //if(e->Q.w*Vector_x<0.) e->Q.w.setLength(-v(n)); else e->Q.w.setLength(v(n));
         
@@ -1706,7 +1712,7 @@ void ors::Graph::contactsToForces(double hook, double damp) {
 }
 
 /// measure (=scalar kinematics) for the contact cost summed over all bodies
-void ors::Graph::phiCollision(arr &y, arr& J, double margin) const {
+void ors::Graph::phiCollision(arr &y, arr& J, double margin, bool useCenterDist) const {
   y.resize(1);
   y=0.;
   uint i;
@@ -1719,12 +1725,11 @@ void ors::Graph::phiCollision(arr &y, arr& J, double margin) const {
       CHECK(proxies(i)->cenD<.8*cenMarg, "sorry I made assumption objects are not too large; rescale cenMarg");
       a=shapes(proxies(i)->a); b=shapes(proxies(i)->b);
 
-      bool used2=false;
       //costs
       double d1 = 1.-proxies(i)->d/margin;
       double d2 = 1.-proxies(i)->cenD/cenMarg;
       //NORMALS ALWAYS GO FROM b TO a !!
-      if(!used2) d2=1.;
+      if(!useCenterDist) d2=1.;
       y(0) += d1*d2;
       
       //Jacobian
@@ -1741,7 +1746,7 @@ void ors::Graph::phiCollision(arr &y, arr& J, double margin) const {
           jacobianPos(Jpos, b->body->index, &brel); J += d2/margin*(posN*Jpos);
         }
         
-        if(used2){
+        if(useCenterDist){
           ors::Vector arel=a->X.rot/(proxies(i)->cenA-a->X.pos);
           ors::Vector brel=b->X.rot/(proxies(i)->cenB-b->X.pos);
           CHECK(proxies(i)->cenN.isNormalized(), "proxy normal is not normalized");

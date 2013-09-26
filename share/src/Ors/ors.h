@@ -267,7 +267,7 @@ struct Graph {
   void inverseDynamics(arr& tau, const arr& qd, const arr& qdd);
   
   /// @name special 'kinematic maps'
-  void phiCollision(arr &y, arr& J, double margin=.02) const;
+  void phiCollision(arr &y, arr& J, double margin=.02, bool useCenterDist=true) const;
   
   /// @name get state
   uint getJointStateDimension(bool internal=false) const;

@@ -5,16 +5,20 @@
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
 #include <Optim/constrained.h>
-#include <Perception/videoWriter.h>
+#include <Perception/video.h>
+
 
 void saveTrajectory(const arr& x, ors::Graph& G, OpenGL& gl) {
+  VideoEncoder vid;
   for(uint t=0; t<x.d0; t++) {
     G.setJointState(x[t]);
     G.calcBodyFramesFromJoints();
     gl.update(STRING("step " <<std::setw(3) <<t <<'/' <<x.d0-1).p, true, false);
     flip_image(gl.captureImage);
-    write_ppm(gl.captureImage, STRING("vid/t"<<t<<".ppm"));
+    vid.addFrame(gl.captureImage);
+//    write_ppm(gl.captureImage, STRING("vid/t"<<t<<".ppm"));
   }
+  vid.close();
 }
 
 int main(int argn,char** argv){
