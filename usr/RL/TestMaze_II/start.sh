@@ -25,7 +25,7 @@ else
 fi
 
 ## define string for calling the program
-start_string="./TestMaze_II -mode SPARSE -sample UNIFORM -nEp 100 -maxTran 22 -minTrain 5000 -maxTrain 5000 -maxTree 50000 -l1 0.0003 -incr 0 -fincr 50 -dl 0.0001"
+start_string="./TestMaze_II -mode SPARSE -sample UNIFORM -nEp 100 -maxTran 22 -minTrain 500 -maxTrain 500 -maxTree 50000 -l1 0.001 -incr 0 -fincr 50 -dl 0.0001"
 
 ## call the program
 if [ "$1" == "verbose" ]; then
