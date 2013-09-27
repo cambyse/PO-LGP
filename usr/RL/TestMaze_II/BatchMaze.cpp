@@ -642,7 +642,7 @@ int BatchMaze::run_active() {
             // extra info for some methods
             QString extra_info("");
             if(mode=="SPARSE") {
-                extra_info = QString("data likelihood: %1").arg(likelihood);
+                extra_info = QString("data_likelihood: %1	l1: ").arg(likelihood).arg(switch_double("-l1"));
             } else if(mode=="LINEAR_Q") {
                 extra_info = QString("TD loss: %1").arg(loss);
             } else if(mode=="UTREE_PROB"  ||
