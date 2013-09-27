@@ -101,6 +101,26 @@ void UEyeCamera::setup(int c1, int c2, int c3, int c4) {
   camID[3] = c4;
 }
 
+void UEyeCamera::setupCommon() {
+  camID = new HIDS[nUsedCams];
+  camInfo = new SENSORINFO[nUsedCams];
+  name.resize(nUsedCams);
+
+  img = new char*[nUsedCams];
+  imgCopy = new char*[nUsedCams];
+  imgBuffNum = new INT[nUsedCams];
+  imgInfo = new UEYEIMAGEINFO[nUsedCams];
+  captInfo = new UEYE_CAPTURE_STATUS_INFO[nUsedCams];
+
+  camBuff = new char**[nUsedCams];
+  camBuffID = new INT*[nUsedCams];
+
+  recthread = new QThread*[nUsedCams];
+  recworker = new RecWorker*[nUsedCams];
+
+  setup_flag = true;
+}
+
 void UEyeCamera::init() {
   if(!setup_flag || init_flag || open_flag) {
     err_flag = true;
@@ -143,26 +163,6 @@ void UEyeCamera::exit() {
     camExit();
   init_flag = false;
   emit exited();
-}
-
-void UEyeCamera::setupCommon() {
-  camID = new HIDS[nUsedCams];
-  camInfo = new SENSORINFO[nUsedCams];
-  name.resize(nUsedCams);
-
-  img = new char*[nUsedCams];
-  imgCopy = new char*[nUsedCams];
-  imgBuffNum = new INT[nUsedCams];
-  imgInfo = new UEYEIMAGEINFO[nUsedCams];
-  captInfo = new UEYE_CAPTURE_STATUS_INFO[nUsedCams];
-
-  camBuff = new char**[nUsedCams];
-  camBuffID = new INT*[nUsedCams];
-
-  recthread = new QThread*[nUsedCams];
-  recworker = new RecWorker*[nUsedCams];
-
-  setup_flag = true;
 }
 
 void UEyeCamera::camInit() {

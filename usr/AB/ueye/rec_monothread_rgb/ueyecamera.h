@@ -69,8 +69,6 @@ class UEyeCamera: public QObject {
     void close();
     void exit();
 
-    void quit();
-    void queryImage(int c, char *p);
     bool queryError();
 
     void startRec();

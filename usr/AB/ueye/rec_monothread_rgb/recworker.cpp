@@ -15,6 +15,8 @@ RecWorker::~RecWorker() {
 }
 
 void RecWorker::process() {
+  throut::throut(this, "Recording Started");
+
   quitMutex.lock();
   quit_flag = false;
   quitMutex.unlock();
@@ -33,6 +35,7 @@ void RecWorker::process() {
   }
 
   processBuffer();
+  throut::throut(this, STRING("Recording Stopped: " << pframes << " processed"));
 
   emit finished();
 }
