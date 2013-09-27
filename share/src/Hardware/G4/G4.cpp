@@ -15,7 +15,7 @@ void G4Poller::open(){
   for(uint i=0;i<100;i++){
     res = g4_init_sys(&sysId, src_cfg_file, NULL);
     if(res==G4_ERROR_NONE) break; //success!
-    MT::wait(.001, false);
+    MT::wait(.1, false);
   }
   if(res!=G4_ERROR_NONE)
     HALT("G4Tracker initialization failed 100 times. g4_init_sys returned " <<res);
