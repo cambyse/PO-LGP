@@ -267,6 +267,11 @@ void ors::Link::setFeatherstones() {
   switch(type) {
     case -1:     CHECK(parent==-1, ""); _h.clear();  break;
     case JT_hingeX: _h.resize(6); _h.setZero(); _h(0)=1.; break;
+    case JT_hingeY: _h.resize(6); _h.setZero(); _h(1)=1.; break;
+    case JT_hingeZ: _h.resize(6); _h.setZero(); _h(2)=1.; break;
+    case JT_transX: _h.resize(6); _h.setZero(); _h(3)=1.; break;
+    case JT_transY: _h.resize(6); _h.setZero(); _h(4)=1.; break;
+    case JT_transZ: _h.resize(6); _h.setZero(); _h(5)=1.; break;
     default: NIY;
   }
   Featherstone::RBmci(_I, mass, com.p(), inertia);
@@ -956,6 +961,7 @@ void ors::equationOfMotion(arr& H, arr& C,
   
   int par;
   uint i, j, N=tree.N, iq, jq;
+  //CHECK(N-1==qd.N,"vels don't have right dimension")
   arr h(N, 6);
   arr Xup(N, 6, 6), v(N, 6), dh_dq(N, 6), IC(N, 6, 6), fvp(N, 6), avp(N, 6);
   arr vJ, fh;

@@ -805,13 +805,8 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
         }*/
         
         //velocity
-        if(&_v){
-          j->Q.angvel.set(v(n) ,0., 0.);
-          j->Q.zeroVels=false;
-        }else{
-          j->Q.angvel.setZero();
-          j->Q.zeroVels=true;
-        }
+        if(&_v){  j->Q.angvel.set(v(n) ,0., 0.);  j->Q.zeroVels=false;  }
+        else{  j->Q.angvel.setZero();  j->Q.zeroVels=true;  }
         //if(e->Q.w.isZero()) e->Q.w=Vector_x;
         //if(e->Q.w*Vector_x<0.) e->Q.w.setLength(-v(n)); else e->Q.w.setLength(v(n));
         
@@ -825,13 +820,8 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
 
       case JT_hingeY: {
         j->Q.rot.setRadY(q(n));
-        if(&_v){
-          j->Q.angvel.set(0., v(n) ,0.);
-          j->Q.zeroVels=false;
-        }else{
-          j->Q.angvel.setZero();
-          j->Q.zeroVels=true;
-        }
+        if(&_v){  j->Q.angvel.set(0., v(n) ,0.);  j->Q.zeroVels=false;  }
+        else{  j->Q.angvel.setZero();  j->Q.zeroVels=true;  }
         if(clearJointErrors) {
           j->Q.pos.setZero();
           j->Q.vel.setZero();
@@ -841,13 +831,8 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
 
       case JT_hingeZ: {
         j->Q.rot.setRadZ(q(n));
-        if(&_v){
-          j->Q.angvel.set(0., 0., v(n));
-          j->Q.zeroVels=false;
-        }else{
-          j->Q.angvel.setZero();
-          j->Q.zeroVels=true;
-        }
+        if(&_v){  j->Q.angvel.set(0., 0., v(n));  j->Q.zeroVels=false;  }
+        else{  j->Q.angvel.setZero();  j->Q.zeroVels=true;  }
         if(clearJointErrors) {
           j->Q.pos.setZero();
           j->Q.vel.setZero();
