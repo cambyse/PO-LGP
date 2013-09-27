@@ -1,5 +1,8 @@
 Architecture
 ============
 
+.. figure:: architecture.png
+   :width: 600 px
+   :alt: architecture.
 
-TODO
+   Desrciption of the architecture.
