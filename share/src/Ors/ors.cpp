@@ -103,36 +103,30 @@ void ors::Body::reset() {
   type=dynamicBT;
   shapes.memMove=true;
   com.setZero();
+#if 1
+  mass = 0.;
+  inertia.setZero();
+#else
   mass=1.;
   inertia.setId();
-  inertia*=.2;
+  inertia *= .3;
+#endif
 }
 
 void ors::Body::parseAts() {
   //interpret some of the attributes
   arr x;
-  double d;
   MT::String str;
   ats.getValue<Transformation>(X, "X");
   ats.getValue<Transformation>(X, "pose");
   
   //mass properties
-  if(ats.getValue<double>(d, "mass")) {
-    mass=d;
-#if 1
-    inertia.setId();
-    inertia *= .2*d;
-#else
-    switch(shapes(0)->type) {
-      case sphereST:   inertiaSphere(inertia.m, mass, 1000., shapes(0)->size[3]);  break;
-      case boxST:      inertiaBox(inertia.m, mass, 1000., shapes(0)->size[0], shapes(0)->size[1], shapes(0)->size[2]);  break;
-      case cappedCylinderST:
-      case cylinderST: inertiaCylinder(inertia.m, mass, 1000., shapes(0)->size[2], shapes(0)->size[3]);  break;
-      case noneST:
-      default: HALT("can't set inertia tensor for this type");
-    }
-#endif
-  }
+//  double d;
+//  if(ats.getValue<double>(d, "mass")) {
+//    mass=d;
+//    inertia.setId();
+//    inertia *= .2*d;
+//  }
   
   type=dynamicBT;
   if(ats.getValue<bool>("fixed"))      type=staticBT;
@@ -224,6 +218,25 @@ void ors::Shape::parseAts() {
   if(ats.getValue<double>(d, "meshscale"))  { mesh.scale(d); }
   if(ats.getValue<bool>("contact"))         { cont=true; }
   if(ats.getValue<arr>(x, "submeshsizes"))  { copy(mesh.subMeshSizes, x); }
+
+  //add inertia to the body
+  if(body) {
+    Matrix I;
+    double mass=-1.;
+    switch(type) {
+    case sphereST:   inertiaSphere(I.p(), mass, 1000., size[3]);  break;
+    case boxST:      inertiaBox(I.p(), mass, 1000., size[0], size[1], size[2]);  break;
+    case cappedCylinderST:
+    case cylinderST: inertiaCylinder(I.p(), mass, 1000., size[2], size[3]);  break;
+      case noneST:
+      default: ;
+    }
+    if(mass>0.){
+      body->mass += mass;
+      body->inertia += I;
+    }
+  }
+
 }
 
 void ors::Shape::reset() {
@@ -793,7 +806,7 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
         
         //velocity
         if(&_v){
-          j->Q.angvel.set(v(n), 0., 0.);
+          j->Q.angvel.set(v(n) ,0., 0.);
           j->Q.zeroVels=false;
         }else{
           j->Q.angvel.setZero();
@@ -812,7 +825,13 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
 
       case JT_hingeY: {
         j->Q.rot.setRadY(q(n));
-        if(&_v) j->Q.angvel.set(0., v(n), 0.);
+        if(&_v){
+          j->Q.angvel.set(0., v(n) ,0.);
+          j->Q.zeroVels=false;
+        }else{
+          j->Q.angvel.setZero();
+          j->Q.zeroVels=true;
+        }
         if(clearJointErrors) {
           j->Q.pos.setZero();
           j->Q.vel.setZero();
@@ -822,7 +841,13 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
 
       case JT_hingeZ: {
         j->Q.rot.setRadZ(q(n));
-        if(&_v) j->Q.angvel.set(0., 0., v(n));
+        if(&_v){
+          j->Q.angvel.set(0., 0., v(n));
+          j->Q.zeroVels=false;
+        }else{
+          j->Q.angvel.setZero();
+          j->Q.zeroVels=true;
+        }
         if(clearJointErrors) {
           j->Q.pos.setZero();
           j->Q.vel.setZero();
@@ -877,7 +902,7 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
         }*/
         
         //velocity
-        if(&_v) j->Q.vel = v(n)*Vector_x;
+        if(&_v){ j->Q.vel.set(v(n), 0., 0.); j->Q.zeroVels=false; }
         
         if(clearJointErrors) {
           j->Q.rot.setZero();
@@ -888,7 +913,7 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
 
       case JT_transY: {
         j->Q.pos = q(n)*Vector_y;
-        if(&_v) j->Q.vel = v(n)*Vector_y;
+        if(&_v){ j->Q.vel.set(0., v(n), 0.); j->Q.zeroVels=false; }
         if(clearJointErrors) {
           j->Q.rot.setZero();
           j->Q.angvel.setZero();
@@ -898,7 +923,7 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
 
       case JT_transZ: {
         j->Q.pos = q(n)*Vector_z;
-        if(&_v) j->Q.vel = v(n)*Vector_z;
+        if(&_v){ j->Q.vel.set(0., 0., v(n)); j->Q.zeroVels=false; }
         if(clearJointErrors) {
           j->Q.rot.setZero();
           j->Q.angvel.setZero();
@@ -908,7 +933,7 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
 
       case JT_trans3: {
         j->Q.pos.set(q(n), q(n+1), q(n+2));
-        if(&_v) j->Q.vel.set(v(n), v(n+1), v(n+2));
+        if(&_v){ j->Q.vel.set(v(n), v(n+1), v(n+2)); j->Q.zeroVels=false; }
         if(clearJointErrors) {
           j->Q.rot.setZero();
           j->Q.angvel.setZero();
@@ -919,6 +944,7 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
       case JT_glue:
       case JT_fixed:
         j->Q.setZero();
+        j->Q.zeroVels=true;
         break;
       default: NIY;
     }
@@ -2094,10 +2120,10 @@ double ors::Graph::getEnergy() const {
   E=0.;
   for_list(j, n, bodies) {
     m=n->mass;
-    I=n->inertia;
+    ors::Quaternion &rot = n->X.rot;
+    I=(rot).getMatrix() * n->inertia * (-rot).getMatrix();
     v=n->X.vel.length();
     w=n->X.angvel;
-    //I.setZero(); I(0, 0)=I(1, 1)=I(2, 2)=.1*m;
     E += .5*m*v*v;
     E += 9.81 * m * n->X.pos.z;
     E += .5*(w*(I*w));

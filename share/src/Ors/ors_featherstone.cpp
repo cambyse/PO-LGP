@@ -221,7 +221,7 @@ const arr Featherstone::Robot::Ilink(uint i) const {
   if(e) com = e->B.p; else com = C->nodes(i)->X.p;
   //arr Ic(3, 3);  Ic.setDiag(.1*m);
   arr I;
-  RBmci(I, m, com.v, C->nodes(i)->inertia); //Ic);
+  RBmci(I, m, com.v, C->nodes(i)->inertia);
   return I;
 }
 

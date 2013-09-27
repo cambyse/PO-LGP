@@ -155,9 +155,9 @@ void optimize(arr& w, bool noise){
   w = wbest;
 }
 
-void playController(const arr& w,bool noise){
+void playController(const arr& w, bool noise){
   CartPoleState s;
-  if(noise)  s.dynamicsNoise = 0.01;
+  if(noise)  s.dynamicsNoise = 0.1;
   for(uint t=0;;t++){
     s.step(GetControl(w,s));
     s.gl.update();
