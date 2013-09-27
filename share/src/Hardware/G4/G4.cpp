@@ -12,7 +12,7 @@ void G4Poller::open(){
 
   //-- initialization
   int res;
-  for(uint i=0;i<100;i++){
+  for(uint i=0;i<10;i++){
     res = g4_init_sys(&sysId, src_cfg_file, NULL);
     if(res==G4_ERROR_NONE) break; //success!
     MT::wait(.1, false);
@@ -32,8 +32,8 @@ void G4Poller::open(){
   while(hubs != (int)numHubs) {
     res = g4_set_query(&cs);
     hubs = cs.cds.iParam;
-    cout << hubs << ", ";
-    MT::wait(.001, false);
+    cout << hubs << ", " << flush;
+    MT::wait(.01, false);
   }
   cout << "success!" << endl;
 

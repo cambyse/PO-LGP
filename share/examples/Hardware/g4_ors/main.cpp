@@ -18,6 +18,33 @@ void threadedRun(){
   OpenGL gl;
   ors::Graph ors;
   init(ors, gl, "g4_markers.ors");
+
+  /* GRRR
+  //gl.camera.X->rot.setZero();
+  gl.camera.setPosition(2, 0, 1);
+  cout << "cam pos:" << endl;
+  cout << "x = " << gl.camera.X->pos.x << endl;
+  cout << "y = " << gl.camera.X->pos.y << endl;
+  cout << "z = " << gl.camera.X->pos.z << endl;
+
+  cout << "cam rot:" << endl;
+  cout << "x = " << gl.camera.X->rot.x << endl;
+  cout << "y = " << gl.camera.X->rot.y << endl;
+  cout << "z = " << gl.camera.X->rot.z << endl;
+  cout << "w = " << gl.camera.X->rot.w << endl;
+
+  //gl.camera.X->rot.setRad(3.1415/2 , 1, 0, 0);
+
+  cout << "cam rot:" << endl;
+  cout << "x = " << gl.camera.X->rot.x << endl;
+  cout << "y = " << gl.camera.X->rot.y << endl;
+  cout << "z = " << gl.camera.X->rot.z << endl;
+  cout << "w = " << gl.camera.X->rot.w << endl;
+  */
+  gl.camera.setPosition(2, 0, 1);
+  gl.camera.focus(0, .5, 0);
+  gl.update();
+
   floatA poses;
   timeval time;
   MT::String nowStr, timesStr, poseStr;
@@ -32,9 +59,7 @@ void threadedRun(){
   uint t;
   for(t=0;/*t<100*/;t++){
     if(engine().shutdown) break;
-    cout << "waiting" << endl;
     S.currentPoses.var->waitForNextWriteAccess();
-    cout << "done" << endl;
     gettimeofday(&time, 0);
     poses = S.currentPoses.get();
     poses.reshape(poses.N/7,7);
