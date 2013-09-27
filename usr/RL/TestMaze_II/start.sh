@@ -1,3 +1,6 @@
+## define string for calling the program
+start_string="./TestMaze_II -mode SPARSE -sample UNIFORM -nEp 100 -maxTran 22 -minTrain 500 -maxTrain 500 -maxTree 50000 -l1 0.0005 -incr 0 -fincr 50 -dl 0.0001"
+
 ## print kind of help if no arguments are given
 if [ $# -lt 1 ]; then
     echo "expecting at least one argument"
@@ -23,9 +26,6 @@ if [ $# -gt 1 ]; then
 else
     unset OMP_NUM_THREADS
 fi
-
-## define string for calling the program
-start_string="./TestMaze_II -mode SPARSE -sample UNIFORM -nEp 100 -maxTran 22 -minTrain 500 -maxTrain 500 -maxTree 50000 -l1 0.001 -incr 0 -fincr 50 -dl 0.0001"
 
 ## call the program
 if [ "$1" == "verbose" ]; then
