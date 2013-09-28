@@ -1226,8 +1226,62 @@ void KMarkovCRF::update_prediction_map() {
     DEBUG_OUT(1,"    DONE");
 }
 
-void KMarkovCRF::test() {
+void KMarkovCRF::test_2() {
 
+    // TODO!!! Probability for first data point is different here and for
+    // get_prediction(). This should not be the case!
+
+    DEBUG_OUT(0,"Data Probabilities");
+    DEBUG_OUT(0,"   idx: probability	(prediction)");
+
+    probability_t prob = 1;
+    idx_t instance_idx = 0;
+    for(instance_t * current_episode : instance_data) {
+        for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
+
+            action_t action = insIt->action;
+            state_t state = insIt->state;
+            reward_t reward = insIt->reward;
+
+            // calculate sumF(x,y)
+            probability_t sumFXY = 0;
+            for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
+                // TODO!!! This makes a differencs (for feature return value !=
+                // {0,1}) but really should not!
+                sumFXY += lambda[f_idx]*active_features[f_idx].evaluate(insIt-1,action,state,reward);
+                //sumFXY += lambda[f_idx]*active_features[f_idx].evaluate(insIt);
+            }
+
+            // calculate sumExp(x)
+            probability_t sumExpX = 0;
+
+            for(stateIt_t sum_state=stateIt_t::first(); sum_state!=INVALID; ++sum_state) {
+                for(rewardIt_t sum_reward=rewardIt_t::first(); sum_reward!=INVALID; ++sum_reward) {
+
+                    // calculate sumF(x,y')
+                    probability_t sumFXYs = 0;
+                    for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
+                        sumFXYs += lambda[f_idx]*active_features[f_idx].evaluate(insIt-1,action,sum_state,sum_reward);
+                    }
+
+                    // increment sumExp(x(n))
+                    sumExpX += exp( sumFXYs );
+                }
+            }
+
+            probability_t tmp_prob = exp( sumFXY )/sumExpX;
+            prob *= tmp_prob;
+
+            probability_t tmp_prob_2 = get_prediction(insIt-1,action,state,reward);
+
+            DEBUG_OUT(0,"   " << instance_idx << ": " <<  tmp_prob << "	(" << tmp_prob_2 << ")");
+        }
+    }
+
+    DEBUG_OUT(0,"   mean data likelihood: " <<  pow(prob,1./instance_idx) );
+}
+
+void KMarkovCRF::test() {
     // return if not enough data available
     if(number_of_data_points<=0) {
         DEBUG_OUT(0,"Not enough data to evaluate features (" << number_of_data_points << ").");
@@ -1291,6 +1345,13 @@ void KMarkovCRF::test() {
 
     DEBUG_OUT(0,"Number of data points:           " << number_of_data_points );
     DEBUG_OUT(0,"Number of unique feature values: " << feature_value_set.size() );
+}
+
+void KMarkovCRF::print_all_features() const {
+    DEBUG_OUT(0,"Printing active features:");
+    for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
+        DEBUG_OUT(0,"    f " << f_idx << ":	" << active_features[f_idx] << "	w = " << lambda[f_idx]);
+    }
 }
 
 void KMarkovCRF::check_lambda_size(lbfgsfloatval_t* & parameters, vector<AndFeature> & feature_vector, int old_feature_vector_size) {

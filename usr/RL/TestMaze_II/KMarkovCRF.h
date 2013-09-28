@@ -179,7 +179,11 @@ public:
 
     void update_prediction_map();
 
+    void test_2();
+
     void test();
+
+    void print_all_features() const;
 
 private:
 

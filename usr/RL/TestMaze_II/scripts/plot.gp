@@ -1,30 +1,58 @@
-rand_fact = 0
-rand_fact_x = rand_fact*10
-rand_fact_y = rand_fact*0.002
-r_x(x)=rand_fact_x*(2*rand(0)-1)
-r_y(y)=rand_fact_y*(2*rand(0)-1)
+## activate sub- and superscripts, and macros
+set termopt enhanced
+set macros
 
-point_type = 6
+## modulus
+mod(x,y) = x-floor(x/y)*y
 
-plot [0:10000][0:0.275] \
-     '../log_file_linear-q_2013-06-14_23:14:36.txt' u ($2+r_x(0)):($5+r_y(0)) s u w lp t 'linear-q', \
-     '../log_file_sparse_2013-06-14_23:12:43.txt' u ($2+r_x(0)):($5+r_y(0)) s u w lp t 'sparse', \
-     '../log_file_sparse_2013-06-21_22:23:49.txt' u ($2+r_x(0)):($5+r_y(0)) s u w lp t 'sparse', \
-     '../log_file_utree-prob_2013-06-14_23:13:36.txt' u ($2+r_x(0)):($5+r_y(0)) s u w lp t 'u-prob', \
-     '../log_file_utree-value_2013-06-14_23:14:16.txt' u ($2+r_x(0)):($5+r_y(0)) s u w lp t 'u-value'
-#     '../log_file_random_1371490133.txt' u ($2+r_x(0)):($5+r_y(0)) s u w lp
+## random function
+r(x) = 2*x*(rand(0)-0.5)
+rn(x) = 0.6*x*invnorm(rand(0))
+rx = "rn(4e1)"
+ry = "rn(6e-3)"
 
-plot [0:1000][0:0.275] \
-     '../log_file_linear-q_2013-06-14_23:14:36.txt' u ($2+r_x(0)):($5+r_y(0)) pt point_type t 'linear-q', \
-     '../log_file_sparse_2013-06-14_23:12:43.txt' u ($2+r_x(0)):($5+r_y(0)) pt point_type t 'sparse' , \
-     '../log_file_sparse_2013-06-21_22:23:49.txt' u ($2+r_x(0)):($5+r_y(0)) pt point_type t 'sparse' , \
-     '../log_file_utree-prob_2013-06-14_23:13:36.txt' u ($2+r_x(0)):($5+r_y(0)) pt point_type t 'u-prob' , \
-     '../log_file_utree-value_2013-06-14_23:14:16.txt' u ($2+r_x(0)):($5+r_y(0)) pt point_type t 'u-value'
-#     '../log_file_random_1371490133.txt' u ($2+r_x(0)):($5+r_y(0)) pt point_type
+## plot styles
+UNIQUE = "s u w lp pt 1 lt 1"
+RAW = "w p pt 6 lt 2 ps 0.5"
+SPLINE = "s ac w l lt 2"
+FREQ = "s f w lp pt 2 lt 3"
 
-plot [0:1000][0:0.275] '../log_file_linear-q_2013-06-14_23:14:36.txt' u ($2+r_x(0)):($5+r_y(0)) pt point_type t 'linear-q'
-plot [0:1000][0:0.275] '../log_file_sparse_2013-06-14_23:12:43.txt' u ($2+r_x(0)):($5+r_y(0)) pt point_type t 'sparse'
-plot [0:1000][0:0.275] '../log_file_sparse_2013-06-21_22:23:49.txt' u ($2+r_x(0)):($5+r_y(0)) pt point_type t 'sparse'
-plot [0:1000][0:0.275] '../log_file_utree-prob_2013-06-14_23:13:36.txt' u ($2+r_x(0)):($5+r_y(0)) pt point_type t 'u-prob'
-plot [0:1000][0:0.275] '../log_file_utree-value_2013-06-14_23:14:16.txt' u ($2+r_x(0)):($5+r_y(0)) pt point_type t 'u-value'
-#plot [0:1000][0:0.275] '../log_file_random_1371490133.txt' u ($2+r_x(0)):($5+r_y(0)) pt point_type
+## scale counts
+f_div = 100
+
+## data
+
+# data_file_1 = '../4x4_III_SPARSE_L1.txt'
+# BLOCK = "i 0"
+# C1 = "8"
+# C2 = "7"
+
+data_file_1 = '../4x4_III_SPARSE.txt'
+BLOCK = "i 3:10"
+data_file_1 = '../4x4_III_UTREE_VALUE.txt'
+BLOCK = ""
+C1 = "2"
+C2 = "7"
+
+## labels and tics
+# set xlabel 'L^{1}-regularization'; \
+set xlabel 'Training Length'; \
+set ylabel 'Mean Reward over 22 Steps'; \
+set format y "%.2f"; \
+set ytics 0,0.05; \
+set mytics 5
+
+plot [:5000][0:0.5] \
+     data_file_1 u @C1:@C2 @BLOCK @UNIQUE t 'Mean reward', \
+     data_file_1 u ($@C1+@rx):($@C2+@ry) @BLOCK @RAW t 'Mean reward raw data', \
+     data_file_1 u @C1:(1./f_div) @BLOCK @FREQ t 'No data points / '.f_div
+     # data_file_1 u @C1:@C2:(5e10) @BLOCK @SPLINE t ''
+
+
+plot [:5000][0:] \
+     '../4x4_III_SPARSE.txt' u @C1:@C2 i 3:10 s u w lp pt 1 lt 1 t 'Mean reward', \
+     '../4x4_III_SPARSE.txt' u ($@C1+@rx):($@C2+@ry) i 3:10 w p pt 6 lt 2 ps 0.5 t 'Mean reward raw data', \
+     '../4x4_III_SPARSE.txt' u @C1:(1./f_div) i 3:10 s f w lp pt 2 lt 3 t 'No data points / '.f_div, \
+     '../4x4_III_UTREE_VALUE.txt' u @C1:@C2 s u w lp pt 1 lt 4 t 'Mean reward', \
+     '../4x4_III_UTREE_VALUE.txt' u ($@C1+@rx):($@C2+@ry) w p pt 6 lt 5 ps 0.5 t 'Mean reward raw data', \
+     '../4x4_III_UTREE_VALUE.txt' u @C1:(1./f_div) s f w lp pt 2 lt 6 t 'No data points / '.f_div

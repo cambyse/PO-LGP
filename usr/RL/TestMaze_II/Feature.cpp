@@ -22,23 +22,25 @@ Feature::~Feature() {}
 
 Feature::feature_return_value Feature::evaluate(const_instanceIt_t) const {
     DEBUG_OUT(0,"Error: Evaluating abstract type Feature");
-    return 0;
+    return return_function(0);
 }
 
 Feature::feature_return_value Feature::evaluate(const_instanceIt_t insIt, action_t action, state_t state, reward_t reward) const {
+    const instance_t * new_ins;
     if(insIt!=INVALID) {
-        const instance_t * new_ins = instance_t::create(action,state,reward,insIt);
-        Feature::feature_return_value ret = this->evaluate(new_ins);
-        delete new_ins;
-        return ret;
+        new_ins = instance_t::create(action,state,reward,insIt);
     } else {
-        return 0;
+        new_ins = instance_t::create(action,state,reward,nullptr);
     }
+    const_instanceIt_t new_insIt(new_ins);
+    Feature::feature_return_value ret = this->evaluate(new_insIt);
+    delete new_ins;
+    return return_function(ret);
 }
 
 Feature::feature_return_value Feature::evaluate(const look_up_map_t&) const {
     DEBUG_OUT(0,"Error: Evaluating abstract type Feature");
-    return 0;
+    return return_function(0);
 }
 
 // string Feature::identifier() const {
@@ -146,6 +148,11 @@ void Feature::clean_up_subfeatures() {
     }
 }
 
+Feature::feature_return_value Feature::return_function(const feature_return_value& ret) const {
+    return ret;
+    //return (complexity+1) * ret;
+}
+
 ConstFeature::ConstFeature(const long long int& v) {
     type = CONST_FEATURE;
     complexity = 0;
@@ -163,12 +170,12 @@ ConstFeature * ConstFeature::create(const long long int& v) {
 ConstFeature::~ConstFeature() {}
 
 Feature::feature_return_value ConstFeature::evaluate(const_instanceIt_t insIt) const {
-    return insIt==INVALID ? 0 : const_return_value;
+    return return_function(insIt==INVALID ? 0 : const_return_value);
 }
 
 Feature::feature_return_value ConstFeature::evaluate(const_instanceIt_t insIt, action_t, state_t, reward_t) const {
     // re-implement because it's more efficient
-    return insIt==INVALID ? 0 : const_return_value;
+    return return_function(insIt==INVALID ? 0 : const_return_value);
 }
 
 string ConstFeature::identifier() const {
@@ -202,9 +209,9 @@ ActionFeature * ActionFeature::create(const action_t& a, const int& d) {
 
 Feature::feature_return_value ActionFeature::evaluate(const_instanceIt_t insIt) const {
     if( insIt!=INVALID && (insIt+=delay)!=INVALID && insIt->action==action ) {
-        return 1;
+        return return_function(1);
     } else {
-        return 0;
+        return return_function(0);
     }
 }
 
@@ -249,9 +256,9 @@ StateFeature * StateFeature::create(const state_t& s, const int& d) {
 
 Feature::feature_return_value StateFeature::evaluate(const_instanceIt_t insIt) const {
     if( insIt!=INVALID && (insIt+=delay)!=INVALID && insIt->state==state ) {
-        return 1;
+        return return_function(1);
     } else {
-        return 0;
+        return return_function(0);
     }
 }
 
@@ -301,15 +308,15 @@ Feature::feature_return_value RelativeStateFeature::evaluate(const_instanceIt_t 
             idx_t x_2 = s_2%Config::maze_x_size;
             idx_t y_2 = s_2/Config::maze_x_size;
             if(x_1-x_2==delta_x && y_1-y_2==delta_y) {
-                return 1;
+                return return_function(1);
             } else {
-                return 0;
+                return return_function(0);
             }
         } else {
-            return 0;
+            return return_function(0);
         }
     } else {
-        return 0;
+        return return_function(0);
     }
 }
 
@@ -357,9 +364,9 @@ RewardFeature * RewardFeature::create(const reward_t& r, const int& d) {
 
 Feature::feature_return_value RewardFeature::evaluate(const_instanceIt_t insIt) const {
     if( insIt!=INVALID && (insIt+=delay)!=INVALID && insIt->reward==reward ) {
-        return 1;
+        return return_function(1);
     } else {
-        return 0;
+        return return_function(0);
     }
 }
 
@@ -407,7 +414,7 @@ AndFeature::~AndFeature() {}
 Feature::feature_return_value AndFeature::evaluate(const_instanceIt_t insIt) const {
     if(insIt!=INVALID) {
         if(const_feature) {
-            return const_return_value;
+            return return_function(const_return_value);
         } else {
             Feature::feature_return_value prod = 1;
             for(auto feature_iterator : subfeatures) {
@@ -416,10 +423,10 @@ Feature::feature_return_value AndFeature::evaluate(const_instanceIt_t insIt) con
                     break;
                 }
             }
-            return prod;
+            return return_function(prod);
         }
     } else {
-        return 0;
+        return return_function(0);
     }
 }
 
@@ -429,14 +436,14 @@ AndFeature::feature_return_value AndFeature::evaluate(const look_up_map_t& look_
         auto it = look_up_map.find(feature_iterator);
         DEBUG_IF(it==look_up_map.end()) {
             DEBUG_OUT(0,"Error: Subfeature not in look-up map");
-            return 0;
+            return return_function(0);
         }
         prod *= it->second;
         if(prod==0) {
             break;
         }
     }
-    return prod;
+    return return_function(prod);
 }
 
 string AndFeature::identifier() const {
@@ -464,4 +471,9 @@ void AndFeature::check_for_contradicting_subfeatures() {
             }
         }
     }
+}
+
+AndFeature::feature_return_value AndFeature::return_function(const feature_return_value& ret) const {
+    return ret;
+    //return ret/(complexity+1);
 }
