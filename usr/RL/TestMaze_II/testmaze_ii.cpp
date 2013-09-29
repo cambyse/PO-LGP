@@ -913,8 +913,9 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             //     maze.print_reward_activation_on_random_walk(int_args[1]);
             //     maze.render_update();
             // }
-//            crf.print_all_features();
-            crf.test_2();
+            crf.print_all_features();
+            utree.print_features();
+            //crf.test_2();
             //TO_CONSOLE( "    currently no test function implemented" );
         } else if(str_args[0]=="random-distribution" || str_args[0]=="rd") { // test
             if(str_args_n==2 && int_args_ok[1]) {

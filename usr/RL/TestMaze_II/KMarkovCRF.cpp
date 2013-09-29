@@ -1349,9 +1349,11 @@ void KMarkovCRF::test() {
 
 void KMarkovCRF::print_all_features() const {
     DEBUG_OUT(0,"Printing active features:");
+    DEBUG_OUT(0,"========================================");
     for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
-        DEBUG_OUT(0,"    f " << f_idx << ":	" << active_features[f_idx] << "	w = " << lambda[f_idx]);
+        cout << "Feature " << f_idx << ":	" << lambda[f_idx] << "	" << active_features[f_idx] << endl;
     }
+    DEBUG_OUT(0,"========================================");
 }
 
 void KMarkovCRF::check_lambda_size(lbfgsfloatval_t* & parameters, vector<AndFeature> & feature_vector, int old_feature_vector_size) {
