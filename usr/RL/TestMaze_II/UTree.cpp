@@ -93,18 +93,7 @@ UTree::UTree(const double& d):
     }
 }
 
-UTree::~UTree() {
-    for(auto& featurePtr : basis_features_val) {
-        delete featurePtr;
-        featurePtr = nullptr;
-    }
-    basis_features_val.clear();
-    for(auto& featurePtr : basis_features_prob) {
-        delete featurePtr;
-        featurePtr = nullptr;
-    }
-    basis_features_prob.clear();
-}
+UTree::~UTree() {}
 
 void UTree::add_action_state_reward_tripel(
         const action_t& action,

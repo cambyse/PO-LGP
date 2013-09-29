@@ -1,5 +1,7 @@
 ## define string for calling the program
-start_string="./TestMaze_II -mode SPARSE -sample UNIFORM -nEp 100 -maxTran 22 -minTrain 500 -maxTrain 500 -maxTree 50000 -l1 0.0005 -incr 0 -fincr 50 -dl 0.0001"
+start_string="-mode UTREE_VALUE -sample UNIFORM -nEp 1000 -maxTran 12 -minTrain 100 -maxTrain 1000 -maxTree 10000 -f 2 -l1 0.001 -incr 100"
+#start_string="-mode SPARSE -sample UNIFORM -nEp 1000 -maxTran 22 -minTrain 100 -maxTrain 1000 -maxTree 50000 -l1 0.001 -incr 100 -fincr 50 -dl 0.0001"
+#start_string="-mode UTREE_PROB -sample UNIFORM -nEp 2000 -maxTran 22 -minTrain 500 -maxTrain 10000 -maxTree 50000 -incr 500"
 
 ## print kind of help if no arguments are given
 if [ $# -lt 1 ]; then
@@ -29,7 +31,15 @@ fi
 
 ## call the program
 if [ "$1" == "verbose" ]; then
-    eval "$start_string"
+    if [ -e TestMaze_II_verbose ]; then
+	eval "./TestMaze_II_verbose $start_string"
+    else
+	eval "./TestMaze_II $start_string"
+    fi
 else
-    eval "nohup $start_string &"
+    if [ -e TestMaze_II_quiet ]; then
+	eval "nohup ./TestMaze_II_quiet $start_string &"
+    else
+	eval "nohup ./TestMaze_II $start_string &"
+    fi
 fi
