@@ -586,8 +586,8 @@ int BatchMaze::run_active() {
                 }
                 action = look_ahead_search->get_optimal_action();
             } else if(mode=="UTREE_PROB") {
-                look_ahead_search->clear_tree();
                 if(look_ahead_search->get_number_of_nodes()==0 || !switch_bool("-pruneTree")) {
+                    look_ahead_search->clear_tree();
                     look_ahead_search->build_tree<UTree>(current_instance, *utree, switch_int("-maxTree"));
                 } else {
                     look_ahead_search->fully_expand_tree<UTree>(*utree, switch_int("-maxTree"));
@@ -646,12 +646,18 @@ int BatchMaze::run_active() {
             // extra info for some methods
             QString extra_info("");
             if(mode=="SPARSE") {
-                extra_info = QString("data_likelihood: %1	l1: %2").arg(likelihood).arg(switch_double("-l1"));
+                extra_info = QString("search_tree_size: %1	data_likelihood: %2	l1: %3	nr_of_features: %4")
+                    .arg(search_tree_size)
+                    .arg(likelihood)
+                    .arg(switch_double("-l1"))
+                    .arg(crf->get_number_of_features());
             } else if(mode=="LINEAR_Q") {
                 extra_info = QString("TD loss: %1").arg(loss);
-            } else if(mode=="UTREE_PROB"  ||
-                      mode=="OPTIMAL"     ||
-                      mode=="SEARCH_TREE" ||
+            } else if(mode=="UTREE_PROB") {
+                extra_info = QString("search_tree_size: %1	utree_size: %2").arg(search_tree_size).arg(utree->get_tree_size());
+            } else if(mode=="SEARCH_TREE") {
+                extra_info = QString("search_tree_size: %1").arg(search_tree_size);
+            } else if(mode=="OPTIMAL"     ||
                       mode=="TRANSITIONS" ||
                       mode=="RANDOM"      ||
                       mode=="UTREE_VALUE") {
@@ -664,9 +670,6 @@ int BatchMaze::run_active() {
             LOG(episode_counter << " 	" <<
                 training_length << "	" <<
                 transition_length << "	" <<
-                search_tree_size << "	" <<
-                (mode=="SPARSE" ? crf->get_number_of_features() : 0) << "	" <<
-                ( (mode=="UTREE_VALUE" || mode=="UTREE_PROB") ? utree->get_tree_size() : 0) << "	" <<
                 reward_sum/transition_length << "	" <<
                 extra_info
                 );
