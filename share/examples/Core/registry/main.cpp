@@ -14,7 +14,7 @@ struct Derived:NewType{
 REGISTER_TYPE(NewType)
 REGISTER_TYPE(double)
 REGISTER_ITEM(double, mykey, 3.)
-REGISTER_TYPE_DERIVED(Derived,NewType)
+REGISTER_TYPE_DERIVED(Derived, NewType)
 
 
 
@@ -22,9 +22,18 @@ int main(int argn,char** argv){
 
   cout <<"** REGISTRY:\n" <<registry() <<endl;
 
-  cout <<"** derived from TypeRegistration:\n";
-  listWrite(registry().getDerivedValues<Type>(), cout, "\n");
-  cout <<endl;
+  Item *it;
+  it = reg_findType("NewType");
+  CHECK(it, "could't retrieve type derived from NewType");
+  cout <<"retrieved Type item: " <<*it <<endl;
+
+  it = reg_findType("double");
+  CHECK(it, "could't retrieve type derived from double");
+  cout <<"retrieved Type item: " <<*it <<endl;
+
+  it = reg_findType("Derived");
+  CHECK(it, "could't retrieve type derived from Derived");
+  cout <<"retrieved Type item: " <<*it <<endl;
 
   return 0;
 }

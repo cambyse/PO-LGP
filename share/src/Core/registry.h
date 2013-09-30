@@ -30,10 +30,12 @@
 
 //===========================================================================
 //
-// global registry of anything
+// global registry of anything using a singleton KeyValueGraph
 //
 
 KeyValueGraph& registry();
+
+//macros to be used in *.cpp files
 
 #define REGISTER_ITEM(T, key, value) \
   Item_typed<T > key##_RegistryEntry(ARRAY<MT::String>(MT::String(#key)), ItemL(), value, &registry());
@@ -44,7 +46,7 @@ KeyValueGraph& registry();
 
 //===========================================================================
 //
-// define a type registry
+// to register a type (instead of general thing/item), use this:
 //
 
 struct Type:RootType {
@@ -69,10 +71,13 @@ inline bool operator!=(Type& t1, Type& t2){ return t1.typeId()!= t2.typeId(); }
 
 typedef MT::Array<Type*> TypeInfoL;
 
-// user interface
+
+//===========================================================================
+//
+// retrieving types
+//
 
 //-- query existing types
-template <class T> TypeInfoL reg_findDerived();
 inline Item *reg_findType(const char* key) {
   ItemL types = registry().getDerivedItems<Type>();
   for_list_(Item, ti, types) {
@@ -80,6 +85,7 @@ inline Item *reg_findType(const char* key) {
   }
   return NULL;
 }
+
 template<class T>
 Item *reg_findType() {
   ItemL types = registry().getDerivedItems<Type>();
@@ -89,12 +95,24 @@ Item *reg_findType() {
   return NULL;
 }
 
+
+//===========================================================================
+//
+// read a value from a stream by looking up available registered types
+//
+
 inline Item* readTypeIntoItem(const char* key, std::istream& is) {
   TypeInfoL types = registry().getDerivedValues<Type>();
   Item *ti = reg_findType(key);
   if(ti) return ti->value<Type>()->readItem(is);
   return NULL;
 }
+
+
+//===========================================================================
+//
+// typed version
+//
 
 template<class T, class Base>
 struct Type_typed:Type {
@@ -115,7 +133,10 @@ struct Type_typed:Type {
 };
 
 
-//-- use these macros to register types in cpp files
+//===========================================================================
+//
+// macros for declaring types (in *.cpp files)
+//
 
 #define KO ,
 #define REGISTER_TYPE(T) \
@@ -126,6 +147,7 @@ struct Type_typed:Type {
 
 #define REGISTER_TYPE_DERIVED(T, Base) \
   REGISTER_ITEM2(Type, Decl_Type, T, new Type_typed<T KO Base>(#Base,NULL));
+
 
 #endif
 
