@@ -1,5 +1,5 @@
 #include <Optim/optimization.h>
-#include <Optim/optimization_benchmarks.h>
+#include <Optim/benchmarks.h>
 
 void testSqrProblem(){
   SquaredCost P(10);

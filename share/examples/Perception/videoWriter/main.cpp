@@ -1,8 +1,9 @@
-#include <MT/videoWriter.h>
+
+#include <Hardware/VideoWriter/video.h>
+//#include <Perception/videoWriter.h>
 #include <Gui/opengl.h>
 
 float angle;
-
 
 void draw(void*){
   glStandardLight(NULL);
@@ -15,11 +16,11 @@ void testVideo(){
   OpenGL gl;
   gl.add(draw,0);
 
-  VideoWriter video;
-  video.open(gl.width, gl.height);
+  VideoEncoder video;
   for(angle=0.;angle<180.;angle+=180./150.){
-    gl.update();
-    video.addFrameFromOpengl(gl);
+    gl.update(NULL, true);
+    flip_image(gl.captureImage);
+    video.addFrame(gl.captureImage);
   }
   video.close();
 }

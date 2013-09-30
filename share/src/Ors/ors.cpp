@@ -103,36 +103,30 @@ void ors::Body::reset() {
   type=dynamicBT;
   shapes.memMove=true;
   com.setZero();
+#if 1
+  mass = 0.;
+  inertia.setZero();
+#else
   mass=1.;
   inertia.setId();
-  inertia*=.2;
+  inertia *= .3;
+#endif
 }
 
 void ors::Body::parseAts() {
   //interpret some of the attributes
   arr x;
-  double d;
   MT::String str;
   ats.getValue<Transformation>(X, "X");
   ats.getValue<Transformation>(X, "pose");
   
   //mass properties
-  if(ats.getValue<double>(d, "mass")) {
-    mass=d;
-#if 1
-    inertia.setId();
-    inertia *= .2*d;
-#else
-    switch(shapes(0)->type) {
-      case sphereST:   inertiaSphere(inertia.m, mass, 1000., shapes(0)->size[3]);  break;
-      case boxST:      inertiaBox(inertia.m, mass, 1000., shapes(0)->size[0], shapes(0)->size[1], shapes(0)->size[2]);  break;
-      case cappedCylinderST:
-      case cylinderST: inertiaCylinder(inertia.m, mass, 1000., shapes(0)->size[2], shapes(0)->size[3]);  break;
-      case noneST:
-      default: HALT("can't set inertia tensor for this type");
-    }
-#endif
-  }
+//  double d;
+//  if(ats.getValue<double>(d, "mass")) {
+//    mass=d;
+//    inertia.setId();
+//    inertia *= .2*d;
+//  }
   
   type=dynamicBT;
   if(ats.getValue<bool>("fixed"))      type=staticBT;
@@ -209,7 +203,7 @@ ors::Shape::Shape(Graph& G, Body *b, const Shape *copyShape) {
 
 ors::Shape::~Shape() {
   reset();
-  body->shapes.removeValue(this);
+  if(body) body->shapes.removeValue(this);
 }
 
 void ors::Shape::parseAts() {
@@ -224,6 +218,25 @@ void ors::Shape::parseAts() {
   if(ats.getValue<double>(d, "meshscale"))  { mesh.scale(d); }
   if(ats.getValue<bool>("contact"))         { cont=true; }
   if(ats.getValue<arr>(x, "submeshsizes"))  { copy(mesh.subMeshSizes, x); }
+
+  //add inertia to the body
+  if(body) {
+    Matrix I;
+    double mass=-1.;
+    switch(type) {
+    case sphereST:   inertiaSphere(I.p(), mass, 1000., size[3]);  break;
+    case boxST:      inertiaBox(I.p(), mass, 1000., size[0], size[1], size[2]);  break;
+    case cappedCylinderST:
+    case cylinderST: inertiaCylinder(I.p(), mass, 1000., size[2], size[3]);  break;
+      case noneST:
+      default: ;
+    }
+    if(mass>0.){
+      body->mass += mass;
+      body->inertia += I;
+    }
+  }
+
 }
 
 void ors::Shape::reset() {
@@ -762,7 +775,7 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
   arr q=_q, v;
   if(&_v) v=_v;
 
-if(Qlin.N) {
+  if(Qlin.N) {
     CHECK(_q.N==Qlin.d1,"wrong joint dimensions: ors expected " <<Qlin.d1 <<" joints; you gave " <<_q.N <<" joints");
     q = Qlin*_q + Qoff;
     if(&_v) { v = Qlin*_v;  v.reshape(v.N); }
@@ -792,7 +805,8 @@ if(Qlin.N) {
         }*/
         
         //velocity
-        if(&_v) j->Q.angvel.set(v(n), 0., 0.);
+        if(&_v){  j->Q.angvel.set(v(n) ,0., 0.);  j->Q.zeroVels=false;  }
+        else{  j->Q.angvel.setZero();  j->Q.zeroVels=true;  }
         //if(e->Q.w.isZero()) e->Q.w=Vector_x;
         //if(e->Q.w*Vector_x<0.) e->Q.w.setLength(-v(n)); else e->Q.w.setLength(v(n));
         
@@ -806,7 +820,8 @@ if(Qlin.N) {
 
       case JT_hingeY: {
         j->Q.rot.setRadY(q(n));
-        if(&_v) j->Q.angvel.set(0., v(n), 0.);
+        if(&_v){  j->Q.angvel.set(0., v(n) ,0.);  j->Q.zeroVels=false;  }
+        else{  j->Q.angvel.setZero();  j->Q.zeroVels=true;  }
         if(clearJointErrors) {
           j->Q.pos.setZero();
           j->Q.vel.setZero();
@@ -816,7 +831,8 @@ if(Qlin.N) {
 
       case JT_hingeZ: {
         j->Q.rot.setRadZ(q(n));
-        if(&_v) j->Q.angvel.set(0., 0., v(n));
+        if(&_v){  j->Q.angvel.set(0., 0., v(n));  j->Q.zeroVels=false;  }
+        else{  j->Q.angvel.setZero();  j->Q.zeroVels=true;  }
         if(clearJointErrors) {
           j->Q.pos.setZero();
           j->Q.vel.setZero();
@@ -871,7 +887,7 @@ if(Qlin.N) {
         }*/
         
         //velocity
-        if(&_v) j->Q.vel = v(n)*Vector_x;
+        if(&_v){ j->Q.vel.set(v(n), 0., 0.); j->Q.zeroVels=false; }
         
         if(clearJointErrors) {
           j->Q.rot.setZero();
@@ -882,7 +898,7 @@ if(Qlin.N) {
 
       case JT_transY: {
         j->Q.pos = q(n)*Vector_y;
-        if(&_v) j->Q.vel = v(n)*Vector_y;
+        if(&_v){ j->Q.vel.set(0., v(n), 0.); j->Q.zeroVels=false; }
         if(clearJointErrors) {
           j->Q.rot.setZero();
           j->Q.angvel.setZero();
@@ -892,7 +908,7 @@ if(Qlin.N) {
 
       case JT_transZ: {
         j->Q.pos = q(n)*Vector_z;
-        if(&_v) j->Q.vel = v(n)*Vector_z;
+        if(&_v){ j->Q.vel.set(0., 0., v(n)); j->Q.zeroVels=false; }
         if(clearJointErrors) {
           j->Q.rot.setZero();
           j->Q.angvel.setZero();
@@ -902,7 +918,7 @@ if(Qlin.N) {
 
       case JT_trans3: {
         j->Q.pos.set(q(n), q(n+1), q(n+2));
-        if(&_v) j->Q.vel.set(v(n), v(n+1), v(n+2));
+        if(&_v){ j->Q.vel.set(v(n), v(n+1), v(n+2)); j->Q.zeroVels=false; }
         if(clearJointErrors) {
           j->Q.rot.setZero();
           j->Q.angvel.setZero();
@@ -913,6 +929,7 @@ if(Qlin.N) {
       case JT_glue:
       case JT_fixed:
         j->Q.setZero();
+        j->Q.zeroVels=true;
         break;
       default: NIY;
     }
@@ -1706,7 +1723,7 @@ void ors::Graph::contactsToForces(double hook, double damp) {
 }
 
 /// measure (=scalar kinematics) for the contact cost summed over all bodies
-void ors::Graph::phiCollision(arr &y, arr& J, double margin) const {
+void ors::Graph::phiCollision(arr &y, arr& J, double margin, bool useCenterDist) const {
   y.resize(1);
   y=0.;
   uint i;
@@ -1718,11 +1735,12 @@ void ors::Graph::phiCollision(arr &y, arr& J, double margin) const {
   for(i=0; i<proxies.N; i++) if(proxies(i)->d<margin) {
       CHECK(proxies(i)->cenD<.8*cenMarg, "sorry I made assumption objects are not too large; rescale cenMarg");
       a=shapes(proxies(i)->a); b=shapes(proxies(i)->b);
-      
+
       //costs
       double d1 = 1.-proxies(i)->d/margin;
       double d2 = 1.-proxies(i)->cenD/cenMarg;
       //NORMALS ALWAYS GO FROM b TO a !!
+      if(!useCenterDist) d2=1.;
       y(0) += d1*d2;
       
       //Jacobian
@@ -1739,15 +1757,17 @@ void ors::Graph::phiCollision(arr &y, arr& J, double margin) const {
           jacobianPos(Jpos, b->body->index, &brel); J += d2/margin*(posN*Jpos);
         }
         
-        ors::Vector arel=a->X.rot/(proxies(i)->cenA-a->X.pos);
-        ors::Vector brel=b->X.rot/(proxies(i)->cenB-b->X.pos);
-        CHECK(proxies(i)->cenN.isNormalized(), "proxy normal is not normalized");
-        arr cenN; cenN.referTo(proxies(i)->cenN.p(), 3); cenN.reshape(1, 3);
+        if(useCenterDist){
+          ors::Vector arel=a->X.rot/(proxies(i)->cenA-a->X.pos);
+          ors::Vector brel=b->X.rot/(proxies(i)->cenB-b->X.pos);
+          CHECK(proxies(i)->cenN.isNormalized(), "proxy normal is not normalized");
+          arr cenN; cenN.referTo(proxies(i)->cenN.p(), 3); cenN.reshape(1, 3);
         
-        //grad on cenA
-        jacobianPos(Jpos, a->body->index, &arel); J -= d1/cenMarg*(cenN*Jpos);
-        //grad on cenB
-        jacobianPos(Jpos, b->body->index, &brel); J += d1/cenMarg*(cenN*Jpos);
+          //grad on cenA
+          jacobianPos(Jpos, a->body->index, &arel); J -= d1/cenMarg*(cenN*Jpos);
+          //grad on cenB
+          jacobianPos(Jpos, b->body->index, &brel); J += d1/cenMarg*(cenN*Jpos);
+        }
       }
       
     }
@@ -2085,10 +2105,10 @@ double ors::Graph::getEnergy() const {
   E=0.;
   for_list(j, n, bodies) {
     m=n->mass;
-    I=n->inertia;
+    ors::Quaternion &rot = n->X.rot;
+    I=(rot).getMatrix() * n->inertia * (-rot).getMatrix();
     v=n->X.vel.length();
     w=n->X.angvel;
-    //I.setZero(); I(0, 0)=I(1, 1)=I(2, 2)=.1*m;
     E += .5*m*v*v;
     E += 9.81 * m * n->X.pos.z;
     E += .5*(w*(I*w));

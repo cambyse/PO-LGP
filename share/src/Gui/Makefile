@@ -4,6 +4,7 @@ OUTPUT = $(BASE)/lib/$(NAME).so
 
 GTK = 1
 GTKGL = 1
+FREEGLUT = 0
 QHULL = 1
 GRAPHVIZ = 1
 DEPEND = Core extern_ply extern_GJK

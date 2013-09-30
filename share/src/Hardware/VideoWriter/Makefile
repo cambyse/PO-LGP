@@ -1,6 +1,6 @@
 BASE   = ../../..
 NAME   = libHardware_$(shell basename `pwd`)
-OUTPUT := $(BASE)/lib/$(NAME).a
+OUTPUT := $(BASE)/lib/$(NAME).so
 
 QT = 1
 CXXFLAGS += -D__STDC_CONSTANT_MACROS

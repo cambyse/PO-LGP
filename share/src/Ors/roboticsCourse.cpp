@@ -427,6 +427,7 @@ void glDrawCarSimulator(void *classP){
 #ifdef FREEGLUT
   CarSimulator *s=(CarSimulator*)classP;
   ors::Transformation f;
+  f.setZero();
   f.addRelativeTranslation(s->x,s->y,.3);
   f.addRelativeRotationRad(s->theta, 0., 0., 1.);
   f.addRelativeTranslation(1.,0.,0.);

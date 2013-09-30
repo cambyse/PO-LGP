@@ -26,7 +26,7 @@
 #undef MIN
 #undef MAX
 #endif
-#include "vision.h"
+#include "opencv.h"
 #include <Gui/opengl.h>
 
 struct sVideoWriter{
@@ -44,10 +44,11 @@ void VideoWriter::open(uint width,uint height,const char* filename,double fps){
 }
 
 void VideoWriter::addFrame(const byteA& img){
-  static ENABLE_CVMAT;
   IplImage ipl_img;
-  cvWriteFrame(s->video, cvGetImage(CVMAT(img), &ipl_img) );
-  //s->video <<CVMAT(img);
+  cv::Mat ref=cvMAT(img);
+  cvGetImage(&ref, &ipl_img);
+  cvWriteFrame(s->video, &ipl_img);
+//  s->video <<cvMAT(img);
   s->numFrames++;
 }
 
@@ -56,11 +57,9 @@ void VideoWriter::close(){
 }
 
 void VideoWriter::addFrameFromOpengl(OpenGL& gl){
-  static byteA img;
-  img.resize(s->height,s->width,3);
-  gl.capture(img,s->height,s->width);
-  flip_image(img);
-  addFrame(img);
+  gl.update(NULL, true, false);
+  flip_image(gl.captureImage);
+  addFrame(gl.captureImage);
 }
 
 #else

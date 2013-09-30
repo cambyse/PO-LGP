@@ -111,7 +111,7 @@ struct Type_typed:Type {
   virtual const std::type_info& typeId() const { return typeid(T); }
   virtual Item* readItem(istream& is) const { T *x=new T(); is >>*x; return new Item_typed<T>(x); }
   virtual void* newInstance() const { return new T(); }
-  virtual Type* clone() const { return new Type_typed<T, void>(*this); }
+  virtual Type* clone() const { Type *t = new Type_typed<T, void>(); t->parents=parents; return t; }
 };
 
 

@@ -16,8 +16,6 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
-
-
 /**
  * @file
  * @ingroup group_ors
@@ -26,7 +24,6 @@
  * @ingroup group_ors
  * @{
  */
-
 
 
 #include "ors.h"
@@ -52,19 +49,7 @@ extern void glDrawText(const char* txt, float x, float y, float z);
 #ifndef MT_ORS_ONLY_BASICS
 void init(ors::Graph& G, OpenGL& gl, const char* orsFile) {
   if(orsFile) G.init(orsFile);
-  gl.add(glStandardScene,0);
-  gl.add(ors::glDrawGraph,&G);
-  gl.setClearColors(1.,1.,1.,1.);
-  
-  ors::Body* glCamera = G.getBodyByName("glCamera");
-  if(glCamera) {
-    *(gl.camera.X) = glCamera->X;
-  } else {
-    gl.camera.setPosition(10.,-15.,8.);
-    gl.camera.focus(0,0,1.);
-    gl.camera.upright();
-  }
-  gl.update();
+  bindOrsToOpenGL(G, gl);
 }
 
 /**
@@ -344,7 +329,7 @@ void glDrawShape(ors::Shape *s) {
   }
 
   glColor(1,1,1);
-  glDrawText(s->body->name, 0, 0, 0);
+  if(s->body) glDrawText(s->body->name, 0, 0, 0);
 
   glPopName();
 }

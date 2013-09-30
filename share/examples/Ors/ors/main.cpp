@@ -343,6 +343,8 @@ void testDynamics(){
   ors::Graph G;
   OpenGL gl;
   init(G,gl,"arm7.ors");
+  //G.makeLinkTree();
+  cout <<G <<endl;
   T2::G=&G;
   
   uint t,T=720,n=G.getJointStateDimension();
@@ -382,7 +384,7 @@ void testDynamics(){
       gl.text.clear() <<"t=" <<t <<"  torque controlled damping (acc = - vel)\n(checking consistency of forward and inverse dynamics),  energy=" <<G.getEnergy();
     }else{
       //cout <<q <<qd <<qdd <<' ' <<G.getEnergy() <<endl;
-      MT::rk4dd(q,qd,q,qd,ddf_joints,dt);
+      MT::rk4dd(q, qd, q, qd, ddf_joints, dt);
       if(t>300){
         T2::friction=true;
         gl.text.clear() <<"t=" <<t <<"  friction swing using RK4,  energy=" <<G.getEnergy();
@@ -492,9 +494,9 @@ void testBlenderImport(){
 
 int main(int argc,char **argv){
 
-  //testKinematicSpeed();
-  //testContacts();
-  //return 0;
+  testDynamics();
+  return 0;
+
   testBasics();
   testLoadSave();
   testPlayStateSequence();

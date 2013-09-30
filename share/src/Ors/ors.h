@@ -267,7 +267,7 @@ struct Graph {
   void inverseDynamics(arr& tau, const arr& qd, const arr& qdd);
   
   /// @name special 'kinematic maps'
-  void phiCollision(arr &y, arr& J, double margin=.02) const;
+  void phiCollision(arr &y, arr& J, double margin=.02, bool useCenterDist=true) const;
   
   /// @name get state
   uint getJointStateDimension(bool internal=false) const;
@@ -632,8 +632,8 @@ extern uint orsDrawLimit;
 
 void displayState(const arr& x, ors::Graph& G, OpenGL& gl, const char *tag);
 void displayTrajectory(const arr& x, int steps, ors::Graph& G, OpenGL& gl, const char *tag);
-void editConfiguration(const char* orsfile, ors::Graph& C, OpenGL& gl);
-void animateConfiguration(ors::Graph& C, OpenGL& gl);
+void editConfiguration(const char* orsfile, ors::Graph& G, OpenGL& gl);
+void animateConfiguration(ors::Graph& G, OpenGL& gl);
 void init(ors::Graph& G, OpenGL& gl, const char* orsFile);
 void bindOrsToOpenGL(ors::Graph& graph, OpenGL& gl);
 /** @} */ // END of group ors_interface_opengl
