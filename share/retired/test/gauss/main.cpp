@@ -116,7 +116,7 @@ void testPullback(){
 void testConditional(){
   Gaussian g1,g2,g1m,g2m,y;
   uint t,k=2,l=1,T=10;
-  MT_DEBUG(double eps=1e-3;)
+  double eps=1e-3;
 
   for(t=0;t<100;t++){
     useC=false;
