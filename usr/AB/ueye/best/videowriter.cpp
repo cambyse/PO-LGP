@@ -1,4 +1,5 @@
-#include "VideoWriter_x264.h"
+#include <iostream>
+#include "videowriter.h"
 
 bool VideoWriter_x264::initialized = false;
 QMutex VideoWriter_x264::initMutex;
@@ -13,20 +14,20 @@ VideoWriter_x264::VideoWriter_x264(const char *filename,
 
   /* auto detect the output format from the name */
   AVOutputFormat *fmt = av_guess_format(NULL, filename, NULL);
-  if (!fmt) {
+  if(!fmt) {
     fprintf(stderr, "Could not find suitable output format\n");
     exit(EXIT_FAILURE);
   }
   /* allocate the output media context */
   out = avformat_alloc_context();
-  if (!out) {
+  if(!out) {
     fprintf(stderr, "Memory error\n");
     exit(EXIT_FAILURE);
   }
   out->oformat = fmt;
   snprintf(out->filename, sizeof(out->filename), "%s", filename);
 
-  if (avio_open2(&out->pb, out->filename, AVIO_FLAG_WRITE, NULL, NULL) < 0) {
+  if(avio_open2(&out->pb, out->filename, AVIO_FLAG_WRITE, NULL, NULL) < 0) {
     fprintf(stderr, "Could not open '%s'\n", out->filename);
     exit(EXIT_FAILURE);
   }
@@ -35,13 +36,13 @@ VideoWriter_x264::VideoWriter_x264(const char *filename,
 
   AVCodec *codec = avcodec_find_encoder_by_name("libx264");
 
-  if (!codec) {
+  if(!codec) {
     fprintf(stderr, "Encoder libx264 not found\n");
     exit(EXIT_FAILURE);
   }
 
   AVStream *st = avformat_new_stream(out, codec);
-  if (!st) {
+  if(!st) {
     fprintf(stderr, "Could not alloc stream\n");
     exit(EXIT_FAILURE);
   }
@@ -72,7 +73,7 @@ VideoWriter_x264::VideoWriter_x264(const char *filename,
   av_dict_set(&opts, "preset", preset, 0);
 
   /* open the codec */
-  if (avcodec_open2(enc, codec, &opts) < 0) {
+  if(avcodec_open2(enc, codec, &opts) < 0) {
     fprintf(stderr, "could not open codec\n");
     exit(EXIT_FAILURE);
   }
@@ -80,7 +81,7 @@ VideoWriter_x264::VideoWriter_x264(const char *filename,
   /* allocate output buffer */
   video_outbuf_size = enc->width * enc->height * 4; /* upper bound */
   video_outbuf = (uint8_t *)av_malloc(video_outbuf_size);
-  if (!video_outbuf) {
+  if(!video_outbuf) {
     fprintf(stderr, "Alloc outbuf fail\n");
     exit(EXIT_FAILURE);
   }
@@ -88,7 +89,7 @@ VideoWriter_x264::VideoWriter_x264(const char *filename,
 
   int r;
   r = avformat_write_header(out, NULL);
-  if (r) {
+  if(r) {
     fprintf(stderr, "write out file fail\n");
     exit(r);
   }
@@ -105,12 +106,10 @@ VideoWriter_x264::VideoWriter_x264(const char *filename,
   int numBytes = avpicture_get_size(enc->pix_fmt, enc->width, enc->height);
   buffer=(uint8_t *)av_malloc(numBytes*sizeof(uint8_t));
   avpicture_fill((AVPicture *)pFrame, buffer, enc->pix_fmt, enc->width, enc->height);
-
 }
 
 
 VideoWriter_x264::~VideoWriter_x264() {
-
   av_free(buffer);
   av_free(pFrame);
 
@@ -118,17 +117,17 @@ VideoWriter_x264::~VideoWriter_x264() {
   AVPacket packet;
 
   int got_packet, fail;
-  while (1) {
+  for(;;) {
     // flush buffered remainings
     av_init_packet(&packet);
     packet.data = NULL;
     packet.size = 0;
     fail = avcodec_encode_video2(enc, &packet, NULL, &got_packet);
 
-    if (fail)
+    if(fail)
       fprintf(stderr, "Error while encoding frame\n");
 
-    if (!(got_packet > 0 && packet.size))
+    if(!(got_packet > 0 && packet.size))
       break;
 
     writeEncodedFrame(&packet);
@@ -142,7 +141,6 @@ VideoWriter_x264::~VideoWriter_x264() {
   avio_close(out->pb);
   avformat_free_context(out);
 }
-
 
 void VideoWriter_x264::addFrame(uint8_t *buffer) {
   AVPacket packet;
@@ -162,11 +160,11 @@ void VideoWriter_x264::addFrame(uint8_t *buffer) {
   int got_packet;
   int fail = avcodec_encode_video2(enc, &packet, pFrame, &got_packet);
 
-  if (fail)
+  if(fail)
     fprintf(stderr, "Error while encoding frame\n");
 
   // if zero size, it means the image was buffered
-  if (got_packet > 0 && packet.size) 
+  if(got_packet > 0 && packet.size) 
     writeEncodedFrame(&packet);
 }
 
@@ -208,25 +206,21 @@ int VideoWriter_x264::writeEncodedFrame(AVPacket *pPacket) {
 
 //  printf("stream pts %d - stream.curr_dts %d - packet pts %d\n",out->streams[0]->pts.val,out->streams[0]->cur_dts,pkt.dts);
 
-
-
   // write the compressed frame in the media file
   int r = av_interleaved_write_frame(out, pPacket);
   av_free_packet(pPacket);
 
-  if (r) {
+  if(r) {
     fprintf(stderr, "Error while writing video frame\n");
     return -1;
   }
-
   return 0;
 }
-
 
 void VideoWriter_x264::init() {
   // needs to be protected since the library could be initialized from multiple threads simultaneously
   VideoWriter_x264::initMutex.lock();
-  if (!initialized) {
+  if(!initialized) {
     printf("initializing lock manager\n");
     av_lockmgr_register(&lockManagerQt);
     av_register_all();
@@ -235,43 +229,39 @@ void VideoWriter_x264::init() {
   VideoWriter_x264::initMutex.unlock();
 }
 
-
-
-int VideoWriter_x264::lockManagerQt(void **mutex, enum AVLockOp op)
-{
-  if (NULL == mutex)
+int VideoWriter_x264::lockManagerQt(void **mutex, enum AVLockOp op) {
+  if(NULL == mutex)
     return -1;
 
-  switch(op)
-  {
-  case AV_LOCK_CREATE:
-  {
-    *mutex = NULL;
-    QMutex * m = new QMutex();
-    *mutex = static_cast<void*>(m);
-    break;
-  }
-  case AV_LOCK_OBTAIN:
-  {
-    QMutex * m = static_cast<QMutex*>(*mutex);
-    m->lock();
-    break;
-  }
-  case AV_LOCK_RELEASE:
-  {
-    QMutex * m = static_cast<QMutex*>(*mutex);
-    m->unlock();
-    break;
-  }
-  case AV_LOCK_DESTROY:
-  {
-    QMutex * m = static_cast<QMutex*>(*mutex);
-    delete m;
-    break;
-  }
-  default:
-    break;
+  switch(op) {
+    case AV_LOCK_CREATE:
+      {
+      *mutex = NULL;
+      QMutex *m = new QMutex();
+      *mutex = static_cast<void*>(m);
+      break;
+      }
+    case AV_LOCK_OBTAIN:
+      {
+      QMutex *m = static_cast<QMutex*>(*mutex);
+      m->lock();
+      break;
+      }
+    case AV_LOCK_RELEASE:
+      {
+      QMutex *m = static_cast<QMutex*>(*mutex);
+      m->unlock();
+      break;
+      }
+    case AV_LOCK_DESTROY:
+      {
+      QMutex *m = static_cast<QMutex*>(*mutex);
+      delete m;
+      break;
+      }
+    default:
+      break;
   }
   return 0;
-
 }
+
