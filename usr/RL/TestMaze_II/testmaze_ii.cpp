@@ -392,6 +392,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString move_s(                          "    move . . . . . . . . . . . [<int>|stop]. . . . . . . . . . . . . . . .-> start/stop moving using planner");
     QString random_s(                        "    random . . . . . . . . . . [<int>|stop]. . . . . . . . . . . . . . . .-> start/stop moving randomly");
     QString epsilon_s(                       "    epsilon. . . . . . . . . . [<double>]. . . . . . . . . . . . . . . . .-> get [set] random transition probability");
+    QString reward_activation_s(             "    reward-activation / ra . . <int> . . . . . . . . . . . . . . . . . . .-> print mean reward activation probability for length-<int> random walk");
+    QString random_distribution_s(           "    random-distribution / rd . <int> . . . . . . . . . . . . . . . . . . .-> run <int> random transitions and display relative counts for all states");
 
     QString learning_s(                    "\n    ------------------------------Model Learning------------------------------");
     QString episode_s(                       "    episode / e. . . . . . . . [<int>|clear,c] . . . . . . . . . . . . . .-> record length <int> episode or clear data");
@@ -424,7 +426,6 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString max_tree_size_s(                 "    max-tree-size. . . . . . . <int> . . . . . . . . . . . . . . . . . . .-> set maximum size of Look-Ahead-Tree (zero for infinite)");
 
     QString new_s(                         "\n    ---------------------------------New Stuff----------------------------------");
-    QString random_distribution_s(           "    random-distribution / rd . <int> . . . . . . . . . . . . . . . . . . .-> run <int> random transitions and display relative counts for all states");
     QString color_states_s(                  "    col-states . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> color states (random)");
     QString fixed_dt_distribution_s(         "    fixed-dt-dist / fdd. . . . <int> . . . . . . . . . . . . . . . . . . .-> show probability for a state to occur <int> steps after current state");
     QString pair_delay_distribution_s(       "    pair-delay-dist / pdd. . . [<int>] . . . . . . . . . . . . . . . . . .-> show temporal delay distribution from current state to target state (restrict to time window of width <int>");
@@ -486,6 +487,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             TO_CONSOLE( move_s );
             TO_CONSOLE( random_s );
             TO_CONSOLE( epsilon_s );
+            TO_CONSOLE( reward_activation_s );
+            TO_CONSOLE( random_distribution_s );
             // Learning
             TO_CONSOLE( learning_s );
             TO_CONSOLE( episode_s );
@@ -518,7 +521,6 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             TO_CONSOLE( max_tree_size_s );
             // New
             TO_CONSOLE( new_s );
-            TO_CONSOLE( random_distribution_s );
             TO_CONSOLE( color_states_s );
             TO_CONSOLE( fixed_dt_distribution_s );
             TO_CONSOLE( pair_delay_distribution_s );
@@ -631,6 +633,45 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             } else {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( epsilon_s );
+            }
+        } else if(str_args[0]=="reward-activation" || str_args[0]=="ra") {
+            if(str_args_n==2 && int_args_ok[1]) {
+                maze.print_reward_activation_on_random_walk(int_args[1]);
+                maze.render_update();
+            } else {
+                TO_CONSOLE(invalid_args_s);
+                TO_CONSOLE(reward_activation_s);
+            }
+        } else if(str_args[0]=="random-distribution" || str_args[0]=="rd") { // test
+            if(str_args_n==2 && int_args_ok[1]) {
+                // initialize state counts to zero
+                vector<int> state_counts;
+                for(stateIt_t state=stateIt_t::first(); state!=util::INVALID; ++state) {
+                    state_counts.push_back(0);
+                }
+                // get state counts
+                int n = int_args[1];
+                int max_count = 1;
+                for(int idx=0; idx<n; ++idx) {
+                    action_t action = (action_t)(action_t::random_action());
+                    state_t state_to;
+                    reward_t reward;
+                    maze.perform_transition(action,state_to,reward);
+                    ++state_counts[state_to];
+                    max_count = util::max<int>(state_counts[state_to],max_count);
+                }
+                // transform into colors
+                Maze::color_vector_t cols;
+                for(stateIt_t state=stateIt_t::first(); state!=util::INVALID; ++state) {
+                    double p = state_counts[state];
+                    DEBUG_OUT(0,"State " << state << ": p = " << p/util::max<int>(n,1) );
+                    p /= max_count;
+                    cols.push_back( std::make_tuple(1,1-p,1-p) );
+                }
+                maze.render_update(&cols);
+            } else {
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( random_distribution_s );
             }
         } else if(str_args[0]=="expand" || str_args[0]=="ex") {
             if(str_args_n==1) {
@@ -909,42 +950,28 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 TO_CONSOLE( construct_s );
             }
         } else if(str_args[0]=="test") { // test
-            if(str_args_n==2 && int_args_ok[1]) {
-                maze.print_reward_activation_on_random_walk(int_args[1]);
-                maze.render_update();
-            }
+
+            crf.test();
+
+            // crf.set_exclude_data();
+            // crf.optimize_model(0);
+            // crf.set_exclude_data(0,0.1);
+            // probability_t prob = crf.evaluate_on_excluded_data();
+            // crf.set_exclude_data();
+            // TO_CONSOLE( QString("    prob = %1").arg(prob) );
+
+            // for(double p=0; p<90; p+=10) {
+            //     crf.set_exclude_data((double)p/100,(double)(p+10)/100);
+            //     crf.optimize_model(l1_factor);
+            //     probability_t prob = crf.evaluate_on_excluded_data();
+            //     TO_CONSOLE( QString("    p = %1 for %2% - %3%")
+            //                 .arg(prob)
+            //                 .arg(p)
+            //                 .arg(p+10)
+            //         );
+            // }
+            // crf.set_exclude_data();
             //TO_CONSOLE( "    currently no test function implemented" );
-        } else if(str_args[0]=="random-distribution" || str_args[0]=="rd") { // test
-            if(str_args_n==2 && int_args_ok[1]) {
-                // initialize state counts to zero
-                vector<int> state_counts;
-                for(stateIt_t state=stateIt_t::first(); state!=util::INVALID; ++state) {
-                    state_counts.push_back(0);
-                }
-                // get state counts
-                int n = int_args[1];
-                int max_count = 1;
-                for(int idx=0; idx<n; ++idx) {
-                    action_t action = (action_t)(action_t::random_action());
-                    state_t state_to;
-                    reward_t reward;
-                    maze.perform_transition(action,state_to,reward);
-                    ++state_counts[state_to];
-                    max_count = util::max<int>(state_counts[state_to],max_count);
-                }
-                // transform into colors
-                Maze::color_vector_t cols;
-                for(stateIt_t state=stateIt_t::first(); state!=util::INVALID; ++state) {
-                    double p = state_counts[state];
-                    DEBUG_OUT(0,"State " << state << ": p = " << p/util::max<int>(n,1) );
-                    p /= max_count;
-                    cols.push_back( std::make_tuple(1,1-p,1-p) );
-                }
-                maze.render_update(&cols);
-            } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( random_distribution_s );
-            }
         } else if(str_args[0]=="col-states") { // color states
             Maze::color_vector_t cols;
             for(stateIt_t state=stateIt_t::first(); state!=util::INVALID; ++state) {

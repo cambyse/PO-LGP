@@ -177,9 +177,18 @@ public:
         return &KMarkovCRF::get_kmdp_prediction;
     }
 
+    /** \brief Exclude all data from p1 to p2 percent of the training length for
+     * optimization. */
+    void set_exclude_data(const double& p1 = 0, const double& p2 = 0);
+
+    /** \brief Calculates the data likelihood of the excluded data. */
+    probability_t evaluate_on_excluded_data();
+
     void update_prediction_map();
 
     void test();
+
+    void find_unique_feature_values();
 
 private:
 
@@ -213,6 +222,11 @@ private:
     std::vector<std::vector<Feature::look_up_map_t> >  base_feature_values;     ///< The precomputed feature values (BASE_LOOK_UP).
     std::vector<idx_t>        base_feature_indices;                             ///< State-reward index for given instance.
     std::vector<double>       data_probabilities;                               ///< Predicted probabilities for individual data points.
+
+    //------------------//
+    // Cross-validation //
+    //------------------//
+    double exclude_data_1, exclude_data_2;      ///< Percent of data to exclude from optimization.
 
     //------------------//
     // k-MDP Prediction //

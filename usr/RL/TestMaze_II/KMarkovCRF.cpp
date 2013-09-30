@@ -3,6 +3,8 @@
 #include "util.h"
 #include "util/ProgressBar.h"
 
+#include "QtUtil.h" // for << operator
+
 #include <list>
 #include <map>
 
@@ -37,7 +39,9 @@ KMarkovCRF::KMarkovCRF():
         lambda_candidates(nullptr),
         old_active_features_size(0),
         feature_values_precomputed(false),
-        use_stochastic_sparsification(false)
+        use_stochastic_sparsification(false),
+        exclude_data_1(0),
+        exclude_data_2(0)
 {
 
     //----------------------------------------//
@@ -168,6 +172,12 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
             // last action is not changed while iterating through states and rewards
             action_t action = insIt->action;
 
+            // exclude data
+            double data_percent = double(instance_idx+1)/number_of_data_points;
+            if(data_percent>exclude_data_1 && data_percent<exclude_data_2) {
+                continue;
+            }
+
             // sparsify data
             if(use_stochastic_sparsification) {
                 if(pow(data_probabilities[instance_idx],sparse_beta)>drand48()) {
@@ -295,7 +305,12 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
     // terminate progress bar
     if(DEBUG_LEVEL>0) {
         ProgressBar::terminate();
-        DEBUG_OUT(0,"    Ignored " << ignored_data << " out of " << number_of_data_points << " data points");
+        DEBUG_OUT(1,QString("    Ignored %1 out of %2 data points (%3% to %4% excluded)")
+                  .arg(ignored_data)
+                  .arg(number_of_data_points)
+                  .arg((int)(100*exclude_data_1))
+                  .arg((int)(100*exclude_data_2))
+            );
     }
 
     // use NEGATIVE log likelihood (blfgs minimizes the objective)
@@ -343,7 +358,12 @@ int KMarkovCRF::progress_model(
                 x[f_idx]);
     }
     DEBUG_OUT(1,"Iteration " << k << " (fx = " << fx << ", xnorm = " << xnorm << ", p = " << exp(-fx) << "):");
-    DEBUG_OUT(1,"    Ignored " << ignored_data << " out of " << number_of_data_points << " data points");
+    DEBUG_OUT(1,QString("    Ignored %1 out of %2 data points (%3% to %4% excluded)")
+              .arg(ignored_data)
+              .arg(number_of_data_points)
+              .arg((int)(100*exclude_data_1))
+              .arg((int)(100*exclude_data_2))
+        );
     DEBUG_OUT(1,"");
 
     return 0;
@@ -1170,6 +1190,36 @@ unsigned long int KMarkovCRF::get_training_data_length() {
     return number_of_data_points;
 }
 
+void KMarkovCRF::set_exclude_data(const double& p1, const double& p2) {
+    exclude_data_1 = p1;
+    exclude_data_2 = p2;
+}
+
+KMarkovCRF::probability_t KMarkovCRF::evaluate_on_excluded_data() {
+    idx_t instance_idx = 0;
+    probability_t log_prob = 0;
+    for(instance_t * current_episode : instance_data) {
+        for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
+
+            // if(insIt-1==INVALID) {
+            //     continue;
+            // }
+
+            // exclude data
+            double data_percent = double(instance_idx+1)/number_of_data_points;
+            if(data_percent>exclude_data_1 && data_percent<exclude_data_2) {
+                // prob *= get_prediction(insIt-1, insIt->action, insIt->state, insIt->reward);
+                log_prob += log( get_prediction(insIt) );
+            } else {
+                continue;
+            }
+
+        }
+    }
+
+    return exp( log_prob );
+}
+
 void KMarkovCRF::update_prediction_map() {
 
     DEBUG_OUT(1,"Updating prediction map...");
@@ -1227,6 +1277,15 @@ void KMarkovCRF::update_prediction_map() {
 }
 
 void KMarkovCRF::test() {
+    for(instance_t * current_episode : instance_data) {
+        for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt) {
+
+            DEBUG_OUT(0,"   Prob = " << get_prediction(insIt) );
+        }
+    }
+}
+
+void KMarkovCRF::find_unique_feature_values() {
 
     // return if not enough data available
     if(number_of_data_points<=0) {
