@@ -63,8 +63,6 @@ public:
 
     void add_candidates(const int& n);
 
-    void erase_zero_features();
-
     void erase_zero_weighted_features(const double& threshold = 0);
 
     /** \brief Calls evaluate_model() on instance. */
@@ -143,6 +141,8 @@ private:
     //------------------//
     // Member Functions //
     //------------------//
+
+    void erase_zero_features();
 
     /** \brief Update LinearQ::L, LinearQ::rho, and LinearQ::c. */
     void update_loss_terms();

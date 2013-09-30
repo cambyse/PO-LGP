@@ -56,13 +56,15 @@ LinearQ::LinearQ(const double& d):
             basis_features.push_back(action_feature);
             DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
         }
-        if(k_idx<0) { // present state and reward are not known for predicting value
+        if(k_idx<0) { // present state is not known for predicting value
             // states
             for(state_t state : stateIt_t::all) {
                 StateFeature * state_feature = StateFeature::create(state,k_idx);
                 basis_features.push_back(state_feature);
                 DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
             }
+        }
+        if(false) { // no correlated rewards
             // reward
             for(reward_t reward : rewardIt_t::all) {
                 RewardFeature * reward_feature = RewardFeature::create(reward,k_idx);
@@ -244,6 +246,9 @@ void LinearQ::add_candidates(const int& n) {
 
     // resize weights and set to zero
     feature_weights.assign(active_features.size(),0);
+
+    // erase const zero features
+    erase_zero_features();
 
     // mark loss terms as out-of-date
     loss_terms_up_to_date = false;
@@ -532,7 +537,8 @@ void LinearQ::update_loss_terms() {
             //--------------------//
 
             // constant
-            c += pow(ins_t0->reward,2);
+            //c += pow(ins_t0->reward,2);
+            c += pow(ins_t1->reward,2);
 
             // iterate through rows
             for(int j=0; j<feature_n; ++j) {
@@ -540,7 +546,8 @@ void LinearQ::update_loss_terms() {
                 double factor1 = discount * (*f_ret_t1)[j] - (*f_ret_t0)[j];
 
                 // increment linear term
-                rho(j) += ins_t0->reward * factor1;
+                //rho(j) += ins_t0->reward * factor1;
+                rho(j) += ins_t1->reward * factor1;
 
                 // iterate through columns
                 for(int k=0; k<feature_n; ++k) {

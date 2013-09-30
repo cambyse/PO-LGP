@@ -421,7 +421,6 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString optimize_linQ_l1_s(              "    lq-optimize-l1 / lqol1 . . [<double> [<int>] | check | c ] . . . . . .-> optimize Linear-Q with L1-regularization coefficient <double> [ and max <int> iterations ] or check derivatives");
     QString construct_s(                     "    construct / con. . . . . . <int> . . . . . . . . . . . . . . . . . . .-> construct candidate features with distance <int>");
     QString lq_erase_zero_weight_s(          "    lq-erase / lqe . . . . . . [<double>]. . . . . . . . . . . . . . . . .-> erase features with zero weight [ weight below or equal to <double> ]");
-    QString lq_erase_zero_s(                 "    lq-erase-zero / lqez . . . . . . . . . . . . . . . . . . . . . . . . .-> erase features which are never non-zero");
 
     QString planning_s(                    "\n    ---------------------------------Planning----------------------------------");
     QString discount_s(                      "    discount . . . . . . . . . [<double>]. . . . . . . . . . . . . . . . .-> get [set] discount");
@@ -519,7 +518,6 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             TO_CONSOLE( optimize_linQ_l1_s );
             TO_CONSOLE( construct_s );
             TO_CONSOLE( lq_erase_zero_weight_s );
-            TO_CONSOLE( lq_erase_zero_s );
             // Planning
             TO_CONSOLE( planning_s );
             TO_CONSOLE( discount_s );
@@ -633,8 +631,6 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( lq_erase_zero_weight_s );
             }
-        } else if(str_args[0]=="lq-erase-zero" || str_args[0]=="lqez") {
-            linQ.erase_zero_features();
         } else if(str_args[0]=="epsilon") {
             if(str_args_n==1) {
                 TO_CONSOLE( QString("    maze epsilon is %1").arg(maze.get_epsilon()) );

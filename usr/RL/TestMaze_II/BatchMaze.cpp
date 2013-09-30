@@ -524,7 +524,6 @@ int BatchMaze::run_active() {
             if(switch_int("-fincr")>0) {
                 do {
                     linQ->add_candidates(1);
-                    linQ->erase_zero_features();
                     linQ->optimize_l1(switch_double("-l1"),500);
                     linQ->erase_zero_weighted_features();
                     loss = linQ->optimize_ridge(1e-10);
@@ -532,7 +531,6 @@ int BatchMaze::run_active() {
             } else {
                 for(int complx=1; complx<=switch_int("-f"); ++complx) {
                     linQ->add_candidates(1);
-                    linQ->erase_zero_features();
                     if(complx==1) {
                         // no l1 in first run
                         linQ->optimize_ridge(1e-10);
