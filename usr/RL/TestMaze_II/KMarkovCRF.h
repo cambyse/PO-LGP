@@ -159,9 +159,9 @@ public:
 
     void add_candidate_features_to_active(const int& n);
 
-    void erase_zero_features();
+    void erase_zero_features(const bool& store = true);
 
-    void erase_all_features();
+    void erase_all_features(const bool& store = true);
 
     unsigned long int get_number_of_features();
 
@@ -184,6 +184,8 @@ public:
     /** \brief Calculates the data likelihood of the excluded data. */
     probability_t evaluate_on_excluded_data();
 
+    probability_t cross_validation(const int& k_fold, lbfgsfloatval_t l1 = 0, unsigned int max_iter = 0);
+
     void update_prediction_map();
 
     void test();
@@ -191,6 +193,10 @@ public:
     void find_unique_feature_values();
 
     void print_all_features() const;
+
+    void store_features();
+
+    void apply_features();
 
 private:
 
@@ -207,6 +213,7 @@ private:
     lbfgsfloatval_t * lambda_candidates;             ///< Coefficients for candidate features.
     std::vector<Feature*> basis_features;            ///< Basis features used to construct new candidates.
     std::vector<AndFeature> active_features;         ///< Set of currently active features.
+    std::vector<AndFeature> active_features_copy;    ///< Copy of currently active features.
     std::vector<AndFeature> candidate_features;      ///< Set of candidate features.
     std::vector<double> candidate_feature_scores;    ///< Scores for candidate features.
     int old_active_features_size;                    ///< Number of active features before adding new candidates.

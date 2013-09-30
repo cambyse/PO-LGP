@@ -406,6 +406,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString l1_s(                            "    l1 . . . . . . . . . . . . <double>. . . . . . . . . . . . . . . . . .-> coefficient for L1 regularization");
     QString evaluate_s(                      "    evaluate . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> evaluate features at current point");
     QString validate_s(                      "    validate / v . . . . . . . {crf,kmdp}[exact|mc <int>]. . . . . . . . .-> validate CRF or k-MDP model using exact (default) or Monte Carlo (with <int> samples) computation of the KL-divergence");
+    QString examine_crf_features_s(          "    ex-crf-f . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> print CRF features and weights");
+    QString apply_old_crf_features_s(        "    apply-old-features / aof . . . . . . . . . . . . . . . . . . . . . . .-> re-apply the old featues stored at the last erase");
     QString learning_utree_s(                "    === UTree ===");
     QString expand_leaf_nodes_s(             "    expand / ex. . . . . . . . [<int>|<double] . . . . . . . . . . . . . .-> expand <int> leaf nodes / expand leaves until a score of <double> is reached");
     QString print_utree_s(                   "    print-utree. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> print the current UTree");
@@ -413,6 +415,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString clear_utree_s(                   "    clear-utree. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> clear UTree");
     QString utree_value_iteration_s(         "    v-iteration / vi . . . . . [<int>] . . . . . . . . . . . . . . . . . .-> run one [<int>] iteration(s) of Value-Iteration");
     QString utree_expansion_type_s(          "    ex-type / ext. . . . . . . [u(tility)|s(tate)r(eward)] . . . . . . . .-> get/set expansion type for UTree");
+    QString examine_utree_features_s(        "    ex-utree-f . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> print UTree features");
     QString learning_linQ_s(                 "    === Linear-Q ===");
     QString optimize_linQ_ridge_s(           "    lq-optimize-ridge / lqor . [<double>]. . . . . . . . . . . . . . . . .-> optimize Linear-Q [ with L2-regularization coefficient <double> ]");
     QString optimize_linQ_l1_s(              "    lq-optimize-l1 / lqol1 . . [<double> [<int>] | check | c ] . . . . . .-> optimize Linear-Q with L1-regularization coefficient <double> [ and max <int> iterations ] or check derivatives");
@@ -501,6 +504,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             TO_CONSOLE( l1_s );
             TO_CONSOLE( evaluate_s );
             TO_CONSOLE( validate_s );
+            TO_CONSOLE( examine_crf_features_s );
+            TO_CONSOLE( apply_old_crf_features_s );
             TO_CONSOLE( learning_utree_s ); // UTree
             TO_CONSOLE( expand_leaf_nodes_s );
             TO_CONSOLE( print_utree_s );
@@ -508,6 +513,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             TO_CONSOLE( clear_utree_s );
             TO_CONSOLE( utree_value_iteration_s );
             TO_CONSOLE( utree_expansion_type_s );
+            TO_CONSOLE( examine_utree_features_s );
             TO_CONSOLE( learning_linQ_s ); // linear-Q
             TO_CONSOLE( optimize_linQ_ridge_s );
             TO_CONSOLE( optimize_linQ_l1_s );
@@ -588,6 +594,10 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( optimize_crf_s );
             }
+        } else if(str_args[0]=="ex-utree-f") {
+            utree.print_features();
+        } else if(str_args[0]=="apply-old-features" || str_args[0]=="aof") {
+            crf.apply_features();
         } else if(str_args[0]=="lq-optimize-ridge" || str_args[0]=="lqor") { // optimize linear-Q
             if(str_args_n==1 || double_args_ok[1] ) {
                 if(double_args_ok[1]) {
@@ -772,6 +782,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( validate_s );
             }
+        } else if(str_args[0]=="ex-crf-f") {
+            crf.print_all_features();
         } else if(str_args[0]=="l1") {
             if(str_args_n==1) {
                 TO_CONSOLE(QString("    %1").arg(l1_factor));
@@ -958,7 +970,9 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             // crf.print_all_features();
             // utree.print_features();
 
-            crf.test();
+            probability_t like = crf.cross_validation(10);
+            TO_CONSOLE( QString("    Mean Data Likelihood: %1").arg(like) );
+
             //TO_CONSOLE( "    currently no test function implemented" );
         } else if(str_args[0]=="col-states") { // color states
             Maze::color_vector_t cols;

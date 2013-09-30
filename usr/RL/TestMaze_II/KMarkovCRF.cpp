@@ -1056,9 +1056,14 @@ void KMarkovCRF::add_candidate_features_to_active(const int& n) {
     DEBUG_OUT(1, "DONE");
 }
 
-void KMarkovCRF::erase_zero_features() {
+void KMarkovCRF::erase_zero_features(const bool& store) {
 
     DEBUG_OUT(1, "Erasing zero weighted features from active...");
+
+    // store
+    if(store) {
+        store_features();
+    }
 
     // Count features to erase //
     uint new_size = active_features.size();
@@ -1100,8 +1105,13 @@ void KMarkovCRF::erase_zero_features() {
     DEBUG_OUT(1, "DONE");
 }
 
-void KMarkovCRF::erase_all_features() {
+void KMarkovCRF::erase_all_features(const bool& store) {
     DEBUG_OUT(1, "Erasing all features from active...");
+
+    // store
+    if(store) {
+        store_features();
+    }
 
     lbfgs_free(lambda);
     lambda = nullptr;
@@ -1206,7 +1216,9 @@ KMarkovCRF::probability_t KMarkovCRF::evaluate_on_excluded_data() {
             double data_percent = double(instance_idx+1)/number_of_data_points;
             if(data_percent>exclude_data_1 && data_percent<exclude_data_2) {
                 ++evaluated_data;
-                log_prob += get_prediction(insIt-1, insIt->action, insIt->state, insIt->reward);
+                probability_t prob = get_prediction(insIt-1, insIt->action, insIt->state, insIt->reward);
+                DEBUG_OUT(3,"    " << instance_idx << ":	" << prob);
+                log_prob += log(prob);
             } else {
                 continue;
             }
@@ -1214,7 +1226,26 @@ KMarkovCRF::probability_t KMarkovCRF::evaluate_on_excluded_data() {
         }
     }
 
+    DEBUG_OUT(3,"    Mean Data Likelihood:	" << exp( log_prob/evaluated_data ) );
     return exp( log_prob/evaluated_data );
+}
+
+KMarkovCRF::probability_t KMarkovCRF::cross_validation(const int& k_fold, lbfgsfloatval_t l1, unsigned int max_iter) {
+    double ex_tmp_1 = exclude_data_1;
+    double ex_tmp_2 = exclude_data_2;
+
+    probability_t log_like = 0;
+    for(int i=0; i<k_fold; ++i) {
+        set_exclude_data((double)i/k_fold,(double)(i+1)/k_fold);
+        optimize_model(l1,max_iter);
+        probability_t prob = evaluate_on_excluded_data();
+        log_like += log( prob );
+        DEBUG_OUT(0,"    " << (100*i)/k_fold << "% - " << (100*(i+1))/k_fold << "%: " << prob);
+    }
+
+    set_exclude_data(ex_tmp_1, ex_tmp_2);
+
+    return exp( log_like/k_fold );
 }
 
 void KMarkovCRF::update_prediction_map() {
@@ -1401,6 +1432,14 @@ void KMarkovCRF::print_all_features() const {
         cout << "Feature " << f_idx << ":	" << lambda[f_idx] << "	" << active_features[f_idx] << endl;
     }
     DEBUG_OUT(0,"========================================");
+}
+
+void KMarkovCRF::store_features() {
+    active_features_copy = active_features;
+}
+
+void KMarkovCRF::apply_features() {
+    active_features = active_features_copy;
 }
 
 void KMarkovCRF::check_lambda_size(lbfgsfloatval_t* & parameters, vector<AndFeature> & feature_vector, int old_feature_vector_size) {
