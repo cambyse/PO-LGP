@@ -59,8 +59,12 @@ public:
 
     /** \brief Print the tree nodes and associated information. */
     void print_tree();
+
     /** \brief Print only the leaf nodes and associated information. */
     void print_leaves();
+
+    void print_features();
+
     /** \brief Clear the tree but not the data (instances). */
     void clear_tree();
 
@@ -141,7 +145,8 @@ private:
         bool statistics_up_to_date;                                             ///< whether the preceding two are up-to-date
     };
 
-    std::vector<Feature*> basis_features;
+    std::vector<Feature*> basis_features_val;
+    std::vector<Feature*> basis_features_prob;
     node_container_t leaf_nodes;
     graph_t graph;
     node_t root_node;

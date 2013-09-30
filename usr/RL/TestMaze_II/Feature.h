@@ -55,6 +55,7 @@ protected:
     feature_return_value const_return_value;
     // member functions
     virtual void clean_up_subfeatures();
+    inline feature_return_value return_function(const feature_return_value& ret) const;
 };
 
 class ConstFeature: public Feature {
@@ -142,6 +143,7 @@ public:
     virtual std::string identifier() const;
 protected:
     void check_for_contradicting_subfeatures();
+    inline feature_return_value return_function(const feature_return_value& ret) const;
 };
 
 #endif /* FEATURE_H_ */

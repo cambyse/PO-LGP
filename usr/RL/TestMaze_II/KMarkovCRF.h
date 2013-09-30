@@ -190,6 +190,8 @@ public:
 
     void find_unique_feature_values();
 
+    void print_all_features() const;
+
 private:
 
     typedef std::tuple<const instance_t*, action_t, state_t, reward_t> prediction_tuple_t;

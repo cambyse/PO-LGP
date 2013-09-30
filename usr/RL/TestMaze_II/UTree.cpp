@@ -6,6 +6,7 @@
 #include <queue>
 #include <utility> // for std::pair
 #include <tuple>
+#include <algorithm> // for std::reverse
 #include <float.h> // for DBL_MAX
 
 #ifdef BATCH_MODE_QUIET
@@ -52,24 +53,42 @@ UTree::UTree(const double& d):
     //----------------------------------------//
 
     // delayed action, state, and reward features
-    for(int k_idx = -1; k_idx>=(int)-Config::k; --k_idx) {
+    for(int k_idx = 0; k_idx>=(int)-Config::k; --k_idx) {
         // actions
         for(action_t action : actionIt_t::all) {
             ActionFeature * action_feature = ActionFeature::create(action,k_idx);
-            basis_features.push_back(action_feature);
-            DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+            if(k_idx<0) {
+                basis_features_val.push_back(action_feature);
+                DEBUG_OUT(2,"Added " << basis_features_val.back()->identifier() << " to basis features");
+            }
+            if(true) {
+                basis_features_prob.push_back(action_feature);
+                DEBUG_OUT(2,"Added " << basis_features_prob.back()->identifier() << " to basis features");
+            }
         }
         // states
         for(state_t state : stateIt_t::all) {
             StateFeature * state_feature = StateFeature::create(state,k_idx);
-            basis_features.push_back(state_feature);
-            DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+            if(k_idx<0) {
+                basis_features_val.push_back(state_feature);
+                DEBUG_OUT(2,"Added " << basis_features_val.back()->identifier() << " to basis features");
+            }
+            if(true) {
+                basis_features_prob.push_back(state_feature);
+                DEBUG_OUT(2,"Added " << basis_features_prob.back()->identifier() << " to basis features");
+            }
         }
         // reward
         for(reward_t reward : rewardIt_t::all) {
             RewardFeature * reward_feature = RewardFeature::create(reward,k_idx);
-            basis_features.push_back(reward_feature);
-            DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+            if(false) {
+                basis_features_val.push_back(reward_feature);
+                DEBUG_OUT(2,"Added " << basis_features_val.back()->identifier() << " to basis features");
+            }
+            if(k_idx==0) {
+                basis_features_prob.push_back(reward_feature);
+                DEBUG_OUT(2,"Added " << basis_features_prob.back()->identifier() << " to basis features");
+            }
         }
     }
 }
@@ -279,6 +298,46 @@ void UTree::print_leaves() {
     }
 }
 
+void UTree::print_features() {
+    DEBUG_OUT(0,"Printing features for all leaves");
+    // some typedefs
+    typedef pair<const Feature*,f_ret_t> feature_score_pair_t;
+    typedef vector<feature_score_pair_t> feature_score_vector_t;
+    // vector storing features for all leaves
+    vector<feature_score_vector_t> feature_vector;
+    // get the data
+    for(node_t leaf : leaf_nodes) {
+        feature_vector.push_back(feature_score_vector_t());
+        feature_score_vector_t & current_feature_vector = feature_vector.back();
+        node_t current_node = leaf;
+        graph_t::InArcIt parent_arc = graph_t::InArcIt(graph,current_node);
+        while(parent_arc!=INVALID) {
+            // get parent node
+            node_t parent_node = graph.source(parent_arc);
+            // get data
+            f_ret_t parent_ret = node_info_map[current_node].parent_return_value;
+            const Feature* parent_feature = node_info_map[parent_node].feature;
+            current_feature_vector.push_back(feature_score_pair_t(parent_feature,parent_ret));
+            // updata nodes
+            current_node = parent_node;
+            parent_arc = graph_t::InArcIt(graph,current_node);
+        }
+    }
+    // print the data (starting at root node, i.e. in reverse order)
+    DEBUG_OUT(0,"========================================");
+    int f_idx = 0;
+    for(feature_score_vector_t current_feature_vector : feature_vector) {
+        ++f_idx;
+        std::reverse(current_feature_vector.begin(),current_feature_vector.end());
+        cout << "Feature " << f_idx << ":";
+        for(feature_score_pair_t current_pair : current_feature_vector) {
+            cout << "	" << *current_pair.first << "	" << current_pair.second;
+        }
+        cout << endl;
+    }
+    DEBUG_OUT(0,"========================================");
+}
+
 void UTree::clear_tree() {
     // clear old graph
     graph.clear();
@@ -334,11 +393,20 @@ double UTree::expand_leaf_node(const double& score_threshold) {
     values_up_to_date = true;
     // update scores
     for(node_t leaf : leaf_nodes) {
-      for(auto featurePtr : basis_features) {
-	double score = score_leaf_node(leaf, featurePtr);
-	node_info_map[leaf].scores[featurePtr] = score;
-      }
-      node_info_map[leaf].scores_up_to_date = true;
+        if(expansion_type==UTILITY_EXPANSION) {
+            for(auto featurePtr : basis_features_val) {
+                double score = score_leaf_node(leaf, featurePtr);
+                node_info_map[leaf].scores[featurePtr] = score;
+            }
+        } else if(expansion_type==STATE_REWARD_EXPANSION) {
+            for(auto featurePtr : basis_features_prob) {
+                double score = score_leaf_node(leaf, featurePtr);
+                node_info_map[leaf].scores[featurePtr] = score;
+            }
+        } else {
+            DEBUG_DEAD_LINE;
+        }
+        node_info_map[leaf].scores_up_to_date = true;
     }
 
     //-----------------------------------//
@@ -346,17 +414,34 @@ double UTree::expand_leaf_node(const double& score_threshold) {
     //-----------------------------------//
     for(node_t node : leaf_nodes) {
         assert_scores_up_to_date(node);
-        for(auto featurePtr : basis_features) {
-            double score = node_info_map[node].scores[featurePtr];
-            if(score>max_score) {
-                max_score = score;
-                max_nodes.assign(1,node);
-                max_features.assign(1,featurePtr);
-            } else if(score==max_score) {
-                max_nodes.push_back(node);
-                max_features.push_back(featurePtr);
+        if(expansion_type==UTILITY_EXPANSION) {
+            for(auto featurePtr : basis_features_val) {
+                double score = node_info_map[node].scores[featurePtr];
+                if(score>max_score) {
+                    max_score = score;
+                    max_nodes.assign(1,node);
+                    max_features.assign(1,featurePtr);
+                } else if(score==max_score) {
+                    max_nodes.push_back(node);
+                    max_features.push_back(featurePtr);
+                }
+                DEBUG_OUT(3,"Node " << graph.id(node) << ", feature " << *featurePtr << ", score " << score);
             }
-            DEBUG_OUT(3,"Node " << graph.id(node) << ", feature " << *featurePtr << ", score " << score);
+        } else if(expansion_type==STATE_REWARD_EXPANSION) {
+            for(auto featurePtr : basis_features_prob) {
+                double score = node_info_map[node].scores[featurePtr];
+                if(score>max_score) {
+                    max_score = score;
+                    max_nodes.assign(1,node);
+                    max_features.assign(1,featurePtr);
+                } else if(score==max_score) {
+                    max_nodes.push_back(node);
+                    max_features.push_back(featurePtr);
+                }
+                DEBUG_OUT(3,"Node " << graph.id(node) << ", feature " << *featurePtr << ", score " << score);
+            }
+        } else {
+            DEBUG_DEAD_LINE;
         }
     }
 
@@ -643,9 +728,18 @@ void UTree::assert_scores_up_to_date(const node_t leaf) {
             DEBUG_DEAD_LINE;
         }
         // update scores
-        for(auto featurePtr : basis_features) {
-            double score = score_leaf_node(leaf, featurePtr);
-            node_info_map[leaf].scores[featurePtr] = score;
+        if(expansion_type==UTILITY_EXPANSION) {
+            for(auto featurePtr : basis_features_val) {
+                double score = score_leaf_node(leaf, featurePtr);
+                node_info_map[leaf].scores[featurePtr] = score;
+            }
+        } else if(expansion_type==STATE_REWARD_EXPANSION) {
+            for(auto featurePtr : basis_features_prob) {
+                double score = score_leaf_node(leaf, featurePtr);
+                node_info_map[leaf].scores[featurePtr] = score;
+            }
+        } else {
+            DEBUG_DEAD_LINE;
         }
         node_info_map[leaf].scores_up_to_date = true;
     }

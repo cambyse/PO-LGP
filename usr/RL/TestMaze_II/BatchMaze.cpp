@@ -53,7 +53,9 @@ const vector<QString> BatchMaze::mode_vector = {
     "UTREE_VALUE",
     "LINEAR_Q",
     "SEARCH_TREE",
-    "TRANSITIONS"
+    "TRANSITIONS",
+    "UTREE_PROB_GROWTH",
+    "SPARSE_L1_SWEEP"
 };
 
 const vector<QString> BatchMaze::sample_method_vector = {
@@ -85,7 +87,9 @@ const vector<BatchMaze::switch_t> BatchMaze::switch_vector = {
     switch_t("-optTran",      "double", "0",      "probability of optimal training transitions (vs. random)"),
     switch_t("-fincr",        "int",    "0",      "feature increment (positive value for incremental feature discovery)"),
     switch_t("-dl",           "double", "0.001",  "minimum change of data likelihood (only for incremental feature discovery with CRFs)"),
-    switch_t("-tderr",        "double", "0.0001", "minimum TD-error (only for incremental feature discovery with Linear-Q)")
+    switch_t("-tderr",        "double", "0.0001", "minimum TD-error (only for incremental feature discovery with Linear-Q)"),
+    switch_t("-l1incr",       "double", "0.0001", "L1-regularization increment (for 'SPARSE_L1_SWEEP' only)"),
+    switch_t("-maxl1",        "double", "0.001",  "maximum L1-regularization (for 'SPARSE_L1_SWEEP' only)")
 };
 
 BatchMaze::BatchMaze() {
@@ -642,7 +646,7 @@ int BatchMaze::run_active() {
             // extra info for some methods
             QString extra_info("");
             if(mode=="SPARSE") {
-                extra_info = QString("data_likelihood: %1	l1: ").arg(likelihood).arg(switch_double("-l1"));
+                extra_info = QString("data_likelihood: %1	l1: %2").arg(likelihood).arg(switch_double("-l1"));
             } else if(mode=="LINEAR_Q") {
                 extra_info = QString("TD loss: %1").arg(loss);
             } else if(mode=="UTREE_PROB"  ||

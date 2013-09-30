@@ -950,27 +950,15 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 TO_CONSOLE( construct_s );
             }
         } else if(str_args[0]=="test") { // test
+            // if(str_args_n==2 && int_args_ok[1]) {
+            //     maze.print_reward_activation_on_random_walk(int_args[1]);
+            //     maze.render_update();
+            // }
+
+            // crf.print_all_features();
+            // utree.print_features();
 
             crf.test();
-
-            // crf.set_exclude_data();
-            // crf.optimize_model(0);
-            // crf.set_exclude_data(0,0.1);
-            // probability_t prob = crf.evaluate_on_excluded_data();
-            // crf.set_exclude_data();
-            // TO_CONSOLE( QString("    prob = %1").arg(prob) );
-
-            // for(double p=0; p<90; p+=10) {
-            //     crf.set_exclude_data((double)p/100,(double)(p+10)/100);
-            //     crf.optimize_model(l1_factor);
-            //     probability_t prob = crf.evaluate_on_excluded_data();
-            //     TO_CONSOLE( QString("    p = %1 for %2% - %3%")
-            //                 .arg(prob)
-            //                 .arg(p)
-            //                 .arg(p+10)
-            //         );
-            // }
-            // crf.set_exclude_data();
             //TO_CONSOLE( "    currently no test function implemented" );
         } else if(str_args[0]=="col-states") { // color states
             Maze::color_vector_t cols;
