@@ -55,6 +55,7 @@ void threadedRun() {
       vid_rgb.addFrame(S.kinect_rgb.get().p);
       vid_depth.addFrame(depthImg.p);
       fprintf(fil, "%4i %8li.%06li\n", t, time.tv_sec&0xffffff, time.tv_usec);
+      fflush(fil);
     }
   }
   cout <<"fps = " <<t/MT::timerRead() <<endl;

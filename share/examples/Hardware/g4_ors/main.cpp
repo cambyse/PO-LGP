@@ -39,6 +39,7 @@ void threadedRun(){
     ors.calcShapeFramesFromBodies();
     gl.update();
     fprintf(fil, "%4i %8li.%06li\n", t, time.tv_sec&0xffffff, time.tv_usec);
+    fflush(fil);
     file_poses <<poses <<endl;
   }
   cout <<"fps = " <<t/MT::timerRead() <<endl;
