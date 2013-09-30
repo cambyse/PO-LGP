@@ -653,21 +653,22 @@ int BatchMaze::run_active() {
                     .arg(crf->get_number_of_features());
             } else if(mode=="LINEAR_Q") {
                 extra_info = QString("TD loss: %1").arg(loss);
+            } else if(mode=="UTREE_VALUE") {
+                extra_info = QString("utree_size: %1").arg(utree->get_tree_size());
             } else if(mode=="UTREE_PROB") {
-                extra_info = QString("search_tree_size: %1	utree_size: %2").arg(search_tree_size).arg(utree->get_tree_size());
+                extra_info = QString("utree_size: %1	search_tree_size: %2").arg(utree->get_tree_size()).arg(search_tree_size);
             } else if(mode=="SEARCH_TREE") {
                 extra_info = QString("search_tree_size: %1").arg(search_tree_size);
             } else if(mode=="OPTIMAL"     ||
                       mode=="TRANSITIONS" ||
-                      mode=="RANDOM"      ||
-                      mode=="UTREE_VALUE") {
+                      mode=="RANDOM") {
                 // no extra info
             } else {
                 DEBUG_DEAD_LINE;
             }
 
             // write data to log file
-            LOG(episode_counter << " 	" <<
+            LOG(episode_counter << "	" <<
                 training_length << "	" <<
                 transition_length << "	" <<
                 reward_sum/transition_length << "	" <<
@@ -830,7 +831,7 @@ void BatchMaze::initialize_log_file() {
     LOG_COMMENT(wall_str);
     LOG_COMMENT(door_str);
     LOG_COMMENT("");
-    LOG_COMMENT("Episode	training_length	transition_length	search_tree_size	feature_n	utree_size	episode_mean_reward");
+    LOG_COMMENT("Episode	training_length	transition_length	episode_mean_reward");
     LOG_COMMENT("");
 }
 
