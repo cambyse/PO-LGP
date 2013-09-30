@@ -1,0 +1,980 @@
+# Switches:
+# -mode              = SPARSE
+# -sample            = UNIFORM
+# -nEp               = 100
+# -minTran           = 10
+# -maxTran           = 12
+# -e                 = 0
+# -d                 = 0.5
+# -minTrain          = 100
+# -maxTrain          = 100
+# -minTree           = 1000
+# -maxTree           = 10000
+# -f                 = 2
+# -l1                = 0.0001
+# -pruneTree         = 1
+# -kWidth            = 0
+# -incr              = 0
+# -exp               = 0
+# -printSamples      = 0
+# -optTran           = 0
+# -fincr             = 0
+# -dl                = 0.001
+# -tderr             = 0.0001
+# -l1incr            = 0.0001
+# -maxl1             = 0.001
+# 
+# Maze size: 2x2
+# 
+# Reward 0
+#     ACTIVATION_STATE : 0
+#     RECEIVE_STATE    : 3
+#     TIME_DELAY       : 2
+#     reward           : 1
+#     activation       : EACH_TIME_NO_PUNISH
+# 
+# 
+# 
+# 
+# Episode	training_length	transition_length	search_tree_size	feature_n	utree_size	episode_mean_reward
+# 
+3 	100	12	10000	83	0	0.25	data_likelihood: 0.998605	l1: 0.0001
+8 	100	12	10000	73	0	0.166667	data_likelihood: 0.99834	l1: 0.0001
+5 	100	12	10000	80	0	0.25	data_likelihood: 0.998818	l1: 0.0001
+1 	100	12	10000	79	0	0.25	data_likelihood: 0.999215	l1: 0.0001
+7 	100	12	10000	74	0	0	data_likelihood: 0.998737	l1: 0.0001
+2 	100	12	10000	80	0	0.25	data_likelihood: 0.99684	l1: 0.0001
+4 	100	12	10000	89	0	0.25	data_likelihood: 0.998853	l1: 0.0001
+6 	100	12	10000	46	0	0.0833333	data_likelihood: 0.66028	l1: 0.0001
+14 	100	12	10000	64	0	0.25	data_likelihood: 0.998511	l1: 0.0001
+12 	100	12	10000	88	0	0.25	data_likelihood: 0.997459	l1: 0.0001
+13 	100	12	10000	79	0	0.25	data_likelihood: 0.997561	l1: 0.0001
+16 	100	12	10000	79	0	0	data_likelihood: 0.999068	l1: 0.0001
+9 	100	12	10000	77	0	0.0833333	data_likelihood: 0.99853	l1: 0.0001
+15 	100	12	10000	67	0	0.25	data_likelihood: 0.998603	l1: 0.0001
+10 	100	12	10000	91	0	0.25	data_likelihood: 0.997935	l1: 0.0001
+11 	100	12	10000	61	0	0.0833333	data_likelihood: 0.999159	l1: 0.0001
+17 	100	12	10000	83	0	0.25	data_likelihood: 0.99854	l1: 0.0001
+19 	100	12	10000	81	0	0.25	data_likelihood: 0.998454	l1: 0.0001
+20 	100	12	10000	68	0	0.25	data_likelihood: 0.997013	l1: 0.0001
+23 	100	12	10000	74	0	0.25	data_likelihood: 0.999498	l1: 0.0001
+21 	100	12	10000	65	0	0.25	data_likelihood: 0.998902	l1: 0.0001
+22 	100	12	10000	77	0	0.0833333	data_likelihood: 0.998829	l1: 0.0001
+18 	100	12	10000	82	0	0.25	data_likelihood: 0.997793	l1: 0.0001
+24 	100	12	10000	74	0	0.25	data_likelihood: 0.998681	l1: 0.0001
+25 	100	12	10000	69	0	0.0833333	data_likelihood: 0.99848	l1: 0.0001
+27 	100	12	10000	72	0	0.25	data_likelihood: 0.99853	l1: 0.0001
+29 	100	12	10000	88	0	0.25	data_likelihood: 0.998567	l1: 0.0001
+26 	100	12	10000	87	0	0.25	data_likelihood: 0.99828	l1: 0.0001
+30 	100	12	10000	80	0	0.25	data_likelihood: 0.998122	l1: 0.0001
+32 	100	12	10000	92	0	0.0833333	data_likelihood: 0.998187	l1: 0.0001
+33 	100	12	10000	73	0	0.25	data_likelihood: 0.99857	l1: 0.0001
+28 	100	12	10000	88	0	0	data_likelihood: 0.999191	l1: 0.0001
+31 	100	12	10000	80	0	0	data_likelihood: 0.998526	l1: 0.0001
+34 	100	12	10000	80	0	0.25	data_likelihood: 0.997416	l1: 0.0001
+37 	100	12	10000	73	0	0.0833333	data_likelihood: 0.998544	l1: 0.0001
+35 	100	12	10000	77	0	0.25	data_likelihood: 0.997331	l1: 0.0001
+36 	100	12	10000	75	0	0	data_likelihood: 0.998553	l1: 0.0001
+38 	100	12	10000	77	0	0.0833333	data_likelihood: 0.999144	l1: 0.0001
+39 	100	12	10000	75	0	0.0833333	data_likelihood: 0.998005	l1: 0.0001
+44 	100	12	10000	70	0	0.25	data_likelihood: 0.997996	l1: 0.0001
+42 	100	12	10000	75	0	0.25	data_likelihood: 0.999042	l1: 0.0001
+40 	100	12	10000	93	0	0.25	data_likelihood: 0.998431	l1: 0.0001
+41 	100	12	10000	64	0	0.0833333	data_likelihood: 0.998323	l1: 0.0001
+43 	100	12	10000	59	0	0.0833333	data_likelihood: 0.998425	l1: 0.0001
+45 	100	12	10000	82	0	0.166667	data_likelihood: 0.999001	l1: 0.0001
+47 	100	12	10000	72	0	0.25	data_likelihood: 0.998579	l1: 0.0001
+46 	100	12	10000	81	0	0.25	data_likelihood: 0.998423	l1: 0.0001
+52 	100	12	10000	80	0	0.25	data_likelihood: 0.998748	l1: 0.0001
+48 	100	12	10000	84	0	0.25	data_likelihood: 0.997894	l1: 0.0001
+49 	100	12	10000	82	0	0.0833333	data_likelihood: 0.999037	l1: 0.0001
+54 	100	12	10000	76	0	0.25	data_likelihood: 0.998366	l1: 0.0001
+51 	100	12	10000	77	0	0.25	data_likelihood: 0.998495	l1: 0.0001
+50 	100	12	10000	65	0	0.0833333	data_likelihood: 0.999196	l1: 0.0001
+53 	100	12	10000	70	0	0.0833333	data_likelihood: 0.999228	l1: 0.0001
+59 	100	12	10000	66	0	0.25	data_likelihood: 0.998891	l1: 0.0001
+55 	100	12	10000	68	0	0	data_likelihood: 0.99861	l1: 0.0001
+57 	100	12	10000	72	0	0	data_likelihood: 0.999076	l1: 0.0001
+62 	100	12	10000	76	0	0.0833333	data_likelihood: 0.999404	l1: 0.0001
+61 	100	12	10000	79	0	0.25	data_likelihood: 0.997974	l1: 0.0001
+56 	100	12	10000	66	0	0.0833333	data_likelihood: 0.999034	l1: 0.0001
+58 	100	12	10000	60	0	0.25	data_likelihood: 0.998223	l1: 0.0001
+60 	100	12	10000	61	0	0.0833333	data_likelihood: 0.998624	l1: 0.0001
+63 	100	12	10000	91	0	0.25	data_likelihood: 0.998915	l1: 0.0001
+64 	100	12	10000	70	0	0	data_likelihood: 0.998775	l1: 0.0001
+68 	100	12	10000	86	0	0	data_likelihood: 0.998661	l1: 0.0001
+65 	100	12	10000	72	0	0.25	data_likelihood: 0.998238	l1: 0.0001
+67 	100	12	10000	88	0	0	data_likelihood: 0.998727	l1: 0.0001
+71 	100	12	10000	68	0	0.25	data_likelihood: 0.998586	l1: 0.0001
+66 	100	12	10000	63	0	0	data_likelihood: 0.995643	l1: 0.0001
+69 	100	12	10000	84	0	0.25	data_likelihood: 0.998855	l1: 0.0001
+73 	100	12	10000	76	0	0.25	data_likelihood: 0.997436	l1: 0.0001
+75 	100	12	10000	74	0	0.25	data_likelihood: 0.998161	l1: 0.0001
+74 	100	12	10000	78	0	0.25	data_likelihood: 0.998466	l1: 0.0001
+72 	100	12	10000	86	0	0.166667	data_likelihood: 0.998425	l1: 0.0001
+76 	100	12	10000	81	0	0.25	data_likelihood: 0.998572	l1: 0.0001
+79 	100	12	10000	67	0	0.25	data_likelihood: 0.999214	l1: 0.0001
+77 	100	12	10000	74	0	0.25	data_likelihood: 0.997923	l1: 0.0001
+70 	100	12	10000	66	0	0.166667	data_likelihood: 0.634162	l1: 0.0001
+80 	100	12	10000	81	0	0.25	data_likelihood: 0.998122	l1: 0.0001
+78 	100	12	10000	88	0	0.25	data_likelihood: 0.998728	l1: 0.0001
+81 	100	12	10000	86	0	0.25	data_likelihood: 0.998398	l1: 0.0001
+82 	100	12	10000	64	0	0.25	data_likelihood: 0.705137	l1: 0.0001
+86 	100	12	10000	79	0	0.25	data_likelihood: 0.997907	l1: 0.0001
+83 	100	12	10000	61	0	0.25	data_likelihood: 0.999087	l1: 0.0001
+87 	100	12	10000	79	0	0.25	data_likelihood: 0.998107	l1: 0.0001
+84 	100	12	10000	55	0	0.0833333	data_likelihood: 0.998246	l1: 0.0001
+88 	100	12	10000	67	0	0.25	data_likelihood: 0.998889	l1: 0.0001
+85 	100	12	10000	62	0	0.25	data_likelihood: 0.70578	l1: 0.0001
+92 	100	12	10000	68	0	0.25	data_likelihood: 0.996284	l1: 0.0001
+90 	100	12	10000	88	0	0.25	data_likelihood: 0.99871	l1: 0.0001
+93 	100	12	10000	67	0	0	data_likelihood: 0.998249	l1: 0.0001
+91 	100	12	10000	85	0	0.25	data_likelihood: 0.997205	l1: 0.0001
+89 	100	12	10000	62	0	0	data_likelihood: 0.998575	l1: 0.0001
+96 	100	12	10000	77	0	0.25	data_likelihood: 0.998153	l1: 0.0001
+94 	100	12	10000	81	0	0.25	data_likelihood: 0.998809	l1: 0.0001
+95 	100	12	10000	85	0	0.25	data_likelihood: 0.998792	l1: 0.0001
+100 	100	12	10000	67	0	0.25	data_likelihood: 0.99918	l1: 0.0001
+99 	100	12	10000	61	0	0.25	data_likelihood: 0.998874	l1: 0.0001
+97 	100	12	10000	85	0	0.25	data_likelihood: 0.997145	l1: 0.0001
+98 	100	12	10000	93	0	0.166667	data_likelihood: 0.996502	l1: 0.0001
+# Switches:
+# -mode              = SPARSE
+# -sample            = UNIFORM
+# -nEp               = 100
+# -minTran           = 10
+# -maxTran           = 12
+# -e                 = 0
+# -d                 = 0.5
+# -minTrain          = 100
+# -maxTrain          = 100
+# -minTree           = 1000
+# -maxTree           = 10000
+# -f                 = 2
+# -l1                = 0.001
+# -pruneTree         = 1
+# -kWidth            = 0
+# -incr              = 0
+# -exp               = 0
+# -printSamples      = 0
+# -optTran           = 0
+# -fincr             = 0
+# -dl                = 0.001
+# -tderr             = 0.0001
+# -l1incr            = 0.0001
+# -maxl1             = 0.001
+# 
+# Maze size: 2x2
+# 
+# Reward 0
+#     ACTIVATION_STATE : 0
+#     RECEIVE_STATE    : 3
+#     TIME_DELAY       : 2
+#     reward           : 1
+#     activation       : EACH_TIME_NO_PUNISH
+# 
+# 
+# 
+# 
+# Episode	training_length	transition_length	search_tree_size	feature_n	utree_size	episode_mean_reward
+# 
+1 	100	12	10000	59	0	0.25	data_likelihood: 0.997269	l1: 0.001
+3 	100	12	10000	53	0	0.25	data_likelihood: 0.998411	l1: 0.001
+6 	100	12	10000	54	0	0.25	data_likelihood: 0.999369	l1: 0.001
+8 	100	12	10000	52	0	0.25	data_likelihood: 0.999342	l1: 0.001
+5 	100	12	10000	49	0	0.0833333	data_likelihood: 0.999249	l1: 0.001
+4 	100	12	10000	54	0	0.25	data_likelihood: 0.998952	l1: 0.001
+7 	100	12	10000	50	0	0.25	data_likelihood: 0.998693	l1: 0.001
+2 	100	12	10000	53	0	0.166667	data_likelihood: 0.998344	l1: 0.001
+14 	100	12	10000	56	0	0.25	data_likelihood: 0.999194	l1: 0.001
+11 	100	12	10000	46	0	0.25	data_likelihood: 0.998916	l1: 0.001
+9 	100	12	10000	53	0	0.0833333	data_likelihood: 0.999547	l1: 0.001
+13 	100	12	10000	52	0	0.25	data_likelihood: 0.997982	l1: 0.001
+15 	100	12	10000	48	0	0	data_likelihood: 0.999185	l1: 0.001
+10 	100	12	10000	53	0	0	data_likelihood: 0.999164	l1: 0.001
+12 	100	12	10000	54	0	0.25	data_likelihood: 0.998257	l1: 0.001
+16 	100	12	10000	44	0	0.0833333	data_likelihood: 0.998811	l1: 0.001
+18 	100	12	10000	54	0	0.25	data_likelihood: 0.998816	l1: 0.001
+23 	100	12	10000	49	0	0.0833333	data_likelihood: 0.999337	l1: 0.001
+17 	100	12	10000	35	0	0.166667	data_likelihood: 0.997323	l1: 0.001
+22 	100	12	10000	50	0	0.25	data_likelihood: 0.99932	l1: 0.001
+19 	100	12	10000	50	0	0.0833333	data_likelihood: 0.999058	l1: 0.001
+24 	100	12	10000	48	0	0	data_likelihood: 0.998989	l1: 0.001
+20 	100	12	10000	48	0	0.25	data_likelihood: 0.999096	l1: 0.001
+21 	100	12	10000	54	0	0	data_likelihood: 0.998361	l1: 0.001
+27 	100	12	10000	54	0	0	data_likelihood: 0.999247	l1: 0.001
+30 	100	12	10000	42	0	0.25	data_likelihood: 0.998458	l1: 0.001
+26 	100	12	10000	40	0	0.0833333	data_likelihood: 0.997795	l1: 0.001
+25 	100	12	10000	40	0	0	data_likelihood: 0.998707	l1: 0.001
+28 	100	12	10000	54	0	0.25	data_likelihood: 0.997946	l1: 0.001
+31 	100	12	10000	49	0	0.25	data_likelihood: 0.998707	l1: 0.001
+29 	100	12	10000	42	0	0	data_likelihood: 0.99923	l1: 0.001
+33 	100	12	10000	54	0	0.25	data_likelihood: 0.998254	l1: 0.001
+35 	100	12	10000	52	0	0.25	data_likelihood: 0.998896	l1: 0.001
+32 	100	12	10000	50	0	0	data_likelihood: 0.625367	l1: 0.001
+34 	100	12	10000	29	0	0	data_likelihood: 0.999575	l1: 0.001
+36 	100	12	10000	50	0	0.25	data_likelihood: 0.998293	l1: 0.001
+37 	100	12	10000	51	0	0.25	data_likelihood: 0.998623	l1: 0.001
+39 	100	12	10000	54	0	0.0833333	data_likelihood: 0.998607	l1: 0.001
+38 	100	12	10000	52	0	0	data_likelihood: 0.998959	l1: 0.001
+41 	100	12	10000	60	0	0	data_likelihood: 0.99941	l1: 0.001
+42 	100	12	10000	53	0	0.166667	data_likelihood: 0.99831	l1: 0.001
+40 	100	12	10000	53	0	0.25	data_likelihood: 0.998228	l1: 0.001
+44 	100	12	10000	54	0	0.25	data_likelihood: 0.998775	l1: 0.001
+43 	100	12	10000	54	0	0.0833333	data_likelihood: 0.999078	l1: 0.001
+46 	100	12	10000	52	0	0.25	data_likelihood: 0.998853	l1: 0.001
+47 	100	12	10000	48	0	0.25	data_likelihood: 0.998779	l1: 0.001
+51 	100	12	10000	52	0	0	data_likelihood: 0.997486	l1: 0.001
+45 	100	12	10000	48	0	0.25	data_likelihood: 0.998636	l1: 0.001
+49 	100	12	10000	45	0	0.25	data_likelihood: 0.997703	l1: 0.001
+50 	100	12	10000	43	0	0.25	data_likelihood: 0.99847	l1: 0.001
+48 	100	12	10000	53	0	0.25	data_likelihood: 0.998301	l1: 0.001
+56 	100	12	10000	47	0	0.0833333	data_likelihood: 0.999035	l1: 0.001
+52 	100	12	10000	50	0	0.25	data_likelihood: 0.99829	l1: 0.001
+54 	100	12	10000	54	0	0	data_likelihood: 0.999201	l1: 0.001
+53 	100	12	10000	36	0	0.25	data_likelihood: 0.999098	l1: 0.001
+55 	100	12	10000	52	0	0.25	data_likelihood: 0.998169	l1: 0.001
+57 	100	12	10000	48	0	0.0833333	data_likelihood: 0.999471	l1: 0.001
+58 	100	12	10000	51	0	0.25	data_likelihood: 0.99764	l1: 0.001
+60 	100	12	10000	40	0	0	data_likelihood: 0.99915	l1: 0.001
+59 	100	12	10000	54	0	0.0833333	data_likelihood: 0.998986	l1: 0.001
+61 	100	12	10000	41	0	0	data_likelihood: 0.999511	l1: 0.001
+65 	100	12	10000	44	0	0.25	data_likelihood: 0.999344	l1: 0.001
+63 	100	12	10000	53	0	0.25	data_likelihood: 0.998604	l1: 0.001
+64 	100	12	10000	54	0	0	data_likelihood: 0.9995	l1: 0.001
+62 	100	12	10000	40	0	0	data_likelihood: 0.998961	l1: 0.001
+66 	100	12	10000	50	0	0.166667	data_likelihood: 0.998366	l1: 0.001
+68 	100	12	10000	51	0	0.25	data_likelihood: 0.998937	l1: 0.001
+67 	100	12	10000	49	0	0.25	data_likelihood: 0.998929	l1: 0.001
+70 	100	12	10000	44	0	0.25	data_likelihood: 0.997366	l1: 0.001
+73 	100	12	10000	55	0	0.25	data_likelihood: 0.999059	l1: 0.001
+72 	100	12	10000	55	0	0.25	data_likelihood: 0.999325	l1: 0.001
+71 	100	12	10000	51	0	0.166667	data_likelihood: 0.999074	l1: 0.001
+69 	100	12	10000	39	0	0	data_likelihood: 0.999053	l1: 0.001
+74 	100	12	10000	49	0	0.166667	data_likelihood: 0.998256	l1: 0.001
+75 	100	12	10000	35	0	0	data_likelihood: 0.998301	l1: 0.001
+76 	100	12	10000	44	0	0	data_likelihood: 0.997514	l1: 0.001
+77 	100	12	10000	46	0	0	data_likelihood: 0.999246	l1: 0.001
+78 	100	12	10000	46	0	0.25	data_likelihood: 0.998852	l1: 0.001
+82 	100	12	10000	55	0	0.25	data_likelihood: 0.999282	l1: 0.001
+80 	100	12	10000	54	0	0	data_likelihood: 0.998951	l1: 0.001
+79 	100	12	10000	37	0	0	data_likelihood: 0.998842	l1: 0.001
+83 	100	12	10000	53	0	0.166667	data_likelihood: 0.999168	l1: 0.001
+86 	100	12	10000	53	0	0.0833333	data_likelihood: 0.999197	l1: 0.001
+84 	100	12	10000	51	0	0.25	data_likelihood: 0.997632	l1: 0.001
+81 	100	12	10000	53	0	0	data_likelihood: 0.999293	l1: 0.001
+85 	100	12	10000	58	0	0	data_likelihood: 0.9967	l1: 0.001
+90 	100	12	10000	49	0	0.0833333	data_likelihood: 0.998308	l1: 0.001
+87 	100	12	10000	52	0	0	data_likelihood: 0.998397	l1: 0.001
+92 	100	12	10000	50	0	0.166667	data_likelihood: 0.998931	l1: 0.001
+91 	100	12	10000	51	0	0.166667	data_likelihood: 0.998138	l1: 0.001
+88 	100	12	10000	54	0	0.0833333	data_likelihood: 0.998261	l1: 0.001
+89 	100	12	10000	56	0	0.25	data_likelihood: 0.999166	l1: 0.001
+93 	100	12	10000	44	0	0.25	data_likelihood: 0.999085	l1: 0.001
+95 	100	12	10000	44	0	0.25	data_likelihood: 0.998867	l1: 0.001
+97 	100	12	10000	50	0	0	data_likelihood: 0.999218	l1: 0.001
+100 	100	12	10000	49	0	0	data_likelihood: 0.998723	l1: 0.001
+94 	100	12	10000	50	0	0.0833333	data_likelihood: 0.999423	l1: 0.001
+98 	100	12	10000	48	0	0	data_likelihood: 0.997882	l1: 0.001
+96 	100	12	10000	47	0	0.0833333	data_likelihood: 0.999158	l1: 0.001
+99 	100	12	10000	42	0	0	data_likelihood: 0.999459	l1: 0.001
+# Switches:
+# -mode              = SPARSE
+# -sample            = UNIFORM
+# -nEp               = 100
+# -minTran           = 10
+# -maxTran           = 12
+# -e                 = 0
+# -d                 = 0.5
+# -minTrain          = 100
+# -maxTrain          = 100
+# -minTree           = 1000
+# -maxTree           = 10000
+# -f                 = 2
+# -l1                = 0.0005
+# -pruneTree         = 1
+# -kWidth            = 0
+# -incr              = 0
+# -exp               = 0
+# -printSamples      = 0
+# -optTran           = 0
+# -fincr             = 0
+# -dl                = 0.001
+# -tderr             = 0.0001
+# -l1incr            = 0.0001
+# -maxl1             = 0.001
+# 
+# Maze size: 2x2
+# 
+# Reward 0
+#     ACTIVATION_STATE : 0
+#     RECEIVE_STATE    : 3
+#     TIME_DELAY       : 2
+#     reward           : 1
+#     activation       : EACH_TIME_NO_PUNISH
+# 
+# 
+# 
+# 
+# Episode	training_length	transition_length	search_tree_size	feature_n	utree_size	episode_mean_reward
+# 
+4 	100	12	10000	60	0	0.0833333	data_likelihood: 0.998921	l1: 0.0005
+7 	100	12	10000	52	0	0.25	data_likelihood: 0.99849	l1: 0.0005
+1 	100	12	10000	54	0	0.25	data_likelihood: 0.998975	l1: 0.0005
+5 	100	12	10000	54	0	0.166667	data_likelihood: 0.998397	l1: 0.0005
+3 	100	12	10000	59	0	0.166667	data_likelihood: 0.998227	l1: 0.0005
+2 	100	12	10000	53	0	0.0833333	data_likelihood: 0.99856	l1: 0.0005
+6 	100	12	10000	42	0	0	data_likelihood: 0.999229	l1: 0.0005
+8 	100	12	10000	54	0	0	data_likelihood: 0.997654	l1: 0.0005
+12 	100	12	10000	54	0	0.25	data_likelihood: 0.999147	l1: 0.0005
+9 	100	12	10000	53	0	0	data_likelihood: 0.998939	l1: 0.0005
+11 	100	12	10000	55	0	0.25	data_likelihood: 0.998753	l1: 0.0005
+13 	100	12	10000	48	0	0	data_likelihood: 0.9993	l1: 0.0005
+15 	100	12	10000	59	0	0.166667	data_likelihood: 0.998702	l1: 0.0005
+10 	100	12	10000	58	0	0.0833333	data_likelihood: 0.998839	l1: 0.0005
+16 	100	12	10000	62	0	0.0833333	data_likelihood: 0.99739	l1: 0.0005
+14 	100	12	10000	47	0	0	data_likelihood: 0.999191	l1: 0.0005
+18 	100	12	10000	52	0	0.25	data_likelihood: 0.999485	l1: 0.0005
+20 	100	12	10000	54	0	0.25	data_likelihood: 0.999056	l1: 0.0005
+19 	100	12	10000	58	0	0.0833333	data_likelihood: 0.999456	l1: 0.0005
+17 	100	12	10000	40	0	0	data_likelihood: 0.998993	l1: 0.0005
+23 	100	12	10000	56	0	0.25	data_likelihood: 0.999154	l1: 0.0005
+21 	100	12	10000	57	0	0.25	data_likelihood: 0.99922	l1: 0.0005
+24 	100	12	10000	47	0	0.25	data_likelihood: 0.998383	l1: 0.0005
+25 	100	12	10000	58	0	0.25	data_likelihood: 0.998887	l1: 0.0005
+22 	100	12	10000	43	0	0	data_likelihood: 0.998912	l1: 0.0005
+27 	100	12	10000	51	0	0.166667	data_likelihood: 0.998471	l1: 0.0005
+32 	100	12	10000	52	0	0	data_likelihood: 0.998267	l1: 0.0005
+26 	100	12	10000	36	0	0.166667	data_likelihood: 0.999352	l1: 0.0005
+28 	100	12	10000	62	0	0.0833333	data_likelihood: 0.999035	l1: 0.0005
+30 	100	12	10000	59	0	0.166667	data_likelihood: 0.997224	l1: 0.0005
+33 	100	12	10000	55	0	0	data_likelihood: 0.9989	l1: 0.0005
+29 	100	12	10000	45	0	0.0833333	data_likelihood: 0.998696	l1: 0.0005
+31 	100	12	10000	40	0	0.166667	data_likelihood: 0.997695	l1: 0.0005
+35 	100	12	10000	52	0	0.25	data_likelihood: 0.998748	l1: 0.0005
+36 	100	12	10000	48	0	0.0833333	data_likelihood: 0.999326	l1: 0.0005
+38 	100	12	10000	54	0	0.25	data_likelihood: 0.999121	l1: 0.0005
+40 	100	12	10000	52	0	0	data_likelihood: 0.998258	l1: 0.0005
+37 	100	12	10000	59	0	0.25	data_likelihood: 0.998747	l1: 0.0005
+34 	100	12	10000	45	0	0.0833333	data_likelihood: 0.998114	l1: 0.0005
+39 	100	12	10000	49	0	0.25	data_likelihood: 0.999242	l1: 0.0005
+41 	100	12	10000	48	0	0	data_likelihood: 0.998113	l1: 0.0005
+42 	100	12	10000	47	0	0.25	data_likelihood: 0.998626	l1: 0.0005
+46 	100	12	10000	55	0	0.25	data_likelihood: 0.998668	l1: 0.0005
+44 	100	12	10000	52	0	0.25	data_likelihood: 0.998672	l1: 0.0005
+43 	100	12	10000	57	0	0.0833333	data_likelihood: 0.999261	l1: 0.0005
+47 	100	12	10000	50	0	0.25	data_likelihood: 0.99915	l1: 0.0005
+45 	100	12	10000	49	0	0.25	data_likelihood: 0.99819	l1: 0.0005
+49 	100	12	10000	51	0	0.25	data_likelihood: 0.999081	l1: 0.0005
+48 	100	12	10000	53	0	0.0833333	data_likelihood: 0.999483	l1: 0.0005
+50 	100	12	10000	59	0	0.25	data_likelihood: 0.999345	l1: 0.0005
+51 	100	12	10000	45	0	0.25	data_likelihood: 0.998732	l1: 0.0005
+53 	100	12	10000	54	0	0.25	data_likelihood: 0.998625	l1: 0.0005
+54 	100	12	10000	44	0	0.0833333	data_likelihood: 0.998895	l1: 0.0005
+56 	100	12	10000	54	0	0.25	data_likelihood: 0.999352	l1: 0.0005
+55 	100	12	10000	55	0	0.25	data_likelihood: 0.998179	l1: 0.0005
+57 	100	12	10000	44	0	0	data_likelihood: 0.998387	l1: 0.0005
+52 	100	12	10000	61	0	0.0833333	data_likelihood: 0.997721	l1: 0.0005
+58 	100	12	10000	49	0	0.25	data_likelihood: 0.998088	l1: 0.0005
+59 	100	12	10000	54	0	0.25	data_likelihood: 0.998826	l1: 0.0005
+60 	100	12	10000	57	0	0.25	data_likelihood: 0.998751	l1: 0.0005
+63 	100	12	10000	46	0	0.25	data_likelihood: 0.99788	l1: 0.0005
+65 	100	12	10000	51	0	0.25	data_likelihood: 0.998825	l1: 0.0005
+64 	100	12	10000	51	0	0	data_likelihood: 0.999306	l1: 0.0005
+62 	100	12	10000	43	0	0.0833333	data_likelihood: 0.99843	l1: 0.0005
+61 	100	12	10000	45	0	0	data_likelihood: 0.998842	l1: 0.0005
+67 	100	12	10000	53	0	0.25	data_likelihood: 0.998378	l1: 0.0005
+68 	100	12	10000	56	0	0.25	data_likelihood: 0.998793	l1: 0.0005
+66 	100	12	10000	40	0	0.0833333	data_likelihood: 0.999213	l1: 0.0005
+69 	100	12	10000	44	0	0.25	data_likelihood: 0.998893	l1: 0.0005
+70 	100	12	10000	58	0	0.25	data_likelihood: 0.999436	l1: 0.0005
+72 	100	12	10000	59	0	0.25	data_likelihood: 0.998904	l1: 0.0005
+73 	100	12	10000	51	0	0.25	data_likelihood: 0.997831	l1: 0.0005
+75 	100	12	10000	52	0	0.25	data_likelihood: 0.999181	l1: 0.0005
+71 	100	12	10000	51	0	0	data_likelihood: 0.997202	l1: 0.0005
+77 	100	12	10000	56	0	0.25	data_likelihood: 0.998255	l1: 0.0005
+76 	100	12	10000	53	0	0.25	data_likelihood: 0.998908	l1: 0.0005
+79 	100	12	10000	52	0	0.0833333	data_likelihood: 0.999324	l1: 0.0005
+74 	100	12	10000	42	0	0	data_likelihood: 0.99903	l1: 0.0005
+78 	100	12	10000	56	0	0.25	data_likelihood: 0.999006	l1: 0.0005
+80 	100	12	10000	56	0	0.25	data_likelihood: 0.998732	l1: 0.0005
+81 	100	12	10000	52	0	0.25	data_likelihood: 0.998723	l1: 0.0005
+83 	100	12	10000	49	0	0.25	data_likelihood: 0.998546	l1: 0.0005
+82 	100	12	10000	59	0	0.25	data_likelihood: 0.999381	l1: 0.0005
+84 	100	12	10000	56	0	0.166667	data_likelihood: 0.999109	l1: 0.0005
+87 	100	12	10000	55	0	0.25	data_likelihood: 0.998483	l1: 0.0005
+86 	100	12	10000	59	0	0.166667	data_likelihood: 0.998816	l1: 0.0005
+85 	100	12	10000	56	0	0	data_likelihood: 0.998909	l1: 0.0005
+88 	100	12	10000	58	0	0	data_likelihood: 0.998852	l1: 0.0005
+90 	100	12	10000	45	0	0.25	data_likelihood: 0.997577	l1: 0.0005
+89 	100	12	10000	41	0	0	data_likelihood: 0.999016	l1: 0.0005
+92 	100	12	10000	56	0	0.25	data_likelihood: 0.999017	l1: 0.0005
+94 	100	12	10000	55	0	0.25	data_likelihood: 0.998598	l1: 0.0005
+93 	100	12	10000	59	0	0.25	data_likelihood: 0.998784	l1: 0.0005
+95 	100	12	10000	55	0	0.25	data_likelihood: 0.999166	l1: 0.0005
+91 	100	12	10000	59	0	0	data_likelihood: 0.999202	l1: 0.0005
+99 	100	12	10000	48	0	0.25	data_likelihood: 0.999003	l1: 0.0005
+97 	100	12	10000	46	0	0.166667	data_likelihood: 0.998526	l1: 0.0005
+100 	100	12	10000	62	0	0.25	data_likelihood: 0.99873	l1: 0.0005
+98 	100	12	10000	38	0	0	data_likelihood: 0.998681	l1: 0.0005
+96 	100	12	10000	43	0	0	data_likelihood: 0.999111	l1: 0.0005
+# Switches:
+# -mode              = SPARSE
+# -sample            = UNIFORM
+# -nEp               = 100
+# -minTran           = 10
+# -maxTran           = 12
+# -e                 = 0
+# -d                 = 0.5
+# -minTrain          = 100
+# -maxTrain          = 100
+# -minTree           = 1000
+# -maxTree           = 10000
+# -f                 = 2
+# -l1                = 0.0002
+# -pruneTree         = 1
+# -kWidth            = 0
+# -incr              = 0
+# -exp               = 0
+# -printSamples      = 0
+# -optTran           = 0
+# -fincr             = 0
+# -dl                = 0.001
+# -tderr             = 0.0001
+# -l1incr            = 0.0001
+# -maxl1             = 0.001
+# 
+# Maze size: 2x2
+# 
+# Reward 0
+#     ACTIVATION_STATE : 0
+#     RECEIVE_STATE    : 3
+#     TIME_DELAY       : 2
+#     reward           : 1
+#     activation       : EACH_TIME_NO_PUNISH
+# 
+# 
+# 
+# 
+# Episode	training_length	transition_length	search_tree_size	feature_n	utree_size	episode_mean_reward
+# 
+8 	100	12	10000	59	0	0.25	data_likelihood: 0.999447	l1: 0.0002
+4 	100	12	10000	56	0	0.25	data_likelihood: 0.998836	l1: 0.0002
+1 	100	12	10000	58	0	0.25	data_likelihood: 0.999225	l1: 0.0002
+7 	100	12	10000	59	0	0.25	data_likelihood: 0.998322	l1: 0.0002
+3 	100	12	10000	62	0	0.0833333	data_likelihood: 0.998334	l1: 0.0002
+6 	100	12	10000	46	0	0.166667	data_likelihood: 0.998666	l1: 0.0002
+2 	100	12	10000	72	0	0	data_likelihood: 0.998365	l1: 0.0002
+11 	100	12	10000	53	0	0.25	data_likelihood: 0.998937	l1: 0.0002
+10 	100	12	10000	67	0	0.25	data_likelihood: 0.996896	l1: 0.0002
+9 	100	12	10000	68	0	0.25	data_likelihood: 0.998681	l1: 0.0002
+12 	100	12	10000	38	0	0.0833333	data_likelihood: 0.999169	l1: 0.0002
+5 	100	12	10000	62	0	0	data_likelihood: 0.999199	l1: 0.0002
+13 	100	12	10000	70	0	0.25	data_likelihood: 0.998743	l1: 0.0002
+14 	100	12	10000	67	0	0.25	data_likelihood: 0.998458	l1: 0.0002
+15 	100	12	10000	67	0	0.25	data_likelihood: 0.999513	l1: 0.0002
+16 	100	12	10000	66	0	0.25	data_likelihood: 0.999316	l1: 0.0002
+19 	100	12	10000	63	0	0.25	data_likelihood: 0.998109	l1: 0.0002
+21 	100	12	10000	62	0	0.25	data_likelihood: 0.998561	l1: 0.0002
+18 	100	12	10000	56	0	0.25	data_likelihood: 0.99842	l1: 0.0002
+17 	100	12	10000	64	0	0.0833333	data_likelihood: 0.998818	l1: 0.0002
+20 	100	12	10000	61	0	0.25	data_likelihood: 0.998467	l1: 0.0002
+23 	100	12	10000	63	0	0.25	data_likelihood: 0.998481	l1: 0.0002
+22 	100	12	10000	62	0	0.25	data_likelihood: 0.998843	l1: 0.0002
+25 	100	12	10000	63	0	0.25	data_likelihood: 0.998992	l1: 0.0002
+24 	100	12	10000	57	0	0.166667	data_likelihood: 0.99863	l1: 0.0002
+26 	100	12	10000	60	0	0.25	data_likelihood: 0.99891	l1: 0.0002
+28 	100	12	10000	60	0	0.25	data_likelihood: 0.998873	l1: 0.0002
+29 	100	12	10000	58	0	0.25	data_likelihood: 0.998604	l1: 0.0002
+27 	100	12	10000	58	0	0.166667	data_likelihood: 0.9984	l1: 0.0002
+30 	100	12	10000	67	0	0.25	data_likelihood: 0.999178	l1: 0.0002
+31 	100	12	10000	63	0	0.25	data_likelihood: 0.998547	l1: 0.0002
+33 	100	12	10000	57	0	0.25	data_likelihood: 0.999436	l1: 0.0002
+36 	100	12	10000	61	0	0.166667	data_likelihood: 0.998256	l1: 0.0002
+35 	100	12	10000	61	0	0.25	data_likelihood: 0.998975	l1: 0.0002
+38 	100	12	10000	49	0	0.25	data_likelihood: 0.998347	l1: 0.0002
+32 	100	12	10000	68	0	0	data_likelihood: 0.998945	l1: 0.0002
+34 	100	12	10000	49	0	0.166667	data_likelihood: 0.998867	l1: 0.0002
+39 	100	12	10000	66	0	0.25	data_likelihood: 0.99884	l1: 0.0002
+40 	100	12	10000	66	0	0	data_likelihood: 0.998375	l1: 0.0002
+37 	100	12	10000	66	0	0.166667	data_likelihood: 0.999166	l1: 0.0002
+41 	100	12	10000	61	0	0.25	data_likelihood: 0.998014	l1: 0.0002
+42 	100	12	10000	62	0	0.25	data_likelihood: 0.999139	l1: 0.0002
+44 	100	12	10000	62	0	0.25	data_likelihood: 0.998666	l1: 0.0002
+45 	100	12	10000	56	0	0.25	data_likelihood: 0.998626	l1: 0.0002
+47 	100	12	10000	55	0	0.25	data_likelihood: 0.99866	l1: 0.0002
+43 	100	12	10000	61	0	0.25	data_likelihood: 0.999046	l1: 0.0002
+48 	100	12	10000	49	0	0.25	data_likelihood: 0.998186	l1: 0.0002
+46 	100	12	10000	63	0	0.166667	data_likelihood: 0.997777	l1: 0.0002
+51 	100	12	10000	61	0	0.25	data_likelihood: 0.998947	l1: 0.0002
+49 	100	12	10000	62	0	0.25	data_likelihood: 0.999175	l1: 0.0002
+50 	100	12	10000	60	0	0.25	data_likelihood: 0.998175	l1: 0.0002
+55 	100	12	10000	62	0	0.25	data_likelihood: 0.999198	l1: 0.0002
+54 	100	12	10000	60	0	0.25	data_likelihood: 0.998571	l1: 0.0002
+59 	100	12	10000	56	0	0.25	data_likelihood: 0.999325	l1: 0.0002
+53 	100	12	10000	62	0	0.25	data_likelihood: 0.999509	l1: 0.0002
+57 	100	12	10000	62	0	0.25	data_likelihood: 0.998053	l1: 0.0002
+52 	100	12	10000	69	0	0.25	data_likelihood: 0.998786	l1: 0.0002
+56 	100	12	10000	50	0	0	data_likelihood: 0.998933	l1: 0.0002
+58 	100	12	10000	58	0	0.0833333	data_likelihood: 0.998754	l1: 0.0002
+60 	100	12	10000	65	0	0.25	data_likelihood: 0.998464	l1: 0.0002
+66 	100	12	10000	61	0	0.25	data_likelihood: 0.998889	l1: 0.0002
+61 	100	12	10000	47	0	0	data_likelihood: 0.998962	l1: 0.0002
+62 	100	12	10000	58	0	0.25	data_likelihood: 0.998977	l1: 0.0002
+64 	100	12	10000	68	0	0.25	data_likelihood: 0.999475	l1: 0.0002
+63 	100	12	10000	60	0	0.25	data_likelihood: 0.998175	l1: 0.0002
+65 	100	12	10000	65	0	0.25	data_likelihood: 0.999253	l1: 0.0002
+67 	100	12	10000	65	0	0.25	data_likelihood: 0.99866	l1: 0.0002
+68 	100	12	10000	65	0	0.25	data_likelihood: 0.999403	l1: 0.0002
+70 	100	12	10000	67	0	0.25	data_likelihood: 0.998535	l1: 0.0002
+73 	100	12	10000	57	0	0.25	data_likelihood: 0.998029	l1: 0.0002
+69 	100	12	10000	65	0	0.25	data_likelihood: 0.999083	l1: 0.0002
+72 	100	12	10000	62	0	0.0833333	data_likelihood: 0.998908	l1: 0.0002
+71 	100	12	10000	57	0	0.25	data_likelihood: 0.99848	l1: 0.0002
+74 	100	12	10000	68	0	0.25	data_likelihood: 0.999164	l1: 0.0002
+76 	100	12	10000	66	0	0.25	data_likelihood: 0.999046	l1: 0.0002
+75 	100	12	10000	63	0	0.166667	data_likelihood: 0.99855	l1: 0.0002
+77 	100	12	10000	56	0	0.25	data_likelihood: 0.998842	l1: 0.0002
+78 	100	12	10000	66	0	0.25	data_likelihood: 0.998869	l1: 0.0002
+82 	100	12	10000	57	0	0.25	data_likelihood: 0.999356	l1: 0.0002
+79 	100	12	10000	61	0	0.0833333	data_likelihood: 0.998656	l1: 0.0002
+81 	100	12	10000	66	0	0.25	data_likelihood: 0.999346	l1: 0.0002
+84 	100	12	10000	61	0	0.25	data_likelihood: 0.998767	l1: 0.0002
+80 	100	12	10000	51	0	0	data_likelihood: 0.998911	l1: 0.0002
+86 	100	12	10000	59	0	0.25	data_likelihood: 0.99871	l1: 0.0002
+83 	100	12	10000	43	0	0	data_likelihood: 0.997545	l1: 0.0002
+88 	100	12	10000	62	0	0.25	data_likelihood: 0.998421	l1: 0.0002
+87 	100	12	10000	64	0	0.166667	data_likelihood: 0.998645	l1: 0.0002
+90 	100	12	10000	64	0	0.25	data_likelihood: 0.997628	l1: 0.0002
+89 	100	12	10000	61	0	0	data_likelihood: 0.998349	l1: 0.0002
+91 	100	12	10000	60	0	0.0833333	data_likelihood: 0.998297	l1: 0.0002
+85 	100	12	10000	66	0	0.0833333	data_likelihood: 0.998307	l1: 0.0002
+92 	100	12	10000	64	0	0.25	data_likelihood: 0.999019	l1: 0.0002
+93 	100	12	10000	67	0	0.25	data_likelihood: 0.998486	l1: 0.0002
+94 	100	12	10000	64	0	0.0833333	data_likelihood: 0.999176	l1: 0.0002
+95 	100	12	10000	62	0	0	data_likelihood: 0.99916	l1: 0.0002
+97 	100	12	10000	55	0	0.25	data_likelihood: 0.998162	l1: 0.0002
+99 	100	12	10000	59	0	0.25	data_likelihood: 0.998752	l1: 0.0002
+98 	100	12	10000	52	0	0.25	data_likelihood: 0.998523	l1: 0.0002
+96 	100	12	10000	55	0	0.25	data_likelihood: 0.99932	l1: 0.0002
+100 	100	12	10000	57	0	0.25	data_likelihood: 0.998806	l1: 0.0002
+# Switches:
+# -mode              = SPARSE
+# -sample            = UNIFORM
+# -nEp               = 100
+# -minTran           = 10
+# -maxTran           = 12
+# -e                 = 0
+# -d                 = 0.5
+# -minTrain          = 100
+# -maxTrain          = 100
+# -minTree           = 1000
+# -maxTree           = 10000
+# -f                 = 2
+# -l1                = 5e-05
+# -pruneTree         = 1
+# -kWidth            = 0
+# -incr              = 0
+# -exp               = 0
+# -printSamples      = 0
+# -optTran           = 0
+# -fincr             = 0
+# -dl                = 0.001
+# -tderr             = 0.0001
+# -l1incr            = 0.0001
+# -maxl1             = 0.001
+# 
+# Maze size: 2x2
+# 
+# Reward 0
+#     ACTIVATION_STATE : 0
+#     RECEIVE_STATE    : 3
+#     TIME_DELAY       : 2
+#     reward           : 1
+#     activation       : EACH_TIME_NO_PUNISH
+# 
+# 
+# 
+# 
+# Episode	training_length	transition_length	search_tree_size	feature_n	utree_size	episode_mean_reward
+# 
+7 	100	12	10000	89	0	0.0833333	data_likelihood: 0.997359	l1: 5e-05
+3 	100	12	10000	112	0	0.25	data_likelihood: 0.998158	l1: 5e-05
+5 	100	12	10000	107	0	0.25	data_likelihood: 0.998287	l1: 5e-05
+2 	100	12	10000	88	0	0.25	data_likelihood: 0.997187	l1: 5e-05
+6 	100	12	10000	111	0	0.25	data_likelihood: 0.998213	l1: 5e-05
+8 	100	12	10000	110	0	0.0833333	data_likelihood: 0.997841	l1: 5e-05
+1 	100	12	10000	99	0	0.0833333	data_likelihood: 0.998219	l1: 5e-05
+10 	100	12	10000	98	0	0.25	data_likelihood: 0.996885	l1: 5e-05
+12 	100	12	10000	114	0	0.25	data_likelihood: 0.998197	l1: 5e-05
+9 	100	12	10000	104	0	0.0833333	data_likelihood: 0.998325	l1: 5e-05
+15 	100	12	10000	107	0	0.25	data_likelihood: 0.998196	l1: 5e-05
+4 	100	12	10000	101	0	0.0833333	data_likelihood: 0.998483	l1: 5e-05
+14 	100	12	10000	90	0	0.25	data_likelihood: 0.997711	l1: 5e-05
+17 	100	12	10000	97	0	0	data_likelihood: 0.996811	l1: 5e-05
+13 	100	12	10000	107	0	0.25	data_likelihood: 0.998254	l1: 5e-05
+16 	100	12	10000	109	0	0	data_likelihood: 0.998147	l1: 5e-05
+11 	100	12	10000	97	0	0.166667	data_likelihood: 0.998267	l1: 5e-05
+18 	100	12	10000	104	0	0.25	data_likelihood: 0.998124	l1: 5e-05
+22 	100	12	10000	95	0	0.25	data_likelihood: 0.998519	l1: 5e-05
+20 	100	12	10000	99	0	0.25	data_likelihood: 0.998339	l1: 5e-05
+23 	100	12	10000	95	0	0.25	data_likelihood: 0.997429	l1: 5e-05
+25 	100	12	10000	106	0	0.25	data_likelihood: 0.998112	l1: 5e-05
+19 	100	12	10000	108	0	0.25	data_likelihood: 0.998296	l1: 5e-05
+24 	100	12	10000	89	0	0.25	data_likelihood: 0.997432	l1: 5e-05
+21 	100	12	10000	95	0	0	data_likelihood: 0.998715	l1: 5e-05
+26 	100	12	10000	93	0	0.25	data_likelihood: 0.99741	l1: 5e-05
+32 	100	12	10000	102	0	0.25	data_likelihood: 0.99838	l1: 5e-05
+28 	100	12	10000	103	0	0.0833333	data_likelihood: 0.998357	l1: 5e-05
+30 	100	12	10000	99	0	0	data_likelihood: 0.996842	l1: 5e-05
+27 	100	12	10000	105	0	0	data_likelihood: 0.998604	l1: 5e-05
+33 	100	12	10000	39	0	0	data_likelihood: 0.641921	l1: 5e-05
+31 	100	12	10000	100	0	0.0833333	data_likelihood: 0.998434	l1: 5e-05
+29 	100	12	10000	106	0	0.0833333	data_likelihood: 0.997969	l1: 5e-05
+34 	100	12	10000	94	0	0.25	data_likelihood: 0.996956	l1: 5e-05
+38 	100	12	10000	107	0	0.0833333	data_likelihood: 0.998528	l1: 5e-05
+37 	100	12	10000	99	0	0.0833333	data_likelihood: 0.998456	l1: 5e-05
+35 	100	12	10000	105	0	0	data_likelihood: 0.998236	l1: 5e-05
+40 	100	12	10000	111	0	0.25	data_likelihood: 0.998418	l1: 5e-05
+36 	100	12	10000	100	0	0.0833333	data_likelihood: 0.998374	l1: 5e-05
+43 	100	12	10000	113	0	0.25	data_likelihood: 0.998195	l1: 5e-05
+42 	100	12	10000	106	0	0.25	data_likelihood: 0.998262	l1: 5e-05
+39 	100	12	10000	109	0	0.0833333	data_likelihood: 0.998495	l1: 5e-05
+41 	100	12	10000	110	0	0.0833333	data_likelihood: 0.998491	l1: 5e-05
+45 	100	12	10000	109	0	0.166667	data_likelihood: 0.998128	l1: 5e-05
+48 	100	12	10000	98	0	0.25	data_likelihood: 0.99841	l1: 5e-05
+44 	100	12	10000	97	0	0	data_likelihood: 0.998624	l1: 5e-05
+50 	100	12	10000	112	0	0.25	data_likelihood: 0.998303	l1: 5e-05
+47 	100	12	10000	114	0	0.0833333	data_likelihood: 0.998321	l1: 5e-05
+46 	100	12	10000	97	0	0.0833333	data_likelihood: 0.998322	l1: 5e-05
+53 	100	12	10000	119	0	0	data_likelihood: 0.998512	l1: 5e-05
+51 	100	12	10000	94	0	0.25	data_likelihood: 0.996096	l1: 5e-05
+52 	100	12	10000	100	0	0.25	data_likelihood: 0.998376	l1: 5e-05
+49 	100	12	10000	96	0	0.166667	data_likelihood: 0.998276	l1: 5e-05
+54 	100	12	10000	111	0	0	data_likelihood: 0.998198	l1: 5e-05
+60 	100	12	10000	97	0	0.25	data_likelihood: 0.998089	l1: 5e-05
+56 	100	12	10000	108	0	0.0833333	data_likelihood: 0.998201	l1: 5e-05
+61 	100	12	10000	104	0	0.0833333	data_likelihood: 0.998184	l1: 5e-05
+58 	100	12	10000	104	0	0.25	data_likelihood: 0.998311	l1: 5e-05
+57 	100	12	10000	108	0	0.25	data_likelihood: 0.99822	l1: 5e-05
+55 	100	12	10000	118	0	0	data_likelihood: 0.997642	l1: 5e-05
+59 	100	12	10000	106	0	0.25	data_likelihood: 0.998369	l1: 5e-05
+69 	100	12	10000	113	0	0.25	data_likelihood: 0.998545	l1: 5e-05
+64 	100	12	10000	97	0	0.25	data_likelihood: 0.998465	l1: 5e-05
+66 	100	12	10000	110	0	0.25	data_likelihood: 0.998379	l1: 5e-05
+65 	100	12	10000	108	0	0	data_likelihood: 0.998361	l1: 5e-05
+67 	100	12	10000	109	0	0.25	data_likelihood: 0.998276	l1: 5e-05
+63 	100	12	10000	109	0	0.25	data_likelihood: 0.9983	l1: 5e-05
+68 	100	12	10000	110	0	0.166667	data_likelihood: 0.998513	l1: 5e-05
+62 	100	12	10000	107	0	0	data_likelihood: 0.99837	l1: 5e-05
+71 	100	12	10000	99	0	0.25	data_likelihood: 0.998346	l1: 5e-05
+70 	100	12	10000	107	0	0.25	data_likelihood: 0.998356	l1: 5e-05
+74 	100	12	10000	106	0	0.25	data_likelihood: 0.998379	l1: 5e-05
+77 	100	12	10000	93	0	0.25	data_likelihood: 0.998303	l1: 5e-05
+75 	100	12	10000	93	0	0.25	data_likelihood: 0.997276	l1: 5e-05
+72 	100	12	10000	103	0	0	data_likelihood: 0.998719	l1: 5e-05
+76 	100	12	10000	111	0	0.166667	data_likelihood: 0.998181	l1: 5e-05
+73 	100	12	10000	98	0	0	data_likelihood: 0.99867	l1: 5e-05
+80 	100	12	10000	104	0	0.25	data_likelihood: 0.998285	l1: 5e-05
+81 	100	12	10000	98	0	0.25	data_likelihood: 0.998347	l1: 5e-05
+78 	100	12	10000	99	0	0.166667	data_likelihood: 0.998345	l1: 5e-05
+83 	100	12	10000	111	0	0.166667	data_likelihood: 0.998341	l1: 5e-05
+82 	100	12	10000	88	0	0.25	data_likelihood: 0.996768	l1: 5e-05
+84 	100	12	10000	111	0	0.0833333	data_likelihood: 0.998307	l1: 5e-05
+79 	100	12	10000	114	0	0.25	data_likelihood: 0.998194	l1: 5e-05
+92 	100	12	10000	95	0	0	data_likelihood: 0.998678	l1: 5e-05
+87 	100	12	10000	101	0	0	data_likelihood: 0.998281	l1: 5e-05
+86 	100	12	10000	107	0	0.25	data_likelihood: 0.998521	l1: 5e-05
+88 	100	12	10000	103	0	0.0833333	data_likelihood: 0.998365	l1: 5e-05
+85 	100	12	10000	112	0	0.166667	data_likelihood: 0.998072	l1: 5e-05
+90 	100	12	10000	110	0	0.25	data_likelihood: 0.998209	l1: 5e-05
+91 	100	12	10000	82	0	0.25	data_likelihood: 0.997281	l1: 5e-05
+89 	100	12	10000	99	0	0.25	data_likelihood: 0.99828	l1: 5e-05
+94 	100	12	10000	95	0	0.25	data_likelihood: 0.998251	l1: 5e-05
+96 	100	12	10000	102	0	0.25	data_likelihood: 0.998418	l1: 5e-05
+97 	100	12	10000	108	0	0.25	data_likelihood: 0.998411	l1: 5e-05
+99 	100	12	10000	115	0	0.25	data_likelihood: 0.998068	l1: 5e-05
+95 	100	12	10000	110	0	0.166667	data_likelihood: 0.998277	l1: 5e-05
+98 	100	12	10000	109	0	0.25	data_likelihood: 0.998293	l1: 5e-05
+93 	100	12	10000	96	0	0.0833333	data_likelihood: 0.998657	l1: 5e-05
+100 	100	12	10000	113	0	0.25	data_likelihood: 0.998105	l1: 5e-05
+# Switches:
+# -mode              = SPARSE
+# -sample            = UNIFORM
+# -nEp               = 100
+# -minTran           = 10
+# -maxTran           = 12
+# -e                 = 0
+# -d                 = 0.5
+# -minTrain          = 100
+# -maxTrain          = 100
+# -minTree           = 1000
+# -maxTree           = 10000
+# -f                 = 2
+# -l1                = 0.0003
+# -pruneTree         = 1
+# -kWidth            = 0
+# -incr              = 0
+# -exp               = 0
+# -printSamples      = 0
+# -optTran           = 0
+# -fincr             = 0
+# -dl                = 0.001
+# -tderr             = 0.0001
+# -l1incr            = 0.0001
+# -maxl1             = 0.001
+# 
+# Maze size: 2x2
+# 
+# Reward 0
+#     ACTIVATION_STATE : 0
+#     RECEIVE_STATE    : 3
+#     TIME_DELAY       : 2
+#     reward           : 1
+#     activation       : EACH_TIME_NO_PUNISH
+# 
+# 
+# 
+# 
+# Episode	training_length	transition_length	search_tree_size	feature_n	utree_size	episode_mean_reward
+# 
+8 	100	12	10000	58	0	0	data_likelihood: 0.998986	l1: 0.0003
+7 	100	12	10000	59	0	0.25	data_likelihood: 0.998556	l1: 0.0003
+4 	100	12	10000	60	0	0.25	data_likelihood: 0.999051	l1: 0.0003
+2 	100	12	10000	54	0	0.25	data_likelihood: 0.998575	l1: 0.0003
+1 	100	12	10000	61	0	0	data_likelihood: 0.998977	l1: 0.0003
+6 	100	12	10000	56	0	0.0833333	data_likelihood: 0.999024	l1: 0.0003
+3 	100	12	10000	45	0	0	data_likelihood: 0.999279	l1: 0.0003
+5 	100	12	10000	58	0	0.25	data_likelihood: 0.998642	l1: 0.0003
+13 	100	12	10000	57	0	0	data_likelihood: 0.999193	l1: 0.0003
+12 	100	12	10000	62	0	0.25	data_likelihood: 0.998905	l1: 0.0003
+9 	100	12	10000	55	0	0	data_likelihood: 0.997678	l1: 0.0003
+11 	100	12	10000	56	0	0.25	data_likelihood: 0.999344	l1: 0.0003
+10 	100	12	10000	58	0	0.25	data_likelihood: 0.997815	l1: 0.0003
+14 	100	12	10000	62	0	0.25	data_likelihood: 0.998802	l1: 0.0003
+19 	100	12	10000	61	0	0	data_likelihood: 0.999543	l1: 0.0003
+16 	100	12	10000	66	0	0.0833333	data_likelihood: 0.998362	l1: 0.0003
+15 	100	12	10000	62	0	0.25	data_likelihood: 0.998696	l1: 0.0003
+17 	100	12	10000	54	0	0.25	data_likelihood: 0.998909	l1: 0.0003
+21 	100	12	10000	56	0	0.0833333	data_likelihood: 0.676222	l1: 0.0003
+18 	100	12	10000	62	0	0.25	data_likelihood: 0.998749	l1: 0.0003
+20 	100	12	10000	61	0	0.25	data_likelihood: 0.998719	l1: 0.0003
+22 	100	12	10000	63	0	0.25	data_likelihood: 0.998814	l1: 0.0003
+25 	100	12	10000	54	0	0.25	data_likelihood: 0.998219	l1: 0.0003
+26 	100	12	10000	59	0	0.25	data_likelihood: 0.999114	l1: 0.0003
+24 	100	12	10000	54	0	0.166667	data_likelihood: 0.999224	l1: 0.0003
+28 	100	12	10000	49	0	0.25	data_likelihood: 0.998168	l1: 0.0003
+30 	100	12	10000	50	0	0.25	data_likelihood: 0.999326	l1: 0.0003
+27 	100	12	10000	55	0	0	data_likelihood: 0.998978	l1: 0.0003
+29 	100	12	10000	61	0	0.25	data_likelihood: 0.998272	l1: 0.0003
+23 	100	12	10000	65	0	0	data_likelihood: 0.99884	l1: 0.0003
+31 	100	12	10000	60	0	0.25	data_likelihood: 0.998186	l1: 0.0003
+33 	100	12	10000	58	0	0	data_likelihood: 0.998581	l1: 0.0003
+36 	100	12	10000	67	0	0.25	data_likelihood: 0.998325	l1: 0.0003
+34 	100	12	10000	51	0	0.25	data_likelihood: 0.998503	l1: 0.0003
+35 	100	12	10000	61	0	0.0833333	data_likelihood: 0.999494	l1: 0.0003
+37 	100	12	10000	51	0	0.166667	data_likelihood: 0.998174	l1: 0.0003
+32 	100	12	10000	60	0	0.0833333	data_likelihood: 0.998463	l1: 0.0003
+39 	100	12	10000	55	0	0.25	data_likelihood: 0.998866	l1: 0.0003
+38 	100	12	10000	58	0	0.166667	data_likelihood: 0.999431	l1: 0.0003
+43 	100	12	10000	51	0	0.25	data_likelihood: 0.998602	l1: 0.0003
+40 	100	12	10000	52	0	0.25	data_likelihood: 0.999211	l1: 0.0003
+41 	100	12	10000	59	0	0.25	data_likelihood: 0.998927	l1: 0.0003
+45 	100	12	10000	56	0	0.25	data_likelihood: 0.998905	l1: 0.0003
+44 	100	12	10000	54	0	0.25	data_likelihood: 0.997756	l1: 0.0003
+46 	100	12	10000	62	0	0.166667	data_likelihood: 0.997482	l1: 0.0003
+42 	100	12	10000	56	0	0.166667	data_likelihood: 0.999179	l1: 0.0003
+48 	100	12	10000	59	0	0.25	data_likelihood: 0.998449	l1: 0.0003
+47 	100	12	10000	61	0	0.25	data_likelihood: 0.99933	l1: 0.0003
+52 	100	12	10000	62	0	0.25	data_likelihood: 0.998956	l1: 0.0003
+50 	100	12	10000	56	0	0.25	data_likelihood: 0.998993	l1: 0.0003
+49 	100	12	10000	45	0	0	data_likelihood: 0.99919	l1: 0.0003
+54 	100	12	10000	59	0	0.25	data_likelihood: 0.99861	l1: 0.0003
+53 	100	12	10000	60	0	0	data_likelihood: 0.998461	l1: 0.0003
+51 	100	12	10000	46	0	0	data_likelihood: 0.999207	l1: 0.0003
+55 	100	12	10000	59	0	0.25	data_likelihood: 0.999483	l1: 0.0003
+57 	100	12	10000	58	0	0.25	data_likelihood: 0.999216	l1: 0.0003
+58 	100	12	10000	45	0	0.25	data_likelihood: 0.998649	l1: 0.0003
+56 	100	12	10000	61	0	0	data_likelihood: 0.998432	l1: 0.0003
+59 	100	12	10000	59	0	0.25	data_likelihood: 0.999459	l1: 0.0003
+61 	100	12	10000	56	0	0.25	data_likelihood: 0.998527	l1: 0.0003
+62 	100	12	10000	61	0	0.25	data_likelihood: 0.998774	l1: 0.0003
+64 	100	12	10000	53	0	0.25	data_likelihood: 0.998452	l1: 0.0003
+65 	100	12	10000	53	0	0.25	data_likelihood: 0.999355	l1: 0.0003
+60 	100	12	10000	47	0	0	data_likelihood: 0.999042	l1: 0.0003
+67 	100	12	10000	65	0	0.25	data_likelihood: 0.998349	l1: 0.0003
+63 	100	12	10000	62	0	0	data_likelihood: 0.998698	l1: 0.0003
+68 	100	12	10000	58	0	0.25	data_likelihood: 0.998818	l1: 0.0003
+66 	100	12	10000	61	0	0.25	data_likelihood: 0.998506	l1: 0.0003
+69 	100	12	10000	58	0	0.25	data_likelihood: 0.999125	l1: 0.0003
+70 	100	12	10000	44	0	0	data_likelihood: 0.999101	l1: 0.0003
+71 	100	12	10000	43	0	0	data_likelihood: 0.998748	l1: 0.0003
+72 	100	12	10000	55	0	0	data_likelihood: 0.998921	l1: 0.0003
+73 	100	12	10000	62	0	0.0833333	data_likelihood: 0.99803	l1: 0.0003
+75 	100	12	10000	57	0	0.25	data_likelihood: 0.998862	l1: 0.0003
+77 	100	12	10000	61	0	0.25	data_likelihood: 0.998339	l1: 0.0003
+74 	100	12	10000	58	0	0.25	data_likelihood: 0.998237	l1: 0.0003
+76 	100	12	10000	61	0	0.25	data_likelihood: 0.998345	l1: 0.0003
+82 	100	12	10000	52	0	0.25	data_likelihood: 0.999638	l1: 0.0003
+78 	100	12	10000	63	0	0	data_likelihood: 0.99903	l1: 0.0003
+84 	100	12	10000	60	0	0	data_likelihood: 0.999499	l1: 0.0003
+80 	100	12	10000	53	0	0.0833333	data_likelihood: 0.999024	l1: 0.0003
+85 	100	12	10000	51	0	0.25	data_likelihood: 0.999037	l1: 0.0003
+81 	100	12	10000	61	0	0.0833333	data_likelihood: 0.998398	l1: 0.0003
+86 	100	12	10000	48	0	0.25	data_likelihood: 0.706753	l1: 0.0003
+87 	100	12	10000	58	0	0.25	data_likelihood: 0.998319	l1: 0.0003
+88 	100	12	10000	55	0	0.25	data_likelihood: 0.998764	l1: 0.0003
+79 	100	12	10000	56	0	0	data_likelihood: 0.67305	l1: 0.0003
+83 	100	12	10000	55	0	0	data_likelihood: 0.655777	l1: 0.0003
+90 	100	12	10000	61	0	0.25	data_likelihood: 0.999302	l1: 0.0003
+92 	100	12	10000	54	0	0.25	data_likelihood: 0.999059	l1: 0.0003
+91 	100	12	10000	56	0	0.25	data_likelihood: 0.998881	l1: 0.0003
+89 	100	12	10000	62	0	0.25	data_likelihood: 0.996516	l1: 0.0003
+95 	100	12	10000	56	0	0.25	data_likelihood: 0.998681	l1: 0.0003
+93 	100	12	10000	65	0	0.166667	data_likelihood: 0.99897	l1: 0.0003
+99 	100	12	10000	56	0	0.25	data_likelihood: 0.998012	l1: 0.0003
+98 	100	12	10000	61	0	0.25	data_likelihood: 0.998886	l1: 0.0003
+94 	100	12	10000	57	0	0.25	data_likelihood: 0.998857	l1: 0.0003
+97 	100	12	10000	61	0	0	data_likelihood: 0.999007	l1: 0.0003
+100 	100	12	10000	63	0	0.25	data_likelihood: 0.999464	l1: 0.0003
+96 	100	12	10000	47	0	0	data_likelihood: 0.999149	l1: 0.0003
+# Switches:
+# -mode              = SPARSE
+# -sample            = UNIFORM
+# -nEp               = 100
+# -minTran           = 10
+# -maxTran           = 12
+# -e                 = 0
+# -d                 = 0.5
+# -minTrain          = 100
+# -maxTrain          = 100
+# -minTree           = 1000
+# -maxTree           = 10000
+# -f                 = 2
+# -l1                = 0.00025
+# -pruneTree         = 1
+# -kWidth            = 0
+# -incr              = 0
+# -exp               = 0
+# -printSamples      = 0
+# -optTran           = 0
+# -fincr             = 0
+# -dl                = 0.001
+# -tderr             = 0.0001
+# -l1incr            = 0.0001
+# -maxl1             = 0.001
+# 
+# Maze size: 2x2
+# 
+# Reward 0
+#     ACTIVATION_STATE : 0
+#     RECEIVE_STATE    : 3
+#     TIME_DELAY       : 2
+#     reward           : 1
+#     activation       : EACH_TIME_NO_PUNISH
+# 
+# 
+# 
+# 
+# Episode	training_length	transition_length	search_tree_size	feature_n	utree_size	episode_mean_reward
+# 
+3 	100	12	10000	60	0	0.25	data_likelihood: 0.998911	l1: 0.00025
+6 	100	12	10000	60	0	0.25	data_likelihood: 0.998988	l1: 0.00025
+8 	100	12	10000	64	0	0.25	data_likelihood: 0.998692	l1: 0.00025
+5 	100	12	10000	59	0	0.25	data_likelihood: 0.999543	l1: 0.00025
+7 	100	12	10000	54	0	0.25	data_likelihood: 0.998577	l1: 0.00025
+2 	100	12	10000	62	0	0.25	data_likelihood: 0.998791	l1: 0.00025
+4 	100	12	10000	45	0	0.0833333	data_likelihood: 0.99929	l1: 0.00025
+1 	100	12	10000	45	0	0	data_likelihood: 0.998618	l1: 0.00025
+10 	100	12	10000	53	0	0.25	data_likelihood: 0.997083	l1: 0.00025
+13 	100	12	10000	59	0	0.25	data_likelihood: 0.999028	l1: 0.00025
+11 	100	12	10000	55	0	0.25	data_likelihood: 0.998771	l1: 0.00025
+14 	100	12	10000	57	0	0.0833333	data_likelihood: 0.998771	l1: 0.00025
+12 	100	12	10000	65	0	0.25	data_likelihood: 0.997649	l1: 0.00025
+9 	100	12	10000	56	0	0	data_likelihood: 0.999081	l1: 0.00025
+16 	100	12	10000	56	0	0.25	data_likelihood: 0.998803	l1: 0.00025
+15 	100	12	10000	48	0	0.166667	data_likelihood: 0.99936	l1: 0.00025
+19 	100	12	10000	50	0	0.25	data_likelihood: 0.998426	l1: 0.00025
+20 	100	12	10000	53	0	0.25	data_likelihood: 0.999462	l1: 0.00025
+17 	100	12	10000	66	0	0.166667	data_likelihood: 0.999073	l1: 0.00025
+18 	100	12	10000	61	0	0	data_likelihood: 0.999263	l1: 0.00025
+21 	100	12	10000	64	0	0.25	data_likelihood: 0.998756	l1: 0.00025
+22 	100	12	10000	58	0	0.25	data_likelihood: 0.997634	l1: 0.00025
+23 	100	12	10000	56	0	0.25	data_likelihood: 0.999337	l1: 0.00025
+24 	100	12	10000	63	0	0.25	data_likelihood: 0.998557	l1: 0.00025
+25 	100	12	10000	59	0	0.25	data_likelihood: 0.99927	l1: 0.00025
+28 	100	12	10000	61	0	0.25	data_likelihood: 0.998534	l1: 0.00025
+26 	100	12	10000	59	0	0.0833333	data_likelihood: 0.999335	l1: 0.00025
+27 	100	12	10000	66	0	0.25	data_likelihood: 0.99881	l1: 0.00025
+30 	100	12	10000	59	0	0.25	data_likelihood: 0.998927	l1: 0.00025
+29 	100	12	10000	58	0	0.0833333	data_likelihood: 0.998867	l1: 0.00025
+33 	100	12	10000	56	0	0.25	data_likelihood: 0.998822	l1: 0.00025
+31 	100	12	10000	62	0	0.0833333	data_likelihood: 0.998817	l1: 0.00025
+32 	100	12	10000	64	0	0.25	data_likelihood: 0.998752	l1: 0.00025
+36 	100	12	10000	59	0	0	data_likelihood: 0.999374	l1: 0.00025
+34 	100	12	10000	43	0	0	data_likelihood: 0.999054	l1: 0.00025
+35 	100	12	10000	55	0	0.0833333	data_likelihood: 0.99883	l1: 0.00025
+37 	100	12	10000	61	0	0.25	data_likelihood: 0.999508	l1: 0.00025
+38 	100	12	10000	57	0	0.0833333	data_likelihood: 0.999168	l1: 0.00025
+39 	100	12	10000	56	0	0.25	data_likelihood: 0.998605	l1: 0.00025
+40 	100	12	10000	60	0	0	data_likelihood: 0.999115	l1: 0.00025
+41 	100	12	10000	64	0	0.25	data_likelihood: 0.998703	l1: 0.00025
+46 	100	12	10000	62	0	0.25	data_likelihood: 0.998951	l1: 0.00025
+44 	100	12	10000	58	0	0.25	data_likelihood: 0.998072	l1: 0.00025
+45 	100	12	10000	57	0	0.25	data_likelihood: 0.998889	l1: 0.00025
+43 	100	12	10000	57	0	0.166667	data_likelihood: 0.998486	l1: 0.00025
+42 	100	12	10000	48	0	0.0833333	data_likelihood: 0.999181	l1: 0.00025
+47 	100	12	10000	70	0	0.25	data_likelihood: 0.998667	l1: 0.00025
+48 	100	12	10000	49	0	0.25	data_likelihood: 0.999024	l1: 0.00025
+49 	100	12	10000	54	0	0.25	data_likelihood: 0.998534	l1: 0.00025
+50 	100	12	10000	58	0	0.25	data_likelihood: 0.998245	l1: 0.00025
+51 	100	12	10000	59	0	0.25	data_likelihood: 0.99873	l1: 0.00025
+52 	100	12	10000	59	0	0.25	data_likelihood: 0.999083	l1: 0.00025
+56 	100	12	10000	52	0	0.0833333	data_likelihood: 0.99825	l1: 0.00025
+53 	100	12	10000	70	0	0	data_likelihood: 0.998542	l1: 0.00025
+54 	100	12	10000	63	0	0.166667	data_likelihood: 0.999209	l1: 0.00025
+55 	100	12	10000	65	0	0	data_likelihood: 0.999254	l1: 0.00025
+57 	100	12	10000	60	0	0.25	data_likelihood: 0.998801	l1: 0.00025
+58 	100	12	10000	54	0	0.25	data_likelihood: 0.998023	l1: 0.00025
+60 	100	12	10000	56	0	0.25	data_likelihood: 0.998427	l1: 0.00025
+62 	100	12	10000	61	0	0.25	data_likelihood: 0.998261	l1: 0.00025
+61 	100	12	10000	68	0	0.25	data_likelihood: 0.999116	l1: 0.00025
+59 	100	12	10000	62	0	0	data_likelihood: 0.998327	l1: 0.00025
+63 	100	12	10000	51	0	0.25	data_likelihood: 0.999185	l1: 0.00025
+66 	100	12	10000	58	0	0.25	data_likelihood: 0.999082	l1: 0.00025
+65 	100	12	10000	59	0	0.0833333	data_likelihood: 0.998713	l1: 0.00025
+64 	100	12	10000	60	0	0	data_likelihood: 0.998359	l1: 0.00025
+67 	100	12	10000	54	0	0.25	data_likelihood: 0.999017	l1: 0.00025
+70 	100	12	10000	57	0	0.25	data_likelihood: 0.999143	l1: 0.00025
+68 	100	12	10000	61	0	0.25	data_likelihood: 0.998787	l1: 0.00025
+71 	100	12	10000	56	0	0.25	data_likelihood: 0.998782	l1: 0.00025
+72 	100	12	10000	56	0	0.25	data_likelihood: 0.998399	l1: 0.00025
+69 	100	12	10000	58	0	0.25	data_likelihood: 0.999206	l1: 0.00025
+73 	100	12	10000	62	0	0.25	data_likelihood: 0.998693	l1: 0.00025
+74 	100	12	10000	60	0	0	data_likelihood: 0.99924	l1: 0.00025
+75 	100	12	10000	62	0	0.25	data_likelihood: 0.998518	l1: 0.00025
+78 	100	12	10000	48	0	0	data_likelihood: 0.99874	l1: 0.00025
+76 	100	12	10000	61	0	0	data_likelihood: 0.999581	l1: 0.00025
+80 	100	12	10000	62	0	0.25	data_likelihood: 0.998504	l1: 0.00025
+81 	100	12	10000	61	0	0.25	data_likelihood: 0.998616	l1: 0.00025
+79 	100	12	10000	61	0	0.25	data_likelihood: 0.999072	l1: 0.00025
+82 	100	12	10000	69	0	0.25	data_likelihood: 0.999064	l1: 0.00025
+83 	100	12	10000	52	0	0.25	data_likelihood: 0.999095	l1: 0.00025
+77 	100	12	10000	63	0	0	data_likelihood: 0.999185	l1: 0.00025
+85 	100	12	10000	64	0	0.25	data_likelihood: 0.998457	l1: 0.00025
+87 	100	12	10000	60	0	0.25	data_likelihood: 0.998359	l1: 0.00025
+89 	100	12	10000	55	0	0.25	data_likelihood: 0.998349	l1: 0.00025
+86 	100	12	10000	57	0	0.166667	data_likelihood: 0.997108	l1: 0.00025
+90 	100	12	10000	57	0	0.25	data_likelihood: 0.998324	l1: 0.00025
+84 	100	12	10000	66	0	0.25	data_likelihood: 0.998123	l1: 0.00025
+88 	100	12	10000	60	0	0.166667	data_likelihood: 0.998408	l1: 0.00025
+93 	100	12	10000	58	0	0.25	data_likelihood: 0.999042	l1: 0.00025
+92 	100	12	10000	57	0	0.25	data_likelihood: 0.998561	l1: 0.00025
+91 	100	12	10000	63	0	0	data_likelihood: 0.998048	l1: 0.00025
+96 	100	12	10000	59	0	0.25	data_likelihood: 0.998776	l1: 0.00025
+94 	100	12	10000	59	0	0	data_likelihood: 0.998243	l1: 0.00025
+95 	100	12	10000	63	0	0.25	data_likelihood: 0.999033	l1: 0.00025
+98 	100	12	10000	62	0	0.25	data_likelihood: 0.999254	l1: 0.00025
+99 	100	12	10000	49	0	0.25	data_likelihood: 0.99704	l1: 0.00025
+100 	100	12	10000	61	0	0.25	data_likelihood: 0.999173	l1: 0.00025
+97 	100	12	10000	49	0	0	data_likelihood: 0.99876	l1: 0.00025
