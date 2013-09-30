@@ -61,7 +61,7 @@ UTree::UTree(const double& d):
                 basis_features_val.push_back(action_feature);
                 DEBUG_OUT(2,"Added " << basis_features_val.back()->identifier() << " to basis features");
             }
-            if(true) {
+            if(k_idx<0) {
                 basis_features_prob.push_back(action_feature);
                 DEBUG_OUT(2,"Added " << basis_features_prob.back()->identifier() << " to basis features");
             }
@@ -73,7 +73,7 @@ UTree::UTree(const double& d):
                 basis_features_val.push_back(state_feature);
                 DEBUG_OUT(2,"Added " << basis_features_val.back()->identifier() << " to basis features");
             }
-            if(true) {
+            if(k_idx<0) {
                 basis_features_prob.push_back(state_feature);
                 DEBUG_OUT(2,"Added " << basis_features_prob.back()->identifier() << " to basis features");
             }
@@ -85,7 +85,7 @@ UTree::UTree(const double& d):
                 basis_features_val.push_back(reward_feature);
                 DEBUG_OUT(2,"Added " << basis_features_val.back()->identifier() << " to basis features");
             }
-            if(k_idx==0) {
+            if(false) {
                 basis_features_prob.push_back(reward_feature);
                 DEBUG_OUT(2,"Added " << basis_features_prob.back()->identifier() << " to basis features");
             }
@@ -134,7 +134,7 @@ UTree::probability_t UTree::get_prediction(
         const state_t& state_to,
         const reward_t& reward) const {
 
-    // create instance
+    // construct instance
     const instance_t * next_instance = instance_t::create(action, state_to, reward, instance);
 
     // find leaf node
@@ -156,10 +156,10 @@ UTree::probability_t UTree::get_prediction(
         // number of times action a was performed.
         unsigned long transition_counter = 0;
         unsigned long action_counter = 0;
-        for( const instance_t * next_instance : node_info_map[node].instance_vector ) {
-            if(next_instance->action==action) {
+        for( const instance_t * node_instance : node_info_map[node].instance_vector ) {
+            if(node_instance->action==action) {
                 ++action_counter;
-                if(next_instance->state==state_to && next_instance->reward==reward) {
+                if(node_instance->state==state_to && node_instance->reward==reward) {
                     ++transition_counter;
                 }
             }
