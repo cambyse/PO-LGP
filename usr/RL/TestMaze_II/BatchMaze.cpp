@@ -650,7 +650,7 @@ int BatchMaze::run_active() {
                     .arg(switch_double("-l1"))
                     .arg(crf->get_number_of_features());
             } else if(mode=="LINEAR_Q") {
-                extra_info = QString("TD loss: %1").arg(loss);
+                extra_info = QString("TD_loss: %1").arg(loss);
             } else if(mode=="UTREE_VALUE") {
                 extra_info = QString("utree_size: %1").arg(utree->get_tree_size());
             } else if(mode=="UTREE_PROB") {
