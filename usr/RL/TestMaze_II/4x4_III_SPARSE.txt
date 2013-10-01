@@ -697,6 +697,7 @@
 107 	1400	22	50000	238	0	0.363636	data_likelihood: 0.997449	l1: 
 108 	1600	22	50000	231	0	0.363636	data_likelihood: 0.996477	l1: 
 113 	600	22	50000	208	0	0.227273	data_likelihood: 0.99528	l1: 
+
 # Switches:
 # -mode              = SPARSE
 # -sample            = UNIFORM

@@ -62,6 +62,10 @@ plot [:3000][0:] \
      '../4x4_III_UTREE_VALUE.txt' u ($@C1+@rx):($@C2+@ry) w p pt 6 lt 5 ps 0.5 t 'Mean reward raw data', \
      '../4x4_III_UTREE_VALUE.txt' u @C1:(1./f_div) s f w lp pt 2 lt 6 t 'No data points / '.f_div
 
+plot [:3000][0:] \
+     '../4x4_III_SPARSE.txt' u @C1:@C2 i 3:10 s u w lp pt 1 lt 1 t 'CRF', \
+     '../4x4_III_UTREE_VALUE.txt' u @C1:@C2 s u w lp pt 1 lt 4 t 'UTree (value)'
+
 ########################################
 ## 2x2 Maze
 ########################################
@@ -86,8 +90,11 @@ set y2label "L^1-regularization"
 set y2tics
 set ytics nomirror
 plot \
-     '../2x2_SPARSE_L1.txt'	       u 12:4 i 0 s u w lp lt 1 pt 2 t 'Mean Reward', \
-     '../2x2_SPARSE_L1.txt'	       u 12:10 i 0 s u w lp lt 2 pt 2 t 'L^1-regularization' axes x1y2
+     '../2x2_SPARSE_L1_F3.txt'	       u 12:4 i 0 s u w lp lt 1 pt 2 t 'Mean Reward', \
+     '../2x2_SPARSE_L1_F3.txt'	       u 12:10 i 0 s u w lp lt 2 pt 2 t 'L^1-regularization' axes x1y2
+plot \
+     '../2x2_SPARSE_L1_F2.txt'	       u 12:4 i 0 s u w lp lt 1 pt 2 t 'Mean Reward', \
+     '../2x2_SPARSE_L1_F2.txt'	       u 12:10 i 0 s u w lp lt 2 pt 2 t 'L^1-regularization' axes x1y2
 
 ## UTree size
 set xlabel "Number of Leaves"
