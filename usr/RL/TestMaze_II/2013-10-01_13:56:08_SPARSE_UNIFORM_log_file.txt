@@ -1,0 +1,71 @@
+# Switches:
+# -mode              = SPARSE
+# -sample            = UNIFORM
+# -nEp               = 100
+# -minTran           = 10
+# -maxTran           = 12
+# -e                 = 0
+# -d                 = 0.5
+# -minTrain          = 1500
+# -maxTrain          = 1500
+# -minTree           = 1000
+# -maxTree           = 10000
+# -f                 = 3
+# -l1                = 0
+# -pruneTree         = 1
+# -kWidth            = 0
+# -incr              = 0
+# -exp               = 0
+# -printSamples      = 0
+# -optTran           = 0
+# -fincr             = 0
+# -dl                = 0.001
+# -tderr             = 0.0001
+# -l1incr            = 0.005
+# -maxl1             = 0.01
+# -utreegrowth       = 0
+# 
+# Maze size: 2x2
+# 
+# Reward 0
+#     ACTIVATION_STATE : 0
+#     RECEIVE_STATE    : 3
+#     TIME_DELAY       : 2
+#     reward           : 1
+#     activation       : EACH_TIME_NO_PUNISH
+# 
+# 
+# 
+# 
+# Episode	training_length	transition_length	episode_mean_reward
+# 
+3	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.999692	l1: 0	nr_of_features: 1041
+6	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.999788	l1: 0	nr_of_features: 1055
+7	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.999816	l1: 0	nr_of_features: 1055
+8	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.999789	l1: 0	nr_of_features: 1055
+5	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.999833	l1: 0	nr_of_features: 1047
+2	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.99986	l1: 0	nr_of_features: 1055
+1	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.999795	l1: 0	nr_of_features: 1055
+4	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.999827	l1: 0	nr_of_features: 1055
+5	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.998981	l1: 0.005	nr_of_features: 32
+5	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.999141	l1: 0.01	nr_of_features: 28
+1	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.999002	l1: 0.005	nr_of_features: 32
+1	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.999572	l1: 0.01	nr_of_features: 28
+3	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.998191	l1: 0.005	nr_of_features: 32
+3	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.99855	l1: 0.01	nr_of_features: 29
+6	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.999415	l1: 0.005	nr_of_features: 31
+2	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.999553	l1: 0.005	nr_of_features: 31
+7	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.998093	l1: 0.005	nr_of_features: 32
+6	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.999159	l1: 0.01	nr_of_features: 28
+2	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.999485	l1: 0.01	nr_of_features: 28
+7	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.9987	l1: 0.01	nr_of_features: 28
+4	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.999385	l1: 0.005	nr_of_features: 31
+4	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.999193	l1: 0.01	nr_of_features: 29
+8	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.999554	l1: 0.005	nr_of_features: 32
+8	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.998718	l1: 0.01	nr_of_features: 29
+9	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.999859	l1: 0	nr_of_features: 1054
+10	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.999839	l1: 0	nr_of_features: 1055
+11	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.99982	l1: 0	nr_of_features: 1044
+14	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.999881	l1: 0	nr_of_features: 1053
+12	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.999732	l1: 0	nr_of_features: 1054
+13	1500	12	0.25	search_tree_size: 10000	data_likelihood: 0.999812	l1: 0	nr_of_features: 1050
