@@ -511,10 +511,10 @@ int BatchMaze::run_active() {
                 crf->optimize_model(0,500,&likelihood);
             }
         } else if(mode=="UTREE_PROB") {
+            utree->set_expansion_type(UTree::STATE_REWARD_EXPANSION);
             if(switch_bool("-utreegrowth")) {
                 // do not expand
             } else {
-                utree->set_expansion_type(UTree::STATE_REWARD_EXPANSION);
                 double score_threshold = 1e-5;
                 utree_score = DBL_MAX;
                 while(score_threshold <= utree_score) {
@@ -522,10 +522,10 @@ int BatchMaze::run_active() {
                 }
             }
         } else if(mode=="UTREE_VALUE") {
+            utree->set_expansion_type(UTree::UTILITY_EXPANSION);
             if(switch_bool("-utreegrowth")) {
                 // do not expand
             } else {
-                utree->set_expansion_type(UTree::UTILITY_EXPANSION);
                 double score_threshold = 1e-5;
                 utree_score = DBL_MAX;
                 while(score_threshold <= utree_score) {
