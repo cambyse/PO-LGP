@@ -53,9 +53,7 @@ const vector<QString> BatchMaze::mode_vector = {
     "UTREE_VALUE",
     "LINEAR_Q",
     "SEARCH_TREE",
-    "TRANSITIONS",
-    "UTREE_PROB_GROWTH",
-    "SPARSE_L1_SWEEP"
+    "TRANSITIONS"
 };
 
 const vector<QString> BatchMaze::sample_method_vector = {
@@ -88,8 +86,9 @@ const vector<BatchMaze::switch_t> BatchMaze::switch_vector = {
     switch_t("-fincr",        "int",    "0",      "feature increment (positive value for incremental feature discovery)"),
     switch_t("-dl",           "double", "0.001",  "minimum change of data likelihood (only for incremental feature discovery with CRFs)"),
     switch_t("-tderr",        "double", "0.0001", "minimum TD-error (only for incremental feature discovery with Linear-Q)"),
-    switch_t("-l1incr",       "double", "0.0001", "L1-regularization increment (for 'SPARSE_L1_SWEEP' only)"),
-    switch_t("-maxl1",        "double", "0.001",  "maximum L1-regularization (for 'SPARSE_L1_SWEEP' only)")
+    switch_t("-l1incr",       "double", "0.0",    "L1-regularization increment (non-zero activates L1-sweep)"),
+    switch_t("-maxl1",        "double", "0.001",  "maximum L1-regularization (for L1-sweep)"),
+    switch_t("-utreegrowth",  "bool",   "false",  "grow UTree leaf by leaf tracking performance")
 };
 
 BatchMaze::BatchMaze() {
@@ -435,8 +434,7 @@ int BatchMaze::run_active() {
                 DEBUG_DEAD_LINE;
             }
 
-        }
-// end omp critical
+        } // end omp critical
 
 	if(mode=="OPTIMAL" || mode=="RANDOM" || mode=="SEARCH_TREE" || mode=="TRANSITIONS") {
 	  // nothing more to do
@@ -472,7 +470,7 @@ int BatchMaze::run_active() {
         //-------------------//
         // train the learner //
         //-------------------//
-        double likelihood, loss;
+        double likelihood, loss, utree_score = -1;
         if(mode=="OPTIMAL" || mode=="RANDOM" || mode=="SEARCH_TREE" || mode=="TRANSITIONS") {
             // nothing to train
         } else if(mode=="SPARSE") {
@@ -513,13 +511,27 @@ int BatchMaze::run_active() {
                 crf->optimize_model(0,500,&likelihood);
             }
         } else if(mode=="UTREE_PROB") {
-            utree->set_expansion_type(UTree::STATE_REWARD_EXPANSION);
-            double score_threshold = 1e-5;
-            while(score_threshold <= utree->expand_leaf_node(score_threshold)) {}
+            if(switch_bool("-utreegrowth")) {
+                // do not expand
+            } else {
+                utree->set_expansion_type(UTree::STATE_REWARD_EXPANSION);
+                double score_threshold = 1e-5;
+                utree_score = DBL_MAX;
+                while(score_threshold <= utree_score) {
+                    utree_score = utree->expand_leaf_node(score_threshold);
+                }
+            }
         } else if(mode=="UTREE_VALUE") {
-            utree->set_expansion_type(UTree::UTILITY_EXPANSION);
-            double score_threshold = 1e-5;
-            while(score_threshold <= utree->expand_leaf_node(score_threshold)) {}
+            if(switch_bool("-utreegrowth")) {
+                // do not expand
+            } else {
+                utree->set_expansion_type(UTree::UTILITY_EXPANSION);
+                double score_threshold = 1e-5;
+                utree_score = DBL_MAX;
+                while(score_threshold <= utree_score) {
+                    utree_score = utree->expand_leaf_node(score_threshold);
+                }
+            }
         } else if(mode=="LINEAR_Q") {
             if(switch_int("-fincr")>0) {
                 do {
@@ -555,124 +567,168 @@ int BatchMaze::run_active() {
         //---------------------//
         // perform transitions //
         //---------------------//
-        double reward_sum = 0;
-        int transition_counter;
-        for(transition_counter=1; transition_counter<=transition_length; ++transition_counter) {
+        double l1 = switch_double("-l1");
+        bool repeat_transitions = false;
+        double reward_sum;
+        do { // repeated for '-utreegrowth' and non-zero '-l1incr'
 
-            // transition variables
-            action_t action;
-            state_t state;
-            reward_t reward;
+            look_ahead_search->clear_tree();
 
-            // choose the action
-            if(mode=="OPTIMAL" || mode=="TRANSITIONS") {
-                if(look_ahead_search->get_number_of_nodes()==0 || !switch_bool("-pruneTree")) {
-                    look_ahead_search->clear_tree();
-                    look_ahead_search->build_tree<Maze>(current_instance, *maze, switch_int("-maxTree"));
-                } else {
-                    look_ahead_search->fully_expand_tree<Maze>(*maze, switch_int("-maxTree"));
-                }
-                action = look_ahead_search->get_optimal_action();
-            } else if(mode=="RANDOM") {
-                action = action_t::random_action();
-            } else if(mode=="SPARSE") {
-                if(look_ahead_search->get_number_of_nodes()==0 || !switch_bool("-pruneTree")) {
-                    look_ahead_search->clear_tree();
-                    look_ahead_search->build_tree<KMarkovCRF>(current_instance, *crf, switch_int("-maxTree"));
-                } else {
-                    look_ahead_search->fully_expand_tree<KMarkovCRF>(*crf, switch_int("-maxTree"));
-                }
-                action = look_ahead_search->get_optimal_action();
-            } else if(mode=="UTREE_PROB") {
-                if(look_ahead_search->get_number_of_nodes()==0 || !switch_bool("-pruneTree")) {
-                    look_ahead_search->clear_tree();
-                    look_ahead_search->build_tree<UTree>(current_instance, *utree, switch_int("-maxTree"));
-                } else {
-                    look_ahead_search->fully_expand_tree<UTree>(*utree, switch_int("-maxTree"));
-                }
-                action = look_ahead_search->get_optimal_action();
-            } else if(mode=="UTREE_VALUE") {
-                action = utree->get_max_value_action(current_instance);
-            } else if(mode=="LINEAR_Q") {
-                action = linQ->get_max_value_action(current_instance);
-            } else if(mode=="SEARCH_TREE") {
-                if(look_ahead_search->get_number_of_nodes()==0 || !switch_bool("-pruneTree")) {
-                    look_ahead_search->build_tree<Maze>(current_instance, *maze, search_tree_size);
-                } else {
-                    look_ahead_search->fully_expand_tree<Maze>(*maze, search_tree_size);
-                }
-                action = look_ahead_search->get_optimal_action();
-            } else {
-                DEBUG_DEAD_LINE;
-            }
+            reward_sum = 0;
+            int transition_counter;
+            for(transition_counter=1; transition_counter<=transition_length; ++transition_counter) {
 
-            // perform transition
-            maze->perform_transition(action,state,reward);
-            current_instance = current_instance->append_instance(action,state,reward);
+                // transition variables
+                action_t action;
+                state_t state;
+                reward_t reward;
 
-            // prune search tree
-            if(switch_bool("-pruneTree")) {
-                if(mode=="OPTIMAL" || mode=="SEARCH_TREE" || mode=="TRANSITIONS") {
-                    look_ahead_search->prune_tree(action,current_instance,*maze);
+                // choose the action
+                if(mode=="OPTIMAL" || mode=="TRANSITIONS") {
+                    if(look_ahead_search->get_number_of_nodes()==0 || !switch_bool("-pruneTree")) {
+                        look_ahead_search->clear_tree();
+                        look_ahead_search->build_tree<Maze>(current_instance, *maze, switch_int("-maxTree"));
+                    } else {
+                        look_ahead_search->fully_expand_tree<Maze>(*maze, switch_int("-maxTree"));
+                    }
+                    action = look_ahead_search->get_optimal_action();
+                } else if(mode=="RANDOM") {
+                    action = action_t::random_action();
                 } else if(mode=="SPARSE") {
-                    look_ahead_search->prune_tree(action,current_instance,*crf);
+                    if(look_ahead_search->get_number_of_nodes()==0 || !switch_bool("-pruneTree")) {
+                        look_ahead_search->clear_tree();
+                        look_ahead_search->build_tree<KMarkovCRF>(current_instance, *crf, switch_int("-maxTree"));
+                    } else {
+                        look_ahead_search->fully_expand_tree<KMarkovCRF>(*crf, switch_int("-maxTree"));
+                    }
+                    action = look_ahead_search->get_optimal_action();
                 } else if(mode=="UTREE_PROB") {
-                    look_ahead_search->prune_tree(action,current_instance,*utree);
-                } else if(mode=="RANDOM" || mode=="UTREE_VALUE" || mode=="LINEAR_Q") {
-                    // no search tree
+                    if(look_ahead_search->get_number_of_nodes()==0 || !switch_bool("-pruneTree")) {
+                        look_ahead_search->clear_tree();
+                        look_ahead_search->build_tree<UTree>(current_instance, *utree, switch_int("-maxTree"));
+                    } else {
+                        look_ahead_search->fully_expand_tree<UTree>(*utree, switch_int("-maxTree"));
+                    }
+                    action = look_ahead_search->get_optimal_action();
+                } else if(mode=="UTREE_VALUE") {
+                    action = utree->get_max_value_action(current_instance);
+                } else if(mode=="LINEAR_Q") {
+                    action = linQ->get_max_value_action(current_instance);
+                } else if(mode=="SEARCH_TREE") {
+                    if(look_ahead_search->get_number_of_nodes()==0 || !switch_bool("-pruneTree")) {
+                        look_ahead_search->build_tree<Maze>(current_instance, *maze, search_tree_size);
+                    } else {
+                        look_ahead_search->fully_expand_tree<Maze>(*maze, search_tree_size);
+                    }
+                    action = look_ahead_search->get_optimal_action();
                 } else {
                     DEBUG_DEAD_LINE;
                 }
+
+                // perform transition
+                maze->perform_transition(action,state,reward);
+                current_instance = current_instance->append_instance(action,state,reward);
+
+                // prune search tree
+                if(switch_bool("-pruneTree")) {
+                    if(mode=="OPTIMAL" || mode=="SEARCH_TREE" || mode=="TRANSITIONS") {
+                        look_ahead_search->prune_tree(action,current_instance,*maze);
+                    } else if(mode=="SPARSE") {
+                        look_ahead_search->prune_tree(action,current_instance,*crf);
+                    } else if(mode=="UTREE_PROB") {
+                        look_ahead_search->prune_tree(action,current_instance,*utree);
+                    } else if(mode=="RANDOM" || mode=="UTREE_VALUE" || mode=="LINEAR_Q") {
+                        // no search tree
+                    } else {
+                        DEBUG_DEAD_LINE;
+                    }
+                }
+
+                // increment reward
+                reward_sum += reward;
+
+                DEBUG_OUT(2, "Episode	" << episode_counter <<
+                          ",	training length " << training_length <<
+                          ",	transition " << transition_counter <<
+                          ",	current mean reward = " << reward_sum/transition_counter <<
+                          ",	(a,s,r) = (" << action << "," << state << "," << reward << ")"
+                    );
+            }
+#ifdef USE_OMP
+#pragma omp critical
+#endif
+            {
+
+                // extra info for some methods
+                QString extra_info("");
+                if(mode=="SPARSE") {
+                    extra_info = QString("search_tree_size: %1	data_likelihood: %2	l1: %3	nr_of_features: %4")
+                        .arg(search_tree_size)
+                        .arg(likelihood)
+                        .arg(l1)
+                        .arg(crf->get_number_of_features());
+                } else if(mode=="LINEAR_Q") {
+                    extra_info = QString("TD loss: %1	l1: %2").arg(loss).arg(l1);
+                } else if(mode=="UTREE_VALUE") {
+                    extra_info = QString("utree_size: %1	utree_score: %2").arg(utree->get_tree_size()).arg(utree_score);
+                } else if(mode=="UTREE_PROB") {
+                    extra_info = QString("utree_size: %1	utree_score: %2	search_tree_size: %3").arg(utree->get_tree_size()).arg(utree_score).arg(search_tree_size);
+                } else if(mode=="SEARCH_TREE") {
+                    extra_info = QString("search_tree_size: %1").arg(search_tree_size);
+                } else if(mode=="OPTIMAL"     ||
+                          mode=="TRANSITIONS" ||
+                          mode=="RANDOM") {
+                    // no extra info
+                } else {
+                    DEBUG_DEAD_LINE;
+                }
+
+                // write data to log file
+                LOG(episode_counter << "	" <<
+                    training_length << "	" <<
+                    transition_length << "	" <<
+                    reward_sum/transition_length << "	" <<
+                    extra_info
+                    );
+
+            } // end omp critical
+
+
+            // perform updates for repeated transitions
+            if((mode=="UTREE_VALUE" || mode=="UTREE_PROB") && switch_bool("-utreegrowth")) {
+                repeat_transitions = true;
+                double score_threshold = 1e-5;
+                utree_score = utree->expand_leaf_node(score_threshold);
+                if(utree_score < score_threshold) {
+                    repeat_transitions = false;
+                }
+            } else if(mode=="SPARSE" && switch_double("-l1incr")>0) {
+                l1 += switch_double("-l1incr");
+                if(l1<=switch_double("-maxl1")) {
+                    repeat_transitions = true;
+                    crf->optimize_model(l1,500);
+                    crf->erase_zero_features();
+                    crf->optimize_model(0,500,&likelihood);
+                } else {
+                    repeat_transitions = false;
+                }
+            } else if(mode=="LINEAR_Q" && switch_double("-l1incr")>0) {
+                l1 += switch_double("-l1incr");
+                if(l1<=switch_double("-maxl1")) {
+                    repeat_transitions = true;
+                    linQ->optimize_l1(l1,500);
+                    linQ->erase_zero_weighted_features();
+                    loss = linQ->optimize_ridge(1e-10);
+                } else {
+                    repeat_transitions = false;
+                }
             }
 
-            // increment reward
-            reward_sum += reward;
-
-            DEBUG_OUT(1, "Episode	" << episode_counter <<
-                      ",	training length " << training_length <<
-                      ",	tree size " << search_tree_size <<
-                      ",	transition " << transition_counter <<
-                      ",	current mean reward = " << reward_sum/transition_counter <<
-                      ",	(a,s,r) = (" << action << "," << state << "," << reward << ")"
-                );
-        }
+        } while(repeat_transitions);
 #ifdef USE_OMP
 #pragma omp critical
 #endif
         {
-
-            // extra info for some methods
-            QString extra_info("");
-            if(mode=="SPARSE") {
-                extra_info = QString("search_tree_size: %1	data_likelihood: %2	l1: %3	nr_of_features: %4")
-                    .arg(search_tree_size)
-                    .arg(likelihood)
-                    .arg(switch_double("-l1"))
-                    .arg(crf->get_number_of_features());
-            } else if(mode=="LINEAR_Q") {
-                extra_info = QString("TD loss: %1").arg(loss);
-            } else if(mode=="UTREE_VALUE") {
-                extra_info = QString("utree_size: %1").arg(utree->get_tree_size());
-            } else if(mode=="UTREE_PROB") {
-                extra_info = QString("utree_size: %1	search_tree_size: %2").arg(utree->get_tree_size()).arg(search_tree_size);
-            } else if(mode=="SEARCH_TREE") {
-                extra_info = QString("search_tree_size: %1").arg(search_tree_size);
-            } else if(mode=="OPTIMAL"     ||
-                      mode=="TRANSITIONS" ||
-                      mode=="RANDOM") {
-                // no extra info
-            } else {
-                DEBUG_DEAD_LINE;
-            }
-
-            // write data to log file
-            LOG(episode_counter << "	" <<
-                training_length << "	" <<
-                transition_length << "	" <<
-                reward_sum/transition_length << "	" <<
-                extra_info
-                );
-
             // for "ACTIVE" sampling: update smoothing kernel and virtual data,
             // print data if X server available
             if(sample_method=="ACTIVE") {
@@ -740,8 +796,7 @@ int BatchMaze::run_active() {
             delete utree;
             delete linQ;
             delete virtual_sks;
-        }
-// end omp critical
+        } // end omp critical
     }
     delete sks;
 

@@ -51,10 +51,12 @@ LinearQ::LinearQ(const double& d):
     // delayed action, state, and reward features
     for(int k_idx = 0; k_idx>=-(int)Config::k; --k_idx) {
         // actions
-        for(action_t action : actionIt_t::all) {
-            ActionFeature * action_feature = ActionFeature::create(action,k_idx);
-            basis_features.push_back(action_feature);
-            DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+        if(true) {
+            for(action_t action : actionIt_t::all) {
+                ActionFeature * action_feature = ActionFeature::create(action,k_idx);
+                basis_features.push_back(action_feature);
+                DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+            }
         }
         if(k_idx<0) { // present state is not known for predicting value
             // states
@@ -508,37 +510,38 @@ void LinearQ::update_loss_terms() {
         // iterators with delay of one
         const_instanceIt_t ins_t0 = current_episode->const_first();
         const_instanceIt_t ins_t1 = ins_t0 + 1;
-        const_instanceIt_t ins_t2 = ins_t0 + 2;
+
+        // precompute feature values
         idx_t f_idx = 0;
         for( auto f : active_features ) {
-            (*f_ret_t0)[f_idx] = f.evaluate(ins_t0, ins_t1->action, state_t(), reward_t());
+            (*f_ret_t0)[f_idx] = f.evaluate(ins_t0);
             ++f_idx;
         }
 
         // iterate through current episode
-        while(ins_t2!=INVALID) {
+        while(ins_t1!=INVALID) {
 
+            // print progress
             if(DEBUG_LEVEL>=1) {
                 ProgressBar::print(data_idx, number_of_data_points);
             }
 
-            // count data
-            ++data_idx;
-
             // precompute feature values
-            f_idx = 0;
+            idx_t f_idx = 0;
             for( auto f : active_features ) {
-                (*f_ret_t1)[f_idx] = f.evaluate(ins_t1, ins_t2->action, state_t(), reward_t());
+                (*f_ret_t1)[f_idx] = f.evaluate(ins_t1);
                 ++f_idx;
             }
+
+            // count data
+            ++data_idx;
 
             //--------------------//
             // increment elements //
             //--------------------//
 
             // constant
-            //c += pow(ins_t0->reward,2);
-            c += pow(ins_t1->reward,2);
+            c += pow(ins_t0->reward,2);
 
             // iterate through rows
             for(int j=0; j<feature_n; ++j) {
@@ -546,8 +549,7 @@ void LinearQ::update_loss_terms() {
                 double factor1 = discount * (*f_ret_t1)[j] - (*f_ret_t0)[j];
 
                 // increment linear term
-                //rho(j) += ins_t0->reward * factor1;
-                rho(j) += ins_t1->reward * factor1;
+                rho(j) += ins_t0->reward * factor1;
 
                 // iterate through columns
                 for(int k=0; k<feature_n; ++k) {
@@ -567,7 +569,6 @@ void LinearQ::update_loss_terms() {
             // increment instance iterators
             ++ins_t0;
             ++ins_t1;
-            ++ins_t2;
         }
     }
 
