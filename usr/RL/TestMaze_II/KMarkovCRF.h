@@ -210,6 +210,7 @@ private:
     // Features, Weights etc. //
     //------------------------//
     lbfgsfloatval_t * lambda;                        ///< Coefficients for active features.
+    lbfgsfloatval_t * lambda_copy;                   ///< Coefficients for copy of active features.
     lbfgsfloatval_t * lambda_candidates;             ///< Coefficients for candidate features.
     std::vector<Feature*> basis_features;            ///< Basis features used to construct new candidates.
     std::vector<AndFeature> active_features;         ///< Set of currently active features.

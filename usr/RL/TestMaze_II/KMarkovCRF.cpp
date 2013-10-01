@@ -36,6 +36,7 @@ const KMarkovCRF::PRECOMPUTATION_TYPE KMarkovCRF::precomputation_type = KMarkovC
 
 KMarkovCRF::KMarkovCRF():
         lambda(nullptr),
+        lambda_copy(nullptr),
         lambda_candidates(nullptr),
         old_active_features_size(0),
         feature_values_precomputed(false),
@@ -1436,10 +1437,20 @@ void KMarkovCRF::print_all_features() const {
 
 void KMarkovCRF::store_features() {
     active_features_copy = active_features;
+    lbfgs_free(lambda_copy);
+    lambda_copy = lbfgs_malloc(active_features.size());
+    for(int f_idx=0; f_idx<(int)active_features.size(); ++f_idx) {
+        lambda_copy[f_idx] = lambda[f_idx];
+    }
 }
 
 void KMarkovCRF::apply_features() {
     active_features = active_features_copy;
+    lbfgs_free(lambda);
+    lambda = lbfgs_malloc(active_features.size());
+    for(int f_idx=0; f_idx<(int)active_features.size(); ++f_idx) {
+        lambda[f_idx] = lambda_copy[f_idx];
+    }
 }
 
 void KMarkovCRF::check_lambda_size(lbfgsfloatval_t* & parameters, vector<AndFeature> & feature_vector, int old_feature_vector_size) {
