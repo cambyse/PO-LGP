@@ -494,9 +494,6 @@ void testBlenderImport(){
 
 int main(int argc,char **argv){
 
-  testDynamics();
-  return 0;
-
   testBasics();
   testLoadSave();
   testPlayStateSequence();
