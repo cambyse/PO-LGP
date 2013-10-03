@@ -1,0 +1,1023 @@
+# Switches:
+# -mode              = SPARSE
+# -sample            = UNIFORM
+# -nEp               = 400
+# -minTran           = 10
+# -maxTran           = 12
+# -e                 = 0
+# -d                 = 0.5
+# -minTrain          = 50
+# -maxTrain          = 200
+# -minTree           = 1000
+# -maxTree           = 10000
+# -f                 = 2
+# -l1                = 0.0002
+# -pruneTree         = 1
+# -kWidth            = 0
+# -incr              = 50
+# -exp               = 0
+# -printSamples      = 0
+# -optTran           = 0
+# -fincr             = 0
+# -dl                = 0.001
+# -tderr             = 0.0001
+# -l1incr            = 0
+# -maxl1             = 0.001
+# -utreegrowth       = 0
+# 
+# Maze size: 2x2
+# 
+# Reward 0
+#     ACTIVATION_STATE : 0
+#     RECEIVE_STATE    : 3
+#     TIME_DELAY       : 2
+#     reward           : 1
+#     activation       : EACH_TIME_NO_PUNISH
+# 
+# 
+# 
+# 
+# Episode	training_length	transition_length	episode_mean_reward
+# 
+6	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.99844	l1: 0.0002	nr_of_features: 66
+8	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998988	l1: 0.0002	nr_of_features: 63
+7	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.997964	l1: 0.0002	nr_of_features: 62
+2	100	12	0	search_tree_size: 10000	data_likelihood: 0.999392	l1: 0.0002	nr_of_features: 47
+5	50	12	0	search_tree_size: 10000	data_likelihood: 0.998613	l1: 0.0002	nr_of_features: 68
+3	150	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.998971	l1: 0.0002	nr_of_features: 56
+4	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.999198	l1: 0.0002	nr_of_features: 61
+1	50	12	0	search_tree_size: 10000	data_likelihood: 0.999317	l1: 0.0002	nr_of_features: 47
+9	50	12	0.25	search_tree_size: 10000	data_likelihood: 0.998931	l1: 0.0002	nr_of_features: 68
+14	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.99876	l1: 0.0002	nr_of_features: 56
+10	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.99661	l1: 0.0002	nr_of_features: 65
+12	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.99901	l1: 0.0002	nr_of_features: 54
+11	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998331	l1: 0.0002	nr_of_features: 62
+13	50	12	0	search_tree_size: 10000	data_likelihood: 0.999442	l1: 0.0002	nr_of_features: 47
+16	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.999176	l1: 0.0002	nr_of_features: 55
+15	150	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.998294	l1: 0.0002	nr_of_features: 58
+18	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998891	l1: 0.0002	nr_of_features: 54
+21	50	12	0.25	search_tree_size: 10000	data_likelihood: 0.999114	l1: 0.0002	nr_of_features: 61
+19	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999236	l1: 0.0002	nr_of_features: 60
+17	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999586	l1: 0.0002	nr_of_features: 53
+23	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998736	l1: 0.0002	nr_of_features: 56
+20	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.999584	l1: 0.0002	nr_of_features: 56
+22	100	12	0	search_tree_size: 10000	data_likelihood: 0.998714	l1: 0.0002	nr_of_features: 60
+24	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998971	l1: 0.0002	nr_of_features: 57
+28	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998245	l1: 0.0002	nr_of_features: 60
+26	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998459	l1: 0.0002	nr_of_features: 59
+30	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.999456	l1: 0.0002	nr_of_features: 64
+27	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999399	l1: 0.0002	nr_of_features: 63
+25	50	12	0	search_tree_size: 10000	data_likelihood: 0.998972	l1: 0.0002	nr_of_features: 60
+31	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998989	l1: 0.0002	nr_of_features: 54
+29	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999102	l1: 0.0002	nr_of_features: 62
+34	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998424	l1: 0.0002	nr_of_features: 64
+33	50	12	0	search_tree_size: 10000	data_likelihood: 0.999589	l1: 0.0002	nr_of_features: 37
+37	50	12	0.166667	search_tree_size: 10000	data_likelihood: 0.998913	l1: 0.0002	nr_of_features: 65
+35	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998804	l1: 0.0002	nr_of_features: 57
+32	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.99796	l1: 0.0002	nr_of_features: 65
+36	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.999369	l1: 0.0002	nr_of_features: 56
+38	100	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999257	l1: 0.0002	nr_of_features: 54
+39	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999337	l1: 0.0002	nr_of_features: 65
+40	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998849	l1: 0.0002	nr_of_features: 56
+43	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.99925	l1: 0.0002	nr_of_features: 66
+44	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.99935	l1: 0.0002	nr_of_features: 55
+45	50	12	0	search_tree_size: 10000	data_likelihood: 0.998818	l1: 0.0002	nr_of_features: 62
+42	100	12	0	search_tree_size: 10000	data_likelihood: 0.998591	l1: 0.0002	nr_of_features: 67
+47	150	12	0	search_tree_size: 10000	data_likelihood: 0.999466	l1: 0.0002	nr_of_features: 59
+41	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.99928	l1: 0.0002	nr_of_features: 47
+46	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998874	l1: 0.0002	nr_of_features: 72
+48	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998771	l1: 0.0002	nr_of_features: 58
+49	50	12	0	search_tree_size: 10000	data_likelihood: 0.999726	l1: 0.0002	nr_of_features: 41
+50	100	12	0.166667	search_tree_size: 10000	data_likelihood: 0.998819	l1: 0.0002	nr_of_features: 59
+53	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.99925	l1: 0.0002	nr_of_features: 61
+51	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.99852	l1: 0.0002	nr_of_features: 55
+55	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998569	l1: 0.0002	nr_of_features: 54
+54	100	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.997864	l1: 0.0002	nr_of_features: 61
+52	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998757	l1: 0.0002	nr_of_features: 55
+56	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998148	l1: 0.0002	nr_of_features: 53
+62	100	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999272	l1: 0.0002	nr_of_features: 54
+61	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.998934	l1: 0.0002	nr_of_features: 68
+57	50	12	0	search_tree_size: 10000	data_likelihood: 0.998538	l1: 0.0002	nr_of_features: 51
+58	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998932	l1: 0.0002	nr_of_features: 65
+59	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998349	l1: 0.0002	nr_of_features: 60
+60	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998788	l1: 0.0002	nr_of_features: 57
+63	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998626	l1: 0.0002	nr_of_features: 58
+65	50	12	0	search_tree_size: 10000	data_likelihood: 0.999323	l1: 0.0002	nr_of_features: 26
+64	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998987	l1: 0.0002	nr_of_features: 48
+67	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998029	l1: 0.0002	nr_of_features: 51
+70	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998944	l1: 0.0002	nr_of_features: 56
+68	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998273	l1: 0.0002	nr_of_features: 59
+66	100	12	0	search_tree_size: 10000	data_likelihood: 0.706042	l1: 0.0002	nr_of_features: 36
+69	50	12	0.166667	search_tree_size: 10000	data_likelihood: 0.999527	l1: 0.0002	nr_of_features: 57
+73	50	12	0.25	search_tree_size: 10000	data_likelihood: 0.999105	l1: 0.0002	nr_of_features: 64
+71	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998084	l1: 0.0002	nr_of_features: 61
+74	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.999076	l1: 0.0002	nr_of_features: 60
+72	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998779	l1: 0.0002	nr_of_features: 64
+75	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998582	l1: 0.0002	nr_of_features: 56
+76	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.999093	l1: 0.0002	nr_of_features: 59
+79	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.99781	l1: 0.0002	nr_of_features: 53
+77	50	12	0	search_tree_size: 10000	data_likelihood: 0.998788	l1: 0.0002	nr_of_features: 58
+78	100	12	0.166667	search_tree_size: 10000	data_likelihood: 0.998489	l1: 0.0002	nr_of_features: 65
+82	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998552	l1: 0.0002	nr_of_features: 65
+83	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.99895	l1: 0.0002	nr_of_features: 66
+80	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998208	l1: 0.0002	nr_of_features: 56
+86	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.99945	l1: 0.0002	nr_of_features: 60
+81	50	12	0	search_tree_size: 10000	data_likelihood: 0.999354	l1: 0.0002	nr_of_features: 57
+84	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.999196	l1: 0.0002	nr_of_features: 57
+87	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999572	l1: 0.0002	nr_of_features: 55
+88	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.999107	l1: 0.0002	nr_of_features: 52
+85	50	12	0	search_tree_size: 10000	data_likelihood: 0.999352	l1: 0.0002	nr_of_features: 56
+90	100	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999187	l1: 0.0002	nr_of_features: 64
+91	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998453	l1: 0.0002	nr_of_features: 64
+89	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.998869	l1: 0.0002	nr_of_features: 62
+94	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998173	l1: 0.0002	nr_of_features: 62
+92	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.999085	l1: 0.0002	nr_of_features: 53
+93	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999158	l1: 0.0002	nr_of_features: 60
+95	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999325	l1: 0.0002	nr_of_features: 58
+99	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999543	l1: 0.0002	nr_of_features: 64
+96	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.999259	l1: 0.0002	nr_of_features: 56
+98	100	12	0.166667	search_tree_size: 10000	data_likelihood: 0.997296	l1: 0.0002	nr_of_features: 74
+97	50	12	0.25	search_tree_size: 10000	data_likelihood: 0.998638	l1: 0.0002	nr_of_features: 59
+102	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998962	l1: 0.0002	nr_of_features: 67
+101	50	12	0	search_tree_size: 10000	data_likelihood: 0.999365	l1: 0.0002	nr_of_features: 51
+100	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.997351	l1: 0.0002	nr_of_features: 60
+103	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.99829	l1: 0.0002	nr_of_features: 62
+104	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.999397	l1: 0.0002	nr_of_features: 58
+105	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.998578	l1: 0.0002	nr_of_features: 62
+107	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998352	l1: 0.0002	nr_of_features: 52
+110	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998481	l1: 0.0002	nr_of_features: 54
+106	100	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.998726	l1: 0.0002	nr_of_features: 46
+108	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998361	l1: 0.0002	nr_of_features: 61
+109	50	12	0	search_tree_size: 10000	data_likelihood: 0.999233	l1: 0.0002	nr_of_features: 50
+113	50	12	0.25	search_tree_size: 10000	data_likelihood: 0.999156	l1: 0.0002	nr_of_features: 62
+111	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998517	l1: 0.0002	nr_of_features: 60
+112	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998195	l1: 0.0002	nr_of_features: 55
+114	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.999205	l1: 0.0002	nr_of_features: 66
+118	100	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.998778	l1: 0.0002	nr_of_features: 61
+115	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998051	l1: 0.0002	nr_of_features: 52
+116	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998786	l1: 0.0002	nr_of_features: 57
+117	50	12	0	search_tree_size: 10000	data_likelihood: 0.999553	l1: 0.0002	nr_of_features: 39
+119	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999425	l1: 0.0002	nr_of_features: 55
+120	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.999127	l1: 0.0002	nr_of_features: 56
+125	50	12	0	search_tree_size: 10000	data_likelihood: 0.998996	l1: 0.0002	nr_of_features: 63
+121	50	12	0	search_tree_size: 10000	data_likelihood: 0.999043	l1: 0.0002	nr_of_features: 63
+123	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.99863	l1: 0.0002	nr_of_features: 57
+124	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998521	l1: 0.0002	nr_of_features: 58
+126	100	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.99918	l1: 0.0002	nr_of_features: 66
+127	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999126	l1: 0.0002	nr_of_features: 68
+128	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998749	l1: 0.0002	nr_of_features: 55
+130	100	12	0.166667	search_tree_size: 10000	data_likelihood: 0.998541	l1: 0.0002	nr_of_features: 64
+129	50	12	0	search_tree_size: 10000	data_likelihood: 0.999686	l1: 0.0002	nr_of_features: 46
+122	100	12	0	search_tree_size: 10000	data_likelihood: 0.999349	l1: 0.0002	nr_of_features: 72
+132	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998114	l1: 0.0002	nr_of_features: 56
+131	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998394	l1: 0.0002	nr_of_features: 63
+133	50	12	0	search_tree_size: 10000	data_likelihood: 0.999219	l1: 0.0002	nr_of_features: 49
+138	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998852	l1: 0.0002	nr_of_features: 56
+135	150	12	0	search_tree_size: 10000	data_likelihood: 0.99877	l1: 0.0002	nr_of_features: 41
+136	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.999325	l1: 0.0002	nr_of_features: 57
+134	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998495	l1: 0.0002	nr_of_features: 73
+137	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999299	l1: 0.0002	nr_of_features: 71
+141	50	12	0.25	search_tree_size: 10000	data_likelihood: 0.99891	l1: 0.0002	nr_of_features: 62
+140	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998965	l1: 0.0002	nr_of_features: 52
+139	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998904	l1: 0.0002	nr_of_features: 65
+143	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998771	l1: 0.0002	nr_of_features: 58
+145	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999188	l1: 0.0002	nr_of_features: 54
+142	100	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999091	l1: 0.0002	nr_of_features: 67
+146	100	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999232	l1: 0.0002	nr_of_features: 64
+144	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998544	l1: 0.0002	nr_of_features: 58
+147	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998695	l1: 0.0002	nr_of_features: 63
+151	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998877	l1: 0.0002	nr_of_features: 53
+149	50	12	0.166667	search_tree_size: 10000	data_likelihood: 0.999428	l1: 0.0002	nr_of_features: 58
+150	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.999433	l1: 0.0002	nr_of_features: 62
+153	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999313	l1: 0.0002	nr_of_features: 51
+148	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.99911	l1: 0.0002	nr_of_features: 57
+152	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.997975	l1: 0.0002	nr_of_features: 61
+161	50	12	0	search_tree_size: 10000	data_likelihood: 0.999431	l1: 0.0002	nr_of_features: 50
+154	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998589	l1: 0.0002	nr_of_features: 64
+155	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999082	l1: 0.0002	nr_of_features: 59
+158	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998785	l1: 0.0002	nr_of_features: 62
+160	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998534	l1: 0.0002	nr_of_features: 62
+157	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999301	l1: 0.0002	nr_of_features: 37
+159	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998888	l1: 0.0002	nr_of_features: 52
+156	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998685	l1: 0.0002	nr_of_features: 56
+162	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.999178	l1: 0.0002	nr_of_features: 64
+166	100	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.99936	l1: 0.0002	nr_of_features: 61
+164	200	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.998367	l1: 0.0002	nr_of_features: 70
+163	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.99805	l1: 0.0002	nr_of_features: 62
+165	50	12	0.166667	search_tree_size: 10000	data_likelihood: 0.999482	l1: 0.0002	nr_of_features: 61
+167	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998899	l1: 0.0002	nr_of_features: 60
+170	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.999252	l1: 0.0002	nr_of_features: 62
+168	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.997869	l1: 0.0002	nr_of_features: 59
+169	50	12	0	search_tree_size: 10000	data_likelihood: 0.99922	l1: 0.0002	nr_of_features: 56
+174	100	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.998779	l1: 0.0002	nr_of_features: 64
+171	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999045	l1: 0.0002	nr_of_features: 65
+172	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998744	l1: 0.0002	nr_of_features: 62
+173	50	12	0	search_tree_size: 10000	data_likelihood: 0.999177	l1: 0.0002	nr_of_features: 47
+175	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999141	l1: 0.0002	nr_of_features: 64
+177	50	12	0	search_tree_size: 10000	data_likelihood: 0.999395	l1: 0.0002	nr_of_features: 49
+178	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998713	l1: 0.0002	nr_of_features: 63
+180	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998375	l1: 0.0002	nr_of_features: 58
+176	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.72224	l1: 0.0002	nr_of_features: 59
+181	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999088	l1: 0.0002	nr_of_features: 50
+183	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998263	l1: 0.0002	nr_of_features: 55
+184	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998579	l1: 0.0002	nr_of_features: 59
+182	100	12	0	search_tree_size: 10000	data_likelihood: 0.998767	l1: 0.0002	nr_of_features: 48
+179	150	12	0	search_tree_size: 10000	data_likelihood: 0.998905	l1: 0.0002	nr_of_features: 76
+185	50	12	0.166667	search_tree_size: 10000	data_likelihood: 0.998961	l1: 0.0002	nr_of_features: 70
+189	50	12	0.25	search_tree_size: 10000	data_likelihood: 0.998871	l1: 0.0002	nr_of_features: 55
+187	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999316	l1: 0.0002	nr_of_features: 55
+186	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998116	l1: 0.0002	nr_of_features: 66
+190	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998135	l1: 0.0002	nr_of_features: 53
+188	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.999251	l1: 0.0002	nr_of_features: 57
+194	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.999502	l1: 0.0002	nr_of_features: 57
+191	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998816	l1: 0.0002	nr_of_features: 66
+192	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.999145	l1: 0.0002	nr_of_features: 56
+193	50	12	0	search_tree_size: 10000	data_likelihood: 0.999407	l1: 0.0002	nr_of_features: 49
+196	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.999108	l1: 0.0002	nr_of_features: 53
+195	150	12	0	search_tree_size: 10000	data_likelihood: 0.999493	l1: 0.0002	nr_of_features: 54
+198	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.99859	l1: 0.0002	nr_of_features: 59
+199	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999386	l1: 0.0002	nr_of_features: 59
+197	50	12	0	search_tree_size: 10000	data_likelihood: 0.999338	l1: 0.0002	nr_of_features: 41
+203	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999109	l1: 0.0002	nr_of_features: 63
+204	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.999146	l1: 0.0002	nr_of_features: 65
+200	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998658	l1: 0.0002	nr_of_features: 53
+201	50	12	0	search_tree_size: 10000	data_likelihood: 0.999715	l1: 0.0002	nr_of_features: 55
+202	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.997659	l1: 0.0002	nr_of_features: 63
+205	50	12	0	search_tree_size: 10000	data_likelihood: 0.999158	l1: 0.0002	nr_of_features: 46
+207	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998582	l1: 0.0002	nr_of_features: 68
+206	100	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.99873	l1: 0.0002	nr_of_features: 71
+208	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.99863	l1: 0.0002	nr_of_features: 60
+211	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999372	l1: 0.0002	nr_of_features: 57
+210	100	12	0	search_tree_size: 10000	data_likelihood: 0.998963	l1: 0.0002	nr_of_features: 61
+209	50	12	0	search_tree_size: 10000	data_likelihood: 0.998915	l1: 0.0002	nr_of_features: 73
+212	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998107	l1: 0.0002	nr_of_features: 59
+213	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999479	l1: 0.0002	nr_of_features: 39
+215	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999513	l1: 0.0002	nr_of_features: 62
+214	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998421	l1: 0.0002	nr_of_features: 57
+220	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998882	l1: 0.0002	nr_of_features: 49
+217	50	12	0.25	search_tree_size: 10000	data_likelihood: 0.998637	l1: 0.0002	nr_of_features: 68
+219	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998103	l1: 0.0002	nr_of_features: 67
+218	100	12	0	search_tree_size: 10000	data_likelihood: 0.99852	l1: 0.0002	nr_of_features: 58
+221	50	12	0.25	search_tree_size: 10000	data_likelihood: 0.999078	l1: 0.0002	nr_of_features: 68
+223	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998495	l1: 0.0002	nr_of_features: 57
+224	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998909	l1: 0.0002	nr_of_features: 59
+225	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.998709	l1: 0.0002	nr_of_features: 53
+227	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998045	l1: 0.0002	nr_of_features: 68
+230	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.99841	l1: 0.0002	nr_of_features: 56
+222	100	12	0	search_tree_size: 10000	data_likelihood: 0.998434	l1: 0.0002	nr_of_features: 70
+226	100	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.998672	l1: 0.0002	nr_of_features: 65
+229	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999289	l1: 0.0002	nr_of_features: 52
+228	200	12	0	search_tree_size: 10000	data_likelihood: 0.998321	l1: 0.0002	nr_of_features: 68
+231	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998856	l1: 0.0002	nr_of_features: 60
+234	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.99858	l1: 0.0002	nr_of_features: 58
+232	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.997666	l1: 0.0002	nr_of_features: 61
+235	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998394	l1: 0.0002	nr_of_features: 55
+233	50	12	0.25	search_tree_size: 10000	data_likelihood: 0.998717	l1: 0.0002	nr_of_features: 59
+216	200	12	0	search_tree_size: 10000	data_likelihood: 0.577918	l1: 0.0002	nr_of_features: 60
+237	50	12	0.25	search_tree_size: 10000	data_likelihood: 0.99952	l1: 0.0002	nr_of_features: 65
+236	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998092	l1: 0.0002	nr_of_features: 67
+239	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999243	l1: 0.0002	nr_of_features: 63
+238	100	12	0.166667	search_tree_size: 10000	data_likelihood: 0.99934	l1: 0.0002	nr_of_features: 56
+240	200	12	0.166667	search_tree_size: 10000	data_likelihood: 0.998854	l1: 0.0002	nr_of_features: 69
+241	50	12	0	search_tree_size: 10000	data_likelihood: 0.998887	l1: 0.0002	nr_of_features: 38
+244	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.99881	l1: 0.0002	nr_of_features: 53
+242	100	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.998788	l1: 0.0002	nr_of_features: 48
+243	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998409	l1: 0.0002	nr_of_features: 60
+246	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.99874	l1: 0.0002	nr_of_features: 62
+245	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.998753	l1: 0.0002	nr_of_features: 51
+247	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.99897	l1: 0.0002	nr_of_features: 66
+249	50	12	0.25	search_tree_size: 10000	data_likelihood: 0.99862	l1: 0.0002	nr_of_features: 62
+248	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998128	l1: 0.0002	nr_of_features: 58
+250	100	12	0	search_tree_size: 10000	data_likelihood: 0.998551	l1: 0.0002	nr_of_features: 57
+251	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999426	l1: 0.0002	nr_of_features: 62
+252	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998456	l1: 0.0002	nr_of_features: 57
+254	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998252	l1: 0.0002	nr_of_features: 56
+253	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999087	l1: 0.0002	nr_of_features: 59
+258	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.999033	l1: 0.0002	nr_of_features: 73
+255	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.99864	l1: 0.0002	nr_of_features: 58
+259	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.997996	l1: 0.0002	nr_of_features: 49
+256	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998849	l1: 0.0002	nr_of_features: 64
+260	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998477	l1: 0.0002	nr_of_features: 59
+257	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.998759	l1: 0.0002	nr_of_features: 48
+261	50	12	0.25	search_tree_size: 10000	data_likelihood: 0.998332	l1: 0.0002	nr_of_features: 63
+262	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998995	l1: 0.0002	nr_of_features: 59
+263	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998646	l1: 0.0002	nr_of_features: 58
+267	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999022	l1: 0.0002	nr_of_features: 51
+264	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.997223	l1: 0.0002	nr_of_features: 61
+269	50	12	0.25	search_tree_size: 10000	data_likelihood: 0.999112	l1: 0.0002	nr_of_features: 62
+268	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.99916	l1: 0.0002	nr_of_features: 64
+270	100	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999511	l1: 0.0002	nr_of_features: 56
+265	50	12	0	search_tree_size: 10000	data_likelihood: 0.998884	l1: 0.0002	nr_of_features: 51
+266	100	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.998554	l1: 0.0002	nr_of_features: 50
+271	150	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999092	l1: 0.0002	nr_of_features: 54
+277	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999132	l1: 0.0002	nr_of_features: 59
+272	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998228	l1: 0.0002	nr_of_features: 58
+278	100	12	0	search_tree_size: 10000	data_likelihood: 0.998646	l1: 0.0002	nr_of_features: 53
+274	100	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.998529	l1: 0.0002	nr_of_features: 61
+276	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998858	l1: 0.0002	nr_of_features: 62
+273	50	12	0	search_tree_size: 10000	data_likelihood: 0.998791	l1: 0.0002	nr_of_features: 55
+279	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999024	l1: 0.0002	nr_of_features: 62
+275	150	12	0.166667	search_tree_size: 10000	data_likelihood: 0.999482	l1: 0.0002	nr_of_features: 63
+281	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999093	l1: 0.0002	nr_of_features: 64
+283	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999383	l1: 0.0002	nr_of_features: 62
+280	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.999531	l1: 0.0002	nr_of_features: 54
+282	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.997587	l1: 0.0002	nr_of_features: 63
+285	50	12	0	search_tree_size: 10000	data_likelihood: 0.999228	l1: 0.0002	nr_of_features: 56
+286	100	12	0.166667	search_tree_size: 10000	data_likelihood: 0.999403	l1: 0.0002	nr_of_features: 63
+284	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.999264	l1: 0.0002	nr_of_features: 59
+287	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999293	l1: 0.0002	nr_of_features: 66
+288	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.999465	l1: 0.0002	nr_of_features: 62
+291	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999092	l1: 0.0002	nr_of_features: 67
+292	200	12	0	search_tree_size: 10000	data_likelihood: 0.997982	l1: 0.0002	nr_of_features: 69
+289	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.998914	l1: 0.0002	nr_of_features: 46
+290	100	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.998155	l1: 0.0002	nr_of_features: 44
+293	50	12	0	search_tree_size: 10000	data_likelihood: 0.998727	l1: 0.0002	nr_of_features: 54
+294	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.999015	l1: 0.0002	nr_of_features: 62
+295	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999157	l1: 0.0002	nr_of_features: 64
+296	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.997887	l1: 0.0002	nr_of_features: 52
+297	50	12	0.25	search_tree_size: 10000	data_likelihood: 0.99933	l1: 0.0002	nr_of_features: 67
+299	150	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999498	l1: 0.0002	nr_of_features: 52
+298	100	12	0	search_tree_size: 10000	data_likelihood: 0.999	l1: 0.0002	nr_of_features: 40
+300	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998386	l1: 0.0002	nr_of_features: 57
+302	100	12	0	search_tree_size: 10000	data_likelihood: 0.998497	l1: 0.0002	nr_of_features: 54
+306	100	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999408	l1: 0.0002	nr_of_features: 64
+301	50	12	0	search_tree_size: 10000	data_likelihood: 0.999113	l1: 0.0002	nr_of_features: 58
+303	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998404	l1: 0.0002	nr_of_features: 57
+304	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.999354	l1: 0.0002	nr_of_features: 65
+308	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998811	l1: 0.0002	nr_of_features: 54
+307	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998396	l1: 0.0002	nr_of_features: 59
+310	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.999016	l1: 0.0002	nr_of_features: 62
+311	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998117	l1: 0.0002	nr_of_features: 66
+305	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999432	l1: 0.0002	nr_of_features: 59
+312	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998728	l1: 0.0002	nr_of_features: 62
+309	50	12	0	search_tree_size: 10000	data_likelihood: 0.999313	l1: 0.0002	nr_of_features: 62
+313	50	12	0.25	search_tree_size: 10000	data_likelihood: 0.998947	l1: 0.0002	nr_of_features: 66
+314	100	12	0	search_tree_size: 10000	data_likelihood: 0.998456	l1: 0.0002	nr_of_features: 60
+315	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999464	l1: 0.0002	nr_of_features: 54
+316	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998954	l1: 0.0002	nr_of_features: 63
+317	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999179	l1: 0.0002	nr_of_features: 39
+319	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999412	l1: 0.0002	nr_of_features: 56
+318	100	12	0.166667	search_tree_size: 10000	data_likelihood: 0.998736	l1: 0.0002	nr_of_features: 65
+320	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.999468	l1: 0.0002	nr_of_features: 61
+321	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999565	l1: 0.0002	nr_of_features: 40
+322	100	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.99848	l1: 0.0002	nr_of_features: 64
+323	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998531	l1: 0.0002	nr_of_features: 62
+324	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.99856	l1: 0.0002	nr_of_features: 56
+326	100	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.998698	l1: 0.0002	nr_of_features: 62
+325	50	12	0.166667	search_tree_size: 10000	data_likelihood: 0.998867	l1: 0.0002	nr_of_features: 59
+327	150	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999007	l1: 0.0002	nr_of_features: 64
+329	50	12	0	search_tree_size: 10000	data_likelihood: 0.999172	l1: 0.0002	nr_of_features: 63
+328	200	12	0.166667	search_tree_size: 10000	data_likelihood: 0.998697	l1: 0.0002	nr_of_features: 59
+330	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998666	l1: 0.0002	nr_of_features: 67
+332	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.99893	l1: 0.0002	nr_of_features: 64
+331	150	12	0	search_tree_size: 10000	data_likelihood: 0.999228	l1: 0.0002	nr_of_features: 48
+335	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999392	l1: 0.0002	nr_of_features: 64
+333	50	12	0	search_tree_size: 10000	data_likelihood: 0.998988	l1: 0.0002	nr_of_features: 70
+334	100	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.998525	l1: 0.0002	nr_of_features: 69
+338	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998228	l1: 0.0002	nr_of_features: 57
+336	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.997665	l1: 0.0002	nr_of_features: 62
+337	50	12	0	search_tree_size: 10000	data_likelihood: 0.999213	l1: 0.0002	nr_of_features: 47
+339	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998769	l1: 0.0002	nr_of_features: 57
+342	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998914	l1: 0.0002	nr_of_features: 54
+340	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998227	l1: 0.0002	nr_of_features: 54
+343	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999074	l1: 0.0002	nr_of_features: 55
+341	50	12	0.166667	search_tree_size: 10000	data_likelihood: 0.998775	l1: 0.0002	nr_of_features: 59
+344	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998781	l1: 0.0002	nr_of_features: 67
+345	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.998848	l1: 0.0002	nr_of_features: 56
+347	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.99889	l1: 0.0002	nr_of_features: 72
+346	100	12	0.166667	search_tree_size: 10000	data_likelihood: 0.998602	l1: 0.0002	nr_of_features: 58
+351	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998814	l1: 0.0002	nr_of_features: 63
+352	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.999209	l1: 0.0002	nr_of_features: 56
+348	200	12	0.166667	search_tree_size: 10000	data_likelihood: 0.99908	l1: 0.0002	nr_of_features: 60
+349	50	12	0	search_tree_size: 10000	data_likelihood: 0.999741	l1: 0.0002	nr_of_features: 45
+350	100	12	0	search_tree_size: 10000	data_likelihood: 0.99777	l1: 0.0002	nr_of_features: 68
+355	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998194	l1: 0.0002	nr_of_features: 60
+354	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998885	l1: 0.0002	nr_of_features: 73
+353	50	12	0	search_tree_size: 10000	data_likelihood: 0.999343	l1: 0.0002	nr_of_features: 45
+356	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.999617	l1: 0.0002	nr_of_features: 53
+358	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998865	l1: 0.0002	nr_of_features: 58
+357	50	12	0	search_tree_size: 10000	data_likelihood: 0.999142	l1: 0.0002	nr_of_features: 43
+359	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998941	l1: 0.0002	nr_of_features: 60
+361	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.99896	l1: 0.0002	nr_of_features: 59
+367	150	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999386	l1: 0.0002	nr_of_features: 64
+362	100	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.998514	l1: 0.0002	nr_of_features: 60
+363	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998429	l1: 0.0002	nr_of_features: 63
+360	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998675	l1: 0.0002	nr_of_features: 64
+364	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998859	l1: 0.0002	nr_of_features: 54
+366	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998671	l1: 0.0002	nr_of_features: 61
+365	50	12	0	search_tree_size: 10000	data_likelihood: 0.999549	l1: 0.0002	nr_of_features: 45
+370	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.997394	l1: 0.0002	nr_of_features: 66
+371	150	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.998652	l1: 0.0002	nr_of_features: 58
+374	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998758	l1: 0.0002	nr_of_features: 65
+368	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998016	l1: 0.0002	nr_of_features: 63
+369	50	12	0	search_tree_size: 10000	data_likelihood: 0.999061	l1: 0.0002	nr_of_features: 46
+372	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.999366	l1: 0.0002	nr_of_features: 62
+373	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999291	l1: 0.0002	nr_of_features: 50
+375	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999443	l1: 0.0002	nr_of_features: 62
+381	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.998714	l1: 0.0002	nr_of_features: 56
+376	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.999472	l1: 0.0002	nr_of_features: 56
+378	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.999298	l1: 0.0002	nr_of_features: 59
+380	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998782	l1: 0.0002	nr_of_features: 59
+382	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998684	l1: 0.0002	nr_of_features: 59
+379	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.99807	l1: 0.0002	nr_of_features: 56
+377	50	12	0	search_tree_size: 10000	data_likelihood: 0.998828	l1: 0.0002	nr_of_features: 65
+383	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.999036	l1: 0.0002	nr_of_features: 63
+384	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998701	l1: 0.0002	nr_of_features: 58
+385	50	12	0	search_tree_size: 10000	data_likelihood: 0.999036	l1: 0.0002	nr_of_features: 46
+387	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998854	l1: 0.0002	nr_of_features: 73
+391	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998409	l1: 0.0002	nr_of_features: 64
+389	50	12	0	search_tree_size: 10000	data_likelihood: 0.99851	l1: 0.0002	nr_of_features: 71
+388	200	12	0	search_tree_size: 10000	data_likelihood: 0.99917	l1: 0.0002	nr_of_features: 54
+390	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.999222	l1: 0.0002	nr_of_features: 46
+386	100	12	0	search_tree_size: 10000	data_likelihood: 0.999544	l1: 0.0002	nr_of_features: 62
+394	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.999194	l1: 0.0002	nr_of_features: 66
+392	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998049	l1: 0.0002	nr_of_features: 63
+395	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.99875	l1: 0.0002	nr_of_features: 66
+393	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.998632	l1: 0.0002	nr_of_features: 65
+396	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998248	l1: 0.0002	nr_of_features: 71
+397	50	12	0.0833333	search_tree_size: 10000	data_likelihood: 0.999447	l1: 0.0002	nr_of_features: 61
+399	150	12	0.25	search_tree_size: 10000	data_likelihood: 0.998514	l1: 0.0002	nr_of_features: 57
+400	200	12	0.25	search_tree_size: 10000	data_likelihood: 0.998657	l1: 0.0002	nr_of_features: 61
+398	100	12	0.25	search_tree_size: 10000	data_likelihood: 0.998493	l1: 0.0002	nr_of_features: 59
+# Switches:
+# -mode              = SPARSE
+# -sample            = UNIFORM
+# -nEp               = 200
+# -minTran           = 10
+# -maxTran           = 12
+# -e                 = 0
+# -d                 = 0.5
+# -minTrain          = 300
+# -maxTrain          = 400
+# -minTree           = 1000
+# -maxTree           = 10000
+# -f                 = 2
+# -l1                = 0.0002
+# -pruneTree         = 1
+# -kWidth            = 0
+# -incr              = 100
+# -exp               = 0
+# -printSamples      = 0
+# -optTran           = 0
+# -fincr             = 0
+# -dl                = 0.001
+# -tderr             = 0.0001
+# -l1incr            = 0
+# -maxl1             = 0.001
+# -utreegrowth       = 0
+# 
+# Maze size: 2x2
+# 
+# Reward 0
+#     ACTIVATION_STATE : 0
+#     RECEIVE_STATE    : 3
+#     TIME_DELAY       : 2
+#     reward           : 1
+#     activation       : EACH_TIME_NO_PUNISH
+# 
+# 
+# 
+# 
+# Episode	training_length	transition_length	episode_mean_reward
+# 
+5	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998069	l1: 0.0002	nr_of_features: 63
+3	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999144	l1: 0.0002	nr_of_features: 57
+1	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998787	l1: 0.0002	nr_of_features: 57
+7	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998023	l1: 0.0002	nr_of_features: 56
+2	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998629	l1: 0.0002	nr_of_features: 48
+8	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998478	l1: 0.0002	nr_of_features: 49
+6	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998426	l1: 0.0002	nr_of_features: 64
+4	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998999	l1: 0.0002	nr_of_features: 58
+9	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.99932	l1: 0.0002	nr_of_features: 44
+10	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.99879	l1: 0.0002	nr_of_features: 57
+13	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.99811	l1: 0.0002	nr_of_features: 60
+12	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998834	l1: 0.0002	nr_of_features: 49
+11	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998873	l1: 0.0002	nr_of_features: 65
+15	300	12	0	search_tree_size: 10000	data_likelihood: 0.99934	l1: 0.0002	nr_of_features: 53
+16	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998579	l1: 0.0002	nr_of_features: 57
+14	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998445	l1: 0.0002	nr_of_features: 60
+17	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999213	l1: 0.0002	nr_of_features: 58
+19	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.99851	l1: 0.0002	nr_of_features: 64
+21	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999141	l1: 0.0002	nr_of_features: 50
+18	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999076	l1: 0.0002	nr_of_features: 53
+23	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998787	l1: 0.0002	nr_of_features: 56
+22	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.99874	l1: 0.0002	nr_of_features: 52
+24	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999359	l1: 0.0002	nr_of_features: 41
+20	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999138	l1: 0.0002	nr_of_features: 57
+25	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998878	l1: 0.0002	nr_of_features: 57
+27	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999111	l1: 0.0002	nr_of_features: 61
+26	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999247	l1: 0.0002	nr_of_features: 50
+29	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999534	l1: 0.0002	nr_of_features: 63
+28	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998291	l1: 0.0002	nr_of_features: 49
+31	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.99853	l1: 0.0002	nr_of_features: 54
+30	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998731	l1: 0.0002	nr_of_features: 53
+32	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999309	l1: 0.0002	nr_of_features: 56
+33	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.99849	l1: 0.0002	nr_of_features: 58
+34	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999158	l1: 0.0002	nr_of_features: 52
+35	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998884	l1: 0.0002	nr_of_features: 56
+36	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998837	l1: 0.0002	nr_of_features: 59
+37	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998292	l1: 0.0002	nr_of_features: 62
+41	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998322	l1: 0.0002	nr_of_features: 58
+40	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999278	l1: 0.0002	nr_of_features: 57
+39	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998561	l1: 0.0002	nr_of_features: 61
+38	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998756	l1: 0.0002	nr_of_features: 66
+42	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998166	l1: 0.0002	nr_of_features: 46
+43	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998885	l1: 0.0002	nr_of_features: 56
+45	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998295	l1: 0.0002	nr_of_features: 52
+44	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998663	l1: 0.0002	nr_of_features: 56
+46	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999283	l1: 0.0002	nr_of_features: 48
+48	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998351	l1: 0.0002	nr_of_features: 53
+47	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998133	l1: 0.0002	nr_of_features: 57
+49	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998594	l1: 0.0002	nr_of_features: 63
+51	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.99895	l1: 0.0002	nr_of_features: 48
+50	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.99876	l1: 0.0002	nr_of_features: 57
+52	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.997801	l1: 0.0002	nr_of_features: 48
+53	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999472	l1: 0.0002	nr_of_features: 61
+55	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.997707	l1: 0.0002	nr_of_features: 55
+57	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998878	l1: 0.0002	nr_of_features: 58
+54	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999256	l1: 0.0002	nr_of_features: 58
+56	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999063	l1: 0.0002	nr_of_features: 57
+58	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998698	l1: 0.0002	nr_of_features: 56
+61	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999317	l1: 0.0002	nr_of_features: 58
+59	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998623	l1: 0.0002	nr_of_features: 57
+60	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999376	l1: 0.0002	nr_of_features: 55
+62	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999079	l1: 0.0002	nr_of_features: 49
+63	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998583	l1: 0.0002	nr_of_features: 58
+65	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999376	l1: 0.0002	nr_of_features: 53
+64	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998649	l1: 0.0002	nr_of_features: 56
+69	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998814	l1: 0.0002	nr_of_features: 54
+67	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999649	l1: 0.0002	nr_of_features: 59
+66	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998462	l1: 0.0002	nr_of_features: 51
+68	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998278	l1: 0.0002	nr_of_features: 52
+71	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999183	l1: 0.0002	nr_of_features: 54
+70	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999363	l1: 0.0002	nr_of_features: 41
+72	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998544	l1: 0.0002	nr_of_features: 48
+73	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998079	l1: 0.0002	nr_of_features: 58
+75	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998965	l1: 0.0002	nr_of_features: 55
+77	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999341	l1: 0.0002	nr_of_features: 58
+74	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998708	l1: 0.0002	nr_of_features: 55
+81	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999357	l1: 0.0002	nr_of_features: 55
+76	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998908	l1: 0.0002	nr_of_features: 55
+79	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.997468	l1: 0.0002	nr_of_features: 53
+80	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998815	l1: 0.0002	nr_of_features: 47
+78	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999139	l1: 0.0002	nr_of_features: 61
+82	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999008	l1: 0.0002	nr_of_features: 50
+83	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998615	l1: 0.0002	nr_of_features: 57
+85	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999205	l1: 0.0002	nr_of_features: 51
+84	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998808	l1: 0.0002	nr_of_features: 53
+87	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998762	l1: 0.0002	nr_of_features: 59
+86	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.997908	l1: 0.0002	nr_of_features: 51
+89	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998645	l1: 0.0002	nr_of_features: 58
+91	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998394	l1: 0.0002	nr_of_features: 58
+88	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998347	l1: 0.0002	nr_of_features: 58
+90	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998042	l1: 0.0002	nr_of_features: 52
+92	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999534	l1: 0.0002	nr_of_features: 54
+93	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999429	l1: 0.0002	nr_of_features: 62
+95	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999406	l1: 0.0002	nr_of_features: 55
+94	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998942	l1: 0.0002	nr_of_features: 67
+97	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999055	l1: 0.0002	nr_of_features: 61
+98	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998078	l1: 0.0002	nr_of_features: 52
+99	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998559	l1: 0.0002	nr_of_features: 67
+96	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998343	l1: 0.0002	nr_of_features: 52
+100	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999143	l1: 0.0002	nr_of_features: 48
+103	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.99822	l1: 0.0002	nr_of_features: 57
+101	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999388	l1: 0.0002	nr_of_features: 58
+102	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999044	l1: 0.0002	nr_of_features: 59
+107	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998309	l1: 0.0002	nr_of_features: 58
+104	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998442	l1: 0.0002	nr_of_features: 55
+106	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999521	l1: 0.0002	nr_of_features: 64
+105	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998535	l1: 0.0002	nr_of_features: 64
+108	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998883	l1: 0.0002	nr_of_features: 48
+109	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.996536	l1: 0.0002	nr_of_features: 53
+111	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.997985	l1: 0.0002	nr_of_features: 62
+110	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999146	l1: 0.0002	nr_of_features: 48
+113	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998682	l1: 0.0002	nr_of_features: 59
+112	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999526	l1: 0.0002	nr_of_features: 57
+114	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998845	l1: 0.0002	nr_of_features: 57
+115	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.99825	l1: 0.0002	nr_of_features: 58
+117	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998233	l1: 0.0002	nr_of_features: 57
+116	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998954	l1: 0.0002	nr_of_features: 43
+119	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999174	l1: 0.0002	nr_of_features: 60
+118	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998231	l1: 0.0002	nr_of_features: 54
+121	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999017	l1: 0.0002	nr_of_features: 51
+123	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998666	l1: 0.0002	nr_of_features: 46
+120	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998635	l1: 0.0002	nr_of_features: 52
+122	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998841	l1: 0.0002	nr_of_features: 54
+127	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998135	l1: 0.0002	nr_of_features: 58
+125	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.99947	l1: 0.0002	nr_of_features: 54
+124	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998263	l1: 0.0002	nr_of_features: 58
+126	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998301	l1: 0.0002	nr_of_features: 53
+129	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999342	l1: 0.0002	nr_of_features: 51
+132	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999023	l1: 0.0002	nr_of_features: 49
+131	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998031	l1: 0.0002	nr_of_features: 60
+130	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998714	l1: 0.0002	nr_of_features: 52
+128	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998208	l1: 0.0002	nr_of_features: 60
+133	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998252	l1: 0.0002	nr_of_features: 60
+135	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998793	l1: 0.0002	nr_of_features: 53
+139	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999159	l1: 0.0002	nr_of_features: 64
+136	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.99867	l1: 0.0002	nr_of_features: 60
+137	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998585	l1: 0.0002	nr_of_features: 62
+134	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998498	l1: 0.0002	nr_of_features: 53
+141	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998597	l1: 0.0002	nr_of_features: 65
+140	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998186	l1: 0.0002	nr_of_features: 63
+138	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998009	l1: 0.0002	nr_of_features: 55
+142	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998552	l1: 0.0002	nr_of_features: 61
+144	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.99859	l1: 0.0002	nr_of_features: 51
+143	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999185	l1: 0.0002	nr_of_features: 54
+145	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998388	l1: 0.0002	nr_of_features: 56
+147	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998541	l1: 0.0002	nr_of_features: 54
+146	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.99931	l1: 0.0002	nr_of_features: 58
+149	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998171	l1: 0.0002	nr_of_features: 57
+148	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.997888	l1: 0.0002	nr_of_features: 55
+151	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999446	l1: 0.0002	nr_of_features: 54
+150	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999123	l1: 0.0002	nr_of_features: 48
+153	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.99909	l1: 0.0002	nr_of_features: 63
+152	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998182	l1: 0.0002	nr_of_features: 62
+155	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999122	l1: 0.0002	nr_of_features: 62
+156	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999331	l1: 0.0002	nr_of_features: 47
+154	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.997497	l1: 0.0002	nr_of_features: 49
+157	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998564	l1: 0.0002	nr_of_features: 59
+159	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.996789	l1: 0.0002	nr_of_features: 51
+158	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.997832	l1: 0.0002	nr_of_features: 59
+160	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.997769	l1: 0.0002	nr_of_features: 49
+161	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.99943	l1: 0.0002	nr_of_features: 56
+163	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998135	l1: 0.0002	nr_of_features: 56
+165	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999147	l1: 0.0002	nr_of_features: 58
+164	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.997899	l1: 0.0002	nr_of_features: 51
+162	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998511	l1: 0.0002	nr_of_features: 51
+166	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998647	l1: 0.0002	nr_of_features: 54
+168	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998881	l1: 0.0002	nr_of_features: 54
+167	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998751	l1: 0.0002	nr_of_features: 56
+169	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998663	l1: 0.0002	nr_of_features: 53
+171	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999309	l1: 0.0002	nr_of_features: 58
+170	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998807	l1: 0.0002	nr_of_features: 54
+172	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999472	l1: 0.0002	nr_of_features: 50
+173	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998446	l1: 0.0002	nr_of_features: 56
+175	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998603	l1: 0.0002	nr_of_features: 60
+174	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998809	l1: 0.0002	nr_of_features: 49
+176	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999498	l1: 0.0002	nr_of_features: 61
+177	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998188	l1: 0.0002	nr_of_features: 60
+179	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999068	l1: 0.0002	nr_of_features: 55
+178	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998725	l1: 0.0002	nr_of_features: 50
+181	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998947	l1: 0.0002	nr_of_features: 56
+180	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999253	l1: 0.0002	nr_of_features: 52
+183	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.99846	l1: 0.0002	nr_of_features: 46
+182	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999062	l1: 0.0002	nr_of_features: 56
+184	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998698	l1: 0.0002	nr_of_features: 45
+185	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998974	l1: 0.0002	nr_of_features: 57
+186	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999337	l1: 0.0002	nr_of_features: 54
+187	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998549	l1: 0.0002	nr_of_features: 54
+189	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999068	l1: 0.0002	nr_of_features: 60
+191	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999443	l1: 0.0002	nr_of_features: 56
+188	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998493	l1: 0.0002	nr_of_features: 60
+190	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998516	l1: 0.0002	nr_of_features: 61
+193	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998629	l1: 0.0002	nr_of_features: 48
+195	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.999136	l1: 0.0002	nr_of_features: 54
+192	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998649	l1: 0.0002	nr_of_features: 51
+194	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999153	l1: 0.0002	nr_of_features: 55
+196	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999225	l1: 0.0002	nr_of_features: 53
+197	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.9985	l1: 0.0002	nr_of_features: 61
+199	300	12	0.25	search_tree_size: 10000	data_likelihood: 0.998813	l1: 0.0002	nr_of_features: 63
+198	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.998996	l1: 0.0002	nr_of_features: 61
+200	400	12	0.25	search_tree_size: 10000	data_likelihood: 0.999255	l1: 0.0002	nr_of_features: 56
+# Switches:
+# -mode              = SPARSE
+# -sample            = UNIFORM
+# -nEp               = 300
+# -minTran           = 10
+# -maxTran           = 12
+# -e                 = 0
+# -d                 = 0.5
+# -minTrain          = 600
+# -maxTrain          = 1000
+# -minTree           = 1000
+# -maxTree           = 10000
+# -f                 = 2
+# -l1                = 0.0002
+# -pruneTree         = 1
+# -kWidth            = 0
+# -incr              = 200
+# -exp               = 0
+# -printSamples      = 0
+# -optTran           = 0
+# -fincr             = 0
+# -dl                = 0.001
+# -tderr             = 0.0001
+# -l1incr            = 0
+# -maxl1             = 0.001
+# -utreegrowth       = 0
+# 
+# Maze size: 2x2
+# 
+# Reward 0
+#     ACTIVATION_STATE : 0
+#     RECEIVE_STATE    : 3
+#     TIME_DELAY       : 2
+#     reward           : 1
+#     activation       : EACH_TIME_NO_PUNISH
+# 
+# 
+# 
+# 
+# Episode	training_length	transition_length	episode_mean_reward
+# 
+4	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.99817	l1: 0.0002	nr_of_features: 46
+7	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998208	l1: 0.0002	nr_of_features: 57
+5	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998395	l1: 0.0002	nr_of_features: 41
+1	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999343	l1: 0.0002	nr_of_features: 53
+2	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998801	l1: 0.0002	nr_of_features: 51
+8	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998514	l1: 0.0002	nr_of_features: 50
+3	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.999043	l1: 0.0002	nr_of_features: 57
+6	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998662	l1: 0.0002	nr_of_features: 57
+10	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998995	l1: 0.0002	nr_of_features: 55
+11	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998438	l1: 0.0002	nr_of_features: 50
+13	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999246	l1: 0.0002	nr_of_features: 53
+16	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999166	l1: 0.0002	nr_of_features: 57
+14	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998254	l1: 0.0002	nr_of_features: 54
+12	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.999275	l1: 0.0002	nr_of_features: 54
+15	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.999454	l1: 0.0002	nr_of_features: 44
+19	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998689	l1: 0.0002	nr_of_features: 57
+17	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998067	l1: 0.0002	nr_of_features: 51
+22	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998586	l1: 0.0002	nr_of_features: 48
+9	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.714688	l1: 0.0002	nr_of_features: 55
+20	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998581	l1: 0.0002	nr_of_features: 52
+18	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.99912	l1: 0.0002	nr_of_features: 49
+23	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998783	l1: 0.0002	nr_of_features: 58
+21	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998819	l1: 0.0002	nr_of_features: 48
+25	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.997961	l1: 0.0002	nr_of_features: 53
+28	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998636	l1: 0.0002	nr_of_features: 53
+24	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.996727	l1: 0.0002	nr_of_features: 49
+26	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.999481	l1: 0.0002	nr_of_features: 48
+27	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998747	l1: 0.0002	nr_of_features: 50
+31	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.99868	l1: 0.0002	nr_of_features: 56
+29	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998572	l1: 0.0002	nr_of_features: 48
+32	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998473	l1: 0.0002	nr_of_features: 45
+30	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998335	l1: 0.0002	nr_of_features: 53
+34	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998793	l1: 0.0002	nr_of_features: 52
+37	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998556	l1: 0.0002	nr_of_features: 58
+35	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.999201	l1: 0.0002	nr_of_features: 53
+36	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998841	l1: 0.0002	nr_of_features: 52
+38	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.997664	l1: 0.0002	nr_of_features: 49
+40	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998988	l1: 0.0002	nr_of_features: 45
+33	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.999169	l1: 0.0002	nr_of_features: 54
+41	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.999062	l1: 0.0002	nr_of_features: 49
+43	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998652	l1: 0.0002	nr_of_features: 53
+39	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998339	l1: 0.0002	nr_of_features: 51
+42	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.9983	l1: 0.0002	nr_of_features: 50
+44	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.99856	l1: 0.0002	nr_of_features: 50
+46	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998401	l1: 0.0002	nr_of_features: 66
+45	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998862	l1: 0.0002	nr_of_features: 54
+47	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.999371	l1: 0.0002	nr_of_features: 55
+49	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.99856	l1: 0.0002	nr_of_features: 59
+48	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.99922	l1: 0.0002	nr_of_features: 58
+52	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998148	l1: 0.0002	nr_of_features: 46
+50	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.999231	l1: 0.0002	nr_of_features: 58
+55	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998431	l1: 0.0002	nr_of_features: 46
+51	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.99875	l1: 0.0002	nr_of_features: 49
+54	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.99845	l1: 0.0002	nr_of_features: 48
+53	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998727	l1: 0.0002	nr_of_features: 51
+56	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998717	l1: 0.0002	nr_of_features: 57
+58	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998496	l1: 0.0002	nr_of_features: 56
+57	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998888	l1: 0.0002	nr_of_features: 55
+59	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998734	l1: 0.0002	nr_of_features: 50
+61	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.99896	l1: 0.0002	nr_of_features: 56
+62	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.99913	l1: 0.0002	nr_of_features: 48
+64	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998878	l1: 0.0002	nr_of_features: 48
+60	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.99881	l1: 0.0002	nr_of_features: 50
+63	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998274	l1: 0.0002	nr_of_features: 49
+65	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998974	l1: 0.0002	nr_of_features: 46
+66	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.99809	l1: 0.0002	nr_of_features: 58
+68	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998017	l1: 0.0002	nr_of_features: 54
+67	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.997757	l1: 0.0002	nr_of_features: 51
+70	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999229	l1: 0.0002	nr_of_features: 59
+71	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.999491	l1: 0.0002	nr_of_features: 56
+73	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999321	l1: 0.0002	nr_of_features: 56
+69	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998595	l1: 0.0002	nr_of_features: 48
+72	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998281	l1: 0.0002	nr_of_features: 49
+76	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999028	l1: 0.0002	nr_of_features: 56
+74	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.999285	l1: 0.0002	nr_of_features: 56
+75	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998526	l1: 0.0002	nr_of_features: 51
+79	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998628	l1: 0.0002	nr_of_features: 40
+77	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.99879	l1: 0.0002	nr_of_features: 59
+80	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.999369	l1: 0.0002	nr_of_features: 62
+78	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998386	l1: 0.0002	nr_of_features: 56
+82	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998071	l1: 0.0002	nr_of_features: 51
+85	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998447	l1: 0.0002	nr_of_features: 53
+83	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998776	l1: 0.0002	nr_of_features: 47
+84	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998515	l1: 0.0002	nr_of_features: 52
+86	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998699	l1: 0.0002	nr_of_features: 58
+88	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999311	l1: 0.0002	nr_of_features: 46
+81	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.705988	l1: 0.0002	nr_of_features: 49
+87	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.999294	l1: 0.0002	nr_of_features: 49
+89	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998428	l1: 0.0002	nr_of_features: 47
+91	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998608	l1: 0.0002	nr_of_features: 47
+90	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.999575	l1: 0.0002	nr_of_features: 51
+92	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.999156	l1: 0.0002	nr_of_features: 59
+94	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.99837	l1: 0.0002	nr_of_features: 48
+97	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998704	l1: 0.0002	nr_of_features: 57
+95	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.999479	l1: 0.0002	nr_of_features: 54
+93	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.999041	l1: 0.0002	nr_of_features: 62
+96	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.999191	l1: 0.0002	nr_of_features: 51
+100	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998442	l1: 0.0002	nr_of_features: 51
+98	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.999317	l1: 0.0002	nr_of_features: 49
+99	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998423	l1: 0.0002	nr_of_features: 53
+103	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999219	l1: 0.0002	nr_of_features: 54
+101	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998555	l1: 0.0002	nr_of_features: 49
+104	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998334	l1: 0.0002	nr_of_features: 46
+106	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998181	l1: 0.0002	nr_of_features: 56
+102	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.999386	l1: 0.0002	nr_of_features: 58
+107	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.999227	l1: 0.0002	nr_of_features: 58
+105	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998932	l1: 0.0002	nr_of_features: 53
+109	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998287	l1: 0.0002	nr_of_features: 57
+108	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998831	l1: 0.0002	nr_of_features: 57
+110	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.997818	l1: 0.0002	nr_of_features: 47
+112	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998546	l1: 0.0002	nr_of_features: 52
+111	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998575	l1: 0.0002	nr_of_features: 59
+115	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998793	l1: 0.0002	nr_of_features: 61
+113	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998596	l1: 0.0002	nr_of_features: 53
+118	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998178	l1: 0.0002	nr_of_features: 53
+114	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.99946	l1: 0.0002	nr_of_features: 49
+116	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998137	l1: 0.0002	nr_of_features: 52
+119	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.999257	l1: 0.0002	nr_of_features: 52
+117	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998397	l1: 0.0002	nr_of_features: 53
+121	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999183	l1: 0.0002	nr_of_features: 53
+120	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.997149	l1: 0.0002	nr_of_features: 55
+122	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.997857	l1: 0.0002	nr_of_features: 51
+124	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998537	l1: 0.0002	nr_of_features: 50
+127	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998986	l1: 0.0002	nr_of_features: 50
+123	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998209	l1: 0.0002	nr_of_features: 56
+125	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998021	l1: 0.0002	nr_of_features: 46
+126	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.99844	l1: 0.0002	nr_of_features: 50
+128	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.999514	l1: 0.0002	nr_of_features: 57
+130	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998604	l1: 0.0002	nr_of_features: 49
+133	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998179	l1: 0.0002	nr_of_features: 55
+129	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.999116	l1: 0.0002	nr_of_features: 51
+131	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.997711	l1: 0.0002	nr_of_features: 47
+136	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998503	l1: 0.0002	nr_of_features: 53
+134	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998475	l1: 0.0002	nr_of_features: 49
+132	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.999326	l1: 0.0002	nr_of_features: 51
+135	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.99931	l1: 0.0002	nr_of_features: 47
+137	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.999072	l1: 0.0002	nr_of_features: 62
+139	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.997647	l1: 0.0002	nr_of_features: 63
+142	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998873	l1: 0.0002	nr_of_features: 59
+140	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998536	l1: 0.0002	nr_of_features: 53
+141	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.999107	l1: 0.0002	nr_of_features: 48
+143	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998387	l1: 0.0002	nr_of_features: 49
+138	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.999366	l1: 0.0002	nr_of_features: 49
+145	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998709	l1: 0.0002	nr_of_features: 60
+148	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998575	l1: 0.0002	nr_of_features: 52
+144	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998621	l1: 0.0002	nr_of_features: 58
+151	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998709	l1: 0.0002	nr_of_features: 58
+146	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.99783	l1: 0.0002	nr_of_features: 51
+149	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998278	l1: 0.0002	nr_of_features: 54
+147	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998547	l1: 0.0002	nr_of_features: 57
+150	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998207	l1: 0.0002	nr_of_features: 54
+152	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.999202	l1: 0.0002	nr_of_features: 43
+154	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999365	l1: 0.0002	nr_of_features: 55
+153	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998653	l1: 0.0002	nr_of_features: 59
+158	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998781	l1: 0.0002	nr_of_features: 58
+156	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998017	l1: 0.0002	nr_of_features: 43
+157	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998549	l1: 0.0002	nr_of_features: 59
+160	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998253	l1: 0.0002	nr_of_features: 52
+159	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.999243	l1: 0.0002	nr_of_features: 46
+155	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998679	l1: 0.0002	nr_of_features: 56
+161	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998167	l1: 0.0002	nr_of_features: 53
+163	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999081	l1: 0.0002	nr_of_features: 49
+166	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.997331	l1: 0.0002	nr_of_features: 52
+169	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.99889	l1: 0.0002	nr_of_features: 53
+162	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998683	l1: 0.0002	nr_of_features: 51
+167	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998569	l1: 0.0002	nr_of_features: 59
+164	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.99883	l1: 0.0002	nr_of_features: 54
+165	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.997988	l1: 0.0002	nr_of_features: 47
+168	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998917	l1: 0.0002	nr_of_features: 52
+170	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998519	l1: 0.0002	nr_of_features: 53
+173	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998676	l1: 0.0002	nr_of_features: 48
+175	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998122	l1: 0.0002	nr_of_features: 53
+176	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.997981	l1: 0.0002	nr_of_features: 51
+171	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998623	l1: 0.0002	nr_of_features: 45
+174	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998843	l1: 0.0002	nr_of_features: 57
+177	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.99929	l1: 0.0002	nr_of_features: 46
+178	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998862	l1: 0.0002	nr_of_features: 61
+181	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999113	l1: 0.0002	nr_of_features: 42
+179	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998144	l1: 0.0002	nr_of_features: 51
+182	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998999	l1: 0.0002	nr_of_features: 47
+180	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998017	l1: 0.0002	nr_of_features: 55
+184	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999469	l1: 0.0002	nr_of_features: 49
+183	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998481	l1: 0.0002	nr_of_features: 52
+187	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999242	l1: 0.0002	nr_of_features: 56
+185	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998353	l1: 0.0002	nr_of_features: 53
+186	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.997899	l1: 0.0002	nr_of_features: 48
+188	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998746	l1: 0.0002	nr_of_features: 51
+190	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999204	l1: 0.0002	nr_of_features: 58
+189	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998793	l1: 0.0002	nr_of_features: 48
+191	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998951	l1: 0.0002	nr_of_features: 54
+193	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998379	l1: 0.0002	nr_of_features: 50
+192	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998414	l1: 0.0002	nr_of_features: 42
+196	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999238	l1: 0.0002	nr_of_features: 58
+194	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998782	l1: 0.0002	nr_of_features: 46
+172	600	12	0	search_tree_size: 10000	data_likelihood: 0.55563	l1: 0.0002	nr_of_features: 64
+197	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.999455	l1: 0.0002	nr_of_features: 47
+199	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999571	l1: 0.0002	nr_of_features: 49
+200	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.99809	l1: 0.0002	nr_of_features: 54
+195	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998164	l1: 0.0002	nr_of_features: 63
+202	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998398	l1: 0.0002	nr_of_features: 54
+198	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.99891	l1: 0.0002	nr_of_features: 50
+201	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.999499	l1: 0.0002	nr_of_features: 47
+203	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998832	l1: 0.0002	nr_of_features: 50
+205	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999292	l1: 0.0002	nr_of_features: 53
+206	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.999164	l1: 0.0002	nr_of_features: 53
+204	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.99892	l1: 0.0002	nr_of_features: 54
+208	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.9989	l1: 0.0002	nr_of_features: 57
+209	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.999175	l1: 0.0002	nr_of_features: 55
+207	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998902	l1: 0.0002	nr_of_features: 52
+211	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998541	l1: 0.0002	nr_of_features: 55
+210	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.999339	l1: 0.0002	nr_of_features: 49
+214	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999308	l1: 0.0002	nr_of_features: 50
+213	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998735	l1: 0.0002	nr_of_features: 48
+217	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999355	l1: 0.0002	nr_of_features: 54
+215	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998946	l1: 0.0002	nr_of_features: 55
+218	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998613	l1: 0.0002	nr_of_features: 54
+212	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998338	l1: 0.0002	nr_of_features: 46
+216	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998896	l1: 0.0002	nr_of_features: 54
+220	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999211	l1: 0.0002	nr_of_features: 54
+219	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.999221	l1: 0.0002	nr_of_features: 48
+221	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998595	l1: 0.0002	nr_of_features: 46
+223	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998761	l1: 0.0002	nr_of_features: 58
+224	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.99866	l1: 0.0002	nr_of_features: 45
+222	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998368	l1: 0.0002	nr_of_features: 57
+226	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998583	l1: 0.0002	nr_of_features: 52
+229	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.997753	l1: 0.0002	nr_of_features: 51
+227	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.999183	l1: 0.0002	nr_of_features: 55
+225	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.999085	l1: 0.0002	nr_of_features: 51
+232	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999102	l1: 0.0002	nr_of_features: 49
+228	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.997854	l1: 0.0002	nr_of_features: 50
+230	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998601	l1: 0.0002	nr_of_features: 60
+233	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.999247	l1: 0.0002	nr_of_features: 54
+231	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998992	l1: 0.0002	nr_of_features: 52
+235	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998381	l1: 0.0002	nr_of_features: 62
+234	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998041	l1: 0.0002	nr_of_features: 56
+238	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998723	l1: 0.0002	nr_of_features: 61
+236	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.99825	l1: 0.0002	nr_of_features: 48
+239	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.999351	l1: 0.0002	nr_of_features: 44
+237	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998523	l1: 0.0002	nr_of_features: 45
+240	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998327	l1: 0.0002	nr_of_features: 50
+241	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998492	l1: 0.0002	nr_of_features: 55
+242	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.99883	l1: 0.0002	nr_of_features: 50
+244	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999623	l1: 0.0002	nr_of_features: 51
+245	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998765	l1: 0.0002	nr_of_features: 49
+247	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.99898	l1: 0.0002	nr_of_features: 57
+246	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998142	l1: 0.0002	nr_of_features: 48
+250	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998186	l1: 0.0002	nr_of_features: 52
+243	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.997289	l1: 0.0002	nr_of_features: 56
+248	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.997754	l1: 0.0002	nr_of_features: 62
+249	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998747	l1: 0.0002	nr_of_features: 50
+251	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.999224	l1: 0.0002	nr_of_features: 47
+253	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999209	l1: 0.0002	nr_of_features: 57
+252	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.999237	l1: 0.0002	nr_of_features: 50
+256	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998438	l1: 0.0002	nr_of_features: 56
+254	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998467	l1: 0.0002	nr_of_features: 56
+255	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998846	l1: 0.0002	nr_of_features: 43
+259	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998775	l1: 0.0002	nr_of_features: 48
+257	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.99798	l1: 0.0002	nr_of_features: 48
+260	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.99889	l1: 0.0002	nr_of_features: 43
+258	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.999196	l1: 0.0002	nr_of_features: 50
+261	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.99922	l1: 0.0002	nr_of_features: 52
+265	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998704	l1: 0.0002	nr_of_features: 48
+262	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999462	l1: 0.0002	nr_of_features: 56
+263	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998392	l1: 0.0002	nr_of_features: 63
+268	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999392	l1: 0.0002	nr_of_features: 51
+266	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998324	l1: 0.0002	nr_of_features: 57
+264	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.999334	l1: 0.0002	nr_of_features: 57
+267	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998632	l1: 0.0002	nr_of_features: 54
+271	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.99818	l1: 0.0002	nr_of_features: 58
+269	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998868	l1: 0.0002	nr_of_features: 53
+270	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998299	l1: 0.0002	nr_of_features: 45
+274	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998691	l1: 0.0002	nr_of_features: 53
+272	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998394	l1: 0.0002	nr_of_features: 48
+275	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998112	l1: 0.0002	nr_of_features: 51
+277	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998725	l1: 0.0002	nr_of_features: 49
+273	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.999379	l1: 0.0002	nr_of_features: 49
+276	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.997966	l1: 0.0002	nr_of_features: 48
+280	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998434	l1: 0.0002	nr_of_features: 59
+278	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.99896	l1: 0.0002	nr_of_features: 49
+279	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.997763	l1: 0.0002	nr_of_features: 47
+281	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998907	l1: 0.0002	nr_of_features: 54
+283	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999251	l1: 0.0002	nr_of_features: 51
+282	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998381	l1: 0.0002	nr_of_features: 54
+284	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998594	l1: 0.0002	nr_of_features: 54
+286	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999089	l1: 0.0002	nr_of_features: 56
+285	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998562	l1: 0.0002	nr_of_features: 46
+289	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998635	l1: 0.0002	nr_of_features: 52
+287	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998473	l1: 0.0002	nr_of_features: 45
+288	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998434	l1: 0.0002	nr_of_features: 50
+290	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.999192	l1: 0.0002	nr_of_features: 53
+292	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999493	l1: 0.0002	nr_of_features: 49
+293	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.999049	l1: 0.0002	nr_of_features: 59
+294	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998201	l1: 0.0002	nr_of_features: 48
+296	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998557	l1: 0.0002	nr_of_features: 50
+295	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.998597	l1: 0.0002	nr_of_features: 54
+291	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.997794	l1: 0.0002	nr_of_features: 51
+298	600	12	0.25	search_tree_size: 10000	data_likelihood: 0.999466	l1: 0.0002	nr_of_features: 56
+297	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998139	l1: 0.0002	nr_of_features: 50
+299	800	12	0.25	search_tree_size: 10000	data_likelihood: 0.998824	l1: 0.0002	nr_of_features: 61
+300	1000	12	0.25	search_tree_size: 10000	data_likelihood: 0.998943	l1: 0.0002	nr_of_features: 50
