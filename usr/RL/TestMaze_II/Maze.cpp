@@ -81,7 +81,7 @@ const vector<Maze::wall_t> Maze::walls = {
     {2,3}
     /**/
 
-    /* 4x4 Maze (Paper III) */
+    /* 4x4 Maze (Paper III) *
     { 5, 9},
     {12,13},
     {11,15},
@@ -174,7 +174,7 @@ const vector<Maze::maze_reward_t> Maze::rewards = {
     { 3, 2, 1, 1, ON_RELEASE_NO_PUNISH,   0,   0, 200}
     /**/
 
-    /* 2x2 Maze *
+    /* 2x2 Maze */
     { 0, 3, 2, 1, EACH_TIME_NO_PUNISH, 200,   0,   0}
     /**/
 
@@ -218,7 +218,7 @@ const vector<Maze::maze_reward_t> Maze::rewards = {
     { 2, 1, 3, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0}
     /**/
 
-    /* 4x4 Maze (Paper III) */
+    /* 4x4 Maze (Paper III) *
     { 0, 8, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
     { 8,13, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
     { 9,12, 3, 1,  EACH_TIME_NO_PUNISH, 255, 100,   0},
@@ -309,7 +309,7 @@ const vector<Maze::door_t> Maze::doors = {
     door_t(MazeState( 3),MazeState( 2),MazeState( 3), RIGHT_BUTTON, -3, color_t(0.0,0.0,1.0) )
     /**/
 
-    /* 4x4 Maze (Paper III) */
+    /* 4x4 Maze (Paper III) *
     door_t(MazeState(12),MazeState(13),MazeState(13),  DOWN_BUTTON, -2, color_t(0.0,1.0,0.0) ),
     door_t(MazeState(15),MazeState(11),MazeState(15), RIGHT_BUTTON, -2, color_t(0.0,1.0,0.0) ),
     door_t(MazeState( 5),MazeState( 1),MazeState( 5),  DOWN_BUTTON, -2, color_t(0.0,1.0,0.0) )
