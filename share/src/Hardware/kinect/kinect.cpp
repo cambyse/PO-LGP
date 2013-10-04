@@ -75,6 +75,7 @@ void KinectPoller::close() {
   s->stopVideo();
   s->stopDepth();
   freenect->deleteDevice(0);
+  delete s;
   s = NULL;
   cout <<"KinectPoller closed successfully" <<endl;
 }
