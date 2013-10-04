@@ -46,7 +46,7 @@ esac
 ## configure, make, make install
 echo -n "  * configure / make / make install"
 cd $MLR_LIBPATH/src/$SRC_PATH
-./configure --enable-gpl --enable-libx264
+./configure --enable-gpl --enable-libx264 --enable-pic
 make -j 20
 sudo make install -j 20
 
