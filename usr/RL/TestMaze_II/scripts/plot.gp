@@ -69,25 +69,37 @@ plot [:3000][0:] \
      data_folder.'4x4_III_UTREE_VALUE.txt' u ($@C1+@rx):($@C2+@ry) w p pt 6 lt 5 ps 0.5 t 'Mean reward raw data', \
      data_folder.'4x4_III_UTREE_VALUE.txt' u @C1:(1./f_div) s f w lp pt 2 lt 6 t 'No data points / '.f_div
 
-plot [:5100][0:] \
-     data_folder.'4x4_III_SPARSE.txt' u 2:7 i 4:10 s u w lp pt 1 lt 1 t 'CRF', \
-     data_folder.'4x4_III_UTREE_VALUE.txt' u 2:7 s u w lp pt 1 lt 4 t 'UTree (value)'
+plot [0:5100][0:] \
+     data_folder.'4x4_III_SPARSE.txt' u 2:4 s u w lp pt 1 lt 1 t 'CRF', \
+     data_folder.'4x4_III_UTREE_VALUE.txt' u 2:4 s u w lp pt 1 lt 4 t 'UTree (value)'
+
+plot [0:5100][0:30] \
+     data_folder.'4x4_III_SPARSE.txt' u 2:(1) s f w lp pt 1 lt 1 t 'CRF', \
+     data_folder.'4x4_III_UTREE_VALUE.txt' u 2:(1) s f w lp pt 1 lt 4 t 'UTree (value)'
 
 ########################################
 ## 2x2 Maze
 ########################################
 
 ## Learning Curves
-set xlabel "Number of Random Transitions"
-set ylabel "Mean Reward"
-unset y2label
-unset y2tics
-set ytics mirror
+set xlabel "Number of Random Transitions"; \
+set ylabel "Mean Reward"; \
+set ytics; \
+unset y2label; \
+unset y2tics; \
+set ytics auto
 plot [0:1000] \
-     data_folder.'2x2_LINEAR_Q.txt'             u 2:4 s u w lp t 'Linear-Q', \
-     data_folder.'2x2_SPARSE.txt'	       u 2:4 s u w lp t 'CRF', \
-     data_folder.'2x2_UTREE_PROB.txt'	       u 2:4 s u w lp t 'UTree (prob.)', \
-     data_folder.'2x2_UTREE_VALUE.txt'	       u 2:4 s u w lp t 'UTree (value)'
+     data_folder.'LINEAR_Q_tmp.txt'	u 2:4 s u w lp t 'Linear-Q', \
+     data_folder.'SPARSE_tmp.txt' 	u 2:4 s u w lp t 'CRF', \
+     data_folder.'2x2_UTREE_PROB.txt' 	u 2:4 s u w lp t 'UTree (prob.)', \
+     data_folder.'2x2_UTREE_VALUE.txt' 	u 2:4 s u w lp t 'UTree (value)'
+plot [0:1000] data_folder.'2x2_UTREE_PROB.txt' 	u ($2+rn(20)):($4+rn(0.01))  t 'UTree (prob.)'
+plot [0:1000] data_folder.'2x2_UTREE_VALUE.txt' u ($2+rn(20)):($4+rn(0.01))  t 'UTree (value)'
+plot [0:1000] \
+     data_folder.'2x2_LINEAR_Q.txt'	u 2:(1) s f w lp t 'Linear-Q', \
+     data_folder.'2x2_SPARSE.txt' 	u 2:(1) s f w lp t 'CRF', \
+     data_folder.'2x2_UTREE_PROB.txt' 	u 2:(1) s f w lp t 'UTree (prob.)', \
+     data_folder.'2x2_UTREE_VALUE.txt' 	u 2:(1) s f w lp t 'UTree (value)'
 
 ## L1-regularization
 ## -maxTrain 500 in block 0; -maxTrain 1500 in block 1
