@@ -1,6 +1,6 @@
 #include <Hardware/schunk/schunk.h>
-#include <MT/socSystem_ors.h>
-#include <MT/soc_inverseKinematics.h>
+//#include <MT/socSystem_ors.h>
+//#include <MT/soc_inverseKinematics.h>
 #include <Gui/opengl.h>
 #include <Ors/ors.h>
 

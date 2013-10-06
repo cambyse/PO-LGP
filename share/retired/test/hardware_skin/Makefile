@@ -1,4 +1,4 @@
-BASE = ../..
+BASE = ../../..
 
 DEPEND = Hardware_schunk
 
