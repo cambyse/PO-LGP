@@ -11,7 +11,7 @@ struct MyThread: Thread{
 };
 
 
-int main(int argn,char** argv){
+void TEST(Thread){
   MyThread t1(1), t2(2);
 
   t1.threadLoopWithBeat(.1);
@@ -24,5 +24,10 @@ int main(int argn,char** argv){
 
   CHECK(t1.i>=29 && t1.i<=31,"");
   CHECK(t2.i>=2 && t2.i<=4,"");
+}
+
+int MAIN(int argn,char** argv){
+  testThread();
+
   return 0;
 }

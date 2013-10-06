@@ -1,6 +1,6 @@
 #include <Core/util_t.h>
 
-void testString(){
+void TEST(String){
   //-- basic IO
   String s("4.123, ");                     // create the string
   String t1,t2;
@@ -32,7 +32,7 @@ void testString(){
   cout <<tmp <<'|' <<endl;
 }
 
-void testParameter(){
+void TEST(Parameter){
   String p1;
   MT::getParameter(p1, "par", String("default1"));
   CHECK(p1=="default1","");
@@ -44,11 +44,11 @@ void testParameter(){
   cout <<p1 <<endl <<p2 <<endl;
 }
 
-void testTimer(){
+void TEST(Timer){
   MT::timerStart();
   for(uint i=0;i<4;i++){
     cout <<"i=" <<i <<flush;
-    for(uint i=0;i<10000000;i++){ i+=10; i-=10; } //do something stupid
+    for(uint j=0;j<10000000;j++){ j+=10; j-=10; } //do something stupid
     MT::wait(.5);
     cout <<" cpu timer reads " <<MT::timerRead(false) <<"sec" <<endl;
     if(i==1){ MT::timerPause(); cout <<"timer paused" <<endl; }
@@ -59,7 +59,7 @@ void testTimer(){
   CHECK(t>0. && t<1.,"no cpu time measured");
 }
 
-int main(int argn,char** argv){
+int MAIN(int argn,char** argv){
   MT::initCmdLine(argn,argv);
 
   uint double_size=sizeof(double);

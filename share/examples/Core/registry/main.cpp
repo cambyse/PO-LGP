@@ -17,9 +17,7 @@ REGISTER_ITEM(double, mykey, 3.)
 REGISTER_TYPE_DERIVED(Derived, NewType)
 
 
-
-int main(int argn,char** argv){
-
+void TEST(Registry){
   cout <<"** REGISTRY:\n" <<registry() <<endl;
 
   Item *it;
@@ -34,6 +32,10 @@ int main(int argn,char** argv){
   it = reg_findType("Derived");
   CHECK(it, "could't retrieve type derived from Derived");
   cout <<"retrieved Type item: " <<*it <<endl;
+}
+
+int MAIN(int argn,char** argv){
+  testRegistry();
 
   return 0;
 }
