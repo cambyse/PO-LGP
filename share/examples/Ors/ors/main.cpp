@@ -7,39 +7,10 @@
 
 //===========================================================================
 //
-// test very basics
-//
-
-#define TEST_DIFF_ZERO(expr) { double e=(expr).diffZero(); CHECK(e<1e-6, " Error="<<e <<" Expression=" <<(expr)); cout <<"Success: " <<e <<endl; }
-
-void testBasics(){
-  for(uint k=0;k<10;k++){
-    ors::Quaternion A,B,C;
-    A.setRandom();
-    B.setRandom();
-    C.setRandom();
-    TEST_DIFF_ZERO(Quaternion_Id);
-    TEST_DIFF_ZERO(A/A);
-    TEST_DIFF_ZERO(A*B/B/A);
-  }
-
-  for(uint k=0;k<10;k++){
-    ors::Transformation A,B,C;
-    A.setRandom();
-    B.setRandom();
-    C.setDifference(A,B);
-    TEST_DIFF_ZERO(A/A);
-    TEST_DIFF_ZERO(A*A/A/A);
-    TEST_DIFF_ZERO(A*C/B);
-  }
-}
-
-//===========================================================================
-//
 // test laod save
 //
 
-void testLoadSave(){
+void TEST(LoadSave){
   ors::Graph G;
   ifstream fil("arm7.ors");
   fil >>G;
@@ -72,7 +43,7 @@ namespace T1{
   //static void df3(arr &J,const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->jacobianOri2(J,i,axis); }
 }
 
-void testKinematics(){
+void TEST(Kinematics){
   ors::Graph G;
   OpenGL gl;
   init(G,gl,"arm3.ors");
@@ -97,7 +68,7 @@ void testKinematics(){
 // Kinematic speed test
 //
 
-void testKinematicSpeed(){
+void TEST(KinematicSpeed){
 #define NUM 10000
 #if 1
   ors::Graph G;
@@ -149,7 +120,7 @@ namespace Ctest{
   }
 }
 
-void testContacts(){
+void TEST(Contacts){
   ors::Graph G;
   OpenGL gl;
   init(G,gl,"arm7.ors");
@@ -175,7 +146,7 @@ void testContacts(){
     G.phiCollision(con, grad, .2);
     cout <<"contact meassure = " <<con(0) <<endl;
     gl.text.clear() <<"t=" <<t <<"  movement along negative contact gradient (using SWIFT to get contacts)";
-    gl.watch();
+    //gl.watch();
     gl.update();
     //x += inverse(grad)*(-.1*c);
     x -= 1e-3*grad; //.1 * (invJ * grad);
@@ -202,7 +173,7 @@ void generateSequence(arr &X, uint T, uint n){
   MT::Spline(T,P).eval(X);
 }
 
-void testPlayStateSequence(){
+void TEST(PlayStateSequence){
   ors::Graph G;
   OpenGL gl;
   init(G, gl, "arm7.ors");
@@ -224,7 +195,7 @@ void testPlayStateSequence(){
 //
 
 #ifdef MT_ODE
-void testPlayTorqueSequenceInOde(){
+void TEST(PlayTorqueSequenceInOde){
   ors::Graph G;
   OpenGL gl;
   init(G,gl,"arm7.ors");
@@ -246,7 +217,7 @@ void testPlayTorqueSequenceInOde(){
   }
 }
 
-void testMeshShapesInOde(){
+void TEST(MeshShapesInOde){
   ors::Graph G;
   OpenGL gl;
   init(G, gl, "testOdeMesh.ors");
@@ -267,7 +238,7 @@ void testMeshShapesInOde(){
 // standard IK test
 //
 
-void testFollowRedundantSequence(){  
+void TEST(FollowRedundantSequence){  
   ors::Graph G;
   OpenGL gl;
   init(G,gl,"arm7.ors");
@@ -339,7 +310,7 @@ void ddf_joints(arr& xdd,const arr& x,const arr& v){
 }
 
 //---------- test standard dynamic control
-void testDynamics(){
+void TEST(Dynamics){
   ors::Graph G;
   OpenGL gl;
   init(G,gl,"arm7.ors");
@@ -422,7 +393,7 @@ bool checkContacts(const arr& s){
 }
 
 //---------- test standard redundant control
-void testContactDynamics(){
+void TEST(ContactDynamics){
   init();
 
   uint t,T=1000,n=G.getJointStateDimension();
@@ -477,7 +448,7 @@ static void drawTrimesh(void* _mesh){
 #endif
 }
 
-void testBlenderImport(){
+void TEST(BlenderImport){
   MT::timerStart();
   ors::Mesh mesh;
   ors::Graph bl;
@@ -492,9 +463,8 @@ void testBlenderImport(){
   animateConfiguration(bl,gl);
 }
 
-int main(int argc,char **argv){
+int MAIN(int argc,char **argv){
 
-  testBasics();
   testLoadSave();
   testPlayStateSequence();
   testKinematics();
