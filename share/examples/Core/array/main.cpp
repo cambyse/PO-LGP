@@ -6,7 +6,7 @@ using namespace std;
 
 bool DoubleComp(const double& a,const double& b){ return a<b; }
 
-void testBasics(){
+void TEST(Basics){
   cout <<"\n*** basic manipulations\n";
   arr a;     //'arr' is a macro for MT::Array<double>
   intA ints; //a macro for MT::Array<int>
@@ -88,7 +88,7 @@ void testBasics(){
   CHECK_ZERO(maxDiff(a,b), 1e-4, "non-exact save load");
 }
 
-void testMatlab(){
+void TEST(Matlab){
   arr x = randn(5);
   cout <<"\nrandn(5)" <<x <<endl;
 
@@ -105,7 +105,7 @@ void testMatlab(){
   cout <<"\nrepmat(A,2,3)" <<B <<endl;
 }
 
-void testException(){
+void TEST(Exception){
   cout <<"\n*** exception handling\n";
   arr A;
   A.append(10);
@@ -120,7 +120,7 @@ void testException(){
   CHECK(caught,"exception not caught");
 }
 
-void testMemoryBound(){
+void TEST(MemoryBound){
   cout <<"\n*** memory bound\n";
   MT::globalMemoryBound=1ull<<20;
   MT::globalMemoryStrict=true;
@@ -135,7 +135,7 @@ void testMemoryBound(){
   MT::globalMemoryBound=1ull<<30;
 }
 
-void testBinaryIO(){
+void TEST(BinaryIO){
   cout <<"\n*** acsii and binary IO\n";
   arr a,b; a.resize(10000,100); rndUniform(a,0.,1.,false);
 
@@ -168,7 +168,7 @@ void testBinaryIO(){
   cout <<"binary IO exactly restores double array and is much faster" <<endl;
 }
 
-void testExpression(){
+void TEST(Expression){
   cout <<"\n*** matrix expressions\n";
   arr a(2,3),b(3,2),c(3),d;
   rndInteger(a,-5,5,false);
@@ -185,7 +185,7 @@ void testExpression(){
   cout <<"\nlonger expression\n" <<2.*a + ~b;
 }
 
-void testPermutation(){
+void TEST(Permutation){
   cout <<"\n*** permutation\n";
   uintA p;
   rnd.seed(3);
@@ -203,7 +203,7 @@ void testPermutation(){
   for(uint i=0;i<p.N;i++) cout <<i <<":" <<p(i) <<"\n";
 }
 
-void testGnuplot(){
+void TEST(Gnuplot){
   cout <<"\n*** gnuplot\n";
   uint i,j;
   arr X(30,30);
@@ -220,7 +220,7 @@ void testGnuplot(){
   MT::wait(1.);
 }
 
-void testDeterminant(){
+void TEST(Determinant){
   cout <<"\n*** determinant computation\n";
   arr a = ARR(1,1,2,1,1,0,0,-2,3);
   a.reshape(3,3);
@@ -236,7 +236,7 @@ void testDeterminant(){
   //  CHECK(fabs(d-c11*a(1,0))<1e-10,"");
 }
 
-void testMM(){
+void TEST(MM){
   cout <<"\n*** matrix multiplication speeds\n";
   uint M=10000,N=100,O=100;
   arr A(M,N),B(N,O),C,D;
@@ -266,7 +266,7 @@ void testMM(){
   CHECK(t_blas < t_native,"blas MM is slower than native");
 }
 
-void testSVD(){
+void TEST(SVD){
   cout <<"\n*** singular value decomposition\n";
   uint m=1000,n=500,r=2,svdr;
   arr L(m,r),R(r,n),A,U,d,V,D;
@@ -300,7 +300,7 @@ void testSVD(){
   CHECK_ZERO(maxDiff(A, U*D*~V), 1e-10, "Lapack SVD failed");
 }
 
-void testInverse(){
+void TEST(Inverse){
   cout <<"\n*** matrix inverse\n";
   uint m=500,n=500,svdr;
   arr A(m,n),invA,I;
@@ -359,7 +359,7 @@ void testInverse(){
   CHECK(t_symPosDef < t_lapack, "symposdef matrix inverse slower than general");
 }
 
-void testGaussElimintation() {
+void TEST(GaussElimintation) {
   cout << "\n*** Gaussian elimination with partial pivoting \n";
   if (MT::lapackSupported) {
     arr A;
@@ -420,7 +420,7 @@ ostream &operator<<(ostream &os,ArrayOp &op){ arr x; op.assign(x); os <<x; retur
 #define MUL  % ArrayOp(elemProduct) %
 */
 
-/*void testNewOp(){
+/*void TEST(NewOp){
   arr x(2,3),y(3,4);
   rndInt(x,0,5);
   rndInt(y,0,5);
@@ -431,7 +431,7 @@ ostream &operator<<(ostream &os,ArrayOp &op){ arr x; op.assign(x); os <<x; retur
 
 //------------------------------------------------------------------------------
 
-void testTensor(){
+void TEST(Tensor){
   cout <<"\n*** tensor manipulations\n";
 
   arr A,B,C,D;
@@ -478,7 +478,7 @@ void write(RowShiftedPackedMatrix& PM){
   cout <<"\nrowShifts=" <<PM.rowShift <<"\ncolPaches=" <<PM.colPatches <<endl;
 }
 
-void testRowShiftedPackedMatrix(){
+void TEST(RowShiftedPackedMatrix){
   cout <<"\n*** RowShiftedPackedMatrix\n";
   
   arr J;
@@ -510,8 +510,8 @@ void testRowShiftedPackedMatrix(){
 
 //------------------------------------------------------------------------------
 
-int main(int argc, char *argv[]){
-  
+int MAIN(int argc, char *argv[]){
+
   testBasics();
   testMatlab();
   testException();

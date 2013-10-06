@@ -200,6 +200,7 @@ endif
 endif
 
 ifeq ($(GTEST),1)
+CXXFLAGS += -DMT_GTEST
 LIBS += -lgtest
 endif
 
