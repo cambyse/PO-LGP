@@ -58,6 +58,29 @@ TEST(ArrayIO, tensor_read_write) {
   // }
 }
 
+TEST(ArrayIO, tensor_high_dim_read_write) {
+  arr a = randn(5, 125);
+  a.reshape(TUP(5, 5, 5, 5));
+  ofstream of("tensor_hd.tmp");
+  of << a;
+  of.close();
+
+  arr b;
+  ifstream inf("tensor_hd.tmp");
+  inf >> b;
+  inf.close();
+
+  EXPECT_EQ(a.nd, b.nd);
+
+  // for (int i = 0; i < 5; ++i) {
+  //   for (int j = 0; j < 5; ++j) {
+  //     for (int k = 0; k < 5; ++k) {
+  //       EXPECT_NEAR(a(i, j, k), b(i, j, k), 0.001);
+  //     }
+  //   }
+  // }
+}
+
 
 GTEST_API_ int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
