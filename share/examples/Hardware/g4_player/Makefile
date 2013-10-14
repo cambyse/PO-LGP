@@ -2,6 +2,6 @@ BASE = ../../..
 
 OBJS = main.o
 
-DEPEND = Core Ors Gui System Hardware_G4 Hardware_VideoWriter
+DEPEND = Core Ors Gui Perception
 
 include $(BASE)/make-generic

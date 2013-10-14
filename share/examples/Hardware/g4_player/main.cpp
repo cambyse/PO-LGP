@@ -1,8 +1,6 @@
-#include <System/engine.h>
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
-#include <Hardware/VideoWriter/video.h>
-#include <sys/time.h>
+#include <Perception/video.h>
 
 void lib_hardware_G4();
 
@@ -19,7 +17,6 @@ void display(const arr& X){
   s->type = ors::markerST;
   s->size[0] = .5;
 
-  //init(ors, gl, "g4_markers.ors");
   for(uint m=0;m<X.d1;m++){
     ors::Shape *s = new ors::Shape(ors, NULL);
     s->type = ors::boxST;
@@ -58,7 +55,6 @@ void loadData(arr &X){
 
 int main(int argc, char **argv) {
   MT::initCmdLine(argc, argv);
-  lib_hardware_G4();
 
   arr X;
   loadData(X);
