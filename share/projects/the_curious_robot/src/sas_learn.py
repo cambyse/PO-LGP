@@ -5,6 +5,9 @@ roslib.load_manifest('the_curious_robot')
 roslib.load_manifest('actionlib')
 import rospy
 from actionlib import SimpleActionServer
+
+import corepy
+import orspy
 import the_curious_robot.msg as msgs
 from articulation_msgs.msg import ModelMsg, TrackMsg
 from articulation_msgs.srv import TrackModelSrv, TrackModelSrvRequest
@@ -43,6 +46,16 @@ class LearnActionServer:
         self.server.register_preempt_callback(self.preempt_cb)
         self.server.start()
 
+        # Belief & PhysX & OpenGL
+        self.belief = orspy.Graph()
+        self.gl = corepy.OpenGL()
+        self.physx = orspy.PhysXInterface()
+        orspy.bindOrsToPhysX(self.belief, self.gl, self.physx)
+
+        self.learned_bodies = []
+        self.learned_shapes = []
+
+        # require/provide
         rp.Provide("Learn")
 
     def execute(self, msg):

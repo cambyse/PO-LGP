@@ -1,0 +1,3 @@
+files to modify friction:
+share/src/Ors/ors_opengl.cpp
+share/src/Ors/ors_physx.cpp

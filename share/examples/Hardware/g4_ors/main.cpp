@@ -13,35 +13,47 @@ struct G4System:System{
   }
 };
 
-void getNowString(MT::String &str) {
-  time_t t = time(0);
-  struct tm *now = localtime(&t);
-
-  char s[19]; //-- just enough
-  sprintf(s, "%02d-%02d-%02d--%02d-%02d-%02d",
-    now->tm_year-100,
-    now->tm_mon+1,
-    now->tm_mday,
-    now->tm_hour,
-    now->tm_min,
-    now->tm_sec);
-
-  str.clear() << s;
-}
-
 void threadedRun(){
   G4System S;
   OpenGL gl;
   ors::Graph ors;
   init(ors, gl, "g4_markers.ors");
+
+  /* GRRR
+  //gl.camera.X->rot.setZero();
+  gl.camera.setPosition(2, 0, 1);
+  cout << "cam pos:" << endl;
+  cout << "x = " << gl.camera.X->pos.x << endl;
+  cout << "y = " << gl.camera.X->pos.y << endl;
+  cout << "z = " << gl.camera.X->pos.z << endl;
+
+  cout << "cam rot:" << endl;
+  cout << "x = " << gl.camera.X->rot.x << endl;
+  cout << "y = " << gl.camera.X->rot.y << endl;
+  cout << "z = " << gl.camera.X->rot.z << endl;
+  cout << "w = " << gl.camera.X->rot.w << endl;
+
+  //gl.camera.X->rot.setRad(3.1415/2 , 1, 0, 0);
+
+  cout << "cam rot:" << endl;
+  cout << "x = " << gl.camera.X->rot.x << endl;
+  cout << "y = " << gl.camera.X->rot.y << endl;
+  cout << "z = " << gl.camera.X->rot.z << endl;
+  cout << "w = " << gl.camera.X->rot.w << endl;
+  */
+  gl.camera.setPosition(2, 0, 1);
+  gl.camera.focus(0, .5, 0);
+  gl.update();
+
   floatA poses;
   timeval time;
   MT::String nowStr, timesStr, poseStr;
-  getNowString(nowStr);
+  MT::getNowString(nowStr);
   timesStr << "z." << nowStr << ".g4_times.dat";
   poseStr << "z." << nowStr << ".g4_pose.dat";
   FILE *fil = fopen((const char*)timesStr,"w");
   ofstream file_poses((const char*)poseStr);
+  char ts[25];
 
   engine().open(S);
   uint t;
@@ -49,20 +61,29 @@ void threadedRun(){
     if(engine().shutdown) break;
     S.currentPoses.var->waitForNextWriteAccess();
     gettimeofday(&time, 0);
+    sprintf(ts, "%4i %8li.%06li", t, time.tv_sec&0xffffff, time.tv_usec);
+
     poses = S.currentPoses.get();
     poses.reshape(poses.N/7,7);
-    //cout <<t <<" #poses=" <<poses.d0 /*<<poses*/ <<endl;
-    for(uint b=0; b+1<ors.bodies.N && b<poses.d0; b++){
-      ors.bodies(b+1)->X.pos.set(poses(b,0), poses(b,1), poses(b,2));
-      ors.bodies(b+1)->X.rot.set(poses(b,3), poses(b,4), poses(b,5), poses(b,6));
+    if(!(t%100)){
+      cout <<"frame=" <<t <<endl;
     }
-    ors.calcShapeFramesFromBodies();
-    gl.update();
+    if(true){
+      //cout <<t <<" #poses=" <<poses.d0 /*<<poses*/ <<endl;
+      for(uint b=0; b+1<ors.bodies.N && b<poses.d0; b++){
+	ors.bodies(b+1)->X.pos.set(poses(b,0), poses(b,1), poses(b,2));
+	ors.bodies(b+1)->X.rot.set(poses(b,3), poses(b,4), poses(b,5), poses(b,6));
+      }
+      gl.text.clear() << ts;
 
-    fprintf(fil, "%4i %8li.%06li\n", t, time.tv_sec&0xffffff, time.tv_usec);
+      ors.calcShapeFramesFromBodies();
+      gl.update();
+    }
+
+    fprintf(fil, "%s\n", ts);
     fflush(fil);
 
-    file_poses <<poses <<endl; //-- just for clarity, change it to binary later
+    file_poses <<poses <<endl; //-- TODO just for clarity, change it to binary later
     //file_poses.write((char*)poses.p, poses.sizeT*poses.N);
     //file_poses.flush();
   }
@@ -70,7 +91,7 @@ void threadedRun(){
 
   fclose(fil);
   file_poses.close();
-  cout <<"bye bye" <<endl;
+  cout << "bye bye" << endl;
   engine().close(S);
 }
 

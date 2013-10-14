@@ -73,7 +73,7 @@ ifeq ($(OPTIM),callgrind)
 CXXFLAGS := -O3 -g -Wall -DMT_NOCHECK -fno-inline $(CXXFLAGS)
 endif
 
-CXXFLAGS += -fPIC
+CXXFLAGS += -fPIC $(EXTRA_CXXFLAGS)
 
 
 ################################################################################
@@ -685,11 +685,13 @@ makeSubpaths/%::
 cleanSubpaths/%::
 	-@find -L $* -maxdepth 1 -follow -type d -not -name '$*' -not -name 'SHARE' -exec $(MAKE) -C {} clean \;
 
-doc::
-	$(MAKE) -C doc doxy_array
+#doc::
+#	$(MAKE) -C doc doxy_array
 
 zip::
 	cd ..;  rm -f $(NAME).tgz;  tar cvzf $(NAME).tgz $(NAME) --dereference --exclude-vcs --exclude-from tar.exclude --exclude-from $(NAME)/tar.exclude
 
 
 force:	;
+
+# vim:ft=make:

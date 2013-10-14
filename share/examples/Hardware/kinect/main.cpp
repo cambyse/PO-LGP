@@ -9,22 +9,6 @@
 void lib_hardware_kinect();
 void lib_Perception();
 
-void getNowString(MT::String &str) {
-  time_t t = time(0);
-  struct tm *now = localtime(&t);
-
-  char s[19]; //-- just enough
-  sprintf(s, "%02d-%02d-%02d--%02d-%02d-%02d",
-    now->tm_year-100,
-    now->tm_mon+1,
-    now->tm_mday,
-    now->tm_hour,
-    now->tm_min,
-    now->tm_sec);
-
-  str.clear() << s;
-}
-
 void threadedRun() {
   lib_hardware_kinect();
   lib_Perception();
@@ -46,7 +30,7 @@ void threadedRun() {
 
   OpenGL gl;
   MT::String nowStr, rgbStr, depthStr, timesStr;
-  getNowString(nowStr);
+  MT::getNowString(nowStr);
   rgbStr << "z." << nowStr << ".kinectRgb.avi";
   depthStr << "z." << nowStr << ".kinectDepth.avi";
   timesStr << "z." << nowStr << ".kinectTimes.dat";

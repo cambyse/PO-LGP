@@ -1,0 +1,10 @@
+1) sometimes gets blocked at waitForNextWriteAccess();
+
+2) sometimes sensors read all 0s. In this case we should either define a
+standard INVALID value, or just use the values just previous to the "jump".
+
+Probably better to leave all 0s as a standard INVALID flag, then the application
+which actually reads the values can choose what to do with it..
+
+3) I encountered a weird bug once. The timestamp continued, but the video
+looped..

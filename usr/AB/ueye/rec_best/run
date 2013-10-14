@@ -1,0 +1,4 @@
+#!/bin/bash
+
+./x.exe 2> /dev/null
+

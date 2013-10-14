@@ -1,0 +1,100 @@
+#! /bin/sh
+
+# Fail early. Abort on any error!
+set -e
+
+####################
+###### libav #######
+####################
+
+## parameters for this install
+SRC_PATH=libav
+GIT_REPO=git://git.libav.org/libav.git
+
+[ -z $MLR_LIBPATH ] && MLR_LIBPATH=/home/lib
+
+echo "*** Installing " $SRC_PATH " into " $MLR_LIBPATH
+echo
+
+## check existance of lib path
+echo -n "  * Checking for directory" $MLR_LIBPATH
+read -p " -- [Enter] to continue..." yn
+if [ ! -d $MLR_LIBPATH ] ; then
+  # only root can create the folder in /home
+  sudo mkdir -p $MLR_LIBPATH
+  # but everybody needs access to /home/lib
+  sudo chmod o+r+w+x $MLR_LIBPATH
+  # and also /home/lib/lib
+  mkdir -p $MLR_LIBPATH/lib
+fi
+
+## clone git repo
+echo -n "  * Delete" $MLR_LIBPATH/src/$SRC_PATH "and re-clone repo?"
+read -p " -- y/[n] ?" yn
+case $yn in
+    y|Y)
+	mkdir -p $MLR_LIBPATH/src
+  sudo chmod o+r+w+x $MLR_LIBPATH/src
+
+	cd $MLR_LIBPATH/src
+	rm -Rf $SRC_PATH
+  git clone $GIT_REPO $MLR_LIBPATH/src/$SRC_PATH
+	;;
+    *) ;;
+esac
+
+## configure, make, make install
+echo -n "  * configure / make / make install"
+cd $MLR_LIBPATH/src/$SRC_PATH
+./configure --enable-gpl --enable-libx264 --enable-pic
+make -j 20
+sudo make install -j 20
+
+###################
+###### x264 #######
+###################
+
+## parameters for this install
+SRC_PATH=x264
+GIT_REPO=git://git.videolan.org/x264.git
+
+[ -z $MLR_LIBPATH ] && MLR_LIBPATH=/home/lib
+
+echo "*** Installing " $SRC_PATH " into " $MLR_LIBPATH
+echo
+
+## check existance of lib path
+echo -n "  * Checking for directory" $MLR_LIBPATH
+read -p " -- [Enter] to continue..." yn
+if [ ! -d $MLR_LIBPATH ] ; then
+  # only root can create the folder in /home
+  sudo mkdir -p $MLR_LIBPATH
+  # but everybody needs access to /home/lib
+  sudo chmod o+r+w+x $MLR_LIBPATH
+  # and also /home/lib/lib
+  mkdir -p $MLR_LIBPATH/lib
+fi
+
+## clone git repo
+echo -n "  * Delete" $MLR_LIBPATH/src/$SRC_PATH "and re-clone repo?"
+read -p " -- y/[n] ?" yn
+case $yn in
+    y|Y)
+	mkdir -p $MLR_LIBPATH/src
+  sudo chmod o+r+w+x $MLR_LIBPATH/src
+
+	cd $MLR_LIBPATH/src
+	rm -Rf $SRC_PATH
+  git clone $GIT_REPO $MLR_LIBPATH/src/$SRC_PATH
+	;;
+    *) ;;
+esac
+
+## configure, make, make install
+echo -n "  * configure / make / make install"
+cd $MLR_LIBPATH/src/$SRC_PATH
+git checkout f0c1c5 # 
+./configure --enable-shared --enable-static 
+make
+sudo make install
+

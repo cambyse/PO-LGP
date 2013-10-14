@@ -1,11 +1,10 @@
 import orspy as ors
 import corepy
-
-import roslib
 import rospy
 import the_curious_robot.msg as msgs
 import geometry_msgs.msg
-from articulation_msgs.msg import ModelMsg, TrackMsg
+from articulation_msgs.msg import TrackMsg
+
 
 class Gaussian():
     """
@@ -32,10 +31,8 @@ class Properties():
                         callable(getattr(self, attr)))]
 
 
-
-
+#########################################################################
 # msg parser/builder
-
 def parse_body_msg(msg):
     body = ors.Body()
     body_list = msg.split(' ', 1)
@@ -43,8 +40,10 @@ def parse_body_msg(msg):
     body.read(body_list[1])
     return body
 
+
 def create_body_msg(body):
     return body.name + ' ' + str(body)
+
 
 def parse_property_msg(msg):
     properties = Properties()
@@ -52,20 +51,23 @@ def parse_property_msg(msg):
         setattr(properties, p.name, Gaussian(p.values[0], p.values[1]))
     return properties
 
+
 def create_properties_msg(properties):
     result = []
     for prop_name in properties.property_names():
         msg = msgs.Property()
         msg.name = prop_name
-        msg.values = [ getattr(properties, prop_name).mu,
-                       getattr(properties, prop_name).sigma ]
+        msg.values = [getattr(properties, prop_name).mu,
+                      getattr(properties, prop_name).sigma]
         result.append(msg)
     return result
+
 
 def parse_ooi_msg(msg):
     body = parse_body_msg(msg.body)
     properties = parse_property_msg(msg.properties)
     return {"body": body, "properties": properties}
+
 
 def create_ooi_msg(body, properties):
     body_msg = create_body_msg(body)
@@ -75,17 +77,20 @@ def create_ooi_msg(body, properties):
     msg.properties = properties_msg
     return msg
 
+
 def parse_oois_msg(msg):
     objects = []
     for obj in msg.objects:
         objects.append(parse_ooi_msg(obj))
     return objects
 
+
 def create_oois_msg(objects):
     msg = msgs.Objects()
     for obj in objects:
         msg.objects.append(create_ooi_msg(obj['body'], obj['properties']))
     return msg
+
 
 def parse_trajectory_msg(msg):
     trajectory = []
@@ -96,6 +101,7 @@ def parse_trajectory_msg(msg):
         pose.pos.z = p.position.z
         trajectory.append(pose)
     return (msg.object, trajectory)
+
 
 def create_trajectory_msg(obj_id, pos):
     msg = msgs.Trajectory()
@@ -108,6 +114,7 @@ def create_trajectory_msg(obj_id, pos):
     msg.object = obj_id
     return msg
 
+
 def create_track_msg(trajectory):
     msg = TrackMsg()
     msg.header.stamp = rospy.get_rostime()
@@ -115,7 +122,8 @@ def create_track_msg(trajectory):
     #msg.id = model
 
     for t in trajectory:
-        pose = geometry_msgs.msg.Pose(t.pos, geometry_msgs.msg.Quaternion(0, 0,
-            0, 1))
+        pose = geometry_msgs.msg.Pose(
+            t.pos, geometry_msgs.msg.Quaternion(0, 0, 0, 1)
+        )
         msg.pose.append(pose)
     return msg
