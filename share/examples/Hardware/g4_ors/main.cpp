@@ -61,18 +61,24 @@ void threadedRun(){
     if(engine().shutdown) break;
     S.currentPoses.var->waitForNextWriteAccess();
     gettimeofday(&time, 0);
+    sprintf(ts, "%4i %8li.%06li", t, time.tv_sec&0xffffff, time.tv_usec);
+
     poses = S.currentPoses.get();
     poses.reshape(poses.N/7,7);
-    //cout <<t <<" #poses=" <<poses.d0 /*<<poses*/ <<endl;
-    for(uint b=0; b+1<ors.bodies.N && b<poses.d0; b++){
-      ors.bodies(b+1)->X.pos.set(poses(b,0), poses(b,1), poses(b,2));
-      ors.bodies(b+1)->X.rot.set(poses(b,3), poses(b,4), poses(b,5), poses(b,6));
+    if(!(t%100)){
+      cout <<"frame=" <<t <<endl;
     }
-    sprintf(ts, "%4i %8li.%06li", t, time.tv_sec&0xffffff, time.tv_usec);
-    gl.text.clear() << ts;
+    if(true){
+      //cout <<t <<" #poses=" <<poses.d0 /*<<poses*/ <<endl;
+      for(uint b=0; b+1<ors.bodies.N && b<poses.d0; b++){
+	ors.bodies(b+1)->X.pos.set(poses(b,0), poses(b,1), poses(b,2));
+	ors.bodies(b+1)->X.rot.set(poses(b,3), poses(b,4), poses(b,5), poses(b,6));
+      }
+      gl.text.clear() << ts;
 
-    ors.calcShapeFramesFromBodies();
-    gl.update();
+      ors.calcShapeFramesFromBodies();
+      gl.update();
+    }
 
     fprintf(fil, "%s\n", ts);
     fflush(fil);
