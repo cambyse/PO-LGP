@@ -692,3 +692,5 @@ zip::
 
 
 force:	;
+
+# vim:ft=make:
