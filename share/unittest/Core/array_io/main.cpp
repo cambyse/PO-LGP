@@ -17,7 +17,6 @@ TEST(ArrayIO, vector_read_write) {
   }
 }
 
-
 TEST(ArrayIO, matrix_read_write) {
   arr a = randn(5, 5);
   ofstream of("mat.tmp");
@@ -27,13 +26,12 @@ TEST(ArrayIO, matrix_read_write) {
   arr b;
   b.read("mat.tmp");
 
-  for (int i = 0; i < 5; ++i) {
-    for (int j = 0; j < 5; ++j) {
-      EXPECT_NEAR(a(i, j), b(i, j), 0.001);
-    }
+  a.reshape(25);
+  b.reshape(25);
+  for (int i = 0; i < 25; ++i) {
+    EXPECT_NEAR(a(i), b(i), 0.001);
   }
 }
-
 
 TEST(ArrayIO, tensor_read_write) {
   arr a = randn(5, 25);
@@ -50,13 +48,11 @@ TEST(ArrayIO, tensor_read_write) {
 
   EXPECT_EQ(a.nd, b.nd);
 
-  // for (int i = 0; i < 5; ++i) {
-  //   for (int j = 0; j < 5; ++j) {
-  //     for (int k = 0; k < 5; ++k) {
-  //       EXPECT_NEAR(a(i, j, k), b(i, j, k), 0.001);
-  //     }
-  //   }
-  // }
+  a.reshape(125);
+  b.reshape(125);
+  for (int i = 0; i < 125; ++i) {
+    EXPECT_NEAR(a(i), b(i), 0.001);
+  }
 }
 
 TEST(ArrayIO, tensor_high_dim_read_write) {
@@ -74,13 +70,11 @@ TEST(ArrayIO, tensor_high_dim_read_write) {
 
   EXPECT_EQ(a.nd, b.nd);
 
-  // for (int i = 0; i < 5; ++i) {
-  //   for (int j = 0; j < 5; ++j) {
-  //     for (int k = 0; k < 5; ++k) {
-  //       EXPECT_NEAR(a(i, j, k), b(i, j, k), 0.001);
-  //     }
-  //   }
-  // }
+  a.reshape(625);
+  b.reshape(625);
+  for (int i = 0; i < 625; ++i) {
+    EXPECT_NEAR(a(i), b(i), 0.001);
+  }
 }
 
 
