@@ -515,7 +515,7 @@ int BatchMaze::run_active() {
             if(switch_bool("-utreegrowth")) {
                 // do not expand
             } else {
-                double score_threshold = 1e-5;
+                double score_threshold = 1;
                 utree_score = DBL_MAX;
                 while(score_threshold <= utree_score) {
                     utree_score = utree->expand_leaf_node(score_threshold);
@@ -695,7 +695,14 @@ int BatchMaze::run_active() {
 
 
             // perform updates for repeated transitions
-            if((mode=="UTREE_VALUE" || mode=="UTREE_PROB") && switch_bool("-utreegrowth")) {
+            if( mode=="UTREE_PROB" && switch_bool("-utreegrowth")) {
+                repeat_transitions = true;
+                double score_threshold = 1;
+                utree_score = utree->expand_leaf_node(score_threshold);
+                if(utree_score < score_threshold) {
+                    repeat_transitions = false;
+                }
+            } else if(mode=="UTREE_VALUE" && switch_bool("-utreegrowth")) {
                 repeat_transitions = true;
                 double score_threshold = 1e-5;
                 utree_score = utree->expand_leaf_node(score_threshold);

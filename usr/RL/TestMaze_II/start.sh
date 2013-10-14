@@ -1,17 +1,24 @@
 ## define string for calling the program
 
 ## 2x2
+
 # Learning curves
-#start_string="-mode LINEAR_Q -sample UNIFORM -nEp 2000 -maxTran 12 -minTrain 10 -maxTrain 200 -f 3 -l1 0.0005 -incr 10"
-#start_string="-mode UTREE_VALUE -sample UNIFORM -nEp 200 -maxTran 12 -minTrain 200 -maxTrain 200 -maxTree 10000 -incr 0"
-#start_string="-mode SPARSE -sample UNIFORM -nEp 1000 -maxTran 12 -minTrain 110 -maxTrain 190 -maxTree 10000 -f 2 -l1 0.0002 -incr 10"
+#start_string="-mode SPARSE -sample UNIFORM -nEp 2700 -maxTran 12 -minTrain 600 -maxTrain 1000 -maxTree 10000 -f 2 -l1 0.0002 -incr 200"
+#start_string="-mode LINEAR_Q -sample UNIFORM -nEp 2700 -maxTran 12 -minTrain 600 -maxTrain 1000 -f 3 -l1 0.0005 -incr 200"
+#start_string="-mode UTREE_PROB -sample UNIFORM -nEp 3000 -maxTran 12 -minTrain 600 -maxTrain 1000 -maxTree 10000 -incr 200"
+
 # L1 sweep / UTree growth
-#start_string="-mode SPARSE -sample UNIFORM -nEp 100 -maxTran 12 -minTrain 1500 -maxTrain 1500 -maxTree 10000 -f 3 -l1 0.005 -incr 0 -l1incr 0.005 -maxl1 0.1"
-start_string="-mode UTREE_PROB -sample UNIFORM -nEp 100 -maxTran 12 -minTrain 1500 -maxTrain 1500 -maxTree 10000 -incr 0 -utreegrowth t"
+#start_string="-mode SPARSE -sample UNIFORM -nEp 100 -maxTran 12 -minTrain 500 -maxTrain 500 -maxTree 10000 -f 2 -l1 0.005 -incr 0 -l1incr 0.005 -maxl1 0.1"
+#start_string="-mode UTREE_PROB -sample UNIFORM -nEp 100 -maxTran 12 -minTrain 1500 -maxTrain 1500 -maxTree 10000 -incr 0 -utreegrowth t"
 
 ## 4x4
-#start_string="-mode SPARSE -sample UNIFORM -nEp 1000 -maxTran 22 -minTrain 100 -maxTrain 1000 -maxTree 50000 -l1 0.001 -incr 100 -fincr 50 -dl 0.0001"
-#start_string="-mode UTREE_PROB -sample UNIFORM -nEp 2000 -maxTran 22 -minTrain 500 -maxTrain 10000 -maxTree 50000 -incr 500"
+
+# Learning curves
+start_string="-mode SPARSE -sample UNIFORM -nEp 300 -maxTran 22 -minTrain 3000 -maxTrain 5000 -maxTree 50000 -l1 0.0005 -incr 1000 -fincr 50 -dl 0.0001"
+#start_string="-mode UTREE_VALUE -sample UNIFORM -nEp 3000 -maxTran 22 -minTrain 3000 -maxTrain 5000 -maxTree 50000 -incr 1000"
+
+# L1 sweep
+#start_string="-mode SPARSE -sample UNIFORM -nEp 8 -maxTran 22 -minTrain 2000 -maxTrain 2000 -maxTree 50000 -l1 0.0001 -incr 0 -fincr 50 -dl 0.0001 -l1incr 0.0004 -maxl1 0.002"
 
 ## print kind of help if no arguments are given
 if [ $# -lt 1 ]; then
