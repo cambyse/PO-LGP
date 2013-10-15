@@ -3,7 +3,13 @@ The Curious Robot
 
 This is the implementation of "The Curious Robot" (TCR) project.
 
-To learn more install sphinx and build the documentation:
+
+Documentation
+-------------
+
+Online documentation: http://sully.informatik.uni-stuttgart.de:8080/job/MLR-the_curious_robot/TCR_Documentation/
+
+Or build it yourself:
 
     # install sphinx if needed
     #sudo pip install sphinx
@@ -13,6 +19,7 @@ To learn more install sphinx and build the documentation:
     make html
     # open the documentation
     firefox _build/html/index.html
+
 
 <!--
 vim: ft=markdown
