@@ -21,6 +21,4 @@ Or build it yourself:
     firefox _build/html/index.html
 
 
-<!--
-vim: ft=markdown
--->
+<!-- vim: ft=markdown -->
