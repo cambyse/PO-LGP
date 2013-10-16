@@ -71,7 +71,7 @@ def create_body_msg(body):
 def parse_property_msg(msg):
     properties = Properties()
     for p in msg:
-        setattr(properties, p.name, ss.norm())  #p.values[0], p.values[1]))
+        setattr(properties, p.name, ss.norm())  # p.values[0], p.values[1]))
     return properties
 
 
