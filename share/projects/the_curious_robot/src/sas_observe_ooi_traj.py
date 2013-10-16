@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# encoding: utf-8
 
 import roslib
 
@@ -9,7 +10,6 @@ import threading
 
 from actionlib import SimpleActionServer
 import the_curious_robot.msg as msgs
-import orspy
 import corepy
 import util
 import require_provide as rp
@@ -36,7 +36,8 @@ class ObserveOOITrajActionServer:
 
         # Publisher
         self.trajectory_pub = rospy.Publisher(
-            'ooi_trajectory', msgs.Trajectory)
+            'ooi_trajectory', msgs.Trajectory
+        )
         self.oois_pub = rospy.Publisher('oois', msgs.Objects)
 
         # real members
@@ -61,12 +62,14 @@ class ObserveOOITrajActionServer:
 
         with self.trajectory_lock:
             if self.trajectory:
-                msg = util.create_trajectory_msg(self.ooi_id, self.trajectory)
-                self.trajectory_pub.publish(msg)
+                trajectory_msg = util.create_trajectory_msg(
+                    self.ooi_id, self.trajectory
+                )
+                self.trajectory_pub.publish(trajectory_msg)
 
                 get_ooi(self.oois, self.ooi_id)['body'].X = self.trajectory[-1]
-                msg = util.create_oois_msg(self.oois)
-                self.oois_pub.publish(msg)
+                oois_msg = util.create_oois_msg(self.oois)
+                self.oois_pub.publish(oois_msg)
 
                 del self.trajectory[:]
                 self.trajectory = []
