@@ -72,6 +72,7 @@ int Variable::writeAccess(Module *m) {
   engine().acc->queryWriteAccess(this, p);
   rwlock.writeLock();
   int r = revision.incrementValue();
+  revision_time = MT::clockTime();
   engine().acc->logWriteAccess(this, p);
   for_list_(Module, l, listeners) if(l!=m) engine().step(*l, true);
   return r;
@@ -91,8 +92,16 @@ int Variable::deAccess(Module *m) {
   return rev;
 }
 
-void Variable::waitForNextWriteAccess(){
-  revision.waitForSignal();
+double Variable::revisionTime(){
+  return revision_time;
+}
+
+int Variable::waitForNextWriteAccess(){
+  revision.lock();
+  revision.waitForSignal(true);
+  int rev = revision.value;
+  revision.unlock();
+  return rev;
 }
 
 int Variable::waitForRevisionGreaterThan(int rev) {
@@ -263,11 +272,16 @@ void System::write(ostream& os) const{
 //
 
 void signalhandler(int s){
-  cerr <<"\n*** System/Engine received signal " <<s <<" -- trying to shutdown all threads" <<endl;
-  engine().shutdown=true;
-  engine().close();
-  cerr <<"*** Shutdown successful - bye bye!" <<endl;
-  exit(1);
+  int calls = engine().shutdown.incrementValue();
+  cerr <<"\n*** System/Engine received signal " <<s <<" -- count " <<calls <<" trying to shutdown all threads" <<endl;
+  if(calls==1){
+    engine().close();
+    cerr <<"*** Shutdown successful - bye bye!" <<endl;
+  }
+  if(calls>2){
+    cerr <<"*** Shutdown failed - emergency exit!" <<endl;
+    exit(1);
+  }
 }
 
 Engine& engine(){  return singleton_Engine.obj(); }

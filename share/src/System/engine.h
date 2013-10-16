@@ -56,6 +56,7 @@ struct Variable : VariableAccess {
   struct sVariable *s;        ///< private
   ModuleL listeners;
   ConditionVariable revision; ///< revision (= number of write accesses) number
+  double revision_time;
   RWLock rwlock;              ///< rwLock (usually handled via read/writeAccess -- but views may access directly...)
   Item *reg;
 
@@ -71,8 +72,9 @@ struct Variable : VariableAccess {
 
   /// @name syncing via a variable
   /// the caller is set to sleep
-  void waitForNextWriteAccess();
-  int  waitForRevisionGreaterThan(int rev); //returns the revision
+  int waitForNextWriteAccess();
+  int waitForRevisionGreaterThan(int rev); //returns the revision
+  double revisionTime();
 
   /// @name info
   struct FieldRegistration& get_field(uint i) const;
@@ -136,7 +138,7 @@ struct System:Module{
   template<class T> Module* addModule(const char *name=NULL, ModuleThread::StepMode mode=ModuleThread::listenFirst, double beat=0.);
   Module* addModule(const char *dclName, const char *name=NULL, ModuleThread::StepMode mode=ModuleThread::listenFirst, double beat=0.);
   void addModule(const char *dclName, const char *name, const uintA& accIdxs, ModuleThread::StepMode mode=ModuleThread::listenFirst, double beat=0.);
-  void addModule(const char *dclName, const char *name, const StringA& accNames, ModuleThread::StepMode mode=ModuleThread::listenFirst, double beat=0.);
+  void addModule(const char *dclName, const char *name, const StringA& accRenamings, ModuleThread::StepMode mode=ModuleThread::listenFirst, double beat=0.);
   KeyValueGraph graph() const;
   void write(ostream& os) const;
   void connect();
@@ -155,7 +157,7 @@ struct Engine{
   enum { none=0, serial, threaded } mode;
   System *system;
   AccessL createdAccesses;
-  bool shutdown;
+  ConditionVariable shutdown;
 
   Engine();
   virtual ~Engine();

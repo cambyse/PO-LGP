@@ -51,6 +51,7 @@ REGISTER_TYPE_Key(T, ors::Transformation);
 #endif
 
 
+void lib_ors(){ cout <<"force loading lib/ors" <<endl; }
 
 #define LEN .2
 
