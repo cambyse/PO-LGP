@@ -19,8 +19,8 @@
 #ifndef MT_ors_h
 #define MT_ors_h
 
-#include <Core/array.h>
 #include <Core/util.h>
+#include <Core/array.h>
 #include <Core/keyValueGraph.h>
 #include <Core/geo.h>
 #include <Gui/mesh.h>
