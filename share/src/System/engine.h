@@ -157,7 +157,7 @@ struct Engine{
   enum { none=0, serial, threaded } mode;
   System *system;
   AccessL createdAccesses;
-  bool shutdown;
+  ConditionVariable shutdown;
 
   Engine();
   virtual ~Engine();

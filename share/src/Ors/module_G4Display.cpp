@@ -1,4 +1,4 @@
-#include "display_modules.h"
+#include "module_G4Display.h"
 
 #include <Gui/opengl.h>
 #include <Ors/ors.h>

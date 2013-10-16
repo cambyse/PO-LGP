@@ -272,11 +272,16 @@ void System::write(ostream& os) const{
 //
 
 void signalhandler(int s){
-  cerr <<"\n*** System/Engine received signal " <<s <<" -- trying to shutdown all threads" <<endl;
-  engine().shutdown=true;
-  engine().close();
-  cerr <<"*** Shutdown successful - bye bye!" <<endl;
-  exit(1);
+  int calls = engine().shutdown.incrementValue();
+  cerr <<"\n*** System/Engine received signal " <<s <<" -- count " <<calls <<" trying to shutdown all threads" <<endl;
+  if(calls==1){
+    engine().close();
+    cerr <<"*** Shutdown successful - bye bye!" <<endl;
+  }
+  if(calls>2){
+    cerr <<"*** Shutdown failed - emergency exit!" <<endl;
+    exit(1);
+  }
 }
 
 Engine& engine(){  return singleton_Engine.obj(); }

@@ -2,9 +2,9 @@
 #include <Core/util.h>
 
 extern "C"{
-#include "libavcodec/avcodec.h"
-#include "libavutil/mathematics.h"
-#include "libavutil/samplefmt.h"
+#include <libavcodec/avcodec.h>
+#include <libavutil/mathematics.h>
+#include <libavutil/samplefmt.h>
 #include <libswscale/swscale.h>
 }
 
