@@ -39,8 +39,6 @@ def _door1_select_strategy(oois):
 class PickOOIActionServer:
 
     def __init__(self, name):
-        self.oois = None
-
         # Subscriber
         self.oois_sub = rospy.Subscriber('oois', msgs.Objects, self.oois_cb)
         # right now we don't need the world_belief, that might change
@@ -49,16 +47,21 @@ class PickOOIActionServer:
         # Publisher
         self.ooi_id_pub = rospy.Publisher('ooi_id', msgs.ObjectID)
 
+        # Actionlib Server
+        self.server = SimpleActionServer(
+            name,
+            msgs.PickOOIAction,
+            execute_cb=self.execute,
+            auto_start=False
+        )
+        self.server.register_preempt_callback(self.preempt_cb)
+        self.server.start()
+
         # Select the Strategies
         #self.select_ooi = _random_select_strategy
         self.select_ooi = _random_select_strategy
 
-        # Actionlib Server
-        self.server = SimpleActionServer(
-            name, msgs.PickOOIAction,
-            execute_cb=self.execute, auto_start=False)
-        self.server.register_preempt_callback(self.preempt_cb)
-        self.server.start()
+        self.oois = None
         rp.Provide("PickOOI")
 
     def execute(self, msg):
