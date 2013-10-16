@@ -66,8 +66,6 @@ class LearnActionServer:
         rp.Provide("Learn")
 
     def execute(self, msg):
-        print msg
-
         # add object hypothesis if it does not exist yet
         if self.ooi not in self.learned_tmp:
             self.learned_tmp[self.ooi] = ObjectTypeHypo()
@@ -184,8 +182,8 @@ class LearnActionServer:
 def main():
     rospy.init_node('tcr_sas_learn')
     server = LearnActionServer('learn')
+    rospy.spin()
 
 
 if __name__ == '__main__':
     main()
-    rospy.spin()
