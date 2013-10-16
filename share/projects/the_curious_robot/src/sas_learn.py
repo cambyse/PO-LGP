@@ -73,7 +73,7 @@ class LearnActionServer:
             self.learned_tmp[self.ooi] = ObjectTypeHypo()
 
         # no trajectory observed --> static object
-        if not self.trajectory:
+        if len(self.trajectory) == 0:
             rospy.loginfo("updating with static object")
             self.learned_tmp[self.ooi].update(ObjectTypeHypo.STATIC)
             self.server.set_succeeded()
