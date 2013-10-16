@@ -72,6 +72,11 @@ class LearnActionServer:
         if self.ooi not in self.learned_tmp:
             self.learned_tmp[self.ooi] = ObjectTypeHypo()
 
+        # TODO we also have to check if we actually touched the object.
+        # maybe we tried to manipulate the object but didn't touch it.
+        # then we'd get an empty trajectory and would classify the object as
+        # STATIC.
+
         # no trajectory observed --> static object
         if len(self.trajectory) == 0:
             rospy.loginfo("updating with static object")
