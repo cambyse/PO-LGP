@@ -16,6 +16,7 @@ import require_provide as rp
 
 
 def get_ooi(oois, ooi_id):
+    # TODO what are we doing here and why?
     for ooi in oois:
         if ooi["body"].name == ooi_id:
             return ooi
@@ -71,12 +72,15 @@ class ObserveOOITrajActionServer:
                 oois_msg = util.create_oois_msg(self.oois)
                 self.oois_pub.publish(oois_msg)
 
-                del self.trajectory[:]
-                self.trajectory = []
-
-                self.send = False
             else:
+                trajectory_msg = util.create_trajectory_msg(self.ooi_id, [])
+                self.trajectory_pub.publish(trajectory_msg)
                 rospy.loginfo("empty trajectory")
+
+            # clean up
+            del self.trajectory[:]
+            self.trajectory = []
+            self.send = False
 
         self.server.set_succeeded()
 
