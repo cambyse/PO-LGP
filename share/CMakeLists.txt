@@ -38,8 +38,10 @@ set(GUI_DIRS src/extern/GJK src/extern/ply src/Gui src/extern/SWIFT src/extern/S
 set(GUI_SAMPLES examples/Gui)
 set(ORS_DIRS src/Ors)
 set(OPTIM_DIRS src/Optim)
+set(INFER_DIRS src/Infer)
 
 set(CURRENT_SLICE ${CORE_DIRS} ${GUI_DIRS} ${ORS_DIRS} ${OPTIM_DIRS} 
+        ${INFER_DIRS}        
         ${CORE_SAMPLES} ${GUI_SAMPLES})
 
 foreach(DIR ${CURRENT_SLICE})
