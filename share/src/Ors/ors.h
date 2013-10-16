@@ -320,7 +320,7 @@ struct Graph {
   
   void write(std::ostream& os) const;
   void read(std::istream& is);
-  void read(const char* string);
+  void read(const char* filename);
   void writePlyFile(const char* filename) const;
   void glDraw();
 };

@@ -9,7 +9,7 @@ from actionlib import SimpleActionServer
 import corepy
 import orspy
 import the_curious_robot.msg as msgs
-from articulation_msgs.msg import ModelMsg, TrackMsg
+#from articulation_msgs.msg import ModelMsg, TrackMsg
 from articulation_msgs.srv import TrackModelSrv, TrackModelSrvRequest
 import util
 import require_provide as rp
@@ -59,6 +59,25 @@ class LearnActionServer:
         rp.Provide("Learn")
 
     def execute(self, msg):
+        self.learned_bodies.append(orspy.Body(self.belief))
+        body = self.learned_bodies[-1]
+
+        body.X.pos.setRandom()
+        body.X.pos.z += 1
+        body.name = "body_" + str(len(self.learned_bodies))
+
+        self.learned_shapes.append(orspy.Shape(self.belief, body))
+        shape = self.learned_shapes[-1]
+        shape.type = orspy.sphereST
+        shape.set_size(.1, .1, .1, .1)
+
+        self.belief.calcShapeFramesFromBodies()
+        self.gl.update()
+        print
+        print "adding objects -- #%d" % self.belief.bodies.N
+        print
+        return
+
         if not self.trajectory:
             self.server.set_aborted()
             return
@@ -66,16 +85,52 @@ class LearnActionServer:
         request = TrackModelSrvRequest()
         request.model.track = util.create_track_msg(self.trajectory)
 
+        rospy.loginfo(self.belief.bodies.N)
+
         try:
             # here we learn
             response = self.dof_learner(request)
-
             # rospy.loginfo(response.model)
-
             if response.model.params:
-                print response
+                # print response
+                # print response.model.name
 
-                logLH = [entry.value for entry in response.model.params
+                for p in [p for p in response.model.params
+                          if p.name.startswith("rot")]:
+                    # print p
+                    if p.name == "rot_center.x":
+                        # print "rot_center.x"
+                        x = p.value
+                    if p.name == "rot_center.y":
+                        # print "rot_center.y"
+                        y = p.value
+                    if p.name == "rot_center.z":
+                        # print "rot_center.z"
+                        z = p.value
+                try:
+                    print x, y, z
+                    self.learned_bodies.append(orspy.Body(self.belief))
+                    body = self.learned_bodies[-1]
+
+                    body.X.pos.setRandom()
+                    body.X.pos.z += 1
+                    body.name = "body_" + str(len(self.learned_bodies))
+
+                    self.learned_shapes.append(orspy.Shape(self.belief, body))
+                    shape = self.learned_shapes[-1]
+                    shape.type = orspy.sphereST
+                    shape.set_size(.1, .1, .1, .1)
+
+                    self.belief.calcShapeFramesFromBodies()
+                    self.gl.update()
+
+                except Exception:
+                    print
+                    print "rot center not set"
+                    print
+
+                logLH = [entry.value
+                         for entry in response.model.params
                          if entry.name == 'loglikelihood'][0]
                 rospy.loginfo("selected model: '%s' (n = %d, log LH = %f)" % (
                     response.model.name,

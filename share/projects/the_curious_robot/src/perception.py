@@ -21,9 +21,6 @@ import require_provide as rp
 
 class FakePerception():
 
-    """
-    The actual behavior of the robot.
-    """
     def __init__(self):
         # init the node: test_fitting
         rospy.init_node('tcr_perception')
@@ -46,7 +43,6 @@ class FakePerception():
         self.ors_subs = rospy.Subscriber(name='geometric_state',
                                          data_class=msgs.ors,
                                          callback=self.ors_cb)
-
         self.frame = 0
 
     def percept_all_cb(self, req):

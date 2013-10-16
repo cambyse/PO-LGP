@@ -1386,8 +1386,8 @@ void ors::Graph::write(std::ostream& os) const {
 
 #define DEBUG(x) //x
 
-void ors::Graph::read(const char* string) {
-  std::istringstream is(string);
+void ors::Graph::read(const char* filename) {
+  std::istringstream is(filename);
   read(is);
 }
 

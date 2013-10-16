@@ -2,12 +2,17 @@ Getting Started
 =====================
 TCR uses **ROS Fuerte** and the **MLR** code. This section explains how to setup everything.
 
-
 Prerequisites
 -------------
+This section explains how to
 
-This explains how to setup ROS and articulation which is used by TCR.
+- setup ROS,
+- setup `articulation` for ROS,
+- activate PhysX
+- compile the python wrappers
 
+ROS
+~~~~~~~~~~~~~
 - use Ubuntu 12.04 and ROS Fuerte!
 - install libgsl0-dev to make it work::
 
@@ -27,6 +32,9 @@ This explains how to setup ROS and articulation which is used by TCR.
     rosws set ~/fuerte_workspace/sandbox
     source ~/fuerte_workspace/setup.bash
 
+
+Articulation
+~~~~~~~~~~~~~
 - install the ros articulation package by Sturm in the sandbox::
 
     cd ~/fuerte_workspace/sandbox
@@ -37,9 +45,37 @@ This explains how to setup ROS and articulation which is used by TCR.
 
     rosmake articulation
 
+MLR: PhysX
+~~~~~~~~~~~~~~~~~~~
+TCR depends on the python bindings of MLR and on PhysX support.
 
-Setup
---------
+To install PhysX call the install script in the install folder::
+
+    install/PhysX_install
+
+Then activate the PhysX support by addind the following line to
+share/make-config::
+
+    PHYSX = 1
+
+and recompile the entire project::
+
+    make clean
+    make
+
+MLR: Python Wrapper
+~~~~~~~~~~~~~~~~~~~
+Also compile the python wrappers::
+
+    cd share/src/Core
+    make -f Makefile_corepy
+    cd ../Ors
+    make -f Makefile_orspy
+
+
+Setup & Compile TCR
+-------------------
+
 - create a symlink from TCR project ``~/git/mlr/share/projects/the_curious_robot/`` to
   ``~/fuerte_workspace/sandbox/the_curious_robot``::
 
