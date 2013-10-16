@@ -72,6 +72,7 @@ int Variable::writeAccess(Module *m) {
   engine().acc->queryWriteAccess(this, p);
   rwlock.writeLock();
   int r = revision.incrementValue();
+  revision_time = MT::clockTime();
   engine().acc->logWriteAccess(this, p);
   for_list_(Module, l, listeners) if(l!=m) engine().step(*l, true);
   return r;
@@ -91,8 +92,16 @@ int Variable::deAccess(Module *m) {
   return rev;
 }
 
-void Variable::waitForNextWriteAccess(){
-  revision.waitForSignal();
+double Variable::revisionTime(){
+  return revision_time;
+}
+
+int Variable::waitForNextWriteAccess(){
+  revision.lock();
+  revision.waitForSignal(true);
+  int rev = revision.value;
+  revision.unlock();
+  return rev;
 }
 
 int Variable::waitForRevisionGreaterThan(int rev) {
