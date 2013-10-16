@@ -28,9 +28,10 @@ endif(TESTING_ENABLED)
 include_directories(src)
 include_directories(include)
 
-set(CORE_DIRS src/Core examples/Core)
+set(CORE_DIRS src/Core src/Algo examples/Core examples/Algo)
+set(GUI_DIRS src/extern/GJK src/extern/ply src/Gui )
 
-foreach(DIR ${CORE_DIRS})
+foreach(DIR ${CORE_DIRS} ${GUI_DIRS})
 add_subdirectory(${DIR})
 endforeach(DIR ${CORE_DIRS})
 
