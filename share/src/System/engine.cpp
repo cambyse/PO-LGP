@@ -32,7 +32,18 @@ System& NoSystem = *((System*)NULL);
 // Variable
 //
 
-Variable::Variable(const char *_name):VariableAccess(_name), s(NULL), revision(0), reg(NULL) {
+struct sVariable {
+  virtual ~sVariable(){}
+  MT::Array<struct FieldRegistration*> fields; //? make static? not recreating for each variable?
+  struct LoggerVariableData *loggerData; //data that the logger may associate with a variable
+
+  virtual void serializeToString(MT::String &string) const;
+  virtual void deSerializeFromString(const MT::String &string);
+
+  sVariable():loggerData(NULL){}
+};
+
+Variable::Variable(const char *_name):VariableAccess(_name), s(NULL), revision(0) {
   s = new sVariable();
   listeners.memMove=true;
   //MT logValues = false;
@@ -199,39 +210,40 @@ void System::addModule(const char *dclName, const char *name, const uintA& accId
   for_list_(Access, a, m->accesses) a->var = vars(accIdxs(a_COUNT));
 }
 
-void System::addModule(const char *dclName, const char *name, const StringA& accNames, ModuleThread::StepMode mode, double beat){
+void System::addModule(const char *dclName, const char *name, const StringA& accRenamings, ModuleThread::StepMode mode, double beat){
   Module *m = addModule(dclName, name, mode, beat);
-  if(accNames.N != m->accesses.N) HALT("given and needed #acc mismatch");
-  for_list_(Access, a, m->accesses) a->name = accNames(a_COUNT);
+  if(accRenamings.N != m->accesses.N) HALT("given and needed #acc mismatch");
+  for_list_(Access, a, m->accesses) a->name = accRenamings(a_COUNT);
+}
+
+Variable* System::connect(Access& acc, const char *variable_name){
+  Variable *v = listFindByName(vars, variable_name);
+  if(v){ //variable exists -> check type
+    if(*v->type != *acc.type) HALT("trying to connect an access '" <<acc.name <<*acc.type <<" with a variable " <<v->name <<*v->type);
+    //good: just connect
+    acc.var = v;
+  }else{ //variable does not exist yet
+    acc.var = v = addVariable(acc);
+  }
+  return v;
 }
 
 void System::connect(){
   //first collect all accesses
-  AccessL as;
+  AccessL accs;
 
-  { for_list_(Module, m, mts){ for_list_(Access, a, m->accesses) as.append(a); } }
-  { for_list_(Access, a, accesses) as.append(a); }
+  { for_list_(Module, m, mts){ for_list_(Access, a, m->accesses) accs.append(a); } }
+  { for_list_(Access, a, accesses) accs.append(a); }
 
-  for_list_(Access, a, as){
+  for_list_(Access, a, accs){
     Module *m=a->module;
     Variable *v = NULL;
-    if(!a->var){ //access is not connected yet
-      v = listFindByName(vars, a->name);
-      if(v){ //variable exists -> check type
-        if(*v->type != *a->type) HALT("trying to connect an access " <<m->name <<'-' <<a->name <<*a->type <<" with a variable " <<v->name <<*v->type);
-        //good: just connect
-        a->var = v;
-      }else{ //variable does not exist yet
-        a->var = v = addVariable(a);
-      }
-    }else{
-      v = dynamic_cast<Variable*>(a->var);
-    }
+    if(!a->var) v = connect(*a, a->name); //access is not connected yet
+    else v = dynamic_cast<Variable*>(a->var);
 
     if(m->thread &&
        ( m->thread->mode==ModuleThread::listenAll ||
-         (m->thread->mode==ModuleThread::listenFirst &&
-          a==m->accesses(0)))){
+         (m->thread->mode==ModuleThread::listenFirst && a==m->accesses(0)) ) ){
       v->listeners.setAppend(m);
     }
   }
@@ -274,10 +286,7 @@ void System::write(ostream& os) const{
 void signalhandler(int s){
   int calls = engine().shutdown.incrementValue();
   cerr <<"\n*** System/Engine received signal " <<s <<" -- count " <<calls <<" trying to shutdown all threads" <<endl;
-  if(calls==1){
-    engine().close();
-    cerr <<"*** Shutdown successful - bye bye!" <<endl;
-  }
+  if(calls==1) engine().close();
   if(calls>2){
     cerr <<"*** Shutdown failed - emergency exit!" <<endl;
     exit(1);
@@ -476,7 +485,7 @@ void EventController::breakpointNext(){ //first in the queue is being woke up
 void EventController::queryReadAccess(Variable *v, const ModuleThread *p){
   blockMode.lock();
   if(blockMode.value>=1){
-    Event *e = new Event(v, p, Event::read, v->revision.getValue(), p?p->step_count:0, 0.);
+    EventRecord *e = new EventRecord(v, p, EventRecord::read, v->revision.getValue(), p?p->step_count:0, 0.);
     blockedEvents.append(e);
     blockMode.waitForValueSmallerThan(2, true);
     if(blockMode.value==1) blockMode.value=2; //1: only ONE reader
@@ -489,7 +498,7 @@ void EventController::queryReadAccess(Variable *v, const ModuleThread *p){
 void EventController::queryWriteAccess(Variable *v, const ModuleThread *p){
   blockMode.lock();
   if(blockMode.value>=1){
-    Event *e = new Event(v, p, Event::write, v->revision.getValue(), p?p->step_count:0, 0.);
+    EventRecord *e = new EventRecord(v, p, EventRecord::write, v->revision.getValue(), p?p->step_count:0, 0.);
     blockedEvents.append(e);
     blockMode.waitForValueSmallerThan(2, true);
     if(blockMode.value==1) blockMode.value=2;
@@ -501,7 +510,7 @@ void EventController::queryWriteAccess(Variable *v, const ModuleThread *p){
 
 void EventController::logReadAccess(const Variable *v, const ModuleThread *p) {
   if(!enableEventLog || enableReplay) return;
-  Event *e = new Event(v, p, Event::read, v->revision.getValue(), p?p->step_count:0, MT::realTime());
+  EventRecord *e = new EventRecord(v, p, EventRecord::read, v->revision.getValue(), p?p->step_count:0, MT::realTime());
   eventsLock.writeLock();
   events.append(e);
   eventsLock.unlock();
@@ -510,7 +519,7 @@ void EventController::logReadAccess(const Variable *v, const ModuleThread *p) {
 
 void EventController::logWriteAccess(const Variable *v, const ModuleThread *p) {
   if(!enableEventLog || enableReplay) return;
-  Event *e = new Event(v, p, Event::write, v->revision.getValue(), p?p->step_count:0, MT::realTime());
+  EventRecord *e = new EventRecord(v, p, EventRecord::write, v->revision.getValue(), p?p->step_count:0, MT::realTime());
   eventsLock.writeLock();
   events.append(e);
   eventsLock.unlock();
@@ -532,7 +541,7 @@ void EventController::logWriteDeAccess(const Variable *v, const ModuleThread *p)
 
 void EventController::logStepBegin(const ModuleThread *p) {
   if(!enableEventLog || enableReplay) return;
-  Event *e = new Event(NULL, p, Event::stepBegin, 0, p->step_count, MT::realTime());
+  EventRecord *e = new EventRecord(NULL, p, EventRecord::stepBegin, 0, p->step_count, MT::realTime());
   eventsLock.writeLock();
   events.append(e);
   eventsLock.unlock();
@@ -541,7 +550,7 @@ void EventController::logStepBegin(const ModuleThread *p) {
 
 void EventController::logStepEnd(const ModuleThread *p) {
   if(!enableEventLog || enableReplay) return;
-  Event *e = new Event(NULL, p, Event::stepEnd, 0, p->step_count, MT::realTime());
+  EventRecord *e = new EventRecord(NULL, p, EventRecord::stepEnd, 0, p->step_count, MT::realTime());
   eventsLock.writeLock();
   events.append(e);
   eventsLock.unlock();
@@ -549,7 +558,7 @@ void EventController::logStepEnd(const ModuleThread *p) {
 }
 
 void EventController::writeEventList(ostream& os, bool blocked, uint max, bool clear){
-  BirosEventL copy;
+  EventRecordL copy;
   eventsLock.writeLock();
   if(!blocked){
     if(clear){
@@ -568,14 +577,14 @@ void EventController::writeEventList(ostream& os, bool blocked, uint max, bool c
   }
   eventsLock.unlock();
   uint i;
-  Event *e;
+  EventRecord *e;
   for_list(i,e,copy){
     if(!i && max && copy.N>max){ i=copy.N-max; e=copy(i); }
     switch(e->type){
-    case Event::read: os <<'r';  break;
-    case Event::write: os <<'w';  break;
-    case Event::stepBegin: os <<'b';  break;
-    case Event::stepEnd: os <<'e';  break;
+    case EventRecord::read: os <<'r';  break;
+    case EventRecord::write: os <<'w';  break;
+    case EventRecord::stepBegin: os <<'b';  break;
+    case EventRecord::stepEnd: os <<'e';  break;
     }
 
     os

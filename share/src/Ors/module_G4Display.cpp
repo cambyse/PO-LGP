@@ -44,6 +44,8 @@ void G4Display::step(){
   floatA poses = currentPoses();
   currentPoses.deAccess();
 
+  if(!t) return; //no revision yet -> nothing to display
+
   CHECK_EQ(poses.d0, s->sensors, "poses dim is wrong");
   CHECK_EQ(s->ors.shapes.N, 1+s->sensors, "ors.shapes dim is wrong")
   for(uint sen=0; sen+1<s->ors.shapes.N && sen<s->sensors; sen++){

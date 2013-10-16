@@ -113,6 +113,9 @@ struct Access{
   Module *module;  ///< which module is this a member of
   VariableAccess *var; ///< which variable does it access
   Access(const char* _name):name(_name), type(NULL), module(NULL), var(NULL){}
+  int readAccess(){  CHECK(var,""); return var->readAccess(module); }
+  int writeAccess(){ CHECK(var,""); return var->writeAccess(module); }
+  int deAccess(){    CHECK(var,""); return var->deAccess(module); }
 };
 
 
@@ -135,9 +138,6 @@ struct Access_typed:Access{
   };
 
   Access_typed(const char* name, Module *m=NULL, VariableAccess *d=NULL):Access(name){ type=new Type_typed<T, void>();  module=currentlyCreating; var=d; if(module) module->accesses.append(this); }
-  int readAccess(){  CHECK(var,""); return var->readAccess(module); }
-  int writeAccess(){ CHECK(var,""); return var->writeAccess(module); }
-  int deAccess(){    CHECK(var,""); return var->deAccess(module); }
   T& operator()(){ CHECK(var && var->data,""); return *((T*)var->data); }
   const T& get(){ return ReadToken(this)(); } ///< read access to the variable's data
   T& set(){ return WriteToken(this)(); } ///< write access to the variable's data
@@ -171,21 +171,13 @@ struct __##name##__Access:Access_typed<type>{ \
 //
 /** Macros for a most standard declaration of a module */
 
-#define BEGIN_MODULE1(name) \
-struct name : Module { \
-  struct s##name *s; \
-  name(); \
-  ~name(); \
-  virtual void open(); \
-  virtual void step(); \
-  virtual void close();
-
 #define BEGIN_MODULE(name) \
   struct name : Module { \
-    name(): Module(#name) {} \
-  virtual void open(); \
-  virtual void step(); \
-  virtual void close();
+    struct s##name *s; \
+    name(): Module(#name), s(NULL) {} \
+    virtual void open(); \
+    virtual void step(); \
+    virtual void close();
 
 #define END_MODULE() };
 

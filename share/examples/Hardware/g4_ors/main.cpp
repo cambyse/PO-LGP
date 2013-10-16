@@ -1,17 +1,18 @@
 #include <System/engine.h>
 #include <sys/time.h>
 
-void lib_hardware_G4();
-void lib_ors();
-void lib_Core();
+#include <Hardware/G4/G4.h>
+#include <Ors/module_G4Display.h>
+#include <Core/module_FloatA_Recorder.h>
 
 
 struct G4System:System{
   ACCESS(floatA, currentPoses);
   G4System(){
-    addModule("G4Poller", "G4_Poller", ModuleThread::loopWithBeat, .001);
-    addModule("G4Display", "G4_Display", ModuleThread::loopWithBeat, .1);
-    addModule("FloatA_Recorder", "G4_Recorder", STRINGS("currentPoses"), ModuleThread::listenFirst, .1);
+    addModule<G4Poller>(NULL, ModuleThread::loopWithBeat, .001);
+    addModule<G4Display>(NULL, ModuleThread::loopWithBeat, .1);
+    FloatA_Recorder *m = addModule<FloatA_Recorder>(NULL, ModuleThread::listenFirst, .1);
+    connect(m->x, "currentPoses");
     connect();
   }
 };
@@ -19,16 +20,12 @@ struct G4System:System{
 
 void threadedRun(){
   G4System S;
-  cout <<S <<endl;
+  //cout <<S <<endl;
 
   engine().open(S);
-  uint t;
-  for(t=0;/*t<100*/;t++){
-    if(engine().shutdown) break;
-    S.currentPoses.var->waitForNextWriteAccess();
-  }
 
-  cout <<"fps = " <<t/MT::timerRead() <<endl;
+  engine().shutdown.waitForSignal();
+
   cout << "bye bye" << endl;
   engine().close(S);
 }
@@ -36,9 +33,6 @@ void threadedRun(){
 
 int main(int argc, char **argv) {
   MT::initCmdLine(argc, argv);
-  lib_hardware_G4();
-  lib_ors();
-  lib_Core();
 
   threadedRun();
   return 0;
