@@ -10,6 +10,22 @@ if(CHECK_LAPACK)
 find_package(LAPACK)
 endif(CHECK_LAPACK)
 
+# TODO add automatic checking for presence
+option(MT_PHYSX "Use PhysX" OFF)
+if(MT_PHYSX)
+        add_definitions(-DMT_PHYSX)
+endif(MT_PHYSX)
+option(MT_ODE "Use ODE" OFF)
+if(MT_ODE)
+        add_definitions(-DMT_ODE)
+endif(MT_ODE)
+option(MT_OPENMP "Use OpenMP" OFF)
+if(MT_OPENMP)
+        add_definitions(-fopenmp -DOPENMP)
+endif(MT_OPENMP)
+# TODO option(MT_CUDA "Use CUDA" OFF)
+
+
 # allow users to switch off compilation of unit-tests
 option(TESTING_ENABLED "Should we run unit-tests (default yes)" ON)
 if(TESTING_ENABLED)
@@ -37,12 +53,13 @@ set(CORE_SAMPLES examples/Core examples/Algo)
 set(GUI_DIRS src/extern/GJK src/extern/ply src/Gui src/extern/SWIFT src/extern/SWIFT_decomposer)
 set(GUI_SAMPLES examples/Gui)
 set(ORS_DIRS src/Ors)
+set(ORS_SAMPLES examples/Ors)
 set(OPTIM_DIRS src/Optim)
 set(INFER_DIRS src/Infer)
 
 set(CURRENT_SLICE ${CORE_DIRS} ${GUI_DIRS} ${ORS_DIRS} ${OPTIM_DIRS} 
         ${INFER_DIRS}        
-        ${CORE_SAMPLES} ${GUI_SAMPLES})
+        ${CORE_SAMPLES} ${GUI_SAMPLES} ${ORS_SAMPLES})
 
 foreach(DIR ${CURRENT_SLICE})
 add_subdirectory(${DIR})

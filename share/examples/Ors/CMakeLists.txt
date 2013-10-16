@@ -1,0 +1,10 @@
+add_subdirectory(ors)
+add_subdirectory(ors_collision)
+add_subdirectory(ors_editor)
+add_subdirectory(ors_physx)
+#add_subdirectory(ors_physx_convex_submeshes)
+#add_subdirectory(ors_physx_obstacle_avoidance)
+#add_subdirectory(orspy)
+#add_subdirectory(ors_sceneGui)
+#add_subdirectory(ors_swift)
+
