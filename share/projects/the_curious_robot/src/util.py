@@ -22,7 +22,7 @@ class ObjectTypeHypo():
         # uninformed prior for beta distribution
         self.alpha = 1
         self.beta = 1
-        self.dist = ss.beta(self.alpha, self.beta)
+        self._dist = ss.beta(self.alpha, self.beta)
 
     def update(self, OBJECT_TYPE):
         if OBJECT_TYPE == ObjectTypeHypo.STATIC:
@@ -33,9 +33,9 @@ class ObjectTypeHypo():
             raise TypeError("Type most be STATIC or FREE")
 
     def __str__(self):
-        self.dist = ss.beta(self.alpha, self.beta)
+        self._dist = ss.beta(self.alpha, self.beta)
         return "(alpha={}; beta={}; H={})".format(
-            self.alpha, self.beta, self.dist.entropy()
+            self.alpha, self.beta, self._dist.entropy()
         )
 
 
