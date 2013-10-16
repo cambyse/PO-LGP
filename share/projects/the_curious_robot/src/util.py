@@ -5,25 +5,17 @@ import the_curious_robot.msg as msgs
 import geometry_msgs.msg
 from articulation_msgs.msg import TrackMsg
 
-
-class Gaussian():
-    """
-    Represent Gaussians with this class.
-    TODO maybe there is a Gaussian class that we can recycle.
-    """
-    def __init__(self, mu=0, sigma=99999):
-        self.mu = mu
-        self.sigma = sigma
+import scipy as sp
 
 
 class Properties():
-    """Potential properties a DoF can have"""
+    """A collection of potential properties a DoF can have."""
     def __init__(self):
-        self.joint = Gaussian()
-        self.friction = Gaussian()
-        self.weight = Gaussian()
-        self.limit_min = Gaussian()
-        self.limit_max = Gaussian()
+        self.joint = None  # sp.stats.norm(loc=?, scale=)
+        self.friction = None  # sp.stats.norm(loc=?, scale=)
+        self.weight = None  # sp.stats.norm(loc=?, scale=)
+        self.limit_min = None  # sp.stats.norm(loc=?, scale=)
+        self.limit_max = None  # sp.stats.norm(loc=?, scale=)
 
     def property_names(self):
         return [attr for attr in dir(self)
@@ -48,7 +40,7 @@ def create_body_msg(body):
 def parse_property_msg(msg):
     properties = Properties()
     for p in msg:
-        setattr(properties, p.name, Gaussian(p.values[0], p.values[1]))
+        setattr(properties, p.name, sp.stats.norm(p.values[0], p.values[1]))
     return properties
 
 
@@ -123,7 +115,8 @@ def create_track_msg(trajectory):
 
     for t in trajectory:
         pose = geometry_msgs.msg.Pose(
-            t.pos, geometry_msgs.msg.Quaternion(0, 0, 0, 1)
+            t.pos,
+            geometry_msgs.msg.Quaternion(0, 0, 0, 1)
         )
         msg.pose.append(pose)
     return msg
