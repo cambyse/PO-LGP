@@ -32,11 +32,15 @@ include_directories(include)
 # configuration variables
 set(GL_LIBRARIES glut GLU GL X11)
 
-set(CORE_DIRS src/Core src/Algo examples/Core examples/Algo)
-set(GUI_DIRS src/extern/GJK src/extern/ply src/Gui )
-set(ORS_DIRS src/extern/SWIFT src/Ors)
+set(CORE_DIRS src/Core src/Algo)
+set(CORE_SAMPLES examples/Core examples/Algo)
+set(GUI_DIRS src/extern/GJK src/extern/ply src/Gui src/extern/SWIFT src/extern/SWIFT_decomposer)
+set(GUI_SAMPLES examples/Gui)
+set(ORS_DIRS src/Ors)
 
-set(CURRENT_SLICE ${CORE_DIRS} ${GUI_DIRS} ${ORS_DIRS})
+
+set(CURRENT_SLICE ${CORE_DIRS} ${GUI_DIRS} ${ORS_DIRS} 
+        ${CORE_SAMPLES} ${GUI_SAMPLES})
 
 foreach(DIR ${CURRENT_SLICE})
 add_subdirectory(${DIR})
