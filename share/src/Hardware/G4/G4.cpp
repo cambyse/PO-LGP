@@ -115,6 +115,7 @@ void G4Poller::step(){
   // better to avoid setting to 0, at least the previous values are maintained,
   // in that case. Keep this here just for now to see if that can actually
   // happen.
+  s->poses.resize(s->hubs, G4_SENSORS_PER_HUB, 7);
   s->poses.setZero();
 
   int h_id, s_id;
@@ -137,6 +138,7 @@ void G4Poller::step(){
     }
   }
 
+  s->poses.reshape(s->hubs*G4_SENSORS_PER_HUB, 7);
   currentPoses.set() = s->poses; //publish the result
 }
 

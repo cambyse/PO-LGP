@@ -609,6 +609,7 @@ struct TaskVariableTable {
 // C-style functions
 //
 
+void lib_ors();
 void makeConvexHulls(ShapeL& shapes);
 
 //===========================================================================
