@@ -29,10 +29,16 @@ endif(TESTING_ENABLED)
 include_directories(src)
 include_directories(include)
 
+# configuration variables
+set(GL_LIBRARIES glut GLU GL X11)
+
 set(CORE_DIRS src/Core src/Algo examples/Core examples/Algo)
 set(GUI_DIRS src/extern/GJK src/extern/ply src/Gui )
+set(ORS_DIRS src/extern/SWIFT src/Ors)
 
-foreach(DIR ${CORE_DIRS} ${GUI_DIRS})
+set(CURRENT_SLICE ${CORE_DIRS} ${GUI_DIRS} ${ORS_DIRS})
+
+foreach(DIR ${CURRENT_SLICE})
 add_subdirectory(${DIR})
-endforeach(DIR ${CORE_DIRS})
+endforeach(DIR ${CURRENT_SLICE})
 

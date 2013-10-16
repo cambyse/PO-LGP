@@ -34,8 +34,23 @@ set(SOURCES     ${SOURCES}
                 )
 
 add_library(Gui SHARED ${SOURCES})
-target_link_libraries(Gui Core extern_GJK extern_ply ${GTKGL_LIBRARY_DIRS} ${GTKGL_LIBRARIES} ${GTK2_LIBRARIES} graph cgraph gvc qhull glut GLU GL X11)
-add_definitions(-DMT_GTKGL -DMT_GTK -DMT_QHULL -DMT_GRAPHVIZ -DMT_extern_GJK -DMT_extern_ply)
+target_link_libraries(Gui Core 
+        extern_GJK extern_ply 
+        ${GTKGL_LIBRARY_DIRS} 
+        ${GTKGL_LIBRARIES} 
+        ${GTK2_LIBRARIES} 
+        graph cgraph gvc 
+        qhull 
+        ${GL_LIBRARIES}
+)
+add_definitions(-DMT_GTKGL 
+        -DMT_GTK 
+        -DMT_GL
+        -DMT_QHULL 
+        -DMT_GRAPHVIZ 
+        -DMT_extern_GJK 
+        -DMT_extern_ply
+)
 
 include_directories(${GTK2_INCLUDE_DIRS} ${GTKGL_INCLUDE_DIRS})
 add_definitions(${LAPACK_DEFINITIONS} ${GTK2_DEFINITIONS})
