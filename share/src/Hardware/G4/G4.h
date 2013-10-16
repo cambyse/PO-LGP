@@ -8,18 +8,11 @@ struct G4Poller : Module{
   ACCESS(floatA, currentPoses)
   ACCESS(floatA, buffer)
 
-  int sysId;
-  int hubs;
-  int* hubList;
-  G4_FRAMEDATA* framedata;
-  floatA poses;
-
-  int* hubMap;
-  int hubMapSize;
-
-  G4Poller():Module("G4Tracker"){}
+  G4Poller();
 
   virtual void open();
   virtual void close();
   virtual void step();
+
+  struct sG4Poller *s;
 };
