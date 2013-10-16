@@ -32,6 +32,7 @@
 //global options
 bool orsDrawJoints=true, orsDrawShapes=true, orsDrawBodies=true, orsDrawProxies=true;
 bool orsDrawMeshes=true, orsDrawWires=false, orsDrawZlines=false;
+bool orsDrawBodyNames=false;
 double orsDrawAlpha=1.00;
 uint orsDrawLimit=0;
 
@@ -329,7 +330,7 @@ void glDrawShape(ors::Shape *s) {
   }
 
   glColor(1,1,1);
-  if(s->body) glDrawText(s->body->name, 0, 0, 0);
+  if(orsDrawBodyNames && s->body) glDrawText(s->body->name, 0, 0, 0);
 
   glPopName();
 }
