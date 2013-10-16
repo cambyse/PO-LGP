@@ -1,0 +1,6 @@
+add_subdirectory(array)
+add_subdirectory(geo)
+add_subdirectory(keyValueGraph)
+add_subdirectory(registry)
+add_subdirectory(thread)
+add_subdirectory(util)

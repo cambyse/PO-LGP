@@ -24,3 +24,7 @@ include_directories(${LAPACK_INCLUDE_DIR})
 add_definitions(${LAPACK_DEFINITIONS})
 target_link_libraries(Core ${LAPACK_LINKER_FLAGS} ${LAPACK_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 endif(LAPACK_FOUND)
+
+if(TESTING_ENABLED)
+target_link_libraries(Core gtest)
+endif(TESTING_ENABLED)

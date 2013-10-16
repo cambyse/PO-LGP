@@ -18,15 +18,19 @@ if(TESTING_ENABLED)
                 enable_testing()
                 add_subdirectory(/usr/src/gtest gtest)
                 link_directories(gtest)
-                add_definitions(-DMT_GTEST -DMLR_EXAMPLES_AS_TESTS)
+                add_definitions(-DMLR_EXAMPLES_AS_TESTS)
         else(GTEST_H_FOUND)
                 message(WARNING "Did not found gtest.h, cannot enable testing")
+                set(TESTING_ENABLED)
         endif(GTEST_H_FOUND)
 endif(TESTING_ENABLED)
 
 include_directories(src)
 include_directories(include)
 
-add_subdirectory(src/Core)
-add_subdirectory(examples/Core/array)
+set(CORE_DIRS src/Core examples/Core)
+
+foreach(DIR ${CORE_DIRS})
+add_subdirectory(${DIR})
+endforeach(DIR ${CORE_DIRS})
 
