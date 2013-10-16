@@ -37,9 +37,9 @@ set(CORE_SAMPLES examples/Core examples/Algo)
 set(GUI_DIRS src/extern/GJK src/extern/ply src/Gui src/extern/SWIFT src/extern/SWIFT_decomposer)
 set(GUI_SAMPLES examples/Gui)
 set(ORS_DIRS src/Ors)
+set(OPTIM_DIRS src/Optim)
 
-
-set(CURRENT_SLICE ${CORE_DIRS} ${GUI_DIRS} ${ORS_DIRS} 
+set(CURRENT_SLICE ${CORE_DIRS} ${GUI_DIRS} ${ORS_DIRS} ${OPTIM_DIRS} 
         ${CORE_SAMPLES} ${GUI_SAMPLES})
 
 foreach(DIR ${CURRENT_SLICE})
