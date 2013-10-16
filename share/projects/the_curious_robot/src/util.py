@@ -5,17 +5,48 @@ import the_curious_robot.msg as msgs
 import geometry_msgs.msg
 from articulation_msgs.msg import TrackMsg
 
-import scipy as sp
+import scipy.stats as ss
+
+
+class ObjectTypeHypo():
+    """
+    ObjectType represents the probability that an object has a certain type.
+
+    Each object in the world can be either STATIC or FREE. We use a beta
+    distribution to model the probability for the object types.
+    """
+    STATIC = 0
+    FREE = 1
+
+    def __init__(self):
+        # uninformed prior for beta distribution
+        self.alpha = 1
+        self.beta = 1
+        self.dist = ss.beta(self.alpha, self.beta)
+
+    def update(self, OBJECT_TYPE):
+        if OBJECT_TYPE == ObjectTypeHypo.STATIC:
+            self.alpha += 1
+        elif OBJECT_TYPE == ObjectTypeHypo.FREE:
+            self.beta += 1
+        else:
+            raise TypeError("Type most be STATIC or FREE")
+
+    def __str__(self):
+        self.dist = ss.beta(self.alpha, self.beta)
+        return "(alpha={}; beta={}; H={})".format(
+            self.alpha, self.beta, self.dist.entropy()
+        )
 
 
 class Properties():
     """A collection of potential properties a DoF can have."""
     def __init__(self):
-        self.joint = None  # sp.stats.norm(loc=?, scale=)
-        self.friction = None  # sp.stats.norm(loc=?, scale=)
-        self.weight = None  # sp.stats.norm(loc=?, scale=)
-        self.limit_min = None  # sp.stats.norm(loc=?, scale=)
-        self.limit_max = None  # sp.stats.norm(loc=?, scale=)
+        self.joint = None  # ss.norm(loc=?, scale=)
+        self.friction = None  # ss.norm(loc=?, scale=)
+        self.weight = None  # ss.norm(loc=?, scale=)
+        self.limit_min = None  # ss.norm(loc=?, scale=)
+        self.limit_max = None  # ss.norm(loc=?, scale=)
 
     def property_names(self):
         return [attr for attr in dir(self)
@@ -40,7 +71,7 @@ def create_body_msg(body):
 def parse_property_msg(msg):
     properties = Properties()
     for p in msg:
-        setattr(properties, p.name, sp.stats.norm(p.values[0], p.values[1]))
+        setattr(properties, p.name, ss.norm())  #p.values[0], p.values[1]))
     return properties
 
 
@@ -49,8 +80,8 @@ def create_properties_msg(properties):
     for prop_name in properties.property_names():
         msg = msgs.Property()
         msg.name = prop_name
-        msg.values = [getattr(properties, prop_name).mu,
-                      getattr(properties, prop_name).sigma]
+        # msg.values = [getattr(properties, prop_name).mu,
+        #               getattr(properties, prop_name).sigma]
         result.append(msg)
     return result
 
@@ -92,7 +123,7 @@ def parse_trajectory_msg(msg):
         pose.pos.y = p.position.y
         pose.pos.z = p.position.z
         trajectory.append(pose)
-    return (msg.object, trajectory)
+    return msg.object_id, trajectory
 
 
 def create_trajectory_msg(obj_id, pos):
@@ -103,7 +134,7 @@ def create_trajectory_msg(obj_id, pos):
         pose.position.y = p.pos.y
         pose.position.z = p.pos.z
         msg.pos.append(pose)
-    msg.object = obj_id
+    msg.object_id = obj_id
     return msg
 
 
