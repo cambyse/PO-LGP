@@ -34,7 +34,7 @@ class ObjectTypeHypo():
 
     def __str__(self):
         self._dist = ss.beta(self.alpha, self.beta)
-        return "(alpha={}; beta={}; H={})".format(
+        return "(alpha={}; beta={}; H={:.6})".format(
             self.alpha, self.beta, self._dist.entropy()
         )
 
