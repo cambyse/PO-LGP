@@ -73,7 +73,7 @@ ifeq ($(OPTIM),callgrind)
 CXXFLAGS := -O3 -g -Wall -DMT_NOCHECK -fno-inline $(CXXFLAGS)
 endif
 
-CXXFLAGS += -fPIC $(EXTRA_CXXFLAGS)
+CXXFLAGS += -fPIC -std=c++11 $(EXTRA_CXXFLAGS)
 
 
 ################################################################################
