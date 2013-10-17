@@ -20,7 +20,6 @@
 #define MT_util_t_cpp
 
 #include "util.h"
-#include "thread.h"
 #include <map>
 #include <string>
 #include <sstream>

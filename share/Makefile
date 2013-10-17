@@ -22,6 +22,9 @@ depend: $(srcs:%=dependPath/%)
 
 clean: $(srcs:%=cleanPath/%) $(exas:%=cleanPath/%) cleanLocks
 
+inf:
+	@echo "srcs =" $(srcs)
+
 ################################################################################
 
 doc::

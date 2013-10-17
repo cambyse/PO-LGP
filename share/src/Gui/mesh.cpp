@@ -1378,6 +1378,7 @@ void inertiaCylinder(double *I, double& mass, double density, double height, dou
 // GJK interface
 //
 
+#ifdef MT_extern_GJK
 double GJK_distance(ors::Mesh& mesh1, ors::Mesh& mesh2,
                     ors::Transformation& t1, ors::Transformation& t2,
                     ors::Vector& p1, ors::Vector& p2){
@@ -1395,4 +1396,8 @@ double GJK_distance(ors::Mesh& mesh1, ors::Mesh& mesh2,
 
   return sqrt(d);
 }
-
+#else
+double GJK_distance(ors::Mesh& mesh1, ors::Mesh& mesh2,
+                    ors::Transformation& t1, ors::Transformation& t2,
+                    ors::Vector& p1, ors::Vector& p2){ NICO }
+#endif
