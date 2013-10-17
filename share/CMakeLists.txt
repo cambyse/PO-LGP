@@ -37,7 +37,7 @@ if(TESTING_ENABLED)
                 link_directories(gtest)
                 add_definitions(-DMLR_EXAMPLES_AS_TESTS)
         else(GTEST_H_FOUND)
-                message(WARNING "Did not found gtest.h, cannot enable testing")
+                message(WARNING "Did not find gtest.h, cannot enable testing")
                 set(TESTING_ENABLED)
         endif(GTEST_H_FOUND)
 endif(TESTING_ENABLED)
@@ -55,11 +55,12 @@ set(GUI_SAMPLES examples/Gui)
 set(ORS_DIRS src/Ors)
 set(ORS_SAMPLES examples/Ors)
 set(OPTIM_DIRS src/Optim)
+set(OPTIM_SAMPLES examples/Optim)
 set(INFER_DIRS src/Infer)
 
 set(CURRENT_SLICE ${CORE_DIRS} ${GUI_DIRS} ${ORS_DIRS} ${OPTIM_DIRS} 
         ${INFER_DIRS}        
-        ${CORE_SAMPLES} ${GUI_SAMPLES} ${ORS_SAMPLES})
+        ${CORE_SAMPLES} ${GUI_SAMPLES} ${ORS_SAMPLES} ${OPTIM_SAMPLES})
 
 foreach(DIR ${CURRENT_SLICE})
 add_subdirectory(${DIR})
