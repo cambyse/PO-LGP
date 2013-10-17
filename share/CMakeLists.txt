@@ -86,7 +86,7 @@ include_directories(include)
 # configuration variables
 set(GL_LIBRARIES glut GLU GL X11)
 
-set(CORE_DIRS src/Core src/Algo)
+set(CORE_DIRS src/Core src/Algo src/System)
 set(CORE_SAMPLES examples/Core examples/Algo)
 set(GUI_DIRS src/extern/GJK src/extern/ply src/Gui src/extern/SWIFT src/extern/SWIFT_decomposer)
 set(GUI_SAMPLES examples/Gui)
@@ -99,11 +99,12 @@ set(INFER_SAMPLES examples/Infer)
 set(PERCEPTION_DIRS src/Perception)
 set(MOTION_DIRS src/Motion)
 set(MOTION_SAMPLES examples/Motion)
+set(SYSTEM_SAMPLES examples/System)
 
 set(CURRENT_SLICE ${CORE_DIRS} ${GUI_DIRS} ${ORS_DIRS} ${OPTIM_DIRS} 
         ${INFER_DIRS} ${MOTION_DIRS} ${PERCEPTION_DIRS}
         ${CORE_SAMPLES} ${GUI_SAMPLES} ${ORS_SAMPLES} ${OPTIM_SAMPLES} 
-        ${INFER_SAMPLES} ${MOTION_SAMPLES}
+        ${INFER_SAMPLES} ${MOTION_SAMPLES} ${SYSTEM_SAMPLES}
 )
 
 foreach(DIR ${CURRENT_SLICE})
