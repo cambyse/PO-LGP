@@ -88,6 +88,34 @@ void TEST(Basics){
   CHECK_ZERO(maxDiff(a,b), 1e-4, "non-exact save load");
 }
 
+void TEST(SimpleIterators) {
+  // This test shows how to use the iterators
+
+  cout << "*** Iterate linearly through the memory of an array (1D) - const" << endl;
+  arr A = randn(9, 1);
+  // notice: we're using const here
+  for (const auto& elem : A) {
+    cout << elem << endl;
+  }
+
+  cout << "*** increment each element" << endl;
+  // notice: we DON'T use const here
+  for (auto& elem : A) { elem += 1; }
+
+  cout << "*** Iterate linearly through the memory of an array (2D)" << endl;
+  A.reshape(3, 3);
+  for (const auto& elem : A) {
+    cout << elem << endl;
+  }
+
+  cout << "*** Iterate linearly through the memory of an array (3D)" << endl;
+  arr C = randn(1, 8);
+  C.reshape(TUP(2, 2, 2));
+  for (const auto& elem : C) {
+    cout << elem << endl;
+  }
+}
+
 void TEST(Matlab){
   arr x = randn(5);
   cout <<"\nrandn(5)" <<x <<endl;
@@ -513,6 +541,7 @@ void TEST(RowShiftedPackedMatrix){
 int MAIN(int argc, char *argv[]){
 
   testBasics();
+  testSimpleIterators();
   testMatlab();
   testException();
   testMemoryBound();
