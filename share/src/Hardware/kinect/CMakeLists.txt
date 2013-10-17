@@ -16,6 +16,6 @@ target_link_libraries(${TARGET}
         LINK_PRIVATE Core ${DEPLIB_LIBRARY_DIR} ${DEPLIB_LIBRARIES})
 
 else(DEPLIB_FOUND)
-message(STATUS "Kinect support not build because libfreenect not found")
+message(STATUS "Kinect support not built because libfreenect not found")
 endif(DEPLIB_FOUND)
 
