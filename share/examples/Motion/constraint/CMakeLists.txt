@@ -3,7 +3,7 @@ get_filename_component(NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 add_executable(${NAME} main.cpp)
 
 target_link_libraries(${NAME} Motion Perception)
-add_definitions(-DMT_GL -DMT_Motion -DMT_Core -DMT_Ors -DMT_Gui -DMT_Optim -DMT_Perception)
+add_definitions(-DMT_GL)
 
 add_test(${NAME}_test ${NAME} --gtest_output=xml:${NAME}-unit.xml)
 

@@ -7,7 +7,7 @@ include(FindPkgConfig)
 pkg_check_modules(MLRGUI REQUIRED mlr_gui)
 
 target_link_libraries(${NAME} Motion Optim Gui Ors)
-add_definitions(-DMT_Motion -DMT_Core -DMT_Ors -DMT_Optim ${MLRGUI_CFLAGS})
+add_definitions(${MLRGUI_CFLAGS})
 
 add_test(${NAME}_test ${NAME} --gtest_output=xml:${NAME}-unit.xml)
 
