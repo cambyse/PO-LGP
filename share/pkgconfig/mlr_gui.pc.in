@@ -1,0 +1,11 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+includedir=${prefix}/include
+libdir=${exec_prefix}/lib
+
+Name: mlr_gui
+Description: Gui wrappers
+Version: 1.0.0
+Cflags: -DMT_Gui @MT_FLTK@ @MT_FREEGLUT@ @MT_GL@ @MT_GL2PS@ @MT_CUDA@ @MT_MSVC@
+Libs.private: @FLTK_LIBRARY_DIRS@ @FLTK_LIBRARIES@ @FREEGLUT_LIBRARY_DIRS@ @FREEGLUT_LIBRARIES@ @GL_LIBRARY_DIRS@ @GL_LIBRARIES@ @GL2PS_LIBRARY_DIRS@ @GL2PS_LIBRARIES@ @GRAPHVIZ_LIBRARY_DIRS@ @GRAPHVIZ_LIBRARIES@ @PKG_QHULL@
+Libs: -L${libdir} -lGui
