@@ -116,6 +116,12 @@ void TEST(SimpleIterators) {
   }
 }
 
+void TEST(InitializationList) {
+  cout << "Use c++11 initialization list to initialize arrays by hand" << endl;
+  arr a = {1, 3, 2, 5};
+  cout << a << endl;
+}
+
 void TEST(RowsAndColumsAccess) {
   // access rows and columns easily
   arr A = eye(3);
@@ -564,6 +570,7 @@ void TEST(RowShiftedPackedMatrix){
 int MAIN(int argc, char *argv[]){
 
   testBasics();
+  testInitializationList();
   testSimpleIterators();
   testRowsAndColumsAccess();
   testMatlab();
