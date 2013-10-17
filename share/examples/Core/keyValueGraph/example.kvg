@@ -4,6 +4,8 @@ a    	     # key=a, value=true, parents=none
 b	     # key=b, value=true, parents=none
 (a b)	     # key=none, value=true, parents=a b
 
+%include example_include.kvg
+
 ## a bit more verbose graph
 node A{ color=blue }		# keys=node A, value=<KVG>, parents=none
 node B{ color=red, value=5 }	# keys=node B, value=<KVG>, parents=none

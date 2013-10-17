@@ -1,28 +1,8 @@
 // Read DOCSTRING to get an idea of orspy!
-%define DOCSTRING
+%define DOCSTRING_ORSPY
 "
 This is a simple SWIG wrapper to be able to use the ors datastructures
-within other languages (primarily python)
-
-Note:
-- There is also a VERY SIMPLE interface for the array class
-- tested with python.
-
-TODO
-- better MT::Array wrapper (important!)
-  - DONE fill with python lists
-  - DONE __getitem__
-  - DONE __setitem__
-  - DONE slicing!
-  - TODO fill with numpy ndarray
-- memory management sometimes fails
-- DONE Interfaces for PhysX not implemented
-- integrate some docstrings:
-  http://www.swig.org/Doc1.3/Python.html#Python_nn65
-- pointers sometimes need to be handled differently:
-  http://www.swig.org/Doc1.3/Python.html#Python_nn47
-  http://www.swig.org/Doc1.3/Python.html#Python_nn18
-- TODO run unittests with Jenkins
+within python.
 
 
 author: Stefan Otte
@@ -30,7 +10,7 @@ author: Stefan Otte
 created: <2013-03-20 Wed>
 "
 %enddef
-%module(docstring=DOCSTRING) orspy
+%module(docstring=DOCSTRING_ORSPY) orspy
 
 %feature("autodoc", "1");
 %include "typemaps.i"
@@ -241,7 +221,7 @@ struct Joint {
   std::string __str__() {
     std::ostringstream oss(std::ostringstream::out);
     oss<<(*$self);
-    return oss.str(); 
+    return oss.str();
   }
 } // end of %extend
 
@@ -302,7 +282,6 @@ struct Proxy {
 //===========================================================================
 struct Graph {
   //!@name data fields
-  uint sd, jd, td;
   MT::Array<Body*>  bodies;
   MT::Array<Joint*> joints;
   MT::Array<Shape*> shapes;
@@ -402,17 +381,15 @@ def setJointStateList(self, jointState):
   bool checkUniqueNames() const;
 
   Body *getBodyByName(const char* name) const;
-  uint getBodyIndexByName(const char* name) const;
 
   Shape *getShapeByName(const char* name) const;
-  uint getShapeIndexByName(const char* name) const;
 
   Joint *getJointByBodyNames(const char* from, const char* to) const;
   void prefixNames();
 
   void write(std::ostream& os) const;
   void read(std::istream& is);
-  void read(const char* string);
+  void read(const char* filename);
   void writePlyFile(const char* filename) const;
   void glDraw();
 
@@ -476,4 +453,4 @@ void generateSequence(arr& X, arr& V, uint n) {
 %}
 
 
-// vim: ft=cpp
+// vim: ft=swig

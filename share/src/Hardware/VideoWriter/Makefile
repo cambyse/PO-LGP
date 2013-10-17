@@ -1,0 +1,13 @@
+BASE   = ../../..
+NAME   = libHardware_$(shell basename `pwd`)
+OUTPUT := $(BASE)/lib/$(NAME).so
+
+QT = 1
+CXXFLAGS += -D__STDC_CONSTANT_MACROS
+LPATHS += /usr/local/lib
+LIBS += -lavformat -lavcodec -lavutil -lswscale -lx264 -lz
+
+SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
+OBJS = $(SRCS:%.cpp=%.o)
+
+include $(BASE)/make-generic

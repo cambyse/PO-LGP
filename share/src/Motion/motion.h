@@ -44,21 +44,41 @@ enum DefaultTaskMapType {
   skinTMT      ///< vector of skin pressures...
 };
 
+
+//===========================================================================
+//
+// defines only a map (task space), not yet the costs in this space
+//
+
 struct TaskMap {
+  bool constraint;
   virtual void phi(arr& y, arr& J, const ors::Graph& G) = 0;
-  virtual uint phiDim(const ors::Graph& G) = 0; //the dimensionality of $y$
+  virtual uint dim_phi(const ors::Graph& G) = 0; //the dimensionality of $y$
+
+  TaskMap():constraint(false) {}
 };
+
+
+//===========================================================================
+//
+// the costs in a task space
+//
 
 struct TaskCost {
   TaskMap& map;
   MT::String name;
   bool active;
   arr y_target, y_prec;  ///< target & precision over a whole trajectory
-  arr v_target, v_prec;  ///< target & precision over a whole trajectory
-  //void cost(arr& y, arr& J, const ors::Graph& G, uint t); ///< returns the weighted costs in time t, ASSUMING that G is in state x_t
+  arr v_target, v_prec;  ///< velocity target & precision over a whole trajectory
   
   TaskCost(TaskMap* m):map(*m), active(true) {}
 };
+
+
+//===========================================================================
+//
+// a motion problem description
+//
 
 /// This class allows you to DESCRIBE a motion problem, nothing more
 struct MotionProblem {
@@ -120,27 +140,36 @@ struct MotionProblem {
                                 const arr& v_finalTarget, double v_finalPrec, const arr& v_midTarget, double v_midPrec);
                                 
   //-- cost infos
-  uint get_phiDim(uint t);
+  uint dim_phi(uint t);
+  uint dim_g(uint t);
+  uint dim_psi();
   void getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t); ///< the general (`big') task vector and its Jacobian
-  uint get_psiDim();
   void costReport();
   
   void setState(const arr& x, const arr& v);
   void activateAllTaskCosts(bool activate=true);
 };
 
+
+//===========================================================================
+//
+// transforming a motion problem description into an optimization problem
+//
+
 struct MotionProblemFunction:KOrderMarkovFunction {
   MotionProblem& P;
-  
-  MotionProblemFunction(MotionProblem& _P):P(_P) {};
+  bool makeConstrainedProblem;
+
+  MotionProblemFunction(MotionProblem& _P):P(_P), makeConstrainedProblem(false) {};
   
   //KOrderMarkovFunction definitions
   virtual void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);
   //functions to get the parameters $T$, $k$ and $n$ of the $k$-order Markov Process
-  virtual uint get_T();
-  virtual uint get_k();
-  virtual uint get_n(); //the dimensionality of $x_t$
-  virtual uint get_m(uint t); //the dimensionality of $\phi_t$
+  virtual uint get_T() { return P.T; }
+  virtual uint get_k() { if(P.transitionType==MotionProblem::kinematic) return 1;  return 2; }
+  virtual uint dim_x() { return P.x0.N; }
+  virtual uint dim_phi(uint t){ return dim_x() + P.dim_phi(t); }
+  virtual uint dim_g(uint t){ return P.dim_g(t); }
   virtual arr get_prefix(); //the history states x(-k),..,x(-1)
 };
 

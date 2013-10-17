@@ -63,6 +63,7 @@ struct Mesh {
   void setCappedCylinder(double r, double l, uint fineness=3);
   void setGrid(uint X, uint Y);
   void setImplicitSurface(double(*fct)(double, double, double, void*), void *p, double lo, double hi, uint res);
+  void setRandom(uint vertices=10);
   
   //transform and modify
   void subDevide();
@@ -166,6 +167,16 @@ void getTriangulatedHull(uintA& T, arr& V);
 
 void getDelaunayEdges(uintA& E, const arr& V);
 /** @} */
+
+
+//===========================================================================
+//
+// GJK interface
+//
+
+double GJK_distance(ors::Mesh& mesh1, ors::Mesh& mesh2,
+                    ors::Transformation& t1, ors::Transformation& t2,
+                    ors::Vector& p1, ors::Vector& p2);
 
 
 #endif

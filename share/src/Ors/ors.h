@@ -127,11 +127,13 @@ struct Body {
 
 /// a joint
 struct Joint {
-  uint index;          ///< unique identifier
-  uint qIndex;         ///< index where this joint appears in the q-state-vector
+  uint index;           ///< unique identifier
+  uint qIndex;          ///< index where this joint appears in the q-state-vector
   int ifrom, ito;       ///< indices of from and to bodies
   Body *from, *to;      ///< pointers to from and to bodies
-  
+  Joint *coupledTo;     ///< if non-NULL, this joint's state is identical to another's
+
+  MT::String name;      ///< name
   JointType type;            ///< joint type
   Transformation A;          ///< transformation from parent body to joint (attachment, usually static)
   Transformation Q;          ///< transformation within the joint (usually dynamic)
@@ -145,7 +147,7 @@ struct Joint {
   explicit Joint(Graph& G, Body *f, Body *t, const Joint *copyJoint=NULL); //new Shape, being added to graph and body's joint lists
   ~Joint();
   void operator=(const Joint& j) {
-    index=j.index; qIndex=j.qIndex; ifrom=j.ifrom; ito=j.ito;
+    index=j.index; qIndex=j.qIndex; ifrom=j.ifrom; ito=j.ito; coupledTo=(Joint*)(j.coupledTo?1:0);
     type=j.type; A=j.A; Q=j.Q; B=j.B; X=j.X; axis=j.axis;
     ats=j.ats;
   }
@@ -206,18 +208,18 @@ struct Proxy {
 /// data structure to store a whole physical situation (lists of bodies, joints, shapes, proxies)
 struct Graph {
   /// @name data fields
-  uint sd, jd, td; // added jd (joint dim.), 16. Mar 06 (hh)
   MT::Array<Body*>  bodies;
   MT::Array<Joint*> joints;
   MT::Array<Shape*> shapes;
   MT::Array<Proxy*> proxies; ///< list of current proximities between bodies
-  arr Qlin, Qoff, Qinv; //linear transformations of q
+  uint q_dim; ///< numer of degrees of freedom IN the joints (not counting root body)
+  arr Qlin, Qoff, Qinv; ///< linear transformations of q
   bool isLinkTree;
   
   /// @name constructors
-  Graph() { sd=jd=0; bodies.memMove=joints.memMove=shapes.memMove=proxies.memMove=true; isLinkTree=false; }
+  Graph() { q_dim=0; bodies.memMove=joints.memMove=shapes.memMove=proxies.memMove=true; isLinkTree=false; }
   Graph(const char* filename) {
-    sd=jd=0; bodies.memMove=joints.memMove=shapes.memMove=proxies.memMove=true; isLinkTree=false;
+    q_dim=0; bodies.memMove=joints.memMove=shapes.memMove=proxies.memMove=true; isLinkTree=false;
     init(filename);
   }
   ~Graph() { clear(); }
@@ -235,6 +237,7 @@ struct Graph {
   void transformJoint(Joint *e, const ors::Transformation &f); //A <- A*f, B <- f^{-1}*B
   void zeroGaugeJoints();                          //A <- A*Q, Q <- Id
   void makeLinkTree(); //modify transformations so that B's become identity
+  void topSort(){ graphTopsort(bodies, joints); for_list_(Shape, s, shapes) s->ibody=s->body->index; }
   void glueBodies(Body *a, Body *b);
   void glueTouchingBodies();
   void addObject(Body *b);
@@ -264,7 +267,7 @@ struct Graph {
   void inverseDynamics(arr& tau, const arr& qd, const arr& qdd);
   
   /// @name special 'kinematic maps'
-  void phiCollision(arr &y, arr& J, double margin=.02) const;
+  void phiCollision(arr &y, arr& J, double margin=.02, bool useCenterDist=true) const;
   
   /// @name get state
   uint getJointStateDimension(bool internal=false) const;
@@ -306,18 +309,18 @@ struct Graph {
   void sortProxies(bool deleteMultiple=false);
   bool checkUniqueNames() const;
   
+  
   Body *getBodyByName(const char* name) const;
-  uint getBodyIndexByName(const char* name) const;
-  
   Shape *getShapeByName(const char* name) const;
-  uint getShapeIndexByName(const char* name) const;
-  
+  Joint *getJointByName(const char* name) const;
   Joint *getJointByBodyNames(const char* from, const char* to) const;
+  //uint getBodyIndexByName(const char* name) const;
+  //uint getShapeIndexByName(const char* name) const;
   void prefixNames();
   
   void write(std::ostream& os) const;
   void read(std::istream& is);
-  void read(const char* string);
+  void read(const char* filename);
   void writePlyFile(const char* filename) const;
   void glDraw();
 };
@@ -606,10 +609,7 @@ struct TaskVariableTable {
 // C-style functions
 //
 
-void inertiaSphere(double *Inertia, double& mass, double density, double radius);
-void inertiaBox(double *Inertia, double& mass, double density, double dx, double dy, double dz);
-void inertiaCylinder(double *Inertia, double& mass, double density, double height, double radius);
-
+void makeConvexHulls(ShapeL& shapes);
 
 //===========================================================================
 // routines using external interfaces.
@@ -632,8 +632,8 @@ extern uint orsDrawLimit;
 
 void displayState(const arr& x, ors::Graph& G, OpenGL& gl, const char *tag);
 void displayTrajectory(const arr& x, int steps, ors::Graph& G, OpenGL& gl, const char *tag);
-void editConfiguration(const char* orsfile, ors::Graph& C, OpenGL& gl);
-void animateConfiguration(ors::Graph& C, OpenGL& gl);
+void editConfiguration(const char* orsfile, ors::Graph& G, OpenGL& gl);
+void animateConfiguration(ors::Graph& G, OpenGL& gl);
 void init(ors::Graph& G, OpenGL& gl, const char* orsFile);
 void bindOrsToOpenGL(ors::Graph& graph, OpenGL& gl);
 /** @} */ // END of group ors_interface_opengl

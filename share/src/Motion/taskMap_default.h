@@ -28,7 +28,7 @@ struct DefaultTaskMap:TaskMap {
   arr params;           ///< parameters of the variable (e.g., liner coefficients, limits, etc)
 
   virtual void phi(arr& y, arr& J, const ors::Graph& G);
-  virtual uint phiDim(const ors::Graph& G);
+  virtual uint dim_phi(const ors::Graph& G);
 };
 
 #endif

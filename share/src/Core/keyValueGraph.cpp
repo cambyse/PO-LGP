@@ -59,6 +59,7 @@ void Item::write(std::ostream& os) const {
   }
   
   //-- write value
+  if(!hasValue()) return;
   if(valueType()==typeid(KeyValueGraph)) {
     os <<" {";
     value<KeyValueGraph>()->write(os, " ");
@@ -281,8 +282,20 @@ void KeyValueGraph::read(std::istream& is) {
   //MT::lineCount=1;
   for(;;) {
     char c=MT::peerNextChar(is, " \n\r\t,");
-    if(!is.good() || c=='}') { is.clear(); break; }
-    if(!readItem(*this, is)) break;
+    if(c=='%'){ //special caracter
+      MT::String str;
+      str.read(is,""," \n\r\t",true);
+      if(str=="%include"){
+	is >>str;
+	std::ifstream is2;
+	MT::open(is2,str);
+	read(is2);
+	is2.close();
+      }else HALT("don't know special command " <<str);
+    }else{
+      if(!is.good() || c=='}') { is.clear(); break; }
+      if(!readItem(*this, is)) break;
+    }
   }
 }
 

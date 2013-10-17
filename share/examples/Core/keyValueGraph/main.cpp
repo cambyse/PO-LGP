@@ -1,7 +1,9 @@
 #include <Core/keyValueGraph.h>
 #include <Core/registry.h>
 
-void testRead(const char *filename=NULL){
+const char *filename=NULL;
+
+void TEST(Read){
   KeyValueGraph G;
 
   cout <<"\n** reading graph..." <<flush;
@@ -16,19 +18,20 @@ void testRead(const char *filename=NULL){
   cout <<*G.getValue<KeyValueGraph>("k")->getValue<MT::String>("z") <<endl;
 }
 
-void testDot(const char *filename=NULL){
+void TEST(Dot){
   KeyValueGraph G;
   MT::load(G, filename?filename:"coffee_shop.fg");
   G.sortByDotOrder();
   G.writeDot();
 }
 
-int main(int argc, char** argv){
+int MAIN(int argc, char** argv){
   cout <<"GLOBAL LATENT REGISTRY:\n" <<registry() <<endl;
 
-  testRead(argc<2?NULL:argv[1]);
+  if(argc>=2) filename=argv[1];
 
-  testDot(argc<2?NULL:argv[1]);
+  testRead();
+  testDot();
 
   return 0;
 }

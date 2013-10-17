@@ -2,6 +2,19 @@
 
 @todo is this page uptodate?
 
+@section Better qLin conventions for linearly coupled joints in ors:
+
+- Currently the conversion between q-state-vectore and internal joint vector is cumbersome. It would become much simpler with the following convention.
+
+- Sort all joints such that: non-dependdent joints are first; dependent joints come later
+
+- Non-dependent joints can simply be copied (Id-Matrix); For the dependent joints the j->qLin describes how the joint depends on the previous
+
+- That should make back and forth conversion mush simpler
+
+- write routines for transforming back and forth vectors, jacobians, hessians, matrices
+
+
 @section ci_penetration Penetrating collisions
 The way penetrating collisions are
 handled is really not nice ors_swift.cpp:318. What should ideally

@@ -2,7 +2,7 @@
 
 #include <JK/gpc.h>
 #include <JK/util.h>
-#include <MT/gaussianProcess.h>
+#include <Algo/gaussianProcess.h>
 
 #include <cmath>
 

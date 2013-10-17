@@ -2,8 +2,6 @@
 
 """
 The fake perception of the curious robot.
-
-NOTE: this does not work yet!
 """
 
 import roslib
@@ -14,17 +12,15 @@ import the_curious_robot.srv as srvs
 # import numpy as np
 import os
 import orspy as ors
-import corepy
 import Queue
-import time
+# import corepy
+# import time
 
 import require_provide as rp
 
 
 class FakePerception():
-    """
-    The actual behavior of the robot.
-    """
+
     def __init__(self):
         # init the node: test_fitting
         rospy.init_node('tcr_perception')
@@ -42,17 +38,17 @@ class FakePerception():
         self.not_published_once = True
 
         self.pub = rospy.Publisher('perception_updates', msgs.percept)
-        self.serv = rospy.Service('percept_all', srvs.percept_all, self.percept_all_cb)
+        self.serv = rospy.Service(
+            'percept_all', srvs.percept_all, self.percept_all_cb)
         self.ors_subs = rospy.Subscriber(name='geometric_state',
                                          data_class=msgs.ors,
                                          callback=self.ors_cb)
-
         self.frame = 0
 
     def percept_all_cb(self, req):
         msg = srvs.percept_allResponse()
         msg.header.stamp = rospy.get_rostime()
-        for p in self.world.bodies: # TODO: synchronize!
+        for p in self.world.bodies:  # TODO: synchronize!
             msg.bodies.append(p.name + " " + str(p))
         return msg
 

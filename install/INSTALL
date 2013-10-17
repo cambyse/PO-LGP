@@ -2,7 +2,6 @@
 
 ## parameters for this install
 MLR_LIBPATH=/home/lib
-MLR_URL=http://userpage.fu-berlin.de/mtoussai/smScpB076X
 
 if [ ! -d $MLR_LIBPATH ] ; then
   echo "Creating lib directory: " $MLR_LIBPATH
@@ -15,6 +14,6 @@ fi
 sh INSTALL_DEPENDENCIES.sh
 
 #install external libraries
-./PHYSX_install
+./PhysX_install
 ./ODE_install
 #./IBDS_install

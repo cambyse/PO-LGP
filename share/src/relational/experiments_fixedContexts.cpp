@@ -2,7 +2,7 @@
 
 #include "experiments_fixedContexts.h"
 #include <math.h>
-#include <MT/algos.h>
+#include <Algo/algos.h>
 #include "ruleReasoning.h"
 #include "logicReasoning.h"
 

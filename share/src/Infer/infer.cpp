@@ -20,7 +20,7 @@
 
 #include "infer.h"
 #include <algorithm>
-
+#include <iomanip>
 
 
 #define LOG_NORM_SCALE

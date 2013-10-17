@@ -1,4 +1,3 @@
-#include <MT/aico.h>
 #include <Core/util_t.h>
 #include <Gui/opengl.h>
 

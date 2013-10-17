@@ -1,0 +1,67 @@
+#! /bin/sh
+
+# Fail early. Abort on any error!
+set -e
+
+## parameters for this install
+FILE=PhysX-3.2_LINUX_SDK_Core.zip
+SRC_PATH=PhysX
+URL='https://mlr-owncloud.informatik.uni-stuttgart.de/public.php?service=files&t=f7f8d476b96f0d21f6f41bfb01e2b272&download'
+THIS_PATH=$PWD
+
+[ -z $MLR_LIBPATH ] && MLR_LIBPATH=/home/lib
+
+echo "*** Installing" $SRC_PATH "into" $MLR_LIBPATH
+echo
+
+## download
+echo -n "  * Checking for file" /tmp/$FILE "-> download"
+read -p " -- [Enter] to continue..." yn
+if [ ! -f /tmp/$FILE ] ; then
+  wget -O /tmp/$FILE $URL --no-check-certificate
+  if [ ! -f /tmp/$FILE ] ; then
+    echo "Automatic Download failed. You need to download " $URL " and store it in " /tmp/$FILE
+    exit
+  fi
+fi
+
+## check existance of lib path
+echo -n "  * Checking for directory" $MLR_LIBPATH
+read -p " -- [Enter] to continue..." yn
+if [ ! -d $MLR_LIBPATH ] ; then
+  # only root can create the folder in /home
+  sudo mkdir -p $MLR_LIBPATH
+  # but everybody needs access to /home/lib
+  sudo chmod o+r+w+x $MLR_LIBPATH
+  # and also /home/lib/lib
+  mkdir -p $MLR_LIBPATH/lib
+fi
+
+## delete & unpack
+echo -n "  * Deleting" $MLR_LIBPATH/src/$SRC_PATH "and unpacking" /tmp/$FILE
+read -p " -- [Enter] to continue..." yn
+mkdir -p $MLR_LIBPATH/src
+cd $MLR_LIBPATH/src
+rm -rf $SRC_PATH
+mkdir -p $SRC_PATH
+cd $SRC_PATH
+unzip -q /tmp/$FILE
+
+## patch
+echo -n "  * Patching the sources in" $MLR_LIBPATH/src/$SRC_PATH "with" $THIS_PATH/${SRC_PATH}_patch
+read -p " -- [Enter] to continue..." yn
+cd $MLR_LIBPATH/src/$SRC_PATH
+patch -p1 < $THIS_PATH/${SRC_PATH}_patch
+
+## install
+echo -n "  * Installing into" $MLR_LIBPATH/include "and" $MLR_LIBPATH/lib
+read -p " -- [Enter] to continue..." yn
+cd $MLR_LIBPATH
+mkdir -p include/physx
+cp -R src/$SRC_PATH/Include/* include/physx
+cp -R src/$SRC_PATH/Samples/PxToolkit/include include/physx/toolkit
+if [ "$(uname -m)" = "x86_64" ] ; then
+  cp src/$SRC_PATH/Lib/linux64/* lib
+else
+  cp src/$SRC_PATH/Lib/linux32/* lib
+fi

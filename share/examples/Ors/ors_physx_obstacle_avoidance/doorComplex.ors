@@ -1,0 +1,53 @@
+# door1 
+body door1-frame { type=3 mesh="plys/door-frame.ply" meshscale=.01 submeshsizes=[8 8 8] fixed}
+body  door1 { type=3 mesh='plys/door-door.ply' meshscale=.01 submeshsizes=[8 36 41 36 41] color=[1 0 0] mass=2000000 contact}
+body door1-handle { type=3 mesh='plys/door-handle.ply' meshscale=.01 color=[0 0 0] submeshsizes=[73 50 71 51]}
+joint (door1-frame,  door1) { A=<T t(.46 0 0) d(90 0 1 0)> limit=[-.9 .9 0 0 0] BinvA}
+joint ( door1, door1-handle) { A=<T t(-.39 0 1) d(90 0 0 1)> limit=[0 .1 0 0 0] BinvA}
+
+# door2
+body door2-frame {X=<T t(-2 0 0) d(90 0 0 1)> type=3 mesh="plys/door-frame.ply" meshscale=.01 submeshsizes=[8 8 8] fixed}
+body door2 { X=<T t(-2 0 0) d(90 0 0 1)> type=3 mesh='plys/door-door.ply' meshscale=.01 submeshsizes=[8 36 41 36 41] color=[1 0 0] mass=2000000 contact}
+body door2-handle {X=<T t(-2 0 0) d(90 0 0 1)> type=3 mesh='plys/door-handle.ply' meshscale=.01 color=[0 0 0] submeshsizes=[73 50 71 51]}
+joint (door2-frame, door2) {A=<T t(.46 0 0) d(90 0 1 0)> BinvA}
+joint (door2, door2-handle) {A=<T t(-.39 0 1) d(90 0 0 1)> limit=[0 .1 0 0 0] BinvA}
+
+#  door3
+body door3-frame {X=<T t(2 0 0) d(90 0 0 1)> type=3 mesh="plys/door-frame.ply" meshscale=.01 submeshsizes=[8 8 8] fixed}
+body door3 { X=<T t(2 0 0) d(90 0 0 1)> type=3 mesh='plys/door-door.ply' meshscale=.01 submeshsizes=[8 36 41 36 41] color=[1 0 0] mass=2000000 contact}
+body door3-handle {X=<T t(2 0 0) d(90 0 0 1)> type=3 mesh='plys/door-handle.ply' meshscale=.01 color=[0 0 0] submeshsizes=[73 50 71 51]}
+joint (door3-frame, door3) {A=<T t(.46 0 0) d(90 0 1 0)> BinvA}
+joint (door3, door3-handle) {A=<T t(-.39 0 1) d(90 0 0 1)> limit=[0 .1 0 0 0] BinvA}
+
+#  door4
+body door4-frame {X=<T t(-2 2 0) d(90 0 0 1)> type=3 mesh="plys/door-frame.ply" meshscale=.01 submeshsizes=[8 8 8] fixed}
+body door4 { X=<T t(-2 2 0) d(90 0 0 1)> type=3 mesh='plys/door-door.ply' meshscale=.01 submeshsizes=[8 36 41 36 41] color=[1 0 0] mass=2000000 contact}
+body door4-handle {X=<T t(-2 2 0) d(90 0 0 1)> type=3 mesh='plys/door-handle.ply' meshscale=.01 color=[0 0 0] submeshsizes=[73 50 71 51]}
+joint (door4-frame, door4) {A=<T t(.46 0 0) d(90 0 1 0)> BinvA}
+joint (door4, door4-handle) {A=<T t(-.39 0 1) d(90 0 0 1)> limit=[0 .1 0 0 0] BinvA}
+
+#  door5
+body door5-frame {X=<T t(2 2 0) d(90 0 0 1)> type=3 mesh="plys/door-frame.ply" meshscale=.01 submeshsizes=[8 8 8] fixed}
+body door5 { X=<T t(2 2 0) d(90 0 0 1)> type=3 mesh='plys/door-door.ply' meshscale=.01 submeshsizes=[8 36 41 36 41] color=[1 0 0] mass=2000000 contact}
+body door5-handle {X=<T t(2 2 0) d(90 0 0 1)> type=3 mesh='plys/door-handle.ply' meshscale=.01 color=[0 0 0] submeshsizes=[73 50 71 51]}
+joint (door5-frame, door5) {A=<T t(.46 0 0) d(90 0 1 0)> BinvA}
+joint (door5, door5-handle) {A=<T t(-.39 0 1) d(90 0 0 1)> limit=[0 .1 0 0 0] BinvA}
+
+#  door6
+body door6-frame {X=<T t(0 3 0) d(90 0 0 1)> type=3 mesh="plys/door-frame.ply" meshscale=.01 submeshsizes=[8 8 8] fixed}
+body door6 { X=<T t(0 3 0) d(90 0 0 1)> type=3 mesh='plys/door-door.ply' meshscale=.01 submeshsizes=[8 36 41 36 41] color=[1 0 0] mass=2000000 contact}
+body door6-handle {X=<T t(0 3 0) d(90 0 0 1)> type=3 mesh='plys/door-handle.ply' meshscale=.01 color=[0 0 0] submeshsizes=[73 50 71 51]}
+joint (door6-frame, door6) {A=<T t(.46 0 0) d(90 0 1 0)> BinvA}
+joint (door6, door6-handle) {A=<T t(-.39 0 1) d(90 0 0 1)> limit=[0 .1 0 0 0] BinvA}
+
+
+// robot
+body robot {
+  type=1
+  size=[.1 .1 .1 .1]
+  X=<T t(0. -1. 1.)>
+  color=[0 1 0]
+  mass=100
+  kinematic
+  contact
+}

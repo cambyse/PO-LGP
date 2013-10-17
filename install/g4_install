@@ -1,0 +1,89 @@
+#! /bin/sh
+
+# Fail early. Abort on any error!
+set -e
+
+## parameters for this install
+FILE=g4track_lib_dist-0.0.2.tar.gz
+SRC_PATH=g4track_lib_dist-0.0.2
+URL='https://mlr-owncloud.informatik.uni-stuttgart.de/public.php?service=files&t=e6b1fb741ce10462a7f7154296399bc9&download'
+THIS_PATH=$PWD
+
+[ -z $MLR_LIBPATH ] && MLR_LIBPATH=/home/lib
+
+echo "*** Installing" $SRC_PATH "into" $MLR_LIBPATH
+echo
+
+## download
+echo -n "  * Checking for file" /tmp/$FILE "-> download"
+read -p " -- [Enter] to continue..." yn
+if [ ! -f /tmp/$FILE ] ; then
+  wget -O /tmp/$FILE $URL --no-check-certificate
+  if [ ! -f /tmp/$FILE ] ; then
+    echo "Automatic Download failed. You need to download " $URL " and store it in " /tmp/$FILE
+    exit
+  fi
+fi
+
+## check existance of lib path
+echo -n "  * Checking for directory" $MLR_LIBPATH
+read -p " -- [Enter] to continue..." yn
+if [ ! -d $MLR_LIBPATH ] ; then
+  # only root can create the folder in /home
+  sudo mkdir -p $MLR_LIBPATH
+  # but everybody needs access to /home/lib
+  sudo chmod o+r+w+x $MLR_LIBPATH
+  # and also /home/lib/lib
+  mkdir -p $MLR_LIBPATH/lib
+fi
+
+## delete & unpack
+echo -n "  * Delete" $MLR_LIBPATH/src/$SRC_PATH "and unpack" /tmp/$FILE "?"
+read -p " -- y/[n]? " yn
+case $yn in
+    y|Y)
+	mkdir -p $MLR_LIBPATH/src
+	cd $MLR_LIBPATH/src
+	rm -Rf $SRC_PATH
+	tar xvzf /tmp/$FILE
+	;;
+    *) ;;
+esac
+
+## install
+echo -n "  * Installing into" $MLR_LIBPATH/include "and" $MLR_LIBPATH/lib
+read -p " -- [Enter] to continue..." yn
+cd $MLR_LIBPATH/src/$SRC_PATH
+#./configure --help
+./configure --prefix=$MLR_LIBPATH
+sudo make install sysconfdir=/etc
+#export MANPATH=$MANPATH:$MLR_LIBPATH/share
+
+
+## source config
+FILE=createcfgfile-1.0.0
+wget -O /tmp/$FILE.tar.gz ftp://ftp.polhemus.com/pub/G4/G4_Linux/$FILE.tar.gz
+cd $MLR_LIBPATH/src
+tar xvzf /tmp/$FILE.tar.gz
+cd $FILE
+./configure --prefix=$MLR_LIBPATH
+make
+sudo make install
+
+## dongle config
+MLR_LIBPATH=/home/lib
+FILE=g4devcfg
+wget -O /tmp/$FILE.tgz ftp://ftp.polhemus.com/pub/G4/G4_Linux/$FILE.tar.gz
+cd $MLR_LIBPATH/src
+tar xvzf /tmp/$FILE.tgz
+cd $FILE
+cp -f * $MLR_LIBPATH/bin
+
+## 32bit version
+MLR_LIBPATH=/home/lib
+FILE=libG4Track_32.so.0.0.2
+wget -O /tmp/$FILE ftp://ftp.polhemus.com/pub/G4/G4_Linux/$FILE
+cd $MLR_LIBPATH/lib
+cp -f /tmp/$FILE .
+ln -s -f $FILE libG4Track.so
+ln -s -f $FILE libG4Track_arm.so.0

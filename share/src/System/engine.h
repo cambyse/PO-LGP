@@ -1,46 +1,170 @@
+/*  ---------------------------------------------------------------------
+    Copyright 2013 Marc Toussaint
+    email: mtoussai@cs.tu-berlin.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a COPYING file of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
 #ifndef system_engine_h
 #define system_engine_h
 
-#include "module.h"
+#include <Core/thread.h>
+#include <Core/module.h>
 
-struct SystemDescription{
-  enum StepMode { listenAll=0, listenRead, loopWithBeat, loopFull };
-  struct VariableEntry{ Type* type; Variable *var; };
-  struct AccessEntry{ Item* reg; Type* type; Access *acc; };
-  struct ModuleEntry{ Item* reg; Type* type; Module *mod; StepMode mode; double beat; };
-  KeyValueGraph system;
+struct Variable;
+struct ModuleThread;
+typedef MT::Array<Module*> ModuleL;
+typedef MT::Array<ModuleThread*> ModuleThreadL;
+typedef MT::Array<Variable*> VariableL;
+typedef MT::Array<Access*> AccessL;
 
-  SystemDescription() {}
+VariableL createVariables(const ModuleL& ms);
 
-  template<class T> void addVar(const char *name){
-    VariableEntry *v = new VariableEntry;
-    v->type = new Type_typed<T, void>();
-    system.append<VariableEntry>(STRINGS("Variable", name), v);
-  }
-  Item* getVariableEntry(const Access& acc);
-  Item* getVariableEntry(const char* name, const Type& typeinfo);
+struct ModuleThread:Thread{
+  enum StepMode { listenFirst=0, listenAll, loopWithBeat, loopFull };
+  Module *m;
+  uint step_count;
+  StepMode mode; double beat;
 
-  Item* getVar(uint i){ ItemL vars = system.getTypedItems<VariableEntry>("Variable"); return vars(i); }
-  template<class T> T& getValue(uint i){ return *((T*)getVar(i)->value<VariableEntry>()->var->data); }
+  /// @name c'tor/d'tor
+  ModuleThread(Module* _m, const char* _name=NULL):Thread(_name),m(_m),step_count(0){ m->name = _name; }
 
-  void addModule(const char *dclName, const char *name=NULL, const ItemL& vars=NoItemL, StepMode mode=listenRead, double beat=0.);
-  void report();
-  void complete();
+  virtual void open(){ m->open(); }
+  virtual void step(){ m->step(); step_count++; }
+  virtual void close(){ m->close(); }
+};
+//inline void operator>>(istream& is, ModuleThread& m){  }
+inline void operator<<(ostream& os, const ModuleThread& m){ os <<"ModuleThread " <<m.name <<' ' <<m.step_count; }
+
+//===========================================================================
+/**
+ * A Variable is a container to hold data, potentially handling concurrent r/w
+ * access, which is used to exchange information between processes.
+ */
+struct Variable : VariableAccess {
+  struct sVariable *s;        ///< private
+  ModuleL listeners;
+  ConditionVariable revision; ///< revision (= number of write accesses) number
+  RWLock rwlock;              ///< rwLock (usually handled via read/writeAccess -- but views may access directly...)
+  Item *reg;
+
+  /// @name c'tor/d'tor
+  Variable(const char* name);
+  virtual ~Variable();
+
+  /// @name access control
+  /// to be called by a processes before access, returns the revision
+  int readAccess(Module*);  //might set the caller to sleep
+  int writeAccess(Module*); //might set the caller to sleep
+  int deAccess(Module*);
+
+  /// @name syncing via a variable
+  /// the caller is set to sleep
+  void waitForNextWriteAccess();
+  int  waitForRevisionGreaterThan(int rev); //returns the revision
+
+  /// @name info
+  struct FieldRegistration& get_field(uint i) const;
+};
+inline void operator<<(ostream& os, const Variable& v){ os <<"Variable " <<v.name <<' ' <<*v.type; }
+
+
+//TODO: hide?
+struct sVariable {
+  virtual ~sVariable(){}
+  MT::Array<struct FieldRegistration*> fields; //? make static? not recreating for each variable?
+  struct LoggerVariableData *loggerData; //data that the logger may associate with a variable
+
+  virtual void serializeToString(MT::String &string) const;
+  virtual void deSerializeFromString(const MT::String &string);
+
+  sVariable():loggerData(NULL){}
 };
 
+
+//===========================================================================
+/**
+ * A System is an interconnected list of Modules and Variables.
+ */
+
+struct System:Module{
+  ModuleL mts;
+  VariableL vars;
+
+  System(const char* name=NULL):Module(name){}
+
+  virtual void step(){  for_list_(Module, m, mts) m->step();  }
+  virtual void open(){  for_list_(Module, m, mts) m->open();  }
+  virtual void close(){  for_list_(Module, m, mts) m->close();  }
+
+  Variable* addVariable(Access *a){
+    Variable *v = new Variable(a->name);
+    v->type = a->type->clone();
+    v->data = v->type->newInstance();
+    vars.append(v);
+    return v;
+  }
+
+  template<class T> Variable* addVariable(const char *name){
+    Variable *v = new Variable(name);
+    v->type = new Type_typed<T, void>();
+    v->data = new T;
+    vars.append(v);
+    return v;
+  }
+//  Item* getVariableEntry(const Access& acc);
+//  Item* getVariableEntry(const char* name, const Type& typeinfo);
+
+//  Item* getVar(uint i){ ItemL vars = system.getTypedItems<VariableEntry>("Variable"); return vars(i); }
+  template<class T> T& getVar(uint i){ return *((T*)vars(i)->data); }
+  template<class T> Access_typed<T>* getAccess(const char* varName){
+    Variable *v = listFindByName(vars, varName);
+    return new Access_typed<T>(varName, NULL, v);
+  }
+
+  template<class T> Module* addModule(const char *name=NULL, ModuleThread::StepMode mode=ModuleThread::listenFirst, double beat=0.);
+  Module* addModule(const char *dclName, const char *name=NULL, ModuleThread::StepMode mode=ModuleThread::listenFirst, double beat=0.);
+  void addModule(const char *dclName, const char *name, const uintA& accIdxs, ModuleThread::StepMode mode=ModuleThread::listenFirst, double beat=0.);
+  void addModule(const char *dclName, const char *name, const StringA& accNames, ModuleThread::StepMode mode=ModuleThread::listenFirst, double beat=0.);
+  KeyValueGraph graph() const;
+  void write(ostream& os) const;
+  void connect();
+};
+stdOutPipe(System);
+
+extern System& NoSystem;
+
+//===========================================================================
+/**
+ * An Engine runs a system.
+ */
 
 struct Engine{
   struct EventController *acc;
   enum { none=0, serial, threaded } mode;
-  KeyValueGraph *system;
+  System *system;
+  AccessL createdAccesses;
+  bool shutdown;
 
   Engine();
-  ~Engine();
+  virtual ~Engine();
 
-  void create(SystemDescription& S);
-  void step(Module &m);
-  void step(SystemDescription& S);
-  void test(SystemDescription& S);
+  void open(System& S);
+  void step(Module &m, bool threadedOnly=false);
+  void step(System& S=NoSystem);
+  void test(System& S=NoSystem);
+  void close(System& S=NoSystem);
 
   /// @name event control
   void enableAccessLog();
@@ -53,9 +177,9 @@ struct Engine{
 
 Engine& engine();
 
-inline void operator<<(std::ostream& os,const SystemDescription::ModuleEntry& m){ os <<"ModuleEntry"; }
-inline void operator<<(std::ostream& os,const SystemDescription::AccessEntry& a){ os <<"AccessEntry '" <<"'"; }
-inline void operator<<(std::ostream& os,const SystemDescription::VariableEntry& v){ os <<"VariableEntry"; }
+//inline void operator<<(std::ostream& os,const SystemDescription::ModuleEntry& m){ os <<"ModuleEntry"; }
+//inline void operator<<(std::ostream& os,const SystemDescription::AccessEntry& a){ os <<"AccessEntry '" <<"'"; }
+//inline void operator<<(std::ostream& os,const SystemDescription::VariableEntry& v){ os <<"VariableEntry"; }
 
 
 //===========================================================================
@@ -65,12 +189,12 @@ inline void operator<<(std::ostream& os,const SystemDescription::VariableEntry& 
 
 struct Event{
   const Variable *variable;
-  const Module *module;
+  const ModuleThread *module;
   enum EventType{ read, write, stepBegin, stepEnd } type;
   uint revision;
   uint procStep;
   double time;
-  Event(const Variable *v, const Module *m, EventType _type, uint _revision, uint _procStep, double _time):
+  Event(const Variable *v, const ModuleThread *m, EventType _type, uint _revision, uint _procStep, double _time):
     variable(v), module(m), type(_type), revision(_revision), procStep(_procStep), time(_time){}
 };
 
@@ -98,19 +222,32 @@ struct EventController{
   void dumpEventList();
 
   //methods called during write/read access from WITHIN biros
-  void queryReadAccess(Variable *v, const Module *p);
-  void queryWriteAccess(Variable *v, const Module *p);
-  void logReadAccess(const Variable *v, const Module *p);
-  void logReadDeAccess(const Variable *v, const Module *p);
-  void logWriteAccess(const Variable *v, const Module *p);
-  void logWriteDeAccess(const Variable *v, const Module *p);
-  void logStepBegin(const Module *p);
-  void logStepEnd(const Module *p);
+  void queryReadAccess(Variable *v, const ModuleThread *p);
+  void queryWriteAccess(Variable *v, const ModuleThread *p);
+  void logReadAccess(const Variable *v, const ModuleThread *p);
+  void logReadDeAccess(const Variable *v, const ModuleThread *p);
+  void logWriteAccess(const Variable *v, const ModuleThread *p);
+  void logWriteDeAccess(const Variable *v, const ModuleThread *p);
+  void logStepBegin(const ModuleThread *p);
+  void logStepEnd(const ModuleThread *p);
 
   MT::Array<ConditionVariable*> breakpointQueue;
   Mutex breakpointMutex;
   void breakpointSleep(); //the caller goes to sleep
   void breakpointNext(); //first in the queue is being woke up
 };
+
+
+template<class T> Module* System::addModule(const char *name, ModuleThread::StepMode mode, double beat){
+  Module *m = new T;
+  currentlyCreating=NULL;
+  for_list_(Access, a, m->accesses) a->module = m;
+  mts.append(m);
+
+  m->thread = new ModuleThread(m, name);
+  m->thread->mode = mode;
+  m->thread->beat = beat;
+  return m;
+}
 
 #endif

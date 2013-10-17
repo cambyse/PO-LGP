@@ -1,6 +1,6 @@
 #include<MT/ors.h>
 #include<MT/aico.h>
-#include<MT/algos.h>
+#include<Algo/algos.h>
 #include<MT/opengl.h>
 #include<MT/plot.h>
 #include<GL/gl.h>

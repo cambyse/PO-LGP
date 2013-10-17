@@ -1,0 +1,27 @@
+# SILLY makefile to wrap ors with swig.
+#
+# Experimental as of <2013-04-02 Tue>
+#
+# in python you can use ors simply by importing ors:
+# >>> import corpy
+# >>> help(corepy)
+#
+# Also take a look at share/test/orspy/
+
+ifndef MLR_PATH
+	MLR_PATH=~/git/mlr
+endif
+
+main: python
+
+LDFLAGS+=-L../../lib -Xlinker -rpath $(MLR_PATH)/share/lib
+
+python:
+	swig2.0 -c++ -python core.i
+	install -D corepy.py ~/.local/lib/python2.7/site-packages/corepy.py
+	$(CXX) $(EXTRA_CXXFLAGS) -c -fPIC -shared core_wrap.cxx -I../ -I/usr/include/python2.7/
+	$(CXX) -shared core_wrap.o -I../ -I/usr/include/python2.7/ $(LDFLAGS) -lCore -lGui -o ~/.local/lib/python2.7/site-packages/_corepy.so
+	rm corepy.py
+
+clean:
+	rm -f _corepy.so core_wrap.*

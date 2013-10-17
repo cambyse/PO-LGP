@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import roslib 
+import roslib
 roslib.load_manifest('the_curious_robot')
 roslib.load_manifest('actionlib')
 import rospy
@@ -10,15 +10,17 @@ import the_curious_robot.msg as msgs
 import the_curious_robot.srv as srvs
 
 import orspy
-import corepy
+# import corepy
 import util
-
 import require_provide as rp
 
+
 class InitServer:
+
     def __init__(self, name):
-        self.server = SimpleActionServer(name, msgs.EmptyAction,
-                execute_cb=self.execute, auto_start=False)
+        self.server = SimpleActionServer(
+            name, msgs.EmptyAction,
+            execute_cb=self.execute, auto_start=False)
         self.oois_pub = rospy.Publisher('oois', msgs.Objects)
         self.belief_pub = rospy.Publisher('world_belief', msgs.ors)
 
@@ -34,7 +36,7 @@ class InitServer:
             world = world_init()
             for p in world.bodies:
                 b = util.parse_body_msg(p)
-                oois.append( {'body': b, 'properties': util.Properties()} )
+                oois.append({'body': b, 'properties': util.Properties()})
                 self.graph.addObject(b)
         except rospy.ServiceException, e:
             self.server.set_aborted()
@@ -47,6 +49,7 @@ class InitServer:
         self.belief_pub.publish(belief_msg)
 
         self.server.set_succeeded()
+
 
 def main():
     rospy.init_node('tcr_sas_init')

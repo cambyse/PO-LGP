@@ -1,18 +1,16 @@
-target: examples
+BASE = .
 
-MAKEFLAGS :=
+target: examples
 
 ################################################################################
 
 NAME   = $(shell basename $(PWD))
 
-srcs =  $(shell find src -mindepth 1 -maxdepth 1 -type d)
+srcs =  $(shell find src -mindepth 1 -maxdepth 1 -type d -not -name 'extern' )
 srcs += $(shell find src/extern -mindepth 1 -maxdepth 1 -type d)
-exas = $(shell find examples -mindepth 2 -maxdepth 2 -type d)
+exas = $(shell find examples -mindepth 2 -maxdepth 2 -type d -not -name '*py')
 
 ################################################################################
-
-.NOTPARALLEL: all src examples depend clean
 
 all: $(srcs:%=makePath/%) $(exas:%=makePath/%)
 
@@ -22,17 +20,20 @@ examples: $(exas:%=makePath/%)
 
 depend: $(srcs:%=dependPath/%)
 
-clean: $(srcs:%=cleanPath/%) $(exas:%=cleanPath/%)
+clean: $(srcs:%=cleanPath/%) $(exas:%=cleanPath/%) cleanLocks
 
 ################################################################################
 
 doc::
-	#$(MAKE) -w -C doc guide doxy
 	cd doc; doxygen MLR.doxy;
+#	$(MAKE) -w -C doc guide doxy
 
 reformatSources:
 	astyle --options=src/style.astyle "src/MT/*.h" "src/MT/*.cpp" "src/MT/*.cxx"
 	cd src; find MT/ \( -name "*.h" -or -name "*.cpp" -or -name "*.cxx" \) -exec ./style.sed.sh {} \;
+
+cleanLocks: force
+	find . -name 'Make.lock' -type d -delete
 
 %.tgz:: force
 	rm -f $*.tgz;

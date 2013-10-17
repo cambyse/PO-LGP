@@ -16,6 +16,8 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
+#ifdef MT_GTEST
+
 #include "array.h"
 #include "gtest/gtest.h"
 
@@ -50,3 +52,4 @@ TEST(ArrayTest, testEye) {
   }
 }
 
+#endif

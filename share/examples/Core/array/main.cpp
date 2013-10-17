@@ -6,16 +6,17 @@ using namespace std;
 
 bool DoubleComp(const double& a,const double& b){ return a<b; }
 
-void testBasics(){
+void TEST(Basics){
   cout <<"\n*** basic manipulations\n";
   arr a;     //'arr' is a macro for MT::Array<double>
   intA ints; //a macro for MT::Array<int>
 
-  a.resize(7,10);
+  a.resize(7,5);
   double *ap=a.p, *astop=ap+a.N;
   for(; ap!=astop; ap++) *ap=ap-a.p; //assign pointer offsets to entries
   cout <<"\narray filled with pointer offsets (-> memory is linear):" <<a <<endl;
   cout <<"\nsubarray (of the original) [2:4,:] (in MATLAB notation)" <<a.sub(2,4,0,-1) <<endl;
+  CHECK(a.last()==a.N-1,"");
 
   //easier looping:
   cout <<"\neasier looping:";
@@ -33,6 +34,8 @@ void testBasics(){
   cout <<"\n2 columns deleted at 1:" <<a <<endl;
   a.insColumns(1,3);
   cout <<"\n3 columns inserted at 1:" <<a <<endl;
+  CHECK(a.d1==6,"");
+  CHECK(a(0,1)==0,"non-zeros inserted");
 
   //access:
   cout <<"\n3rd line:" <<a[2] <<endl; //gets a const-version of the []-subarray
@@ -40,12 +43,16 @@ void testBasics(){
   a[3]()+=1.; //use operator() to get a non-const &-version of the []-subarray 
   a[1]()=a[2];
   cout <<"\nrows manipulated:" <<a <<endl;
+  CHECK(a(2,1)==7.,"");
+  CHECK(a[1]==a[2],"");
 
   //setting arrays ``by hand''
   a = ARR(0, 1, 2, 3, 4); //ARR() is equivalent to ARRAY<double>()
   cout <<"\nset by hand: " <<a <<endl;
   ints = ARRAY<int>(0, -1, -2, -3, -4);
   cout <<"\nset by hand: " <<ints <<endl;
+  copy(a, ints); //copying between different types
+  CHECK(a(2)==-2,"");
 
   //TRY DEBUGGING with GDB:
   //set a breakpoint here
@@ -54,7 +61,6 @@ void testBasics(){
   //randomization
   rndUniform(a,-1.,1,false); //same as   forall(i,a) *i=rnd.uni(-1,1);
   cout <<"\nrandom double array:\n" <<a <<endl;
-  cout <<"\nmultiplied by 2:\n" <<2.*a <<endl;
 
   //sorting
   a.sort(DoubleComp);
@@ -62,6 +68,7 @@ void testBasics(){
   cout <<"\n sorting: sorted double array:\n" <<a <<endl;
   a.insertInSorted(.01,DoubleComp);
   cout <<"\n sorted insert: .01 added:\n" <<a <<endl;
+  for(uint i=0;i<a.N-1;i++) CHECK(a(i)<=a(i+1),"not sorted!");
 
   //commuting I/O-operators:
   a.resize(3,7);
@@ -78,15 +85,16 @@ void testBasics(){
   inf.close();
 
   cout <<"\nafter saved and loaded from a file:" <<b <<endl;
-  CHECK(a==b,"save-load failed");
+  CHECK_ZERO(maxDiff(a,b), 1e-4, "non-exact save load");
 }
 
-void testMatlab(){
+void TEST(Matlab){
   arr x = randn(5);
   cout <<"\nrandn(5)" <<x <<endl;
 
   x = eye(5);
   cout <<"\neye(5)" <<x <<endl;
+  for(uint i=0;i<x.d0;i++) CHECK(x(i,i)==1.,"is not eye");
 
   uintA p = randperm(5);
   cout <<"\nrandperm(5)" <<p <<endl;
@@ -97,19 +105,22 @@ void testMatlab(){
   cout <<"\nrepmat(A,2,3)" <<B <<endl;
 }
 
-void testException(){
+void TEST(Exception){
   cout <<"\n*** exception handling\n";
   arr A;
   A.append(10);
   cout <<"accessing our of range..." <<endl;
+  bool caught=false;
   try{
     cout <<A(2);
   }catch(const char *e){
+    caught=true;
     cout <<"exception caught `" <<e <<"'" <<endl;
   }
+  CHECK(caught,"exception not caught");
 }
 
-void testMemoryBound(){
+void TEST(MemoryBound){
   cout <<"\n*** memory bound\n";
   MT::globalMemoryBound=1ull<<20;
   MT::globalMemoryStrict=true;
@@ -124,7 +135,7 @@ void testMemoryBound(){
   MT::globalMemoryBound=1ull<<30;
 }
 
-void testBinaryIO(){
+void TEST(BinaryIO){
   cout <<"\n*** acsii and binary IO\n";
   arr a,b; a.resize(10000,100); rndUniform(a,0.,1.,false);
 
@@ -133,33 +144,31 @@ void testBinaryIO(){
 
   MT::timerStart();
   a.write(fout," ","\n","[]",true,false);
-  cout <<"ascii save time: " <<MT::timerRead() <<"sec" <<endl;
+  cout <<"ascii write time: " <<MT::timerRead() <<"sec" <<endl;
   fout.close();
 
   MT::timerStart();
   b.read(fin);
-  cout <<"ascii load time: " <<MT::timerRead() <<"sec" <<endl;
+  cout <<"ascii read time: " <<MT::timerRead() <<"sec" <<endl;
   fin.close();
 
-  //CHECK(a==b) would fail because ascii numbers are not exact!
+  CHECK_ZERO(maxDiff(a,b), 1e-4, "ascii write-read error");
 
   MT::timerStart();
   a.write(bout,NULL,NULL,NULL,true,true);
-  cout <<"binary save time: " <<MT::timerRead() <<"sec" <<endl;
+  cout <<"binary write time: " <<MT::timerRead() <<"sec" <<endl;
   bout.close();
 
   MT::timerStart();
   b.read(bin);
-  cout <<"binary load time: " <<MT::timerRead() <<"sec" <<endl;
+  cout <<"binary read time: " <<MT::timerRead() <<"sec" <<endl;
   bin.close();
 
   CHECK(a==b,"binary IO failed!");
   cout <<"binary IO exactly restores double array and is much faster" <<endl;
 }
 
-//#include "expressions.cpp"
-
-void testExpression(){
+void TEST(Expression){
   cout <<"\n*** matrix expressions\n";
   arr a(2,3),b(3,2),c(3),d;
   rndInteger(a,-5,5,false);
@@ -176,24 +185,25 @@ void testExpression(){
   cout <<"\nlonger expression\n" <<2.*a + ~b;
 }
 
-void testPermutation(){
+void TEST(Permutation){
   cout <<"\n*** permutation\n";
   uintA p;
   rnd.seed(3);
 
   p.setStraightPerm(10);
   cout <<"\ninit:\n" <<p;
+  CHECK(p(2)==2 && p(5)==5,"");
 
   p.permute(2,5);
   cout <<"\npermute(2,5):\n" <<p;
+  CHECK(p(2)==5 && p(5)==2,"");
 
   p.setRandomPerm();
   cout <<"\nrandom:\n" <<p <<endl;
-
   for(uint i=0;i<p.N;i++) cout <<i <<":" <<p(i) <<"\n";
 }
 
-void testGnuplot(){
+void TEST(Gnuplot){
   cout <<"\n*** gnuplot\n";
   uint i,j;
   arr X(30,30);
@@ -210,18 +220,23 @@ void testGnuplot(){
   MT::wait(1.);
 }
 
-void testDeterminant(){
+void TEST(Determinant){
   cout <<"\n*** determinant computation\n";
-  //double A[4]={1.,2.,-2.,3.};
-  double B[9]={1,1,2,1,1,0,0,-2,3};
-  //arr a; a.copy(A,4); a.resizeCopy(2,2);
-  arr a; a.setCarray(B,9); a.reshape(3,3);
-  cout <<a <<"det=" <<determinant(a) <<std::endl;
-  cout <<"co00=" <<cofactor(a,0,0) <<std::endl;
-  cout <<"co10=" <<cofactor(a,1,0) <<std::endl;
+  arr a = ARR(1,1,2,1,1,0,0,-2,3);
+  a.reshape(3,3);
+  double d=determinant(a);
+  double c00=cofactor(a,0,0);
+  double c11=cofactor(a,1,1);
+  double c22=cofactor(a,2,2);
+  cout <<a <<"det=" <<d <<std::endl;
+  cout <<"co00=" <<c00 <<std::endl;
+  cout <<"co11=" <<c11 <<std::endl;
+  cout <<"co22=" <<c22 <<std::endl;
+  //  CHECK(fabs(d-c00*a(0,0))<1e-10,"");
+  //  CHECK(fabs(d-c11*a(1,0))<1e-10,"");
 }
 
-void testMM(){
+void TEST(MM){
   cout <<"\n*** matrix multiplication speeds\n";
   uint M=10000,N=100,O=100;
   arr A(M,N),B(N,O),C,D;
@@ -233,20 +248,25 @@ void testMM(){
   MT::useLapack=false; 
   MT::timerStart();
   innerProduct(D,A,B);
-  cout <<"native time = " <<MT::timerRead() <<std::endl;
+  double t_native=MT::timerRead();
+  cout <<"native time = " <<t_native <<std::endl;
 
-  if(MT::lapackSupported){
-    MT::useLapack=true;
-    MT::timerStart();
-    blas_MM(C,A,B);
-    cout <<"blas time = " <<MT::timerRead() <<std::endl;
-    cout <<"error = " <<sqrDistance(C,D) <<std::endl;
-  }else{
+  if(!MT::lapackSupported){
     cout <<"LAPACK not installed - only native algorithms" <<std::endl;
+    return;
   }
+
+  MT::useLapack=true;
+  MT::timerStart();
+  blas_MM(C,A,B);
+  double t_blas=MT::timerRead();
+  cout <<"blas time = " <<MT::timerRead() <<std::endl;
+
+  CHECK_ZERO(maxDiff(C,D), 1e-10, "blas MM is not equivalent to native matrix multiplication");
+  CHECK(t_blas < t_native,"blas MM is slower than native");
 }
 
-void testSVD(){
+void TEST(SVD){
   cout <<"\n*** singular value decomposition\n";
   uint m=1000,n=500,r=2,svdr;
   arr L(m,r),R(r,n),A,U,d,V,D;
@@ -259,23 +279,28 @@ void testSVD(){
   MT::useLapack=false;
   MT::timerStart();
   svdr=svd(U,d,V,A);
-  cout <<"native SVD time = " <<MT::timerRead(); cout.flush();
+  double t_native = MT::timerRead();
+  cout <<"native SVD time = " <<t_native <<flush;
   D.setDiag(d);
-  cout <<" error = " <<norm(A - U*D*~V) <<" rank = " <<svdr <<"("<<r<<")"<<std::endl;
+  cout <<" error = " <<maxDiff(A, U*D*~V) <<" rank = " <<svdr <<"("<<r<<")"<<std::endl;
+  CHECK_ZERO(maxDiff(A, U*D*~V), 1e-10, "native SVD failed");
 
-  if(MT::lapackSupported){
-    MT::useLapack=true;
-    MT::timerStart();
-    svdr=svd(U,d,V,A);
-    cout <<"lapack SVD time = " <<MT::timerRead(); cout.flush();
-    D.setDiag(d);
-    cout <<" error = " <<norm(A - U*D*~V) <<" rank = " <<svdr <<"("<<r<<")" <<std::endl;
-  }else{
+  if(!MT::lapackSupported){
     cout <<"LAPACK not installed - only native algorithms" <<std::endl;
+    return;
   }
+
+  MT::useLapack=true;
+  MT::timerStart();
+  svdr=svd(U,d,V,A);
+  double t_lapack = MT::timerRead();
+  cout <<"lapack SVD time = " <<t_lapack <<flush;
+  D.setDiag(d);
+  cout <<" error = " <<maxDiff(A, U*D*~V) <<" rank = " <<svdr <<"("<<r<<")" <<std::endl;
+  CHECK_ZERO(maxDiff(A, U*D*~V), 1e-10, "Lapack SVD failed");
 }
 
-void testInverse(){
+void TEST(Inverse){
   cout <<"\n*** matrix inverse\n";
   uint m=500,n=500,svdr;
   arr A(m,n),invA,I;
@@ -287,29 +312,33 @@ void testInverse(){
   MT::useLapack=false;
   MT::timerStart();
   svdr=inverse_SVD(invA,A);
-  cout <<"native SVD inverse time = " <<MT::timerRead(); cout.flush();
-  uint mi;
-  cout <<" error = " <<maxDiff(A*invA,I,&mi) <<" rank = " <<svdr <<std::endl;
-  
+  double t_native = MT::timerRead();
+  cout <<"native SVD inverse time = " <<t_native <<flush;
+  cout <<" error = " <<maxDiff(A*invA,I) <<" rank = " <<svdr <<std::endl;
+  CHECK_ZERO(maxDiff(A*invA,I), 1e-10, "native matrix inverse failed");
+
   /*MT::timerStart();
   MT::inverse_LU(invA,A);
   cout <<"native LU  inverse time = " <<MT::timerRead(); cout.flush();
   cout <<" error = " <<maxDiff(invA*A,I) <<std::endl;*/
   
-  if(MT::lapackSupported){
-    MT::useLapack=true;
-    MT::timerStart();
-    svdr=inverse_SVD(invA,A);
-    cout <<"lapack SVD inverse time = " <<MT::timerRead(); cout.flush();
-    cout <<" error = " <<maxDiff(A*invA,I,NULL) <<" rank = " <<svdr <<std::endl;
+  if(!MT::lapackSupported){
+    cout <<"LAPACK not installed - only native algorithms" <<std::endl;
+    return;
+  }
 
-    /*MT::timerStart();
+  MT::useLapack=true;
+  MT::timerStart();
+  svdr=inverse_SVD(invA,A);
+  double t_lapack = MT::timerRead();
+  cout <<"lapack SVD inverse time = " <<t_lapack <<flush;
+  cout <<" error = " <<maxDiff(A*invA, I) <<" rank = " <<svdr <<std::endl;
+  CHECK_ZERO(maxDiff(A*invA, I), 1e-10, "lapack matrix inverse failed");
+
+  /*MT::timerStart();
     MT::inverse_LU(invA,A);
     cout <<"lapack LU  inverse time = " <<MT::timerRead(); cout.flush();
     cout <<" error = " <<norm(invA*A - I) <<std::endl;*/
-  }else{
-    cout <<"LAPACK not installed - only native algorithms" <<std::endl;
-  }
   
   cout <<"\n*** symmetric matrix inverse\n";
   A.resize(m,m);
@@ -319,17 +348,18 @@ void testInverse(){
   
   cout <<"speed test: " <<m <<'x' <<m <<" symmetric inversion..." <<std::endl;
 
-  if(MT::lapackSupported){
-    MT::timerStart();
-    lapack_inverseSymPosDef(invA,A);
-    cout <<"lapack SymDefPos inverse time = " <<MT::timerRead(); cout.flush();
-    cout <<" error = " <<maxDiff(A*invA,I,&mi) <<std::endl;
-  }else{
-    cout <<"LAPACK not installed - only native algorithms" <<std::endl;
-  }
+  MT::timerStart();
+  lapack_inverseSymPosDef(invA,A);
+  double t_symPosDef = MT::timerRead();
+  cout <<"lapack SymDefPos inverse time = " <<t_symPosDef <<flush;
+  cout <<" error = " <<maxDiff(A*invA, I) <<std::endl;
+  CHECK_ZERO(maxDiff(A*invA, I), 1e-10, "lapack SymDefPos inverse failed");
+
+  CHECK(t_lapack < t_native, "lapack matrix inverse slower than native");
+  CHECK(t_symPosDef < t_lapack, "symposdef matrix inverse slower than general");
 }
 
-void testGaussElimintation() {
+void TEST(GaussElimintation) {
   cout << "\n*** Gaussian elimination with partial pivoting \n";
   if (MT::lapackSupported) {
     arr A;
@@ -348,12 +378,12 @@ void testGaussElimintation() {
   }
 }
 
-//--------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// alternative operator notation
+// alternative operator notation -- TRASH THIS?
 //
 
-enum ArrayOpType { exProduct, inProduct, elemProduct };
+/*enum ArrayOpType { exProduct, inProduct, elemProduct };
 class ArrayOp{
 public:
   ArrayOpType type;
@@ -388,8 +418,9 @@ ostream &operator<<(ostream &os,ArrayOp &op){ arr x; op.assign(x); os <<x; retur
 #define PROD % ArrayOp(inProduct) %
 #define PROD % ArrayOp(inProduct) %
 #define MUL  % ArrayOp(elemProduct) %
+*/
 
-/*void testNewOp(){
+/*void TEST(NewOp){
   arr x(2,3),y(3,4);
   rndInt(x,0,5);
   rndInt(y,0,5);
@@ -398,7 +429,9 @@ ostream &operator<<(ostream &os,ArrayOp &op){ arr x; op.assign(x); os <<x; retur
   }*/
 
 
-void testTensor(){
+//------------------------------------------------------------------------------
+
+void TEST(Tensor){
   cout <<"\n*** tensor manipulations\n";
 
   arr A,B,C,D;
@@ -431,12 +464,12 @@ void testTensor(){
 
   //test permutations:
   A.resize(2,3,4);
-  rndInteger(A,0.,1.,false);
-  tensorPermutation(B,A,TUP(0,1,2));
+  rndInteger(A,0,1,false);
+  tensorPermutation(B, A, TUP(0,1,2));
   cout <<A <<endl <<B <<endl;
 }
 
-//--------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 void write(RowShiftedPackedMatrix& PM){
   cout <<"RowShiftedPackedMatrix: real:" <<PM.Z.d0 <<'x' <<PM.real_d1 <<"  packed:" <<PM.Z.d0 <<'x' <<PM.Z.d1 <<endl;
@@ -445,7 +478,7 @@ void write(RowShiftedPackedMatrix& PM){
   cout <<"\nrowShifts=" <<PM.rowShift <<"\ncolPaches=" <<PM.colPatches <<endl;
 }
 
-void testRowShiftedPackedMatrix(){
+void TEST(RowShiftedPackedMatrix){
   cout <<"\n*** RowShiftedPackedMatrix\n";
   
   arr J;
@@ -469,31 +502,16 @@ void testRowShiftedPackedMatrix(){
     arr x(X.d0);
     rndInteger(x,0,9);
     cout <<"unpacking errors = " <<maxDiff(X,unpack(Y)) <<' ' <<maxDiff(~X*X,unpack(comp_At_A(Y))) <<' ' <<maxDiff(~X*x,comp_At_x(Y,x)) <<endl;
-    //cout <<X <<endl;
-    //write(*((RowShiftedPackedMatrix*)Y.aux));
-    //cout <<comp_At_A(Y).unpack() <<~X*X <<endl;
+    CHECK_ZERO(maxDiff(X, unpack(Y)), 1e-10, "");
+    CHECK_ZERO(maxDiff(~X*X, unpack(comp_At_A(Y))), 1e-10, "");
+    CHECK_ZERO(maxDiff(~X*x, comp_At_x(Y,x)), 1e-10, "");
   }
 }
 
-//--------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
-char* gdb(MT::Array<double>& a){
-  static MT::String buf;
-  buf.clear();
-  a.writeDim(buf);
-  a.writeRaw(buf);
-  return buf.p;
-}
-char* gdb(MT::Array<int>& a){
-  static MT::String buf;
-  buf.clear();
-  a.writeDim(buf);
-  a.writeRaw(buf);
-  return buf.p;
-}
+int MAIN(int argc, char *argv[]){
 
-int main(int argc, char *argv[]){
-  
   testBasics();
   testMatlab();
   testException();
@@ -511,6 +529,7 @@ int main(int argc, char *argv[]){
   testGaussElimintation();
   
   cout <<"\n ** total memory still allocated = " <<MT::globalMemoryTotal <<endl;
+  CHECK_ZERO(MT::globalMemoryTotal, 0, "memory not released");
   
   return 0;
 }

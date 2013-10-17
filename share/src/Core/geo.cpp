@@ -1000,6 +1000,12 @@ double* Transformation::getAffineMatrix(double *m) const {
   return m;
 }
 
+arr Transformation::getAffineMatrix() const{
+  arr T(4,4);
+  getAffineMatrix(T.p);
+  return T;
+}
+
 /// get inverse OpenGL matrix for this frame (of type double[16])
 double* Transformation::getInverseAffineMatrix(double *m) const {
   Matrix M = rot.getMatrix();

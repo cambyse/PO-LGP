@@ -10,7 +10,9 @@ import util
 
 import require_provide as rp
 
+
 class GotoOOIActionServer:
+
     def __init__(self, name):
         self.ooi_id = ""
         self.oois = []
@@ -19,22 +21,25 @@ class GotoOOIActionServer:
 
         # subscriber
         self.oois_sub = rospy.Subscriber('oois', msgs.Objects, self.oois_cb)
-        self.ooi_id_sub = rospy.Subscriber('ooi_id', msgs.ObjectID, self.ooi_id_cb)
-        self.control_done_sub = rospy.Subscriber('control_done',
-                msgs.control_done, self.control_done_cb)
+        self.ooi_id_sub = rospy.Subscriber(
+            'ooi_id', msgs.ObjectID, self.ooi_id_cb)
+        self.control_done_sub = rospy.Subscriber(
+            'control_done',
+            msgs.control_done, self.control_done_cb)
 
         # publisher
         self.control_pub = rospy.Publisher('control', msgs.control)
 
-        self.server = SimpleActionServer(name, msgs.GotoOOIAction,
-                execute_cb=self.execute, auto_start=False)
+        self.server = SimpleActionServer(
+            name, msgs.GotoOOIAction,
+            execute_cb=self.execute, auto_start=False)
         self.server.register_preempt_callback(self.preempt_cb)
         self.server.start()
         rp.Provide("GotoOOI")
 
     def execute(self, msg):
         if not self.ooi_id:
-            server.set_aborted()
+            self.server.set_aborted()
             return
         for ooi in self.oois:
             if ooi['body'].name == self.ooi_id:
@@ -44,9 +49,9 @@ class GotoOOIActionServer:
                 msg.pose.position.z = 1
                 break
 
-        self.react_to_controller = True #TODO: rather block?
+        self.react_to_controller = True  # TODO: rather block?
         self.control_pub.publish(msg)
-        
+
         while not self.control_done and not rospy.is_shutdown():
             rospy.sleep(.1)
         self.react_to_controller = False
@@ -58,7 +63,7 @@ class GotoOOIActionServer:
         self.ooi_id = msg.id
 
     def oois_cb(self, msg):
-        #rospy.logdebug("callback")
+        # rospy.logdebug("callback")
         self.oois = util.parse_oois_msg(msg)
 
     def control_done_cb(self, msg):
@@ -68,9 +73,11 @@ class GotoOOIActionServer:
     def preempt_cb(self):
         self.server.set_preempted()
 
+
 def main():
     rospy.init_node('tcr_sas_goto_ooi')
     server = GotoOOIActionServer('goto_ooi')
+
 
 if __name__ == '__main__':
     main()
