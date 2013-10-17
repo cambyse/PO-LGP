@@ -5,6 +5,43 @@ include(CheckIncludeFile)
 include(CheckIncludeFileCXX)
 include(FindPkgConfig)
 
+# Gui options
+option(USE_FLTK "Use FLTK" OFF)
+if(USE_FLTK)
+        set(MT_FLTK -DMT_FLTK)
+endif(USE_FLTK)
+option(USE_GTKGL "Use GTK GL" ON)
+if(USE_GTKGL)
+        set(MT_GTKGL -DMT_GTKGL)
+        set(USE_GL ON)
+endif(USE_GTKGL)
+option(USE_FREEGLUT "Use FreeGLUT" OFF)
+if(USE_FREEGLUT)
+        set(MT_FREEGLUT -DMT_FREEGLUT)
+        set(USE_OPENGL ON)
+endif(USE_FREEGLUT)
+option(USE_OPENGL "Use OpenGL" ON)
+if(USE_OPENGL)
+        set(MT_GL -DMT_GL)
+endif(USE_OPENGL)
+option(USE_QHULL "Use QHULL" ON)
+if(USE_QHULL)
+        set(MT_QHULL -DMT_QHULL)
+        set(QHULL_LIBRARIES qhull)
+        set(PKG_QHULL -lqhull)
+endif(USE_QHULL)
+option(USE_GRAPHVIZ "Use graphviz visualization" ON)
+if(USE_GRAPHVIZ)
+endif(USE_GRAPHVIZ)
+
+# TODO check for illegal combinations
+
+configure_file(
+        ${PROJECT_SOURCE_DIR}/pkgconfig/mlr_gui.pc.in
+        ${PROJECT_BINARY_DIR}/pkgconfig/mlr_gui.pc
+        @ONLY
+)
+
 pkg_check_modules(GTKGL REQUIRED gtkglext-1.0)
 
 # first check lib then header for qhull
@@ -21,7 +58,6 @@ check_include_file_CXX(graphviz/graphviz_version.h GRAPHVIZ_FOUND)
 if(NOT GRAPHVIZ_FOUND)
 	message(FATAL_ERROR "graph library not found, cannot build gui")
 endif(NOT GRAPHVIZ_FOUND)
-
 
 set(SOURCES     ${SOURCES}
                 geo_qhull.cpp
