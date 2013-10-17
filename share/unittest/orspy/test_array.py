@@ -1,6 +1,6 @@
 import sys
 sys.path.append('../../lib/')
-import orspy
+import corepy
 
 import unittest2 as unittest
 
@@ -11,7 +11,7 @@ class TestArray_MatlabFunctions(unittest.TestCase):
     """
 
     def test_creation_of_matrix_of_ones(self):
-        a = orspy.ones(2, 2)
+        a = corepy.ones(2, 2)
         # check dimensions
         self.assertEqual(a.N, 4)
         self.assertEqual(a.d0, 2)
@@ -23,7 +23,7 @@ class TestArray_MatlabFunctions(unittest.TestCase):
         self.assertAlmostEqual(a[1, 1], 1.)
 
     def test_creation_of_matrix_of_zeros(self):
-        a = orspy.zeros(2, 3)
+        a = corepy.zeros(2, 3)
         # check dimensions
         self.assertEqual(a.N, 6)
         self.assertEqual(a.d0, 2)
@@ -37,7 +37,7 @@ class TestArray_MatlabFunctions(unittest.TestCase):
         self.assertAlmostEqual(a[1, 2], 0.)
 
     def test_creation_of_identity_matrix(self):
-        a = orspy.eye(2, 2)
+        a = corepy.eye(2, 2)
         # check dimensions
         self.assertEqual(a.N, 4)
         self.assertEqual(a.d0, 2)
@@ -54,7 +54,7 @@ class TestArray_setFromPythonList(unittest.TestCase):
     Note: this testclass also tests the magic method __getitem__.
     """
     def test_setWithPythonList1D_one_element(self):
-        a = orspy.ArrayDouble()
+        a = corepy.ArrayDouble()
         a.setWithList([1.])
         # check dimensions
         self.assertEqual(a.N, 1)
@@ -63,7 +63,7 @@ class TestArray_setFromPythonList(unittest.TestCase):
         self.assertAlmostEqual(a[0], 1.)
 
     def test_setWithPythonList1D_multiple_elements(self):
-        a = orspy.ArrayDouble()
+        a = corepy.ArrayDouble()
         a.setWithList([1.] * 10)
         # check dimensions
         self.assertEqual(a.N, 10)
@@ -74,7 +74,7 @@ class TestArray_setFromPythonList(unittest.TestCase):
         self.assertAlmostEqual(a[9], 1.)
 
     def test_setWithPythonList2D(self):
-        a = orspy.ArrayDouble()
+        a = corepy.ArrayDouble()
         a.setWithList([[1., 1.], [2., 2.]])
         # check dimensions
         self.assertEqual(a.d0, 2)
@@ -88,7 +88,7 @@ class TestArray_setFromPythonList(unittest.TestCase):
 
 class TestArray_setitem(unittest.TestCase):
     def test_setitem_with_multiple_dimensions(self):
-        a = orspy.zeros(2, 2)
+        a = corepy.zeros(2, 2)
         a[0, 0] = 1.
         a[0, 1] = 2.
         a[1, 0] = 3.
@@ -100,7 +100,7 @@ class TestArray_setitem(unittest.TestCase):
         self.assertAlmostEqual(a[1, 1], 4.)
 
     def test_setitem_with_single_dimensions(self):
-        a = orspy.ArrayDouble()
+        a = corepy.ArrayDouble()
         a.setWithList([0] * 10)
 
         a[0] = 1.
@@ -117,7 +117,7 @@ class TestArray_slicing(unittest.TestCase):
 
     def test_get_full_sub_matrix(self):
         n = 5
-        a = orspy.eye(n, n)
+        a = corepy.eye(n, n)
         tmp = a[0:n, 0:n]
         print tmp
         self.assertEqual(tmp.N, n*n)
@@ -127,7 +127,7 @@ class TestArray_slicing(unittest.TestCase):
     def test_get_full_sub_matrix_with_index_out_of_bounds(self):
         """python it pretty forgiving when indices are out of bounds"""
         n = 5
-        a = orspy.eye(n, n)
+        a = corepy.eye(n, n)
         tmp = a[0:1000, 0:1000]
         print tmp
         self.assertEqual(tmp.N, n*n)
@@ -136,7 +136,7 @@ class TestArray_slicing(unittest.TestCase):
 
     def test_get_full_sub_matrix_with_slice_without_first_indices(self):
         n = 5
-        a = orspy.eye(n, n)
+        a = corepy.eye(n, n)
         tmp = a[:n, :n]
         print tmp
         self.assertEqual(tmp.N, n*n)
@@ -145,7 +145,7 @@ class TestArray_slicing(unittest.TestCase):
 
     def test_get_full_sub_matrix_with_slice_without_last_indices(self):
         n = 5
-        a = orspy.eye(n, n)
+        a = corepy.eye(n, n)
         tmp = a[0:, 0:]
         print tmp
         self.assertEqual(tmp.N, n*n)
@@ -154,7 +154,7 @@ class TestArray_slicing(unittest.TestCase):
 
     def test_get_full_sub_matrix_with_slice_without_any_indices(self):
         n = 5
-        a = orspy.eye(n, n)
+        a = corepy.eye(n, n)
         tmp = a[:, :]
         print tmp
         self.assertEqual(tmp.N, n*n)
@@ -166,7 +166,7 @@ class TestArray_slicing(unittest.TestCase):
 
     def test_get_one_row(self):
         n = 5
-        a = orspy.eye(n, n)
+        a = corepy.eye(n, n)
         tmp = a[0:1, 0:n]
         print tmp
         self.assertEqual(tmp.N, n)
@@ -176,7 +176,7 @@ class TestArray_slicing(unittest.TestCase):
 
     def test_get_one_row_with_explicet_index(self):
         n = 5
-        a = orspy.eye(n, n)
+        a = corepy.eye(n, n)
         tmp = a[0, :]
         print tmp
         self.assertEqual(tmp.N, n)
@@ -189,7 +189,7 @@ class TestArray_slicing(unittest.TestCase):
 
     def test_get_multiple_rows(self):
         n = 5
-        a = orspy.eye(n, n)
+        a = corepy.eye(n, n)
         tmp = a[0:3, :]
         print tmp
         self.assertEqual(tmp.N, 3 * n)
@@ -201,7 +201,7 @@ class TestArray_slicing(unittest.TestCase):
 
     def test_get_with_one_column(self):
         n = 5
-        a = orspy.eye(n, n)
+        a = corepy.eye(n, n)
         tmp = a[:, 0:1]
         print tmp
         self.assertEqual(tmp.N, n)
@@ -211,7 +211,7 @@ class TestArray_slicing(unittest.TestCase):
 
     def test_get_with_one_column_with_explicit_index(self):
         n = 5
-        a = orspy.eye(n, n)
+        a = corepy.eye(n, n)
         tmp = a[:, 3]
         print tmp
         self.assertEqual(tmp.N, n)
@@ -221,7 +221,7 @@ class TestArray_slicing(unittest.TestCase):
 
     def test_get_with_multiple_column(self):
         n = 5
-        a = orspy.eye(n, n)
+        a = corepy.eye(n, n)
         tmp = a[:, 0:3]
         print tmp
         self.assertEqual(tmp.N, 3 * n)

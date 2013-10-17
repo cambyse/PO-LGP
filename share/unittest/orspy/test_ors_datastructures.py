@@ -1,5 +1,6 @@
 import sys
 sys.path.append('../../lib/')
+import corepy
 import orspy
 
 import unittest2 as unittest
@@ -7,8 +8,8 @@ import unittest2 as unittest
 
 class Test_VectorOperatorOverloading(unittest.TestCase):
     def test_add(self):
-        v1 = orspy.Vector(1, 2, 3)
-        v2 = orspy.Vector(2, 2, 2)
+        v1 = corepy.Vector(1, 2, 3)
+        v2 = corepy.Vector(2, 2, 2)
         v3 = v1 + v2
         # check each value
         self.assertAlmostEqual(v3.x, 3.)
@@ -16,8 +17,8 @@ class Test_VectorOperatorOverloading(unittest.TestCase):
         self.assertAlmostEqual(v3.z, 5.)
 
     def test_sub(self):
-        v1 = orspy.Vector(1, 2, 3)
-        v2 = orspy.Vector(2, 2, 2)
+        v1 = corepy.Vector(1, 2, 3)
+        v2 = corepy.Vector(2, 2, 2)
         v3 = v2 - v1
         # check each value
         self.assertAlmostEqual(v3.x, 1.)
@@ -25,32 +26,32 @@ class Test_VectorOperatorOverloading(unittest.TestCase):
         self.assertAlmostEqual(v3.z, -1.)
 
     def test_equals(self):
-        v1 = orspy.Vector(1, 2, 3)
-        v2 = orspy.Vector(2, 2, 2)
+        v1 = corepy.Vector(1, 2, 3)
+        v2 = corepy.Vector(2, 2, 2)
 
         self.assertTrue(v1 == v1)
         self.assertTrue(v2 == v2)
         self.assertFalse(v1 == v2)
 
-        v3 = orspy.Vector(2, 2, 2)
+        v3 = corepy.Vector(2, 2, 2)
         self.assertTrue(v2 == v3)
 
     def test_unequals(self):
-        v1 = orspy.Vector(1, 2, 3)
-        v2 = orspy.Vector(2, 2, 2)
+        v1 = corepy.Vector(1, 2, 3)
+        v2 = corepy.Vector(2, 2, 2)
 
         self.assertFalse(v1 != v1)
         self.assertFalse(v2 != v2)
         self.assertTrue(v1 != v2)
 
-        v3 = orspy.Vector(2, 2, 2)
+        v3 = corepy.Vector(2, 2, 2)
         self.assertFalse(v2 != v3)
 
 
 class Test_ListOfOrsDatastuctures(unittest.TestCase):
     def test_vector(self):
-        v1 = orspy.Vector(1, 2, 3)
-        v2 = orspy.Vector(3, 2, 1)
+        v1 = corepy.Vector(1, 2, 3)
+        v2 = corepy.Vector(3, 2, 1)
         l = []
         l.append(v1)
         l.append(v2)
@@ -63,7 +64,7 @@ class Test_ListOfOrsDatastuctures(unittest.TestCase):
 
 class Test_MatrixOperatorOverloading(unittest.TestCase):
     def test_add(self):
-        m1, m2 = orspy.Matrix(), orspy.Matrix()
+        m1, m2 = corepy.Matrix(), corepy.Matrix()
         m1.set([1.] * 9)
         m2.set([2.] * 9)
         m3 = m1 + m2
@@ -82,7 +83,7 @@ class Test_MatrixOperatorOverloading(unittest.TestCase):
         self.assertAlmostEqual(m3.m22, 3.)
 
     def test_equals(self):
-        m1, m2 = orspy.Matrix(), orspy.Matrix()
+        m1, m2 = corepy.Matrix(), corepy.Matrix()
         m1.set([1.] * 9)
         m2.set([2.] * 9)
 
@@ -90,12 +91,12 @@ class Test_MatrixOperatorOverloading(unittest.TestCase):
         self.assertTrue(m2 == m2)
         self.assertFalse(m1 == m2)
 
-        m3 = orspy.Matrix()
+        m3 = corepy.Matrix()
         m3.set([2.] * 9)
         self.assertTrue(m2 == m3)
 
     def test_unequals(self):
-        m1, m2 = orspy.Matrix(), orspy.Matrix()
+        m1, m2 = corepy.Matrix(), corepy.Matrix()
         m1.set([1.] * 9)
         m2.set([2.] * 9)
 
@@ -103,7 +104,7 @@ class Test_MatrixOperatorOverloading(unittest.TestCase):
         self.assertFalse(m2 != m2)
         self.assertTrue(m1 != m2)
 
-        m3 = orspy.Matrix()
+        m3 = corepy.Matrix()
         m3.set([2.] * 9)
         self.assertFalse(m2 != m3)
 
@@ -113,25 +114,25 @@ class Test_QuaternionOperatorOverload(unittest.TestCase):
         self.maxDiff = None
 
     def test_equals(self):
-        q1 = orspy.Quaternion(1, 2, 3, 4)
-        q2 = orspy.Quaternion(4, 3, 2, 1)
+        q1 = corepy.Quaternion(1, 2, 3, 4)
+        q2 = corepy.Quaternion(4, 3, 2, 1)
 
         self.assertTrue(q1 == q1)
         self.assertTrue(q2 == q2)
         self.assertFalse(q1 == q2)
 
-        q3 = orspy.Quaternion(4, 3, 2, 1)
+        q3 = corepy.Quaternion(4, 3, 2, 1)
         self.assertTrue(q2 == q3)
 
     def test_unequals(self):
-        q1 = orspy.Quaternion(1, 2, 3, 4)
-        q2 = orspy.Quaternion(4, 3, 2, 1)
+        q1 = corepy.Quaternion(1, 2, 3, 4)
+        q2 = corepy.Quaternion(4, 3, 2, 1)
 
         self.assertFalse(q1 != q1)
         self.assertFalse(q2 != q2)
         self.assertTrue(q1 != q2)
 
-        q3 = orspy.Quaternion(4, 3, 2, 1)
+        q3 = corepy.Quaternion(4, 3, 2, 1)
         self.assertFalse(q2 != q3)
 
 
