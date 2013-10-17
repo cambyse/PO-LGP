@@ -34,13 +34,14 @@ set(SOURCES     ${SOURCES}
                 )
 
 add_library(Gui SHARED ${SOURCES})
-target_link_libraries(Gui Core 
+target_link_libraries(Gui LINK_PRIVATE Core 
         extern_GJK extern_ply 
         ${GTKGL_LIBRARY_DIRS} 
         ${GTKGL_LIBRARIES} 
         ${GTK2_LIBRARIES} 
         graph cgraph gvc 
         qhull 
+        LINK_PUBLIC
         ${GL_LIBRARIES}
 )
 add_definitions(-DMT_GTKGL 

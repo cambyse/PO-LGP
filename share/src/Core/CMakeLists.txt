@@ -18,13 +18,20 @@ set(SOURCES     ${SOURCES}
                 util.cpp)
 
 add_library(Core SHARED ${SOURCES})
+target_link_libraries(Core
+        LINK_PUBLIC
+        ${CMAKE_THREAD_LIBS_INIT}
+)
 
 if(LAPACK_FOUND)
 include_directories(${LAPACK_INCLUDE_DIR})
 add_definitions(${LAPACK_DEFINITIONS})
-target_link_libraries(Core ${LAPACK_LINKER_FLAGS} ${LAPACK_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(Core 
+        LINK_PRIVATE 
+        ${LAPACK_LINKER_FLAGS} ${LAPACK_LIBRARIES} 
+)
 endif(LAPACK_FOUND)
 
 if(TESTING_ENABLED)
-target_link_libraries(Core gtest)
+target_link_libraries(Core LINK_PUBLIC gtest)
 endif(TESTING_ENABLED)

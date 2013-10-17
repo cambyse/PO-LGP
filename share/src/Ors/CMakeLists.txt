@@ -17,7 +17,7 @@ set(SOURCES     ${SOURCES}
                 )
 
 add_library(Ors SHARED ${SOURCES})
-target_link_libraries(Ors Algo Core Gui extern_SWIFT ${GL_LIBRARIES})
+target_link_libraries(Ors LINK_PRIVATE Algo Core Gui extern_SWIFT)
 add_definitions(-DMT_ALGO 
         -DMT_Core 
         -DMT_Gui 

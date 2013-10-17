@@ -19,7 +19,7 @@ set(SOURCES     ${SOURCES}
                 )
 
 add_library(Algo SHARED ${SOURCES})
-target_link_libraries(Algo Core ann)
+target_link_libraries(Algo LINK_PRIVATE Core ann)
 add_definitions(-DMT_ANN -DMT_LAPACK)
 
 include_directories(${LAPACK_INCLUDE_DIR})
