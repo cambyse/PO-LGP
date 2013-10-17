@@ -116,6 +116,29 @@ void TEST(SimpleIterators) {
   }
 }
 
+void TEST(RowsAndColumsAccess) {
+  // access rows and columns easily
+  arr A = eye(3);
+
+  cout << "\nAccessing single rows" << endl;
+  cout << A.row(0) << endl;
+  cout << A.row(1) << endl;
+  cout << A.row(2) << endl;
+
+  cout << "\nAccessing single columns" << endl;
+  cout << A.col(0) << endl;
+  cout << A.col(1) << endl;
+  cout << A.col(2) << endl;
+
+  cout << "\nAccessing multiple rows" << endl;
+  cout << A.rows(0, 2) << endl;
+  cout << A.rows(1, 3) << endl;
+
+  cout << "\nAccessing multiple columns" << endl;
+  cout << A.cols(0, 2) << endl;
+  cout << A.cols(1, 3) << endl;
+}
+
 void TEST(Matlab){
   arr x = randn(5);
   cout <<"\nrandn(5)" <<x <<endl;
@@ -542,6 +565,7 @@ int MAIN(int argc, char *argv[]){
 
   testBasics();
   testSimpleIterators();
+  testRowsAndColumsAccess();
   testMatlab();
   testException();
   testMemoryBound();

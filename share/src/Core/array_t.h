@@ -884,6 +884,69 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, Array<uint> cols)
 }
 
 
+/**
+ * @brief Return a copy of row `row_index` of the Array.
+ *
+ * This is just a convenient wrapper around `sub`.
+ *
+ * @tparam T data type of the array.
+ * @param row_index the row to access.
+ *
+ * @return  copy of row `row_index`.
+ */
+template<class T>
+MT::Array<T> MT::Array<T>::row(uint row_index) const {
+  return sub(row_index, row_index, 0, d1 - 1);
+}
+
+/**
+ * @brief Return a copy of column col_index of the Array.
+ *
+ * This is just a convenient wrapper around `sub`.
+ *
+ * @tparam T data type of the array.
+ * @param col_index the column to access.
+ *
+ * @return  copy of column `col_index`.
+ */
+template<class T>
+MT::Array<T> MT::Array<T>::col(uint col_index) const {
+  return sub(0, d0 - 1, col_index, col_index);
+}
+
+/**
+ * @brief Return a copy of the rows from `start_row` to excluding `end_row`.
+ *
+ * This is just a convenient wrapper around `sub`.
+ *
+ * @tparam T Data type of the array.
+ * @param start_row Start copying from index `start_row`.
+ * @param end_row Stop copying at excluding `end_row`.
+ *
+ * @return Copy of the rows from `start` to excluding `end_row`.
+ */
+template<class T>
+MT::Array<T> MT::Array<T>::rows(uint start_row, uint end_row) const {
+  return sub(start_row, end_row - 1, 0, d1 - 1);
+}
+
+/**
+ * @brief Return a copy of the columns from column `start_col` to (excluding) `end_col`.
+ *
+ * This is just a convenient wrapper around `sub`.
+ *
+ * @tparam T Data type of the array.
+ * @param start_col Start copying from index `start_col`.
+ * @param end_col Stop copying at excluding `end_col`.
+ *
+ * @return Copy of the columns from `start_col` to excluding `end_col`.
+ */
+template<class T>
+MT::Array<T> MT::Array<T>::cols(uint start_col, uint end_col) const {
+  return sub(0, d0 - 1, start_col, end_col - 1);
+}
+
+
 //***** C-array interfacing
 
 #if 0
