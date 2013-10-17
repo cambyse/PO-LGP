@@ -57,10 +57,12 @@ set(ORS_SAMPLES examples/Ors)
 set(OPTIM_DIRS src/Optim)
 set(OPTIM_SAMPLES examples/Optim)
 set(INFER_DIRS src/Infer)
+set(INFER_SAMPLES examples/Infer)
 
 set(CURRENT_SLICE ${CORE_DIRS} ${GUI_DIRS} ${ORS_DIRS} ${OPTIM_DIRS} 
         ${INFER_DIRS}        
-        ${CORE_SAMPLES} ${GUI_SAMPLES} ${ORS_SAMPLES} ${OPTIM_SAMPLES})
+        ${CORE_SAMPLES} ${GUI_SAMPLES} ${ORS_SAMPLES} ${OPTIM_SAMPLES} 
+        ${INFER_SAMPLES})
 
 foreach(DIR ${CURRENT_SLICE})
 add_subdirectory(${DIR})
