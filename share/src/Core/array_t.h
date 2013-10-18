@@ -117,6 +117,24 @@ template<class T> MT::Array<T>::Array(const MT::Array<T>& a, uint i, uint j){ in
 /// this becomes a reference on the C-array \c p
 template<class T> MT::Array<T>::Array(const T* p, uint size) { init(); referTo(p, size); }
 
+
+/**
+ * @brief Initialization list for MT::Array
+ *
+ * This makes it possible to initialize list like this:
+\code
+arr a = { 1.1, 2, 25.7, 12 };
+\endcode
+ * See http://en.cppreference.com/w/cpp/utility/initializer_list for more.
+ *
+ * @param list the list used to initialize the array.
+ */
+template<class T>
+MT::Array<T>::Array(std::initializer_list<T> list) {
+  init();
+  for(T t : list) append(t);
+}
+
 template<class T> MT::Array<T>::~Array() {
   freeMEM();
 }
