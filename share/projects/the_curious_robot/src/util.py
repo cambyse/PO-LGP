@@ -5,25 +5,48 @@ import the_curious_robot.msg as msgs
 import geometry_msgs.msg
 from articulation_msgs.msg import TrackMsg
 
+import scipy.stats as ss
 
-class Gaussian():
+
+class ObjectTypeHypo():
     """
-    Represent Gaussians with this class.
-    TODO maybe there is a Gaussian class that we can recycle.
+    ObjectType represents the probability that an object has a certain type.
+
+    Each object in the world can be either STATIC or FREE. We use a beta
+    distribution to model the probability for the object types.
     """
-    def __init__(self, mu=0, sigma=99999):
-        self.mu = mu
-        self.sigma = sigma
+    STATIC = 0
+    FREE = 1
+
+    def __init__(self):
+        # uninformed prior for beta distribution
+        self.alpha = 1
+        self.beta = 1
+        self._dist = ss.beta(self.alpha, self.beta)
+
+    def update(self, OBJECT_TYPE):
+        if OBJECT_TYPE == ObjectTypeHypo.STATIC:
+            self.alpha += 1
+        elif OBJECT_TYPE == ObjectTypeHypo.FREE:
+            self.beta += 1
+        else:
+            raise TypeError("Type most be STATIC or FREE")
+
+    def __str__(self):
+        self._dist = ss.beta(self.alpha, self.beta)
+        return "(alpha={}; beta={}; H={:.6})".format(
+            self.alpha, self.beta, self._dist.entropy()
+        )
 
 
 class Properties():
-    """Potential properties a DoF can have"""
+    """A collection of potential properties a DoF can have."""
     def __init__(self):
-        self.joint = Gaussian()
-        self.friction = Gaussian()
-        self.weight = Gaussian()
-        self.limit_min = Gaussian()
-        self.limit_max = Gaussian()
+        self.joint = None  # ss.norm(loc=?, scale=)
+        self.friction = None  # ss.norm(loc=?, scale=)
+        self.weight = None  # ss.norm(loc=?, scale=)
+        self.limit_min = None  # ss.norm(loc=?, scale=)
+        self.limit_max = None  # ss.norm(loc=?, scale=)
 
     def property_names(self):
         return [attr for attr in dir(self)
@@ -48,7 +71,7 @@ def create_body_msg(body):
 def parse_property_msg(msg):
     properties = Properties()
     for p in msg:
-        setattr(properties, p.name, Gaussian(p.values[0], p.values[1]))
+        setattr(properties, p.name, ss.norm())  # p.values[0], p.values[1]))
     return properties
 
 
@@ -57,8 +80,8 @@ def create_properties_msg(properties):
     for prop_name in properties.property_names():
         msg = msgs.Property()
         msg.name = prop_name
-        msg.values = [getattr(properties, prop_name).mu,
-                      getattr(properties, prop_name).sigma]
+        # msg.values = [getattr(properties, prop_name).mu,
+        #               getattr(properties, prop_name).sigma]
         result.append(msg)
     return result
 
@@ -100,7 +123,7 @@ def parse_trajectory_msg(msg):
         pose.pos.y = p.position.y
         pose.pos.z = p.position.z
         trajectory.append(pose)
-    return (msg.object, trajectory)
+    return msg.object_id, trajectory
 
 
 def create_trajectory_msg(obj_id, pos):
@@ -111,7 +134,7 @@ def create_trajectory_msg(obj_id, pos):
         pose.position.y = p.pos.y
         pose.position.z = p.pos.z
         msg.pos.append(pose)
-    msg.object = obj_id
+    msg.object_id = obj_id
     return msg
 
 
@@ -123,7 +146,8 @@ def create_track_msg(trajectory):
 
     for t in trajectory:
         pose = geometry_msgs.msg.Pose(
-            t.pos, geometry_msgs.msg.Quaternion(0, 0, 0, 1)
+            t.pos,
+            geometry_msgs.msg.Quaternion(0, 0, 0, 1)
         )
         msg.pose.append(pose)
     return msg

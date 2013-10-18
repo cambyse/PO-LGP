@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <Core/util.h>
 #include <Core/array.h>
+#include "array_cheatsheet.h"
 
 using namespace std;
 
@@ -86,6 +87,63 @@ void TEST(Basics){
 
   cout <<"\nafter saved and loaded from a file:" <<b <<endl;
   CHECK_ZERO(maxDiff(a,b), 1e-4, "non-exact save load");
+}
+
+void TEST(SimpleIterators) {
+  // This test shows how to use the iterators
+
+  cout << "*** Iterate linearly through the memory of an array (1D) - const" << endl;
+  arr A = randn(9, 1);
+  // notice: we're using const here
+  for (const auto& elem : A) {
+    cout << elem << endl;
+  }
+
+  cout << "*** increment each element" << endl;
+  // notice: we DON'T use const here
+  for (auto& elem : A) { elem += 1; }
+
+  cout << "*** Iterate linearly through the memory of an array (2D)" << endl;
+  A.reshape(3, 3);
+  for (const auto& elem : A) {
+    cout << elem << endl;
+  }
+
+  cout << "*** Iterate linearly through the memory of an array (3D)" << endl;
+  arr C = randn(1, 8);
+  C.reshape(TUP(2, 2, 2));
+  for (const auto& elem : C) {
+    cout << elem << endl;
+  }
+}
+
+void TEST(InitializationList) {
+  cout << "Use c++11 initialization list to initialize arrays by hand" << endl;
+  arr a = {1, 3, 2, 5};
+  cout << a << endl;
+}
+
+void TEST(RowsAndColumsAccess) {
+  // access rows and columns easily
+  arr A = eye(3);
+
+  cout << "\nAccessing single rows" << endl;
+  cout << A.row(0) << endl;
+  cout << A.row(1) << endl;
+  cout << A.row(2) << endl;
+
+  cout << "\nAccessing single columns" << endl;
+  cout << A.col(0) << endl;
+  cout << A.col(1) << endl;
+  cout << A.col(2) << endl;
+
+  cout << "\nAccessing multiple rows" << endl;
+  cout << A.rows(0, 2) << endl;
+  cout << A.rows(1, 3) << endl;
+
+  cout << "\nAccessing multiple columns" << endl;
+  cout << A.cols(0, 2) << endl;
+  cout << A.cols(1, 3) << endl;
 }
 
 void TEST(Matlab){
@@ -512,7 +570,12 @@ void TEST(RowShiftedPackedMatrix){
 
 int MAIN(int argc, char *argv[]){
 
+  testCheatSheet();
+
   testBasics();
+  testInitializationList();
+  testSimpleIterators();
+  testRowsAndColumsAccess();
   testMatlab();
   testException();
   testMemoryBound();

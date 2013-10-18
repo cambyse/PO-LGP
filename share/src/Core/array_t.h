@@ -117,6 +117,24 @@ template<class T> MT::Array<T>::Array(const MT::Array<T>& a, uint i, uint j){ in
 /// this becomes a reference on the C-array \c p
 template<class T> MT::Array<T>::Array(const T* p, uint size) { init(); referTo(p, size); }
 
+
+/**
+ * @brief Initialization list for MT::Array
+ *
+ * This makes it possible to initialize list like this:
+\code
+arr a = { 1.1, 2, 25.7, 12 };
+\endcode
+ * See http://en.cppreference.com/w/cpp/utility/initializer_list for more.
+ *
+ * @param list the list used to initialize the array.
+ */
+template<class T>
+MT::Array<T>::Array(std::initializer_list<T> list) {
+  init();
+  for(T t : list) append(t);
+}
+
 template<class T> MT::Array<T>::~Array() {
   freeMEM();
 }
@@ -841,7 +859,7 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, int j, int J) con
   if(j<0) j+=d1;
   if(I<0) I+=d0;
   if(J<0) J+=d1;
-  CHECK(i>=0 && j>=0 && I>=0 && J>=0 && i<=I && j<=J, "lower limit must be higher than upper!");
+  CHECK(i>=0 && j>=0 && I>=0 && J>=0 && i<=I && j<=J, "lower limit higher than upper!");
   x.resize(I-i+1, J-j+1);
   int k, l;
   for(k=i; k<=I; k++) for(l=j; l<=J; l++) x(k-i, l-j)=operator()(k, l);
@@ -860,7 +878,7 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, int j, int J, int
   if(I<0) I+=d0;
   if(J<0) J+=d1;
   if(K<0) J+=d2;
-  CHECK(i>=0 && j>=0 && k>=0 && I>=0 && J>=0 && K>=0 && i<=I && j<=J && k<K, "lower limit must be higher than upper!");
+  CHECK(i>=0 && j>=0 && k>=0 && I>=0 && J>=0 && K>=0 && i<=I && j<=J && k<=K, "lower limit higher than upper!");
   x.resize(I-i+1, J-j+1, K-k+1);
   int ii, jj, kk;
   for(ii=i; ii<=I; ii++) for(jj=j; jj<=J; jj++)  for(kk=k; kk<=K; kk++) x(ii-i, jj-j, kk-k)=operator()(ii, jj, kk);
@@ -881,6 +899,69 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, Array<uint> cols)
   int k, l;
   for(k=i; k<=I; k++) for(l=0; l<(int)cols.N; l++) x(k-i, l)=operator()(k, cols(l));
   return x;
+}
+
+
+/**
+ * @brief Return a copy of row `row_index` of the Array.
+ *
+ * This is just a convenient wrapper around `sub`.
+ *
+ * @tparam T data type of the array.
+ * @param row_index the row to access.
+ *
+ * @return  copy of row `row_index`.
+ */
+template<class T>
+MT::Array<T> MT::Array<T>::row(uint row_index) const {
+  return sub(row_index, row_index, 0, d1 - 1);
+}
+
+/**
+ * @brief Return a copy of column col_index of the Array.
+ *
+ * This is just a convenient wrapper around `sub`.
+ *
+ * @tparam T data type of the array.
+ * @param col_index the column to access.
+ *
+ * @return  copy of column `col_index`.
+ */
+template<class T>
+MT::Array<T> MT::Array<T>::col(uint col_index) const {
+  return sub(0, d0 - 1, col_index, col_index);
+}
+
+/**
+ * @brief Return a copy of the rows from `start_row` to excluding `end_row`.
+ *
+ * This is just a convenient wrapper around `sub`.
+ *
+ * @tparam T Data type of the array.
+ * @param start_row Start copying from index `start_row`.
+ * @param end_row Stop copying at excluding `end_row`.
+ *
+ * @return Copy of the rows from `start` to excluding `end_row`.
+ */
+template<class T>
+MT::Array<T> MT::Array<T>::rows(uint start_row, uint end_row) const {
+  return sub(start_row, end_row - 1, 0, d1 - 1);
+}
+
+/**
+ * @brief Return a copy of the columns from column `start_col` to (excluding) `end_col`.
+ *
+ * This is just a convenient wrapper around `sub`.
+ *
+ * @tparam T Data type of the array.
+ * @param start_col Start copying from index `start_col`.
+ * @param end_col Stop copying at excluding `end_col`.
+ *
+ * @return Copy of the columns from `start_col` to excluding `end_col`.
+ */
+template<class T>
+MT::Array<T> MT::Array<T>::cols(uint start_col, uint end_col) const {
+  return sub(0, d0 - 1, start_col, end_col - 1);
 }
 
 
@@ -1393,6 +1474,18 @@ template<class T> void MT::Array<T>::shift(int offset, bool wrapAround) {
 
 
 //***** I/O
+/**
+ * @brief Print the matrix to std::cout prefixed with the header (if supplied).
+ *
+ * @param header Prefix the matrix with the given header.
+ */
+template<class T>
+void MT::Array<T>::print(const char* header) const {
+  if (header) {
+    std::cout << header;
+  }
+  std::cout << *this << std::endl;
+}
 
 /** @brief prototype for operator<<, writes the array by separating elements with ELEMSEP, separating rows with LINESEP, using BRACKETS[0] and BRACKETS[1] to brace the data, optionally writs a dimensionality tag before the data (see below), and optinally in binary format */
 template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP, const char *LINESEP, const char *BRACKETS, bool dimTag, bool binary) const {
