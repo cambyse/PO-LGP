@@ -1474,6 +1474,18 @@ template<class T> void MT::Array<T>::shift(int offset, bool wrapAround) {
 
 
 //***** I/O
+/**
+ * @brief Print the matrix to std::cout prefixed with the header (if supplied).
+ *
+ * @param header Prefix the matrix with the given header.
+ */
+template<class T>
+void MT::Array<T>::print(const char* header) const {
+  if (header) {
+    std::cout << header;
+  }
+  std::cout << *this << std::endl;
+}
 
 /** @brief prototype for operator<<, writes the array by separating elements with ELEMSEP, separating rows with LINESEP, using BRACKETS[0] and BRACKETS[1] to brace the data, optionally writs a dimensionality tag before the data (see below), and optinally in binary format */
 template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP, const char *LINESEP, const char *BRACKETS, bool dimTag, bool binary) const {
