@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <Core/util.h>
 #include <Core/array.h>
+#include "array_cheatsheet.h"
 
 using namespace std;
 
@@ -568,6 +569,8 @@ void TEST(RowShiftedPackedMatrix){
 //------------------------------------------------------------------------------
 
 int MAIN(int argc, char *argv[]){
+
+  testCheatSheet();
 
   testBasics();
   testInitializationList();
