@@ -877,7 +877,7 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, int j, int J, int
   if(k<0) j+=d2;
   if(I<0) I+=d0;
   if(J<0) J+=d1;
-  if(K<0) J+=d2;
+  if(K<0) K+=d2;
   CHECK(i>=0 && j>=0 && k>=0 && I>=0 && J>=0 && K>=0 && i<=I && j<=J && k<=K, "lower limit higher than upper!");
   x.resize(I-i+1, J-j+1, K-k+1);
   int ii, jj, kk;
