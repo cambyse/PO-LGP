@@ -8,11 +8,11 @@ void loadData(G4Data &g4d) {
 void setObjIDs(G4Data &g4d) {
   g4d.addSensor("rh", "thumb", 0, 0);
   g4d.addSensor("rh", "index", 0, 1);
-  g4d.addSensor("rh", "thumb", 0, 2);
+  g4d.addSensor("rh", "middle", 0, 2);
 
   g4d.addSensor("lh", "thumb", 1, 0);
   g4d.addSensor("lh", "index", 1, 1);
-  g4d.addSensor("lh", "thumb", 1, 2);
+  g4d.addSensor("lh", "middle", 1, 2);
 
   g4d.addSensor("lh", "back", 2, 0);
   g4d.addSensor("rh", "back", 2, 1);
@@ -43,20 +43,20 @@ void testData(G4Data &g4d) {
   cout << g4d.query("book", 10).getDim() << endl; // returns a 1xMx7 Array
   cout << "(should be 1, 1, 7)" << endl << endl;
 
-  cout << "right_hand" << endl;
-  cout << g4d.query("right_hand").getDim() << endl; // returns a TxMx7 Array
-  cout << "(should be T, 4, T)" << endl << endl;
+  cout << "rh " << endl;
+  cout << g4d.query("rh").getDim() << endl; // returns a TxMx7 Array
+  cout << "(should be T, 4, 7)" << endl << endl;
 
-  cout << "right_hand @ t = 10" << endl;
-  cout << g4d.query("right_hand", 10).getDim() << endl; // returns 1xMx7 Array
+  cout << "rh @ t = 10" << endl;
+  cout << g4d.query("rh", 10).getDim() << endl; // returns 1xMx7 Array
   cout << "(should be 1, 4, 7)" << endl << endl;
 
-  cout << "right_hand::thumb" << endl;
-  cout << g4d.query("right_hand", "thumb").getDim() << endl; // returns a Tx1x7 Array
+  cout << "rh::thumb" << endl;
+  cout << g4d.query("rh", "thumb").getDim() << endl; // returns a Tx1x7 Array
   cout << "(should be T, 1, 7)" << endl << endl;
 
-  cout << "right_hand::thumb @ t = 10" << endl;
-  cout << g4d.query("right_hand", "thumb", 10).getDim() << endl; // returns a 1x1x7 Array
+  cout << "rh::thumb @ t = 10" << endl;
+  cout << g4d.query("rh", "thumb", 10).getDim() << endl; // returns a 1x1x7 Array
   cout << "(should be 1, 1, 7)" << endl << endl;
 }
 
