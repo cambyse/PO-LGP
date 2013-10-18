@@ -859,7 +859,7 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, int j, int J) con
   if(j<0) j+=d1;
   if(I<0) I+=d0;
   if(J<0) J+=d1;
-  CHECK(i>=0 && j>=0 && I>=0 && J>=0 && i<=I && j<=J, "lower limit must be higher than upper!");
+  CHECK(i>=0 && j>=0 && I>=0 && J>=0 && i<=I && j<=J, "lower limit higher than upper!");
   x.resize(I-i+1, J-j+1);
   int k, l;
   for(k=i; k<=I; k++) for(l=j; l<=J; l++) x(k-i, l-j)=operator()(k, l);
@@ -878,7 +878,7 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, int j, int J, int
   if(I<0) I+=d0;
   if(J<0) J+=d1;
   if(K<0) J+=d2;
-  CHECK(i>=0 && j>=0 && k>=0 && I>=0 && J>=0 && K>=0 && i<=I && j<=J && k<K, "lower limit must be higher than upper!");
+  CHECK(i>=0 && j>=0 && k>=0 && I>=0 && J>=0 && K>=0 && i<=I && j<=J && k<=K, "lower limit higher than upper!");
   x.resize(I-i+1, J-j+1, K-k+1);
   int ii, jj, kk;
   for(ii=i; ii<=I; ii++) for(jj=j; jj<=J; jj++)  for(kk=k; kk<=K; kk++) x(ii-i, jj-j, kk-k)=operator()(ii, jj, kk);
