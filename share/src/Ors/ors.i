@@ -420,6 +420,8 @@ struct PhysXInterface {
   void create();
   void step();
   void glDraw();
+
+  void syncWithOrs();
   // void pushState();
   // void pullState();
   // void ShutdownPhysX();
