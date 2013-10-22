@@ -15,19 +15,24 @@ struct MObject {
   double stepLength;
 
   arr position;
+  arr orientation;
   arr direction;
   arr prediction;
   arr positionHistory; // save positions of object
+  arr orientationHistory;
 
   MObject(ors::Graph *_ors,MT::String _name, ObjectType _objectType, double _stepLength=0.001, const arr& _direction = ARRAY(1.,0.,0.));
   ~MObject();
 
   void predict(uint _T); // predict _T time steps ahead
-  void move();  // simulate object for one time step
+  void move();  // simulate object for one time step along direction
+  void move(const arr& _offset);  // simulate object for one time step
+  void rotate(const arr& _offset);
   void drawPrediction();
 
   // Getter
-  void pose(arr& _position) {_position = position;};
+  void setPosition(const arr& _position);
+  void setOrientation(const arr& _orientation);
 
 
 };
