@@ -224,10 +224,10 @@ void ors::Shape::parseAts() {
     Matrix I;
     double mass=-1.;
     switch(type) {
-    case sphereST:   inertiaSphere(I.p(), mass, 1000., size[3]);  break;
-    case boxST:      inertiaBox(I.p(), mass, 1000., size[0], size[1], size[2]);  break;
-    case cappedCylinderST:
-    case cylinderST: inertiaCylinder(I.p(), mass, 1000., size[2], size[3]);  break;
+      case sphereST:   inertiaSphere(I.p(), mass, 1000., size[3]);  break;
+      case boxST:      inertiaBox(I.p(), mass, 1000., size[0], size[1], size[2]);  break;
+      case cappedCylinderST:
+      case cylinderST: inertiaCylinder(I.p(), mass, 1000., size[2], size[3]);  break;
       case noneST:
       default: ;
     }
