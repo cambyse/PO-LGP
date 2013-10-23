@@ -80,36 +80,74 @@ def get_mlr_path():
 // MT::Array wrapper
 //===========================================================================
 
-%fragment("AsMTArray", "header") {
-  void asMTArray(MT::Array<double>& result, PyObject *nparray) {
+// actual translation of numpy array to MT::Array<double>
+%fragment("ArrayTransform", "header") {
+  template<class T>
+  void asMTArray(MT::Array<T>& result, PyObject *nparray, int type) {
     uint size = 1;
     for(uint i=0; i<array_numdims(nparray); ++i)
       size *= array_size(nparray, i);
     result.resize(size);
 
     PyArrayObject* src = (PyArrayObject*) nparray;
-    if (PyArray_TYPE(nparray) != NPY_DOUBLE) {
-      if (PyArray_CanCastSafely(PyArray_TYPE(nparray), NPY_DOUBLE)) {
-        src = (PyArrayObject*) PyArray_SimpleNew(array_numdims(nparray), array_dimensions(nparray), NPY_DOUBLE);
+
+    // cast array entries to the correct type if necessary
+    if (PyArray_TYPE(nparray) != type) {
+      if (PyArray_CanCastSafely(PyArray_TYPE(nparray), type)) {
+        src = (PyArrayObject*) PyArray_SimpleNew(array_numdims(nparray), array_dimensions(nparray), type);
         PyArray_CastTo(src, (PyArrayObject*) nparray);
       }
       else {
-        PyErr_SetString(PyExc_TypeError, "Not an array of numeric values");
+        PyErr_SetString(PyExc_TypeError, "Not an array of compatible numeric values");
       }
     }
 
+    // Copy actual data
     memcpy(result.p, PyArray_DATA(src), size*sizeof(double));
+
+    // reshape to the correct size
     if(array_numdims(nparray) == 1)
       result.reshape(array_size(nparray, 0));
     else if(array_numdims(nparray) == 2)
       result.reshape(array_size(nparray, 0), array_size(nparray, 1));
     else if(array_numdims(nparray) == 3)
       result.reshape(array_size(nparray, 0), array_size(nparray, 1), array_size(nparray, 2));
+    else
+      PyErr_SetString(PyExc_TypeError, "MT::Array does not support matrices with more than 3 dimensions.");
   }
 }
 
+//===========================================================================
+// ugly, but we need to get the numpy type number from the actual C(++) type
+//===========================================================================
+%fragment("getNP_TYPE"{double}, "header") {
+  int numpy_type_double() { return NPY_DOUBLE; }
+}
 
-%typemap(in, fragment="AsMTArray") MT::Array<double> {
+%fragment("getNP_TYPE"{int}, "header") {
+  int numpy_type_int() { return NPY_INT; }
+}
+
+%fragment("getNP_TYPE"{uint}, "header") {
+  int numpy_type_uint() { return NPY_UINT; }
+}
+
+//===========================================================================
+// The typemap macro, to get all our types done with one piece of code
+//===========================================================================
+%define %Array_Typemap(Type)
+
+// Calls the transform template with the right numpy type etc.
+%fragment("asMTArray"{Type}, "header", fragment="ArrayTransform", fragment="getNP_TYPE"{Type}) {
+  void asMTArray(MT::Array<Type>& result, PyObject *nparray) {
+    asMTArray(result, nparray, numpy_type_##Type());
+  }
+}
+
+//===========================================================================
+// The actual typemaps for value, reference and pointer arguments
+//===========================================================================
+%typemap(in, fragment="asMTArray"{Type}) MT::Array<Type> {
   if(is_array($input)) {
     asMTArray($1, $input);
   }
@@ -119,9 +157,9 @@ def get_mlr_path():
   }
 }
 
-%typemap(in, fragment="AsMTArray") MT::Array<double> & {
+%typemap(in, fragment="asMTArray"{Type}) MT::Array<Type> & {
   if(is_array($input)) {
-    $1 = new MT::Array<double>();
+    $1 = new MT::Array<Type>();
     asMTArray(*$1, $input);
   }
   else {
@@ -130,9 +168,9 @@ def get_mlr_path():
   }
 }
 
-%typemap(in, fragment="AsMTArray") MT::Array<double> * {
+%typemap(in, fragment="asMTArray"{Type}) MT::Array<Type> * {
   if(is_array($input)) {
-    $1 = new MT::Array<double>();
+    $1 = new MT::Array<Type>();
     asMTArray(*$1, $input);
   }
   else {
@@ -141,28 +179,50 @@ def get_mlr_path():
   }
 }
 
-%typemap(typecheck) MT::Array<double> {
+//===========================================================================
+// Typecheck typemaps for all kinds of overloading magic
+//===========================================================================
+%typemap(typecheck) MT::Array<Type> {
   if(is_array($input)) $1 = 1;
   else $1 = 0;
 }
 
-%typemap(typecheck) MT::Array<double> & {
+%typemap(typecheck) MT::Array<Type> & {
   if(is_array($input)) $1 = 1;
   else $1 = 0;
 }
 
-%typemap(typecheck) MT::Array<double> * {
+%typemap(typecheck) MT::Array<Type> * {
   if(is_array($input)) $1 = 1;
   else $1 = 0;
 }
 
-%typemap(out) MT::Array<double> {
+//===========================================================================
+// We only have value returns so far (TODO: Do we need pointers here?)
+//===========================================================================
+%typemap(out) MT::Array<Type> {
   long dims[3] = { $1.d0, $1.d1, $1.d2 };
-  PyArrayObject *a = (PyArrayObject*) PyArray_SimpleNew($1.nd, dims, NPY_DOUBLE);
-  memcpy(PyArray_DATA(a), $1.p, $1.N*sizeof(double));
+  PyArrayObject *a = (PyArrayObject*) PyArray_SimpleNew($1.nd, dims, numpy_type_##Type());
+  memcpy(PyArray_DATA(a), $1.p, $1.N*sizeof(Type));
   $result = PyArray_Return(a);
 }
+%enddef
 
+//===========================================================================
+// End of the Macro
+//===========================================================================
+
+//===========================================================================
+// Generate the real typemaps from the macro above
+//===========================================================================
+
+%Array_Typemap(double)
+%Array_Typemap(int)
+%Array_Typemap(uint)
+
+//===========================================================================
+// Some test functions. TODO: move to some test-lib?
+//===========================================================================
 
 %inline %{
 void testing_in_value(MT::Array<double> INPUT) {
@@ -177,6 +237,7 @@ void testing_in_pointer(MT::Array<double> *INPUT) {
   std::cout << *INPUT << endl;
 }
 
+
 MT::Array<double> returntest() {
   arr t = { 1, 3, 5, 7};
   t.reshape(2,2);
@@ -184,6 +245,7 @@ MT::Array<double> returntest() {
 }
 %}  
 
+//===========================================================================
 
 %typemap(in) MT::String {
     $1 = PyString_AsString($input);
