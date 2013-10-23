@@ -120,17 +120,11 @@ def get_mlr_path():
 //===========================================================================
 // ugly, but we need to get the numpy type number from the actual C(++) type
 //===========================================================================
-%fragment("getNP_TYPE"{double}, "header") {
+%inline %{
   int numpy_type_double() { return NPY_DOUBLE; }
-}
-
-%fragment("getNP_TYPE"{int}, "header") {
   int numpy_type_int() { return NPY_INT; }
-}
-
-%fragment("getNP_TYPE"{uint}, "header") {
   int numpy_type_uint() { return NPY_UINT; }
-}
+%}
 
 //===========================================================================
 // The typemap macro, to get all our types done with one piece of code
@@ -138,7 +132,7 @@ def get_mlr_path():
 %define %Array_Typemap(Type)
 
 // Calls the transform template with the right numpy type etc.
-%fragment("asMTArray"{Type}, "header", fragment="ArrayTransform", fragment="getNP_TYPE"{Type}) {
+%fragment("asMTArray"{Type}, "header", fragment="ArrayTransform") {
   void asMTArray(MT::Array<Type>& result, PyObject *nparray) {
     asMTArray(result, nparray, numpy_type_##Type());
   }
