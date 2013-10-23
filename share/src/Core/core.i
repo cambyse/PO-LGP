@@ -25,7 +25,7 @@ TODO
 - TODO run unittests with Jenkins
 
 
-author: Stefan Otte
+author: Stefan Otte and Johannes Kulick
 
 created: <2013-03-20 Wed>
 "
@@ -103,7 +103,7 @@ def get_mlr_path():
     }
 
     // Copy actual data
-    memcpy(result.p, PyArray_DATA(src), size*sizeof(double));
+    memcpy(result.p, PyArray_DATA(src), size*sizeof(T));
 
     // reshape to the correct size
     if(array_numdims(nparray) == 1)
@@ -216,9 +216,13 @@ def get_mlr_path():
 // Generate the real typemaps from the macro above
 //===========================================================================
 
-%Array_Typemap(double)
-%Array_Typemap(int)
-%Array_Typemap(uint)
+%Array_Typemap(double)  // arr
+%Array_Typemap(int)     // intA
+%Array_Typemap(uint)    // uintA
+
+// TODO: we'll get in trouble if we would support things like arrL, since numpy
+// is not supposed to handle such things. Instead we'd need to actually map
+// those things to normal lists (of NP arrays)
 
 //===========================================================================
 // Some test functions. TODO: move to some test-lib?
