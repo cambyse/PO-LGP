@@ -18,10 +18,12 @@
 
 
 
-#define FREEGLUT_STATIC
+#ifndef MT_MSVC
+#  define FREEGLUT_STATIC
+#endif
 #include <GL/freeglut.h>
-#include <X11/Xlib.h>
-#include <GL/glx.h>
+//#include <X11/Xlib.h>
+//#include <GL/glx.h>
 
 #include "opengl.h"
 #include <Core/geo.h>
@@ -38,10 +40,13 @@ static Mutex globalOpenglLock;
 extern "C" {
   void fgDeinitialize(void);
 }
+
+#ifdef MT_Linux
 struct SFG_Display_dummy {
   _XDisplay *Display;
 };
 extern SFG_Display_dummy fgDisplay;
+#endif
 
 static void sleepForEvents(void) {
 #ifdef MT_Linux
@@ -66,7 +71,7 @@ static void sleepForEvents(void) {
     }
   }
 #elif defined MT_MSVC
-  MsgWaitForMultipleObjects(0, NULL, FALSE, msec, QS_ALLINPUT);
+  MsgWaitForMultipleObjects(0, NULL, FALSE, 10/*msec*/, QS_ALLINPUT);
 #endif
 }
 
@@ -106,7 +111,12 @@ struct sOpenGL {
   static void lock() { globalOpenglLock.lock(); }
   static void unlock() { globalOpenglLock.unlock(); }
   void lock_win() { lock(); glutSetWindow(windowID); } //same as above, but also sets gl cocntext (glXMakeCurrent)
-  void unlock_win() { glXMakeCurrent(fgDisplay.Display, None, NULL); unlock(); } //releases the context
+  void unlock_win() {
+#ifndef MT_MSVC
+	  glXMakeCurrent(fgDisplay.Display, None, NULL);
+#endif
+	  unlock();
+  } //releases the context
 };
 
 uint sOpenGL::nrWins=0;
@@ -175,6 +185,8 @@ sOpenGL::~sOpenGL() {
   glutDestroyWindow(windowID);
   glwins(windowID)=0;
   nrWins--;
+#ifndef MT_MSVC
   if (!nrWins) fgDeinitialize();
+#endif
   unlock();
 }
