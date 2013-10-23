@@ -214,6 +214,13 @@ def get_mlr_path():
 %Array_Typemap(int)     // intA
 %Array_Typemap(uint)    // uintA
 
+// we need to typedef array. Otherwise python complains about arr.
+%inline %{
+  typedef MT::Array<double> arr;
+  typedef MT::Array<int> intA;
+  typedef MT::Array<uint> uintA;
+%}
+
 // TODO: we'll get in trouble if we would support things like arrL, since numpy
 // is not supposed to handle such things. Instead we'd need to actually map
 // those things to normal lists (of NP arrays)
@@ -252,10 +259,6 @@ MT::Array<double> returntest() {
     $result = PyString_FromString($1.p);
 }
 
-// we need to typedef array. Otherwise python complains about arr.
-%inline %{
-  typedef MT::Array<double> arr;
-%}
 
 
 //===========================================================================
