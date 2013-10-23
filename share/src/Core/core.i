@@ -230,21 +230,33 @@ def get_mlr_path():
 //===========================================================================
 
 %inline %{
-void testing_in_value(MT::Array<double> INPUT) {
-  std::cout << INPUT << endl;
+MT::Array<double> identity_arr_value(MT::Array<double> INPUT) {
+  return INPUT;
 }
 
-void testing_in_reference(MT::Array<double> &INPUT) {
-  std::cout << INPUT << endl;
+MT::Array<double> identity_arr_reference(MT::Array<double> &INPUT) {
+  return INPUT;
 }
 
-void testing_in_pointer(MT::Array<double> *INPUT) {
-  std::cout << *INPUT << endl;
+MT::Array<double> identity_arr_pointer(MT::Array<double> *INPUT) {
+  return *INPUT;
 }
 
 
-MT::Array<double> returntest() {
-  arr t = { 1, 3, 5, 7};
+MT::Array<double> return_arr() {
+  arr t = { 1.2, 3.4, 5.6, 7.8};
+  t.reshape(2,2);
+  return t;
+}
+
+MT::Array<int> return_intA() {
+  intA t = { -1, 3, -5, 7};
+  t.reshape(2,2);
+  return t;
+}
+
+MT::Array<uint> return_uintA() {
+  uintA t = { 1, 3, 5, 7};
   t.reshape(2,2);
   return t;
 }
