@@ -32,9 +32,19 @@ created: <2013-03-20 Wed>
 %enddef
 %module(docstring=DOCSTRING_COREPY) corepy
 
+%{
+#define SWIG_FILE_WITH_INIT
+%}
+
 %feature("autodoc", "1");
 %include "typemaps.i"
+%include "numpy.i"
 %include "std_string.i"
+
+%fragment("NumPy_Fragments");
+%init %{
+import_array();
+%}
 
 //===========================================================================
 %pythoncode %{
@@ -66,154 +76,114 @@ def get_mlr_path():
   typedef unsigned int uint;
 %}
 
-
 //===========================================================================
-// VERY simple array wrapper
-namespace MT {
-template <class T>
-struct Array{
-  T *p;     //!< the pointer on the linear memory allocated
-  uint N;
-  uint nd;
-  uint d0,d1,d2;
+// MT::Array wrapper
+//===========================================================================
 
-  ::MT::Array<T>& resize(uint D0);
-  ::MT::Array<T>& resize(uint D0, uint D1);
+%fragment("AsMTArray", "header") {
+  void asMTArray(MT::Array<double>& result, PyObject *nparray) {
+    uint size = 1;
+    for(uint i=0; i<array_numdims(nparray); ++i)
+      size *= array_size(nparray, i);
+    result.resize(size);
 
-  T& append(const T& x);
-  void append(const MT::Array<T>& x);
+    PyArrayObject* src = (PyArrayObject*) nparray;
+    if (PyArray_TYPE(nparray) != NPY_DOUBLE) {
+      if (PyArray_CanCastSafely(PyArray_TYPE(nparray), NPY_DOUBLE)) {
+        src = (PyArrayObject*) PyArray_SimpleNew(array_numdims(nparray), array_dimensions(nparray), NPY_DOUBLE);
+        PyArray_CastTo(src, (PyArrayObject*) nparray);
+      }
+      else {
+        PyErr_SetString(PyExc_TypeError, "Not an array of numeric values");
+      }
+    }
 
-  void clear();
-
-  Array<T> sub(int i, int I, int j, int J) const;
-  Array<T> sub(int i, int I) const;
-
-%extend {
-  T get1D(uint i) { return (*self).elem(i); };
-  T get2D(uint i, uint j) { return (*self)[i](j); };
-  void setElem2D(uint i, uint j, T value) {(*self)[i](j) = value; };
-  void setElem1D(uint i, T value) {(*self)(i) = value; };
-
-  std::string __str__() {
-    std::ostringstream oss(std::ostringstream::out);
-    oss << "Array<#elems=" << $self->N << ">";
-    oss << (*$self);
-    return oss.str();
+    memcpy(result.p, PyArray_DATA(src), size*sizeof(double));
+    if(array_numdims(nparray) == 1)
+      result.reshape(array_size(nparray, 0));
+    else if(array_numdims(nparray) == 2)
+      result.reshape(array_size(nparray, 0), array_size(nparray, 1));
+    else if(array_numdims(nparray) == 3)
+      result.reshape(array_size(nparray, 0), array_size(nparray, 1), array_size(nparray, 2));
   }
-};
-%pythoncode %{
-def setWithList(self, data):
-    if isinstance(data, list):
-        # 2D
-        if isinstance(data[0], list):
-            # assume the lists have the same length
-            self.resize(len(data), len(data[0]))
-            for i, row in enumerate(data):
-                for j, value in enumerate(row):
-                    self.setElem2D(i, j, value)
-        # 1D
-        else:
-            self.resize(len(data))
-            for i, value in enumerate(data):
-                self.setElem1D(i, value)
-    else:
-        raise Exception("ERROR: setWithList: the data was not set; it is no list!")
+}
 
 
-# magic function
-def __getitem__(self, pos):
-    """
-    pos can be:
-     - 1D:
-       - int
-       - slice
-     - 2D:
-       - (int, int)
-       - (slice|int, slice|int)
-    """
-    if self.nd == 1:
-        if isinstance(pos, int):
-            if pos < self.d0:
-                return self.get1D(pos)
-            else:
-                raise Exception("index", str(pos), "out of bounds")
-        elif isinstance(pos, slice):
-            return self.sub(pos.start, pos.stop)
-        else:
-            raise Exception("array.nd==1 bud slicing request for nd>1")
+%typemap(in, fragment="AsMTArray") MT::Array<double> {
+  if(is_array($input)) {
+    asMTArray($1, $input);
+  }
+  else {
+    PyErr_SetString(PyExc_TypeError, "Not a numpy array");
+    return NULL;
+  }
+}
 
-    elif self.nd == 2:
-        try:
-            d0, d1 = pos
-        except:
-            raise Exception("array.nd==2 bud slicing request for nd==1")
+%typemap(in, fragment="AsMTArray") MT::Array<double> & {
+  if(is_array($input)) {
+    $1 = new MT::Array<double>();
+    asMTArray(*$1, $input);
+  }
+  else {
+    PyErr_SetString(PyExc_TypeError, "Not a numpy array");
+    return NULL;
+  }
+}
 
-        if isinstance(d0, int) and isinstance(d1, int):
-            return self.get2D(d0, d1)
-        else:
-            # determine start and stop for every d0 and d1
-            # which can be:
-            #   d0, d1 == slice|int, slice|int
-            # print "slice|int and slice|int"
-            d0_start, d0_stop = self._get_valid_slice_positions(self.d0, d0)
-            d1_start, d1_stop = self._get_valid_slice_positions(self.d1, d1)
-            return self.sub(d0_start, d0_stop, d1_start, d1_stop)
-    else:
-        raise Exception("Slicing: dimension wrong")
+%typemap(in, fragment="AsMTArray") MT::Array<double> * {
+  if(is_array($input)) {
+    $1 = new MT::Array<double>();
+    asMTArray(*$1, $input);
+  }
+  else {
+    PyErr_SetString(PyExc_TypeError, "Not a numpy array");
+    return NULL;
+  }
+}
 
+%typemap(typecheck) MT::Array<double> {
+  if(is_array($input)) $1 = 1;
+  else $1 = 0;
+}
 
-def _get_valid_slice_positions(self, d_max, pos):
-    """
-    Return valid start and stop positions for slices for the given
-    dimension.
-    """
-    # print "gvsp", d_max, pos
-    if isinstance(pos, slice):
-        # print "pos is a slice"
-        start =  max([0, pos.start])
-        stop = d_max - 1 if not pos.stop else min([pos.stop, d_max]) - 1
-    elif isinstance(pos, int):
-        # print "pos is an int"
-        start =  max([0, pos])
-        stop = start
-    else:
-        raise Exception("Slicing: something weird happend")
-    # print "new:", start, stop
-    return start, stop
+%typemap(typecheck) MT::Array<double> & {
+  if(is_array($input)) $1 = 1;
+  else $1 = 0;
+}
+
+%typemap(typecheck) MT::Array<double> * {
+  if(is_array($input)) $1 = 1;
+  else $1 = 0;
+}
+
+%typemap(out) MT::Array<double> {
+  long dims[3] = { $1.d0, $1.d1, $1.d2 };
+  PyArrayObject *a = (PyArrayObject*) PyArray_SimpleNew($1.nd, dims, NPY_DOUBLE);
+  memcpy(PyArray_DATA(a), $1.p, $1.N*sizeof(double));
+  $result = PyArray_Return(a);
+}
 
 
-def __setitem__(self, pos, value):
-    if isinstance(pos, tuple):
-        x, y = pos
-        return self.setElem2D(x, y, value)
-    else:
-        return self.setElem1D(pos, value)
+%inline %{
+void testing_in_value(MT::Array<double> INPUT) {
+  std::cout << INPUT << endl;
+}
 
+void testing_in_reference(MT::Array<double> &INPUT) {
+  std::cout << INPUT << endl;
+}
 
-def __iter__(self):
-    return corepy.ArrayIter(self)
+void testing_in_pointer(MT::Array<double> *INPUT) {
+  std::cout << *INPUT << endl;
+}
 
-%} // end of %pythoncode
-}; // end of struct Array
-%pythoncode %{
-class ArrayIter:
-    def __init__(self, array):
-        self.array = array
-        self.pos = -1
+MT::Array<double> returntest() {
+  arr t = { 1, 3, 5, 7};
+  t.reshape(2,2);
+  return t;
+}
+%}  
 
-    def __iter__(self):
-        return self
-
-    def next(self):
-        if self.pos<self.array.N-1:
-            self.pos = self.pos + 1
-            return self.array.get1D(self.pos)
-        else:
-            raise StopIteration
-
-%}
-
-}; // end of namespace MT
 
 %typemap(in) MT::String {
     $1 = PyString_AsString($input);
@@ -227,8 +197,6 @@ class ArrayIter:
   typedef MT::Array<double> arr;
 %}
 
-%template(ArrayInt) MT::Array<int>;
-%template(ArrayDouble) MT::Array<double>;
 
 //===========================================================================
 // helper functions for Array
@@ -263,7 +231,7 @@ struct Vector {
 
   Vector() {}
   Vector(double x, double y, double z);
-  Vector(const arr& x);
+  Vector(const MT::Array<double>& x);
   Vector(const Vector& v);
   double *p();
 
@@ -460,6 +428,25 @@ struct Transformation {
 }; // end of Transformation
 }; // end of namespace ors
 
+
+//===========================================================================
+// Conversion to MT::Array
+//===========================================================================
+
+arr ARRAY(const ors::Vector& v);
+arr ARRAY(const ors::Quaternion& q);
+arr ARRAY(const ors::Matrix& m);
+
+//===========================================================================
+// Constants
+//===========================================================================
+
+const ors::Vector Vector_x;
+const ors::Vector Vector_y;
+const ors::Vector Vector_z;
+const ors::Transformation Transformation_Id;
+const ors::Quaternion Quaternion_Id;
+ors::Transformation& NoTransformation;
 
 //===========================================================================
 // vim: ft=swig
