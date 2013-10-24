@@ -38,7 +38,7 @@ created: <2013-03-20 Wed>
 
 %feature("autodoc", "1");
 %include "typemaps.i"
-%include "../../include/numpy/numpy.i"
+%include "numpy.i"
 %include "std_string.i"
 
 %fragment("NumPy_Fragments");
