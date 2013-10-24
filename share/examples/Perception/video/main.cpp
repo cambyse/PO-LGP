@@ -15,6 +15,7 @@ void draw(void*){
 void testVideo(){
   OpenGL gl;
   gl.add(draw,0);
+  gl.watch();
 
   VideoEncoder_libav_simple video;
 //  VideoEncoder_OpenCV video;

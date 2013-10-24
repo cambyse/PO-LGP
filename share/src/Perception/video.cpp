@@ -50,7 +50,7 @@ void sVideoEncoder_libav_simple::open(uint width, uint height){
   avcodec_register_all();
 
   codec = avcodec_find_encoder(CODEC_ID_MPEG2VIDEO);
-//  codec = avcodec_find_encoder(CODEC_ID_H264);
+  //codec = avcodec_find_encoder(CODEC_ID_H264);
   if (!codec) HALT("codec not found");
 
   c = avcodec_alloc_context3(codec);
