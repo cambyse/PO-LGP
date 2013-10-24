@@ -229,68 +229,6 @@ def get_mlr_path():
 // is not supposed to handle such things. Instead we'd need to actually map
 // those things to normal lists (of NP arrays)
 
-//===========================================================================
-// Some test functions. TODO: move to some test-lib?
-//===========================================================================
-
-%inline %{
-MT::Array<double> identity_arr_value(MT::Array<double> INPUT) {
-  return INPUT;
-}
-
-MT::Array<double> identity_arr_reference(MT::Array<double> &INPUT) {
-  return INPUT;
-}
-
-MT::Array<double> identity_arr_pointer(MT::Array<double> *INPUT) {
-  return *INPUT;
-}
-
-MT::Array<int> identity_intA_value(MT::Array<int> INPUT) {
-  return INPUT;
-}
-
-MT::Array<int> identity_intA_reference(MT::Array<int> &INPUT) {
-  return INPUT;
-}
-
-MT::Array<int> identity_intA_pointer(MT::Array<int> *INPUT) {
-  return *INPUT;
-}
-
-MT::Array<uint> identity_uintA_value(MT::Array<uint> INPUT) {
-  return INPUT;
-}
-
-MT::Array<uint> identity_uintA_reference(MT::Array<uint> &INPUT) {
-  return INPUT;
-}
-
-MT::Array<uint> identity_uintA_pointer(MT::Array<uint> *INPUT) {
-  return *INPUT;
-}
-
-MT::Array<double> return_arr() {
-  arr t = { 1.2, 3.4, 5.6, 7.8};
-  t.reshape(2,2);
-  return t;
-}
-
-MT::Array<int> return_intA() {
-  intA t = { -1, 3, -5, 7};
-  t.reshape(2,2);
-  return t;
-}
-
-MT::Array<uint> return_uintA() {
-  uintA t = { 1, 3, 5, 7};
-  t.reshape(2,2);
-  return t;
-}
-%}  
-
-//===========================================================================
-
 %typemap(in) MT::String {
     $1 = PyString_AsString($input);
 }
