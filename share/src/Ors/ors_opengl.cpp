@@ -28,6 +28,7 @@
 
 #include "ors.h"
 #include <Gui/opengl.h>
+#include <iomanip>
 
 //global options
 bool orsDrawJoints=true, orsDrawShapes=true, orsDrawBodies=true, orsDrawProxies=true;

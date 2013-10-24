@@ -7,6 +7,8 @@
 #  include <QtGui/QApplication>
 #endif
 
+#  include <GL/gl.h>
+#  include <GL/glut.h>
 
 using namespace std;
 

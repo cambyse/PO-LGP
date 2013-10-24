@@ -23,7 +23,7 @@
 #include "engine.h"
 #include "engine_internal.h"
 
-Singleton<Engine> singleton_Engine;
+Singleton<Engine> SingleEngine;
 
 System& NoSystem = *((System*)NULL);
 
@@ -293,7 +293,7 @@ void signalhandler(int s){
   }
 }
 
-Engine& engine(){  return singleton_Engine.obj(); }
+Engine& engine(){  return SingleEngine(); }
 
 Engine::Engine(): mode(none), system(NULL), shutdown(false) {
   acc = new EventController;

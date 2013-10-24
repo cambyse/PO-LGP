@@ -6,10 +6,10 @@
 #include <Optim/benchmarks.h>
 #include <Optim/constrained.h>
 #include <Perception/video.h>
-
+#include <iomanip>
 
 void saveTrajectory(const arr& x, ors::Graph& G, OpenGL& gl) {
-  VideoEncoder vid;
+  VideoEncoder_libav_simple vid;
   for(uint t=0; t<x.d0; t++) {
     G.setJointState(x[t]);
     G.calcBodyFramesFromJoints();

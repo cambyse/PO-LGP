@@ -23,13 +23,31 @@
 #endif
 #include <GL/freeglut.h>
 //#include <X11/Xlib.h>
-//#include <GL/glx.h>
+#include <GL/glx.h>
 
 #include "opengl.h"
 #include <Core/geo.h>
 
+
 void initGlEngine(){}
-static Mutex globalOpenglLock;
+
+//===========================================================================
+//
+// A singleton to ensure once initialization
+//
+
+struct FreeglutInitializer{
+  Mutex lock;
+  FreeglutInitializer(){
+    lock.lock();
+    int argc=1;
+    char *argv[1]={(char*)"x"};
+    glutInit(&argc, argv);
+    lock.unlock();
+  }
+};
+
+Singleton<FreeglutInitializer> SingleOpengl;
 
 
 //===========================================================================
@@ -37,20 +55,15 @@ static Mutex globalOpenglLock;
 // special trick for the event loop
 //
 
-extern "C" {
-  void fgDeinitialize(void);
-}
-
 #ifdef MT_Linux
 struct SFG_Display_dummy {
   _XDisplay *Display;
 };
+
 extern SFG_Display_dummy fgDisplay;
-#endif
 
 static void sleepForEvents(void) {
-#ifdef MT_Linux
-  if (! XPending(fgDisplay.Display)) {
+  if (!XPending(fgDisplay.Display)) {
     fd_set fdset;
     struct timeval wait;
     
@@ -64,16 +77,21 @@ static void sleepForEvents(void) {
     if(-1 == err){
 #if HAVE_ERRNO
       if(errno != EINTR)
-	fgWarning("freeglut select() error: %d", errno);
+        fgWarning("freeglut select() error: %d", errno);
 #else
       MT_MSG("freeglut select() error");
 #endif
     }
   }
-#elif defined MT_MSVC
-  MsgWaitForMultipleObjects(0, NULL, FALSE, 10/*msec*/, QS_ALLINPUT);
-#endif
 }
+
+#elif defined MT_MSVC
+
+static void sleepForEvents(void) {
+  MsgWaitForMultipleObjects(0, NULL, FALSE, 10/*msec*/, QS_ALLINPUT);
+}
+
+#endif
 
 
 //===========================================================================
@@ -93,7 +111,6 @@ struct sOpenGL {
   ors::Quaternion downRot;
 
   //-- engine specific data
-  static uint nrWins;
   static MT::Array<OpenGL*> glwins;    ///< global window list
   int windowID;                        ///< id of this window in the global glwins list
   
@@ -108,18 +125,17 @@ struct sOpenGL {
   static void _Reshape(int w,int h) { lock(); glwins(glutGetWindow())->Reshape(w,h); unlock(); }
   static void _MouseWheel(int wheel, int direction, int x, int y) { lock(); glwins(glutGetWindow())->MouseWheel(wheel,direction,x,y); unlock(); }
   
-  static void lock() { globalOpenglLock.lock(); }
-  static void unlock() { globalOpenglLock.unlock(); }
+  static void lock() { SingleOpengl().lock.lock(); }
+  static void unlock() { SingleOpengl().lock.unlock(); }
   void lock_win() { lock(); glutSetWindow(windowID); } //same as above, but also sets gl cocntext (glXMakeCurrent)
   void unlock_win() {
 #ifndef MT_MSVC
-	  glXMakeCurrent(fgDisplay.Display, None, NULL);
+    glXMakeCurrent(fgDisplay.Display, None, NULL);
 #endif
-	  unlock();
+    unlock();
   } //releases the context
 };
 
-uint sOpenGL::nrWins=0;
 MT::Array<OpenGL*> sOpenGL::glwins;
 
 
@@ -144,14 +160,7 @@ void OpenGL::resize(int w,int h) {
 // int OpenGL::height() { s->lock(); int h=glutGet(GLUT_WINDOW_HEIGHT); s->unlock(); return h; }
 
 sOpenGL::sOpenGL(OpenGL *gl,const char* title,int w,int h,int posx,int posy) {
-  lock();
-  
-  if (!nrWins) {
-    int argc=1;
-    char *argv[1]={(char*)"x"};
-    glutInit(&argc, argv);
-  }
-  nrWins++;
+  SingleOpengl().lock.lock();
   
   glutInitWindowSize(w,h);
   glutInitWindowPosition(posx,posy);
@@ -173,7 +182,7 @@ sOpenGL::sOpenGL(OpenGL *gl,const char* title,int w,int h,int posx,int posy) {
   gl->width = glutGet(GLUT_WINDOW_WIDTH);
   gl->height = glutGet(GLUT_WINDOW_HEIGHT);
 
-  unlock_win();
+  SingleOpengl().lock.unlock();
 }
 
 sOpenGL::sOpenGL(OpenGL *gl, void *container) {
@@ -181,12 +190,8 @@ sOpenGL::sOpenGL(OpenGL *gl, void *container) {
 }
 
 sOpenGL::~sOpenGL() {
-  lock();
+  SingleOpengl().lock.lock();
   glutDestroyWindow(windowID);
-  glwins(windowID)=0;
-  nrWins--;
-#ifndef MT_MSVC
-  if (!nrWins) fgDeinitialize();
-#endif
-  unlock();
+  glwins(windowID)=NULL;
+  SingleOpengl().lock.unlock();
 }

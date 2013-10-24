@@ -23,8 +23,6 @@
 // global singleton TypeRegistrationSpace
 //
 
-Singleton<KeyValueGraph> single_registry;
+Singleton<KeyValueGraph> SingleRegistry;
 
-KeyValueGraph& registry() {
-  return single_registry.obj();
-}
+KeyValueGraph& registry(){ return SingleRegistry(); }

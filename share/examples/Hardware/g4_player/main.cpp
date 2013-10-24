@@ -23,7 +23,7 @@ void setup_opengl_for_g4(ors::Graph& ors, OpenGL& gl, uint hubs){
 }
 
 void display(const arr& X){
-  VideoEncoder vid;
+  VideoEncoder_libav_simple vid;
   OpenGL gl;
   ors::Graph ors;
   setup_opengl_for_g4(ors, gl, X.d1);
