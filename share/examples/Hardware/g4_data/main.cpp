@@ -1,63 +1,132 @@
 #include <Perception/g4data.h>
+#include <Core/array.h>
 
 void loadData(G4Data &g4d) {
-  MT::String fname = MT::getParameter<MT::String>("filename");
-  g4d.loadData(fname);
-}
+  MT::String meta = MT::getParameter<MT::String>("meta");
+  MT::String poses = MT::getParameter<MT::String>("poses");
 
-void setObjIDs(G4Data &g4d) {
-  g4d.addSensor("rh", "thumb", 0, 0);
-  g4d.addSensor("rh", "index", 0, 1);
-  g4d.addSensor("rh", "middle", 0, 2);
-
-  g4d.addSensor("lh", "thumb", 1, 0);
-  g4d.addSensor("lh", "index", 1, 1);
-  g4d.addSensor("lh", "middle", 1, 2);
-
-  g4d.addSensor("lh", "back", 2, 0);
-  g4d.addSensor("rh", "back", 2, 1);
-
-  g4d.addSensor("small_box", 3, 0);
-  g4d.addSensor("bottle", 3, 1);
-  g4d.addSensor("book", 3, 2);
-
-  g4d.addSensor("ball", 4, 0);
-  g4d.addSensor("big_box", "box", 4, 1);
-  g4d.addSensor("big_box", "lid", 4, 2);
+  g4d.loadData(meta, poses);
 }
 
 void testData(G4Data &g4d) {
-  // T = number frames
-  // N = number bodies
-  // M = number sensors for a body
+  uint checkT           = 11;
+  uint checkN           = 14;
+  uint checkNrh         = 4;
+  uint checkNrhthumb    = 1;
+  uint checkNbook       = 1;
+  uintA checkD10        = { 1,      checkN,        7 };
+  uintA checkDbook      = { checkT, checkNbook,    7 };
+  uintA checkD10book    = { 1,      checkNbook,    7 };
+  uintA checkDrh        = { checkT, checkNrh,      7 };
+  uintA checkD10rh      = { 1,      checkNrh,      7 };
+  uintA checkDrhthumb   = { checkT, checkNrhthumb, 7 };
+  uintA checkD10rhthumb = { 1,      checkNrhthumb, 7 };
 
-  cout << "frame 10" << endl;
-  cout << g4d.query(10).getDim() << endl; // returns a 1xNx7 Array
-  cout << "(should be 1, 15, 7)" << endl << endl;
+  uint T, N, v;
+  arr data;
+  MT::Array<uint> dim;
 
-  cout << "book" << endl;
-  cout << g4d.query("book").getDim() << endl; // returns a TxMx7 Array
-  cout << "(should be T, 1, 7)" << endl << endl;
+  T = g4d.getNumTimesteps();
+  cout << "T               = " << T << endl;
+  CHECK(T == checkT, "wrong value of T");
 
-  cout << "book @ t = 10" << endl;
-  cout << g4d.query("book", 10).getDim() << endl; // returns a 1xMx7 Array
-  cout << "(should be 1, 1, 7)" << endl << endl;
+  N = g4d.getNumSensors();
+  cout << "N               = " << N << endl;
+  CHECK(N == checkN, "wrong value of N");
 
-  cout << "rh " << endl;
-  cout << g4d.query("rh").getDim() << endl; // returns a TxMx7 Array
-  cout << "(should be T, 4, 7)" << endl << endl;
+  N = g4d.getNumSensors("rh");
+  cout << "N rh            = " << N << endl;
+  CHECK(N == checkNrh, "wrong value of N");
 
-  cout << "rh @ t = 10" << endl;
-  cout << g4d.query("rh", 10).getDim() << endl; // returns 1xMx7 Array
-  cout << "(should be 1, 4, 7)" << endl << endl;
+  N = g4d.getNumSensors("rh:thumb");
+  cout << "N rh:thumb      = " << N << endl;
+  CHECK(N == checkNrhthumb, "wrong value of N");
 
-  cout << "rh::thumb" << endl;
-  cout << g4d.query("rh", "thumb").getDim() << endl; // returns a Tx1x7 Array
-  cout << "(should be T, 1, 7)" << endl << endl;
+  N = g4d.getNumSensors("book");
+  cout << "N book          = " << N << endl;
+  CHECK(N == checkNbook, "wrong value of N");
 
-  cout << "rh::thumb @ t = 10" << endl;
-  cout << g4d.query("rh", "thumb", 10).getDim() << endl; // returns a 1x1x7 Array
-  cout << "(should be 1, 1, 7)" << endl << endl;
+  data = g4d.query(10);
+  dim = data.getDim();
+  cout << "dim 10          = " << dim << endl;
+  CHECK(dim == checkD10, "wrong value of dim");
+
+  data = g4d.query("book");
+  dim = data.getDim();
+  cout << "dim book        = " << dim << endl;
+  CHECK(dim == checkDbook, "wrong value of dim");
+
+  data = g4d.query(10, "book");
+  dim = data.getDim();
+  cout << "dim 10 book     = " << dim << endl;
+  CHECK(dim == checkD10book, "wrong value of dim");
+
+  data = g4d.query("rh");
+  dim = data.getDim();
+  cout << "dim rh          = " << dim << endl;
+  CHECK(dim == checkDrh, "wrong value of dim");
+
+  data = g4d.query(10, "rh");
+  dim = data.getDim();
+  cout << "dim 10 rh       = " << dim << endl;
+  CHECK(dim == checkD10rh, "wrong value of dim");
+
+  data = g4d.query("rh:thumb");
+  dim = data.getDim();
+  cout << "dim rh thumb    = " << dim << endl;
+  CHECK(dim == checkDrhthumb, "wrong value of dim");
+
+  data = g4d.query(10, "rh:thumb");
+  dim = data.getDim();
+  cout << "dim 10 rh thumb = " << dim << endl;
+  CHECK(dim == checkD10rhthumb, "wrong value of dim");
+
+  data = g4d.query();
+  v = data(0, 0, 0);
+  cout << "value = " << v << endl;
+  CHECK(v == 1, "wrong value");
+  v = data(0, 1, 0);
+  cout << "value = " << v << endl;
+  CHECK(v == 1, "wrong value");
+  v = data(0, 2, 0);
+  cout << "value = " << v << endl;
+  CHECK(v == 1, "wrong value");
+
+  data = g4d.query(1);
+  v = data(0, 0, 0);
+  cout << "value = " << v << endl;
+  CHECK(v == 2, "wrong value");
+  v = data(0, 1, 0);
+  cout << "value = " << v << endl;
+  CHECK(v == 2, "wrong value");
+  v = data(0, 2, 0);
+  cout << "value = " << v << endl;
+  CHECK(v == 2, "wrong value");
+
+  data = g4d.query("rh");
+  v = data(2, 0, 0);
+  cout << "value = " << v << endl;
+  CHECK(v == 3, "wrong value");
+  v = data(2, 1, 0);
+  cout << "value = " << v << endl;
+  CHECK(v == 3, "wrong value");
+  v = data(2, 2, 0);
+  cout << "value = " << v << endl;
+  CHECK(v == 3, "wrong value");
+  v = data(2, 3, 0);
+  cout << "value = " << v << endl;
+  CHECK(v == 3, "wrong value");
+
+  data = g4d.query(0, "rh:thumb");
+  v = data(0, 0, 0);
+  cout << "value = " << v << endl;
+  CHECK(v == 1, "wrong value");
+  v = data(0, 0, 1);
+  cout << "value = " << v << endl;
+  CHECK(v == 2, "wrong value");
+  v = data(0, 0, 2);
+  cout << "value = " << v << endl;
+  CHECK(v == 3, "wrong value");
 }
 
 int main(int argc, char **argv) {
@@ -65,8 +134,6 @@ int main(int argc, char **argv) {
 
   G4Data g4d;
   loadData(g4d);
-  setObjIDs(g4d);
-
   testData(g4d);
 
   return 0;
