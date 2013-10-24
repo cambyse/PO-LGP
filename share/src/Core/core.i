@@ -38,7 +38,7 @@ created: <2013-03-20 Wed>
 
 %feature("autodoc", "1");
 %include "typemaps.i"
-%include "numpy.i"
+%include "../../include/numpy/numpy.i"
 %include "std_string.i"
 
 %fragment("NumPy_Fragments");
@@ -242,6 +242,29 @@ MT::Array<double> identity_arr_pointer(MT::Array<double> *INPUT) {
   return *INPUT;
 }
 
+MT::Array<int> identity_intA_value(MT::Array<int> INPUT) {
+  return INPUT;
+}
+
+MT::Array<int> identity_intA_reference(MT::Array<int> &INPUT) {
+  return INPUT;
+}
+
+MT::Array<int> identity_intA_pointer(MT::Array<int> *INPUT) {
+  return *INPUT;
+}
+
+MT::Array<uint> identity_uintA_value(MT::Array<uint> INPUT) {
+  return INPUT;
+}
+
+MT::Array<uint> identity_uintA_reference(MT::Array<uint> &INPUT) {
+  return INPUT;
+}
+
+MT::Array<uint> identity_uintA_pointer(MT::Array<uint> *INPUT) {
+  return *INPUT;
+}
 
 MT::Array<double> return_arr() {
   arr t = { 1.2, 3.4, 5.6, 7.8};
