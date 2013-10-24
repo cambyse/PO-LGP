@@ -1,6 +1,145 @@
 import corepy
 import numpy
 
+class TestArray_SWIGTypemaps():
+    """
+    Note: this testclass also tests the magic method __getitem__.
+    """
+
+    def test_return_arr(self):
+        a = corepy.return_arr()    # should return [[1. 3]. [5. 7]]
+
+        # check dimensions
+        assert a.size == 4
+        assert a.shape == (2, 2)
+
+        assert a.dtype == numpy.float64
+
+        # check each value
+        assert (a[0, 0] - 1.2) < 0.01
+        assert (a[0, 1] - 3.4) < 0.01
+        assert (a[1, 0] - 5.6) < 0.01
+        assert (a[1, 1] - 7.8) < 0.01
+
+    def test_return_intA(self):
+        a = corepy.return_intA()    # should return [[1. 3]. [5. 7]]
+
+        # check dimensions
+        assert a.size == 4
+        assert a.shape == (2, 2)
+
+        assert a.dtype == numpy.int32
+
+        # check each value
+        assert (a[0, 0] + 1) < 0.01
+        assert (a[0, 1] - 3) < 0.01
+        assert (a[1, 0] + 5) < 0.01
+        assert (a[1, 1] - 7) < 0.01
+
+    def test_return_uintA(self):
+        a = corepy.return_uintA()    # should return [[1. 3]. [5. 7]]
+
+        # check dimensions
+        assert a.size == 4
+        assert a.shape == (2, 2)
+
+        assert a.dtype == numpy.uint32
+
+        # check each value
+        assert (a[0, 0] - 1) < 0.01
+        assert (a[0, 1] - 3) < 0.01
+        assert (a[1, 0] - 5) < 0.01
+        assert (a[1, 1] - 7) < 0.01
+
+    def test_argument_arr_value_1D(self):
+        a = numpy.array([1, 2, 3]);
+        b = corepy.identity_arr_value(a)
+        assert (a == b).all()
+
+    def test_argument_arr_value_2D(self):
+        a = numpy.array([[1, 2, 3], [4, 5, 6]]);
+        b = corepy.identity_arr_value(a)
+        assert (a == b).all()
+
+    def test_argument_arr_reference_1D(self):
+        a = numpy.array([1, 2, 3]);
+        b = corepy.identity_arr_reference(a)
+        assert (a == b).all()
+
+    def test_argument_arr_reference_2D(self):
+        a = numpy.array([[1, 2, 3], [4, 5, 6]]);
+        b = corepy.identity_arr_reference(a)
+        assert (a == b).all()
+
+    def test_argument_arr_pointer_1D(self):
+        a = numpy.array([1, 2, 3]);
+        b = corepy.identity_arr_pointer(a)
+        assert (a == b).all()
+
+    def test_argument_arr_pointer_2D(self):
+        a = numpy.array([[1, 2, 3], [4, 5, 6]]);
+        b = corepy.identity_arr_pointer(a)
+        assert (a == b).all()
+
+    def test_argument_intA_value_1D(self):
+        a = numpy.array([1, 2, 3], dtype=numpy.int32);
+        b = corepy.identity_intA_value(a)
+        assert (a == b).all()
+
+    def test_argument_intA_value_2D(self):
+        a = numpy.array([[1, 2, 3], [4, 5, 6]], dtype=numpy.int32);
+        b = corepy.identity_intA_value(a)
+        assert (a == b).all()
+
+    def test_argument_intA_reference_1D(self):
+        a = numpy.array([1, 2, 3], dtype=numpy.int32);
+        b = corepy.identity_intA_reference(a)
+        assert (a == b).all()
+
+    def test_argument_intA_reference_2D(self):
+        a = numpy.array([[1, 2, 3], [4, 5, 6]], dtype=numpy.int32);
+        b = corepy.identity_intA_reference(a)
+        assert (a == b).all()
+
+    def test_argument_intA_pointer_1D(self):
+        a = numpy.array([1, 2, 3], dtype=numpy.int32);
+        b = corepy.identity_intA_pointer(a)
+        assert (a == b).all()
+
+    def test_argument_intA_pointer_2D(self):
+        a = numpy.array([[1, 2, 3], [4, 5, 6]], dtype=numpy.int32);
+        b = corepy.identity_intA_pointer(a)
+        assert (a == b).all()
+
+    def test_argument_uintA_value_1D(self):
+        a = numpy.array([1, 2, 3], dtype=numpy.uint32);
+        b = corepy.identity_uintA_value(a)
+        assert (a == b).all()
+
+    def test_argument_uintA_value_2D(self):
+        a = numpy.array([[1, 2, 3], [4, 5, 6]], dtype=numpy.uint32);
+        b = corepy.identity_uintA_value(a)
+        assert (a == b).all()
+
+    def test_argument_uintA_reference_1D(self):
+        a = numpy.array([1, 2, 3], dtype=numpy.uint32);
+        b = corepy.identity_uintA_reference(a)
+        assert (a == b).all()
+
+    def test_argument_uintA_reference_2D(self):
+        a = numpy.array([[1, 2, 3], [4, 5, 6]], dtype=numpy.uint32);
+        b = corepy.identity_uintA_reference(a)
+        assert (a == b).all()
+
+    def test_argument_uintA_pointer_1D(self):
+        a = numpy.array([1, 2, 3], dtype=numpy.uint32);
+        b = corepy.identity_uintA_pointer(a)
+        assert (a == b).all()
+
+    def test_argument_uintA_pointer_2D(self):
+        a = numpy.array([[1, 2, 3], [4, 5, 6]], dtype=numpy.uint32);
+        b = corepy.identity_uintA_pointer(a)
+        assert (a == b).all()
 
 class TestArray_MatlabFunctions():
     """
