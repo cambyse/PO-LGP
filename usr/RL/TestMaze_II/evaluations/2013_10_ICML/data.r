@@ -34,3 +34,4 @@ analyze_data("2x2_UTREE_PROB_R.txt","2x2_UTREE_PROB_plot.txt");
 
 analyze_data("4x4_III_SPARSE_R.txt","4x4_III_SPARSE_plot.txt");
 analyze_data("4x4_III_UTREE_VALUE_R.txt","4x4_III_UTREE_VALUE_plot.txt");
+analyze_data("4x4_III_UTREE_PROB_R.txt","4x4_III_UTREE_PROB_plot.txt");
