@@ -178,6 +178,18 @@ def get_mlr_path():
 }
 
 //===========================================================================
+// Garbage collection
+//===========================================================================
+
+%typemap(freearg) MT::Array<Type> * {
+  delete $1;
+}
+
+%typemap(freearg) MT::Array<Type> & {
+  delete $1;
+}
+
+//===========================================================================
 // Typecheck typemaps for all kinds of overloading magic
 //===========================================================================
 %typemap(typecheck) MT::Array<Type> {
