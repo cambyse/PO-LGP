@@ -8,21 +8,7 @@
 # >>> help(orspy)
 #
 # Also take a look at share/test/orspy/
+MODULE_NAME=ors
+LIBS=-lCore -lOrs
 
-ifndef MLR_PATH
-	MLR_PATH=~/git/mlr
-endif
-
-main: python
-
-LDFLAGS+=-L../../lib -Xlinker -rpath $(MLR_PATH)/share/lib
-
-python:
-	swig2.0 -c++ -python ors.i
-	install -D orspy.py ~/.local/lib/python2.7/site-packages/orspy.py
-	$(CXX) -c -std=c++0x -fPIC -shared ors_wrap.cxx -I../ -I/usr/include/python2.7/
-	$(CXX) -std=c++0x -shared ors.o ors_wrap.o -I../ -I/usr/include/python2.7/  $(LDFLAGS) -lCore -lOrs -o ~/.local/lib/python2.7/site-packages/_orspy.so
-	rm orspy.py
-
-clean:
-	rm -f _orspy.so ors_wrap.*
+include ../../Makefile.swig

@@ -16,7 +16,8 @@ created: <2013-03-20 Wed>
 %include "typemaps.i"
 %include "std_string.i"
 
-%import "../Core/core.i"
+%include "Core/array.i"
+%import "Core/core.i"
 
 
 //===========================================================================
@@ -429,8 +430,8 @@ struct PhysXInterface {
 
 //===========================================================================
 // some common array templates
-%template(ArrayJoint) MT::Array<ors::Joint*>;
-%template(ArrayBody) MT::Array<ors::Body*>;
+/*%template(ArrayJoint) MT::Array<ors::Joint*>;*/
+/*%template(ArrayBody) MT::Array<ors::Body*>;*/
 
 
 //===========================================================================
