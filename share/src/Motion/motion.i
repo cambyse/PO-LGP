@@ -12,14 +12,9 @@ author: Johannes kulick
 
 %feature("autodoc", "1");
 
-%import "../Core/core.i"
-
-
-//===========================================================================
-%pythoncode %{
-import os
-import corepy
-%}
+%include "Core/array.i"
+%import "Core/core.i"
+%import "Ors/ors.i"
 
 //===========================================================================
 %module motionpy
