@@ -39,11 +39,11 @@ link it:
     $ sudo ldconfig
 
 qhull is newer in arch than in ubuntu and changes some pointer/reference things.
-You can get the newer behaviour by adding
+You need to put 
 
-    QHULL2010 = 1
+   ARCH_LINUX = 1
 
-to your make-config.
+in your make-config. This fixes the qhull change.
 
 Everything else is equal to ubuntu.
 
