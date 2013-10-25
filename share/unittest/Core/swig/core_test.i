@@ -1,4 +1,4 @@
-%module core_test
+%module core_testpy
 
 %include "../../../src/Core/array.i"
 %import "../../../src/Core/core.i"
@@ -54,6 +54,8 @@ MT::Array<uint> identity_uintA_reference(MT::Array<uint> &INPUT) {
 MT::Array<uint> identity_uintA_pointer(MT::Array<uint> *INPUT) {
   return *INPUT;
 }
+
+typedef MT::Array<double> arr;
 
 const arr test_typedefs(const arr& a) {
   return a;
