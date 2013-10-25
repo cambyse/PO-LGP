@@ -52,6 +52,11 @@ class TestArray_SWIGTypemaps():
         assert (a[1, 0] - 5) < 0.01
         assert (a[1, 1] - 7) < 0.01
 
+    def test_memory_leakage(self):
+        a = corepy.zeros(100)
+        for i in range(1, 100000):
+            core_testpy.identity_arr_pointer(a)
+
     def test_argument_arr_value_1D(self):
         a = numpy.array([1, 2, 3]);
         b = core_testpy.identity_arr_value(a)
