@@ -233,16 +233,16 @@ bool readItem(KeyValueGraph& list, std::istream& is, bool verbose=false) {
 //
 
 struct sKeyValueGraph {
-  std::map<std::string, Item*> keyMap;
+//  std::map<std::string, Item*> keyMap;
 };
 
 KeyValueGraph::KeyValueGraph():s(NULL) {
   ItemL::memMove=true;
-  s = new sKeyValueGraph;
+//  s = new sKeyValueGraph;
 }
 
 KeyValueGraph::~KeyValueGraph() {
-  delete s;
+//  delete s;
 }
 
 Item* KeyValueGraph::getItem(const char *key) {

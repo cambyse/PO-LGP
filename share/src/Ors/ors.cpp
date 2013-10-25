@@ -46,11 +46,6 @@
 
 #define Qstate
 
-#ifndef MT_ORS_ONLY_BASICS
-REGISTER_TYPE_Key(T, ors::Transformation);
-#endif
-
-
 void lib_ors(){ cout <<"force loading lib/ors" <<endl; }
 
 #define LEN .2
@@ -214,7 +209,7 @@ void ors::Shape::parseAts() {
   ats.getValue<Transformation>(rel, "rel");
   if(ats.getValue<arr>(x, "size"))          { CHECK(x.N==4,"size=[] needs 4 entries"); memmove(size, x.p, 4*sizeof(double)); }
   if(ats.getValue<arr>(x, "color"))         { CHECK(x.N==3,"color=[] needs 3 entries"); memmove(color, x.p, 3*sizeof(double)); }
-  if(ats.getValue<double>(d, "type"))       { type=(ShapeType)d;}
+  if(ats.getValue<double>(d, "type"))       { type=(ShapeType)(int)d;}
   if(ats.getValue<MT::String>(str, "mesh")) { mesh.readFile(str); }
   if(ats.getValue<double>(d, "meshscale"))  { mesh.scale(d); }
   if(ats.getValue<bool>("contact"))         { cont=true; }
@@ -321,7 +316,7 @@ void ors::Joint::parseAts() {
   ats.getValue<Transformation>(Q, "Q");
   ats.getValue<Transformation>(Q, "q");
   ats.getValue<Transformation>(X, "X");
-  if(ats.getValue<double>(d, "type")) type=(JointType)d; else type=JT_hingeX;
+  if(ats.getValue<double>(d, "type")) type=(JointType)(int)d; else type=JT_hingeX;
   //axis
   arr axis;
   ats.getValue<arr>(axis, "axis");
@@ -654,7 +649,7 @@ uint ors::Graph::getJointStateDimension(bool internal) const {
 //first version, give series of translated positions of bodies with such indexes (NJ)
 void ors::Graph::setExternalState(const arr & x) {
   for(uint i = 0; i < x.N; i+=4) {
-    ors::Body * body = bodies(x(i));//index
+    ors::Body *body = bodies((uint)x(i));//index
     body->X.pos = ors::Vector(x(i+1), x(i+2), x(i+3));//3 position coordinates
   }
 }
