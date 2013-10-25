@@ -19,7 +19,7 @@ INCLUDES=-I$(MLR_PATH)/share/src -I/usr/include/python2.7
 LIB_PATH=-L$(MLR_PATH)/share/lib -Xlinker -rpath $(MLR_PATH)/share/lib
 CXXFLAGS+=-c $(FLAGS) -fPIC $(INCLUDES) -DSWIG_TYPE_TABLE=mlr
 LDFLAGS+=$(FLAGS) $(LIB_PATH) $(INCLUDES) $(LIBS)
-SWIG_INCLUDE=-I$(MLR_PATH)/share -I$(MLR_PATH)/share/include/numpy
+SWIG_INCLUDE=-I$(MLR_PATH)/share/src -I$(MLR_PATH)/share/include/numpy
 
 python:
 	swig2.0 -c++ -python $(SWIG_INCLUDE) $(MODULE_NAME).i
