@@ -181,7 +181,7 @@ template<class T> MT::Array<T>& MT::Array<T>::resize(uint ND, uint *dim) {
   uint64_t S;
   for(S=1, j=0; j<nd; j++) S*=dim[j];
   if(S>=(1ull <<32)) HALT("Array #elements " <<(S>>30) <<"G is >= 2^32");
-  resizeMEM(S, false);
+  resizeMEM((uint)S, false);
   return *this;
 }
 
@@ -194,7 +194,7 @@ template<class T> MT::Array<T>& MT::Array<T>::resizeCopy(uint ND, uint *dim) {
   uint64_t S;
   for(S=1, j=0; j<nd; j++) S*=dim[j];
   if(S>=(1ull <<32)) HALT("Array #elements " <<(S>>30) <<"G is >= 2^32");
-  resizeMEM(S, true);
+  resizeMEM((uint)S, true);
   return *this;
 }
 
@@ -1086,7 +1086,7 @@ template<class T> void MT::Array<T>::setId(int d) {
 template<class T> void MT::Array<T>::setDiag(const T& x, int d) {
   CHECK(d!=-1 || nd==2, "need squared matrix to set to diagonal");
   if(d!=-1) resize(d, d);
-  if(d==-1) d=MT::MIN(d0, d1);
+  if(d==-1) d=(int)MT::MIN(d0, d1);
   setZero();
   uint i;
   for(i=0; i<(uint)d; i++) operator()(i, i)=x;
@@ -2824,8 +2824,8 @@ template<class T> uint numberSharedElements(const MT::Array<T>& x, const MT::Arr
 
 /// Assign all elements of \c a to a uniformly distributed discrete value in {low, .., hi}
 template<class T> void rndInteger(MT::Array<T>& a, int low, int high, bool add) {
-  if(!add) for(uint i=0; i<a.N; i++) a.p[i] =low+(int)rnd.num(1+high-low);
-  else     for(uint i=0; i<a.N; i++) a.p[i]+=low+(int)rnd.num(1+high-low);
+  if(!add) for(uint i=0; i<a.N; i++) a.p[i] =(T)(low+(int)rnd.num(1+high-low));
+  else     for(uint i=0; i<a.N; i++) a.p[i]+=(T)(low+(int)rnd.num(1+high-low));
 }
 
 /// Assign all elements of \c a to a uniformly distributed continuous value in [low, hi]
@@ -3020,7 +3020,7 @@ template<class T> void negative(MT::Array<T>& x, const MT::Array<T>& y) {
     if(&x!=&y) x.resizeAs(y);         \
     T *xp=x.p, *xstop=xp+x.N;            \
     const T *yp=y.p;            \
-    for(; xp!=xstop; xp++, yp++) *xp = ::func( (double) *yp );  \
+    for(; xp!=xstop; xp++, yp++) *xp = (T)::func( (double) *yp );  \
     return x;         \
   }
 

@@ -2,14 +2,15 @@
 
 #include <Core/module.h>
 
-struct G4Poller : Module{
-  ACCESS(floatA, currentPoses)
+struct FloatA_Recorder: Module{
+  ACCESS(floatA, x)
 
-  G4Poller();
+  FloatA_Recorder();
 
   virtual void open();
   virtual void close();
   virtual void step();
 
-  struct sG4Poller *s;
+  MT::String varName;
+  ofstream file;
 };

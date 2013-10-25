@@ -609,6 +609,7 @@ struct TaskVariableTable {
 // C-style functions
 //
 
+void lib_ors();
 void makeConvexHulls(ShapeL& shapes);
 
 //===========================================================================
@@ -627,7 +628,7 @@ void makeConvexHulls(ShapeL& shapes);
 struct OpenGL;
 
 //-- global draw options
-extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines;
+extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines, orsDrawBodyNames;
 extern uint orsDrawLimit;
 
 void displayState(const arr& x, ors::Graph& G, OpenGL& gl, const char *tag);

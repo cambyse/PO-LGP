@@ -65,29 +65,24 @@ void reach(){
   cout <<"initial posture (hit ENTER in the OpenGL window to continue!!)" <<endl;
   S.watch();        //pause and watch initial posture
 
-  arr y_target,y,J,Phi,PhiJ;
-  for(uint i=0;i<10;i++){
+  arr y_target,y,y0,yT,J,Phi,PhiJ;
+  yT = ARR(-0.2, -0.4, 2.1);
+  S.kinematicsPos(y0,"handR");
+  uint T=10;
+  for(uint t=0;t<=5*T;t++){
     //1st task:
-    y_target = ARR(-0.2, -0.4, 1.1); 
     S.kinematicsPos(y,"handR");  //"handR" is the name of the right hand ("handL" for the left hand)
     S.jacobianPos  (J,"handR");
+    if(t<T) y_target = y0 + ((double)t/T)*(yT-y0); 
+    else    y_target = yT;
     Phi  = (y - y_target)/1e-2;  //build the big Phi (sigma = 0.01)
     PhiJ = J/1e-2;               //and the big Jacobian
 
     //report on error in the first task
-    cout <<i <<" current eff pos = " <<y <<"  current error = " <<norm(y_target-y) <<endl;;
-
-    //optional: append a second task
-    //...compute y and J for second task
-    //Phi .append((y - y_target)/sigma);  //append to big Phi
-    //PhiJ.append( J / sigma );           //and the big Jacobian
-
-    //optional: append third task, etc...
+    cout <<t <<" current eff pos = " <<y <<"  current error = " <<norm(y_target-y) <<endl;
 
     //compute joint updates
     q -= inverse(~PhiJ*PhiJ + W)*~PhiJ* Phi;
-    //NOTE: for 1 task only, the following would be equivalent:
-    //q += inverse(~J*J + 1e-4*W)*~J*(y_target - y); 
     
     //sets joint angles AND computes all frames AND updates display
     S.setJointAngles(q);
@@ -162,7 +157,7 @@ void multiTask(){
 int main(int argc,char **argv){
   MT::initCmdLine(argc,argv);
 
-  switch(MT::getParameter<int>("mode",2)){
+  switch(MT::getParameter<int>("mode",4)){
   case 0:  simpleArrayOperations();  break;
   case 1:  openingSimulator();  break;
   case 2:  reach();  break;
