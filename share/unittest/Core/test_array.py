@@ -171,6 +171,28 @@ class TestArray_SWIGTypemaps():
         assert c.size == 1
         assert c[0] - .1 < 0.01
 
+    def test_member_out(self):
+        t = core_testpy.TestClass()
+        a = t.a_val
+        p = t.a_poi
+        assert a.shape == (2, )
+        assert a[0] - 1.2 < 0.01
+        assert a[1] - 3.4 < 0.01
+        assert p.shape == (2, )
+        assert p[0] - 9.0 < 0.01
+        assert p[1] - 1.2 < 0.01
+
+    def test_member_in(self):
+        t = core_testpy.TestClass()
+        t.a_val = numpy.array([3.4, 5.6])
+        t.a_poi = numpy.array([7.8, 9.0])
+        v = t.get_value()
+        p = t.get_pointer()
+        assert v[0] - 3.4 < 0.01
+        assert v[1] - 5.6 < 0.01
+        assert p[0] - 7.8 < 0.01
+        assert p[1] - 9.0 < 0.01
+
 
 class TestArray_MatlabFunctions():
     """
@@ -215,6 +237,7 @@ class TestArray_MatlabFunctions():
 
 class TestList_SWIGTypemaps:
     def test_return_arrL(self):
-        arrl = core_testpy.return_arrL();
-        arr = core_testpy.return_arr();
-        assert (arrl[0]==arr)
+        arrl = core_testpy.return_arrL()
+        arr = core_testpy.return_arr()
+        arr = arr.reshape(4)
+        assert (arrl[0]==arr).all()
