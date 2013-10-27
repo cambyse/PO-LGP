@@ -1,7 +1,7 @@
 %module core_testpy
 
-%include "../../../src/Core/array.i"
-%import "../../../src/Core/core.i"
+%include "Core/array_typemaps.i"
+%import "Core/core.i"
 //===========================================================================
 // Some test functions. TODO: move to some test-lib?
 //===========================================================================
@@ -89,6 +89,25 @@ MT::Array<uint> return_uintA() {
   uintA t = { 1, 3, 5, 7};
   t.reshape(2,2);
   return t;
+}
+
+arrL return_arrL() {
+  arr *a = new arr({1.2, 3.4, 5.6, 7.8});
+  arrL l;
+  l.append(a);
+  return l;
+}
+
+arrL identity_arrL_value(arrL in) {
+  return in;
+}
+
+arrL identity_arrL_reference(arrL& in) {
+  return in;
+}
+
+arrL identity_arrL_pointer(arrL* in) {
+  return *in;
 }
 %}  
 

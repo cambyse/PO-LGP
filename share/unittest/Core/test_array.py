@@ -211,3 +211,10 @@ class TestArray_MatlabFunctions():
         assert (a[0, 1] - 0.) < 0.01
         assert (a[1, 0] - 0.) < 0.01
         assert (a[1, 1] - 1.) < 0.01
+
+
+class TestList_SWIGTypemaps:
+    def test_return_arrL(self):
+        arrl = core_testpy.return_arrL();
+        arr = core_testpy.return_arr();
+        assert (arrl[0]==arr)
