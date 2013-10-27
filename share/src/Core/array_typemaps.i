@@ -195,11 +195,10 @@ import_array();
       Type tm;
       PyObject *iter = PyList_GetItem($input, i);
       {
-        Type arg1;
-        void* argp1 = 0;
-        PyObject *obj0 = iter;
+        Type $1;
+        PyObject *$input = iter;
         $typemap(in, Type)
-        tm = arg1;
+        tm = $1;
       }
       $1(i) = tm;
     }
@@ -218,11 +217,10 @@ import_array();
       Type tm;
       PyObject *iter = PyList_GetItem($input, i);
       {
-        Type arg1;
-        void* argp1 = 0;
-        PyObject *obj0 = iter;
+        Type $1;
+        PyObject *$input = iter;
         $typemap(in, Type)
-        tm = arg1;
+        tm = $1;
       }
       (*$1)(i) = tm;
     }
@@ -245,10 +243,10 @@ import_array();
     PyObject *obj = NULL;
     Type *iter = &($1(i));
     {
-      Type result = *iter;
-      PyObject *resultobj = NULL;
+      Type $1 = *iter;
+      PyObject *$result = NULL;
       $typemap(out, Type)
-      obj = resultobj; 
+      obj = $result; 
     }
     PyList_SetItem($result, i, obj);
   }
@@ -260,10 +258,10 @@ import_array();
     PyObject *obj = NULL;
     Type *iter = &((*$1)(i));
     {
-      Type result = *iter;
-      PyObject *resultobj = NULL;
+      Type $1 = *iter;
+      PyObject *$result = NULL;
       $typemap(out, Type)
-      obj = resultobj; 
+      obj = $result; 
     }
     PyList_SetItem($result, i, obj);
   }
