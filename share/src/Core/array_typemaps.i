@@ -184,10 +184,25 @@ import_array();
 //===========================================================================
 // The actual typemaps for value, reference and pointer arguments
 //===========================================================================
+// This is super hacky. Kids don't try at home. I abused the $typemap macro to
+// get some kind of recursive typemaps. It would be much nicer, to put it in a
+// fragment or so, but SWIG doesn't provide that functionality.
 
 %typemap(in, fragment="asMTArrayList") MT::Array<Type> {
   if(PyList_Check($input)) {
-    if(!asMTArrayList($1, $input, $descriptor(Type))) return NULL;
+    $1.resize(PyList_Size($input));
+    for(uint i=0; i<PyList_Size($input); ++i) {
+      Type tm;
+      PyObject *iter = PyList_GetItem($input, i);
+      {
+        Type arg1;
+        void* argp1 = 0;
+        PyObject *obj0 = iter;
+        $typemap(in, Type)
+        tm = arg1;
+      }
+      $1(i) = tm;
+    }
   }
   else {
     // the typecheck typemap should ensure, that this never happens
@@ -198,8 +213,19 @@ import_array();
 
 %typemap(in, fragment="asMTArrayList") MT::Array<Type> & {
   if(PyList_Check($input)) {
-    $1 = new MT::Array<Type>;
-    if(!asMTArrayList(*$1, $input, $descriptor(Type))) return NULL;
+    $1->resize(PyList_Size($input));
+    for(uint i=0; i<PyList_Size($input); ++i) {
+      Type tm;
+      PyObject *iter = PyList_GetItem($input, i);
+      {
+        Type arg1;
+        void* argp1 = 0;
+        PyObject *obj0 = iter;
+        $typemap(in, Type)
+        tm = arg1;
+      }
+      (*$1)(i) = tm;
+    }
   }
   else {
     // the typecheck typemap should ensure, that this never happens
@@ -212,9 +238,6 @@ import_array();
 //===========================================================================
 // Output
 //===========================================================================
-// This is super hacky. Kids don't try at home. I abused the $typemap macro to
-// get some kind of recursive typemaps. It would be much nicer, to put it in a
-// fragment or so, but SWIG doesn't provide that functionality.
 
 %typemap(out) MT::Array<Type> {
   $result = PyList_New($1.N);
@@ -227,8 +250,6 @@ import_array();
       $typemap(out, Type)
       obj = resultobj; 
     }
-    if(!obj)
-      obj = SWIG_NewPointerObj($1(i), $descriptor(Type), 0);
     PyList_SetItem($result, i, obj);
   }
 }
@@ -244,8 +265,6 @@ import_array();
       $typemap(out, Type)
       obj = resultobj; 
     }
-    if(!obj)
-      obj = SWIG_NewPointerObj((*$1)(i), $descriptor(Type), 0);
     PyList_SetItem($result, i, obj);
   }
 }
