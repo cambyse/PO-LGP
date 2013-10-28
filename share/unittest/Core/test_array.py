@@ -53,6 +53,7 @@ class TestArray_SWIGTypemaps():
         assert (a[1, 1] - 7) < 0.01
 
     def test_memory_leakage(self):
+        # if there is a memory leak, you will definitely get out of memory here
         a = corepy.zeros(100)
         for i in range(1, 100000):
             core_testpy.identity_arr_pointer(a)
@@ -241,3 +242,8 @@ class TestList_SWIGTypemaps:
         arr = core_testpy.return_arr()
         arr = arr.reshape(4)
         assert (arrl[0]==arr).all()
+
+    def test_argument_arrL_value(self):
+        arrl = core_testpy.return_arrL()
+        cp = core_testpy.identity_arrL_value(arrl)
+        assert (cp[0] == arrl[0]).all()

@@ -17,6 +17,14 @@ struct TestClass {
   MT::Array<double>* get_pointer() { return a_poi; }
 };
 
+struct ListTest {
+  double d;
+};
+%}
+
+%List_Typemap(ListTest*)
+
+%inline %{
 
 MT::Array<double> identity_arr_value(MT::Array<double> INPUT) {
   return INPUT;
@@ -119,6 +127,10 @@ arrL identity_arrL_reference(arrL& in) {
 
 arrL identity_arrL_pointer(arrL* in) {
   return *in;
+}
+
+MT::Array<ListTest*> id_list_test(MT::Array<ListTest*> a) {
+  return a;  
 }
 %}  
 
