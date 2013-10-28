@@ -15,6 +15,7 @@ author: Johannes kulick
 %include "Core/array_typemaps.i"
 %import "Core/core.i"
 %import "Ors/ors.i"
+%import "Optim/optim.i"
 
 //===========================================================================
 %module motionpy
