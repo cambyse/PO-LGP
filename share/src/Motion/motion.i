@@ -12,7 +12,7 @@ author: Johannes kulick
 
 %feature("autodoc", "1");
 
-%include "Core/array.i"
+%include "Core/array_typemaps.i"
 %import "Core/core.i"
 %import "Ors/ors.i"
 
