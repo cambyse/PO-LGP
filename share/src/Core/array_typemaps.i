@@ -91,6 +91,7 @@ import_array();
 }
 
 
+
 //===========================================================================
 // Garbage collection
 //===========================================================================
@@ -139,6 +140,14 @@ import_array();
 
 %typemap(out, fragment="out_tm"{Type}) MT::Array<Type> & {
   $result = MTArray_As_NumpyArray(*$1);
+}
+
+%typemap(argout, fragment="out_tm"{Type}) MT::Array<Type> & {
+  %append_output(MTArray_As_NumpyArray(*$1));
+}
+
+// const types can't be outputs (or they are pretty useless anyway)
+%typemap(argout, fragment="out_tm"{Type}) const MT::Array<Type> & {
 }
 
 %apply MT::Array<Type> & { MT::Array<Type> * }
@@ -265,6 +274,22 @@ import_array();
     }
     PyList_SetItem($result, i, obj);
   }
+}
+
+%typemap(argout) MT::Array<Type> & {
+  PyObject *argout = PyList_New($1->N);
+  for(uint i=0; i<$1->N; ++i) {
+    PyObject *obj = NULL;
+    Type *iter = &((*$1)(i));
+    {
+      Type $1 = *iter;
+      PyObject *$result = NULL;
+      $typemap(out, Type)
+      obj = $result; 
+    }
+    PyList_SetItem($result, i, obj);
+  }
+  %append_output(argout);
 }
 //===========================================================================
 // Garbage collection
