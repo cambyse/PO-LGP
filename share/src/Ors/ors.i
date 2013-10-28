@@ -16,7 +16,7 @@ created: <2013-03-20 Wed>
 %include "typemaps.i"
 %include "std_string.i"
 
-%include "Core/array.i"
+%include "Core/array_typemaps.i"
 %import "Core/core.i"
 
 
@@ -50,6 +50,13 @@ def get_mlr_path():
 %inline %{
   typedef unsigned int uint;
 %}
+
+%List_Typemap(ors::Body*)
+%List_Typemap(ors::Shape*)
+%List_Typemap(ors::Joint*)
+%List_Typemap(ors::Transformation*)
+%List_Typemap(ors::Proxy*)
+%List_Typemap(uintA)
 
 namespace ors {
 
