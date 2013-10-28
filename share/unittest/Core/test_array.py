@@ -194,6 +194,37 @@ class TestArray_SWIGTypemaps():
         assert p[0] - 7.8 < 0.01
         assert p[1] - 9.0 < 0.01
 
+    def test_argout(self):
+        a = numpy.array([1])
+        a = core_testpy.argout_test(a)
+        assert a[0] - 1.2 < 0.01
+        assert a[1] - 3.4 < 0.01
+
+    def test_multi_argout(self):
+        a1 = numpy.array([1])
+        a2 = numpy.array([1])
+        (a1, a2) = core_testpy.multi_argout_test(a1, a2)
+        assert a1[0] - 1.2 < 0.01
+        assert a1[1] - 3.4 < 0.01
+        assert a2[0] - 5.6 < 0.01
+        assert a2[1] - 7.8 < 0.01
+
+    def test_argout_plus_return(self):
+        a = numpy.array([1])
+        (r, a) = core_testpy.argout_test_plus_return(a)
+        assert a[0] - 1.2 < 0.01
+        assert a[1] - 3.4 < 0.01
+        assert r == 1
+
+    def test_mixed_argout(self):
+        a1 = numpy.array([1])
+        a2 = numpy.array([1])
+        (r, a1, a2) = core_testpy.argout_test_mixed(1.2, a1, 3, a2)
+        assert a1[0] - 1.2 < 0.01
+        assert a1[1] - 3.4 < 0.01
+        assert a2[0] - 5.6 < 0.01
+        assert a2[1] - 7.8 < 0.01
+        assert r == 1
 
 class TestArray_MatlabFunctions():
     """
