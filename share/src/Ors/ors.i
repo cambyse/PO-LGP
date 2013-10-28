@@ -443,6 +443,11 @@ struct PhysXInterface {
 
 //===========================================================================
 // helper functions
+void displayState(const arr& x, ors::Graph& G, OpenGL& gl, const char *tag);
+void displayTrajectory(const arr& x, int steps, ors::Graph& G, OpenGL& gl, const char *tag);
+void editConfiguration(const char* orsfile, ors::Graph& G, OpenGL& gl);
+void animateConfiguration(ors::Graph& G, OpenGL& gl);
+void init(ors::Graph& G, OpenGL& gl, const char* orsFile);
 void bindOrsToOpenGL(ors::Graph& graph, OpenGL& gl);
 void bindOrsToPhysX(ors::Graph& graph, OpenGL& gl, PhysXInterface& physx);
 
