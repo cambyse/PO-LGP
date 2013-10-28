@@ -93,6 +93,8 @@ def get_mlr_path():
 %}
 
 %List_Typemap(arr*)
+%List_Typemap(intA*)
+%List_Typemap(uintA*)
 
 %inline %{
   typedef MT::Array<arr*> arrL;
