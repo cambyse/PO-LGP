@@ -19,27 +19,33 @@
 #   size = [ .1 .1 .1 .1 ]
 # }
 
-body sbox {
+body sbox {}
+shape sh:sbox (sbox) {
   type = 0
-  size = [ .075 .045 .11 0 ] #blah
+  size = [ .075 .045 .11 0 ]
 }
 
-body bottle {
+body bottle {}
+shape sh:bottle (bottle) {
   type = 2
   size = [ .23 .06 .06 .1 ]
 }
 
-body book {
+body book {}
+shape sh:book (book) {
   type = 0
   size = [ .21 .235 .035  0 ]
 }
 
-body ball {
+body ball {}
+shape sh:ball (ball) {
   type = 1
+  X = <T t(1 0 0)> # test
   size = [ 0 0 0 .075 ]
 }
 
-body bbox:lid {
+body bbox:lid {}
+shape sh:bbox:lid (bbox:lid) {
   type = 0
   size = [ .15 .15 .002  0 ]
 }
@@ -50,26 +56,47 @@ shape sh:bbox:body:down (bbox:body) {
   rel = <T t(0 0 -.075) d(90 1 0 0) t(0 0 -.075)>
   size = [ .15 .15 .002  0 ]
 }
-
 shape sh:bbox:body:front (bbox:body) {
   type = 0
   rel = <T t(0 0 -.15)>
   size = [ .15 .15 .002  0 ]
 }
-
 shape sh:bbox:body:back (bbox:body) {
   type = 0
   size = [ .15 .15 .002  0 ]
 }
-
 shape sh:bbox:body:left (bbox:body) {
   type = 0
   rel = <T t(.075 0 0) d(90 0 1 0) t(.075 0 0)>
   size = [ .15 .15 .002  0 ]
 }
-
 shape sh:bbox:body:right (bbox:body) {
   type = 0
   rel = <T t(-.075 0 0) d(90 0 1 0) t(.075 0 0)>
   size = [ .15 .15 .002  0 ]
+}
+
+shape sh:xbos:axes (sbox) {
+  type = 5
+  size = [ .1 0 0 0 ]
+}
+shape sh:bottle:axes (bottle) {
+  type = 5
+  size = [ .1 0 0 0 ]
+}
+shape sh:book:axes (book) {
+  type = 5
+  size = [ .1 0 0 0 ]
+}
+shape sh:ball:axes (ball) {
+  type = 5
+  size = [ .1 0 0 0 ]
+}
+shape sh:bbox:lid:axes (bbox:lid) {
+  type = 5
+  size = [ .1 0 0 0 ]
+}
+shape sh:bbox:body:axes (bbox:body) {
+  type = 5
+  size = [ .1 0 0 0 ]
 }
