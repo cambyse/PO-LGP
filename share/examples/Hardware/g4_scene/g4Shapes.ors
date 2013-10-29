@@ -1,0 +1,75 @@
+#body sensor {}
+#shape sh:sensor (sensor) {
+#  type = 0
+#  #X = <T t(  )>
+#  size = [1, 2, 3, 4]
+#}
+
+# body rh:thumb {}
+# body rh:index {}
+# body rh:middle {}
+# body rh:back {}
+# body lh:thumb {}
+# body lh:index {}
+# body lh:middle {}
+# body lh:back {}
+# 
+# shape sh:sensor {
+#   type = 0
+#   size = [ .1 .1 .1 .1 ]
+# }
+
+body sbox {
+  type = 0
+  size = [ .075 .045 .11 0 ] #blah
+}
+
+body bottle {
+  type = 2
+  size = [ .23 .06 .06 .1 ]
+}
+
+body book {
+  type = 0
+  size = [ .21 .235 .035  0 ]
+}
+
+body ball {
+  type = 1
+  size = [ 0 0 0 .075 ]
+}
+
+body bbox:lid {
+  type = 0
+  size = [ .15 .15 .002  0 ]
+}
+ 
+body bbox:body {}
+shape sh:bbox:body:down (bbox:body) {
+  type = 0
+  rel = <T t(0 0 -.075) d(90 1 0 0) t(0 0 -.075)>
+  size = [ .15 .15 .002  0 ]
+}
+
+shape sh:bbox:body:front (bbox:body) {
+  type = 0
+  rel = <T t(0 0 -.15)>
+  size = [ .15 .15 .002  0 ]
+}
+
+shape sh:bbox:body:back (bbox:body) {
+  type = 0
+  size = [ .15 .15 .002  0 ]
+}
+
+shape sh:bbox:body:left (bbox:body) {
+  type = 0
+  rel = <T t(.075 0 0) d(90 0 1 0) t(.075 0 0)>
+  size = [ .15 .15 .002  0 ]
+}
+
+shape sh:bbox:body:right (bbox:body) {
+  type = 0
+  rel = <T t(-.075 0 0) d(90 0 1 0) t(.075 0 0)>
+  size = [ .15 .15 .002  0 ]
+}
