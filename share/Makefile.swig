@@ -9,7 +9,7 @@
 # Also take a look at share/test/orspy/
 
 ifndef MLR_PATH
-	MLR_PATH=~/git/mlr
+	MLR_PATH=$(HOME)/git/mlr
 endif
 
 main: python
