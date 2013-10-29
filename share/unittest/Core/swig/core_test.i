@@ -1,12 +1,31 @@
-%module core_test
+%module core_testpy
 
-%include "../../../src/Core/array.i"
-%import "../../../src/Core/core.i"
+%include "Core/array_typemaps.i"
+%import "Core/core.i"
 //===========================================================================
 // Some test functions. TODO: move to some test-lib?
 //===========================================================================
 
 %inline %{
+
+struct TestClass {
+  MT::Array<double> a_val;
+  MT::Array<double>* a_poi;
+  TestClass() : a_val({1.2, 3.4}), a_poi(new arr({9.0, 1.2})) {};
+
+  MT::Array<double> get_value() { return a_val; }
+  MT::Array<double>* get_pointer() { return a_poi; }
+};
+
+struct ListTest {
+  double d;
+};
+%}
+
+%List_Typemap(ListTest*)
+
+%inline %{
+
 MT::Array<double> identity_arr_value(MT::Array<double> INPUT) {
   return INPUT;
 }
@@ -55,6 +74,8 @@ MT::Array<uint> identity_uintA_pointer(MT::Array<uint> *INPUT) {
   return *INPUT;
 }
 
+typedef MT::Array<double> arr;
+
 const arr test_typedefs(const arr& a) {
   return a;
 }
@@ -88,6 +109,50 @@ MT::Array<uint> return_uintA() {
   t.reshape(2,2);
   return t;
 }
+
+arrL return_arrL() {
+  arr *a = new arr({1.2, 3.4, 5.6, 7.8});
+  arrL l;
+  l.append(a);
+  return l;
+}
+
+arrL identity_arrL_value(arrL in) {
+  return in;
+}
+
+arrL identity_arrL_reference(arrL& in) {
+  return in;
+}
+
+arrL identity_arrL_pointer(arrL* in) {
+  return *in;
+}
+
+MT::Array<ListTest*> id_list_test(MT::Array<ListTest*> a) {
+  return a;  
+}
+
+void argout_test(MT::Array<double>& io) {
+  io = {1.2, 3.4};
+}
+
+void multi_argout_test(MT::Array<double>& io1, MT::Array<double>& io2) {
+  io1 = {1.2, 3.4};
+  io2 = {5.6, 7.8};
+}
+
+int argout_test_plus_return(MT::Array<double>& io) {
+  io = {1.2, 3.4};
+  return 1;
+}
+
+int argout_test_mixed(double d, MT::Array<double>& io1, int a, MT::Array<double>& io2) {
+  io1 = {1.2, 3.4};
+  io2 = {5.6, 7.8};
+  return 1;
+}
+
 %}  
 
 //===========================================================================

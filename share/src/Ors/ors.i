@@ -16,7 +16,7 @@ created: <2013-03-20 Wed>
 %include "typemaps.i"
 %include "std_string.i"
 
-%include "Core/array.i"
+%include "Core/array_typemaps.i"
 %import "Core/core.i"
 
 
@@ -50,6 +50,13 @@ def get_mlr_path():
 %inline %{
   typedef unsigned int uint;
 %}
+
+%List_Typemap(ors::Body*)
+%List_Typemap(ors::Shape*)
+%List_Typemap(ors::Joint*)
+%List_Typemap(ors::Transformation*)
+%List_Typemap(ors::Proxy*)
+%List_Typemap(uintA)
 
 namespace ors {
 
@@ -436,6 +443,11 @@ struct PhysXInterface {
 
 //===========================================================================
 // helper functions
+void displayState(const arr& x, ors::Graph& G, OpenGL& gl, const char *tag);
+void displayTrajectory(const arr& x, int steps, ors::Graph& G, OpenGL& gl, const char *tag);
+void editConfiguration(const char* orsfile, ors::Graph& G, OpenGL& gl);
+void animateConfiguration(ors::Graph& G, OpenGL& gl);
+void init(ors::Graph& G, OpenGL& gl, const char* orsFile);
 void bindOrsToOpenGL(ors::Graph& graph, OpenGL& gl);
 void bindOrsToPhysX(ors::Graph& graph, OpenGL& gl, PhysXInterface& physx);
 
