@@ -1347,7 +1347,7 @@ void Mesh::readObjFile(const char* filename) {
 
 #ifdef MT_GL
 /// static GL routine to draw a ors::Mesh
-void ors::glDrawMesh(void *classP) {
+void glDrawMesh(void *classP) {
   ((ors::Mesh*)classP)->glDraw();
 }
 

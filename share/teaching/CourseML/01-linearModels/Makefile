@@ -1,5 +1,5 @@
 BASE = ../../..
 
-DEPEND = Core
+DEPEND = Core Gui Algo
 
 include $(BASE)/make-generic
