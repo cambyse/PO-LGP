@@ -3,9 +3,18 @@
 
 #include <Core/array.h>
 
-struct VideoEncoder{
-  struct sVideoEncoder *s;
-  VideoEncoder(const char* filename="z.avi");
+struct VideoEncoder_libav_simple{
+  struct sVideoEncoder_libav_simple *s;
+
+  VideoEncoder_libav_simple(const char* filename="z.avi", uint fps=30);
+  void addFrame(const byteA& rgb);
+  void close();
+};
+
+struct VideoEncoder_OpenCV{
+  struct sVideoEncoder_OpenCV *s;
+
+  VideoEncoder_OpenCV(const char* filename="z.avi", uint fps=30);
   void addFrame(const byteA& rgb);
   void close();
 };

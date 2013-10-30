@@ -17,33 +17,39 @@
     -----------------------------------------------------------------  */
 
 
-#include "videoWriter.h"
+#include "video.h"
 #ifdef MT_OPENCV
 
-#ifdef MT_OPENCV
 #undef COUNT
 #include <opencv2/opencv.hpp>
 #undef MIN
 #undef MAX
-#endif
 #include "opencv.h"
-#include <Gui/opengl.h>
 
-struct sVideoWriter{
+struct sVideoEncoder_OpenCV{
   CvVideoWriter *video;
-  uint numFrames,width,height;
+  const char* filename;
+  uint fps;
+  uint numFrames; //,width,height;
+  sVideoEncoder_OpenCV():video(NULL){}
+  void open(uint width, uint height);
 };
 
-void VideoWriter::open(uint width,uint height,const char* filename,double fps){
-
-  s = new sVideoWriter;
-  s->numFrames=0;
-  s->width = width;
-  s->height = height;
-  s->video = cvCreateVideoWriter(filename, CV_FOURCC('X','V','I','D'), fps , cvSize(width,height), true);
+void sVideoEncoder_OpenCV::open(uint width, uint height){
+  numFrames=0;
+  //s->width = width;
+//  s->height = height;
+  video = cvCreateVideoWriter(filename, CV_FOURCC('X','V','I','D'), fps , cvSize(width, height), true);
 }
 
-void VideoWriter::addFrame(const byteA& img){
+VideoEncoder_OpenCV::VideoEncoder_OpenCV(const char* filename, uint fps){
+  s = new sVideoEncoder_OpenCV;
+  s->filename = filename;
+  s->fps = fps;
+}
+
+void VideoEncoder_OpenCV::addFrame(const byteA& img){
+  if(!s->video) s->open(img.d1, img.d0);
   IplImage ipl_img;
   cv::Mat ref=cvMAT(img);
   cvGetImage(&ref, &ipl_img);
@@ -52,20 +58,15 @@ void VideoWriter::addFrame(const byteA& img){
   s->numFrames++;
 }
 
-void VideoWriter::close(){
+void VideoEncoder_OpenCV::close(){
   cvReleaseVideoWriter(&s->video);
 }
 
-void VideoWriter::addFrameFromOpengl(OpenGL& gl){
-  gl.update(NULL, true, false);
-  flip_image(gl.captureImage);
-  addFrame(gl.captureImage);
-}
+#else //MT_OPENCV
 
-#else
 #include <Core/util.h>
-  void VideoWriter::open(uint width,uint height,const char* filename,double fps){ MT_MSG("WARNING - using dummy Revel module"); };
-  void VideoWriter::addFrame(const byteA& img){};
-  void VideoWriter::addFrameFromOpengl(OpenGL& gl){};
-  void VideoWriter::close(){};
-#endif
+  VideoEncoder_OpenCV::VideoEncoder_OpenCV(const char* filename,double fps){ MT_MSG("WARNING - using dummy Revel module"); };
+  void VideoEncoder_OpenCV::addFrame(const byteA& img){};
+  void VideoEncoder_OpenCV::close(){};
+
+#endif //MT_OPENCV

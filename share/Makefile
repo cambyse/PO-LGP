@@ -22,6 +22,9 @@ depend: $(srcs:%=dependPath/%)
 
 clean: $(srcs:%=cleanPath/%) $(exas:%=cleanPath/%) cleanLocks
 
+inf:
+	@echo "srcs =" $(srcs)
+
 ################################################################################
 
 doc::
@@ -36,6 +39,8 @@ cleanLocks: force
 	find . -name 'Make.lock' -type d -delete
 
 %.tgz:: force
+	mv -f make-config make-config.mine
+	cp -f slices/$*.make-config ./make-config
 	rm -f $*.tgz;
 	cd ..; \
 	tar cvzf $*.tgz --exclude-vcs \
@@ -43,5 +48,6 @@ cleanLocks: force
 	--files-from $(PWD)/slices/$*.tar.incl \
 	--exclude-from $(PWD)/slices/tar.excl \
 	--exclude-from $(PWD)/slices/$*.tar.excl
+	cp -f make-config.mine make-config
 
 include make-generic

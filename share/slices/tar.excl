@@ -12,6 +12,7 @@ MT.log
 *_doc/*
 html
 Makefile.dep
+retired
 
 SHARE
 PROJ
@@ -22,7 +23,7 @@ PROJ
 *.creator.user*
 *.config
 *.includes
-course/*/main.cpp
+teaching/*/main.cpp
 *solution*
 *exercise*
 *ODE_0.11/ode-0.11

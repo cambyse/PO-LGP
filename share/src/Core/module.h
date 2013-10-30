@@ -50,10 +50,11 @@ struct VariableAccess{
   void *data;       ///< pointer to data struct; Access_typed knows how to cast it
   VariableAccess(const char* _name):name(_name), type(NULL), data(NULL){}
   virtual int writeAccess(Module*) = 0; ///< tell the engine that a module accesses -> mutex or publish
-  virtual int readAccess(Module*) = 0; ///< tell the engine that a module accesses
+  virtual int readAccess(Module*) = 0;  ///< tell the engine that a module accesses
   virtual int deAccess(Module*) = 0;    ///< tell the engine that the module de-accesses
-  virtual void waitForNextWriteAccess() = 0;
-  virtual int  waitForRevisionGreaterThan(int rev) = 0; //returns the revision
+  virtual double revisionTime() = 0;
+  virtual int waitForNextWriteAccess() = 0;
+  virtual int waitForRevisionGreaterThan(int rev) = 0; //returns the revision
 };
 
 
@@ -72,21 +73,25 @@ struct Module{
   MT::String name;
   AccessL accesses;
   struct ModuleThread *thread;
+
   /** DON'T open drivers/devices/files or so here in the constructor,
       but in open(). Sometimes a module might be created only to see
       which accesses it needs. The default constructure should really
       do nothing */
-Module(const char* _name=NULL):name(_name), thread(NULL){ currentlyCreating=this; }
+  Module(const char* _name=NULL):name(_name), thread(NULL){ currentlyCreating=this; }
   virtual ~Module(){};
+
   /** The most important method of all of this: step does the actual
       computation of the module. Modules should be state less. Access
       the variables by calling the x.get(), x.set() or
       x.[read|write|de]Access(), where ACCESS(TYPE, x) was
       declared. */
   virtual void step() = 0;
+
   /** use this to open drivers/devices/files and initialize
       parameters; this is called within the thread */
   virtual void open(){};
+
   /** use this to close drivers/devices/files; this is called within
       the thread */
   virtual void close(){}; 
@@ -103,11 +108,14 @@ Module(const char* _name=NULL):name(_name), thread(NULL){ currentlyCreating=this
     is the base class of Access_typed */
 
 struct Access{
-  MT::String name; ///< name; by default the member name; redefine to a variable's name to autoconnect
+  MT::String name; ///< name; by default the access' name; redefine to a variable's name to autoconnect
   Type *type;      ///< type; must be the same as the variable's type
   Module *module;  ///< which module is this a member of
   VariableAccess *var; ///< which variable does it access
   Access(const char* _name):name(_name), type(NULL), module(NULL), var(NULL){}
+  int readAccess(){  CHECK(var,""); return var->readAccess(module); }
+  int writeAccess(){ CHECK(var,""); return var->writeAccess(module); }
+  int deAccess(){    CHECK(var,""); return var->deAccess(module); }
 };
 
 
@@ -130,9 +138,6 @@ struct Access_typed:Access{
   };
 
   Access_typed(const char* name, Module *m=NULL, VariableAccess *d=NULL):Access(name){ type=new Type_typed<T, void>();  module=currentlyCreating; var=d; if(module) module->accesses.append(this); }
-  void readAccess(){CHECK(var,""); var->readAccess(module); }
-  void writeAccess(){ CHECK(var,""); var->writeAccess(module); }
-  void deAccess(){ CHECK(var,""); var->deAccess(module); }
   T& operator()(){ CHECK(var && var->data,""); return *((T*)var->data); }
   const T& get(){ return ReadToken(this)(); } ///< read access to the variable's data
   T& set(){ return WriteToken(this)(); } ///< write access to the variable's data
@@ -166,21 +171,13 @@ struct __##name##__Access:Access_typed<type>{ \
 //
 /** Macros for a most standard declaration of a module */
 
-#define BEGIN_MODULE1(name) \
-struct name : Module { \
-  struct s##name *s; \
-  name(); \
-  ~name(); \
-  virtual void open(); \
-  virtual void step(); \
-  virtual void close();
-
 #define BEGIN_MODULE(name) \
   struct name : Module { \
-    name(): Module(#name) {} \
-  virtual void open(); \
-  virtual void step(); \
-  virtual void close();
+    struct s##name *s; \
+    name(): Module(#name), s(NULL) {} \
+    virtual void open(); \
+    virtual void step(); \
+    virtual void close();
 
 #define END_MODULE() };
 

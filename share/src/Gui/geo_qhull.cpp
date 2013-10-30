@@ -494,7 +494,7 @@ void delaunay(Graph<N, E>& g, uint dim=2) {
 #else ///MT_QHULL
 #include <Core/util.h>
 #include <Core/array.h>
-#include "geo.h"
+#include <Core/geo.h>
 int QHULL_DEBUG_LEVEL=0;
 const char* qhullVersion() { return "NONE"; }
 void getTriangulatedHull(uintA& T, arr& V) { NICO }

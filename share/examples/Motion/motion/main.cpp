@@ -55,13 +55,13 @@ int main(int argn,char** argv){
   
   OpenGL costs(STRING("PHI ("<<F.dim_phi(0)<<" tasks)"), 3*T+10, 3*F.dim_phi(0)+10 );
   //-- optimize
-  for(uint k=0;k<1;k++){
+  for(uint k=0;k<2;k++){
     optNewton(x, Convert(F), OPT(verbose=2, stopIters=40, useAdaptiveDamping=false, damping=1e-0, maxStep=1.));
-//    costs.displayRedBlue(~sqr(P.costMatrix), false, 3);
-//    P.costReport();
-//    write(LIST<arr>(x),"z.output");
-//    gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", false, true);
-//    displayTrajectory(x, 1, G, gl,"planned trajectory");
+    costs.displayRedBlue(~sqr(P.costMatrix), false, 3);
+    P.costReport();
+    write(LIST<arr>(x),"z.output");
+    gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", false, true);
+    displayTrajectory(x, 1, G, gl,"planned trajectory");
   }
   
   return 0;

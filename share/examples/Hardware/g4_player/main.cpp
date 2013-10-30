@@ -4,10 +4,7 @@
 
 void lib_hardware_G4();
 
-void display(const arr& X){
-  VideoEncoder vid;
-  OpenGL gl;
-  ors::Graph ors;
+void setup_opengl_for_g4(ors::Graph& ors, OpenGL& gl, uint hubs){
   bindOrsToOpenGL(ors, gl);
   gl.camera.setPosition(7., .5, 3.);
   gl.camera.focus(0, .5, .5);
@@ -17,12 +14,21 @@ void display(const arr& X){
   s->type = ors::markerST;
   s->size[0] = .5;
 
-  for(uint m=0;m<X.d1;m++){
+  for(uint m=0;m<hubs;m++){
     ors::Shape *s = new ors::Shape(ors, NULL);
     s->type = ors::boxST;
     memmove(s->size ,ARR(.10, .04, .01, 0).p, 4*sizeof(double));
     memmove(s->color,ARR(1, 0, 0).p, 3*sizeof(double));
   }
+}
+
+void display(const arr& X){
+  VideoEncoder_libav_simple vid;
+  OpenGL gl;
+  ors::Graph ors;
+  setup_opengl_for_g4(ors, gl, X.d1);
+
+  CHECK(X.nd==3 && X.d0==7,"wrong sized g4 data set");
 
   for(uint t=0;t<X.d0;t++){
     for(uint b=0; b+1<ors.shapes.N && b<X.d1; b++){
