@@ -74,7 +74,6 @@ struct Mesh {
 
   uintA T;
   arr   Tn;
-  uintA subMeshSizes;
 
   MT::Array<Transformation*> GF;
   MT::Array<uintA> GT;
