@@ -1,7 +1,7 @@
 # door
-body door-frame{ type=3 mesh="door_model/door-frame.ply" meshscale=.01 submeshsizes=[8 8 8] fixed }
-body door-door{ type=3 mesh='door_model/door-door.ply' meshscale=.01 submeshsizes=[8 36 41 36 41] color=[1 0 0] }
-body door-handle{ type=3 mesh='door_model/door-handle.ply' meshscale=.01 submeshsizes=[73 50 71 51] }
+body door-frame{ type=3 mesh="door_model/frame_hacd.obj" meshscale=.01 fixed }
+body door-door{ type=3 mesh='door_model/door-hacd.obj' meshscale=.01 color=[1 0 0] }
+body door-handle{ type=3 mesh='door_model/handle-hacd.obj' meshscale=.01 }
 joint (door-frame, door-door){ A=<T t(.46 0 0) d(90 0 1 0)> limit=[-.5 .5 0 0 0] BinvA }
 joint (door-door, door-handle){ A=<T t(-.39 0 1) d(90 0 0 1)> limit=[0 .1 0 0 0] BinvA }
 
