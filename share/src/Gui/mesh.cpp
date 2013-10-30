@@ -1156,8 +1156,6 @@ void Mesh::readObjFile(const char* filename) {
   // if (parsing_pos_start > -1) {
   fseek(file, parsing_pos_start, SEEK_SET);
 
-  cout << "reading " << filename << " from " << parsing_pos_start << " to " << parsing_pos_end << endl;
-
   while ((fscanf(file, "%s", buf) != EOF) && (ftell(file) < parsing_pos_end)) {
     switch(buf[0]) {
       case '#':  CHECK(fgets(buf, sizeof(buf), file), "fgets failed");  break;  // comment
