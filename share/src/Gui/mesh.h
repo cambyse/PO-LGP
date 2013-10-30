@@ -38,18 +38,15 @@ struct Mesh {
   
   uintA T;              ///< triangles (faces)
   arr   Tn;             ///< vertex normals
-  /**
-   * A mesh can consist of several convex sub-parts.
-   * subMeshSizes[i] denotes the number of vertices from V which are part
-   * of sub-part i.
-   */
-  uintA subMeshSizes;
+
+  long parsing_pos_start;
+  long parsing_pos_end;
   //-- groups: deprecated?
   MT::Array<Transformation*> GF; ///< pose for each group (GF.N is number of groups)
   MT::Array<uintA>  GT; ///< triangles for each group (GT.N=GF.N+1, last entry contains mixed group triangles)
   //MT::Array<uintA> strips; ///< triangle strips (each with a 1D stripe index set)
   
-  Mesh() {};
+  Mesh();
   
   //set or create
   void clear();

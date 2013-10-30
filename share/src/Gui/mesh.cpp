@@ -29,12 +29,20 @@ extern "C"{
 }
 #endif
 
+#include <limits>
+
+
 namespace ors {
 
 //==============================================================================
 //
 // Mesh code
 //
+
+Mesh::Mesh() :
+    parsing_pos_start(0),
+    parsing_pos_end(std::numeric_limits<long>::max())
+{};
 
 void Mesh::clear() {
   V.clear(); Vn.clear(); T.clear(); Tn.clear(); C.clear(); //strips.clear();
@@ -312,7 +320,10 @@ void Mesh::computeNormals() {
   Vn.setZero();
   //triangle normals and contributions
   for(i=0; i<T.d0; i++) {
-    a.set(&V(T(i, 0), 0)); b.set(&V(T(i, 1), 0)); c.set(&V(T(i, 2), 0));
+    a.set(&V(T(i, 0), 0));
+    b.set(&V(T(i, 1), 0));
+    c.set(&V(T(i, 2), 0));
+
     b-=a; c-=a; a=b^c; a.normalize();
     Tn(i, 0)=a.x;  Tn(i, 1)=a.y;  Tn(i, 2)=a.z;
     Vn(T(i, 0), 0)+=a.x;  Vn(T(i, 0), 1)+=a.y;  Vn(T(i, 0), 2)+=a.z;
@@ -1128,24 +1139,26 @@ uint& Tti(uint, uint) { static uint dummy; return dummy; } //texture index
 
 /** initialises the ascii-obj file "filename"*/
 void Mesh::readObjFile(const char* filename) {
-  FILE* file;
-  
-  // open the file
-  file = fopen(filename, "r");
-  if(!file) HALT("readObjFile() failed: can't open data file " <<filename);
-  
   // make a first pass through the file to get a count of the number
   // of vertices, normals, texcoords & triangles
-  uint nV;
-  uint nN;
-  uint nTex;
-  uint nT;
+  uint nV, nN, nTex, nT;
+  nV = nN = nTex = nT = 0;
   int v, n, t;
   char buf[128];
   
-  nV = nN = nTex = nT = 0;
-  
-  while(fscanf(file, "%s", buf) != EOF) {
+  // open the file
+  FILE* file;
+  file = fopen(filename, "r");
+  if(!file) HALT("readObjFile() failed: can't open data file " <<filename);
+
+  // we only want to parse the relevant subpart/submesh of the mesh therefore
+  // jump to the right position and stop parsing at the right positon.
+  // if (parsing_pos_start > -1) {
+  fseek(file, parsing_pos_start, SEEK_SET);
+
+  cout << "reading " << filename << " from " << parsing_pos_start << " to " << parsing_pos_end << endl;
+
+  while ((fscanf(file, "%s", buf) != EOF) && (ftell(file) < parsing_pos_end)) {
     switch(buf[0]) {
       case '#':  CHECK(fgets(buf, sizeof(buf), file), "fgets failed");  break;  // comment
       case 'v':
@@ -1210,13 +1223,17 @@ void Mesh::readObjFile(const char* filename) {
   
   // rewind to beginning of file and read in the data this pass
   rewind(file);
+  // again, jump to the correct position
+  fseek(file, parsing_pos_start, SEEK_SET);
   
   /* on the second pass through the file, read all the data into the
      allocated arrays */
   nV = nN = nTex = nT = 0;
   ////_material = 0;
   
-  while(fscanf(file, "%s", buf) != EOF) {
+  while ((fscanf(file, "%s", buf) != EOF) &&
+         (ftell(file) < parsing_pos_end)) {
+
     switch(buf[0]) {
       case '#':  CHECK(fgets(buf, sizeof(buf), file), "fgets failed");  break;  //comment
       case 'v':               // v, vn, vt
@@ -1335,7 +1352,7 @@ void Mesh::readObjFile(const char* filename) {
   }
   
   //CONVENTION!: start counting vertex indices from 0!!
-  T -= (uint)1;
+  T -= T.min();
   
   // close the file
   fclose(file);
