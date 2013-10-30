@@ -285,36 +285,12 @@ void PhysXInterface::addBody(ors::Body *b, physx::PxMaterial *mMaterial) {
         // PhysX uses float for the vertices
         floatA Vfloat;
 
-        // if mesh is only a single convex part
-        if(!s->mesh.subMeshSizes.N) {
-          Vfloat.clear();
-          copy(Vfloat, s->mesh.V); //convert vertices from double to float array..
-          PxConvexMesh* triangleMesh = PxToolkit::createConvexMesh(
-              *mPhysics, *mCooking, (PxVec3*)Vfloat.p, Vfloat.d0,
-              PxConvexFlag::eCOMPUTE_CONVEX | PxConvexFlag::eINFLATE_CONVEX);
-          geometry = new PxConvexMeshGeometry(triangleMesh);
-        }
-        // the mesh consists of several convex sub-parts
-        else {
-          uint offset = 0;
-          for(uint i = 0; i < s->mesh.subMeshSizes.N; i++) {
-            Vfloat.resize(s->mesh.subMeshSizes(i), 3);
-            for(uint v = 0; v < s->mesh.subMeshSizes(i); v++) {
-              Vfloat(v, 0) = s->mesh.V(offset + v, 0);
-              Vfloat(v, 1) = s->mesh.V(offset + v, 1);
-              Vfloat(v, 2) = s->mesh.V(offset + v, 2);
-            }
-            offset += s->mesh.subMeshSizes(i);
-
-            PxConvexMesh* triangleMesh = PxToolkit::createConvexMesh(
-                *mPhysics, *mCooking, (PxVec3*)Vfloat.p, Vfloat.d0,
-                PxConvexFlag::eCOMPUTE_CONVEX | PxConvexFlag::eINFLATE_CONVEX);
-            geometry = new PxConvexMeshGeometry(triangleMesh);
-            PxShape* shape = actor->createShape(*geometry, *mMaterial, OrsTrans2PxTrans(s->rel));
-            CHECK(shape, "create shape failed!");
-          }
-          geometry = NULL;
-        }
+        Vfloat.clear();
+        copy(Vfloat, s->mesh.V); //convert vertices from double to float array..
+        PxConvexMesh* triangleMesh = PxToolkit::createConvexMesh(
+            *mPhysics, *mCooking, (PxVec3*)Vfloat.p, Vfloat.d0,
+            PxConvexFlag::eCOMPUTE_CONVEX | PxConvexFlag::eINFLATE_CONVEX);
+        geometry = new PxConvexMeshGeometry(triangleMesh);
       }
       break;
       case ors::markerST: {
