@@ -133,27 +133,48 @@ void ors::Body::parseAts() {
   if(ats.getValue<bool>("static"))     type=staticBT;
   if(ats.getValue<bool>("kinematic"))  type=kinematicBT;
   
-  // SHAPE handling
-  // move shape attributes to shape
-  Shape *s=NULL;
-  Item *it;
-  if(ats.getItem("type")) {
-    CHECK(!shapes.N,"");
-    s=new Shape();
-    shapes.append(s);
-    s->body=this;
-    s->ibody=index;
+  // SHAPE handling {{{
+  Item* item;
+  // a mesh which consists of multiple convex sub meshes creates multiple
+  // shapes that belong to the same body
+  item = ats.getItem("mesh");
+  if (item) {
+    MT::String* filename = item->value<MT::String>();
+
+    // if mesh is not .obj we only have one shape
+    if (MT::String(*filename).getLastN(3) != "obj") {
+      Shape* shape = new Shape(this);
+    }
+
+    // if .obj file create Shape for all submeshes
+    else {
+      auto subMeshPositions = getSubMeshPositions(*filename);
+      for (auto parsing_pos : subMeshPositions) {
+        Shape* shape = new Shape(this);
+        shape->mesh.parsing_pos_start = std::get<0>(parsing_pos);
+        shape->mesh.parsing_pos_end = std::get<1>(parsing_pos);
+      }
+    }
   }
-  it=ats.getItem("type");         if(it) { CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  it=ats.getItem("size");         if(it) { CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  it=ats.getItem("color");        if(it) { CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  it=ats.getItem("rel");          if(it) { CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  it=ats.getItem("mesh");         if(it) { CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  it=ats.getItem("meshscale");    if(it) { CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  it=ats.getItem("contact");      if(it) { CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  it=ats.getItem("submeshsizes"); if(it) { CHECK(s,""); ats.removeValue(it); s->ats.append(it); }
-  if(s) s->parseAts();
-  
+
+  // add shape if there is no shape exists yet
+  if(ats.getItem("type")) {
+    if (shapes.N == 0) {
+      Shape* shape = new Shape(this);
+    }
+  }
+
+  // copy body attributes to shapes 
+  const auto attributes = { "mesh", "type", "size", "color", "rel", "meshscale", "contact" };
+  for (auto& shape : shapes) {
+    for (const auto& itemname : attributes) {
+      item=ats.getItem(itemname);
+      if (item) {
+        shape->ats.append(item); 
+      }
+    }
+    shape->parseAts();
+  }
 }
 
 void ors::Body::write(std::ostream& os) const {
@@ -169,6 +190,7 @@ void ors::Body::read(std::istream& is) {
   if(!is.good()) HALT("body '" <<name <<"' read error: in ");
   parseAts();
 }
+
 void ors::Body::read(const char* string) {
   std::istringstream str(string);
   read(str);
@@ -186,6 +208,11 @@ std::ostream& operator<<(std::ostream& os, const Joint& x) { x.write(os); return
 //
 
 ors::Shape::Shape() { reset(); }
+
+ors::Shape::Shape(Body *b) : body(b), ibody(b->index) {
+  reset();
+  body->shapes.append(this);
+}
 
 ors::Shape::Shape(const Shape& s) { body=NULL; *this=s; }
 
@@ -214,10 +241,9 @@ void ors::Shape::parseAts() {
   if(ats.getValue<arr>(x, "size"))          { CHECK(x.N==4,"size=[] needs 4 entries"); memmove(size, x.p, 4*sizeof(double)); }
   if(ats.getValue<arr>(x, "color"))         { CHECK(x.N==3,"color=[] needs 3 entries"); memmove(color, x.p, 3*sizeof(double)); }
   if(ats.getValue<double>(d, "type"))       { type=(ShapeType)d;}
+  if(ats.getValue<bool>("contact"))         { cont=true; }
   if(ats.getValue<MT::String>(str, "mesh")) { mesh.readFile(str); }
   if(ats.getValue<double>(d, "meshscale"))  { mesh.scale(d); }
-  if(ats.getValue<bool>("contact"))         { cont=true; }
-  if(ats.getValue<arr>(x, "submeshsizes"))  { copy(mesh.subMeshSizes, x); }
 
   //add inertia to the body
   if(body) {
@@ -1410,11 +1436,10 @@ void ors::Graph::read(std::istream& is) {
     b->name = it->keys(1);
     b->ats = *it->value<KeyValueGraph>();
     b->parseAts();
-    if(b->shapes.N==1) {  //parsing has implicitly added a shape...
-      Shape *s=b->shapes(0);
-      s->index=shapes.N;
-      shapes.append(s);
-      s->parseAts();
+
+    for (auto shape : b->shapes) {
+        shape->index = shapes.N;
+        shapes.append(shape);
     }
   }
   
@@ -2214,6 +2239,48 @@ void ors::Graph::getTotals(ors::Vector& c, ors::Vector& v, ors::Vector& l, ors::
 
 #undef LEN
 
+//===========================================================================
+// Util
+/**
+ * @brief Return the position of the submesh in the obj file in bytes (can be
+ * used by fseek).
+ *
+ * @param filename file to parse.
+ */
+MT::Array<std::tuple<long, long> > getSubMeshPositions(const char* filename) {
+  CHECK(MT::String(filename).getLastN(3)=="obj", "getSubMeshPositions parses only obj files.");
+  FILE* file;
+  char buf[128];
+  file = fopen(filename, "r");
+  CHECK(file, "CheckManyShapes() failed: can't open data file " <<filename);
+  int flag = 0;
+  long start_pos = 0;
+  long end_pos = 0;
+
+  MT::Array<std::tuple<long, long> > result;
+  while(fscanf(file, "%s", buf) != EOF) {
+    switch(buf[0]) {
+      case 'v': {
+        if (flag > 0) {
+          end_pos = ftell(file) - 1;
+          auto tmp = std::make_tuple(start_pos, end_pos);
+          result.append(tmp);
+          start_pos = end_pos;
+          flag =0; }
+      } break;
+      case 'f': {
+        flag=1;
+      } break;
+    }
+  }
+
+  end_pos = ftell(file) - 1;
+  auto tmp = std::make_tuple(start_pos, end_pos);
+  result.append(tmp);
+  return result;
+}
+
+//===========================================================================
 //-- template instantiations
 
 #include <Core/util_t.h>

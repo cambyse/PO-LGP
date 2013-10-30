@@ -178,6 +178,7 @@ struct Shape {
   
   Shape();
   explicit Shape(const Shape& s);
+  explicit Shape(Body *body);
   explicit Shape(Graph& G, Body *b, const Shape *copyShape=NULL); //new Shape, being added to graph and body's shape lists
   ~Shape();
   void operator=(const Shape& s) {
@@ -834,6 +835,7 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl);
 //===========================================================================
 #endif //MT_ORS_ONLY_BASICS
 
+MT::Array<std::tuple<long, long> > getSubMeshPositions(const char* filename);
 
 /** @} */
 
