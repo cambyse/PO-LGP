@@ -1,102 +1,156 @@
-#body sensor {}
-#shape sh:sensor (sensor) {
-#  type = 0
-#  #X = <T t(  )>
-#  size = [1, 2, 3, 4]
-#}
+body rh:thumb {}
+shape sh:rh:thumb (rh:thumb) {
+  type = 2
+  rel = <T t(0 0 .0075) t(0 0 .008) d(90 0 1 0)>
+  size = [ 0 0 .01 .0075 ]
+  color = [ 1 0 0 ]
+}
 
-# body rh:thumb {}
-# body rh:index {}
-# body rh:middle {}
-# body rh:back {}
-# body lh:thumb {}
-# body lh:index {}
-# body lh:middle {}
-# body lh:back {}
-# 
-# shape sh:sensor {
-#   type = 0
-#   size = [ .1 .1 .1 .1 ]
-# }
+body rh:index {}
+shape sh:rh:index (rh:index) {
+  type = 2
+  rel = <T t(0 0 .0075) t(0 0 .008) d(90 0 1 0)>
+  size = [ 0 0 .01 .0075 ]
+  color = [ 1 0 0 ]
+}
+
+body rh:middle {}
+shape sh:rh:middle (rh:middle) {
+  type = 2
+  rel = <T t(0 0 .0075) t(0 0 .008) d(90 0 1 0)>
+  size = [ 0 0 .01 .0075 ]
+  color = [ 1 0 0 ]
+}
+
+body rh:back {}
+shape sh:rh:back (rh:back) {
+  type = 0
+  rel = <T t(-.015 0 0) t(0 0 .008)>
+  size = [ .07 .035 .015 0 ]
+  color = [ 1 0 0 ]
+}
+
+body lh:thumb {}
+shape sh:lh:thumb (lh:thumb) {
+  type = 2
+  rel = <T t(0 0 .0075) t(0 0 .008) d(90 0 1 0)>
+  size = [ 0 0 .01 .0075 ]
+  color = [ 0 0 1 ]
+}
+
+body lh:index {}
+shape sh:lh:index (lh:index) {
+  type = 2
+  rel = <T t(0 0 .0075) t(0 0 .008) d(90 0 1 0)>
+  size = [ 0 0 .01 .0075 ]
+  color = [ 0 0 1 ]
+}
+
+body lh:middle {}
+shape sh:lh:middle (lh:middle) {
+  type = 2
+  rel = <T t(0 0 .0075) t(0 0 .008) d(90 0 1 0)>
+  size = [ 0 0 .01 .0075 ]
+  color = [ 0 0 1 ]
+}
+
+body lh:back {}
+shape sh:lh:back (lh:back) {
+  type = 0
+  rel = <T t(-.015 0 0) t(0 0 .008)>
+  size = [ .07 .035 .015 0 ]
+  color = [ 0 0 1 ]
+}
 
 body sbox {}
 shape sh:sbox (sbox) {
   type = 0
-  size = [ .075 .045 .11 0 ]
+  rel = <T t(-.0298 0 .0305)>
+  size = [ .075 .11 .045 0 ]
+}
+shape sh:sbox:axes (sbox) {
+  type = 5
+  size = [ .03 0 0 0 ]
+  color = [ 0 0 0 ]
 }
 
 body bottle {}
 shape sh:bottle (bottle) {
-  type = 2
-  size = [ .23 .06 .06 .1 ]
+  type = 4
+  rel = <T t(0 0 .068) d(90 0 1 0)>
+  size = [ 0 0 .23 .06 ]
+}
+shape sh:bottle:axes (bottle) {
+  type = 5
+  size = [ .03 0 0 0 ]
+  color = [ 0 0 0 ]
 }
 
 body book {}
 shape sh:book (book) {
   type = 0
+  rel = <T t(-.0925 0 .0255)>
   size = [ .21 .235 .035  0 ]
+}
+shape sh:book:axes (book) {
+  type = 5
+  size = [ .03 0 0 0 ]
+  color = [ 0 0 0 ]
 }
 
 body ball {}
 shape sh:ball (ball) {
   type = 1
-  X = <T t(1 0 0)> # test
+  rel = <T t(0 0 .075) t(0 0 .008)>
   size = [ 0 0 0 .075 ]
+}
+shape sh:ball:axes (ball) {
+  type = 5
+  size = [ .03 0 0 0 ]
+  color = [ 0 0 0 ]
 }
 
 body bbox:lid {}
 shape sh:bbox:lid (bbox:lid) {
   type = 0
+  rel = <T t(-.0535 .042 .008)>
   size = [ .15 .15 .002  0 ]
-}
- 
-body bbox:body {}
-shape sh:bbox:body:down (bbox:body) {
-  type = 0
-  rel = <T t(0 0 -.075) d(90 1 0 0) t(0 0 -.075)>
-  size = [ .15 .15 .002  0 ]
-}
-shape sh:bbox:body:front (bbox:body) {
-  type = 0
-  rel = <T t(0 0 -.15)>
-  size = [ .15 .15 .002  0 ]
-}
-shape sh:bbox:body:back (bbox:body) {
-  type = 0
-  size = [ .15 .15 .002  0 ]
-}
-shape sh:bbox:body:left (bbox:body) {
-  type = 0
-  rel = <T t(.075 0 0) d(90 0 1 0) t(.075 0 0)>
-  size = [ .15 .15 .002  0 ]
-}
-shape sh:bbox:body:right (bbox:body) {
-  type = 0
-  rel = <T t(-.075 0 0) d(90 0 1 0) t(.075 0 0)>
-  size = [ .15 .15 .002  0 ]
-}
-
-shape sh:xbos:axes (sbox) {
-  type = 5
-  size = [ .1 0 0 0 ]
-}
-shape sh:bottle:axes (bottle) {
-  type = 5
-  size = [ .1 0 0 0 ]
-}
-shape sh:book:axes (book) {
-  type = 5
-  size = [ .1 0 0 0 ]
-}
-shape sh:ball:axes (ball) {
-  type = 5
-  size = [ .1 0 0 0 ]
 }
 shape sh:bbox:lid:axes (bbox:lid) {
   type = 5
-  size = [ .1 0 0 0 ]
+  size = [ .03 0 0 0 ]
+  color = [ 0 0 0 ]
+}
+ 
+body bbox:body {}
+shape sh:bbox:body:back (bbox:body) {
+  type = 0
+  rel = <T t(-.05 .0435 .008)>
+  size = [ .15 .197 .002  0 ]
+}
+shape sh:bbox:body:front (bbox:body) {
+  type = 0
+  rel = <T t(-.05 .0435 .008) t(0 0 -.15)>
+  size = [ .15 .197 .002  0 ]
+}
+shape sh:bbox:body:left (bbox:body) {
+  type = 0
+  rel = <T t(-.05 .0435 .008) t(.075 0 0) d(90 0 1 0) t(.075 0 0)>
+  size = [ .15 .197 .002  0 ]
+}
+shape sh:bbox:body:right (bbox:body) {
+  type = 0
+  rel = <T t(-.05 .0435 .008) t(-.075 0 0) d(90 0 1 0) t(.075 0 0)>
+  size = [ .15 .197 .002  0 ]
+}
+shape sh:bbox:body:down (bbox:body) {
+  type = 0
+  rel = <T t(-.05 .0435 .008) t(0 0 -.075) d(90 1 0 0) t(0 0 -.0985)>
+  size = [ .15 .15 .002  0 ]
 }
 shape sh:bbox:body:axes (bbox:body) {
   type = 5
-  size = [ .1 0 0 0 ]
+  size = [ .03 0 0 0 ]
+  color = [ 0 0 0 ]
 }
+
