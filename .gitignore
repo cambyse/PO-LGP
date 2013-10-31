@@ -29,6 +29,7 @@ Makefile.dep
 *_moc.cpp
 *_ui.h
 CTestTestfile.cmake
+Makefile
 
 
 *.pyc
