@@ -17,14 +17,6 @@ from util import ObjectTypeHypo
 
 import require_provide as rp
 
-# different joint types
-PRISMATIC = 0
-ROTATIONAL = 1
-MODELS = {
-    PRISMATIC: 'prismatic',
-    ROTATIONAL: 'rotational'
-}
-
 
 class LearnActionServer:
 
