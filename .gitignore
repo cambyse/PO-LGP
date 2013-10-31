@@ -28,7 +28,7 @@ vc60.idb
 Makefile.dep
 *_moc.cpp
 *_ui.h
-.*CTestTestfile.cmake
+CTestTestfile.cmake
 
 
 *.pyc
