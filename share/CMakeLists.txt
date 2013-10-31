@@ -2,15 +2,9 @@ cmake_minimum_required(VERSION 2.8.1)
 project(MLR_SHARE)
 cmake_policy(SET CMP0015 NEW)
 
-# almost all programs use threads
-find_package (Threads)
-
-if(CHECK_LAPACK)
+# perform common checks
+find_package (Threads REQUIRED)
 find_package(LAPACK)
-endif(CHECK_LAPACK)
-
-# prepend search path
-set(ENV{PKG_CONFIG_PATH} ${PROJECT_BINARY_DIR}/pkgconfig:ENV{PKG_CONFIG_PATH})
 
 # allow users to switch off compilation of unit-tests
 option(TESTING_ENABLED "Should we run unit-tests (default yes)" ON)
@@ -22,18 +16,28 @@ if(TESTING_ENABLED)
                 add_subdirectory(/usr/src/gtest gtest)
                 link_directories(gtest)
                 add_definitions(-DMLR_EXAMPLES_AS_TESTS)
+                export(TARGETS gtest
+                        NAMESPACE mlr 
+                        FILE ${CMAKE_BINARY_DIR}/cmake/mlr-exports.cmake)
         else(GTEST_H_FOUND)
-                message(WARNING "Did not find gtest.h, cannot enable testing")
+                        message(WARNING "Did not find gtest.h, cannot enable testing")
                 set(TESTING_ENABLED)
         endif(GTEST_H_FOUND)
 endif(TESTING_ENABLED)
 
+# common configuration
 include_directories(src)
 include_directories(include)
-
-# configuration variables
 set(GL_LIBRARIES glut GLU GL X11)
+mark_as_advanced(GL_LIBRARIES)
+if(ENV{MLR_LIBPATH})
+link_directories(ENV{MLR_LIBPATH}/lib)
+include_directories(ENV{MLR_LIBPATH}/include)
+endif(ENV{MLR_LIBPATH})
+# pick up config from source-tree
+set(ENV{PKG_CONFIG_PATH} ${PROJECT_BINARY_DIR}/pkgconfig:$ENV{PKG_CONFIG_PATH})
 
+# select what to compile
 set(CURRENT_SLICE 
         src/Core
         src/Algo
@@ -60,6 +64,8 @@ set(CURRENT_SLICE
         examples/Motion
         examples/System
         examples/relational
+
+        projects/mlr_ros/circle_test
 )
 
 foreach(DIR ${CURRENT_SLICE})
