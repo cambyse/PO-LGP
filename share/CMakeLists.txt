@@ -16,9 +16,6 @@ if(TESTING_ENABLED)
                 add_subdirectory(/usr/src/gtest gtest)
                 link_directories(gtest)
                 add_definitions(-DMLR_EXAMPLES_AS_TESTS)
-                export(TARGETS gtest
-                        NAMESPACE mlr 
-                        FILE ${CMAKE_BINARY_DIR}/cmake/mlr-exports.cmake)
         else(GTEST_H_FOUND)
                         message(WARNING "Did not find gtest.h, cannot enable testing")
                 set(TESTING_ENABLED)
