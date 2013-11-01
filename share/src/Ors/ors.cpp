@@ -139,9 +139,8 @@ void ors::Body::parseAts() {
 
     // if mesh is not .obj we only have one shape
     if (MT::String(*filename).endsWith("obj")) {
-      Shape* shape = new Shape(this);
+      this->shapes.append(new Shape(this));
     }
-
     // if .obj file create Shape for all submeshes
     else {
       auto subMeshPositions = getSubMeshPositions(*filename);
@@ -149,6 +148,7 @@ void ors::Body::parseAts() {
         Shape* shape = new Shape(this);
         shape->mesh.parsing_pos_start = std::get<0>(parsing_pos);
         shape->mesh.parsing_pos_end = std::get<1>(parsing_pos);
+        this->shapes.append(shape);
       }
     }
   }
@@ -156,7 +156,7 @@ void ors::Body::parseAts() {
   // add shape if there is no shape exists yet
   if(ats.getItem("type")) {
     if (shapes.N == 0) {
-      Shape* shape = new Shape(this);
+      this->shapes.append(new Shape(this));
     }
   }
 
@@ -207,7 +207,6 @@ ors::Shape::Shape() { reset(); }
 
 ors::Shape::Shape(Body *b) : ibody(b->index), body(b) {
   reset();
-  body->shapes.append(this);
 }
 
 ors::Shape::Shape(const Shape& s) { body=NULL; *this=s; }
