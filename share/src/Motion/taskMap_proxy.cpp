@@ -51,6 +51,7 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::Graph& G){
           p->colorCode = 4;
         }
       }
+      break;
     case pairsCTVT: {
       shapes.reshape(shapes.N/2,2);
       // only explicit paris in 2D array shapes
