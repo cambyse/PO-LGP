@@ -450,21 +450,5 @@ void init(ors::Graph& G, OpenGL& gl, const char* orsFile);
 void bindOrsToOpenGL(ors::Graph& graph, OpenGL& gl);
 void bindOrsToPhysX(ors::Graph& graph, OpenGL& gl, PhysXInterface& physx);
 
-%inline %{
-// stupid helper function to generate a trajectory for an arm
-// TODO ideally this should be done in python, however the MT::Array and helper
-// class support is not that good yet.
-void generateSequence(arr& X, arr& V, uint n) {
-  uint i;
-  rnd.seed(0);
-  arr P(10, n);
-  //a random spline
-  //a set of random via points with zero start and end:
-  rndUniform(P, -1., 1., false); P[0] = 0.; P[P.d0 - 1] = 0.;
-  //convert into a smooth spline (1/0.03 points per via point):
-  /*MT::makeSpline(X, V, P, (int)(1 / 0.03));*/
-};
-%}
-
 
 // vim: ft=swig
