@@ -73,13 +73,12 @@ class PickOOIActionServer:
 
     def execute(self, msg):
         all_shapes = self.request_all_shapes()
-        print all_shapes
 
         # GUARD
         if self.oois is None:
             self.server.set_aborted()
             return
-        if self.all_shapes is None:
+        if all_shapes is None:
             self.server.set_aborted()
             return
 
