@@ -205,7 +205,7 @@ std::ostream& operator<<(std::ostream& os, const Joint& x) { x.write(os); return
 
 ors::Shape::Shape() { reset(); }
 
-ors::Shape::Shape(Body *b) : body(b), ibody(b->index) {
+ors::Shape::Shape(Body *b) : ibody(b->index), body(b) {
   reset();
   body->shapes.append(this);
 }
