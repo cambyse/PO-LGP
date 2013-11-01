@@ -138,7 +138,7 @@ void ors::Body::parseAts() {
     MT::String* filename = item->value<MT::String>();
 
     // if mesh is not .obj we only have one shape
-    if (MT::String(*filename).getLastN(3) != "obj") {
+    if (MT::String(*filename).endsWith("obj")) {
       Shape* shape = new Shape(this);
     }
 
@@ -2244,11 +2244,14 @@ void ors::Graph::getTotals(ors::Vector& c, ors::Vector& v, ors::Vector& l, ors::
  * @param filename file to parse.
  */
 MT::Array<std::tuple<long, long> > getSubMeshPositions(const char* filename) {
-  CHECK(MT::String(filename).getLastN(3)=="obj", "getSubMeshPositions parses only obj files.");
+  CHECK(MT::String(filename).endsWith("obj"),
+        "getSubMeshPositions parses only obj files.");
   FILE* file;
   char buf[128];
   file = fopen(filename, "r");
-  CHECK(file, "CheckManyShapes() failed: can't open data file " <<filename);
+  CHECK(file,
+        "can't open data file " << filename << "; cwd is " << getcwd_string());
+
   int flag = 0;
   long start_pos = 0;
   long end_pos = 0;
