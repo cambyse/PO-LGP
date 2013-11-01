@@ -337,9 +337,11 @@ struct Graph {
 namespace ors {
 std::istream& operator>>(std::istream&, Body&);
 std::istream& operator>>(std::istream&, Joint&);
+std::istream& operator>>(std::istream&, Shape&);
 std::istream& operator>>(std::istream&, Proxy&);
 std::ostream& operator<<(std::ostream&, const Body&);
 std::ostream& operator<<(std::ostream&, const Joint&);
+std::ostream& operator<<(std::ostream&, const Shape&);
 std::ostream& operator<<(std::ostream&, const Proxy&);
 stdPipes(Graph);
 }
