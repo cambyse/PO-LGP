@@ -21,6 +21,7 @@ author: Johannes kulick
 %module motionpy
 %{
   #include "motion.h"
+  #include "taskMap_proxy.h"
   #include <Optim/optimization.h>
   #include <sstream>
 %}
@@ -31,5 +32,11 @@ author: Johannes kulick
   typedef unsigned int uint;
 %}
 
-%include "motion.h"
+%inline %{
+  typedef MT::Array<int> intA;
+  typedef MT::Array<uint> uintA;
+  typedef MT::Array<arr*> arrL;
+%}
 
+%include "motion.h"
+%include "taskMap_proxy.h"

@@ -23,7 +23,7 @@
 
 enum PTMtype {
   allPTMT, //phi=sum over all proxies (as is standard)
-  allListedPTMT, //phi=sum over all proxies between listed shapes
+  listedVsListedPTMT, //phi=sum over all proxies between listed shapes
   allVersusListedPTMT, //phi=sum over all proxies between listed shapes
   allExceptListedPTMT, //as above, but excluding listed shapes
   bipartitePTMT, //sum over proxies between the two sets of shapes (shapes, shapes2)
@@ -40,7 +40,6 @@ struct ProxyTaskMap:public TaskMap {
   double margin;
   bool useCenterDist;
   
-  ProxyTaskMap();
   ProxyTaskMap(PTMtype _type,
                uintA _shapes,
                double _margin=.02,
@@ -51,6 +50,7 @@ struct ProxyTaskMap:public TaskMap {
 };
 
 /** proxy align task variable */
+#if 0
 struct ProxyAlignTaskMap:public TaskMap {
   /// @name data fields
   PTMtype type;
@@ -67,5 +67,6 @@ struct ProxyAlignTaskMap:public TaskMap {
   virtual void phi(arr& y, arr& J, const ors::Graph& G);
   virtual uint dim_phi(const ors::Graph& G);
 };
+#endif
 
 #endif

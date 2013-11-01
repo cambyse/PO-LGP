@@ -635,7 +635,7 @@ extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawM
 extern uint orsDrawLimit;
 
 void displayState(const arr& x, ors::Graph& G, OpenGL& gl, const char *tag);
-void displayTrajectory(const arr& x, int steps, ors::Graph& G, OpenGL& gl, const char *tag);
+void displayTrajectory(const arr& x, int steps, ors::Graph& G, OpenGL& gl, const char *tag, double delay=0.);
 void editConfiguration(const char* orsfile, ors::Graph& G, OpenGL& gl);
 void animateConfiguration(ors::Graph& G, OpenGL& gl);
 void init(ors::Graph& G, OpenGL& gl, const char* orsFile);

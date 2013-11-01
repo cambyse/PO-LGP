@@ -159,7 +159,7 @@ void setGraspGoals_Schunk(MotionProblem& M, uint T, uint shapeId, uint side, uin
   shapes = ARRAY<uint>(shapeId);
   c = M.addCustomTaskMap("otherCollisions", new ProxyTaskMap(allExceptListedPTMT, shapes, .04, true));
   target = ARR(0.);
-  M.setInterpolatingCosts(c, MotionProblem::constFinalMid, target, colPrec, target, colPrec);
+  M.setInterpolatingCosts(c, MotionProblem::final_restConst, target, colPrec, target, colPrec);
   c->map.phi(initial, NoArr, *M.ors);
   if (initial(0)>0.) { //we are in collision/proximity -> depart slowly
     double a=initial(0);
@@ -177,7 +177,7 @@ void setGraspGoals_Schunk(MotionProblem& M, uint T, uint shapeId, uint side, uin
 
   c = M.addDefaultTaskMap_Shapes("oppose13", zalignTMT, "tipNormal1", NoTransformation, "tipNormal3", NoTransformation);
   target = ARR(-1.);
-  M.setInterpolatingCosts(c, MotionProblem::constFinalMid, target, oppositionPrec);
+  M.setInterpolatingCosts(c, MotionProblem::final_restConst, target, oppositionPrec);
 
   
   //MT_MSG("TODO: fingers should be in relaxed position, or aligned with surface (otherwise they remain ``hooked'' as in previous posture)");
@@ -188,11 +188,11 @@ void setGraspGoals_Schunk(MotionProblem& M, uint T, uint shapeId, uint side, uin
       -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5 ]";
   c = M.addDefaultTaskMap("limits", qLimitsTMT, -1, NoTransformation, -1, NoTransformation, limits);
   target=0.;
-  M.setInterpolatingCosts(c, MotionProblem::constFinalMid, target, limPrec, target, limPrec);
+  M.setInterpolatingCosts(c, MotionProblem::final_restConst, target, limPrec, target, limPrec);
 
   //-- homing
   c = M.addDefaultTaskMap("qitself", qItselfTMT);
-  M.setInterpolatingCosts(c, MotionProblem::constFinalMid, target, zeroQPrec, target, zeroQPrec);
+  M.setInterpolatingCosts(c, MotionProblem::final_restConst, target, zeroQPrec, target, zeroQPrec);
 }
 
 void setGraspGoals_PR2(MotionProblem& M, uint T, uint shapeId, uint side, uint phase) {
@@ -300,11 +300,11 @@ void setGraspGoals_PR2(MotionProblem& M, uint T, uint shapeId, uint side, uint p
       -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5 ]";
   c = M.addDefaultTaskMap("limits", qLimitsTMT, -1, NoTransformation, -1, NoTransformation, limits);
   target=0.;
-  M.setInterpolatingCosts(c, MotionProblem::constFinalMid, target, limPrec, target, limPrec);
+  M.setInterpolatingCosts(c, MotionProblem::final_restConst, target, limPrec, target, limPrec);
 
   //-- homing
   c = M.addDefaultTaskMap("qitself", qItselfTMT);
-  M.setInterpolatingCosts(c, MotionProblem::constFinalMid, target, zeroQPrec, target, zeroQPrec);
+  M.setInterpolatingCosts(c, MotionProblem::final_restConst, target, zeroQPrec, target, zeroQPrec);
 }
 
 void reattachShape(ors::Graph& ors, SwiftInterface *swift, const char* objShape, const char* toBody);

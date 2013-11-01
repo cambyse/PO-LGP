@@ -1748,7 +1748,7 @@ void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph& ors, 
   ors::Vector arel, brel;
   //arr Ja, Jb, dnormal;
 
-  double cenMarg = 2.;
+  double cenMarg = 5.;
 
   CHECK(p->cenD<.8*cenMarg, "sorry I made assumption objects are not too large; rescale cenMarg");
   a=ors.shapes(p->a); b=ors.shapes(p->b);

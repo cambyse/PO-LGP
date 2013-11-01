@@ -18,12 +18,10 @@ int main(int argn,char** argv){
   //-- setup the motion problem
   TaskCost *c;
   c = P.addDefaultTaskMap_Bodies("position", posTMT,"endeff",ors::Transformation().setText("<t(0 0 .2)>"));
-  P.setInterpolatingCosts(c, MotionProblem::constFinalMid,
-                          ARRAY(P.ors->getBodyByName("target")->X.pos), 1e3,
-                          ARRAY(0.,0.,0.), 1e-3);
-  P.setInterpolatingVelCosts(c, MotionProblem::constFinalMid,
-                          ARRAY(0.,-1.,0.), 1e-0, //final desired velocity: v_y=-1 (hit ball from behind)
-                          ARRAY(0.,0.,0.), 0.);
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly,
+                          ARRAY(P.ors->getBodyByName("target")->X.pos), 1e3);
+  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
+                          ARRAY(0.,-1.,0.), 1e-0);
 
 //  c = P.addDefaultTaskMap("collision", collTMT, 0, Transformation_Id, 0, Transformation_Id, ARR(.1));
 //  P.setInterpolatingCosts(c, MotionProblem::constFinalMid, ARRAY(0.), 1e-0);
@@ -35,14 +33,14 @@ int main(int argn,char** argv){
   //-- collisions with other objects
   uintA shapes = ARRAY<uint>(P.ors->getBodyByName("endeff")->shapes(0)->index);
   c = P.addCustomTaskMap("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .1, true));
-  P.setInterpolatingCosts(c, MotionProblem::constFinalMid, ARRAY(0.), 1e-0);
+  P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction F(P);
   uint T=F.get_T();
   uint k=F.get_k();
   uint n=F.dim_x();
-  cout <<"Problem parameters:"1
+  cout <<"Problem parameters:"
        <<"\n T=" <<T
        <<"\n k=" <<k
        <<"\n n=" <<n
@@ -63,11 +61,11 @@ int main(int argn,char** argv){
   //-- optimize
   for(uint k=0;k<2;k++){
     optNewton(x, Convert(F), OPT(verbose=2, stopIters=40, useAdaptiveDamping=false, damping=1e-0, maxStep=1.));
-    costs.displayRedBlue(~sqr(P.costMatrix), false, 3);
+//    costs.displayRedBlue(~sqr(P.costMatrix), false, 3);
     P.costReport();
     write(LIST<arr>(x),"z.output");
     gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", false, true);
-    displayTrajectory(x, 1, G, gl,"planned trajectory");
+    displayTrajectory(x, 1, G, gl,"planned trajectory", 0.01);
   }
   
   return 0;
