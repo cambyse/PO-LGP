@@ -1743,6 +1743,54 @@ void ors::Graph::contactsToForces(double hook, double damp) {
     }
 }
 
+void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph& ors, double margin, bool useCenterDist) {
+  //double d;
+  ors::Shape *a, *b;
+  ors::Vector arel, brel;
+  //arr Ja, Jb, dnormal;
+
+  double cenMarg = 2.;
+
+  CHECK(p->cenD<.8*cenMarg, "sorry I made assumption objects are not too large; rescale cenMarg");
+  a=ors.shapes(p->a); b=ors.shapes(p->b);
+
+  //costs
+  double d1 = 1.-p->d/margin;
+  double d2 = 1.-p->cenD/cenMarg;
+  //NORMALS ALWAYS GO FROM b TO a !!
+  if(!useCenterDist) d2=1.;
+  y += d1*d2;
+ 
+  //Jacobian
+  if(&J){
+    arr Jpos;
+    J.resize(1, ors.getJointStateDimension(false)).setZero();
+    if(p->d>0.) { //we have a gradient on pos only when outside
+      ors::Vector arel=a->X.rot/(p->posA-a->X.pos);
+      ors::Vector brel=b->X.rot/(p->posB-b->X.pos);
+      CHECK(p->normal.isNormalized(), "proxy normal is not normalized");
+      arr posN; posN.referTo(&p->normal.x, 3); posN.reshape(1, 3);
+          
+      //grad on posA
+      ors.jacobianPos(Jpos, a->body->index, &arel); J -= d2/margin*(posN*Jpos);
+      //grad on posA
+      ors.jacobianPos(Jpos, b->body->index, &brel); J += d2/margin*(posN*Jpos);
+    }
+        
+    if(useCenterDist){
+      ors::Vector arel=a->X.rot/(p->cenA-a->X.pos);
+      ors::Vector brel=b->X.rot/(p->cenB-b->X.pos);
+      CHECK(p->cenN.isNormalized(), "proxy normal is not normalized");
+      arr cenN; cenN.referTo(&p->cenN.x, 3); cenN.reshape(1, 3);
+        
+      //grad on cenA
+      ors.jacobianPos(Jpos, a->body->index, &arel); J -= d1/cenMarg*(cenN*Jpos);
+      //grad on cenB
+      ors.jacobianPos(Jpos, b->body->index, &brel); J += d1/cenMarg*(cenN*Jpos);
+    }
+  }
+}
+
 /// measure (=scalar kinematics) for the contact cost summed over all bodies
 void ors::Graph::phiCollision(arr &y, arr& J, double margin, bool useCenterDist) const {
   y.resize(1);
