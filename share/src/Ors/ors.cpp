@@ -166,7 +166,7 @@ void ors::Body::parseAts() {
     for (const auto& itemname : attributes) {
       item=ats.getItem(itemname);
       if (item) {
-        shape->ats.append(item); 
+        shape->ats.append(item->newClone()); 
       }
     }
     shape->parseAts();
