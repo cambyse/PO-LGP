@@ -129,7 +129,7 @@ void ors::Body::parseAts() {
   if(ats.getValue<bool>("static"))     type=staticBT;
   if(ats.getValue<bool>("kinematic"))  type=kinematicBT;
   
-  // SHAPE handling {{{
+  // SHAPE handling
   Item* item;
   // a mesh which consists of multiple convex sub meshes creates multiple
   // shapes that belong to the same body
