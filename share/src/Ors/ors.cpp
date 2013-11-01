@@ -139,7 +139,7 @@ void ors::Body::parseAts() {
 
     // if mesh is not .obj we only have one shape
     if (MT::String(*filename).getLastN(3) != "obj") {
-      Shape* shape = new Shape(this);
+      new Shape(this);
     }
 
     // if .obj file create Shape for all submeshes
@@ -154,11 +154,7 @@ void ors::Body::parseAts() {
   }
 
   // add shape if there is no shape exists yet
-  if(ats.getItem("type")) {
-    if (shapes.N == 0) {
-      Shape* shape = new Shape(this);
-    }
-  }
+  if(ats.getItem("type") && !shapes.N) new Shape(this);
 
   // copy body attributes to shapes 
   const auto attributes = { "mesh", "type", "size", "color", "rel", "meshscale", "contact" };
@@ -205,7 +201,7 @@ std::ostream& operator<<(std::ostream& os, const Joint& x) { x.write(os); return
 
 ors::Shape::Shape() { reset(); }
 
-ors::Shape::Shape(Body *b) : body(b), ibody(b->index) {
+ors::Shape::Shape(Body *b) : ibody(b->index), body(b) {
   reset();
   body->shapes.append(this);
 }
@@ -397,7 +393,7 @@ ors::Proxy::Proxy() {
 
 void ors::Graph::init(const char* filename) {
   MT::load(*this, filename, true);
-  //calcBodyFramesFromJoints();
+  calcBodyFramesFromJoints();
 }
 
 void ors::Graph::clear() {
