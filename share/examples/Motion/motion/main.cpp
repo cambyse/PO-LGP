@@ -42,7 +42,7 @@ int main(int argn,char** argv){
   uint T=F.get_T();
   uint k=F.get_k();
   uint n=F.dim_x();
-  cout <<"Problem parameters:"1
+  cout <<"Problem parameters:"
        <<"\n T=" <<T
        <<"\n k=" <<k
        <<"\n n=" <<n
