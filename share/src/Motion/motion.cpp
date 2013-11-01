@@ -78,11 +78,11 @@ TaskCost* MotionProblem::addDefaultTaskMap(
 }
 
 TaskCost* MotionProblem::addDefaultTaskMap_Bodies(
-  const char* name,
-  DefaultTaskMapType type,
-  const char *iBodyName, const ors::Transformation& irel,
-  const char *jBodyName, const ors::Transformation& jrel,
-  const arr& params) {
+    const char* name,
+    DefaultTaskMapType type,
+    const char *iBodyName, const ors::Transformation& irel,
+    const char *jBodyName, const ors::Transformation& jrel,
+    const arr& params) {
   ors::Body *a = iBodyName ? ors->getBodyByName(iBodyName):NULL;
   ors::Body *b = jBodyName ? ors->getBodyByName(jBodyName):NULL;
   return addDefaultTaskMap(
@@ -95,11 +95,11 @@ TaskCost* MotionProblem::addDefaultTaskMap_Bodies(
 }
 
 TaskCost* MotionProblem::addDefaultTaskMap_Shapes(
-  const char* name,
-  DefaultTaskMapType type,
-  const char *iShapeName, const ors::Transformation& irel,
-  const char *jShapeName, const ors::Transformation& jrel,
-  const arr& params) {
+    const char* name,
+    DefaultTaskMapType type,
+    const char *iShapeName, const ors::Transformation& irel,
+    const char *jShapeName, const ors::Transformation& jrel,
+    const arr& params) {
   ors::Shape *a = iShapeName ? ors->getShapeByName(iShapeName):NULL;
   ors::Shape *b = jShapeName ? ors->getShapeByName(jShapeName):NULL;
   return addDefaultTaskMap(

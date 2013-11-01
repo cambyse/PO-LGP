@@ -235,6 +235,9 @@ void PhysXInterface::addJoint(ors::Joint *jj) {
       // desc->setProjectionAngularTolerance(3.14);
     }
     break;
+    case ors::JT_trans3: {
+      break; 
+    }
     default:
       NIY;
   }
