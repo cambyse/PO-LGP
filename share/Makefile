@@ -16,6 +16,11 @@ all: $(srcs:%=makePath/%) $(exas:%=makePath/%)
 
 src: $(srcs:%=makePath/%)
 
+python: src
+	make --directory=src/Core -f Makefile_corepy
+	make --directory=src/Ors -f Makefile_orspy
+	make --directory=src/Motion -f Makefile_motionpy
+
 examples: $(exas:%=makePath/%)
 
 depend: $(srcs:%=dependPath/%)
