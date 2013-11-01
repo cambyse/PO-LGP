@@ -72,7 +72,9 @@ class PickOOIActionServer:
         rp.Provide("PickOOI")
 
     def execute(self, msg):
-        all_shapes = self.request_all_shapes()
+        all_shapes_msg = self.request_all_shapes()
+        all_shapes = util.parse_shape_msg(all_shapes_msg)
+        print all_shapes
 
         # GUARD
         if self.oois is None:
