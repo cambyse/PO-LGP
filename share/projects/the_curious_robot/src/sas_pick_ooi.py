@@ -50,7 +50,7 @@ class PickOOIActionServer:
         # self.world_belief_sub = rospy.Subscriber ...
         # Services
         self.request_all_shapes = rospy.ServiceProxy('all_shapes',
-                                                     srv.all_shapes)
+                                                     srv.AllShapes)
         # Publisher
         self.ooi_id_pub = rospy.Publisher('ooi_id', tcr.msg.ObjectID)
 

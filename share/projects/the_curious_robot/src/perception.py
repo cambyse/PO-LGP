@@ -47,7 +47,7 @@ class FakePerception():
                                              srv.percept_all,
                                              self.handle_percept_all_request)
         self.all_shapes_srv = rospy.Service('all_shapes',
-                                            srv.all_shapes,
+                                            srv.AllShapes,
                                             self.handle_all_shapes_request)
         # Subscribers
         self.ors_subs = rospy.Subscriber(name='geometric_state',
@@ -59,7 +59,7 @@ class FakePerception():
     # callbacks: handle requests and subscriptions
     def handle_all_shapes_request(self, req):
         rospy.loginfo("all shapes requested")
-        response = tcr.srv.all_shapes()
+        response = tcr.srv.AllShapesResponse()
         for shape in self.world.shapes:
             response.shapes.append(str(shape))
         return response
