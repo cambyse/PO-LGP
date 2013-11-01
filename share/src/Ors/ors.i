@@ -188,10 +188,6 @@ struct Body {
   void read(const char* string);
 
 %extend {
-  void set_name(char* newName) {
-    $self->name = MT::String(newName);
-  };
-
   std::string __str__() {
     std::ostringstream oss(std::ostringstream::out);
     oss << (*$self);
@@ -227,7 +223,7 @@ struct Joint {
 %extend {
   std::string __str__() {
     std::ostringstream oss(std::ostringstream::out);
-    oss<<(*$self);
+    oss << (*$self);
     return oss.str();
   }
 } // end of %extend
@@ -268,8 +264,12 @@ struct Shape {
     $self->size[2] = c;
     $self->size[3] = d;
   };
-}; // end of %extend
-
+  std::string __str__() {
+    std::ostringstream oss(std::ostringstream::out);
+    oss << (*$self);
+    return oss.str();
+  };
+} // end of %extend
 };
 
 
@@ -362,12 +362,6 @@ struct Graph {
   //!@name set state
   void setJointState(const arr& x, const arr& v, bool clearJointErrors=false);
   void setJointState(const arr& x, bool clearJointErrors=false);
-%pythoncode %{
-def setJointStateList(self, jointState):
-    tmp = corepy.ArrayDouble()
-    tmp.setWithList(jointState)
-    self.setJointState(tmp)
-%} //end of %pythoncode
   /*void setFullState(const arr& x, bool clearJointErrors=false);*/
   /*void setFullState(const arr& x, const arr& v, bool clearJointErrors=false);*/
   void setExternalState(const arr & x);//set array of body positions, sets all degrees of freedom except for the joint states
