@@ -119,7 +119,7 @@ struct Body {
     type=b.type; mass=b.mass; inertia=b.inertia; com=b.com; force=b.force; torque=b.torque;
   }
   void reset();
-  void parseAts();
+  void parseAts(Graph *G);
   void write(std::ostream& os) const;
   void read(std::istream& is);
   void read(const char* string);
@@ -178,8 +178,7 @@ struct Shape {
   
   Shape();
   explicit Shape(const Shape& s);
-  explicit Shape(Body *body);
-  explicit Shape(Graph& G, Body *b, const Shape *copyShape=NULL); //new Shape, being added to graph and body's shape lists
+  explicit Shape(Graph *G, Body *b, const Shape *copyShape=NULL); //new Shape, being added to graph and body's shape lists
   ~Shape();
   void operator=(const Shape& s) {
     index=s.index; ibody=s.ibody; body=NULL; name=s.name; X=s.X; rel=s.rel; type=s.type;
@@ -337,9 +336,11 @@ struct Graph {
 namespace ors {
 std::istream& operator>>(std::istream&, Body&);
 std::istream& operator>>(std::istream&, Joint&);
+std::istream& operator>>(std::istream&, Shape&);
 std::istream& operator>>(std::istream&, Proxy&);
 std::ostream& operator<<(std::ostream&, const Body&);
 std::ostream& operator<<(std::ostream&, const Joint&);
+std::ostream& operator<<(std::ostream&, const Shape&);
 std::ostream& operator<<(std::ostream&, const Proxy&);
 stdPipes(Graph);
 }
