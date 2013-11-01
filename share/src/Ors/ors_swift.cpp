@@ -85,21 +85,22 @@ void SwiftInterface::init(const ors::Graph& C, double _cutoff) {
     add=true;
     switch(s->type) {
       case ors::noneST: HALT("shapes should have a type - somehow wrong initialization..."); break;
-      case ors::boxST:
-        s->mesh.setBox();
-        s->mesh.scale(s->size[0], s->size[1], s->size[2]);
-        break;
-      case ors::sphereST:
+      case ors::boxST:  if(!s->mesh.V.N){
+          s->mesh.setBox();
+          s->mesh.scale(s->size[0], s->size[1], s->size[2]);
+        } break;
+      case ors::sphereST:  if(!s->mesh.V.N){
         s->mesh.setSphere();
         s->mesh.scale(s->size[3], s->size[3], s->size[3]);
-        break;
-      case ors::cylinderST:
+        } break;
+      case ors::cylinderST:  if(!s->mesh.V.N){
         CHECK(s->size[3]>1e-10,"");
         s->mesh.setCylinder(s->size[3], s->size[2]);
-        break;
-      case ors::cappedCylinderST:
+        } break;
+      case ors::cappedCylinderST:  if(!s->mesh.V.N){
+        CHECK(s->size[3]>1e-10,"");
         s->mesh.setCappedCylinder(s->size[3], s->size[2]);
-        break;
+        } break;
       case ors::meshST:
         //check if there is a specific swiftfile!
         MT::String *filename;

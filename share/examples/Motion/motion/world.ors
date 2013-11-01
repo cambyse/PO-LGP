@@ -47,7 +47,7 @@ body door2-door {
   meshscale=.01
   color=[1 0 0]
   mass=2000000
-  contact
+#  contact
 }
 body door2-handle {
   X=<T t(-2 -2 0) d(90 0 0 1)>
@@ -82,7 +82,7 @@ body door3-door {
   type=3 mesh='door_model/door_hacd.obj'
   meshscale=.01
   color=[1 0 0]
-  contact
+#  contact
 }
 body door3-handle {
   X=<T t(2 0 0)>

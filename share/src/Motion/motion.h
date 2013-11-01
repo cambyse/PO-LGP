@@ -87,7 +87,7 @@ struct MotionProblem {
   SwiftInterface *swift;
   
   //task cost descriptions
-  enum TaskCostInterpolationType { constFinalMid, constEarlyMid, linearInterpolation };
+  enum TaskCostInterpolationType { constant, finalOnly, final_restConst, constEarlyMid, final_restLinInterpolated };
   MT::Array<TaskCost*> taskCosts;
   
   //transition cost descriptions
@@ -137,7 +137,7 @@ struct MotionProblem {
                              
   void setInterpolatingVelCosts(TaskCost *c,
                                 TaskCostInterpolationType inType,
-                                const arr& v_finalTarget, double v_finalPrec, const arr& v_midTarget, double v_midPrec);
+                                const arr& v_finalTarget, double v_finalPrec, const arr& v_midTarget=NoArr, double v_midPrec=-1.);
                                 
   //-- cost infos
   uint dim_phi(uint t);
