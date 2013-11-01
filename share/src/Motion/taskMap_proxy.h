@@ -23,7 +23,7 @@
 
 enum PTMtype {
   allPTMT, //phi=sum over all proxies (as is standard)
-  allListedPTMT, //phi=sum over all proxies between listed shapes
+  listedVsListedPTMT, //phi=sum over all proxies between listed shapes
   allVersusListedPTMT, //phi=sum over all proxies between listed shapes
   allExceptListedPTMT, //as above, but excluding listed shapes
   bipartitePTMT, //sum over proxies between the two sets of shapes (shapes, shapes2)
