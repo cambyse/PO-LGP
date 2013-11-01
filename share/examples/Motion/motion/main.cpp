@@ -1,5 +1,6 @@
 #include <Core/util.h>
 #include <Motion/motion.h>
+#include <Motion/taskMap_proxy.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
@@ -24,19 +25,24 @@ int main(int argn,char** argv){
                           ARRAY(0.,-1.,0.), 1e-0, //final desired velocity: v_y=-1 (hit ball from behind)
                           ARRAY(0.,0.,0.), 0.);
 
-  c = P.addDefaultTaskMap("collision", collTMT, 0, Transformation_Id, 0, Transformation_Id, ARR(.1));
+//  c = P.addDefaultTaskMap("collision", collTMT, 0, Transformation_Id, 0, Transformation_Id, ARR(.1));
+//  P.setInterpolatingCosts(c, MotionProblem::constFinalMid, ARRAY(0.), 1e-0);
+
+//  c = P.addDefaultTaskMap("qitself", qItselfTMT, (int)0, Transformation_Id, 0, Transformation_Id, 0);
+//  P.setInterpolatingCosts(   c, MotionProblem::constFinalMid, ARRAY(0.), 1e-4);
+//  //P.setInterpolatingVelCosts(c, MotionProblem::constFinalMid, ARRAY(0.), 1e4, ARRAY(0.), 1e-2);
+
+  //-- collisions with other objects
+  uintA shapes = ARRAY<uint>(P.ors->getBodyByName("endeff")->shapes(0)->index);
+  c = P.addCustomTaskMap("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .1, true));
   P.setInterpolatingCosts(c, MotionProblem::constFinalMid, ARRAY(0.), 1e-0);
 
-  c = P.addDefaultTaskMap("qitself", qItselfTMT, (int)0, Transformation_Id, 0, Transformation_Id, 0);
-  P.setInterpolatingCosts(   c, MotionProblem::constFinalMid, ARRAY(0.), 1e-4);
-  //P.setInterpolatingVelCosts(c, MotionProblem::constFinalMid, ARRAY(0.), 1e4, ARRAY(0.), 1e-2);
-  
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction F(P);
   uint T=F.get_T();
   uint k=F.get_k();
   uint n=F.dim_x();
-  cout <<"Problem parameters:"
+  cout <<"Problem parameters:"1
        <<"\n T=" <<T
        <<"\n k=" <<k
        <<"\n n=" <<n

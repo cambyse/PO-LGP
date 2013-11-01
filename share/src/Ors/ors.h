@@ -779,6 +779,8 @@ double forceClosureFromProxies(ors::Graph& C, uint bodyIndex,
                                double mu=.5,     //friction coefficient
                                double discountTorques=1.);  //friction coefficient
 
+void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph& ors, double margin, bool useCenterDist);
+
 
 
 //===========================================================================
