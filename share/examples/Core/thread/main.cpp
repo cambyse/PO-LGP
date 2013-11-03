@@ -41,7 +41,25 @@ void TEST(Thread){
   CHECK(t1.i>=29 && t1.i<=31,"");
   CHECK(t2.i>=2 && t2.i<=4,"");
 
-  // tout examples
+  // tout example
+  int nThreads = 2;
+  MyOtherThread *tp[nThreads];
+
+  for(int i = 0; i < nThreads; i++)
+    tp[i] = new MyOtherThread(i);
+
+  for(int i = 0; i < nThreads; i++)
+    tp[i]->threadLoop();
+
+  MT::wait(1.);
+
+  for(int i = 0; i < nThreads; i++)
+    tp[i]->threadClose();
+
+  for(int i = 0; i < nThreads; i++)
+    delete tp[i];
+
+  // tout usage examples
   char i = 'i';
   char j = 'j';
   
@@ -65,29 +83,11 @@ void TEST(Thread){
   tout(&j) << "test with new object" << endl;
 
   tout::unreg_all();
-  tout() << "test after unregistering all:" << endl;
+  tout() << "tests after unregistering all:" << endl;
   tout(&i) << "test i" << endl;
   tout(&j) << "test j" << endl;
 
   MT::wait(2.);
-
-  // other tout example
-  int nThreads = 2;
-  MyOtherThread *tp[nThreads];
-
-  for(int i = 0; i < nThreads; i++)
-    tp[i] = new MyOtherThread(i);
-
-  for(int i = 0; i < nThreads; i++)
-    tp[i]->threadLoop();
-
-  MT::wait(1.);
-
-  for(int i = 0; i < nThreads; i++)
-    tp[i]->threadClose();
-
-  for(int i = 0; i < nThreads; i++)
-    delete tp[i];
 }
 
 int MAIN(int argn,char** argv){
