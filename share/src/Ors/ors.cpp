@@ -2205,7 +2205,7 @@ void ors::Graph::removeNonShapeBodies() {
   proxies.clear();
 }
 
-void ors::Graph::meldFixedJoint() {
+void ors::Graph::meldFixedJoints() {
   for_list_(Joint, j, joints) if(j->type==JT_fixed) {
     Body *a = j->from;
     Body *b = j->to;

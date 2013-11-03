@@ -24,10 +24,8 @@ void TEST(CheatSheet) {
   cout << "\n##### MISC" << endl;
   // you can reshape matrices
   A.reshape(2, 2);
-  // print matrices different ways
+  // print matrices
   std::cout << A << std::endl;
-  A.print();
-  A.print("A:");
 
   // query information about the array dimentions
   std::cout << "number of elements total:    " << A.N << std::endl;
@@ -41,15 +39,15 @@ void TEST(CheatSheet) {
   A(0, 0) += 1;
   std::cout << "A(0, 0) = " << A(0, 0) << std::endl;
   // access rows
-  I.row(0).print("I.row(0):");
-  I.rows(0, 2).print("I.rows(0, 2):");
+  cout <<"I.row(0): " <<I.row(0) <<endl;
+  cout <<"I.rows(0, 2): " <<I.rows(0, 2) <<endl;
   // access columns
-  I.col(3).print("I.col(3):");
-  I.rows(1, 4).print("I.rows(1, 4):");
+  cout <<"I.col(3): " <<I.col(3) <<endl;
+  cout <<"I.rows(1, 4): " <<I.rows(1, 4) <<endl;
   // iterate through all elements
   for (const auto& elem : A) std::cout << elem << std::endl;
   for (auto& elem : A) elem += 4.;
-  A.print("A+4:");
+  cout <<"A+4: " <<A <<endl;
 
   cout << "\n##### MATRIX OPERATIONS" << std::endl;
   // Work as you'd expect
@@ -60,13 +58,13 @@ void TEST(CheatSheet) {
   // transpose
   CHECK(A == ~(~A), "A = A^T^T");
   // inplace transpose
-  A.print("before inplace transpose");
+  cout <<"before inplace transpose: " <<A <<endl;
   transpose(A);
-  A.print("after inplace transpose");
+  cout <<"after inplace transpose:" <<A <<endl;
   transpose(A);
-  A.print("back to normal/after second inplace transpose");
+  cout <<"back to normal/after second inplace transpose: " <<A <<endl;
   // inverse
-  (A * inverse(A)).print("\nA * A.I");
-  (inverse(A) * A).print("\nA.I * A");
-  CHECK(A * inverse(A) == I, "");
+  cout <<"\nA * A.I: " <<A * inverse(A) <<endl;
+  cout <<"\nA.I * A: " <<inverse(A) * A <<endl;
+  CHECK_ZERO(maxDiff(A * inverse(A),I),1e-6, "");
 }

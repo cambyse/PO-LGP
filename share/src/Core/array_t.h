@@ -1473,20 +1473,6 @@ template<class T> void MT::Array<T>::shift(int offset, bool wrapAround) {
 }
 
 
-//***** I/O
-/**
- * @brief Print the matrix to std::cout prefixed with the header (if supplied).
- *
- * @param header Prefix the matrix with the given header.
- */
-template<class T>
-void MT::Array<T>::print(const char* header) const {
-  if (header) {
-    std::cout << header;
-  }
-  std::cout << *this << std::endl;
-}
-
 /** @brief prototype for operator<<, writes the array by separating elements with ELEMSEP, separating rows with LINESEP, using BRACKETS[0] and BRACKETS[1] to brace the data, optionally writs a dimensionality tag before the data (see below), and optinally in binary format */
 template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP, const char *LINESEP, const char *BRACKETS, bool dimTag, bool binary) const {
   CHECK(!binary || memMove, "binary write works only for memMoveable data");
@@ -1504,7 +1490,7 @@ template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP
     os.put(0);
     os <<std::endl;
   } else {
-    if(dimTag) { writeDim(os); os <<' '; }
+    if(dimTag || nd>=3) { writeDim(os); os <<' '; }
     if(nd>=2) os <<'\n';
     if(BRACKETS[0]) os <<BRACKETS[0];
     if(nd==0 && N==0) { if(BRACKETS[1]) os <<BRACKETS[1]; return; }
@@ -1526,17 +1512,9 @@ template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP
       }
     if(nd>3) {
       CHECK(d && d!=&d0, "");
-      //Array<uint> I;
       for(i=0; i<N; i++) {
         if(i && !(i%d[nd-1])) os <<LINESEP;
-        if(nd>1 && !(i%(d[nd-2]*d[nd-1]))) {
-          /*getIndexTuple(I, i);
-          os <<LINESEP <<'<' <<I(0);
-          for(j=1;j<nd;j++) os <<' ' <<I(j);
-          os <<':' <<i <<'>' <<LINESEP;
-          */
-          os <<LINESEP;
-        }
+        if(nd>1 && !(i%(d[nd-2]*d[nd-1]))) os <<LINESEP;
         os <<ELEMSEP <<elem(i);
       }
     }
