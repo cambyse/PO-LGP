@@ -122,7 +122,6 @@ struct Body {
   void parseAts(Graph& G);
   void write(std::ostream& os) const;
   void read(std::istream& is);
-  void read(const char* string);
 };
 
 /// a joint
@@ -182,7 +181,7 @@ struct Shape {
   void operator=(const Shape& s) {
     index=s.index; ibody=s.ibody; body=NULL; name=s.name; X=s.X; rel=s.rel; type=s.type;
     memmove(size, s.size, 4*sizeof(double)); memmove(color, s.color, 3*sizeof(double));
-    mesh=s.mesh; cont=s.cont; contactOrientation=s.contactOrientation;
+    mesh=s.mesh; cont=s.cont;
     ats=s.ats;
   }
   void reset();
@@ -318,7 +317,6 @@ struct Graph {
   
   void write(std::ostream& os) const;
   void read(std::istream& is);
-  void read(const char* filename); //TODO: obsolete
   void writePlyFile(const char* filename) const;
   void glDraw();
 };

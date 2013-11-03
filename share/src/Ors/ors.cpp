@@ -190,11 +190,6 @@ void ors::Body::read(std::istream& is) {
   parseAts(NoGraph);
 }
 
-void ors::Body::read(const char* string) {
-  std::istringstream str(string);
-  read(str);
-}
-
 namespace ors {
 std::ostream& operator<<(std::ostream& os, const Body& x) { x.write(os); return os; }
 std::ostream& operator<<(std::ostream& os, const Shape& x) { x.write(os); return os; }
@@ -266,7 +261,6 @@ void ors::Shape::reset() {
   type=noneST;
   size[0]=size[1]=size[2]=size[3]=1.;
   color[0]=color[1]=color[2]=.8;
-  contactOrientation.setZero();
   listDelete(ats);
   rel.setZero();
   mesh.V.clear();
@@ -1408,11 +1402,6 @@ void ors::Graph::write(std::ostream& os) const {
 }
 
 #define DEBUG(x) //x
-
-void ors::Graph::read(const char* filename) {
-  std::istringstream is(filename);
-  read(is);
-}
 
 /** @brief prototype for \c operator>> */
 void ors::Graph::read(std::istream& is) {
