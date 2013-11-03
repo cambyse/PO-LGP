@@ -131,6 +131,7 @@ struct Joint {
   int ifrom, ito;       ///< indices of from and to bodies
   Body *from, *to;      ///< pointers to from and to bodies
   Joint *coupledTo;     ///< if non-NULL, this joint's state is identical to another's
+  uint agent;           ///< associate this Joint to a specific agent (0=default robot)
 
   MT::String name;      ///< name
   JointType type;       ///< joint type
@@ -212,7 +213,6 @@ struct Graph {
   MT::Array<Proxy*> proxies; ///< list of current proximities between bodies
 
   uint q_dim; ///< numer of degrees of freedom IN the joints (not counting root body)
-  arr Qlin, Qoff, Qinv; ///< linear transformations of q TODO: isn't this obsolete?
   bool isLinkTree;
   
   /// @name constructors
@@ -269,7 +269,7 @@ struct Graph {
   void phiCollision(arr &y, arr& J, double margin=.02, bool useCenterDist=true) const;
   
   /// @name get state
-  uint getJointStateDimension(bool internal=false) const;
+  uint getJointStateDimension() const;
   void getJointState(arr& x, arr& v) const;
   void getJointState(arr& x) const;
   void getContactConstraints(arr& y) const;

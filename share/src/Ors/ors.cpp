@@ -254,7 +254,6 @@ void ors::Shape::parseAts() {
       body->inertia += I;
     }
   }
-
 }
 
 void ors::Shape::reset() {
@@ -401,14 +400,12 @@ void ors::Graph::clear() {
   listDelete(joints);
   listDelete(bodies);
   q_dim=0;
-  Qlin.clear(); Qoff.clear(); Qinv.clear();
   isLinkTree=false;
 }
 
 ors::Graph* ors::Graph::newClone() const {
   Graph *G=new Graph();
   G->q_dim=q_dim;
-  G->Qlin = Qlin;  G->Qoff = Qoff;  G->Qinv = Qinv;
   listCopy(G->proxies, proxies);
   listCopy(G->joints, joints);
   listCopy(G->shapes, shapes);
@@ -426,7 +423,6 @@ ors::Graph* ors::Graph::newClone() const {
 void ors::Graph::operator=(const ors::Graph& G) {
   uint i;  Shape *s;  Body *b;
   q_dim=G.q_dim;
-  Qlin = G.Qlin;  Qoff = G.Qoff;  Qinv = G.Qinv;
   listCopy(proxies, G.proxies);
   listCopy(joints, G.joints);
   listCopy(shapes, G.shapes);
@@ -568,7 +564,7 @@ void ors::Graph::invertTime() {
 
 arr ors::Graph::naturalQmetric() {
 #if 1
-  if(!q_dim) getJointStateDimension(true);
+  if(!q_dim) getJointStateDimension();
   arr Wdiag(q_dim);
   Wdiag=1.;
   return Wdiag;
@@ -646,7 +642,7 @@ void ors::Graph::reconfigureRoot(Body *n) {
 }
 
 /** @brief returns the joint (actuator) dimensionality */
-uint ors::Graph::getJointStateDimension(bool internal) const {
+uint ors::Graph::getJointStateDimension() const {
   if(!q_dim) {
     uint jd=0;
     for_list_(Joint, j, joints) {
@@ -660,11 +656,7 @@ uint ors::Graph::getJointStateDimension(bool internal) const {
     ((Graph*)this)->q_dim = jd; //hack to work around const declaration
   }
   
-  if(internal || !Qlin.N) return q_dim;
-  else {
-    CHECK(Qlin.d0==q_dim, "");
-    return Qlin.d1;
-  }
+  return q_dim;
 }
 
 //first version, give series of translated positions of bodies with such indexes (NJ)
@@ -773,11 +765,6 @@ void ors::Graph::getJointState(arr& x, arr& v) const {
   }
 
   CHECK(n==q_dim,"");
-
-  if(Qlin.N) {
-    x=Qinv*(x-Qoff);
-    v=Qinv*v;
-  }
 }
 
 /** @brief returns the joint positions only */
@@ -791,12 +778,6 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErro
   ors::Quaternion rot1, rot2;
   arr q=_q, v;
   if(&_v) v=_v;
-
-  if(Qlin.N) {
-    CHECK(_q.N==Qlin.d1,"wrong joint dimensions: ors expected " <<Qlin.d1 <<" joints; you gave " <<_q.N <<" joints");
-    q = Qlin*_q + Qoff;
-    if(&_v) { v = Qlin*_v;  v.reshape(v.N); }
-  }
 
   if(!q_dim) getJointStateDimension();
   CHECK(q.N==q_dim && (!(&_v) || v.N==q_dim), "wrong joint state dimensionalities");
@@ -985,7 +966,7 @@ void ors::Graph::jacobianPos(arr& J, uint a, ors::Vector *rel) const {
   Joint *ei;
   ors::Vector tmp;
   
-  if(!q_dim) getJointStateDimension(true);
+  if(!q_dim) getJointStateDimension();
   
   //initialize Jacobian
   J.resize(3, q_dim);
@@ -1029,14 +1010,6 @@ void ors::Graph::jacobianPos(arr& J, uint a, ors::Vector *rel) const {
       ei=ei->from->inLinks(0);
     }
   }
-
-  if(Qlin.N) J=J*Qlin;
-//  if(q_dim<j_dim){
-//    //we have coupled joints!
-//    arr Jleft  = J.sub(0,-1,0,q_dim-1);
-//    arr Jright = J.sub(0,-1,q_dim,-1);
-//    J = Jleft + Jright * Qlin;
-//  }
 }
 
 /** @brief return the Hessian \f$H = \frac{\partial^2\phi_i(q)}{\partial q\partial q}\f$ of the position
@@ -1047,7 +1020,7 @@ void ors::Graph::hessianPos(arr& H, uint a, ors::Vector *rel) const {
   Joint *ei, *ej;
   ors::Vector r;
   
-  if(!q_dim)((ors::Graph*)this)->q_dim = getJointStateDimension(true);
+  if(!q_dim)((ors::Graph*)this)->q_dim = getJointStateDimension();
   
   //initialize Jacobian
   H.resize(3, q_dim, q_dim);
@@ -1104,8 +1077,6 @@ void ors::Graph::hessianPos(arr& H, uint a, ors::Vector *rel) const {
       ei=ei->from->inLinks(0);
     }
   }
-
-  if(Qlin.N) H=~Qlin*H*Qlin;
 }
 
 /// kinematis of the i-th body's z-orientation vector
@@ -1124,7 +1095,7 @@ void ors::Graph::jacobianVec(arr& J, uint a, ors::Vector *vec) const {
   Joint *ei;
   ors::Vector r, ta;
   
-  if(!q_dim)((ors::Graph*)this)->q_dim = getJointStateDimension(true);
+  if(!q_dim)((ors::Graph*)this)->q_dim = getJointStateDimension();
   
   //initialize Jacobian
   J.resize(3, q_dim);
@@ -1160,14 +1131,6 @@ void ors::Graph::jacobianVec(arr& J, uint a, ors::Vector *vec) const {
       ei=ei->from->inLinks(0);
     }
   }
-
-  if(Qlin.N) J=J*Qlin;
-//  if(q_dim<j_dim){
-//    //we have coupled joints!
-//    arr Jleft  = J.sub(0,-1,0,q_dim-1);
-//    arr Jright = J.sub(0,-1,q_dim,-1);
-//    J = Jleft + Jright * Qlin;
-//  }
 }
 
 /* takes the joint state x and returns the jacobian dz of
@@ -1178,7 +1141,7 @@ void ors::Graph::jacobianR(arr& J, uint a) const {
   Joint *ei;
   ors::Vector ti;
   
-  if(!q_dim)((ors::Graph*)this)->q_dim = getJointStateDimension(true);
+  if(!q_dim)((ors::Graph*)this)->q_dim = getJointStateDimension();
   
   //initialize Jacobian
   J.resize(3, q_dim);
@@ -1213,8 +1176,6 @@ void ors::Graph::jacobianR(arr& J, uint a) const {
     ei=ei->from->inLinks(0);
   }
   }
-  
-  if(Qlin.N) J=J*Qlin;
 }
 
 /** @brief return the configuration's inertia tensor $M$ (n x n tensor)*/
@@ -1225,7 +1186,7 @@ void ors::Graph::inertia(arr& M) {
   ors::Vector vi, vj, ti, tj;
   double tmp;
   
-  if(!q_dim) q_dim = getJointStateDimension(true);
+  if(!q_dim) q_dim = getJointStateDimension();
   
   //initialize Jacobian
   M.resize(q_dim, q_dim);
@@ -1272,7 +1233,6 @@ void ors::Graph::inertia(arr& M) {
 }
 
 void ors::Graph::equationOfMotion(arr& M, arr& F, const arr& qd) {
-  if(Qlin.N) NIY;
   static ors::LinkTree tree;
   if(!tree.N) GraphToTree(tree, *this);
   else updateGraphToTree(tree, *this);
@@ -1749,7 +1709,7 @@ void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph& ors, 
   //Jacobian
   if(&J){
     arr Jpos;
-    J.resize(1, ors.getJointStateDimension(false)).setZero();
+    J.resize(1, ors.getJointStateDimension()).setZero();
     if(p->d>0.) { //we have a gradient on pos only when outside
       ors::Vector arel=a->X.rot/(p->posA-a->X.pos);
       ors::Vector brel=b->X.rot/(p->posB-b->X.pos);
@@ -1785,7 +1745,7 @@ void ors::Graph::phiCollision(arr &y, arr& J, double margin, bool useCenterDist)
   ors::Vector normal;
   double cenMarg = 2.;
   arr Jpos;
-  if(&J) J.resize(1, getJointStateDimension(false)).setZero();
+  if(&J) J.resize(1, getJointStateDimension()).setZero();
   for(i=0; i<proxies.N; i++) if(proxies(i)->d<margin) {
       CHECK(proxies(i)->cenD<.8*cenMarg, "sorry I made assumption objects are not too large; rescale cenMarg");
       a=shapes(proxies(i)->a); b=shapes(proxies(i)->b);
@@ -2009,7 +1969,7 @@ double ors::Graph::getLimitsGradient(arr &grad, const arr& limits, double margin
   double d;
   double cost=0.;
   arr J;
-  grad.resize(1, getJointStateDimension(false));
+  grad.resize(1, getJointStateDimension());
   grad.setZero();
   arr q;
   getJointState(q);
@@ -2043,7 +2003,7 @@ void ors::Graph::getComGradient(arr &grad) const {
   double M=0.;
   Body *n;
   uint j;
-  arr J(3, getJointStateDimension(true));
+  arr J(3, getJointStateDimension());
   grad.resizeAs(J); grad.setZero();
   for_list(j, n, bodies) {
     M += n->mass;
