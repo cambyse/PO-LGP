@@ -25,14 +25,14 @@ void G4Display::open(){
 
   //add shapes for the sensors
   for(uint sen=0; sen<s->sensors; sen++){
-    ors::Shape *sh = new ors::Shape(&s->ors, NULL);
+    ors::Shape *sh = new ors::Shape(s->ors, NoBody);
     sh->type = ors::boxST;
     memmove(sh->size ,ARR(.10, .04, .01, 0).p, 4*sizeof(double));
     memmove(sh->color,ARR(1, 0, 0).p, 3*sizeof(double));
   }
 
   //add a marker
-  ors::Shape *sh = new ors::Shape(&s->ors, NULL);
+  ors::Shape *sh = new ors::Shape(s->ors, NoBody);
   sh->type = ors::markerST;
   sh->size[0] = .5;
 }

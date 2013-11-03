@@ -119,7 +119,7 @@ struct Body {
     type=b.type; mass=b.mass; inertia=b.inertia; com=b.com; force=b.force; torque=b.torque;
   }
   void reset();
-  void parseAts(Graph *G);
+  void parseAts(Graph& G);
   void write(std::ostream& os) const;
   void read(std::istream& is);
   void read(const char* string);
@@ -178,7 +178,7 @@ struct Shape {
   
   Shape();
   explicit Shape(const Shape& s);
-  explicit Shape(Graph *G, Body *b, const Shape *copyShape=NULL); //new Shape, being added to graph and body's shape lists
+  explicit Shape(Graph& G, Body& b, const Shape *copyShape=NULL); //new Shape, being added to graph and body's shape lists
   ~Shape();
   void operator=(const Shape& s) {
     index=s.index; ibody=s.ibody; body=NULL; name=s.name; X=s.X; rel=s.rel; type=s.type;
@@ -326,6 +326,17 @@ struct Graph {
 };
 /** @} */ // END of group ors_basic_data_structures
 } // END ors namespace
+
+
+//===========================================================================
+//
+// constants
+//
+
+extern ors::Body& NoBody;
+extern ors::Shape& NoShape;
+extern ors::Joint& NoJoint;
+extern ors::Graph& NoGraph;
 
 
 //===========================================================================
