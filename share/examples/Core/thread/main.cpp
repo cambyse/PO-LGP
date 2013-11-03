@@ -15,15 +15,15 @@ struct MyThread: Thread{
 struct MyOtherThread: Thread {
   uint n, i;
   MyOtherThread(uint _n):Thread(STRING("MyOtherThread_"<<n)), n(_n), i(0) {
-    throut::throutRegHeading(this, STRING("MyOtherThread(" << n << "): "));
+    tout::reg(this) << "MyOtherThread(" << n << "): ";
   }
   ~MyOtherThread() {
-    throut::throutUnregHeading(this);
+    tout::unreg(this);
   }
   void open(){}
   void close(){}
   void step(){
-    throut::throut(this, STRING("iteration " << i++));
+    tout(this) << "iteration " << i++ << endl;
   }
 };
 
@@ -41,8 +41,37 @@ void TEST(Thread){
   CHECK(t1.i>=29 && t1.i<=31,"");
   CHECK(t2.i>=2 && t2.i<=4,"");
 
-#if 0 //TODO - left over of a merge conflict
-  // throut example code
+  // tout examples
+  char i = 'i';
+  char j = 'j';
+  
+  tout() << "test without object" << endl;
+
+  tout(&i) << "test with unregistered object" << endl;
+
+  tout::reg(&i) << "Head " << i << ": ";
+  tout(&i) << "test with registered object" << endl;
+
+  tout::unreg(&i);
+  tout(&i) << "test after unregistering object" << endl;
+
+  tout::reg(&i) << "Head " << i << " v2.0: ";
+  tout(&i) << "test after re-registering object" << endl;
+
+  tout::reg(&i) << "Head " << i << " v3.0: ";
+  tout(&i) << "test after re-registering object" << endl;
+
+  tout::reg(&j) << "Head " << j << ": ";
+  tout(&j) << "test with new object" << endl;
+
+  tout::unreg_all();
+  tout() << "test after unregistering all:" << endl;
+  tout(&i) << "test i" << endl;
+  tout(&j) << "test j" << endl;
+
+  MT::wait(2.);
+
+  // other tout example
   int nThreads = 2;
   MyOtherThread *tp[nThreads];
 
@@ -52,14 +81,13 @@ void TEST(Thread){
   for(int i = 0; i < nThreads; i++)
     tp[i]->threadLoop();
 
-  MT::wait(2.);
+  MT::wait(1.);
 
   for(int i = 0; i < nThreads; i++)
     tp[i]->threadClose();
 
   for(int i = 0; i < nThreads; i++)
     delete tp[i];
-#endif
 }
 
 int MAIN(int argn,char** argv){
