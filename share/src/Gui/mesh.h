@@ -34,17 +34,12 @@ struct Mesh {
   arr V;                ///< vertices
   arr Vn;               ///< triangle normals
   arr C;                ///< vertex colors
-  intA G;               ///< vertex groups
   
   uintA T;              ///< triangles (faces)
   arr   Tn;             ///< vertex normals
 
   long parsing_pos_start;
   long parsing_pos_end;
-  //-- groups: deprecated?
-  MT::Array<Transformation*> GF; ///< pose for each group (GF.N is number of groups)
-  MT::Array<uintA>  GT; ///< triangles for each group (GT.N=GF.N+1, last entry contains mixed group triangles)
-  //MT::Array<uintA> strips; ///< triangle strips (each with a 1D stripe index set)
   
   Mesh();
   
@@ -78,11 +73,9 @@ struct Mesh {
   void fuseNearVertices(double tol=1e-5);
   void clean();
   void flipFaces();
-  void makeVerticesRelativeToGroup();
   Vector getMeanVertex();
   
   //[preliminary]]
-  void collectTriGroups();
   void skin(uint i);
   
   //IO
