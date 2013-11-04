@@ -54,6 +54,16 @@ void lib_ors(){ cout <<"force loading lib/ors" <<endl; }
 
 //===========================================================================
 //
+// contants
+//
+
+ors::Body& NoBody = *((ors::Body*)NULL);
+ors::Shape& NoShape = *((ors::Shape*)NULL);
+ors::Joint& NoJoint = *((ors::Joint*)NULL);
+ors::Graph& NoGraph = *((ors::Graph*)NULL);
+
+//===========================================================================
+//
 // Body implementations
 //
 
@@ -109,7 +119,7 @@ void ors::Body::reset() {
 #endif
 }
 
-void ors::Body::parseAts(Graph *G) {
+void ors::Body::parseAts(Graph& G) {
   //interpret some of the attributes
   arr x;
   MT::String str;
@@ -134,16 +144,16 @@ void ors::Body::parseAts(Graph *G) {
   // a mesh which consists of multiple convex sub meshes creates multiple
   // shapes that belong to the same body
   item = ats.getItem("mesh");
-  if (item) {
-    MT::String* filename = item->value<MT::String>();
+  if(item){
+    MT::String *filename = item->value<MT::String>();
 
     // if mesh is not .obj we only have one shape
-    if (MT::String(*filename).endsWith("obj")) {
-      new Shape(G, this);
+    if(!filename->endsWith("obj")) {
+      new Shape(G, *this);
     }else{  // if .obj file create Shape for all submeshes
       auto subMeshPositions = getSubMeshPositions(*filename);
       for (auto parsing_pos : subMeshPositions) {
-        Shape* shape = new Shape(G, this);
+        Shape* shape = new Shape(G, *this);
         shape->mesh.parsing_pos_start = std::get<0>(parsing_pos);
         shape->mesh.parsing_pos_end = std::get<1>(parsing_pos);
       }
@@ -151,7 +161,7 @@ void ors::Body::parseAts(Graph *G) {
   }
 
   // add shape if there is no shape exists yet
-  if(ats.getItem("type") && !shapes.N) new Shape(G, this);
+  if(ats.getItem("type") && !shapes.N) new Shape(G, *this);
 
   // copy body attributes to shapes 
   const auto attributes = { "mesh", "type", "size", "color", "rel", "meshscale", "contact" };
@@ -177,12 +187,7 @@ void ors::Body::read(std::istream& is) {
   reset();
   ats.read(is);
   if(!is.good()) HALT("body '" <<name <<"' read error: in ");
-  parseAts(NULL);
-}
-
-void ors::Body::read(const char* string) {
-  std::istringstream str(string);
-  read(str);
+  parseAts(NoGraph);
 }
 
 namespace ors {
@@ -198,18 +203,20 @@ std::ostream& operator<<(std::ostream& os, const Joint& x) { x.write(os); return
 
 ors::Shape::Shape() { reset(); }
 
-ors::Shape::Shape(const Shape& s) { body=NULL; *this=s; }
+ors::Shape::Shape(const Shape& s): body(NULL){ *this=s; }
 
-ors::Shape::Shape(Graph *G, Body *b, const Shape *copyShape):body(b) {
+ors::Shape::Shape(Graph& G, Body& b, const Shape *copyShape):body(NULL) {
   reset();
   if(copyShape) *this = *copyShape;
-  if(G){
-    index=G->shapes.N;
-    G->shapes.append(this);
+  if(&b && !&G) MT_MSG("You're attaching a Shape to a Body, but not to a Graph -- you're not supposed to do that!");
+  if(&G){
+    index=G.shapes.N;
+    G.shapes.append(this);
   }
-  if(b){
-    b->shapes.append(this);
-    ibody=b->index;
+  if(&b){
+    body = &b;
+    b.shapes.append(this);
+    ibody=b.index;
   }
 }
 
@@ -254,7 +261,6 @@ void ors::Shape::reset() {
   type=noneST;
   size[0]=size[1]=size[2]=size[3]=1.;
   color[0]=color[1]=color[2]=.8;
-  contactOrientation.setZero();
   listDelete(ats);
   rel.setZero();
   mesh.V.clear();
@@ -1397,11 +1403,6 @@ void ors::Graph::write(std::ostream& os) const {
 
 #define DEBUG(x) //x
 
-void ors::Graph::read(const char* filename) {
-  std::istringstream is(filename);
-  read(is);
-}
-
 /** @brief prototype for \c operator>> */
 void ors::Graph::read(std::istream& is) {
   uint i; Item *it;
@@ -1420,7 +1421,7 @@ void ors::Graph::read(std::istream& is) {
     Body *b=new Body(*this);
     b->name = it->keys(1);
     b->ats = *it->value<KeyValueGraph>();
-    b->parseAts(this);
+    b->parseAts(*this);
   }
   
   ItemL ss = G.getItems("shape");
@@ -1433,9 +1434,9 @@ void ors::Graph::read(std::istream& is) {
     if(it->parents.N==1){
       Body *b = listFindByName(bodies, it->parents(0)->keys(1));
       CHECK(b,"");
-      s=new Shape(this, b);
+      s=new Shape(*this, *b);
     }else{
-      s=new Shape(this, NULL);
+      s=new Shape(*this, NoBody);
     }
     if(it->keys.N>1) s->name=it->keys(1);
     s->ats = *it->value<KeyValueGraph>();
@@ -2193,7 +2194,7 @@ void ors::Graph::removeNonShapeBodies() {
   proxies.clear();
 }
 
-void ors::Graph::meldFixedJoint() {
+void ors::Graph::meldFixedJoints() {
   for_list_(Joint, j, joints) if(j->type==JT_fixed) {
     Body *a = j->from;
     Body *b = j->to;

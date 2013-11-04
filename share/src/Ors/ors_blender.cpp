@@ -131,7 +131,7 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl) {
   
   for(i=0; i<frames.d0; i++) {
     n=new ors::Body(bl);
-    s=new ors::Shape(&bl, n); //always create a shape for a body...
+    s=new ors::Shape(bl, *n); //always create a shape for a body...
     MT::skip(is);
     n->name=names(i);
     f.pos.set(&frames(i, 3, 0)); f.pos=ROT*f.pos;

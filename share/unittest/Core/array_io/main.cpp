@@ -37,7 +37,6 @@ TEST(ArrayIO, tensor_read_write) {
   arr a = randn(5, 25);
   a.reshape(5, 5, 5);
   ofstream of("tensor.tmp");
-  a.writeDim(of);
   a.write(of);
   of.close();
 
@@ -59,7 +58,6 @@ TEST(ArrayIO, tensor_high_dim_read_write) {
   arr a = randn(5, 125);
   a.reshape(TUP(5, 5, 5, 5));
   ofstream of("tensor_hd.tmp");
-  a.writeDim(of);
   a.write(of);
   of.close();
 
