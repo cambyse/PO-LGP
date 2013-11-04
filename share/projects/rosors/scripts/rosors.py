@@ -48,6 +48,12 @@ class RosOrs(object):
     def handle_shapes_request(self, req):
         rospy.logdebug("handling shapes request")
         res = rosors.srv.ShapesResponse()
+        # special shape requested
+        if req.name:
+            ors_shape = self.graph.getShapeByName(req.name)
+            res.bodies.append(self.ors_shape_to_msg(ors_shape))
+            return res
+        # all shapes requested
         for ors_shape in self.graph.shapes:
             res.shapes.append(self.ors_shape_to_msg(ors_shape))
         return res
