@@ -53,6 +53,7 @@ class RosOrs(object):
     def ors_body_to_msg(self, ors_body):
         body_msg = rosors.msg.Body()
 
+        body_msg.index = ors_body.index
         body_msg.name = ors_body.name
         body_msg.mass = ors_body.mass
 

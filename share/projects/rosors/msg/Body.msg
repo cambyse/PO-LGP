@@ -1,3 +1,4 @@
+uint32 index
 string name
 float64 mass
 
