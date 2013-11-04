@@ -103,17 +103,24 @@ class RosOrs(object):
         return body_msg
 
 
-class Dummy():
+class OrsRosDemo():
+    """
+    This class demonstrates how to use rosors.
+
+    Simply create a rosors member variable.  You need to specify the orsfile
+    and the prefix for the service.  The rosors instance automatically offers
+    services for the ors data structures.
+    """
     def __init__(self):
         orsfile = "arm3.ors"
         node_name = "rosors_test"
 
         rospy.init_node(node_name, log_level=rospy.DEBUG)
-        self.rosors = RosOrs(orsfile, "/prefix")
+        self.rosors = RosOrs(orsfile=orsfile, srv_prefix="/prefix")
 
 
 def main():
-    rosors = Dummy()
+    rosors = OrsRosDemo()
     rospy.spin()
 
 
