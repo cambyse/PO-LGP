@@ -15,6 +15,9 @@ class RosOrs(object):
     RosOrs represents a ors graph and provieds service calls to query the
     state of the graph.
 
+    TODO should we transport subtypes, e.g. transport shapes and meshes for
+    a given body? maybe a flag?
+
     Supported information:
         - Body
         - Shape
@@ -54,8 +57,10 @@ class RosOrs(object):
         res = rosors.srv.ShapesResponse()
         # special shape requested
         if req.index:
+            # TODO ors.graph must support such a function
             raise NotImplementedError("get by index is not implemented")
         if req.index_body:
+            # TODO ors.graph must support such a function
             raise NotImplementedError("get by index_body is not implemented")
         elif req.name:
             ors_shape = self.graph.getShapeByName(req.name)
