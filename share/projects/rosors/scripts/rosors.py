@@ -23,12 +23,12 @@ class RosOrs(object):
         rospy.loginfo("Starting rosors services with prefix: %s " % srv_prefix)
 
         # start rospy services
+        self.shape_service = rospy.Service(srv_prefix + "/shapes",
+                                           rosors.srv.Shapes,
+                                           self.handle_shapes_request)
         self.body_service = rospy.Service(srv_prefix + "/bodies",
                                           rosors.srv.Bodies,
                                           self.handle_bodies_request)
-        self.shape_service = rospy.Service(srv_prefix + "/shapes",
-                                           rosors.srv.Bodies,
-                                           self.handle_shape_request)
 
     #########################################################################
     # HANDLE SERVICES
@@ -45,11 +45,29 @@ class RosOrs(object):
             res.bodies.append(self.ors_body_to_msg(ors_body))
         return res
 
-    def handle_shape_request(self, req):
-        raise NotImplementedError("Subclasses should implement this!")
+    def handle_shapes_request(self, req):
+        rospy.logdebug("handling shapes request")
+        res = rosors.srv.ShapesResponse()
+        for ors_shape in self.graph.shapes:
+            res.shapes.append(self.ors_shape_to_msg(ors_shape))
+        return res
 
     #########################################################################
     # Helpers for creating msgs
+    def ors_shape_to_msg(self, ors_shape):
+        shape_msg = rosors.msg.Shape()
+
+        shape_msg.index = ors_shape.index
+        shape_msg.index_body = ors_shape.ibody
+        shape_msg.name = ors_shape.name
+
+        shape_msg.X.translation = ors_shape.X.pos
+        shape_msg.X.rotation = ors_shape.X.rot
+        shape_msg.rel.translation = ors_shape.rel.pos
+        shape_msg.rel.rotation = ors_shape.rel.rot
+
+        return shape_msg
+
     def ors_body_to_msg(self, ors_body):
         body_msg = rosors.msg.Body()
 
