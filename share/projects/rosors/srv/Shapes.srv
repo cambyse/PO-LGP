@@ -1,0 +1,5 @@
+# request an ors.shape by name
+string name
+
+---
+Shape[] shapes
