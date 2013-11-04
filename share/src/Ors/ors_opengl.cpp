@@ -169,15 +169,6 @@ void glDrawShape(ors::Shape *s) {
     glVertex3d(0., 0., -s->X.pos.z);
     glEnd();
   }
-  if(!s->contactOrientation.isZero()) {
-    s->X.getAffineMatrixGL(GLmatrix);
-    glLoadMatrixd(GLmatrix);
-    glColor(0, .7, 0);
-    glBegin(GL_LINES);
-    glVertex3d(0., 0., 0.);
-    glVertex3d(.1*s->contactOrientation.x, .1*s->contactOrientation.y, .1*s->contactOrientation.z);
-    glEnd();
-  }
 
   glColor(1,1,1);
   if(orsDrawBodyNames && s->body) glDrawText(s->body->name, 0, 0, 0);

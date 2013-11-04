@@ -19,12 +19,12 @@ int main(int argn,char** argv){
   TaskCost *c;
   c = P.addDefaultTaskMap_Bodies("position", posTMT,"endeff",ors::Transformation().setText("<t(0 0 .2)>"));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.ors->getBodyByName("target")->X.pos), 1e3);
+                          ARRAY(P.ors->getBodyByName("target")->X.pos), 1e2);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
-                          ARRAY(0.,-1.,0.), 1e-0);
+                          ARRAY(0.,0.,0.), 1e1);
 
 //  c = P.addDefaultTaskMap("collision", collTMT, 0, Transformation_Id, 0, Transformation_Id, ARR(.1));
-//  P.setInterpolatingCosts(c, MotionProblem::constFinalMid, ARRAY(0.), 1e-0);
+//  P.setInterpolatingCosts(c, MotionProblem::1constFinalMid, ARRAY(0.), 1e-0);
 
 //  c = P.addDefaultTaskMap("qitself", qItselfTMT, (int)0, Transformation_Id, 0, Transformation_Id, 0);
 //  P.setInterpolatingCosts(   c, MotionProblem::constFinalMid, ARRAY(0.), 1e-4);
@@ -32,8 +32,8 @@ int main(int argn,char** argv){
 
   //-- collisions with other objects
   uintA shapes = ARRAY<uint>(P.ors->getBodyByName("endeff")->shapes(0)->index);
-  c = P.addCustomTaskMap("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .1, true));
-  P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
+  c = P.addCustomTaskMap("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .2, true));
+  P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e2);
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction F(P);
@@ -48,7 +48,10 @@ int main(int argn,char** argv){
 
   //mini evaluation test:
   arr x(T+1,n);
-  x.setZero();
+  for(uint t=0;t<=T;t++){
+    double a=(double)t/T;
+    x[t]() = (1.-a)*P.x0 + a*ARRAY(P.ors->getBodyByName("target")->X.pos);
+  }
   cout <<"fx = " <<evaluateVF(Convert(F), x) <<endl;
 
   //gradient check

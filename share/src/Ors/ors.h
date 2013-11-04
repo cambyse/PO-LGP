@@ -131,7 +131,7 @@ struct Joint {
   int ifrom, ito;       ///< indices of from and to bodies
   Body *from, *to;      ///< pointers to from and to bodies
   Joint *coupledTo;     ///< if non-NULL, this joint's state is identical to another's
-  uint agent;           ///< associate this Joint to a specific agent (0=default robot)
+  int agent;           ///< associate this Joint to a specific agent (0=default robot)
 
   MT::String name;      ///< name
   JointType type;       ///< joint type
@@ -229,6 +229,14 @@ struct Graph {
   /// @name initializations
   void init(const char* filename);
   
+  /// @name access
+  Body *getBodyByName(const char* name) const;
+  Shape *getShapeByName(const char* name) const;
+  Joint *getJointByName(const char* name) const;
+  Joint *getJointByBodyNames(const char* from, const char* to) const;
+  bool checkUniqueNames() const;
+  void prefixNames();
+
   /// @name changes of configuration
   void clear();
   void revertJoint(Joint *e);
@@ -253,12 +261,21 @@ struct Graph {
   void computeNaturalQmetric(arr& W);
   void fillInRelativeTransforms();
   
+  /// @name get state
+  uint getJointStateDimension(int agent=0) const;
+  void getJointState(arr& x, arr& v, int agent=0) const;
+  void getJointState(arr& x, int agent=0) const;
+
+  /// @name set state
+  void setJointState(const arr& x, const arr& v, int agent=0, bool clearJointErrors=false);
+  void setJointState(const arr& x, int agent=0, bool clearJointErrors=false);
+
   /// @name kinematics & dynamics
   void kinematicsPos(arr& y, uint i, ors::Vector *rel=0) const;
-  void jacobianPos(arr& J, uint i, ors::Vector *rel=0) const;
-  void hessianPos(arr& H, uint i, ors::Vector *rel=0) const;
+  void jacobianPos(arr& J, uint i, ors::Vector *rel=0, int agent=0) const;
+  void hessianPos(arr& H, uint i, ors::Vector *rel=0, int agent=0) const;
   void kinematicsVec(arr& z, uint i, ors::Vector *vec=0) const;
-  void jacobianVec(arr& J, uint i, ors::Vector *vec=0) const;
+  void jacobianVec(arr& J, uint i, ors::Vector *vec=0, int agent=0) const;
   void jacobianR(arr& J, uint a) const;
   void inertia(arr& M);
   void equationOfMotion(arr& M, arr& F, const arr& qd);
@@ -268,10 +285,7 @@ struct Graph {
   /// @name special 'kinematic maps'
   void phiCollision(arr &y, arr& J, double margin=.02, bool useCenterDist=true) const;
   
-  /// @name get state
-  uint getJointStateDimension() const;
-  void getJointState(arr& x, arr& v) const;
-  void getJointState(arr& x) const;
+  /// @name older 'kinematic maps'
   void getContactConstraints(arr& y) const;
   void getContactConstraintsGradient(arr &dydq) const;
   //void getContactMeasure(arr &x, double margin=.02, bool linear=false) const;
@@ -288,11 +302,6 @@ struct Graph {
   void getGripState(arr& grip, uint j) const;
   ors::Proxy* getContact(uint a, uint b) const;
   
-  /// @name set state
-  void setJointState(const arr& x, const arr& v, bool clearJointErrors=false);
-  void setJointState(const arr& x, bool clearJointErrors=false);
-  void setExternalState(const arr & x);//set array of body positions, sets all degrees of freedom except for the joint states
-  
   /// @name forces and gravity
   void clearForces();
   void addForce(ors::Vector force, Body *n, ors::Vector pos);
@@ -303,17 +312,6 @@ struct Graph {
   /// @name I/O
   void reportProxies(std::ostream *os=&std::cout);
   void reportGlue(std::ostream *os=&std::cout); //TODO: obsolete
-  
-  /// @name managing the data
-  void sortProxies(bool deleteMultiple=false); //TODO: obsolete
-  bool checkUniqueNames() const;
-  
-  
-  Body *getBodyByName(const char* name) const;
-  Shape *getShapeByName(const char* name) const;
-  Joint *getJointByName(const char* name) const;
-  Joint *getJointByBodyNames(const char* from, const char* to) const;
-  void prefixNames();
   
   void write(std::ostream& os) const;
   void read(std::istream& is);

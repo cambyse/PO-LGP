@@ -115,7 +115,6 @@ namespace Ctest{
   void f(arr& c, arr *dfdx, const arr &x,void*){
     G->setJointState(x); G->calcBodyFramesFromJoints();
     swift->computeProxies(*G,false);
-    G->sortProxies(true);
     G->phiCollision(c, (dfdx?*dfdx:NoArr), .2);
   }
 }
@@ -139,7 +138,6 @@ void TEST(Contacts){
     G.setJointState(x);
     G.calcBodyFramesFromJoints();
     swift.computeProxies(G,false);
-    G.sortProxies(true);
 
     G.reportProxies();
 

@@ -127,7 +127,6 @@ void Simulator::setJointAnglesAndVels(const arr& q, const arr& qdot){
   s->G.setJointState(q, qdot);
   s->G.calcBodyFramesFromJoints();
   s->swift.computeProxies(s->G, false);
-  s->G.sortProxies(true);
   s->gl.update();
   if(&q!=&s->q) s->q = q;
   if(&qdot!=&s->qdot) s->qdot = qdot;

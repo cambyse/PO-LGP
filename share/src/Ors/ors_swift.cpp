@@ -287,7 +287,7 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
     if(num_contacts[i]==-1) k++;
   }
   
-  listResize(C.proxies,k);
+  listResize(C.proxies, k);
   
   //add contacts to list
   ors::Proxy *proxy;
@@ -377,8 +377,6 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
       proxy->normal.normalize();
     }
   }
-  
-  C.sortProxies();
 }
 
 void SwiftInterface::computeProxies(ors::Graph& C, bool dumpReport) {
