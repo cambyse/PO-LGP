@@ -25,7 +25,7 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::Graph& G){
         p->colorCode = 1;
       }
       break;
-    case allListedPTMT:
+    case listedVsListedPTMT:
       for_list(i,p,G.proxies)  if(p->d<margin) {
         if(shapes.contains(p->a) && shapes.contains(p->b)) {
           addAContact(y(0), J, p, G, margin, useCenterDist);
@@ -112,7 +112,7 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::Graph& G){
 uint ProxyTaskMap::dim_phi(const ors::Graph& G){
   switch(type) {
   case allPTMT:
-  case allListedPTMT:
+  case listedVsListedPTMT:
   case allVersusListedPTMT:
   case allExceptListedPTMT:
   case bipartitePTMT:

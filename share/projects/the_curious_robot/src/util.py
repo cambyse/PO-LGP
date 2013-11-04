@@ -54,20 +54,53 @@ class Properties():
                         callable(getattr(self, attr)))]
 
 
-#########################################################################
+############################################################################
+# Note:
+# The vanialla ors __str__ spits out the "content" of the ors datatype
+# but it does not contain the name (and some other information). Therefore we
+# have a bunch of parse_DATATYPE_msg and create_DATATYPE_msg function.
+#
+# TODO: find something better than str to transport ors datastructures!
+
+############################################################################
 # msg parser/builder
-def parse_body_msg(msg):
+def parse_body_msg(body_str):
+    """
+    Transform the string representation into an ors.Body.
+    """
     body = ors.Body()
-    body_list = msg.split(' ', 1)
-    body.name = body_list[0]
-    body.read(body_list[1])
+    name, properties = body_str.split(' ', 1)
+    body.name = name
+    body.read(properties)
     return body
 
 
 def create_body_msg(body):
+    """
+    Transform the ors body into a sensible string representation.
+
+    The vanialla ors __str__ spits out the "content" of the ors datatype but
+    does not contain the name.
+    """
     return body.name + ' ' + str(body)
 
 
+#########################################################################
+def parse_shape_msg(all_shapes_msg):
+    result = []
+    for shape_str in all_shapes_msg.shapes:
+        name, idx, properties = shape_str.split(" ", 2)
+        shape = ors.Shape()
+        shape.read(properties)
+        result.append(shape)
+    return result
+
+
+def create_shape_msg(shape):
+    return "{} {} {}".format(shape.body.name, str(shape.index), str(shape))
+
+
+#########################################################################
 def parse_property_msg(msg):
     properties = Properties()
     for p in msg:
@@ -86,6 +119,7 @@ def create_properties_msg(properties):
     return result
 
 
+#########################################################################
 def parse_ooi_msg(msg):
     body = parse_body_msg(msg.body)
     properties = parse_property_msg(msg.properties)
@@ -101,6 +135,7 @@ def create_ooi_msg(body, properties):
     return msg
 
 
+#########################################################################
 def parse_oois_msg(msg):
     objects = []
     for obj in msg.objects:
@@ -115,6 +150,7 @@ def create_oois_msg(objects):
     return msg
 
 
+#########################################################################
 def parse_trajectory_msg(msg):
     trajectory = []
     for p in msg.pos:
@@ -138,6 +174,7 @@ def create_trajectory_msg(obj_id, pos):
     return msg
 
 
+#########################################################################
 def create_track_msg(trajectory):
     msg = TrackMsg()
     msg.header.stamp = rospy.get_rostime()

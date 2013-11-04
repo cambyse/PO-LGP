@@ -119,10 +119,9 @@ struct Body {
     type=b.type; mass=b.mass; inertia=b.inertia; com=b.com; force=b.force; torque=b.torque;
   }
   void reset();
-  void parseAts();
+  void parseAts(Graph& G);
   void write(std::ostream& os) const;
   void read(std::istream& is);
-  void read(const char* string);
 };
 
 /// a joint
@@ -134,13 +133,13 @@ struct Joint {
   Joint *coupledTo;     ///< if non-NULL, this joint's state is identical to another's
 
   MT::String name;      ///< name
-  JointType type;            ///< joint type
-  Transformation A;          ///< transformation from parent body to joint (attachment, usually static)
-  Transformation Q;          ///< transformation within the joint (usually dynamic)
-  Transformation B;          ///< transformation from joint to child body (attachment, usually static)
-  Transformation X;          ///< joint pose in world coordinates (same as from->X*A)
-  Vector axis;               ///< joint axis (same as X.rot.getX() for standard hinge joints)
-  KeyValueGraph ats;         ///< list of any-type attributes
+  JointType type;       ///< joint type
+  Transformation A;     ///< transformation from parent body to joint (attachment, usually static)
+  Transformation Q;     ///< transformation within the joint (usually dynamic)
+  Transformation B;     ///< transformation from joint to child body (attachment, usually static)
+  Transformation X;     ///< joint pose in world coordinates (same as from->X*A)
+  Vector axis;          ///< joint axis (same as X.rot.getX() for standard hinge joints)
+  KeyValueGraph ats;    ///< list of any-type attributes
   
   Joint();
   explicit Joint(const Joint& j);
@@ -167,24 +166,22 @@ struct Shape {
   
   MT::String name;     ///< name
   Transformation X;
-  Transformation rel;      ///< relative translation/rotation of the bodies geometry
+  Transformation rel;  ///< relative translation/rotation of the bodies geometry
   ShapeType type;
-  double size[4];
-  double color[3];
+  double size[4];  //TODO: obsolete: directly translate to mesh?
+  double color[3]; //TODO: obsolete: directly translate to mesh?
   Mesh mesh;
-  bool cont;      ///< are contacts registered (or filtered in the callback)
-  Vector contactOrientation;
-  KeyValueGraph ats;    ///< list of any-type attributes
+  bool cont;           ///< are contacts registered (or filtered in the callback)
+  KeyValueGraph ats;   ///< list of any-type attributes
   
   Shape();
   explicit Shape(const Shape& s);
-  explicit Shape(Body *body);
-  explicit Shape(Graph& G, Body *b, const Shape *copyShape=NULL); //new Shape, being added to graph and body's shape lists
+  explicit Shape(Graph& G, Body& b, const Shape *copyShape=NULL); //new Shape, being added to graph and body's shape lists
   ~Shape();
   void operator=(const Shape& s) {
     index=s.index; ibody=s.ibody; body=NULL; name=s.name; X=s.X; rel=s.rel; type=s.type;
     memmove(size, s.size, 4*sizeof(double)); memmove(color, s.color, 3*sizeof(double));
-    mesh=s.mesh; cont=s.cont; contactOrientation=s.contactOrientation;
+    mesh=s.mesh; cont=s.cont;
     ats=s.ats;
   }
   void reset();
@@ -213,8 +210,9 @@ struct Graph {
   MT::Array<Joint*> joints;
   MT::Array<Shape*> shapes;
   MT::Array<Proxy*> proxies; ///< list of current proximities between bodies
+
   uint q_dim; ///< numer of degrees of freedom IN the joints (not counting root body)
-  arr Qlin, Qoff, Qinv; ///< linear transformations of q
+  arr Qlin, Qoff, Qinv; ///< linear transformations of q TODO: isn't this obsolete?
   bool isLinkTree;
   
   /// @name constructors
@@ -225,8 +223,8 @@ struct Graph {
   }
   ~Graph() { clear(); }
   void operator=(const ors::Graph& G);
-  Graph* newClone() const;
-  void copyShapesAndJoints(const Graph& G);
+  Graph* newClone() const; //TODO: obsolete?
+  void copyShapesAndJoints(const Graph& G); //TODO: obsolete?
   
   /// @name initializations
   void init(const char* filename);
@@ -241,9 +239,9 @@ struct Graph {
   void topSort(){ graphTopsort(bodies, joints); for_list_(Shape, s, shapes) s->ibody=s->body->index; }
   void glueBodies(Body *a, Body *b);
   void glueTouchingBodies();
-  void addObject(Body *b);
+  void addObject(Body *b); //TODO: What the heck?? Obsolete!
   void removeNonShapeBodies();
-  void meldFixedJoint();
+  void meldFixedJoints();
   
   /// @name computations on the DoFs
   void calcBodyFramesFromJoints();
@@ -305,10 +303,10 @@ struct Graph {
   
   /// @name I/O
   void reportProxies(std::ostream *os=&std::cout);
-  void reportGlue(std::ostream *os=&std::cout);
+  void reportGlue(std::ostream *os=&std::cout); //TODO: obsolete
   
   /// @name managing the data
-  void sortProxies(bool deleteMultiple=false);
+  void sortProxies(bool deleteMultiple=false); //TODO: obsolete
   bool checkUniqueNames() const;
   
   
@@ -316,18 +314,26 @@ struct Graph {
   Shape *getShapeByName(const char* name) const;
   Joint *getJointByName(const char* name) const;
   Joint *getJointByBodyNames(const char* from, const char* to) const;
-  //uint getBodyIndexByName(const char* name) const;
-  //uint getShapeIndexByName(const char* name) const;
   void prefixNames();
   
   void write(std::ostream& os) const;
   void read(std::istream& is);
-  void read(const char* filename);
   void writePlyFile(const char* filename) const;
   void glDraw();
 };
 /** @} */ // END of group ors_basic_data_structures
 } // END ors namespace
+
+
+//===========================================================================
+//
+// constants
+//
+
+extern ors::Body& NoBody;
+extern ors::Shape& NoShape;
+extern ors::Joint& NoJoint;
+extern ors::Graph& NoGraph;
 
 
 //===========================================================================
@@ -338,9 +344,11 @@ struct Graph {
 namespace ors {
 std::istream& operator>>(std::istream&, Body&);
 std::istream& operator>>(std::istream&, Joint&);
+std::istream& operator>>(std::istream&, Shape&);
 std::istream& operator>>(std::istream&, Proxy&);
 std::ostream& operator<<(std::ostream&, const Body&);
 std::ostream& operator<<(std::ostream&, const Joint&);
+std::ostream& operator<<(std::ostream&, const Shape&);
 std::ostream& operator<<(std::ostream&, const Proxy&);
 stdPipes(Graph);
 }
@@ -634,7 +642,7 @@ extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawM
 extern uint orsDrawLimit;
 
 void displayState(const arr& x, ors::Graph& G, OpenGL& gl, const char *tag);
-void displayTrajectory(const arr& x, int steps, ors::Graph& G, OpenGL& gl, const char *tag);
+void displayTrajectory(const arr& x, int steps, ors::Graph& G, OpenGL& gl, const char *tag, double delay=0.);
 void editConfiguration(const char* orsfile, ors::Graph& G, OpenGL& gl);
 void animateConfiguration(ors::Graph& G, OpenGL& gl);
 void init(ors::Graph& G, OpenGL& gl, const char* orsFile);

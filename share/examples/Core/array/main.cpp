@@ -72,10 +72,10 @@ void TEST(Basics){
   for(uint i=0;i<a.N-1;i++) CHECK(a(i)<=a(i+1),"not sorted!");
 
   //commuting I/O-operators:
-  a.resize(3,7);
+  a.resize(3,7,2);
   arr b;
   rndInteger(a,1,9,false);
-  cout <<"\nbefore save/load:" <<a <<endl;
+  cout <<"\nbefore save/load: " <<a <<endl;
 
   ofstream of("z.tmp");
   of <<a;
@@ -85,7 +85,7 @@ void TEST(Basics){
   inf >>b;
   inf.close();
 
-  cout <<"\nafter saved and loaded from a file:" <<b <<endl;
+  cout <<"\nafter saved and loaded from a file: " <<b <<endl;
   CHECK_ZERO(maxDiff(a,b), 1e-4, "non-exact save load");
 }
 
@@ -573,6 +573,7 @@ int MAIN(int argc, char *argv[]){
   testCheatSheet();
 
   testBasics();
+  return 0;
   testInitializationList();
   testSimpleIterators();
   testRowsAndColumsAccess();

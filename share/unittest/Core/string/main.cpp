@@ -44,6 +44,51 @@ TEST(StringGetFirstN, RequestTooManyChars) {
 }
 
 //=============================================================================
+TEST(StringStartsWith, PosExamples) {
+  MT::String fullString("this is a long string");
+
+  EXPECT_TRUE(fullString.startsWith("t"));
+  EXPECT_TRUE(fullString.startsWith(String("t")));
+
+  EXPECT_TRUE(fullString.startsWith("this"));
+  EXPECT_TRUE(fullString.startsWith(String("this")));
+
+  EXPECT_TRUE(fullString.startsWith("this is"));
+  EXPECT_TRUE(fullString.startsWith(String("this is")));
+}
+
+TEST(StringStartsWith, NegExamples) {
+  MT::String fullString("this is a long string");
+
+  EXPECT_FALSE(fullString.startsWith(("b")));
+  EXPECT_FALSE(fullString.startsWith(String("b")));
+
+  EXPECT_FALSE(fullString.startsWith("is"));
+  EXPECT_FALSE(fullString.startsWith(String("is")));
+
+  EXPECT_FALSE(fullString.startsWith("ntiearnsto"));
+  EXPECT_FALSE(fullString.startsWith(String("ntiearnsto")));
+}
+
+//=============================================================================
+TEST(StringEndsWith, PosExamples) {
+  MT::String fullString("this is a long string");
+
+  EXPECT_TRUE(fullString.endsWith("g"));
+  EXPECT_TRUE(fullString.endsWith(String("g")));
+
+  EXPECT_TRUE(fullString.endsWith("string"));
+  EXPECT_TRUE(fullString.endsWith(String("string")));
+}
+
+TEST(StringEndsWith, NegExamples) {
+  MT::String fullString("this is a long string");
+
+  EXPECT_FALSE(fullString.endsWith("somethig"));
+  EXPECT_FALSE(fullString.endsWith(String("something")));
+}
+
+//=============================================================================
 GTEST_API_ int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

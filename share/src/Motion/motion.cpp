@@ -120,19 +120,33 @@ void MotionProblem::setInterpolatingCosts(
   arr y0;
   c->map.phi(y0, NoArr, *ors);
   //TODO: cleaner, next 3 lines
-  arr midTarget(m),finTarget(y_finalTarget);
-  if(&y_midTarget && y_midTarget.N==1) midTarget = y_midTarget(0);
-  if(y_finalTarget.N==1) { finTarget.resize(m);  finTarget = y_finalTarget(0); }
+  arr midTarget(m),finTarget(m);
+  if(&y_finalTarget){ if(y_finalTarget.N==1) finTarget = y_finalTarget(0); else finTarget=y_finalTarget; }
+  if(&y_midTarget){   if(y_midTarget.N==1)   midTarget = y_midTarget(0);   else midTarget=y_midTarget; }
   switch(inType) {
-    case constFinalMid: {
+    case constant: {
       c->y_target.resize(T+1, m);
-      c->y_target[T]() = finTarget;
-      for(uint t=0; t<T; t++) c->y_target[t]() = (&y_midTarget) ? midTarget : finTarget;
+      for(uint t=0; t<=T; t++) c->y_target[t]() = finTarget;
       c->y_prec.resize(T+1);
-      c->y_prec = y_midPrec<0. ? y_finalPrec : y_midPrec;
+      c->y_prec = y_finalPrec;
+    } break;
+    case finalOnly: {
+      c->y_target.resize(T+1, m);
+      c->y_target.setZero();
+      c->y_target[T]() = finTarget;
+      c->y_prec.resize(T+1);
+      c->y_prec.setZero();
       c->y_prec(T) = y_finalPrec;
     } break;
-    case linearInterpolation: {
+    case final_restConst: {
+      c->y_target.resize(T+1, m);
+      c->y_target[T]() = finTarget;
+      for(uint t=0; t<T; t++) c->y_target[t]() = midTarget;
+      c->y_prec.resize(T+1);
+      c->y_prec = y_midPrec<=0. ? 0. : y_midPrec;
+      c->y_prec(T) = y_finalPrec;
+    } break;
+    case final_restLinInterpolated: {
       c->y_target.resize(T+1, m);
       for(uint t=0; t<=T; t++) {
         double a = (double)t/T;
@@ -170,18 +184,32 @@ void MotionProblem::setInterpolatingVelCosts(
   c->map.phi(y0, J, *ors);
   yv0 = J * v0;
   arr midTarget(m), finTarget(m);
-  if(&v_finalTarget && v_finalTarget.N==1) finTarget = v_finalTarget(0); else finTarget=v_finalTarget;
-  if(&v_midTarget && v_midTarget.N==1) midTarget = v_midTarget(0); else midTarget=v_midTarget;
+  if(&v_finalTarget){ if(v_finalTarget.N==1) finTarget = v_finalTarget(0); else finTarget=v_finalTarget; }
+  if(&v_midTarget){   if(v_midTarget.N==1)   midTarget = v_midTarget(0); else midTarget=v_midTarget; }
   switch(inType) {
-    case constFinalMid: {
+    case constant: {
       c->v_target.resize(T+1, m);
-      c->v_target[T]() = finTarget;
-      for(uint t=0; t<T; t++) c->v_target[t]() = (&v_midTarget) ? midTarget : finTarget;
+      for(uint t=0; t<=T; t++) c->v_target[t]() = finTarget;
       c->v_prec.resize(T+1);
-      c->v_prec = v_midPrec<0. ? v_finalPrec : v_midPrec;
+      c->v_prec = v_finalPrec;
+    } break;
+    case finalOnly: {
+      c->v_target.resize(T+1, m);
+      c->v_target.setZero();
+      c->v_target[T]() = finTarget;
+      c->v_prec.resize(T+1);
+      c->v_prec.setZero();
       c->v_prec(T) = v_finalPrec;
     } break;
-    case linearInterpolation: {
+    case final_restConst: {
+      c->v_target.resize(T+1, m);
+      c->v_target[T]() = finTarget;
+      for(uint t=0; t<T; t++) c->v_target[t]() = midTarget;
+      c->v_prec.resize(T+1);
+      c->v_prec = v_midPrec<=0. ? 0. : v_midPrec;
+      c->v_prec(T) = v_finalPrec;
+    } break;
+    case final_restLinInterpolated: {
       c->v_target.resize(T+1, m);
       for(uint t=0; t<=T; t++) {
         double a = (double)t/T;
@@ -358,38 +386,49 @@ arr MotionProblemFunction::get_prefix() {
 }
 
 void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
-  uint n=dim_x();
-  CHECK(x_bar.d0==3 && x_bar.d1==n,"");
-  arr q_2(x_bar,0); //this is q(t-2)
-  arr q_1(x_bar,1);
-  arr q_0(x_bar,2);
+  uint T=get_T(), n=dim_x(), k=get_k();
+
+  //assert some dimensions
+  CHECK(x_bar.d0==k+1,"");
+  CHECK(x_bar.d1==n,"");
+  CHECK(t<=T,"");
+
   double tau=P.tau;
   double _tau2=1./(tau*tau);
   
-  //dynamics
+  //-- transition costs
   arr h = sqrt(P.H_rate_diag)*sqrt(tau);
-  phi = h % (_tau2*(q_0-2.*q_1+q_2)); //penalize acceleration
-  if(&J) { //we todoalso need to return the Jacobian
-    J.resize(n,3,n);
+  if(k==1)  phi = x_bar[1]-x_bar[0]; //penalize velocity
+  if(k==2)  phi = x_bar[2]-2.*x_bar[1]+x_bar[0]; //penalize acceleration
+  if(k==3)  phi = x_bar[3]-3.*x_bar[2]+3.*x_bar[1]-x_bar[0]; //penalize jerk
+  phi = h % (_tau2*phi);
+
+  if(&J) {
+    J.resize(phi.N, k+1, n);
     J.setZero();
-    for(uint i=0; i<n; i++) {  J(i,2,i) = 1.;  J(i,1,i) = -2.;  J(i,0,i) = 1.; }
+    for(uint i=0;i<n;i++){
+      if(k==1){ J(i,1,i) = 1.;  J(i,0,i) = -1.; }
+      if(k==2){ J(i,2,i) = 1.;  J(i,1,i) = -2.;  J(i,0,i) = 1.; }
+      if(k==3){ J(i,3,i) = 1.;  J(i,2,i) = -3.;  J(i,1,i) = +3.;  J(i,0,i) = -1.; }
+    }
     J *= _tau2;
-    J.reshape(n,3*n);
+    J.reshape(phi.N, (k+1)*n);
     for(uint i=0; i<n; i++) J[i]() *= h(i);
   }
   
   if(&J) CHECK(J.d0==phi.N,"");
-  
-  //task phi w.r.t. q1
+
+  //-- task cost (which are taken w.r.t. x_bar[k])
   arr _phi, J_x, J_v;
-  P.setState(q_0, (q_0-q_1)/tau);
+  if(k>0) P.setState(x_bar[k], (x_bar[k]-x_bar[k-1])/tau);
+  else    P.setState(x_bar[k], NoArr); //don't set velocities
   P.getTaskCosts(_phi, J_x, J_v, t);
   phi.append(_phi);
   if(&J && _phi.N) {
-    arr Japp(_phi.N,3*n);
+    arr Japp(_phi.N, (k+1)*n);
     Japp.setZero();
-    Japp.setMatrixBlock(J_x + (1./tau)*J_v, 0, 2*n);  //w.r.t. q_0
-    Japp.setMatrixBlock((-1./tau)*J_v, 0, n); //w.r.t. q_1
+    Japp.setMatrixBlock(J_x + (1./tau)*J_v, 0,  k*n   ); //w.r.t. x_bar[k]
+    Japp.setMatrixBlock(     (-1./tau)*J_v, 0, (k-1)*n); //w.r.t. x_bar[k-1]
     J.append(Japp);
   }
   

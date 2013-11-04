@@ -50,7 +50,7 @@ class PickOOIActionServer:
         # self.world_belief_sub = rospy.Subscriber ...
         # Services
         self.request_all_shapes = rospy.ServiceProxy('all_shapes',
-                                                     srv.all_shapes)
+                                                     srv.AllShapes)
         # Publisher
         self.ooi_id_pub = rospy.Publisher('ooi_id', tcr.msg.ObjectID)
 
@@ -72,14 +72,15 @@ class PickOOIActionServer:
         rp.Provide("PickOOI")
 
     def execute(self, msg):
-        all_shapes = self.request_all_shapes()
+        all_shapes_msg = self.request_all_shapes()
+        all_shapes = util.parse_shape_msg(all_shapes_msg)
         print all_shapes
 
         # GUARD
         if self.oois is None:
             self.server.set_aborted()
             return
-        if self.all_shapes is None:
+        if all_shapes is None:
             self.server.set_aborted()
             return
 

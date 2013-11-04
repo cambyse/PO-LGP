@@ -4,7 +4,6 @@ body door1-frame {
   mesh="door_model/frame_hacd.obj"
   meshscale=.01
   fixed
-  contact
 }
 body target {
   type=3
@@ -12,14 +11,12 @@ body target {
   meshscale=.01
   color=[1 0 0]
   mass=2000000
-  contact
 }
 body door1-handle {
   type=3
   mesh='door_model/handle_hacd.obj'
   meshscale=.01
   color=[0 0 0]
-  contact
 }
 #joint (door1-frame, door1-door) {
   #A=<T t(.46 0 0) d(90 0 1 0)>
@@ -39,7 +36,6 @@ body door2-frame {
   mesh="door_model/frame_hacd.obj"
   meshscale=.01
   fixed
-  contact
 }
 body door2-door {
   X=<T t(-2 -2 0) d(90 0 0 1)>
@@ -47,7 +43,6 @@ body door2-door {
   meshscale=.01
   color=[1 0 0]
   mass=2000000
-#  contact
 }
 body door2-handle {
   X=<T t(-2 -2 0) d(90 0 0 1)>
@@ -55,7 +50,6 @@ body door2-handle {
   mesh='door_model/handle_hacd.obj'
   meshscale=.01
   color=[0 0 0]
-  contact
 }
 #joint (door2-frame, door2-door) {
   #A=<T t(.46 0 0) d(90 0 1 0)>
@@ -82,7 +76,7 @@ body door3-door {
   type=3 mesh='door_model/door_hacd.obj'
   meshscale=.01
   color=[1 0 0]
-#  contact
+  contact
 }
 body door3-handle {
   X=<T t(2 0 0)>

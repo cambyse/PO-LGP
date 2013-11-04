@@ -115,9 +115,11 @@ void glDrawShape(ors::Shape *s) {
           s->mesh.scale(s->size[3], s->size[3], s->size[3]);
           break;
         case ors::cylinderST:
+          CHECK(s->size[3]>1e-10,"");
           s->mesh.setCylinder(s->size[3], s->size[2]);
           break;
         case ors::cappedCylinderST:
+          CHECK(s->size[3]>1e-10,"");
           s->mesh.setCappedCylinder(s->size[3], s->size[2]);
           break;
         case ors::markerST:
@@ -282,7 +284,7 @@ void displayState(const arr& x, ors::Graph& G, OpenGL& gl, const char *tag){
   gl.watch(tag);
 }
 
-void displayTrajectory(const arr& x, int steps, ors::Graph& G, OpenGL& gl, const char *tag) {
+void displayTrajectory(const arr& x, int steps, ors::Graph& G, OpenGL& gl, const char *tag, double delay) {
   uint k, t, T=x.d0-1;
   if(!steps) return;
   uint num;
@@ -292,6 +294,7 @@ void displayTrajectory(const arr& x, int steps, ors::Graph& G, OpenGL& gl, const
     G.setJointState(x[t]);
     G.calcBodyFramesFromJoints();
     gl.update(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
+    if(delay) MT::wait(delay);
   }
   if(steps==1)
     gl.watch(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
