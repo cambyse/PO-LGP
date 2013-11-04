@@ -369,12 +369,57 @@ void MotionProblem::costReport() {
     }
     cout <<endl;
   }
+  CHECK(m == costMatrix.d1, "");
+
   cout <<"\t total task        = " <<taskC <<endl;
   cout <<"\t total trans       = " <<transC <<endl;
   cout <<"\t total task+trans  = " <<taskC+transC <<endl;
   cout <<"\t total constraints = " <<constraintViolations <<endl;
 
-  CHECK(m == costMatrix.d1, "");
+  //-- write a nice gnuplot file
+  ofstream fil("z.costReport");
+  fil <<"trans ";
+  for(auto c:taskCosts){
+    uint d=c->map.dim_phi(*ors);
+    if(c->y_target.N)
+      fil <<c->name <<'[' <<d <<"] ";
+    if(transitionType!=kinematic && c->v_target.N)
+      fil <<c->name <<"_vel[" <<d <<"] ";
+  }
+  fil <<endl;
+  for(uint t=0;t<costMatrix.d0;t++){
+    double tc=sumOfSqr(costMatrix.sub(t,t,0,dim_psi()-1));
+    fil <<sqrt(tc) <<' ';
+    m=dim_psi();
+    for(auto c:taskCosts){
+      uint d=c->map.dim_phi(*ors);
+      if(c->y_target.N) {
+        double tc=sumOfSqr(costMatrix.sub(t,t,m,m+d-1));
+        fil <<sqrt(tc) <<' ';
+        m += d;
+      }
+      if(transitionType!=kinematic && c->v_target.N) {
+        double tc=sumOfSqr(costMatrix.sub(t,t,m,m+d-1));
+        fil <<sqrt(tc) <<' ';
+        m += d;
+      }
+    }
+    fil <<endl;
+  }
+  fil.close();
+
+  ofstream fil2("z.costReport.plt");
+  fil2 <<"set key autotitle columnheader" <<endl;
+  fil2 <<"set title 'costReport ( plotting sqrt(costs) )'" <<endl;
+  fil2 <<"plot 'z.costReport' u 0:1 w l \\" <<endl;
+  uint i=1;
+  for(auto c:taskCosts){
+    if(c->y_target.N){ i++; fil2 <<"  ,'' u 0:"<<i<<" w l \\" <<endl; }
+    if(transitionType!=kinematic && c->v_target.N){ i++; fil2 <<"  ,'' u 0:"<<i<<" w l \\" <<endl; }
+  }
+  fil2 <<endl;
+  fil2.close();
+
 }
 
 //===========================================================================

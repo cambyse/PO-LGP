@@ -60,14 +60,15 @@ int main(int argn,char** argv){
     checkJacobian(Convert(F), x, 1e-5);
   }
   
-  OpenGL costs(STRING("PHI ("<<F.dim_phi(0)<<" tasks)"), 3*T+10, 3*F.dim_phi(0)+10 );
+//  OpenGL costs(STRING("PHI ("<<F.dim_phi(0)<<" tasks)"), 3*T+10, 3*F.dim_phi(0)+10 );
   //-- optimize
   for(uint k=0;k<10;k++){
     optNewton(x, Convert(F), OPT(verbose=2, stopIters=40, useAdaptiveDamping=false, damping=1e-0, maxStep=1.));
-//    costs.displayRedBlue(~sqr(P.costMatrix), false, 3);
+    //costs.displayRedBlue(~sqr(P.costMatrix), false, 3);
     P.costReport();
     write(LIST<arr>(x),"z.output");
-    gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", false, true);
+    //gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", false, true);
+    gnuplot("load 'z.costReport.plt'", false, true);
     displayTrajectory(x, 1, G, gl,"planned trajectory", 0.01);
   }
   
