@@ -788,6 +788,8 @@ void ors::Graph::getJointState(arr& x, arr& v) const {
 /** @brief returns the joint positions only */
 void ors::Graph::getJointState(arr& x) const { getJointState(x, NoArr); }
 
+arr ors::Graph::getJointState() const { arr q; getJointState(q, NoArr); return q; }
+
 /** @brief sets the joint state vectors separated in positions and
   velocities */
 void ors::Graph::setJointState(const arr& _q, const arr& _v, bool clearJointErrors) {
@@ -1749,7 +1751,7 @@ void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph& ors, 
   ors::Vector arel, brel;
   //arr Ja, Jb, dnormal;
 
-  double cenMarg = 2.;
+  double cenMarg = 20.;
 
   CHECK(p->cenD<.8*cenMarg, "sorry I made assumption objects are not too large; rescale cenMarg");
   a=ors.shapes(p->a); b=ors.shapes(p->b);

@@ -274,6 +274,7 @@ struct Graph {
   uint getJointStateDimension(bool internal=false) const;
   void getJointState(arr& x, arr& v) const;
   void getJointState(arr& x) const;
+  arr getJointState() const;
   void getContactConstraints(arr& y) const;
   void getContactConstraintsGradient(arr &dydq) const;
   //void getContactMeasure(arr &x, double margin=.02, bool linear=false) const;
