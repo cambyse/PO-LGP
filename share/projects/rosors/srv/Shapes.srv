@@ -1,4 +1,6 @@
-# request an ors.shape by name
+# request shapes by propeties
+string index
+string index_body
 string name
 
 ---

@@ -14,6 +14,10 @@ class RosOrs(object):
     """
     RosOrs represents a ors graph and provieds service calls to query the
     state of the graph.
+
+    Supported information:
+        - Body
+        - Shape
     """
 
     def __init__(self, orsfile, srv_prefix):
@@ -49,7 +53,11 @@ class RosOrs(object):
         rospy.logdebug("handling shapes request")
         res = rosors.srv.ShapesResponse()
         # special shape requested
-        if req.name:
+        if req.index:
+            raise NotImplementedError("get by index is not implemented")
+        if req.index_body:
+            raise NotImplementedError("get by index_body is not implemented")
+        elif req.name:
             ors_shape = self.graph.getShapeByName(req.name)
             res.bodies.append(self.ors_shape_to_msg(ors_shape))
             return res
