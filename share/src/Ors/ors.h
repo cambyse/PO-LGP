@@ -172,6 +172,7 @@ struct Shape {
   double size[4];  //TODO: obsolete: directly translate to mesh?
   double color[3]; //TODO: obsolete: directly translate to mesh?
   Mesh mesh;
+  double mesh_radius;
   bool cont;           ///< are contacts registered (or filtered in the callback)
   KeyValueGraph ats;   ///< list of any-type attributes
   
@@ -182,7 +183,7 @@ struct Shape {
   void operator=(const Shape& s) {
     index=s.index; ibody=s.ibody; body=NULL; name=s.name; X=s.X; rel=s.rel; type=s.type;
     memmove(size, s.size, 4*sizeof(double)); memmove(color, s.color, 3*sizeof(double));
-    mesh=s.mesh; cont=s.cont;
+    mesh=s.mesh; mesh_radius=s.mesh_radius; cont=s.cont;
     ats=s.ats;
   }
   void reset();

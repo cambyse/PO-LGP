@@ -263,13 +263,11 @@ void Mesh::translate(double dx, double dy, double dz) {
   for(i=0; i<V.d0; i++) {  V(i, 0)+=dx;  V(i, 1)+=dy;  V(i, 2)+=dz;  }
 }
 
-void Mesh::center() {
-  arr mean(3);
-  mean.setZero();
-  uint i;
-  for(i=0; i<V.d0; i++) mean += V[i];
-  mean /= (double)V.d0;
-  for(i=0; i<V.d0; i++) V[i]() -= mean;
+Vector Mesh::center() {
+  arr Vmean = sum(V,0);
+  Vmean /= (double)V.d0;
+  for(uint i=0; i<V.d0; i++) V[i]() -= Vmean;
+  return Vector(Vmean);
 }
 
 void Mesh::box() {
@@ -791,10 +789,16 @@ void Mesh::skin(uint start) {
   cout <<T <<endl;
 }
 
-ors::Vector Mesh::getMeanVertex() {
+Vector Mesh::getMeanVertex() {
   arr Vmean = sum(V,0);
   Vmean /= (double)V.d0;
-  return ors::Vector(Vmean);
+  return Vector(Vmean);
+}
+
+double Mesh::getRadius() {
+  double r=0.;
+  for(uint i=0;i<V.d0;i++) r=MT::MAX(r, sumOfSqr(V[i]));
+  return sqrt(r);
 }
 
 void Mesh::write(std::ostream& os) const {

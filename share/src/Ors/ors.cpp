@@ -230,6 +230,40 @@ void ors::Shape::parseAts() {
   if(ats.getValue<MT::String>(str, "mesh")) { mesh.readFile(str); }
   if(ats.getValue<double>(d, "meshscale"))  { mesh.scale(d); }
 
+  //create mesh for basic shapes
+  switch(type) {
+    case ors::noneST: HALT("shapes should have a type - somehow wrong initialization..."); break;
+    case ors::boxST:
+      mesh.setBox();
+      mesh.scale(size[0], size[1], size[2]);
+      break;
+    case ors::sphereST:
+      mesh.setSphere();
+      mesh.scale(size[3], size[3], size[3]);
+      break;
+    case ors::cylinderST:
+      CHECK(size[3]>1e-10,"");
+      mesh.setCylinder(size[3], size[2]);
+      break;
+    case ors::cappedCylinderST:
+      CHECK(size[3]>1e-10,"");
+      mesh.setCappedCylinder(size[3], size[2]);
+      break;
+    case ors::markerST:
+      break;
+    case ors::meshST:
+    case ors::pointCloudST:
+      CHECK(mesh.V.N, "mesh needs to be loaded to draw mesh object");
+      break;
+  }
+
+  //center the mesh:
+  if(mesh.V.N){
+    Vector c = mesh.center();
+    rel.addRelativeTranslation(c);
+    mesh_radius = mesh.getRadius();
+  }
+
   //add inertia to the body
   if(body) {
     Matrix I;
@@ -256,6 +290,7 @@ void ors::Shape::reset() {
   listDelete(ats);
   rel.setZero();
   mesh.V.clear();
+  mesh_radius=0.;
   cont=false;
 }
 
@@ -1647,14 +1682,20 @@ void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph& ors, 
   ors::Vector arel, brel;
   //arr Ja, Jb, dnormal;
 
-  double cenMarg = 5.;
+  a=ors.shapes(p->a);
+  b=ors.shapes(p->b);
+  CHECK(a->mesh_radius>0.,"");
+  CHECK(b->mesh_radius>0.,"");
+  double ab_radius = margin + 1.5*(a->mesh_radius+b->mesh_radius);
+  CHECK(p->d<(1.+1e-6)*margin, "something's really wierd here!");
+  CHECK(p->cenD<(1.+1e-6)*ab_radius, "something's really wierd here! You disproved the triangle inequality :-)");
 
-  CHECK(p->cenD<.8*cenMarg, "sorry I made assumption objects are not too large; rescale cenMarg");
-  a=ors.shapes(p->a); b=ors.shapes(p->b);
+  //TO RESET TO PREVIOUS BEHAVIOR:
+  //ab_radius = 5.;
 
   //costs
   double d1 = 1.-p->d/margin;
-  double d2 = 1.-p->cenD/cenMarg;
+  double d2 = 1.-p->cenD/ab_radius;
   //NORMALS ALWAYS GO FROM b TO a !!
   if(!useCenterDist) d2=1.;
   y += d1*d2;
@@ -1682,9 +1723,9 @@ void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph& ors, 
       arr cenN; cenN.referTo(&p->cenN.x, 3); cenN.reshape(1, 3);
         
       //grad on cenA
-      ors.jacobianPos(Jpos, a->body->index, &arel); J -= d1/cenMarg*(cenN*Jpos);
+      ors.jacobianPos(Jpos, a->body->index, &arel); J -= d1/ab_radius*(cenN*Jpos);
       //grad on cenB
-      ors.jacobianPos(Jpos, b->body->index, &brel); J += d1/cenMarg*(cenN*Jpos);
+      ors.jacobianPos(Jpos, b->body->index, &brel); J += d1/ab_radius*(cenN*Jpos);
     }
   }
 }
@@ -1693,51 +1734,10 @@ void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph& ors, 
 void ors::Graph::phiCollision(arr &y, arr& J, double margin, bool useCenterDist) const {
   y.resize(1);
   y=0.;
-  uint i;
-  Shape *a, *b;
-  ors::Vector normal;
-  double cenMarg = 2.;
-  arr Jpos;
   if(&J) J.resize(1, getJointStateDimension()).setZero();
-  for(i=0; i<proxies.N; i++) if(proxies(i)->d<margin) {
-      CHECK(proxies(i)->cenD<.8*cenMarg, "sorry I made assumption objects are not too large; rescale cenMarg");
-      a=shapes(proxies(i)->a); b=shapes(proxies(i)->b);
-
-      //costs
-      double d1 = 1.-proxies(i)->d/margin;
-      double d2 = 1.-proxies(i)->cenD/cenMarg;
-      //NORMALS ALWAYS GO FROM b TO a !!
-      if(!useCenterDist) d2=1.;
-      y(0) += d1*d2;
-      
-      //Jacobian
-      if(&J) {
-        if(proxies(i)->d>0.) { //we have a gradient on pos only when outside
-          ors::Vector arel=a->X.rot/(proxies(i)->posA-a->X.pos);
-          ors::Vector brel=b->X.rot/(proxies(i)->posB-b->X.pos);
-          CHECK(proxies(i)->normal.isNormalized(), "proxy normal is not normalized");
-          arr posN; posN.referTo(proxies(i)->normal.p(), 3); posN.reshape(1, 3);
-          
-          //grad on posA
-          jacobianPos(Jpos, a->body->index, &arel); J -= d2/margin*(posN*Jpos);
-          //grad on posA
-          jacobianPos(Jpos, b->body->index, &brel); J += d2/margin*(posN*Jpos);
-        }
-        
-        if(useCenterDist){
-          ors::Vector arel=a->X.rot/(proxies(i)->cenA-a->X.pos);
-          ors::Vector brel=b->X.rot/(proxies(i)->cenB-b->X.pos);
-          CHECK(proxies(i)->cenN.isNormalized(), "proxy normal is not normalized");
-          arr cenN; cenN.referTo(proxies(i)->cenN.p(), 3); cenN.reshape(1, 3);
-        
-          //grad on cenA
-          jacobianPos(Jpos, a->body->index, &arel); J -= d1/cenMarg*(cenN*Jpos);
-          //grad on cenB
-          jacobianPos(Jpos, b->body->index, &brel); J += d1/cenMarg*(cenN*Jpos);
-        }
-      }
-      
-    }
+  for(uint i=0; i<proxies.N; i++) if(proxies(i)->d<margin) {
+    addAContact(y(0), J, proxies(i), *this, margin, useCenterDist);
+  }
 }
 
 #if 0 //obsolete:

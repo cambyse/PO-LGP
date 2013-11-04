@@ -19,6 +19,7 @@
 #ifndef MT_mesh_h
 #define MT_mesh_h
 
+#include <Core/array.h>
 #include <Core/geo.h>
 
 /// @file
@@ -62,7 +63,7 @@ struct Mesh {
   void scale(double f);
   void scale(double sx, double sy, double sz);
   void translate(double dx, double dy, double dz);
-  void center();
+  Vector center();
   void box();
   void addMesh(const ors::Mesh& mesh2);
   void makeConvexHull();
@@ -74,7 +75,8 @@ struct Mesh {
   void clean();
   void flipFaces();
   Vector getMeanVertex();
-  
+  double getRadius();
+
   //[preliminary]]
   void skin(uint i);
   
