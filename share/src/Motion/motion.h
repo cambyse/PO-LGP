@@ -70,6 +70,8 @@ struct TaskCost {
   bool active;
   arr y_target, y_prec;  ///< target & precision over a whole trajectory
   arr v_target, v_prec;  ///< velocity target & precision over a whole trajectory
+
+  double y_threshold, v_threshold; ///< threshold for feasibility checks
   
   TaskCost(TaskMap* m):map(*m), active(true) {}
 };
@@ -143,7 +145,7 @@ struct MotionProblem {
   uint dim_phi(uint t);
   uint dim_g(uint t);
   uint dim_psi();
-  void getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t); ///< the general (`big') task vector and its Jacobian
+  bool getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t); ///< the general (`big') task vector and its Jacobian
   void costReport();
   
   void setState(const arr& x, const arr& v);
