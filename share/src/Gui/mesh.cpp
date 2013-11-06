@@ -263,13 +263,11 @@ void Mesh::translate(double dx, double dy, double dz) {
   for(i=0; i<V.d0; i++) {  V(i, 0)+=dx;  V(i, 1)+=dy;  V(i, 2)+=dz;  }
 }
 
-void Mesh::center() {
-  arr mean(3);
-  mean.setZero();
-  uint i;
-  for(i=0; i<V.d0; i++) mean += V[i];
-  mean /= (double)V.d0;
-  for(i=0; i<V.d0; i++) V[i]() -= mean;
+Vector Mesh::center() {
+  arr Vmean = sum(V,0);
+  Vmean /= (double)V.d0;
+  for(uint i=0; i<V.d0; i++) V[i]() -= Vmean;
+  return Vector(Vmean);
 }
 
 void Mesh::box() {
@@ -334,32 +332,6 @@ void Mesh::computeNormals() {
   }
   Vector *d;
   for(i=0; i<Vn.d0; i++) { d=(Vector*)&Vn(i, 0); d->normalize(); }
-}
-
-void Mesh::makeVerticesRelativeToGroup() {
-  uint i;
-  int g;
-  Vector *v;
-  for(i=0; i<V.d0; i++) if((g=G(i))!=-1) {
-      v = (Vector*)&V(i, 0);
-      *v = GF(g)->rot/((*v) - GF(g)->pos);
-      v = (Vector*)&Vn(i, 0);
-      *v = GF(g)->rot/(*v);
-    }
-}
-
-void Mesh::collectTriGroups() {
-  uint i;
-  int g;
-  GT.resize(GF.N+1);
-  for(i=0; i<T.d0; i++) {
-    g=G(T(i, 0));
-    if(g!=-1 && g==G(T(i, 1)) && g==G(T(i, 2))) {
-      GT(g).append(i);
-    } else {
-      GT(GF.N).append(i);
-    }
-  }
 }
 
 /** @brief add triangles according to the given grid; grid has to be a 2D
@@ -817,10 +789,16 @@ void Mesh::skin(uint start) {
   cout <<T <<endl;
 }
 
-ors::Vector Mesh::getMeanVertex() {
+Vector Mesh::getMeanVertex() {
   arr Vmean = sum(V,0);
   Vmean /= (double)V.d0;
-  return ors::Vector(Vmean);
+  return Vector(Vmean);
+}
+
+double Mesh::getRadius() {
+  double r=0.;
+  for(uint i=0;i<V.d0;i++) r=MT::MAX(r, sumOfSqr(V[i]));
+  return sqrt(r);
 }
 
 void Mesh::write(std::ostream& os) const {
@@ -1391,87 +1369,20 @@ void Mesh::glDraw() {
     return;
   }
 #if 1
-  if(!GF.N) { //no group frames  ->  use OpenGL's Arrays for fast drawing...
-    GLboolean turnOnLight=false;
-    if(C.N) { glGetBooleanv(GL_LIGHTING, &turnOnLight); glDisable(GL_LIGHTING); }
-    
-    glShadeModel(GL_FLAT);
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_NORMAL_ARRAY);
-    if(C.N) glEnableClientState(GL_COLOR_ARRAY); else glDisableClientState(GL_COLOR_ARRAY);
-    glVertexPointer(3, GL_DOUBLE, 0, V.p);
-    if(C.N) glColorPointer(3, GL_DOUBLE, 0, C.p);
-    glNormalPointer(GL_DOUBLE, 0, Vn.p);
-    
-    glDrawElements(GL_TRIANGLES, T.N, GL_UNSIGNED_INT, T.p);
-    
-    if(turnOnLight) { glEnable(GL_LIGHTING); }
-  } else {
-    int g;
-    uint v, t, i, j;
-    double GLmatrix[16];
-    Vector w;
-    if(!GT.N) {
-      for(t=0; t<T.d0; t++) {
-        glPushName(t <<4);
-        glBegin(GL_TRIANGLES);
-        for(j=0; j<3; j++) {
-          v=T(t, j);
-          if(G.N) g=G(v); else g=-1;
-          w.set(&Vn(v, 0));
-          if(g!=-1) w=GF(g)->rot*w;
-          glNormal3dv(w.p());
-          if(C.N) glColor3dv(&C(v, 0));
-          w.set(&V(v, 0));
-          if(g!=-1) w=GF(g)->pos+GF(g)->rot*w;
-          glVertex3dv(w.p());
-        }
-        glEnd();
-        glPopName();
-      }
-    } else {
-      //faces that belong to one group only
-      for(g=0; g<(int)GT.N-1; g++) {
-        glPushMatrix();
-        GF(g)->getAffineMatrixGL(GLmatrix);
-        glLoadMatrixd(GLmatrix);
-        glBegin(GL_TRIANGLES);
-        for(i=0; i<GT(g).N; i++) {
-          t=GT(g)(i);
-          for(j=0; j<3; j++) {
-            v=T(t, j);
-            glNormal3dv(&Vn(v, 0));
-            if(C.N) glColor3dv(&C(v, 0));
-            glVertex3dv(&V(v, 0));
-          }
-        }
-        glEnd();
-        glPopMatrix();
-      }
-      //faces with vertices from different groups (transform each vertex individually)
-      glBegin(GL_TRIANGLES);
-      for(i=0; i<GT(GT.N-1).N; i++) {
-        t=GT(GT.N-1)(i);
-        for(j=0; j<3; j++) {
-          v=T(t, j);
-          g=G(v);
-          w.set(&Vn(v, 0));  if(g!=-1) w=GF(g)->rot*w;  glNormal3dv(w.p());
-          if(C.N) glColor3dv(&C(v, 0));
-          w.set(&V(v, 0));  if(g!=-1) w=GF(g)->pos+GF(g)->rot*w;  glVertex3dv(w.p());
-        }
-      }
-      glEnd();
-    }
-    /*for(j=0;j<strips.N;j++){
-      glBegin(GL_TRIANGLE_STRIP);
-      for(i=0;i<strips(j).N;i++){
-      glNormal3dv(&N(strips(j)(i), 0));
-      if(C.N) glColor3fv(C(strips(j)(i)));
-      glVertex3dv(&V(strips(j)(i), 0));
-    }
-      glEnd();
-    }*/
-  }
+  GLboolean turnOnLight=false;
+  if(C.N) { glGetBooleanv(GL_LIGHTING, &turnOnLight); glDisable(GL_LIGHTING); }
+
+  glShadeModel(GL_FLAT);
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glEnableClientState(GL_NORMAL_ARRAY);
+  if(C.N) glEnableClientState(GL_COLOR_ARRAY); else glDisableClientState(GL_COLOR_ARRAY);
+  glVertexPointer(3, GL_DOUBLE, 0, V.p);
+  if(C.N) glColorPointer(3, GL_DOUBLE, 0, C.p);
+  glNormalPointer(GL_DOUBLE, 0, Vn.p);
+
+  glDrawElements(GL_TRIANGLES, T.N, GL_UNSIGNED_INT, T.p);
+
+  if(turnOnLight) { glEnable(GL_LIGHTING); }
 #elif 0 //simple with vertex normals
   uint i, v;
   glShadeModel(GL_SMOOTH);

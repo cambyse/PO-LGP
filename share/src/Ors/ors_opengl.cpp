@@ -103,33 +103,6 @@ void glDrawShape(ors::Shape *s) {
     glDrawSphere(.1*scale);
   }
   if(orsDrawShapes) {
-    if(orsDrawMeshes && !s->mesh.V.N) {
-      switch(s->type) {
-        case ors::noneST: HALT("shapes should have a type - somehow wrong initialization..."); break;
-        case ors::boxST:
-          s->mesh.setBox();
-          s->mesh.scale(s->size[0], s->size[1], s->size[2]);
-          break;
-        case ors::sphereST:
-          s->mesh.setSphere();
-          s->mesh.scale(s->size[3], s->size[3], s->size[3]);
-          break;
-        case ors::cylinderST:
-          CHECK(s->size[3]>1e-10,"");
-          s->mesh.setCylinder(s->size[3], s->size[2]);
-          break;
-        case ors::cappedCylinderST:
-          CHECK(s->size[3]>1e-10,"");
-          s->mesh.setCappedCylinder(s->size[3], s->size[2]);
-          break;
-        case ors::markerST:
-          break;
-        case ors::meshST:
-        case ors::pointCloudST:
-          CHECK(s->mesh.V.N, "mesh needs to be loaded to draw mesh object");
-          break;
-      }
-    }
     switch(s->type) {
       case ors::noneST: break;
       case ors::boxST:
@@ -167,15 +140,6 @@ void glDrawShape(ors::Shape *s) {
     glBegin(GL_LINES);
     glVertex3d(0., 0., 0.);
     glVertex3d(0., 0., -s->X.pos.z);
-    glEnd();
-  }
-  if(!s->contactOrientation.isZero()) {
-    s->X.getAffineMatrixGL(GLmatrix);
-    glLoadMatrixd(GLmatrix);
-    glColor(0, .7, 0);
-    glBegin(GL_LINES);
-    glVertex3d(0., 0., 0.);
-    glVertex3d(.1*s->contactOrientation.x, .1*s->contactOrientation.y, .1*s->contactOrientation.z);
     glEnd();
   }
 

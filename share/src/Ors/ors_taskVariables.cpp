@@ -624,7 +624,7 @@ void ProxyTaskVariable::updateState(const ors::Graph& ors, double tau) {
   ors::Proxy *p;
   
   y.resize(1);  y.setZero();
-  J.resize(1, ors.getJointStateDimension(false));  J.setZero();
+  J.resize(1, ors.getJointStateDimension());  J.setZero();
   
   switch(type) {
     case allCTVT:

@@ -54,7 +54,7 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl) {
   
   String tag, name;
   char c;
-  uint i, j, b;
+  uint i, j;
   arr x0, x1, x2, x3;
   
   String::readSkipSymbols="\"\n\r\t ";
@@ -108,6 +108,7 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl) {
   mesh.V=vertices;
   mesh.T=faces;
   mesh.Tn=normals;
+  /* GROUPS: retired
   mesh.G.resize(vertices.d0); mesh.G=-1;
   for(i=0; i<G.N; i++) {
     for(b=0; b<names.N; b++) { if(G(i).name==names(b)) break; }
@@ -116,7 +117,7 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl) {
     } else {
       for(j=0; j<G(i).verts.N; j++) mesh.G(G(i).verts(j))=b;
     }
-  }
+  }*/
   
   mesh.computeNormals();
   
@@ -171,6 +172,7 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl) {
     e->B.setDifference(f, n->X); //p=(h-t)/2;
   }
   graphMakeLists(bl.bodies, bl.joints);
+  /* GROUPS: retired
   mesh.GF.resize(bl.bodies.N);
   for(i=0; i<bl.bodies.N; i++) {
     mesh.GF(i) = &(bl.bodies(i)->X);
@@ -178,7 +180,8 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl) {
   mesh.makeVerticesRelativeToGroup();
   mesh.collectTriGroups();
   //bl.calcNodeFramesFromEdges();
-  
+  */
+
   /*
   bl.topsort();
   bl.orderAsIndexed();

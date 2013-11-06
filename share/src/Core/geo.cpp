@@ -834,11 +834,13 @@ void Transformation::setRandom() {
 
 /// move the turtle by the vector (x, z, y) WITH RESPECT TO the current orientation/scale
 void Transformation::addRelativeTranslation(double x, double y, double z) {
-  Vector X(x, y, z);
-  //X=r*(s*X); //in global coords
-  X=rot*X; //in global coords
-  pos+=X;
-  if(!zeroVels) vel+=angvel^X;
+  addRelativeTranslation(Vector(x, y, z));
+}
+
+void Transformation::addRelativeTranslation(const Vector& x_rel){
+  Vector x = rot*x_rel;
+  pos+=x;
+  if(!zeroVels) vel+=angvel^x;
 }
 
 /// add a velocity to the turtle's inertial frame

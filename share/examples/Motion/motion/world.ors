@@ -57,15 +57,17 @@ body door2-handle {
   color=[0 0 0]
   contact
 }
-#joint (door2-frame, door2-door) {
-  #A=<T t(.46 0 0) d(90 0 1 0)>
-  #BinvA
-#}
-#joint (door2-door, door2-handle) {
-  #A=<T t(-.39 0 1) d(90 0 0 1)>
-  #limit=[0 .1 0 0 0]
-  #BinvA
-#}
+joint (door2-frame, door2-door) {
+  A=<T t(.46 0 0) d(90 0 1 0)>
+  BinvA
+  agent = 1
+}
+joint (door2-door, door2-handle) {
+  A=<T t(-.39 0 1) d(90 0 0 1)>
+  limit=[0 .1 0 0 0]
+  BinvA
+  agent = 1
+}
 # }}}
 # door3 (locked) {{{
 # this door is locked (due to a bug in the rotation of the joint)
@@ -92,15 +94,17 @@ body door3-handle {
   submeshsizes=[73 50 71 51]
   contact
 }
-#joint (door3-frame, door3-door) {
-  #A=<T t(.46 0 0) d(90 0 1 0)>
-  #BinvA
-#}
-#joint (door3-door, door3-handle) {
-  #A=<T t(-.39 0 1)>
-  #limit=[0 .1 0 0 0]
-  #BinvA
-#}
+joint (door3-frame, door3-door) {
+  A=<T t(.46 0 0) d(90 0 1 0)>
+  BinvA
+  agent = 1
+}
+joint (door3-door, door3-handle) {
+  A=<T t(-.39 0 1)>
+  limit=[0 .1 0 0 0]
+  BinvA
+  agent = 1
+}
 # }}}
 # environment {{{
 #body wall_left {
@@ -158,14 +162,14 @@ body wall_right_to_right {
   fixed
   contact
 }
-#body ground {
-  #type=0
-  #size=[10 10 .01 0]
-  #X=<T t(-5 -5 0)>
-  #color=[.9 .9 .9]
-  #fixed
-  #contact
-#}
+body ground {
+  type=0
+  size=[5 5 .1 0]
+  X=<T t(-2 -2 0)>
+  color=[.9 .9 .9]
+  fixed
+  contact
+}
 # }}}
 # robot {{{
 body endeff {
