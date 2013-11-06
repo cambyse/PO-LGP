@@ -92,7 +92,7 @@ ors::RRTPlanner::RRTPlanner(ors::Graph *G, MotionProblem &problem, double stepsi
     joint_max = ones(G->getJointStateDimension(), 1);
   }
 
-arr ors::RRTPlanner::getTrajectoryTo(arr target, double prec) {
+arr ors::RRTPlanner::getTrajectoryTo(const arr& target, const double prec) {
   ors::Graph *copy = G->newClone();
   arr q;
 
@@ -130,17 +130,16 @@ arr ors::RRTPlanner::getTrajectoryTo(arr target, double prec) {
   return q;
 }
 
-void ors::RRTPlanner::plotRRT(OpenGL* gl) {
-  gl->add(glDrawPlot, &plotModule);
+// don't delete. might be handy:
+//void ors::RRTPlanner::plotRRT(OpenGL* gl) {
+  //gl->add(glDrawPlot, &plotModule);
 
-  for(uint i=1; i < s->rrt.getNumberNodes(); ++i) {
-    arr line;
-    line.append(s->rrt.getNode(i)); line.reshape(1, line.N);
-    line.append(s->rrt.getNode(s->rrt.getParent(i)));
-    plotLine(line);
-  }
-
-    
-}
+  //for(uint i=1; i < s->rrt.getNumberNodes(); ++i) {
+    //arr line;
+    //line.append(s->rrt.getNode(i)); line.reshape(1, line.N);
+    //line.append(s->rrt.getNode(s->rrt.getParent(i)));
+    //plotLine(line);
+  //}
+//}
 
 

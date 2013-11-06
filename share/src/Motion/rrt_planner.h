@@ -12,15 +12,14 @@ namespace ors {
     private:
       struct sRRTPlanner *s;
     public:
-      Graph *G;
-      MotionProblem& problem;
+      Graph *G;                 ///< the graph to plan in
+      MotionProblem& problem;   ///< the MotionProblem gives the feasibility test for new states
 
-      arr joint_max, joint_min;
+      arr joint_max, joint_min; ///< in which range are the joints allowed (boundaries for the sample space)
 
       RRTPlanner(ors::Graph* G, MotionProblem &problem, double stepsize);
 
-      arr getTrajectoryTo(arr, double prec);
-      void plotRRT(OpenGL* gl);
+      arr getTrajectoryTo(const arr& target, const double prec); ///< returns the trajectory created by the RRT
   };
 }
 
