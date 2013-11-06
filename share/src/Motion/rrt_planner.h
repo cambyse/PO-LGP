@@ -4,6 +4,7 @@
 #include <Core/array.h>
 
 struct MotionProblem;
+struct OpenGL;
 
 namespace ors { 
   struct Graph;
@@ -14,9 +15,12 @@ namespace ors {
       Graph *G;
       MotionProblem& problem;
 
+      arr joint_max, joint_min;
+
       RRTPlanner(ors::Graph* G, MotionProblem &problem, double stepsize);
 
       arr getTrajectoryTo(arr, double prec);
+      void plotRRT(OpenGL* gl);
   };
 }
 

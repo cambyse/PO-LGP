@@ -1,10 +1,11 @@
 #include "rrt_planner.h"
+
 #include <Ors/ors.h>
 #include <Algo/rrt.h>
 #include <Motion/motion.h>
 
-#include <Gui/plot.h>
 #include <Gui/opengl.h>
+#include <Gui/plot.h>
 
 #include <retired/devTools/logging.h>
 #include <retired/devTools/logging.cpp>
@@ -28,7 +29,7 @@ namespace ors {
 bool ors::sRRTPlanner::growTowards(RRT& growing, RRT& passive, ors::Graph &G) {
   arr q;
   if(rnd.uni()<.5) {
-    q = rand(G.getJointStateDimension(), 1) * 2. - ones(G.getJointStateDimension(), 1);
+    q = p->joint_min + rand(G.getJointStateDimension(), 1) % ( p->joint_max - p->joint_min );
     q.reshape(q.d0);
   }
   else { 
@@ -86,7 +87,10 @@ arr buildTrajectory(RRT& rrt, uint node, bool forward) {
 }
     
 ors::RRTPlanner::RRTPlanner(ors::Graph *G, MotionProblem &problem, double stepsize) : 
-  s(new ors::sRRTPlanner(this, RRT(G->getJointState(), stepsize))), G(G), problem(problem) {}
+  s(new ors::sRRTPlanner(this, RRT(G->getJointState(), stepsize))), G(G), problem(problem) {
+    joint_min = zeros(G->getJointStateDimension(), 1);
+    joint_max = ones(G->getJointStateDimension(), 1);
+  }
 
 arr ors::RRTPlanner::getTrajectoryTo(arr target, double prec) {
   ors::Graph *copy = G->newClone();
@@ -124,6 +128,19 @@ arr ors::RRTPlanner::getTrajectoryTo(arr target, double prec) {
   q.reshape(q0.d0 + q1.d0, q0.d1);
 
   return q;
+}
+
+void ors::RRTPlanner::plotRRT(OpenGL* gl) {
+  gl->add(glDrawPlot, &plotModule);
+
+  for(uint i=1; i < s->rrt.getNumberNodes(); ++i) {
+    arr line;
+    line.append(s->rrt.getNode(i)); line.reshape(1, line.N);
+    line.append(s->rrt.getNode(s->rrt.getParent(i)));
+    plotLine(line);
+  }
+
+    
 }
 
 
