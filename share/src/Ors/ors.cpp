@@ -1743,7 +1743,7 @@ void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph& ors, 
 
   //costs
   double d1 = 1.-p->d/margin;
-  double d2 = 1.-p->cenD/cenMarg;
+  double d2 = 1.-p->cenD/cenMarg; // this is always positive, because of the check above
   //NORMALS ALWAYS GO FROM b TO a !!
   if(!useCenterDist) d2=1.;
   y += d1*d2;
