@@ -37,6 +37,7 @@ int main(int argn, char **argv) {
   for(uint i=0;i<N;i++) S.getVar<int>(i) = MT::rnd(100);
 
   for(uint k=0;k<20;k++){
+    if(engine().shutdown.getValue()) break;
     for(uint i=0;i<N;i++) cout <<S.getVar<int>(i) <<' ';  cout <<endl;
     engine().step(S);
     MT::wait(.1);

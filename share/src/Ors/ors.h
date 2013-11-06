@@ -119,10 +119,9 @@ struct Body {
     type=b.type; mass=b.mass; inertia=b.inertia; com=b.com; force=b.force; torque=b.torque;
   }
   void reset();
-  void parseAts();
+  void parseAts(Graph& G);
   void write(std::ostream& os) const;
   void read(std::istream& is);
-  void read(const char* string);
 };
 
 /// a joint
@@ -132,15 +131,16 @@ struct Joint {
   int ifrom, ito;       ///< indices of from and to bodies
   Body *from, *to;      ///< pointers to from and to bodies
   Joint *coupledTo;     ///< if non-NULL, this joint's state is identical to another's
+  int agent;           ///< associate this Joint to a specific agent (0=default robot)
 
   MT::String name;      ///< name
-  JointType type;            ///< joint type
-  Transformation A;          ///< transformation from parent body to joint (attachment, usually static)
-  Transformation Q;          ///< transformation within the joint (usually dynamic)
-  Transformation B;          ///< transformation from joint to child body (attachment, usually static)
-  Transformation X;          ///< joint pose in world coordinates (same as from->X*A)
-  Vector axis;               ///< joint axis (same as X.rot.getX() for standard hinge joints)
-  KeyValueGraph ats;         ///< list of any-type attributes
+  JointType type;       ///< joint type
+  Transformation A;     ///< transformation from parent body to joint (attachment, usually static)
+  Transformation Q;     ///< transformation within the joint (usually dynamic)
+  Transformation B;     ///< transformation from joint to child body (attachment, usually static)
+  Transformation X;     ///< joint pose in world coordinates (same as from->X*A)
+  Vector axis;          ///< joint axis (same as X.rot.getX() for standard hinge joints)
+  KeyValueGraph ats;    ///< list of any-type attributes
   
   Joint();
   explicit Joint(const Joint& j);
@@ -167,23 +167,23 @@ struct Shape {
   
   MT::String name;     ///< name
   Transformation X;
-  Transformation rel;      ///< relative translation/rotation of the bodies geometry
+  Transformation rel;  ///< relative translation/rotation of the bodies geometry
   ShapeType type;
-  double size[4];
-  double color[3];
+  double size[4];  //TODO: obsolete: directly translate to mesh?
+  double color[3]; //TODO: obsolete: directly translate to mesh?
   Mesh mesh;
-  bool cont;      ///< are contacts registered (or filtered in the callback)
-  Vector contactOrientation;
-  KeyValueGraph ats;    ///< list of any-type attributes
+  double mesh_radius;
+  bool cont;           ///< are contacts registered (or filtered in the callback)
+  KeyValueGraph ats;   ///< list of any-type attributes
   
   Shape();
   explicit Shape(const Shape& s);
-  explicit Shape(Graph& G, Body *b, const Shape *copyShape=NULL); //new Shape, being added to graph and body's shape lists
+  explicit Shape(Graph& G, Body& b, const Shape *copyShape=NULL); //new Shape, being added to graph and body's shape lists
   ~Shape();
   void operator=(const Shape& s) {
     index=s.index; ibody=s.ibody; body=NULL; name=s.name; X=s.X; rel=s.rel; type=s.type;
     memmove(size, s.size, 4*sizeof(double)); memmove(color, s.color, 3*sizeof(double));
-    mesh=s.mesh; cont=s.cont; contactOrientation=s.contactOrientation;
+    mesh=s.mesh; mesh_radius=s.mesh_radius; cont=s.cont;
     ats=s.ats;
   }
   void reset();
@@ -212,8 +212,8 @@ struct Graph {
   MT::Array<Joint*> joints;
   MT::Array<Shape*> shapes;
   MT::Array<Proxy*> proxies; ///< list of current proximities between bodies
+
   uint q_dim; ///< numer of degrees of freedom IN the joints (not counting root body)
-  arr Qlin, Qoff, Qinv; ///< linear transformations of q
   bool isLinkTree;
   
   /// @name constructors
@@ -224,12 +224,20 @@ struct Graph {
   }
   ~Graph() { clear(); }
   void operator=(const ors::Graph& G);
-  Graph* newClone() const;
-  void copyShapesAndJoints(const Graph& G);
+  Graph* newClone() const; //TODO: obsolete?
+  void copyShapesAndJoints(const Graph& G); //TODO: obsolete?
   
   /// @name initializations
   void init(const char* filename);
   
+  /// @name access
+  Body *getBodyByName(const char* name) const;
+  Shape *getShapeByName(const char* name) const;
+  Joint *getJointByName(const char* name) const;
+  Joint *getJointByBodyNames(const char* from, const char* to) const;
+  bool checkUniqueNames() const;
+  void prefixNames();
+
   /// @name changes of configuration
   void clear();
   void revertJoint(Joint *e);
@@ -240,9 +248,9 @@ struct Graph {
   void topSort(){ graphTopsort(bodies, joints); for_list_(Shape, s, shapes) s->ibody=s->body->index; }
   void glueBodies(Body *a, Body *b);
   void glueTouchingBodies();
-  void addObject(Body *b);
+  void addObject(Body *b); //TODO: What the heck?? Obsolete!
   void removeNonShapeBodies();
-  void meldFixedJoint();
+  void meldFixedJoints();
   
   /// @name computations on the DoFs
   void calcBodyFramesFromJoints();
@@ -254,12 +262,21 @@ struct Graph {
   void computeNaturalQmetric(arr& W);
   void fillInRelativeTransforms();
   
+  /// @name get state
+  uint getJointStateDimension(int agent=0) const;
+  void getJointState(arr& x, arr& v, int agent=0) const;
+  void getJointState(arr& x, int agent=0) const;
+
+  /// @name set state
+  void setJointState(const arr& x, const arr& v, int agent=0, bool clearJointErrors=false);
+  void setJointState(const arr& x, int agent=0, bool clearJointErrors=false);
+
   /// @name kinematics & dynamics
   void kinematicsPos(arr& y, uint i, ors::Vector *rel=0) const;
-  void jacobianPos(arr& J, uint i, ors::Vector *rel=0) const;
-  void hessianPos(arr& H, uint i, ors::Vector *rel=0) const;
+  void jacobianPos(arr& J, uint i, ors::Vector *rel=0, int agent=0) const;
+  void hessianPos(arr& H, uint i, ors::Vector *rel=0, int agent=0) const;
   void kinematicsVec(arr& z, uint i, ors::Vector *vec=0) const;
-  void jacobianVec(arr& J, uint i, ors::Vector *vec=0) const;
+  void jacobianVec(arr& J, uint i, ors::Vector *vec=0, int agent=0) const;
   void jacobianR(arr& J, uint a) const;
   void inertia(arr& M);
   void equationOfMotion(arr& M, arr& F, const arr& qd);
@@ -269,10 +286,7 @@ struct Graph {
   /// @name special 'kinematic maps'
   void phiCollision(arr &y, arr& J, double margin=.02, bool useCenterDist=true) const;
   
-  /// @name get state
-  uint getJointStateDimension(bool internal=false) const;
-  void getJointState(arr& x, arr& v) const;
-  void getJointState(arr& x) const;
+  /// @name older 'kinematic maps'
   void getContactConstraints(arr& y) const;
   void getContactConstraintsGradient(arr &dydq) const;
   //void getContactMeasure(arr &x, double margin=.02, bool linear=false) const;
@@ -289,11 +303,6 @@ struct Graph {
   void getGripState(arr& grip, uint j) const;
   ors::Proxy* getContact(uint a, uint b) const;
   
-  /// @name set state
-  void setJointState(const arr& x, const arr& v, bool clearJointErrors=false);
-  void setJointState(const arr& x, bool clearJointErrors=false);
-  void setExternalState(const arr & x);//set array of body positions, sets all degrees of freedom except for the joint states
-  
   /// @name forces and gravity
   void clearForces();
   void addForce(ors::Vector force, Body *n, ors::Vector pos);
@@ -303,29 +312,26 @@ struct Graph {
   
   /// @name I/O
   void reportProxies(std::ostream *os=&std::cout);
-  void reportGlue(std::ostream *os=&std::cout);
-  
-  /// @name managing the data
-  void sortProxies(bool deleteMultiple=false);
-  bool checkUniqueNames() const;
-  
-  
-  Body *getBodyByName(const char* name) const;
-  Shape *getShapeByName(const char* name) const;
-  Joint *getJointByName(const char* name) const;
-  Joint *getJointByBodyNames(const char* from, const char* to) const;
-  //uint getBodyIndexByName(const char* name) const;
-  //uint getShapeIndexByName(const char* name) const;
-  void prefixNames();
+  void reportGlue(std::ostream *os=&std::cout); //TODO: obsolete
   
   void write(std::ostream& os) const;
   void read(std::istream& is);
-  void read(const char* string);
   void writePlyFile(const char* filename) const;
   void glDraw();
 };
 /** @} */ // END of group ors_basic_data_structures
 } // END ors namespace
+
+
+//===========================================================================
+//
+// constants
+//
+
+extern ors::Body& NoBody;
+extern ors::Shape& NoShape;
+extern ors::Joint& NoJoint;
+extern ors::Graph& NoGraph;
 
 
 //===========================================================================
@@ -336,9 +342,11 @@ struct Graph {
 namespace ors {
 std::istream& operator>>(std::istream&, Body&);
 std::istream& operator>>(std::istream&, Joint&);
+std::istream& operator>>(std::istream&, Shape&);
 std::istream& operator>>(std::istream&, Proxy&);
 std::ostream& operator<<(std::ostream&, const Body&);
 std::ostream& operator<<(std::ostream&, const Joint&);
+std::ostream& operator<<(std::ostream&, const Shape&);
 std::ostream& operator<<(std::ostream&, const Proxy&);
 stdPipes(Graph);
 }
@@ -609,6 +617,7 @@ struct TaskVariableTable {
 // C-style functions
 //
 
+void lib_ors();
 void makeConvexHulls(ShapeL& shapes);
 
 //===========================================================================
@@ -627,11 +636,11 @@ void makeConvexHulls(ShapeL& shapes);
 struct OpenGL;
 
 //-- global draw options
-extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines;
+extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines, orsDrawBodyNames;
 extern uint orsDrawLimit;
 
 void displayState(const arr& x, ors::Graph& G, OpenGL& gl, const char *tag);
-void displayTrajectory(const arr& x, int steps, ors::Graph& G, OpenGL& gl, const char *tag);
+void displayTrajectory(const arr& x, int steps, ors::Graph& G, OpenGL& gl, const char *tag, double delay=0.);
 void editConfiguration(const char* orsfile, ors::Graph& G, OpenGL& gl);
 void animateConfiguration(ors::Graph& G, OpenGL& gl);
 void init(ors::Graph& G, OpenGL& gl, const char* orsFile);
@@ -777,6 +786,8 @@ double forceClosureFromProxies(ors::Graph& C, uint bodyIndex,
                                double mu=.5,     //friction coefficient
                                double discountTorques=1.);  //friction coefficient
 
+void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph& ors, double margin, bool useCenterDist);
+
 
 
 //===========================================================================
@@ -834,6 +845,7 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl);
 //===========================================================================
 #endif //MT_ORS_ONLY_BASICS
 
+MT::Array<std::tuple<long, long> > getSubMeshPositions(const char* filename);
 
 /** @} */
 

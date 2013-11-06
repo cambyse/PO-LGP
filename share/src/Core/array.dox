@@ -53,4 +53,8 @@ evolved from a lib started in Bochum, years ago...)
 - In gdb you can type `print *A.p@A.N`
 - or type `call A.prt()`
 
+
+@section array_cheatsheet Cheat Sheet
+
+\include array_cheatsheet.h
 */

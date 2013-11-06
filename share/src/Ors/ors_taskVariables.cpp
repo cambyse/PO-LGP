@@ -586,6 +586,7 @@ ProxyTaskVariable::ProxyTaskVariable(const char* _name,
   v_target=v;
 }
 
+#if 0
 void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph& ors, double margin, bool linear) {
   double d;
   ors::Shape *a, *b;
@@ -613,6 +614,7 @@ void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph& ors, 
     }
   }
 }
+#endif
 
 void ProxyTaskVariable::updateState(const ors::Graph& ors, double tau) {
   v_old=v;
@@ -622,7 +624,7 @@ void ProxyTaskVariable::updateState(const ors::Graph& ors, double tau) {
   ors::Proxy *p;
   
   y.resize(1);  y.setZero();
-  J.resize(1, ors.getJointStateDimension(false));  J.setZero();
+  J.resize(1, ors.getJointStateDimension());  J.setZero();
   
   switch(type) {
     case allCTVT:

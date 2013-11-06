@@ -16,7 +16,8 @@ created: <2013-03-20 Wed>
 %include "typemaps.i"
 %include "std_string.i"
 
-%import "../Core/core.i"
+%include "Core/array_typemaps.i"
+%import "Core/core.i"
 
 
 //===========================================================================
@@ -50,6 +51,13 @@ def get_mlr_path():
   typedef unsigned int uint;
 %}
 
+%List_Typemap(ors::Body*)
+%List_Typemap(ors::Shape*)
+%List_Typemap(ors::Joint*)
+%List_Typemap(ors::Transformation*)
+%List_Typemap(ors::Proxy*)
+%List_Typemap(uintA)
+
 namespace ors {
 
 
@@ -66,7 +74,6 @@ struct Mesh {
 
   uintA T;
   arr   Tn;
-  uintA subMeshSizes;
 
   MT::Array<Transformation*> GF;
   MT::Array<uintA> GT;
@@ -181,10 +188,6 @@ struct Body {
   void read(const char* string);
 
 %extend {
-  void set_name(char* newName) {
-    $self->name = MT::String(newName);
-  };
-
   std::string __str__() {
     std::ostringstream oss(std::ostringstream::out);
     oss << (*$self);
@@ -220,7 +223,7 @@ struct Joint {
 %extend {
   std::string __str__() {
     std::ostringstream oss(std::ostringstream::out);
-    oss<<(*$self);
+    oss << (*$self);
     return oss.str();
   }
 } // end of %extend
@@ -261,8 +264,12 @@ struct Shape {
     $self->size[2] = c;
     $self->size[3] = d;
   };
-}; // end of %extend
-
+  std::string __str__() {
+    std::ostringstream oss(std::ostringstream::out);
+    oss << (*$self);
+    return oss.str();
+  };
+} // end of %extend
 };
 
 
@@ -355,12 +362,6 @@ struct Graph {
   //!@name set state
   void setJointState(const arr& x, const arr& v, bool clearJointErrors=false);
   void setJointState(const arr& x, bool clearJointErrors=false);
-%pythoncode %{
-def setJointStateList(self, jointState):
-    tmp = corepy.ArrayDouble()
-    tmp.setWithList(jointState)
-    self.setJointState(tmp)
-%} //end of %pythoncode
   /*void setFullState(const arr& x, bool clearJointErrors=false);*/
   /*void setFullState(const arr& x, const arr& v, bool clearJointErrors=false);*/
   void setExternalState(const arr & x);//set array of body positions, sets all degrees of freedom except for the joint states
@@ -389,7 +390,7 @@ def setJointStateList(self, jointState):
 
   void write(std::ostream& os) const;
   void read(std::istream& is);
-  void read(const char* string);
+  void read(const char* filename);
   void writePlyFile(const char* filename) const;
   void glDraw();
 
@@ -420,6 +421,8 @@ struct PhysXInterface {
   void create();
   void step();
   void glDraw();
+
+  void syncWithOrs();
   // void pushState();
   // void pullState();
   // void ShutdownPhysX();
@@ -427,30 +430,19 @@ struct PhysXInterface {
 
 //===========================================================================
 // some common array templates
-%template(ArrayJoint) MT::Array<ors::Joint*>;
-%template(ArrayBody) MT::Array<ors::Body*>;
+/*%template(ArrayJoint) MT::Array<ors::Joint*>;*/
+/*%template(ArrayBody) MT::Array<ors::Body*>;*/
 
 
 //===========================================================================
 // helper functions
+void displayState(const arr& x, ors::Graph& G, OpenGL& gl, const char *tag);
+void displayTrajectory(const arr& x, int steps, ors::Graph& G, OpenGL& gl, const char *tag);
+void editConfiguration(const char* orsfile, ors::Graph& G, OpenGL& gl);
+void animateConfiguration(ors::Graph& G, OpenGL& gl);
+void init(ors::Graph& G, OpenGL& gl, const char* orsFile);
 void bindOrsToOpenGL(ors::Graph& graph, OpenGL& gl);
 void bindOrsToPhysX(ors::Graph& graph, OpenGL& gl, PhysXInterface& physx);
-
-%inline %{
-// stupid helper function to generate a trajectory for an arm
-// TODO ideally this should be done in python, however the MT::Array and helper
-// class support is not that good yet.
-void generateSequence(arr& X, arr& V, uint n) {
-  uint i;
-  rnd.seed(0);
-  arr P(10, n);
-  //a random spline
-  //a set of random via points with zero start and end:
-  rndUniform(P, -1., 1., false); P[0] = 0.; P[P.d0 - 1] = 0.;
-  //convert into a smooth spline (1/0.03 points per via point):
-  /*MT::makeSpline(X, V, P, (int)(1 / 0.03));*/
-};
-%}
 
 
 // vim: ft=swig

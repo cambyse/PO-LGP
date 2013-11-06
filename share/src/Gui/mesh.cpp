@@ -19,6 +19,9 @@
 
 #include "mesh.h"
 
+#include <limits>
+#include "opengl.h"
+
 #ifdef MT_extern_ply
 #  include <extern/ply/ply.h>
 #endif
@@ -29,12 +32,19 @@ extern "C"{
 }
 #endif
 
+bool orsDrawWires=false;
+
 namespace ors {
 
 //==============================================================================
 //
 // Mesh code
 //
+
+Mesh::Mesh() :
+    parsing_pos_start(0),
+    parsing_pos_end(std::numeric_limits<long>::max())
+{};
 
 void Mesh::clear() {
   V.clear(); Vn.clear(); T.clear(); Tn.clear(); C.clear(); //strips.clear();
@@ -253,13 +263,11 @@ void Mesh::translate(double dx, double dy, double dz) {
   for(i=0; i<V.d0; i++) {  V(i, 0)+=dx;  V(i, 1)+=dy;  V(i, 2)+=dz;  }
 }
 
-void Mesh::center() {
-  arr mean(3);
-  mean.setZero();
-  uint i;
-  for(i=0; i<V.d0; i++) mean += V[i];
-  mean /= (double)V.d0;
-  for(i=0; i<V.d0; i++) V[i]() -= mean;
+Vector Mesh::center() {
+  arr Vmean = sum(V,0);
+  Vmean /= (double)V.d0;
+  for(uint i=0; i<V.d0; i++) V[i]() -= Vmean;
+  return Vector(Vmean);
 }
 
 void Mesh::box() {
@@ -312,7 +320,10 @@ void Mesh::computeNormals() {
   Vn.setZero();
   //triangle normals and contributions
   for(i=0; i<T.d0; i++) {
-    a.set(&V(T(i, 0), 0)); b.set(&V(T(i, 1), 0)); c.set(&V(T(i, 2), 0));
+    a.set(&V(T(i, 0), 0));
+    b.set(&V(T(i, 1), 0));
+    c.set(&V(T(i, 2), 0));
+
     b-=a; c-=a; a=b^c; a.normalize();
     Tn(i, 0)=a.x;  Tn(i, 1)=a.y;  Tn(i, 2)=a.z;
     Vn(T(i, 0), 0)+=a.x;  Vn(T(i, 0), 1)+=a.y;  Vn(T(i, 0), 2)+=a.z;
@@ -321,32 +332,6 @@ void Mesh::computeNormals() {
   }
   Vector *d;
   for(i=0; i<Vn.d0; i++) { d=(Vector*)&Vn(i, 0); d->normalize(); }
-}
-
-void Mesh::makeVerticesRelativeToGroup() {
-  uint i;
-  int g;
-  Vector *v;
-  for(i=0; i<V.d0; i++) if((g=G(i))!=-1) {
-      v = (Vector*)&V(i, 0);
-      *v = GF(g)->rot/((*v) - GF(g)->pos);
-      v = (Vector*)&Vn(i, 0);
-      *v = GF(g)->rot/(*v);
-    }
-}
-
-void Mesh::collectTriGroups() {
-  uint i;
-  int g;
-  GT.resize(GF.N+1);
-  for(i=0; i<T.d0; i++) {
-    g=G(T(i, 0));
-    if(g!=-1 && g==G(T(i, 1)) && g==G(T(i, 2))) {
-      GT(g).append(i);
-    } else {
-      GT(GF.N).append(i);
-    }
-  }
 }
 
 /** @brief add triangles according to the given grid; grid has to be a 2D
@@ -804,10 +789,16 @@ void Mesh::skin(uint start) {
   cout <<T <<endl;
 }
 
-ors::Vector Mesh::getMeanVertex() {
+Vector Mesh::getMeanVertex() {
   arr Vmean = sum(V,0);
   Vmean /= (double)V.d0;
-  return ors::Vector(Vmean);
+  return Vector(Vmean);
+}
+
+double Mesh::getRadius() {
+  double r=0.;
+  for(uint i=0;i<V.d0;i++) r=MT::MAX(r, sumOfSqr(V[i]));
+  return sqrt(r);
 }
 
 void Mesh::write(std::ostream& os) const {
@@ -1128,24 +1119,24 @@ uint& Tti(uint, uint) { static uint dummy; return dummy; } //texture index
 
 /** initialises the ascii-obj file "filename"*/
 void Mesh::readObjFile(const char* filename) {
-  FILE* file;
-  
-  // open the file
-  file = fopen(filename, "r");
-  if(!file) HALT("readObjFile() failed: can't open data file " <<filename);
-  
   // make a first pass through the file to get a count of the number
   // of vertices, normals, texcoords & triangles
-  uint nV;
-  uint nN;
-  uint nTex;
-  uint nT;
+  uint nV, nN, nTex, nT;
+  nV = nN = nTex = nT = 0;
   int v, n, t;
   char buf[128];
   
-  nV = nN = nTex = nT = 0;
-  
-  while(fscanf(file, "%s", buf) != EOF) {
+  // open the file
+  FILE* file;
+  file = fopen(filename, "r");
+  if(!file) HALT("readObjFile() failed: can't open data file " <<filename);
+
+  // we only want to parse the relevant subpart/submesh of the mesh therefore
+  // jump to the right position and stop parsing at the right positon.
+  // if (parsing_pos_start > -1) {
+  fseek(file, parsing_pos_start, SEEK_SET);
+
+  while ((fscanf(file, "%s", buf) != EOF) && (ftell(file) < parsing_pos_end)) {
     switch(buf[0]) {
       case '#':  CHECK(fgets(buf, sizeof(buf), file), "fgets failed");  break;  // comment
       case 'v':
@@ -1210,13 +1201,17 @@ void Mesh::readObjFile(const char* filename) {
   
   // rewind to beginning of file and read in the data this pass
   rewind(file);
+  // again, jump to the correct position
+  fseek(file, parsing_pos_start, SEEK_SET);
   
   /* on the second pass through the file, read all the data into the
      allocated arrays */
   nV = nN = nTex = nT = 0;
   ////_material = 0;
   
-  while(fscanf(file, "%s", buf) != EOF) {
+  while ((fscanf(file, "%s", buf) != EOF) &&
+         (ftell(file) < parsing_pos_end)) {
+
     switch(buf[0]) {
       case '#':  CHECK(fgets(buf, sizeof(buf), file), "fgets failed");  break;  //comment
       case 'v':               // v, vn, vt
@@ -1335,11 +1330,102 @@ void Mesh::readObjFile(const char* filename) {
   }
   
   //CONVENTION!: start counting vertex indices from 0!!
-  T -= (uint)1;
+  T -= T.min();
   
   // close the file
   fclose(file);
 }
+
+#ifdef MT_GL
+/// static GL routine to draw a ors::Mesh
+void glDrawMesh(void *classP) {
+  ((ors::Mesh*)classP)->glDraw();
+}
+
+/// GL routine to draw a ors::Mesh
+void Mesh::glDraw() {
+  if(V.d0!=Vn.d0 || T.d0!=Tn.d0) {
+    computeNormals();
+  }
+  if(orsDrawWires) {
+#if 0
+    uint t;
+    for(t=0; t<T.d0; t++) {
+      glBegin(GL_LINE_LOOP);
+      glVertex3dv(&V(T(t, 0), 0));
+      glVertex3dv(&V(T(t, 1), 0));
+      glVertex3dv(&V(T(t, 2), 0));
+      glEnd();
+    }
+#else
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+    if(C.N) glEnableClientState(GL_COLOR_ARRAY); else glDisableClientState(GL_COLOR_ARRAY);
+    glVertexPointer(3, GL_DOUBLE, 0, V.p);
+    if(C.N) glColorPointer(3, GL_DOUBLE, 0, C.p);
+    glDrawElements(GL_LINE_STRIP, T.N, GL_UNSIGNED_INT, T.p);
+    //glDrawArrays(GL_LINE_STRIP, 0, V.d0);
+#endif
+    return;
+  }
+#if 1
+  GLboolean turnOnLight=false;
+  if(C.N) { glGetBooleanv(GL_LIGHTING, &turnOnLight); glDisable(GL_LIGHTING); }
+
+  glShadeModel(GL_FLAT);
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glEnableClientState(GL_NORMAL_ARRAY);
+  if(C.N) glEnableClientState(GL_COLOR_ARRAY); else glDisableClientState(GL_COLOR_ARRAY);
+  glVertexPointer(3, GL_DOUBLE, 0, V.p);
+  if(C.N) glColorPointer(3, GL_DOUBLE, 0, C.p);
+  glNormalPointer(GL_DOUBLE, 0, Vn.p);
+
+  glDrawElements(GL_TRIANGLES, T.N, GL_UNSIGNED_INT, T.p);
+
+  if(turnOnLight) { glEnable(GL_LIGHTING); }
+#elif 0 //simple with vertex normals
+  uint i, v;
+  glShadeModel(GL_SMOOTH);
+  glBegin(GL_TRIANGLES);
+  for(i=0; i<T.d0; i++) {
+    if(C.d0==T.d0)  glColor(C(t, 0), C(t, 1), C(t, 2),1.);
+    v=T(i, 0);  glNormal3dv(&Vn(v, 0));  if(C.d0==V.d0) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
+    v=T(i, 1);  glNormal3dv(&Vn(v, 0));  if(C.d0==V.d0) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
+    v=T(i, 2);  glNormal3dv(&Vn(v, 0));  if(C.d0==V.d0) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
+  }
+  glEnd();
+#else //simple with triangle normals
+  uint t, v;
+  computeNormals();
+  glBegin(GL_TRIANGLES);
+  for(t=0; t<T.d0; t++) {
+    glNormal3dv(&Tn(t, 0));
+    if(C.d0==T.d0)  glColor(C(t, 0), C(t, 1), C(t, 2),1.);
+    v=T(t, 0);  if(C.d0==V.d0) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
+    v=T(t, 1);  if(C.d0==V.d0) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
+    v=T(t, 2);  if(C.d0==V.d0) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
+  }
+  glEnd();
+#if 0 //draw normals
+  glColor(.5, 1., .0);
+  Vector a, b, c, x;
+  for(i=0; i<T.d0; i++) {
+    glBegin(GL_LINES);
+    a.set(&V(T(i, 0), 0)); b.set(&V(T(i, 1), 0)); c.set(&V(T(i, 2), 0));
+    x.setZero(); x+=a; x+=b; x+=c; x/=3;
+    glVertex3dv(x.v);
+    a.set(&Tn(i, 0));
+    x+=.05*a;
+    glVertex3dv(x.v);
+    glEnd();
+  }
+#endif
+#endif
+}
+#else //MT_GL
+void ors::Mesh::glDraw() { NICO }
+void ors::glDrawMesh(void*) { NICO }
+#endif
 
 //==============================================================================
 
@@ -1378,6 +1464,7 @@ void inertiaCylinder(double *I, double& mass, double density, double height, dou
 // GJK interface
 //
 
+#ifdef MT_extern_GJK
 double GJK_distance(ors::Mesh& mesh1, ors::Mesh& mesh2,
                     ors::Transformation& t1, ors::Transformation& t2,
                     ors::Vector& p1, ors::Vector& p2){
@@ -1395,4 +1482,8 @@ double GJK_distance(ors::Mesh& mesh1, ors::Mesh& mesh2,
 
   return sqrt(d);
 }
-
+#else
+double GJK_distance(ors::Mesh& mesh1, ors::Mesh& mesh2,
+                    ors::Transformation& t1, ors::Transformation& t2,
+                    ors::Vector& p1, ors::Vector& p2){ NICO }
+#endif

@@ -19,6 +19,7 @@
 #ifndef MT_mesh_h
 #define MT_mesh_h
 
+#include <Core/array.h>
 #include <Core/geo.h>
 
 /// @file
@@ -34,22 +35,14 @@ struct Mesh {
   arr V;                ///< vertices
   arr Vn;               ///< triangle normals
   arr C;                ///< vertex colors
-  intA G;               ///< vertex groups
   
   uintA T;              ///< triangles (faces)
   arr   Tn;             ///< vertex normals
-  /**
-   * A mesh can consist of several convex sub-parts.
-   * subMeshSizes[i] denotes the number of vertices from V which are part
-   * of sub-part i.
-   */
-  uintA subMeshSizes;
-  //-- groups: deprecated?
-  MT::Array<Transformation*> GF; ///< pose for each group (GF.N is number of groups)
-  MT::Array<uintA>  GT; ///< triangles for each group (GT.N=GF.N+1, last entry contains mixed group triangles)
-  //MT::Array<uintA> strips; ///< triangle strips (each with a 1D stripe index set)
+
+  long parsing_pos_start;
+  long parsing_pos_end;
   
-  Mesh() {};
+  Mesh();
   
   //set or create
   void clear();
@@ -70,7 +63,7 @@ struct Mesh {
   void scale(double f);
   void scale(double sx, double sy, double sz);
   void translate(double dx, double dy, double dz);
-  void center();
+  Vector center();
   void box();
   void addMesh(const ors::Mesh& mesh2);
   void makeConvexHull();
@@ -81,11 +74,10 @@ struct Mesh {
   void fuseNearVertices(double tol=1e-5);
   void clean();
   void flipFaces();
-  void makeVerticesRelativeToGroup();
   Vector getMeanVertex();
-  
+  double getRadius();
+
   //[preliminary]]
-  void collectTriGroups();
   void skin(uint i);
   
   //IO

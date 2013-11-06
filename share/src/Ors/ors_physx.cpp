@@ -195,159 +195,155 @@ void PhysXInterface::create() {
   s->gScene->addActor(*plane);
   // create ORS equivalent in PhysX
   // loop through ors
-  uint i, j;
+  uint i;
   ors::Body* b;
-  ors::Shape* s;
-  
-  for_list(i, b, G->bodies) {
-    PxRigidDynamic* actor;
-    switch(b->type) {
-      case ors::staticBT:
-        actor = (PxRigidDynamic*) mPhysics->createRigidStatic(OrsTrans2PxTrans(b->X));
-        break;
-      case ors::dynamicBT:
-        actor = mPhysics->createRigidDynamic(OrsTrans2PxTrans(b->X));
-        break;
-      case ors::kinematicBT:
-        actor = mPhysics->createRigidDynamic(OrsTrans2PxTrans(b->X));
-        actor->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
-        break;
-      case ors::noneBT:
-        actor = mPhysics->createRigidDynamic(OrsTrans2PxTrans(b->X));
-        break;
-    }
-    CHECK(actor, "create actor failed!");
-    for_list(j, s, b->shapes) {
-      PxGeometry* geometry;
-      switch(s->type) {
-        case ors::boxST: {
-          geometry = new PxBoxGeometry(.5 * s->size[0], .5 * s->size[1], .5 * s->size[2]);
-        }
-        break;
-        case ors::sphereST: {
-          geometry = new PxSphereGeometry(s->size[3]);
-        }
-        break;
-        case ors::cappedCylinderST: {
-          geometry = new PxCapsuleGeometry(s->size[3], s->size[2]);
-        }
-        break;
-        case ors::cylinderST:
-        case ors::meshST: {
-          // Note: physx can't decompose meshes itself.
-          // Physx doesn't support triangle meshes in dynamic objects! See:
-          // file:///home/mtoussai/lib/PhysX/Documentation/PhysXGuide/Manual/Shapes.html
-          // We have to decompose the meshes "by hand" and feed them to PhysX.
-          
-          // PhysX uses float for the vertices
-          floatA Vfloat;
-          
-          // if mesh is only a single convex part
-          if(!s->mesh.subMeshSizes.N) {
-            Vfloat.clear();
-            copy(Vfloat, s->mesh.V); //convert vertices from double to float array..
-            PxConvexMesh* triangleMesh = PxToolkit::createConvexMesh(
-                                           *mPhysics, *mCooking, (PxVec3*)Vfloat.p, Vfloat.d0,
-                                           PxConvexFlag::eCOMPUTE_CONVEX | PxConvexFlag::eINFLATE_CONVEX);
-            geometry = new PxConvexMeshGeometry(triangleMesh);
-          }
-          // the mesh consists of several convex sub-parts
-          else {
-            uint offset = 0;
-            for(uint i = 0; i < s->mesh.subMeshSizes.N; i++) {
-              Vfloat.resize(s->mesh.subMeshSizes(i), 3);
-              for(uint v = 0; v < s->mesh.subMeshSizes(i); v++) {
-                Vfloat(v, 0) = s->mesh.V(offset + v, 0);
-                Vfloat(v, 1) = s->mesh.V(offset + v, 1);
-                Vfloat(v, 2) = s->mesh.V(offset + v, 2);
-              }
-              offset += s->mesh.subMeshSizes(i);
-              
-              PxConvexMesh* triangleMesh = PxToolkit::createConvexMesh(
-                                             *mPhysics, *mCooking, (PxVec3*)Vfloat.p, Vfloat.d0,
-                                             PxConvexFlag::eCOMPUTE_CONVEX | PxConvexFlag::eINFLATE_CONVEX);
-              geometry = new PxConvexMeshGeometry(triangleMesh);
-              PxShape* shape = actor->createShape(*geometry, *mMaterial, OrsTrans2PxTrans(s->rel));
-              CHECK(shape, "create shape failed!");
-            }
-            geometry = NULL;
-          }
-        }
-        break;
-        case ors::markerST: {
-          geometry = NULL;
-        }
-        break;
-        default:
-          NIY;
-      }
-      if(geometry) {
-        PxShape* shape = actor->createShape(*geometry, *mMaterial, OrsTrans2PxTrans(s->rel));
-        CHECK(shape, "create shape failed!");
-      }
-      //actor = PxCreateDynamic(*mPhysics, OrsTrans2PxTrans(s->X), *geometry, *mMaterial, 1.f);
-    }
-    if(b->ats.getValue<double>("mass")) {
-      PxRigidBodyExt::setMassAndUpdateInertia(*actor, *(b->ats.getValue<double>("mass")));
-    }
-    if (b->type == ors::dynamicBT) {
-      if(!b->ats.getValue<double>("mass")) 
-        PxRigidBodyExt::updateMassAndInertia(*actor, 1.f);
-    }
-    if(b->type == ors::dynamicBT) {
-      PxRigidBodyExt::updateMassAndInertia(*actor, 1.f);
-      actor->setAngularDamping(0.75);
-      actor->setLinearVelocity(PxVec3(b->X.vel.x, b->X.vel.y, b->X.vel.z));
-      actor->setAngularVelocity(PxVec3(b->X.angvel.x, b->X.angvel.y, b->X.angvel.z));
-    }
-    this->s->gScene->addActor(*actor);
-    
-    this->s->actors.append(actor);
-    //WARNING: actors must be aligned (indexed) exactly as G->bodies
-  }
+  for_list(i, b, G->bodies) 
+    addBody(b, mMaterial);
   
   /// ADD joints here!
   ors::Joint* jj;
-  for_list(i, jj, G->joints) {
-    PxTransform A = OrsTrans2PxTrans(jj->A);
-    PxTransform B = OrsTrans2PxTrans(jj->B);
-    switch(jj->type) {
-      case ors::JT_hingeX: {
-        PxRevoluteJoint* desc;
-        //  CHECK(A.p!=B.p,"Something is horribly wrong!");
-        desc = PxRevoluteJointCreate(*mPhysics, this->s->actors(jj->ifrom), A, this->s->actors(jj->ito), B.getInverse());
-        
-        if(jj->ats.getValue<arr>("limit")) {
-          arr limits = *(jj->ats.getValue<arr>("limit"));
-          PxJointLimitPair limit(limits(0), limits(1), 0.1f);
-          limit.restitution = limits(2);
-          limit.spring = limits(3);
-          limit.damping= limits(4);
-          desc->setLimit(limit);
-          desc->setRevoluteJointFlag(physx::PxRevoluteJointFlag::eLIMIT_ENABLED, true);
-          //desc->setProjectionAngularTolerance(3.14);
-        }
-        
+  for_list(i, jj, G->joints) 
+    addJoint(jj);
+}
+
+void PhysXInterface::addJoint(ors::Joint *jj) {
+  PxTransform A = OrsTrans2PxTrans(jj->A);
+  PxTransform B = OrsTrans2PxTrans(jj->B);
+  switch(jj->type) {
+    case ors::JT_hingeX: {
+      PxRevoluteJoint* desc;
+      //  CHECK(A.p!=B.p,"Something is horribly wrong!");
+      desc = PxRevoluteJointCreate(*mPhysics, this->s->actors(jj->ifrom), A, this->s->actors(jj->ito), B.getInverse());
+      
+      if(jj->ats.getValue<arr>("limit")) {
+        arr limits = *(jj->ats.getValue<arr>("limit"));
+        PxJointLimitPair limit(limits(0), limits(1), 0.1f);
+        limit.restitution = limits(2);
+        limit.spring = limits(3);
+        limit.damping= limits(4);
+        desc->setLimit(limit);
+        desc->setRevoluteJointFlag(physx::PxRevoluteJointFlag::eLIMIT_ENABLED, true);
+        //desc->setProjectionAngularTolerance(3.14);
+      }
+      
+    }
+    break;
+    case ors::JT_fixed: {
+      // PxFixedJoint* desc =
+      PxFixedJointCreate(*mPhysics, this->s->actors(jj->ifrom), A, this->s->actors(jj->ito), B.getInverse());
+      // desc->setProjectionLinearTolerance(1e10);
+      // desc->setProjectionAngularTolerance(3.14);
+    }
+    break;
+    case ors::JT_trans3: {
+      break; 
+    }
+    default:
+      NIY;
+  }
+}
+
+void PhysXInterface::addBody(ors::Body *b, physx::PxMaterial *mMaterial) {
+  uint j;
+  ors::Shape* s;
+  PxRigidDynamic* actor;
+  switch(b->type) {
+    case ors::staticBT:
+      actor = (PxRigidDynamic*) mPhysics->createRigidStatic(OrsTrans2PxTrans(b->X));
+      break;
+    case ors::dynamicBT:
+      actor = mPhysics->createRigidDynamic(OrsTrans2PxTrans(b->X));
+      break;
+    case ors::kinematicBT:
+      actor = mPhysics->createRigidDynamic(OrsTrans2PxTrans(b->X));
+      actor->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
+      break;
+    case ors::noneBT:
+      actor = mPhysics->createRigidDynamic(OrsTrans2PxTrans(b->X));
+      break;
+  }
+  CHECK(actor, "create actor failed!");
+  for_list(j, s, b->shapes) {
+    PxGeometry* geometry;
+    switch(s->type) {
+      case ors::boxST: {
+        geometry = new PxBoxGeometry(.5 * s->size[0], .5 * s->size[1], .5 * s->size[2]);
       }
       break;
-      case ors::JT_fixed: {
-        // PxFixedJoint* desc =
-        PxFixedJointCreate(*mPhysics, this->s->actors(jj->ifrom), A, this->s->actors(jj->ito), B.getInverse());
-        // desc->setProjectionLinearTolerance(1e10);
-        // desc->setProjectionAngularTolerance(3.14);
+      case ors::sphereST: {
+        geometry = new PxSphereGeometry(s->size[3]);
+      }
+      break;
+      case ors::cappedCylinderST: {
+        geometry = new PxCapsuleGeometry(s->size[3], s->size[2]);
+      }
+      break;
+      case ors::cylinderST:
+      case ors::meshST: {
+        // Note: physx can't decompose meshes itself.
+        // Physx doesn't support triangle meshes in dynamic objects! See:
+        // file:///home/mtoussai/lib/PhysX/Documentation/PhysXGuide/Manual/Shapes.html
+        // We have to decompose the meshes "by hand" and feed them to PhysX.
+
+        // PhysX uses float for the vertices
+        floatA Vfloat;
+
+        Vfloat.clear();
+        copy(Vfloat, s->mesh.V); //convert vertices from double to float array..
+        PxConvexMesh* triangleMesh = PxToolkit::createConvexMesh(
+            *mPhysics, *mCooking, (PxVec3*)Vfloat.p, Vfloat.d0,
+            PxConvexFlag::eCOMPUTE_CONVEX | PxConvexFlag::eINFLATE_CONVEX);
+        geometry = new PxConvexMeshGeometry(triangleMesh);
+      }
+      break;
+      case ors::markerST: {
+        geometry = NULL;
       }
       break;
       default:
         NIY;
     }
+    if(geometry) {
+      PxShape* shape = actor->createShape(*geometry, *mMaterial, OrsTrans2PxTrans(s->rel));
+      CHECK(shape, "create shape failed!");
+    }
+    //actor = PxCreateDynamic(*mPhysics, OrsTrans2PxTrans(s->X), *geometry, *mMaterial, 1.f);
   }
-  /// end of joints
+  if(b->ats.getValue<double>("mass")) {
+    PxRigidBodyExt::setMassAndUpdateInertia(*actor, *(b->ats.getValue<double>("mass")));
+  }
+  if (b->type == ors::dynamicBT) {
+    if(!b->ats.getValue<double>("mass")) 
+      PxRigidBodyExt::updateMassAndInertia(*actor, 1.f);
+  }
+  if(b->type == ors::dynamicBT) {
+    PxRigidBodyExt::updateMassAndInertia(*actor, 1.f);
+    actor->setAngularDamping(0.75);
+    actor->setLinearVelocity(PxVec3(b->X.vel.x, b->X.vel.y, b->X.vel.z));
+    actor->setAngularVelocity(PxVec3(b->X.angvel.x, b->X.angvel.y, b->X.angvel.z));
+  }
+  this->s->gScene->addActor(*actor);
+
+  this->s->actors.append(actor);
+  //WARNING: actors must be aligned (indexed) exactly as G->bodies
 }
 
 void PhysXInterface::pullState() {
   for_index(i, s->actors) PxTrans2OrsTrans(G->bodies(i)->X, s->actors(i)->getGlobalPose());
   G->calcShapeFramesFromBodies();
   G->calcJointsFromBodyFrames();
+}
+
+void PhysXInterface::syncWithOrs() {
+  PxMaterial* mMaterial = mPhysics->createMaterial(1.f, 1.f, 0.5f);
+  for_index(i, G->bodies) {
+    if(s->actors.N > i) {
+      s->actors(i)->setGlobalPose(OrsTrans2PxTrans(G->bodies(i)->X));
+    }
+    else {
+      addBody(G->bodies(i), mMaterial);  
+    }
+  }
 }
 
 void PhysXInterface::ShutdownPhysX() {

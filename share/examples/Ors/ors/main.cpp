@@ -72,7 +72,7 @@ void TEST(KinematicSpeed){
 #define NUM 10000
 #if 1
   ors::Graph G;
-  G.init("pr2_clean.ors");
+  G.init("arm7.ors");
   G.makeLinkTree();
   uint n=G.getJointStateDimension();
   arr x(n);
@@ -115,7 +115,6 @@ namespace Ctest{
   void f(arr& c, arr *dfdx, const arr &x,void*){
     G->setJointState(x); G->calcBodyFramesFromJoints();
     swift->computeProxies(*G,false);
-    G->sortProxies(true);
     G->phiCollision(c, (dfdx?*dfdx:NoArr), .2);
   }
 }
@@ -139,7 +138,6 @@ void TEST(Contacts){
     G.setJointState(x);
     G.calcBodyFramesFromJoints();
     swift.computeProxies(G,false);
-    G.sortProxies(true);
 
     G.reportProxies();
 
@@ -439,6 +437,7 @@ void TEST(ContactDynamics){
 // blender import test
 //
 
+#if 0
 static void drawTrimesh(void* _mesh){
 #if MT_GL
   ors::Mesh *mesh=(ors::Mesh*)_mesh;
@@ -462,6 +461,7 @@ void TEST(BlenderImport){
   gl.text="testing blender import";
   animateConfiguration(bl,gl);
 }
+#endif
 
 int MAIN(int argc,char **argv){
 

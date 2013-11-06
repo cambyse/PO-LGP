@@ -1,13 +1,20 @@
 BASE   = ../..
 NAME   = lib$(shell basename `pwd`)
 OUTPUT = $(BASE)/lib/$(NAME).so
+-include $(BASE)/make-config
 
+ifndef MLR_RoboticsCourse
 GTK = 1
 GTKGL = 1
 FREEGLUT = 0
 QHULL = 1
 GRAPHVIZ = 1
 DEPEND = Core extern_ply extern_GJK
+else
+QHULL = 1
+FREEGLUT = 1
+DEPEND = Core
+endif
 
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS = $(SRCS:%.cpp=%.o)

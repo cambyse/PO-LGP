@@ -60,6 +60,7 @@ cd $MLR_LIBPATH
 mkdir -p include/physx
 cp -R src/$SRC_PATH/Include/* include/physx
 cp -R src/$SRC_PATH/Samples/PxToolkit/include include/physx/toolkit
+mkdir -p lib
 if [ "$(uname -m)" = "x86_64" ] ; then
   cp src/$SRC_PATH/Lib/linux64/* lib
 else

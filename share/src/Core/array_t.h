@@ -117,6 +117,24 @@ template<class T> MT::Array<T>::Array(const MT::Array<T>& a, uint i, uint j){ in
 /// this becomes a reference on the C-array \c p
 template<class T> MT::Array<T>::Array(const T* p, uint size) { init(); referTo(p, size); }
 
+
+/**
+ * @brief Initialization list for MT::Array
+ *
+ * This makes it possible to initialize list like this:
+\code
+arr a = { 1.1, 2, 25.7, 12 };
+\endcode
+ * See http://en.cppreference.com/w/cpp/utility/initializer_list for more.
+ *
+ * @param list the list used to initialize the array.
+ */
+template<class T>
+MT::Array<T>::Array(std::initializer_list<T> list) {
+  init();
+  for(T t : list) append(t);
+}
+
 template<class T> MT::Array<T>::~Array() {
   freeMEM();
 }
@@ -163,7 +181,7 @@ template<class T> MT::Array<T>& MT::Array<T>::resize(uint ND, uint *dim) {
   uint64_t S;
   for(S=1, j=0; j<nd; j++) S*=dim[j];
   if(S>=(1ull <<32)) HALT("Array #elements " <<(S>>30) <<"G is >= 2^32");
-  resizeMEM(S, false);
+  resizeMEM((uint)S, false);
   return *this;
 }
 
@@ -176,7 +194,7 @@ template<class T> MT::Array<T>& MT::Array<T>::resizeCopy(uint ND, uint *dim) {
   uint64_t S;
   for(S=1, j=0; j<nd; j++) S*=dim[j];
   if(S>=(1ull <<32)) HALT("Array #elements " <<(S>>30) <<"G is >= 2^32");
-  resizeMEM(S, true);
+  resizeMEM((uint)S, true);
   return *this;
 }
 
@@ -841,7 +859,7 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, int j, int J) con
   if(j<0) j+=d1;
   if(I<0) I+=d0;
   if(J<0) J+=d1;
-  CHECK(i>=0 && j>=0 && I>=0 && J>=0 && i<=I && j<=J, "lower limit must be higher than upper!");
+  CHECK(i>=0 && j>=0 && I>=0 && J>=0 && i<=I && j<=J, "lower limit higher than upper!");
   x.resize(I-i+1, J-j+1);
   int k, l;
   for(k=i; k<=I; k++) for(l=j; l<=J; l++) x(k-i, l-j)=operator()(k, l);
@@ -859,8 +877,8 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, int j, int J, int
   if(k<0) j+=d2;
   if(I<0) I+=d0;
   if(J<0) J+=d1;
-  if(K<0) J+=d2;
-  CHECK(i>=0 && j>=0 && k>=0 && I>=0 && J>=0 && K>=0 && i<=I && j<=J && k<K, "lower limit must be higher than upper!");
+  if(K<0) K+=d2;
+  CHECK(i>=0 && j>=0 && k>=0 && I>=0 && J>=0 && K>=0 && i<=I && j<=J && k<=K, "lower limit higher than upper!");
   x.resize(I-i+1, J-j+1, K-k+1);
   int ii, jj, kk;
   for(ii=i; ii<=I; ii++) for(jj=j; jj<=J; jj++)  for(kk=k; kk<=K; kk++) x(ii-i, jj-j, kk-k)=operator()(ii, jj, kk);
@@ -881,6 +899,69 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, Array<uint> cols)
   int k, l;
   for(k=i; k<=I; k++) for(l=0; l<(int)cols.N; l++) x(k-i, l)=operator()(k, cols(l));
   return x;
+}
+
+
+/**
+ * @brief Return a copy of row `row_index` of the Array.
+ *
+ * This is just a convenient wrapper around `sub`.
+ *
+ * @tparam T data type of the array.
+ * @param row_index the row to access.
+ *
+ * @return  copy of row `row_index`.
+ */
+template<class T>
+MT::Array<T> MT::Array<T>::row(uint row_index) const {
+  return sub(row_index, row_index, 0, d1 - 1);
+}
+
+/**
+ * @brief Return a copy of column col_index of the Array.
+ *
+ * This is just a convenient wrapper around `sub`.
+ *
+ * @tparam T data type of the array.
+ * @param col_index the column to access.
+ *
+ * @return  copy of column `col_index`.
+ */
+template<class T>
+MT::Array<T> MT::Array<T>::col(uint col_index) const {
+  return sub(0, d0 - 1, col_index, col_index);
+}
+
+/**
+ * @brief Return a copy of the rows from `start_row` to excluding `end_row`.
+ *
+ * This is just a convenient wrapper around `sub`.
+ *
+ * @tparam T Data type of the array.
+ * @param start_row Start copying from index `start_row`.
+ * @param end_row Stop copying at excluding `end_row`.
+ *
+ * @return Copy of the rows from `start` to excluding `end_row`.
+ */
+template<class T>
+MT::Array<T> MT::Array<T>::rows(uint start_row, uint end_row) const {
+  return sub(start_row, end_row - 1, 0, d1 - 1);
+}
+
+/**
+ * @brief Return a copy of the columns from column `start_col` to (excluding) `end_col`.
+ *
+ * This is just a convenient wrapper around `sub`.
+ *
+ * @tparam T Data type of the array.
+ * @param start_col Start copying from index `start_col`.
+ * @param end_col Stop copying at excluding `end_col`.
+ *
+ * @return Copy of the columns from `start_col` to excluding `end_col`.
+ */
+template<class T>
+MT::Array<T> MT::Array<T>::cols(uint start_col, uint end_col) const {
+  return sub(0, d0 - 1, start_col, end_col - 1);
 }
 
 
@@ -1005,7 +1086,7 @@ template<class T> void MT::Array<T>::setId(int d) {
 template<class T> void MT::Array<T>::setDiag(const T& x, int d) {
   CHECK(d!=-1 || nd==2, "need squared matrix to set to diagonal");
   if(d!=-1) resize(d, d);
-  if(d==-1) d=MT::MIN(d0, d1);
+  if(d==-1) d=(int)MT::MIN(d0, d1);
   setZero();
   uint i;
   for(i=0; i<(uint)d; i++) operator()(i, i)=x;
@@ -1392,8 +1473,6 @@ template<class T> void MT::Array<T>::shift(int offset, bool wrapAround) {
 }
 
 
-//***** I/O
-
 /** @brief prototype for operator<<, writes the array by separating elements with ELEMSEP, separating rows with LINESEP, using BRACKETS[0] and BRACKETS[1] to brace the data, optionally writs a dimensionality tag before the data (see below), and optinally in binary format */
 template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP, const char *LINESEP, const char *BRACKETS, bool dimTag, bool binary) const {
   CHECK(!binary || memMove, "binary write works only for memMoveable data");
@@ -1411,7 +1490,7 @@ template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP
     os.put(0);
     os <<std::endl;
   } else {
-    if(dimTag) { writeDim(os); os <<' '; }
+    if(dimTag || nd>=3) { writeDim(os); os <<' '; }
     if(nd>=2) os <<'\n';
     if(BRACKETS[0]) os <<BRACKETS[0];
     if(nd==0 && N==0) { if(BRACKETS[1]) os <<BRACKETS[1]; return; }
@@ -1433,17 +1512,9 @@ template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP
       }
     if(nd>3) {
       CHECK(d && d!=&d0, "");
-      //Array<uint> I;
       for(i=0; i<N; i++) {
         if(i && !(i%d[nd-1])) os <<LINESEP;
-        if(nd>1 && !(i%(d[nd-2]*d[nd-1]))) {
-          /*getIndexTuple(I, i);
-          os <<LINESEP <<'<' <<I(0);
-          for(j=1;j<nd;j++) os <<' ' <<I(j);
-          os <<':' <<i <<'>' <<LINESEP;
-          */
-          os <<LINESEP;
-        }
+        if(nd>1 && !(i%(d[nd-2]*d[nd-1]))) os <<LINESEP;
         os <<ELEMSEP <<elem(i);
       }
     }
@@ -2731,8 +2802,8 @@ template<class T> uint numberSharedElements(const MT::Array<T>& x, const MT::Arr
 
 /// Assign all elements of \c a to a uniformly distributed discrete value in {low, .., hi}
 template<class T> void rndInteger(MT::Array<T>& a, int low, int high, bool add) {
-  if(!add) for(uint i=0; i<a.N; i++) a.p[i] =low+(int)rnd.num(1+high-low);
-  else     for(uint i=0; i<a.N; i++) a.p[i]+=low+(int)rnd.num(1+high-low);
+  if(!add) for(uint i=0; i<a.N; i++) a.p[i] =(T)(low+(int)rnd.num(1+high-low));
+  else     for(uint i=0; i<a.N; i++) a.p[i]+=(T)(low+(int)rnd.num(1+high-low));
 }
 
 /// Assign all elements of \c a to a uniformly distributed continuous value in [low, hi]
@@ -2927,7 +2998,7 @@ template<class T> void negative(MT::Array<T>& x, const MT::Array<T>& y) {
     if(&x!=&y) x.resizeAs(y);         \
     T *xp=x.p, *xstop=xp+x.N;            \
     const T *yp=y.p;            \
-    for(; xp!=xstop; xp++, yp++) *xp = ::func( (double) *yp );  \
+    for(; xp!=xstop; xp++, yp++) *xp = (T)::func( (double) *yp );  \
     return x;         \
   }
 

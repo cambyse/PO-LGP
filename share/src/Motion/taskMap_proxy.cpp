@@ -3,16 +3,13 @@
 ProxyTaskMap::ProxyTaskMap(PTMtype _type,
              uintA _shapes,
              double _margin,
-             bool _linear) {
+             bool _useCenterDist) {
   type=_type;
   shapes=_shapes;
   margin=_margin;
-  linear=_linear;
+  useCenterDist=_useCenterDist;
   cout <<"creating ProxyTaskMap with shape list" <<shapes <<endl;
 }
-
-//TODO: defined in Ors/ors_taskVariables.cpp !!
-void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph& G, double margin, bool linear);
 
 void ProxyTaskMap::phi(arr& y, arr& J, const ors::Graph& G){
   uint i;
@@ -22,36 +19,46 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::Graph& G){
   if(&J){ J.resize(1, G.getJointStateDimension(false));  J.setZero(); }
 
   switch(type) {
-    case allCTVT:
+    case allPTMT:
       for_list(i,p,G.proxies)  if(p->d<margin) {
-        addAContact(y(0), J, p, G, margin, linear);
+        addAContact(y(0), J, p, G, margin, useCenterDist);
         p->colorCode = 1;
       }
       break;
-    case allListedCTVT:
+    case listedVsListedPTMT:
       for_list(i,p,G.proxies)  if(p->d<margin) {
         if(shapes.contains(p->a) && shapes.contains(p->b)) {
-          addAContact(y(0), J, p, G, margin, linear);
+          addAContact(y(0), J, p, G, margin, useCenterDist);
           p->colorCode = 2;
         }
       }
-    case allExceptListedCTVT:
+      break;
+    case allVersusListedPTMT: {
+      for_list(i,p,G.proxies)  if(p->d<margin) {
+        if(shapes.contains(p->a) || shapes.contains(p->b)) {
+          addAContact(y(0), J, p, G, margin, useCenterDist);
+          p->colorCode = 2;
+        }
+      }
+    } break;
+    case allExceptListedPTMT:
       for_list(i,p,G.proxies)  if(p->d<margin) {
         if(!shapes.contains(p->a) && !shapes.contains(p->b)) {
-          addAContact(y(0), J, p, G, margin, linear);
+          addAContact(y(0), J, p, G, margin, useCenterDist);
           p->colorCode = 3;
         }
       }
       break;
-    case bipartiteCTVT:
+    case bipartitePTMT:
       for_list(i,p,G.proxies)  if(p->d<margin) {
         if((shapes.contains(p->a) && shapes2.contains(p->b)) ||
             (shapes.contains(p->b) && shapes2.contains(p->a))) {
-          addAContact(y(0), J, p, G, margin, linear);
+          addAContact(y(0), J, p, G, margin, useCenterDist);
           p->colorCode = 4;
         }
       }
-    case pairsCTVT: {
+      break;
+    case pairsPTMT: {
       shapes.reshape(shapes.N/2,2);
       // only explicit paris in 2D array shapes
       uint j;
@@ -61,12 +68,12 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::Graph& G){
             break;
         }
         if(j<shapes.d0) { //if a pair was found
-          addAContact(y(0), J, p, G, margin, linear);
+          addAContact(y(0), J, p, G, margin, useCenterDist);
           p->colorCode = 5;
         }
       }
     } break;
-    case allExceptPairsCTVT: {
+    case allExceptPairsPTMT: {
       shapes.reshape(shapes.N/2,2);
       // only explicit paris in 2D array shapes
       uint j;
@@ -76,12 +83,12 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::Graph& G){
             break;
         }
         if(j==shapes.d0) { //if a pair was not found
-          addAContact(y(0), J, p, G, margin, linear);
+          addAContact(y(0), J, p, G, margin, useCenterDist);
           p->colorCode = 5;
         }
       }
     } break;
-    case vectorCTVT: {
+    case vectorPTMT: {
       //outputs a vector of collision meassures, with entry for each explicit pair
       shapes.reshape(shapes.N/2,2);
       y.resize(shapes.d0);  y.setZero();
@@ -93,7 +100,7 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::Graph& G){
             break;
         }
         if(j<shapes.d0) {
-          addAContact(y(j), J[j](), p, G, margin, linear);
+          addAContact(y(j), J[j](), p, G, margin, useCenterDist);
           p->colorCode = 5;
         }
       }
@@ -104,14 +111,15 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::Graph& G){
 
 uint ProxyTaskMap::dim_phi(const ors::Graph& G){
   switch(type) {
-  case allCTVT:
-  case allListedCTVT:
-  case allExceptListedCTVT:
-  case bipartiteCTVT:
-  case pairsCTVT:
-  case allExceptPairsCTVT:
+  case allPTMT:
+  case listedVsListedPTMT:
+  case allVersusListedPTMT:
+  case allExceptListedPTMT:
+  case bipartitePTMT:
+  case pairsPTMT:
+  case allExceptPairsPTMT:
     return 1;
-  case vectorCTVT:
+  case vectorPTMT:
     return shapes.d0;
   default: NIY;
   }

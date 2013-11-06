@@ -37,7 +37,7 @@ void threadedRun() {
   uint t;
 
   for(t=0;/*t<100*/;t++){
-    if(engine().shutdown) break;
+    if(engine().shutdown.getValue()) break;
     S.ueye_rgb.var->waitForNextWriteAccess();
     rgbImg = S.ueye_rgb.get();
     if(rgbImg.N>0) {

@@ -1,5 +1,10 @@
 # MLR Repository
 
+Doxygen documentation: http://sully.informatik.uni-stuttgart.de:8080/job/MLR-share-doxygen/doxygen/
+
+Jenkins status: http://sully.informatik.uni-stuttgart.de:8080/
+
+
 ## Install on Ubuntu
 Install the mlr system by executing:
 
@@ -34,20 +39,21 @@ link it:
     $ sudo ldconfig
 
 qhull is newer in arch than in ubuntu and changes some pointer/reference things.
-You can get the newer behaviour by adding
+You need to put 
 
-    QHULL2010 = 1
+   ARCH_LINUX = 1
 
-to your make-config.
+in your make-config. This fixes the qhull change.
 
 Everything else is equal to ubuntu.
 
 
 ## Getting started
 
-The currently only way to learn about this code and understand what is can do it to go through all examples.
+The best way to learn about this code and understand what is can do it to go through all examples.
+and take a look at the Doxygen documentation http://sully.informatik.uni-stuttgart.de:8080/job/MLR-share-doxygen/doxygen/
 
-Start with
+For the examples start with
 
  - examples/Core
  - examples/Gui

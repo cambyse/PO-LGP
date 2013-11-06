@@ -64,8 +64,8 @@ Simulator::Simulator(const char* orsFile){
   s = new sSimulator;
   
   //ORS
-  //s->G.init(orsFile);
   init(s->G, s->gl, orsFile);
+  s->G.calcBodyFramesFromJoints();
   /*  if(s->G.getBodyByName("rfoot")){
     s->G.reconfigureRoot(s->G.getBodyByName("rfoot"));
     s->G.calcBodyFramesFromJoints();
@@ -74,13 +74,6 @@ Simulator::Simulator(const char* orsFile){
   //G.makeLinkTree();
   
   //OPENGL
-  // s->gl.add(drawEnv, 0);
-  // s->gl.add(ors::glDrawGraph, &s->G);
-  // s->gl.setClearColors(1., 1., 1., 1.);
-  // s->gl.camera.setPosition(10., -15., 8.);
-  // s->gl.camera.focus(0, 0, 1.);
-  // s->gl.camera.upright();
-  // s->gl.update();
   s->gl.add(glDrawPlot, &plotModule);
   
   //SWIFT
@@ -134,7 +127,6 @@ void Simulator::setJointAnglesAndVels(const arr& q, const arr& qdot){
   s->G.setJointState(q, qdot);
   s->G.calcBodyFramesFromJoints();
   s->swift.computeProxies(s->G, false);
-  s->G.sortProxies(true);
   s->gl.update();
   if(&q!=&s->q) s->q = q;
   if(&qdot!=&s->qdot) s->qdot = qdot;

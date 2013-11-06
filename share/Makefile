@@ -16,11 +16,19 @@ all: $(srcs:%=makePath/%) $(exas:%=makePath/%)
 
 src: $(srcs:%=makePath/%)
 
+python: src
+	make --directory=src/Core -f Makefile_corepy
+	make --directory=src/Ors -f Makefile_orspy
+	make --directory=src/Motion -f Makefile_motionpy
+
 examples: $(exas:%=makePath/%)
 
 depend: $(srcs:%=dependPath/%)
 
 clean: $(srcs:%=cleanPath/%) $(exas:%=cleanPath/%) cleanLocks
+
+inf:
+	@echo "srcs =" $(srcs)
 
 ################################################################################
 
@@ -36,6 +44,8 @@ cleanLocks: force
 	find . -name 'Make.lock' -type d -delete
 
 %.tgz:: force
+	mv -f make-config make-config.mine
+	cp -f slices/$*.make-config ./make-config
 	rm -f $*.tgz;
 	cd ..; \
 	tar cvzf $*.tgz --exclude-vcs \
@@ -43,5 +53,6 @@ cleanLocks: force
 	--files-from $(PWD)/slices/$*.tar.incl \
 	--exclude-from $(PWD)/slices/tar.excl \
 	--exclude-from $(PWD)/slices/$*.tar.excl
+	cp -f make-config.mine make-config
 
 include make-generic

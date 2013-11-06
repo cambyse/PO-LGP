@@ -23,6 +23,10 @@
 #define MT_ors_physx_h
 #include "ors.h"
 
+namespace physx {
+  class PxMaterial;
+}
+
 /**
  * @defgroup ors_interface_physx Interface to PhysX
  * @ingroup ors_interfaces
@@ -41,7 +45,12 @@ struct PhysXInterface {
   
   void pushState();
   void pullState();
+
+  void syncWithOrs();
   
+  void addBody(ors::Body *b, physx::PxMaterial *material);
+  void addJoint(ors::Joint *jj);
+
   void ShutdownPhysX();
 };
 
