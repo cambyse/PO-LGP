@@ -241,16 +241,6 @@ namespace util {
         return vec[rand()%vec.size()];
     }
 
-    /** \brief Generic function that returns the smaller of c1 and c2 (c2 for
-     * equality). */
-    template < class C >
-        C min(const C& c1, const C& c2) { return c1<c2 ? c1 : c2; }
-
-    /** \brief Generic function that returns the greater of c1 and c2 (c2 for
-     * equality). */
-    template < class C >
-        C max(const C& c1, const C& c2) { return c1>c2 ? c1 : c2; }
-
     /** \brief Generic sign function.
      *
      * Returns -1 if val is less than T(0), +1 for greater, and 0 for equality. */

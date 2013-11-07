@@ -8,15 +8,18 @@
 #define DEBUG_LEVEL 1
 #include "debug.h"
 
-using util::min;
-using util::max;
+#include <algorithm>
+
 using util::clamp;
 using util::sgn;
 using util::is_finite_number;
+
 using std::vector;
 using std::pair;
 using std::make_pair;
 using std::sort;
+using std::min;
+using std::max;
 
 SmoothingKernelSigmoid::SmoothingKernelSigmoid(const double& width,
                                                const double& g,

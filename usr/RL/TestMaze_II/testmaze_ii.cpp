@@ -7,6 +7,7 @@
 
 #include <float.h>  // for DBL_MAX
 #include <vector>
+#include <algorithm> // for min, max
 
 #ifdef BATCH_MODE_QUIET
 #define DEBUG_LEVEL 0
@@ -19,12 +20,12 @@ using std::vector;
 using std::cout;
 using std::endl;
 using std::get;
+using std::min;
+using std::max;
 
 using util::arg_int;
 using util::arg_double;
 using util::arg_string;
-using util::min;
-using util::max;
 
 #include "QtUtil.h"
 
@@ -664,13 +665,13 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     reward_t reward;
                     maze.perform_transition(action,state_to,reward);
                     ++state_counts[state_to];
-                    max_count = util::max<int>(state_counts[state_to],max_count);
+                    max_count = max(state_counts[state_to],max_count);
                 }
                 // transform into colors
                 Maze::color_vector_t cols;
                 for(stateIt_t state=stateIt_t::first(); state!=util::INVALID; ++state) {
                     double p = state_counts[state];
-                    DEBUG_OUT(0,"State " << state << ": p = " << p/util::max<int>(n,1) );
+                    DEBUG_OUT(0,"State " << state << ": p = " << p/max(n,1) );
                     p /= max_count;
                     cols.push_back( std::make_tuple(1,1-p,1-p) );
                 }

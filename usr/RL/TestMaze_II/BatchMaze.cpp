@@ -19,6 +19,7 @@
 #include <set>
 #include <tuple>
 #include <iomanip> // for std::setw
+#include <algorithm> // for min, max
 
 #include <QString>
 #include "QtUtil.h" // for << operator
@@ -40,10 +41,10 @@ using std::tuple;
 using std::make_tuple;
 using std::get;
 using std::vector;
+using std::min;
+using std::max;
 
 using util::clamp;
-using util::min;
-using util::max;
 
 const vector<QString> BatchMaze::mode_vector = {
     "RANDOM",
@@ -897,18 +898,18 @@ void BatchMaze::initialize_log_file() {
 
 void BatchMaze::generate_uniform_samples(vector<int>& sample_vector) const {
     // get minimum and maximum
-    int min = 0, max = 0;
+    int minimum = 0, maximum = 0;
     if(mode=="OPTIMAL" || mode=="RANDOM") {
         // nothing to do
     } else if(mode=="SEARCH_TREE") {
-        min = switch_int("-minTree");
-        max = switch_int("-maxTree");
+        minimum = switch_int("-minTree");
+        maximum = switch_int("-maxTree");
     } else if(mode=="TRANSITIONS") {
-        min = switch_int("-minTran");
-        max = switch_int("-maxTran");
+        minimum = switch_int("-minTran");
+        maximum = switch_int("-maxTran");
     } else {
-        min = switch_int("-minTrain");
-        max = switch_int("-maxTrain");
+        minimum = switch_int("-minTrain");
+        maximum = switch_int("-maxTrain");
     }
     // get number of episodes
     int episodes = switch_int("-nEp");
@@ -916,30 +917,30 @@ void BatchMaze::generate_uniform_samples(vector<int>& sample_vector) const {
     // get increment
     int incr = switch_int("-incr");
     if(incr==0) {
-        incr = (int)ceil((double)(max-min)/(episodes-1));
+        incr = (int)ceil((double)(maximum-minimum)/(episodes-1));
     } else if(incr<0) {
-        incr = (int)ceil((double)(max-min)/((-episodes/incr)-1));
+        incr = (int)ceil((double)(maximum-minimum)/((-episodes/incr)-1));
     }
     for(int i=0; i<episodes; ++i) {
-        int incr_factor = i%(1+(int)ceil((double)(max-min)/incr));
-        sample_vector[i] = util::min<int>(max,min+incr_factor*incr);
+        int incr_factor = i%(1+(int)ceil((double)(maximum-minimum)/incr));
+        sample_vector[i] = min(maximum,minimum+incr_factor*incr);
     }
 }
 
 void BatchMaze::generate_exp_samples(vector<int>& sample_vector) const {
     // get minimum and maximum
-    int min = 0, max = 0;
+    int minimum = 0, maximum = 0;
     if(mode=="OPTIMAL" || mode=="RANDOM") {
         // nothing to do
     } else if(mode=="SEARCH_TREE") {
-        min = switch_int("-minTree");
-        max = switch_int("-maxTree");
+        minimum = switch_int("-minTree");
+        maximum = switch_int("-maxTree");
     } else if(mode=="TRANSITIONS") {
-        min = switch_int("-minTran");
-        max = switch_int("-maxTran");
+        minimum = switch_int("-minTran");
+        maximum = switch_int("-maxTran");
     } else {
-        min = switch_int("-minTrain");
-        max = switch_int("-maxTrain");
+        minimum = switch_int("-minTrain");
+        maximum = switch_int("-maxTrain");
     }
 
     // get number of episodes
@@ -954,13 +955,13 @@ void BatchMaze::generate_exp_samples(vector<int>& sample_vector) const {
 
     // get maximum idx
     int max_i = 0;
-    while((int)round(min + max_i*incr + pow(exp_factor,max_i) - 1) < max) {
+    while((int)round(minimum + max_i*incr + pow(exp_factor,max_i) - 1) < maximum) {
         ++max_i;
     }
 
     // generate samples
     for(int i=0; i<episodes; ++i) {
         int idx = i%(max_i+1);
-        sample_vector[i] = util::min<int>((int)round(min + idx*incr + pow(exp_factor,idx) - 1),max);
+        sample_vector[i] = min((int)round(minimum + idx*incr + pow(exp_factor,idx) - 1),maximum);
     }
 }

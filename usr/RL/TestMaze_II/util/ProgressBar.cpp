@@ -3,10 +3,13 @@
 
 #include <iostream>
 
+#include <algorithm>
+
 using std::string;
 using std::cout;
 using std::endl;
 using std::flush;
+using std::min;
 
 uint ProgressBar::bar_width = DEFAULT_PROGRESS_BAR_WIDTH;
 uint ProgressBar::current_progress = 0;
@@ -81,7 +84,7 @@ void ProgressBar::print() {
     cout << "|";
 
     // print processed part
-    for(uint idx=0; idx < util::min<uint>(current_progress,bar_width); ++idx) {
+    for(uint idx=0; idx < min(current_progress,bar_width); ++idx) {
         cout << "-";
     }
 

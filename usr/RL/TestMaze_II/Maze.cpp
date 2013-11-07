@@ -4,6 +4,8 @@
 #define DEBUG_LEVEL 0
 #include "debug.h"
 
+#include <algorithm>
+
 using std::tuple;
 using std::pair;
 using std::make_pair;
@@ -13,9 +15,9 @@ using std::get;
 using std::string;
 using std::stringstream;
 using std::endl;
+using std::min;
+using std::max;
 
-using util::min;
-using util::max;
 using util::INVALID;
 
 static const double state_size = 0.9;                             // Size of states for rendering.
@@ -994,7 +996,7 @@ void Maze::frame_maze() {
     double border_y = first_maze_state.y()-state_size/2 - border_margin;
     double border_width = last_maze_state.x()+state_size/2 - border_x + border_margin;
     double border_height = last_maze_state.y()+state_size/2 - border_y + border_margin;
-    double reward_magnitude = util::max<double>(fabs(reward_t::max_reward), fabs(reward_t::min_reward));
+    double reward_magnitude = max(fabs(reward_t::max_reward), fabs(reward_t::min_reward));
     for(rewardIt_t rewIt=rewardIt_t::first(); rewIt!=INVALID; ++rewIt) {
         double intensity = ((reward_t)rewIt)/reward_magnitude;
         bool positive = intensity>=0;
