@@ -29,7 +29,8 @@ HEADERS += LookAheadSearch.h \
     HistoryObserver.h \
     qcustomplot.h \
     SmoothingKernelSigmoid.h \
-    QtUtil.h
+    QtUtil.h \
+    optimization/LBFGS_Optimizer.h
 SOURCES += LookAheadSearch.cpp \
     util.cpp \
     BatchMaze.cpp \
@@ -55,12 +56,14 @@ SOURCES += LookAheadSearch.cpp \
     HistoryObserver.cpp \
     qcustomplot.cpp \
     SmoothingKernelSigmoid.cpp \
-    QtUtil.cpp
+    QtUtil.cpp \
+    optimization/LBFGS_Optimizer.cpp
 LIBS += -llbfgs \
     -lemon \
     -larmadillo \
     -lgomp
 INCLUDEPATH +=
+LIBPATH += /usr/share/lib
 FORMS += testmaze_ii.ui
 RESOURCES +=
 QMAKE_CXXFLAGS += -std=c++0x \
