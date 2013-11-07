@@ -46,4 +46,17 @@ namespace util {
 
     const InvalidBase INVALID = InvalidBase(true);
 
+    Range::RangeIt & Range::RangeIt::operator++() {
+        ++idx;
+        return *this;
+    }
+    bool Range::RangeIt::operator== (const RangeIt& other) const {
+        return other.idx==this->idx;
+    }
+    bool Range::RangeIt::operator!= (const RangeIt& other) const {
+        return !(other==*this);
+    }
+    Range::RangeIt Range::begin() const { return RangeIt(begin_idx); }
+    Range::RangeIt Range::end() const { return RangeIt(end_idx); }
+
 } // end namespace util

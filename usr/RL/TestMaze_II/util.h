@@ -197,6 +197,42 @@ namespace util {
         InvalidAdapter& operator=(const C& c) {}
     };
 
+    /** \brief Convenience class to iterate over a range of integers.
+     *
+     * This class allows to write something like
+     * @code
+     for( int i : Range(11,17) ) {
+         cout << "idx = " << i << endl;
+     }
+     * @endcode
+     * to iterate from 11 to 17 inclusively or
+     * @code
+     for( int i : Range(100) ) {
+         cout << "idx = " << i << endl;
+     }
+     * @endcode
+     * to iterate from 0 to 99. */
+    class Range {
+    public:
+        /** \brief Iterator class to iterate through a Range object. */
+        class RangeIt {
+        public:
+        RangeIt(int i): idx(i) {}
+            RangeIt & operator++();
+            bool operator== (const RangeIt& other) const;
+            bool operator!= (const RangeIt& other) const;
+            int operator*() const { return idx; }
+        private:
+            int idx;
+        };
+    Range(int f, int l): begin_idx(f), end_idx(l+1) {}
+    Range(int l): begin_idx(0), end_idx(l) {}
+        RangeIt begin() const;
+        RangeIt end() const;
+    private:
+        int begin_idx, end_idx;
+    };
+
     //========================================================//
     //                  Global Variables                      //
     //========================================================//
