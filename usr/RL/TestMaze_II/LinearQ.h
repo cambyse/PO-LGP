@@ -5,6 +5,7 @@
 
 #include "Feature.h"
 #include "HistoryObserver.h"
+#include "optimization/LBFGS_Optimizer.h"
 
 #define ARMA_NO_DEBUG
 #include <armadillo>
@@ -13,13 +14,20 @@
 
 #include <vector>
 
-class LinearQ: public HistoryObserver
+class LinearQ: public HistoryObserver, public LBFGS_Optimizer
 {
 public:
 
     USE_CONFIG_TYPEDEFS;
     typedef Feature::feature_return_value    f_ret_t;
     typedef std::vector<const instance_t *>  instance_vector_t;
+
+    /** \brief What strategy to use for optimizting the features weights. */
+    enum class OPTIMIZATION_TYPE {
+        TD_RIDGE, ///< Ridge regression on the TD error (solving a system of linear equations)
+        TD_L1,    ///< Minimize TD error with L1-regularization (objective can be computed efficiently)
+        BELLMAN   ///< Minimize Bellman error
+    };
 
     LinearQ(const double&);
     virtual ~LinearQ();
@@ -65,68 +73,78 @@ public:
 
     void erase_zero_weighted_features(const double& threshold = 0);
 
-    /** \brief Calls evaluate_model() on instance. */
-    static lbfgsfloatval_t static_evaluate_model(
-            void *instance,
-            const lbfgsfloatval_t *x,
-            lbfgsfloatval_t *g,
-            const int n,
-            const lbfgsfloatval_t step
-    );
+    /** \brief Overrides the function in LBFGS_Optimizer and calls the objective
+     * defined by LinearQ::optimization_type. */
+    virtual lbfgsfloatval_t objective(
+        const lbfgsfloatval_t *x,
+        lbfgsfloatval_t *g,
+        const int n
+        ) override;
 
-    /** \brief Evaluate objective and gradient. */
-    lbfgsfloatval_t evaluate_model(
-            const lbfgsfloatval_t *x,
-            lbfgsfloatval_t *g,
-            const int n
-    );
+    /** \brief Objective for OPTIMIZATION_TYPE::TD_L1. */
+    virtual lbfgsfloatval_t td_error_objective(
+        const lbfgsfloatval_t *x,
+        lbfgsfloatval_t *g,
+        const int n
+        );
 
-    /** \brief Calls progress_model() on instance. */
-    static int static_progress_model(
-            void *instance,
-            const lbfgsfloatval_t *x,
-            const lbfgsfloatval_t *g,
-            const lbfgsfloatval_t fx,
-            const lbfgsfloatval_t xnorm,
-            const lbfgsfloatval_t gnorm,
-            const lbfgsfloatval_t step,
-            int n,
-            int k,
-            int ls
-    );
+    /** \brief Objective for OPTIMIZATION_TYPE::BELLMAN. */
+    virtual lbfgsfloatval_t bellman_objective(
+        const lbfgsfloatval_t *x,
+        lbfgsfloatval_t *g,
+        const int n
+        );
 
     /** \brief Prints progress information during optimization. */
-    int progress_model(
-            const lbfgsfloatval_t *x,
-            const lbfgsfloatval_t *g,
-            const lbfgsfloatval_t fx,
-            const lbfgsfloatval_t xnorm,
-            const lbfgsfloatval_t gnorm,
-            const lbfgsfloatval_t step,
-            int n,
-            int k,
-            int ls
-    );
+    virtual int progress(
+        const lbfgsfloatval_t *x,
+        const lbfgsfloatval_t *g,
+        const lbfgsfloatval_t fx,
+        const lbfgsfloatval_t xnorm,
+        const lbfgsfloatval_t gnorm,
+        const lbfgsfloatval_t step,
+        int n,
+        int k,
+        int ls
+        ) override;
 
-    void check_derivatives(const int& number_of_samples,
-                           const double& range,
-                           const double& max_variation,
-                           const double& max_relative_deviation
-        );
+    /** \brief Optimize weights and return loss.
+     *
+     * This function wraps the corresponding function in LBFGS_Optimizer but
+     * additionally reports the results */
+    virtual lbfgsfloatval_t optimize(
+        int * return_code = nullptr,
+        std::string * return_code_description = nullptr
+        ) override;
+
+    /** \brief Calls the correpsonding private function in LBFGS_Optimizer. */
+    virtual LinearQ& set_l1_factor(lbfgsfloatval_t f ) override;
+
+    /** \brief Calls the correpsonding private function in LBFGS_Optimizer. */
+    virtual LinearQ& set_lbfgs_delta(lbfgsfloatval_t f ) override;
+
+    /** \brief Calls the correpsonding private function in LBFGS_Optimizer. */
+    virtual LinearQ& set_maximum_iterations(unsigned int n ) override;
+
+    /** \brief Calls the correpsonding private function in LBFGS_Optimizer. */
+    virtual LinearQ& set_lbfgs_epsilon(lbfgsfloatval_t f ) override;
+
+    /** \brief Sets LinearQ::optimization_type. */
+    virtual LinearQ& set_optimization_type(OPTIMIZATION_TYPE t );
 
 private:
 
     //--------------//
     // General Data //
     //--------------//
-    double discount;                                 ///< Discount for computing value.
+    double discount; ///< Discount for computing value.
+    OPTIMIZATION_TYPE optimization_type = OPTIMIZATION_TYPE::BELLMAN; ///< Optimization strategy.
 
     //------------------------//
     // Features, Weights etc. //
     //------------------------//
     std::vector<double> feature_weights;             ///< Coefficients for active features.
     std::vector<Feature*> basis_features;            ///< Basis features used to construct new candidates.
-    lbfgsfloatval_t * lambda;                        ///< Feature weights for L1-optimization.
     std::vector<AndFeature> active_features;         ///< Set of currently active features.
     std::vector<AndFeature> candidate_features;      ///< Set of candidate features.
 

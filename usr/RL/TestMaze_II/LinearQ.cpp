@@ -1,5 +1,4 @@
 #include "LinearQ.h"
-#include "util.h"
 
 #include <queue>
 #include <set>
@@ -11,6 +10,7 @@
 #include "lbfgs_codes.h"
 
 #include "util/ProgressBar.h"
+#include "util.h"
 
 #ifdef BATCH_MODE_QUIET
 #define DEBUG_LEVEL 0
@@ -32,6 +32,8 @@ using std::make_tuple;
 using std::get;
 using std::priority_queue;
 
+using util::Range;
+
 using arma::mat;
 using arma::vec;
 using arma::mat44;
@@ -41,7 +43,6 @@ using util::INVALID;
 
 LinearQ::LinearQ(const double& d):
         discount(d),
-        lambda(nullptr),
         loss_terms_up_to_date(false)
 {
     //----------------------------------------//
@@ -153,48 +154,33 @@ double LinearQ::optimize_ridge(const double& reg) {
 
 int LinearQ::optimize_l1(const double& reg, const int& max_iter, double * loss) {
 
-    // Initialize the parameters for the L-BFGS optimization.
-    lbfgs_parameter_t param;
-    lbfgs_parameter_init(&param);
-    param.orthantwise_c = reg;
-    param.linesearch = LBFGS_LINESEARCH_BACKTRACKING;
-    if(max_iter>0) {
-        param.max_iterations = max_iter;
-    }
+    set_l1_factor(reg);
+    set_maximum_iterations(max_iter);
+    set_lbfgs_delta(1e-3);
+    set_lbfgs_epsilon(1e-3);
+    set_number_of_variables(active_features.size());
 
-    // todo what values
-    param.delta = 1e-3;   // change of objective (f-f')/f (default 0)
-    param.epsilon = 1e-3; // change of parameters ||g||/max(1,||x||) (default 1e-5)
+    int return_code;
+    lbfgsfloatval_t fx = optimize(&return_code);
 
-    // Start the L-BFGS optimization
-    lbfgsfloatval_t fx;
-    lambda = lbfgs_malloc(active_features.size()); // allocate lambda
-    int ret = lbfgs(active_features.size(), lambda, &fx, static_evaluate_model, static_progress_model, this, &param);
 
     // Transfer weights and report result
-    DEBUG_OUT(1, "L-BFGS optimization terminated with status code = " << ret << " ( " << lbfgs_code(ret) << " )");
-    DEBUG_OUT(1,"loss = " << fx );
-    for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
+    for(int f_idx : Range(active_features.size())) {
         DEBUG_OUT(1, "    " <<
-                active_features[f_idx].identifier() <<
-                " --> t[" <<
-                f_idx << "] = " <<
-                lambda[f_idx]);
-        feature_weights[f_idx] = lambda[f_idx];
+                  active_features[f_idx].identifier() <<
+                  " --> t[" << f_idx << "] = " <<
+                  lbfgs_variables[f_idx]
+            );
+        feature_weights[f_idx] = lbfgs_variables[f_idx];
     }
-    DEBUG_OUT(1, "L-BFGS optimization terminated with status code = " << ret << " ( " << lbfgs_code(ret) << " )");
     DEBUG_OUT(1,"Loss = " << fx << " (sqrt = " << sqrt(fx) << ")" );
-    DEBUG_OUT(1,"");
-
-    // free lambda
-    lbfgs_free(lambda);
 
     // write out loss
     if(loss!=nullptr) {
         *loss = fx;
     }
 
-    return ret;
+    return return_code;
 }
 
 void LinearQ::clear_data() {
@@ -321,17 +307,30 @@ void LinearQ::erase_zero_weighted_features(const double& threshold) {
     loss_terms_up_to_date = false;
 }
 
-lbfgsfloatval_t LinearQ::static_evaluate_model(
-        void *instance,
+lbfgsfloatval_t LinearQ::objective(
         const lbfgsfloatval_t *x,
         lbfgsfloatval_t *g,
-        const int n,
-        const lbfgsfloatval_t /*step*/
+        const int n
 ) {
-    return ((LinearQ*)instance)->evaluate_model(x,g,n);
+    switch(optimization_type) {
+    case OPTIMIZATION_TYPE::TD_RIDGE:
+        // is optimized in closed form, not with L-BFGS
+        DEBUG_DEAD_LINE;
+        break;
+    case OPTIMIZATION_TYPE::TD_L1:
+        return td_error_objective(x,g,n);
+        break;
+    case OPTIMIZATION_TYPE::BELLMAN:
+        // TODO
+        return td_error_objective(x,g,n);
+        break;
+    default:
+        DEBUG_DEAD_LINE;
+    }
+    return LBFGS_Optimizer::objective(x,g,n);
 }
 
-lbfgsfloatval_t LinearQ::evaluate_model(
+lbfgsfloatval_t LinearQ::td_error_objective(
         const lbfgsfloatval_t *x,
         lbfgsfloatval_t *g,
         const int n
@@ -371,22 +370,56 @@ lbfgsfloatval_t LinearQ::evaluate_model(
     return fx;
 }
 
-int LinearQ::static_progress_model(
-        void *instance,
+lbfgsfloatval_t LinearQ::bellman_objective(
         const lbfgsfloatval_t *x,
-        const lbfgsfloatval_t *g,
-        const lbfgsfloatval_t fx,
-        const lbfgsfloatval_t xnorm,
-        const lbfgsfloatval_t gnorm,
-        const lbfgsfloatval_t step,
-        int n,
-        int k,
-        int ls
+        lbfgsfloatval_t *g,
+        const int n
 ) {
-    return ((LinearQ*)instance)->progress_model(x,g,fx,xnorm,gnorm,step,n,k,ls);
+
+    // reset objective and gradient
+    lbfgsfloatval_t fx = 0;
+    for(int i=0; i<n; i++) {
+        g[i] = 0;
+    }
+
+    // start progress bar
+    if(DEBUG_LEVEL>0) {
+        ProgressBar::init("Evaluating: ");
+    }
+
+    // iterate through data
+    idx_t instance_idx = 0;
+    for(instance_t * current_episode : instance_data) {
+        for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt) {
+
+            // print progress information
+            if(DEBUG_LEVEL>0) {
+                ProgressBar::print(instance_idx++, number_of_data_points-1);
+            }
+
+            // sum_a exp[alpha Q(t+1,a)]
+            double sumExp;
+            // sum_a exp[alpha Q(t+1,a)]
+            double sumQExp;
+            // f(t,a+1)
+            vector<f_ret_t> f_t_ap1(n);
+            // f(t+1,a)
+            vector<vector<f_ret_t> > f_tp1_a(action_t::action_n,vector<double>(n));
+
+            //-------------------------------//
+            // calculate the different terms //
+            //-------------------------------//
+
+            for(uint f_idx : Range(n)) { // sum over features
+                f_t_ap1[f_idx] = active_features[f_idx].evaluate(insIt);
+            }
+        }
+    }
+
+    return fx;
 }
 
-int LinearQ::progress_model(
+int LinearQ::progress(
         const lbfgsfloatval_t *x,
         const lbfgsfloatval_t * /*g*/,
         const lbfgsfloatval_t fx,
@@ -401,9 +434,8 @@ int LinearQ::progress_model(
     for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
         DEBUG_OUT(1, "    " <<
                 active_features[f_idx].identifier() <<
-                " --> t[" <<
-                f_idx << "] = " <<
-                x[f_idx]);
+                " --> t[" << f_idx << "] = " <<
+                  x[f_idx]);
     }
     DEBUG_OUT(1,"Iteration " << k << " (fx = " << fx << ", xnorm = " << xnorm << ", loss = " << fx << ")");
     DEBUG_OUT(1,"");
@@ -411,72 +443,51 @@ int LinearQ::progress_model(
     return 0;
 }
 
-void LinearQ::check_derivatives(const int& number_of_samples, const double& range, const double& max_variation, const double& max_relative_deviation) {
+lbfgsfloatval_t LinearQ::optimize(
+    int * return_code,
+    std::string * return_code_description
+    ) {
 
-    // initialize arrays
-    lbfgsfloatval_t * x = lbfgs_malloc(active_features.size());
-    lbfgsfloatval_t * dx = lbfgs_malloc(active_features.size());
-    lbfgsfloatval_t * grad = lbfgs_malloc(active_features.size());
-    lbfgsfloatval_t * grad_dummy = lbfgs_malloc(active_features.size());
+    lbfgsfloatval_t fx = LBFGS_Optimizer::optimize(return_code, return_code_description);
 
-    // remember deviations
-    lbfgsfloatval_t relative_deviation = 0;
-
-    DEBUG_OUT(0,"Checking first derivative (#samples="<<number_of_samples<<", range=+/-"<<range<<", max_var="<<max_variation<<", max_rel_dev="<<max_relative_deviation);
-    for(int count=0; count<number_of_samples; ++count) {
-
-        // set test point
-        for(uint x_idx=0; x_idx<active_features.size(); ++x_idx) {
-            x[x_idx] = range * (2*drand48()-1);
-            dx[x_idx] = (2*drand48()-1)*max_variation;
-        }
-
-        lbfgsfloatval_t fx = evaluate_model(x,grad,active_features.size());
-        DEBUG_OUT(1, "fx = " << fx );
-        for(uint x_idx=0; x_idx<active_features.size(); ++x_idx) {
-
-            // go in positive direction
-            x[x_idx] += dx[x_idx]/2.;
-            lbfgsfloatval_t fx_plus = evaluate_model(x,grad_dummy,active_features.size());
-            // go in negative direction
-            x[x_idx] -= dx[x_idx];
-            lbfgsfloatval_t fx_minus = evaluate_model(x,grad_dummy,active_features.size());
-            // reset x
-            x[x_idx] += dx[x_idx]/2.;
-
-            // numerical gradient
-            lbfgsfloatval_t ngrad = (fx_plus-fx_minus)/dx[x_idx];
-
-            // check for deviations
-            lbfgsfloatval_t current_relative_deviation = fabs(ngrad-grad[x_idx])/fabs(grad[x_idx]);
-            if(current_relative_deviation>relative_deviation) {
-                relative_deviation=current_relative_deviation;
-            }
-
-            // print result
-            DEBUG_OUT(1,
-                      "    diff[" << x_idx << "] = " << grad[x_idx]-ngrad <<
-                      ", grad["   << x_idx << "] = " << grad[x_idx] <<
-                      ", ngrad["  << x_idx << "] = " << ngrad <<
-                      ", x["      << x_idx << "] = " << x[x_idx] <<
-                      ", dx["     << x_idx << "] = " << dx[x_idx] <<
-                      ", rel_dev["     << x_idx << "] = " << current_relative_deviation
-                );
-
-
-        }
+    // Transfer weights and report result
+    for(int f_idx : Range(active_features.size())) {
+        DEBUG_OUT(1, "    " <<
+                  active_features[f_idx].identifier() <<
+                  " --> t[" << f_idx << "] = " <<
+                  lbfgs_variables[f_idx]
+            );
+        feature_weights[f_idx] = lbfgs_variables[f_idx];
     }
-    if(relative_deviation>max_relative_deviation) {
-        DEBUG_OUT(0, "ERRORS in first derivative found: max relative deviation = " << relative_deviation << " (tolerance = " << max_relative_deviation << ")" );
-        DEBUG_OUT(0, "");
-    } else {
-        DEBUG_OUT(0, "No error in first derivative found (no relative deviations larger that " << max_relative_deviation << ").");
-        DEBUG_OUT(0, "");
-    }
-    lbfgs_free(x);
-    lbfgs_free(dx);
-    lbfgs_free(grad);
-    lbfgs_free(grad_dummy);
+    DEBUG_OUT(1,"Loss = " << fx << " (sqrt = " << sqrt(fx) << ")" );
+
+    // return loss
+    return fx;
+}
+
+LinearQ& LinearQ::set_l1_factor(lbfgsfloatval_t f ) {
+    LBFGS_Optimizer::set_l1_factor(f);
+    return *this;
+}
+
+LinearQ& LinearQ::set_lbfgs_delta(lbfgsfloatval_t f ) {
+    LBFGS_Optimizer::set_lbfgs_delta(f);
+    return *this;
+}
+
+LinearQ& LinearQ::set_maximum_iterations(unsigned int n ) {
+    LBFGS_Optimizer::set_maximum_iterations(n);
+    return *this;
+}
+
+LinearQ& LinearQ::set_lbfgs_epsilon(lbfgsfloatval_t f ) {
+    LBFGS_Optimizer::set_lbfgs_epsilon(f);
+    return *this;
+}
+
+LinearQ& LinearQ::set_optimization_type(OPTIMIZATION_TYPE t ) {
+    optimization_type = t;
+    return *this;
 }
 
 void LinearQ::update_loss_terms() {
