@@ -9,9 +9,9 @@
 struct G4System:System{
   ACCESS(floatA, currentPoses);
   G4System(){
-    addModule<G4Poller>(NULL, ModuleThread::loopWithBeat, .001);
-    addModule<G4Display>(NULL, ModuleThread::loopWithBeat, .1);
-    FloatA_Recorder *m = addModule<FloatA_Recorder>(NULL, ModuleThread::listenFirst, .1);
+    addModule<G4Poller>("POLLER", ModuleThread::loopWithBeat, .001);
+    addModule<G4Display>("DISPLAY", ModuleThread::loopWithBeat, .1);
+    FloatA_Recorder *m = addModule<FloatA_Recorder>("SAVER", ModuleThread::listenFirst, .1);
     connect(m->x, "currentPoses");
     connect();
   }
@@ -20,7 +20,7 @@ struct G4System:System{
 
 void threadedRun(){
   G4System S;
-  //cout <<S <<endl;
+  cout <<S <<endl;
 
   engine().open(S);
 

@@ -43,7 +43,7 @@ struct ModuleThread:Thread{
   StepMode mode; double beat;
 
   /// @name c'tor/d'tor
-  ModuleThread(Module* _m, const char* _name=NULL):Thread(_name),m(_m),step_count(0){ m->name = _name; }
+  ModuleThread(Module* _m, const char* _name=NULL):Thread(_name?_name:m->name),m(_m),step_count(0){ m->name = _name; }
 
   virtual void open(){ m->open(); }
   virtual void step(){ m->step(); step_count++; }
