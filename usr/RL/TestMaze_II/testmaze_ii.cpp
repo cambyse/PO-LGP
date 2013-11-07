@@ -418,8 +418,9 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString utree_expansion_type_s(          "    ex-type / ext. . . . . . . [u(tility)|s(tate)r(eward)] . . . . . . . .-> get/set expansion type for UTree");
     QString examine_utree_features_s(        "    utree-f. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> print UTree features");
     QString learning_linQ_s(                 "    === Linear-Q ===");
-    QString optimize_linQ_ridge_s(           "    lq-optimize-ridge / lqor . [<double>]. . . . . . . . . . . . . . . . .-> optimize Linear-Q [ with L2-regularization coefficient <double> ]");
-    QString optimize_linQ_l1_s(              "    lq-optimize-l1 / lqol1 . . [<double> [<int>] | check | c ] . . . . . .-> optimize Linear-Q with L1-regularization coefficient <double> [ and max <int> iterations ] or check derivatives");
+    QString optimize_linQ_ridge_s(           "    lq-optimize-ridge / lqor . [<double>]. . . . . . . . . . . . . . . . .-> optimize Linear-Q (TD Error) [ with L2-regularization coefficient <double> ]");
+    QString optimize_linQ_l1_s(              "    lq-optimize-l1 / lqol1 . . [<double> [<int>] | check | c ] . . . . . .-> optimize Linear-Q (TD Error) with L1-regularization coefficient <double> [ and max <int> iterations ] or check derivatives");
+    QString optimize_linQ_s(                 "    lq-optimize / lqo. . . . . [<double> [<int>] | check | c ] . . . . . .-> optimize Linear-Q (Bellman Error) with L1-regularization coefficient <double> [ and max <int> iterations ] or check derivatives");
     QString construct_s(                     "    construct / con. . . . . . <int> . . . . . . . . . . . . . . . . . . .-> construct candidate features with distance <int>");
     QString lq_erase_zero_weight_s(          "    lq-erase / lqe . . . . . . [<double>]. . . . . . . . . . . . . . . . .-> erase features with zero weight [ weight below or equal to <double> ]");
 
@@ -517,6 +518,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             TO_CONSOLE( learning_linQ_s ); // linear-Q
             TO_CONSOLE( optimize_linQ_ridge_s );
             TO_CONSOLE( optimize_linQ_l1_s );
+            TO_CONSOLE( optimize_linQ_s );
             TO_CONSOLE( construct_s );
             TO_CONSOLE( lq_erase_zero_weight_s );
             // Planning
@@ -620,6 +622,22 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             } else {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( optimize_linQ_l1_s );
+            }
+        } else if(str_args[0]=="lq-optimize" || str_args[0]=="lqo") { // optimize linear-Q
+            if(str_args_n>1 && double_args_ok[1] ) {
+                if(str_args_n>2 && int_args_ok[2] ) {
+                    linQ.set_l1_factor(double_args[1])
+                        .set_maximum_iterations(int_args[2])
+                        .optimize();
+                } else {
+                    linQ.set_l1_factor(double_args[1])
+                        .optimize();
+                }
+            } else if(str_args_n>1 && (str_args[1]=="check" || str_args[1]=="c") ) {
+                linQ.check_derivatives(10,10,1e-6,1e-3);
+            } else {
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( optimize_linQ_s );
             }
         } else if(str_args[0]=="lq-erase" || str_args[0]=="lqe") {
             if(str_args_n==1 || double_args_ok[1]) {

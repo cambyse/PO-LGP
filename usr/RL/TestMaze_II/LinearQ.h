@@ -138,6 +138,7 @@ private:
     // General Data //
     //--------------//
     double discount; ///< Discount for computing value.
+    double alpha = 3; ///< Alpha for Soft-Max.
     OPTIMIZATION_TYPE optimization_type = OPTIMIZATION_TYPE::BELLMAN; ///< Optimization strategy.
 
     //------------------------//

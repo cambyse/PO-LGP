@@ -397,23 +397,93 @@ lbfgsfloatval_t LinearQ::bellman_objective(
                 ProgressBar::print(instance_idx++, number_of_data_points-1);
             }
 
-            // sum_a exp[alpha Q(t+1,a)]
-            double sumExp;
-            // sum_a exp[alpha Q(t+1,a)]
-            double sumQExp;
-            // f(t,a+1)
-            vector<f_ret_t> f_t_ap1(n);
-            // f(t+1,a)
-            vector<vector<f_ret_t> > f_tp1_a(action_t::action_n,vector<double>(n));
+            // ignore last instance
+            if(insIt+1==INVALID) {
+                break;
+            }
+            action_t action_tp1 = (insIt+1)->action;
+            reward_t reward_tp1 = (insIt+1)->reward;
+
+            //-------------------------------//
+            //          variables            //
+            //-------------------------------//
+
+            // f(i_t,a+1): features for time t
+            vector<f_ret_t> f_it_atp1(n);
+
+            // f(i_t+1,a): features for time t+1 for all actions a
+            vector<vector<f_ret_t> > f_itp1_a(action_t::action_n,vector<double>(n));
+
+            // Q(i_t,a_t+1): Q-function for time t
+            double Q_it_atp1 = 0;
+
+            // Q(i_t+1,a): Q-function for time t+1 for for all actions a
+            vector<f_ret_t> Q_itp1_a(action_t::action_n,0);
+
+            // sum_a exp[alpha Q(i_t+1,a)]
+            double sumExp = 0;
+
+            // sum_a exp[alpha Q(i_t+1,a_t)]
+            double sumQExp = 0;
 
             //-------------------------------//
             // calculate the different terms //
             //-------------------------------//
 
-            for(uint f_idx : Range(n)) { // sum over features
-                f_t_ap1[f_idx] = active_features[f_idx].evaluate(insIt);
+            // evaluate feature and calculate Q-functions
+            for(uint f_idx : Range(n)) { // iterate through features
+                // evaluate feature
+                f_ret_t f_ret = active_features[f_idx].evaluate(insIt,action_tp1,state_t(),reward_t());
+                f_it_atp1[f_idx] = f_ret;
+                // increment Q-function
+                double f_weight = x[f_idx];
+                Q_it_atp1 += f_weight*f_ret;
+                idx_t action_idx = 0;
+                for(action_t action : actionIt_t::all) {
+                    // evaluate feature
+                    f_ret_t f_ret_a = active_features[f_idx].evaluate(insIt,action,state_t(),reward_t());
+                    f_itp1_a[action_idx][f_idx] = f_ret_a;
+                    // increment Q-function
+                    Q_itp1_a[action_idx] += f_weight*f_ret_a;
+                    // increment action idx
+                    ++action_idx;
+                }
+            }
+
+            // calculate sums
+            idx_t action_idx = 0;
+            for(action_t action : actionIt_t::all) {
+                double expQ = exp(alpha*Q_itp1_a[action_idx]);
+                sumExp += expQ;
+                sumQExp += Q_itp1_a[action_idx]*expQ;
+                ++action_idx;
+            }
+
+            //-------------------------------//
+            // update objective and gradient //
+            //-------------------------------//
+
+            // objective
+            double bellman_error = reward_tp1 + discount*(sumQExp/sumExp) - Q_it_atp1;
+            fx += bellman_error*bellman_error;
+
+            // gradient
+            for(uint f_idx : Range(n)) {
+                double aSum = 0;
+                idx_t action_idx = 0;
+                for(action_t action : actionIt_t::all) {
+                    double inner_terms = 1 + alpha*Q_itp1_a[action_idx] - alpha*(sumQExp/sumExp);
+                    aSum += (exp(alpha*Q_itp1_a[action_idx])/sumExp)*inner_terms*f_itp1_a[action_idx][f_idx];
+                    ++action_idx;
+                }
+                g[f_idx] += 2*bellman_error*(f_it_atp1[f_idx] - discount*aSum);
             }
         }
+    }
+
+    // terminate progress bar
+    if(DEBUG_LEVEL>0) {
+        ProgressBar::terminate();
     }
 
     return fx;
@@ -448,9 +518,13 @@ lbfgsfloatval_t LinearQ::optimize(
     std::string * return_code_description
     ) {
 
+    // set correct dimensionality
+    set_number_of_variables(active_features.size());
+
+    // perform optimization
     lbfgsfloatval_t fx = LBFGS_Optimizer::optimize(return_code, return_code_description);
 
-    // Transfer weights and report result
+    // transfer weights and report result
     for(int f_idx : Range(active_features.size())) {
         DEBUG_OUT(1, "    " <<
                   active_features[f_idx].identifier() <<

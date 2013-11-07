@@ -210,12 +210,14 @@ void LBFGS_Optimizer::check_derivatives(
 }
 
 LBFGS_Optimizer& LBFGS_Optimizer::set_number_of_variables(unsigned int n, bool zero) {
-    number_of_variables = n;
-    lbfgs_free(lbfgs_variables);
-    lbfgs_variables = lbfgs_malloc(n);
-    if(zero) {
-        for( int i : Range(n) ) {
-            lbfgs_variables[i] = 0;
+    if(number_of_variables!=n) {
+        number_of_variables = n;
+        lbfgs_free(lbfgs_variables);
+        lbfgs_variables = lbfgs_malloc(n);
+        if(zero) {
+            for( int i : Range(n) ) {
+                lbfgs_variables[i] = 0;
+            }
         }
     }
     return *this;
