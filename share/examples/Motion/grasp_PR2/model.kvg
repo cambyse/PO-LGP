@@ -1,5 +1,5 @@
 
-%include pr2_meshes/pr2_tree.ors
+%include pr2_model/pr2_left.ors
 
 %include pr2_augmentations.ors
 

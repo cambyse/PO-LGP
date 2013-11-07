@@ -1,5 +1,6 @@
 #include <Core/util.h>
 #include <Motion/motion.h>
+#include <Motion/taskMap_default.h>
 #include <Motion/taskMap_proxy.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
@@ -17,7 +18,8 @@ int main(int argn,char** argv){
 
   //-- setup the motion problem
   TaskCost *c;
-  c = P.addDefaultTaskMap_Bodies("position", posTMT,"endeff",ors::Transformation().setText("<t(0 0 .2)>"));
+  c = P.addTaskMap("position",
+                   new DefaultTaskMap(posTMT, G, "endeff", ors::Vector(0, 0, .2)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                           ARRAY(P.ors->getBodyByName("target")->X.pos), 1e2);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
@@ -32,7 +34,8 @@ int main(int argn,char** argv){
 
   //-- collisions with other objects
   uintA shapes = ARRAY<uint>(P.ors->getBodyByName("endeff")->shapes(0)->index);
-  c = P.addCustomTaskMap("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .2, true));
+  c = P.addTaskMap("proxyColls",
+                   new ProxyTaskMap(allVersusListedPTMT, shapes, .2, true));
   P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e2);
 
   //-- create the Optimization problem (of type kOrderMarkov)
@@ -48,9 +51,13 @@ int main(int argn,char** argv){
 
   //mini evaluation test:
   arr x(T+1,n);
-  for(uint t=0;t<=T;t++){
-    double a=(double)t/T;
-    x[t]() = (1.-a)*P.x0 + a*ARRAY(P.ors->getBodyByName("target")->X.pos);
+  if(P.x0.N==3){ //assume 3D ball!
+    for(uint t=0;t<=T;t++){
+      double a=(double)t/T;
+      x[t]() = (1.-a)*P.x0 + a*ARRAY(P.ors->getBodyByName("target")->X.pos);
+    }
+  }else{
+    for(uint t=0;t<=T;t++) x[t]() = P.x0;
   }
   cout <<"fx = " <<evaluateVF(Convert(F), x) <<endl;
 

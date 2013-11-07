@@ -272,6 +272,7 @@ extern const ors::Vector Vector_y;
 extern const ors::Vector Vector_z;
 extern const ors::Transformation Transformation_Id;
 extern const ors::Quaternion Quaternion_Id;
+extern ors::Vector& NoVector;
 extern ors::Transformation& NoTransformation;
 
 #endif

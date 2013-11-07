@@ -1,5 +1,6 @@
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
+#include <Core/registry.h>
 
 const char *USAGE=
 "\n\
@@ -30,11 +31,12 @@ int main(int argn,char **argv){
   init(G, gl, file);
 
   //some optional manipulations
-//  G.meldFixedJoints();
-//  G.removeNonShapeBodies();
+  G.meldFixedJoints();
+  G.removeUselessBodies();
+    G.calcBodyFramesFromJoints();
 //  G.topSort();
 //  G.makeLinkTree();
-//  MT::save(G,"z.ors");
+  MT::save(G,"z.ors");
 
   editConfiguration(file, G, gl);
 

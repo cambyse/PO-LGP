@@ -56,59 +56,11 @@ void MotionProblem::setx0v0(const arr& x, const arr& v) {
   x0=x; v0=v;
 }
 
-TaskCost* MotionProblem::addCustomTaskMap(const char* name, TaskMap *m){
+TaskCost* MotionProblem::addTaskMap(const char* name, TaskMap *m){
   TaskCost *t = new TaskCost(m);
   t->name=name;
   taskCosts.append(t);
   return t;
-}
-
-TaskCost* MotionProblem::addDefaultTaskMap(
-    const char* name,
-    DefaultTaskMapType type,
-    int iBody, const ors::Transformation& irel,
-    int jBody, const ors::Transformation& jrel,
-    const arr& params) {
-  DefaultTaskMap *m = new DefaultTaskMap();
-  m->type=type;
-  m->i=iBody;  if(&irel) m->irel=irel;
-  m->j=jBody;  if(&jrel) m->jrel=jrel;
-  if(&params) m->params=params;
-  return addCustomTaskMap(name, m);
-}
-
-TaskCost* MotionProblem::addDefaultTaskMap_Bodies(
-    const char* name,
-    DefaultTaskMapType type,
-    const char *iBodyName, const ors::Transformation& irel,
-    const char *jBodyName, const ors::Transformation& jrel,
-    const arr& params) {
-  ors::Body *a = iBodyName ? ors->getBodyByName(iBodyName):NULL;
-  ors::Body *b = jBodyName ? ors->getBodyByName(jBodyName):NULL;
-  return addDefaultTaskMap(
-           name, type,
-           a  ? (int)a->index : -1,
-           &irel ? irel : Transformation_Id,
-           b  ? (int)b->index : -1,
-           &jrel ? jrel : Transformation_Id,
-           params);
-}
-
-TaskCost* MotionProblem::addDefaultTaskMap_Shapes(
-    const char* name,
-    DefaultTaskMapType type,
-    const char *iShapeName, const ors::Transformation& irel,
-    const char *jShapeName, const ors::Transformation& jrel,
-    const arr& params) {
-  ors::Shape *a = iShapeName ? ors->getShapeByName(iShapeName):NULL;
-  ors::Shape *b = jShapeName ? ors->getShapeByName(jShapeName):NULL;
-  return addDefaultTaskMap(
-           name, type,
-           a ? (int)a->body->index : -1,
-           a ? (&irel ? a->rel*irel : a->rel) : Transformation_Id,
-           b ? (int)b->body->index : -1,
-           b ? (&jrel ? b->rel*jrel : b->rel) : Transformation_Id,
-           params);
 }
 
 void MotionProblem::setInterpolatingCosts(
@@ -119,7 +71,6 @@ void MotionProblem::setInterpolatingCosts(
   setState(x0,v0);
   arr y0;
   c->map.phi(y0, NoArr, *ors);
-  //TODO: cleaner, next 3 lines
   arr midTarget(m),finTarget(m);
   if(&y_finalTarget){ if(y_finalTarget.N==1) finTarget = y_finalTarget(0); else finTarget=y_finalTarget; }
   if(&y_midTarget){   if(y_midTarget.N==1)   midTarget = y_midTarget(0);   else midTarget=y_midTarget; }
@@ -156,20 +107,16 @@ void MotionProblem::setInterpolatingCosts(
       c->y_prec = y_midPrec<0. ? y_finalPrec : y_midPrec;
       c->y_prec(T) = y_finalPrec;
     } break;
-  case constEarlyMid: {
-    c->y_target.resize(T+1, m);
+  case early_restConst: {
+    uint t;
     CHECK(earlyFraction>=0. && earlyFraction<=1.,"");
     uint Tearly=earlyFraction*T;
-    for(uint t=0; t<=Tearly; t++) {
-      double a = (double)t/Tearly;
-      c->y_target[t]() = ((double)1.-a)*y0 + a*finTarget;
-    }
+    c->y_target.resize(T+1, m);
+    for(t=0; t<Tearly; t++) c->y_target[t]() = midTarget;
+    for(t=Tearly; t<=T; t++) c->y_target[t]() = finTarget;
     c->y_prec.resize(T+1);
-    c->y_prec = y_midPrec<0. ? y_finalPrec : y_midPrec;
-    for(uint t=Tearly; t<=T; t++) {
-      c->y_target[t]() = finTarget;
-      c->y_prec(t) = y_finalPrec;
-    }
+    for(t=0; t<Tearly; t++) c->y_prec(t) = y_midPrec<=0. ? 0. : y_midPrec;
+    for(t=Tearly; t<=T; t++) c->y_prec(t) = y_finalPrec;
   } break;
   }
 }
@@ -219,7 +166,7 @@ void MotionProblem::setInterpolatingVelCosts(
       c->v_prec = v_midPrec<0. ? v_finalPrec : v_midPrec;
       c->v_prec(T) = v_finalPrec;
     } break;
-  case constEarlyMid: NIY;
+  case early_restConst: NIY;
   }
 }
 

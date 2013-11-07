@@ -162,7 +162,8 @@ void ors::Body::parseAts(Graph& G) {
 
   // add shape if there is no shape exists yet
   if(ats.getItem("type") && !shapes.N){
-    new Shape(G, *this);
+    Shape *s = new Shape(G, *this);
+    s->name = name;
   }
 
   // copy body attributes to shapes 
@@ -260,7 +261,10 @@ void ors::Shape::parseAts() {
   //center the mesh:
   if(mesh.V.N){
     Vector c = mesh.center();
-    rel.addRelativeTranslation(c);
+    if(!ats.getValue<bool>("rel_includes_mesh_center")){
+      rel.addRelativeTranslation(c);
+      ats.append<bool>("rel_includes_mesh_center",new bool(true));
+    }
     mesh_radius = mesh.getRadius();
   }
 
@@ -364,6 +368,7 @@ void ors::Joint::parseAts() {
   if(ats.getValue<double>(d, "type")) type=(JointType)(int)d; else type=JT_hingeX;
   if(ats.getValue<double>(d, "q")){
     if(type==JT_hingeX) Q.addRelativeRotationRad(d, 1., 0., 0.);
+    if(type==JT_fixed)  A.addRelativeRotationRad(d, 1., 0., 0.);
     if(type==JT_transX) Q.addRelativeTranslation(d, 0., 0.);
   }
   if(ats.getValue<double>(d, "agent")) agent=(int)d;
@@ -393,7 +398,7 @@ uint ors::Joint::qDim() {
 void ors::Joint::write(std::ostream& os) const {
   if(!A.isZero()) os <<"from=<T " <<A <<" > ";
   if(!B.isZero()) os <<"to=<T " <<B <<" > ";
-  if(!Q.isZero()) os <<"q=<T " <<Q <<" > ";
+  if(!Q.isZero()) os <<"Q=<T " <<Q <<" > ";
   uint i; Item *a;
   for_list(i,a,ats)
   if(a->keys(0)!="A" && a->keys(0)!="from"
@@ -1359,13 +1364,15 @@ void ors::Graph::write(std::ostream& os) const {
   }
   os <<std::endl;
   for_list_(Shape, s, shapes) {
-    os <<"shape (" <<s->body->name <<"){ ";
+    os <<"shape ";
+    if(s->name.N) os <<s->name <<' ';
+    os <<"(" <<s->body->name <<"){ ";
     s->write(os);  os <<" }\n";
   }
   os <<std::endl;
   for_list_(Joint, j, joints) {
     os <<"joint ";
-    if (j->name.N) os <<j->name.p <<' ';
+    if (j->name.N) os <<j->name <<' ';
     os <<"(" <<j->from->name <<' ' <<j->to->name <<"){ ";
     j->write(os);  os <<" }\n";
   }
@@ -2100,7 +2107,7 @@ void ors::Graph::addObject(ors::Body *b) {
   }
 }
 
-void ors::Graph::removeNonShapeBodies() {
+void ors::Graph::removeUselessBodies() {
   for_list_rev_(Body, b, bodies) if(!b->shapes.N && !b->outLinks.N) {
     for_list_rev_(Joint, j, b->inLinks) joints.removeValue(j);
     bodies.remove(b_COUNT);
@@ -2120,7 +2127,7 @@ void ors::Graph::meldFixedJoints() {
     for_list_(Shape, s, b->shapes) {
       s->body=a;
       s->ibody = a->index;
-      s->rel = j->A * s->rel;
+      s->rel = j->A * j->Q * j->B * s->rel;
       a->shapes.append(s);
     }
     b->shapes.clear();
@@ -2128,10 +2135,13 @@ void ors::Graph::meldFixedJoints() {
     for_list_(Joint, jj, b->outLinks) {
       jj->from=a;
       jj->ifrom=a->index;
-      jj->A = j->A * j->B * jj->A;
+      jj->A = j->A * j->Q * j->B * jj->A;
       a->outLinks.append(jj);
     }
     b->outLinks.clear();
+    //reassociate mass
+    a->mass += b->mass;
+    b->mass = 0.;
   }
 }
 
