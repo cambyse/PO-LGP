@@ -28,17 +28,13 @@ int main(int argn,char **argv){
   ors::Graph G;
   OpenGL gl;
   init(G, gl, file);
-  gl.add(drawBase,0);
-  gl.add(ors::glDrawGraph,&G);
-  //gl.reportEvents=true;
-  //gl.reportSelects=true;
-  gl.watch();
 
-  G.meldFixedJoint();
-  G.removeNonShapeBodies();
-  G.topSort();
-  G.makeLinkTree();
-  MT::save(G,"z.ors");
+  //some optional manipulations
+//  G.meldFixedJoints();
+//  G.removeNonShapeBodies();
+//  G.topSort();
+//  G.makeLinkTree();
+//  MT::save(G,"z.ors");
 
   editConfiguration(file, G, gl);
 

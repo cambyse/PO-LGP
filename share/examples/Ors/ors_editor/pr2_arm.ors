@@ -1,5 +1,5 @@
 
-body base_footprint{ mass=1 fixed X=<T t(0 0 1)> }
+body base_footprint{ mass=1 fixed, X=<T t(0 0 1)> }
 
 body torso_lift_link {  mass=36.248 }
 #body head_pan_link {  mass=6.339  }
