@@ -25,19 +25,6 @@
 
 const ItemL& NoItemL=*((ItemL*)NULL);
 
-/*struct Parser{
-  virtual ~Parser(){};
-  virtual Item* readItem (std::istream& is) = 0;
-};
-
-struct TransformationParser:Parser{
-  Item* readItem(std::istream& is){
-    ors::Transformation t;
-    is >>t;
-    return new Item_typed<ors::Transformation>(t);
-  }
-};*/
-
 //===========================================================================
 //
 //  Item methods

@@ -361,8 +361,11 @@ void ors::Joint::parseAts() {
   ats.getValue<Transformation>(B, "to");
   ats.getValue<Transformation>(Q, "Q");
   ats.getValue<Transformation>(X, "X");
-  if(ats.getValue<double>(d, "q")) Q.addRelativeRotationRad(d, 1., 0., 0.);
   if(ats.getValue<double>(d, "type")) type=(JointType)(int)d; else type=JT_hingeX;
+  if(ats.getValue<double>(d, "q")){
+    if(type==JT_hingeX) Q.addRelativeRotationRad(d, 1., 0., 0.);
+    if(type==JT_transX) Q.addRelativeTranslation(d, 0., 0.);
+  }
   if(ats.getValue<double>(d, "agent")) agent=(int)d;
   //axis
   arr axis;

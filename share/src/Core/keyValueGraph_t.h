@@ -83,7 +83,9 @@ template<class T> const T *Item::value() const {
 template<class T> T* KeyValueGraph::getValue(const char *key) {
   Item *it = getItem(key);
   if(!it) return NULL;
-  return it->value<T>();
+  T *x=it->value<T>();
+  if(!x) MT_MSG("type conversion of item '" <<*it <<"' to '" <<typeid(T).name() <<"' failed");
+  return x;
 }
 
 template<class T> MT::Array<T*> KeyValueGraph::getTypedValues(const char* key) {

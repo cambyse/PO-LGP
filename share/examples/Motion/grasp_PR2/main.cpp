@@ -2,6 +2,7 @@
 #include <Gui/opengl.h>
 
 #include <Motion/motionHeuristics.h>
+#include <Motion/pr2_heuristics.h>
 
 void testGraspHeuristic(){
   cout <<"\n= 1-step grasp optimization=\n" <<endl;
@@ -11,11 +12,12 @@ void testGraspHeuristic(){
   ors::Graph G;
   init(G, gl, MT::getParameter<MT::String>("orsFile"));
   makeConvexHulls(G.shapes);
-  G.calcBodyFramesFromJoints();
   gl.watch();
 
   MotionProblem P(&G);
   P.loadTransitionParameters();
+  P.H_rate_diag = pr2_reasonable_W();
+  P.x0 = pr2_zero_pose();
 
   ors::Shape *s = G.getShapeByName("target1");
   for(uint k=0;k<10;k++){
