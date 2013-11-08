@@ -1,0 +1,4 @@
+MODULE_NAME=gui
+LIBS=-lGui -lCore -lOrs
+
+include ../../Makefile.swig

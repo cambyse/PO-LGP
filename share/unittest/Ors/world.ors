@@ -1,5 +1,5 @@
-body door0{ type=3 meshscale=.01 submeshsizes=[8 8 8] fixed }
-body door1{ type=3 meshscale=.01 submeshsizes=[8 36 41 36 41] color=[1 0 0]}
-body door2{ type=3 meshscale=.01 submeshsizes=[73 50 71 51] }
+body door0{ type=3 meshscale=.01 mesh="door_model/frame_hacd.obj" fixed }
+body door1{ type=3 meshscale=.01 mesh="door_model/door_hacd.obj" color=[1 0 0]}
+body door2{ type=3 meshscale=.01 mesh="door_model/handle_hacd.obj"}
 joint (door0, door1){ A=<T t(.46 0 0) d(90 0 1 0)> BinvA }
 joint (door1, door2){ A=<T t(-.39 0 1) d(90 0 0 1)> BinvA }

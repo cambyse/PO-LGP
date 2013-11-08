@@ -788,6 +788,8 @@ void ors::Graph::getJointState(arr& x, arr& v, int agent) const {
 /** @brief returns the joint positions only */
 void ors::Graph::getJointState(arr& x, int agent) const { getJointState(x, NoArr, agent); }
 
+arr ors::Graph::getJointState(int agent) const { arr q; getJointState(q, NoArr, agent); return q; }
+
 /** @brief sets the joint state vectors separated in positions and
   velocities */
 void ors::Graph::setJointState(const arr& _q, const arr& _v, int agent, bool clearJointErrors) {

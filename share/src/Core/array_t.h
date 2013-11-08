@@ -487,6 +487,15 @@ template<class T> void MT::Array<T>::reverse() {
   *this = L2;
 }
 
+/// reverse the rows of this array
+template<class T> void MT::Array<T>::reverseRows() {
+  CHECK(this->nd == 2, "Can only reverse rows of 2 dim arrays. nd=" << this->nd);
+  MT::Array<T> L2;
+  uint i;
+  for(i=this->d0; i--;) L2.append(this->operator[](i));
+  L2.reshape(this->d0, this->d1);
+  *this = L2;
+}
 
 /// the array contains `copies' copies of the old one
 template<class T> void MT::Array<T>::replicate(uint copies) {

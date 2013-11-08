@@ -266,6 +266,7 @@ struct Graph {
   uint getJointStateDimension(int agent=0) const;
   void getJointState(arr& x, arr& v, int agent=0) const;
   void getJointState(arr& x, int agent=0) const;
+  arr getJointState(int agent=0) const;
 
   /// @name set state
   void setJointState(const arr& x, const arr& v, int agent=0, bool clearJointErrors=false);
@@ -340,14 +341,12 @@ extern ors::Graph& NoGraph;
 //
 
 namespace ors {
-std::istream& operator>>(std::istream&, Body&);
-std::istream& operator>>(std::istream&, Joint&);
-std::istream& operator>>(std::istream&, Shape&);
-std::istream& operator>>(std::istream&, Proxy&);
+//std::istream& operator>>(std::istream&, Body&);
+//std::istream& operator>>(std::istream&, Joint&);
+//std::istream& operator>>(std::istream&, Shape&);
 std::ostream& operator<<(std::ostream&, const Body&);
 std::ostream& operator<<(std::ostream&, const Joint&);
 std::ostream& operator<<(std::ostream&, const Shape&);
-std::ostream& operator<<(std::ostream&, const Proxy&);
 stdPipes(Graph);
 }
 

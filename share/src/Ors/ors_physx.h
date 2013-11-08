@@ -43,7 +43,7 @@ struct PhysXInterface {
   void step();
   void glDraw();
   
-  void pushState();
+  //void pushState();
   void pullState();
 
   void syncWithOrs();

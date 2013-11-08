@@ -263,8 +263,10 @@ uint MotionProblem::dim_g(uint t) {
   return m;
 }
 
-void MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
+
+bool MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
   phi.clear();
+  bool feasible = true;
   if(&J_x) J_x.clear();
   if(&J_v) J_v.clear();
   arr y,J;
@@ -277,11 +279,13 @@ void MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
       }
       if(c->y_target.N) { //pose costs
         phi.append(sqrt(c->y_prec(t))*(y - c->y_target[t]));
+        if(phi(phi.N-1) > c->y_threshold) feasible = false;
         if(&J_x) J_x.append(sqrt(c->y_prec(t))*J);
         if(&J_v) J_v.append(0.*J);
       }
       if(transitionType!=kinematic && c->v_target.N) { //velocity costs
         phi.append(sqrt(c->v_prec(t))*(J*v_current - c->v_target[t]));
+        if(phi(phi.N-1) > c->v_threshold) feasible = false;
         if(&J_x) J_x.append(0.*J);
         if(&J_v) J_v.append(sqrt(c->v_prec(t))*J);
       }
@@ -294,6 +298,7 @@ void MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
       for(uint j=0;j<y.N;j++) y(j) = -y(j); //MT::sigmoid(y(j));
       if(J.N) for(uint j=0;j<J.d0;j++) J[j]() *= -1.; // ( y(j)*(1.-y(j)) );
       phi.append(y);
+      if(phi(phi.N-1) > c->y_threshold) feasible = false;
       if(&J_x) J_x.append(J);
       if(&J_v) J_v.append(0.*J);
     }
@@ -305,12 +310,15 @@ void MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
       CHECK(!c->y_target.N && !c->v_target.N,"constraints cannot have targets");
       c->map.phi(y, J, *ors);
       phi.append(y);
+      if(phi(phi.N-1) > c->y_threshold) feasible = false;
       if(&J_x) J_x.append(J);
       if(&J_v) J_v.append(0.*J);
     }
   }
   if(&J_x) J_x.reshape(phi.N, x_current.N);
   if(&J_v) J_v.reshape(phi.N, x_current.N);
+
+  return feasible;
 }
 
 uint MotionProblem::dim_psi() {
