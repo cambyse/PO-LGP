@@ -92,7 +92,16 @@ ors::RRTPlanner::RRTPlanner(ors::Graph *G, MotionProblem &problem, double stepsi
     joint_max = ones(G->getJointStateDimension(), 1);
   }
 
-arr ors::RRTPlanner::getTrajectoryTo(const arr& target, const double prec) {
+void drawRRT(RRT rrt) {
+  for(uint i=1; i < rrt.getNumberNodes(); ++i) {
+    arr line;
+    line.append(rrt.getNode(i)); line.reshape(1, line.N);
+    line.append(rrt.getNode(rrt.getParent(i)));
+    plotLine(line);
+  }
+}
+
+arr ors::RRTPlanner::getTrajectoryTo(const arr& target, const double prec, OpenGL* gl) {
   ors::Graph *copy = G->newClone();
   arr q;
 
@@ -119,6 +128,12 @@ arr ors::RRTPlanner::getTrajectoryTo(const arr& target, const double prec) {
   }
   delete copy;
 
+  if (gl) {
+    gl->add(glDrawPlot, &plotModule);
+    drawRRT(s->rrt);
+    drawRRT(target_rrt);
+  }
+
   arr q0 = buildTrajectory(s->rrt, node0, true);
   arr q1 = buildTrajectory(target_rrt, node1, false);
 
@@ -129,17 +144,5 @@ arr ors::RRTPlanner::getTrajectoryTo(const arr& target, const double prec) {
 
   return q;
 }
-
-// don't delete. might be handy:
-//void ors::RRTPlanner::plotRRT(OpenGL* gl) {
-  //gl->add(glDrawPlot, &plotModule);
-
-  //for(uint i=1; i < s->rrt.getNumberNodes(); ++i) {
-    //arr line;
-    //line.append(s->rrt.getNode(i)); line.reshape(1, line.N);
-    //line.append(s->rrt.getNode(s->rrt.getParent(i)));
-    //plotLine(line);
-  //}
-//}
 
 
