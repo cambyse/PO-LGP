@@ -552,7 +552,7 @@ bool RobotManipulationSymbols::isInorderGang(const uintA gang, const SymbolicSta
     NIY;
   }
   else {
-    return reason::holds(state.lits, Literal::get(Symbol::get(MT::String("inorder")), gang(0), 1.0));
+    return reason::holds(state.lits, Literal::get(Symbol::get(MT::String("inorder")), uintA(gang(0)), 1.0));
   }
 }
 
@@ -647,7 +647,7 @@ void RobotManipulationSymbols::getHomieGangs(MT::Array< uintA >& homieGangs, con
   boolA constants_covered(reason::getConstants().N);
   constants_covered.setUni(false);
   FOR1D(reason::getConstants(), i) {
-    if (reason::holds(state.lits, Literal::get(Symbol::get(MT::String("table")), reason::getConstants()(i), 1.0)))
+    if (reason::holds(state.lits, Literal::get(Symbol::get(MT::String("table")), uintA(reason::getConstants()(i)), 1.0)))
       continue;
     if (constants_covered(i))
       continue;
