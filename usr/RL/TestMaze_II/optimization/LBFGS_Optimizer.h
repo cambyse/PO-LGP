@@ -39,27 +39,6 @@ public:
         int ls                         ///< Number of evaluation for this iteration
         );
 
-    /** \brief Compute gradient and return value of objective. */
-    virtual lbfgsfloatval_t objective(
-        const lbfgsfloatval_t *x,       ///< Current variable values
-        lbfgsfloatval_t *g,             ///< Gradient to be computed
-        const int n                     ///< Number of variables
-    );
-
-
-    /** \brief Prints progress information during optimization. */
-    virtual int progress(
-        const lbfgsfloatval_t *x,      ///< Current variable values
-        const lbfgsfloatval_t *g,      ///< Gradient to be computed
-        const lbfgsfloatval_t fx,      ///< Current value of the objective
-        const lbfgsfloatval_t xnorm,   ///< Euclidian norm of the variables
-        const lbfgsfloatval_t gnorm,   ///< Euclidian norm of the gradient
-        const lbfgsfloatval_t step,    ///< Line-search step in this iteration
-        int n,                         ///< Number of variables
-        int k,                         ///< Iteration count
-        int ls                         ///< Number of evaluation for this iteration
-    );
-
     /** \brief Optimize the objective and return its final value. */
     virtual lbfgsfloatval_t optimize(
         int * return_code = nullptr,
@@ -115,7 +94,29 @@ public:
 
 protected:
 
-    lbfgsfloatval_t * lbfgs_variables     = nullptr; ///< Variable values.
+    lbfgsfloatval_t * lbfgs_variables = nullptr; ///< Variable values.
+
+
+    /** \brief Compute gradient and return value of objective. */
+    virtual lbfgsfloatval_t objective(
+        const lbfgsfloatval_t *x,       ///< Current variable values
+        lbfgsfloatval_t *g,             ///< Gradient to be computed
+        const int n                     ///< Number of variables
+        );
+
+
+    /** \brief Prints progress information during optimization. */
+    virtual int progress(
+        const lbfgsfloatval_t *x,      ///< Current variable values
+        const lbfgsfloatval_t *g,      ///< Gradient to be computed
+        const lbfgsfloatval_t fx,      ///< Current value of the objective
+        const lbfgsfloatval_t xnorm,   ///< Euclidian norm of the variables
+        const lbfgsfloatval_t gnorm,   ///< Euclidian norm of the gradient
+        const lbfgsfloatval_t step,    ///< Line-search step in this iteration
+        int n,                         ///< Number of variables
+        int k,                         ///< Iteration count
+        int ls                         ///< Number of evaluation for this iteration
+        );
 
     /** \brief Set the number of variables that are optimized. */
     virtual LBFGS_Optimizer& set_number_of_variables(unsigned int n, bool zero = false);

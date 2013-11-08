@@ -14,6 +14,8 @@
 
 #include <vector>
 
+#include "debug.h"
+
 class LinearQ: public HistoryObserver, public LBFGS_Optimizer
 {
 public:
@@ -39,27 +41,6 @@ public:
             const reward_t& reward,
             const bool& new_episode
     );
-
-    /** \brief Optimize weights via ridge regression.
-     *
-     * Optimize the weights for the currently active features using a
-     * \f$L^2\f$-regularization and returning the optimum value of the objective
-     * function.
-     *
-     * @param reg Coefficient for the \f$L^2\f$-regularization. */
-    double optimize_ridge(const double& reg);
-
-    /** \brief Optimize weights via \f$L^1\f$-regression.
-     *
-     * Optimize the weights for the currently active features using a
-     * \f$L^1\f$-regularization, write the optimum value of the objective
-     * function into loss (if provided) and return L-BFGS return code.
-     *
-     * @param reg      Coefficient for the \f$L^1\f$-regularization.
-     * @param max_iter Maximum number of iterations (zero for unlimited until convergence).
-     * @param loss     Pointer to return the value of the objective function after the last iteration.
-     * */
-    int optimize_l1(const double& reg, const int& max_iter = 0, double * loss = nullptr);
 
     /** \brief Clears all data (all instances). */
     virtual void clear_data();
@@ -117,8 +98,9 @@ public:
         std::string * return_code_description = nullptr
         ) override;
 
-    /** \brief Calls the correpsonding private function in LBFGS_Optimizer. */
-    virtual LinearQ& set_l1_factor(lbfgsfloatval_t f ) override;
+    /** \brief Sets the regularization factor for both ridge and
+     * L1-regularization. */
+    virtual LinearQ& set_regularization(lbfgsfloatval_t f );
 
     /** \brief Calls the correpsonding private function in LBFGS_Optimizer. */
     virtual LinearQ& set_lbfgs_delta(lbfgsfloatval_t f ) override;
@@ -131,6 +113,16 @@ public:
 
     /** \brief Sets LinearQ::optimization_type. */
     virtual LinearQ& set_optimization_type(OPTIMIZATION_TYPE t );
+
+    /** \brief Convenience function. */
+    LinearQ& set_optimization_type_TD_RIDGE() { return set_optimization_type(OPTIMIZATION_TYPE::TD_RIDGE); }
+    /** \brief Convenience function. */
+    LinearQ& set_optimization_type_TD_L1() { return set_optimization_type(OPTIMIZATION_TYPE::TD_L1); }
+    /** \brief Convenience function. */
+    LinearQ& set_optimization_type_BELLMAN() { return set_optimization_type(OPTIMIZATION_TYPE::BELLMAN); }
+
+    virtual LinearQ& set_alpha(const double a) { alpha = a; return *this; }
+    virtual double get_alpha() { return alpha; }
 
 private:
 
@@ -161,6 +153,15 @@ private:
     // Member Functions //
     //------------------//
 
+    /** \brief Optimize weights via ridge regression.
+     *
+     * Optimize the weights for the currently active features using a
+     * \f$L^2\f$-regularization and returning the optimum value of the objective
+     * function.
+     *
+     * @param reg Coefficient for the \f$L^2\f$-regularization. */
+    double optimize_TD_ridge(const double& reg);
+
     void erase_zero_features();
 
     /** \brief Update LinearQ::L, LinearQ::rho, and LinearQ::c. */
@@ -177,5 +178,7 @@ private:
     /** \brief Calculate gradient of the loss function. */
     arma::vec loss_gradient(const arma::vec& w) const { return 2 * rho + 2 * L * w; }
 };
+
+#include "debug_exclude.h"
 
 #endif /* LINEARQ_H_ */

@@ -98,91 +98,6 @@ void LinearQ::add_action_state_reward_tripel(
     loss_terms_up_to_date = false;
 }
 
-double LinearQ::optimize_ridge(const double& reg) {
-
-    // get dimension
-    idx_t feature_n = active_features.size();
-
-    // update terms if necessary
-    if(!loss_terms_up_to_date) {
-        update_loss_terms();
-    }
-
-    // weights
-    vec w;
-
-    // print
-    DEBUG_OUT(1,"    c (mean reward) = " << c);
-    if(DEBUG_LEVEL>=3) {
-        DEBUG_OUT(0,"    r-Vector");
-        rho.print();
-        DEBUG_OUT(0,"    L-Matrix");
-        L.print();
-    }
-
-    // add regularization to L and set sign for rho
-    L.diag() += reg;
-    rho *= -1;
-
-    // solve system
-    DEBUG_OUT(1,"    Solving system...");
-    bool solved = solve(w, L, rho);
-    if(!solved) {
-        DEBUG_OUT(0,"Error: Could not solve equations");
-        return 0;
-    }
-
-    // remove regularization from L and unset sign for rho
-    L.diag() -= reg;
-    rho *= -1;
-
-    // remember weights
-    feature_weights.clear();
-    for(int w_idx=0; w_idx<feature_n; ++w_idx) {
-        feature_weights.push_back(w(w_idx));
-        DEBUG_OUT(1,"    Feature (" << w_idx << "): " <<
-                  active_features[w_idx] << " --> " << w(w_idx)
-            );
-    }
-
-    // calculate loss
-    double loss = loss_function(w);
-    DEBUG_OUT(1,"    Loss = " << loss << " (sqrt = " << sqrt(loss) << ")" );
-
-    return loss;
-}
-
-int LinearQ::optimize_l1(const double& reg, const int& max_iter, double * loss) {
-
-    set_l1_factor(reg);
-    set_maximum_iterations(max_iter);
-    set_lbfgs_delta(1e-3);
-    set_lbfgs_epsilon(1e-3);
-    set_number_of_variables(active_features.size());
-
-    int return_code;
-    lbfgsfloatval_t fx = optimize(&return_code);
-
-
-    // Transfer weights and report result
-    for(int f_idx : Range(active_features.size())) {
-        DEBUG_OUT(1, "    " <<
-                  active_features[f_idx].identifier() <<
-                  " --> t[" << f_idx << "] = " <<
-                  lbfgs_variables[f_idx]
-            );
-        feature_weights[f_idx] = lbfgs_variables[f_idx];
-    }
-    DEBUG_OUT(1,"Loss = " << fx << " (sqrt = " << sqrt(fx) << ")" );
-
-    // write out loss
-    if(loss!=nullptr) {
-        *loss = fx;
-    }
-
-    return return_code;
-}
-
 void LinearQ::clear_data() {
     // call function of parent class
     HistoryObserver::clear_data();
@@ -240,6 +155,63 @@ void LinearQ::add_candidates(const int& n) {
 
     // mark loss terms as out-of-date
     loss_terms_up_to_date = false;
+}
+
+double LinearQ::optimize_TD_ridge(const double& reg) {
+
+    // identify method
+    DEBUG_OUT(1,"Optimizing TD error via ridge-regression");
+
+    // get dimension
+    idx_t feature_n = active_features.size();
+
+    // update terms if necessary
+    if(!loss_terms_up_to_date) {
+        update_loss_terms();
+    }
+
+    // weights
+    vec w;
+
+    // print
+    DEBUG_OUT(1,"    c (mean reward) = " << c);
+    if(DEBUG_LEVEL>=3) {
+        DEBUG_OUT(0,"    r-Vector");
+        rho.print();
+        DEBUG_OUT(0,"    L-Matrix");
+        L.print();
+    }
+
+    // add regularization to L and set sign for rho
+    L.diag() += reg;
+    rho *= -1;
+
+    // solve system
+    DEBUG_OUT(1,"    Solving system...");
+    bool solved = solve(w, L, rho);
+    if(!solved) {
+        DEBUG_OUT(0,"Error: Could not solve equations");
+        return 0;
+    }
+
+    // remove regularization from L and unset sign for rho
+    L.diag() -= reg;
+    rho *= -1;
+
+    // remember weights
+    feature_weights.clear();
+    for(int w_idx=0; w_idx<feature_n; ++w_idx) {
+        feature_weights.push_back(w(w_idx));
+        DEBUG_OUT(1,"    Feature (" << w_idx << "): " <<
+                  active_features[w_idx] << " --> " << w(w_idx)
+            );
+    }
+
+    // calculate loss
+    double loss = loss_function(w);
+    DEBUG_OUT(1,"    Loss = " << loss << " (sqrt = " << sqrt(loss) << ")" );
+
+    return loss;
 }
 
 void LinearQ::erase_zero_features() {
@@ -321,8 +293,7 @@ lbfgsfloatval_t LinearQ::objective(
         return td_error_objective(x,g,n);
         break;
     case OPTIMIZATION_TYPE::BELLMAN:
-        // TODO
-        return td_error_objective(x,g,n);
+        return bellman_objective(x,g,n);
         break;
     default:
         DEBUG_DEAD_LINE;
@@ -339,6 +310,9 @@ lbfgsfloatval_t LinearQ::td_error_objective(
     //------------------------------------//
     // Compute loss function and gradient //
     //------------------------------------//
+
+    // identify method
+    DEBUG_OUT(1,"Calling TD error objective (L1)");
 
     // x[f_idx] : current weights
     // fx       : loss function
@@ -376,6 +350,9 @@ lbfgsfloatval_t LinearQ::bellman_objective(
         const int n
 ) {
 
+    // identify method
+    DEBUG_OUT(1,"Calling Bellman error objective (L1)");
+
     // reset objective and gradient
     lbfgsfloatval_t fx = 0;
     for(int i=0; i<n; i++) {
@@ -384,23 +361,25 @@ lbfgsfloatval_t LinearQ::bellman_objective(
 
     // start progress bar
     if(DEBUG_LEVEL>0) {
-        ProgressBar::init("Evaluating: ");
+        ProgressBar::init("Evaluating (Bellman): ");
     }
 
     // iterate through data
-    idx_t instance_idx = 0;
+    idx_t instance_idx = 1;
+    idx_t data_idx = 0;
     for(instance_t * current_episode : instance_data) {
-        for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt) {
+        for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
 
             // print progress information
             if(DEBUG_LEVEL>0) {
-                ProgressBar::print(instance_idx++, number_of_data_points-1);
+                ProgressBar::print(instance_idx, number_of_data_points);
             }
 
             // ignore last instance
             if(insIt+1==INVALID) {
                 break;
             }
+            ++data_idx;
             action_t action_tp1 = (insIt+1)->action;
             reward_t reward_tp1 = (insIt+1)->reward;
 
@@ -451,12 +430,10 @@ lbfgsfloatval_t LinearQ::bellman_objective(
             }
 
             // calculate sums
-            idx_t action_idx = 0;
-            for(action_t action : actionIt_t::all) {
+            for(idx_t action_idx : Range(action_t::action_n)) {
                 double expQ = exp(alpha*Q_itp1_a[action_idx]);
                 sumExp += expQ;
                 sumQExp += Q_itp1_a[action_idx]*expQ;
-                ++action_idx;
             }
 
             //-------------------------------//
@@ -470,15 +447,22 @@ lbfgsfloatval_t LinearQ::bellman_objective(
             // gradient
             for(uint f_idx : Range(n)) {
                 double aSum = 0;
-                idx_t action_idx = 0;
-                for(action_t action : actionIt_t::all) {
+                for(idx_t action_idx : Range(action_t::action_n)) {
                     double inner_terms = 1 + alpha*Q_itp1_a[action_idx] - alpha*(sumQExp/sumExp);
                     aSum += (exp(alpha*Q_itp1_a[action_idx])/sumExp)*inner_terms*f_itp1_a[action_idx][f_idx];
-                    ++action_idx;
                 }
-                g[f_idx] += 2*bellman_error*(f_it_atp1[f_idx] - discount*aSum);
+                g[f_idx] += -2*bellman_error*(f_it_atp1[f_idx] - discount*aSum);
             }
         }
+    }
+
+
+    // normalize objective
+    fx /= data_idx;
+
+    // normalize gradient
+    for(uint f_idx : Range(n)) {
+        g[f_idx] /= data_idx;
     }
 
     // terminate progress bar
@@ -518,28 +502,37 @@ lbfgsfloatval_t LinearQ::optimize(
     std::string * return_code_description
     ) {
 
-    // set correct dimensionality
-    set_number_of_variables(active_features.size());
 
-    // perform optimization
-    lbfgsfloatval_t fx = LBFGS_Optimizer::optimize(return_code, return_code_description);
-
-    // transfer weights and report result
-    for(int f_idx : Range(active_features.size())) {
-        DEBUG_OUT(1, "    " <<
-                  active_features[f_idx].identifier() <<
-                  " --> t[" << f_idx << "] = " <<
-                  lbfgs_variables[f_idx]
-            );
-        feature_weights[f_idx] = lbfgs_variables[f_idx];
+    switch(optimization_type) {
+    case OPTIMIZATION_TYPE::TD_RIDGE:
+        return optimize_TD_ridge(get_l1_factor());
+    case OPTIMIZATION_TYPE::TD_L1:
+    case OPTIMIZATION_TYPE::BELLMAN:
+    {
+        // set correct dimensionality
+        set_number_of_variables(active_features.size());
+        // perform optimization
+        lbfgsfloatval_t fx = LBFGS_Optimizer::optimize(return_code, return_code_description);
+        // transfer weights and report result
+        for(int f_idx : Range(active_features.size())) {
+            DEBUG_OUT(1, "    " <<
+                      active_features[f_idx].identifier() <<
+                      " --> t[" << f_idx << "] = " <<
+                      lbfgs_variables[f_idx]
+                );
+            feature_weights[f_idx] = lbfgs_variables[f_idx];
+        }
+        DEBUG_OUT(1,"Loss = " << fx << " (sqrt = " << sqrt(fx) << ")" );
+        // return loss
+        return fx;
     }
-    DEBUG_OUT(1,"Loss = " << fx << " (sqrt = " << sqrt(fx) << ")" );
-
-    // return loss
-    return fx;
+    default:
+        DEBUG_DEAD_LINE;
+        return 0;
+    }
 }
 
-LinearQ& LinearQ::set_l1_factor(lbfgsfloatval_t f ) {
+LinearQ& LinearQ::set_regularization(lbfgsfloatval_t f ) {
     LBFGS_Optimizer::set_l1_factor(f);
     return *this;
 }

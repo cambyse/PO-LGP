@@ -423,6 +423,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString optimize_linQ_s(                 "    lq-optimize / lqo. . . . . [<double> [<int>] | check | c ] . . . . . .-> optimize Linear-Q (Bellman Error) with L1-regularization coefficient <double> [ and max <int> iterations ] or check derivatives");
     QString construct_s(                     "    construct / con. . . . . . <int> . . . . . . . . . . . . . . . . . . .-> construct candidate features with distance <int>");
     QString lq_erase_zero_weight_s(          "    lq-erase / lqe . . . . . . [<double>]. . . . . . . . . . . . . . . . .-> erase features with zero weight [ weight below or equal to <double> ]");
+    QString lq_alpha_s(                      "    lq-alpha . . . . . . . . . [<double>]. . . . . . . . . . . . . . . . .-> get [set] alpha for Soft-Max");
 
     QString planning_s(                    "\n    ---------------------------------Planning----------------------------------");
     QString discount_s(                      "    discount . . . . . . . . . [<double>]. . . . . . . . . . . . . . . . .-> get [set] discount");
@@ -521,6 +522,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             TO_CONSOLE( optimize_linQ_s );
             TO_CONSOLE( construct_s );
             TO_CONSOLE( lq_erase_zero_weight_s );
+            TO_CONSOLE( lq_alpha_s );
             // Planning
             TO_CONSOLE( planning_s );
             TO_CONSOLE( discount_s );
@@ -602,9 +604,13 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
         } else if(str_args[0]=="lq-optimize-ridge" || str_args[0]=="lqor") { // optimize linear-Q
             if(str_args_n==1 || double_args_ok[1] ) {
                 if(double_args_ok[1]) {
-                    linQ.optimize_ridge(double_args[1]);
+                    linQ.set_optimization_type_TD_RIDGE()
+                        .set_regularization(double_args[1])
+                        .optimize();
                 } else {
-                    linQ.optimize_ridge(0);
+                    linQ.set_optimization_type_TD_RIDGE()
+                        .set_regularization(0)
+                        .optimize();
                 }
             } else {
                 TO_CONSOLE( invalid_args_s );
@@ -613,9 +619,14 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
         } else if(str_args[0]=="lq-optimize-l1" || str_args[0]=="lqol1") { // optimize linear-Q
             if(str_args_n>1 && double_args_ok[1] ) {
                 if(str_args_n>2 && int_args_ok[2] ) {
-                    linQ.optimize_l1(double_args[1], int_args[2]);
+                    linQ.set_optimization_type_TD_L1()
+                        .set_regularization(double_args[1])
+                        .set_maximum_iterations(int_args[2])
+                        .optimize();
                 } else {
-                    linQ.optimize_l1(double_args[1]);
+                    linQ.set_optimization_type_TD_L1()
+                        .set_regularization(double_args[1])
+                        .optimize();
                 }
             } else if(str_args_n>1 && (str_args[1]=="check" || str_args[1]=="c") ) {
                 linQ.check_derivatives(3,10,1e-6,1e-3);
@@ -626,11 +637,14 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
         } else if(str_args[0]=="lq-optimize" || str_args[0]=="lqo") { // optimize linear-Q
             if(str_args_n>1 && double_args_ok[1] ) {
                 if(str_args_n>2 && int_args_ok[2] ) {
-                    linQ.set_l1_factor(double_args[1])
+                    linQ.set_optimization_type_BELLMAN()
+                        .set_regularization(double_args[1])
                         .set_maximum_iterations(int_args[2])
                         .optimize();
                 } else {
-                    linQ.set_l1_factor(double_args[1])
+                    linQ.set_optimization_type_BELLMAN()
+                        .set_regularization(double_args[1])
+                        .set_maximum_iterations(0)
                         .optimize();
                 }
             } else if(str_args_n>1 && (str_args[1]=="check" || str_args[1]=="c") ) {
@@ -649,6 +663,18 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             } else {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( lq_erase_zero_weight_s );
+            }
+        } else if(str_args[0]=="lq-alpha") {
+            if(str_args_n==1 || double_args_ok[1]) {
+                if(str_args_n>1) {
+                    linQ.set_alpha(double_args[1]);
+                } else {
+                    double alpha = linQ.get_alpha();
+                    TO_CONSOLE( QString("    alpha = %1").arg(alpha) );
+                }
+            } else {
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( lq_alpha_s );
             }
         } else if(str_args[0]=="epsilon") {
             if(str_args_n==1) {

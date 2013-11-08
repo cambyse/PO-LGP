@@ -35,19 +35,6 @@ lbfgsfloatval_t LBFGS_Optimizer::static_objective(
     return ((LBFGS_Optimizer*)instance)->objective(x,g,n);
 }
 
-lbfgsfloatval_t LBFGS_Optimizer::objective(
-    const lbfgsfloatval_t * /*x*/,
-    lbfgsfloatval_t *g,
-    const int n
-) {
-    DEBUG_ERROR("No objective function defined.");
-    lbfgsfloatval_t fx = 0;
-    for(int i=0; i<n; i++) {
-        g[i] = 0;
-    }
-    return fx;
-}
-
 int LBFGS_Optimizer::static_progress(
     void *instance,
     const lbfgsfloatval_t *x,
@@ -61,25 +48,6 @@ int LBFGS_Optimizer::static_progress(
     int ls
     ) {
     return ((LBFGS_Optimizer*)instance)->progress(x,g,fx,xnorm,gnorm,step,n,k,ls);
-}
-
-int LBFGS_Optimizer::progress(
-    const lbfgsfloatval_t *x,
-    const lbfgsfloatval_t * /*g*/,
-    const lbfgsfloatval_t fx,
-    const lbfgsfloatval_t xnorm,
-    const lbfgsfloatval_t /*gnorm*/,
-    const lbfgsfloatval_t /*step*/,
-    int n,
-    int k,
-    int /*ls*/
-) {
-    DEBUG_OUT(1,"Iteration " << k << " (fx = " << fx << ", xnorm = " << xnorm << ")" );
-    for(int x_idx=0; x_idx<n; ++x_idx) {
-        DEBUG_OUT(1, "    x[" << x_idx << "] = " << x[x_idx]);
-    }
-    DEBUG_OUT(1,"Iteration " << k << " (fx = " << fx << ", xnorm = " << xnorm << ")" );
-    return 0;
 }
 
 lbfgsfloatval_t LBFGS_Optimizer::optimize(int * return_code, std::string * return_code_description) {
@@ -207,6 +175,38 @@ void LBFGS_Optimizer::check_derivatives(
     lbfgs_free(x);
     lbfgs_free(grad);
     lbfgs_free(grad_dummy);
+}
+
+lbfgsfloatval_t LBFGS_Optimizer::objective(
+    const lbfgsfloatval_t * /*x*/,
+    lbfgsfloatval_t *g,
+    const int n
+) {
+    DEBUG_ERROR("No objective function defined.");
+    lbfgsfloatval_t fx = 0;
+    for(int i=0; i<n; i++) {
+        g[i] = 0;
+    }
+    return fx;
+}
+
+int LBFGS_Optimizer::progress(
+    const lbfgsfloatval_t *x,
+    const lbfgsfloatval_t * /*g*/,
+    const lbfgsfloatval_t fx,
+    const lbfgsfloatval_t xnorm,
+    const lbfgsfloatval_t /*gnorm*/,
+    const lbfgsfloatval_t /*step*/,
+    int n,
+    int k,
+    int /*ls*/
+) {
+    DEBUG_OUT(1,"Iteration " << k << " (fx = " << fx << ", xnorm = " << xnorm << ")" );
+    for(int x_idx=0; x_idx<n; ++x_idx) {
+        DEBUG_OUT(1, "    x[" << x_idx << "] = " << x[x_idx]);
+    }
+    DEBUG_OUT(1,"Iteration " << k << " (fx = " << fx << ", xnorm = " << xnorm << ")" );
+    return 0;
 }
 
 LBFGS_Optimizer& LBFGS_Optimizer::set_number_of_variables(unsigned int n, bool zero) {
