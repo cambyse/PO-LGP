@@ -1,20 +1,13 @@
 // Read DOCSTRING to get an idea of corepy!
 %define DOCSTRING_COREPY
 "
-This is a simple SWIG wrapper to be able to use the mlr Core
-within python
+This is a SWIG wrapper to be able to use the mlr Core within python
 
 Note:
-- There is also a VERY SIMPLE interface for the array class
 - tested with python.
 
 TODO
-- better MT::Array wrapper (important!)
-  - DONE fill with python lists
-  - DONE __getitem__
-  - DONE __setitem__
-  - DONE slicing!
-  - TODO fill with numpy ndarray
+- DONE map MT::Array to pylist/ndarray
 - memory management sometimes fails
 - DONE Interfaces for PhysX not implemented
 - integrate some docstrings:
@@ -109,67 +102,58 @@ def get_mlr_path():
 }
 
 //===========================================================================
-// helper functions for Array
-// matrix of ones
-arr ones(uint n);
-arr ones(uint d0, uint d1);
-// matrix of zeros
-arr zeros(uint n);
-arr zeros(uint d0, uint d1);
-// identity matrix
-arr eye(uint d0, uint d1);
-arr eye(uint n);
+
+%include "geo.h"
 
 //===========================================================================
+// Map some common array functions
+// TODO: do we really need them?
+
+/// return identity matrix
+inline arr eye(uint d0, uint d1) { arr z;  z.resize(d0, d1);  z.setId();  return z; }
+/// return identity matrix
+inline arr eye(uint n) { return eye(n, n); }
+
+/// return matrix of ones
+inline arr ones(const uintA& d) {  arr z;  z.resize(d);  z=1.;  return z;  }
+/// return matrix of ones
+inline arr ones(uint n) { return ones(TUP(n, n)); }
+/// return matrix of ones
+inline arr ones(uint d0, uint d1) { return ones(TUP(d0, d1)); }
+
+/// return matrix of zeros
+inline arr zeros(const uintA& d) {  arr z;  z.resize(d);  z.setZero();  return z; }
+/// return matrix of zeros
+inline arr zeros(uint n) { return zeros(TUP(n, n)); }
+/// return matrix of zeros
+inline arr zeros(uint d0, uint d1) { return zeros(TUP(d0, d1)); }
+
+arr repmat(const arr& A, uint m, uint n);
+
+/// return array with random numbers in [0, 1]
+arr rand(const uintA& d);
+/// return array with random numbers in [0, 1]
+inline arr rand(uint n) { return rand(TUP(n, n)); }
+/// return array with random numbers in [0, 1]
+inline arr rand(uint d0, uint d1) { return rand(TUP(d0, d1)); }
+
+/// return array with normal (Gaussian) random numbers
+arr randn(const uintA& d);
+/// return array with normal (Gaussian) random numbers
+inline arr randn(uint n) { return randn(TUP(n, n)); }
+/// return array with normal (Gaussian) random numbers
+inline arr randn(uint d0, uint d1) { return randn(TUP(d0, d1)); }
+
+inline double max(const arr& x) { return x.max(); }
+inline double min(const arr& x) { return x.min(); }
+inline uint argmax(const arr& x) { return x.maxIndex(); }
+inline uint argmin(const arr& x) { return x.minIndex(); }
+
+inline uintA randperm(uint n) {  uintA z;  z.setRandomPerm(n);  return z; }
+
 //===========================================================================
-// OpenGL wrapper to be able to visualize the ORS stuctures
-class OpenGL {
-public:
-  int  timedupdate(double sec);
-  bool update(const char *text=NULL);
-};
 
-
-//===========================================================================
-// ORS datastructures
-namespace ors { 
-
-
-//===========================================================================
-struct Vector {
-  double x, y, z;
-
-  Vector() {}
-  Vector(double x, double y, double z);
-  Vector(const MT::Array<double>& x);
-  Vector(const Vector& v);
-  double *p();
-
-  void set(double, double, double);
-  void set(double*);
-  void setZero();
-  void setRandom(double range=1.);
-  /*void add(double, double, double);*/
-  /*void subtract(double, double, double);*/
-  void normalize();
-  void setLength(double);
-  void makeNormal(const Vector&);
-  void makeColinear(const Vector&);
-
-  bool isZero() const;
-  bool isNormalized() const;
-  double isColinear(const Vector&) const;
-  double length() const;
-  double lengthSqr() const;
-  double angle(const Vector&) const;
-  double radius() const;
-  double phi() const;
-  double theta() const;
-
-  void write(std::ostream&) const;
-  void read(std::istream&);
-
-%extend {
+%extend ors::Vector {
   std::string __str__() {
     std::ostringstream oss(std::ostringstream::out);
     oss << (*$self);
@@ -180,152 +164,34 @@ struct Vector {
   Vector __mul__(const double& other) { return *$self * other; }
   bool __eq__(const Vector& other) { return *$self == other; }
   bool __ne__(const Vector& other) { return *$self != other; }
-} // end %extend Vector
+} 
 
-}; // end of Vector
-
-
-//===========================================================================
-struct Matrix {
-  double m00, m01, m02, m10, m11, m12, m20, m21, m22;
-
-  Matrix() {};
-  Matrix(const arr& m);
-  double *p();
-
-  // void set(double* m);
-  void setZero();
-  void setRandom(double range=1.);
-  void setId();
-  void setFrame(Vector&, Vector&, Vector&);
-  void setInvFrame(Vector&, Vector&, Vector&);
-  void setXrot(double);
-  void setSkew(const Vector&);
-  void setExponential(const Vector&);
-  void setOdeMatrix(double*);
-  void setTensorProduct(const Vector&, const Vector&);
-
-  void write(std::ostream&) const;
-  void read(std::istream&);
-
-%extend {
+%extend ors::Matrix {
   Matrix __add__(const Matrix& other) { return *$self + other; };
   bool __eq__(const Matrix& other) { return *$self == other; }
   bool __ne__(const Matrix& other) { return *$self != other; }
+
+  %pythoncode %{
+    def set(self, lst):
+      assert(len(lst) >= 9)
+      self.m00 = lst[0]
+      self.m01 = lst[1]
+      self.m02 = lst[2]
+      self.m10 = lst[3]
+      self.m11 = lst[4]
+      self.m12 = lst[5]
+      self.m20 = lst[6]
+      self.m21 = lst[7]
+      self.m22 = lst[8]
+  %}
 }
-%pythoncode %{
-def set(self, lst):
-    assert(len(lst) >= 9)
-    self.m00 = lst[0]
-    self.m01 = lst[1]
-    self.m02 = lst[2]
-    self.m10 = lst[3]
-    self.m11 = lst[4]
-    self.m12 = lst[5]
-    self.m20 = lst[6]
-    self.m21 = lst[7]
-    self.m22 = lst[8]
-%} // end of %pythoncode
-};
 
-
-//===========================================================================
-struct Quaternion {
-  double w, x, y, z;
-
-  Quaternion();
-  Quaternion(double w, double x, double y, double z);
-  Quaternion(const arr& q);
-  Quaternion(const Quaternion& q);
-  double *p();
-
-  void set(double w, double x, double y, double z);
-  void set(double* p);
-  void setZero();
-  void setRandom();
-  void setDeg(double degree , double axis0, double axis1, double axis2);
-  void setDeg(double degree , const Vector& axis);
-  void setRad(double radians, double axis0, double axis1, double axis2);
-  void setRad(double radians, const Vector& axis);
-  void setRad(double angle);
-  void setRadX(double angle);
-  void setRadY(double angle);
-  void setVec(Vector w);
-  void setMatrix(double* m);
-  void setDiff(const Vector& from, const Vector& to);
-  void setInterpolate(double t, const Quaternion& a, const Quaternion b);
-  void invert();
-  void normalize();
-  void multiply(double f);
-  void alignWith(const Vector& v);
-
-  bool isZero() const;
-  bool isNormalized() const;
-  double getDeg() const;
-  double getRad() const;
-  void getDeg(double& degree, Vector& axis) const;
-  void getRad(double& angle , Vector& axis) const;
-  Vector& getVec(Vector& v) const;
-  Vector& getX(Vector& Rx) const;
-  Vector& getY(Vector& Ry) const;
-  Vector& getZ(Vector& Rz) const;
-  Matrix getMatrix() const;
-  double* getMatrix(double* m) const;
-  double* getMatrixOde(double* m) const;
-  double* getMatrixGL(double* m) const;
-
-  void writeNice(std::ostream& os) const;
-  void write(std::ostream& os) const;
-  void read(std::istream& is);
-
-%extend {
+%extend ors::Quaternion {
   bool __eq__(const Quaternion& other) { return *$self == other; }
   bool __ne__(const Quaternion& other) { return *$self != other; }
 }
 
-};
-
-
-//===========================================================================
-struct Transformation {
-  Vector pos;
-  Quaternion rot;
-  Vector vel;
-  Vector angvel;
-
-  Transformation();
-  Transformation(const Transformation& t);
-
-  void setZero();
-  Transformation& setText(const char* txt);
-  void setRandom();
-  void setInverse(const Transformation& f);
-  void setDifference(const Transformation& from, const Transformation& to);
-  void setAffineMatrix(const double *m);
-
-  bool isZero() const;
-
-  void addRelativeTranslation(double x, double y, double z);
-  void addRelativeRotationDeg(double degree, double x, double y, double z);
-  void addRelativeRotationRad(double rad, double x, double y, double z);
-  void addRelativeRotationQuat(double s, double x, double y, double z);
-  void addRelativeVelocity(double x, double y, double z);
-  void addRelativeAngVelocityDeg(double degree, double x, double y, double z);
-  void addRelativeAngVelocityRad(double rad, double x, double y, double z);
-  void addRelativeAngVelocityRad(double wx, double wy, double wz);
-
-  void appendTransformation(const Transformation& f);
-  void appendInvTransformation(const Transformation& f);
-
-  double* getAffineMatrix(double *m) const;
-  double* getInverseAffineMatrix(double *m) const;
-  double* getAffineMatrixGL(double *m) const;
-  double* getInverseAffineMatrixGL(double *m) const;// in OpenGL format (transposed memory storage!!)
-
-  void write(std::ostream& os) const;
-  void read(std::istream& is);
-
-%extend {
+%extend ors::Transformation {
   std::string __str__() {
     std::ostringstream oss(std::ostringstream::out);
     oss << (*$self);
@@ -333,30 +199,7 @@ struct Transformation {
   }
   bool __eq__(const Transformation& other) { return *$self == other; }
   bool __ne__(const Transformation& other) { return *$self != other; }
-} // end %extend Transformation
-
-}; // end of Transformation
-}; // end of namespace ors
-
-
-//===========================================================================
-// Conversion to MT::Array
-//===========================================================================
-
-arr ARRAY(const ors::Vector& v);
-arr ARRAY(const ors::Quaternion& q);
-arr ARRAY(const ors::Matrix& m);
-
-//===========================================================================
-// Constants
-//===========================================================================
-
-const ors::Vector Vector_x;
-const ors::Vector Vector_y;
-const ors::Vector Vector_z;
-const ors::Transformation Transformation_Id;
-const ors::Quaternion Quaternion_Id;
-ors::Transformation& NoTransformation;
+} 
 
 //===========================================================================
 // vim: ft=swig
