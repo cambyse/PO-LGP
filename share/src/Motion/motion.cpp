@@ -82,28 +82,26 @@ void MotionProblem::setInterpolatingCosts(
       c->y_prec = y_finalPrec;
     } break;
     case finalOnly: {
-      c->y_target.resize(T+1, m);
-      c->y_target.setZero();
+      c->y_target.resize(T+1, m).setZero();
       c->y_target[T]() = finTarget;
-      c->y_prec.resize(T+1);
-      c->y_prec.setZero();
+      c->y_prec.resize(T+1).setZero();
       c->y_prec(T) = y_finalPrec;
     } break;
     case final_restConst: {
-      c->y_target.resize(T+1, m);
+      c->y_target.resize(T+1, m).setZero();
       c->y_target[T]() = finTarget;
       for(uint t=0; t<T; t++) c->y_target[t]() = midTarget;
-      c->y_prec.resize(T+1);
+      c->y_prec.resize(T+1).setZero();
       c->y_prec = y_midPrec<=0. ? 0. : y_midPrec;
       c->y_prec(T) = y_finalPrec;
     } break;
     case final_restLinInterpolated: {
-      c->y_target.resize(T+1, m);
+      c->y_target.resize(T+1, m).setZero();
       for(uint t=0; t<=T; t++) {
         double a = (double)t/T;
         c->y_target[t]() = ((double)1.-a)*y0 + a*finTarget;
       }
-      c->y_prec.resize(T+1);
+      c->y_prec.resize(T+1).setZero();
       c->y_prec = y_midPrec<0. ? y_finalPrec : y_midPrec;
       c->y_prec(T) = y_finalPrec;
     } break;
@@ -111,10 +109,10 @@ void MotionProblem::setInterpolatingCosts(
     uint t;
     CHECK(earlyFraction>=0. && earlyFraction<=1.,"");
     uint Tearly=earlyFraction*T;
-    c->y_target.resize(T+1, m);
+    c->y_target.resize(T+1, m).setZero();
     for(t=0; t<Tearly; t++) c->y_target[t]() = midTarget;
     for(t=Tearly; t<=T; t++) c->y_target[t]() = finTarget;
-    c->y_prec.resize(T+1);
+    c->y_prec.resize(T+1).setZero();
     for(t=0; t<Tearly; t++) c->y_prec(t) = y_midPrec<=0. ? 0. : y_midPrec;
     for(t=Tearly; t<=T; t++) c->y_prec(t) = y_finalPrec;
   } break;

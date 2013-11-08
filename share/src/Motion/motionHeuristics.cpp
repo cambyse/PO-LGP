@@ -270,6 +270,10 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
   target = ARR(grip,grip);
   MP.setInterpolatingCosts(c, MotionProblem::early_restConst,
                           target, fingerDistPrec, ARR(0.,0.), 0., 0.8);
+  for (uint t=.8*T; t<=T; t++) { //interpolation: 0 up to 4/5 of the trajectory, then interpolating in the last 1/5
+    double a=double(t-.8*T)/(.2*T);
+    c->y_target[t]() = .7*(1.-a) + grip*a;
+  }
 
 #if 1
   //-- collisions with other objects
@@ -278,12 +282,14 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
                     new ProxyTaskMap(allExceptListedPTMT, shapes, .04, true));
   target = ARR(0.);
   MP.setInterpolatingCosts(c, MotionProblem::constant, target, colPrec);
-//  c->map.phi(initial, NoArr, *M.ors);
-//  if (initial(0)>0.) { //we are in collision/proximity -> depart slowly
-//    double a=initial(0);
-//    for (uint t=0; t<=T/5; t++)
-//      c->y_target[t]() = a*double(T-5*t)/T;
-//  }
+//  arr initial;
+  c->map.phi(initial, NoArr, *MP.ors);
+  if(initial(0)>0.) { //we are in collision/proximity -> depart slowly
+    for (uint t=0; t<=T/5; t++){
+      double a = double(T-5*t)/T;
+      c->y_target[t]() = a*initial(0);
+    }
+  }
 #endif
 
 //  //-- opposing fingers -- PR2-fingers always oppose!
@@ -292,6 +298,11 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
 //  M.setInterpolatingCosts(c, MotionProblem::constEarlyMid,
 //                          target, oppositionPrec, ARR(0.,0.,0.), 0., 0.8);
 
+
+  //-- homing
+  c = MP.addTaskMap("qitself",
+                    new DefaultTaskMap(qItselfTMT));
+  MP.setInterpolatingCosts(c, MotionProblem::final_restConst, target, zeroQPrec, target, zeroQPrec);
 
   return;
 
@@ -306,10 +317,6 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
   target=0.;
   MP.setInterpolatingCosts(c, MotionProblem::final_restConst, target, limPrec, target, limPrec);
 
-  //-- homing
-  c = MP.addTaskMap("qitself",
-                    new DefaultTaskMap(qItselfTMT));
-  MP.setInterpolatingCosts(c, MotionProblem::final_restConst, target, zeroQPrec, target, zeroQPrec);
 }
 
 void reattachShape(ors::Graph& ors, SwiftInterface *swift, const char* objShape, const char* toBody);
@@ -465,108 +472,15 @@ void setHomingGoals(MotionProblem& M, uint T){
 }
 #endif
 
-//From Dmitry
-void decomposeMatrix(arr& A1,arr& A2,arr A) { // returns diagonal blocks of equal size
-  int dim = sqrt(A.N)/2;
-  A.resize(2*dim,2*dim);
-  A1.resize(dim,dim);
-  A2.resize(dim,dim);
-  for (int i=0; i<dim; i++)
-    for (int j=0; j<dim; j++) {
-      A1(i,j) = A(i,j);
-      A2(i,j) = A(dim+i,dim+j);
-    }
-}
-
-double SumOfRow(int p,int k) { // sum of geometric series
-  double sum=0;
-  switch (k) {
-    case 0: sum=p;  break;
-    case 1: sum=p*(p+1)/2.0;  break;
-    case 2: sum=p*(p+1)*(2.0*p+1)/6.0;  break;
-    default: NIY;
-  }
-  if (sum>0)
-    return sum;
-  else return 1;
-}
-
 
 double keyframeOptimizer(arr& x, MotionProblem& MP, bool x_is_initialized, uint verbose) {
-#if 0
-  arr sqrtW;
-  
-  if (MP.transitionType==MotionProblem::kinematic) {
-    arr wdiag = MP.H_rate_diag;
-    wdiag *= MP.tau/double(MP.T);
-    sqrtW.setDiag(sqrt(wdiag));
-  } else {
-#if 1
-    arr wdiag = MP.H_rate_diag;
-    double D = MP.tau*MP.T;
-    wdiag *= 16./D/D/D;
-    sqrtW.setDiag(sqrt(wdiag));
-#else
-    //From Dmitry
-    double T = M.T;
-    //control costs
-    arr HrateInv;
-    HrateInv.setDiag(1./M.H_rate_diag);
-
-    //dynamics noise
-    arr A,a,B,Q,Qrate,Q1,Q2;
-    M.getDynamics(A,a,B,Q,0);
-    Qrate = Q/M.get_tau();
-    decomposeMatrix(Q1,Q2,Q);
-
-    double tau = M.T*M.get_tau();// tau is basically = time
-    double tau2=tau*tau;
-    int dim=sqrt(Q.N)/2;
-    
-    arr I,Z,AT,Zv;
-    I.setId(dim); Z.resize(dim,dim); Z.setZero();
-    AT.setBlockMatrix(I,tau*I,Z,I);  // A to the power of T
-    
-    double S0 = SumOfRow(T,0); double S1 = SumOfRow(T-1,1); double S2 = SumOfRow(T-1,2);  // sums of geometric series
-    arr sigma1,sigma2,sigma3,sigma4; // Blocks of sigma matrix
-    sigma1 = tau2*tau*HrateInv*(S0+2.0*S1 + S2)/pow(T,3) + tau2*tau*Q2*S2/pow(T,3)+ tau*S0*Q1/T;
-    sigma2 = tau2*HrateInv*(S0+S1)/pow(T,2) + tau2*S1*Q2/pow(T,2);
-    sigma3 = sigma2;
-    sigma4 = tau*S0*(HrateInv + Q2)/T;
-    
-    arr sumA,sumAinv;
-    sumA.setBlockMatrix(sigma1,sigma2,sigma3,sigma4);
-    inverse_SymPosDef(sumAinv,sumA);
-    //suma= AT*x0;
-    lapack_cholesky(sqrtWinv, sumAinv);
-#endif
-  }
-  
-  struct MyOptimizationProblem:VectorFunction {
-    MotionProblem *MP;
-    arr sqrtW, x0;
-    bool verbose;
-
-    void   fv(arr& Phi, arr& J, const arr& x) {
-      MP->setState(x, NoArr);
-      MP->getTaskCosts(Phi, J, NoArr, MP->T);
-      Phi.append(sqrtW*(x-x0));
-      if (&J) J.append(sqrtW);
-    }
-  } F;
-  F.MP = &MP;
-  F.sqrtW = sqrtW;
-  F.x0=x0;
-  F.verbose=false;
-  if (verbose>=3) checkJacobian(F, x, 1e-6);
-  F.verbose = verbose>=3;
-#endif
 
   MotionProblem_EndPoseFunction MF(MP);
 
   if (!x_is_initialized) x=MP.x0;
 
   double cost;
+
   optNewton(x, Convert(MF), OPT(fmin_return=&cost, verbose=2, stopIters=200, useAdaptiveDamping=false, damping=1e-0, maxStep=.5, stopTolerance=1e-2));
 
   return cost;
