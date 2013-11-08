@@ -283,6 +283,7 @@ import_array();
     Type *iter = &((*$1)(i));
     {
       Type $1 = *iter;
+      int $owner = 1; // this is hacky
       PyObject *$result = NULL;
       $typemap(out, Type)
       obj = $result; 
@@ -291,6 +292,9 @@ import_array();
   }
   %append_output(argout);
 }
+
+%typemap(argout) const MT::Array<Type> & { }
+
 //===========================================================================
 // Garbage collection
 //===========================================================================
