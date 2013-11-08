@@ -2,7 +2,13 @@ BASE   = ../../..
 NAME   = libHardware_$(shell basename `pwd`)
 OUTPUT := $(BASE)/lib/$(NAME).so
 
+ifeq ($(wildcard /usr/local/lib/libG4Track.so), )
+$(error "libG4Track not installed. Skipping.")
+endif
+
+CXXFLAGS += -DG4_INSTALLED
 LIBS += -lG4Track -lusb-1.0
+
 DEPEND = Core
 
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )

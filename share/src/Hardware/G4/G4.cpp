@@ -1,3 +1,5 @@
+#ifdef G4_INSTALLED
+
 #include "G4.h"
 #include <G4TrackIncl.h>
 
@@ -142,6 +144,12 @@ void G4Poller::step(){
   currentPoses.set() = s->poses; //publish the result
 }
 
+#include <unistd.h>
+
 void G4Poller::close(){
+  usleep(1000000l);
   g4_close_tracker();
+  usleep(1000000l);
 }
+
+#endif // ifdef G4_INSTALLED
