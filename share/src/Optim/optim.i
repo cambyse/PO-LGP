@@ -21,7 +21,6 @@ author: Johannes kulick
 %{
   #include "optimization.h"
   #include "constrained.h"
-  #include "benchmarks.h"
 %}
 
 //===========================================================================
@@ -40,5 +39,4 @@ author: Johannes kulick
 
 %include "optimization.h"
 %include "constrained.h"
-%include "benchmarks.h"
 
