@@ -261,7 +261,7 @@ void testGaussNewton(VectorFunction& F){
     cout <<"x0=" <<x0 <<endl;
     checkJacobian(F, x, 1e-4);
 
-    optGaussNewton(x, F, OPT(verbose=2, stopTolerance=1e-3));
+    optNewton(x, F, OPT(verbose=2, stopTolerance=1e-3));
     cout <<"x_opt=" <<x <<endl;
     gnuplot("load 'plt'", false, true);
     MT::wait();

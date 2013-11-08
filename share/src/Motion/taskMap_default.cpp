@@ -4,8 +4,9 @@ DefaultTaskMap::DefaultTaskMap(DefaultTaskMapType _type,
                                int iShape, const ors::Vector& _ivec,
                                int jShape, const ors::Vector& _jvec,
                                const arr& _params):type(_type), i(iShape), j(jShape){
-  if(&_ivec) ivec = _ivec;
-  if(&_jvec) jvec = _jvec;
+
+  if(&_ivec) ivec=_ivec; else ivec.setZero();
+  if(&_jvec) jvec=_jvec; else jvec.setZero();
   if(&_params) params=_params;
 }
 
@@ -17,8 +18,8 @@ DefaultTaskMap::DefaultTaskMap(DefaultTaskMapType _type, const ors::Graph &G,
   ors::Shape *b = jShapeName ? G.getShapeByName(jShapeName):NULL;
   if(a) i=a->index;
   if(b) j=b->index;
-  if(&_ivec) ivec = _ivec;
-  if(&_jvec) jvec = _jvec;
+  if(&_ivec) ivec=_ivec; else ivec.setZero();
+  if(&_jvec) jvec=_jvec; else jvec.setZero();
   if(&_params) params=_params;
 }
 

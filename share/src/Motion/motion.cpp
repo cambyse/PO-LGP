@@ -221,6 +221,10 @@ bool MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
     TaskCost *c = taskCosts(i);
     if(c->active && !c->map.constraint) {
       c->map.phi(y, J, *ors);
+      if(absMax(y)>1e10){
+        MT_MSG("WARNING y=" <<y);
+        c->map.phi(y, J, *ors);
+      }
       if(!c->y_target.N && !c->v_target.N){
         MT_MSG("active task costs "<< c->name <<" have no targets defined - ignoring");
       }
@@ -381,7 +385,7 @@ void MotionProblem::costReport() {
 
 arr MotionProblemFunction::get_prefix() {
   arr x_pre(get_k(), dim_x());
-  for(uint i=0; i<x_pre.d0; i++) x_pre[i]() = P.x0;
+  for(uint i=0; i<x_pre.d0; i++) x_pre[i]() = MP.x0;
   return x_pre;
 }
 
@@ -393,15 +397,15 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
   CHECK(x_bar.d1==n,"");
   CHECK(t<=T,"");
 
-  double tau=P.tau;
-  double _tau2=1./(tau*tau);
+  double tau=MP.tau;
+  double tau2=tau*tau, tau3=tau2*tau;
   
   //-- transition costs
-  arr h = sqrt(P.H_rate_diag)*sqrt(tau);
-  if(k==1)  phi = x_bar[1]-x_bar[0]; //penalize velocity
-  if(k==2)  phi = x_bar[2]-2.*x_bar[1]+x_bar[0]; //penalize acceleration
-  if(k==3)  phi = x_bar[3]-3.*x_bar[2]+3.*x_bar[1]-x_bar[0]; //penalize jerk
-  phi = h % (_tau2*phi);
+  arr h = sqrt(MP.H_rate_diag)*sqrt(tau);
+  if(k==1)  phi = (x_bar[1]-x_bar[0])/tau; //penalize velocity
+  if(k==2)  phi = (x_bar[2]-2.*x_bar[1]+x_bar[0])/tau2; //penalize acceleration
+  if(k==3)  phi = (x_bar[3]-3.*x_bar[2]+3.*x_bar[1]-x_bar[0])/tau3; //penalize jerk
+  phi = h % phi;
 
   if(&J) {
     J.resize(phi.N, k+1, n);
@@ -411,7 +415,9 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
       if(k==2){ J(i,2,i) = 1.;  J(i,1,i) = -2.;  J(i,0,i) = 1.; }
       if(k==3){ J(i,3,i) = 1.;  J(i,2,i) = -3.;  J(i,1,i) = +3.;  J(i,0,i) = -1.; }
     }
-    J *= _tau2;
+    if(k==1) J/=tau;
+    if(k==2) J/=tau2;
+    if(k==3) J/=tau3;
     J.reshape(phi.N, (k+1)*n);
     for(uint i=0; i<n; i++) J[i]() *= h(i);
   }
@@ -420,9 +426,9 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
 
   //-- task cost (which are taken w.r.t. x_bar[k])
   arr _phi, J_x, J_v;
-  if(k>0) P.setState(x_bar[k], (x_bar[k]-x_bar[k-1])/tau);
-  else    P.setState(x_bar[k], NoArr); //don't set velocities
-  P.getTaskCosts(_phi, J_x, J_v, t);
+  if(k>0) MP.setState(x_bar[k], (x_bar[k]-x_bar[k-1])/tau);
+  else    MP.setState(x_bar[k], NoArr); //don't set velocities
+  MP.getTaskCosts(_phi, J_x, J_v, t);
   phi.append(_phi);
   if(&J && _phi.N) {
     arr Japp(_phi.N, (k+1)*n);
@@ -435,12 +441,45 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
   if(&J) CHECK(J.d0==phi.N,"");
   
   //store in CostMatrix
-  if(!P.costMatrix.N) {
-    P.costMatrix.resize(get_T()+1,phi.N);
-    P.costMatrix.setZero();
+  if(!MP.costMatrix.N) {
+    MP.costMatrix.resize(get_T()+1,phi.N);
+    MP.costMatrix.setZero();
   }
   
-  CHECK(P.costMatrix.d1==phi.N,"");
-  P.costMatrix[t]() = phi;
+  CHECK(MP.costMatrix.d1==phi.N,"");
+  MP.costMatrix[t]() = phi;
 }
 
+//===========================================================================
+
+void MotionProblem_EndPoseFunction::fv(arr& phi, arr& J, const arr& x){
+  //-- transition costs
+  arr h = MP.H_rate_diag;
+  if(MP.transitionType==MotionProblem::kinematic){
+    h *= MP.tau/double(MP.T);
+    h=sqrt(h);
+  } else {
+    double D = MP.tau*MP.T;
+    h *= 16./D/D/D;
+    h=sqrt(h);
+  }
+  phi = h%(x-MP.x0);
+  if(&J) J.setDiag(h);
+
+  //-- task costs
+  arr _phi, J_x;
+  MP.setState(x, NoArr);
+  MP.getTaskCosts(_phi, J_x, NoArr, MP.T);
+  phi.append(_phi);
+  if(&J && _phi.N) {
+    J.append(J_x);
+  }
+
+  if(absMax(phi)>1e10){
+    MT_MSG("\nx=" <<x <<"\nphi=" <<phi <<"\nJ=" <<J);
+    MP.setState(x, NoArr);
+    MP.getTaskCosts(_phi, J_x, NoArr, MP.T);
+  }
+
+  if(&J) CHECK(J.d0==phi.N,"");
+}

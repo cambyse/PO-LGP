@@ -99,7 +99,7 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   x.setZero();
 
   //-- optimize
-  optGaussNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
 
   P.costReport();
   //  displayTrajectory(x, 1, G, gl,"planned trajectory");

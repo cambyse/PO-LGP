@@ -128,20 +128,36 @@ struct MotionProblem {
 //
 
 struct MotionProblemFunction:KOrderMarkovFunction {
-  MotionProblem& P;
+  MotionProblem& MP;
   bool makeConstrainedProblem;
 
-  MotionProblemFunction(MotionProblem& _P):P(_P), makeConstrainedProblem(false) {};
+  MotionProblemFunction(MotionProblem& _P):MP(_P), makeConstrainedProblem(false) {};
   
   //KOrderMarkovFunction definitions
   virtual void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);
   //functions to get the parameters $T$, $k$ and $n$ of the $k$-order Markov Process
-  virtual uint get_T() { return P.T; }
-  virtual uint get_k() { if(P.transitionType==MotionProblem::kinematic) return 1;  return 2; }
-  virtual uint dim_x() { return P.x0.N; }
-  virtual uint dim_phi(uint t){ return dim_x() + P.dim_phi(t); }
-  virtual uint dim_g(uint t){ return P.dim_g(t); }
+  virtual uint get_T() { return MP.T; }
+  virtual uint get_k() { if(MP.transitionType==MotionProblem::kinematic) return 1;  return 2; }
+  virtual uint dim_x() { return MP.x0.N; }
+  virtual uint dim_phi(uint t){ return dim_x() + MP.dim_phi(t); }
+  virtual uint dim_g(uint t){ return MP.dim_g(t); }
   virtual arr get_prefix(); //the history states x(-k),..,x(-1)
+};
+
+
+//===========================================================================
+//
+// transforming a motion problem description into an end-pose optimization problem only
+//
+
+struct MotionProblem_EndPoseFunction:VectorFunction {
+  MotionProblem& MP;
+  bool makeConstrainedProblem; //TODO: not used yet
+
+  MotionProblem_EndPoseFunction(MotionProblem& _P):MP(_P), makeConstrainedProblem(false) {};
+
+  //VectorFunction definitions
+  virtual void fv(arr& phi, arr& J, const arr& x);
 };
 
 #endif

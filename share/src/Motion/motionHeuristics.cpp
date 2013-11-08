@@ -34,7 +34,7 @@ void threeStepGraspHeuristic(arr& x, MotionProblem& MP, const arr& x0, uint shap
     arr cost_side(3),x_side(3,x0.N);
     for (side=0; side<3; side++) {
       setGraspGoals_PR2(MP, T, shapeId, side, 0);
-      cost_side(side) = keyframeOptimizer(x, MP, 1e-2, false, verbose);
+      cost_side(side) = keyframeOptimizer(x, MP, false, verbose);
       listDelete(MP.taskCosts());
       if (verbose>=2) {
         displayState(x, *MP.ors, gl, STRING("posture estimate phase 0 side " <<side));
@@ -46,7 +46,7 @@ void threeStepGraspHeuristic(arr& x, MotionProblem& MP, const arr& x0, uint shap
     x = x_side[side];
   } else {
     setGraspGoals_PR2(MP, T, shapeId, side, 0);
-    keyframeOptimizer(x, MP, 1e-2, false, verbose);
+    keyframeOptimizer(x, MP, false, verbose);
     listDelete(MP.taskCosts());
     if (verbose>=2) {
       displayState(x, *MP.ors, gl, "posture estimate phase 0");
@@ -64,7 +64,7 @@ void threeStepGraspHeuristic(arr& x, MotionProblem& MP, const arr& x0, uint shap
   
   //-- reoptimize with close hand
   setGraspGoals_PR2(MP, T, shapeId, side, 1);
-  keyframeOptimizer(x, MP, 1e-2, true, verbose);
+  keyframeOptimizer(x, MP, true, verbose);
   //listDelete(M.vars); //DON'T delete the grasp goals - the system should keep them for the planner
   if (verbose>=1) displayState(x, *MP.ors, gl, "posture estimate phase 2");
 //  M.displayCurrentState("posture estimate phase 2", false, false);
@@ -492,8 +492,9 @@ double SumOfRow(int p,int k) { // sum of geometric series
 }
 
 
-double keyframeOptimizer(arr& x, MotionProblem& MP, double stopTolerance, bool x_is_initialized, uint verbose) {
-  arr sqrtW,x0;
+double keyframeOptimizer(arr& x, MotionProblem& MP, bool x_is_initialized, uint verbose) {
+#if 0
+  arr sqrtW;
   
   if (MP.transitionType==MotionProblem::kinematic) {
     arr wdiag = MP.H_rate_diag;
@@ -541,9 +542,6 @@ double keyframeOptimizer(arr& x, MotionProblem& MP, double stopTolerance, bool x
 #endif
   }
   
-  x0 = MP.x0;
-  if (!x_is_initialized) x=x0;
-  
   struct MyOptimizationProblem:VectorFunction {
     MotionProblem *MP;
     arr sqrtW, x0;
@@ -562,18 +560,15 @@ double keyframeOptimizer(arr& x, MotionProblem& MP, double stopTolerance, bool x
   F.verbose=false;
   if (verbose>=3) checkJacobian(F, x, 1e-6);
   F.verbose = verbose>=3;
-  
+#endif
+
+  MotionProblem_EndPoseFunction MF(MP);
+
+  if (!x_is_initialized) x=MP.x0;
+
   double cost;
-  OptOptions opt;
-  opt.fmin_return=&cost;
-  opt.stopTolerance=1e-2;
-  opt.stopEvals=100;
-  opt.maxStep=.5;
-  opt.damping=1.;
-  opt.useAdaptiveDamping=false;
-  opt.verbose=2; //verbose?verbose-1:0;
-  optGaussNewton(x, F, opt);
-  
+  optNewton(x, Convert(MF), OPT(fmin_return=&cost, verbose=2, stopIters=200, useAdaptiveDamping=false, damping=1e-0, maxStep=.5, stopTolerance=1e-2));
+
   return cost;
 }
 

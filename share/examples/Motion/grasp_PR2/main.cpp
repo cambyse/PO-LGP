@@ -30,7 +30,7 @@ void testGraspHeuristic(){
 
     sineProfile(x, x0, xT, MP.T);
 
-    optGaussNewton(x, Convert(F), OPT(verbose=2, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+    optNewton(x, Convert(F), OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1e-0, maxStep=.5));
     MP.costReport();
     gnuplot("load 'z.costReport.plt'", false, true);
 
