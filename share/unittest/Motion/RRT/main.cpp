@@ -24,7 +24,7 @@ class RRTPlannerTest : public ::testing::Test {
 
 RRTPlannerTest::RRTPlannerTest() {
   rnd.seed(seed);
-  stepsize = .1;
+  stepsize = .05;
   eps = .001;
   G.init("world_complex.ors");
 
@@ -50,16 +50,16 @@ RRTPlannerTest::RRTPlannerTest() {
   target = ARRAY(G.getBodyByName("target")->X.pos);
   std::cout << "target = " << target << std::endl;
 
+  //OpenGL gl;
+  //bindOrsToOpenGL(G, gl);
   trajectory = planner.getTrajectoryTo(target, eps);
 
   //std::cout << "Trajectory:" << std::endl;
   //for(uint i=0; i<trajectory.d0; ++i)
     //cout << i << " : " << trajectory[i] << std::endl;
 
-  //OpenGL gl;
-  //bindOrsToOpenGL(G, gl);
-  //planner.plotRRT(&gl);
   //displayTrajectory(trajectory, trajectory.d0, G, gl, "RRT");
+  //gl.watch();
 }
 
 TEST_F(RRTPlannerTest, testRRTEndPoints) {
