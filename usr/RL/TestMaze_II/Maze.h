@@ -26,7 +26,7 @@ public:
     enum COLOR_IDX { COLOR_R, COLOR_G, COLOR_B };
     enum LEARNER_TYPE {CRF_LEARNER,
                        UTREE_VALUE_LEARNER,
-                       UTREE_STATE_REWARD_LEARNER,
+                       UTREE_OBSERVATION_REWARD_LEARNER,
                        LINEAR_Q_LEARNER
     };
 
@@ -66,21 +66,21 @@ public:
     void perform_transition(const action_t& action);
 
     /** \brief Perform a transition by executing an action and return resulting
-     * state and reward by reference. */
-    void perform_transition(const action_t& a, state_t& final_state, reward_t& r );
+     * observation and reward by reference. */
+    void perform_transition(const action_t& a, observation_t& final_observation, reward_t& r );
 
     /** \brief Perform a transition by executing an action and return which rewards
      * were active. */
     void perform_transition(const action_t& a, std::vector<std::pair<int,int> > * reward_vector);
 
     /** \brief Returns the transition probability. */
-    probability_t get_prediction(const instance_t*, const action_t&, const state_t&, const reward_t&) const;
+    probability_t get_prediction(const instance_t*, const action_t&, const observation_t&, const reward_t&) const;
 
     /** \brief Returns the transition probability and which rewards were active.
      *
      * The first counter in each pair counts positive rewards, the second
      * punishments (for not collecting an activated reward). */
-    probability_t get_prediction(const instance_t*, const action_t&, const state_t&, const reward_t&, std::vector<std::pair<int,int> > * reward_vector) const;
+    probability_t get_prediction(const instance_t*, const action_t&, const observation_t&, const reward_t&, std::vector<std::pair<int,int> > * reward_vector) const;
 
     void get_features(std::vector<Feature*> & basis_features, LEARNER_TYPE type) const;
 
@@ -103,7 +103,7 @@ public:
     double get_epsilon() const { return epsilon; }
 
     /** \brief Set the current state of the agent. */
-    void set_current_state(const state_t&);
+    void set_current_state(const observation_t&);
 
     /** \brief Get a string describing all rewards. */
     static std::string get_rewards();
@@ -206,7 +206,7 @@ private:
     void frame_maze();
 
     /** \brief Add a state in the graphics. */
-    void render_state(state_t s);
+    void render_state(observation_t s);
 
     /** \brief Add a wall in the graphics. */
     void render_wall(wall_t);
@@ -241,12 +241,12 @@ Maze::probability_t Maze::validate_model(
     *mean_maze_likelihood = 0;
     for(size_t transition_counter=0; transition_counter<samples; ++transition_counter) {
         action_t action = action_t::random_action();
-        state_t state;
+        observation_t observation;
         reward_t reward;
         instance_t * last_instance = current_instance;
-        perform_transition(action,state,reward);
-        probability_t p_maze = get_prediction(last_instance,action,state,reward);
-        probability_t p_model = model.get_prediction(last_instance,action,state,reward);
+        perform_transition(action,observation,reward);
+        probability_t p_maze = get_prediction(last_instance,action,observation,reward);
+        probability_t p_model = model.get_prediction(last_instance,action,observation,reward);
         kl_divergence += log(p_maze/p_model);
         *mean_model_likelihood += p_model;
         *mean_maze_likelihood += p_maze;

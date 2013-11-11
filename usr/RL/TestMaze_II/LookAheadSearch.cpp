@@ -93,7 +93,7 @@ void LookAheadSearch::clear_tree() {
     for(graph_t::NodeIt node(graph); node!=INVALID; ++node) {
         // DEBUG_OUT(0,"Deleting instance of:");
         // print_node(node);
-        if(node_info_map[node].type==STATE) {
+        if(node_info_map[node].type==OBSERVATION) {
             delete node_info_map[node].instance;
         }
     }
@@ -207,13 +207,13 @@ void LookAheadSearch::print_tree(const bool& text,
                     DEBUG_OUT(0,"Error: Level of mixed type");
                 }
                 node_vector_t optimal_action_node_vector;
-                if(current_level_type==STATE) {
+                if(current_level_type==OBSERVATION) {
                     optimal_action_node_vector = optimal_action_nodes(current_node);
                 }
                 for(graph_t::OutArcIt out_arc(graph,current_node); out_arc!=INVALID; ++out_arc) {
                     node_t next_level_node = graph.target(out_arc);
                     double weight_factor = 0;
-                    if(current_level_type==STATE) {
+                    if(current_level_type==OBSERVATION) {
                         for( auto optimal_node : optimal_action_node_vector ) {
                             if(next_level_node==optimal_node) {
                                 weight_factor = 1;
@@ -245,8 +245,8 @@ void LookAheadSearch::print_tree(const bool& text,
             sizes[node] = node_size;
             lables[node] = QString::number(graph.id(node)).toStdString();
             lables[node] += ": ";
-            if(node_info_map[node].type==STATE) {
-                lables[node] += Maze::MazeState(node_info_map[node].instance->state).print();
+            if(node_info_map[node].type==OBSERVATION) {
+                lables[node] += Maze::MazeState(node_info_map[node].instance->observation).print();
                 if(node_info_map[node].instance->reward==reward_t::max_reward) {
                     lables[node] += "*";
                 }
@@ -420,7 +420,7 @@ void LookAheadSearch::print_tree_statistics() {
         current_level_type=node_info_map[(*current_level)[0]].type;
         DEBUG_OUT(0,"    Level " << level_counter << ": " <<
                   current_level->size() << " nodes (" <<
-                  (current_level_type==STATE ? "STATE" : (current_level_type==ACTION ? "ACTION" : "NONE")) << ")");
+                  (current_level_type==OBSERVATION ? "OBSERVATION" : (current_level_type==ACTION ? "ACTION" : "NONE")) << ")");
         for(idx_t idx=0; idx<(idx_t)current_level->size(); ++idx) {
             ++total_node_counter;
             if(current_level_type!=node_info_map[(*current_level)[idx]].type) {
@@ -501,7 +501,7 @@ void LookAheadSearch::print_tree_statistics() {
     }
 }
 
-LookAheadSearch::node_t LookAheadSearch::select_next_action_node(node_t state_node) {
+LookAheadSearch::node_t LookAheadSearch::select_next_action_node(node_t observation_node) {
 
     DEBUG_OUT(3,"Selecting next action");
 
@@ -513,7 +513,7 @@ LookAheadSearch::node_t LookAheadSearch::select_next_action_node(node_t state_no
         DEBUG_OUT(4,"    using maximum upper bound as criterion");
         value_t max_upper_bound = -DBL_MAX, current_upper_bound;
         node_t current_action_node;
-        for(graph_t::OutArcIt out_arc(graph,state_node); out_arc!=INVALID; ++out_arc) {
+        for(graph_t::OutArcIt out_arc(graph,observation_node); out_arc!=INVALID; ++out_arc) {
             current_action_node = graph.target(out_arc);
             current_upper_bound = node_info_map[current_action_node].upper_value_bound;
             if(approx_eq(current_upper_bound,max_upper_bound)) {
@@ -531,7 +531,7 @@ LookAheadSearch::node_t LookAheadSearch::select_next_action_node(node_t state_no
         DEBUG_OUT(4,"    using maximum lower bound as criterion");
         value_t max_lower_bound = -DBL_MAX, current_lower_bound;
         node_t current_action_node;
-        for(graph_t::OutArcIt out_arc(graph,state_node); out_arc!=INVALID; ++out_arc) {
+        for(graph_t::OutArcIt out_arc(graph,observation_node); out_arc!=INVALID; ++out_arc) {
             current_action_node = graph.target(out_arc);
             current_lower_bound = node_info_map[current_action_node].lower_value_bound;
             if(approx_eq(current_lower_bound,max_lower_bound)) {
@@ -569,57 +569,57 @@ LookAheadSearch::node_t LookAheadSearch::select_next_action_node(node_t state_no
     return selected_action_node;
 }
 
-LookAheadSearch::node_t LookAheadSearch::select_next_state_node(node_t action_node) {
-    DEBUG_OUT(3,"Selecting next state");
-    node_vector_t next_state_nodes;
-    switch(tree_state_selection_type) {
+LookAheadSearch::node_t LookAheadSearch::select_next_observation_node(node_t action_node) {
+    DEBUG_OUT(3,"Selecting next observation");
+    node_vector_t next_observation_nodes;
+    switch(tree_observation_selection_type) {
     case MAX_WEIGHTED_UNCERTAINTY:
     {
         DEBUG_OUT(4,"    using maximum uncertainty as criterion");
         value_t max_uncertainty = -DBL_MAX, current_uncertainty;
-        node_t current_state_node;
+        node_t current_observation_node;
         for(graph_t::OutArcIt out_arc(graph,action_node); out_arc!=INVALID; ++out_arc) {
-            current_state_node = graph.target(out_arc);
-            current_uncertainty = node_info_map[current_state_node].upper_value_bound - node_info_map[current_state_node].lower_value_bound;
+            current_observation_node = graph.target(out_arc);
+            current_uncertainty = node_info_map[current_observation_node].upper_value_bound - node_info_map[current_observation_node].lower_value_bound;
             current_uncertainty *= arc_info_map[out_arc].prob;
             if(approx_eq(current_uncertainty,max_uncertainty)) {
-                next_state_nodes.push_back(current_state_node);
+                next_observation_nodes.push_back(current_observation_node);
             } else if(current_uncertainty>max_uncertainty) {
-                next_state_nodes.clear();
-                next_state_nodes.push_back(current_state_node);
+                next_observation_nodes.clear();
+                next_observation_nodes.push_back(current_observation_node);
                 max_uncertainty = current_uncertainty;
             }
         }
         break;
     }
     default:
-        DEBUG_OUT(0,"Error: State selection type not implemented.");
+        DEBUG_OUT(0,"Error: Observation selection type not implemented.");
         break;
     }
 
-    // select state
-    node_t selected_state_node;
+    // select observation
+    node_t selected_observation_node;
     if(random_tie_break) {
-        selected_state_node = util::random_select(next_state_nodes);
+        selected_observation_node = util::random_select(next_observation_nodes);
     } else {
-        selected_state_node = next_state_nodes.front();
+        selected_observation_node = next_observation_nodes.front();
     }
 
     // check
-    if(node_info_map[selected_state_node].type!=STATE) {
-        DEBUG_OUT(0,"Error: Next state node is not of type STATE");
+    if(node_info_map[selected_observation_node].type!=OBSERVATION) {
+        DEBUG_OUT(0,"Error: Next observation node is not of type OBSERVATION");
     }
-    DEBUG_OUT(4,"    Next state:");
+    DEBUG_OUT(4,"    Next observation:");
     if(DEBUG_LEVEL>=4) {
-        print_node(selected_state_node);
+        print_node(selected_observation_node);
     }
-    return selected_state_node;
+    return selected_observation_node;
 }
 
-LookAheadSearch::node_vector_t LookAheadSearch::optimal_action_nodes(const node_t& state_node) const {
+LookAheadSearch::node_vector_t LookAheadSearch::optimal_action_nodes(const node_t& observation_node) const {
     // check
-    if(node_info_map[state_node].type!=STATE) {
-        DEBUG_OUT(0,"Error: Given state node is not of type STATE");
+    if(node_info_map[observation_node].type!=OBSERVATION) {
+        DEBUG_OUT(0,"Error: Given observation node is not of type OBSERVATION");
     }
 
     // determine optimal actions
@@ -630,7 +630,7 @@ LookAheadSearch::node_vector_t LookAheadSearch::optimal_action_nodes(const node_
         DEBUG_OUT(3,"    Using maximum lower bound as criterion");
         value_t max_lower_bound = -DBL_MAX, current_lower_bound;
         node_t current_action_node;
-        for(graph_t::OutArcIt out_arc(graph,state_node); out_arc!=INVALID; ++out_arc) {
+        for(graph_t::OutArcIt out_arc(graph,observation_node); out_arc!=INVALID; ++out_arc) {
             current_action_node = graph.target(out_arc);
             current_lower_bound = node_info_map[current_action_node].lower_value_bound;
             if(approx_eq(current_lower_bound,max_lower_bound)) {
@@ -648,7 +648,7 @@ LookAheadSearch::node_vector_t LookAheadSearch::optimal_action_nodes(const node_
         DEBUG_OUT(3,"    Using maximum weighted bounds as criterion");
         value_t max_value = -DBL_MAX, current_value;
         node_t current_action_node;
-        for(graph_t::OutArcIt out_arc(graph,state_node); out_arc!=INVALID; ++out_arc) {
+        for(graph_t::OutArcIt out_arc(graph,observation_node); out_arc!=INVALID; ++out_arc) {
             current_action_node = graph.target(out_arc);
             current_value = 0;
             current_value +=    lower_bound_weight  * node_info_map[current_action_node].lower_value_bound;
@@ -679,15 +679,15 @@ LookAheadSearch::node_t LookAheadSearch::update_action_node(node_t action_node) 
         node_info_map[action_node].upper_value_bound = 0;
         node_info_map[action_node].lower_value_bound = 0;
         for(graph_t::OutArcIt out_arc(graph,action_node); out_arc!=INVALID; ++out_arc) {
-            node_t state_node = graph.target(out_arc);
-            probability_t state_prob = arc_info_map[out_arc].prob;
-            prob_sum += state_prob;
+            node_t observation_node = graph.target(out_arc);
+            probability_t observation_prob = arc_info_map[out_arc].prob;
+            prob_sum += observation_prob;
             reward_t transition_reward = arc_info_map[out_arc].transition_reward;
-            node_info_map[action_node].upper_value_bound += state_prob * (transition_reward + discount*node_info_map[state_node].upper_value_bound);
-            node_info_map[action_node].lower_value_bound += state_prob * (transition_reward + discount*node_info_map[state_node].lower_value_bound);
+            node_info_map[action_node].upper_value_bound += observation_prob * (transition_reward + discount*node_info_map[observation_node].upper_value_bound);
+            node_info_map[action_node].lower_value_bound += observation_prob * (transition_reward + discount*node_info_map[observation_node].lower_value_bound);
         }
         if(fabs(prob_sum-1)>1e-10) {
-            DEBUG_OUT(0,"Error: Unnormalized state transition probabilities (p_sum=" << prob_sum << ")");
+            DEBUG_OUT(0,"Error: Unnormalized observation transition probabilities (p_sum=" << prob_sum << ")");
         }
         break;
     }
@@ -696,10 +696,10 @@ LookAheadSearch::node_t LookAheadSearch::update_action_node(node_t action_node) 
         value_t max_upper = -DBL_MAX;
         value_t min_lower =  DBL_MAX;
         for(graph_t::OutArcIt out_arc(graph,action_node); out_arc!=INVALID; ++out_arc) {
-            node_t state_node = graph.target(out_arc);
+            node_t observation_node = graph.target(out_arc);
             reward_t transition_reward = arc_info_map[out_arc].transition_reward;
-            value_t upper = transition_reward + discount*node_info_map[state_node].upper_value_bound;
-            value_t lower = transition_reward + discount*node_info_map[state_node].lower_value_bound;
+            value_t upper = transition_reward + discount*node_info_map[observation_node].upper_value_bound;
+            value_t lower = transition_reward + discount*node_info_map[observation_node].lower_value_bound;
             if(upper>max_upper) {
                 max_upper = upper;
             }
@@ -708,7 +708,7 @@ LookAheadSearch::node_t LookAheadSearch::update_action_node(node_t action_node) 
             }
         }
         if(max_upper==-DBL_MAX||min_lower==DBL_MAX) {
-            DEBUG_OUT(0,"Error: No outgoing state node");
+            DEBUG_OUT(0,"Error: No outgoing observation node");
         }
         node_info_map[action_node].upper_value_bound = max_upper;
         node_info_map[action_node].lower_value_bound = min_lower;
@@ -724,27 +724,27 @@ LookAheadSearch::node_t LookAheadSearch::update_action_node(node_t action_node) 
         print_node(action_node);
     }
 
-    // return parent state node
+    // return parent observation node
     graph_t::InArcIt in_arc(graph,action_node);
-    node_t parent_state_node = graph.source(in_arc);
+    node_t parent_observation_node = graph.source(in_arc);
     if(in_arc==INVALID) {
-        DEBUG_OUT(0,"Error: No parent state node for this action");
+        DEBUG_OUT(0,"Error: No parent observation node for this action");
     }
     if(++in_arc!=INVALID) {
-        DEBUG_OUT(0,"Error: More than one parent state node for this action");
+        DEBUG_OUT(0,"Error: More than one parent observation node for this action");
     }
-    if(node_info_map[parent_state_node].type!=STATE) {
-        DEBUG_OUT(0,"Error: Parent state node is not of type STATE");
+    if(node_info_map[parent_observation_node].type!=OBSERVATION) {
+        DEBUG_OUT(0,"Error: Parent observation node is not of type OBSERVATION");
     }
-    DEBUG_OUT(4,"    Parent state node:");
+    DEBUG_OUT(4,"    Parent observation node:");
     if(DEBUG_LEVEL>=4) {
-        print_node(parent_state_node);
+        print_node(parent_observation_node);
     }
-    return parent_state_node;
+    return parent_observation_node;
 }
 
-LookAheadSearch::node_t LookAheadSearch::update_state_node(node_t state_node) {
-    BOUND_USAGE_TYPE use_type = state_back_propagation_type;
+LookAheadSearch::node_t LookAheadSearch::update_observation_node(node_t observation_node) {
+    BOUND_USAGE_TYPE use_type = observation_back_propagation_type;
     if(use_type==SAME_AS_OPTIMAL_ACTION_SELECTION) {
         use_type = optimal_action_selection_type;
     }
@@ -752,7 +752,7 @@ LookAheadSearch::node_t LookAheadSearch::update_state_node(node_t state_node) {
     case MAX_UPPER_FOR_UPPER_CORRESPONDING_LOWER_FOR_LOWER:
     {
         value_t max_upper_bound= -DBL_MAX, current_upper_bound, current_lower_bound;
-        for(graph_t::OutArcIt out_arc(graph,state_node); out_arc!=INVALID; ++out_arc) {
+        for(graph_t::OutArcIt out_arc(graph,observation_node); out_arc!=INVALID; ++out_arc) {
             node_t action_node = graph.target(out_arc);
             current_upper_bound = node_info_map[action_node].upper_value_bound;
             current_lower_bound = node_info_map[action_node].lower_value_bound;
@@ -760,11 +760,11 @@ LookAheadSearch::node_t LookAheadSearch::update_state_node(node_t state_node) {
                 (!approx_eq(current_upper_bound,max_upper_bound) && // if upper bounds are NOT equal
                  current_upper_bound>max_upper_bound ) || // primary criterion: upper bound
                 ( approx_eq(current_upper_bound,max_upper_bound) && // if upper bounds are equal
-                  current_lower_bound>node_info_map[state_node].lower_value_bound ) // secondary criterion: lower bounds
+                  current_lower_bound>node_info_map[observation_node].lower_value_bound ) // secondary criterion: lower bounds
                 ) {
                 max_upper_bound=current_upper_bound;
-                node_info_map[state_node].upper_value_bound = current_upper_bound;
-                node_info_map[state_node].lower_value_bound = current_lower_bound;
+                node_info_map[observation_node].upper_value_bound = current_upper_bound;
+                node_info_map[observation_node].lower_value_bound = current_lower_bound;
             }
         }
         break;
@@ -772,38 +772,38 @@ LookAheadSearch::node_t LookAheadSearch::update_state_node(node_t state_node) {
     case MAX_WEIGHTED_BOUNDS:
     {
         value_t max_value= -DBL_MAX;
-        for(graph_t::OutArcIt out_arc(graph,state_node); out_arc!=INVALID; ++out_arc) {
+        for(graph_t::OutArcIt out_arc(graph,observation_node); out_arc!=INVALID; ++out_arc) {
             node_t action_node = graph.target(out_arc);
             value_t current_upper_bound = node_info_map[action_node].upper_value_bound;
             value_t current_lower_bound = node_info_map[action_node].lower_value_bound;
             value_t current_value = lower_bound_weight*current_lower_bound + (1-lower_bound_weight)*current_upper_bound;
             if(current_value>max_value) { // no randomization needed for equal values since actual action is not considered
                 max_value=current_value;
-                node_info_map[state_node].upper_value_bound = current_upper_bound;
-                node_info_map[state_node].lower_value_bound = current_lower_bound;
+                node_info_map[observation_node].upper_value_bound = current_upper_bound;
+                node_info_map[observation_node].lower_value_bound = current_lower_bound;
             }
         }
         break;
     }
     default:
-        DEBUG_OUT(0,"Error: State back-propagation type not implemented.");
+        DEBUG_OUT(0,"Error: Observation back-propagation type not implemented.");
         break;
     }
 
-    DEBUG_OUT(3,"Updated state node");
+    DEBUG_OUT(3,"Updated observation node");
     if(DEBUG_LEVEL>=4) {
-        print_node(state_node);
+        print_node(observation_node);
     }
 
     // return parent action node
-    if(state_node!=root_node) {
-        graph_t::InArcIt in_arc(graph,state_node);
+    if(observation_node!=root_node) {
+        graph_t::InArcIt in_arc(graph,observation_node);
         node_t parent_action_node = graph.source(in_arc);
         if(in_arc==INVALID) {
-            DEBUG_OUT(0,"Error: No parent action node for this state");
+            DEBUG_OUT(0,"Error: No parent action node for this observation");
         }
         if(++in_arc!=INVALID) {
-            DEBUG_OUT(0,"Error: More than one parent action node for this state");
+            DEBUG_OUT(0,"Error: More than one parent action node for this observation");
         }
         if(node_info_map[parent_action_node].type!=ACTION) {
             DEBUG_OUT(0,"Error: Parent action node is not of type ACTION");
@@ -876,8 +876,8 @@ void LookAheadSearch::print_node(node_t node) const {
     case NONE:
         DEBUG_OUT(0, "    type:    " << "NONE" );
         break;
-    case STATE:
-        DEBUG_OUT(0, "    type:    " << "STATE" );
+    case OBSERVATION:
+        DEBUG_OUT(0, "    type:    " << "OBSERVATION" );
         DEBUG_OUT(0, "    instance:" << *(node_info_map[node].instance) );
         break;
     case ACTION:

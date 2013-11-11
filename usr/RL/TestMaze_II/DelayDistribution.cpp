@@ -15,8 +15,8 @@ using std::make_tuple;
 using std::get;
 
 DelayDistribution::probability_t DelayDistribution::get_fixed_delay_probability(
-    const state_t& s1,
-    const state_t& s2,
+    const observation_t& s1,
+    const observation_t& s2,
     const idx_t& delay
     ) {
     // determine unnormalized delay probability
@@ -33,9 +33,9 @@ DelayDistribution::probability_t DelayDistribution::get_fixed_delay_probability(
                 insIt_2 += delay;
             }
             while(insIt_1!=INVALID && insIt_2!=INVALID) {
-                if(insIt_1->state==s1) {
+                if(insIt_1->observation==s1) {
                     ++normalization;
-                    if(insIt_2->state==s2) {
+                    if(insIt_2->observation==s2) {
                         prob += 1;
                     }
                 }
@@ -54,17 +54,17 @@ DelayDistribution::probability_t DelayDistribution::get_fixed_delay_probability(
 }
 
 vector<DelayDistribution::probability_t> DelayDistribution::get_fixed_delay_probability_distribution(
-    const state_t& s1,
+    const observation_t& s1,
     const idx_t& delay
     ) {
     // initialize unnormalized probabilities
     vector<probability_t> prob;
-    map<state_t,idx_t> idx_map;
-    idx_t state_idx = 0;
-    for( state_t state : stateIt_t::all ) {
+    map<observation_t,idx_t> idx_map;
+    idx_t observation_idx = 0;
+    for( observation_t observation : observationIt_t::all ) {
         prob.push_back(0);
-        idx_map[state] = state_idx;
-        ++state_idx;
+        idx_map[observation] = observation_idx;
+        ++observation_idx;
     }
     size_t normalization = 0;
 
@@ -80,9 +80,9 @@ vector<DelayDistribution::probability_t> DelayDistribution::get_fixed_delay_prob
                 insIt_2 += delay;
             }
             while(insIt_1!=INVALID && insIt_2!=INVALID) {
-                if(insIt_1->state==s1) {
+                if(insIt_1->observation==s1) {
                     ++normalization;
-                    prob[idx_map[insIt_2->state]] += 1;
+                    prob[idx_map[insIt_2->observation]] += 1;
                 }
                 ++insIt_1;
                 ++insIt_2;
@@ -102,18 +102,18 @@ vector<DelayDistribution::probability_t> DelayDistribution::get_fixed_delay_prob
 }
 
 void DelayDistribution::get_delay_distribution(
-    const state_t& s1,
-    const state_t& s2,
+    const observation_t& s1,
+    const observation_t& s2,
     vector<probability_t> & forward,
     vector<probability_t> & backward,
     const idx_t& max_delay
     ) {
 
     //---------------------------------------------------//
-    // handle identical states and initialize containers //
+    // handle identical observations and initialize containers //
     //---------------------------------------------------//
     if(s1==s2) {
-        DEBUG_OUT(1,"Warning: States given to calculate delay distribution are identical");
+        DEBUG_OUT(1,"Warning: Observations given to calculate delay distribution are identical");
         forward.assign(1,1);
         backward.assign(1,1);
         return;
@@ -148,10 +148,10 @@ void DelayDistribution::get_delay_distribution(
                     }
                 }
 
-                // update if states match
-                if(instance_1->state==s1 && instance_2->state==s2) {
+                // update if observations match
+                if(instance_1->observation==s1 && instance_2->observation==s2) {
                     if(delay==0) {
-                        DEBUG_DEAD_LINE; // identical states should be handeld above
+                        DEBUG_DEAD_LINE; // identical observations should be handeld above
                     } else if(delay<0) {
                         if((idx_t)backward.size()<1-delay) {
                             backward.resize(1-delay,0);
@@ -185,9 +185,9 @@ void DelayDistribution::get_delay_distribution(
 }
 
 DelayDistribution::probability_t DelayDistribution::get_mediator_probability(
-    const state_t& s1,
-    const state_t& s2,
-    const state_t& s3,
+    const observation_t& s1,
+    const observation_t& s2,
+    const observation_t& s3,
     const int& max_window
     ) {
     //-------------------//
@@ -197,12 +197,12 @@ DelayDistribution::probability_t DelayDistribution::get_mediator_probability(
     size_t counter = 0;
     for(instance_t * current_episode : instance_data) {
         for(const_instanceIt_t ins_1=current_episode->first(); ins_1!=INVALID; ++ins_1 ) {
-            if(ins_1->state!=s1) { continue; }
+            if(ins_1->observation!=s1) { continue; }
             idx_t window = 1;
             for(const_instanceIt_t ins_3=ins_1+2; ins_3!=INVALID; ++ins_3 , ++window) {
-                if(ins_3->state!=s3 || (max_window>0 && window>max_window)) { continue; }
+                if(ins_3->observation!=s3 || (max_window>0 && window>max_window)) { continue; }
                 for(const_instanceIt_t ins_2=ins_1+1; (const instance_t *)ins_2!=(const instance_t *)ins_3; ++ins_2 ) {
-                    if(ins_2->state==s2) {
+                    if(ins_2->observation==s2) {
                         prob += 1;
                     }
                     ++counter;
@@ -230,8 +230,8 @@ void DelayDistribution::get_pairwise_delay_distribution(
                 // increment counts, perhaps explicitely call constructor when
                 // element does not exist? (relies on default constructor
                 // int()==0 for initialization)
-                dist_map[make_tuple(ins_1->state, ins_2->state, dt)] += 1;
-                dist_map[make_tuple(ins_1->state, ins_2->state, 0)] += 1;
+                dist_map[make_tuple(ins_1->observation, ins_2->observation, dt)] += 1;
+                dist_map[make_tuple(ins_1->observation, ins_2->observation, 0)] += 1;
             }
         }
     }

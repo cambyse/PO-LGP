@@ -32,15 +32,15 @@ public:
 
     /** \brief Expand the tree to represent a value function or to make
      * predictions. */
-    enum EXPANSION_TYPE { UTILITY_EXPANSION, STATE_REWARD_EXPANSION };
+    enum EXPANSION_TYPE { UTILITY_EXPANSION, OBSERVATION_REWARD_EXPANSION };
 
     UTree(const double&);
     virtual ~UTree();
 
     /** \brief Add a new instance to the tree. */
-    virtual void add_action_state_reward_tripel(
+    virtual void add_action_observation_reward_tripel(
             const action_t& action,
-            const state_t& state,
+            const observation_t& observation,
             const reward_t& reward,
             const bool& new_episode
     );
@@ -49,11 +49,11 @@ public:
      * tree. */
     virtual void clear_data();
 
-    /** \brief Returns a prediction of how probable the state and reward are
+    /** \brief Returns a prediction of how probable the observation and reward are
      * give the instance and action. */
-    probability_t get_prediction(const instance_t *, const action_t&, const state_t&, const reward_t&) const;
+    probability_t get_prediction(const instance_t *, const action_t&, const observation_t&, const reward_t&) const;
     /** \brief Return function pointer to be used by LookAheadSearch. */
-    probability_t (UTree::*get_prediction_ptr())(const instance_t *, const action_t&, const state_t&, const reward_t&) const {
+    probability_t (UTree::*get_prediction_ptr())(const instance_t *, const action_t&, const observation_t&, const reward_t&) const {
         return &UTree::get_prediction;
     }
 
@@ -84,7 +84,7 @@ public:
 
     action_t get_max_value_action(const instance_t *);
 
-    /*! \brief Set the discount rate used for computing state and action values. */
+    /*! \brief Set the discount rate used for computing observation and action values. */
     void set_discount(const double& d) { discount = d; }
 
     /** \brief Set the expansion type. */
@@ -123,7 +123,7 @@ private:
      *              scores
      *
      * @endcode In case of new data the statistics of the affected leaf nodes
-     * need to be updated. New statistics imply a change of state-action values
+     * need to be updated. New statistics imply a change of observation-action values
      * for the affected leaf nodes, which affect the values and scores of all
      * other leaves as well (VB UTree only). Leaf expansion inserts new data to
      * the new child nodes, which changes its statistics, and also modifies the
@@ -137,10 +137,10 @@ private:
         std::map<const Feature*,double> scores;                                 ///< the scores for different features
         bool scores_up_to_date;                                                 ///< whether leaf-node's scores are up-to-date
 
-        std::map<action_t,double> state_action_values;                          ///< Q(s,a)-function
-        double max_state_action_value;                                          ///< utility / state-value
+        std::map<action_t,double> observation_action_values;                          ///< Q(s,a)-function
+        double max_observation_action_value;                                          ///< utility / observation-value
 
-        std::map< std::pair<action_t,node_t>, probability_t > transition_table; ///< state transition table
+        std::map< std::pair<action_t,node_t>, probability_t > transition_table; ///< observation transition table
         std::map< std::pair<action_t,node_t>, double > expected_reward;         ///< expected reward
         bool statistics_up_to_date;                                             ///< whether the preceding two are up-to-date
     };
@@ -155,8 +155,8 @@ private:
     double discount;
     EXPANSION_TYPE expansion_type;
 
-    /** \brief Whether for all nodes NodeInfo::state_action_values,
-     * NodeInfo::max_state_action_value, and NodeInfo::max_value_action are
+    /** \brief Whether for all nodes NodeInfo::observation_action_values,
+     * NodeInfo::max_observation_action_value, and NodeInfo::max_value_action are
      * up-to-date. */
     bool values_up_to_date;
 
@@ -196,7 +196,7 @@ private:
 
     node_t find_leaf_node(const instance_t *) const;
 
-    probability_t prior_probability(const state_t&, const reward_t&) const;
+    probability_t prior_probability(const observation_t&, const reward_t&) const;
 
     /** \brief Updates expected_reward and transition_table based on the
      * instance data. */

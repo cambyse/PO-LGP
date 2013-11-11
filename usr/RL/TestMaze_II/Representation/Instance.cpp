@@ -19,7 +19,7 @@ ConstInstanceIt Instance::ConstAll::end() { return ConstInstanceIt(); }
 
 Instance * Instance::create(
     const action_t& a,
-    const state_t& s,
+    const observation_t& s,
     const reward_t& r,
     const Instance * prev,
     const Instance * next
@@ -37,7 +37,7 @@ Instance * Instance::create(
 
 Instance & Instance::operator=(const Instance& other) {
     action = other.action;
-    state = other.state;
+    observation = other.observation;
     reward = other.reward;
     all = All(this);
     const_all =  ConstAll(this);
@@ -94,8 +94,8 @@ Instance::~Instance() {
 bool Instance::operator<(const Instance& other) const {
     if(action<other.action) return true;
     else if(action>other.action) return false;
-    else if(state<other.state) return true;
-    else if(state>other.state) return false;
+    else if(observation<other.observation) return true;
+    else if(observation>other.observation) return false;
     else if(reward<other.reward) return true;
     else if(reward>other.reward) return false;
     else return false;
@@ -106,7 +106,7 @@ bool Instance::same_history(const Instance* other) const {
     ConstInstanceIt otherIt = other->const_it();
     while(thisIt!=INVALID && otherIt!=INVALID) {
         if(thisIt->action!=otherIt->action ||
-           thisIt->state!=otherIt->state ||
+           thisIt->observation!=otherIt->observation ||
            thisIt->reward!=otherIt->reward) {
             return false;
         }
@@ -122,14 +122,14 @@ bool Instance::same_history(const Instance* other) const {
 
 Instance * Instance::insert_instance_after(
     const action_t& a,
-    const state_t& s,
+    const observation_t& s,
     const reward_t& r
     ) {
 
     // create new instance
     Instance * new_instance = new Instance(*this);
     new_instance->action = a;
-    new_instance->state = s;
+    new_instance->observation = s;
     new_instance->reward = r;
 
     // make next instance point back to newly created (if not const)
@@ -155,14 +155,14 @@ Instance * Instance::insert_instance_after(
 
 Instance * Instance::insert_instance_before(
     const action_t& a,
-    const state_t& s,
+    const observation_t& s,
     const reward_t& r
     ) {
 
     // create new instance
     Instance * new_instance = new Instance(*this);
     new_instance->action = a;
-    new_instance->state = s;
+    new_instance->observation = s;
     new_instance->reward = r;
 
     // make previous instance point forward to newly created (if not const)
@@ -188,7 +188,7 @@ Instance * Instance::insert_instance_before(
 
 Instance * Instance::append_instance(
     const action_t& a,
-    const state_t& s,
+    const observation_t& s,
     const reward_t& r
     ) {
     return this->last()->insert_instance_after(a,s,r);
@@ -196,7 +196,7 @@ Instance * Instance::append_instance(
 
 Instance * Instance::prepend_instance(
     const action_t& a,
-    const state_t& s,
+    const observation_t& s,
     const reward_t& r
     ) {
     return this->first()->insert_instance_before(a,s,r);
@@ -281,7 +281,7 @@ void Instance::unset_container() {
 std::ostream& operator<<(std::ostream &out, const Instance& i) {
     out << "(" <<
         i.action << ", " <<
-        i.state << ", " <<
+        i.observation << ", " <<
         i.reward << ")";
     return out;
 }
@@ -290,7 +290,7 @@ const char* Instance::print() PRINT_FROM_OSTREAM;
 
 void Instance::print_history() const {
     for(ConstInstanceIt insIt = this->const_it(); insIt!=util::INVALID; --insIt) {
-        cout << "(" << insIt->action << "," << insIt->state << "," << insIt->reward << ")" << endl;
+        cout << "(" << insIt->action << "," << insIt->observation << "," << insIt->reward << ")" << endl;
     }
 }
 
@@ -550,7 +550,7 @@ void Instance::check_performance_and_memory(bool memory) {
 
 Instance::Instance(const Instance& i):
     action(i.action),
-    state(i.state),
+    observation(i.observation),
     reward(i.reward),
     all(this),
     const_all(this),
@@ -564,11 +564,11 @@ Instance::Instance(const Instance& i):
 
 Instance::Instance(
     const action_t& a,
-    const state_t& s,
+    const observation_t& s,
     const reward_t& r
     ):
     action(a),
-    state(s),
+    observation(s),
     reward(r),
     all(this),
     const_all(this),

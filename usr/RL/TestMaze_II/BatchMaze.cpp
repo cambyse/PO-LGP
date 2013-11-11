@@ -367,10 +367,10 @@ int BatchMaze::run_active() {
 #endif
         {
             // initialize maze
-            state_t start_state = state_t::random_state();
+            observation_t start_observation = observation_t::random_observation();
             maze = new Maze(switch_double("-e"));
-            maze->set_current_state(start_state);
-            current_instance = instance_t::create(action_t::STAY,start_state,reward_t(0));
+            maze->set_current_state(start_observation);
+            current_instance = instance_t::create(action_t::STAY,start_observation,reward_t(0));
 
             // initialize look ahead search
             look_ahead_search = new LookAheadSearch(switch_double("-d"));
@@ -443,7 +443,7 @@ int BatchMaze::run_active() {
 	  // generate training data
 	  for(int train_step=0; train_step<training_length; ++train_step) {
 	    action_t action;
-	    state_t state;
+	    observation_t observation;
 	    reward_t reward;
 	    if(drand48()<switch_double("-optTran")) {
 	      look_ahead_search->clear_tree();
@@ -452,18 +452,18 @@ int BatchMaze::run_active() {
 	    } else {
 	      action = action_t::random_action();
 	    }
-	    maze->perform_transition(action,state,reward);
-	    current_instance = current_instance->append_instance(action,state,reward);
+	    maze->perform_transition(action,observation,reward);
+	    current_instance = current_instance->append_instance(action,observation,reward);
 	    if(mode=="SPARSE") {
-	      crf->add_action_state_reward_tripel(action,state,reward,false);
+	      crf->add_action_observation_reward_tripel(action,observation,reward,false);
 	    } else if(mode=="UTREE_VALUE" || mode=="UTREE_PROB") {
-	      utree->add_action_state_reward_tripel(action,state,reward,false);
+	      utree->add_action_observation_reward_tripel(action,observation,reward,false);
 	    } else if(mode=="LINEAR_Q") {
-	      linQ->add_action_state_reward_tripel(action,state,reward,false);
+	      linQ->add_action_observation_reward_tripel(action,observation,reward,false);
 	    } else {
 	      DEBUG_DEAD_LINE;
 	    }
-	    DEBUG_OUT(2,"Learning: (" << action << "," << state << "," << reward << ")");
+	    DEBUG_OUT(2,"Learning: (" << action << "," << observation << "," << reward << ")");
 	  }
 	}
 
@@ -512,7 +512,7 @@ int BatchMaze::run_active() {
                 crf->optimize_model(0,500,&likelihood);
             }
         } else if(mode=="UTREE_PROB") {
-            utree->set_expansion_type(UTree::STATE_REWARD_EXPANSION);
+            utree->set_expansion_type(UTree::OBSERVATION_REWARD_EXPANSION);
             if(switch_bool("-utreegrowth")) {
                 // do not expand
             } else {
@@ -593,7 +593,7 @@ int BatchMaze::run_active() {
 
                 // transition variables
                 action_t action;
-                state_t state;
+                observation_t observation;
                 reward_t reward;
 
                 // choose the action
@@ -639,8 +639,8 @@ int BatchMaze::run_active() {
                 }
 
                 // perform transition
-                maze->perform_transition(action,state,reward);
-                current_instance = current_instance->append_instance(action,state,reward);
+                maze->perform_transition(action,observation,reward);
+                current_instance = current_instance->append_instance(action,observation,reward);
 
                 // prune search tree
                 if(switch_bool("-pruneTree")) {
@@ -664,7 +664,7 @@ int BatchMaze::run_active() {
                           ",	training length " << training_length <<
                           ",	transition " << transition_counter <<
                           ",	current mean reward = " << reward_sum/transition_counter <<
-                          ",	(a,s,r) = (" << action << "," << state << "," << reward << ")"
+                          ",	(a,s,r) = (" << action << "," << observation << "," << reward << ")"
                     );
             }
 #ifdef USE_OMP

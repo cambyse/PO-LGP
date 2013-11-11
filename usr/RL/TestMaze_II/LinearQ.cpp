@@ -49,7 +49,7 @@ LinearQ::LinearQ(const double& d):
     // Constructing basis indicator features  //
     //----------------------------------------//
 
-    // delayed action, state, and reward features
+    // delayed action, observation, and reward features
     for(int k_idx = 0; k_idx>=-(int)Config::k; --k_idx) {
         // actions
         if(true) {
@@ -59,11 +59,11 @@ LinearQ::LinearQ(const double& d):
                 DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
             }
         }
-        if(k_idx<0) { // present state is not known for predicting value
-            // states
-            for(state_t state : stateIt_t::all) {
-                StateFeature * state_feature = StateFeature::create(state,k_idx);
-                basis_features.push_back(state_feature);
+        if(k_idx<0) { // present observation is not known for predicting value
+            // observations
+            for(observation_t observation : observationIt_t::all) {
+                ObservationFeature * observation_feature = ObservationFeature::create(observation,k_idx);
+                basis_features.push_back(observation_feature);
                 DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
             }
         }
@@ -85,14 +85,14 @@ LinearQ::LinearQ(const double& d):
 
 LinearQ::~LinearQ() {}
 
-void LinearQ::add_action_state_reward_tripel(
+void LinearQ::add_action_observation_reward_tripel(
         const action_t& action,
-        const state_t& state,
+        const observation_t& observation,
         const reward_t& reward,
         const bool& new_episode
 ) {
     // call function of parent class
-    HistoryObserver::add_action_state_reward_tripel(action,state,reward,new_episode);
+    HistoryObserver::add_action_observation_reward_tripel(action,observation,reward,new_episode);
 
     // mark loss terms as out-of-date
     loss_terms_up_to_date = false;
@@ -112,7 +112,7 @@ LinearQ::action_t LinearQ::get_max_value_action(const instance_t * i) {
     for( auto action : actionIt_t::all ) {
         double value = 0;
         for(idx_t f_idx=0; f_idx<(idx_t)active_features.size(); ++f_idx) {
-            value += feature_weights[f_idx]*active_features[f_idx].evaluate(i, action, state_t(), reward_t() );
+            value += feature_weights[f_idx]*active_features[f_idx].evaluate(i, action, observation_t(), reward_t() );
         }
         if(value>max_value) {
             max_value = value;
@@ -412,7 +412,7 @@ lbfgsfloatval_t LinearQ::bellman_objective(
             // evaluate feature and calculate Q-functions
             for(uint f_idx : Range(n)) { // iterate through features
                 // evaluate feature
-                f_ret_t f_ret = active_features[f_idx].evaluate(insIt,action_tp1,state_t(),reward_t());
+                f_ret_t f_ret = active_features[f_idx].evaluate(insIt,action_tp1,observation_t(),reward_t());
                 f_it_atp1[f_idx] = f_ret;
                 // increment Q-function
                 double f_weight = x[f_idx];
@@ -420,7 +420,7 @@ lbfgsfloatval_t LinearQ::bellman_objective(
                 idx_t action_idx = 0;
                 for(action_t action : actionIt_t::all) {
                     // evaluate feature
-                    f_ret_t f_ret_a = active_features[f_idx].evaluate(insIt,action,state_t(),reward_t());
+                    f_ret_t f_ret_a = active_features[f_idx].evaluate(insIt,action,observation_t(),reward_t());
                     f_itp1_a[action_idx][f_idx] = f_ret_a;
                     // increment Q-function
                     Q_itp1_a[action_idx] += f_weight*f_ret_a;
@@ -751,9 +751,9 @@ void LinearQ::construct_candidate_features(const int& n) {
     DEBUG_OUT(1, "DONE");
 }
 
-LinearQ::probability_t LinearQ::prior_probability(const state_t&, const reward_t& r) const {
+LinearQ::probability_t LinearQ::prior_probability(const observation_t&, const reward_t& r) const {
     if(r==reward_t::min_reward) {
-        return 1./(state_t::state_n);
+        return 1./(observation_t::observation_n);
     } else {
         return 0;
     }

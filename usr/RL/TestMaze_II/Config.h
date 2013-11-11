@@ -27,8 +27,8 @@
     typedef double                 probability_t;       \
     typedef Action                 action_t;            \
     typedef ActionIt               actionIt_t;          \
-    typedef AugmentedState         state_t;             \
-    typedef AugmentedStateIt       stateIt_t;           \
+    typedef AugmentedObservation   observation_t;       \
+    typedef AugmentedObservationIt observationIt_t;     \
     typedef EnumeratedReward       reward_t;            \
     typedef EnumeratedRewardIt     rewardIt_t;          \
     typedef Instance               instance_t;          \
@@ -42,14 +42,14 @@
 #ifndef CONFIG_TYPE_INCLUDES_H_
 #define CONFIG_TYPE_INCLUDES_H_
 
-#define USE_AUGMENTED_STATE
+#define USE_AUGMENTED_OBSERVATION
 
 #include "Representation/Action.h"
 
-#ifdef USE_AUGMENTED_STATE
-#include "Representation/AugmentedState.h"
+#ifdef USE_AUGMENTED_OBSERVATION
+#include "Representation/AugmentedObservation.h"
 #else
-#include "Representation/State.h"
+#include "Representation/Observation.h"
 #endif
 
 #include "Representation/EnumeratedReward.h"

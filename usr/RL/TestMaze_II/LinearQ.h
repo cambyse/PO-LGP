@@ -35,9 +35,9 @@ public:
     virtual ~LinearQ();
 
     /** \brief Add a new instance to the tree. */
-    virtual void add_action_state_reward_tripel(
+    virtual void add_action_observation_reward_tripel(
             const action_t& action,
-            const state_t& state,
+            const observation_t& observation,
             const reward_t& reward,
             const bool& new_episode
     );
@@ -47,7 +47,7 @@ public:
 
     action_t get_max_value_action(const instance_t *);
 
-    /*! \brief Set the discount rate used for computing state and action values. */
+    /*! \brief Set the discount rate used for computing observation and action values. */
     void set_discount(const double& d) { discount = d; }
 
     void add_candidates(const int& n);
@@ -170,7 +170,7 @@ private:
     /** \brief Constructs new candidate features. */
     void construct_candidate_features(const int& n);
 
-    probability_t prior_probability(const state_t&, const reward_t&) const;
+    probability_t prior_probability(const observation_t&, const reward_t&) const;
 
     /** \brief Calculate loss function. */
     double loss_function(const arma::vec& w) const { return arma::as_scalar(c + 2*rho.t()*w + w.t()*L*w); }
