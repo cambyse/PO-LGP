@@ -18,8 +18,7 @@ void drawBase(void*){
   glColor(1.,.5,0.);
 }
 
-int main(int argc,char **argv){
-  MT::initCmdLine(argc, argv);
+void TEST(OrsEditor) {
   cout <<USAGE <<endl;
 
   MT::String file=MT::getParameter<MT::String>("file",STRING("test.ors"));
@@ -39,6 +38,12 @@ int main(int argc,char **argv){
   MT::save(G,"z.ors");
 
   editConfiguration(file, G, gl);
+}
+
+int MAIN(int argc,char **argv){
+  MT::initCmdLine(argc, argv);
+
+  testOrsEditor();
 
   return 0;
 }

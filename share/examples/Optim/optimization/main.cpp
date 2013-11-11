@@ -1,7 +1,7 @@
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
 
-void testSqrProblem(){
+void TEST(SqrProblem) {
   SquaredCost P(10);
   //NonlinearlyWarpedSquaredCost P(10);
 
@@ -36,7 +36,7 @@ void testSqrProblem(){
 }
 
 
-int main(int argc,char** argv){
+int MAIN(int argc,char** argv){
   testSqrProblem();
   
   return 0;

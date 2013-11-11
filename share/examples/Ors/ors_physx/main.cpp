@@ -43,8 +43,7 @@ void createOrs(ors::Graph& ors, OpenGL& gl) {
   gl.update();
 }
 
-
-int main(int argc, char** argv) {
+TEST(OrsPhysx) {
   ors::Graph ors;
   OpenGL glMy, glPh;
   createOrs(ors, glMy);
@@ -66,5 +65,10 @@ int main(int argc, char** argv) {
     glPh.update();
     glMy.update();
   }
+}
+
+int MAIN(int argc, char** argv) {
+  testOrsPhysx();
+
   return 0;
 }

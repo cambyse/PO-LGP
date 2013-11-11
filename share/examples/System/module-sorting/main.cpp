@@ -10,7 +10,9 @@ END_MODULE()
 
 REGISTER_MODULE(PairSorter)
 
-int main(int argc, char **argv) {
+//==============================================================================
+
+void TEST(ModuleSorter){
   uint N=20;
 
   engine().enableAccessLog();
@@ -48,8 +50,16 @@ int main(int argc, char **argv) {
   KeyValueGraph g = S.graph();
   GraphView gv(g);
   gv.watch();
+}
+
+//==============================================================================
+
+int MAIN(int argc, char **argv) {
+  testModuleSorter();
   return 0;
 }
+
+//==============================================================================
 
 void PairSorter::open(){}
 void PairSorter::close(){}

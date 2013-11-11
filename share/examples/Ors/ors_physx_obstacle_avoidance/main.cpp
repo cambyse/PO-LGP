@@ -4,7 +4,8 @@
 #include <Core/util.h>
 
 /*----------------------------------------------------------------------------*/
-int main(int argc, char** argv) {
+
+void TEST(PhysxObstacleAvoidance) {
   ors::Graph ors;
   ors.init("doorComplex.ors");
   ors::Body* robot = ors.getBodyByName("robot");
@@ -85,9 +86,10 @@ int main(int argc, char** argv) {
     (ors.getBodyByName(bname)->shapes(0))->cont = true;
     swift.init(ors,1);
   }
+}
+
+int MAIN(int argc, char** argv) {
+  testPhysxObstacleAvoidance();
 
   return 0;
 }
-
-
-// vim: ts=2:sw=2:expandtab
