@@ -41,7 +41,7 @@ public:
 
     //compute little step
     arr d = q - ann.X[nearest]; //difference vector between q and nearest neighbor
-    double dist = norm(d);
+    double dist = length(d);
     q = ann.X[nearest] + stepsize/dist * d;
     return dist;
   }

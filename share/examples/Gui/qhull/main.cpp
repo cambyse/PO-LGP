@@ -81,7 +81,7 @@ void testForceClosure(){
   c.setZero();
   rndUniform(X,-1.,1.,false);
 
-  Xn=X;  for(i=0;i<N;i++) Xn[i]() /= norm(Xn[i]);
+  Xn=X;  for(i=0;i<N;i++) Xn[i]() /= length(Xn[i]);
 
   plotOpengl();
   plotClear(); plotPoints(c); plotPoints(X); plotVectorField(X,Xn);  plot(false);
@@ -98,14 +98,14 @@ void testForceClosure(){
     cout <<"d=" <<d <<endl;
     plotClear(); plotPoints(c); plotPoints(X); plotVectorField(X,Xn);  plot(false);
     X -= .005*dFdX;
-    Xn=X;  for(i=0;i<N;i++) Xn[i]() /= -norm(Xn[i]);
+    Xn=X;  for(i=0;i<N;i++) Xn[i]() /= -length(Xn[i]);
   }
 
   //gradient check
   center.setZero();
   for(k=0;k<100;k++){
     rndUniform(X,-1.,1.,false);
-    Xn=X;  for(i=0;i<N;i++) Xn[i]() /= -norm(Xn[i]);
+    Xn=X;  for(i=0;i<N;i++) Xn[i]() /= -length(Xn[i]);
 
     d=forceClosure(X,Xn,center,.5,10.,0);
     cout <<"FC= " <<d <<endl;

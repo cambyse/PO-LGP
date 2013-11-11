@@ -34,7 +34,7 @@ void testSVD(){
   
   cout <<"matrix rank: " <<svd(u,w,v,a,true) <<endl;
   W.setDiag(w);
-  cout <<norm(a - u * W * ~v) <<endl;
+  cout <<length(a - u * W * ~v) <<endl;
 }
 
 void testDeterminant(){

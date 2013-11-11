@@ -124,7 +124,7 @@ double distanceToConvexHull(const arr &X, const arr &y, arr *projectedPoint, uin
   //        &bestdist, &isoutside, &totpart);
   */
   
-  CHECK(norm(y)>1e-10 || fabs(bestdist-bestfacet->offset)<1e-10, "inconsistent!");
+  CHECK(length(y)>1e-10 || fabs(bestdist-bestfacet->offset)<1e-10, "inconsistent!");
   CHECK((isoutside && bestdist>-1e-10) || (!isoutside && bestdist<1e-10), "");
   
   if(projectedPoint) {

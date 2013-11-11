@@ -46,7 +46,7 @@ void TruncateGaussian(arr& a, arr& A, const arr& c, double d){
   //cout <<"a=" <<a <<"\nc*a=" <<scalarProduct(c, a) <<"\nd=" <<d <<endl;
   arr v;
   v=M*c;
-  double norm_v=norm(v);
+  double norm_v=length(v);
   CHECK(norm_v>1e-10, "no gradient for Gaussian trunctation!");
   z/=norm_v;
   v/=norm_v;

@@ -41,11 +41,11 @@ int main(int argc, char** argv) {
     // remove collision avoidance for current door
     (ors.getBodyByName(bname)->shapes(0))->cont = false;
 
-    while (norm(x - goal) > 1e-1) {
+    while (length(x - goal) > 1e-1) {
       x = ARRAY(robot->X.pos);
 
       // direction towards goal
-      dir = wGoal*(goal - x)/norm(goal - x);
+      dir = wGoal*(goal - x)/length(goal - x);
 
       // obstacle avoidance
       swift.computeProxies(ors,false);
@@ -67,12 +67,12 @@ int main(int argc, char** argv) {
       }
 
       // add direction pointing away of obstacles
-      if (norm(dirObs) > 0) {
-        dir += wObs*dirObs/norm(dirObs);
+      if (length(dirObs) > 0) {
+        dir += wObs*dirObs/length(dirObs);
       }
 
       // compute next position
-      robot->X.pos = robot->X.pos + dt*dir/norm(dir);
+      robot->X.pos = robot->X.pos + dt*dir/length(dir);
 
       // update sim
       physx.step();

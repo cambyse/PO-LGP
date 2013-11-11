@@ -2002,7 +2002,7 @@ template<class T> T sumOfSqr(const MT::Array<T>& v) {
 }
 
 /// \f$\sqrt{\sum_i x_i^2}\f$
-template<class T> T norm(const MT::Array<T>& v) { return (T)::sqrt((double)sumOfSqr(v)); }
+template<class T> T length(const MT::Array<T>& v) { return (T)::sqrt((double)sumOfSqr(v)); }
 
 /// \f$\sqrt{\sum_i x_i^2}\f$
 template<class T> T mean(const MT::Array<T>& v) { return sum(v)/v.N; }
@@ -2883,7 +2883,7 @@ UpdateOperator(%=)
 
 #define BinaryOperator( op, updateOp)         \
   template<class T> Array<T> operator op(const Array<T>& y, const Array<T>& z){ Array<T> x(y); x updateOp z; return x; } \
-  template<class T> Array<T> operator op(T y, const Array<T>& z){               Array<T> x(z); x updateOp y; return x; } \
+  template<class T> Array<T> operator op(T y, const Array<T>& z){               Array<T> x; x.resizeAs(z); x=y; x updateOp z; return x; } \
   template<class T> Array<T> operator op(const Array<T>& y, T z){               Array<T> x(y); x updateOp z; return x; }
 
 BinaryOperator(+ , +=);

@@ -382,9 +382,9 @@ void sAICO::updateBwdMessage(uint t){
 
 void sAICO::updateTaskMessage(uint t, arr& xhat_t){
   
-  if(maxStepSize>0. && norm(xhat_t-xhat[t])>maxStepSize){
+  if(maxStepSize>0. && length(xhat_t-xhat[t])>maxStepSize){
     arr Delta = xhat_t-xhat[t];
-    Delta *= maxStepSize/norm(Delta);
+    Delta *= maxStepSize/length(Delta);
     xhat_t = xhat[t] + Delta;  //really change the given xhat_t (often the belief!!)
   }
   xhat[t]() = xhat_t;

@@ -37,11 +37,11 @@ void test_rrt(long num) {
     arr next_after = next - nearest;
     next_before = next_before - nearest;
 
-    arr next_normalized_before = next_before/norm(next_before);
-    arr next_normalized_after = next_after/norm(next_after);
+    arr next_normalized_before = next_before/length(next_before);
+    arr next_normalized_after = next_after/length(next_after);
 
     TEST_ALMOST_EQUAL(next_normalized_before, next_normalized_after, .01);
-    EXPECT_LE(norm(next_after) - rrt.getStepsize(), 0.01);
+    EXPECT_LE(length(next_after) - rrt.getStepsize(), 0.01);
 
     uint num_before = rrt.getNumberNodes();
     rrt.add(next);

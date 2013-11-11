@@ -16,25 +16,13 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
+#include "mesh.h"
+
+#ifdef MT_extern_Lewiner
+#  include <extern/Lewiner/MarchingCubes.h>
 
 
-/**
- * @file
- * @ingroup group_ors
- */
-/**
- * @ingroup group_ors
- * @{
- */
-
-
-#include "ors.h"
-
-#ifdef MT_Lewiner
-#include <stdio.h>
-#include "Lewiner/MarchingCubes.h"
-
-void ors::Mesh::setImplicitSurface(double(*fct)(double, double, double, void*), void *p, double lo, double hi, uint res) {
+void ors::Mesh::setImplicitSurface(ScalarFunction& f, double lo, double hi, uint res) {
   MarchingCubes mc(res, res, res);
   mc.init_all() ;
   
@@ -47,7 +35,7 @@ void ors::Mesh::setImplicitSurface(double(*fct)(double, double, double, void*), 
       y = lo+j*(hi-lo)/res;
       for(i=0; i<res; i++) {
         x = lo+i*(hi-lo)/res;
-        mc.set_data((double)fct(x, y, z, p), i, j, k) ;
+        mc.set_data(f.fs(NoArr, NoArr, ARR(x, y, z)), i, j, k) ;
       }
     }
   }
@@ -71,8 +59,8 @@ void ors::Mesh::setImplicitSurface(double(*fct)(double, double, double, void*), 
   }
 }
 
-#else
-void ors::Mesh::setImplicitSurface(double(*fct)(double, double, double, void*), void *p, double lo, double hi, uint res) {
+#else //extern_Lewiner
+void ors::Mesh::setImplicitSurface(ScalarFunction& f, double lo, double hi, uint res) {
   NICO
 }
 #endif

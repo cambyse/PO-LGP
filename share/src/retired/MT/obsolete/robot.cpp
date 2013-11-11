@@ -465,7 +465,7 @@ Homing::updateTaskGoals(ControllerProcess *ctrl){
   TV_q->active=true;
   TV_q->y_prec=0.;  TV_q->v_prec=10.*TV_q_vprec;
   TV_q->v_target = ctrl->q_home - TV_q->y;
-  double vmax=.3, v=norm(TV_q->v_target);
+  double vmax=.3, v=length(TV_q->v_target);
   if(v>vmax) TV_q->v_target*=vmax/v;
 }
 void
@@ -508,7 +508,7 @@ Reach::updateTaskGoals(ControllerProcess *ctrl){
   TV_eff->active = true;
   TV_eff->y_prec=0.;  TV_eff->v_prec=1e-1;
   TV_eff->v_target=reachPoint - TV_eff->y;
-  double vmax=.2, v=norm(TV_eff->v_target);
+  double vmax=.2, v=length(TV_eff->v_target);
   if(v>vmax) TV_eff->v_target*=vmax/v;
 }
 void
@@ -578,7 +578,7 @@ Joystick::updateTaskGoals(ControllerProcess *ctrl){
   switch(joyState(0)){
     case 1: { //(1) homing
       TV_q->v_target = ctrl->q_home - TV_q->y;
-      double vmax=.5, v=norm(TV_q->v_target);
+      double vmax=.5, v=length(TV_q->v_target);
       if(v>vmax) TV_q->v_target*=vmax/v;
       break;
     }

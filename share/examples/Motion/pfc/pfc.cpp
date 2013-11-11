@@ -50,8 +50,8 @@ void Pfc::iterate(arr& _state)
   // update phase variable s
   if (traj.d0>2) {
 
-    double goalRatio = norm(goalRef - trajRef->eval(s.last()))/norm(lastGoal-state);
-    double stateRatio = norm(state - traj[traj.d0-2])/norm(traj[traj.d0-1] - traj[traj.d0-2]);
+    double goalRatio = length(goalRef - trajRef->eval(s.last()))/length(lastGoal-state);
+    double stateRatio = length(state - traj[traj.d0-2])/length(traj[traj.d0-1] - traj[traj.d0-2]);
     s.append(s(s.d0-1) + dsRef*goalRatio*stateRatio);
   } else {
     s.append(s(s.d0-1) + dsRef);

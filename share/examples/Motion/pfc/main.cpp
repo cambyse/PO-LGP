@@ -1,5 +1,6 @@
 #include <Core/util.h>
 #include <Motion/motion.h>
+#include <Motion/taskMap_default.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
@@ -69,21 +70,22 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
 
   //-- create an optimal trajectory to trainTarget
   TaskCost *c;
-  c = P.addDefaultTaskMap_Bodies("position", posTMT,"endeff",ors::Transformation().setText("<t(0 0 0)>"));
-  P.setInterpolatingCosts(c, MotionProblem::constFinalMid,
+  c = P.addTaskMap("position", new DefaultTaskMap(posTMT, G, "endeff"));
+  P.setInterpolatingCosts(c, MotionProblem::final_restConst,
                           ARRAY(P.ors->getBodyByName("goalRef")->X.pos), 1e4,
                           ARRAY(0.,0.,0.), 1e-3);
 
   if (useOrientation) {
-    c = P.addDefaultTaskMap_Bodies("orientation", zoriTMT,"endeff",ors::Transformation().setText("<t(0 0 0)>"));
-    P.setInterpolatingCosts(c, MotionProblem::constFinalMid,
+    c = P.addTaskMap("orientation", new DefaultTaskMap(vecTMT, G, "endeff"));
+    P.setInterpolatingCosts(c, MotionProblem::final_restConst,
                             ARRAY(0.,0.,-1.), 1e4,
                             ARRAY(0.,0.,0.), 1e-3);
   }
 
   if (useCollAvoid) {
-    c = P.addDefaultTaskMap("collision", collTMT, 0, Transformation_Id, 0, Transformation_Id, ARR(.1));
-    P.setInterpolatingCosts(c, MotionProblem::constFinalMid, ARRAY(0.), 1e0);
+    c = P.addTaskMap("collision",
+		     new DefaultTaskMap(collTMT, 0, NoVector, 0, NoVector, ARR(.1)));
+    P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e0);
   }
 
   //-- create the Optimization problem (of type kOrderMarkov)

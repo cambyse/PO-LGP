@@ -45,15 +45,15 @@ TEST(AlgosTest, testRRT) {
   displayTrajectory(traj, traj.d0, G, gl, "RRT");
 
   // check for correct start point
-  EXPECT_TRUE( norm(traj[0] - q) <= end_prec);
+  EXPECT_TRUE( length(traj[0] - q) <= end_prec);
 
   // check for goal reaching
-  EXPECT_TRUE( norm(traj[traj.d0-1] - target) <= end_prec);
+  EXPECT_TRUE( length(traj[traj.d0-1] - target) <= end_prec);
 
   for(uint i=0; i<traj.d0; ++i) {
     // check for small enough steps
     if(i>0) {
-      EXPECT_LE(norm(traj[i] - traj[i-1]), stepsize + eps) << "i = " << i;  
+      EXPECT_LE(length(traj[i] - traj[i-1]), stepsize + eps) << "i = " << i;  
     }
 
     // check for no collisions
