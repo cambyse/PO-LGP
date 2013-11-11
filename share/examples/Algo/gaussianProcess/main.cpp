@@ -20,7 +20,7 @@ double kernel(const doubleA& x,const doubleA& y){
   return priorVar*::exp(-.5 * d/(kernelRange*kernelRange));
 }
 
-void testGP(){
+void TEST(GP) {
   cout <<"*** test GP on sinus functions" <<endl;
 
   doubleA X,Y,Xp,Yp,Sp;
@@ -34,7 +34,7 @@ void testGP(){
   plotBelief(gp,-5.,5., pltPause);
 }
 
-void testDerivativeObservations(){
+void TEST(DerivativeObservations) {
   cout <<"*** test derivative observations" <<endl;
 
   GaussianProcess gp;
@@ -66,7 +66,7 @@ void testDerivativeObservations(){
   plotBelief(gp,-5.,5., pltPause);
 }
 
-void randomFunctions(){
+void TEST(RandomFunctions) {
   cout <<"*** generate random functions by sampling from the GP itself..." <<endl;
   GaussianProcess gp;
   GaussKernelParams gpp(1., .2, .001);
@@ -87,7 +87,7 @@ void randomFunctions(){
   */
 }
 
-int main(int argc,char** argv){
+int MAIN(int argc,char** argv){
   MT::initCmdLine(argc,argv);
 
   if(MT::checkCmdLineTag("test")) pltPause=false;
@@ -96,7 +96,7 @@ int main(int argc,char** argv){
   
   testDerivativeObservations();
 
-  randomFunctions();
+  testRandomFunctions();
 
   return 0;
 }

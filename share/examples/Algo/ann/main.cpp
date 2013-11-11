@@ -1,7 +1,7 @@
 #include <Core/util.h>
 #include <Algo/ann.h>
 
-void testANN(){
+void TEST(ANN) {
   uint N=1000,dim=2;
 
   ANN ann;
@@ -27,7 +27,7 @@ void testANN(){
   MT::wait();
 }
 
-void testANNIncremental(){
+void TEST(ANNIncremental) {
   uint N=1000,dim=2;
 
   ANN ann;
@@ -74,7 +74,7 @@ void testANNIncremental(){
 
 }*/
 
-int main(int argc,char** argv){
+int MAIN(int argc,char** argv){
 
   testANN();
   testANNIncremental();

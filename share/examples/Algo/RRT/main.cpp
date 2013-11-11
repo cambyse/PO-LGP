@@ -2,7 +2,7 @@
 #include <Gui/plot.h>
 #include <Algo/ann.h>
 
-void testRRT(){
+void TEST(RRT) {
   uint dim=2;
 
   arr q_start(dim);
@@ -80,7 +80,7 @@ void testRRT(){
 }
 
 
-int main(int argc,char** argv){
+int MAIN(int argc,char** argv){
 
   testRRT();
 
