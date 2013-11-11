@@ -719,7 +719,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     p /= max_count;
                     cols.push_back( std::make_tuple(1,1-p,1-p) );
                 }
-                maze.render_update(&cols);
+                maze.set_state_colors(cols);
+                maze.render_update();
             } else {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( random_distribution_s );
@@ -960,7 +961,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                                 cols.push_back( Maze::color_t(1,1,1) );
                             }
                         }
-                        maze.render_update(&cols);
+                        maze.set_state_colors(cols);
+                        maze.render_update();
                         TO_CONSOLE( "    target active" );
                     }
                 } else {
@@ -1020,7 +1022,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             for(observationIt_t observation=observationIt_t::first(); observation!=util::INVALID; ++observation) {
                 cols.push_back( std::make_tuple(drand48(),drand48(),drand48()) );
             }
-            maze.render_update(&cols);
+            maze.set_state_colors(cols);
+            maze.render_update();
         } else if(str_args[0]=="fixed-dt-dist" || str_args[0]=="fdd") { // show delay probability
             if(str_args_n!=2 || !int_args_ok[1]) {
                 TO_CONSOLE( invalid_args_s );
@@ -1057,7 +1060,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 }
 
                 // render
-                maze.render_update(&cols);
+                maze.set_state_colors(cols);
+                maze.render_update();
             }
         } else if(str_args[0]=="pair-delay-dist" || str_args[0]=="pdd") { // show delay distribution
             if(str_args_n>1 && !int_args_ok[1]) {
@@ -1164,7 +1168,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     }
                     cols[target_idx]=std::make_tuple(0,1,0);
                     // render
-                    maze.render_update(&cols);
+                    maze.set_state_colors(cols);
+                    maze.render_update();
                 }
             } else {
                 TO_CONSOLE( invalid_args_s );

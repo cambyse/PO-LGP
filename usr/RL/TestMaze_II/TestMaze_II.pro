@@ -11,6 +11,7 @@ HEADERS += LookAheadSearch.h \
     Config.h \
     util.h \
     Maze.h \
+    VisualWorld.h \
     testmaze_ii.h \
     KMarkovCRF.h \
     UTree.h \
@@ -38,6 +39,7 @@ SOURCES += LookAheadSearch.cpp \
     Config.cpp \
     main.cpp \
     Maze.cpp \
+    VisualWorld.cpp \
     testmaze_ii.cpp \
     KMarkovCRF.cpp \
     UTree.cpp \

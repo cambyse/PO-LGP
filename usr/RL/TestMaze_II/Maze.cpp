@@ -346,10 +346,11 @@ const vector<Maze::door_t> Maze::doors = {
 
 Maze::Maze(const double& eps):
     current_instance(nullptr),
-    view(nullptr),
     epsilon(eps),
     agent(nullptr)
 {
+    // set state colors
+    set_state_colors();
     // setting current state
     current_instance = instance_t::create(action_t::STAY, current_state.state_idx(), reward_t(0));
     current_state = MazeState(Config::maze_x_size/2, Config::maze_y_size/2);
@@ -427,7 +428,7 @@ void Maze::render_initialize(QGraphicsView * v) {
 }
 
 
-void Maze::render_update(const color_vector_t * color) {
+void Maze::render_update() {
     // set agent position and mirror to make 'stay' actions visible
     QSizeF s = agent->boundingRect().size();
     agent->setPos(current_state.x()-agent->scale()*s.width()/2, current_state.y()-agent->scale()*s.height()/2);
@@ -473,17 +474,24 @@ void Maze::render_update(const color_vector_t * color) {
     }
 
     // Change State Color
-    if(color!=nullptr) {
-        idx_t col_idx = 0;
-        for( auto rect_ptr : state_rects ) {
-            rect_ptr->setBrush( QColor( get<COLOR_R>((*color)[col_idx])*255, get<COLOR_G>((*color)[col_idx])*255, get<COLOR_B>((*color)[col_idx])*255 ) );
-            ++col_idx;
-        }
+    idx_t col_idx = 0;
+    for( auto rect_ptr : state_rects ) {
+        rect_ptr->setBrush( QColor( get<COLOR_R>(state_colors[col_idx])*255, get<COLOR_G>(state_colors[col_idx])*255, get<COLOR_B>(state_colors[col_idx])*255 ) );
+        ++col_idx;
     }
 
     rescale_scene(view);
 }
 
+void Maze::set_state_colors(const color_vector_t colors) {
+    state_colors = colors;
+    if(state_colors.size()==0) {
+        state_colors.assign(observation_t::observation_n, color_t(0.9,0.9,0.9));
+    } else if(state_colors.size()!=observation_t::observation_n) {
+        DEBUG_ERROR("Number of colors does not match number of states");
+        state_colors.resize(observation_t::observation_n, color_t(0.9,0.9,0.9));
+    }
+}
 
 void Maze::perform_transition(const action_t& action, std::vector<std::pair<int,int> > * reward_vector) {
 
@@ -1025,7 +1033,7 @@ void Maze::render_state(observation_t s) {
                                                state_size,
                                                state_size,
                                                state_pen,
-                                               QBrush(QColor(230,230,230))
+                                               QBrush(QColor(255,255,255))
         );
     state_rects.push_back(rect);
 }
@@ -1269,13 +1277,6 @@ void Maze::render_reward(maze_reward_t r) {
         txt->setScale(text_scale);
         txt->setDefaultTextColor(color);
     }
-}
-
-void Maze::rescale_scene(QGraphicsView * view) {
-    QGraphicsScene * scene = view->scene();
-    scene->setSceneRect(scene->itemsBoundingRect());
-    view->fitInView(scene->itemsBoundingRect(),Qt::KeepAspectRatio);
-    view->scale(0.95,0.95);
 }
 
 const char* Maze::reward_activation_type_str(REWARD_ACTIVATION_TYPE ra) {

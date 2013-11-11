@@ -1,12 +1,11 @@
 #ifndef MAZE_H_
 #define MAZE_H_
 
-#include <QGraphicsView>
+#include "VisualWorld.h"
+
 #include <QGraphicsSvgItem>
 #include <map>
-#include <tuple>
 #include <deque>
-#include <vector>
 #include <string>
 #include <sstream>
 
@@ -16,14 +15,11 @@
 
 #include "debug.h"
 
-class Maze {
+class Maze: public VisualWorld {
 public:
 
     USE_CONFIG_TYPEDEFS;
 
-    typedef std::tuple<double,double,double> color_t;
-    typedef std::vector<color_t>             color_vector_t;
-    enum COLOR_IDX { COLOR_R, COLOR_G, COLOR_B };
     enum LEARNER_TYPE {CRF_LEARNER,
                        UTREE_VALUE_LEARNER,
                        UTREE_OBSERVATION_REWARD_LEARNER,
@@ -57,10 +53,12 @@ public:
     };
 
     /** \brief Renders the complete maze. */
-    void render_initialize(QGraphicsView * v);
+    virtual void render_initialize(QGraphicsView * v) override;
 
     /** \brief Updates the graphical representation. */
-    void render_update(const color_vector_t * color = nullptr);
+    virtual void render_update() override;
+
+    void set_state_colors(const color_vector_t colors = color_vector_t());
 
     /** \brief Perform a transition by executing an action. */
     void perform_transition(const action_t& action);
@@ -181,8 +179,6 @@ private:
     /** \brief The current state of the maze including the complete past. */
     instance_t * current_instance;
 
-    QGraphicsView * view;                            ///< QGraphicsView to render the maze;
-
     double epsilon;                                  ///< Amount of stochasticity in transitions.
     MazeState current_state;                         ///< Current state of the agent in the maze.
     QGraphicsSvgItem *agent;                         ///< Svg image for rendering the agent.
@@ -190,6 +186,7 @@ private:
     QGraphicsEllipseItem *action_point;              ///< Circle showing the last position for showing the last action.
     std::vector<QGraphicsItem*> borders;             ///< Graphic items for rendering the maze borders.
     std::vector<QGraphicsRectItem*> state_rects;     ///< Graphic items containing the state rects for rendering the states.
+    color_vector_t state_colors;                     ///< Color vector for all states.
 
     static const std::vector<wall_t> walls;          ///< Defines the walls.
     static const std::vector<maze_reward_t> rewards; ///< Defines the rewards.
@@ -216,9 +213,6 @@ private:
 
     /** \brief Add a reward in the graphics. */
     void render_reward(maze_reward_t);
-
-    /*! \brief Rescale the scene to fit into view. */
-    void rescale_scene(QGraphicsView * view);
 
     /** \brief Simple helper function. */
     static int clamp(const int& lower, const int& upper, const int& value) {
