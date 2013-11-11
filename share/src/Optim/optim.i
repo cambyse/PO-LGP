@@ -20,6 +20,8 @@ author: Johannes kulick
 %module motionpy
 %{
   #include "optimization.h"
+  #include "constrained.h"
+  #include "benchmarks.h"
 %}
 
 //===========================================================================
@@ -37,4 +39,6 @@ author: Johannes kulick
 %rename(asKOrderMarkovFunction) Convert::operator KOrderMarkovFunction&();
 
 %include "optimization.h"
+%include "constrained.h"
+%include "benchmarks.h"
 

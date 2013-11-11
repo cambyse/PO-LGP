@@ -2,7 +2,13 @@ BASE   = ../../..
 NAME   = libHardware_$(shell basename `pwd`)
 OUTPUT := $(BASE)/lib/$(NAME).so
 
+ifeq ($(wildcard /usr/lib/libueye_api.so), )
+$(error "libueye_api not installed. Skipping.")
+endif
+
+CXXFLAGS += -DUEYE_INSTALLED
 LIBS += -lueye_api
+
 DEPEND = Core
 
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
