@@ -2,7 +2,7 @@
 #include <hardware/uvccamera.h>
 #include <Gui/opengl.h>
 
-int main(int argn,char** argv){
+int main(int argc,char** argv){
   Image imgL("CameraL"), imgR("CameraR");
 
   Process *camera = newUVCCamera();

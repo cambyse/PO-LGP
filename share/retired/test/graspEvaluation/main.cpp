@@ -21,7 +21,7 @@ void evaluate(){
   ge.simulateInPhysX();
 }
 
-int main(int argn, char** argv){
+int main(int argc, char** argv){
   evaluate();
 
   return 0;

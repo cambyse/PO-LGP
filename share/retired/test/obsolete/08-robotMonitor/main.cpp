@@ -115,8 +115,8 @@ void testClient(){
   closeRobotSharedMemory();
 }
 
-int main(int argn,char** argv){
-  if(argn==1){ monitorMain(); return 0; }
+int main(int argc,char** argv){
+  if(argc==1){ monitorMain(); return 0; }
   
   if(!strcmp(argv[1],"test"))    testClient();
   if(!strcmp(argv[1],"clean")) destroyRobotSharedMemory();

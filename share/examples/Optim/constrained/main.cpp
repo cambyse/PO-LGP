@@ -116,8 +116,8 @@ void testPhaseOne(ConstrainedProblem& f){
 
 //==============================================================================
 
-int main(int argn,char** argv){
-  MT::initCmdLine(argn,argv);
+int main(int argc,char** argv){
+  MT::initCmdLine(argc,argv);
 
   ChoiceConstraintFunction F;
 //  SimpleConstraintFunction F;

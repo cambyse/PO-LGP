@@ -18,12 +18,12 @@ void drawBase(void*){
   glColor(1.,.5,0.);
 }
 
-int main(int argn,char **argv){
-  MT::initCmdLine(argn, argv);
+int main(int argc,char **argv){
+  MT::initCmdLine(argc, argv);
   cout <<USAGE <<endl;
 
   MT::String file=MT::getParameter<MT::String>("file",STRING("test.ors"));
-  if(argn==2) file=argv[1];
+  if(argc==2) file=argv[1];
   cout <<"opening file `" <<file <<"'" <<endl;
 
   ors::Graph G;

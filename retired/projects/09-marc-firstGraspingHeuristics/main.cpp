@@ -213,8 +213,8 @@ void testPlan(){
   gl.watch();
 }
 
-int main(int argn,char** argv){
-  MT::initCmdLine(argn,argv);
+int main(int argc,char** argv){
+  MT::initCmdLine(argc,argv);
 
   uint mode=MT::getParameter<uint>("mode",(uint)2);
   switch(mode){

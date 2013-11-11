@@ -11,7 +11,7 @@ DECLARE_MODULE(ImageConsumer){
   ACCESS(byteA, rgb);
 };
 
-void main(int argn, char** argv){
+void main(int argc, char** argv){
   //direct instantiation
   ImageProducer cam;
   ImageConsumer view;

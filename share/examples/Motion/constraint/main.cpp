@@ -22,8 +22,8 @@ void saveTrajectory(const arr& x, ors::Graph& G, OpenGL& gl) {
   vid.close();
 }
 
-int main(int argn,char** argv){
-  MT::initCmdLine(argn,argv);
+int main(int argc,char** argv){
+  MT::initCmdLine(argc,argv);
 
   OpenGL gl;
   ors::Graph G;

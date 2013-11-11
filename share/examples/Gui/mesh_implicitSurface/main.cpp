@@ -43,7 +43,7 @@ struct Cylinder:ScalarFunction{
   }
 } cylinder;
 
-void testSimpleImplicitSurfaces(){
+void TEST(SimpleImplicitSurfaces) {
   ors::Mesh m;
   OpenGL gl;
   gl.add(glStandardScene,NULL);
@@ -59,7 +59,7 @@ void testSimpleImplicitSurfaces(){
 
 //===========================================================================
 
-void testDistanceFunctions(){
+void TEST(DistanceFunctions) {
   ors::Transformation t;
   t.setRandom();
   ors::Mesh m;
@@ -96,7 +96,7 @@ void testDistanceFunctions(){
 
 //===========================================================================
 
-int main (int argc, char **argv){
+int MAIN(int argc, char **argv){
   testSimpleImplicitSurfaces();
   testDistanceFunctions();
 

@@ -25,8 +25,8 @@ arr buildKernelMatrix(KOrderMarkovFunction& P){
   return Kinv;
 }
 
-int main(int argn,char** argv){
-  MT::initCmdLine(argn,argv);
+int main(int argc,char** argv){
+  MT::initCmdLine(argc,argv);
 
   ParticleAroundWalls P;
   P.k=1;

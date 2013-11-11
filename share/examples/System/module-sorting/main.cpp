@@ -10,7 +10,7 @@ END_MODULE()
 
 REGISTER_MODULE(PairSorter)
 
-int main(int argn, char **argv) {
+int main(int argc, char **argv) {
   uint N=20;
 
   engine().enableAccessLog();

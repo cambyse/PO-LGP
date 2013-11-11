@@ -19,7 +19,7 @@ namespace Qtest{
   }
 }
 
-void testConvexHull(){
+void TEST(ConvexHull) {
   uint N=20,D=2;
   arr X(N,D);
   rndUniform(X,-1.,1.,false);
@@ -75,7 +75,7 @@ namespace FCtest{
   }
 }
 
-void testForceClosure(){
+void TEST(ForceClosure) {
   uint N=4,i,k;
   arr X(N,3),Xn(N,3),c(3);
   c.setZero();
@@ -162,7 +162,7 @@ void testFCinOrs(){
   }
 }*/
 
-int main(int argc, char *argv[]){
+int MAIN(int argc, char *argv[]){
   cout <<"QHull version = " <<qhullVersion() <<endl;
 
   testConvexHull();

@@ -129,9 +129,9 @@ void MyDemo::loadPlainTrajectory(const char* filename){
 }
 
 
-int main(int argn,char** argv){
+int main(int argc,char** argv){
   MT::IOraw = true;
-  MT::initCmdLine(argn,argv);
+  MT::initCmdLine(argc,argv);
   signal(SIGINT,RobotProcessGroup::signalStopCallback);
   RobotProcessGroup robotProcesses;
   MyDemo demo;

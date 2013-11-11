@@ -108,7 +108,7 @@ void testMeshes3(){
   gl.watch();
 }
 
-int main(int argn, char** argv){
+int main(int argc, char** argv){
 
   testSwift();
   testSphere();

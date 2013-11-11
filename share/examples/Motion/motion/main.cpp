@@ -6,8 +6,8 @@
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
 
-int main(int argn,char** argv){
-  MT::initCmdLine(argn,argv);
+int main(int argc,char** argv){
+  MT::initCmdLine(argc,argv);
 
   OpenGL gl;
   ors::Graph G;

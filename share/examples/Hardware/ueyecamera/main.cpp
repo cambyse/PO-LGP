@@ -51,7 +51,7 @@ void threadedRun() {
   cout <<"bye bye" <<endl;
 }
 
-int main(int argn,char **argv){
+int main(int argc,char **argv){
   threadedRun();
   return 0;
 };
