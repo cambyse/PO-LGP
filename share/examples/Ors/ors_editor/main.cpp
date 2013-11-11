@@ -22,7 +22,7 @@ void TEST(OrsEditor) {
   cout <<USAGE <<endl;
 
   MT::String file=MT::getParameter<MT::String>("file",STRING("test.ors"));
-  if(argc==2) file=argv[1];
+  if(MT::argc==2) file=MT::argv[1];
   cout <<"opening file `" <<file <<"'" <<endl;
 
   ors::Graph G;

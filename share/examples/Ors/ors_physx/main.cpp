@@ -43,7 +43,7 @@ void createOrs(ors::Graph& ors, OpenGL& gl) {
   gl.update();
 }
 
-TEST(OrsPhysx) {
+void TEST(OrsPhysx) {
   ors::Graph ors;
   OpenGL glMy, glPh;
   createOrs(ors, glMy);
