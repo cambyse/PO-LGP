@@ -1,7 +1,7 @@
 // Read DOCSTRING to get an idea of motionpy!
 %define DOCSTRING_MOTIONPY
 "
-This is a simple SWIG wrapper to be able to use the motion framework
+This is a SWIG wrapper to be able to use the motion framework
 within python.
 
 
@@ -21,6 +21,10 @@ author: Johannes kulick
 %module motionpy
 %{
   #include "motion.h"
+  #include "motionHeuristics.h"
+  #include "rrt_planner.h"
+  #include "taskMap_constrained.h"
+  #include "taskMap_default.h"
   #include "taskMap_proxy.h"
   #include <Optim/optimization.h>
   #include <sstream>
@@ -39,4 +43,8 @@ author: Johannes kulick
 %}
 
 %include "motion.h"
+%include "motionHeuristics.h"
+%include "rrt_planner.h"
+%include "taskMap_constrained.h"
+%include "taskMap_default.h"
 %include "taskMap_proxy.h"
