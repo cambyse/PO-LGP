@@ -346,10 +346,11 @@ const vector<Maze::door_t> Maze::doors = {
 
 Maze::Maze(const double& eps):
     current_instance(nullptr),
-    view(nullptr),
     epsilon(eps),
     agent(nullptr)
 {
+    // set state colors
+    set_state_colors();
     // setting current state
     current_instance = instance_t::create(action_t::STAY, current_state.state_idx(), reward_t(0));
     current_state = MazeState(Config::maze_x_size/2, Config::maze_y_size/2);
@@ -370,23 +371,19 @@ Maze::~Maze() {
 
 void Maze::render_initialize(QGraphicsView * v) {
 
-    // Set view
-    view = v;
+    // intitialize view
+    VisualWorld::render_initialize(v);
 
     // Get scene or initialize.
     QGraphicsScene * scene = view->scene();
-    if(scene==NULL) {
-        scene = new QGraphicsScene();
-        view->setScene(scene);
-    }
 
     // Put Border Around Maze
     frame_maze();
 
     // Render States
     state_rects.clear();
-    for(auto state : stateIt_t::all) {
-        render_state(state);
+    for(auto observation : observationIt_t::all) {
+        render_state(observation);
     }
 
     // Render Walls
@@ -427,14 +424,14 @@ void Maze::render_initialize(QGraphicsView * v) {
 }
 
 
-void Maze::render_update(const color_vector_t * color) {
+void Maze::render_update() {
     // set agent position and mirror to make 'stay' actions visible
     QSizeF s = agent->boundingRect().size();
     agent->setPos(current_state.x()-agent->scale()*s.width()/2, current_state.y()-agent->scale()*s.height()/2);
     agent->setElementId(agent->elementId()=="normal" ? "mirrored" : "normal");
 
     // set action line and circle
-    MazeState last_state((current_instance->const_it()-1)->state);
+    MazeState last_state((current_instance->const_it()-1)->observation);
     double al_length = state_size*action_line_length_factor;
     double ap_size = state_size*action_point_size_factor;
     action_point->setRect(last_state.x()-ap_size/2,last_state.y()-ap_size/2,ap_size,ap_size);
@@ -473,17 +470,24 @@ void Maze::render_update(const color_vector_t * color) {
     }
 
     // Change State Color
-    if(color!=nullptr) {
-        idx_t col_idx = 0;
-        for( auto rect_ptr : state_rects ) {
-            rect_ptr->setBrush( QColor( get<COLOR_R>((*color)[col_idx])*255, get<COLOR_G>((*color)[col_idx])*255, get<COLOR_B>((*color)[col_idx])*255 ) );
-            ++col_idx;
-        }
+    idx_t col_idx = 0;
+    for( auto rect_ptr : state_rects ) {
+        rect_ptr->setBrush( QColor( get<COLOR_R>(state_colors[col_idx])*255, get<COLOR_G>(state_colors[col_idx])*255, get<COLOR_B>(state_colors[col_idx])*255 ) );
+        ++col_idx;
     }
 
     rescale_scene(view);
 }
 
+void Maze::set_state_colors(const color_vector_t colors) {
+    state_colors = colors;
+    if(state_colors.size()==0) {
+        state_colors.assign(observation_t::observation_n, color_t(0.9,0.9,0.9));
+    } else if(state_colors.size()!=observation_t::observation_n) {
+        DEBUG_ERROR("Number of colors does not match number of states");
+        state_colors.resize(observation_t::observation_n, color_t(0.9,0.9,0.9));
+    }
+}
 
 void Maze::perform_transition(const action_t& action, std::vector<std::pair<int,int> > * reward_vector) {
 
@@ -503,14 +507,14 @@ void Maze::perform_transition(const action_t& action, std::vector<std::pair<int,
     DEBUG_OUT(2,"Prob threshold = " << prob_threshold);
     probability_t prob_accum = 0;
     bool was_set = false;
-    for(stateIt_t state_to=stateIt_t::first(); state_to!=INVALID && !was_set; ++state_to) {
+    for(observationIt_t observation_to=observationIt_t::first(); observation_to!=INVALID && !was_set; ++observation_to) {
         for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID && !was_set; ++reward) {
-            probability_t prob = get_prediction(current_instance, action, state_to, reward, reward_vector);
-            DEBUG_OUT(2,"state(" << state_to << "), reward(" << reward << ") --> prob=" << prob);
+            probability_t prob = get_prediction(current_instance, action, observation_to, reward, reward_vector);
+            DEBUG_OUT(2,"observation(" << observation_to << "), reward(" << reward << ") --> prob=" << prob);
             prob_accum += prob;
             if(prob_accum>prob_threshold) {
-                current_state = MazeState(state_to);
-                current_instance = current_instance->append_instance(action, state_to, reward);
+                current_state = MazeState(observation_to);
+                current_instance = current_instance->append_instance(action, observation_to, reward);
                 was_set = true;
                 DEBUG_OUT(2,"CHOOSE");
             }
@@ -533,21 +537,21 @@ void Maze::perform_transition(const action_t& action) {
     perform_transition(action, nullptr);
 }
 
-void Maze::perform_transition(const action_t& a, state_t& final_state, reward_t& r) {
+void Maze::perform_transition(const action_t& a, observation_t& final_observation, reward_t& r) {
     perform_transition(a);
-    final_state = current_state.state_idx();
+    final_observation = current_state.state_idx();
     r = current_instance->reward;
 }
 
-Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const action_t& action, const state_t& state_to, const reward_t& reward) const {
-    return get_prediction(instance_from, action, state_to, reward, nullptr);
+Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const action_t& action, const observation_t& observation_to, const reward_t& reward) const {
+    return get_prediction(instance_from, action, observation_to, reward, nullptr);
 }
 
-Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const action_t& action, const state_t& state_to, const reward_t& reward, vector<pair<int,int> > * reward_vector) const {
+Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const action_t& action, const observation_t& observation_to, const reward_t& reward, vector<pair<int,int> > * reward_vector) const {
 
     // state 'from' and 'to'
-    MazeState maze_state_from(instance_from->state);
-    MazeState maze_state_to(state_to);
+    MazeState maze_state_from(instance_from->observation);
+    MazeState maze_state_to(observation_to);
     int x_from = maze_state_from.x();
     int y_from = maze_state_from.y();
 
@@ -615,7 +619,7 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
                     if(delay<0 || steps_in_past==delay) { // exact match for positve delay less-equal match for negative
 
                         // check if key state was visited at that time
-                        if(MazeState(insIt->state)==s3) {
+                        if(MazeState(insIt->observation)==s3) {
 
                             // check action
                             switch(kt) {
@@ -755,7 +759,7 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
 
                 // check if agent was on activation state
                 bool activation_state = false;
-                if(MazeState(insIt->state)==activate_state) {
+                if(MazeState(insIt->observation)==activate_state) {
                     activation_state = true;
                 }
 
@@ -844,7 +848,7 @@ void Maze::get_features(std::vector<Feature*> & basis_features, LEARNER_TYPE typ
     for(int k_idx = 0; k_idx>=-(int)Config::k; --k_idx) {
         if((type==CRF_LEARNER) ||
            (type==UTREE_VALUE_LEARNER && k_idx>-(int)Config::k) ||
-           (type==UTREE_STATE_REWARD_LEARNER && k_idx>-(int)Config::k) ||
+           (type==UTREE_OBSERVATION_REWARD_LEARNER && k_idx>-(int)Config::k) ||
            (type==LINEAR_Q_LEARNER)) {
             // actions
             for(action_t action : actionIt_t::all) {
@@ -854,17 +858,17 @@ void Maze::get_features(std::vector<Feature*> & basis_features, LEARNER_TYPE typ
         }
         if((type==CRF_LEARNER) ||
            (type==UTREE_VALUE_LEARNER && k_idx>-(int)Config::k) ||
-           (type==UTREE_STATE_REWARD_LEARNER && k_idx>-(int)Config::k) ||
+           (type==UTREE_OBSERVATION_REWARD_LEARNER && k_idx>-(int)Config::k) ||
            (type==LINEAR_Q_LEARNER && k_idx<0)) {
-            // states
-            for(state_t state : stateIt_t::all) {
-                StateFeature * state_feature = StateFeature::create(state,k_idx);
-                basis_features.push_back(state_feature);
+            // observations
+            for(observation_t observation : observationIt_t::all) {
+                ObservationFeature * observation_feature = ObservationFeature::create(observation,k_idx);
+                basis_features.push_back(observation_feature);
             }
         }
         if((type==CRF_LEARNER && k_idx==0) ||
            (type==UTREE_VALUE_LEARNER && k_idx>-(int)Config::k) ||
-           (type==UTREE_STATE_REWARD_LEARNER && k_idx>-(int)Config::k) ||
+           (type==UTREE_OBSERVATION_REWARD_LEARNER && k_idx>-(int)Config::k) ||
            (type==LINEAR_Q_LEARNER && false)) {
             // reward
             for(reward_t reward : rewardIt_t::all) {
@@ -875,18 +879,18 @@ void Maze::get_features(std::vector<Feature*> & basis_features, LEARNER_TYPE typ
     }
 
     if(type==CRF_LEARNER) {
-        // relative state features
-        RelativeStateFeature * relative_state_feature;
-        relative_state_feature = RelativeStateFeature::create(1,0,-1,0);
-        basis_features.push_back(relative_state_feature);
-        relative_state_feature = RelativeStateFeature::create(0,1,-1,0);
-        basis_features.push_back(relative_state_feature);
-        relative_state_feature = RelativeStateFeature::create(-1,0,-1,0);
-        basis_features.push_back(relative_state_feature);
-        relative_state_feature = RelativeStateFeature::create(0,-1,-1,0);
-        basis_features.push_back(relative_state_feature);
-        relative_state_feature = RelativeStateFeature::create(0,0,-1,0);
-        basis_features.push_back(relative_state_feature);
+        // relative observation features
+        RelativeObservationFeature * relative_observation_feature;
+        relative_observation_feature = RelativeObservationFeature::create(1,0,-1,0);
+        basis_features.push_back(relative_observation_feature);
+        relative_observation_feature = RelativeObservationFeature::create(0,1,-1,0);
+        basis_features.push_back(relative_observation_feature);
+        relative_observation_feature = RelativeObservationFeature::create(-1,0,-1,0);
+        basis_features.push_back(relative_observation_feature);
+        relative_observation_feature = RelativeObservationFeature::create(0,-1,-1,0);
+        basis_features.push_back(relative_observation_feature);
+        relative_observation_feature = RelativeObservationFeature::create(0,0,-1,0);
+        basis_features.push_back(relative_observation_feature);
     }
     if(type==LINEAR_Q_LEARNER) {
         // also add a unit feature
@@ -913,7 +917,7 @@ void Maze::print_reward_activation_on_random_walk(const int& walk_length) {
     DEBUG_OUT(0,"Relative frequencies for reward activation on a length " << walk_length << " random walk");
     for(int r_idx=0; r_idx<(int)reward_vector.size(); ++r_idx) {
         DEBUG_OUT(0,"    Reward " << r_idx <<
-                  " (" << (state_t)rewards[r_idx][REWARD_ACTIVATION_STATE] << "," << (state_t)rewards[r_idx][REWARD_RECEIVE_STATE] <<
+                  " (" << (observation_t)rewards[r_idx][REWARD_ACTIVATION_STATE] << "," << (observation_t)rewards[r_idx][REWARD_RECEIVE_STATE] <<
                   ")	p+ = " << (double)reward_vector[r_idx].first/walk_length <<
                   "	p- = " << (double)reward_vector[r_idx].second/walk_length
             );
@@ -924,8 +928,8 @@ void Maze::set_epsilon(const double& e) {
     epsilon = e;
 }
 
-void Maze::set_current_state(const state_t& state) {
-    current_state = MazeState(state);
+void Maze::set_current_state(const observation_t& observation) {
+    current_state = MazeState(observation);
     for(idx_t k_idx=0; k_idx<(idx_t)Config::k; ++k_idx) {
         current_instance = current_instance->append_instance(action_t::STAY, current_state.state_idx(), reward_t(0));
     }
@@ -936,8 +940,8 @@ string Maze::get_rewards() {
     stringstream ss;
     for(int r_idx=0; r_idx<(int)rewards.size(); ++r_idx) {
         ss << "Reward " << r_idx << endl;
-        ss << "    ACTIVATION_STATE : " << (state_t)rewards[r_idx][REWARD_ACTIVATION_STATE] << endl;
-        ss << "    RECEIVE_STATE    : " << (state_t)rewards[r_idx][REWARD_RECEIVE_STATE] << endl;
+        ss << "    ACTIVATION_STATE : " << (observation_t)rewards[r_idx][REWARD_ACTIVATION_STATE] << endl;
+        ss << "    RECEIVE_STATE    : " << (observation_t)rewards[r_idx][REWARD_RECEIVE_STATE] << endl;
         ss << "    TIME_DELAY       : " << (int)rewards[r_idx][REWARD_TIME_DELAY] << endl;
         ss << "    reward           : " << (reward_t)rewards[r_idx][REWARD_VALUE] << endl;
         ss << "    activation       : " << reward_activation_type_str((REWARD_ACTIVATION_TYPE)rewards[r_idx][REWARD_ACTIVATION]) << endl;
@@ -990,8 +994,8 @@ void Maze::frame_maze() {
 
     QGraphicsScene * scene = view->scene();
 
-    MazeState first_maze_state(stateIt_t::first());
-    MazeState last_maze_state(stateIt_t::last());
+    MazeState first_maze_state(observationIt_t::first());
+    MazeState last_maze_state(observationIt_t::last());
     double border_x = first_maze_state.x()-state_size/2 - border_margin;
     double border_y = first_maze_state.y()-state_size/2 - border_margin;
     double border_width = last_maze_state.x()+state_size/2 - border_x + border_margin;
@@ -1014,7 +1018,7 @@ void Maze::frame_maze() {
     }
 }
 
-void Maze::render_state(state_t s) {
+void Maze::render_state(observation_t s) {
 
     QGraphicsScene * scene = view->scene();
 
@@ -1025,7 +1029,7 @@ void Maze::render_state(state_t s) {
                                                state_size,
                                                state_size,
                                                state_pen,
-                                               QBrush(QColor(230,230,230))
+                                               QBrush(QColor(255,255,255))
         );
     state_rects.push_back(rect);
 }
@@ -1269,13 +1273,6 @@ void Maze::render_reward(maze_reward_t r) {
         txt->setScale(text_scale);
         txt->setDefaultTextColor(color);
     }
-}
-
-void Maze::rescale_scene(QGraphicsView * view) {
-    QGraphicsScene * scene = view->scene();
-    scene->setSceneRect(scene->itemsBoundingRect());
-    view->fitInView(scene->itemsBoundingRect(),Qt::KeepAspectRatio);
-    view->scale(0.95,0.95);
 }
 
 const char* Maze::reward_activation_type_str(REWARD_ACTIVATION_TYPE ra) {

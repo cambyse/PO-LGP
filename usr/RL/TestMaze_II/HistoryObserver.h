@@ -13,9 +13,9 @@ public:
     virtual ~HistoryObserver() {
         clear_data();
     }
-    virtual void add_action_state_reward_tripel(
+    virtual void add_action_observation_reward_tripel(
             const action_t& action,
-            const state_t& state,
+            const observation_t& observation,
             const reward_t& reward,
             const bool& new_episode
     );

@@ -25,12 +25,12 @@ Feature::feature_return_value Feature::evaluate(const_instanceIt_t) const {
     return return_function(0);
 }
 
-Feature::feature_return_value Feature::evaluate(const_instanceIt_t insIt, action_t action, state_t state, reward_t reward) const {
+Feature::feature_return_value Feature::evaluate(const_instanceIt_t insIt, action_t action, observation_t observation, reward_t reward) const {
     const instance_t * new_ins;
     if(insIt!=INVALID) {
-        new_ins = instance_t::create(action,state,reward,insIt);
+        new_ins = instance_t::create(action,observation,reward,insIt);
     } else {
-        new_ins = instance_t::create(action,state,reward,nullptr);
+        new_ins = instance_t::create(action,observation,reward,nullptr);
     }
     const_instanceIt_t new_insIt(new_ins);
     Feature::feature_return_value ret = this->evaluate(new_insIt);
@@ -173,7 +173,7 @@ Feature::feature_return_value ConstFeature::evaluate(const_instanceIt_t insIt) c
     return return_function(insIt==INVALID ? 0 : const_return_value);
 }
 
-Feature::feature_return_value ConstFeature::evaluate(const_instanceIt_t insIt, action_t, state_t, reward_t) const {
+Feature::feature_return_value ConstFeature::evaluate(const_instanceIt_t insIt, action_t, observation_t, reward_t) const {
     // re-implement because it's more efficient
     return return_function(insIt==INVALID ? 0 : const_return_value);
 }
@@ -234,11 +234,11 @@ bool ActionFeature::features_contradict(const ActionFeature& f1, const ActionFea
     }
 }
 
-StateFeature::StateFeature(const state_t& s, const int& d): state(s), delay(d) {
-    type = STATE;
+ObservationFeature::ObservationFeature(const observation_t& s, const int& d): observation(s), delay(d) {
+    type = OBSERVATION;
     complexity = 1;
-    if( field_width[0] < log10(abs(state)) ) {
-        field_width[0]=log10(abs(state));
+    if( field_width[0] < log10(abs(observation)) ) {
+        field_width[0]=log10(abs(observation));
     }
     if( field_width[1] < log10(abs(delay))+2 ) {
         field_width[1]=log10(abs(delay))+2;
@@ -246,25 +246,25 @@ StateFeature::StateFeature(const state_t& s, const int& d): state(s), delay(d) {
     subfeatures.push_back(this);
 }
 
-StateFeature::~StateFeature() {}
+ObservationFeature::~ObservationFeature() {}
 
-StateFeature * StateFeature::create(const state_t& s, const int& d) {
-    StateFeature * new_feature = new StateFeature(s,d);
+ObservationFeature * ObservationFeature::create(const observation_t& s, const int& d) {
+    ObservationFeature * new_feature = new ObservationFeature(s,d);
     basis_features.insert(unique_f_ptr(new_feature));
     return new_feature;
 }
 
-Feature::feature_return_value StateFeature::evaluate(const_instanceIt_t insIt) const {
-    if( insIt!=INVALID && (insIt+=delay)!=INVALID && insIt->state==state ) {
+Feature::feature_return_value ObservationFeature::evaluate(const_instanceIt_t insIt) const {
+    if( insIt!=INVALID && (insIt+=delay)!=INVALID && insIt->observation==observation ) {
         return return_function(1);
     } else {
         return return_function(0);
     }
 }
 
-string StateFeature::identifier() const {
+string ObservationFeature::identifier() const {
     QString id_string(" s("
-            +QString("%1").arg(state,field_width[0])
+            +QString("%1").arg(observation,field_width[0])
             +", "
             +QString("%1").arg(delay,field_width[1])
             +")"
@@ -272,37 +272,37 @@ string StateFeature::identifier() const {
     return id_string.toStdString()+Feature::identifier();
 }
 
-bool StateFeature::features_contradict(const StateFeature& f1, const StateFeature& f2) {
-    if(f1.delay==f2.delay && f1.state!=f2.state) {
+bool ObservationFeature::features_contradict(const ObservationFeature& f1, const ObservationFeature& f2) {
+    if(f1.delay==f2.delay && f1.observation!=f2.observation) {
         return true;
     } else {
         return false;
     }
 }
 
-RelativeStateFeature::RelativeStateFeature(const int& dx, const int& dy, const int& d1, const int& d2):
+RelativeObservationFeature::RelativeObservationFeature(const int& dx, const int& dy, const int& d1, const int& d2):
     delta_x(dx), delta_y(dy), delay_1(d1), delay_2(d2)
 {
-    type = RELATIVE_STATE;
+    type = RELATIVE_OBSERVATION;
     complexity = 1;
     subfeatures.push_back(this);
 }
 
-RelativeStateFeature::~RelativeStateFeature() {}
+RelativeObservationFeature::~RelativeObservationFeature() {}
 
-RelativeStateFeature * RelativeStateFeature::create(const int& dx, const int& dy, const int& d1, const int& d2) {
-    RelativeStateFeature * new_feature = new RelativeStateFeature(dx,dy,d1,d2);
+RelativeObservationFeature * RelativeObservationFeature::create(const int& dx, const int& dy, const int& d1, const int& d2) {
+    RelativeObservationFeature * new_feature = new RelativeObservationFeature(dx,dy,d1,d2);
     basis_features.insert(unique_f_ptr(new_feature));
     return new_feature;
 }
 
-Feature::feature_return_value RelativeStateFeature::evaluate(const_instanceIt_t insIt) const {
+Feature::feature_return_value RelativeObservationFeature::evaluate(const_instanceIt_t insIt) const {
     if(insIt!=INVALID) {
         const_instanceIt_t insIt_1 = insIt+delay_1;
         const_instanceIt_t insIt_2 = insIt+delay_2;
         if(insIt_1!=INVALID && insIt_2!=INVALID) {
-            state_t s_1 = insIt_1->state;
-            state_t s_2 = insIt_2->state;
+            observation_t s_1 = insIt_1->observation;
+            observation_t s_2 = insIt_2->observation;
             idx_t x_1 = s_1%Config::maze_x_size;
             idx_t y_1 = s_1/Config::maze_x_size;
             idx_t x_2 = s_2%Config::maze_x_size;
@@ -320,7 +320,7 @@ Feature::feature_return_value RelativeStateFeature::evaluate(const_instanceIt_t 
     }
 }
 
-string RelativeStateFeature::identifier() const {
+string RelativeObservationFeature::identifier() const {
     QString id_string = QString("rs(dx=%1,dy=%2,i1=%3,i2=%4)")
         .arg(delta_x)
         .arg(delta_y)
@@ -329,7 +329,7 @@ string RelativeStateFeature::identifier() const {
     return id_string.toStdString()+Feature::identifier();
 }
 
-bool RelativeStateFeature::features_contradict(const RelativeStateFeature& f1, const RelativeStateFeature& f2) {
+bool RelativeObservationFeature::features_contradict(const RelativeObservationFeature& f1, const RelativeObservationFeature& f2) {
     if(
         f1.delay_1!=f2.delay_1 ||
         f1.delay_2!=f2.delay_2 ||

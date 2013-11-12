@@ -21,12 +21,12 @@ public:
     typedef std::set<std::unique_ptr<Feature> >                 basis_feature_container_t;
     typedef double                                              feature_return_value;
     typedef std::unordered_map<Feature*,feature_return_value>   look_up_map_t;
-    enum TYPE { ABSTRACT, CONST_FEATURE, ACTION, RELATIVE_STATE, STATE, REWARD, AND };
+    enum TYPE { ABSTRACT, CONST_FEATURE, ACTION, RELATIVE_OBSERVATION, OBSERVATION, REWARD, AND };
     // functions
     Feature();
     virtual ~Feature();
     virtual feature_return_value evaluate(const_instanceIt_t) const;
-    virtual feature_return_value evaluate(const_instanceIt_t, action_t, state_t, reward_t) const;
+    virtual feature_return_value evaluate(const_instanceIt_t, action_t, observation_t, reward_t) const;
     virtual feature_return_value evaluate(const look_up_map_t&) const;
     virtual std::string identifier() const;
     friend std::ostream& operator<<(std::ostream&, const Feature&);
@@ -65,7 +65,7 @@ private:
 public:
     static ConstFeature * create(const long long int& v = 0);
     virtual feature_return_value evaluate(const_instanceIt_t) const;
-    virtual feature_return_value evaluate(const_instanceIt_t, action_t, state_t, reward_t) const;
+    virtual feature_return_value evaluate(const_instanceIt_t, action_t, observation_t, reward_t) const;
     virtual std::string identifier() const;
 };
 
@@ -84,31 +84,31 @@ protected:
     int delay;
 };
 
-class StateFeature: public Feature {
+class ObservationFeature: public Feature {
 private:
-    StateFeature(const state_t& s, const int& d);
-    virtual ~StateFeature();
+    ObservationFeature(const observation_t& s, const int& d);
+    virtual ~ObservationFeature();
 public:
-    static StateFeature * create(const state_t& s, const int& d);
+    static ObservationFeature * create(const observation_t& s, const int& d);
     virtual feature_return_value evaluate(const_instanceIt_t) const;
     virtual std::string identifier() const;
-    static bool features_contradict(const StateFeature& f1, const StateFeature& f2);
-    bool contradicts(const StateFeature& f) { return features_contradict(*this,f); }
+    static bool features_contradict(const ObservationFeature& f1, const ObservationFeature& f2);
+    bool contradicts(const ObservationFeature& f) { return features_contradict(*this,f); }
 protected:
-    state_t state;
+    observation_t observation;
     int delay;
 };
 
-class RelativeStateFeature: public Feature {
+class RelativeObservationFeature: public Feature {
 private:
-    RelativeStateFeature(const int& dx, const int& dy, const int& d1, const int& d2);
-    virtual ~RelativeStateFeature();
+    RelativeObservationFeature(const int& dx, const int& dy, const int& d1, const int& d2);
+    virtual ~RelativeObservationFeature();
 public:
-    static RelativeStateFeature * create(const int& dx, const int& dy, const int& d1, const int& d2);
+    static RelativeObservationFeature * create(const int& dx, const int& dy, const int& d1, const int& d2);
     virtual feature_return_value evaluate(const_instanceIt_t) const;
     virtual std::string identifier() const;
-    static bool features_contradict(const RelativeStateFeature& f1, const RelativeStateFeature& f2);
-    bool contradicts(const RelativeStateFeature& f) { return features_contradict(*this,f); }
+    static bool features_contradict(const RelativeObservationFeature& f1, const RelativeObservationFeature& f2);
+    bool contradicts(const RelativeObservationFeature& f) { return features_contradict(*this,f); }
 protected:
     int delta_x;
     int delta_y;

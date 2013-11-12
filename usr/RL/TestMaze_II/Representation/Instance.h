@@ -22,7 +22,7 @@ class ConstInstanceIt;
 
 /** \brief Instance object.
  *
- * Instance objects are essentially triples of (action_t, state_t, reward_t)
+ * Instance objects are essentially triples of (action_t, observation_t, reward_t)
  * representing all information associated with one time step in a reinforcement
  * learning process. Additionally every Instance stores pointers to the Instance
  * before and after, so one can iterate through time. */
@@ -35,7 +35,7 @@ public:
     USE_CONFIG_TYPEDEFS;
 
     action_t action;
-    state_t state;
+    observation_t observation;
     reward_t reward;
 
     // for compatibility with for( ... : ... ) constructs
@@ -58,7 +58,7 @@ public:
 
     static Instance * create(
         const action_t& a = action_t(),
-        const state_t& s = state_t(),
+        const observation_t& s = observation_t(),
         const reward_t& r = reward_t(),
         const Instance * prev = nullptr,
         const Instance * next = nullptr
@@ -69,10 +69,10 @@ public:
     Instance & operator=(const Instance&);
     bool operator<(const Instance& other) const;
     bool same_history(const Instance* other) const;
-    Instance * insert_instance_after  (const action_t& a, const state_t& s, const reward_t& r);
-    Instance * insert_instance_before (const action_t& a, const state_t& s, const reward_t& r);
-    Instance * append_instance        (const action_t& a, const state_t& s, const reward_t& r);
-    Instance * prepend_instance       (const action_t& a, const state_t& s, const reward_t& r);
+    Instance * insert_instance_after  (const action_t& a, const observation_t& s, const reward_t& r);
+    Instance * insert_instance_before (const action_t& a, const observation_t& s, const reward_t& r);
+    Instance * append_instance        (const action_t& a, const observation_t& s, const reward_t& r);
+    Instance * prepend_instance       (const action_t& a, const observation_t& s, const reward_t& r);
     InstanceIt it();
     ConstInstanceIt const_it() const;
     InstanceIt first();
@@ -110,7 +110,7 @@ protected:
     Instance(const Instance&);
     Instance(
         const action_t& a = action_t(),
-        const state_t& s = state_t(),
+        const observation_t& s = observation_t(),
         const reward_t& r = reward_t()
         );
     const Instance * get_previous() const;

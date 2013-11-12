@@ -36,7 +36,7 @@ UTree::NodeInfo::NodeInfo(const Feature * f, const f_ret_t& r):
     feature(f),
     parent_return_value(r),
     scores_up_to_date(false),
-    max_state_action_value(0),
+    max_observation_action_value(0),
     statistics_up_to_date(false)
 {}
 
@@ -52,7 +52,7 @@ UTree::UTree(const double& d):
     // Constructing basis indicator features  //
     //----------------------------------------//
 
-    // delayed action, state, and reward features
+    // delayed action, observation, and reward features
     for(int k_idx = 0; k_idx>=(int)-Config::k; --k_idx) {
         // actions
         for(action_t action : actionIt_t::all) {
@@ -66,15 +66,15 @@ UTree::UTree(const double& d):
                 DEBUG_OUT(2,"Added " << basis_features_prob.back()->identifier() << " to basis features");
             }
         }
-        // states
-        for(state_t state : stateIt_t::all) {
-            StateFeature * state_feature = StateFeature::create(state,k_idx);
+        // observations
+        for(observation_t observation : observationIt_t::all) {
+            ObservationFeature * observation_feature = ObservationFeature::create(observation,k_idx);
             if(k_idx<0) {
-                basis_features_val.push_back(state_feature);
+                basis_features_val.push_back(observation_feature);
                 DEBUG_OUT(2,"Added " << basis_features_val.back()->identifier() << " to basis features");
             }
             if(k_idx<0) {
-                basis_features_prob.push_back(state_feature);
+                basis_features_prob.push_back(observation_feature);
                 DEBUG_OUT(2,"Added " << basis_features_prob.back()->identifier() << " to basis features");
             }
         }
@@ -95,14 +95,14 @@ UTree::UTree(const double& d):
 
 UTree::~UTree() {}
 
-void UTree::add_action_state_reward_tripel(
+void UTree::add_action_observation_reward_tripel(
         const action_t& action,
-        const state_t& state,
+        const observation_t& observation,
         const reward_t& reward,
         const bool& new_episode
 ) {
     // call function of parent class
-    HistoryObserver::add_action_state_reward_tripel(action,state,reward,new_episode);
+    HistoryObserver::add_action_observation_reward_tripel(action,observation,reward,new_episode);
 
     // create root node if necessary
     if(root_node==INVALID) {
@@ -131,11 +131,11 @@ void UTree::clear_data() {
 UTree::probability_t UTree::get_prediction(
         const instance_t * instance,
         const action_t& action,
-        const state_t& state_to,
+        const observation_t& observation_to,
         const reward_t& reward) const {
 
     // construct instance
-    const instance_t * next_instance = instance_t::create(action, state_to, reward, instance);
+    const instance_t * next_instance = instance_t::create(action, observation_to, reward, instance);
 
     // find leaf node
     node_t node = find_leaf_node(next_instance);
@@ -149,9 +149,9 @@ UTree::probability_t UTree::get_prediction(
     if(node==INVALID) {
         // if no leaf node could be found, return prior probability
         DEBUG_OUT(1,"Returning prior probability");
-        return prior_probability(state_to, reward);
+        return prior_probability(observation_to, reward);
     } else {
-        // transition probability p(s,r|a) equals the number of times state s
+        // transition probability p(s,r|a) equals the number of times observation s
         // and reward r occurred after performing action a, divied by the total
         // number of times action a was performed.
         unsigned long transition_counter = 0;
@@ -159,12 +159,12 @@ UTree::probability_t UTree::get_prediction(
         for( const instance_t * node_instance : node_info_map[node].instance_vector ) {
             if(node_instance->action==action) {
                 ++action_counter;
-                if(node_instance->state==state_to && node_instance->reward==reward) {
+                if(node_instance->observation==observation_to && node_instance->reward==reward) {
                     ++transition_counter;
                 }
             }
         }
-        probability_t prob = transition_counter + prior_probability(state_to,reward)*pseudo_counts;
+        probability_t prob = transition_counter + prior_probability(observation_to,reward)*pseudo_counts;
         prob /= action_counter + pseudo_counts;
         return prob;
     }
@@ -288,10 +288,10 @@ void UTree::print_leaves() {
                 DEBUG_OUT(0,"            " << *(insVec[ins_idx]) );
             }
         }
-        DEBUG_OUT(0,"        Action Value: " << node_info_map[current_leaf_node].max_state_action_value );
+        DEBUG_OUT(0,"        Action Value: " << node_info_map[current_leaf_node].max_observation_action_value );
         if(DEBUG_LEVEL>=1) {
             DEBUG_OUT(0,"        Action Values:");
-            for(auto action_values : node_info_map[current_leaf_node].state_action_values) {
+            for(auto action_values : node_info_map[current_leaf_node].observation_action_values) {
                 DEBUG_OUT(0,"            " << action_values.first << " --> " << action_values.second );
             }
         }
@@ -398,7 +398,7 @@ double UTree::expand_leaf_node(const double& score_threshold) {
                 double score = score_leaf_node(leaf, featurePtr);
                 node_info_map[leaf].scores[featurePtr] = score;
             }
-        } else if(expansion_type==STATE_REWARD_EXPANSION) {
+        } else if(expansion_type==OBSERVATION_REWARD_EXPANSION) {
             for(auto featurePtr : basis_features_prob) {
                 double score = score_leaf_node(leaf, featurePtr);
                 node_info_map[leaf].scores[featurePtr] = score;
@@ -427,7 +427,7 @@ double UTree::expand_leaf_node(const double& score_threshold) {
                 }
                 DEBUG_OUT(3,"Node " << graph.id(node) << ", feature " << *featurePtr << ", score " << score);
             }
-        } else if(expansion_type==STATE_REWARD_EXPANSION) {
+        } else if(expansion_type==OBSERVATION_REWARD_EXPANSION) {
             for(auto featurePtr : basis_features_prob) {
                 double score = node_info_map[node].scores[featurePtr];
                 if(score>max_score) {
@@ -488,18 +488,18 @@ double UTree::expand_leaf_node(const double& score_threshold) {
 
 // double UTree::q_iteration(const double& alpha) {
 
-//     // check if state value map is complete (initialize with zero otherwise)
+//     // check if observation value map is complete (initialize with zero otherwise)
 //     for(auto current_leaf_node : leaf_nodes) {
-//         if(node_info_map[current_leaf_node].state_action_values.size()!=action_t::action_n) {
-//             DEBUG_OUT(1,"Initializing state-action values (size=" <<
-//                       node_info_map[current_leaf_node].state_action_values.size() << " != " <<
+//         if(node_info_map[current_leaf_node].observation_action_values.size()!=action_t::action_n) {
+//             DEBUG_OUT(1,"Initializing observation-action values (size=" <<
+//                       node_info_map[current_leaf_node].observation_action_values.size() << " != " <<
 //                       action_t::action_n << ")"
 //                 );
 //             for(actionIt_t aIt=actionIt_t::first(); aIt!=util::INVALID; ++aIt) {
-//                 node_info_map[current_leaf_node].state_action_values[aIt]=0;
+//                 node_info_map[current_leaf_node].observation_action_values[aIt]=0;
 //             }
 //             DEBUG_OUT(1,"    DONE (size=" <<
-//                       node_info_map[current_leaf_node].state_action_values.size() << ")"
+//                       node_info_map[current_leaf_node].observation_action_values.size() << ")"
 //                 );
 //         }
 //     }
@@ -516,17 +516,17 @@ double UTree::expand_leaf_node(const double& score_threshold) {
 //             while(next_instance!=util::INVALID) {
 
 //                 action_t current_action = current_instance->action;
-//                 double old_Q = node_info_map[current_leaf_node].state_action_values[current_action];
+//                 double old_Q = node_info_map[current_leaf_node].observation_action_values[current_action];
 
 //                 // calculate update
 //                 double delta_Q = next_instance->reward;
-//                 delta_Q += discount*node_info_map[next_leaf_node].max_state_action_value;
+//                 delta_Q += discount*node_info_map[next_leaf_node].max_observation_action_value;
 //                 delta_Q -= old_Q;
 //                 delta_Q *= alpha;
 
-//                 // update state-action value
+//                 // update observation-action value
 //                 double new_Q = old_Q + delta_Q;
-//                 node_info_map[current_leaf_node].state_action_values[current_action] = new_Q;
+//                 node_info_map[current_leaf_node].observation_action_values[current_action] = new_Q;
 
 //                 // update data for next loop
 //                 ++current_instance;
@@ -541,12 +541,12 @@ double UTree::expand_leaf_node(const double& score_threshold) {
 //         return 0;
 //     }
 
-//     // update state values (i.e. maximum state-action value)
+//     // update observation values (i.e. maximum observation-action value)
 //     double max_value_diff = -DBL_MAX;
 //     for(auto current_leaf_node : leaf_nodes) {
 //         double max_value = -DBL_MAX;
 //         vector<action_t> max_value_actions;
-//         map<action_t,double>& value_map = node_info_map[current_leaf_node].state_action_values;
+//         map<action_t,double>& value_map = node_info_map[current_leaf_node].observation_action_values;
 //         for(auto valueIt=value_map.begin(); valueIt!=value_map.end(); ++valueIt) {
 //             if(valueIt->second>max_value) {
 //                 max_value = valueIt->second;
@@ -555,8 +555,8 @@ double UTree::expand_leaf_node(const double& score_threshold) {
 //                 max_value_actions.push_back(valueIt->first);
 //             }
 //         }
-//         double value_diff = node_info_map[current_leaf_node].max_state_action_value - max_value;
-//         node_info_map[current_leaf_node].max_state_action_value = max_value;
+//         double value_diff = node_info_map[current_leaf_node].max_observation_action_value - max_value;
+//         node_info_map[current_leaf_node].max_observation_action_value = max_value;
 //         node_info_map[current_leaf_node].max_value_action = util::random_select(max_value_actions);
 //         if(fabs(value_diff)>max_value_diff) {
 //             max_value_diff = fabs(value_diff);
@@ -582,34 +582,34 @@ double UTree::value_iteration() {
     double max_diff = -DBL_MAX;
     for( node_t leaf : leaf_nodes ) {
 
-        // reset Q-function, only state value (i.e. max state-action value) is
+        // reset Q-function, only observation value (i.e. max observation-action value) is
         // needed below, remember old values to determine maximum update as
         // return value
-        auto old_q_values = node_info_map[leaf].state_action_values;
-        node_info_map[leaf].state_action_values.clear();
+        auto old_q_values = node_info_map[leaf].observation_action_values;
+        node_info_map[leaf].observation_action_values.clear();
 
         // update Q-values
         for( auto transition : node_info_map[leaf].transition_table ) {
 
             // get necessary data
             action_t action = transition.first.first;                               // action to perform
-            node_t state_to = transition.first.second;                              // leaf node to reach
+            node_t observation_to = transition.first.second;                              // leaf node to reach
             double prob = transition.second;                                        // probability for this transition
             double exp_rew = node_info_map[leaf].expected_reward[transition.first]; // expeced reward for this transition
-            double state_value = node_info_map[state_to].max_state_action_value;    // state value of leaf node to reach
+            double observation_value = node_info_map[observation_to].max_observation_action_value;    // observation value of leaf node to reach
 
             DEBUG_OUT(3,"    Transition " << graph.id(leaf) << "," << action <<
-                      " --> node:" << graph.id(state_to) <<
+                      " --> node:" << graph.id(observation_to) <<
                       " (prob=" << prob <<
                       ",	exp_rew=" << exp_rew <<
-                      ",	state_value=" << state_value
+                      ",	observation_value=" << observation_value
                 );
 
             // assign new value
-            double q_increment = prob * (exp_rew + discount*state_value);
-            auto q_value = node_info_map[leaf].state_action_values.find(action);
-            if(q_value==node_info_map[leaf].state_action_values.end()) { // not found --> insert
-                node_info_map[leaf].state_action_values[action] = q_increment;
+            double q_increment = prob * (exp_rew + discount*observation_value);
+            auto q_value = node_info_map[leaf].observation_action_values.find(action);
+            if(q_value==node_info_map[leaf].observation_action_values.end()) { // not found --> insert
+                node_info_map[leaf].observation_action_values[action] = q_increment;
             } else { // was found --> increment
                 q_value->second += q_increment;
             }
@@ -619,7 +619,7 @@ double UTree::value_iteration() {
         // update maximum difference //
         //---------------------------//
         // go through new Q-values
-        for( auto q_value : node_info_map[leaf].state_action_values ) {
+        for( auto q_value : node_info_map[leaf].observation_action_values ) {
             DEBUG_OUT(4,"    Difference for " << q_value.first );
             double diff;
             auto old_value = old_q_values.find(q_value.first);
@@ -647,21 +647,21 @@ double UTree::value_iteration() {
     }
 
     //-------------------------------//
-    // update state value
+    // update observation value
     //-------------------------------//
     for( node_t leaf : leaf_nodes ) {
         // find maximum value
         double max_q_value = -DBL_MAX;
-        for(auto current_q_value : node_info_map[leaf].state_action_values) {
+        for(auto current_q_value : node_info_map[leaf].observation_action_values) {
             if(current_q_value.second > max_q_value) {
                 max_q_value = current_q_value.second;
             }
         }
         if(max_q_value==-DBL_MAX) {
-            DEBUG_ERROR("No state-action values in leaf node " << graph.id(leaf) );
-            node_info_map[leaf].max_state_action_value = 0;
+            DEBUG_ERROR("No observation-action values in leaf node " << graph.id(leaf) );
+            node_info_map[leaf].max_observation_action_value = 0;
         } else {
-            node_info_map[leaf].max_state_action_value = max_q_value;
+            node_info_map[leaf].max_observation_action_value = max_q_value;
         }
     }
 
@@ -676,19 +676,19 @@ UTree::action_t UTree::get_max_value_action(const instance_t * i) {
 
     // get leaf node
     const instance_t * next_instance = instance_t::create(action_t(),
-                                                          state_t(),
+                                                          observation_t(),
                                                           reward_t(),
                                                           i);
     node_t node = find_leaf_node(next_instance);
     delete next_instance;
 
     // find maximum-value action (random tie break)
-    if(node_info_map[node].state_action_values.size()==0) {
-        DEBUG_ERROR("Incomplete state action values");
+    if(node_info_map[node].observation_action_values.size()==0) {
+        DEBUG_ERROR("Incomplete observation action values");
     }
     vector<action_t> max_value_action_vector;
-    double max_q_value = node_info_map[node].max_state_action_value;
-    for(auto current_q_value : node_info_map[node].state_action_values) {
+    double max_q_value = node_info_map[node].max_observation_action_value;
+    for(auto current_q_value : node_info_map[node].observation_action_values) {
         if(current_q_value.second==max_q_value) {
             max_value_action_vector.push_back(current_q_value.first);
         }
@@ -719,7 +719,7 @@ void UTree::assert_scores_up_to_date(const node_t leaf) {
     if(node_info_map[leaf].scores_up_to_date==false) {
         DEBUG_OUT(2,"Assert scores up-to-date for leaf " << graph.id(leaf));
         // assert precondition
-        if(expansion_type==STATE_REWARD_EXPANSION) {
+        if(expansion_type==OBSERVATION_REWARD_EXPANSION) {
             // no precondition
         } else if(expansion_type==UTILITY_EXPANSION) {
             // all values need to be up-to-date
@@ -733,7 +733,7 @@ void UTree::assert_scores_up_to_date(const node_t leaf) {
                 double score = score_leaf_node(leaf, featurePtr);
                 node_info_map[leaf].scores[featurePtr] = score;
             }
-        } else if(expansion_type==STATE_REWARD_EXPANSION) {
+        } else if(expansion_type==OBSERVATION_REWARD_EXPANSION) {
             for(auto featurePtr : basis_features_prob) {
                 double score = score_leaf_node(leaf, featurePtr);
                 node_info_map[leaf].scores[featurePtr] = score;
@@ -749,7 +749,7 @@ void UTree::invalidate_values() {
     if(values_up_to_date==true) {
         DEBUG_OUT(2,"Invalidate values");
         values_up_to_date = false;
-        if(expansion_type==STATE_REWARD_EXPANSION) {
+        if(expansion_type==OBSERVATION_REWARD_EXPANSION) {
             // nothing to do
         } else if(expansion_type==UTILITY_EXPANSION) {
             // invalidate scores for all leaf nodes
@@ -804,7 +804,7 @@ UTree::node_t UTree::add_child(const node_t& node) {
     node_info_map[new_child].statistics_up_to_date = true;
 
     //--------------------------------------------------------------------------//
-    // invalidate ALL statistics because the state space has changed and thus
+    // invalidate ALL statistics because the observation space has changed and thus
     // the transition structure, too.
     // --------------------------------------------------------------------------//
     for( node_t leaf : leaf_nodes ) {
@@ -871,18 +871,18 @@ double UTree::score_leaf_node(const node_t leaf_node, const Feature* feature) co
     //--------------------------------------------------------//
     const instance_vector_t& instance_vector = node_info_map[leaf_node].instance_vector;
     map< pair<f_ret_t,action_t>, vector<double                 > > utility_samples;      // for UTILITY_EXPANSION
-    map< pair<f_ret_t,action_t>, vector<pair<state_t,reward_t> > > state_reward_samples; // for STATE_REWARD_EXPANSION
+    map< pair<f_ret_t,action_t>, vector<pair<observation_t,reward_t> > > observation_reward_samples; // for OBSERVATION_REWARD_EXPANSION
     set<f_ret_t> feature_return_values; // corresponds to different child nodes
 
     // iterate through instances
     for(const instance_t * instance : instance_vector) {
 
-        // construct state-action pair
+        // construct observation-action pair
         f_ret_t f_ret = feature->evaluate(instance); // feature return value defining the potential new leaf node
         action_t action = instance->action;          // action that was performed from current node
         pair<f_ret_t,action_t> node_action_pair = make_pair(f_ret,action);
 
-        // remember state/leaf
+        // remember observation/leaf
         feature_return_values.insert(f_ret);
 
         // update samples
@@ -890,27 +890,27 @@ double UTree::score_leaf_node(const node_t leaf_node, const Feature* feature) co
         switch(expansion_type) {
         case UTILITY_EXPANSION:
             // A sample consists of the reward actually received after
-            // performing the action plus the discounted state value of the leaf
+            // performing the action plus the discounted observation value of the leaf
             // node that was actually reached.
         {
             // create (virtual) next instance (UTree features are expected to
-            // ignore action, state, and reward with time index zero).
+            // ignore action, observation, and reward with time index zero).
             const instance_t * next_instance = instance_t::create(action_t(),
-                                                                  state_t(),
+                                                                  observation_t(),
                                                                   reward_t(),
                                                                   instance);
             node_t next_node = find_leaf_node(next_instance);
-            double util = instance->reward + discount*node_info_map[next_node].max_state_action_value;
+            double util = instance->reward + discount*node_info_map[next_node].max_observation_action_value;
             utility_samples[node_action_pair].push_back(util);
             DEBUG_OUT(4,"    Adding utility of " << util << " for f_ret=" << f_ret << "	" << action);
             delete next_instance;
         }
         break;
-        case STATE_REWARD_EXPANSION:
-            // A sample consists of the state (not the leaf node) that was
+        case OBSERVATION_REWARD_EXPANSION:
+            // A sample consists of the observation (not the leaf node) that was
             // actually reached after performing the action, and the reward that
             // was actually received.
-            state_reward_samples[node_action_pair].push_back(make_pair(instance->state, instance->reward));
+            observation_reward_samples[node_action_pair].push_back(make_pair(instance->observation, instance->reward));
             break;
         default:
             DEBUG_DEAD_LINE;
@@ -936,8 +936,8 @@ double UTree::score_leaf_node(const node_t leaf_node, const Feature* feature) co
     // The score is computed as the sum over the sub-scores for all actions. The
     // sub-scores are computed by comparing the samples for the two different
     // feature return values (i.e. potential leaf nodes) using the
-    // Kolmogorov-Smirnov test for the real valued utility (state value)
-    // distributions and the Chi-Square test for the discrete state-reward
+    // Kolmogorov-Smirnov test for the real valued utility (observation value)
+    // distributions and the Chi-Square test for the discrete observation-reward
     // distributions.
     f_ret_t f_val_1 = *(feature_return_values.begin());
     f_ret_t f_val_2 = *(++(feature_return_values.begin()));
@@ -953,12 +953,12 @@ double UTree::score_leaf_node(const node_t leaf_node, const Feature* feature) co
             score += tmp_score;
             break;
         }
-        case STATE_REWARD_EXPANSION:
+        case OBSERVATION_REWARD_EXPANSION:
         {
-            vector<pair<state_t,reward_t> >& sample_1 = state_reward_samples[make_pair(f_val_1,action)];
-            vector<pair<state_t,reward_t> >& sample_2 = state_reward_samples[make_pair(f_val_2,action)];
+            vector<pair<observation_t,reward_t> >& sample_1 = observation_reward_samples[make_pair(f_val_1,action)];
+            vector<pair<observation_t,reward_t> >& sample_2 = observation_reward_samples[make_pair(f_val_2,action)];
             double tmp_score = sample_size_factor( sample_1.size(), sample_2.size() );
-            tmp_score *= ChiSquareTest::chi_square_statistic<pair<state_t,reward_t> >(sample_1, sample_2, false);
+            tmp_score *= ChiSquareTest::chi_square_statistic<pair<observation_t,reward_t> >(sample_1, sample_2, false);
             score += tmp_score;
             break;
         }
@@ -1017,9 +1017,9 @@ UTree::node_t UTree::find_leaf_node(const instance_t *i) const {
     return current_node;
 }
 
-UTree::probability_t UTree::prior_probability(const state_t&, const reward_t& r) const {
+UTree::probability_t UTree::prior_probability(const observation_t&, const reward_t& r) const {
     if(r==reward_t::min_reward) {
-        return 1./(state_t::state_n);
+        return 1./(observation_t::observation_n);
     } else {
         return 0;
     }
@@ -1037,7 +1037,7 @@ void UTree::update_statistics(const node_t& leaf_node) {
     map< action_t, unsigned long int > action_counts;
     // number of times a leaf node was reached with a specific action
     map< pair<action_t,node_t>, unsigned long int > transition_counts;
-    // sum of rewards received for a specific transition (state and action specific)
+    // sum of rewards received for a specific transition (observation and action specific)
     map< pair<action_t,node_t>, double > reward_sums;
 
     // go through instances
@@ -1045,21 +1045,21 @@ void UTree::update_statistics(const node_t& leaf_node) {
         action_t action = ins->action;
         reward_t reward = ins->reward;
         const instance_t * next_instance = instance_t::create(action_t(),
-                                                              state_t(),
+                                                              observation_t(),
                                                               reward_t(),
                                                               ins);
-        node_t next_state = find_leaf_node(next_instance);
+        node_t next_observation = find_leaf_node(next_instance);
         delete next_instance;
         action_counts[action] += 1;
-        transition_counts[make_pair(action,next_state)] += 1;
-        reward_sums[make_pair(action,next_state)] += reward;
+        transition_counts[make_pair(action,next_observation)] += 1;
+        reward_sums[make_pair(action,next_observation)] += reward;
     }
 
     //------------------------------------------------//
     // calculate transition probabilities from counts //
     // (store only non-zero probabilities)            //
     //------------------------------------------------//
-    // Transition probability p(s|a) equals the number of times state s (leaf
+    // Transition probability p(s|a) equals the number of times observation s (leaf
     // node) was reached with action a, divided by the total number of times
     // action a was carried out.
     node_info_map[leaf_node].transition_table.clear();
@@ -1076,7 +1076,7 @@ void UTree::update_statistics(const node_t& leaf_node) {
     // calculate expected rewards //
     //----------------------------//
     // The expected reward r(s,a) equals the sum over all rewards received for a
-    // transition to state (leaf node) s after performing action a, divided by
+    // transition to observation (leaf node) s after performing action a, divided by
     // the total number of times the transition occurred.
     node_info_map[leaf_node].expected_reward.clear();
     for( auto current_reward_sum : reward_sums ) {

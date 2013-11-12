@@ -1,12 +1,11 @@
 #ifndef MAZE_H_
 #define MAZE_H_
 
-#include <QGraphicsView>
+#include "VisualWorld.h"
+
 #include <QGraphicsSvgItem>
 #include <map>
-#include <tuple>
 #include <deque>
-#include <vector>
 #include <string>
 #include <sstream>
 
@@ -16,17 +15,14 @@
 
 #include "debug.h"
 
-class Maze {
+class Maze: public VisualWorld {
 public:
 
     USE_CONFIG_TYPEDEFS;
 
-    typedef std::tuple<double,double,double> color_t;
-    typedef std::vector<color_t>             color_vector_t;
-    enum COLOR_IDX { COLOR_R, COLOR_G, COLOR_B };
     enum LEARNER_TYPE {CRF_LEARNER,
                        UTREE_VALUE_LEARNER,
-                       UTREE_STATE_REWARD_LEARNER,
+                       UTREE_OBSERVATION_REWARD_LEARNER,
                        LINEAR_Q_LEARNER
     };
 
@@ -57,30 +53,32 @@ public:
     };
 
     /** \brief Renders the complete maze. */
-    void render_initialize(QGraphicsView * v);
+    virtual void render_initialize(QGraphicsView * v) override;
 
     /** \brief Updates the graphical representation. */
-    void render_update(const color_vector_t * color = nullptr);
+    virtual void render_update() override;
+
+    void set_state_colors(const color_vector_t colors = color_vector_t());
 
     /** \brief Perform a transition by executing an action. */
     void perform_transition(const action_t& action);
 
     /** \brief Perform a transition by executing an action and return resulting
-     * state and reward by reference. */
-    void perform_transition(const action_t& a, state_t& final_state, reward_t& r );
+     * observation and reward by reference. */
+    void perform_transition(const action_t& a, observation_t& final_observation, reward_t& r );
 
     /** \brief Perform a transition by executing an action and return which rewards
      * were active. */
     void perform_transition(const action_t& a, std::vector<std::pair<int,int> > * reward_vector);
 
     /** \brief Returns the transition probability. */
-    probability_t get_prediction(const instance_t*, const action_t&, const state_t&, const reward_t&) const;
+    probability_t get_prediction(const instance_t*, const action_t&, const observation_t&, const reward_t&) const;
 
     /** \brief Returns the transition probability and which rewards were active.
      *
      * The first counter in each pair counts positive rewards, the second
      * punishments (for not collecting an activated reward). */
-    probability_t get_prediction(const instance_t*, const action_t&, const state_t&, const reward_t&, std::vector<std::pair<int,int> > * reward_vector) const;
+    probability_t get_prediction(const instance_t*, const action_t&, const observation_t&, const reward_t&, std::vector<std::pair<int,int> > * reward_vector) const;
 
     void get_features(std::vector<Feature*> & basis_features, LEARNER_TYPE type) const;
 
@@ -103,7 +101,7 @@ public:
     double get_epsilon() const { return epsilon; }
 
     /** \brief Set the current state of the agent. */
-    void set_current_state(const state_t&);
+    void set_current_state(const observation_t&);
 
     /** \brief Get a string describing all rewards. */
     static std::string get_rewards();
@@ -181,8 +179,6 @@ private:
     /** \brief The current state of the maze including the complete past. */
     instance_t * current_instance;
 
-    QGraphicsView * view;                            ///< QGraphicsView to render the maze;
-
     double epsilon;                                  ///< Amount of stochasticity in transitions.
     MazeState current_state;                         ///< Current state of the agent in the maze.
     QGraphicsSvgItem *agent;                         ///< Svg image for rendering the agent.
@@ -190,6 +186,7 @@ private:
     QGraphicsEllipseItem *action_point;              ///< Circle showing the last position for showing the last action.
     std::vector<QGraphicsItem*> borders;             ///< Graphic items for rendering the maze borders.
     std::vector<QGraphicsRectItem*> state_rects;     ///< Graphic items containing the state rects for rendering the states.
+    color_vector_t state_colors;                     ///< Color vector for all states.
 
     static const std::vector<wall_t> walls;          ///< Defines the walls.
     static const std::vector<maze_reward_t> rewards; ///< Defines the rewards.
@@ -206,7 +203,7 @@ private:
     void frame_maze();
 
     /** \brief Add a state in the graphics. */
-    void render_state(state_t s);
+    void render_state(observation_t s);
 
     /** \brief Add a wall in the graphics. */
     void render_wall(wall_t);
@@ -216,9 +213,6 @@ private:
 
     /** \brief Add a reward in the graphics. */
     void render_reward(maze_reward_t);
-
-    /*! \brief Rescale the scene to fit into view. */
-    void rescale_scene(QGraphicsView * view);
 
     /** \brief Simple helper function. */
     static int clamp(const int& lower, const int& upper, const int& value) {
@@ -241,12 +235,12 @@ Maze::probability_t Maze::validate_model(
     *mean_maze_likelihood = 0;
     for(size_t transition_counter=0; transition_counter<samples; ++transition_counter) {
         action_t action = action_t::random_action();
-        state_t state;
+        observation_t observation;
         reward_t reward;
         instance_t * last_instance = current_instance;
-        perform_transition(action,state,reward);
-        probability_t p_maze = get_prediction(last_instance,action,state,reward);
-        probability_t p_model = model.get_prediction(last_instance,action,state,reward);
+        perform_transition(action,observation,reward);
+        probability_t p_maze = get_prediction(last_instance,action,observation,reward);
+        probability_t p_model = model.get_prediction(last_instance,action,observation,reward);
         kl_divergence += log(p_maze/p_model);
         *mean_model_likelihood += p_model;
         *mean_maze_likelihood += p_maze;

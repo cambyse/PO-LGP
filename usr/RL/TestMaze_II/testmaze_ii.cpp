@@ -98,7 +98,7 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     ui.graphicsView->installEventFilter(moveByKeys);
 
     // set maze initial state
-    state_t initial_state = Maze::MazeState(Config::maze_x_size/2,Config::maze_y_size/2).state_idx();
+    observation_t initial_state = Maze::MazeState(Config::maze_x_size/2,Config::maze_y_size/2).state_idx();
     maze.set_current_state(initial_state);
     update_current_instance(action_t::STAY,initial_state,0);
 }
@@ -114,37 +114,37 @@ void TestMaze_II::collect_episode(const int& length) {
     start_new_episode = true;
     for(int idx=0; idx<length; ++idx) {
         action_t action = (action_t)(action_t::random_action());
-        state_t state_to;
+        observation_t observation_to;
         reward_t reward;
-        maze.perform_transition(action,state_to,reward);
-        update_current_instance(action,state_to,reward);
-        add_action_state_reward_tripel(action,state_to,reward);
+        maze.perform_transition(action,observation_to,reward);
+        update_current_instance(action,observation_to,reward);
+        add_action_observation_reward_tripel(action,observation_to,reward);
     }
     maze.render_update();
 }
 
-void TestMaze_II::update_current_instance(action_t action, state_t state, reward_t reward, bool invalidate_search_tree) {
+void TestMaze_II::update_current_instance(action_t action, observation_t observation, reward_t reward, bool invalidate_search_tree) {
     if(current_instance==nullptr) {
-        current_instance = instance_t::create(action,state,reward);
+        current_instance = instance_t::create(action,observation,reward);
     } else {
-        current_instance = current_instance->append_instance(action,state,reward);
+        current_instance = current_instance->append_instance(action,observation,reward);
     }
     if(plot) {
-        plot_file << action << " " << state << " " << reward << endl;
+        plot_file << action << " " << observation << " " << reward << endl;
     }
     search_tree_invalid = invalidate_search_tree;
 }
 
-void TestMaze_II::add_action_state_reward_tripel(
+void TestMaze_II::add_action_observation_reward_tripel(
     const action_t& action,
-    const state_t& state,
+    const observation_t& observation,
     const reward_t& reward
     ) {
-           crf.add_action_state_reward_tripel(action,state,reward,start_new_episode);
-         utree.add_action_state_reward_tripel(action,state,reward,start_new_episode);
-          linQ.add_action_state_reward_tripel(action,state,reward,start_new_episode);
-    delay_dist.add_action_state_reward_tripel(action,state,reward,start_new_episode);
-    DEBUG_OUT(1,"Add (" << action << ", " << state << ", " << reward << ")" <<
+           crf.add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
+         utree.add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
+          linQ.add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
+    delay_dist.add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
+    DEBUG_OUT(1,"Add (" << action << ", " << observation << ", " << reward << ")" <<
               (start_new_episode?" new episode":""));
     start_new_episode = false;
 }
@@ -170,17 +170,17 @@ void TestMaze_II::save_to_png(QString file_name) const {
 }
 
 void TestMaze_II::perform_transition(const action_t& action) {
-    state_t s;
+    observation_t s;
     reward_t r;
     perform_transition(action, s, r);
 }
 
-void TestMaze_II::perform_transition(const action_t& action, state_t& state_to, reward_t& reward) {
-    maze.perform_transition(action,state_to,reward);
-    update_current_instance(action,state_to,reward);
+void TestMaze_II::perform_transition(const action_t& action, observation_t& observation_to, reward_t& reward) {
+    maze.perform_transition(action,observation_to,reward);
+    update_current_instance(action,observation_to,reward);
     maze.render_update();
     if(record) {
-        add_action_state_reward_tripel(action,state_to,reward);
+        add_action_observation_reward_tripel(action,observation_to,reward);
     }
     if(save_png_on_transition) {
         QString file_name = QString("Maze_%1.png").arg(QString::number(png_counter++),(int)4,QChar('0'));
@@ -268,9 +268,9 @@ void TestMaze_II::choose_action() {
         DEBUG_OUT(0,"Error: undefined planner type --> choosing STAY");
         break;
     }
-    state_t state_to;
+    observation_t observation_to;
     reward_t reward;
-    perform_transition(action,state_to,reward);
+    perform_transition(action,observation_to,reward);
 
     // debugging
     switch(planner_type) {
@@ -283,10 +283,10 @@ void TestMaze_II::choose_action() {
         }
         // sanity check
         if(DEBUG_LEVEL>=1) {
-            probability_t prob = look_ahead_search.get_predicted_transition_probability<Maze>(action, state_to, reward, maze);
+            probability_t prob = look_ahead_search.get_predicted_transition_probability<Maze>(action, observation_to, reward, maze);
             if(prob==0) {
-                probability_t prob_maze = maze.get_prediction(current_instance->const_it()-1, action, state_to, reward);
-                DEBUG_OUT(0,"Warning: Transition with predicted probability of zero for (" << action << "," << state_to << "," << reward << ") (Maze predicts " << prob_maze << ")" );
+                probability_t prob_maze = maze.get_prediction(current_instance->const_it()-1, action, observation_to, reward);
+                DEBUG_OUT(0,"Warning: Transition with predicted probability of zero for (" << action << "," << observation_to << "," << reward << ") (Maze predicts " << prob_maze << ")" );
             }
         }
         break;
@@ -376,8 +376,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString option_3_s(                      "                               p/planner .<string> . . . . . . . . . . . .-> set planner to use");
     QString option_3a_s(                     "                                          o/optimal. . . . . . . . . . . .-> use optimal predictions (give by maze)");
     QString option_3b_s(                     "                                          s/sparse . . . . . . . . . . . .-> use sparse predictions (given by CRF)");
-    QString option_3c_s(                     "                                          u/utree. . . . . . . . . . . . .-> use UTree predictions");
-    QString option_3d_s(                     "                                          uv/utree-value . . . . . . . . .-> use UTree state-action values");
+    QString option_3c_s(                     "                                          u/utree. . . . . . . . . . . . .-> use UTree as predictive model");
+    QString option_3d_s(                     "                                          uv/utree-value . . . . . . . . .-> use UTree as value function");
     QString option_3e_s(                     "                                          lq/linear-q. . . . . . . . . . .-> use linear Q-function approximation");
     QString option_4_s(                      "                               target. . . . . . . . . . . . . . . . . . .-> activate a target state");
     QString option_5_s(                      "                               prune-tree. . . . . . . . . . . . . . . . .-> prune search tree");
@@ -415,7 +415,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString print_leaves_s(                  "    print-leaves . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> print leaves of the current UTree");
     QString clear_utree_s(                   "    clear-utree. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> clear UTree");
     QString utree_value_iteration_s(         "    v-iteration / vi . . . . . [<int>] . . . . . . . . . . . . . . . . . .-> run one [<int>] iteration(s) of Value-Iteration");
-    QString utree_expansion_type_s(          "    ex-type / ext. . . . . . . [u(tility)|s(tate)r(eward)] . . . . . . . .-> get/set expansion type for UTree");
+    QString utree_expansion_type_s(          "    ex-type / ext. . . . . . . [u(tility)|o(bservation)r(eward)] . . . . .-> get/set expansion type for UTree");
     QString examine_utree_features_s(        "    utree-f. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> print UTree features");
     QString learning_linQ_s(                 "    === Linear-Q ===");
     QString optimize_linQ_ridge_s(           "    lq-optimize-ridge / lqor . [<double>]. . . . . . . . . . . . . . . . .-> optimize Linear-Q (TD Error) [ with L2-regularization coefficient <double> ]");
@@ -697,7 +697,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             if(str_args_n==2 && int_args_ok[1]) {
                 // initialize state counts to zero
                 vector<int> state_counts;
-                for(stateIt_t state=stateIt_t::first(); state!=util::INVALID; ++state) {
+                for(observationIt_t observation=observationIt_t::first(); observation!=util::INVALID; ++observation) {
                     state_counts.push_back(0);
                 }
                 // get state counts
@@ -705,21 +705,22 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 int max_count = 1;
                 for(int idx=0; idx<n; ++idx) {
                     action_t action = (action_t)(action_t::random_action());
-                    state_t state_to;
+                    observation_t observation_to;
                     reward_t reward;
-                    maze.perform_transition(action,state_to,reward);
-                    ++state_counts[state_to];
-                    max_count = max(state_counts[state_to],max_count);
+                    maze.perform_transition(action,observation_to,reward);
+                    ++state_counts[observation_to];
+                    max_count = max(state_counts[observation_to],max_count);
                 }
                 // transform into colors
                 Maze::color_vector_t cols;
-                for(stateIt_t state=stateIt_t::first(); state!=util::INVALID; ++state) {
-                    double p = state_counts[state];
-                    DEBUG_OUT(0,"State " << state << ": p = " << p/max(n,1) );
+                for(observationIt_t observation=observationIt_t::first(); observation!=util::INVALID; ++observation) {
+                    double p = state_counts[observation];
+                    DEBUG_OUT(0,"State " << observation << ": p = " << p/max(n,1) );
                     p /= max_count;
                     cols.push_back( std::make_tuple(1,1-p,1-p) );
                 }
-                maze.render_update(&cols);
+                maze.set_state_colors(cols);
+                maze.render_update();
             } else {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( random_distribution_s );
@@ -764,8 +765,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 case UTree::UTILITY_EXPANSION:
                     TO_CONSOLE("    expansion type: UTILITY_EXPANSION");
                     break;
-                case UTree::STATE_REWARD_EXPANSION:
-                    TO_CONSOLE("    expansion type: STATE_REWARD_EXPANSION");
+                case UTree::OBSERVATION_REWARD_EXPANSION:
+                    TO_CONSOLE("    expansion type: OBSERVATION_REWARD_EXPANSION");
                     break;
                 default:
                     DEBUG_DEAD_LINE;
@@ -773,9 +774,9 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             } else if(str_args[1]=="utility" || str_args[1]=="u") {
                 utree.set_expansion_type(UTree::UTILITY_EXPANSION);
                 TO_CONSOLE("    expansion type: UTILITY_EXPANSION");
-            } else if(str_args[1]=="statereward" ||str_args[1]=="sr") {
-                utree.set_expansion_type(UTree::STATE_REWARD_EXPANSION);
-                TO_CONSOLE("    expansion type: STATE_REWARD_EXPANSION");
+            } else if(str_args[1]=="observationreward" ||str_args[1]=="or") {
+                utree.set_expansion_type(UTree::OBSERVATION_REWARD_EXPANSION);
+                TO_CONSOLE("    expansion type: OBSERVATION_REWARD_EXPANSION");
             } else {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( utree_expansion_type_s );
@@ -910,7 +911,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 if(plot) {
                     // open plot file
                     plot_file.open("plot_file.txt");
-                    plot_file << "# action state reward" << endl;
+                    plot_file << "# action observation reward" << endl;
                     TO_CONSOLE( "    plot on" );
                 } else {
                     // close plot file
@@ -951,16 +952,17 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                         TO_CONSOLE( "    target already active" );
                     } else {
                         target_activated = true;
-                        target_state = current_instance->state;
+                        target_state = current_instance->observation;
                         Maze::color_vector_t cols;
-                        for( auto state : stateIt_t::all ) {
-                            if(state==target_state) {
+                        for( auto observation : observationIt_t::all ) {
+                            if(observation==target_state) {
                                 cols.push_back( Maze::color_t(0,1,0) );
                             } else {
                                 cols.push_back( Maze::color_t(1,1,1) );
                             }
                         }
-                        maze.render_update(&cols);
+                        maze.set_state_colors(cols);
+                        maze.render_update();
                         TO_CONSOLE( "    target active" );
                     }
                 } else {
@@ -1017,28 +1019,29 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             //TO_CONSOLE( "    currently no test function implemented" );
         } else if(str_args[0]=="col-states") { // color states
             Maze::color_vector_t cols;
-            for(stateIt_t state=stateIt_t::first(); state!=util::INVALID; ++state) {
+            for(observationIt_t observation=observationIt_t::first(); observation!=util::INVALID; ++observation) {
                 cols.push_back( std::make_tuple(drand48(),drand48(),drand48()) );
             }
-            maze.render_update(&cols);
+            maze.set_state_colors(cols);
+            maze.render_update();
         } else if(str_args[0]=="fixed-dt-dist" || str_args[0]=="fdd") { // show delay probability
             if(str_args_n!=2 || !int_args_ok[1]) {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( fixed_dt_distribution_s );
             } else {
                 // get probabilites for all states
-                state_t s1 = current_instance->state;
+                observation_t s1 = current_instance->observation;
                 idx_t delay = int_args[1];
                 vector<probability_t> probs = delay_dist.get_fixed_delay_probability_distribution(s1,delay);
 
                 // get maximum probability for rescaling and target state idx
                 double max_prob = -DBL_MAX;
                 idx_t target_idx = 0, state_idx = 0;
-                for(stateIt_t state=stateIt_t::first(); state!=util::INVALID; ++state, ++state_idx) {
+                for(observationIt_t observation=observationIt_t::first(); observation!=util::INVALID; ++observation, ++state_idx) {
                     if(probs[state_idx]>max_prob) {
                         max_prob = probs[state_idx];
                     }
-                    if(state==target_state) {
+                    if(observation==target_state) {
                         target_idx=state_idx;
                     }
                 }
@@ -1057,7 +1060,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 }
 
                 // render
-                maze.render_update(&cols);
+                maze.set_state_colors(cols);
+                maze.render_update();
             }
         } else if(str_args[0]=="pair-delay-dist" || str_args[0]=="pdd") { // show delay distribution
             if(str_args_n>1 && !int_args_ok[1]) {
@@ -1077,13 +1081,13 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     delay_dist.get_pairwise_delay_distribution(dist_map,time_window);
 
                     // apply to current states
-                    state_t s1 = current_instance->state;
-                    state_t s2 = target_state;
+                    observation_t s1 = current_instance->observation;
+                    observation_t s2 = target_state;
                     vector<double> forward;
                     vector<double> backward;
                     for( auto el : dist_map ) {
-                        state_t s1_map = get<0>(el.first);
-                        state_t s2_map = get<1>(el.first);
+                        observation_t s1_map = get<0>(el.first);
+                        observation_t s2_map = get<1>(el.first);
                         int dt = get<2>(el.first);
                         if(dt==0) {
                             continue;
@@ -1136,21 +1140,21 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 } else {
                     // get probabilites for all states
                     DEBUG_OUT(2,"Calculating mediator distribution...");
-                    state_t s1 = current_instance->state;
-                    state_t s3 = target_state;
+                    observation_t s1 = current_instance->observation;
+                    observation_t s3 = target_state;
                     vector<double> probs;
                     double max_prob = -DBL_MAX;
                     idx_t target_idx = 0, state_idx = 0;
-                    for(stateIt_t state=stateIt_t::first(); state!=util::INVALID; ++state, ++state_idx) {
-                        probability_t prob = delay_dist.get_mediator_probability(s1,state,s3,int_args[1]);
+                    for(observationIt_t observation=observationIt_t::first(); observation!=util::INVALID; ++observation, ++state_idx) {
+                        probability_t prob = delay_dist.get_mediator_probability(s1,observation,s3,int_args[1]);
                         probs.push_back(prob);
                         if(prob>max_prob) {
                             max_prob = prob;
                         }
-                        if(state==target_state) {
+                        if(observation==target_state) {
                             target_idx=state_idx;
                         }
-                        DEBUG_OUT(3,"    " << s1 << " --> " << state << " --> " << s3 << " : " << prob);
+                        DEBUG_OUT(3,"    " << s1 << " --> " << observation << " --> " << s3 << " : " << prob);
                     }
                     DEBUG_OUT(2,"DONE");
                     // rescale and define colors
@@ -1164,7 +1168,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     }
                     cols[target_idx]=std::make_tuple(0,1,0);
                     // render
-                    maze.render_update(&cols);
+                    maze.set_state_colors(cols);
+                    maze.render_update();
                 }
             } else {
                 TO_CONSOLE( invalid_args_s );

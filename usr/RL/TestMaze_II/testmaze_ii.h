@@ -112,24 +112,24 @@ private:
     //-------//
     DelayDistribution delay_dist;
     bool target_activated;
-    state_t target_state;
+    observation_t target_state;
 
     //==================//
     // Member Functions //
     //==================//
 
     void collect_episode(const int& length);
-    void update_current_instance(action_t, state_t, reward_t, bool invalidate_search_tree = true);
-    void add_action_state_reward_tripel(
+    void update_current_instance(action_t, observation_t, reward_t, bool invalidate_search_tree = true);
+    void add_action_observation_reward_tripel(
             const action_t& action,
-            const state_t& state,
+            const observation_t& observation,
             const reward_t& reward
     );
     void clear_data();
     void fully_expand_utree();
     void save_to_png(QString file_name) const;
     void perform_transition(const action_t& action);
-    void perform_transition(const action_t& action, state_t& state_to, reward_t& reward);
+    void perform_transition(const action_t& action, observation_t& observation_to, reward_t& reward);
 
 private slots:
     void render();

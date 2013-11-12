@@ -139,9 +139,9 @@ public:
                        lbfgsfloatval_t * mean_likelihood = nullptr
         );
 
-    virtual void add_action_state_reward_tripel(
+    virtual void add_action_observation_reward_tripel(
         const action_t& action,
-        const state_t& state,
+        const observation_t& observation,
         const reward_t& reward,
         const bool& new_episode
         );
@@ -167,13 +167,13 @@ public:
 
     unsigned long int get_training_data_length();
 
-    probability_t get_prediction(const instance_t *, const action_t&, const state_t&, const reward_t&) const;
-    probability_t (KMarkovCRF::*get_prediction_ptr())(const instance_t *, const action_t&, const state_t&, const reward_t&) const {
+    probability_t get_prediction(const instance_t *, const action_t&, const observation_t&, const reward_t&) const;
+    probability_t (KMarkovCRF::*get_prediction_ptr())(const instance_t *, const action_t&, const observation_t&, const reward_t&) const {
         return &KMarkovCRF::get_prediction;
     }
 
-    probability_t get_kmdp_prediction(const instance_t *, const action_t&, const state_t&, const reward_t&) const;
-    probability_t (KMarkovCRF::*get_kmdp_prediction_ptr())(const instance_t *, const action_t&, const state_t&, const reward_t&) const {
+    probability_t get_kmdp_prediction(const instance_t *, const action_t&, const observation_t&, const reward_t&) const;
+    probability_t (KMarkovCRF::*get_kmdp_prediction_ptr())(const instance_t *, const action_t&, const observation_t&, const reward_t&) const {
         return &KMarkovCRF::get_kmdp_prediction;
     }
 
@@ -200,7 +200,7 @@ public:
 
 private:
 
-    typedef std::tuple<const instance_t*, action_t, state_t, reward_t> prediction_tuple_t;
+    typedef std::tuple<const instance_t*, action_t, observation_t, reward_t> prediction_tuple_t;
     typedef std::map<prediction_tuple_t,probability_t> prediction_map_t;
 
     typedef std::tuple<const instance_t*, action_t> input_tuple_t;
@@ -230,7 +230,7 @@ private:
     unsigned int              ignored_data;                                     ///< Number of ignored data in last iteration.
     std::vector<f_ret_t>      compound_feature_values;                          ///< The precomputed feature values (COMPOUND_LOOK_UP).
     std::vector<std::vector<Feature::look_up_map_t> >  base_feature_values;     ///< The precomputed feature values (BASE_LOOK_UP).
-    std::vector<idx_t>        base_feature_indices;                             ///< State-reward index for given instance.
+    std::vector<idx_t>        base_feature_indices;                             ///< Observation-reward index for given instance.
     std::vector<double>       data_probabilities;                               ///< Predicted probabilities for individual data points.
 
     //------------------//
@@ -262,9 +262,9 @@ private:
         const idx_t& instance_idx,
         const idx_t& feature_idx,
         const idx_t& feature_n,
-        const state_t& state,
+        const observation_t& observation,
         const reward_t& reward,
-        const bool& use_state_and_reward
+        const bool& use_observation_and_reward
         );
     idx_t precomputed_feature_idx(
         const idx_t& instance_idx,
@@ -275,7 +275,7 @@ private:
         const idx_t& instance_idx,
         const idx_t& feature_idx,
         const idx_t& feature_n,
-        const state_t& state,
+        const observation_t& observation,
         const reward_t& reward
         );
 
