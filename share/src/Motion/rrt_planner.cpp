@@ -7,8 +7,7 @@
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
 
-#include <retired/devTools/logging.h>
-#include <retired/devTools/logging.cpp>
+#include <devTools/logging.h>
 SET_LOG(rrt_planner, DEBUG)
 
 namespace ors {
