@@ -371,15 +371,11 @@ Maze::~Maze() {
 
 void Maze::render_initialize(QGraphicsView * v) {
 
-    // Set view
-    view = v;
+    // intitialize view
+    VisualWorld::render_initialize(v);
 
     // Get scene or initialize.
     QGraphicsScene * scene = view->scene();
-    if(scene==NULL) {
-        scene = new QGraphicsScene();
-        view->setScene(scene);
-    }
 
     // Put Border Around Maze
     frame_maze();

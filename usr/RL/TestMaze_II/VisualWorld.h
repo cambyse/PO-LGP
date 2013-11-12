@@ -17,11 +17,14 @@ public:
     VisualWorld() = default;
     virtual ~VisualWorld() = default;
 
-    /** \brief Initializes the graphical representation. */
+    /** \brief Initializes get graphics view (or initialize).
+     *
+     * After calling this method VisualWorld::view points to the the view used
+     * by the given QGraphcisView. */
     virtual void render_initialize(QGraphicsView * v);
 
     /** \brief Updates the graphical representation. */
-    virtual void render_update();
+    virtual void render_update() = 0;
 
 protected:
 
