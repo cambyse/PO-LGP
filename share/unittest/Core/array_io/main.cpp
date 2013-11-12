@@ -10,7 +10,8 @@ TEST(ArrayIO, vector_read_write) {
   of.close();
 
   arr b;
-  b.read("vec.tmp");
+  ifstream ifs("vec.tmp");
+  ifs >> b;
 
   for (int i = 0; i < 5; ++i) {
       EXPECT_NEAR(a(i, 0), b(i, 0), 0.001);
@@ -24,7 +25,8 @@ TEST(ArrayIO, matrix_read_write) {
   of.close();
 
   arr b;
-  b.read("mat.tmp");
+  ifstream ifs("mat.tmp");
+  ifs >> b;
 
   a.reshape(25);
   b.reshape(25);

@@ -1,4 +1,0 @@
-MODULE_NAME=motion
-LIBS=-lMotion -lCore -lOrs
-
-include ../../Makefile.swig

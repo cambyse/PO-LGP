@@ -321,31 +321,6 @@ double forceClosure(const arr& C, const arr& Cn, const ors::Vector& center,
 
 //===========================================================================
 
-// double forceClosureFromProxies(ors::Graph& ORS, uint bodyIndex, double distanceThreshold, double mu, double torqueWeights) {
-//   uint k;
-//   ors::Vector c, cn;
-//   arr C, Cn;
-//   ors::Proxy *p;
-//   for_list(k,p,ORS.proxies){
-//     int body_a = ORS.shapes(p->a)->body?ORS.shapes(p->a)->body->index:-1;
-//     int body_b = ORS.shapes(p->b)->body?ORS.shapes(p->b)->body->index:-1;
-//     if(p->d<distanceThreshold && (body_a==(int)bodyIndex || body_b==(int)bodyIndex)) {
-//       if(body_a==(int)bodyIndex) {
-//         c = p->posA;
-//         cn=-p->normal;
-//       } else {
-//         c = p->posB;
-//         cn= p->normal;
-//       }
-//       C.append(ARRAY(c));
-//       Cn.append(ARRAY(cn));
-//     }
-//   }
-//   C .reshape(C.N/3, 3);
-//   Cn.reshape(C.N/3, 3);
-//   double fc=forceClosure(C, Cn, ORS.bodies(bodyIndex)->X.pos, mu, torqueWeights, NULL);
-//   return fc;
-// }
 
 //===========================================================================
 

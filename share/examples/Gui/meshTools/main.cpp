@@ -24,7 +24,7 @@ void drawInit(void*){
 void TEST(MeshTools) {
   if(MT::argc<2){
     cout <<USAGE <<endl;
-    return 1;
+    return;
   }
 
   MT::initCmdLine(MT::argc,MT::argv);

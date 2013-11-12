@@ -1190,7 +1190,7 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
     obj_below_id = getTableID();
   }
   
-  DefaultTaskVariable o("obj",*C,posTVT,obj_dropped1,0,0,0,0);
+  DefaultTaskVariable o("obj",*C,posTVT,obj_dropped1,0,0,0,arr(0));
   DefaultTaskVariable z;
   //
   ors::Quaternion rot;
@@ -1204,7 +1204,7 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   if((rot*(-Vector_z)).z>maxz){ upvec=-Vector_z; maxz=(rot*upvec).z; }
   ors::Transformation tf;
   tf.rot.setDiff(Vector_z, upvec);
-  z.set("obj-z-align",*C,zalignTVT,obj_dropped1_index,tf,-1,Transformation_Id,0);
+  z.set("obj-z-align",*C,zalignTVT,obj_dropped1_index,tf,-1,Transformation_Id,arr(0));
   //
   DefaultTaskVariable r("full state",*C,qLinearTVT,0,0,0,0,I);
   DefaultTaskVariable c("collision",*C,collTVT,0,0,0,0,ARR(.02));

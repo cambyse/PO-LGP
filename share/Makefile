@@ -9,6 +9,7 @@ NAME   = $(shell basename $(PWD))
 srcs =  $(shell find src -mindepth 1 -maxdepth 1 -type d -not -name 'extern' )
 srcs += $(shell find src/extern -mindepth 1 -maxdepth 1 -type d)
 exas = $(shell find examples -mindepth 2 -maxdepth 2 -type d -not -name '*py')
+pysrcs = src/Core src/Ors src/Gui src/Motion src/Optim
 
 ################################################################################
 
@@ -16,10 +17,7 @@ all: $(srcs:%=makePath/%) $(exas:%=makePath/%)
 
 src: $(srcs:%=makePath/%)
 
-python: src
-	make --directory=src/Core -f Makefile_corepy
-	make --directory=src/Ors -f Makefile_orspy
-	make --directory=src/Motion -f Makefile_motionpy
+python: $(srcs:%=makePath/%) $(pysrcs:%=makePythonPath/%)
 
 examples: $(exas:%=makePath/%)
 
