@@ -18,6 +18,7 @@ void testVideo(){
   gl.watch();
 
   VideoEncoder_libav_simple video;
+  //VideoEncoder_libav_x264 video;
 //  VideoEncoder_OpenCV video;
   for(angle=0.;angle<180.;angle+=180./150.){
     gl.update(NULL, true);
