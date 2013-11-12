@@ -496,6 +496,30 @@ endif
 
 ################################################################################
 #
+# VARS for SWIG wrappers
+#
+################################################################################
+
+
+ifndef MLR_PATH
+	MLR_PATH=$(HOME)/git/mlr
+endif
+
+MODULE_NAME=$(shell echo $(notdir $(CURDIR)) | tr A-Z a-z)
+
+SWC_FLAGS=-std=c++0x
+SWC_INCLUDES=-I$(MLR_PATH)/share/src -I/usr/include/python2.7 
+SWC_LIB_PATH=-L$(MLR_PATH)/share/lib -Xlinker -rpath $(MLR_PATH)/share/lib
+SWC_CXXFLAGS=-c $(SWC_FLAGS) -fPIC $(SWC_INCLUDES) -DSWIG_TYPE_TABLE=mlr
+SWC_LDFLAGS=$(SWC_FLAGS) -shared $(SWC_LIB_PATH) $(SWC_INCLUDES) $(DEPEND:%=-l%) -l$(notdir $(CURDIR))
+
+SWIG=swig2.0
+SWIG_INCLUDE=-I$(MLR_PATH)/share/src -I$(MLR_PATH)/share/include/numpy
+SWIG_FLAGS=-c++ -python $(SWIG_INCLUDE)
+
+
+################################################################################
+#
 # also building and linking to a local component
 #
 ################################################################################
@@ -534,6 +558,7 @@ default: $(OUTPUT)
 clean:
 	@rm -f $(OUTPUT) $(OBJS) $(PREOBJS) callgrind.out.* $(CLEAN)
 	@find . -type d -name 'Make.lock' -delete
+	@rm -f $(MODULE_NAME)_wrap.* $(MODULE_NAME)py.so
 
 depend: generate_Makefile.dep
 
@@ -581,6 +606,30 @@ all: default
 
 ################################################################################
 #
+# SWIG rules
+#
+################################################################################
+
+# keep the actual wrapper
+.SECONDARY: $(MODULE_NAME)_wrap.cxx  
+
+%_wrap.cxx: %.i
+	$(SWIG) $(SWIG_FLAGS) $<
+
+%_wrap.o: %_wrap.cxx
+	$(CXX) $(SWC_CXXFLAGS) $<
+
+%py.so: %_wrap.o
+	$(CXX) $(SWC_LDFLAGS) $< -o $(MODULE_NAME)py.so
+
+%py.py: 
+
+pywrapper: $(OUTPUT) $(MODULE_NAME)py.so $(MODULE_NAME)py.py
+	install -D $(MODULE_NAME)py.py ~/.local/lib/python2.7/site-packages/$(MODULE_NAME)py.py
+	install -D $(MODULE_NAME)py.so ~/.local/lib/python2.7/site-packages/_$(MODULE_NAME)py.so
+
+################################################################################
+#
 # rules
 #
 ################################################################################
@@ -625,9 +674,6 @@ endif
 
 %.obj: %.cxx
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
-
-%_wrap.cxx: %.i
-	swig $(SWIGFLAGS) -c++ $<
 
 %_ui.h: %.ui
 	$(UIC) -o $*_ui.h $<
@@ -690,6 +736,9 @@ makeSubpaths/%::
 
 cleanSubpaths/%::
 	-@find -L $* -maxdepth 1 -follow -type d -not -name '$*' -not -name 'SHARE' -exec $(MAKE) -C {} clean \;
+
+makePythonPath/%: %
+	make --directory=$< pywrapper
 
 #doc::
 #	$(MAKE) -C doc doxy_array

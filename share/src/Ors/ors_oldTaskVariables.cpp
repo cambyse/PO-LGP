@@ -30,6 +30,7 @@
 
 
 #include "ors.h"
+#include "ors_oldTaskVariables.h"
 
 TaskVariable::TaskVariable() {
   active=false;

@@ -1,4 +1,0 @@
-MODULE_NAME=optim
-LIBS=-lOptim -lCore -lOrs
-
-include ../../Makefile.swig
