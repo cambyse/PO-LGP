@@ -19,6 +19,7 @@ author: Johannes kulick
 //===========================================================================
 %module motionpy
 %{
+  #include <Core/geo.h>
   #include "optimization.h"
   #include "constrained.h"
 %}
