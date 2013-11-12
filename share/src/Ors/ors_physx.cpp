@@ -533,7 +533,7 @@ PhysXInterface::~PhysXInterface() { NICO }
 void PhysXInterface::create() { NICO }
 void PhysXInterface::step() { NICO }
 void PhysXInterface::glDraw() { NICO }
-void PhysXInterface::pushState() { NICO }
+//void PhysXInterface::pushState() { NICO }
 void PhysXInterface::pullState() { NICO }
 void PhysXInterface::ShutdownPhysX() { NICO }
 void glPhysXInterface(void *classP) { NICO }
