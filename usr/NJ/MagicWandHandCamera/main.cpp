@@ -171,11 +171,11 @@ void MyDemo::updateTaskVariables(ControllerModule *ctrl){
 
 
 
-int main(int argn,char** argv){
+int main(int argc,char** argv){
   //sudo chmod a+rw /dev/raw1394
   //sudo chmod a+rw /dev/video1394/0
   MT::IOraw = true;
-  MT::initCmdLine(argn,argv);
+  MT::initCmdLine(argc,argv);
   signal(SIGINT,RobotProcessGroup::signalStopCallback);
   RobotProcessGroup robotProcesses;
   MyDemo demo;

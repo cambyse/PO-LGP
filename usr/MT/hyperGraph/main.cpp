@@ -40,13 +40,13 @@ void testBasic(){
   cout <<"--------------------------" <<endl;
 }
 
-int main(int argn,char** argv){
-  MT::initCmdLine(argn,argv);
+int main(int argc,char** argv){
+  MT::initCmdLine(argc,argv);
   
   int mode = MT::getParameter<int>("mode",1);
   switch(mode){
     case 0:  testBasic();  break;
-    case 1:  if(argn>1) testRead(argv[1]); else testRead();  break;
+    case 1:  if(argc>1) testRead(argv[1]); else testRead();  break;
   }
   
   return 0;

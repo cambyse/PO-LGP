@@ -261,8 +261,8 @@ arr GetEndPath(const arr & joints, ors::Graph * ors){
 	return x;
 }
 
-int main(int argn,char** argv){
-	MT::initCmdLine(argn,argv);
+int main(int argc,char** argv){
+	MT::initCmdLine(argc,argv);
 	int nMode = MT::getParameter<int>("Nmode");//0 is heuristic + noise, 1 is random sampling, 2 is gradient move, 7 is gradient check, 3 is planniong,5 is batch validate
 	InitLoadedData(nMode);
 	arr c = MT::getParameter<arr>("center");lastCenter = c;

@@ -9,7 +9,7 @@ struct Integer:public Variable {
 };
 
 
-int main(int argn, char **argv) {
+int main(int argc, char **argv) {
 
   //  biros().dump();
 

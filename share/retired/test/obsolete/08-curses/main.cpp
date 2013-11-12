@@ -28,7 +28,7 @@ struct Curses{
 };
 
 
-int main(int argn,char** argv){
+int main(int argc,char** argv){
   Curses curses;
   curses.open();
   mvwprintw(curses.win,0,0,"*** MONITOR ***");

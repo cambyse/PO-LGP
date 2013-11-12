@@ -52,7 +52,7 @@ void inferCameraProjectionMatrix(){
 	 <<"\nR=" <<R
 	 <<"\nr=" <<r
 	 <<"\nt=" <<t
-	 <<"\nposition error = " <<norm(t-S.getCameraTranslation()) <<endl;
+	 <<"\nposition error = " <<length(t-S.getCameraTranslation()) <<endl;
     */
     S.watch();
   }

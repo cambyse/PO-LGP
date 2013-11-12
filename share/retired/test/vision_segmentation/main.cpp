@@ -164,7 +164,7 @@ void shutdown(int){
    exit(0);
 }
 
-int main(int argn,char** argv){
+int main(int argc,char** argv){
    signal(SIGINT,shutdown);
    
   //test();

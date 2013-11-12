@@ -404,14 +404,15 @@ void animateConfiguration(ors::Graph& C, OpenGL& gl) {
   uint t, i;
   C.calcBodyFramesFromJoints();
   C.getJointState(x0);
+  gl.pressedkey=0;
   for(i=x0.N; i--;) {
-    //for(i=20;i<x0.N;i++){
     x=x0;
     for(t=0; t<20; t++) {
+      if(gl.pressedkey==13 || gl.pressedkey==27) return;
       x(i)=x0(i) + .5*sin(MT_2PI*t/20);
       C.setJointState(x);
       C.calcBodyFramesFromJoints();
-      if(!gl.update()) { return; }
+      gl.update();
       MT::wait(0.01);
     }
   }
@@ -464,92 +465,91 @@ struct EditConfigurationHoverCall:OpenGL::GLHoverCall {
 };
 
 struct EditConfigurationKeyCall:OpenGL::GLKeyCall {
-  ors::Graph *ors;
-  EditConfigurationKeyCall(ors::Graph& _ors) { ors=&_ors; }
+  ors::Graph &ors;
+  bool &exit;
+  EditConfigurationKeyCall(ors::Graph& _ors, bool& _exit): ors(_ors), exit(_exit){}
   bool keyCallback(OpenGL& gl) {
-    if(gl.pressedkey!=' ') return true;
-    if(movingBody) { movingBody=NULL; return true; }
-    ors::Joint *j=NULL;
-    ors::Shape *s=NULL;
-    gl.Select();
-    OpenGL::GLSelect *top=gl.topSelection;
-    if(!top) {
-      cout <<"No object below mouse!" <<endl;
-      return false;
+    if(gl.pressedkey==' '){ //grab a body
+      if(movingBody) { movingBody=NULL; return true; }
+      ors::Joint *j=NULL;
+      ors::Shape *s=NULL;
+      gl.Select();
+      OpenGL::GLSelect *top=gl.topSelection;
+      if(!top) { cout <<"No object below mouse!" <<endl;  return false; }
+      uint i=top->name;
+      //cout <<"HOVER call: id = 0x" <<std::hex <<gl.topSelection->name <<endl;
+      if((i&3)==1) s=ors.shapes(i>>2);
+      if((i&3)==2) j=ors.joints(i>>2);
+      if(s) {
+        cout <<"selected shape " <<s->name <<" of body " <<s->body->name <<endl;
+        selx=top->x;
+        sely=top->y;
+        selz=top->z;
+        seld=top->dmin;
+        cout <<"x=" <<selx <<" y=" <<sely <<" z=" <<selz <<" d=" <<seld <<endl;
+        selpos = s->body->X.pos;
+        movingBody=s->body;
+      }
+      if(j) {
+        cout <<"selected joint " <<j->index <<" connecting " <<j->from->name <<"--" <<j->to->name <<endl;
+      }
+      return true;
+    }else switch(gl.pressedkey) {
+      case '1':  orsDrawBodies^=1;  break;
+      case '2':  orsDrawShapes^=1;  break;
+      case '3':  orsDrawJoints^=1;  break;
+      case '4':  orsDrawProxies^=1;  break;
+      case '5':  gl.reportSelects^=1;  break;
+      case '6':  gl.reportEvents^=1;  break;
+      case '7':  ors.writePlyFile("z.ply");  break;
+      case 'j':  gl.camera.X->pos += gl.camera.X->rot*ors::Vector(0, 0, .1);  break;
+      case 'k':  gl.camera.X->pos -= gl.camera.X->rot*ors::Vector(0, 0, .1);  break;
+      case 'i':  gl.camera.X->pos += gl.camera.X->rot*ors::Vector(0, .1, 0);  break;
+      case ',':  gl.camera.X->pos -= gl.camera.X->rot*ors::Vector(0, .1, 0);  break;
+      case 'l':  gl.camera.X->pos += gl.camera.X->rot*ors::Vector(.1, .0, 0);  break;
+      case 'h':  gl.camera.X->pos -= gl.camera.X->rot*ors::Vector(.1, 0, 0);  break;
+      case 'a':  gl.camera.focus(
+          (gl.camera.X->rot*(*gl.camera.foc - gl.camera.X->pos)
+           ^ gl.camera.X->rot*ors::Vector(1, 0, 0)) * .001
+          + *gl.camera.foc);
+        break;
+      case 's':  gl.camera.X->pos +=
+          (
+            gl.camera.X->rot*(*gl.camera.foc - gl.camera.X->pos)
+            ^(gl.camera.X->rot * ors::Vector(1., 0, 0))
+          ) * .01;
+        break;
+      case 'q' :
+        cout <<"EXITING" <<endl;
+        exit=true;
+        break;
     }
-    uint i=top->name;
-    //cout <<"HOVER call: id = 0x" <<std::hex <<gl.topSelection->name <<endl;
-    if((i&3)==1) s=ors->shapes(i>>2);
-    if((i&3)==2) j=ors->joints(i>>2);
-    if(s) {
-      cout <<"selected shape " <<s->name <<" of body " <<s->body->name <<endl;
-      selx=top->x;
-      sely=top->y;
-      selz=top->z;
-      seld=top->dmin;
-      cout <<"x=" <<selx <<" y=" <<sely <<" z=" <<selz <<" d=" <<seld <<endl;
-      selpos = s->body->X.pos;
-      movingBody=s->body;
-    }
-    if(j) {
-      cout <<"selected joint " <<j->index <<" connecting " <<j->from->name <<"--" <<j->to->name <<endl;
-    }
-    return true;
+    gl.postRedrawEvent(true);
   }
 };
 
 void editConfiguration(const char* filename, ors::Graph& C, OpenGL& gl) {
-  gl.exitkeys="1234567890qhjklias, "; //TODO: move the key handling to the keyCall!
-  gl.addHoverCall(new EditConfigurationHoverCall(C));
-  gl.addKeyCall(new EditConfigurationKeyCall(C));
+//  gl.exitkeys="1234567890qhjklias, "; //TODO: move the key handling to the keyCall!
   bool exit=false;
-  for(; !exit;) {
+  gl.addHoverCall(new EditConfigurationHoverCall(C));
+  gl.addKeyCall(new EditConfigurationKeyCall(C,exit));
+  for(;!exit;) {
     cout <<"reloading `" <<filename <<"' ... " <<std::endl;
     try {
       MT::lineCount=1;
-      MT::load(C, filename);
+      C.init(filename);
     } catch(const char* msg) {
       cout <<"line " <<MT::lineCount <<": " <<msg <<" -- please check the file and press ENTER" <<endl;
       gl.watch();
       continue;
     }
+    cout <<"animating.." <<endl;
     animateConfiguration(C, gl);
+    cout <<"watching..." <<endl;
     gl.watch();
-    while(!exit && MT::contains(gl.exitkeys, gl.pressedkey)) {
-      switch(gl.pressedkey) {
-        case '1':  orsDrawBodies^=1;  break;
-        case '2':  orsDrawShapes^=1;  break;
-        case '3':  orsDrawJoints^=1;  break;
-        case '4':  orsDrawProxies^=1;  break;
-        case '5':  gl.reportSelects^=1;  break;
-        case '6':  gl.reportEvents^=1;  break;
-        case '7':  C.writePlyFile("z.ply");  break;
-        case 'j':  gl.camera.X->pos += gl.camera.X->rot*ors::Vector(0, 0, .1);  break;
-        case 'k':  gl.camera.X->pos -= gl.camera.X->rot*ors::Vector(0, 0, .1);  break;
-        case 'i':  gl.camera.X->pos += gl.camera.X->rot*ors::Vector(0, .1, 0);  break;
-        case ',':  gl.camera.X->pos -= gl.camera.X->rot*ors::Vector(0, .1, 0);  break;
-        case 'l':  gl.camera.X->pos += gl.camera.X->rot*ors::Vector(.1, .0, 0);  break;
-        case 'h':  gl.camera.X->pos -= gl.camera.X->rot*ors::Vector(.1, 0, 0);  break;
-        case 'a':  gl.camera.focus(
-            (gl.camera.X->rot*(*gl.camera.foc - gl.camera.X->pos)
-             ^ gl.camera.X->rot*ors::Vector(1, 0, 0)) * .001
-            + *gl.camera.foc);
-          break;
-        case 's':  gl.camera.X->pos +=
-            (
-              gl.camera.X->rot*(*gl.camera.foc - gl.camera.X->pos)
-              ^(gl.camera.X->rot * ors::Vector(1., 0, 0))
-            ) * .01;
-          break;
-        case 'q' :
-          cout <<"EXITING" <<endl;
-          exit=true;
-          break;
-      }
-      if(!exit) gl.watch();
-    }
   }
 }
+
 
 #if 0 //MT_ODE
 void testSim(const char* filename, ors::Graph *C, Ode *ode, OpenGL *gl) {

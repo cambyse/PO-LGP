@@ -62,7 +62,7 @@ void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=10){
     cout <<"x_start=" <<x <<" mu=" <<UCP.mu <<" lambda=" <<UCP.lambda <<endl;
     checkGradient(UCP, x, 1e-4);
     //checkHessian (UCP, x, 1e-4); //will throw errors: no Hessians for g!
-    checkAll(p, x, 1e-4);
+    checkAllGradients(p, x, 1e-4);
     //checkJacobian(p, x, 1e-4);
 
 //    optRprop(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
@@ -116,8 +116,8 @@ void testPhaseOne(ConstrainedProblem& f){
 
 //==============================================================================
 
-int main(int argn,char** argv){
-  MT::initCmdLine(argn,argv);
+int main(int argc,char** argv){
+  MT::initCmdLine(argc,argv);
 
   ChoiceConstraintFunction F;
 //  SimpleConstraintFunction F;

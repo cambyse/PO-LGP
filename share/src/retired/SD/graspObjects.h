@@ -34,7 +34,7 @@ struct PotentialField : public MeshObject
   virtual double psi(arr* grad,arr *hess,const arr& x)=0;
   void getNormGrad(arr& grad,const arr& x){
     psi(&grad,NULL,x);
-    double d=norm(grad);
+    double d=length(grad);
     if(d>1e-200) grad/=d; else MT_MSG("gradient too small!");
   }
   void buildMesh();

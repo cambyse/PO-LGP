@@ -229,7 +229,7 @@ double MinSumGaussNewton::updateNode(uint i){
     Delta -= x[i];
     VERBOSE(1, cout <<"optimizing over node " <<i <<": x=" <<x[i] <<" f(x)=" <<fx <<" Delta=" <<Delta <<endl);
     
-    double len=norm(Delta);
+    double len=length(Delta);
     if(len>maxStep) Delta*=maxStep/len;
     if(len<tolerance) break;  //stopping criterion
     
@@ -242,7 +242,7 @@ double MinSumGaussNewton::updateNode(uint i){
         m=del(i)(k);
         fy += mu(m).hatm + (~y*mu(m).M*y -2.*~mu(m).m*y)(0);
       }
-      VERBOSE(1, cout /* <<evals*/ <<" \tprobing y=" <<y <<" \tf(y)=" <<fy <<" \t|Delta|=" <<norm(Delta) <<" \talpha=" <<alpha <<std::flush);
+      VERBOSE(1, cout /* <<evals*/ <<" \tprobing y=" <<y <<" \tf(y)=" <<fy <<" \t|Delta|=" <<length(Delta) <<" \talpha=" <<alpha <<std::flush);
       CHECK(fy==fy, "cost seems to be NAN: f(y)=" <<fy);
       if(fy <= fx) break;
       //if(evals>maxEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!

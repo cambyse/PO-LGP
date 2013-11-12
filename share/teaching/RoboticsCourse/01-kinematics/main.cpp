@@ -79,7 +79,7 @@ void reach(){
     PhiJ = J/1e-2;               //and the big Jacobian
 
     //report on error in the first task
-    cout <<t <<" current eff pos = " <<y <<"  current error = " <<norm(y_target-y) <<endl;
+    cout <<t <<" current eff pos = " <<y <<"  current error = " <<length(y_target-y) <<endl;
 
     //compute joint updates
     q -= inverse(~PhiJ*PhiJ + W)*~PhiJ* Phi;
@@ -105,7 +105,7 @@ void circle(){
     y_target += .2 * ARR(cos((double)i/20), 0, sin((double)i/20)); 
     S.kinematicsPos(y,"handR");
     S.jacobianPos  (J,"handR");
-    cout <<i <<" current eff pos = " <<y <<"  current error = " <<norm(y_target-y) <<endl;;
+    cout <<i <<" current eff pos = " <<y <<"  current error = " <<length(y_target-y) <<endl;;
     q += inverse(~J*J + 1e-4*W)*~J*(y_target - y); 
     S.setJointAngles(q);
   }

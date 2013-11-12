@@ -17,7 +17,7 @@
    should be the command to invoke the process.
    Returns a file descriptor that can be used to communicate
    with the process. */
-int main(int argn, char *argv[]) {
+int main(int argc, char *argv[]) {
   int ret_fd = -1;
 
   cout <<"1" <<endl;

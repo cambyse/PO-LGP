@@ -64,13 +64,13 @@ void findPosture(arr& qT, const arr& q0, Simulator& S, uint T, const arr& pos_ta
 
     //make a step:
     step = inverse(~PhiJ*PhiJ + W)*(W*(qT-q0) + ~PhiJ* Phi);
-    if(norm(step) > max_step_length) step *= max_step_length/norm(step);
+    if(length(step) > max_step_length) step *= max_step_length/length(step);
     qT -= step;
 
     //update simulator
     S.setJointAngles(qT);
 
-    if(norm(step)<1e-2) break; //stopping criterion
+    if(length(step)<1e-2) break; //stopping criterion
   }
 }
 

@@ -55,7 +55,7 @@ struct Mesh {
   void setCylinder(double r, double l, uint fineness=3);
   void setCappedCylinder(double r, double l, uint fineness=3);
   void setGrid(uint X, uint Y);
-  void setImplicitSurface(double(*fct)(double, double, double, void*), void *p, double lo, double hi, uint res);
+  void setImplicitSurface(ScalarFunction& f, double lo=-10., double hi=+10., uint res=100);
   void setRandom(uint vertices=10);
   
   //transform and modify

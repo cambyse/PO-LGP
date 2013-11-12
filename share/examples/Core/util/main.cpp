@@ -60,8 +60,8 @@ void TEST(Timer){
   CHECK(t>0. && t<1.,"no cpu time measured");
 }
 
-int MAIN(int argn,char** argv){
-  MT::initCmdLine(argn,argv);
+int MAIN(int argc,char** argv){
+  MT::initCmdLine(argc,argv);
 
   uint double_size=sizeof(double);
   uint long_int_size=sizeof(long);

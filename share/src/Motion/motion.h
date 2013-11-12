@@ -28,22 +28,6 @@
   -- transition costs: vel^2 *tau, acc^2 * tau, u^2 * tau
   */
 
-enum DefaultTaskMapType {
-  noneTMT,     ///< undefined
-  posTMT,      ///< 3D position of reference, can have 2nd reference, no param
-  zoriTMT,     ///< 3D z-axis orientation, no 2nd reference, no param
-  zalignTMT,   ///< 1D z-axis alignment, can have 2nd reference, param (optional) determins alternative reference world vector
-  qItselfTMT,  ///< q itself as task variable, no param
-  qLinearTMT,  ///< k-dim variable linear in q, no references, param: k-times-n matrix
-  qSingleTMT,  ///< 1D entry of q, reference-integer=index, no param
-  qSquaredTMT, ///< 1D square norm of q, no references, param: n-times-n matrix
-  qLimitsTMT,  ///< 1D meassure for joint limit violation, no references, param: n-times-2 matrix with lower and upper limits for each joint
-  collTMT,     ///< 1D meassure for collision violation, no references, param: 1D number defining the distance margin
-  colConTMT,   ///< 1D meassure collision CONSTRAINT meassure, no references, param: 1D number defining the distance margin
-  comTMT,      ///< 2D vector of the horizontal center of mass, no refs, no param
-  skinTMT      ///< vector of skin pressures...
-};
-
 
 //===========================================================================
 //
@@ -89,7 +73,7 @@ struct MotionProblem {
   SwiftInterface *swift;
   
   //task cost descriptions
-  enum TaskCostInterpolationType { constant, finalOnly, final_restConst, constEarlyMid, final_restLinInterpolated };
+  enum TaskCostInterpolationType { constant, finalOnly, final_restConst, early_restConst, final_restLinInterpolated };
   MT::Array<TaskCost*> taskCosts;
   
   //transition cost descriptions
@@ -114,23 +98,8 @@ struct MotionProblem {
   void setx0(const arr&);
   void setx0v0(const arr&, const arr&);
   
-  //adding add task spaces
-  TaskCost* addDefaultTaskMap(const char* name, DefaultTaskMapType type,
-                              int iBody=-1, const ors::Transformation& irel=NoTransformation,
-                              int jBody=-1, const ors::Transformation& jrel=NoTransformation,
-                              const arr& params=NoArr);
-                              
-  TaskCost* addDefaultTaskMap_Bodies(const char* name, DefaultTaskMapType type,
-                                     const char *iBodyName=NULL, const ors::Transformation& irel=NoTransformation,
-                                     const char *jBodyName=NULL, const ors::Transformation& jrel=NoTransformation,
-                                     const arr& params=NoArr);
-                              
-  TaskCost* addDefaultTaskMap_Shapes(const char* name, DefaultTaskMapType type,
-                                     const char *iShapeName=NULL, const ors::Transformation& irel=NoTransformation,
-                                     const char *jShapeName=NULL, const ors::Transformation& jrel=NoTransformation,
-                                     const arr& param=NoArr);
-
-  TaskCost* addCustomTaskMap(const char* name, TaskMap *map);
+  //adding task spaces
+  TaskCost* addTaskMap(const char* name, TaskMap *map);
 
   //setting costs in a task space
   void setInterpolatingCosts(TaskCost *c,
@@ -159,20 +128,36 @@ struct MotionProblem {
 //
 
 struct MotionProblemFunction:KOrderMarkovFunction {
-  MotionProblem& P;
+  MotionProblem& MP;
   bool makeConstrainedProblem;
 
-  MotionProblemFunction(MotionProblem& _P):P(_P), makeConstrainedProblem(false) {};
+  MotionProblemFunction(MotionProblem& _P):MP(_P), makeConstrainedProblem(false) {};
   
   //KOrderMarkovFunction definitions
   virtual void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);
   //functions to get the parameters $T$, $k$ and $n$ of the $k$-order Markov Process
-  virtual uint get_T() { return P.T; }
-  virtual uint get_k() { if(P.transitionType==MotionProblem::kinematic) return 1;  return 2; }
-  virtual uint dim_x() { return P.x0.N; }
-  virtual uint dim_phi(uint t){ return dim_x() + P.dim_phi(t); }
-  virtual uint dim_g(uint t){ return P.dim_g(t); }
+  virtual uint get_T() { return MP.T; }
+  virtual uint get_k() { if(MP.transitionType==MotionProblem::kinematic) return 1;  return 2; }
+  virtual uint dim_x() { return MP.x0.N; }
+  virtual uint dim_phi(uint t){ return dim_x() + MP.dim_phi(t); }
+  virtual uint dim_g(uint t){ return MP.dim_g(t); }
   virtual arr get_prefix(); //the history states x(-k),..,x(-1)
+};
+
+
+//===========================================================================
+//
+// transforming a motion problem description into an end-pose optimization problem only
+//
+
+struct MotionProblem_EndPoseFunction:VectorFunction {
+  MotionProblem& MP;
+  bool makeConstrainedProblem; //TODO: not used yet
+
+  MotionProblem_EndPoseFunction(MotionProblem& _P):MP(_P), makeConstrainedProblem(false) {};
+
+  //VectorFunction definitions
+  virtual void fv(arr& phi, arr& J, const arr& x);
 };
 
 #endif

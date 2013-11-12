@@ -78,7 +78,7 @@ void rawTest(){
   kin.close();
 }
 
-int main(int argn,char **argv){
+int main(int argc,char **argv){
   //  rawTest();
   threadedRun();
   return 0;

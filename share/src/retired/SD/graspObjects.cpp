@@ -182,7 +182,7 @@ GraspObject::psi(arr* grad,arr* hess,const arr& x)  {
 void
 GraspObject::getNormGrad(arr& grad,const arr& x) {
   phi(&grad,NULL,NULL,x);
-  double d=norm(grad);
+  double d=length(grad);
   if(d>1e-200) grad/=d; else MT_MSG("gradient too small!");
 }
 
@@ -195,11 +195,11 @@ GraspObject::getNormGrad(arr& grad,const arr& x) {
  */
 double
 GraspObject_InfCylinder::distanceToSurface(arr *grad,arr *hess,const arr& x){
-  z = z / norm(z);
+  z = z / length(z);
   arr a = (x-c) - scalarProduct((x-c), z) * z;
   arr I(x.d0,x.d0);
   uint i;
-  double na = norm(a);
+  double na = length(a);
 
   if(grad) *grad = s*a/na;
   if(hess){
@@ -230,13 +230,13 @@ GraspObject_InfCylinder::GraspObject_InfCylinder(){
 
 double
 GraspObject_Cylinder1::distanceToSurface(arr *grad,arr *hess,const arr& x){
-  z = z / norm(z);
+  z = z / length(z);
   arr b = scalarProduct((x-c), z) * z;
   arr a = (x-c) - b;
   arr I(x.d0,x.d0);
   uint i;
-  double na = norm(a);
-  double nb = norm(b);
+  double na = length(a);
+  double nb = length(b);
   arr aaTovasq = 1/(na*na) * a*(~a);
   arr zzT = z*(~z);
 
@@ -261,7 +261,7 @@ GraspObject_Cylinder1::distanceToSurface(arr *grad,arr *hess,const arr& x){
       return s*(nb-h/2.);
     }else{ // outside the infinite cyl
       arr v =  b/nb * (nb-h/2.)  + a/na * (na-r); //MT: good! (note: b/nb is the same as z)
-      double nv=norm(v);
+      double nv=length(v);
       if(grad) *grad = s* v/nv; 
       if(hess){
         I.setZero();
@@ -318,12 +318,12 @@ double GraspObject_Box::distanceToSurface(arr *grad,arr *hess,const arr& x){
     closest.setZero();
     uint side=del.maxIndex(); //which side are we closest to?
     if(a_rel(side)>0) closest(side) = dim(side);  else  closest(side)=-dim(side); //in positive or neg direction?
-    d = -norm(a_rel - closest);
+    d = -length(a_rel - closest);
   }else{ //outside
     closest = a_rel;
     closest = elemWiseMax(-dim,closest);
     closest = elemWiseMin(dim,closest);
-    d = norm(a_rel - closest);
+    d = length(a_rel - closest);
   }
 
   del=a_rel-closest;
@@ -380,7 +380,7 @@ GraspObject_Box::GraspObject_Box(const ors::Shape* s){
 double
 GraspObject_Sphere::distanceToSurface(arr *grad,arr *hess,const arr& x){
   arr d = x-c;
-  double nd = norm(d);
+  double nd = length(d);
   arr I(x.d0,x.d0);
   uint i;
 
@@ -422,7 +422,7 @@ GraspObject_GP::phi(arr *grad, arr *hess, double *var, const arr& x){
     /* SD: too small gradients render GP Grammian uninvertible -- presumably
      * due to underflow and coseq. low rank */
     if ( grad->absMin() < 1e-155) *grad /=  1e-155;
-    *grad /= norm(*grad);
+    *grad /= length(*grad);
   }
 
   if (hess) isf_gp.gp.hessianPos (*hess, x);

@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
     cout << "Hubs from thing = " << hubs << endl;
     usleep(10000);
     //} while(hubs != 2);
-  } while(hubs != 1);
+  } while(hubs != 5);
   cout << "Final hubs from thing = " << hubs << endl;
 
   //create hub list and G4_FRAMEDATA array
@@ -83,9 +83,9 @@ int main(int argc, char **argv) {
   cs.cds.pParam=(void*)&meter_unit;
   res = g4_set_query(&cs);         // sets orientation units to quaternions
 
-  //    for(int i = 0; i < 10000; i++) {
-  for(int i = 0; i < 1000; i++) {
-    res=g4_get_frame_data(fd,sysId,hubList,hubs);
+//  for(int i = 0; i < 10000; i++) {
+  for(uint t;;t++){
+    res=g4_get_frame_data(fd, sysId, hubList, hubs);
     int num_hubs_read=res&0xffff;
     int tot_sys_hubs=res>>16;
 
@@ -108,6 +108,7 @@ int main(int argc, char **argv) {
         }
       }
     }
+    cout <<'.' <<t<< flush;
     usleep(855000000l);
   }
 

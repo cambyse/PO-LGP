@@ -50,7 +50,7 @@ void PotentialFieldAlignTaskVariable::userUpdate(const ors::Graph& ors){
     ors.kinematicsVec(zi,s->body->index,&s->rel.rot.getZ(tmp));
     ors.jacobianVec  (Jzi,s->body->index,&s->rel.rot.getZ(tmp));
     f->psi(&grad,&hess,xi);
-    grad /= norm(grad);
+    grad /= length(grad);
     y(i) = scalarProduct(grad,zi);
     J[i]() = (~Jxi * hess) * zi  + ~grad * Jzi ;
   }

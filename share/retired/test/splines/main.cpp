@@ -129,7 +129,7 @@ void testOldSplines(){
   gnuplot("plot 'z.spline' us 3 with lines title 'z.spline f(x)','z.spline' us 5 with lines title 'v=df/dx' lw 3,'z.spline' us 7 with lines title 'numerical v'");
 }
 
-int main(int argn,char** argv){
+int main(int argc,char** argv){
   testBSpline();
   //testOldSplines();
 

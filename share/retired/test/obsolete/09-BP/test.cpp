@@ -49,16 +49,16 @@ void testEvidenceDiscounting(){
     // relax again
     for(t=0;t<100;t++) net.stepBP();
     net.getNodeBeliefs(b);
-    cout <<"error: " <<norm(b-b0) <<endl;
+    cout <<"error: " <<length(b-b0) <<endl;
     diff /= eps;
     cout <<"diffs: " <<diff <<endl;
-    //cout <<"diff norm: " <<norm(diff) <<endl;
+    //cout <<"diff norm: " <<length(diff) <<endl;
 
     //compute gradient:
     for(t=0;t<100;t++) net.stepGradBP();
     net.getGradT(grad);
     cout <<"grads: " <<grad <<endl;
-    //cout <<"grad norm: " <<norm(grad) <<endl;
+    //cout <<"grad norm: " <<length(grad) <<endl;
                    
     //adapt discounts...
 #if 1

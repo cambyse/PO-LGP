@@ -21,15 +21,14 @@ void drawInit(void*){
   glColor(1.,.5,0.);
 }
 
-int main(int argn, char** argv){
-
-  if(argn<2){
+void TEST(MeshTools) {
+  if(MT::argc<2){
     cout <<USAGE <<endl;
     return 1;
   }
 
-  MT::initCmdLine(argn,argv);
-  MT::String file(argv[1]);
+  MT::initCmdLine(MT::argc,MT::argv);
+  MT::String file(MT::argv[1]);
 
   OpenGL *gl=NULL;
 
@@ -125,6 +124,11 @@ int main(int argn, char** argv){
   }
 
   cout <<"#vertices = " <<mesh.V.d0 <<" #triangles=" <<mesh.T.d0 <<endl;
+}
+
+int main(int argc, char** argv){
+  MT::initCmdLine(argc, argv);
+  testMeshTools();
 
   return 1;
 }

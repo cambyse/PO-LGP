@@ -1052,7 +1052,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
     send_msg << msg_string /*<< "      \n\n(time " << t << ")"*/;
     controlledStep(q,W,C,ode,swift,gl,revel,local_TVs,send_msg);
     if (gl) {gl->update();}
-    double dist = norm(x.y - x.y_target);
+    double dist = length(x.y - x.y_target);
 //     PRINT(x.y);
 //     PRINT(x.y_target);
 //     PRINT(dist);
@@ -1088,7 +1088,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
     send_msg << msg_string /*<< "      \n\n(time " << t << ")"*/;
     controlledStep(q,W,C,ode,swift,gl,revel,local_TVs,send_msg);
     if (gl) {gl->update();}
-    double dist = norm(x.y - x.y_target);
+    double dist = length(x.y - x.y_target);
     if(dist<.05) break;
     
     // might drop object
@@ -1256,7 +1256,7 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
     MT::String send_string;
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
     controlledStep(q,W,C,ode,swift,gl,revel,local_TVs,send_string);
-    double diff = norm(o.y - o.y_target);
+    double diff = length(o.y - o.y_target);
     if (diff < 0.05) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
@@ -1272,7 +1272,7 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
     MT::String send_string;
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
     controlledStep(q,W,C,ode,swift,gl,revel,local_TVs,send_string);
-    double diff = norm(o.y - o.y_target);
+    double diff = length(o.y - o.y_target);
     if (diff < 0.05) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
@@ -1307,7 +1307,7 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
     MT::String send_string;
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
     controlledStep(q,W,C,ode,swift,gl,revel,local_TVs,send_string);
-    double diff = norm(o.y - o.y_target);
+    double diff = length(o.y - o.y_target);
     if (diff < 0.001) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
@@ -1478,7 +1478,7 @@ void RobotManipulationSimulator::relaxPosition(const char* message) {
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
 //     controlledStep(q,W,send_string);
     controlledStep(q,W,C,ode,swift,gl,revel,local_TVs,send_string);
-    double diff = norm(x.y - x.y_target);
+    double diff = length(x.y - x.y_target);
     if (diff < 0.5) break;
 //     if(x.active==1) break;
   }
@@ -1584,7 +1584,7 @@ void RobotManipulationSimulator::openBox(uint id, const char* message) {
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
 //     controlledStep(q,W,send_string);
     controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_string);
-    double diff = norm(x.y - x.y_target);
+    double diff = length(x.y - x.y_target);
     if (diff < 0.01) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
@@ -1629,7 +1629,7 @@ void RobotManipulationSimulator::closeBox(uint id, const char* message) {
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
 //     controlledStep(q,W,send_string);
     controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_string);
-    double diff = norm(x.y - x.y_target);
+    double diff = length(x.y - x.y_target);
     if (diff < 0.01) break;
   }
   if(t==Tabort){ indicateFailure(); return; }

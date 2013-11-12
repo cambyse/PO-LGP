@@ -134,6 +134,7 @@ struct Quaternion {
   Vector& getY(Vector& Ry) const;
   Vector& getZ(Vector& Rz) const;
   Matrix getMatrix() const;
+  arr    getArr() const;
   double* getMatrix(double* m) const;
   double* getMatrixOde(double* m) const; //in Ode foramt: 3x4 memory storae
   double* getMatrixGL(double* m) const;  //in OpenGL format: transposed 4x4 memory storage
@@ -272,7 +273,32 @@ extern const ors::Vector Vector_y;
 extern const ors::Vector Vector_z;
 extern const ors::Transformation Transformation_Id;
 extern const ors::Quaternion Quaternion_Id;
+extern ors::Vector& NoVector;
 extern ors::Transformation& NoTransformation;
+
+
+//===========================================================================
+//
+// low level drivers
+//
+
+struct DistanceFunction_Sphere:ScalarFunction{
+  ors::Transformation t; double r;
+  DistanceFunction_Sphere(const ors::Transformation& _t, double _r):t(_t),r(_r){}
+  virtual double fs(arr& g, arr& H, const arr& x);
+};
+
+struct DistanceFunction_Box:ScalarFunction{
+  ors::Transformation t; double dx, dy, dz;
+  DistanceFunction_Box(const ors::Transformation& _t, double _dx, double _dy, double _dz):t(_t),dx(_dx),dy(_dy),dz(_dz){}
+  virtual double fs(arr& g, arr& H, const arr& x);
+};
+
+struct DistanceFunction_Cylinder:ScalarFunction{
+  ors::Transformation t; double r, dz;
+  DistanceFunction_Cylinder(const ors::Transformation& _t, double _r, double _dz):t(_t),r(_r),dz(_dz){}
+  virtual double fs(arr& g, arr& H, const arr& x);
+};
 
 #endif
 

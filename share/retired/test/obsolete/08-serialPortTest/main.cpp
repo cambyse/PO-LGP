@@ -10,7 +10,7 @@ void sendCommand(byte address,byte command,byte speed){
   PutSerialChar((address + command + speed) & 0x7f);
 }
 
-int main(int argn,char **argv){
+int main(int argc,char **argv){
 
   int r=OpenPort(5,9600,0,NULL);
   cout <<"success?" <<r <<endl;

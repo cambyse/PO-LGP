@@ -154,7 +154,7 @@ void Reach_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {
 void Reach_FeedbackControlTask::updateTaskVariableGoals(const ors::Graph& ors) {
   TaskVariable *eff = TVs(0);
   eff->v_target = reachPoint - eff->y;
-  double vmax=.2, v=norm(eff->v_target);
+  double vmax=.2, v=length(eff->v_target);
   if (v>vmax) eff->v_target*=vmax/v;
 }
 

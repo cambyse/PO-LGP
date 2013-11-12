@@ -249,7 +249,7 @@ struct Graph {
   void glueBodies(Body *a, Body *b);
   void glueTouchingBodies();
   void addObject(Body *b); //TODO: What the heck?? Obsolete!
-  void removeNonShapeBodies();
+  void removeUselessBodies();
   void meldFixedJoints();
   
   /// @name computations on the DoFs

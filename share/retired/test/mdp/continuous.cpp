@@ -7,12 +7,12 @@ struct Simulator{
   }
   static void step(const doubleA& in,const doubleA& goal,doubleA& out){
     doubleA del=goal-in;
-    del*=.1/norm(del);
+    del*=.1/length(del);
     out=in+del;
   }
   static void stepBack(const doubleA& in,const doubleA& goal,doubleA& out){
     doubleA del=goal-in;
-    del*=.1/norm(del);
+    del*=.1/length(del);
     out=in+del;
   }
 };
