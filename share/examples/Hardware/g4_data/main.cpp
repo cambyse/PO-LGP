@@ -26,6 +26,7 @@ void testData(G4Data &g4d) {
   arr data;
   MT::Array<uint> dim;
 
+  cout << endl;
   cout << "========================================" << endl;
   cout << "frames" << endl;
   cout << "========================================" << endl;
@@ -33,6 +34,7 @@ void testData(G4Data &g4d) {
   cout << "T              = " << T << endl;
   CHECK(T == checkT, "wrong value of T");
 
+  cout << endl;
   cout << "========================================" << endl;
   cout << "sensors" << endl;
   cout << "========================================" << endl;
@@ -40,6 +42,7 @@ void testData(G4Data &g4d) {
   cout << "N              = " << N << endl;
   CHECK(N == checkN, "wrong value of N");
 
+  cout << endl;
   cout << "========================================" << endl;
   cout << "sensors" << endl;
   cout << "========================================" << endl;
@@ -47,6 +50,7 @@ void testData(G4Data &g4d) {
   cout << "N rh           = " << N << endl;
   CHECK(N == checkNrh, "wrong value of N");
 
+  cout << endl;
   cout << "========================================" << endl;
   cout << "sensors" << endl;
   cout << "========================================" << endl;
@@ -54,6 +58,7 @@ void testData(G4Data &g4d) {
   cout << "N rh:thumb     = " << N << endl;
   CHECK(N == checkNrhthumb, "wrong value of N");
 
+  cout << endl;
   cout << "========================================" << endl;
   cout << "sensors" << endl;
   cout << "========================================" << endl;
@@ -61,6 +66,7 @@ void testData(G4Data &g4d) {
   cout << "N book         = " << N << endl;
   CHECK(N == checkNbook, "wrong value of N");
 
+  cout << endl;
   cout << "========================================" << endl;
   cout << "dims" << endl;
   cout << "========================================" << endl;
@@ -99,6 +105,7 @@ void testData(G4Data &g4d) {
   cout << "dim 9 rh thumb = " << dim << endl;
   CHECK(dim == checkD9rhthumb, "wrong value of dim");
 
+  cout << endl;
   cout << "========================================" << endl;
   cout << "values" << endl;
   cout << "========================================" << endl;
@@ -113,6 +120,7 @@ void testData(G4Data &g4d) {
   cout << "value = " << v << endl;
   CHECK(v == 1, "wrong value");
 
+  cout << endl;
   cout << "========================================" << endl;
   cout << "values" << endl;
   cout << "========================================" << endl;
@@ -127,6 +135,7 @@ void testData(G4Data &g4d) {
   cout << "value = " << v << endl;
   CHECK(v == 2, "wrong value");
 
+  cout << endl;
   cout << "========================================" << endl;
   cout << "values" << endl;
   cout << "========================================" << endl;
@@ -144,6 +153,7 @@ void testData(G4Data &g4d) {
   cout << "value = " << v << endl;
   CHECK(v == 3, "wrong value");
 
+  cout << endl;
   cout << "========================================" << endl;
   cout << "values" << endl;
   cout << "========================================" << endl;
@@ -158,6 +168,7 @@ void testData(G4Data &g4d) {
   cout << "value = " << v << endl;
   CHECK(v == 3, "wrong value");
 
+  cout << endl;
   cout << "========================================" << endl;
   cout << "interpolation (beginning)" << endl;
   cout << "========================================" << endl;
@@ -172,6 +183,7 @@ void testData(G4Data &g4d) {
   cout << "value = " << v << endl;
   CHECK(v == 3, "wrong value (interpolation)");
 
+  cout << endl;
   cout << "========================================" << endl;
   cout << "interpolation (middle)" << endl;
   cout << "========================================" << endl;
@@ -197,6 +209,7 @@ void testData(G4Data &g4d) {
   cout << "value = " << v << endl;
   CHECK(v == 4, "wrong value (interpolation)");
 
+  cout << endl;
   cout << "========================================" << endl;
   cout << "interpolation (middle)" << endl;
   cout << "========================================" << endl;
@@ -211,6 +224,7 @@ void testData(G4Data &g4d) {
   cout << "value = " << v << endl;
   CHECK(v == 4, "wrong value (interpolation)");
 
+  cout << endl;
   cout << "========================================" << endl;
   cout << "interpolation (end)" << endl;
   cout << "========================================" << endl;
@@ -224,6 +238,22 @@ void testData(G4Data &g4d) {
   v = data(0, 2);
   cout << "value = " << v << endl;
   CHECK(v == 3, "wrong value (interpolation)");
+
+  cout << endl;
+  cout << "========================================" << endl;
+  cout << "missing" << endl;
+  cout << "========================================" << endl;
+  cout << g4d.getMissing() << endl;
+
+  cout << "========================================" << endl;
+  cout << "missingno" << endl;
+  cout << "========================================" << endl;
+  cout << g4d.getMissingNo() << endl;
+
+  cout << "========================================" << endl;
+  cout << "missingt" << endl;
+  cout << "========================================" << endl;
+  cout << g4d.getMissingT() << endl;
 }
 
 int main(int argc, char **argv) {
