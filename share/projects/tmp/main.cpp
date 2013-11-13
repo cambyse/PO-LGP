@@ -1,21 +1,27 @@
-#include <Ors/roboticsCourse.h>
+#include <Ors/ors.h>
 #include <Gui/opengl.h>
 
 void circle(){
-  Simulator S("pr2_model/pr2_left.ors");
+  ors::Graph G;
+  OpenGL gl;
+  init(G, gl, "pr2_model/pr2_left.ors");
+  makeConvexHulls(G.shapes);
+
   arr q,W;
-  uint n = S.getJointDimension();
+  uint n = G.getJointStateDimension();
   cout <<"n=" <<n <<endl;
-  S.getJointAngles(q);
+  G.getJointState(q);
   W.setDiag(10.,n);
   W(0,0) = 1e3;
 
-  S.watch();
+  gl.watch();
+
+  uint endeff = G.getBodyByName("l_wrist_roll_link")->index;
 
   arr y_target,y,J;
   for(uint i=0;i<1000;i++){
-    S.kinematicsPos(y,"l_wrist_roll_link");
-    S.jacobianPos  (J,"l_wrist_roll_link");
+    G.kinematicsPos(y, endeff);
+    G.jacobianPos  (J, endeff);
 #if 1
     y_target = ARR(0.5, .2, 1.1); 
     y_target += .2 * ARR(0, cos((double)i/20), sin((double)i/20)); 
@@ -26,9 +32,12 @@ void circle(){
     cout <<i <<" current eff pos = " <<y <<"  current error = " <<length(y_target-y) <<endl;;
     double prec=1e-0;
     q += inverse(~J*J + W/prec)*~J*(y_target - y); 
-    S.setJointAngles(q);
+
+    G.setJointState(q);
+    G.calcBodyFramesFromJoints();
+    gl.update();
   }
-  S.watch();
+  gl.watch();
 }
 
 int main(int argc,char **argv){
