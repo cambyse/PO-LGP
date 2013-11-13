@@ -12,6 +12,7 @@ import os
 # import numpy as np
 import orspy as ors
 import corepy
+import guipy
 
 import require_provide as rp
 
@@ -28,12 +29,12 @@ class FakeController():
         # World & PhysX & OpenGL
         self.world = ors.Graph()
         worldfile = os.path.join(
-            ors.get_mlr_path(),
+            corepy.get_mlr_path(),
             "share/projects/the_curious_robot/src/world.ors"
         )
         self.world.init(worldfile)
 
-        self.gl = corepy.OpenGL()
+        self.gl = guipy.OpenGL()
         self.physx = ors.PhysXInterface()
         ors.bindOrsToPhysX(self.world, self.gl, self.physx)
 
