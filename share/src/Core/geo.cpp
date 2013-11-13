@@ -555,7 +555,7 @@ void Quaternion::setVec(Vector w) {
 /// rotation that will rotate 'from' to 'to' on direct path
 void Quaternion::setDiff(const Vector& from, const Vector& to) {
   double phi=acos(from*to/(from.length()*to.length()));
-  if(!phi) return;
+  if(!phi){ setZero(); return; }
   Vector axis(from^to);
   if(axis.isZero()) axis=Vector(0, 0, 1)^to;
   setRad(phi, axis);

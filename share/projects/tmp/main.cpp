@@ -14,9 +14,10 @@ void circle(){
   W.setDiag(10.,n);
   W(0,0) = 1e3;
 
-  gl.watch();
-
   uint endeff = G.getBodyByName("l_wrist_roll_link")->index;
+  for(ors::Joint* j: G.joints) cout <<j->name <<endl;
+
+  gl.watch();
 
   arr y_target,y,J;
   for(uint i=0;i<1000;i++){

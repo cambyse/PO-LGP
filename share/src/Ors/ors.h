@@ -130,8 +130,8 @@ struct Joint {
   uint qIndex;          ///< index where this joint appears in the q-state-vector
   int ifrom, ito;       ///< indices of from and to bodies
   Body *from, *to;      ///< pointers to from and to bodies
-  Joint *coupledTo;     ///< if non-NULL, this joint's state is identical to another's
-  int agent;           ///< associate this Joint to a specific agent (0=default robot)
+  Joint *mimic;         ///< if non-NULL, this joint's state is identical to another's
+  int agent;            ///< associate this Joint to a specific agent (0=default robot)
 
   MT::String name;      ///< name
   JointType type;       ///< joint type
@@ -147,7 +147,7 @@ struct Joint {
   explicit Joint(Graph& G, Body *f, Body *t, const Joint *copyJoint=NULL); //new Shape, being added to graph and body's joint lists
   ~Joint();
   void operator=(const Joint& j) {
-    index=j.index; qIndex=j.qIndex; ifrom=j.ifrom; ito=j.ito; coupledTo=(Joint*)(j.coupledTo?1:0);
+    index=j.index; qIndex=j.qIndex; ifrom=j.ifrom; ito=j.ito; mimic=(Joint*)(j.mimic?1:0);
     type=j.type; A=j.A; Q=j.Q; B=j.B; X=j.X; axis=j.axis;
     ats=j.ats;
   }
