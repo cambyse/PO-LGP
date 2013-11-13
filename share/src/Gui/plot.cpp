@@ -104,7 +104,7 @@ void plot(bool wait, const char* txt) {
 #ifdef MT_GL
     case opengl:
       if(txt) plotModule.gl->text = txt;
-      plotInitGL();
+      //plotInitGL();
       if(wait) plotModule.gl->watch();
       break;
 #else
@@ -133,7 +133,7 @@ void plotOpengl() { plotModule.mode=opengl; plotInitGL(); }
 void plotOpengl(bool perspective, double xl, double xh, double yl, double yh, double zl, double zh) {
   plotModule.mode=opengl;
   plotModule.perspective=perspective;
-  plotInitGL(xl, xh, yl, yh, zl, zh);
+  if(!plotModule.gl) plotInitGL(xl, xh, yl, yh, zl, zh);
 }
 #else
 void plotOpengl() { MT_MSG("dummy routine - compile with MT_FREEGLUT to use this!"); }

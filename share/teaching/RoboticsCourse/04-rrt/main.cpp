@@ -40,6 +40,7 @@ public:
     parent.append(0);    //q has itself as parent
     stepsize = _stepsize;
   }
+  
   double getProposalTowards(arr& q){
     //find NN
     nearest=ann.getNN(q);
@@ -50,22 +51,25 @@ public:
     q = ann.X[nearest] + stepsize/dist * d;
     return dist;
   }
+
   void add(const arr& q){
     ann.append(q);
     parent.append(nearest);
   }
+
   void addLineDraw(const arr& q, Simulator& S){
     //I can't draw the edge in the 7-dim joint space!
     //But I can draw a projected edge in 3D endeffector position space:
     arr y_from,y_to;
     arr line;
-    S.setJointAngles(ann.X[nearest],false);  S.kinematicsPos(y_from,"peg");
-    S.setJointAngles(q             ,false);  S.kinematicsPos(y_to  ,"peg");
+    S.setJointAngles(ann.X[nearest], false);  S.kinematicsPos(y_from,"peg");
+    S.setJointAngles(q             , false);  S.kinematicsPos(y_to  ,"peg");
     line.append(y_from); line.reshape(1,line.N);
     line.append(y_to);
     plotLine(line); //add a line to the plot
 
   }
+
   //some access routines
   uint getNearest(){ return nearest; }
   uint getParent(uint i){ return parent(i); }

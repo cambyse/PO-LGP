@@ -18,8 +18,9 @@
     02110-1301 USA
 */
 
-#include <MT/mdp.h>
+#include <MDP/mdp.h>
 #include <Core/util.h>
+#include <iomanip>
 
 enum { ValueIteration, PrioritizedSweeping, PolicyIteration, EM, POMDP_EM, POMDP_EM_hierarchical };
 
