@@ -3,8 +3,30 @@
 #include <actionlib/client/simple_action_client.h>
 #include <Core/array.h>
 #include <Core/keyValueGraph.h>
+#include <Ors/roboticsCourse.h>
+#include <Gui/opengl.h>
+
 
 typedef actionlib::SimpleActionClient< pr2_controllers_msgs::JointTrajectoryAction > TrajClient;
+
+struct sSimulator {
+  ors::Graph G;
+  OpenGL gl;
+  SwiftInterface swift;
+  double margin;
+  double dynamicNoise;
+  bool gravity;
+  
+  //state
+  arr q,qdot,qddot;
+
+#ifdef MT_ODE
+  OdeInterface ode;
+#endif
+  sSimulator(){ margin=.1; dynamicNoise=0.; gravity=true; } //default margin = 10cm
+};
+
+
 
 class RobotArm
 {
@@ -112,6 +134,61 @@ public:
   {
     return traj_client_->getState();
   }
+
+void circle(){
+  Simulator S("pr2_model/pr2_left.ors");
+  arr q,W;
+  uint n = S.getJointDimension();
+  cout <<"n=" <<n <<endl;
+  S.getJointAngles(q);
+  W.setDiag(10.,n);
+  W(0,0) = 1e3;
+
+  //our goal variable
+  pr2_controllers_msgs::JointTrajectoryGoal goal;
+
+  // First, the joint names, which apply to all waypoints
+  //goal.trajectory.joint_names.push_back("r_shoulder_pan_joint");
+
+  S.watch();
+  ors::Graph& G=S.s->G;
+  for(uint i=0;i<G.joints.N;i++){
+       goal.trajectory.joint_names.push_back(G.joints(i)->name.p);
+       cout <<G.joints(i)->name <<endl;
+  }
+    //pr2_controllers_msgs::JointTrajectoryGoal goal;
+
+    // First, the joint names, which apply to all waypoints
+    //goal.trajectory.joint_names.push_back("l_wrist_roll_link");
+
+  arr y_target,y,J;
+  for(uint i=0;i<1000;i++){
+    S.kinematicsPos(y,"l_wrist_roll_link");
+    S.jacobianPos  (J,"l_wrist_roll_link");
+#if 1
+    y_target = ARR(0.5, .2, 1.1); 
+    y_target += .2 * ARR(0, cos((double)i/20), sin((double)i/20)); 
+#else
+    y_target = y;
+    y_target(2) += 0.1;
+#endif
+    cout <<i <<" current eff pos = " <<y <<"  current error = " <<norm(y_target-y) <<endl;;
+    double prec=1e-0;
+    q += inverse(~J*J + W/prec)*~J*(y_target - y); 
+    S.setJointAngles(q);
+    
+    for(int i=0; i < q.N; ++i) {
+      goal.trajectory.points[0].positions.resize(q.N);
+      goal.trajectory.points[0].positions[i] = q(i);
+    }
+    goal.trajectory.points[0].time_from_start = ros::Duration(0.1);
+    goal.trajectory.header.stamp = ros::Time::now();
+    traj_client_->sendGoal(goal);
+  }
+  S.watch();
+}
+
+
  
 };
 
@@ -125,7 +202,7 @@ int main(int argc, char** argv)
 
   RobotArm arm;
   // Start the trajectory
-  arm.startTrajectory(arm.armExtensionTrajectory());
+  arm.circle();
   // Wait for trajectory completion
   while(!arm.getState().isDone() && ros::ok())
   {

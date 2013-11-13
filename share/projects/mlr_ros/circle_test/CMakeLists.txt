@@ -22,7 +22,7 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 rosbuild_add_executable(circle_test src/main.cpp)
-target_link_libraries(circle_test Core)
+target_link_libraries(circle_test Core Ors Gui)
 
 #uncomment if you have defined messages
 #rosbuild_genmsg()
