@@ -224,6 +224,7 @@ Variable* System::connect(Access& acc, const char *variable_name){
     acc.var = v;
   }else{ //variable does not exist yet
     acc.var = v = addVariable(acc);
+    v->name = variable_name;
   }
   return v;
 }
