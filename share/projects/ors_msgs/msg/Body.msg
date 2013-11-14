@@ -16,4 +16,4 @@ geometry_msgs/Vector3 force
 geometry_msgs/Vector3 torque
 
 # shapes
-orsmsgs/Shape[] shapes
+ors_msgs/Shape[] shapes
