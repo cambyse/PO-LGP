@@ -5,14 +5,16 @@ import roslib
 roslib.load_manifest("rosors")
 
 import rospy
-import rosors.srv
+import rosors
+import srv
+import msg
 
 import orspy
 
 
 class RosOrs(object):
     """
-    RosOrs represents a ors graph and provieds service calls to query the
+    RosOrs represents a ors graph and provides ORS services to query the
     state of the graph.
 
     TODO should we transport subtypes, e.g. transport shapes and meshes for
@@ -31,10 +33,10 @@ class RosOrs(object):
 
         # start rospy services
         self.shape_service = rospy.Service(srv_prefix + "/shapes",
-                                           rosors.srv.Shapes,
+                                           srv.Shapes,
                                            self.handle_shapes_request)
         self.body_service = rospy.Service(srv_prefix + "/bodies",
-                                          rosors.srv.Bodies,
+                                          srv.Bodies,
                                           self.handle_bodies_request)
 
     #########################################################################
@@ -74,7 +76,7 @@ class RosOrs(object):
     #########################################################################
     # Helpers for creating msgs
     def ors_shape_to_msg(self, ors_shape):
-        shape_msg = rosors.msg.Shape()
+        shape_msg = msg.Shape()
 
         shape_msg.index = ors_shape.index
         shape_msg.index_body = ors_shape.ibody
@@ -88,7 +90,7 @@ class RosOrs(object):
         return shape_msg
 
     def ors_body_to_msg(self, ors_body):
-        body_msg = rosors.msg.Body()
+        body_msg = msg.Body()
 
         body_msg.index = ors_body.index
         body_msg.name = ors_body.name
@@ -106,28 +108,3 @@ class RosOrs(object):
         body_msg.torque = ors_body.torque
 
         return body_msg
-
-
-class OrsRosDemo():
-    """
-    This class demonstrates how to use rosors.
-
-    Simply create a rosors member variable.  You need to specify the orsfile
-    and the prefix for the service.  The rosors instance automatically offers
-    services for the ors data structures.
-    """
-    def __init__(self):
-        orsfile = "arm3.ors"
-        node_name = "rosors_test"
-
-        rospy.init_node(node_name, log_level=rospy.DEBUG)
-        self.rosors = RosOrs(orsfile=orsfile, srv_prefix="/prefix")
-
-
-def main():
-    rosors = OrsRosDemo()
-    rospy.spin()
-
-
-if __name__ == '__main__':
-    main()
