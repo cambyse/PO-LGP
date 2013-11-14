@@ -39,9 +39,21 @@ class RosOrs(object):
         self.body_service = rospy.Service(srv_prefix + "/bodies",
                                           srv.Bodies,
                                           self.handle_bodies_request)
+        self.graph_service = rospy.Service(srv_prefix + "/graph",
+                                           srv.Graph,
+                                           self.handle_graph_request)
 
     #########################################################################
     # HANDLE SERVICES
+    def handle_graph_request(self, req):
+        rospy.logdebug("handling graph request")
+        res = srv.GraphResponse()
+        for body in self.graph.bodies:
+            res.bodies.append(parser.ors_body_to_msg(body))
+        for shape in self.graph.shapes:
+            res.shapes.append(parser.ors_shape_to_msg(shape))
+        return res
+
     def handle_bodies_request(self, req):
         rospy.logdebug("handling bodies request")
         res = srv.BodiesResponse()
