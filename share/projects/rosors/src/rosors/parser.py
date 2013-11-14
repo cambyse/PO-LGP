@@ -43,4 +43,8 @@ def ors_body_to_msg(ors_body):
     body_msg.force = ors_body.force
     body_msg.torque = ors_body.torque
 
+    # shapes
+    for shape in ors_body.shapes:
+        body_msg.shapes.append(ors_shape_to_msg(shape))
+
     return body_msg
