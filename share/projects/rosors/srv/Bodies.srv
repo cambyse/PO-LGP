@@ -2,4 +2,4 @@
 string name
 
 ---
-Body[] bodies
+orsmsgs/Body[] bodies
