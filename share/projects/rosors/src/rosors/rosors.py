@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+# ROS
 import roslib
 roslib.load_manifest("rosors")
-
 import rospy
-import rosors
+# RosOrs
 import srv
 import msg
 import parser
-
+# MLR
 import orspy
 
 
@@ -44,7 +44,7 @@ class RosOrs(object):
     # HANDLE SERVICES
     def handle_bodies_request(self, req):
         rospy.logdebug("handling bodies request")
-        res = rosors.srv.BodiesResponse()
+        res = srv.BodiesResponse()
         # special body requested
         if req.name:
             ors_body = self.graph.getBodyByName(req.name)
@@ -57,7 +57,7 @@ class RosOrs(object):
 
     def handle_shapes_request(self, req):
         rospy.logdebug("handling shapes request")
-        res = rosors.srv.ShapesResponse()
+        res = srv.ShapesResponse()
         # special shape requested
         if req.index:
             # TODO ors.graph must support such a function
