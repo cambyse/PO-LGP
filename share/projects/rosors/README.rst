@@ -33,7 +33,7 @@ Log / Journal
 2013-11-14 Thu
 -----------------
 
- - Turn RosOrs into a full ROS dependency.
+ - DONE Turn RosOrs into a full ROS dependency.
    What should be in scripts/, src/ etc?
    See resources on ros packages: http://wiki.ros.org/rosbuild/Packages
    More precisely::
@@ -48,4 +48,11 @@ Log / Journal
      - manifest.xml: Package Manifest
      - mainpage.dox: many packages will often place their Doxygen mainpage documentation here
 
- - Add example of rosors.
+ - DONE Add example of rosors.
+
+ - DONE Extract the msgs into a sep. ros package. see ../ors_msgs
+
+ - TODO save the following
+   - body type
+   - shape type
+   - mesh
