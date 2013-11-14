@@ -51,8 +51,10 @@ class FakePerception():
         self.graph = rosors.parse_graph_msg(graph_msg)
 
         update_msg = rosors.msgs.objects()
+        update_msg.changed = False
         for b in self.graph.bodies:
             if has_moved(b):
+                update_msg.changed = True
                 update_msg.objects.append(b.index)
 
         self.upddate_pub.pub(update_msg)
