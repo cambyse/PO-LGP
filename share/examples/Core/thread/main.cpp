@@ -1,5 +1,7 @@
 #include <Core/thread.h>
 
+TStream tout(cout);
+
 // Normal Thread struct
 struct MyThread: Thread{
   uint n,i;
@@ -15,10 +17,10 @@ struct MyThread: Thread{
 struct MyOtherThread: Thread {
   uint n, i;
   MyOtherThread(uint _n):Thread(STRING("MyOtherThread_"<<n)), n(_n), i(0) {
-    tout::reg(this) << "MyOtherThread(" << n << "): ";
+    tout.reg(this) << "MyOtherThread(" << n << "): ";
   }
   ~MyOtherThread() {
-    tout::unreg(this);
+    tout.unreg(this);
   }
   void open(){}
   void close(){}
@@ -67,22 +69,22 @@ void TEST(Thread){
 
   tout(&i) << "test with unregistered object" << endl;
 
-  tout::reg(&i) << "Head " << i << ": ";
+  tout.reg(&i) << "Head " << i << ": ";
   tout(&i) << "test with registered object" << endl;
 
-  tout::unreg(&i);
+  tout.unreg(&i);
   tout(&i) << "test after unregistering object" << endl;
 
-  tout::reg(&i) << "Head " << i << " v2.0: ";
+  tout.reg(&i) << "Head " << i << " v2.0: ";
   tout(&i) << "test after re-registering object" << endl;
 
-  tout::reg(&i) << "Head " << i << " v3.0: ";
+  tout.reg(&i) << "Head " << i << " v3.0: ";
   tout(&i) << "test after re-registering object" << endl;
 
-  tout::reg(&j) << "Head " << j << ": ";
+  tout.reg(&j) << "Head " << j << ": ";
   tout(&j) << "test with new object" << endl;
 
-  tout::unreg_all();
+  tout.unreg_all();
   tout() << "tests after unregistering all:" << endl;
   tout(&i) << "test i" << endl;
   tout(&j) << "test j" << endl;
