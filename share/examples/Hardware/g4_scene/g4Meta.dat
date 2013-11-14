@@ -1,14 +1,14 @@
 
-sensor rh rh:thumb { hid = 0, sid = 0 }
-sensor rh rh:index { hid = 0, sid = 1 }
-sensor rh rh:middle { hid = 0 , sid = 2 }
+sensor agent rh rh:thumb { hid = 0, sid = 0 }
+sensor agent rh rh:index { hid = 0, sid = 1 }
+sensor agent rh rh:middle { hid = 0 , sid = 2 }
 
-sensor lh lh:thumb { hid = 1, sid = 0 }
-sensor lh lh:index { hid = 1, sid = 1 }
-sensor lh lh:middle { hid = 1 , sid = 2 }
+sensor agent lh lh:thumb { hid = 1, sid = 0 }
+sensor agent lh lh:index { hid = 1, sid = 1 }
+sensor agent lh lh:middle { hid = 1 , sid = 2 }
 
-sensor lh lh:back { hid = 2, sid = 0 }
-sensor rh rh:back { hid = 2, sid = 1 }
+sensor agent lh lh:back { hid = 2, sid = 0 }
+sensor agent rh rh:back { hid = 2, sid = 1 }
 
 sensor sbox { hid = 3, sid = 0 }
 sensor bottle { hid = 3, sid = 1 }

@@ -1,6 +1,6 @@
 BASE = ../../..
 
-OBJS = main.o
+OBJS = main.o feedgnuplot.o
 
 DEPEND = Core Ors Gui Perception
 

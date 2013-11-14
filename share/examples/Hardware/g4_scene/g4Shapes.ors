@@ -77,7 +77,7 @@ shape sh:sbox:axes (sbox) {
 body bottle {}
 shape sh:bottle (bottle) {
   type = 4
-  rel = <T t(0 0 .068) d(90 0 1 0)>
+  rel = <T t(-.03 0 .06) t(0 0 .008) d(90 0 1 0)>
   size = [ 0 0 .23 .06 ]
 }
 shape sh:bottle:axes (bottle) {
