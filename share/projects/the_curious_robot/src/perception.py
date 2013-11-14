@@ -45,6 +45,7 @@ class FakePerception():
             self.step()
 
     def step(self):
+        # TODO: newClone() ?
         self.old_graph = self.graph
         graph_msg = rospy.ServiceProxy("/world/graph")
 
