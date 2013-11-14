@@ -30,6 +30,7 @@
 
 
 #include "ors.h"
+#include "ors_oldTaskVariables.h"
 
 TaskVariable::TaskVariable() {
   active=false;
@@ -453,8 +454,8 @@ void DefaultTaskVariable::updateState(const ors::Graph& ors, double tau) {
   v = (y - y_old)/tau; //TODO: the velocity should be evaluated from the joint angle velocity (J*dq) to be consistent with the whole soc code!
   
   if(y_target.N==y.N) {
-    err=norm(y - y_target);
-    derr=err - norm(y_old - y_target);
+    err=length(y - y_target);
+    derr=err - length(y_old - y_target);
   }
 }
 
@@ -715,8 +716,8 @@ void ProxyTaskVariable::updateState(const ors::Graph& ors, double tau) {
   v = (y - y_old)/tau; //TODO: the velocity should be evaluated from the joint angle velocity (J*dq) to be consistent with the whole soc code!
   
   if(y_target.N==y.N) {
-    err=norm(y - y_target);
-    derr=err - norm(y_old - y_target);
+    err=length(y - y_target);
+    derr=err - length(y_old - y_target);
   }
 }
 
@@ -759,10 +760,10 @@ void reportErrors(TaskVariableList& CS, ostream& os, bool onlyActives, int t) {
   double e, E=0.;
   for(i=0; i<CS.N; i++) if(!onlyActives || CS(i)->active) {
       if(t!=-1)
-        if(t) e=norm(CS(i)->y - CS(i)->y_trajectory[t-1]);
+        if(t) e=length(CS(i)->y - CS(i)->y_trajectory[t-1]);
         else  e=0.;
       else
-        e=norm(CS(i)->y - CS(i)->y_target);
+        e=length(CS(i)->y - CS(i)->y_target);
       os <<e <<' ';
       E += e; //*CS(i)->y_prec;
     }

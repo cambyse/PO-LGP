@@ -73,6 +73,6 @@ void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
                   wxOK | wxICON_INFORMATION, this);
 }
 
-int main(int argn,char **arv){
+int main(int argc,char **arv){
   return 0;
 }

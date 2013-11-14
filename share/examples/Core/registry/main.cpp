@@ -34,7 +34,7 @@ void TEST(Registry){
   cout <<"retrieved Type item: " <<*it <<endl;
 }
 
-int MAIN(int argn,char** argv){
+int MAIN(int argc,char** argv){
   testRegistry();
 
   return 0;

@@ -2,6 +2,7 @@
 #include <Gui/opengl.h>
 
 #include <Motion/motionHeuristics.h>
+#include <Motion/pr2_heuristics.h>
 
 void testGraspHeuristic(){
   cout <<"\n= 1-step grasp optimization=\n" <<endl;
@@ -11,27 +12,30 @@ void testGraspHeuristic(){
   ors::Graph G;
   init(G, gl, MT::getParameter<MT::String>("orsFile"));
   makeConvexHulls(G.shapes);
-  G.calcBodyFramesFromJoints();
   gl.watch();
 
-  MotionProblem P(&G);
-  P.loadTransitionParameters();
+  MotionProblem MP(&G);
+  MP.loadTransitionParameters();
+  MP.H_rate_diag = pr2_reasonable_W();
+  cout <<MP.x0 <<endl;
 
   ors::Shape *s = G.getShapeByName("target1");
   for(uint k=0;k<10;k++){
 
-    arr x, xT, x0=P.x0;
-    threeStepGraspHeuristic(xT, P, x0, s->index, 2);
+    arr x, xT, x0=MP.x0;
 
-    MotionProblemFunction F(P);
+    threeStepGraspHeuristic(xT, MP, x0, s->index, 2);
 
-    sineProfile(x, x0, xT, P.T);
+    MotionProblemFunction F(MP);
 
-    optGaussNewton(x, Convert(F), OPT(verbose=2, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
-    //costs.displayRedBlue(~sqr(P.costMatrix), false, 3);
-    P.costReport();
-    write(LIST<arr>(x),"z.output");
-    gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", false, true);
+    sineProfile(x, x0, xT, MP.T);
+
+    optNewton(x, Convert(F), OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1e-0, maxStep=.5));
+    MP.costReport();
+    gnuplot("load 'z.costReport.plt'", false, true);
+
+    displayTrajectory(x, 1, G, gl,"planned trajectory");
+    displayTrajectory(x, 1, G, gl,"planned trajectory");
     displayTrajectory(x, 1, G, gl,"planned trajectory");
 
     MT::save(G,"z.ors");
@@ -44,7 +48,7 @@ void testGraspHeuristic(){
     s->size[3] = rnd.uni(.02,.07);
     s->mesh.clear();
 
-    P.setx0(P.x_current);
+    MP.setx0(MP.x_current);
     gl.watch();
   }
   
@@ -52,8 +56,8 @@ void testGraspHeuristic(){
 
 //===========================================================================
 
-int main(int argn,char **argv){
-  MT::initCmdLine(argn,argv);
+int main(int argc,char **argv){
+  MT::initCmdLine(argc,argv);
 
   testGraspHeuristic();
   

@@ -23,7 +23,7 @@ public:
 
     //compute little step
     arr d = q - ann.X[k]; //difference vector between q and nearest neighbor
-    double dist = norm(d);
+    double dist = length(d);
     q = ann.X[k] + stepsize/dist * d;
     last_parent = k;
     return dist;

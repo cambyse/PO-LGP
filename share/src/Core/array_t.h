@@ -1499,13 +1499,13 @@ template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP
     os.put(0);
     os <<std::endl;
   } else {
-    if(dimTag || nd>=3) { writeDim(os); os <<' '; }
-    if(nd>=2) os <<'\n';
     if(BRACKETS[0]) os <<BRACKETS[0];
-    if(nd==0 && N==0) { if(BRACKETS[1]) os <<BRACKETS[1]; return; }
-    if(nd==0 && N==1) { os <<scalar() <<']'; return; }
+    if(dimTag || nd>=3) { os <<' '; writeDim(os); os <<' '; }
+    if(nd>=2) os <<'\n';
+    if(nd==0 && N==1) {
+      os <<scalar();
+    }
     if(nd==1) {
-      //os <<' ';
       for(i=0; i<N; i++) os <<ELEMSEP  <<operator()(i);
     }
     if(nd==2) for(j=0; j<d0; j++) {
@@ -1536,109 +1536,63 @@ template<class T> void MT::Array<T>::read(std::istream& is) {
   uint d, i;
   char c;
   T x;
+  bool expectBracket=false;
 
 #define PARSERR(x) HALT("Error in parsing Array of type '" <<typeid(T).name() <<"' (line=" <<MT::lineCount <<"):\n" <<x)
 
   c=MT::peerNextChar(is);
-  switch(c) {
-    case '<':
-      readDim(is);
-      c=MT::peerNextChar(is);
-      if(c=='[') {  //fast ascii read
-        is >>PARSE("[");
-        for(i=0; i<N; i++) {
-          if(is.fail()) PARSERR("could not read " <<i <<"-th element of an array");
-          is >>p[i];
-        }
-        is >>PARSE("]");
-        if(is.fail()) PARSERR("could not read array end tag");
-      } else if(c==0) {  //binary read
-        c=is.get();  if(c!=0) PARSERR("couldn't read newline before binary data block :-(");
-        is.read((char*)p, sizeT*N);
-        if(is.fail()) PARSERR("could not binary data");
-        c=is.get(); if(c!=0) PARSERR("couldn't read newline after binary data block :-(");
-      } else { //just directly read numbers
-        for(i=0; i<N; i++) {
-          if(is.fail()) PARSERR("could not read " <<i <<"-th element of an array");
-          is >>p[i];
-        }
+  if(c=='['){
+    is >>PARSE("[");
+    expectBracket=true;
+    c=MT::peerNextChar(is);
+  }
+
+  if(c=='<'){
+    readDim(is);
+    c=MT::peerNextChar(is);
+    if(c==0) {  //binary read
+      c=is.get();  if(c!=0) PARSERR("couldn't read newline before binary data block :-(");
+      is.read((char*)p, sizeT*N);
+      if(is.fail()) PARSERR("could not binary data");
+      c=is.get(); if(c!=0) PARSERR("couldn't read newline after binary data block :-(");
+    }else{  //fast ascii read
+      for(i=0; i<N; i++) {
+	if(is.fail()) PARSERR("could not read " <<i <<"-th element of an array");
+	is >>p[i];
       }
-      break;
-    case '[': //slow read
-      is >>PARSE("[");
-    default:
-      uint i=0;
-      d=0;
-      for(;;) {
-        MT::skip(is, " \r\t");
-        is.get(c);
-        if(c==']' || !is.good()) { is.clear(); break; }
-        if(c==';' || c=='\n') {  //set an array width
-          if(!d) d=i; else if(i%d) PARSERR("mis-structured array in row " <<i/d);
-          continue;
-        }
-        if(c!=',') is.putback(c);
-        is >>x;
-        if(!is.good()) { is.clear(); break; }
-        if(i>=N) resizeCopy(i+1000);
-        elem(i)=x;
-        i++;
+    }
+    if(expectBracket){
+      is >>PARSE("]");
+      if(is.fail()) PARSERR("could not read array end tag");
+    }
+  }else{ //slow ascii read (inferring size from formatting)
+    uint i=0;
+    d=0;
+    for(;;) {
+      MT::skip(is, " \r\t");
+      is.get(c);
+      if(c==']' || !is.good()) { is.clear(); break; }
+      if(c==';' || c=='\n') {  //set an array width
+	if(!d) d=i; else if(i%d) PARSERR("mis-structured array in row " <<i/d);
+	continue;
       }
-      resizeCopy(i);
-      if(d) {
-        if(N%d) PARSERR("mis-structured array in last row");
-        reshape(N/d, d);
-      }
-      break;
+      if(c!=',') is.putback(c);
+      is >>x;
+      if(!is.good()) { is.clear(); break; }
+      if(i>=N) resizeCopy(i+1000);
+      elem(i)=x;
+      i++;
+    }
+    resizeCopy(i);
+    if(d) {
+      if(N%d) PARSERR("mis-structured array in last row");
+      reshape(N/d, d);
+    }
   }
 
 #undef PARSERR
 
 }
-
-template<class T> void MT::Array<T>::read(const char* filename) {
-  ifstream fil;
-  MT::open(fil, filename);
-  read(fil);
-}
-/*
-template<class T> void MT::Array<T>::readOld(std::istream& is){
-  uint d, i, j, k;
-  char c;
-  MT::skip(is);
-  is.get(c);
-  switch(c){
-  case '[':
-    is >>d;
-    if(is.fail()) HALT ("could not read array tag");
-    if(d==0){ is >>PARSE(">"); return; }
-    if(d==1){
-      is >>PARSE(":") >>i;
-      if(is.fail()) HALT ("could not read array's dimensions");
-      resize(i);
-    }
-    if(d==2){
-      is >>PARSE(":") >>i >>PARSE(", ") >>j;
-      if(is.fail()) HALT ("could not read array's dimensions");
-      resize(i, j);
-    }
-    if(d==3){
-      is >>PARSE(":") >>i >>PARSE(", ") >>j >>PARSE(", ") >>k;
-      if(is.fail()) HALT ("could not read array's dimensions");
-      resize(i, j, k);
-    }
-    is >>PARSE("]");
-    if(is.fail()) HALT ("could not read array end tag");
-    for(i=0;i<N;i++){
-      if(is.fail()) HALT("could not read " <<i <<"-th element of an array");
-      is >>p[i];
-    }
-    break;
-  default:
-    NIY;
-  }
-}
-*/
 
 /// write a dimensionality tag of format <d0 d1 d2 ...>
 template<class T> void MT::Array<T>::writeDim(std::ostream& os) const {
@@ -2048,7 +2002,7 @@ template<class T> T sumOfSqr(const MT::Array<T>& v) {
 }
 
 /// \f$\sqrt{\sum_i x_i^2}\f$
-template<class T> T norm(const MT::Array<T>& v) { return (T)::sqrt((double)sumOfSqr(v)); }
+template<class T> T length(const MT::Array<T>& v) { return (T)::sqrt((double)sumOfSqr(v)); }
 
 /// \f$\sqrt{\sum_i x_i^2}\f$
 template<class T> T mean(const MT::Array<T>& v) { return sum(v)/v.N; }
@@ -2929,7 +2883,7 @@ UpdateOperator(%=)
 
 #define BinaryOperator( op, updateOp)         \
   template<class T> Array<T> operator op(const Array<T>& y, const Array<T>& z){ Array<T> x(y); x updateOp z; return x; } \
-  template<class T> Array<T> operator op(T y, const Array<T>& z){               Array<T> x(z); x updateOp y; return x; } \
+  template<class T> Array<T> operator op(T y, const Array<T>& z){               Array<T> x; x.resizeAs(z); x=y; x updateOp z; return x; } \
   template<class T> Array<T> operator op(const Array<T>& y, T z){               Array<T> x(y); x updateOp z; return x; }
 
 BinaryOperator(+ , +=);

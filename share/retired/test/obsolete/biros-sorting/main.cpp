@@ -15,7 +15,7 @@ struct Integer:public Variable {
 Process *newPairSorter(Integer& a, Integer& b);
 
 
-int main(int argn, char **argv) {
+int main(int argc, char **argv) {
   uint N=20;
 
   MT::Array<Integer> ints(N);

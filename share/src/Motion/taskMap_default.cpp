@@ -1,6 +1,35 @@
 #include "taskMap_default.h"
 
+DefaultTaskMap::DefaultTaskMap(DefaultTaskMapType _type,
+                               int iShape, const ors::Vector& _ivec,
+                               int jShape, const ors::Vector& _jvec,
+                               const arr& _params):type(_type), i(iShape), j(jShape){
+
+  if(&_ivec) ivec=_ivec; else ivec.setZero();
+  if(&_jvec) jvec=_jvec; else jvec.setZero();
+  if(&_params) params=_params;
+}
+
+DefaultTaskMap::DefaultTaskMap(DefaultTaskMapType _type, const ors::Graph &G,
+                               const char* iShapeName, const ors::Vector& _ivec,
+                               const char* jShapeName, const ors::Vector& _jvec,
+                               const arr& _params):type(_type), i(-1), j(-1){
+  ors::Shape *a = iShapeName ? G.getShapeByName(iShapeName):NULL;
+  ors::Shape *b = jShapeName ? G.getShapeByName(jShapeName):NULL;
+  if(a) i=a->index;
+  if(b) j=b->index;
+  if(&_ivec) ivec=_ivec; else ivec.setZero();
+  if(&_jvec) jvec=_jvec; else jvec.setZero();
+  if(&_params) params=_params;
+}
+
+
 void DefaultTaskMap::phi(arr& y, arr& J, const ors::Graph& G) {
+  int body_i = i<0?-1: G.shapes(i)->body->index;
+  int body_j = j<0?-1: G.shapes(j)->body->index;
+  ors::Vector vec_i = i<0?ivec: G.shapes(i)->rel*ivec;
+  ors::Vector vec_j = j<0?jvec: G.shapes(j)->rel*jvec;
+
   arr q;
   ors::Vector pi, pj, c;
   arr zi, zj, Ji, Jj, JRj;
@@ -8,46 +37,47 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::Graph& G) {
   ors::Vector vi, vj, r, jk;
   uint k,l;
 
+
   //get state
   switch(type) {
     case posTMT:
-      if(j==-1) {
-        G.kinematicsPos(y, i, &irel.pos);
-        if(&J) G.jacobianPos(J, i, &irel.pos);
+      if(body_j==-1) {
+        G.kinematicsPos(y, body_i, &vec_i);
+        if(&J) G.jacobianPos(J, body_i, &vec_i);
         break;
       }
-      pi = G.bodies(i)->X.pos + G.bodies(i)->X.rot * irel.pos;
-      pj = G.bodies(j)->X.pos + G.bodies(j)->X.rot * jrel.pos;
-      c = G.bodies(j)->X.rot / (pi-pj);
-      y.resize(3); y = ARRAY(c);
-      G.jacobianPos(Ji, i, &irel.pos);
-      G.jacobianPos(Jj, j, &jrel.pos);
-      G.jacobianR(JRj, j);
+      pi = G.bodies(body_i)->X * vec_i;
+      pj = G.bodies(body_j)->X * vec_j;
+      c = G.bodies(body_j)->X.rot / (pi-pj);
+      y = ARRAY(c);
       if(&J) {
+        G.jacobianPos(Ji, body_i, &vec_i);
+        G.jacobianPos(Jj, body_j, &vec_j);
+        G.jacobianR(JRj, body_j);
         J.resize(3, Jj.d1);
         for(k=0; k<Jj.d1; k++) {
           vi.set(Ji(0, k), Ji(1, k), Ji(2, k));
           vj.set(Jj(0, k), Jj(1, k), Jj(2, k));
           r .set(JRj(0, k), JRj(1, k), JRj(2, k));
-          jk =  G.bodies(j)->X.rot / (vi - vj);
-          jk -= G.bodies(j)->X.rot / (r ^(pi - pj));
+          jk =  G.bodies(body_j)->X.rot / (vi - vj);
+          jk -= G.bodies(body_j)->X.rot / (r ^(pi - pj));
           J(0, k)=jk.x; J(1, k)=jk.y; J(2, k)=jk.z;
         }
       }
       break;
-    case zoriTMT:
-      if(j==-1) {
-        G.kinematicsVec(y, i, &irel.rot.getZ(vi));
-        if(&J) G.jacobianVec(J, i, &irel.rot.getZ(vi));
+    case vecTMT:
+      if(body_j==-1) {
+        G.kinematicsVec(y, body_i, &vec_i);
+        if(&J) G.jacobianVec(J, body_i, &vec_i);
         break;
       }
       //relative
       MT_MSG("warning - don't have a correct Jacobian for this TMType yet");
-      fi = G.bodies(i)->X; fi.appendTransformation(irel);
-      fj = G.bodies(j)->X; fj.appendTransformation(jrel);
-      f.setDifference(fi, fj);
-      f.rot.getZ(c);
-      y = ARRAY(c);
+//      fi = G.bodies(body_i)->X; fi.appendTransformation(irel);
+//      fj = G.bodies(body_j)->X; fj.appendTransformation(jrel);
+//      f.setDifference(fi, fj);
+//      f.rot.getZ(c);
+//      y = ARRAY(c);
       NIY; //TODO: Jacobian?
       break;
     case qItselfTMT:   G.getJointState(q);    y = q;   if(&J) J.setId(q.N);  break;
@@ -90,17 +120,15 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::Graph& G) {
         J.reshape(params.N, J.N/params.N);
       }
       break;
-    case zalignTMT:
-      G.kinematicsVec(zi, i, &irel.rot.getZ(vi));
-      if(&J) G.jacobianVec(Ji, i, &irel.rot.getZ(vi));
-      if(j==-1) {
-        ors::Vector world_z;
-        if(params.N==3) world_z.set(params.p); else world_z=Vector_z;
-        zj = ARRAY((jrel*world_z));
+    case vecAlignTMT:
+      G.kinematicsVec(zi, body_i, &vec_i);
+      if(&J) G.jacobianVec(Ji, body_i, &vec_i);
+      if(body_j==-1) {
+        zj = ARRAY(vec_j);
         if(&J) { Jj.resizeAs(Ji); Jj.setZero(); }
       } else {
-        G.kinematicsVec(zj, j, &jrel.rot.getZ(vj));
-        if(&J) G.jacobianVec(Jj, j, &jrel.rot.getZ(vj));
+        G.kinematicsVec(zj, body_j, &vec_j);
+        if(&J) G.jacobianVec(Jj, body_j, &vec_j);
       }
       y.resize(1);
       y(0) = scalarProduct(zi, zj);
@@ -117,7 +145,7 @@ uint DefaultTaskMap::dim_phi(const ors::Graph& G) {
   //get state
   switch(type) {
     case posTMT: return 3;
-    case zoriTMT: return 3;
+    case vecTMT: return 3;
     case qItselfTMT: return G.getJointStateDimension();
     case qLinearTMT: return params.d0;
     case qSquaredTMT: return 1;
@@ -127,7 +155,7 @@ uint DefaultTaskMap::dim_phi(const ors::Graph& G) {
     case collTMT: return 1;
     case colConTMT: return 1;
     case skinTMT: return params.N;
-    case zalignTMT: return 1;
+    case vecAlignTMT: return 1;
     default:  HALT("no such TMT");
   }
 }

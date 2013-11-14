@@ -2,8 +2,8 @@
 #include <MT/soc_orsSystem.h>
 #include <Gui/opengl.h>
 
-int main(int argn,char** argv){
-  MT::initCmdLine(argn,argv);
+int main(int argc,char** argv){
+  MT::initCmdLine(argc,argv);
 
   OpenGL gl;
   
@@ -78,7 +78,7 @@ int main(int argn,char** argv){
   //-- optimize
   //rndUniform(x,-10.,-1.);
   for(;;){
-    optGaussNewton(x, Convert(sys), OPT4(verbose=2, stopIters=20, useAdaptiveDamping=.0, maxStep=1.));
+    optNewton(x, Convert(sys), OPT4(verbose=2, stopIters=20, useAdaptiveDamping=.0, maxStep=1.));
     arr xx;
     if(sys.get_xDim()>x.d1) getPhaseTrajectory(xx, x, sys.get_tau()); else xx=x;
     analyzeTrajectory(sys, xx, true, &cout);

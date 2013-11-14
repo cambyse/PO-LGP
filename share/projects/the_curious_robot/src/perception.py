@@ -10,10 +10,10 @@ import Queue
 # import time
 
 # import numpy as np
-# import corepy
 
 import the_curious_robot as tcr
 import the_curious_robot.srv as srv
+import corepy
 import orspy as ors
 
 import require_provide as rp
@@ -30,7 +30,7 @@ class FakePerception():
 
         self.world = ors.Graph()
         worldfile = os.path.join(
-            ors.get_mlr_path(),
+            corepy.get_mlr_path(),
             "share/projects/the_curious_robot/src/world.ors"
         )
         self.world.init(worldfile)

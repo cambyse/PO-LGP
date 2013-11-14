@@ -1,9 +1,7 @@
 #include <Ors/ors_physx.h>
 #include <Gui/opengl.h>
 
-
-/*----------------------------------------------------------------------------*/
-int main(int argc, char** argv) {
+void TEST(PhysxConvexSubmeshes) {
   ors::Graph graph;
   graph.init("doorSimple.ors");
   ors::Body* robot = graph.getBodyByName("robot");
@@ -27,7 +25,10 @@ int main(int argc, char** argv) {
     glMy.update();
     glPh.update();
   }
-  return 0;
 }
 
-// vim: ts=2:sw=2:expandtab
+int MAIN(int argc, char** argv) {
+  testPhysxConvexSubmeshes();
+
+  return 0;
+}

@@ -10,12 +10,12 @@ void setup_opengl_for_g4(ors::Graph& ors, OpenGL& gl, uint hubs){
   gl.camera.focus(0, .5, .5);
   gl.camera.upright();
 
-  ors::Shape *s = new ors::Shape(ors, NULL);
+  ors::Shape *s = new ors::Shape(ors, NoBody);
   s->type = ors::markerST;
   s->size[0] = .5;
 
   for(uint m=0;m<hubs;m++){
-    ors::Shape *s = new ors::Shape(ors, NULL);
+    ors::Shape *s = new ors::Shape(ors, NoBody);
     s->type = ors::boxST;
     memmove(s->size ,ARR(.10, .04, .01, 0).p, 4*sizeof(double));
     memmove(s->color,ARR(1, 0, 0).p, 3*sizeof(double));

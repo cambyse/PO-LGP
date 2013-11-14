@@ -21,11 +21,39 @@
 
 #include "motion.h"
 
+enum DefaultTaskMapType {
+  noneTMT,     ///< undefined
+  posTMT,      ///< 3D position of reference, can have 2nd reference, no param
+  vecTMT,      ///< 3D vec (orientation), no 2nd reference, no param
+  vecAlignTMT, ///< 1D vector alignment, can have 2nd reference, param (optional) determins alternative reference world vector
+  qItselfTMT,  ///< q itself as task variable, no param
+  qLinearTMT,  ///< k-dim variable linear in q, no references, param: k-times-n matrix
+  qSingleTMT,  ///< 1D entry of q, reference-integer=index, no param
+  qSquaredTMT, ///< 1D square norm of q, no references, param: n-times-n matrix
+  qLimitsTMT,  ///< 1D meassure for joint limit violation, no references, param: n-times-2 matrix with lower and upper limits for each joint
+  collTMT,     ///< 1D meassure for collision violation, no references, param: 1D number defining the distance margin
+  colConTMT,   ///< 1D meassure collision CONSTRAINT meassure, no references, param: 1D number defining the distance margin
+  comTMT,      ///< 2D vector of the horizontal center of mass, no refs, no param
+  skinTMT      ///< vector of skin pressures...
+};
+
+
+
 struct DefaultTaskMap:TaskMap {
   DefaultTaskMapType type;
-  int i, j;             ///< which body(-ies) does it refer to?
-  ors::Transformation irel, jrel; ///< relative position to the body
-  arr params;           ///< parameters of the variable (e.g., liner coefficients, limits, etc)
+  int i, j;               ///< which shapes does it refer to?
+  ors::Vector ivec, jvec; ///< additional position or vector
+  arr params;             ///< parameters of the variable (e.g., liner coefficients, limits, etc)
+
+  DefaultTaskMap(DefaultTaskMapType type,
+                 int iShape=-1, const ors::Vector& ivec=NoVector,
+                 int jShape=-1, const ors::Vector& jvec=NoVector,
+                 const arr& params=NoArr);
+
+  DefaultTaskMap(DefaultTaskMapType type, const ors::Graph& G,
+                 const char* iShapeName=NULL, const ors::Vector& ivec=NoVector,
+                 const char* jShapeName=NULL, const ors::Vector& jvec=NoVector,
+                 const arr& params=NoArr);
 
   virtual void phi(arr& y, arr& J, const ors::Graph& G);
   virtual uint dim_phi(const ors::Graph& G);

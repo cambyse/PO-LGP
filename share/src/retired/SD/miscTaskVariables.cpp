@@ -18,7 +18,7 @@ void zOpposeTaskVariable::userUpdate(const ors::Graph& ors){
   sum_z.resize(3); sum_z.setZero();
   for_list(i,s,refs){
     ors.kinematicsVec(zi,s->body->index,&s->rel.rot.getZ(tmp));
-    sum_z += zi/norm(zi);
+    sum_z += zi/length(zi);
     ors.jacobianVec  (Ji,s->body->index,&s->rel.rot.getZ(tmp));
     sum_J += Ji;
   }

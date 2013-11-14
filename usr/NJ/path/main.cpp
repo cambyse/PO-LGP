@@ -241,7 +241,7 @@ void testControl(){
   schunk.closeLWA();
 }
 
-int main(int argn,char** argv){
+int main(int argc,char** argv){
   //testSchunk();
   //testControl();
   testTracking();

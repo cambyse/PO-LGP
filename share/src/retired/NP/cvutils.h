@@ -339,7 +339,7 @@ inline void triangulate(floatA& p3D, const floatA& p2D, const floatA& d, float f
 inline void circle_center_3D(floatA& cX, const floatA& X, const floatA& c0, float radius)
 {
   floatA v = X-c0;
-  float normv_inv = 1./norm(v);
+  float normv_inv = 1./length(v);
   for (uint i=0;i<v.N;i++)
     v(i)*=normv_inv*radius;
   cX = X+v;

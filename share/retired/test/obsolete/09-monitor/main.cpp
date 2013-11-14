@@ -25,11 +25,11 @@
 #endif
 
 
-int main(int argn,char** argv){
+int main(int argc,char** argv){
   QApplication *app;
   Gui *gui;
   
-  app = new QApplication(argn, argv);
+  app = new QApplication(argc, argv);
   gui = new Gui;
   gui->exec();
 

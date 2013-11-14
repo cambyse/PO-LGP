@@ -34,7 +34,7 @@ RRTPlannerTest::RRTPlannerTest() {
 
   // add a collision cost with threshold 0 to avoid collisions
   uintA shapes = ARRAY<uint>(P.ors->getBodyByName("endeff")->shapes(0)->index);
-  TaskCost *c = P.addCustomTaskMap("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .01, true));
+  TaskCost *c = P.addTaskMap("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .01, true));
   P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
   c->y_threshold = 0;
 
@@ -65,17 +65,17 @@ RRTPlannerTest::RRTPlannerTest() {
 TEST_F(RRTPlannerTest, testRRTEndPoints) {
 
   // check for correct start point
-  EXPECT_TRUE( norm(trajectory[0] - start) <= eps);
+  EXPECT_TRUE( length(trajectory[0] - start) <= eps);
 
   // check for goal reaching
-  EXPECT_TRUE( norm(trajectory[trajectory.d0-1] - target) <= eps);
+  EXPECT_TRUE( length(trajectory[trajectory.d0-1] - target) <= eps);
 }
 
 TEST_F(RRTPlannerTest, testRRTStepSize) {
   for(uint i=0; i<trajectory.d0; ++i) {
     // check for small enough steps
     if(i>0) {
-      EXPECT_LE(norm(trajectory[i] - trajectory[i-1]), stepsize + eps) << "i = " << i;  
+      EXPECT_LE( length(trajectory[i] - trajectory[i-1]), stepsize + eps) << "i = " << i;  
     }
   }
 }

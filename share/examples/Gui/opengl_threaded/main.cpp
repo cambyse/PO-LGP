@@ -22,10 +22,7 @@ struct Proc:public Thread{
   }
 };
 
-int main(int argc, char **argv){
-  MT::initCmdLine(argc,argv);
-  //int mode = MT::getParameter<int>("mode",3);
-  
+void TEST(ThreadedOpenGL) {
   Proc gl1("gl1"),gl2("gl2"),gl3("gl3");
   gl1.threadOpen();
   gl2.threadOpen();
@@ -44,6 +41,12 @@ int main(int argc, char **argv){
   }
   MT::wait(5.);
   close(procs);
+}
+
+int MAIN(int argc, char **argv){
+  MT::initCmdLine(argc,argv);
+
+  testThreadedOpenGL();
 
   return 0;
 }

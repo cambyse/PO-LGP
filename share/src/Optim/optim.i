@@ -19,9 +19,9 @@ author: Johannes kulick
 //===========================================================================
 %module motionpy
 %{
+  #include <Core/geo.h>
   #include "optimization.h"
   #include "constrained.h"
-  #include "benchmarks.h"
 %}
 
 //===========================================================================
@@ -40,5 +40,4 @@ author: Johannes kulick
 
 %include "optimization.h"
 %include "constrained.h"
-%include "benchmarks.h"
 

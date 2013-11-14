@@ -396,7 +396,7 @@ void TEST(Inverse){
   /*MT::timerStart();
     MT::inverse_LU(invA,A);
     cout <<"lapack LU  inverse time = " <<MT::timerRead(); cout.flush();
-    cout <<" error = " <<norm(invA*A - I) <<std::endl;*/
+    cout <<" error = " <<length(invA*A - I) <<std::endl;*/
   
   cout <<"\n*** symmetric matrix inverse\n";
   A.resize(m,m);

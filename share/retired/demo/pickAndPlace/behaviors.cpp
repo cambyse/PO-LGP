@@ -55,9 +55,9 @@ void homing(bool fixFingers){
     MT::wait(.2);
     double dist;
     if(fixFingers)
-      dist=norm(_HardwareReference->get_q_reference(NULL).sub(0,6));
+      dist=length(_HardwareReference->get_q_reference(NULL).sub(0,6));
     else 
-      dist=norm(_HardwareReference->get_q_reference(NULL));
+      dist=length(_HardwareReference->get_q_reference(NULL));
     cout <<"\rhoming dist = " <<dist <<std::flush;
     if(dist<1e-1) break;
     if(_JoystickState->get_state(NULL)(0)&0x30) break;

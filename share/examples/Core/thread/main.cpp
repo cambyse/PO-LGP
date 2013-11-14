@@ -62,7 +62,7 @@ void TEST(Thread){
 #endif
 }
 
-int MAIN(int argn,char** argv){
+int MAIN(int argc,char** argv){
   testThread();
 
   return 0;

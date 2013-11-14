@@ -95,7 +95,7 @@ void way2(){
 // testing
 //
 
-void autotest(){
+void TEST(SystemConnect) {
   cout <<"**** ENTER_MAIN" <<endl;
 
   cout <<registry() <<endl;
@@ -119,15 +119,15 @@ void autotest(){
 
 //===========================================================================
 
-//-- this is how the top-level manager should get access
-int main(int argc, char** argv){
+int MAIN(int argc, char** argv){
   int mode=0;
   if(argc>1) mode=atoi(argv[1]);
   switch(mode){
-    case 0: way0(); break;
-    case 1: way1(); break;
-    case 2: way2(); break;
-    case 3: autotest(); break;
+    case 0: way0(); way1(); way2(); testSystemConnect(); break;
+    case 1: way0(); break;
+    case 2: way1(); break;
+    case 3: way2(); break;
+    case 4: testSystemConnect(); break;
   }
 
   return 0;

@@ -85,11 +85,11 @@ test_fake_skin(GuiModule &gui, grobi_skin_t &gs){
 }
 
 int
-main(int argn,char** argv){
+main(int argc,char** argv){
   GuiModule gui;
   ors::Graph ors;
 
-  MT::initCmdLine(argn,argv);
+  MT::initCmdLine(argc,argv);
   signal(SIGINT,usrbreak_callback);
   
   MT::load(ors,"schunk.ors",true);

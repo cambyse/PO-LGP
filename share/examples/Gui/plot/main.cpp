@@ -1,8 +1,7 @@
 #include <Core/array.h>
 #include <Gui/plot.h>
 
-
-void testPlot(){
+void TEST(Plot) {
   //plotGnuplot();
   plotOpengl();
   doubleA mean(2),A;
@@ -31,7 +30,7 @@ void testPlot(){
 
 }
 
-int main(int argn,char** argv){
+int MAIN(int argc,char** argv){
   testPlot();
 
   return 0;

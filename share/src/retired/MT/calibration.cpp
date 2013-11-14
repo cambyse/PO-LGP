@@ -44,7 +44,7 @@ void decomposeCameraProjectionMatrix(arr& K, arr& R, arr& t, const arr& P, bool 
          <<"\nR=" <<R
          // <<"\nr=" <<r
          <<"\nt=" <<t
-         // <<"\nposition error = " <<norm(t-S.getCameraTranslation())
+         // <<"\nposition error = " <<length(t-S.getCameraTranslation())
          <<endl;
   }
 }

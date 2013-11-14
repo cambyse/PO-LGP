@@ -7,6 +7,7 @@ import rospy
 from actionlib import SimpleActionServer
 
 import corepy
+import guipy
 import orspy
 import the_curious_robot.msg as msgs
 #from articulation_msgs.msg import ModelMsg, TrackMsg
@@ -44,7 +45,7 @@ class LearnActionServer:
 
         # Belief & PhysX & OpenGL
         self.belief = orspy.Graph()
-        self.gl = corepy.OpenGL()
+        self.gl = guipy.OpenGL()
         self.physx = orspy.PhysXInterface()
         orspy.bindOrsToPhysX(self.belief, self.gl, self.physx)
 

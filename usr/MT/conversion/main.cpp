@@ -35,7 +35,7 @@ struct Cderiv:C{
   const char* type(){ return typeid(*this).name(); }
 };
 
-int main(int argn, char**argv){
+int main(int argc, char**argv){
   Cderiv c;
   write(Convert(c));
   return 0;

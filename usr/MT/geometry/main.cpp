@@ -10,7 +10,7 @@ void addRndShape(ors::Graph& ors){
   ors.shapes.append(s);
 }
 
-int main(int argn, char** argv){
+int main(int argc, char** argv){
   ors::Graph ors;
   OpenGL gl;
   gl.add(glStandardScene,NULL);

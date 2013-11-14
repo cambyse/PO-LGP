@@ -105,7 +105,7 @@ Percept_ISF_process::get_cmd_line_obj(GraspObject **obj, GraspObject **prior){
               o->isf_gp.gp.appendObservation(
                   pts[i],0);
               o->isf_gp.gp.appendGradientObservation(
-                  pts[i],grads[i]/(norm(grads[i])));
+                  pts[i],grads[i]/(length(grads[i])));
             }
             o->isf_gp.gp.recompute();
             if (plotObservs) plotPoints(pts);

@@ -1,5 +1,6 @@
 #include <Core/util.h>
 #include <Motion/motion.h>
+#include <Motion/taskMap_default.h>
 #include <Motion/taskMap_constrained.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
@@ -21,8 +22,8 @@ void saveTrajectory(const arr& x, ors::Graph& G, OpenGL& gl) {
   vid.close();
 }
 
-int main(int argn,char** argv){
-  MT::initCmdLine(argn,argv);
+int main(int argc,char** argv){
+  MT::initCmdLine(argc,argv);
 
   OpenGL gl;
   ors::Graph G;
@@ -35,19 +36,20 @@ int main(int argn,char** argv){
 
   //-- setup the motion problem
   TaskCost *c;
-  c = P.addDefaultTaskMap_Bodies("position", posTMT, "endeff", ors::Transformation().setText("<t(0 0 .2)>"));
-  P.setInterpolatingCosts(c, MotionProblem::constFinalMid,
+  c = P.addTaskMap("position",
+		   new DefaultTaskMap(posTMT, G, "endeff", ors::Vector(0,0,.2)));
+  P.setInterpolatingCosts(c, MotionProblem::final_restConst,
                           ARRAY(P.ors->getBodyByName("target")->X.pos), 1e3,
                           ARRAY(0.,0.,0.), 1e-3);
-  P.setInterpolatingVelCosts(c, MotionProblem::constFinalMid,
-                             ARRAY(0.,-1.,0.), 1e3, //final desired velocity: v_y=-1 (hit ball from behind)
-                             ARRAY(0.,0.,0.), 0.);
+  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
+                             ARRAY(0.,-1.,0.), 1e3);
 
   if(con){
-    c = P.addCustomTaskMap("collisionConstraints", new CollisionConstraint());
+    c = P.addTaskMap("collisionConstraints", new CollisionConstraint());
   }else{
-    c = P.addDefaultTaskMap("collision", collTMT, 0, Transformation_Id, 0, Transformation_Id, ARR(.1));
-    P.setInterpolatingCosts(c, MotionProblem::constFinalMid, ARRAY(0.), 1e-0);
+    c = P.addTaskMap("collision",
+		     new DefaultTaskMap(collTMT, 0, NoVector, 0, NoVector, ARR(.1)));
+    P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
   }
 
   

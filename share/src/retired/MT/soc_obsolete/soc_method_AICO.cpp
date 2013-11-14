@@ -886,7 +886,7 @@ double soc::AICO::stepDynamic(){
       if(maxStep){
         arr delta = b[t]-qhat[t];
         if(convergenceRate) delta *= convergenceRate;
-        double len = norm(delta);
+        double len = length(delta);
         if(len>maxStep){
           qhat[t]() += (maxStep/len)*delta;
         }else qhat[t]() += delta;

@@ -27,8 +27,8 @@
 #include <MT/mdp_EMSolver.h>
 
 
-int main(int argn,char** argv){
-  MT::initCmdLine(argn,argv);
+int main(int argc,char** argv){
+  MT::initCmdLine(argc,argv);
 
   uint mode;
   MT::getParameter(mode,"mode",(uint)9);
@@ -90,7 +90,7 @@ int main(int argn,char** argv){
 #ifndef MT_QT
     HALT("gui only works when compiling with QT");
 #else
-    app = new QApplication(argn, argv);
+    app = new QApplication(argc, argv);
     gui = new Gui;
     gui->exec();
     delete gui;

@@ -34,7 +34,7 @@ struct PredicateNetwork {
 
 
 #if 0
-void test(int argn,char** argv) {
+void test(int argc,char** argv) {
   uint DEBUG = 2;
   
   uint t, i, k, l;

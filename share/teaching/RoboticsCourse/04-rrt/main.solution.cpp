@@ -4,7 +4,7 @@
 #include <Gui/plot.h>
 #include <Optim/optimization.h>
 
-#include <MT/kOrderMarkovProblem.h>
+//#include <MT/kOrderMarkovProblem.h>
 //#include <MT/functions.h>
 
 struct TrajectoryOptimizationProblem:KOrderMarkovFunction {
@@ -15,10 +15,10 @@ struct TrajectoryOptimizationProblem:KOrderMarkovFunction {
 
   uint get_T(){ return T; }
   uint get_k(){ return 2; }
-  uint get_n(){ return S->getJointDimension(); }
-  uint get_m(uint t){
-    if(t==0 || t==get_T()-get_k()) return 2*get_n();
-    return get_n()+1;
+  uint dim_x(){ return S->getJointDimension(); }
+  uint dim_phi(uint t){
+    if(t==0 || t==get_T()-get_k()) return 2*dim_x();
+    return dim_x()+1;
   }
 };
 
@@ -41,7 +41,7 @@ public:
 
     //compute little step
     arr d = q - ann.X[nearest]; //difference vector between q and nearest neighbor
-    double dist = norm(d);
+    double dist = length(d);
     q = ann.X[nearest] + stepsize/dist * d;
     return dist;
   }
@@ -209,18 +209,18 @@ void optim(){
   cout <<"Problem parameters:"
        <<"\n T=" <<P.get_T()
        <<"\n k=" <<P.get_k()
-       <<"\n n=" <<P.get_n()
+       <<"\n n=" <<P.dim_x()
        <<endl;
 
 #if 0 //only if you want to see some steps...
   for(uint k=0;k<20;k++){
-    optGaussNewton(x, Convert(P), OPT5(stopIters=1, verbose=2, useAdaptiveDamping=.0, maxStep=.1, stopTolerance=1e-2));
+    optNewton(x, Convert(P), OPT(stopIters=1, verbose=2, useAdaptiveDamping=.0, maxStep=.1, stopTolerance=1e-2));
     plotEffTraj(S, x);
     S.watch();
   }
 #endif
 
-  optGaussNewton(x, Convert(P), OPT5(stopIters=1000, verbose=2, useAdaptiveDamping=.0, maxStep=.1, stopTolerance=1e-2));
+  optNewton(x, Convert(P), OPT(stopIters=1000, verbose=2, useAdaptiveDamping=.0, maxStep=.1, stopTolerance=1e-2));
   MT::save(x,"q.optim");
 
   //display
@@ -244,7 +244,7 @@ int main(int argc,char **argv){
 
 
 void TrajectoryOptimizationProblem::phi_t(arr& phi, arr& J, uint t, const arr& x_bar){
-  uint T=get_T(), n=get_n(), k=get_k(), m=get_m(t);
+  uint T=get_T(), n=dim_x(), k=get_k(), m=dim_phi(t);
 
   //assert some dimensions
   CHECK(x_bar.d0==k+1,"");

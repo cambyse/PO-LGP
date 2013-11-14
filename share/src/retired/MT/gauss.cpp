@@ -384,7 +384,7 @@ void backward(Gaussian& x, const Gaussian& y, arr& f, arr& F, arr& Q, double upd
     //strech the redundant dimensions
     arr U, w, V, Vt, vk;
     svd(U, w, V, F);
-    double scale=norm(w);
+    double scale=length(w);
     transpose(Vt, V);
     //cout <<U <<w <<V;
     for(uint k=F.d0; k<w.N; k++){ //eigen vectors with zero eigen value

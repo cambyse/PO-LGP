@@ -5,15 +5,15 @@ const int OnOracle::classify(const MT::Array<arr>& data, const int set) const {
 	double epsilon = 10e-3;
 	//if (data(set, 2)(2) - data(set, 0)(2) >= (data(set, 1)(2) + data(set, 3)(2))*0.5 - epsilon&& 
 			//data(set, 2)(2) - data(set, 0)(2) < (data(set, 1)(2) + data(set, 3)(2))*0.5 + epsilon && 
-			//norm( data(set, 2).subRange(0,1) - data(set, 0).subRange(0,1)) < 0.5 ) return 1;
+			//length( data(set, 2).subRange(0,1) - data(set, 0).subRange(0,1)) < 0.5 ) return 1;
 	if (data(set, 0)(2) - data(set, 2)(2) >= (data(set, 1)(0) + data(set, 3)(0))*0.5 - epsilon&& 
 			data(set, 0)(2) - data(set, 2)(2) < (data(set, 1)(0) + data(set, 3)(0))*0.5 + epsilon && 
-			norm( data(set, 0).subRange(0,1) - data(set, 2).subRange(0,1)) < 0.1 ) return 1;
+			length( data(set, 0).subRange(0,1) - data(set, 2).subRange(0,1)) < 0.1 ) return 1;
   else return 0;
 }
 
 const int CloseOracle::classify(const MT::Array<arr>& data, const int set) const {
-  if (norm(data(set, 2) - data(set, 0)) < 0.15) return 1;
+  if (length(data(set, 2) - data(set, 0)) < 0.15) return 1;
   else return 0;
 }
 
@@ -31,7 +31,7 @@ const int InsideOracle::classify(const MT::Array<arr>& data, const int set) cons
   else return 0;
 }
 const int OutOfReachOracle::classify(const MT::Array<arr>& data, const int set) const {
-  if (norm(data(set, 0) - ARR(0., 0., 1.)) > 1.2) return 1;
+  if (length(data(set, 0) - ARR(0., 0., 1.)) > 1.2) return 1;
   else return 0;
 }
 

@@ -1,7 +1,8 @@
 #include <Core/keyValueGraph.h>
 #include <Gui/graphview.h>
 
-void testDot(const char *filename=NULL){
+void TEST(Dot){
+  const char* filename = MT::argc<2?NULL:MT::argv[1];
   KeyValueGraph G;
   MT::load(G, filename?filename:"coffee_shop.fg");
   G.sortByDotOrder();
@@ -10,8 +11,9 @@ void testDot(const char *filename=NULL){
   gv.watch();
 }
 
-int main(int argc, char** argv){
-  testDot(argc<2?NULL:argv[1]);
+int MAIN(int argc, char** argv){
+  MT::initCmdLine(argc, argv);
+  testDot();
 
   return 0;
 }

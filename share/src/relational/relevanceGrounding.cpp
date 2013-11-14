@@ -262,7 +262,7 @@ void createRelevanceDistribution_learned(RelevanceDistribution& relDist, const T
           
     relDist.weights(relDist.obj2id[objects(i)]) = value;
   }
-  norm(relDist.weights);
+  length(relDist.weights);
 }
 
 

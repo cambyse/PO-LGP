@@ -4,8 +4,7 @@
 //NOTE: no actual perception code is included - only system!
 void lib_Perception(); //this is enough to ensure the linking and loading of registry entries
 
-int main(int argn,char **argv) {
-  MT::initCmdLine(argn,argv);
+void TEST(ModuleVision) {
   lib_Perception();
   cout <<registry() <<endl;
 
@@ -35,6 +34,12 @@ int main(int argn,char **argv) {
   }
 
   engine().close(S);
+}
+
+int main(int argc,char **argv) {
+  MT::initCmdLine(argc,argv);
+
+  testModuleVision();
 
   return 0;
 }

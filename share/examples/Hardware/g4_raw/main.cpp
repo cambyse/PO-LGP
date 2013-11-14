@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
 
   //for(int i = 0; i < 1000; i++) {
   for(uint t = 0;; t++) {
-    res = g4_get_frame_data(fd,sysId,hubList,hubs);
+    res = g4_get_frame_data(fd, sysId, hubList, hubs);
     int num_hubs_read = res&0xffff;
     int tot_sys_hubs = res>>16;
 
@@ -104,7 +104,7 @@ int main(int argc, char **argv) {
         }
       }
     }
-    cout << "." << t;
+    cout <<'.' <<t<< flush;
     usleep(855000000l);
   }
 

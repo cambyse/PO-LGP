@@ -17,29 +17,27 @@ void sineProfile(arr& q, const arr& q0, const arr& qT,uint T){
 // the rest is on the three base routines
 //
 
-void threeStepGraspHeuristic(arr& x, MotionProblem& M, const arr& x0, uint shapeId, uint verbose) {
+void threeStepGraspHeuristic(arr& x, MotionProblem& MP, const arr& x0, uint shapeId, uint verbose) {
   OpenGL gl;
-  bindOrsToOpenGL(*M.ors, gl);
+  bindOrsToOpenGL(*MP.ors, gl);
 
-  uint T = M.T;
+  uint T = MP.T;
   //double duration = sys.getTau() * T;
   
-  M.setx0(x0);
-  listDelete(M.taskCosts());
+  MP.setx0(x0);
+  listDelete(MP.taskCosts());
   
   uint side=0;
   
   //-- optimize ignoring hand -- testing different options for aligning with the object
-  if (M.ors->shapes(shapeId)->type==ors::boxST) {
+  if (MP.ors->shapes(shapeId)->type==ors::boxST) {
     arr cost_side(3),x_side(3,x0.N);
     for (side=0; side<3; side++) {
-      setGraspGoals_PR2(M, T, shapeId, side, 0);
-      cost_side(side) = keyframeOptimizer(x, M, 1e-2, false, verbose);
-      listDelete(M.taskCosts());
+      setGraspGoals_PR2(MP, T, shapeId, side, 0);
+      cost_side(side) = keyframeOptimizer(x, MP, false, verbose);
+      listDelete(MP.taskCosts());
       if (verbose>=2) {
-        displayState(x, *M.ors, gl, STRING("posture estimate phase 0 side" <<side));
-//        M.displayCurrentState("posture estimate phase 0", false, false);
-        //M.gl->watch();
+        displayState(x, *MP.ors, gl, STRING("posture estimate phase 0 side " <<side));
       }
       x_side[side]() = x;
     }
@@ -47,36 +45,34 @@ void threeStepGraspHeuristic(arr& x, MotionProblem& M, const arr& x0, uint shape
     side = cost_side.minIndex();
     x = x_side[side];
   } else {
-    setGraspGoals_PR2(M, T, shapeId, side, 0);
-    keyframeOptimizer(x, M, 1e-2, false, verbose);
-    listDelete(M.taskCosts());
+    setGraspGoals_PR2(MP, T, shapeId, side, 0);
+    keyframeOptimizer(x, MP, false, verbose);
+    listDelete(MP.taskCosts());
     if (verbose>=2) {
-      displayState(x, *M.ors, gl, "posture estimate phase 0");
-//      M.displayCurrentState("posture estimate phase 0", false, false);
-     // M.gl->watch();
+      displayState(x, *MP.ors, gl, "posture estimate phase 0");
     }
   }
   
   //-- open hand
   //x.subRange(7,13) = ARR(0,-1.,.8,-1.,.8,-1.,.8);
-  x(M.ors->getJointByName("finger_l_l")->qIndex) = 1.;
-  x(M.ors->getJointByName("finger_l_r")->qIndex) = 1.;
+  x(MP.ors->getJointByName("finger_l_l")->qIndex) = 1.;
+  x(MP.ors->getJointByName("finger_l_r")->qIndex) = 1.;
 
   if (verbose>=2) {
-    displayState(x, *M.ors, gl, "posture estimate phase 1");
+    displayState(x, *MP.ors, gl, "posture estimate phase 1");
   }
   
   //-- reoptimize with close hand
-  setGraspGoals_PR2(M,T,shapeId, side, 1);
-  keyframeOptimizer(x, M, 1e-2, true, verbose);
+  setGraspGoals_PR2(MP, T, shapeId, side, 1);
+  keyframeOptimizer(x, MP, true, verbose);
   //listDelete(M.vars); //DON'T delete the grasp goals - the system should keep them for the planner
-  if (verbose>=1) displayState(x, *M.ors, gl, "posture estimate phase 2");
+  if (verbose>=1) displayState(x, *MP.ors, gl, "posture estimate phase 2");
 //  M.displayCurrentState("posture estimate phase 2", false, false);
   //if (verbose>=2) M.gl->watch();
 }
 
-void setGraspGoals_Schunk(MotionProblem& M, uint T, uint shapeId, uint side, uint phase) {
-  M.setState(M.x0, M.v0);;
+void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, uint phase) {
+  MP.setState(MP.x0, MP.v0);;
   
   //load parameters only once!
   double positionPrec = MT::getParameter<double>("graspPlanPositionPrec");
@@ -88,19 +84,19 @@ void setGraspGoals_Schunk(MotionProblem& M, uint T, uint shapeId, uint side, uin
   double zeroQPrec = MT::getParameter<double>("graspPlanZeroQPrec");
   
   //set the time horizon
-  CHECK(T==M.T, "");
+  CHECK(T==MP.T, "");
   
   //deactivate all variables
-  M.activateAllTaskCosts(false);
+  MP.activateAllTaskCosts(false);
   
   //activate collision testing with target shape
-  ors::Shape *target_shape = M.ors->shapes(shapeId);
+  ors::Shape *target_shape = MP.ors->shapes(shapeId);
   target_shape->cont=true;
-  M.swift->initActivations(*M.ors);
+  MP.swift->initActivations(*MP.ors);
   
   //
   arr target,initial;
-  ors::Transformation irel,jrel;
+  ors::Vector ivec,jvec;
 
   //general target
   target = ARRAY(target_shape->X.pos);
@@ -108,31 +104,33 @@ void setGraspGoals_Schunk(MotionProblem& M, uint T, uint shapeId, uint side, uin
   
   //-- graspCenter -> predefined point (xtarget)
   TaskCost *c;
-  c = M.addDefaultTaskMap_Shapes("graspCenter", posTMT, "graspCenter");
-  M.setInterpolatingCosts(c, MotionProblem::constEarlyMid,
+  c = MP.addTaskMap("graspCenter",
+                   new DefaultTaskMap(posTMT, "graspCenter"));
+  MP.setInterpolatingCosts(c, MotionProblem::early_restConst,
                           target, positionPrec, NoArr, -1., .8);
 
   //-- up: align either with cylinder axis or one of the box sides -- works good
-  irel.setText("<d(90 1 0 0)>"); //we want to align the y-axis of the hand with something
-  jrel.setZero();
+  ivec.set(0, 1, 0);
+  jvec.set(0, 0, 1);
   switch (target_shape->type) {
     case ors::cylinderST:
       target = ARR(0.);  //y-axis of m9 is orthogonal to world z-axis (tricky :-) )
       break;
     case ors::boxST: {
       //jrel=target_shape->X;
-      if (side==1) jrel.addRelativeRotationDeg(90,1,0,0);
-      if (side==2) jrel.addRelativeRotationDeg(90,0,1,0);
+      if (side==1) jvec.set(0, 1, 0);
+      if (side==2) jvec.set(1, 0, 0);
       target = ARR(1.);  //y-axis of m9 is aligned with one of the 3 sides of the cube
     } break;
     default: NIY;
   }
-  c = M.addDefaultTaskMap_Shapes("upAlign", zalignTMT, "graspCenter", irel, target_shape->name, jrel, NoArr);
-  M.setInterpolatingCosts(c, MotionProblem::constEarlyMid,
+  c = MP.addTaskMap("upAlign",
+                   new DefaultTaskMap(vecAlignTMT, *MP.ors, "graspCenter", ivec, target_shape->name, jvec, NoArr));
+  MP.setInterpolatingCosts(c, MotionProblem::early_restConst,
                           target, alignmentPrec, NoArr, -1., .8);
   //test current state: flip if necessary
-  c->map.phi(initial, NoArr, *M.ors);
-  if (initial(0)<0.) ((DefaultTaskMap*)&c->map)->irel.addRelativeRotationDeg(180,1,0,0); //flip vector to become positive
+  c->map.phi(initial, NoArr, *MP.ors);
+  if (initial(0)<0.) ((DefaultTaskMap*)&c->map)->ivec.set(0., -1., 0.); //flip vector to become positive
 
 
   if (phase==0) return;
@@ -142,13 +140,13 @@ void setGraspGoals_Schunk(MotionProblem& M, uint T, uint shapeId, uint side, uin
   uintA shapes = stringListToShapeIndices(
                    ARRAY<const char*>("tip1Shape",
                                       "tip2Shape",
-                                      "tip3Shape"), M.ors->shapes);
+                                      "tip3Shape"), MP.ors->shapes);
   shapes.append(shapeId); shapes.append(shapeId); shapes.append(shapeId);
   shapes.reshape(2,3); shapes = ~shapes;
-  c = M.addCustomTaskMap("graspContacts", new ProxyTaskMap(vectorPTMT, shapes, .05, true));
+  c = MP.addTaskMap("graspContacts", new ProxyTaskMap(vectorPTMT, shapes, .05, true));
   double grip=.8; //specifies the desired proxy value
   target = ARR(grip,grip,grip);
-  M.setInterpolatingCosts(c, MotionProblem::constEarlyMid,
+  MP.setInterpolatingCosts(c, MotionProblem::early_restConst,
                           target, fingerDistPrec, ARR(0.,0.,0.), 0., 0.8);
   for (uint t=0; t<=T; t++) { //interpolation: 0 up to 4/5 of the trajectory, then interpolating in the last 1/5
     if (5*t<4*T) c->y_target[t]()=0.;
@@ -157,10 +155,10 @@ void setGraspGoals_Schunk(MotionProblem& M, uint T, uint shapeId, uint side, uin
   
   //-- collisions with other objects
   shapes = ARRAY<uint>(shapeId);
-  c = M.addCustomTaskMap("otherCollisions", new ProxyTaskMap(allExceptListedPTMT, shapes, .04, true));
+  c = MP.addTaskMap("otherCollisions", new ProxyTaskMap(allExceptListedPTMT, shapes, .04, true));
   target = ARR(0.);
-  M.setInterpolatingCosts(c, MotionProblem::final_restConst, target, colPrec, target, colPrec);
-  c->map.phi(initial, NoArr, *M.ors);
+  MP.setInterpolatingCosts(c, MotionProblem::final_restConst, target, colPrec, target, colPrec);
+  c->map.phi(initial, NoArr, *MP.ors);
   if (initial(0)>0.) { //we are in collision/proximity -> depart slowly
     double a=initial(0);
     for (uint t=0; t<=T/5; t++)
@@ -168,16 +166,18 @@ void setGraspGoals_Schunk(MotionProblem& M, uint T, uint shapeId, uint side, uin
   }
   
   //-- opposing fingers
-  c = M.addDefaultTaskMap_Shapes("oppose12", zalignTMT, "tipNormal1", NoTransformation, "tipNormal2", NoTransformation);
+  c = MP.addTaskMap("oppose12",
+                    new DefaultTaskMap(vecAlignTMT, *MP.ors, "tipNormal1", NoVector, "tipNormal2", NoVector));
   target = ARR(-1.);
-  M.setInterpolatingCosts(c, MotionProblem::constEarlyMid,
+  MP.setInterpolatingCosts(c, MotionProblem::early_restConst,
                           target, oppositionPrec, ARR(0.,0.,0.), 0., 0.8);
   //M.setInterpolatingCosts(c, MotionProblem::constFinalMid, target, oppositionPrec);
 
 
-  c = M.addDefaultTaskMap_Shapes("oppose13", zalignTMT, "tipNormal1", NoTransformation, "tipNormal3", NoTransformation);
+  c = MP.addTaskMap("oppose13",
+                    new DefaultTaskMap(vecAlignTMT, *MP.ors, "tipNormal1", NoVector, "tipNormal3", NoVector));
   target = ARR(-1.);
-  M.setInterpolatingCosts(c, MotionProblem::final_restConst, target, oppositionPrec);
+  MP.setInterpolatingCosts(c, MotionProblem::final_restConst, target, oppositionPrec);
 
   
   //MT_MSG("TODO: fingers should be in relaxed position, or aligned with surface (otherwise they remain ``hooked'' as in previous posture)");
@@ -186,21 +186,22 @@ void setGraspGoals_Schunk(MotionProblem& M, uint T, uint shapeId, uint side, uin
   arr limits;
   limits <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \
       -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5 ]";
-  c = M.addDefaultTaskMap("limits", qLimitsTMT, -1, NoTransformation, -1, NoTransformation, limits);
+  c = MP.addTaskMap("limits",
+                    new DefaultTaskMap(qLimitsTMT, -1, NoVector, -1, NoVector, limits));
   target=0.;
-  M.setInterpolatingCosts(c, MotionProblem::final_restConst, target, limPrec, target, limPrec);
+  MP.setInterpolatingCosts(c, MotionProblem::final_restConst, target, limPrec, target, limPrec);
 
   //-- homing
-  c = M.addDefaultTaskMap("qitself", qItselfTMT);
-  M.setInterpolatingCosts(c, MotionProblem::final_restConst, target, zeroQPrec, target, zeroQPrec);
+  c = MP.addTaskMap("qitself",
+                    new DefaultTaskMap(qItselfTMT));
+  MP.setInterpolatingCosts(c, MotionProblem::final_restConst, target, zeroQPrec, target, zeroQPrec);
 }
 
-void setGraspGoals_PR2(MotionProblem& M, uint T, uint shapeId, uint side, uint phase) {
-  M.setState(M.x0, M.v0);;
+void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint phase) {
+  MP.setState(MP.x0, MP.v0);;
 
   //load parameters only once!
   double positionPrec = MT::getParameter<double>("graspPlanPositionPrec");
-  double oppositionPrec = MT::getParameter<double>("graspPlanOppositionPrec");
   double alignmentPrec = MT::getParameter<double>("graspPlanAlignmentPrec");
   double fingerDistPrec = MT::getParameter<double>("graspPlanFingerDistPrec");
   double colPrec = MT::getParameter<double>("graspPlanColPrec");
@@ -208,87 +209,100 @@ void setGraspGoals_PR2(MotionProblem& M, uint T, uint shapeId, uint side, uint p
   double zeroQPrec = MT::getParameter<double>("graspPlanZeroQPrec");
 
   //set the time horizon
-  CHECK(T==M.T, "");
+  CHECK(T==MP.T, "");
 
   //deactivate all variables
-  M.activateAllTaskCosts(false);
+  MP.activateAllTaskCosts(false);
 
   //activate collision testing with target shape
-  ors::Shape *target_shape = M.ors->shapes(shapeId);
+  ors::Shape *target_shape = MP.ors->shapes(shapeId);
   target_shape->cont=true;
-  M.swift->initActivations(*M.ors);
+  MP.swift->initActivations(*MP.ors);
 
   //
   arr target,initial;
-  ors::Transformation irel,jrel;
+  ors::Vector ivec,jvec;
 
   //general target
   target = ARRAY(target_shape->X.pos);
 
   //-- graspCenter -> predefined point (xtarget)
   TaskCost *c;
-  c = M.addDefaultTaskMap_Shapes("graspCenter", posTMT, "graspCenter");
-  M.setInterpolatingCosts(c, MotionProblem::constEarlyMid,
+  c = MP.addTaskMap("graspCenter",
+                    new DefaultTaskMap(posTMT, *MP.ors, "graspCenter"));
+  MP.setInterpolatingCosts(c, MotionProblem::early_restConst,
                           target, positionPrec, NoArr, -1., .8);
 
-  //-- up: align either with cylinder axis or one of the box sides -- works good
-  irel.setText("<d(90 1 0 0)>"); //we want to align the y-axis of the hand with something
-  jrel.setZero();
+  //-- align either with cylinder axis or one of the box sides -- works good
+  ivec.set(0,1,0); //we want to align the y-axis of the hand with something
+  jvec.set(0,0,1);
   switch (target_shape->type) {
     case ors::cylinderST:
       target = ARR(0.);  //y-axis of m9 is orthogonal to world z-axis (tricky :-) )
       break;
     case ors::boxST: {
       //jrel=target_shape->X;
-      if (side==1) jrel.addRelativeRotationDeg(90,1,0,0);
-      if (side==2) jrel.addRelativeRotationDeg(90,0,1,0);
+      if (side==1) jvec.set(0,1,0);
+      if (side==2) jvec.set(1,0,0);
       target = ARR(1.);  //y-axis of m9 is aligned with one of the 3 sides of the cube
     } break;
     default: NIY;
   }
-  c = M.addDefaultTaskMap_Shapes("upAlign", zalignTMT, "graspCenter", irel, target_shape->name, jrel, NoArr);
-  M.setInterpolatingCosts(c, MotionProblem::constEarlyMid,
+  c = MP.addTaskMap("upAlign",
+                    new DefaultTaskMap(vecAlignTMT, *MP.ors, "graspCenter", ivec, target_shape->name, jvec, NoArr));
+  MP.setInterpolatingCosts(c, MotionProblem::early_restConst,
                           target, alignmentPrec, NoArr, -1., .8);
   //test current state: flip if necessary
-  c->map.phi(initial, NoArr, *M.ors);
-  if (initial(0)<0.) ((DefaultTaskMap*)&c->map)->irel.addRelativeRotationDeg(180,1,0,0); //flip vector to become positive
-
+  c->map.phi(initial, NoArr, *MP.ors);
+  if (initial(0)<0.) ((DefaultTaskMap*)&c->map)->ivec.set(0,-1,0); //flip vector to become positive
 
   if (phase==0) return;
 
   //-- finger tips close to surface : using ProxyTaskVariable
   uintA shapes = stringListToShapeIndices(
                    ARRAY<const char*>("tip1",
-                                      "tip2"), M.ors->shapes);
+                                      "tip2"), MP.ors->shapes);
   shapes.append(shapeId); shapes.append(shapeId);
   shapes.reshape(2,2); shapes = ~shapes;
-  c = M.addCustomTaskMap("graspContacts", new ProxyTaskMap(vectorPTMT, shapes, .05, true));
-  for_(uint, i, shapes) cout <<' ' <<M.ors->shapes(*i)->name;
-  double grip=.8; //specifies the desired proxy value
+  c = MP.addTaskMap("graspContacts", new ProxyTaskMap(vectorPTMT, shapes, .1, false));
+  for_(uint, i, shapes) cout <<' ' <<MP.ors->shapes(*i)->name;
+  double grip=.98; //specifies the desired proxy value
   target = ARR(grip,grip);
-  M.setInterpolatingCosts(c, MotionProblem::constEarlyMid,
+  MP.setInterpolatingCosts(c, MotionProblem::early_restConst,
                           target, fingerDistPrec, ARR(0.,0.), 0., 0.8);
+  for (uint t=.8*T; t<=T; t++) { //interpolation: 0 up to 4/5 of the trajectory, then interpolating in the last 1/5
+    double a=double(t-.8*T)/(.2*T);
+    c->y_target[t]() = .7*(1.-a) + grip*a;
+  }
 
-#if 0
+#if 1
   //-- collisions with other objects
   shapes = ARRAY<uint>(shapeId);
-  c = M.addCustomTaskMap("otherCollisions", new ProxyTaskMap(allExceptListedPTMT, shapes, .04, true));
+  c = MP.addTaskMap("otherCollisions",
+                    new ProxyTaskMap(allExceptListedPTMT, shapes, .04, true));
   target = ARR(0.);
-  M.setInterpolatingCosts(c, MotionProblem::constFinalMid, target, colPrec, target, colPrec);
-//  c->map.phi(initial, NoArr, *M.ors);
-//  if (initial(0)>0.) { //we are in collision/proximity -> depart slowly
-//    double a=initial(0);
-//    for (uint t=0; t<=T/5; t++)
-//      c->y_target[t]() = a*double(T-5*t)/T;
-//  }
+  MP.setInterpolatingCosts(c, MotionProblem::constant, target, colPrec);
+//  arr initial;
+  c->map.phi(initial, NoArr, *MP.ors);
+  if(initial(0)>0.) { //we are in collision/proximity -> depart slowly
+    for (uint t=0; t<=T/5; t++){
+      double a = double(T-5*t)/T;
+      c->y_target[t]() = a*initial(0);
+    }
+  }
 #endif
 
 //  //-- opposing fingers -- PR2-fingers always oppose!
-//  c = M.addDefaultTaskMap_Shapes("oppose12", zalignTMT, "tipNormal1", NoTransformation, "tipNormal2", NoTransformation);
+//  c = M.addDefaultTaskMap_Shapes("oppose12", zalignTMT, "tipNormal1", NoVector, "tipNormal2", NoVector);
 //  target = ARR(-1.);
 //  M.setInterpolatingCosts(c, MotionProblem::constEarlyMid,
 //                          target, oppositionPrec, ARR(0.,0.,0.), 0., 0.8);
 
+
+  //-- homing
+  c = MP.addTaskMap("qitself",
+                    new DefaultTaskMap(qItselfTMT));
+  MP.setInterpolatingCosts(c, MotionProblem::final_restConst, target, zeroQPrec, target, zeroQPrec);
 
   return;
 
@@ -298,13 +312,11 @@ void setGraspGoals_PR2(MotionProblem& M, uint T, uint shapeId, uint side, uint p
   arr limits;
   limits <<"[-2. 2.; -2. 2.; -2. 0.2; -2. 2.; -2. 0.2; -3. 3.; -2. 2.; \
       -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5; -1.5 1.5 ]";
-  c = M.addDefaultTaskMap("limits", qLimitsTMT, -1, NoTransformation, -1, NoTransformation, limits);
+  c = MP.addTaskMap("limits",
+                    new DefaultTaskMap(qLimitsTMT, -1, NoVector, -1, NoVector, limits));
   target=0.;
-  M.setInterpolatingCosts(c, MotionProblem::final_restConst, target, limPrec, target, limPrec);
+  MP.setInterpolatingCosts(c, MotionProblem::final_restConst, target, limPrec, target, limPrec);
 
-  //-- homing
-  c = M.addDefaultTaskMap("qitself", qItselfTMT);
-  M.setInterpolatingCosts(c, MotionProblem::final_restConst, target, zeroQPrec, target, zeroQPrec);
 }
 
 void reattachShape(ors::Graph& ors, SwiftInterface *swift, const char* objShape, const char* toBody);
@@ -460,122 +472,17 @@ void setHomingGoals(MotionProblem& M, uint T){
 }
 #endif
 
-//From Dmitry
-void decomposeMatrix(arr& A1,arr& A2,arr A) { // returns diagonal blocks of equal size
-  int dim = sqrt(A.N)/2;
-  A.resize(2*dim,2*dim);
-  A1.resize(dim,dim);
-  A2.resize(dim,dim);
-  for (int i=0; i<dim; i++)
-    for (int j=0; j<dim; j++) {
-      A1(i,j) = A(i,j);
-      A2(i,j) = A(dim+i,dim+j);
-    }
-}
 
-double SumOfRow(int p,int k) { // sum of geometric series
-  double sum=0;
-  switch (k) {
-    case 0: sum=p;  break;
-    case 1: sum=p*(p+1)/2.0;  break;
-    case 2: sum=p*(p+1)*(2.0*p+1)/6.0;  break;
-    default: NIY;
-  }
-  if (sum>0)
-    return sum;
-  else return 1;
-}
+double keyframeOptimizer(arr& x, MotionProblem& MP, bool x_is_initialized, uint verbose) {
 
+  MotionProblem_EndPoseFunction MF(MP);
 
-double keyframeOptimizer(arr& x, MotionProblem& M, double stopTolerance, bool x_is_initialized, uint verbose) {
-  arr sqrtW,x0;
-  
-  if (M.transitionType==MotionProblem::kinematic) {
-    arr wdiag = M.H_rate_diag;
-    wdiag *= M.tau/double(M.T);
-    wdiag = sqrt(wdiag);
-    sqrtW.setDiag(wdiag);
-  } else {
-#if 1
-    arr wdiag = M.H_rate_diag;
-    double D = M.tau*M.T;
-    wdiag *= 16/D/D/D;
-    wdiag = sqrt(wdiag);
-    sqrtW.setDiag(wdiag);
-#else
-    //From Dmitry
-    double T = M.T;
-    //control costs
-    arr HrateInv;
-    HrateInv.setDiag(1./M.H_rate_diag);
+  if (!x_is_initialized) x=MP.x0;
 
-    //dynamics noise
-    arr A,a,B,Q,Qrate,Q1,Q2;
-    M.getDynamics(A,a,B,Q,0);
-    Qrate = Q/M.get_tau();
-    decomposeMatrix(Q1,Q2,Q);
-
-    double tau = M.T*M.get_tau();// tau is basically = time
-    double tau2=tau*tau;
-    int dim=sqrt(Q.N)/2;
-    
-    arr I,Z,AT,Zv;
-    I.setId(dim); Z.resize(dim,dim); Z.setZero();
-    AT.setBlockMatrix(I,tau*I,Z,I);  // A to the power of T
-    
-    double S0 = SumOfRow(T,0); double S1 = SumOfRow(T-1,1); double S2 = SumOfRow(T-1,2);  // sums of geometric series
-    arr sigma1,sigma2,sigma3,sigma4; // Blocks of sigma matrix
-    sigma1 = tau2*tau*HrateInv*(S0+2.0*S1 + S2)/pow(T,3) + tau2*tau*Q2*S2/pow(T,3)+ tau*S0*Q1/T;
-    sigma2 = tau2*HrateInv*(S0+S1)/pow(T,2) + tau2*S1*Q2/pow(T,2);
-    sigma3 = sigma2;
-    sigma4 = tau*S0*(HrateInv + Q2)/T;
-    
-    arr sumA,sumAinv;
-    sumA.setBlockMatrix(sigma1,sigma2,sigma3,sigma4);
-    inverse_SymPosDef(sumAinv,sumA);
-    //suma= AT*x0;
-    lapack_cholesky(sqrtWinv, sumAinv);
-#endif
-  }
-  
-  x0 = M.x0;
-  if (!x_is_initialized) x=x0;
-  
-  struct MyOptimizationProblem:VectorFunction {
-    MotionProblem *M;
-    arr sqrtW,x0;
-    bool verbose;
-
-    void   fv(arr& Phi, arr& J, const arr& x) {
-      M->setState(x, NoArr);
-//      if (verbose) {
-//        sys->displayCurrentState("posture", false, true);
-//        sys->gl->watch();
-//      }
-      //P.getTaskCosts(_phi, J_x, J_v, t);
-      M->getTaskCosts(Phi, J, NoArr, M->T);
-      Phi.append(sqrtW*(x-x0));
-      if (&J) J.append(sqrtW);
-    }
-  } F;
-  F.M = &M;
-  F.sqrtW = sqrtW;
-  F.x0=x0;
-  F.verbose=false;
-  if (verbose>=3) checkJacobian(F, x, 1e-6);
-  F.verbose = verbose>=3;
-  
   double cost;
-  OptOptions opt;
-  opt.fmin_return=&cost;
-  opt.stopTolerance=1e-2;
-  opt.stopEvals=100;
-  opt.maxStep=.5;
-  opt.damping=1.;
-  opt.useAdaptiveDamping=true;
-  opt.verbose=2; //verbose?verbose-1:0;
-  optGaussNewton(x, F, opt);
-  
+
+  optNewton(x, Convert(MF), OPT(fmin_return=&cost, verbose=2, stopIters=200, useAdaptiveDamping=false, damping=1e-0, maxStep=.5, stopTolerance=1e-2));
+
   return cost;
 }
 

@@ -73,7 +73,7 @@ void Mesh::setBox() {
   T.setCarray(tris , 36);
   V.reshape(8, 3);
   T.reshape(12, 3);
-  //cout <<V <<endl;  for(uint i=0;i<4;i++) cout <<norm(V[i]) <<endl;
+  //cout <<V <<endl;  for(uint i=0;i<4;i++) cout <<length(V[i]) <<endl;
 }
 
 void Mesh::setTetrahedron() {
@@ -84,7 +84,7 @@ void Mesh::setTetrahedron() {
   T.setCarray(tris , 12);
   V.reshape(4, 3);
   T.reshape(4, 3);
-  //cout <<V <<endl;  for(uint i=0;i<4;i++) cout <<norm(V[i]) <<endl;
+  //cout <<V <<endl;  for(uint i=0;i<4;i++) cout <<length(V[i]) <<endl;
 }
 
 void Mesh::setOctahedron() {
@@ -104,7 +104,7 @@ void Mesh::setOctahedron() {
   T.setCarray(tris , 24);
   V.reshape(6, 3);
   T.reshape(8, 3);
-  //cout <<V <<endl;  for(uint i=0;i<4;i++) cout <<norm(V[i]) <<endl;
+  //cout <<V <<endl;  for(uint i=0;i<4;i++) cout <<length(V[i]) <<endl;
 }
 
 void Mesh::setDodecahedron() {
@@ -149,7 +149,7 @@ void Mesh::setSphere(uint fineness) {
   setOctahedron();
   for(uint k=0; k<fineness; k++) {
     subDevide();
-    for(uint i=0; i<V.d0; i++) V[i]() /= norm(V[i]);
+    for(uint i=0; i<V.d0; i++) V[i]() /= length(V[i]);
   }
 }
 
@@ -159,7 +159,7 @@ void Mesh::setHalfSphere(uint fineness) {
   T.resizeCopy(4, 3);
   for(uint k=0; k<fineness; k++) {
     subDevide();
-    for(uint i=0; i<V.d0; i++) V[i]() /= norm(V[i]);
+    for(uint i=0; i<V.d0; i++) V[i]() /= length(V[i]);
   }
 }
 

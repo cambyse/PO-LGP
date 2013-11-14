@@ -69,7 +69,7 @@ void RobotActionInterface::homing(){
   s->robotProcesses.ctrl.change_task(Homing::a());
   for(; !schunkShutdown;){
     MT::wait(.2);
-    double dist=norm(s->robotProcesses.ctrl.q_reference);
+    double dist=length(s->robotProcesses.ctrl.q_reference);
     cout <<"\rhoming dist = " <<dist <<std::flush;
     if(dist<1e-1) break;
     if(s->robotProcesses.joy.state(0)&0x30) break;

@@ -397,7 +397,7 @@ void MarcsRobotTask::closeHand(const char* objShape, const char* belowShape){
   for(; !signalStop;){
     NIY; //();
     if(joy.state(0)==16 || joy.state(0)==32) break;
-    if(norm(TV_skin->y - TV_skin->y_target) < 1e-3) break;
+    if(length(TV_skin->y - TV_skin->y_target) < 1e-3) break;
     if(stepCounter>400) break; //early stop!!
   }
   controlMode = stopCM;
@@ -431,7 +431,7 @@ void MarcsRobotTask::openHand(const char* objShape){
   for(; !signalStop;){
     NIY; //();
     if(joy.state(0)==16 || joy.state(0)==32) break;
-    //if(stepCounter>200 && norm(TV_skin->y - TV_skin->y_target) < 1e-3) break;
+    //if(stepCounter>200 && length(TV_skin->y - TV_skin->y_target) < 1e-3) break;
     if(stepCounter>300) break; //early stop!!
     
   }

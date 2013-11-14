@@ -27,7 +27,7 @@ void setGraspGoals_PR2(MotionProblem& M, uint T, uint shapeId, uint side, uint p
 void setPlaceGoals(MotionProblem& M, uint T, uint shapeId, int belowToShapeId, const arr& locationTo);
 void setHomingGoals(MotionProblem& M, uint T);
 
-double keyframeOptimizer(arr& x, MotionProblem& M, double stopTolerance, bool x_is_initialized, uint verbose);
+double keyframeOptimizer(arr& x, MotionProblem& M, bool x_is_initialized, uint verbose);
 void interpolate_trajectory(arr &q, const arr& q0, const arr& qT, uint T);
 
 void sineProfile(arr& q, const arr& q0, const arr& qT, uint T);

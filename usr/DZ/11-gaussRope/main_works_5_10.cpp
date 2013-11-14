@@ -12,8 +12,8 @@
       
 const char* USAGE="usage: ./x.exe -orsfile test.ors -dynamic 1 -Hcost 1e-3";
  
-int main(int argn,char **argv){     
-  MT::initCmdLine(argn,argv);
+int main(int argc,char **argv){     
+  MT::initCmdLine(argc,argv);
   ors::Graph ors;
   ors.init(MT::getParameter<MT::String>("orsfile",MT::String("rope.ors")));
  //ors.init(MT::getParameter<MT::String>("orsfile",MT::String("writhe.ors")));

@@ -100,7 +100,7 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::Graph& G){
             break;
         }
         if(j<shapes.d0) {
-          addAContact(y(j), J[j](), p, G, margin, useCenterDist);
+          addAContact(y(j), (&J?J[j]():NoArr), p, G, margin, useCenterDist);
           p->colorCode = 5;
         }
       }

@@ -34,7 +34,7 @@ void testSVD(){
   
   cout <<"matrix rank: " <<svd(u,w,v,a,true) <<endl;
   W.setDiag(w);
-  cout <<norm(a - u * W * ~v) <<endl;
+  cout <<length(a - u * W * ~v) <<endl;
 }
 
 void testDeterminant(){
@@ -255,8 +255,8 @@ void testLUdecomposition(){
 
 }
 
-int main(int argn,char** argv){
-  MT::initCmdLine(argn,argv);
+int main(int argc,char** argv){
+  MT::initCmdLine(argc,argv);
   rnd.seed(1);
   
   testMonSolve();

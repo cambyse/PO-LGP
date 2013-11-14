@@ -292,7 +292,7 @@ void testReduction(){
   reduceIterated(g,m,f,P,50);
 }
 
-int main(int argn,char** argv){
+int main(int argc,char** argv){
 
   //testProduct();
   //testUT();
