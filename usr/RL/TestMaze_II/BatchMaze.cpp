@@ -536,19 +536,19 @@ int BatchMaze::run_active() {
         } else if(mode=="LINEAR_Q") {
             if(switch_int("-fincr")>0) {
                 do {
-                    linQ->add_candidates(1);
+                    linQ->add_all_candidates(1);
                     linQ->set_optimization_type_TD_L1()
                         .set_regularization(switch_double("-l1"))
                         .set_maximum_iterations(500)
                         .optimize();
-                    linQ->erase_zero_weighted_features();
+                    linQ->erase_features_by_weight();
                     loss = linQ->set_optimization_type_TD_RIDGE()
                         .set_regularization(1e-10)
                         .optimize();
                 } while(loss>switch_double("-tderr"));
             } else {
                 for(int complx=1; complx<=switch_int("-f"); ++complx) {
-                    linQ->add_candidates(1);
+                    linQ->add_all_candidates(1);
                     if(complx==1) {
                         // no l1 in first run
                         linQ->set_optimization_type_TD_RIDGE()
@@ -566,7 +566,7 @@ int BatchMaze::run_active() {
                             .set_regularization(switch_double("-l1"))
                             .optimize();
                     }
-                    linQ->erase_zero_weighted_features();
+                    linQ->erase_features_by_weight();
                 }
                 // finalize
                 loss = linQ->set_optimization_type_TD_RIDGE()
@@ -739,7 +739,7 @@ int BatchMaze::run_active() {
                     linQ->set_optimization_type_TD_L1()
                         .set_maximum_iterations(500)
                         .optimize();
-                    linQ->erase_zero_weighted_features();
+                    linQ->erase_features_by_weight();
                     loss = linQ->set_optimization_type_TD_RIDGE()
                         .set_regularization(1e-10)
                         .optimize();

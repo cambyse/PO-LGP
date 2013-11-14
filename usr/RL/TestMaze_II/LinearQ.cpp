@@ -124,7 +124,45 @@ LinearQ::action_t LinearQ::get_max_value_action(const instance_t * i) {
     return util::random_select(max_actions);
 }
 
-void LinearQ::add_candidates(const int& n) {
+void LinearQ::score_candidates_by_gradient() {
+
+    DEBUG_OUT(1,"Scoring candidates by gradient...");
+
+    // remember active features and add all candidates
+    auto old_active_features = active_features;
+    active_features.insert(
+        active_features.end(),
+        candidate_features.begin(),
+        candidate_features.end()
+        );
+    size_t old_active_n = old_active_features.size();
+    size_t new_active_n = active_features.size();
+
+    // adjust number of variables and transfer weights
+    set_number_of_variables_to_active();
+
+    // calculate gradient
+    lbfgsfloatval_t * grad = lbfgs_malloc(new_active_n);
+    objective(lbfgs_variables,grad,new_active_n);
+
+    // transfer weights
+    candidate_scores.resize(candidate_features.size());
+    for(size_t f_idx : Range(new_active_n)) {
+        if(f_idx<old_active_n) {
+            continue;
+        } else {
+            candidate_scores[f_idx-old_active_n]=grad[f_idx];
+        }
+    }
+
+    // sort candidates
+
+    // revert to old active features and free grad
+    active_features = old_active_features;
+    lbfgs_free(grad);
+}
+
+void LinearQ::add_all_candidates(const int& n) {
 
     // construct candidats
     construct_candidate_features(n);
@@ -151,7 +189,7 @@ void LinearQ::add_candidates(const int& n) {
     feature_weights.assign(active_features.size(),0);
 
     // erase const zero features
-    erase_zero_features();
+    erase_inactive_features_from_active();
 
     // mark loss terms as out-of-date
     loss_terms_up_to_date = false;
@@ -214,45 +252,51 @@ double LinearQ::optimize_TD_ridge(const double& reg) {
     return loss;
 }
 
-void LinearQ::erase_zero_features() {
+void LinearQ::erase_inactive_features(
+    vector<AndFeature> * feature_vector,
+    vector<double> * weight_vector
+    ) {
 
-    DEBUG_OUT(1,"Erase zero features...");
+    DEBUG_OUT(1,"Erase inactive features...");
 
-    // find non-zero features
-    idx_t feature_n = active_features.size();
+    // find activated features
+    idx_t feature_n = feature_vector->size();
     vector<bool> is_non_zero(feature_n,false);
     for(instance_t * current_episode : instance_data) {
         for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=util::INVALID; ++insIt) {
             for(idx_t f_idx=0; f_idx<feature_n; ++f_idx) {
-                if(is_non_zero[f_idx]==false && active_features[f_idx].evaluate(insIt)!=0) {
+                if(is_non_zero[f_idx]==false && (*feature_vector)[f_idx].evaluate(insIt)!=0) {
                     is_non_zero[f_idx] = true;
                 }
             }
         }
     }
 
-    // keep only non-zero
-    auto old_active = active_features;
-    auto old_weights = feature_weights;
-    active_features.clear();
-    feature_weights.clear();
+    // keep only activated
+    vector<AndFeature> old_features;
+    vector<double> old_weights;
+    old_features = *feature_vector;
+    feature_vector->clear();
+    if(weight_vector!=nullptr) {
+        old_weights = *weight_vector;
+        weight_vector->clear();
+    }
     for(idx_t f_idx=0; f_idx<feature_n; ++f_idx) {
         if(is_non_zero[f_idx]) {
-            active_features.push_back(old_active[f_idx]);
-            feature_weights.push_back(old_weights[f_idx]);
-            DEBUG_OUT(1,"    keep  " << old_active[f_idx] );
+            feature_vector->push_back(old_features[f_idx]);
+            if(weight_vector!=nullptr) {
+                weight_vector->push_back(old_weights[f_idx]);
+            }
+            DEBUG_OUT(1,"    keep  " << old_features[f_idx] );
         } else {
-            DEBUG_OUT(1,"    erase " << old_active[f_idx] );
+            DEBUG_OUT(1,"    erase " << old_features[f_idx] );
         }
     }
 
     DEBUG_OUT(1,"DONE");
-
-    // mark loss terms as out-of-date
-    loss_terms_up_to_date = false;
 }
 
-void LinearQ::erase_zero_weighted_features(const double& threshold) {
+void LinearQ::erase_features_by_weight(const double& threshold) {
 
     DEBUG_OUT(1,"Erase zero weighted features...");
 
@@ -510,7 +554,7 @@ lbfgsfloatval_t LinearQ::optimize(
     case OPTIMIZATION_TYPE::BELLMAN:
     {
         // set correct dimensionality
-        set_number_of_variables(active_features.size());
+        set_number_of_variables_to_active();
         // perform optimization
         lbfgsfloatval_t fx = LBFGS_Optimizer::optimize(return_code, return_code_description);
         // transfer weights and report result
@@ -757,4 +801,61 @@ LinearQ::probability_t LinearQ::prior_probability(const observation_t&, const re
     } else {
         return 0;
     }
+}
+
+void LinearQ::set_number_of_variables_to_active() {
+    size_t feature_n = active_features.size();
+    // call parent class function
+    LBFGS_Optimizer::set_number_of_variables(feature_n);
+    feature_weights.resize(feature_n,0);
+    // transfer weights
+    for(idx_t f_idx : Range(active_features.size())) {
+        lbfgs_variables[f_idx] = feature_weights[f_idx];
+    }
+}
+
+void LinearQ::sort_candidates_by_score(bool divide_by_complexity) {
+
+    // if(divide_by_complexity) {
+    //     DEBUG_OUT(1, "Sorting scored features (considering complexity)...");
+    // } else {
+    //     DEBUG_OUT(1, "Sorting scored features (NOT considering complexity)...");
+    // }
+
+    // // number of candidate features;
+    // int n = candidate_features.size();
+
+    // // sort indices by score
+    // list<pair<double,int> > scored_indices;
+    // for(int cf_idx=0; cf_idx<n; ++cf_idx) {
+    //     if(divide_by_complexity) {
+    //         scored_indices.push_back(make_pair(candidate_feature_scores[cf_idx]/candidate_features[cf_idx].get_complexity(),cf_idx));
+    //     } else {
+    //         scored_indices.push_back(make_pair(candidate_feature_scores[cf_idx],cf_idx));
+    //     }
+    // }
+    // scored_indices.sort();
+
+    // // construct new feature and score lists
+    // vector<AndFeature> new_candidate_features(n);
+    // vector<double> new_candidate_feature_scores(n);
+    // int new_idx = 0;
+    // DEBUG_OUT(1, "Feature Scores:")
+    // for(list<pair<double,int> >::iterator it = scored_indices.begin(); it!=scored_indices.end(); ++it) {
+    //     int old_idx = it->second;
+    //     new_candidate_features[new_idx]       = candidate_features[old_idx];
+    //     new_candidate_feature_scores[new_idx] = candidate_feature_scores[old_idx];
+    //     if(divide_by_complexity) {
+    //         DEBUG_OUT(1, "    " << QString("%1 (%2) <-- ").arg(candidate_feature_scores[old_idx],7,'f',5).arg(candidate_features[old_idx].get_complexity(),2).toStdString() << candidate_features[old_idx].identifier() );
+    //     } else {
+    //         DEBUG_OUT(1, "    " << QString("%1 <-- ").arg(candidate_feature_scores[old_idx],7,'f',5).toStdString() << candidate_features[old_idx].identifier() );
+    //     }
+    //     ++new_idx;
+    // }
+
+    // // swap lists
+    // candidate_features.swap(new_candidate_features);
+    // candidate_feature_scores.swap(new_candidate_feature_scores);
+
+    // DEBUG_OUT(1, "DONE");
 }

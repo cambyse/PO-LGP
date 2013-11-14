@@ -50,9 +50,22 @@ public:
     /*! \brief Set the discount rate used for computing observation and action values. */
     void set_discount(const double& d) { discount = d; }
 
-    void add_candidates(const int& n);
+    /** \brief Constructs new candidate features. */
+    void construct_candidate_features(const int& n);
 
-    void erase_zero_weighted_features(const double& threshold = 0);
+    /** \brief Score the candidate features by their gradient.
+     *
+     * Temporally adds the canidates to the active features and calls the
+     * objective to compute the gradient. Sorts the candidates by their
+     * gradient.*/
+    void score_candidates_by_gradient();
+
+    /** \brief Construct and add all candidates with 'distance' n. */
+    void add_all_candidates(const int& n);
+
+    /** \brief Erase from active features all that have a weight less than or
+     * equal to threshold. */
+    void erase_features_by_weight(const double& threshold = 0);
 
     /** \brief Overrides the function in LBFGS_Optimizer and calls the objective
      * defined by LinearQ::optimization_type. */
@@ -140,6 +153,7 @@ private:
     std::vector<Feature*> basis_features;            ///< Basis features used to construct new candidates.
     std::vector<AndFeature> active_features;         ///< Set of currently active features.
     std::vector<AndFeature> candidate_features;      ///< Set of candidate features.
+    std::vector<double> candidate_scores;            ///< Scores for the candidate features.
 
     //-------------------------//
     // Terms for Loss Function //
@@ -162,13 +176,22 @@ private:
      * @param reg Coefficient for the \f$L^2\f$-regularization. */
     double optimize_TD_ridge(const double& reg);
 
-    void erase_zero_features();
+    /** \brief Erase from feature_vector all features that are never
+     * activated/non-zero. Modify weight_vector accordingly, if provided. */
+    void erase_inactive_features(
+        std::vector<AndFeature> * feature_vector,
+        std::vector<double> * weight_vector = nullptr
+        );
+
+    /** \brief Erase from active features all that are never activated/non-zero
+     * and modify weight_vector accordingly. */
+    void erase_inactive_features_from_active() {
+        erase_inactive_features(&active_features,&feature_weights);
+        loss_terms_up_to_date = false;
+    }
 
     /** \brief Update LinearQ::L, LinearQ::rho, and LinearQ::c. */
     void update_loss_terms();
-
-    /** \brief Constructs new candidate features. */
-    void construct_candidate_features(const int& n);
 
     probability_t prior_probability(const observation_t&, const reward_t&) const;
 
@@ -177,6 +200,13 @@ private:
 
     /** \brief Calculate gradient of the loss function. */
     arma::vec loss_gradient(const arma::vec& w) const { return 2 * rho + 2 * L * w; }
+
+    /** \brief Set the number of variables to the number of active features and
+     * transfers weights. */
+    virtual void set_number_of_variables_to_active();
+
+    /** \brief Sort candidate features by their score. */
+    void sort_candidates_by_score(bool divide_by_complexity = false);
 };
 
 #include "debug_exclude.h"

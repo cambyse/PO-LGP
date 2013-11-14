@@ -656,9 +656,9 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
         } else if(str_args[0]=="lq-erase" || str_args[0]=="lqe") {
             if(str_args_n==1 || double_args_ok[1]) {
                 if(str_args_n>1) {
-                    linQ.erase_zero_weighted_features(double_args[1]);
+                    linQ.erase_features_by_weight(double_args[1]);
                 } else {
-                    linQ.erase_zero_weighted_features();
+                    linQ.erase_features_by_weight();
                 }
             } else {
                 TO_CONSOLE( invalid_args_s );
@@ -999,7 +999,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             if(str_args_n==1) {
                 TO_CONSOLE(construct_s);
             } else if(int_args_ok[1] && int_args[1]>=0 ) {
-                linQ.add_candidates(int_args[1]);
+                linQ.add_all_candidates(int_args[1]);
             } else {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( construct_s );
