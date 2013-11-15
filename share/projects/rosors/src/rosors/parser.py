@@ -26,6 +26,7 @@ def ors_shape_to_msg(ors_shape):
     shape_msg.rel.translation = ors_shape.rel.pos
     shape_msg.rel.rotation = ors_shape.rel.rot
 
+    shape_msg.shape_type = ors_shape.type
     if ors_shape.type == orspy.meshST:
         # vertices
         for i in range(ors_shape.mesh.V.shape[0]):

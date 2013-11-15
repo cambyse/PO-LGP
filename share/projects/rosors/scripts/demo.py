@@ -5,7 +5,7 @@ import roslib
 roslib.load_manifest("rosors")
 
 import rospy
-import rosors.rosors
+from rosors.rosors import RosOrs
 
 
 class OrsRosDemo():
@@ -21,8 +21,7 @@ class OrsRosDemo():
         node_name = "rosors_test"
         rospy.init_node(node_name, log_level=rospy.DEBUG)
 
-        self.rosors = rosors.rosors.RosOrs(orsfile=orsfile,
-                                           srv_prefix="/rosors_demo")
+        self.rosors = RosOrs(orsfile=orsfile, srv_prefix="/rosors_demo")
 
 
 def main():
