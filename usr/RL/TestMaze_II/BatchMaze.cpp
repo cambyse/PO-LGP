@@ -52,7 +52,8 @@ const vector<QString> BatchMaze::mode_vector = {
     "SPARSE",
     "UTREE_PROB",
     "UTREE_VALUE",
-    "LINEAR_Q",
+    "LINEAR_Q_TD",
+    "LINEAR_Q_BELLMAN",
     "SEARCH_TREE",
     "TRANSITIONS"
 };
@@ -86,10 +87,11 @@ const vector<BatchMaze::switch_t> BatchMaze::switch_vector = {
     switch_t("-optTran",      "double", "0",      "probability of optimal training transitions (vs. random)"),
     switch_t("-fincr",        "int",    "0",      "feature increment (positive value for incremental feature discovery)"),
     switch_t("-dl",           "double", "0.001",  "minimum change of data likelihood (only for incremental feature discovery with CRFs)"),
-    switch_t("-tderr",        "double", "0.0001", "minimum TD-error (only for incremental feature discovery with Linear-Q)"),
+    switch_t("-dloss",        "double", "0.0001", "minimum change loss (only for incremental feature discovery with Linear-Q)"),
     switch_t("-l1incr",       "double", "0.0",    "L1-regularization increment (non-zero activates L1-sweep)"),
     switch_t("-maxl1",        "double", "0.001",  "maximum L1-regularization (for L1-sweep)"),
-    switch_t("-utreegrowth",  "bool",   "false",  "grow UTree leaf by leaf tracking performance")
+    switch_t("-utreegrowth",  "bool",   "false",  "grow UTree leaf by leaf tracking performance"),
+    switch_t("-alpha",        "double", "0",      "soft-max parameter for LinearQ with Bellman error")
 };
 
 BatchMaze::BatchMaze() {
@@ -458,7 +460,7 @@ int BatchMaze::run_active() {
 	      crf->add_action_observation_reward_tripel(action,observation,reward,false);
 	    } else if(mode=="UTREE_VALUE" || mode=="UTREE_PROB") {
 	      utree->add_action_observation_reward_tripel(action,observation,reward,false);
-	    } else if(mode=="LINEAR_Q") {
+	    } else if(mode=="LINEAR_Q_TD" || mode=="LINEAR_Q_BELLMAN") {
 	      linQ->add_action_observation_reward_tripel(action,observation,reward,false);
 	    } else {
 	      DEBUG_DEAD_LINE;
@@ -533,45 +535,74 @@ int BatchMaze::run_active() {
                     utree_score = utree->expand_leaf_node(score_threshold);
                 }
             }
-        } else if(mode=="LINEAR_Q") {
+        } else if(mode=="LINEAR_Q_TD" || mode=="LINEAR_Q_BELLMAN") {
             if(switch_int("-fincr")>0) {
-                do {
+                loss = DBL_MAX/2.;
+                double old_loss = DBL_MAX;
+                while(old_loss-loss>switch_double("-dloss")) {
+                    old_loss = loss;
                     linQ->add_all_candidates(1);
-                    linQ->set_optimization_type_TD_L1()
-                        .set_regularization(switch_double("-l1"))
-                        .set_maximum_iterations(500)
-                        .optimize();
-                    linQ->erase_features_by_weight();
-                    loss = linQ->set_optimization_type_TD_RIDGE()
-                        .set_regularization(1e-10)
-                        .optimize();
-                } while(loss>switch_double("-tderr"));
+                    if(mode=="LINEAR_Q_TD") {
+                        linQ->set_optimization_type_TD_L1()
+                            .set_regularization(switch_double("-l1"))
+                            .set_maximum_iterations(500)
+                            .optimize();
+                        linQ->erase_features_by_weight();
+                        loss = linQ->set_optimization_type_TD_RIDGE()
+                            .set_regularization(1e-10)
+                            .optimize();
+                    } else if(mode=="LINEAR_Q_BELLMAN") {
+                        linQ->set_optimization_type_BELLMAN()
+                            .set_regularization(switch_double("-l1"))
+                            .set_maximum_iterations(500)
+                            .optimize();
+                        linQ->erase_features_by_weight();
+                        loss = linQ->set_regularization(0).optimize();
+                    } else {
+                        DEBUG_DEAD_LINE;
+                    }
+                }
             } else {
                 for(int complx=1; complx<=switch_int("-f"); ++complx) {
                     linQ->add_all_candidates(1);
                     if(complx==1) {
-                        // no l1 in first run
-                        linQ->set_optimization_type_TD_RIDGE()
-                            .set_regularization(1e-10)
-                            .optimize();
+                        // no regularization in first run
+                        if(mode=="LINEAR_Q_TD") {
+                            linQ->set_optimization_type_TD_RIDGE()
+                                .set_regularization(1e-10);
+                        } else if(mode=="LINEAR_Q_BELLMAN") {
+                            linQ->set_optimization_type_BELLMAN()
+                                .set_regularization(0);
+                        } else {
+                            DEBUG_DEAD_LINE;
+                        }
+                        linQ->optimize();
                     } else {
-                        // // sparsify features to speed up optimization
-                        // linQ->optimize_l1(switch_double("-l1")/2,10);
-                        // linQ->erase_zero_weighted_features();
-                        // linQ->optimize_l1(switch_double("-l1")/2,20);
-                        // linQ->erase_zero_weighted_features();
-                        // linQ->optimize_l1(switch_double("-l1"),100);
-                        linQ->set_optimization_type_TD_L1()
-                            .set_maximum_iterations(500)
+                        if(mode=="LINEAR_Q_TD") {
+                            linQ->set_optimization_type_TD_L1();
+                        } else if(mode=="LINEAR_Q_BELLMAN") {
+                            linQ->set_optimization_type_BELLMAN();
+                        } else {
+                            DEBUG_DEAD_LINE;
+                        }
+                        linQ->set_maximum_iterations(500)
                             .set_regularization(switch_double("-l1"))
                             .optimize();
                     }
                     linQ->erase_features_by_weight();
                 }
                 // finalize
-                loss = linQ->set_optimization_type_TD_RIDGE()
-                    .set_regularization(1e-10)
-                    .optimize();
+                if(mode=="LINEAR_Q_TD") {
+                    loss = linQ->set_optimization_type_TD_RIDGE()
+                        .set_regularization(1e-10)
+                        .optimize();
+                } else if(mode=="LINEAR_Q_BELLMAN") {
+                    loss = linQ->set_optimization_type_BELLMAN()
+                        .set_regularization(0)
+                        .optimize();
+                } else {
+                    DEBUG_DEAD_LINE;
+                }
             }
         } else {
             DEBUG_DEAD_LINE;
@@ -625,7 +656,7 @@ int BatchMaze::run_active() {
                     action = look_ahead_search->get_optimal_action();
                 } else if(mode=="UTREE_VALUE") {
                     action = utree->get_max_value_action(current_instance);
-                } else if(mode=="LINEAR_Q") {
+                } else if(mode=="LINEAR_Q_TD" || mode=="LINEAR_Q_BELLMAN") {
                     action = linQ->get_max_value_action(current_instance);
                 } else if(mode=="SEARCH_TREE") {
                     if(look_ahead_search->get_number_of_nodes()==0 || !switch_bool("-pruneTree")) {
@@ -650,7 +681,7 @@ int BatchMaze::run_active() {
                         look_ahead_search->prune_tree(action,current_instance,*crf);
                     } else if(mode=="UTREE_PROB") {
                         look_ahead_search->prune_tree(action,current_instance,*utree);
-                    } else if(mode=="RANDOM" || mode=="UTREE_VALUE" || mode=="LINEAR_Q") {
+                    } else if(mode=="RANDOM" || mode=="UTREE_VALUE" || mode=="LINEAR_Q_TD" || mode=="LINEAR_Q_BELLMAN") {
                         // no search tree
                     } else {
                         DEBUG_DEAD_LINE;
@@ -680,8 +711,8 @@ int BatchMaze::run_active() {
                         .arg(likelihood)
                         .arg(l1)
                         .arg(crf->get_number_of_features());
-                } else if(mode=="LINEAR_Q") {
-                    extra_info = QString("TD_loss: %1	l1: %2").arg(loss).arg(l1);
+                } else if(mode=="LINEAR_Q_TD" || mode=="LINEAR_Q_BELLMAN") {
+                    extra_info = QString("loss: %1	l1: %2").arg(loss).arg(l1);
                 } else if(mode=="UTREE_VALUE") {
                     extra_info = QString("utree_size: %1	utree_score: %2").arg(utree->get_tree_size()).arg(utree_score);
                 } else if(mode=="UTREE_PROB") {
@@ -732,17 +763,31 @@ int BatchMaze::run_active() {
                 } else {
                     repeat_transitions = false;
                 }
-            } else if(mode=="LINEAR_Q" && switch_double("-l1incr")>0) {
+            } else if((mode=="LINEAR_Q_TD" || mode=="LINEAR_Q_BELLMAN") && switch_double("-l1incr")>0) {
                 l1 += switch_double("-l1incr");
                 if(l1<=switch_double("-maxl1")) {
                     repeat_transitions = true;
-                    linQ->set_optimization_type_TD_L1()
-                        .set_maximum_iterations(500)
-                        .optimize();
-                    linQ->erase_features_by_weight();
-                    loss = linQ->set_optimization_type_TD_RIDGE()
-                        .set_regularization(1e-10)
-                        .optimize();
+                    if(mode=="LINEAR_Q_TD") {
+                        linQ->set_optimization_type_TD_L1()
+                            .set_regularization(l1)
+                            .set_maximum_iterations(500)
+                            .optimize();
+                        linQ->erase_features_by_weight();
+                        loss = linQ->set_optimization_type_TD_RIDGE()
+                            .set_regularization(1e-10)
+                            .optimize();
+                    } else if(mode=="LINEAR_Q_BELLMAN") {
+                        linQ->set_optimization_type_BELLMAN()
+                            .set_regularization(l1)
+                            .set_maximum_iterations(500)
+                            .optimize();
+                        linQ->erase_features_by_weight();
+                        loss = linQ->set_regularization(0)
+                            .set_maximum_iterations(500)
+                            .optimize();
+                    } else {
+                        DEBUG_DEAD_LINE;
+                    }
                 } else {
                     repeat_transitions = false;
                 }
