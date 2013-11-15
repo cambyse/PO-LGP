@@ -60,6 +60,9 @@ public:
      * gradient.*/
     void score_candidates_by_gradient();
 
+    /** \brief Add the n highest scored candidates. */
+    void add_candidates_by_score(const int& n);
+
     /** \brief Construct and add all candidates with 'distance' n. */
     void add_all_candidates(const int& n);
 

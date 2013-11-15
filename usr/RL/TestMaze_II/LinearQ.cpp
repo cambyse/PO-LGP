@@ -4,6 +4,7 @@
 #include <set>
 #include <list>
 #include <utility> // for std::pair
+#include <algorithm> // for std::min
 #include <tuple>
 #include <float.h> // for DBL_MAX
 
@@ -31,6 +32,7 @@ using std::tuple;
 using std::make_tuple;
 using std::get;
 using std::priority_queue;
+using std::min;
 
 using util::Range;
 
@@ -128,7 +130,7 @@ void LinearQ::score_candidates_by_gradient() {
 
     DEBUG_OUT(1,"Scoring candidates by gradient...");
 
-    // remember active features and add all candidates
+    // remember currently active features and add all candidates
     auto old_active_features = active_features;
     active_features.insert(
         active_features.end(),
@@ -145,7 +147,7 @@ void LinearQ::score_candidates_by_gradient() {
     lbfgsfloatval_t * grad = lbfgs_malloc(new_active_n);
     objective(lbfgs_variables,grad,new_active_n);
 
-    // transfer weights
+    // transfer gradient to scores
     candidate_scores.resize(candidate_features.size());
     for(size_t f_idx : Range(new_active_n)) {
         if(f_idx<old_active_n) {
@@ -156,10 +158,18 @@ void LinearQ::score_candidates_by_gradient() {
     }
 
     // sort candidates
+    sort_candidates_by_score();
 
     // revert to old active features and free grad
     active_features = old_active_features;
     lbfgs_free(grad);
+}
+
+void LinearQ::add_candidates_by_score(const int& n) {
+    for(size_t f_idx : Range(min((int)n,(int)candidate_features.size()))) {
+        active_features.push_back(candidate_features[f_idx]);
+    }
+    set_number_of_variables_to_active();
 }
 
 void LinearQ::add_all_candidates(const int& n) {
@@ -816,46 +826,53 @@ void LinearQ::set_number_of_variables_to_active() {
 
 void LinearQ::sort_candidates_by_score(bool divide_by_complexity) {
 
-    // if(divide_by_complexity) {
-    //     DEBUG_OUT(1, "Sorting scored features (considering complexity)...");
-    // } else {
-    //     DEBUG_OUT(1, "Sorting scored features (NOT considering complexity)...");
-    // }
+    if(divide_by_complexity) {
+        DEBUG_OUT(1, "Sorting scored features (considering complexity)...");
+    } else {
+        DEBUG_OUT(1, "Sorting scored features (NOT considering complexity)...");
+    }
 
-    // // number of candidate features;
-    // int n = candidate_features.size();
+    // number of candidate features;
+    int n = candidate_features.size();
 
-    // // sort indices by score
-    // list<pair<double,int> > scored_indices;
-    // for(int cf_idx=0; cf_idx<n; ++cf_idx) {
-    //     if(divide_by_complexity) {
-    //         scored_indices.push_back(make_pair(candidate_feature_scores[cf_idx]/candidate_features[cf_idx].get_complexity(),cf_idx));
-    //     } else {
-    //         scored_indices.push_back(make_pair(candidate_feature_scores[cf_idx],cf_idx));
-    //     }
-    // }
-    // scored_indices.sort();
+    // sort indices by score
+    list<pair<double,int> > scored_indices;
+    for(int cf_idx=0; cf_idx<n; ++cf_idx) {
+        if(divide_by_complexity) {
+            scored_indices.push_back(make_pair(candidate_scores[cf_idx]/candidate_features[cf_idx].get_complexity(),cf_idx));
+        } else {
+            scored_indices.push_back(make_pair(candidate_scores[cf_idx],cf_idx));
+        }
+    }
+    scored_indices.sort();
 
-    // // construct new feature and score lists
-    // vector<AndFeature> new_candidate_features(n);
-    // vector<double> new_candidate_feature_scores(n);
-    // int new_idx = 0;
-    // DEBUG_OUT(1, "Feature Scores:")
-    // for(list<pair<double,int> >::iterator it = scored_indices.begin(); it!=scored_indices.end(); ++it) {
-    //     int old_idx = it->second;
-    //     new_candidate_features[new_idx]       = candidate_features[old_idx];
-    //     new_candidate_feature_scores[new_idx] = candidate_feature_scores[old_idx];
-    //     if(divide_by_complexity) {
-    //         DEBUG_OUT(1, "    " << QString("%1 (%2) <-- ").arg(candidate_feature_scores[old_idx],7,'f',5).arg(candidate_features[old_idx].get_complexity(),2).toStdString() << candidate_features[old_idx].identifier() );
-    //     } else {
-    //         DEBUG_OUT(1, "    " << QString("%1 <-- ").arg(candidate_feature_scores[old_idx],7,'f',5).toStdString() << candidate_features[old_idx].identifier() );
-    //     }
-    //     ++new_idx;
-    // }
+    // construct new feature and score lists
+    vector<AndFeature> new_candidate_features(n);
+    vector<double> new_candidate_scores(n);
+    int new_idx = 0;
+    DEBUG_OUT(1, "Feature Scores:")
+    for(list<pair<double,int> >::iterator it = scored_indices.begin(); it!=scored_indices.end(); ++it) {
+        int old_idx = it->second;
+        new_candidate_features[new_idx] = candidate_features[old_idx];
+        new_candidate_scores[new_idx]   = candidate_scores[old_idx];
+        if(divide_by_complexity) {
+            DEBUG_OUT(1, "    " << QString("%1 (%2) <-- ")
+                      .arg(candidate_scores[old_idx],7,'f',5)
+                      .arg(candidate_features[old_idx].get_complexity(),2).toStdString()
+                      << candidate_features[old_idx].identifier()
+                );
+        } else {
+            DEBUG_OUT(1, "    " << QString("%1 <-- ")
+                      .arg(candidate_scores[old_idx],7,'f',5).toStdString()
+                      << candidate_features[old_idx].identifier()
+                );
+        }
+        ++new_idx;
+    }
 
-    // // swap lists
-    // candidate_features.swap(new_candidate_features);
-    // candidate_feature_scores.swap(new_candidate_feature_scores);
+    // swap lists
+    candidate_features.swap(new_candidate_features);
+    candidate_scores.swap(new_candidate_scores);
 
-    // DEBUG_OUT(1, "DONE");
+    DEBUG_OUT(1, "DONE");
 }

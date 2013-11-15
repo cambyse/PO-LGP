@@ -400,9 +400,9 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString episode_s(                       "    episode / e. . . . . . . . [<int>|clear,c] . . . . . . . . . . . . . .-> record length <int> episode or clear data");
     QString learning_crf_s(                  "    === CRF ===");
     QString optimize_crf_s(                  "    crf-optimize / co. . . . . [<int> [<d> <d>]|check, c]. . . . . . . . .-> optimize CRF [max_iterations [ alpha beta ] | check derivatives]");
-    QString score_s(                         "    score. . . . . . . . . . . <int> . . . . . . . . . . . . . . . . . . .-> score candidate features with distance <int> by gradient");
-    QString score1D_s(                       "    score1D. . . . . . . . . . <int> . . . . . . . . . . . . . . . . . . .-> score candidate features with distance <int> by 1D optimization");
-    QString add_s(                           "    add. . . . . . . . . . . . <int> . . . . . . . . . . . . . . . . . . .-> add <int> highest scored candidate features to active (0 for all non-zero scored)");
+    QString score_crf_s(                     "    score-crf / scrf . . . . . <int> . . . . . . . . . . . . . . . . . . .-> score candidate features with distance <int> by gradient");
+    QString score1D_crf_s(                   "    score1D-crf / s1Dcrf . . . <int> . . . . . . . . . . . . . . . . . . .-> score candidate features with distance <int> by 1D optimization");
+    QString add_crf_s(                       "    add-crf. . . . . . . . . . <int> . . . . . . . . . . . . . . . . . . .-> add <int> highest scored candidate features to active (0 for all non-zero scored)");
     QString crf_erase_s(                     "    crf-erase / ce . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> erase features with zero weight");
     QString l1_s(                            "    l1 . . . . . . . . . . . . <double>. . . . . . . . . . . . . . . . . .-> coefficient for L1 regularization");
     QString evaluate_s(                      "    evaluate . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> evaluate features at current point");
@@ -499,9 +499,9 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             TO_CONSOLE( episode_s );
             TO_CONSOLE( learning_crf_s ); // CRF
             TO_CONSOLE( optimize_crf_s );
-            TO_CONSOLE( score_s );
-            TO_CONSOLE( score1D_s );
-            TO_CONSOLE( add_s );
+            TO_CONSOLE( score_crf_s );
+            TO_CONSOLE( score1D_crf_s );
+            TO_CONSOLE( add_crf_s );
             TO_CONSOLE( crf_erase_s );
             TO_CONSOLE( l1_s );
             TO_CONSOLE( evaluate_s );
@@ -835,35 +835,35 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( l1_s );
             }
-        } else if(str_args[0]=="score") {
+        } else if(str_args[0]=="score-crf" || str_args[0]=="scrf") {
             if(str_args_n==1) {
-                TO_CONSOLE(score_s);
+                TO_CONSOLE(score_crf_s);
             } else if(int_args_ok[1] && int_args[1]>=0 ) {
                 crf.construct_candidate_features(int_args[1]);
                 crf.score_candidates_by_gradient();
             } else {
                 TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( score_s );
+                TO_CONSOLE( score_crf_s );
             }
-        } else if(str_args[0]=="score1D") {
+        } else if(str_args[0]=="score1D-crf" || str_args[0]=="s1Dcrf") {
             if(str_args_n==1) {
-                TO_CONSOLE(score1D_s);
+                TO_CONSOLE(score1D_crf_s);
             } else if(int_args_ok[1] && int_args[1]>=0 ) {
                 crf.construct_candidate_features(int_args[1]);
                 crf.score_candidates_by_1D_optimization();
             } else {
                 TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( score1D_s );
+                TO_CONSOLE( score1D_crf_s );
             }
-        } else if(str_args[0]=="add") {
+        } else if(str_args[0]=="add-crf") {
             if(str_args_n==1) {
                 TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( add_s );
+                TO_CONSOLE( add_crf_s );
             } else if(int_args_ok[1] && int_args[1]>=0 ) {
                 crf.add_candidate_features_to_active(int_args[1]);
             } else {
                 TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( add_s );
+                TO_CONSOLE( add_crf_s );
             }
         } else if(str_args[0]=="crf-erase" || str_args[0]=="ce") {
             crf.erase_zero_features();
