@@ -2,7 +2,7 @@
 RosOrs
 ======
 
-Rosors is supposed to be a general bridge between ros and ors.  This is kinda
+RosOrs is supposed to be a general bridge between ros and ors.  This is kinda
 a subproject of TCR but can be and should be used by everybody who works with
 ors and ros.
 
@@ -10,9 +10,19 @@ RosOrs should be an ROS package.  One should be able to add the RosOrs
 dependency to ones project and use (most of) the ors functionality.
 
 
-Install
+Dependencies
 ===============
 
+ROS Dependencies:
+ - ors_msgs
+
+MLR Dependencies:
+ - orspy
+ - corepy
+ - guipy
+
+Install
+=======
 ::
 
     ln -s ~/git/mlr/share/projects/rosors/ ~/fuerte_workspace/sandbox/rosors
