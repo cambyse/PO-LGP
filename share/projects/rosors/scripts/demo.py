@@ -18,6 +18,7 @@ class OrsRosDemo():
     """
     def __init__(self):
         orsfile = "arm3.ors"
+        orsfile = "door.ors"
         node_name = "rosors_test"
         rospy.init_node(node_name, log_level=rospy.DEBUG)
 
