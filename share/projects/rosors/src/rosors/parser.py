@@ -54,6 +54,7 @@ def ors_body_to_msg(ors_body):
     body_msg.index = ors_body.index
     body_msg.name = ors_body.name
     body_msg.mass = ors_body.mass
+    body_msg.body_type = ors_body.type
 
     # ors transformation
     body_msg.pos = ors_body.X.pos
