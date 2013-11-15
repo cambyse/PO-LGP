@@ -10,4 +10,4 @@ geometry_msgs/Transform rel
 # double size[4];  //TODO: obsolete: directly translate to mesh?
 # double color[3]; //TODO: obsolete: directly translate to mesh?
 
-# Mesh mesh;
+shape_msgs/Mesh mesh
