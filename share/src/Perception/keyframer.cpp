@@ -185,10 +185,10 @@ void KeyFramer::run() {
         /*
         cout << "dofi = " << dofi << endl;
         cout << "diff[dofi] = " << diff[dofi] << endl;
-        cout << "norm -- = " << norm(diff[dofi]) << endl;
+        cout << "length -- = " << length(diff[dofi]) << endl;
         usleep(1000000);
         */
-        s->err(dofi, f) = norm(diff[dofi]);
+        s->err(dofi, f) = length(diff[dofi]);
       }
     }
   }
