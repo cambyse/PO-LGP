@@ -7,7 +7,6 @@ roslib.load_manifest("rosors")
 import rospy
 # RosOrs
 import srv
-import msg
 import parser
 # MLR
 import orspy
@@ -72,11 +71,13 @@ class RosOrs(object):
         res = srv.ShapesResponse()
         # special shape requested
         if req.index:
-            # TODO ors.graph must support such a function
-            raise NotImplementedError("get by index is not implemented")
+            ors_shape = self.graph.shapes[req.index]
+            res.bodies.append(parser.ors_shape_to_msg(ors_shape))
+            return res
         if req.index_body:
-            # TODO ors.graph must support such a function
-            raise NotImplementedError("get by index_body is not implemented")
+            for ors_shape in self.graph.bodies[req.index_body].shapes:
+                res.bodies.append(parser.ors_shape_to_msg(ors_shape))
+            return res
         elif req.name:
             ors_shape = self.graph.getShapeByName(req.name)
             res.bodies.append(parser.ors_shape_to_msg(ors_shape))
