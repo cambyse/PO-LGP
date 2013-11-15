@@ -1,17 +1,15 @@
 <package>
-  <description brief="rosors">
+  <description brief="ors_msgs">
 
-     rosors
+    msgs for the ORS datastructures.
 
   </description>
-  <author>stefan.otte@gmail.com</author>
+  <author>Stefan Otte</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://nowhere.com</url>
   <depend package="std_msgs"/>
   <depend package="geometry_msgs"/>
-  <depend package="rospy"/>
-  <depend package="ors_msgs"/>
 
 </package>
 

@@ -11,6 +11,9 @@ geometry_msgs/Vector3 angvel
 
 geometry_msgs/Vector3 com
 
-#Wrench wrench
+# Wrench wrench
 geometry_msgs/Vector3 force
 geometry_msgs/Vector3 torque
+
+# shapes
+ors_msgs/Shape[] shapes
