@@ -18,7 +18,7 @@ int main() {
   // supports operator<< can be used here. This works for DEBUG_VAR and
   // INFO_VAR.
   int x=6;
-  DEGBU_VAR(main, x);
+  DEBUG_VAR(main, x);
   INFO_VAR(main, x);
 
   // For more generic messages a variadic macro is defined. You can concatenate

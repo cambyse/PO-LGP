@@ -2,7 +2,7 @@
 RosOrs
 ======
 
-Rosors is supposed to be a general bridge between ros and ors.  This is kinda
+RosOrs is supposed to be a general bridge between ros and ors.  This is kinda
 a subproject of TCR but can be and should be used by everybody who works with
 ors and ros.
 
@@ -10,9 +10,19 @@ RosOrs should be an ROS package.  One should be able to add the RosOrs
 dependency to ones project and use (most of) the ors functionality.
 
 
-Install
+Dependencies
 ===============
 
+ROS Dependencies:
+ - ors_msgs
+
+MLR Dependencies:
+ - orspy
+ - corepy
+ - guipy
+
+Install
+=======
 ::
 
     ln -s ~/git/mlr/share/projects/rosors/ ~/fuerte_workspace/sandbox/rosors
@@ -29,6 +39,14 @@ Run rosors.py in scripts/::
 
 Log / Journal
 ===============
+
+2013-11-15 Fri
+--------------
+
+ - DONE save the following in the msgs
+   - mesh
+   - body type
+   - shape type
 
 2013-11-14 Thu
 -----------------
@@ -51,8 +69,3 @@ Log / Journal
  - DONE Add example of rosors.
 
  - DONE Extract the msgs into a sep. ros package. see ../ors_msgs
-
- - TODO save the following
-   - body type
-   - shape type
-   - mesh

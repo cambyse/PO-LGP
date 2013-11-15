@@ -1,6 +1,7 @@
 uint32 index
 string name
 float64 mass
+int8 body_type
 
 # ORS transformation
 # TODO should we use ros Transformation? Transformation trans
