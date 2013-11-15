@@ -40,6 +40,14 @@ Run rosors.py in scripts/::
 Log / Journal
 ===============
 
+2013-11-15 Fri
+--------------
+
+ - DONE save the following in the msgs
+   - mesh
+   - body type
+   - shape type
+
 2013-11-14 Thu
 -----------------
 
@@ -61,8 +69,3 @@ Log / Journal
  - DONE Add example of rosors.
 
  - DONE Extract the msgs into a sep. ros package. see ../ors_msgs
-
- - TODO save the following
-   - body type
-   - shape type
-   - mesh
