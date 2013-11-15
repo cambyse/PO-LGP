@@ -2308,6 +2308,13 @@ template<class T> MT::Array<T> elemWiseMax(const MT::Array<T>& v, const MT::Arra
   return z;
 }
 
+template<class T> MT::Array<T> elemWiseProd(const MT::Array<T>& v, const MT::Array<T>& w) {
+  MT::Array<T> z(v.N);
+  for(uint i = 0; i<v.N; i++) z(i) = v(i)*w(i);
+  reshapeAs(z, v);
+  return z;
+}
+
 
 //===========================================================================
 //
