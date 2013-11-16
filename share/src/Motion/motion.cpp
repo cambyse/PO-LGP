@@ -278,7 +278,7 @@ void MotionProblem::activateAllTaskCosts(bool active) {
   for_list_(TaskCost, c, taskCosts) c->active=active;
 }
 
-void MotionProblem::costReport() {
+void MotionProblem::costReport(bool gnuplt) {
   CHECK(costMatrix.d1 == dim_psi() + dim_phi(0),"");
   cout <<"*** MotionProblem -- CostReport" <<endl;
   
@@ -376,6 +376,8 @@ void MotionProblem::costReport() {
   }
   fil2 <<endl;
   fil2.close();
+
+  if(gnuplt) gnuplot("load 'z.costReport.plt'");
 
 }
 

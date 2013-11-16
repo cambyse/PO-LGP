@@ -1,10 +1,8 @@
-#include <Core/util.h>
 #include <Motion/motion.h>
 #include <Motion/taskMap_default.h>
 #include <Motion/taskMap_constrained.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
-#include <Optim/benchmarks.h>
 #include <Optim/constrained.h>
 #include <Perception/video.h>
 #include <iomanip>
@@ -37,29 +35,28 @@ int main(int argc,char** argv){
   //-- setup the motion problem
   TaskCost *c;
   c = P.addTaskMap("position",
-		   new DefaultTaskMap(posTMT, G, "endeff", ors::Vector(0,0,.2)));
-  P.setInterpolatingCosts(c, MotionProblem::final_restConst,
-                          ARRAY(P.ors->getBodyByName("target")->X.pos), 1e3,
-                          ARRAY(0.,0.,0.), 1e-3);
+                   new DefaultTaskMap(posTMT, G, "endeff", NoVector));
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly,
+                          ARRAY(P.ors->getBodyByName("target")->X.pos), 1e2);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
-                             ARRAY(0.,-1.,0.), 1e3);
+                             ARRAY(0.,0.,0.), 1e1);
 
   if(con){
     c = P.addTaskMap("collisionConstraints", new CollisionConstraint());
   }else{
     c = P.addTaskMap("collision",
-		     new DefaultTaskMap(collTMT, 0, NoVector, 0, NoVector, ARR(.1)));
+                     new DefaultTaskMap(collTMT, 0, NoVector, 0, NoVector, ARR(.1)));
     P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
   }
 
   
   //-- create the Optimization problem (of type kOrderMarkov)
-  MotionProblemFunction F(P);
-  Convert CP(F);
+  MotionProblemFunction MF(P);
+  Convert CP(MF);
   UnconstrainedProblem UCP(CP);
   UCP.mu = 10.;
 
-  arr x(F.get_T()+1,F.dim_x());
+  arr x(MF.get_T()+1,MF.dim_x());
   x.setZero();
 
   if(con){
@@ -67,22 +64,18 @@ int main(int argc,char** argv){
 //      checkAll(CP, x, 1e-4);
       optNewton(x, UCP, OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
       P.costReport();
-      write(LIST<arr>(x),"z.output");
-      gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", false, true);
-      saveTrajectory(x, G, gl);
       displayTrajectory(x, 1, G, gl,"planned trajectory");
-
-      //UCP.mu *= 10;
+//      saveTrajectory(x, G, gl);
+//      UCP.mu *= 10;
       UCP.augmentedLagrangian_LambdaUpdate(x, .9);
     }
   }else{
-    optNewton(x, CP, OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+    for(uint k=0;k<10;k++){
+      optNewton(x, CP, OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1., maxStep=1.));
+      P.costReport();
+      displayTrajectory(x, 1, G, gl,"planned trajectory");
+    }
   }
-
-  P.costReport();
-  write(LIST<arr>(x),"z.output");
-  gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", false, true);
-  displayTrajectory(x, 1, G, gl,"planned trajectory");
 
   return 0;
 }

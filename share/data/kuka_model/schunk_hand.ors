@@ -1,0 +1,35 @@
+body knuck1 {}
+body knuck2 {}
+body knuck3 {}
+body fing1  {}
+body fing2  {}
+body fing3  {}
+body tip1   {}
+body tip2   {}
+body tip3   {}
+
+# 107.4 to the root of the hand, then  98 (-10mm ring) to the finger joints
+joint (endeff knuck1) { A=<T d(180 1 0 0) t(-0.0 0 0) d(90 0 1 0) t(-.038105    0   .113) d(-90 0 1 0)>, B=<T d(90 0 1 0)>, Q=<T d(0 1 0 0)> }
+joint (endeff knuck2) { A=<T d(180 1 0 0) t(-0.0 0 0) d(90 0 1 0) t( .0190525  .033 .113) d(-90 0 1 0)>, B=<T d(90 0 1 0)>, Q=<T d( 5 1 0 0)>  }
+joint (endeff knuck3) { A=<T d(180 1 0 0) t(-0.0 0 0) d(90 0 1 0) t( .0190525 -.033 .113) d(-90 0 1 0)>, B=<T d(90 0 1 0)>, Q=<T d(-5 1 0 0)>  }
+
+### THE ORDER IS IMPORTANT -- SHOULD CORRESPOND TO SCHUNK'S CONVENTION FOR ODERING!
+joint (knuck3 fing3) { A=<T d(-90 0 0 1)> }
+joint (fing3 tip3) { A=<T t(0 0 .0865)> B=<T t(0 0 0.035)> }
+
+joint (knuck1 fing1) { A=<T d( 90 0 0 1)> }
+joint (fing1 tip1) { A=<T t(0 0 .0865)> B=<T t(0 0 0.035)> }
+
+joint (knuck2 fing2) { A=<T d(-90 0 0 1)> }
+joint (fing2 tip2) { A=<T t(0 0 .0865)> B=<T t(0 0 0.035)> }
+
+shape ring   (endeff) { rel=<T d(90 0 1 0) t(0 0 0.02)>, contact, type=4, size=[0 0 .008 .04], color=[.1 .1 .1] }
+shape wrist  (endeff) { contact,rel=<T d(90 0 1 0) t(0 0 0.07) d(180 0 0 1)>, contact, type=3, mesh='../schunk/SDH_Gehaeuse_x.tri' color=[.55 .55 .55] }
+shape f1(fing1)  { type=3, rel=<T t(0 0  -.0175) d(90 1 0 0) d(180 0 1 0)>, mesh='../schunk/SDH_Mittelteil_Finger1_x.tri' color=[.55 .55 .55] }
+shape f2(fing2)  { type=3, rel=<T t(0 0  -.0175) d(90 1 0 0) d(180 0 1 0)>, mesh='../schunk/SDH_Mittelteil_Finger1_x.tri' color=[.55 .55 .55] }
+shape f3(fing3)  { type=3, rel=<T t(0 0  -.0175) d(90 1 0 0) d(180 0 1 0)>, mesh='../schunk/SDH_Mittelteil_Finger1_x.tri' color=[.55 .55 .55] }
+shape t1(tip1)   { type=3, rel=<T t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>, mesh='../schunk/SDH_Kuppe_Finger1_x.tri'  color=[.5 .5 .5]}
+shape t2(tip2)   { type=3, rel=<T t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>, mesh='../schunk/SDH_Kuppe_Finger1_x.tri'  color=[.5 .5 .5]}
+shape t3(tip3)   { type=3, rel=<T t(0 0 -.1385) d(90 1 0 0) d(180 0 1 0)>, mesh='../schunk/SDH_Kuppe_Finger1_x.tri' color=[.5 .5 .5] }
+
+

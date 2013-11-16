@@ -110,8 +110,8 @@ LPATHS	+= $(BASE)/lib $(MLR_LIBPATH)/lib
 LIBS += -lrt
 #MEXFLAGS  = -cxx #CC='$(CXX)' CXX='$(CXX)' LD='$(CXX)'
 SHAREFLAG = -shared #-Wl,--warn-unresolved-symbols #-Wl,--no-allow-shlib-undefined
-MOC = moc
-UIC = uic
+MOC = moc-qt4
+UIC = uic-qt4
 endif
 
 ifeq ($(SYS), Darwin)
