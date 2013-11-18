@@ -266,10 +266,54 @@ class Test_PrimitiveShape(unittest.TestCase):
         assert_shape_equal(shape_msg, ors_shape)
 
     def test_ors_ros_ors(self):
-        pass
+        ors_s1 = Shape()
+
+        ors_s1.index = 1
+        ors_s1.ibody = 2
+        ors_s1.name = "testshape"
+
+        ors_s1.X.pos = Vector(3, 4, 5)
+        ors_s1.rel.pos = Vector(6, 7, 8)
+        ors_s1.X.rot = Quaternion(1, 9, 1, 2)
+        ors_s1.rel.rot = Quaternion(1, 3, 4, 5)
+
+        ors_s1.type = sphereST
+        ors_s1.cont = True
+
+        copy_shape = ors_s1
+
+        shape_msg = parser.ors_shape_to_msg(ors_s1)
+        ors_s2 = parser.msg_to_ors_shape(shape_msg)
+
+        assert copy_shape == ors_s1
+        assert ors_s1 == ors_s2
+
 
     def test_ros_ors_ros(self):
-        pass
+        shape_msg = ors_msgs.msg.Shape()
+
+        shape_msg.index = 1
+        shape_msg.index_body = 2
+        shape_msg.name = "testshape"
+
+        shape_msg.X.translation = parser.ors_to_ros_vector(Vector(3, 4, 5))
+        shape_msg.X.rotation = parser.ors_to_ros_quaternion(
+            Quaternion(1, 6, 7, 8))
+        shape_msg.rel.translation = parser.ors_to_ros_vector(
+            Vector(9, 1, 2))
+        shape_msg.rel.rotation = parser.ors_to_ros_quaternion(
+            Quaternion(1, 3, 4, 5))
+
+        shape_msg.shape_type = sphereST
+        shape_msg.contact = True
+
+        copy_shape = shape_msg
+
+        ors_shape = parser.msg_to_ors_shape(shape_msg)
+        shape_msg2 = parser.ors_shape_to_msg(ors_shape)
+
+        assert copy_shape == shape_msg
+        assert shape_msg == shape_msg2
 
 
 if __name__ == '__main__':
