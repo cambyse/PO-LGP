@@ -35,6 +35,7 @@ using std::priority_queue;
 using std::min;
 
 using util::Range;
+using util::iRange;
 
 using arma::mat;
 using arma::vec;
@@ -147,13 +148,13 @@ void LinearQ::score_candidates_by_gradient() {
     lbfgsfloatval_t * grad = lbfgs_malloc(new_active_n);
     objective(lbfgs_variables,grad,new_active_n);
 
-    // transfer gradient to scores
+    // transfer (absolute value of) gradient to scores
     candidate_scores.resize(candidate_features.size());
     for(size_t f_idx : Range(new_active_n)) {
         if(f_idx<old_active_n) {
             continue;
         } else {
-            candidate_scores[f_idx-old_active_n]=grad[f_idx];
+            candidate_scores[f_idx-old_active_n]=fabs(grad[f_idx]);
         }
     }
 
@@ -165,11 +166,30 @@ void LinearQ::score_candidates_by_gradient() {
     lbfgs_free(grad);
 }
 
-void LinearQ::add_candidates_by_score(const int& n) {
-    for(size_t f_idx : Range(min((int)n,(int)candidate_features.size()))) {
-        active_features.push_back(candidate_features[f_idx]);
+void LinearQ::add_candidates_by_score(int n) {
+    DEBUG_OUT(1,"Adding candidates...");
+
+    // add all non-zero scored
+    if(n==0) {
+        n = candidate_features.size();
     }
+
+    // add features
+    int included = 0;
+    for(size_t f_idx : iRange(candidate_features.size())) {
+        if(candidate_scores[f_idx]==0 || included>=n) {
+            DEBUG_OUT(1,"   ignore (" << candidate_scores[f_idx] << "):" << candidate_features[f_idx]);
+        } else {
+            active_features.push_back(candidate_features[f_idx]);
+            ++included;
+            DEBUG_OUT(1,"   add (" << candidate_scores[f_idx] << "):" << candidate_features[f_idx]);
+        }
+    }
+
+    // adjust number of variables
     set_number_of_variables_to_active();
+
+    DEBUG_OUT(1,"DONE");
 }
 
 void LinearQ::add_all_candidates(const int& n) {
@@ -540,10 +560,10 @@ int LinearQ::progress(
 ) {
     DEBUG_OUT(1,"Iteration " << k << " (fx = " << fx << ", xnorm = " << xnorm << ", loss = " << fx << "):");
     for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
-        DEBUG_OUT(1, "    " <<
-                active_features[f_idx].identifier() <<
-                " --> t[" << f_idx << "] = " <<
-                  x[f_idx]);
+        DEBUG_OUT(1, "    t[" << f_idx << "] = " <<
+                  x[f_idx] << " <-- " <<
+                  active_features[f_idx].identifier()
+            );
     }
     DEBUG_OUT(1,"Iteration " << k << " (fx = " << fx << ", xnorm = " << xnorm << ", loss = " << fx << ")");
     DEBUG_OUT(1,"");
@@ -569,10 +589,9 @@ lbfgsfloatval_t LinearQ::optimize(
         lbfgsfloatval_t fx = LBFGS_Optimizer::optimize(return_code, return_code_description);
         // transfer weights and report result
         for(int f_idx : Range(active_features.size())) {
-            DEBUG_OUT(1, "    " <<
-                      active_features[f_idx].identifier() <<
-                      " --> t[" << f_idx << "] = " <<
-                      lbfgs_variables[f_idx]
+            DEBUG_OUT(1, "    t[" << f_idx << "] = " <<
+                      lbfgs_variables[f_idx] << " <-- " <<
+                      active_features[f_idx].identifier()
                 );
             feature_weights[f_idx] = lbfgs_variables[f_idx];
         }

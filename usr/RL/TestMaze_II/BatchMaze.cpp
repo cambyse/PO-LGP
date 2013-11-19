@@ -541,27 +541,27 @@ int BatchMaze::run_active() {
                 double old_loss = DBL_MAX;
                 while(old_loss-loss>switch_double("-dloss")) {
                     old_loss = loss;
-                    linQ->add_all_candidates(1);
                     if(mode=="LINEAR_Q_TD") {
-                        linQ->set_optimization_type_TD_L1()
+                        linQ->add_all_candidates(1);
+                        loss = linQ->set_optimization_type_TD_L1()
                             .set_regularization(switch_double("-l1"))
                             .set_maximum_iterations(500)
                             .optimize();
                         linQ->erase_features_by_weight();
-                        loss = linQ->set_optimization_type_TD_RIDGE()
-                            .set_regularization(1e-10)
-                            .optimize();
                     } else if(mode=="LINEAR_Q_BELLMAN") {
-                        linQ->set_optimization_type_BELLMAN()
+                        linQ->construct_candidate_features(1);
+                        linQ->score_candidates_by_gradient();
+                        linQ->add_candidates_by_score(switch_int("-fincr"));
+                        loss = linQ->set_optimization_type_BELLMAN()
                             .set_regularization(switch_double("-l1"))
                             .set_maximum_iterations(500)
                             .optimize();
-                        linQ->erase_features_by_weight();
-                        loss = linQ->set_regularization(0).optimize();
+                        linQ->erase_features_by_weight(0);
                     } else {
                         DEBUG_DEAD_LINE;
                     }
                 }
+                loss = linQ->set_regularization(0).optimize();
             } else {
                 for(int complx=1; complx<=switch_int("-f"); ++complx) {
                     linQ->add_all_candidates(1);
@@ -712,7 +712,7 @@ int BatchMaze::run_active() {
                         .arg(l1)
                         .arg(crf->get_number_of_features());
                 } else if(mode=="LINEAR_Q_TD" || mode=="LINEAR_Q_BELLMAN") {
-                    extra_info = QString("loss: %1	l1: %2").arg(loss).arg(l1);
+                    extra_info = QString("loss: %1	l1: %2	nr_of_features: %3").arg(loss).arg(l1).arg(linQ->get_number_of_features());
                 } else if(mode=="UTREE_VALUE") {
                     extra_info = QString("utree_size: %1	utree_score: %2").arg(utree->get_tree_size()).arg(utree_score);
                 } else if(mode=="UTREE_PROB") {

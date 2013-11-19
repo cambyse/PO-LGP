@@ -46,17 +46,67 @@ namespace util {
 
     const InvalidBase INVALID = InvalidBase(true);
 
+    Range::Range(int first, int last, int increment):
+        begin_idx(first),
+        idx_increment(increment)
+    {
+        if(first<=last) {
+            // range is forward (or zero)
+            if(increment>0) {
+                // increment is forward
+                int offset = (last-first)%increment;
+                end_idx=last-offset+increment;
+            } else {
+                // increment is backward (or zero)
+                end_idx=first;
+            }
+        } else {
+            // range is backward
+            if(increment>=0) {
+                // increment is forward (or zero)
+                end_idx=first;
+            } else {
+                // increment is backward
+                int offset = (first-last)%(-increment);
+                end_idx=last+offset+increment;
+            }
+        }
+    }
+
+    Range::Range(int first, int last):
+        Range(first,last,first<last?+1:-1)
+    {}
+
+    Range::Range(int last):
+        Range(0,last-1,1)
+    {}
+
     Range::RangeIt & Range::RangeIt::operator++() {
-        ++idx;
+        idx+=idx_increment;
         return *this;
     }
+
     bool Range::RangeIt::operator== (const RangeIt& other) const {
         return other.idx==this->idx;
     }
+
     bool Range::RangeIt::operator!= (const RangeIt& other) const {
         return !(other==*this);
     }
-    Range::RangeIt Range::begin() const { return RangeIt(begin_idx); }
-    Range::RangeIt Range::end() const { return RangeIt(end_idx); }
+
+    Range::RangeIt Range::begin() const {
+        return RangeIt(begin_idx,idx_increment);
+    }
+
+    Range::RangeIt Range::end() const {
+        return RangeIt(end_idx,idx_increment);
+    }
+
+    Range::RangeIt::RangeIt(int i, int incr):
+        idx(i),
+        idx_increment(incr)
+    {}
+
+    iRange::iRange(int n): Range(n-1,0,-1) {}
 
 } // end namespace util

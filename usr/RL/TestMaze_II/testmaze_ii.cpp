@@ -422,6 +422,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString optimize_linQ_l1_s(              "    lq-optimize-l1 / lqol1 . . [<double> [<int>] | check | c ] . . . . . .-> optimize Linear-Q (TD Error) with L1-regularization coefficient <double> [ and max <int> iterations ] or check derivatives");
     QString optimize_linQ_s(                 "    lq-optimize / lqo. . . . . [<double> [<int>] | check | c ] . . . . . .-> optimize Linear-Q (Bellman Error) with L1-regularization coefficient <double> [ and max <int> iterations ] or check derivatives");
     QString construct_s(                     "    construct / con. . . . . . <int> . . . . . . . . . . . . . . . . . . .-> construct candidate features with distance <int>");
+    QString score_lq_s(                      "    score-lq / slq . . . . . . <int> . . . . . . . . . . . . . . . . . . .-> score candidate features with distance <int> by gradient");
+    QString add_lq_s(                        "    add-lq . . . . . . . . . . <int> . . . . . . . . . . . . . . . . . . .-> add <int> highest scored candidate features to active (0 for all non-zero scored)");
     QString lq_erase_zero_weight_s(          "    lq-erase / lqe . . . . . . [<double>]. . . . . . . . . . . . . . . . .-> erase features with zero weight [ weight below or equal to <double> ]");
     QString lq_alpha_s(                      "    lq-alpha . . . . . . . . . [<double>]. . . . . . . . . . . . . . . . .-> get [set] alpha for Soft-Max");
 
@@ -521,6 +523,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             TO_CONSOLE( optimize_linQ_l1_s );
             TO_CONSOLE( optimize_linQ_s );
             TO_CONSOLE( construct_s );
+            TO_CONSOLE( score_lq_s );
+            TO_CONSOLE( add_lq_s );
             TO_CONSOLE( lq_erase_zero_weight_s );
             TO_CONSOLE( lq_alpha_s );
             // Planning
@@ -864,6 +868,26 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             } else {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( add_crf_s );
+            }
+        } else if(str_args[0]=="score-lq" || str_args[0]=="slq") {
+            if(str_args_n==1) {
+                TO_CONSOLE(score_lq_s);
+            } else if(int_args_ok[1] && int_args[1]>=0 ) {
+                linQ.construct_candidate_features(int_args[1]);
+                linQ.score_candidates_by_gradient();
+            } else {
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( score_lq_s );
+            }
+        } else if(str_args[0]=="add-lq") {
+            if(str_args_n==1) {
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( add_lq_s );
+            } else if(int_args_ok[1] && int_args[1]>=0 ) {
+                linQ.add_candidates_by_score(int_args[1]);
+            } else {
+                TO_CONSOLE( invalid_args_s );
+                TO_CONSOLE( add_lq_s );
             }
         } else if(str_args[0]=="crf-erase" || str_args[0]=="ce") {
             crf.erase_zero_features();

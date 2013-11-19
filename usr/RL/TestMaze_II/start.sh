@@ -5,6 +5,7 @@
 # Learning curves
 #start_string="-mode SPARSE -sample UNIFORM -nEp 2700 -maxTran 12 -minTrain 600 -maxTrain 1000 -maxTree 10000 -f 2 -l1 0.0002 -incr 200"
 #start_string="-mode LINEAR_Q -sample UNIFORM -nEp 2700 -maxTran 12 -minTrain 600 -maxTrain 1000 -f 3 -l1 0.0005 -incr 200"
+start_string="-mode LINEAR_Q_BELLMAN -sample UNIFORM -nEp 5000 -maxTran 12 -minTrain 200 -maxTrain 1000 -incr 200 -l1 0.001 -fincr 10 -dloss 1e-10 -alpha 5"
 #start_string="-mode UTREE_PROB -sample UNIFORM -nEp 3000 -maxTran 12 -minTrain 600 -maxTrain 1000 -maxTree 10000 -incr 200"
 
 # L1 sweep / UTree growth
@@ -14,7 +15,7 @@
 ## 4x4
 
 # Learning curves
-start_string="-mode SPARSE -sample UNIFORM -nEp 300 -maxTran 22 -minTrain 3000 -maxTrain 5000 -maxTree 50000 -l1 0.0005 -incr 1000 -fincr 50 -dl 0.0001"
+#start_string="-mode SPARSE -sample UNIFORM -nEp 300 -maxTran 22 -minTrain 3000 -maxTrain 5000 -maxTree 50000 -l1 0.0005 -incr 1000 -fincr 50 -dl 0.0001"
 #start_string="-mode UTREE_VALUE -sample UNIFORM -nEp 3000 -maxTran 22 -minTrain 3000 -maxTrain 5000 -maxTree 50000 -incr 1000"
 
 # L1 sweep

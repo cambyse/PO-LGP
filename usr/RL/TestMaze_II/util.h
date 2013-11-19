@@ -217,20 +217,40 @@ namespace util {
         /** \brief Iterator class to iterate through a Range object. */
         class RangeIt {
         public:
-        RangeIt(int i): idx(i) {}
+            RangeIt(int i, int incr);
             RangeIt & operator++();
             bool operator== (const RangeIt& other) const;
             bool operator!= (const RangeIt& other) const;
             int operator*() const { return idx; }
         private:
             int idx;
+            int idx_increment;
         };
-    Range(int f, int l): begin_idx(f), end_idx(l+1) {}
-    Range(int l): begin_idx(0), end_idx(l) {}
+
+        /** \brief Iterate from \e first to \e last (inclusive) with step size
+         * \e increment. */
+        Range(int first, int last, int increment);
+
+        /** \brief Iterate from \e first to \e last (inclusive) with step size
+         * one. */
+        Range(int first, int last);
+
+        /** \brief Iterate from zero to \e last-1 with step size one. */
+        Range(int last);
+
         RangeIt begin() const;
         RangeIt end() const;
     private:
-        int begin_idx, end_idx;
+        int begin_idx;
+        int end_idx;
+        int idx_increment;
+    };
+
+    /** \brief iRange(n) counts down from n-1 to zero. */
+    class iRange: public Range {
+    public:
+        /** \brief Iterate from \e n-1 to zero with step size one. */
+        iRange(int n);
     };
 
     //========================================================//

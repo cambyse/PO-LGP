@@ -60,8 +60,9 @@ public:
      * gradient.*/
     void score_candidates_by_gradient();
 
-    /** \brief Add the n highest scored candidates. */
-    void add_candidates_by_score(const int& n);
+    /** \brief Add the n highest scored candidates. Never add zero scored
+     * features. For n==0 add all non-zero scored. */
+    void add_candidates_by_score(int n);
 
     /** \brief Construct and add all candidates with 'distance' n. */
     void add_all_candidates(const int& n);
@@ -139,6 +140,8 @@ public:
 
     virtual LinearQ& set_alpha(const double a) { alpha = a; return *this; }
     virtual double get_alpha() { return alpha; }
+
+    int get_number_of_features() const { return active_features.size(); }
 
 private:
 
