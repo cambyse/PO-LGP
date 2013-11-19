@@ -16,7 +16,7 @@ start_string="-mode LINEAR_Q_BELLMAN -sample UNIFORM -nEp 5000 -maxTran 12 -minT
 
 # Learning curves
 #start_string="-mode SPARSE -sample UNIFORM -nEp 300 -maxTran 22 -minTrain 3000 -maxTrain 5000 -maxTree 50000 -l1 0.0005 -incr 1000 -fincr 50 -dl 0.0001"
-#start_string="-mode UTREE_VALUE -sample UNIFORM -nEp 3000 -maxTran 22 -minTrain 3000 -maxTrain 5000 -maxTree 50000 -incr 1000"
+#start_string="-mode UTREE_PROB -sample UNIFORM -nEp 400 -maxTran 22 -minTrain 500 -maxTrain 2000 -maxTree 50000 -incr 500"
 
 # L1 sweep
 #start_string="-mode SPARSE -sample UNIFORM -nEp 8 -maxTran 22 -minTrain 2000 -maxTrain 2000 -maxTree 50000 -l1 0.0001 -incr 0 -fincr 50 -dl 0.0001 -l1incr 0.0004 -maxl1 0.002"

@@ -70,3 +70,5 @@ FORMS += testmaze_ii.ui
 RESOURCES +=
 QMAKE_CXXFLAGS += -std=c++0x \
     -fopenmp
+QMAKE_CC = gcc-4.8
+QMAKE_CXX = g++-4.8
