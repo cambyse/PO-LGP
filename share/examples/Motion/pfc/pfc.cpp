@@ -1,20 +1,28 @@
 #include "pfc.h"
 
-Pfc::Pfc(arr& _trajRef, double _TRef, arr& _x0, MObject &_goalMO, bool _useOrientation)
+Pfc::Pfc(ors::Graph &_orsG, arr& _trajRef, double _TRef, arr &_x0, MObject &_goalMO, \
+        bool _useOrientation, bool _useCollAvoid, \
+        double _fPos_deviation, double _fVec_deviation, double _yCol_deviation, double _w_reg):
+        orsG(&_orsG),
+        TRef(_TRef),
+        x0(_x0),
+        goalMO(&_goalMO),
+        useOrientation(_useOrientation),
+        useCollAvoid(_useCollAvoid),
+        fPos_deviation(_fPos_deviation),
+        fVec_deviation(_fVec_deviation),
+        yCol_deviation(_yCol_deviation),
+        w_reg(_w_reg)
 {
-  TRef = _TRef;
   goalRef = _trajRef[_trajRef.d0-1];
   dt = TRef/(_trajRef.d0-1);
   dsRef = 1./(_trajRef.d0-1);
   sRef = linspace(0.,1.,_trajRef.d0-1);
-  useOrientation = _useOrientation;
 
-
-  goalMO = &_goalMO;
   if (useOrientation) {
     goalMO->setOrientation(goalRef.subRange(3,5));
   }
-  x0 = _x0;
+
   traj = ~x0;
   s = ARR(0.);
 
@@ -73,6 +81,59 @@ void Pfc::warpTrajectory()
   trajWrap->transform(goalDiff, stateDiff, s.last());
 }
 
+void Pfc::computeIK(arr &q, arr &qd)
+{
+    arr W, yPos, JPos, yVec, JVec, yPos_target,yVec_target, y_target, Phi, PhiJ, yCol,JCol,costs;
+
+    W.setDiag(1.,orsG->getJointStateDimension());  // W is equal the Id_n matrix
+    W = W*w_reg;
+
+    // Compute current task states
+    orsG->kinematicsPos(yPos, orsG->getBodyByName("endeff")->index);
+    orsG->jacobianPos(JPos, orsG->getBodyByName("endeff")->index);
+    orsG->kinematicsVec(yVec, orsG->getBodyByName("endeff")->index);
+    orsG->jacobianVec(JVec, orsG->getBodyByName("endeff")->index);
+
+    // iterate pfc
+    arr y = yPos;
+    if (useOrientation) {
+      y.append(yVec);
+    }
+    iterate(y);
+
+    // next target
+    y_target = traj[traj.d0-1];
+
+    // task 1: POSITION
+    yPos_target = y_target.subRange(0,2);
+    costs = (yPos - yPos_target)/ fPos_deviation;
+    posCosts.append(~costs*costs);
+    Phi = ((yPos - yPos_target)/ fPos_deviation);
+    PhiJ = (JPos / fPos_deviation);
+
+    // task  2: ORIENTATION
+    if (useOrientation) {
+      yVec_target = y_target.subRange(3,5);
+      costs = (yVec - yVec_target)/ fVec_deviation;
+      vecCosts.append(~costs*costs);
+      Phi.append(costs);
+      PhiJ.append(JVec / fVec_deviation);
+    }
+
+    // task 3: COLLISION
+    if (useCollAvoid) {
+      orsG->phiCollision(yCol,JCol,0.15);
+      costs = yCol / yCol_deviation;
+      colCosts.append(~costs*costs);
+      Phi.append(costs);
+      PhiJ.append(JCol / yCol_deviation);
+    }
+
+    // compute joint updates
+    qd = inverse(~PhiJ*PhiJ + W)*~PhiJ* Phi;
+    q -= qd;
+}
+
 void Pfc::plotState()
 {
   write(LIST<arr>(trajRef->points),"out/trajRef.output");
@@ -119,6 +180,20 @@ void Pfc::plotState()
   write(LIST<arr>(sqrt(sum(sqr(~(~dtraj).subRange(0,2)),1)) ),"out/dtraj.output");
   gnuplot("set term wxt 11 title 'velocity profile'");
   gnuplot("plot 'out/dtrajRef.output' us 1,'out/dtraj.output' us 1");
+
+  //plot costs
+  gnuplot("set term wxt 21 title 'cost overview'");
+  write(LIST<arr>(posCosts),"out/posCosts.output");
+  gnuplot("plot 'out/posCosts.output' us 1");
+
+  if (useOrientation) {
+    write(LIST<arr>(vecCosts),"out/vecCosts.output");
+     gnuplot("replot 'out/vecCosts.output' us 1");
+  }
+  if (useCollAvoid) {
+    write(LIST<arr>(colCosts),"out/colCosts.output");
+      gnuplot("replot 'out/colCosts.output' us 1");
+  }
 }
 
 void Pfc::printState()
