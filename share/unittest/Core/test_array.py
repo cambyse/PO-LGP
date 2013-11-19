@@ -17,10 +17,10 @@ class TestArray_SWIGTypemaps():
         assert a.dtype == numpy.float64
 
         # check each value
-        assert (a[0, 0] - 1.2) < 0.01
-        assert (a[0, 1] - 3.4) < 0.01
-        assert (a[1, 0] - 5.6) < 0.01
-        assert (a[1, 1] - 7.8) < 0.01
+        assert abs(a[0, 0] - 1.2) < 0.01
+        assert abs(a[0, 1] - 3.4) < 0.01
+        assert abs(a[1, 0] - 5.6) < 0.01
+        assert abs(a[1, 1] - 7.8) < 0.01
 
     def test_return_intA(self):
         a = core_testpy.return_intA()    # should return [[1. 3]. [5. 7]]
@@ -32,10 +32,10 @@ class TestArray_SWIGTypemaps():
         assert a.dtype == numpy.int32
 
         # check each value
-        assert (a[0, 0] + 1) < 0.01
-        assert (a[0, 1] - 3) < 0.01
-        assert (a[1, 0] + 5) < 0.01
-        assert (a[1, 1] - 7) < 0.01
+        assert abs(a[0, 0] + 1) < 0.01
+        assert abs(a[0, 1] - 3) < 0.01
+        assert abs(a[1, 0] + 5) < 0.01
+        assert abs(a[1, 1] - 7) < 0.01
 
     def test_return_uintA(self):
         a = core_testpy.return_uintA()    # should return [[1. 3]. [5. 7]]
@@ -47,10 +47,10 @@ class TestArray_SWIGTypemaps():
         assert a.dtype == numpy.uint32
 
         # check each value
-        assert (a[0, 0] - 1) < 0.01
-        assert (a[0, 1] - 3) < 0.01
-        assert (a[1, 0] - 5) < 0.01
-        assert (a[1, 1] - 7) < 0.01
+        assert abs(a[0, 0] - 1) < 0.01
+        assert abs(a[0, 1] - 3) < 0.01
+        assert abs(a[1, 0] - 5) < 0.01
+        assert abs(a[1, 1] - 7) < 0.01
 
     def test_memory_leakage(self):
         # if there is a memory leak, you will definitely get out of memory here
@@ -170,18 +170,18 @@ class TestArray_SWIGTypemaps():
         assert (a == b).all()
         assert c.shape == (1, )
         assert c.size == 1
-        assert c[0] - .1 < 0.01
+        assert abs(c[0] - .1) < 0.01
 
     def test_member_out(self):
         t = core_testpy.TestClass()
         a = t.a_val
         p = t.a_poi
         assert a.shape == (2, )
-        assert a[0] - 1.2 < 0.01
-        assert a[1] - 3.4 < 0.01
+        assert abs(a[0] - 1.2) < 0.01
+        assert abs(a[1] - 3.4) < 0.01
         assert p.shape == (2, )
-        assert p[0] - 9.0 < 0.01
-        assert p[1] - 1.2 < 0.01
+        assert abs(p[0] - 9.0) < 0.01
+        assert abs(p[1] - 1.2) < 0.01
 
     def test_member_in(self):
         t = core_testpy.TestClass()
@@ -189,10 +189,22 @@ class TestArray_SWIGTypemaps():
         t.a_poi = numpy.array([7.8, 9.0])
         v = t.get_value()
         p = t.get_pointer()
-        assert v[0] - 3.4 < 0.01
-        assert v[1] - 5.6 < 0.01
-        assert p[0] - 7.8 < 0.01
-        assert p[1] - 9.0 < 0.01
+        assert abs(v[0] - 3.4) < 0.01
+        assert abs(v[1] - 5.6) < 0.01
+        assert abs(p[0] - 7.8) < 0.01
+        assert abs(p[1] - 9.0) < 0.01
+
+    def test_member_set_value(self):
+        t = core_testpy.TestClass()
+        t.a_val = numpy.array([[1.2, 3.4], [5.6, 7.8]])
+
+        t.a_val[1, 0] = 4.3
+
+        assert abs(t.a_val[0, 0] - 1.2) < 0.1
+        assert abs(t.a_val[0, 1] - 3.4) < .01
+        assert abs(t.a_val[1, 0] - 4.3) < .01
+        assert abs(t.a_val[1, 1] - 7.8) < .01
+
 
     def test_argout(self):
         a = numpy.array([1])
