@@ -1,6 +1,7 @@
 #include "LBFGS_Optimizer.h"
 #include "../lbfgs_codes.h"
 #include "../util.h"
+#include "../Config.h"
 
 #include <math.h> // for fabs()
 #include <algorithm> // for min, max
