@@ -13,6 +13,8 @@ import shape_msgs
 import ors_msgs.msg
 import orspy
 from corepy import Transformation, Vector, Quaternion
+from guipy import Mesh
+import numpy as np
 
 
 def ros_to_ors_vector(ros_vector):
@@ -81,9 +83,9 @@ def ors_mesh_to_msg(ors_mesh):
 
 
 def msg_to_ors_mesh(mesh_msg):
-    mesh = orspy.Mesh()
-    mesh.V = mesh.V.reshape([3, len(mesh_msg.vertices)])
-    mesh.T = mesh.T.reshape([3, len(mesh_msg.triangles)])
+    mesh = Mesh()
+    mesh.V = np.resize(mesh.V, [len(mesh_msg.vertices), 3])
+    mesh.T = np.resize(mesh.T, [len(mesh_msg.triangles), 3])
     for i in range(len(mesh_msg.vertices)):
         v = mesh_msg.vertices[i]
         mesh.V[i, 0] = v.x
