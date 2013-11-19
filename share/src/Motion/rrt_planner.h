@@ -19,7 +19,7 @@ namespace ors {
 
       RRTPlanner(ors::Graph* G, MotionProblem &problem, double stepsize);
 
-      arr getTrajectoryTo(const arr& target, const double prec, OpenGL* gl = NULL); ///< returns the trajectory created by the RRT
+      arr getTrajectoryTo(const arr& target, OpenGL* gl = NULL); ///< returns the trajectory created by the RRT
   };
 }
 
