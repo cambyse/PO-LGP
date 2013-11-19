@@ -16,6 +16,8 @@ import_array();
 // For numerical types, we want to get numpy arrays, to keep the shape of the
 // array, etc.
 
+%naturalvar MT::Array;
+
 // actual translation of numpy array to MT::Array<double>
 %fragment("ArrayTransform", "header") {
   template<class T>
@@ -129,7 +131,8 @@ import_array();
   PyObject *MTArray_As_NumpyArray(MT::Array<Type> in) {
     long dims[3] = { in.d0, in.d1, in.d2 };
     PyArrayObject *a = (PyArrayObject*) PyArray_SimpleNew(in.nd, dims, numpy_type_##Type());
-    memcpy(PyArray_DATA(a), in.p, in.N*sizeof(Type));
+    /*memcpy(PyArray_DATA(a), in.p, in.N*sizeof(Type));*/
+    a->data = reinterpret_cast<char*>(in.p);
     return PyArray_Return(a);
   }
 }
@@ -164,6 +167,7 @@ import_array();
 // information.
 // BEWARE: if you define a array of typemapped types you won't get what you
 // expect. (But you will get a list of not typemapped SWIG_Objects.)
+
 
 %fragment("asMTArrayList", "header") {
   template<class T>

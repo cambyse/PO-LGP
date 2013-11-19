@@ -197,8 +197,10 @@ inline uintA randperm(uint n) {  uintA z;  z.setRandomPerm(n);  return z; }
     oss << (*$self);
     return oss.str();
   }
-  bool __eq__(const Transformation& other) { return *$self == other; }
-  bool __ne__(const Transformation& other) { return *$self != other; }
+  bool __eq__(const Transformation& other) { return $self->pos == other.pos &&
+$self->rot == other.rot; }
+  bool __ne__(const Transformation& other) { return $self->pos != other.pos ||
+$self->rot != other.rot; }
 } 
 
 //===========================================================================
