@@ -6,6 +6,7 @@ geometry_msgs/Transform X
 geometry_msgs/Transform rel
 
 int8 shape_type
+bool contact
 shape_msgs/Mesh mesh
 
 # ShapeType type;
