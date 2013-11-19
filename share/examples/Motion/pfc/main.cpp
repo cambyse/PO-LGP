@@ -1,6 +1,7 @@
 #include <Core/util.h>
 #include <Motion/motion.h>
 #include <Motion/taskMap_default.h>
+#include <Motion/taskMap_proxy.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
@@ -62,29 +63,35 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   //------------------------------------------------//
   OpenGL gl(scene,800,800);
   ors::Graph G;
+
   init(G, gl, scene);
+  makeConvexHulls(G.shapes);
+  cout << "Loaded scene: " << scene << endl;
 
   MotionProblem P(&G);
   P.loadTransitionParameters();
-//  P.swift->deactivate(P.ors->getBodyByName("obstacle1")->shapes(0),P.ors->getBodyByName("obstacle2")->shapes(0));
+
 
   //-- create an optimal trajectory to trainTarget
   TaskCost *c;
-  c = P.addTaskMap("position", new DefaultTaskMap(posTMT, G, "endeff"));
-  P.setInterpolatingCosts(c, MotionProblem::final_restConst,
+  c = P.addTaskMap("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
+
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                           ARRAY(P.ors->getBodyByName("goalRef")->X.pos), 1e4,
                           ARRAY(0.,0.,0.), 1e-3);
+  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
+                          ARRAY(0.,0.,0.), 1e3,
+                          ARRAY(0.,0.,0.), 0.);
 
   if (useOrientation) {
-    c = P.addTaskMap("orientation", new DefaultTaskMap(vecTMT, G, "endeff"));
-    P.setInterpolatingCosts(c, MotionProblem::final_restConst,
-                            ARRAY(0.,0.,-1.), 1e4,
+    c = P.addTaskMap("orientation", new DefaultTaskMap(vecTMT,G,"endeff",ors::Vector(0., 0., 0.)));
+    P.setInterpolatingCosts(c, MotionProblem::finalOnly,
+                            ARRAY(0.,0.,1.), 1e4,
                             ARRAY(0.,0.,0.), 1e-3);
   }
 
   if (useCollAvoid) {
-    c = P.addTaskMap("collision",
-		     new DefaultTaskMap(collTMT, 0, NoVector, 0, NoVector, ARR(.1)));
+    c = P.addTaskMap("collision", new DefaultTaskMap(collTMT, 0, ors::Vector(0., 0., 0.), 0, ors::Vector(0., 0., 0.), ARR(.1)));
     P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e0);
   }
 
@@ -104,7 +111,8 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
 
   P.costReport();
-  //  displayTrajectory(x, 1, G, gl,"planned trajectory");
+  displayTrajectory(x, 1, G, gl,"planned trajectory");
+
 
   //------------------------------------------------//
   // Transform trajectory into task space
@@ -128,17 +136,32 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   //------------------------------------------------//
   // Create obstacles and goals
   //------------------------------------------------//
-  MObject goalMO(&G, MT::String("goal"), MObject::GOAL , 0.00, ARRAY(0.,1.,0.));
+  MObject goalMO(&G, MT::String("goal"), MObject::GOAL , 0., ARRAY(0.,0.,1.));
   std::vector<MObject*> mobjects;
 
   //    mobjects.push_back(new MObject(&G, MT::String("obstacle1"), MObject::OBSTACLE , 0.003, ARRAY(0.,0.,-1.)));
   //    gl.add(drawEnv,mobjects.at(0));
 
+
+  arr q, dq, q0, dq0;
+
+  // Set start state
+  q0 = x[0]; dq0 = 0.*q0;
+  G.setJointState(q0,dq0);
+  G.calcBodyFramesFromJoints();
+  G.getJointState(q);
+
   //------------------------------------------------//
   // Create pfc from optimal trajectory in task space
   //------------------------------------------------//
   arr x0 = xRef[0];
-  Pfc *pfc = new Pfc(xRef,2.,x0, goalMO, useOrientation);
+  double fPos_deviation = 1e-2;
+  double fVec_deviation = 1e-3;
+  double yCol_deviation = 3e-1;
+  double w_reg = 100.;
+
+  Pfc *pfc = new Pfc(G, xRef,2.,x0, goalMO, useOrientation, useCollAvoid,fPos_deviation,fVec_deviation,yCol_deviation,w_reg);
+
   gl.add(drawActTraj,&(pfc->traj));
   gl.add(drawRefTraj,&(pfc->trajRef->points));
   gl.add(drawPlanTraj,&(pfc->trajWrap->points));
@@ -146,28 +169,9 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   //------------------------------------------------//
   // Simulate controller
   //------------------------------------------------//
-  arr W, yPos, JPos, yVec, JVec, yPos_target,yVec_target, y_target, q, Phi, PhiJ, q0, dq0,yCol,JCol,costs,posCosts,vecCosts,colCosts;
-  double fPos_deviation = 1e-1;
-  double fVec_deviation = 1e-1;
-  double yCol_deviation = 3e-1;
-
-  W.setDiag(1.,G.getJointStateDimension());  // W is equal the Id_n matrix
-  W = W*10.;
-
-  q0 = x[0]; dq0 = 0.*q0;
-  G.setJointState(q0,dq0);
-  G.calcBodyFramesFromJoints();
-  G.getJointState(q);
-
   uint t = 0;
-  while((pfc->s.last()<0.99) && t++ < 2*T)
+  while((pfc->s.last()<0.95) && t++ < 2*T)
   {
-    // Compute current task states
-    G.kinematicsPos(yPos, G.getBodyByName("endeff")->index);
-    G.jacobianPos(JPos, G.getBodyByName("endeff")->index);
-    G.kinematicsVec(yVec, G.getBodyByName("endeff")->index);
-    G.jacobianVec(JVec, G.getBodyByName("endeff")->index);
-
     // move obstacles
     for (std::vector<MObject*>::iterator moIter = mobjects.begin() ; moIter != mobjects.end() ; ++moIter) {
       (*moIter)->move();
@@ -176,47 +180,10 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
     // move goal
     goalMO.move();
 
-    // iterate pfc
-    arr y = yPos;
-    if (useOrientation) {
-      y.append(yVec);
-    }
-    pfc->iterate(y);
+    P.swift->computeProxies(G);
+    pfc->computeIK(q,dq);
 
-    // find current position in plan and next target
-    y_target = pfc->traj[pfc->traj.d0-1];
-    yPos_target = y_target.subRange(0,2);
-
-
-    // task 1: POSITION
-    costs = (yPos - yPos_target)/ fPos_deviation;
-    posCosts.append(~costs*costs);
-    Phi = ((yPos - yPos_target)/ fPos_deviation);
-    PhiJ = (JPos / fPos_deviation);
-
-    // task 2: ORIENTATION
-    if (useOrientation) {
-      yVec_target = y_target.subRange(3,5);
-      costs = (yVec - yVec_target)/ fVec_deviation;
-      vecCosts.append(~costs*costs);
-      Phi.append(costs);
-      PhiJ.append(JVec / fVec_deviation);
-    }
-
-    // task 3: COLLISION
-    if (useCollAvoid) {
-      P.swift->computeProxies(G);
-      G.phiCollision(yCol,JCol,0.15);
-      costs = yCol / yCol_deviation;
-      colCosts.append(~costs*costs);
-      Phi.append(costs);
-      PhiJ.append(JCol / yCol_deviation);
-    }
-
-    // compute joint updates
-    q -= inverse(~PhiJ*PhiJ + W)*~PhiJ* Phi;
-
-    // sets joint angles AND computes all frames AND updates display
+    // sets joint angles AND computes all frames AND update display
     G.setJointState(q);
     G.calcBodyFramesFromJoints();
 
@@ -227,24 +194,14 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   // Plot results
   //------------------------------------------------//
   pfc->plotState();
-  gnuplot("set term wxt 21 title 'cost overview'");
-  write(LIST<arr>(posCosts),"out/posCosts.output");
-  gnuplot("plot 'out/posCosts.output' us 1");
-
-  if (useOrientation) {
-    write(LIST<arr>(vecCosts),"out/vecCosts.output");
-     gnuplot("replot 'out/vecCosts.output' us 1");
-  }
-  if (useCollAvoid) {
-    write(LIST<arr>(colCosts),"out/colCosts.output");
-      gnuplot("replot 'out/colCosts.output' us 1");
-  }
 
   gl.watch();
 }
 
 int main(int argc,char **argv){
   MT::initCmdLine(argc,argv);
+
+  runPFC(String("model.kvg"),true,true);
 
   runPFC(String("scenes/scene1.ors"),true,false);
   runPFC(String("scenes/scene2.ors"),false,false);
