@@ -13,6 +13,7 @@ import Queue
 
 import the_curious_robot as tcr
 import the_curious_robot.srv as srv
+import rosors.srv
 
 # The order is important - this sucks
 import orspy as ors
@@ -47,11 +48,12 @@ class FakePerception():
     def step(self):
         # TODO: newClone() ?
         self.old_graph = self.graph
-        graph_msg = rospy.ServiceProxy("/world/graph")
+        graph_srv = rospy.ServiceProxy("/world/graph", rosors.srv.Graph)
+        graph_msg = graph_srv()
 
-        self.graph = rosors.parse_graph_msg(graph_msg)
+        self.graph = orspy.Graph()
 
-        update_msg = rosors.msgs.objects()
+        update_msg = msgs.ObjectIDs()
         update_msg.changed = False
         for b in self.graph.bodies:
             if has_moved(b):

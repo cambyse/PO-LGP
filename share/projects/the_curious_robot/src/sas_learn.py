@@ -6,9 +6,9 @@ roslib.load_manifest('actionlib')
 import rospy
 from actionlib import SimpleActionServer
 
-import corepy
 import guipy
 import orspy
+import corepy
 import the_curious_robot.msg as msgs
 #from articulation_msgs.msg import ModelMsg, TrackMsg
 from articulation_msgs.srv import TrackModelSrv, TrackModelSrvRequest

@@ -6,14 +6,19 @@ The fake controller of the curious robot.
 
 import roslib
 roslib.load_manifest('the_curious_robot')
+
 import rospy
 import the_curious_robot.msg as msgs
 import os
-# import numpy as np
+
 import rosors.rosors
+import rosors.srv
+
+# swig wrapper
 import orspy as ors
-import corepy
 import guipy
+import motionpy
+import corepy
 
 import require_provide as rp
 
@@ -50,6 +55,7 @@ class FakeController():
         # Misc
         self.goal = None
         self.frame_id = 1
+        self.recompute_trajectory = False
 
     def run(self):
         rp.Provide("Controller")
@@ -57,7 +63,32 @@ class FakeController():
         while not rospy.is_shutdown():
             self.step()
 
+    def compute_trajectory(self):
+        P = motionpy.MotionProblem(self.world.graph)
+        P.T = 1
+
+        #shapes = np.ndarray([P.ors.getBodyByName("robot").shapes[0].index],
+                            #np.uint32)
+        #c = P.addTaskMap("proxyColls",
+                         #motionpy.ProxyTaskMap(motionpy.allVersusListedPTMT,
+                                               #shapes, .01, True))
+        #P.setInterpolatingCosts(c, motionpy.MotionProblem.constant,
+                                #np.ndarray([0]), 1e-0)
+        #planner = motionpy.RRTPlanner(self.world.graph, P, self.stepsize)
+
+        #planner.joint_max = np.ndarray([6, 6, 1])
+        #planner.joint_max = np.ndarray([-6, -6, 1])
+
+        #target = corepy.ARRAY(self.goal.pos)
+        #self.trajectory = planner.getTrajectoryTo(target, .01)
+
+        #rospy.logdebug(self.trajectory)
+
     def step(self):
+        if self.recompute_trajectory:
+            self.compute_trajectory()
+            self.recompute_trajectory = False
+
         # P-Controller
         if self.goal is not None:
             Kp = rospy.get_param('Kp', 10e-3)
@@ -86,11 +117,17 @@ class FakeController():
         self.gl.update()
 
     def control_cb(self, data):
-        self.goal = corepy.Transformation()
-        self.goal.pos.x = data.pose.position.x
-        self.goal.pos.y = data.pose.position.y
-        self.goal.pos.z = data.pose.position.z
-        # self.goal.rot = data.pose.orientation
+        new_goal = corepy.Transformation()
+        new_goal.pos.x = data.pose.translation.x
+        new_goal.pos.y = data.pose.translation.y
+        new_goal.pos.z = data.pose.translation.z
+        new_goal.rot.x = data.pose.rotation.x
+        new_goal.rot.y = data.pose.rotation.y
+        new_goal.rot.z = data.pose.rotation.z
+        new_goal.rot.w = data.pose.rotation.w
+        if self.goal is None or self.goal != new_goal:
+            self.goal = new_goal
+            self.recompute_trajectory = True
 
 
 if __name__ == '__main__':
