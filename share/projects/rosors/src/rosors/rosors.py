@@ -7,7 +7,6 @@ roslib.load_manifest("rosors")
 import rospy
 # RosOrs
 import srv
-import msg
 import parser
 # MLR
 import orspy

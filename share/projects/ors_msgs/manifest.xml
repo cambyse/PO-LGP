@@ -10,6 +10,7 @@
   <url>http://nowhere.com</url>
   <depend package="std_msgs"/>
   <depend package="geometry_msgs"/>
+  <depend package="shape_msgs"/>
 
 </package>
 
