@@ -47,7 +47,7 @@ void holdSteady(){
   S.watch();        //pause and watch initial posture
   
   double tau = .01; //duration of one time step = .01sec
-  bool control = false;
+  bool control = true; //false;
   
   for(uint i=0;i<1000;i++){
     //** CONTROLLER part
