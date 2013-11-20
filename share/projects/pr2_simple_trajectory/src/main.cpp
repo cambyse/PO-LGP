@@ -128,9 +128,13 @@ public:
 
     for(uint idx = 0; idx < trajectory.d1; ++idx) {
       goal.trajectory.points[idx].positions.resize(trajectory.d0);
+      goal.trajectory.points[idx].velocities.resize(trajectory.d0);
       for(uint p = 0; p < trajectory.d0; ++p) {
         goal.trajectory.points[idx].positions[p] = trajectory(idx, p);  
-      }  
+        goal.trajectory.points[idx].velocities[p] = 0.0;
+      }
+      // To be reached 2 seconds after starting along the trajectory
+      goal.trajectory.points[idx].time_from_start = ros::Duration(2.0);
     }
     return goal; 
   }
