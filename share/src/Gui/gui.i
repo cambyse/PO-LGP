@@ -20,8 +20,14 @@ author: Johannes kulick
 %module motionpy
 %{
   #include "mesh.h"
+  #include "opengl.h"
   #include <Optim/optimization.h>
   #include <sstream>
 %}
 
+%ignore glDrawRobotArm;
+%ignore glClickUI;
+%ignore Camera::setOffset;
+
 %include "mesh.h"
+%include "opengl.h"

@@ -7,8 +7,7 @@
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
 
-#include <retired/devTools/logging.h>
-#include <retired/devTools/logging.cpp>
+#include <devTools/logging.h>
 SET_LOG(rrt_planner, DEBUG)
 
 namespace ors {
@@ -101,7 +100,7 @@ void drawRRT(RRT rrt) {
   }
 }
 
-arr ors::RRTPlanner::getTrajectoryTo(const arr& target, const double prec, OpenGL* gl) {
+arr ors::RRTPlanner::getTrajectoryTo(const arr& target, OpenGL* gl) {
   ors::Graph *copy = G->newClone();
   arr q;
 

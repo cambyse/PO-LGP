@@ -5,8 +5,9 @@
 Test orspy with physx and objects which onsist of convex submeshes.
 """
 
-import corepy
 import orspy
+import guipy
+import corepy
 
 
 if __name__ == '__main__':
@@ -17,18 +18,16 @@ if __name__ == '__main__':
     print os.path.exists("door_model/door-door.ply")
     graph.init("door.ors")
 
-    import sys
-    sys.exit()
     robot = graph.getBodyByName("robot")
     # view and physx
-    openGL = corepy.OpenGL()
-    physxGL = corepy.OpenGL()
+    openGL = guipy.OpenGL()
+    physxGL = guipy.OpenGL()
     physX = orspy.PhysXInterface()
 
     orspy.bindOrsToOpenGL(graph, openGL)
     orspy.bindOrsToPhysX(graph, physxGL, physX)
 
-    control = orspy.Vector(0., 0.01, 0)
+    control = corepy.Vector(0., 0.01, 0)
     for i in range(300):
         robot.X.pos = robot.X.pos + control
         graph.calcBodyFramesFromJoints()

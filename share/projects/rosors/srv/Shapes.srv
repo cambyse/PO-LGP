@@ -4,4 +4,4 @@ string index_body
 string name
 
 ---
-Shape[] shapes
+ors_msgs/Shape[] shapes

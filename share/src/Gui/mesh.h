@@ -44,7 +44,7 @@ struct Mesh {
   
   Mesh();
   
-  //set or create
+  /// @name set or create
   void clear();
   void setBox();
   void setTetrahedron();
@@ -58,7 +58,7 @@ struct Mesh {
   void setImplicitSurface(ScalarFunction& f, double lo=-10., double hi=+10., uint res=100);
   void setRandom(uint vertices=10);
   
-  //transform and modify
+  /// @name transform and modify
   void subDevide();
   void scale(double f);
   void scale(double sx, double sy, double sz);
@@ -68,7 +68,7 @@ struct Mesh {
   void addMesh(const ors::Mesh& mesh2);
   void makeConvexHull();
   
-  //internal computations & cleanup
+  /// @name internal computations & cleanup
   void computeNormals();
   void deleteUnusedVertices();
   void fuseNearVertices(double tol=1e-5);
@@ -80,7 +80,7 @@ struct Mesh {
   //[preliminary]]
   void skin(uint i);
   
-  //IO
+  /// @name IO
   void write(std::ostream&) const; ///< only writes generic info
   void readFile(const char* filename);
   void readTriFile(const char* filename);

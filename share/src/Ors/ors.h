@@ -148,7 +148,7 @@ struct Joint {
   ~Joint();
   void operator=(const Joint& j) {
     index=j.index; qIndex=j.qIndex; ifrom=j.ifrom; ito=j.ito; mimic=(Joint*)(j.mimic?1:0);
-    type=j.type; A=j.A; Q=j.Q; B=j.B; X=j.X; axis=j.axis;
+    type=j.type; A=j.A; Q=j.Q; B=j.B; X=j.X; axis=j.axis; name=j.name;
     ats=j.ats;
   }
   void reset() { listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); X.setZero(); axis.setZero(); type=JT_none; }

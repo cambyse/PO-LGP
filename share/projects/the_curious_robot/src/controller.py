@@ -10,8 +10,10 @@ import rospy
 import the_curious_robot.msg as msgs
 import os
 # import numpy as np
+import rosors.rosors
 import orspy as ors
 import corepy
+import guipy
 
 import require_provide as rp
 
@@ -26,19 +28,18 @@ class FakeController():
         rospy.init_node('tcr_controller')
 
         # World & PhysX & OpenGL
-        self.world = ors.Graph()
         worldfile = os.path.join(
-            ors.get_mlr_path(),
+            corepy.get_mlr_path(),
             "share/projects/the_curious_robot/src/world.ors"
         )
-        self.world.init(worldfile)
+        self.world = rosors.rosors.RosOrs(orsfile=worldfile,
+                                          srv_prefix="/world")
 
-        self.gl = corepy.OpenGL()
+        self.gl = guipy.OpenGL()
         self.physx = ors.PhysXInterface()
-        ors.bindOrsToPhysX(self.world, self.gl, self.physx)
+        ors.bindOrsToPhysX(self.world.graph, self.gl, self.physx)
 
         # Subscriber & Publisher
-        self.pub = rospy.Publisher('geometric_state', msgs.ors)
         self.control_done_pub = rospy.Publisher(
             'control_done', msgs.control_done)
         self.traj_sub = rospy.Subscriber(
@@ -62,7 +63,7 @@ class FakeController():
             Kp = rospy.get_param('Kp', 10e-3)
             # tolerance for he movement
             eps = 10e-3
-            agent = self.world.getBodyByName("robot")
+            agent = self.world.graph.getBodyByName("robot")
             if (agent.X.pos - self.goal.pos).length() > eps:
 
                 agent.X.pos = (agent.X.pos +
@@ -81,15 +82,8 @@ class FakeController():
             # agent.X.rot = agent.X.rot + (self.goal.rot - agent.X.rot)*Kp
 
         self.physx.step()
-        self.world.calcBodyFramesFromJoints()
+        self.world.graph.calcBodyFramesFromJoints()
         self.gl.update()
-
-        msg = msgs.ors()
-        msg.header.stamp = rospy.get_rostime()
-        msg.header.frame_id = str(self.frame_id)
-        self.frame_id = self.frame_id + 1
-        msg.ors = str(self.world)
-        self.pub.publish(msg)
 
     def control_cb(self, data):
         self.goal = corepy.Transformation()
