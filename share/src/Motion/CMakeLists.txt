@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.6)
 project(MLR_CORE)
 
+set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
+
 set(SOURCES     ${SOURCES}
                 motion.cpp
                 motionHeuristics.cpp
@@ -13,7 +15,6 @@ set(SOURCES     ${SOURCES}
 
 add_library(Motion SHARED ${SOURCES})
 
-add_definitions(-DMT_Core -DMT_Ors -DMT_Optim)
-target_link_libraries(Motion Core Ors Optim)
+target_link_libraries(Motion Core Ors Optim Algo)
 
 

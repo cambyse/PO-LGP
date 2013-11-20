@@ -1,3 +1,5 @@
+set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
+
 add_subdirectory(relational_armani_basic)
 add_subdirectory(relational_armani_symbolic)
 add_subdirectory(relational_basic)

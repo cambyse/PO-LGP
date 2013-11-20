@@ -59,6 +59,8 @@ if(NOT GRAPHVIZ_FOUND)
 	message(FATAL_ERROR "graph library not found, cannot build gui")
 endif(NOT GRAPHVIZ_FOUND)
 
+set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
+
 set(SOURCES     ${SOURCES}
                 geo_qhull.cpp
 		graphview.cpp

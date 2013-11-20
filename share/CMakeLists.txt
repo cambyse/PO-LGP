@@ -34,6 +34,9 @@ endif(ENV{MLR_LIBPATH})
 # pick up config from source-tree
 set(ENV{PKG_CONFIG_PATH} ${PROJECT_BINARY_DIR}/pkgconfig:$ENV{PKG_CONFIG_PATH})
 
+# our code uses C++ 10x stuff by now
+set(MLR_CXX_FLAGS "-std=c++11 ${MLR_CXX_FLAGS}")
+
 # select what to compile
 set(CURRENT_SLICE 
         src/Core

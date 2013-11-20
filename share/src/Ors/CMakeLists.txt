@@ -16,6 +16,8 @@ if(MT_OPENMP)
 endif(MT_OPENMP)
 # TODO option(MT_CUDA "Use CUDA" OFF)
 
+set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
+
 set(SOURCES     ${SOURCES}
                 ors_actionInterface.cpp
                 ors_blender.cpp
