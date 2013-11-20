@@ -9,7 +9,6 @@
 #include <Motion/taskMap_proxy.h>
 #include <Motion/taskMap_default.h>
 #include <Ors/ors.h>
-#include <gtest/gtest.h>
 #include <Gui/opengl.h>
 #include <ctime>
 
@@ -243,7 +242,7 @@ int main(int argc, char** argv) {
   arr opt_trajectory = optimize_trajectory(G, rrt_trajectory);
   show_trajectory(G, gl, opt_trajectory, "optimized");
 
-  std::cout << "Should I run the trajectory on the /real/ PR2? (y/N)
+  std::cout << "Should I run the trajectory on the /real/ PR2? (y/N)" << std::endl;
   char answer;
   std::cin >> answer;
 
