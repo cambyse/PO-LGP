@@ -553,6 +553,7 @@ int BatchMaze::run_active() {
                         linQ->score_candidates_by_gradient();
                         linQ->add_candidates_by_score(switch_int("-fincr"));
                         loss = linQ->set_optimization_type_BELLMAN()
+                            .set_alpha(switch_double("-alpha"))
                             .set_regularization(switch_double("-l1"))
                             .set_maximum_iterations(500)
                             .optimize();
@@ -572,6 +573,7 @@ int BatchMaze::run_active() {
                                 .set_regularization(1e-10);
                         } else if(mode=="LINEAR_Q_BELLMAN") {
                             linQ->set_optimization_type_BELLMAN()
+                                .set_alpha(switch_double("-alpha"))
                                 .set_regularization(0);
                         } else {
                             DEBUG_DEAD_LINE;
@@ -581,7 +583,8 @@ int BatchMaze::run_active() {
                         if(mode=="LINEAR_Q_TD") {
                             linQ->set_optimization_type_TD_L1();
                         } else if(mode=="LINEAR_Q_BELLMAN") {
-                            linQ->set_optimization_type_BELLMAN();
+                            linQ->set_optimization_type_BELLMAN()
+                                .set_alpha(switch_double("-alpha"));
                         } else {
                             DEBUG_DEAD_LINE;
                         }
@@ -598,6 +601,7 @@ int BatchMaze::run_active() {
                         .optimize();
                 } else if(mode=="LINEAR_Q_BELLMAN") {
                     loss = linQ->set_optimization_type_BELLMAN()
+                        .set_alpha(switch_double("-alpha"))
                         .set_regularization(0)
                         .optimize();
                 } else {
@@ -780,6 +784,7 @@ int BatchMaze::run_active() {
                             .optimize();
                     } else if(mode=="LINEAR_Q_BELLMAN") {
                         linQ->set_optimization_type_BELLMAN()
+                            .set_alpha(switch_double("-alpha"))
                             .set_regularization(l1)
                             .set_maximum_iterations(500)
                             .optimize();
