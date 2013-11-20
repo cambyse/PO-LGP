@@ -445,13 +445,13 @@ ors::Graph* ors::Graph::newClone() const {
   listCopy(G->joints, joints);
   // post-process coupled joints
   for_list_(Joint, j, G->joints) 
-    if(j->coupledTo){
+    if(j->mimic){
     MT::String jointName;
-    bool good = j->ats.getValue<MT::String>(jointName, "coupledTo");
+    bool good = j->ats.getValue<MT::String>(jointName, "mimic");
     CHECK(good, "something is wrong");
-    j->coupledTo = listFindByName(G->joints, jointName);
-    if(!j->coupledTo) HALT("The joint '" <<*j <<"' is declared coupled to '" <<jointName <<"' -- but that doesn't exist!");
-    j->type = j->coupledTo->type;
+    j->mimic = listFindByName(G->joints, jointName);
+    if(!j->mimic) HALT("The joint '" <<*j <<"' is declared coupled to '" <<jointName <<"' -- but that doesn't exist!");
+    j->type = j->mimic->type;
   }
   graphMakeLists(G->bodies, G->joints);
   uint i;  Shape *s;  Body *b;
@@ -469,13 +469,13 @@ void ors::Graph::operator=(const ors::Graph& G) {
   listCopy(proxies, G.proxies);
   listCopy(joints, G.joints);
   for_list_(Joint, j, joints) 
-    if(j->coupledTo){
+    if(j->mimic){
     MT::String jointName;
-    bool good = j->ats.getValue<MT::String>(jointName, "coupledTo");
+    bool good = j->ats.getValue<MT::String>(jointName, "mimic");
     CHECK(good, "something is wrong");
-    j->coupledTo = listFindByName(G.joints, jointName);
-    if(!j->coupledTo) HALT("The joint '" <<*j <<"' is declared coupled to '" <<jointName <<"' -- but that doesn't exist!");
-    j->type = j->coupledTo->type;
+    j->mimic = listFindByName(G.joints, jointName);
+    if(!j->mimic) HALT("The joint '" <<*j <<"' is declared coupled to '" <<jointName <<"' -- but that doesn't exist!");
+    j->type = j->mimic->type;
   }
   listCopy(shapes, G.shapes);
   listCopy(bodies, G.bodies);
