@@ -90,7 +90,7 @@ OpenGL gl;
    ur.close();
  }
  
- int main(int argn,char **argv){
+ int main(int argc,char **argv){
    gl.add(plotDrawOpenGL,&plotData);
    gl.focus(0,0,.8);
    

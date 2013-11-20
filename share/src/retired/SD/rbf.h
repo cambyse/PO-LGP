@@ -23,7 +23,7 @@ RBF_gauss( const double s, const double dist){
  * a sphere with radius r around c. */
 double
 ISF_RBF_gauss(const RBF_param_t  *p, const arr &x){
-  return  - RBF_gauss(p->s, norm(x - p->c)) + RBF_gauss(p->s, p->r); 
+  return  - RBF_gauss(p->s, length(x - p->c)) + RBF_gauss(p->s, p->r); 
 }
 
 void

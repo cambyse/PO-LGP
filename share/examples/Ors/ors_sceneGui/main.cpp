@@ -1,9 +1,9 @@
 #include <Ors/ors_sceneGui.h>
 
-int main(int argn,char **argv){
+int main(int argc,char **argv){
 
   const char *file="situation.ors";
-  if(argn<2){
+  if(argc<2){
     cout <<"opening standard file `" <<file <<"'" <<endl;
   }else file=argv[1];
   

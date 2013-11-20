@@ -1,4 +1,4 @@
-#include "display_modules.h"
+#include "module_G4Display.h"
 
 #include <Gui/opengl.h>
 #include <Ors/ors.h>
@@ -25,14 +25,14 @@ void G4Display::open(){
 
   //add shapes for the sensors
   for(uint sen=0; sen<s->sensors; sen++){
-    ors::Shape *sh = new ors::Shape(s->ors, NULL);
+    ors::Shape *sh = new ors::Shape(s->ors, NoBody);
     sh->type = ors::boxST;
     memmove(sh->size ,ARR(.10, .04, .01, 0).p, 4*sizeof(double));
     memmove(sh->color,ARR(1, 0, 0).p, 3*sizeof(double));
   }
 
   //add a marker
-  ors::Shape *sh = new ors::Shape(s->ors, NULL);
+  ors::Shape *sh = new ors::Shape(s->ors, NoBody);
   sh->type = ors::markerST;
   sh->size[0] = .5;
 }
@@ -43,6 +43,8 @@ void G4Display::step(){
   uint t=currentPoses.readAccess();
   floatA poses = currentPoses();
   currentPoses.deAccess();
+
+  if(!t) return; //no revision yet -> nothing to display
 
   CHECK_EQ(poses.d0, s->sensors, "poses dim is wrong");
   CHECK_EQ(s->ors.shapes.N, 1+s->sensors, "ors.shapes dim is wrong")

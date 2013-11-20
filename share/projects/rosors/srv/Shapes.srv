@@ -1,0 +1,7 @@
+# request shapes by propeties
+string index
+string index_body
+string name
+
+---
+ors_msgs/Shape[] shapes

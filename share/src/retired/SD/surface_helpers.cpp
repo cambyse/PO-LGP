@@ -145,11 +145,11 @@ mesh_similar_view(ors::Mesh &mtrue, ors::Mesh &mestm){
         );
     SD_DBG1("true faces: " << facestrue<< " estimate faces: "<< facesestm);
     // take the closest distance
-    diff=norm(intertrue[0] - interestm[0]);
+    diff=length(intertrue[0] - interestm[0]);
     idiff=0;
     FOR1D(interestm,j){ 
-      if (norm(intertrue[0]-interestm[j]) < diff){
-        diff = norm(intertrue[0]-interestm[j]);
+      if (length(intertrue[0]-interestm[j]) < diff){
+        diff = length(intertrue[0]-interestm[j]);
         idiff = j;
       }
     }
@@ -359,15 +359,15 @@ get_observs_gradwalk(arr& pts, arr& grads, PotentialField *ot , const arr &mins,
       // walk along gradient
       do{
         y = ot->psi(&grad,NULL, o);
-        o = o - (y>0?1:-1)*eps*grad/norm(grad);
+        o = o - (y>0?1:-1)*eps*grad/length(grad);
         --j;
         
         /*if(1){DEBUG gradwalk
           pt1->pos(p.p); pt2->pos(o.p); 
           ray->pos(o.p); ray->ori(grad.p);
-          show(NULL,0,STRING("y="<<y<<"; |grad|="<<norm(grad)));
+          show(NULL,0,STRING("y="<<y<<"; |grad|="<<length(grad)));
         }*/ 
-      }while(eps<y*y && 0<norm(grad) && 0<j); // big enough and not stuck
+      }while(eps<y*y && 0<length(grad) && 0<j); // big enough and not stuck
     }while(eps<y*y );
 
     // append first intersected face only

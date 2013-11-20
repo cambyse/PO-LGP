@@ -29,7 +29,7 @@ void testGaussNewton(){
   arr x(1);
   x=1.;
   x=10.;
-  optGaussNewton(x, f, OPT2(stopTolerance=1e-5, verbose=3));
+  optNewton(x, f, OPT2(stopTolerance=1e-5, verbose=3));
 }
 
 int main(int argc, char *argv[]){

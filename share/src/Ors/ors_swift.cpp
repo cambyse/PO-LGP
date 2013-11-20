@@ -85,22 +85,7 @@ void SwiftInterface::init(const ors::Graph& C, double _cutoff) {
     add=true;
     switch(s->type) {
       case ors::noneST: HALT("shapes should have a type - somehow wrong initialization..."); break;
-      case ors::boxST:
-        s->mesh.setBox();
-        s->mesh.scale(s->size[0], s->size[1], s->size[2]);
-        break;
-      case ors::sphereST:
-        s->mesh.setSphere();
-        s->mesh.scale(s->size[3], s->size[3], s->size[3]);
-        break;
-      case ors::cylinderST:
-        CHECK(s->size[3]>1e-10,"");
-        s->mesh.setCylinder(s->size[3], s->size[2]);
-        break;
-      case ors::cappedCylinderST:
-        s->mesh.setCappedCylinder(s->size[3], s->size[2]);
-        break;
-      case ors::meshST:
+      case ors::meshST: {
         //check if there is a specific swiftfile!
         MT::String *filename;
         filename=s->ats.getValue<MT::String>("swiftfile");
@@ -110,8 +95,8 @@ void SwiftInterface::init(const ors::Graph& C, double _cutoff) {
           r=scene->Add_General_Object(*filename, INDEXshape2swift(s->index), false);
           if(!r) HALT("--failed!");
         }
-        break;
-      case ors::pointCloudST:
+      } break;
+      case ors::pointCloudST: {
         //for now, assume there is only ONE pointCloudObject!
         CHECK(s->mesh.V.N, "");
         global_ANN=new ANN;
@@ -119,14 +104,15 @@ void SwiftInterface::init(const ors::Graph& C, double _cutoff) {
         global_ANN->setX(s->mesh.V);
         global_ANN->calculate();
         add=false;
-        break;
+      } break;
       case ors::markerST:
         add=false; // ignore (no collisions)
         break;
       default:
-        NIY;
+        break;
     }
     if(add) {
+      CHECK(s->mesh.V.d0,"no mesh to add to SWIFT, something was wrongly initialized");
       r=scene->Add_Convex_Object(
           s->mesh.V.p, (int*)s->mesh.T.p,
           s->mesh.V.d0, s->mesh.T.d0, INDEXshape2swift(s->index), false,
@@ -286,7 +272,7 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
     if(num_contacts[i]==-1) k++;
   }
   
-  listResize(C.proxies,k);
+  listResize(C.proxies, k);
   
   //add contacts to list
   ors::Proxy *proxy;
@@ -376,8 +362,6 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
       proxy->normal.normalize();
     }
   }
-  
-  C.sortProxies();
 }
 
 void SwiftInterface::computeProxies(ors::Graph& C, bool dumpReport) {

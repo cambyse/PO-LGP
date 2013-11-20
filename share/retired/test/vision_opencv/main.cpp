@@ -183,8 +183,8 @@ void testShiftAnalysis(){
 }
 
 
-int main(int argn,char** argv){
-  MT::initCmdLine(argn,argv);
+int main(int argc,char** argv){
+  MT::initCmdLine(argc,argv);
   switch(MT::getParameter<int>("mode")){
   case 1:  testShow();  break;
   case 2:  testSurf();  break;

@@ -7,20 +7,16 @@ import rospy
 from actionlib import SimpleActionServer
 
 import corepy
+import guipy
 import orspy
 import the_curious_robot.msg as msgs
 #from articulation_msgs.msg import ModelMsg, TrackMsg
 from articulation_msgs.srv import TrackModelSrv, TrackModelSrvRequest
-import util
-import require_provide as rp
 
-# different joint types
-PRISMATIC = 0
-ROTATIONAL = 1
-MODELS = {
-    PRISMATIC: 'prismatic',
-    ROTATIONAL: 'rotational'
-}
+import util
+from util import ObjectTypeHypo
+
+import require_provide as rp
 
 
 class LearnActionServer:
@@ -37,28 +33,58 @@ class LearnActionServer:
         # services
         self.dof_learner = rospy.ServiceProxy('model_select', TrackModelSrv)
 
-        # real member
-        self.trajectory = []
-
         # action server
         self.server = SimpleActionServer(
             name, msgs.LearnAction, execute_cb=self.execute, auto_start=False)
         self.server.register_preempt_callback(self.preempt_cb)
         self.server.start()
 
+        # real member
+        self.ooi = None
+        self.trajectory = []
+
         # Belief & PhysX & OpenGL
         self.belief = orspy.Graph()
-        self.gl = corepy.OpenGL()
+        self.gl = guipy.OpenGL()
         self.physx = orspy.PhysXInterface()
         orspy.bindOrsToPhysX(self.belief, self.gl, self.physx)
 
         self.learned_bodies = []
         self.learned_shapes = []
 
+        # save all learned object in here
+        self.learned_tmp = {}
+
         # require/provide
         rp.Provide("Learn")
 
     def execute(self, msg):
+        # add object hypothesis if it does not exist yet
+        if self.ooi not in self.learned_tmp:
+            self.learned_tmp[self.ooi] = ObjectTypeHypo()
+
+        # TODO we also have to check if we actually touched the object.
+        # maybe we tried to manipulate the object but didn't touch it.
+        # then we'd get an empty trajectory and would classify the object as
+        # STATIC.
+
+        # no trajectory observed --> static object
+        if len(self.trajectory) == 0:
+            rospy.loginfo("updating with static object")
+            self.learned_tmp[self.ooi].update(ObjectTypeHypo.STATIC)
+            self.server.set_succeeded()
+
+        # trajectory observed --> classify joint
+        else:
+            rospy.logwarn("CAN'T learn joints yet")
+            self.learned_tmp[self.ooi].update(ObjectTypeHypo.FREE)
+            self.server.set_succeeded()
+
+        for name, hypo in self.learned_tmp.iteritems():
+            print "{}: {}".format(name, hypo)
+
+        return
+
         self.learned_bodies.append(orspy.Body(self.belief))
         body = self.learned_bodies[-1]
 
@@ -77,11 +103,6 @@ class LearnActionServer:
         print "adding objects -- #%d" % self.belief.bodies.N
         print
         return
-
-        if not self.trajectory:
-            self.server.set_aborted()
-            return
-
         request = TrackModelSrvRequest()
         request.model.track = util.create_track_msg(self.trajectory)
 
@@ -154,8 +175,8 @@ class LearnActionServer:
 def main():
     rospy.init_node('tcr_sas_learn')
     server = LearnActionServer('learn')
+    rospy.spin()
 
 
 if __name__ == '__main__':
     main()
-    rospy.spin()

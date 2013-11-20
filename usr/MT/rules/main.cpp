@@ -160,8 +160,8 @@ void RulesToFactorGraph(infer::VariableList& vars, infer::FactorList& facs,
   
 }
 
-int main(int argn, char** argv){
-  MT::initCmdLine(argn, argv);
+int main(int argc, char** argv){
+  MT::initCmdLine(argc, argv);
   
   StateVariableList S;
   RuleList R;

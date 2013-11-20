@@ -44,12 +44,12 @@ void simulate(uint& state_new, double& reward, uint action, uint state_old,const
 #define E_CUBE 2
 #define TIMESTEPS 1000000
 
-int main(int argn, char **argv){
+int main(int argc, char **argv){
   uint rl_algorithm = 1;
   
   rnd.seed(1000);
   
-  MT::initCmdLine(argn,argv);
+  MT::initCmdLine(argc,argv);
 
   //display
   OpenGL gl;

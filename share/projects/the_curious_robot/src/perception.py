@@ -1,57 +1,43 @@
 #!/usr/bin/env python
-
-"""
-The fake perception of the curious robot.
-"""
+# encoding: utf-8
 
 import roslib
 roslib.load_manifest('the_curious_robot')
 import rospy
-import the_curious_robot.msg as msgs
-import the_curious_robot.srv as srvs
-# import numpy as np
+
 import os
-import orspy as ors
 import Queue
-# import corepy
 # import time
+
+# import numpy as np
+
+import the_curious_robot as tcr
+import the_curious_robot.srv as srv
+
+# The order is important - this sucks
+import orspy as ors
+import corepy
 
 import require_provide as rp
 
 
 class FakePerception():
+    """
+    The fake perception of the curious robot publishes shapes.
+    """
 
     def __init__(self):
         # init the node: test_fitting
         rospy.init_node('tcr_perception')
 
-        self.world = ors.Graph()
-        worldfile = os.path.join(
-            ors.get_mlr_path(),
-            "share/projects/the_curious_robot/src/world.ors"
-        )
-        self.world.init(worldfile)
+        self.graph = None
+        self.old_graph = None
 
-        self.worlds = Queue.Queue()
-        self.worlds.put(open(worldfile).read())
+        self.update_pub = rospy.Publisher('perception/updates', 
+                                          rosors.msgs.objects)
 
-        self.not_published_once = True
-
-        self.pub = rospy.Publisher('perception_updates', msgs.percept)
-        self.serv = rospy.Service(
-            'percept_all', srvs.percept_all, self.percept_all_cb)
-        self.ors_subs = rospy.Subscriber(name='geometric_state',
-                                         data_class=msgs.ors,
-                                         callback=self.ors_cb)
-        self.frame = 0
-
-    def percept_all_cb(self, req):
-        msg = srvs.percept_allResponse()
-        msg.header.stamp = rospy.get_rostime()
-        for p in self.world.bodies:  # TODO: synchronize!
-            msg.bodies.append(p.name + " " + str(p))
-        return msg
-
+    #########################################################################
+    # logic
     def run(self):
         rp.Provide("Perception")
         """ the perception loop """
@@ -59,32 +45,20 @@ class FakePerception():
             self.step()
 
     def step(self):
-        if self.worlds.empty():
-            return
-        self.old_world = self.world.newClone()  # backup for change detection
-        self.world.read(self.worlds.get())
-        self.world.calcShapeFramesFromBodies()  # don't use
-                                                # calcBodyFramesFromJoints
-                                                # here
-        agent = self.world.getBodyByName("robot")
-        msg = msgs.percept()
-        msg.changed = False
+        # TODO: newClone() ?
+        self.old_graph = self.graph
+        graph_msg = rospy.ServiceProxy("/world/graph")
 
-        self.frame = self.frame + 1
-        for p in self.world.bodies:
-            if agent.index != p.index and self.has_moved(p):
-                msg.header.stamp = rospy.get_rostime()
-                msg.header.seq = self.frame
+        self.graph = rosors.parse_graph_msg(graph_msg)
 
-                msg.bodies.append(p.name + " " + str(p))
-                msg.changed = True
-                rospy.logdebug(p.name)
+        update_msg = rosors.msgs.objects()
+        update_msg.changed = False
+        for b in self.graph.bodies:
+            if has_moved(b):
+                update_msg.changed = True
+                update_msg.objects.append(b.index)
 
-        self.not_published_once = False
-        self.pub.publish(msg)
-
-    def ors_cb(self, data):
-        self.worlds.put(data.ors)  # simply backup ors data in a queue
+        self.upddate_pub.pub(update_msg)
 
     def has_moved(self, body):
         if self.not_published_once:

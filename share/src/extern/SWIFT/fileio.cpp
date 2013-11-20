@@ -374,7 +374,7 @@ bool SWIFT_File_Read_Dispatcher::Read( const char* filename, SWIFT_Real*& vs,
     }
 
 #ifdef WIN32
-    fin.open( filename, ios::in | ios::nocreate | ios::binary );
+    fin.open( filename, ios::in | ios::binary );
 #else
     fin.open( filename, ios::in );
 #endif
@@ -495,7 +495,7 @@ bool SWIFT_File_Type( const char* filename, SWIFT_FILE_TYPE& ft )
     }
 
 #ifdef WIN32
-    fin.open( filename, ios::in | ios::nocreate | ios::binary );
+    fin.open( filename, ios::in | ios::binary );
 #else
     fin.open( filename, ios::in );
 #endif
@@ -554,7 +554,7 @@ bool SWIFT_File_Read_Decomposition(
     }
 
 #ifdef WIN32
-    fin.open( filename, ios::in | ios::nocreate | ios::binary );
+    fin.open( filename, ios::in | ios::binary );
 #else
     fin.open( filename, ios::in );
 #endif
@@ -823,7 +823,7 @@ bool SWIFT_File_Read_Hierarchy( const char* filename, SWIFT_Tri_Mesh*& mesh,
     }
 
 #ifdef WIN32
-    fin.open( filename, ios::in | ios::nocreate | ios::binary );
+    fin.open( filename, ios::in | ios::binary );
 #else
     fin.open( filename, ios::in );
 #endif

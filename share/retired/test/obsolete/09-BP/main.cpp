@@ -87,10 +87,10 @@ void testEvidenceDiscounting(){
     // relax again
     for(t=0;t<100;t++) net.stepBP();
     net.getNodeBeliefs(b);
-    cout <<"error: " <<norm(b-b0) <<endl;
+    cout <<"error: " <<length(b-b0) <<endl;
     diff /= eps;
     cout <<"perturbation grad = " <<diff <<endl;
-    //cout <<"diff norm: " <<norm(diff) <<endl;
+    //cout <<"diff norm: " <<length(diff) <<endl;
 
     //compute gradient:
     net.initNodeBeliefGradients();
@@ -98,7 +98,7 @@ void testEvidenceDiscounting(){
     net.getGradT(grad);
     getDiag(gradDiag,grad);
     cout <<"computed grad     = " <<gradDiag <<endl;
-    //cout <<"grad norm: " <<norm(grad) <<endl;
+    //cout <<"grad norm: " <<length(grad) <<endl;
                    
     //adapt discounts...
 #if 0
@@ -179,7 +179,7 @@ void testGradient(){
   // relax again
   for(t=0;t<100;t++) net.stepBP();
   net.getNodeBeliefs(b);
-  cout <<"error: " <<norm(b-b0) <<endl;
+  cout <<"error: " <<length(b-b0) <<endl;
 
   //-- test coupling perturbation
   BinaryBPNet::edge *e;
@@ -203,7 +203,7 @@ void testGradient(){
   // relax again
   for(t=0;t<100;t++) net.stepBP();
   net.getNodeBeliefs(b);
-  cout <<"error: " <<norm(b-b0) <<endl;
+  cout <<"error: " <<length(b-b0) <<endl;
 
 }
 
@@ -229,7 +229,7 @@ void testParameterLearning(){
 
 //================================================================================
 
-int main(int argn, char** argv){
+int main(int argc, char** argv){
   testEvidenceDiscounting();
   //testGradient();
   //testParameterLearning();

@@ -31,7 +31,7 @@ class Test_VectorOperatorOverloading(unittest.TestCase):
         self.assertTrue(v1 == v1)
         self.assertTrue(v2 == v2)
         self.assertFalse(v1 == v2)
-
+        
         v3 = Vector(2, 2, 2)
         self.assertTrue(v2 == v3)
 

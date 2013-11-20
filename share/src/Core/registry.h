@@ -81,6 +81,7 @@ typedef MT::Array<Type*> TypeInfoL;
 inline Item *reg_findType(const char* key) {
   ItemL types = registry().getDerivedItems<Type>();
   for_list_(Item, ti, types) {
+    if(MT::String(ti->value<Type>()->typeId().name())==key) return ti;
     for(uint i=0; i<ti->keys.N; i++) if(ti->keys(i)==key) return ti;
   }
   return NULL;

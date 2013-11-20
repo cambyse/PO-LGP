@@ -21,14 +21,14 @@ set(SOURCES     ${SOURCES}
                 ors_blender.cpp
                 ors.cpp
                 ors_featherstone.cpp
-                ors_lewiner.cpp
                 ors_ode.cpp
                 ors_opengl.cpp
                 ors_physx.cpp
                 ors_sceneGui.cpp
                 ors_swift.cpp
-                ors_taskVariables.cpp
                 roboticsCourse.cpp
+                module_G4Display.cpp
+                ors_oldTaskVariables.cpp
                 )
 
 add_library(Ors SHARED ${SOURCES})

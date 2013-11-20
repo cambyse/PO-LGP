@@ -25,9 +25,7 @@ arr buildKernelMatrix(KOrderMarkovFunction& P){
   return Kinv;
 }
 
-int main(int argn,char** argv){
-  MT::initCmdLine(argn,argv);
-
+void TEST(KOrderMarkov) {
   ParticleAroundWalls P;
   P.k=1;
   P.kern = false; //true;
@@ -93,7 +91,12 @@ int main(int argn,char** argv){
   //analyzeTrajectory(sys, x, true, &cout);
   write(LIST<arr>(x),"z.output");
   gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", true, true);
+}
   
+int MAIN(int argc,char** argv){
+  MT::initCmdLine(argc,argv);
+  testKOrderMarkov();
+
   return 0;
 }
 

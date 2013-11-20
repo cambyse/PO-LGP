@@ -37,7 +37,7 @@ void threadedRun() {
   uint t;
 
   for(t=0;/*t<100*/;t++){
-    if(engine().shutdown) break;
+    if(engine().shutdown.getValue()) break;
     S.ueye_rgb.var->waitForNextWriteAccess();
     rgbImg = S.ueye_rgb.get();
     if(rgbImg.N>0) {
@@ -51,7 +51,7 @@ void threadedRun() {
   cout <<"bye bye" <<endl;
 }
 
-int main(int argn,char **argv){
+int main(int argc,char **argv){
   threadedRun();
   return 0;
 };

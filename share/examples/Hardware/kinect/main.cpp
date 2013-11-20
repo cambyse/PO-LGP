@@ -48,7 +48,7 @@ void threadedRun() {
   MT::timerStart();
   uint t;
   for(t=0;/*t<100*/;t++){
-    if(engine().shutdown) break;
+    if(engine().shutdown.getValue()) break;
     S.kinect_depth.var->waitForNextWriteAccess();
     gettimeofday(&time, 0);
     rgbImg = S.kinect_rgb.get();
@@ -78,7 +78,7 @@ void rawTest(){
   kin.close();
 }
 
-int main(int argn,char **argv){
+int main(int argc,char **argv){
   //  rawTest();
   threadedRun();
   return 0;

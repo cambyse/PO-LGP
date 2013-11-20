@@ -7,6 +7,7 @@
 ors::Mesh m1, m2;
 ors::Transformation t1, t2;
 ors::Vector p1, p2;
+
 void draw(void*){
   glColor(.4, .4, .4, .4);
   glTransform(t1);  ors::glDrawMesh(&m1);
@@ -23,8 +24,7 @@ void draw(void*){
   glLoadIdentity();
 }
 
-void testGJK(){
-
+void TEST(GJK) {
   OpenGL gl;
   gl.add(glStandardScene);
   gl.add(draw, &m2);
@@ -45,11 +45,10 @@ void testGJK(){
     cout <<"distance = " <<d <<"\np1=" <<p1 <<"\np2=" <<p2 <<endl;
     gl.watch();
   }
-
 }
 
 
-int main(int argn, char** argv){
+int MAIN(int argc, char** argv){
 
   testGJK();
 

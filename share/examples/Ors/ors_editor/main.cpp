@@ -1,5 +1,6 @@
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
+#include <Core/registry.h>
 
 const char *USAGE=
 "\n\
@@ -17,30 +18,32 @@ void drawBase(void*){
   glColor(1.,.5,0.);
 }
 
-int main(int argn,char **argv){
-  MT::initCmdLine(argn, argv);
+void TEST(OrsEditor) {
   cout <<USAGE <<endl;
 
   MT::String file=MT::getParameter<MT::String>("file",STRING("test.ors"));
-  if(argn==2) file=argv[1];
+  if(MT::argc==2) file=MT::argv[1];
   cout <<"opening file `" <<file <<"'" <<endl;
 
   ors::Graph G;
   OpenGL gl;
   init(G, gl, file);
-  gl.add(drawBase,0);
-  gl.add(ors::glDrawGraph,&G);
-  //gl.reportEvents=true;
-  //gl.reportSelects=true;
-  gl.watch();
 
-  G.meldFixedJoint();
-  G.removeNonShapeBodies();
-  G.topSort();
-  G.makeLinkTree();
+  //some optional manipulations
+  G.meldFixedJoints();
+  G.removeUselessBodies();
+    G.calcBodyFramesFromJoints();
+//  G.topSort();
+//  G.makeLinkTree();
   MT::save(G,"z.ors");
 
   editConfiguration(file, G, gl);
+}
+
+int MAIN(int argc,char **argv){
+  MT::initCmdLine(argc, argv);
+
+  testOrsEditor();
 
   return 0;
 }

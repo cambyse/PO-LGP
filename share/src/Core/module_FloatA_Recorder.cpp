@@ -1,4 +1,4 @@
-#include "module_Recorder.h"
+#include "module_FloatA_Recorder.h"
 
 REGISTER_MODULE(FloatA_Recorder)
 

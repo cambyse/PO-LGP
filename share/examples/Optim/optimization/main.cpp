@@ -1,7 +1,7 @@
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
 
-void testSqrProblem(){
+void TEST(SqrProblem) {
   SquaredCost P(10);
   //NonlinearlyWarpedSquaredCost P(10);
 
@@ -23,7 +23,7 @@ void testSqrProblem(){
 //  MT::wait();
 
   x=x0;
-  optGaussNewton(x, P, OPT(stopEvals=1000, stopTolerance=1e-5, useAdaptiveDamping=0., verbose=2, damping=.1));
+  optNewton(x, Convert(P), OPT(stopEvals=1000, stopTolerance=1e-5, useAdaptiveDamping=0., verbose=2, damping=.1));
   system("cp z.opt z.gaussNewton");
 //  MT::wait();
 
@@ -36,7 +36,7 @@ void testSqrProblem(){
 }
 
 
-int main(int argn,char** argv){
+int MAIN(int argc,char** argv){
   testSqrProblem();
   
   return 0;

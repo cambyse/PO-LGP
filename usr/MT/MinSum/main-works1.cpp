@@ -214,8 +214,8 @@ void test(){
 
 }
 
-int main(int argn,char** argv){
-  MT::initCmdLine(argn,argv);
+int main(int argc,char** argv){
+  MT::initCmdLine(argc,argv);
   MT::verboseLevel=1;
   
   test();

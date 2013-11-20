@@ -60,7 +60,7 @@ void reach(){
   arr q,W;
   uint n = S.getJointDimension();
   S.getJointAngles(q);
-  W.setDiag(1.,n);  //W is equal the Id_n matrix
+  W.setDiag(1.e4,n);  //W is equal the Id_n matrix
 
   cout <<"initial posture (hit ENTER in the OpenGL window to continue!!)" <<endl;
   S.watch();        //pause and watch initial posture
@@ -69,7 +69,7 @@ void reach(){
   yT = ARR(-0.2, -0.4, 2.1);
   S.kinematicsPos(y0,"handR");
   uint T=10;
-  for(uint t=0;t<=5*T;t++){
+  for(uint t=0;t<=10*T;t++){
     //1st task:
     S.kinematicsPos(y,"handR");  //"handR" is the name of the right hand ("handL" for the left hand)
     S.jacobianPos  (J,"handR");
@@ -79,7 +79,7 @@ void reach(){
     PhiJ = J/1e-2;               //and the big Jacobian
 
     //report on error in the first task
-    cout <<t <<" current eff pos = " <<y <<"  current error = " <<norm(y_target-y) <<endl;
+    cout <<t <<" current eff pos = " <<y <<"  current error = " <<length(y_target-y) <<endl;
 
     //compute joint updates
     q -= inverse(~PhiJ*PhiJ + W)*~PhiJ* Phi;
@@ -105,7 +105,7 @@ void circle(){
     y_target += .2 * ARR(cos((double)i/20), 0, sin((double)i/20)); 
     S.kinematicsPos(y,"handR");
     S.jacobianPos  (J,"handR");
-    cout <<i <<" current eff pos = " <<y <<"  current error = " <<norm(y_target-y) <<endl;;
+    cout <<i <<" current eff pos = " <<y <<"  current error = " <<length(y_target-y) <<endl;;
     q += inverse(~J*J + 1e-4*W)*~J*(y_target - y); 
     S.setJointAngles(q);
   }
@@ -120,7 +120,7 @@ void multiTask(){
   S.getJointAngles(q);
   W.setDiag(1.,n);
 
-  for(uint i=0;i<1000;i++){
+  for(uint i=0;i<10000;i++){
     //1st task: track with right hand
     y_target = ARR(-0.2, -0.4, 1.1); 
     y_target += .2 * ARR(cos((double)i/20), 0, sin((double)i/20)); 

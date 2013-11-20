@@ -8,6 +8,7 @@ add_definitions(-DMT_LAPACK)
 endif(LAPACK_FOUND)
 
 set(SOURCES     ${SOURCES}
+                core.cpp
                 array.cpp
                 geo.cpp 
                 keyValueGraph.cpp
@@ -15,7 +16,9 @@ set(SOURCES     ${SOURCES}
                 registry.cpp
                 tests.cpp
                 thread.cpp
-                util.cpp)
+                util.cpp
+                module_FloatA_Recorder.cpp
+)
 
 add_library(Core SHARED ${SOURCES})
 target_link_libraries(Core

@@ -133,8 +133,8 @@ void problem3(){
 
 //===========================================================================
 
-int main(int argn,char **argv){
-  MT::initCmdLine(argn,argv);
+int main(int argc,char **argv){
+  MT::initCmdLine(argc,argv);
 
   int mode=MT::getParameter<int>("mode");
   switch(mode){

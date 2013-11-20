@@ -74,7 +74,7 @@ void soc::SocSystem_Analytical::getPhi(arr& phiq_i, uint i){
   if(i==1){
     phiq_i.resize(1);
     for(uint i=0; i<obstacles.N; i++){
-      phiq_i(0) += norm(x-obstacles[i]);
+      phiq_i(0) += length(x-obstacles[i]);
     }
   }
 }
@@ -105,10 +105,10 @@ double soc::SocSystem_Analytical::getTaskCosts(arr& R, arr& r, uint t, const arr
   phiHatQ.setZero();
   for(uint i=0; i<obstacles.d0; i++){
     double margin = .1;
-    double d = (1.-norm(x-obstacles[i])/margin);
+    double d = (1.-length(x-obstacles[i])/margin);
     if(d<0) continue;
     phiHatQ(0) += d*d;
-    J += ((double)2.*d/margin)*(obstacles[i]-x)/norm(x-obstacles[i]);
+    J += ((double)2.*d/margin)*(obstacles[i]-x)/length(x-obstacles[i]);
   }
   J.reshape(1, J.N);
   arr tJ, target(1);
@@ -148,9 +148,9 @@ void soc::SocSystem_Analytical::getConstraints(arr& cdir, arr& coff, uint t, con
 #elif 1 //assume that the task vector is a list of scalars, each constrained >0
   arr J, y;
   for(i=0; i<M; i++){
-    double haty = norm(x-obstacles[i]);
+    double haty = length(x-obstacles[i]);
     if(haty>.5) continue; //that's good enough -> don't add the constraint
-    J = (x-obstacles[i])/norm(x-obstacles[i]);
+    J = (x-obstacles[i])/length(x-obstacles[i]);
     coff.append(-haty + scalarProduct(J, x));
     cdir.append(J);
   }
@@ -163,12 +163,12 @@ void soc::SocSystem_Analytical::getConstraints(arr& cdir, arr& coff, uint t, con
   phiHatQ.setZero();
   for(i=0; i<obstacles.d0; i++){
     double margin = .25;
-    double d = 1.-norm(x-obstacles[i])/margin;
+    double d = 1.-length(x-obstacles[i])/margin;
     //if(d<0) continue;
     //phiHatQ(0) += d*d;
-    //J += (2.*d/margin)*(obstacles[i]-x)/norm(x-obstacles[i]);
+    //J += (2.*d/margin)*(obstacles[i]-x)/length(x-obstacles[i]);
     phiHatQ(0) += d;
-    J += (1./margin)*(obstacles[i]-x)/norm(x-obstacles[i]);
+    J += (1./margin)*(obstacles[i]-x)/length(x-obstacles[i]);
   }
   //...then add a single constraint
   if(phiHatQ(0)>0.){ //potential violation, else discard

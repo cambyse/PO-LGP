@@ -7,6 +7,8 @@ set(SOURCES     ${SOURCES}
                 taskMap_constrained.cpp
                 taskMap_default.cpp
                 taskMap_proxy.cpp
+                rrt_planner.cpp
+                pr2_heuristics.cpp
 )
 
 add_library(Motion SHARED ${SOURCES})

@@ -40,7 +40,7 @@ struct PairSorter:public Process{
   }
 };
 
-int main(int argn, char **argv){
+int main(int argc, char **argv){
   uint nV=20;
   uint nP=10;
   uint nR=10;

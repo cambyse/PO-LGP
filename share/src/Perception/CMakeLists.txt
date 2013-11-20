@@ -11,7 +11,9 @@ set(SOURCES     ${SOURCES}
                 pointcloud.cpp
                 shapeFitter.cpp
                 video.cpp
-                videoWriter.cpp
+                video_opencv.cpp
+                keyframer.cpp
+                g4data.cpp
 )
 
 add_library(Perception SHARED ${SOURCES})

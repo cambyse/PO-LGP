@@ -2,7 +2,7 @@
 #include <Gui/plot.h>
 #include <Algo/ann.h>
 
-void testRRT(){
+void TEST(RRT) {
   uint dim=2;
 
   arr q_start(dim);
@@ -43,15 +43,15 @@ void testRRT(){
 
       //compute little step
       d = q - ann[fb].X[k]; //difference vector between q and nearest neighbor
-      qnew = ann[fb].X[k] + stepsize/norm(d) * d;
+      qnew = ann[fb].X[k] + stepsize/length(d) * d;
 
       //check collision (here: simple sphere)
-      if(norm(qnew)<.5) collision=true;
+      if(length(qnew)<.5) collision=true;
       else collision=false;
 
       //perhaps add to tree
       if(!collision){
-	//if(norm(qnew-q_goal)<stepsize){ plot(true); return; }
+	//if(length(qnew-q_goal)<stepsize){ plot(true); return; }
         ann[fb].append(qnew);
         parent[fb].append(k);
       }
@@ -80,7 +80,7 @@ void testRRT(){
 }
 
 
-int main(int argn,char** argv){
+int MAIN(int argc,char** argv){
 
   testRRT();
 

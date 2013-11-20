@@ -1,36 +1,50 @@
-/** \page howto_convex_meshes How to Build Convex Meshes
+/** \page howto_convex_meshes Convex (Sub)Meshes and ORS
 
-\note Work in Progress!
- 
-\note This is Stefans version. Dimi has one which works a bit differntly. It's
-not clear which is going to be the final version.
+This document desrcibes how to handle convex submeshes and how they are handled
+in ORS.
 
-A common problem of physic engines is that they cannot do collision checking of
-non-convex objects/meshes efficiently.  Therefore it is necessary to divide
-non-convex meshes into convex sup-parts.  This document gives a step by step
-instruction to create convex sub-parts.
+Usually, physics engines are able to peform efficent collision checking if the
+meshse consist of convex parts.  ORS does not require convex meshses.
+Some mesh fileformats natively support groups (and these groups can be convex
+submeshes).  One can decompose mesh files into convex sub meshes (described
+below).  ORS and therefore some pyhsics engines then support efficent collision
+checking.
 
 
+<b> Current state [2013-10-31 Thu]: </b>
 
-\section why What and Why
+If an .obj file contains groups, the groups are interpreted as convex sub
+meshses.  If one uses the ORS_physX interface physx is able to use efficient
+collision detection.
 
-The hacd_decomposer can divide non-convex meshes (given as .off files) into
-convex sub-meshes (.wrl files).
-The .wrl fileformat has sub-groups, whereas the ply fileformat doesn't.
-Because we use .ply for all meshes, we convert the .wrl files into ply and save the
-infos about the sub-meshes in the ors-file.
+Summary:
 
-\note The decompositon with the hacd_decomposer can take a while (several hours) depending on
-the number of vertices of the mesh.
+ - obj supports submeshes
 
-\section how How
+ - using a obj file automatically creates a Shape+Mesh for every submesh
 
-To decompose a mesh file just call in bin/
+ - physx can use the convex submeshes efficently
+
+
+\section how Decompose Meshes
+
+To decompose a mesh file (the format does not matter) call the
+`decompose_meshes.py` file in `share/bin/`:
 \code
-decompose_ply.py MESHFILE
+./decompose_meshes.py MESHFILE
 \endcode
 
-For more infos call decompose_ply.py --help or read the source.
+For more infos about the decomposition `decompose_ply.py --help` or read the
+source of the script.
+
+
+\section random Random Notes
+
+The toool `hacd` is a custom version of the program "Hierarchical Approximate
+Convex Decomposition".  As opposed to the original it outputs .obj files.
+The code is in `gitolite@sully.informatik.uni-stuttgart.de:HACD.git`
+
+TODO support other file formats
 
 
 \section ref References

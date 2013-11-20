@@ -16,6 +16,7 @@ set(SOURCES     ${SOURCES}
                 ann.cpp
                 gaussianProcess.cpp
                 MLcourse.cpp
+                rrt.cpp
                 )
 
 add_library(Algo SHARED ${SOURCES})

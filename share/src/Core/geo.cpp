@@ -29,6 +29,7 @@ const ors::Vector Vector_y(0, 1, 0);
 const ors::Vector Vector_z(0, 0, 1);
 const ors::Transformation Transformation_Id(ors::Transformation().setZero());
 const ors::Quaternion Quaternion_Id(1, 0, 0, 0);
+ors::Vector& NoVector = *((ors::Vector*)NULL);
 ors::Transformation& NoTransformation = *((ors::Transformation*)NULL);
 
 namespace ors {
@@ -632,7 +633,7 @@ void Quaternion::setMatrix(double* m) {
 
 /// exports the rotation to a double[9] matrix, row-by-row
 Matrix Quaternion::getMatrix() const {
-  Matrix M;
+  Matrix R;
   double P1=2.*x, P2=2.*y, P3=2.*z;
   double q11 = x*P1;
   double q22 = y*P2;
@@ -643,10 +644,16 @@ Matrix Quaternion::getMatrix() const {
   double q01 = w*P1;
   double q02 = w*P2;
   double q03 = w*P3;
-  M.m00=1.-q22-q33; M.m01=q12-q03;     M.m02=q13+q02;
-  M.m10=q12+q03;    M.m11=1.-q11-q33;  M.m12=q23-q01;
-  M.m20=q13-q02;    M.m21=q23+q01;     M.m22=1.-q11-q22;
-  return M;
+  R.m00=1.-q22-q33; R.m01=q12-q03;     R.m02=q13+q02;
+  R.m10=q12+q03;    R.m11=1.-q11-q33;  R.m12=q23-q01;
+  R.m20=q13-q02;    R.m21=q23+q01;     R.m22=1.-q11-q22;
+  return R;
+}
+
+arr Quaternion::getArr() const {
+  arr R(3,3);
+  getMatrix(R.p);
+  return R;
 }
 
 double* Quaternion::getMatrix(double* m) const {
@@ -834,11 +841,13 @@ void Transformation::setRandom() {
 
 /// move the turtle by the vector (x, z, y) WITH RESPECT TO the current orientation/scale
 void Transformation::addRelativeTranslation(double x, double y, double z) {
-  Vector X(x, y, z);
-  //X=r*(s*X); //in global coords
-  X=rot*X; //in global coords
-  pos+=X;
-  if(!zeroVels) vel+=angvel^X;
+  addRelativeTranslation(Vector(x, y, z));
+}
+
+void Transformation::addRelativeTranslation(const Vector& x_rel){
+  Vector x = rot*x_rel;
+  pos+=x;
+  if(!zeroVels) vel+=angvel^x;
 }
 
 /// add a velocity to the turtle's inertial frame
@@ -1109,11 +1118,140 @@ std::ostream& operator<<(std::ostream& os, const Transformation& x)     { x.writ
 
 } //namespace ors
 
-//-- template instantiations
 
-//#include "util_t.h"
+//===========================================================================
+//
+// low level drivers
+//
 
-//template void MT::Parameter<ors::Vector>::initialize();
+/** distance to surface, distance gradient, and hessian for this shape
+ *
+ * Details in inf cylinder section of
+ * mlr/stanio/concepts/note-analytic-impl-shapes-hessian
+ */
+
+
+
+//===========================================================================
+
+double DistanceFunction_Sphere::fs(arr& g, arr& H, const arr& x){
+  arr d = x-ARRAY(t.pos);
+  double len = length(d);
+  if(&g) g = d/len;
+  if(&H) H = 1./len * (eye(3) - (d^d)/(len*len));
+  return len-r;
+}
+
+//===========================================================================
+
+//double DistanceFunction_InfCylinder::fs(arr& g, arr& H, const arr& x){
+//  z = z / length(z);
+//  arr a = (x-c) - scalarProduct((x-c), z) * z;
+//  arr I(x.d0,x.d0);
+//  uint i;
+//  double na = length(a);
+
+//  if(&g) g = s*a/na;
+//  if(&H){
+//    I.setZero();
+//    for(i=0;i<x.d0;++i) I(i,i)=1;
+//    H = s/na * (I - z*(~z) - 1/(na*na) * a*(~a));
+//  }
+//  return s*(na-r);
+//}
+
+//===========================================================================
+
+double DistanceFunction_Cylinder::fs(arr& g, arr& H, const arr& x){
+  ors::Vector bla;
+  arr z = ARRAY(t.rot.getZ(bla));
+  arr c = ARRAY(t.pos);
+  arr b = scalarProduct(x-c, z) * z;
+  arr a = (x-c) - b;
+  arr I(3,3);
+  double la = length(a);
+  double lb = length(b);
+  arr aaTovasq = 1/(la*la) * (a^a);
+  arr zzT = z^z;
+
+  if ( lb < dz/2. ){ // x projection on z is inside cyl
+    if(la<r && (dz/2.-lb)<(r-la)){ // x is INSIDE the cyl and closer to the lid than the wall
+      if(&g) g = 1./lb*b; //z is unit: s*z*|z|*sgn(b*z) = s*b/nb
+      if(&H) { I.setZero(); H=I; }
+      return lb-dz/2.;
+    }else{ // closer to the side than to a lid (inc. cases in- and outside the tube, because (r-na)<0 then)
+      if(&g) g = a/la;
+      if(&H){
+        I.setId(3);
+        H = 1./la * (I - zzT - aaTovasq);
+      }
+      return la-r;
+    }
+  }else{// x projection on z is outside cylinder
+    if ( la < r ){// inside the infinite cylinder
+      if(&g) g = b/lb;
+      if(&H) H.resize(3,3).setZero();
+      return lb-dz/2.;
+    }else{ // outside the infinite cyl
+      arr v =  b/lb * (lb-dz/2.)  + a/la * (la-r); //MT: good! (note: b/nb is the same as z) SD: well, b/nb is z or -z.
+      double nv=length(v);
+      if(&g) g = v/nv;
+      if(&H){
+        I.setId(3);
+        arr dvdx = (la-r)/la*( I - zzT - aaTovasq )
+                   + aaTovasq + zzT;
+        H = 1./nv* (dvdx - 1/nv/nv * (v^v) * (~dvdx) );
+      }
+      return nv;
+    }
+  }
+  HALT("You shouldn't be here!");
+}
+
+//===========================================================================
+
+double DistanceFunction_Box::fs(arr& g, arr& H, const arr& x){
+  arr rot = t.rot.getArr();
+  arr a_rel = (~rot)*(x-ARRAY(t.pos));
+  arr dim = {dx, dy, dz};
+
+  double d;
+  arr closest = a_rel;
+  arr del_abs = fabs(a_rel)-dim;
+  //-- find closest point on box and distance to it
+  if(del_abs.max()<0.){ //inside
+    uint side=del_abs.maxIndex(); //which side are we closest to?
+    if(a_rel(side)>0) closest(side) = dim(side);  else  closest(side)=-dim(side); //in positive or neg direction?
+    d = del_abs(side);
+  }else{ //outside
+    closest = elemWiseMax(-dim,closest);
+    closest = elemWiseMin(dim,closest);
+    d = length(a_rel - closest);
+  }
+
+  arr del = a_rel-closest;
+  if(&g) g = rot*del/d; //transpose(R) rotates the gradient back to world coordinates
+  if(&H){
+    if(d<0.){ //inside
+      H.resize(3,3).setZero();
+    }else{ //outside
+      if(del_abs.min()>0.){ //outside on all 3 axis
+        H = 1./d * (eye(3) - (del^del)/(d*d));
+      }else{
+        arr edge=del_abs;
+        for(double& z: edge) z=(z<0.)?0.:1.;
+        if(sum(edge)<=1.1){ //closest to the plane (equals 1.)
+          H.resize(3,3).setZero();
+        }else{ //closest to an edge
+          edge = 1.-edge;
+          H = 1./d * (eye(3) - (del^del)/(d*d) - (edge^edge));
+        }
+      }
+      H = rot*H*(~rot);
+    }
+  }
+  return d;
+}
 
 
 //===========================================================================

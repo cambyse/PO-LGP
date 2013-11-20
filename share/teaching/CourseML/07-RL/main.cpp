@@ -42,8 +42,8 @@ void simulate(uint& state_new, double& reward, uint action, uint state_old,const
   state_new = SUS(p); //sample from p
 }
 
-int main(int argn, char **argv){
-  MT::initCmdLine(argn,argv);
+int main(int argc, char **argv){
+  MT::initCmdLine(argc,argv);
 
   //display
   OpenGL gl;

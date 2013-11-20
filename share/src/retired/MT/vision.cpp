@@ -774,7 +774,7 @@ void compute_hueMap(byteA& hue, const floatA& alphaV){
   float s;
   for(x=0; x<X; x++){
     h=(uint)((MT::phi(mean(x, 0), mean(x, 1))+MT_PI)*180./MT_PI);
-    s = norm(mean[x]) * 100; if(s>255) s=255;
+    s = length(mean[x]) * 100; if(s>255) s=255;
     hsv2rgb(hue[x](), ARRAY<int>(h, (byte)s, 255));
   }
   hue.reshape(I, J, 3);
@@ -849,7 +849,7 @@ void findMaxRegionInEvidence(uintA& box, floatA *center, floatA *axis,
   float l1 = T/2 + sqrt(T*T/4-D);
   floatA ax(2);
   ax(0) = l1 - C(1, 1); ax(1) = C(1, 0);
-  ax/=norm(ax);
+  ax/=length(ax);
   ax *= (float)sqrt(l1);
   (*axis)(0) = ax(0)+(*center)(0);
   (*axis)(1) = ax(1)+(*center)(1);

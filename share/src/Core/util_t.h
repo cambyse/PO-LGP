@@ -20,7 +20,6 @@
 #define MT_util_t_cpp
 
 #include "util.h"
-#include "thread.h"
 #include <map>
 #include <string>
 #include <sstream>
@@ -51,6 +50,10 @@ template<class T> void save(const T& x, const char *filename) {
 std::ifstream file; MT::open(file, filename); file >>x;
 file.close(); */
 template<class T> void load(T& x, const char *filename, bool change_directory) {
+#ifdef MT_MSVC
+  if(change_directory) MT_MSG("can't handle change_directory with MSVC");
+  change_directory = false;
+#endif
   if(!change_directory) {
     std::ifstream file;
     open(file, filename);
@@ -68,8 +71,6 @@ template<class T> void load(T& x, const char *filename, bool change_directory) {
     file.close();
     if(path[0]) if(chdir(cwd)) HALT("couldn't change to directory " <<cwd);
 //     if(!getcwd(cwd, 200)) HALT("couldn't get current dir");
-#else
-    HALT("MSVC!");
 #endif
   }
 }

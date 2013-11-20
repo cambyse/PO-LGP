@@ -10,7 +10,8 @@ TEST(ArrayIO, vector_read_write) {
   of.close();
 
   arr b;
-  b.read("vec.tmp");
+  ifstream ifs("vec.tmp");
+  ifs >> b;
 
   for (int i = 0; i < 5; ++i) {
       EXPECT_NEAR(a(i, 0), b(i, 0), 0.001);
@@ -24,7 +25,8 @@ TEST(ArrayIO, matrix_read_write) {
   of.close();
 
   arr b;
-  b.read("mat.tmp");
+  ifstream ifs("mat.tmp");
+  ifs >> b;
 
   a.reshape(25);
   b.reshape(25);
@@ -37,7 +39,6 @@ TEST(ArrayIO, tensor_read_write) {
   arr a = randn(5, 25);
   a.reshape(5, 5, 5);
   ofstream of("tensor.tmp");
-  a.writeDim(of);
   a.write(of);
   of.close();
 
@@ -59,7 +60,6 @@ TEST(ArrayIO, tensor_high_dim_read_write) {
   arr a = randn(5, 125);
   a.reshape(TUP(5, 5, 5, 5));
   ofstream of("tensor_hd.tmp");
-  a.writeDim(of);
   a.write(of);
   of.close();
 

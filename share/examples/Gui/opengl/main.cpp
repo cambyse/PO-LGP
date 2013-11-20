@@ -7,7 +7,8 @@
 #  include <QtGui/QApplication>
 #endif
 
-#include <GL/glut.h>
+#  include <GL/gl.h>
+#  include <GL/glut.h>
 
 using namespace std;
 
@@ -22,7 +23,7 @@ void draw1(void*){
   glFrontFace(GL_CCW);
 }
 
-void testTeapot(){
+void TEST(Teapot) {
   OpenGL gl;
   gl.add(draw1,0);
   gl.watch();
@@ -33,7 +34,7 @@ void testTeapot(){
 
 /************ multiple views ************/
 
-void testMultipleViews(){
+void TEST(MultipleViews) {
   byteA img;
   read_ppm(img,"box.ppm",false);
   OpenGL gl;
@@ -54,7 +55,7 @@ void testMultipleViews(){
 /************ grab test ************/
 
 
-void testGrab(){
+void TEST(Grab) {
   OpenGL gl("title",300,300);
   gl.add(draw1,0);
   cout <<"normal view - written to z.ppm " <<endl;
@@ -86,7 +87,7 @@ static void draw2(void*){
   glColor(1.,1.,1.);
 }
 
-void testMesh(){
+void TEST(Mesh) {
   uint i,j,N=10;
   ors::Vector v;
   ors::Mesh mesh;
@@ -124,7 +125,7 @@ void testMesh(){
 
 /************ third test ************/
 
-void testObj(){
+void TEST(Obj) {
   ors::Mesh mesh,mesh2;
 
   //mesh.readObjFile("../../external/3dmodel/obj/gipshand2-273k.obj");
@@ -225,7 +226,7 @@ void draw5(void*){
 
 }
 
-void testTexture(){
+void TEST(Texture) {
   OpenGL gl;
   init5();
   gl.add(draw5,0);
@@ -241,7 +242,8 @@ void draw3(void*){
   glutSolidTeapot(1.);
   glPopName();
 }
-void testSelect(){
+
+void TEST(Select) {
   OpenGL gl;
   gl.add(draw3,0);
   gl.text <<"hover over objects and read cout...";
@@ -265,7 +267,7 @@ void testUI(){
   gl.watch();
 }
 
-void testImage(){
+void TEST(Image) {
   OpenGL gl;
   byteA img;
   read_ppm(img,"box.ppm",false);
@@ -274,7 +276,7 @@ void testImage(){
 
 //extern void qtCheckInitialized();
 
-int main(int argc,char **argv){
+int MAIN(int argc,char **argv){
   MT::initCmdLine(argc,argv);
 
   //qtCheckInitialized();

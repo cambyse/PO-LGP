@@ -1,0 +1,17 @@
+<package>
+  <description brief="ors_msgs">
+
+    msgs for the ORS datastructures.
+
+  </description>
+  <author>Stefan Otte</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://nowhere.com</url>
+  <depend package="std_msgs"/>
+  <depend package="geometry_msgs"/>
+  <depend package="shape_msgs"/>
+
+</package>
+
+

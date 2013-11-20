@@ -67,6 +67,7 @@ set(SOURCES     ${SOURCES}
 		opengl.cpp
 		ors_opengl.cpp
 		plot.cpp
+                mesh_lewiner.cpp
                 )
 
 add_library(Gui SHARED ${SOURCES})

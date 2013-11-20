@@ -9,7 +9,7 @@ void createOrs(ors::Graph& ors, OpenGL& gl) {
     b->X.setRandom();
     b->X.pos.z += 1.;
     b->name <<"rndSphere_" <<k;
-    ors::Shape *s = new ors::Shape(ors, b);
+    ors::Shape *s = new ors::Shape(ors, *b);
     s->type=ors::boxST;
     s->size[0]=.1; s->size[1]=.1; s->size[2]=.1; s->size[3]=.1;
   }
@@ -18,7 +18,7 @@ void createOrs(ors::Graph& ors, OpenGL& gl) {
     b->X.setRandom();
     b->X.pos.z += 1.;
     b->name <<"thing_" <<k;
-    ors::Shape *s = new ors::Shape(ors, b);
+    ors::Shape *s = new ors::Shape(ors, *b);
     s->type=ors::sphereST;
     s->size[0]=.1; s->size[1]=.1; s->size[2]=.1; s->size[3]=.1;
     //s->mesh.readFile("pin1.off");
@@ -28,7 +28,7 @@ void createOrs(ors::Graph& ors, OpenGL& gl) {
     b->X.pos.setRandom();
     b->X.pos.z += .5;
     b->name <<"thing_" <<k;
-    ors::Shape *s = new ors::Shape(ors, b);
+    ors::Shape *s = new ors::Shape(ors, *b);
     s->type=ors::meshST;
     s->mesh.readFile("pin1.off");
   }
@@ -43,8 +43,7 @@ void createOrs(ors::Graph& ors, OpenGL& gl) {
   gl.update();
 }
 
-
-int main(int argc, char** argv) {
+void TEST(OrsPhysx) {
   ors::Graph ors;
   OpenGL glMy, glPh;
   createOrs(ors, glMy);
@@ -66,5 +65,10 @@ int main(int argc, char** argv) {
     glPh.update();
     glMy.update();
   }
+}
+
+int MAIN(int argc, char** argv) {
+  testOrsPhysx();
+
   return 0;
 }

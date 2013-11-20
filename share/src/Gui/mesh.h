@@ -19,6 +19,7 @@
 #ifndef MT_mesh_h
 #define MT_mesh_h
 
+#include <Core/array.h>
 #include <Core/geo.h>
 
 /// @file
@@ -34,24 +35,16 @@ struct Mesh {
   arr V;                ///< vertices
   arr Vn;               ///< triangle normals
   arr C;                ///< vertex colors
-  intA G;               ///< vertex groups
   
   uintA T;              ///< triangles (faces)
   arr   Tn;             ///< vertex normals
-  /**
-   * A mesh can consist of several convex sub-parts.
-   * subMeshSizes[i] denotes the number of vertices from V which are part
-   * of sub-part i.
-   */
-  uintA subMeshSizes;
-  //-- groups: deprecated?
-  MT::Array<Transformation*> GF; ///< pose for each group (GF.N is number of groups)
-  MT::Array<uintA>  GT; ///< triangles for each group (GT.N=GF.N+1, last entry contains mixed group triangles)
-  //MT::Array<uintA> strips; ///< triangle strips (each with a 1D stripe index set)
+
+  long parsing_pos_start;
+  long parsing_pos_end;
   
-  Mesh() {};
+  Mesh();
   
-  //set or create
+  /// @name set or create
   void clear();
   void setBox();
   void setTetrahedron();
@@ -62,33 +55,32 @@ struct Mesh {
   void setCylinder(double r, double l, uint fineness=3);
   void setCappedCylinder(double r, double l, uint fineness=3);
   void setGrid(uint X, uint Y);
-  void setImplicitSurface(double(*fct)(double, double, double, void*), void *p, double lo, double hi, uint res);
+  void setImplicitSurface(ScalarFunction& f, double lo=-10., double hi=+10., uint res=100);
   void setRandom(uint vertices=10);
   
-  //transform and modify
+  /// @name transform and modify
   void subDevide();
   void scale(double f);
   void scale(double sx, double sy, double sz);
   void translate(double dx, double dy, double dz);
-  void center();
+  Vector center();
   void box();
   void addMesh(const ors::Mesh& mesh2);
   void makeConvexHull();
   
-  //internal computations & cleanup
+  /// @name internal computations & cleanup
   void computeNormals();
   void deleteUnusedVertices();
   void fuseNearVertices(double tol=1e-5);
   void clean();
   void flipFaces();
-  void makeVerticesRelativeToGroup();
   Vector getMeanVertex();
-  
+  double getRadius();
+
   //[preliminary]]
-  void collectTriGroups();
   void skin(uint i);
   
-  //IO
+  /// @name IO
   void write(std::ostream&) const; ///< only writes generic info
   void readFile(const char* filename);
   void readTriFile(const char* filename);

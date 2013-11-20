@@ -117,6 +117,24 @@ template<class T> MT::Array<T>::Array(const MT::Array<T>& a, uint i, uint j){ in
 /// this becomes a reference on the C-array \c p
 template<class T> MT::Array<T>::Array(const T* p, uint size) { init(); referTo(p, size); }
 
+
+/**
+ * @brief Initialization list for MT::Array
+ *
+ * This makes it possible to initialize list like this:
+\code
+arr a = { 1.1, 2, 25.7, 12 };
+\endcode
+ * See http://en.cppreference.com/w/cpp/utility/initializer_list for more.
+ *
+ * @param list the list used to initialize the array.
+ */
+template<class T>
+MT::Array<T>::Array(std::initializer_list<T> list) {
+  init();
+  for(T t : list) append(t);
+}
+
 template<class T> MT::Array<T>::~Array() {
   freeMEM();
 }
@@ -163,7 +181,7 @@ template<class T> MT::Array<T>& MT::Array<T>::resize(uint ND, uint *dim) {
   uint64_t S;
   for(S=1, j=0; j<nd; j++) S*=dim[j];
   if(S>=(1ull <<32)) HALT("Array #elements " <<(S>>30) <<"G is >= 2^32");
-  resizeMEM(S, false);
+  resizeMEM((uint)S, false);
   return *this;
 }
 
@@ -176,7 +194,7 @@ template<class T> MT::Array<T>& MT::Array<T>::resizeCopy(uint ND, uint *dim) {
   uint64_t S;
   for(S=1, j=0; j<nd; j++) S*=dim[j];
   if(S>=(1ull <<32)) HALT("Array #elements " <<(S>>30) <<"G is >= 2^32");
-  resizeMEM(S, true);
+  resizeMEM((uint)S, true);
   return *this;
 }
 
@@ -469,6 +487,15 @@ template<class T> void MT::Array<T>::reverse() {
   *this = L2;
 }
 
+/// reverse the rows of this array
+template<class T> void MT::Array<T>::reverseRows() {
+  CHECK(this->nd == 2, "Can only reverse rows of 2 dim arrays. nd=" << this->nd);
+  MT::Array<T> L2;
+  uint i;
+  for(i=this->d0; i--;) L2.append(this->operator[](i));
+  L2.reshape(this->d0, this->d1);
+  *this = L2;
+}
 
 /// the array contains `copies' copies of the old one
 template<class T> void MT::Array<T>::replicate(uint copies) {
@@ -841,7 +868,7 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, int j, int J) con
   if(j<0) j+=d1;
   if(I<0) I+=d0;
   if(J<0) J+=d1;
-  CHECK(i>=0 && j>=0 && I>=0 && J>=0 && i<=I && j<=J, "lower limit must be higher than upper!");
+  CHECK(i>=0 && j>=0 && I>=0 && J>=0 && i<=I && j<=J, "lower limit higher than upper!");
   x.resize(I-i+1, J-j+1);
   int k, l;
   for(k=i; k<=I; k++) for(l=j; l<=J; l++) x(k-i, l-j)=operator()(k, l);
@@ -859,8 +886,8 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, int j, int J, int
   if(k<0) j+=d2;
   if(I<0) I+=d0;
   if(J<0) J+=d1;
-  if(K<0) J+=d2;
-  CHECK(i>=0 && j>=0 && k>=0 && I>=0 && J>=0 && K>=0 && i<=I && j<=J && k<K, "lower limit must be higher than upper!");
+  if(K<0) K+=d2;
+  CHECK(i>=0 && j>=0 && k>=0 && I>=0 && J>=0 && K>=0 && i<=I && j<=J && k<=K, "lower limit higher than upper!");
   x.resize(I-i+1, J-j+1, K-k+1);
   int ii, jj, kk;
   for(ii=i; ii<=I; ii++) for(jj=j; jj<=J; jj++)  for(kk=k; kk<=K; kk++) x(ii-i, jj-j, kk-k)=operator()(ii, jj, kk);
@@ -881,6 +908,69 @@ template<class T> MT::Array<T> MT::Array<T>::sub(int i, int I, Array<uint> cols)
   int k, l;
   for(k=i; k<=I; k++) for(l=0; l<(int)cols.N; l++) x(k-i, l)=operator()(k, cols(l));
   return x;
+}
+
+
+/**
+ * @brief Return a copy of row `row_index` of the Array.
+ *
+ * This is just a convenient wrapper around `sub`.
+ *
+ * @tparam T data type of the array.
+ * @param row_index the row to access.
+ *
+ * @return  copy of row `row_index`.
+ */
+template<class T>
+MT::Array<T> MT::Array<T>::row(uint row_index) const {
+  return sub(row_index, row_index, 0, d1 - 1);
+}
+
+/**
+ * @brief Return a copy of column col_index of the Array.
+ *
+ * This is just a convenient wrapper around `sub`.
+ *
+ * @tparam T data type of the array.
+ * @param col_index the column to access.
+ *
+ * @return  copy of column `col_index`.
+ */
+template<class T>
+MT::Array<T> MT::Array<T>::col(uint col_index) const {
+  return sub(0, d0 - 1, col_index, col_index);
+}
+
+/**
+ * @brief Return a copy of the rows from `start_row` to excluding `end_row`.
+ *
+ * This is just a convenient wrapper around `sub`.
+ *
+ * @tparam T Data type of the array.
+ * @param start_row Start copying from index `start_row`.
+ * @param end_row Stop copying at excluding `end_row`.
+ *
+ * @return Copy of the rows from `start` to excluding `end_row`.
+ */
+template<class T>
+MT::Array<T> MT::Array<T>::rows(uint start_row, uint end_row) const {
+  return sub(start_row, end_row - 1, 0, d1 - 1);
+}
+
+/**
+ * @brief Return a copy of the columns from column `start_col` to (excluding) `end_col`.
+ *
+ * This is just a convenient wrapper around `sub`.
+ *
+ * @tparam T Data type of the array.
+ * @param start_col Start copying from index `start_col`.
+ * @param end_col Stop copying at excluding `end_col`.
+ *
+ * @return Copy of the columns from `start_col` to excluding `end_col`.
+ */
+template<class T>
+MT::Array<T> MT::Array<T>::cols(uint start_col, uint end_col) const {
+  return sub(0, d0 - 1, start_col, end_col - 1);
 }
 
 
@@ -1005,7 +1095,7 @@ template<class T> void MT::Array<T>::setId(int d) {
 template<class T> void MT::Array<T>::setDiag(const T& x, int d) {
   CHECK(d!=-1 || nd==2, "need squared matrix to set to diagonal");
   if(d!=-1) resize(d, d);
-  if(d==-1) d=MT::MIN(d0, d1);
+  if(d==-1) d=(int)MT::MIN(d0, d1);
   setZero();
   uint i;
   for(i=0; i<(uint)d; i++) operator()(i, i)=x;
@@ -1392,8 +1482,6 @@ template<class T> void MT::Array<T>::shift(int offset, bool wrapAround) {
 }
 
 
-//***** I/O
-
 /** @brief prototype for operator<<, writes the array by separating elements with ELEMSEP, separating rows with LINESEP, using BRACKETS[0] and BRACKETS[1] to brace the data, optionally writs a dimensionality tag before the data (see below), and optinally in binary format */
 template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP, const char *LINESEP, const char *BRACKETS, bool dimTag, bool binary) const {
   CHECK(!binary || memMove, "binary write works only for memMoveable data");
@@ -1411,13 +1499,13 @@ template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP
     os.put(0);
     os <<std::endl;
   } else {
-    if(dimTag) { writeDim(os); os <<' '; }
-    if(nd>=2) os <<'\n';
     if(BRACKETS[0]) os <<BRACKETS[0];
-    if(nd==0 && N==0) { if(BRACKETS[1]) os <<BRACKETS[1]; return; }
-    if(nd==0 && N==1) { os <<scalar() <<']'; return; }
+    if(dimTag || nd>=3) { os <<' '; writeDim(os); os <<' '; }
+    if(nd>=2) os <<'\n';
+    if(nd==0 && N==1) {
+      os <<scalar();
+    }
     if(nd==1) {
-      //os <<' ';
       for(i=0; i<N; i++) os <<ELEMSEP  <<operator()(i);
     }
     if(nd==2) for(j=0; j<d0; j++) {
@@ -1433,17 +1521,9 @@ template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP
       }
     if(nd>3) {
       CHECK(d && d!=&d0, "");
-      //Array<uint> I;
       for(i=0; i<N; i++) {
         if(i && !(i%d[nd-1])) os <<LINESEP;
-        if(nd>1 && !(i%(d[nd-2]*d[nd-1]))) {
-          /*getIndexTuple(I, i);
-          os <<LINESEP <<'<' <<I(0);
-          for(j=1;j<nd;j++) os <<' ' <<I(j);
-          os <<':' <<i <<'>' <<LINESEP;
-          */
-          os <<LINESEP;
-        }
+        if(nd>1 && !(i%(d[nd-2]*d[nd-1]))) os <<LINESEP;
         os <<ELEMSEP <<elem(i);
       }
     }
@@ -1456,109 +1536,63 @@ template<class T> void MT::Array<T>::read(std::istream& is) {
   uint d, i;
   char c;
   T x;
+  bool expectBracket=false;
 
 #define PARSERR(x) HALT("Error in parsing Array of type '" <<typeid(T).name() <<"' (line=" <<MT::lineCount <<"):\n" <<x)
 
   c=MT::peerNextChar(is);
-  switch(c) {
-    case '<':
-      readDim(is);
-      c=MT::peerNextChar(is);
-      if(c=='[') {  //fast ascii read
-        is >>PARSE("[");
-        for(i=0; i<N; i++) {
-          if(is.fail()) PARSERR("could not read " <<i <<"-th element of an array");
-          is >>p[i];
-        }
-        is >>PARSE("]");
-        if(is.fail()) PARSERR("could not read array end tag");
-      } else if(c==0) {  //binary read
-        c=is.get();  if(c!=0) PARSERR("couldn't read newline before binary data block :-(");
-        is.read((char*)p, sizeT*N);
-        if(is.fail()) PARSERR("could not binary data");
-        c=is.get(); if(c!=0) PARSERR("couldn't read newline after binary data block :-(");
-      } else { //just directly read numbers
-        for(i=0; i<N; i++) {
-          if(is.fail()) PARSERR("could not read " <<i <<"-th element of an array");
-          is >>p[i];
-        }
+  if(c=='['){
+    is >>PARSE("[");
+    expectBracket=true;
+    c=MT::peerNextChar(is);
+  }
+
+  if(c=='<'){
+    readDim(is);
+    c=MT::peerNextChar(is);
+    if(c==0) {  //binary read
+      c=is.get();  if(c!=0) PARSERR("couldn't read newline before binary data block :-(");
+      is.read((char*)p, sizeT*N);
+      if(is.fail()) PARSERR("could not binary data");
+      c=is.get(); if(c!=0) PARSERR("couldn't read newline after binary data block :-(");
+    }else{  //fast ascii read
+      for(i=0; i<N; i++) {
+	if(is.fail()) PARSERR("could not read " <<i <<"-th element of an array");
+	is >>p[i];
       }
-      break;
-    case '[': //slow read
-      is >>PARSE("[");
-    default:
-      uint i=0;
-      d=0;
-      for(;;) {
-        MT::skip(is, " \r\t");
-        is.get(c);
-        if(c==']' || !is.good()) { is.clear(); break; }
-        if(c==';' || c=='\n') {  //set an array width
-          if(!d) d=i; else if(i%d) PARSERR("mis-structured array in row " <<i/d);
-          continue;
-        }
-        if(c!=',') is.putback(c);
-        is >>x;
-        if(!is.good()) { is.clear(); break; }
-        if(i>=N) resizeCopy(i+1000);
-        elem(i)=x;
-        i++;
+    }
+    if(expectBracket){
+      is >>PARSE("]");
+      if(is.fail()) PARSERR("could not read array end tag");
+    }
+  }else{ //slow ascii read (inferring size from formatting)
+    uint i=0;
+    d=0;
+    for(;;) {
+      MT::skip(is, " \r\t");
+      is.get(c);
+      if(c==']' || !is.good()) { is.clear(); break; }
+      if(c==';' || c=='\n') {  //set an array width
+	if(!d) d=i; else if(i%d) PARSERR("mis-structured array in row " <<i/d);
+	continue;
       }
-      resizeCopy(i);
-      if(d) {
-        if(N%d) PARSERR("mis-structured array in last row");
-        reshape(N/d, d);
-      }
-      break;
+      if(c!=',') is.putback(c);
+      is >>x;
+      if(!is.good()) { is.clear(); break; }
+      if(i>=N) resizeCopy(i+1000);
+      elem(i)=x;
+      i++;
+    }
+    resizeCopy(i);
+    if(d) {
+      if(N%d) PARSERR("mis-structured array in last row");
+      reshape(N/d, d);
+    }
   }
 
 #undef PARSERR
 
 }
-
-template<class T> void MT::Array<T>::read(const char* filename) {
-  ifstream fil;
-  MT::open(fil, filename);
-  read(fil);
-}
-/*
-template<class T> void MT::Array<T>::readOld(std::istream& is){
-  uint d, i, j, k;
-  char c;
-  MT::skip(is);
-  is.get(c);
-  switch(c){
-  case '[':
-    is >>d;
-    if(is.fail()) HALT ("could not read array tag");
-    if(d==0){ is >>PARSE(">"); return; }
-    if(d==1){
-      is >>PARSE(":") >>i;
-      if(is.fail()) HALT ("could not read array's dimensions");
-      resize(i);
-    }
-    if(d==2){
-      is >>PARSE(":") >>i >>PARSE(", ") >>j;
-      if(is.fail()) HALT ("could not read array's dimensions");
-      resize(i, j);
-    }
-    if(d==3){
-      is >>PARSE(":") >>i >>PARSE(", ") >>j >>PARSE(", ") >>k;
-      if(is.fail()) HALT ("could not read array's dimensions");
-      resize(i, j, k);
-    }
-    is >>PARSE("]");
-    if(is.fail()) HALT ("could not read array end tag");
-    for(i=0;i<N;i++){
-      if(is.fail()) HALT("could not read " <<i <<"-th element of an array");
-      is >>p[i];
-    }
-    break;
-  default:
-    NIY;
-  }
-}
-*/
 
 /// write a dimensionality tag of format <d0 d1 d2 ...>
 template<class T> void MT::Array<T>::writeDim(std::ostream& os) const {
@@ -1968,7 +2002,7 @@ template<class T> T sumOfSqr(const MT::Array<T>& v) {
 }
 
 /// \f$\sqrt{\sum_i x_i^2}\f$
-template<class T> T norm(const MT::Array<T>& v) { return (T)::sqrt((double)sumOfSqr(v)); }
+template<class T> T length(const MT::Array<T>& v) { return (T)::sqrt((double)sumOfSqr(v)); }
 
 /// \f$\sqrt{\sum_i x_i^2}\f$
 template<class T> T mean(const MT::Array<T>& v) { return sum(v)/v.N; }
@@ -2731,8 +2765,8 @@ template<class T> uint numberSharedElements(const MT::Array<T>& x, const MT::Arr
 
 /// Assign all elements of \c a to a uniformly distributed discrete value in {low, .., hi}
 template<class T> void rndInteger(MT::Array<T>& a, int low, int high, bool add) {
-  if(!add) for(uint i=0; i<a.N; i++) a.p[i] =low+(int)rnd.num(1+high-low);
-  else     for(uint i=0; i<a.N; i++) a.p[i]+=low+(int)rnd.num(1+high-low);
+  if(!add) for(uint i=0; i<a.N; i++) a.p[i] =(T)(low+(int)rnd.num(1+high-low));
+  else     for(uint i=0; i<a.N; i++) a.p[i]+=(T)(low+(int)rnd.num(1+high-low));
 }
 
 /// Assign all elements of \c a to a uniformly distributed continuous value in [low, hi]
@@ -2849,7 +2883,7 @@ UpdateOperator(%=)
 
 #define BinaryOperator( op, updateOp)         \
   template<class T> Array<T> operator op(const Array<T>& y, const Array<T>& z){ Array<T> x(y); x updateOp z; return x; } \
-  template<class T> Array<T> operator op(T y, const Array<T>& z){               Array<T> x(z); x updateOp y; return x; } \
+  template<class T> Array<T> operator op(T y, const Array<T>& z){               Array<T> x; x.resizeAs(z); x=y; x updateOp z; return x; } \
   template<class T> Array<T> operator op(const Array<T>& y, T z){               Array<T> x(y); x updateOp z; return x; }
 
 BinaryOperator(+ , +=);
@@ -2927,7 +2961,7 @@ template<class T> void negative(MT::Array<T>& x, const MT::Array<T>& y) {
     if(&x!=&y) x.resizeAs(y);         \
     T *xp=x.p, *xstop=xp+x.N;            \
     const T *yp=y.p;            \
-    for(; xp!=xstop; xp++, yp++) *xp = ::func( (double) *yp );  \
+    for(; xp!=xstop; xp++, yp++) *xp = (T)::func( (double) *yp );  \
     return x;         \
   }
 

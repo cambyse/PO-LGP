@@ -533,9 +533,9 @@ void go_lev2(const char *problem,bool hierarchy=false){
 }
 
     
-int main(int argn,char** argv){
+int main(int argc,char** argv){
  
-  MT::init(argn,argv);
+  MT::init(argc,argv);
   MT::getParameter(PARAMS.seed,"seed",(uint)0);
   MT::getParameter(PARAMS.d0,"d0");
   MT::getParameter(PARAMS.d1,"d1",(uint)0);
@@ -554,7 +554,7 @@ int main(int argn,char** argv){
   cout <<std::setprecision(5);
   
   int mode=0;
-  if(argn>1) mode=atoi(argv[1]);
+  if(argc>1) mode=atoi(argv[1]);
   switch(mode){
   case 1: convertProblem(PARAMS.problem); break;
   case 2: scanArrFile(PARAMS.problem); break;

@@ -39,8 +39,8 @@ void problem2(){
     sys.displayTrajectory(q,NULL,-1,STRING(" final "));
 }
 
-int main(int argn,char **argv){
-  MT::initCmdLine(argn,argv);
+int main(int argc,char **argv){
+  MT::initCmdLine(argc,argv);
   init();
   int mode=MT::getParameter<int>("mode");
   switch(mode){

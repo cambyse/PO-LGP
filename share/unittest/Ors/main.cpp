@@ -27,6 +27,18 @@ TEST(OrsTest, testTransformations) {
   }
 }
 
+TEST(OrsTest, testGraph) {
+  {
+    ors::Graph G;
+    G.init("world.ors");
+  }
+  {
+    ors::Graph *G2 = new ors::Graph();
+    G2->init("world-complex.ors");
+    delete G2;
+  }
+}
+
 GTEST_API_ int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

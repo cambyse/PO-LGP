@@ -7,7 +7,7 @@ void drawInit(void*){
   glColor(1.,.5,0.);
 }
 
-void testSwift(){
+void TEST(Swift) {
   ors::Graph C;
   C.init("swift_test.ors");
 
@@ -39,7 +39,7 @@ void testSwift(){
 }
 
 
-void testSphere(){
+void TEST(Sphere) {
   OpenGL gl;
   ors::Mesh mesh;
 
@@ -60,7 +60,7 @@ void testSphere(){
   gl.watch();
 }
 
-void testMeshes(){
+void TEST(Meshes) {
   OpenGL gl;
   ors::Mesh mesh;
   mesh.readStlFile("~/share/data/3dmodel/schunk-hand.stl");
@@ -77,7 +77,7 @@ void testMeshes(){
   gl.watch();
 }
 
-void testMeshes2(){
+void TEST(Meshes2) {
   ors::Mesh mesh1,mesh2;
   OpenGL gl;
   gl.add(drawInit,0);
@@ -93,7 +93,7 @@ void testMeshes2(){
   gl.watch();
 }
 
-void testMeshes3(){
+void TEST(Meshes3) {
   ors::Mesh mesh;
   OpenGL gl;
   gl.add(drawInit,0);
@@ -108,7 +108,7 @@ void testMeshes3(){
   gl.watch();
 }
 
-int main(int argn, char** argv){
+int MAIN(int argc, char** argv){
 
   testSwift();
   testSphere();

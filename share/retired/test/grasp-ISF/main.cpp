@@ -94,8 +94,8 @@ plot_belief_slices(GraspObject_GP &obj){
 }
 
 int
-main(int argn,char** argv){
-  MT::initCmdLine(argn,argv);
+main(int argc,char** argv){
+  MT::initCmdLine(argc,argv);
 
   signal(SIGINT,RobotProcessGroup::signalStopCallback);
 

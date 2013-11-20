@@ -219,9 +219,9 @@ void computeMode();
 void extractMode();
 
 
-int main(int argn, char **argv) {
+int main(int argc, char **argv) {
 
-  //MT::initCmdLine(argn,argv);
+  //MT::initCmdLine(argc,argv);
 
 <<<<<<< HEAD
   if(birosInfo().getParameter<int>("mode", NULL) == 1) {

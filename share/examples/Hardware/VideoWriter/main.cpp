@@ -1,7 +1,7 @@
 #include <Hardware/VideoWriter/videowriter.h>
 #include <Core/array.h>
 
-int main(int argn, char** argv){
+int main(int argc, char** argv){
   byteA img(200,100,3);
   img = 128;
 
