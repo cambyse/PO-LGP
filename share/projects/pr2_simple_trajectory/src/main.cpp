@@ -28,7 +28,7 @@ public:
   //! Initialize the action client and wait for action server to come up
   RobotArm() {
     // tell the action client that we want to spin a thread by default
-    traj_client_ = new TrajClient("r_arm_controller/joint_trajectory_action", true);
+    traj_client_ = new TrajClient("l_arm_controller/joint_trajectory_action", true);
 
     // wait for action server to come up
     while (!traj_client_->waitForServer(ros::Duration(5.0))) {
@@ -117,6 +117,16 @@ public:
   pr2_controllers_msgs::JointTrajectoryGoal trajectoryToPR2Msg(const arr& trajectory) {
     pr2_controllers_msgs::JointTrajectoryGoal goal;
     goal.trajectory.points.resize(trajectory.d1);
+
+    // First, the joint names, which apply to all waypoints
+    goal.trajectory.joint_names.push_back("l_shoulder_pan_joint");
+    goal.trajectory.joint_names.push_back("l_shoulder_lift_joint");
+    goal.trajectory.joint_names.push_back("l_upper_arm_roll_joint");
+    goal.trajectory.joint_names.push_back("l_elbow_flex_joint");
+    goal.trajectory.joint_names.push_back("l_forearm_roll_joint");
+    goal.trajectory.joint_names.push_back("l_wrist_flex_joint");
+    goal.trajectory.joint_names.push_back("l_wrist_roll_joint");
+
     for(uint idx = 0; idx < trajectory.d1; ++idx) {
       goal.trajectory.points[idx].positions.resize(trajectory.d0);
       for(uint p = 0; p < trajectory.d0; ++p) {
@@ -169,7 +179,7 @@ arr create_rrt_trajectory(ors::Graph& G, arr& target) {
   c->y_threshold = 0;
 
   ors::RRTPlanner planner(&G, P, stepsize);
-  arr q = { 0.1, 0.999998, 0.500003, 0.999998, 1.5, -2, 0, 0.500003, 0, 0 };
+  arr q = { 0.999998, 0.500003, 0.999998, 1.5, -2, 0, 0.500003 };
   planner.joint_max = q + ones(q.N, 1);
   planner.joint_min = q - ones(q.N, 1);
   std::cout << "Planner initialized" <<std::endl;
