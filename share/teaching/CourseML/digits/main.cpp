@@ -1,17 +1,19 @@
 #include <Core/array.h>
-#include <MT/util.h>
-#include <MT/plot.h>
+#include <Core/util.h>
+#include <Gui/plot.h>
 #include <stdlib.h>
 using namespace std;
 
-#include <MT/MLcourse.h>
-#include <MT/util.h>
+#include <Algo/MLcourse.h>
+#include <Core/util.h>
 
 
 void digits() {
   arr X,y;
-  X.read("digit_pca.txt");
-  y.read("digit_label.txt");
+  ifstream digit_pca("digit_pca.txt");
+  X.read(digit_pca);
+  ifstream digit_label("digit_label.txt");
+  y.read(digit_label);
   y.reshape(y.N);
 
 
