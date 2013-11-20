@@ -65,6 +65,8 @@ set(CURRENT_SLICE
         examples/System
         examples/relational
 
+        teaching/RoboticsCourse
+
         projects/mlr_ros/circle_test
 )
 
