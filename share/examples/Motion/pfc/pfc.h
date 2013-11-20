@@ -5,7 +5,6 @@
 #include <Core/array.h>
 #include <Core/array_t.h>
 #include <Ors/ors.h>
-#include <Ors/ors.h>
 #include <Core/util.h>
 #include <stdlib.h>
 #include "mobject.h"
