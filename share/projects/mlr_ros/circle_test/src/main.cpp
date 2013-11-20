@@ -154,7 +154,7 @@ void circle(){
   ors::Graph& G=S.s->G;
   for(uint i=0;i<G.joints.N;i++){
        goal.trajectory.joint_names.push_back(G.joints(i)->name.p);
-       cout <<G.joints(i)->name <<endl;
+       cout << G.joints(i)->name <<endl;
   }
     //pr2_controllers_msgs::JointTrajectoryGoal goal;
 
@@ -172,7 +172,7 @@ void circle(){
     y_target = y;
     y_target(2) += 0.1;
 #endif
-    cout <<i <<" current eff pos = " <<y <<"  current error = " <<norm(y_target-y) <<endl;;
+    cout <<i <<" current eff pos = " <<y <<"  current error = " << length(y_target-y) <<endl;;
     double prec=1e-0;
     q += inverse(~J*J + W/prec)*~J*(y_target - y); 
     S.setJointAngles(q);
