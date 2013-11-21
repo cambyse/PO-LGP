@@ -47,94 +47,31 @@ public:
     traj_client_->sendGoal(goal);
   }
 
-  /**
-   * Generates a simple trajectory with two waypoints, used as an example.
-   *
-   * Note that this trajectory contains two waypoints, joined together as
-   * a single trajectory.  Alternatively, each of these waypoints could be in
-   * its own trajectory a trajectory can have one or more waypoints depending
-   * on the desired application.
-   */
-  pr2_controllers_msgs::JointTrajectoryGoal armExtensionTrajectory() {
-    //our goal variable
-    pr2_controllers_msgs::JointTrajectoryGoal goal;
-
-    // First, the joint names, which apply to all waypoints
-    goal.trajectory.joint_names.push_back("r_shoulder_pan_joint");
-    goal.trajectory.joint_names.push_back("r_shoulder_lift_joint");
-    goal.trajectory.joint_names.push_back("r_upper_arm_roll_joint");
-    goal.trajectory.joint_names.push_back("r_elbow_flex_joint");
-    goal.trajectory.joint_names.push_back("r_forearm_roll_joint");
-    goal.trajectory.joint_names.push_back("r_wrist_flex_joint");
-    goal.trajectory.joint_names.push_back("r_wrist_roll_joint");
-
-    // We will have two waypoints in this goal trajectory
-    goal.trajectory.points.resize(2);
-
-    // First trajectory point
-    // Positions
-    int ind = 0;
-    goal.trajectory.points[ind].positions.resize(7);
-    goal.trajectory.points[ind].positions[0] = 0.0;
-    goal.trajectory.points[ind].positions[1] = 0.0;
-    goal.trajectory.points[ind].positions[2] = 0.0;
-    goal.trajectory.points[ind].positions[3] = 0.0;
-    goal.trajectory.points[ind].positions[4] = 0.0;
-    goal.trajectory.points[ind].positions[5] = 0.0;
-    goal.trajectory.points[ind].positions[6] = 0.0;
-    // Velocities
-    goal.trajectory.points[ind].velocities.resize(7);
-    for (size_t j = 0; j < 7; ++j) {
-      goal.trajectory.points[ind].velocities[j] = 0.0;
-    }
-    // To be reached 1 second after starting along the trajectory
-    goal.trajectory.points[ind].time_from_start = ros::Duration(1.0);
-
-    // Second trajectory point
-    // Positions
-    ind += 1;
-    goal.trajectory.points[ind].positions.resize(7);
-    goal.trajectory.points[ind].positions[0] = -0.3;
-    goal.trajectory.points[ind].positions[1] = 0.2;
-    goal.trajectory.points[ind].positions[2] = -0.1;
-    goal.trajectory.points[ind].positions[3] = -1.2;
-    goal.trajectory.points[ind].positions[4] = 1.5;
-    goal.trajectory.points[ind].positions[5] = -0.3;
-    goal.trajectory.points[ind].positions[6] = 0.5;
-    // Velocities
-    goal.trajectory.points[ind].velocities.resize(7);
-    for (size_t j = 0; j < 7; ++j) {
-      goal.trajectory.points[ind].velocities[j] = 0.0;
-    }
-    // To be reached 2 seconds after starting along the trajectory
-    goal.trajectory.points[ind].time_from_start = ros::Duration(2.0);
-
-    //we are done; return the goal
-    return goal;
-  }
-
   pr2_controllers_msgs::JointTrajectoryGoal trajectoryToPR2Msg(const arr& trajectory) {
     pr2_controllers_msgs::JointTrajectoryGoal goal;
-    goal.trajectory.points.resize(trajectory.d1);
+    goal.trajectory.points.resize(trajectory.d0);
 
     // First, the joint names, which apply to all waypoints
     goal.trajectory.joint_names.push_back("l_shoulder_pan_joint");
     goal.trajectory.joint_names.push_back("l_shoulder_lift_joint");
     goal.trajectory.joint_names.push_back("l_upper_arm_roll_joint");
-    goal.trajectory.joint_names.push_back("l_elbow_flex_joint");
     goal.trajectory.joint_names.push_back("l_forearm_roll_joint");
+    goal.trajectory.joint_names.push_back("l_elbow_flex_joint");
     goal.trajectory.joint_names.push_back("l_wrist_flex_joint");
     goal.trajectory.joint_names.push_back("l_wrist_roll_joint");
 
-    for(uint idx = 0; idx < trajectory.d1; ++idx) {
-      goal.trajectory.points[idx].positions.resize(trajectory.d0);
-      goal.trajectory.points[idx].velocities.resize(trajectory.d0);
-      for(uint p = 0; p < trajectory.d0; ++p) {
-        goal.trajectory.points[idx].positions[p] = trajectory(idx, p);  
+    goal.trajectory.points[0].time_from_start = ros::Duration(0.1);
+
+    for(uint idx = 0; idx < trajectory.d0; ++idx) {
+      goal.trajectory.points[idx].positions.resize(trajectory.d1);
+      goal.trajectory.points[idx].velocities.resize(trajectory.d1);
+      goal.trajectory.points[idx].time_from_start = ros::Duration(.2);
+
+      // joints
+      for(uint p = 0; p < trajectory.d1; ++p) {
+        goal.trajectory.points[idx].positions[p] = trajectory(idx, p);
         goal.trajectory.points[idx].velocities[p] = 0.0;
       }
-      // To be reached 2 seconds after starting along the trajectory
-      goal.trajectory.points[idx].time_from_start = ros::Duration(2.0);
     }
     return goal; 
   }
@@ -232,6 +169,7 @@ int main(int argc, char** argv) {
   OpenGL gl;
   bindOrsToOpenGL(G, gl);
 
+  G.setJointState({0., 0., 0, 0, 0, 0, 0});
   arr start = G.getJointState();
   std::cout << "q = " << start << std::endl;
 
@@ -241,10 +179,11 @@ int main(int argc, char** argv) {
   std::cout << "target = " << target << std::endl;
 
   arr rrt_trajectory = create_rrt_trajectory(G, target);
-  show_trajectory(G, gl, rrt_trajectory, "RRT");
+  // show_trajectory(G, gl, rrt_trajectory, "RRT");
 
   arr opt_trajectory = optimize_trajectory(G, rrt_trajectory);
-  show_trajectory(G, gl, opt_trajectory, "optimized");
+  DEBUG_VAR(main, opt_trajectory);
+  // show_trajectory(G, gl, opt_trajectory, "optimized");
 
   std::cout << "Should I run the trajectory on the /real/ PR2? (y/N)" << std::endl;
   char answer;
@@ -257,6 +196,12 @@ int main(int argc, char** argv) {
 
   RobotArm arm;
   // Start the trajectory
+  // auto goal = arm.trajectoryToPR2Msg(opt_trajectory);
+
+  // for (uint i = 0; i < goal.trajectory.joint_names.size(); i++) {
+  //   std::cout << goal.trajectory.joint_names[i] << " " << opt_trajectory(opt_trajectory.d0-1, i) << std::endl;
+  // }
+  // arm.startTrajectory(arm.trajectoryToPR2Msg(zeros(7, 1)));
   arm.startTrajectory(arm.trajectoryToPR2Msg(opt_trajectory));
   // Wait for trajectory completion
   while (!arm.getState().isDone() && ros::ok()) {
