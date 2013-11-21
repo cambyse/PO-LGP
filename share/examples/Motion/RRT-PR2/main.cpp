@@ -47,7 +47,7 @@ arr create_rrt_trajectory(ors::Graph& G, arr& target) {
   c->y_threshold = 0;
 
   ors::RRTPlanner planner(&G, P, stepsize);
-  arr q = { 0.1, 0.999998, 0.500003, 0.999998, 1.5, -2, 0, 0.500003, 0, 0 };
+  arr q = { 0.999998, 0.500003, 0.999998, 1.5, -2, 0, 0.500003 };
   planner.joint_max = q + ones(q.N, 1);
   planner.joint_min = q - ones(q.N, 1);
   std::cout << "Planner initialized" <<std::endl;

@@ -2,7 +2,7 @@
 
 from lxml import etree
 
-inFile = "pr2.urdf"
+inFile = "ApolloRobot.urdf"
 xmlData = etree.parse(inFile)
 
 links = xmlData.findall("/link")
@@ -17,7 +17,7 @@ for link in links:
     elem = link.find("collision/origin")
     if elem is not None:
         print ' rel=<T t(%s) E(%s)>' % (elem.attrib['xyz'],
-                                         elem.attrib['rpy']),
+                                        elem.attrib['rpy']),
 
     elem = link.find("collision/geometry/box")
     if elem is not None:
@@ -30,7 +30,7 @@ for link in links:
     elem = link.find("collision/geometry/cylinder")
     if elem is not None:
         print ' type=2 size=[0 0 %s %s]' % (elem.attrib['length'],
-                                             elem.attrib['radius']),
+                                            elem.attrib['radius']),
 
     elem = link.find("collision/geometry/mesh")
     if elem is not None:
