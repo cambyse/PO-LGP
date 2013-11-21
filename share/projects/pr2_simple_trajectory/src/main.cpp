@@ -174,12 +174,10 @@ void callback(const sensor_msgs::JointState::ConstPtr& state) {
     "l_wrist_roll_joint"
   };
 
-  uint j = 0;
   for (uint i = 0; i < state->name.size(); i++) {
-
-    if (std::find(names.begin(), names.end(), state->name[i]) != names.end()) {
-      joint_state(j) = state->position[i];
-      j++;
+    auto iter = std::find(names.begin(), names.end(), state->name[i]);
+    if (iter != names.end()) {
+      joint_state(std::distance(names.begin(), iter)) = state->position[i];
     }
   }
 }
@@ -218,7 +216,7 @@ int main(int argc, char** argv) {
   std::cout << "target = " << target << std::endl;
 
   arr rrt_trajectory = create_rrt_trajectory(G, target);
-  // show_trajectory(G, gl, rrt_trajectory, "RRT");
+  show_trajectory(G, gl, rrt_trajectory, "RRT");
 
   arr opt_trajectory = optimize_trajectory(G, rrt_trajectory);
   DEBUG_VAR(main, opt_trajectory);
