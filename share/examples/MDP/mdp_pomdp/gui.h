@@ -7,7 +7,7 @@
 #include "gui_ui.h"
 #define MT_IMPLEMENT_TEMPLATES
 #include <Core/util.h>
-#include <MT/mdp_EMSolver.h>
+#include <MDP/mdp_EMSolver.h>
 
 class Gui:public QDialog{
 Q_OBJECT

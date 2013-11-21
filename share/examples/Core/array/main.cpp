@@ -570,10 +570,8 @@ void TEST(RowShiftedPackedMatrix){
 
 int MAIN(int argc, char *argv[]){
 
-  testCheatSheet();
-
   testBasics();
-  return 0;
+  testCheatSheet();
   testInitializationList();
   testSimpleIterators();
   testRowsAndColumsAccess();

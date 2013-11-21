@@ -525,6 +525,7 @@ struct EditConfigurationKeyCall:OpenGL::GLKeyCall {
         break;
     }
     gl.postRedrawEvent(true);
+    return true;
   }
 };
 
