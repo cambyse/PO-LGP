@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <pr2_controllers_msgs/JointTrajectoryAction.h>
 #include <actionlib/client/simple_action_client.h>
+#include "sensor_msgs/JointState.h"
 
 #include <Motion/rrt_planner.h>
 #include <Motion/motion.h>
@@ -65,7 +66,7 @@ public:
     for(uint idx = 0; idx < trajectory.d0; ++idx) {
       goal.trajectory.points[idx].positions.resize(trajectory.d1);
       goal.trajectory.points[idx].velocities.resize(trajectory.d1);
-      goal.trajectory.points[idx].time_from_start = ros::Duration(.2);
+      goal.trajectory.points[idx].time_from_start = ros::Duration(idx * .01);
 
       // joints
       for(uint p = 0; p < trajectory.d1; ++p) {
@@ -157,7 +158,43 @@ void show_trajectory(ors::Graph& G, OpenGL& gl, arr& trajectory, const char* tit
   G.setJointState(start);
 }
 
+
+arr joint_state;
+void callback(const sensor_msgs::JointState::ConstPtr& state) {
+
+  cout << "bla" << endl;
+  joint_state.resize(7);
+  std::vector<std::string> names = {
+    "l_shoulder_pan_joint",
+    "l_shoulder_lift_joint",
+    "l_upper_arm_roll_joint",
+    "l_forearm_roll_joint",
+    "l_elbow_flex_joint",
+    "l_wrist_flex_joint",
+    "l_wrist_roll_joint"
+  };
+
+  uint j = 0;
+  for (uint i = 0; i < state->name.size(); i++) {
+
+    if (std::find(names.begin(), names.end(), state->name[i]) != names.end()) {
+      joint_state(j) = state->position[i];
+      j++;
+    }
+  }
+}
+
+
 int main(int argc, char** argv) {
+  // Init the ROS node
+  ros::init(argc, argv, "robot_dri");
+  ros::NodeHandle nh;
+  ros::Subscriber joint_sub = nh.subscribe("/joint_states", 100, callback);
+  while (joint_state.N == 0)
+    ros::spinOnce();
+  cout << "after wait...proceding" << endl;
+
+  // MLR
   MT::initCmdLine(argc,argv);
   int seed = time(NULL);
 
@@ -169,7 +206,9 @@ int main(int argc, char** argv) {
   OpenGL gl;
   bindOrsToOpenGL(G, gl);
 
-  G.setJointState({0., 0., 0, 0, 0, 0, 0});
+  std::cout << "q = " << joint_state << std::endl;
+  G.setJointState(joint_state);
+  
   arr start = G.getJointState();
   std::cout << "q = " << start << std::endl;
 
@@ -183,16 +222,14 @@ int main(int argc, char** argv) {
 
   arr opt_trajectory = optimize_trajectory(G, rrt_trajectory);
   DEBUG_VAR(main, opt_trajectory);
-  // show_trajectory(G, gl, opt_trajectory, "optimized");
+  MT::wait();
+  show_trajectory(G, gl, opt_trajectory, "optimized");
 
   std::cout << "Should I run the trajectory on the /real/ PR2? (y/N)" << std::endl;
   char answer;
   std::cin >> answer;
 
   if (answer != 'y') return 0;
-
-  // Init the ROS node
-  ros::init(argc, argv, "robot_driver");
 
   RobotArm arm;
   // Start the trajectory
