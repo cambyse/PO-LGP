@@ -370,6 +370,7 @@ void ors::Joint::parseAts() {
     if(type==JT_transX) Q.addRelativeTranslation(d, 0., 0.);
   }
   if(ats.getValue<double>(d, "agent")) agent=(int)d;
+  if(ats.getValue<bool>("fixed")) agent=-1; 
   //axis
   arr axis;
   ats.getValue<arr>(axis, "axis");

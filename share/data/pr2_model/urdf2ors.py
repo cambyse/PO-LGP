@@ -2,74 +2,79 @@
 
 from lxml import etree
 
-inFile = "pr2.urdf" 
+inFile = "pr2.urdf"
 xmlData = etree.parse(inFile)
 
-links = xmlData.findall("/link") 
+links = xmlData.findall("/link")
 for link in links:
     name = link.attrib['name']
-    print 'body %s {'%name
+    print 'body %s {' % name,
 
     elem = link.find("inertial/mass")
-    if elem != None:
-        print '\tmass=%s'%elem.attrib['value']
+    if elem is not None:
+        print ' mass=%s' % elem.attrib['value'],
 
     elem = link.find("collision/origin")
-    if elem != None:
-        print '\trel=<T t(%s) E(%s)>'%(elem.attrib['xyz'],elem.attrib['rpy'])
+    if elem is not None:
+        print ' rel=<T t(%s) E(%s)>' % (elem.attrib['xyz'],
+                                         elem.attrib['rpy']),
 
     elem = link.find("collision/geometry/box")
-    if elem != None:
-        print '\ttype=0\n\tsize=[%s 0]'%elem.attrib['size']
+    if elem is not None:
+        print ' type=0 size=[%s 0]' % elem.attrib['size'],
 
     elem = link.find("collision/geometry/sphere")
-    if elem != None:
-        print '\ttype=1 size=[0 0 0 %s]'%elem.attrib['radius']
+    if elem is not None:
+        print ' type=1 size=[0 0 0 %s]' % elem.attrib['radius'],
 
     elem = link.find("collision/geometry/cylinder")
-    if elem != None:
-        print '\ttype=2 size=[0 0 %s %s]'%(elem.attrib['length'],elem.attrib['radius'])
+    if elem is not None:
+        print ' type=2 size=[0 0 %s %s]' % (elem.attrib['length'],
+                                             elem.attrib['radius']),
 
     elem = link.find("collision/geometry/mesh")
-    if elem != None:
+    if elem is not None:
         meshfile = elem.attrib['filename']
-        meshfile = meshfile.replace("package://pr2_description/meshes","pr2_model");
-        print '\ttype=3\n\tmesh="%s"'%meshfile
+        meshfile = meshfile.replace("package://pr2_description/meshes",
+                                    "pr2_model")
+        print ' type=3 mesh="%s"' % meshfile,
 
-    print  '}\n'
+    print '}\n',
 
-joints = xmlData.findall("/joint") 
+joints = xmlData.findall("/joint")
 for joint in joints:
     name = joint.attrib['name']
-    if joint.find("child")!=None:
-        print 'joint %s (%s %s) {'%(name, joint.find("parent").attrib['link'],joint.find("child").attrib['link'])
+    if joint.find("child") is not None:
+        print 'joint %s (%s %s) {' % (name,
+                                      joint.find("parent").attrib['link'],
+                                      joint.find("child").attrib['link']),
 
         # figure out joint type
         att = joint.attrib.get('type')
-        if att=="revolute" or att=="continuous":
-            print '\ttype=0'
-        if att=="prismatic":
-            print '\ttype=3'
-        if att=="fixed":
-            print '\ttype=10'
+        if att in ["revolute", "continuous"]:
+            print ' type=0',
+        if att == "prismatic":
+            print ' type=3',
+        if att == "fixed":
+            print ' type=10',
 
         elem = joint.find("mimic")
-        if elem!=None:
-            print '\tmimic=%s'%elem.attrib['joint']
+        if elem is not None:
+            print ' mimic=%s' % elem.attrib['joint'],
 
         elem = joint.find("axis")
-        if elem!=None:
-            print '\taxis=[%s]'%elem.attrib['xyz']
+        if elem is not None:
+            print ' axis=[%s]' % elem.attrib['xyz'],
 
         elem = joint.find("origin")
-        if elem!=None:
-            att=elem.attrib.get('rpy')
-            if att!=None:
-                print '\tA=<T t(%s) E(%s)>'%(elem.attrib['xyz'],att)
+        if elem is not None:
+            att = elem.attrib.get('rpy')
+            if att is not None:
+                print ' A=<T t(%s) E(%s)>' % (elem.attrib['xyz'], att),
             else:
-                print '\tA=<T t(%s)>'%(elem.attrib['xyz'])
+                print ' A=<T t(%s)>' % (elem.attrib['xyz']),
 
-        print  '}\n'
+        print '}\n',
 
 #print(etree.tostring(links[22]))
 #print(etree.tostring(joints[0]))
