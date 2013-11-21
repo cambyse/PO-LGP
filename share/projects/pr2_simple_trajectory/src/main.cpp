@@ -7,9 +7,6 @@
 #include <Gui/opengl.h>
 #include <ctime>
 
-#include <devTools/logging.h>
-SET_LOG(main, DEBUG);
-
 typedef actionlib::SimpleActionClient< pr2_controllers_msgs::JointTrajectoryAction > TrajClient;
 
 class RobotArm {
@@ -22,7 +19,7 @@ public:
   //! Initialize the action client and wait for action server to come up
   RobotArm() {
     // tell the action client that we want to spin a thread by default
-    traj_client_ = new TrajClient("l_arm_controller/joint_trajectory_action", true);
+    traj_client_ = new TrajClient("r_arm_controller/joint_trajectory_action", true);
 
     // wait for action server to come up
     while (!traj_client_->waitForServer(ros::Duration(5.0))) {
@@ -94,8 +91,8 @@ public:
     goal.trajectory.points[ind].positions[2] = -0.1;
     goal.trajectory.points[ind].positions[3] = -1.2;
     goal.trajectory.points[ind].positions[4] = 1.5;
-    goal.trajectory.points[ind].positions[5] = -0.3;
-    goal.trajectory.points[ind].positions[6] = 0.5;
+    goal.trajectory.points[ind].positions[5] = -0.1;
+    goal.trajectory.points[ind].positions[6] = 0.0;
     // Velocities
     goal.trajectory.points[ind].velocities.resize(7);
     for (size_t j = 0; j < 7; ++j) {
@@ -126,7 +123,7 @@ public:
     goal.trajectory.points[0].positions.resize(q_last.N);
     goal.trajectory.points[0].velocities.resize(q_last.N);
     for(uint i=0; i<q_last.N; i++) {
-      goal.trajectory.points[0].positions[i] = q_last(i);
+      goal.trajectory.points[0].positions[i] = 0.0; //q_last(i);
       goal.trajectory.points[0].velocities[i] = 0.0;
     }
     goal.trajectory.points[0].time_from_start = ros::Duration(1.0);
@@ -147,21 +144,6 @@ public:
   }
 
 };
-
-
-void base(){
-  RobotArm *arm=NULL;
-  ros::init(MT::argc, MT::argv, "robot_driver");
-  arm = new RobotArm;
-  if(!ros::ok()) cout <<"INIT not ok" <<endl;
-
-  arm->startTrajectory(arm->armExtensionTrajectory());
-  if(!ros::ok()) cout <<"not ok" <<endl;
-
-  while (!arm->getState().isDone() && ros::ok()) {
-    usleep(50000);
-  }
-}
 
 void circle(bool FIRE=false){
   ors::Graph G;
@@ -205,12 +187,14 @@ void circle(bool FIRE=false){
     gl.update();
 
     if(FIRE){
-      arm->startTrajectory(arm->OrsConfigToPR2Msg(q_last,q,G));
+      arm->startTrajectory(arm->armExtensionTrajectory());
+//      arm->startTrajectory(arm->OrsConfigToPR2Msg(q_last, q, G));
       if(!ros::ok()) cout <<"not ok" <<endl;
       while (!arm->getState().isDone() && ros::ok()) {
         usleep(50000);
       }
-      MT::wait(5.);
+//      MT::wait(5.);
+      break;
     }
   }
   gl.watch();
@@ -220,12 +204,20 @@ void circle(bool FIRE=false){
   }
 }
 
-int main(int argc, char** argv) {
-  MT::initCmdLine(argc,argv);
+void base(){
+  // Init the ROS node
+  ros::init(MT::argc, MT::argv, "robot_driver");
 
-  //circle(true);
-  base();
-
-  return 0;
+  RobotArm arm;
+  // Start the trajectory
+  arm.startTrajectory(arm.armExtensionTrajectory());
+  // Wait for trajectory completion
+  while (!arm.getState().isDone() && ros::ok()) {
+    usleep(50000);
+  }
 }
 
+int main(int argc, char** argv) {
+  circle(true);
+//  base();
+}
