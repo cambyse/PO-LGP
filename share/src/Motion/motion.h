@@ -115,7 +115,7 @@ struct MotionProblem {
   uint dim_g(uint t);
   uint dim_psi();
   bool getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t); ///< the general (`big') task vector and its Jacobian
-  void costReport();
+  void costReport(bool gnuplt=true);
   
   void setState(const arr& x, const arr& v);
   void activateAllTaskCosts(bool activate=true);

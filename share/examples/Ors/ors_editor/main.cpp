@@ -32,9 +32,9 @@ void TEST(OrsEditor) {
   //some optional manipulations
   G.meldFixedJoints();
   G.removeUselessBodies();
-    G.calcBodyFramesFromJoints();
+  G.calcBodyFramesFromJoints();
 //  G.topSort();
-//  G.makeLinkTree();
+  G.makeLinkTree();
   MT::save(G,"z.ors");
 
   editConfiguration(file, G, gl);

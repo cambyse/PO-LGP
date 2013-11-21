@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 from lxml import etree
 
 inFile = "pr2.urdf" 
@@ -31,7 +33,7 @@ for link in links:
     elem = link.find("collision/geometry/mesh")
     if elem != None:
         meshfile = elem.attrib['filename']
-        meshfile = meshfile.replace("package://pr2_description/meshes","pr2_meshes");
+        meshfile = meshfile.replace("package://pr2_description/meshes","pr2_model");
         print '\ttype=3\n\tmesh="%s"'%meshfile
 
     print  '}\n'
@@ -50,6 +52,10 @@ for joint in joints:
             print '\ttype=3'
         if att=="fixed":
             print '\ttype=10'
+
+        elem = joint.find("mimic")
+        if elem!=None:
+            print '\tmimic=%s'%elem.attrib['joint']
 
         elem = joint.find("axis")
         if elem!=None:

@@ -24,7 +24,7 @@
 #ifdef MT_QT
 #  include"gui.h"
 #endif
-#include <MT/mdp_EMSolver.h>
+#include <MDP/mdp_EMSolver.h>
 
 
 int main(int argc,char** argv){

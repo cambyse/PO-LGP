@@ -2,7 +2,8 @@ BASE   = ../..
 NAME   = lib$(shell basename `pwd`)
 OUTPUT := $(BASE)/lib/$(NAME).so
 
-DEPEND = Core
+GL = 1
+DEPEND = Core Infer Gui
 
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS = $(SRCS:%.cpp=%.o)

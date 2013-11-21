@@ -8,7 +8,7 @@ private:
   ANN ann;      //ann stores all points added to the tree in ann.X
   uintA parent; //for each point we also store the index of the parent node
   double stepsize;
-  uint last_parent;
+  uint nearest;
 
 public:
   RRT(const arr& q0, double _stepsize){
@@ -19,19 +19,18 @@ public:
   
   double getProposalTowards(arr& q){
     //find NN
-    uint k=ann.getNN(q);
+    nearest=ann.getNN(q);
 
     //compute little step
-    arr d = q - ann.X[k]; //difference vector between q and nearest neighbor
+    arr d = q - ann.X[nearest]; //difference vector between q and nearest neighbor
     double dist = length(d);
-    q = ann.X[k] + stepsize/dist * d;
-    last_parent = k;
+    q = ann.X[nearest] + stepsize/dist * d;
     return dist;
   }
   
   void add(const arr& q){
     ann.append(q);
-    parent.append(last_parent);
+    parent.append(nearest);
   }
   
   void addLineDraw(const arr& q, Simulator& S){
@@ -39,8 +38,8 @@ public:
     //But I can draw a projected edge in 3D endeffector position space:
     arr y_from,y_to;
     arr line;
-    S.setJointAngles(ann.X[last_parent],false);  S.kinematicsPos(y_from,"peg");
-    S.setJointAngles(q                 ,false);  S.kinematicsPos(y_to  ,"peg");
+    S.setJointAngles(ann.X[nearest], false);  S.kinematicsPos(y_from,"peg");
+    S.setJointAngles(q             , false);  S.kinematicsPos(y_to  ,"peg");
     line.append(y_from); line.reshape(1,line.N);
     line.append(y_to);
     plotLine(line); //add a line to the plot
@@ -48,9 +47,10 @@ public:
   }
   
   //some access routines
+  uint getNearest(){ return nearest; }
   uint getParent(uint i){ return parent(i); }
   uint getNumberNodes(){ return ann.X.d0; }
-  arr& getNode(uint i){ return ann.X[i](); }
+  arr getNode(uint i){ return ann.X[i]; }
   void getRandomNode(arr& q){ q = ann.X[rnd(ann.X.d0)]; }
 };
 
