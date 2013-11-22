@@ -10,12 +10,12 @@ struct DMP {
   DMP(arr &y_ref_, uint nBase_, double dt_);
   ~DMP();
 
-  void trainDMP(double T_=-1., const arr& goal_=NoArr);
+  void trainDMP();
   void iterate();
   void plotDMP();
   void printDMP();
   void reset();
-
+  void changeGoal(const arr &goal_);
 
   double tau; // Time constant, T = 0.5/tau
   double T; // Motion time [s]
@@ -48,6 +48,7 @@ struct DMP {
   // bookkeeping
   arr y_bk;
   arr yd_bk;
+  arr x_bk;
 
 
 };
