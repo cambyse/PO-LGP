@@ -381,6 +381,13 @@ void MotionProblem::costReport(bool gnuplt) {
 
 }
 
+arr MotionProblem::getInitialization(){
+  arr x;
+  x.resize(T+1, dim_x());
+  for(uint i=0;i<x.d0;i++) x[i]() = x0;
+  return x;
+}
+
 //===========================================================================
 
 arr MotionProblemFunction::get_prefix() {
@@ -485,4 +492,33 @@ void MotionProblem_EndPoseFunction::fv(arr& phi, arr& J, const arr& x){
   }
 
   if(&J) CHECK(J.d0==phi.N,"");
+}
+
+//===========================================================================
+
+void sineProfile(arr& q, const arr& q0, const arr& qT,uint T){
+  q.resize(T+1,q0.N);
+  for(uint t=0; t<=T; t++) q[t] = q0 + .5 * (1.-cos(MT_PI*t/T)) * (qT-q0);
+}
+
+arr reverseTrajectory(const arr& q){
+  uint T=q.d0-1;
+  arr r(T+1, q.d1);
+  for(uint t=0; t<=T; t++) r[T-t] = q[t];
+  return r;
+}
+
+void getVel(arr& v, const arr& q, double tau){
+  uint T=q.d0-1;
+  v.resizeAs(q);
+  for(uint t=0; t<T; t++)  v[t] = (q[t+1] - q[t])/tau;
+  v[T] = 0.;
+}
+
+void getAcc(arr& a, const arr& q, double tau){
+  uint T=q.d0-1;
+  a.resizeAs(q);
+  a[0] = 0.;
+  for(uint t=1; t<T; t++)  a[t] = (q[t+1] + q[t-1] - 2.*q[t])/(tau*tau);
+  a[T] = 0.;
 }

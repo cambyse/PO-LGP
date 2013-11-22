@@ -6,13 +6,6 @@
 #include <Gui/opengl.h>
 
 //===========================================================================
-
-void sineProfile(arr& q, const arr& q0, const arr& qT,uint T){
-  q.resize(T+1,q0.N);
-  for(uint t=0; t<=T; t++) q[t] = q0 + .5 * (1.-cos(MT_PI*t/T)) * (qT-q0);
-}
-
-//===========================================================================
 //
 // the rest is on the three base routines
 //

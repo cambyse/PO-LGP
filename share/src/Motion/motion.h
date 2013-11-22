@@ -72,23 +72,26 @@ struct MotionProblem {
   ors::Graph *ors;
   SwiftInterface *swift;
   
-  //task cost descriptions
+  //******* the following three sections are parameters that define the problem
+
+  //-- task cost descriptions
   enum TaskCostInterpolationType { constant, finalOnly, final_restConst, early_restConst, final_restLinInterpolated };
   MT::Array<TaskCost*> taskCosts;
   
-  //transition cost descriptions
+  //-- transition cost descriptions
   enum TransitionType { kinematic=0, pseudoDynamic=1, realDynamic=2 };
   TransitionType transitionType;
   arr H_rate_diag; ///< cost rate
   uint T; ///< number of time steps
   double tau; ///< duration of single step
   
-  //start constraints
+  //-- start constraints
   arr x0, v0; ///< fixed start state and velocity TODO: delete v0?
   arr prefix; ///< a set of states PRECEEDING x[0] (having 'negative' time indices) and which influence the control cost on x[0]. NOTE: x[0] is subject to optimization. DEFAULT: constantly equals x0
   arr x_current, v_current; ///< memory for which state was set (which state ors is in) TODO: necessary?
   
-  //evaluation outcomes
+
+  //-- return values of an optimizer
   arr costMatrix;
   
   MotionProblem(ors::Graph *_ors=NULL, SwiftInterface *_swift=NULL);
@@ -112,6 +115,7 @@ struct MotionProblem {
                                 const arr& v_finalTarget, double v_finalPrec, const arr& v_midTarget=NoArr, double v_midPrec=-1.);
                                 
   //-- cost infos
+  uint dim_x() { return x0.N; }
   uint dim_phi(uint t);
   uint dim_g(uint t);
   uint dim_psi();
@@ -120,6 +124,9 @@ struct MotionProblem {
   
   void setState(const arr& x, const arr& v);
   void activateAllTaskCosts(bool activate=true);
+
+  //-- helpers
+  arr getInitialization();
 };
 
 
@@ -139,7 +146,7 @@ struct MotionProblemFunction:KOrderMarkovFunction {
   //functions to get the parameters $T$, $k$ and $n$ of the $k$-order Markov Process
   virtual uint get_T() { return MP.T; }
   virtual uint get_k() { if(MP.transitionType==MotionProblem::kinematic) return 1;  return 2; }
-  virtual uint dim_x() { return MP.x0.N; }
+  virtual uint dim_x() { return MP.dim_x(); }
   virtual uint dim_phi(uint t){ return dim_x() + MP.dim_phi(t); }
   virtual uint dim_g(uint t){ return MP.dim_g(t); }
   virtual arr get_prefix(); //the history states x(-k),..,x(-1)
@@ -160,5 +167,17 @@ struct MotionProblem_EndPoseFunction:VectorFunction {
   //VectorFunction definitions
   virtual void fv(arr& phi, arr& J, const arr& x);
 };
+
+
+//===========================================================================
+//
+// basic helpers
+//
+
+void sineProfile(arr& q, const arr& q0, const arr& qT,uint T);
+arr reverseTrajectory(const arr& q);
+void getVel(arr& v, const arr& q, double tau);
+void getAcc(arr& a, const arr& q, double tau);
+
 
 #endif
