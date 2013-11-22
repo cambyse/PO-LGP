@@ -384,9 +384,12 @@ void MotionProblem::costReport(bool gnuplt) {
 //===========================================================================
 
 arr MotionProblemFunction::get_prefix() {
-  arr x_pre(get_k(), dim_x());
-  for(uint i=0; i<x_pre.d0; i++) x_pre[i]() = MP.x0;
-  return x_pre;
+  if(!MP.prefix.N){
+    MP.prefix.resize(get_k(), dim_x());
+    for(uint i=0; i<MP.prefix.d0; i++) MP.prefix[i]() = MP.x0;
+  }
+  CHECK(MP.prefix.d0==get_k() && MP.prefix.d1==dim_x(), "the prefix you set has wrong dimension");
+  return MP.prefix;
 }
 
 void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {

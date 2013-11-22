@@ -536,6 +536,14 @@ void Quaternion::setRadZ(double angle) {
 }
 
 Quaternion& Quaternion::setRpy(double r, double p, double y) {
+#if 1
+  Quaternion q;
+  setZero();
+  q.setRadZ(y); *this = *this * q;
+  q.setRadY(p); *this = *this * q;
+  q.setRadX(r); *this = *this * q;
+  return *this;
+#else
   double cr=::cos(.5*r), sr=::sin(.5*r);
   double cp=::cos(.5*p), sp=::sin(.5*p);
   double cy=::cos(.5*y), sy=::sin(.5*y);
@@ -543,6 +551,8 @@ Quaternion& Quaternion::setRpy(double r, double p, double y) {
   x = sr*cp*cy - cr*sp*sy;
   y = cr*sp*cy + sr*cp*sy;
   z = cr*cp*sy - sr*sp*cy;
+#endif
+  CHECK(isNormalized(),"bad luck");
   return *this;
 }
 
