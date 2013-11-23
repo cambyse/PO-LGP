@@ -21,11 +21,21 @@
 
 #include "motion.h"
 
-/** Proxy task variable */
 struct CollisionConstraint:public TaskMap {
   double margin;
 
   CollisionConstraint():margin(.1){ constraint=true; }
+
+  virtual void phi(arr& y, arr& J, const ors::Graph& G);
+  virtual uint dim_phi(const ors::Graph& G){ return 1; }
+};
+
+struct PlaneConstraint:public TaskMap {
+  int i;       ///< which shapes does it refer to?
+  arr planeParams;  ///< parameters of the variable (e.g., liner coefficients, limits, etc)
+
+  PlaneConstraint(const ors::Graph& G, const char* iShapeName, const arr& _planeParams):
+    i(G.getShapeByName(iShapeName)->index), planeParams(_planeParams){ constraint=true; }
 
   virtual void phi(arr& y, arr& J, const ors::Graph& G);
   virtual uint dim_phi(const ors::Graph& G){ return 1; }

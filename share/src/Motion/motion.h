@@ -93,8 +93,10 @@ struct MotionProblem {
 
   //-- return values of an optimizer
   arr costMatrix;
-  
-  MotionProblem(ors::Graph *_ors=NULL, SwiftInterface *_swift=NULL);
+  arr constraintMatrix;
+  arr dualMatrix;
+
+  MotionProblem(ors::Graph *_ors=NULL, SwiftInterface *_swift=NULL, bool useSwift=true);
   
   void loadTransitionParameters(); ///< loads transition parameters from cfgFile
   
@@ -137,9 +139,8 @@ struct MotionProblem {
 
 struct MotionProblemFunction:KOrderMarkovFunction {
   MotionProblem& MP;
-  bool makeConstrainedProblem;
 
-  MotionProblemFunction(MotionProblem& _P):MP(_P), makeConstrainedProblem(false) {};
+  MotionProblemFunction(MotionProblem& _P):MP(_P) {};
   
   //KOrderMarkovFunction definitions
   virtual void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);
@@ -160,9 +161,8 @@ struct MotionProblemFunction:KOrderMarkovFunction {
 
 struct MotionProblem_EndPoseFunction:VectorFunction {
   MotionProblem& MP;
-  bool makeConstrainedProblem; //TODO: not used yet
 
-  MotionProblem_EndPoseFunction(MotionProblem& _P):MP(_P), makeConstrainedProblem(false) {};
+  MotionProblem_EndPoseFunction(MotionProblem& _P):MP(_P) {};
 
   //VectorFunction definitions
   virtual void fv(arr& phi, arr& J, const arr& x);

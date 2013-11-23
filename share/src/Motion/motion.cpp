@@ -21,9 +21,11 @@
 #include "taskMap_default.h"
 #include <Gui/opengl.h>
 
-MotionProblem::MotionProblem(ors::Graph *_ors, SwiftInterface *_swift) {
-  if(_ors)   ors   = _ors;   else { ors=new ors::Graph;        ors  ->init(MT::getParameter<MT::String>("orsFile")); } // ormakeLinkTree(); }
-  if(_swift) swift = _swift; else { swift=new SwiftInterface;  swift->init(*ors, 2.*MT::getParameter<double>("swiftCutoff", 0.11)); }
+MotionProblem::MotionProblem(ors::Graph *_ors, SwiftInterface *_swift, bool useSwift) {
+  if(_ors)   ors   = _ors;   else { ors=new ors::Graph;        ors  ->init(MT::getParameter<MT::String>("orsFile")); } // orLinkTree(); }
+  if(useSwift){
+    if(_swift) swift = _swift; else { swift=new SwiftInterface;  swift->init(*ors, 2.*MT::getParameter<double>("swiftCutoff", 0.11)); }
+  }else swift=NULL;
   ors->getJointState(x0, v0);
   x_current = x0;
   v_current = v0;
@@ -175,7 +177,7 @@ void MotionProblem::setState(const arr& q, const arr& v) {
 //  if(q_external.N)
 //    ors->setExternalState(q_external[0]);
   ors->calcBodyFramesFromJoints();
-  swift->computeProxies(*ors, false);
+  if(swift) swift->computeProxies(*ors, false);
   if(transitionType == realDynamic) {
     NIY;
     //requires computation of the real dynamics, i.e. of M and F
@@ -335,13 +337,19 @@ void MotionProblem::costReport(bool gnuplt) {
 
   //-- write a nice gnuplot file
   ofstream fil("z.costReport");
-  fil <<"trans ";
+  fil <<"trans[" <<dim_psi() <<"] ";
   for(auto c:taskCosts){
     uint d=c->map.dim_phi(*ors);
     if(c->y_target.N)
       fil <<c->name <<'[' <<d <<"] ";
     if(transitionType!=kinematic && c->v_target.N)
       fil <<c->name <<"_vel[" <<d <<"] ";
+    if(c->map.constraint){
+#ifdef STICK
+      fil <<c->name <<"_stick[" <<d <<"] ";
+#endif
+      fil <<c->name <<"_constr[" <<d <<"] ";
+    }
   }
   fil <<endl;
   for(uint t=0;t<costMatrix.d0;t++){
@@ -360,6 +368,16 @@ void MotionProblem::costReport(bool gnuplt) {
         fil <<sqrt(tc) <<' ';
         m += d;
       }
+      if(c->map.constraint){
+  #ifdef STICK
+        double tc=sumOfSqr(costMatrix.sub(t,t,m,m+d-1));
+        fil <<sqrt(tc) <<' ';
+        m += d;
+  #endif
+        double g=sum(costMatrix.sub(t,t,m,m+d-1));
+        fil <<g <<' ';
+        m += d;
+      }
     }
     fil <<endl;
   }
@@ -373,6 +391,10 @@ void MotionProblem::costReport(bool gnuplt) {
   for(auto c:taskCosts){
     if(c->y_target.N){ i++; fil2 <<"  ,'' u 0:"<<i<<" w l \\" <<endl; }
     if(transitionType!=kinematic && c->v_target.N){ i++; fil2 <<"  ,'' u 0:"<<i<<" w l \\" <<endl; }
+#ifdef STICK
+    if(c->map.constraint){ i++; fil2 <<"  ,'' u 0:"<<i<<" w l \\" <<endl; }
+#endif
+    if(c->map.constraint){ i++; fil2 <<"  ,'' u 0:"<<i<<" w l \\" <<endl; }
   }
   fil2 <<endl;
   fil2.close();
