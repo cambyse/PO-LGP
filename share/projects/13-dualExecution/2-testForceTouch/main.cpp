@@ -33,6 +33,7 @@ arr getSimpleTrajectory(ors::Graph& G){
     P.costReport();
 //    displayTrajectory(x, 1, G, gl,"planned trajectory");
     UnConstrainedP.augmentedLagrangian_LambdaUpdate(x, .9);
+    P.dualMatrix = UnConstrainedP.lambda;
   }
   P.costReport();
   return x;

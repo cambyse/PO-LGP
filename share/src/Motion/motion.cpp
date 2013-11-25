@@ -78,10 +78,8 @@ void MotionProblem::setInterpolatingCosts(
   if(&y_midTarget){   if(y_midTarget.N==1)   midTarget = y_midTarget(0);   else midTarget=y_midTarget; }
   switch(inType) {
     case constant: {
-      c->y_target.resize(T+1, m);
-      for(uint t=0; t<=T; t++) c->y_target[t]() = finTarget;
-      c->y_prec.resize(T+1);
-      c->y_prec = y_finalPrec;
+      c->y_target = replicate(finTarget, T+1);
+      c->y_prec.resize(T+1) = y_finalPrec;
     } break;
     case finalOnly: {
       c->y_target.resize(T+1, m).setZero();
@@ -90,11 +88,9 @@ void MotionProblem::setInterpolatingCosts(
       c->y_prec(T) = y_finalPrec;
     } break;
     case final_restConst: {
-      c->y_target.resize(T+1, m).setZero();
+      c->y_target = replicate(midTarget, T+1);
       c->y_target[T]() = finTarget;
-      for(uint t=0; t<T; t++) c->y_target[t]() = midTarget;
-      c->y_prec.resize(T+1).setZero();
-      c->y_prec = y_midPrec<=0. ? 0. : y_midPrec;
+      c->y_prec.resize(T+1) = y_midPrec<=0. ? 0. : y_midPrec;
       c->y_prec(T) = y_finalPrec;
     } break;
     case final_restLinInterpolated: {
@@ -103,8 +99,7 @@ void MotionProblem::setInterpolatingCosts(
         double a = (double)t/T;
         c->y_target[t]() = ((double)1.-a)*y0 + a*finTarget;
       }
-      c->y_prec.resize(T+1).setZero();
-      c->y_prec = y_midPrec<0. ? y_finalPrec : y_midPrec;
+      c->y_prec.resize(T+1) = y_midPrec<0. ? y_finalPrec : y_midPrec;
       c->y_prec(T) = y_finalPrec;
     } break;
   case early_restConst: {
@@ -135,25 +130,19 @@ void MotionProblem::setInterpolatingVelCosts(
   if(&v_midTarget){   if(v_midTarget.N==1)   midTarget = v_midTarget(0); else midTarget=v_midTarget; }
   switch(inType) {
     case constant: {
-      c->v_target.resize(T+1, m);
-      for(uint t=0; t<=T; t++) c->v_target[t]() = finTarget;
-      c->v_prec.resize(T+1);
-      c->v_prec = v_finalPrec;
+      c->v_target = replicate(finTarget, T+1);
+      c->v_prec.resize(T+1) = v_finalPrec;
     } break;
     case finalOnly: {
-      c->v_target.resize(T+1, m);
-      c->v_target.setZero();
+      c->v_target.resize(T+1, m).setZero();
       c->v_target[T]() = finTarget;
-      c->v_prec.resize(T+1);
-      c->v_prec.setZero();
+      c->v_prec.resize(T+1).setZero();
       c->v_prec(T) = v_finalPrec;
     } break;
     case final_restConst: {
-      c->v_target.resize(T+1, m);
+      c->v_target = replicate(midTarget, T+1);
       c->v_target[T]() = finTarget;
-      for(uint t=0; t<T; t++) c->v_target[t]() = midTarget;
-      c->v_prec.resize(T+1);
-      c->v_prec = v_midPrec<=0. ? 0. : v_midPrec;
+      c->v_prec.resize(T+1) = v_midPrec<=0. ? 0. : v_midPrec;
       c->v_prec(T) = v_finalPrec;
     } break;
     case final_restLinInterpolated: {
@@ -335,6 +324,8 @@ void MotionProblem::costReport(bool gnuplt) {
   cout <<"\t total task+trans  = " <<taskC+transC <<endl;
   cout <<"\t total constraints = " <<constraintViolations <<endl;
 
+  if(dualMatrix.N) dualMatrix.reshape(T+1, dualMatrix.N/(T+1));
+
   //-- write a nice gnuplot file
   ofstream fil("z.costReport");
   fil <<"trans[" <<dim_psi() <<"] ";
@@ -349,6 +340,7 @@ void MotionProblem::costReport(bool gnuplt) {
       fil <<c->name <<"_stick[" <<d <<"] ";
 #endif
       fil <<c->name <<"_constr[" <<d <<"] ";
+      if(dualMatrix.N) fil <<c->name <<"_dual[" <<d <<"] ";
     }
   }
   fil <<endl;
@@ -356,27 +348,28 @@ void MotionProblem::costReport(bool gnuplt) {
     double tc=sumOfSqr(costMatrix.sub(t,t,0,dim_psi()-1));
     fil <<sqrt(tc) <<' ';
     m=dim_psi();
+    uint m_dual=0;
     for(auto c:taskCosts){
       uint d=c->map.dim_phi(*ors);
       if(c->y_target.N) {
-        double tc=sumOfSqr(costMatrix.sub(t,t,m,m+d-1));
-        fil <<sqrt(tc) <<' ';
+        fil <<sqrt(sumOfSqr(costMatrix.sub(t,t,m,m+d-1))) <<' ';
         m += d;
       }
       if(transitionType!=kinematic && c->v_target.N) {
-        double tc=sumOfSqr(costMatrix.sub(t,t,m,m+d-1));
-        fil <<sqrt(tc) <<' ';
+        fil <<sqrt(sumOfSqr(costMatrix.sub(t,t,m,m+d-1))) <<' ';
         m += d;
       }
       if(c->map.constraint){
   #ifdef STICK
-        double tc=sumOfSqr(costMatrix.sub(t,t,m,m+d-1));
-        fil <<sqrt(tc) <<' ';
+        fil <<sqrt(sumOfSqr(costMatrix.sub(t,t,m,m+d-1))) <<' ';
         m += d;
   #endif
-        double g=sum(costMatrix.sub(t,t,m,m+d-1));
-        fil <<g <<' ';
+        fil <<sum(costMatrix.sub(t,t,m,m+d-1)) <<' ';
         m += d;
+        if(dualMatrix.N){
+          fil <<sum(dualMatrix.sub(t,t,m_dual,m_dual+d-1));
+          m_dual += d;
+        }
       }
     }
     fil <<endl;
@@ -395,6 +388,7 @@ void MotionProblem::costReport(bool gnuplt) {
     if(c->map.constraint){ i++; fil2 <<"  ,'' u 0:"<<i<<" w l \\" <<endl; }
 #endif
     if(c->map.constraint){ i++; fil2 <<"  ,'' u 0:"<<i<<" w l \\" <<endl; }
+    if(c->map.constraint && dualMatrix.N){ i++; fil2 <<"  ,'' u 0:"<<i<<" w l \\" <<endl; }
   }
   fil2 <<endl;
   fil2.close();

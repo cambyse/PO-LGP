@@ -23,7 +23,6 @@
 #include <Optim/optimization.h>
 
 /* Notes
-  -- pack everything into the CostMatrix! Its Jacobian should be T+1 x |phi| x 3*n
   -- transition models: kinematic, non-holonomic (vel = B u), pseudo dynamic, non-hol dynamic (acc = B u), real dynamic
   -- transition costs: vel^2 *tau, acc^2 * tau, u^2 * tau
   */
@@ -35,7 +34,7 @@
 //
 
 struct TaskMap {
-  bool constraint;
+  bool constraint;  ///< whether this is a hard constraint (implementing a constraint function g)
   virtual void phi(arr& y, arr& J, const ors::Graph& G) = 0;
   virtual uint dim_phi(const ors::Graph& G) = 0; //the dimensionality of $y$
 
@@ -55,7 +54,7 @@ struct TaskCost {
   arr y_target, y_prec;  ///< target & precision over a whole trajectory
   arr v_target, v_prec;  ///< velocity target & precision over a whole trajectory
 
-  double y_threshold, v_threshold; ///< threshold for feasibility checks
+  double y_threshold, v_threshold; ///< threshold for feasibility checks (e.g. in RRTs)
   
   TaskCost(TaskMap* m):map(*m), active(true) {}
 };
@@ -86,14 +85,13 @@ struct MotionProblem {
   double tau; ///< duration of single step
   
   //-- start constraints
-  arr x0, v0; ///< fixed start state and velocity TODO: delete v0?
+  arr x0, v0; ///< fixed start state and velocity
   arr prefix; ///< a set of states PRECEEDING x[0] (having 'negative' time indices) and which influence the control cost on x[0]. NOTE: x[0] is subject to optimization. DEFAULT: constantly equals x0
-  arr x_current, v_current; ///< memory for which state was set (which state ors is in) TODO: necessary?
+  arr x_current, v_current; ///< memory for which state was set (which state ors is in)
   
 
   //-- return values of an optimizer
   arr costMatrix;
-  arr constraintMatrix;
   arr dualMatrix;
 
   MotionProblem(ors::Graph *_ors=NULL, SwiftInterface *_swift=NULL, bool useSwift=true);
@@ -103,11 +101,11 @@ struct MotionProblem {
   //-- methods for defining the task
   void setx0(const arr&);
   void setx0v0(const arr&, const arr&);
-  
+
   //adding task spaces
   TaskCost* addTaskMap(const char* name, TaskMap *map);
 
-  //setting costs in a task space
+  //setting costs in a task space TODO: move to be member of TaskCost
   void setInterpolatingCosts(TaskCost *c,
                              TaskCostInterpolationType inType,
                              const arr& y_finalTarget, double y_finalPrec, const arr& y_midTarget=NoArr, double y_midPrec=-1., double earlyFraction=-1.);
@@ -122,7 +120,7 @@ struct MotionProblem {
   uint dim_g(uint t);
   uint dim_psi();
   bool getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t); ///< the general (`big') task vector and its Jacobian
-  void costReport(bool gnuplt=true);
+  void costReport(bool gnuplt=true); ///< also computes the costMatrix
   
   void setState(const arr& x, const arr& v);
   void activateAllTaskCosts(bool activate=true);
