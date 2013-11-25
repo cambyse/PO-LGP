@@ -273,11 +273,11 @@ void KeyValueGraph::read(std::istream& is) {
       MT::String str;
       str.read(is,""," \n\r\t",true);
       if(str=="%include"){
-	is >>str;
-	std::ifstream is2;
-	MT::open(is2,str);
-	read(is2);
-	is2.close();
+        is >>str;
+        std::ifstream is2;
+        MT::open(is2, str);
+        read(is2);
+        is2.close();
       }else HALT("don't know special command " <<str);
     }else{
       if(!is.good() || c=='}') { is.clear(); break; }

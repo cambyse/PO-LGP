@@ -1,0 +1,6 @@
+BASE = ../../..
+
+DEPEND = Motion Core Ors Gui Optim devTools
+LIBS += -lgtest
+
+include $(BASE)/make-generic
