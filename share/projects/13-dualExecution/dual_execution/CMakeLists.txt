@@ -30,7 +30,7 @@ set(CMAKE_CXX_FLAGS "-std=c++0x")
 if (DEFINED ENV{MLR_PATH}) 
   set(MLR_PATH $ENV{MLR_PATH})
 else()
-  set(MLR_PATH ~/git/mlr)
+  set(MLR_PATH /home/mlr_user/mlr)
   message("WARNING: $MLR_PATH is not set. I assume ${MLR_PATH} to be your path.")
 endif()
 

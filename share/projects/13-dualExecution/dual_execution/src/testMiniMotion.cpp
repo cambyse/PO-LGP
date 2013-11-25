@@ -152,6 +152,8 @@ int main(int argc, char** argv){
 
 
   for(uint i=0;i<7;i++) desired_joint_positions[i] = 0.0;
+  desired_joint_positions[1] = -1.0;
+  desired_joint_positions[3] = 1.5;
   joint_client.moveTo(desired_joint_positions, 10.);
 
   ROS_INFO("moving to x[0]");
