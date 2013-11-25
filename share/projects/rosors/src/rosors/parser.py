@@ -176,10 +176,6 @@ def msg_to_ors_body(msg, graph=None):
     ors_body = orspy.Body()
 
     ors_body.index = msg.index
-    if graph is not None:
-        #TODO: resize!
-        graph.bodies[ors_body.index] = ors_body
-
     ors_body.name = msg.name
     ors_body.mass = msg.mass
     ors_body.type = msg.body_type
@@ -195,7 +191,55 @@ def msg_to_ors_body(msg, graph=None):
         shapes.append(msg_to_ors_shape(shape))
     ors_body.shapes = shapes
 
+    for s in ors_body.shapes:
+        print s.index
+
     return ors_body
+
+
+def msg_to_ors_joint(msg):
+    ors_joint = orspy.Joint()
+
+    ors_joint.index = msg.index
+    ors_joint.qIndex = msg.qIndex
+    ors_joint.ifrom = msg.index_from
+    ors_joint.ito = msg.index_to
+
+    ors_joint.agent = msg.agent
+    ors_joint.name = msg.name
+
+    ors_joint.type = msg.joint_type
+
+    ors_joint.A = ros_to_ors_transform(msg.A, msg.Avel)
+    ors_joint.Q = ros_to_ors_transform(msg.Q, msg.Qvel)
+    ors_joint.B = ros_to_ors_transform(msg.B, msg.Bvel)
+    ors_joint.X = ros_to_ors_transform(msg.X, msg.Xvel)
+
+    ors_joint.axis = ros_to_ors_vector(msg.axis)
+
+    return ors_joint
+
+
+def ors_joint_to_msg(ors_joint):
+    joint_msg = ors_msgs.msg.Joint()
+
+    joint_msg.index = ors_joint.index
+    joint_msg.qIndex = ors_joint.qIndex
+    joint_msg.index_from = ors_joint.ifrom
+    joint_msg.index_to = ors_joint.ito
+
+    joint_msg.agent = ors_joint.agent
+    joint_msg.name = ors_joint.name
+    joint_msg.joint_type = ors_joint.type
+
+    joint_msg.A, joint_msg.Avel = ors_to_ros_transform(ors_joint.A)
+    joint_msg.Q, joint_msg.Qvel = ors_to_ros_transform(ors_joint.Q)
+    joint_msg.B, joint_msg.Bvel = ors_to_ros_transform(ors_joint.B)
+    joint_msg.X, joint_msg.Xvel = ors_to_ros_transform(ors_joint.X)
+
+    joint_msg.axis = ors_to_ros_vector(ors_joint.axis)
+
+    return joint_msg
 
 
 def msg_to_ors_graph(msg):

@@ -3,7 +3,7 @@ import unittest
 import roslib
 roslib.load_manifest("rosors")
 
-from orspy import Shape, sphereST, meshST, Graph, Body
+from orspy import Shape, sphereST, meshST, Graph, Body, Joint
 from corepy import Vector, Quaternion, Transformation
 from guipy import Mesh
 
@@ -98,10 +98,46 @@ def assert_body_equal(ros, ors):
     assert ros.body_type == ors.type
 
     assert_transform_equal(ros.transform, ros.twist, ors.X)
+    assert_vector_equal(ros.com, ors.com)
+    assert_vector_equal(ros.force, ors.force)
+    assert_vector_equal(ros.torque, ors.torque)
 
-    for i, shape in enumerate(ros.shapes):
-        assert_shape_equal(shape, ors.shapes[i])
+    for i, _ in enumerate(ros.shapes):
+        assert_shape_equal(ros.shapes[i], ors.shapes[i])
 
+
+def assert_ors_body_equal(ors1, ors2):
+    assert ors1.index == ors2.index
+    assert ors1.name == ors2.name
+    assert ors1.mass == ors2.mass
+    assert ors1.type == ors2.type
+
+    assert ors1.X == ors2.X
+    assert ors1.com == ors2.com
+    assert ors1.force == ors2.force
+    assert ors1.torque == ors2.torque
+
+    for i, _ in enumerate(ors1.shapes):
+        assert_ors_shape_equal(ors1.shapes[i], ors2.shapes[i])
+
+
+def assert_joint_equal(ros, ors):
+    assert type(ros) == ors_msgs.msg.Joint
+    assert type(ors) == Joint
+
+    assert ros.index == ors.index
+    assert ros.qIndex == ors.qIndex
+    assert ros.index_from == ors.ifrom
+    assert ros.index_to == ors.ito
+
+    assert ros.agent == ors.agent
+    assert ros.name == ors.name
+    assert ros.joint_type == ors.type
+
+    assert_transform_equal(ros.A, ros.Avel, ors.A)
+    assert_transform_equal(ros.Q, ros.Qvel, ors.Q)
+    assert_transform_equal(ros.B, ros.Bvel, ors.B)
+    assert_transform_equal(ros.X, ros.Xvel, ors.X)
 
 class Test_Vector(unittest.TestCase):
     def test_ors_to_ros(self):
@@ -428,7 +464,7 @@ class Test_MeshShape(unittest.TestCase):
 
         ros_s1 = parser.ors_shape_to_msg(ors_s1)
 
-        assert copy_shape == ors_s1
+        assert_ors_shape_equal(copy_shape, ors_s1)
         assert_shape_equal(ros_s1, ors_s1)
 
     def test_ors_ros_ors(self):
@@ -451,7 +487,36 @@ class Test_Body(unittest.TestCase):
 
         copy_body = ors_b1
 
-        ors_msg = parser.ors_body_to_msg(ors_b1)
+        body_msg = parser.ors_body_to_msg(ors_b1)
 
         assert ors_b1 == copy_body
-        assert_body_equal(ors_msg, ors_b1)
+        assert_body_equal(body_msg, ors_b1)
+
+    def test_ors_ros_ors(self):
+        g = Graph('handle.ors')
+        ors_b1 = g.bodies[0]
+
+        copy_body = ors_b1
+
+        body_msg = parser.ors_body_to_msg(ors_b1)
+        ors_b2 = parser.msg_to_ors_body(body_msg)
+        for s in ors_b2.shapes:
+            print s.index
+
+        assert_ors_body_equal(ors_b1, copy_body)
+        assert_body_equal(body_msg, ors_b1)
+        assert_body_equal(body_msg, ors_b2)
+        assert_ors_body_equal(ors_b1, ors_b2)
+
+
+class Test_Joint(unittest.TestCase):
+    def test_ors_to_ros(self):
+        g = Graph('handle.ors')
+        ors_j1 = g.joints[0]
+
+        copy_joint = ors_j1
+
+        joint_msg = parser.ors_joint_to_msg(ors_j1)
+
+        assert ors_j1 == copy_joint
+        assert_joint_equal(joint_msg, ors_j1)
