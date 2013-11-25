@@ -139,6 +139,37 @@ def assert_joint_equal(ros, ors):
     assert_transform_equal(ros.B, ros.Bvel, ors.B)
     assert_transform_equal(ros.X, ros.Xvel, ors.X)
 
+
+def assert_ors_joint_equal(ors1, ors2):
+    assert ors1.index == ors2.index
+    assert ors1.qIndex == ors2.qIndex
+    assert ors1.ifrom == ors2.ifrom
+    assert ors1.ito == ors2.ito
+
+    assert ors1.agent == ors2.agent
+    assert ors1.name == ors2.name
+    assert ors1.type == ors2.type
+
+    assert ors1.A == ors2.A
+    assert ors1.Q == ors2.Q
+    assert ors1.B == ors2.B
+    assert ors1.X == ors2.X
+
+
+def assert_graph_equal(ros, ors):
+    for i, _ in enumerate(ros.bodies):
+        assert_body_equal(ros.bodies[i], ors.bodies[i])
+
+    for i, _ in enumerate(ros.shapes):
+        assert_shape_equal(ros.shapes[i], ors.shapes[i])
+
+    for i, _ in enumerate(ros.joints):
+        assert_joint_equal(ros.joints[i], ors.joints[i])
+
+    assert ros.q_dim == ors.q_dim
+    assert ros.isLinkTree == ors.isLinkTree
+
+
 class Test_Vector(unittest.TestCase):
     def test_ors_to_ros(self):
         ors_v1 = Vector(1, 2, 3)
@@ -500,8 +531,6 @@ class Test_Body(unittest.TestCase):
 
         body_msg = parser.ors_body_to_msg(ors_b1)
         ors_b2 = parser.msg_to_ors_body(body_msg)
-        for s in ors_b2.shapes:
-            print s.index
 
         assert_ors_body_equal(ors_b1, copy_body)
         assert_body_equal(body_msg, ors_b1)
@@ -520,3 +549,12 @@ class Test_Joint(unittest.TestCase):
 
         assert ors_j1 == copy_joint
         assert_joint_equal(joint_msg, ors_j1)
+
+
+class Test_Graph(unittest.TestCase):
+    def test_ors_to_ros(self):
+        g = Graph("handle.ors")
+
+        msg = parser.ors_graph_to_msg(g)
+
+        assert_graph_equal(msg, g)

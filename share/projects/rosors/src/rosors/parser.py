@@ -217,6 +217,9 @@ def msg_to_ors_joint(msg):
 
     ors_joint.axis = ros_to_ors_vector(msg.axis)
 
+    ors_joint.to = None
+    ors_joint._from = None
+
     return ors_joint
 
 
@@ -244,5 +247,43 @@ def ors_joint_to_msg(ors_joint):
 
 def msg_to_ors_graph(msg):
     graph = orspy.Graph()
+
+    bodies = []
     for body in msg.bodies:
-        graph.bodies.append(msg_to_ors_body(body, graph))
+        bodies.append(msg_to_ors_body(body))
+    graph.bodies = bodies
+
+    shapes = []
+    for shape in msg.shapes:
+        shapes.append(msg_to_ors_shape(shape))
+    graph.shapes = shapes
+
+    joints = []
+    for joint in msg.joints:
+        joints.append(msg_to_ors_joint(joint))
+        joints[-1]._from = graph.bodies[joints[-1].ifrom]
+        joints[-1].to = graph.bodies[joints[-1].ito]
+    graph.joints = joints
+
+    graph.q_dim = msg.q_dim
+    graph.isLinkTree = msg.isLinkTree
+
+    return graph
+
+
+def ors_graph_to_msg(graph):
+    msg = ors_msgs.msg.Graph()
+
+    for body in graph.bodies:
+        msg.bodies.append(ors_body_to_msg(body))
+
+    for shape in graph.shapes:
+        msg.shapes.append(ors_shape_to_msg(shape))
+
+    for joint in graph.joints:
+        msg.joints.append(ors_joint_to_msg(joint))
+
+    msg.q_dim = graph.q_dim
+    msg.isLinkTree = graph.isLinkTree
+
+    return msg
