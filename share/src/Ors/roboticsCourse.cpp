@@ -21,6 +21,7 @@
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
+#include <Algo/algos.h>
 
 void drawEnv(void*){ glStandardLight(NULL); glDrawFloor(10., .9, .9, .9); }
 void drawBase(void*){ glDrawAxes(1.); }
@@ -209,19 +210,39 @@ double Simulator::getEnergy(){
 
 
 void Simulator::stepDynamic(const arr& u_control, double tau){
+
+  struct DiffEqn:VectorFunction{
+    Simulator &S;
+    const arr& u;
+    DiffEqn(Simulator& _S, const arr& _u):S(_S),u(_u){}
+    void fv(arr& y, arr& J, const arr& x){
+      S.s->G.setJointState(x[0], x[1]);
+      S.s->G.calcBodyFramesFromJoints();
+//      S.setJointAnglesAndVels(x[0], x[1]);
+      arr M,Minv,F;
+      S.getDynamics(M, F);
+      inverse_SymPosDef(Minv,M);
+      y = Minv * (u - F);
+    }
+  } eqn(*this, u_control);
+
+#if 0
   arr M,Minv,F;
-
   getDynamics(M, F);
+  inverse_SymPosDef(Minv,M);
 
-  inverse(Minv,M);
+  //noisy Euler integration (Runge-Kutte4 would be much more precise...)
   s->qddot = Minv * (u_control - F);
-    
   if(s->dynamicNoise) rndGauss(s->qddot, s->dynamicNoise, true);
-
-  //Euler integration (Runge-Kutte4 would be much more precise...)
   s->q    += tau * s->qdot;
   s->qdot += tau * s->qddot;
-  setJointAnglesAndVels(s->q, s->qdot);
+  arr x1=cat(s->q, s->qdot).reshape(2,s->q.N);
+#else
+  arr x1;
+  rk4_2ndOrder(x1, cat(s->q, s->qdot).reshape(2,s->q.N), eqn, tau);
+#endif
+
+  setJointAnglesAndVels(x1[0], x1[1]);
 }
   
 void Simulator::setDynamicSimulationNoise(double noise){

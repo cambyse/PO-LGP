@@ -284,28 +284,15 @@ void TEST(FollowRedundantSequence){
 // dynamics test
 //
 
-namespace T2{
-  bool friction;
-  arr tau;
-  //static arr conswit;
-  //bool hasContact=false;
-  bool addContactsToDynamics=false;
-  ors::Graph *G;
-}
+//namespace T2{
+//  bool friction;
+//  arr tau;
+//  //static arr conswit;
+//  //bool hasContact=false;
+//  bool addContactsToDynamics=false;
+//  ors::Graph *G;
+//}
 
-void ddf_joints(arr& xdd,const arr& x,const arr& v){
-  T2::G->setJointState(x,v);
-  T2::G->calcBodyFramesFromJoints();
-  if(!T2::tau.N){ T2::tau.resize(x.N); T2::tau=0.; }
-  if(T2::friction) T2::tau = -.01 * v;
-  xdd.resize(x.N);
-  T2::G->clearForces();
-  T2::G->gravityToForces();
-  if(T2::addContactsToDynamics){
-    T2::G->contactsToForces(100.,10.);
-  }
-  T2::G->dynamics(xdd,v,T2::tau);
-}
 
 //---------- test standard dynamic control
 void TEST(Dynamics){
@@ -314,7 +301,26 @@ void TEST(Dynamics){
   init(G,gl,"arm7.ors");
   //G.makeLinkTree();
   cout <<G <<endl;
-  T2::G=&G;
+
+  struct DiffEqn:VectorFunction{
+    ors::Graph& G;
+    arr u;
+    bool friction;
+    DiffEqn(ors::Graph& _G):G(_G),friction(false){}
+    void fv(arr& y,arr&,const arr& x){
+      G.setJointState(x[0],x[1]);
+      G.calcBodyFramesFromJoints();
+      if(!u.N) u.resize(x.d1).setZero();
+      if(friction) u = -10. * x[1];
+      G.clearForces();
+      G.gravityToForces();
+      /*if(T2::addContactsToDynamics){
+        G.contactsToForces(100.,10.);
+      }*/
+      G.dynamics(y, x[1], u);
+    }
+  } diffEqn(G);
+
   
   uint t,T=720,n=G.getJointStateDimension();
   arr q,qd,qdd(n),qdd_(n);
@@ -336,11 +342,11 @@ void TEST(Dynamics){
     }
     if(t>=500){ //hold steady
       qdd_ = -1. * qd;
-      G.inverseDynamics(T2::tau,qd,qdd_);
+      G.inverseDynamics(diffEqn.u, qd, qdd_);
       //tau.resize(n); tau.setZero();
       //G.clearForces();
       //G.gravityToForces();
-      G.dynamics(qdd,qd,T2::tau);
+      G.dynamics(qdd, qd, diffEqn.u);
       CHECK(maxDiff(qdd,qdd_,0)<1e-5,"dynamics and inverse dynamics inconsistent");
       //cout <<q <<qd <<qdd <<endl;
       cout <<"test dynamics: fwd-inv error =" <<maxDiff(qdd,qdd_,0) <<endl;
@@ -353,12 +359,14 @@ void TEST(Dynamics){
       gl.text.clear() <<"t=" <<t <<"  torque controlled damping (acc = - vel)\n(checking consistency of forward and inverse dynamics),  energy=" <<G.getEnergy();
     }else{
       //cout <<q <<qd <<qdd <<' ' <<G.getEnergy() <<endl;
-      MT::rk4dd(q, qd, q, qd, ddf_joints, dt);
+      arr x=cat(q,qd).reshape(2,q.N);
+      MT::rk4_2ndOrder(x, x, diffEqn, dt);
+      q=x[0]; qd=x[1];
       if(t>300){
-        T2::friction=true;
+        diffEqn.friction=true;
         gl.text.clear() <<"t=" <<t <<"  friction swing using RK4,  energy=" <<G.getEnergy();
       }else{
-        T2::friction=false;
+        diffEqn.friction=false;
         gl.text.clear() <<"t=" <<t <<"  free swing using RK4,  energy=" <<G.getEnergy();
       }
     }
