@@ -201,19 +201,19 @@ import_array();
 // get some kind of recursive typemaps. It would be much nicer, to put it in a
 // fragment or so, but SWIG doesn't provide that functionality.
 
-%typemap(in, fragment="asMTArrayList") MT::Array<Type> {
+%typemap(in, fragment="asMTArrayList") MT::Array<Type*> {
   if(PyList_Check($input)) {
     $1.resize(PyList_Size($input));
     for(uint i=0; i<PyList_Size($input); ++i) {
-      Type tm;
+      Type *tm;
       PyObject *iter = PyList_GetItem($input, i);
       {
-        Type $1;
+        Type *$1;
         PyObject *$input = iter;
-        $typemap(in, Type)
+        $typemap(in, Type*)
         tm = $1;
       }
-      $1(i) = tm;
+      $1(i) = new Type(*tm);
     }
   }
   else {
@@ -223,19 +223,19 @@ import_array();
   }
 }
 
-%typemap(in, fragment="asMTArrayList") MT::Array<Type> & {
+%typemap(in, fragment="asMTArrayList") MT::Array<Type*> & {
   if(PyList_Check($input)) {
     $1->resize(PyList_Size($input));
     for(uint i=0; i<PyList_Size($input); ++i) {
-      Type tm;
+      Type *tm;
       PyObject *iter = PyList_GetItem($input, i);
       {
-        Type $1;
+        Type *$1;
         PyObject *$input = iter;
-        $typemap(in, Type)
+        $typemap(in, Type*)
         tm = $1;
       }
-      (*$1)(i) = tm;
+      (*$1)(i) = new Type(*tm);
     }
   }
   else {
@@ -250,46 +250,46 @@ import_array();
 // Output
 //===========================================================================
 
-%typemap(out) MT::Array<Type> {
+%typemap(out) MT::Array<Type*> {
   $result = PyList_New($1.N);
   for(uint i=0; i<$1.N; ++i) {
     PyObject *obj = NULL;
-    Type *iter = &($1(i));
+    Type* *iter = &($1(i));
     {
-      Type $1 = *iter;
+      Type *$1 = *iter;
       PyObject *$result = NULL;
-      $typemap(out, Type)
+      $typemap(out, Type*)
       obj = $result; 
     }
     PyList_SetItem($result, i, obj);
   }
 }
 
-%typemap(out) MT::Array<Type> & {
+%typemap(out) MT::Array<Type*> & {
   $result = PyList_New($1->N);
   for(uint i=0; i<$1->N; ++i) {
     PyObject *obj = NULL;
-    Type *iter = &((*$1)(i));
+    Type* *iter = &((*$1)(i));
     {
-      Type $1 = *iter;
+      Type *$1 = *iter;
       PyObject *$result = NULL;
-      $typemap(out, Type)
+      $typemap(out, Type*)
       obj = $result; 
     }
     PyList_SetItem($result, i, obj);
   }
 }
 
-%typemap(argout) MT::Array<Type> & {
+%typemap(argout) MT::Array<Type*> & {
   PyObject *argout = PyList_New($1->N);
   for(uint i=0; i<$1->N; ++i) {
     PyObject *obj = NULL;
-    Type *iter = &((*$1)(i));
+    Type **iter = &((*$1)(i));
     {
-      Type $1 = *iter;
+      Type *$1 = *iter;
       int $owner = 1; // this is hacky
       PyObject *$result = NULL;
-      $typemap(out, Type)
+      $typemap(out, Type*)
       obj = $result; 
     }
     PyList_SetItem($result, i, obj);
@@ -297,13 +297,13 @@ import_array();
   %append_output(argout);
 }
 
-%typemap(argout) const MT::Array<Type> & { }
+%typemap(argout) const MT::Array<Type*> & { }
 
 //===========================================================================
 // Garbage collection
 //===========================================================================
 
-%typemap(freearg) MT::Array<Type> & {
+%typemap(freearg) MT::Array<Type*> & {
   delete $1;
 }
 
@@ -311,12 +311,12 @@ import_array();
 // members
 //===========================================================================
 
-%typemap(memberin) MT::Array<Type> {
+%typemap(memberin) MT::Array<Type*> {
   $1 = $input;  
 }
 
-%typemap(memberin) MT::Array<Type> & {
-  $1 = new MT::Array<Type>;
+%typemap(memberin) MT::Array<Type*> & {
+  $1 = new MT::Array<Type*>;
   *$1 = *$input;  
 }
 
@@ -324,18 +324,18 @@ import_array();
 // Typechecking for overload magic 
 //===========================================================================
 
-%typemap(typecheck) MT::Array<Type> {
+%typemap(typecheck) MT::Array<Type*> {
   if (PyList_Check($input)) {
-    Type obj;
-    int res = SWIG_ConvertPtr(PyList_GetItem($input, 0), (void**) &obj, $descriptor(Type), 0);
+    Type *obj;
+    int res = SWIG_ConvertPtr(PyList_GetItem($input, 0), (void**) &obj, $descriptor(Type*), 0);
     if (SWIG_IsOK(res)) $1 = 1;
     else $1 = 0;
   }
   else $1 = 0;
 }
 
-%typemap(typecheck) MT::Array<Type> & = MT::Array<Type>;
+%typemap(typecheck) MT::Array<Type*> & = MT::Array<Type*>;
 
-%apply MT::Array<Type> & { MT::Array<Type> * }
+%apply MT::Array<Type*> & { MT::Array<Type*> * }
 
 %enddef

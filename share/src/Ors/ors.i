@@ -41,13 +41,12 @@ created: <2013-03-20 Wed>
   typedef MT::Array<uint> uintA;
 %}
 
-%List_Typemap(ors::Body*)
-%List_Typemap(ors::Shape*)
-%List_Typemap(ors::Joint*)
-%List_Typemap(ors::Transformation*)
-%List_Typemap(ors::Proxy*)
-%List_Typemap(const char*)
-%List_Typemap(uintA)
+%List_Typemap(ors::Body)
+%List_Typemap(ors::Shape)
+%List_Typemap(ors::Joint)
+%List_Typemap(ors::Transformation)
+%List_Typemap(ors::Proxy)
+%List_Typemap(const char)
 
 
 //===========================================================================

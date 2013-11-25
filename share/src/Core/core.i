@@ -85,9 +85,9 @@ def get_mlr_path():
   typedef MT::Array<uint> uintA;
 %}
 
-%List_Typemap(arr*)
-%List_Typemap(intA*)
-%List_Typemap(uintA*)
+%List_Typemap(arr)
+%List_Typemap(intA)
+%List_Typemap(uintA)
 
 %inline %{
   typedef MT::Array<arr*> arrL;
@@ -102,6 +102,8 @@ def get_mlr_path():
 }
 
 //===========================================================================
+
+%ignore MT::errString;
 
 %include "geo.h"
 
