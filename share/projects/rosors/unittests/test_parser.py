@@ -3,7 +3,7 @@ import unittest
 import roslib
 roslib.load_manifest("rosors")
 
-from orspy import Shape, sphereST, meshST, Graph
+from orspy import Shape, sphereST, meshST, Graph, Body
 from corepy import Vector, Quaternion, Transformation
 from guipy import Mesh
 
@@ -33,12 +33,16 @@ def assert_quaternion_equal(ros, ors):
     assert ros.z == ors.z
 
 
-def assert_transform_equal(ros, ors):
-    assert type(ros) == geometry_msgs.msg.Transform
+def assert_transform_equal(ros_transform, ros_twist, ors):
+    assert type(ros_transform) == geometry_msgs.msg.Transform
+    assert type(ros_twist) == geometry_msgs.msg.Twist
     assert type(ors) == Transformation
 
-    assert_vector_equal(ros.translation, ors.pos)
-    assert_quaternion_equal(ros.rotation, ors.rot)
+    assert_vector_equal(ros_transform.translation, ors.pos)
+    assert_quaternion_equal(ros_transform.rotation, ors.rot)
+
+    assert_vector_equal(ros_twist.linear, ors.vel)
+    assert_vector_equal(ros_twist.angular, ors.angvel)
 
 
 def assert_mesh_equal(ros, ors):
@@ -56,19 +60,16 @@ def assert_mesh_equal(ros, ors):
 
 
 def assert_ors_mesh_equal(ors1, ors2):
-    assert ors1.V == ors2.V
-    assert ors1.T == ors2.T
+    assert (ors1.V == ors2.V).all()
+    assert (ors1.T == ors2.T).all()
 
 
 def assert_shape_equal(ros, ors):
-    assert type(ros) == ors_msgs.msg.Shape
-    assert type(ors) == Shape
-
     assert ros.index == ors.index
     assert ros.index_body == ors.ibody
     assert ros.name == ors.name
-    assert_transform_equal(ros.X, ors.X)
-    assert_transform_equal(ros.rel, ors.rel)
+    assert_transform_equal(ros.X, ros.Xvel, ors.X)
+    assert_transform_equal(ros.rel, ros.relvel, ors.rel)
     assert ros.shape_type == ors.type
     assert ros.contact == ors.cont
     if ors.type == meshST or ros.shape_type == meshST:
@@ -85,6 +86,21 @@ def assert_ors_shape_equal(ors1, ors2):
     assert ors1.cont == ors2.cont
     if ors1.type == meshST or ors2.type == meshST:
         assert_ors_mesh_equal(ors1.mesh, ors2.mesh)
+
+
+def assert_body_equal(ros, ors):
+    assert type(ros) == ors_msgs.msg.Body
+    assert type(ors) == Body
+
+    assert ros.index == ors.index
+    assert ros.name == ors.name
+    assert ros.mass == ors.mass
+    assert ros.body_type == ors.type
+
+    assert_transform_equal(ros.transform, ros.twist, ors.X)
+
+    for i, shape in enumerate(ros.shapes):
+        assert_shape_equal(shape, ors.shapes[i])
 
 
 class Test_Vector(unittest.TestCase):
@@ -188,20 +204,24 @@ class Test_Transform(unittest.TestCase):
     def test_ors_to_ros(self):
         ors_rot = Quaternion(1, 2, 3, 4)
         ors_pos = Vector(5, 6, 7)
+        ors_vel = Vector(8, 7, 6)
+        ors_angvel = Vector(5, 4, 3)
 
         ors_transform = Transformation()
         ors_transform.pos = ors_pos
         ors_transform.rot = ors_rot
+        ors_transform.vel = ors_vel
+        ors_transform.angvel = ors_angvel
 
         copy_transform = ors_transform
 
-        ros_transform = parser.ors_to_ros_transform(ors_transform)
+        ros_transform, ros_twist = parser.ors_to_ros_transform(ors_transform)
 
         # assert ors transformation didn't change
         assert copy_transform == ors_transform
 
         # assert ros msg values are equal to ors_transform
-        assert_transform_equal(ros_transform, ors_transform)
+        assert_transform_equal(ros_transform, ros_twist, ors_transform)
 
     def test_ros_to_ors(self):
         ros_transform = geometry_msgs.msg.Transform()
@@ -215,15 +235,26 @@ class Test_Transform(unittest.TestCase):
         ros_transform.translation.y = 6
         ros_transform.translation.z = 7
 
-        copy_transform = ros_transform
+        ros_twist = geometry_msgs.msg.Twist()
+        ros_twist.linear.x = 8
+        ros_twist.linear.y = 9
+        ros_twist.linear.z = 1
 
-        ors_transform = parser.ros_to_ors_transform(ros_transform)
+        ros_twist.angular.x = 2
+        ros_twist.angular.y = 3
+        ros_twist.angular.z = 4
+
+        copy_transform = ros_transform
+        copy_twist = ros_twist
+
+        ors_transform = parser.ros_to_ors_transform(ros_transform, ros_twist)
 
         # assert ros transformation didn't change
         assert copy_transform == ros_transform
+        assert copy_twist == ros_twist
 
         # assert ros msg values are equal to ors_transform
-        assert_transform_equal(ros_transform, ors_transform)
+        assert_transform_equal(ros_transform, ros_twist, ors_transform)
 
     def test_ros_ors_ros(self):
         ros_transform = geometry_msgs.msg.Transform()
@@ -237,10 +268,20 @@ class Test_Transform(unittest.TestCase):
         ros_transform.translation.y = 6
         ros_transform.translation.z = 7
 
-        ors_transform = parser.ros_to_ors_transform(ros_transform)
-        ros_transform2 = parser.ors_to_ros_transform(ors_transform)
+        ros_twist = geometry_msgs.msg.Twist()
+        ros_twist.linear.x = 8
+        ros_twist.linear.y = 9
+        ros_twist.linear.z = 1
+
+        ros_twist.angular.x = 2
+        ros_twist.angular.y = 3
+        ros_twist.angular.z = 4
+
+        ors_transform = parser.ros_to_ors_transform(ros_transform, ros_twist)
+        ros_transform2, ros_twist2 = parser.ors_to_ros_transform(ors_transform)
 
         assert ros_transform == ros_transform2
+        assert ros_twist == ros_twist2
 
     def test_ors_ros_ors(self):
         ors_rot = Quaternion(1, 2, 3, 4)
@@ -250,8 +291,8 @@ class Test_Transform(unittest.TestCase):
         ors_transform.pos = ors_pos
         ors_transform.rot = ors_rot
 
-        ros_transform = parser.ors_to_ros_transform(ors_transform)
-        ors_transform2 = parser.ros_to_ors_transform(ros_transform)
+        ros_transform, ros_twist = parser.ors_to_ros_transform(ors_transform)
+        ors_transform2 = parser.ros_to_ors_transform(ros_transform, ros_twist)
 
         assert ors_transform == ors_transform2
 
@@ -360,7 +401,7 @@ class Test_PrimitiveShape(unittest.TestCase):
 
 class Test_Mesh(unittest.TestCase):
     def test_ors_to_ros(self):
-        g = Graph('handle.ors')
+        g = Graph("handle.ors")
         ors_mesh = g.shapes[0].mesh
 
         ros_mesh = parser.ors_mesh_to_msg(ors_mesh)
@@ -378,5 +419,39 @@ class Test_Mesh(unittest.TestCase):
         assert_mesh_equal(ros_mesh, ors_mesh2)
 
 
-if __name__ == '__main__':
-    unittest.main()
+class Test_MeshShape(unittest.TestCase):
+    def test_ors_to_ros(self):
+        g = Graph('handle.ors')
+        ors_s1 = g.shapes[0]
+
+        copy_shape = ors_s1
+
+        ros_s1 = parser.ors_shape_to_msg(ors_s1)
+
+        assert copy_shape == ors_s1
+        assert_shape_equal(ros_s1, ors_s1)
+
+    def test_ors_ros_ors(self):
+        g = Graph('handle.ors')
+        ors_s1 = g.shapes[0]
+
+        shape_msg = parser.ors_shape_to_msg(ors_s1)
+        assert_shape_equal(shape_msg, ors_s1)
+
+        ors_s2 = parser.msg_to_ors_shape(shape_msg)
+        assert_shape_equal(shape_msg, ors_s2)
+
+        assert_ors_shape_equal(ors_s1, ors_s2)
+
+
+class Test_Body(unittest.TestCase):
+    def test_ors_to_ros(self):
+        g = Graph('handle.ors')
+        ors_b1 = g.bodies[0]
+
+        copy_body = ors_b1
+
+        ors_msg = parser.ors_body_to_msg(ors_b1)
+
+        assert ors_b1 == copy_body
+        assert_body_equal(ors_msg, ors_b1)

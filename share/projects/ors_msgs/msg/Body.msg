@@ -4,11 +4,8 @@ float64 mass
 int8 body_type
 
 # ORS transformation
-# TODO should we use ros Transformation? Transformation trans
-geometry_msgs/Vector3 pos
-geometry_msgs/Quaternion rot
-geometry_msgs/Vector3 vel
-geometry_msgs/Vector3 angvel
+geometry_msgs/Transform transform
+geometry_msgs/Twist twist
 
 geometry_msgs/Vector3 com
 

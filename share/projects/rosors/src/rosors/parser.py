@@ -47,10 +47,12 @@ def ors_to_ros_quaternion(ors_quaternion):
     return ros_quaternion
 
 
-def ros_to_ors_transform(ros_transform):
+def ros_to_ors_transform(ros_transform, ros_twist):
     ors_transform = Transformation()
     ors_transform.pos = ros_to_ors_vector(ros_transform.translation)
     ors_transform.rot = ros_to_ors_quaternion(ros_transform.rotation)
+    ors_transform.vel = ros_to_ors_vector(ros_twist.linear)
+    ors_transform.angvel = ros_to_ors_vector(ros_twist.angular)
     return ors_transform
 
 
@@ -58,7 +60,10 @@ def ors_to_ros_transform(ors_transform):
     ros_transform = geometry_msgs.msg.Transform()
     ros_transform.translation = ors_to_ros_vector(ors_transform.pos)
     ros_transform.rotation = ors_to_ros_quaternion(ors_transform.rot)
-    return ros_transform
+    ros_twist = geometry_msgs.msg.Twist()
+    ros_twist.linear = ors_to_ros_vector(ors_transform.vel)
+    ros_twist.angular = ors_to_ros_vector(ors_transform.angvel)
+    return ros_transform, ros_twist
 
 
 def ors_mesh_to_msg(ors_mesh):
@@ -84,18 +89,22 @@ def ors_mesh_to_msg(ors_mesh):
 
 def msg_to_ors_mesh(mesh_msg):
     mesh = Mesh()
-    mesh.V = np.resize(mesh.V, [len(mesh_msg.vertices), 3])
-    mesh.T = np.resize(mesh.T, [len(mesh_msg.triangles), 3])
+    V = np.resize(mesh.V, [len(mesh_msg.vertices), 3])
+    T = np.resize(mesh.T, [len(mesh_msg.triangles), 3])
+
     for i in range(len(mesh_msg.vertices)):
         v = mesh_msg.vertices[i]
-        mesh.V[i, 0] = v.x
-        mesh.V[i, 1] = v.y
-        mesh.V[i, 2] = v.z
+        V[i, 0] = v.x
+        V[i, 1] = v.y
+        V[i, 2] = v.z
+    mesh.V = V  # need to assign members, because of swig
+
     for i in range(len(mesh_msg.triangles)):
         t = mesh_msg.triangles[i]
-        mesh.T[i, 0] = t.vertex_indices[0]
-        mesh.T[i, 1] = t.vertex_indices[1]
-        mesh.T[i, 2] = t.vertex_indices[2]
+        T[i, 0] = t.vertex_indices[0]
+        T[i, 1] = t.vertex_indices[1]
+        T[i, 2] = t.vertex_indices[2]
+    mesh.T = T  # see above
     return mesh
 
 
@@ -106,8 +115,8 @@ def ors_shape_to_msg(ors_shape):
     shape_msg.index_body = ors_shape.ibody
     shape_msg.name = ors_shape.name
 
-    shape_msg.X = ors_to_ros_transform(ors_shape.X)
-    shape_msg.rel = ors_to_ros_transform(ors_shape.rel)
+    shape_msg.X, shape_msg.Xvel = ors_to_ros_transform(ors_shape.X)
+    shape_msg.rel, shape_msg.relvel = ors_to_ros_transform(ors_shape.rel)
 
     shape_msg.shape_type = ors_shape.type
     shape_msg.contact = ors_shape.cont
@@ -130,8 +139,8 @@ def msg_to_ors_shape(msg, graph=None, body=None):
         graph.shapes[msg.index] = shape
         shape.body = graph.bodies[msg.index_body]
 
-    shape.X = ros_to_ors_transform(msg.X)
-    shape.rel = ros_to_ors_transform(msg.rel)
+    shape.X = ros_to_ors_transform(msg.X, msg.Xvel)
+    shape.rel = ros_to_ors_transform(msg.rel, msg.relvel)
 
     shape.type = msg.shape_type
     shape.cont = msg.contact
@@ -150,15 +159,11 @@ def ors_body_to_msg(ors_body):
     body_msg.body_type = ors_body.type
 
     # ors transformation
-    body_msg.pos = ors_to_ros_vector(ors_body.X.pos)
-    body_msg.rot = ors_to_ros_quaternion(ors_body.X.rot)
-    body_msg.vel = ors_to_ros_vector(ors_body.X.vel)
-    body_msg.angvel = ors_to_ros_vector(ors_body.X.angvel)
+    body_msg.transform, body_msg.twist = ors_to_ros_transform(ors_body.X)
 
-    body_msg.com = ors_body.com
-
-    body_msg.force = ors_body.force
-    body_msg.torque = ors_body.torque
+    body_msg.com = ors_to_ros_vector(ors_body.com)
+    body_msg.force = ors_to_ros_vector(ors_body.force)
+    body_msg.torque = ors_to_ros_vector(ors_body.torque)
 
     # shapes
     for shape in ors_body.shapes:
@@ -178,6 +183,17 @@ def msg_to_ors_body(msg, graph=None):
     ors_body.name = msg.name
     ors_body.mass = msg.mass
     ors_body.type = msg.body_type
+
+    ors_body.X = ros_to_ors_transform(msg.transform, msg.twist)
+
+    ors_body.com = ros_to_ors_vector(msg.com)
+    ors_body.force = ros_to_ors_vector(msg.force)
+    ors_body.torque = ros_to_ors_vector(msg.torque)
+
+    shapes = []
+    for shape in msg.shapes:
+        shapes.append(msg_to_ors_shape(shape))
+    ors_body.shapes = shapes
 
     return ors_body
 
