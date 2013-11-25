@@ -235,7 +235,7 @@ bool MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
       CHECK(!c->y_target.N && !c->v_target.N,"constraints cannot have targets");
       c->map.phi(y, J, *ors);
       CHECK(y.N==J.d0,"");
-      for(uint j=0;j<y.N;j++) y(j) = -y(j); //MT::sigmoid(y(j));
+      for(uint j=0;j<y.N;j++) y(j) = -y(j)+.1; //MT::sigmoid(y(j));
       if(J.N) for(uint j=0;j<J.d0;j++) J[j]() *= -1.; // ( y(j)*(1.-y(j)) );
       phi.append(y);
       if(phi(phi.N-1) > c->y_threshold) feasible = false;

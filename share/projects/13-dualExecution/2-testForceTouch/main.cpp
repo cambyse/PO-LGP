@@ -28,12 +28,13 @@ arr getSimpleTrajectory(ors::Graph& G){
   UnConstrainedP.mu = 10.;
 
   for(uint k=0;k<5;k++){
-    optNewton(x, UnConstrainedP, OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1e-3, maxStep=.5));
+    optNewton(x, UnConstrainedP, OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1e-3, stopTolerance=1e-4, maxStep=.5));
 //    optNewton(x, UCP, OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
     P.costReport();
 //    displayTrajectory(x, 1, G, gl,"planned trajectory");
     UnConstrainedP.augmentedLagrangian_LambdaUpdate(x, .9);
     P.dualMatrix = UnConstrainedP.lambda;
+    UnConstrainedP.mu *= 2.;
   }
   P.costReport();
   return x;
