@@ -39,6 +39,8 @@ struct TaskMap {
   virtual void phi(arr& y, arr& J, const ors::Graph& G) = 0;
   virtual uint dim_phi(const ors::Graph& G) = 0; //the dimensionality of $y$
 
+  virtual ~TaskMap() {};
+
   TaskMap():constraint(false) {}
 };
 
