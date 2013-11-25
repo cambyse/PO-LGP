@@ -5,19 +5,28 @@ roslib.load_manifest("rosors")
 
 from orspy import Shape, sphereST, meshST, Graph
 from corepy import Vector, Quaternion, Transformation
+from guipy import Mesh
+
 from rosors import parser
 
 import geometry_msgs.msg
+import shape_msgs.msg
 import ors_msgs.msg
 
 
 def assert_vector_equal(ros, ors):
+    assert type(ros) == geometry_msgs.msg.Vector3
+    assert type(ors) == Vector
+
     assert ros.x == ors.x
     assert ros.y == ors.y
     assert ros.z == ors.z
 
 
 def assert_quaternion_equal(ros, ors):
+    assert type(ros) == geometry_msgs.msg.Quaternion
+    assert type(ors) == Quaternion
+
     assert ros.w == ors.w
     assert ros.x == ors.x
     assert ros.y == ors.y
@@ -25,11 +34,17 @@ def assert_quaternion_equal(ros, ors):
 
 
 def assert_transform_equal(ros, ors):
+    assert type(ros) == geometry_msgs.msg.Transform
+    assert type(ors) == Transformation
+
     assert_vector_equal(ros.translation, ors.pos)
     assert_quaternion_equal(ros.rotation, ors.rot)
 
 
 def assert_mesh_equal(ros, ors):
+    assert type(ros) == shape_msgs.msg.Mesh
+    assert type(ors) == Mesh
+
     for i in range(len(ros.vertices)):
         assert ors.V[i, 0] == ros.vertices[i].x
         assert ors.V[i, 1] == ros.vertices[i].y
@@ -46,6 +61,9 @@ def assert_ors_mesh_equal(ors1, ors2):
 
 
 def assert_shape_equal(ros, ors):
+    assert type(ros) == ors_msgs.msg.Shape
+    assert type(ors) == Shape
+
     assert ros.index == ors.index
     assert ros.index_body == ors.ibody
     assert ros.name == ors.name
