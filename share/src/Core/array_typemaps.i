@@ -131,8 +131,8 @@ import_array();
   PyObject *MTArray_As_NumpyArray(MT::Array<Type> in) {
     long dims[3] = { in.d0, in.d1, in.d2 };
     PyArrayObject *a = (PyArrayObject*) PyArray_SimpleNew(in.nd, dims, numpy_type_##Type());
-    /*memcpy(PyArray_DATA(a), in.p, in.N*sizeof(Type));*/
-    a->data = reinterpret_cast<char*>(in.p);
+    memcpy(PyArray_DATA(a), in.p, in.N*sizeof(Type));
+    /*a->data = reinterpret_cast<char*>(in.p);*/
     return PyArray_Return(a);
   }
 }
