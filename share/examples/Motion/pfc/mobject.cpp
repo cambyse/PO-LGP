@@ -6,7 +6,7 @@ MObject::MObject(ors::Graph *_ors,MT::String _name, ObjectType _objectType, doub
   objectType = _objectType;
   direction = _direction;
   stepLength = _stepLength;
-  cout << name << endl;
+  cout << "Loaded MObject: " << name << endl;
 
   ors->kinematicsPos(position, ors->getBodyByName(name)->index);
   positionHistory.append(~position);

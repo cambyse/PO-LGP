@@ -47,7 +47,7 @@ void holdSteady(){
   S.watch();        //pause and watch initial posture
   
   double tau = .01; //duration of one time step = .01sec
-  bool control = 1;
+  bool control = true; //false;
   
   for(uint i=0;i<1000;i++){
     //** CONTROLLER part
@@ -56,7 +56,7 @@ void holdSteady(){
     if(!control){
       //pure friction
       u = -.1 * qdot; //pure friction
-      if(i > 500)control = 1;
+      if(i > 500) control = 1;
     }else{
       //separate PDs in each joint separately:
       double lambda = .5/MT_2PI; //corresponds to 1 second period
