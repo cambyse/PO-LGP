@@ -133,11 +133,7 @@ def msg_to_ors_shape(msg, graph=None, body=None):
     shape.ibody = msg.index_body
     shape.name = msg.name
 
-    shape.body = body
-    if graph is not None:
-        #TODO: resize!
-        graph.shapes[msg.index] = shape
-        shape.body = graph.bodies[msg.index_body]
+    shape.body = None
 
     shape.X = ros_to_ors_transform(msg.X, msg.Xvel)
     shape.rel = ros_to_ors_transform(msg.rel, msg.relvel)
@@ -146,6 +142,7 @@ def msg_to_ors_shape(msg, graph=None, body=None):
     shape.cont = msg.contact
     if shape.type == orspy.meshST:
         shape.mesh = msg_to_ors_mesh(msg.mesh)
+        shape.mesh.thisown = False
 
     return shape
 
@@ -189,6 +186,7 @@ def msg_to_ors_body(msg, graph=None):
     shapes = []
     for shape in msg.shapes:
         shapes.append(msg_to_ors_shape(shape))
+        shapes[-1].thisown = False
     ors_body.shapes = shapes
 
     for s in ors_body.shapes:
@@ -249,21 +247,35 @@ def msg_to_ors_graph(msg):
     graph = orspy.Graph()
 
     bodies = []
+    shapes = [None]*len(msg.shapes)
     for body in msg.bodies:
         bodies.append(msg_to_ors_body(body))
-    graph.bodies = bodies
+        bodies[-1].thisown = False
+        for shape in bodies[-1].shapes:
+            shape.body = bodies[-1]
+            shapes[shape.index] = shape
 
-    shapes = []
-    for shape in msg.shapes:
-        shapes.append(msg_to_ors_shape(shape))
+    graph.bodies = bodies
     graph.shapes = shapes
 
     joints = []
     for joint in msg.joints:
         joints.append(msg_to_ors_joint(joint))
-        joints[-1]._from = graph.bodies[joints[-1].ifrom]
-        joints[-1].to = graph.bodies[joints[-1].ito]
+        joints[-1].thisown = False
     graph.joints = joints
+
+    # post-process after assignment
+    for joint in graph.joints:
+        joint._from = graph.bodies[joint.ifrom]
+        joint.to = graph.bodies[joint.ito]
+        graph.bodies[joint.ifrom].outLinks += [joint]  # don't use append(),
+                                                       # because of annoying
+                                                       # swig typemapped
+                                                       # members
+        graph.bodies[joint.ito].inLinks += [joint]
+
+    for shape in graph.shapes:
+        shape.body = graph.bodies[shape.ibody]
 
     graph.q_dim = msg.q_dim
     graph.isLinkTree = msg.isLinkTree
