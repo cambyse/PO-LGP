@@ -106,6 +106,7 @@ void plot(bool wait, const char* txt) {
       if(txt) plotModule.gl->text = txt;
       //plotInitGL();
       if(wait) plotModule.gl->watch();
+      else plotModule.gl->update();
       break;
 #else
     case opengl:
