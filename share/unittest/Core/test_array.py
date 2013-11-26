@@ -53,7 +53,7 @@ class TestArray_SWIGTypemaps():
         assert abs(a[1, 0] - 5) < 0.01
         assert abs(a[1, 1] - 7) < 0.01
 
-    def test_memory_leakage(self):
+    def un_test_memory_leakage(self):
         # if there is a memory leak, you will definitely get out of memory here
         a = corepy.zeros(100)
         for i in range(1, 100000):
@@ -308,21 +308,19 @@ class TestList_SWIGTypemaps:
 
     def helper_new_object_copy(self):
         t1 = core_testpy.ListTest()
+        t1.thisown = False  # we want to keep the object after python
+                            # destruction. But now we must handle the
+                            # destruction.
         t1.d = 10
         t2 = core_testpy.ListTest()
+        t2.thisown = False
         t2.d = 20
 
         c = core_testpy.TestClass()
-        c.a_list = [t1, t2]  # here we need a /copy/ of t1 and t2, since
-                             # the original t1 and t2 get destroyed in the next
-                             # line
+        c.a_list = [t1, t2]
         return c
 
     def test_new_object_copy(self):
-        # this should ensure, that we get a fine new copy of each object in the
-        # member list. Otherwise a destructor is called at the end of some
-        # random function and destroys everything useful on the original
-        # objects
         c = self.helper_new_object_copy()
         assert c.a_list[0].d == 10
         assert c.a_list[1].d == 20
@@ -339,3 +337,11 @@ class TestList_SWIGTypemaps:
 
         assert c.a_list[0].d == 10
         assert c.a_list[1].d == 20
+
+    def test_member_set_value(self):
+        c = core_testpy.TestClass()
+        t = core_testpy.ListTest()
+        t.d = 10
+        c.a_list.append(t)
+
+        assert c.a_list[0].d == 10
