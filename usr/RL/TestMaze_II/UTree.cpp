@@ -31,7 +31,7 @@ using std::priority_queue;
 
 using lemon::INVALID;
 
-UTree::NodeInfo::NodeInfo(const Feature * f, const f_ret_t& r):
+UTree::NodeInfo::NodeInfo(f_ptr_t f, const f_ret_t& r):
     instance_vector(0),
     feature(f),
     parent_return_value(r),
@@ -56,38 +56,38 @@ UTree::UTree(const double& d):
     for(int k_idx = 0; k_idx>=(int)-Config::k; --k_idx) {
         // actions
         for(action_t action : actionIt_t::all) {
-            ActionFeature * action_feature = ActionFeature::create(action,k_idx);
+            f_ptr_t action_feature = ActionFeature::create(action,k_idx);
             if(k_idx<0) {
-                basis_features_val.push_back(action_feature);
-                DEBUG_OUT(2,"Added " << basis_features_val.back()->identifier() << " to basis features");
+                basis_features_value.push_back(action_feature);
+                DEBUG_OUT(2,"Added " << basis_features_value.back()->identifier() << " to basis features");
             }
             if(k_idx<0) {
-                basis_features_prob.push_back(action_feature);
-                DEBUG_OUT(2,"Added " << basis_features_prob.back()->identifier() << " to basis features");
+                basis_features_model.push_back(action_feature);
+                DEBUG_OUT(2,"Added " << basis_features_model.back()->identifier() << " to basis features");
             }
         }
         // observations
         for(observation_t observation : observationIt_t::all) {
-            ObservationFeature * observation_feature = ObservationFeature::create(observation,k_idx);
+            f_ptr_t observation_feature = ObservationFeature::create(observation,k_idx);
             if(k_idx<0) {
-                basis_features_val.push_back(observation_feature);
-                DEBUG_OUT(2,"Added " << basis_features_val.back()->identifier() << " to basis features");
+                basis_features_value.push_back(observation_feature);
+                DEBUG_OUT(2,"Added " << basis_features_value.back()->identifier() << " to basis features");
             }
             if(k_idx<0) {
-                basis_features_prob.push_back(observation_feature);
-                DEBUG_OUT(2,"Added " << basis_features_prob.back()->identifier() << " to basis features");
+                basis_features_model.push_back(observation_feature);
+                DEBUG_OUT(2,"Added " << basis_features_model.back()->identifier() << " to basis features");
             }
         }
         // reward
         for(reward_t reward : rewardIt_t::all) {
-            RewardFeature * reward_feature = RewardFeature::create(reward,k_idx);
+            f_ptr_t reward_feature = RewardFeature::create(reward,k_idx);
             if(false) {
-                basis_features_val.push_back(reward_feature);
-                DEBUG_OUT(2,"Added " << basis_features_val.back()->identifier() << " to basis features");
+                basis_features_value.push_back(reward_feature);
+                DEBUG_OUT(2,"Added " << basis_features_value.back()->identifier() << " to basis features");
             }
             if(false) {
-                basis_features_prob.push_back(reward_feature);
-                DEBUG_OUT(2,"Added " << basis_features_prob.back()->identifier() << " to basis features");
+                basis_features_model.push_back(reward_feature);
+                DEBUG_OUT(2,"Added " << basis_features_model.back()->identifier() << " to basis features");
             }
         }
     }
@@ -201,7 +201,7 @@ void UTree::print_tree() {
                     parent_node = graph.source(parent_arc);
                 }
                 instance_vector_t& insVec = node_info_map[current_node].instance_vector;
-                const Feature * fPtr = node_info_map[current_node].feature;
+                f_ptr_t fPtr = node_info_map[current_node].feature;
                 f_ret_t pVal = node_info_map[current_node].parent_return_value;
                 DEBUG_OUT(0,"        Node Id " << graph.id(current_node) << ":");
                 if(parent_node!=INVALID) {
@@ -301,7 +301,7 @@ void UTree::print_leaves() {
 void UTree::print_features() {
     DEBUG_OUT(0,"Printing features for all leaves");
     // some typedefs
-    typedef pair<const Feature*,f_ret_t> feature_score_pair_t;
+    typedef pair<f_ptr_t,f_ret_t> feature_score_pair_t;
     typedef vector<feature_score_pair_t> feature_score_vector_t;
     // vector storing features for all leaves
     vector<feature_score_vector_t> feature_vector;
@@ -316,7 +316,7 @@ void UTree::print_features() {
             node_t parent_node = graph.source(parent_arc);
             // get data
             f_ret_t parent_ret = node_info_map[current_node].parent_return_value;
-            const Feature* parent_feature = node_info_map[parent_node].feature;
+            f_ptr_t parent_feature = node_info_map[parent_node].feature;
             current_feature_vector.push_back(feature_score_pair_t(parent_feature,parent_ret));
             // updata nodes
             current_node = parent_node;
@@ -377,7 +377,7 @@ double UTree::expand_leaf_node(const double& score_threshold) {
     //----------------//
     double max_score = -DBL_MAX;
     vector<node_t> max_nodes;
-    vector<Feature*> max_features;
+    vector<f_ptr_t> max_features;
 
 
     //------------------------------------------------------------//
@@ -394,12 +394,12 @@ double UTree::expand_leaf_node(const double& score_threshold) {
     // update scores
     for(node_t leaf : leaf_nodes) {
         if(expansion_type==UTILITY_EXPANSION) {
-            for(auto featurePtr : basis_features_val) {
+            for(auto featurePtr : basis_features_value) {
                 double score = score_leaf_node(leaf, featurePtr);
                 node_info_map[leaf].scores[featurePtr] = score;
             }
         } else if(expansion_type==OBSERVATION_REWARD_EXPANSION) {
-            for(auto featurePtr : basis_features_prob) {
+            for(auto featurePtr : basis_features_model) {
                 double score = score_leaf_node(leaf, featurePtr);
                 node_info_map[leaf].scores[featurePtr] = score;
             }
@@ -415,7 +415,7 @@ double UTree::expand_leaf_node(const double& score_threshold) {
     for(node_t node : leaf_nodes) {
         assert_scores_up_to_date(node);
         if(expansion_type==UTILITY_EXPANSION) {
-            for(auto featurePtr : basis_features_val) {
+            for(auto featurePtr : basis_features_value) {
                 double score = node_info_map[node].scores[featurePtr];
                 if(score>max_score) {
                     max_score = score;
@@ -428,7 +428,7 @@ double UTree::expand_leaf_node(const double& score_threshold) {
                 DEBUG_OUT(3,"Node " << graph.id(node) << ", feature " << *featurePtr << ", score " << score);
             }
         } else if(expansion_type==OBSERVATION_REWARD_EXPANSION) {
-            for(auto featurePtr : basis_features_prob) {
+            for(auto featurePtr : basis_features_model) {
                 double score = node_info_map[node].scores[featurePtr];
                 if(score>max_score) {
                     max_score = score;
@@ -459,7 +459,7 @@ double UTree::expand_leaf_node(const double& score_threshold) {
     //----------------------------------------------------//
     int rand_select = rand()%max_nodes.size();
     node_t max_node = max_nodes[rand_select];
-    Feature * max_feature = max_features[rand_select];
+    f_ptr_t max_feature = max_features[rand_select];
 
     //------------------------------------------//
     // set feature to make node a non-leaf node //
@@ -729,12 +729,12 @@ void UTree::assert_scores_up_to_date(const node_t leaf) {
         }
         // update scores
         if(expansion_type==UTILITY_EXPANSION) {
-            for(auto featurePtr : basis_features_val) {
+            for(auto featurePtr : basis_features_value) {
                 double score = score_leaf_node(leaf, featurePtr);
                 node_info_map[leaf].scores[featurePtr] = score;
             }
         } else if(expansion_type==OBSERVATION_REWARD_EXPANSION) {
-            for(auto featurePtr : basis_features_prob) {
+            for(auto featurePtr : basis_features_model) {
                 double score = score_leaf_node(leaf, featurePtr);
                 node_info_map[leaf].scores[featurePtr] = score;
             }
@@ -851,7 +851,7 @@ void UTree::insert_instance(const instance_t * i, const node_t& node, const bool
 
 }
 
-double UTree::score_leaf_node(const node_t leaf_node, const Feature* feature) const {
+double UTree::score_leaf_node(const node_t leaf_node, f_ptr_t feature) const {
 
     double default_score = 0;
 
@@ -1088,5 +1088,3 @@ void UTree::update_statistics(const node_t& leaf_node) {
             );
     }
 }
-
-

@@ -57,7 +57,7 @@ LinearQ::LinearQ(const double& d):
         // actions
         if(true) {
             for(action_t action : actionIt_t::all) {
-                ActionFeature * action_feature = ActionFeature::create(action,k_idx);
+                f_ptr_t action_feature = ActionFeature::create(action,k_idx);
                 basis_features.push_back(action_feature);
                 DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
             }
@@ -65,7 +65,7 @@ LinearQ::LinearQ(const double& d):
         if(k_idx<0) { // present observation is not known for predicting value
             // observations
             for(observation_t observation : observationIt_t::all) {
-                ObservationFeature * observation_feature = ObservationFeature::create(observation,k_idx);
+                f_ptr_t observation_feature = ObservationFeature::create(observation,k_idx);
                 basis_features.push_back(observation_feature);
                 DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
             }
@@ -73,7 +73,7 @@ LinearQ::LinearQ(const double& d):
         if(false) { // no correlated rewards
             // reward
             for(reward_t reward : rewardIt_t::all) {
-                RewardFeature * reward_feature = RewardFeature::create(reward,k_idx);
+                f_ptr_t reward_feature = RewardFeature::create(reward,k_idx);
                 basis_features.push_back(reward_feature);
                 DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
             }
@@ -81,7 +81,7 @@ LinearQ::LinearQ(const double& d):
     }
 
     // also add a unit feature
-    ConstFeature * const_feature = ConstFeature::create(1);
+    f_ptr_t const_feature = ConstFeature::create(1);
     basis_features.push_back(const_feature);
     DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
 }

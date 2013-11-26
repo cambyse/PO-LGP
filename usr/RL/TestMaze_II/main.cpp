@@ -7,8 +7,8 @@
 
 //#define FORCE_BATCH
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
+
     // seed random generator
 #ifdef NO_RANDOM
     srand(0);

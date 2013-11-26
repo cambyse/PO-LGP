@@ -20,6 +20,7 @@ private:
 public:
     USE_CONFIG_TYPEDEFS;
     typedef Feature::feature_return_value    f_ret_t;
+    typedef Feature::const_feature_ptr_t     f_ptr_t;
     typedef lemon::ListDigraph               graph_t;
     typedef graph_t::Node                    node_t;
     typedef graph_t::Arc                     arc_t;
@@ -129,24 +130,24 @@ private:
      * the new child nodes, which changes its statistics, and also modifies the
      * transition structure (and therefore the statistics of ALL nodes). */
     struct NodeInfo {
-        NodeInfo(const Feature * f = nullptr, const f_ret_t& r = f_ret_t());
+        NodeInfo(f_ptr_t f = nullptr, const f_ret_t& r = f_ret_t());
         instance_vector_t instance_vector;                                      ///< data
-        const Feature * feature;                                                ///< discriminating feature for non-leaf nodes
+        f_ptr_t feature;                                                        ///< discriminating feature for non-leaf nodes
         f_ret_t parent_return_value;                                            ///< return value of parent-node's feature
 
-        std::map<const Feature*,double> scores;                                 ///< the scores for different features
+        std::map<f_ptr_t,double> scores;                                        ///< the scores for different features
         bool scores_up_to_date;                                                 ///< whether leaf-node's scores are up-to-date
 
-        std::map<action_t,double> observation_action_values;                          ///< Q(s,a)-function
-        double max_observation_action_value;                                          ///< utility / observation-value
+        std::map<action_t,double> observation_action_values;                    ///< Q(s,a)-function
+        double max_observation_action_value;                                    ///< utility / observation-value
 
         std::map< std::pair<action_t,node_t>, probability_t > transition_table; ///< observation transition table
         std::map< std::pair<action_t,node_t>, double > expected_reward;         ///< expected reward
         bool statistics_up_to_date;                                             ///< whether the preceding two are up-to-date
     };
 
-    std::vector<Feature*> basis_features_val;
-    std::vector<Feature*> basis_features_prob;
+    std::vector<f_ptr_t> basis_features_value;    ///< Basis features for value-based U-Tree.
+    std::vector<f_ptr_t> basis_features_model;    ///< Basis features for model-based U-Tree.
     node_container_t leaf_nodes;
     graph_t graph;
     node_t root_node;
@@ -185,7 +186,7 @@ private:
 
     void insert_instance(const instance_t *, const node_t& node, const bool& descendants_only = false);
 
-    double score_leaf_node(const node_t leaf_node, const Feature* feature) const;
+    double score_leaf_node(const node_t leaf_node, f_ptr_t feature) const;
 
     /** \brief Weight factor for considering the sample size.
      *

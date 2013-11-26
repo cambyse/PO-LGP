@@ -53,20 +53,20 @@ KMarkovCRF::KMarkovCRF():
     for(int k_idx = 0; k_idx>=-(int)Config::k; --k_idx) {
         // actions
         for(actionIt_t action=actionIt_t::first(); action!=INVALID; ++action) {
-            fPtr_t action_feature = ActionFeature::create(action,k_idx);
+            f_ptr_t action_feature = ActionFeature::create(action,k_idx);
             basis_features.push_back(action_feature);
             DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
         }
         // observations
         for(observationIt_t observation=observationIt_t::first(); observation!=INVALID; ++observation) {
-            fPtr_t observation_feature = ObservationFeature::create(observation,k_idx);
+            f_ptr_t observation_feature = ObservationFeature::create(observation,k_idx);
             basis_features.push_back(observation_feature);
             DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
         }
         // reward
         if(k_idx==0) { // take only the current reward into account (for predicting only)
             for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
-                fPtr_t reward_feature = RewardFeature::create(reward,k_idx);
+                f_ptr_t reward_feature = RewardFeature::create(reward,k_idx);
                 basis_features.push_back(reward_feature);
                 DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
             }
@@ -75,7 +75,7 @@ KMarkovCRF::KMarkovCRF():
 
 #ifdef USE_RELATIVE_FEATURES
     // relative observation features
-    fPtr_t relative_observation_feature;
+    f_ptr_t relative_observation_feature;
     relative_observation_feature = RelativeObservationFeature::create(1,0,-1,0);
     basis_features.push_back(relative_observation_feature);
     DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");

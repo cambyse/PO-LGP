@@ -844,7 +844,7 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
     return prob;
 }
 
-void Maze::get_features(std::vector<Feature*> & basis_features, LEARNER_TYPE type) const {
+void Maze::get_features(std::vector<f_ptr_t> & basis_features, LEARNER_TYPE type) const {
     for(int k_idx = 0; k_idx>=-(int)Config::k; --k_idx) {
         if((type==CRF_LEARNER) ||
            (type==UTREE_VALUE_LEARNER && k_idx>-(int)Config::k) ||
@@ -852,7 +852,7 @@ void Maze::get_features(std::vector<Feature*> & basis_features, LEARNER_TYPE typ
            (type==LINEAR_Q_LEARNER)) {
             // actions
             for(action_t action : actionIt_t::all) {
-                ActionFeature * action_feature = ActionFeature::create(action,k_idx);
+                f_ptr_t action_feature = ActionFeature::create(action,k_idx);
                 basis_features.push_back(action_feature);
             }
         }
@@ -862,7 +862,7 @@ void Maze::get_features(std::vector<Feature*> & basis_features, LEARNER_TYPE typ
            (type==LINEAR_Q_LEARNER && k_idx<0)) {
             // observations
             for(observation_t observation : observationIt_t::all) {
-                ObservationFeature * observation_feature = ObservationFeature::create(observation,k_idx);
+                f_ptr_t observation_feature = ObservationFeature::create(observation,k_idx);
                 basis_features.push_back(observation_feature);
             }
         }
@@ -872,7 +872,7 @@ void Maze::get_features(std::vector<Feature*> & basis_features, LEARNER_TYPE typ
            (type==LINEAR_Q_LEARNER && false)) {
             // reward
             for(reward_t reward : rewardIt_t::all) {
-                RewardFeature * reward_feature = RewardFeature::create(reward,k_idx);
+                f_ptr_t reward_feature = RewardFeature::create(reward,k_idx);
                 basis_features.push_back(reward_feature);
             }
         }
@@ -880,7 +880,7 @@ void Maze::get_features(std::vector<Feature*> & basis_features, LEARNER_TYPE typ
 
     if(type==CRF_LEARNER) {
         // relative observation features
-        RelativeObservationFeature * relative_observation_feature;
+        f_ptr_t relative_observation_feature;
         relative_observation_feature = RelativeObservationFeature::create(1,0,-1,0);
         basis_features.push_back(relative_observation_feature);
         relative_observation_feature = RelativeObservationFeature::create(0,1,-1,0);
@@ -894,7 +894,7 @@ void Maze::get_features(std::vector<Feature*> & basis_features, LEARNER_TYPE typ
     }
     if(type==LINEAR_Q_LEARNER) {
         // also add a unit feature
-        ConstFeature * const_feature = ConstFeature::create(1);
+        f_ptr_t const_feature = ConstFeature::create(1);
         basis_features.push_back(const_feature);
         DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
     }

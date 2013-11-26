@@ -19,6 +19,7 @@ class Maze: public VisualWorld {
 public:
 
     USE_CONFIG_TYPEDEFS;
+    typedef Feature::const_feature_ptr_t f_ptr_t;
 
     enum LEARNER_TYPE {CRF_LEARNER,
                        UTREE_VALUE_LEARNER,
@@ -80,7 +81,7 @@ public:
      * punishments (for not collecting an activated reward). */
     probability_t get_prediction(const instance_t*, const action_t&, const observation_t&, const reward_t&, std::vector<std::pair<int,int> > * reward_vector) const;
 
-    void get_features(std::vector<Feature*> & basis_features, LEARNER_TYPE type) const;
+    void get_features(std::vector<f_ptr_t> & basis_features, LEARNER_TYPE type) const;
 
     /** \brief Validates a model by performing random transitions and comparing
      * the result to the model predicitons. */
