@@ -6,8 +6,11 @@ MLR_LIBPATH=/home/lib
 if [ ! -d $MLR_LIBPATH ] ; then
   echo "Creating lib directory: " $MLR_LIBPATH
   sudo mkdir $MLR_LIBPATH
+  sudo mkdir $MLR_LIBPATH/lib
   sudo chown $(id -u) $MLR_LIBPATH
   sudo chgrp $(id -u) $MLR_LIBPATH
+  sudo chown $(id -u) $MLR_LIBPATH/lib
+  sudo chgrp $(id -u) $MLR_LIBPATH/lib
 fi
 
 # install ubuntu packages
