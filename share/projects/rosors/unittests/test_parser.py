@@ -76,9 +76,16 @@ def assert_shape_equal(ros, ors):
         assert_mesh_equal(ros.mesh, ors.mesh)
 
 
-def assert_ors_shape_equal(ors1, ors2):
+def assert_ors_shape_equal(ors1, ors2, check_bodies_set=False):
     assert ors1.index == ors2.index
     assert ors1.ibody == ors2.ibody
+    if check_bodies_set:
+        assert ors1.body is not None
+        assert ors2.body is not None
+    if ors1.body is not None and ors2.body is not None:
+        assert ors1.body.index == ors2.body.index
+        assert ors1.ibody == ors1.body.index
+        assert ors2.ibody == ors2.body.index
     assert ors1.name == ors2.name
     assert ors1.X == ors2.X
     assert ors1.rel == ors2.rel
@@ -159,15 +166,40 @@ def assert_ors_joint_equal(ors1, ors2):
 def assert_graph_equal(ros, ors):
     for i, _ in enumerate(ros.bodies):
         assert_body_equal(ros.bodies[i], ors.bodies[i])
+        assert ors.bodies[i].index == i
+        assert ros.bodies[i].index == i
 
     for i, _ in enumerate(ros.shapes):
         assert_shape_equal(ros.shapes[i], ors.shapes[i])
+        assert ors.shapes[i].index == i
+        assert ros.shapes[i].index == i
 
     for i, _ in enumerate(ros.joints):
         assert_joint_equal(ros.joints[i], ors.joints[i])
+        assert ors.joints[i].index == i
+        assert ros.joints[i].index == i
 
     assert ros.q_dim == ors.q_dim
     assert ros.isLinkTree == ors.isLinkTree
+
+
+def assert_ors_graph_equal(ors1, ors2):
+    assert len(ors1.joints) == len(ors2.joints)
+    for i, _ in enumerate(ors1.bodies):
+        assert_ors_body_equal(ors1.bodies[i], ors2.bodies[i])
+
+    assert len(ors1.shapes) == len(ors2.shapes)
+    for i, _ in enumerate(ors1.shapes):
+        assert_ors_shape_equal(ors1.shapes[i],
+                               ors2.shapes[i],
+                               check_bodies_set=True)
+
+    assert len(ors1.joints) == len(ors2.joints)
+    for i, _ in enumerate(ors1.joints):
+        assert_ors_joint_equal(ors1.joints[i], ors2.joints[i])
+
+    assert ors1.q_dim == ors2.q_dim
+    assert ors1.isLinkTree == ors2.isLinkTree
 
 
 class Test_Vector(unittest.TestCase):
@@ -554,7 +586,23 @@ class Test_Joint(unittest.TestCase):
 class Test_Graph(unittest.TestCase):
     def test_ors_to_ros(self):
         g = Graph("handle.ors")
+        copy = g
 
         msg = parser.ors_graph_to_msg(g)
 
+        assert g == copy
         assert_graph_equal(msg, g)
+
+    def test_ors_ros_ors(self):
+        g1 = Graph("handle.ors")
+        copy = g1
+
+        msg = parser.ors_graph_to_msg(g1)
+        g2 = parser.msg_to_ors_graph(msg)
+
+        assert_ors_graph_equal(g1, g2)
+        assert g1 == copy
+
+        for joint in g2.joints:
+            assert_ors_body_equal(g2.bodies[joint.ifrom], joint._from)
+            assert_ors_body_equal(g2.bodies[joint.ito], joint.to)
