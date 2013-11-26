@@ -507,7 +507,7 @@ endif
 
 MODULE_NAME=$(shell echo $(notdir $(CURDIR)) | tr A-Z a-z)
 
-SWC_FLAGS=-std=c++0x
+SWC_FLAGS=-std=c++0x -g
 SWC_INCLUDES=-I$(MLR_PATH)/share/src -I/usr/include/python2.7 
 SWC_LIB_PATH=-L$(MLR_PATH)/share/lib -Xlinker -rpath $(MLR_PATH)/share/lib
 SWC_CXXFLAGS=-c $(SWC_FLAGS) -fPIC $(SWC_INCLUDES) -DSWIG_TYPE_TABLE=mlr
