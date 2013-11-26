@@ -1,17 +1,13 @@
-/*
- * test_switch_controller_stack.cpp
- *
- *  Created on: Aug 15, 2011
- *      Author: mrinal
- */
+//#define USE_SL
 
+#include <ros/ros.h>
 
+#ifdef USE_SL
 #include <sl_controller_interface/controller_interface.h>
 #include <sl_controller_interface/joint_trajectory_client.h>
 #include <sl_controller_interface/switch_controller_stack_client.h>
-#include <ros/ros.h>
-#include <boost/thread.hpp>
-
+//#include <boost/thread.hpp>
+#endif
 
 #include <Motion/motion.h>
 #include <Motion/taskMap_default.h>
@@ -53,6 +49,7 @@ void testMarcs(){
     displayTrajectory(x, 1, G, gl,"planned trajectory");
 }
 
+#ifdef USE_SL
 void testLudos(){
   std::string robot_part("LEFT_ARM");
   std::string stack_name("LeftArmJointInverseDynamicsControl");
@@ -98,7 +95,7 @@ void testLudos(){
   desired_joint_positions.resize(joint_names.size(), 0.0);
   joint_client.moveTo(desired_joint_positions,2.0);
 }
-
+#endif
 
 int main(int argc, char** argv){
 
@@ -127,6 +124,7 @@ int main(int argc, char** argv){
   ros::AsyncSpinner spinner(4);
   spinner.start();
 
+#if USE_SL
   sl_controller_interface::init();
 
   int part = sl_controller_interface::RobotInfo::getRobotPartId(robot_part);
@@ -164,7 +162,7 @@ int main(int argc, char** argv){
     for(uint i=0;i<7;i++) desired_joint_positions[i] = x(t,i);
     joint_client.moveTo(desired_joint_positions, 0.01);
   }
-
+#endif
 
   return 0;
 }
