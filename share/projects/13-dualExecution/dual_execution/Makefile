@@ -35,11 +35,14 @@ CMAKE_COMMAND = /usr/bin/cmake
 # The command to remove a file.
 RM = /usr/bin/cmake -E remove -f
 
+# Escaping for special characters.
+EQUALS = =
+
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /Network/Servers/davinci/Volumes/davinci/nratliff/git/mlr/share/projects/13-dualExecution/dual_execution
+CMAKE_SOURCE_DIR = /home/mtoussai/git/mlr/share/projects/13-dualExecution/dual_execution
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /Network/Servers/davinci/Volumes/davinci/nratliff/git/mlr/share/projects/13-dualExecution/dual_execution
+CMAKE_BINARY_DIR = /home/mtoussai/git/mlr/share/projects/13-dualExecution/dual_execution
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -107,9 +110,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /Network/Servers/davinci/Volumes/davinci/nratliff/git/mlr/share/projects/13-dualExecution/dual_execution/CMakeFiles /Network/Servers/davinci/Volumes/davinci/nratliff/git/mlr/share/projects/13-dualExecution/dual_execution/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/mtoussai/git/mlr/share/projects/13-dualExecution/dual_execution/CMakeFiles /home/mtoussai/git/mlr/share/projects/13-dualExecution/dual_execution/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /Network/Servers/davinci/Volumes/davinci/nratliff/git/mlr/share/projects/13-dualExecution/dual_execution/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/mtoussai/git/mlr/share/projects/13-dualExecution/dual_execution/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -371,17 +374,17 @@ test-results-run/fast:
 .PHONY : test-results-run/fast
 
 #=============================================================================
-# Target rules for targets named test_mini_motion
+# Target rules for targets named test_mini_motion.exe
 
 # Build rule for target.
-test_mini_motion: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 test_mini_motion
-.PHONY : test_mini_motion
+test_mini_motion.exe: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 test_mini_motion.exe
+.PHONY : test_mini_motion.exe
 
 # fast build rule for target.
-test_mini_motion/fast:
-	$(MAKE) -f CMakeFiles/test_mini_motion.dir/build.make CMakeFiles/test_mini_motion.dir/build
-.PHONY : test_mini_motion/fast
+test_mini_motion.exe/fast:
+	$(MAKE) -f CMakeFiles/test_mini_motion.exe.dir/build.make CMakeFiles/test_mini_motion.exe.dir/build
+.PHONY : test_mini_motion.exe/fast
 
 #=============================================================================
 # Target rules for targets named tests
@@ -427,7 +430,7 @@ src/testMiniMotion.o: src/testMiniMotion.cpp.o
 
 # target to build an object file
 src/testMiniMotion.cpp.o:
-	$(MAKE) -f CMakeFiles/test_mini_motion.dir/build.make CMakeFiles/test_mini_motion.dir/src/testMiniMotion.cpp.o
+	$(MAKE) -f CMakeFiles/test_mini_motion.exe.dir/build.make CMakeFiles/test_mini_motion.exe.dir/src/testMiniMotion.cpp.o
 .PHONY : src/testMiniMotion.cpp.o
 
 src/testMiniMotion.i: src/testMiniMotion.cpp.i
@@ -435,7 +438,7 @@ src/testMiniMotion.i: src/testMiniMotion.cpp.i
 
 # target to preprocess a source file
 src/testMiniMotion.cpp.i:
-	$(MAKE) -f CMakeFiles/test_mini_motion.dir/build.make CMakeFiles/test_mini_motion.dir/src/testMiniMotion.cpp.i
+	$(MAKE) -f CMakeFiles/test_mini_motion.exe.dir/build.make CMakeFiles/test_mini_motion.exe.dir/src/testMiniMotion.cpp.i
 .PHONY : src/testMiniMotion.cpp.i
 
 src/testMiniMotion.s: src/testMiniMotion.cpp.s
@@ -443,7 +446,7 @@ src/testMiniMotion.s: src/testMiniMotion.cpp.s
 
 # target to generate assembly for a file
 src/testMiniMotion.cpp.s:
-	$(MAKE) -f CMakeFiles/test_mini_motion.dir/build.make CMakeFiles/test_mini_motion.dir/src/testMiniMotion.cpp.s
+	$(MAKE) -f CMakeFiles/test_mini_motion.exe.dir/build.make CMakeFiles/test_mini_motion.exe.dir/src/testMiniMotion.cpp.s
 .PHONY : src/testMiniMotion.cpp.s
 
 # Help Target
@@ -476,7 +479,7 @@ help:
 	@echo "... test-future"
 	@echo "... test-results"
 	@echo "... test-results-run"
-	@echo "... test_mini_motion"
+	@echo "... test_mini_motion.exe"
 	@echo "... tests"
 	@echo "... gtest"
 	@echo "... gtest_main"
