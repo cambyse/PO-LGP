@@ -17,7 +17,7 @@
 #include <Optim/optimization.h>
 #include <Optim/constrained.h>
 #include <Core/thread.h>
-
+#include "execution.h"
 
 arr getSimpleTrajectory(ors::Graph& G){
   MotionProblem P(&G, NULL, false);
