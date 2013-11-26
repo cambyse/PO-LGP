@@ -191,7 +191,6 @@ import_array();
 //===========================================================================
 // The macro to generate typemaps for new lists
 //===========================================================================
-
 %define %List_Typemap(Type)
 
 //===========================================================================
@@ -213,7 +212,7 @@ import_array();
         $typemap(in, Type*)
         tm = $1;
       }
-      $1(i) = new Type(*tm);
+      $1(i) = tm;
     }
   }
   else {
@@ -235,7 +234,7 @@ import_array();
         $typemap(in, Type*)
         tm = $1;
       }
-      (*$1)(i) = new Type(*tm);
+      (*$1)(i) = tm;
     }
   }
   else {
@@ -254,11 +253,14 @@ import_array();
   $result = PyList_New($1.N);
   for(uint i=0; i<$1.N; ++i) {
     PyObject *obj = NULL;
-    Type* *iter = &($1(i));
+    Type **iter = &($1(i));
     {
       Type *$1 = *iter;
       PyObject *$result = NULL;
+
+      // this sets result.
       $typemap(out, Type*)
+
       obj = $result; 
     }
     PyList_SetItem($result, i, obj);
@@ -269,11 +271,14 @@ import_array();
   $result = PyList_New($1->N);
   for(uint i=0; i<$1->N; ++i) {
     PyObject *obj = NULL;
-    Type* *iter = &((*$1)(i));
+    Type **iter = &((*$1)(i));
     {
       Type *$1 = *iter;
       PyObject *$result = NULL;
+      
+      // this sets result.
       $typemap(out, Type*)
+
       obj = $result; 
     }
     PyList_SetItem($result, i, obj);
