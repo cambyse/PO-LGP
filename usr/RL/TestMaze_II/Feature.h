@@ -15,12 +15,9 @@ class Feature {
 public:
     // types
     USE_CONFIG_TYPEDEFS;
-    typedef std::list<Feature * >                               subfeature_container_t;
-    typedef subfeature_container_t::iterator                    subfeature_iterator_t;
-    typedef subfeature_container_t::const_iterator              subfeature_const_iterator_t;
-    typedef std::set<std::unique_ptr<Feature> >                 basis_feature_container_t;
+    typedef std::shared_ptr<const Feature>                      const_feature_ptr_t;
     typedef double                                              feature_return_value;
-    typedef std::unordered_map<Feature*,feature_return_value>   look_up_map_t;
+    typedef std::unordered_map<const_feature_ptr_t, feature_return_value> look_up_map_t;
     enum TYPE { ABSTRACT, CONST_FEATURE, ACTION, RELATIVE_OBSERVATION, OBSERVATION, REWARD, AND };
     // functions
     Feature();
@@ -30,18 +27,15 @@ public:
     virtual feature_return_value evaluate(const look_up_map_t&) const;
     virtual std::string identifier() const;
     friend std::ostream& operator<<(std::ostream&, const Feature&);
-    virtual TYPE get_type() const;
-    virtual int get_id() const;
-    virtual unsigned int get_complexity() const;
+    /** \brief Compare features based on their type. */
     virtual bool operator==(const Feature& other) const;
     virtual bool operator!=(const Feature& other) const;
     virtual bool operator<(const Feature& other) const;
-    static bool pComp(Feature const * first, Feature const * second);
-    virtual subfeature_const_iterator_t get_subfeatures_begin() const;
-    virtual subfeature_const_iterator_t get_subfeatures_end() const;
-    virtual uint get_subfeatures_size() const;
+    virtual TYPE get_type() const;
+    virtual int get_id() const;
+    virtual unsigned int get_complexity() const;
     virtual bool is_const_feature() const { return const_feature; }
-    virtual bool contradicts(const Feature&) { return false; }
+    virtual bool contradicts(const Feature&) const { return false; }
 protected:
     // member variables
     TYPE type;
@@ -49,66 +43,78 @@ protected:
     unsigned int complexity;
     static int field_width[2];
     static long id_counter;
-    subfeature_container_t subfeatures;
-    static basis_feature_container_t basis_features;
     bool const_feature;
     feature_return_value const_return_value;
     // member functions
-    virtual void clean_up_subfeatures();
     inline feature_return_value return_function(const feature_return_value& ret) const;
 };
 
-class ConstFeature: public Feature {
-private:
-    ConstFeature(const long long int& v);
-    virtual ~ConstFeature();
+class BasisFeature: public Feature {
 public:
-    static ConstFeature * create(const long long int& v = 0);
+    typedef std::weak_ptr<const Feature> this_ptr_t;
+    virtual this_ptr_t get_this_ptr() const { return thisPtr; }
+protected:
+    BasisFeature() {}
+    ~BasisFeature() {}
+    this_ptr_t thisPtr;
+    virtual void set_this_ptr(const_feature_ptr_t ptr) { thisPtr = ptr; }
+};
+
+class ConstFeature: public BasisFeature {
+private:
+    ConstFeature(const feature_return_value& v);
+public:
+    virtual ~ConstFeature();
+    static const_feature_ptr_t create(const feature_return_value& v = 0);
     virtual feature_return_value evaluate(const_instanceIt_t) const;
     virtual feature_return_value evaluate(const_instanceIt_t, action_t, observation_t, reward_t) const;
     virtual std::string identifier() const;
+    virtual bool operator==(const Feature& other) const override;
 };
 
-class ActionFeature: public Feature {
+class ActionFeature: public BasisFeature {
 private:
     ActionFeature(const action_t& a, const int& d);
-    virtual ~ActionFeature();
 public:
-    static ActionFeature * create(const action_t& a, const int& d);
+    virtual ~ActionFeature();
+    static const_feature_ptr_t create(const action_t& a, const int& d);
     virtual feature_return_value evaluate(const_instanceIt_t) const;
     virtual std::string identifier() const;
     static bool features_contradict(const ActionFeature& f1, const ActionFeature& f2);
-    bool contradicts(const ActionFeature& f) { return features_contradict(*this,f); }
+    bool contradicts(const ActionFeature& f) const { return features_contradict(*this,f); }
+    virtual bool operator==(const Feature& other) const override;
 protected:
     action_t action;
     int delay;
 };
 
-class ObservationFeature: public Feature {
+class ObservationFeature: public BasisFeature {
 private:
     ObservationFeature(const observation_t& s, const int& d);
-    virtual ~ObservationFeature();
 public:
-    static ObservationFeature * create(const observation_t& s, const int& d);
+    virtual ~ObservationFeature();
+    static const_feature_ptr_t create(const observation_t& s, const int& d);
     virtual feature_return_value evaluate(const_instanceIt_t) const;
     virtual std::string identifier() const;
     static bool features_contradict(const ObservationFeature& f1, const ObservationFeature& f2);
-    bool contradicts(const ObservationFeature& f) { return features_contradict(*this,f); }
+    bool contradicts(const ObservationFeature& f) const { return features_contradict(*this,f); }
+    virtual bool operator==(const Feature& other) const override;
 protected:
     observation_t observation;
     int delay;
 };
 
-class RelativeObservationFeature: public Feature {
+class RelativeObservationFeature: public BasisFeature {
 private:
     RelativeObservationFeature(const int& dx, const int& dy, const int& d1, const int& d2);
-    virtual ~RelativeObservationFeature();
 public:
-    static RelativeObservationFeature * create(const int& dx, const int& dy, const int& d1, const int& d2);
+    virtual ~RelativeObservationFeature();
+    static const_feature_ptr_t create(const int& dx, const int& dy, const int& d1, const int& d2);
     virtual feature_return_value evaluate(const_instanceIt_t) const;
     virtual std::string identifier() const;
     static bool features_contradict(const RelativeObservationFeature& f1, const RelativeObservationFeature& f2);
-    bool contradicts(const RelativeObservationFeature& f) { return features_contradict(*this,f); }
+    bool contradicts(const RelativeObservationFeature& f) const { return features_contradict(*this,f); }
+    virtual bool operator==(const Feature& other) const override;
 protected:
     int delta_x;
     int delta_y;
@@ -116,16 +122,17 @@ protected:
     int delay_2;
 };
 
-class RewardFeature: public Feature {
+class RewardFeature: public BasisFeature {
 private:
     RewardFeature(const reward_t& r, const int& d);
-    virtual ~RewardFeature();
 public:
-    static RewardFeature * create(const reward_t& r, const int& d);
+    virtual ~RewardFeature();
+    static const_feature_ptr_t create(const reward_t& r, const int& d);
     virtual feature_return_value evaluate(const_instanceIt_t) const;
     virtual std::string identifier() const;
     static bool features_contradict(const RewardFeature& f1, const RewardFeature& f2);
-    bool contradicts(const RewardFeature& f) { return features_contradict(*this,f); }
+    bool contradicts(const RewardFeature& f) const { return features_contradict(*this,f); }
+    virtual bool operator==(const Feature& other) const override;
 protected:
     reward_t reward;
     int delay;
@@ -133,15 +140,23 @@ protected:
 
 class AndFeature: public Feature {
 public:
+    typedef std::set<const_feature_ptr_t>          subfeature_container_t;
+    typedef subfeature_container_t::iterator       subfeature_iterator_t;
+    typedef subfeature_container_t::const_iterator subfeature_const_iterator_t;
     using Feature::evaluate; // so the compiler finds them
     AndFeature();
-    AndFeature(const Feature& f1);
+    AndFeature(const Feature& f);
     AndFeature(const Feature& f1, const Feature& f2);
     virtual ~AndFeature();
     virtual feature_return_value evaluate(const_instanceIt_t) const;
     virtual feature_return_value evaluate(const look_up_map_t&) const;
     virtual std::string identifier() const;
+    virtual bool operator==(const Feature& other) const override;
+    /* virtual bool operator<(const Feature& other) const; */
 protected:
+    subfeature_container_t subfeatures;
+    virtual void add_feature(const Feature& f);
+    virtual void finalize_construction();
     void check_for_contradicting_subfeatures();
     inline feature_return_value return_function(const feature_return_value& ret) const;
 };

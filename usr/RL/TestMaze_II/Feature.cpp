@@ -8,13 +8,15 @@ using std::string;
 
 using util::INVALID;
 
-typedef std::unique_ptr<Feature> unique_f_ptr;
-
 int Feature::field_width[2] = {0,0};
 long Feature::id_counter = 0;
-Feature::basis_feature_container_t Feature::basis_features = Feature::basis_feature_container_t();
 
-Feature::Feature(): type(ABSTRACT), id(id_counter), complexity(0), subfeatures(0), const_feature(false) {
+Feature::Feature():
+    type(ABSTRACT),
+    id(id_counter),
+    complexity(0),
+    const_feature(false)
+{
     ++id_counter;
 }
 
@@ -55,6 +57,18 @@ std::ostream& operator<<(std::ostream &out, const Feature& f) {
     return out << f.identifier();
 }
 
+bool Feature::operator==(const Feature& other) const {
+    return this->type==other.type;
+}
+
+bool Feature::operator!=(const Feature& other) const {
+    return !(*this==other);
+}
+
+bool Feature::operator<(const Feature& other) const {
+    return false;
+}
+
 Feature::TYPE Feature::get_type() const {
     return type;
 }
@@ -67,104 +81,23 @@ unsigned int Feature::get_complexity() const{
     return complexity;
 }
 
-bool Feature::operator==(const Feature& other) const {
-    if(subfeatures.size()!=other.subfeatures.size()) {
-        return false;
-    } else {
-        subfeature_container_t::const_iterator f1_it=subfeatures.begin();
-        subfeature_container_t::const_iterator f2_it=other.subfeatures.begin();
-        while(f1_it!=subfeatures.end() && f2_it!=other.subfeatures.end()) {
-            if((*f1_it)->id!=(*f2_it)->id) {
-                return false;
-            }
-            ++f1_it;
-            ++f2_it;
-        }
-    }
-    return true;
-}
-
-bool Feature::operator!=(const Feature& other) const {
-    return !(*this==other);
-}
-
-bool Feature::operator<(const Feature& other) const {
-    if(subfeatures.size()==other.get_subfeatures_size()) {
-        subfeature_const_iterator_t this_it  = subfeatures.begin();
-        subfeature_const_iterator_t other_it = other.get_subfeatures_begin();
-        while(this_it!=subfeatures.end() && other_it!=other.get_subfeatures_end()) {
-            if((*this_it)->id==(*other_it)->get_id()) {
-                ++this_it;
-                ++other_it;
-            }
-            else {
-                return (*this_it)->id < (*other_it)->get_id();
-            }
-        }
-        if(this_it!=subfeatures.end() || other_it!=other.get_subfeatures_end()) {
-            DEBUG_OUT(0, "Autsch! This should never happen!");
-        }
-    } else {
-        return subfeatures.size()<other.subfeatures.size();
-    }
-    return false;
-}
-
-bool Feature::pComp(Feature const * first, Feature const * second) {
-    return (*first)<(*second);
-}
-
-Feature::subfeature_const_iterator_t Feature::get_subfeatures_begin() const {
-    return subfeatures.begin();
-}
-
-Feature::subfeature_const_iterator_t Feature::get_subfeatures_end() const {
-    return subfeatures.end();
-}
-
-uint Feature::get_subfeatures_size() const {
-    return subfeatures.size();
-}
-
-void Feature::clean_up_subfeatures() {
-    // make sure subfeatures are sorted
-    subfeatures.sort(&(pComp));
-
-    // erase duplicates
-    subfeature_const_iterator_t it_1;
-    subfeature_iterator_t it_2;
-    it_1 = it_2 = subfeatures.begin();
-    ++it_2;
-    while(it_2!=subfeatures.end()) {
-        if(
-            **it_2==**it_1 ||
-            ( (*it_2)->const_feature && (*it_2)->const_return_value==1 )
-            ) {
-            it_2 = subfeatures.erase(it_2);
-        } else {
-            ++it_1;
-            ++it_2;
-        }
-    }
-}
-
 Feature::feature_return_value Feature::return_function(const feature_return_value& ret) const {
     return ret;
     //return (complexity+1) * ret;
 }
 
-ConstFeature::ConstFeature(const long long int& v) {
+ConstFeature::ConstFeature(const feature_return_value& v) {
     type = CONST_FEATURE;
     complexity = 0;
     const_feature = true;
     const_return_value = v;
-    subfeatures.push_back(this);
 }
 
-ConstFeature * ConstFeature::create(const long long int& v) {
+Feature::const_feature_ptr_t ConstFeature::create(const feature_return_value& v) {
     ConstFeature * new_feature = new ConstFeature(v);
-    basis_features.insert(unique_f_ptr(new_feature));
-    return new_feature;
+    const_feature_ptr_t return_ptr(new_feature);
+    new_feature->set_this_ptr(return_ptr);
+    return return_ptr;
 }
 
 ConstFeature::~ConstFeature() {}
@@ -187,6 +120,15 @@ string ConstFeature::identifier() const {
     return id_string.toStdString()+Feature::identifier();
 }
 
+bool ConstFeature::operator==(const Feature& other) const {
+    const ConstFeature * pt = dynamic_cast<const ConstFeature *>(&other);
+    if(pt==nullptr) {
+        return false;
+    } else {
+        return this->const_return_value==pt->const_return_value;
+    }
+}
+
 ActionFeature::ActionFeature(const action_t& a, const int& d): action(a), delay(d) {
     type = ACTION;
     complexity = 1;
@@ -196,15 +138,15 @@ ActionFeature::ActionFeature(const action_t& a, const int& d): action(a), delay(
     if( field_width[1] < log10(abs(delay))+2 ) {
         field_width[1]=log10(abs(delay))+2;
     }
-    subfeatures.push_back(this);
 }
 
 ActionFeature::~ActionFeature() {}
 
-ActionFeature * ActionFeature::create(const action_t& a, const int& d) {
+Feature::const_feature_ptr_t ActionFeature::create(const action_t& a, const int& d) {
     ActionFeature * new_feature = new ActionFeature(a,d);
-    basis_features.insert(unique_f_ptr(new_feature));
-    return new_feature;
+    const_feature_ptr_t return_ptr(new_feature);
+    new_feature->set_this_ptr(return_ptr);
+    return return_ptr;
 }
 
 Feature::feature_return_value ActionFeature::evaluate(const_instanceIt_t insIt) const {
@@ -234,6 +176,15 @@ bool ActionFeature::features_contradict(const ActionFeature& f1, const ActionFea
     }
 }
 
+bool ActionFeature::operator==(const Feature& other) const {
+    const ActionFeature * pt = dynamic_cast<const ActionFeature *>(&other);
+    if(pt==nullptr) {
+        return false;
+    } else {
+        return (this->action==pt->action && this->delay==pt->delay);
+    }
+}
+
 ObservationFeature::ObservationFeature(const observation_t& s, const int& d): observation(s), delay(d) {
     type = OBSERVATION;
     complexity = 1;
@@ -243,15 +194,15 @@ ObservationFeature::ObservationFeature(const observation_t& s, const int& d): ob
     if( field_width[1] < log10(abs(delay))+2 ) {
         field_width[1]=log10(abs(delay))+2;
     }
-    subfeatures.push_back(this);
 }
 
 ObservationFeature::~ObservationFeature() {}
 
-ObservationFeature * ObservationFeature::create(const observation_t& s, const int& d) {
+Feature::const_feature_ptr_t ObservationFeature::create(const observation_t& s, const int& d) {
     ObservationFeature * new_feature = new ObservationFeature(s,d);
-    basis_features.insert(unique_f_ptr(new_feature));
-    return new_feature;
+    const_feature_ptr_t return_ptr(new_feature);
+    new_feature->set_this_ptr(return_ptr);
+    return return_ptr;
 }
 
 Feature::feature_return_value ObservationFeature::evaluate(const_instanceIt_t insIt) const {
@@ -280,20 +231,29 @@ bool ObservationFeature::features_contradict(const ObservationFeature& f1, const
     }
 }
 
+bool ObservationFeature::operator==(const Feature& other) const {
+    const ObservationFeature * pt = dynamic_cast<const ObservationFeature *>(&other);
+    if(pt==nullptr) {
+        return false;
+    } else {
+        return (this->observation==pt->observation && this->delay==pt->delay);
+    }
+}
+
 RelativeObservationFeature::RelativeObservationFeature(const int& dx, const int& dy, const int& d1, const int& d2):
     delta_x(dx), delta_y(dy), delay_1(d1), delay_2(d2)
 {
     type = RELATIVE_OBSERVATION;
     complexity = 1;
-    subfeatures.push_back(this);
 }
 
 RelativeObservationFeature::~RelativeObservationFeature() {}
 
-RelativeObservationFeature * RelativeObservationFeature::create(const int& dx, const int& dy, const int& d1, const int& d2) {
+Feature::const_feature_ptr_t RelativeObservationFeature::create(const int& dx, const int& dy, const int& d1, const int& d2) {
     RelativeObservationFeature * new_feature = new RelativeObservationFeature(dx,dy,d1,d2);
-    basis_features.insert(unique_f_ptr(new_feature));
-    return new_feature;
+    const_feature_ptr_t return_ptr(new_feature);
+    new_feature->set_this_ptr(return_ptr);
+    return return_ptr;
 }
 
 Feature::feature_return_value RelativeObservationFeature::evaluate(const_instanceIt_t insIt) const {
@@ -342,6 +302,20 @@ bool RelativeObservationFeature::features_contradict(const RelativeObservationFe
     }
 }
 
+bool RelativeObservationFeature::operator==(const Feature& other) const {
+    const RelativeObservationFeature * pt = dynamic_cast<const RelativeObservationFeature *>(&other);
+    if(pt==nullptr) {
+        return false;
+    } else {
+        return (
+            this->delay_1==pt->delay_1 &&
+            this->delay_2==pt->delay_2 &&
+            this->delta_x==pt->delta_x &&
+            this->delta_y==pt->delta_y
+            );
+    }
+}
+
 RewardFeature::RewardFeature(const reward_t& r, const int& d): reward(r), delay(d) {
     type = REWARD;
     complexity = 1;
@@ -351,15 +325,15 @@ RewardFeature::RewardFeature(const reward_t& r, const int& d): reward(r), delay(
     if( field_width[1] < log10(abs(delay))+2 ) {
         field_width[1]=log10(abs(delay))+2;
     }
-    subfeatures.push_back(this);
 }
 
 RewardFeature::~RewardFeature() {}
 
-RewardFeature * RewardFeature::create(const reward_t& r, const int& d) {
+Feature::const_feature_ptr_t RewardFeature::create(const reward_t& r, const int& d) {
     RewardFeature * new_feature = new RewardFeature(r,d);
-    basis_features.insert(unique_f_ptr(new_feature));
-    return new_feature;
+    const_feature_ptr_t return_ptr(new_feature);
+    new_feature->set_this_ptr(return_ptr);
+    return return_ptr;
 }
 
 Feature::feature_return_value RewardFeature::evaluate(const_instanceIt_t insIt) const {
@@ -388,25 +362,28 @@ bool RewardFeature::features_contradict(const RewardFeature& f1, const RewardFea
     }
 }
 
-AndFeature::AndFeature() {
-    type = AND;
+bool RewardFeature::operator==(const Feature& other) const {
+    const RewardFeature * pt = dynamic_cast<const RewardFeature *>(&other);
+    if(pt==nullptr) {
+        return false;
+    } else {
+        return (this->reward==pt->reward && this->delay==pt->delay);
+    }
 }
 
-AndFeature::AndFeature(const Feature& f1) {
-    type = AND;
-    subfeatures.insert(subfeatures.begin(),f1.get_subfeatures_begin(),f1.get_subfeatures_end());
-    clean_up_subfeatures();
-    complexity = subfeatures.size();
-    check_for_contradicting_subfeatures();
+AndFeature::AndFeature() {
+    finalize_construction();
+}
+
+AndFeature::AndFeature(const Feature& f) {
+    add_feature(f);
+    finalize_construction();
 }
 
 AndFeature::AndFeature(const Feature& f1, const Feature& f2) {
-    type = AND;
-    subfeatures.insert(subfeatures.begin(),f1.get_subfeatures_begin(),f1.get_subfeatures_end());
-    subfeatures.insert(subfeatures.begin(),f2.get_subfeatures_begin(),f2.get_subfeatures_end());
-    clean_up_subfeatures();
-    complexity = subfeatures.size();
-    check_for_contradicting_subfeatures();
+    add_feature(f1);
+    add_feature(f2);
+    finalize_construction();
 }
 
 AndFeature::~AndFeature() {}
@@ -460,6 +437,61 @@ string AndFeature::identifier() const {
     }
     return id_string+")"+Feature::identifier();
 };
+
+bool AndFeature::operator==(const Feature& other) const {
+    const AndFeature * pt = dynamic_cast<const AndFeature *>(&other);
+    if(pt==nullptr) {
+        return false;
+    } else {
+        return (this->subfeatures==pt->subfeatures);
+    }
+}
+
+// bool AndFeature::operator<(const AndFeature& other) const {
+//     if(subfeatures.size()==other.subfeatures.size()) {
+//         subfeature_const_iterator_t this_it  = subfeatures.begin();
+//         subfeature_const_iterator_t other_it = other.subfeatures.begin();
+//         while(this_it!=subfeatures.end() && other_it!=other.subfeatures.end()) {
+//             if((*this_it)->id==(*other_it)->get_id()) {
+//                 ++this_it;
+//                 ++other_it;
+//             }
+//             else {
+//                 return (*this_it)->id < (*other_it)->get_id();
+//             }
+//         }
+//         if(this_it!=subfeatures.end() || other_it!=other.subfeatures.end()) {
+//             DEBUG_OUT(0, "Autsch! This should never happen!");
+//         }
+//     } else {
+//         return subfeatures.size()<other.subfeatures.size();
+//     }
+//     return false;
+// }
+
+void AndFeature::add_feature(const Feature& f) {
+    const AndFeature * and_feature = dynamic_cast<const AndFeature *>(&f);
+    if(and_feature!=nullptr) {
+        subfeatures.insert(
+            and_feature->subfeatures.begin(),
+            and_feature->subfeatures.end()
+            );
+    } else {
+        const BasisFeature * basis_feature = dynamic_cast<const BasisFeature *>(&f);
+        if(basis_feature!=nullptr) {
+            subfeatures.insert(const_feature_ptr_t(basis_feature->get_this_ptr()));
+        } else {
+            DEBUG_ERROR("Unsupported feature type");
+            DEBUG_DEAD_LINE;
+        }
+    }
+}
+
+void AndFeature::finalize_construction() {
+    type = AND;
+    complexity = subfeatures.size();
+    check_for_contradicting_subfeatures();
+}
 
 void AndFeature::check_for_contradicting_subfeatures() {
     for( auto sub_1 : subfeatures ) {
