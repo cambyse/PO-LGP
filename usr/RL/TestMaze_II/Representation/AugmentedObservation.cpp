@@ -1,6 +1,6 @@
 #include "AugmentedObservation.h"
 
-#include "Config.h"
+#include "../Config.h"
 
 using util::INVALID;
 

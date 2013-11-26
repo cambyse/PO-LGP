@@ -5,7 +5,7 @@ class Instance;
 class InstanceIt;
 class ConstInstanceIt;
 
-#include "Config.h"
+#include "../Config.h"
 
 #include "../util.h"
 

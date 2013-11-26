@@ -13,7 +13,7 @@
 #define DEBUG_LEVEL 1
 #endif
 #define DEBUG_STRING "LBFGS: "
-#include "debug.h"
+#include "../debug.h"
 
 using std::min;
 using std::max;

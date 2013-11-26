@@ -1,6 +1,6 @@
 #include "Observation.h"
 
-#include "Config.h"
+#include "../Config.h"
 
 using util::INVALID;
 
