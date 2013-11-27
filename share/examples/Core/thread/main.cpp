@@ -61,6 +61,8 @@ void TEST(Thread){
   for(int i = 0; i < nThreads; i++)
     delete tp[i];
 
+  MT::wait(1.);
+
   // tout usage examples
   char i = 'i';
   char j = 'j';
@@ -86,10 +88,8 @@ void TEST(Thread){
 
   tout.unreg_all();
   tout() << "tests after unregistering all:" << endl;
-  tout(&i) << "test i" << endl;
-  tout(&j) << "test j" << endl;
-
-  MT::wait(2.);
+  tout(&i) << "test " << i << endl;
+  tout(&j) << "test " << j << endl;
 }
 
 int MAIN(int argn,char** argv){
