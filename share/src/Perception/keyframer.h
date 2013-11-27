@@ -23,19 +23,21 @@ struct KeyFramer {
   void addState(arr st);
   void addState(arr st, uint f);
 
+  arr getState();
   arr getState(uint f);
   arr getState(uint f, uint b);
-  arr getWindow(uint f);
-  arr getWindow(uint f, uint b);
+  //arr getWindow(uint f);
+  //arr getWindow(uint f, uint b);
 
   void setAgent(uint a);
   void setLWin(uint l);
 
-  void run();
-  arr getErr();
-  arr getErr(uint b);
-  void keyframes();
+  arr getCorrPCA(uint b1, uint b2, uint wlen);
+  arr getCorrWOPCA(uint b1, uint b2, uint wlen);
+  arr getCorr(uint b1, uint b2, uint wlen, bool pca);
+  MT::Array<arr> getCorrEnsemble(uint b1, uint b2, uintA wlens, bool pca);
 
-  void test();
+  // TODO define keyframe struct
+  void keyframes();
 };
 
