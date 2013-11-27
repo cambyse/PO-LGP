@@ -8,6 +8,9 @@ roslib.load_manifest('actionlib')
 import rospy
 import threading
 
+import rosors.srv
+from rosors import parser
+
 from actionlib import SimpleActionServer
 import the_curious_robot.msg as msgs
 import corepy
@@ -28,7 +31,7 @@ class ObserveOOITrajActionServer:
         # Subscriber
         self.perception_sub = rospy.Subscriber(
             name='/perception/updates',
-            data_class=rosors.objects,
+            data_class=msgs.Objects,
             callback=self.percept_cb)
 
         self.ooi_id_sub = rospy.Subscriber(
@@ -64,7 +67,6 @@ class ObserveOOITrajActionServer:
             )
             self.trajectory_pub.publish(trajectory_msg)
 
-
             # clean up
             del self.trajectory[:]
             self.trajectory = []
@@ -72,29 +74,29 @@ class ObserveOOITrajActionServer:
         self.server.set_succeeded()
 
     def percept_cb(self, data):
+        rospy.logdebug("get update.")
         self.data_changed = data.changed
         if data.objects:
             for obj in data.objects:
                 if obj != self.ooi_id:
                     continue
                 with self.trajectory_lock:
-                    body_msg = rospy.ServiceProxy("/world/bodies",
-                            rosors.msgs.Object(obj))
-                    body = msg_to_ors_body(body_msg)
+                    body_srv = rospy.ServiceProxy("/world/bodies",
+                                                  rosors.srv.Bodies)
+                    body_msg = body_srv()
+                    body = parser.msg_to_ors_body(body_msg.bodies[0])
                     self.trajectory.append(corepy.Transformation(body.X))
-
 
     def preempt_cb(self):
         self.server.set_preempted()
-
 
     def ooi_id_cb(self, msg):
         self.ooi_id = msg.id
 
 
 def main():
-    rospy.init_node('tcr_sas_observe_ooi_traj')
-    server = ObserveOOITrajActionServer('observe_ooi_traj')
+    rospy.init_node('tcr_sas_observe_ooi_traj', log_level=rospy.DEBUG)
+    ObserveOOITrajActionServer('observe_ooi_traj')
 
 if __name__ == '__main__':
     main()
