@@ -189,9 +189,6 @@ def msg_to_ors_body(msg, graph=None):
         shapes[-1].thisown = False
     ors_body.shapes = shapes
 
-    for s in ors_body.shapes:
-        print s.index
-
     return ors_body
 
 
