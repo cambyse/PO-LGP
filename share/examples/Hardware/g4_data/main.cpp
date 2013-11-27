@@ -9,18 +9,20 @@ void loadData(G4Data &g4d) {
 }
 
 void testData(G4Data &g4d) {
-  uint checkT           = 10;
-  uint checkN           = 14;
-  uint checkNrh         = 4;
-  uint checkNrhthumb    = 1;
-  uint checkNbook       = 1;
-  uintA checkD9         = {         checkN,        7 };
-  uintA checkDbook      = { checkT, checkNbook,    7 };
-  uintA checkD9book     = {         checkNbook,    7 };
-  uintA checkDrh        = { checkT, checkNrh,      7 };
-  uintA checkD9rh       = {         checkNrh,      7 };
-  uintA checkDrhthumb   = { checkT, checkNrhthumb, 7 };
-  uintA checkD9rhthumb  = {         checkNrhthumb, 7 };
+  uint checkT              = 10;
+  uint checkN              = 14;
+  uint checkNrh            = 4;
+  uint checkNrhthumb       = 1;
+  uint checkNbook          = 1;
+  uintA checkD9            = {         checkN,        7 };
+  uintA checkDbook         = { checkT, checkNbook,    7 };
+  uintA checkD9book        = {         checkNbook,    7 };
+  uintA checkDrh           = { checkT, checkNrh,      7 };
+  uintA checkD9rh          = {         checkNrh,      7 };
+  uintA checkDrhthumb      = { checkT, checkNrhthumb, 7 };
+  uintA checkD9rhthumb     = {         checkNrhthumb, 7 };
+  uintA checkDPosrhthumb   = { checkT, checkNrhthumb, 3 };
+  uintA checkDPos9rhthumb  = {         checkNrhthumb, 3 };
 
   uint T, N, v;
   arr data;
@@ -104,6 +106,16 @@ void testData(G4Data &g4d) {
   dim = data.getDim();
   cout << "dim 9 rh thumb = " << dim << endl;
   CHECK(dim == checkD9rhthumb, "wrong value of dim");
+
+  data = g4d.queryPos("rh:thumb");
+  dim = data.getDim();
+  cout << "dim Pos rh thumb = " << dim << endl;
+  CHECK(dim == checkDPosrhthumb, "wrong value of dim");
+
+  data = g4d.queryPos(9u, "rh:thumb");
+  dim = data.getDim();
+  cout << "dim Pos 9 rh thumb = " << dim << endl;
+  CHECK(dim == checkDPos9rhthumb, "wrong value of dim");
 
   cout << endl;
   cout << "========================================" << endl;
