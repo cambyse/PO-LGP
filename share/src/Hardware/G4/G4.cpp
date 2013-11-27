@@ -1,3 +1,5 @@
+#ifdef G4_INSTALLED
+
 #include "G4.h"
 #include <G4TrackIncl.h>
 
@@ -145,3 +147,6 @@ void G4Poller::step(){
 void G4Poller::close(){
   g4_close_tracker();
 }
+
+#endif // ifdef G4_INSTALLED
+
