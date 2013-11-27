@@ -2249,6 +2249,24 @@ template<class T> MT::Array<T> elemWiseMax(const MT::Array<T>& v, const MT::Arra
   return z;
 }
 
+template<class T> MT::Array<T> elemWiseProd(const MT::Array<T>& v, const MT::Array<T>& w) {
+  // also valid for non-linear arrays (tensors)
+  CHECK(v.getDim()==w.getDim(), "Arrays must have same dimension.");
+  MT::Array<T> z(v.N);
+  for(uint i = 0; i<v.N; i++) z.p[i] = v.p[i]*w.p[i];
+  z.reshapeAs(v);
+  return z;
+}
+
+template<class T> MT::Array<T> elemWiseDiv(const MT::Array<T>& v, const MT::Array<T>& w) {
+  // also valid for non-linear arrays (tensors)
+  CHECK(v.getDim()==w.getDim(), "Arrays must have same dimension.");
+  CHECK(w.findValue(0) == -1, "Array w should not contain 0");
+  MT::Array<T> z(v.N);
+  for(uint i = 0; i<v.N; i++) z.p[i] = v.p[i]/w.p[i];
+  z.reshapeAs(v);
+  return z;
+}
 
 //===========================================================================
 //

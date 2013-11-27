@@ -86,8 +86,9 @@ struct MotionProblem {
   double tau; ///< duration of single step
   
   //start constraints
-  arr x0,v0; ///< fixed start state and velocity
-  arr x_current, v_current; ///< memory for which state was set (which state ors is in)
+  arr x0, v0; ///< fixed start state and velocity TODO: delete v0?
+  arr prefix; ///< a set of states PRECEEDING x[0] (having 'negative' time indices) and which influence the control cost on x[0]. NOTE: x[0] is subject to optimization. DEFAULT: constantly equals x0
+  arr x_current, v_current; ///< memory for which state was set (which state ors is in) TODO: necessary?
   
   //evaluation outcomes
   arr costMatrix;

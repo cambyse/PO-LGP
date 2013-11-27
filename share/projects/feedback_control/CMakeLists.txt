@@ -11,6 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 )
 
+SET(CMAKE_CXX_FLAGS "-std=c++0x") 
+
 ###########################
 #   MLR
 ###########################

@@ -275,7 +275,7 @@ void KeyValueGraph::read(std::istream& is) {
       if(str=="%include"){
         is >>str;
         std::ifstream is2;
-        MT::open(is2,str);
+        MT::open(is2, str);
         read(is2);
         is2.close();
       }else HALT("don't know special command " <<str);
