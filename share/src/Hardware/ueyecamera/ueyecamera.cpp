@@ -1,3 +1,5 @@
+#ifdef UEYE_INSTALLED
+
 #include <Core/thread.h>
 #include <ueye.h>
 #include "ueyecamera.h"
@@ -758,4 +760,6 @@ void UEyePoller::close() {
   delete s;
   throut::throut(this, "closed successfully");
 }
+
+#endif // UEYE_INSTALLED
 
