@@ -47,10 +47,7 @@ class RosOrs(object):
     def handle_graph_request(self, req):
         rospy.logdebug("handling graph request")
         res = srv.GraphResponse()
-        for body in self.graph.bodies:
-            res.bodies.append(parser.ors_body_to_msg(body))
-        for shape in self.graph.shapes:
-            res.shapes.append(parser.ors_shape_to_msg(shape))
+        res.graph = parser.ors_graph_to_msg(self.graph)
         return res
 
     def handle_bodies_request(self, req):
