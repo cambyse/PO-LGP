@@ -5,19 +5,11 @@ import roslib
 roslib.load_manifest('the_curious_robot')
 import rospy
 
-import os
-import Queue
-# import time
-
-# import numpy as np
-
 import the_curious_robot as tcr
-import the_curious_robot.srv as srv
-import rosors.srv
 
-# The order is important - this sucks
-import orspy as ors
-import corepy
+import rosors.srv
+import rosors
+from rosors import parser
 
 import require_provide as rp
 
@@ -29,17 +21,18 @@ class FakePerception():
 
     def __init__(self):
         # init the node: test_fitting
-        rospy.init_node('tcr_perception')
+        rospy.init_node('tcr_perception', log_level=rospy.INFO)
 
         self.graph = None
         self.old_graph = None
 
-        self.update_pub = rospy.Publisher('perception/updates', 
-                                          rosors.msgs.objects)
+        self.update_pub = rospy.Publisher('/perception/updates',
+                                          tcr.msg.Objects)
 
     #########################################################################
     # logic
     def run(self):
+        rospy.logdebug("start perception")
         rp.Provide("Perception")
         """ the perception loop """
         while not rospy.is_shutdown():
@@ -49,23 +42,28 @@ class FakePerception():
         # TODO: newClone() ?
         self.old_graph = self.graph
         graph_srv = rospy.ServiceProxy("/world/graph", rosors.srv.Graph)
-        graph_msg = graph_srv()
+        try:
+            graph_msg = graph_srv()
+        except rospy.ServiceException:
+            return
 
-        self.graph = orspy.Graph()
+        self.graph = parser.msg_to_ors_graph(graph_msg.graph)
 
-        update_msg = msgs.ObjectIDs()
+        update_msg = tcr.msg.Objects()
         update_msg.changed = False
         for b in self.graph.bodies:
-            if has_moved(b):
+            if self.has_moved(b):
                 update_msg.changed = True
                 update_msg.objects.append(b.index)
 
-        self.upddate_pub.pub(update_msg)
+        #rospy.logdebug(update_msg)
+        #rospy.logdebug("="*80)
+        self.update_pub.publish(update_msg)
 
     def has_moved(self, body):
-        if self.not_published_once:
+        if self.old_graph is None:
             return True
-        old_body = self.old_world.getBodyByName(body.name)
+        old_body = self.old_graph.getBodyByName(body.name)
         eps = 10e-5
         return (body.X.pos - old_body.X.pos).length() > eps
 
