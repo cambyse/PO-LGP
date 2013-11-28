@@ -53,7 +53,7 @@ void display(const G4Data &g4d) {
     for(auto &b: ors.bodies) {
       arr x = g4d.query(t, b->name);
       x.reshape(x.N); // TODO there should be a nicer way.. // resetD doesn't work
-      CHECK(norm(x)!=0, "Why isn't interpolation on?");
+      CHECK(length(x)!=0, "Why isn't interpolation on?");
 
       b->X.pos.set(x(0), x(1), x(2));
       b->X.rot.set(x(3), x(4), x(5), x(6));
