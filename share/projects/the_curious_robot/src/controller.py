@@ -9,6 +9,7 @@ roslib.load_manifest('the_curious_robot')
 
 import rospy
 import the_curious_robot.msg as msgs
+import the_curious_robot.srv as srvs
 import os
 
 import rosors.rosors
@@ -21,6 +22,7 @@ import motionpy
 import corepy
 
 import require_provide as rp
+import numpy as np
 
 
 class FakeController():
@@ -51,11 +53,14 @@ class FakeController():
             name='control',
             data_class=msgs.control,
             callback=self.control_cb)
+        self.control_service = rospy.Service("control", srvs.Control,
+                                             self.control_service)
 
         # Misc
         self.goal = None
         self.frame_id = 1
         self.recompute_trajectory = False
+        self.trajectory = None
 
     def run(self):
         rp.Provide("Controller")
@@ -64,53 +69,58 @@ class FakeController():
             self.step()
 
     def compute_trajectory(self):
+        rospy.loginfo("Compute a new Trajectory")
         P = motionpy.MotionProblem(self.world.graph)
         P.T = 1
 
-        #shapes = np.ndarray([P.ors.getBodyByName("robot").shapes[0].index],
-                            #np.uint32)
-        #c = P.addTaskMap("proxyColls",
-                         #motionpy.ProxyTaskMap(motionpy.allVersusListedPTMT,
-                                               #shapes, .01, True))
-        #P.setInterpolatingCosts(c, motionpy.MotionProblem.constant,
-                                #np.ndarray([0]), 1e-0)
-        #planner = motionpy.RRTPlanner(self.world.graph, P, self.stepsize)
+        shapes = np.ndarray([self.world.graph.getBodyByName("robot").shapes[0]
+                             .index],
+                            np.uint32)
+        c = P.addTaskMap("proxyColls",
+                         motionpy.ProxyTaskMap(motionpy.allVersusListedPTMT,
+                                               shapes, .01, True))
+        P.setInterpolatingCosts(c, motionpy.MotionProblem.constant,
+                                np.ndarray([0]), 1e-0)
+        planner = motionpy.RRTPlanner(self.world.graph, P, self.stepsize)
 
-        #planner.joint_max = np.ndarray([6, 6, 1])
-        #planner.joint_max = np.ndarray([-6, -6, 1])
+        planner.joint_max = np.ndarray([6, 6, 1])
+        planner.joint_max = np.ndarray([-6, -6, 1])
 
-        #target = corepy.ARRAY(self.goal.pos)
-        #self.trajectory = planner.getTrajectoryTo(target, .01)
+        target = corepy.ARRAY(self.goal.pos)
+        self.trajectory = planner.getTrajectoryTo(target, .01)
 
-        #rospy.logdebug(self.trajectory)
+        rospy.logdebug(self.trajectory)
 
     def step(self):
         if self.recompute_trajectory:
             self.compute_trajectory()
-            self.recompute_trajectory = False
 
+        if self.trajectory:
+            self.world.graph.setJointState(self.trajectory[self.tpos])
+            self.tpos += 1
+
+        self.physx.step()
+        self.world.graph.calcBodyFramesFromJoints()
+        self.gl.update()
+
+    def pstep(self):
         # P-Controller
-        if self.goal is not None:
-            Kp = rospy.get_param('Kp', 10e-3)
-            # tolerance for he movement
-            eps = 10e-3
-            agent = self.world.graph.getBodyByName("robot")
+        Kp = 10e-3
+        # tolerance for he movement
+        eps = 10e-3
+        agent = self.world.graph.getBodyByName("robot")
+
+        if self.goal:
             if (agent.X.pos - self.goal.pos).length() > eps:
 
                 agent.X.pos = (agent.X.pos +
                                (self.goal.pos - agent.X.pos) * Kp)
-                # agent.X.vel = (self.goal.pos - agent.X.pos) * Kp
-                # agent.X.addRelativeVelocity(
-                    # Kp *(self.goal.pos.x - agent.X.pos.x),
-                    # Kp *(self.goal.pos.y - agent.X.pos.y),
-                    # Kp *(self.goal.pos.z -
-                    # agent.X.pos.z))
+
             else:
                 msg = msgs.control_done()
                 msg.header.frame_id = 'control done'
                 self.control_done_pub.publish(msg)
                 self.goal = None
-            # agent.X.rot = agent.X.rot + (self.goal.rot - agent.X.rot)*Kp
 
         self.physx.step()
         self.world.graph.calcBodyFramesFromJoints()
@@ -125,9 +135,28 @@ class FakeController():
         new_goal.rot.y = data.pose.rotation.y
         new_goal.rot.z = data.pose.rotation.z
         new_goal.rot.w = data.pose.rotation.w
-        if self.goal is None or self.goal != new_goal:
+
+        if self.goal is None:
             self.goal = new_goal
             self.recompute_trajectory = True
+
+    def control_service(self, req):
+        new_goal = corepy.Transformation()
+        new_goal.pos.x = req.pose.translation.x
+        new_goal.pos.y = req.pose.translation.y
+        new_goal.pos.z = req.pose.translation.z
+        new_goal.rot.x = req.pose.rotation.x
+        new_goal.rot.y = req.pose.rotation.y
+        new_goal.rot.z = req.pose.rotation.z
+        new_goal.rot.w = req.pose.rotation.w
+
+        self.goal = new_goal
+        self.recompute_trajectory = True
+
+        while self.goal is not None:
+            self.step()
+
+        return srvs.ControlResponse()
 
 
 if __name__ == '__main__':
