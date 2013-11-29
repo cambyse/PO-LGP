@@ -17,6 +17,9 @@
     -----------------------------------------------------------------  */
 
 #include "motion.h"
+#include "taskMap_default.h"
+
+//===========================================================================
 
 struct PDtask{
   TaskMap& map;
@@ -28,7 +31,7 @@ struct PDtask{
   double Pgain, Dgain;   ///< parameters of the PD controller or attractor dynamics
   double err, derr;
 
-  PDtask(TaskMap* m):map(*m), active(true) {}
+  PDtask(TaskMap* m):map(*m), active(true), prec(0.), Pgain(0.), Dgain(0.) {}
 
   void setTarget(const arr& yref, const arr& vref=NoArr);
   void setGains(double Pgain, double Dgain);
@@ -37,29 +40,25 @@ struct PDtask{
   arr getDesiredAcceleration(const arr& y, const arr& ydot);
 };
 
-struct FeedbackMotionProblem {
-  //engines to compute things
-  ors::Graph *ors;
-  SwiftInterface *swift;
+//===========================================================================
 
+struct FeedbackMotionControl : MotionProblem {
   MT::Array<PDtask*> tasks;
+  PDtask nullSpacePD;
 
-  //-- transition cost descriptions
-  arr H_rate_diag; ///< cost rate
-  double tau; ///< duration of single step
-
-  arr x_current, v_current; ///< memory for which state was set (which state ors is in)
-
-  FeedbackMotionProblem(ors::Graph *_ors=NULL, SwiftInterface *_swift=NULL, bool useSwift=true);
-  void loadTransitionParameters(); ///< loads transition parameters from cfgFile
-  void setState(const arr& x, const arr& v);
+  FeedbackMotionControl(ors::Graph *_ors=NULL, SwiftInterface *_swift=NULL, bool useSwift=true);
 
   //adding task spaces
   PDtask* addTask(const char* name, TaskMap *map);
+  PDtask* addPDTask(const char* name,
+                    double decayTime, double dampingRatio,
+                    DefaultTaskMapType type,
+                    const char* iShapeName=NULL, const ors::Vector& ivec=NoVector,
+                    const char* jShapeName=NULL, const ors::Vector& jvec=NoVector,
+                    const arr& params=NoArr);
 
   void getTaskCosts(arr& phi, arr& J, arr& a); ///< the general (`big') task vector and its Jacobian
   arr operationalSpaceControl();
-
-  //VectorFunction definitions
-//  virtual void fv(arr& phi, arr& J, const arr& x);
 };
+
+//===========================================================================

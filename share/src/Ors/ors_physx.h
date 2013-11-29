@@ -46,6 +46,7 @@ struct PhysXInterface {
   void pullState();
 
   bool isCreated();
+  void setArticulatedBodiesKinematic(ors::Graph& G, int agent=0);
   void ShutdownPhysX();
 };
 

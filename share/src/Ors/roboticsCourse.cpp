@@ -98,9 +98,9 @@ Simulator::~Simulator(){
 }
 
 
-void Simulator::watch(bool pause){
-  if(pause) s->gl.watch();
-  else s->gl.update();
+void Simulator::watch(bool pause, const char* txt){
+  if(pause) s->gl.watch(txt);
+  else s->gl.update(txt);
 }
 
 void Simulator::getJointAngles(arr& q){
@@ -119,19 +119,17 @@ uint Simulator::getJointDimension(){
 void Simulator::setJointAngles(const arr& q, bool updateDisplay){
   s->G.setJointState(q);
   s->G.calcBodyFramesFromJoints();
-  listDelete(s->G.proxies);
   s->swift.computeProxies(s->G, false);
-  //s->G.sortProxies(true);
   if(updateDisplay) s->gl.update();
   if(&q!=&s->q) s->q = q;
   s->qdot.setZero();
 }
 
-void Simulator::setJointAnglesAndVels(const arr& q, const arr& qdot){
+void Simulator::setJointAnglesAndVels(const arr& q, const arr& qdot, bool updateDisplay){
   s->G.setJointState(q, qdot);
   s->G.calcBodyFramesFromJoints();
   s->swift.computeProxies(s->G, false);
-  s->gl.update();
+  if(updateDisplay) s->gl.update();
   if(&q!=&s->q) s->q = q;
   if(&qdot!=&s->qdot) s->qdot = qdot;
 }
@@ -261,13 +259,14 @@ void Simulator::stepOde(const arr& qdot, double tau){
   s->ode.step(tau);
   s->ode.importStateFromOde(s->G);
 #endif
-  s->gl.update();
 }
 
 void Simulator::stepPhysx(const arr& qdot, double tau){
-  if(!s->physx.isCreated())  s->physx.create(s->G);
+  if(!s->physx.isCreated()){
+    s->physx.setArticulatedBodiesKinematic(s->G);
+    s->physx.create(s->G);
+  }
   s->physx.step(tau);
-  s->gl.update();
 }
 
 ors::Graph& Simulator::getOrsGraph(){

@@ -138,6 +138,15 @@ void PhysXInterface::step(double tau) {
   
 }
 
+void PhysXInterface::setArticulatedBodiesKinematic(ors::Graph& G, int agent){
+  for(ors::Joint* j:G.joints){
+    if(j->agent==agent){
+      if(j->from->type==ors::dynamicBT) j->from->type=ors::kinematicBT;
+      if(j->to->type==ors::dynamicBT) j->to->type=ors::kinematicBT;
+    }
+  }
+}
+
 /**
  * @brief Create the PhysX interface which then can be used by OpenGL.
  *
@@ -262,7 +271,8 @@ void sPhysXInterface::addBody(ors::Body *b, physx::PxMaterial *mMaterial) {
       actor->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
       break;
     case ors::noneBT:
-      actor = mPhysics->createRigidDynamic(OrsTrans2PxTrans(b->X));
+      HALT("this shoudn't be none BT!?")
+//      actor = mPhysics->createRigidDynamic(OrsTrans2PxTrans(b->X));
       break;
   }
   CHECK(actor, "create actor failed!");

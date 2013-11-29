@@ -29,7 +29,7 @@ struct Simulator {
   Simulator(const char* orsFile);
   ~Simulator();
   
-  void watch(bool pause=true);                                    //pauses and lets you watch the OpenGL window
+  void watch(bool pause=true, const char *txt=NULL);                                    //pauses and lets you watch the OpenGL window
   
   //-- KINEMATICS
   //set the joint angles AND compute the frames of all bodies via
@@ -53,7 +53,7 @@ struct Simulator {
   //set the joint angles and velocities AND compute the frames and
   //linear & angular velocities of all bodies via
   //forward chaining of dynamic transformations AND update the robot display
-  void setJointAnglesAndVels(const arr& q, const arr& qdot);
+  void setJointAnglesAndVels(const arr& q, const arr& qdot, bool updateDisplay=true);
   void getJointAnglesAndVels(arr& q, arr& qdot);
   void getDynamics(arr& M, arr& F); //get the mass matrix and force vector describing the system equation
   double getEnergy();

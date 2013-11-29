@@ -1,5 +1,7 @@
 #include "feedbackControl.h"
 
+//===========================================================================
+
 void PDtask::setTarget(const arr& yref, const arr& vref){
   y_ref = yref;
   if(&vref) v_ref=vref; else v_ref.resizeAs(y_ref).setZero();
@@ -14,50 +16,45 @@ void PDtask::setGains(double pgain, double dgain) {
 
 void PDtask::setGainsAsNatural(double decayTime, double dampingRatio) {
   active=true;
-  Pgain = MT::sqr(MT_PI/decayTime);
-  Dgain = 4.*dampingRatio*sqrt(Pgain);
+  Pgain = MT::sqr(1./decayTime);
+  Dgain = 2.*dampingRatio/decayTime;
   if(!prec) prec=100.;
 }
 
 arr PDtask::getDesiredAcceleration(const arr& y, const arr& ydot){
+  if(!y_ref.N) y_ref.resizeAs(y).setZero();
+  if(!v_ref.N) v_ref.resizeAs(ydot).setZero();
   return Pgain*(y_ref-y) + Dgain*(v_ref-ydot);
 }
 
-FeedbackMotionProblem::FeedbackMotionProblem(ors::Graph *_ors, SwiftInterface *_swift, bool useSwift) {
-  if(_ors)   ors   = _ors;   else { ors=new ors::Graph;        ors  ->init(MT::getParameter<MT::String>("orsFile")); } // orLinkTree(); }
-  if(useSwift){
-    if(_swift) swift = _swift; else { swift=new SwiftInterface;  swift->init(*ors, 2.*MT::getParameter<double>("swiftCutoff", 0.11)); }
-  }else swift=NULL;
-  ors->getJointState(x_current, v_current);
+//===========================================================================
+
+FeedbackMotionControl::FeedbackMotionControl(ors::Graph *_ors, SwiftInterface *_swift, bool useSwift)
+  : MotionProblem(_ors, _swift, useSwift), nullSpacePD(NULL) {
+  loadTransitionParameters();
+  nullSpacePD.setGainsAsNatural(1.,1.);
+  nullSpacePD.prec=1.;
 }
 
-PDtask* FeedbackMotionProblem::addTask(const char* name, TaskMap *m){
+PDtask* FeedbackMotionControl::addTask(const char* name, TaskMap *m){
   PDtask *t = new PDtask(m);
   t->name=name;
   tasks.append(t);
   return t;
 }
 
-void FeedbackMotionProblem::setState(const arr& q, const arr& v) {
-  if(&v) v_current = v;
-  x_current = q;
-  ors->setJointState(q);
-  ors->calcBodyFramesFromJoints();
-  if(swift) swift->computeProxies(*ors, false);
+PDtask* FeedbackMotionControl::addPDTask(const char* name,
+                                         double decayTime, double dampingRatio,
+                                         DefaultTaskMapType type,
+                                         const char* iShapeName, const ors::Vector& ivec,
+                                         const char* jShapeName, const ors::Vector& jvec,
+                                         const arr& params){
+  PDtask *t = addTask(name, new DefaultTaskMap(type, *ors, iShapeName, ivec, jShapeName, jvec, params));
+  t->setGainsAsNatural(decayTime, dampingRatio);
+  return t;
 }
 
-void FeedbackMotionProblem::loadTransitionParameters() {
-  //transition type
-//  transitionType = (TransitionType)MT::getParameter<int>("transitionType");
-
-  //time and steps
-  tau = 0.01;
-
-  //transition cost metric
-  H_rate_diag.resize(x_current.N)  = MT::getParameter<double>("Hrate");
-}
-
-void FeedbackMotionProblem::getTaskCosts(arr& phi, arr& J, arr& a){
+void FeedbackMotionControl::getTaskCosts(arr& phi, arr& J, arr& a){
   phi.clear();
   if(&J) J.clear();
   arr y, J_y, a_des;
@@ -72,15 +69,15 @@ void FeedbackMotionProblem::getTaskCosts(arr& phi, arr& J, arr& a){
   if(&J) J.reshape(phi.N, a.N);
 }
 
-arr FeedbackMotionProblem::operationalSpaceControl(){
+arr FeedbackMotionControl::operationalSpaceControl(){
   arr phi, J, a;
   a.resizeAs(x_current).setZero();
   getTaskCosts(phi, J, a);
   arr H, Jinv;
   H.setDiag(H_rate_diag);
   pseudoInverse(Jinv, J, H, 1e-6);
-  a = - Jinv * phi;
+  arr Null = eye(a.N) - Jinv * J;
+  a = - Jinv * phi + Null * nullSpacePD.getDesiredAcceleration(x_current, v_current);
   return a;
 }
 
-//virtual void FeedbackMotionProblem::fv(arr& phi, arr& J, const arr& a){

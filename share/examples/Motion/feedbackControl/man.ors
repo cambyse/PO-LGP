@@ -77,3 +77,4 @@ joint (rdn rfoot){ A=<T t(0 0 -.17) d(20  1 0 0)> B=<T t(0 .04 -.025)>  }
 
 body rightTarget { type=1 size=[0 0 0 .03] X=<T t(-0.2 -0.4 1.1)> color=[1 0 0] }
 body leftTarget  { type=1 size=[0 0 0 .03] X=<T t( 0.2 -0.4 1.1)> color=[1 0 0] }
+body table { type=0 size=[1 1 .03 0] X=<T t(0 -.7 .5)> color=[.3 .3 .3] fixed=true }
