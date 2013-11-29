@@ -24,8 +24,7 @@ class FakePerception():
         rospy.init_node('tcr_perception', log_level=rospy.INFO)
 
         self.graph = None
-        self.old_graph = None
-
+        self.eps = 10e-4
         self.update_pub = rospy.Publisher('/perception/updates',
                                           tcr.msg.Objects)
 
@@ -35,37 +34,45 @@ class FakePerception():
         rospy.logdebug("start perception")
         rp.Provide("Perception")
         """ the perception loop """
+        self.init()
         while not rospy.is_shutdown():
             self.step()
 
-    def step(self):
-        # TODO: newClone() ?
-        self.old_graph = self.graph
+    def init(self):
         graph_srv = rospy.ServiceProxy("/world/graph", rosors.srv.Graph)
+        while not rospy.is_shutdown():
+            try:
+                graph_msg = graph_srv()
+            except rospy.ServiceException:
+                continue
+            break
+        self.graph = parser.msg_to_ors_graph(graph_msg.graph)
+        return
+
+    def update_positions(self, body):
+        gbody = self.graph.getBodyByName(body.name)
+        changed = ((gbody.X.pos - body.X.pos).length() > self.eps)
+        #rospy.logdebug(gbody.X)
+        #rospy.logdebug(body.X)
+        gbody.X = body.X
+        return changed
+
+    def step(self):
         try:
-            graph_msg = graph_srv()
+            body_srv = rospy.ServiceProxy("/world/bodies", rosors.srv.Bodies)
+            body_msg = body_srv(no_shapes=True)
         except rospy.ServiceException:
             return
 
-        self.graph = parser.msg_to_ors_graph(graph_msg.graph)
-
         update_msg = tcr.msg.Objects()
         update_msg.changed = False
-        for b in self.graph.bodies:
-            if self.has_moved(b):
+        for body in body_msg.bodies:
+            if self.update_positions(parser.msg_to_ors_body(body)):
                 update_msg.changed = True
-                update_msg.objects.append(b.index)
+                update_msg.objects += [shape.index for shape in
+                                       self.graph.bodies[body.index].shapes]
 
-        #rospy.logdebug(update_msg)
-        #rospy.logdebug("="*80)
         self.update_pub.publish(update_msg)
-
-    def has_moved(self, body):
-        if self.old_graph is None:
-            return True
-        old_body = self.old_graph.getBodyByName(body.name)
-        eps = 10e-5
-        return (body.X.pos - old_body.X.pos).length() > eps
 
 
 if __name__ == '__main__':
