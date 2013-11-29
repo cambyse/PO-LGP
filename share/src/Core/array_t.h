@@ -1987,6 +1987,36 @@ template<class T> MT::Array<T> sum(const MT::Array<T>& v, uint d) {
   NIY;
 }
 
+/// \f$\sum_i x_i\f$
+template<class T> MT::Array<T> mean(const MT::Array<T>& v, uint d) {
+  CHECK(v.nd>d, "array doesn't have this dimension");
+  MT::Array<T> x;
+  x.referTo(v);
+  MT::Array<T> S;
+  uint i, j;
+  if(d==v.nd-1) {  //sum over last index - contiguous in memory
+    x.reshape(x.N/x.dim(x.nd-1), x.dim(x.nd-1));
+    S.resize(x.d0);  S.setZero();
+    for(i=0; i<x.d0; i++) {
+      for(j=0; j<x.d1; j++)
+        S(i) += x(i, j);
+      S(i) *= 1./x.d1;
+    }
+    return S;
+  }
+  if(d==0) {  //sum over first index
+    x.reshape(x.d0, x.N/x.d0);
+    S.resize(x.d1);  S.setZero();
+    for(j=0; j<x.d1; j++) {
+      for(i=0; i<x.d0; i++)
+        S(j) += x(i, j);
+      S(j) *= 1./x.d0;
+    }
+    return S;
+  }
+  NIY;
+}
+
 /// \f$\sum_i |x_i|\f$
 template<class T> T sumOfAbs(const MT::Array<T>& v) {
   T t(0);
