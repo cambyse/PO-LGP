@@ -74,28 +74,30 @@ class ObserveOOITrajActionServer:
         self.server.set_succeeded()
 
     def percept_cb(self, data):
-        rospy.logdebug("get update.")
         self.data_changed = data.changed
         if data.objects:
             for obj in data.objects:
                 if obj != self.ooi_id:
                     continue
                 with self.trajectory_lock:
-                    body_srv = rospy.ServiceProxy("/world/bodies",
-                                                  rosors.srv.Bodies)
-                    body_msg = body_srv()
-                    body = parser.msg_to_ors_body(body_msg.bodies[0])
-                    self.trajectory.append(corepy.Transformation(body.X))
+                    rospy.logdebug("interesting movement detected")
+                    shape_srv = rospy.ServiceProxy("/world/shapes",
+                                                   rosors.srv.Shapes)
+                    shape_msg = shape_srv(index=self.ooi_id)
+                    shape = parser.msg_to_ors_shape(shape_msg.shapes[0])
+                    self.trajectory.append(corepy.Transformation(shape.X))
+        #rospy.loginfo(self.trajectory)
 
     def preempt_cb(self):
         self.server.set_preempted()
 
     def ooi_id_cb(self, msg):
+        rospy.logdebug("ooi id = " + str(msg.id))
         self.ooi_id = msg.id
 
 
 def main():
-    rospy.init_node('tcr_sas_observe_ooi_traj', log_level=rospy.DEBUG)
+    rospy.init_node('tcr_sas_observe_ooi_traj')
     ObserveOOITrajActionServer('observe_ooi_traj')
 
 if __name__ == '__main__':
