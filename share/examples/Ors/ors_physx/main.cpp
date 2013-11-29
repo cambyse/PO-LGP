@@ -49,8 +49,7 @@ void TEST(OrsPhysx) {
   createOrs(ors, glMy);
   
   PhysXInterface physx;
-  physx.G = &ors;
-  physx.create();
+  physx.create(ors);
   
   glPh.add(glStandardScene, NULL);
   glPh.add(glPhysXInterface, &physx);

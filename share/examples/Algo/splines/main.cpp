@@ -61,7 +61,7 @@ struct SplineCost:ScalarFunction{
   }
 };
 
-void testBSpline(){
+void TEST(BSpline){
   uint K=5,T=100; //6 spline point, path of length T=100
 
   arr X(K+1,2); //spline points
@@ -144,7 +144,7 @@ void testBSpline(){
 }
 */
 
-int main(int argc,char** argv){
+int MAIN(int argc,char** argv){
   testBSpline();
   //testOldSplines();
 

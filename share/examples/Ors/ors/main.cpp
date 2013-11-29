@@ -1,4 +1,5 @@
 #include <Ors/ors.h>
+#include <Algo/spline.h>
 #include <Algo/algos.h>
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
@@ -168,7 +169,7 @@ void generateSequence(arr &X, uint T, uint n){
   rndUniform(P,-1.,1.,false); P[0]=0.; P[P.d0-1]=0.;
   
   //convert into a smooth spline (1/0.03 points per via point):
-  MT::Spline(T,P).eval(X);
+  X = MT::Spline(T,P).eval();
 }
 
 void TEST(PlayStateSequence){
@@ -472,10 +473,6 @@ void TEST(BlenderImport){
 #endif
 
 int MAIN(int argc,char **argv){
-  testDynamics();
-  return 0;
-
-
   testLoadSave();
   testPlayStateSequence();
   testKinematics();

@@ -66,8 +66,7 @@ static PxSimulationFilterShader gDefaultFilterShader=PxDefaultSimulationFilterSh
  * @param physx the PhyxXInteface which handles the ors graph.
  */
 void bindOrsToPhysX(ors::Graph& graph, OpenGL& gl, PhysXInterface& physx) {
-  physx.G = &graph;
-  physx.create();
+  physx.create(graph);
   
   gl.add(glStandardScene, NULL);
   gl.add(glPhysXInterface, &physx);
@@ -84,8 +83,8 @@ void bindOrsToPhysX(ors::Graph& graph, OpenGL& gl, PhysXInterface& physx) {
   gl.update();
 }
 
-
 // ============================================================================
+
 void PxTrans2OrsTrans(ors::Transformation& f, const PxTransform& pose) {
   f.pos.set(pose.p.x, pose.p.y, pose.p.z);
   f.rot.set(pose.q.w, pose.q.x, pose.q.y, pose.q.z);
@@ -95,18 +94,23 @@ PxTransform OrsTrans2PxTrans(const ors::Transformation& f) {
   return PxTransform(PxVec3(f.pos.x, f.pos.y, f.pos.z), PxQuat(f.rot.x, f.rot.y, f.rot.z, f.rot.w));
 }
 
+// ============================================================================
+
 struct sPhysXInterface {
+  ors::Graph *G;
   PxScene* gScene;
-  PxReal timestep;
   MT::Array<PxRigidActor*> actors;
   
-  sPhysXInterface() {
-    gScene = NULL;
-    timestep = 1.0f/60.0f;
+  sPhysXInterface():G(NULL), gScene(NULL) {
   }
+
+  void addBody(ors::Body *b, physx::PxMaterial *material);
+  void addJoint(ors::Joint *jj);
 };
 
-PhysXInterface::PhysXInterface() {
+// ============================================================================
+
+PhysXInterface::PhysXInterface(): s(NULL) {
   s = new sPhysXInterface;
 }
 
@@ -114,16 +118,16 @@ PhysXInterface::~PhysXInterface() {
   delete s;
 }
 
-void PhysXInterface::step() {
+void PhysXInterface::step(double tau) {
   //-- push positions of all kinematic objects
   uint i;
   ors::Body *b;
-  for_list(i,b,G->bodies) if(b->type==ors::kinematicBT) {
+  for_list(i,b,s->G->bodies) if(b->type==ors::kinematicBT) {
     ((PxRigidDynamic*)s->actors(i))->setKinematicTarget(OrsTrans2PxTrans(b->X));
   }
   
   //-- dynamic simulation
-  s->gScene->simulate(s->timestep);
+  s->gScene->simulate(tau);
   
   //...perform useful work here using previous frame's state data
   while(!s->gScene->fetchResults()) {
@@ -140,8 +144,9 @@ void PhysXInterface::step() {
  * - setup some physx stuff
  * - create PhysX equivalent to the ors graph
  */
-void PhysXInterface::create() {
-  CHECK(G, "");
+void PhysXInterface::create(ors::Graph& G) {
+  CHECK(!s->G,"can create an interface only once");
+  s->G = &G;
   if(!mFoundation) {
     mFoundation = PxCreateFoundation(PX_PHYSICS_VERSION, gDefaultAllocatorCallback, gDefaultErrorCallback);
     mPhysics = PxCreatePhysics(PX_PHYSICS_VERSION, *mFoundation, PxTolerancesScale());
@@ -197,23 +202,21 @@ void PhysXInterface::create() {
   // loop through ors
   uint i;
   ors::Body* b;
-  for_list(i, b, G->bodies) 
-    addBody(b, mMaterial);
+  for_list(i, b, G.bodies) s->addBody(b, mMaterial);
   
   /// ADD joints here!
   ors::Joint* jj;
-  for_list(i, jj, G->joints) 
-    addJoint(jj);
+  for_list(i, jj, G.joints) s->addJoint(jj);
 }
 
-void PhysXInterface::addJoint(ors::Joint *jj) {
+void sPhysXInterface::addJoint(ors::Joint *jj) {
   PxTransform A = OrsTrans2PxTrans(jj->A);
   PxTransform B = OrsTrans2PxTrans(jj->B);
   switch(jj->type) {
     case ors::JT_hingeX: {
       PxRevoluteJoint* desc;
       //  CHECK(A.p!=B.p,"Something is horribly wrong!");
-      desc = PxRevoluteJointCreate(*mPhysics, this->s->actors(jj->ifrom), A, this->s->actors(jj->ito), B.getInverse());
+      desc = PxRevoluteJointCreate(*mPhysics, actors(jj->ifrom), A, actors(jj->ito), B.getInverse());
       
       if(jj->ats.getValue<arr>("limit")) {
         arr limits = *(jj->ats.getValue<arr>("limit"));
@@ -230,7 +233,7 @@ void PhysXInterface::addJoint(ors::Joint *jj) {
     break;
     case ors::JT_fixed: {
       // PxFixedJoint* desc =
-      PxFixedJointCreate(*mPhysics, this->s->actors(jj->ifrom), A, this->s->actors(jj->ito), B.getInverse());
+      PxFixedJointCreate(*mPhysics, actors(jj->ifrom), A, actors(jj->ito), B.getInverse());
       // desc->setProjectionLinearTolerance(1e10);
       // desc->setProjectionAngularTolerance(3.14);
     }
@@ -243,7 +246,7 @@ void PhysXInterface::addJoint(ors::Joint *jj) {
   }
 }
 
-void PhysXInterface::addBody(ors::Body *b, physx::PxMaterial *mMaterial) {
+void sPhysXInterface::addBody(ors::Body *b, physx::PxMaterial *mMaterial) {
   uint j;
   ors::Shape* s;
   PxRigidDynamic* actor;
@@ -322,28 +325,31 @@ void PhysXInterface::addBody(ors::Body *b, physx::PxMaterial *mMaterial) {
     actor->setLinearVelocity(PxVec3(b->X.vel.x, b->X.vel.y, b->X.vel.z));
     actor->setAngularVelocity(PxVec3(b->X.angvel.x, b->X.angvel.y, b->X.angvel.z));
   }
-  this->s->gScene->addActor(*actor);
+  gScene->addActor(*actor);
 
-  this->s->actors.append(actor);
+  actors.append(actor);
   //WARNING: actors must be aligned (indexed) exactly as G->bodies
 }
 
 void PhysXInterface::pullState() {
-  for_index(i, s->actors) PxTrans2OrsTrans(G->bodies(i)->X, s->actors(i)->getGlobalPose());
-  G->calcShapeFramesFromBodies();
-  G->calcJointsFromBodyFrames();
+  for_index(i, s->actors) PxTrans2OrsTrans(s->G->bodies(i)->X, s->actors(i)->getGlobalPose());
+  s->G->calcShapeFramesFromBodies();
+  s->G->calcJointsFromBodyFrames();
 }
 
-void PhysXInterface::syncWithOrs() {
+void PhysXInterface::pushState() {
   PxMaterial* mMaterial = mPhysics->createMaterial(1.f, 1.f, 0.5f);
-  for_index(i, G->bodies) {
+  for_index(i, s->G->bodies) {
     if(s->actors.N > i) {
-      s->actors(i)->setGlobalPose(OrsTrans2PxTrans(G->bodies(i)->X));
-    }
-    else {
-      addBody(G->bodies(i), mMaterial);  
+      s->actors(i)->setGlobalPose(OrsTrans2PxTrans(s->G->bodies(i)->X));
+    } else {
+      s->addBody(s->G->bodies(i), mMaterial);
     }
   }
+}
+
+bool PhysXInterface::isCreated(){
+  return s->G!=NULL;
 }
 
 void PhysXInterface::ShutdownPhysX() {
@@ -413,7 +419,7 @@ void DrawActor(PxRigidActor* actor, ors::Body *body) {
 }
 
 void PhysXInterface::glDraw() {
-  for_index(i, s->actors)  DrawActor(s->actors(i), G->bodies(i));
+  for_index(i, s->actors)  DrawActor(s->actors(i), s->G->bodies(i));
 }
 
 void glPhysXInterface(void *classP) {
@@ -531,7 +537,7 @@ PxU32 MemoryInputData::tell() const {
 PhysXInterface::PhysXInterface() { NICO }
 PhysXInterface::~PhysXInterface() { NICO }
 void PhysXInterface::create() { NICO }
-void PhysXInterface::step() { NICO }
+void PhysXInterface::step(double tau) { NICO }
 void PhysXInterface::glDraw() { NICO }
 void PhysXInterface::syncWithOrs() { NICO }
 void PhysXInterface::pullState() { NICO }

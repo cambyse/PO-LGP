@@ -1171,7 +1171,7 @@ void ors::Graph::jacobianVec(arr& J, uint a, ors::Vector *vec, int agent) const 
 void ors::Graph::jacobianR(arr& J, uint a) const {
   uint i;
   ors::Transformation Xi;
-  Joint *ei;
+  Joint *j;
   ors::Vector ti;
   
   if(!q_dim)((ors::Graph*)this)->q_dim = getJointStateDimension();
@@ -1186,28 +1186,28 @@ void ors::Graph::jacobianR(arr& J, uint a) const {
   //  object a is relevant in the sense that only the tree-down
   //  joints contribute to this rotation
   
-  if(!bodies(a)->inLinks.N) {
-  ei=bodies(a)->inLinks(0);
-  while(ei) {
-    i=ei->qIndex;
-    if(i>=q_dim) {
-      CHECK(ei->type==JT_glue || ei->type==JT_fixed, "");
-      if(!ei->from->inLinks.N) break;
-      ei=ei->from->inLinks(0);
-      continue;
+  if(bodies(a)->inLinks.N) {
+    j=bodies(a)->inLinks(0);
+    while(j) {
+      i=j->qIndex;
+      if(i>=q_dim) {
+        CHECK(j->type==JT_glue || j->type==JT_fixed, "");
+        if(!j->from->inLinks.N) break;
+        j=j->from->inLinks(0);
+        continue;
+      }
+      CHECK(j->type!=JT_glue && j->type!=JT_fixed, "resort joints so that fixed and glued are last");
+
+      Xi = j->X;
+      Xi.rot.getX(ti);
+
+      J(0, i) = ti.x;
+      J(1, i) = ti.y;
+      J(2, i) = ti.z;
+
+      if(!j->from->inLinks.N) break;
+      j=j->from->inLinks(0);
     }
-    CHECK(ei->type!=JT_glue && ei->type!=JT_fixed, "resort joints so that fixed and glued are last");
-    
-    Xi = ei->X;
-    Xi.rot.getX(ti);
-    
-    J(0, i) = ti.x;
-    J(1, i) = ti.y;
-    J(2, i) = ti.z;
-    
-    if(!ei->from->inLinks.N) break;
-    ei=ei->from->inLinks(0);
-  }
   }
 }
 

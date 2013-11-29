@@ -19,6 +19,7 @@
 
 #include "roboticsCourse.h"
 #include <Ors/ors.h>
+#include <Ors/ors_physx.h>
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
 #include <Algo/algos.h>
@@ -40,6 +41,7 @@ struct sSimulator {
 #ifdef MT_ODE
   OdeInterface ode;
 #endif
+  PhysXInterface physx;
   sSimulator(){ margin=.1; dynamicNoise=0.; gravity=true; } //default margin = 10cm
 };
 
@@ -88,7 +90,7 @@ Simulator::Simulator(const char* orsFile){
 
   s->G.getJointState(s->q, s->qdot);
 
-  n=s->G.getJointStateDimension();
+//  n=s->G.getJointStateDimension();
 }
 
 Simulator::~Simulator(){
@@ -134,39 +136,39 @@ void Simulator::setJointAnglesAndVels(const arr& q, const arr& qdot){
   if(&qdot!=&s->qdot) s->qdot = qdot;
 }
 
-void Simulator::kinematicsPos(arr& y, const char* bodyName, const arr* rel){
+void Simulator::kinematicsPos(arr& y, const char* shapeName, const arr* rel){
   if(rel){
     ors::Vector v;  v.set(rel->p);
-    s->G.kinematicsPos(y, s->G.getBodyByName(bodyName)->index, &v);
+    s->G.kinematicsPos(y, s->G.getShapeByName(shapeName)->body->index, &v);
   }else{
-    s->G.kinematicsPos(y, s->G.getBodyByName(bodyName)->index, NULL);
+    s->G.kinematicsPos(y, s->G.getShapeByName(shapeName)->body->index, NULL);
   }
 }
 
-void Simulator::kinematicsVec(arr& y, const char* bodyName, const arr* vec){
+void Simulator::kinematicsVec(arr& y, const char* shapeName, const arr* vec){
   if(vec){
     ors::Vector v;  v.set(vec->p);
-    s->G.kinematicsVec(y, s->G.getBodyByName(bodyName)->index, &v);
+    s->G.kinematicsVec(y, s->G.getShapeByName(shapeName)->body->index, &v);
   }else{
-    s->G.kinematicsVec(y, s->G.getBodyByName(bodyName)->index, NULL);
+    s->G.kinematicsVec(y, s->G.getShapeByName(shapeName)->body->index, NULL);
   }
 }
 
-void Simulator::jacobianPos(arr& J, const char* bodyName, const arr* rel){
+void Simulator::jacobianPos(arr& J, const char* shapeName, const arr* rel){
   if(rel){
     ors::Vector v;  v.set(rel->p);
-    s->G.jacobianPos(J, s->G.getBodyByName(bodyName)->index, &v);
+    s->G.jacobianPos(J, s->G.getShapeByName(shapeName)->body->index, &v);
   }else{
-    s->G.jacobianPos(J, s->G.getBodyByName(bodyName)->index, NULL);
+    s->G.jacobianPos(J, s->G.getShapeByName(shapeName)->body->index, NULL);
   }
 }
 
-void Simulator::jacobianVec(arr& J, const char* bodyName, const arr* vec){
+void Simulator::jacobianVec(arr& J, const char* shapeName, const arr* vec){
   if(vec){
     ors::Vector v;  v.set(vec->p);
-    s->G.jacobianVec(J, s->G.getBodyByName(bodyName)->index, &v);
+    s->G.jacobianVec(J, s->G.getShapeByName(shapeName)->body->index, &v);
   }else{
-    s->G.jacobianVec(J, s->G.getBodyByName(bodyName)->index, NULL);
+    s->G.jacobianVec(J, s->G.getShapeByName(shapeName)->body->index, NULL);
   }
 }
 
@@ -253,13 +255,23 @@ void Simulator::setDynamicGravity(bool gravity){
   s->gravity = gravity;
 }
 
-void Simulator::stepOde(const arr& qdot, bool updateDisplay){
+void Simulator::stepOde(const arr& qdot, double tau){
 #ifdef MT_ODE
   s->ode.setMotorVel(s->G, qdot, 100.);
-  s->ode.step(0.01);
+  s->ode.step(tau);
   s->ode.importStateFromOde(s->G);
 #endif
-  if(updateDisplay) s->gl.update();
+  s->gl.update();
+}
+
+void Simulator::stepPhysx(const arr& qdot, double tau){
+  if(!s->physx.isCreated())  s->physx.create(s->G);
+  s->physx.step(tau);
+  s->gl.update();
+}
+
+ors::Graph& Simulator::getOrsGraph(){
+  return s->G;
 }
 
 struct sVisionSimulator {

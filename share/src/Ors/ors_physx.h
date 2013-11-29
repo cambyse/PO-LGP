@@ -34,23 +34,18 @@ namespace physx {
  */
 struct PhysXInterface {
   struct sPhysXInterface *s;
-  ors::Graph *G;
   
   PhysXInterface();
   ~PhysXInterface();
   
-  void create();
-  void step();
+  void create(ors::Graph& G);
+  void step(double tau=1./60.);
   void glDraw();
   
-  //void pushState();
+  void pushState();
   void pullState();
 
-  void syncWithOrs();
-  
-  void addBody(ors::Body *b, physx::PxMaterial *material);
-  void addJoint(ors::Joint *jj);
-
+  bool isCreated();
   void ShutdownPhysX();
 };
 
