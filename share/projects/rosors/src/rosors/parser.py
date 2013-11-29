@@ -140,7 +140,7 @@ def msg_to_ors_shape(msg, graph=None, body=None):
 
     shape.type = msg.shape_type
     shape.cont = msg.contact
-    if shape.type == orspy.meshST:
+    if shape.type == orspy.meshST and msg.mesh is not None:
         shape.mesh = msg_to_ors_mesh(msg.mesh)
         shape.mesh.thisown = False
 
@@ -148,6 +148,16 @@ def msg_to_ors_shape(msg, graph=None, body=None):
 
 
 def ors_body_to_msg(ors_body):
+    body_msg = ors_body_to_msg_no_shapes(ors_body)
+
+    # shapes
+    for shape in ors_body.shapes:
+        body_msg.shapes.append(ors_shape_to_msg(shape))
+
+    return body_msg
+
+
+def ors_body_to_msg_no_shapes(ors_body):
     body_msg = ors_msgs.msg.Body()
 
     body_msg.index = ors_body.index
@@ -161,10 +171,6 @@ def ors_body_to_msg(ors_body):
     body_msg.com = ors_to_ros_vector(ors_body.com)
     body_msg.force = ors_to_ros_vector(ors_body.force)
     body_msg.torque = ors_to_ros_vector(ors_body.torque)
-
-    # shapes
-    for shape in ors_body.shapes:
-        body_msg.shapes.append(ors_shape_to_msg(shape))
 
     return body_msg
 

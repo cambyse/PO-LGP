@@ -51,16 +51,21 @@ class RosOrs(object):
         return res
 
     def handle_bodies_request(self, req):
+        if req.no_shapes:
+            parse = parser.ors_body_to_msg_no_shapes
+        else:
+            parse = parser.ors_body_to_msg
+
         rospy.logdebug("handling bodies request")
         res = srv.BodiesResponse()
         # special body requested
         if req.name:
             ors_body = self.graph.getBodyByName(req.name)
-            res.bodies.append(parser.ors_body_to_msg(ors_body))
+            res.bodies.append(parse(ors_body))
             return res
         # all bodies requested
         for ors_body in self.graph.bodies:
-            res.bodies.append(parser.ors_body_to_msg(ors_body))
+            res.bodies.append(parse(ors_body))
         return res
 
     def handle_shapes_request(self, req):
