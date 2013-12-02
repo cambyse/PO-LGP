@@ -8,6 +8,9 @@ roslib.load_manifest('actionlib')
 import rospy
 import threading
 
+import rosors.srv
+from rosors import parser
+
 from actionlib import SimpleActionServer
 import the_curious_robot.msg as msgs
 import corepy
@@ -28,7 +31,7 @@ class ObserveOOITrajActionServer:
         # Subscriber
         self.perception_sub = rospy.Subscriber(
             name='/perception/updates',
-            data_class=rosors.objects,
+            data_class=msgs.Objects,
             callback=self.percept_cb)
 
         self.ooi_id_sub = rospy.Subscriber(
@@ -64,7 +67,6 @@ class ObserveOOITrajActionServer:
             )
             self.trajectory_pub.publish(trajectory_msg)
 
-
             # clean up
             del self.trajectory[:]
             self.trajectory = []
@@ -78,23 +80,25 @@ class ObserveOOITrajActionServer:
                 if obj != self.ooi_id:
                     continue
                 with self.trajectory_lock:
-                    body_msg = rospy.ServiceProxy("/world/bodies",
-                            rosors.msgs.Object(obj))
-                    body = msg_to_ors_body(body_msg)
-                    self.trajectory.append(corepy.Transformation(body.X))
-
+                    rospy.logdebug("interesting movement detected")
+                    shape_srv = rospy.ServiceProxy("/world/shapes",
+                                                   rosors.srv.Shapes)
+                    shape_msg = shape_srv(index=self.ooi_id)
+                    shape = parser.msg_to_ors_shape(shape_msg.shapes[0])
+                    self.trajectory.append(corepy.Transformation(shape.X))
+        #rospy.loginfo(self.trajectory)
 
     def preempt_cb(self):
         self.server.set_preempted()
 
-
     def ooi_id_cb(self, msg):
+        rospy.logdebug("ooi id = " + str(msg.id))
         self.ooi_id = msg.id
 
 
 def main():
     rospy.init_node('tcr_sas_observe_ooi_traj')
-    server = ObserveOOITrajActionServer('observe_ooi_traj')
+    ObserveOOITrajActionServer('observe_ooi_traj')
 
 if __name__ == '__main__':
     main()

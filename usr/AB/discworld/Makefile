@@ -1,6 +1,7 @@
 BASE = ../../../share/
 
-DEPEND = Ors Gui Core
+DEPEND = Ors Gui Core Perception
+PHYSX = 1
 
 CXX = clang++
 

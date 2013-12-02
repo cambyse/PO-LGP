@@ -1,3 +1,2 @@
 ---
-ors_msgs/Body[] bodies
-ors_msgs/Shape[] shapes
+ors_msgs/Graph graph

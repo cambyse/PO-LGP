@@ -85,9 +85,9 @@ def get_mlr_path():
   typedef MT::Array<uint> uintA;
 %}
 
-%List_Typemap(arr*)
-%List_Typemap(intA*)
-%List_Typemap(uintA*)
+%List_Typemap(arr)
+%List_Typemap(intA)
+%List_Typemap(uintA)
 
 %inline %{
   typedef MT::Array<arr*> arrL;
@@ -102,6 +102,8 @@ def get_mlr_path():
 }
 
 //===========================================================================
+
+%ignore MT::errString;
 
 %include "geo.h"
 
@@ -197,8 +199,10 @@ inline uintA randperm(uint n) {  uintA z;  z.setRandomPerm(n);  return z; }
     oss << (*$self);
     return oss.str();
   }
-  bool __eq__(const Transformation& other) { return *$self == other; }
-  bool __ne__(const Transformation& other) { return *$self != other; }
+  bool __eq__(const Transformation& other) { return $self->pos == other.pos &&
+$self->rot == other.rot; }
+  bool __ne__(const Transformation& other) { return $self->pos != other.pos ||
+$self->rot != other.rot; }
 } 
 
 //===========================================================================

@@ -1,8 +1,8 @@
-#include<MT/ors.h>
-#include<MT/aico.h>
+#include<Ors/ors.h>
+//#include<MT/aico.h> // retired
 #include<Algo/algos.h>
-#include<MT/opengl.h>
-#include<MT/plot.h>
+#include<Gui/opengl.h>
+#include<Gui/plot.h>
 #include<GL/gl.h>
 
 #include<fstream>

@@ -1,5 +1,6 @@
 # request an ors.body by name
 string name
+bool no_shapes
 
 ---
 ors_msgs/Body[] bodies

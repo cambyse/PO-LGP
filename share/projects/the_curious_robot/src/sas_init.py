@@ -11,7 +11,9 @@ import the_curious_robot.msg as msgs
 import the_curious_robot.srv as srvs
 
 import orspy
-# import corepy
+import rosors.rosors
+import rosors.msg
+
 import util
 import require_provide as rp
 
@@ -35,7 +37,8 @@ class InitServer:
 
     def execute(self, msg):
         rospy.wait_for_service('percept_all')
-        self.graph = orspy.Graph()
+        self.graph = rosors.rosors.RosOrs(orsfile=orsfile,
+                                           srv_prefix="/rosors_demo")
 
         # a list of all known shapes of the environment
         all_shapes = []

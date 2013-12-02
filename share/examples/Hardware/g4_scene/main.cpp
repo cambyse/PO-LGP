@@ -9,31 +9,10 @@
 
 void lib_hardware_G4();
 
-/*
-void setup_opengl_for_g4(ors::Graph& ors, OpenGL& gl, uint hubs){
-  bindOrsToOpenGL(ors, gl);
-  gl.camera.setPosition(7., .5, 3.);
-  gl.camera.focus(0, .5, .5);
-  gl.camera.upright();
-
-  ors::Shape *s = new ors::Shape(ors, NULL);
-  s->type = ors::markerST;
-  s->size[0] = .5;
-
-  for(uint m=0;m<hubs;m++){
-    ors::Shape *s = new ors::Shape(ors, NULL);
-    s->type = ors::boxST;
-    memmove(s->size ,ARR(.10, .04, .01, 0).p, 4*sizeof(double));
-    memmove(s->color,ARR(1, 0, 0).p, 3*sizeof(double));
-  }
-}
-*/
-
 void display(const G4Data &g4d) {
   //VideoEncoder_libav_simple vid;
   OpenGL gl;
   ors::Graph ors;
-  //setup_opengl_for_g4(ors, gl, X.d1);
 
   MT::String shapes = MT::getParameter<MT::String>("shapes");
   init(ors, gl, shapes);
@@ -43,22 +22,29 @@ void display(const G4Data &g4d) {
 
   // add bodies to keyframer
   KeyFramer kf;
-  kf.addBody(24); // 8*3
+  for(int i = 0; i < 8; i++)
+    kf.addBody(3);
   kf.setAgent(0);
   kf.addBody(3); // sbox
   kf.addBody(3); // bottle
   kf.addBody(3); // book
   kf.addBody(3); // ball
-  kf.addBody(6); // bbox
+  kf.addBody(3); // bbox:body
+  kf.addBody(3); // bbox:lid
 
   // add states to keyframer
   uint T = g4d.getNumTimesteps();
   for(uint t = 0; t < T; t++)
     kf.addState(g4d.queryPos(t));
 
-  kf.setLWin(30);
-  kf.run(); // trains the linear classifier
+  //uint wlen = 20;
+  //arr corr = kf.getCorr(0, 8, wlen);
+  //arr corr = kf.getCorr2(3, 8, wlen);
 
+  uintA wlens = { 10, 20, 30, 40, 50, 60 };
+  uint mwlen = wlens.max();
+  MT::Array<arr> corr = kf.getCorr3(3, 8, wlens);
+  
   Feedgnuplot gnup;
   gnup.open();
 
@@ -67,7 +53,7 @@ void display(const G4Data &g4d) {
     for(auto &b: ors.bodies) {
       arr x = g4d.query(t, b->name);
       x.reshape(x.N); // TODO there should be a nicer way.. // resetD doesn't work
-      CHECK(norm(x)!=0, "Why isn't interpolation on?");
+      CHECK(length(x)!=0, "Why isn't interpolation on?");
 
       b->X.pos.set(x(0), x(1), x(2));
       b->X.rot.set(x(3), x(4), x(5), x(6));
@@ -79,14 +65,19 @@ void display(const G4Data &g4d) {
     //flip_image(gl.captureImage);
     //vid.addFrame(gl.captureImage);
 
-    // TODO fix index of getErr
-    if(t + 5 < T) {
-      std::stringstream sss;
-      for(int b = 1; b < kf.getNBodies(); b++) {
-        arr TEMP = kf.getErr(b);
-        sss << " " << TEMP(t, 0) << " " << TEMP(t, 1) << " " << TEMP(t, 2);
-      }
-      gnup() << t << sss.str();
+    if(t>=mwlen) {
+      uint wi = t-mwlen;
+
+      cout << "1";
+      for(uint wii = 0; wii < wlens.N; wii++)
+        cout << " * " << corr(wii).elem(wi);
+      cout << " = " << c << endl;
+
+      double c = 1;
+      for(uint wii = 0; wii < wlens.N; wii++)
+        c *= corr(wii).elem(wi);
+
+      gnup() << t << " " << c;
     }
   }
   usleep(1000000);
