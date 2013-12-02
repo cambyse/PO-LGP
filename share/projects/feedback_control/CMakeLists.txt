@@ -39,7 +39,21 @@ include_directories(
 
 ## Declare a cpp executable
 add_executable(feedback_control src/feedback_control.cpp)
+add_executable(trajectory_execution src/trajectory_execution.cpp)
+
 target_link_libraries(feedback_control
+  ${catkin_LIBRARIES}
+  ${MLR_PATH}/share/lib/libAlgo.so
+  ${MLR_PATH}/share/lib/libCore.so
+  ${MLR_PATH}/share/lib/libGui.so
+  ${MLR_PATH}/share/lib/libInfer.so
+  ${MLR_PATH}/share/lib/libMotion.so
+  ${MLR_PATH}/share/lib/libOptim.so
+  ${MLR_PATH}/share/lib/libOrs.so
+  ${MLR_PATH}/share/lib/libpfc.so
+)
+
+target_link_libraries(trajectory_execution
   ${catkin_LIBRARIES}
   ${MLR_PATH}/share/lib/libAlgo.so
   ${MLR_PATH}/share/lib/libCore.so
