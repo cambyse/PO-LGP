@@ -26,6 +26,7 @@ author: Johannes kulick
   #include "taskMap_constrained.h"
   #include "taskMap_default.h"
   #include "taskMap_proxy.h"
+  #include "pr2_heuristics.h"
   #include <Optim/optimization.h>
   #include <sstream>
 %}
@@ -52,3 +53,4 @@ author: Johannes kulick
 %include "taskMap_constrained.h"
 %include "taskMap_default.h"
 %include "taskMap_proxy.h"
+%include "pr2_heuristics.h"
