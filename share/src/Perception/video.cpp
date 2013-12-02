@@ -68,9 +68,9 @@ void sVideoEncoder_libav_simple::open(uint width, uint height){
   c->pix_fmt = PIX_FMT_YUV420P;
 
   AVDictionary *opts = NULL;
-  char crf_str[4];
-  sprintf(crf_str,"%d", 18);
-  av_dict_set(&opts, "crf", crf_str, 0);
+  char opt_str[4];
+  sprintf(opt_str,"%d", 0);
+  av_dict_set(&opts, "qp", opt_str, 0);
   //av_dict_set(&opts, "preset", "superfast", 0);
   av_dict_set(&opts, "preset", "ultrafast", 0);
 
