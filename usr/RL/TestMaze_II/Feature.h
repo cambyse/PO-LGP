@@ -6,7 +6,7 @@
 #include <list>
 #include <set>
 #include <string>
-#include <memory>
+#include <memory> // for shared_ptr
 #include <unordered_map>
 
 #include "Config.h"

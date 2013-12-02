@@ -1,8 +1,4 @@
-#ifndef FEATURETEST_H_
-#define FEATURETEST_H_
-
 #include <gtest/gtest.h>
-
 #include "../Feature.h"
 #include <vector>
 
@@ -31,11 +27,9 @@ TEST(FeatureTest, SharedPtr) {
     AndFeature a4(a1,a3);
 
     // Re-test counters
-    EXPECT_EQ(basis_features[0].use_count(), 4);
-    EXPECT_EQ(basis_features[1].use_count(), 2);
-    EXPECT_EQ(basis_features[2].use_count(), 2);
-    EXPECT_EQ(basis_features[3].use_count(), 3);
-    EXPECT_EQ(basis_features[4].use_count(), 1);
+    EXPECT_EQ(4, basis_features[0].use_count());
+    EXPECT_EQ(2, basis_features[1].use_count());
+    EXPECT_EQ(2, basis_features[2].use_count());
+    EXPECT_EQ(3, basis_features[3].use_count());
+    EXPECT_EQ(1, basis_features[4].use_count());
 }
-
-#endif /* FEATURETEST_H_ */

@@ -22,7 +22,7 @@
 #endif
 
 #define DEBUG_ERROR(message) {                                          \
-        std::cout << DEBUG_STRING << "Error: " << message << std::endl; \
+        std::cout << DEBUG_STRING << "Error(l" << __LINE__ << "): " << message << std::endl; \
     }
 
 #define DEBUG_OUT(level,message) {                              \

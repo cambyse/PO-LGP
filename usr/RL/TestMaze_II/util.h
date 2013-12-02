@@ -11,6 +11,7 @@
 #include <QString>
 #include <vector>
 #include <sstream>
+#include <memory> // for shared_ptr
 
 #define DEBUG_LEVEL 0
 #define DEBUG_STRING "util: "
@@ -73,6 +74,97 @@ namespace util {
     //========================================================//
     //                      Classes                           //
     //========================================================//
+
+    /** \brief Base class for polymorphic iteratable spaces.
+     *
+     * An iteratable space consists of a countable set of constant objects like
+     * actions in a maze (up, down, left, right, stay) or the like. To define an
+     * iteratable space you can inherit from this class and override the begin()
+     * end() next() and operator!=() methods. You can iterate over any
+     * AbstractIteratableSpace as
+     @code
+     for(YourIteratableSpace::ptr_t item : YourIteratableSpace()) {
+
+         ...do things that can be done on any abstract space...
+
+         // do a cast if you need the functionality
+         // of your specific implemenation
+         const YourIteratableSpace * your_item;
+         your_item = dynamic_cast<const YourIteratableSpace *>(item.get());
+         if(your_item!=nullptr) {
+
+             ...do things that can only be done on your specific implementation...
+
+         }
+     }
+     @endcode
+     * You can use
+     @code
+     for(auto item : YourIteratableSpace()) { ... }
+     @endcode
+     * to keep the code brief. */
+    class AbstractIteratableSpace {
+    public:
+
+        // use (smart) pointers to allow for polymorphy
+        typedef std::shared_ptr<const AbstractIteratableSpace> ptr_t;
+
+        /** \brief Iterator class.
+         *
+         * Dereferences to a pointer of the current object and calls the next()
+         * function of the object to increment.*/
+        class Iterator {
+
+        public:
+
+            /** \brief Constructor takes a pointer to an object. */
+            Iterator(ptr_t ptr);
+
+            /** \brief Dereference operator returns pointer. */
+            virtual ptr_t operator*() const;
+
+            /** \brief Increment operator.
+             *
+             * Calls the next() function of the underlying object. */
+            virtual Iterator & operator++();
+
+            /** \brief Inequality operator.
+             *
+             * Checks inequality based on the underlying objects. */
+            virtual bool operator!=(const Iterator& other) const;
+
+        private:
+
+            /** \brief The current object. */
+            ptr_t object;
+        };
+
+        /** \brief Returns Iterator to first object of the space. */
+        virtual Iterator begin() const = 0;
+        /** \brief Returns an invalid Iterator to stop iteration.
+         *
+         * A derived class must somehow implement an 'invalid' object. The
+         * next() function must return a pointer to such an object if called on
+         * the last element of the space and the end() function must return such
+         * an object. */
+        virtual Iterator end() const = 0;
+        /** \brief Return pointer to next element in the space.
+         *
+         * When called on the last element in the space is should return an
+         * invalid object (cf. end()). */
+        virtual ptr_t next() const = 0;
+        /** \brief Inequality operator.
+         *
+         * Used by Iterator class to determine stopping criterion. */
+        virtual bool operator!=(const AbstractIteratableSpace& other) const = 0;
+        /** \brief Equality operator.
+         *
+         * To define equality simply define the inequality operator
+         * accordingly. To ensure logical consistency this operator cannot be
+         * overridden, instead it returns the negation of the inequality
+         * operator. */
+        virtual bool operator==(const AbstractIteratableSpace& other) const final;
+    };
 
     /** \brief Base class to make a derived class assign-compatible with a type.
      *

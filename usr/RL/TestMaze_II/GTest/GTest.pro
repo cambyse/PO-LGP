@@ -6,7 +6,6 @@ QT += core \
     printsupport
 HEADERS += \
     ../LookAheadSearch.h \
-    ../Test.h \
     ../BatchMaze.h \
     ../lbfgs_codes.h \
     ../Config.h \
@@ -32,13 +31,11 @@ HEADERS += \
     ../qcustomplot.h \
     ../SmoothingKernelSigmoid.h \
     ../QtUtil.h \
-    ../optimization/LBFGS_Optimizer.h \
-    FeatureTest.h
+    ../optimization/LBFGS_Optimizer.h
 SOURCES += \
     main.cpp \
     ../LookAheadSearch.cpp \
     ../util.cpp \
-    ../Test.cpp \
     ../BatchMaze.cpp \
     ../lbfgs_codes.cpp \
     ../Config.cpp \
@@ -63,7 +60,9 @@ SOURCES += \
     ../qcustomplot.cpp \
     ../SmoothingKernelSigmoid.cpp \
     ../QtUtil.cpp \
-    ../optimization/LBFGS_Optimizer.cpp
+    ../optimization/LBFGS_Optimizer.cpp \
+    FeatureTest.cpp \
+    AbstractIteratableSpaceTest.cpp
 LIBS += -llbfgs \
     -lemon \
     -larmadillo \
