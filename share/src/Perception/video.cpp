@@ -57,7 +57,7 @@ void sVideoEncoder_libav_simple::open(uint width, uint height){
   picture= avcodec_alloc_frame();
 
   /* put sample parameters */
-  c->bit_rate = 400000;
+  //c->bit_rate = 400000;
   /* resolution must be a multiple of two */
   c->width = width;
   c->height = height;
@@ -66,6 +66,13 @@ void sVideoEncoder_libav_simple::open(uint width, uint height){
   c->gop_size = 10; /* emit one intra frame every ten frames */
   c->max_b_frames=1;
   c->pix_fmt = PIX_FMT_YUV420P;
+
+  AVDictionary *opts = NULL;
+  char opt_str[4];
+  sprintf(opt_str,"%d", 0);
+  av_dict_set(&opts, "qp", opt_str, 0);
+  //av_dict_set(&opts, "preset", "superfast", 0);
+  av_dict_set(&opts, "preset", "ultrafast", 0);
 
   /* open it */
   if (avcodec_open2(c, codec, NULL) < 0)
