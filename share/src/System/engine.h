@@ -43,7 +43,7 @@ struct ModuleThread:Thread{
   StepMode mode; double beat;
 
   /// @name c'tor/d'tor
-  ModuleThread(Module* _m, const char* _name=NULL):Thread(_name?_name:m->name),m(_m),step_count(0){ m->name = _name; }
+  ModuleThread(Module* _m, const char* _name=NULL):Thread(_name?_name:_m->name),m(_m),step_count(0){ m->name = _name; }
 
   virtual void open(){ m->open(); }
   virtual void step(){ m->step(); step_count++; }
@@ -102,6 +102,7 @@ struct System:Module{
   virtual void open(){  for_list_(Module, m, mts) m->open();  }
   virtual void close(){  for_list_(Module, m, mts) m->close();  }
 
+  //-- add variables
   Variable* addVariable(Access& acc){
     Variable *v = new Variable(acc.name);
     v->type = acc.type->clone();
@@ -118,6 +119,7 @@ struct System:Module{
     return v;
   }
 
+  //-- access vars
   template<class T> T& getVar(uint i){ return *((T*)vars(i)->data); }
 
   template<class T> Access_typed<T>* getAccess(const char* varName){
@@ -125,6 +127,7 @@ struct System:Module{
     return new Access_typed<T>(varName, NULL, v);
   }
 
+  //-- add modules
   template<class T> T* addModule(const char *name=NULL, ModuleThread::StepMode mode=ModuleThread::listenFirst, double beat=0.){
     T *m = new T;
     currentlyCreating=NULL;
@@ -134,6 +137,14 @@ struct System:Module{
     m->thread = new ModuleThread(m, name);
     m->thread->mode = mode;
     m->thread->beat = beat;
+    return m;
+  }
+
+  //-- add modules
+  template<class T> T* addModule(const char *name, const StringA& accessConnectRules, ModuleThread::StepMode mode=ModuleThread::listenFirst, double beat=0.){
+    T *m = addModule<T>(name, mode, beat);
+    if(accessConnectRules.N != m->accesses.N) HALT("given and needed #acc in accessConnectRules cmismatch");
+    for_list_(Access, a, m->accesses) connect(*a, accessConnectRules(a_COUNT));
     return m;
   }
 

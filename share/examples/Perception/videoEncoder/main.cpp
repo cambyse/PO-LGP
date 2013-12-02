@@ -1,5 +1,3 @@
-
-//#include <Hardware/VideoWriter/video.h>
 #include <Perception/video.h>
 #include <Gui/opengl.h>
 
@@ -15,11 +13,9 @@ void draw(void*){
 void testVideo(){
   OpenGL gl;
   gl.add(draw,0);
-  gl.watch();
+  //gl.watch();
 
   VideoEncoder_libav_simple video;
-  //VideoEncoder_libav_x264 video;
-//  VideoEncoder_OpenCV video;
   for(angle=0.;angle<180.;angle+=180./150.){
     gl.update(NULL, true);
     flip_image(gl.captureImage);

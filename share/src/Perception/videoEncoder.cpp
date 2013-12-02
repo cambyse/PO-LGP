@@ -1,4 +1,4 @@
-#include "video.h"
+#include "videoEncoder.h"
 #include <Core/util.h>
 
 extern "C"{
@@ -9,7 +9,7 @@ extern "C"{
 }
 
 struct sVideoEncoder_libav_simple{
-  const char *filename;
+  MT::String filename;
   uint fps;
   bool isOpen;
 

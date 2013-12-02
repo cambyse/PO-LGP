@@ -1,6 +1,8 @@
 /* minimalistic wrapper of the standard libav (ffmpeg) example for
    encoding/decoding vids */
 
+#pragma once
+
 #include <Core/array.h>
 
 struct VideoEncoder_libav_simple{
