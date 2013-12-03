@@ -5,6 +5,7 @@ body door1-frame {
   meshscale=.01
   submeshsizes=[8 8 8]
   fixed
+  contact
 }
 body door1-door {
   type=3
@@ -13,6 +14,7 @@ body door1-door {
   submeshsizes=[8 36 41 36 41]
   color=[1 0 0]
   mass=2000000
+  contact
 }
 body door1-handle {
   type=3
@@ -20,16 +22,19 @@ body door1-handle {
   meshscale=.01
   color=[0 0 0]
   submeshsizes=[73 50 71 51]
+  contact
 }
 joint (door1-frame, door1-door) {
   A=<T t(.46 0 0) d(90 0 1 0)>
   limit=[-.9 .9 0 0 0]
   BinvA
+  agent = 99
 }
 joint (door1-door, door1-handle) {
   A=<T t(-.39 0 1) d(90 0 0 1)>
   limit=[0 .1 0 0 0]
   BinvA
+  agent = 99
 }
 # }}}
 # door2 {{{
@@ -40,6 +45,7 @@ body door2-frame {
   meshscale=.01
   submeshsizes=[8 8 8]
   fixed
+  contact
 }
 body door2-door {
   X=<T t(-2 -2 0) d(90 0 0 1)>
@@ -48,6 +54,7 @@ body door2-door {
   submeshsizes=[8 36 41 36 41]
   color=[1 0 0]
   mass=2000000
+  contact
 }
 body door2-handle {
   X=<T t(-2 -2 0) d(90 0 0 1)>
@@ -56,15 +63,18 @@ body door2-handle {
   meshscale=.01
   color=[0 0 0]
   submeshsizes=[73 50 71 51]
+  contact
 }
 joint (door2-frame, door2-door) {
   A=<T t(.46 0 0) d(90 0 1 0)>
   BinvA
+  agent = 99
 }
 joint (door2-door, door2-handle) {
   A=<T t(-.39 0 1) d(90 0 0 1)>
   limit=[0 .1 0 0 0]
   BinvA
+  agent = 99
 }
 # }}}
 # door3 (locked) {{{
@@ -76,6 +86,7 @@ body door3-frame {
   meshscale=.01
   submeshsizes=[8 8 8]
   fixed
+  contact
 }
 body door3-door {
   X=<T t(2 0 0)>
@@ -84,6 +95,7 @@ body door3-door {
   submeshsizes=[8 36 41 36 41]
   color=[1 0 0]
   fixed
+  contact
 }
 #body door3-handle {
 #  X=<T t(2 0 0)>
@@ -109,6 +121,7 @@ body wall_left {
   X=<T t(-5 0 1)>
   color=[0.8 0.8 0.8]
   kinematic
+  contact
 }
 body wall_left_small {
   type=0
@@ -116,6 +129,7 @@ body wall_left_small {
   X=<T t(-2 0 1)>
   color=[0.8 0.8 0.8]
   kinematic
+  contact
 }
 #body wall_right {
 #  type=0
@@ -130,6 +144,7 @@ body wall_back {
   X=<T t(0 5 1)>
   color=[0.8 0.8 0.8]
   kinematic
+  contact
 }
 body wall_left_to_middle {
   type=0
@@ -137,6 +152,7 @@ body wall_left_to_middle {
   X=<T t(-3 0 1)>
   color=[0.8 0.8 0.8]
   kinematic
+  contact
 }
 body wall_middle_to_right {
   type=0
@@ -144,6 +160,7 @@ body wall_middle_to_right {
   X=<T t(1 0 1)>
   color=[0.8 0.8 0.8]
   kinematic
+  contact
 }
 body wall_right_to_right {
   type=0
@@ -151,16 +168,27 @@ body wall_right_to_right {
   X=<T t(4 0 1)>
   color=[0.8 0.8 0.8]
   kinematic
+  contact
 }
 # }}}
 # robot {{{
-body robot {
+body robot { 
+  kinematic 
   type=1
   size=[.1 .1 .1 .1]
   X=<T t(0. -1. 1.)>
   color=[0 1 0]
-  mass=100
-  kinematic
+  contact
+}
+body base {
+  type=2
+  size=[.01 .01 .01 .01]
+  X=<T t(0. 0. 0.)>
+  fixed
+}
+joint (base robot) { 
+  type=6 
+  Q=<T t(0. -1. 1.)> 
 }
 # }}}
 // vim:ft=ors:foldmethod=indent:
