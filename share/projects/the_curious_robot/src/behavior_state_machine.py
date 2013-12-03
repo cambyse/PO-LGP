@@ -83,11 +83,11 @@ class StateMachine:
         self.introspection_server.start()
 
     def run(self):
-        rp.Require(["Controller"])  # , "Perception"])
-        #rp.Require([
-            #"Init", "PickOOI", "GotoOOI",
-            #"ArticulateOOI", "ObserveOOITraj", "Learn"
-        #])
+        rp.Require(["Controller", "Perception"])
+        rp.Require([
+            "Init", "PickOOI", "GotoOOI",
+            "ArticulateOOI", "ObserveOOITraj", "Learn"
+        ])
         smach_ros.util.set_preempt_handler(self.sm)
 
         smach_thread = threading.Thread(target=self.sm.execute)
