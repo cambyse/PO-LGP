@@ -141,6 +141,7 @@ namespace util {
 
         /** \brief Returns Iterator to first object of the space. */
         virtual Iterator begin() const = 0;
+
         /** \brief Returns an invalid Iterator to stop iteration.
          *
          * A derived class must somehow implement an 'invalid' object. The
@@ -148,15 +149,18 @@ namespace util {
          * the last element of the space and the end() function must return such
          * an object. */
         virtual Iterator end() const = 0;
+
         /** \brief Return pointer to next element in the space.
          *
          * When called on the last element in the space is should return an
          * invalid object (cf. end()). */
         virtual ptr_t next() const = 0;
+
         /** \brief Inequality operator.
          *
          * Used by Iterator class to determine stopping criterion. */
         virtual bool operator!=(const AbstractIteratableSpace& other) const = 0;
+
         /** \brief Equality operator.
          *
          * To define equality simply define the inequality operator
@@ -164,6 +168,10 @@ namespace util {
          * overridden, instead it returns the negation of the inequality
          * operator. */
         virtual bool operator==(const AbstractIteratableSpace& other) const final;
+
+        virtual std::string print() const {
+            return std::string();
+        }
     };
 
     /** \brief Base class to make a derived class assign-compatible with a type.

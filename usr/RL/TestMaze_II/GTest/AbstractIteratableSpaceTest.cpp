@@ -1,62 +1,48 @@
 #include <gtest/gtest.h>
+
 #include "../util.h"
+#include "../AbstractAction.h"
+#include "../Maze/MazeAction.h"
+#include "../Maze/AugmentedMazeAction.h"
+
+#define DEBUG_LEVEL 0
 #include "../debug.h"
 
 namespace {
 
-class TestSpace: public util::AbstractIteratableSpace {
-public:
-enum ITEM_T { ZERO, ONE, TWO, THREE, END } item;
-    TestSpace(ITEM_T i = ZERO): item(i) {}
-    virtual Iterator begin() const override { return Iterator(ptr_t(new TestSpace(ZERO))); }
-    virtual Iterator end() const override { return Iterator(ptr_t(new TestSpace(END))); }
-    virtual ptr_t next() const override { return ptr_t(new TestSpace((ITEM_T)(item+1))); }
-    virtual bool operator!=(const AbstractIteratableSpace& other) const override {
-        const TestSpace * other_ptr = dynamic_cast<const TestSpace *>(&other);
-        return other_ptr==nullptr || this->item!=other_ptr->item;
-    }
-};
+    TEST(AbstractIteratableSpace, AbstractAction) {
 
-    TEST(AbstractIteratableSpaceTest, Iterate) {
+        std::vector<std::shared_ptr<AbstractAction> > action_vector;
+        action_vector.push_back(std::make_shared<MazeAction>(MazeAction::ACTION::DOWN));
+        action_vector.push_back(std::make_shared<AugmentedMazeAction>(AugmentedMazeAction::ACTION::DOWN,AugmentedMazeAction::TAG::TAG_2));
 
-        // construct an object and check constructor
-        TestSpace test_space_item(TestSpace::ZERO);
-        EXPECT_EQ(TestSpace::ZERO, test_space_item.item) << "constructor FAILED";
-
-        // check next() function
-        auto next_test_space_item = std::dynamic_pointer_cast<const TestSpace>(test_space_item.next());
-        EXPECT_NE(std::shared_ptr<const TestSpace>(),next_test_space_item) << "cast to derived FAILED";
-        EXPECT_EQ(TestSpace::ONE, next_test_space_item->item) << "next() function FAILED";
-
-        int counter = 0;
-        for(auto i : TestSpace()) {
-
-            // cast to correct type
-            const TestSpace * ii;
-            ii = dynamic_cast<const TestSpace *>(i.get());
-            EXPECT_NE(ii,nullptr);
-
-            // check value
-            switch(counter) {
-            case 0:
-                EXPECT_EQ(TestSpace::ZERO,ii->item) << "zeroth iteration";
-                break;
-            case 1:
-                EXPECT_EQ(TestSpace::ONE,ii->item) << "first iteration";
-                break;
-            case 2:
-                EXPECT_EQ(TestSpace::TWO,ii->item) << "second iteration";
-                break;
-            case 3:
-                EXPECT_EQ(TestSpace::THREE,ii->item) << "third iteration";
-                break;
-            default:
-                EXPECT_TRUE(false) << "This line should never be reached";
+        int action_type_idx = 0;
+        // for all action types (represented by one specific action of each type)
+        for(auto action_type : action_vector) {
+            DEBUG_OUT(1,"This action: " << action_type->print());
+            DEBUG_OUT(1,"    Action space:");
+            // go through all actions of the corresponding action space
+            int match_counter = 0;
+            int match_idx = -1;
+            for(auto action_in_space : *action_type) {
+                DEBUG_OUT(1,"    " << action_in_space->print() );
+                // make sure only a single action matches (the one we use for
+                // iterating its action space)
+                int action_idx = 0;
+                for(auto action : action_vector) {
+                    if(*action_in_space==*action) {
+                        ++match_counter;
+                        match_idx = action_idx;
+                        DEBUG_OUT(1,"        X " << action->print());
+                    } else {
+                        DEBUG_OUT(1,"        - " << action->print());
+                    }
+                    ++action_idx;
+                }
             }
-            ++counter;
-            if(counter>3) {
-                break;
-            }
+            EXPECT_EQ(1,match_counter) << "expecting exactly one action from each action type/space";
+            EXPECT_EQ(action_type_idx,match_idx) << "match should be the action currently used to iterate its space";
+            ++action_type_idx;
         }
     }
 
