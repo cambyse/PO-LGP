@@ -47,6 +47,10 @@ void Feedgnuplot::setDataID(bool d) {
   dataid = d;
 }
 
+void Feedgnuplot::setAutolegend(bool al) {
+  autolegend = al;
+}
+
 void Feedgnuplot::setStream(double s) {
   stream = s;
 }
@@ -58,6 +62,8 @@ void Feedgnuplot::open() {
   cmd << " " << (points? "--points": "--nopoints");
   cmd << " " << (domain? "--domain": "--nodomain");
   cmd << " " << (dataid? "--dataid": "--nodataid");
+  if(autolegend)
+    cmd << " --autolegend";
   if(stream>0)
     cmd << " --stream " << stream;
 

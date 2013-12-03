@@ -20,32 +20,54 @@ void display(const G4Data &g4d) {
   gl.camera.focus(0, .5, .5);
   gl.camera.upright();
 
-  // add bodies to keyframer
+  SwiftInterface swift;
+  swift.init(ors, 2.);
+  swift.computeProxies(ors);
+
+  StringA posNames;
+  StringA oriNames;
+
+  // add entities to keyframer
   KeyFramer kf;
-  for(int i = 0; i < 8; i++)
-    kf.addBody(3);
-  kf.setAgent(0);
-  kf.addBody(3); // sbox
-  kf.addBody(3); // bottle
-  kf.addBody(3); // book
-  kf.addBody(3); // ball
-  kf.addBody(3); // bbox:body
-  kf.addBody(3); // bbox:lid
+  for(String name: g4d.getNames()) {
+    String pname = STRING(name << ":pos");
+    posNames.append(pname);
+    kf.addBody(pname, 3);
 
-  // add states to keyframer
+    String oname = STRING(name << ":ori");
+    oriNames.append(oname);
+    kf.addBody(oname, 4);;
+  }
+
   uint T = g4d.getNumTimesteps();
-  for(uint t = 0; t < T; t++)
-    kf.addState(g4d.queryPos(t));
+  for(uint t = 0; t < T; t++) {
+    kf.addState();
+    for(uint i = 0; i < posNames.N; i++) {
+      String name = g4d.getName(i);
+      String pname = posNames(i);
+      String oname = oriNames(i);
 
-  //uint wlen = 20;
-  //arr corr = kf.getCorr(0, 8, wlen);
-  //arr corr = kf.getCorr2(3, 8, wlen);
+      kf.setState(pname, g4d.queryPos(t, name), t);
+      kf.setState(oname, g4d.queryQuat(t, name), t);
+    }
+  }
 
-  uintA wlens = { 10, 20, 30, 40, 50, 60 };
+  String b1("rh:thumb"), b2("sbox");
+  String bp1(STRING(b1 << ":pos")), bp2(STRING(b2 << ":pos"));
+  String bo1(STRING(b1 << ":ori")), bo2(STRING(b2 << ":ori"));
+
+  uintA wlens = { 20, 30, 40 };
   uint mwlen = wlens.max();
-  MT::Array<arr> corr = kf.getCorr3(3, 8, wlens);
-  
+  MT::Array<arr> corrPos = kf.getCorrEnsemble(bp1, bp2, wlens, true);
+
+  uint wlen = 30;
+  arr corrOri = kf.getAngle(bo1, bo2);
+  arr corrVar = kf.getAngleVar(bo1, bo2, wlen);
+
   Feedgnuplot gnup;
+  gnup.setDataID(true);
+  gnup.setAutolegend(true);
+  gnup.setStream(.75);
   gnup.open();
 
   MT::String bname;
@@ -59,26 +81,46 @@ void display(const G4Data &g4d) {
       b->X.rot.set(x(3), x(4), x(5), x(6));
     }
 
-    ors.calcShapeFramesFromBodies();
+    ors.calcBodyFramesFromJoints();
+    //ors.calcShapeFramesFromBodies();
+
+    uint bi1 = ors.getBodyByName(b1)->index;
+    uint bi2 = ors.getBodyByName(b2)->index;
+    swift.computeProxies(ors);
+    //ors.reportProxies();
+    //cout << "proxy: " << endl;
+    //cout << ors.proxies << endl;
+    for(ors::Proxy *p: ors.proxies) {
+      cout << "Proxy:" << endl;
+      cout << " - d: " << p->d << endl;
+      cout << " - cenD: " << p->cenD << endl;
+      cout << " - posA: " << p->posA << endl;
+      cout << " - posB: " << p->posB << endl;
+      cout << " - a->pos: " << ors.shapes(p->a)->body->X.pos << endl;
+      cout << " - b->pos: " << ors.shapes(p->b)->body->X.pos << endl;
+      cout << " - l_diff: " << (ors.shapes(p->a)->body->X.pos -
+          ors.shapes(p->b)->body->X.pos).length() << endl; }
+    
     gl.text.clear() <<"frame " <<t <<"/" <<T;
     gl.update(NULL, true);
     //flip_image(gl.captureImage);
     //vid.addFrame(gl.captureImage);
 
+    String ss;
+    ss << t << " ori " << -(corrOri(t)/(2*M_PI));
+    if(t>=wlen) {
+      uint wi = t-wlen;
+      ss << "var " << corrVar(wi);
+    }
     if(t>=mwlen) {
       uint wi = t-mwlen;
 
-      cout << "1";
-      for(uint wii = 0; wii < wlens.N; wii++)
-        cout << " * " << corr(wii).elem(wi);
-      cout << " = " << c << endl;
-
       double c = 1;
       for(uint wii = 0; wii < wlens.N; wii++)
-        c *= corr(wii).elem(wi);
-
-      gnup() << t << " " << c;
+        c *= corrPos(wii).elem(wi);
+      ss << " pos " << c;
     }
+    gnup() << ss;
   }
   usleep(1000000);
 
