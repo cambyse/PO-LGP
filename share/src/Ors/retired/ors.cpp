@@ -15,7 +15,7 @@
    }
 */
 
-//void ors::Graph::addObject(ors::Body *b) {
+//void ors::KinematicWorld::addObject(ors::Body *b) {
 //  bodies.append(b);
 //  int ibody = bodies.N - 1;
 //  uint i; ors::Shape *s;
@@ -26,7 +26,7 @@
 //  }
 //}
 
-//ors::Graph* ors::Graph::newClone() const {
+//ors::KinematicWorld* ors::KinematicWorld::newClone() const {
 //  Graph *G=new Graph();
 //  G->q_dim=q_dim;
 //  listCopy(G->proxies, proxies);
@@ -54,7 +54,7 @@
 //}
 
 
-//void ors::Graph::copyShapesAndJoints(const Graph& G) {
+//void ors::KinematicWorld::copyShapesAndJoints(const Graph& G) {
 //  uint i;  Shape *s;  Body *b;  Joint *j;
 //  for_list(i, s, shapes)(*s) = *G.shapes(i);
 //  for_list(i, j, joints)(*j) = *G.joints(i);
@@ -69,20 +69,20 @@
 
 
 ///// find body index with specific name
-//uint ors::Graph::getBodyIndexByName(const char* name) const {
+//uint ors::KinematicWorld::getBodyIndexByName(const char* name) const {
 //  Body *b=getBodyByName(name);
 //  return b?b->index:0;
 //}
 
 ///// find shape index with specific name
-//uint ors::Graph::getShapeIndexByName(const char* name) const {
+//uint ors::KinematicWorld::getShapeIndexByName(const char* name) const {
 //  Shape *s=getShapeByName(name);
 //  return s?s->index:0;
 //}
 
 /** @brief if two bodies touch, the are not yet connected, and one of them has
   the `glue' attribute, add a new edge of FIXED type between them */
-//void ors::Graph::glueTouchingBodies() {
+//void ors::KinematicWorld::glueTouchingBodies() {
 //  uint i, A, B;
 //  Body *a, *b;//, c;
 //  bool ag, bg;
@@ -102,7 +102,7 @@
 //}
 
 #if 0 //obsolete:
-void ors::Graph::getContactMeasure(arr &x, double margin, bool linear) const {
+void ors::KinematicWorld::getContactMeasure(arr &x, double margin, bool linear) const {
   x.resize(1);
   x=0.;
   uint i;
@@ -133,7 +133,7 @@ void ors::Graph::getContactMeasure(arr &x, double margin, bool linear) const {
 }
 
 /// gradient (=scalar Jacobian) of this contact cost
-double ors::Graph::getContactGradient(arr &grad, double margin, bool linear) const {
+double ors::KinematicWorld::getContactGradient(arr &grad, double margin, bool linear) const {
   ors::Vector normal;
   uint i;
   Shape *a, *b;
@@ -183,7 +183,7 @@ double ors::Graph::getContactGradient(arr &grad, double margin, bool linear) con
 #endif
 
 #if 0 //alternative implementation : cost=1 -> contact, other discounting...
-double ors::Graph::getContactGradient(arr &grad, double margin) {
+double ors::KinematicWorld::getContactGradient(arr &grad, double margin) {
   ors::Vector normal;
   uint i;
   Shape *a, *b;
@@ -229,13 +229,13 @@ double ors::Graph::getContactGradient(arr &grad, double margin) {
 #endif
 
 /// [prelim] some kind of gyroscope
-void ors::Graph::getGyroscope(ors::Vector& up) const {
+void ors::KinematicWorld::getGyroscope(ors::Vector& up) const {
   up.set(0, 0, 1);
   up=bodies(0)->X.rot*up;
 }
 
 /** @brief returns a k-dim vector containing the penetration depths of all bodies */
-void ors::Graph::getPenetrationState(arr &vec) const {
+void ors::KinematicWorld::getPenetrationState(arr &vec) const {
   vec.resize(bodies.N);
   vec.setZero();
   ors::Vector d;
@@ -249,7 +249,7 @@ void ors::Graph::getPenetrationState(arr &vec) const {
 }
 
 /** @brief a vector describing the incoming forces (penetrations) on one object */
-void ors::Graph::getGripState(arr& grip, uint j) const {
+void ors::KinematicWorld::getGripState(arr& grip, uint j) const {
   ors::Vector d, p;
   ors::Vector sumOfD; sumOfD.setZero();
   ors::Vector torque; torque.setZero();
@@ -293,7 +293,7 @@ void ors::Graph::getGripState(arr& grip, uint j) const {
 
 #if 0 //OBSOLETE
 /// returns the number of touch-sensors
-uint ors::Graph::getTouchDimension() {
+uint ors::KinematicWorld::getTouchDimension() {
   Body *n;
   uint i=0, j;
 
@@ -304,7 +304,7 @@ uint ors::Graph::getTouchDimension() {
 }
 
 /// returns the touch vector (penetrations) of all touch-sensors
-void ors::Graph::getTouchState(arr& touch) {
+void ors::KinematicWorld::getTouchState(arr& touch) {
   if(!td) td=getTouchDimension();
   arr pen;
   getPenetrationState(pen);
@@ -321,7 +321,7 @@ void ors::Graph::getTouchState(arr& touch) {
 #endif
 
 /** @brief get the center of mass, total velocity, and total angular momemtum */
-void ors::Graph::getTotals(ors::Vector& c, ors::Vector& v, ors::Vector& l, ors::Quaternion& ori) const {
+void ors::KinematicWorld::getTotals(ors::Vector& c, ors::Vector& v, ors::Vector& l, ors::Quaternion& ori) const {
   Body *n;
   uint j;
   double m, M;
@@ -358,7 +358,7 @@ void ors::Graph::getTotals(ors::Vector& c, ors::Vector& v, ors::Vector& l, ors::
 }
 
 /** @brief dump a list body pairs for which the upper conditions hold */
-void ors::Graph::reportGlue(std::ostream *os) {
+void ors::KinematicWorld::reportGlue(std::ostream *os) {
   uint i, A, B;
   Body *a, *b;
   bool ag, bg;

@@ -31,7 +31,7 @@
  */
 
 /* TODO (marc)
-  -- ors::Graph should have an 'arr q' or 'arr state'. The config should ALWAYS be in sync with this state!
+  -- ors::KinematicWorld should have an 'arr q' or 'arr state'. The config should ALWAYS be in sync with this state!
   */
 
 //===========================================================================
@@ -82,7 +82,7 @@ enum BodyType  { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };
 struct Joint;
 struct Shape;
 struct Body;
-struct Graph;
+struct KinematicWorld;
 
 /** @} */ // END of group ors_basic_data_structures
 } // END of namespace
@@ -117,14 +117,14 @@ struct Body {
   
   Body();
   explicit Body(const Body& b);
-  explicit Body(Graph& G, const Body *copyBody=NULL);
+  explicit Body(KinematicWorld& G, const Body *copyBody=NULL);
   ~Body();
   void operator=(const Body& b) {
     index=b.index; name=b.name; X=b.X; ats=b.ats;
     type=b.type; mass=b.mass; inertia=b.inertia; com=b.com; force=b.force; torque=b.torque;
   }
   void reset();
-  void parseAts(Graph& G);
+  void parseAts(KinematicWorld& G);
   void write(std::ostream& os) const;
   void read(std::istream& is);
 };
@@ -149,7 +149,7 @@ struct Joint {
   
   Joint();
   explicit Joint(const Joint& j);
-  explicit Joint(Graph& G, Body *f, Body *t, const Joint *copyJoint=NULL); //new Shape, being added to graph and body's joint lists
+  explicit Joint(KinematicWorld& G, Body *f, Body *t, const Joint *copyJoint=NULL); //new Shape, being added to graph and body's joint lists
   ~Joint();
   void operator=(const Joint& j) {
     index=j.index; qIndex=j.qIndex; ifrom=j.ifrom; ito=j.ito; mimic=(Joint*)(j.mimic?1:0);
@@ -183,7 +183,7 @@ struct Shape {
   
   Shape();
   explicit Shape(const Shape& s);
-  explicit Shape(Graph& G, Body& b, const Shape *copyShape=NULL); //new Shape, being added to graph and body's shape lists
+  explicit Shape(KinematicWorld& G, Body& b, const Shape *copyShape=NULL); //new Shape, being added to graph and body's shape lists
   ~Shape();
   void operator=(const Shape& s) {
     index=s.index; ibody=s.ibody; body=NULL; name=s.name; X=s.X; rel=s.rel; type=s.type;
@@ -211,8 +211,8 @@ struct Proxy {
 
 //===========================================================================
 /// data structure to store a whole physical situation (lists of bodies, joints, shapes, proxies)
-struct Graph { //TODO: rename KinematicWorld
-  struct sGraph *s;
+struct KinematicWorld { //TODO: rename KinematicWorld
+  struct sKinematicWorld *s;
 
   /// @name data fields
   MT::Array<Body*>  bodies;
@@ -226,10 +226,10 @@ struct Graph { //TODO: rename KinematicWorld
   arr q_current, qdot_current;
 
   /// @name constructors
-  Graph();
-  Graph(const char* filename);
-  ~Graph();
-  void operator=(const ors::Graph& G);
+  KinematicWorld();
+  KinematicWorld(const char* filename);
+  ~KinematicWorld();
+  void operator=(const ors::KinematicWorld& G);
   
   /// @name initializations
   void init(const char* filename);
@@ -334,7 +334,7 @@ struct Graph { //TODO: rename KinematicWorld
 extern ors::Body& NoBody;
 extern ors::Shape& NoShape;
 extern ors::Joint& NoJoint;
-extern ors::Graph& NoGraph;
+extern ors::KinematicWorld& NoGraph;
 
 
 //===========================================================================
@@ -349,7 +349,7 @@ namespace ors {
 std::ostream& operator<<(std::ostream&, const Body&);
 std::ostream& operator<<(std::ostream&, const Joint&);
 std::ostream& operator<<(std::ostream&, const Shape&);
-stdPipes(Graph);
+stdPipes(KinematicWorld);
 }
 
 
@@ -373,7 +373,7 @@ uintA stringListToShapeIndices(const MT::Array<const char*>& names, const MT::Ar
 
 void lib_ors();
 void makeConvexHulls(ShapeL& shapes);
-double forceClosureFromProxies(ors::Graph& C, uint bodyIndex,
+double forceClosureFromProxies(ors::KinematicWorld& C, uint bodyIndex,
                                double distanceThreshold=0.01,
                                double mu=.5,     //friction coefficient
                                double discountTorques=1.);  //friction coefficient
@@ -397,12 +397,12 @@ struct OpenGL;
 extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines, orsDrawBodyNames;
 extern uint orsDrawLimit;
 
-void displayState(const arr& x, ors::Graph& G, OpenGL& gl, const char *tag);
-void displayTrajectory(const arr& x, int steps, ors::Graph& G, OpenGL& gl, const char *tag, double delay=0.);
-void editConfiguration(const char* orsfile, ors::Graph& G, OpenGL& gl);
-void animateConfiguration(ors::Graph& G, OpenGL& gl);
-//void init(ors::Graph& G, OpenGL& gl, const char* orsFile);
-void bindOrsToOpenGL(ors::Graph& graph, OpenGL& gl);
+void displayState(const arr& x, ors::KinematicWorld& G, OpenGL& gl, const char *tag);
+void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, OpenGL& gl, const char *tag, double delay=0.);
+void editConfiguration(const char* orsfile, ors::KinematicWorld& G, OpenGL& gl);
+void animateConfiguration(ors::KinematicWorld& G, OpenGL& gl);
+//void init(ors::KinematicWorld& G, OpenGL& gl, const char* orsFile);
+void bindOrsToOpenGL(ors::KinematicWorld& graph, OpenGL& gl);
 /** @} */ // END of group ors_interface_opengl
 
 
@@ -454,15 +454,15 @@ void invDynamics(arr& tau, const LinkTree& tree, const arr& qd, const arr& qdd);
 }
 stdOutPipe(ors::Link);
 
-void GraphToTree(ors::LinkTree& tree, const ors::Graph& C);
-void updateGraphToTree(ors::LinkTree& tree, const ors::Graph& C);
+void GraphToTree(ors::LinkTree& tree, const ors::KinematicWorld& C);
+void updateGraphToTree(ors::LinkTree& tree, const ors::KinematicWorld& C);
 /** @} */
 
 //===========================================================================
 /** @defgroup ors_interface_blender Blender interface.
  * @{
  */
-void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl);
+void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl);
 /** @} */
 //===========================================================================
 /** @} */ // END of group ors_interfaces

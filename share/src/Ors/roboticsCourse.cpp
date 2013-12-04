@@ -29,7 +29,7 @@ void drawEnv(void*){ glStandardLight(NULL); glDrawFloor(10., .9, .9, .9); }
 void drawBase(void*){ glDrawAxes(1.); }
 
 struct sSimulator {
-  ors::Graph G;
+  ors::KinematicWorld G;
   double margin;
   double dynamicNoise;
   bool gravity;
@@ -260,7 +260,7 @@ void Simulator::stepPhysx(const arr& qdot, double tau){
   s->G.physx().step(tau);
 }
 
-ors::Graph& Simulator::getOrsGraph(){
+ors::KinematicWorld& Simulator::getOrsGraph(){
   return s->G;
 }
 

@@ -66,7 +66,7 @@ void ActionProgressor::step(){
   motionFuture->incrementFrame(this);
 }
 
-void reattachShape(ors::Graph& ors, SwiftInterface *swift, const char* objShape, const char* toBody){
+void reattachShape(ors::KinematicWorld& ors, SwiftInterface *swift, const char* objShape, const char* toBody){
   ors::Shape *obj  = ors.getShapeByName(objShape);
   obj->body->shapes.removeValue(obj);
   obj->body = ors.getBodyByName(toBody);

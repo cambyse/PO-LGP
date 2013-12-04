@@ -10,7 +10,7 @@ DefaultTaskMap::DefaultTaskMap(DefaultTaskMapType _type,
   if(&_params) params=_params;
 }
 
-DefaultTaskMap::DefaultTaskMap(DefaultTaskMapType _type, const ors::Graph &G,
+DefaultTaskMap::DefaultTaskMap(DefaultTaskMapType _type, const ors::KinematicWorld &G,
                                const char* iShapeName, const ors::Vector& _ivec,
                                const char* jShapeName, const ors::Vector& _jvec,
                                const arr& _params):type(_type), i(-1), j(-1){
@@ -24,7 +24,7 @@ DefaultTaskMap::DefaultTaskMap(DefaultTaskMapType _type, const ors::Graph &G,
 }
 
 
-void DefaultTaskMap::phi(arr& y, arr& J, const ors::Graph& G) {
+void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G) {
   int body_i = i<0?-1: G.shapes(i)->body->index;
   int body_j = j<0?-1: G.shapes(j)->body->index;
   ors::Vector vec_i = i<0?ivec: G.shapes(i)->rel*ivec;
@@ -141,7 +141,7 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::Graph& G) {
   }
 }
 
-uint DefaultTaskMap::dim_phi(const ors::Graph& G) {
+uint DefaultTaskMap::dim_phi(const ors::KinematicWorld& G) {
   //get state
   switch(type) {
     case posTMT: return 3;

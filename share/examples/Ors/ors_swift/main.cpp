@@ -9,7 +9,7 @@ void drawInit(void*){
 }
 
 void TEST(Swift) {
-  ors::Graph G("swift_test.ors");
+  ors::KinematicWorld G("swift_test.ors");
 
   G.swift().setCutoff(2.);
   G.swift().computeProxies(G);

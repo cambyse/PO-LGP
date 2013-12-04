@@ -16,7 +16,7 @@ void drawChecker(void*){
 }
 
 void testStereoCapture(){
-  ors::Graph ors;
+  ors::KinematicWorld ors;
   ors.init("capture_scene.ors");
 
   OpenGL gl;

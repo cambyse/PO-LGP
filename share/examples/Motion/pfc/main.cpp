@@ -62,7 +62,7 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   // Compute optimal trajectory
   //------------------------------------------------//
   OpenGL gl(scene,800,800);
-  ors::Graph G;
+  ors::KinematicWorld G;
 
   init(G, gl, scene);
   makeConvexHulls(G.shapes);

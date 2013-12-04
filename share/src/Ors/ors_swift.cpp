@@ -43,8 +43,8 @@
 #undef max
 
 // internal use
-void exportStateToSwift(const ors::Graph& C, SwiftInterface& swift);
-void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpReport=false);
+void exportStateToSwift(const ors::KinematicWorld& C, SwiftInterface& swift);
+void importProxiesFromSwift(ors::KinematicWorld& C, SwiftInterface& swift, bool dumpReport=false);
 void swiftQueryExactDistance(SwiftInterface& swift);
 ANN *global_ANN=NULL;
 ors::Shape *global_ANN_shape;
@@ -53,7 +53,7 @@ SwiftInterface::~SwiftInterface() {
   close();
 }
 
-SwiftInterface* SwiftInterface::newClone(const ors::Graph& G) const {
+SwiftInterface* SwiftInterface::newClone(const ors::KinematicWorld& G) const {
   SwiftInterface* s=new SwiftInterface;
   s->init(G, cutoff);
   return s;
@@ -67,7 +67,7 @@ void SwiftInterface::close() {
   isOpen=false;
 }
 
-void SwiftInterface::init(const ors::Graph& C, double _cutoff) {
+void SwiftInterface::init(const ors::KinematicWorld& C, double _cutoff) {
   ors::Shape *s;
   uint k;
   bool r, add;
@@ -131,7 +131,7 @@ void SwiftInterface::init(const ors::Graph& C, double _cutoff) {
   isOpen=true;
 }
 
-void SwiftInterface::reinitShape(const ors::Graph& ors, const ors::Shape *s) {
+void SwiftInterface::reinitShape(const ors::KinematicWorld& ors, const ors::Shape *s) {
   int sw = INDEXshape2swift(s->index);
   scene->Delete_Object(sw);
   INDEXswift2shape(sw) = -1;
@@ -148,7 +148,7 @@ void SwiftInterface::reinitShape(const ors::Graph& ors, const ors::Shape *s) {
   if(s->cont) scene->Activate(sw);
 }
 
-void SwiftInterface::initActivations(const ors::Graph& C, uint parentLevelsToDeactivate) {
+void SwiftInterface::initActivations(const ors::KinematicWorld& C, uint parentLevelsToDeactivate) {
   ors::Shape *s;
   ors::Body *b, *b2;
   ors::Joint *e;
@@ -220,7 +220,7 @@ void SwiftInterface::deactivate(ors::Shape *s1, ors::Shape *s2) {
   scene->Deactivate(INDEXshape2swift(s1->index), INDEXshape2swift(s2->index));
 }
 
-void exportStateToSwift(const ors::Graph& C, SwiftInterface& swift) {
+void exportStateToSwift(const ors::KinematicWorld& C, SwiftInterface& swift) {
   CHECK(swift.INDEXshape2swift.N==C.shapes.N,"the number of shapes has changed");
   ors::Shape *s;
   uint k;
@@ -235,7 +235,7 @@ void exportStateToSwift(const ors::Graph& C, SwiftInterface& swift) {
   }
 }
 
-void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpReport) {
+void importProxiesFromSwift(ors::KinematicWorld& C, SwiftInterface& swift, bool dumpReport) {
   int i, j, k, np;
   int *oids, *num_contacts;
   SWIFT_Real *dists, *nearest_pts, *normals;
@@ -364,7 +364,7 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
   }
 }
 
-void SwiftInterface::computeProxies(ors::Graph& C, bool dumpReport) {
+void SwiftInterface::computeProxies(ors::KinematicWorld& C, bool dumpReport) {
   exportStateToSwift(C, *this);
   importProxiesFromSwift(C, *this, dumpReport);
 }
@@ -386,13 +386,13 @@ void swiftQueryExactDistance(SwiftInterface& swift) {
 #else
 #include <Core/util.h>
 //#warning "MT_extern_SWIFT undefined - using HALT implementations"
-void SwiftInterface::init(const ors::Graph& C, double _cutoff) { MT_MSG("WARNING - creating dummy SwiftInterface"); }
-void SwiftInterface::initActivations(const ors::Graph& C, uint parentLevelsToDeactivate) {}
+void SwiftInterface::init(const ors::KinematicWorld& C, double _cutoff) { MT_MSG("WARNING - creating dummy SwiftInterface"); }
+void SwiftInterface::initActivations(const ors::KinematicWorld& C, uint parentLevelsToDeactivate) {}
 void SwiftInterface::close() {}
 void SwiftInterface::deactivate(const MT::Array<ors::Body*>& bodies) {}
 void SwiftInterface::deactivate(ors::Shape *s1, ors::Shape *s2) {}
-void SwiftInterface::computeProxies(ors::Graph& C, bool dumpReport) {}
-SwiftInterface* SwiftInterface::newClone(const ors::Graph& G) const { return NULL; }
+void SwiftInterface::computeProxies(ors::KinematicWorld& C, bool dumpReport) {}
+SwiftInterface* SwiftInterface::newClone(const ors::KinematicWorld& G) const { return NULL; }
 void swiftQueryExactDistance(SwiftInterface& swift) {}
 SwiftInterface::~SwiftInterface() {}
 #endif

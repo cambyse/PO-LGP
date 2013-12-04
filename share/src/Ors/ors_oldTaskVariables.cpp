@@ -47,7 +47,7 @@ DefaultTaskVariable::~DefaultTaskVariable() {
 
 DefaultTaskVariable::DefaultTaskVariable(
   const char* _name,
-  const ors::Graph& _ors,
+  const ors::KinematicWorld& _ors,
   TVtype _type,
   const char *iname, const char *iframe,
   const char *jname, const char *jframe,
@@ -63,7 +63,7 @@ DefaultTaskVariable::DefaultTaskVariable(
 
 DefaultTaskVariable::DefaultTaskVariable(
   const char* _name,
-  const ors::Graph& _ors,
+  const ors::KinematicWorld& _ors,
   TVtype _type,
   const char *iShapeName,
   const char *jShapeName,
@@ -84,7 +84,7 @@ TaskVariable::~TaskVariable() {
 
 void DefaultTaskVariable::set(
   const char* _name,
-  const ors::Graph& _ors,
+  const ors::KinematicWorld& _ors,
   TVtype _type,
   int _i, const ors::Transformation& _irel,
   int _j, const ors::Transformation& _jrel,
@@ -101,7 +101,7 @@ void DefaultTaskVariable::set(
   v_target=v;
 }
 
-/*void TaskVariable::set(const char* _name, ors::Graph& _sl, TVtype _type, const char *iname, const char *jname, const char *reltext){
+/*void TaskVariable::set(const char* _name, ors::KinematicWorld& _sl, TVtype _type, const char *iname, const char *jname, const char *reltext){
   set(
     _name, _sl, _type,
     _sl.getBodyByName(iname)->index,
@@ -330,7 +330,7 @@ void TaskVariable::shiftTargets(int offset) {
 #endif
 }
 
-void DefaultTaskVariable::updateState(const ors::Graph& ors, double tau) {
+void DefaultTaskVariable::updateState(const ors::KinematicWorld& ors, double tau) {
   arr q, qd, p;
   ors::Vector pi, pj, c;
   arr zi, zj, Ji, Jj, JRj;
@@ -453,7 +453,7 @@ void DefaultTaskVariable::updateState(const ors::Graph& ors, double tau) {
   }
 }
 
-void DefaultTaskVariable::getHessian(const ors::Graph& ors, arr& H) {
+void DefaultTaskVariable::getHessian(const ors::KinematicWorld& ors, arr& H) {
   switch(type) {
     case posTVT:
       if(j==-1) { ors.hessianPos(H, i, &irel.pos); break; }
@@ -521,7 +521,7 @@ void TaskVariable::updateChange(int t, double tau) {
   }
     */
 
-void TaskVariable::write(ostream &os, const ors::Graph& ors) const {
+void TaskVariable::write(ostream &os, const ors::KinematicWorld& ors) const {
   os <<"TaskVariable '" <<name <<'\'';
   os
       <<"\n  y=" <<y
@@ -540,7 +540,7 @@ void TaskVariable::write(ostream &os, const ors::Graph& ors) const {
       <<endl;
 }
 
-void DefaultTaskVariable::write(ostream &os, const ors::Graph& ors) const {
+void DefaultTaskVariable::write(ostream &os, const ors::KinematicWorld& ors) const {
   TaskVariable::write(os);
   return;
   switch(type) {
@@ -564,7 +564,7 @@ void DefaultTaskVariable::write(ostream &os, const ors::Graph& ors) const {
 
 
 ProxyTaskVariable::ProxyTaskVariable(const char* _name,
-                                     ors::Graph& ors,
+                                     ors::KinematicWorld& ors,
                                      CTVtype _type,
                                      uintA _shapes,
                                      double _margin,
@@ -580,7 +580,7 @@ ProxyTaskVariable::ProxyTaskVariable(const char* _name,
 }
 
 #if 0
-void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph& ors, double margin, bool linear) {
+void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::KinematicWorld& ors, double margin, bool linear) {
   double d;
   ors::Shape *a, *b;
   ors::Vector arel, brel;
@@ -609,7 +609,7 @@ void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph& ors, 
 }
 #endif
 
-void ProxyTaskVariable::updateState(const ors::Graph& ors, double tau) {
+void ProxyTaskVariable::updateState(const ors::KinematicWorld& ors, double tau) {
   v_old=v;
   y_old=y;
   
@@ -771,7 +771,7 @@ void shiftTargets(TaskVariableList& CS, int offset) {
   for(uint i=0; i<CS.N; i++) CS(i)->shiftTargets(offset);
 }
 
-void updateState(TaskVariableList& CS, const ors::Graph& ors) {
+void updateState(TaskVariableList& CS, const ors::KinematicWorld& ors) {
   for(uint i=0; i<CS.N; i++) {
     CS(i)->updateState(ors);
   }
@@ -821,7 +821,7 @@ void bayesianControl(TaskVariableList& CS, arr& dq, const arr& W) {
 
 #if 0
 
-void TaskVariableTable::init(const ors::Graph& ors) {
+void TaskVariableTable::init(const ors::KinematicWorld& ors) {
   uint i,j,k,m=0,T=0,t,qdim;
   TaskVariable *v;
   //count the total task dimension, q-d
@@ -844,7 +844,7 @@ void TaskVariableTable::init(const ors::Graph& ors) {
 }
 
 //recompute all phi in time slice t using the pose in ors
-void TaskVariableTable::updateTimeSlice(uint t, const ors::Graph& ors, bool alsoTargets) {
+void TaskVariableTable::updateTimeSlice(uint t, const ors::KinematicWorld& ors, bool alsoTargets) {
   uint i,j,k,m=0;
   TaskVariable *v;
   for_list(i,v,list) {
@@ -967,7 +967,7 @@ void additiveControl_obsolete(TaskVariableList& CS, arr& dq, const arr& W){
 }
 */
 /*OLD
-void bayesianPlanner_obsolete(ors::Graph *ors, TaskVariableList& CS, SwiftInterface *swift, OpenGL *gl,
+void bayesianPlanner_obsolete(ors::KinematicWorld *ors, TaskVariableList& CS, SwiftInterface *swift, OpenGL *gl,
                      arr& q, uint T, const arr& W, uint iterations,
                      std::ostream* os, int display, bool repeat){
   //FOR THE OLD VERSION, SEE SMAC.CPP IN THE DEPOSIT

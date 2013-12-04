@@ -1,11 +1,11 @@
 #include "taskMap_constrained.h"
 
-void CollisionConstraint::phi(arr& y, arr& J, const ors::Graph& G){
+void CollisionConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
   G.phiCollision(y, J, 2.*margin, false);
   y -= .9;
 }
 
-void PlaneConstraint::phi(arr& y, arr& J, const ors::Graph& G){
+void PlaneConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
   int body_i = G.shapes(i)->body->index;
   ors::Vector vec_i = G.shapes(i)->rel.pos;
 

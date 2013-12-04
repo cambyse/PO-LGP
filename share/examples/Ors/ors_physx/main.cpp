@@ -1,7 +1,7 @@
 #include <Ors/ors_physx.h>
 #include <Gui/opengl.h>
 
-void createScene(ors::Graph& ors, OpenGL& gl) {
+void createScene(ors::KinematicWorld& ors, OpenGL& gl) {
   ors.clear();
   
   for(uint k=0; k<3; k++) {
@@ -44,7 +44,7 @@ void createScene(ors::Graph& ors, OpenGL& gl) {
 }
 
 void TEST(OrsPhysx) {
-  ors::Graph G;
+  ors::KinematicWorld G;
   OpenGL glPh;
 
   createScene(G, G.gl());

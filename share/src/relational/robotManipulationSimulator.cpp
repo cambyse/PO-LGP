@@ -66,7 +66,7 @@ double GRAB_UNCLEAR_OBJ_FAILURE_PROB = 0.4;
 uint gl_step = 0;
 uint revel_step = 0;
 
-void oneStep(const arr &q,ors::Graph *C,OdeInterface *ode,SwiftInterface *swift,OpenGL *gl, RevelInterface *revel,const char* text){
+void oneStep(const arr &q,ors::KinematicWorld *C,OdeInterface *ode,SwiftInterface *swift,OpenGL *gl, RevelInterface *revel,const char* text){
 #ifdef MT_ODE
   C->setJointState(q);
   C->calcBodyFramesFromJoints();
@@ -105,7 +105,7 @@ void oneStep(const arr &q,ors::Graph *C,OdeInterface *ode,SwiftInterface *swift,
 
 
 
-void controlledStep(arr &q,arr &W,ors::Graph *C,OdeInterface *ode,SwiftInterface *swift,OpenGL *gl, RevelInterface *revel,TaskVariableList& TVs, const char* text){
+void controlledStep(arr &q,arr &W,ors::KinematicWorld *C,OdeInterface *ode,SwiftInterface *swift,OpenGL *gl, RevelInterface *revel,TaskVariableList& TVs, const char* text){
 #ifdef MT_ODE
   static arr dq;
   updateState(TVs, *C);
@@ -155,7 +155,7 @@ void drawEnv(void* horst){
 
 void RobotManipulationSimulator::loadConfiguration(const char* ors_filename){
   if(C) delete C;
-  C = new ors::Graph();
+  C = new ors::KinematicWorld();
   MT::load(*C,ors_filename);
   C->calcBodyFramesFromJoints();
   C->getJointState(q0);
@@ -1676,14 +1676,14 @@ void RobotManipulationSimulator::displayText(const char* text, uint t) {
 
 namespace relational {
     
-void generateOrsBlocksSample(ors::Graph& ors, const uint numOfBlocks) {
+void generateOrsBlocksSample(ors::KinematicWorld& ors, const uint numOfBlocks) {
   MT::Array<arr> pos;
   generateBlocksSample(pos, numOfBlocks);
 	generateOrsFromSample(ors, pos);
 }
 
 
-void generateOrsFromSample(ors::Graph& ors, const MT::Array<arr>& sample) {
+void generateOrsFromSample(ors::KinematicWorld& ors, const MT::Array<arr>& sample) {
   //for (int i = ors.bodies.N - 1; i >= 0; --i) {
     //if (ors.bodies(i)->name.p[0] == 'o') {
       //ors.bodies.remove(i);  

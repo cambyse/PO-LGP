@@ -3,7 +3,7 @@
 #include <Gui/opengl.h>
 
 void compareModules(){
-  ors::Graph G("../../../configurations/schunk.ors");
+  ors::KinematicWorld G("../../../configurations/schunk.ors");
 
   G.swift().setCutoff(1.);
 

@@ -6,7 +6,7 @@
 /*----------------------------------------------------------------------------*/
 
 void TEST(PhysxObstacleAvoidance) {
-  ors::Graph ors;
+  ors::KinematicWorld ors;
   ors.init("doorComplex.ors");
   ors::Body* robot = ors.getBodyByName("robot");
   ors.calcBodyFramesFromJoints();

@@ -9,7 +9,7 @@ void testGraspHeuristic(){
 
   //setup the problem
   OpenGL gl;
-  ors::Graph G;
+  ors::KinematicWorld G;
   init(G, gl, MT::getParameter<MT::String>("orsFile"));
   makeConvexHulls(G.shapes);
   gl.watch();

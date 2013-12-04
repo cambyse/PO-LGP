@@ -10,7 +10,7 @@ int main(int argc,char** argv){
   MT::initCmdLine(argc,argv);
 
   OpenGL gl;
-  ors::Graph G;
+  ors::KinematicWorld G;
   init(G, gl, MT::getParameter<MT::String>("orsFile"));
 
   MotionProblem MP(&G);

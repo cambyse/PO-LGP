@@ -35,8 +35,8 @@
 
 struct TaskMap {
   bool constraint;  ///< whether this is a hard constraint (implementing a constraint function g)
-  virtual void phi(arr& y, arr& J, const ors::Graph& G) = 0;
-  virtual uint dim_phi(const ors::Graph& G) = 0; //the dimensionality of $y$
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G) = 0;
+  virtual uint dim_phi(const ors::KinematicWorld& G) = 0; //the dimensionality of $y$
 
   TaskMap():constraint(false) {}
 };
@@ -68,7 +68,7 @@ struct TaskCost {
 /// This class allows you to DESCRIBE a motion planning problem, nothing more
 struct MotionProblem { //TODO: rename MotionPlanningProblem
   //engines to compute things
-  ors::Graph *ors;
+  ors::KinematicWorld *ors;
   SwiftInterface *swift;
   
   //******* the following three sections are parameters that define the problem
@@ -93,7 +93,7 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
   arr costMatrix;
   arr dualMatrix;
 
-  MotionProblem(ors::Graph *_ors=NULL, SwiftInterface *_swift=NULL, bool useSwift=true);
+  MotionProblem(ors::KinematicWorld *_ors=NULL, SwiftInterface *_swift=NULL, bool useSwift=true);
   
   void loadTransitionParameters(); ///< loads transition parameters from cfgFile //TODO: do in constructor of TransitionCost
   

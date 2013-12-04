@@ -7,7 +7,7 @@
 #include <Perception/video.h>
 #include <iomanip>
 
-void saveTrajectory(const arr& x, ors::Graph& G, OpenGL& gl) {
+void saveTrajectory(const arr& x, ors::KinematicWorld& G, OpenGL& gl) {
   VideoEncoder_libav_simple vid;
   for(uint t=0; t<x.d0; t++) {
     G.setJointState(x[t]);
@@ -24,7 +24,7 @@ int main(int argc,char** argv){
   MT::initCmdLine(argc,argv);
 
   OpenGL gl;
-  ors::Graph G;
+  ors::KinematicWorld G;
   init(G, gl, MT::getParameter<MT::String>("orsFile"));
 
   bool con=true;

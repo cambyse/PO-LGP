@@ -108,7 +108,7 @@ public:
     return goal;
   }
 
-  pr2_controllers_msgs::JointTrajectoryGoal OrsConfigToPR2Msg(const arr& q_last, const arr& q, const ors::Graph& G) {
+  pr2_controllers_msgs::JointTrajectoryGoal OrsConfigToPR2Msg(const arr& q_last, const arr& q, const ors::KinematicWorld& G) {
     pr2_controllers_msgs::JointTrajectoryGoal goal;
     goal.trajectory.points.resize(2);
 
@@ -164,7 +164,7 @@ void base(){
 }
 
 void circle(bool FIRE=false){
-  ors::Graph G;
+  ors::KinematicWorld G;
   OpenGL gl;
   init(G, gl, "pr2_model/pr2_left.ors");
   makeConvexHulls(G.shapes);

@@ -38,7 +38,7 @@ struct PhysXInterface {
   PhysXInterface();
   ~PhysXInterface();
   
-  void create(ors::Graph& G);
+  void create(ors::KinematicWorld& G);
   void step(double tau=1./60.);
   void glDraw();
   
@@ -46,14 +46,14 @@ struct PhysXInterface {
   void pullState();
 
   bool isCreated();
-  void setArticulatedBodiesKinematic(ors::Graph& G, int agent=0);
+  void setArticulatedBodiesKinematic(ors::KinematicWorld& G, int agent=0);
   void ShutdownPhysX();
 };
 
 void glPhysXInterface(void *classP);
 
 
-void bindOrsToPhysX(ors::Graph& graph, OpenGL& gl, PhysXInterface& physx);
+void bindOrsToPhysX(ors::KinematicWorld& graph, OpenGL& gl, PhysXInterface& physx);
 
 #endif
 /// @}

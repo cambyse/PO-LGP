@@ -21,8 +21,8 @@
 #include "taskMap_default.h"
 #include <Gui/opengl.h>
 
-MotionProblem::MotionProblem(ors::Graph *_ors, SwiftInterface *_swift, bool useSwift) {
-  if(_ors)   ors   = _ors;   else { ors=new ors::Graph;        ors  ->init(MT::getParameter<MT::String>("orsFile")); } // orLinkTree(); }
+MotionProblem::MotionProblem(ors::KinematicWorld *_ors, SwiftInterface *_swift, bool useSwift) {
+  if(_ors)   ors   = _ors;   else { ors=new ors::KinematicWorld;        ors  ->init(MT::getParameter<MT::String>("orsFile")); } // orLinkTree(); }
   if(useSwift){
     if(_swift) swift = _swift; else { swift=new SwiftInterface;  swift->init(*ors, 2.*MT::getParameter<double>("swiftCutoff", 0.11)); }
   }else swift=NULL;

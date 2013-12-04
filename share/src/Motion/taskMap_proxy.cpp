@@ -11,7 +11,7 @@ ProxyTaskMap::ProxyTaskMap(PTMtype _type,
   cout <<"creating ProxyTaskMap with shape list" <<shapes <<endl;
 }
 
-void ProxyTaskMap::phi(arr& y, arr& J, const ors::Graph& G){
+void ProxyTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G){
   uint i;
   ors::Proxy *p;
 
@@ -109,7 +109,7 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::Graph& G){
   }
 }
 
-uint ProxyTaskMap::dim_phi(const ors::Graph& G){
+uint ProxyTaskMap::dim_phi(const ors::KinematicWorld& G){
   switch(type) {
   case allPTMT:
   case listedVsListedPTMT:

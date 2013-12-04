@@ -65,7 +65,7 @@ static PxSimulationFilterShader gDefaultFilterShader=PxDefaultSimulationFilterSh
  * @param gl the gl output.
  * @param physx the PhyxXInteface which handles the ors graph.
  */
-void bindOrsToPhysX(ors::Graph& graph, OpenGL& gl, PhysXInterface& physx) {
+void bindOrsToPhysX(ors::KinematicWorld& graph, OpenGL& gl, PhysXInterface& physx) {
   physx.create(graph);
   
   gl.add(glStandardScene, NULL);
@@ -97,7 +97,7 @@ PxTransform OrsTrans2PxTrans(const ors::Transformation& f) {
 // ============================================================================
 
 struct sPhysXInterface {
-  ors::Graph *G;
+  ors::KinematicWorld *G;
   PxScene* gScene;
   MT::Array<PxRigidActor*> actors;
   
@@ -138,7 +138,7 @@ void PhysXInterface::step(double tau) {
   
 }
 
-void PhysXInterface::setArticulatedBodiesKinematic(ors::Graph& G, int agent){
+void PhysXInterface::setArticulatedBodiesKinematic(ors::KinematicWorld& G, int agent){
   for(ors::Joint* j:G.joints){
     if(j->agent==agent){
       if(j->from->type==ors::dynamicBT) j->from->type=ors::kinematicBT;
@@ -153,7 +153,7 @@ void PhysXInterface::setArticulatedBodiesKinematic(ors::Graph& G, int agent){
  * - setup some physx stuff
  * - create PhysX equivalent to the ors graph
  */
-void PhysXInterface::create(ors::Graph& G) {
+void PhysXInterface::create(ors::KinematicWorld& G) {
   CHECK(!s->G,"can create an interface only once");
   s->G = &G;
   if(!mFoundation) {
@@ -553,7 +553,7 @@ void PhysXInterface::syncWithOrs() { NICO }
 void PhysXInterface::pullState() { NICO }
 void PhysXInterface::ShutdownPhysX() { NICO }
 void glPhysXInterface(void *classP) { NICO }
-void bindOrsToPhysX(ors::Graph& graph, OpenGL& gl, PhysXInterface& physx) { NICO }
+void bindOrsToPhysX(ors::KinematicWorld& graph, OpenGL& gl, PhysXInterface& physx) { NICO }
 
 #endif
 /** @} */

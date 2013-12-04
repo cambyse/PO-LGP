@@ -35,7 +35,7 @@ enum EditMode { emNone, emMove, emOde };
 
 struct sOrsSceneGui:OpenGL::GLKeyCall,OpenGL::GLHoverCall,OpenGL::GLClickCall {
   OpenGL *gl;
-  ors::Graph *ors;
+  ors::KinematicWorld *ors;
   OdeInterface ode;
   EditMode mode;
   ors::Body *movingBody;
@@ -165,7 +165,7 @@ bool sOrsSceneGui::keyCallback(OpenGL&) {
   return true;
 }
 
-OrsSceneGui::OrsSceneGui(ors::Graph& ors, OpenGL* gl) {
+OrsSceneGui::OrsSceneGui(ors::KinematicWorld& ors, OpenGL* gl) {
   s=new sOrsSceneGui();
   s->ors = &ors;
   orsDrawZlines=true;

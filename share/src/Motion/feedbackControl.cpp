@@ -29,7 +29,7 @@ arr PDtask::getDesiredAcceleration(const arr& y, const arr& ydot){
 
 //===========================================================================
 
-FeedbackMotionControl::FeedbackMotionControl(ors::Graph *_ors, SwiftInterface *_swift, bool useSwift)
+FeedbackMotionControl::FeedbackMotionControl(ors::KinematicWorld *_ors, SwiftInterface *_swift, bool useSwift)
   : MotionProblem(_ors, _swift, useSwift), nullSpacePD(NULL) {
   loadTransitionParameters();
   nullSpacePD.setGainsAsNatural(1.,1.);

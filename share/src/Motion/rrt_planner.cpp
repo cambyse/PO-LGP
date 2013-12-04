@@ -17,7 +17,7 @@ namespace ors {
 
     sRRTPlanner(RRTPlanner *p, RRT rrt) : p(p), rrt(rrt) { };
 
-    bool growTowards(RRT& growing, RRT& passive, ors::Graph &G);
+    bool growTowards(RRT& growing, RRT& passive, ors::KinematicWorld &G);
 
     uint success_growing;
     uint success_passive;
@@ -25,7 +25,7 @@ namespace ors {
 }
 
 
-bool ors::sRRTPlanner::growTowards(RRT& growing, RRT& passive, ors::Graph &G) {
+bool ors::sRRTPlanner::growTowards(RRT& growing, RRT& passive, ors::KinematicWorld &G) {
   arr q;
   if(rnd.uni()<.5) {
     q = p->joint_min + rand(G.getJointStateDimension(), 1) % ( p->joint_max - p->joint_min );
@@ -40,7 +40,7 @@ bool ors::sRRTPlanner::growTowards(RRT& growing, RRT& passive, ors::Graph &G) {
   G.setJointState(q);
   G.calcBodyFramesFromJoints();
 
-  ors::Graph *G_t = p->problem.ors;
+  ors::KinematicWorld *G_t = p->problem.ors;
   p->problem.ors = &G;
   arr phi, J_x, J_v;
   p->problem.swift->computeProxies(G);
@@ -85,7 +85,7 @@ arr buildTrajectory(RRT& rrt, uint node, bool forward) {
   return q;
 }
     
-ors::RRTPlanner::RRTPlanner(ors::Graph *G, MotionProblem &problem, double stepsize) : 
+ors::RRTPlanner::RRTPlanner(ors::KinematicWorld *G, MotionProblem &problem, double stepsize) : 
   s(new ors::sRRTPlanner(this, RRT(G->getJointState(), stepsize))), G(G), problem(problem) {
     joint_min = zeros(G->getJointStateDimension(), 1);
     joint_max = ones(G->getJointStateDimension(), 1);
@@ -101,7 +101,7 @@ void drawRRT(RRT rrt) {
 }
 
 arr ors::RRTPlanner::getTrajectoryTo(const arr& target, OpenGL* gl) {
-  ors::Graph *copy = G->newClone();
+  ors::KinematicWorld *copy = G->newClone();
   arr q;
 
   RRT target_rrt(target, s->rrt.getStepsize());

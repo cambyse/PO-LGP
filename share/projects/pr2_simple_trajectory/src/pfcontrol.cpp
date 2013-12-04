@@ -23,7 +23,7 @@ typedef actionlib::SimpleActionClient<control_msgs::JointTrajectoryAction> TrajC
 
 class PfControl{
 private:
-  ors::Graph G;
+  ors::KinematicWorld G;
   Pfc* pfc;
   MObject* goalMO;
   arr xRef, x0;

@@ -64,7 +64,7 @@ void drawOrsActionInterfaceEnv(void*) {
   glDrawFloor(4., 1, 1, 1);
 }
 
-void oneStep(const arr &q, ors::Graph *C, OdeInterface *ode, SwiftInterface *swift) {
+void oneStep(const arr &q, ors::KinematicWorld *C, OdeInterface *ode, SwiftInterface *swift) {
   C->setJointState(q);
   C->calcBodyFramesFromJoints();
 #ifdef MT_ODE
@@ -86,7 +86,7 @@ void oneStep(const arr &q, ors::Graph *C, OdeInterface *ode, SwiftInterface *swi
   
 }
 
-void controlledStep(arr &q, arr &W, ors::Graph *C, OdeInterface *ode, SwiftInterface *swift, TaskVariableList& TVs) {
+void controlledStep(arr &q, arr &W, ors::KinematicWorld *C, OdeInterface *ode, SwiftInterface *swift, TaskVariableList& TVs) {
   static arr dq;
   updateState(TVs, *C);
   updateChanges(TVs); //computeXchangeWithAttractor(globalSpace);
@@ -125,7 +125,7 @@ void ActionInterface::loadConfiguration(const char* ors_filename) {
   chdir(path);
   
   if(C) delete C;
-  C = new ors::Graph();
+  C = new ors::KinematicWorld();
   MT::load(*C, name);
   C->calcBodyFramesFromJoints();
   //C->reconfigureRoot(C->getName("rfoot"));
@@ -259,7 +259,7 @@ void ActionInterface::relaxPosition() {
 //   DefaultTaskVariable x("endeffector", *C, posTVT, man_id, 0, 0, 0, ARR());
 //   x.setGainsAsAttractor(20, .2);
 //   x.y_prec=1000.;
-//   ors::Graph::node obj=C->getName(obj_id);
+//   ors::KinematicWorld::node obj=C->getName(obj_id);
 //
 //   uint t;
 //   arr q, dq;
@@ -527,7 +527,7 @@ bool ActionInterface::partOfBody(uint id) {
 
 uint ActionInterface::getCatched(uint man_id) {
 #if 0
-  //   ors::Graph::node n = C->bodies(man_id);
+  //   ors::KinematicWorld::node n = C->bodies(man_id);
   ors::Proxy *p;
   //  cout <<"davor";
   uint obj=C->getBodyByName(convertObjectID2name(man_id))->index;

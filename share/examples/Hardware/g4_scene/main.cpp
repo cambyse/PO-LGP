@@ -10,7 +10,7 @@
 void lib_hardware_G4();
 
 /*
-void setup_opengl_for_g4(ors::Graph& ors, OpenGL& gl, uint hubs){
+void setup_opengl_for_g4(ors::KinematicWorld& ors, OpenGL& gl, uint hubs){
   bindOrsToOpenGL(ors, gl);
   gl.camera.setPosition(7., .5, 3.);
   gl.camera.focus(0, .5, .5);
@@ -32,7 +32,7 @@ void setup_opengl_for_g4(ors::Graph& ors, OpenGL& gl, uint hubs){
 void display(const G4Data &g4d) {
   //VideoEncoder_libav_simple vid;
   OpenGL gl;
-  ors::Graph ors;
+  ors::KinematicWorld ors;
   //setup_opengl_for_g4(ors, gl, X.d1);
 
   MT::String shapes = MT::getParameter<MT::String>("shapes");

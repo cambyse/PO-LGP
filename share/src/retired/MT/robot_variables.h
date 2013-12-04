@@ -67,7 +67,7 @@ struct q_currentReferenceVar:public Variable {
 };
 
 struct CurrentSceneInformation:public Variable {
-  ors::Graph ors;
+  ors::KinematicWorld ors;
 
   CurrentSceneInformation():Variable("current scnene information"){}
 };

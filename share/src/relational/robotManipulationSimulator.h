@@ -203,7 +203,7 @@ public:
   ************************************************/
   
   OpenGL *gl;
-  ors::Graph *C;
+  ors::KinematicWorld *C;
   OdeInterface *ode;
   SwiftInterface *swift;
   RevelInterface *revel;
@@ -226,9 +226,9 @@ public:
   ************************************************/
 
 namespace relational {
-void generateOrsBlocksSample(ors::Graph& ors, const uint numOfBlocks);
-void generateOrsFromSample(ors::Graph& ors, const MT::Array<arr>& sample);
-//void generateOrsFromTraySample(ors::Graph& ors, const MT::Array<arr>& sample);
+void generateOrsBlocksSample(ors::KinematicWorld& ors, const uint numOfBlocks);
+void generateOrsFromSample(ors::KinematicWorld& ors, const MT::Array<arr>& sample);
+//void generateOrsFromTraySample(ors::KinematicWorld& ors, const MT::Array<arr>& sample);
 void generateBlocksSample(MT::Array<arr>& sample, uint numOfBlocks);
 void createCylinder(ors::Body& cyl, const ors::Vector& pos, const arr& color, const arr& size);
 void createCylinder(ors::Body& cyl, const ors::Vector& pos, const arr& color);

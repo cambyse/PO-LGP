@@ -3,7 +3,7 @@
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 
-arr getSimpleTrajectory(ors::Graph& G){
+arr getSimpleTrajectory(ors::KinematicWorld& G){
   MotionProblem P(&G, NULL, false);
   P.loadTransitionParameters();
 
@@ -28,7 +28,7 @@ int main(int argc,char** argv){
   MT::initCmdLine(argc,argv);
 
   OpenGL gl;
-  ors::Graph G;
+  ors::KinematicWorld G;
   init(G, gl, MT::getParameter<MT::String>("orsFile"));
 
   arr x = getSimpleTrajectory(G);

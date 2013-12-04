@@ -36,16 +36,16 @@ struct SwiftInterface {
   double cutoff;
   SwiftInterface() { scene=NULL; cutoff=.1; isOpen=false; }
   ~SwiftInterface();
-  SwiftInterface* newClone(const ors::Graph& G) const;
+  SwiftInterface* newClone(const ors::KinematicWorld& G) const;
 
   void setCutoff(double _cutoff){ cutoff=_cutoff; }
-  void init(const ors::Graph& ors, double _cutoff=.1);
-  void reinitShape(const ors::Graph& ors, const ors::Shape *s);
+  void init(const ors::KinematicWorld& ors, double _cutoff=.1);
+  void reinitShape(const ors::KinematicWorld& ors, const ors::Shape *s);
   void close();
   void deactivate(ors::Shape *s1, ors::Shape *s2);
   void deactivate(const MT::Array<ors::Shape*>& shapes);
   void deactivate(const MT::Array<ors::Body*>& bodies);
-  void initActivations(const ors::Graph& ors, uint parentLevelsToDeactivate=3);
-  void computeProxies(ors::Graph& ors, bool dumpReport=false);
+  void initActivations(const ors::KinematicWorld& ors, uint parentLevelsToDeactivate=3);
+  void computeProxies(ors::KinematicWorld& ors, bool dumpReport=false);
 };
 /** @} */

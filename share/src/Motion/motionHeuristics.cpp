@@ -312,7 +312,7 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
 
 }
 
-void reattachShape(ors::Graph& ors, SwiftInterface *swift, const char* objShape, const char* toBody);
+void reattachShape(ors::KinematicWorld& ors, SwiftInterface *swift, const char* objShape, const char* toBody);
 
 #if 0
 void setPlaceGoals(MotionProblem& MP, uint T, uint shapeId, int belowToShapeId, const arr& locationTo){

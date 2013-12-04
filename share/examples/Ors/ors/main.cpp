@@ -13,7 +13,7 @@
 //
 
 void TEST(LoadSave){
-  ors::Graph G;
+  ors::KinematicWorld G;
   ifstream fil("arm7.ors");
   fil >>G;
   G.calcBodyFramesFromJoints();
@@ -34,7 +34,7 @@ void TEST(LoadSave){
 
 namespace T1{
   uint i,j;
-  ors::Graph *G;
+  ors::KinematicWorld *G;
   ors::Vector rel;
   ors::Vector axis;
   static void f  (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsPos(y,*J,i,&rel); }
@@ -45,7 +45,7 @@ namespace T1{
 }
 
 void TEST(Kinematics){
-  ors::Graph G("arm3.ors");
+  ors::KinematicWorld G("arm3.ors");
   uint n=G.getJointStateDimension();
   arr x(n);
   T1::axis.set(1,0,0);
@@ -70,7 +70,7 @@ void TEST(Kinematics){
 void TEST(KinematicSpeed){
 #define NUM 10000
 #if 1
-  ors::Graph G("arm7.ors");
+  ors::KinematicWorld G("arm7.ors");
   G.makeLinkTree();
   uint n=G.getJointStateDimension();
   arr x(n);
@@ -108,7 +108,7 @@ void TEST(KinematicSpeed){
 //
 
 namespace Ctest{
-  ors::Graph *G;
+  ors::KinematicWorld *G;
   void f(arr& c, arr *dfdx, const arr &x,void*){
     G->setJointState(x); G->calcBodyFramesFromJoints();
     G->swift().computeProxies(*G,false);
@@ -117,7 +117,7 @@ namespace Ctest{
 }
 
 void TEST(Contacts){
-  ors::Graph G("arm7.ors");
+  ors::KinematicWorld G("arm7.ors");
   
   arr x,v,con,grad;
   uint t;
@@ -166,7 +166,7 @@ void generateSequence(arr &X, uint T, uint n){
 }
 
 void TEST(PlayStateSequence){
-  ors::Graph G("arm7.ors");
+  ors::KinematicWorld G("arm7.ors");
   uint n=G.getJointStateDimension();
   arr X;
   generateSequence(X, 200, n);
@@ -186,7 +186,7 @@ void TEST(PlayStateSequence){
 
 #ifdef MT_ODE
 void TEST(PlayTorqueSequenceInOde){
-  ors::Graph G("arm7.ors");
+  ors::KinematicWorld G("arm7.ors");
   OdeInterface ode;
   ode.createOde(G);
   uint n=G.getJointStateDimension();
@@ -206,7 +206,7 @@ void TEST(PlayTorqueSequenceInOde){
 }
 
 void TEST(MeshShapesInOde){
-  ors::Graph G("testOdeMesh.ors");
+  ors::KinematicWorld G("testOdeMesh.ors");
   OdeInterface ode;
   ode.createOde(G);
   for(uint t=0;t<1000;t++){
@@ -225,7 +225,7 @@ void TEST(MeshShapesInOde){
 //
 
 void TEST(FollowRedundantSequence){  
-  ors::Graph G("arm7.ors");
+  ors::KinematicWorld G("arm7.ors");
   //init();
   uint N=G.bodies.N-2;
 
@@ -275,21 +275,21 @@ void TEST(FollowRedundantSequence){
 //  //static arr conswit;
 //  //bool hasContact=false;
 //  bool addContactsToDynamics=false;
-//  ors::Graph *G;
+//  ors::KinematicWorld *G;
 //}
 
 
 //---------- test standard dynamic control
 void TEST(Dynamics){
-  ors::Graph G("arm7.ors");
+  ors::KinematicWorld G("arm7.ors");
   //G.makeLinkTree();
   cout <<G <<endl;
 
   struct DiffEqn:VectorFunction{
-    ors::Graph& G;
+    ors::KinematicWorld& G;
     arr u;
     bool friction;
-    DiffEqn(ors::Graph& _G):G(_G),friction(false){}
+    DiffEqn(ors::KinematicWorld& _G):G(_G),friction(false){}
     void fv(arr& y,arr&,const arr& x){
       G.setJointState(x[0],x[1]);
       G.calcBodyFramesFromJoints();
@@ -441,7 +441,7 @@ static void drawTrimesh(void* _mesh){
 void TEST(BlenderImport){
   MT::timerStart();
   ors::Mesh mesh;
-  ors::Graph bl;
+  ors::KinematicWorld bl;
   readBlender("blender-export",mesh,bl);
   cout <<"loading time =" <<MT::timerRead() <<"sec" <<endl;
   OpenGL gl;
