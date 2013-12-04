@@ -12,7 +12,6 @@ import the_curious_robot.srv as srvs
 
 import orspy
 import rosors.rosors
-import rosors.msg
 
 import util
 import require_provide as rp
