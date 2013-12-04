@@ -6,7 +6,7 @@ void reach(){
   arr q,qdot;
   S.getJointAnglesAndVels(q, qdot);
 
-  FeedbackMotionControl MP(&S.getOrsGraph(), NULL, false);
+  FeedbackMotionControl MP(&S.getOrsGraph(), false);
   MP.addPDTask("endeff1", .1, .8, posTMT, "handR", NoVector, "rightTarget");
   MP.addPDTask("endeff2", .1, .8, posTMT, "handL", NoVector, "leftTarget");
 

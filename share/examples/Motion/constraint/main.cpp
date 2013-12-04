@@ -23,9 +23,7 @@ void saveTrajectory(const arr& x, ors::KinematicWorld& G, OpenGL& gl) {
 int main(int argc,char** argv){
   MT::initCmdLine(argc,argv);
 
-  OpenGL gl;
-  ors::KinematicWorld G;
-  init(G, gl, MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
 
   bool con=true;
 
@@ -37,7 +35,7 @@ int main(int argc,char** argv){
   c = P.addTaskMap("position",
                    new DefaultTaskMap(posTMT, G, "endeff", NoVector));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.ors->getBodyByName("target")->X.pos), 1e2);
+                          ARRAY(P.world->getBodyByName("target")->X.pos), 1e2);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
                              ARRAY(0.,0.,0.), 1e1);
 
@@ -64,7 +62,7 @@ int main(int argc,char** argv){
 //      checkAll(CP, x, 1e-4);
       optNewton(x, UCP, OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
       P.costReport();
-      displayTrajectory(x, 1, G, gl,"planned trajectory");
+      displayTrajectory(x, 1, G, G.gl(),"planned trajectory");
 //      saveTrajectory(x, G, gl);
 //      UCP.mu *= 10;
       UCP.augmentedLagrangian_LambdaUpdate(x, .9);
@@ -73,7 +71,7 @@ int main(int argc,char** argv){
     for(uint k=0;k<10;k++){
       optNewton(x, CP, OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1., maxStep=1.));
       P.costReport();
-      displayTrajectory(x, 1, G, gl,"planned trajectory");
+      displayTrajectory(x, 1, G, G.gl(),"planned trajectory");
     }
   }
 

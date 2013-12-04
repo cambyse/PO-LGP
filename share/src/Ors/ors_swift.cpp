@@ -293,8 +293,10 @@ void importProxiesFromSwift(ors::KinematicWorld& C, SwiftInterface& swift, bool 
         //swift returns nearest points in the local frame -> transform them
         proxy->posA.set(&nearest_pts[6*k+0]);  proxy->posA = C.shapes(a)->X * proxy->posA;
         proxy->posB.set(&nearest_pts[6*k+3]);  proxy->posB = C.shapes(b)->X * proxy->posB;
-        if(C.shapes(a)->type==ors::meshST) proxy->cenA = C.shapes(a)->X * C.shapes(a)->mesh.getMeanVertex(); else proxy->cenA = C.shapes(a)->X.pos;
-        if(C.shapes(b)->type==ors::meshST) proxy->cenB = C.shapes(b)->X * C.shapes(b)->mesh.getMeanVertex(); else proxy->cenB = C.shapes(b)->X.pos;
+        proxy->cenA = C.shapes(a)->X.pos;
+        proxy->cenB = C.shapes(b)->X.pos;
+//        if(C.shapes(a)->type==ors::meshST) proxy->cenA = C.shapes(a)->X * C.shapes(a)->mesh.getMeanVertex(); else proxy->cenA = C.shapes(a)->X.pos;
+//        if(C.shapes(b)->type==ors::meshST) proxy->cenB = C.shapes(b)->X * C.shapes(b)->mesh.getMeanVertex(); else proxy->cenB = C.shapes(b)->X.pos;
         proxy->cenN = proxy->cenA - proxy->cenB; //normal always points from b to a
         proxy->cenD = proxy->cenN.length();
         proxy->cenN /= proxy->cenD;

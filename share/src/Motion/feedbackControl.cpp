@@ -29,8 +29,8 @@ arr PDtask::getDesiredAcceleration(const arr& y, const arr& ydot){
 
 //===========================================================================
 
-FeedbackMotionControl::FeedbackMotionControl(ors::KinematicWorld *_ors, SwiftInterface *_swift, bool useSwift)
-  : MotionProblem(_ors, _swift, useSwift), nullSpacePD(NULL) {
+FeedbackMotionControl::FeedbackMotionControl(ors::KinematicWorld *_ors, bool useSwift)
+  : MotionProblem(_ors, useSwift), nullSpacePD(NULL) {
   loadTransitionParameters();
   nullSpacePD.setGainsAsNatural(1.,1.);
   nullSpacePD.prec=1.;
@@ -49,7 +49,7 @@ PDtask* FeedbackMotionControl::addPDTask(const char* name,
                                          const char* iShapeName, const ors::Vector& ivec,
                                          const char* jShapeName, const ors::Vector& jvec,
                                          const arr& params){
-  PDtask *t = addTask(name, new DefaultTaskMap(type, *ors, iShapeName, ivec, jShapeName, jvec, params));
+  PDtask *t = addTask(name, new DefaultTaskMap(type, *world, iShapeName, ivec, jShapeName, jvec, params));
   t->setGainsAsNatural(decayTime, dampingRatio);
   return t;
 }
@@ -60,7 +60,7 @@ void FeedbackMotionControl::getTaskCosts(arr& phi, arr& J, arr& a){
   arr y, J_y, a_des;
   for(PDtask* t: tasks){
     if(t->active) {
-      t->map.phi(y, J_y, *ors);
+      t->map.phi(y, J_y, *world);
       a_des = t->getDesiredAcceleration(y, J_y*v_current);
       phi.append(::sqrt(t->prec)*(J_y*a - a_des));
       if(&J) J.append(::sqrt(t->prec)*J_y);

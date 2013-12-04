@@ -26,32 +26,32 @@
 //  }
 //}
 
-//ors::KinematicWorld* ors::KinematicWorld::newClone() const {
-//  Graph *G=new Graph();
-//  G->q_dim=q_dim;
-//  listCopy(G->proxies, proxies);
-//  listCopy(G->shapes, shapes);
-//  listCopy(G->bodies, bodies);
-//  listCopy(G->joints, joints);
-//  // post-process coupled joints
-//  for_list_(Joint, j, G->joints)
-//    if(j->mimic){
-//    MT::String jointName;
-//    bool good = j->ats.getValue<MT::String>(jointName, "mimic");
-//    CHECK(good, "something is wrong");
-//    j->mimic = listFindByName(G->joints, jointName);
-//    if(!j->mimic) HALT("The joint '" <<*j <<"' is declared coupled to '" <<jointName <<"' -- but that doesn't exist!");
-//    j->type = j->mimic->type;
-//  }
-//  graphMakeLists(G->bodies, G->joints);
-//  uint i;  Shape *s;  Body *b;
-//  for_list(i, s, G->shapes) {
-//    b=G->bodies(s->ibody);
-//    s->body=b;
-//    b->shapes.append(s);
-//  }
-//  return G;
-//}
+ors::KinematicWorld* ors::KinematicWorld::newClone() const {
+  Graph *G=new Graph();
+  G->q_dim=q_dim;
+  listCopy(G->proxies, proxies);
+  listCopy(G->shapes, shapes);
+  listCopy(G->bodies, bodies);
+  listCopy(G->joints, joints);
+  // post-process coupled joints
+  for_list_(Joint, j, G->joints)
+    if(j->mimic){
+    MT::String jointName;
+    bool good = j->ats.getValue<MT::String>(jointName, "mimic");
+    CHECK(good, "something is wrong");
+    j->mimic = listFindByName(G->joints, jointName);
+    if(!j->mimic) HALT("The joint '" <<*j <<"' is declared coupled to '" <<jointName <<"' -- but that doesn't exist!");
+    j->type = j->mimic->type;
+  }
+  graphMakeLists(G->bodies, G->joints);
+  uint i;  Shape *s;  Body *b;
+  for_list(i, s, G->shapes) {
+    b=G->bodies(s->ibody);
+    s->body=b;
+    b->shapes.append(s);
+  }
+  return G;
+}
 
 
 //void ors::KinematicWorld::copyShapesAndJoints(const Graph& G) {

@@ -1,4 +1,5 @@
 #include <Ors/ors_physx.h>
+#include <Ors/ors_swift.h>
 #include <Gui/opengl.h>
 #include <Core/array.h>
 #include <Core/util.h>
@@ -17,8 +18,7 @@ void TEST(PhysxObstacleAvoidance) {
   bindOrsToOpenGL(ors, glMy);
   bindOrsToPhysX(ors, glPh, physx);
 
-  SwiftInterface swift;
-  swift.init(ors,0.3);
+  ors.swift().setCutoff(0.3);
 
   double wGoal=1.5;
   double wObs=1;
@@ -49,7 +49,7 @@ void TEST(PhysxObstacleAvoidance) {
       dir = wGoal*(goal - x)/length(goal - x);
 
       // obstacle avoidance
-      swift.computeProxies(ors,false);
+      ors.swift().computeProxies(ors,false);
       dirObs.setZero();
       for (uint j = 0; j < ors.proxies.N; j++) {
         p = ors.proxies(j);
@@ -84,7 +84,7 @@ void TEST(PhysxObstacleAvoidance) {
 
     // add collision avoidance for current door again
     (ors.getBodyByName(bname)->shapes(0))->cont = true;
-    swift.init(ors,1);
+    ors.swift().init(ors,1);
   }
 }
 

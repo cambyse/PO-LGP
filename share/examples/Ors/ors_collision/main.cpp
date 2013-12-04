@@ -11,7 +11,7 @@ void compareModules(){
   G.getJointState(q0);
   MT::timerStart();
   uint t;
-  for(t=0;t<10000;t++){
+  for(t=0;t<1000;t++){
     if(!(t%1)){ q = q0;  rndGauss(q,.1,true); }
     G.setJointState(q);
     G.calcBodyFramesFromJoints();

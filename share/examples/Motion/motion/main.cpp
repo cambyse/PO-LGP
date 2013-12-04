@@ -9,9 +9,7 @@
 int main(int argc,char** argv){
   MT::initCmdLine(argc,argv);
 
-  OpenGL gl;
-  ors::KinematicWorld G;
-  init(G, gl, MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
 
   MotionProblem MP(&G);
   MP.loadTransitionParameters();
@@ -21,7 +19,7 @@ int main(int argc,char** argv){
   c = MP.addTaskMap("position",
                    new DefaultTaskMap(posTMT, G, "endeff", ors::Vector(0, 0, .2)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(MP.ors->getBodyByName("target")->X.pos), 1e2);
+                          ARRAY(MP.world->getBodyByName("target")->X.pos), 1e2);
   MP.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
                           ARRAY(0.,0.,0.), 1e1);
 
@@ -33,7 +31,7 @@ int main(int argc,char** argv){
 //  //P.setInterpolatingVelCosts(c, MotionProblem::constFinalMid, ARRAY(0.), 1e4, ARRAY(0.), 1e-2);
 
   //-- collisions with other objects
-  uintA shapes = ARRAY<uint>(MP.ors->getBodyByName("endeff")->shapes(0)->index);
+  uintA shapes = ARRAY<uint>(MP.world->getBodyByName("endeff")->shapes(0)->index);
   c = MP.addTaskMap("proxyColls",
                    new ProxyTaskMap(allVersusListedPTMT, shapes, .2, true));
   MP.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e2);
@@ -54,7 +52,7 @@ int main(int argc,char** argv){
   if(MP.x0.N==3){ //assume 3D ball!
     for(uint t=0;t<=T;t++){
       double a=(double)t/T;
-      x[t]() = (1.-a)*MP.x0 + a*ARRAY(MP.ors->getBodyByName("target")->X.pos);
+      x[t]() = (1.-a)*MP.x0 + a*ARRAY(MP.world->getBodyByName("target")->X.pos);
     }
   }else{
     for(uint t=0;t<=T;t++) x[t]() = MP.x0;
@@ -76,7 +74,7 @@ int main(int argc,char** argv){
     write(LIST<arr>(x),"z.output");
     //gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", false, true);
     gnuplot("load 'z.costReport.plt'", false, true);
-    displayTrajectory(x, 1, G, gl,"planned trajectory", 0.01);
+    displayTrajectory(x, 1, G, G.gl(),"planned trajectory", 0.01);
   }
   
   return 0;

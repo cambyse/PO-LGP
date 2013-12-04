@@ -1,4 +1,4 @@
-BASE = ../../../share
+BASE = ../../..
 
 DEPEND = Core Ors Motion
 

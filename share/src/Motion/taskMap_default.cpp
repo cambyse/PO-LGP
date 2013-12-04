@@ -42,8 +42,7 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G) {
   switch(type) {
     case posTMT:
       if(body_j==-1) {
-        G.kinematicsPos(y, body_i, &vec_i);
-        if(&J) G.jacobianPos(J, body_i, &vec_i);
+        G.kinematicsPos(y, J, body_i, &vec_i);
         break;
       }
       pi = G.bodies(body_i)->X * vec_i;
@@ -51,8 +50,8 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G) {
       c = G.bodies(body_j)->X.rot / (pi-pj);
       y = ARRAY(c);
       if(&J) {
-        G.jacobianPos(Ji, body_i, &vec_i);
-        G.jacobianPos(Jj, body_j, &vec_j);
+        G.kinematicsPos(NoArr, Ji, body_i, &vec_i);
+        G.kinematicsPos(NoArr, Jj, body_j, &vec_j);
         G.jacobianR(JRj, body_j);
         J.resize(3, Jj.d1);
         for(k=0; k<Jj.d1; k++) {
@@ -67,8 +66,7 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G) {
       break;
     case vecTMT:
       if(body_j==-1) {
-        G.kinematicsVec(y, body_i, &vec_i);
-        if(&J) G.jacobianVec(J, body_i, &vec_i);
+        G.kinematicsVec(y, J, body_i, &vec_i);
         break;
       }
       //relative
@@ -102,8 +100,8 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G) {
       break;
     case qLimitsTMT:   G.getLimitsMeasure(y, params);  if(&J) G.getLimitsGradient(J, params);   break;
     case comTMT:       G.getCenterOfMass(y);     y.resizeCopy(2); if(&J) { G.getComGradient(J);  J.resizeCopy(2, J.d1); }  break;
-    case collTMT:      G.phiCollision(y, J, params(0));  break;
-    case colConTMT:    G.getContactConstraints(y);  if(&J) G.getContactConstraintsGradient(J); break;
+    case collTMT:      G.kinematicsProxyCost(y, J, params(0));  break;
+    case colConTMT:    G.kinematicsContactConstraints(y, J);  break;
     case skinTMT:
       y.resize(params.N);
       y.setZero();
@@ -111,7 +109,7 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G) {
         J.clear();
         for(k=0; k<params.N; k++) {
           l=(uint)params(k);
-          G.jacobianPos(Ji, l, NULL);
+          G.kinematicsPos(NoArr, Ji, l, NULL);
           G.bodies(l)->X.rot.getY(vi);
           vi *= -1.;
           zi = ARRAY(vi);
@@ -121,14 +119,12 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G) {
       }
       break;
     case vecAlignTMT:
-      G.kinematicsVec(zi, body_i, &vec_i);
-      if(&J) G.jacobianVec(Ji, body_i, &vec_i);
+      G.kinematicsVec(zi, Ji, body_i, &vec_i);
       if(body_j==-1) {
         zj = ARRAY(vec_j);
         if(&J) { Jj.resizeAs(Ji); Jj.setZero(); }
       } else {
-        G.kinematicsVec(zj, body_j, &vec_j);
-        if(&J) G.jacobianVec(Jj, body_j, &vec_j);
+        G.kinematicsVec(zj, Jj, body_j, &vec_j);
       }
       y.resize(1);
       y(0) = scalarProduct(zi, zj);

@@ -1,6 +1,7 @@
 #include "rrt_planner.h"
 
 #include <Ors/ors.h>
+#include <Ors/ors_swift.h>
 #include <Algo/rrt.h>
 #include <Motion/motion.h>
 
@@ -40,12 +41,12 @@ bool ors::sRRTPlanner::growTowards(RRT& growing, RRT& passive, ors::KinematicWor
   G.setJointState(q);
   G.calcBodyFramesFromJoints();
 
-  ors::KinematicWorld *G_t = p->problem.ors;
-  p->problem.ors = &G;
+  ors::KinematicWorld *G_t = p->problem.world;
+  p->problem.world = &G;
   arr phi, J_x, J_v;
-  p->problem.swift->computeProxies(G);
+  p->problem.world->swift().computeProxies(G);
   bool feasible = p->problem.getTaskCosts(phi, J_x, J_v, 0);
-  p->problem.ors = G_t;
+  p->problem.world = G_t;
 
   if (feasible) {
 
@@ -101,7 +102,8 @@ void drawRRT(RRT rrt) {
 }
 
 arr ors::RRTPlanner::getTrajectoryTo(const arr& target, OpenGL* gl) {
-  ors::KinematicWorld *copy = G->newClone();
+  ors::KinematicWorld copy;
+  copy = *G;
   arr q;
 
   RRT target_rrt(target, s->rrt.getStepsize());
@@ -111,21 +113,20 @@ arr ors::RRTPlanner::getTrajectoryTo(const arr& target, OpenGL* gl) {
   uint node0 = 0, node1 = 0;
 
   while(!found) {
-    found = s->growTowards(s->rrt, target_rrt, *copy);
+    found = s->growTowards(s->rrt, target_rrt, copy);
     if(found) {
       node0 = s->success_growing;
       node1 = s->success_passive;
       break;
     }
 
-    found = s->growTowards(target_rrt, s->rrt, *copy);
+    found = s->growTowards(target_rrt, s->rrt, copy);
     if(found) {
       node0 = s->success_passive;
       node1 = s->success_growing;
       break;
     }
   }
-  delete copy;
 
   if (gl) {
     gl->add(glDrawPlot, &plotModule);

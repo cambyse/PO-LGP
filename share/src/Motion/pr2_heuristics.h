@@ -4,7 +4,7 @@
 #include <Core/array.h>
 
 namespace ors {
-  struct Graph;
+  struct KinematicWorld;
 };
 
 uint pr2_q_dim(){ return 7; } //10; } //34; }
