@@ -46,7 +46,7 @@ struct ModuleThread:Thread{
   ModuleThread(Module* _m, const char* _name=NULL):Thread(_name?_name:_m->name),m(_m),step_count(0){ m->name = _name; }
 
   virtual void open(){ m->open(); }
-  virtual void step(){ m->step(); step_count++; }
+  virtual void step();
   virtual void close(){ m->close(); }
 };
 //inline void operator>>(istream& is, ModuleThread& m){  }
@@ -80,6 +80,7 @@ struct Variable : VariableAccess {
   int waitForNextWriteAccess();
   int waitForRevisionGreaterThan(int rev); //returns the revision
   double revisionTime();
+  int revisionNumber();
 
   /// @name info (fields are currently not used anymore)
   struct FieldRegistration& get_field(uint i) const;
