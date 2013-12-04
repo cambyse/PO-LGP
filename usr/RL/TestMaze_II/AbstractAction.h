@@ -14,7 +14,7 @@ public:
     virtual bool operator!=(const AbstractAction& other) const;
     virtual std::string print() const override;
     friend std::ostream& operator<<(std::ostream& out, const AbstractAction& a);
-    ACTION_TYPE get_type() const;
+    virtual ACTION_TYPE get_type() const;
 protected:
     virtual void set_type(ACTION_TYPE t);
 private:

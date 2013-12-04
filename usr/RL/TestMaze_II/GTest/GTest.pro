@@ -16,7 +16,11 @@ HEADERS += \
     ../Representation/Instance.h \
     ../AbstractAction.h \
     ../Maze/MazeAction.h \
-    ../Maze/AugmentedMazeAction.h
+    ../Maze/AugmentedMazeAction.h \
+    ../AbstractObservation.h \
+    ../Maze/MazeObservation.h \
+    ../AbstractReward.h \
+    ../ListedReward.h
 SOURCES += \
     main.cpp \
     ../Config.cpp \
@@ -33,7 +37,11 @@ SOURCES += \
     PlayGround.cpp \
     ../AbstractAction.cpp \
     ../Maze/MazeAction.cpp \
-    ../Maze/AugmentedMazeAction.cpp
+    ../Maze/AugmentedMazeAction.cpp \
+    ../AbstractObservation.cpp \
+    ../Maze/MazeObservation.cpp \
+    ../AbstractReward.cpp \
+    ../ListedReward.cpp
 LIBS += -llbfgs \
     -lemon \
     -larmadillo \

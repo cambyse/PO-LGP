@@ -33,7 +33,7 @@ bool AbstractAction::operator!=(const AbstractAction& other) const {
 }
 
 std::string AbstractAction::print() const {
-    return std::string("NONE");
+    return std::string("AbstractAction()");
 }
 
 std::ostream& operator<<(std::ostream& out, const AbstractAction& a) {

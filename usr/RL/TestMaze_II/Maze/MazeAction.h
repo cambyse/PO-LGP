@@ -13,7 +13,7 @@ public:
     virtual bool operator!=(const AbstractAction &other) const override;
     virtual std::string print() const override;
 protected:
-    virtual void set_type(ACTION_TYPE t);
+    virtual void set_type(ACTION_TYPE t) override;
 };
 
 #endif /* MAZEACTION_H_ */
