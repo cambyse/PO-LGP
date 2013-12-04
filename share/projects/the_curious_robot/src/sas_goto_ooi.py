@@ -49,6 +49,7 @@ class GotoOOIActionServer:
         shapes = self.response_shapes(index=self.ooi_id)
         msg = msgs.control()
         msg.pose = shapes.shapes[0].X
+        msg.ignore_collisions = False
 
         self.react_to_controller = True  # TODO: rather block?
         self.control_pub.publish(msg)
