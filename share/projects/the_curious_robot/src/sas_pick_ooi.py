@@ -37,7 +37,7 @@ def _random_select_strategy(oois):
 def _door1_select_strategy(oois):
     """always go for the door1-door"""
     ooi_id_msg = tcr.msg.ObjectID()
-    ooi_id_msg.id = "door1-door"
+    ooi_id_msg.id = 3
     return ooi_id_msg
 
 
