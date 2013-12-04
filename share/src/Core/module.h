@@ -53,6 +53,7 @@ struct VariableAccess{
   virtual int readAccess(Module*) = 0;  ///< tell the engine that a module accesses
   virtual int deAccess(Module*) = 0;    ///< tell the engine that the module de-accesses
   virtual double revisionTime() = 0;
+  virtual int revisionNumber() = 0;
   virtual int waitForNextWriteAccess() = 0;
   virtual int waitForRevisionGreaterThan(int rev) = 0; //returns the revision
 };

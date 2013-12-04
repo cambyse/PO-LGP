@@ -18,16 +18,12 @@ const unsigned int image_size = image_width*image_height*3;
 
 struct sKinectInterface : Freenect::FreenectDevice {
   KinectPoller *module;
-  MT::Array<uint16_t> depth;
 
   sKinectInterface(freenect_context *_ctx, int _index) : Freenect::FreenectDevice(_ctx, _index), module(NULL) {
-    depth.resize(image_height, image_width);
   };
 
-  void DepthCallback(void *_depth, uint32_t timestamp) {
-    memmove(depth.p, _depth, 2*depth_size);
-    copy(module->kinect_depth.set(), depth);
-    //module->kinect_depth.set().setCarray(static_cast<uint16_t*>(depth), depth_size);
+  void DepthCallback(void *depth, uint32_t timestamp) {
+    memmove(module->kinect_depth.set().p, depth, 2*depth_size);
   }
 
   void VideoCallback(void *rgb, uint32_t timestamp) {
@@ -75,7 +71,6 @@ void KinectPoller::close() {
   s->stopVideo();
   s->stopDepth();
   freenect->deleteDevice(0);
-  delete s;
   s = NULL;
   cout <<"KinectPoller closed successfully" <<endl;
 }
@@ -86,7 +81,7 @@ void KinectPoller::close() {
 //
 
 void Kinect2PointCloud::step(){
-  depth = kinect_depth.get();
+  copy(depth, kinect_depth.get());
   rgb = kinect_rgb.get();
 
   if(depth.N!=depth_size || rgb.N!=image_size){

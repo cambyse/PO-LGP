@@ -29,6 +29,18 @@ System& NoSystem = *((System*)NULL);
 
 //===========================================================================
 //
+// ModuleThread
+//
+
+void ModuleThread::step(){
+  engine().acc->logStepBegin(this);
+  m->step();
+  step_count++;
+  engine().acc->logStepEnd(this);
+}
+
+//===========================================================================
+//
 // Variable
 //
 
@@ -105,6 +117,10 @@ int Variable::deAccess(Module *m) {
 
 double Variable::revisionTime(){
   return revision_time;
+}
+
+int Variable::revisionNumber(){
+  return revision.getValue();
 }
 
 int Variable::waitForNextWriteAccess(){
