@@ -58,6 +58,11 @@
  * @ingroup group_ors
  */
 
+struct OpenGL;
+struct PhysXInterface;
+struct SwiftInterface;
+struct OdeInterface;
+
 //===========================================================================
 /**
 * @addtogroup group_ors
@@ -206,7 +211,9 @@ struct Proxy {
 
 //===========================================================================
 /// data structure to store a whole physical situation (lists of bodies, joints, shapes, proxies)
-struct Graph {
+struct Graph { //TODO: rename KinematicWorld
+  struct sGraph *s;
+
   /// @name data fields
   MT::Array<Body*>  bodies;
   MT::Array<Joint*> joints;
@@ -216,16 +223,13 @@ struct Graph {
   uint q_dim; ///< numer of degrees of freedom IN the joints (not counting root body)
   bool isLinkTree;
   
+  arr q_current, qdot_current;
+
   /// @name constructors
-  Graph() { q_dim=0; bodies.memMove=joints.memMove=shapes.memMove=proxies.memMove=true; isLinkTree=false; }
-  Graph(const char* filename) {
-    q_dim=0; bodies.memMove=joints.memMove=shapes.memMove=proxies.memMove=true; isLinkTree=false;
-    init(filename);
-  }
-  ~Graph() { clear(); }
+  Graph();
+  Graph(const char* filename);
+  ~Graph();
   void operator=(const ors::Graph& G);
-  Graph* newClone() const; //TODO: obsolete?
-  void copyShapesAndJoints(const Graph& G); //TODO: obsolete?
   
   /// @name initializations
   void init(const char* filename);
@@ -241,26 +245,23 @@ struct Graph {
   /// @name changes of configuration
   void clear();
   void revertJoint(Joint *e);
-  void reconfigureRoot(Body *n);
-  void transformJoint(Joint *e, const ors::Transformation &f); //A <- A*f, B <- f^{-1}*B
-  void zeroGaugeJoints();                          //A <- A*Q, Q <- Id
-  void makeLinkTree(); //modify transformations so that B's become identity
-  void topSort(){ graphTopsort(bodies, joints); for_list_(Shape, s, shapes) s->ibody=s->body->index; }
+  void reconfigureRoot(Body *n);  ///< n becomes the root of the kinematic tree; joints accordingly reversed; lists resorted
+  void transformJoint(Joint *e, const ors::Transformation &f); ///< A <- A*f, B <- f^{-1}*B
+  void zeroGaugeJoints();         ///< A <- A*Q, Q <- Id
+  void makeLinkTree();            ///< modify transformations so that B's become identity
+  void topSort(){ graphTopsort(bodies, joints); for(Shape *s: shapes) s->ibody=s->body->index; }
   void glueBodies(Body *a, Body *b);
-  void glueTouchingBodies();
-  void addObject(Body *b); //TODO: What the heck?? Obsolete!
-  void removeUselessBodies();
-  void meldFixedJoints();
+  void meldFixedJoints();         ///< prune fixed joints; shapes of fixed bodies are reassociated to non-fixed boides
+  void removeUselessBodies();     ///< prune non-articulated bodies; they become shapes of other bodies
   
   /// @name computations on the DoFs
-  void calcBodyFramesFromJoints();
-  void calcShapeFramesFromBodies();
-  void calcJointsFromBodyFrames();
+  void calcBodyFramesFromJoints();    ///< elementary forward kinematics; also computes all Shape frames
+  void calcShapeFramesFromBodies();   ///< TODO: shouldn't that be done by above
+  void calcJointsFromBodyFrames();    ///< fill in the joint transformations assuming that body poses are known (makes sense when reading files)
+  void fillInRelativeTransforms();    ///< fill in the joint relative transforms (A & B) if body and joint world poses are known
   void clearJointErrors();
   void invertTime();
-  arr naturalQmetric(); //returns diagonal
-  void computeNaturalQmetric(arr& W);
-  void fillInRelativeTransforms();
+  arr naturalQmetric();               ///< returns diagonal of a natural metric in q-space, depending on tree depth
   
   /// @name get state
   uint getJointStateDimension(int agent=0) const;
@@ -269,39 +270,35 @@ struct Graph {
   arr getJointState(int agent=0) const;
 
   /// @name set state
-  void setJointState(const arr& x, const arr& v, int agent=0, bool clearJointErrors=false);
-  void setJointState(const arr& x, int agent=0, bool clearJointErrors=false);
+  void setJointState(const arr& x, const arr& v, int agent=0);
+  void setJointState(const arr& x, int agent=0);
 
-  /// @name kinematics & dynamics
-  void kinematicsPos(arr& y, uint i, ors::Vector *rel=0) const;
-  void jacobianPos(arr& J, uint i, ors::Vector *rel=0, int agent=0) const;
+  /// @name kinematics
+  void kinematicsPos(arr& y, arr& J, uint i, ors::Vector *rel=0, int agent=0) const;
+  void kinematicsVec(arr& y, arr& J, uint i, ors::Vector *vec=0, int agent=0) const;
   void hessianPos(arr& H, uint i, ors::Vector *rel=0, int agent=0) const;
-  void kinematicsVec(arr& z, uint i, ors::Vector *vec=0) const;
-  void jacobianVec(arr& J, uint i, ors::Vector *vec=0, int agent=0) const;
   void jacobianR(arr& J, uint a) const;
+  void kinematicsProxyCost(arr& y, arr& J, Proxy *p, double margin=.02, bool useCenterDist=true, bool addValues=false) const;
+  void kinematicsProxyCost(arr& y, arr& J, double margin=.02, bool useCenterDist=true) const;
+  void kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, double margin=.02, bool useCenterDist=true, bool addValues=false);
+  void kinematicsContactConstraints(arr& y, arr &J) const;
+
+  /// @name dynamics
   void inertia(arr& M);
   void equationOfMotion(arr& M, arr& F, const arr& qd);
   void dynamics(arr& qdd, const arr& qd, const arr& tau);
   void inverseDynamics(arr& tau, const arr& qd, const arr& qdd);
-  
-  /// @name special 'kinematic maps'
-  void phiCollision(arr &y, arr& J, double margin=.02, bool useCenterDist=true) const;
-  
+
   /// @name older 'kinematic maps'
-  void getContactConstraints(arr& y) const;
-  void getContactConstraintsGradient(arr &dydq) const;
   //void getContactMeasure(arr &x, double margin=.02, bool linear=false) const;
   //double getContactGradient(arr &grad, double margin=.02, bool linear=false) const;
   void getLimitsMeasure(arr &x, const arr& limits, double margin=.1) const;
   double getLimitsGradient(arr &grad, const arr& limits, double margin=.1) const;
-  void getComGradient(arr &grad) const;
-  void getTotals(ors::Vector& c, ors::Vector& v, ors::Vector& l, ors::Quaternion& ori) const;
-  void getGyroscope(ors::Vector& up) const;
-  double getEnergy() const;
   double getCenterOfMass(arr& com) const;
+  void getComGradient(arr &grad) const;
+
+  double getEnergy() const;
   double getJointErrors() const;
-  void getPenetrationState(arr &vec) const;
-  void getGripState(arr& grip, uint j) const;
   ors::Proxy* getContact(uint a, uint b) const;
   
   /// @name forces and gravity
@@ -311,14 +308,19 @@ struct Graph {
   void gravityToForces();
   void frictionToForces(double coeff);
   
+  /// @name extensions on demand
+  OpenGL& gl();
+  SwiftInterface& swift();
+  PhysXInterface& physx();
+  OdeInterface& ode();
+
   /// @name I/O
-  void reportProxies(std::ostream *os=&std::cout);
-  void reportGlue(std::ostream *os=&std::cout); //TODO: obsolete
-  
   void write(std::ostream& os) const;
   void read(std::istream& is);
-  void writePlyFile(const char* filename) const;
   void glDraw();
+
+  void reportProxies(std::ostream *os=&std::cout);
+  void writePlyFile(const char* filename) const; //TODO: move outside
 };
 /** @} */ // END of group ors_basic_data_structures
 } // END ors namespace
@@ -399,146 +401,16 @@ void displayState(const arr& x, ors::Graph& G, OpenGL& gl, const char *tag);
 void displayTrajectory(const arr& x, int steps, ors::Graph& G, OpenGL& gl, const char *tag, double delay=0.);
 void editConfiguration(const char* orsfile, ors::Graph& G, OpenGL& gl);
 void animateConfiguration(ors::Graph& G, OpenGL& gl);
-void init(ors::Graph& G, OpenGL& gl, const char* orsFile);
+//void init(ors::Graph& G, OpenGL& gl, const char* orsFile);
 void bindOrsToOpenGL(ors::Graph& graph, OpenGL& gl);
 /** @} */ // END of group ors_interface_opengl
 
 
-//===========================================================================
-/**
- * @defgroup ors_interface_SWIFT SWIFT Interface.
- * @{
- */
-class SWIFT_Scene;
-
-/// contains all information necessary to communicate with swift
-struct SwiftInterface {
-  SWIFT_Scene *scene;
-  bool isOpen;
-  intA INDEXswift2shape, INDEXshape2swift;
-  double cutoff;
-  SwiftInterface() { scene=NULL; cutoff=.1; isOpen=false; }
-  ~SwiftInterface();
-  SwiftInterface* newClone(const ors::Graph& G) const;
-  
-  void init(const ors::Graph& ors, double _cutoff=.1);
-  void reinitShape(const ors::Graph& ors, const ors::Shape *s);
-  void close();
-  void deactivate(ors::Shape *s1, ors::Shape *s2);
-  void deactivate(const MT::Array<ors::Shape*>& shapes);
-  void deactivate(const MT::Array<ors::Body*>& bodies);
-  void initActivations(const ors::Graph& ors, uint parentLevelsToDeactivate=3);
-  void computeProxies(ors::Graph& ors, bool dumpReport=false);
-};
-/** @} */
-
-
-//===========================================================================
-/**
- * @defgroup ors_interface_ode ODE interface
- * @{
- */
-struct dxWorld;   /* dynamics world */
-struct dxSpace;   /* collision space */
-struct dxBody;    /* rigid body (dynamics object) */
-struct dxGeom;    /* geometry (collision object) */
-struct dxJoint;
-struct dxJointNode;
-struct dxJointGroup;
-struct dContactGeom;
-
-typedef struct dxWorld *dWorldID;
-typedef struct dxSpace *dSpaceID;
-typedef struct dxBody *dBodyID;
-typedef struct dxGeom *dGeomID;
-typedef struct dxJoint *dJointID;
-typedef struct dxJointGroup *dJointGroupID;
-
-/** A trivial interface to the Open Dynamic Engine library.
- *
- * It basically contains a dSpace and dWorld, provides a proximity
- * callback function, and basic stepping function.
- */
-class OdeInterface {
-public:
-  bool isOpen;
-  double time;
-  dxSpace *space;
-  dxGeom *plane0, *planex1, *planex2, *planey1, *planey2;
-  dxWorld *world;
-  dxJointGroup *contactgroup;
-  double ERP, CFM; //integration parameters
-  double coll_ERP, coll_CFM, coll_bounce, friction; //collision parameter
-  bool noGravity, noContactJoints;
-  
-  MT::Array<dxBody*> bodies;
-  MT::Array<dxGeom*> geoms;
-  MT::Array<dxJoint*> joints;
-  MT::Array<dxJoint*> motors;
-  MT::Array<dContactGeom*> conts;
-  
-public:
-  OdeInterface();
-  ~OdeInterface();
-  
-  void createOde(ors::Graph &C);
-  
-  /** @brief reinstantiates a new ODE world (and space) clear of all previous objects */
-  void clear();
-  
-  /**
-   * This function is called from the `dSpaceCollide' routine (in the
-   * `step' routine) when two objects get too close.
-   *
-   * A "collision-joint" is inserted between them that exerts the force
-   * of the collision. All of these collision-joints are collected in
-   * a group, and they are deleted after the `dWorldStep' by the
-   * `dJoinGroupEmpty' routine (in the `step' routine).
-   */
-  static void staticCallback(void *classP, dxGeom *g1, dxGeom *g2);
-  
-  /// sets gravity to zero (or back to -9.81)
-  void setForceFree(bool free);
-  
-  /** @brief main method: process one time step by calling SpaceCollide and WorldQuickStep */
-  void step(double dtime=.01);
-  
-  void printInfo(std::ostream& os, dxBody *b);
-  void reportContacts();
-  void contactForces();
-  void penetration(ors::Vector &p);
-  
-  void exportStateToOde(ors::Graph &C);
-  void importStateFromOde(ors::Graph &C);
-  void exportForcesToOde(ors::Graph &C);
-  void addJointForce(ors::Graph &C, ors::Joint *e, double f1, double f2);
-  void addJointForce(ors::Graph &C, arr& f);
-  void setMotorVel(ors::Graph& C, const arr& qdot, double maxF);
-  uint getJointMotorDimension(ors::Graph &C);
-  void setJointMotorPos(ors::Graph &C, arr& x, double maxF=1., double tau=.01);
-  void setJointMotorPos(ors::Graph &C, ors::Joint *e, double x0, double maxF=1., double tau=.01);
-  void setJointMotorVel(ors::Graph &C, arr& v, double maxF=1.);
-  void setJointMotorVel(ors::Graph &C, ors::Joint *e, double v0, double maxF=1.);
-  void unsetJointMotors(ors::Graph &C);
-  void unsetJointMotor(ors::Graph &C, ors::Joint *e);
-  void getJointMotorForce(ors::Graph &C, arr& f);
-  void getJointMotorForce(ors::Graph &C, ors::Joint *e, double& f);
-  void pidJointPos(ors::Graph &C, ors::Joint *e, double x0, double v0, double xGain, double vGain, double iGain=0, double* eInt=0);
-  void pidJointVel(ors::Graph &C, ors::Joint *e, double v0, double vGain);
-  void getGroundContact(ors::Graph &C, boolA& cts);
-  void importProxiesFromOde(ors::Graph &C);
-  void step(ors::Graph &C, arr& force, uint steps=1, double tau=.01);
-  void step(ors::Graph &C, uint steps=1, double tau=.01);
-  void slGetProxies(ors::Graph &C);
-  //void slGetProxyGradient(arr &dx, const arr &x, ors::Graph &C);
-  void reportContacts2();
-  bool inFloorContacts(ors::Vector& x);
-};
-/** @} */
 
 
 
-void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::Graph& ors, double margin, bool useCenterDist);
+
+
 
 
 

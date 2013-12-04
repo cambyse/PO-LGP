@@ -1,7 +1,7 @@
 #include <Ors/ors_physx.h>
 #include <Gui/opengl.h>
 
-void createOrs(ors::Graph& ors, OpenGL& gl) {
+void createScene(ors::Graph& ors, OpenGL& gl) {
   ors.clear();
   
   for(uint k=0; k<3; k++) {
@@ -44,15 +44,13 @@ void createOrs(ors::Graph& ors, OpenGL& gl) {
 }
 
 void TEST(OrsPhysx) {
-  ors::Graph ors;
-  OpenGL glMy, glPh;
-  createOrs(ors, glMy);
-  
-  PhysXInterface physx;
-  physx.create(ors);
+  ors::Graph G;
+  OpenGL glPh;
+
+  createScene(G, G.gl());
   
   glPh.add(glStandardScene, NULL);
-  glPh.add(glPhysXInterface, &physx);
+  glPh.add(glPhysXInterface, &G.physx());
   glPh.setClearColors(1.,1.,1.,1.);
   glPh.camera.setPosition(10.,-15.,8.);
   glPh.camera.focus(0,0,1.);
@@ -60,9 +58,9 @@ void TEST(OrsPhysx) {
   
   for(uint t=0; t<500; t++) {
     cout <<"\r t=" <<t <<std::flush;
-    physx.step();
+    G.physx().step();
     glPh.update();
-    glMy.update();
+    G.gl().update();
   }
 }
 

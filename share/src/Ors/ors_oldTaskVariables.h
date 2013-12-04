@@ -22,7 +22,7 @@ enum TVtype {
   colConTVT,   ///< 1D meassure collision CONSTRAINT meassure, no references, param: 1D number defining the distance margin
   comTVT,      ///< 2D vector of the horizontal center of mass, no refs, no param
   skinTVT,     ///< vector of skin pressures...
-  gripTVT, rotTVT, contactTVT, //PRELIMINARY OR OBSOLETE
+  rotTVT,  //PRELIMINARY OR OBSOLETE
   userTVT      ///< fully user defined: derive from TaskVariable and overload userUpdate(...)
 };
 

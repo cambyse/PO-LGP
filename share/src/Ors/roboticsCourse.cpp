@@ -19,6 +19,7 @@
 
 #include "roboticsCourse.h"
 #include <Ors/ors.h>
+#include <Ors/ors_swift.h>
 #include <Ors/ors_physx.h>
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
@@ -29,8 +30,6 @@ void drawBase(void*){ glDrawAxes(1.); }
 
 struct sSimulator {
   ors::Graph G;
-  OpenGL gl;
-  SwiftInterface swift;
   double margin;
   double dynamicNoise;
   bool gravity;
@@ -38,10 +37,6 @@ struct sSimulator {
   //state
   arr q,qdot,qddot;
 
-#ifdef MT_ODE
-  OdeInterface ode;
-#endif
-  PhysXInterface physx;
   sSimulator(){ margin=.1; dynamicNoise=0.; gravity=true; } //default margin = 10cm
 };
 
@@ -49,9 +44,9 @@ void Simulator::anchorKinematicChainIn(const char* bodyName){
   s->G.reconfigureRoot(s->G.getBodyByName(bodyName));
   s->G.calcBodyFramesFromJoints();
   
-  if(s->swift.isOpen){
-    s->swift.close();
-    s->swift.init(s->G, .5);
+  if(s->G.swift().isOpen){
+    s->G.swift().close();
+    s->G.swift().init(s->G, .5);
   }
   
 #ifdef MT_ODE
@@ -67,7 +62,7 @@ Simulator::Simulator(const char* orsFile){
   s = new sSimulator;
   
   //ORS
-  init(s->G, s->gl, orsFile);
+  s->G.init(orsFile);
   s->G.calcBodyFramesFromJoints();
   /*  if(s->G.getBodyByName("rfoot")){
     s->G.reconfigureRoot(s->G.getBodyByName("rfoot"));
@@ -78,10 +73,10 @@ Simulator::Simulator(const char* orsFile){
   makeConvexHulls(s->G.shapes);
 
   //OPENGL
-  s->gl.add(glDrawPlot, &plotModule);
+  s->G.gl().add(glDrawPlot, &plotModule);
   
   //SWIFT
-  s->swift.init(s->G, .5);
+  s->G.swift().setCutoff(.5);
   
   //ODE
 #ifdef MT_ODE
@@ -99,8 +94,8 @@ Simulator::~Simulator(){
 
 
 void Simulator::watch(bool pause, const char* txt){
-  if(pause) s->gl.watch(txt);
-  else s->gl.update(txt);
+  if(pause) s->G.gl().watch(txt);
+  else s->G.gl().update(txt);
 }
 
 void Simulator::getJointAngles(arr& q){
@@ -119,8 +114,8 @@ uint Simulator::getJointDimension(){
 void Simulator::setJointAngles(const arr& q, bool updateDisplay){
   s->G.setJointState(q);
   s->G.calcBodyFramesFromJoints();
-  s->swift.computeProxies(s->G, false);
-  if(updateDisplay) s->gl.update();
+  s->G.swift().computeProxies(s->G, false);
+  if(updateDisplay) s->G.gl().update();
   if(&q!=&s->q) s->q = q;
   s->qdot.setZero();
 }
@@ -128,8 +123,8 @@ void Simulator::setJointAngles(const arr& q, bool updateDisplay){
 void Simulator::setJointAnglesAndVels(const arr& q, const arr& qdot, bool updateDisplay){
   s->G.setJointState(q, qdot);
   s->G.calcBodyFramesFromJoints();
-  s->swift.computeProxies(s->G, false);
-  if(updateDisplay) s->gl.update();
+  s->G.swift().computeProxies(s->G, false);
+  if(updateDisplay) s->G.gl().update();
   if(&q!=&s->q) s->q = q;
   if(&qdot!=&s->qdot) s->qdot = qdot;
 }
@@ -137,36 +132,36 @@ void Simulator::setJointAnglesAndVels(const arr& q, const arr& qdot, bool update
 void Simulator::kinematicsPos(arr& y, const char* shapeName, const arr* rel){
   if(rel){
     ors::Vector v;  v.set(rel->p);
-    s->G.kinematicsPos(y, s->G.getShapeByName(shapeName)->body->index, &v);
+    s->G.kinematicsPos(y, NoArr, s->G.getShapeByName(shapeName)->body->index, &v);
   }else{
-    s->G.kinematicsPos(y, s->G.getShapeByName(shapeName)->body->index, NULL);
+    s->G.kinematicsPos(y, NoArr, s->G.getShapeByName(shapeName)->body->index, NULL);
   }
 }
 
 void Simulator::kinematicsVec(arr& y, const char* shapeName, const arr* vec){
   if(vec){
     ors::Vector v;  v.set(vec->p);
-    s->G.kinematicsVec(y, s->G.getShapeByName(shapeName)->body->index, &v);
+    s->G.kinematicsVec(y, NoArr, s->G.getShapeByName(shapeName)->body->index, &v);
   }else{
-    s->G.kinematicsVec(y, s->G.getShapeByName(shapeName)->body->index, NULL);
+    s->G.kinematicsVec(y, NoArr, s->G.getShapeByName(shapeName)->body->index, NULL);
   }
 }
 
 void Simulator::jacobianPos(arr& J, const char* shapeName, const arr* rel){
   if(rel){
     ors::Vector v;  v.set(rel->p);
-    s->G.jacobianPos(J, s->G.getShapeByName(shapeName)->body->index, &v);
+    s->G.kinematicsPos(NoArr, J, s->G.getShapeByName(shapeName)->body->index, &v);
   }else{
-    s->G.jacobianPos(J, s->G.getShapeByName(shapeName)->body->index, NULL);
+    s->G.kinematicsPos(NoArr, J, s->G.getShapeByName(shapeName)->body->index, NULL);
   }
 }
 
 void Simulator::jacobianVec(arr& J, const char* shapeName, const arr* vec){
   if(vec){
     ors::Vector v;  v.set(vec->p);
-    s->G.jacobianVec(J, s->G.getShapeByName(shapeName)->body->index, &v);
+    s->G.kinematicsVec(NoArr, J, s->G.getShapeByName(shapeName)->body->index, &v);
   }else{
-    s->G.jacobianVec(J, s->G.getShapeByName(shapeName)->body->index, NULL);
+    s->G.kinematicsVec(NoArr, J, s->G.getShapeByName(shapeName)->body->index, NULL);
   }
 }
 
@@ -189,12 +184,12 @@ void Simulator::setContactMargin(double margin){
 }
 
 void Simulator::kinematicsContacts(arr& y){
-  s->G.phiCollision(y, NoArr, s->margin);
+  s->G.kinematicsProxyCost(y, NoArr, s->margin);
 }
 
 void Simulator::jacobianContacts(arr& J){
   arr y;
-  s->G.phiCollision(y, J, s->margin);
+  s->G.kinematicsProxyCost(y, J, s->margin);
 }
 
 void Simulator::getDynamics(arr& M, arr& F){
@@ -262,11 +257,7 @@ void Simulator::stepOde(const arr& qdot, double tau){
 }
 
 void Simulator::stepPhysx(const arr& qdot, double tau){
-  if(!s->physx.isCreated()){
-    s->physx.setArticulatedBodiesKinematic(s->G);
-    s->physx.create(s->G);
-  }
-  s->physx.step(tau);
+  s->G.physx().step(tau);
 }
 
 ors::Graph& Simulator::getOrsGraph(){

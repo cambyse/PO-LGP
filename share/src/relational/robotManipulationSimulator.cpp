@@ -1051,18 +1051,11 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
     MT::String send_msg;
     send_msg << msg_string /*<< "      \n\n(time " << t << ")"*/;
     controlledStep(q,W,C,ode,swift,gl,revel,local_TVs,send_msg);
-    if (gl) {gl->update();}
+    if(gl) gl->update();
     double dist = length(x.y - x.y_target);
-//     PRINT(x.y);
-//     PRINT(x.y_target);
-//     PRINT(dist);
-//     PRINT(C->getContact(x.i, obj->index));
     if(dist <.05 || C->getContact(x.i, obj->index)) break;
   }
   if(t==Tabort){ indicateFailure(); return; }
-  
-    
-    
   
   // (3) grasp if not table or world
   if(obj->index!=getTableID()){

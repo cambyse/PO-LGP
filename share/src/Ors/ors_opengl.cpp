@@ -49,10 +49,6 @@ extern void glDrawText(const char* txt, float x, float y, float z);
 //void glColor(float *rgb);//{ glColor(rgb[0], rgb[1], rgb[2], 1.); }
 
 #ifndef MT_ORS_ONLY_BASICS
-void init(ors::Graph& G, OpenGL& gl, const char* orsFile) {
-  if(orsFile) G.init(orsFile);
-  bindOrsToOpenGL(G, gl);
-}
 
 /**
  * @brief Bind ors to OpenGL.
@@ -79,6 +75,7 @@ void bindOrsToOpenGL(ors::Graph& graph, OpenGL& gl) {
 #endif
 
 #ifndef MT_ORS_ONLY_BASICS
+
 /// static GL routine to draw a ors::Graph
 void ors::glDrawGraph(void *classP) {
   ((ors::Graph*)classP)->glDraw();
@@ -579,9 +576,6 @@ void testSim(const char* filename, ors::Graph *C, Ode *ode, OpenGL *gl) {
 void ors::Graph::glDraw() { NICO }
 void ors::glDrawGraph(void *classP) { NICO }
 void editConfiguration(const char* orsfile, ors::Graph& C, OpenGL& gl) { NICO }
-void init(ors::Graph& G, OpenGL& gl, const char* orsFile) {
-  if(orsFile) G.init(orsFile);
-}
 void animateConfiguration(ors::Graph& C, OpenGL& gl) { NICO }
 #endif
 #endif

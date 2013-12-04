@@ -29,7 +29,7 @@
 
 
 
-#include "ors.h"
+#include "ors_ode.h"
 
 #ifdef MT_ODE
 

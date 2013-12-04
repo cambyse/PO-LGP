@@ -65,8 +65,8 @@ struct TaskCost {
 // a motion problem description
 //
 
-/// This class allows you to DESCRIBE a motion problem, nothing more
-struct MotionProblem {
+/// This class allows you to DESCRIBE a motion planning problem, nothing more
+struct MotionProblem { //TODO: rename MotionPlanningProblem
   //engines to compute things
   ors::Graph *ors;
   SwiftInterface *swift;
@@ -77,7 +77,7 @@ struct MotionProblem {
   enum TaskCostInterpolationType { constant, finalOnly, final_restConst, early_restConst, final_restLinInterpolated };
   MT::Array<TaskCost*> taskCosts;
   
-  //-- transition cost descriptions
+  //-- transition cost descriptions //TODO: make own little class
   enum TransitionType { kinematic=0, pseudoDynamic=1, realDynamic=2 };
   TransitionType transitionType;
   arr H_rate_diag; ///< cost rate
@@ -95,14 +95,14 @@ struct MotionProblem {
 
   MotionProblem(ors::Graph *_ors=NULL, SwiftInterface *_swift=NULL, bool useSwift=true);
   
-  void loadTransitionParameters(); ///< loads transition parameters from cfgFile
+  void loadTransitionParameters(); ///< loads transition parameters from cfgFile //TODO: do in constructor of TransitionCost
   
   //-- methods for defining the task
-  void setx0(const arr&);
-  void setx0v0(const arr&, const arr&);
+  void setx0(const arr&); //TODO: obsolete
+  void setx0v0(const arr&, const arr&); //TODO: obsolete
 
   //adding task spaces
-  TaskCost* addTaskMap(const char* name, TaskMap *map);
+  TaskCost* addTaskMap(const char* name, TaskMap *map); //TODO: rename addTask
 
   //setting costs in a task space TODO: move to be member of TaskCost
   void setInterpolatingCosts(TaskCost *c,

@@ -28,6 +28,7 @@
  */
 
 
+#include "ors_ode.h"
 #include "ors_sceneGui.h"
 
 enum EditMode { emNone, emMove, emOde };

@@ -49,7 +49,7 @@
 namespace ors{
   struct Graph;
 }
-class OdeInterface;
+struct OdeInterface;
 struct SwiftInterface;
 struct OpenGL;
 struct RevelInterface;
