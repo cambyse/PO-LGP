@@ -17,5 +17,5 @@ joint (arm5 arm6) { A=<T t(0 0 0.2) d(45 0 0 1)> B=<T t(0 0 .2)>  Q=<T d(1 0 0 0
 joint (arm6 endeff) { A=<T t(0 0 0.2) d(45 0 0 1)> B=<T t(0 0 .2)>  Q=<T d(1 0 0 0)> }
 
 body goalRef { X=<T t(1.1 -0.8 .8)>  type=1 size=[.15 .15 .15 .1] color=[0 1. 0] fixed, }
-body goal { X=<T t(1.1 -0.8 .8)>  type=1 size=[.1 .1 .1 .001] color=[1. 0 0] fixed, }
+body goal { X=<T t(1.1 -0.8 .8)>  type=1 size=[.1 .1 .1 .1] color=[1. 0 0] fixed, }
 
