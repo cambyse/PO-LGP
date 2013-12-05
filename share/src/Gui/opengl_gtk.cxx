@@ -87,10 +87,10 @@ void OpenGL::postRedrawEvent(bool fromWithinCallback){
 }
 
 void OpenGL::processEvents(){
-  //gtkLock();
-  //gdk_window_process_updates(gtk_widget_get_window(s->glArea), false);
-  //while (gtk_events_pending())  gtk_main_iteration();
-  //gtkUnlock();
+  gtkLock();
+  gdk_window_process_updates(gtk_widget_get_window(s->glArea), false);
+  while (gtk_events_pending())  gtk_main_iteration();
+  gtkUnlock();
 }
 
 void OpenGL::enterEventLoop(){ watching.setValue(1); watching.waitForValueEq(0); } //loopExit=false; while(!loopExit){ gtkLock(); gtk_main_iteration(); gtkUnlock(); } }

@@ -5,18 +5,11 @@ import roslib
 roslib.load_manifest('the_curious_robot')
 import rospy
 
-import os
-import Queue
-# import time
-
-# import numpy as np
-
 import the_curious_robot as tcr
-import the_curious_robot.srv as srv
 
-# The order is important - this sucks
-import orspy as ors
-import corepy
+import rosors.srv
+import rosors
+from rosors import parser
 
 import require_provide as rp
 
@@ -28,44 +21,58 @@ class FakePerception():
 
     def __init__(self):
         # init the node: test_fitting
-        rospy.init_node('tcr_perception')
+        rospy.init_node('tcr_perception', log_level=rospy.INFO)
 
         self.graph = None
-        self.old_graph = None
-
-        self.update_pub = rospy.Publisher('perception/updates', 
-                                          rosors.msgs.objects)
+        self.eps = 10e-4
+        self.update_pub = rospy.Publisher('/perception/updates',
+                                          tcr.msg.Objects)
 
     #########################################################################
     # logic
     def run(self):
+        rospy.logdebug("start perception")
         rp.Provide("Perception")
         """ the perception loop """
+        self.init()
         while not rospy.is_shutdown():
             self.step()
 
+    def init(self):
+        graph_srv = rospy.ServiceProxy("/world/graph", rosors.srv.Graph)
+        while not rospy.is_shutdown():
+            try:
+                graph_msg = graph_srv()
+            except rospy.ServiceException:
+                continue
+            break
+        self.graph = parser.msg_to_ors_graph(graph_msg.graph)
+        return
+
+    def update_positions(self, body):
+        gbody = self.graph.getBodyByName(body.name)
+        changed = ((gbody.X.pos - body.X.pos).length() > self.eps)
+        #rospy.logdebug(gbody.X)
+        #rospy.logdebug(body.X)
+        gbody.X = body.X
+        return changed
+
     def step(self):
-        # TODO: newClone() ?
-        self.old_graph = self.graph
-        graph_msg = rospy.ServiceProxy("/world/graph")
+        try:
+            body_srv = rospy.ServiceProxy("/world/bodies", rosors.srv.Bodies)
+            body_msg = body_srv(no_shapes=True)
+        except rospy.ServiceException:
+            return
 
-        self.graph = rosors.parse_graph_msg(graph_msg)
-
-        update_msg = rosors.msgs.objects()
+        update_msg = tcr.msg.Objects()
         update_msg.changed = False
-        for b in self.graph.bodies:
-            if has_moved(b):
+        for body in body_msg.bodies:
+            if self.update_positions(parser.msg_to_ors_body(body)):
                 update_msg.changed = True
-                update_msg.objects.append(b.index)
+                update_msg.objects += [shape.index for shape in
+                                       self.graph.bodies[body.index].shapes]
 
-        self.upddate_pub.pub(update_msg)
-
-    def has_moved(self, body):
-        if self.not_published_once:
-            return True
-        old_body = self.old_world.getBodyByName(body.name)
-        eps = 10e-5
-        return (body.X.pos - old_body.X.pos).length() > eps
+        self.update_pub.publish(update_msg)
 
 
 if __name__ == '__main__':

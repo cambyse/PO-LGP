@@ -1,0 +1,33 @@
+# door1 {{{
+body door1-frame {
+  type=3
+  mesh="door_model/frame_hacd.obj"
+  meshscale=.01
+  fixed
+  contact
+}
+body door1-door {
+  type=3
+  mesh='door_model/door_hacd.obj'
+  meshscale=.01
+  color=[1 0 0]
+  mass=2000000
+}
+body door1-handle {
+  type=3
+  mesh='door_model/handle_hacd.obj'
+  meshscale=.01
+  color=[0 0 0]
+  contact
+}
+joint (door1-frame, door1-door) {
+  A=<T t(.46 0 0) d(90 0 1 0)>
+  limit=[-.9 .9 0 0 0]
+  BinvA
+}
+joint (door1-door, door1-handle) {
+  A=<T t(-.39 0 1) d(90 0 0 1)>
+  limit=[0 .1 0 0 0]
+  BinvA
+}
+#}}}

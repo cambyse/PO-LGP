@@ -1,4 +1,4 @@
 Header header
 
-string object_id
+int32 object_id
 geometry_msgs/Pose[] pos

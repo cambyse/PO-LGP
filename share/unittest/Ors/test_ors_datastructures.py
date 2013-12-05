@@ -1,4 +1,4 @@
-from corepy import Vector, Matrix, Quaternion
+from corepy import Vector, Matrix, Quaternion, Transformation
 import orspy
 
 import os
@@ -31,7 +31,7 @@ class Test_VectorOperatorOverloading(unittest.TestCase):
         self.assertTrue(v1 == v1)
         self.assertTrue(v2 == v2)
         self.assertFalse(v1 == v2)
-        
+
         v3 = Vector(2, 2, 2)
         self.assertTrue(v2 == v3)
 
@@ -135,29 +135,58 @@ class Test_QuaternionOperatorOverload(unittest.TestCase):
         self.assertFalse(q2 != q3)
 
 
-class Test_Graph_serialization(unittest.TestCase):
-    def test_graph_de_serialization(self):
-        p = os.path.dirname(os.path.realpath(__file__))
-        f = os.path.join(p, "world.ors")
-        graph1 = orspy.Graph(f)
-        g1_str = str(graph1)
+class Test_TransformationOperatorOverloading(unittest.TestCase):
+    def test_equals(self):
+        v1 = Vector(1, 2, 3)
+        v2 = Vector(1, 2, 3)
+        v3 = Vector(3, 2, 1)
 
-        graph2 = orspy.Graph()
-        graph2.read(g1_str)
-        g2_str = str(graph2)
+        q1 = Quaternion(1, 2, 3, 4)
+        q2 = Quaternion(1, 2, 3, 4)
+        q3 = Quaternion(4, 3, 2, 1)
 
-        # sadly the string representation is not unambiguous.
-        # sometimes a '-0', and sometimes a '0' is used. Therefore, we
-        # have to split the string representation in words, try to convert
-        # them into float and then compare them.
-        for line_a, line_b in zip(g1_str.split('\n'), g2_str.split('\n')):
-            for a, b in zip(line_a.split(' '), line_b.split(' ')):
-                print a, b
-                try:
-                    a, b = float(a), float(b)
-                    assert (a, b) < 0.001
-                except:
-                    assert a == b
+        t1 = Transformation()
+        t1.pos = v1
+        t1.rot = q1
+
+        t2 = Transformation()
+        t2.pos = v2
+        t2.rot = q2
+
+        t3 = Transformation()
+        t3.pos = v3
+        t3.rot = q3
+
+        assert t1 == t1
+        assert t2 == t2
+        assert t3 == t3
+        assert t1 == t2
+        assert t1 != t3
+        assert t2 != t3
+
+# TODO: reactivate!
+#class Test_Graph_serialization(unittest.TestCase):
+    #def test_graph_de_serialization(self):
+        #p = os.path.dirname(os.path.realpath(__file__))
+        #f = os.path.join(p, "world.ors")
+        #graph1 = orspy.Graph(f)
+        #g1_str = str(graph1)
+
+        #graph2 = orspy.Graph()
+        #graph2.read(g1_str)
+        #g2_str = str(graph2)
+
+        ## sadly the string representation is not unambiguous.
+        ## sometimes a '-0', and sometimes a '0' is used. Therefore, we
+        ## have to split the string representation in words, try to convert
+        ## them into float and then compare them.
+        #for a, b in zip(g1_str.split(), g2_str.split()):
+            #print a, b
+            #try:
+                #a, b = float(a), float(b)
+                #assert (a, b) < 0.001
+            #except:
+                #assert a == b
 
 
 if __name__ == '__main__':

@@ -47,23 +47,25 @@ class RosOrs(object):
     def handle_graph_request(self, req):
         rospy.logdebug("handling graph request")
         res = srv.GraphResponse()
-        for body in self.graph.bodies:
-            res.bodies.append(parser.ors_body_to_msg(body))
-        for shape in self.graph.shapes:
-            res.shapes.append(parser.ors_shape_to_msg(shape))
+        res.graph = parser.ors_graph_to_msg(self.graph)
         return res
 
     def handle_bodies_request(self, req):
+        if req.no_shapes:
+            parse = parser.ors_body_to_msg_no_shapes
+        else:
+            parse = parser.ors_body_to_msg
+
         rospy.logdebug("handling bodies request")
         res = srv.BodiesResponse()
         # special body requested
         if req.name:
             ors_body = self.graph.getBodyByName(req.name)
-            res.bodies.append(parser.ors_body_to_msg(ors_body))
+            res.bodies.append(parse(ors_body))
             return res
         # all bodies requested
         for ors_body in self.graph.bodies:
-            res.bodies.append(parser.ors_body_to_msg(ors_body))
+            res.bodies.append(parse(ors_body))
         return res
 
     def handle_shapes_request(self, req):
@@ -71,14 +73,16 @@ class RosOrs(object):
         res = srv.ShapesResponse()
         # special shape requested
         if req.index:
-            # TODO ors.graph must support such a function
-            raise NotImplementedError("get by index is not implemented")
+            ors_shape = self.graph.shapes[req.index]
+            res.shapes.append(parser.ors_shape_to_msg(ors_shape))
+            return res
         if req.index_body:
-            # TODO ors.graph must support such a function
-            raise NotImplementedError("get by index_body is not implemented")
+            for ors_shape in self.graph.bodies[req.index_body].shapes:
+                res.shapes.append(parser.ors_shape_to_msg(ors_shape))
+            return res
         elif req.name:
             ors_shape = self.graph.getShapeByName(req.name)
-            res.bodies.append(parser.ors_shape_to_msg(ors_shape))
+            res.shapes.append(parser.ors_shape_to_msg(ors_shape))
             return res
         # all shapes requested
         for ors_shape in self.graph.shapes:

@@ -25,20 +25,20 @@ class StateMachine:
         outcomes = ['succeeded', 'aborted', 'preempted']
         self.sm = smach.StateMachine(outcomes=outcomes)
         with self.sm:
-            smach.StateMachine.add(
-                'INIT',
-                smach_ros.SimpleActionState('init', msgs.PickOOIAction),
-                transitions={
-                    'succeeded': 'PICK_OOI',
-                    'aborted': 'INIT'
-                }
-            )
+            #smach.StateMachine.add(
+                #'INIT',
+                #smach_ros.SimpleActionState('init', msgs.PickOOIAction),
+                #transitions={
+                    #'succeeded': 'PICK_OOI',
+                    #'aborted': 'INIT'
+                #}
+            #)
             smach.StateMachine.add(
                 'PICK_OOI',
                 smach_ros.SimpleActionState('pick_ooi', msgs.PickOOIAction),
                 transitions={
                     'succeeded': 'GOTO_OOI',
-                    'aborted': 'INIT'
+                    'aborted': 'PICK_OOI'
                 }
             )
             smach.StateMachine.add(
@@ -83,11 +83,11 @@ class StateMachine:
         self.introspection_server.start()
 
     def run(self):
-        rp.Require(["Controller", "Perception"])
-        rp.Require([
-            "Init", "PickOOI", "GotoOOI",
-            "ArticulateOOI", "ObserveOOITraj", "Learn"
-        ])
+        rp.Require(["Controller"])  # , "Perception"])
+        #rp.Require([
+            #"Init", "PickOOI", "GotoOOI",
+            #"ArticulateOOI", "ObserveOOITraj", "Learn"
+        #])
         smach_ros.util.set_preempt_handler(self.sm)
 
         smach_thread = threading.Thread(target=self.sm.execute)

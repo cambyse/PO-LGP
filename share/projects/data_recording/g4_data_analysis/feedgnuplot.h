@@ -27,7 +27,7 @@ StreamCollector& StreamCollector::operator<<(const T &t) {
 struct Feedgnuplot {
   FILE *f;
 
-  bool lines, points, domain, dataid;
+  bool lines, points, domain, dataid, autolegend;
   double stream;
 
   Feedgnuplot();
@@ -38,6 +38,7 @@ struct Feedgnuplot {
   void setPoints(bool p);
   void setDomain(bool d);
   void setDataID(bool d);
+  void setAutolegend(bool al);
   void setStream(double s);
   void open();
 

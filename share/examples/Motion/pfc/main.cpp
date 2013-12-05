@@ -96,12 +96,16 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   }
 
   //-- create the Optimization problem (of type kOrderMarkov)
+  P.x0 = ARRAY(0.,0.,0.,0.,-0.2,-.2,0.);
+
   MotionProblemFunction F(P);
   uint T=F.get_T();
   uint k=F.get_k();
   uint n=F.dim_x();
+  double dt = P.tau;
 
-  cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n<<" # joints=" <<G.getJointStateDimension()<<endl;
+
+  cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<" # joints=" <<G.getJointStateDimension()<<endl;
 
   //-- mini evaluation test:
   arr x(T+1,n);

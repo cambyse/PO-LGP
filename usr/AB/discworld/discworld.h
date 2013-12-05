@@ -5,7 +5,7 @@
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
 
-#include "keyframer.h"
+#include <Perception/keyframer.h>
 
 class DiscWorld {
   public:

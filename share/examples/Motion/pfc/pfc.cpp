@@ -130,8 +130,8 @@ void Pfc::computeIK(arr &q, arr &qd)
     }
 
     // compute joint updates
-    qd = inverse(~PhiJ*PhiJ + W)*~PhiJ* Phi;
-    q -= qd;
+    qd = -inverse(~PhiJ*PhiJ + W)*~PhiJ* Phi;
+    q += qd;
 }
 
 void Pfc::plotState()

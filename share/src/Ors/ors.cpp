@@ -334,8 +334,8 @@ ors::Joint::Joint(KinematicWorld& G, Body *f, Body *t, const Joint* copyJoint)
 
 ors::Joint::~Joint() {
   reset();
-  from->outLinks.removeValue(this);
-  to->inLinks.removeValue(this);
+  if (from) from->outLinks.removeValue(this);
+  if (to) to->inLinks.removeValue(this);
 }
 
 void ors::Joint::parseAts() {

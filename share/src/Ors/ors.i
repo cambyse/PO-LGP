@@ -41,13 +41,12 @@ created: <2013-03-20 Wed>
   typedef MT::Array<uint> uintA;
 %}
 
-%List_Typemap(ors::Body*)
-%List_Typemap(ors::Shape*)
-%List_Typemap(ors::Joint*)
-%List_Typemap(ors::Transformation*)
-%List_Typemap(ors::Proxy*)
-%List_Typemap(const char*)
-%List_Typemap(uintA)
+%List_Typemap(ors::Body)
+%List_Typemap(ors::Shape)
+%List_Typemap(ors::Joint)
+%List_Typemap(ors::Transformation)
+%List_Typemap(ors::Proxy)
+%List_Typemap(const char)
 
 
 //===========================================================================
@@ -81,7 +80,8 @@ created: <2013-03-20 Wed>
     std::ostringstream oss(std::ostringstream::out);
     oss << (*$self);
     return oss.str();
-  } }
+  } 
+}
 
 %extend ors::Shape {
   void set_size(double a, double b, double c, double d) {
@@ -104,8 +104,9 @@ created: <2013-03-20 Wed>
     return oss.str();
   }
   void read(const char* string) {
-    MT::String stream(string);
-    self->read(stream);
+    std::stringstream str;
+    str << string;
+    str >> *self;
   }
 }
 
