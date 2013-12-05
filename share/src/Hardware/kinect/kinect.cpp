@@ -9,7 +9,6 @@ REGISTER_MODULE(Kinect2PointCloud)
 const unsigned int image_width = 640; //kinect resolution
 const unsigned int image_height = 480; //kinect resolution
 const unsigned int depth_size = image_width*image_height;
-const unsigned int image_size = image_width*image_height*3;
 
 //===========================================================================
 //
@@ -18,20 +17,16 @@ const unsigned int image_size = image_width*image_height*3;
 
 struct sKinectInterface : Freenect::FreenectDevice {
   KinectPoller *module;
-  MT::Array<uint16_t> depth;
 
   sKinectInterface(freenect_context *_ctx, int _index) : Freenect::FreenectDevice(_ctx, _index), module(NULL) {
-    depth.resize(image_height, image_width);
   };
 
-  void DepthCallback(void *_depth, uint32_t timestamp) {
-    memmove(depth.p, _depth, 2*depth_size);
-    copy(module->kinect_depth.set(), depth);
-    //module->kinect_depth.set().setCarray(static_cast<uint16_t*>(depth), depth_size);
+  void DepthCallback(void *depth, uint32_t timestamp) {
+    memmove(module->kinect_depth.set().p, depth, 2*image_width*image_height);
   }
 
   void VideoCallback(void *rgb, uint32_t timestamp) {
-    memmove(module->kinect_rgb.set().p, rgb, image_size);
+    memmove(module->kinect_rgb.set().p, rgb, 3*image_width*image_height);
   }
 };
 
@@ -63,21 +58,17 @@ void KinectPoller::open() {
   s->startVideo();
   s->startDepth();
   s->setDepthFormat(FREENECT_DEPTH_REGISTERED);  // use hardware registration
-
-  cout <<"KinectPoller opened successfully" <<endl;
 }
 
 void KinectPoller::step() {
-  s->updateState(); //actually I think this step routine is redundant because the callback access the variable and fire its revision
+  //s->updateState(); //actually I think this step routine is redundant because the callback access the variable and fire its revision
 }
 
 void KinectPoller::close() {
   s->stopVideo();
   s->stopDepth();
   freenect->deleteDevice(0);
-  delete s;
   s = NULL;
-  cout <<"KinectPoller closed successfully" <<endl;
 }
 
 //===========================================================================
@@ -86,10 +77,10 @@ void KinectPoller::close() {
 //
 
 void Kinect2PointCloud::step(){
-  depth = kinect_depth.get();
+  copy(depth, kinect_depth.get());
   rgb = kinect_rgb.get();
 
-  if(depth.N!=depth_size || rgb.N!=image_size){
+  if(depth.N!=image_width*image_height || rgb.N!=3*image_width*image_height){
     MT_MSG("here" <<depth.getDim() <<' ' <<kinect_depth.get().getDim());
     return;
   }

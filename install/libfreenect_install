@@ -19,7 +19,7 @@ cd libfreenect
 echo "Building..."
 mkdir build
 cd build
-cmake ..
+cmake .. -DCMAKE_BUILD_TYPE=debug
 make
 
 echo "Installing..."

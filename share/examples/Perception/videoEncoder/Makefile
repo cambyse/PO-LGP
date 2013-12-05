@@ -1,7 +1,9 @@
 BASE = ../../..
 
 GL = 1
-DEPEND = Gui Perception Hardware_VideoWriter Core
+DEPEND = Core Gui Perception
+
+CLEAN = z.*
 
 include $(BASE)/make-generic
 

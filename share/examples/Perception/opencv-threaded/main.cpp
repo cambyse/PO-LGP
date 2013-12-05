@@ -12,8 +12,9 @@ void TEST(ModuleVision) {
   S.addModule("OpencvCamera", NULL, ModuleThread::loopFull);
   S.addModule("CvtGray");
   S.addModule("MotionFilter");
-  S.addModule("ImageViewer", NULL, STRINGS("motion"), ModuleThread::listenFirst, .0);
-  S.addModule("ImageWriter", NULL, STRINGS("rgb"), ModuleThread::listenFirst, .0);
+  S.addModule("ImageViewer", NULL, STRINGS("motion"), ModuleThread::listenFirst);
+  S.addModule("VideoEncoder", NULL, STRINGS("rgb"), ModuleThread::listenFirst);
+  S.addModule("VideoEncoder", "MyMotionWriter", STRINGS("motion"), ModuleThread::listenFirst);
   S.connect();
 
   cout <<S <<endl;
