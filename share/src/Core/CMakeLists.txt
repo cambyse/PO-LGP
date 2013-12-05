@@ -3,24 +3,12 @@ project(MLR_CORE)
 
 include(CheckIncludeFiles)
 if(LAPACK_FOUND)
-set(SOURCES array_lapack.cpp)
 add_definitions(-DMT_LAPACK)
 endif(LAPACK_FOUND)
 
 set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
 
-set(SOURCES     ${SOURCES}
-                core.cpp
-                array.cpp
-                geo.cpp 
-                keyValueGraph.cpp
-                module.cpp
-                registry.cpp
-                tests.cpp
-                thread.cpp
-                util.cpp
-                module_FloatA_Recorder.cpp
-)
+include(.sources.cmake)
 
 add_library(Core SHARED ${SOURCES})
 target_link_libraries(Core

@@ -6,17 +6,7 @@ pkg_search_module(OPENCV REQUIRED opencv>=2.3 opencv-2.3.1)
 
 set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
 
-set(SOURCES     ${SOURCES}
-                libcolorseg.cpp
-                perception.cpp
-                perception_views.cpp
-                pointcloud.cpp
-                shapeFitter.cpp
-                video.cpp
-                video_opencv.cpp
-                keyframer.cpp
-                g4data.cpp
-)
+include(.sources.cmake)
 
 add_library(Perception SHARED ${SOURCES})
 

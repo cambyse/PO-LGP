@@ -13,13 +13,7 @@ endif(NOT LAPACK_FOUND)
 
 set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
 
-set(SOURCES     ${SOURCES}
-                algos.cpp
-                ann.cpp
-                gaussianProcess.cpp
-                MLcourse.cpp
-                rrt.cpp
-                )
+include(.sources.cmake)
 
 add_library(Algo SHARED ${SOURCES})
 target_link_libraries(Algo LINK_PRIVATE Core ann)

@@ -2,8 +2,8 @@ find_package(TCL REQUIRED)
 
 get_filename_component(NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
-set(SOURCES convex.cpp cvxutils.cpp gui.cpp guidraw.cpp io.cpp togl.cpp
-        viewer.cpp RAPID/build.cpp RAPID/collide.cpp RAPID/overlap.cpp
+include(.sources.cmake)
+set(SOURCES ${SOURCES} RAPID/build.cpp RAPID/collide.cpp RAPID/overlap.cpp
         RAPID/RAPID.cpp)
 
 add_library(extern_${NAME} STATIC ${SOURCES})

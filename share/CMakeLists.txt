@@ -37,39 +37,21 @@ set(ENV{PKG_CONFIG_PATH} ${PROJECT_BINARY_DIR}/pkgconfig:$ENV{PKG_CONFIG_PATH})
 # our code uses C++ 10x stuff by now
 set(MLR_CXX_FLAGS "-std=c++11 ${MLR_CXX_FLAGS}")
 
-# select what to compile
-set(CURRENT_SLICE 
-        src/Core
-        src/Algo
-        src/Ors
-        src/Optim
-        src/Infer
-        src/Perception
-        src/System
-        src/Gui 
-        src/Motion 
-        src/relational
-        src/extern/GJK
-        src/extern/ply
-        src/extern/SWIFT
-        src/extern/SWIFT_decomposer
-        src/Hardware        
-        
-        examples/Core 
-        examples/Algo
-        examples/Optim
-        examples/Infer
-        examples/Gui
-        examples/Ors    
-        examples/Motion
-        examples/System
-        examples/relational
+# set Gui-GL definition globally for convenience
+include(src/Gui/gl.cmake OPTIONAL)
+if(USE_OPENGL)
+set(MLR_CXX_FLAGS "${MLR_CXX_FLAGS} -DMT_GL")
+endif(USE_OPENGL)
+message(STATUS "Using OpenGL: ${USE_OPENGL}, MLR CXX Flags: ${MLR_CXX_FLAGS}")
 
-        teaching/RoboticsCourse
-        teaching/CourseML
-
-        projects/mlr_ros/circle_test
+# target to create includes
+add_custom_target(sourceinc ALL
+  COMMAND ${CMAKE_SOURCE_DIR}/bin/update-includes.sh
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
+
+# select what to compile
+include(.slicedef.cmake)
 
 foreach(DIR ${CURRENT_SLICE})
 add_subdirectory(${DIR})

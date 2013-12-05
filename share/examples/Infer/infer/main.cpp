@@ -276,7 +276,7 @@ void testLoop(){
   lbp.getVarBeliefs(b);  cout <<b <<endl;
 }
 
-#include "gridBP.cpp"
+#include "gridBP.inc"
             
 void testGridBP(){
   uint i,j,k;
@@ -317,7 +317,7 @@ void testGridBP2(){
 }
 
 
-#include "rndNetBP.cpp"
+#include "rndNetBP.inc"
 void testRndNetBP(){
   uint order=MT::Parameter<uint>("order");
   uint N    =MT::Parameter<uint>("N");

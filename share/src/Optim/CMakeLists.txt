@@ -1,11 +1,6 @@
 set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
 
-set(SOURCES     ${SOURCES}
-        benchmarks.cpp
-        constrained.cpp
-        optimization.cpp
-        convert.cpp
-                )
+include(.sources.cmake)
 
 add_library(Optim SHARED ${SOURCES})
 target_link_libraries(Optim Core)

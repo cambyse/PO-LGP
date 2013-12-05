@@ -6,24 +6,6 @@ include(CheckIncludeFileCXX)
 include(FindPkgConfig)
 
 # Gui options
-option(USE_FLTK "Use FLTK" OFF)
-if(USE_FLTK)
-        set(MT_FLTK -DMT_FLTK)
-endif(USE_FLTK)
-option(USE_GTKGL "Use GTK GL" ON)
-if(USE_GTKGL)
-        set(MT_GTKGL -DMT_GTKGL)
-        set(USE_GL ON)
-endif(USE_GTKGL)
-option(USE_FREEGLUT "Use FreeGLUT" OFF)
-if(USE_FREEGLUT)
-        set(MT_FREEGLUT -DMT_FREEGLUT)
-        set(USE_OPENGL ON)
-endif(USE_FREEGLUT)
-option(USE_OPENGL "Use OpenGL" ON)
-if(USE_OPENGL)
-        set(MT_GL -DMT_GL)
-endif(USE_OPENGL)
 option(USE_QHULL "Use QHULL" ON)
 if(USE_QHULL)
         set(MT_QHULL -DMT_QHULL)
@@ -61,16 +43,7 @@ endif(NOT GRAPHVIZ_FOUND)
 
 set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
 
-set(SOURCES     ${SOURCES}
-                geo_qhull.cpp
-		graphview.cpp
-		gtk.cpp
-		mesh.cpp
-		opengl.cpp
-		ors_opengl.cpp
-		plot.cpp
-                mesh_lewiner.cpp
-                )
+include(.sources.cmake)
 
 add_library(Gui SHARED ${SOURCES})
 target_link_libraries(Gui LINK_PRIVATE Core 

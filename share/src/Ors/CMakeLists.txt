@@ -1,8 +1,5 @@
-option(ORS_PHYSX "Use NVidia PhysX libraries" OFF)
-option(ORS_ODE "Use ODE" OFF)
-
 # TODO add automatic checking for presence
-option(MT_PHYSX "Use PhysX" OFF)
+option(MT_PHYSX "Use NVidia PhysX libraries" OFF)
 if(MT_PHYSX)
         add_definitions(-DMT_PHYSX)
 endif(MT_PHYSX)
@@ -18,28 +15,8 @@ endif(MT_OPENMP)
 
 set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
 
-set(SOURCES     ${SOURCES}
-                ors_actionInterface.cpp
-                ors_blender.cpp
-                ors.cpp
-                ors_featherstone.cpp
-                ors_ode.cpp
-                ors_opengl.cpp
-                ors_physx.cpp
-                ors_sceneGui.cpp
-                ors_swift.cpp
-                roboticsCourse.cpp
-                module_G4Display.cpp
-                ors_oldTaskVariables.cpp
-                )
+include(.sources.cmake)
 
 add_library(Ors SHARED ${SOURCES})
 target_link_libraries(Ors LINK_PRIVATE Algo Core Gui extern_SWIFT)
-add_definitions(-DMT_ALGO 
-        -DMT_Core 
-        -DMT_Gui 
-        -DMT_Extern_SWIFT
-        -DMT_GL
-        )
-
 

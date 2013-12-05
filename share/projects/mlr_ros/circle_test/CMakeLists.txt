@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 2.4.6)
 project(circle_test)
+
+if(USE_ROS)
+
 include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 set(ENV{ROS_PACKAGE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/..:$ENV{ROS_PACKAGE_PATH})
 
@@ -22,7 +25,8 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
-rosbuild_add_executable(circle_test src/main.cpp)
+include(.sources.cmake)
+rosbuild_add_executable(circle_test ${SOURCES})
 target_link_libraries(circle_test Core Ors Gui)
 
 #uncomment if you have defined messages
@@ -36,4 +40,4 @@ target_link_libraries(circle_test Core Ors Gui)
 #rosbuild_add_boost_directories()
 #rosbuild_link_boost(${PROJECT_NAME} thread)
 
-
+endif(USE_ROS)

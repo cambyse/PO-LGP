@@ -5,7 +5,7 @@
 #include <Gui/mesh.h>
 #include <Gui/opengl.h>
 
-#include "swift_decomposer.cpp"
+#include "swift_decomposer.inc"
 #include <Gui/color.h>
 
 const char *USAGE=

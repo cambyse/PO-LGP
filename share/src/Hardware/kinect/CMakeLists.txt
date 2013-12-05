@@ -6,9 +6,7 @@ pkg_check_modules(DEPLIB libfreenect)
 set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
 
 if(DEPLIB_FOUND)
-set(SOURCES     ${SOURCES}
-                kinect.cpp
-)
+include(.sources.cmake)
 
 set(TARGET libHardware_${NAME})
 add_library(${TARGET} SHARED ${SOURCES})
