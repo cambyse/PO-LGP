@@ -3,6 +3,7 @@
 import rospy
 import the_curious_robot.msg as msgs
 
+
 class Require:
     def __init__(self, modules):
         self.modules = dict(map(lambda x: (x, False), modules))
@@ -17,18 +18,19 @@ class Require:
                     msg = msgs.Alive()
                     msg.module = module
                     self.is_alive_pub.publish(msg)
-                    rospy.logdebug("wait for " + module);
+                    rospy.logdebug("wait for " + module)
             rospy.sleep(.1)
 
     def alive_cb(self, msg):
         self.modules[msg.module] = True
         self.wait = not all(self.modules.values())
 
+
 class Provide:
     def __init__(self, module):
         self.module = module
         self.is_alive_sub = rospy.Subscriber("is_alive", msgs.Alive,
-                self.is_alive_cb)
+                                             self.is_alive_cb)
         self.alive_pub = rospy.Publisher("alive", msgs.Alive)
 
     def is_alive_cb(self, msg):
