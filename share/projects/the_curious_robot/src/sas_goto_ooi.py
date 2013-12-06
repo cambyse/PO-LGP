@@ -50,6 +50,8 @@ class GotoOOIActionServer:
         msg = msgs.control()
         msg.pose = shapes.shapes[0].X
         msg.ignore_collisions = False
+        msg.collision_shapes = [shape.index for shape in shapes.shapes]
+        msg.endeffector = "robot"
 
         self.react_to_controller = True  # TODO: rather block?
         self.control_pub.publish(msg)

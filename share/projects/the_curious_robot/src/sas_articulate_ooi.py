@@ -70,6 +70,7 @@ class ArticulateOOIActionServer:
         msg = msgs.control()
         msg.pose = target
         msg.ignore_collisions = True
+        msg.endeffector = "robot"
 
         self.react_to_controller = True  # TODO: rather block?
         self.control_pub.publish(msg)

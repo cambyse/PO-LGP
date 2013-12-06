@@ -32,7 +32,9 @@ class RRTPlanner():
         self.graph.shapes = shapes
 
     def create_endpose(self, target, endeff, start_q=None,
-                       col_prec=1e3, pos_prec=1e1):
+                       col_prec=1e3,
+                       col_shapes=np.array([], dtype=np.uint32),
+                       pos_prec=1e1):
         rospy.logdebug("start calculating endpose")
         start = self.graph.getJointState()
         if start_q is not None:
@@ -42,20 +44,13 @@ class RRTPlanner():
 
         problem = motionpy.MotionProblem(self.graph)
         problem.loadTransitionParameters()
-        #problem.H_rate_diag = motionpy.pr2_reasonable_W()
         problem.H_rate_diag = 1e-1*np.ones((3,))
 
         rospy.logdebug(self.graph.getJointStateDimension())
 
-        #shapes = motionpy.pr2_get_shapes(self.graph)
-        shapes = self.graph.getBodyByName(endeff).shapes
-        shape_idx = np.array([0]*len(shapes), dtype=np.uint32)
-        for i, shape in enumerate(shapes):
-            shape_idx[i] = shape.index
-
         if col_prec != 0:
             proxy_tm = motionpy.ProxyTaskMap(motionpy.allVersusListedPTMT,
-                                             shape_idx, 0.01, True)
+                                             col_shapes, 0.01, True)
             task_cost2 = problem.addTaskMap("proxyColls", proxy_tm)
             problem.setInterpolatingCosts(task_cost2,
                                           motionpy.MotionProblem.constant,
@@ -79,22 +74,17 @@ class RRTPlanner():
         rospy.logdebug("done calculating endpose")
         return x
 
-    def create_rrt_trajectory(self, target, endeff, collisions=True):
+    def create_rrt_trajectory(self, target, endeff, collisions=True,
+                              col_shapes=np.array([], dtype=np.uint32)):
         rospy.logdebug("start calculating rrt trajectory")
         stepsize = .01
 
         problem = motionpy.MotionProblem(self.graph)
         problem.loadTransitionParameters()
 
-        #shapes = motionpy.pr2_get_shapes(self.graph)
-        shapes = self.graph.getBodyByName(endeff).shapes
-        shape_idx = np.array([0]*len(shapes), dtype=np.uint32)
-        for i, shape in enumerate(shapes):
-            shape_idx[i] = shape.index
-
         if collisions:
             proxy_tm = motionpy.ProxyTaskMap(motionpy.allVersusListedPTMT,
-                                             shape_idx, .01, True)
+                                             col_shapes, .01, True)
             task_cost = problem.addTaskMap("proxyColls", proxy_tm)
 
             problem.setInterpolatingCosts(task_cost,
@@ -161,34 +151,34 @@ class FakeController():
     def compute_trajectory(self):
         rospy.loginfo("start computing trajectory")
 
-
         if self.collisions:
             # first create a target without collision detection
             # this leads us to a penetrating positions
             target = self.rrt.create_endpose(target=corepy.ARRAY(self.goal.
                                                                  pos),
-                                             endeff="robot",
+                                             endeff=self.endeff,
                                              col_prec=1e1,
+                                             col_shapes=self.collision_shapes,
                                              pos_prec=1e3)
 
             # if we want to avoid collisions we then reoptimize mainly on the
             # collisions, that gives us a position very close to the object
             target = self.rrt.create_endpose(target=corepy.ARRAY(self.goal.
                                                                  pos),
-                                             endeff="robot",
+                                             endeff=self.endeff,
                                              start_q=target,
                                              col_prec=1e3,
+                                             col_shapes=self.collision_shapes,
                                              pos_prec=0)
         else:
             target = self.rrt.create_endpose(target=corepy.ARRAY(self.goal.
                                                                  pos),
-                                             endeff="robot",
+                                             endeff=self.endeff,
                                              col_prec=0,
                                              pos_prec=1e3)
 
-
         self.trajectory = self.rrt.create_rrt_trajectory(target=target,
-                                                         endeff="robot",
+                                                         endeff=self.endeff,
                                                          collisions=
                                                          self.collisions)
 
@@ -260,7 +250,11 @@ class FakeController():
 
         rospy.loginfo("Set new goal")
 
+        self.endeff = data.endeffector
+
         self.collisions = not data.ignore_collisions
+        self.collision_shapes = np.array(data.collision_shapes,
+                                         dtype=np.uint32)
 
         self.goal = new_goal
         self.recompute_trajectory = True
