@@ -5,7 +5,7 @@ import pickle
 
 class pickle_member(object):
     """
-    A simple decorator that pickles the given instace variable
+    A simple decorator that pickles the given instance variable
     `member_name` after calling the decorated function.
 
     Just decorate a function and supply the member_name.  Folders are
