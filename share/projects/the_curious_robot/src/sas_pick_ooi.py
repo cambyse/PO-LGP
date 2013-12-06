@@ -1,20 +1,17 @@
 #!/usr/bin/env python
 
+# ROS
 import roslib
-roslib.load_manifest('the_curious_robot')
 roslib.load_manifest('actionlib')
-import rospy
 from actionlib import SimpleActionServer
-
-import random
-
-import the_curious_robot as tcr
-from the_curious_robot import srv
-import util
-
-import rosors.srv
-
+# MLR
+roslib.load_manifest('the_curious_robot')
 import require_provide as rp
+import rosors.srv
+import rospy
+import the_curious_robot as tcr
+# python std
+import random
 
 
 #########################################################################
