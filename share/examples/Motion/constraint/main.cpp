@@ -35,7 +35,7 @@ int main(int argc,char** argv){
   c = P.addTaskMap("position",
                    new DefaultTaskMap(posTMT, G, "endeff", NoVector));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.world->getBodyByName("target")->X.pos), 1e2);
+                          ARRAY(P.world.getBodyByName("target")->X.pos), 1e2);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
                              ARRAY(0.,0.,0.), 1e1);
 

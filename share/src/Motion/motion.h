@@ -70,7 +70,7 @@ struct TaskCost {
 /// This class allows you to DESCRIBE a motion planning problem, nothing more
 struct MotionProblem { //TODO: rename MotionPlanningProblem
   //engines to compute things
-  ors::KinematicWorld *world;
+  ors::KinematicWorld& world;
   bool useSwift;
   
   //******* the following three sections are parameters that define the problem
@@ -95,7 +95,7 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
   arr costMatrix;
   arr dualMatrix;
 
-  MotionProblem(ors::KinematicWorld *_ors=NULL, bool useSwift=true);
+  MotionProblem(ors::KinematicWorld& _world, bool useSwift=true);
   
   void loadTransitionParameters(); ///< loads transition parameters from cfgFile //TODO: do in constructor of TransitionCost
   

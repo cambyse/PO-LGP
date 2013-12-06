@@ -47,9 +47,8 @@ typedef struct dxJointGroup *dJointGroupID;
  * It basically contains a dSpace and dWorld, provides a proximity
  * callback function, and basic stepping function.
  */
-class OdeInterface {
-public:
-  bool isOpen;
+struct OdeInterface {
+  ors::KinematicWorld& C;
   double time;
   dxSpace *space;
   dxGeom *plane0, *planex1, *planex2, *planey1, *planey2;
@@ -65,11 +64,8 @@ public:
   MT::Array<dxJoint*> motors;
   MT::Array<dContactGeom*> conts;
 
-public:
-  OdeInterface();
+  OdeInterface(ors::KinematicWorld &_C);
   ~OdeInterface();
-
-  void createOde(ors::KinematicWorld &C);
 
   /** @brief reinstantiates a new ODE world (and space) clear of all previous objects */
   void clear();
@@ -96,29 +92,29 @@ public:
   void contactForces();
   void penetration(ors::Vector &p);
 
-  void exportStateToOde(ors::KinematicWorld &C);
-  void importStateFromOde(ors::KinematicWorld &C);
-  void exportForcesToOde(ors::KinematicWorld &C);
-  void addJointForce(ors::KinematicWorld &C, ors::Joint *e, double f1, double f2);
-  void addJointForce(ors::KinematicWorld &C, arr& f);
-  void setMotorVel(ors::KinematicWorld& C, const arr& qdot, double maxF);
-  uint getJointMotorDimension(ors::KinematicWorld &C);
-  void setJointMotorPos(ors::KinematicWorld &C, arr& x, double maxF=1., double tau=.01);
-  void setJointMotorPos(ors::KinematicWorld &C, ors::Joint *e, double x0, double maxF=1., double tau=.01);
-  void setJointMotorVel(ors::KinematicWorld &C, arr& v, double maxF=1.);
-  void setJointMotorVel(ors::KinematicWorld &C, ors::Joint *e, double v0, double maxF=1.);
-  void unsetJointMotors(ors::KinematicWorld &C);
-  void unsetJointMotor(ors::KinematicWorld &C, ors::Joint *e);
-  void getJointMotorForce(ors::KinematicWorld &C, arr& f);
-  void getJointMotorForce(ors::KinematicWorld &C, ors::Joint *e, double& f);
-  void pidJointPos(ors::KinematicWorld &C, ors::Joint *e, double x0, double v0, double xGain, double vGain, double iGain=0, double* eInt=0);
-  void pidJointVel(ors::KinematicWorld &C, ors::Joint *e, double v0, double vGain);
-  void getGroundContact(ors::KinematicWorld &C, boolA& cts);
-  void importProxiesFromOde(ors::KinematicWorld &C);
-  void step(ors::KinematicWorld &C, arr& force, uint steps=1, double tau=.01);
-  void step(ors::KinematicWorld &C, uint steps=1, double tau=.01);
-  void slGetProxies(ors::KinematicWorld &C);
-  //void slGetProxyGradient(arr &dx, const arr &x, ors::KinematicWorld &C);
+  void exportStateToOde();
+  void importStateFromOde();
+  void exportForcesToOde();
+  void addJointForce(ors::Joint *e, double f1, double f2);
+  void addJointForce(arr& f);
+  void setMotorVel(const arr& qdot, double maxF);
+  uint getJointMotorDimension();
+  void setJointMotorPos(arr& x, double maxF=1., double tau=.01);
+  void setJointMotorPos(ors::Joint *e, double x0, double maxF=1., double tau=.01);
+  void setJointMotorVel(arr& v, double maxF=1.);
+  void setJointMotorVel(ors::Joint *e, double v0, double maxF=1.);
+  void unsetJointMotors();
+  void unsetJointMotor(ors::Joint *e);
+  void getJointMotorForce(arr& f);
+  void getJointMotorForce(ors::Joint *e, double& f);
+  void pidJointPos(ors::Joint *e, double x0, double v0, double xGain, double vGain, double iGain=0, double* eInt=0);
+  void pidJointVel(ors::Joint *e, double v0, double vGain);
+  void getGroundContact(boolA& cts);
+  void importProxiesFromOde();
+  void step(arr& force, uint steps=1, double tau=.01);
+  void step(uint steps=1, double tau=.01);
+  void slGetProxies();
+  //void slGetProxyGradient(arr &dx, const arr &x);
   void reportContacts2();
   bool inFloorContacts(ors::Vector& x);
 };

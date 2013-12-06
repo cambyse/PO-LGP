@@ -10,7 +10,7 @@ void testGraspHeuristic(){
   //setup the problem
   ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
   makeConvexHulls(G.shapes);
-  G.gl().watch();
+  G.watch(true);
 
   MotionProblem MP(&G);
   MP.loadTransitionParameters();
@@ -47,7 +47,7 @@ void testGraspHeuristic(){
     s->mesh.clear();
 
     MP.setx0(MP.x_current);
-    G.gl().watch();
+    G.watch(true);
   }
   
 }

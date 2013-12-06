@@ -22,11 +22,11 @@
 #include <Gui/opengl.h>
 #include <Ors/ors_swift.h>
 
-MotionProblem::MotionProblem(ors::KinematicWorld *_ors, bool _useSwift) {
-  if(_ors)   world   = _ors;   else { world=new ors::KinematicWorld;        world  ->init(MT::getParameter<MT::String>("orsFile")); } // orLinkTree(); }
+MotionProblem::MotionProblem(ors::KinematicWorld& _world, bool _useSwift)
+  : world(_world) {
   useSwift=_useSwift;
-  if(useSwift) world->swift().setCutoff(2.*MT::getParameter<double>("swiftCutoff", 0.11));
-  world->getJointState(x0, v0);
+  if(useSwift) world.swift().setCutoff(2.*MT::getParameter<double>("swiftCutoff", 0.11));
+  world.getJointState(x0, v0);
   x_current = x0;
   v_current = v0;
 }
@@ -45,7 +45,7 @@ void MotionProblem::loadTransitionParameters() {
   if(MT::checkParameter<arr>("Wdiag")) {
     W_diag = MT::getParameter<arr>("Wdiag");
   } else {
-    W_diag = world->naturalQmetric();
+    W_diag = world.naturalQmetric();
   }
   H_rate_diag = MT::getParameter<double>("Hrate")*W_diag;
 }
@@ -69,10 +69,10 @@ void MotionProblem::setInterpolatingCosts(
   TaskCost *c,
   TaskCostInterpolationType inType,
   const arr& y_finalTarget, double y_finalPrec, const arr& y_midTarget, double y_midPrec, double earlyFraction) {
-  uint m=c->map.dim_phi(*world);
+  uint m=c->map.dim_phi(world);
   setState(x0,v0);
   arr y0;
-  c->map.phi(y0, NoArr, *world);
+  c->map.phi(y0, NoArr, world);
   arr midTarget(m),finTarget(m);
   if(&y_finalTarget){ if(y_finalTarget.N==1) finTarget = y_finalTarget(0); else finTarget=y_finalTarget; }
   if(&y_midTarget){   if(y_midTarget.N==1)   midTarget = y_midTarget(0);   else midTarget=y_midTarget; }
@@ -120,10 +120,10 @@ void MotionProblem::setInterpolatingVelCosts(
   TaskCost *c,
   TaskCostInterpolationType inType,
   const arr& v_finalTarget, double v_finalPrec, const arr& v_midTarget, double v_midPrec) {
-  uint m=c->map.dim_phi(*world);
+  uint m=c->map.dim_phi(world);
   setState(x0,v0);
   arr y0,yv0,J;
-  c->map.phi(y0, J, *world);
+  c->map.phi(y0, J, world);
   yv0 = J * v0;
   arr midTarget(m), finTarget(m);
   if(&v_finalTarget){ if(v_finalTarget.N==1) finTarget = v_finalTarget(0); else finTarget=v_finalTarget; }
@@ -162,9 +162,9 @@ void MotionProblem::setInterpolatingVelCosts(
 void MotionProblem::setState(const arr& q, const arr& v) {
   if(&v) v_current = v;
   x_current = q;
-  world->setJointState(q);
-  world->calcBodyFramesFromJoints();
-  if(useSwift) world->swift().computeProxies(*world, false);
+  world.setJointState(q);
+  world.calcBodyFramesFromJoints();
+  if(useSwift) world.computeProxies();
   if(transitionType == realDynamic) {
     NIY;
     //requires computation of the real dynamics, i.e. of M and F
@@ -177,11 +177,11 @@ uint MotionProblem::dim_phi(uint t) {
   for(uint i=0; i<taskCosts.N; i++) {
     TaskCost *c = taskCosts(i);
     if(c->active) {
-      if(c->y_target.N || c->map.constraint) m += c->map.dim_phi(*world);
-      if(transitionType!=kinematic && c->v_target.N)  m += c->map.dim_phi(*world);
+      if(c->y_target.N || c->map.constraint) m += c->map.dim_phi(world);
+      if(transitionType!=kinematic && c->v_target.N)  m += c->map.dim_phi(world);
 #define STICK 1
 #ifdef STICK
-      if(c->active && c->map.constraint)  m += c->map.dim_phi(*world);
+      if(c->active && c->map.constraint)  m += c->map.dim_phi(world);
 #endif
     }
   }
@@ -192,7 +192,7 @@ uint MotionProblem::dim_g(uint t) {
   uint m=0;
   for(uint i=0; i<taskCosts.N; i++) {
     TaskCost *c = taskCosts(i);
-    if(c->active && c->map.constraint)  m += c->map.dim_phi(*world);
+    if(c->active && c->map.constraint)  m += c->map.dim_phi(world);
   }
   return m;
 }
@@ -207,10 +207,10 @@ bool MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
   for(uint i=0; i<taskCosts.N; i++) {
     TaskCost *c = taskCosts(i);
     if(c->active && !c->map.constraint) {
-      c->map.phi(y, J, *world);
+      c->map.phi(y, J, world);
       if(absMax(y)>1e10){
         MT_MSG("WARNING y=" <<y);
-        c->map.phi(y, J, *world);
+        c->map.phi(y, J, world);
       }
       if(!c->y_target.N && !c->v_target.N){
         MT_MSG("active task costs "<< c->name <<" have no targets defined - ignoring");
@@ -231,7 +231,7 @@ bool MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
 #ifdef STICK //sticky: push into constraints
     if(c->active && c->map.constraint) {
       CHECK(!c->y_target.N && !c->v_target.N,"constraints cannot have targets");
-      c->map.phi(y, J, *world);
+      c->map.phi(y, J, world);
       CHECK(y.N==J.d0,"");
       for(uint j=0;j<y.N;j++) y(j) = -y(j)+.1; //MT::sigmoid(y(j));
       if(J.N) for(uint j=0;j<J.d0;j++) J[j]() *= -1.; // ( y(j)*(1.-y(j)) );
@@ -246,7 +246,7 @@ bool MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
     TaskCost *c = taskCosts(i);
     if(c->active && c->map.constraint) {
       CHECK(!c->y_target.N && !c->v_target.N,"constraints cannot have targets");
-      c->map.phi(y, J, *world);
+      c->map.phi(y, J, world);
       phi.append(y);
       if(phi(phi.N-1) > c->y_threshold) feasible = false;
       if(&J_x) J_x.append(J);
@@ -281,7 +281,7 @@ void MotionProblem::costReport(bool gnuplt) {
   cout <<" * task costs:" <<endl;
   for(uint i=0; i<taskCosts.N; i++) {
     TaskCost *c = taskCosts(i);
-    uint d=c->map.dim_phi(*world);
+    uint d=c->map.dim_phi(world);
     
     cout <<"\t '" <<c->name <<"' [" <<d <<"] ";
     
@@ -328,7 +328,7 @@ void MotionProblem::costReport(bool gnuplt) {
   ofstream fil("z.costReport");
   fil <<"trans[" <<dim_psi() <<"] ";
   for(auto c:taskCosts){
-    uint d=c->map.dim_phi(*world);
+    uint d=c->map.dim_phi(world);
     if(c->y_target.N)
       fil <<c->name <<'[' <<d <<"] ";
     if(transitionType!=kinematic && c->v_target.N)
@@ -348,7 +348,7 @@ void MotionProblem::costReport(bool gnuplt) {
     m=dim_psi();
     uint m_dual=0;
     for(auto c:taskCosts){
-      uint d=c->map.dim_phi(*world);
+      uint d=c->map.dim_phi(world);
       if(c->y_target.N) {
         fil <<sqrt(sumOfSqr(costMatrix.sub(t,t,m,m+d-1))) <<' ';
         m += d;

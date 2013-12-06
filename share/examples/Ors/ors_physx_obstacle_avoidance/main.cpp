@@ -1,5 +1,4 @@
 #include <Ors/ors_physx.h>
-#include <Ors/ors_swift.h>
 #include <Gui/opengl.h>
 #include <Core/array.h>
 #include <Core/util.h>
@@ -49,7 +48,7 @@ void TEST(PhysxObstacleAvoidance) {
       dir = wGoal*(goal - x)/length(goal - x);
 
       // obstacle avoidance
-      ors.swift().computeProxies(ors,false);
+      ors.computeProxies();
       dirObs.setZero();
       for (uint j = 0; j < ors.proxies.N; j++) {
         p = ors.proxies(j);

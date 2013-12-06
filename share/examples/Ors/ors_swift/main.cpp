@@ -12,7 +12,7 @@ void TEST(Swift) {
   ors::KinematicWorld G("swift_test.ors");
 
   G.swift().setCutoff(2.);
-  G.swift().computeProxies(G);
+  G.computeProxies();
 
   uint t;
   for(t=0;t<50;t++){
@@ -20,11 +20,11 @@ void TEST(Swift) {
     G.bodies(0)->X.addRelativeRotationDeg(10,1,0,0);
     G.calcBodyFramesFromJoints();
 
-    G.swift().computeProxies(G);
+    G.computeProxies();
 
     G.reportProxies();
 
-    G.gl().watch();
+    G.watch(true);
   }
 }
 

@@ -1,7 +1,6 @@
 #include "rrt_planner.h"
 
 #include <Ors/ors.h>
-#include <Ors/ors_swift.h>
 #include <Algo/rrt.h>
 #include <Motion/motion.h>
 
@@ -41,12 +40,13 @@ bool ors::sRRTPlanner::growTowards(RRT& growing, RRT& passive, ors::KinematicWor
   G.setJointState(q);
   G.calcBodyFramesFromJoints();
 
-  ors::KinematicWorld *G_t = p->problem.world;
-  p->problem.world = &G;
+  HALT("SORRY! I didn't know how to fix this. What is it doing?");
+//  ors::KinematicWorld *G_t = &p->problem.world;
+//  p->problem.world = &G;
   arr phi, J_x, J_v;
-  p->problem.world->swift().computeProxies(G);
+//  p->problem.world.computeProxies();
   bool feasible = p->problem.getTaskCosts(phi, J_x, J_v, 0);
-  p->problem.world = G_t;
+//  p->problem.world = G_t;
 
   if (feasible) {
 
@@ -87,7 +87,7 @@ arr buildTrajectory(RRT& rrt, uint node, bool forward) {
 }
     
 ors::RRTPlanner::RRTPlanner(ors::KinematicWorld *G, MotionProblem &problem, double stepsize) : 
-  s(new ors::sRRTPlanner(this, RRT(G->getJointState(), stepsize))), G(G), problem(problem) {
+  s(new ors::sRRTPlanner(this, RRT(G->q, stepsize))), G(G), problem(problem) {
     joint_min = zeros(G->getJointStateDimension(), 1);
     joint_max = ones(G->getJointStateDimension(), 1);
   }

@@ -15,10 +15,10 @@ void compareModules(){
     if(!(t%1)){ q = q0;  rndGauss(q,.1,true); }
     G.setJointState(q);
     G.calcBodyFramesFromJoints();
-    G.swift().computeProxies(G,false);
+    G.computeProxies();
 //    G.reportProxies();
-//    G.gl().update();
-//    G.gl().watch();
+//    G.watch(false);
+//    G.watch(true);
   }
   cout <<t <<" collision queries: sec=" <<MT::timerRead() <<endl;
 }

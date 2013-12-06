@@ -46,7 +46,7 @@ struct FeedbackMotionControl : MotionProblem {
   MT::Array<PDtask*> tasks;
   PDtask nullSpacePD;
 
-  FeedbackMotionControl(ors::KinematicWorld *_ors=NULL, bool useSwift=true);
+  FeedbackMotionControl(ors::KinematicWorld& _world, bool useSwift=true);
 
   //adding task spaces
   PDtask* addTask(const char* name, TaskMap *map);

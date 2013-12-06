@@ -1,3 +1,4 @@
+#include <Ors/ors.h>
 #include <Ors/ors_physx.h>
 #include <Gui/opengl.h>
 
@@ -60,7 +61,7 @@ void TEST(OrsPhysx) {
     cout <<"\r t=" <<t <<std::flush;
     G.physx().step();
     glPh.update();
-    G.gl().update();
+    G.watch(false);
   }
 }
 
