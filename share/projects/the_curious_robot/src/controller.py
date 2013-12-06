@@ -31,9 +31,14 @@ class RRTPlanner():
         shapes = ors.makeConvexHulls(self.graph.shapes)
         self.graph.shapes = shapes
 
-    def create_endpose(self, target, endeff, collisions=True):
+    def create_endpose(self, target, endeff, start_q=None,
+                       col_prec=1e3, pos_prec=1e1):
         rospy.logdebug("start calculating endpose")
         start = self.graph.getJointState()
+        if start_q is not None:
+            self.graph.setJointState(start_q)
+        else:
+            start_q = self.graph.getJointState()
 
         problem = motionpy.MotionProblem(self.graph)
         problem.loadTransitionParameters()
@@ -48,28 +53,28 @@ class RRTPlanner():
         for i, shape in enumerate(shapes):
             shape_idx[i] = shape.index
 
-        if collisions:
+        if col_prec != 0:
             proxy_tm = motionpy.ProxyTaskMap(motionpy.allVersusListedPTMT,
                                              shape_idx, 0.01, True)
             task_cost2 = problem.addTaskMap("proxyColls", proxy_tm)
             problem.setInterpolatingCosts(task_cost2,
                                           motionpy.MotionProblem.constant,
-                                          np.array([0]), 1e3)
+                                          np.array([0]), col_prec)
 
-        position_tm = motionpy.DefaultTaskMap(motionpy.posTMT, self.graph,
-                                              endeff, corepy.Vector(0, 0, 0))
-        task_cost = problem.addTaskMap("position", position_tm)
-        problem.setInterpolatingCosts(task_cost,
-                                      motionpy.MotionProblem.finalOnly,
-                                      target, 1e2)
-                                      #corepy.ARRAY(problem.ors
-                                                   #.getBodyByName("target")
-                                                   #.X.pos)
-        problem.setInterpolatingVelCosts(task_cost, motionpy.
-                                         MotionProblem.finalOnly,
-                                         np.array([0., 0., 0.]), 1e1)
+        if pos_prec != 0:
+            position_tm = motionpy.DefaultTaskMap(motionpy.posTMT, self.graph,
+                                                  endeff,
+                                                  corepy.Vector(0, 0, 0))
+            task_cost = problem.addTaskMap("position", position_tm)
+            problem.setInterpolatingCosts(task_cost,
+                                          motionpy.MotionProblem.finalOnly,
+                                          target, 1e2)
+            problem.setInterpolatingVelCosts(task_cost, motionpy.
+                                             MotionProblem.finalOnly,
+                                             np.array([0., 0., 0.]), pos_prec)
 
-        _, x = motionpy.keyframeOptimizer(problem.x0, problem, False, 2)
+        _, x = motionpy.keyframeOptimizer(start_q, problem, True, 2)
+
         self.graph.setJointState(start)
         rospy.logdebug("done calculating endpose")
         return x
@@ -156,9 +161,32 @@ class FakeController():
     def compute_trajectory(self):
         rospy.loginfo("start computing trajectory")
 
-        target = self.rrt.create_endpose(target=corepy.ARRAY(self.goal.pos),
-                                         endeff="robot",
-                                         collisions=self.collisions)
+
+        if self.collisions:
+            # first create a target without collision detection
+            # this leads us to a penetrating positions
+            target = self.rrt.create_endpose(target=corepy.ARRAY(self.goal.
+                                                                 pos),
+                                             endeff="robot",
+                                             col_prec=1e1,
+                                             pos_prec=1e3)
+
+            # if we want to avoid collisions we then reoptimize mainly on the
+            # collisions, that gives us a position very close to the object
+            target = self.rrt.create_endpose(target=corepy.ARRAY(self.goal.
+                                                                 pos),
+                                             endeff="robot",
+                                             start_q=target,
+                                             col_prec=1e3,
+                                             pos_prec=0)
+        else:
+            target = self.rrt.create_endpose(target=corepy.ARRAY(self.goal.
+                                                                 pos),
+                                             endeff="robot",
+                                             col_prec=0,
+                                             pos_prec=1e3)
+
+
         self.trajectory = self.rrt.create_rrt_trajectory(target=target,
                                                          endeff="robot",
                                                          collisions=
