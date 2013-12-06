@@ -17,7 +17,7 @@ class OrsRosDemo():
     services for the ors data structures.
     """
     def __init__(self):
-        orsfile = "world.ors"
+        orsfile = "door.ors"
         node_name = "rosors_test"
         rospy.init_node(node_name, log_level=rospy.DEBUG)
 
