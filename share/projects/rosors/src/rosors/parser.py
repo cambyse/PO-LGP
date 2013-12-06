@@ -1,6 +1,10 @@
 """
 Helpers for creating ros msgs and ors datastructures.
 
+The function follow the naming theme
+ - `ros_to_ors_TYPENAME`
+ - `ors_to_ros_TYPENAME`
+
 You can use the helper functions from whereever you want.
 """
 
@@ -108,7 +112,7 @@ def msg_to_ors_mesh(mesh_msg):
     return mesh
 
 
-def ors_shape_to_msg(ors_shape):
+def ors_shape_to_msg(ors_shape, with_mesh=False):
     shape_msg = ors_msgs.msg.Shape()
 
     shape_msg.index = ors_shape.index
@@ -121,7 +125,7 @@ def ors_shape_to_msg(ors_shape):
     shape_msg.shape_type = ors_shape.type
     shape_msg.contact = ors_shape.cont
 
-    if ors_shape.type == orspy.meshST:
+    if with_mesh and ors_shape.type == orspy.meshST:
         shape_msg.mesh = ors_mesh_to_msg(ors_shape.mesh)
 
     return shape_msg

@@ -74,17 +74,21 @@ class RosOrs(object):
         # special shape requested
         if req.index:
             ors_shape = self.graph.shapes[req.index]
-            res.shapes.append(parser.ors_shape_to_msg(ors_shape))
+            res.shapes.append(parser.ors_shape_to_msg(ors_shape,
+                                                      req.with_mesh))
             return res
         if req.index_body:
             for ors_shape in self.graph.bodies[req.index_body].shapes:
-                res.shapes.append(parser.ors_shape_to_msg(ors_shape))
+                res.shapes.append(parser.ors_shape_to_msg(ors_shape,
+                                                          req.with_mesh))
             return res
         elif req.name:
             ors_shape = self.graph.getShapeByName(req.name)
-            res.shapes.append(parser.ors_shape_to_msg(ors_shape))
+            res.shapes.append(parser.ors_shape_to_msg(ors_shape,
+                                                      req.with_mesh))
             return res
         # all shapes requested
         for ors_shape in self.graph.shapes:
-            res.shapes.append(parser.ors_shape_to_msg(ors_shape))
+            res.shapes.append(parser.ors_shape_to_msg(ors_shape,
+                                                      req.with_mesh))
         return res
