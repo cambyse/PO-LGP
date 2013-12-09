@@ -45,7 +45,6 @@ class RosOrs(object):
     #########################################################################
     # HANDLE SERVICES
     def handle_graph_request(self, req):
-        rospy.logdebug("handling graph request")
         res = srv.GraphResponse()
         res.graph = parser.ors_graph_to_msg(self.graph)
         return res
@@ -56,7 +55,6 @@ class RosOrs(object):
         else:
             parse = parser.ors_body_to_msg
 
-        rospy.logdebug("handling bodies request")
         res = srv.BodiesResponse()
         # special body requested
         if req.name:
@@ -69,7 +67,6 @@ class RosOrs(object):
         return res
 
     def handle_shapes_request(self, req):
-        rospy.logdebug("handling shapes request")
         res = srv.ShapesResponse()
         # special shape requested
         if req.index:
