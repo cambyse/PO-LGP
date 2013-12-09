@@ -9,11 +9,7 @@ from actionlib import SimpleActionServer
 import random
 
 import the_curious_robot as tcr
-from the_curious_robot import srv
-import util
-
 import rosors.srv
-
 import require_provide as rp
 
 
@@ -37,7 +33,7 @@ def _random_select_strategy(oois):
 def _door1_select_strategy(oois):
     """always go for the door1-door"""
     ooi_id_msg = tcr.msg.ObjectID()
-    ooi_id_msg.id = 3
+    ooi_id_msg.id = 24
     return ooi_id_msg
 
 
