@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 
+# ROS
 import roslib
-roslib.load_manifest('the_curious_robot')
 roslib.load_manifest('actionlib')
-import rospy
 from actionlib import SimpleActionServer
-
-import random
-
-import the_curious_robot as tcr
-import rosors.srv
+# MLR
+roslib.load_manifest('the_curious_robot')
 import require_provide as rp
+import rosors.srv
+import rospy
+import the_curious_robot as tcr
+# python std
+import random
 
 
 #########################################################################
@@ -68,12 +69,11 @@ class PickOOIActionServer:
         rp.Provide("PickOOI")
 
     def execute(self, msg):
-        rospy.logdebug("before")
-        all_shapes_msg = self.request_all_shapes()
-        rospy.logdebug("after")
-        self.oois = []
-        for shape in all_shapes_msg.shapes:
-            self.oois.append(shape.index)
+        # We assume that we "see" all shapes from the beginning and the number
+        # does not change. Therfore, we only request it once.
+        if self.oois is None:
+            all_shapes_msg = self.request_all_shapes(with_mesh=False)
+            self.oois = [shape.index for shape in all_shapes_msg.shapes]
 
         # select an ooi
         ooi_id_msg = self.select_ooi(self.oois)

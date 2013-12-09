@@ -14,7 +14,10 @@ import the_curious_robot.msg as msgs
 from articulation_msgs.srv import TrackModelSrv, TrackModelSrvRequest
 
 import util
-from util import ObjectTypeHypo
+import pickle_logger
+
+import belief_representations as rep
+from belief_representations import ObjectTypeHypo
 
 import require_provide as rp
 
@@ -34,8 +37,10 @@ class LearnActionServer:
         self.dof_learner = rospy.ServiceProxy('model_select', TrackModelSrv)
 
         # action server
-        self.server = SimpleActionServer(
-            name, msgs.LearnAction, execute_cb=self.execute, auto_start=False)
+        self.server = SimpleActionServer(name,
+                                         msgs.LearnAction,
+                                         execute_cb=self.execute,
+                                         auto_start=False)
         self.server.register_preempt_callback(self.preempt_cb)
         self.server.start()
 
@@ -43,46 +48,37 @@ class LearnActionServer:
         self.ooi = None
         self.trajectory = []
 
-        # Belief & PhysX & OpenGL
+        # Belief
         self.belief = orspy.Graph()
+        # The BeliefAnnotation is the probabilistic counterpart to the ors
+        # graph/belief representation.
+        # It's a mapping:  "shape_id" --> ShapeBelief
+        self.belief_annotation = {}
+
+        # PhysX & OpenGL of belief
         self.gl = guipy.OpenGL()
         self.physx = orspy.PhysXInterface()
         orspy.bindOrsToPhysX(self.belief, self.gl, self.physx)
 
-        self.learned_bodies = []
-        self.learned_shapes = []
-
-        # save all learned object in here
-        self.learned_tmp = {}
-
         # require/provide
         rp.Provide("Learn")
 
+    @pickle_logger.pickle_member("belief_annotation")
     def execute(self, msg):
-        # add object hypothesis if it does not exist yet
-        if self.ooi not in self.learned_tmp:
-            self.learned_tmp[self.ooi] = ObjectTypeHypo()
+        # add object to belief_annotations
+        if self.ooi not in self.belief_annotation:
+            self.belief_annotation[self.ooi] = rep.ShapeBelief()
 
-        # TODO we also have to check if we actually touched the object.
-        # maybe we tried to manipulate the object but didn't touch it.
-        # then we'd get an empty trajectory and would classify the object as
-        # STATIC.
+        # Update ObjectTypeHypo
+        obs_object_type = (ObjectTypeHypo.STATIC
+                           if len(self.trajectory) == 0 else
+                           ObjectTypeHypo.FREE)
+        self.belief_annotation[self.ooi].object_type.update(obs_object_type)
 
-        # no trajectory observed --> static object
-        if len(self.trajectory) == 0:
-            rospy.loginfo("updating with static object")
-            self.learned_tmp[self.ooi].update(ObjectTypeHypo.STATIC)
-            self.server.set_succeeded()
+        # Update JointInformation
+        # TODO Update JointInformation
 
-        # trajectory observed --> classify joint
-        else:
-            rospy.logwarn("CAN'T learn joints yet")
-            self.learned_tmp[self.ooi].update(ObjectTypeHypo.FREE)
-            self.server.set_succeeded()
-
-        for name, hypo in self.learned_tmp.iteritems():
-            print "{}: {}".format(name, hypo)
-
+        self.server.set_succeeded()
         return
 
         self.learned_bodies.append(orspy.Body(self.belief))
