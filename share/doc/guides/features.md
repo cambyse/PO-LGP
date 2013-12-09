@@ -1,8 +1,14 @@
 # THINGS in our mlr repos
+Writtten <2013-12-05>
 
-This document is a bullet point list of features/functionalities/methods we have *somewhere* implemented in our repos. It is *not* meant as a documentation of these features. Instead it is meant to get an overview and let you find the right keywords to search for in the repos.
+This document is a bullet point list of features/functionalities/methods we
+have *somewhere* implemented in our repos. It is *not* meant as a documentation
+of these features. Instead it is meant to get an overview and let you find the
+right keywords to search for in the repos.
 
-Please add features/things you have provides. But keep it a short and keywordy as possible. No long documentations! At most, use `code formatting` to indicate keywords to point to the code.
+Please add features/things you have provides. But keep it a short and keywordy
+as possible. No long documentations! At most, use `code formatting` to indicate
+keywords to point to the code.
 
 ----------------------------------------------------------------------------------------------------------------------
 
