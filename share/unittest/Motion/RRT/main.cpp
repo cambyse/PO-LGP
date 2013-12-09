@@ -52,7 +52,7 @@ RRTPlannerTest::RRTPlannerTest() {
 
   //OpenGL gl;
   //bindOrsToOpenGL(G, gl);
-  trajectory = planner.getTrajectoryTo(target, eps);
+  trajectory = planner.getTrajectoryTo(target);
 
   //std::cout << "Trajectory:" << std::endl;
   //for(uint i=0; i<trajectory.d0; ++i)
