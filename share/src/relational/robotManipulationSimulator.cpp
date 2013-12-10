@@ -1,8 +1,8 @@
-/*  
+/*
     Copyright 2008-2012   Tobias Lang
-    
+
     E-mail:    tobias.lang@fu-berlin.de
-    
+
     This file is part of libPRADA.
 
     libPRADA is free software: you can redistribute it and/or modify
@@ -23,6 +23,8 @@
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
 #include <relational/utilTL.h>
+#include <Ors/ors_ode.h>
+#include <Ors/ors_swift.h>
 
 #include "robotManipulationSimulator.h"
 #include <sstream>
@@ -41,11 +43,11 @@
 
 
 /************************************************
-* 
+*
 *     Noise for actions
-* 
+*
 *     THIS IS WHERE YOU CAN BRING IN YOUR OWN IDEAS OF "NOISE" ETC. !!!
-* 
+*
 ************************************************/
 
 double DROP_TARGET_NOISE__BLOCK_ON_SMALL_BLOCK = 0.001;
@@ -58,118 +60,110 @@ double GRAB_UNCLEAR_OBJ_FAILURE_PROB = 0.4;
 
 
 /************************************************
-* 
+*
 *     Low-level control
-* 
+*
 ************************************************/
 
 uint gl_step = 0;
 uint revel_step = 0;
 
-void oneStep(const arr &q,ors::KinematicWorld *C,OdeInterface *ode,SwiftInterface *swift,OpenGL *gl, RevelInterface *revel,const char* text){
-#ifdef MT_ODE
+void oneStep(const arr &q, ors::KinematicWorld *C, bool useOpengl, bool useSwift, const char* text) {
   C->setJointState(q);
   C->calcBodyFramesFromJoints();
-  if(ode){
-    ode->exportStateToOde(*C);
-    ode->step(.01);
-    ode->importStateFromOde(*C);
-    //ode->importProxiesFromOde(*C);
+  C->ode().exportStateToOde();
+  C->ode().step(.01);
+  C->ode().importStateFromOde();
+  //C->ode().importProxiesFromOde(*C);
   //C->getJointState(q);
-  }
-  if(swift){
-    swift->computeProxies(*C);
-  }else{
-    if(ode) ode->importProxiesFromOde(*C);
+  if(useSwift) {
+    C->swift().step();
+  } else {
+    C->ode().importProxiesFromOde();
   }
   
-  if(gl){
+  if(useOpengl) {
     gl_step++;
 //     if (gl_step % 1 == 50) {
-      gl->text.clear();
-      gl->text <<text <<endl;
-      gl->update();
+    C->gl().text.clear();
+    C->gl().text <<text <<endl;
+    C->gl().update();
 //     }
   }
 #ifdef MT_REVEL
-  if(revel){
+  if(revel) {
     revel_step++;
-    if (true) {
+    if(true) {
       revel->addFrameFromOpengl();
       revel_step = 0;
     }
   }
 #endif
-#endif
 }
 
 
 
-void controlledStep(arr &q,arr &W,ors::KinematicWorld *C,OdeInterface *ode,SwiftInterface *swift,OpenGL *gl, RevelInterface *revel,TaskVariableList& TVs, const char* text){
-#ifdef MT_ODE
+void controlledStep(arr &q, arr &W, ors::KinematicWorld *C, bool useOpengl, bool useSwift, TaskVariableList& TVs, const char* text) {
   static arr dq;
   updateState(TVs, *C);
   updateChanges(TVs);
   bayesianControl(TVs,dq,W);
 //   if (q.N==0) q.resizeAs(dq); // TOBIAS-Aenderung
   q += dq;
-  oneStep(q,C,ode,swift,gl,revel,text);
-#endif
+  oneStep(q, C, useOpengl, useSwift, text);
 }
 
 
 
 /************************************************
-* 
+*
 *     Administration
-* 
+*
 ************************************************/
 
 // How many time-steps until action fails
 #define SEC_ACTION_ABORT 300
 
-RobotManipulationSimulator::RobotManipulationSimulator(){
+RobotManipulationSimulator::RobotManipulationSimulator() {
   C=0;
-  gl=0;
-  ode=0;
-  swift=0;
-  revel=0;
+  useOpengl=true;
+  useSwift=false;
+//  revel=0;
   Tabort = SEC_ACTION_ABORT;
 }
 
-RobotManipulationSimulator::~RobotManipulationSimulator(){
-    shutdownAll();
+RobotManipulationSimulator::~RobotManipulationSimulator() {
+  shutdownAll();
 }
 
 
 arr q0, W;
 
-void drawEnv(void* horst){
-#ifdef MT_FREEGLUT
+void drawEnv(void* horst) {
   glStandardLight(horst);
 //   glDrawFloor(4.,1,1,1);
   glDrawFloor(4., 108./255., 123./255., 139./255.);
-#endif
 }
 
 
-void RobotManipulationSimulator::loadConfiguration(const char* ors_filename){
+void RobotManipulationSimulator::loadConfiguration(const char* ors_filename) {
   if(C) delete C;
   C = new ors::KinematicWorld();
   MT::load(*C,ors_filename);
   C->calcBodyFramesFromJoints();
+  C->calcJointState();
   C->getJointState(q0);
   
   uint i;
   arr BM(C->bodies.N);
   BM=1.;
-  for(i=BM.N;i--;){
-    if(C->bodies(i)->outLinks.N){
+  for(i=BM.N; i--;) {
+    if(C->bodies(i)->outLinks.N) {
       BM(i) += BM(C->bodies(i)->outLinks(0)->to->index);
     }
   }
   arr Wdiag(q0.N);
-  for(i=0;i<q0.N;i++) Wdiag(i)=BM(C->joints(i)->to->index);
+  for(i=0; i<q0.N; i++) Wdiag(i)=BM(C->joints(i)->to->index);
   W.setDiag(Wdiag);
   
   calcObjectNumber();
@@ -177,76 +171,51 @@ void RobotManipulationSimulator::loadConfiguration(const char* ors_filename){
   // determine table height
   neutralHeight = getPosition(getTableID())[2] + NEUTRAL_HEIGHT_BONUS;
   
-  if(gl){
-    gl->clear();
-    gl->add(drawEnv,0);
-    gl->add(ors::glDrawGraph,C);
-    return;
+  if(useOpengl){
+    C->gl().clear();
+    C->gl().add(drawEnv,0);
+    C->gl().add(ors::glDrawGraph,C);
+    orsDrawProxies = false;
+    C->gl().resize(800, 600);
+    //   C->gl().resize(1024, 600);
+    C->gl().camera.setPosition(2.5,-7.5,2.3);  // position of camera
+    C->gl().camera.focus(-0.25, -0.6, 1.1);  // rotate the frame to focus the point (x,y,z)
+    C->gl().camera.upright();
+    C->gl().update();
   }
-#ifdef MT_FREEGLUT
-  gl=new OpenGL;
-  gl->add(drawEnv,0);
-  gl->add(ors::glDrawGraph,C);
-  gl->setClearColors(1.,1.,1.,1.);
-  orsDrawProxies = false;
-  gl->resize(800, 600);
-//   gl->resize(1024, 600);
-  gl->camera.setPosition(2.5,-7.5,2.3);  // position of camera
-  gl->camera.focus(-0.25, -0.6, 1.1);  // rotate the frame to focus the point (x,y,z)
-  gl->camera.upright();
-  gl->update();
-#endif
 }
 
 
 void RobotManipulationSimulator::startOde(double ode_coll_bounce, double ode_coll_erp, double ode_coll_cfm, double ode_friction) {
-#ifdef MT_ODE
   CHECK(C,"load a configuration first");
-  if(ode) delete ode;
-  ode = new OdeInterface;
   
   // SIMULATOR PARAMETER
-  ode->coll_bounce = ode_coll_bounce;
-  ode->coll_ERP = ode_coll_erp;
-  ode->coll_CFM = ode_coll_cfm;
-  ode->friction = ode_friction;
-  
-  ode->createOde(*C);
-#endif
+  C->ode().coll_bounce = ode_coll_bounce;
+  C->ode().coll_ERP = ode_coll_erp;
+  C->ode().coll_CFM = ode_coll_cfm;
+  C->ode().friction = ode_friction;
 }
 
 
-void RobotManipulationSimulator::startSwift(){
-#ifdef MT_extern_SWIFT
-  if(swift) delete swift;
-  swift = new SwiftInterface;
-  swift->init(*C);
-#endif
+void RobotManipulationSimulator::startSwift() {
+  useSwift=true;
+  C->swift();
 }
 
 
-void RobotManipulationSimulator::startRevel(const char* filename){
+void RobotManipulationSimulator::startRevel(const char* filename) {
 #ifdef MT_REVEL
   if(revel) delete revel;
   revel= new RevelInterface;
-  revel->open(gl->width(),gl->height(), filename);
+  revel->open(C->gl().width(),C->gl().height(), filename);
 #endif
 }
 
 
-void RobotManipulationSimulator::shutdownAll(){
+void RobotManipulationSimulator::shutdownAll() {
   if(C) delete C;          C=0;
-#ifdef MT_ODE
-  if(ode) delete ode;      ode=0;
-#endif
-#ifdef MT_FREEGLUT
-  if(gl) delete gl;        gl=0;
-#endif
-#ifdef MT_extern_SWIFT
-  if(swift) delete swift;  swift=0;
-#endif
 #ifdef MT_REVEL
-  if(revel){ revel->close(); delete revel; } revel=0;
+  if(revel) { revel->close(); delete revel; } revel=0;
 #endif
 }
 
@@ -255,48 +224,47 @@ void RobotManipulationSimulator::shutdownAll(){
 
 
 /************************************************
-* 
+*
 *     Standard simulation
-* 
+*
 ************************************************/
 
 
-void RobotManipulationSimulator::simulate(uint t, const char* message){
+void RobotManipulationSimulator::simulate(uint t, const char* message) {
   String msg_string(message);
   arr q;
   TaskVariableList local_TVs;
   local_TVs.clear();
   C->getJointState(q);
   bool change = true;
-  for(;t--;){
+  for(; t--;) {
     MT::String send_string;
-    if (msg_string.N == 0) {
-      if (t%20==0)
+    if(msg_string.N == 0) {
+      if(t%20==0)
         change = !change;
-      if (change)
+      if(change)
         send_string << "S";
-    }
-    else
+    } else
       send_string << msg_string;
     //     send_string << msg_string << "     \n\n(time " << t << ")";
-    controlledStep(q,W,C,ode,swift,gl,revel,local_TVs,send_string);
+    controlledStep(q, W, C, useOpengl, useSwift, local_TVs, send_string);
   }
 }
 
 
-void RobotManipulationSimulator::watch(){
-#ifdef MT_FREEGLUT
-  gl->text.clear() <<"Watch" <<endl;
-  gl->watch();
-#endif
+void RobotManipulationSimulator::watch() {
+  if(useOpengl){
+    C->gl().text.clear() <<"Watch" <<endl;
+    C->gl().watch();
+  }
 }
 
 
-void RobotManipulationSimulator::indicateFailure(){
+void RobotManipulationSimulator::indicateFailure() {
   // drop object
   ors::Joint* e;
   uint i;
-  for_list(i,e,C->getBodyByName("fing1c")->outLinks){
+  for_list(i,e,C->getBodyByName("fing1c")->outLinks) {
     del_edge(e,C->bodies,C->joints,true); //otherwise: no object in hand
   }
   std::cerr << "RobotManipulationSimulator: CONTROL FAILURE" << endl;
@@ -310,9 +278,9 @@ void RobotManipulationSimulator::indicateFailure(){
 
 
 /************************************************
-* 
+*
 *     General object information (state-independent)
-* 
+*
 ************************************************/
 
 
@@ -322,11 +290,11 @@ void RobotManipulationSimulator::calcObjectNumber() {
   // assuming that all objects start with "o"
   std::stringstream ss;
   uint i;
-  for (i=1;;i++) {
+  for(i=1;; i++) {
     ss.str("");
     ss << "o" << i;
     ors::Body* n = C->getBodyByName(ss.str().c_str());
-    if (n==0)
+    if(n==0)
       break;
     numObjects++;
   }
@@ -363,12 +331,12 @@ void RobotManipulationSimulator::getBlocks(uintA& blocks) {
   // assuming that all objects start with "o"
   std::stringstream ss;
   uint i;
-  for (i=1;i<=numObjects;i++) {
+  for(i=1; i<=numObjects; i++) {
     ss.str("");
     ss << "o" << i;
     ors::Body* n = C->getBodyByName(ss.str().c_str());
-    if (n->shapes.N == 1) {
-      if (n->shapes(0)->type == ors::boxST)
+    if(n->shapes.N == 1) {
+      if(n->shapes(0)->type == ors::boxST)
         blocks.append(n->index);
     }
   }
@@ -380,12 +348,12 @@ void RobotManipulationSimulator::getBalls(uintA& balls) {
   // assuming that all objects start with "o"
   std::stringstream ss;
   uint i;
-  for (i=1;i<=numObjects;i++) {
+  for(i=1; i<=numObjects; i++) {
     ss.str("");
     ss << "o" << i;
     ors::Body* n = C->getBodyByName(ss.str().c_str());
-    if (n->shapes.N == 1) {
-      if (n->shapes(0)->type == ors::sphereST)
+    if(n->shapes.N == 1) {
+      if(n->shapes(0)->type == ors::sphereST)
         balls.append(n->index);
     }
   }
@@ -397,11 +365,11 @@ void RobotManipulationSimulator::getBoxes(uintA& boxes) {
   // assuming that all objects start with "o"
   std::stringstream ss;
   uint i;
-  for (i=1;i<=numObjects;i++) {
+  for(i=1; i<=numObjects; i++) {
     ss.str("");
     ss << "o" << i;
     ors::Body* n = C->getBodyByName(ss.str().c_str());
-    if (isBox(n->index))
+    if(isBox(n->index))
       boxes.append(n->index);
   }
 }
@@ -412,12 +380,12 @@ void RobotManipulationSimulator::getCylinders(uintA& cylinders) {
   // assuming that all objects start with "o"
   std::stringstream ss;
   uint i;
-  for (i=1;i<=numObjects;i++) {
+  for(i=1; i<=numObjects; i++) {
     ss.str("");
     ss << "o" << i;
     ors::Body* n = C->getBodyByName(ss.str().c_str());
-    if (n->shapes.N == 1) {
-      if (n->shapes(0)->type == ors::cylinderST)
+    if(n->shapes.N == 1) {
+      if(n->shapes(0)->type == ors::cylinderST)
         cylinders.append(n->index);
     }
   }
@@ -435,7 +403,7 @@ uint RobotManipulationSimulator::convertObjectName2ID(const char* name) {
 
 
 const char* RobotManipulationSimulator::convertObjectID2name(uint ID) {
-  if (C->bodies.N > ID)
+  if(C->bodies.N > ID)
     return C->bodies(ID)->name;
   else
     return "";
@@ -443,10 +411,9 @@ const char* RobotManipulationSimulator::convertObjectID2name(uint ID) {
 
 
 int RobotManipulationSimulator::getOrsType(uint id) {
-  if (C->bodies(id)->shapes.N == 1) {
+  if(C->bodies(id)->shapes.N == 1) {
     return C->bodies(id)->shapes(0)->type;
-  }
-  else
+  } else
     return OBJECT_TYPE__BOX;
 }
 
@@ -475,63 +442,63 @@ MT::String RobotManipulationSimulator::getColorString(uint obj) {
   double dark_red[3];  dark_red[0]=.7;  dark_red[1]=0.05;   dark_red[2]=.05;
   double dark_blue[3];  dark_blue[0]=.05;  dark_blue[1]=0.;   dark_blue[2]=.7;
   double rose[3];  rose[0]=1.0;  rose[1]=0.5;   rose[2]=.75;
-
+  
   uint i;
   
   double* color = getColor(obj);
   MT::String name;
-
-  for (i=0; i<3; i++)
-  if(!TL::areEqual(color[i], red[i])) break;
-  if (i==3) {name = "red";}
   
-  for (i=0; i<3; i++)
+  for(i=0; i<3; i++)
+    if(!TL::areEqual(color[i], red[i])) break;
+  if(i==3) {name = "red";}
+  
+  for(i=0; i<3; i++)
     if(!TL::areEqual(color[i], green[i])) break;
-  if (i==3) {name = "green";}
+  if(i==3) {name = "green";}
   
-  for (i=0; i<3; i++)
+  for(i=0; i<3; i++)
     if(!TL::areEqual(color[i], orange[i])) break;
-  if (i==3) {name = "orange";}
+  if(i==3) {name = "orange";}
   
-  for (i=0; i<3; i++)
+  for(i=0; i<3; i++)
     if(!TL::areEqual(color[i], yellow[i])) break;
-  if (i==3) {name = "yellow";}
+  if(i==3) {name = "yellow";}
   
-  for (i=0; i<3; i++)
+  for(i=0; i<3; i++)
     if(!TL::areEqual(color[i], blue[i])) break;
-  if (i==3) {name = "blue";}
+  if(i==3) {name = "blue";}
   
-  for (i=0; i<3; i++)
+  for(i=0; i<3; i++)
     if(!TL::areEqual(color[i], brown[i])) break;
-  if (i==3) {name = "brown";}
+  if(i==3) {name = "brown";}
   
-  for (i=0; i<3; i++)
+  for(i=0; i<3; i++)
     if(!TL::areEqual(color[i], yellow_green[i])) break;
-  if (i==3) {name = "yellow-green";}
+  if(i==3) {name = "yellow-green";}
   
-  for (i=0; i<3; i++)
+  for(i=0; i<3; i++)
     if(!TL::areEqual(color[i], grey[i])) break;
-  if (i==3) {name = "grey";}
+  if(i==3) {name = "grey";}
   
-  for (i=0; i<3; i++)
+  for(i=0; i<3; i++)
     if(!TL::areEqual(color[i], light_blue[i])) break;
-  if (i==3) {name = "light blue";}
+  if(i==3) {name = "light blue";}
   
-  for (i=0; i<3; i++)
+  for(i=0; i<3; i++)
     if(!TL::areEqual(color[i], rose[i])) break;
-  if (i==3) {name = "rose";}
+  if(i==3) {name = "rose";}
   
-  for (i=0; i<3; i++)
+  for(i=0; i<3; i++)
     if(!TL::areEqual(color[i], purple[i])) break;
-  if (i==3) {name = "purple";}
+  if(i==3) {name = "purple";}
   
-  for (i=0; i<3; i++)
+  for(i=0; i<3; i++)
     if(!TL::areEqual(color[i], dark_red[i])) break;
-  if (i==3) {name = "dark red";}
+  if(i==3) {name = "dark red";}
   
-  for (i=0; i<3; i++)
+  for(i=0; i<3; i++)
     if(!TL::areEqual(color[i], dark_blue[i])) break;
-  if (i==3) {name = "dark blue";}
+  if(i==3) {name = "dark blue";}
   
   return name;
 }
@@ -548,9 +515,9 @@ MT::String RobotManipulationSimulator::getColorString(uint obj) {
 
 
 /************************************************
-* 
+*
 *     State information
-* 
+*
 ************************************************/
 
 double* RobotManipulationSimulator::getPosition(uint id) {
@@ -575,7 +542,7 @@ void RobotManipulationSimulator::getObjectPositions(arr& positions) {
   positions.resize(objs.N, 3);
   FOR1D(objs, i) {
     double* local_position = getPosition(objs(i));
-    for (k=0; k<3; k++) {
+    for(k=0; k<3; k++) {
       positions(i, k) = local_position[k];
     }
   }
@@ -586,25 +553,25 @@ void RobotManipulationSimulator::getObjectPositions(arr& positions) {
 void RobotManipulationSimulator::getOrientation(arr& orientation, uint id) {
   orientation.resize(2);
   
-  if (getOrsType(id) == ors::sphereST) {
+  if(getOrsType(id) == ors::sphereST) {
     orientation.setUni(0.);
     return;
   }
   
 //   cout<<C->bodies(id)->name<<endl;
-  
+
   ors::Quaternion rot;
   rot = C->bodies(id)->X.rot;
   
   ors::Vector upvec_z; double maxz=-2;
-  if((rot*Vector_x).z>maxz){ upvec_z=Vector_x; maxz=(rot*upvec_z).z; }
-  if((rot*Vector_y).z>maxz){ upvec_z=Vector_y; maxz=(rot*upvec_z).z; }
-  if((rot*Vector_z).z>maxz){ upvec_z=Vector_z; maxz=(rot*upvec_z).z; }
-  if((rot*(-Vector_x)).z>maxz){ upvec_z=-Vector_x; maxz=(rot*upvec_z).z; }
-  if((rot*(-Vector_y)).z>maxz){ upvec_z=-Vector_y; maxz=(rot*upvec_z).z; }
-  if((rot*(-Vector_z)).z>maxz){ upvec_z=-Vector_z; maxz=(rot*upvec_z).z; }
+  if((rot*Vector_x).z>maxz) { upvec_z=Vector_x; maxz=(rot*upvec_z).z; }
+  if((rot*Vector_y).z>maxz) { upvec_z=Vector_y; maxz=(rot*upvec_z).z; }
+  if((rot*Vector_z).z>maxz) { upvec_z=Vector_z; maxz=(rot*upvec_z).z; }
+  if((rot*(-Vector_x)).z>maxz) { upvec_z=-Vector_x; maxz=(rot*upvec_z).z; }
+  if((rot*(-Vector_y)).z>maxz) { upvec_z=-Vector_y; maxz=(rot*upvec_z).z; }
+  if((rot*(-Vector_z)).z>maxz) { upvec_z=-Vector_z; maxz=(rot*upvec_z).z; }
   double angle_z = acos(maxz);
-  if (angle_z < 0.0001)
+  if(angle_z < 0.0001)
     angle_z = 0.;
 //   if (angle_z>MT_PI/4) {
 //     PRINT(MT_PI/4);
@@ -626,14 +593,14 @@ void RobotManipulationSimulator::getOrientation(arr& orientation, uint id) {
   orientation(0) = angle_z;
   
   ors::Vector upvec_x; double maxx=-2;
-  if((rot*Vector_x).x>maxx){ upvec_x=Vector_x; maxx=(rot*upvec_x).x; }
-  if((rot*Vector_y).x>maxx){ upvec_x=Vector_y; maxx=(rot*upvec_x).x; }
-  if((rot*Vector_z).x>maxx){ upvec_x=Vector_z; maxx=(rot*upvec_x).x; }
-  if((rot*(-Vector_x)).x>maxx){ upvec_x=-Vector_x; maxx=(rot*upvec_x).x; }
-  if((rot*(-Vector_y)).x>maxx){ upvec_x=-Vector_y; maxx=(rot*upvec_x).x; }
-  if((rot*(-Vector_z)).x>maxx){ upvec_x=-Vector_z; maxx=(rot*upvec_x).x; }
+  if((rot*Vector_x).x>maxx) { upvec_x=Vector_x; maxx=(rot*upvec_x).x; }
+  if((rot*Vector_y).x>maxx) { upvec_x=Vector_y; maxx=(rot*upvec_x).x; }
+  if((rot*Vector_z).x>maxx) { upvec_x=Vector_z; maxx=(rot*upvec_x).x; }
+  if((rot*(-Vector_x)).x>maxx) { upvec_x=-Vector_x; maxx=(rot*upvec_x).x; }
+  if((rot*(-Vector_y)).x>maxx) { upvec_x=-Vector_y; maxx=(rot*upvec_x).x; }
+  if((rot*(-Vector_z)).x>maxx) { upvec_x=-Vector_z; maxx=(rot*upvec_x).x; }
   double angle_xy = atan((rot*upvec_x).y / maxx);
-  if (angle_xy < 0.0001)
+  if(angle_xy < 0.0001)
     angle_xy = 0.;
 //   CHECK((angle_xy<=MT_PI/4)  &&  (angle_xy>=0), "invalid angle_xy (upvec_x="<<upvec_x<<", x="<<maxx<<")");
   orientation(1) = angle_xy;
@@ -651,7 +618,7 @@ void RobotManipulationSimulator::getObjectAngles(arr& angles) {
     CHECK(orientation.N == 2, "too many angles");
     FOR1D(orientation, k) {
       angles(i, k) = orientation(k);
-      if (angles(i, k) < 0.00001)
+      if(angles(i, k) < 0.00001)
         angles(i, k) = 0.;
     }
   }
@@ -660,15 +627,15 @@ void RobotManipulationSimulator::getObjectAngles(arr& angles) {
 
 bool RobotManipulationSimulator::isUpright(uint id) {
   // balls are always upright
-  if (getOrsType(id) == ors::sphereST)
+  if(getOrsType(id) == ors::sphereST)
     return true;
-  
+    
   double TOLERANCE = 0.05; // in radians
   
   arr orientation;
   getOrientation(orientation, id);
 //   cout << id << " angle = " << angle << endl;
-  if (fabs(orientation(0)) < TOLERANCE)
+  if(fabs(orientation(0)) < TOLERANCE)
     return true;
   else
     return false;
@@ -687,7 +654,7 @@ double RobotManipulationSimulator::getOverallHeight(uintA& objects) {
   double table_height = getHeight(getTableID());
   cout<<"table "<<table_height<<endl;
   FOR1D(objects, i) {
-    if (objects(i) == obj_inhand) {
+    if(objects(i) == obj_inhand) {
       cout << objects(i) << " 0 (inhand)"<<endl;
       continue;
     }
@@ -700,7 +667,7 @@ double RobotManipulationSimulator::getOverallHeight(uintA& objects) {
 }
 
 
-uint RobotManipulationSimulator::getInhand(uint man_id){
+uint RobotManipulationSimulator::getInhand(uint man_id) {
   ors::Joint* e;
   if(!C->bodies(man_id)->outLinks.N) return TL::UINT_NIL;
   e=C->bodies(man_id)->outLinks(0);
@@ -718,7 +685,7 @@ uint RobotManipulationSimulator::getHandID() {
 }
 
 
-void RobotManipulationSimulator::getObjectsOn(uintA& list,const char *obj_name){
+void RobotManipulationSimulator::getObjectsOn(uintA& list,const char *obj_name) {
   list.clear();
   
   ors::Body* obj_body = C->getBodyByName(obj_name);
@@ -732,37 +699,34 @@ void RobotManipulationSimulator::getObjectsOn(uintA& list,const char *obj_name){
   uintA others;
   getObjects(others);
   ors::Body* other_body;
-
-   //C->reportProxies();
   
-  for(i=0;i<C->proxies.N;i++){
-    if (C->proxies(i)->a  == -1  ||  C->proxies(i)->b  == -1) // on earth
+  //C->reportProxies();
+  
+  for(i=0; i<C->proxies.N; i++) {
+    if(C->proxies(i)->a  == -1  ||  C->proxies(i)->b  == -1)  // on earth
       continue;
     body_id__a = C->shapes(C->proxies(i)->a)->body->index;
     body_id__b = C->shapes(C->proxies(i)->b)->body->index;
-    if (body_id__a == obj_body->index) {
+    if(body_id__a == obj_body->index) {
       other_body = C->bodies(body_id__b);
-    }
-    else if (body_id__b == obj_body->index) {
+    } else if(body_id__b == obj_body->index) {
       other_body = C->bodies(body_id__a);
-    }
-    else
+    } else
       continue;
-    
+      
     double MAX_DISTANCE = 0.02;
-
-    if (C->proxies(i)->d < MAX_DISTANCE) { // small enough distance
+    
+    if(C->proxies(i)->d < MAX_DISTANCE) {  // small enough distance
       other_rad = 0.5 * getSize(other_body->index)[2];
       // z-axis (height) difference big enough
-      if (other_body->shapes(0)->X.pos.z - obj_body->shapes(0)->X.pos.z   >   TOL_COEFF * (obj_rad + other_rad)) {
-        if (other_body->index == getTableID()  ||  obj_body->index == getTableID()) {
+      if(other_body->shapes(0)->X.pos.z - obj_body->shapes(0)->X.pos.z   >   TOL_COEFF * (obj_rad + other_rad)) {
+        if(other_body->index == getTableID()  ||  obj_body->index == getTableID()) {
           list.setAppend(other_body->index);
-        }
-        else {
+        } else {
           // x-axis difference small enough
-          if (fabs(other_body->shapes(0)->X.pos.x - obj_body->shapes(0)->X.pos.x)   <   0.9 * (obj_rad + other_rad)) {
+          if(fabs(other_body->shapes(0)->X.pos.x - obj_body->shapes(0)->X.pos.x)   <   0.9 * (obj_rad + other_rad)) {
             // y-axis difference small enough
-            if (fabs(other_body->shapes(0)->X.pos.y - obj_body->shapes(0)->X.pos.y)   <   0.9 * (obj_rad + other_rad)) {
+            if(fabs(other_body->shapes(0)->X.pos.y - obj_body->shapes(0)->X.pos.y)   <   0.9 * (obj_rad + other_rad)) {
               list.setAppend(other_body->index);
             }
           }
@@ -787,29 +751,29 @@ bool RobotManipulationSimulator::isClear(uint id) {
 
 // if z-value of objects is beneath THRESHOLD
 bool RobotManipulationSimulator::onGround(uint id) {
-    double THRESHOLD = 0.4;
-    ors::Body* obj=C->bodies(id);
-    if (obj->X.pos.z < THRESHOLD)
-        return true;
-    else
-        return false;
+  double THRESHOLD = 0.4;
+  ors::Body* obj=C->bodies(id);
+  if(obj->X.pos.z < THRESHOLD)
+    return true;
+  else
+    return false;
 }
 
 
-void RobotManipulationSimulator::getObjectsClose(uintA& list, uint obj){
+void RobotManipulationSimulator::getObjectsClose(uintA& list, uint obj) {
   list.clear();
   double* pos = getPosition(obj);
   uint i;
   uintA objects;
   getObjects(objects);
   FOR1D(objects, i) {
-    if (objects(i) == obj) continue;
+    if(objects(i) == obj) continue;
     double* pos_other = getPosition(objects(i));
-    if (fabs(pos[2] - pos_other[2]) > 0.03) continue;
+    if(fabs(pos[2] - pos_other[2]) > 0.03) continue;
 //     PRINT(fabs(pos[0] - pos_other[0]));
 //     PRINT(fabs(pos[1] - pos_other[1]));
-    if (fabs(pos[0] - pos_other[0]) > 0.15) continue;
-    if (fabs(pos[1] - pos_other[1]) > 0.15) continue;
+    if(fabs(pos[0] - pos_other[0]) > 0.15) continue;
+    if(fabs(pos[1] - pos_other[1]) > 0.15) continue;
     list.append(objects(i));
   }
 }
@@ -824,12 +788,12 @@ bool RobotManipulationSimulator::freePosition(double x, double y, double radius)
   FOR1D(objects, i) {
     double* pos = getPosition(objects(i));
     double local_radius = radius;
-    if (isBox(objects(i)))
+    if(isBox(objects(i)))
       local_radius = 0.1;
-    if (fabs(pos[0] - x) < local_radius)
-        return false;
-    if (fabs(pos[1] - y) < local_radius)
-        return false;
+    if(fabs(pos[0] - x) < local_radius)
+      return false;
+    if(fabs(pos[1] - y) < local_radius)
+      return false;
   }
   return true;
 }
@@ -840,7 +804,7 @@ double RobotManipulationSimulator::highestPosition(double x, double y, double ra
   uintA objects;
   getObjects(objects);
   objects.removeValue(getTableID());
-  if (DEBUG>0) {
+  if(DEBUG>0) {
     cout << "highestPosition:"<<endl;
     cout<<"Asking for pos "<<x<<"/"<<y<<" within radius "<<radius<<endl;
   }
@@ -848,19 +812,19 @@ double RobotManipulationSimulator::highestPosition(double x, double y, double ra
   double max_z;
   double* table_pos = getPosition(getTableID());
   max_z = table_pos[2];
-  if (DEBUG>0) {cout<<"table_z: "<<max_z<<endl;}
+  if(DEBUG>0) {cout<<"table_z: "<<max_z<<endl;}
   FOR1D(objects, i) {
-    if (objects(i) == id_ignored)
+    if(objects(i) == id_ignored)
       continue;
     double* pos = getPosition(objects(i));
 //         cout<<manipObjs(i)<<" has pos "<<pos[0]<<"/"<<pos[1]<<endl;
-    if (fabs(pos[0] - x) < radius  &&  fabs(pos[1] - y) < radius) {
-      if (DEBUG>0) cout<<"Object "<<objects(i)<<" within radius at height "<<pos[2]<<endl;
-      if (pos[2] > max_z)
+    if(fabs(pos[0] - x) < radius  &&  fabs(pos[1] - y) < radius) {
+      if(DEBUG>0) cout<<"Object "<<objects(i)<<" within radius at height "<<pos[2]<<endl;
+      if(pos[2] > max_z)
         max_z = pos[2];
     }
   }
-  if (DEBUG>0) cout<<"max_z = "<<max_z<<endl;
+  if(DEBUG>0) cout<<"max_z = "<<max_z<<endl;
   return max_z;
 }
 
@@ -876,9 +840,9 @@ uint RobotManipulationSimulator::getContainedObject(uint box_id) {
   getBlocks(blocks);
   FOR1D(blocks, i) {
     double* obj_pos = getPosition(blocks(i));
-    if ( fabs(obj_pos[0] - box_pos[0]) < 0.05
-         &&  fabs(obj_pos[1] - box_pos[1]) < 0.05
-         &&  (box_pos[2] - obj_pos[2]) > -0.02) {
+    if(fabs(obj_pos[0] - box_pos[0]) < 0.05
+        &&  fabs(obj_pos[1] - box_pos[1]) < 0.05
+        && (box_pos[2] - obj_pos[2]) > -0.02) {
       return blocks(i);
     }
   }
@@ -887,11 +851,11 @@ uint RobotManipulationSimulator::getContainedObject(uint box_id) {
   getBalls(balls);
   FOR1D(balls, i) {
     double* obj_pos = getPosition(balls(i));
-    if ( fabs(obj_pos[0] - box_pos[0]) < 0.05
-         &&  fabs(obj_pos[1] - box_pos[1]) < 0.05
-         &&  (box_pos[2] - obj_pos[2]) > -0.02) {
+    if(fabs(obj_pos[0] - box_pos[0]) < 0.05
+        &&  fabs(obj_pos[1] - box_pos[1]) < 0.05
+        && (box_pos[2] - obj_pos[2]) > -0.02) {
       return balls(i);
-         }
+    }
   }
   return TL::UINT_NIL;
 }
@@ -899,7 +863,7 @@ uint RobotManipulationSimulator::getContainedObject(uint box_id) {
 
 bool RobotManipulationSimulator::isClosed(uint box_id) {
   CHECK(C->bodies(box_id)->shapes.N == 6, "isn't a box");
-  if (TL::isZero(C->bodies(box_id)->shapes(5)->rel.pos.x)  &&  TL::isZero(C->bodies(box_id)->shapes(5)->rel.pos.y)
+  if(TL::isZero(C->bodies(box_id)->shapes(5)->rel.pos.x)  &&  TL::isZero(C->bodies(box_id)->shapes(5)->rel.pos.y)
       &&  C->bodies(box_id)->shapes(5)->rel.pos.x < 0.1)
     return true;
   else
@@ -912,7 +876,7 @@ bool RobotManipulationSimulator::containedInBox(uint id) {
   getBoxes(boxes);
   uint i;
   FOR1D(boxes, i) {
-    if (getContainedObject(boxes(i)) == id)
+    if(getContainedObject(boxes(i)) == id)
       return true;
   }
   return false;
@@ -924,16 +888,16 @@ bool RobotManipulationSimulator::containedInClosedBox(uint id) {
   getBoxes(boxes);
   uint i;
   FOR1D(boxes, i) {
-    if (!isClosed(boxes(i)))
+    if(!isClosed(boxes(i)))
       continue;
-    if (getContainedObject(boxes(i)) == id)
+    if(getContainedObject(boxes(i)) == id)
       return true;
   }
   return false;
 }
 
 
-bool RobotManipulationSimulator::inContact(uint a,uint b){
+bool RobotManipulationSimulator::inContact(uint a,uint b) {
   if(C->getContact(a,b)) return true;
   return false;
 }
@@ -941,19 +905,19 @@ bool RobotManipulationSimulator::inContact(uint a,uint b){
 void RobotManipulationSimulator::writeAllContacts(uint id) {
 //   C->reportProxies();
 //   void sortProxies(bool deleteMultiple=false,bool deleteOld=false);
-  
+
   ors::Proxy *p;
   uint obj=C->getBodyByName(convertObjectID2name(id))->index;
   uint i;
   cout << convertObjectID2name(id) << " is in contact with ";
-  for(i=0;i<C->proxies.N;i++)
-    if (C->proxies(i)->d<0.02){
+  for(i=0; i<C->proxies.N; i++)
+    if(C->proxies(i)->d<0.02) {
       p=C->proxies(i);
       if(p->a==(int)obj && p->b!=(int)obj) {
-	cout << C->bodies(p->b)->name << " ";
+        cout << C->bodies(p->b)->name << " ";
       }
       if(p->b==(int)obj && p->a!=(int)obj) {
-	cout << C->bodies(p->a)->name << " ";
+        cout << C->bodies(p->a)->name << " ";
       }
     }
   cout << endl;
@@ -981,33 +945,33 @@ void RobotManipulationSimulator::printObjectInfo() {
 
 
 /************************************************
-* 
+*
 *     Actions - grab
-* 
+*
 ************************************************/
-  
 
-void RobotManipulationSimulator::grab_final(const char *manipulator,const char *obj_grabbed, const char* message){
+
+void RobotManipulationSimulator::grab_final(const char *manipulator,const char *obj_grabbed, const char* message) {
   ors::Body *obj=C->getBodyByName(obj_grabbed);
   bool isTable = obj->index == getTableID();
-  if (isTable) {
+  if(isTable) {
     cout<<"Cannot grab table"<<endl;
     return;
   }
   bool inClosedBox = containedInClosedBox(convertObjectName2ID(obj_grabbed));
-  if (inClosedBox) {
+  if(inClosedBox) {
     cout<<"Object "<<obj_grabbed<<" is inside of a closed box and cannot be grabbed."<<endl;
     return;
   }
   bool isHand = obj->index == getHandID();
-  if (isHand) HALT("grab_final("<<obj_grabbed<<") --> cannot grab my own hand!");
-
+  if(isHand) HALT("grab_final("<<obj_grabbed<<") --> cannot grab my own hand!");
+  
   uintA list;
   getObjectsOn(list, obj_grabbed);
   bool object_is_clear = list.N == 0;
   
   MT::String msg_string(message);
-  if (msg_string.N == 0) {
+  if(msg_string.N == 0) {
     msg_string << "grab "<<obj_grabbed;
   }
   
@@ -1025,85 +989,83 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
   // (1) drop object if one is in hand
   //   dropInhandObjectOnTable(message);
   uint id_grabbed = getInhand();
-  if (id_grabbed != TL::UINT_NIL) {
+  if(id_grabbed != TL::UINT_NIL) {
     // move a bit towards new object
-    for(t=0;t<10;t++){
+    for(t=0; t<10; t++) {
       x.y_target = ARRAY(obj->X.pos);
-      if (isTable) {x.y_target(2) = neutralHeight-0.1;}
+      if(isTable) {x.y_target(2) = neutralHeight-0.1;}
       MT::String send_msg;
       send_msg << msg_string /*<< "      \n\n(time " << t << ")"*/;
-      controlledStep(q,W,C,ode,swift,gl,revel,local_TVs,send_msg);
+      controlledStep(q,W,C,useOpengl, useSwift,local_TVs,send_msg);
       // TODO passt das? Ueberall state durch "active" ersetzt
 //       if(x.active==1 || C->getContact(x.i,obj->index)) break;
       if(x.active==1 || C->getContact(x.i,obj->index)) break;
     }
-    if(C->bodies(id_grabbed)->inLinks.N){
+    if(C->bodies(id_grabbed)->inLinks.N) {
       ors::Joint* e=C->bodies(id_grabbed)->inLinks(0);
       del_edge(e,C->bodies,C->joints,true);
     }
   }
-    
+  
   // (2) move towards new object
   C->getJointState(q);
-  for(t=0; t<Tabort; t++){
+  for(t=0; t<Tabort; t++) {
     x.y_target = ARRAY(obj->X.pos);
-    if (isTable) {x.y_target(2) = neutralHeight-0.1;}
+    if(isTable) {x.y_target(2) = neutralHeight-0.1;}
     MT::String send_msg;
     send_msg << msg_string /*<< "      \n\n(time " << t << ")"*/;
-    controlledStep(q,W,C,ode,swift,gl,revel,local_TVs,send_msg);
-    if(gl) gl->update();
+    controlledStep(q,W,C,useOpengl, useSwift,local_TVs,send_msg);
+    if(useOpengl) C->gl().update();
     double dist = length(x.y - x.y_target);
     if(dist <.05 || C->getContact(x.i, obj->index)) break;
   }
-  if(t==Tabort){ indicateFailure(); return; }
+  if(t==Tabort) { indicateFailure(); return; }
   
   // (3) grasp if not table or world
-  if(obj->index!=getTableID()){
+  if(obj->index!=getTableID()) {
     C->glueBodies(C->bodies(x.i), obj);
-  }else{
+  } else {
     //indicateFailure()?
   }
   
   // (4) move upwards (to avoid collisions)
   // to be sure: unset contact of that object if grabbed from table
   ors::Shape* s = NULL;
-  if (isClear(obj->index)) {
+  if(isClear(obj->index)) {
     s = obj->shapes(0);
     s->cont = false;
   }
-   
-  for(t=0; t<Tabort; t++){
+  
+  for(t=0; t<Tabort; t++) {
     x.y_target = ARRAY(obj->X.pos);
 //     if (x.y_target(2) < neutralHeight)       // ALTE LOESUNG -- TOBIAS
 //       x.y_target(2) += SMALL_HEIGHT_STEP;    // ALTE LOESUNG -- TOBIAS
     x.y_target(2) = 1.2;
     MT::String send_msg;
     send_msg << msg_string /*<< "      \n\n(time " << t << ")"*/;
-    controlledStep(q,W,C,ode,swift,gl,revel,local_TVs,send_msg);
-    if (gl) {gl->update();}
+    controlledStep(q,W,C,useOpengl, useSwift,local_TVs,send_msg);
+    if(useOpengl) C->gl().update();
     double dist = length(x.y - x.y_target);
     if(dist<.05) break;
     
     // might drop object
-    if (t==50  &&  !object_is_clear  &&  obj->index!=getTableID()) {
+    if(t==50  &&  !object_is_clear  &&  obj->index!=getTableID()) {
       cout<<"I might drop that object!"<<endl;
-      if (rnd.uni() < GRAB_UNCLEAR_OBJ_FAILURE_PROB) {
+      if(rnd.uni() < GRAB_UNCLEAR_OBJ_FAILURE_PROB) {
         dropObject(convertObjectName2ID(manipulator));
         cout<<"  >>  Uh, indeed I dropped it!"<<endl;
       }
     }
   }
-  if(t==Tabort){ indicateFailure(); return; }
+  if(t==Tabort) { indicateFailure(); return; }
   
   
   relaxPosition();
-    
+  
   // reset contact of grabbed object
-  if (s!=NULL) {
+  if(s!=NULL) {
     s->cont = true;
-#ifdef MT_extern_SWIFT
-    swift->initActivations(*C);
-#endif
+    C->swift().initActivations();
   }
   if(t==Tabort) { indicateFailure(); return; }
 }
@@ -1120,65 +1082,60 @@ void RobotManipulationSimulator::grab(const char* obj, const char* message) {
 
 
 void RobotManipulationSimulator::grabHere(const char* message) {
-  #ifdef MT_extern_SWIFT
   MT::String msg_string(message);
-  if (msg_string.N == 0) {
+  if(msg_string.N == 0) {
     msg_string << "grabHere: ";
   }
-
+  
   uint finger = convertObjectName2ID("fing1c");
   // (1) drop object if one is in hand
   dropObject(finger);
   
   double min_distance = std::numeric_limits<double>::max();
   uint closest_object = 0;
-  for (uint i = 0; i< C->proxies.N; i++) {
-    if (C->proxies(i)->a == finger || C->proxies(i)->b == finger) {
-       if (C->proxies(i)->d < min_distance) {
-         min_distance = C->proxies(i)->d; 
-         closest_object = (C->proxies(i)->a == finger ? C->proxies(i)->b : C->proxies(i)->a );
-       }
+  for(uint i = 0; i< C->proxies.N; i++) {
+    if(C->proxies(i)->a == (int)finger || C->proxies(i)->b == (int)finger) {
+      if(C->proxies(i)->d < min_distance) {
+        min_distance = C->proxies(i)->d;
+        closest_object = (C->proxies(i)->a == (int)finger ? C->proxies(i)->b : C->proxies(i)->a);
+      }
     }
   }
-  if (min_distance > 10e-4) {
+  if(min_distance > 10e-4) {
     msg_string << "nothing to grab";
-  }
-  else {
+  } else {
     C->glueBodies(C->getBodyByName("fing1c"), C->getBodyByName(convertObjectID2name(closest_object)));
-    msg_string << "Grabed obj " << convertObjectID2name(closest_object); 
+    msg_string << "Grabed obj " << convertObjectID2name(closest_object);
   }
-  
-  #endif
 }
 
 
 
 
 /************************************************
-* 
+*
 *     Actions - drop
-* 
+*
 ************************************************/
 
-void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, const char *obj_below, const char* message){
+void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, const char *obj_below, const char* message) {
   MT::String msg_string(message);
-  if (msg_string.N == 0) {
+  if(msg_string.N == 0) {
     msg_string << "puton " << obj_below;
   }
   
   arr I(q0.N,q0.N); I.setId();
   bool obj_is_inhand = strlen(obj_dropped) > 0;
   MT::String obj_dropped1;
-  if (obj_is_inhand) {
+  if(obj_is_inhand) {
     obj_dropped1 = obj_dropped;
-  }
-  else
+  } else
     obj_dropped1 = "fing1c";
-  
+    
   uint obj_dropped1_index=C->getBodyByName(obj_dropped1)->index;
   uint obj_below_id = convertObjectName2ID(obj_below);
   
-  if (obj_below_id == obj_dropped1_index) { // if puton itself --> puton table
+  if(obj_below_id == obj_dropped1_index) {  // if puton itself --> puton table
 //     MT_MSG("Trying to put on table");
     obj_below_id = getTableID();
   }
@@ -1189,12 +1146,12 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   ors::Quaternion rot;
   rot = C->bodies(obj_dropped1_index)->X.rot;
   ors::Vector upvec; double maxz=-2;
-  if((rot*Vector_x).z>maxz){ upvec=Vector_x; maxz=(rot*upvec).z; }
-  if((rot*Vector_y).z>maxz){ upvec=Vector_y; maxz=(rot*upvec).z; }
-  if((rot*Vector_z).z>maxz){ upvec=Vector_z; maxz=(rot*upvec).z; }
-  if((rot*(-Vector_x)).z>maxz){ upvec=-Vector_x; maxz=(rot*upvec).z; }
-  if((rot*(-Vector_y)).z>maxz){ upvec=-Vector_y; maxz=(rot*upvec).z; }
-  if((rot*(-Vector_z)).z>maxz){ upvec=-Vector_z; maxz=(rot*upvec).z; }
+  if((rot*Vector_x).z>maxz) { upvec=Vector_x; maxz=(rot*upvec).z; }
+  if((rot*Vector_y).z>maxz) { upvec=Vector_y; maxz=(rot*upvec).z; }
+  if((rot*Vector_z).z>maxz) { upvec=Vector_z; maxz=(rot*upvec).z; }
+  if((rot*(-Vector_x)).z>maxz) { upvec=-Vector_x; maxz=(rot*upvec).z; }
+  if((rot*(-Vector_y)).z>maxz) { upvec=-Vector_y; maxz=(rot*upvec).z; }
+  if((rot*(-Vector_z)).z>maxz) { upvec=-Vector_z; maxz=(rot*upvec).z; }
   ors::Transformation tf;
   tf.rot.setDiff(Vector_z, upvec);
   z.set("obj-z-align",*C,zalignTVT,obj_dropped1_index,tf,-1,Transformation_Id,arr(0));
@@ -1211,24 +1168,24 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   z.setGainsAsAttractor(20,.2);
   z.y_prec=1000.;
   z.y_target.resize(1);  z.y_target = 1.;
-    
+  
   c.setGainsAsAttractor(20,.1);
   c.y_prec=10000.;
-  if(!swift) c.active=false;
+  if(!useSwift) c.active=false;
   
   uint t;
   arr q,dq;
   C->getJointState(q);
-
+  
   TaskVariableList local_TVs;
   local_TVs.append(&o);
   local_TVs.append(&z);
   local_TVs.append(&r);
-  local_TVs.append(&c);  
+  local_TVs.append(&c);
   
   // Calculate (noisy) target position
   double x_target, y_target;
-  if (obj_is_inhand)
+  if(obj_is_inhand)
     calcTargetPositionForDrop(x_target, y_target, obj_dropped1_index, obj_below_id);
   else {
     x_target = C->bodies(obj_below_id)->X.pos.x;
@@ -1236,23 +1193,23 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   }
   
   // Hard limit on y-distance to robot
-  if (y_target < HARD_LIMIT_DIST_Y)
+  if(y_target < HARD_LIMIT_DIST_Y)
     y_target = HARD_LIMIT_DIST_Y;
-  
-  
+    
+    
   // Phase 1: up
   updateState(local_TVs, *C);
   o.y_target(2) += .3;
-  for(t=0;t<Tabort;t++){
-    if (o.y_target(2) < neutralHeight)
+  for(t=0; t<Tabort; t++) {
+    if(o.y_target(2) < neutralHeight)
       o.y_target(2) += 0.05;
     MT::String send_string;
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
-    controlledStep(q,W,C,ode,swift,gl,revel,local_TVs,send_string);
+    controlledStep(q,W,C,useOpengl, useSwift,local_TVs,send_string);
     double diff = length(o.y - o.y_target);
-    if (diff < 0.05) break;
+    if(diff < 0.05) break;
   }
-  if(t==Tabort){ indicateFailure(); return; }
+  if(t==Tabort) { indicateFailure(); return; }
   
   
   
@@ -1261,53 +1218,53 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   o.y_target(1) = y_target;
   // WHERE TO GO ABOVE
   o.y_target(2) = highestPosition(o.y_target(0), o.y_target(1), 0.06, obj_dropped1_index) + .2;
-  for(t=0;t<Tabort;t++){
+  for(t=0; t<Tabort; t++) {
     MT::String send_string;
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
-    controlledStep(q,W,C,ode,swift,gl,revel,local_TVs,send_string);
+    controlledStep(q,W,C,useOpengl, useSwift,local_TVs,send_string);
     double diff = length(o.y - o.y_target);
-    if (diff < 0.05) break;
+    if(diff < 0.05) break;
   }
-  if(t==Tabort){ indicateFailure(); return; }
-
+  if(t==Tabort) { indicateFailure(); return; }
+  
   //turn off collision avoidance
   c.active=false;
-
+  
   
   
   // Phase 3: down
   // IMPORTANT PARAM: set distance to target (relative height-distance in which "hand is opened" / object let loose)
   double Z_ADD_DIST = getSize(obj_dropped1_index)[0]/2 + .03;
-  if (getOrsType(obj_below_id) == OBJECT_TYPE__BOX) {
+  if(getOrsType(obj_below_id) == OBJECT_TYPE__BOX) {
     Z_ADD_DIST += 0.05;
   }
   double z_target = Z_ADD_DIST + highestPosition(o.y_target(0), o.y_target(1), 0.06, obj_dropped1_index);
-  if (getTableID() == obj_below_id)
+  if(getTableID() == obj_below_id)
     z_target += 0.05;
   // we slowly approach z_target
   o.y_target(2) = C->bodies(obj_dropped1_index)->X.pos.z - 0.05;
-  for(t=0;t<Tabort;t++){
+  for(t=0; t<Tabort; t++) {
 //     cout<<"C->bodies(obj_dropped1_index)->X.pos.z = "<<C->bodies(obj_dropped1_index)->X.pos.z<<endl;
 //     cout<<"z_target = "<<z_target<<endl;
-    if (C->bodies(obj_dropped1_index)->X.pos.z - o.y_target(2) < 0.05) {
+    if(C->bodies(obj_dropped1_index)->X.pos.z - o.y_target(2) < 0.05) {
       // slowly go down
-      if (o.y_target(2) - z_target > 0.1)
+      if(o.y_target(2) - z_target > 0.1)
         o.y_target(2) -= 0.02;
-      else if (o.y_target(2) - z_target > 0.02)
+      else if(o.y_target(2) - z_target > 0.02)
         o.y_target(2) -= 0.01;
     }
     // WHERE TO GO ABOVE
     MT::String send_string;
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
-    controlledStep(q,W,C,ode,swift,gl,revel,local_TVs,send_string);
+    controlledStep(q,W,C,useOpengl, useSwift,local_TVs,send_string);
     double diff = length(o.y - o.y_target);
-    if (diff < 0.001) break;
+    if(diff < 0.001) break;
   }
-  if(t==Tabort){ indicateFailure(); return; }
+  if(t==Tabort) { indicateFailure(); return; }
   
   
   // Phase 4: let loose
-  if(C->bodies(o.i)->inLinks.N && obj_is_inhand){
+  if(C->bodies(o.i)->inLinks.N && obj_is_inhand) {
     ors::Joint* e=C->bodies(o.i)->inLinks(0);
     del_edge(e,C->bodies,C->joints,true); //otherwise: no object in hand
   }
@@ -1325,7 +1282,7 @@ void RobotManipulationSimulator::dropObjectAbove(uint obj_below, const char* mes
 
 
 void RobotManipulationSimulator::dropObject(uint manipulator_id) {
-  if (C->bodies(manipulator_id)->outLinks.N == 0)
+  if(C->bodies(manipulator_id)->outLinks.N == 0)
     return;
   CHECK(C->bodies(manipulator_id)->outLinks.N == 1, "too many objects in hand");
   del_edge(C->bodies(manipulator_id)->outLinks(0), C->bodies, C->joints, true);
@@ -1334,7 +1291,7 @@ void RobotManipulationSimulator::dropObject(uint manipulator_id) {
 
 void RobotManipulationSimulator::dropInhandObjectOnTable(const char* message) {
   uint id_grabbed = getInhand();
-  if (TL::UINT_NIL == id_grabbed)
+  if(TL::UINT_NIL == id_grabbed)
     return;
   dropObjectAbove(id_grabbed, getTableID(), message);
   relaxPosition(message);
@@ -1354,57 +1311,53 @@ void RobotManipulationSimulator::calcTargetPositionForDrop(double& x, double& y,
   double obj_dropped_type = getOrsType(obj_dropped);
   
   // Below = Table
-  if (obj_below == getTableID()) {
+  if(obj_below == getTableID()) {
     double DROP_TARGET_NOISE__ON_TABLE = 0.09;
     std_dev_noise = DROP_TARGET_NOISE__ON_TABLE;
     uint tries = 0;
-    while (true) {
+    while(true) {
       tries++;
-      if (tries>20000) {
-          MT_MSG("Can't find empty position on table, throw it whereever!");
-          break;
+      if(tries>20000) {
+        MT_MSG("Can't find empty position on table, throw it whereever!");
+        break;
       }
       x_noise = std_dev_noise * rnd.gauss();
       y_noise = std_dev_noise * rnd.gauss() * 0.8 + 0.2; // tisch ist nicht so breit wie lang
 //       if (x_noise>0.5 || y_noise>0.5) // stay on table
-      if (x_noise>0.5) // stay on table
+      if(x_noise>0.5)  // stay on table
         continue;
-      if (C->bodies(obj_below)->X.pos.y + y_noise < -1.0  ||  C->bodies(obj_below)->X.pos.y + y_noise > -0.05)
+      if(C->bodies(obj_below)->X.pos.y + y_noise < -1.0  ||  C->bodies(obj_below)->X.pos.y + y_noise > -0.05)
         continue;
-      if (freePosition(C->bodies(obj_below)->X.pos.x+x_noise, C->bodies(obj_below)->X.pos.y+y_noise, 0.05))
+      if(freePosition(C->bodies(obj_below)->X.pos.x+x_noise, C->bodies(obj_below)->X.pos.y+y_noise, 0.05))
         break;
     }
   }
   // Below = Block
-  else if (obj_below_type == ors::boxST) {
+  else if(obj_below_type == ors::boxST) {
     // (1) Dropping block
-    if (obj_dropped_type == ors::boxST) {
+    if(obj_dropped_type == ors::boxST) {
       // (1a) on small block
-      if (TL::areEqual(obj_below_size, BLOCK_SMALL)) {
+      if(TL::areEqual(obj_below_size, BLOCK_SMALL)) {
         std_dev_noise = DROP_TARGET_NOISE__BLOCK_ON_SMALL_BLOCK;
       }
       // (1b) on big block
-      else if (TL::areEqual(obj_below_size, BLOCK_BIG)) {
+      else if(TL::areEqual(obj_below_size, BLOCK_BIG)) {
         std_dev_noise = DROP_TARGET_NOISE__BLOCK_ON_BIG_BLOCK;
-      }
-      else if (TL::areEqual(obj_below_size, BLOCK_VERY_BIG)) {
+      } else if(TL::areEqual(obj_below_size, BLOCK_VERY_BIG)) {
         std_dev_noise = DROP_TARGET_NOISE__BLOCK_ON_BIG_BLOCK;
-      }
-      else {NIY;}
+      } else {NIY;}
     }
     // (2) Dropping ball
-    else if (obj_dropped_type == ors::sphereST) {
+    else if(obj_dropped_type == ors::sphereST) {
       // (2a) on small block
-      if (TL::areEqual(obj_below_size, BLOCK_SMALL)) {
+      if(TL::areEqual(obj_below_size, BLOCK_SMALL)) {
         std_dev_noise = DROP_TARGET_NOISE__BALL_ON_SMALL_BLOCK;
       }
       // (2b) on big block
-      else if (TL::areEqual(obj_below_size, BLOCK_BIG)) {
+      else if(TL::areEqual(obj_below_size, BLOCK_BIG)) {
         std_dev_noise = DROP_TARGET_NOISE__BALL_ON_BIG_BLOCK;
-      }
-      else {NIY;}
-    }
-    else {NIY;}
+      } else {NIY;}
+    } else {NIY;}
     
     x_noise = std_dev_noise * rnd.gauss();
     y_noise = std_dev_noise * rnd.gauss();
@@ -1413,7 +1366,7 @@ void RobotManipulationSimulator::calcTargetPositionForDrop(double& x, double& y,
 //     PRINT(std_dev_noise);
   }
   // Below = Ball
-  else if (obj_below_type == ors::sphereST) {
+  else if(obj_below_type == ors::sphereST) {
     x_noise = DROP_TARGET_NOISE__ON_BALL * rnd.gauss();
     y_noise = DROP_TARGET_NOISE__ON_BALL * rnd.gauss();
   }
@@ -1431,14 +1384,14 @@ void RobotManipulationSimulator::calcTargetPositionForDrop(double& x, double& y,
 
 
 /************************************************
-* 
+*
 *     Actions - Posture control
-* 
+*
 ************************************************/
 
 void RobotManipulationSimulator::relaxPosition(const char* message) {
   MT::String msg_string(message);
-  if (msg_string.N == 0) {
+  if(msg_string.N == 0) {
     msg_string << "Relax position";
   }
   PRINT(msg_string);
@@ -1446,7 +1399,7 @@ void RobotManipulationSimulator::relaxPosition(const char* message) {
   uint inhand_id = getInhand();
   ors::Shape* s = NULL;
   // simplification: set off contacts for inhand-object
-  if (inhand_id != TL::UINT_NIL) {
+  if(inhand_id != TL::UINT_NIL) {
     s = C->getBodyByName(convertObjectID2name(inhand_id))->shapes(0);
     s->cont = false;
   }
@@ -1459,72 +1412,66 @@ void RobotManipulationSimulator::relaxPosition(const char* message) {
   DefaultTaskVariable x("full state",*C,qLinearTVT,0,0,0,0,I);
   x.setGainsAsAttractor(20,.1);
   x.y_prec=1000.;
-  x.y_target=q0; 
+  x.y_target=q0;
 //   x.active_tol=.2;
   // TODO tolerance now?
   TaskVariableList local_TVs;
   local_TVs.append(&x);
-
+  
   uint t;
-  for(t=0;t<Tabort;t++){
+  for(t=0; t<Tabort; t++) {
     MT::String send_string;
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
 //     controlledStep(q,W,send_string);
-    controlledStep(q,W,C,ode,swift,gl,revel,local_TVs,send_string);
+    controlledStep(q,W,C,useOpengl, useSwift,local_TVs,send_string);
     double diff = length(x.y - x.y_target);
-    if (diff < 0.5) break;
+    if(diff < 0.5) break;
 //     if(x.active==1) break;
   }
-  PRINT(t);
-  exit(0);
+//  PRINT(t);
+//  exit(0);
   
   // simplification: set on contacts for inhand-object
-  if (s!=NULL) {
+  if(s!=NULL) {
     s->cont = true;
-#ifdef MT_extern_SWIFT
-    swift->initActivations(*C);
-#endif
+    C->swift().initActivations();
   }
   
-  if(t==Tabort){ indicateFailure(); return; }
+  if(t==Tabort) { indicateFailure(); return; }
 }
 
 
 void RobotManipulationSimulator::moveToPosition(const arr& pos, const char* message) {
-#  ifdef MT_ODE
-	CHECK(pos.N == 3 && pos.nd == 1, "Not a valid position array");
+  CHECK(pos.N == 3 && pos.nd == 1, "Not a valid position array");
   MT::String msg_string(message);
-  if (msg_string.N == 0) {
+  if(msg_string.N == 0) {
     msg_string << "move to position "<< pos;
   }
   
   ors::Body* obj = C->bodies(convertObjectName2ID("fing1c"));
   // move manipulator towards box
-  DefaultTaskVariable x("endeffector",*C,posTVT,"fing1c",0,0,0,0);
+  DefaultTaskVariable x("endeffector",*C,posTVT,"fing1c",0,0,0,NoArr);
   x.setGainsAsAttractor(20,.2);
   x.y_prec=1000.;
   TaskVariableList TVs;
   TVs.append(&x);
-
-	double epsilon = 10e-3;
-
+  
+  double epsilon = 10e-3;
+  
   uint t;
   arr q,dq;
   C->getJointState(q);
-  for(t=0;t<Tabort;t++){
+  for(t=0; t<Tabort; t++) {
     x.y_target.setCarray(pos.p,3);
     MT::String send_string;
     send_string << msg_string;
-    controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_string);
-		if ((obj->X.pos - pos).length() < epsilon) break;
+    controlledStep(q,W,C,useOpengl, useSwift,TVs,send_string);
+    if((obj->X.pos - pos).length() < epsilon) break;
   }
-  if(t==Tabort){ indicateFailure(); return; }
+  if(t==Tabort) { indicateFailure(); return; }
   simulate(30, msg_string);
   
-#ifdef MT_extern_SWIFT
-  swift->initActivations(*C);
-#endif
-#endif
+  C->swift().initActivations();
 }
 
 
@@ -1532,114 +1479,84 @@ void RobotManipulationSimulator::moveToPosition(const arr& pos, const char* mess
 
 
 /************************************************
-* 
+*
 *     Actions - Boxes
-* 
+*
 ************************************************/
 
-
-#  ifdef MT_ODE
-
-#  include <ode/ode.h>
-#  include <ode/internal/objects.h>
-#  include <ode/internal/joints/joints.h>
-#  include <ode/internal/collision_kernel.h>
-#  include <ode/internal/collision_transform.h>
-#  ifdef MT_MSVC
-#    undef HAVE_UNISTD_H
-#    undef HAVE_SYS_TIME_H
-#  endif
-
-#endif
-
 void RobotManipulationSimulator::openBox(uint id, const char* message) {
-#  ifdef MT_ODE
   MT::String msg_string(message);
-  if (msg_string.N == 0) {
+  if(msg_string.N == 0) {
     msg_string << "openBox "<<id;
   }
   
   // move manipulator towards box
   ors::Body* obj = C->bodies(id);
-  DefaultTaskVariable x("endeffector",*C,posTVT,"fing1c",0,0,0,0);
+  DefaultTaskVariable x("endeffector",*C,posTVT,"fing1c",0,0,0,NoArr);
   x.setGainsAsAttractor(20,.2);
   x.y_prec=1000.;
   TaskVariableList TVs;
   TVs.append(&x);
-
+  
   uint t;
   arr q,dq;
   C->getJointState(q);
-  for(t=0;t<Tabort;t++){
+  for(t=0; t<Tabort; t++) {
     x.y_target.setCarray(obj->X.pos.p(), 3);
     x.y_target.p[2] += 0.15;
     MT::String send_string;
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
 //     controlledStep(q,W,send_string);
-    controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_string);
+    controlledStep(q,W,C,useOpengl, useSwift,TVs,send_string);
     double diff = length(x.y - x.y_target);
-    if (diff < 0.01) break;
+    if(diff < 0.01) break;
   }
-  if(t==Tabort){ indicateFailure(); return; }
+  if(t==Tabort) { indicateFailure(); return; }
   simulate(30, msg_string);
   
   // open it
   ors::Shape* s = C->bodies(id)->shapes(5);
   s->rel.setText("<t(0 0 .075) t(0 -.05 0) d(80 1 0 0) t(0 .05 .0)>");
-#ifdef MT_extern_SWIFT
-  swift->initActivations(*C);
-#endif
-  
-  dGeomID geom;
-  geom = ode->geoms(s->index);
-  dGeomSetQuaternion(geom,*((dQuaternion*)s->rel.rot.p()));
-  dGeomSetPosition(geom,s->rel.pos.x,s->rel.pos.y,s->rel.pos.z);
-#endif
+  C->swift().initActivations();
+
+  C->ode().pushPoseForShape(s);
 }
 
 void RobotManipulationSimulator::closeBox(uint id, const char* message) {
-#  ifdef MT_ODE
   MT::String msg_string(message);
-  if (msg_string.N == 0) {
+  if(msg_string.N == 0) {
     msg_string << "closeBox "<<id;
   }
   
   // move manipulator towards box
   ors::Body* obj = C->bodies(id);
-  DefaultTaskVariable x("endeffector",*C,posTVT,"fing1c",0,0,0,0);
+  DefaultTaskVariable x("endeffector",*C,posTVT,"fing1c",0,0,0,NoArr);
   x.setGainsAsAttractor(20,.2);
   x.y_prec=1000.;
   TaskVariableList TVs;
   TVs.append(&x);
-
+  
   uint t;
   arr q,dq;
   C->getJointState(q);
-  for(t=0;t<Tabort;t++){
+  for(t=0; t<Tabort; t++) {
     x.y_target.setCarray(obj->X.pos.p(),3);
     x.y_target.p[2] += 0.15;
     MT::String send_string;
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
 //     controlledStep(q,W,send_string);
-    controlledStep(q,W,C,ode,swift,gl,revel,TVs,send_string);
+    controlledStep(q,W,C,useOpengl, useSwift,TVs,send_string);
     double diff = length(x.y - x.y_target);
-    if (diff < 0.01) break;
+    if(diff < 0.01) break;
   }
-  if(t==Tabort){ indicateFailure(); return; }
+  if(t==Tabort) { indicateFailure(); return; }
   simulate(30, msg_string);
   
   // close it
   ors::Shape* s = C->bodies(id)->shapes(5);
   s->rel.setText("<t(0 0 .075)>");
-#ifdef MT_extern_SWIFT
-  swift->initActivations(*C);
-#endif
-
-  dGeomID geom;
-  geom = ode->geoms(s->index);
-  dGeomSetQuaternion(geom,*((dQuaternion*)s->rel.rot.p()));
-  dGeomSetPosition(geom,s->rel.pos.x,s->rel.pos.y,s->rel.pos.z);
-#endif
+  C->swift().initActivations();
+  C->ode().pushPoseForShape(s);
 }
 
 
@@ -1648,17 +1565,17 @@ void RobotManipulationSimulator::closeBox(uint id, const char* message) {
 
 
 
- /************************************************
-  * 
-  *     OpenGL Displaying
-  * 
-  ************************************************/
+/************************************************
+ *
+ *     OpenGL Displaying
+ *
+ ************************************************/
 
 void RobotManipulationSimulator::displayText(const char* text, uint t) {
-  if(gl){
-    for(;t--;) {
-      gl->text.clear() <<text <<endl;
-      gl->update();
+  if(useOpengl) {
+    for(; t--;) {
+      C->gl().text.clear() <<text <<endl;
+      C->gl().update();
     }
   }
 }
@@ -1668,33 +1585,33 @@ void RobotManipulationSimulator::displayText(const char* text, uint t) {
 
 
 /************************************************
-  * 
+  *
   *     Creating ORS-objects
-  * 
+  *
   ************************************************/
 
 
 namespace relational {
-    
+
 void generateOrsBlocksSample(ors::KinematicWorld& ors, const uint numOfBlocks) {
   MT::Array<arr> pos;
   generateBlocksSample(pos, numOfBlocks);
-	generateOrsFromSample(ors, pos);
+  generateOrsFromSample(ors, pos);
 }
 
 
 void generateOrsFromSample(ors::KinematicWorld& ors, const MT::Array<arr>& sample) {
   //for (int i = ors.bodies.N - 1; i >= 0; --i) {
-    //if (ors.bodies(i)->name.p[0] == 'o') {
-      //ors.bodies.remove(i);  
-    //}
+  //if (ors.bodies(i)->name.p[0] == 'o') {
+  //ors.bodies.remove(i);
   //}
-  for (uint i = 0; i < sample.N; i+=2) {
+  //}
+  for(uint i = 0; i < sample.N; i+=2) {
     ors::Body* body = new ors::Body;
-    createCylinder(*body, sample(0,i), ARR(1., 0., 0.), sample(0,i+1)); 
-		MT::String name;
-		name << "o7" << i;
-		cout << name << endl;
+    createCylinder(*body, sample(0,i), ARR(1., 0., 0.), sample(0,i+1));
+    MT::String name;
+    name << "o7" << i;
+    cout << name << endl;
     body->name = name;
     ors.bodies.append(body);
   }
@@ -1703,33 +1620,33 @@ void generateOrsFromSample(ors::KinematicWorld& ors, const MT::Array<arr>& sampl
 
 void generateBlocksSample(MT::Array<arr>& sample, const uint numOfBlocks) {
   sample.clear();
-  for (uint i = 0; i < numOfBlocks; ++i) {
+  for(uint i = 0; i < numOfBlocks; ++i) {
     arr center3d = ARR(0.2, -.8) + randn(2,1) * 0.1;
-
+    
     int t = rand() % 100;
     double blocksize = 0.108;// + (rand() % 100) / 100000.;
     double towersize = 0.69 + blocksize;
     center3d.append(0.69 + 0.5*blocksize);
     center3d.resize(3);
-
+    
     sample.append(center3d);
     //sample.append(ARR(0.1, 0.1, blocksize, 0.0375));
     sample.append(ARR(blocksize));
-    while (t < 50 && i < numOfBlocks-1) {
+    while(t < 50 && i < numOfBlocks-1) {
       i++;
       center3d = center3d + randn(3,1) * 0.02;
       double blocksize = 0.08;// + (rand() % 100) / 1000.;
       center3d(2) = 0.5*blocksize + towersize;
       towersize += blocksize;
-
+      
       sample.append(center3d);
       //sample.append(ARR(0.1, 0.1, blocksize, 0.0375));
       sample.append(ARR(blocksize));
-
+      
       t = rand() % 100;
     }
   }
-	sample.reshape(1,2*numOfBlocks);
+  sample.reshape(1,2*numOfBlocks);
   //sample.reshape(1,numOfBlocks);
 }
 
@@ -1744,13 +1661,13 @@ void createCylinder(ors::Body& cyl, const ors::Vector& pos, const arr& color, co
   ors::Transformation t;
   t.pos = pos;
   ors::Shape* s = new ors::Shape();
-  for (uint i = 0; i < 4; ++i) { s->size[i] = size(i);}
+  for(uint i = 0; i < 4; ++i) { s->size[i] = size(i);}
   s->type = ors::cylinderST;
-  for (uint i = 0; i < 3; ++i) s->color[i] = color(i);
+  for(uint i = 0; i < 3; ++i) s->color[i] = color(i);
   s->body = &cyl;
   
   cyl.shapes.append(s);
-  cyl.X = t; 
+  cyl.X = t;
 }
 
 }  // namespace relational

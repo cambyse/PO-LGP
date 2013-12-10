@@ -117,6 +117,7 @@ struct OdeInterface {
   //void slGetProxyGradient(arr &dx, const arr &x);
   void reportContacts2();
   bool inFloorContacts(ors::Vector& x);
+  void pushPoseForShape(ors::Shape *s);
 };
 
 /** @} */

@@ -202,12 +202,9 @@ public:
   * 
   ************************************************/
   
-  OpenGL *gl;
   ors::KinematicWorld *C;
-  OdeInterface *ode;
-  SwiftInterface *swift;
-  RevelInterface *revel;
-    
+//  RevelInterface *revel;
+  bool useOpengl, useSwift;
   uint numObjects;
   double neutralHeight;
   uint Tabort; //abortion time when attractors fail

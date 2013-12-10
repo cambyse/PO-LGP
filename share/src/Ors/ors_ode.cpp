@@ -595,6 +595,12 @@ void OdeInterface::exportStateToOde() {
   }
 }
 
+void OdeInterface::pushPoseForShape(ors::Shape *s){
+  dGeomID geom = geoms(s->index);
+  dGeomSetQuaternion(geom,*((dQuaternion*)s->rel.rot.p()));
+  dGeomSetPosition(geom,s->rel.pos.x,s->rel.pos.y,s->rel.pos.z);
+}
+
 void OdeInterface::exportForcesToOde() {
   ors::Body *n;
   uint j;
@@ -1090,6 +1096,7 @@ void OdeInterface::slGetProxies(OdeInterface &ode);
 void OdeInterface::reportContacts(OdeInterface& ode);
 /// \ingroup sl
 bool inFloorContacts(ors::Vector& x);
+
 #endif
 
 #else

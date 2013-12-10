@@ -29,7 +29,6 @@ struct PDtask{
 
   arr y_ref, v_ref;      ///< immediate (next step) desired target reference
   double Pgain, Dgain;   ///< parameters of the PD controller or attractor dynamics
-  double err, derr;
 
   PDtask(TaskMap* m):map(*m), active(true), prec(0.), Pgain(0.), Dgain(0.) {}
 
