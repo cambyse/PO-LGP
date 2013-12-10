@@ -1,0 +1,4 @@
+source /opt/ros/groovy/setup.bash
+source ~nratliff/APOLLO/apollo/setup.bash 
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:~/git/mlr/share/projects/13-dualExecution/dual_execution
+roslaunch apollo_user sl_sim.launch &
