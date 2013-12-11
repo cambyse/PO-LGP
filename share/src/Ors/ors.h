@@ -78,13 +78,16 @@ struct Joint;
 struct Shape;
 struct Body;
 struct Graph;
+struct Proxy;
 
 /** @} */ // END of group ors_basic_data_structures
 } // END of namespace
 
 //===========================================================================
+typedef MT::Array<ors::Joint*> JointL;
 typedef MT::Array<ors::Shape*> ShapeL;
-typedef MT::Array<ors::Body*> BodyL;
+typedef MT::Array<ors::Body*>  BodyL;
+typedef MT::Array<ors::Proxy*> ProxyL;
 
 //===========================================================================
 namespace ors {
@@ -95,7 +98,7 @@ namespace ors {
 /// a rigid body (inertia properties, lists of attached joints & shapes)
 struct Body {
   uint index;          ///< unique identifier TODO:do we really need index, ifrom, ito, ibody??
-  MT::Array<Joint*> inLinks, outLinks;       ///< lists of in and out joints
+  JointL inLinks, outLinks;       ///< lists of in and out joints
   
   MT::String name;     ///< name
   Transformation X;    ///< body's absolute pose
@@ -108,7 +111,7 @@ struct Body {
   Vector com;          ///< its center of gravity
   Vector force, torque; ///< current forces applying on the body
   
-  MT::Array<Shape*> shapes;
+  ShapeL shapes;
   
   Body();
   explicit Body(const Body& b);
@@ -208,10 +211,10 @@ struct Proxy {
 /// data structure to store a whole physical situation (lists of bodies, joints, shapes, proxies)
 struct Graph {
   /// @name data fields
-  MT::Array<Body*>  bodies;
-  MT::Array<Joint*> joints;
-  MT::Array<Shape*> shapes;
-  MT::Array<Proxy*> proxies; ///< list of current proximities between bodies
+  BodyL  bodies;
+  JointL joints;
+  ShapeL shapes;
+  ProxyL proxies; ///< list of current proximities between bodies
 
   uint q_dim; ///< numer of degrees of freedom IN the joints (not counting root body)
   bool isLinkTree;
@@ -362,7 +365,7 @@ void glDrawGraph(void *classP);
 
 #ifndef MT_ORS_ONLY_BASICS
 
-uintA stringListToShapeIndices(const MT::Array<const char*>& names, const MT::Array<ors::Shape*>& shapes);
+uintA stringListToShapeIndices(const MT::Array<const char*>& names, const ShapeL& shapes);
 
 //===========================================================================
 //
@@ -425,8 +428,8 @@ struct SwiftInterface {
   void reinitShape(const ors::Graph& ors, const ors::Shape *s);
   void close();
   void deactivate(ors::Shape *s1, ors::Shape *s2);
-  void deactivate(const MT::Array<ors::Shape*>& shapes);
-  void deactivate(const MT::Array<ors::Body*>& bodies);
+  void deactivate(const ShapeL& shapes);
+  void deactivate(const BodyL& bodies);
   void initActivations(const ors::Graph& ors, uint parentLevelsToDeactivate=3);
   void computeProxies(ors::Graph& ors, bool dumpReport=false);
 };
