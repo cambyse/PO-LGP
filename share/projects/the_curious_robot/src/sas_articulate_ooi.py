@@ -11,6 +11,8 @@ import rospy
 import rosors.srv
 import the_curious_robot.msg as msgs
 
+import corepy
+
 
 class ArticulateOOIActionServer:
 
@@ -42,12 +44,14 @@ class ArticulateOOIActionServer:
         self.server.start()
         rp.Provide("ArticulateOOI")
 
+        self.endeffector = corepy.getStringParameter("endeffector")
+
     def execute(self, msg):
         if not self.ooi_id:
             self.server.set_aborted()
             return
 
-        shapes = self.response_shapes(name="robot")
+        shapes = self.response_shapes(name=self.endeffector)
         start = shapes.shapes[0].X
 
         shapes = self.response_shapes(index=self.ooi_id)
@@ -70,7 +74,7 @@ class ArticulateOOIActionServer:
         msg = msgs.control()
         msg.pose = target
         msg.ignore_collisions = True
-        msg.endeffector = "robot"
+        msg.endeffector = self.endeffector
 
         self.react_to_controller = True  # TODO: rather block?
         self.control_pub.publish(msg)

@@ -11,6 +11,8 @@ import rosors.srv
 
 import require_provide as rp
 
+import corepy
+
 
 class GotoOOIActionServer:
 
@@ -41,6 +43,8 @@ class GotoOOIActionServer:
         self.server.start()
         rp.Provide("GotoOOI")
 
+        self.endeffector = corepy.getStringParameter("endeffector")
+
     def execute(self, msg):
         if not self.ooi_id:
             self.server.set_aborted()
@@ -50,8 +54,8 @@ class GotoOOIActionServer:
         msg = msgs.control()
         msg.pose = shapes.shapes[0].X
         msg.ignore_collisions = False
-        msg.collision_shapes = [shape.index for shape in shapes.shapes]
-        msg.endeffector = "robot"
+        msg.collision_shapes = corepy.getIntAParameter("agent_shapes")
+        msg.endeffector = self.endeffector
 
         self.react_to_controller = True  # TODO: rather block?
         self.control_pub.publish(msg)
