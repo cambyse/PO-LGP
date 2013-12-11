@@ -26,38 +26,7 @@
 #include <Ors/ors.h>
 #include <Ors/ors_oldTaskVariables.h>
 
-
-
-/************************************************
- * 
- *     ODE parameters
- * 
- ************************************************/
-
-// Object bouncing when falling on table or other object.
-#define ODE_COLL_BOUNCE 0.001
-// Stiffness (time-scale of contact reaction) in [0.1, 0.5]; the larger, the more error correction
-#define ODE_COLL_ERP 0.3
-// Softness in [10e-10, 10e5]; the larger, the wider, the softer, the less error correction
-#define ODE_COLL_CFM 10e0
-// Friction (alternative: dInfinity)
-#define ODE_FRICTION 0.02
-
-
-
-
-namespace ors{
-  struct Graph;
-}
-struct OdeInterface;
-struct SwiftInterface;
-struct OpenGL;
-struct RevelInterface;
-
-
-
-class RobotManipulationSimulator {
-public:
+struct RobotManipulationSimulator : ors::KinematicWorld {
   
  /************************************************
   * 
@@ -70,13 +39,9 @@ public:
   
   // initialization
   void loadConfiguration(const char* ors_filename);
-  void startOde(double ode_coll_bounce = ODE_COLL_BOUNCE, double ode_coll_erp = ODE_COLL_ERP, double ode_coll_cfm = ODE_COLL_CFM, double ode_friction = ODE_FRICTION);
+  void startOde();
   void startSwift();
-  void startRevel(const char* filename = "z.avi");
-  
-  // shutdown
-  void shutdownAll();
-  
+  void startVideo(const char* filename = "z.avi");
   
   
  /************************************************
@@ -179,7 +144,7 @@ public:
   void calcTargetPositionForDrop(double& x, double& y, uint obj_dropped, uint obj_below);
   // posture control
   void relaxPosition(const char* message = "");   ///< move into a relaxed position
-	void moveToPosition(const arr& pos, const char* message = "");
+  void moveToPosition(const arr& pos, const char* message = "");
   // boxes
   void openBox(uint id, const char* message = "");
   void closeBox(uint id, const char* message = "");
@@ -202,15 +167,13 @@ public:
   * 
   ************************************************/
   
-  ors::KinematicWorld *C;
-//  RevelInterface *revel;
-  bool useOpengl, useSwift;
+
+//  VideoEncoder_libav_simple *video;
+
   uint numObjects;
   double neutralHeight;
   uint Tabort; //abortion time when attractors fail
   
-  
- 
 };
 
 
@@ -230,8 +193,6 @@ void generateBlocksSample(MT::Array<arr>& sample, uint numOfBlocks);
 void createCylinder(ors::Body& cyl, const ors::Vector& pos, const arr& color, const arr& size);
 void createCylinder(ors::Body& cyl, const ors::Vector& pos, const arr& color);
 }
-
-
 
 
 #endif  // robotManipulationSimulator_h

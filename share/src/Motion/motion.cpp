@@ -27,8 +27,7 @@ MotionProblem::MotionProblem(ors::KinematicWorld& _world, bool _useSwift)
   useSwift=_useSwift;
   if(useSwift) world.swift().setCutoff(2.*MT::getParameter<double>("swiftCutoff", 0.11));
   world.getJointState(x0, v0);
-  x_current = x0;
-  v_current = v0;
+  if(!v0.N){ v0.resizeAs(x0).setZero(); world.setJointState(x0, v0); }
 }
 
 void MotionProblem::loadTransitionParameters() {
@@ -160,9 +159,7 @@ void MotionProblem::setInterpolatingVelCosts(
 }
 
 void MotionProblem::setState(const arr& q, const arr& v) {
-  if(&v) v_current = v;
-  x_current = q;
-  world.setJointState(q);
+  world.setJointState(q, v);
   world.calcBodyFramesFromJoints();
   if(useSwift) world.computeProxies();
   if(transitionType == realDynamic) {
@@ -222,7 +219,7 @@ bool MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
         if(&J_v) J_v.append(0.*J);
       }
       if(transitionType!=kinematic && c->v_target.N) { //velocity costs
-        phi.append(sqrt(c->v_prec(t))*(J*v_current - c->v_target[t]));
+        phi.append(sqrt(c->v_prec(t))*(J*world.qdot - c->v_target[t]));
         if(phi(phi.N-1) > c->v_threshold) feasible = false;
         if(&J_x) J_x.append(0.*J);
         if(&J_v) J_v.append(sqrt(c->v_prec(t))*J);
@@ -253,8 +250,8 @@ bool MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
       if(&J_v) J_v.append(0.*J);
     }
   }
-  if(&J_x) J_x.reshape(phi.N, x_current.N);
-  if(&J_v) J_v.reshape(phi.N, x_current.N);
+  if(&J_x) J_x.reshape(phi.N, world.q.N);
+  if(&J_v) J_v.reshape(phi.N, world.q.N);
 
   return feasible;
 }

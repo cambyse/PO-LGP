@@ -10,7 +10,6 @@ RobotManipulationSimulator sim;
 // -------------------------------------
 // Init routine
 void initSimulator(const char* configurationFile, bool takeMovie) {
-  sim.shutdownAll();
   sim.loadConfiguration(configurationFile);
 #ifdef MT_FREEGLUT
   orsDrawProxies = false;
@@ -18,7 +17,7 @@ void initSimulator(const char* configurationFile, bool takeMovie) {
 #endif
   sim.startOde();
   if (takeMovie)
-    sim.startRevel();
+    sim.startVideo();
   sim.startSwift();
   sim.simulate(50);
 }
@@ -109,8 +108,6 @@ void test_simple() {
   
   cout<<"Please press button to continue."<<endl;
   sim.watch();
-  
-  sim.shutdownAll();
 }
 
 
@@ -187,8 +184,6 @@ void test_box() {
   
   cout<<"Please press button to finish."<<endl;
   sim.watch();
-  
-  sim.shutdownAll();
 }
 
 
