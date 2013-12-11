@@ -12,3 +12,4 @@ set(SOURCES ./rrt_planner.cpp
 ./taskMap_default.h
 ./rrt_planner.h
 ./motion.cpp)
+set(SWIG_SOURCES motion.i)

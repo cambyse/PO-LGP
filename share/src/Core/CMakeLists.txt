@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.6)
-project(MLR_CORE)
+get_filename_component(NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+project(MLR_${NAME})
 
 include(CheckIncludeFiles)
 if(LAPACK_FOUND)
@@ -10,8 +11,8 @@ set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
 
 include(.sources.cmake)
 
-add_library(Core SHARED ${SOURCES})
-target_link_libraries(Core
+add_library(${NAME} SHARED ${SOURCES})
+target_link_libraries(${NAME}
         LINK_PUBLIC
         ${CMAKE_THREAD_LIBS_INIT}
 )
@@ -19,7 +20,7 @@ target_link_libraries(Core
 if(LAPACK_FOUND)
 include_directories(${LAPACK_INCLUDE_DIR})
 add_definitions(${LAPACK_DEFINITIONS})
-target_link_libraries(Core 
+target_link_libraries(${NAME} 
         LINK_PRIVATE 
         ${LAPACK_LINKER_FLAGS} ${LAPACK_LIBRARIES} 
 )
@@ -28,3 +29,13 @@ endif(LAPACK_FOUND)
 if(TESTING_ENABLED)
 target_link_libraries(Core LINK_PUBLIC gtest)
 endif(TESTING_ENABLED)
+
+#if(SWIG_FOUND)
+#include_directories(${CMAKE_SOURCE_DIR}/include/numpy ${PYTHON_INCLUDE_PATH})
+#set_source_files_properties(${SWIG_SOURCES} PROPERTIES CPLUSPLUS ON)
+##set_source_files_properties(${SWIG_SOURCES} PROPERTIES SWIG_FLAGS "-module _${NAME}")
+#string(REGEX REPLACE ".i" ".cxx " SWIG_GENERATED ${SWIG_SOURCES})
+#set(CMAKE_SWIG_FLAGS -module _${NAME})
+#swig_add_module(${NAME}py python ${SWIG_SOURCES})
+#swig_link_libraries(${NAME}py ${NAME} ${PYTHON_LIBRARIES})
+#endif(SWIG_FOUND)

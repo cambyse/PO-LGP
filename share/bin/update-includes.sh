@@ -16,8 +16,20 @@ do
   then
     dir=$(dirname "$filename")
     cd "$dir"
-    SOURCES=$(find . -maxdepth 1 -type f -name '*.cpp' -a ! -name 'main.*.cpp' -o -name '*.h')
-    echo "set(SOURCES ${SOURCES})" > $tmpname
+    # clear out tmp file
+    echo -n > $tmpname
+    # look for C++ source
+    CPP_SOURCES=$(find . -maxdepth 1 -type f -name '*.cpp' -a ! -name 'main.*.cpp' -o -name '*.h' -o -name '*.c')
+    if [ ! -z "$CPP_SOURCES" ]
+    then
+      echo "set(SOURCES ${CPP_SOURCES})" >> $tmpname
+    fi
+    # look for Python wrapper source
+    SWIG_SOURCES=$(ls *.i 2>/dev/null)
+    if [ ! -z "$SWIG_SOURCES" ]
+    then
+      echo "set(SWIG_SOURCES ${SWIG_SOURCES})" >> $tmpname
+    fi
     # only update include if content changed, to prevent unnecessary cmake calls
     if cmp $incname $tmpname >/dev/null 2>&1
     then

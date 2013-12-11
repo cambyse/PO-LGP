@@ -1,7 +1,7 @@
-add_subdirectory(graphView)
-add_subdirectory(mesh)
-add_subdirectory(meshTools)
-add_subdirectory(opengl)
-add_subdirectory(opengl_threaded)
-add_subdirectory(plot)
-add_subdirectory(qhull)
+# select what to compile
+include(.slicedef.cmake)
+
+foreach(DIR ${CURRENT_SLICE})
+add_subdirectory(${DIR})
+endforeach(DIR ${CURRENT_SLICE})
+

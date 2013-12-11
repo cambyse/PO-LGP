@@ -5,3 +5,4 @@ set(SOURCES ./benchmarks.cpp
 ./optimization.cpp
 ./convert.cpp
 ./benchmarks.h)
+set(SWIG_SOURCES optim.i)

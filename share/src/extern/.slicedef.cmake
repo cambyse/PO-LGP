@@ -1,0 +1,10 @@
+set(CURRENT_SLICE 
+ dynamixel
+GJK
+Lewiner
+libcolorseg
+ply
+SWIFT
+SWIFT_decomposer
+tony_mdp
+ )

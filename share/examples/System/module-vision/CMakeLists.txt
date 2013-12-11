@@ -1,9 +1,9 @@
 get_filename_component(NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
 include(.sources.cmake)
-add_executable(${NAME} ${SOURCES})
+add_executable(x_${NAME} ${SOURCES})
 
-target_link_libraries(${NAME} LINK_PRIVATE Core Gui System Perception)
+target_link_libraries(x_${NAME} LINK_PRIVATE Core Gui System Perception)
 
-add_test(${NAME}_test ${NAME} --gtest_output=xml:${NAME}-unit.xml)
+add_test(x_${NAME}_test ${NAME} --gtest_output=xml:${NAME}-unit.xml)
 

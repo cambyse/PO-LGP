@@ -1,9 +1,7 @@
-set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
+# select what to compile
+include(.slicedef.cmake)
 
-add_subdirectory(relational_armani_basic)
-add_subdirectory(relational_armani_symbolic)
-add_subdirectory(relational_basic)
-add_subdirectory(relational_learn)
-add_subdirectory(relational_nonBinarySymbols)
-add_subdirectory(relational_plan)
+foreach(DIR ${CURRENT_SLICE})
+add_subdirectory(${DIR})
+endforeach(DIR ${CURRENT_SLICE})
 

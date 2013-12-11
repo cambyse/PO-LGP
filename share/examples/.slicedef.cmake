@@ -1,0 +1,14 @@
+set(CURRENT_SLICE 
+ Algo
+Core
+Gui
+Hardware
+Infer
+Motion
+Optim
+Ors
+Perception
+relational
+RoboticsCourse
+System
+ )

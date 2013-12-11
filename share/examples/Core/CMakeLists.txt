@@ -1,6 +1,7 @@
-add_subdirectory(array)
-add_subdirectory(geo)
-add_subdirectory(keyValueGraph)
-add_subdirectory(registry)
-add_subdirectory(thread)
-add_subdirectory(util)
+# select what to compile
+include(.slicedef.cmake)
+
+foreach(DIR ${CURRENT_SLICE})
+add_subdirectory(${DIR})
+endforeach(DIR ${CURRENT_SLICE})
+

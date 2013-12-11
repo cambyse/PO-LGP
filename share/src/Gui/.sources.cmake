@@ -13,3 +13,4 @@ set(SOURCES ./opengl.cpp
 ./color.h
 ./opengl_qt.h
 ./mesh.cpp)
+set(SWIG_SOURCES gui.i)
