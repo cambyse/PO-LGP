@@ -129,19 +129,21 @@ struct Access_typed:Access{
     Access_typed<T> *a;
     ReadToken(Access_typed<T> *_a):a(_a){ a->readAccess(); }
     ~ReadToken(){ a->deAccess(); }
-    const T& operator()(){ return (*a)(); }
+    operator const T&(){ return (*a)(); }
+//    const T& operator()(){ return (*a)(); }
   };
   struct WriteToken{
     Access_typed<T> *a;
     WriteToken(Access_typed<T> *_a):a(_a){ a->writeAccess(); }
     ~WriteToken(){ a->deAccess(); }
-    T& operator()(){ return (*a)(); }
+    WriteToken& operator=(const T& x){ (*a)() = x; return *this; }
+//    T& operator()(){ return (*a)(); }
   };
 
   Access_typed(const char* name, Module *m=NULL, VariableAccess *d=NULL):Access(name){ type=new Type_typed<T, void>();  module=currentlyCreating; var=d; if(module) module->accesses.append(this); }
   T& operator()(){ CHECK(var && var->data,""); return *((T*)var->data); }
-  const T& get(){ return ReadToken(this)(); } ///< read access to the variable's data
-  T& set(){ return WriteToken(this)(); } ///< write access to the variable's data
+  ReadToken get(){ return ReadToken(this); } ///< read access to the variable's data
+  WriteToken set(){ return WriteToken(this); } ///< write access to the variable's data
 };
 
 
