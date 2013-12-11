@@ -39,6 +39,8 @@ struct TaskMap {
   virtual void phi(arr& y, arr& J, const ors::Graph& G) = 0;
   virtual uint dim_phi(const ors::Graph& G) = 0; //the dimensionality of $y$
 
+  virtual ~TaskMap() {};
+
   TaskMap():constraint(false) {}
 };
 
@@ -84,8 +86,9 @@ struct MotionProblem {
   double tau; ///< duration of single step
   
   //start constraints
-  arr x0,v0; ///< fixed start state and velocity
-  arr x_current, v_current; ///< memory for which state was set (which state ors is in)
+  arr x0, v0; ///< fixed start state and velocity TODO: delete v0?
+  arr prefix; ///< a set of states PRECEEDING x[0] (having 'negative' time indices) and which influence the control cost on x[0]. NOTE: x[0] is subject to optimization. DEFAULT: constantly equals x0
+  arr x_current, v_current; ///< memory for which state was set (which state ors is in) TODO: necessary?
   
   //evaluation outcomes
   arr costMatrix;
@@ -115,7 +118,7 @@ struct MotionProblem {
   uint dim_g(uint t);
   uint dim_psi();
   bool getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t); ///< the general (`big') task vector and its Jacobian
-  void costReport();
+  void costReport(bool gnuplt=true);
   
   void setState(const arr& x, const arr& v);
   void activateAllTaskCosts(bool activate=true);

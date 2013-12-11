@@ -6,7 +6,8 @@ roslib.load_manifest('actionlib')
 import rospy
 from actionlib import SimpleActionServer
 import the_curious_robot.msg as msgs
-import util
+
+import rosors.srv
 
 import require_provide as rp
 
@@ -19,8 +20,11 @@ class GotoOOIActionServer:
         self.control_done = False
         self.react_to_controller = False
 
+        # services
+        self.response_shapes = rospy.ServiceProxy("/world/shapes",
+                                                  rosors.srv.Shapes)
+
         # subscriber
-        self.oois_sub = rospy.Subscriber('oois', msgs.Objects, self.oois_cb)
         self.ooi_id_sub = rospy.Subscriber(
             'ooi_id', msgs.ObjectID, self.ooi_id_cb)
         self.control_done_sub = rospy.Subscriber(
@@ -41,13 +45,10 @@ class GotoOOIActionServer:
         if not self.ooi_id:
             self.server.set_aborted()
             return
-        for ooi in self.oois:
-            if ooi['body'].name == self.ooi_id:
-                msg = msgs.control()
-                msg.pose.position.x = ooi['body'].X.pos.x
-                msg.pose.position.y = ooi['body'].X.pos.y
-                msg.pose.position.z = 1
-                break
+
+        shapes = self.response_shapes(index=self.ooi_id)
+        msg = msgs.control()
+        msg.pose = shapes.shapes[0].X
 
         self.react_to_controller = True  # TODO: rather block?
         self.control_pub.publish(msg)
@@ -62,10 +63,6 @@ class GotoOOIActionServer:
     def ooi_id_cb(self, msg):
         self.ooi_id = msg.id
 
-    def oois_cb(self, msg):
-        # rospy.logdebug("callback")
-        self.oois = util.parse_oois_msg(msg)
-
     def control_done_cb(self, msg):
         if self.react_to_controller:
             self.control_done = True
@@ -76,7 +73,7 @@ class GotoOOIActionServer:
 
 def main():
     rospy.init_node('tcr_sas_goto_ooi')
-    server = GotoOOIActionServer('goto_ooi')
+    GotoOOIActionServer('goto_ooi')
 
 
 if __name__ == '__main__':

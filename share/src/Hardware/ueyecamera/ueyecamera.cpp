@@ -659,3 +659,4 @@ void UEyePoller::close() {
 }
 
 #endif // UEYE_INSTALLED
+

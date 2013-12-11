@@ -12,6 +12,8 @@ import the_curious_robot as tcr
 from the_curious_robot import srv
 import util
 
+import rosors.srv
+
 import require_provide as rp
 
 
@@ -27,7 +29,8 @@ def _random_select_strategy(oois):
     """select a random object of all possibes objects"""
     ooi = random.choice(oois)
     ooi_id_msg = tcr.msg.ObjectID()
-    ooi_id_msg.id = ooi['body'].name
+    ooi_id_msg.id = ooi
+    rospy.logdebug(ooi)
     return ooi_id_msg
 
 
@@ -42,15 +45,12 @@ def _door1_select_strategy(oois):
 class PickOOIActionServer:
 
     def __init__(self, name):
-        # Subscriber
-        self.oois_sub = rospy.Subscriber(name='oois',
-                                         data_class=tcr.msg.Objects,
-                                         callback=self.handle_oois_sub)
         # right now we don't need the world_belief, that might change
         # self.world_belief_sub = rospy.Subscriber ...
+
         # Services
-        self.request_all_shapes = rospy.ServiceProxy('all_shapes',
-                                                     srv.AllShapes)
+        self.request_all_shapes = rospy.ServiceProxy('/world/shapes',
+                                                     rosors.srv.Shapes)
         # Publisher
         self.ooi_id_pub = rospy.Publisher('ooi_id', tcr.msg.ObjectID)
 
@@ -72,17 +72,12 @@ class PickOOIActionServer:
         rp.Provide("PickOOI")
 
     def execute(self, msg):
+        rospy.logdebug("before")
         all_shapes_msg = self.request_all_shapes()
-        all_shapes = util.parse_shape_msg(all_shapes_msg)
-        print all_shapes
-
-        # GUARD
-        if self.oois is None:
-            self.server.set_aborted()
-            return
-        if all_shapes is None:
-            self.server.set_aborted()
-            return
+        rospy.logdebug("after")
+        self.oois = []
+        for shape in all_shapes_msg.shapes:
+            self.oois.append(shape.index)
 
         # select an ooi
         ooi_id_msg = self.select_ooi(self.oois)
@@ -90,17 +85,13 @@ class PickOOIActionServer:
         self.ooi_id_pub.publish(ooi_id_msg)
         self.server.set_succeeded()
 
-    def handle_oois_sub(self, msg):
-        # rospy.logdebug("callback")
-        self.oois = util.parse_oois_msg(msg)
-
     def preempt_cb(self):
         self.server.set_preempted()
 
 
 def main():
     rospy.init_node('tcr_sas_pick_ooi')
-    server = PickOOIActionServer('pick_ooi')
+    PickOOIActionServer('pick_ooi')
 
 
 if __name__ == '__main__':

@@ -26,7 +26,7 @@ int main(int argc,char **argv){
   arr dgoal = ARRAY(0.8,0.1);
   double cs = 0.0;
   s.transform(dgoal,dstate,cs);
-  s.plotSpline();
+  os.plotSpline();
   MT::wait();
   return 0;
 }

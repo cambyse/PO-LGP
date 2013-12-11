@@ -20,6 +20,11 @@ struct TrajectoryOptimizationProblem:KOrderMarkovFunction {
     if(t==0 || t==get_T()-get_k()) return 2*dim_x();
     return dim_x()+1;
   }
+  arr get_prefix(){
+    arr x(get_k(), dim_x());
+    for(uint k=0;k<x.d0;k++) x[k]()=x0;
+    return x;
+  }
 };
 
 struct RRT{
@@ -55,7 +60,7 @@ public:
     arr y_from,y_to;
     arr line;
     S.setJointAngles(ann.X[nearest],false);  S.kinematicsPos(y_from,"peg");
-    S.setJointAngles(q                 ,false);  S.kinematicsPos(y_to  ,"peg");
+    S.setJointAngles(q             ,false);  S.kinematicsPos(y_to  ,"peg");
     line.append(y_from); line.reshape(1,line.N);
     line.append(y_to);
     plotLine(line); //add a line to the plot
@@ -190,15 +195,21 @@ void RTTplan(){
 
 void optim(){
   Simulator S("../02-pegInAHole/pegInAHole.ors");
-  S.setContactMargin(.01); //this is 2 cm (all units are in meter)
+  S.setContactMargin(.02); //this is 2 cm (all units are in meter)
   
-  arr x,x0;
-  MT::load(x0,"q.rrt");
-  x=x0;
+  arr x;
+  MT::load(x,"q.rrt");
+  uint T=x.d0-1;
+  //S.watch();
+  if(false){
+    for(uint t=0;t<=T;t++){
+      double a = (double)t/T;
+      x[t]() = (1.-a)*x[0] + a*x[T];
+    }
+  }
   plotClear();
   plotEffTraj(S, x);
-  for(uint t=0;t<x.d0;t++) S.setJointAngles(x[t], true);
-  //S.watch();
+  for(uint t=0;t<=T;t++) S.setJointAngles(x[t], true);
 
   TrajectoryOptimizationProblem P;
   P.S=&S;
@@ -220,13 +231,13 @@ void optim(){
   }
 #endif
 
-  optNewton(x, Convert(P), OPT(stopIters=1000, verbose=2, useAdaptiveDamping=.0, maxStep=.1, stopTolerance=1e-2));
+  optNewton(x, Convert(P), OPT(stopIters=1000, verbose=2, useAdaptiveDamping=false, damping=1e-0, maxStep=.1, stopTolerance=1e-4));
   MT::save(x,"q.optim");
 
   //display
   plotEffTraj(S, x);
   for(;;){
-    for(uint t=0;t<=P.get_T();t++) S.setJointAngles(x[t], true);
+    for(uint t=0;t<=P.get_T();t++){ S.setJointAngles(x[t], true);  MT::wait(.02); }
     S.watch();
   }
 }
@@ -234,7 +245,7 @@ void optim(){
 int main(int argc,char **argv){
   MT::initCmdLine(argc,argv);
 
-  switch(MT::getParameter<int>("mode",0)){
+  switch(MT::getParameter<int>("mode", 1)){
   case 0: RTTplan(); //break;
   case 1: optim(); break;
   }
@@ -246,36 +257,38 @@ int main(int argc,char **argv){
 void TrajectoryOptimizationProblem::phi_t(arr& phi, arr& J, uint t, const arr& x_bar){
   uint T=get_T(), n=dim_x(), k=get_k(), m=dim_phi(t);
 
+  double col_prec=1e-1;
+
   //assert some dimensions
   CHECK(x_bar.d0==k+1,"");
   CHECK(x_bar.d1==n,"");
-  CHECK(t<=T-k,"");
+  CHECK(t<=T,"");
 
   phi.resize(m);
   phi.setZero();
 
-  //curvature
+  // ctrl costs
   if(k==1)  phi.setVectorBlock(x_bar[1]-x_bar[0], 0); //penalize velocity
   if(k==2)  phi.setVectorBlock(x_bar[2]-2.*x_bar[1]+x_bar[0], 0); //penalize acceleration
   if(k==3)  phi.setVectorBlock(x_bar[3]-3.*x_bar[2]+3.*x_bar[1]-x_bar[0], 0); //penalize jerk
 
-  //task
+  // task costs
   if(t==0){
-    phi.setVectorBlock(1e2*(x_bar[0]-x0),m-n);
+    phi.setVectorBlock(1e2*(x_bar[k]-x0),n);
   }else if(t==get_T()-get_k()){
-    phi.setVectorBlock(1e2*(x_bar[k]-xT),m-n);
+    phi.setVectorBlock(1e2*(x_bar[k]-xT),n);
   }else{
-    S->setJointAngles(x_bar[1],false);
+    S->setJointAngles(x_bar[k],false);
     arr y_col,J_col;
     S->kinematicsContacts(y_col);
-    phi(m-1) = y_col(0);
+    phi(m-1) = col_prec*y_col(0);
   }
 
   if(&J){ //we also need to return the Jacobian
     J.resize(m,k+1,n);
     J.setZero();
 
-    //curvature
+    // ctrl costs
     for(uint i=0;i<n;i++){
       if(k==1){ J(i,1,i) = 1.;  J(i,0,i) = -1.; }
       if(k==2){ J(i,2,i) = 1.;  J(i,1,i) = -2.;  J(i,0,i) = 1.; }
@@ -284,14 +297,15 @@ void TrajectoryOptimizationProblem::phi_t(arr& phi, arr& J, uint t, const arr& x
 
     //task
     if(t==0){
-      for(uint i=0;i<n;i++) J(n+i,0,i) = 1e2;
+      for(uint i=0;i<n;i++) J(n+i,k,i) = 1e2;
     }else if(t==get_T()-get_k()){
       for(uint i=0;i<n;i++) J(n+i,k,i) = 1e2;
     }else{
       arr J_col;
       S->jacobianContacts(J_col);
+      J_col *= col_prec;
       for(uint i=0;i<n;i++){
-        J(m-1,1,i) = J_col(0,i);
+        J(m-1,k,i) = J_col(0,i);
       }
     }
   }

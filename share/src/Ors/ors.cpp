@@ -109,14 +109,8 @@ void ors::Body::reset() {
   type=dynamicBT;
   shapes.memMove=true;
   com.setZero();
-#if 1
   mass = 0.;
   inertia.setZero();
-#else
-  mass=1.;
-  inertia.setId();
-  inertia *= .3;
-#endif
 }
 
 void ors::Body::parseAts(Graph& G) {
@@ -167,14 +161,17 @@ void ors::Body::parseAts(Graph& G) {
   }
 
   // copy body attributes to shapes 
-  for (auto& s:shapes) { s->ats = ats;  s->parseAts(); }
+  for(Shape *s:shapes) { s->ats=ats;  s->parseAts(); }
+  listDelete(ats);
 }
 
 void ors::Body::write(std::ostream& os) const {
   if(!X.isZero()) os <<"pose=<T " <<X <<" > ";
-  uint i; Item *a;
-  for_list(i, a, ats)
-  if(a->keys(0)!="X" && a->keys(0)!="pose") os <<*a <<' ';
+  if(mass) os <<"mass=" <<mass <<' ';
+  if(type!=dynamicBT) os <<"type=" <<(int)type <<' ';
+//  uint i; Item *a;
+//  for_list(i, a, ats)
+//      if(a->keys(0)!="X" && a->keys(0)!="pose") os <<*a <<' ';
 }
 
 void ors::Body::read(std::istream& is) {
@@ -334,13 +331,13 @@ void makeConvexHulls(ShapeL& shapes){
 //
 
 ors::Joint::Joint()
-  : index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), coupledTo(NULL), agent(0) { reset(); }
+  : index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0) { reset(); }
 
 ors::Joint::Joint(const Joint& j)
-  : index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), coupledTo(NULL), agent(0) { reset(); *this=j; }
+  : index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0) { reset(); *this=j; }
 
 ors::Joint::Joint(Graph& G, Body *f, Body *t, const Joint* copyJoint)
-  : index(0), qIndex(-1), ifrom(f->index), ito(t->index), from(f), to(t), coupledTo(NULL), agent(0){
+  : index(0), qIndex(-1), ifrom(f->index), ito(t->index), from(f), to(t), mimic(NULL), agent(0){
   reset();
   if(copyJoint) *this=*copyJoint;
   index=G.joints.N;
@@ -351,8 +348,8 @@ ors::Joint::Joint(Graph& G, Body *f, Body *t, const Joint* copyJoint)
 
 ors::Joint::~Joint() {
   reset();
-  from->outLinks.removeValue(this);
-  to->inLinks.removeValue(this);
+  if (from) from->outLinks.removeValue(this);
+  if (to) to->inLinks.removeValue(this);
 }
 
 void ors::Joint::parseAts() {
@@ -366,12 +363,14 @@ void ors::Joint::parseAts() {
   ats.getValue<Transformation>(Q, "Q");
   ats.getValue<Transformation>(X, "X");
   if(ats.getValue<double>(d, "type")) type=(JointType)(int)d; else type=JT_hingeX;
+  if(type==JT_fixed && !Q.isZero()){ A.appendTransformation(Q); Q.setZero(); }
   if(ats.getValue<double>(d, "q")){
     if(type==JT_hingeX) Q.addRelativeRotationRad(d, 1., 0., 0.);
     if(type==JT_fixed)  A.addRelativeRotationRad(d, 1., 0., 0.);
     if(type==JT_transX) Q.addRelativeTranslation(d, 0., 0.);
   }
   if(ats.getValue<double>(d, "agent")) agent=(int)d;
+  if(ats.getValue<bool>("fixed")) agent=-1; 
   //axis
   arr axis;
   ats.getValue<arr>(axis, "axis");
@@ -383,7 +382,7 @@ void ors::Joint::parseAts() {
     B.rot = -rot * B.rot;
   }
   //coupled to another joint requires post-processing by the Graph::read!!
-  if(ats.getValue<MT::String>("coupledTo")) coupledTo=(Joint*)1;
+  if(ats.getValue<MT::String>("mimic")) mimic=(Joint*)1;
 }
 
 uint ors::Joint::qDim() {
@@ -447,13 +446,13 @@ ors::Graph* ors::Graph::newClone() const {
   listCopy(G->joints, joints);
   // post-process coupled joints
   for_list_(Joint, j, G->joints) 
-    if(j->coupledTo){
+    if(j->mimic){
     MT::String jointName;
-    bool good = j->ats.getValue<MT::String>(jointName, "coupledTo");
+    bool good = j->ats.getValue<MT::String>(jointName, "mimic");
     CHECK(good, "something is wrong");
-    j->coupledTo = listFindByName(G->joints, jointName);
-    if(!j->coupledTo) HALT("The joint '" <<*j <<"' is declared coupled to '" <<jointName <<"' -- but that doesn't exist!");
-    j->type = j->coupledTo->type;
+    j->mimic = listFindByName(G->joints, jointName);
+    if(!j->mimic) HALT("The joint '" <<*j <<"' is declared coupled to '" <<jointName <<"' -- but that doesn't exist!");
+    j->type = j->mimic->type;
   }
   graphMakeLists(G->bodies, G->joints);
   uint i;  Shape *s;  Body *b;
@@ -471,13 +470,13 @@ void ors::Graph::operator=(const ors::Graph& G) {
   listCopy(proxies, G.proxies);
   listCopy(joints, G.joints);
   for_list_(Joint, j, joints) 
-    if(j->coupledTo){
+    if(j->mimic){
     MT::String jointName;
-    bool good = j->ats.getValue<MT::String>(jointName, "coupledTo");
+    bool good = j->ats.getValue<MT::String>(jointName, "mimic");
     CHECK(good, "something is wrong");
-    j->coupledTo = listFindByName(G.joints, jointName);
-    if(!j->coupledTo) HALT("The joint '" <<*j <<"' is declared coupled to '" <<jointName <<"' -- but that doesn't exist!");
-    j->type = j->coupledTo->type;
+    j->mimic = listFindByName(G.joints, jointName);
+    if(!j->mimic) HALT("The joint '" <<*j <<"' is declared coupled to '" <<jointName <<"' -- but that doesn't exist!");
+    j->type = j->mimic->type;
   }
   listCopy(shapes, G.shapes);
   listCopy(bodies, G.bodies);
@@ -700,11 +699,11 @@ uint ors::Graph::getJointStateDimension(int agent) const {
   if(!q_dim) {
     uint qdim=0;
     for_list_(Joint, j, joints) if(j->agent==agent){
-      if(!j->coupledTo){
+      if(!j->mimic){
         j->qIndex = qdim;
         qdim += j->qDim();
       }else{
-        j->qIndex = j->coupledTo->qIndex;
+        j->qIndex = j->mimic->qIndex;
       }
     }
     ((Graph*)this)->q_dim = qdim; //hack to work around const declaration
@@ -741,7 +740,7 @@ void ors::Graph::getJointState(arr& x, arr& v, int agent) const {
   
   uint n=0;
   for_list_(Joint, j, joints) if(j->agent==agent){
-    if(j->coupledTo) continue; //don't count dependent joints
+    if(j->mimic) continue; //don't count dependent joints
     switch(j->type) {
       case JT_hingeX:
       case JT_hingeY:
@@ -830,8 +829,8 @@ void ors::Graph::setJointState(const arr& _q, const arr& _v, int agent, bool cle
   CHECK(q.N==q_dim && (!(&_v) || v.N==q_dim), "wrong joint state dimensionalities");
   
   for_list(i, j, joints) if(j->agent==agent){
-    if(j->coupledTo){
-      j->Q=j->coupledTo->Q;
+    if(j->mimic){
+      j->Q=j->mimic->Q;
     }else switch(j->type) {
       case JT_hingeX: {
         //angle
@@ -1037,7 +1036,7 @@ void ors::Graph::jacobianPos(arr& J, uint a, ors::Vector *rel, int agent) const 
           J(2, j_idx) += j->axis.z;
         }
         else if(j->type==JT_trans3) {
-          if(j->coupledTo) NIY;
+          if(j->mimic) NIY;
           arr R(3,3); j->X.rot.getMatrix(R.p);
           J.setMatrixBlock(R, 0, j_idx);
         }
@@ -1405,7 +1404,7 @@ void ors::Graph::read(std::istream& is) {
   KeyValueGraph G;
   
   G.read(is);
-  //cout <<"***MAPGRAPH\n" <<G <<endl;
+//  cout <<"***MAPGRAPH\n" <<G <<endl;
   
   clear();
   
@@ -1456,9 +1455,7 @@ void ors::Graph::read(std::istream& is) {
     j->parseAts();
 
     //if the joint is coupled to another:
-    if(j->coupledTo) {
-      nCoupledJoints++;   
-    }
+    if(j->mimic) nCoupledJoints++;
   }
 
 #if 0
@@ -1477,23 +1474,23 @@ void ors::Graph::read(std::istream& is) {
     for(i=0; i<nCoupledJoints; i++){
       j=joints(joints.N-nCoupledJoints+i);
       CHECK(j->isCoupled,"");
-      bool good = j->ats.getValue<MT::String>(jointName, "coupledTo");
+      bool good = j->ats.getValue<MT::String>(jointName, "mimic");
       CHECK(good, "something is wrong");
-      Joint *coupledTo = listFindByName(joints, jointName);
-      j->type = coupledTo->type;
-      if(!coupledTo) HALT("The joint '" <<*j <<"' is declared coupled to '" <<jointName <<"' -- but that doesn't exist!");
-      Qlin(i, coupledTo->qIndex) = 1.;
+      Joint *mimic = listFindByName(joints, jointName);
+      j->type = mimic->type;
+      if(!mimic) HALT("The joint '" <<*j <<"' is declared coupled to '" <<jointName <<"' -- but that doesn't exist!");
+      Qlin(i, mimic->qIndex) = 1.;
     }
   }
 #else
   if(nCoupledJoints){
-    for_list_(Joint, j, joints) if(j->coupledTo){
+    for_list_(Joint, j, joints) if(j->mimic){
       MT::String jointName;
-      bool good = j->ats.getValue<MT::String>(jointName, "coupledTo");
+      bool good = j->ats.getValue<MT::String>(jointName, "mimic");
       CHECK(good, "something is wrong");
-      j->coupledTo = listFindByName(joints, jointName);
-      j->type = j->coupledTo->type;
-      if(!j->coupledTo) HALT("The joint '" <<*j <<"' is declared coupled to '" <<jointName <<"' -- but that doesn't exist!");
+      j->mimic = listFindByName(joints, jointName);
+      if(!j->mimic) HALT("The joint '" <<*j <<"' is declared coupled to '" <<jointName <<"' -- but that doesn't exist!");
+      j->type = j->mimic->type;
     }
   }
 #endif
@@ -2144,11 +2141,12 @@ void ors::Graph::meldFixedJoints() {
   for_list_(Joint, j, joints) if(j->type==JT_fixed) {
     Body *a = j->from;
     Body *b = j->to;
+    Transformation bridge = j->A * j->Q * j->B;
     //reassociate shapes with a
     for_list_(Shape, s, b->shapes) {
       s->body=a;
       s->ibody = a->index;
-      s->rel = j->A * j->Q * j->B * s->rel;
+      s->rel = bridge * s->rel;
       a->shapes.append(s);
     }
     b->shapes.clear();
@@ -2156,7 +2154,7 @@ void ors::Graph::meldFixedJoints() {
     for_list_(Joint, jj, b->outLinks) {
       jj->from=a;
       jj->ifrom=a->index;
-      jj->A = j->A * j->Q * j->B * jj->A;
+      jj->A = bridge * jj->A;
       a->outLinks.append(jj);
     }
     b->outLinks.clear();

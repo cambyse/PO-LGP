@@ -8,21 +8,31 @@
 
 %inline %{
 
+struct ListTest {
+  double d;
+  ~ListTest() {};
+};
+
+%}
+
+%List_Typemap(ListTest)
+
+%inline %{
+
 struct TestClass {
   MT::Array<double> a_val;
   MT::Array<double>* a_poi;
+
+  MT::Array<ListTest*> a_list;
+
   TestClass() : a_val({1.2, 3.4}), a_poi(new arr({9.0, 1.2})) {};
 
   MT::Array<double> get_value() { return a_val; }
   MT::Array<double>* get_pointer() { return a_poi; }
 };
 
-struct ListTest {
-  double d;
-};
 %}
 
-%List_Typemap(ListTest*)
 
 %inline %{
 
