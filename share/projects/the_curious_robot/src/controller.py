@@ -44,7 +44,7 @@ class RRTPlanner():
 
         problem = motionpy.MotionProblem(self.graph)
         problem.loadTransitionParameters()
-        problem.H_rate_diag = 1e-1*np.ones((3,))
+        problem.H_rate_diag = corepy.getArrayParameter("Hratediag")
 
         rospy.logdebug(self.graph.getJointStateDimension())
 
@@ -93,10 +93,9 @@ class RRTPlanner():
             task_cost.y_threshold = 0
 
         planner = motionpy.RRTPlanner(self.graph, problem, stepsize)
-        #q = np.array([.999998, .500003, .999998, 1.5, -2, 0, .500003])
-        q = np.array([0, 0, 0])
-        planner.joint_max = q + 6*np.ones(q.shape)
-        planner.joint_min = q - 6*np.ones(q.shape)
+
+        planner.joint_max = corepy.getArrayParameter("joint_max")
+        planner.joint_min = corepy.getArrayParameter("joint_max")
 
         traj = planner.getTrajectoryTo(target)
         rospy.logdebug("start calculating rrt trajectory")
@@ -113,9 +112,10 @@ class FakeController():
         rospy.init_node('tcr_controller', log_level=rospy.DEBUG)
 
         # World & PhysX & OpenGL
+        orspath = "share/projects/the_curious_robot/src"
+        orsfile = corepy.getStringParameter("orsFile")
         worldfile = os.path.join(
-            corepy.get_mlr_path(),
-            "share/projects/the_curious_robot/src/world.ors"
+            corepy.get_mlr_path(), orspath, orsfile
         )
         self.world = rosors.rosors.RosOrs(orsfile=worldfile,
                                           srv_prefix="/world")
