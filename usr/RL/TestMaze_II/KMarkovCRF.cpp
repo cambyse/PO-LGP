@@ -171,7 +171,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
         for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
 
             // last action is not changed while iterating through observations and rewards
-            action_t action = insIt->action;
+            action_ptr_t action = insIt->action;
 
             // exclude data
             double data_percent = double(instance_idx+1)/number_of_data_points;
@@ -505,7 +505,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_candidates(
         for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
 
             // last action is not changed while iterating through observations and rewards
-            action_t action = insIt->action;
+            action_ptr_t action = insIt->action;
 
             // print progress information
             if(DEBUG_LEVEL>0) {
@@ -740,9 +740,9 @@ int KMarkovCRF::optimize_candidates(lbfgsfloatval_t l1,
 }
 
 void KMarkovCRF::add_action_observation_reward_tripel(
-    const action_t& action,
-    const observation_t& observation,
-    const reward_t& reward,
+    const action_ptr_t& action,
+    const observation_ptr_t& observation,
+    const reward_ptr_t& reward,
     const bool& new_episode
     ) {
     HistoryObserver::add_action_observation_reward_tripel(action, observation, reward, new_episode);
@@ -952,7 +952,7 @@ void KMarkovCRF::score_candidates_by_gradient() {
                 ProgressBar::print(instance_idx, number_of_data_points);
             }
 
-            action_t action = insIt->action;
+            action_ptr_t action = insIt->action;
 
             sumExpN = 0.0;
             sumFExpNF.assign(cf_size,0.0);
@@ -1133,9 +1133,9 @@ unsigned long KMarkovCRF::get_number_of_features() {
 
 KMarkovCRF::probability_t KMarkovCRF::get_prediction(
         const instance_t * instance,
-        const action_t& action,
-        const observation_t& observation_to,
-        const reward_t& reward) const {
+        const action_ptr_t& action,
+        const observation_ptr_t& observation_to,
+        const reward_ptr_t& reward) const {
 
     // calculate sumF(x,y)
     probability_t sumFXY = 0;
@@ -1164,9 +1164,9 @@ KMarkovCRF::probability_t KMarkovCRF::get_prediction(
 
 KMarkovCRF::probability_t KMarkovCRF::get_kmdp_prediction(
         const instance_t * instance,
-        const action_t& action,
-        const observation_t& observation_to,
-        const reward_t& reward)
+        const action_ptr_t& action,
+        const observation_ptr_t& observation_to,
+        const reward_ptr_t& reward)
 const {
 
     // check if data for input exist
@@ -1265,9 +1265,9 @@ void KMarkovCRF::update_prediction_map() {
         for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt) {
 
             // get data
-            action_t action = insIt->action;
-            observation_t observation = insIt->observation;
-            reward_t reward = insIt->reward;
+            action_ptr_t action = insIt->action;
+            observation_ptr_t observation = insIt->observation;
+            reward_ptr_t reward = insIt->reward;
 
             // increment frequency
             prediction_tuple_t predict_tuple = std::make_tuple(insIt, action, observation, reward);
@@ -1318,9 +1318,9 @@ void KMarkovCRF::test() {
     for(instance_t * current_episode : instance_data) {
         for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
 
-            action_t action = insIt->action;
-            observation_t observation = insIt->observation;
-            reward_t reward = insIt->reward;
+            action_ptr_t action = insIt->action;
+            observation_ptr_t observation = insIt->observation;
+            reward_ptr_t reward = insIt->reward;
 
             // calculate sumF(x,y)
             probability_t sumFXY = 0;
@@ -1389,7 +1389,7 @@ void KMarkovCRF::find_unique_feature_values() {
             vector<vector<f_ret_t> > feature_value_element;
 
             // remember action for being able to only change observation and reward below
-            action_t action = insIt->action;
+            action_ptr_t action = insIt->action;
 
             // iterate through all possible observations and rewards (keeping action the same)
             for(observationIt_t observation=observationIt_t::first(); observation!=INVALID; ++observation) {
@@ -1533,8 +1533,8 @@ KMarkovCRF::idx_t KMarkovCRF::precomputed_feature_idx(
     const idx_t& instance_idx,
     const idx_t& feature_idx,
     const idx_t& feature_n,
-    const observation_t& observation,
-    const reward_t& reward,
+    const observation_ptr_t& observation,
+    const reward_ptr_t& reward,
     const bool& use_observation_and_reward
     ) {
     // block sizes
@@ -1568,8 +1568,8 @@ KMarkovCRF::idx_t KMarkovCRF::precomputed_feature_idx(
     const idx_t& instance_idx,
     const idx_t& feature_idx,
     const idx_t& feature_n,
-    const observation_t& observation,
-    const reward_t& reward
+    const observation_ptr_t& observation,
+    const reward_ptr_t& reward
     ) {
     return precomputed_feature_idx(instance_idx,feature_idx,feature_n,observation,reward,true);
 }
@@ -1604,7 +1604,7 @@ void KMarkovCRF::precompute_compound_feature_values() {
             DEBUG_OUT(3,"    Instance " << *insIt );
 
             // iterate through features
-            action_t action = insIt->action;
+            action_ptr_t action = insIt->action;
             for(uint f_idx=0; f_idx<feature_n; ++f_idx) {
 
                 // for instance itself without setting specific observation and reward
@@ -1667,9 +1667,9 @@ void KMarkovCRF::precompute_base_feature_values() {
             base_feature_values.push_back(vector<Feature::look_up_map_t>());
 
             // remember action, observation, and reward
-            action_t current_action = insIt->action;
-            observation_t current_observation = insIt->observation;
-            reward_t current_reward = insIt->reward;
+            action_ptr_t current_action = insIt->action;
+            observation_ptr_t current_observation = insIt->observation;
+            reward_ptr_t current_reward = insIt->reward;
 
             // iterate through observations and rewards
             idx_t observation_reward_idx=0;

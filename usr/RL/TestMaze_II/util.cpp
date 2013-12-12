@@ -44,25 +44,6 @@ namespace util {
 
     double approx_equal_tolerance() { return 1e-10; }
 
-    AbstractIteratableSpace::Iterator::Iterator(ptr_t ptr): object(ptr) {}
-
-    AbstractIteratableSpace::ptr_t AbstractIteratableSpace::Iterator::operator*() const {
-        return object;
-    }
-
-    AbstractIteratableSpace::Iterator & AbstractIteratableSpace::Iterator::operator++() {
-        object = object->next();
-        return *this;
-    }
-
-    bool AbstractIteratableSpace::Iterator::operator!=(const Iterator& other) const {
-        return *(this->object)!=*(other.object);
-    }
-
-    bool AbstractIteratableSpace::operator==(const AbstractIteratableSpace& other) const {
-        return !(*this!=other);
-    }
-
     const InvalidBase INVALID = InvalidBase(true);
 
     Range::Range(int first, int last, int increment):

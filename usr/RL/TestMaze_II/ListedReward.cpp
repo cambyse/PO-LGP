@@ -14,10 +14,6 @@ ListedReward::Iterator ListedReward::begin() const {
     return Iterator(ptr_t(new ListedReward(reward_list,0)));
 }
 
-ListedReward::Iterator ListedReward::end() const {
-    return Iterator(ptr_t(new ListedReward()));
-}
-
 ListedReward::ptr_t ListedReward::next() const {
     if(reward_index<reward_list.size()-1) {
         return ptr_t(new ListedReward(reward_list,reward_index+1));
@@ -43,10 +39,29 @@ bool ListedReward::operator!=(const AbstractReward &other) const {
     }
 }
 
-std::string ListedReward::print() const {
+bool ListedReward::operator<(const AbstractReward &other) const {
+    if(this->get_type()<other.get_type()) {
+        return true;
+    } else {
+        auto listed_reward = dynamic_cast<const ListedReward *>(&other);
+        if(listed_reward==nullptr) {
+            DEBUG_ERROR("Dynamic cast failed");
+            return true;
+        } else {
+            return (
+                this->reward_index < listed_reward->reward_index || (
+                    this->reward_index == listed_reward->reward_index &&
+                    this->reward_list < listed_reward->reward_list
+                    )
+                );
+        }
+    }
+}
+
+const char * ListedReward::print() const {
     std::stringstream ret;
     ret << "ListedReward(" << reward_list[reward_index] << ")";
-    return ret.str();
+    return ret.str().c_str();
 }
 
 void ListedReward::set_type(REWARD_TYPE t) {

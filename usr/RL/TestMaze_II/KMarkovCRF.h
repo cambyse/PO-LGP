@@ -141,9 +141,9 @@ public:
         );
 
     virtual void add_action_observation_reward_tripel(
-        const action_t& action,
-        const observation_t& observation,
-        const reward_t& reward,
+        const action_ptr_t& action,
+        const observation_ptr_t& observation,
+        const reward_ptr_t& reward,
         const bool& new_episode
         );
 
@@ -168,13 +168,13 @@ public:
 
     unsigned long int get_training_data_length();
 
-    probability_t get_prediction(const instance_t *, const action_t&, const observation_t&, const reward_t&) const;
-    probability_t (KMarkovCRF::*get_prediction_ptr())(const instance_t *, const action_t&, const observation_t&, const reward_t&) const {
+    probability_t get_prediction(const instance_t *, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&) const;
+    probability_t (KMarkovCRF::*get_prediction_ptr())(const instance_t *, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&) const {
         return &KMarkovCRF::get_prediction;
     }
 
-    probability_t get_kmdp_prediction(const instance_t *, const action_t&, const observation_t&, const reward_t&) const;
-    probability_t (KMarkovCRF::*get_kmdp_prediction_ptr())(const instance_t *, const action_t&, const observation_t&, const reward_t&) const {
+    probability_t get_kmdp_prediction(const instance_t *, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&) const;
+    probability_t (KMarkovCRF::*get_kmdp_prediction_ptr())(const instance_t *, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&) const {
         return &KMarkovCRF::get_kmdp_prediction;
     }
 
@@ -201,10 +201,10 @@ public:
 
 private:
 
-    typedef std::tuple<const instance_t*, action_t, observation_t, reward_t> prediction_tuple_t;
+    typedef std::tuple<const instance_t*, action_ptr_t, observation_ptr_t, reward_ptr_t> prediction_tuple_t;
     typedef std::map<prediction_tuple_t,probability_t> prediction_map_t;
 
-    typedef std::tuple<const instance_t*, action_t> input_tuple_t;
+    typedef std::tuple<const instance_t*, action_ptr_t> input_tuple_t;
     typedef std::set<input_tuple_t> input_set_t;
 
     //------------------------//
@@ -263,8 +263,8 @@ private:
         const idx_t& instance_idx,
         const idx_t& feature_idx,
         const idx_t& feature_n,
-        const observation_t& observation,
-        const reward_t& reward,
+        const observation_ptr_t& observation,
+        const reward_ptr_t& reward,
         const bool& use_observation_and_reward
         );
     idx_t precomputed_feature_idx(
@@ -276,8 +276,8 @@ private:
         const idx_t& instance_idx,
         const idx_t& feature_idx,
         const idx_t& feature_n,
-        const observation_t& observation,
-        const reward_t& reward
+        const observation_ptr_t& observation,
+        const reward_ptr_t& reward
         );
 
     /** \brief Precompute compound feature values. */

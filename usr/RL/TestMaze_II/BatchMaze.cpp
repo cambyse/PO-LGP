@@ -1,7 +1,7 @@
 #include "BatchMaze.h"
 
 #include "util.h"
-#include "Maze.h"
+#include "Maze/Maze.h"
 #include "KMarkovCRF.h"
 #include "LookAheadSearch.h"
 #include "UTree.h"

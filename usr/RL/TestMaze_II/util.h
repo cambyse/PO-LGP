@@ -103,11 +103,47 @@ namespace util {
      for(auto item : YourIteratableSpace()) { ... }
      @endcode
      * to keep the code brief. */
+    template <class Derived>
     class AbstractIteratableSpace {
     public:
 
-        // use (smart) pointers to allow for polymorphy
-        typedef std::shared_ptr<const AbstractIteratableSpace> ptr_t;
+        /** \brief Pointer class used as return type.
+         *
+         * The class uses std::shared_ptr as underlying type but defines
+         * comparison operators based on the object pointed to (not the
+         * adress).*/
+        class PointerType {
+        public:
+        PointerType(): ptr(new const Derived()) {}
+        PointerType(const Derived * d): ptr(d) {}
+            PointerType(const PointerType&) = default;
+            virtual ~PointerType() final = default;
+            virtual operator const Derived() const {
+                return *ptr;
+            }
+            virtual const Derived & operator*() const final {
+                return ptr.operator*();
+            }
+            virtual const Derived * operator->() const final {
+                return ptr.operator->();
+            }
+            virtual bool operator!=(const PointerType& other) const final {
+                return *(this->ptr)!=*(other.ptr);
+            }
+            virtual bool operator==(const PointerType& other) const final {
+                return !(*this!=other);
+            }
+            virtual bool operator<(const PointerType& other) const final {
+                return *(this->ptr)<*(other.ptr);
+            }
+            friend inline std::ostream& operator<<(std::ostream& out, const PointerType& ptr) {
+                return out << (Derived)ptr;
+            }
+        private:
+            std::shared_ptr<const Derived> ptr;
+        };
+
+        typedef PointerType ptr_t;
 
         /** \brief Iterator class.
          *
@@ -118,20 +154,30 @@ namespace util {
         public:
 
             /** \brief Constructor takes a pointer to an object. */
-            Iterator(ptr_t ptr);
+            Iterator(ptr_t ptr): object(ptr) {}
+
+            /** \brief Default descructor. */
+            virtual ~Iterator() final = default;
 
             /** \brief Dereference operator returns pointer. */
-            virtual ptr_t operator*() const;
+            virtual ptr_t operator*() const final {
+                return object;
+            }
 
             /** \brief Increment operator.
              *
              * Calls the next() function of the underlying object. */
-            virtual Iterator & operator++();
+            virtual Iterator & operator++() final {
+                object = object->next();
+                return *this;
+            }
 
             /** \brief Inequality operator.
              *
              * Checks inequality based on the underlying objects. */
-            virtual bool operator!=(const Iterator& other) const;
+            virtual bool operator!=(const Iterator& other) const final {
+                return *(this->object)!=*(other.object);
+            }
 
         private:
 
@@ -148,7 +194,9 @@ namespace util {
          * next() function must return a pointer to such an object if called on
          * the last element of the space and the end() function must return such
          * an object. */
-        virtual Iterator end() const = 0;
+        virtual Iterator end() const final {
+            return Iterator(ptr_t(new const Derived()));
+        }
 
         /** \brief Return pointer to next element in the space.
          *
@@ -167,11 +215,12 @@ namespace util {
          * accordingly. To ensure logical consistency this operator cannot be
          * overridden, instead it returns the negation of the inequality
          * operator. */
-        virtual bool operator==(const AbstractIteratableSpace& other) const final;
-
-        virtual std::string print() const {
-            return std::string();
+        virtual bool operator==(const AbstractIteratableSpace& other) const final {
+            return !(*this!=other);
         }
+
+        /** \brief operator<. */
+        virtual bool operator<(const AbstractIteratableSpace& other) const = 0;
     };
 
     /** \brief Base class to make a derived class assign-compatible with a type.

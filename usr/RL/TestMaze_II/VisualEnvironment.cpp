@@ -1,6 +1,6 @@
-#include "VisualWorld.h"
+#include "VisualEnvironment.h"
 
-void VisualWorld::render_initialize(QGraphicsView * v) {
+void VisualEnvironment::render_initialize(QGraphicsView * v) {
 
     // Set view
     view = v;
@@ -16,7 +16,7 @@ void VisualWorld::render_initialize(QGraphicsView * v) {
     rescale_scene(view);
 }
 
-void VisualWorld::rescale_scene(QGraphicsView * view) {
+void VisualEnvironment::rescale_scene(QGraphicsView * view) {
     QGraphicsScene * scene = view->scene();
     scene->setSceneRect(scene->itemsBoundingRect());
     view->fitInView(scene->itemsBoundingRect(),Qt::KeepAspectRatio);

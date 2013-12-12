@@ -1,12 +1,12 @@
-#ifndef VISUALWORLD_H_
-#define VISUALWORLD_H_
+#ifndef VISUALENVIRONMENT_H_
+#define VISUALENVIRONMENT_H_
 
 #include <QGraphicsView>
 
 #include <vector>
 #include <tuple>
 
-class VisualWorld {
+class VisualEnvironment {
 
 public:
 
@@ -14,12 +14,12 @@ public:
     typedef std::vector<color_t>             color_vector_t;
     enum COLOR_IDX { COLOR_R, COLOR_G, COLOR_B };
 
-    VisualWorld() = default;
-    virtual ~VisualWorld() = default;
+    VisualEnvironment() = default;
+    virtual ~VisualEnvironment() = default;
 
     /** \brief Initializes get graphics view (or initialize).
      *
-     * After calling this method VisualWorld::view points to the the view used
+     * After calling this method VisualEnvironment::view points to the the view used
      * by the given QGraphcisView. */
     virtual void render_initialize(QGraphicsView * v);
 
@@ -28,7 +28,7 @@ public:
 
 protected:
 
-    /** \brief QGraphicsView to render the World. */
+    /** \brief QGraphicsView to render the environment. */
     QGraphicsView * view = nullptr;
 
     /*! \brief Rescale the scene to fit into view. */
@@ -36,4 +36,4 @@ protected:
 
 };
 
-#endif /* VISUALWORLD_H_ */
+#endif /* VISUALENVIRONMENT_H_ */

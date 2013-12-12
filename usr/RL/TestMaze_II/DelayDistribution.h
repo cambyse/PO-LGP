@@ -12,7 +12,7 @@ public:
 
     USE_CONFIG_TYPEDEFS;
 
-    typedef std::map<std::tuple<observation_t,observation_t,unsigned int>,probability_t> pair_dist_map_t;
+    typedef std::map<std::tuple<observation_ptr_t,observation_ptr_t,unsigned int>,probability_t> pair_dist_map_t;
 
     DelayDistribution() {}
 
@@ -23,8 +23,8 @@ public:
      * Return the probability p(s2|s1,delay) of reaching observation s2 given one was
      * in observation s1 delay time steps ago. */
     probability_t get_fixed_delay_probability(
-        const observation_t& s1,
-        const observation_t& s2,
+        const observation_ptr_t& s1,
+        const observation_ptr_t& s2,
         const idx_t& delay
         );
 
@@ -33,7 +33,7 @@ public:
      * Return the probability distribution p(s2|s1,delay) of reaching observation s2 given one was
      * in observation s1 delay time steps ago. */
     std::vector<probability_t> get_fixed_delay_probability_distribution(
-        const observation_t& s1,
+        const observation_ptr_t& s1,
         const idx_t& delay
         );
 
@@ -42,8 +42,8 @@ public:
      * Return the distribution p(t|s1,s2) of time delay t between visiting observation
      * s1 and observation s1. */
     void get_delay_distribution(
-        const observation_t& s1,
-        const observation_t& s2,
+        const observation_ptr_t& s1,
+        const observation_ptr_t& s2,
         std::vector<probability_t> & forward,
         std::vector<probability_t> & backward,
         const idx_t& max_delay = -1
@@ -54,9 +54,9 @@ public:
      * Return the probability p(s2|s1,s3) of having visited observation s2 on the way
      * from observation s1 to observation s3. */
     probability_t get_mediator_probability(
-        const observation_t& s1,
-        const observation_t& s2,
-        const observation_t& s3,
+        const observation_ptr_t& s1,
+        const observation_ptr_t& s2,
+        const observation_ptr_t& s3,
         const int& max_window = -1
         );
 
@@ -67,4 +67,6 @@ public:
         pair_dist_map_t & dist_map,
         const int& max_dt = -1
         );
+
+    observation_ptr_t observation_space;
 };

@@ -10,10 +10,6 @@ AbstractAction::Iterator AbstractAction::begin() const {
     return Iterator(ptr_t(new AbstractAction()));
 }
 
-AbstractAction::Iterator AbstractAction::end() const {
-    return Iterator(ptr_t(new AbstractAction()));
-}
-
 AbstractAction::ptr_t AbstractAction::next() const {
     return ptr_t(new AbstractAction());
 }
@@ -32,12 +28,22 @@ bool AbstractAction::operator!=(const AbstractAction& other) const {
     return this->action_type!=other.action_type;
 }
 
-std::string AbstractAction::print() const {
-    return std::string("AbstractAction()");
+bool AbstractAction::operator<(const AbstractIteratableSpace& other) const {
+    auto abstract_action = dynamic_cast<const AbstractAction *>(&other);
+    if(abstract_action==nullptr) {
+        DEBUG_ERROR("Dynamic cast failed");
+        return true;
+    } else {
+        return *this<*abstract_action;
+    }
 }
 
-std::ostream& operator<<(std::ostream& out, const AbstractAction& a) {
-    return out << a.print();
+bool AbstractAction::operator<(const AbstractAction& other) const {
+    return this->action_type<other.action_type;
+}
+
+const char * AbstractAction::print() const {
+    return "AbstractAction()";
 }
 
 AbstractAction::ACTION_TYPE AbstractAction::get_type() const {

@@ -9,9 +9,9 @@ HistoryObserver::HistoryObserver():
 {}
 
 void HistoryObserver::add_action_observation_reward_tripel(
-        const action_t& action,
-        const observation_t& observation,
-        const reward_t& reward,
+        const action_ptr_t& action,
+        const observation_ptr_t& observation,
+        const reward_ptr_t& reward,
         const bool& new_episode
     ) {
 

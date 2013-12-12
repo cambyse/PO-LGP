@@ -1,8 +1,7 @@
 #include "Maze.h"
-#include "util.h"
 
 #define DEBUG_LEVEL 0
-#include "debug.h"
+#include "../debug.h"
 
 #include <algorithm>
 
@@ -345,6 +344,9 @@ const vector<Maze::door_t> Maze::doors = {
 };
 
 Maze::Maze(const double& eps):
+    default_action(new action_t("stay")),
+    default_observation(new observation_t(x_dimensions,y_dimensions,x_dimensions/2,y_dimensions/2)),
+    default_reward(new reward_t({0,1},0)),
     current_instance(nullptr),
     epsilon(eps),
     agent(nullptr)
@@ -352,10 +354,14 @@ Maze::Maze(const double& eps):
     // set state colors
     set_state_colors();
     // setting current state
-    current_instance = instance_t::create(action_t::STAY, current_state.state_idx(), reward_t(0));
-    current_state = MazeState(Config::maze_x_size/2, Config::maze_y_size/2);
-    DEBUG_OUT(1,"Current Maze State: " << current_state << " (Index: " << current_state.state_idx() << ")" );
-    set_current_state(current_state.state_idx());
+    current_instance = instance_t::create(
+        default_action,
+        default_observation,
+        default_reward
+        );
+    current_observation = default_observation;
+    DEBUG_OUT(1,"Current Maze State: " << current_observation << " (Index: " << current_observation.state_idx() << ")" );
+    set_current_observation(current_observation.state_idx());
 
     // TODO: Test if all rewards are actually valid!
 }
@@ -372,7 +378,7 @@ Maze::~Maze() {
 void Maze::render_initialize(QGraphicsView * v) {
 
     // intitialize view
-    VisualWorld::render_initialize(v);
+    VisualEnvironment::render_initialize(v);
 
     // Get scene or initialize.
     QGraphicsScene * scene = view->scene();
@@ -400,9 +406,9 @@ void Maze::render_initialize(QGraphicsView * v) {
     QPen action_line_pen(QColor(0,0,0,50),0.1,Qt::SolidLine,Qt::RoundCap);
     QPen action_point_pen(QColor(0,0,0),0.01,Qt::SolidLine,Qt::RoundCap);
     QBrush action_point_brush(QColor(0,0,0,30));
-    action_line = scene->addLine(current_state.x(),current_state.y(),current_state.x(),current_state.y(),action_line_pen);
+    action_line = scene->addLine(current_observation.x(),current_observation.y(),current_observation.x(),current_observation.y(),action_line_pen);
     double ap_size = state_size*action_point_size_factor;
-    action_point = scene->addEllipse(current_state.x()-ap_size/2,current_state.y()-ap_size/2,ap_size,ap_size,action_point_pen,action_point_brush);
+    action_point = scene->addEllipse(current_observation.x()-ap_size/2,current_observation.y()-ap_size/2,ap_size,ap_size,action_point_pen,action_point_brush);
 
     // Rewards
     for(maze_reward_t reward : rewards ) {
@@ -414,7 +420,7 @@ void Maze::render_initialize(QGraphicsView * v) {
         agent = new QGraphicsSvgItem("agent.svg");
         agent->setScale(0.2);
         QSizeF s = agent->boundingRect().size();
-        agent->setPos(current_state.x()-s.width()/2, current_state.y()-s.height()/2);
+        agent->setPos(current_observation.x()-s.width()/2, current_observation.y()-s.height()/2);
         agent->setElementId("normal");
     }
 
@@ -427,7 +433,7 @@ void Maze::render_initialize(QGraphicsView * v) {
 void Maze::render_update() {
     // set agent position and mirror to make 'stay' actions visible
     QSizeF s = agent->boundingRect().size();
-    agent->setPos(current_state.x()-agent->scale()*s.width()/2, current_state.y()-agent->scale()*s.height()/2);
+    agent->setPos(current_observation.x()-agent->scale()*s.width()/2, current_observation.y()-agent->scale()*s.height()/2);
     agent->setElementId(agent->elementId()=="normal" ? "mirrored" : "normal");
 
     // set action line and circle
@@ -491,7 +497,7 @@ void Maze::set_state_colors(const color_vector_t colors) {
 
 void Maze::perform_transition(const action_t& action, std::vector<std::pair<int,int> > * reward_vector) {
 
-    MazeState old_state = current_state; // remember current (old) state
+    MazeState old_state = current_observation; // remember current (old) state
 
     if(DEBUG_LEVEL>=1) {
         DEBUG_OUT(1,"Current instance: ");
@@ -513,7 +519,7 @@ void Maze::perform_transition(const action_t& action, std::vector<std::pair<int,
             DEBUG_OUT(2,"observation(" << observation_to << "), reward(" << reward << ") --> prob=" << prob);
             prob_accum += prob;
             if(prob_accum>prob_threshold) {
-                current_state = MazeState(observation_to);
+                current_observation = MazeState(observation_to);
                 current_instance = current_instance->append_instance(action, observation_to, reward);
                 was_set = true;
                 DEBUG_OUT(2,"CHOOSE");
@@ -528,8 +534,8 @@ void Maze::perform_transition(const action_t& action, std::vector<std::pair<int,
               old_state.x() << "," <<
               old_state.y() << ") + " <<
               action << " ==> (" <<
-              current_state.x() << "," <<
-              current_state.y() << ")"
+              current_observation.x() << "," <<
+              current_observation.y() << ")"
         );
 }
 
@@ -539,7 +545,7 @@ void Maze::perform_transition(const action_t& action) {
 
 void Maze::perform_transition(const action_t& a, observation_t& final_observation, reward_t& r) {
     perform_transition(a);
-    final_observation = current_state.state_idx();
+    final_observation = current_observation.state_idx();
     r = current_instance->reward;
 }
 
@@ -928,12 +934,12 @@ void Maze::set_epsilon(const double& e) {
     epsilon = e;
 }
 
-void Maze::set_current_state(const observation_t& observation) {
-    current_state = MazeState(observation);
+void Maze::set_current_observation(const observation_t& observation) {
+    current_observation = MazeState(observation);
     for(idx_t k_idx=0; k_idx<(idx_t)Config::k; ++k_idx) {
-        current_instance = current_instance->append_instance(action_t::STAY, current_state.state_idx(), reward_t(0));
+        current_instance = current_instance->append_instance(action_t::STAY, current_observation.state_idx(), reward_t(0));
     }
-    DEBUG_OUT(1,"Set current state to (" << current_state.x() << "," << current_state.y() << ")");
+    DEBUG_OUT(1,"Set current state to (" << current_observation.x() << "," << current_observation.y() << ")");
 }
 
 string Maze::get_rewards() {

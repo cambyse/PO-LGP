@@ -7,7 +7,7 @@
 #include <tuple>
 
 #include "util.h"
-#include "Maze.h"
+#include "Maze/Maze.h"
 
 #define DEBUG_LEVEL 1
 #include "debug.h"

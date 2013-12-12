@@ -15,8 +15,8 @@ using std::make_tuple;
 using std::get;
 
 DelayDistribution::probability_t DelayDistribution::get_fixed_delay_probability(
-    const observation_t& s1,
-    const observation_t& s2,
+    const observation_ptr_t& s1,
+    const observation_ptr_t& s2,
     const idx_t& delay
     ) {
     // determine unnormalized delay probability
@@ -54,14 +54,14 @@ DelayDistribution::probability_t DelayDistribution::get_fixed_delay_probability(
 }
 
 vector<DelayDistribution::probability_t> DelayDistribution::get_fixed_delay_probability_distribution(
-    const observation_t& s1,
+    const observation_ptr_t& s1,
     const idx_t& delay
     ) {
     // initialize unnormalized probabilities
     vector<probability_t> prob;
-    map<observation_t,idx_t> idx_map;
+    map<observation_ptr_t,idx_t> idx_map;
     idx_t observation_idx = 0;
-    for( observation_t observation : observationIt_t::all ) {
+    for(observation_ptr_t observation : *observation_space) {
         prob.push_back(0);
         idx_map[observation] = observation_idx;
         ++observation_idx;
@@ -102,8 +102,8 @@ vector<DelayDistribution::probability_t> DelayDistribution::get_fixed_delay_prob
 }
 
 void DelayDistribution::get_delay_distribution(
-    const observation_t& s1,
-    const observation_t& s2,
+    const observation_ptr_t& s1,
+    const observation_ptr_t& s2,
     vector<probability_t> & forward,
     vector<probability_t> & backward,
     const idx_t& max_delay
@@ -185,9 +185,9 @@ void DelayDistribution::get_delay_distribution(
 }
 
 DelayDistribution::probability_t DelayDistribution::get_mediator_probability(
-    const observation_t& s1,
-    const observation_t& s2,
-    const observation_t& s3,
+    const observation_ptr_t& s1,
+    const observation_ptr_t& s2,
+    const observation_ptr_t& s3,
     const int& max_window
     ) {
     //-------------------//

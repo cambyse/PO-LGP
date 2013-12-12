@@ -5,7 +5,7 @@
 
 #include "Config.h"
 
-#include "Maze.h"
+#include "Maze/Maze.h"
 #include "KMarkovCRF.h"
 #include "UTree.h"
 #include "LinearQ.h"

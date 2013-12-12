@@ -22,10 +22,6 @@ MazeObservation::Iterator MazeObservation::begin() const {
     return Iterator(ptr_t(new MazeObservation(x_dimensions,y_dimensions,0,0)));
 }
 
-MazeObservation::Iterator MazeObservation::end() const {
-    return Iterator(ptr_t(new MazeObservation()));
-}
-
 MazeObservation::ptr_t MazeObservation::next() const {
     uint x_pos = x_position + 1;
     uint y_pos = y_position + 1;
@@ -60,10 +56,31 @@ bool MazeObservation::operator!=(const AbstractObservation &other) const {
     }
 }
 
-std::string MazeObservation::print() const {
+bool MazeObservation::operator<(const AbstractObservation &other) const {
+    if(this->get_type()<other.get_type()) {
+        return true;
+    } else {
+        auto maze_observation = dynamic_cast<const MazeObservation *>(&other);
+        if(maze_observation==nullptr) {
+            DEBUG_ERROR("Dynamic cast failed");
+            return true;
+        } else {
+            return (this->x_position < maze_observation->x_position ||
+                    (this->x_position == maze_observation->x_position &&
+                     this->y_position < maze_observation->y_position) ||
+                    (this->y_position == maze_observation->y_position &&
+                     this->x_dimensions < maze_observation->x_dimensions) ||
+                    (this->x_dimensions == maze_observation->x_dimensions &&
+                     this->y_dimensions < maze_observation->y_dimensions)
+                );
+        }
+    }
+}
+
+const char * MazeObservation::print() const {
     std::stringstream ret;
     ret << "MazeObservation(" << x_position << "," << y_position << ")";
-    return ret.str();
+    return ret.str().c_str();
 }
 
 void MazeObservation::set_type(OBSERVATION_TYPE t) {

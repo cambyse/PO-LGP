@@ -13,10 +13,6 @@ AugmentedMazeAction::Iterator AugmentedMazeAction::begin() const {
     return Iterator(ptr_t(new AugmentedMazeAction(ACTION::UP,TAG::TAG_0)));
 }
 
-AugmentedMazeAction::Iterator AugmentedMazeAction::end() const {
-    return Iterator(ptr_t(new AugmentedMazeAction(ACTION::NONE,TAG::NONE)));
-}
-
 AugmentedMazeAction::ptr_t AugmentedMazeAction::next() const {
     ACTION a = (ACTION)((int)action+1);
     TAG t = (TAG)((int)tag+1);
@@ -45,7 +41,24 @@ bool AugmentedMazeAction::operator!=(const AbstractAction &other) const {
     }
 }
 
-std::string AugmentedMazeAction::print() const {
+bool AugmentedMazeAction::operator<(const AbstractAction &other) const {
+    if(this->get_type()<other.get_type()) {
+        return true;
+    } else {
+        auto augmented_maze_action = dynamic_cast<const AugmentedMazeAction *>(&other);
+        if(augmented_maze_action==nullptr) {
+            DEBUG_ERROR("Dynamic cast failed");
+            return true;
+        } else {
+            return ( this->action<augmented_maze_action->action || (
+                         this->action==augmented_maze_action->action &&
+                         this->tag<augmented_maze_action->tag
+                         ));
+        }
+    }
+}
+
+const char * AugmentedMazeAction::print() const {
     std::string ret("AugmentedMazeAction(");
     switch(action) {
     case ACTION::UP:
@@ -83,5 +96,5 @@ std::string AugmentedMazeAction::print() const {
         break;
     }
     ret+=")";
-    return ret;
+    return ret.c_str();
 }

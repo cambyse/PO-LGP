@@ -15,15 +15,15 @@ class Feature {
 public:
     // types
     USE_CONFIG_TYPEDEFS;
-    typedef std::shared_ptr<const Feature>                      const_feature_ptr_t;
-    typedef double                                              feature_return_value;
+    typedef std::shared_ptr<const Feature> const_feature_ptr_t;
+    typedef double feature_return_value;
     typedef std::unordered_map<const_feature_ptr_t, feature_return_value> look_up_map_t;
-    enum TYPE { ABSTRACT, CONST_FEATURE, ACTION, RELATIVE_OBSERVATION, OBSERVATION, REWARD, AND };
+    enum TYPE { ABSTRACT, CONST_FEATURE, ACTION, OBSERVATION, REWARD, AND };
     // functions
     Feature();
     virtual ~Feature();
     virtual feature_return_value evaluate(const_instanceIt_t) const;
-    virtual feature_return_value evaluate(const_instanceIt_t, action_t, observation_t, reward_t) const;
+    virtual feature_return_value evaluate(const_instanceIt_t, action_ptr_t, observation_ptr_t, reward_ptr_t) const;
     virtual feature_return_value evaluate(const look_up_map_t&) const;
     virtual std::string identifier() const;
     friend std::ostream& operator<<(std::ostream&, const Feature&);
@@ -32,17 +32,13 @@ public:
     virtual bool operator!=(const Feature& other) const;
     virtual bool operator<(const Feature& other) const;
     virtual TYPE get_type() const;
-    virtual int get_id() const;
     virtual unsigned int get_complexity() const;
     virtual bool is_const_feature() const { return const_feature; }
     virtual bool contradicts(const Feature&) const { return false; }
 protected:
     // member variables
     TYPE type;
-    long id;
     unsigned int complexity;
-    static int field_width[2];
-    static long id_counter;
     bool const_feature;
     feature_return_value const_return_value;
     // member functions
@@ -67,74 +63,56 @@ public:
     virtual ~ConstFeature();
     static const_feature_ptr_t create(const feature_return_value& v = 0);
     virtual feature_return_value evaluate(const_instanceIt_t) const;
-    virtual feature_return_value evaluate(const_instanceIt_t, action_t, observation_t, reward_t) const;
+    virtual feature_return_value evaluate(const_instanceIt_t, action_ptr_t, observation_ptr_t, reward_ptr_t) const;
     virtual std::string identifier() const;
     virtual bool operator==(const Feature& other) const override;
 };
 
 class ActionFeature: public BasisFeature {
 private:
-    ActionFeature(const action_t& a, const int& d);
+    ActionFeature(const action_ptr_t& a, const int& d);
 public:
     virtual ~ActionFeature();
-    static const_feature_ptr_t create(const action_t& a, const int& d);
+    static const_feature_ptr_t create(const action_ptr_t& a, const int& d);
     virtual feature_return_value evaluate(const_instanceIt_t) const;
     virtual std::string identifier() const;
     static bool features_contradict(const ActionFeature& f1, const ActionFeature& f2);
     bool contradicts(const ActionFeature& f) const { return features_contradict(*this,f); }
     virtual bool operator==(const Feature& other) const override;
 protected:
-    action_t action;
+    action_ptr_t action;
     int delay;
 };
 
 class ObservationFeature: public BasisFeature {
 private:
-    ObservationFeature(const observation_t& s, const int& d);
+    ObservationFeature(const observation_ptr_t& s, const int& d);
 public:
     virtual ~ObservationFeature();
-    static const_feature_ptr_t create(const observation_t& s, const int& d);
+    static const_feature_ptr_t create(const observation_ptr_t& s, const int& d);
     virtual feature_return_value evaluate(const_instanceIt_t) const;
     virtual std::string identifier() const;
     static bool features_contradict(const ObservationFeature& f1, const ObservationFeature& f2);
     bool contradicts(const ObservationFeature& f) const { return features_contradict(*this,f); }
     virtual bool operator==(const Feature& other) const override;
 protected:
-    observation_t observation;
+    observation_ptr_t observation;
     int delay;
-};
-
-class RelativeObservationFeature: public BasisFeature {
-private:
-    RelativeObservationFeature(const int& dx, const int& dy, const int& d1, const int& d2);
-public:
-    virtual ~RelativeObservationFeature();
-    static const_feature_ptr_t create(const int& dx, const int& dy, const int& d1, const int& d2);
-    virtual feature_return_value evaluate(const_instanceIt_t) const;
-    virtual std::string identifier() const;
-    static bool features_contradict(const RelativeObservationFeature& f1, const RelativeObservationFeature& f2);
-    bool contradicts(const RelativeObservationFeature& f) const { return features_contradict(*this,f); }
-    virtual bool operator==(const Feature& other) const override;
-protected:
-    int delta_x;
-    int delta_y;
-    int delay_1;
-    int delay_2;
 };
 
 class RewardFeature: public BasisFeature {
 private:
-    RewardFeature(const reward_t& r, const int& d);
+    RewardFeature(const reward_ptr_t& r, const int& d);
 public:
     virtual ~RewardFeature();
-    static const_feature_ptr_t create(const reward_t& r, const int& d);
+    static const_feature_ptr_t create(const reward_ptr_t& r, const int& d);
     virtual feature_return_value evaluate(const_instanceIt_t) const;
     virtual std::string identifier() const;
     static bool features_contradict(const RewardFeature& f1, const RewardFeature& f2);
     bool contradicts(const RewardFeature& f) const { return features_contradict(*this,f); }
     virtual bool operator==(const Feature& other) const override;
 protected:
-    reward_t reward;
+    reward_ptr_t reward;
     int delay;
 };
 

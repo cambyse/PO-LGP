@@ -9,7 +9,7 @@
 
 #include "Config.h"
 #include "util/ProgressBar.h"
-#include "Maze.h"
+#include "Maze/Maze.h"
 
 #ifdef BATCH_MODE_QUIET
 #define DEBUG_LEVEL 0

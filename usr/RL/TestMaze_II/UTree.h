@@ -4,6 +4,7 @@
 #include "Config.h"
 
 #include "Feature.h"
+#include "FeatureLearner.h"
 #include "HistoryObserver.h"
 
 #include <lemon/list_graph.h>
@@ -12,8 +13,7 @@
 #include <set>
 #include <map>
 
-class UTree: public HistoryObserver
-{
+class UTree: public HistoryObserver, public FeatureLearner {
 private:
     struct NodeInfo; // forward declaration of private type
 
@@ -40,9 +40,9 @@ public:
 
     /** \brief Add a new instance to the tree. */
     virtual void add_action_observation_reward_tripel(
-            const action_t& action,
-            const observation_t& observation,
-            const reward_t& reward,
+            const action_ptr_t& action,
+            const observation_ptr_t& observation,
+            const reward_ptr_t& reward,
             const bool& new_episode
     );
 
@@ -52,9 +52,9 @@ public:
 
     /** \brief Returns a prediction of how probable the observation and reward are
      * give the instance and action. */
-    probability_t get_prediction(const instance_t *, const action_t&, const observation_t&, const reward_t&) const;
+    probability_t get_prediction(const instance_t *, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&) const;
     /** \brief Return function pointer to be used by LookAheadSearch. */
-    probability_t (UTree::*get_prediction_ptr())(const instance_t *, const action_t&, const observation_t&, const reward_t&) const {
+    probability_t (UTree::*get_prediction_ptr())(const instance_t *, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&) const {
         return &UTree::get_prediction;
     }
 
@@ -83,7 +83,7 @@ public:
 
     double value_iteration();
 
-    action_t get_max_value_action(const instance_t *);
+    action_ptr_t get_max_value_action(const instance_t *);
 
     /*! \brief Set the discount rate used for computing observation and action values. */
     void set_discount(const double& d) { discount = d; }
@@ -138,11 +138,11 @@ private:
         std::map<f_ptr_t,double> scores;                                        ///< the scores for different features
         bool scores_up_to_date;                                                 ///< whether leaf-node's scores are up-to-date
 
-        std::map<action_t,double> observation_action_values;                    ///< Q(s,a)-function
+        std::map<action_ptr_t,double> observation_action_values;                    ///< Q(s,a)-function
         double max_observation_action_value;                                    ///< utility / observation-value
 
-        std::map< std::pair<action_t,node_t>, probability_t > transition_table; ///< observation transition table
-        std::map< std::pair<action_t,node_t>, double > expected_reward;         ///< expected reward
+        std::map< std::pair<action_ptr_t,node_t>, probability_t > transition_table; ///< observation transition table
+        std::map< std::pair<action_ptr_t,node_t>, double > expected_reward;         ///< expected reward
         bool statistics_up_to_date;                                             ///< whether the preceding two are up-to-date
     };
 
@@ -197,7 +197,7 @@ private:
 
     node_t find_leaf_node(const instance_t *) const;
 
-    probability_t prior_probability(const observation_t&, const reward_t&) const;
+    probability_t prior_probability(const observation_ptr_t&, const reward_ptr_t&) const;
 
     /** \brief Updates expected_reward and transition_table based on the
      * instance data. */

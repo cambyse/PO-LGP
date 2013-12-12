@@ -4,44 +4,41 @@ QT += core \
     gui \
     svg \
     printsupport
-HEADERS += \
+    HEADERS += \
     ../Config.h \
     ../util.h \
     ../Feature.h \
-    ../Representation/Action.h \
-    ../Representation/Observation.h \
-    ../Representation/AugmentedObservation.h \
-    ../Representation/SequentialReward.h \
-    ../Representation/EnumeratedReward.h \
-    ../Representation/Instance.h \
+    ../Instance.h \
     ../AbstractAction.h \
+    ../AbstractObservation.h \
+    ../AbstractReward.h \
+    ../ListedReward.h \
+    ../PredictiveEnvironment.h \
+    ../FeatureLearner.h \
+    ../VisualEnvironment.h \
+#    ../Maze/Maze.h \
     ../Maze/MazeAction.h \
     ../Maze/AugmentedMazeAction.h \
     ../AbstractObservation.h \
-    ../Maze/MazeObservation.h \
-    ../AbstractReward.h \
-    ../ListedReward.h
+    ../Maze/MazeObservation.h
 SOURCES += \
     main.cpp \
-    ../Config.cpp \
     ../util.cpp \
     ../Feature.cpp \
-    ../Representation/Action.cpp \
-    ../Representation/Observation.cpp \
-    ../Representation/AugmentedObservation.cpp \
-    ../Representation/SequentialReward.cpp \
-    ../Representation/EnumeratedReward.cpp \
-    ../Representation/Instance.cpp \
-    FeatureTest.cpp \
-    AbstractIteratableSpaceTest.cpp \
-    PlayGround.cpp \
+    ../Instance.cpp \
     ../AbstractAction.cpp \
+    ../AbstractObservation.cpp \
+    ../AbstractReward.cpp \
+    ../ListedReward.cpp \
+    ../FeatureLearner.cpp \
+    ../VisualEnvironment.cpp \
+#    ../Maze/Maze.cpp \
     ../Maze/MazeAction.cpp \
     ../Maze/AugmentedMazeAction.cpp \
-    ../AbstractObservation.cpp \
     ../Maze/MazeObservation.cpp \
-    ../AbstractReward.cpp \
-    ../ListedReward.cpp
+    PlayGround.cpp \
+    AbstractIteratableSpaceTest.cpp \
+    FeatureTest.cpp
 LIBS += -llbfgs \
     -lemon \
     -larmadillo \

@@ -1,7 +1,8 @@
 #ifndef MAZE_H_
 #define MAZE_H_
 
-#include "VisualWorld.h"
+#include "../VisualEnvironment.h"
+#include "../PredictiveEnvironment.h"
 
 #include <QGraphicsSvgItem>
 #include <map>
@@ -9,17 +10,24 @@
 #include <string>
 #include <sstream>
 
-#include "Config.h"
-#include "util.h"
-#include "Feature.h"
+#include "../Config.h"
+#include "../util.h"
+#include "../Feature.h"
 
-#include "debug.h"
+#include "MazeObservation.h"
+#include "MazeAction.h"
+#include "../ListedReward.h"
 
-class Maze: public VisualWorld {
+#include "../debug.h"
+
+class Maze: public VisualEnvironment, public PredictiveEnvironment {
 public:
 
     USE_CONFIG_TYPEDEFS;
     typedef Feature::const_feature_ptr_t f_ptr_t;
+    typedef MazeAction action_t;
+    typedef MazeObservation observation_t;
+    typedef ListedReward reward_t;
 
     enum LEARNER_TYPE {CRF_LEARNER,
                        UTREE_VALUE_LEARNER,
@@ -30,68 +38,37 @@ public:
     Maze(const double& eps = 0);
     virtual ~Maze();
 
-    /** \brief State, which has 2D semantic, used by the Maze class. */
-    class MazeState {
-    public:
-    MazeState(const int& idx = 0): index(idx) {}
-    MazeState(const int& x, const int& y): index(x+Config::maze_x_size*y) {}
-        bool operator==(const MazeState& other) const { return this->index==other.index; }
-        bool operator!=(const MazeState& other) const { return !((*this)==other); }
-        bool operator<(const MazeState& other) const { return this->index<other.index; }
-        idx_t state_idx() const { return index; }
-        idx_t x() const { return index%Config::maze_x_size; }
-        idx_t y() const { return index/Config::maze_x_size; }
-        std::string print() const {
-            std::stringstream ss;
-            ss << "(" << x() << "," << y() << ")";
-            return ss.str();
-        }
-        friend std::ostream& operator<<(std::ostream &out, const MazeState& s) {
-            return (out << s.print());
-        }
-    private:
-        idx_t index;
-    };
-
     /** \brief Renders the complete maze. */
     virtual void render_initialize(QGraphicsView * v) override;
 
     /** \brief Updates the graphical representation. */
     virtual void render_update() override;
 
+    virtual void get_spaces(action_ptr_t & a, observation_ptr_t & o, reward_ptr_t & r) const override;
+
     void set_state_colors(const color_vector_t colors = color_vector_t());
 
     /** \brief Perform a transition by executing an action. */
-    void perform_transition(const action_t& action);
+    void perform_transition(const action_ptr_t& action);
 
     /** \brief Perform a transition by executing an action and return resulting
      * observation and reward by reference. */
-    void perform_transition(const action_t& a, observation_t& final_observation, reward_t& r );
+    void perform_transition(const action_ptr_t& a, observation_ptr_t& final_observation, reward_ptr_t& r );
 
     /** \brief Perform a transition by executing an action and return which rewards
      * were active. */
-    void perform_transition(const action_t& a, std::vector<std::pair<int,int> > * reward_vector);
+    void perform_transition(const action_ptr_t& a, std::vector<std::pair<int,int> > * reward_vector);
 
     /** \brief Returns the transition probability. */
-    probability_t get_prediction(const instance_t*, const action_t&, const observation_t&, const reward_t&) const;
+    probability_t get_prediction(const instance_t*, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&) const;
 
     /** \brief Returns the transition probability and which rewards were active.
      *
      * The first counter in each pair counts positive rewards, the second
      * punishments (for not collecting an activated reward). */
-    probability_t get_prediction(const instance_t*, const action_t&, const observation_t&, const reward_t&, std::vector<std::pair<int,int> > * reward_vector) const;
+    probability_t get_prediction(const instance_t*, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&, std::vector<std::pair<int,int> > * reward_vector) const;
 
     void get_features(std::vector<f_ptr_t> & basis_features, LEARNER_TYPE type) const;
-
-    /** \brief Validates a model by performing random transitions and comparing
-     * the result to the model predicitons. */
-    template < class Model >
-    probability_t validate_model(
-            const Model& model,
-            size_t samples,
-            probability_t * mean_model_likelihood,
-            probability_t * mean_maze_likelihood
-    );
 
     void print_reward_activation_on_random_walk(const int& walk_length);
 
@@ -102,7 +79,7 @@ public:
     double get_epsilon() const { return epsilon; }
 
     /** \brief Set the current state of the agent. */
-    void set_current_state(const observation_t&);
+    void set_current_observation(const observation_ptr_t&);
 
     /** \brief Get a string describing all rewards. */
     static std::string get_rewards();
@@ -138,7 +115,7 @@ private:
         LEFT_BUTTON, ///< Perform LEFT action on the field.
         RIGHT_BUTTON ///< Perform RIGHT action on the field.
     };
-    typedef std::tuple<MazeState, MazeState, MazeState, KEY_TYPE, idx_t, color_t> door_t;
+    typedef std::tuple<observation_t, observation_t, observation_t, KEY_TYPE, idx_t, color_t> door_t;
 
     /* \brief Enum to identify the components for defining a reward. */
     enum REWARD_COMPONENTS {
@@ -177,11 +154,17 @@ private:
     // Data Members //
     //==============//
 
+    uint x_dimensions;                     ///< x dimensions of the maze.
+    uint y_dimensions;                     ///< y dimensions of the maze.
+    action_ptr_t default_action;           ///< Default action.
+    observation_ptr_t default_observation; ///< Default state.
+    reward_ptr_t default_reward;           ///< Default reward.
+
     /** \brief The current state of the maze including the complete past. */
     instance_t * current_instance;
 
     double epsilon;                                  ///< Amount of stochasticity in transitions.
-    MazeState current_state;                         ///< Current state of the agent in the maze.
+    observation_t current_observation;               ///< Current state of the agent in the maze.
     QGraphicsSvgItem *agent;                         ///< Svg image for rendering the agent.
     QGraphicsLineItem *action_line;                  ///< Line showing the last action.
     QGraphicsEllipseItem *action_point;              ///< Circle showing the last position for showing the last action.
@@ -204,7 +187,7 @@ private:
     void frame_maze();
 
     /** \brief Add a state in the graphics. */
-    void render_state(observation_t s);
+    void render_state(observation_ptr_t s);
 
     /** \brief Add a wall in the graphics. */
     void render_wall(wall_t);
@@ -224,33 +207,6 @@ private:
     static const char* reward_activation_type_str(REWARD_ACTIVATION_TYPE);
 };
 
-template < class Model >
-Maze::probability_t Maze::validate_model(
-        const Model& model,
-        size_t samples,
-        probability_t * mean_model_likelihood,
-        probability_t * mean_maze_likelihood
-) {
-    probability_t kl_divergence = 0;
-    *mean_model_likelihood = 0;
-    *mean_maze_likelihood = 0;
-    for(size_t transition_counter=0; transition_counter<samples; ++transition_counter) {
-        action_t action = action_t::random_action();
-        observation_t observation;
-        reward_t reward;
-        instance_t * last_instance = current_instance;
-        perform_transition(action,observation,reward);
-        probability_t p_maze = get_prediction(last_instance,action,observation,reward);
-        probability_t p_model = model.get_prediction(last_instance,action,observation,reward);
-        kl_divergence += log(p_maze/p_model);
-        *mean_model_likelihood += p_model;
-        *mean_maze_likelihood += p_maze;
-    }
-    *mean_model_likelihood/=samples;
-    *mean_maze_likelihood/=samples;
-    return kl_divergence/samples;
-}
-
-#include "debug_exclude.h"
+#include "../debug_exclude.h"
 
 #endif /* MAZE_H_ */

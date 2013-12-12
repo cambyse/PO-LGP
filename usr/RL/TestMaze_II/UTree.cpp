@@ -53,44 +53,44 @@ UTree::UTree(const double& d):
     //----------------------------------------//
 
     // delayed action, observation, and reward features
-    for(int k_idx = 0; k_idx>=(int)-Config::k; --k_idx) {
-        // actions
-        for(action_t action : actionIt_t::all) {
-            f_ptr_t action_feature = ActionFeature::create(action,k_idx);
-            if(k_idx<0) {
-                basis_features_value.push_back(action_feature);
-                DEBUG_OUT(2,"Added " << basis_features_value.back()->identifier() << " to basis features");
-            }
-            if(k_idx<0) {
-                basis_features_model.push_back(action_feature);
-                DEBUG_OUT(2,"Added " << basis_features_model.back()->identifier() << " to basis features");
-            }
-        }
-        // observations
-        for(observation_t observation : observationIt_t::all) {
-            f_ptr_t observation_feature = ObservationFeature::create(observation,k_idx);
-            if(k_idx<0) {
-                basis_features_value.push_back(observation_feature);
-                DEBUG_OUT(2,"Added " << basis_features_value.back()->identifier() << " to basis features");
-            }
-            if(k_idx<0) {
-                basis_features_model.push_back(observation_feature);
-                DEBUG_OUT(2,"Added " << basis_features_model.back()->identifier() << " to basis features");
-            }
-        }
-        // reward
-        for(reward_t reward : rewardIt_t::all) {
-            f_ptr_t reward_feature = RewardFeature::create(reward,k_idx);
-            if(false) {
-                basis_features_value.push_back(reward_feature);
-                DEBUG_OUT(2,"Added " << basis_features_value.back()->identifier() << " to basis features");
-            }
-            if(false) {
-                basis_features_model.push_back(reward_feature);
-                DEBUG_OUT(2,"Added " << basis_features_model.back()->identifier() << " to basis features");
-            }
-        }
-    }
+    // for(int k_idx = 0; k_idx>=(int)-Config::k; --k_idx) {
+    //     // actions
+    //     for(action_t action : actionIt_t::all) {
+    //         f_ptr_t action_feature = ActionFeature::create(action,k_idx);
+    //         if(k_idx<0) {
+    //             basis_features_value.push_back(action_feature);
+    //             DEBUG_OUT(2,"Added " << basis_features_value.back()->identifier() << " to basis features");
+    //         }
+    //         if(k_idx<0) {
+    //             basis_features_model.push_back(action_feature);
+    //             DEBUG_OUT(2,"Added " << basis_features_model.back()->identifier() << " to basis features");
+    //         }
+    //     }
+    //     // observations
+    //     for(observation_t observation : observationIt_t::all) {
+    //         f_ptr_t observation_feature = ObservationFeature::create(observation,k_idx);
+    //         if(k_idx<0) {
+    //             basis_features_value.push_back(observation_feature);
+    //             DEBUG_OUT(2,"Added " << basis_features_value.back()->identifier() << " to basis features");
+    //         }
+    //         if(k_idx<0) {
+    //             basis_features_model.push_back(observation_feature);
+    //             DEBUG_OUT(2,"Added " << basis_features_model.back()->identifier() << " to basis features");
+    //         }
+    //     }
+    //     // reward
+    //     for(reward_t reward : rewardIt_t::all) {
+    //         f_ptr_t reward_feature = RewardFeature::create(reward,k_idx);
+    //         if(false) {
+    //             basis_features_value.push_back(reward_feature);
+    //             DEBUG_OUT(2,"Added " << basis_features_value.back()->identifier() << " to basis features");
+    //         }
+    //         if(false) {
+    //             basis_features_model.push_back(reward_feature);
+    //             DEBUG_OUT(2,"Added " << basis_features_model.back()->identifier() << " to basis features");
+    //         }
+    //     }
+    // }
 }
 
 UTree::~UTree() {}

@@ -3,17 +3,20 @@
 
 #include "util.h"
 
-class AbstractReward: public util::AbstractIteratableSpace {
+class AbstractReward: public util::AbstractIteratableSpace<AbstractReward> {
 public:
     enum class REWARD_TYPE { NONE, LISTED_REWARD };
     AbstractReward(REWARD_TYPE t = REWARD_TYPE::NONE);
     virtual Iterator begin() const override;
-    virtual Iterator end() const override;
     virtual ptr_t next() const override;
     virtual bool operator!=(const AbstractIteratableSpace& other) const override;
     virtual bool operator!=(const AbstractReward& other) const;
-    virtual std::string print() const override;
-    friend std::ostream& operator<<(std::ostream& out, const AbstractReward& a);
+    virtual bool operator<(const AbstractIteratableSpace& other) const override;
+    virtual bool operator<(const AbstractReward& other) const;
+    virtual const char * print() const;
+    friend std::ostream& operator<<(std::ostream& out, const AbstractReward& a) {
+        return out << a.print();
+    }
     virtual REWARD_TYPE get_type() const;
 protected:
     virtual void set_type(REWARD_TYPE t);
