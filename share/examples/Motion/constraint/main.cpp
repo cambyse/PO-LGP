@@ -4,7 +4,7 @@
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 #include <Optim/constrained.h>
-#include <Perception/video.h>
+#include <Perception/videoEncoder.h>
 #include <iomanip>
 
 void saveTrajectory(const arr& x, ors::Graph& G, OpenGL& gl) {
