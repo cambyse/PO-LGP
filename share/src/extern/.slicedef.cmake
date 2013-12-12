@@ -7,4 +7,5 @@ ply
 SWIFT
 SWIFT_decomposer
 tony_mdp
+usbreset
  )

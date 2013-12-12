@@ -21,5 +21,4 @@ set(SOURCES ./registry.cpp
 ./module.h
 ./keyValueGraph.h)
 set(SWIG_SOURCES array_typemaps.i
-core.i
-list.i)
+core.i)
