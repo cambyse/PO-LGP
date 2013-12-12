@@ -32,6 +32,8 @@
 #endif
 
 #include <iostream>
+// for the parser
+int readMDPFile(FILE*);
 
 /* Use this type for a variable that indicated whether we have a 
    POMDP or an MDP.
