@@ -4,7 +4,7 @@ include(.sources.cmake)
 
 add_library(extern_${NAME} STATIC ${SOURCES})
 target_link_libraries(extern_${NAME} qhull)
-set_property(TARGET extern_${NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_target_properties(extern_${NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 add_definitions(-DNO_CYCLE_DETECTION -DSWIFT_DECOMP)
 

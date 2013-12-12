@@ -8,14 +8,14 @@ BISON_TARGET(mdp_parser
 find_package(FLEX)
 FLEX_TARGET(mdp_scanner 
   scanner.l 
-  ${CMAKE_CURRENT_BINARY_DIR}/lex.yy.c)
+  ${CMAKE_CURRENT_BINARY_DIR}/lex.yy.cpp)
 
 ADD_FLEX_BISON_DEPENDENCY(mdp_scanner mdp_parser)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 
 # for whatever reason, g++ compiles it, while gcc doesn't
-set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/lex.yy.c PROPERTIES LANGUAGE CXX)
+#set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/lex.yy.c PROPERTIES LANGUAGE CXX)
 
 set(SOURCES ${FLEX_mdp_scanner_OUTPUTS} ${BISON_mdp_parser_OUTPUTS}
   imm-reward.cpp
@@ -25,5 +25,5 @@ set(SOURCES ${FLEX_mdp_scanner_OUTPUTS} ${BISON_mdp_parser_OUTPUTS}
   mdp.cpp)
 
 add_library(extern_${NAME} STATIC ${SOURCES})
-set_property(TARGET extern_${NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_target_properties(extern_${NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 

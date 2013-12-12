@@ -7,7 +7,7 @@ set(SOURCES ${SOURCES} RAPID/build.cpp RAPID/collide.cpp RAPID/overlap.cpp
         RAPID/RAPID.cpp)
 
 add_library(extern_${NAME} STATIC ${SOURCES})
-set_property(TARGET extern_${NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_target_properties(extern_${NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 add_definitions(-DDECOMP_GRAPHICS -DSWIFT_DECOMP)
 include_directories(. RAPID ${TCL_INCLUDE_PATH} ${TK_INCLUDE_PATH})
