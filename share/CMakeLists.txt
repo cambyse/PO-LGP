@@ -44,7 +44,7 @@ include_directories(ENV{MLR_LIBPATH}/include)
 endif(ENV{MLR_LIBPATH})
 
 # our code uses C++ 10x stuff by now
-set(MLR_CXX_FLAGS "-std=c++11 ${MLR_CXX_FLAGS}")
+set(MLR_CXX_FLAGS "-std=c++0x ${MLR_CXX_FLAGS}")
 
 # set Gui-GL definition globally for convenience
 include(src/Gui/gl.cmake OPTIONAL)
