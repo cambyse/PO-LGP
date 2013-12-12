@@ -320,7 +320,7 @@ import_array();
 //===========================================================================
 
 %typemap(memberin) MT::Array<Type*> {
-  $1 = $input;  
+  $1 = *$input;  
 }
 
 %typemap(memberin) MT::Array<Type*> & {
