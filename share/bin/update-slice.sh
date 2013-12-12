@@ -22,7 +22,7 @@ do
     subfiles=$(ls */CMakeLists.txt 2>/dev/null)   
     if [ ! -z "$subfiles" ]
     then
-      dirs=$(for file in $subfiles; do dirname $file; done)
+      dirs=$(for file in $subfiles; do dir=$(dirname $file); if [ ! -f $dir/NOBUILD ]; then echo $dir; fi; done)
       echo -e "set(CURRENT_SLICE \n ${dirs}\n )" >> $tmpname
     else
       echo "unset(CURRENT_SLICE)" >> $tmpname
