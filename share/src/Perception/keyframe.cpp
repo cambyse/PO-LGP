@@ -50,35 +50,38 @@ void KeyFrame::setCorr(arr cs, uintA wls) {
   s->wlens = wls;
 }
 
+uint KeyFrame::getFrame() {
+  return s->framenum;
+}
+
 bool operator<(const KeyFrame &kf1, const KeyFrame &kf2) {
   return kf1.s->framenum < kf2.s->framenum;
 }
 
 std::ostream &operator<<(std::ostream &os, const KeyFrame &kf) {
   KeyFrame::sKeyFrame *s = kf.s;
-  os << "KeyFrame {\n";
-  os << "  frame:    " << s->framenum << "\n";
+  os << "KeyFrame:\n";
+  os << " - frame:    " << s->framenum << "\n";
   if(s->hasbodies)
-    os << "  bodies:    " << s->body1 << " " << s->body2 << "\n";
+    os << " - bodies:    " << s->body1 << " " << s->body2 << "\n";
   switch(kf.s->type) {
     case KFT_undef:
-      os << "  type:     undefined\n";
+      os << " - type:     undefined\n";
       break;
     case KFT_corr:
-      os << "  type:     correlation\n";
-      os << "  corr:     " << s->corr << "\n";
-      os << "  wlen:     " << s->wlen << "\n";
+      os << " - type:     correlation\n";
+      os << " - corr:     " << s->corr << "\n";
+      os << " - wlen:     " << s->wlen << "\n";
       break;
     case KFT_corr_ens:
-      os << "  type:     correlation-ensemble\n";
-      os << "  tot_corr: " << product(s->corrs) << "\n";
-      os << "  corr:     " << s->corrs << "\n";
-      os << "  wlen:     " << s->wlens << "\n";
+      os << " - type:     correlation-ensemble\n";
+      os << " - tot_corr: " << product(s->corrs) << "\n";
+      os << " - corr:     " << s->corrs << "\n";
+      os << " - wlen:     " << s->wlens << "\n";
       break;
     default:
-      HALT("KeyFrame type unhandles?!");
+      HALT("KeyFrame type unhandled?!");
   }
-  os << "}" << endl;
   return os;
 }
 
