@@ -1,4 +1,3 @@
-cmake_minimum_required(VERSION 2.6)
 get_filename_component(NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 project(MLR_${NAME})
 
