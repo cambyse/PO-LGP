@@ -17,7 +17,7 @@ message(STATUS "Adding librt to ${NAME} build for clock_nanosleep")
 target_link_libraries(${NAME} LINK_PRIVATE ${CMAKE_REQUIRED_LIBRARIES})
 unset(CMAKE_REQUIRED_LIBRARIES)
 else(HAS_NANOSLEEP)
-message(FATAL "Could not find clock_nanosleep in either libc or librt, stopping")
+message(FATAL_ERROR "Could not find clock_nanosleep in either libc or librt, stopping")
 endif(HAS_NANOSLEEP)
 endif(NOT HAS_NANOSLEEP)
 
