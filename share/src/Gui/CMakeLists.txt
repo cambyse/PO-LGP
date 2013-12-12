@@ -16,14 +16,6 @@ option(USE_GRAPHVIZ "Use graphviz visualization" ON)
 if(USE_GRAPHVIZ)
 endif(USE_GRAPHVIZ)
 
-# TODO check for illegal combinations
-
-configure_file(
-        ${PROJECT_SOURCE_DIR}/pkgconfig/mlr_gui.pc.in
-        ${PROJECT_BINARY_DIR}/pkgconfig/mlr_gui.pc
-        @ONLY
-)
-
 pkg_check_modules(GTKGL REQUIRED gtkglext-1.0)
 
 # first check lib then header for qhull
