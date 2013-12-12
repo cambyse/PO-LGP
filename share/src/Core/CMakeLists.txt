@@ -6,6 +6,16 @@ if(LAPACK_FOUND)
 add_definitions(-DMT_LAPACK)
 endif(LAPACK_FOUND)
 
+set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
+
+include(.sources.cmake)
+
+add_library(${NAME} SHARED ${SOURCES})
+target_link_libraries(${NAME}
+        LINK_PUBLIC
+        ${CMAKE_THREAD_LIBS_INIT}
+)
+
 # check what we need for nanosleep
 include(CheckFunctionExists)
 check_function_exists(clock_nanosleep NANOSLEEP_IN_LIBC)
@@ -20,16 +30,6 @@ else(NANOSLEEP_IN_RT)
 message(FATAL_ERROR "Could not find clock_nanosleep in either libc or librt, stopping")
 endif(NANOSLEEP_IN_RT)
 endif(NOT NANOSLEEP_IN_LIBC)
-
-set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
-
-include(.sources.cmake)
-
-add_library(${NAME} SHARED ${SOURCES})
-target_link_libraries(${NAME}
-        LINK_PUBLIC
-        ${CMAKE_THREAD_LIBS_INIT}
-)
 
 if(LAPACK_FOUND)
 include_directories(${LAPACK_INCLUDE_DIR})
