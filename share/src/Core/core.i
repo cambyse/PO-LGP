@@ -173,6 +173,7 @@ namespace MT {
 %template(getArrayParameter) MT::getParameter<arr>;
 %template(getIntAParameter) MT::getParameter<intA>;
 %template(getStringParameter) MT::getParameter<MT::String>;
+%template(getBoolParameter) MT::getParameter<bool>;
 
 //===========================================================================
 
