@@ -1,7 +1,9 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <opencv2/features2d/features2d.hpp>
+#ifdef HAVE_OPENCV_NONFREE
 #include <opencv2/nonfree/features2d.hpp>
+#endif
 
 using namespace cv;
 using namespace std;
@@ -16,7 +18,9 @@ int main(int argc, char** argv){
     Mat img, kpImg, imgGray, last, blur, diff, canny, dst, mask, hough;
     vector<Vec2f> lines; // for hough
     vector<KeyPoint> keypoints;
+#ifdef HAVE_OPENCV_NONFREE
     SURF surf;
+#endif
 
     uint t;
     for(t=0;;t++){
@@ -54,10 +58,12 @@ int main(int argc, char** argv){
 
         imshow("hough lines ", hough);
 
+#ifdef HAVE_OPENCV_NONFREE
         // part 5, surf features
         surf(imgGray, mask, keypoints);
         drawKeypoints(img, keypoints, kpImg, DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
         imshow("SURF keypoints", kpImg);
+#endif
 
         if((waitKey(2)&0xff)==27)
             break;
