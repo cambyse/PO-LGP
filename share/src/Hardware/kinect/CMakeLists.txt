@@ -1,21 +1,21 @@
 get_filename_component(NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
 include(FindPkgConfig)
-pkg_check_modules(DEPLIB libfreenect)
+pkg_check_modules(LIBFREENECT libfreenect)
 
 set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
 
-if(DEPLIB_FOUND)
+if(LIBFREENECT_FOUND)
 include(.sources.cmake)
 
-set(TARGET libHardware_${NAME})
+set(TARGET Hardware_${NAME})
 add_library(${TARGET} SHARED ${SOURCES})
-include_directories(${DEPLIB_INCLUDE_DIRS})
-add_definitions(${DEPLIB_CFLAGS})
+include_directories(${LIBFREENECT_INCLUDE_DIRS})
+add_definitions(${LIBFREENECT_CFLAGS})
 target_link_libraries(${TARGET} 
-        LINK_PRIVATE Core ${DEPLIB_LIBRARY_DIR} ${DEPLIB_LIBRARIES})
+        LINK_PRIVATE Core ${LIBFREENECT_LIBRARY_DIR} ${LIBFREENECT_LIBRARIES})
 
-else(DEPLIB_FOUND)
+else(LIBFREENECT_FOUND)
 message(STATUS "Kinect support not built because libfreenect not found")
-endif(DEPLIB_FOUND)
+endif(LIBFREENECT_FOUND)
 

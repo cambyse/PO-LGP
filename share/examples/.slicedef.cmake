@@ -4,6 +4,7 @@ Core
 Gui
 Hardware
 Infer
+MDP
 Motion
 Optim
 Ors

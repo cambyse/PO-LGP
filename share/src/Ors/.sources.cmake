@@ -18,4 +18,3 @@ set(SOURCES ./ors_swift.cpp
 ./ors_oldTaskVariables.cpp
 ./ors_actionInterface.cpp
 ./ors.h)
-set(SWIG_SOURCES ors.i)

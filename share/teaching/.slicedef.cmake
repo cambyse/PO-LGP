@@ -1,4 +1,5 @@
 set(CURRENT_SLICE 
- CourseML
+ AutonomousSystems
+CourseML
 RoboticsCourse
  )
