@@ -98,7 +98,7 @@ class RRTPlanner():
         planner.joint_min = corepy.getArrayParameter("joint_max")
 
         traj = planner.getTrajectoryTo(target)
-        rospy.logdebug("start calculating rrt trajectory")
+        rospy.logdebug("done calculating rrt trajectory")
         return traj
 
 
@@ -157,7 +157,7 @@ class FakeController():
             target = self.rrt.create_endpose(target=corepy.ARRAY(self.goal.
                                                                  pos),
                                              endeff=self.endeff,
-                                             col_prec=1e1,
+                                             col_prec=0,
                                              col_shapes=self.collision_shapes,
                                              pos_prec=1e3)
 
@@ -177,10 +177,14 @@ class FakeController():
                                              col_prec=0,
                                              pos_prec=1e3)
 
-        self.trajectory = self.rrt.create_rrt_trajectory(target=target,
-                                                         endeff=self.endeff,
-                                                         collisions=
-                                                         self.collisions)
+        if self.teleport:
+            self.trajectory = np.reshape(target, (1, target.shape[0]))
+        else:
+            self.trajectory = self.rrt.create_rrt_trajectory(target=target,
+                                                             endeff=
+                                                             self.endeff,
+                                                             collisions=
+                                                             self.collisions)
 
         self.tpos = 0
         self.recompute_trajectory = False
@@ -258,6 +262,7 @@ class FakeController():
 
         self.goal = new_goal
         self.recompute_trajectory = True
+        self.teleport = data.teleport
 
     def control_service(self, req):
         new_goal = corepy.Transformation()

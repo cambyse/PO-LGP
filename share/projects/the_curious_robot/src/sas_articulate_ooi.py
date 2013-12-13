@@ -74,6 +74,7 @@ class ArticulateOOIActionServer:
         msg = msgs.control()
         msg.pose = target
         msg.ignore_collisions = True
+        msg.teleport = False
         msg.endeffector = self.endeffector
 
         self.react_to_controller = True  # TODO: rather block?

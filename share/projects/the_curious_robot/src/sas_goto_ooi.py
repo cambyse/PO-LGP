@@ -54,6 +54,7 @@ class GotoOOIActionServer:
         msg = msgs.control()
         msg.pose = shapes.shapes[0].X
         msg.ignore_collisions = False
+        msg.teleport = corepy.getBoolParameter("teleport", False)
         msg.collision_shapes = corepy.getIntAParameter("agent_shapes")
         msg.endeffector = self.endeffector
 
