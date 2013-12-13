@@ -5,7 +5,7 @@
 
 class AbstractObservation: public util::AbstractIteratableSpace<AbstractObservation> {
 public:
-    enum class OBSERVATION_TYPE { NONE, MAZE_OBSERVATION };
+    enum class OBSERVATION_TYPE { NONE, MINIMAL, MAZE_OBSERVATION };
     AbstractObservation(OBSERVATION_TYPE t = OBSERVATION_TYPE::NONE);
     virtual Iterator begin() const override;
     virtual ptr_t next() const override;
@@ -18,6 +18,7 @@ public:
         return out << a.print();
     }
     virtual OBSERVATION_TYPE get_type() const;
+    inline virtual const std::string space_descriptor() const override { return "AbstractObservation"; }
 protected:
     virtual void set_type(OBSERVATION_TYPE t);
 private:

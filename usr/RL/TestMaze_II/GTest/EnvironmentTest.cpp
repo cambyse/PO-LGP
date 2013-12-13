@@ -4,9 +4,10 @@
 
 #include "../PredictiveEnvironment.h"
 #include "../Maze/Maze.h"
+#include "MinimalEnvironmentExample/MinimalEnvironment.h"
 
-TEST(MazeTest, Test) {
+TEST(EnvironmentTest, Minimal) {
     std::vector<std::shared_ptr<PredictiveEnvironment> > environments;
-    environments.push_back();
+    environments.push_back(new MinimalEnvironment());
 }
 

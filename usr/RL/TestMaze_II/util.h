@@ -77,13 +77,12 @@ namespace util {
 
     /** \brief Base class for polymorphic iteratable spaces.
      *
-     * An iteratable space consists of a countable set of constant objects like
-     * actions in a maze (up, down, left, right, stay) or the like. To define an
-     * iteratable space you can inherit from this class and override the begin()
-     * end() next() and operator!=() methods. You can iterate over any
-     * AbstractIteratableSpace as
-     @code
-     for(YourIteratableSpace::ptr_t item : YourIteratableSpace()) {
+     * OUT OF DATE!!! An iteratable space consists of a countable set of
+     * constant objects like actions in a maze (up, down, left, right, stay) or
+     * the like. To define an iteratable space you can inherit from this class
+     * and override the begin() end() next() and operator!=() methods. You can
+     * iterate over any AbstractIteratableSpace as @code
+     * for(YourIteratableSpace::ptr_t item : YourIteratableSpace()) {
 
          ...do things that can be done on any abstract space...
 
@@ -103,7 +102,7 @@ namespace util {
      for(auto item : YourIteratableSpace()) { ... }
      @endcode
      * to keep the code brief. */
-    template <class Derived>
+    template <class DerivedSpace>
     class AbstractIteratableSpace {
     public:
 
@@ -114,21 +113,27 @@ namespace util {
          * adress).*/
         class PointerType {
         public:
-        PointerType(): ptr(new const Derived()) {}
-        PointerType(const Derived * d): ptr(d) {}
+        PointerType(): ptr(new const DerivedSpace()) {}
+        PointerType(const DerivedSpace * d): ptr(d) {}
             PointerType(const PointerType&) = default;
             virtual ~PointerType() final = default;
-            virtual operator const Derived() const {
+            virtual operator const DerivedSpace() const {
                 return *ptr;
             }
-            virtual const Derived & operator*() const final {
+            virtual const DerivedSpace & operator*() const final {
                 return ptr.operator*();
             }
-            virtual const Derived * operator->() const final {
+            virtual const DerivedSpace * operator->() const final {
                 return ptr.operator->();
+            }
+            virtual bool operator!=(const DerivedSpace& other) const final {
+                return *(this->ptr)!=other;
             }
             virtual bool operator!=(const PointerType& other) const final {
                 return *(this->ptr)!=*(other.ptr);
+            }
+            virtual bool operator==(const DerivedSpace& other) const final {
+                return !(*this!=other);
             }
             virtual bool operator==(const PointerType& other) const final {
                 return !(*this!=other);
@@ -137,10 +142,17 @@ namespace util {
                 return *(this->ptr)<*(other.ptr);
             }
             friend inline std::ostream& operator<<(std::ostream& out, const PointerType& ptr) {
-                return out << (Derived)ptr;
+                return out << (DerivedSpace)ptr;
+            }
+            template < class T > std::shared_ptr<const T> get_derived(bool report_error = true) const {
+                std::shared_ptr<const T> ret_ptr = std::dynamic_pointer_cast<const T>(ptr);
+                if(report_error && ret_ptr == std::shared_ptr<const T>()) {
+                    DEBUG_ERROR("Could not cast to space '" << T().space_descriptor() << "'");
+                }
+                return ret_ptr;
             }
         private:
-            std::shared_ptr<const Derived> ptr;
+            std::shared_ptr<const DerivedSpace> ptr;
         };
 
         typedef PointerType ptr_t;
@@ -153,8 +165,9 @@ namespace util {
 
         public:
 
-            /** \brief Constructor takes a pointer to an object. */
             Iterator(ptr_t ptr): object(ptr) {}
+
+            Iterator(const DerivedSpace * ptr): object(ptr_t(ptr)) {}
 
             /** \brief Default descructor. */
             virtual ~Iterator() final = default;
@@ -195,7 +208,7 @@ namespace util {
          * the last element of the space and the end() function must return such
          * an object. */
         virtual Iterator end() const final {
-            return Iterator(ptr_t(new const Derived()));
+            return Iterator(ptr_t(new const DerivedSpace()));
         }
 
         /** \brief Return pointer to next element in the space.
@@ -219,8 +232,11 @@ namespace util {
             return !(*this!=other);
         }
 
-        /** \brief operator<. */
+        /** \brief operator< */
         virtual bool operator<(const AbstractIteratableSpace& other) const = 0;
+
+        /** \brief Returns a string identifying the space. */
+        inline virtual const std::string space_descriptor() const = 0;
     };
 
     /** \brief Base class to make a derived class assign-compatible with a type.

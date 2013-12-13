@@ -4,7 +4,7 @@
 
 #include "../debug.h"
 
-ListedReward::ListedReward(const std::vector<float> & list, const uint & idx):
+ListedReward::ListedReward(const std::vector<value_t> & list, const uint & idx):
     reward_list(list), reward_index(idx)
 {
     set_type(REWARD_TYPE::LISTED_REWARD);
@@ -62,6 +62,18 @@ const char * ListedReward::print() const {
     std::stringstream ret;
     ret << "ListedReward(" << reward_list[reward_index] << ")";
     return ret.str().c_str();
+}
+
+void ListedReward::set_value(const value_t& v) {
+    uint idx = 0;
+    for(value_t list_value : reward_list) {
+        if(list_value==v) {
+            reward_index = idx;
+            return;
+        }
+        ++idx;
+    }
+    DEBUG_ERROR("Value (" << v << ")does not match any in reward list.");
 }
 
 void ListedReward::set_type(REWARD_TYPE t) {

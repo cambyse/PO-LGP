@@ -12,6 +12,7 @@ public:
     virtual bool operator!=(const AbstractAction &other) const override;
     virtual bool operator<(const AbstractAction &other) const override;
     virtual const char * print() const override;
+    inline virtual const std::string space_descriptor() const override { return "AugmentedMazeAction"; }
 };
 
 #endif /* AUGMENTEDMAZEACTION_H_ */

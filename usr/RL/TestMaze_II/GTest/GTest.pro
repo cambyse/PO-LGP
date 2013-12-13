@@ -16,11 +16,15 @@ QT += core \
     ../PredictiveEnvironment.h \
     ../FeatureLearner.h \
     ../VisualEnvironment.h \
-#    ../Maze/Maze.h \
+    ../Maze/Maze.h \
     ../Maze/MazeAction.h \
     ../Maze/AugmentedMazeAction.h \
     ../AbstractObservation.h \
-    ../Maze/MazeObservation.h
+    ../Maze/MazeObservation.h \
+    MinimalEnvironmentExample/MinimalAction.h \
+    MinimalEnvironmentExample/MinimalObservation.h \
+    MinimalEnvironmentExample/MinimalReward.h \
+    MinimalEnvironmentExample/MinimalEnvironment.h
 SOURCES += \
     main.cpp \
     ../util.cpp \
@@ -32,13 +36,14 @@ SOURCES += \
     ../ListedReward.cpp \
     ../FeatureLearner.cpp \
     ../VisualEnvironment.cpp \
-#    ../Maze/Maze.cpp \
+    ../Maze/Maze.cpp \
     ../Maze/MazeAction.cpp \
     ../Maze/AugmentedMazeAction.cpp \
     ../Maze/MazeObservation.cpp \
     PlayGround.cpp \
     AbstractIteratableSpaceTest.cpp \
-    FeatureTest.cpp
+    FeatureTest.cpp \
+    EnvironmentTest.cpp
 LIBS += -llbfgs \
     -lemon \
     -larmadillo \

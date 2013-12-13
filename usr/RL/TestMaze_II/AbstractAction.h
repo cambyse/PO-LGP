@@ -5,7 +5,7 @@
 
 class AbstractAction: public util::AbstractIteratableSpace<AbstractAction> {
 public:
-    enum class ACTION_TYPE { NONE, MAZE_ACTION, AUGMENTED_MAZE_ACTION };
+    enum class ACTION_TYPE { NONE, MINIMAL, MAZE_ACTION, AUGMENTED_MAZE_ACTION };
     AbstractAction(ACTION_TYPE t = ACTION_TYPE::NONE);
     virtual Iterator begin() const override;
     virtual ptr_t next() const override;
@@ -18,6 +18,7 @@ public:
         return out << a.print();
     }
     virtual ACTION_TYPE get_type() const;
+    inline virtual const std::string space_descriptor() const override { return "AbstractAction"; }
 protected:
     virtual void set_type(ACTION_TYPE t);
 private:

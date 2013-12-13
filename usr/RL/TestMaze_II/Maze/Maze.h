@@ -154,11 +154,12 @@ private:
     // Data Members //
     //==============//
 
-    uint x_dimensions;                     ///< x dimensions of the maze.
-    uint y_dimensions;                     ///< y dimensions of the maze.
-    action_ptr_t default_action;           ///< Default action.
-    observation_ptr_t default_observation; ///< Default state.
-    reward_ptr_t default_reward;           ///< Default reward.
+    int k;                             ///< k-MDP length.
+    uint x_dimensions;                 ///< x dimensions of the maze.
+    uint y_dimensions;                 ///< y dimensions of the maze.
+    action_t default_action;           ///< Default action.
+    observation_t default_observation; ///< Default state.
+    reward_t default_reward;           ///< Default reward.
 
     /** \brief The current state of the maze including the complete past. */
     instance_t * current_instance;
@@ -187,7 +188,7 @@ private:
     void frame_maze();
 
     /** \brief Add a state in the graphics. */
-    void render_state(observation_ptr_t s);
+    void render_state(observation_ptr_t observation);
 
     /** \brief Add a wall in the graphics. */
     void render_wall(wall_t);

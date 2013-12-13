@@ -37,7 +37,7 @@ const vector<Maze::wall_t> Maze::walls = {
 
     /* 2x2 Maze *
     { 1, 3}
-    /**/
+    */
 
     /* 3x3 Maze *
     { 0, 1},
@@ -48,13 +48,13 @@ const vector<Maze::wall_t> Maze::walls = {
     { 6, 7},
     { 8, 7},
     { 8, 5}
-    /**/
+    */
 
     /* 3x2 Maze (Paper) *
     { 0, 3},
     { 1, 4},
     { 2, 5}
-    /**/
+    */
 
     /* 4x4 Maze (Paper I) *
     { 4, 8},
@@ -71,7 +71,7 @@ const vector<Maze::wall_t> Maze::walls = {
     {14,15},
     {11,15},
     { 3, 7}
-    /**/
+    */
 
     /* 4x4 Maze (Paper II) *
     {0,4},
@@ -80,7 +80,7 @@ const vector<Maze::wall_t> Maze::walls = {
     {14,15},
     {5,6},
     {2,3}
-    /**/
+    */
 
     /* 4x4 Maze (Paper III) *
     { 5, 9},
@@ -92,7 +92,7 @@ const vector<Maze::wall_t> Maze::walls = {
     { 3, 7},
     { 9,10},
     {10,14}
-    /**/
+    */
 
     /* 6x6 Maze (Paper) *
     {12, 18},
@@ -123,7 +123,7 @@ const vector<Maze::wall_t> Maze::walls = {
     { 3,  9},
     { 4, 10},
     { 5, 11}
-    /**/
+    */
 
     /* 10x10 Maze *
     {  2,  3},
@@ -160,20 +160,20 @@ const vector<Maze::wall_t> Maze::walls = {
     { 58, 68},
     { 57, 67},
     { 56, 66}
-    /**/
+    */
 };
 
 const vector<Maze::maze_reward_t> Maze::rewards = {
     /* 1x5 Maze *
     { 0, 4, 4, 1, EACH_TIME_NO_PUNISH,   0,   0,   0}
-    /**/
+    */
 
     /* 2x2 Maze *
     { 0, 3, 4, 5, ON_RELEASE_NO_PUNISH, 200,   0,   0},
     { 3, 0, 4, 5, ON_RELEASE_NO_PUNISH, 200, 200,   0},
     { 0, 1, 1, 1, ON_RELEASE_NO_PUNISH,   0, 200,   0},
     { 3, 2, 1, 1, ON_RELEASE_NO_PUNISH,   0,   0, 200}
-    /**/
+    */
 
     /* 2x2 Maze */
     { 0, 3, 2, 1, EACH_TIME_NO_PUNISH, 200,   0,   0}
@@ -184,12 +184,12 @@ const vector<Maze::maze_reward_t> Maze::rewards = {
     { 5, 3, 6, 8, ON_RELEASE_NO_PUNISH,   0, 200, 200},
     { 4, 1, 1, 1, ON_RELEASE_NO_PUNISH, 200, 200,   0},
     { 4, 7, 3, 3, ON_RELEASE_NO_PUNISH, 200,   0,   0}
-    /**/
+    */
 
     /* 3x2 Maze (Paper) *
     { 3, 0, 5, 1, EACH_TIME_NO_PUNISH, 0, 0, 0},
     { 2, 5, 5, 1, EACH_TIME_NO_PUNISH, 0, 0, 0}
-    /**/
+    */
 
     /* 4x4 Maze (Paper I) *
     { 0,  4, 3, 1, ON_RELEASE_NO_PUNISH, 255, 120,  0},
@@ -202,7 +202,7 @@ const vector<Maze::maze_reward_t> Maze::rewards = {
     {13, 14, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,  0},
     { 8,  9, 4, 1,  EACH_TIME_NO_PUNISH, 255, 200,  0},
     { 4,  8, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,  0}
-    /**/
+    */
 
     /* 4x4 Maze (Paper II) *
     { 0, 8, 3, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0},
@@ -217,7 +217,7 @@ const vector<Maze::maze_reward_t> Maze::rewards = {
     { 7, 3, 3, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0},
     { 7, 2, 3, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0},
     { 2, 1, 3, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0}
-    /**/
+    */
 
     /* 4x4 Maze (Paper III) *
     { 0, 8, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
@@ -230,7 +230,7 @@ const vector<Maze::maze_reward_t> Maze::rewards = {
     { 5, 2, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
     { 1, 3, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
     { 2, 0, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0}
-    /**/
+    */
 
     /* 6x6 Maze (Paper) *
     {25, 31, 2, 1,  EACH_TIME_NO_PUNISH, 100,   0,   0},
@@ -252,7 +252,7 @@ const vector<Maze::maze_reward_t> Maze::rewards = {
     { 2,  7, 2, 1,  EACH_TIME_NO_PUNISH, 100,   0,   0},
     { 0, 12, 2, 1,  EACH_TIME_NO_PUNISH, 100,   0,   0},
     { 1,  0, 3, 1, ON_RELEASE_NO_PUNISH,  50,   0,   0}
-    /**/
+    */
 
     /* 10x10 Maze *
     {  0, 21,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
@@ -275,18 +275,18 @@ const vector<Maze::maze_reward_t> Maze::rewards = {
     { 41, 51,  2, 1,  EACH_TIME_NO_PUNISH,   0, 200, 200}, // test
     { 60, 70,  2, 1, ON_RELEASE_PUNISH_FAILURE,   0, 200, 200}, // test
     { 80, 90,  2, 1,  EACH_TIME_PUNISH_FAILURE,   0, 200, 200}  // test
-    /**/
+    */
 };
 
 const vector<Maze::door_t> Maze::doors = {
     /* 2x2 Maze *
     door_t(MazeState(1,0), MazeState(1,1), MazeState(1,1),  RIGHT_BUTTON,-3, color_t(0.0,0.8,0.0) ),
-    /**/
+    */
 
     /* 3x2 Maze (Paper) *
     door_t(MazeState(1), MazeState(4), MazeState(2),   UP_BUTTON, -4, color_t(0.0,0.5,0.0) ),
     door_t(MazeState(1), MazeState(4), MazeState(3), DOWN_BUTTON, -4, color_t(0.5,0.0,0.0) )
-    /**/
+    */
 
     /* 4x4 Maze (Paper I) *
     door_t(MazeState( 4), MazeState( 8), MazeState( 4),  DOWN_BUTTON,  0, color_t(0.6,0.0,1.0) ),
@@ -300,7 +300,7 @@ const vector<Maze::door_t> Maze::doors = {
     door_t(MazeState( 7), MazeState( 6), MazeState( 3),  LEFT_BUTTON, -3, color_t(0.0,0.0,1.0) ),
     door_t(MazeState( 2), MazeState( 1), MazeState( 2),  LEFT_BUTTON,  0, color_t(0.6,0.0,1.0) )
 
-    /**/
+    */
 
     /* 4x4 Maze (Paper II) *
     door_t(MazeState( 0),MazeState( 4),MazeState( 1),    UP_BUTTON, -3, color_t(0.0,0.0,1.0) ),
@@ -308,13 +308,13 @@ const vector<Maze::door_t> Maze::doors = {
     door_t(MazeState(14),MazeState(15),MazeState(14),  DOWN_BUTTON, -3, color_t(0.0,0.0,1.0) ),
     door_t(MazeState( 5),MazeState( 6),MazeState( 5),  LEFT_BUTTON, -3, color_t(0.0,0.0,1.0) ),
     door_t(MazeState( 3),MazeState( 2),MazeState( 3), RIGHT_BUTTON, -3, color_t(0.0,0.0,1.0) )
-    /**/
+    */
 
     /* 4x4 Maze (Paper III) *
     door_t(MazeState(12),MazeState(13),MazeState(13),  DOWN_BUTTON, -2, color_t(0.0,1.0,0.0) ),
     door_t(MazeState(15),MazeState(11),MazeState(15), RIGHT_BUTTON, -2, color_t(0.0,1.0,0.0) ),
     door_t(MazeState( 5),MazeState( 1),MazeState( 5),  DOWN_BUTTON, -2, color_t(0.0,1.0,0.0) )
-    /**/
+    */
 
     /* 6x6 Maze (Paper) *
     door_t(MazeState(13), MazeState(19), MazeState(13),  DOWN_BUTTON,-0, color_t(0.0,0.8,0.0) ),
@@ -331,7 +331,7 @@ const vector<Maze::door_t> Maze::doors = {
     door_t(MazeState(10), MazeState( 4), MazeState(11), RIGHT_BUTTON,-4, color_t(0.0,0.2,0.8) ),
     door_t(MazeState( 5), MazeState(11), MazeState( 3),  LEFT_BUTTON,-4, color_t(0.6,0.0,0.8) ),
     door_t(MazeState( 9), MazeState( 8), MazeState( 9),  LEFT_BUTTON,-0, color_t(0.0,0.8,0.0) )
-    /**/
+    */
 
     /* 10x10 Maze *
     door_t(MazeState(0,3), MazeState(0,4), MazeState(0,4),  PASS_BUTTON, 0, color_t(1.0,0.5,0.0) ),
@@ -340,13 +340,13 @@ const vector<Maze::door_t> Maze::doors = {
     door_t(MazeState(3,3), MazeState(4,3), MazeState(3,3),  DOWN_BUTTON, 3, color_t(0.0,0.5,0.5) ),
     door_t(MazeState(4,5), MazeState(5,5), MazeState(4,6),  LEFT_BUTTON,-5, color_t(0.0,0.0,1.0) ),
     door_t(MazeState(6,5), MazeState(6,6), MazeState(4,7), RIGHT_BUTTON, 5, color_t(1.0,0.0,1.0) )
-    /**/
+    */
 };
 
 Maze::Maze(const double& eps):
-    default_action(new action_t("stay")),
-    default_observation(new observation_t(x_dimensions,y_dimensions,x_dimensions/2,y_dimensions/2)),
-    default_reward(new reward_t({0,1},0)),
+    default_action("stay"),
+    default_observation(x_dimensions,y_dimensions,x_dimensions/2,y_dimensions/2),
+    default_reward({0,1},0),
     current_instance(nullptr),
     epsilon(eps),
     agent(nullptr)
@@ -355,15 +355,12 @@ Maze::Maze(const double& eps):
     set_state_colors();
     // setting current state
     current_instance = instance_t::create(
-        default_action,
-        default_observation,
-        default_reward
+        action_ptr_t(new action_t(default_action)),
+        observation_ptr_t(new observation_t(default_observation)),
+        reward_ptr_t(new reward_t(default_reward))
         );
-    current_observation = default_observation;
-    DEBUG_OUT(1,"Current Maze State: " << current_observation << " (Index: " << current_observation.state_idx() << ")" );
-    set_current_observation(current_observation.state_idx());
-
-    // TODO: Test if all rewards are actually valid!
+    DEBUG_OUT(1,"Current Maze State: " << current_observation );
+    set_current_observation(observation_ptr_t(new observation_t(default_observation)));
 }
 
 
@@ -388,7 +385,7 @@ void Maze::render_initialize(QGraphicsView * v) {
 
     // Render States
     state_rects.clear();
-    for(auto observation : observationIt_t::all) {
+    for(observation_ptr_t observation : default_observation) {
         render_state(observation);
     }
 
@@ -406,9 +403,9 @@ void Maze::render_initialize(QGraphicsView * v) {
     QPen action_line_pen(QColor(0,0,0,50),0.1,Qt::SolidLine,Qt::RoundCap);
     QPen action_point_pen(QColor(0,0,0),0.01,Qt::SolidLine,Qt::RoundCap);
     QBrush action_point_brush(QColor(0,0,0,30));
-    action_line = scene->addLine(current_observation.x(),current_observation.y(),current_observation.x(),current_observation.y(),action_line_pen);
+    action_line = scene->addLine(current_observation.get_x_pos(),current_observation.get_y_pos(),current_observation.get_x_pos(),current_observation.get_y_pos(),action_line_pen);
     double ap_size = state_size*action_point_size_factor;
-    action_point = scene->addEllipse(current_observation.x()-ap_size/2,current_observation.y()-ap_size/2,ap_size,ap_size,action_point_pen,action_point_brush);
+    action_point = scene->addEllipse(current_observation.get_x_pos()-ap_size/2,current_observation.get_y_pos()-ap_size/2,ap_size,ap_size,action_point_pen,action_point_brush);
 
     // Rewards
     for(maze_reward_t reward : rewards ) {
@@ -420,7 +417,7 @@ void Maze::render_initialize(QGraphicsView * v) {
         agent = new QGraphicsSvgItem("agent.svg");
         agent->setScale(0.2);
         QSizeF s = agent->boundingRect().size();
-        agent->setPos(current_observation.x()-s.width()/2, current_observation.y()-s.height()/2);
+        agent->setPos(current_observation.get_x_pos()-s.width()/2, current_observation.get_y_pos()-s.height()/2);
         agent->setElementId("normal");
     }
 
@@ -433,42 +430,45 @@ void Maze::render_initialize(QGraphicsView * v) {
 void Maze::render_update() {
     // set agent position and mirror to make 'stay' actions visible
     QSizeF s = agent->boundingRect().size();
-    agent->setPos(current_observation.x()-agent->scale()*s.width()/2, current_observation.y()-agent->scale()*s.height()/2);
+    agent->setPos(current_observation.get_x_pos()-agent->scale()*s.width()/2, current_observation.get_y_pos()-agent->scale()*s.height()/2);
     agent->setElementId(agent->elementId()=="normal" ? "mirrored" : "normal");
 
     // set action line and circle
-    MazeState last_state((current_instance->const_it()-1)->observation);
+    observation_t last_state(*((current_instance->const_it()-1)->observation.get_derived<observation_t>()));
     double al_length = state_size*action_line_length_factor;
     double ap_size = state_size*action_point_size_factor;
-    action_point->setRect(last_state.x()-ap_size/2,last_state.y()-ap_size/2,ap_size,ap_size);
-    switch(current_instance->action) {
-    case action_t::STAY:
-        action_line->setLine(last_state.x(),last_state.y(),last_state.x(),last_state.y());
+    action_point->setRect(last_state.get_x_pos()-ap_size/2,last_state.get_y_pos()-ap_size/2,ap_size,ap_size);
+    switch(current_instance->action.get_derived<action_t>()->get_action()) {
+    case action_t::ACTION::STAY:
+        action_line->setLine(last_state.get_x_pos(),last_state.get_y_pos(),last_state.get_x_pos(),last_state.get_y_pos());
         break;
-    case action_t::UP:
-        action_line->setLine(last_state.x(),last_state.y(),last_state.x(),last_state.y()-al_length);
+    case action_t::ACTION::UP:
+        action_line->setLine(last_state.get_x_pos(),last_state.get_y_pos(),last_state.get_x_pos(),last_state.get_y_pos()-al_length);
         break;
-    case action_t::DOWN:
-        action_line->setLine(last_state.x(),last_state.y(),last_state.x(),last_state.y()+al_length);
+    case action_t::ACTION::DOWN:
+        action_line->setLine(last_state.get_x_pos(),last_state.get_y_pos(),last_state.get_x_pos(),last_state.get_y_pos()+al_length);
         break;
-    case action_t::LEFT:
-        action_line->setLine(last_state.x(),last_state.y(),last_state.x()-al_length,last_state.y());
+    case action_t::ACTION::LEFT:
+        action_line->setLine(last_state.get_x_pos(),last_state.get_y_pos(),last_state.get_x_pos()-al_length,last_state.get_y_pos());
         break;
-    case action_t::RIGHT:
-        action_line->setLine(last_state.x(),last_state.y(),last_state.x()+al_length,last_state.y());
+    case action_t::ACTION::RIGHT:
+        action_line->setLine(last_state.get_x_pos(),last_state.get_y_pos(),last_state.get_x_pos()+al_length,last_state.get_y_pos());
         break;
+    case action_t::ACTION::NONE:
+        DEBUG_ERROR("Invalid action (" << current_instance->action << ")");
     }
 
     // show reward by border color
     int border_idx = 0;
     bool matching_reward = false; // safety check
-    for(rewardIt_t rewIt=rewardIt_t::first(); rewIt!=INVALID; ++rewIt, ++border_idx) {
-        if(current_instance->reward==rewIt) {
+    for(reward_ptr_t reward : default_reward) {
+        if(current_instance->reward==reward) {
             borders[border_idx]->setVisible(true);
             matching_reward = true;
         } else {
             borders[border_idx]->setVisible(false);
         }
+        ++border_idx;
     }
 
     if(!matching_reward) {
@@ -485,24 +485,31 @@ void Maze::render_update() {
     rescale_scene(view);
 }
 
+void Maze::get_spaces(action_ptr_t & a, observation_ptr_t & o, reward_ptr_t & r) const {
+    a = action_ptr_t( new action_t( default_action ));
+    o = observation_ptr_t( new observation_t( default_observation ));
+    r = reward_ptr_t( new reward_t( default_reward ));
+}
+
 void Maze::set_state_colors(const color_vector_t colors) {
     state_colors = colors;
+    uint state_n = default_observation.get_x_dim()*default_observation.get_y_dim();
     if(state_colors.size()==0) {
-        state_colors.assign(observation_t::observation_n, color_t(0.9,0.9,0.9));
-    } else if(state_colors.size()!=observation_t::observation_n) {
+        state_colors.assign(state_n, color_t(0.9,0.9,0.9));
+    } else if(state_colors.size()!=state_n) {
         DEBUG_ERROR("Number of colors does not match number of states");
-        state_colors.resize(observation_t::observation_n, color_t(0.9,0.9,0.9));
+        state_colors.resize(state_n, color_t(0.9,0.9,0.9));
     }
 }
 
-void Maze::perform_transition(const action_t& action, std::vector<std::pair<int,int> > * reward_vector) {
+void Maze::perform_transition(const action_ptr_t& action, std::vector<std::pair<int,int> > * reward_vector) {
 
-    MazeState old_state = current_observation; // remember current (old) state
+    observation_t old_state = current_observation; // remember current (old) state
 
     if(DEBUG_LEVEL>=1) {
         DEBUG_OUT(1,"Current instance: ");
         const_instanceIt_t insIt = current_instance->it();
-        for(idx_t k_idx=0; k_idx<(idx_t)Config::k; ++k_idx) {
+        for(idx_t k_idx=0; k_idx<k; ++k_idx) {
             DEBUG_OUT(1,"    " << (*insIt) );
             --insIt;
         }
@@ -513,13 +520,19 @@ void Maze::perform_transition(const action_t& action, std::vector<std::pair<int,
     DEBUG_OUT(2,"Prob threshold = " << prob_threshold);
     probability_t prob_accum = 0;
     bool was_set = false;
-    for(observationIt_t observation_to=observationIt_t::first(); observation_to!=INVALID && !was_set; ++observation_to) {
-        for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID && !was_set; ++reward) {
+    for(observation_ptr_t observation_to : default_observation) {
+        if(was_set) {
+            break;
+        }
+        for(reward_ptr_t reward : default_reward) {
+            if(was_set) {
+                break;
+            }
             probability_t prob = get_prediction(current_instance, action, observation_to, reward, reward_vector);
             DEBUG_OUT(2,"observation(" << observation_to << "), reward(" << reward << ") --> prob=" << prob);
             prob_accum += prob;
             if(prob_accum>prob_threshold) {
-                current_observation = MazeState(observation_to);
+                current_observation = *(observation_to.get_derived<observation_t>());
                 current_instance = current_instance->append_instance(action, observation_to, reward);
                 was_set = true;
                 DEBUG_OUT(2,"CHOOSE");
@@ -531,42 +544,53 @@ void Maze::perform_transition(const action_t& action, std::vector<std::pair<int,
     }
 
     DEBUG_OUT(1, "(" <<
-              old_state.x() << "," <<
-              old_state.y() << ") + " <<
+              old_state.get_x_pos() << "," <<
+              old_state.get_y_pos() << ") + " <<
               action << " ==> (" <<
-              current_observation.x() << "," <<
-              current_observation.y() << ")"
+              current_observation.get_x_pos() << "," <<
+              current_observation.get_y_pos() << ")"
         );
 }
 
-void Maze::perform_transition(const action_t& action) {
+void Maze::perform_transition(const action_ptr_t& action) {
     perform_transition(action, nullptr);
 }
 
-void Maze::perform_transition(const action_t& a, observation_t& final_observation, reward_t& r) {
+void Maze::perform_transition(const action_ptr_t& a, observation_ptr_t& final_observation, reward_ptr_t& r) {
     perform_transition(a);
-    final_observation = current_observation.state_idx();
+    final_observation = observation_ptr_t(new observation_t(current_observation));
     r = current_instance->reward;
 }
 
-Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const action_t& action, const observation_t& observation_to, const reward_t& reward) const {
+Maze::probability_t Maze::get_prediction(
+    const instance_t*        instance_from,
+    const action_ptr_t&      action,
+    const observation_ptr_t& observation_to,
+    const reward_ptr_t&      reward
+    ) const {
     return get_prediction(instance_from, action, observation_to, reward, nullptr);
 }
 
-Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const action_t& action, const observation_t& observation_to, const reward_t& reward, vector<pair<int,int> > * reward_vector) const {
+Maze::probability_t Maze::get_prediction(
+    const instance_t*        instance_from,
+    const action_ptr_t&      action,
+    const observation_ptr_t& observation_to,
+    const reward_ptr_t&      reward,
+    vector<pair<int,int> > * reward_vector
+    ) const {
 
     // state 'from' and 'to'
-    MazeState maze_state_from(instance_from->observation);
-    MazeState maze_state_to(observation_to);
-    int x_from = maze_state_from.x();
-    int y_from = maze_state_from.y();
+    observation_t maze_state_from(*(instance_from->observation.get_derived<observation_t>()));
+    observation_t maze_state_to(*(observation_to.get_derived<observation_t>()));
+    int x_from = maze_state_from.get_x_pos();
+    int y_from = maze_state_from.get_y_pos();
 
     // states that can in principle be reached (ignoring walls and doors)
-    MazeState maze_state_stay(                               x_from   ,                                y_from   );
-    MazeState maze_state_left( clamp(0,Config::maze_x_size-1,x_from-1),                                y_from   );
-    MazeState maze_state_right(clamp(0,Config::maze_x_size-1,x_from+1),                                y_from   );
-    MazeState maze_state_up(                                 x_from   , clamp(0,Config::maze_y_size-1, y_from-1));
-    MazeState maze_state_down(                               x_from   , clamp(0,Config::maze_y_size-1, y_from+1));
+    observation_t maze_state_stay(  x_from, y_from                                               );
+    observation_t maze_state_left(  clamp(0,default_observation.get_x_dim()-1,x_from-1), y_from  );
+    observation_t maze_state_right( clamp(0,default_observation.get_x_dim()-1,x_from+1), y_from  );
+    observation_t maze_state_up(    x_from, clamp(0,default_observation.get_y_dim()-1, y_from-1) );
+    observation_t maze_state_down(  x_from, clamp(0,default_observation.get_y_dim()-1, y_from+1) );
 
     // check if state_to can be reached at all
     if( maze_state_to!=maze_state_stay  &&
@@ -579,7 +603,7 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
 
     // check and remember blocking/unblocking (store references as array for
     // later manipulation, ignore 'stay' which cannot be blocked/unblocked)
-    MazeState reachable_states[4] = { maze_state_left, maze_state_right, maze_state_up, maze_state_down };
+    observation_t reachable_states[4] = { maze_state_left, maze_state_right, maze_state_up, maze_state_down };
     bool  left_unblocked_by_door = false;
     bool right_unblocked_by_door = false;
     bool    up_unblocked_by_door = false;
@@ -593,15 +617,15 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
 
     // check for doors (unblocking doors take precedence over closed doors)
     for( auto d : doors ) {
-        MazeState s1 = get<DOOR_STATE_FROM>(d);
-        MazeState s2 = get<DOOR_STATE_TO>(d);
-        MazeState s3 = get<DOOR_KEY_STATE>(d);
+        observation_t s1 = get<DOOR_STATE_FROM>(d);
+        observation_t s2 = get<DOOR_STATE_TO>(d);
+        observation_t s3 = get<DOOR_KEY_STATE>(d);
         KEY_TYPE kt =  get<DOOR_KEY>(d);
         idx_t delay =  get<DOOR_TIME_DELAY>(d);
 
         // iterate through reachable state
         for(int idx=0; idx<4; ++idx) {
-            MazeState tmp_maze_state_to = reachable_states[idx];
+            observation_t tmp_maze_state_to = reachable_states[idx];
 
             // check if transition was unblocked already
             if(*unblocked_by_door[idx]) {
@@ -611,21 +635,22 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
             // check if the door connects the two states
             if( (tmp_maze_state_to==s1 && maze_state_from==s2) || (tmp_maze_state_to==s2 && maze_state_from==s1) ) {
 
+                // action must be set one iteration earlier because some times
+                // (e.g. in look-ahead search tree) one cannot go back to the
+                // future because it is not uniquely defined
+                action_t past_action = *(action.get_derived<action_t>());
+
                 // check if key was activated
                 idx_t steps_in_past = 0;
-                action_t past_action = action; // action must be set one
-                                               // iteration earlier because some
-                                               // times (e.g. in look-ahead
-                                               // search tree) one cannot go
-                                               // back to the future because it
-                                               // is not uniquely defines
-                for( const_instanceIt_t insIt = instance_from->const_it(); insIt!=INVALID && steps_in_past<=abs(delay); past_action=insIt->action, --insIt, ++steps_in_past) {
+                for(const_instanceIt_t insIt = instance_from->const_it();
+                    insIt!=INVALID && steps_in_past<=abs(delay);
+                    past_action=*(insIt->action.get_derived<action_t>()), --insIt, ++steps_in_past) {
 
                     // check if delay matches
                     if(delay<0 || steps_in_past==delay) { // exact match for positve delay less-equal match for negative
 
                         // check if key state was visited at that time
-                        if(MazeState(insIt->observation)==s3) {
+                        if(insIt->observation==s3) {
 
                             // check action
                             switch(kt) {
@@ -634,27 +659,27 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
                                 *unblocked_by_door[idx]=true;
                                 break;
                             case STAY_BUTTON:
-                                if(past_action==(action_t)action_t::STAY) {
+                                if(past_action==(action_t)action_t::ACTION::STAY) {
                                     *unblocked_by_door[idx]=true;
                                 }
                                 break;
                             case UP_BUTTON:
-                                if(past_action==(action_t)action_t::UP) {
+                                if(past_action==(action_t)action_t::ACTION::UP) {
                                     *unblocked_by_door[idx]=true;
                                 }
                                 break;
                             case DOWN_BUTTON:
-                                if(past_action==(action_t)action_t::DOWN) {
+                                if(past_action==(action_t)action_t::ACTION::DOWN) {
                                     *unblocked_by_door[idx]=true;
                                 }
                                 break;
                             case LEFT_BUTTON:
-                                if(past_action==(action_t)action_t::LEFT) {
+                                if(past_action==(action_t)action_t::ACTION::LEFT) {
                                     *unblocked_by_door[idx]=true;
                                 }
                                 break;
                             case RIGHT_BUTTON:
-                                if(past_action==(action_t)action_t::RIGHT) {
+                                if(past_action==(action_t)action_t::ACTION::RIGHT) {
                                     *unblocked_by_door[idx]=true;
                                 }
                                 break;
@@ -668,12 +693,12 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
 
     // check for walls
     for(auto w : walls) {
-        MazeState s1(w[0]);
-        MazeState s2(w[1]);
+        observation_t s1(w[0]);
+        observation_t s2(w[1]);
 
         // iterate through reachable states
         for(int idx=0; idx<4; ++idx) {
-            MazeState tmp_maze_state_to = reachable_states[idx];
+            observation_t tmp_maze_state_to = reachable_states[idx];
 
             // ignore wall if transition was unblocked by door or already blocked by wall
             // if(*unblocked_by_door[idx] || *blocked_by_wall[idx]) {
@@ -688,11 +713,11 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
     }
 
     // determine effective states (by considering blocking/unblocking)
-    MazeState effective_maze_state_stay  = maze_state_stay;
-    MazeState effective_maze_state_left  = ( left_unblocked_by_door || ! left_blocked_by_wall) ? maze_state_left  : maze_state_stay;
-    MazeState effective_maze_state_right = (right_unblocked_by_door || !right_blocked_by_wall) ? maze_state_right : maze_state_stay;
-    MazeState effective_maze_state_up    = (   up_unblocked_by_door || !   up_blocked_by_wall) ? maze_state_up    : maze_state_stay;
-    MazeState effective_maze_state_down  = ( down_unblocked_by_door || ! down_blocked_by_wall) ? maze_state_down  : maze_state_stay;
+    observation_t effective_maze_state_stay  = maze_state_stay;
+    observation_t effective_maze_state_left  = ( left_unblocked_by_door || ! left_blocked_by_wall) ? maze_state_left  : maze_state_stay;
+    observation_t effective_maze_state_right = (right_unblocked_by_door || !right_blocked_by_wall) ? maze_state_right : maze_state_stay;
+    observation_t effective_maze_state_up    = (   up_unblocked_by_door || !   up_blocked_by_wall) ? maze_state_up    : maze_state_stay;
+    observation_t effective_maze_state_down  = ( down_unblocked_by_door || ! down_blocked_by_wall) ? maze_state_down  : maze_state_stay;
 
     // determine state transition probabilites via effective states
     probability_t prob = 0;
@@ -705,24 +730,24 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
         if(maze_state_to==effective_maze_state_down ) prob += epsilon/5;
 
         // intended action
-        switch(action) {
-        case action_t::STAY:
+        switch(action.get_derived<action_t>()->get_action()) {
+        case action_t::ACTION::STAY:
             if(maze_state_to==effective_maze_state_stay ) prob += 1-epsilon;
             break;
-        case action_t::LEFT:
+        case action_t::ACTION::LEFT:
             if(maze_state_to==effective_maze_state_left ) prob += 1-epsilon;
             break;
-        case action_t::RIGHT:
+        case action_t::ACTION::RIGHT:
             if(maze_state_to==effective_maze_state_right) prob += 1-epsilon;
             break;
-        case action_t::UP:
+        case action_t::ACTION::UP:
             if(maze_state_to==effective_maze_state_up   ) prob += 1-epsilon;
             break;
-        case action_t::DOWN:
+        case action_t::ACTION::DOWN:
             if(maze_state_to==effective_maze_state_down ) prob += 1-epsilon;
             break;
-        default:
-            DEBUG_OUT(0,"Error: unknown action");
+        case action_t::ACTION::NONE:
+            DEBUG_ERROR("Invalid action (" << action << ")");
             return 0;
         }
 
@@ -732,14 +757,14 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
     }
 
     // calculate accumulated reward
-    reward_t accumulated_reward = 0;
+    reward_t::value_t accumulated_reward = 0;
     if(reward_vector!=nullptr) {
         reward_vector->assign(rewards.size(),make_pair(0,0));
     }
     for(int r_idx=0; r_idx<(int)rewards.size(); ++r_idx) {
         maze_reward_t r = rewards[r_idx];
-        MazeState activate_state(r[REWARD_ACTIVATION_STATE]);
-        MazeState receive_state(r[REWARD_RECEIVE_STATE]);
+        observation_t activate_state(r[REWARD_ACTIVATION_STATE]);
+        observation_t receive_state(r[REWARD_RECEIVE_STATE]);
         idx_t delay = r[REWARD_TIME_DELAY];
         REWARD_ACTIVATION_TYPE rat = (REWARD_ACTIVATION_TYPE)r[REWARD_ACTIVATION];
 
@@ -765,7 +790,7 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
 
                 // check if agent was on activation state
                 bool activation_state = false;
-                if(MazeState(insIt->observation)==activate_state) {
+                if(insIt->observation==activate_state) {
                     activation_state = true;
                 }
 
@@ -843,7 +868,7 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
     }
 
     // check for matching reward
-    if(reward!=accumulated_reward) {
+    if(reward->get_value()!=accumulated_reward) {
         return 0;
     }
 
@@ -851,53 +876,53 @@ Maze::probability_t Maze::get_prediction(const instance_t* instance_from, const 
 }
 
 void Maze::get_features(std::vector<f_ptr_t> & basis_features, LEARNER_TYPE type) const {
-    for(int k_idx = 0; k_idx>=-(int)Config::k; --k_idx) {
+    for(int k_idx = 0; k_idx>=-k; --k_idx) {
         if((type==CRF_LEARNER) ||
-           (type==UTREE_VALUE_LEARNER && k_idx>-(int)Config::k) ||
-           (type==UTREE_OBSERVATION_REWARD_LEARNER && k_idx>-(int)Config::k) ||
+           (type==UTREE_VALUE_LEARNER && k_idx>-k) ||
+           (type==UTREE_OBSERVATION_REWARD_LEARNER && k_idx>-k) ||
            (type==LINEAR_Q_LEARNER)) {
             // actions
-            for(action_t action : actionIt_t::all) {
+            for(action_ptr_t action : default_action) {
                 f_ptr_t action_feature = ActionFeature::create(action,k_idx);
                 basis_features.push_back(action_feature);
             }
         }
         if((type==CRF_LEARNER) ||
-           (type==UTREE_VALUE_LEARNER && k_idx>-(int)Config::k) ||
-           (type==UTREE_OBSERVATION_REWARD_LEARNER && k_idx>-(int)Config::k) ||
+           (type==UTREE_VALUE_LEARNER && k_idx>-k) ||
+           (type==UTREE_OBSERVATION_REWARD_LEARNER && k_idx>-k) ||
            (type==LINEAR_Q_LEARNER && k_idx<0)) {
             // observations
-            for(observation_t observation : observationIt_t::all) {
+            for(observation_ptr_t observation : default_observation) {
                 f_ptr_t observation_feature = ObservationFeature::create(observation,k_idx);
                 basis_features.push_back(observation_feature);
             }
         }
         if((type==CRF_LEARNER && k_idx==0) ||
-           (type==UTREE_VALUE_LEARNER && k_idx>-(int)Config::k) ||
-           (type==UTREE_OBSERVATION_REWARD_LEARNER && k_idx>-(int)Config::k) ||
+           (type==UTREE_VALUE_LEARNER && k_idx>-k) ||
+           (type==UTREE_OBSERVATION_REWARD_LEARNER && k_idx>-k) ||
            (type==LINEAR_Q_LEARNER && false)) {
             // reward
-            for(reward_t reward : rewardIt_t::all) {
+            for(reward_ptr_t reward : default_reward) {
                 f_ptr_t reward_feature = RewardFeature::create(reward,k_idx);
                 basis_features.push_back(reward_feature);
             }
         }
     }
 
-    if(type==CRF_LEARNER) {
-        // relative observation features
-        f_ptr_t relative_observation_feature;
-        relative_observation_feature = RelativeObservationFeature::create(1,0,-1,0);
-        basis_features.push_back(relative_observation_feature);
-        relative_observation_feature = RelativeObservationFeature::create(0,1,-1,0);
-        basis_features.push_back(relative_observation_feature);
-        relative_observation_feature = RelativeObservationFeature::create(-1,0,-1,0);
-        basis_features.push_back(relative_observation_feature);
-        relative_observation_feature = RelativeObservationFeature::create(0,-1,-1,0);
-        basis_features.push_back(relative_observation_feature);
-        relative_observation_feature = RelativeObservationFeature::create(0,0,-1,0);
-        basis_features.push_back(relative_observation_feature);
-    }
+    // if(type==CRF_LEARNER) {
+    //     // relative observation features
+    //     f_ptr_t relative_observation_feature;
+    //     relative_observation_feature = RelativeObservationFeature::create(1,0,-1,0);
+    //     basis_features.push_back(relative_observation_feature);
+    //     relative_observation_feature = RelativeObservationFeature::create(0,1,-1,0);
+    //     basis_features.push_back(relative_observation_feature);
+    //     relative_observation_feature = RelativeObservationFeature::create(-1,0,-1,0);
+    //     basis_features.push_back(relative_observation_feature);
+    //     relative_observation_feature = RelativeObservationFeature::create(0,-1,-1,0);
+    //     basis_features.push_back(relative_observation_feature);
+    //     relative_observation_feature = RelativeObservationFeature::create(0,0,-1,0);
+    //     basis_features.push_back(relative_observation_feature);
+    // }
     if(type==LINEAR_Q_LEARNER) {
         // also add a unit feature
         f_ptr_t const_feature = ConstFeature::create(1);
@@ -910,7 +935,7 @@ void Maze::print_reward_activation_on_random_walk(const int& walk_length) {
     // collect data
     vector<pair<long,long> > reward_vector(rewards.size(),make_pair(0,0));
     for(int i=0; i<walk_length; ++i) {
-        action_t action = action_t::random_action();
+        action_ptr_t action(new MazeAction(action_t::random_action()));
         vector<pair<int,int> > tmp_reward_vector;
         perform_transition(action,&tmp_reward_vector);
         for(int r_idx=0; r_idx<(int)reward_vector.size(); ++r_idx) {
@@ -934,12 +959,22 @@ void Maze::set_epsilon(const double& e) {
     epsilon = e;
 }
 
-void Maze::set_current_observation(const observation_t& observation) {
-    current_observation = MazeState(observation);
-    for(idx_t k_idx=0; k_idx<(idx_t)Config::k; ++k_idx) {
-        current_instance = current_instance->append_instance(action_t::STAY, current_observation.state_idx(), reward_t(0));
+void Maze::set_current_observation(const observation_ptr_t& observation) {
+    typedef std::shared_ptr<const observation_t> o_ptr_t;
+    o_ptr_t o = observation.get_derived<observation_t>(false);
+    if(o == o_ptr_t()) {
+        DEBUG_ERROR("Cast failed. Need to give an observation derived from '" << observation_t().space_descriptor() << "'");
+    } else {
+        current_observation = *o;
+        for(idx_t k_idx=0; k_idx<k; ++k_idx) {
+            current_instance = current_instance->append_instance(
+                action_ptr_t(new action_t(default_action)),
+                observation_ptr_t(new observation_t(current_observation)),
+                reward_ptr_t(new reward_t(default_reward))
+                );
+        }
+        DEBUG_OUT(1,"Set current state to " << current_observation);
     }
-    DEBUG_OUT(1,"Set current state to (" << current_observation.x() << "," << current_observation.y() << ")");
 }
 
 string Maze::get_rewards() {
@@ -949,7 +984,7 @@ string Maze::get_rewards() {
         ss << "    ACTIVATION_STATE : " << (observation_t)rewards[r_idx][REWARD_ACTIVATION_STATE] << endl;
         ss << "    RECEIVE_STATE    : " << (observation_t)rewards[r_idx][REWARD_RECEIVE_STATE] << endl;
         ss << "    TIME_DELAY       : " << (int)rewards[r_idx][REWARD_TIME_DELAY] << endl;
-        ss << "    reward           : " << (reward_t)rewards[r_idx][REWARD_VALUE] << endl;
+        ss << "    reward           : " << rewards[r_idx][REWARD_VALUE] << endl;
         ss << "    activation       : " << reward_activation_type_str((REWARD_ACTIVATION_TYPE)rewards[r_idx][REWARD_ACTIVATION]) << endl;
     }
     return ss.str();
@@ -1000,15 +1035,34 @@ void Maze::frame_maze() {
 
     QGraphicsScene * scene = view->scene();
 
-    MazeState first_maze_state(observationIt_t::first());
-    MazeState last_maze_state(observationIt_t::last());
-    double border_x = first_maze_state.x()-state_size/2 - border_margin;
-    double border_y = first_maze_state.y()-state_size/2 - border_margin;
-    double border_width = last_maze_state.x()+state_size/2 - border_x + border_margin;
-    double border_height = last_maze_state.y()+state_size/2 - border_y + border_margin;
-    double reward_magnitude = max(fabs(reward_t::max_reward), fabs(reward_t::min_reward));
-    for(rewardIt_t rewIt=rewardIt_t::first(); rewIt!=INVALID; ++rewIt) {
-        double intensity = ((reward_t)rewIt)/reward_magnitude;
+    // determine border dimensions
+    double border_min_x = DBL_MAX;
+    double border_min_y = DBL_MAX;
+    double border_max_x = -DBL_MAX;
+    double border_max_y = -DBL_MAX;
+    for(observation_ptr_t o : default_observation) {
+        border_min_x = min(border_min_x,(double)o.get_derived<observation_t>()->get_x_pos());
+        border_min_y = min(border_min_y,(double)o.get_derived<observation_t>()->get_y_pos());
+        border_max_x = max(border_max_x,(double)o.get_derived<observation_t>()->get_x_pos());
+        border_max_y = max(border_max_y,(double)o.get_derived<observation_t>()->get_y_pos());
+    }
+    double border_x = border_min_x - state_size/2 - border_margin;
+    double border_y = border_min_y - state_size/2 - border_margin;
+    double border_width  = border_max_x - border_min_x + state_size + 2*border_margin;
+    double border_height = border_max_y - border_min_y + state_size + 2*border_margin;
+
+    // determine reward range
+    double min_reward = DBL_MAX;
+    double max_reward = -DBL_MAX;
+    for(reward_ptr_t r : default_reward) {
+        min_reward = min(min_reward,r->get_value());
+        max_reward = max(max_reward,r->get_value());
+    }
+    double reward_magnitude = max_reward - min_reward;
+
+    // create frames for different reward values
+    for(reward_ptr_t r : default_reward) {
+        double intensity = r->get_value()/reward_magnitude;
         bool positive = intensity>=0;
         intensity = fabs(intensity);
         if(intensity!=0) {
@@ -1024,14 +1078,18 @@ void Maze::frame_maze() {
     }
 }
 
-void Maze::render_state(observation_t s) {
+void Maze::render_state(observation_ptr_t observation) {
 
+    // get corret observation type
+    observation_t o = *(observation.get_derived<observation_t>());
+
+    // get scene
     QGraphicsScene * scene = view->scene();
 
+    // create state
     QPen state_pen(QColor(0,0,0), 0.02, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-    MazeState maze_state(s);
-    QGraphicsRectItem * rect = scene->addRect( maze_state.x()-state_size/2,
-                                               maze_state.y()-state_size/2,
+    QGraphicsRectItem * rect = scene->addRect( o.get_x_pos()-state_size/2,
+                                               o.get_y_pos()-state_size/2,
                                                state_size,
                                                state_size,
                                                state_pen,
@@ -1047,12 +1105,12 @@ void Maze::render_wall(wall_t w) {
     QPen wall_pen(QColor(50,50,50), 0.02, Qt::SolidLine, Qt::RoundCap);
     QBrush wall_brush(QColor(50,50,50));
 
-    MazeState maze_state_1(w[0]);
-    MazeState maze_state_2(w[1]);
-    idx_t x_1 = maze_state_1.x();
-    idx_t y_1 = maze_state_1.y();
-    idx_t x_2 = maze_state_2.x();
-    idx_t y_2 = maze_state_2.y();
+    observation_t maze_state_1(w[0]);
+    observation_t maze_state_2(w[1]);
+    idx_t x_1 = maze_state_1.get_x_pos();
+    idx_t y_1 = maze_state_1.get_y_pos();
+    idx_t x_2 = maze_state_2.get_x_pos();
+    idx_t y_2 = maze_state_2.get_y_pos();
     if( abs(x_1-x_2)==1 && abs(y_1-y_2)==0 ) {
         idx_t x_min = min<idx_t>(x_1,x_2);
         idx_t y = y_1;
@@ -1076,9 +1134,9 @@ void Maze::render_door(door_t dt) {
 
     QGraphicsScene * scene = view->scene();
 
-    MazeState s1 = get<DOOR_STATE_FROM>(dt);
-    MazeState s2 = get<DOOR_STATE_TO>(dt);
-    MazeState s3 = get<DOOR_KEY_STATE>(dt);
+    observation_t s1 = get<DOOR_STATE_FROM>(dt);
+    observation_t s2 = get<DOOR_STATE_TO>(dt);
+    observation_t s3 = get<DOOR_KEY_STATE>(dt);
     KEY_TYPE kt =  get<DOOR_KEY>(dt);
     idx_t delay =  get<DOOR_TIME_DELAY>(dt);
     color_t c = get<DOOR_COLOR>(dt);
@@ -1088,10 +1146,10 @@ void Maze::render_door(door_t dt) {
     QBrush door_brush(door_color);
 
     // draw door
-    idx_t x1 = s1.x();
-    idx_t y1 = s1.y();
-    idx_t x2 = s2.x();
-    idx_t y2 = s2.y();
+    idx_t x1 = s1.get_x_pos();
+    idx_t y1 = s1.get_y_pos();
+    idx_t x2 = s2.get_x_pos();
+    idx_t y2 = s2.get_y_pos();
     if( abs(x1-x2)==1 && abs(y1-y2)==0 ) {
         idx_t x_min = min<idx_t>(x1,x2);
         idx_t y = y1;
@@ -1107,8 +1165,8 @@ void Maze::render_door(door_t dt) {
     }
 
     // draw key
-    idx_t x3 = s3.x();
-    idx_t y3 = s3.y();
+    idx_t x3 = s3.get_x_pos();
+    idx_t y3 = s3.get_y_pos();
     double text_x, text_y;
     switch(kt) {
     case PASS_BUTTON:
@@ -1163,12 +1221,12 @@ void Maze::render_reward(maze_reward_t r) {
 
     QGraphicsScene * scene = view->scene();
 
-    MazeState maze_state_1((int)r[REWARD_ACTIVATION_STATE]);
-    MazeState maze_state_2((int)r[REWARD_RECEIVE_STATE]);
-    double x_start   = maze_state_1.x();
-    double y_start   = maze_state_1.y();
-    double x_end     = maze_state_2.x();
-    double y_end     = maze_state_2.y();
+    observation_t maze_state_1((int)r[REWARD_ACTIVATION_STATE]);
+    observation_t maze_state_2((int)r[REWARD_RECEIVE_STATE]);
+    double x_start   = maze_state_1.get_x_pos();
+    double y_start   = maze_state_1.get_y_pos();
+    double x_end     = maze_state_2.get_x_pos();
+    double y_end     = maze_state_2.get_y_pos();
     double x_shift   = -(y_end-y_start)/5;
     double y_shift   = (x_end-x_start)/5;
     double x_control = (x_start+x_end)/2+x_shift;
@@ -1266,7 +1324,7 @@ void Maze::render_reward(maze_reward_t r) {
         double mid_point_x = x_start + (x_end - x_start)/2;
         double mid_point_y = y_start + (y_end - y_start)/2;
         idx_t time_delay = (idx_t)r[REWARD_TIME_DELAY];
-        reward_t reward = (reward_t)r[REWARD_VALUE];
+        reward_t::value_t reward = r[REWARD_VALUE];
         QGraphicsTextItem * txt = scene->addText(
             QString("t=%1,r=%2").arg(QString::number(time_delay)).arg(QString::number(reward)),
             text_font
