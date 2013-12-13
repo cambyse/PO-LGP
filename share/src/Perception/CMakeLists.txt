@@ -22,5 +22,5 @@ endif(LIBAV_FOUND)
 # the __STDC thing is necessary for UINT64_C, which opencv needs
 add_definitions(-D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DMT_Core -DMT_Gui -DMT_OPENCV ${OPENCV_CFLAGS})
 link_directories(${OPENCV_LIBRARY_DIRS})
-target_link_libraries(Perception Core Gui ${OPENCV_LDFLAGS} ${OPENCV_LIBRARIES})
+target_link_libraries(Perception LINK_PRIVATE Core Gui Ors extern_SWIFT ${OPENCV_LDFLAGS} ${OPENCV_LIBRARIES})
 
