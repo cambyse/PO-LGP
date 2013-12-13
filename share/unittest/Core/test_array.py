@@ -342,6 +342,21 @@ class TestList_SWIGTypemaps:
         c = core_testpy.TestClass()
         t = core_testpy.ListTest()
         t.d = 10
-        c.a_list.append(t)
+        c.a_list.append(t)  # this appends to a copy. I have no clue how to fix
+                            # this.
 
         assert c.a_list[0].d == 10
+
+    def test_argout(self):
+        l = []
+        c = core_testpy.argout_list_test(l)
+        assert c[0].d == 10
+        assert c[1].d == 20
+
+    def test_inplace(self):
+        l = [core_testpy.ListTest(20), core_testpy.ListTest(10)]
+        assert abs(l[1].d - 10) < .01
+        assert abs(l[0].d - 20) < .01
+        c = core_testpy.argout_inplace_list_test(l)
+        assert abs(c[0].d - 10) < .01
+        assert abs(c[1].d - 20) < .01
