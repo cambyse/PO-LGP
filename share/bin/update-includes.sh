@@ -24,12 +24,6 @@ do
     then
       echo "set(SOURCES ${CPP_SOURCES})" >> $tmpname
     fi
-    # look for Python wrapper source
-    SWIG_SOURCES=$(ls *.i 2>/dev/null)
-    if [ ! -z "$SWIG_SOURCES" ]
-    then
-      echo "set(SWIG_SOURCES ${SWIG_SOURCES})" >> $tmpname
-    fi
     # only update include if content changed, to prevent unnecessary cmake calls
     if cmp $incname $tmpname >/dev/null 2>&1
     then

@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 2.8.1)
 project(MLR_SHARE)
 cmake_policy(SET CMP0015 NEW)
 
+# path for find macros
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
+
 # perform common checks
 find_package (Threads REQUIRED)
 find_package(LAPACK)
@@ -21,17 +24,31 @@ if(TESTING_ENABLED)
                 set(TESTING_ENABLED)
         endif(GTEST_H_FOUND)
 endif(TESTING_ENABLED)
-option(PYTHON_ENABLED "Build python bindings using SWIG. Will be omitted of swig is not found" ON)
-if(PYTHON_ENABLED)
+
+# configure Python
+option(ENABLE_PYTHON "Build python bindings using SWIG. Will be omitted of swig or NumPy are not found" ON)
+if(ENABLE_PYTHON)
   find_package(SWIG 2.0)
   if(SWIG_FOUND)
     include(${SWIG_USE_FILE})
     find_package(PythonInterp 2.7)
     find_package(PythonLibs 2.7)
+    find_package(NumPy)
+    if(NUMPY_FOUND)
+      set(PYTHON_OK ON)
+      set(PYTHON_INCLUDES 
+        ${PYTHON_INCLUDE_DIRS} 
+        ${NUMPY_INCLUDE_DIRS}
+        ${CMAKE_SOURCE_DIR}/include/numpy-${NUMPY_VERSION_MAJOR}.${NUMPY_VERSION_MINOR}
+        ${CMAKE_SOURCE_DIR}/include/numpy
+    )
+
+    else(NUMPY_FOUND)
+    endif(NUMPY_FOUND)
   else(SWIG_FOUND)
     message(STATUS "swig not found, will not build Python bindings")
   endif(SWIG_FOUND)
-endif(PYTHON_ENABLED)
+endif(ENABLE_PYTHON)
 
 # common configuration
 include_directories(src)
