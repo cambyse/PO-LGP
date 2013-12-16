@@ -44,8 +44,6 @@ public:
     /** \brief Updates the graphical representation. */
     virtual void render_update() override;
 
-    virtual void get_spaces(action_ptr_t & a, observation_ptr_t & o, reward_ptr_t & r) const override;
-
     void set_state_colors(const color_vector_t colors = color_vector_t());
 
     /** \brief Perform a transition by executing an action. */
@@ -154,12 +152,13 @@ private:
     // Data Members //
     //==============//
 
-    int k;                             ///< k-MDP length.
-    uint x_dimensions;                 ///< x dimensions of the maze.
-    uint y_dimensions;                 ///< y dimensions of the maze.
     action_t default_action;           ///< Default action.
     observation_t default_observation; ///< Default state.
     reward_t default_reward;           ///< Default reward.
+
+    int k;                             ///< k-MDP length.
+    uint x_dimensions;                 ///< x dimensions of the maze.
+    uint y_dimensions;                 ///< y dimensions of the maze.
 
     /** \brief The current state of the maze including the complete past. */
     instance_t * current_instance;

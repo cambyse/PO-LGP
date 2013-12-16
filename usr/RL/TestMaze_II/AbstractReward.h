@@ -6,7 +6,7 @@
 class AbstractReward: public util::AbstractIteratableSpace<AbstractReward> {
 public:
     typedef double value_t;
-    enum class REWARD_TYPE { NONE, LISTED_REWARD };
+    enum class REWARD_TYPE { NONE, MINIMAL, LISTED_REWARD };
     AbstractReward(REWARD_TYPE t = REWARD_TYPE::NONE);
     virtual Iterator begin() const override;
     virtual ptr_t next() const override;

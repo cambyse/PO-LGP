@@ -18,7 +18,7 @@ public:
     typedef std::shared_ptr<const Feature> const_feature_ptr_t;
     typedef double feature_return_value;
     typedef std::unordered_map<const_feature_ptr_t, feature_return_value> look_up_map_t;
-    enum TYPE { ABSTRACT, CONST_FEATURE, ACTION, OBSERVATION, REWARD, AND };
+    enum FEATURE_TYPE { ABSTRACT, CONST_FEATURE, ACTION, OBSERVATION, REWARD, AND };
     // functions
     Feature();
     virtual ~Feature();
@@ -31,13 +31,13 @@ public:
     virtual bool operator==(const Feature& other) const;
     virtual bool operator!=(const Feature& other) const;
     virtual bool operator<(const Feature& other) const;
-    virtual TYPE get_type() const;
+    virtual FEATURE_TYPE get_feature_type() const;
     virtual unsigned int get_complexity() const;
     virtual bool is_const_feature() const { return const_feature; }
     virtual bool contradicts(const Feature&) const { return false; }
 protected:
     // member variables
-    TYPE type;
+    FEATURE_TYPE feature_type;
     unsigned int complexity;
     bool const_feature;
     feature_return_value const_return_value;

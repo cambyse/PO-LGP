@@ -106,6 +106,8 @@ namespace util {
     class AbstractIteratableSpace {
     public:
 
+        class Iterator; // forward declaration for use in PointerType
+
         /** \brief Pointer class used as return type.
          *
          * The class uses std::shared_ptr as underlying type but defines
@@ -117,14 +119,17 @@ namespace util {
         PointerType(const DerivedSpace * d): ptr(d) {}
             PointerType(const PointerType&) = default;
             virtual ~PointerType() final = default;
-            virtual operator const DerivedSpace() const {
-                return *ptr;
-            }
             virtual const DerivedSpace & operator*() const final {
                 return ptr.operator*();
             }
             virtual const DerivedSpace * operator->() const final {
                 return ptr.operator->();
+            }
+            virtual Iterator begin() const {
+                return ptr->begin();
+            }
+            virtual Iterator end() const {
+                return ptr->end();
             }
             virtual bool operator!=(const DerivedSpace& other) const final {
                 return *(this->ptr)!=other;
@@ -142,7 +147,7 @@ namespace util {
                 return *(this->ptr)<*(other.ptr);
             }
             friend inline std::ostream& operator<<(std::ostream& out, const PointerType& ptr) {
-                return out << (DerivedSpace)ptr;
+                return out << *ptr;
             }
             template < class T > std::shared_ptr<const T> get_derived(bool report_error = true) const {
                 std::shared_ptr<const T> ret_ptr = std::dynamic_pointer_cast<const T>(ptr);

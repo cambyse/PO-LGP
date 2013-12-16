@@ -4,7 +4,7 @@ QT += core \
     gui \
     svg \
     printsupport
-    HEADERS += \
+HEADERS += \
     ../Config.h \
     ../util.h \
     ../Feature.h \
@@ -24,6 +24,7 @@ QT += core \
     MinimalEnvironmentExample/MinimalAction.h \
     MinimalEnvironmentExample/MinimalObservation.h \
     MinimalEnvironmentExample/MinimalReward.h \
+#    MinimalEnvironmentExample/MinimalFeature.h \
     MinimalEnvironmentExample/MinimalEnvironment.h
 SOURCES += \
     main.cpp \
@@ -34,6 +35,7 @@ SOURCES += \
     ../AbstractObservation.cpp \
     ../AbstractReward.cpp \
     ../ListedReward.cpp \
+    ../PredictiveEnvironment.cpp \
     ../FeatureLearner.cpp \
     ../VisualEnvironment.cpp \
     ../Maze/Maze.cpp \
@@ -43,6 +45,7 @@ SOURCES += \
     PlayGround.cpp \
     AbstractIteratableSpaceTest.cpp \
     FeatureTest.cpp \
+#    TemplateTest.cpp \
     EnvironmentTest.cpp
 LIBS += -llbfgs \
     -lemon \

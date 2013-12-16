@@ -9,7 +9,7 @@ using std::string;
 using util::INVALID;
 
 Feature::Feature():
-    type(ABSTRACT),
+    feature_type(ABSTRACT),
     complexity(0),
     const_feature(false)
 {}
@@ -52,7 +52,7 @@ std::ostream& operator<<(std::ostream &out, const Feature& f) {
 }
 
 bool Feature::operator==(const Feature& other) const {
-    return this->type==other.type;
+    return this->feature_type==other.feature_type;
 }
 
 bool Feature::operator!=(const Feature& other) const {
@@ -63,8 +63,8 @@ bool Feature::operator<(const Feature& other) const {
     return false;
 }
 
-Feature::TYPE Feature::get_type() const {
-    return type;
+Feature::FEATURE_TYPE Feature::get_feature_type() const {
+    return feature_type;
 }
 
 unsigned int Feature::get_complexity() const{
@@ -77,7 +77,7 @@ Feature::feature_return_value Feature::return_function(const feature_return_valu
 }
 
 ConstFeature::ConstFeature(const feature_return_value& v) {
-    type = CONST_FEATURE;
+    feature_type = CONST_FEATURE;
     complexity = 0;
     const_feature = true;
     const_return_value = v;
@@ -115,7 +115,7 @@ bool ConstFeature::operator==(const Feature& other) const {
 }
 
 ActionFeature::ActionFeature(const action_ptr_t& a, const int& d): action(a), delay(d) {
-    type = ACTION;
+    feature_type = ACTION;
     complexity = 1;
 }
 
@@ -158,7 +158,7 @@ bool ActionFeature::operator==(const Feature& other) const {
 }
 
 ObservationFeature::ObservationFeature(const observation_ptr_t& s, const int& d): observation(s), delay(d) {
-    type = OBSERVATION;
+    feature_type = OBSERVATION;
     complexity = 1;
 }
 
@@ -201,7 +201,7 @@ bool ObservationFeature::operator==(const Feature& other) const {
 }
 
 RewardFeature::RewardFeature(const reward_ptr_t& r, const int& d): reward(r), delay(d) {
-    type = REWARD;
+    feature_type = REWARD;
     complexity = 1;
 }
 
@@ -360,7 +360,7 @@ void AndFeature::add_feature(const Feature& f) {
 }
 
 void AndFeature::finalize_construction() {
-    type = AND;
+    feature_type = AND;
     complexity = subfeatures.size();
     check_for_contradicting_subfeatures();
 }
@@ -368,7 +368,7 @@ void AndFeature::finalize_construction() {
 void AndFeature::check_for_contradicting_subfeatures() {
     for( auto sub_1 : subfeatures ) {
         for( auto sub_2 : subfeatures ) {
-            if(sub_1->get_type()==sub_2->get_type() && sub_1->contradicts(*sub_2)) {
+            if(sub_1->get_feature_type()==sub_2->get_feature_type() && sub_1->contradicts(*sub_2)) {
                 const_feature = true;
                 const_return_value = 0;
                 return;

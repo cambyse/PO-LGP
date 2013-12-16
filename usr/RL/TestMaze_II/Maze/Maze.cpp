@@ -351,8 +351,14 @@ Maze::Maze(const double& eps):
     epsilon(eps),
     agent(nullptr)
 {
+    // set spaces
+    action_space = action_ptr_t(new action_t(default_action));
+    observation_space = observation_ptr_t(new observation_t(default_observation));
+    reward_space = reward_ptr_t(new reward_t(default_reward));
+
     // set state colors
     set_state_colors();
+
     // setting current state
     current_instance = instance_t::create(
         action_ptr_t(new action_t(default_action)),
@@ -483,12 +489,6 @@ void Maze::render_update() {
     }
 
     rescale_scene(view);
-}
-
-void Maze::get_spaces(action_ptr_t & a, observation_ptr_t & o, reward_ptr_t & r) const {
-    a = action_ptr_t( new action_t( default_action ));
-    o = observation_ptr_t( new observation_t( default_observation ));
-    r = reward_ptr_t( new reward_t( default_reward ));
 }
 
 void Maze::set_state_colors(const color_vector_t colors) {
