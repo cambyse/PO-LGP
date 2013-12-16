@@ -34,7 +34,6 @@ MPC::MPC(uint _plan_time_factor, ors::Graph &_orsG):
   t_prev = 0.;
   t_plan_prev = 0.;
 
-#ifdef VISUALIZE
   // transform trajectory in cartesian space for visualization
   arr kinPos;
   y_cart.clear();
@@ -45,14 +44,13 @@ MPC::MPC(uint _plan_time_factor, ors::Graph &_orsG):
     orsG->kinematicsPos(kinPos,P->ors->getBodyByName("endeff")->index);
     y_cart.append(~kinPos);
   }
-#endif
 }
 
 arr MPC::iterate(double _t, arr &_state, arr &_goal, double _simRate) {
   P->swift->computeProxies(*orsG);
 
   // save trajectory every dt steps
-  if (_t >= (t_prev+dt)) {
+  if (_t >= (t_prev+dt-1e-10)) {
     y_bk.append(~_state);
     t_prev = _t;
   }
@@ -69,7 +67,6 @@ arr MPC::iterate(double _t, arr &_state, arr &_goal, double _simRate) {
 
 void MPC::replanTrajectory(arr &_state, arr &_goal, double _t) {
   P->T = P->T-plan_time_factor;
-  cout << "P.T: " << P->T << endl;
 
   arr prefix(2,n);
   prefix[1] = y_bk[y_bk.d0-2];
@@ -90,14 +87,17 @@ void MPC::replanTrajectory(arr &_state, arr &_goal, double _t) {
 
   // update reference trajectory
   yRef = yRef.rows(plan_time_factor,yRef.d0);
+
   MT::timerStart();
-  optNewton(yRef, Convert(*F), OPT(verbose=1, stopIters=10, useAdaptiveDamping=false, damping=1e-3, maxStep=1., stopTolerance=1e-2));
+  optNewton(yRef, Convert(*F), OPT(verbose=0, stopIters=10, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
   std::cout <<"optimization time: " <<MT::timerRead() <<"sec" <<std::endl;
+  //  cout << "Opt change: "<< sum((yRef- z)%(yRef- z)) << endl;
+
 
   arr knots = linspace(_t,T*dt,P->T);
   s = new Spline(knots,yRef,2);
 
-#ifdef VISUALIZE
+#if VISUALIZE
   // transform trajectory in cartesian space for visualization
   arr kinPos;
   y_cart.clear();

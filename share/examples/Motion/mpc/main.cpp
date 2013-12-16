@@ -212,7 +212,7 @@ void scenario2() {
 
 
   //** Replan from index i **//
-  uint i = 50;
+  uint i = 2;
   arr x0 = xRef[i];
   arr v0 = (xRef[i+1]-xRef[i])/dt;
   arr a0 = (xRef[i+1]+xRef[i-1]-2.*xRef[i])/(dt*dt);
@@ -266,11 +266,10 @@ void scenario3() {
   OpenGL gl;
   ors::Graph G;
 
-  init(G, gl, "scenes/scene1.ors");
+  init(G, gl, "scenes/scene1");
   makeConvexHulls(G.shapes);
 
   MPC mpc(10,G);
-  //  plotTraj(mpc.yRef,mpc.dt);
 
   arr q0, qd0, q, qd, goal, qn;
   double t = 0.0;
@@ -282,7 +281,7 @@ void scenario3() {
   G.getJointState(q);
 
   gl.add(drawActTraj,&(mpc.y_cart));
-  MObject goalMO(&G, MT::String("goal"), MObject::GOAL , 0.001, ARRAY(0.,0.,1.));
+  MObject goalMO(&G, MT::String("goal"), MObject::GOAL , 0.01, ARRAY(0.,0.,1.));
 
   // execute trajectory while continiously replanning
   while (t < (mpc.T*mpc.dt-1e-2)) {

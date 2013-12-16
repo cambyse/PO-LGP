@@ -13,7 +13,7 @@
 
 struct Pfc{
 
-    Pfc(ors::Graph &_orsG, arr& _trajRef, double _TRef, arr &_x0, MObject &_goalMO, \
+    Pfc(ors::Graph &_orsG, arr& _trajRef, double _TRef, arr &_x0, arr &_q0, MObject &_goalMO, \
         bool _useOrientation, bool _useCollAvoid, \
         double _fPos_deviation, double _fVec_deviation, double _yCol_deviation, double _w_reg);
     void printState();
@@ -43,6 +43,7 @@ struct Pfc{
     // Actual Trajectory
     arr traj;
     arr x0; // start pos
+    arr q0;
     arr s;
     arr goal;
     arr lastGoal;
@@ -56,14 +57,14 @@ struct Pfc{
     // Wrapped Trajectory
     Spline *trajWrap;
 
-
     // Reference Trajectory
     Spline *trajRef;
     arr dtrajRef;
     arr goalRef;
     arr sRef;
 
-
+    String scene;
+    arr joints_bk;
 
 };
 
