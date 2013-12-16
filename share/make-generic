@@ -558,7 +558,7 @@ default: $(OUTPUT)
 clean:
 	@rm -f $(OUTPUT) $(OBJS) $(PREOBJS) callgrind.out.* $(CLEAN)
 	@find . -type d -name 'Make.lock' -delete
-	@rm -f $(MODULE_NAME)_wrap.* $(MODULE_NAME)py.so
+	@rm -f $(MODULE_NAME)_wrap.* $(MODULE_NAME)py.so $(MODULE_NAME)py.py
 
 depend: generate_Makefile.dep
 
