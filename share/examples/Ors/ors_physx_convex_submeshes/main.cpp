@@ -2,7 +2,7 @@
 #include <Gui/opengl.h>
 
 void TEST(PhysxConvexSubmeshes) {
-  ors::Graph graph;
+  ors::KinematicWorld graph;
   graph.init("doorSimple.ors");
   ors::Body* robot = graph.getBodyByName("robot");
   graph.calcBodyFramesFromJoints();

@@ -85,7 +85,7 @@ public:
 };
 
 
-arr create_endpose(ors::Graph& G) {
+arr create_endpose(ors::KinematicWorld& G) {
   MotionProblem P(&G);
 
   P.loadTransitionParameters();
@@ -106,7 +106,7 @@ arr create_endpose(ors::Graph& G) {
   return x;
 }
 
-arr create_rrt_trajectory(ors::Graph& G, arr& target) {
+arr create_rrt_trajectory(ors::KinematicWorld& G, arr& target) {
   double stepsize = MT::getParameter<double>("rrt_stepsize", .005);
 
   // create MotionProblem
@@ -128,7 +128,7 @@ arr create_rrt_trajectory(ors::Graph& G, arr& target) {
   return planner.getTrajectoryTo(target);
 }
 
-arr optimize_trajectory(ors::Graph& G, arr& init_trajectory) {
+arr optimize_trajectory(ors::KinematicWorld& G, arr& init_trajectory) {
   // create MotionProblem
   MotionProblem P(&G);
   P.loadTransitionParameters();
@@ -150,7 +150,7 @@ arr optimize_trajectory(ors::Graph& G, arr& init_trajectory) {
   return x;
 }
 
-void show_trajectory(ors::Graph& G, OpenGL& gl, arr& trajectory, const char* title) {
+void show_trajectory(ors::KinematicWorld& G, OpenGL& gl, arr& trajectory, const char* title) {
   arr start;
   G.getJointState(start);
   displayTrajectory(trajectory, trajectory.d0, G, gl, title);
@@ -198,7 +198,7 @@ int main(int argc, char** argv) {
 
   rnd.seed(seed);
 
-  ors::Graph G("world.ors");
+  ors::KinematicWorld G("world.ors");
   makeConvexHulls(G.shapes);
 
   OpenGL gl;

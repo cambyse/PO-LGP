@@ -45,7 +45,7 @@ void ImitateTask::initTaskVariables(ControllerModule *ctrl){
 }
 
 
-ImitateTaskVariable::ImitateTaskVariable(const char* _name, ors::Graph& _ors){
+ImitateTaskVariable::ImitateTaskVariable(const char* _name, ors::KinematicWorld& _ors){
 	landmarks = GetLandmarks(&_ors);
 	nCounter = 1;//change time for dynamic case
 	nIterations = MT::getParameter<int>("iterations");

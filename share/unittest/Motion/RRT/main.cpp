@@ -14,7 +14,7 @@ class RRTPlannerTest : public ::testing::Test {
     arr start;
     arr target;
 
-    ors::Graph G;
+    ors::KinematicWorld G;
 
     double stepsize; // RRT stepsize
     double eps;      // eps environment size

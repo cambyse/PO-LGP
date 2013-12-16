@@ -25,7 +25,7 @@ void TEST(OrsEditor) {
   if(MT::argc==2) file=MT::argv[1];
   cout <<"opening file `" <<file <<"'" <<endl;
 
-  ors::Graph G;
+  ors::KinematicWorld G;
   OpenGL gl;
   init(G, gl, file);
 

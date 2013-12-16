@@ -1,6 +1,6 @@
 #include "pfc.h"
 
-Pfc::Pfc(ors::Graph &_orsG, arr& _trajRef, double _TRef, arr &_x0, arr &_q0, MObject &_goalMO, \
+Pfc::Pfc(ors::KinematicWorld &_orsG, arr& _trajRef, double _TRef, arr &_x0,arr &_q0, MObject &_goalMO, \
         bool _useOrientation, bool _useCollAvoid, \
         double _fPos_deviation, double _fVec_deviation, double _yCol_deviation, double _w_reg):
         orsG(&_orsG),

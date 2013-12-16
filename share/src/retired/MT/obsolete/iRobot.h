@@ -81,7 +81,7 @@ struct ControllerProcess{ //--non-threaded!!
   arr q_home; //posture as loaded from the ors file
   
   //INTERNAL
-  ors::Graph ors;
+  ors::KinematicWorld ors;
   SwiftInterface swift;
   OrsSystem sys;
   CycleTimer timer;

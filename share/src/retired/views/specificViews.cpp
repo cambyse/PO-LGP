@@ -81,7 +81,7 @@ void MeshView::glDraw() {
 
 //===========================================================================
 
-REGISTER_VIEW(OrsView, ors::Graph);
+REGISTER_VIEW(OrsView, ors::KinematicWorld);
 
 void OrsView::glInit() {
   gl->setClearColors(1.,1.,1.,1.);
@@ -93,7 +93,7 @@ void OrsView::glInit() {
 
 void OrsView::glDraw() {
   if(objectLock) objectLock->readLock();
-  orsCopy = *( (ors::Graph*) object );
+  orsCopy = *( (ors::KinematicWorld*) object );
   if(objectLock) objectLock->unlock();
   glStandardScene(NULL);
   orsCopy.glDraw();

@@ -29,11 +29,11 @@ TEST(OrsTest, testTransformations) {
 
 TEST(OrsTest, testGraph) {
   {
-    ors::Graph G;
+    ors::KinematicWorld G;
     G.init("world.ors");
   }
   {
-    ors::Graph *G2 = new ors::Graph();
+    ors::KinematicWorld *G2 = new ors::KinematicWorld();
     G2->init("world-complex.ors");
     delete G2;
   }

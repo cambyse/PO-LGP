@@ -45,10 +45,10 @@ struct PerceptionModule:public Process {
   void close(){};
 };
 
-void realizeObjectsInOrs(ors::Graph& ors, const MT::Array<Object>& objects);
+void realizeObjectsInOrs(ors::KinematicWorld& ors, const MT::Array<Object>& objects);
 
-//void copyShapeInfos(ors::Graph& A, const ors::Graph& B);
-void copyBodyInfos(ors::Graph& A, const ors::Graph& B);
+//void copyShapeInfos(ors::KinematicWorld& A, const ors::KinematicWorld& B);
+void copyBodyInfos(ors::KinematicWorld& A, const ors::KinematicWorld& B);
 
 #ifdef  MT_IMPLEMENTATION
 #  include "perceptionModule.cpp"

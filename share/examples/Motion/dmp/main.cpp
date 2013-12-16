@@ -55,7 +55,7 @@ void scenario1() {
 //** optimized trajectory in joint space **//
 void scenario2() {
   OpenGL gl("scenario2",800,800);
-  ors::Graph G;
+  ors::KinematicWorld G;
 
   init(G, gl, "scenes/scene1.ors");
   makeConvexHulls(G.shapes);
@@ -135,7 +135,7 @@ void scenario2() {
 //** optimized trajectory in cartesian space **//
 void scenario3() {
   OpenGL gl("scenario3",800,800);
-  ors::Graph G;
+  ors::KinematicWorld G;
 
   init(G, gl, "scenes/scene1.ors");
   makeConvexHulls(G.shapes);
@@ -257,7 +257,7 @@ void scenario4() {
   bool useOrientation = true;
 
   OpenGL gl("scenario4",800,800);
-  ors::Graph G;
+  ors::KinematicWorld G;
 
   init(G, gl, "scenes/scene1.ors");
   makeConvexHulls(G.shapes);

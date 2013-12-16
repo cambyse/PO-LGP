@@ -100,7 +100,7 @@ void BezierSurface(const arr control,arr& result){
 
 void problem1(){   
   cout <<"\n= Sample surface=\n" <<endl;
-   ors::Graph ors;
+   ors::KinematicWorld ors;
    ors.init("clear.ors");
    OpenGL gl; gl.add(glStandardScene); gl.add(ors::glDrawGraph,&ors); 
    gl.camera.setPosition(0,-5,6);  gl.camera.focus(0,0,2);
@@ -153,7 +153,7 @@ gl.watch();
 
 void problem2(){   
   cout <<"\n= Bezier surface=\n" <<endl;
-   ors::Graph ors;
+   ors::KinematicWorld ors;
    ors.init("clear.ors");
    OpenGL gl; gl.add(glStandardScene); gl.add(ors::glDrawGraph,&ors); 
    gl.camera.setPosition(0,-5,6);  gl.camera.focus(0,0,2);
@@ -207,7 +207,7 @@ gl.watch();
 
 void problem3(){   
   cout <<"\n= Bezier surface for human hand=\n" <<endl;
-   ors::Graph ors;
+   ors::KinematicWorld ors;
    ors.init("bottle_grasp.ors");
    OpenGL gl; gl.add(glStandardScene); gl.add(ors::glDrawGraph,&ors); 
    gl.camera.setPosition(0,-3,3);  gl.camera.focus(0,0,1);

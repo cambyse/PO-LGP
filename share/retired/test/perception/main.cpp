@@ -19,7 +19,7 @@ int main(int argc,char** argv) {
   MT::initCmdLine(argc,argv);
   signal(SIGINT,shutdown);
   
-  ors::Graph G;
+  ors::KinematicWorld G;
   MT::load(G,"schunk.ors", true);
   //ors::Body * o = G.getBodyByName("OBJECTS");
   //o->X.p(0) = 100;

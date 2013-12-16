@@ -667,9 +667,9 @@ template<class T> void MT::Array<T>::resizeDim(uint k, uint dk) {
 
 /// return a uint-Array that contains (acutally refers to) the dimensions of 'this'
 template<class T> MT::Array<uint> MT::Array<T>::getDim() const {
-  Array<uint> dd;
-  dd.referTo(d, nd);
-  return dd;
+  Array<uint> dims(d, nd);
+  dims.dereference();
+  return dims;
 }
 
 /// the \c ith element
@@ -1050,12 +1050,6 @@ template<class T> MT::Array<T>& MT::Array<T>::operator=(const MT::Array<T>& a) {
   }
   NIY;
   return *this;
-}
-
-/// reads it from the C string (by using std::istringstream)
-template<class T> void MT::Array<T>::setText(const char* str) {
-  std::istringstream s(str);
-  read(s);
 }
 
 /** @brief same as memset(p, 0, sizeT*N); precondition: memMove is
@@ -1752,6 +1746,18 @@ template<class T> void checkNan(const MT::Array<T>& x) {
   }
 }
 
+template<class T> MT::Array<T> replicate(const MT::Array<T>& A, uint d0) {
+  arr x;
+  uintA d=A.getDim();
+  d.prepend(d0);
+  x.resize(d);
+  if(x.memMove){
+    for(uint i=0;i<x.d0;i++) memmove(&x.elem(i*A.N), A.p, A.sizeT*A.N);
+  }else{
+    for(uint i=0;i<x.d0;i++) x[i]=A;
+  }
+  return x;
+}
 
 
 //===========================================================================
