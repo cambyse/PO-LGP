@@ -150,7 +150,7 @@ struct Joint {
   explicit Joint(Graph& G, Body *f, Body *t, const Joint *copyJoint=NULL); //new Shape, being added to graph and body's joint lists
   ~Joint();
   void operator=(const Joint& j) {
-    index=j.index; qIndex=j.qIndex; ifrom=j.ifrom; ito=j.ito; mimic=(Joint*)(j.mimic?1:0);
+    index=j.index; qIndex=j.qIndex; ifrom=j.ifrom; ito=j.ito; mimic=reinterpret_cast<Joint*>(j.mimic?1:0);
     type=j.type; A=j.A; Q=j.Q; B=j.B; X=j.X; axis=j.axis; name=j.name;
     ats=j.ats; agent=j.agent;
   }
