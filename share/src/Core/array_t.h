@@ -245,6 +245,11 @@ template<class T> MT::Array<T>& MT::Array<T>::reshapeAs(const MT::Array<T>& a) {
   return *this;
 }
 
+template<class T> MT::Array<T>& MT::Array<T>::flatten() {
+  reshape(N);
+  return *this;
+}
+
 /// return the size of memory allocated in bytes
 template<class T> uint MT::Array<T>::getMemsize() const { return M*sizeof(T); }
 
