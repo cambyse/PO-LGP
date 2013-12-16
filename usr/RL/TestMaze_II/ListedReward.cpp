@@ -18,7 +18,7 @@ ListedReward::ptr_t ListedReward::next() const {
     if(reward_index<reward_list.size()-1) {
         return ptr_t(new ListedReward(reward_list,reward_index+1));
     } else {
-        return ptr_t(new ListedReward());
+        return ptr_t(new AbstractReward());
     }
 }
 

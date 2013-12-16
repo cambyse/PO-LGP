@@ -125,10 +125,10 @@ namespace util {
             virtual const DerivedSpace * operator->() const final {
                 return ptr.operator->();
             }
-            virtual Iterator begin() const {
+            virtual Iterator begin() const final {
                 return ptr->begin();
             }
-            virtual Iterator end() const {
+            virtual Iterator end() const final {
                 return ptr->end();
             }
             virtual bool operator!=(const DerivedSpace& other) const final {

@@ -14,14 +14,17 @@ AugmentedMazeAction::Iterator AugmentedMazeAction::begin() const {
 }
 
 AugmentedMazeAction::ptr_t AugmentedMazeAction::next() const {
+    // use (temporarily) incremented action and tag
     ACTION a = (ACTION)((int)action+1);
     TAG t = (TAG)((int)tag+1);
-    if(a==ACTION::NONE) {
-        if(t!=TAG::NONE) {
-            a = ACTION::UP;
+    if(a==ACTION::NONE) {   // action over limit
+        if(t!=TAG::NONE) {  // tag not over limit
+            a = ACTION::UP; // reset action to first
+        } else {            // both over limit
+            return ptr_t(new AbstractAction());
         }
-    } else {
-        t = tag;
+    } else {                // action not over limit
+        t = tag;            // reverse tag increment
     }
     return ptr_t(new AugmentedMazeAction(a,t));
 }

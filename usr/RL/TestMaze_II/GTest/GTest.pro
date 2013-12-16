@@ -48,7 +48,7 @@ SOURCES += \
 #    TemplateTest.cpp \
     EnvironmentTest.cpp
 LIBS += -llbfgs \
-    -lemon \
+#    -lemon \
     -larmadillo \
     -lgomp \
     -lgtest

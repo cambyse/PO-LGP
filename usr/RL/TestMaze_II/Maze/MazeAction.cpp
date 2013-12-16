@@ -30,7 +30,12 @@ MazeAction::Iterator MazeAction::begin() const {
 }
 
 MazeAction::ptr_t MazeAction::next() const {
-    return ptr_t(new MazeAction((ACTION)((int)action+1)));
+    ACTION a = (ACTION)((int)action+1);
+    if(a==ACTION::NONE) {
+        return ptr_t(new AbstractAction());
+    } else {
+        return ptr_t(new MazeAction(a));
+    }
 }
 
 bool MazeAction::operator!=(const AbstractAction &other) const {

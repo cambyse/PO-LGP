@@ -14,7 +14,7 @@
 // }
 
 TEST(EnvironmentTest, Minimal) {
-    return;
+
     // use standard typedefs
     typedef AbstractAction::ptr_t      action_ptr_t;
     typedef AbstractObservation::ptr_t observation_ptr_t;

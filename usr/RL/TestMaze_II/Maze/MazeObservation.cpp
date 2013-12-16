@@ -27,7 +27,7 @@ MazeObservation::ptr_t MazeObservation::next() const {
     uint y_pos = y_position + 1;
     if(x_pos>=x_dimensions) {
         if(y_pos>=y_dimensions) {
-            return ptr_t(new MazeObservation());
+            return ptr_t(new AbstractObservation());
         } else {
             x_pos = 0;
         }

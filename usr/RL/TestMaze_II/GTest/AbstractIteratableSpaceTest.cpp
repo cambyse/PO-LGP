@@ -11,7 +11,7 @@
 #include "../AbstractReward.h"
 #include "../ListedReward.h"
 
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 0
 #define DEBUG_STRING "Testing: "
 #include "../debug.h"
 
@@ -26,7 +26,7 @@ namespace {
         std::vector<action_ptr_t> action_vector;
         action_vector.push_back(new AbstractAction());
         action_vector.push_back(new MazeAction(MazeAction::ACTION::DOWN));
-        action_vector.push_back(new AugmentedMazeAction(AugmentedMazeAction::ACTION::DOWN,AugmentedMazeAction::TAG::TAG_2));
+        action_vector.push_back(new AugmentedMazeAction(AugmentedMazeAction::ACTION::LEFT,AugmentedMazeAction::TAG::TAG_2));
 
         int action_type_idx = 0;
         // for all action types (represented by one specific action of each type)
@@ -50,11 +50,13 @@ namespace {
                     }
                     ++action_idx;
                     if(DEBUG_LEVEL>0 && action_idx>100) {
+                        EXPECT_TRUE(false);
                         return;
                     }
                 }
                 ++action_space_idx;
                 if(DEBUG_LEVEL>0 && action_space_idx>100) {
+                    EXPECT_TRUE(false);
                     return;
                 }
             }
@@ -69,7 +71,6 @@ namespace {
     }
 
     TEST(AbstractIteratableSpace, AbstractObservation) {
-        return;
 
         // typedef to improve readability
         typedef AbstractObservation::ptr_t observation_ptr_t;
@@ -82,10 +83,11 @@ namespace {
         // for all observation types (represented by one specific observation of each type)
         for(observation_ptr_t observation_type : observation_vector) {
             DEBUG_OUT(1,"This observation: " << observation_type);
-            DEBUG_OUT(1,"    Observation space:");
+            DEBUG_OUT(1,"    Observation space...");
             // go through all observations of the corresponding observation space
             int match_counter = 0;
             int match_idx = -1;
+            int observation_space_idx = 0;
             for(observation_ptr_t observation_in_space : observation_type) {
                 DEBUG_OUT(1,"        " << observation_in_space);
                 // make sure only a single observation matches (the one we use for
@@ -98,16 +100,28 @@ namespace {
                         DEBUG_OUT(1,"        --> " << observation << " (match)");
                     }
                     ++observation_idx;
+                    if(DEBUG_LEVEL>0 && observation_idx>100) {
+                        EXPECT_TRUE(false);
+                        return;
+                    }
+                }
+                ++observation_space_idx;
+                if(DEBUG_LEVEL>0 && observation_space_idx>100) {
+                    EXPECT_TRUE(false);
+                    return;
                 }
             }
-            EXPECT_EQ(1,match_counter) << "expecting exactly one observation from each observation type/space";
-            EXPECT_EQ(observation_type_idx,match_idx) << "match should be the observation currently used to iterate its space";
+            if(observation_type==AbstractObservation()) {
+                EXPECT_EQ(0,match_counter) << "expecting empty space and hence zero matches for abstract type";
+            } else {
+                EXPECT_EQ(1,match_counter) << "expecting exactly one observation from each observation type/space";
+                EXPECT_EQ(observation_type_idx,match_idx) << "match should be the observation currently used to iterate its space";
+            }
             ++observation_type_idx;
         }
     }
 
     TEST(AbstractIteratableSpace, AbstractReward) {
-        return;
 
         // typedef to improve readability
         typedef AbstractReward::ptr_t reward_ptr_t;
@@ -120,10 +134,11 @@ namespace {
         // for all reward types (represented by one specific reward of each type)
         for(reward_ptr_t reward_type : reward_vector) {
             DEBUG_OUT(1,"This reward: " << reward_type);
-            DEBUG_OUT(1,"    Reward space:");
+            DEBUG_OUT(1,"    Reward space...");
             // go through all rewards of the corresponding reward space
             int match_counter = 0;
             int match_idx = -1;
+            int reward_space_idx = 0;
             for(reward_ptr_t reward_in_space : reward_type) {
                 DEBUG_OUT(1,"        " << reward_in_space);
                 // make sure only a single reward matches (the one we use for
@@ -136,10 +151,23 @@ namespace {
                         DEBUG_OUT(1,"        --> " << reward << " (match)");
                     }
                     ++reward_idx;
+                    if(DEBUG_LEVEL>0 && reward_idx>100) {
+                        EXPECT_TRUE(false);
+                        return;
+                    }
+                }
+                ++reward_space_idx;
+                if(DEBUG_LEVEL>0 && reward_space_idx>100) {
+                    EXPECT_TRUE(false);
+                    return;
                 }
             }
-            EXPECT_EQ(1,match_counter) << "expecting exactly one reward from each reward type/space";
-            EXPECT_EQ(reward_type_idx,match_idx) << "match should be the reward currently used to iterate its space";
+            if(reward_type==AbstractReward()) {
+                EXPECT_EQ(0,match_counter) << "expecting empty space and hence zero matches for abstract type";
+            } else {
+                EXPECT_EQ(1,match_counter) << "expecting exactly one reward from each reward type/space";
+                EXPECT_EQ(reward_type_idx,match_idx) << "match should be the reward currently used to iterate its space";
+            }
             ++reward_type_idx;
         }
     }
