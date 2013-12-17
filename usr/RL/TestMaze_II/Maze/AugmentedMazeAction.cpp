@@ -2,6 +2,15 @@
 
 #include "../debug.h"
 
+using std::string;
+
+AugmentedMazeAction::AugmentedMazeAction():
+    MazeAction(),
+    tag(TAG::TAG_0)
+{
+    set_type(ACTION_TYPE::AUGMENTED_MAZE_ACTION);
+}
+
 AugmentedMazeAction::AugmentedMazeAction(ACTION a, TAG t):
     MazeAction(a),
     tag(t)
@@ -9,16 +18,12 @@ AugmentedMazeAction::AugmentedMazeAction(ACTION a, TAG t):
     set_type(ACTION_TYPE::AUGMENTED_MAZE_ACTION);
 }
 
-AugmentedMazeAction::Iterator AugmentedMazeAction::begin() const {
-    return Iterator(ptr_t(new AugmentedMazeAction(ACTION::UP,TAG::TAG_0)));
-}
-
 AugmentedMazeAction::ptr_t AugmentedMazeAction::next() const {
     // use (temporarily) incremented action and tag
     ACTION a = (ACTION)((int)action+1);
     TAG t = (TAG)((int)tag+1);
-    if(a==ACTION::NONE) {   // action over limit
-        if(t!=TAG::NONE) {  // tag not over limit
+    if(a>=ACTION::END) {   // action over limit
+        if(t<TAG::END) {  // tag not over limit
             a = ACTION::UP; // reset action to first
         } else {            // both over limit
             return ptr_t(new AbstractAction());
@@ -61,8 +66,8 @@ bool AugmentedMazeAction::operator<(const AbstractAction &other) const {
     }
 }
 
-const char * AugmentedMazeAction::print() const {
-    std::string ret("AugmentedMazeAction(");
+const string AugmentedMazeAction::print() const {
+    string ret("AugmentedMazeAction(");
     switch(action) {
     case ACTION::UP:
         ret+="   UP";
@@ -80,7 +85,8 @@ const char * AugmentedMazeAction::print() const {
         ret+=" STAY";
         break;
     default:
-        ret+=" NONE";
+        DEBUG_ERROR("Invalid action");
+        ret+="INVALID";
         break;
     }
     ret+=",";
@@ -95,9 +101,10 @@ const char * AugmentedMazeAction::print() const {
         ret+="TAG_2";
         break;
     default:
-        ret+=" NONE";
+        DEBUG_ERROR("Invalid tag");
+        ret+="INVALID";
         break;
     }
     ret+=")";
-    return ret.c_str();
+    return ret;
 }

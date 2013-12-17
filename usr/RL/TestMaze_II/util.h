@@ -152,7 +152,7 @@ namespace util {
             template < class T > std::shared_ptr<const T> get_derived(bool report_error = true) const {
                 std::shared_ptr<const T> ret_ptr = std::dynamic_pointer_cast<const T>(ptr);
                 if(report_error && ret_ptr == std::shared_ptr<const T>()) {
-                    DEBUG_ERROR("Could not cast to space '" << T().space_descriptor() << "'");
+                    DEBUG_ERROR("Cast failed");
                 }
                 return ret_ptr;
             }
@@ -206,6 +206,13 @@ namespace util {
         /** \brief Returns Iterator to first object of the space. */
         virtual Iterator begin() const = 0;
 
+        /** \brief Macro that should be used in derived classes to define the
+         * begin function. */
+#define ABSTRACT_ITERATABLE_SPACE_BEGIN(C)              \
+        virtual Iterator begin() const override {       \
+            return Iterator(ptr_t(new C()));            \
+        }
+
         /** \brief Returns an invalid Iterator to stop iteration.
          *
          * A derived class must somehow implement an 'invalid' object. The
@@ -239,9 +246,6 @@ namespace util {
 
         /** \brief operator< */
         virtual bool operator<(const AbstractIteratableSpace& other) const = 0;
-
-        /** \brief Returns a string identifying the space. */
-        inline virtual const std::string space_descriptor() const = 0;
     };
 
     /** \brief Base class to make a derived class assign-compatible with a type.

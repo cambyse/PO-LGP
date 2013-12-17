@@ -2,13 +2,11 @@
 
 #include "debug.h"
 
+using std::string;
+
 AbstractReward::AbstractReward(REWARD_TYPE t):
     reward_type(t)
 {}
-
-AbstractReward::Iterator AbstractReward::begin() const {
-    return Iterator(ptr_t(new AbstractReward()));
-}
 
 AbstractReward::ptr_t AbstractReward::next() const {
     return ptr_t(new AbstractReward());
@@ -42,8 +40,8 @@ bool AbstractReward::operator<(const AbstractReward& other) const {
     return this->reward_type<other.reward_type;
 }
 
-const char * AbstractReward::print() const {
-    return "AbstractReward()";
+const string AbstractReward::print() const {
+    return string("AbstractReward()");
 }
 
 AbstractReward::REWARD_TYPE AbstractReward::get_type() const {

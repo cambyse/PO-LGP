@@ -344,6 +344,9 @@ const vector<Maze::door_t> Maze::doors = {
 };
 
 Maze::Maze(const double& eps):
+    k(1),
+    x_dimensions(2),
+    y_dimensions(2),
     default_action("stay"),
     default_observation(x_dimensions,y_dimensions,x_dimensions/2,y_dimensions/2),
     default_reward({0,1},0),
@@ -460,7 +463,7 @@ void Maze::render_update() {
     case action_t::ACTION::RIGHT:
         action_line->setLine(last_state.get_x_pos(),last_state.get_y_pos(),last_state.get_x_pos()+al_length,last_state.get_y_pos());
         break;
-    case action_t::ACTION::NONE:
+    default:
         DEBUG_ERROR("Invalid action (" << current_instance->action << ")");
     }
 
@@ -746,7 +749,7 @@ Maze::probability_t Maze::get_prediction(
         case action_t::ACTION::DOWN:
             if(maze_state_to==effective_maze_state_down ) prob += 1-epsilon;
             break;
-        case action_t::ACTION::NONE:
+        default:
             DEBUG_ERROR("Invalid action (" << action << ")");
             return 0;
         }
@@ -875,32 +878,29 @@ Maze::probability_t Maze::get_prediction(
     return prob;
 }
 
-void Maze::get_features(std::vector<f_ptr_t> & basis_features, LEARNER_TYPE type) const {
+void Maze::get_features(std::vector<f_ptr_t> & basis_features, FeatureLearner::LEARNER_TYPE type) const {
     for(int k_idx = 0; k_idx>=-k; --k_idx) {
-        if((type==CRF_LEARNER) ||
-           (type==UTREE_VALUE_LEARNER && k_idx>-k) ||
-           (type==UTREE_OBSERVATION_REWARD_LEARNER && k_idx>-k) ||
-           (type==LINEAR_Q_LEARNER)) {
+        if((type==FeatureLearner::LEARNER_TYPE::FULL_PREDICTIVE) ||
+           (type==FeatureLearner::LEARNER_TYPE::HISTORY_ONLY && k_idx>-k) ||
+           (type==FeatureLearner::LEARNER_TYPE::HISTORY_AND_ACTION)) {
             // actions
             for(action_ptr_t action : default_action) {
                 f_ptr_t action_feature = ActionFeature::create(action,k_idx);
                 basis_features.push_back(action_feature);
             }
         }
-        if((type==CRF_LEARNER) ||
-           (type==UTREE_VALUE_LEARNER && k_idx>-k) ||
-           (type==UTREE_OBSERVATION_REWARD_LEARNER && k_idx>-k) ||
-           (type==LINEAR_Q_LEARNER && k_idx<0)) {
+        if((type==FeatureLearner::LEARNER_TYPE::FULL_PREDICTIVE) ||
+           (type==FeatureLearner::LEARNER_TYPE::HISTORY_ONLY && k_idx>-k) ||
+           (type==FeatureLearner::LEARNER_TYPE::HISTORY_AND_ACTION && k_idx<0)) {
             // observations
             for(observation_ptr_t observation : default_observation) {
                 f_ptr_t observation_feature = ObservationFeature::create(observation,k_idx);
                 basis_features.push_back(observation_feature);
             }
         }
-        if((type==CRF_LEARNER && k_idx==0) ||
-           (type==UTREE_VALUE_LEARNER && k_idx>-k) ||
-           (type==UTREE_OBSERVATION_REWARD_LEARNER && k_idx>-k) ||
-           (type==LINEAR_Q_LEARNER && false)) {
+        if((type==FeatureLearner::LEARNER_TYPE::FULL_PREDICTIVE && k_idx==0) ||
+           (type==FeatureLearner::LEARNER_TYPE::HISTORY_ONLY && k_idx>-k) ||
+           (type==FeatureLearner::LEARNER_TYPE::HISTORY_AND_ACTION && false)) {
             // reward
             for(reward_ptr_t reward : default_reward) {
                 f_ptr_t reward_feature = RewardFeature::create(reward,k_idx);
@@ -909,7 +909,7 @@ void Maze::get_features(std::vector<f_ptr_t> & basis_features, LEARNER_TYPE type
         }
     }
 
-    // if(type==CRF_LEARNER) {
+    // if(type==FeatureLearner::LEARNER_TYPE::FULL_PREDICTIVE) {
     //     // relative observation features
     //     f_ptr_t relative_observation_feature;
     //     relative_observation_feature = RelativeObservationFeature::create(1,0,-1,0);
@@ -923,7 +923,7 @@ void Maze::get_features(std::vector<f_ptr_t> & basis_features, LEARNER_TYPE type
     //     relative_observation_feature = RelativeObservationFeature::create(0,0,-1,0);
     //     basis_features.push_back(relative_observation_feature);
     // }
-    if(type==LINEAR_Q_LEARNER) {
+    if(type==FeatureLearner::LEARNER_TYPE::HISTORY_AND_ACTION) {
         // also add a unit feature
         f_ptr_t const_feature = ConstFeature::create(1);
         basis_features.push_back(const_feature);
@@ -963,7 +963,7 @@ void Maze::set_current_observation(const observation_ptr_t& observation) {
     typedef std::shared_ptr<const observation_t> o_ptr_t;
     o_ptr_t o = observation.get_derived<observation_t>(false);
     if(o == o_ptr_t()) {
-        DEBUG_ERROR("Cast failed. Need to give an observation derived from '" << observation_t().space_descriptor() << "'");
+        DEBUG_ERROR("Cast failed. Please provide an observation of correct type");
     } else {
         current_observation = *o;
         for(idx_t k_idx=0; k_idx<k; ++k_idx) {

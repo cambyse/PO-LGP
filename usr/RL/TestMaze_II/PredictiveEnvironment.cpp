@@ -1,5 +1,6 @@
 #include "PredictiveEnvironment.h"
 
+#define DEBUG_LEVEL 0
 #include "debug.h"
 
 PredictiveEnvironment::PredictiveEnvironment(): current_instance(nullptr) {}

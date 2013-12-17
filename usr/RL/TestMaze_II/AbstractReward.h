@@ -8,18 +8,17 @@ public:
     typedef double value_t;
     enum class REWARD_TYPE { NONE, MINIMAL, LISTED_REWARD };
     AbstractReward(REWARD_TYPE t = REWARD_TYPE::NONE);
-    virtual Iterator begin() const override;
+    ABSTRACT_ITERATABLE_SPACE_BEGIN(AbstractReward);
     virtual ptr_t next() const override;
     virtual bool operator!=(const AbstractIteratableSpace& other) const override;
     virtual bool operator!=(const AbstractReward& other) const;
     virtual bool operator<(const AbstractIteratableSpace& other) const override;
     virtual bool operator<(const AbstractReward& other) const;
-    virtual const char * print() const;
+    virtual const std::string print() const;
     friend std::ostream& operator<<(std::ostream& out, const AbstractReward& a) {
         return out << a.print();
     }
     virtual REWARD_TYPE get_type() const;
-    inline virtual const std::string space_descriptor() const override { return "AbstractReward"; }
 
     /** \brief Always return a value of zero. */
     virtual value_t get_value() const { return 0; }

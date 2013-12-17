@@ -29,12 +29,6 @@ public:
     typedef MazeObservation observation_t;
     typedef ListedReward reward_t;
 
-    enum LEARNER_TYPE {CRF_LEARNER,
-                       UTREE_VALUE_LEARNER,
-                       UTREE_OBSERVATION_REWARD_LEARNER,
-                       LINEAR_Q_LEARNER
-    };
-
     Maze(const double& eps = 0);
     virtual ~Maze();
 
@@ -66,7 +60,7 @@ public:
      * punishments (for not collecting an activated reward). */
     probability_t get_prediction(const instance_t*, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&, std::vector<std::pair<int,int> > * reward_vector) const;
 
-    void get_features(std::vector<f_ptr_t> & basis_features, LEARNER_TYPE type) const;
+    virtual void get_features(std::vector<f_ptr_t> & basis_features, FeatureLearner::LEARNER_TYPE type) const override;
 
     void print_reward_activation_on_random_walk(const int& walk_length);
 
@@ -152,13 +146,13 @@ private:
     // Data Members //
     //==============//
 
-    action_t default_action;           ///< Default action.
-    observation_t default_observation; ///< Default state.
-    reward_t default_reward;           ///< Default reward.
-
     int k;                             ///< k-MDP length.
     uint x_dimensions;                 ///< x dimensions of the maze.
     uint y_dimensions;                 ///< y dimensions of the maze.
+
+    action_t default_action;           ///< Default action.
+    observation_t default_observation; ///< Default state.
+    reward_t default_reward;           ///< Default reward.
 
     /** \brief The current state of the maze including the complete past. */
     instance_t * current_instance;

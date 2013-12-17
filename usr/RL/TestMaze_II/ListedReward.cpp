@@ -4,6 +4,8 @@
 
 #include "../debug.h"
 
+using std::string;
+
 ListedReward::ListedReward(const std::vector<value_t> & list, const uint & idx):
     reward_list(list), reward_index(idx)
 {
@@ -58,10 +60,10 @@ bool ListedReward::operator<(const AbstractReward &other) const {
     }
 }
 
-const char * ListedReward::print() const {
+const string ListedReward::print() const {
     std::stringstream ret;
     ret << "ListedReward(" << reward_list[reward_index] << ")";
-    return ret.str().c_str();
+    return ret.str();
 }
 
 void ListedReward::set_value(const value_t& v) {

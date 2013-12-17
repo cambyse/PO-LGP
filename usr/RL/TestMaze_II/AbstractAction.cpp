@@ -2,13 +2,11 @@
 
 #include "debug.h"
 
+using std::string;
+
 AbstractAction::AbstractAction(ACTION_TYPE t):
     action_type(t)
 {}
-
-AbstractAction::Iterator AbstractAction::begin() const {
-    return Iterator(ptr_t(new AbstractAction()));
-}
 
 AbstractAction::ptr_t AbstractAction::next() const {
     return ptr_t(new AbstractAction());
@@ -42,8 +40,8 @@ bool AbstractAction::operator<(const AbstractAction& other) const {
     return this->action_type<other.action_type;
 }
 
-const char * AbstractAction::print() const {
-    return "AbstractAction()";
+const string AbstractAction::print() const {
+    return string("AbstractAction()");
 }
 
 AbstractAction::ACTION_TYPE AbstractAction::get_type() const {

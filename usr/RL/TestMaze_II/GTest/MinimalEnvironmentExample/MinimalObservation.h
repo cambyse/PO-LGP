@@ -7,20 +7,18 @@
 
 class MinimalObservation: public AbstractObservation {
 public:
-    enum OBSERVATION { RED, GREEN, NONE } observation;
-    MinimalObservation(OBSERVATION o = NONE) {
+    enum OBSERVATION { RED, GREEN } observation;
+    MinimalObservation(OBSERVATION o = RED) {
         observation = o;
         set_type(OBSERVATION_TYPE::MINIMAL);
     }
     virtual ~MinimalObservation() = default;
-    virtual Iterator begin() const override {
-        return Iterator(new MinimalObservation(RED));
-    }
+    ABSTRACT_ITERATABLE_SPACE_BEGIN(MinimalObservation);
     virtual ptr_t next() const override {
         if(observation==RED) {
             return ptr_t(new MinimalObservation(GREEN));
         } else {
-            return ptr_t(new MinimalObservation());
+            return ptr_t(new AbstractObservation());
         }
     }
     virtual bool operator!=(const AbstractObservation &other) const override {
@@ -49,12 +47,11 @@ public:
             }
         }
     }
-    virtual const char * print() const override {
-        if(observation==RED) return std::string("MinimalObservation(RED)").c_str();
-        if(observation==GREEN) return std::string("MinimalObservation(GREEN)").c_str();
-        return std::string("MinimalObservation(NONE)").c_str();
+    virtual const std::string print() const override {
+        if(observation==RED) return std::string("MinimalObservation(RED)");
+        if(observation==GREEN) return std::string("MinimalObservation(GREEN)");
+        return std::string("MinimalObservation(NONE)");
     }
-    inline virtual const std::string space_descriptor() const override { return "MinimalObservation"; }
 };
 
 #include "../../debug_exclude.h"

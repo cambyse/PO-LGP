@@ -1,7 +1,7 @@
 #ifndef LISTEDREWARD_H_
 #define LISTEDREWARD_H_
 
-#include "../AbstractReward.h"
+#include "AbstractReward.h"
 
 #include <vector>
 
@@ -16,6 +16,7 @@ public:
         const uint & idx = 0
         );
 
+    /** \brief Defined explicitly because the reward list needs to be given. */
     virtual Iterator begin() const override;
 
     virtual ptr_t next() const override;
@@ -24,9 +25,7 @@ public:
 
     virtual bool operator<(const AbstractReward &other) const override;
 
-    virtual const char * print() const override;
-
-    inline virtual const std::string space_descriptor() const override { return "ListedReward"; }
+    virtual const std::string print() const override;
 
     /** \brief Get the reward value.
      *

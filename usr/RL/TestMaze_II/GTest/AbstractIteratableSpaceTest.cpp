@@ -2,17 +2,19 @@
 
 #include "../util.h"
 #include "../AbstractAction.h"
+#include "MinimalEnvironmentExample/MinimalAction.h"
 #include "../Maze/MazeAction.h"
 #include "../Maze/AugmentedMazeAction.h"
 
 #include "../AbstractObservation.h"
+#include "MinimalEnvironmentExample/MinimalObservation.h"
 #include "../Maze/MazeObservation.h"
 
 #include "../AbstractReward.h"
+#include "MinimalEnvironmentExample/MinimalReward.h"
 #include "../ListedReward.h"
 
 #define DEBUG_LEVEL 0
-#define DEBUG_STRING "Testing: "
 #include "../debug.h"
 
 namespace {
@@ -25,6 +27,7 @@ namespace {
         // construct vector with one action of every type (plus one abstract)
         std::vector<action_ptr_t> action_vector;
         action_vector.push_back(new AbstractAction());
+        action_vector.push_back(new MinimalAction(MinimalAction::ACTION::STAY));
         action_vector.push_back(new MazeAction(MazeAction::ACTION::DOWN));
         action_vector.push_back(new AugmentedMazeAction(AugmentedMazeAction::ACTION::LEFT,AugmentedMazeAction::TAG::TAG_2));
 
@@ -77,6 +80,8 @@ namespace {
 
         // construct vector with one observation of every type
         std::vector<observation_ptr_t> observation_vector;
+        observation_vector.push_back(new AbstractObservation());
+        observation_vector.push_back(new MinimalObservation(MinimalObservation::OBSERVATION::RED));
         observation_vector.push_back(new MazeObservation(10,10,3,4));
 
         int observation_type_idx = 0;
@@ -128,6 +133,8 @@ namespace {
 
         // construct vector with one reward of every type
         std::vector<reward_ptr_t> reward_vector;
+        reward_vector.push_back(new AbstractReward());
+        reward_vector.push_back(new MinimalReward(MinimalReward::REWARD::SOME_REWARD));
         reward_vector.push_back(new ListedReward({0,0.1,1,5,20},1));
 
         int reward_type_idx = 0;

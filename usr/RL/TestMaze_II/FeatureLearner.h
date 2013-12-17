@@ -18,11 +18,11 @@ public:
     enum class LEARNER_TYPE { FULL_PREDICTIVE, HISTORY_ONLY, HISTORY_AND_ACTION };
 
     // constructor/destructor
-FeatureLearner(const LEARNER_TYPE lt): learner_type(lt) {}
+    FeatureLearner(const LEARNER_TYPE lt): learner_type(lt) {}
     virtual ~FeatureLearner() = default;
 
     /** \brief Initialize action, observation, and reward spaces. */
-    void initialize_spaces(const PredictiveEnvironment & environment);
+    virtual void initialize_spaces(const PredictiveEnvironment & environment);
 
 private:
 

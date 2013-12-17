@@ -41,11 +41,12 @@ UTree::NodeInfo::NodeInfo(f_ptr_t f, const f_ret_t& r):
 {}
 
 UTree::UTree(const double& d):
-        root_node(INVALID),
-        node_info_map(graph),
-        discount(d),
-	expansion_type(UTILITY_EXPANSION),
-        values_up_to_date(false)
+    FeatureLearner(LEARNER_TYPE::HISTORY_ONLY),
+    root_node(INVALID),
+    node_info_map(graph),
+    discount(d),
+    expansion_type(UTILITY_EXPANSION),
+    values_up_to_date(false)
 {
 
     //----------------------------------------//

@@ -6,6 +6,8 @@
 #include "MinimalObservation.h"
 #include "MinimalReward.h"
 
+#include "../util/ColorOutput.h"
+
 class MinimalEnvironment: public PredictiveEnvironment {
 public:
     MinimalEnvironment() {
@@ -14,6 +16,9 @@ public:
             observation_ptr_t(new MinimalObservation(MinimalObservation::OBSERVATION::RED)),
             reward_ptr_t(new MinimalReward(MinimalReward::REWARD::NO_REWARD))
             );
+        action_space = action_ptr_t(new MinimalAction());
+        observation_space = observation_ptr_t(new MinimalObservation());
+        reward_space = reward_ptr_t(new MinimalReward());
     }
     virtual ~MinimalEnvironment() = default;
 
@@ -21,19 +26,41 @@ public:
         bool same_observation = i->observation==o;
         bool stay_action = a==MinimalAction(MinimalAction::ACTION::STAY);
         bool no_reward = r==MinimalReward(MinimalReward::REWARD::NO_REWARD);
-        if(same_observation && stay_action) {
-            if(no_reward) {
-                return 0.6;
+        double HIGH = 10;
+        double MEDIUM_HIGH = 4;
+        double MEDIUM_LOW = 2;
+        double LOW = 1;
+        double p;
+        if(same_observation) {
+            if(stay_action) {
+                if(no_reward) {
+                    p = HIGH;
+                } else {
+                    p = MEDIUM_HIGH;
+                }
             } else {
-                return 0.3;
+                if(no_reward) {
+                    p = MEDIUM_LOW;
+                } else {
+                    p = LOW;
+                }
             }
         } else {
-            if(no_reward) {
-                return 0.05;
+            if(stay_action) {
+                if(no_reward) {
+                    p = MEDIUM_LOW;
+                } else {
+                    p = LOW;
+                }
             } else {
-                return 0.05;
+                if(no_reward) {
+                    p = HIGH;
+                } else {
+                    p = MEDIUM_HIGH;
+                }
             }
         }
+        return p/(HIGH + MEDIUM_HIGH + MEDIUM_LOW + LOW);
     }
 
     virtual void get_features(std::vector<f_ptr_t> & basis_features, FeatureLearner::LEARNER_TYPE type) const override {
@@ -76,21 +103,43 @@ public:
 
     void print_last_transition() const {
         std::cout << "-------" << std::endl;
+        ColorOutput::reset_all();
         if(current_instance->action==MinimalAction(MinimalAction::ACTION::STAY)) {
             std::cout << "   O  " << std::endl;
         } else {
             std::cout << "  <-> " << std::endl;
         }
         if(current_instance->observation==MinimalObservation(MinimalObservation::OBSERVATION::RED)) {
-            std::cout << " | |X|";
+            std::cout << " |";
+            ColorOutput::set_background(ColorOutput::BACKGROUND::GREEN);
+            std::cout << " ";
+            ColorOutput::reset_all();
+            std::cout << "|";
+            ColorOutput::set_background(ColorOutput::BACKGROUND::RED);
+            ColorOutput::set_attribute(ColorOutput::ATTRIBUTE::BOLD);
+            std::cout << "X";
+            ColorOutput::reset_all();
+            std::cout << "|";
         } else {
-            std::cout << " |X| |";
+            std::cout << " |";
+            ColorOutput::set_background(ColorOutput::BACKGROUND::GREEN);
+            ColorOutput::set_attribute(ColorOutput::ATTRIBUTE::BOLD);
+            std::cout << "X";
+            ColorOutput::reset_all();
+            std::cout << "|";
+            ColorOutput::set_background(ColorOutput::BACKGROUND::RED);
+            std::cout << " ";
+            ColorOutput::reset_all();
+            std::cout << "|";
         }
         if(current_instance->reward==MinimalReward(MinimalReward::REWARD::NO_REWARD)) {
-            std::cout << " :-(" << std::endl;
+            std::cout << " :-(";
         } else {
-            std::cout << " :-)" << std::endl;
+            ColorOutput::set_foreground(ColorOutput::FOREGROUND::RED);
+            std::cout << " :-)";
         }
+        ColorOutput::reset_all();
+        std::cout << std::endl;
         std::cout << "-------" << std::endl;
     }
 };

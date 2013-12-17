@@ -7,6 +7,7 @@ QT += core \
 HEADERS += \
     ../Config.h \
     ../util.h \
+    ../util/ColorOutput.h \
     ../Feature.h \
     ../Instance.h \
     ../AbstractAction.h \
@@ -42,7 +43,6 @@ SOURCES += \
     ../Maze/MazeAction.cpp \
     ../Maze/AugmentedMazeAction.cpp \
     ../Maze/MazeObservation.cpp \
-    PlayGround.cpp \
     AbstractIteratableSpaceTest.cpp \
     FeatureTest.cpp \
 #    TemplateTest.cpp \

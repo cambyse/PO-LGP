@@ -7,20 +7,18 @@
 
 class MinimalReward: public AbstractReward {
 public:
-    enum REWARD { NO_REWARD, SOME_REWARD, NONE } reward;
-    MinimalReward(REWARD o = NONE) {
+    enum REWARD { NO_REWARD, SOME_REWARD } reward;
+    MinimalReward(REWARD o = NO_REWARD) {
         reward = o;
         set_type(REWARD_TYPE::MINIMAL);
     }
     virtual ~MinimalReward() = default;
-    virtual Iterator begin() const override {
-        return Iterator(new MinimalReward(NO_REWARD));
-    }
+    ABSTRACT_ITERATABLE_SPACE_BEGIN(MinimalReward);
     virtual ptr_t next() const override {
         if(reward==NO_REWARD) {
             return ptr_t(new MinimalReward(SOME_REWARD));
         } else {
-            return ptr_t(new MinimalReward());
+            return ptr_t(new AbstractReward());
         }
     }
     virtual bool operator!=(const AbstractReward &other) const override {
@@ -49,12 +47,11 @@ public:
             }
         }
     }
-    virtual const char * print() const override {
-        if(reward==NO_REWARD) return std::string("MinimalReward(NO_REWARD)").c_str();
-        if(reward==SOME_REWARD) return std::string("MinimalReward(SOME_REWARD)").c_str();
-        return std::string("MinimalReward(NONE)").c_str();
+    virtual const std::string print() const override {
+        if(reward==NO_REWARD) return std::string("MinimalReward(NO_REWARD)");
+        if(reward==SOME_REWARD) return std::string("MinimalReward(SOME_REWARD)");
+        return std::string("MinimalReward(NONE)");
     }
-    inline virtual const std::string space_descriptor() const override { return "MinimalReward"; }
 };
 
 #include "../../debug_exclude.h"

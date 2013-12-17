@@ -2,6 +2,8 @@
 
 #include "../debug.h"
 
+using std::string;
+
 MazeAction::MazeAction(ACTION a):
     action(a)
 {
@@ -21,17 +23,13 @@ MazeAction::MazeAction(const char * a) {
         action = ACTION::UP;
     } else {
         DEBUG_ERROR("Not valid action ('" << a << "'");
-        action = ACTION::NONE;
+        action = ACTION::END;
     }
-}
-
-MazeAction::Iterator MazeAction::begin() const {
-    return Iterator(ptr_t(new MazeAction(ACTION::UP)));
 }
 
 MazeAction::ptr_t MazeAction::next() const {
     ACTION a = (ACTION)((int)action+1);
-    if(a==ACTION::NONE) {
+    if(a>=ACTION::END) {
         return ptr_t(new AbstractAction());
     } else {
         return ptr_t(new MazeAction(a));
@@ -66,8 +64,8 @@ bool MazeAction::operator<(const AbstractAction &other) const {
     }
 }
 
-const char * MazeAction::print() const {
-    std::string ret("MazeAction(");
+const string MazeAction::print() const {
+    string ret("MazeAction(");
     switch(action) {
     case ACTION::UP:
         ret+="   UP";
@@ -85,11 +83,12 @@ const char * MazeAction::print() const {
         ret+=" STAY";
         break;
     default:
-        ret+=" NONE";
+        DEBUG_ERROR("Invalid action");
+        ret+="INVALID";
         break;
     }
     ret+=")";
-    return ret.c_str();
+    return ret;
 }
 
 void MazeAction::set_type(ACTION_TYPE t) {

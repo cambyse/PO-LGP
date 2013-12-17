@@ -4,6 +4,8 @@
 
 #include "../debug.h"
 
+using std::string;
+
 MazeObservation::MazeObservation(
     uint x_dim,
     uint y_dim,
@@ -77,10 +79,10 @@ bool MazeObservation::operator<(const AbstractObservation &other) const {
     }
 }
 
-const char * MazeObservation::print() const {
+const string MazeObservation::print() const {
     std::stringstream ret;
     ret << "MazeObservation(" << x_position << "," << y_position << ")";
-    return ret.str().c_str();
+    return ret.str();
 }
 
 void MazeObservation::set_type(OBSERVATION_TYPE t) {

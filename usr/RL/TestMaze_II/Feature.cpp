@@ -137,7 +137,7 @@ Feature::feature_return_value ActionFeature::evaluate(const_instanceIt_t insIt) 
 }
 
 string ActionFeature::identifier() const {
-    return QString("a(%1,%2)").arg(action->print()).arg(delay).toStdString()+Feature::identifier();
+    return QString("a(%1,%2)").arg(action->print().c_str()).arg(delay).toStdString()+Feature::identifier();
 }
 
 bool ActionFeature::features_contradict(const ActionFeature& f1, const ActionFeature& f2) {
@@ -180,7 +180,7 @@ Feature::feature_return_value ObservationFeature::evaluate(const_instanceIt_t in
 }
 
 string ObservationFeature::identifier() const {
-    return QString("s(%1,%2)").arg(observation->print()).arg(delay).toStdString()+Feature::identifier();
+    return QString("s(%1,%2)").arg(observation->print().c_str()).arg(delay).toStdString()+Feature::identifier();
 }
 
 bool ObservationFeature::features_contradict(const ObservationFeature& f1, const ObservationFeature& f2) {
@@ -223,7 +223,7 @@ Feature::feature_return_value RewardFeature::evaluate(const_instanceIt_t insIt) 
 }
 
 string RewardFeature::identifier() const {
-    return QString("r(%1,%2)").arg(reward->print()).arg(delay).toStdString()+Feature::identifier();
+    return QString("r(%1,%2)").arg(reward->print().c_str()).arg(delay).toStdString()+Feature::identifier();
 }
 
 bool RewardFeature::features_contradict(const RewardFeature& f1, const RewardFeature& f2) {
