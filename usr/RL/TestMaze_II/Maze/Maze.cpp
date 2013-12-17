@@ -343,6 +343,24 @@ const vector<Maze::door_t> Maze::doors = {
     */
 };
 
+// const vector<Maze::maze_t> Maze::maze_list = {
+//     maze_t(
+//         QString("2x2 Maze"),
+//         action_ptr_t(new action_t()),
+//         observation_ptr_t(new observation_t(2,2,0,0)),
+//         reward_ptr_t(new reward_t({0,1},0)),
+//         vector<wall_t>({
+//                 { 1, 3}
+//             }),
+//         vector<maze_reward_t>({
+//                 { 0, 4, 4, 1, EACH_TIME_NO_PUNISH,   0,   0,   0}
+//             }),
+//         vector<door_t>({
+//                 door_t(observation_t(2,2,1,0), observation_t(2,2,1,1), observation_t(2,2,1,1),  RIGHT_BUTTON,-3, color_t(0.0,0.8,0.0) )
+//                     })
+//         )
+// };
+
 Maze::Maze(const double& eps):
     k(1),
     x_dimensions(2),
@@ -352,7 +370,8 @@ Maze::Maze(const double& eps):
     default_reward({0,1},0),
     current_instance(nullptr),
     epsilon(eps),
-    agent(nullptr)
+    agent(nullptr)//,
+    //current_maze(maze_list[0])
 {
     // set spaces
     action_space = action_ptr_t(new action_t(default_action));
