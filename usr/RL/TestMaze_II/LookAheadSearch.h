@@ -9,7 +9,6 @@
 
 #include "Config.h"
 #include "util/ProgressBar.h"
-#include "Maze/Maze.h"
 
 #ifdef BATCH_MODE_QUIET
 #define DEBUG_LEVEL 0
@@ -23,7 +22,7 @@ class LookAheadSearch {
 public:
 
     USE_CONFIG_TYPEDEFS;
-    typedef reward_t::value_t value_t;
+    typedef AbstractReward::value_t value_t;
 
     enum NODE_TYPE { NONE, OBSERVATION, ACTION };
     enum EXPANSION_TYPE { NOT_DEFINED, NOT_EXPANDED, FULLY_EXPANDED };
@@ -34,7 +33,7 @@ public:
                 const NODE_TYPE&,
                 const EXPANSION_TYPE&,
                 instance_t *,
-                const action_t&,
+                const action_ptr_t&,
                 const value_t&,
                 const value_t&
         );
@@ -44,13 +43,13 @@ public:
         NODE_TYPE type;
         EXPANSION_TYPE expansion;
         instance_t * instance; // !!!Needs to be set and deleted manually!!!
-        action_t action;
+        action_ptr_t action;
         value_t upper_value_bound, lower_value_bound;
     };
 
     struct ArcInfo {
-        ArcInfo(const reward_t& r = 0, const probability_t& p = 0): transition_reward(r), prob(p) {}
-        reward_t transition_reward;
+        ArcInfo(const reward_ptr_t& r = 0, const probability_t& p = 0): transition_reward(r), prob(p) {}
+        reward_ptr_t transition_reward;
         probability_t prob;
     };
 
@@ -65,6 +64,9 @@ public:
 
     LookAheadSearch(const double& d);
     virtual ~LookAheadSearch();
+
+    /** \brief Set the spaces used for planning. */
+    void set_spaces(const action_ptr_t & a, const observation_ptr_t & o, const reward_ptr_t & r);
 
     /*! \brief Clears the search tree. */
     void clear_tree();
@@ -92,21 +94,21 @@ public:
     );
 
     /*! \brief Returns the best action for the root observation. */
-    action_t get_optimal_action() const;
+    action_ptr_t get_optimal_action() const;
 
     /*! \brief Returns the predicted transition probability for given action to
      *  given observation and reward. */
     template < class Model >
-    probability_t get_predicted_transition_probability(const action_t&,
-                                                       const observation_t&,
-                                                       const reward_t& ,
+    probability_t get_predicted_transition_probability(const action_ptr_t&,
+                                                       const observation_ptr_t&,
+                                                       const reward_ptr_t& ,
                                                        const Model& model
         ) const;
 
     /*! \brief Prune obsolete branches after performing action a into observation s
      *  and reset root node. */
     template < class Model >
-    void prune_tree(const action_t& a, const instance_t * new_root_instance, const Model& model);
+    void prune_tree(const action_ptr_t& a, const instance_t * new_root_instance, const Model& model);
 
     /*! \brief Set the discount rate used for computing observation and action values. */
     void set_discount(const double& d) { discount = d; }
@@ -134,6 +136,10 @@ protected:
     double discount;
     size_t number_of_nodes;
     static const bool random_tie_break;
+
+    action_ptr_t action_space;
+    observation_ptr_t observation_space;
+    reward_ptr_t reward_space;
 
     /*! \brief Sets the way the upper and lower bounds
      * are used for node selection and back-propagation. */
@@ -269,10 +275,10 @@ protected:
     bool tree_needs_further_expansion();
 
     /*! \brief Upper bound for observation value without prior knowledge. */
-    value_t get_upper_value_bound() { return reward_t::max_reward/(1-discount); }
+    value_t get_upper_value_bound() { return reward_space->max_reward()/(1-discount); }
 
     /*! \brief Lower bound for observation value without prior knowledge. */
-    value_t get_lower_value_bound() { return reward_t::min_reward/(1-discount); }
+    value_t get_lower_value_bound() { return reward_space->min_reward()/(1-discount); }
 
     /*! \brief Print information on node. */
     void print_node(node_t node) const;
@@ -305,7 +311,7 @@ void LookAheadSearch::build_tree(
             OBSERVATION,
             NOT_EXPANDED,
             instance_t::create(root_instance->action, root_instance->observation, root_instance->reward, root_instance->const_it()-1),
-            action_t::NULL_ACTION,
+            action_ptr_t(),
             get_upper_value_bound(),
             get_lower_value_bound()
     );
@@ -355,7 +361,9 @@ void LookAheadSearch::fully_expand_tree(
     if(tree_needs_further_expansion()) {
         while(expand_tree(model)) {
             if(max_node_counter>0 && number_of_nodes>max_node_counter) {
-                DEBUG_OUT(1,"Abort: Tree has more than " << max_node_counter << " nodes (" << number_of_nodes << ")");
+                if(DEBUG_LEVEL>0) {
+                    std::cout << "Abort: Tree has more than " << max_node_counter << " nodes (" << number_of_nodes << ")" << std::endl;
+                }
                 break;
             } else {
                 if(DEBUG_LEVEL>=1) {
@@ -374,9 +382,9 @@ void LookAheadSearch::fully_expand_tree(
 }
 
 template < class Model >
-LookAheadSearch::probability_t LookAheadSearch::get_predicted_transition_probability(const action_t& action,
-                                                                                     const observation_t& observation,
-                                                                                     const reward_t& reward,
+LookAheadSearch::probability_t LookAheadSearch::get_predicted_transition_probability(const action_ptr_t& action,
+                                                                                     const observation_ptr_t& observation,
+                                                                                     const reward_ptr_t& reward,
                                                                                      const Model& model
     ) const {
 
@@ -423,7 +431,7 @@ LookAheadSearch::probability_t LookAheadSearch::get_predicted_transition_probabi
 }
 
 template < class Model >
-void LookAheadSearch::prune_tree(const action_t& a, const instance_t * new_root_instance, const Model& model) {
+void LookAheadSearch::prune_tree(const action_ptr_t& a, const instance_t * new_root_instance, const Model& model) {
 
     // get undirected graph for using standard algorithms
     typedef lemon::Undirector<graph_t> ugraph_t;
@@ -454,7 +462,7 @@ void LookAheadSearch::prune_tree(const action_t& a, const instance_t * new_root_
             OBSERVATION,
             NOT_EXPANDED,
             instance_t::create(new_root_instance->action, new_root_instance->observation, new_root_instance->reward, new_root_instance->const_it()-1),
-            action_t::NULL_ACTION,
+            action_ptr_t(),
             get_upper_value_bound(),
             get_lower_value_bound()
             );
@@ -462,8 +470,8 @@ void LookAheadSearch::prune_tree(const action_t& a, const instance_t * new_root_
     }
 
     // find new root node
-    observation_t observation = new_root_instance->observation;
-    reward_t reward = new_root_instance->reward;
+    observation_ptr_t observation = new_root_instance->observation;
+    reward_ptr_t reward = new_root_instance->reward;
     graph_t::OutArcIt arc_to_observation;
     for(arc_to_observation = graph_t::OutArcIt(graph,action_node); arc_to_observation!=lemon::INVALID; ++arc_to_observation) {
         node_t observation_node = graph.target(arc_to_observation);
@@ -499,7 +507,7 @@ void LookAheadSearch::prune_tree(const action_t& a, const instance_t * new_root_
             //     OBSERVATION,
             //     NOT_EXPANDED,
             //     instance_t::create(new_root_instance->action, new_root_instance->observation, new_root_instance->reward, new_root_instance->const_it()-1),
-            //     action_t::NULL_ACTION,
+            //     action_ptr_t::NULL_ACTION,
             //     get_upper_value_bound(),
             //     get_lower_value_bound()
             //     );
@@ -636,7 +644,7 @@ void LookAheadSearch::expand_leaf_node(
     instance_t * instance_from = node_info_map[observation_node].instance;
 
     // create action nodes
-    for(actionIt_t action=actionIt_t::first(); action!=util::INVALID; ++action) {
+    for(action_ptr_t action : action_space) {
         node_t action_node = graph.addNode();
         ++number_of_nodes;
         node_info_map[action_node] = NodeInfo(
@@ -686,14 +694,14 @@ void LookAheadSearch::expand_action_node(
     }
 
     const instance_t * instance_from = node_info_map[action_node].instance;
-    action_t action = node_info_map[action_node].action;
+    action_ptr_t action = node_info_map[action_node].action;
 
     // add all target observations (MDP-observation-reward combinations)
-    for(observation_t new_observation : observationIt_t::all) {
+    for(observation_ptr_t new_observation : observation_space) {
 
         node_t new_observation_node = lemon::INVALID;
 
-        for(reward_t new_reward : rewardIt_t::all) {
+        for(reward_ptr_t new_reward : reward_space) {
 
             probability_t prob = model.get_prediction(instance_from, action, new_observation, new_reward);
             if(prob>0) {
@@ -703,7 +711,7 @@ void LookAheadSearch::expand_action_node(
                         OBSERVATION,
                         NOT_EXPANDED,
                         instance_t::create(action, new_observation, new_reward, instance_from, nullptr),
-                        action_t::NULL_ACTION, // not defined for observation nodes
+                        action_ptr_t(), // not defined for observation nodes
                         get_upper_value_bound(),
                         get_lower_value_bound()
                 );

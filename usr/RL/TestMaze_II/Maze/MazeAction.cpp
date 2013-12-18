@@ -11,16 +11,19 @@ MazeAction::MazeAction(ACTION a):
 }
 
 MazeAction::MazeAction(const char * a) {
+    // set type
+    set_type(ACTION_TYPE::MAZE_ACTION);
+    // set action
     if(!strcmp(a,"up") || !strcmp(a,"u")) {
         action = ACTION::UP;
     } else if(!strcmp(a,"down") || !strcmp(a,"d")) {
-        action = ACTION::UP;
+        action = ACTION::DOWN;
     } else if(!strcmp(a,"left") || !strcmp(a,"l")) {
-        action = ACTION::UP;
+        action = ACTION::LEFT;
     } else if(!strcmp(a,"right") || !strcmp(a,"r")) {
-        action = ACTION::UP;
+        action = ACTION::RIGHT;
     } else if(!strcmp(a,"stay") || !strcmp(a,"s")) {
-        action = ACTION::UP;
+        action = ACTION::STAY;
     } else {
         DEBUG_ERROR("Not valid action ('" << a << "'");
         action = ACTION::END;

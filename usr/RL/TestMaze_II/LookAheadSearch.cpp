@@ -32,7 +32,7 @@ LookAheadSearch::NodeInfo::NodeInfo():
     type(NONE),
     expansion(NOT_DEFINED),
     instance(nullptr),
-    action(action_t()),
+    action(action_ptr_t()),
     upper_value_bound(0),
     lower_value_bound(0)
 {}
@@ -41,7 +41,7 @@ LookAheadSearch::NodeInfo::NodeInfo(
     const NODE_TYPE& t,
     const EXPANSION_TYPE& e,
     instance_t * i,
-    const action_t& a,
+    const action_ptr_t& a,
     const value_t& uv,
     const value_t& lv
     ):
@@ -88,6 +88,12 @@ LookAheadSearch::LookAheadSearch(const double& d):
 
 LookAheadSearch::~LookAheadSearch() {}
 
+void LookAheadSearch::set_spaces(const action_ptr_t & a, const observation_ptr_t & o, const reward_ptr_t & r) {
+    action_space = a;
+    observation_space = o;
+    reward_space = r;
+}
+
 void LookAheadSearch::clear_tree() {
     DEBUG_OUT(2,"Clearing graph");
     for(graph_t::NodeIt node(graph); node!=INVALID; ++node) {
@@ -102,13 +108,13 @@ void LookAheadSearch::clear_tree() {
     root_node = INVALID;
 }
 
-LookAheadSearch::action_t LookAheadSearch::get_optimal_action() const {
+LookAheadSearch::action_ptr_t LookAheadSearch::get_optimal_action() const {
     DEBUG_OUT(2,"Determining optimal action");
 
     node_vector_t optimal_action_node_vector = optimal_action_nodes(root_node);
 
     // select one action randomly
-    action_t selected_action = action_t::STAY;
+    action_ptr_t selected_action = action_ptr_t();
     if(optimal_action_node_vector.size()==0) {
         DEBUG_OUT(0,"Error: No action available from root node. Choosing " << selected_action << ".");
         return selected_action;
@@ -246,13 +252,13 @@ void LookAheadSearch::print_tree(const bool& text,
             lables[node] = QString::number(graph.id(node)).toStdString();
             lables[node] += ": ";
             if(node_info_map[node].type==OBSERVATION) {
-                lables[node] += Maze::MazeState(node_info_map[node].instance->observation).print();
-                if(node_info_map[node].instance->reward==reward_t::max_reward) {
+                lables[node] += node_info_map[node].instance->observation->print();
+                if(node_info_map[node].instance->reward->get_value()==reward_space->max_reward()) {
                     lables[node] += "*";
                 }
                 shapes[node] = 0;
             } else if(node_info_map[node].type==ACTION) {
-                lables[node] += node_info_map[node].action.action_string();
+                lables[node] += node_info_map[node].action->print();
                 shapes[node] = 2;
             } else {
                 lables[node] = "";
@@ -472,7 +478,7 @@ void LookAheadSearch::print_tree_statistics() {
               .arg(max_upper_bound,11,'e',5,'0')
               .toStdString()
         );
-    action_t optimal_action = get_optimal_action();
+    action_ptr_t optimal_action = get_optimal_action();
     for(graph_t::OutArcIt out_arc(graph,root_node); out_arc!=INVALID; ++out_arc) {
         node_t action_node = graph.target(out_arc);
         value_t lower_bound = node_info_map[action_node].lower_value_bound;
@@ -494,7 +500,7 @@ void LookAheadSearch::print_tree_statistics() {
                   .arg(QString('-').repeated(upper_count-weighted_count-1))
                   .arg(QString(' ').repeated(width-upper_count))
                   .arg(upper_bound,11,'e',5,'0')
-                  .arg(node_info_map[action_node].action.action_string())
+                  .arg(node_info_map[action_node].action->print().c_str())
                   .arg(node_info_map[action_node].action==optimal_action ? '*' : ' ')
                   .toStdString()
             );
@@ -682,9 +688,9 @@ LookAheadSearch::node_t LookAheadSearch::update_action_node(node_t action_node) 
             node_t observation_node = graph.target(out_arc);
             probability_t observation_prob = arc_info_map[out_arc].prob;
             prob_sum += observation_prob;
-            reward_t transition_reward = arc_info_map[out_arc].transition_reward;
-            node_info_map[action_node].upper_value_bound += observation_prob * (transition_reward + discount*node_info_map[observation_node].upper_value_bound);
-            node_info_map[action_node].lower_value_bound += observation_prob * (transition_reward + discount*node_info_map[observation_node].lower_value_bound);
+            reward_ptr_t transition_reward = arc_info_map[out_arc].transition_reward;
+            node_info_map[action_node].upper_value_bound += observation_prob * (transition_reward->get_value() + discount*node_info_map[observation_node].upper_value_bound);
+            node_info_map[action_node].lower_value_bound += observation_prob * (transition_reward->get_value() + discount*node_info_map[observation_node].lower_value_bound);
         }
         if(fabs(prob_sum-1)>1e-10) {
             DEBUG_OUT(0,"Error: Unnormalized observation transition probabilities (p_sum=" << prob_sum << ")");
@@ -697,9 +703,9 @@ LookAheadSearch::node_t LookAheadSearch::update_action_node(node_t action_node) 
         value_t min_lower =  DBL_MAX;
         for(graph_t::OutArcIt out_arc(graph,action_node); out_arc!=INVALID; ++out_arc) {
             node_t observation_node = graph.target(out_arc);
-            reward_t transition_reward = arc_info_map[out_arc].transition_reward;
-            value_t upper = transition_reward + discount*node_info_map[observation_node].upper_value_bound;
-            value_t lower = transition_reward + discount*node_info_map[observation_node].lower_value_bound;
+            reward_ptr_t transition_reward = arc_info_map[out_arc].transition_reward;
+            value_t upper = transition_reward->get_value() + discount*node_info_map[observation_node].upper_value_bound;
+            value_t lower = transition_reward->get_value() + discount*node_info_map[observation_node].lower_value_bound;
             if(upper>max_upper) {
                 max_upper = upper;
             }

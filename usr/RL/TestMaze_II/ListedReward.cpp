@@ -1,9 +1,13 @@
 #include "ListedReward.h"
 
 #include <sstream>
+#include <algorithm> // for min, max
 
+#define DEBUG_LEVEL 0
 #include "../debug.h"
 
+using std::min;
+using std::max;
 using std::string;
 
 ListedReward::ListedReward(const std::vector<value_t> & list, const uint & idx):
@@ -62,7 +66,21 @@ bool ListedReward::operator<(const AbstractReward &other) const {
 
 const string ListedReward::print() const {
     std::stringstream ret;
-    ret << "ListedReward(" << reward_list[reward_index] << ")";
+    if(DEBUG_LEVEL>=1) {
+        ret << "ListedReward({";
+        bool first = true;
+        for(value_t v : reward_list) {
+            if(first) {
+                first = false;
+            } else {
+                ret << ",";
+            }
+            ret << v;
+        }
+        ret << "}," << reward_list[reward_index] << ")";
+    } else {
+        ret << "ListedReward(" << reward_list[reward_index] << ")";
+    }
     return ret.str();
 }
 
@@ -76,6 +94,22 @@ void ListedReward::set_value(const value_t& v) {
         ++idx;
     }
     DEBUG_ERROR("Value (" << v << ")does not match any in reward list.");
+}
+
+ListedReward::value_t ListedReward::min_reward() const {
+    value_t min_val = DBL_MAX;
+    for(value_t v : reward_list) {
+        min_val = min(min_val,v);
+    }
+    return min_val;
+}
+
+ListedReward::value_t ListedReward::max_reward() const {
+    value_t max_val = -DBL_MAX;
+    for(value_t v : reward_list) {
+        max_val = max(max_val,v);
+    }
+    return max_val;
 }
 
 void ListedReward::set_type(REWARD_TYPE t) {

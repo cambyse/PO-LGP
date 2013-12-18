@@ -7,7 +7,9 @@ QT += core \
 HEADERS += \
     ../Config.h \
     ../util.h \
+    ../util/ProgressBar.h \
     ../util/ColorOutput.h \
+    ../util/QtUtil.h \
     ../Feature.h \
     ../Instance.h \
     ../AbstractAction.h \
@@ -22,14 +24,17 @@ HEADERS += \
     ../Maze/AugmentedMazeAction.h \
     ../AbstractObservation.h \
     ../Maze/MazeObservation.h \
+    ../LookAheadSearch.h \
     MinimalEnvironmentExample/MinimalAction.h \
     MinimalEnvironmentExample/MinimalObservation.h \
     MinimalEnvironmentExample/MinimalReward.h \
-#    MinimalEnvironmentExample/MinimalFeature.h \
     MinimalEnvironmentExample/MinimalEnvironment.h
 SOURCES += \
     main.cpp \
     ../util.cpp \
+    ../util/ProgressBar.cpp \
+    ../util/ColorOutput.cpp \
+    ../util/QtUtil.cpp \
     ../Feature.cpp \
     ../Instance.cpp \
     ../AbstractAction.cpp \
@@ -43,16 +48,18 @@ SOURCES += \
     ../Maze/MazeAction.cpp \
     ../Maze/AugmentedMazeAction.cpp \
     ../Maze/MazeObservation.cpp \
+    ../LookAheadSearch.cpp \
     AbstractIteratableSpaceTest.cpp \
     FeatureTest.cpp \
 #    TemplateTest.cpp \
-    EnvironmentTest.cpp
+    EnvironmentTest.cpp \
+    PlannerTest.cpp
 LIBS += -llbfgs \
-#    -lemon \
+    -lemon \
     -larmadillo \
     -lgomp \
     -lgtest
-LIBPATH += /usr/share/lib
+#LIBPATH += /usr/share/lib
 QMAKE_CXXFLAGS += -std=c++0x \
     -fopenmp
 

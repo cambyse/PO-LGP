@@ -102,43 +102,27 @@ public:
     }
 
     void print_last_transition() const {
-        std::cout << "-------" << std::endl;
-        ColorOutput::reset_all();
+        using ColorOutput::reset_all;
+        using ColorOutput::bold;
+        using ColorOutput::fg_red;
+        using ColorOutput::bg_red;
+        using ColorOutput::bg_green;
+        std::cout << reset_all() << "-------" << std::endl;
         if(current_instance->action==MinimalAction(MinimalAction::ACTION::STAY)) {
             std::cout << "   O  " << std::endl;
         } else {
             std::cout << "  <-> " << std::endl;
         }
         if(current_instance->observation==MinimalObservation(MinimalObservation::OBSERVATION::RED)) {
-            std::cout << " |";
-            ColorOutput::set_background(ColorOutput::BACKGROUND::GREEN);
-            std::cout << " ";
-            ColorOutput::reset_all();
-            std::cout << "|";
-            ColorOutput::set_background(ColorOutput::BACKGROUND::RED);
-            ColorOutput::set_attribute(ColorOutput::ATTRIBUTE::BOLD);
-            std::cout << "X";
-            ColorOutput::reset_all();
-            std::cout << "|";
+            std::cout << " |" << bg_green() << " " << reset_all() << "|" << bg_red() << bold() << "X" << reset_all() << "|";
         } else {
-            std::cout << " |";
-            ColorOutput::set_background(ColorOutput::BACKGROUND::GREEN);
-            ColorOutput::set_attribute(ColorOutput::ATTRIBUTE::BOLD);
-            std::cout << "X";
-            ColorOutput::reset_all();
-            std::cout << "|";
-            ColorOutput::set_background(ColorOutput::BACKGROUND::RED);
-            std::cout << " ";
-            ColorOutput::reset_all();
-            std::cout << "|";
+            std::cout << " |" << bg_green() << bold() << "X" << reset_all() << "|" << bg_red() << " " << reset_all() << "|";
         }
         if(current_instance->reward==MinimalReward(MinimalReward::REWARD::NO_REWARD)) {
             std::cout << " :-(";
         } else {
-            ColorOutput::set_foreground(ColorOutput::FOREGROUND::RED);
-            std::cout << " :-)";
+            std::cout << fg_red() << " :-)" << reset_all();
         }
-        ColorOutput::reset_all();
         std::cout << std::endl;
         std::cout << "-------" << std::endl;
     }

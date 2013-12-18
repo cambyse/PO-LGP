@@ -38,6 +38,10 @@ public:
      * Checks for a matching value in ListedReward::reward_list. */
     virtual void set_value(const value_t& v);
 
+    virtual value_t min_reward() const override;
+
+    virtual value_t max_reward() const override;
+
 protected:
     virtual void set_type(REWARD_TYPE t) override;
     std::vector<value_t> reward_list; ///< List of all possible reward values.

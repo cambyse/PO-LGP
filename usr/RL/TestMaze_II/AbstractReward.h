@@ -23,6 +23,10 @@ public:
     /** \brief Always return a value of zero. */
     virtual value_t get_value() const { return 0; }
 
+    virtual value_t min_reward() const { return 0; }
+
+    virtual value_t max_reward() const { return 0; }
+
 protected:
     virtual void set_type(REWARD_TYPE t);
 private:

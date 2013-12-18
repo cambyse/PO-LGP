@@ -12,6 +12,7 @@
 #define DEBUG_H_
 
 #include <iostream>
+#include "./util/ColorOutput.h"
 
 #ifndef DEBUG_STRING
 #define DEBUG_STRING __FILE__ << ": "
@@ -22,7 +23,7 @@
 #endif
 
 #define DEBUG_ERROR(message) {                                          \
-        std::cout << DEBUG_STRING << "Error(l" << __LINE__ << "): " << message << std::endl; \
+        std::cout << ColorOutput::fg_red() << DEBUG_STRING << "Error(L" << __LINE__ << "): " << message << ColorOutput::reset_all() << std::endl; \
     }
 
 #define DEBUG_OUT(level,message) {                              \

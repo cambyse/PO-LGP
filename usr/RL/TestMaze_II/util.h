@@ -234,6 +234,10 @@ namespace util {
          * Used by Iterator class to determine stopping criterion. */
         virtual bool operator!=(const AbstractIteratableSpace& other) const = 0;
 
+        virtual bool operator!=(const PointerType& other) const final {
+            return *this!=*other;
+        }
+
         /** \brief Equality operator.
          *
          * To define equality simply define the inequality operator
@@ -241,6 +245,10 @@ namespace util {
          * overridden, instead it returns the negation of the inequality
          * operator. */
         virtual bool operator==(const AbstractIteratableSpace& other) const final {
+            return !(*this!=other);
+        }
+
+        virtual bool operator==(const PointerType& other) const final {
             return !(*this!=other);
         }
 

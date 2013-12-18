@@ -32,6 +32,9 @@ public:
     Maze(const double& eps = 0);
     virtual ~Maze();
 
+    /** \brief Set a maze by name. */
+    virtual void set_maze(const QString& s);
+
     /** \brief Renders the complete maze. */
     virtual void render_initialize(QGraphicsView * v) override;
 
@@ -72,6 +75,8 @@ public:
 
     /** \brief Set the current state of the agent. */
     void set_current_observation(const observation_ptr_t&);
+
+    const instance_t * get_current_instance() const { return current_instance; }
 
     /** \brief Get a string describing all rewards. */
     std::string get_rewards();
@@ -144,18 +149,20 @@ private:
 
     struct maze_t {
         maze_t(const QString & n,
+               const int kk,
                const action_ptr_t & a,
                const observation_ptr_t & o,
                const reward_ptr_t & r,
                const std::vector<wall_t> & w,
                const std::vector<maze_reward_t> & mr,
                const std::vector<door_t> & d):
-            name(n),
+            name(n), k(kk),
             action_space(a), observation_space(o), reward_space(r),
             walls(w), rewards(mr), doors(d)
         {}
         ~maze_t() = default;
         QString                    name;
+        int                        k;
         action_ptr_t               action_space;
         observation_ptr_t          observation_space;
         reward_ptr_t               reward_space;
@@ -169,12 +176,6 @@ private:
     //==============//
 
     int k;                             ///< k-MDP length.
-    uint x_dimensions;                 ///< x dimensions of the maze.
-    uint y_dimensions;                 ///< y dimensions of the maze.
-
-    action_t default_action;           ///< Default action.
-    observation_t default_observation; ///< Default state.
-    reward_t default_reward;           ///< Default reward.
 
     /** \brief The current state of the maze including the complete past. */
     instance_t * current_instance;
@@ -187,11 +188,10 @@ private:
     std::vector<QGraphicsRectItem*> state_rects;     ///< Graphic items containing the state rects for rendering the states.
     color_vector_t state_colors;                     ///< Color vector for all states.
 
-    /* static const std::vector<maze_t> maze_list;      ///< List of all mazes. */
-    /* maze_t current_maze;                             ///< Defines current maze. */
-    static const std::vector<wall_t>         walls;               ///< Defines the walls.
-    static const std::vector<maze_reward_t>  rewards;             ///< Defines the rewards.
-    static const std::vector<door_t>         doors;               ///< Defines the doors.
+    static const std::vector<maze_t> maze_list;      ///< List of all mazes.
+    static std::vector<wall_t>         walls;               ///< Defines the walls.
+    static std::vector<maze_reward_t>  rewards;             ///< Defines the rewards.
+    static std::vector<door_t>         doors;               ///< Defines the doors.
 
     //==================//
     // Member Functions //
