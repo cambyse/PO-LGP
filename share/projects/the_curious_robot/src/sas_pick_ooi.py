@@ -77,9 +77,6 @@ class PickOOIActionServer:
             if self.oois is None:
                 all_shapes_msg = self.request_all_shapes(with_mesh=False)
                 self.oois = [shape.index for shape in all_shapes_msg.shapes]
-                for shape in all_shapes_msg.shapes:
-                    print "printing mesh"
-                    print shape.mesh
 
         # select an ooi
         with Timer("PICK: select ooi", rospy.logwarn):
