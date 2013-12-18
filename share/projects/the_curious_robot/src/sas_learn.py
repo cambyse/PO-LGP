@@ -183,6 +183,12 @@ class LearnActionServer:
             # rot_radius
             # rot_orientation x y z w
             # ros_mode
+
+            # rot_center[3], points to the rotational center of the rotational joint
+            # rot_axis[4], gives the rotational axis of the rotational joint
+            # rot_radius, gives the radius of the rotational joint
+            # rot_orientation[4], gives the orientation of the articulated object
+
             x = filter(lambda param: param.name == 'rot_center.x',
                        response.model.params)[0].value
             y = filter(lambda param: param.name == 'rot_center.y',
@@ -195,9 +201,29 @@ class LearnActionServer:
             print rots
 
         elif response.name == "prismatic":
-            pass
+            # The parameters of the prismatic model are:
+            #
+            # rigid_position[3], gives the average position of the articulated
+            # object (inherited from the rigid model)
+            #
+            # rigid_orientation[4], gives the average orientation of the
+            # articulated object (inherited from the rigid model)
+            #
+            # prismatic_dir[3], gives the line direction of the prismatic joint
             rospy.logerr("PRISMATIV evaluation not implemented yet")
+
         else:
+            # The parameters of the rigid model are:
+            # - rigid_position[3], gives the estimated position of the rigid
+            #   object.
+            # - rigid_orientation[4], gives the estimated orientation of the
+            #   rigid object.  rigid_width, gives the estimated width of the
+            #   rigid object (only if a width channel is present in
+            #   ModelMsg::track.channels).
+            # - rigid_height, gives the estimated height of the rigid object
+            #   (only if a height channel is present in
+            #   ModelMsg::track.channels).
+
             rospy.logerr("Joint type is not handled.")
 
     def preempt_cb(self):
