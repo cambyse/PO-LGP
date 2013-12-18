@@ -25,6 +25,13 @@ import require_provide as rp
 import numpy as np
 
 
+def find(f, seq):
+    """Return first item in sequence where f(item) == True."""
+    for item in seq:
+        if f(item):
+            return item
+
+
 class LearnActionServer:
 
     def __init__(self, name):
@@ -162,29 +169,43 @@ class LearnActionServer:
 
         # here we learn
         response = self.dof_learner(request)
-        rospy.loginfo(response.model)
-        if response.model.params:
+        rospy.loginfo(response)
 
-            for p in [p for p in response.model.params if p.name.startswith("rot")]:
-                rospy.loginfo(p)
-                if p.name == "rot_center.x":
-                    # print "rot_center.x"
-                    x = p.value
-                if p.name == "rot_center.y":
-                    # print "rot_center.y"
-                    y = p.value
-                if p.name == "rot_center.z":
-                    # print "rot_center.z"
-                    z = p.value
+        # useful information
+        print response.model.name
+        ll = find(lambda param: param.name == 'loglikelihood',
+                  response.model.params)
+        print ll.value
 
-            logLH = [entry.value
-                        for entry in response.model.params
-                        if entry.name == 'loglikelihood'][0]
-            rospy.loginfo("selected model: '%s' (n = %d, log LH = %f)" % (
-                response.model.name,
-                len(response.model.track.pose),
-                logLH
-            ))
+        # - rigid: a rigid model, describes a static link (with Gaussian noise)
+        # - prismatic: a prismatic joint model, describes for example a drawer
+        #   or a sliding cabinet door
+        # - rotational: a rotary joint model, describes for example a door or
+        #   a door handle
+
+        if response.model.name == "rotational":
+            # important information
+            # rot_center x y z
+            # rot_axis x y z w
+            # rot_radius
+            # rot_orientation x y z w
+            # ros_mode
+            x = find(lambda param: param.name == 'rot_center.x',
+                     response.model.params).value
+            y = find(lambda param: param.name == 'rot_center.y',
+                     response.model.params).value
+            z = find(lambda param: param.name == 'rot_center.z',
+                     response.model.params).value
+
+            rot = [p for p in response.model.params
+                   if p.name.startswith("rot")]
+            print rot
+
+        elif response.name == "prismatic":
+            pass
+            rospy.logerr("PRISMATIV evaluation not implemented yet")
+        else:
+            rospy.logerr("Joint type is not handled.")
 
     def preempt_cb(self):
         self.server.set_preempted()
