@@ -12,9 +12,6 @@
 //
 
 void threeStepGraspHeuristic(arr& x, MotionProblem& MP, const arr& x0, uint shapeId, uint verbose) {
-  OpenGL gl;
-  bindOrsToOpenGL(MP.world, gl);
-
   uint T = MP.T;
   //double duration = sys.getTau() * T;
   
@@ -31,7 +28,7 @@ void threeStepGraspHeuristic(arr& x, MotionProblem& MP, const arr& x0, uint shap
       cost_side(side) = keyframeOptimizer(x, MP, false, verbose);
       listDelete(MP.taskCosts());
       if (verbose>=2) {
-        displayState(x, MP.world, gl, STRING("posture estimate phase 0 side " <<side));
+        displayState(x, MP.world, STRING("posture estimate phase 0 side " <<side));
       }
       x_side[side]() = x;
     }
@@ -43,7 +40,7 @@ void threeStepGraspHeuristic(arr& x, MotionProblem& MP, const arr& x0, uint shap
     keyframeOptimizer(x, MP, false, verbose);
     listDelete(MP.taskCosts());
     if (verbose>=2) {
-      displayState(x, MP.world, gl, "posture estimate phase 0");
+      displayState(x, MP.world, "posture estimate phase 0");
     }
   }
   
@@ -53,14 +50,14 @@ void threeStepGraspHeuristic(arr& x, MotionProblem& MP, const arr& x0, uint shap
   x(MP.world.getJointByName("finger_l_r")->qIndex) = 1.;
 
   if (verbose>=2) {
-    displayState(x, MP.world, gl, "posture estimate phase 1");
+    displayState(x, MP.world, "posture estimate phase 1");
   }
   
   //-- reoptimize with close hand
   setGraspGoals_PR2(MP, T, shapeId, side, 1);
   keyframeOptimizer(x, MP, true, verbose);
   //listDelete(M.vars); //DON'T delete the grasp goals - the system should keep them for the planner
-  if (verbose>=1) displayState(x, MP.world, gl, "posture estimate phase 2");
+  if (verbose>=1) displayState(x, MP.world, "posture estimate phase 2");
 //  M.displayCurrentState("posture estimate phase 2", false, false);
   //if (verbose>=2) M.gl->watch();
 }

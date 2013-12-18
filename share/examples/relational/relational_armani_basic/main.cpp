@@ -160,28 +160,27 @@ void test_box() {
   
   sim.openBox(67, "opening box 67");
   sim.relaxPosition();
-  
   sim.closeBox(66);
   sim.relaxPosition();
-  
+
   sim.grab(70);
   sim.relaxPosition();
-  sim.simulate(50);
-  
   sim.dropObjectAbove(67);
   sim.relaxPosition();
-  sim.simulate(50);
-  
+
   sim.grab(71);
-  
+  sim.relaxPosition();
+
   sim.grab(68);
   sim.relaxPosition();
-  sim.simulate(50);
-  
   sim.dropObjectAbove(66);
   sim.relaxPosition();
-  sim.simulate(50);
-  
+
+  sim.grab(69);
+  sim.relaxPosition();
+  sim.dropObjectAbove(68);
+  sim.relaxPosition();
+
   cout<<"Please press button to finish."<<endl;
   sim.watch();
 }

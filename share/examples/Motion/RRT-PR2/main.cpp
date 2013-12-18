@@ -13,7 +13,7 @@
 SET_LOG(main, DEBUG);
 
 arr create_endpose(ors::KinematicWorld& G) {
-  MotionProblem P(&G);
+  MotionProblem P(G);
 
   P.loadTransitionParameters();
   P.H_rate_diag = pr2_reasonable_W();
@@ -37,7 +37,7 @@ arr create_rrt_trajectory(ors::KinematicWorld& G, arr& target) {
   double stepsize = MT::getParameter<double>("rrt_stepsize", .005);
 
   // create MotionProblem
-  MotionProblem P(&G);
+  MotionProblem P(G);
   P.loadTransitionParameters();
 
   // add a collision cost with threshold 0 to avoid collisions
@@ -57,7 +57,7 @@ arr create_rrt_trajectory(ors::KinematicWorld& G, arr& target) {
 
 arr optimize_trajectory(ors::KinematicWorld& G, arr& init_trajectory) {
   // create MotionProblem
-  MotionProblem P(&G);
+  MotionProblem P(G);
   P.loadTransitionParameters();
   P.H_rate_diag = pr2_reasonable_W();
   P.T = init_trajectory.d0-1;
@@ -77,11 +77,11 @@ arr optimize_trajectory(ors::KinematicWorld& G, arr& init_trajectory) {
   return x;
 }
 
-void show_trajectory(ors::KinematicWorld& G, OpenGL& gl, arr& trajectory, const char* title) {
+void show_trajectory(ors::KinematicWorld& G, arr& trajectory, const char* title) {
   arr start;
   G.getJointState(start);
-  displayTrajectory(trajectory, trajectory.d0, G, gl, title);
-  gl.watch();
+  displayTrajectory(trajectory, trajectory.d0, G, title);
+  G.gl().watch();
   G.setJointState(start);
 }
 
@@ -94,10 +94,8 @@ int main(int argc, char** argv) {
   ors::KinematicWorld G("world.ors");
   makeConvexHulls(G.shapes);
 
-  OpenGL gl;
-  bindOrsToOpenGL(G, gl);
-
-  arr start = G.getJointState();
+  arr start;
+  G.getJointState(start);
   std::cout << "q = " << start << std::endl;
 
   arr target = create_endpose(G);
@@ -106,10 +104,10 @@ int main(int argc, char** argv) {
   std::cout << "target = " << target << std::endl;
 
   arr rrt_trajectory = create_rrt_trajectory(G, target);
-  show_trajectory(G, gl, rrt_trajectory, "RRT");
+  show_trajectory(G,  rrt_trajectory, "RRT");
 
   arr opt_trajectory = optimize_trajectory(G, rrt_trajectory);
-  show_trajectory(G, gl, opt_trajectory, "optimized");
+  show_trajectory(G,  opt_trajectory, "optimized");
 
   return 0;
 }

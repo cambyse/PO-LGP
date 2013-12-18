@@ -39,12 +39,10 @@ void scenario1() {
   d.reset();
 
   // Simulate DMP
-
+  d.changeGoal(ARRAY(2.,2.));
 
   // Simulate DMP
   for (i=0;i<300;i++) {
-    if (i==50)
-      d.changeGoal(ARRAY(0.,0.));
     d.iterate();
   }
 
@@ -52,14 +50,13 @@ void scenario1() {
   d.printDMP();
   d.plotDMP();
 
-  MT::wait();
 }
 
 //** optimized trajectory in joint space **//
 void scenario2() {
-  ors::KinematicWorld G;
+  ors::KinematicWorld G("scenes/scene1.ors");
+  G.gl().resize(800, 800);
 
-  G.init("scenes/scene1.ors");
   makeConvexHulls(G.shapes);
   cout << "Loaded scene: " << endl;
 
@@ -129,16 +126,16 @@ void scenario2() {
     G.calcBodyFramesFromJoints();
 
     d.iterate();
-    G.watch(false, STRING(d.X));
+    G.gl().update();
   }
 
 }
 
 //** optimized trajectory in cartesian space **//
 void scenario3() {
-  ors::KinematicWorld G;
+  ors::KinematicWorld G("scenes/scene1.ors");
+  G.gl().resize(800, 800);
 
-  G.init("scenes/scene1.ors");
   makeConvexHulls(G.shapes);
   cout << "Loaded scene: " << endl;
 
@@ -183,8 +180,8 @@ void scenario3() {
   for (uint t=0;t<=T;t++) {
     G.setJointState(x[t]);
     G.calcBodyFramesFromJoints();
-    G.kinematicsPos(kinPos,NoArr,P.world.getBodyByName("endeff")->index);
-    G.kinematicsVec(kinVec,NoArr,P.world.getBodyByName("endeff")->index);
+    G.kinematicsPos(kinPos, NoArr, P.world.getBodyByName("endeff")->index);
+    G.kinematicsVec(kinVec, NoArr, P.world.getBodyByName("endeff")->index);
     xRefPos.append(~kinPos);
     xRefVec.append(~kinVec);
   }
@@ -225,7 +222,7 @@ void scenario3() {
     W = W*w_reg;
 
     // Compute current task states
-    G.kinematicsPos(yPos,JPos, G.getBodyByName("endeff")->index);
+    G.kinematicsPos(yPos, JPos, G.getBodyByName("endeff")->index);
 
     // iterate dmp
     d.iterate();
@@ -247,18 +244,18 @@ void scenario3() {
     G.setJointState(q);
     G.calcBodyFramesFromJoints();
 
-    G.watch(false, STRING(d.X));
+    G.gl().update();
   }
-  G.watch(true, STRING("DONE"));
+  G.gl().watch();
 }
 
 //** optimized trajectory in cartesian space with orientation **//
 void scenario4() {
   bool useOrientation = true;
 
-  ors::KinematicWorld G;
+  ors::KinematicWorld G("scenes/scene1.ors");
+  G.gl().resize(800, 800);
 
-  G.init("scenes/scene1.ors");
   makeConvexHulls(G.shapes);
   cout << "Loaded scene: " << endl;
 
@@ -299,7 +296,7 @@ void scenario4() {
   optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
 
   P.costReport();
-  displayTrajectory(x, 1, G, G.gl(),"planned trajectory");
+  displayTrajectory(x, 1, G, "planned trajectory");
 
 
   //------------------------------------------------//
@@ -310,8 +307,8 @@ void scenario4() {
   for (uint t=0;t<=T;t++) {
     G.setJointState(x[t]);
     G.calcBodyFramesFromJoints();
-    G.kinematicsPos(kinPos,NoArr,P.world.getBodyByName("endeff")->index);
-    G.kinematicsVec(kinVec,NoArr,P.world.getBodyByName("endeff")->index);
+    G.kinematicsPos(kinPos, NoArr, P.world.getBodyByName("endeff")->index);
+    G.kinematicsVec(kinVec, NoArr, P.world.getBodyByName("endeff")->index);
     xRefPos.append(~kinPos);
     xRefVec.append(~kinVec);
   }
@@ -356,9 +353,14 @@ void scenario4() {
     W = W*w_reg;
 
     // Compute current task states
+<<<<<<< HEAD
     G.kinematicsPos(yPos,JPos, G.getBodyByName("endeff")->index);
     G.kinematicsVec(yVec,JVec, G.getBodyByName("endeff")->index);
 
+=======
+    G.kinematicsPos(yPos, JPos, G.getBodyByName("endeff")->index);
+    G.kinematicsVec(yVec, JVec, G.getBodyByName("endeff")->index);
+>>>>>>> master
 
     // iterate dmp
     d.iterate();
@@ -393,13 +395,13 @@ void scenario4() {
     G.setJointState(q);
     G.calcBodyFramesFromJoints();
 
-    G.watch(false, STRING(d.X));
+    G.gl().update();
   }
-  G.watch(true, STRING("DONE"));
+  G.gl().watch();
 }
 
 int main(int argc,char **argv){
-  switch(MT::getParameter<int>("mode",1)){
+  switch(MT::getParameter<int>("mode",4)){
   case 1:  scenario1();  break;
   case 2:  scenario2();  break;
   case 3:  scenario3();  break;

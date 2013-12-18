@@ -130,14 +130,14 @@ struct Access_typed:Access{
     ReadToken(Access_typed<T> *_a):a(_a){ a->readAccess(); }
     ~ReadToken(){ a->deAccess(); }
     operator const T&(){ return (*a)(); }
-//    const T& operator()(){ return (*a)(); }
+    const T& operator()(){ return (*a)(); }
   };
   struct WriteToken{
     Access_typed<T> *a;
     WriteToken(Access_typed<T> *_a):a(_a){ a->writeAccess(); }
     ~WriteToken(){ a->deAccess(); }
     WriteToken& operator=(const T& x){ (*a)() = x; return *this; }
-//    T& operator()(){ return (*a)(); }
+    T& operator()(){ return (*a)(); }
   };
 
   Access_typed(const char* name, Module *m=NULL, VariableAccess *d=NULL):Access(name){ type=new Type_typed<T, void>();  module=currentlyCreating; var=d; if(module) module->accesses.append(this); }

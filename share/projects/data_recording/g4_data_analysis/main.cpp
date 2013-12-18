@@ -9,7 +9,7 @@
 
 void lib_hardware_G4();
 
-void init_display(ors::Graph &G, OpenGL &gl) {
+void init_display(ors::KinematicWorld &G, OpenGL &gl) {
   MT::String shapes = MT::getParameter<MT::String>("shapes");
   init(G, gl, shapes);
   gl.camera.setPosition(7., .5, 3.);
@@ -20,7 +20,7 @@ void init_display(ors::Graph &G, OpenGL &gl) {
 void display(G4Data &g4d) {
   //VideoEncoder_libav_simple vid;
   OpenGL gl;
-  ors::Graph G;
+  ors::KinematicWorld G;
 
   init_display(G, gl);
 

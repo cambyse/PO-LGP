@@ -1713,11 +1713,13 @@ template<class T> void transpose(MT::Array<T>& x, const MT::Array<T>& y) {
 }
 
 /// returns the diagonal x = diag(y) (the diagonal-vector of the symmetric 2D matrix y)
-template<class T> void getDiag(MT::Array<T>& x, const MT::Array<T>& y) {
+template<class T> MT::Array<T> getDiag(const MT::Array<T>& y) {
   CHECK(y.nd==2 && y.d0==y.d1, "can only give diagonal of symmetric 2D matrix");
+  arr x;
   x.resize(y.d0);
   uint i;
   for(i=0; i<x.d0; i++) x(i)=y(i, i);
+  return x;
 }
 
 /// inverse of a 2d matrix

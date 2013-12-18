@@ -24,7 +24,6 @@
 
 #include <Core/array.h>
 #include <Ors/ors.h>
-#include <Ors/ors_oldTaskVariables.h>
 
 struct RobotManipulationSimulator : ors::KinematicWorld {
   

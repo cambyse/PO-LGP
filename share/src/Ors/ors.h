@@ -83,13 +83,16 @@ struct Joint;
 struct Shape;
 struct Body;
 struct KinematicWorld;
+struct Proxy;
 
 /** @} */ // END of group ors_basic_data_structures
 } // END of namespace
 
 //===========================================================================
+typedef MT::Array<ors::Joint*> JointL;
 typedef MT::Array<ors::Shape*> ShapeL;
-typedef MT::Array<ors::Body*> BodyL;
+typedef MT::Array<ors::Body*>  BodyL;
+typedef MT::Array<ors::Proxy*> ProxyL;
 
 //===========================================================================
 namespace ors {
@@ -100,7 +103,7 @@ namespace ors {
 /// a rigid body (inertia properties, lists of attached joints & shapes)
 struct Body {
   uint index;          ///< unique identifier TODO:do we really need index, ifrom, ito, ibody??
-  MT::Array<Joint*> inLinks, outLinks;       ///< lists of in and out joints
+  JointL inLinks, outLinks;       ///< lists of in and out joints
   
   MT::String name;     ///< name
   Transformation X;    ///< body's absolute pose
@@ -113,7 +116,7 @@ struct Body {
   Vector com;          ///< its center of gravity
   Vector force, torque; ///< current forces applying on the body
   
-  MT::Array<Shape*> shapes;
+  ShapeL shapes;
   
   Body();
   explicit Body(const Body& b);
@@ -217,10 +220,10 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   /// @name data fields
   arr q, qdot; ///< the current joint configuration vector and velocities
   int q_agent; ///< the agent index of the current q,qdot
-  MT::Array<Body*>  bodies;
-  MT::Array<Joint*> joints;
-  MT::Array<Shape*> shapes;
-  MT::Array<Proxy*> proxies; ///< list of current proximities between bodies
+  BodyL  bodies;
+  JointL joints;
+  ShapeL shapes;
+  ProxyL proxies; ///< list of current proximities between bodies
 
 //  uint q_dim; ///< numer of degrees of freedom IN the joints (not counting root body)
   bool isLinkTree;
@@ -368,7 +371,7 @@ void glDrawGraph(void *classP);
 
 #ifndef MT_ORS_ONLY_BASICS
 
-uintA stringListToShapeIndices(const MT::Array<const char*>& names, const MT::Array<ors::Shape*>& shapes);
+uintA stringListToShapeIndices(const MT::Array<const char*>& names, const ShapeL& shapes);
 
 //===========================================================================
 //
@@ -401,10 +404,10 @@ struct OpenGL;
 extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines, orsDrawBodyNames;
 extern uint orsDrawLimit;
 
-void displayState(const arr& x, ors::KinematicWorld& G, OpenGL& gl, const char *tag);
-void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, OpenGL& gl, const char *tag, double delay=0.);
-void editConfiguration(const char* orsfile, ors::KinematicWorld& G, OpenGL& gl);
-void animateConfiguration(ors::KinematicWorld& G, OpenGL& gl);
+void displayState(const arr& x, ors::KinematicWorld& G, const char *tag);
+void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, const char *tag, double delay=0.);
+void editConfiguration(const char* orsfile, ors::KinematicWorld& G);
+void animateConfiguration(ors::KinematicWorld& G);
 //void init(ors::KinematicWorld& G, OpenGL& gl, const char* orsFile);
 void bindOrsToOpenGL(ors::KinematicWorld& graph, OpenGL& gl);
 /** @} */ // END of group ors_interface_opengl

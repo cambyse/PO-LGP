@@ -75,8 +75,9 @@ arr FeedbackMotionControl::operationalSpaceControl(){
   arr phi, J, a;
   a.resizeAs(world.q).setZero();
   getTaskCosts(phi, J, a);
+  if(!phi.N) return a;
   arr H, Jinv;
-  H.setDiag(H_rate_diag);
+  H.setDiag(1./H_rate_diag);
   pseudoInverse(Jinv, J, H, 1e-6);
   arr Null = eye(a.N) - Jinv * J;
   a = - Jinv * phi + Null * nullSpacePD.getDesiredAcceleration(world.q, world.qdot);

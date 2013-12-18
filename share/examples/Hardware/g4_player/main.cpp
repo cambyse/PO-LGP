@@ -1,6 +1,6 @@
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
-#include <Perception/video.h>
+#include <Perception/videoEncoder.h>
 
 void lib_hardware_G4();
 
