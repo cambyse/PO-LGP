@@ -19,6 +19,8 @@
     along with libPRADA.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#define NEW_FEEDBACK_CONTROL
+
 #include <stdlib.h>
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
@@ -26,6 +28,9 @@
 #include <Ors/ors_ode.h>
 #include <Ors/ors_swift.h>
 #include <Motion/feedbackControl.h>
+#ifndef NEW_FEEDBACK_CONTROL
+#  include <Ors/ors_oldTaskVariables.h>
+#endif
 
 #include "robotManipulationSimulator.h"
 #include <sstream>
@@ -106,6 +111,9 @@ void oneStep(const arr &q, ors::KinematicWorld *C, const char* text) {
 }
 
 
+arr q0;
+#ifndef NEW_FEEDBACK_CONTROL
+arr W, Wdiag;
 
 void controlledStep(arr &q, arr &W, ors::KinematicWorld *C, TaskVariableList& TVs, const char* text) {
   arr dq;
@@ -118,11 +126,13 @@ void controlledStep(arr &q, arr &W, ors::KinematicWorld *C, TaskVariableList& TV
   C->calcBodyFramesFromJoints();
   oneStep(q, C, text);
 }
+#endif
 
 void controlledStep(ors::KinematicWorld *C, FeedbackMotionControl &FM, const char* text) {
   double tau=.01;
   arr q, qdot;
   C->getJointState(q, qdot);
+  FM.nullSpacePD.y_ref = q0;
   arr a = FM.operationalSpaceControl();
   q += tau*qdot;
   qdot += tau*a;
@@ -149,7 +159,6 @@ RobotManipulationSimulator::~RobotManipulationSimulator() {
 }
 
 
-arr q0, W;
 
 void drawEnv(void* horst) {
   glStandardLight(horst);
@@ -166,6 +175,7 @@ void RobotManipulationSimulator::loadConfiguration(const char* ors_filename) {
   v0.resizeAs(q0).setZero();
   setJointState(q0,v0);
 
+#ifndef NEW_FEEDBACK_CONTROL
   uint i;
   arr BM(bodies.N);
   BM=1.;
@@ -174,10 +184,12 @@ void RobotManipulationSimulator::loadConfiguration(const char* ors_filename) {
       BM(i) += BM(bodies(i)->outLinks(0)->to->index);
     }
   }
-  arr Wdiag(q0.N);
+  Wdiag.resize(q0.N);
   for(i=0; i<q0.N; i++) Wdiag(i)=BM(joints(i)->to->index);
   W.setDiag(Wdiag);
-  
+//  cout <<"W here: " <<Wdiag <<"W natural:" <<naturalQmetric() <<endl;
+#endif
+
   calcObjectNumber();
   
   // determine table height
@@ -235,6 +247,11 @@ void RobotManipulationSimulator::startVideo(const char* filename) {
 
 void RobotManipulationSimulator::simulate(uint t, const char* message) {
   String msg_string(message);
+#ifdef NEW_FEEDBACK_CONTROL
+  FeedbackMotionControl MP(*this, false);
+  MP.nullSpacePD.prec=0.;
+  for(; t--;) controlledStep(this, MP, msg_string);
+#else
   arr q;
   TaskVariableList local_TVs;
   local_TVs.clear();
@@ -252,6 +269,7 @@ void RobotManipulationSimulator::simulate(uint t, const char* message) {
     //     send_string << msg_string << "     \n\n(time " << t << ")";
     controlledStep(q, W, this, local_TVs, send_string);
   }
+#endif
 }
 
 
@@ -866,8 +884,8 @@ uint RobotManipulationSimulator::getContainedObject(uint box_id) {
 
 bool RobotManipulationSimulator::isClosed(uint box_id) {
   CHECK(bodies(box_id)->shapes.N == 6, "isn't a box");
-  if(TL::isZero(bodies(box_id)->shapes(5)->rel.pos.x)  &&  TL::isZero(bodies(box_id)->shapes(5)->rel.pos.y)
-      &&  bodies(box_id)->shapes(5)->rel.pos.x < 0.1)
+  if(TL::isZero(bodies(box_id)->shapes.last()->rel.pos.x)  &&  TL::isZero(bodies(box_id)->shapes.last()->rel.pos.y)
+      &&  bodies(box_id)->shapes.last()->rel.pos.x < 0.1)
     return true;
   else
     return false;
@@ -978,6 +996,72 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
     msg_string << "grab "<<obj_grabbed;
   }
   
+#ifdef NEW_FEEDBACK_CONTROL
+  uint t;
+  arr pos = ARRAY(obj->X.pos);
+  uint fingIdx = getBodyByName("fing1c")->index;
+
+  FeedbackMotionControl MP(*this, false);
+  PDtask *x = MP.addPDTask("endeffector", .2, 1.5, posTMT, "fing1c", NoVector, NULL, ors::Vector(pos));
+  if(isTable) x->y_ref(2) = neutralHeight-0.1;
+
+  // (1) drop object if one is in hand
+  //   dropInhandObjectOnTable(message);
+  uint id_grabbed = getInhand();
+  if(id_grabbed != TL::UINT_NIL) {
+    // move a bit towards new object
+    for(t=0; t<10; t++) {
+      MT::String send_msg;
+      send_msg << msg_string /*<< "      \n\n(time " << t << ")"*/;
+      controlledStep(this, MP, msg_string);
+      // TODO passt das? Ueberall state durch "active" ersetzt
+      if(getContact(fingIdx,obj->index)) break;
+    }
+    if(bodies(id_grabbed)->inLinks.N) {
+      ors::Joint* e=bodies(id_grabbed)->inLinks(0);
+      del_edge(e,bodies,joints,true);
+    }
+  }
+
+  // (2) move towards new object
+  for(t=0; t<Tabort; t++) {
+    controlledStep(this, MP, msg_string);
+    if(absMax(x->Perr) <.05 || getContact(fingIdx, obj->index)) break;
+  }
+  if(t==Tabort) { indicateFailure(); return; }
+
+  // (3) grasp if not table or world
+  if(obj->index!=getTableID()) {
+    glueBodies(bodies(fingIdx), obj);
+  } else {
+    //indicateFailure()?
+  }
+
+  // (4) move upwards (to avoid collisions)
+  // to be sure: unset contact of that object if grabbed from table
+  ors::Shape* s = NULL;
+  if(isClear(obj->index)) {
+    s = obj->shapes(0);
+    s->cont = false;
+  }
+
+  x->y_ref(2) = .5;
+  for(t=0; t<Tabort; t++) {
+    controlledStep(this, MP, msg_string);
+    if(absMax(x->Perr) < .05) break;
+
+    // might drop object
+    if(t==50  &&  !object_is_clear  &&  obj->index!=getTableID()) {
+      cout<<"I might drop that object!"<<endl;
+      if(rnd.uni() < GRAB_UNCLEAR_OBJ_FAILURE_PROB) {
+        dropObject(convertObjectName2ID(manipulator));
+        cout<<"  >>  Uh, indeed I dropped it!"<<endl;
+      }
+    }
+  }
+  if(t==Tabort) { indicateFailure(); return; }
+
+#else
   DefaultTaskVariable x("endeffector", *this, posTVT, manipulator, 0, 0, 0, ARR());
   x.setGainsAsAttractor(20, .2);
   x.y_prec=1000.;
@@ -1061,7 +1145,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
     }
   }
   if(t==Tabort) { indicateFailure(); return; }
-  
+#endif
   
   relaxPosition();
   
@@ -1130,19 +1214,99 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   arr I(q0.N,q0.N); I.setId();
   bool obj_is_inhand = strlen(obj_dropped) > 0;
   MT::String obj_dropped1;
-  if(obj_is_inhand) {
-    obj_dropped1 = obj_dropped;
-  } else
-    obj_dropped1 = "fing1c";
+  if(obj_is_inhand) obj_dropped1 = obj_dropped; else obj_dropped1 = "fing1c";
     
   uint obj_dropped1_index=getBodyByName(obj_dropped1)->index;
   uint obj_below_id = convertObjectName2ID(obj_below);
   
-  if(obj_below_id == obj_dropped1_index) {  // if puton itself --> puton table
-//     MT_MSG("Trying to put on table");
-    obj_below_id = getTableID();
+  // if puton itself --> puton table
+  if(obj_below_id == obj_dropped1_index) obj_below_id = getTableID();
+
+#ifdef NEW_FEEDBACK_CONTROL
+  uint t;
+  FeedbackMotionControl MP(*this, false);
+  PDtask *o = MP.addPDTask("obj", .2, 1.5, posTMT, obj_dropped1);
+  PDtask *c = MP.addPDTask("collision", .5, 2., collTMT, NULL, NoVector, NULL, NoVector, ARR(.02));
+  c->prec = 1.;
+//  PDtask *r =  MP.addPDTask("q-pose", .5, 1., qItselfTMT);
+//  r->prec = 1.;
+//  r->y_ref = q0;
+
+  //target for the upright align
+  ors::Quaternion rot;
+  rot = bodies(obj_dropped1_index)->X.rot;
+  ors::Vector upvec; double maxz=-2;
+  if((rot*Vector_x).z>maxz) { upvec=Vector_x; maxz=(rot*upvec).z; }
+  if((rot*Vector_y).z>maxz) { upvec=Vector_y; maxz=(rot*upvec).z; }
+  if((rot*Vector_z).z>maxz) { upvec=Vector_z; maxz=(rot*upvec).z; }
+  if((rot*(-Vector_x)).z>maxz) { upvec=-Vector_x; maxz=(rot*upvec).z; }
+  if((rot*(-Vector_y)).z>maxz) { upvec=-Vector_y; maxz=(rot*upvec).z; }
+  if((rot*(-Vector_z)).z>maxz) { upvec=-Vector_z; maxz=(rot*upvec).z; }
+  ors::Transformation tf;
+  tf.rot.setDiff(Vector_z, upvec);
+  PDtask *z = MP.addPDTask("obj-z-align", .2, 1.5, vecAlignTMT, bodies(obj_dropped1_index)->name, upvec, NULL, Vector_z);
+  z->y_ref = ARR(1.);
+
+  // Calculate (noisy) target position
+  double x_target, y_target;
+  if(obj_is_inhand)
+    calcTargetPositionForDrop(x_target, y_target, obj_dropped1_index, obj_below_id);
+  else {
+    x_target = bodies(obj_below_id)->X.pos.x;
+    y_target = bodies(obj_below_id)->X.pos.z;
   }
-  
+
+  // Hard limit on y-distance to robot
+  if(y_target < HARD_LIMIT_DIST_Y)
+    y_target = HARD_LIMIT_DIST_Y;
+
+
+  // Phase 1: move object up
+  o->map.phi(o->y_ref, NoArr, *this);
+  o->y_ref(2) = neutralHeight;
+  for(t=0; t<Tabort; t++) {
+    controlledStep(this, MP, msg_string);
+    if(absMax(o->Perr) < 0.01) break;
+  }
+  if(t==Tabort) { indicateFailure(); return; }
+
+
+  // Phase 2: above object
+  o->y_ref = ARR( x_target, y_target, highestPosition(x_target, y_target, 0.06, obj_dropped1_index) + .2);
+  for(t=0; t<Tabort; t++) {
+    controlledStep(this, MP, msg_string);
+    if(absMax(o->Perr) < 0.01) break;
+  }
+  if(t==Tabort) { indicateFailure(); return; }
+
+  //turn off collision avoidance
+  c->active=false;
+
+  // Phase 3: down
+  // IMPORTANT PARAM: set distance to target (relative height-distance in which "hand is opened" / object let loose)
+  double Z_ADD_DIST = getSize(obj_dropped1_index)[0]/2 + .03;
+  if(getOrsType(obj_below_id) == OBJECT_TYPE__BOX) {
+    Z_ADD_DIST += 0.05;
+  }
+  double z_target = Z_ADD_DIST + highestPosition(x_target, y_target, 0.06, obj_dropped1_index)+.01;
+  if(getTableID() == obj_below_id)
+    z_target += 0.05;
+  // we slowly approach z_target
+  o->y_ref(2) = bodies(obj_dropped1_index)->X.pos.z - 0.05;
+  o->y_ref(2) = z_target;
+  for(t=0; t<Tabort; t++) {
+//    if(bodies(obj_dropped1_index)->X.pos.z - o->y_ref(2) < 0.05) {
+//      // slowly go down
+//      if(o->y_ref(2) - z_target > 0.1)
+//        o->y_ref(2) -= 0.02;
+//      else if(o->y_ref(2) - z_target > 0.02)
+//        o->y_ref(2) -= 0.01;
+//    }
+    controlledStep(this, MP, msg_string);
+    if(absMax(o->Perr) < 0.001) break;
+  }
+  if(t==Tabort) { indicateFailure(); return; }
+#else
   DefaultTaskVariable o("obj",*this,posTVT,obj_dropped1,0,0,0,arr(0));
   DefaultTaskVariable z;
   //
@@ -1264,11 +1428,11 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
     if(diff < 0.001) break;
   }
   if(t==Tabort) { indicateFailure(); return; }
-  
+#endif
   
   // Phase 4: let loose
-  if(bodies(o.i)->inLinks.N && obj_is_inhand) {
-    ors::Joint* e=bodies(o.i)->inLinks(0);
+  if(bodies(obj_dropped1_index)->inLinks.N && obj_is_inhand) {
+    ors::Joint* e=bodies(obj_dropped1_index)->inLinks(0);
     del_edge(e,bodies,joints,true); //otherwise: no object in hand
   }
 }
@@ -1407,19 +1571,15 @@ void RobotManipulationSimulator::relaxPosition(const char* message) {
     s->cont = false;
   }
   
-#if 1
+#ifdef NEW_FEEDBACK_CONTROL
   FeedbackMotionControl MP(*this, false);
-//  MP.nullSpacePD.setGainsAsNatural(20,.1);
-  arr I(q.N,q.N); I.setId();
-  PDtask *x =  MP.addPDTask("q-pose", .1, .8, qLinearTMT, NULL, NoVector, NULL, NoVector, I);
+  PDtask *x =  MP.addPDTask("q-pose", .2, 1., qItselfTMT);
   x->y_ref = q0;
   uint t;
   for(t=0; t<Tabort; t++) {
     controlledStep(this, MP, msg_string);
-    double diff = absMax(x->Perr);
-    if(diff < 0.05) break;
+    if(absMax(x->Perr) < 0.05) break;
   }
-
 #else
   arr q,dq;
   getJointState(q);
@@ -1458,12 +1618,19 @@ void RobotManipulationSimulator::relaxPosition(const char* message) {
 
 
 void RobotManipulationSimulator::moveToPosition(const arr& pos, const char* message) {
-  CHECK(pos.N == 3 && pos.nd == 1, "Not a valid position array");
   MT::String msg_string(message);
-  if(msg_string.N == 0) {
-    msg_string << "move to position "<< pos;
-  }
+  if(msg_string.N == 0) msg_string << "move to position "<< pos;
   
+#ifdef NEW_FEEDBACK_CONTROL
+  FeedbackMotionControl MP(*this, false);
+  PDtask *x = MP.addPDTask("endeffector", .2, 1.5, posTMT, "fing1c", NoVector, NULL, ors::Vector(pos));
+  uint t;
+  for(t=0; t<Tabort; t++) {
+    controlledStep(this, MP, msg_string);
+    if(absMax(x->Perr) < 0.01) break;
+  }
+  if(t==Tabort) { indicateFailure(); return; }
+#else
   ors::Body* obj = bodies(convertObjectName2ID("fing1c"));
   // move manipulator towards box
   DefaultTaskVariable x("endeffector",*this,posTVT,"fing1c",0,0,0,NoArr);
@@ -1488,6 +1655,7 @@ void RobotManipulationSimulator::moveToPosition(const arr& pos, const char* mess
   simulate(30, msg_string);
   
   swift().initActivations();
+#endif
 }
 
 
@@ -1508,6 +1676,9 @@ void RobotManipulationSimulator::openBox(uint id, const char* message) {
   
   // move manipulator towards box
   ors::Body* obj = bodies(id);
+#ifdef NEW_FEEDBACK_CONTROL
+  moveToPosition(ARRAY(obj->X.pos+ors::Vector(0,0,.15)));
+#else
   DefaultTaskVariable x("endeffector",*this,posTVT,"fing1c",0,0,0,NoArr);
   x.setGainsAsAttractor(20,.2);
   x.y_prec=1000.;
@@ -1528,10 +1699,11 @@ void RobotManipulationSimulator::openBox(uint id, const char* message) {
     if(diff < 0.01) break;
   }
   if(t==Tabort) { indicateFailure(); return; }
+#endif
   simulate(30, msg_string);
   
   // open it
-  ors::Shape* s = bodies(id)->shapes(5);
+  ors::Shape* s = bodies(id)->shapes.last();
   s->rel.setText("<t(0 0 .075) t(0 -.05 0) d(80 1 0 0) t(0 .05 .0)>");
   swift().initActivations();
 
@@ -1546,6 +1718,9 @@ void RobotManipulationSimulator::closeBox(uint id, const char* message) {
   
   // move manipulator towards box
   ors::Body* obj = bodies(id);
+#ifdef NEW_FEEDBACK_CONTROL
+  moveToPosition(ARRAY(obj->X.pos+ors::Vector(0,0,.15)));
+#else
   DefaultTaskVariable x("endeffector",*this,posTVT,"fing1c",0,0,0,NoArr);
   x.setGainsAsAttractor(20,.2);
   x.y_prec=1000.;
@@ -1566,10 +1741,11 @@ void RobotManipulationSimulator::closeBox(uint id, const char* message) {
     if(diff < 0.01) break;
   }
   if(t==Tabort) { indicateFailure(); return; }
+#endif
   simulate(30, msg_string);
   
   // close it
-  ors::Shape* s = bodies(id)->shapes(5);
+  ors::Shape* s = bodies(id)->shapes.last();
   s->rel.setText("<t(0 0 .075)>");
   swift().initActivations();
   ode().pushPoseForShape(s);
