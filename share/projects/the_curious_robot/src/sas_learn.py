@@ -25,13 +25,6 @@ import require_provide as rp
 import numpy as np
 
 
-def find(f, seq):
-    """Return first item in sequence where f(item) == True."""
-    for item in seq:
-        if f(item):
-            return item
-
-
 class LearnActionServer:
 
     def __init__(self, name):
@@ -173,8 +166,8 @@ class LearnActionServer:
 
         # useful information
         print response.model.name
-        ll = find(lambda param: param.name == 'loglikelihood',
-                  response.model.params)
+        ll = filter(lambda param: param.name == 'loglikelihood',
+                    response.model.params)[0]
         print ll.value
 
         # - rigid: a rigid model, describes a static link (with Gaussian noise)
@@ -190,16 +183,16 @@ class LearnActionServer:
             # rot_radius
             # rot_orientation x y z w
             # ros_mode
-            x = find(lambda param: param.name == 'rot_center.x',
-                     response.model.params).value
-            y = find(lambda param: param.name == 'rot_center.y',
-                     response.model.params).value
-            z = find(lambda param: param.name == 'rot_center.z',
-                     response.model.params).value
+            x = filter(lambda param: param.name == 'rot_center.x',
+                       response.model.params)[0].value
+            y = filter(lambda param: param.name == 'rot_center.y',
+                       response.model.params)[0].value
+            z = filter(lambda param: param.name == 'rot_center.z',
+                       response.model.params)[0].value
 
-            rot = [p for p in response.model.params
-                   if p.name.startswith("rot")]
-            print rot
+            rots = filter(lambda p: p.name.startswith("rot"),
+                          response.model.params)
+            print rots
 
         elif response.name == "prismatic":
             pass
