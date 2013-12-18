@@ -39,7 +39,7 @@ void testGraspHeuristic(){
     P.costReport();
     write(LIST<arr>(x),"z.output");
     gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", false, true);
-    displayTrajectory(x, 1, G, gl,"planned trajectory");
+    displayTrajectory(x, 1, G, "planned trajectory");
 #else
     setNewGraspGoals(sys, T, s->index, side, 1);
     AICO solver(sys);

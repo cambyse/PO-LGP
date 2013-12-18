@@ -296,7 +296,7 @@ void scenario4() {
   optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
 
   P.costReport();
-  displayTrajectory(x, 1, G, G.gl(),"planned trajectory");
+  displayTrajectory(x, 1, G, "planned trajectory");
 
 
   //------------------------------------------------//

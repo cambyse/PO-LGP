@@ -74,7 +74,7 @@ int main(int argc,char** argv){
     write(LIST<arr>(x),"z.output");
     //gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", false, true);
     gnuplot("load 'z.costReport.plt'", false, true);
-    displayTrajectory(x, 1, G, G.gl(),"planned trajectory", 0.01);
+    displayTrajectory(x, 1, G, "planned trajectory", 0.01);
   }
   
   return 0;

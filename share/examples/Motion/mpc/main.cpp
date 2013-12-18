@@ -163,7 +163,7 @@ void scenario1() {
 
   plotTraj(x,dt);
 
-  displayTrajectory(x, 1, G, G.gl(),"planned trajectory");
+  displayTrajectory(x, 1, G, "planned trajectory");
   G.gl().watch();
 
 }
@@ -252,7 +252,7 @@ void scenario2() {
 
   cout << sum((x- xRef.subRange(i,xRef.d0-1))%(x- xRef.subRange(i,xRef.d0-1))) << endl;
 
-  displayTrajectory(x, 1, G, G.gl(),"planned trajectory");
+  displayTrajectory(x, 1, G, "planned trajectory");
 
 }
 

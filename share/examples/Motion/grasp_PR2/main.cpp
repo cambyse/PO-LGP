@@ -32,9 +32,9 @@ void testGraspHeuristic(){
     MP.costReport();
     gnuplot("load 'z.costReport.plt'", false, true);
 
-    displayTrajectory(x, 1, G, G.gl(),"planned trajectory");
-    displayTrajectory(x, 1, G, G.gl(),"planned trajectory");
-    displayTrajectory(x, 1, G, G.gl(),"planned trajectory");
+    displayTrajectory(x, 1, G, "planned trajectory");
+    displayTrajectory(x, 1, G, "planned trajectory");
+    displayTrajectory(x, 1, G, "planned trajectory");
 
     MT::save(G,"z.ors");
 
