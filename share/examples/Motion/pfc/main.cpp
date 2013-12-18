@@ -115,7 +115,7 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
 
   P.costReport();
-  displayTrajectory(x, 1, G, gl,"planned trajectory");
+//  displayTrajectory(x, 1, G, gl,"planned trajectory");
 
 
   //------------------------------------------------//
@@ -164,8 +164,8 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   double yCol_deviation = 3e-1;
   double w_reg = 100.;
 
-  Pfc *pfc = new Pfc(G, xRef,2.,x0, goalMO, useOrientation, useCollAvoid,fPos_deviation,fVec_deviation,yCol_deviation,w_reg);
-
+  Pfc *pfc = new Pfc(G, xRef,2.,x0, q0, goalMO, useOrientation, useCollAvoid,fPos_deviation,fVec_deviation,yCol_deviation,w_reg);
+  pfc->scene = scene;
   gl.add(drawActTraj,&(pfc->traj));
   gl.add(drawRefTraj,&(pfc->trajRef->points));
   gl.add(drawPlanTraj,&(pfc->trajWrap->points));
@@ -174,7 +174,7 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   // Simulate controller
   //------------------------------------------------//
   uint t = 0;
-  while((pfc->s.last()<0.95) && t++ < 2*T)
+  while((pfc->s.last()<0.99) && t++ < 2*T)
   {
     // move obstacles
     for (std::vector<MObject*>::iterator moIter = mobjects.begin() ; moIter != mobjects.end() ; ++moIter) {
@@ -200,22 +200,25 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   pfc->plotState();
 
   gl.watch();
+
 }
+
+
 
 int main(int argc,char **argv){
   MT::initCmdLine(argc,argv);
 
-  runPFC(String("model.kvg"),true,true);
+//  runPFC(String("model.kvg"),true,true);
 
-  runPFC(String("scenes/scene1.ors"),true,false);
-  runPFC(String("scenes/scene2.ors"),false,false);
-  runPFC(String("scenes/scene3.ors"),false,true);
-  runPFC(String("scenes/scene4.ors"),true,true);
-  runPFC(String("scenes/scene5.ors"),true,true);
-  runPFC(String("scenes/scene6.ors"),true,true);
-  runPFC(String("scenes/scene7.ors"),true,true);
-  runPFC(String("scenes/scene8.ors"),false,false);
-  runPFC(String("scenes/scene9.ors"),false,true);
+  runPFC(String("scenes/scene1"),true,true);
+  runPFC(String("scenes/scene2"),true,true);
+  runPFC(String("scenes/scene3"),true,true);
+  runPFC(String("scenes/scene4"),true,true);
+  runPFC(String("scenes/scene5"),true,true);
+  runPFC(String("scenes/scene6"),true,true);
+  runPFC(String("scenes/scene7"),true,true);
+  runPFC(String("scenes/scene8"),true,true);
+  runPFC(String("scenes/scene9"),true,true);
 
   return 0;
 }

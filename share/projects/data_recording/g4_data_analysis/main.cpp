@@ -1,6 +1,6 @@
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
-#include <Perception/video.h>
+#include <Perception/videoEncoder.h>
 #include <Perception/g4data.h>
 #include <Perception/keyframer.h>
 #include "feedgnuplot.h"
@@ -9,120 +9,87 @@
 
 void lib_hardware_G4();
 
-void display(const G4Data &g4d) {
-  //VideoEncoder_libav_simple vid;
-  OpenGL gl;
-  ors::Graph ors;
-
+void init_display(ors::Graph &G, OpenGL &gl) {
   MT::String shapes = MT::getParameter<MT::String>("shapes");
-  init(ors, gl, shapes);
+  init(G, gl, shapes);
   gl.camera.setPosition(7., .5, 3.);
   gl.camera.focus(0, .5, .5);
   gl.camera.upright();
+}
 
-  SwiftInterface swift;
-  swift.init(ors, 2.);
-  swift.computeProxies(ors);
+void display(G4Data &g4d) {
+  //VideoEncoder_libav_simple vid;
+  OpenGL gl;
+  ors::Graph G;
 
-  StringA posNames;
-  StringA oriNames;
+  init_display(G, gl);
 
-  // add entities to keyframer
-  KeyFramer kf;
-  for(String name: g4d.getNames()) {
-    String pname = STRING(name << ":pos");
-    posNames.append(pname);
-    kf.addBody(pname, 3);
-
-    String oname = STRING(name << ":ori");
-    oriNames.append(oname);
-    kf.addBody(oname, 4);;
-  }
-
-  uint T = g4d.getNumTimesteps();
-  for(uint t = 0; t < T; t++) {
-    kf.addState();
-    for(uint i = 0; i < posNames.N; i++) {
-      String name = g4d.getName(i);
-      String pname = posNames(i);
-      String oname = oriNames(i);
-
-      kf.setState(pname, g4d.queryPos(t, name), t);
-      kf.setState(oname, g4d.queryQuat(t, name), t);
-    }
-  }
+  KeyFramer kf(G, gl, g4d);
 
   String b1("rh:thumb"), b2("sbox");
   String bp1(STRING(b1 << ":pos")), bp2(STRING(b2 << ":pos"));
   String bo1(STRING(b1 << ":ori")), bo2(STRING(b2 << ":ori"));
 
-  uintA wlens = { 20, 30, 40 };
-  uint mwlen = wlens.max();
-  MT::Array<arr> corrPos = kf.getCorrEnsemble(bp1, bp2, wlens, true);
-
+  arr corrPos;
+  arr corrVar;
   uint wlen = 30;
-  arr corrOri = kf.getAngle(bo1, bo2);
-  arr corrVar = kf.getAngleVar(bo1, bo2, wlen);
+  uintA wlens = { wlen, wlen+10, wlen-10 };
+  for(uint wlen: wlens) {
+    if(corrPos.N == 0) {
+      corrPos = kf.getCorr(bp1, bp2, wlen, true);
+      corrVar = kf.getAngleVar(bo1, bo2, wlen);
+      continue;
+    }
+    corrPos = elemWiseProd(corrPos, kf.getCorr(bp1, bp2, wlen, true));
+    corrVar += kf.getAngleVar(bo1, bo2, wlen);
+  }
+  corrVar *= 1./wlens.N;
 
+  arr dists = kf.getDists(b1, b2);
+
+#if 0
   Feedgnuplot gnup;
   gnup.setDataID(true);
   gnup.setAutolegend(true);
   gnup.setStream(.75);
   gnup.open();
 
+  arr corrPosDer = corrPos;
+  for(uint i = corrPosDer.N-1; i > 0; i--)
+    corrPosDer(i) -= corrPosDer(i-1);
+  corrPosDer(0) = 0;
+
+  arr test = corrPos;
+  for(uint i = 0; i < test.N-wlen; i++)
+    test(i) += test(i+wlen);
+  test *= .5;
+
   MT::String bname;
-  for(uint t = 0; t < T; t++) {
-    for(auto &b: ors.bodies) {
-      arr x = g4d.query(t, b->name);
-      x.reshape(x.N); // TODO there should be a nicer way.. // resetD doesn't work
-      CHECK(length(x)!=0, "Why isn't interpolation on?");
-
-      b->X.pos.set(x(0), x(1), x(2));
-      b->X.rot.set(x(3), x(4), x(5), x(6));
-    }
-
-    ors.calcBodyFramesFromJoints();
-    //ors.calcShapeFramesFromBodies();
-
-    uint bi1 = ors.getBodyByName(b1)->index;
-    uint bi2 = ors.getBodyByName(b2)->index;
-    swift.computeProxies(ors);
-    //ors.reportProxies();
-    //cout << "proxy: " << endl;
-    //cout << ors.proxies << endl;
-    for(ors::Proxy *p: ors.proxies) {
-      cout << "Proxy:" << endl;
-      cout << " - d: " << p->d << endl;
-      cout << " - cenD: " << p->cenD << endl;
-      cout << " - posA: " << p->posA << endl;
-      cout << " - posB: " << p->posB << endl;
-      cout << " - a->pos: " << ors.shapes(p->a)->body->X.pos << endl;
-      cout << " - b->pos: " << ors.shapes(p->b)->body->X.pos << endl;
-      cout << " - l_diff: " << (ors.shapes(p->a)->body->X.pos -
-          ors.shapes(p->b)->body->X.pos).length() << endl; }
-    
-    gl.text.clear() <<"frame " <<t <<"/" <<T;
+  uint F = g4d.getNumFrames();
+  for(uint f = 0; f < F; f++) {
+    kf.updateOrs(f);
     gl.update(NULL, true);
+
     //flip_image(gl.captureImage);
     //vid.addFrame(gl.captureImage);
 
     String ss;
-    ss << t << " ori " << -(corrOri(t)/(2*M_PI));
-    if(t>=wlen) {
-      uint wi = t-wlen;
-      ss << "var " << corrVar(wi);
-    }
-    if(t>=mwlen) {
-      uint wi = t-mwlen;
-
-      double c = 1;
-      for(uint wii = 0; wii < wlens.N; wii++)
-        c *= corrPos(wii).elem(wi);
-      ss << " pos " << c;
-    }
+    ss << f << " var " << sqrt(corrVar(f))
+            << " corr " << corrPos(f)
+            //<< " der " << corrPosDer(f)
+            //<< " test " << test(f)
+            << " dist " << dists(f)
+            //<< " thresh .9"
+            ;
     gnup() << ss;
   }
-  usleep(1000000);
+#endif
+
+  ProxyL proxies = kf.getProxies(b1, b2);
+  KeyFrameL kfs = kf.getKeyFrames(corrPos, proxies);
+  kf.clearProxies();
+  kf.saveKeyFrameScreens(kfs, 30);
+  cout << "Tot num keyframes: " << kfs.N << endl;
 
   //gl.watch();
   //vid.close();

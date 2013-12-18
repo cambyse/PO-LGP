@@ -16,7 +16,6 @@ import_array();
 // For numerical types, we want to get numpy arrays, to keep the shape of the
 // array, etc.
 
-%naturalvar MT::Array;
 
 // actual translation of numpy array to MT::Array<double>
 %fragment("ArrayTransform", "header") {
@@ -61,6 +60,7 @@ import_array();
 //===========================================================================
 %define %Array_Typemap(Type)
 
+%naturalvar MT::Array<Type>;
 // Calls the transform template with the right numpy type etc.
 %fragment("asMTArray"{Type}, "header", fragment="ArrayTransform", fragment="getNP_TYPE"{Type}) {
   void asMTArray(MT::Array<Type>& result, PyObject *nparray) {
@@ -193,6 +193,7 @@ import_array();
 //===========================================================================
 %define %List_Typemap(Type)
 
+%naturalvar MT::Array<Type*>;
 //===========================================================================
 // The actual typemaps for value, reference and pointer arguments
 //===========================================================================
@@ -317,7 +318,7 @@ import_array();
 //===========================================================================
 
 %typemap(memberin) MT::Array<Type*> {
-  $1 = $input;  
+  $1 = *$input;  
 }
 
 %typemap(memberin) MT::Array<Type*> & {
