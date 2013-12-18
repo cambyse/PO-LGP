@@ -13,7 +13,7 @@
 SET_LOG(main, DEBUG);
 
 arr create_endpose(ors::KinematicWorld& G) {
-  MotionProblem P(&G);
+  MotionProblem P(G);
 
   P.loadTransitionParameters();
   P.H_rate_diag = pr2_reasonable_W();
@@ -37,7 +37,7 @@ arr create_rrt_trajectory(ors::KinematicWorld& G, arr& target) {
   double stepsize = MT::getParameter<double>("rrt_stepsize", .005);
 
   // create MotionProblem
-  MotionProblem P(&G);
+  MotionProblem P(G);
   P.loadTransitionParameters();
 
   // add a collision cost with threshold 0 to avoid collisions
@@ -57,7 +57,7 @@ arr create_rrt_trajectory(ors::KinematicWorld& G, arr& target) {
 
 arr optimize_trajectory(ors::KinematicWorld& G, arr& init_trajectory) {
   // create MotionProblem
-  MotionProblem P(&G);
+  MotionProblem P(G);
   P.loadTransitionParameters();
   P.H_rate_diag = pr2_reasonable_W();
   P.T = init_trajectory.d0-1;

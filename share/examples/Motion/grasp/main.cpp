@@ -8,11 +8,9 @@ void testGraspHeuristic(){
 //  double seconds = MT::getParameter<double>("reachPlanTrajectoryDuration");
 
   //setup the problem
-  OpenGL gl;
-  ors::KinematicWorld G;
-  init(G, gl, MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
 
-  MotionProblem P(&G);
+  MotionProblem P(G);
   P.loadTransitionParameters();
 
 //  uint T=MT::getParameter<uint>("reachPlanTrajectoryLength");
@@ -59,8 +57,8 @@ void testGraspHeuristic(){
     s->size[3] = rnd.uni(.02,.07);
     s->mesh.clear();
 
-    P.setx0(P.x_current);
-    gl.watch();
+    P.setx0(P.world.q);
+    G.gl().watch();
   }
   
 }

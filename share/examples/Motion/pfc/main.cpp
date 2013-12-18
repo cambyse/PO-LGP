@@ -61,14 +61,13 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   //------------------------------------------------//
   // Compute optimal trajectory
   //------------------------------------------------//
-  OpenGL gl(scene,800,800);
-  ors::KinematicWorld G;
+  ors::KinematicWorld G(scene);
+  G.gl().resize(800,800);
 
-  init(G, gl, scene);
   makeConvexHulls(G.shapes);
   cout << "Loaded scene: " << scene << endl;
 
-  MotionProblem P(&G);
+  MotionProblem P(G);
   P.loadTransitionParameters();
 
 
@@ -77,7 +76,7 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   c = P.addTaskMap("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.ors->getBodyByName("goalRef")->X.pos), 1e4,
+                          ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           ARRAY(0.,0.,0.), 1e-3);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
                           ARRAY(0.,0.,0.), 1e3,
@@ -126,8 +125,8 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   for (uint t=0;t<=T;t++) {
     G.setJointState(x[t]);
     G.calcBodyFramesFromJoints();
-    G.kinematicsPos(kinPos,P.ors->getBodyByName("endeff")->index);
-    G.kinematicsVec(kinVec,P.ors->getBodyByName("endeff")->index);
+    G.kinematicsPos(kinPos, NoArr, P.world.getBodyByName("endeff")->index);
+    G.kinematicsVec(kinVec, NoArr, P.world.getBodyByName("endeff")->index);
     xRefPos.append(~kinPos);
     xRefVec.append(~kinVec);
   }
@@ -166,9 +165,9 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
 
   Pfc *pfc = new Pfc(G, xRef,2.,x0, q0, goalMO, useOrientation, useCollAvoid,fPos_deviation,fVec_deviation,yCol_deviation,w_reg);
   pfc->scene = scene;
-  gl.add(drawActTraj,&(pfc->traj));
-  gl.add(drawRefTraj,&(pfc->trajRef->points));
-  gl.add(drawPlanTraj,&(pfc->trajWrap->points));
+  G.gl().add(drawActTraj,&(pfc->traj));
+  G.gl().add(drawRefTraj,&(pfc->trajRef->points));
+  G.gl().add(drawPlanTraj,&(pfc->trajWrap->points));
 
   //------------------------------------------------//
   // Simulate controller
@@ -184,14 +183,14 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
     // move goal
     goalMO.move();
 
-    P.swift->computeProxies(G);
+    P.world.computeProxies();
     pfc->computeIK(q,dq);
 
     // sets joint angles AND computes all frames AND update display
     G.setJointState(q);
     G.calcBodyFramesFromJoints();
 
-    gl.update();
+    G.gl().update();
   }
 
   //------------------------------------------------//
@@ -199,7 +198,7 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   //------------------------------------------------//
   pfc->plotState();
 
-  gl.watch();
+  G.gl().watch();
 
 }
 

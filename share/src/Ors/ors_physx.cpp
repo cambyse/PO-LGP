@@ -109,7 +109,7 @@ struct sPhysXInterface {
 
 // ============================================================================
 
-PhysXInterface::PhysXInterface(ors::KinematicWorld& _world): s(NULL), world(_world) {
+PhysXInterface::PhysXInterface(ors::KinematicWorld& _world): world(_world), s(NULL) {
   s = new sPhysXInterface;
 
   if(!mFoundation) {
