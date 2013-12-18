@@ -63,10 +63,10 @@ class LearnActionServer:
         self._added_shapes = []
 
         # PhysX & OpenGL of belief
-        self.gl = guipy.OpenGL()
+        # self.gl = guipy.OpenGL()
         # self.physx = orspy.PhysXInterface()
         # orspy.bindOrsToPhysX(self.belief, self.gl, self.physx)
-        orspy.bindOrsToOpenGL(self.belief, self.gl)
+        # orspy.bindOrsToOpenGL(self.belief, self.gl)
 
         # require/provide
         rp.Provide("Learn")
@@ -77,49 +77,49 @@ class LearnActionServer:
         if self.ooi not in self.belief_annotation:
             rospy.logwarn("TODO: adding new shape")
             # add shape and body to belief
-            self._added_bodies.append(orspy.Body(self.belief))
-            self._added_shapes.append(orspy.Shape(self.belief,
-                                                  self._added_bodies[-1]))
-            new_shape = self._added_shapes[-1]
-            # add to belief annotation
+            # self._added_bodies.append(orspy.Body(self.belief))
+            # self._added_shapes.append(orspy.Shape(self.belief,
+            #                                       self._added_bodies[-1]))
+            # new_shape = self._added_shapes[-1]
+            # # add to belief annotation
             self.belief_annotation[self.ooi] = rep.ShapeBelief(
-                belief_shape_id=self.belief.shapes[-1].index
+                belief_shape_id=1  # self.belief.shapes[-1].index
             )
 
-            # fill body and shape with preliminary infor from the perception
-            shape_response = self.request_shapes(index=self.ooi)
-            shape_msg = shape_response.shapes[0]
+            # # fill body and shape with preliminary infor from the perception
+            # shape_response = self.request_shapes(index=self.ooi)
+            # shape_msg = shape_response.shapes[0]
 
-            new_shape.X = rosors.parser.ros_to_ors_transform(
-                shape_msg.X, shape_msg.Xvel
-            )
-            new_shape.rel = rosors.parser.ros_to_ors_transform(
-                shape_msg.rel, shape_msg.relvel
-            )
-            new_shape.type = shape_msg.shape_type
-            if new_shape.type == orspy.meshST and shape_msg.mesh:
-                # c&p from parser: what causes the stupid crash?
-                new_shape.mesh = guipy.Mesh()
+            # new_shape.X = rosors.parser.ros_to_ors_transform(
+            #     shape_msg.X, shape_msg.Xvel
+            # )
+            # new_shape.rel = rosors.parser.ros_to_ors_transform(
+            #     shape_msg.rel, shape_msg.relvel
+            # )
+            # new_shape.type = shape_msg.shape_type
+            # if new_shape.type == orspy.meshST and shape_msg.mesh:
+            #     # c&p from parser: what causes the stupid crash?
+            #     new_shape.mesh = guipy.Mesh()
 
-                V = np.resize(new_shape.mesh.V,
-                              [len(shape_msg.mesh.vertices), 3])
-                for i in range(len(shape_msg.mesh.vertices)):
-                    v = shape_msg.mesh.vertices[i]
-                    V[i, 0] = v.x
-                    V[i, 1] = v.y
-                    V[i, 2] = v.z
-                new_shape.mesh.V = V  # need to assign members, because of swig
+            #     V = np.resize(new_shape.mesh.V,
+            #                   [len(shape_msg.mesh.vertices), 3])
+            #     for i in range(len(shape_msg.mesh.vertices)):
+            #         v = shape_msg.mesh.vertices[i]
+            #         V[i, 0] = v.x
+            #         V[i, 1] = v.y
+            #         V[i, 2] = v.z
+            #     new_shape.mesh.V = V  # need to assign members, because of swig
 
-                T = np.resize(new_shape.mesh.T,
-                              [len(shape_msg.mesh.triangles), 3])
-                for i in range(len(shape_msg.mesh.triangles)):
-                    t = shape_msg.mesh.triangles[i]
-                    T[i, 0] = t.vertex_indices[0]
-                    T[i, 1] = t.vertex_indices[1]
-                    T[i, 2] = t.vertex_indices[2]
-                new_shape.mesh.T = T  # see above
-                # new_shape.mesh.thisown = False
-            self.belief.calcShapeFramesFromBodies()
+            #     T = np.resize(new_shape.mesh.T,
+            #                   [len(shape_msg.mesh.triangles), 3])
+            #     for i in range(len(shape_msg.mesh.triangles)):
+            #         t = shape_msg.mesh.triangles[i]
+            #         T[i, 0] = t.vertex_indices[0]
+            #         T[i, 1] = t.vertex_indices[1]
+            #         T[i, 2] = t.vertex_indices[2]
+            #     new_shape.mesh.T = T  # see above
+            #     # new_shape.mesh.thisown = False
+            # self.belief.calcShapeFramesFromBodies()
 
         #######################################################################
         # Belief update
@@ -134,13 +134,14 @@ class LearnActionServer:
         shape_anno.object_type.update(ObjectTypeHypo.STATIC
                                       if len(self.trajectory) == 0 else
                                       ObjectTypeHypo.FREE)
-
         # Update JointInformation
-        # self.learn_articulation_model()
+        if len(self.trajectory) > 1:
+            rospy.loginfo("Learning DoF")
+            self.update_dof()
+            # self.update_dynamics()
 
-        print self.belief_annotation
+        rospy.loginfo(str(self.belief_annotation))
         self.server.set_succeeded()
-        return
 
     def getShapeById(self, idx):
         """
@@ -155,63 +156,35 @@ class LearnActionServer:
                 return shape
         return None
 
-    def learn_articulation_model(self):
+    def update_dof(self):
         request = TrackModelSrvRequest()
         request.model.track = util.create_track_msg(self.trajectory)
-        try:
-            # here we learn
-            response = self.dof_learner(request)
-            # rospy.loginfo(response.model)
-            if response.model.params:
-                # print response
-                # print response.model.name
 
-                for p in [p for p in response.model.params
-                          if p.name.startswith("rot")]:
-                    # print p
-                    if p.name == "rot_center.x":
-                        # print "rot_center.x"
-                        x = p.value
-                    if p.name == "rot_center.y":
-                        # print "rot_center.y"
-                        y = p.value
-                    if p.name == "rot_center.z":
-                        # print "rot_center.z"
-                        z = p.value
-                try:
-                    print x, y, z
-                    self.learned_bodies.append(orspy.Body(self.belief))
-                    body = self.learned_bodies[-1]
+        # here we learn
+        response = self.dof_learner(request)
+        rospy.loginfo(response.model)
+        if response.model.params:
 
-                    body.X.pos.setRandom()
-                    body.X.pos.z += 1
-                    body.name = "body_" + str(len(self.learned_bodies))
+            for p in [p for p in response.model.params if p.name.startswith("rot")]:
+                rospy.loginfo(p)
+                if p.name == "rot_center.x":
+                    # print "rot_center.x"
+                    x = p.value
+                if p.name == "rot_center.y":
+                    # print "rot_center.y"
+                    y = p.value
+                if p.name == "rot_center.z":
+                    # print "rot_center.z"
+                    z = p.value
 
-                    self.learned_shapes.append(orspy.Shape(self.belief, body))
-                    shape = self.learned_shapes[-1]
-                    shape.type = orspy.sphereST
-                    shape.set_size(.1, .1, .1, .1)
-
-                    self.belief.calcShapeFramesFromBodies()
-                    self.gl.update()
-
-                except Exception:
-                    print
-                    print "rot center not set"
-                    print
-
-                logLH = [entry.value
-                         for entry in response.model.params
-                         if entry.name == 'loglikelihood'][0]
-                rospy.loginfo("selected model: '%s' (n = %d, log LH = %f)" % (
-                    response.model.name,
-                    len(response.model.track.pose),
-                    logLH
-                ))
-            # TODO: add to world_belief and publish
-        except rospy.ServiceException:
-            self.server.set_aborted()
-        self.server.set_succeeded()
+            logLH = [entry.value
+                        for entry in response.model.params
+                        if entry.name == 'loglikelihood'][0]
+            rospy.loginfo("selected model: '%s' (n = %d, log LH = %f)" % (
+                response.model.name,
+                len(response.model.track.pose),
+                logLH
+            ))
 
     def preempt_cb(self):
         self.server.set_preempted()
