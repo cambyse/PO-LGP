@@ -83,13 +83,16 @@ struct Joint;
 struct Shape;
 struct Body;
 struct KinematicWorld;
+struct Proxy;
 
 /** @} */ // END of group ors_basic_data_structures
 } // END of namespace
 
 //===========================================================================
+typedef MT::Array<ors::Joint*> JointL;
 typedef MT::Array<ors::Shape*> ShapeL;
-typedef MT::Array<ors::Body*> BodyL;
+typedef MT::Array<ors::Body*>  BodyL;
+typedef MT::Array<ors::Proxy*> ProxyL;
 
 //===========================================================================
 namespace ors {
@@ -100,7 +103,7 @@ namespace ors {
 /// a rigid body (inertia properties, lists of attached joints & shapes)
 struct Body {
   uint index;          ///< unique identifier TODO:do we really need index, ifrom, ito, ibody??
-  MT::Array<Joint*> inLinks, outLinks;       ///< lists of in and out joints
+  JointL inLinks, outLinks;       ///< lists of in and out joints
   
   MT::String name;     ///< name
   Transformation X;    ///< body's absolute pose
@@ -113,7 +116,7 @@ struct Body {
   Vector com;          ///< its center of gravity
   Vector force, torque; ///< current forces applying on the body
   
-  MT::Array<Shape*> shapes;
+  ShapeL shapes;
   
   Body();
   explicit Body(const Body& b);
@@ -215,16 +218,16 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   struct sKinematicWorld *s;
 
   /// @name data fields
-  MT::Array<Body*>  bodies;
-  MT::Array<Joint*> joints;
-  MT::Array<Shape*> shapes;
-  MT::Array<Proxy*> proxies; ///< list of current proximities between bodies
+  arr q, qdot; ///< the current joint configuration vector and velocities
+  int q_agent; ///< the agent index of the current q,qdot
+  BodyL  bodies;
+  JointL joints;
+  ShapeL shapes;
+  ProxyL proxies; ///< list of current proximities between bodies
 
-  uint q_dim; ///< numer of degrees of freedom IN the joints (not counting root body)
+//  uint q_dim; ///< numer of degrees of freedom IN the joints (not counting root body)
   bool isLinkTree;
   
-  arr q_current, qdot_current;
-
   /// @name constructors
   KinematicWorld();
   KinematicWorld(const char* filename);
@@ -258,6 +261,7 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   void calcBodyFramesFromJoints();    ///< elementary forward kinematics; also computes all Shape frames
   void calcShapeFramesFromBodies();   ///< TODO: shouldn't that be done by above
   void calcJointsFromBodyFrames();    ///< fill in the joint transformations assuming that body poses are known (makes sense when reading files)
+  void calcJointState(int agent=0);
   void fillInRelativeTransforms();    ///< fill in the joint relative transforms (A & B) if body and joint world poses are known
   void clearJointErrors();
   void invertTime();
@@ -265,29 +269,27 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   
   /// @name get state
   uint getJointStateDimension(int agent=0) const;
-  void getJointState(arr& x, arr& v, int agent=0) const;
-  void getJointState(arr& x, int agent=0) const;
-  arr getJointState(int agent=0) const;
+  void getJointState(arr &_q, arr& _qdot=NoArr) const { _q=q; if(&_qdot) _qdot=qdot; };
 
   /// @name set state
-  void setJointState(const arr& x, const arr& v, int agent=0);
-  void setJointState(const arr& x, int agent=0);
+  void setJointState(const arr& _q, const arr& _qdot, int agent=0);
+  void setJointState(const arr& _q, int agent=0);
 
   /// @name kinematics
   void kinematicsPos(arr& y, arr& J, uint i, ors::Vector *rel=0, int agent=0) const;
   void kinematicsVec(arr& y, arr& J, uint i, ors::Vector *vec=0, int agent=0) const;
   void hessianPos(arr& H, uint i, ors::Vector *rel=0, int agent=0) const;
-  void jacobianR(arr& J, uint a) const;
+  void jacobianR(arr& J, uint a, int agent=0) const;
   void kinematicsProxyCost(arr& y, arr& J, Proxy *p, double margin=.02, bool useCenterDist=true, bool addValues=false) const;
   void kinematicsProxyCost(arr& y, arr& J, double margin=.02, bool useCenterDist=true) const;
   void kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, double margin=.02, bool useCenterDist=true, bool addValues=false) const;
-  void kinematicsContactConstraints(arr& y, arr &J) const;
+  void kinematicsContactConstraints(arr& y, arr &J) const; //TODO: should depend on agent...
 
   /// @name dynamics
-  void inertia(arr& M);
-  void equationOfMotion(arr& M, arr& F, const arr& qd);
-  void dynamics(arr& qdd, const arr& qd, const arr& tau);
+  void fwdDynamics(arr& qdd, const arr& qd, const arr& tau);
   void inverseDynamics(arr& tau, const arr& qd, const arr& qdd);
+  void equationOfMotion(arr& M, arr& F, bool gravity=true);
+  void inertia(arr& M);
 
   /// @name older 'kinematic maps'
   //void getContactMeasure(arr &x, double margin=.02, bool linear=false) const;
@@ -313,6 +315,11 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   SwiftInterface& swift();
   PhysXInterface& physx();
   OdeInterface& ode();
+  void watch(bool pause=false, const char* txt=NULL);
+  void computeProxies();
+  void stepPhysx(double tau);
+  void stepOde(double tau);
+  void stepDynamics(const arr& u_control, double tau, double dynamicNoise);
 
   /// @name I/O
   void write(std::ostream& os) const;
@@ -364,7 +371,7 @@ void glDrawGraph(void *classP);
 
 #ifndef MT_ORS_ONLY_BASICS
 
-uintA stringListToShapeIndices(const MT::Array<const char*>& names, const MT::Array<ors::Shape*>& shapes);
+uintA stringListToShapeIndices(const MT::Array<const char*>& names, const ShapeL& shapes);
 
 //===========================================================================
 //
@@ -397,10 +404,10 @@ struct OpenGL;
 extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines, orsDrawBodyNames;
 extern uint orsDrawLimit;
 
-void displayState(const arr& x, ors::KinematicWorld& G, OpenGL& gl, const char *tag);
-void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, OpenGL& gl, const char *tag, double delay=0.);
-void editConfiguration(const char* orsfile, ors::KinematicWorld& G, OpenGL& gl);
-void animateConfiguration(ors::KinematicWorld& G, OpenGL& gl);
+void displayState(const arr& x, ors::KinematicWorld& G, const char *tag);
+void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, const char *tag, double delay=0.);
+void editConfiguration(const char* orsfile, ors::KinematicWorld& G);
+void animateConfiguration(ors::KinematicWorld& G);
 //void init(ors::KinematicWorld& G, OpenGL& gl, const char* orsFile);
 void bindOrsToOpenGL(ors::KinematicWorld& graph, OpenGL& gl);
 /** @} */ // END of group ors_interface_opengl

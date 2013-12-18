@@ -63,10 +63,8 @@ static bool ODEinitialized=false;
 // Ode implementations
 //
 
-OdeInterface::OdeInterface() {
-  isOpen=false;
+OdeInterface::OdeInterface(ors::KinematicWorld &_C):C(_C) {
   time=0.;
-  
   
   noGravity=noContactJoints=false;
   
@@ -84,6 +82,210 @@ OdeInterface::OdeInterface() {
   
   if(!ODEinitialized) {  dInitODE();  ODEinitialized=true; }
   clear();
+
+  ors::Body *n;
+  ors::Joint *e;
+  dBodyID b;
+  dMass odeMass;
+  dGeomID geom, trans;
+  dSpaceID myspace;
+  dxJointHinge* jointH=0;
+  dxJointSlider* jointS=0;
+  dxJointUniversal* jointU=0;
+  dxJointFixed* jointF=0;
+  dxJointAMotor* jointM=0;
+  dJointFeedback* jointFB=0;
+  ors::Vector a;
+  //double *mass, *shape, *type, *fixed, *cont, typeD=cappedCylinderST;
+  //, *inertiaTensor, *realMass, *centerOfMass;
+  uint i, j;
+
+  clear();
+  C.calcBodyFramesFromJoints();
+
+  bodies.resize(C.bodies.N); bodies=0;
+  geoms .resize(C.shapes.N); geoms =0;
+  joints.resize(C.joints.N); joints=0;
+  motors.resize(C.joints.N); motors=0;
+
+  for_list(j, n, C.bodies) {
+    b=dBodyCreate(world);
+
+    bodies(n->index)=b;
+    b->userdata=n;
+
+    //n->copyFrameToOde();
+    CHECK(n->X.rot.isNormalized(), "quaternion is not normalized!");
+    CP3(b->posr.pos, n->X.pos.p());                // dxBody changed in ode-0.6 ! 14. Jun 06 (hh)
+    CP4(b->q, n->X.rot.p()); dQtoR(b->q, b->posr.R);
+    CP3(b->lvel, n->X.vel.p());
+    CP3(b->avel, n->X.angvel.p());
+
+    // need to fix: "mass" is not a mass but a density (in dMassSetBox)
+    ors::Shape *s;
+    for_list(i, s, n->shapes) {
+      if(!(s->rel.rot.isZero()) || !(s->rel.pos.isZero())) { //we need a relative transformation
+        trans = dCreateGeomTransform(space);
+        myspace = NULL; //the object is added to no space, but (below) associated with the transform
+      } else {
+        trans = NULL;
+        myspace = space; //the object is added normally to the main space
+      }
+
+      switch(s->type) {
+        default:
+          for(int i=0; i<3; ++i) {
+            if(s->size[i] == 0) s->size[i] = 0.001;
+          }
+        case ors::boxST:
+          dMassSetBox(&odeMass, n->mass, s->size[0], s->size[1], s->size[2]);
+          dBodySetMass(b, &odeMass);
+          geom=dCreateBox(myspace, s->size[0], s->size[1], s->size[2]);
+          break;
+        case ors::sphereST:
+          dMassSetSphere(&odeMass, n->mass, s->size[3]);
+          dBodySetMass(b, &odeMass);
+          geom=dCreateSphere(myspace, s->size[3]);
+          break;
+        case ors::cylinderST:
+          dMassSetCylinder(&odeMass, n->mass, 3, s->size[3], s->size[2]);
+          dBodySetMass(b, &odeMass);
+          geom=dCreateCylinder(myspace, s->size[3], s->size[2]);
+          break;
+        case ors::cappedCylinderST:
+          dMassSetCylinder(&odeMass, n->mass, 3, s->size[3], s->size[2]);
+          //                 MT_MSG("ODE: setting Cylinder instead of capped cylinder mass");
+          dBodySetMass(b, &odeMass);
+          geom=dCreateCCylinder(myspace, s->size[3], s->size[2]);
+          break;
+        case ors::meshST: {
+#if 0
+          NIY;
+#else
+          s->mesh.computeNormals();
+          // get inertia tensor and REAL mass (careful no density)
+          //n->ats.get("I", inertiaTensor, 9);
+          //n->ats.get("w", realMass, 1);
+          //n->ats.get("X", centerOfMass, 3);
+
+          // transform the mesh to ODE trimesh format;
+          //i=0; j=0;
+
+#if 0 //correct mass/density stuff
+          trimeshPhysics triPhys;
+          triPhys.reset(s->mesh.T.N);
+          if(inertiaTensor && realMass && centerOfMass) { // are all important params set in the dcg file
+            triPhys._mass = *realMass;
+            triPhys.r[0]=centerOfMass[0];
+            triPhys.r[1]=centerOfMass[1];
+            triPhys.r[2]=centerOfMass[2];
+            triPhys.J[0][0]= inertiaTensor[0];
+            triPhys.J[1][1]= inertiaTensor[4];
+            triPhys.J[2][2]= inertiaTensor[8];
+            triPhys.J[0][1]= inertiaTensor[1];
+            triPhys.J[0][2]= inertiaTensor[2];
+            triPhys.J[1][2]= inertiaTensor[5];
+          } else { // not all parametrs specified in dcg file....need to calculate them
+            triPhys.calculateODEparams(&s->mesh, s->mass); // note: 2nd parameter is the density
+          }
+
+          dMassSetParameters(&odeMass, triPhys._mass,
+                             triPhys.r[0], triPhys.r[1], triPhys.r[2],
+                             triPhys.J[0][0], triPhys.J[1][1], triPhys.J[2][2],
+                             triPhys.J[0][1], triPhys.J[0][2], triPhys.J[1][2]);
+
+          dBodySetMass(b, &odeMass);
+#else //don't care about mass...
+          n->mass = .001;
+          dMassSetBox(&odeMass, n->mass, s->size[0], s->size[1], s->size[2]);
+          dBodySetMass(b, &odeMass);
+#endif
+
+          dTriMeshDataID TriData;
+          TriData = dGeomTriMeshDataCreate();
+          dGeomTriMeshDataBuildDouble(TriData,
+                                      s->mesh.V.p, 3*sizeof(double), s->mesh.V.d0,
+                                      s->mesh.T.p, s->mesh.T.d0, 3*sizeof(uint));
+          dGeomTriMeshDataPreprocess(TriData);
+
+          geom = dCreateTriMesh(myspace, TriData, 0, 0, 0);
+
+          dGeomTriMeshClearTCCache(geom);
+#endif
+        } break; //end of mesh
+      }
+
+      geoms(s->index) = geom;
+      if(trans) {
+        //geoms(s->index) = trans;
+        dGeomTransformSetGeom(trans, geom);
+        dGeomSetPosition(geom, s->rel.pos.x, s->rel.pos.y, s->rel.pos.z);
+        dGeomSetQuaternion(geom, s->rel.rot.p());
+        dGeomSetBody(trans, b); //attaches the geom to the body
+      } else {
+        dGeomSetBody(geom, b); //attaches the geom to the body
+      }
+    }//loop through shapes
+
+    if(n->type==ors::staticBT) {
+      jointF=(dxJointFixed*)dJointCreateFixed(world, 0);
+      dJointAttach(jointF, b, 0);
+      dJointSetFixed(jointF);
+    }
+  }
+#ifndef MT_ode_nojoints
+  for_list(j, n, C.bodies) {
+    for_list(i, e, n->inLinks) {
+      switch(e->type) {
+        case ors::JT_fixed:
+          jointF=(dxJointFixed*)dJointCreateFixed(world, 0);
+          dJointAttach(jointF, bodies(e->from->index), bodies(e->to->index));
+          dJointSetFixed(jointF);
+          joints(e->index)=jointF;
+          //    e->fixed=true;
+          break;
+        case ors::JT_hingeX:
+          jointH=(dxJointHinge*)dJointCreateHinge(world, 0);
+          /*if(e->p[1]!=e->p[0]){
+            dJointSetHingeParam(jointH, dParamLoStop, e->p[0]);
+            dJointSetHingeParam(jointH, dParamHiStop, e->p[1]);
+
+            //dJointSetHingeParam(jointH, dParamCFM, CFM);
+            }*/
+          dJointAttach(jointH, bodies(e->from->index), bodies(e->to->index));
+          joints(e->index)=jointH;
+          //e->copyFramesToOdeHinge();
+          break;
+        case ors::JT_universal:
+          jointU=(dxJointUniversal*)dJointCreateUniversal(world, 0);
+          dJointAttach(jointU, bodies(e->from->index), bodies(e->to->index));
+          joints(e->index)=jointU;
+          //e->copyFramesToOdeUniversal();
+          break;
+        case ors::JT_transX:
+          jointS=(dxJointSlider*)dJointCreateSlider(world, 0);
+          dJointAttach(jointS, bodies(e->from->index), bodies(e->to->index));
+          joints(e->index)=jointS;
+          //e->copyFramesToOdeSlider();
+          break;
+        default: NIY;
+      }
+      if(e->type==ors::JT_hingeX) {
+        jointM = (dxJointAMotor*)dJointCreateAMotor(world, 0);
+        dJointSetAMotorNumAxes(jointM, 1);
+        dJointAttach(jointM, bodies(e->from->index), bodies(e->to->index));
+        motors(e->index)=jointM;
+        a=e->from->X.rot*e->A.rot*ors::Vector(1, 0, 0);
+        dJointSetAMotorAxis(jointM, 0, 1, a.x, a.y, a.z);
+        //dJointSetAMotorParam(jointM, dParamFMax, 1.);
+        jointFB = new dJointFeedback;
+        dJointSetFeedback(jointM, jointFB);
+      }
+    }
+  }
+#endif
+
+  exportStateToOde();
 }
 
 OdeInterface::~OdeInterface() {
@@ -120,7 +322,6 @@ void OdeInterface::clear() {
   //planex2=dCreatePlane(space, -1, 0, 0, -10);
   //planey1=dCreatePlane(space, 0, 1, 0, -10);
   //planey2=dCreatePlane(space, 0, -1, 0, -10);
-  isOpen=false;
 }
 
 void OdeInterface::staticCallback(void *classP, dGeomID g1, dGeomID g2) {
@@ -342,7 +543,7 @@ void OdeInterface::contactForces() {
 // graph
 //
 
-void OdeInterface::exportStateToOde(ors::KinematicWorld &C) {
+void OdeInterface::exportStateToOde() {
   ors::Body *n;
   ors::Joint *e;
   uint j, i;
@@ -394,7 +595,13 @@ void OdeInterface::exportStateToOde(ors::KinematicWorld &C) {
   }
 }
 
-void OdeInterface::exportForcesToOde(ors::KinematicWorld &C) {
+void OdeInterface::pushPoseForShape(ors::Shape *s){
+  dGeomID geom = geoms(s->index);
+  dGeomSetQuaternion(geom,*((dQuaternion*)s->rel.rot.p()));
+  dGeomSetPosition(geom,s->rel.pos.x,s->rel.pos.y,s->rel.pos.z);
+}
+
+void OdeInterface::exportForcesToOde() {
   ors::Body *n;
   uint j;
   dBodyID b;
@@ -405,7 +612,7 @@ void OdeInterface::exportForcesToOde(ors::KinematicWorld &C) {
   }
 }
 
-void OdeInterface::importStateFromOde(ors::KinematicWorld &C) {
+void OdeInterface::importStateFromOde() {
   ors::Body *n;
   uint j;
   dBodyID b;
@@ -423,7 +630,7 @@ void OdeInterface::importStateFromOde(ors::KinematicWorld &C) {
 }
 
 
-void OdeInterface::addJointForce(ors::KinematicWorld& C, ors::Joint *e, double f1, double f2) {
+void OdeInterface::addJointForce(ors::Joint *e, double f1, double f2) {
   switch(e->type) {
     case ors::JT_hingeX:
       dJointAddHingeTorque(joints(e->index), -f1);
@@ -440,7 +647,7 @@ void OdeInterface::addJointForce(ors::KinematicWorld& C, ors::Joint *e, double f
   }
 }
 
-void OdeInterface::addJointForce(ors::KinematicWorld& C, doubleA& x) {
+void OdeInterface::addJointForce(doubleA& x) {
   ors::Joint *e;
   uint i=0, n=0;
   
@@ -466,7 +673,7 @@ void OdeInterface::addJointForce(ors::KinematicWorld& C, doubleA& x) {
   CHECK(n==x.N, "wrong dimensionality");
 }
 
-void OdeInterface::setMotorVel(ors::KinematicWorld& C, const arr& qdot, double maxF) {
+void OdeInterface::setMotorVel(const arr& qdot, double maxF) {
   ors::Joint *e;
   uint i=0, n=0;
   
@@ -491,7 +698,7 @@ void OdeInterface::setMotorVel(ors::KinematicWorld& C, const arr& qdot, double m
   CHECK(n==qdot.N, "wrong dimensionality");
 }
 
-uint OdeInterface::getJointMotorDimension(ors::KinematicWorld& C) {
+uint OdeInterface::getJointMotorDimension() {
   NIY;
   ors::Body *n; ors::Joint *e;
   uint i=0, j, k;
@@ -504,17 +711,17 @@ uint OdeInterface::getJointMotorDimension(ors::KinematicWorld& C) {
   return i;
 }
 
-void OdeInterface::setJointMotorPos(ors::KinematicWorld &C, ors::Joint *e, double x0, double maxF, double tau) {
+void OdeInterface::setJointMotorPos(ors::Joint *e, double x0, double maxF, double tau) {
   double x=-dJointGetHingeAngle(joints(e->index));
-  setJointMotorVel(C, e, .1*(x0-x)/tau, maxF);
+  setJointMotorVel(e, .1*(x0-x)/tau, maxF);
 }
 
-void OdeInterface::setJointMotorVel(ors::KinematicWorld &C, ors::Joint *e, double v0, double maxF) {
+void OdeInterface::setJointMotorVel(ors::Joint *e, double v0, double maxF) {
   dJointSetAMotorParam(motors(e->index), dParamVel, -v0);
   dJointSetAMotorParam(motors(e->index), dParamFMax, maxF);
 }
 
-void OdeInterface::setJointMotorPos(ors::KinematicWorld &C, doubleA& x, double maxF, double tau) {
+void OdeInterface::setJointMotorPos(doubleA& x, double maxF, double tau) {
   //CHECK(x.N==E, "given joint state has wrong dimension, " <<x.N <<"=" <<E);
   NIY;
   ors::Body *n;
@@ -522,7 +729,7 @@ void OdeInterface::setJointMotorPos(ors::KinematicWorld &C, doubleA& x, double m
   uint i=0, j, k;
   for_list(k, n, C.bodies) {
     for_list(j, e, n->inLinks) { // if(e->motor)
-      setJointMotorPos(C, e, x(i), maxF, tau);
+      setJointMotorPos(e, x(i), maxF, tau);
       i++;
       break;
     }
@@ -530,7 +737,7 @@ void OdeInterface::setJointMotorPos(ors::KinematicWorld &C, doubleA& x, double m
   CHECK(x.N==i, "joint motor array had wrong dimension " <<x.N <<"!=" <<i);
 }
 
-void OdeInterface::setJointMotorVel(ors::KinematicWorld &C, doubleA& x, double maxF) {
+void OdeInterface::setJointMotorVel(doubleA& x, double maxF) {
   //CHECK(x.N==E, "given joint state has wrong dimension, " <<x.N <<"=" <<E);
   NIY;
   ors::Body *n;
@@ -538,7 +745,7 @@ void OdeInterface::setJointMotorVel(ors::KinematicWorld &C, doubleA& x, double m
   uint i=0, j, k;
   for_list(k, n, C.bodies) {
     for_list(j, e, n->inLinks) { // if(e->motor){
-      setJointMotorVel(C, e, x(i), maxF);
+      setJointMotorVel(e, x(i), maxF);
       i++;
       break;
     }
@@ -546,22 +753,22 @@ void OdeInterface::setJointMotorVel(ors::KinematicWorld &C, doubleA& x, double m
   CHECK(x.N==i, "joint motor array had wrong dimension " <<x.N <<"!=" <<i);
 }
 
-void OdeInterface::unsetJointMotors(ors::KinematicWorld &C) {
+void OdeInterface::unsetJointMotors() {
   NIY;
   ors::Body *n;
   ors::Joint *e;
   uint i, j;
   for_list(j, n, C.bodies) for_list(i, e, n->inLinks) { // if(e->motor){
-    unsetJointMotor(C, e);
+    unsetJointMotor(e);
     break;
   }
 }
 
-void OdeInterface::unsetJointMotor(ors::KinematicWorld &C, ors::Joint *e) {
+void OdeInterface::unsetJointMotor(ors::Joint *e) {
   dJointSetAMotorParam(motors(e->index), dParamFMax, 0.);
 }
 
-void OdeInterface::getJointMotorForce(ors::KinematicWorld &C, ors::Joint *e, double& f) {
+void OdeInterface::getJointMotorForce(ors::Joint *e, double& f) {
   dJointFeedback* fb=dJointGetFeedback(motors(e->index));
   CHECK(fb, "no feedback buffer set for this joint");
   //std::cout <<OUTv(fb->f1) <<' ' <<OUTv(fb->t1) <<' ' <<OUTv(fb->f2) <<' ' <<OUTv(fb->t2) <<std::endl;
@@ -570,14 +777,14 @@ void OdeInterface::getJointMotorForce(ors::KinematicWorld &C, ors::Joint *e, dou
   f=-f;
 }
 
-void OdeInterface::getJointMotorForce(ors::KinematicWorld &C, doubleA& f) {
+void OdeInterface::getJointMotorForce(doubleA& f) {
   NIY;
   ors::Body *n;
   ors::Joint *e;
   uint i=0, j, k;
   for_list(k, n, C.bodies) {
     for_list(j, e, n->inLinks) { // if(!e->fixed && e->motor){
-      getJointMotorForce(C, e, f(i));
+      getJointMotorForce(e, f(i));
       i++;
       break;
     }
@@ -585,7 +792,7 @@ void OdeInterface::getJointMotorForce(ors::KinematicWorld &C, doubleA& f) {
   CHECK(f.N==i, "joint motor array had wrong dimension " <<f.N <<"!=" <<i);
 }
 
-void OdeInterface::pidJointPos(ors::KinematicWorld &C, ors::Joint *e, double x0, double v0, double xGain, double vGain, double iGain, double* eInt) {
+void OdeInterface::pidJointPos(ors::Joint *e, double x0, double v0, double xGain, double vGain, double iGain, double* eInt) {
   double x, v, f;
   //double a, b, c, dAcc;
   
@@ -601,7 +808,7 @@ void OdeInterface::pidJointPos(ors::KinematicWorld &C, ors::Joint *e, double x0,
   dJointAddHingeTorque(joints(e->index), -f);
 }
 
-void OdeInterface::pidJointVel(ors::KinematicWorld &C, ors::Joint *e, double v0, double vGain) {
+void OdeInterface::pidJointVel(ors::Joint *e, double v0, double vGain) {
   double v, f;
   
   v=-dJointGetHingeAngleRate(joints(e->index));
@@ -618,225 +825,18 @@ void OdeInterface::pidJointVel(ors::KinematicWorld &C, ors::Joint *e, double v0,
 // higher level C
 //
 
-void OdeInterface::createOde(ors::KinematicWorld &C) {
-  ors::Body *n;
-  ors::Joint *e;
-  dBodyID b;
-  dMass odeMass;
-  dGeomID geom, trans;
-  dSpaceID myspace;
-  dxJointHinge* jointH=0;
-  dxJointSlider* jointS=0;
-  dxJointUniversal* jointU=0;
-  dxJointFixed* jointF=0;
-  dxJointAMotor* jointM=0;
-  dJointFeedback* jointFB=0;
-  ors::Vector a;
-  //double *mass, *shape, *type, *fixed, *cont, typeD=cappedCylinderST;
-  //, *inertiaTensor, *realMass, *centerOfMass;
-  uint i, j;
-  
-  clear();
-  C.calcBodyFramesFromJoints();
-  
-  bodies.resize(C.bodies.N); bodies=0;
-  geoms .resize(C.shapes.N); geoms =0;
-  joints.resize(C.joints.N); joints=0;
-  motors.resize(C.joints.N); motors=0;
-  
-  for_list(j, n, C.bodies) {
-    b=dBodyCreate(world);
-    
-    bodies(n->index)=b;
-    b->userdata=n;
-    
-    //n->copyFrameToOde();
-    CHECK(n->X.rot.isNormalized(), "quaternion is not normalized!");
-    CP3(b->posr.pos, n->X.pos.p());                // dxBody changed in ode-0.6 ! 14. Jun 06 (hh)
-    CP4(b->q, n->X.rot.p()); dQtoR(b->q, b->posr.R);
-    CP3(b->lvel, n->X.vel.p());
-    CP3(b->avel, n->X.angvel.p());
-    
-    // need to fix: "mass" is not a mass but a density (in dMassSetBox)
-    ors::Shape *s;
-    for_list(i, s, n->shapes) {
-      if(!(s->rel.rot.isZero()) || !(s->rel.pos.isZero())) { //we need a relative transformation
-        trans = dCreateGeomTransform(space);
-        myspace = NULL; //the object is added to no space, but (below) associated with the transform
-      } else {
-        trans = NULL;
-        myspace = space; //the object is added normally to the main space
-      }
-      
-      switch(s->type) {
-        default:
-          for(int i=0; i<3; ++i) {
-            if(s->size[i] == 0) s->size[i] = 0.001;
-          }
-        case ors::boxST:
-          dMassSetBox(&odeMass, n->mass, s->size[0], s->size[1], s->size[2]);
-          dBodySetMass(b, &odeMass);
-          geom=dCreateBox(myspace, s->size[0], s->size[1], s->size[2]);
-          break;
-        case ors::sphereST:
-          dMassSetSphere(&odeMass, n->mass, s->size[3]);
-          dBodySetMass(b, &odeMass);
-          geom=dCreateSphere(myspace, s->size[3]);
-          break;
-        case ors::cylinderST:
-          dMassSetCylinder(&odeMass, n->mass, 3, s->size[3], s->size[2]);
-          dBodySetMass(b, &odeMass);
-          geom=dCreateCylinder(myspace, s->size[3], s->size[2]);
-          break;
-        case ors::cappedCylinderST:
-          dMassSetCylinder(&odeMass, n->mass, 3, s->size[3], s->size[2]);
-          //                 MT_MSG("ODE: setting Cylinder instead of capped cylinder mass");
-          dBodySetMass(b, &odeMass);
-          geom=dCreateCCylinder(myspace, s->size[3], s->size[2]);
-          break;
-        case ors::meshST: {
-#if 0
-          NIY;
-#else
-          s->mesh.computeNormals();
-          // get inertia tensor and REAL mass (careful no density)
-          //n->ats.get("I", inertiaTensor, 9);
-          //n->ats.get("w", realMass, 1);
-          //n->ats.get("X", centerOfMass, 3);
-          
-          // transform the mesh to ODE trimesh format;
-          //i=0; j=0;
-          
-#if 0 //correct mass/density stuff
-          trimeshPhysics triPhys;
-          triPhys.reset(s->mesh.T.N);
-          if(inertiaTensor && realMass && centerOfMass) { // are all important params set in the dcg file
-            triPhys._mass = *realMass;
-            triPhys.r[0]=centerOfMass[0];
-            triPhys.r[1]=centerOfMass[1];
-            triPhys.r[2]=centerOfMass[2];
-            triPhys.J[0][0]= inertiaTensor[0];
-            triPhys.J[1][1]= inertiaTensor[4];
-            triPhys.J[2][2]= inertiaTensor[8];
-            triPhys.J[0][1]= inertiaTensor[1];
-            triPhys.J[0][2]= inertiaTensor[2];
-            triPhys.J[1][2]= inertiaTensor[5];
-          } else { // not all parametrs specified in dcg file....need to calculate them
-            triPhys.calculateODEparams(&s->mesh, s->mass); // note: 2nd parameter is the density
-          }
-          
-          dMassSetParameters(&odeMass, triPhys._mass,
-                             triPhys.r[0], triPhys.r[1], triPhys.r[2],
-                             triPhys.J[0][0], triPhys.J[1][1], triPhys.J[2][2],
-                             triPhys.J[0][1], triPhys.J[0][2], triPhys.J[1][2]);
-          
-          dBodySetMass(b, &odeMass);
-#else //don't care about mass...
-          n->mass = .001;
-          dMassSetBox(&odeMass, n->mass, s->size[0], s->size[1], s->size[2]);
-          dBodySetMass(b, &odeMass);
-#endif
-          
-          dTriMeshDataID TriData;
-          TriData = dGeomTriMeshDataCreate();
-          dGeomTriMeshDataBuildDouble(TriData,
-                                      s->mesh.V.p, 3*sizeof(double), s->mesh.V.d0,
-                                      s->mesh.T.p, s->mesh.T.d0, 3*sizeof(uint));
-          dGeomTriMeshDataPreprocess(TriData);
-          
-          geom = dCreateTriMesh(myspace, TriData, 0, 0, 0);
-          
-          dGeomTriMeshClearTCCache(geom);
-#endif
-        } break; //end of mesh
-      }
-      
-      geoms(s->index) = geom;
-      if(trans) {
-        //geoms(s->index) = trans;
-        dGeomTransformSetGeom(trans, geom);
-        dGeomSetPosition(geom, s->rel.pos.x, s->rel.pos.y, s->rel.pos.z);
-        dGeomSetQuaternion(geom, s->rel.rot.p());
-        dGeomSetBody(trans, b); //attaches the geom to the body
-      } else {
-        dGeomSetBody(geom, b); //attaches the geom to the body
-      }
-    }//loop through shapes
-    
-    if(n->type==ors::staticBT) {
-      jointF=(dxJointFixed*)dJointCreateFixed(world, 0);
-      dJointAttach(jointF, b, 0);
-      dJointSetFixed(jointF);
-    }
-  }
-#ifndef MT_ode_nojoints
-  for_list(j, n, C.bodies) {
-    for_list(i, e, n->inLinks) {
-      switch(e->type) {
-        case ors::JT_fixed:
-          jointF=(dxJointFixed*)dJointCreateFixed(world, 0);
-          dJointAttach(jointF, bodies(e->from->index), bodies(e->to->index));
-          dJointSetFixed(jointF);
-          joints(e->index)=jointF;
-          //    e->fixed=true;
-          break;
-        case ors::JT_hingeX:
-          jointH=(dxJointHinge*)dJointCreateHinge(world, 0);
-          /*if(e->p[1]!=e->p[0]){
-            dJointSetHingeParam(jointH, dParamLoStop, e->p[0]);
-            dJointSetHingeParam(jointH, dParamHiStop, e->p[1]);
-          
-            //dJointSetHingeParam(jointH, dParamCFM, CFM);
-            }*/
-          dJointAttach(jointH, bodies(e->from->index), bodies(e->to->index));
-          joints(e->index)=jointH;
-          //e->copyFramesToOdeHinge();
-          break;
-        case ors::JT_universal:
-          jointU=(dxJointUniversal*)dJointCreateUniversal(world, 0);
-          dJointAttach(jointU, bodies(e->from->index), bodies(e->to->index));
-          joints(e->index)=jointU;
-          //e->copyFramesToOdeUniversal();
-          break;
-        case ors::JT_transX:
-          jointS=(dxJointSlider*)dJointCreateSlider(world, 0);
-          dJointAttach(jointS, bodies(e->from->index), bodies(e->to->index));
-          joints(e->index)=jointS;
-          //e->copyFramesToOdeSlider();
-          break;
-        default: NIY;
-      }
-      if(e->type==ors::JT_hingeX) {
-        jointM = (dxJointAMotor*)dJointCreateAMotor(world, 0);
-        dJointSetAMotorNumAxes(jointM, 1);
-        dJointAttach(jointM, bodies(e->from->index), bodies(e->to->index));
-        motors(e->index)=jointM;
-        a=e->from->X.rot*e->A.rot*ors::Vector(1, 0, 0);
-        dJointSetAMotorAxis(jointM, 0, 1, a.x, a.y, a.z);
-        //dJointSetAMotorParam(jointM, dParamFMax, 1.);
-        jointFB = new dJointFeedback;
-        dJointSetFeedback(jointM, jointFB);
-      }
-    }
-  }
-#endif
-  
-  exportStateToOde(C);
-  isOpen=true;
-}
-
-void OdeInterface::step(ors::KinematicWorld &C, doubleA& force, uint steps, double tau) {
-  addJointForce(C, force);
+void OdeInterface::step(doubleA& force, uint steps, double tau) {
+  addJointForce(force);
   for(; steps--;) step(tau);
-  importStateFromOde(C);
+  importStateFromOde();
 }
 
-void OdeInterface::step(ors::KinematicWorld &C, uint steps, double tau) {
+void OdeInterface::step(uint steps, double tau) {
   for(; steps--;) step(tau);
-  importStateFromOde(C);
+  importStateFromOde();
 }
 
-void OdeInterface::getGroundContact(ors::KinematicWorld &C, boolA& cts) {
+void OdeInterface::getGroundContact(boolA& cts) {
   cts.resize(C.bodies.N);
   cts=false;
   //reportContacts();
@@ -861,7 +861,7 @@ void OdeInterface::getGroundContact(ors::KinematicWorld &C, boolA& cts) {
   };*/
 
 
-void OdeInterface::importProxiesFromOde(ors::KinematicWorld &C) {
+void OdeInterface::importProxiesFromOde() {
   uint i;
   C.proxies.memMove=true;
   C.proxies.resizeCopy(conts.N);
@@ -897,8 +897,6 @@ void OdeInterface::importProxiesFromOde(ors::KinematicWorld &C) {
 //    else           C.proxies(i)->rel.setZero();
 //    C.proxies(i)->age=0;
   }
-  
-  C.sortProxies();
 }
 
 void OdeInterface::reportContacts2() {
@@ -983,15 +981,14 @@ bool OdeInterface::inFloorContacts(ors::Vector& x) {
   return true;
 }
 
-void OdeInterface::slGetProxies(ors::KinematicWorld &C) {
+void OdeInterface::slGetProxies() {
   //C.setJointState(x);
   //dJointGroupEmpty(contactgroup);
   //exportStateToOde(C, ode);
-  createOde(C);
   conts.clear();
   noContactJoints=true;
   dSpaceCollide(space, this, OdeInterface::staticCallback);
-  importProxiesFromOde(C);
+  importProxiesFromOde();
 }
 
 /*void OdeInterface::slGetProxyGradient(arr &dx, const arr &x, ors::KinematicWorld &C){
@@ -1026,71 +1023,71 @@ void OdeInterface::slGetProxyGradient(arr &dx, const arr &x, ors::KinematicWorld
 #if 0 //documentation...
 /** @brief copy all frame variables (positions, velocities, etc)
 into the ODE engine (createOde had to be called before) */
-void OdeInterface::exportStateToOde(ors::KinematicWorld &C);
+void OdeInterface::exportStateToOde();
 
 /** @brief copy the current state of the ODE engine into
 the frame variables (positions, velocities, etc) */
-void OdeInterface::importStateFromOde(ors::KinematicWorld &C);
+void OdeInterface::importStateFromOde();
 
 /** @brief copy all frame variables (positions, velocities, etc)
 into the ODE engine (createOde had to be called before) */
-void OdeInterface::exportForcesToOde(ors::KinematicWorld &C);
+void OdeInterface::exportForcesToOde();
 
-void OdeInterface::setJointForce(ors::KinematicWorld &C, ors::Joint *e, double f1, double f2);
+void OdeInterface::setJointForce(ors::Joint *e, double f1, double f2);
 
 /** @brief applies forces on the configuration as given by the force vector x */
-void OdeInterface::setJointForce(ors::KinematicWorld &C, arr& f);
+void OdeInterface::setJointForce(arr& f);
 
 /** @brief returns the number of motors attached to joints */
-uint getJointMotorDimension(ors::KinematicWorld &C);
+uint getJointMotorDimension();
 
 /** @brief set the desired positions of all motor joints */
-void OdeInterface::setJointMotorPos(ors::KinematicWorld &C, arr& x, double maxF, double tau);
+void OdeInterface::setJointMotorPos(arr& x, double maxF, double tau);
 /** @brief set the desired position of a specific motor joint */
-void OdeInterface::setJointMotorPos(ors::KinematicWorld &C, ors::Joint *e, double x0, double maxF, double tau);
+void OdeInterface::setJointMotorPos(ors::Joint *e, double x0, double maxF, double tau);
 
 /** @brief set the desired velocities of all motor joints */
-void OdeInterface::setJointMotorVel(ors::KinematicWorld &C, arr& v, double maxF=1.);
+void OdeInterface::setJointMotorVel(arr& v, double maxF=1.);
 /** @brief set the desired velocity of a specific motor joint */
-void OdeInterface::setJointMotorVel(ors::KinematicWorld &C, ors::Joint *e, double v0, double maxF=1.);
+void OdeInterface::setJointMotorVel(ors::Joint *e, double v0, double maxF=1.);
 
 /** @brief disable motors by setting maxForce parameter to zero */
-void OdeInterface::unsetJointMotors(ors::KinematicWorld &C, OdeInterface& ode);
+void OdeInterface::unsetJointMotors(OdeInterface& ode);
 /** @brief disable motor by setting maxForce parameter to zero */
-void OdeInterface::unsetJointMotor(ors::KinematicWorld &C, ors::Joint *e);
+void OdeInterface::unsetJointMotor(ors::Joint *e);
 
 /** @brief get the forces induced by all motor motor joints */
-void OdeInterface::getJointMotorForce(ors::KinematicWorld &C, arr& f);
+void OdeInterface::getJointMotorForce(arr& f);
 /** @brief get the force induced by a specific motor joint */
-void OdeInterface::getJointMotorForce(ors::KinematicWorld &C, ors::Joint *e, double& f);
+void OdeInterface::getJointMotorForce(ors::Joint *e, double& f);
 
-void OdeInterface::pidJointPos(ors::KinematicWorld &C, ors::Joint *e, double x0, double v0, double xGain, double vGain, double iGain=0, double* eInt=0);
+void OdeInterface::pidJointPos(ors::Joint *e, double x0, double v0, double xGain, double vGain, double iGain=0, double* eInt=0);
 
-void OdeInterface::pidJointVel(ors::KinematicWorld &C, ors::Joint *e, double v0, double vGain);
+void OdeInterface::pidJointVel(ors::Joint *e, double v0, double vGain);
 
 /// [obsolete] \ingroup sl
-void OdeInterface::getGroundContact(ors::KinematicWorld &C, boolA& cts);
+void OdeInterface::getGroundContact(boolA& cts);
 
 /// import the information from ODE's contact list into the proximity list \ingroup sl
-void OdeInterface::importProxiesFromOde(ors::KinematicWorld &C, OdeInterface& ode);
+void OdeInterface::importProxiesFromOde(OdeInterface& ode);
 
 /** @brief simulates one time step with the ODE engine, starting from state
     vector in, returns state vector out \ingroup sl */
-void OdeInterface::step(ors::KinematicWorld &C, arr& in, arr& force, arr& out, uint steps=1);
+void OdeInterface::step(arr& in, arr& force, arr& out, uint steps=1);
 
 /** @brief simulates one time step with the ODE engine, starting from state
     vector in, returns state vector out \ingroup sl */
-void OdeInterface::step(ors::KinematicWorld &C, arr& force, arr& out, uint steps=1);
+void OdeInterface::step(arr& force, arr& out, uint steps=1);
 
 /// \ingroup sl
-void OdeInterface::step(ors::KinematicWorld &C, uint steps=1, double tau=.01);
+void OdeInterface::step(uint steps=1, double tau=.01);
 
 /** @brief instantiate the configuration in an ODE engine (first clears the
     ODE engine from all other objects) \ingroup sl */
-void OdeInterface::createOde(ors::KinematicWorld &C, OdeInterface& ode);
+void OdeInterface::createOde(OdeInterface& ode);
 
 /// \ingroup sl
-void OdeInterface::slGetProxies(ors::KinematicWorld &C, OdeInterface &ode);
+void OdeInterface::slGetProxies(OdeInterface &ode);
 
 /// \ingroup sl
 //void OdeInterface::slGetProxyGradient(arr &dx, const arr &x, ors::KinematicWorld &C, OdeInterface &ode);
@@ -1099,19 +1096,19 @@ void OdeInterface::slGetProxies(ors::KinematicWorld &C, OdeInterface &ode);
 void OdeInterface::reportContacts(OdeInterface& ode);
 /// \ingroup sl
 bool inFloorContacts(ors::Vector& x);
+
 #endif
 
 #else
-OdeInterface::OdeInterface() { MT_MSG("WARNING - creating dummy OdeInterface"); }
+OdeInterface::OdeInterface(ors::KinematicWorld &_C):C(_C) { MT_MSG("WARNING - creating dummy OdeInterface"); }
 OdeInterface::~OdeInterface() {}
 void OdeInterface::step(double dtime) {}
-void OdeInterface::createOde(ors::KinematicWorld &C) {}
 void OdeInterface::clear() {}
-void OdeInterface::slGetProxies(ors::KinematicWorld &C) {}
-void OdeInterface::unsetJointMotors(ors::KinematicWorld &C) {}
-void OdeInterface::exportStateToOde(ors::KinematicWorld &C) {}
-void OdeInterface::importStateFromOde(ors::KinematicWorld &C) {}
-void OdeInterface::importProxiesFromOde(ors::KinematicWorld &C) {}
-void OdeInterface::addJointForce(ors::KinematicWorld &C, arr& f) {}
+void OdeInterface::slGetProxies() {}
+void OdeInterface::unsetJointMotors() {}
+void OdeInterface::exportStateToOde() {}
+void OdeInterface::importStateFromOde() {}
+void OdeInterface::importProxiesFromOde() {}
+void OdeInterface::addJointForce(arr& f) {}
 #endif
 /** @} */

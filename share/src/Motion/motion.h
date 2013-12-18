@@ -38,6 +38,8 @@ struct TaskMap {
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G) = 0;
   virtual uint dim_phi(const ors::KinematicWorld& G) = 0; //the dimensionality of $y$
 
+  virtual ~TaskMap() {};
+
   TaskMap():constraint(false) {}
 };
 
@@ -68,7 +70,7 @@ struct TaskCost {
 /// This class allows you to DESCRIBE a motion planning problem, nothing more
 struct MotionProblem { //TODO: rename MotionPlanningProblem
   //engines to compute things
-  ors::KinematicWorld *world;
+  ors::KinematicWorld& world;
   bool useSwift;
   
   //******* the following three sections are parameters that define the problem
@@ -87,13 +89,12 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
   //-- start constraints
   arr x0, v0; ///< fixed start state and velocity
   arr prefix; ///< a set of states PRECEEDING x[0] (having 'negative' time indices) and which influence the control cost on x[0]. NOTE: x[0] is subject to optimization. DEFAULT: constantly equals x0
-  arr x_current, v_current; ///< memory for which state was set (which state ors is in)
 
   //-- return values of an optimizer
   arr costMatrix;
   arr dualMatrix;
 
-  MotionProblem(ors::KinematicWorld *_ors=NULL, bool useSwift=true);
+  MotionProblem(ors::KinematicWorld& _world, bool useSwift=true);
   
   void loadTransitionParameters(); ///< loads transition parameters from cfgFile //TODO: do in constructor of TransitionCost
   

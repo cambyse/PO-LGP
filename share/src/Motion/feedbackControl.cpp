@@ -24,13 +24,15 @@ void PDtask::setGainsAsNatural(double decayTime, double dampingRatio) {
 arr PDtask::getDesiredAcceleration(const arr& y, const arr& ydot){
   if(!y_ref.N) y_ref.resizeAs(y).setZero();
   if(!v_ref.N) v_ref.resizeAs(ydot).setZero();
-  return Pgain*(y_ref-y) + Dgain*(v_ref-ydot);
+  Perr = y_ref-y;
+  Derr = v_ref-ydot;
+  return Pgain*Perr + Dgain*Derr;
 }
 
 //===========================================================================
 
-FeedbackMotionControl::FeedbackMotionControl(ors::KinematicWorld *_ors, bool useSwift)
-  : MotionProblem(_ors, useSwift), nullSpacePD(NULL) {
+FeedbackMotionControl::FeedbackMotionControl(ors::KinematicWorld& _world, bool useSwift)
+  : MotionProblem(_world, useSwift), nullSpacePD(NULL) {
   loadTransitionParameters();
   nullSpacePD.setGainsAsNatural(1.,1.);
   nullSpacePD.prec=1.;
@@ -49,7 +51,7 @@ PDtask* FeedbackMotionControl::addPDTask(const char* name,
                                          const char* iShapeName, const ors::Vector& ivec,
                                          const char* jShapeName, const ors::Vector& jvec,
                                          const arr& params){
-  PDtask *t = addTask(name, new DefaultTaskMap(type, *world, iShapeName, ivec, jShapeName, jvec, params));
+  PDtask *t = addTask(name, new DefaultTaskMap(type, world, iShapeName, ivec, jShapeName, jvec, params));
   t->setGainsAsNatural(decayTime, dampingRatio);
   return t;
 }
@@ -60,8 +62,8 @@ void FeedbackMotionControl::getTaskCosts(arr& phi, arr& J, arr& a){
   arr y, J_y, a_des;
   for(PDtask* t: tasks){
     if(t->active) {
-      t->map.phi(y, J_y, *world);
-      a_des = t->getDesiredAcceleration(y, J_y*v_current);
+      t->map.phi(y, J_y, world);
+      a_des = t->getDesiredAcceleration(y, J_y*world.qdot);
       phi.append(::sqrt(t->prec)*(J_y*a - a_des));
       if(&J) J.append(::sqrt(t->prec)*J_y);
     }
@@ -71,13 +73,14 @@ void FeedbackMotionControl::getTaskCosts(arr& phi, arr& J, arr& a){
 
 arr FeedbackMotionControl::operationalSpaceControl(){
   arr phi, J, a;
-  a.resizeAs(x_current).setZero();
+  a.resizeAs(world.q).setZero();
   getTaskCosts(phi, J, a);
+  if(!phi.N) return a;
   arr H, Jinv;
-  H.setDiag(H_rate_diag);
+  H.setDiag(1./H_rate_diag);
   pseudoInverse(Jinv, J, H, 1e-6);
   arr Null = eye(a.N) - Jinv * J;
-  a = - Jinv * phi + Null * nullSpacePD.getDesiredAcceleration(x_current, v_current);
+  a = - Jinv * phi + Null * nullSpacePD.getDesiredAcceleration(world.q, world.qdot);
   return a;
 }
 

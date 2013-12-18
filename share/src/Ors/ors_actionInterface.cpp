@@ -31,6 +31,7 @@
 #include "ors.h"
 #include "ors_oldTaskVariables.h"
 #include "ors_swift.h"
+#include "ors_ode.h"
 #include "ors_actionInterface.h"
 #include <sstream>
 #include <limits.h>
@@ -69,18 +70,18 @@ void oneStep(const arr &q, ors::KinematicWorld *C, OdeInterface *ode, SwiftInter
   C->calcBodyFramesFromJoints();
 #ifdef MT_ODE
   if(ode) {
-    ode->exportStateToOde(*C);
-    ode->step(.01);
-    ode->importStateFromOde(*C);
-    //ode->importProxiesFromOde(*C);
+    C->ode().exportStateToOde();
+    C->ode().step(.01);
+    C->ode().importStateFromOde();
+    //C->ode().importProxiesFromOde(*C);
     //C->getJointState(q);
   }
 #endif
   if(swift) {
-    swift->computeProxies(*C);
+    swift->step();
   } else {
 #ifdef MT_ODE
-    if(ode) ode->importProxiesFromOde(*C);
+    C->ode().importProxiesFromOde();
 #endif
   }
   
@@ -186,25 +187,20 @@ void ActionInterface::startOde(double ode_coll_bounce, double ode_coll_erp,
                                double ode_coll_cfm, double ode_friction) {
   CHECK(C, "load a configuration first");
 #ifdef MT_ODE
-  if(ode) delete ode;
-  ode = new OdeInterface;
-#endif
+  C->ode();
   
   // SIMULATOR PARAMETER
-#ifdef MT_ODE
-  ode->coll_bounce = ode_coll_bounce; // huepfen der bloecke, falls sie zb runterfallen
-  ode->coll_ERP = ode_coll_erp;   //usually .2!! stiffness (time-scale of contact reaction) umso groesser, desto mehr Fehlerkorrektur; muss zwischen 0.1 und 0.5 sein (ungefaehr)
-  ode->coll_CFM = ode_coll_cfm;  //softness // umso groesser, desto breiter, desto weicher, desto weniger Fehlerkorrektur; zwischen 10e-10 und 10e5
-  ode->friction = ode_friction;  //alternative: dInfinity;
-  ode->createOde(*C);
+  C->ode().coll_bounce = ode_coll_bounce; // huepfen der bloecke, falls sie zb runterfallen
+  C->ode().coll_ERP = ode_coll_erp;   //usually .2!! stiffness (time-scale of contact reaction) umso groesser, desto mehr Fehlerkorrektur; muss zwischen 0.1 und 0.5 sein (ungefaehr)
+  C->ode().coll_CFM = ode_coll_cfm;  //softness // umso groesser, desto breiter, desto weicher, desto weniger Fehlerkorrektur; zwischen 10e-10 und 10e5
+  C->ode().friction = ode_friction;  //alternative: dInfinity;
+//  C->ode().createOde(*C);
 #endif
 }
 
 void ActionInterface::startSwift() {
   if(swift) delete swift;
-  swift = new SwiftInterface;
-  
-  swift->init(*C);
+  swift = new SwiftInterface(*C);
 }
 
 /*void ActionInterface::startSchunk(){

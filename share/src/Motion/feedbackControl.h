@@ -29,7 +29,7 @@ struct PDtask{
 
   arr y_ref, v_ref;      ///< immediate (next step) desired target reference
   double Pgain, Dgain;   ///< parameters of the PD controller or attractor dynamics
-  double err, derr;
+  arr Perr, Derr;
 
   PDtask(TaskMap* m):map(*m), active(true), prec(0.), Pgain(0.), Dgain(0.) {}
 
@@ -46,7 +46,7 @@ struct FeedbackMotionControl : MotionProblem {
   MT::Array<PDtask*> tasks;
   PDtask nullSpacePD;
 
-  FeedbackMotionControl(ors::KinematicWorld *_ors=NULL, bool useSwift=true);
+  FeedbackMotionControl(ors::KinematicWorld& _world, bool useSwift=true);
 
   //adding task spaces
   PDtask* addTask(const char* name, TaskMap *map);

@@ -61,14 +61,13 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   //------------------------------------------------//
   // Compute optimal trajectory
   //------------------------------------------------//
-  OpenGL gl(scene,800,800);
-  ors::KinematicWorld G;
+  ors::KinematicWorld G(scene);
+  G.gl().resize(800,800);
 
-  init(G, gl, scene);
   makeConvexHulls(G.shapes);
   cout << "Loaded scene: " << scene << endl;
 
-  MotionProblem P(&G);
+  MotionProblem P(G);
   P.loadTransitionParameters();
 
 
@@ -77,7 +76,7 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   c = P.addTaskMap("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.ors->getBodyByName("goalRef")->X.pos), 1e4,
+                          ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           ARRAY(0.,0.,0.), 1e-3);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
                           ARRAY(0.,0.,0.), 1e3,
@@ -96,12 +95,16 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   }
 
   //-- create the Optimization problem (of type kOrderMarkov)
+  P.x0 = ARRAY(0.,0.,0.,0.,-0.2,-.2,0.);
+
   MotionProblemFunction F(P);
   uint T=F.get_T();
   uint k=F.get_k();
   uint n=F.dim_x();
+  double dt = P.tau;
 
-  cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n<<" # joints=" <<G.getJointStateDimension()<<endl;
+
+  cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<" # joints=" <<G.getJointStateDimension()<<endl;
 
   //-- mini evaluation test:
   arr x(T+1,n);
@@ -111,7 +114,7 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
 
   P.costReport();
-  displayTrajectory(x, 1, G, gl,"planned trajectory");
+//  displayTrajectory(x, 1, G, gl,"planned trajectory");
 
 
   //------------------------------------------------//
@@ -122,8 +125,8 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   for (uint t=0;t<=T;t++) {
     G.setJointState(x[t]);
     G.calcBodyFramesFromJoints();
-    G.kinematicsPos(kinPos,P.ors->getBodyByName("endeff")->index);
-    G.kinematicsVec(kinVec,P.ors->getBodyByName("endeff")->index);
+    G.kinematicsPos(kinPos, NoArr, P.world.getBodyByName("endeff")->index);
+    G.kinematicsVec(kinVec, NoArr, P.world.getBodyByName("endeff")->index);
     xRefPos.append(~kinPos);
     xRefVec.append(~kinVec);
   }
@@ -160,17 +163,17 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   double yCol_deviation = 3e-1;
   double w_reg = 100.;
 
-  Pfc *pfc = new Pfc(G, xRef,2.,x0, goalMO, useOrientation, useCollAvoid,fPos_deviation,fVec_deviation,yCol_deviation,w_reg);
-
-  gl.add(drawActTraj,&(pfc->traj));
-  gl.add(drawRefTraj,&(pfc->trajRef->points));
-  gl.add(drawPlanTraj,&(pfc->trajWrap->points));
+  Pfc *pfc = new Pfc(G, xRef,2.,x0, q0, goalMO, useOrientation, useCollAvoid,fPos_deviation,fVec_deviation,yCol_deviation,w_reg);
+  pfc->scene = scene;
+  G.gl().add(drawActTraj,&(pfc->traj));
+  G.gl().add(drawRefTraj,&(pfc->trajRef->points));
+  G.gl().add(drawPlanTraj,&(pfc->trajWrap->points));
 
   //------------------------------------------------//
   // Simulate controller
   //------------------------------------------------//
   uint t = 0;
-  while((pfc->s.last()<0.95) && t++ < 2*T)
+  while((pfc->s.last()<0.99) && t++ < 2*T)
   {
     // move obstacles
     for (std::vector<MObject*>::iterator moIter = mobjects.begin() ; moIter != mobjects.end() ; ++moIter) {
@@ -180,14 +183,14 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
     // move goal
     goalMO.move();
 
-    P.swift->computeProxies(G);
+    P.world.computeProxies();
     pfc->computeIK(q,dq);
 
     // sets joint angles AND computes all frames AND update display
     G.setJointState(q);
     G.calcBodyFramesFromJoints();
 
-    gl.update();
+    G.gl().update();
   }
 
   //------------------------------------------------//
@@ -195,23 +198,26 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   //------------------------------------------------//
   pfc->plotState();
 
-  gl.watch();
+  G.gl().watch();
+
 }
+
+
 
 int main(int argc,char **argv){
   MT::initCmdLine(argc,argv);
 
-  runPFC(String("model.kvg"),true,true);
+//  runPFC(String("model.kvg"),true,true);
 
-  runPFC(String("scenes/scene1.ors"),true,false);
-  runPFC(String("scenes/scene2.ors"),false,false);
-  runPFC(String("scenes/scene3.ors"),false,true);
-  runPFC(String("scenes/scene4.ors"),true,true);
-  runPFC(String("scenes/scene5.ors"),true,true);
-  runPFC(String("scenes/scene6.ors"),true,true);
-  runPFC(String("scenes/scene7.ors"),true,true);
-  runPFC(String("scenes/scene8.ors"),false,false);
-  runPFC(String("scenes/scene9.ors"),false,true);
+  runPFC(String("scenes/scene1"),true,true);
+  runPFC(String("scenes/scene2"),true,true);
+  runPFC(String("scenes/scene3"),true,true);
+  runPFC(String("scenes/scene4"),true,true);
+  runPFC(String("scenes/scene5"),true,true);
+  runPFC(String("scenes/scene6"),true,true);
+  runPFC(String("scenes/scene7"),true,true);
+  runPFC(String("scenes/scene8"),true,true);
+  runPFC(String("scenes/scene9"),true,true);
 
   return 0;
 }

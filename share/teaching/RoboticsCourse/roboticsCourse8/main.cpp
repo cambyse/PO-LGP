@@ -2,7 +2,7 @@
 
 void inferCameraProjectionMatrix(){
   uint N = 100;
-  double pixelNoise = .0; //5;
+  double pixelNoise = .5;
   VisionSimulator S;
   arr  X;
   S.getRandomWorldPoints(X,N);

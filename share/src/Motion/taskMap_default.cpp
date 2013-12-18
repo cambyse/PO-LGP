@@ -43,6 +43,7 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G) {
     case posTMT:
       if(body_j==-1) {
         G.kinematicsPos(y, J, body_i, &vec_i);
+        y -= ARRAY(vec_j);
         break;
       }
       pi = G.bodies(body_i)->X * vec_i;

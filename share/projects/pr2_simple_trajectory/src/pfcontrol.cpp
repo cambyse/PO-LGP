@@ -68,14 +68,14 @@ public:
     TaskCost *c;
     c = P.addDefaultTaskMap_Bodies("position", posTMT,"endeff",ors::Transformation().setText("<t(0 0 0)>"));
     P.setInterpolatingCosts(c, MotionProblem::constFinalMid,
-                            ARRAY(P.ors->getBodyByName("goalRef")->X.pos), 1e4,
+                            ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                             ARRAY(0.,0.,0.), 1e-3);
     P.setInterpolatingVelCosts(c, MotionProblem::constFinalMid,
                                ARRAY(0.,0.,0.), 1e3,
                                ARRAY(0.,0.,0.), 0.);
 
     P.setInterpolatingCosts(c, MotionProblem::constFinalMid,
-                            ARRAY(P.ors->getBodyByName("goalRef")->X.pos), 1e4,
+                            ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                             ARRAY(0.,0.,0.), 1e-3);
 
     if (useOrientation) {
@@ -115,8 +115,8 @@ public:
     for (uint t=0;t<=T;t++) {
       G.setJointState(x[t]);
       G.calcBodyFramesFromJoints();
-      G.kinematicsPos(kinPos,P.ors->getBodyByName("endeff")->index);
-      G.kinematicsVec(kinVec,P.ors->getBodyByName("endeff")->index);
+      G.kinematicsPos(kinPos,P.world.getBodyByName("endeff")->index);
+      G.kinematicsVec(kinVec,P.world.getBodyByName("endeff")->index);
       xRefPos.append(~kinPos);
       xRefVec.append(~kinVec);
     }

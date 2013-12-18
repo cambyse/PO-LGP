@@ -54,14 +54,13 @@ void scenario1() {
 
 //** optimized trajectory in joint space **//
 void scenario2() {
-  OpenGL gl("scenario2",800,800);
-  ors::KinematicWorld G;
+  ors::KinematicWorld G("scenes/scene1.ors");
+  G.gl().resize(800, 800);
 
-  init(G, gl, "scenes/scene1.ors");
   makeConvexHulls(G.shapes);
   cout << "Loaded scene: " << endl;
 
-  MotionProblem P(&G);
+  MotionProblem P(G);
   P.loadTransitionParameters();
 
   //-- create an optimal trajectory to trainTarget
@@ -69,7 +68,7 @@ void scenario2() {
   c = P.addTaskMap("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.ors->getBodyByName("goalRef")->X.pos), 1e4,
+                          ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           ARRAY(0.,0.,0.), 1e-3);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
                              ARRAY(0.,0.,0.), 1e3,
@@ -127,21 +126,20 @@ void scenario2() {
     G.calcBodyFramesFromJoints();
 
     d.iterate();
-    gl.update();
+    G.gl().update();
   }
 
 }
 
 //** optimized trajectory in cartesian space **//
 void scenario3() {
-  OpenGL gl("scenario3",800,800);
-  ors::KinematicWorld G;
+  ors::KinematicWorld G("scenes/scene1.ors");
+  G.gl().resize(800, 800);
 
-  init(G, gl, "scenes/scene1.ors");
   makeConvexHulls(G.shapes);
   cout << "Loaded scene: " << endl;
 
-  MotionProblem P(&G);
+  MotionProblem P(G);
   P.loadTransitionParameters();
 
   //-- create an optimal trajectory to trainTarget
@@ -149,7 +147,7 @@ void scenario3() {
   c = P.addTaskMap("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.ors->getBodyByName("goalRef")->X.pos), 1e4,
+                          ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           ARRAY(0.,0.,0.), 1e-3);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
                              ARRAY(0.,0.,0.), 1e3,
@@ -182,8 +180,8 @@ void scenario3() {
   for (uint t=0;t<=T;t++) {
     G.setJointState(x[t]);
     G.calcBodyFramesFromJoints();
-    G.kinematicsPos(kinPos,P.ors->getBodyByName("endeff")->index);
-    G.kinematicsVec(kinVec,P.ors->getBodyByName("endeff")->index);
+    G.kinematicsPos(kinPos, NoArr, P.world.getBodyByName("endeff")->index);
+    G.kinematicsVec(kinVec, NoArr, P.world.getBodyByName("endeff")->index);
     xRefPos.append(~kinPos);
     xRefVec.append(~kinVec);
   }
@@ -224,8 +222,7 @@ void scenario3() {
     W = W*w_reg;
 
     // Compute current task states
-    G.kinematicsPos(yPos, G.getBodyByName("endeff")->index);
-    G.jacobianPos(JPos, G.getBodyByName("endeff")->index);
+    G.kinematicsPos(yPos, JPos, G.getBodyByName("endeff")->index);
 
     // iterate dmp
     d.iterate();
@@ -247,23 +244,22 @@ void scenario3() {
     G.setJointState(q);
     G.calcBodyFramesFromJoints();
 
-    gl.update();
+    G.gl().update();
   }
-  gl.watch();
+  G.gl().watch();
 }
 
 //** optimized trajectory in cartesian space with orientation **//
 void scenario4() {
   bool useOrientation = true;
 
-  OpenGL gl("scenario4",800,800);
-  ors::KinematicWorld G;
+  ors::KinematicWorld G("scenes/scene1.ors");
+  G.gl().resize(800, 800);
 
-  init(G, gl, "scenes/scene1.ors");
   makeConvexHulls(G.shapes);
   cout << "Loaded scene: " << endl;
 
-  MotionProblem P(&G);
+  MotionProblem P(G);
   P.loadTransitionParameters();
 
   //-- create an optimal trajectory to trainTarget
@@ -271,7 +267,7 @@ void scenario4() {
   c = P.addTaskMap("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.ors->getBodyByName("goalRef")->X.pos), 1e4,
+                          ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           ARRAY(0.,0.,0.), 1e-3);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
                              ARRAY(0.,0.,0.), 1e3,
@@ -300,7 +296,7 @@ void scenario4() {
   optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
 
   P.costReport();
-  displayTrajectory(x, 1, G, gl,"planned trajectory");
+  displayTrajectory(x, 1, G, "planned trajectory");
 
 
   //------------------------------------------------//
@@ -311,8 +307,8 @@ void scenario4() {
   for (uint t=0;t<=T;t++) {
     G.setJointState(x[t]);
     G.calcBodyFramesFromJoints();
-    G.kinematicsPos(kinPos,P.ors->getBodyByName("endeff")->index);
-    G.kinematicsVec(kinVec,P.ors->getBodyByName("endeff")->index);
+    G.kinematicsPos(kinPos, NoArr, P.world.getBodyByName("endeff")->index);
+    G.kinematicsVec(kinVec, NoArr, P.world.getBodyByName("endeff")->index);
     xRefPos.append(~kinPos);
     xRefVec.append(~kinVec);
   }
@@ -357,10 +353,8 @@ void scenario4() {
     W = W*w_reg;
 
     // Compute current task states
-    G.kinematicsPos(yPos, G.getBodyByName("endeff")->index);
-    G.jacobianPos(JPos, G.getBodyByName("endeff")->index);
-    G.kinematicsVec(yVec, G.getBodyByName("endeff")->index);
-    G.jacobianVec(JVec, G.getBodyByName("endeff")->index);
+    G.kinematicsPos(yPos, JPos, G.getBodyByName("endeff")->index);
+    G.kinematicsVec(yVec, JVec, G.getBodyByName("endeff")->index);
 
     // iterate dmp
     d.iterate();
@@ -395,9 +389,9 @@ void scenario4() {
     G.setJointState(q);
     G.calcBodyFramesFromJoints();
 
-    gl.update();
+    G.gl().update();
   }
-  gl.watch();
+  G.gl().watch();
 }
 
 int main(int argc,char **argv){

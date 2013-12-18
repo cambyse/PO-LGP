@@ -12,7 +12,7 @@ arr getSimpleTrajectory(ors::KinematicWorld& G){
   c = P.addTaskMap("position",
                    new DefaultTaskMap(posTMT, G, "endeff", NoVector));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.ors->getShapeByName("miniTarget")->X.pos), 1e2);
+                          ARRAY(P.world.getShapeByName("miniTarget")->X.pos), 1e2);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e1);
 
   MotionProblemFunction MF(P);

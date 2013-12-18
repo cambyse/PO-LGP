@@ -16,6 +16,7 @@ import_array();
 // For numerical types, we want to get numpy arrays, to keep the shape of the
 // array, etc.
 
+
 // actual translation of numpy array to MT::Array<double>
 %fragment("ArrayTransform", "header") {
   template<class T>
@@ -59,6 +60,7 @@ import_array();
 //===========================================================================
 %define %Array_Typemap(Type)
 
+%naturalvar MT::Array<Type>;
 // Calls the transform template with the right numpy type etc.
 %fragment("asMTArray"{Type}, "header", fragment="ArrayTransform", fragment="getNP_TYPE"{Type}) {
   void asMTArray(MT::Array<Type>& result, PyObject *nparray) {
@@ -130,6 +132,7 @@ import_array();
     long dims[3] = { in.d0, in.d1, in.d2 };
     PyArrayObject *a = (PyArrayObject*) PyArray_SimpleNew(in.nd, dims, numpy_type_##Type());
     memcpy(PyArray_DATA(a), in.p, in.N*sizeof(Type));
+    /*a->data = reinterpret_cast<char*>(in.p);*/
     return PyArray_Return(a);
   }
 }
@@ -165,6 +168,7 @@ import_array();
 // BEWARE: if you define a array of typemapped types you won't get what you
 // expect. (But you will get a list of not typemapped SWIG_Objects.)
 
+
 %fragment("asMTArrayList", "header") {
   template<class T>
   int asMTArrayList(MT::Array<T>& list, PyObject* pylist, swig_type_info* swigtype) {
@@ -187,9 +191,9 @@ import_array();
 //===========================================================================
 // The macro to generate typemaps for new lists
 //===========================================================================
-
 %define %List_Typemap(Type)
 
+%naturalvar MT::Array<Type*>;
 //===========================================================================
 // The actual typemaps for value, reference and pointer arguments
 //===========================================================================
@@ -197,16 +201,16 @@ import_array();
 // get some kind of recursive typemaps. It would be much nicer, to put it in a
 // fragment or so, but SWIG doesn't provide that functionality.
 
-%typemap(in, fragment="asMTArrayList") MT::Array<Type> {
+%typemap(in, fragment="asMTArrayList") MT::Array<Type*> {
   if(PyList_Check($input)) {
     $1.resize(PyList_Size($input));
     for(uint i=0; i<PyList_Size($input); ++i) {
-      Type tm;
+      Type *tm;
       PyObject *iter = PyList_GetItem($input, i);
       {
-        Type $1;
+        Type *$1;
         PyObject *$input = iter;
-        $typemap(in, Type)
+        $typemap(in, Type*)
         tm = $1;
       }
       $1(i) = tm;
@@ -219,16 +223,16 @@ import_array();
   }
 }
 
-%typemap(in, fragment="asMTArrayList") MT::Array<Type> & {
+%typemap(in, fragment="asMTArrayList") MT::Array<Type*> & {
   if(PyList_Check($input)) {
     $1->resize(PyList_Size($input));
     for(uint i=0; i<PyList_Size($input); ++i) {
-      Type tm;
+      Type *tm;
       PyObject *iter = PyList_GetItem($input, i);
       {
-        Type $1;
+        Type *$1;
         PyObject *$input = iter;
-        $typemap(in, Type)
+        $typemap(in, Type*)
         tm = $1;
       }
       (*$1)(i) = tm;
@@ -246,46 +250,52 @@ import_array();
 // Output
 //===========================================================================
 
-%typemap(out) MT::Array<Type> {
+%typemap(out) MT::Array<Type*> {
   $result = PyList_New($1.N);
   for(uint i=0; i<$1.N; ++i) {
     PyObject *obj = NULL;
-    Type *iter = &($1(i));
+    Type **iter = &($1(i));
     {
-      Type $1 = *iter;
+      Type *$1 = *iter;
       PyObject *$result = NULL;
-      $typemap(out, Type)
+
+      // this sets result.
+      $typemap(out, Type*)
+
       obj = $result; 
     }
     PyList_SetItem($result, i, obj);
   }
 }
 
-%typemap(out) MT::Array<Type> & {
+%typemap(out) MT::Array<Type*> & {
   $result = PyList_New($1->N);
   for(uint i=0; i<$1->N; ++i) {
     PyObject *obj = NULL;
-    Type *iter = &((*$1)(i));
+    Type **iter = &((*$1)(i));
     {
-      Type $1 = *iter;
+      Type *$1 = *iter;
       PyObject *$result = NULL;
-      $typemap(out, Type)
+      
+      // this sets result.
+      $typemap(out, Type*)
+
       obj = $result; 
     }
     PyList_SetItem($result, i, obj);
   }
 }
 
-%typemap(argout) MT::Array<Type> & {
+%typemap(argout) MT::Array<Type*> & {
   PyObject *argout = PyList_New($1->N);
   for(uint i=0; i<$1->N; ++i) {
     PyObject *obj = NULL;
-    Type *iter = &((*$1)(i));
+    Type **iter = &((*$1)(i));
     {
-      Type $1 = *iter;
+      Type *$1 = *iter;
       int $owner = 1; // this is hacky
       PyObject *$result = NULL;
-      $typemap(out, Type)
+      $typemap(out, Type*)
       obj = $result; 
     }
     PyList_SetItem($result, i, obj);
@@ -293,13 +303,13 @@ import_array();
   %append_output(argout);
 }
 
-%typemap(argout) const MT::Array<Type> & { }
+%typemap(argout) const MT::Array<Type*> & { }
 
 //===========================================================================
 // Garbage collection
 //===========================================================================
 
-%typemap(freearg) MT::Array<Type> & {
+%typemap(freearg) MT::Array<Type*> & {
   delete $1;
 }
 
@@ -307,12 +317,12 @@ import_array();
 // members
 //===========================================================================
 
-%typemap(memberin) MT::Array<Type> {
-  $1 = $input;  
+%typemap(memberin) MT::Array<Type*> {
+  $1 = *$input;  
 }
 
-%typemap(memberin) MT::Array<Type> & {
-  $1 = new MT::Array<Type>;
+%typemap(memberin) MT::Array<Type*> & {
+  $1 = new MT::Array<Type*>;
   *$1 = *$input;  
 }
 
@@ -320,18 +330,18 @@ import_array();
 // Typechecking for overload magic 
 //===========================================================================
 
-%typemap(typecheck) MT::Array<Type> {
+%typemap(typecheck) MT::Array<Type*> {
   if (PyList_Check($input)) {
-    Type obj;
-    int res = SWIG_ConvertPtr(PyList_GetItem($input, 0), (void**) &obj, $descriptor(Type), 0);
+    Type *obj;
+    int res = SWIG_ConvertPtr(PyList_GetItem($input, 0), (void**) &obj, $descriptor(Type*), 0);
     if (SWIG_IsOK(res)) $1 = 1;
     else $1 = 0;
   }
   else $1 = 0;
 }
 
-%typemap(typecheck) MT::Array<Type> & = MT::Array<Type>;
+%typemap(typecheck) MT::Array<Type*> & = MT::Array<Type*>;
 
-%apply MT::Array<Type> & { MT::Array<Type> * }
+%apply MT::Array<Type*> & { MT::Array<Type*> * }
 
 %enddef

@@ -30,22 +30,26 @@ class SWIFT_Scene;
 
 /// contains all information necessary to communicate with swift
 struct SwiftInterface {
+  ors::KinematicWorld& world;
   SWIFT_Scene *scene;
-  bool isOpen;
   intA INDEXswift2shape, INDEXshape2swift;
   double cutoff;
-  SwiftInterface() { scene=NULL; cutoff=.1; isOpen=false; }
+
+  SwiftInterface(ors::KinematicWorld& _world);
   ~SwiftInterface();
-  SwiftInterface* newClone(const ors::KinematicWorld& G) const;
 
   void setCutoff(double _cutoff){ cutoff=_cutoff; }
-  void init(const ors::KinematicWorld& ors, double _cutoff=.1);
-  void reinitShape(const ors::KinematicWorld& ors, const ors::Shape *s);
-  void close();
+
+  void step(bool dumpReport=false);
+  void pushToSwift();
+  void pullFromSwift(bool dumpReport);
+
+  void reinitShape(const ors::Shape *s);
+//  void close();
   void deactivate(ors::Shape *s1, ors::Shape *s2);
   void deactivate(const MT::Array<ors::Shape*>& shapes);
   void deactivate(const MT::Array<ors::Body*>& bodies);
-  void initActivations(const ors::KinematicWorld& ors, uint parentLevelsToDeactivate=3);
-  void computeProxies(ors::KinematicWorld& ors, bool dumpReport=false);
+  void initActivations(uint parentLevelsToDeactivate=3);
+  void swiftQueryExactDistance();
 };
 /** @} */

@@ -66,8 +66,9 @@ static PxSimulationFilterShader gDefaultFilterShader=PxDefaultSimulationFilterSh
  * @param physx the PhyxXInteface which handles the ors graph.
  */
 void bindOrsToPhysX(ors::KinematicWorld& graph, OpenGL& gl, PhysXInterface& physx) {
-  physx.create(graph);
+//  physx.create(graph);
   
+  HALT("I don't understand this: why do you need a 2nd opengl window? (This is only for sanity check in the example.)")
   gl.add(glStandardScene, NULL);
   gl.add(glPhysXInterface, &physx);
   gl.setClearColors(1., 1., 1., 1.);
@@ -97,12 +98,10 @@ PxTransform OrsTrans2PxTrans(const ors::Transformation& f) {
 // ============================================================================
 
 struct sPhysXInterface {
-  ors::KinematicWorld *G;
   PxScene* gScene;
   MT::Array<PxRigidActor*> actors;
   
-  sPhysXInterface():G(NULL), gScene(NULL) {
-  }
+  sPhysXInterface():gScene(NULL) {}
 
   void addBody(ors::Body *b, physx::PxMaterial *material);
   void addJoint(ors::Joint *jj);
@@ -110,8 +109,69 @@ struct sPhysXInterface {
 
 // ============================================================================
 
-PhysXInterface::PhysXInterface(): s(NULL) {
+PhysXInterface::PhysXInterface(ors::KinematicWorld& _world): world(_world), s(NULL) {
   s = new sPhysXInterface;
+
+  if(!mFoundation) {
+    mFoundation = PxCreateFoundation(PX_PHYSICS_VERSION, gDefaultAllocatorCallback, gDefaultErrorCallback);
+    mPhysics = PxCreatePhysics(PX_PHYSICS_VERSION, *mFoundation, PxTolerancesScale());
+    PxCookingParams cookParams;
+    cookParams.skinWidth = .001f;
+    mCooking = PxCreateCooking(PX_PHYSICS_VERSION, *mFoundation, cookParams);
+    if(!mCooking) HALT("PxCreateCooking failed!");
+    if(!mPhysics) HALT("Error creating PhysX3 device.");
+
+    if(!PxInitExtensions(*mPhysics))
+      HALT("PxInitExtensions failed!");
+  }
+
+  //PxExtensionVisualDebugger::connect(mPhysics->getPvdConnectionManager(),"localhost",5425, 10000, true);
+
+  //-- Create the scene
+  PxSceneDesc sceneDesc(mPhysics->getTolerancesScale());
+  sceneDesc.gravity = PxVec3(0.f, 0.f, -9.8f);
+
+  if(!sceneDesc.cpuDispatcher) {
+    PxDefaultCpuDispatcher* mCpuDispatcher = PxDefaultCpuDispatcherCreate(1);
+    if(!mCpuDispatcher) {
+      cerr << "PxDefaultCpuDispatcherCreate failed!" << endl;
+    }
+    sceneDesc.cpuDispatcher = mCpuDispatcher;
+  }
+  if(!sceneDesc.filterShader) {
+    sceneDesc.filterShader  = gDefaultFilterShader;
+  }
+
+  s->gScene = mPhysics->createScene(sceneDesc);
+  if(!s->gScene) {
+    cerr << "createScene failed!" << endl;
+  }
+
+  s->gScene->setVisualizationParameter(PxVisualizationParameter::eSCALE, 1.0);
+  s->gScene->setVisualizationParameter(PxVisualizationParameter::eCOLLISION_SHAPES, 1.0f);
+
+  //-- Create objects
+  PxMaterial* mMaterial = mPhysics->createMaterial(1.f, 1.f, 0.5f);
+
+  //Create ground plane
+  //PxReal d = 0.0f;
+  PxTransform pose = PxTransform(PxVec3(0.f, 0.f, 0.f), PxQuat(-PxHalfPi, PxVec3(0.0f, 1.0f, 0.0f)));
+
+  PxRigidStatic* plane = mPhysics->createRigidStatic(pose);
+  CHECK(plane, "create plane failed!");
+
+  PxShape* planeShape = plane->createShape(PxPlaneGeometry(), *mMaterial);
+  CHECK(planeShape, "create shape failed!");
+  s->gScene->addActor(*plane);
+  // create ORS equivalent in PhysX
+  // loop through ors
+  uint i;
+  ors::Body* b;
+  for_list(i, b, world.bodies) s->addBody(b, mMaterial);
+
+  /// ADD joints here!
+  ors::Joint* jj;
+  for_list(i, jj, world.joints) s->addJoint(jj);
 }
 
 PhysXInterface::~PhysXInterface() {
@@ -122,7 +182,7 @@ void PhysXInterface::step(double tau) {
   //-- push positions of all kinematic objects
   uint i;
   ors::Body *b;
-  for_list(i,b,s->G->bodies) if(b->type==ors::kinematicBT) {
+  for_list(i,b,world.bodies) if(b->type==ors::kinematicBT) {
     ((PxRigidDynamic*)s->actors(i))->setKinematicTarget(OrsTrans2PxTrans(b->X));
   }
   
@@ -134,16 +194,22 @@ void PhysXInterface::step(double tau) {
   }
   
   //-- pull state of all objects
-  pullState();
+  pullFromPhysx();
   
 }
 
-void PhysXInterface::setArticulatedBodiesKinematic(ors::KinematicWorld& G, int agent){
-  for(ors::Joint* j:G.joints){
+void PhysXInterface::setArticulatedBodiesKinematic(int agent){
+  for(ors::Joint* j:world.joints){
     if(j->agent==agent){
       if(j->from->type==ors::dynamicBT) j->from->type=ors::kinematicBT;
       if(j->to->type==ors::dynamicBT) j->to->type=ors::kinematicBT;
     }
+  }
+  for(ors::Body *b: world.bodies) {
+    if(b->type==ors::kinematicBT)
+      ((PxRigidDynamic*)s->actors(b->index))->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
+    if(b->type==ors::dynamicBT)
+      ((PxRigidDynamic*)s->actors(b->index))->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, false);
   }
 }
 
@@ -153,70 +219,6 @@ void PhysXInterface::setArticulatedBodiesKinematic(ors::KinematicWorld& G, int a
  * - setup some physx stuff
  * - create PhysX equivalent to the ors graph
  */
-void PhysXInterface::create(ors::KinematicWorld& G) {
-  CHECK(!s->G,"can create an interface only once");
-  s->G = &G;
-  if(!mFoundation) {
-    mFoundation = PxCreateFoundation(PX_PHYSICS_VERSION, gDefaultAllocatorCallback, gDefaultErrorCallback);
-    mPhysics = PxCreatePhysics(PX_PHYSICS_VERSION, *mFoundation, PxTolerancesScale());
-    PxCookingParams cookParams;
-    cookParams.skinWidth = .001f;
-    mCooking = PxCreateCooking(PX_PHYSICS_VERSION, *mFoundation, cookParams);
-    if(!mCooking) HALT("PxCreateCooking failed!");
-    if(!mPhysics) HALT("Error creating PhysX3 device.");
-    
-    if(!PxInitExtensions(*mPhysics))
-      HALT("PxInitExtensions failed!");
-  }
-  
-  //PxExtensionVisualDebugger::connect(mPhysics->getPvdConnectionManager(),"localhost",5425, 10000, true);
-  
-  //-- Create the scene
-  PxSceneDesc sceneDesc(mPhysics->getTolerancesScale());
-  sceneDesc.gravity = PxVec3(0.f, 0.f, -9.8f);
-  
-  if(!sceneDesc.cpuDispatcher) {
-    PxDefaultCpuDispatcher* mCpuDispatcher = PxDefaultCpuDispatcherCreate(1);
-    if(!mCpuDispatcher) {
-      cerr << "PxDefaultCpuDispatcherCreate failed!" << endl;
-    }
-    sceneDesc.cpuDispatcher = mCpuDispatcher;
-  }
-  if(!sceneDesc.filterShader) {
-    sceneDesc.filterShader  = gDefaultFilterShader;
-  }
-  
-  s->gScene = mPhysics->createScene(sceneDesc);
-  if(!s->gScene) {
-    cerr << "createScene failed!" << endl;
-  }
-  
-  s->gScene->setVisualizationParameter(PxVisualizationParameter::eSCALE, 1.0);
-  s->gScene->setVisualizationParameter(PxVisualizationParameter::eCOLLISION_SHAPES, 1.0f);
-  
-  //-- Create objects
-  PxMaterial* mMaterial = mPhysics->createMaterial(1.f, 1.f, 0.5f);
-  
-  //Create ground plane
-  //PxReal d = 0.0f;
-  PxTransform pose = PxTransform(PxVec3(0.f, 0.f, 0.f), PxQuat(-PxHalfPi, PxVec3(0.0f, 1.0f, 0.0f)));
-  
-  PxRigidStatic* plane = mPhysics->createRigidStatic(pose);
-  CHECK(plane, "create plane failed!");
-  
-  PxShape* planeShape = plane->createShape(PxPlaneGeometry(), *mMaterial);
-  CHECK(planeShape, "create shape failed!");
-  s->gScene->addActor(*plane);
-  // create ORS equivalent in PhysX
-  // loop through ors
-  uint i;
-  ors::Body* b;
-  for_list(i, b, G.bodies) s->addBody(b, mMaterial);
-  
-  /// ADD joints here!
-  ors::Joint* jj;
-  for_list(i, jj, G.joints) s->addJoint(jj);
-}
 
 void sPhysXInterface::addJoint(ors::Joint *jj) {
   PxTransform A = OrsTrans2PxTrans(jj->A);
@@ -341,25 +343,21 @@ void sPhysXInterface::addBody(ors::Body *b, physx::PxMaterial *mMaterial) {
   //WARNING: actors must be aligned (indexed) exactly as G->bodies
 }
 
-void PhysXInterface::pullState() {
-  for_index(i, s->actors) PxTrans2OrsTrans(s->G->bodies(i)->X, s->actors(i)->getGlobalPose());
-  s->G->calcShapeFramesFromBodies();
-  s->G->calcJointsFromBodyFrames();
+void PhysXInterface::pullFromPhysx() {
+  for_index(i, s->actors) PxTrans2OrsTrans(world.bodies(i)->X, s->actors(i)->getGlobalPose());
+  world.calcShapeFramesFromBodies();
+  world.calcJointsFromBodyFrames();
 }
 
-void PhysXInterface::pushState() {
+void PhysXInterface::pushToPhysx() {
   PxMaterial* mMaterial = mPhysics->createMaterial(1.f, 1.f, 0.5f);
-  for_index(i, s->G->bodies) {
+  for_index(i, world.bodies) {
     if(s->actors.N > i) {
-      s->actors(i)->setGlobalPose(OrsTrans2PxTrans(s->G->bodies(i)->X));
+      s->actors(i)->setGlobalPose(OrsTrans2PxTrans(world.bodies(i)->X));
     } else {
-      s->addBody(s->G->bodies(i), mMaterial);
+      s->addBody(world.bodies(i), mMaterial);
     }
   }
-}
-
-bool PhysXInterface::isCreated(){
-  return s->G!=NULL;
 }
 
 void PhysXInterface::ShutdownPhysX() {
@@ -429,7 +427,7 @@ void DrawActor(PxRigidActor* actor, ors::Body *body) {
 }
 
 void PhysXInterface::glDraw() {
-  for_index(i, s->actors)  DrawActor(s->actors(i), s->G->bodies(i));
+  for_index(i, s->actors)  DrawActor(s->actors(i), world.bodies(i));
 }
 
 void glPhysXInterface(void *classP) {
@@ -550,7 +548,7 @@ void PhysXInterface::create() { NICO }
 void PhysXInterface::step(double tau) { NICO }
 void PhysXInterface::glDraw() { NICO }
 void PhysXInterface::syncWithOrs() { NICO }
-void PhysXInterface::pullState() { NICO }
+void PhysXInterface::pullFromPhysx() { NICO }
 void PhysXInterface::ShutdownPhysX() { NICO }
 void glPhysXInterface(void *classP) { NICO }
 void bindOrsToPhysX(ors::KinematicWorld& graph, OpenGL& gl, PhysXInterface& physx) { NICO }

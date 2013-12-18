@@ -239,13 +239,13 @@ void ors::KinematicWorld::glDraw() {
   glPopMatrix();
 }
 
-void displayState(const arr& x, ors::KinematicWorld& G, OpenGL& gl, const char *tag){
+void displayState(const arr& x, ors::KinematicWorld& G, const char *tag){
   G.setJointState(x);
   G.calcBodyFramesFromJoints();
-  gl.watch(tag);
+  G.gl().watch(tag);
 }
 
-void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, OpenGL& gl, const char *tag, double delay) {
+void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, const char *tag, double delay) {
   uint k, t, T=x.d0-1;
   if(!steps) return;
   uint num;
@@ -254,11 +254,11 @@ void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, OpenGL& 
     t = k*T/num;
     G.setJointState(x[t]);
     G.calcBodyFramesFromJoints();
-    gl.update(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
+    G.gl().update(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
     if(delay) MT::wait(delay);
   }
   if(steps==1)
-    gl.watch(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
+    G.gl().watch(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
 }
 
 /* please don't remove yet: code for displaying edges might be useful...
@@ -396,20 +396,20 @@ void _glDrawOdeWorld(dWorldID world)
 }
 */
 
-void animateConfiguration(ors::KinematicWorld& C, OpenGL& gl) {
+void animateConfiguration(ors::KinematicWorld& C) {
   arr x, x0;
   uint t, i;
   C.calcBodyFramesFromJoints();
   C.getJointState(x0);
-  gl.pressedkey=0;
+  C.gl().pressedkey=0;
   for(i=x0.N; i--;) {
     x=x0;
     for(t=0; t<20; t++) {
-      if(gl.pressedkey==13 || gl.pressedkey==27) return;
+      if(C.gl().pressedkey==13 || C.gl().pressedkey==27) return;
       x(i)=x0(i) + .5*sin(MT_2PI*t/20);
       C.setJointState(x);
       C.calcBodyFramesFromJoints();
-      gl.update();
+      C.gl().update();
       MT::wait(0.01);
     }
   }
@@ -526,11 +526,11 @@ struct EditConfigurationKeyCall:OpenGL::GLKeyCall {
   }
 };
 
-void editConfiguration(const char* filename, ors::KinematicWorld& C, OpenGL& gl) {
+void editConfiguration(const char* filename, ors::KinematicWorld& C) {
 //  gl.exitkeys="1234567890qhjklias, "; //TODO: move the key handling to the keyCall!
   bool exit=false;
-  gl.addHoverCall(new EditConfigurationHoverCall(C));
-  gl.addKeyCall(new EditConfigurationKeyCall(C,exit));
+  C.gl().addHoverCall(new EditConfigurationHoverCall(C));
+  C.gl().addKeyCall(new EditConfigurationKeyCall(C,exit));
   for(;!exit;) {
     cout <<"reloading `" <<filename <<"' ... " <<std::endl;
     try {
@@ -538,20 +538,20 @@ void editConfiguration(const char* filename, ors::KinematicWorld& C, OpenGL& gl)
       C.init(filename);
     } catch(const char* msg) {
       cout <<"line " <<MT::lineCount <<": " <<msg <<" -- please check the file and press ENTER" <<endl;
-      gl.watch();
+      C.gl().watch();
       continue;
     }
     cout <<"animating.." <<endl;
-    animateConfiguration(C, gl);
+    animateConfiguration(C);
     cout <<"watching..." <<endl;
-    gl.watch();
+    C.gl().watch();
   }
 }
 
 
 #if 0 //MT_ODE
-void testSim(const char* filename, ors::KinematicWorld *C, Ode *ode, OpenGL *gl) {
-  gl.watch();
+void testSim(const char* filename, ors::KinematicWorld *C, Ode *ode) {
+  C.gl().watch();
   uint t, T=200;
   arr x, v;
   createOde(*C, *ode);
@@ -564,8 +564,8 @@ void testSim(const char* filename, ors::KinematicWorld *C, Ode *ode, OpenGL *gl)
     ors->calcBodyFramesFromJoints();
     exportStateToOde(*C, *ode);
     
-    gl.text.clear() <<"time " <<t;
-    gl.timedupdate(10);
+    C.gl().text.clear() <<"time " <<t;
+    C.gl().timedupdate(10);
   }
 }
 #endif

@@ -33,21 +33,21 @@ namespace physx {
  * @{
  */
 struct PhysXInterface {
+  ors::KinematicWorld& world;
   struct sPhysXInterface *s;
   
-  PhysXInterface();
+  PhysXInterface(ors::KinematicWorld& _world);
   ~PhysXInterface();
   
-  void create(ors::KinematicWorld& G);
   void step(double tau=1./60.);
-  void glDraw();
   
-  void pushState();
-  void pullState();
+  void pushToPhysx();
+  void pullFromPhysx();
 
-  bool isCreated();
-  void setArticulatedBodiesKinematic(ors::KinematicWorld& G, int agent=0);
+  void setArticulatedBodiesKinematic(int agent=0);
   void ShutdownPhysX();
+
+  void glDraw();
 };
 
 void glPhysXInterface(void *classP);

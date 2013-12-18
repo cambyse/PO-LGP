@@ -21,6 +21,7 @@
 #include <Ors/ors.h>
 #include <Ors/ors_swift.h>
 #include <Ors/ors_physx.h>
+#include <Ors/ors_ode.h>
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
 #include <Algo/algos.h>
@@ -35,7 +36,7 @@ struct sSimulator {
   bool gravity;
   
   //state
-  arr q,qdot,qddot;
+  arr qddot;
 
   sSimulator(){ margin=.1; dynamicNoise=0.; gravity=true; } //default margin = 10cm
 };
@@ -44,17 +45,19 @@ void Simulator::anchorKinematicChainIn(const char* bodyName){
   s->G.reconfigureRoot(s->G.getBodyByName(bodyName));
   s->G.calcBodyFramesFromJoints();
   
-  if(s->G.swift().isOpen){
-    s->G.swift().close();
-    s->G.swift().init(s->G, .5);
-  }
+  NIY;
+//  if(s->G.swift().isOpen){
+//    s->G.swift().close();
+//    s->G.swift().init(s->G);
+//    s->G.swift().setCutoff(.5);
+//  }
   
-#ifdef MT_ODE
-  if(s->ode.isOpen){
-    s->ode.clear();
-    s->ode.createOde(s->G);
-  }
-#endif
+//#ifdef MT_ODE
+//  if(s->ode.isOpen){
+//    s->ode.clear();
+//    s->ode.createOde(s->G);
+//  }
+//#endif
 }
 
 
@@ -80,12 +83,8 @@ Simulator::Simulator(const char* orsFile){
   
   //ODE
 #ifdef MT_ODE
-  s->ode.createOde(s->G);
+  s->G.ode();
 #endif
-
-  s->G.getJointState(s->q, s->qdot);
-
-//  n=s->G.getJointStateDimension();
 }
 
 Simulator::~Simulator(){
@@ -99,11 +98,12 @@ void Simulator::watch(bool pause, const char* txt){
 }
 
 void Simulator::getJointAngles(arr& q){
-  s->G.getJointState(q);
+  q = s->G.q;
 }
 
 void Simulator::getJointAnglesAndVels(arr& q, arr& qdot){
-  s->G.getJointState(q, qdot);
+  q = s->G.q;
+  qdot = s->G.qdot;
 }
 
 
@@ -114,19 +114,15 @@ uint Simulator::getJointDimension(){
 void Simulator::setJointAngles(const arr& q, bool updateDisplay){
   s->G.setJointState(q);
   s->G.calcBodyFramesFromJoints();
-  s->G.swift().computeProxies(s->G, false);
-  if(updateDisplay) s->G.gl().update();
-  if(&q!=&s->q) s->q = q;
-  s->qdot.setZero();
+  s->G.computeProxies();
+  if(updateDisplay) s->G.watch(false);
 }
 
 void Simulator::setJointAnglesAndVels(const arr& q, const arr& qdot, bool updateDisplay){
   s->G.setJointState(q, qdot);
   s->G.calcBodyFramesFromJoints();
-  s->G.swift().computeProxies(s->G, false);
-  if(updateDisplay) s->G.gl().update();
-  if(&q!=&s->q) s->q = q;
-  if(&qdot!=&s->qdot) s->qdot = qdot;
+  s->G.computeProxies();
+  if(updateDisplay) s->G.watch(false);
 }
 
 void Simulator::kinematicsPos(arr& y, const char* shapeName, const arr* rel){
@@ -192,53 +188,11 @@ void Simulator::jacobianContacts(arr& J){
   s->G.kinematicsProxyCost(y, J, s->margin);
 }
 
-void Simulator::getDynamics(arr& M, arr& F){
-  s->G.clearForces();
-  if(s->gravity) s->G.gravityToForces();
-  s->G.equationOfMotion(M, F, s->qdot);
-  F *= -1.; //different convention!!
-}
-
 double Simulator::getEnergy(){
   return s->G.getEnergy();
 }
 
 
-void Simulator::stepDynamic(const arr& u_control, double tau){
-
-  struct DiffEqn:VectorFunction{
-    Simulator &S;
-    const arr& u;
-    DiffEqn(Simulator& _S, const arr& _u):S(_S),u(_u){}
-    void fv(arr& y, arr& J, const arr& x){
-      S.s->G.setJointState(x[0], x[1]);
-      S.s->G.calcBodyFramesFromJoints();
-//      S.setJointAnglesAndVels(x[0], x[1]);
-      arr M,Minv,F;
-      S.getDynamics(M, F);
-      inverse_SymPosDef(Minv,M);
-      y = Minv * (u - F);
-    }
-  } eqn(*this, u_control);
-
-#if 0
-  arr M,Minv,F;
-  getDynamics(M, F);
-  inverse_SymPosDef(Minv,M);
-
-  //noisy Euler integration (Runge-Kutte4 would be much more precise...)
-  s->qddot = Minv * (u_control - F);
-  if(s->dynamicNoise) rndGauss(s->qddot, s->dynamicNoise, true);
-  s->q    += tau * s->qdot;
-  s->qdot += tau * s->qddot;
-  arr x1=cat(s->q, s->qdot).reshape(2,s->q.N);
-#else
-  arr x1;
-  rk4_2ndOrder(x1, cat(s->q, s->qdot).reshape(2,s->q.N), eqn, tau);
-#endif
-
-  setJointAnglesAndVels(x1[0], x1[1]);
-}
   
 void Simulator::setDynamicSimulationNoise(double noise){
   s->dynamicNoise = noise;
@@ -250,9 +204,9 @@ void Simulator::setDynamicGravity(bool gravity){
 
 void Simulator::stepOde(const arr& qdot, double tau){
 #ifdef MT_ODE
-  s->ode.setMotorVel(s->G, qdot, 100.);
-  s->ode.step(tau);
-  s->ode.importStateFromOde(s->G);
+  s->G.ode().setMotorVel(qdot, 100.);
+  s->G.ode().step(tau);
+  s->G.ode().importStateFromOde();
 #endif
 }
 

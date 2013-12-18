@@ -1,25 +1,28 @@
-#include <Ors/roboticsCourse.h>
+#include <Ors/ors.h>
 #include <Motion/feedbackControl.h>
 
 void reach(){
-  Simulator S("man.ors");
-  arr q,qdot;
-  S.getJointAnglesAndVels(q, qdot);
+  ors::KinematicWorld world("man.ors");
+  arr q, qdot;
+  world.getJointState(q, qdot);
 
-  FeedbackMotionControl MP(&S.getOrsGraph(), false);
-  MP.addPDTask("endeff1", .1, .8, posTMT, "handR", NoVector, "rightTarget");
+  FeedbackMotionControl MP(world, false);
+  PDtask *x = MP.addPDTask("endeff1", .1, .8, posTMT, "handR", NoVector, "rightTarget");
   MP.addPDTask("endeff2", .1, .8, posTMT, "handL", NoVector, "leftTarget");
 
   double tau=0.01;
   for(uint i=0;i<1000;i++){
+    x->v_ref = ARR(1.,1.,1.);
     MP.setState(q, qdot);
-    S.stepPhysx(qdot, tau);
+    world.stepPhysx(tau);
 
-    arr a = MP.operationalSpaceControl();
-    q += tau*qdot;
-    qdot += tau*a;
+    for(uint tt=0;tt<10;tt++){
+      arr a = MP.operationalSpaceControl();
+      q += .1*tau*qdot;
+      qdot += .1*tau*a;
+    }
 
-    S.watch(false, STRING(i));
+    world.watch(false, STRING(i));
   }
 }
 

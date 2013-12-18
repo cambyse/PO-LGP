@@ -10,9 +10,9 @@ void testGraspHeuristic(){
   //setup the problem
   ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
   makeConvexHulls(G.shapes);
-  G.gl().watch();
+  G.watch(true);
 
-  MotionProblem MP(&G);
+  MotionProblem MP(G);
   MP.loadTransitionParameters();
   MP.H_rate_diag = pr2_reasonable_W();
   cout <<MP.x0 <<endl;
@@ -32,9 +32,9 @@ void testGraspHeuristic(){
     MP.costReport();
     gnuplot("load 'z.costReport.plt'", false, true);
 
-    displayTrajectory(x, 1, G, G.gl(),"planned trajectory");
-    displayTrajectory(x, 1, G, G.gl(),"planned trajectory");
-    displayTrajectory(x, 1, G, G.gl(),"planned trajectory");
+    displayTrajectory(x, 1, G, "planned trajectory");
+    displayTrajectory(x, 1, G, "planned trajectory");
+    displayTrajectory(x, 1, G, "planned trajectory");
 
     MT::save(G,"z.ors");
 
@@ -46,8 +46,8 @@ void testGraspHeuristic(){
     s->size[3] = rnd.uni(.02,.07);
     s->mesh.clear();
 
-    MP.setx0(MP.x_current);
-    G.gl().watch();
+    MP.setx0(MP.world.q);
+    G.watch(true);
   }
   
 }
