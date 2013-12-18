@@ -6,7 +6,7 @@ body arm3 { type=2 size=[0.1 0.1 .4 .1] contact, }
 body arm4 { type=2 size=[0.1 0.1 .4 .1] contact, }
 body arm5 { type=2 size=[0.1 0.1 .4 .1] contact, }
 body arm6 { type=2 size=[0.1 0.1 .4 .1] contact, }
-body endeff { type=2 size=[0 0 0 .03] contact, }
+body endeff { type=2 size=[0 0 0 .001] contact, }
 
 joint (stem arm1) { A=<T t(0 0 1) d(90 1 0 0)> B=<T t(0 0 .2)>  Q=<T d(1 0 0 0)> }
 joint (arm1 arm2) { A=<T t(0 0 0.2) d(45 0 0 1)> B=<T t(0 0 .2)>  Q=<T d(1 0 0 0)> }
@@ -16,4 +16,6 @@ joint (arm4 arm5) { A=<T t(0 0 0.2) d(45 0 0 1)> B=<T t(0 0 .2)>  Q=<T d(1 0 0 0
 joint (arm5 arm6) { A=<T t(0 0 0.2) d(45 0 0 1)> B=<T t(0 0 .2)>  Q=<T d(1 0 0 0)> }
 joint (arm6 endeff) { A=<T t(0 0 0.2) d(45 0 0 1)> B=<T t(0 0 .2)>  Q=<T d(1 0 0 0)> }
 
-body goalRef  { type=1 size=[0 0 0 .03] X=<T t( 0 -2.3 2.3)> color=[1 0 0] fixed }
+#body col  { type=1 size=[0 0 0 0.15] X=<T t( 0.6 -1.6 1.3)> color=[1 0 0] fixed contact }
+body goalRef  { type=1 size=[0 0 0 .03] X=<T t( 0.8 -1.3 1.3)> color=[1 0 0] fixed }
+body goal  { type=1 size=[0 0 0 .03] X=<T t( 0.8 -1.3 1.4)> color=[0 1 0] fixed }

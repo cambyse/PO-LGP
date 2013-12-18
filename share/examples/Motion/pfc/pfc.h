@@ -13,7 +13,7 @@
 
 struct Pfc{
 
-    Pfc(ors::KinematicWorld &_orsG, arr& _trajRef, double _TRef, arr &_x0, arr &_q0, MObject &_goalMO, \
+    Pfc(ors::KinematicWorld &_world, arr& _trajRef, double _TRef, arr &_x0, arr &_q0, MObject &_goalMO, \
         bool _useOrientation, bool _useCollAvoid, \
         double _fPos_deviation, double _fVec_deviation, double _yCol_deviation, double _w_reg);
     void printState();
@@ -38,7 +38,7 @@ struct Pfc{
     bool useCollAvoid;
 
     MObject *goalMO;
-    ors::KinematicWorld *orsG;
+    ors::KinematicWorld *world;
 
     // Actual Trajectory
     arr traj;
