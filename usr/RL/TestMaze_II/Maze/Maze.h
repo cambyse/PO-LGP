@@ -52,7 +52,7 @@ public:
     void perform_transition(const action_ptr_t& a, std::vector<std::pair<int,int> > * reward_vector);
 
     /** \brief Returns the transition probability. */
-    probability_t get_prediction(const instance_t*, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&) const;
+    probability_t get_prediction(const instance_t*, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&) const override;
 
     /** \brief Returns the transition probability and which rewards were active.
      *
@@ -74,13 +74,13 @@ public:
     void set_current_observation(const observation_ptr_t&);
 
     /** \brief Get a string describing all rewards. */
-    static std::string get_rewards();
+    std::string get_rewards();
 
     /** \brief Get a string describing all walls. */
-    static std::string get_walls();
+    std::string get_walls();
 
     /** \brief Get a string describing all doors. */
-    static std::string get_doors();
+    std::string get_doors();
 
 private:
 
@@ -178,9 +178,8 @@ private:
 
     /** \brief The current state of the maze including the complete past. */
     instance_t * current_instance;
-
-    double epsilon;                                  ///< Amount of stochasticity in transitions.
     observation_t current_observation;               ///< Current state of the agent in the maze.
+    double epsilon;                                  ///< Amount of stochasticity in transitions.
     QGraphicsSvgItem *agent;                         ///< Svg image for rendering the agent.
     QGraphicsLineItem *action_line;                  ///< Line showing the last action.
     QGraphicsEllipseItem *action_point;              ///< Circle showing the last position for showing the last action.

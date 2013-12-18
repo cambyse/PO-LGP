@@ -9,7 +9,7 @@
 #include "../Maze/Maze.h"
 #include "MinimalEnvironmentExample/MinimalEnvironment.h"
 
-#define DEBUG_LEVEL 2
+#define DEBUG_LEVEL 1
 #include "../debug.h"
 
 using std::vector;
@@ -60,7 +60,7 @@ TEST(EnvironmentTest, Minimal) {
     }
 }
 
-TEST(EnvironmentTest, All) {
+TEST(EnvironmentTest, NormalizationAndTransitions) {
 
     // use standard typedefs
     typedef AbstractAction::ptr_t      action_ptr_t;
@@ -73,7 +73,7 @@ TEST(EnvironmentTest, All) {
     typedef shared_ptr<PredictiveEnvironment> env_ptr_t;
     vector<env_ptr_t> environments;
     environments.push_back(env_ptr_t(new MinimalEnvironment()));
-    environments.push_back(env_ptr_t(new Maze()));
+    environments.push_back(env_ptr_t(new Maze(0.1)));
 
     // test all environments
     for(auto env : environments) {
@@ -109,7 +109,15 @@ TEST(EnvironmentTest, All) {
 
         // perform random transitions
         repeat(100) {
-            env->perform_transition(util::random_select(action_vector));
+            action_ptr_t action = util::random_select(action_vector);
+            observation_ptr_t observation;
+            reward_ptr_t reward;
+            env->perform_transition(action, observation, reward);
+            if(DEBUG_LEVEL>0) {
+                DEBUG_OUT(0,action);
+                DEBUG_OUT(0,"    " << observation);
+                DEBUG_OUT(0,"    " << reward);
+            }
         }
     }
 }
