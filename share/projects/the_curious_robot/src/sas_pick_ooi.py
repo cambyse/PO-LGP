@@ -12,6 +12,7 @@ import rospy
 import the_curious_robot as tcr
 # python std
 import random
+from timer import Timer
 
 
 #########################################################################
@@ -22,7 +23,7 @@ import random
 # `select_ooi` in `PickOOIActionServer` must be set to this method.
 #
 # TODO selecting the strategy should be done via dynamic reconfigure.
-def _random_select_strategy(oois):
+def _strategy_random_select(oois):
     """select a random object of all possibes objects"""
     ooi = random.choice(oois)
     ooi_id_msg = tcr.msg.ObjectID()
@@ -31,10 +32,10 @@ def _random_select_strategy(oois):
     return ooi_id_msg
 
 
-def _door1_select_strategy(oois):
+def _strategy_door1_select(oois):
     """always go for the door1-door"""
     ooi_id_msg = tcr.msg.ObjectID()
-    ooi_id_msg.id = 24
+    ooi_id_msg.id = 4
     return ooi_id_msg
 
 
@@ -62,8 +63,8 @@ class PickOOIActionServer:
         self.server.start()
 
         # Select the exploration strategies
-        #self.select_ooi = _door1_select_strategy
-        self.select_ooi = _random_select_strategy
+        # self.select_ooi = _strategy_random_select
+        self.select_ooi = _strategy_door1_select
 
         self.oois = None
         rp.Provide("PickOOI")
@@ -71,14 +72,19 @@ class PickOOIActionServer:
     def execute(self, msg):
         # We assume that we "see" all shapes from the beginning and the number
         # does not change. Therfore, we only request it once.
-        if self.oois is None:
-            all_shapes_msg = self.request_all_shapes(with_mesh=False)
-            self.oois = [shape.index for shape in all_shapes_msg.shapes]
+
+        with Timer("PICK: initial if", rospy.logwarn):
+            if self.oois is None:
+                all_shapes_msg = self.request_all_shapes(with_mesh=False)
+                self.oois = [shape.index for shape in all_shapes_msg.shapes]
 
         # select an ooi
-        ooi_id_msg = self.select_ooi(self.oois)
+        with Timer("PICK: select ooi", rospy.logwarn):
+            ooi_id_msg = self.select_ooi(self.oois)
 
-        self.ooi_id_pub.publish(ooi_id_msg)
+        with Timer("PICK: publish", rospy.logwarn):
+            self.ooi_id_pub.publish(ooi_id_msg)
+
         self.server.set_succeeded()
 
     def preempt_cb(self):

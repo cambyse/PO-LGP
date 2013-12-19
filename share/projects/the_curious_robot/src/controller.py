@@ -103,10 +103,6 @@ class RRTPlanner():
 
 
 class FakeController():
-
-    """
-    The actual behavior of the robot.
-    """
     def __init__(self):
         # init the node: test_fitting
         rospy.init_node('tcr_controller', log_level=rospy.DEBUG)

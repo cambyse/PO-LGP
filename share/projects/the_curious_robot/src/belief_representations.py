@@ -9,7 +9,9 @@ class ShapeBelief(object):
     """
     ShapeBelief is a container for all beliefs about an shape.
     """
-    def __init__(self):
+    def __init__(self, belief_shape_id):
+        self.belief_shape_id = belief_shape_id
+
         # members / sub beliefs
         self.object_type = ObjectTypeHypo()
         self.joint = None  # JointBelief()
@@ -61,6 +63,10 @@ class ObjectTypeHypo():
 
     def get_entropy(self):
         return ss.beta(self.alpha, self.beta).entropy()
+
+    def is_static(self):
+        """Return True iff the object is static."""
+        return self.alpha >= self.beta
 
     def __str__(self):
         dist = ss.beta(self.alpha, self.beta)
