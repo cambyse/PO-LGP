@@ -76,6 +76,18 @@ add_custom_target(sourceinc ALL
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 
+# set MT definitions depending on which external libs we have
+find_file(SLICE_EXTERN .slicedef.cmake 
+  PATHS ${CMAKE_SOURCE_DIR}/src/extern
+  NO_DEFAULT_PATH)
+if(SLICE_EXTERN)
+include(${SLICE_EXTERN})
+message(STATUS "External libs available: ${CURRENT_SLICE}")
+foreach(DIR ${CURRENT_SLICE})
+add_definitions(-DMT_extern_${DIR})
+endforeach(DIR ${CURRENT_SLICE})
+endif(SLICE_EXTERN)
+
 # select what to compile
 include(.slicedef.cmake)
 
