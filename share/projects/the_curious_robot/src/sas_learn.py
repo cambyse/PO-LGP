@@ -8,21 +8,20 @@ roslib.load_manifest('actionlib')
 import rospy
 from actionlib import SimpleActionServer
 # MLR
-import guipy
 import orspy
 import rosors
 import rosors.parser
 import rosors.srv
-import corepy
+# import corepy
 import the_curious_robot.msg as msgs
 from articulation_msgs.srv import TrackModelSrv, TrackModelSrvRequest
 import util
 import pickle_logger
 import belief_representations as rep
-from belief_representations import ObjectTypeHypo
+from belief_representations import ObjectTypeHypo, JointBelief
 import require_provide as rp
 # python std
-import numpy as np
+# import numpy as np
 
 
 class LearnActionServer:
@@ -137,26 +136,13 @@ class LearnActionServer:
         # Update JointInformation
         if len(self.trajectory) > 1:
             rospy.loginfo("Learning DoF")
-            self.update_dof()
+            self.update_dof(shape_anno)
             # self.update_dynamics()
 
         rospy.loginfo(str(self.belief_annotation))
         self.server.set_succeeded()
 
-    def getShapeById(self, idx):
-        """
-        Return the shape with the given `id`.
-        TODO this should be part of ors.
-        """
-        print "getShapeById(", idx, ")"
-        for shape in self.belief.shapes:
-            print "looking at", shape.index
-            if shape.index == idx:
-                print "found"
-                return shape
-        return None
-
-    def update_dof(self):
+    def update_dof(self, shape_anno):
         request = TrackModelSrvRequest()
         request.model.track = util.create_track_msg(self.trajectory)
 
@@ -164,43 +150,47 @@ class LearnActionServer:
         response = self.dof_learner(request)
         rospy.loginfo(response)
 
-        # useful information
         print response.model.name
-        ll = filter(lambda param: param.name == 'loglikelihood',
-                    response.model.params)[0]
-        print ll.value
 
-        # - rigid: a rigid model, describes a static link (with Gaussian noise)
-        # - prismatic: a prismatic joint model, describes for example a drawer
-        #   or a sliding cabinet door
-        # - rotational: a rotary joint model, describes for example a door or
-        #   a door handle
+        # stop if it's not an rotational or prismatic joint
+        if response.model.name not in ["rotational", "prismatic"]:
+            return
+
+        # make sure we have an JointBelief instance
+        if shape_anno.joint is None:
+            shape_anno.joint = JointBelief()
+
+        # update common stuff
+        loglikelihood = filter(lambda param: param.name == 'loglikelihood',
+                               response.model.params)[0]
+        shape_anno.joint.loglikelihood = loglikelihood
+        # save all parameters in the belief
+        for p in response.model.params:
+            # if p.name.startswith("rot"):
+            shape_anno.joint.values[p.name] = p.value
 
         if response.model.name == "rotational":
+            shape_anno.joint.update(JointBelief.ROTATIONAL)
             # important information
-            # rot_center x y z
-            # rot_axis x y z w
-            # rot_radius
-            # rot_orientation x y z w
-            # ros_mode
+            # - rot_center[3], points to the rotational center of the
+            #   rotational joint
+            # - rot_axis[4], gives the rotational axis of the rotational joint
+            # - rot_radius, gives the radius of the rotational joint
+            # - rot_orientation[4], gives the orientation of the articulated
+            #   object
 
-            # rot_center[3], points to the rotational center of the rotational joint
-            # rot_axis[4], gives the rotational axis of the rotational joint
-            # rot_radius, gives the radius of the rotational joint
-            # rot_orientation[4], gives the orientation of the articulated object
-
-            x = filter(lambda param: param.name == 'rot_center.x',
-                       response.model.params)[0].value
-            y = filter(lambda param: param.name == 'rot_center.y',
-                       response.model.params)[0].value
-            z = filter(lambda param: param.name == 'rot_center.z',
-                       response.model.params)[0].value
-
-            rots = filter(lambda p: p.name.startswith("rot"),
-                          response.model.params)
-            print rots
+            # we might use this later
+            # x = filter(lambda param: param.name == 'rot_center.x',
+            #            response.model.params)[0].value
+            # y = filter(lambda param: param.name == 'rot_center.y',
+            #            response.model.params)[0].value
+            # z = filter(lambda param: param.name == 'rot_center.z',
+            #            response.model.params)[0].value
+            # rots = filter(lambda p: p.name.startswith("rot"),
+            #               response.model.params)
 
         elif response.name == "prismatic":
+            shape_anno.joint.update(JointBelief.PRISMATIC)
             # The parameters of the prismatic model are:
             #
             # rigid_position[3], gives the average position of the articulated
@@ -233,6 +223,19 @@ class LearnActionServer:
         del self.trajectory[:]
         self.trajectory = []
         self.ooi, self.trajectory = util.parse_trajectory_msg(msg)
+
+    def getShapeById(self, idx):
+        """
+        Return the shape with the given `id`.
+        TODO this should be part of ors.
+        """
+        print "getShapeById(", idx, ")"
+        for shape in self.belief.shapes:
+            print "looking at", shape.index
+            if shape.index == idx:
+                print "found"
+                return shape
+        return None
 
 
 def main():
