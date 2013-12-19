@@ -4,7 +4,7 @@
 struct GraspEvaluation{
   struct sGraspEvaluation *s;
   
-  ors::Graph grasp; ///< the isolated grasp with only two bodies: hand and object
+  ors::KinematicWorld grasp; ///< the isolated grasp with only two bodies: hand and object
   OpenGL gl;
   arr contactPoints, contactNormals;
 
@@ -15,7 +15,7 @@ struct GraspEvaluation{
   GraspEvaluation();
   
   
-  void copyGraspFromOrs(const ors::Graph& all,
+  void copyGraspFromOrs(const ors::KinematicWorld& all,
 			const char* palmBodyName,
 			const char* objShapeName);
   

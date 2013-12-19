@@ -119,13 +119,10 @@ void plotTraj(arr &x, double dt) {
 
 void scenario1() {
   // Create Trajectory with start velocity using PREFIX
-  OpenGL gl;
-  ors::Graph G;
-
-  init(G, gl, "scenes/scene1.ors");
+  ors::KinematicWorld G("scenes/scene1.ors");
   makeConvexHulls(G.shapes);
 
-  MotionProblem P(&G);
+  MotionProblem P(G);
   P.loadTransitionParameters();
 
   cout << "Loaded scene: " << endl;
@@ -134,7 +131,7 @@ void scenario1() {
   c = P.addTaskMap("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.ors->getBodyByName("goalRef")->X.pos), 1e4,
+                          ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           ARRAY(0.,0.,0.), 1e-3);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
                              ARRAY(0.,0.,0.), 1e3,
@@ -166,19 +163,16 @@ void scenario1() {
 
   plotTraj(x,dt);
 
-  displayTrajectory(x, 1, G, gl,"planned trajectory");
-  gl.watch();
+  displayTrajectory(x, 1, G, "planned trajectory");
+  G.gl().watch();
 
 }
 
 void scenario2() {
-  OpenGL gl;
-  ors::Graph G;
-
-  init(G, gl, "scenes/scene1.ors");
+  ors::KinematicWorld G("scenes/scene1.ors");
   makeConvexHulls(G.shapes);
 
-  MotionProblem P(&G);
+  MotionProblem P(G);
   P.loadTransitionParameters();
 
   cout << "Loaded scene: " << endl;
@@ -187,7 +181,7 @@ void scenario2() {
   c = P.addTaskMap("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.ors->getBodyByName("goalRef")->X.pos), 1e4,
+                          ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           ARRAY(0.,0.,0.), 1e-3);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
                              ARRAY(0.,0.,0.), 1e3,
@@ -212,7 +206,7 @@ void scenario2() {
 
 
   //** Replan from index i **//
-  uint i = 50;
+  uint i = 2;
   arr x0 = xRef[i];
   arr v0 = (xRef[i+1]-xRef[i])/dt;
   arr a0 = (xRef[i+1]+xRef[i-1]-2.*xRef[i])/(dt*dt);
@@ -227,7 +221,7 @@ void scenario2() {
   c2 = P.addTaskMap("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c2, MotionProblem::finalOnly,
-                          ARRAY(P.ors->getBodyByName("goalRef")->X.pos), 1e4,
+                          ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           ARRAY(0.,0.,0.), 1e-3);
   P.setInterpolatingVelCosts(c2, MotionProblem::finalOnly,
                              ARRAY(0.,0.,0.), 1e3,
@@ -258,19 +252,15 @@ void scenario2() {
 
   cout << sum((x- xRef.subRange(i,xRef.d0-1))%(x- xRef.subRange(i,xRef.d0-1))) << endl;
 
-  displayTrajectory(x, 1, G, gl,"planned trajectory");
+  displayTrajectory(x, 1, G, "planned trajectory");
 
 }
 
 void scenario3() {
-  OpenGL gl;
-  ors::Graph G;
-
-  init(G, gl, "scenes/scene1.ors");
+  ors::KinematicWorld G("scenes/scene1");
   makeConvexHulls(G.shapes);
 
   MPC mpc(10,G);
-  //  plotTraj(mpc.yRef,mpc.dt);
 
   arr q0, qd0, q, qd, goal, qn;
   double t = 0.0;
@@ -281,8 +271,8 @@ void scenario3() {
   G.calcBodyFramesFromJoints();
   G.getJointState(q);
 
-  gl.add(drawActTraj,&(mpc.y_cart));
-  MObject goalMO(&G, MT::String("goal"), MObject::GOAL , 0.001, ARRAY(0.,0.,1.));
+  G.gl().add(drawActTraj, &(mpc.y_cart));
+  MObject goalMO(&G, MT::String("goal"), MObject::GOAL , 0.01, ARRAY(0.,0.,1.));
 
   // execute trajectory while continiously replanning
   while (t < (mpc.T*mpc.dt-1e-2)) {
@@ -295,11 +285,11 @@ void scenario3() {
     // Set Joint states
     G.setJointState(qn);
     G.calcBodyFramesFromJoints();
-    gl.update();
+    G.gl().update();
     t += simRate;
   }
 
-  gl.watch();
+  G.gl().watch();
 }
 
 int main(int argc,char **argv){

@@ -1,0 +1,18 @@
+<package>
+  <description brief="dual_execution">
+
+     dual_execution
+
+  </description>
+  <author>Nathan Ratliff</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/dual_execution</url>
+
+  <depend package="roscpp"/>
+<!--  <depend package="sl_controller_interface"/> -->
+
+
+</package>
+
+

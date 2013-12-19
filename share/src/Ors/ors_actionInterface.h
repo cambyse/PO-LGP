@@ -44,7 +44,7 @@
 
 typedef unsigned int uint;
 namespace ors {
-struct Graph;
+struct KinematicWorld;
 }
 class OdeInterface;
 struct SwiftInterface;
@@ -120,7 +120,7 @@ public:
   
   OpenGL *gl;
 //private:
-  ors::Graph *C;
+  ors::KinematicWorld *C;
   OdeInterface *ode; // HIER PARAMETER verstellen
   SwiftInterface *swift;
   TaskVariableList TVs;

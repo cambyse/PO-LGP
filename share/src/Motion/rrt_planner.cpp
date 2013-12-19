@@ -17,7 +17,7 @@ namespace ors {
 
     sRRTPlanner(RRTPlanner *p, RRT rrt) : p(p), rrt(rrt) { };
 
-    bool growTowards(RRT& growing, RRT& passive, ors::Graph &G);
+    bool growTowards(RRT& growing, RRT& passive, ors::KinematicWorld &G);
 
     uint success_growing;
     uint success_passive;
@@ -25,7 +25,7 @@ namespace ors {
 }
 
 
-bool ors::sRRTPlanner::growTowards(RRT& growing, RRT& passive, ors::Graph &G) {
+bool ors::sRRTPlanner::growTowards(RRT& growing, RRT& passive, ors::KinematicWorld &G) {
   arr q;
   if(rnd.uni()<.5) {
     q = p->joint_min + rand(G.getJointStateDimension(), 1) % ( p->joint_max - p->joint_min );
@@ -40,12 +40,13 @@ bool ors::sRRTPlanner::growTowards(RRT& growing, RRT& passive, ors::Graph &G) {
   G.setJointState(q);
   G.calcBodyFramesFromJoints();
 
-  ors::Graph *G_t = p->problem.ors;
-  p->problem.ors = &G;
+  HALT("SORRY! I didn't know how to fix this. What is it doing?");
+//  ors::KinematicWorld *G_t = &p->problem.world;
+//  p->problem.world = &G;
   arr phi, J_x, J_v;
-  p->problem.swift->computeProxies(G);
+//  p->problem.world.computeProxies();
   bool feasible = p->problem.getTaskCosts(phi, J_x, J_v, 0);
-  p->problem.ors = G_t;
+//  p->problem.world = G_t;
 
   if (feasible) {
 
@@ -85,8 +86,8 @@ arr buildTrajectory(RRT& rrt, uint node, bool forward) {
   return q;
 }
     
-ors::RRTPlanner::RRTPlanner(ors::Graph *G, MotionProblem &problem, double stepsize) : 
-  s(new ors::sRRTPlanner(this, RRT(G->getJointState(), stepsize))), G(G), problem(problem) {
+ors::RRTPlanner::RRTPlanner(ors::KinematicWorld *G, MotionProblem &problem, double stepsize) : 
+  s(new ors::sRRTPlanner(this, RRT(G->q, stepsize))), G(G), problem(problem) {
     joint_min = zeros(G->getJointStateDimension(), 1);
     joint_max = ones(G->getJointStateDimension(), 1);
   }
@@ -101,7 +102,8 @@ void drawRRT(RRT rrt) {
 }
 
 arr ors::RRTPlanner::getTrajectoryTo(const arr& target, OpenGL* gl) {
-  ors::Graph *copy = G->newClone();
+  ors::KinematicWorld copy;
+  copy = *G;
   arr q;
 
   RRT target_rrt(target, s->rrt.getStepsize());
@@ -111,21 +113,20 @@ arr ors::RRTPlanner::getTrajectoryTo(const arr& target, OpenGL* gl) {
   uint node0 = 0, node1 = 0;
 
   while(!found) {
-    found = s->growTowards(s->rrt, target_rrt, *copy);
+    found = s->growTowards(s->rrt, target_rrt, copy);
     if(found) {
       node0 = s->success_growing;
       node1 = s->success_passive;
       break;
     }
 
-    found = s->growTowards(target_rrt, s->rrt, *copy);
+    found = s->growTowards(target_rrt, s->rrt, copy);
     if(found) {
       node0 = s->success_passive;
       node1 = s->success_growing;
       break;
     }
   }
-  delete copy;
 
   if (gl) {
     gl->add(glDrawPlot, &plotModule);

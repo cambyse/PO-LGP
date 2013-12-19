@@ -28,7 +28,7 @@ struct MyOptimizationProblem:public OptimizationProblem{
   uint t_offset;
   arr q_offset;
 
-  ors::Graph C;
+  ors::KinematicWorld C;
   OpenGL gl;
   int bodyIndex;
   

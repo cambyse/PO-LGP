@@ -90,7 +90,7 @@ void GraspEvaluation::getContactPoints(double distanceThreshold){
   cout <<"wrench closure = " <<score_wrenchClosure <<endl;
 }
 
-void GraspEvaluation::copyGraspFromOrs(const ors::Graph& all,
+void GraspEvaluation::copyGraspFromOrs(const ors::KinematicWorld& all,
 				       const char* palmBodyName,
 				       const char* objShapeName){
   uint i,j;

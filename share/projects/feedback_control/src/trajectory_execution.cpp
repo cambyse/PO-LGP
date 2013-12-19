@@ -34,7 +34,7 @@ typedef actionlib::SimpleActionClient<control_msgs::JointTrajectoryAction> TrajC
 
 class TrajExecution{
 private:
-  ors::Graph G;
+  ors::KinematicWorld G;
 
 
   arr x0_opt, xRef;
@@ -94,7 +94,7 @@ public:
     c = P.addTaskMap("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
     P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                            ARRAY(P.ors->getBodyByName("goalRef")->X.pos), 1e4,
+                            ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                             ARRAY(0.,0.,0.), 1e-3);
     P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
                                ARRAY(0.,0.,0.), 1e3,

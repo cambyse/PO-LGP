@@ -293,7 +293,7 @@ void ors::Link::updateFeatherstones() {
   _f(3)=fo.x;  _f(4)=fo.y;  _f(5)=fo.z;
 }
 
-void GraphToTree(MT::Array<ors::Link>& tree, const ors::Graph& C) {
+void GraphToTree(MT::Array<ors::Link>& tree, const ors::KinematicWorld& C) {
   tree.resize(C.bodies.N);
   
   uint i, iq;
@@ -345,7 +345,7 @@ void GraphToTree(MT::Array<ors::Link>& tree, const ors::Graph& C) {
   for(i=0; i<tree.N; i++) tree(i).setFeatherstones();
 }
 
-void updateGraphToTree(MT::Array<ors::Link>& tree, const ors::Graph& C) {
+void updateGraphToTree(MT::Array<ors::Link>& tree, const ors::KinematicWorld& C) {
   CHECK(tree.N==C.bodies.N, "");
   
   uint i;
@@ -1042,8 +1042,8 @@ void ors::fwdDynamics_MF(arr& qdd,
 }
 
 #else ///MT_FEATHERSTONE
-void GraphToTree(ors::LinkTree& tree, const ors::Graph& C) { NIY; }
-void updateGraphToTree(ors::LinkTree& tree, const ors::Graph& C) { NIY; }
+void GraphToTree(ors::LinkTree& tree, const ors::KinematicWorld& C) { NIY; }
+void updateGraphToTree(ors::LinkTree& tree, const ors::KinematicWorld& C) { NIY; }
 void Featherstone::equationOfMotion(arr& H, arr& C,
                                     const ors::LinkTree& tree,
                                     const arr& qd) { NIY; }

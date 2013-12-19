@@ -17,7 +17,7 @@ void problem7(){
   //setup the problem 
   soc::SocSystem_Ors sys_one;// for 1-step              
   soc::SocSystem_Ors sys;  
-  ors::Graph ors;
+  ors::KinematicWorld ors;
   ors.init(MT::getParameter<MT::String>("orsfile",MT::String("kuka.ors")));
 
   OpenGL gl;                       

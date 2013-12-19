@@ -19,20 +19,20 @@
 
 #include "libcolorseg.h"
 
-#ifdef MT_FELZ
+#ifdef MT_extern_libcolorseg
 
 // Felzenszwalb's files
-#include <libcolorseg/misc.h>
-#include <libcolorseg/convolve.h>
-#include <libcolorseg/disjoint-set.h>
-#include <libcolorseg/filter.h>
-#include <libcolorseg/image.h>
-#include <libcolorseg/imconv.h>
-#include <libcolorseg/imutil.h>
-#include <libcolorseg/misc.h>
-#include <libcolorseg/pnmfile.h>
-#include <libcolorseg/segment-graph.h>
-#include <libcolorseg/segment-image.h>
+#include <extern/libcolorseg/misc.h>
+#include <extern/libcolorseg/convolve.h>
+#include <extern/libcolorseg/disjoint-set.h>
+#include <extern/libcolorseg/filter.h>
+#include <extern/libcolorseg/image.h>
+#include <extern/libcolorseg/imconv.h>
+#include <extern/libcolorseg/imutil.h>
+#include <extern/libcolorseg/misc.h>
+#include <extern/libcolorseg/pnmfile.h>
+#include <extern/libcolorseg/segment-graph.h>
+#include <extern/libcolorseg/segment-image.h>
 
 // Unsupervised graph-cut-based segmentation (single-scale)
 //

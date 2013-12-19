@@ -7,7 +7,7 @@ int main(int argc,char **argv){
     cout <<"opening standard file `" <<file <<"'" <<endl;
   }else file=argv[1];
   
-  ors::Graph ors;
+  ors::KinematicWorld ors;
   ors.init(file);
   
   OrsSceneGui gui(ors);

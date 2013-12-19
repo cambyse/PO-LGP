@@ -369,9 +369,9 @@ void test(int argc,char** argv) {
 
 
 void write_inputs(RobotManipulationSimulator& sim, ostream& out, uint prefix) {
-//   void editConfiguration(const char* filename, ors::Graph& C, OpenGL& gl);
-// void getFeatureVector(arr& fab, const ors::Graph& ors, uint a, uint b);
-// void getFeatureVector(arr& fa, const ors::Graph& ors, uint a);
+//   void editConfiguration(const char* filename, ors::KinematicWorld& C, OpenGL& gl);
+// void getFeatureVector(arr& fab, const ors::KinematicWorld& ors, uint a, uint b);
+// void getFeatureVector(arr& fa, const ors::KinematicWorld& ors, uint a);
   uintA blocks;
   sim.getBlocks(blocks);
   uint i, k;
@@ -385,9 +385,9 @@ void write_inputs(RobotManipulationSimulator& sim, ostream& out, uint prefix) {
 
 
 void write_outputs(RobotManipulationSimulator& sim, ostream& out, uint prefix) {
-//   void editConfiguration(const char* filename, ors::Graph& C, OpenGL& gl);
-// void getFeatureVector(arr& fab, const ors::Graph& ors, uint a, uint b);
-// void getFeatureVector(arr& fa, const ors::Graph& ors, uint a);
+//   void editConfiguration(const char* filename, ors::KinematicWorld& C, OpenGL& gl);
+// void getFeatureVector(arr& fab, const ors::KinematicWorld& ors, uint a, uint b);
+// void getFeatureVector(arr& fa, const ors::KinematicWorld& ors, uint a);
   uintA objects;
 //   sim.getBlocks(blocks);
   sim.getObjects(objects);
@@ -610,7 +610,7 @@ void interact() {
 
   const char *file="situation.ors";
 //   const char *file="sit1.ors";
-  ors::Graph ors;
+  ors::KinematicWorld ors;
   ors.init(file);
 
   OrsSceneGui gui(ors);

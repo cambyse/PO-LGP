@@ -2,8 +2,10 @@ set(SOURCES ./ors_swift.cpp
 ./ors_actionInterface.h
 ./ors_physx.cpp
 ./roboticsCourse.cpp
+./ors_ode.h
 ./ors_ode.cpp
 ./roboticsCourse.h
+./ors_swift.h
 ./module_G4Display.h
 ./ors_opengl.cpp
 ./ors_oldTaskVariables.h

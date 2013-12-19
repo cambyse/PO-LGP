@@ -110,7 +110,7 @@ void SetRelTarget(OrsSocImplementation & soci){
   
 }
 
-void InitSOC(OrsSocImplementation & soci, ors::Graph & ors, SwiftInterface & swift, OpenGL & gl){
+void InitSOC(OrsSocImplementation & soci, ors::KinematicWorld & ors, SwiftInterface & swift, OpenGL & gl){
   uint T=300;
   arr W;
   W <<"[.1 .1 .2 .2 1 1 5    1 1 1 1 1 1 1 1 1]";
@@ -197,7 +197,7 @@ void InitSOC(OrsSocImplementation & soci, ors::Graph & ors, SwiftInterface & swi
   //CV_lim->active=false; 
 }
 
-void PlanGraspM( ors::Graph & ors, SwiftInterface & swift, OpenGL & gl){
+void PlanGraspM( ors::KinematicWorld & ors, SwiftInterface & swift, OpenGL & gl){
   uint nTry=MT::getParameter<uint>("nTry");
   uint nStartTry=MT::getParameter<uint>("nStartTry");
   double eps=MT::getParameter<double>("reachPlanEps");

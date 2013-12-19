@@ -7,7 +7,7 @@
 
 int main(int argc, char **argv) {
   IbdsModule ibds;
-  ors::Graph ors;
+  ors::KinematicWorld ors;
   OpenGL gl;
 
   ors.init("test_ibds.ors");

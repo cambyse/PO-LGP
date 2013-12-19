@@ -30,6 +30,4 @@ void setHomingGoals(MotionProblem& M, uint T);
 double keyframeOptimizer(arr& x, MotionProblem& M, bool x_is_initialized, uint verbose);
 void interpolate_trajectory(arr &q, const arr& q0, const arr& qT, uint T);
 
-void sineProfile(arr& q, const arr& q0, const arr& qT, uint T);
-
 #endif

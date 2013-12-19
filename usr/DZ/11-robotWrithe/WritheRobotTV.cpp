@@ -4,7 +4,7 @@
 #include "MT/plot.h"
 
 WritheTaskVariable::WritheTaskVariable(const char* _name,
-                                         ors::Graph& _ors,
+                                         ors::KinematicWorld& _ors,
                                          const char* _obj_name,
 				         int _segments,
 				         int _param){
@@ -24,7 +24,7 @@ void plot_writhe(arr WM,int dim)
  plot(false);
 }
 
-void GetRopes(arr& r1,arr& r2,ors::Graph& _ors,int rope_points,const char* _name){
+void GetRopes(arr& r1,arr& r2,ors::KinematicWorld& _ors,int rope_points,const char* _name){
   //// TODO change it all!!!
   
   arr rope1=arr(rope_points,3); 
