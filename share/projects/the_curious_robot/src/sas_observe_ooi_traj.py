@@ -16,6 +16,7 @@ import the_curious_robot.msg as msgs
 import corepy
 import util
 import require_provide as rp
+from timer import Timer
 
 
 def get_ooi(oois, ooi_id):
@@ -58,18 +59,20 @@ class ObserveOOITrajActionServer:
         rp.Provide('ObserveOOITraj')
 
     def execute(self, msg):
-        while self.data_changed and not rospy.is_shutdown():
-            rospy.sleep(.1)
+        with Timer("While waiting for end of change", rospy.loginfo):
+            while self.data_changed and not rospy.is_shutdown():
+                rospy.sleep(.1)
 
-        with self.trajectory_lock:
-            trajectory_msg = util.create_trajectory_msg(
-                self.ooi_id, self.trajectory
-            )
-            self.trajectory_pub.publish(trajectory_msg)
+        with Timer("Create and send trajectory", rospy.loginfo):
+            with self.trajectory_lock:
+                trajectory_msg = util.create_trajectory_msg(
+                    self.ooi_id, self.trajectory
+                )
+                self.trajectory_pub.publish(trajectory_msg)
 
-            # clean up
-            del self.trajectory[:]
-            self.trajectory = []
+                # clean up
+                del self.trajectory[:]
+                self.trajectory = []
 
         self.server.set_succeeded()
 
