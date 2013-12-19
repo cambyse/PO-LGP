@@ -71,16 +71,19 @@ void FeedbackMotionControl::getTaskCosts(arr& phi, arr& J, arr& a){
   if(&J) J.reshape(phi.N, a.N);
 }
 
-arr FeedbackMotionControl::operationalSpaceControl(){
+arr FeedbackMotionControl::operationalSpaceControl(double regularization){
   arr phi, J, a;
   a.resizeAs(world.q).setZero();
   getTaskCosts(phi, J, a);
   if(!phi.N) return a;
   arr H, Jinv;
   H.setDiag(1./H_rate_diag);
-  pseudoInverse(Jinv, J, H, 1e-6);
-  arr Null = eye(a.N) - Jinv * J;
-  a = - Jinv * phi + Null * nullSpacePD.getDesiredAcceleration(world.q, world.qdot);
+  pseudoInverse(Jinv, J, H, regularization);
+  a = - Jinv * phi;
+  if(nullSpacePD.prec){
+    arr Null = eye(a.N) - Jinv * J;
+    a += Null * nullSpacePD.getDesiredAcceleration(world.q, world.qdot);
+  }
   return a;
 }
 

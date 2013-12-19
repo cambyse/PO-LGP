@@ -92,6 +92,10 @@ void executeTrajectoryPFC(MT::String scene){
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(1.,0.,0.), 1e4);
   P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
 
+//  c = P.addTaskMap("contact", new DefaultTaskMap(collTMT,-1,NoVector,-1,NoVector,ARR(0.15)));
+//  P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e0);
+
+
   //-- create the Optimization problem (of type kOrderMarkov)
   P.x0 = 0.1;
 
@@ -104,8 +108,8 @@ void executeTrajectoryPFC(MT::String scene){
 
   arr x(T+1,n); x.setZero();
   optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
-  P.costReport();
-  //  displayTrajectory(x, 1, world, world.gl(),"planned trajectory", 0.01);
+//  P.costReport();
+//  displayTrajectory(x, 1, world, "planned trajectory", 0.01);
 
   //-- Transform trajectory into task space
   arr kinPos, kinVec, xRefPos, xRefVec, xRef;
@@ -140,9 +144,17 @@ void executeTrajectoryPFC(MT::String scene){
   double t_final = T*dt;
 
   FeedbackMotionControl MP(world, false);
+  MP.nullSpacePD.prec=0.;
+  double regularization=1e-3;
   PDtask *taskPos = MP.addPDTask("pos", tau_plan*5, 1, posTMT, "endeff");
   PDtask *taskVec = MP.addPDTask("vec", tau_plan*5, 1, vecTMT, "endeff",ARR(0.,0.,1.));
-  //  PDtask *taskCol = MP.addPDTask("col", tau_plan*5, 3, collTMT, NULL, NoVector, NULL, NoVector, ARR(0.15));
+  PDtask *taskCol = MP.addPDTask("col", .02, 1., collTMT, NULL, NoVector, NULL, NoVector, ARR(0.1));
+  PDtask *taskHome = MP.addPDTask("home", .02, 0.5, qItselfTMT);
+  taskPos->setGains(0.,100.); taskPos->prec=1e0;
+  taskVec->setGains(0.,100.); taskVec->prec=1e0;
+  taskHome->setGains(0.,10.); taskHome->prec=1e-2;
+  taskCol->prec=1e0;
+
 
   MObject goalMO(&world, MT::String("goal"), MObject::GOAL , 0.001, ARRAY(0.,0.,1.));
   Pfc* pfc = new Pfc(world,xRef,t_final,x0,q0,goalMO,true,true,0.,0.,0.,0.);
@@ -154,11 +166,11 @@ void executeTrajectoryPFC(MT::String scene){
   world.gl().add(drawActTraj,&(pfc->traj));
   world.gl().add(drawPlanTraj,&(pfc->trajWrap->points));
 
+  arr state,stateVec;
   // RUN //
   while (pfc->s.last() <0.99){
     if ( (fmod(t,tau_plan-1e-12) < tau_control) ) {
       // Outer Planning Loop [1/tau_plan Hz]
-      arr state,stateVec;
       // Get current task state
       world.kinematicsPos(state,NoArr,P.world.getBodyByName("endeff")->index);
       world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeff")->index);
@@ -176,7 +188,6 @@ void executeTrajectoryPFC(MT::String scene){
       taskVec->y_ref = yNext.subRange(3,5);
       taskVec->v_ref = ydNext.subRange(3,5);
       world.watch(false, STRING(t));
-
     }
 
     // Inner Controlling Loop [1/tau_control Hz]
@@ -184,7 +195,7 @@ void executeTrajectoryPFC(MT::String scene){
     //    world.stepPhysx(tau_control);
     world.computeProxies();
 
-    arr a = MP.operationalSpaceControl();
+    arr a = MP.operationalSpaceControl(regularization);
     q += tau_control*qdot;
     qdot += tau_control*a;
     t += tau_control;
@@ -328,7 +339,7 @@ void executeTrajectoryDMP(MT::String scene){
   x.setZero();
   optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
   //  P.costReport();
-//  displayTrajectory(x, 1, world, world.gl(),"planned trajectory", 0.01);
+  //  displayTrajectory(x, 1, world, world.gl(),"planned trajectory", 0.01);
 
 
   //-- Transform trajectory into task space
@@ -375,7 +386,7 @@ void executeTrajectoryDMP(MT::String scene){
   // RUN //
   while ((world.getBodyByName("endeff")->X.pos - goalMO.position).length() >1e-2) {
     if ( (fmod(t,tau_plan-1e-12) < tau_control) ) {
-//      goalMO.move();
+      //      goalMO.move();
 
       dmp.goal.subRange(0,2) = goalMO.position;
       dmp.iterate();
@@ -408,8 +419,9 @@ void executeTrajectoryDMP(MT::String scene){
 
 int main(int argc,char **argv) {
   MT::initCmdLine(argc,argv);
-  //  executeTrajectoryMPC(String("scene1.ors"));
-//      executeTrajectoryPFC(String("scene1.ors"));
-  executeTrajectoryDMP(String("scene1.ors"));
+  executeTrajectoryPFC(String("scene1.ors"));
+  //    executeTrajectoryMPC(String("scene1.ors"));
+
+  //    executeTrajectoryDMP(String("scene1.ors"));
   return 0;
 }

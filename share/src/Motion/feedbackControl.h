@@ -58,7 +58,7 @@ struct FeedbackMotionControl : MotionProblem {
                     const arr& params=NoArr);
 
   void getTaskCosts(arr& phi, arr& J, arr& a); ///< the general (`big') task vector and its Jacobian
-  arr operationalSpaceControl();
+  arr operationalSpaceControl(double regularization=1e-6);
 };
 
 //===========================================================================
