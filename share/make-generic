@@ -506,14 +506,25 @@ ifndef MLR_PATH
 endif
 
 MODULE_NAME=$(shell echo $(notdir $(CURDIR)) | tr A-Z a-z)
+ifeq ($(ARCH_LINUX),1)
+  SWIG=swig
+else
+  SWIG=swig2.0
+endif
+
+SWIG_MINOR_VERSION_GT4:=$(shell expr `$(SWIG) -version | grep "SWIG Version" | sed "s/SWIG Version 2.0.//"` \>= 5)
+ifeq ($(SWIG_MINOR_VERSION_GT4),1)
+  SWC_DEREFERENCE_MEMBERS=-DSWIG_NO_DEREFERENCE_MEMBERS
+else
+  SWC_DEREFERENCE_MEMBERS=-DSWIG_DEREFERENCE_MEMBERS
+endif
 
 SWC_FLAGS=-std=c++0x -g
 SWC_INCLUDES=-I$(MLR_PATH)/share/src -I/usr/include/python2.7 
 SWC_LIB_PATH=-L$(MLR_PATH)/share/lib -Xlinker -rpath $(MLR_PATH)/share/lib
-SWC_CXXFLAGS=-c $(SWC_FLAGS) -fPIC $(SWC_INCLUDES) -DSWIG_TYPE_TABLE=mlr
+SWC_CXXFLAGS=-c $(SWC_FLAGS) -fPIC $(SWC_INCLUDES) -DSWIG_TYPE_TABLE=mlr $(SWC_DEREFERENCE_MEMBERS)
 SWC_LDFLAGS=$(SWC_FLAGS) -shared $(SWC_LIB_PATH) $(SWC_INCLUDES) $(DEPEND:%=-l%) -l$(notdir $(CURDIR))
 
-SWIG=swig2.0
 SWIG_INCLUDE=-I$(MLR_PATH)/share/src -I$(MLR_PATH)/share/include/numpy
 SWIG_FLAGS=-c++ -python $(SWIG_INCLUDE)
 
