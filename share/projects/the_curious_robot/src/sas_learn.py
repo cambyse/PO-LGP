@@ -139,7 +139,9 @@ class LearnActionServer:
             self.update_dof(shape_anno)
             # self.update_dynamics()
 
-        rospy.loginfo(str(self.belief_annotation))
+        for key, value in self.belief_annotation.iteritems():
+            rospy.loginfo("%d: %s", key, str(value))
+
         self.server.set_succeeded()
 
     def update_dof(self, shape_anno):
@@ -148,13 +150,13 @@ class LearnActionServer:
 
         # here we learn
         response = self.dof_learner(request)
-        rospy.loginfo(response)
-
-        print response.model.name
+        # rospy.loginfo(response)
 
         # stop if it's not an rotational or prismatic joint
         if response.model.name not in ["rotational", "prismatic"]:
             return
+
+        rospy.loginfo("joint classified as, %s", response.model.name)
 
         # make sure we have an JointBelief instance
         if shape_anno.joint is None:
