@@ -541,15 +541,16 @@ PxU32 MemoryInputData::tell() const {
 #else //MT_PHYSX
 
 #include "ors_physx.h"
-
-PhysXInterface::PhysXInterface() { NICO }
+PhysXInterface::PhysXInterface(ors::KinematicWorld& _world) : world(_world), s(NULL) { NICO }
 PhysXInterface::~PhysXInterface() { NICO }
-void PhysXInterface::create() { NICO }
+  
 void PhysXInterface::step(double tau) { NICO }
-void PhysXInterface::glDraw() { NICO }
-void PhysXInterface::syncWithOrs() { NICO }
+void PhysXInterface::pushToPhysx() { NICO }
 void PhysXInterface::pullFromPhysx() { NICO }
+void PhysXInterface::setArticulatedBodiesKinematic(int agent) { NICO }
 void PhysXInterface::ShutdownPhysX() { NICO }
+void PhysXInterface::glDraw() { NICO }
+
 void glPhysXInterface(void *classP) { NICO }
 void bindOrsToPhysX(ors::KinematicWorld& graph, OpenGL& gl, PhysXInterface& physx) { NICO }
 

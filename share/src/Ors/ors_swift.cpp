@@ -371,13 +371,18 @@ void SwiftInterface::swiftQueryExactDistance() {
 
 #else
 #include <Core/util.h>
-//#warning "MT_extern_SWIFT undefined - using HALT implementations"
-void SwiftInterface::initActivations(const ors::KinematicWorld& C, uint parentLevelsToDeactivate) {}
-void SwiftInterface::deactivate(const MT::Array<ors::Body*>& bodies) {}
-void SwiftInterface::deactivate(ors::Shape *s1, ors::Shape *s2) {}
-void SwiftInterface::step(bool dumpReport) {}
-SwiftInterface* SwiftInterface::newClone(const ors::KinematicWorld& G) const { return NULL; }
-void swiftQueryExactDistance(SwiftInterface& swift) {}
-SwiftInterface::~SwiftInterface() {}
+void setCutoff(double _cutoff){ cutoff=_cutoff; }
+
+  void SwiftInterface::step(bool dumpReport=false){}
+  void SwiftInterface::pushToSwift() {}
+  void SwiftInterface::pullFromSwift(bool dumpReport) {}
+
+  void SwiftInterface::reinitShape(const ors::Shape *s) {}
+//  void close();
+  void SwiftInterface::deactivate(ors::Shape *s1, ors::Shape *s2) {}
+  void SwiftInterface::deactivate(const MT::Array<ors::Shape*>& shapes) {}
+  void SwiftInterface::deactivate(const MT::Array<ors::Body*>& bodies) {}
+  void SwiftInterface::initActivations(uint parentLevelsToDeactivate=3) {}
+  void SwiftInterface::swiftQueryExactDistance() {}
 #endif
 /** @} */
