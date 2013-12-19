@@ -191,7 +191,7 @@ class LearnActionServer:
             # rots = filter(lambda p: p.name.startswith("rot"),
             #               response.model.params)
 
-        elif response.name == "prismatic":
+        elif response.model.name == "prismatic":
             shape_anno.joint.update(JointBelief.PRISMATIC)
             # The parameters of the prismatic model are:
             #
