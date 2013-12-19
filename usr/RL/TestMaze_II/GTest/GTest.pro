@@ -10,6 +10,7 @@ HEADERS += \
     ../util/ProgressBar.h \
     ../util/ColorOutput.h \
     ../util/QtUtil.h \
+    ../util/lbfgs_codes.h \
     \
     ../Feature.h \
     ../Instance.h \
@@ -28,6 +29,7 @@ HEADERS += \
     \
     ../LookAheadSearch.h \
     \
+    ../HistoryObserver.h \
     ../FeatureLearner.h \
     ../KMarkovCRF.h \
     MinimalEnvironmentExample/MinimalAction.h \
@@ -40,6 +42,7 @@ SOURCES += \
     ../util/ProgressBar.cpp \
     ../util/ColorOutput.cpp \
     ../util/QtUtil.cpp \
+    ../util/lbfgs_codes.cpp \
     \
     ../Feature.cpp \
     ../Instance.cpp \
@@ -57,6 +60,7 @@ SOURCES += \
     \
     ../LookAheadSearch.cpp \
     \
+    ../HistoryObserver.cpp \
     ../FeatureLearner.cpp \
     ../KMarkovCRF.cpp \
     \

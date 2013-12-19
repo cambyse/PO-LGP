@@ -37,6 +37,7 @@ bool AbstractObservation::operator<(const AbstractIteratableSpace& other) const 
 }
 
 bool AbstractObservation::operator<(const AbstractObservation& other) const {
+    DEBUG_WARNING("Using comparison operator of abstract class");
     return this->observation_type<other.observation_type;
 }
 

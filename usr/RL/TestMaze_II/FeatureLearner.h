@@ -26,7 +26,7 @@ public:
     /** \brief Initialize the basis features used for learning. */
     virtual void set_features(const PredictiveEnvironment & environment);
 
-private:
+protected:
 
     const LEARNER_TYPE   learner_type;      ///< Characterize the different types of feature learners.
     action_ptr_t         action_space;      ///< The action space that is used.

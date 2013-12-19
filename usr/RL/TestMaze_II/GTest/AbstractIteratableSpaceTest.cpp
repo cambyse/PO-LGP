@@ -35,7 +35,7 @@ namespace {
         // for all action types (represented by one specific action of each type)
         for(action_ptr_t action_type : action_vector) {
             DEBUG_OUT(1,"This action: " << action_type);
-            DEBUG_OUT(1,"    Action space...");
+            DEBUG_OUT(1,"    Action space (size " << action_type->space_size() << ")...");
             // go through all actions of the corresponding action space
             int match_counter = 0;
             int match_idx = -1;
@@ -88,7 +88,7 @@ namespace {
         // for all observation types (represented by one specific observation of each type)
         for(observation_ptr_t observation_type : observation_vector) {
             DEBUG_OUT(1,"This observation: " << observation_type);
-            DEBUG_OUT(1,"    Observation space...");
+            DEBUG_OUT(1,"    Observation space (size " << observation_type->space_size() << ")...");
             // go through all observations of the corresponding observation space
             int match_counter = 0;
             int match_idx = -1;
@@ -141,7 +141,7 @@ namespace {
         // for all reward types (represented by one specific reward of each type)
         for(reward_ptr_t reward_type : reward_vector) {
             DEBUG_OUT(1,"This reward: " << reward_type);
-            DEBUG_OUT(1,"    Reward space...");
+            DEBUG_OUT(1,"    Reward space (size " << reward_type->space_size() << ")...");
             // go through all rewards of the corresponding reward space
             int match_counter = 0;
             int match_idx = -1;

@@ -1,8 +1,8 @@
 #include "KMarkovCRF.h"
-#include "lbfgs_codes.h"
-#include "util.h"
-#include "util/ProgressBar.h"
 
+#include "util.h"
+#include "util/lbfgs_codes.h"
+#include "util/ProgressBar.h"
 #include "util/QtUtil.h" // for << operator
 
 #include <list>
@@ -59,14 +59,14 @@ KMarkovCRF::KMarkovCRF():
 //             DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
 //         }
 //         // observations
-//         for(observationIt_t observation=observationIt_t::first(); observation!=INVALID; ++observation) {
+//         for(observation_ptr_t observation : observation_space) {
 //             f_ptr_t observation_feature = ObservationFeature::create(observation,k_idx);
 //             basis_features.push_back(observation_feature);
 //             DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
 //         }
 //         // reward
 //         if(k_idx==0) { // take only the current reward into account (for predicting only)
-//             for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
+//             for(reward_ptr_t reward : reward_space) {
 //                 f_ptr_t reward_feature = RewardFeature::create(reward,k_idx);
 //                 basis_features.push_back(reward_feature);
 //                 DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
@@ -196,7 +196,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
 
             // store evaluations for this instance in array (for speed up)
             vector<f_ret_t> instance_evaluations(feature_n,0);
-            vector<vector<f_ret_t> > observation_reward_evaluations(feature_n,vector<f_ret_t>(observation_t::observation_n*reward_t::reward_n,0));
+            vector<vector<f_ret_t> > observation_reward_evaluations(feature_n,vector<f_ret_t>(observation_space->space_size()*reward_space->space_size(),0));
 
             // reset sums
             sumFNN = 0;
@@ -233,8 +233,8 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
 
             // calculate sumExp(x(n))
             idx_t observation_reward_idx=0;
-            for(observationIt_t observation=observationIt_t::first(); observation!=INVALID; ++observation) {
-                for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
+            for(observation_ptr_t observation : observation_space) {
+                for(reward_ptr_t reward : reward_space) {
 
                     // calculate sumF(x(n),y')
                     double sumFN = 0;
@@ -516,8 +516,8 @@ lbfgsfloatval_t KMarkovCRF::evaluate_candidates(
             // store evaluations for this instance in array (for speed up)
             /* vector<f_ret_t> active_instance_evaluations(active_n,0); */
             vector<f_ret_t> candidate_instance_evaluations(candidate_n,0);
-            /* vector<vector<f_ret_t> > active_observation_reward_evaluations(active_n,vector<f_ret_t>(observation_t::observation_n*reward_t::reward_n,0)); */
-            /* vector<vector<f_ret_t> > candidate_observation_reward_evaluations(candidate_n,vector<f_ret_t>(observation_t::observation_n*reward_t::reward_n,0)); */
+            /* vector<vector<f_ret_t> > active_observation_reward_evaluations(active_n,vector<f_ret_t>(observation_space->space_size()*reward_space->space_size(),0)); */
+            /* vector<vector<f_ret_t> > candidate_observation_reward_evaluations(candidate_n,vector<f_ret_t>(observation_space->space_size()*reward_space->space_size(),0)); */
 
             //-------------------------------//
             // calculate the different terms //
@@ -570,8 +570,8 @@ lbfgsfloatval_t KMarkovCRF::evaluate_candidates(
             candidate_sumExpN.assign(n,0.0);
             candidate_sumFExpNF.assign(n,0.0);
             idx_t observation_reward_idx=0;
-            for(observationIt_t observation=observationIt_t::first(); observation!=INVALID; ++observation) {
-                for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
+            for(observation_ptr_t observation : observation_space) {
+                for(reward_ptr_t reward : reward_space) {
 
                     // calculate sumF(x(n),y')
                     double active_sumFN = 0; // common terms for all candidate features
@@ -959,8 +959,8 @@ void KMarkovCRF::score_candidates_by_gradient() {
             sumFExpNF.assign(cf_size,0.0);
 
             // calculate sumExp(x(n))
-            for(observationIt_t observation=observationIt_t::first(); observation!=INVALID; ++observation) {
-                for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
+            for(observation_ptr_t observation : observation_space) {
+                for(reward_ptr_t reward : reward_space) {
 
                     // calculate sumF(x(n),y')
                     sumFN = 0.0;
@@ -1146,8 +1146,8 @@ KMarkovCRF::probability_t KMarkovCRF::get_prediction(
 
     // calculate sumExp(x)
     probability_t sumExpX = 0;
-    for(observationIt_t sum_observation=observationIt_t::first(); sum_observation!=INVALID; ++sum_observation) {
-        for(rewardIt_t sum_reward=rewardIt_t::first(); sum_reward!=INVALID; ++sum_reward) {
+    for(observation_ptr_t sum_observation : observation_space) {
+        for(reward_ptr_t sum_reward : reward_space) {
 
             // calculate sumF(x,y')
             probability_t sumFXYs = 0;
@@ -1176,9 +1176,9 @@ const {
 
     if(input_ret==input_set.end()) { // no data for this input
 
-        if(reward==reward_t::min_reward) {
+        if(reward->get_value()==reward_space->min_reward()) {
             // uniform probability for zero reward
-            return 1./(observation_t::max_observation-observation_t::min_observation+1);
+            return 1./observation_space->space_size();
         } else {
             // zero probability else
             return 0;
@@ -1293,7 +1293,7 @@ void KMarkovCRF::update_prediction_map() {
     for(auto it = prediction_map.begin(); it!=prediction_map.end(); ++it) {
 
         const instance_t * instance = std::get<0>(it->first);
-        action_t action = std::get<1>(it->first);
+        action_ptr_t action = std::get<1>(it->first);
         auto input_tuple = std::make_tuple(instance, action);
         auto ret_input = counts.find(input_tuple);
         if(ret_input==counts.end()) {
@@ -1335,8 +1335,8 @@ void KMarkovCRF::test() {
             // calculate sumExp(x)
             probability_t sumExpX = 0;
 
-            for(observationIt_t sum_observation=observationIt_t::first(); sum_observation!=INVALID; ++sum_observation) {
-                for(rewardIt_t sum_reward=rewardIt_t::first(); sum_reward!=INVALID; ++sum_reward) {
+            for(observation_ptr_t sum_observation : observation_space) {
+                for(reward_ptr_t sum_reward : reward_space) {
 
                     // calculate sumF(x,y')
                     probability_t sumFXYs = 0;
@@ -1393,8 +1393,8 @@ void KMarkovCRF::find_unique_feature_values() {
             action_ptr_t action = insIt->action;
 
             // iterate through all possible observations and rewards (keeping action the same)
-            for(observationIt_t observation=observationIt_t::first(); observation!=INVALID; ++observation) {
-                for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
+            for(observation_ptr_t observation : observation_space) {
+                for(reward_ptr_t reward : reward_space) {
 
                     // add new element for this observation-reward combination
                     feature_value_element.push_back(vector<f_ret_t>());
@@ -1539,9 +1539,9 @@ KMarkovCRF::idx_t KMarkovCRF::precomputed_feature_idx(
     const bool& use_observation_and_reward
     ) {
     // block sizes
-    idx_t entry_n_for_all_rewards = reward_t::reward_n;
-    idx_t entry_n_for_all_observations  = observation_t::observation_n * entry_n_for_all_rewards + 1; // plus one for entry where observation and reward are ignored
-    idx_t entry_n_for_all_fetures = feature_n        * entry_n_for_all_observations;
+    idx_t entry_n_for_all_rewards = reward_space->space_size();
+    idx_t entry_n_for_all_observations  = observation_space->space_size() * entry_n_for_all_rewards + 1; // plus one for entry where observation and reward are ignored
+    idx_t entry_n_for_all_fetures = feature_n * entry_n_for_all_observations;
 
     // compute index
     idx_t idx = instance_idx * entry_n_for_all_fetures;
@@ -1551,8 +1551,8 @@ KMarkovCRF::idx_t KMarkovCRF::precomputed_feature_idx(
         return idx;
     } else {
         idx += 1;
-        idx += observation.index() * entry_n_for_all_rewards;
-        idx += reward.index();
+        idx += observation->index() * entry_n_for_all_rewards;
+        idx += reward->index();
         return idx;
     }
 }
@@ -1562,7 +1562,8 @@ KMarkovCRF::idx_t KMarkovCRF::precomputed_feature_idx(
     const idx_t& feature_idx,
     const idx_t& feature_n
     ) {
-    return precomputed_feature_idx(instance_idx,feature_idx,feature_n,observation_t(),reward_t(),false);
+    // observation and reward not used
+    return precomputed_feature_idx(instance_idx,feature_idx,feature_n,observation_ptr_t(),reward_ptr_t(),false);
 }
 
 KMarkovCRF::idx_t KMarkovCRF::precomputed_feature_idx(
@@ -1572,6 +1573,7 @@ KMarkovCRF::idx_t KMarkovCRF::precomputed_feature_idx(
     const observation_ptr_t& observation,
     const reward_ptr_t& reward
     ) {
+    // USE observation and reward
     return precomputed_feature_idx(instance_idx,feature_idx,feature_n,observation,reward,true);
 }
 
@@ -1586,7 +1588,7 @@ void KMarkovCRF::precompute_compound_feature_values() {
     // resize vector
     idx_t value_n = instance_n;
     value_n *= feature_n;
-    value_n *= observation_t::observation_n * reward_t::reward_n + 1;
+    value_n *= observation_space->space_size() * reward_space->space_size() + 1;
     compound_feature_values.resize(value_n);
 
     // iterate through data
@@ -1617,8 +1619,8 @@ void KMarkovCRF::precompute_compound_feature_values() {
                     );
 
                 // with setting specific observation and reward
-                for(observationIt_t observation=observationIt_t::first(); observation!=INVALID; ++observation) {
-                    for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
+                for(observation_ptr_t observation : observation_space) {
+                    for(reward_ptr_t reward : reward_space) {
                         precomputed_index = precomputed_feature_idx(instance_idx,f_idx,feature_n,observation,reward);
                         compound_feature_values[precomputed_index] = active_features[f_idx].evaluate(insIt-1,action,observation,reward);
                         DEBUG_OUT(3,"    Feature " << active_features[f_idx] <<
@@ -1674,8 +1676,8 @@ void KMarkovCRF::precompute_base_feature_values() {
 
             // iterate through observations and rewards
             idx_t observation_reward_idx=0;
-            for(observationIt_t observation=observationIt_t::first(); observation!=INVALID; ++observation) {
-                for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
+            for(observation_ptr_t observation : observation_space) {
+                for(reward_ptr_t reward : reward_space) {
 
                     // add entry on observation-reward level
                     base_feature_values[instance_idx].push_back(Feature::look_up_map_t());

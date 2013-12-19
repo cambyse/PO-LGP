@@ -12,6 +12,8 @@
 #undef DEBUG_STRING
 #undef DEBUG_LEVEL
 #undef DEBUG_OUT
+#undef DEBUG_ERROR
+#undef DEBUG_WARNING
 #undef DEBUG_DEAD_LINE
 
 #undef DEBUG_H_ // debug.h may now be re-included

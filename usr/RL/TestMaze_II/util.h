@@ -254,6 +254,26 @@ namespace util {
 
         /** \brief operator< */
         virtual bool operator<(const AbstractIteratableSpace& other) const = 0;
+
+        virtual unsigned long int space_size() const {
+            unsigned long int size = 0;
+            for(ptr_t element : *this) {
+                ++size;
+            }
+            return size;
+        }
+
+        virtual long int index() const {
+            DEBUG_WARNING("Using inefficient method to compute index");
+            unsigned long int idx = -1;
+            for(ptr_t element : *this) {
+                ++idx;
+                if(*this==element) {
+                    break;
+                }
+            }
+            return idx;
+        }
     };
 
     /** \brief Base class to make a derived class assign-compatible with a type.

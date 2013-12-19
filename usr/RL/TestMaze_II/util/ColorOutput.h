@@ -7,7 +7,7 @@ namespace ColorOutput {
 
     enum class ATTRIBUTE {
         RESET_ALL        = 0,
-        BOLD             = 1,
+        BOLD             = 1, // bold/bright
         DIM              = 2,
         UNDERLINED       = 4,
         BLINK            = 5,

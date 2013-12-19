@@ -37,6 +37,7 @@ bool AbstractAction::operator<(const AbstractIteratableSpace& other) const {
 }
 
 bool AbstractAction::operator<(const AbstractAction& other) const {
+    DEBUG_WARNING("Using comparison operator of abstract class");
     return this->action_type<other.action_type;
 }
 

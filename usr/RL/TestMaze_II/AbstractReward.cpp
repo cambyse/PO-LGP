@@ -37,6 +37,7 @@ bool AbstractReward::operator<(const AbstractIteratableSpace& other) const {
 }
 
 bool AbstractReward::operator<(const AbstractReward& other) const {
+    DEBUG_WARNING("Using comparison operator of abstract class");
     return this->reward_type<other.reward_type;
 }
 
