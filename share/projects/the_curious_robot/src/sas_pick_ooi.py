@@ -24,7 +24,7 @@ from timer import Timer
 #
 # TODO selecting the strategy should be done via dynamic reconfigure.
 def _strategy_random_select(oois):
-    """select a random object of all possibes objects"""
+    """Select a random object of all possibes objects."""
     ooi = random.choice(oois)
     ooi_id_msg = tcr.msg.ObjectID()
     ooi_id_msg.id = ooi
@@ -32,10 +32,22 @@ def _strategy_random_select(oois):
     return ooi_id_msg
 
 
-def _strategy_door1_select(oois):
-    """always go for the door1-door"""
+def _strategy_door_frame_top(oois):
+    """Always go for the door1-door."""
     ooi_id_msg = tcr.msg.ObjectID()
     ooi_id_msg.id = 4
+    return ooi_id_msg
+
+
+def _strategy_select_shape_with_index(oois, index=5):
+    """
+    Pick a shape with the given index.
+
+    4: top door frame
+    5: door_door
+    """
+    ooi_id_msg = tcr.msg.ObjectID()
+    ooi_id_msg.id = index
     return ooi_id_msg
 
 
@@ -64,7 +76,8 @@ class PickOOIActionServer:
 
         # Select the exploration strategies
         # self.select_ooi = _strategy_random_select
-        self.select_ooi = _strategy_door1_select
+        # self.select_ooi = _strategy_door_frame_top
+        self.select_ooi = _strategy_select_shape_with_index
 
         self.oois = None
         rp.Provide("PickOOI")
