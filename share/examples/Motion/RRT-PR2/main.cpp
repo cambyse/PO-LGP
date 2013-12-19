@@ -28,8 +28,8 @@ arr create_endpose(ors::Graph& G, double col_prec, double pos_prec, arr& start) 
   P.setInterpolatingCosts(c, MotionProblem::constant, {0.}, col_prec);
 
   c = P.addTaskMap("position", new DefaultTaskMap(posTMT, G, "tip1", ors::Vector(0, 0, .0)));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(P.ors->getBodyByName("target")->X.pos), 1e2);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), pos_prec);
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(P.ors->getBodyByName("target")->X.pos), pos_prec);
+  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e1);
 
   keyframeOptimizer(start, P, true, 2);
 
@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
   rnd.seed(seed);
   
 
-  ors::Graph G("world-pr2.ors");
+  ors::Graph G(MT::getParameter<MT::String>("orsFile"));
   makeConvexHulls(G.shapes);
 
   OpenGL gl;
@@ -105,7 +105,11 @@ int main(int argc, char** argv) {
   std::cout << "q = " << start << std::endl;
 
   arr opt_start = start;
-  arr target_t = create_endpose(G, 1e1, 1e3, opt_start);
+  opt_start(0) = G.getBodyByName("target")->X.pos.x;
+  opt_start(1) = G.getBodyByName("target")->X.pos.y;
+  //opt_start(2) = (rand()/(double) RAND_MAX) * 2 * M_PI - M_PI;
+
+  arr target_t = create_endpose(G, 1e0, 1e3, opt_start);
   arr target = create_endpose(G, 1e3, 0, target_t);
   G.setJointState(start);
 
