@@ -38,29 +38,29 @@ class ObjectTypeHypo():
 
     def __init__(self):
         # uninformed prior for beta distribution
-        self.alpha = 1
-        self.beta = 1
+        self._static_count = 1
+        self._free_count = 1
 
     def update(self, OBJECT_TYPE):
         """Update the hypothesis. We can observe STATIC or FREE."""
         if OBJECT_TYPE == ObjectTypeHypo.STATIC:
-            self.alpha += 1
+            self._static_count += 1
         elif OBJECT_TYPE == ObjectTypeHypo.FREE:
-            self.beta += 1
+            self._free_count += 1
         else:
             raise TypeError("Type most be STATIC or FREE")
 
     def get_entropy(self):
-        return ss.beta(self.alpha, self.beta).entropy()
+        return ss.beta(self._static_count, self._free_count).entropy()
 
     def is_static(self):
         """Return True iff the object is static."""
-        return self.alpha >= self.beta
+        return self._static_count >= self._free_count
 
     def __str__(self):
-        dist = ss.beta(self.alpha, self.beta)
-        return "Beta(alpha={}, beta={}) -> H={:1.3}".format(
-            self.alpha, self.beta, dist.entropy()
+        dist = ss.beta(self._static_count, self._free_count)
+        return "Beta(static={}, free={}) -> H={}".format(
+            self._static_count, self._free_count, dist.entropy()
         )
 
 
@@ -88,7 +88,7 @@ class JointBelief(object):
 
     def __str__(self):
         dist = ss.beta(self._prismatic_count, self._rotational_count)
-        return "Beta(prismatic={}, rotational={}) -> H={:1.3}".format(
+        return "Beta(prismatic={}, rotational={}) -> H={}".format(
             self._prismatic_count, self._rotational_count, dist.entropy()
         )
 
