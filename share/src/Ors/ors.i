@@ -30,6 +30,7 @@ created: <2013-03-20 Wed>
   #include "Gui/opengl.h"
   #include "Gui/mesh.h"
   #include <sstream>
+  using namespace ors;
 %}
 
 
