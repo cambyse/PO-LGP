@@ -87,8 +87,10 @@ class JointBelief(object):
         self._rotational_count = 1  # beta
 
     def __str__(self):
-        result = ""
-        return result
+        dist = ss.beta(self._prismatic_count, self._rotational_count)
+        return "Beta(alpha={}, beta={}) -> H={:1.3}".format(
+            self._prismatic_count, self._rotational_count, dist.entropy()
+        )
 
     def get_entropy(self):
         return ss.beta(self._prismatic_count, self._rotational_count).entropy()
