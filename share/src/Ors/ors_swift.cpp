@@ -372,9 +372,7 @@ void SwiftInterface::swiftQueryExactDistance() {
 #else
 #include <Core/util.h>
 //#warning "MT_extern_SWIFT undefined - using HALT implementations"
-void SwiftInterface::init(const ors::KinematicWorld& _world) { MT_MSG("WARNING - creating dummy SwiftInterface"); }
 void SwiftInterface::initActivations(const ors::KinematicWorld& C, uint parentLevelsToDeactivate) {}
-void SwiftInterface::close() {}
 void SwiftInterface::deactivate(const MT::Array<ors::Body*>& bodies) {}
 void SwiftInterface::deactivate(ors::Shape *s1, ors::Shape *s2) {}
 void SwiftInterface::step(bool dumpReport) {}
