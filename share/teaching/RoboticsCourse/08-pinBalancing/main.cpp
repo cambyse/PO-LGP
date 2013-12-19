@@ -15,7 +15,8 @@ void testDynamics(){
   
   for(uint i=0;i<1000;i++){
     u = -0.1 * qdot; //a little friction
-    S.stepDynamic(u, tau);
+    S.stepDynamics(u, tau);
+    S.watch(false);
     S.getJointAnglesAndVels(q, qdot);
   }
   

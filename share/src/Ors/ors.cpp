@@ -1331,21 +1331,21 @@ void ors::KinematicWorld::stepOde(double tau){
 #endif
 }
 
-void ors::KinematicWorld::stepDynamics(const arr& u_control, double tau, double dynamicNoise){
+void ors::KinematicWorld::stepDynamics(const arr& Bu_control, double tau, double dynamicNoise){
 
   struct DiffEqn:VectorFunction{
     ors::KinematicWorld &S;
-    const arr& u;
-    DiffEqn(ors::KinematicWorld& _S, const arr& _u):S(_S),u(_u){}
+    const arr& Bu;
+    DiffEqn(ors::KinematicWorld& _S, const arr& _Bu):S(_S), Bu(_Bu){}
     void fv(arr& y, arr& J, const arr& x){
       S.setJointState(x[0], x[1]);
       S.calcBodyFramesFromJoints();
       arr M,Minv,F;
       S.equationOfMotion(M, F);
-      inverse_SymPosDef(Minv,M);
-      y = Minv * (u - F);
+      inverse_SymPosDef(Minv, M);
+      y = Minv * (Bu - F);
     }
-  } eqn(*this, u_control);
+  } eqn(*this, Bu_control);
 
 #if 0
   arr M,Minv,F;
@@ -1361,6 +1361,7 @@ void ors::KinematicWorld::stepDynamics(const arr& u_control, double tau, double 
 #else
   arr x1;
   rk4_2ndOrder(x1, cat(q, qdot).reshape(2,q.N), eqn, tau);
+  if(dynamicNoise) rndGauss(x1[1](), ::sqrt(tau)*dynamicNoise, true);
 #endif
 
   setJointState(x1[0], x1[1]);

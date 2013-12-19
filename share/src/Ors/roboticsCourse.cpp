@@ -80,11 +80,6 @@ Simulator::Simulator(const char* orsFile){
   
   //SWIFT
   s->G.swift().setCutoff(.5);
-  
-  //ODE
-#ifdef MT_ODE
-  s->G.ode();
-#endif
 }
 
 Simulator::~Simulator(){
@@ -200,6 +195,14 @@ void Simulator::setDynamicSimulationNoise(double noise){
 
 void Simulator::setDynamicGravity(bool gravity){
   s->gravity = gravity;
+}
+
+void Simulator::getDynamics(arr& M, arr& F){
+  s->G.equationOfMotion(M, F);
+}
+
+void Simulator::stepDynamics(const arr& Bu, double tau){
+  s->G.stepDynamics(Bu, tau, s->dynamicNoise);
 }
 
 void Simulator::stepOde(const arr& qdot, double tau){
