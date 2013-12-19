@@ -23,7 +23,7 @@ struct RacerState : VectorFunction{
     q(1) = .01; //1MT_PI/2; //slighly non-upright //MT_PI; //haning down
 
     //init constants
-    tau = 0.001; //with 1/1000 is better
+    tau = 0.01;
     r=.05;
     l=.5;
     mA=.05;
@@ -36,17 +36,14 @@ struct RacerState : VectorFunction{
 
     gl.add(drawEnv, this);
     gl.add(glDrawRacer, this);
-    gl.camera.setPosition(10., -50., 10.);
-    gl.camera.focus(0, 0, 1.);
+    gl.camera.setPosition(3., -20., 5.);
+    gl.camera.focus(0, 0, .2);
     gl.camera.upright();
     gl.update();
   }
 
-  void fv(arr& y, arr& J, const arr& x){
-    q = x[0];
-    q_dot = x[1];
-
-    arr B = ARR(1./r, -1.); //control matrix
+  void getDynamics(arr&M, arr& F, arr& B){
+    B = ARR(1./r, -1.); //control matrix
 
     arr M_A, M_B;
     M_A.setDiag(ARR(mA,mA,IA));
@@ -62,35 +59,39 @@ struct RacerState : VectorFunction{
     J_B_dash(0,1) = -l*::sin(q(1));
     J_B_dash(1,1) = -l*::cos(q(1));
 
-    arr M = ~J_A * M_A * J_A + ~J_B * M_B * J_B;
-    arr Minv;
-    inverse_SymPosDef(Minv, M);
-
-//    cout <<"B:" <<B <<"M_A:" <<M_A <<"M_B:" <<M_B <<"M:" <<M <<"J_A:" <<J_A <<"J_B:" <<J_B <<"J_B_DASH:" <<J_B_dash <<endl;
-
-    double T = 0.5 * (~q_dot * M * q_dot).scalar(); //kinetic energy
-    double U = g * mB * l * ::cos(q(1)); //potential energy
-    cout <<"energy = " <<T+U <<endl;
+    M = ~J_A * M_A * J_A + ~J_B * M_B * J_B;
 
     arr M_dot = 2. * ~J_B * M_B * J_B_dash * q_dot(1);
 
-    arr M_q_ddot = B*u - M_dot*q_dot
-                   + ( (~q_dot*~J_B*M_B*J_B_dash*q_dot).scalar() + g*mB*l*::sin(q(1)) )*ARR(0., 1.);
+    F = M_dot*q_dot
+        - ( (~q_dot*~J_B*M_B*J_B_dash*q_dot).scalar() + g*mB*l*::sin(q(1)) )*ARR(0., 1.);
+  }
 
-    arr q_ddot = Minv * M_q_ddot;
+  void fv(arr& y, arr& J, const arr& x){ //returns the acceleration given the state -> used by rk4
+    q = x[0];
+    q_dot = x[1];
 
-    y = q_ddot;
+    arr M, Minv, F, B;
+    getDynamics(M, F, B);
+    inverse_SymPosDef(Minv, M);
+
+    y = Minv * (B*u - F);
+
+//    double T = 0.5 * (~q_dot * M * q_dot).scalar(); //kinetic energy
+//    double U = g * mB * l * ::cos(q(1)); //potential energy
+//    cout <<"energy = " <<T+U <<endl;
+
     if(&J) HALT("");
   }
 
-  void step(double _u){
+  void stepDynamics(double _u){
     u=_u;
     arr x;
     rk4_2ndOrder(x, cat(q,q_dot).reshape(2,2), *this, tau);
     q=x[0];
     q_dot=x[1];
 
-    if(dynamicsNoise) rndGauss(q_dot, dynamicsNoise, true);
+    if(dynamicsNoise) rndGauss(q_dot, ::sqrt(tau)*dynamicsNoise, true);
   }
 
 };
@@ -128,7 +129,7 @@ void TestMove(){
   RacerState s;
   for (uint t=0; t<400000; t++){
     s.gl.text.clear() <<t <<" ; " <<s.q(0) << " ; " <<s.q(1);
-    s.step(0.0);
+    s.stepDynamics(0.0);
     s.gl.update();
   }
 }

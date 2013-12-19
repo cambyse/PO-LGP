@@ -1336,13 +1336,13 @@ void ors::KinematicWorld::stepDynamics(const arr& Bu_control, double tau, double
   struct DiffEqn:VectorFunction{
     ors::KinematicWorld &S;
     const arr& Bu;
-    DiffEqn(ors::KinematicWorld& _S, const arr& _Bu):S(_S),Bu(_Bu){}
+    DiffEqn(ors::KinematicWorld& _S, const arr& _Bu):S(_S), Bu(_Bu){}
     void fv(arr& y, arr& J, const arr& x){
       S.setJointState(x[0], x[1]);
       S.calcBodyFramesFromJoints();
       arr M,Minv,F;
       S.equationOfMotion(M, F);
-      inverse_SymPosDef(Minv,M);
+      inverse_SymPosDef(Minv, M);
       y = Minv * (Bu - F);
     }
   } eqn(*this, Bu_control);
