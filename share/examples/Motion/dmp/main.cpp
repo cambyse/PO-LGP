@@ -353,14 +353,8 @@ void scenario4() {
     W = W*w_reg;
 
     // Compute current task states
-<<<<<<< HEAD
-    G.kinematicsPos(yPos,JPos, G.getBodyByName("endeff")->index);
-    G.kinematicsVec(yVec,JVec, G.getBodyByName("endeff")->index);
-
-=======
     G.kinematicsPos(yPos, JPos, G.getBodyByName("endeff")->index);
     G.kinematicsVec(yVec, JVec, G.getBodyByName("endeff")->index);
->>>>>>> master
 
     // iterate dmp
     d.iterate();
