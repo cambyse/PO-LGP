@@ -131,7 +131,7 @@ RobotManipulationSimulator::RobotManipulationSimulator(){
   gl=0;
   ode=0;
   swift=0;
-  revel=0;
+  video=0;
   Tabort = SEC_ACTION_ABORT;
 }
 
@@ -277,7 +277,7 @@ void RobotManipulationSimulator::simulate(uint t, const char* message){
     else
       send_string << msg_string;
     //     send_string << msg_string << "     \n\n(time " << t << ")";
-    controlledStep(q,W,C,ode,swift,gl,revel,local_TVs,send_string);
+    controlledStep(q,W,C,ode,swift,gl,video,local_TVs,send_string);
   }
 }
 
@@ -568,7 +568,7 @@ MT::String RobotManipulationSimulator::getColorString(uint obj) {
     // WHERE TO GO ABOVE
     MT::String send_string;
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
-    controlledStep(q,W,C,ode,swift,gl,revel,local_TVs,send_string);
+    controlledStep(q,W,C,ode,swift,gl,video,local_TVs,send_string);
     double diff = norm(o.y - o.y_target);
     if (diff < 0.01) break;
   }
@@ -1192,7 +1192,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
       if (isTable) {x.y_target(2) = neutralHeight-0.1;}
       MT::String send_msg;
       send_msg << msg_string /*<< "      \n\n(time " << t << ")"*/;
-      controlledStep(q,W,C,ode,swift,gl,revel,local_TVs,send_msg);
+      controlledStep(q,W,C,ode,swift,gl,video,local_TVs,send_msg);
       // TODO passt das? Ueberall state durch "active" ersetzt
 //       if(x.active==1 || C->getContact(x.i,obj->index)) break;
       if(x.active==1 || C->getContact(x.i,obj->index)) break;
@@ -1210,7 +1210,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
     if (isTable) {x.y_target(2) = neutralHeight-0.1;}
     MT::String send_msg;
     send_msg << msg_string /*<< "      \n\n(time " << t << ")"*/;
-    controlledStep(q,W,C,ode,swift,gl,revel,local_TVs,send_msg);
+    controlledStep(q,W,C,ode,swift,gl,video,local_TVs,send_msg);
     if (gl) {gl->update();}
     double dist = norm(x.y - x.y_target);
 //     PRINT(x.y);
@@ -1246,7 +1246,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
     x.y_target(2) = 1.2;
     MT::String send_msg;
     send_msg << msg_string /*<< "      \n\n(time " << t << ")"*/;
-    controlledStep(q,W,C,ode,swift,gl,revel,local_TVs,send_msg);
+    controlledStep(q,W,C,ode,swift,gl,video,local_TVs,send_msg);
     if (gl) {gl->update();}
     double dist = norm(x.y - x.y_target);
     if(dist<.05) break;
@@ -1415,7 +1415,7 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
       o.y_target(2) += 0.05;
     MT::String send_string;
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
-    controlledStep(q,W,C,ode,swift,gl,revel,local_TVs,send_string);
+    controlledStep(q,W,C,ode,swift,gl,video,local_TVs,send_string);
     double diff = norm(o.y - o.y_target);
     if (diff < 0.05) break;
   }
@@ -1431,7 +1431,7 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   for(t=0;t<Tabort;t++){
     MT::String send_string;
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
-    controlledStep(q,W,C,ode,swift,gl,revel,local_TVs,send_string);
+    controlledStep(q,W,C,ode,swift,gl,video,local_TVs,send_string);
     double diff = norm(o.y - o.y_target);
     if (diff < 0.05) break;
   }
@@ -1466,7 +1466,7 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
     // WHERE TO GO ABOVE
     MT::String send_string;
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
-    controlledStep(q,W,C,ode,swift,gl,revel,local_TVs,send_string);
+    controlledStep(q,W,C,ode,swift,gl,video,local_TVs,send_string);
     double diff = norm(o.y - o.y_target);
     if (diff < 0.001) break;
   }
@@ -1636,7 +1636,7 @@ void RobotManipulationSimulator::relaxPosition(const char* message){
     MT::String send_string;
     send_string << msg_string /*<< "     \n\n(time " << t << ")"*/;
 //     controlledStep(q,W,send_string);
-    controlledStep(q,W,C,ode,swift,gl,revel,local_TVs,send_string);
+    controlledStep(q,W,C,ode,swift,gl,video,local_TVs,send_string);
     double diff = norm(x.y - x.y_target);
     if (diff < 0.5) break;
 //     if(x.active==1) break;

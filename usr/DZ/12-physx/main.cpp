@@ -12,7 +12,7 @@
 // const double PI = 3.1415926535897932384626; 
 // const double PI_OVER_2 = 0.5* PI;
  
-void createOrs(ors::Graph& ors, OpenGL& gl) {
+void createOrs(ors::KinematicWorld& ors, OpenGL& gl) {
   ors.clear(); 
    
   for(uint k=0; k<3; k++) { 
@@ -47,7 +47,7 @@ void createOrs(ors::Graph& ors, OpenGL& gl) {
 
 void problem1(){   
   cout <<"\n= Sample physX simulation=\n" <<endl;
-   ors::Graph ors;
+   ors::KinematicWorld ors;
    OpenGL gl, phys_gl; 
   
    createOrs(ors, gl);
@@ -72,7 +72,7 @@ void problem1(){
 
 void problem2(){   
   cout <<"\n= Sample physX simulation with joints=\n" <<endl;
-   ors::Graph ors;
+   ors::KinematicWorld ors;
    OpenGL gl, phys_gl; 
   
    createOrs(ors, gl); 
@@ -107,7 +107,7 @@ void problem2(){
 
 void problem3(){   
   cout <<"\n= Sample physX simulation with joints and kinematic objects=\n" <<endl;
-   ors::Graph ors;
+   ors::KinematicWorld ors;
    OpenGL gl, phys_gl; 
    ors.init("complex_writhe.ors");
   
@@ -152,7 +152,7 @@ void problem3(){
 
 void problem4(){   
   cout <<"\n=  physX simulation with Schunk arm and hand=\n" <<endl;
-   ors::Graph ors;
+   ors::KinematicWorld ors;
    OpenGL gl, phys_gl; 
    ors.init("schunk.ors");
    ors::Joint *jj;

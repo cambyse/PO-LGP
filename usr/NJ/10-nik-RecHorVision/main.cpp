@@ -299,7 +299,7 @@ void RHV::init(RobotProcessGroup *robot){
 }
 
 void RHV::initTaskVariables(ControllerModule *ctrl){
-	ors::Graph &ors=ctrl->ors;
+	ors::KinematicWorld &ors=ctrl->ors;
 	TV_fNew   = new TaskVariable("posNew",ors,posTVT,"m9","<t( .02   .022 -.366)>",0,0,0);
 	TV_fNew->targetType=directTT;
 	TVall.append(TV_fNew);

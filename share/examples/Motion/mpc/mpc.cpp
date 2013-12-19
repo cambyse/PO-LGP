@@ -2,11 +2,11 @@
 
 #define VISUALIZE 1
 
-MPC::MPC(uint _plan_time_factor, ors::Graph &_orsG):
+MPC::MPC(uint _plan_time_factor, ors::KinematicWorld &_orsG):
   plan_time_factor(_plan_time_factor),
   orsG(&_orsG)
 {
-  P = new MotionProblem(&_orsG);
+  P = new MotionProblem(_orsG);
   P->loadTransitionParameters();
   F = new MotionProblemFunction(*P);
   T=F->get_T(); uint k=F->get_k(); n=F->dim_x(); dt=P->tau;
@@ -15,9 +15,9 @@ MPC::MPC(uint _plan_time_factor, ors::Graph &_orsG):
   plan_time = dt*plan_time_factor; // reoptimize trajectory at plan_time
 
   TaskCost *c;
-  c = P->addTaskMap("position", new DefaultTaskMap(posTMT,*P->ors,"endeff", ors::Vector(0., 0., 0.)));
+  c = P->addTaskMap("position", new DefaultTaskMap(posTMT,P->world,"endeff", ors::Vector(0., 0., 0.)));
   P->setInterpolatingCosts(c, MotionProblem::finalOnly,
-                           ARRAY(P->ors->getBodyByName("goalRef")->X.pos), 1e4,
+                           ARRAY(P->world.getBodyByName("goalRef")->X.pos), 1e4,
                            ARRAY(0.,0.,0.), 1e-3);
   P->setInterpolatingVelCosts(c, MotionProblem::finalOnly,
                               ARRAY(0.,0.,0.), 1e3,
@@ -34,7 +34,6 @@ MPC::MPC(uint _plan_time_factor, ors::Graph &_orsG):
   t_prev = 0.;
   t_plan_prev = 0.;
 
-#ifdef VISUALIZE
   // transform trajectory in cartesian space for visualization
   arr kinPos;
   y_cart.clear();
@@ -42,17 +41,16 @@ MPC::MPC(uint _plan_time_factor, ors::Graph &_orsG):
   for (uint j=0;j<yRef.d0-1;j++) {
     orsG->setJointState(yRef[j]);
     orsG->calcBodyFramesFromJoints();
-    orsG->kinematicsPos(kinPos,P->ors->getBodyByName("endeff")->index);
+    orsG->kinematicsPos(kinPos, NoArr, P->world.getBodyByName("endeff")->index);
     y_cart.append(~kinPos);
   }
-#endif
 }
 
 arr MPC::iterate(double _t, arr &_state, arr &_goal, double _simRate) {
-  P->swift->computeProxies(*orsG);
+  P->world.computeProxies();
 
   // save trajectory every dt steps
-  if (_t >= (t_prev+dt)) {
+  if (_t >= (t_prev+dt-1e-10)) {
     y_bk.append(~_state);
     t_prev = _t;
   }
@@ -69,7 +67,6 @@ arr MPC::iterate(double _t, arr &_state, arr &_goal, double _simRate) {
 
 void MPC::replanTrajectory(arr &_state, arr &_goal, double _t) {
   P->T = P->T-plan_time_factor;
-  cout << "P.T: " << P->T << endl;
 
   arr prefix(2,n);
   prefix[1] = y_bk[y_bk.d0-2];
@@ -79,7 +76,7 @@ void MPC::replanTrajectory(arr &_state, arr &_goal, double _t) {
   // reset costs
   P->costMatrix.clear();
   TaskCost *c;
-  c = P->addTaskMap("position", new DefaultTaskMap(posTMT,*P->ors,"endeff", ors::Vector(0., 0., 0.)));
+  c = P->addTaskMap("position", new DefaultTaskMap(posTMT,P->world,"endeff", ors::Vector(0., 0., 0.)));
 
   P->setInterpolatingCosts(c, MotionProblem::finalOnly,
                            _goal, 1e4,
@@ -90,14 +87,17 @@ void MPC::replanTrajectory(arr &_state, arr &_goal, double _t) {
 
   // update reference trajectory
   yRef = yRef.rows(plan_time_factor,yRef.d0);
+
   MT::timerStart();
-  optNewton(yRef, Convert(*F), OPT(verbose=1, stopIters=10, useAdaptiveDamping=false, damping=1e-3, maxStep=1., stopTolerance=1e-2));
+  optNewton(yRef, Convert(*F), OPT(verbose=0, stopIters=10, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
   std::cout <<"optimization time: " <<MT::timerRead() <<"sec" <<std::endl;
+  //  cout << "Opt change: "<< sum((yRef- z)%(yRef- z)) << endl;
+
 
   arr knots = linspace(_t,T*dt,P->T);
   s = new Spline(knots,yRef,2);
 
-#ifdef VISUALIZE
+#if VISUALIZE
   // transform trajectory in cartesian space for visualization
   arr kinPos;
   y_cart.clear();
@@ -105,7 +105,7 @@ void MPC::replanTrajectory(arr &_state, arr &_goal, double _t) {
   for (uint j=0;j<yRef.d0-1;j++) {
     orsG->setJointState(yRef[j]);
     orsG->calcBodyFramesFromJoints();
-    orsG->kinematicsPos(kinPos,P->ors->getBodyByName("endeff")->index);
+    orsG->kinematicsPos(kinPos, NoArr, P->world.getBodyByName("endeff")->index);
     y_cart.append(~kinPos);
   }
 #endif

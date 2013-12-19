@@ -287,7 +287,6 @@ double sConvert::KOrderMarkovFunction_ConstrainedProblem::fc(arr& df, arr& Hf, a
     }
     y_count += yd;
 
-
     //insert in meta_g
     if(gd){
       g.referToSubRange(phi, yd, -1);

@@ -1,9 +1,8 @@
 #include "keyframer.h"
+#include <Ors/ors_swift.h>
 
 struct KeyFramer::sKeyFramer {
-  ors::Graph *G;
-  OpenGL *gl;
-  SwiftInterface *swift;
+  ors::KinematicWorld *G;
   G4Data *g4d;
 
   uint nbodies, ndofs;
@@ -16,7 +15,7 @@ struct KeyFramer::sKeyFramer {
   double thresh;
   double dist;
 
-  sKeyFramer(ors::Graph *_G, OpenGL *_gl, G4Data *_g4d);
+  sKeyFramer(ors::KinematicWorld *_G, G4Data *_g4d);
   ~sKeyFramer();
 
   void clear();
@@ -38,7 +37,7 @@ struct KeyFramer::sKeyFramer {
 // sKeyFramer
 //
 
-KeyFramer::sKeyFramer::sKeyFramer(ors::Graph *_G, OpenGL *_gl, G4Data *_g4d): G(_G), gl(_gl), g4d(_g4d) {
+KeyFramer::sKeyFramer::sKeyFramer(ors::KinematicWorld *_G, G4Data *_g4d): G(_G), g4d(_g4d) {
   clear();
   init();
   thresh = .95;
@@ -66,10 +65,6 @@ void KeyFramer::sKeyFramer::init() {
   StringA posNames;
   StringA oriNames;
   String name, pname, oname;
-
-  // init swift
-  swift = new SwiftInterface();
-  //swift->init(*G ,2.);
 
   // set up kf bodies and entities
   for(String name: g4d->getNames()) {
@@ -162,8 +157,8 @@ void KeyFramer::sKeyFramer::setupWindows(MT::Array<arr> &wins, uint wlen) {
 // KeyFramer
 //
 
-KeyFramer::KeyFramer(ors::Graph &G, OpenGL &gl, G4Data &g4d) {
-  s = new sKeyFramer(&G, &gl, &g4d);
+KeyFramer::KeyFramer(ors::KinematicWorld &G, G4Data &g4d) {
+  s = new sKeyFramer(&G, &g4d);
 }
 
 KeyFramer::~KeyFramer() {
@@ -239,11 +234,11 @@ void KeyFramer::updateOrs(uint f) {
     b->X.pos.set(x(0), x(1), x(2));
     b->X.rot.set(x(3), x(4), x(5), x(6));
 
-    s->swift->computeProxies(*s->G);
+    s->G->computeProxies();
   }
   s->G->calcBodyFramesFromJoints();
   //s->G.calcShapeFramesFromBodies(); TODO which one?
-  s->gl->text.clear() << "frame " << f << "/" << s->g4d->getNumFrames();
+  s->G->gl().text.clear() << "frame " << f << "/" << s->g4d->getNumFrames();
 }
 
 arr KeyFramer::getCorrPCA(uint b1, uint b2, uint wlen) {
@@ -490,7 +485,8 @@ arr KeyFramer::getDists(uint b1, uint b2) {
   for(auto &shape: s->G->bodies(b2)->shapes)
     if(shape->type != ors::markerST)
       shape->cont = true;
-  s->swift->init(*s->G, 2.);
+  s->G->swift().setCutoff(2.);
+  s->G->swift().initActivations();
   for(uint f = 0; f < s->nframes; f++) {
     updateOrs(f);
     ors::Proxy *minProxy = NULL;
@@ -584,22 +580,22 @@ void KeyFramer::saveKeyFrameScreens(const KeyFrameL &keyframes, uint df) {
 
     // saving keyframe image
     updateOrs(f-df);
-    s->gl->text.clear() <<"frame " <<f-df << endl;
-    s->gl->update(NULL, true);
-    flip_image(s->gl->captureImage);
-    byteA img1 = s->gl->captureImage;
+    s->G->gl().text.clear() <<"frame " <<f-df << endl;
+    s->G->gl().update(NULL, true);
+    flip_image(s->G->gl().captureImage);
+    byteA img1 = s->G->gl().captureImage;
 
     updateOrs(f);
-    s->gl->text.clear() <<"frame " <<f << endl;
-    s->gl->update(NULL, true);
-    flip_image(s->gl->captureImage);
-    byteA img2 = s->gl->captureImage;
+    s->G->gl().text.clear() <<"frame " <<f << endl;
+    s->G->gl().update(NULL, true);
+    flip_image(s->G->gl().captureImage);
+    byteA img2 = s->G->gl().captureImage;
 
     updateOrs(f+df);
-    s->gl->text.clear() <<"frame " <<f+df << endl;
-    s->gl->update(NULL, true);
-    flip_image(s->gl->captureImage);
-    byteA img3 = s->gl->captureImage;
+    s->G->gl().text.clear() <<"frame " <<f+df << endl;
+    s->G->gl().update(NULL, true);
+    flip_image(s->G->gl().captureImage);
+    byteA img3 = s->G->gl().captureImage;
 
     h = img1.d0;
     w = 3*img1.d1;

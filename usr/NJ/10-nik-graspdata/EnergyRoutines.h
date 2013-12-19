@@ -15,7 +15,7 @@ arr lastCenter;//for object positons in train data create
 int bDynamical;
 MT::String sDiscriminant;
 
-MT::Array<ors::Shape*> GetLandmarks(ors::Graph * g){
+MT::Array<ors::Shape*> GetLandmarks(ors::KinematicWorld * g){
 	ors::Shape * s1 = g->getShapeByName("tipNormal1");
 	ors::Shape * s2 = g->getShapeByName("tipNormal2");
 	ors::Shape * s3 = g->getShapeByName("tipNormal3");
@@ -40,7 +40,7 @@ ors::Vector GetRelPos(ors::Shape* a,ors::Shape* b){
 	return c;
 }
 
-arr GetRelJacobian(ors::Shape* a,ors::Shape* b,ors::Graph * G){
+arr GetRelJacobian(ors::Shape* a,ors::Shape* b,ors::KinematicWorld * G){
 	arr J,Ji,Jj,JRj;
 	ors::Vector pi,pj,c,vi,vj,r,jk;
 	uint k;
@@ -61,7 +61,7 @@ arr GetRelJacobian(ors::Shape* a,ors::Shape* b,ors::Graph * G){
 	return J;
 }
 
-arr GetRawFeaturesJ(const MT::Array<ors::Shape*> & landmarks,ors::Graph * G,arr & grad){
+arr GetRawFeaturesJ(const MT::Array<ors::Shape*> & landmarks,ors::KinematicWorld * G,arr & grad){
 	uint br = 0;
 	uint M = 4;
 	arr ans(landmarks.N*(landmarks.N-1)*M);
@@ -120,7 +120,7 @@ arr GetRawFeatures(const MT::Array<ors::Shape*> & landmarks){
 	return ans;
 }
 
-arr GetFeaturesDyn(const MT::Array<ors::Shape*> & landmarks,const arr & q, const arr & lastRaw, const arr & lastJoint,ors::Graph * G,arr & grad){
+arr GetFeaturesDyn(const MT::Array<ors::Shape*> & landmarks,const arr & q, const arr & lastRaw, const arr & lastJoint,ors::KinematicWorld * G,arr & grad){
 	arr gradR;
 	arr raw = GetRawFeaturesJ(landmarks,G,gradR);
 	uint nOffset = raw.N + q.N;
@@ -152,7 +152,7 @@ arr GetFeaturesDyn(const MT::Array<ors::Shape*> & landmarks,const arr & q, const
 	return TD;
 }
 
-arr GetFeatures(const MT::Array<ors::Shape*> & landmarks,const arr & q, ors::Graph * G,arr & grad){
+arr GetFeatures(const MT::Array<ors::Shape*> & landmarks,const arr & q, ors::KinematicWorld * G,arr & grad){
 	arr gradR;
 	arr raw = GetRawFeaturesJ(landmarks,G,gradR);
 	arr TD(raw.N + q.N);
@@ -176,7 +176,7 @@ arr GetFeatures(const MT::Array<ors::Shape*> & landmarks,const arr & q, ors::Gra
 	return TD-0.5;
 }
 
-arr GetFeatures(const MT::Array<ors::Shape*> & landmarks,const arr & q, ors::Graph * G){
+arr GetFeatures(const MT::Array<ors::Shape*> & landmarks,const arr & q, ors::KinematicWorld * G){
 	arr temp;
 	return GetFeatures(landmarks,q,G,temp);
 }
@@ -457,7 +457,7 @@ void GradTrajectory(RobotProcessGroup & robot){
 namespace NJCH {
 
 MT::Array<ors::Shape*> landmarks;
-ors::Graph * G;
+ors::KinematicWorld * G;
 
 void f(arr &y,const arr &x,void*){
 	arr a(39,8); a = 1;
@@ -628,7 +628,7 @@ void CheckManifold(const arr & q){
 	}
 }
 
-void NJCheck(ors::Graph * C){
+void NJCheck(ors::KinematicWorld * C){
 	G = C;
 	landmarks = GetLandmarks(G);
 	arr q;

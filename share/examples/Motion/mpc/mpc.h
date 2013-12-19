@@ -13,7 +13,7 @@
 
 
 struct MPC {
-  MPC(uint _plan_time_factor, ors::Graph &_orsG);
+  MPC(uint _plan_time_factor, ors::KinematicWorld &_orsG);
   ~MPC();
 
   arr iterate(double _t, arr &_state, arr &_goal, double _simRate);
@@ -25,7 +25,7 @@ struct MPC {
 
   MotionProblem *P;
   MotionProblemFunction *F;
-  ors::Graph *orsG;
+  ors::KinematicWorld *orsG;
 
   Spline *s;
 

@@ -2,16 +2,13 @@
 #include <Gui/opengl.h>
 
 void TEST(PhysxConvexSubmeshes) {
-  ors::Graph graph;
+  ors::KinematicWorld graph;
   graph.init("doorSimple.ors");
   ors::Body* robot = graph.getBodyByName("robot");
   graph.calcBodyFramesFromJoints();
 
-  OpenGL glMy;
   OpenGL glPh("PhysX");
-  PhysXInterface physx;
-  bindOrsToOpenGL(graph, glMy);
-  bindOrsToPhysX(graph, glPh, physx);
+  //  bindOrsToPhysX(graph, glPh, physx);
 
   ors::Vector control = ors::Vector(0.0, 0.01, 0.0);
   for (uint i = 0; i < 1000; i++) {
@@ -21,9 +18,9 @@ void TEST(PhysxConvexSubmeshes) {
     graph.calcBodyFramesFromJoints();
 
     // update sim
-    physx.step();
-    glMy.update();
-    glPh.update();
+    graph.stepPhysx(0.01);
+    graph.gl().update();
+    //glPh.update();
   }
 }
 

@@ -38,9 +38,6 @@ reformatSources:
 	astyle --options=src/style.astyle "src/MT/*.h" "src/MT/*.cpp" "src/MT/*.cxx"
 	cd src; find MT/ \( -name "*.h" -or -name "*.cpp" -or -name "*.cxx" \) -exec ./style.sed.sh {} \;
 
-cleanLocks: force
-	find . -name 'Make.lock' -type d -delete
-
 %.tgz:: force
 	mv -f make-config make-config.mine
 	cp -f slices/$*.make-config ./make-config

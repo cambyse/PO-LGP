@@ -242,7 +242,7 @@ double Validate(RobotProcessGroup & robotOld,RobotProcessGroup & robot2,const ar
 	return C;
 }
 
-arr GetEndPath(const arr & joints, ors::Graph * ors){
+arr GetEndPath(const arr & joints, ors::KinematicWorld * ors){
 	arr orig;
 	ors->getJointState(orig);
 	arr x(joints.d0,3);

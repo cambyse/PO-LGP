@@ -323,7 +323,7 @@ void infer::Factor::setP(const arr& p){
 }
 
 void infer::Factor::setText(const char* str){
-  P.setText(str);
+  MT::String(str) >>P;
   CHECK(P.N==product(dim), "infer::Factor set with ill-dimensioned array");
   P.reshape(dim);
   logP = 0.;

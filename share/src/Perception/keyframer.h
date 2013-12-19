@@ -10,7 +10,7 @@ struct KeyFramer {
   struct sKeyFramer;
   sKeyFramer *s;
 
-  KeyFramer(ors::Graph &G, OpenGL &gl, G4Data &g4d);
+  KeyFramer(ors::KinematicWorld &G, G4Data &g4d);
   ~KeyFramer();
 
   //uint getNBodies();

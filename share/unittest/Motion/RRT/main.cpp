@@ -14,7 +14,7 @@ class RRTPlannerTest : public ::testing::Test {
     arr start;
     arr target;
 
-    ors::Graph G;
+    ors::KinematicWorld G;
 
     double stepsize; // RRT stepsize
     double eps;      // eps environment size
@@ -33,7 +33,7 @@ RRTPlannerTest::RRTPlannerTest() {
   P.T = 1;
 
   // add a collision cost with threshold 0 to avoid collisions
-  uintA shapes = ARRAY<uint>(P.ors->getBodyByName("endeff")->shapes(0)->index);
+  uintA shapes = ARRAY<uint>(P.world.getBodyByName("endeff")->shapes(0)->index);
   TaskCost *c = P.addTaskMap("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .01, true));
   P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
   c->y_threshold = 0;
