@@ -3,7 +3,7 @@
 #include "util.h"
 #include "util/ProgressBar.h"
 
-#include "QtUtil.h" // for << operator
+#include "util/QtUtil.h" // for << operator
 
 #include <list>
 #include <map>
@@ -35,6 +35,7 @@ using util::INVALID;
 const KMarkovCRF::PRECOMPUTATION_TYPE KMarkovCRF::precomputation_type = KMarkovCRF::BASE_LOOK_UP;
 
 KMarkovCRF::KMarkovCRF():
+        FeatureLearner(LEARNER_TYPE::FULL_PREDICTIVE),
         lambda(nullptr),
         lambda_copy(nullptr),
         lambda_candidates(nullptr),
@@ -49,49 +50,49 @@ KMarkovCRF::KMarkovCRF():
     // Constructing basis indicator features  //
     //----------------------------------------//
 
-    // delayed action, observation, and reward features
-    for(int k_idx = 0; k_idx>=-(int)Config::k; --k_idx) {
-        // actions
-        for(actionIt_t action=actionIt_t::first(); action!=INVALID; ++action) {
-            f_ptr_t action_feature = ActionFeature::create(action,k_idx);
-            basis_features.push_back(action_feature);
-            DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
-        }
-        // observations
-        for(observationIt_t observation=observationIt_t::first(); observation!=INVALID; ++observation) {
-            f_ptr_t observation_feature = ObservationFeature::create(observation,k_idx);
-            basis_features.push_back(observation_feature);
-            DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
-        }
-        // reward
-        if(k_idx==0) { // take only the current reward into account (for predicting only)
-            for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
-                f_ptr_t reward_feature = RewardFeature::create(reward,k_idx);
-                basis_features.push_back(reward_feature);
-                DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
-            }
-        }
-    }
+//     // delayed action, observation, and reward features
+//     for(int k_idx = 0; k_idx>=-(int)Config::k; --k_idx) {
+//         // actions
+//         for(actionIt_t action=actionIt_t::first(); action!=INVALID; ++action) {
+//             f_ptr_t action_feature = ActionFeature::create(action,k_idx);
+//             basis_features.push_back(action_feature);
+//             DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+//         }
+//         // observations
+//         for(observationIt_t observation=observationIt_t::first(); observation!=INVALID; ++observation) {
+//             f_ptr_t observation_feature = ObservationFeature::create(observation,k_idx);
+//             basis_features.push_back(observation_feature);
+//             DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+//         }
+//         // reward
+//         if(k_idx==0) { // take only the current reward into account (for predicting only)
+//             for(rewardIt_t reward=rewardIt_t::first(); reward!=INVALID; ++reward) {
+//                 f_ptr_t reward_feature = RewardFeature::create(reward,k_idx);
+//                 basis_features.push_back(reward_feature);
+//                 DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+//             }
+//         }
+//     }
 
-#ifdef USE_RELATIVE_FEATURES
-    // relative observation features
-    f_ptr_t relative_observation_feature;
-    relative_observation_feature = RelativeObservationFeature::create(1,0,-1,0);
-    basis_features.push_back(relative_observation_feature);
-    DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
-    relative_observation_feature = RelativeObservationFeature::create(0,1,-1,0);
-    basis_features.push_back(relative_observation_feature);
-    DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
-    relative_observation_feature = RelativeObservationFeature::create(-1,0,-1,0);
-    basis_features.push_back(relative_observation_feature);
-    DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
-    relative_observation_feature = RelativeObservationFeature::create(0,-1,-1,0);
-    basis_features.push_back(relative_observation_feature);
-    DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
-    relative_observation_feature = RelativeObservationFeature::create(0,0,-1,0);
-    basis_features.push_back(relative_observation_feature);
-    DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
-#endif
+// #ifdef USE_RELATIVE_FEATURES
+//     // relative observation features
+//     f_ptr_t relative_observation_feature;
+//     relative_observation_feature = RelativeObservationFeature::create(1,0,-1,0);
+//     basis_features.push_back(relative_observation_feature);
+//     DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+//     relative_observation_feature = RelativeObservationFeature::create(0,1,-1,0);
+//     basis_features.push_back(relative_observation_feature);
+//     DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+//     relative_observation_feature = RelativeObservationFeature::create(-1,0,-1,0);
+//     basis_features.push_back(relative_observation_feature);
+//     DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+//     relative_observation_feature = RelativeObservationFeature::create(0,-1,-1,0);
+//     basis_features.push_back(relative_observation_feature);
+//     DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+//     relative_observation_feature = RelativeObservationFeature::create(0,0,-1,0);
+//     basis_features.push_back(relative_observation_feature);
+//     DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+// #endif
 }
 
 KMarkovCRF::~KMarkovCRF() {

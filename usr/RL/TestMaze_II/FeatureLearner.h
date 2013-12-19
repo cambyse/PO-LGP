@@ -1,9 +1,8 @@
 #ifndef FEATURELEARNER_H_
 #define FEATURELEARNER_H_
 
-#include "AbstractAction.h"
-#include "AbstractObservation.h"
-#include "AbstractReward.h"
+#include "Config.h"
+#include "Feature.h"
 
 class PredictiveEnvironment;
 
@@ -11,10 +10,10 @@ class FeatureLearner {
 
 public:
 
-    // typedefs
-    typedef AbstractAction::ptr_t action_ptr_t;
-    typedef AbstractObservation::ptr_t observation_ptr_t;
-    typedef AbstractReward::ptr_t reward_ptr_t;
+    // typedefs/types
+    USE_CONFIG_TYPEDEFS;
+    typedef Feature::feature_return_value f_ret_t;
+    typedef Feature::const_feature_ptr_t  f_ptr_t;
     enum class LEARNER_TYPE { FULL_PREDICTIVE, HISTORY_ONLY, HISTORY_AND_ACTION };
 
     // constructor/destructor
@@ -22,14 +21,18 @@ public:
     virtual ~FeatureLearner() = default;
 
     /** \brief Initialize action, observation, and reward spaces. */
-    virtual void initialize_spaces(const PredictiveEnvironment & environment);
+    virtual void set_spaces(const PredictiveEnvironment & environment);
+
+    /** \brief Initialize the basis features used for learning. */
+    virtual void set_features(const PredictiveEnvironment & environment);
 
 private:
 
-    const LEARNER_TYPE learner_type;      ///< Characterize the different types of feature learners.
-    action_ptr_t       action_space;      ///< The action space that is used.
-    observation_ptr_t  observation_space; ///< The observation space that is used.
-    reward_ptr_t       reward_space;      ///< The reward space that is used.
+    const LEARNER_TYPE   learner_type;      ///< Characterize the different types of feature learners.
+    action_ptr_t         action_space;      ///< The action space that is used.
+    observation_ptr_t    observation_space; ///< The observation space that is used.
+    reward_ptr_t         reward_space;      ///< The reward space that is used.
+    std::vector<f_ptr_t> basis_features;    ///< Basis features used to construct new candidates.
 };
 
 #endif /* FEATURELEARNER_H_ */

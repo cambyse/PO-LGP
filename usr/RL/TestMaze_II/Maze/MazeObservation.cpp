@@ -42,6 +42,10 @@ MazeObservation::MazeObservation(
     set_type(OBSERVATION_TYPE::MAZE_OBSERVATION);
 }
 
+MazeObservation::MazeObservation(int x_dim, int y_dim, int index):
+    MazeObservation(x_dim, y_dim, index%x_dim, index/x_dim)
+{}
+
 MazeObservation::Iterator MazeObservation::begin() const {
     return Iterator(ptr_t(new MazeObservation(x_dimensions,y_dimensions,0,0)));
 }
@@ -116,11 +120,7 @@ MazeObservation MazeObservation::new_observation(int x_pos, int y_pos) const {
 }
 
 MazeObservation MazeObservation::new_observation(int index) const {
-    return MazeObservation(x_dimensions,
-                           y_dimensions,
-                           index%x_dimensions,
-                           index/x_dimensions
-        );
+    return MazeObservation(x_dimensions, y_dimensions, index);
 }
 
 void MazeObservation::set_type(OBSERVATION_TYPE t) {

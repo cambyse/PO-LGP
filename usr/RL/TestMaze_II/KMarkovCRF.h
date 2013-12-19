@@ -14,19 +14,16 @@
 
 #include "Config.h"
 
-#include "Feature.h"
 #include "HistoryObserver.h"
+#include "FeatureLearner.h"
 
-class KMarkovCRF: public HistoryObserver
+class KMarkovCRF: public HistoryObserver, public FeatureLearner
 {
 public:
 
-    USE_CONFIG_TYPEDEFS;
-    typedef Feature::feature_return_value f_ret_t;
-    typedef Feature::const_feature_ptr_t  f_ptr_t;
+    DISAMBIGUATE_CONFIG_TYPEDEFS(HistoryObserver);
 
     KMarkovCRF();
-
     virtual ~KMarkovCRF();
 
     /** \brief Calls evaluate_model() on instance. */
@@ -213,7 +210,6 @@ private:
     lbfgsfloatval_t * lambda;                        ///< Coefficients for active features.
     lbfgsfloatval_t * lambda_copy;                   ///< Coefficients for copy of active features.
     lbfgsfloatval_t * lambda_candidates;             ///< Coefficients for candidate features.
-    std::vector<f_ptr_t> basis_features;             ///< Basis features used to construct new candidates.
     std::vector<AndFeature> active_features;         ///< Set of currently active features.
     std::vector<AndFeature> active_features_copy;    ///< Copy of currently active features.
     std::vector<AndFeature> candidate_features;      ///< Set of candidate features.

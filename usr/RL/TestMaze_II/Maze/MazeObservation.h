@@ -13,6 +13,11 @@ public:
         int x_pos,
         int y_pos
         );
+    MazeObservation(
+        int x_dim,
+        int y_dim,
+        int index
+        );
     /** \brief Defined explicitly because the maze dimensions need to be given. */
     virtual Iterator begin() const override;
     virtual ptr_t next() const override;

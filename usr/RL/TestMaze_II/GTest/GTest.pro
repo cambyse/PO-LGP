@@ -10,21 +10,26 @@ HEADERS += \
     ../util/ProgressBar.h \
     ../util/ColorOutput.h \
     ../util/QtUtil.h \
+    \
     ../Feature.h \
     ../Instance.h \
     ../AbstractAction.h \
     ../AbstractObservation.h \
     ../AbstractReward.h \
     ../ListedReward.h \
+    \
     ../PredictiveEnvironment.h \
-    ../FeatureLearner.h \
     ../VisualEnvironment.h \
     ../Maze/Maze.h \
     ../Maze/MazeAction.h \
     ../Maze/AugmentedMazeAction.h \
     ../AbstractObservation.h \
     ../Maze/MazeObservation.h \
+    \
     ../LookAheadSearch.h \
+    \
+    ../FeatureLearner.h \
+    ../KMarkovCRF.h \
     MinimalEnvironmentExample/MinimalAction.h \
     MinimalEnvironmentExample/MinimalObservation.h \
     MinimalEnvironmentExample/MinimalReward.h \
@@ -35,20 +40,26 @@ SOURCES += \
     ../util/ProgressBar.cpp \
     ../util/ColorOutput.cpp \
     ../util/QtUtil.cpp \
+    \
     ../Feature.cpp \
     ../Instance.cpp \
     ../AbstractAction.cpp \
     ../AbstractObservation.cpp \
     ../AbstractReward.cpp \
     ../ListedReward.cpp \
+    \
     ../PredictiveEnvironment.cpp \
-    ../FeatureLearner.cpp \
     ../VisualEnvironment.cpp \
     ../Maze/Maze.cpp \
     ../Maze/MazeAction.cpp \
     ../Maze/AugmentedMazeAction.cpp \
     ../Maze/MazeObservation.cpp \
+    \
     ../LookAheadSearch.cpp \
+    \
+    ../FeatureLearner.cpp \
+    ../KMarkovCRF.cpp \
+    \
     AbstractIteratableSpaceTest.cpp \
     FeatureTest.cpp \
 #    TemplateTest.cpp \
@@ -59,7 +70,7 @@ LIBS += -llbfgs \
     -larmadillo \
     -lgomp \
     -lgtest
-#LIBPATH += /usr/share/lib
+LIBPATH += /usr/share/lib
 QMAKE_CXXFLAGS += -std=c++0x \
     -fopenmp
 

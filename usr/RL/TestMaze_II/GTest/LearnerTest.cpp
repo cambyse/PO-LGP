@@ -1,10 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "../util/QtUtil.h"
-#include "../util/ColorOutput.h"
-
 #include "../Maze/Maze.h"
-#include "../LookAheadSearch.h"
+#include "../KMarkovCRF.h"
 
 #define DEBUG_LEVEL 1
 #include "../debug.h"
@@ -12,7 +9,7 @@
 using std::vector;
 using std::shared_ptr;
 
-TEST(PlannerTest, LookAheadSearch) {
+TEST(LearnerTest, LookAheadSearch) {
 
     // use standard typedefs
     typedef AbstractAction::ptr_t      action_ptr_t;
@@ -21,25 +18,13 @@ TEST(PlannerTest, LookAheadSearch) {
     typedef Instance                   instance_t;
     typedef double                     probability_t;
 
-    // do both prune and don't prune
-    for(bool prune_search_tree : {false,true}) {
-
-        if(prune_search_tree) {
-            DEBUG_OUT(1,ColorOutput::bold() << "Pruning" << ColorOutput::reset_all() << " search tree...");
-        } else {
-            DEBUG_OUT(1,ColorOutput::bold() << "Not pruning" << ColorOutput::reset_all() << " search tree...");
-        }
-
-        // initialize environment and planner
+        // initialize environment and learner
         Maze maze;
-        LookAheadSearch planner(0.5);
+        KMarkovCRF learner();
 
-        // get spaces and give them to planner
-        action_ptr_t action_space;
-        observation_ptr_t observation_space;
-        reward_ptr_t reward_space;
-        maze.get_spaces(action_space, observation_space, reward_space);
-        planner.set_spaces(action_space, observation_space, reward_space);
+        // get/set spaces and features
+        learner.set_spaces(maze);
+        learner.set_features(maze);
 
         const instance_t * maze_instance = maze.get_current_instance();
         instance_t * current_instance = instance_t::create(
@@ -54,26 +39,26 @@ TEST(PlannerTest, LookAheadSearch) {
             // debugging
             if(DEBUG_LEVEL>2) {
                 DEBUG_OUT(0,"Before planning:");
-                planner.print_tree_statistics();
+                learner.print_tree_statistics();
             }
 
             // do planning and select action
             action_ptr_t action;
             int max_tree_size = 10000;
             if(prune_search_tree && step_idx>0) {
-                planner.fully_expand_tree<Maze>(
+                learner.fully_expand_tree<Maze>(
                     maze,
                     max_tree_size
                     );
             } else {
-                planner.clear_tree();
-                planner.build_tree<Maze>(
+                learner.clear_tree();
+                learner.build_tree<Maze>(
                     current_instance,
                     maze,
                     max_tree_size
                     );
             }
-            action = planner.get_optimal_action();
+            action = learner.get_optimal_action();
 
             // actually the perform transition and print results
             observation_ptr_t observation_to;
@@ -171,11 +156,11 @@ TEST(PlannerTest, LookAheadSearch) {
             // debugging
             if(DEBUG_LEVEL>2) {
                 DEBUG_OUT(0,"After planning, before pruning:");
-                planner.print_tree_statistics();
+                learner.print_tree_statistics();
             }
 
             // sanity check
-            probability_t prob = planner.get_predicted_transition_probability<Maze>(action, observation_to, reward, maze);
+            probability_t prob = learner.get_predicted_transition_probability<Maze>(action, observation_to, reward, maze);
             if(prob==0) {
                 probability_t prob_maze = maze.get_prediction(current_instance->const_it()-1, action, observation_to, reward);
                 DEBUG_ERROR("Warning: Transition with predicted probability of zero for (" << action << "," << observation_to << "," << reward << ") (Maze predicts " << prob_maze << ")" );
@@ -184,12 +169,12 @@ TEST(PlannerTest, LookAheadSearch) {
 
             // prune tree
             if(prune_search_tree) {
-                planner.prune_tree(action,current_instance,maze);
+                learner.prune_tree(action,current_instance,maze);
             }
 
             if(DEBUG_LEVEL>2) {
                 DEBUG_OUT(0,"After pruning:");
-                planner.print_tree_statistics();
+                learner.print_tree_statistics();
             }
         }
     }

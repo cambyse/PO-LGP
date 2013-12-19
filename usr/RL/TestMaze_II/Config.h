@@ -18,6 +18,18 @@
 
 //===================================================================
 
+#ifndef CONFIG_TYPE_INCLUDES_H_
+#define CONFIG_TYPE_INCLUDES_H_
+
+#include "AbstractAction.h"
+#include "AbstractObservation.h"
+#include "AbstractReward.h"
+#include "Instance.h"
+
+#endif /* CONFIG_TYPE_INCLUDES_H_ */
+
+//===================================================================
+
 #ifndef CONFIG_TYPEDEFS_H_
 #define CONFIG_TYPEDEFS_H_
 
@@ -32,18 +44,17 @@
     typedef InstanceIt                 instanceIt_t;            \
     typedef ConstInstanceIt            const_instanceIt_t;
 
+#define DISAMBIGUATE_CONFIG_TYPEDEFS(class)     \
+    using class::size_t;                        \
+    using class::idx_t;                         \
+    using class::probability_t;                 \
+    using class::action_ptr_t;                  \
+    using class::observation_ptr_t;             \
+    using class::reward_ptr_t;                  \
+    using class::instance_t;                    \
+    using class::instanceIt_t;                  \
+    using class::const_instanceIt_t;
+
 #endif /* CONFIG_TYPEDEFS_H_ */
-
-//===================================================================
-
-#ifndef CONFIG_TYPE_INCLUDES_H_
-#define CONFIG_TYPE_INCLUDES_H_
-
-#include "AbstractAction.h"
-#include "AbstractObservation.h"
-#include "AbstractReward.h"
-#include "Instance.h"
-
-#endif /* CONFIG_TYPE_INCLUDES_H_ */
 
 //===================================================================

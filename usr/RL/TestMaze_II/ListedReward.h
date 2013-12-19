@@ -13,7 +13,12 @@ public:
      * @param idx initializes ListedReward::reward_index */
     ListedReward(
         const std::vector<value_t> & list = std::vector<value_t>(),
-        const uint & idx = 0
+        const int & idx = 0
+        );
+
+    ListedReward(
+        const std::vector<value_t> & list,
+        const double & value
         );
 
     /** \brief Defined explicitly because the reward list needs to be given. */
@@ -45,7 +50,7 @@ public:
 protected:
     virtual void set_type(REWARD_TYPE t) override;
     std::vector<value_t> reward_list; ///< List of all possible reward values.
-    uint reward_index;                ///< Index specifying the reward value.
+    int reward_index;                 ///< Index specifying the reward value.
 };
 
 #endif /* LISTEDREWARD_H_ */
