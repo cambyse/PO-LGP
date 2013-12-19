@@ -4,7 +4,7 @@ include(.sources.cmake)
 
 add_library(relational SHARED ${SOURCES})
 
-target_link_libraries(relational LINK_PRIVATE Core Ors)
+target_link_libraries(relational LINK_PRIVATE Core Ors Motion)
 
 
 

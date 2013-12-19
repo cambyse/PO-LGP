@@ -1110,5 +1110,6 @@ void OdeInterface::exportStateToOde() {}
 void OdeInterface::importStateFromOde() {}
 void OdeInterface::importProxiesFromOde() {}
 void OdeInterface::addJointForce(arr& f) {}
+void OdeInterface::pushPoseForShape(ors::Shape *s) {};
 #endif
 /** @} */

@@ -2,6 +2,7 @@ set(SOURCES ./pointcloud.h
 ./opencv.h
 ./perception.h
 ./keyframe.h
+./opencv.cpp
 ./video_opencv.cpp
 ./libcolorseg.h
 ./videoEncoder.h
@@ -16,4 +17,5 @@ set(SOURCES ./pointcloud.h
 ./videoEncoder.cpp
 ./g4data.cpp
 ./perception_views.cpp
-./keyframer.h)
+./keyframer.h
+./vision.h)

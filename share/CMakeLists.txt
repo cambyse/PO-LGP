@@ -7,18 +7,41 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
 # perform common checks
 find_package (Threads REQUIRED)
+option(USE_LAPACK "Enable use of lapack (default: if found)" ON)
+if(USE_LAPACK)
 find_package(LAPACK)
+if(LAPACK_FOUND)
+add_definitions(-DMT_LAPACK)
+endif(LAPACK_FOUND)
+else(USE_LAPACK)
+message(STATUS "Use of LAPACK disabled by user (option USE_LAPACK)")
+endif(USE_LAPACK)
+
+include(FindPkgConfig)
+option(USE_OPENCV "Enable use of lapack (default: if found)" ON)
+if(USE_OPENCV)
+pkg_search_module(OPENCV opencv>=2.3 opencv-2.3.1)
+if(OPENCV_FOUND)
+message(STATUS "Found OpenCV ${OPENCV_VERSION}")
+add_definitions(-DMT_OPENCV -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS ${OPENCV_CFLAGS})
+endif(OPENCV_FOUND)
+else(USE_OPENCV)
+message(STATUS "Use of OpenCV disabled by user (option USE_OPENCV)")
+endif(USE_OPENCV)
 
 # allow users to switch off compilation of unit-tests
 option(TESTING_ENABLED "Should we run unit-tests (default yes)" ON)
 if(TESTING_ENABLED)
+  option(EXAMPLES_AS_TESTS "Should examples be used as tests? (default yes)" ON)
         include(CheckIncludeFileCXX)
         check_include_file_cxx("gtest/gtest.h" GTEST_H_FOUND)
         if(GTEST_H_FOUND)
                 enable_testing()
                 add_subdirectory(/usr/src/gtest gtest)
                 link_directories(gtest)
+                if(EXAMPLES_AS_TESTS)
                 add_definitions(-DMLR_EXAMPLES_AS_TESTS)
+                endif(EXAMPLES_AS_TESTS)
         else(GTEST_H_FOUND)
                         message(WARNING "Did not find gtest.h, cannot enable testing")
                 set(TESTING_ENABLED)
@@ -68,7 +91,7 @@ include(src/Gui/gl.cmake OPTIONAL)
 if(USE_OPENGL)
 set(MLR_CXX_FLAGS "${MLR_CXX_FLAGS} -DMT_GL")
 endif(USE_OPENGL)
-message(STATUS "Using OpenGL: ${USE_OPENGL}, MLR CXX Flags: ${MLR_CXX_FLAGS}")
+message(STATUS "Using OpenGL: ${USE_OPENGL}")
 
 # target to create includes
 add_custom_target(sourceinc ALL
@@ -91,7 +114,11 @@ endif(SLICE_EXTERN)
 # select what to compile
 include(.slicedef.cmake)
 
+message(STATUS "MLR CXX Flags: ${MLR_CXX_FLAGS}")
+
 foreach(DIR ${CURRENT_SLICE})
 add_subdirectory(${DIR})
 endforeach(DIR ${CURRENT_SLICE})
+
+
 

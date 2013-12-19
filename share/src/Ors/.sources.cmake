@@ -1,5 +1,6 @@
 set(SOURCES ./ors_swift.cpp
 ./ors_actionInterface.h
+./ors_physx.cpp
 ./roboticsCourse.cpp
 ./ors_ode.h
 ./ors_ode.cpp
