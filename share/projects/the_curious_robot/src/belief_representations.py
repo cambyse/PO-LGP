@@ -26,17 +26,6 @@ class ShapeBelief(object):
 
 
 ###############################################################################
-class JointBelief(object):
-    def __init__(self):
-        pass
-
-    def __str__(self):
-        result = ""
-        # TODO fill me
-        return result
-
-
-###############################################################################
 class ObjectTypeHypo():
     """
     ObjectType represents the probability that an object has a certain type.
@@ -73,3 +62,43 @@ class ObjectTypeHypo():
         return "Beta(alpha={}, beta={}) -> H={:1.3}".format(
             self.alpha, self.beta, dist.entropy()
         )
+
+
+###############################################################################
+class JointBelief(object):
+    """
+    JointBelief stores all information about the joint.
+
+    TODO: How should we update the likelihood we get from articulation?
+    """
+
+    # types of joints
+    PRISMATIC = 1
+    ROTATIONAL = 2
+
+    def __init__(self):
+        self.joint_type = None
+        # store the rot/trans information in this dict
+        self.values = {}
+        self.loglikelihood = None
+
+        # parameters for the beta distribution
+        self._prismatic_count = 1  # alpha
+        self._rotational_count = 1  # beta
+
+    def __str__(self):
+        result = ""
+        return result
+
+    def get_entropy(self):
+        return ss.beta(self._prismatic_count, self._rotational_count).entropy()
+
+    def update(self, JOINT_TYPE):
+        """Update the hypothesis. We can observe STATIC or FREE."""
+        if JOINT_TYPE == JointBelief.PRISMATIC:
+            self._prismatic_count += 1
+        elif JOINT_TYPE == JointBelief.ROTATIONAL:
+            self._rotational_count += 1
+        else:
+            raise TypeError("Type most be STATIC or FREE")
+        pass
