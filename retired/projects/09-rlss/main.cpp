@@ -16,7 +16,7 @@ int main(int argc,char **argv){
   // initialization of the simulator (should be ok for the lab)
   
   // load the ors file
-  ors::Graph ors;
+  ors::KinematicWorld ors;
   ors.init(MT::getParameter<MT::String>("orsfile",MT::String("iCub.ors")));
   // start the collision computation engine
   SwiftInterface swift;

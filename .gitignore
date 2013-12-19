@@ -100,6 +100,10 @@ html
 
 %% ROS
 build/
+catkin/
+catkin_generated/
+devel/
+gtest/
 msg_gen
 srv_gen
 *Action.msg

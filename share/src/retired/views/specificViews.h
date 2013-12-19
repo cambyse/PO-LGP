@@ -44,9 +44,9 @@ struct MeshView:View{
 namespace ors{ struct Graph; }
 
 struct OrsView:View {
-  ors::Graph orsCopy;
+  ors::KinematicWorld orsCopy;
   OrsView():View(){}
-  OrsView(ors::Graph& ors, RWLock *_lock=NULL, GtkWidget *container=NULL):View(){ object=&ors; objectLock=_lock; gtkNew(container); }
+  OrsView(ors::KinematicWorld& ors, RWLock *_lock=NULL, GtkWidget *container=NULL):View(){ object=&ors; objectLock=_lock; gtkNew(container); }
   void glInit();
   void glDraw();
   void gtkNew(GtkWidget *container){ gtkNewGl(container); }

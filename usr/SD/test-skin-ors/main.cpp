@@ -87,7 +87,7 @@ test_fake_skin(GuiModule &gui, grobi_skin_t &gs){
 int
 main(int argc,char** argv){
   GuiModule gui;
-  ors::Graph ors;
+  ors::KinematicWorld ors;
 
   MT::initCmdLine(argc,argv);
   signal(SIGINT,usrbreak_callback);

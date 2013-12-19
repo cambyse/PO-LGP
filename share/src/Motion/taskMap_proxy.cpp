@@ -11,7 +11,7 @@ ProxyTaskMap::ProxyTaskMap(PTMtype _type,
   cout <<"creating ProxyTaskMap with shape list" <<shapes <<endl;
 }
 
-void ProxyTaskMap::phi(arr& y, arr& J, const ors::Graph& G){
+void ProxyTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G){
   uint i;
   ors::Proxy *p;
 
@@ -21,14 +21,14 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::Graph& G){
   switch(type) {
     case allPTMT:
       for_list(i,p,G.proxies)  if(p->d<margin) {
-        addAContact(y(0), J, p, G, margin, useCenterDist);
+        G.kinematicsProxyCost(y, J, p, margin, useCenterDist, true);
         p->colorCode = 1;
       }
       break;
     case listedVsListedPTMT:
       for_list(i,p,G.proxies)  if(p->d<margin) {
         if(shapes.contains(p->a) && shapes.contains(p->b)) {
-          addAContact(y(0), J, p, G, margin, useCenterDist);
+          G.kinematicsProxyCost(y, J, p, margin, useCenterDist, true);
           p->colorCode = 2;
         }
       }
@@ -36,7 +36,7 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::Graph& G){
     case allVersusListedPTMT: {
       for_list(i,p,G.proxies)  if(p->d<margin) {
         if(shapes.contains(p->a) || shapes.contains(p->b)) {
-          addAContact(y(0), J, p, G, margin, useCenterDist);
+          G.kinematicsProxyCost(y, J, p, margin, useCenterDist, true);
           p->colorCode = 2;
         }
       }
@@ -44,7 +44,7 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::Graph& G){
     case allExceptListedPTMT:
       for_list(i,p,G.proxies)  if(p->d<margin) {
         if(!shapes.contains(p->a) && !shapes.contains(p->b)) {
-          addAContact(y(0), J, p, G, margin, useCenterDist);
+          G.kinematicsProxyCost(y, J, p, margin, useCenterDist, true);
           p->colorCode = 3;
         }
       }
@@ -53,7 +53,7 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::Graph& G){
       for_list(i,p,G.proxies)  if(p->d<margin) {
         if((shapes.contains(p->a) && shapes2.contains(p->b)) ||
             (shapes.contains(p->b) && shapes2.contains(p->a))) {
-          addAContact(y(0), J, p, G, margin, useCenterDist);
+          G.kinematicsProxyCost(y, J, p, margin, useCenterDist, true);
           p->colorCode = 4;
         }
       }
@@ -68,7 +68,7 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::Graph& G){
             break;
         }
         if(j<shapes.d0) { //if a pair was found
-          addAContact(y(0), J, p, G, margin, useCenterDist);
+          G.kinematicsProxyCost(y, J, p, margin, useCenterDist, true);
           p->colorCode = 5;
         }
       }
@@ -83,7 +83,7 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::Graph& G){
             break;
         }
         if(j==shapes.d0) { //if a pair was not found
-          addAContact(y(0), J, p, G, margin, useCenterDist);
+          G.kinematicsProxyCost(y, J, p, margin, useCenterDist, true);
           p->colorCode = 5;
         }
       }
@@ -91,7 +91,7 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::Graph& G){
     case vectorPTMT: {
       //outputs a vector of collision meassures, with entry for each explicit pair
       shapes.reshape(shapes.N/2,2);
-      y.resize(shapes.d0);  y.setZero();
+      y.resize(shapes.d0, 1);  y.setZero();
       if(&J){ J.resize(shapes.d0,J.d1);  J.setZero(); }
       uint j;
       for_list(i,p,G.proxies)  if(p->d<margin) {
@@ -100,16 +100,17 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::Graph& G){
             break;
         }
         if(j<shapes.d0) {
-          addAContact(y(j), (&J?J[j]():NoArr), p, G, margin, useCenterDist);
+          G.kinematicsProxyCost(y[j](), (&J?J[j]():NoArr), p, margin, useCenterDist, true);
           p->colorCode = 5;
         }
       }
+      y.reshape(shapes.d0);
     } break;
     default: NIY;
   }
 }
 
-uint ProxyTaskMap::dim_phi(const ors::Graph& G){
+uint ProxyTaskMap::dim_phi(const ors::KinematicWorld& G){
   switch(type) {
   case allPTMT:
   case listedVsListedPTMT:

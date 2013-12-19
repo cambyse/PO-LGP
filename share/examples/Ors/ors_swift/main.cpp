@@ -1,4 +1,5 @@
 #include <Ors/ors.h>
+#include <Ors/ors_swift.h>
 #include <Gui/opengl.h>
 
 void drawInit(void*){
@@ -8,33 +9,22 @@ void drawInit(void*){
 }
 
 void TEST(Swift) {
-  ors::Graph C;
-  C.init("swift_test.ors");
+  ors::KinematicWorld G("swift_test.ors");
 
-  OpenGL gl;
-  //gl.reportEvents=true;
-  gl.drawFocus=true;
-  gl.add(drawInit,0);
-  gl.add(ors::glDrawGraph,&C);
-  gl.watch();
+  G.swift().setCutoff(2.);
+  G.computeProxies();
 
-  SwiftInterface swift;
-  swift.init(C,2.);
-  swift.computeProxies(C);
-
-  gl.watch();
-  
   uint t;
   for(t=0;t<50;t++){
-    C.bodies(0)->X.addRelativeTranslation(0,0,-.01);
-    C.bodies(0)->X.addRelativeRotationDeg(10,1,0,0);
-    C.calcBodyFramesFromJoints();
+    G.bodies(0)->X.addRelativeTranslation(0,0,-.01);
+    G.bodies(0)->X.addRelativeRotationDeg(10,1,0,0);
+    G.calcBodyFramesFromJoints();
 
-    swift.computeProxies(C);
+    G.computeProxies();
 
-    C.reportProxies();
+    G.reportProxies();
 
-    gl.watch();
+    G.watch(true);
   }
 }
 

@@ -52,14 +52,14 @@ struct GuiModule:public Process {
   //INTERNAL
   bool useOpengl, logData, plotData;
   OpenGL *gl;
-  ors::Graph *ors, *ors2;
+  ors::KinematicWorld *ors, *ors2;
   RobotProcessGroup  *ctrl;
   bool isOpen;
   
   GuiModule();
   ~GuiModule();
   
-  void createOrsClones(ors::Graph *_ors);
+  void createOrsClones(ors::KinematicWorld *_ors);
   
   void open();
   void step();

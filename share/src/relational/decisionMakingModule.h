@@ -10,7 +10,7 @@ struct DecisionMakingModule:Module {
   const static uint SYMBOLIC_ACTION__PUTON = 3;
   
   //INPUT
-  ors::Graph *ors;
+  ors::KinematicWorld *ors;
   
   //OUTPUT
   uint action;

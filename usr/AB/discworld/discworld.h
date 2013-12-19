@@ -13,7 +13,7 @@ class DiscWorld {
     static float const GOAL_HEIGHT;
     static float const RADIUS;
 
-    ors::Graph *ors;
+    ors::KinematicWorld *ors;
     OpenGL *gl;
     PhysXInterface *physx;
 

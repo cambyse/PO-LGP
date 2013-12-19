@@ -5,11 +5,14 @@ share/src/Ors/roboticsCourse.h
 share/src/Ors/ors.h
 share/src/Ors/ors_opengl.cpp
 share/src/Ors/ors.cpp
+share/src/Ors/ors_swift.h
 share/src/Ors/ors_swift.cpp
 share/src/Ors/Makefile
 share/src/Ors/ors_featherstone.cpp
+share/src/Ors/ors_ode.h
 share/src/Ors/ors_ode.cpp
-share/src/Ors/ors_taskVariables.cpp
+share/src/Ors/ors_physx.h
+share/src/Ors/ors_physx.cpp
 
 share/src/Core/registry.h
 share/src/Core/geo.h
@@ -35,6 +38,8 @@ share/src/Algo/ann.h
 share/src/Algo/ann.cpp
 share/src/Algo/algos.h
 share/src/Algo/algos.cpp
+share/src/Algo/spline.h
+share/src/Algo/spline.cpp
 
 share/src/Gui/Makefile
 share/src/Gui/opengl.h
@@ -58,6 +63,7 @@ share/examples/Ors/ors
 share/examples/Ors/ors_swift
 share/examples/Algo/ann
 share/examples/Algo/RRT
+share/examples/Algo/splines
 
 share/include/lapack
 share/src/extern/SWIFT

@@ -26,7 +26,7 @@ void DiscWorld::clearGui() {
   delete gl;
   delete physx;
 
-  ors = new ors::Graph;
+  ors = new ors::KinematicWorld;
   gl = new OpenGL;
   physx = new PhysXInterface;
 }

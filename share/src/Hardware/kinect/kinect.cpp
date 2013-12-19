@@ -22,11 +22,11 @@ struct sKinectInterface : Freenect::FreenectDevice {
   };
 
   void DepthCallback(void *depth, uint32_t timestamp) {
-    memmove(module->kinect_depth.set().p, depth, 2*image_width*image_height);
+    memmove(module->kinect_depth.set()().p, depth, 2*image_width*image_height);
   }
 
   void VideoCallback(void *rgb, uint32_t timestamp) {
-    memmove(module->kinect_rgb.set().p, rgb, 3*image_width*image_height);
+    memmove(module->kinect_rgb.set()().p, rgb, 3*image_width*image_height);
   }
 };
 
@@ -48,8 +48,8 @@ KinectPoller::~KinectPoller() {
 
 void KinectPoller::open() {
   cout <<"KinectPoller opening..." <<endl;
-  kinect_rgb.set().resize(image_height, image_width, 3);
-  kinect_depth.set().resize(image_height, image_width);
+  kinect_rgb.set()().resize(image_height, image_width, 3);
+  kinect_depth.set()().resize(image_height, image_width);
 
   if(!freenect) freenect = new Freenect::Freenect;
   s = &(freenect->createDevice<sKinectInterface>(0));
@@ -77,11 +77,11 @@ void KinectPoller::close() {
 //
 
 void Kinect2PointCloud::step(){
-  copy(depth, kinect_depth.get());
+  copy(depth, kinect_depth.get()());
   rgb = kinect_rgb.get();
 
   if(depth.N!=image_width*image_height || rgb.N!=3*image_width*image_height){
-    MT_MSG("here" <<depth.getDim() <<' ' <<kinect_depth.get().getDim());
+    MT_MSG("here" <<depth.getDim() <<' ' <<kinect_depth.get()().getDim());
     return;
   }
 

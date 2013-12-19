@@ -2,11 +2,11 @@
 
 #define VISUALIZE 1
 
-MPC::MPC(uint _plan_time_factor, ors::Graph &_orsG):
+MPC::MPC(uint _plan_time_factor, ors::KinematicWorld &_orsG):
   plan_time_factor(_plan_time_factor),
   orsG(&_orsG)
 {
-  P = new MotionProblem(&_orsG);
+  P = new MotionProblem(_orsG);
   P->loadTransitionParameters();
   F = new MotionProblemFunction(*P);
   T=F->get_T(); uint k=F->get_k(); n=F->dim_x(); dt=P->tau;
@@ -15,9 +15,9 @@ MPC::MPC(uint _plan_time_factor, ors::Graph &_orsG):
   plan_time = dt*plan_time_factor; // reoptimize trajectory at plan_time
 
   TaskCost *c;
-  c = P->addTaskMap("position", new DefaultTaskMap(posTMT,*P->ors,"endeff", ors::Vector(0., 0., 0.)));
+  c = P->addTaskMap("position", new DefaultTaskMap(posTMT,P->world,"endeff", ors::Vector(0., 0., 0.)));
   P->setInterpolatingCosts(c, MotionProblem::finalOnly,
-                           ARRAY(P->ors->getBodyByName("goalRef")->X.pos), 1e4,
+                           ARRAY(P->world.getBodyByName("goalRef")->X.pos), 1e4,
                            ARRAY(0.,0.,0.), 1e-3);
   P->setInterpolatingVelCosts(c, MotionProblem::finalOnly,
                               ARRAY(0.,0.,0.), 1e3,
@@ -41,13 +41,13 @@ MPC::MPC(uint _plan_time_factor, ors::Graph &_orsG):
   for (uint j=0;j<yRef.d0-1;j++) {
     orsG->setJointState(yRef[j]);
     orsG->calcBodyFramesFromJoints();
-    orsG->kinematicsPos(kinPos,P->ors->getBodyByName("endeff")->index);
+    orsG->kinematicsPos(kinPos, NoArr, P->world.getBodyByName("endeff")->index);
     y_cart.append(~kinPos);
   }
 }
 
 arr MPC::iterate(double _t, arr &_state, arr &_goal, double _simRate) {
-  P->swift->computeProxies(*orsG);
+  P->world.computeProxies();
 
   // save trajectory every dt steps
   if (_t >= (t_prev+dt-1e-10)) {
@@ -76,7 +76,7 @@ void MPC::replanTrajectory(arr &_state, arr &_goal, double _t) {
   // reset costs
   P->costMatrix.clear();
   TaskCost *c;
-  c = P->addTaskMap("position", new DefaultTaskMap(posTMT,*P->ors,"endeff", ors::Vector(0., 0., 0.)));
+  c = P->addTaskMap("position", new DefaultTaskMap(posTMT,P->world,"endeff", ors::Vector(0., 0., 0.)));
 
   P->setInterpolatingCosts(c, MotionProblem::finalOnly,
                            _goal, 1e4,
@@ -105,7 +105,7 @@ void MPC::replanTrajectory(arr &_state, arr &_goal, double _t) {
   for (uint j=0;j<yRef.d0-1;j++) {
     orsG->setJointState(yRef[j]);
     orsG->calcBodyFramesFromJoints();
-    orsG->kinematicsPos(kinPos,P->ors->getBodyByName("endeff")->index);
+    orsG->kinematicsPos(kinPos, NoArr, P->world.getBodyByName("endeff")->index);
     y_cart.append(~kinPos);
   }
 #endif

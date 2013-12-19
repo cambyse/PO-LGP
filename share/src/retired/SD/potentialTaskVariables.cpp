@@ -2,7 +2,7 @@
 #include "graspObjects.h"
 
 PotentialValuesTaskVariable::PotentialValuesTaskVariable(const char* _name,
-                              ors::Graph& _ors,
+                              ors::KinematicWorld& _ors,
                               const ShapeList& _refs,
                               PotentialField& _f){
   refs=_refs;
@@ -10,7 +10,7 @@ PotentialValuesTaskVariable::PotentialValuesTaskVariable(const char* _name,
   set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, ARR());
 }
 
-void PotentialValuesTaskVariable::userUpdate(const ors::Graph& ors){
+void PotentialValuesTaskVariable::userUpdate(const ors::KinematicWorld& ors){
   uint i;
   ors::Shape *s;
   arr xi,Ji,grad;
@@ -26,7 +26,7 @@ void PotentialValuesTaskVariable::userUpdate(const ors::Graph& ors){
 }
 
 PotentialFieldAlignTaskVariable::PotentialFieldAlignTaskVariable(const char* _name,
-    ors::Graph& _ors,
+    ors::KinematicWorld& _ors,
     const ShapeList& _refs,
     PotentialField& _f){
   refs=_refs;
@@ -37,7 +37,7 @@ PotentialFieldAlignTaskVariable::PotentialFieldAlignTaskVariable(const char* _na
 /** Compute current value and jacobian of the TV.
  * (compare  to mlr/stanio/notes/Jacobian_of_field_align_TV.tex)
  */
-void PotentialFieldAlignTaskVariable::userUpdate(const ors::Graph& ors){
+void PotentialFieldAlignTaskVariable::userUpdate(const ors::KinematicWorld& ors){
   uint i;
   ors::Shape *s;
   ors::Vector tmp;
@@ -58,7 +58,7 @@ void PotentialFieldAlignTaskVariable::userUpdate(const ors::Graph& ors){
 }
 
 GPVarianceTaskVariable::GPVarianceTaskVariable(const char* _name,
-                              ors::Graph& _ors,
+                              ors::KinematicWorld& _ors,
                               const ShapeList& _refs,
                               GraspObject_GP& _f){
   refs=_refs;
@@ -69,7 +69,7 @@ GPVarianceTaskVariable::GPVarianceTaskVariable(const char* _name,
 /** $ \dfdx{\vec y_i}{\vec q} =  2 (\vec{G^{-1}}\vec\kappa) \vec\kappa'\vec Ji $
  * need: inverse Gram, kappa, and derivative of kappa
  */
-void GPVarianceTaskVariable::userUpdate(const ors::Graph& ors){
+void GPVarianceTaskVariable::userUpdate(const ors::KinematicWorld& ors){
   uint i;
   ors::Shape *s;
   arr xi,Ji,ki,dki,*Ginv;

@@ -1,4 +1,7 @@
 #include <Ors/ors.h>
+#include <Ors/ors_swift.h>
+#include <Ors/ors_ode.h>
+#include <Algo/spline.h>
 #include <Algo/algos.h>
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
@@ -11,16 +14,14 @@
 //
 
 void TEST(LoadSave){
-  ors::Graph G;
+  ors::KinematicWorld G;
   ifstream fil("arm7.ors");
   fil >>G;
   G.calcBodyFramesFromJoints();
   cout <<G <<endl;
 
   for(uint i=0;i<0;i++){
-    OpenGL gl;
-    init(G,gl,"arm3.ors");
-    gl.watch();
+    G.watch(true);
 //    MT::wait(.1)
   }
 }
@@ -33,20 +34,18 @@ void TEST(LoadSave){
 
 namespace T1{
   uint i,j;
-  ors::Graph *G;
+  ors::KinematicWorld *G;
   ors::Vector rel;
   ors::Vector axis;
-  static void f  (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsPos(y,i,&rel);  if(J) G->jacobianPos(*J,i,&rel); }
+  static void f  (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsPos(y,*J,i,&rel); }
   //static void f_hess (arr &J, arr *H, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->jacobianPos(J,i,&rel);  if(H) G->hessianPos (*H,i,&rel); }
-  static void f_vec (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsVec(y,i,&axis);  if(J) G->jacobianVec(*J,i,&axis); }
+  static void f_vec (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsVec(y,*J,i,&axis); }
   //static void f3 (arr &y,const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsOri2(y,i,axis); }
   //static void df3(arr &J,const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->jacobianOri2(J,i,axis); }
 }
 
 void TEST(Kinematics){
-  ors::Graph G;
-  OpenGL gl;
-  init(G,gl,"arm3.ors");
+  ors::KinematicWorld G("arm3.ors");
   uint n=G.getJointStateDimension();
   arr x(n);
   T1::axis.set(1,0,0);
@@ -55,8 +54,8 @@ void TEST(Kinematics){
     T1::i=rnd.num(0,G.bodies.N-1);
     T1::rel.setRandom();
     rndUniform(x,-.5,.5,false);
-    gl.text.clear() <<"k=" <<k <<"  gradient checks of kinematics on random postures";
-    //gl.update();
+    //G.gl().text.clear() <<"k=" <<k <<"  gradient checks of kinematics on random postures";
+    //G.watch(false);
     checkJacobian(Convert(T1::f, NULL), x, 1e-5);
     //checkJacobian(Convert(T1::f_hess, NULL), x, 1e-5);
     checkJacobian(Convert(T1::f_vec, NULL), x, 1e-5);
@@ -71,8 +70,7 @@ void TEST(Kinematics){
 void TEST(KinematicSpeed){
 #define NUM 10000
 #if 1
-  ors::Graph G;
-  G.init("arm7.ors");
+  ors::KinematicWorld G("arm7.ors");
   G.makeLinkTree();
   uint n=G.getJointStateDimension();
   arr x(n);
@@ -110,42 +108,36 @@ void TEST(KinematicSpeed){
 //
 
 namespace Ctest{
-  SwiftInterface *swift;
-  ors::Graph *G;
+  ors::KinematicWorld *G;
   void f(arr& c, arr *dfdx, const arr &x,void*){
     G->setJointState(x); G->calcBodyFramesFromJoints();
-    swift->computeProxies(*G,false);
-    G->phiCollision(c, (dfdx?*dfdx:NoArr), .2);
+    G->computeProxies();
+    G->kinematicsProxyCost(c, (dfdx?*dfdx:NoArr), .2);
   }
 }
 
 void TEST(Contacts){
-  ors::Graph G;
-  OpenGL gl;
-  init(G,gl,"arm7.ors");
+  ors::KinematicWorld G("arm7.ors");
   
-  arr x,v,con,grad;
+  arr x,con,grad;
   uint t;
 
-  SwiftInterface swift;
-  swift.init(G,.5);
+  G.swift().setCutoff(.5);
 
-  Ctest::G=&G;  Ctest::swift=&swift;
+  Ctest::G=&G;
 
-  G.getJointState(x,v);
-  gl.text <<"testing the contact gradient";
+  x = G.q;
   for(t=0;t<100;t++){
     G.setJointState(x);
     G.calcBodyFramesFromJoints();
-    swift.computeProxies(G,false);
+    G.computeProxies();
 
     G.reportProxies();
 
-    G.phiCollision(con, grad, .2);
+    G.kinematicsProxyCost(con, grad, .2);
     cout <<"contact meassure = " <<con(0) <<endl;
-    gl.text.clear() <<"t=" <<t <<"  movement along negative contact gradient (using SWIFT to get contacts)";
-    //gl.watch();
-    gl.update();
+    //G.watch(true);
+    G.watch(false, STRING("t=" <<t <<"  movement along negative contact gradient (using SWIFT to get contacts)"));
     //x += inverse(grad)*(-.1*c);
     x -= 1e-3*grad; //.1 * (invJ * grad);
 
@@ -168,13 +160,11 @@ void generateSequence(arr &X, uint T, uint n){
   rndUniform(P,-1.,1.,false); P[0]=0.; P[P.d0-1]=0.;
   
   //convert into a smooth spline (1/0.03 points per via point):
-  MT::Spline(T,P).eval(X);
+  X = MT::Spline(T,P).eval();
 }
 
 void TEST(PlayStateSequence){
-  ors::Graph G;
-  OpenGL gl;
-  init(G, gl, "arm7.ors");
+  ors::KinematicWorld G("arm7.ors");
   uint n=G.getJointStateDimension();
   arr X;
   generateSequence(X, 200, n);
@@ -182,8 +172,7 @@ void TEST(PlayStateSequence){
   for(uint t=0;t<X.d0;t++){
     G.setJointState(X[t](),v);
     G.calcBodyFramesFromJoints();
-    gl.text.clear() <<"replay of a state sequence -- time " <<t;
-    gl.timedupdate(0.01);
+    G.watch(false, STRING("replay of a state sequence -- time " <<t));
   }
 }
 
@@ -194,38 +183,31 @@ void TEST(PlayStateSequence){
 
 #ifdef MT_ODE
 void TEST(PlayTorqueSequenceInOde){
-  ors::Graph G;
-  OpenGL gl;
-  init(G,gl,"arm7.ors");
-  OdeInterface ode;
-  ode.createOde(G);
+  ors::KinematicWorld G("arm7.ors");
+  G.ode();
   uint n=G.getJointStateDimension();
-  arr F,dF,Xt,Vt;
-  generateSequence(F,dF,n);
+  arr F,Xt,Vt;
+  generateSequence(F, 200, n);
   F *= .01;
   Xt.resizeAs(F); Vt.resizeAs(F);
   for(uint t=0;t<F.d0;t++){
-    ode.addJointForce(G,F[t]());
+    G.ode().addJointForce(F[t]());
     //G.clearJointErrors(); exportStateToOde(C,); //try doing this without clearing joint errors...!
-    ode.step(0.03);
-    ode.importStateFromOde(G);
+    G.ode().step(0.03);
+    G.ode().importStateFromOde();
     G.getJointState(Xt[t](),Vt[t]());
-    gl.text.clear() <<"play a random torque sequence [using ODE] -- time " <<t;
-    gl.timedupdate(.01);
+    G.gl().text.clear() <<"play a random torque sequence [using ODE] -- time " <<t;
+    G.gl().timedupdate(.01);
   }
 }
 
 void TEST(MeshShapesInOde){
-  ors::Graph G;
-  OpenGL gl;
-  init(G, gl, "testOdeMesh.ors");
-  OdeInterface ode;
-  ode.createOde(G);
+  ors::KinematicWorld G("testOdeMesh.ors");
   for(uint t=0;t<1000;t++){
     //G.clearJointErrors(); exportStateToOde(C,); //try doing this without clearing joint errors...!
-    ode.step(0.03);
-    ode.importStateFromOde(G);
-    gl.timedupdate(.01);
+    G.ode().step(0.03);
+    G.ode().importStateFromOde();
+    G.gl().timedupdate(.01);
   }
 }
 #endif
@@ -237,9 +219,7 @@ void TEST(MeshShapesInOde){
 //
 
 void TEST(FollowRedundantSequence){  
-  ors::Graph G;
-  OpenGL gl;
-  init(G,gl,"arm7.ors");
+  ors::KinematicWorld G("arm7.ors");
   //init();
   uint N=G.bodies.N-2;
 
@@ -255,26 +235,24 @@ void TEST(FollowRedundantSequence){
   T=Z.d0;
   G.setJointState(x);
   G.calcBodyFramesFromJoints();
-  G.kinematicsPos(z, N, &rel);
+  G.kinematicsPos(z, NoArr, N, &rel);
   for(t=0;t<T;t++) Z[t]() += z; //adjust coordinates to be inside the arm range
   plotLine(Z);
-  gl.add(glDrawPlot,&plotModule);
-  gl.update();
+  G.gl().add(glDrawPlot,&plotModule);
+  G.watch(false);
   //-- follow the trajectory kinematically
   for(t=0;t<T;t++){
     //Z[t] is the desired endeffector trajectory
     //x is the full joint state, z the endeffector position, J the Jacobian
-    G.jacobianPos(J,N,&rel);  //get the Jacobian wrt. the 7th body (endeffector)
+    G.kinematicsPos(z, J, N, &rel);  //get the new endeffector position
     invJ = inverse(J);       //pseudo inverse
     v = invJ * (Z[t]-z);     //multiply endeffector velocity with inverse jacobian
     x += v;                  //simulate a time step (only kinematically)
     G.setJointState(x);
     G.calcBodyFramesFromJoints();
-    G.kinematicsPos(z,N,&rel);  //get the new endeffector position
     //cout <<J * invJ <<invJ <<v <<endl <<x <<endl <<"tracking error = " <<maxDiff(Z[t],z) <<endl;
-    gl.text.clear() <<"follow redundant trajectory -- time " <<t;
-    gl.update();
-    //gl.timedupdate(.01);
+    G.watch(false, STRING("follow redundant trajectory -- time " <<t));
+    //G.gl().timedupdate(.01);
   }
 }
 
@@ -284,41 +262,45 @@ void TEST(FollowRedundantSequence){
 // dynamics test
 //
 
-namespace T2{
-  bool friction;
-  arr tau;
-  //static arr conswit;
-  //bool hasContact=false;
-  bool addContactsToDynamics=false;
-  ors::Graph *G;
-}
+//namespace T2{
+//  bool friction;
+//  arr tau;
+//  //static arr conswit;
+//  //bool hasContact=false;
+//  bool addContactsToDynamics=false;
+//  ors::KinematicWorld *G;
+//}
 
-void ddf_joints(arr& xdd,const arr& x,const arr& v){
-  T2::G->setJointState(x,v);
-  T2::G->calcBodyFramesFromJoints();
-  if(!T2::tau.N){ T2::tau.resize(x.N); T2::tau=0.; }
-  if(T2::friction) T2::tau = -.01 * v;
-  xdd.resize(x.N);
-  T2::G->clearForces();
-  T2::G->gravityToForces();
-  if(T2::addContactsToDynamics){
-    T2::G->contactsToForces(100.,10.);
-  }
-  T2::G->dynamics(xdd,v,T2::tau);
-}
 
 //---------- test standard dynamic control
 void TEST(Dynamics){
-  ors::Graph G;
-  OpenGL gl;
-  init(G,gl,"arm7.ors");
+  ors::KinematicWorld G("arm7.ors");
   //G.makeLinkTree();
   cout <<G <<endl;
-  T2::G=&G;
+
+  struct DiffEqn:VectorFunction{
+    ors::KinematicWorld& G;
+    arr u;
+    bool friction;
+    DiffEqn(ors::KinematicWorld& _G):G(_G),friction(false){}
+    void fv(arr& y,arr&,const arr& x){
+      G.setJointState(x[0],x[1]);
+      G.calcBodyFramesFromJoints();
+      if(!u.N) u.resize(x.d1).setZero();
+      if(friction) u = -10. * x[1];
+      G.clearForces();
+      G.gravityToForces();
+      /*if(T2::addContactsToDynamics){
+        G.contactsToForces(100.,10.);
+      }*/
+      G.fwdDynamics(y, x[1], u);
+    }
+  } diffEqn(G);
+
   
   uint t,T=720,n=G.getJointStateDimension();
   arr q,qd,qdd(n),qdd_(n);
-  G.getJointState(q,qd);
+  G.getJointState(q, qd);
   qdd.setZero();
   
   double dt=.01;
@@ -327,20 +309,13 @@ void TEST(Dynamics){
   G.clearForces();
 
   for(t=0;t<T;t++){
-    if(false && !(t%1)){
-      G.setJointState(q,qd);
-      G.calcBodyFramesFromJoints();
-      G.zeroGaugeJoints();
-      G.calcBodyFramesFromJoints();
-      G.getJointState(q,qd);
-    }
     if(t>=500){ //hold steady
       qdd_ = -1. * qd;
-      G.inverseDynamics(T2::tau,qd,qdd_);
+      G.inverseDynamics(diffEqn.u, qd, qdd_);
       //tau.resize(n); tau.setZero();
       //G.clearForces();
       //G.gravityToForces();
-      G.dynamics(qdd,qd,T2::tau);
+      G.fwdDynamics(qdd, qd, diffEqn.u);
       CHECK(maxDiff(qdd,qdd_,0)<1e-5,"dynamics and inverse dynamics inconsistent");
       //cout <<q <<qd <<qdd <<endl;
       cout <<"test dynamics: fwd-inv error =" <<maxDiff(qdd,qdd_,0) <<endl;
@@ -350,19 +325,21 @@ void TEST(Dynamics){
       G.setJointState(q,qd);
       G.calcBodyFramesFromJoints();
       //cout <<q <<qd <<qdd <<endl;
-      gl.text.clear() <<"t=" <<t <<"  torque controlled damping (acc = - vel)\n(checking consistency of forward and inverse dynamics),  energy=" <<G.getEnergy();
+      G.gl().text.clear() <<"t=" <<t <<"  torque controlled damping (acc = - vel)\n(checking consistency of forward and inverse dynamics),  energy=" <<G.getEnergy();
     }else{
       //cout <<q <<qd <<qdd <<' ' <<G.getEnergy() <<endl;
-      MT::rk4dd(q, qd, q, qd, ddf_joints, dt);
+      arr x=cat(q,qd).reshape(2,q.N);
+      MT::rk4_2ndOrder(x, x, diffEqn, dt);
+      q=x[0]; qd=x[1];
       if(t>300){
-        T2::friction=true;
-        gl.text.clear() <<"t=" <<t <<"  friction swing using RK4,  energy=" <<G.getEnergy();
+        diffEqn.friction=true;
+        G.gl().text.clear() <<"t=" <<t <<"  friction swing using RK4,  energy=" <<G.getEnergy();
       }else{
-        T2::friction=false;
-        gl.text.clear() <<"t=" <<t <<"  free swing using RK4,  energy=" <<G.getEnergy();
+        diffEqn.friction=false;
+        G.gl().text.clear() <<"t=" <<t <<"  free swing using RK4,  energy=" <<G.getEnergy();
       }
     }
-    gl.update();
+    G.watch(false);
   }
 }
 
@@ -418,7 +395,7 @@ void TEST(ContactDynamics){
     if(false && checkContacts(s)){
       dt=.001;
       addContactsToDynamics=true;
-      //gl.watch();
+      //G.watch(true);
     }else{
       dt=.01;
       addContactsToDynamics=false;
@@ -426,9 +403,9 @@ void TEST(ContactDynamics){
     cross=MT::rk4dd_switch(q,qd,s,q,qd,s,ddf_joints,switchfunction,dt,1e-4);
     //G.reportProxies();
     cout <<"*** s = " <<s <<endl;
-    gl.text.clear() <<"t=" <<t <<"  using RK4_switch,  energy=" <<G.getEnergy();
-    //if(cross) gl.watch();
-    gl.update();
+    G.gl().text.clear() <<"t=" <<t <<"  using RK4_switch,  energy=" <<G.getEnergy();
+    //if(cross) G.watch(true);
+    G.watch(false);
   }
 }*/
 
@@ -450,23 +427,20 @@ static void drawTrimesh(void* _mesh){
 void TEST(BlenderImport){
   MT::timerStart();
   ors::Mesh mesh;
-  ors::Graph bl;
+  ors::KinematicWorld bl;
   readBlender("blender-export",mesh,bl);
   cout <<"loading time =" <<MT::timerRead() <<"sec" <<endl;
   OpenGL gl;
-  gl.add(glStandardScene, NULL);
-  gl.add(drawTrimesh,&mesh);
-  gl.watch("mesh only");
-  gl.add(ors::glDrawGraph,&bl);
-  gl.text="testing blender import";
+  G.gl().add(glStandardScene, NULL);
+  G.gl().add(drawTrimesh,&mesh);
+  G.gl().watch("mesh only");
+  G.gl().add(ors::glDrawGraph,&bl);
+  G.gl().text="testing blender import";
   animateConfiguration(bl,gl);
 }
 #endif
 
 int MAIN(int argc,char **argv){
-  testDynamics();
-  return 0;
-
 
   testLoadSave();
   testPlayStateSequence();

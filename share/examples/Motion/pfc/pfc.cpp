@@ -1,19 +1,19 @@
 #include "pfc.h"
 
-Pfc::Pfc(ors::Graph &_orsG, arr& _trajRef, double _TRef, arr &_x0, arr &_q0, MObject &_goalMO, \
+Pfc::Pfc(ors::KinematicWorld &_orsG, arr& _trajRef, double _TRef, arr &_x0, arr &_q0, MObject &_goalMO, \
         bool _useOrientation, bool _useCollAvoid, \
         double _fPos_deviation, double _fVec_deviation, double _yCol_deviation, double _w_reg):
-        orsG(&_orsG),
-        TRef(_TRef),
-        x0(_x0),
-        q0(_q0),
-        goalMO(&_goalMO),
-        useOrientation(_useOrientation),
-        useCollAvoid(_useCollAvoid),
         fPos_deviation(_fPos_deviation),
         fVec_deviation(_fVec_deviation),
         yCol_deviation(_yCol_deviation),
-        w_reg(_w_reg)
+        w_reg(_w_reg),
+        TRef(_TRef),
+        useOrientation(_useOrientation),
+        useCollAvoid(_useCollAvoid),
+        goalMO(&_goalMO),
+        orsG(&_orsG),
+        x0(_x0),
+        q0(_q0)
 {
   goalRef = _trajRef[_trajRef.d0-1];
   dt = TRef/(_trajRef.d0-1);
@@ -93,10 +93,8 @@ void Pfc::computeIK(arr &q, arr &qd)
     joints_bk.append(~q);
 
     // Compute current task states
-    orsG->kinematicsPos(yPos, orsG->getBodyByName("endeff")->index);
-    orsG->jacobianPos(JPos, orsG->getBodyByName("endeff")->index);
-    orsG->kinematicsVec(yVec, orsG->getBodyByName("endeff")->index);
-    orsG->jacobianVec(JVec, orsG->getBodyByName("endeff")->index);
+    orsG->kinematicsPos(yPos, JPos, orsG->getBodyByName("endeff")->index);
+    orsG->kinematicsVec(yVec, JVec, orsG->getBodyByName("endeff")->index);
 
     // iterate pfc
     arr y = yPos;
@@ -127,7 +125,7 @@ void Pfc::computeIK(arr &q, arr &qd)
 
     // task 3: COLLISION
     if (useCollAvoid) {
-      orsG->phiCollision(yCol,JCol,0.15);
+      orsG->kinematicsProxyCost(yCol,JCol,0.15);
       costs = yCol / yCol_deviation;
       colCosts.append(~costs*costs);
       Phi.append(costs);

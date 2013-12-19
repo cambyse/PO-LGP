@@ -49,10 +49,6 @@ extern void glDrawText(const char* txt, float x, float y, float z);
 //void glColor(float *rgb);//{ glColor(rgb[0], rgb[1], rgb[2], 1.); }
 
 #ifndef MT_ORS_ONLY_BASICS
-void init(ors::Graph& G, OpenGL& gl, const char* orsFile) {
-  if(orsFile) G.init(orsFile);
-  bindOrsToOpenGL(G, gl);
-}
 
 /**
  * @brief Bind ors to OpenGL.
@@ -61,7 +57,7 @@ void init(ors::Graph& G, OpenGL& gl, const char* orsFile) {
  * @param graph the ors graph.
  * @param gl OpenGL which shows the ors graph.
  */
-void bindOrsToOpenGL(ors::Graph& graph, OpenGL& gl) {
+void bindOrsToOpenGL(ors::KinematicWorld& graph, OpenGL& gl) {
   gl.add(glStandardScene, 0);
   gl.add(ors::glDrawGraph, &graph);
   gl.setClearColors(1., 1., 1., 1.);
@@ -79,9 +75,10 @@ void bindOrsToOpenGL(ors::Graph& graph, OpenGL& gl) {
 #endif
 
 #ifndef MT_ORS_ONLY_BASICS
-/// static GL routine to draw a ors::Graph
+
+/// static GL routine to draw a ors::KinematicWorld
 void ors::glDrawGraph(void *classP) {
-  ((ors::Graph*)classP)->glDraw();
+  ((ors::KinematicWorld*)classP)->glDraw();
 }
 
 void glDrawShape(ors::Shape *s) {
@@ -149,8 +146,8 @@ void glDrawShape(ors::Shape *s) {
   glPopName();
 }
 
-/// GL routine to draw a ors::Graph
-void ors::Graph::glDraw() {
+/// GL routine to draw a ors::KinematicWorld
+void ors::KinematicWorld::glDraw() {
   ors::Joint *e;
   ors::Shape *s;
   ors::Proxy *proxy;
@@ -242,13 +239,13 @@ void ors::Graph::glDraw() {
   glPopMatrix();
 }
 
-void displayState(const arr& x, ors::Graph& G, OpenGL& gl, const char *tag){
+void displayState(const arr& x, ors::KinematicWorld& G, const char *tag){
   G.setJointState(x);
   G.calcBodyFramesFromJoints();
-  gl.watch(tag);
+  G.gl().watch(tag);
 }
 
-void displayTrajectory(const arr& x, int steps, ors::Graph& G, OpenGL& gl, const char *tag, double delay) {
+void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, const char *tag, double delay) {
   uint k, t, T=x.d0-1;
   if(!steps) return;
   uint num;
@@ -257,11 +254,11 @@ void displayTrajectory(const arr& x, int steps, ors::Graph& G, OpenGL& gl, const
     t = k*T/num;
     G.setJointState(x[t]);
     G.calcBodyFramesFromJoints();
-    gl.update(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
+    G.gl().update(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
     if(delay) MT::wait(delay);
   }
   if(steps==1)
-    gl.watch(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
+    G.gl().watch(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
 }
 
 /* please don't remove yet: code for displaying edges might be useful...
@@ -399,20 +396,20 @@ void _glDrawOdeWorld(dWorldID world)
 }
 */
 
-void animateConfiguration(ors::Graph& C, OpenGL& gl) {
+void animateConfiguration(ors::KinematicWorld& C) {
   arr x, x0;
   uint t, i;
   C.calcBodyFramesFromJoints();
   C.getJointState(x0);
-  gl.pressedkey=0;
+  C.gl().pressedkey=0;
   for(i=x0.N; i--;) {
     x=x0;
     for(t=0; t<20; t++) {
-      if(gl.pressedkey==13 || gl.pressedkey==27) return;
+      if(C.gl().pressedkey==13 || C.gl().pressedkey==27) return;
       x(i)=x0(i) + .5*sin(MT_2PI*t/20);
       C.setJointState(x);
       C.calcBodyFramesFromJoints();
-      gl.update();
+      C.gl().update();
       MT::wait(0.01);
     }
   }
@@ -426,8 +423,8 @@ ors::Vector selpos;
 double seld, selx, sely, selz;
 
 struct EditConfigurationHoverCall:OpenGL::GLHoverCall {
-  ors::Graph *ors;
-  EditConfigurationHoverCall(ors::Graph& _ors) { ors=&_ors; }
+  ors::KinematicWorld *ors;
+  EditConfigurationHoverCall(ors::KinematicWorld& _ors) { ors=&_ors; }
   bool hoverCallback(OpenGL& gl) {
     if(!movingBody) return false;
     if(!movingBody) {
@@ -465,9 +462,9 @@ struct EditConfigurationHoverCall:OpenGL::GLHoverCall {
 };
 
 struct EditConfigurationKeyCall:OpenGL::GLKeyCall {
-  ors::Graph &ors;
+  ors::KinematicWorld &ors;
   bool &exit;
-  EditConfigurationKeyCall(ors::Graph& _ors, bool& _exit): ors(_ors), exit(_exit){}
+  EditConfigurationKeyCall(ors::KinematicWorld& _ors, bool& _exit): ors(_ors), exit(_exit){}
   bool keyCallback(OpenGL& gl) {
     if(gl.pressedkey==' '){ //grab a body
       if(movingBody) { movingBody=NULL; return true; }
@@ -529,11 +526,11 @@ struct EditConfigurationKeyCall:OpenGL::GLKeyCall {
   }
 };
 
-void editConfiguration(const char* filename, ors::Graph& C, OpenGL& gl) {
+void editConfiguration(const char* filename, ors::KinematicWorld& C) {
 //  gl.exitkeys="1234567890qhjklias, "; //TODO: move the key handling to the keyCall!
   bool exit=false;
-  gl.addHoverCall(new EditConfigurationHoverCall(C));
-  gl.addKeyCall(new EditConfigurationKeyCall(C,exit));
+  C.gl().addHoverCall(new EditConfigurationHoverCall(C));
+  C.gl().addKeyCall(new EditConfigurationKeyCall(C,exit));
   for(;!exit;) {
     cout <<"reloading `" <<filename <<"' ... " <<std::endl;
     try {
@@ -541,20 +538,20 @@ void editConfiguration(const char* filename, ors::Graph& C, OpenGL& gl) {
       C.init(filename);
     } catch(const char* msg) {
       cout <<"line " <<MT::lineCount <<": " <<msg <<" -- please check the file and press ENTER" <<endl;
-      gl.watch();
+      C.gl().watch();
       continue;
     }
     cout <<"animating.." <<endl;
-    animateConfiguration(C, gl);
+    animateConfiguration(C);
     cout <<"watching..." <<endl;
-    gl.watch();
+    C.gl().watch();
   }
 }
 
 
 #if 0 //MT_ODE
-void testSim(const char* filename, ors::Graph *C, Ode *ode, OpenGL *gl) {
-  gl.watch();
+void testSim(const char* filename, ors::KinematicWorld *C, Ode *ode) {
+  C.gl().watch();
   uint t, T=200;
   arr x, v;
   createOde(*C, *ode);
@@ -567,8 +564,8 @@ void testSim(const char* filename, ors::Graph *C, Ode *ode, OpenGL *gl) {
     ors->calcBodyFramesFromJoints();
     exportStateToOde(*C, *ode);
     
-    gl.text.clear() <<"time " <<t;
-    gl.timedupdate(10);
+    C.gl().text.clear() <<"time " <<t;
+    C.gl().timedupdate(10);
   }
 }
 #endif
@@ -576,13 +573,10 @@ void testSim(const char* filename, ors::Graph *C, Ode *ode, OpenGL *gl) {
 
 #else ///MT_GL
 #ifndef MT_ORS_ONLY_BASICS
-void ors::Graph::glDraw() { NICO }
+void ors::KinematicWorld::glDraw() { NICO }
 void ors::glDrawGraph(void *classP) { NICO }
-void editConfiguration(const char* orsfile, ors::Graph& C, OpenGL& gl) { NICO }
-void init(ors::Graph& G, OpenGL& gl, const char* orsFile) {
-  if(orsFile) G.init(orsFile);
-}
-void animateConfiguration(ors::Graph& C, OpenGL& gl) { NICO }
+void editConfiguration(const char* orsfile, ors::KinematicWorld& C, OpenGL& gl) { NICO }
+void animateConfiguration(ors::KinematicWorld& C, OpenGL& gl) { NICO }
 #endif
 #endif
 /** @} */

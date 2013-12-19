@@ -19,16 +19,16 @@ struct FeedbackControlTaskAbstraction {
   bool done;
   uint count;
   FeedbackControlTaskAbstraction():requiresInit(true), done(false), count(0) {}
-  virtual void initTaskVariables(const ors::Graph& ors)=0; ///< reactive update of the task variables' goals
-  virtual void updateTaskVariableGoals(const ors::Graph& ors)=0; ///< reactive update of the task variables' goals
+  virtual void initTaskVariables(const ors::KinematicWorld& ors)=0; ///< reactive update of the task variables' goals
+  virtual void updateTaskVariableGoals(const ors::KinematicWorld& ors)=0; ///< reactive update of the task variables' goals
 };
 
 
 #define _FeedbackRobotTask(name) \
   struct name##_FeedbackControlTask:public FeedbackControlTaskAbstraction { \
     ~name##_FeedbackControlTask(){ listDelete(TVs); } \
-    virtual void initTaskVariables(const ors::Graph& ors); \
-    virtual void updateTaskVariableGoals(const ors::Graph& ors);   };
+    virtual void initTaskVariables(const ors::KinematicWorld& ors); \
+    virtual void updateTaskVariableGoals(const ors::KinematicWorld& ors);   };
 
 _FeedbackRobotTask(DoNothing)
 _FeedbackRobotTask(Stop)
@@ -38,15 +38,15 @@ _FeedbackRobotTask(OpenHand)
 struct CloseHand_FeedbackControlTask:public FeedbackControlTaskAbstraction {
   SkinPressure *skinPressure;
   ~CloseHand_FeedbackControlTask() { listDelete(TVs); }
-  virtual void initTaskVariables(const ors::Graph& ors);
-  virtual void updateTaskVariableGoals(const ors::Graph& ors);
+  virtual void initTaskVariables(const ors::KinematicWorld& ors);
+  virtual void updateTaskVariableGoals(const ors::KinematicWorld& ors);
 };
 
 struct Reach_FeedbackControlTask:public FeedbackControlTaskAbstraction {
   arr reachPoint;
   ~Reach_FeedbackControlTask() { listDelete(TVs); }
-  virtual void initTaskVariables(const ors::Graph& ors);
-  virtual void updateTaskVariableGoals(const ors::Graph& ors);
+  virtual void initTaskVariables(const ors::KinematicWorld& ors);
+  virtual void updateTaskVariableGoals(const ors::KinematicWorld& ors);
 };
 
 struct Joystick_FeedbackControlTask:public FeedbackControlTaskAbstraction {
@@ -54,8 +54,8 @@ struct Joystick_FeedbackControlTask:public FeedbackControlTaskAbstraction {
   SkinPressure *skinPressure;
   double joyRate, defaultEff_vprec;
   ~Joystick_FeedbackControlTask() { listDelete(TVs); }
-  virtual void initTaskVariables(const ors::Graph& ors);
-  virtual void updateTaskVariableGoals(const ors::Graph& ors);
+  virtual void initTaskVariables(const ors::KinematicWorld& ors);
+  virtual void updateTaskVariableGoals(const ors::KinematicWorld& ors);
 };
 
 #endif

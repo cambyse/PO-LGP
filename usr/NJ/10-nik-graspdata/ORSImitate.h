@@ -23,13 +23,13 @@ struct ImitateTaskVariable:public TaskVariable{
 	MT::Array<ors::Shape*> landmarks;
 	arr lastFeature,lastJoint;
 	virtual void userUpdate();
-	ImitateTaskVariable(const char* _name, ors::Graph& _ors);
+	ImitateTaskVariable(const char* _name, ors::KinematicWorld& _ors);
 	int nCounter;
 	int nIterations;//when finding argin and using some last state
 };
 
 
-void PlanTrajectory(ors::Graph * ors,RobotProcessGroup & robot,GraspObject* objM){//imitate variable and collisions, plan
+void PlanTrajectory(ors::KinematicWorld * ors,RobotProcessGroup & robot,GraspObject* objM){//imitate variable and collisions, plan
 	soc::SocSystem_Ors sys;
 
 	uint T=MT::getParameter<uint>("T");

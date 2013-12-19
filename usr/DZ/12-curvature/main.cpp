@@ -135,7 +135,7 @@ cout <<maxn<<endl;
 
 void problem1(){   
   cout <<"\n= Sample trimesh functions test=\n" <<endl;
-   ors::Graph ors; ors.init("clear.ors");
+   ors::KinematicWorld ors; ors.init("clear.ors");
    OpenGL gl; gl.add(glStandardScene); gl.add(ors::glDrawGraph,&ors); 
    gl.camera.setPosition(0,-5,6);  gl.camera.focus(0,0,2);
 
@@ -163,7 +163,7 @@ void problem1(){
 
 void problem2(){   
   cout <<"\n= Sample trimesh functions test=\n" <<endl;
-   ors::Graph ors; ors.init("clear.ors");
+   ors::KinematicWorld ors; ors.init("clear.ors");
    OpenGL gl; gl.add(glStandardScene); gl.add(ors::glDrawGraph,&ors); 
    gl.camera.setPosition(0,-5,6);  gl.camera.focus(0,0,2);
 
