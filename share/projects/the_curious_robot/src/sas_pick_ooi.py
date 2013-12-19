@@ -23,6 +23,7 @@ from timer import Timer
 # `select_ooi` in `PickOOIActionServer` must be set to this method.
 #
 # TODO selecting the strategy should be done via dynamic reconfigure.
+
 def _strategy_random_select(oois):
     """Select a random object of all possibes objects."""
     ooi = random.choice(oois)
@@ -30,6 +31,17 @@ def _strategy_random_select(oois):
     ooi_id_msg.id = ooi
     rospy.logdebug(ooi)
     return ooi_id_msg
+
+
+class _strategy_sequential_select():
+    def __init__(self):
+        self.last_selected = 0
+
+    def __call__(self, oois):
+        ooi_id_msg = tcr.msg.ObjectID()
+        ooi_id_msg.id = self.last_selected
+        self.last_selected = (self.last_selected + 1) % len(oois)
+        return ooi_id_msg
 
 
 def _strategy_door_frame_top(oois):
@@ -76,7 +88,10 @@ class PickOOIActionServer:
 
         # Select the exploration strategies
         # self.select_ooi = _strategy_random_select
-        self.select_ooi = _strategy_door_frame_top
+        # this is a class and must be initiated; does it help if we use a
+        # closuer?
+        self.select_ooi = _strategy_sequential_select()
+        # self.select_ooi = _strategy_door_frame_top
         # self.select_ooi = _strategy_select_shape_with_index
 
         self.oois = None
