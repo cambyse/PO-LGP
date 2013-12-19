@@ -76,8 +76,8 @@ class PickOOIActionServer:
 
         # Select the exploration strategies
         # self.select_ooi = _strategy_random_select
-        # self.select_ooi = _strategy_door_frame_top
-        self.select_ooi = _strategy_select_shape_with_index
+        self.select_ooi = _strategy_door_frame_top
+        # self.select_ooi = _strategy_select_shape_with_index
 
         self.oois = None
         rp.Provide("PickOOI")
