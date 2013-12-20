@@ -13,10 +13,10 @@ if(WITH_QHULL)
   # first check lib then header for qhull
   check_library_exists(qhull qh_meminit "" QHULL_FOUND)
   if(QHULL_FOUND)
-    add_definitions(-DMT_QHULL)
-	  check_include_file(qhull/qhull.h QHULL_FOUND)
+  check_include_file_cxx("qhull/qhull_a.h" QHULL_H_FOUND)
     if(QHULL_H_FOUND)    
-      set(MT_QHULL -DMT_QHULL)
+      add_definitions(-DMT_QHULL)
+	    set(MT_QHULL -DMT_QHULL)
       set(QHULL_LIBRARIES qhull)
       set(PKG_QHULL -lqhull)
     else(QHULL_H_FOUND)
@@ -40,9 +40,9 @@ set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
 include(.sources.cmake)
 
 add_definitions(-DMT_GTK )
-if(OPENGL_FOUND)
+if(WITH_OPENGL)
 add_definitions(-DMT_GTKGL)
-endif(OPENGL_FOUND)
+endif(WITH_OPENGL)
 
 include_directories(${GTK2_INCLUDE_DIRS} ${GTKGL_INCLUDE_DIRS})
 add_definitions(${GTK2_DEFINITIONS})
@@ -54,7 +54,7 @@ target_link_libraries(Gui LINK_PRIVATE Core
         ${GTKGL_LIBRARIES} 
         ${GTK2_LIBRARIES} 
         graph cgraph gvc 
-        qhull 
+        ${QHULL_LIBRARIES}
         LINK_PUBLIC
         ${GL_LIBRARIES}
 )

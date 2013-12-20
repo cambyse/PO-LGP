@@ -92,9 +92,6 @@ set(MLR_CXX_FLAGS "-std=c++0x ${MLR_CXX_FLAGS}")
 
 # set Gui-GL definition globally for convenience
 include(src/Gui/gl.cmake OPTIONAL)
-if(WITH_OPENGL)
-set(MLR_CXX_FLAGS "${MLR_CXX_FLAGS} -DMT_GL")
-endif(WITH_OPENGL)
 message(STATUS "Using OpenGL: ${WITH_OPENGL}")
 
 # target to create includes
