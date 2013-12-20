@@ -73,6 +73,7 @@ if(WITH_PYTHON)
     endif(NUMPY_FOUND)
   else(SWIG_FOUND)
     message(STATUS "swig not found, will not build Python bindings")
+    unset(PYTHON_OK) # remove from cache, if earlier configured with python
   endif(SWIG_FOUND)
 endif(WITH_PYTHON)
 
