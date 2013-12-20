@@ -2,7 +2,7 @@
 
 #include <sstream>
 
-#define DEBUG_LEVEL 0
+#define DEBUG_LEVEL 1
 #include "../debug.h"
 
 using std::string;
@@ -107,7 +107,7 @@ bool MazeObservation::operator<(const AbstractObservation &other) const {
 
 const string MazeObservation::print() const {
     std::stringstream ret;
-    if(DEBUG_LEVEL>0) {
+    if(DEBUG_LEVEL>1) {
         ret << "MazeObservation(" << x_position << "," << y_position << ",(" << x_dimensions << "," << y_dimensions << "))";
     } else {
         ret << "MazeObservation(" << x_position << "," << y_position << ")";

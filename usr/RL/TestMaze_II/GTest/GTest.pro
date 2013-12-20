@@ -11,6 +11,8 @@ HEADERS += \
     ../util/ColorOutput.h \
     ../util/QtUtil.h \
     ../util/lbfgs_codes.h \
+    ../util/KolmogorovSmirnovDist.h \
+    ../util/KolmogorovSmirnovTest.h \
     \
     ../Feature.h \
     ../Instance.h \
@@ -32,6 +34,7 @@ HEADERS += \
     ../HistoryObserver.h \
     ../FeatureLearner.h \
     ../KMarkovCRF.h \
+    ../UTree.h \
     MinimalEnvironmentExample/MinimalAction.h \
     MinimalEnvironmentExample/MinimalObservation.h \
     MinimalEnvironmentExample/MinimalReward.h \
@@ -43,6 +46,8 @@ SOURCES += \
     ../util/ColorOutput.cpp \
     ../util/QtUtil.cpp \
     ../util/lbfgs_codes.cpp \
+    ../util/KolmogorovSmirnovDist.cpp \
+    ../util/KolmogorovSmirnovTest.cpp \
     \
     ../Feature.cpp \
     ../Instance.cpp \
@@ -63,12 +68,14 @@ SOURCES += \
     ../HistoryObserver.cpp \
     ../FeatureLearner.cpp \
     ../KMarkovCRF.cpp \
+    ../UTree.cpp \
     \
     AbstractIteratableSpaceTest.cpp \
     FeatureTest.cpp \
 #    TemplateTest.cpp \
     EnvironmentTest.cpp \
-    PlannerTest.cpp
+    PlannerTest.cpp \
+    LearnerTest.cpp
 LIBS += -llbfgs \
     -lemon \
     -larmadillo \

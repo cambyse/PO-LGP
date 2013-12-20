@@ -1,4 +1,7 @@
- #include "Maze.h"
+#include "Maze.h"
+
+#include "../util/QtUtil.h"
+#include "../util/ColorOutput.h"
 
 #define DEBUG_LEVEL 0
 #include "../debug.h"
@@ -32,316 +35,6 @@ static const double border_margin = 0.4*state_size;               // Margin for 
 static const double action_line_length_factor = 0.8;              // How long the action line is relative to the state size.
 static const double action_point_size_factor = 0.5;               // How large the action point is relative to the state size.
 static const bool draw_text = false;                              // Whether to draw texts.
-
-vector<Maze::wall_t> Maze::walls = {
-
-    /* 2x2 Maze *
-    { 1, 3}
-    */
-
-    /* 3x3 Maze *
-    { 0, 1},
-    { 0, 3},
-    { 2, 1},
-    { 2, 5},
-    { 6, 3},
-    { 6, 7},
-    { 8, 7},
-    { 8, 5}
-    */
-
-    /* 3x2 Maze (Paper) *
-    { 0, 3},
-    { 1, 4},
-    { 2, 5}
-    */
-
-    /* 4x4 Maze (Paper I) *
-    { 4, 8},
-    { 5, 9},
-    { 6,10},
-    { 7,11},
-    { 1, 2},
-    { 5, 6},
-    { 9,10},
-    {13,14},
-    { 8, 9},
-    { 2, 3},
-    { 6, 7},
-    {14,15},
-    {11,15},
-    { 3, 7}
-    */
-
-    /* 4x4 Maze (Paper II) *
-    {0,4},
-    {4,5},
-    {8,12},
-    {14,15},
-    {5,6},
-    {2,3}
-    */
-
-    /* 4x4 Maze (Paper III) *
-    { 5, 9},
-    {12,13},
-    {11,15},
-    { 5, 1},
-    { 5, 4},
-    { 2, 6},
-    { 3, 7},
-    { 9,10},
-    {10,14}
-    */
-
-    /* 6x6 Maze (Paper) *
-    {12, 18},
-    {13, 19},
-    {14, 20},
-    {15, 21},
-    {16, 22},
-    {17, 23},
-    { 2,  3},
-    { 8,  9},
-    {14, 15},
-    {20, 21},
-    {26, 27},
-    {32, 33},
-    {19, 25},
-    {25, 26},
-    {24, 30},
-    {25, 31},
-    {27, 33},
-    {28, 34},
-    {29, 35},
-    {27, 28},
-    {33, 34},
-    {28, 29},
-    {34, 35},
-    {22, 28},
-    {23, 29},
-    { 3,  9},
-    { 4, 10},
-    { 5, 11}
-    */
-
-    /* 10x10 Maze *
-    {  2,  3},
-    { 12, 13},
-    { 22, 23},
-    { 32, 33},
-    { 30, 40},
-    { 31, 41},
-    { 33, 34},
-    { 43, 44},
-    { 53, 54},
-    { 63, 64},
-    { 73, 74},
-    { 83, 84},
-    { 61, 71},
-    { 62, 72},
-    { 63, 73},
-    { 44, 45},
-    { 54, 55},
-    { 74, 75},
-    { 84, 85},
-    { 75, 85},
-    { 76, 86},
-    { 77, 87},
-    { 23, 24},
-    { 25, 35},
-    { 26, 36},
-    { 27, 37},
-    { 28, 38},
-    {  6,  7},
-    { 16, 17},
-    { 78, 88},
-    { 59, 69},
-    { 58, 68},
-    { 57, 67},
-    { 56, 66}
-    */
-};
-
-vector<Maze::maze_reward_t> Maze::rewards = {
-    /* 1x5 Maze *
-    { 0, 4, 4, 1, EACH_TIME_NO_PUNISH,   0,   0,   0}
-    */
-
-    /* 2x2 Maze *
-    { 0, 3, 4, 5, ON_RELEASE_NO_PUNISH, 200,   0,   0},
-    { 3, 0, 4, 5, ON_RELEASE_NO_PUNISH, 200, 200,   0},
-    { 0, 1, 1, 1, ON_RELEASE_NO_PUNISH,   0, 200,   0},
-    { 3, 2, 1, 1, ON_RELEASE_NO_PUNISH,   0,   0, 200}
-    */
-
-    /* 2x2 Maze */
-    { 0, 3, 2, 1, EACH_TIME_NO_PUNISH, 200,   0,   0}
-    /**/
-
-    /* 3x3 Maze *
-    { 3, 5, 4, 8, ON_RELEASE_NO_PUNISH,   0, 200,   0},
-    { 5, 3, 6, 8, ON_RELEASE_NO_PUNISH,   0, 200, 200},
-    { 4, 1, 1, 1, ON_RELEASE_NO_PUNISH, 200, 200,   0},
-    { 4, 7, 3, 3, ON_RELEASE_NO_PUNISH, 200,   0,   0}
-    */
-
-    /* 3x2 Maze (Paper) *
-    { 3, 0, 5, 1, EACH_TIME_NO_PUNISH, 0, 0, 0},
-    { 2, 5, 5, 1, EACH_TIME_NO_PUNISH, 0, 0, 0}
-    */
-
-    /* 4x4 Maze (Paper I) *
-    { 0,  4, 3, 1, ON_RELEASE_NO_PUNISH, 255, 120,  0},
-    { 5,  0, 2, 1, ON_RELEASE_NO_PUNISH, 200,   0,  0},
-    { 1,  5, 3, 1, ON_RELEASE_NO_PUNISH, 255, 120,  0},
-    { 2,  1, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,  0},
-    { 7,  6, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,  0},
-    {11,  7, 4, 1,  EACH_TIME_NO_PUNISH, 255, 200,  0},
-    {10, 15, 3, 1,  EACH_TIME_NO_PUNISH, 255, 120,  0},
-    {13, 14, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,  0},
-    { 8,  9, 4, 1,  EACH_TIME_NO_PUNISH, 255, 200,  0},
-    { 4,  8, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,  0}
-    */
-
-    /* 4x4 Maze (Paper II) *
-    { 0, 8, 3, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0},
-    { 1, 4, 3, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0},
-    { 8,13, 3, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0},
-    {12,14, 3, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0},
-    {14,11, 3, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0},
-    {15,10, 3, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0},
-    {11, 9, 3, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0},
-    { 9, 6, 3, 1, ON_RELEASE_NO_PUNISH, 255,   0,   0},
-    { 5, 7, 3, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0},
-    { 7, 3, 3, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0},
-    { 7, 2, 3, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0},
-    { 2, 1, 3, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0}
-    */
-
-    /* 4x4 Maze (Paper III) *
-    { 0, 8, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-    { 8,13, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-    { 9,12, 3, 1,  EACH_TIME_NO_PUNISH, 255, 100,   0},
-    {12,14, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-    {13,15, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-    {11, 6, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-    {10, 5, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-    { 5, 2, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-    { 1, 3, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-    { 2, 0, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0}
-    */
-
-    /* 6x6 Maze (Paper) *
-    {25, 31, 2, 1,  EACH_TIME_NO_PUNISH, 100,   0,   0},
-    {19, 25, 3, 1,  EACH_TIME_NO_PUNISH,  50,   0,   0},
-    {13, 19, 1, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-    {26, 27, 1, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-    {28, 29, 1, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-    {29, 35, 1, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-    {35, 34, 1, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-    {33, 21, 2, 1,  EACH_TIME_NO_PUNISH, 100,   0,   0},
-    {34, 33, 1, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-    {21, 23, 2, 1,  EACH_TIME_NO_PUNISH, 100,   0,   0},
-    {22, 16, 3, 1,  EACH_TIME_NO_PUNISH,  50,   0,   0},
-    {17, 11, 3, 1, ON_RELEASE_NO_PUNISH,  50,   0,   0},
-    { 4, 10, 1, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-    {11,  4, 3, 1,  EACH_TIME_NO_PUNISH,  50,   0,   0},
-    { 9,  8, 1, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-    { 7,  6, 3, 1, ON_RELEASE_NO_PUNISH,  50,   0,   0},
-    { 2,  7, 2, 1,  EACH_TIME_NO_PUNISH, 100,   0,   0},
-    { 0, 12, 2, 1,  EACH_TIME_NO_PUNISH, 100,   0,   0},
-    { 1,  0, 3, 1, ON_RELEASE_NO_PUNISH,  50,   0,   0}
-    */
-
-    /* 10x10 Maze *
-    {  0, 21,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
-    { 30, 43,  4, 1, ON_RELEASE_NO_PUNISH,   0, 200,   0},
-    { 43, 62,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
-    { 61, 92, -4, 1, ON_RELEASE_NO_PUNISH,   0, 200,   0},
-    { 94, 86,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
-    { 87, 66,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
-    { 67, 59,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
-    { 48, 56,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
-    { 55, 36,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
-    { 59, 38,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
-    { 28,  9,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
-    { 18, 37,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
-    { 25, 33,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
-    { 33,  3,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
-    {  4,  1,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
-    {  8, 17,  2, 1, ON_RELEASE_NO_PUNISH,   0,   0, 200},
-    { 40, 50,  2, 1, ON_RELEASE_NO_PUNISH,   0, 200, 200}, // test
-    { 41, 51,  2, 1,  EACH_TIME_NO_PUNISH,   0, 200, 200}, // test
-    { 60, 70,  2, 1, ON_RELEASE_PUNISH_FAILURE,   0, 200, 200}, // test
-    { 80, 90,  2, 1,  EACH_TIME_PUNISH_FAILURE,   0, 200, 200}  // test
-    */
-};
-
-vector<Maze::door_t> Maze::doors = {
-    /* 2x2 Maze *
-    door_t(MazeState(1,0), MazeState(1,1), MazeState(1,1),  RIGHT_BUTTON,-3, color_t(0.0,0.8,0.0) ),
-    */
-
-    /* 3x2 Maze (Paper) *
-    door_t(MazeState(1), MazeState(4), MazeState(2),   UP_BUTTON, -4, color_t(0.0,0.5,0.0) ),
-    door_t(MazeState(1), MazeState(4), MazeState(3), DOWN_BUTTON, -4, color_t(0.5,0.0,0.0) )
-    */
-
-    /* 4x4 Maze (Paper I) *
-    door_t(MazeState( 4), MazeState( 8), MazeState( 4),  DOWN_BUTTON,  0, color_t(0.6,0.0,1.0) ),
-    door_t(MazeState( 8), MazeState( 9), MazeState( 8),  LEFT_BUTTON, -3, color_t(0.0,0.5,0.0) ),
-    door_t(MazeState(13), MazeState(14), MazeState(13), RIGHT_BUTTON,  0, color_t(0.6,0.0,1.0) ),
-    door_t(MazeState(14), MazeState(15), MazeState(10),    UP_BUTTON, -3, color_t(0.0,0.5,0.0) ),
-    door_t(MazeState(15), MazeState(11), MazeState(15), RIGHT_BUTTON, -3, color_t(0.0,0.0,1.0) ),
-    door_t(MazeState(11), MazeState( 7), MazeState(11),    UP_BUTTON,  0, color_t(0.6,0.0,1.0) ),
-    door_t(MazeState( 7), MazeState( 3), MazeState( 7), RIGHT_BUTTON, -3, color_t(0.0,0.5,0.0) ),
-    door_t(MazeState( 3), MazeState( 7), MazeState( 3), RIGHT_BUTTON, -3, color_t(0.0,0.5,0.0) ),
-    door_t(MazeState( 7), MazeState( 6), MazeState( 3),  LEFT_BUTTON, -3, color_t(0.0,0.0,1.0) ),
-    door_t(MazeState( 2), MazeState( 1), MazeState( 2),  LEFT_BUTTON,  0, color_t(0.6,0.0,1.0) )
-
-    */
-
-    /* 4x4 Maze (Paper II) *
-    door_t(MazeState( 0),MazeState( 4),MazeState( 1),    UP_BUTTON, -3, color_t(0.0,0.0,1.0) ),
-    door_t(MazeState( 8),MazeState(12),MazeState( 4), RIGHT_BUTTON, -3, color_t(0.0,0.0,1.0) ),
-    door_t(MazeState(14),MazeState(15),MazeState(14),  DOWN_BUTTON, -3, color_t(0.0,0.0,1.0) ),
-    door_t(MazeState( 5),MazeState( 6),MazeState( 5),  LEFT_BUTTON, -3, color_t(0.0,0.0,1.0) ),
-    door_t(MazeState( 3),MazeState( 2),MazeState( 3), RIGHT_BUTTON, -3, color_t(0.0,0.0,1.0) )
-    */
-
-    /* 4x4 Maze (Paper III) *
-    door_t(MazeState(12),MazeState(13),MazeState(13),  DOWN_BUTTON, -2, color_t(0.0,1.0,0.0) ),
-    door_t(MazeState(15),MazeState(11),MazeState(15), RIGHT_BUTTON, -2, color_t(0.0,1.0,0.0) ),
-    door_t(MazeState( 5),MazeState( 1),MazeState( 5),  DOWN_BUTTON, -2, color_t(0.0,1.0,0.0) )
-    */
-
-    /* 6x6 Maze (Paper) *
-    door_t(MazeState(13), MazeState(19), MazeState(13),  DOWN_BUTTON,-0, color_t(0.0,0.8,0.0) ),
-    door_t(MazeState(19), MazeState(25), MazeState(19),    UP_BUTTON,-1, color_t(0.0,0.4,0.0) ),
-    door_t(MazeState(25), MazeState(31), MazeState(25),  DOWN_BUTTON,-0, color_t(0.0,0.8,0.0) ),
-    door_t(MazeState(26), MazeState(27), MazeState(26), RIGHT_BUTTON,-0, color_t(0.0,0.8,0.0) ),
-    door_t(MazeState(27), MazeState(28), MazeState(27), RIGHT_BUTTON,-0, color_t(0.0,0.8,0.0) ),
-    door_t(MazeState(28), MazeState(29), MazeState(28), RIGHT_BUTTON,-0, color_t(0.0,0.8,0.0) ),
-    door_t(MazeState(29), MazeState(35), MazeState(29),    UP_BUTTON,-1, color_t(0.0,0.4,0.0) ),
-    door_t(MazeState(35), MazeState(34), MazeState(35),  DOWN_BUTTON,-1, color_t(0.0,0.4,0.0) ),
-    door_t(MazeState(34), MazeState(33), MazeState(34),    UP_BUTTON,-1, color_t(0.0,0.4,0.0) ),
-    door_t(MazeState(33), MazeState(27), MazeState(33),  LEFT_BUTTON,-1, color_t(0.0,0.4,0.0) ),
-    door_t(MazeState(22), MazeState(16), MazeState(22),    UP_BUTTON,-0, color_t(0.0,0.8,0.0) ),
-    door_t(MazeState(10), MazeState( 4), MazeState(11), RIGHT_BUTTON,-4, color_t(0.0,0.2,0.8) ),
-    door_t(MazeState( 5), MazeState(11), MazeState( 3),  LEFT_BUTTON,-4, color_t(0.6,0.0,0.8) ),
-    door_t(MazeState( 9), MazeState( 8), MazeState( 9),  LEFT_BUTTON,-0, color_t(0.0,0.8,0.0) )
-    */
-
-    /* 10x10 Maze *
-    door_t(MazeState(0,3), MazeState(0,4), MazeState(0,4),  PASS_BUTTON, 0, color_t(1.0,0.5,0.0) ),
-    door_t(MazeState(1,3), MazeState(1,4), MazeState(1,5),  STAY_BUTTON, 2, color_t(0.0,1.0,0.0) ),
-    door_t(MazeState(2,2), MazeState(3,2), MazeState(2,3),    UP_BUTTON, 2, color_t(0.0,1.0,0.0) ),
-    door_t(MazeState(3,3), MazeState(4,3), MazeState(3,3),  DOWN_BUTTON, 3, color_t(0.0,0.5,0.5) ),
-    door_t(MazeState(4,5), MazeState(5,5), MazeState(4,6),  LEFT_BUTTON,-5, color_t(0.0,0.0,1.0) ),
-    door_t(MazeState(6,5), MazeState(6,6), MazeState(4,7), RIGHT_BUTTON, 5, color_t(1.0,0.0,1.0) )
-    */
-};
 
 const vector<Maze::maze_t> Maze::maze_list = {
     /* === Default Maze === */
@@ -676,7 +369,8 @@ Maze::Maze(const double& eps):
     current_instance(nullptr),
     current_observation(*(maze_list[0].observation_space.get_derived<observation_t>())),
     epsilon(eps),
-    agent(nullptr)
+    agent(nullptr),
+    current_maze(maze_list[0])
 {
     // set a maze
     set_maze("Default");
@@ -694,24 +388,24 @@ Maze::~Maze() {
 void Maze::set_maze(const QString& s) {
 
     // maze to use (defaults to first in list)
-    maze_t maze_to_use = maze_list[0];
+    current_maze = maze_list[0];
 
     // find maze
     for(maze_t maze : maze_list) {
         if(maze.name==s) {
-            maze_to_use = maze;
+            current_maze = maze;
             break;
         }
     }
 
     // set the maze
-    k                 = maze_to_use.k;
-    action_space      = maze_to_use.action_space;
-    observation_space = maze_to_use.observation_space;
-    reward_space      = maze_to_use.reward_space;
-    walls             = maze_to_use.walls;
-    rewards           = maze_to_use.rewards;
-    doors             = maze_to_use.doors;
+    k                 = current_maze.k;
+    action_space      = current_maze.action_space;
+    observation_space = current_maze.observation_space;
+    reward_space      = current_maze.reward_space;
+    walls             = current_maze.walls;
+    rewards           = current_maze.rewards;
+    doors             = current_maze.doors;
 
     // set current observation (and instance)
     set_current_observation(observation_space);
@@ -1223,7 +917,7 @@ void Maze::get_features(std::vector<f_ptr_t> & basis_features, FeatureLearner::L
     // add features
     for(int k_idx = 0; k_idx>=-k; --k_idx) {
         if((type==FeatureLearner::LEARNER_TYPE::FULL_PREDICTIVE) ||
-           (type==FeatureLearner::LEARNER_TYPE::HISTORY_ONLY && k_idx>-k) ||
+           (type==FeatureLearner::LEARNER_TYPE::HISTORY_ONLY && k_idx<0) ||
            (type==FeatureLearner::LEARNER_TYPE::HISTORY_AND_ACTION)) {
             // actions
             for(action_ptr_t action : action_space) {
@@ -1232,7 +926,7 @@ void Maze::get_features(std::vector<f_ptr_t> & basis_features, FeatureLearner::L
             }
         }
         if((type==FeatureLearner::LEARNER_TYPE::FULL_PREDICTIVE) ||
-           (type==FeatureLearner::LEARNER_TYPE::HISTORY_ONLY && k_idx>-k) ||
+           (type==FeatureLearner::LEARNER_TYPE::HISTORY_ONLY && k_idx<0) ||
            (type==FeatureLearner::LEARNER_TYPE::HISTORY_AND_ACTION && k_idx<0)) {
             // observations
             for(observation_ptr_t observation : observation_space) {
@@ -1241,7 +935,7 @@ void Maze::get_features(std::vector<f_ptr_t> & basis_features, FeatureLearner::L
             }
         }
         if((type==FeatureLearner::LEARNER_TYPE::FULL_PREDICTIVE && k_idx==0) ||
-           (type==FeatureLearner::LEARNER_TYPE::HISTORY_ONLY && k_idx>-k) ||
+           (type==FeatureLearner::LEARNER_TYPE::HISTORY_ONLY && k_idx<0) ||
            (type==FeatureLearner::LEARNER_TYPE::HISTORY_AND_ACTION && false)) {
             // reward
             for(reward_ptr_t reward : reward_space) {
@@ -1317,6 +1011,14 @@ void Maze::set_current_observation(const observation_ptr_t& observation) {
     }
 }
 
+const vector<QString> Maze::get_maze_list() const {
+    vector<QString> return_list;
+    for(maze_t maze : maze_list) {
+        return_list.push_back(maze.name);
+    }
+    return return_list;
+}
+
 string Maze::get_rewards() {
     stringstream ss;
     for(int r_idx=0; r_idx<(int)rewards.size(); ++r_idx) {
@@ -1369,6 +1071,67 @@ string Maze::get_doors() {
         ss << "    dt : " << get<DOOR_TIME_DELAY>(d) << endl;
     }
     return ss.str();
+}
+
+void Maze::print_transition(action_ptr_t& a, observation_ptr_t& o, reward_ptr_t& r) const {
+    // check
+    if(current_maze.name!="Default") {
+        DEBUG_ERROR("ASCII printing of transitions is only supported for maze 'Default'");
+        return;
+    }
+
+    // get action string
+    const char * as;
+    if(a==MazeAction("up")) {
+        as = "↑";
+    } else if(a==MazeAction("down")) {
+        as = "↓";
+    } else if(a==MazeAction("right")) {
+        as = "→";
+    } else if(a==MazeAction("left")) {
+        as = "←";
+    } else if(a==MazeAction("stay")) {
+        as = "●";
+    } else {
+        DEBUG_ERROR("unexpected action (" << a << ")");
+    }
+    // get reward colorization
+    QString rc, rs = ColorOutput::reset_all().c_str();
+    if(r->get_value()==0) {
+        rc = "";
+    } else if(r->get_value()==1) {
+        rc = ColorOutput::fg_red().c_str();
+    } else {
+        DEBUG_ERROR("unexpected reward " << r);
+    }
+    // print the thing
+    if(o==MazeObservation(2,2,0,0)) {
+        std::cout << "┏━━━┳━━━┓" << std::endl;
+        std::cout << "┃◗"<<rc<<"●"<<rs<<" ╲   ┃" << std::endl;
+        std::cout << "┣━━━╋━━━┫"<<as << std::endl;
+        std::cout << "┃   ┃   ┃" << std::endl;
+        std::cout << "┗━━━┻━━━┛" << std::endl;
+    } else if(o==MazeObservation(2,2,0,1)) {
+        std::cout << "┏━━━┳━━━┓" << std::endl;
+        std::cout << "┃◗  ╲   ┃" << std::endl;
+        std::cout << "┣━━━╋━━━┫"<<as << std::endl;
+        std::cout << "┃ "<<rc<<"●"<<rs<<" ┃   ┃" << std::endl;
+        std::cout << "┗━━━┻━━━┛" << std::endl;
+    } else if(o==MazeObservation(2,2,1,0)) {
+        std::cout << "┏━━━┳━━━┓" << std::endl;
+        std::cout << "┃◗  ╲ "<<rc<<"●"<<rs<<" ┃" << std::endl;
+        std::cout << "┣━━━╋━━━┫"<<as << std::endl;
+        std::cout << "┃   ┃   ┃" << std::endl;
+        std::cout << "┗━━━┻━━━┛" << std::endl;
+    } else if(o==MazeObservation(2,2,1,1)) {
+        std::cout << "┏━━━┳━━━┓" << std::endl;
+        std::cout << "┃◗  ╲   ┃" << std::endl;
+        std::cout << "┣━━━╋━━━┫"<<as << std::endl;
+        std::cout << "┃   ┃ "<<rc<<"●"<<rs<<" ┃" << std::endl;
+        std::cout << "┗━━━┻━━━┛" << std::endl;
+    } else {
+        DEBUG_ERROR("unexpected observation (" << o << ")");
+    }
 }
 
 void Maze::frame_maze() {

@@ -78,6 +78,8 @@ public:
 
     const instance_t * get_current_instance() const { return current_instance; }
 
+    const std::vector<QString> get_maze_list() const;
+
     /** \brief Get a string describing all rewards. */
     std::string get_rewards();
 
@@ -86,6 +88,8 @@ public:
 
     /** \brief Get a string describing all doors. */
     std::string get_doors();
+
+    virtual void print_transition(action_ptr_t& a, observation_ptr_t& o, reward_ptr_t& r) const;
 
 private:
 
@@ -188,10 +192,11 @@ private:
     std::vector<QGraphicsRectItem*> state_rects;     ///< Graphic items containing the state rects for rendering the states.
     color_vector_t state_colors;                     ///< Color vector for all states.
 
+    maze_t                      current_maze;        ///< Currently used maze.
     static const std::vector<maze_t> maze_list;      ///< List of all mazes.
-    static std::vector<wall_t>         walls;               ///< Defines the walls.
-    static std::vector<maze_reward_t>  rewards;             ///< Defines the rewards.
-    static std::vector<door_t>         doors;               ///< Defines the doors.
+    std::vector<wall_t>         walls;               ///< Defines the walls.
+    std::vector<maze_reward_t>  rewards;             ///< Defines the rewards.
+    std::vector<door_t>         doors;               ///< Defines the doors.
 
     //==================//
     // Member Functions //

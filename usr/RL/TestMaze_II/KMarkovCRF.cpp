@@ -371,9 +371,9 @@ int KMarkovCRF::progress_model(
     return 0;
 }
 
-int KMarkovCRF::optimize_model(lbfgsfloatval_t l1,
+int KMarkovCRF::optimize_model(double l1,
                                unsigned int max_iter,
-                               lbfgsfloatval_t * mean_likelihood,
+                               double * mean_likelihood,
                                bool stochastic_sparsification,
                                double alpha,
                                double beta) {

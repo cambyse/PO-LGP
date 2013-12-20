@@ -25,11 +25,11 @@
 
  =====================================================================*/
 
-namespace KSD {
-
 #include "KolmogorovSmirnovDist.h"
 #include <math.h>
 #include <stdlib.h>
+
+namespace KSD {
 
 #define num_Pi     3.14159265358979323846 /* PI */
 #define num_Ln2    0.69314718055994530941 /* log(2) */

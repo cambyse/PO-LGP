@@ -114,58 +114,7 @@ TEST(PlannerTest, LookAheadSearch) {
 
             // print nice pictures
             if(DEBUG_LEVEL>1) {
-                // get action string
-                const char * as;
-                if(action==MazeAction("up")) {
-                    as = "↑";
-                } else if(action==MazeAction("down")) {
-                    as = "↓";
-                } else if(action==MazeAction("right")) {
-                    as = "→";
-                } else if(action==MazeAction("left")) {
-                    as = "←";
-                } else if(action==MazeAction("stay")) {
-                    as = "●";
-                } else {
-                    EXPECT_TRUE(false) << "unexpected action (" << action << ")";
-                }
-                // get reward colorization
-                QString rc, rs = ColorOutput::reset_all().c_str();
-                if(reward->get_value()==0) {
-                    rc = "";
-                } else if(reward->get_value()==1) {
-                    rc = ColorOutput::fg_red().c_str();
-                } else {
-                    EXPECT_TRUE(false) << "unexpected reward " << reward;
-                }
-                // print the thing
-                if(observation_to==MazeObservation(2,2,0,0)) {
-                    std::cout << "┏━━━┳━━━┓" << std::endl;
-                    std::cout << "┃◗"<<rc<<"●"<<rs<<" ╲   ┃" << std::endl;
-                    std::cout << "┣━━━╋━━━┫"<<as << std::endl;
-                    std::cout << "┃   ┃   ┃" << std::endl;
-                    std::cout << "┗━━━┻━━━┛" << std::endl;
-                } else if(observation_to==MazeObservation(2,2,0,1)) {
-                    std::cout << "┏━━━┳━━━┓" << std::endl;
-                    std::cout << "┃◗  ╲   ┃" << std::endl;
-                    std::cout << "┣━━━╋━━━┫"<<as << std::endl;
-                    std::cout << "┃ "<<rc<<"●"<<rs<<" ┃   ┃" << std::endl;
-                    std::cout << "┗━━━┻━━━┛" << std::endl;
-                } else if(observation_to==MazeObservation(2,2,1,0)) {
-                    std::cout << "┏━━━┳━━━┓" << std::endl;
-                    std::cout << "┃◗  ╲ "<<rc<<"●"<<rs<<" ┃" << std::endl;
-                    std::cout << "┣━━━╋━━━┫"<<as << std::endl;
-                    std::cout << "┃   ┃   ┃" << std::endl;
-                    std::cout << "┗━━━┻━━━┛" << std::endl;
-                } else if(observation_to==MazeObservation(2,2,1,1)) {
-                    std::cout << "┏━━━┳━━━┓" << std::endl;
-                    std::cout << "┃◗  ╲   ┃" << std::endl;
-                    std::cout << "┣━━━╋━━━┫"<<as << std::endl;
-                    std::cout << "┃   ┃ "<<rc<<"●"<<rs<<" ┃" << std::endl;
-                    std::cout << "┗━━━┻━━━┛" << std::endl;
-                } else {
-                    EXPECT_TRUE(false) << "unexpected observation (" << observation_to << ")";
-                }
+                maze.print_transition(action, observation_to, reward);
             }
 
             // debugging

@@ -1,9 +1,6 @@
 #ifndef UTREE_H_
 #define UTREE_H_
 
-#include "Config.h"
-
-#include "Feature.h"
 #include "FeatureLearner.h"
 #include "HistoryObserver.h"
 
@@ -18,7 +15,7 @@ private:
     struct NodeInfo; // forward declaration of private type
 
 public:
-    USE_CONFIG_TYPEDEFS;
+    DISAMBIGUATE_CONFIG_TYPEDEFS(HistoryObserver);
     typedef Feature::feature_return_value    f_ret_t;
     typedef Feature::const_feature_ptr_t     f_ptr_t;
     typedef lemon::ListDigraph               graph_t;
@@ -92,6 +89,8 @@ public:
     void set_expansion_type(const EXPANSION_TYPE& ex);
     /** \brief Get the expansion type. */
     EXPANSION_TYPE get_expansion_type() const { return expansion_type; }
+
+    virtual void set_features(const PredictiveEnvironment & environment) override;
 
 private:
 

@@ -101,7 +101,7 @@ public:
         r = reward_ptr_t(new MinimalReward());
     }
 
-    void print_last_transition() const {
+    virtual void print_last_transition() const {
         using ColorOutput::reset_all;
         using ColorOutput::bold;
         using ColorOutput::fg_red;

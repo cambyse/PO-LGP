@@ -17,8 +17,8 @@
 #include "HistoryObserver.h"
 #include "FeatureLearner.h"
 
-class KMarkovCRF: public HistoryObserver, public FeatureLearner
-{
+class KMarkovCRF: public HistoryObserver, public FeatureLearner {
+
 public:
 
     DISAMBIGUATE_CONFIG_TYPEDEFS(HistoryObserver);
@@ -75,9 +75,9 @@ public:
      * \param max_iter        Maximum number of iterations (zero for unlimited until convergence).
      * \param mean_likelihood For returning the mean likelihood after the last iteration.
      * */
-    int optimize_model(lbfgsfloatval_t l1 = 0,
+    int optimize_model(double l1 = 0,
                        unsigned int max_iter = 0,
-                       lbfgsfloatval_t * mean_likelihood = nullptr,
+                       double * mean_likelihood = nullptr,
                        bool stochastic_sparsification = false,
                        double alpha = 10,
                        double beta = 1
