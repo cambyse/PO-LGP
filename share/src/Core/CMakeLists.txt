@@ -40,9 +40,9 @@ if(LAPACK_FOUND)
   )
 endif(LAPACK_FOUND)
 
-if(TESTING_ENABLED)
+if(GTEST_H_FOUND)
   target_link_libraries(Core LINK_PUBLIC gtest)
-endif(TESTING_ENABLED)
+endif(GTEST_H_FOUND)
 
 # Python wrappers
 if(PYTHON_OK)

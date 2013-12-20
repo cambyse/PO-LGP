@@ -40,7 +40,7 @@ if(USE_GTEST)
                 add_subdirectory(/usr/src/gtest gtest)
                 link_directories(gtest)
                 if(EXAMPLES_AS_TESTS)
-                add_definitions(-DMLR_EXAMPLES_AS_TESTS)
+                  add_definitions(-DMLR_EXAMPLES_AS_TESTS)
                 endif(EXAMPLES_AS_TESTS)
         else(GTEST_H_FOUND)
                         message(WARNING "Did not find gtest.h, cannot enable testing")
@@ -58,12 +58,13 @@ if(USE_PYTHON)
     find_package(PythonLibs 2.7)
     find_package(NumPy)
     if(NUMPY_FOUND)
-      set(PYTHON_OK ON)
+      set(PYTHON_OK ON CACHE INTERNAL BOOL)
       set(PYTHON_INCLUDES 
         ${PYTHON_INCLUDE_DIRS} 
         ${NUMPY_INCLUDE_DIRS}
         ${CMAKE_SOURCE_DIR}/include/numpy-${NUMPY_VERSION_MAJOR}.${NUMPY_VERSION_MINOR}
         ${CMAKE_SOURCE_DIR}/include/numpy
+        CACHE INTERNAL STRING
     )
 
     else(NUMPY_FOUND)
@@ -119,6 +120,4 @@ message(STATUS "MLR CXX Flags: ${MLR_CXX_FLAGS}")
 foreach(DIR ${CURRENT_SLICE})
 add_subdirectory(${DIR})
 endforeach(DIR ${CURRENT_SLICE})
-
-
 
