@@ -59,7 +59,7 @@ struct Simulator {
   double getEnergy();
 
   //-- step dynamic simulation
-  void stepDynamic(const arr& u_control, double tau);
+  void stepDynamics(const arr& Bu, double tau);
   void setDynamicSimulationNoise(double noise);
   void setDynamicGravity(bool gravity);
   

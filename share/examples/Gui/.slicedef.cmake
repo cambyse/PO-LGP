@@ -1,0 +1,10 @@
+set(CURRENT_SLICE 
+ graphView
+mesh
+mesh_implicitSurface
+meshTools
+opengl
+opengl_threaded
+plot
+qhull
+ )
