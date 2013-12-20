@@ -92,8 +92,8 @@ void executeTrajectoryPFC(MT::String scene){
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(1.,0.,0.), 1e4);
   P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
 
-//  c = P.addTaskMap("contact", new DefaultTaskMap(collTMT,-1,NoVector,-1,NoVector,ARR(0.15)));
-//  P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e0);
+  //  c = P.addTaskMap("contact", new DefaultTaskMap(collTMT,-1,NoVector,-1,NoVector,ARR(0.15)));
+  //  P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e0);
 
 
   //-- create the Optimization problem (of type kOrderMarkov)
@@ -108,8 +108,8 @@ void executeTrajectoryPFC(MT::String scene){
 
   arr x(T+1,n); x.setZero();
   optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
-//  P.costReport();
-//  displayTrajectory(x, 1, world, "planned trajectory", 0.01);
+  //  P.costReport();
+  //  displayTrajectory(x, 1, world, "planned trajectory", 0.01);
 
   //-- Transform trajectory into task space
   arr kinPos, kinVec, xRefPos, xRefVec, xRef;
@@ -150,16 +150,17 @@ void executeTrajectoryPFC(MT::String scene){
   PDtask *taskVec = MP.addPDTask("vec", tau_plan*5, 1, vecTMT, "endeff",ARR(0.,0.,1.));
   PDtask *taskCol = MP.addPDTask("col", .02, 1., collTMT, NULL, NoVector, NULL, NoVector, ARR(0.1));
   PDtask *taskHome = MP.addPDTask("home", .02, 0.5, qItselfTMT);
-  taskPos->setGains(0.,100.); taskPos->prec=1e0;
-  taskVec->setGains(0.,100.); taskVec->prec=1e0;
-  taskHome->setGains(0.,10.); taskHome->prec=1e-2;
+
+  taskPos->setGains(1.,100.); taskPos->prec=1e0;
+  taskVec->setGains(1.,100.); taskVec->prec=1e0;
+  taskHome->setGains(0.,10.); taskHome->prec=1e-1;
   taskCol->prec=1e0;
 
 
   MObject goalMO(&world, MT::String("goal"), MObject::GOAL , 0.001, ARRAY(0.,0.,1.));
-  Pfc* pfc = new Pfc(world,xRef,t_final,x0,q0,goalMO,true,true,0.,0.,0.,0.);
-  pfc->dsRef = tau_plan/t_final;
-  pfc->dt = tau_plan;
+  Pfc* pfc = new Pfc(world,xRef,tau_plan,t_final,x0,q0,goalMO,true);
+//  pfc->dsRef = tau_plan/t_final;
+//  pfc->dt = tau_plan;
 
   // gl visualization
   world.gl().add(drawPoint,&(taskPos->y_ref));
@@ -176,13 +177,20 @@ void executeTrajectoryPFC(MT::String scene){
       world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeff")->index);
       state.append(stateVec);
 
-      pfc->goalMO->move();
+      if (pfc->s.last() < 0.9){
+        pfc->goalMO->move();
+      }
       pfc->iterate(state);
 
-      // compute desired state postion and velocity
-      arr yNext = pfc->traj[pfc->traj.d0-1];
-      arr ydNext = pfc->dsRef*pfc->trajWrap->deval(pfc->s.last())/tau_plan;
+      arr yNext, ydNext;
+      pfc->getNextState(yNext,ydNext);
 
+      // compute desired state postion and velocity
+//      arr yNext = pfc->traj[pfc->traj.d0-1];
+//      arr ydNext = pfc->dsRef*pfc->trajWrap->deval(pfc->s.last())/tau_plan;
+//      arr dir = pfc->trajWrap->deval(pfc->s.last());
+//      dir = dir/length(dir);
+//      arr ydNext = dir*pfc->dsRef*length(pfc->trajRef->deval(pfc->s.last()))/tau_plan;
       taskPos->y_ref = yNext.subRange(0,2);
       taskPos->v_ref = ydNext.subRange(0,2);
       taskVec->y_ref = yNext.subRange(3,5);
