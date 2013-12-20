@@ -96,6 +96,21 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
 
   MotionProblem(ors::KinematicWorld& _world, bool useSwift=true);
   
+  MotionProblem& operator=(const MotionProblem& other) {
+    world = const_cast<ors::KinematicWorld&>(other.world);
+    useSwift = other.useSwift;
+    taskCosts = other.taskCosts;
+    transitionType = other.transitionType;
+    H_rate_diag = other.H_rate_diag;
+    T = other.T;
+    tau = other.tau;
+    x0 = other.x0;
+    v0 = other.v0;
+    prefix = other.prefix;
+    costMatrix = other.costMatrix;
+    dualMatrix = other.dualMatrix;
+  };
+
   void loadTransitionParameters(); ///< loads transition parameters from cfgFile //TODO: do in constructor of TransitionCost
   
   //-- methods for defining the task

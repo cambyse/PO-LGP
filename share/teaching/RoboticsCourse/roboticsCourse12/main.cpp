@@ -16,7 +16,7 @@ void testSimulator(){
   for(uint i=0;i<1000;i++){
     //q += .001;
     //S.setJointAngles(q);
-    S.stepOde(qdot);
+    S.stepOde(qdot, !(i%10));
   }
 }
 

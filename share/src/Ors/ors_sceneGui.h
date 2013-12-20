@@ -23,8 +23,8 @@
 /// @addtogroup group_ors
 /// @{
 
-#include <Gui/opengl.h>
 #include "ors.h"
+#include <Gui/opengl.h>
 
 struct OrsSceneGui {
   struct sOrsSceneGui *s;

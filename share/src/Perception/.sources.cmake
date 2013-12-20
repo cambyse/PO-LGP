@@ -1,0 +1,21 @@
+set(SOURCES ./pointcloud.h
+./opencv.h
+./perception.h
+./keyframe.h
+./opencv.cpp
+./video_opencv.cpp
+./libcolorseg.h
+./videoEncoder.h
+./g4data.h
+./pointcloud.cpp
+./perception.cpp
+./keyframe.cpp
+./keyframer.cpp
+./shapeFitter.h
+./shapeFitter.cpp
+./libcolorseg.cpp
+./videoEncoder.cpp
+./g4data.cpp
+./perception_views.cpp
+./keyframer.h
+./vision.h)
