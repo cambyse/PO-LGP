@@ -10,36 +10,44 @@ include(FindPkgConfig)
 # Gui options
 option(WITH_QHULL "Use QHULL" ON)
 if(WITH_QHULL)
-        set(MT_QHULL -DMT_QHULL)
-        set(QHULL_LIBRARIES qhull)
-        set(PKG_QHULL -lqhull)
+  # first check lib then header for qhull
+  check_library_exists(qhull qh_meminit "" QHULL_FOUND)
+  if(QHULL_FOUND)
+    add_definitions(-DMT_QHULL)
+	  check_include_file(qhull/qhull.h QHULL_FOUND)
+    if(QHULL_H_FOUND)    
+      set(MT_QHULL -DMT_QHULL)
+      set(QHULL_LIBRARIES qhull)
+      set(PKG_QHULL -lqhull)
+    else(QHULL_H_FOUND)
+      message(STATUS "qhull library found, but headers missing. -dev package missing? will omit qhull")
+    endif(QHULL_H_FOUND)
+  endif(QHULL_FOUND)
 endif(WITH_QHULL)
 option(WITH_GRAPHVIZ "Use graphviz visualization" ON)
 if(WITH_GRAPHVIZ)
+  # first check lib then header for graphviz
+  check_include_file_CXX(graphviz/graphviz_version.h GRAPHVIZ_FOUND)
+  if(GRAPHVIZ_FOUND)
+    add_definitions(-DMT_GRAPHVIZ)
+  endif(GRAPHVIZ_FOUND)
 endif(WITH_GRAPHVIZ)
 
 pkg_check_modules(GTKGL REQUIRED gtkglext-1.0)
-
-# first check lib then header for qhull
-check_library_exists(qhull qh_meminit "" QHULL_FOUND)
-if(QHULL_FOUND)
-	check_include_file(qhull/qhull.h QHULL_FOUND)
-endif(QHULL_FOUND)
-if(NOT QHULL_FOUND)
-	message(FATAL_ERROR "qhull library not found, cannot build gui")
-endif(NOT QHULL_FOUND)
-
-# first check lib then header for graphviz
-check_include_file_CXX(graphviz/graphviz_version.h GRAPHVIZ_FOUND)
-if(NOT GRAPHVIZ_FOUND)
-	message(FATAL_ERROR "graph library not found, cannot build gui")
-endif(NOT GRAPHVIZ_FOUND)
 
 set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
 
 include(.sources.cmake)
 
+add_definitions(-DMT_GTK )
+if(OPENGL_FOUND)
+add_definitions(-DMT_GTKGL)
+endif(OPENGL_FOUND)
+
+include_directories(${GTK2_INCLUDE_DIRS} ${GTKGL_INCLUDE_DIRS})
+add_definitions(${GTK2_DEFINITIONS})
 add_library(Gui SHARED ${SOURCES})
+
 target_link_libraries(Gui LINK_PRIVATE Core 
         extern_GJK extern_ply extern_Lewiner
         ${GTKGL_LIBRARY_DIRS} 
@@ -50,15 +58,6 @@ target_link_libraries(Gui LINK_PRIVATE Core
         LINK_PUBLIC
         ${GL_LIBRARIES}
 )
-add_definitions(-DMT_GTKGL 
-        -DMT_GTK 
-        -DMT_GL
-        -DMT_QHULL 
-        -DMT_GRAPHVIZ 
-)
-
-include_directories(${GTK2_INCLUDE_DIRS} ${GTKGL_INCLUDE_DIRS})
-add_definitions(${LAPACK_DEFINITIONS} ${GTK2_DEFINITIONS})
 
 # Python wrappers
 if(PYTHON_OK)
