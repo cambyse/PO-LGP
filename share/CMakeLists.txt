@@ -46,6 +46,8 @@ if(USE_GTEST)
                         message(WARNING "Did not find gtest.h, cannot enable testing")
                 set(TESTING_ENABLED)
         endif(GTEST_H_FOUND)
+else(USE_GTEST)
+	set(EXAMPLES_AS_TESTS OFF)
 endif(USE_GTEST)
 
 # configure Python
