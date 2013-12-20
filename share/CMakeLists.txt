@@ -55,7 +55,7 @@ option(WITH_PYTHON "Build python bindings using SWIG. Will be omitted of swig or
 if(WITH_PYTHON)
   find_package(SWIG 2.0)
   if(SWIG_FOUND)
-    include(${SWIG_WITH_FILE})
+    include(${SWIG_USE_FILE})
     find_package(PythonInterp 2.7)
     find_package(PythonLibs 2.7)
     find_package(NumPy)
