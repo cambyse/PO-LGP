@@ -1,5 +1,7 @@
 get_filename_component(NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
+option(WITH_FREENECT "Use libfreenect for Kinect" ON)
+if(WITH_FREENECT)
 include(FindPkgConfig)
 pkg_check_modules(LIBFREENECT libfreenect)
 
@@ -18,4 +20,5 @@ target_link_libraries(${TARGET}
 else(LIBFREENECT_FOUND)
 message(STATUS "Kinect support not built because libfreenect not found")
 endif(LIBFREENECT_FOUND)
+endif(WITH_FREENECT)
 

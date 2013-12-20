@@ -8,15 +8,15 @@ include(CheckIncludeFileCXX)
 include(FindPkgConfig)
 
 # Gui options
-option(USE_QHULL "Use QHULL" ON)
-if(USE_QHULL)
+option(WITH_QHULL "Use QHULL" ON)
+if(WITH_QHULL)
         set(MT_QHULL -DMT_QHULL)
         set(QHULL_LIBRARIES qhull)
         set(PKG_QHULL -lqhull)
-endif(USE_QHULL)
-option(USE_GRAPHVIZ "Use graphviz visualization" ON)
-if(USE_GRAPHVIZ)
-endif(USE_GRAPHVIZ)
+endif(WITH_QHULL)
+option(WITH_GRAPHVIZ "Use graphviz visualization" ON)
+if(WITH_GRAPHVIZ)
+endif(WITH_GRAPHVIZ)
 
 pkg_check_modules(GTKGL REQUIRED gtkglext-1.0)
 

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.4.6)
 project(circle_test)
 
-if(USE_ROS)
+if(WITH_ROS)
 
 include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 set(ENV{ROS_PACKAGE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/..:$ENV{ROS_PACKAGE_PATH})
@@ -40,4 +40,4 @@ target_link_libraries(circle_test Core Ors Gui)
 #rosbuild_add_boost_directories()
 #rosbuild_link_boost(${PROJECT_NAME} thread)
 
-endif(USE_ROS)
+endif(WITH_ROS)
