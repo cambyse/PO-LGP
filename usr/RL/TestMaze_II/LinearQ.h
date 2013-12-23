@@ -5,6 +5,7 @@
 
 #include "Feature.h"
 #include "HistoryObserver.h"
+#include "FeatureLearner.h"
 #include "optimization/LBFGS_Optimizer.h"
 
 #define ARMA_NO_DEBUG
@@ -16,7 +17,7 @@
 
 #include "debug.h"
 
-class LinearQ: public HistoryObserver, public LBFGS_Optimizer
+class LinearQ: public HistoryObserver, public LBFGS_Optimizer, public FeatureLearner
 {
 public:
 
@@ -37,16 +38,16 @@ public:
 
     /** \brief Add a new instance to the tree. */
     virtual void add_action_observation_reward_tripel(
-            const action_t& action,
-            const observation_t& observation,
-            const reward_t& reward,
+            const action_ptr_t& action,
+            const observation_ptr_t& observation,
+            const reward_ptr_t& reward,
             const bool& new_episode
     );
 
     /** \brief Clears all data (all instances). */
     virtual void clear_data();
 
-    action_t get_max_value_action(const instance_t *);
+    action_ptr_t get_max_value_action(const instance_t *);
 
     /*! \brief Set the discount rate used for computing observation and action values. */
     void set_discount(const double& d) { discount = d; }
@@ -157,7 +158,6 @@ private:
     // Features, Weights etc. //
     //------------------------//
     std::vector<double> feature_weights;             ///< Coefficients for active features.
-    std::vector<f_ptr_t> basis_features;             ///< Basis features used to construct new candidates.
     std::vector<AndFeature> active_features;         ///< Set of currently active features.
     std::vector<AndFeature> candidate_features;      ///< Set of candidate features.
     std::vector<double> candidate_scores;            ///< Scores for the candidate features.
@@ -200,7 +200,7 @@ private:
     /** \brief Update LinearQ::L, LinearQ::rho, and LinearQ::c. */
     void update_loss_terms();
 
-    probability_t prior_probability(const observation_t&, const reward_t&) const;
+    probability_t prior_probability(const observation_ptr_t&, const reward_ptr_t&) const;
 
     /** \brief Calculate loss function. */
     double loss_function(const arma::vec& w) const { return arma::as_scalar(c + 2*rho.t()*w + w.t()*L*w); }

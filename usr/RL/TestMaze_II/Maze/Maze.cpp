@@ -366,7 +366,6 @@ const vector<Maze::maze_t> Maze::maze_list = {
 };
 
 Maze::Maze(const double& eps):
-    current_instance(nullptr),
     current_observation(*(maze_list[0].observation_space.get_derived<observation_t>())),
     epsilon(eps),
     agent(nullptr),
@@ -391,11 +390,17 @@ void Maze::set_maze(const QString& s) {
     current_maze = maze_list[0];
 
     // find maze
+    bool found = false;
     for(maze_t maze : maze_list) {
         if(maze.name==s) {
             current_maze = maze;
+            found = true;
             break;
         }
+    }
+
+    if(!found) {
+        DEBUG_ERROR("Could not find maze with name '" << s << "'");
     }
 
     // set the maze
@@ -911,6 +916,7 @@ Maze::probability_t Maze::get_prediction(
 }
 
 void Maze::get_features(std::vector<f_ptr_t> & basis_features, FeatureLearner::LEARNER_TYPE type) const {
+
     // clear first
     basis_features.clear();
 
@@ -922,6 +928,7 @@ void Maze::get_features(std::vector<f_ptr_t> & basis_features, FeatureLearner::L
             // actions
             for(action_ptr_t action : action_space) {
                 f_ptr_t action_feature = ActionFeature::create(action,k_idx);
+                DEBUG_OUT(2,"Adding feature: " << *action_feature);
                 basis_features.push_back(action_feature);
             }
         }
@@ -931,15 +938,17 @@ void Maze::get_features(std::vector<f_ptr_t> & basis_features, FeatureLearner::L
             // observations
             for(observation_ptr_t observation : observation_space) {
                 f_ptr_t observation_feature = ObservationFeature::create(observation,k_idx);
+                DEBUG_OUT(2,"Adding feature: " << *observation_feature);
                 basis_features.push_back(observation_feature);
             }
         }
         if((type==FeatureLearner::LEARNER_TYPE::FULL_PREDICTIVE && k_idx==0) ||
            (type==FeatureLearner::LEARNER_TYPE::HISTORY_ONLY && k_idx<0) ||
-           (type==FeatureLearner::LEARNER_TYPE::HISTORY_AND_ACTION && false)) {
+           (type==FeatureLearner::LEARNER_TYPE::HISTORY_AND_ACTION && k_idx<0)) {
             // reward
             for(reward_ptr_t reward : reward_space) {
                 f_ptr_t reward_feature = RewardFeature::create(reward,k_idx);
+                DEBUG_OUT(2,"Adding feature: " << *reward_feature);
                 basis_features.push_back(reward_feature);
             }
         }
@@ -962,8 +971,8 @@ void Maze::get_features(std::vector<f_ptr_t> & basis_features, FeatureLearner::L
     if(type==FeatureLearner::LEARNER_TYPE::HISTORY_AND_ACTION) {
         // also add a unit feature
         f_ptr_t const_feature = ConstFeature::create(1);
+        DEBUG_OUT(2,"Adding feature: " << *const_feature);
         basis_features.push_back(const_feature);
-        DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
     }
 }
 
@@ -1075,11 +1084,21 @@ string Maze::get_doors() {
 
 void Maze::print_transition(action_ptr_t& a, observation_ptr_t& o, reward_ptr_t& r) const {
     // check
-    if(current_maze.name!="Default") {
-        DEBUG_ERROR("ASCII printing of transitions is only supported for maze 'Default'");
+    if(current_maze.name!="Default" && current_maze.name!="Minimal") {
+        DEBUG_ERROR("UTF-8 printing of transitions is only supported for maze 'Default'");
         return;
     }
 
+    // get string for button and door
+    const char * button;
+    const char * door;
+    if(current_maze.name=="Default") {
+        button = "◗";
+        door = "╲";
+    } else {
+        button = " ";
+        door = "┃";
+    }
     // get action string
     const char * as;
     if(a==MazeAction("up")) {
@@ -1107,25 +1126,25 @@ void Maze::print_transition(action_ptr_t& a, observation_ptr_t& o, reward_ptr_t&
     // print the thing
     if(o==MazeObservation(2,2,0,0)) {
         std::cout << "┏━━━┳━━━┓" << std::endl;
-        std::cout << "┃◗"<<rc<<"●"<<rs<<" ╲   ┃" << std::endl;
+        std::cout << "┃"<<button<<""<<rc<<"●"<<rs<<" "<<door<<"   ┃" << std::endl;
         std::cout << "┣━━━╋━━━┫"<<as << std::endl;
         std::cout << "┃   ┃   ┃" << std::endl;
         std::cout << "┗━━━┻━━━┛" << std::endl;
     } else if(o==MazeObservation(2,2,0,1)) {
         std::cout << "┏━━━┳━━━┓" << std::endl;
-        std::cout << "┃◗  ╲   ┃" << std::endl;
+        std::cout << "┃"<<button<<"  "<<door<<"   ┃" << std::endl;
         std::cout << "┣━━━╋━━━┫"<<as << std::endl;
         std::cout << "┃ "<<rc<<"●"<<rs<<" ┃   ┃" << std::endl;
         std::cout << "┗━━━┻━━━┛" << std::endl;
     } else if(o==MazeObservation(2,2,1,0)) {
         std::cout << "┏━━━┳━━━┓" << std::endl;
-        std::cout << "┃◗  ╲ "<<rc<<"●"<<rs<<" ┃" << std::endl;
+        std::cout << "┃"<<button<<"  "<<door<<" "<<rc<<"●"<<rs<<" ┃" << std::endl;
         std::cout << "┣━━━╋━━━┫"<<as << std::endl;
         std::cout << "┃   ┃   ┃" << std::endl;
         std::cout << "┗━━━┻━━━┛" << std::endl;
     } else if(o==MazeObservation(2,2,1,1)) {
         std::cout << "┏━━━┳━━━┓" << std::endl;
-        std::cout << "┃◗  ╲   ┃" << std::endl;
+        std::cout << "┃"<<button<<"  "<<door<<"   ┃" << std::endl;
         std::cout << "┣━━━╋━━━┫"<<as << std::endl;
         std::cout << "┃   ┃ "<<rc<<"●"<<rs<<" ┃" << std::endl;
         std::cout << "┗━━━┻━━━┛" << std::endl;

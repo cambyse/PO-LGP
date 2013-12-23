@@ -27,7 +27,7 @@
     }
 
 #define DEBUG_WARNING(message) {                                          \
-        std::cout << ColorOutput::fg_magenta() << DEBUG_STRING << "Error(L" << __LINE__ << "): " << message << ColorOutput::reset_all() << std::endl; \
+        std::cout << ColorOutput::fg_magenta() << DEBUG_STRING << "Warning(L" << __LINE__ << "): " << message << ColorOutput::reset_all() << std::endl; \
     }
 
 #define DEBUG_OUT(level,message) {                              \

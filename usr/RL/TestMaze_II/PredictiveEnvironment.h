@@ -32,6 +32,8 @@ public:
 
     virtual void get_spaces(action_ptr_t & a, observation_ptr_t & o, reward_ptr_t & r) const;
 
+    virtual const instance_t * get_current_instance() const { return current_instance; }
+
 protected:
 
     instance_t * current_instance;       ///< Current instance holding the environment state.

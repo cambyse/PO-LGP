@@ -44,11 +44,11 @@ public:
     void set_state_colors(const color_vector_t colors = color_vector_t());
 
     /** \brief Perform a transition by executing an action. */
-    void perform_transition(const action_ptr_t& action);
+    void perform_transition(const action_ptr_t& action) override;
 
     /** \brief Perform a transition by executing an action and return resulting
      * observation and reward by reference. */
-    void perform_transition(const action_ptr_t& a, observation_ptr_t& final_observation, reward_ptr_t& r );
+    void perform_transition(const action_ptr_t& a, observation_ptr_t& final_observation, reward_ptr_t& r ) override;
 
     /** \brief Perform a transition by executing an action and return which rewards
      * were active. */
@@ -75,8 +75,6 @@ public:
 
     /** \brief Set the current state of the agent. */
     void set_current_observation(const observation_ptr_t&);
-
-    const instance_t * get_current_instance() const { return current_instance; }
 
     const std::vector<QString> get_maze_list() const;
 
@@ -182,7 +180,6 @@ private:
     int k;                             ///< k-MDP length.
 
     /** \brief The current state of the maze including the complete past. */
-    instance_t * current_instance;
     observation_t current_observation;               ///< Current state of the agent in the maze.
     double epsilon;                                  ///< Amount of stochasticity in transitions.
     QGraphicsSvgItem *agent;                         ///< Svg image for rendering the agent.

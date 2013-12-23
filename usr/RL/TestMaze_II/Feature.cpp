@@ -102,7 +102,7 @@ Feature::feature_return_value ConstFeature::evaluate(const_instanceIt_t insIt, a
 }
 
 string ConstFeature::identifier() const {
-    return QString("c(%1").arg(const_return_value).toStdString()+Feature::identifier();
+    return QString("c(%1)").arg(const_return_value).toStdString()+Feature::identifier();
 }
 
 bool ConstFeature::operator==(const Feature& other) const {

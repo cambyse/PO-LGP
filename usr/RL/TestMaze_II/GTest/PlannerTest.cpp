@@ -141,5 +141,9 @@ TEST(PlannerTest, LookAheadSearch) {
                 planner.print_tree_statistics();
             }
         }
+
+        // delete instance
+        delete current_instance;
+
     }
 }

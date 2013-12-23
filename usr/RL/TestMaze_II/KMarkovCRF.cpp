@@ -122,10 +122,10 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
     }
 
     // Print parameter vector //
-    if(DEBUG_LEVEL>=2) {
-        DEBUG_OUT(2, "Parameter vector:");
+    if(DEBUG_LEVEL>=3) {
+        DEBUG_OUT(0, "Parameter vector:");
         for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
-            DEBUG_OUT(2, "    t[" << f_idx << "] = " << x[f_idx] );
+            DEBUG_OUT(0, "    t[" << f_idx << "] = " << x[f_idx] );
         }
     }
 
@@ -307,7 +307,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
     // terminate progress bar
     if(DEBUG_LEVEL>0) {
         ProgressBar::terminate();
-        DEBUG_OUT(1,QString("    Ignored %1 out of %2 data points (%3% to %4% excluded)")
+        DEBUG_OUT(2,QString("    Ignored %1 out of %2 data points (%3% to %4% excluded)")
                   .arg(ignored_data)
                   .arg(number_of_data_points)
                   .arg((int)(100*exclude_data_1))
@@ -351,9 +351,9 @@ int KMarkovCRF::progress_model(
         int k,
         int /*ls*/
 ) {
-    DEBUG_OUT(1,"Iteration " << k << " (fx = " << fx << ", xnorm = " << xnorm << ", p = " << exp(-fx) << "):");
+    DEBUG_OUT(2,"Iteration " << k << " (fx = " << fx << ", xnorm = " << xnorm << ", p = " << exp(-fx) << "):");
     for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
-        DEBUG_OUT(1, "    " <<
+        DEBUG_OUT(2, "    " <<
                 active_features[f_idx].identifier() <<
                 " --> t[" <<
                 f_idx << "] = " <<
@@ -849,14 +849,14 @@ void KMarkovCRF::construct_candidate_features(const int& n) {
 
     // Add active features
     for(uint f_idx = 0; f_idx < active_features.size(); ++f_idx) {
-        DEBUG_OUT(2,"Including " << active_features[f_idx].identifier() << " in base set");
+        DEBUG_OUT(3,"Including " << active_features[f_idx].identifier() << " in base set");
         candidate_feature_list.push_back(AndFeature(active_features[f_idx]));
     }
 
     // Add NullFeature if active features were empty
     if(candidate_feature_list.size()==0) {
         candidate_feature_list.push_back(AndFeature());
-        DEBUG_OUT(2,"Used " <<  candidate_feature_list.front().identifier() << " as base");
+        DEBUG_OUT(3,"Used " <<  candidate_feature_list.front().identifier() << " as base");
     }
 
     // Replace current features by those that can
@@ -867,17 +867,17 @@ void KMarkovCRF::construct_candidate_features(const int& n) {
         list<AndFeature>::iterator cf_it = candidate_feature_list.begin();
         while( counter>0 ) {
             for(uint bf_idx = 0; bf_idx < basis_features.size(); ++bf_idx) {
-                DEBUG_OUT(2,"Candidate: " << cf_it->identifier() << ", Basis(" << bf_idx << "): " << basis_features[bf_idx]->identifier() )
+                DEBUG_OUT(3,"Candidate: " << cf_it->identifier() << ", Basis(" << bf_idx << "): " << basis_features[bf_idx]->identifier() )
                 AndFeature and_feature(*basis_features[bf_idx],*cf_it);
-                DEBUG_OUT(2,"    --> " << and_feature.identifier() );
+                DEBUG_OUT(3,"    --> " << and_feature.identifier() );
                 // make sure the basis feature is not already
                 // part of the candidate feature (duplicates
                 // are removed below)
                 if(and_feature!=*cf_it) {
                     candidate_feature_list.push_back(and_feature);
-                    DEBUG_OUT(2,"    accepted");
+                    DEBUG_OUT(3,"    accepted");
                 } else {
-                    DEBUG_OUT(2,"    rejected");
+                    DEBUG_OUT(3,"    rejected");
                 }
             }
             ++cf_it;
@@ -892,10 +892,10 @@ void KMarkovCRF::construct_candidate_features(const int& n) {
     ++cf_it_2;
     while( cf_it_1!=candidate_feature_list.end() ) {
         if(cf_it_2!=candidate_feature_list.end() && *cf_it_2==*cf_it_1) {
-            DEBUG_OUT(2, "    Remove " << cf_it_2->identifier() );
+            DEBUG_OUT(3, "    Remove " << cf_it_2->identifier() );
             cf_it_2 = candidate_feature_list.erase(cf_it_2);
         } else {
-            DEBUG_OUT(2, "    Keep   " << cf_it_1->identifier() );
+            DEBUG_OUT(3, "    Keep   " << cf_it_1->identifier() );
             candidate_features.push_back(*cf_it_1);
             ++cf_it_1;
             ++cf_it_2;
@@ -932,10 +932,10 @@ void KMarkovCRF::score_candidates_by_gradient() {
     vector<double> &g = candidate_feature_scores;
 
     // Print parameter vector
-    if(DEBUG_LEVEL>=2) {
-        DEBUG_OUT(2, "Parameter vector:");
+    if(DEBUG_LEVEL>=3) {
+        DEBUG_OUT(0, "Parameter vector:");
         for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
-            DEBUG_OUT(2, "    t[" << f_idx << "] = " << lambda[f_idx] );
+            DEBUG_OUT(0, "    t[" << f_idx << "] = " << lambda[f_idx] );
         }
     }
 
@@ -1042,11 +1042,11 @@ void KMarkovCRF::add_candidate_features_to_active(const int& n) {
     for(int cf_idx=(int)candidate_features.size()-1; cf_idx>=0; --cf_idx) {
         if(candidate_feature_scores[cf_idx]>0) {
             active_features.push_back(candidate_features[cf_idx]);
-            DEBUG_OUT(1, "added   (idx = " << cf_idx << ", score = " << candidate_feature_scores[cf_idx] << "): " << candidate_features[cf_idx].identifier());
+            DEBUG_OUT(3, "added   (idx = " << cf_idx << ", score = " << candidate_feature_scores[cf_idx] << "): " << candidate_features[cf_idx].identifier());
             candidate_features.erase(candidate_features.begin() + cf_idx);
             if(++counter>=n && n>0) break;
         } else {
-            DEBUG_OUT(1, "ignored (idx = " << cf_idx << ", score = " << candidate_feature_scores[cf_idx] << "): " << candidate_features[cf_idx].identifier());
+            DEBUG_OUT(3, "ignored (idx = " << cf_idx << ", score = " << candidate_feature_scores[cf_idx] << "): " << candidate_features[cf_idx].identifier());
         }
     }
 
@@ -1088,7 +1088,7 @@ void KMarkovCRF::erase_zero_features(const bool& store) {
         if(lambda[f_idx]!=0) {
             new_lambda[new_f_idx]            = lambda[f_idx];
             new_active_features[new_f_idx]   = active_features[f_idx];
-            DEBUG_OUT(1,"Added " << new_active_features[new_f_idx].identifier() << " (new_idx = " << new_f_idx << ", old_idx = " << f_idx << ") to new active features");
+            DEBUG_OUT(3,"Added " << new_active_features[new_f_idx].identifier() << " (new_idx = " << new_f_idx << ", old_idx = " << f_idx << ") to new active features");
             ++new_f_idx;
         }
     }
@@ -1461,8 +1461,8 @@ void KMarkovCRF::check_lambda_size(lbfgsfloatval_t* & parameters, vector<AndFeat
     if((int)feature_vector.size()!=old_feature_vector_size) {
 
         int new_feature_vector_size = feature_vector.size();
-        DEBUG_OUT(2, "    old size = " << old_feature_vector_size);
-        DEBUG_OUT(2, "    new size = " << new_feature_vector_size);
+        DEBUG_OUT(3, "    old size = " << old_feature_vector_size);
+        DEBUG_OUT(3, "    new size = " << new_feature_vector_size);
 
         lbfgsfloatval_t * old_parameters = parameters;
 
@@ -1510,15 +1510,15 @@ void KMarkovCRF::sort_scored_features(bool divide_by_complexity) {
     vector<AndFeature> new_candidate_features(n);
     vector<double> new_candidate_feature_scores(n);
     int new_idx = 0;
-    DEBUG_OUT(1, "Feature Scores:")
+    DEBUG_OUT(3, "Feature Scores:");
     for(list<pair<double,int> >::iterator it = scored_indices.begin(); it!=scored_indices.end(); ++it) {
         int old_idx = it->second;
         new_candidate_features[new_idx]       = candidate_features[old_idx];
         new_candidate_feature_scores[new_idx] = candidate_feature_scores[old_idx];
         if(divide_by_complexity) {
-            DEBUG_OUT(1, "    " << QString("%1 (%2) <-- ").arg(candidate_feature_scores[old_idx],7,'f',5).arg(candidate_features[old_idx].get_complexity(),2).toStdString() << candidate_features[old_idx].identifier() );
+            DEBUG_OUT(3, "    " << QString("%1 (%2) <-- ").arg(candidate_feature_scores[old_idx],7,'f',5).arg(candidate_features[old_idx].get_complexity(),2).toStdString() << candidate_features[old_idx].identifier() );
         } else {
-            DEBUG_OUT(1, "    " << QString("%1 <-- ").arg(candidate_feature_scores[old_idx],7,'f',5).toStdString() << candidate_features[old_idx].identifier() );
+            DEBUG_OUT(3, "    " << QString("%1 <-- ").arg(candidate_feature_scores[old_idx],7,'f',5).toStdString() << candidate_features[old_idx].identifier() );
         }
         ++new_idx;
     }
@@ -1733,7 +1733,7 @@ void KMarkovCRF::erase_const_zero_candidate_features() {
     for(uint f_idx=0; f_idx<candidate_features_n; ++f_idx) {
         if(!erase_feature[f_idx]) {
             new_candidate_features[new_f_idx] = candidate_features[f_idx];
-            DEBUG_OUT(2,"Added " << new_candidate_features[new_f_idx].identifier() << " (new_idx = " << new_f_idx << ", old_idx = " << f_idx << ") to new candidate features");
+            DEBUG_OUT(3,"Added " << new_candidate_features[new_f_idx].identifier() << " (new_idx = " << new_f_idx << ", old_idx = " << f_idx << ") to new candidate features");
             ++new_f_idx;
         }
     }

@@ -1,5 +1,5 @@
 #include "LBFGS_Optimizer.h"
-#include "../lbfgs_codes.h"
+#include "../util/lbfgs_codes.h"
 #include "../util.h"
 #include "../Config.h"
 

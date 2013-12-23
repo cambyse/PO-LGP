@@ -8,7 +8,7 @@
 #include <tuple>
 #include <float.h> // for DBL_MAX
 
-#include "lbfgs_codes.h"
+#include "util/lbfgs_codes.h"
 
 #include "util/ProgressBar.h"
 #include "util.h"
@@ -45,53 +45,54 @@ using arma::zeros;
 using util::INVALID;
 
 LinearQ::LinearQ(const double& d):
-        discount(d),
-        loss_terms_up_to_date(false)
+    FeatureLearner(LEARNER_TYPE::HISTORY_AND_ACTION),
+    discount(d),
+    loss_terms_up_to_date(false)
 {
     //----------------------------------------//
     // Constructing basis indicator features  //
     //----------------------------------------//
 
-    // delayed action, observation, and reward features
-    for(int k_idx = 0; k_idx>=-(int)Config::k; --k_idx) {
-        // actions
-        if(true) {
-            for(action_t action : actionIt_t::all) {
-                f_ptr_t action_feature = ActionFeature::create(action,k_idx);
-                basis_features.push_back(action_feature);
-                DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
-            }
-        }
-        if(k_idx<0) { // present observation is not known for predicting value
-            // observations
-            for(observation_t observation : observationIt_t::all) {
-                f_ptr_t observation_feature = ObservationFeature::create(observation,k_idx);
-                basis_features.push_back(observation_feature);
-                DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
-            }
-        }
-        if(false) { // no correlated rewards
-            // reward
-            for(reward_t reward : rewardIt_t::all) {
-                f_ptr_t reward_feature = RewardFeature::create(reward,k_idx);
-                basis_features.push_back(reward_feature);
-                DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
-            }
-        }
-    }
+    // // delayed action, observation, and reward features
+    // for(int k_idx = 0; k_idx>=-(int)Config::k; --k_idx) {
+    //     // actions
+    //     if(true) {
+    //         for(action_ptr_t action : action_space) {
+    //             f_ptr_t action_feature = ActionFeature::create(action,k_idx);
+    //             basis_features.push_back(action_feature);
+    //             DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+    //         }
+    //     }
+    //     if(k_idx<0) { // present observation is not known for predicting value
+    //         // observations
+    //         for(observation_ptr_t observation : observationIt_t::all) {
+    //             f_ptr_t observation_feature = ObservationFeature::create(observation,k_idx);
+    //             basis_features.push_back(observation_feature);
+    //             DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+    //         }
+    //     }
+    //     if(false) { // no correlated rewards
+    //         // reward
+    //         for(reward_ptr_t reward : rewardIt_t::all) {
+    //             f_ptr_t reward_feature = RewardFeature::create(reward,k_idx);
+    //             basis_features.push_back(reward_feature);
+    //             DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+    //         }
+    //     }
+    // }
 
-    // also add a unit feature
-    f_ptr_t const_feature = ConstFeature::create(1);
-    basis_features.push_back(const_feature);
-    DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
+    // // also add a unit feature
+    // f_ptr_t const_feature = ConstFeature::create(1);
+    // basis_features.push_back(const_feature);
+    // DEBUG_OUT(2,"Added " << basis_features.back()->identifier() << " to basis features");
 }
 
 LinearQ::~LinearQ() {}
 
 void LinearQ::add_action_observation_reward_tripel(
-        const action_t& action,
-        const observation_t& observation,
-        const reward_t& reward,
+        const action_ptr_t& action,
+        const observation_ptr_t& observation,
+        const reward_ptr_t& reward,
         const bool& new_episode
 ) {
     // call function of parent class
@@ -109,13 +110,13 @@ void LinearQ::clear_data() {
     loss_terms_up_to_date = false;
 }
 
-LinearQ::action_t LinearQ::get_max_value_action(const instance_t * i) {
-    vector<action_t> max_actions;
+LinearQ::action_ptr_t LinearQ::get_max_value_action(const instance_t * i) {
+    vector<action_ptr_t> max_actions;
     double max_value = -DBL_MAX;
-    for( auto action : actionIt_t::all ) {
+    for(action_ptr_t action : action_space) {
         double value = 0;
         for(idx_t f_idx=0; f_idx<(idx_t)active_features.size(); ++f_idx) {
-            value += feature_weights[f_idx]*active_features[f_idx].evaluate(i, action, observation_t(), reward_t() );
+            value += feature_weights[f_idx]*active_features[f_idx].evaluate(i, action, observation_ptr_t(), reward_ptr_t() );
         }
         if(value>max_value) {
             max_value = value;
@@ -130,6 +131,14 @@ LinearQ::action_t LinearQ::get_max_value_action(const instance_t * i) {
 void LinearQ::score_candidates_by_gradient() {
 
     DEBUG_OUT(1,"Scoring candidates by gradient...");
+
+    // check for current optimization method
+    bool reset_to_ridge = false;
+    if(optimization_type==OPTIMIZATION_TYPE::TD_RIDGE) {
+        DEBUG_WARNING("Gradient scoring is not defined for OPTIMIZATION_TYPE::TD_RIDGE. Using TD_L1 instead.");
+        optimization_type = OPTIMIZATION_TYPE::TD_L1;
+        reset_to_ridge = true;
+    }
 
     // remember currently active features and add all candidates
     auto old_active_features = active_features;
@@ -164,6 +173,11 @@ void LinearQ::score_candidates_by_gradient() {
     // revert to old active features and free grad
     active_features = old_active_features;
     lbfgs_free(grad);
+
+    // reset optimization method
+    if(reset_to_ridge) {
+        optimization_type = OPTIMIZATION_TYPE::TD_RIDGE;
+    }
 }
 
 void LinearQ::add_candidates_by_score(int n) {
@@ -454,8 +468,8 @@ lbfgsfloatval_t LinearQ::bellman_objective(
                 break;
             }
             ++data_idx;
-            action_t action_tp1 = (insIt+1)->action;
-            reward_t reward_tp1 = (insIt+1)->reward;
+            action_ptr_t action_tp1 = (insIt+1)->action;
+            reward_ptr_t reward_tp1 = (insIt+1)->reward;
 
             //-------------------------------//
             //          variables            //
@@ -465,13 +479,13 @@ lbfgsfloatval_t LinearQ::bellman_objective(
             vector<f_ret_t> f_it_atp1(n);
 
             // f(i_t+1,a): features for time t+1 for all actions a
-            vector<vector<f_ret_t> > f_itp1_a(action_t::action_n,vector<double>(n));
+            vector<vector<f_ret_t> > f_itp1_a(action_space->space_size(),vector<double>(n));
 
             // Q(i_t,a_t+1): Q-function for time t
             double Q_it_atp1 = 0;
 
             // Q(i_t+1,a): Q-function for time t+1 for for all actions a
-            vector<f_ret_t> Q_itp1_a(action_t::action_n,0);
+            vector<f_ret_t> Q_itp1_a(action_space->space_size(),0);
 
             // sum_a exp[alpha Q(i_t+1,a)]
             double sumExp = 0;
@@ -486,15 +500,15 @@ lbfgsfloatval_t LinearQ::bellman_objective(
             // evaluate feature and calculate Q-functions
             for(uint f_idx : Range(n)) { // iterate through features
                 // evaluate feature
-                f_ret_t f_ret = active_features[f_idx].evaluate(insIt,action_tp1,observation_t(),reward_t());
+                f_ret_t f_ret = active_features[f_idx].evaluate(insIt,action_tp1,observation_ptr_t(),reward_ptr_t());
                 f_it_atp1[f_idx] = f_ret;
                 // increment Q-function
                 double f_weight = x[f_idx];
                 Q_it_atp1 += f_weight*f_ret;
                 idx_t action_idx = 0;
-                for(action_t action : actionIt_t::all) {
+                for(action_ptr_t action : action_space) {
                     // evaluate feature
-                    f_ret_t f_ret_a = active_features[f_idx].evaluate(insIt,action,observation_t(),reward_t());
+                    f_ret_t f_ret_a = active_features[f_idx].evaluate(insIt,action,observation_ptr_t(),reward_ptr_t());
                     f_itp1_a[action_idx][f_idx] = f_ret_a;
                     // increment Q-function
                     Q_itp1_a[action_idx] += f_weight*f_ret_a;
@@ -504,7 +518,7 @@ lbfgsfloatval_t LinearQ::bellman_objective(
             }
 
             // calculate sums
-            for(idx_t action_idx : Range(action_t::action_n)) {
+            for(idx_t action_idx : Range(action_space->space_size())) {
                 double expQ = exp(alpha*Q_itp1_a[action_idx]);
                 sumExp += expQ;
                 sumQExp += Q_itp1_a[action_idx]*expQ;
@@ -515,13 +529,13 @@ lbfgsfloatval_t LinearQ::bellman_objective(
             //-------------------------------//
 
             // objective
-            double bellman_error = reward_tp1 + discount*(sumQExp/sumExp) - Q_it_atp1;
+            double bellman_error = reward_tp1->get_value() + discount*(sumQExp/sumExp) - Q_it_atp1;
             fx += bellman_error*bellman_error;
 
             // gradient
             for(uint f_idx : Range(n)) {
                 double aSum = 0;
-                for(idx_t action_idx : Range(action_t::action_n)) {
+                for(idx_t action_idx : Range(action_space->space_size())) {
                     double inner_terms = 1 + alpha*Q_itp1_a[action_idx] - alpha*(sumQExp/sumExp);
                     aSum += (exp(alpha*Q_itp1_a[action_idx])/sumExp)*inner_terms*f_itp1_a[action_idx][f_idx];
                 }
@@ -692,7 +706,7 @@ void LinearQ::update_loss_terms() {
             //--------------------//
 
             // constant
-            c += pow(ins_t0->reward,2);
+            c += pow(ins_t0->reward->get_value(),2);
 
             // iterate through rows
             for(int j=0; j<feature_n; ++j) {
@@ -700,7 +714,7 @@ void LinearQ::update_loss_terms() {
                 double factor1 = discount * (*f_ret_t1)[j] - (*f_ret_t0)[j];
 
                 // increment linear term
-                rho(j) += ins_t0->reward * factor1;
+                rho(j) += ins_t0->reward->get_value() * factor1;
 
                 // iterate through columns
                 for(int k=0; k<feature_n; ++k) {
@@ -743,6 +757,8 @@ void LinearQ::update_loss_terms() {
 
 void LinearQ::construct_candidate_features(const int& n) {
 
+#define DEBUG_LEVEL 4
+
     DEBUG_OUT(1, "Constructing candidate features of distance " << n << "...");
 
     if(n<0) {
@@ -776,7 +792,7 @@ void LinearQ::construct_candidate_features(const int& n) {
         }
         // add augmenting feature
         augmenting_feature_set.insert(and_feature);
-        DEBUG_OUT(4,"    Inserted potential augmenting feature: " << and_feature );
+        DEBUG_OUT(4,"    Inserted potential augmenting feature no " << augmenting_feature_set.size() << ": " << and_feature );
         // increment indices
         for(int idx_idx=0; idx_idx<n; ++idx_idx) {
             DEBUG_OUT(5,"    Idx " << idx_idx << ": " << aug_idx[idx_idx] );
@@ -822,11 +838,14 @@ void LinearQ::construct_candidate_features(const int& n) {
     DEBUG_OUT(1, "    Constructed " << candidate_features.size() << " features");
 
     DEBUG_OUT(1, "DONE");
+
+#define DEBUG_LEVEL 1
+
 }
 
-LinearQ::probability_t LinearQ::prior_probability(const observation_t&, const reward_t& r) const {
-    if(r==reward_t::min_reward) {
-        return 1./(observation_t::observation_n);
+LinearQ::probability_t LinearQ::prior_probability(const observation_ptr_t&, const reward_ptr_t& r) const {
+    if(r->get_value()==reward_space->min_reward()) {
+        return 1./(observation_space->space_size());
     } else {
         return 0;
     }

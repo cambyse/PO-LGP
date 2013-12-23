@@ -14,6 +14,8 @@ HEADERS += \
     ../util/KolmogorovSmirnovDist.h \
     ../util/KolmogorovSmirnovTest.h \
     \
+    ../optimization/LBFGS_Optimizer.h \
+    \
     ../Feature.h \
     ../Instance.h \
     ../AbstractAction.h \
@@ -35,6 +37,7 @@ HEADERS += \
     ../FeatureLearner.h \
     ../KMarkovCRF.h \
     ../UTree.h \
+    ../LinearQ.h \
     MinimalEnvironmentExample/MinimalAction.h \
     MinimalEnvironmentExample/MinimalObservation.h \
     MinimalEnvironmentExample/MinimalReward.h \
@@ -48,6 +51,8 @@ SOURCES += \
     ../util/lbfgs_codes.cpp \
     ../util/KolmogorovSmirnovDist.cpp \
     ../util/KolmogorovSmirnovTest.cpp \
+    \
+    ../optimization/LBFGS_Optimizer.cpp \
     \
     ../Feature.cpp \
     ../Instance.cpp \
@@ -69,6 +74,7 @@ SOURCES += \
     ../FeatureLearner.cpp \
     ../KMarkovCRF.cpp \
     ../UTree.cpp \
+    ../LinearQ.cpp \
     \
     AbstractIteratableSpaceTest.cpp \
     FeatureTest.cpp \
