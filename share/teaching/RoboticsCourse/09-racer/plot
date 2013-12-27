@@ -1,0 +1,6 @@
+set style data line
+set key autotitle columnhead
+#plot 'z.data' us 5,'' us 14,'' us 18
+#plot 'z.data' us 7,'' us 16,'' us 20
+plot 'z.data' us 4,'' us 13,'' us 17
+#plot 'z.data' us 6,'' us 15,'' us 19

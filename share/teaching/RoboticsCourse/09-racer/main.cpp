@@ -1,142 +1,95 @@
 #include <stdlib.h>
 #include <Ors/roboticsCourse.h>
 #include <Gui/opengl.h>
-#include <Algo/algos.h>
+#include <Algo/kalman.h>
 
-void drawEnv(void*);
-void glDrawRacer(void *classP);
-
-struct RacerState : VectorFunction{
-  //state
-  arr q, q_dot;
-
-  //controls
-  double u, tau;
-
-  //constant parameters
-  double r, l, mA, mB, IA, IB, g, dynamicsNoise; //, c1,c2,Mp,Mc,l ;
-
-  OpenGL gl;
-  RacerState(){
-    q.resize(2).setZero();
-    q_dot.resize(2).setZero();
-    q(1) = .01; //1MT_PI/2; //slighly non-upright //MT_PI; //haning down
-
-    //init constants
-    tau = 0.01;
-    r=.05;
-    l=.5;
-    mA=.05;
-    mB=.5;
-    IA=mA*MT::sqr(.5*r);
-    IB=mB*MT::sqr(.2*l);
-    g = 9.8;
-
-    dynamicsNoise = 0;
-
-    gl.add(drawEnv, this);
-    gl.add(glDrawRacer, this);
-    gl.camera.setPosition(3., -20., 5.);
-    gl.camera.focus(0, 0, .2);
-    gl.camera.upright();
-    gl.update();
-  }
-
-  void getDynamics(arr&M, arr& F, arr& B){
-    B = ARR(1./r, -1.); //control matrix
-
-    arr M_A, M_B;
-    M_A.setDiag(ARR(mA,mA,IA));
-    M_B.setDiag(ARR(mB,mB,IB));
-
-    arr J_A, J_B, J_B_dash;
-    J_A.resize(3,2).setZero();  J_A(0,0)=1.;  J_A(2,0)=1./r;
-    J_B.resize(3,2).setZero();
-    J_B(0,0) = J_B(2,1) = 1.;
-    J_B(0,1) =  l*::cos(q(1));
-    J_B(1,1) = -l*::sin(q(1));
-    J_B_dash.resize(3,2).setZero();
-    J_B_dash(0,1) = -l*::sin(q(1));
-    J_B_dash(1,1) = -l*::cos(q(1));
-
-    M = ~J_A * M_A * J_A + ~J_B * M_B * J_B;
-
-    arr M_dot = 2. * ~J_B * M_B * J_B_dash * q_dot(1);
-
-    F = M_dot*q_dot
-        - ( (~q_dot*~J_B*M_B*J_B_dash*q_dot).scalar() + g*mB*l*::sin(q(1)) )*ARR(0., 1.);
-  }
-
-  void fv(arr& y, arr& J, const arr& x){ //returns the acceleration given the state -> used by rk4
-    q = x[0];
-    q_dot = x[1];
-
-    arr M, Minv, F, B;
-    getDynamics(M, F, B);
-    inverse_SymPosDef(Minv, M);
-
-    y = Minv * (B*u - F);
-
-//    double T = 0.5 * (~q_dot * M * q_dot).scalar(); //kinetic energy
-//    double U = g * mB * l * ::cos(q(1)); //potential energy
-//    cout <<"energy = " <<T+U <<endl;
-
-    if(&J) HALT("");
-  }
-
-  void stepDynamics(double _u){
-    u=_u;
-    arr x;
-    rk4_2ndOrder(x, cat(q,q_dot).reshape(2,2), *this, tau);
-    q=x[0];
-    q_dot=x[1];
-
-    if(dynamicsNoise) rndGauss(q_dot, ::sqrt(tau)*dynamicsNoise, true);
-  }
-
-};
-
-void glDrawRacer(void *classP){
-  RacerState *s=(RacerState*)classP;
-  double GLmatrix[16];
-  ors::Transformation f;
-  f.setZero();
-  //wheels
-  f.addRelativeTranslation(s->q(0), 0, s->r);
-  f.addRelativeRotationRad(s->q(0)/s->r, 0, 1, 0);
-  f.getAffineMatrixGL(GLmatrix);
-  glLoadMatrixd(GLmatrix);
-  glColor(.8,.2,.2);
-  glDrawBox(2.*s->r, .01, 2.*s->r);
-  //pole
-  f.setZero();
-  f.addRelativeTranslation(s->q(0), 0, s->r);
-  f.addRelativeRotationRad(s->q(1), 0., 1., 0.);
-  f.addRelativeTranslation(0., 0., s->l);
-  f.getAffineMatrixGL(GLmatrix);
-  glLoadMatrixd(GLmatrix);
-  glColor(.2,.2,.2);
-  glDrawBox(.01, .05, 2.*s->l);
-  glLoadIdentity();
-}
+#include "racer.h"
 
 void testDraw(){
-  RacerState s;
+  Racer s;
   s.gl.watch();
 }
 
 void TestMove(){
-  RacerState s;
+  Racer R;
   for (uint t=0; t<400000; t++){
-    s.gl.text.clear() <<t <<" ; " <<s.q(0) << " ; " <<s.q(1);
-    s.stepDynamics(0.0);
-    s.gl.update();
+    R.stepDynamics(0.0);
+    R.gl.text.clear() <<t <<" ; " <<R.q(0) << " ; " <<R.q(1);
+    R.gl.update();
+    R.getEnergy();
+  }
+}
+
+void CheckGradients(){
+  Racer R;
+  for (uint t=0; t<20; t++){
+    rndUniform(R.q, -.1, .1);
+    rndUniform(R.q_dot, -.1, 1.);
+    R.u = 1.; //rnd.uni(-.1,.1);
+    checkJacobian(R, cat(R.q, R.q_dot).reshape(2,2), 1e-4);
+  }
+}
+
+void TestControl(){
+  ofstream data("z.data");
+  data <<"iteration time control x th x_dot th_dot x_ddot th_ddot y0 y1 y2 E(x) E(th) E(x_dot) E(th_dot) V(x) V(th) V(x_dot) V(th_dot)" <<endl;
+  Racer R;
+
+  arr A,a,B;
+  R.q.setZero();
+  R.getDynamicsAB(A,a,B);
+  cout <<"*** ZERO LQG: \nA=" <<A <<"\na=" <<a <<"\nB=" <<B <<endl;
+
+  R.q(1)=.5;
+  R.noise_dynamics = 1.;
+
+  Kalman K;
+  K.initialize(cat(R.q, R.q_dot),1.*eye(4)); //correct initialization...
+
+  for (uint t=0; t<1000; t++){
+#if 0 //heuristic
+    double th_ref = -0.1*R.q(0)-0.1*R.q_dot(0);
+    double u = 1.*(R.q(1)-th_ref) + .1*R.q_dot(1);
+#else //CARE
+//    arr K = ARR(0.31623,   1.99224,   0.47460,   0.42549); //medium u_costs
+    arr k = ARR(0.10000,   0.90218,   0.15766,   0.15744); //strong u_costs
+//    double u = scalarProduct(k, cat(R.q, R.q_dot));
+    double u = scalarProduct(k, K.b_mean);
+#endif
+
+    //-- dynamics
+    arr A,a,B;
+    R.getDynamicsAB(A,a,B);
+
+    R.stepDynamics(u);
+    R.gl.text.clear() <<t <<" ; " <<R.q(0) << " ; " <<R.q(1);
+    R.gl.update();
+
+    //-- observations
+    arr y,C,c,W;
+    R.getObservation(y, C, c, W);
+    rndGauss(y, 1., true);
+
+    //-- state estimation
+    K.stepPredict(eye(4)+R.tau*A, R.tau*(a+B*ARR(u)), .0001*eye(4));
+    K.stepObserve(y, C, c, 1.*eye(3));
+
+//    checkJacobian(R.getObs(), cat(R.q, R.q_dot).reshape(2,2), 1e-4);
+
+    MT::arrayBrackets="  ";
+    data <<t <<' ' <<t*R.tau <<' ' <<R.u <<' '
+        <<R.q <<R.q_dot <<R.q_ddot
+       <<y
+      <<K.b_mean <<K.b_mean+2.*::sqrt(getDiag(K.b_var)) <<endl;
+
   }
 }
 
 int main(int argc,char **argv){
 //  testDraw();
-  TestMove();
+//  TestMove();
+//  CheckGradients();
+  TestControl();
 
   return 0;
 }
