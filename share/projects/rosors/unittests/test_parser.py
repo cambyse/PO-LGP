@@ -14,6 +14,8 @@ import shape_msgs.msg
 import ors_msgs.msg
 
 
+###############################################################################
+# helper function for asserts
 def assert_vector_equal(ros, ors):
     assert type(ros) == geometry_msgs.msg.Vector3
     assert type(ors) == Vector
@@ -202,6 +204,8 @@ def assert_ors_graph_equal(ors1, ors2):
     assert ors1.isLinkTree == ors2.isLinkTree
 
 
+###############################################################################
+# Real tests
 class Test_Vector(unittest.TestCase):
     def test_ors_to_ros(self):
         ors_v1 = Vector(1, 2, 3)
