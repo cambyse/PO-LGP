@@ -76,7 +76,7 @@ SOURCES += \
     ../UTree.cpp \
     ../LinearQ.cpp \
     \
-    AbstractIteratableSpaceTest.cpp \
+    RepresentationTest.cpp \
     FeatureTest.cpp \
 #    TemplateTest.cpp \
     EnvironmentTest.cpp \

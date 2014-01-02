@@ -19,7 +19,7 @@
 
 namespace {
 
-    TEST(AbstractIteratableSpace, AbstractAction) {
+    TEST(RepresentationTest, AbstractActionSpace) {
 
         // typedef to improve readability
         typedef AbstractAction::ptr_t action_ptr_t;
@@ -73,7 +73,7 @@ namespace {
         }
     }
 
-    TEST(AbstractIteratableSpace, AbstractObservation) {
+    TEST(RepresentationTest, AbstractObservationSpace) {
 
         // typedef to improve readability
         typedef AbstractObservation::ptr_t observation_ptr_t;
@@ -126,7 +126,7 @@ namespace {
         }
     }
 
-    TEST(AbstractIteratableSpace, AbstractReward) {
+    TEST(RepresentationTest, AbstractRewardSpace) {
 
         // typedef to improve readability
         typedef AbstractReward::ptr_t reward_ptr_t;
@@ -177,6 +177,64 @@ namespace {
             }
             ++reward_type_idx;
         }
+    }
+
+
+    TEST(RepresentationTest, MazeObservation) {
+        // check equality of position and inequality of objects for different
+        // maze dimensions
+        MazeObservation o1(2,3,0,1);
+        MazeObservation o2(3,2,0,1);
+        MazeObservation o3(2,3,2);
+        EXPECT_EQ(0,o1.get_x_pos());
+        EXPECT_EQ(1,o1.get_y_pos());
+        EXPECT_EQ(0,o2.get_x_pos());
+        EXPECT_EQ(1,o2.get_y_pos());
+        EXPECT_EQ(0,o3.get_x_pos());
+        EXPECT_EQ(1,o3.get_y_pos());
+        EXPECT_NE(o1,o2);
+        EXPECT_NE(o2,o3);
+        EXPECT_EQ(o1,o3);
+
+        // check functions to create new observations with same dimensions
+        MazeObservation o4 = o1.new_observation(1,1);
+        MazeObservation o5 = o1.new_observation(3);
+        EXPECT_EQ(1,o4.get_x_pos());
+        EXPECT_EQ(1,o4.get_y_pos());
+        EXPECT_EQ(1,o5.get_x_pos());
+        EXPECT_EQ(1,o5.get_y_pos());
+        EXPECT_EQ(o4,o5);
+
+        // bound check
+        DEBUG_WARNING("Expect three errors:");
+        MazeObservation o6(2,2,2,1);
+        MazeObservation o7(2,2,1,2);
+        MazeObservation o8(2,2,4);
+    }
+
+    TEST(RepresentationTest, ListedReward) {
+        // check equality of value and inequality of objects for different
+        // reward lists
+        ListedReward r1({0,1,2,3},1);
+        ListedReward r2({0,2,1,3},2);
+        ListedReward r3({0,1,2,3},2);
+        EXPECT_EQ(1,r1.get_value());
+        EXPECT_EQ(1,r2.get_value());
+        EXPECT_EQ(2,r3.get_value());
+        EXPECT_NE(r1,r2);
+        EXPECT_NE(r1,r3);
+        EXPECT_NE(r3,r2);
+
+        // check value assignment
+        ListedReward r4({0,0.1,1,2.1,3.5,4.},1);
+        ListedReward r5({0,0.1,1,2.1,3.5,4.},1.);
+        EXPECT_EQ(0.1,r4.get_value());
+        EXPECT_EQ(1,r5.get_value());
+        r4.set_value(3.5);
+        EXPECT_EQ(3.5,r4.get_value());
+        DEBUG_WARNING("Expect one error:");
+        r4.set_value(3);
+        EXPECT_EQ(3.5,r4.get_value());
     }
 
 }; // end namespace

@@ -102,7 +102,7 @@ void ListedReward::set_value(const value_t& v) {
         }
         ++idx;
     }
-    DEBUG_ERROR("Value (" << v << ")does not match any in reward list.");
+    DEBUG_ERROR("Value (" << v << ") does not match any in reward list.");
 }
 
 ListedReward::value_t ListedReward::min_reward() const {
