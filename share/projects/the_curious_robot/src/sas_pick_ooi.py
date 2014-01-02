@@ -35,12 +35,12 @@ def _strategy_random_select(oois):
 
 class _strategy_sequential_select():
     def __init__(self):
-        self.last_selected = 0
+        self.ooi_index = 0
 
     def __call__(self, oois):
         ooi_id_msg = tcr.msg.ObjectID()
-        ooi_id_msg.id = self.last_selected
-        self.last_selected = (self.last_selected + 1) % len(oois)
+        ooi_id_msg.id = oois[self.ooi_index]
+        self.ooi_index = (self.ooi_index + 1) % len(oois)
         return ooi_id_msg
 
 
