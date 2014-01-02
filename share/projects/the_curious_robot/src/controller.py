@@ -190,16 +190,16 @@ class FakeController():
     def step(self):
         if self.recompute_trajectory and self.goal:
             self.compute_trajectory()
-            rospy.loginfo(self.trajectory)
-            rospy.loginfo("new trajectory")
+            # rospy.loginfo(self.trajectory)
+            # rospy.loginfo("new trajectory")
 
         if self.trajectory is not None:
-            rospy.loginfo("Move one step")
+            # rospy.loginfo("Move one step")
             if self.tpos == self.trajectory.shape[0]:
                 self.control_done()
             else:
-                rospy.logdebug("next step: " + str(self.trajectory[self.tpos,
-                               :]))
+                # rospy.logdebug("next step: " +
+                #                str(self.trajectory[self.tpos, :]))
                 self.world.graph.setJointState(self.trajectory[self.tpos, :])
                 self.world.graph.calcBodyFramesFromJoints()
                 self.tpos += 1
