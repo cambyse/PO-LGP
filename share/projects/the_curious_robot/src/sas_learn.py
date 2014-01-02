@@ -98,6 +98,7 @@ class LearnActionServer:
             shape.type = shape_msg.shape_type
             if shape.type == orspy.meshST and shape_msg.mesh is not None:
                 shape.mesh = parser.msg_to_ors_mesh(shape_msg.mesh)
+            shape.set_color(.5, .5, .5)
 
             self.belief.calcShapeFramesFromBodies()
 
@@ -109,11 +110,17 @@ class LearnActionServer:
         #  - TODO then transfer all information from the annotation to the
         #    belief
         shape_anno = self.belief_annotation[self.ooi]
+        shape = self.getShapeById(shape_anno.belief_shape_id)
 
         # Update ObjectTypeHypo
         shape_anno.object_type.update(ObjectTypeHypo.STATIC
                                       if len(self.trajectory) == 0 else
                                       ObjectTypeHypo.FREE)
+        if shape_anno.object_type.is_static():
+            shape.set_color(0., 0., 0.)
+        else:
+            shape.set_color(1., 1., 1.)
+
         # Update JointInformation
         if len(self.trajectory) > 1:
             rospy.loginfo("Learning DoF")
