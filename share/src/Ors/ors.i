@@ -4,12 +4,12 @@
 This is a simple SWIG wrapper to be able to use the ors datastructures
 within python.
 
-
 author: Johannes Kulick & Stefan Otte
 
 created: <2013-03-20 Wed>
 "
 %enddef
+
 %module(docstring=DOCSTRING_ORSPY) orspy
 
 %feature("autodoc", "1");
@@ -64,9 +64,8 @@ created: <2013-03-20 Wed>
 %include "ors_physx.h"
 
 //===========================================================================
-// We extend the ors datastructures with some __str__ magic functions
+// We extend the ors datastructures with some functions
 //===========================================================================
-
 %extend ors::Body {
   std::string __str__() {
     std::ostringstream oss(std::ostringstream::out);
@@ -89,6 +88,11 @@ created: <2013-03-20 Wed>
     $self->size[1] = b;
     $self->size[2] = c;
     $self->size[3] = d;
+  };
+  void set_color(double red, double green, double blue) {
+    $self->color[0] = red;
+    $self->color[1] = green;
+    $self->color[2] = blue;
   };
   std::string __str__() {
     std::ostringstream oss(std::ostringstream::out);
