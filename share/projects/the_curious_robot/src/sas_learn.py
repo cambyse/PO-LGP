@@ -82,11 +82,6 @@ class LearnActionServer:
             shape_msg = shape_response.shapes[0]
             print shape_msg
 
-            # we don't want the "base" shape
-            if shape_msg.name == "base":
-                self.server.set_succeeded()
-                return
-
             # add shape and body to belief
             self._added_bodies.append(orspy.Body(self.belief))
             body = self._added_bodies[-1]

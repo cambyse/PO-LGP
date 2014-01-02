@@ -104,7 +104,8 @@ class PickOOIActionServer:
         with Timer("PICK: initial if", rospy.logwarn):
             if self.oois is None:
                 all_shapes_msg = self.request_all_shapes(with_mesh=False)
-                self.oois = [shape.index for shape in all_shapes_msg.shapes]
+                self.oois = [shape.index for shape in all_shapes_msg.shapes
+                             if shape.name != "base"]
 
         # select an ooi
         with Timer("PICK: select ooi", rospy.logwarn):
