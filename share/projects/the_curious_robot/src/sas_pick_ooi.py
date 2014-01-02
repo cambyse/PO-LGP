@@ -101,8 +101,8 @@ class PickOOIActionServer:
         # We assume that we "see" all shapes from the beginning and the number
         # does not change. Therfore, we only request it once.
 
-        with Timer("PICK: initial if", rospy.logwarn):
-            if self.oois is None:
+        if self.oois is None:
+            with Timer("PICK: initial if", rospy.logwarn):
                 all_shapes_msg = self.request_all_shapes(with_mesh=False)
                 self.oois = [shape.index for shape in all_shapes_msg.shapes
                              if shape.name != "base"]
