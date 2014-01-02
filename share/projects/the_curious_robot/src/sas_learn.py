@@ -80,7 +80,7 @@ class LearnActionServer:
             shape_response = self.request_shapes(index=self.ooi,
                                                  with_mesh=True)
             shape_msg = shape_response.shapes[0]
-            print shape_msg
+            # print shape_msg
 
             # add shape and body to belief
             self._added_bodies.append(orspy.Body(self.belief))
@@ -214,11 +214,8 @@ class LearnActionServer:
         Return the shape with the given `id`.
         TODO this should be part of ors.
         """
-        print "getShapeById(", idx, ")"
         for shape in self.belief.shapes:
-            print "looking at", shape.index
             if shape.index == idx:
-                print "found"
                 return shape
         return None
 
