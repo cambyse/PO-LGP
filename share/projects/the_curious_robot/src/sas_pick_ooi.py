@@ -89,7 +89,7 @@ class PickOOIActionServer:
         # Select the exploration strategies
         # self.select_ooi = _strategy_random_select
         # this is a class and must be initiated; does it help if we use a
-        # closuer?
+        # closure?
         self.select_ooi = _strategy_sequential_select()
         # self.select_ooi = _strategy_door_frame_top
         # self.select_ooi = _strategy_select_shape_with_index
