@@ -76,6 +76,17 @@ class LearnActionServer:
         # add object to belief and belief_annotation if it does not exist yet
         if self.ooi not in self.belief_annotation:
             rospy.loginfo("Adding new shape with id %d", self.ooi)
+
+            shape_response = self.request_shapes(index=self.ooi,
+                                                 with_mesh=True)
+            shape_msg = shape_response.shapes[0]
+            print shape_msg
+
+            # we don't want the "base" shape
+            if shape_msg.name == "base":
+                self.server.set_succeeded()
+                return
+
             # add shape and body to belief
             self._added_bodies.append(orspy.Body(self.belief))
             body = self._added_bodies[-1]
@@ -86,11 +97,6 @@ class LearnActionServer:
                 self.belief.shapes[-1].index
             )
 
-            # populate body and shape
-            shape_response = self.request_shapes(index=self.ooi,
-                                                 with_mesh=True)
-            body.type = orspy.dynamicBT
-            shape_msg = shape_response.shapes[0]
             shape.X = parser.ros_to_ors_transform(shape_msg.X, shape_msg.Xvel)
             shape.rel = parser.ros_to_ors_transform(shape_msg.rel,
                                                     shape_msg.relvel)
@@ -99,39 +105,6 @@ class LearnActionServer:
                 shape.mesh = parser.msg_to_ors_mesh(shape_msg.mesh)
 
             self.belief.calcShapeFramesFromBodies()
-            # shape.type = orspy.sphereST
-            # shape.set_size(.5, .5, .5, .5)
-
-            # new_shape.X = rosors.parser.ros_to_ors_transform(
-            #     shape_msg.X, shape_msg.Xvel
-            # )
-            # new_shape.rel = rosors.parser.ros_to_ors_transform(
-            #     shape_msg.rel, shape_msg.relvel
-            # )
-            # new_shape.type = shape_msg.shape_type
-            # if new_shape.type == orspy.meshST and shape_msg.mesh:
-            #     # c&p from parser: what causes the stupid crash?
-            #     new_shape.mesh = guipy.Mesh()
-
-            #     V = np.resize(new_shape.mesh.V,
-            #                   [len(shape_msg.mesh.vertices), 3])
-            #     for i in range(len(shape_msg.mesh.vertices)):
-            #         v = shape_msg.mesh.vertices[i]
-            #         V[i, 0] = v.x
-            #         V[i, 1] = v.y
-            #         V[i, 2] = v.z
-            #     new_shape.mesh.V = V  # need to assign members, because of swig
-
-            #     T = np.resize(new_shape.mesh.T,
-            #                   [len(shape_msg.mesh.triangles), 3])
-            #     for i in range(len(shape_msg.mesh.triangles)):
-            #         t = shape_msg.mesh.triangles[i]
-            #         T[i, 0] = t.vertex_indices[0]
-            #         T[i, 1] = t.vertex_indices[1]
-            #         T[i, 2] = t.vertex_indices[2]
-            #     new_shape.mesh.T = T  # see above
-            #     # new_shape.mesh.thisown = False
-            # self.belief.calcShapeFramesFromBodies()
 
         #######################################################################
         # Belief update
@@ -152,11 +125,11 @@ class LearnActionServer:
             self.update_dof(shape_anno)
             # self.update_dynamics()
 
+        # PRINT
         for key, value in self.belief_annotation.iteritems():
             rospy.loginfo("%d: %s", key, str(value))
 
         self.gl.update()
-
         self.server.set_succeeded()
 
     def update_dof(self, shape_anno):
