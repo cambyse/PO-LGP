@@ -132,12 +132,15 @@ def ors_shape_to_msg(ors_shape, with_mesh=False):
 
 
 def msg_to_ors_shape(msg, graph=None, body=None):
-    shape = orspy.Shape()
+    if graph and body:
+        shape = orspy.Shape(graph, body)
+    else:
+        shape = orspy.Shape()
+        shape.body = None
+
     shape.index = msg.index
     shape.ibody = msg.index_body
     shape.name = msg.name
-
-    shape.body = None
 
     shape.X = ros_to_ors_transform(msg.X, msg.Xvel)
     shape.rel = ros_to_ors_transform(msg.rel, msg.relvel)
