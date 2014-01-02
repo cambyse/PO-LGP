@@ -21,6 +21,7 @@ import pickle_logger
 import belief_representations as rep
 from belief_representations import ObjectTypeHypo, JointBelief
 import require_provide as rp
+from timer import Timer
 # python std
 # import numpy as np
 
@@ -75,32 +76,39 @@ class LearnActionServer:
     def execute(self, msg):
         # add object to belief and belief_annotation if it does not exist yet
         if self.ooi not in self.belief_annotation:
-            rospy.loginfo("Adding new shape with id %d", self.ooi)
+            with Timer("Adding new shape with id %d", rospy.loginfo):
+                shape_response = self.request_shapes(index=self.ooi,
+                                                     with_mesh=True)
+                shape_msg = shape_response.shapes[0]
+                print shape_msg
 
-            shape_response = self.request_shapes(index=self.ooi,
-                                                 with_mesh=True)
-            shape_msg = shape_response.shapes[0]
-            # print shape_msg
+                # add shape and body to belief
+                self._added_bodies.append(orspy.Body(self.belief))
+                body = self._added_bodies[-1]
+                self._added_shapes.append(orspy.Shape(self.belief, body))
+                shape = self._added_shapes[-1]
 
-            # add shape and body to belief
-            self._added_bodies.append(orspy.Body(self.belief))
-            body = self._added_bodies[-1]
-            self._added_shapes.append(orspy.Shape(self.belief, body))
-            shape = self._added_shapes[-1]
+                self.belief_annotation[self.ooi] = rep.ShapeBelief(
+                    self.belief.shapes[-1].index
+                )
 
-            self.belief_annotation[self.ooi] = rep.ShapeBelief(
-                self.belief.shapes[-1].index
-            )
+                shape.X = parser.ros_to_ors_transform(shape_msg.X,
+                                                      shape_msg.Xvel)
+                shape.rel = parser.ros_to_ors_transform(shape_msg.rel,
+                                                        shape_msg.relvel)
+                shape.type = shape_msg.shape_type
+                if shape.type == orspy.meshST and shape_msg.mesh is not None:
+                    shape.mesh = parser.msg_to_ors_mesh(shape_msg.mesh)
+                else:
+                    shape.set_size(shape_msg.size[0], shape_msg.size[1],
+                                   shape_msg.size[2], shape_msg.size[3])
+                shape.set_color(.5, .5, .5)
 
-            shape.X = parser.ros_to_ors_transform(shape_msg.X, shape_msg.Xvel)
-            shape.rel = parser.ros_to_ors_transform(shape_msg.rel,
-                                                    shape_msg.relvel)
-            shape.type = shape_msg.shape_type
-            if shape.type == orspy.meshST and shape_msg.mesh is not None:
-                shape.mesh = parser.msg_to_ors_mesh(shape_msg.mesh)
-            shape.set_color(.5, .5, .5)
+                self.belief.calcShapeFramesFromBodies()
 
-            self.belief.calcShapeFramesFromBodies()
+        print "###############################################################"
+        print "Number of shapes in belief %d." % len(self.belief.shapes)
+        print shape.X
 
         #######################################################################
         # Belief update
