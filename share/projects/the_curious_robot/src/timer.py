@@ -1,3 +1,4 @@
+from __future__ import print_function
 import time
 
 
@@ -14,15 +15,18 @@ class Timer(object):
     """
     def __init__(self, msg, print_function=None):
         self.msg = msg
-        self.print_function = print_function
+
+        if print_function is None:
+            self.print_function = print
+        else:
+            self.print_function = print_function
 
     def __enter__(self):
         self.tstart = time.time()
 
     def __exit__(self, type, value, traceback):
-        text = "%s -- elapsed %s" % (self.msg, time.time() - self.tstart)
+        text = "[TIMER] %s -- elapsed %s" % (
+            self.msg, time.time() - self.tstart
+        )
 
-        if self.print_function:
-            self.print_function(text)
-        else:
-            print text
+        self.print_function(text)
