@@ -68,7 +68,7 @@ class RRTPlanner():
                                              MotionProblem.finalOnly,
                                              np.array([0., 0., 0.]), pos_prec)
 
-        _, x = motionpy.keyframeOptimizer(start_q, problem, True, 2)
+        _, x = motionpy.keyframeOptimizer(start_q, problem, True, 0)
 
         self.graph.setJointState(start)
         rospy.logdebug("done calculating endpose")
