@@ -92,17 +92,22 @@ class LearnActionServer:
                     self.belief.shapes[-1].index
                 )
 
-                shape.X = parser.ros_to_ors_transform(shape_msg.X,
-                                                      shape_msg.Xvel)
-                shape.rel = parser.ros_to_ors_transform(shape_msg.rel,
-                                                        shape_msg.relvel)
                 shape.type = shape_msg.shape_type
                 if shape.type == orspy.meshST and shape_msg.mesh is not None:
                     shape.mesh = parser.msg_to_ors_mesh(shape_msg.mesh)
                 else:
                     shape.set_size(shape_msg.size[0], shape_msg.size[1],
                                    shape_msg.size[2], shape_msg.size[3])
+
+                shape.X = parser.ros_to_ors_transform(shape_msg.X,
+                                                      shape_msg.Xvel)
+                shape.rel = parser.ros_to_ors_transform(shape_msg.rel,
+                                                        shape_msg.relvel)
+                body.pose = parser.ros_to_ors_transform(shape_msg.X,
+                                                        shape_msg.Xvel)
+
                 shape.set_color(.5, .5, .5)
+                print shape
 
                 self.belief.calcShapeFramesFromBodies()
 
