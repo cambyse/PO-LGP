@@ -9,8 +9,9 @@ import rospy
 from actionlib import SimpleActionServer
 # MLR
 import orspy
+import guipy
 import rosors
-import rosors.parser
+from rosors import parser
 import rosors.srv
 # import corepy
 import the_curious_robot.msg as msgs
@@ -62,10 +63,10 @@ class LearnActionServer:
         self._added_shapes = []
 
         # PhysX & OpenGL of belief
-        # self.gl = guipy.OpenGL()
+        self.gl = guipy.OpenGL()
         # self.physx = orspy.PhysXInterface()
         # orspy.bindOrsToPhysX(self.belief, self.gl, self.physx)
-        # orspy.bindOrsToOpenGL(self.belief, self.gl)
+        orspy.bindOrsToOpenGL(self.belief, self.gl)
 
         # require/provide
         rp.Provide("Learn")
@@ -74,20 +75,32 @@ class LearnActionServer:
     def execute(self, msg):
         # add object to belief and belief_annotation if it does not exist yet
         if self.ooi not in self.belief_annotation:
-            rospy.logwarn("TODO: adding new shape")
+            rospy.loginfo("Adding new shape with id %d", self.ooi)
             # add shape and body to belief
-            # self._added_bodies.append(orspy.Body(self.belief))
-            # self._added_shapes.append(orspy.Shape(self.belief,
-            #                                       self._added_bodies[-1]))
-            # new_shape = self._added_shapes[-1]
-            # # add to belief annotation
+            self._added_bodies.append(orspy.Body(self.belief))
+            body = self._added_bodies[-1]
+            self._added_shapes.append(orspy.Shape(self.belief, body))
+            shape = self._added_shapes[-1]
+
             self.belief_annotation[self.ooi] = rep.ShapeBelief(
-                belief_shape_id=1  # self.belief.shapes[-1].index
+                self.belief.shapes[-1].index
             )
 
-            # # fill body and shape with preliminary infor from the perception
-            # shape_response = self.request_shapes(index=self.ooi)
-            # shape_msg = shape_response.shapes[0]
+            # populate body and shape
+            shape_response = self.request_shapes(index=self.ooi,
+                                                 with_mesh=True)
+            body.type = orspy.dynamicBT
+            shape_msg = shape_response.shapes[0]
+            shape.X = parser.ros_to_ors_transform(shape_msg.X, shape_msg.Xvel)
+            shape.rel = parser.ros_to_ors_transform(shape_msg.rel,
+                                                    shape_msg.relvel)
+            shape.type = shape_msg.shape_type
+            if shape.type == orspy.meshST and shape_msg.mesh is not None:
+                shape.mesh = parser.msg_to_ors_mesh(shape_msg.mesh)
+
+            self.belief.calcShapeFramesFromBodies()
+            # shape.type = orspy.sphereST
+            # shape.set_size(.5, .5, .5, .5)
 
             # new_shape.X = rosors.parser.ros_to_ors_transform(
             #     shape_msg.X, shape_msg.Xvel
@@ -141,6 +154,8 @@ class LearnActionServer:
 
         for key, value in self.belief_annotation.iteritems():
             rospy.loginfo("%d: %s", key, str(value))
+
+        self.gl.update()
 
         self.server.set_succeeded()
 
