@@ -1,0 +1,129 @@
+#include "RandomElements.h"
+
+#include "../util.h"
+
+#include "MinimalEnvironmentExample/MinimalAction.h"
+#include "../Maze/MazeAction.h"
+#include "../Maze/AugmentedMazeAction.h"
+#include "MinimalEnvironmentExample/MinimalObservation.h"
+#include "../Maze/MazeObservation.h"
+#include "MinimalEnvironmentExample/MinimalReward.h"
+#include "../ListedReward.h"
+
+#include <vector>
+
+#include "../debug.h"
+
+using util::random_select;
+using std::vector;
+
+AbstractAction::ptr_t get_random_action() {
+    switch(random_select<AbstractAction::ACTION_TYPE>({
+                    AbstractAction::ACTION_TYPE::MINIMAL,
+                    AbstractAction::ACTION_TYPE::MAZE_ACTION,
+                    AbstractAction::ACTION_TYPE::AUGMENTED_MAZE_ACTION
+                    })) {
+    case AbstractAction::ACTION_TYPE::MINIMAL:
+        return get_random_minimal_action();
+    case AbstractAction::ACTION_TYPE::MAZE_ACTION:
+        return get_random_maze_action();
+    case AbstractAction::ACTION_TYPE::AUGMENTED_MAZE_ACTION:
+        return get_random_augmented_maze_action();
+    default:
+        DEBUG_ERROR("Unexpected type");
+        return AbstractAction::ptr_t();
+    }
+}
+
+AbstractAction::ptr_t get_random_minimal_action() {
+    return AbstractAction::ptr_t(new MinimalAction(random_select<MinimalAction::ACTION>({
+                        MinimalAction::ACTION::STAY,
+                        MinimalAction::ACTION::CHANGE
+                        })));
+}
+
+AbstractAction::ptr_t get_random_maze_action() {
+    return AbstractAction::ptr_t(new MazeAction(random_select<MazeAction::ACTION>({
+                        MazeAction::ACTION::UP,
+                        MazeAction::ACTION::DOWN,
+                        MazeAction::ACTION::LEFT,
+                        MazeAction::ACTION::RIGHT,
+                        MazeAction::ACTION::STAY
+                        })));
+}
+
+AbstractAction::ptr_t get_random_augmented_maze_action() {
+    return AbstractAction::ptr_t(new AugmentedMazeAction(random_select<AugmentedMazeAction::ACTION>({
+                        AugmentedMazeAction::ACTION::UP,
+                        AugmentedMazeAction::ACTION::DOWN,
+                        AugmentedMazeAction::ACTION::LEFT,
+                        AugmentedMazeAction::ACTION::RIGHT,
+                        AugmentedMazeAction::ACTION::STAY
+                        }),
+            random_select<AugmentedMazeAction::TAG>({
+                        AugmentedMazeAction::TAG::TAG_0,
+                        AugmentedMazeAction::TAG::TAG_1,
+                        AugmentedMazeAction::TAG::TAG_2
+                        })));
+}
+
+AbstractObservation::ptr_t get_random_observation() {
+    switch(random_select<AbstractObservation::OBSERVATION_TYPE>({
+                    AbstractObservation::OBSERVATION_TYPE::MINIMAL,
+                    AbstractObservation::OBSERVATION_TYPE::MAZE_OBSERVATION
+                    })) {
+    case AbstractObservation::OBSERVATION_TYPE::MINIMAL:
+        return get_random_minimal_observation();
+    case AbstractObservation::OBSERVATION_TYPE::MAZE_OBSERVATION:
+        return get_random_maze_observation();
+    default:
+        DEBUG_ERROR("Unexpected type");
+        return AbstractObservation::ptr_t();
+    }
+}
+
+AbstractObservation::ptr_t get_random_minimal_observation() {
+    return AbstractObservation::ptr_t(new MinimalObservation(random_select<MinimalObservation::OBSERVATION>({
+                        MinimalObservation::OBSERVATION::RED,
+                        MinimalObservation::OBSERVATION::GREEN
+                        })));
+}
+
+AbstractObservation::ptr_t get_random_maze_observation() {
+    int x_dim = rand()%5 + 1;
+    int y_dim = rand()%5 + 1;
+    int x_pos = rand()%x_dim;
+    int y_pos = rand()%y_dim;
+    return AbstractObservation::ptr_t(new MazeObservation(x_dim,y_dim,x_pos,y_pos));
+}
+
+AbstractReward::ptr_t get_random_reward() {
+    switch(random_select<AbstractReward::REWARD_TYPE>({
+                    AbstractReward::REWARD_TYPE::MINIMAL,
+                    AbstractReward::REWARD_TYPE::LISTED_REWARD
+                    })) {
+    case AbstractReward::REWARD_TYPE::MINIMAL:
+        return get_random_minimal_reward();
+    case AbstractReward::REWARD_TYPE::LISTED_REWARD:
+        return get_random_listed_reward();
+    default:
+        DEBUG_ERROR("Unexpected type");
+        return AbstractReward::ptr_t();
+    }
+}
+
+AbstractReward::ptr_t get_random_minimal_reward() {
+    return AbstractReward::ptr_t(new MinimalReward(random_select<MinimalReward::REWARD>({
+                        MinimalReward::REWARD::NO_REWARD,
+                        MinimalReward::REWARD::SOME_REWARD
+                        })));
+}
+
+AbstractReward::ptr_t get_random_listed_reward() {
+    int list_length = rand()%5 + 1;
+    vector<AbstractReward::value_t> reward_list(list_length);
+    for(unsigned int idx=0; idx<reward_list.size(); ++idx) {
+        reward_list[idx] = idx;
+    }
+    return AbstractReward::ptr_t(new ListedReward(reward_list,rand()%list_length));
+}

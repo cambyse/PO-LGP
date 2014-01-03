@@ -14,11 +14,24 @@
 #include "MinimalEnvironmentExample/MinimalReward.h"
 #include "../ListedReward.h"
 
-#include <vector>
+#include "RandomElements.h"
 
+#include "../util/ProgressBar.h"
+
+#include <vector>
+#include <list>
+#include <memory> // shared_ptr
+#include <sstream>
+
+#define DEBUG_LEVEL 1
 #include "../debug.h"
 
 using std::vector;
+using std::list;
+using std::string;
+using std::stringstream;
+using std::shared_ptr;
+using std::dynamic_pointer_cast;
 using util::random_select;
 
 typedef AbstractAction::ptr_t action_ptr_t;
@@ -28,21 +41,10 @@ typedef Feature::const_feature_ptr_t f_ptr_t;
 
 int get_time_delay();
 f_ptr_t get_basis_feature();
-f_ptr_t get_abstract_feature();
 f_ptr_t get_const_feature();
 f_ptr_t get_action_feature();
-f_ptr_t get_abstract_action_feature();
-f_ptr_t get_minimal_action_feature();
-f_ptr_t get_maze_action_feature();
-f_ptr_t get_augmented_maze_action_feature();
 f_ptr_t get_observation_feature();
-f_ptr_t get_abstract_observation_feature();
-f_ptr_t get_minimal_observation_feature();
-f_ptr_t get_maze_observation_feature();
 f_ptr_t get_reward_feature();
-f_ptr_t get_abstract_reward_feature();
-f_ptr_t get_minimal_reward_feature();
-f_ptr_t get_listed_reward_feature();
 f_ptr_t get_and_feature();
 
 TEST(FeatureTest, SharedPtr) {
@@ -63,9 +65,9 @@ TEST(FeatureTest, SharedPtr) {
     }
 
     // Construct compound features
-    AndFeature a1(*basis_features[0]);
-    AndFeature a2(*basis_features[1],*basis_features[2]);
-    AndFeature a3(a1,*basis_features[3]);
+    f_ptr_t a1(new AndFeature(basis_features[0]));
+    f_ptr_t a2(new AndFeature(basis_features[1],basis_features[2]));
+    f_ptr_t a3(new AndFeature(a1,basis_features[3]));
 
     // Re-test counters
     EXPECT_EQ(3, basis_features[0].use_count()) << "in vector and two AND features (a1,a3)";
@@ -80,13 +82,115 @@ TEST(FeatureTest, ComparisonAndOrdering) {
     vector<f_ptr_t> feature_vector;
 
     // Construct a random set of features
-    repeat(1000) {
+    int number_of_features = 1000;
+    repeat(number_of_features) {
         if(drand48()<0.8) {
             // use basis feature
             feature_vector.push_back(get_basis_feature());
         } else {
             // use 'and' feature
             feature_vector.push_back(get_and_feature());
+        }
+     }
+
+
+    // check debug level for equality check
+    {
+        ListedReward r1({0,1},0), r2({0,2},0);
+        stringstream s1, s2;
+        s1 << r1;
+        s2 << r2;
+        if(s1.str()==s2.str()) {
+            EXPECT_EQ(r1,r2) << "'" << r1 << "' and '" << r2 << "' are different!";
+            DEBUG_WARNING("ListedReward has to be compiled with (at least) DEBUG_LEVEL 2 for equality check to work properly!");
+        }
+    }
+    {
+        MazeObservation o1(1,1,0,0), o2(2,2,0,0);
+        stringstream s1, s2;
+        s1 << o1;
+        s2 << o2;
+        if(s1.str()==s2.str()) {
+            EXPECT_EQ(o1,o2) << "'" << o1 << "' and '" << o2 << "' are different!";
+            DEBUG_WARNING("MazeObservation has to be compiled with (at least) DEBUG_LEVEL 2 for equality check to work properly!");
+        }
+    }
+
+    // check equality, inequality, and ordering via description
+    {
+        int counter = 0;
+        ProgressBar::init("Checking Pairwise Operators: ");
+        for(f_ptr_t f1 : feature_vector) {
+            for(f_ptr_t f2 : feature_vector) {
+                // check equality
+                stringstream s1, s2;
+                s1 << *f1;
+                s2 << *f2;
+                bool description_equal = s1.str()==s2.str();
+                if(*f1==*f2) {
+                    EXPECT_TRUE(description_equal) << "'" << *f1 << "' == '" << *f2 << "'";
+                } else {
+                    EXPECT_FALSE(description_equal) << "'" << *f1 << "' != '" << *f2 << "'";
+                }
+                // check inequality
+                if(*f1==*f2) {
+                    EXPECT_FALSE(*f1!=*f2) << "inequality is not the negation of equality";
+                } else {
+                    EXPECT_TRUE(*f1!=*f2) << "inequality is not the negation of equality";
+                }
+                // check ordering
+                if(*f1==*f2) {
+                    EXPECT_FALSE(*f1<*f2) << *f1 << "==" << *f2 << " violated by ordering operator";
+                    EXPECT_FALSE(*f2<*f1) << *f1 << "==" << *f2 << " violated by ordering operator";
+                } else {
+                    EXPECT_TRUE(*f1<*f2 || *f2<*f1) << *f1 << "!=" << *f2 << " violated by ordering operator";
+                }
+            }
+            ProgressBar::print(counter++, number_of_features);
+        }
+        ProgressBar::terminate();
+    }
+
+    // check ordering via stupid sorting
+    {
+        int counter = 0;
+        list<f_ptr_t> sorted_feature_list;
+        ProgressBar::init("Checking Ordering: ");
+        for(f_ptr_t f_unsorted : feature_vector) {
+            auto insert_before = sorted_feature_list.begin();   // first element that is not smaller
+            auto some_elem_after = sorted_feature_list.begin(); // all other elements after that
+            bool found = false;
+            while(insert_before!=sorted_feature_list.end() && some_elem_after!=sorted_feature_list.end()) {
+                if(!found && **insert_before<*f_unsorted) {
+                    ++insert_before;
+                } else {
+                    if(!found) {
+                        found = true;
+                        some_elem_after = insert_before;
+                    }
+                    ++some_elem_after;
+                    if(some_elem_after!=sorted_feature_list.end()) {
+                        EXPECT_FALSE(**some_elem_after<*f_unsorted) << **some_elem_after << " should be larger or equal to " << *f_unsorted;
+                    }
+                }
+            }
+            sorted_feature_list.insert(insert_before,f_unsorted);
+            ProgressBar::print(counter++, number_of_features);
+        }
+        ProgressBar::terminate();
+
+        // check sorting
+        for(auto low_elem=sorted_feature_list.begin(); low_elem!=sorted_feature_list.end(); ++low_elem) {
+            for(auto high_elem=low_elem; high_elem!=sorted_feature_list.end(); ++high_elem) {
+                EXPECT_FALSE(**high_elem<**low_elem) << **high_elem << "<" << **low_elem;
+            }
+        }
+
+        // print
+        if(DEBUG_LEVEL>1) {
+            for(f_ptr_t sorted_feature : sorted_feature_list) {
+                DEBUG_OUT(0,"    " << *sorted_feature);
+            }
         }
     }
 }
@@ -98,16 +202,11 @@ int get_time_delay() {
 f_ptr_t get_basis_feature() {
     // choose feature type at random
     switch(random_select<Feature::FEATURE_TYPE>({
-                Feature::FEATURE_TYPE::ABSTRACT,
                     Feature::FEATURE_TYPE::CONST_FEATURE,
                     Feature::FEATURE_TYPE::ACTION,
                     Feature::FEATURE_TYPE::OBSERVATION,
-                    Feature::FEATURE_TYPE::REWARD,
-                    Feature::FEATURE_TYPE::AND
+                    Feature::FEATURE_TYPE::REWARD
                     })) {
-    case Feature::FEATURE_TYPE::ABSTRACT: {
-        return get_abstract_feature();
-    }
     case Feature::FEATURE_TYPE::CONST_FEATURE: {
         return get_const_feature();
     }
@@ -123,12 +222,8 @@ f_ptr_t get_basis_feature() {
     default:
         DEBUG_ERROR("Unexpected type");
         EXPECT_TRUE(false);
-        return get_abstract_feature();
+        return f_ptr_t();
     }
-}
-
-f_ptr_t get_abstract_feature() {
-    return f_ptr_t(new Feature());
 }
 
 f_ptr_t get_const_feature() {
@@ -136,145 +231,22 @@ f_ptr_t get_const_feature() {
 }
 
 f_ptr_t get_action_feature() {
-    switch(random_select<AbstractAction::ACTION_TYPE>({
-                    AbstractAction::ACTION_TYPE::NONE,
-                    AbstractAction::ACTION_TYPE::MINIMAL,
-                    AbstractAction::ACTION_TYPE::MAZE_ACTION,
-                    AbstractAction::ACTION_TYPE::AUGMENTED_MAZE_ACTION
-                    })) {
-    case AbstractAction::ACTION_TYPE::NONE:
-        return get_abstract_action_feature();
-    case AbstractAction::ACTION_TYPE::MINIMAL:
-        return get_minimal_action_feature();
-    case AbstractAction::ACTION_TYPE::MAZE_ACTION:
-        return get_maze_action_feature();
-    case AbstractAction::ACTION_TYPE::AUGMENTED_MAZE_ACTION:
-        return get_augmented_maze_action_feature();
-    default:
-        DEBUG_ERROR("Unexpected type");
-        EXPECT_TRUE(false);
-        return get_abstract_action_feature();
-    }
-}
-
-f_ptr_t get_abstract_action_feature() {
-    return ActionFeature::create(action_ptr_t(new AbstractAction()),get_time_delay());
-}
-
-f_ptr_t get_minimal_action_feature() {
-    return ActionFeature::create(action_ptr_t(new MinimalAction(random_select<MinimalAction::ACTION>({
-                            MinimalAction::ACTION::STAY,
-                            MinimalAction::ACTION::CHANGE
-                            }))),get_time_delay());
-}
-
-f_ptr_t get_maze_action_feature() {
-    return ActionFeature::create(action_ptr_t(new MazeAction(random_select<MazeAction::ACTION>({
-                            MazeAction::ACTION::UP,
-                            MazeAction::ACTION::DOWN,
-                            MazeAction::ACTION::LEFT,
-                            MazeAction::ACTION::RIGHT,
-                            MazeAction::ACTION::STAY
-                            }))),get_time_delay());
-}
-
-f_ptr_t get_augmented_maze_action_feature() {
-    return ActionFeature::create(action_ptr_t(new AugmentedMazeAction(random_select<AugmentedMazeAction::ACTION>({
-                            AugmentedMazeAction::ACTION::UP,
-                            AugmentedMazeAction::ACTION::DOWN,
-                            AugmentedMazeAction::ACTION::LEFT,
-                            AugmentedMazeAction::ACTION::RIGHT,
-                            AugmentedMazeAction::ACTION::STAY
-                            }),
-                random_select<AugmentedMazeAction::TAG>({
-                            AugmentedMazeAction::TAG::TAG_0,
-                            AugmentedMazeAction::TAG::TAG_1,
-                            AugmentedMazeAction::TAG::TAG_2
-                            }))),get_time_delay());
+    return ActionFeature::create(get_random_action(),get_time_delay());
 }
 
 f_ptr_t get_observation_feature() {
-    switch(random_select<AbstractObservation::OBSERVATION_TYPE>({
-                    AbstractObservation::OBSERVATION_TYPE::NONE,
-                    AbstractObservation::OBSERVATION_TYPE::MINIMAL,
-                    AbstractObservation::OBSERVATION_TYPE::MAZE_OBSERVATION
-                    })) {
-    case AbstractObservation::OBSERVATION_TYPE::NONE:
-        return get_abstract_observation_feature();
-    case AbstractObservation::OBSERVATION_TYPE::MINIMAL:
-        return get_minimal_observation_feature();
-    case AbstractObservation::OBSERVATION_TYPE::MAZE_OBSERVATION:
-        return get_maze_observation_feature();
-    default:
-        DEBUG_ERROR("Unexpected type");
-        EXPECT_TRUE(false);
-        return get_abstract_observation_feature();
-    }
-}
-
-f_ptr_t get_abstract_observation_feature() {
-    return ObservationFeature::create(observation_ptr_t(new AbstractObservation()),get_time_delay());
-}
-
-f_ptr_t get_minimal_observation_feature() {
-    return ObservationFeature::create(observation_ptr_t(new MinimalObservation(random_select<MinimalObservation::OBSERVATION>({
-                            MinimalObservation::OBSERVATION::RED,
-                            MinimalObservation::OBSERVATION::GREEN
-                            }))),get_time_delay());
-}
-
-f_ptr_t get_maze_observation_feature() {
-    int x_dim = rand()%5 + 1;
-    int y_dim = rand()%5 + 1;
-    int x_pos = rand()%x_dim;
-    int y_pos = rand()%y_dim;
-    return ObservationFeature::create(observation_ptr_t(new MazeObservation(x_dim,y_dim,x_pos,y_pos)),get_time_delay());
+    return ObservationFeature::create(get_random_observation(),get_time_delay());
 }
 
 f_ptr_t get_reward_feature() {
-    switch(random_select<AbstractReward::REWARD_TYPE>({
-                    AbstractReward::REWARD_TYPE::NONE,
-                    AbstractReward::REWARD_TYPE::MINIMAL,
-                    AbstractReward::REWARD_TYPE::LISTED_REWARD
-                    })) {
-    case AbstractReward::REWARD_TYPE::NONE:
-        return get_abstract_reward_feature();
-    case AbstractReward::REWARD_TYPE::MINIMAL:
-        return get_minimal_reward_feature();
-    case AbstractReward::REWARD_TYPE::LISTED_REWARD:
-        return get_listed_reward_feature();
-    default:
-        DEBUG_ERROR("Unexpected type");
-        EXPECT_TRUE(false);
-        return get_abstract_reward_feature();
-    }
-}
-
-f_ptr_t get_abstract_reward_feature() {
-    return RewardFeature::create(reward_ptr_t(new AbstractReward()),get_time_delay());
-}
-
-f_ptr_t get_minimal_reward_feature() {
-    return RewardFeature::create(reward_ptr_t(new MinimalReward(random_select<MinimalReward::REWARD>({
-                            MinimalReward::REWARD::NO_REWARD,
-                            MinimalReward::REWARD::SOME_REWARD
-                            }))),get_time_delay());
-}
-
-f_ptr_t get_listed_reward_feature() {
-    int list_length = rand()%5 + 1;
-    vector<AbstractReward::value_t> reward_list(list_length);
-    for(unsigned int idx=0; idx<reward_list.size(); ++idx) {
-        reward_list[idx] = idx;
-    }
-    return RewardFeature::create(reward_ptr_t(new ListedReward(reward_list,rand()%list_length)),get_time_delay());
+    return RewardFeature::create(get_random_reward(),get_time_delay());
 }
 
 f_ptr_t get_and_feature() {
     int number_of_subfeatures = rand()%5 + 1;
     f_ptr_t and_feature(get_basis_feature());
     for(int idx=1; idx<number_of_subfeatures; ++idx) {
-        and_feature = AndFeature(and_feature,get_basis_feature());
+        and_feature = f_ptr_t(new AndFeature(and_feature,get_basis_feature()));
     }
     return and_feature;
 }

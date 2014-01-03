@@ -867,8 +867,8 @@ void KMarkovCRF::construct_candidate_features(const int& n) {
         list<AndFeature>::iterator cf_it = candidate_feature_list.begin();
         while( counter>0 ) {
             for(uint bf_idx = 0; bf_idx < basis_features.size(); ++bf_idx) {
-                DEBUG_OUT(3,"Candidate: " << cf_it->identifier() << ", Basis(" << bf_idx << "): " << basis_features[bf_idx]->identifier() )
-                AndFeature and_feature(*basis_features[bf_idx],*cf_it);
+                DEBUG_OUT(3,"Candidate: " << cf_it->identifier() << ", Basis(" << bf_idx << "): " << basis_features[bf_idx]->identifier() );
+                AndFeature and_feature(basis_features[bf_idx],f_ptr_t(new AndFeature(*cf_it)));
                 DEBUG_OUT(3,"    --> " << and_feature.identifier() );
                 // make sure the basis feature is not already
                 // part of the candidate feature (duplicates

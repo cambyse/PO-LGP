@@ -788,7 +788,7 @@ void LinearQ::construct_candidate_features(const int& n) {
         // construct new augmenting feature from basis features
         AndFeature and_feature;
         for(int idx_idx=0; idx_idx<n; ++idx_idx) {
-            and_feature = AndFeature(and_feature, *basis_features[aug_idx[idx_idx]]);
+            and_feature = AndFeature(f_ptr_t(new AndFeature(and_feature)), basis_features[aug_idx[idx_idx]]);
         }
         // add augmenting feature
         augmenting_feature_set.insert(and_feature);
@@ -821,7 +821,7 @@ void LinearQ::construct_candidate_features(const int& n) {
     } else {
         for( AndFeature aug_f : augmenting_feature_set ) {
             for( AndFeature act_f : active_features ) {
-                AndFeature candidate_feature(aug_f,act_f);
+                AndFeature candidate_feature(f_ptr_t(new AndFeature(aug_f)), f_ptr_t(new AndFeature(act_f)));
                 candidate_feature_set.insert(candidate_feature);
                 DEBUG_OUT(3,"    Inserted potential candidate feature: " << candidate_feature );
             }

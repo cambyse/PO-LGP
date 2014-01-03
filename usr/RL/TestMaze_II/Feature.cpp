@@ -5,6 +5,8 @@
 
 using std::get;
 using std::string;
+using std::shared_ptr;
+using std::dynamic_pointer_cast;
 
 using util::INVALID;
 
@@ -59,7 +61,8 @@ bool Feature::operator!=(const Feature& other) const {
     return !(*this==other);
 }
 
-bool Feature::operator<(const Feature& other) const {
+bool Feature::operator<(const Feature&) const {
+    // sould never be used and will produce an error in unit tests
     return false;
 }
 
@@ -114,6 +117,20 @@ bool ConstFeature::operator==(const Feature& other) const {
     }
 }
 
+bool ConstFeature::operator<(const Feature& other) const {
+    if(this->get_feature_type()!=other.get_feature_type()) {
+        return this->get_feature_type()<other.get_feature_type();
+    } else {
+        const ConstFeature * f_ptr = dynamic_cast<const ConstFeature *>(&other);
+        if(f_ptr==nullptr) {
+            DEBUG_DEAD_LINE;
+            return false;
+        } else {
+            return this->const_return_value<f_ptr->const_return_value;
+        }
+    }
+}
+
 ActionFeature::ActionFeature(const action_ptr_t& a, const int& d): action(a), delay(d) {
     feature_type = ACTION;
     complexity = 1;
@@ -154,6 +171,21 @@ bool ActionFeature::operator==(const Feature& other) const {
         return false;
     } else {
         return (*(this->action)==*(pt->action) && this->delay==pt->delay);
+    }
+}
+
+bool ActionFeature::operator<(const Feature& other) const {
+    if(this->get_feature_type()!=other.get_feature_type()) {
+        return this->get_feature_type()<other.get_feature_type();
+    } else {
+        const ActionFeature * f_ptr = dynamic_cast<const ActionFeature *>(&other);
+        if(f_ptr==nullptr) {
+            DEBUG_DEAD_LINE;
+            return false;
+        } else {
+            return this->action<f_ptr->action ||
+                ( this->action==f_ptr->action && this->delay<f_ptr->delay);
+        }
     }
 }
 
@@ -200,6 +232,21 @@ bool ObservationFeature::operator==(const Feature& other) const {
     }
 }
 
+bool ObservationFeature::operator<(const Feature& other) const {
+    if(this->get_feature_type()!=other.get_feature_type()) {
+        return this->get_feature_type()<other.get_feature_type();
+    } else {
+        const ObservationFeature * f_ptr = dynamic_cast<const ObservationFeature *>(&other);
+        if(f_ptr==nullptr) {
+            DEBUG_DEAD_LINE;
+            return false;
+        } else {
+            return this->observation<f_ptr->observation ||
+                ( this->observation==f_ptr->observation && this->delay<f_ptr->delay);
+        }
+    }
+}
+
 RewardFeature::RewardFeature(const reward_ptr_t& r, const int& d): reward(r), delay(d) {
     feature_type = REWARD;
     complexity = 1;
@@ -243,16 +290,31 @@ bool RewardFeature::operator==(const Feature& other) const {
     }
 }
 
+bool RewardFeature::operator<(const Feature& other) const {
+    if(this->get_feature_type()!=other.get_feature_type()) {
+        return this->get_feature_type()<other.get_feature_type();
+    } else {
+        const RewardFeature * f_ptr = dynamic_cast<const RewardFeature *>(&other);
+        if(f_ptr==nullptr) {
+            DEBUG_DEAD_LINE;
+            return false;
+        } else {
+            return this->reward<f_ptr->reward ||
+                ( this->reward==f_ptr->reward && this->delay<f_ptr->delay);
+        }
+    }
+}
+
 AndFeature::AndFeature() {
     finalize_construction();
 }
 
-AndFeature::AndFeature(const Feature& f) {
+AndFeature::AndFeature(const_feature_ptr_t f) {
     add_feature(f);
     finalize_construction();
 }
 
-AndFeature::AndFeature(const Feature& f1, const Feature& f2) {
+AndFeature::AndFeature(const_feature_ptr_t f1, const_feature_ptr_t f2) {
     add_feature(f1);
     add_feature(f2);
     finalize_construction();
@@ -296,9 +358,9 @@ AndFeature::feature_return_value AndFeature::evaluate(const look_up_map_t& look_
 }
 
 string AndFeature::identifier() const {
-    string id_string(" ^(");
+    string id_string("^(");
     bool first = true;
-    for(subfeature_const_iterator_t feature_iterator=subfeatures.begin();
+    for(auto feature_iterator=subfeatures.begin();
             feature_iterator!=subfeatures.end();
             ++feature_iterator) {
         if(!first) {
@@ -319,38 +381,56 @@ bool AndFeature::operator==(const Feature& other) const {
     }
 }
 
-// bool AndFeature::operator<(const AndFeature& other) const {
-//     if(subfeatures.size()==other.subfeatures.size()) {
-//         subfeature_const_iterator_t this_it  = subfeatures.begin();
-//         subfeature_const_iterator_t other_it = other.subfeatures.begin();
-//         while(this_it!=subfeatures.end() && other_it!=other.subfeatures.end()) {
-//             if((*this_it)->id==(*other_it)->get_id()) {
-//                 ++this_it;
-//                 ++other_it;
-//             }
-//             else {
-//                 return (*this_it)->id < (*other_it)->get_id();
-//             }
-//         }
-//         if(this_it!=subfeatures.end() || other_it!=other.subfeatures.end()) {
-//             DEBUG_OUT(0, "Autsch! This should never happen!");
-//         }
-//     } else {
-//         return subfeatures.size()<other.subfeatures.size();
-//     }
-//     return false;
-// }
+bool AndFeature::operator<(const Feature& other) const {
+    if(this->get_feature_type()!=other.get_feature_type()) {
+        return this->get_feature_type()<other.get_feature_type();
+    } else {
+        const AndFeature * f_ptr = dynamic_cast<const AndFeature *>(&other);
+        if(f_ptr==nullptr) {
+            DEBUG_DEAD_LINE;
+            return false;
+        } else {
+            return *this<*f_ptr;
+        }
+    }
+}
 
-void AndFeature::add_feature(const Feature& f) {
-    const AndFeature * and_feature = dynamic_cast<const AndFeature *>(&f);
-    if(and_feature!=nullptr) {
+bool AndFeature::operator<(const AndFeature& other) const {
+    if(subfeatures.size()==other.subfeatures.size()) {
+        auto this_it  = subfeatures.begin();
+        auto other_it = other.subfeatures.begin();
+        while(this_it!=subfeatures.end() && other_it!=other.subfeatures.end()) {
+            if(*this_it==*other_it) {
+                ++this_it;
+                ++other_it;
+            }
+            else {
+                return *this_it<*other_it;
+            }
+        }
+        if(this_it!=subfeatures.end() || other_it!=other.subfeatures.end()) {
+            DEBUG_DEAD_LINE;
+        }
+    } else {
+        return subfeatures.size()<other.subfeatures.size();
+    }
+    // identical subfeatures
+    return false;
+}
+
+void AndFeature::add_feature(const_feature_ptr_t f) {
+    DEBUG_OUT(4,"Feature to add: " << *f);
+    typedef shared_ptr<const AndFeature> const_and_f_ptr_t;
+    typedef shared_ptr<const BasisFeature> const_basis_f_ptr_t;
+    const_and_f_ptr_t and_feature = dynamic_pointer_cast<const AndFeature>(f);
+    if(and_feature!=const_and_f_ptr_t()) {
         subfeatures.insert(
             and_feature->subfeatures.begin(),
             and_feature->subfeatures.end()
             );
     } else {
-        const BasisFeature * basis_feature = dynamic_cast<const BasisFeature *>(&f);
-        if(basis_feature!=nullptr) {
+        const_basis_f_ptr_t basis_feature = dynamic_pointer_cast<const BasisFeature>(f);
+        if(basis_feature!=const_basis_f_ptr_t()) {
             subfeatures.insert(const_feature_ptr_t(basis_feature->get_this_ptr()));
         } else {
             DEBUG_ERROR("Unsupported feature type");

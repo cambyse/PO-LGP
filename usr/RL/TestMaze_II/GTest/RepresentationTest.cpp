@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "../util.h"
+
 #include "../AbstractAction.h"
 #include "MinimalEnvironmentExample/MinimalAction.h"
 #include "../Maze/MazeAction.h"
@@ -14,15 +15,80 @@
 #include "MinimalEnvironmentExample/MinimalReward.h"
 #include "../ListedReward.h"
 
+#include "RandomElements.h"
+
+#include <vector>
+#include <list>
+
 #define DEBUG_LEVEL 0
 #include "../debug.h"
 
+using std::vector;
+using std::list;
+
+typedef AbstractAction::ptr_t action_ptr_t;
+typedef AbstractObservation::ptr_t observation_ptr_t;
+typedef AbstractReward::ptr_t reward_ptr_t;
+
+static int number_of_elemnets = 1000;
+
 namespace {
 
-    TEST(RepresentationTest, AbstractActionSpace) {
+#define EQUALITY_AND_INEQUALITY(type,getter)            \
+    typedef type::ptr_t ptr_t;                          \
+    vector<ptr_t> type_vector;                          \
+    repeat(number_of_elemnets) {                        \
+        type_vector.push_back(getter());                \
+    }                                                   \
+    for(ptr_t a1 : type_vector) {                       \
+        for(ptr_t a2 : type_vector) {                   \
+            if(a1==a2) {                                \
+                EXPECT_FALSE(a1!=a2);                   \
+                EXPECT_FALSE(a1<a2);                    \
+            } else {                                    \
+                EXPECT_FALSE(a1==a2);                   \
+                EXPECT_TRUE(a1<a2 || a2<a1);            \
+            }                                           \
+        }                                               \
+    }
 
-        // typedef to improve readability
-        typedef AbstractAction::ptr_t action_ptr_t;
+#define CHECK_SORTING                                                   \
+    /* perform stupid sorting */                                        \
+    list<ptr_t> sorted_list;                                            \
+    for(ptr_t unsorted_elem : type_vector) {                            \
+        auto insert_before = sorted_list.begin();                       \
+        while(insert_before!=sorted_list.end()) {                       \
+            if(*insert_before<unsorted_elem) {                          \
+                ++insert_before;                                        \
+            } else {                                                    \
+                break;                                                  \
+            }                                                           \
+        }                                                               \
+        sorted_list.insert(insert_before,unsorted_elem);                \
+    }                                                                   \
+    /* check sorting */                                                 \
+    for(auto low_elem=sorted_list.begin(); low_elem!=sorted_list.end(); ++low_elem) { \
+        for(auto high_elem=low_elem; high_elem!=sorted_list.end(); ++high_elem) { \
+            EXPECT_FALSE(*high_elem<*low_elem) << *high_elem << "<" << *low_elem; \
+        }                                                               \
+    }
+
+    TEST(RepresentationTest, ActionEqualityAndOrdering) {
+        EQUALITY_AND_INEQUALITY(AbstractAction,get_random_action);
+        CHECK_SORTING;
+    }
+
+    TEST(RepresentationTest, ObservationEqualityAndOrdering) {
+        EQUALITY_AND_INEQUALITY(AbstractObservation,get_random_observation);
+        CHECK_SORTING;
+    }
+
+    TEST(RepresentationTest, RewardEqualityAndOrdering) {
+        EQUALITY_AND_INEQUALITY(AbstractReward,get_random_reward);
+        CHECK_SORTING;
+    }
+
+    TEST(RepresentationTest, AbstractActionSpace) {
 
         // construct vector with one action of every type (plus one abstract)
         std::vector<action_ptr_t> action_vector;
@@ -75,9 +141,6 @@ namespace {
 
     TEST(RepresentationTest, AbstractObservationSpace) {
 
-        // typedef to improve readability
-        typedef AbstractObservation::ptr_t observation_ptr_t;
-
         // construct vector with one observation of every type
         std::vector<observation_ptr_t> observation_vector;
         observation_vector.push_back(new AbstractObservation());
@@ -127,9 +190,6 @@ namespace {
     }
 
     TEST(RepresentationTest, AbstractRewardSpace) {
-
-        // typedef to improve readability
-        typedef AbstractReward::ptr_t reward_ptr_t;
 
         // construct vector with one reward of every type
         std::vector<reward_ptr_t> reward_vector;

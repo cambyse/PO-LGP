@@ -1,5 +1,7 @@
 #include "MazeAction.h"
 
+#include "../util/Macro.h"
+
 #include "../debug.h"
 
 using std::string;
@@ -40,31 +42,13 @@ MazeAction::ptr_t MazeAction::next() const {
 }
 
 bool MazeAction::operator!=(const AbstractAction &other) const {
-    if(this->get_type()!=other.get_type()) {
-        return true;
-    } else {
-        auto maze_action = dynamic_cast<const MazeAction *>(&other);
-        if(maze_action==nullptr) {
-            DEBUG_ERROR("Dynamic cast failed");
-            return true;
-        } else {
-            return this->action!=maze_action->action;
-        }
-    }
+    COMPARE_ABSTRACT_TYPE_AND_CAST(!=,get_type,const MazeAction *);
+    return this->action!=ptr->action;
 }
 
 bool MazeAction::operator<(const AbstractAction &other) const {
-    if(this->get_type()<other.get_type()) {
-        return true;
-    } else {
-        auto maze_action = dynamic_cast<const MazeAction *>(&other);
-        if(maze_action==nullptr) {
-            DEBUG_ERROR("Dynamic cast failed");
-            return true;
-        } else {
-            return this->action<maze_action->action;
-        }
-    }
+    COMPARE_ABSTRACT_TYPE_AND_CAST(<,get_type,const MazeAction *);
+    return this->action < ptr->action;
 }
 
 const string MazeAction::print() const {

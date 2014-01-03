@@ -1,5 +1,7 @@
 #include "AugmentedMazeAction.h"
 
+#include "../util/Macro.h"
+
 #include "../debug.h"
 
 using std::string;
@@ -35,35 +37,15 @@ AugmentedMazeAction::ptr_t AugmentedMazeAction::next() const {
 }
 
 bool AugmentedMazeAction::operator!=(const AbstractAction &other) const {
-    if(this->get_type()!=other.get_type()) {
-        return true;
-    } else {
-        auto augmented_maze_action = dynamic_cast<const AugmentedMazeAction *>(&other);
-        if(augmented_maze_action==nullptr) {
-            DEBUG_ERROR("Dynamic cast failed");
-            return true;
-        } else {
-            return ( this->action!=augmented_maze_action->action ||
-                     this->tag!=augmented_maze_action->tag );
-        }
-    }
+    COMPARE_ABSTRACT_TYPE_AND_CAST(!=,get_type,const AugmentedMazeAction *);
+    return ( this->action!=ptr->action || this->tag!=ptr->tag );
 }
 
 bool AugmentedMazeAction::operator<(const AbstractAction &other) const {
-    if(this->get_type()<other.get_type()) {
-        return true;
-    } else {
-        auto augmented_maze_action = dynamic_cast<const AugmentedMazeAction *>(&other);
-        if(augmented_maze_action==nullptr) {
-            DEBUG_ERROR("Dynamic cast failed");
-            return true;
-        } else {
-            return ( this->action<augmented_maze_action->action || (
-                         this->action==augmented_maze_action->action &&
-                         this->tag<augmented_maze_action->tag
-                         ));
-        }
-    }
+    COMPARE_ABSTRACT_TYPE_AND_CAST(<,get_type,const AugmentedMazeAction *);
+    return ( this->action<ptr->action ||
+             (this->action==ptr->action && this->tag<ptr->tag)
+        );
 }
 
 const string AugmentedMazeAction::print() const {

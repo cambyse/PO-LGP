@@ -27,8 +27,8 @@ void ProgressBar::init(const char* label, const uint& width, const double& progr
     // set current progress
     current_progress = progress*bar_width; // drop decimal places
 
-    // open new line for writing progress bar
-    cout << endl;
+    // // open new line for writing progress bar
+    // cout << endl;
 
     // print bar
     print();
@@ -60,7 +60,7 @@ void ProgressBar::terminate() {
 
 void ProgressBar::print() {
     // go to beginning of line and print start marker
-    cout << '\r' << progress_label << "|";
+    cout << "\r" << progress_label << "|";
 
     // print a spinning wheel
     static unsigned short wheel = 0;

@@ -1,9 +1,11 @@
 #include "ListedReward.h"
 
+#include "../util/Macro.h"
+
 #include <sstream>
 #include <algorithm> // for min, max
 
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 2
 #include "../debug.h"
 
 using std::min;
@@ -38,39 +40,19 @@ ListedReward::ptr_t ListedReward::next() const {
 }
 
 bool ListedReward::operator!=(const AbstractReward &other) const {
-    if(this->get_type()!=other.get_type()) {
-        return true;
-    } else {
-        auto listed_reward = dynamic_cast<const ListedReward *>(&other);
-        if(listed_reward==nullptr) {
-            DEBUG_ERROR("Dynamic cast failed");
-            return true;
-        } else {
-            return (
-                this->reward_index != listed_reward->reward_index ||
-                this->reward_list  != listed_reward->reward_list
-                );
-        }
-    }
+    COMPARE_ABSTRACT_TYPE_AND_CAST(!=,get_type,const ListedReward *);
+    return (
+        this->reward_index != ptr->reward_index ||
+        this->reward_list  != ptr->reward_list
+        );
 }
 
 bool ListedReward::operator<(const AbstractReward &other) const {
-    if(this->get_type()<other.get_type()) {
-        return true;
-    } else {
-        auto listed_reward = dynamic_cast<const ListedReward *>(&other);
-        if(listed_reward==nullptr) {
-            DEBUG_ERROR("Dynamic cast failed");
-            return true;
-        } else {
-            return (
-                this->reward_index < listed_reward->reward_index || (
-                    this->reward_index == listed_reward->reward_index &&
-                    this->reward_list < listed_reward->reward_list
-                    )
-                );
-        }
-    }
+    COMPARE_ABSTRACT_TYPE_AND_CAST(<,get_type,const ListedReward *);
+    return ( this->reward_index < ptr->reward_index ||
+             ( this->reward_index == ptr->reward_index &&
+               this->reward_list < ptr->reward_list )
+        );
 }
 
 const string ListedReward::print() const {

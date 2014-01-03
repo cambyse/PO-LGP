@@ -1,8 +1,11 @@
 #include "MazeObservation.h"
 
-#include <sstream>
+#include "../util/Macro.h"
 
-#define DEBUG_LEVEL 1
+#include <sstream>
+#include <tuple> // for std::tie
+
+#define DEBUG_LEVEL 2
 #include "../debug.h"
 
 using std::string;
@@ -66,43 +69,20 @@ MazeObservation::ptr_t MazeObservation::next() const {
 }
 
 bool MazeObservation::operator!=(const AbstractObservation &other) const {
-    if(this->get_type()!=other.get_type()) {
-        return true;
-    } else {
-        auto maze_observation = dynamic_cast<const MazeObservation *>(&other);
-        if(maze_observation==nullptr) {
-            DEBUG_ERROR("Dynamic cast failed");
-            return true;
-        } else {
-            return (
-                this->x_position   != maze_observation->x_position   ||
-                this->y_position   != maze_observation->y_position   ||
-                this->x_dimensions != maze_observation->x_dimensions ||
-                this->y_dimensions != maze_observation->y_dimensions
-                );
-        }
-    }
+    COMPARE_ABSTRACT_TYPE_AND_CAST(!=,get_type,const MazeObservation *);
+    return (
+        this->x_position   != ptr->x_position   ||
+        this->y_position   != ptr->y_position   ||
+        this->x_dimensions != ptr->x_dimensions ||
+        this->y_dimensions != ptr->y_dimensions
+        );
 }
 
 bool MazeObservation::operator<(const AbstractObservation &other) const {
-    if(this->get_type()<other.get_type()) {
-        return true;
-    } else {
-        auto maze_observation = dynamic_cast<const MazeObservation *>(&other);
-        if(maze_observation==nullptr) {
-            DEBUG_ERROR("Dynamic cast failed");
-            return true;
-        } else {
-            return (this->x_position < maze_observation->x_position ||
-                    (this->x_position == maze_observation->x_position &&
-                     this->y_position < maze_observation->y_position) ||
-                    (this->y_position == maze_observation->y_position &&
-                     this->x_dimensions < maze_observation->x_dimensions) ||
-                    (this->x_dimensions == maze_observation->x_dimensions &&
-                     this->y_dimensions < maze_observation->y_dimensions)
-                );
-        }
-    }
+    COMPARE_ABSTRACT_TYPE_AND_CAST(<,get_type,const MazeObservation *);
+    auto this_tie = std::tie(this->x_position,this->y_position,this->x_dimensions,this->y_dimensions);
+    auto other_tie = std::tie(ptr->x_position,ptr->y_position,ptr->x_dimensions,ptr->y_dimensions);
+    return this_tie<other_tie;
 }
 
 const string MazeObservation::print() const {

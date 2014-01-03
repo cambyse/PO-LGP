@@ -29,7 +29,7 @@ public:
     friend std::ostream& operator<<(std::ostream&, const Feature&);
     /** \brief Compare features based on their type. */
     virtual bool operator==(const Feature& other) const;
-    virtual bool operator!=(const Feature& other) const;
+    virtual bool operator!=(const Feature& other) const final;
     virtual bool operator<(const Feature& other) const;
     virtual FEATURE_TYPE get_feature_type() const;
     virtual unsigned int get_complexity() const;
@@ -66,6 +66,7 @@ public:
     virtual feature_return_value evaluate(const_instanceIt_t, action_ptr_t, observation_ptr_t, reward_ptr_t) const;
     virtual std::string identifier() const;
     virtual bool operator==(const Feature& other) const override;
+    virtual bool operator<(const Feature& other) const override;
 };
 
 class ActionFeature: public BasisFeature {
@@ -79,6 +80,7 @@ public:
     static bool features_contradict(const ActionFeature& f1, const ActionFeature& f2);
     bool contradicts(const ActionFeature& f) const { return features_contradict(*this,f); }
     virtual bool operator==(const Feature& other) const override;
+    virtual bool operator<(const Feature& other) const override;
 protected:
     action_ptr_t action;
     int delay;
@@ -95,6 +97,7 @@ public:
     static bool features_contradict(const ObservationFeature& f1, const ObservationFeature& f2);
     bool contradicts(const ObservationFeature& f) const { return features_contradict(*this,f); }
     virtual bool operator==(const Feature& other) const override;
+    virtual bool operator<(const Feature& other) const override;
 protected:
     observation_ptr_t observation;
     int delay;
@@ -111,6 +114,8 @@ public:
     static bool features_contradict(const RewardFeature& f1, const RewardFeature& f2);
     bool contradicts(const RewardFeature& f) const { return features_contradict(*this,f); }
     virtual bool operator==(const Feature& other) const override;
+    virtual bool operator<(const Feature& other) const override;
+    const reward_ptr_t get_reward() const { return reward; }
 protected:
     reward_ptr_t reward;
     int delay;
@@ -118,22 +123,21 @@ protected:
 
 class AndFeature: public Feature {
 public:
-    typedef std::set<const_feature_ptr_t>          subfeature_container_t;
-    typedef subfeature_container_t::iterator       subfeature_iterator_t;
-    typedef subfeature_container_t::const_iterator subfeature_const_iterator_t;
+    typedef std::set<const_feature_ptr_t> subfeature_container_t;
     using Feature::evaluate; // so the compiler finds them
     AndFeature();
-    AndFeature(const Feature& f);
-    AndFeature(const Feature& f1, const Feature& f2);
+    AndFeature(const_feature_ptr_t f);
+    AndFeature(const_feature_ptr_t f1, const_feature_ptr_t f2);
     virtual ~AndFeature();
     virtual feature_return_value evaluate(const_instanceIt_t) const;
     virtual feature_return_value evaluate(const look_up_map_t&) const;
     virtual std::string identifier() const;
     virtual bool operator==(const Feature& other) const override;
-    /* virtual bool operator<(const Feature& other) const; */
+    virtual bool operator<(const Feature& other) const override;
+    virtual bool operator<(const AndFeature& other) const;
 protected:
     subfeature_container_t subfeatures;
-    virtual void add_feature(const Feature& f);
+    virtual void add_feature(const_feature_ptr_t f);
     virtual void finalize_construction();
     void check_for_contradicting_subfeatures();
     inline feature_return_value return_function(const feature_return_value& ret) const;

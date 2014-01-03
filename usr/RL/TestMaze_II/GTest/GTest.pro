@@ -7,6 +7,7 @@ QT += core \
 HEADERS += \
     ../Config.h \
     ../util.h \
+    ../util/Macro.h \
     ../util/ProgressBar.h \
     ../util/ColorOutput.h \
     ../util/QtUtil.h \
@@ -38,10 +39,12 @@ HEADERS += \
     ../KMarkovCRF.h \
     ../UTree.h \
     ../LinearQ.h \
+    \
     MinimalEnvironmentExample/MinimalAction.h \
     MinimalEnvironmentExample/MinimalObservation.h \
     MinimalEnvironmentExample/MinimalReward.h \
-    MinimalEnvironmentExample/MinimalEnvironment.h
+    MinimalEnvironmentExample/MinimalEnvironment.h \
+    RandomElements.h
 SOURCES += \
     main.cpp \
     ../util.cpp \
@@ -75,6 +78,11 @@ SOURCES += \
     ../KMarkovCRF.cpp \
     ../UTree.cpp \
     ../LinearQ.cpp \
+    \
+    MinimalEnvironmentExample/MinimalAction.cpp \
+    MinimalEnvironmentExample/MinimalObservation.cpp \
+    MinimalEnvironmentExample/MinimalReward.cpp \
+    RandomElements.cpp \
     \
     RepresentationTest.cpp \
     FeatureTest.cpp \
