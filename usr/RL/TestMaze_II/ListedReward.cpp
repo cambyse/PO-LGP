@@ -1,12 +1,12 @@
 #include "ListedReward.h"
 
-#include "../util/Macro.h"
+#include "util/Macro.h"
 
 #include <sstream>
 #include <algorithm> // for min, max
 
 #define DEBUG_LEVEL 2
-#include "../debug.h"
+#include "debug.h"
 
 using std::min;
 using std::max;

@@ -2,11 +2,13 @@
 
 #include "Config.h"
 #include "util.h"
+#include "util/QtUtil.h"
 
 #include "SmoothingKernelSigmoid.h"
 
 #include <float.h>  // for DBL_MAX
 #include <vector>
+#include <map>
 #include <algorithm> // for min, max
 
 #ifdef BATCH_MODE_QUIET
@@ -17,6 +19,7 @@
 #include "debug.h"
 
 using std::vector;
+using std::map;
 using std::cout;
 using std::endl;
 using std::get;
@@ -27,7 +30,6 @@ using util::arg_int;
 using util::arg_double;
 using util::arg_string;
 
-#include "QtUtil.h"
 
 #define TO_CONSOLE(x) { ui._wConsoleOutput->appendPlainText(x); }
 
@@ -98,9 +100,9 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     ui.graphicsView->installEventFilter(moveByKeys);
 
     // set maze initial state
-    observation_t initial_state = Maze::MazeState(Config::maze_x_size/2,Config::maze_y_size/2).state_idx();
-    maze.set_current_state(initial_state);
-    update_current_instance(action_t::STAY,initial_state,0);
+    maze.get_spaces(action_space,observation_space,reward_space);
+    const_instanceIt_t maze_instance = maze.get_current_instance()->const_last();
+    current_instance = instance_t::create(maze_instance->action,maze_instance->observation,maze_instance->reward,maze_instance-1);
 }
 
 TestMaze_II::~TestMaze_II() {
@@ -113,9 +115,9 @@ TestMaze_II::~TestMaze_II() {
 void TestMaze_II::collect_episode(const int& length) {
     start_new_episode = true;
     for(int idx=0; idx<length; ++idx) {
-        action_t action = (action_t)(action_t::random_action());
-        observation_t observation_to;
-        reward_t reward;
+        action_ptr_t action = action_space->random_element();
+        observation_ptr_t observation_to;
+        reward_ptr_t reward;
         maze.perform_transition(action,observation_to,reward);
         update_current_instance(action,observation_to,reward);
         add_action_observation_reward_tripel(action,observation_to,reward);
@@ -123,7 +125,7 @@ void TestMaze_II::collect_episode(const int& length) {
     maze.render_update();
 }
 
-void TestMaze_II::update_current_instance(action_t action, observation_t observation, reward_t reward, bool invalidate_search_tree) {
+void TestMaze_II::update_current_instance(action_ptr_t action, observation_ptr_t observation, reward_ptr_t reward, bool invalidate_search_tree) {
     if(current_instance==nullptr) {
         current_instance = instance_t::create(action,observation,reward);
     } else {
@@ -136,9 +138,9 @@ void TestMaze_II::update_current_instance(action_t action, observation_t observa
 }
 
 void TestMaze_II::add_action_observation_reward_tripel(
-    const action_t& action,
-    const observation_t& observation,
-    const reward_t& reward
+    const action_ptr_t& action,
+    const observation_ptr_t& observation,
+    const reward_ptr_t& reward
     ) {
            crf.add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
          utree.add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
@@ -169,13 +171,13 @@ void TestMaze_II::save_to_png(QString file_name) const {
     }
 }
 
-void TestMaze_II::perform_transition(const action_t& action) {
-    observation_t s;
-    reward_t r;
+void TestMaze_II::perform_transition(const action_ptr_t& action) {
+    observation_ptr_t s;
+    reward_ptr_t r;
     perform_transition(action, s, r);
 }
 
-void TestMaze_II::perform_transition(const action_t& action, observation_t& observation_to, reward_t& reward) {
+void TestMaze_II::perform_transition(const action_ptr_t& action, observation_ptr_t& observation_to, reward_ptr_t& reward) {
     maze.perform_transition(action,observation_to,reward);
     update_current_instance(action,observation_to,reward);
     maze.render_update();
@@ -193,7 +195,7 @@ void TestMaze_II::render() {
 }
 
 void TestMaze_II::random_action() {
-    perform_transition(action_t::random_action());
+    perform_transition(action_space->random_element());
 }
 
 void TestMaze_II::choose_action() {
@@ -203,7 +205,7 @@ void TestMaze_II::choose_action() {
         look_ahead_search.print_tree_statistics();
     }
 
-    action_t action;
+    action_ptr_t action;
     bool clear_seach_tree = (look_ahead_search.get_number_of_nodes()==0 || !prune_search_tree || search_tree_invalid);
     switch(planner_type) {
     case OPTIMAL_PLANNER:
@@ -264,12 +266,12 @@ void TestMaze_II::choose_action() {
         action = linQ.get_max_value_action(current_instance);
         break;
     default:
-        action = action_t::STAY;
-        DEBUG_OUT(0,"Error: undefined planner type --> choosing STAY");
+        action = action_space;
+        DEBUG_OUT(0,"Error: undefined planner type --> choosing " << action);
         break;
     }
-    observation_t observation_to;
-    reward_t reward;
+    observation_ptr_t observation_to;
+    reward_ptr_t reward;
     perform_transition(action,observation_to,reward);
 
     // debugging
@@ -406,7 +408,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString crf_erase_s(                     "    crf-erase / ce . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> erase features with zero weight");
     QString l1_s(                            "    l1 . . . . . . . . . . . . <double>. . . . . . . . . . . . . . . . . .-> coefficient for L1 regularization");
     QString evaluate_s(                      "    evaluate . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> evaluate features at current point");
-    QString validate_s(                      "    validate / v . . . . . . . {crf,kmdp}[exact|mc <int>]. . . . . . . . .-> validate CRF or k-MDP model using exact (default) or Monte Carlo (with <int> samples) computation of the KL-divergence");
+//    QString validate_s(                      "    validate / v . . . . . . . {crf,kmdp}[exact|mc <int>]. . . . . . . . .-> validate CRF or k-MDP model using exact (default) or Monte Carlo (with <int> samples) computation of the KL-divergence");
     QString examine_crf_features_s(          "    crf-f. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> print CRF features and weights");
     QString apply_old_crf_features_s(        "    apply-old-features / aof . . . . . . . . . . . . . . . . . . . . . . .-> re-apply the old featues stored at the last erase");
     QString learning_utree_s(                "    === UTree ===");
@@ -507,7 +509,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             TO_CONSOLE( crf_erase_s );
             TO_CONSOLE( l1_s );
             TO_CONSOLE( evaluate_s );
-            TO_CONSOLE( validate_s );
+//            TO_CONSOLE( validate_s );
             TO_CONSOLE( examine_crf_features_s );
             TO_CONSOLE( apply_old_crf_features_s );
             TO_CONSOLE( learning_utree_s ); // UTree
@@ -539,15 +541,20 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             TO_CONSOLE( pair_delay_distribution_s );
             TO_CONSOLE( mediator_probability_s );
         } else if(str_args[0]=="left" || str_args[0]=="l") { // left
-            perform_transition(action_t::LEFT);
+#warning check for maze
+            perform_transition(action_ptr_t(new MazeAction("left")));
         } else if(str_args[0]=="right" || str_args[0]=="r") { // right
-            perform_transition(action_t::RIGHT);
+#warning check for maze
+            perform_transition(action_ptr_t(new MazeAction("right")));
         } else if(str_args[0]=="up" || str_args[0]=="u") { // up
-            perform_transition(action_t::UP);
+#warning check for maze
+            perform_transition(action_ptr_t(new MazeAction("up")));
         } else if(str_args[0]=="down" || str_args[0]=="d") { // down
-            perform_transition(action_t::DOWN);
+#warning check for maze
+            perform_transition(action_ptr_t(new MazeAction("down")));
         } else if(str_args[0]=="stay" || str_args[0]=="s") { // stay
-            perform_transition(action_t::STAY);
+#warning check for maze
+            perform_transition(action_ptr_t(new MazeAction("stay")));
         } else if(str_args[0]=="move") { // start/stop moving
             if(str_args_n==1) {
                 choose_action();
@@ -700,24 +707,24 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
         } else if(str_args[0]=="random-distribution" || str_args[0]=="rd") { // test
             if(str_args_n==2 && int_args_ok[1]) {
                 // initialize state counts to zero
-                vector<int> state_counts;
-                for(observationIt_t observation=observationIt_t::first(); observation!=util::INVALID; ++observation) {
-                    state_counts.push_back(0);
+                map<observation_ptr_t,int> state_counts;
+                for(observation_ptr_t observation : observation_space) {
+                    state_counts[observation] = 0;
                 }
                 // get state counts
                 int n = int_args[1];
                 int max_count = 1;
                 for(int idx=0; idx<n; ++idx) {
-                    action_t action = (action_t)(action_t::random_action());
-                    observation_t observation_to;
-                    reward_t reward;
+                    action_ptr_t action = (action_ptr_t)(action_space->random_element());
+                    observation_ptr_t observation_to;
+                    reward_ptr_t reward;
                     maze.perform_transition(action,observation_to,reward);
                     ++state_counts[observation_to];
                     max_count = max(state_counts[observation_to],max_count);
                 }
                 // transform into colors
                 Maze::color_vector_t cols;
-                for(observationIt_t observation=observationIt_t::first(); observation!=util::INVALID; ++observation) {
+                for(observation_ptr_t observation : observation_space) {
                     double p = state_counts[observation];
                     DEBUG_OUT(0,"State " << observation << ": p = " << p/max(n,1) );
                     p /= max_count;
@@ -799,35 +806,35 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             }
         } else if(str_args[0]=="evaluate") {
             crf.evaluate_features();
-        } else if(str_args[0]=="validate" || str_args[0]=="v") {
-            if(str_args_n==1 ) {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( validate_s );
-            } else if(str_args[1]=="crf") {
-                if(str_args[2]=="mc") {
-                    if( str_args_n>3 && int_args_ok[3] && int_args[3]>0 ) {
-                        probability_t model_l, maze_l;
-                        probability_t kl = maze.validate_model<KMarkovCRF>(
-                                crf,
-                                int_args[3],
-                                &model_l,
-                                &maze_l
-                        );
-                        TO_CONSOLE(QString("    MC KL-Divergence = %1 (%2 samples)").arg(kl).arg(int_args[3]));
-                        TO_CONSOLE(QString("    Mean Likelihood: model = %1, maze = %2").arg(model_l).arg(maze_l));
-                    } else {
-                        TO_CONSOLE( "    Please specify a valid sample size" );
-                    }
-                } else {
-                    TO_CONSOLE( invalid_args_s );
-                    TO_CONSOLE( validate_s );
-                }
-            } else if(str_args[1]=="kmdp") {
-                TO_CONSOLE( "    Sorry, not implemented" );
-            } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( validate_s );
-            }
+        // } else if(str_args[0]=="validate" || str_args[0]=="v") {
+        //     if(str_args_n==1 ) {
+        //         TO_CONSOLE( invalid_args_s );
+        //         TO_CONSOLE( validate_s );
+        //     } else if(str_args[1]=="crf") {
+        //         if(str_args[2]=="mc") {
+        //             if( str_args_n>3 && int_args_ok[3] && int_args[3]>0 ) {
+        //                 probability_t model_l, maze_l;
+        //                 probability_t kl = maze.validate_model<KMarkovCRF>(
+        //                         crf,
+        //                         int_args[3],
+        //                         &model_l,
+        //                         &maze_l
+        //                 );
+        //                 TO_CONSOLE(QString("    MC KL-Divergence = %1 (%2 samples)").arg(kl).arg(int_args[3]));
+        //                 TO_CONSOLE(QString("    Mean Likelihood: model = %1, maze = %2").arg(model_l).arg(maze_l));
+        //             } else {
+        //                 TO_CONSOLE( "    Please specify a valid sample size" );
+        //             }
+        //         } else {
+        //             TO_CONSOLE( invalid_args_s );
+        //             TO_CONSOLE( validate_s );
+        //         }
+        //     } else if(str_args[1]=="kmdp") {
+        //         TO_CONSOLE( "    Sorry, not implemented" );
+        //     } else {
+        //         TO_CONSOLE( invalid_args_s );
+        //         TO_CONSOLE( validate_s );
+        //     }
         } else if(str_args[0]=="crf-f") {
             crf.print_all_features();
         } else if(str_args[0]=="l1") {
@@ -978,7 +985,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                         target_activated = true;
                         target_state = current_instance->observation;
                         Maze::color_vector_t cols;
-                        for( auto observation : observationIt_t::all ) {
+                        for(auto observation : observation_space) {
                             if(observation==target_state) {
                                 cols.push_back( Maze::color_t(0,1,0) );
                             } else {
@@ -1043,7 +1050,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             //TO_CONSOLE( "    currently no test function implemented" );
         } else if(str_args[0]=="col-states") { // color states
             Maze::color_vector_t cols;
-            for(observationIt_t observation=observationIt_t::first(); observation!=util::INVALID; ++observation) {
+            for(observation_ptr_t observation : observation_space) {
                 cols.push_back( std::make_tuple(drand48(),drand48(),drand48()) );
             }
             maze.set_state_colors(cols);
@@ -1054,14 +1061,14 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 TO_CONSOLE( fixed_dt_distribution_s );
             } else {
                 // get probabilites for all states
-                observation_t s1 = current_instance->observation;
+                observation_ptr_t s1 = current_instance->observation;
                 idx_t delay = int_args[1];
                 vector<probability_t> probs = delay_dist.get_fixed_delay_probability_distribution(s1,delay);
 
                 // get maximum probability for rescaling and target state idx
                 double max_prob = -DBL_MAX;
                 idx_t target_idx = 0, state_idx = 0;
-                for(observationIt_t observation=observationIt_t::first(); observation!=util::INVALID; ++observation, ++state_idx) {
+                for(observation_ptr_t observation : observation_space) {
                     if(probs[state_idx]>max_prob) {
                         max_prob = probs[state_idx];
                     }
@@ -1105,13 +1112,13 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     delay_dist.get_pairwise_delay_distribution(dist_map,time_window);
 
                     // apply to current states
-                    observation_t s1 = current_instance->observation;
-                    observation_t s2 = target_state;
+                    observation_ptr_t s1 = current_instance->observation;
+                    observation_ptr_t s2 = target_state;
                     vector<double> forward;
                     vector<double> backward;
                     for( auto el : dist_map ) {
-                        observation_t s1_map = get<0>(el.first);
-                        observation_t s2_map = get<1>(el.first);
+                        observation_ptr_t s1_map = get<0>(el.first);
+                        observation_ptr_t s2_map = get<1>(el.first);
                         int dt = get<2>(el.first);
                         if(dt==0) {
                             continue;
@@ -1164,12 +1171,12 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 } else {
                     // get probabilites for all states
                     DEBUG_OUT(2,"Calculating mediator distribution...");
-                    observation_t s1 = current_instance->observation;
-                    observation_t s3 = target_state;
+                    observation_ptr_t s1 = current_instance->observation;
+                    observation_ptr_t s3 = target_state;
                     vector<double> probs;
                     double max_prob = -DBL_MAX;
                     idx_t target_idx = 0, state_idx = 0;
-                    for(observationIt_t observation=observationIt_t::first(); observation!=util::INVALID; ++observation, ++state_idx) {
+                    for(observation_ptr_t observation : observation_space) {
                         probability_t prob = delay_dist.get_mediator_probability(s1,observation,s3,int_args[1]);
                         probs.push_back(prob);
                         if(prob>max_prob) {
@@ -1179,6 +1186,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                             target_idx=state_idx;
                         }
                         DEBUG_OUT(3,"    " << s1 << " --> " << observation << " --> " << s3 << " : " << prob);
+                        ++state_idx;
                     }
                     DEBUG_OUT(2,"DONE");
                     // rescale and define colors

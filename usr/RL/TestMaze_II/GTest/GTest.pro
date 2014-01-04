@@ -6,6 +6,7 @@ QT += core \
     printsupport
 HEADERS += \
     ../Config.h \
+    \
     ../util.h \
     ../util/Macro.h \
     ../util/ProgressBar.h \
@@ -47,6 +48,7 @@ HEADERS += \
     RandomElements.h
 SOURCES += \
     main.cpp \
+    \
     ../util.cpp \
     ../util/ProgressBar.cpp \
     ../util/ColorOutput.cpp \

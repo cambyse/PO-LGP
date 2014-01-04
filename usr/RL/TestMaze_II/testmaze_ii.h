@@ -62,6 +62,9 @@ private:
 
     // the maze / the world
     Maze maze;
+    action_ptr_t action_space;             ///< Action space to be used.
+    observation_ptr_t observation_space;   ///< Observation space to be used.
+    reward_ptr_t reward_space;             ///< Reward space to be used.
 
     // current instance (essentially the same as the maze instance)
     instance_t * current_instance;
@@ -112,24 +115,24 @@ private:
     //-------//
     DelayDistribution delay_dist;
     bool target_activated;
-    observation_t target_state;
+    observation_ptr_t target_state;
 
     //==================//
     // Member Functions //
     //==================//
 
     void collect_episode(const int& length);
-    void update_current_instance(action_t, observation_t, reward_t, bool invalidate_search_tree = true);
+    void update_current_instance(action_ptr_t, observation_ptr_t, reward_ptr_t, bool invalidate_search_tree = true);
     void add_action_observation_reward_tripel(
-            const action_t& action,
-            const observation_t& observation,
-            const reward_t& reward
+            const action_ptr_t& action,
+            const observation_ptr_t& observation,
+            const reward_ptr_t& reward
     );
     void clear_data();
     void fully_expand_utree();
     void save_to_png(QString file_name) const;
-    void perform_transition(const action_t& action);
-    void perform_transition(const action_t& action, observation_t& observation_to, reward_t& reward);
+    void perform_transition(const action_ptr_t& action);
+    void perform_transition(const action_ptr_t& action, observation_ptr_t& observation_to, reward_ptr_t& reward);
 
 private slots:
     void render();

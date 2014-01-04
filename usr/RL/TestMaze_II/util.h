@@ -263,6 +263,16 @@ namespace util {
             return size;
         }
 
+        virtual ptr_t random_element() const {
+            Iterator elem = this->begin();
+            int counter = rand()%this->space_size();
+            while(counter>0) {
+                ++elem;
+                --counter;
+            }
+            return *elem;
+        }
+
         virtual long int index() const {
             DEBUG_WARNING("Using inefficient method to compute index");
             unsigned long int idx = -1;

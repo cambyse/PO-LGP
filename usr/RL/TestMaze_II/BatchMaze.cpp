@@ -22,7 +22,7 @@
 #include <algorithm> // for min, max
 
 #include <QString>
-#include "QtUtil.h" // for << operator
+#include "util/QtUtil.h" // for << operator
 
 #ifdef BATCH_MODE_QUIET
 #define DEBUG_LEVEL 0
@@ -369,10 +369,12 @@ int BatchMaze::run_active() {
 #endif
         {
             // initialize maze
-            observation_t start_observation = observation_t::random_observation();
+            maze->get_spaces(action_space,observation_space,reward_space);
+            observation_ptr_t start_observation = observation_space->random_element();
             maze = new Maze(switch_double("-e"));
-            maze->set_current_state(start_observation);
-            current_instance = instance_t::create(action_t::STAY,start_observation,reward_t(0));
+            maze->set_current_observation(start_observation);
+            const_instanceIt_t maze_instance = maze->get_current_instance()->const_last();
+            current_instance = instance_t::create(maze_instance->action,maze_instance->observation,maze_instance->reward,maze_instance-1);
 
             // initialize look ahead search
             look_ahead_search = new LookAheadSearch(switch_double("-d"));
@@ -444,15 +446,15 @@ int BatchMaze::run_active() {
 	} else {
 	  // generate training data
 	  for(int train_step=0; train_step<training_length; ++train_step) {
-	    action_t action;
-	    observation_t observation;
-	    reward_t reward;
+	    action_ptr_t action;
+	    observation_ptr_t observation;
+	    reward_ptr_t reward;
 	    if(drand48()<switch_double("-optTran")) {
 	      look_ahead_search->clear_tree();
 	      look_ahead_search->build_tree<Maze>(current_instance, *maze, switch_int("-maxTree"));
 	      action = look_ahead_search->get_optimal_action();
 	    } else {
-	      action = action_t::random_action();
+                action = action_space->random_element();
 	    }
 	    maze->perform_transition(action,observation,reward);
 	    current_instance = current_instance->append_instance(action,observation,reward);
@@ -627,9 +629,9 @@ int BatchMaze::run_active() {
             for(transition_counter=1; transition_counter<=transition_length; ++transition_counter) {
 
                 // transition variables
-                action_t action;
-                observation_t observation;
-                reward_t reward;
+                action_ptr_t action;
+                observation_ptr_t observation;
+                reward_ptr_t reward;
 
                 // choose the action
                 if(mode=="OPTIMAL" || mode=="TRANSITIONS") {
@@ -641,7 +643,7 @@ int BatchMaze::run_active() {
                     }
                     action = look_ahead_search->get_optimal_action();
                 } else if(mode=="RANDOM") {
-                    action = action_t::random_action();
+                    action = action_space->random_element();
                 } else if(mode=="SPARSE") {
                     if(look_ahead_search->get_number_of_nodes()==0 || !switch_bool("-pruneTree")) {
                         look_ahead_search->clear_tree();
@@ -693,7 +695,7 @@ int BatchMaze::run_active() {
                 }
 
                 // increment reward
-                reward_sum += reward;
+                reward_sum += reward->get_value();
 
                 DEBUG_OUT(2, "Episode	" << episode_counter <<
                           ",	training length " << training_length <<
@@ -912,9 +914,9 @@ void BatchMaze::initialize_log_file() {
     log_file_name.append("_log_file.txt");
     log_file.open((const char*)log_file_name.toLatin1());
 
-    std::string tmp_reward_str = Maze::get_rewards(), reward_str;
-    std::string tmp_wall_str = Maze::get_walls(), wall_str;
-    std::string tmp_door_str = Maze::get_doors(), door_str;
+    std::string tmp_reward_str = Maze().get_rewards(), reward_str;
+    std::string tmp_wall_str = Maze().get_walls(), wall_str;
+    std::string tmp_door_str = Maze().get_doors(), door_str;
     for( auto c : tmp_reward_str ) {
         if(c!='\n') {
             reward_str += c;
@@ -954,7 +956,8 @@ void BatchMaze::initialize_log_file() {
         }
     }
     LOG_COMMENT("");
-    LOG_COMMENT("Maze size: " << Config::maze_x_size << "x" << Config::maze_y_size);
+#warning check for maze
+    LOG_COMMENT("Maze size: " << observation_space.get_derived<const MazeObservation>()->get_x_dim() << "x" << observation_space.get_derived<const MazeObservation>()->get_y_dim());
     LOG_COMMENT("");
     LOG_COMMENT(reward_str);
     LOG_COMMENT(wall_str);

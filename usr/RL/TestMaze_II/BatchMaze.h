@@ -26,6 +26,10 @@ private:
         QString help_description;
     };
 
+    action_ptr_t action_space;             ///< Action space to be used.
+    observation_ptr_t observation_space;   ///< Observation space to be used.
+    reward_ptr_t reward_space;             ///< Reward space to be used.
+
     /** \brief Available modes for running BatchMaze. */
     static const std::vector<QString> mode_vector;
 

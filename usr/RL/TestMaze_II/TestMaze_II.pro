@@ -5,52 +5,90 @@ QT += core \
     gui \
     svg \
     printsupport
-HEADERS += LookAheadSearch.h \
-    BatchMaze.h \
-    lbfgs_codes.h \
+HEADERS += \
     Config.h \
+    \
     util.h \
-    Maze/Maze.h \
-    VisualEnvironment.h \
+    util/Macro.h \
+    util/ProgressBar.h \
+    util/ColorOutput.h \
+    util/QtUtil.h \
+    util/lbfgs_codes.h \
+    util/KolmogorovSmirnovDist.h \
+    util/KolmogorovSmirnovTest.h \
+    \
+    SmoothingKernelSigmoid.h \
+    qcustomplot.h \
+    DelayDistribution.h \
+    \
+    optimization/LBFGS_Optimizer.h \
+    \
+    Feature.h \
+    Instance.h \
+    AbstractAction.h \
+    AbstractObservation.h \
+    AbstractReward.h \
+    ListedReward.h \
+    \
     PredictiveEnvironment.h \
-    testmaze_ii.h \
+    VisualEnvironment.h \
+    Maze/Maze.h \
+    Maze/MazeAction.h \
+    Maze/AugmentedMazeAction.h \
+    AbstractObservation.h \
+    Maze/MazeObservation.h \
+    \
+    LookAheadSearch.h \
+    \
+    HistoryObserver.h \
+    FeatureLearner.h \
     KMarkovCRF.h \
     UTree.h \
     LinearQ.h \
-    Feature.h \
-    Instance.h \
-    util/KolmogorovSmirnovTest.h \
-    util/ChiSquareTest.h \
-    util/ProgressBar.h \
-    DelayDistribution.h \
-    HistoryObserver.h \
-    qcustomplot.h \
-    SmoothingKernelSigmoid.h \
-    QtUtil.h \
-    optimization/LBFGS_Optimizer.h \
-    FeatureLearner.h
-SOURCES += LookAheadSearch.cpp \
-    util.cpp \
-    BatchMaze.cpp \
-    lbfgs_codes.cpp \
+    \
+    BatchMaze.h \
+    testmaze_ii.h
+SOURCES += \
     main.cpp \
-    Maze/Maze.cpp \
+    \
+    util.cpp \
+    util/ProgressBar.cpp \
+    util/ColorOutput.cpp \
+    util/QtUtil.cpp \
+    util/lbfgs_codes.cpp \
+    util/KolmogorovSmirnovDist.cpp \
+    util/KolmogorovSmirnovTest.cpp \
+    \
+    SmoothingKernelSigmoid.cpp \
+    qcustomplot.cpp \
+    DelayDistribution.cpp \
+    \
+    optimization/LBFGS_Optimizer.cpp \
+    \
+    Feature.cpp \
+    Instance.cpp \
+    AbstractAction.cpp \
+    AbstractObservation.cpp \
+    AbstractReward.cpp \
+    ListedReward.cpp \
+    \
+    PredictiveEnvironment.cpp \
     VisualEnvironment.cpp \
-    testmaze_ii.cpp \
+    Maze/Maze.cpp \
+    Maze/MazeAction.cpp \
+    Maze/AugmentedMazeAction.cpp \
+    Maze/MazeObservation.cpp \
+    \
+    LookAheadSearch.cpp \
+    \
+    HistoryObserver.cpp \
+    FeatureLearner.cpp \
     KMarkovCRF.cpp \
     UTree.cpp \
     LinearQ.cpp \
-    Feature.cpp \
-    Instance.cpp \
-    util/KolmogorovSmirnovTest.cpp \
-    util/ChiSquareTest.cpp \
-    util/ProgressBar.cpp \
-    DelayDistribution.cpp \
-    HistoryObserver.cpp \
-    qcustomplot.cpp \
-    SmoothingKernelSigmoid.cpp \
-    QtUtil.cpp \
-    optimization/LBFGS_Optimizer.cpp
+    \
+    BatchMaze.cpp \
+    testmaze_ii.cpp
 LIBS += -llbfgs \
     -lemon \
     -larmadillo \
