@@ -22,3 +22,7 @@ void VisualEnvironment::rescale_scene(QGraphicsView * view) {
     view->fitInView(scene->itemsBoundingRect(),Qt::KeepAspectRatio);
     view->scale(0.95,0.95);
 }
+
+void VisualEnvironment::render_tear_down() {
+    view->scene()->clear();
+}

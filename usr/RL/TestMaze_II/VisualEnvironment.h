@@ -26,6 +26,9 @@ public:
     /** \brief Updates the graphical representation. */
     virtual void render_update() = 0;
 
+    /** \brief Clears the scene used by VisualEnvironment::view. */
+    virtual void render_tear_down();
+
 protected:
 
     /** \brief QGraphicsView to render the environment. */

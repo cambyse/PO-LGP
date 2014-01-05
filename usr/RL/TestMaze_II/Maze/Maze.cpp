@@ -95,7 +95,7 @@ const vector<Maze::maze_t> Maze::maze_list = {
         ),
     /* === 4x4 Maze I === */
     maze_t(
-        QString("4x4 I"),
+        QString("4x4_I"),
         4,
         action_ptr_t(new action_t("stay")),
         observation_ptr_t(new observation_t(4,4,1,1)),
@@ -143,7 +143,7 @@ const vector<Maze::maze_t> Maze::maze_list = {
         ),
     /* === 4x4 Maze II === */
     maze_t(
-        QString("4x4 II"),
+        QString("4x4_II"),
         4,
         action_ptr_t(new action_t("stay")),
         observation_ptr_t(new observation_t(4,4,1,1)),
@@ -180,7 +180,7 @@ const vector<Maze::maze_t> Maze::maze_list = {
         ),
     /* === 4x4 Maze III === */
     maze_t(
-        QString("4x4 III"),
+        QString("4x4_III"),
         3,
         action_ptr_t(new action_t("stay")),
         observation_ptr_t(new observation_t(4,4,1,1)),
@@ -373,9 +373,6 @@ Maze::Maze(const double& eps):
 {
     // set a maze
     set_maze("Default");
-
-    // set state colors
-    set_state_colors();
 }
 
 
@@ -384,7 +381,7 @@ Maze::~Maze() {
     delete current_instance;
 }
 
-void Maze::set_maze(const QString& s) {
+bool Maze::set_maze(const QString& s) {
 
     // maze to use (defaults to first in list)
     current_maze = maze_list[0];
@@ -414,6 +411,11 @@ void Maze::set_maze(const QString& s) {
 
     // set current observation (and instance)
     set_current_observation(observation_space);
+
+    // set state colors to default
+    set_state_colors();
+
+    return found;
 }
 
 void Maze::render_initialize(QGraphicsView * v) {
@@ -458,12 +460,13 @@ void Maze::render_initialize(QGraphicsView * v) {
 
     // render agent
     if(!agent) {
-        agent = new QGraphicsSvgItem("agent.svg");
-        agent->setScale(0.2);
-        QSizeF s = agent->boundingRect().size();
-        agent->setPos(current_observation.get_x_pos()-s.width()/2, current_observation.get_y_pos()-s.height()/2);
-        agent->setElementId("normal");
+        delete agent;
     }
+    agent = new QGraphicsSvgItem("agent.svg");
+    agent->setScale(0.2);
+    QSizeF s = agent->boundingRect().size();
+    agent->setPos(current_observation.get_x_pos()-s.width()/2, current_observation.get_y_pos()-s.height()/2);
+    agent->setElementId("normal");
 
     scene->addItem(agent);
 
@@ -527,6 +530,15 @@ void Maze::render_update() {
     }
 
     rescale_scene(view);
+}
+
+void Maze::render_tear_down() {
+    view->scene()->clear();
+    action_line = nullptr;
+    action_point = nullptr;
+    agent = nullptr;
+    borders.assign(0,nullptr);
+    state_rects.assign(0,nullptr);
 }
 
 void Maze::set_state_colors(const color_vector_t colors) {

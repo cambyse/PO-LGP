@@ -384,6 +384,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString option_4_s(                      "                               target. . . . . . . . . . . . . . . . . . .-> activate a target state");
     QString option_5_s(                      "                               prune-tree. . . . . . . . . . . . . . . . .-> prune search tree");
     QString option_6_s(                      "                               png . . . . . . . . . . . . . . . . . . . .-> save a png image of the maze on transition");
+    QString option_7_s(                      "                               maze [<string>] . . . . . . . . . . . . . .-> load maze with name <string> [display available maze names]");
     QString test_s(                          "    test . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> test");
 
     QString maze_s(                        "\n    -----------------------------------Maze-----------------------------------");
@@ -451,6 +452,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     set_s += "\n" + option_4_s;
     set_s += "\n" + option_5_s;
     set_s += "\n" + option_6_s;
+    set_s += "\n" + option_7_s;
 
     QString invalid_args_s( "    invalid arguments" );
 
@@ -976,6 +978,30 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     }
                 } else {
                     TO_CONSOLE( "    please supply a planner to use" );
+                }
+            } else if(str_args[1]=="maze") {
+                bool print_list = false;
+                if(str_args_n>2) {
+                    if(str_args[0]=="unset") {
+                        TO_CONSOLE( "    set different maze to unset current" );
+                    } else {
+                        if(!maze.set_maze(str_args[2])) {
+                            TO_CONSOLE("    No maze named '"+str_args[2]+"'");
+                            print_list = true;
+                        } else {
+                            maze.render_tear_down();
+                            maze.render_initialize(ui.graphicsView);
+                            maze.render_update();
+                        }
+                    }
+                } else {
+                    print_list = true;
+                }
+                if(print_list) {
+                    TO_CONSOLE( "    Available mazes:" );
+                    for(QString name : maze.get_maze_list()) {
+                        TO_CONSOLE("        "+name);
+                    }
                 }
             } else if(str_args[1]=="target") {
                 if(str_args[0]=="set") {

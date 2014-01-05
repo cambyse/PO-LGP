@@ -914,6 +914,7 @@ void BatchMaze::initialize_log_file() {
     log_file_name.append("_log_file.txt");
     log_file.open((const char*)log_file_name.toLatin1());
 
+#warning not generic
     std::string tmp_reward_str = Maze().get_rewards(), reward_str;
     std::string tmp_wall_str = Maze().get_walls(), wall_str;
     std::string tmp_door_str = Maze().get_doors(), door_str;

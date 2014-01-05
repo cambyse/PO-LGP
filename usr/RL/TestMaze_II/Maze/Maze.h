@@ -33,13 +33,17 @@ public:
     virtual ~Maze();
 
     /** \brief Set a maze by name. */
-    virtual void set_maze(const QString& s);
+    virtual bool set_maze(const QString& s);
 
     /** \brief Renders the complete maze. */
     virtual void render_initialize(QGraphicsView * v) override;
 
     /** \brief Updates the graphical representation. */
     virtual void render_update() override;
+
+    /** \brief Clears the scene used by VisualEnvironment::view and resets all
+     * pointers to nullptr. */
+    virtual void render_tear_down() override;
 
     void set_state_colors(const color_vector_t colors = color_vector_t());
 
@@ -76,16 +80,16 @@ public:
     /** \brief Set the current state of the agent. */
     void set_current_observation(const observation_ptr_t&);
 
-    const std::vector<QString> get_maze_list() const;
+    virtual const std::vector<QString> get_maze_list() const;
 
     /** \brief Get a string describing all rewards. */
-    std::string get_rewards();
+    virtual std::string get_rewards();
 
     /** \brief Get a string describing all walls. */
-    std::string get_walls();
+    virtual std::string get_walls();
 
     /** \brief Get a string describing all doors. */
-    std::string get_doors();
+    virtual std::string get_doors();
 
     virtual void print_transition(action_ptr_t& a, observation_ptr_t& o, reward_ptr_t& r) const;
 
