@@ -59,7 +59,7 @@ double KolmogorovSmirnovTest::k_s_statistic(
             } else { // same value for both
                 double value = *samples_1_it;
                 if(value!=*samples_2_it) {
-                    DEBUG_OUT(0,"Error: Samples should be equal but really are not");
+                    DEBUG_ERROR("Samples should be equal but really are not");
                 }
                 while(samples_1_it!=samples_1.end() && *samples_1_it==value) {
                     ++s1_cumulative;
@@ -77,7 +77,7 @@ double KolmogorovSmirnovTest::k_s_statistic(
             ++s2_cumulative;
             ++samples_2_it;
         } else {
-            DEBUG_OUT(0,"Error: Invalid iterators in Kolmogorov-Smirnov test");
+            DEBUG_ERROR("Invalid iterators in Kolmogorov-Smirnov test");
         }
 
         // check difference

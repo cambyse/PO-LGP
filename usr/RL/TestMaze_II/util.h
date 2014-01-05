@@ -504,7 +504,7 @@ namespace util {
     template < typename T >
         T random_select(const std::vector<T> vec) {
         if(vec.size()==0) {
-            DEBUG_OUT(0,"Error: Cannot draw from an empty vector");
+            DEBUG_ERROR("Cannot draw from an empty vector");
         }
         return vec[rand()%vec.size()];
     }

@@ -62,7 +62,7 @@ TestMaze_II::TestMaze_II(QWidget *parent):
 
     // open console history file
     if(!history_file.open(QIODevice::ReadWrite | QIODevice::Text)) {
-        DEBUG_OUT(0,"Error: Could not open console history file");
+        DEBUG_ERROR("Could not open console history file");
     } else {
         QTextStream history_file_stream(&history_file);
         while ( !history_file_stream.atEnd() ) {
@@ -267,7 +267,7 @@ void TestMaze_II::choose_action() {
         break;
     default:
         action = action_space;
-        DEBUG_OUT(0,"Error: undefined planner type --> choosing " << action);
+        DEBUG_ERROR("undefined planner type --> choosing " << action);
         break;
     }
     observation_ptr_t observation_to;

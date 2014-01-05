@@ -156,7 +156,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
 
     idx_t feature_n = active_features.size();
     if(feature_n!=n) {
-        DEBUG_OUT(0,"Error: number of features is different from number of parameters but no parameter binding allowed");
+        DEBUG_ERROR("number of features is different from number of parameters but no parameter binding allowed");
     }
 
     // iterate through data
@@ -487,7 +487,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_candidates(
     idx_t active_n = active_features.size();
     idx_t candidate_n = candidate_features.size();
     if(candidate_n!=n) {
-        DEBUG_OUT(0,"Error: number of candidate features is different from number of parameters but no parameter binding allowed");
+        DEBUG_ERROR("number of candidate features is different from number of parameters but no parameter binding allowed");
     }
 
     // reset scores
@@ -1297,7 +1297,7 @@ void KMarkovCRF::update_prediction_map() {
         auto input_tuple = std::make_tuple(instance, action);
         auto ret_input = counts.find(input_tuple);
         if(ret_input==counts.end()) {
-            DEBUG_OUT(0,"Error: Item from prediction map not found within count-map");
+            DEBUG_ERROR("Item from prediction map not found within count-map");
         } else {
             it->second /= ret_input->second;
         }

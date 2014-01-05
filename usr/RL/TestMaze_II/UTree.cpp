@@ -174,7 +174,7 @@ UTree::probability_t UTree::get_prediction(
 void UTree::print_tree() {
 
     if(root_node==INVALID) {
-        DEBUG_OUT(0,"Error: Cannot print tree, root_node is INVALID");
+        DEBUG_ERROR("Cannot print tree, root_node is INVALID");
         return;
     }
 
@@ -209,7 +209,7 @@ void UTree::print_tree() {
                         DEBUG_OUT(0,"            Parent Id   : " << graph.id(graph.source(graph_t::InArcIt(graph,current_node))) );
                 } else {
                     if(current_node!=root_node) {
-                        DEBUG_OUT(0,"Error: node has no parent but is not root_node?!");
+                        DEBUG_ERROR("node has no parent but is not root_node?!");
                     } else {
                         DEBUG_OUT(0,"            Parent Id   : No parent, is root" );
                     }
@@ -257,7 +257,7 @@ void UTree::print_tree() {
 void UTree::print_leaves() {
 
     if(root_node==INVALID) {
-        DEBUG_OUT(0,"Error: Cannot print leaves, root_node is INVALID");
+        DEBUG_ERROR("Cannot print leaves, root_node is INVALID");
         return;
     }
 
@@ -273,7 +273,7 @@ void UTree::print_leaves() {
                 // get parent node
                 parent_arc = graph_t::InArcIt(graph,current_node);
                 if(parent_arc==INVALID) {
-                    DEBUG_OUT(0,"Error: leaf node has no parent");
+                    DEBUG_ERROR("leaf node has no parent");
                     break;
                 }
                 parent_node = graph.source(parent_arc);
@@ -545,7 +545,7 @@ double UTree::expand_leaf_node(const double& score_threshold) {
 //         }
 //     }
 //     if(!enought_data) {
-//         DEBUG_OUT(0,"Error: Cannot perform Q-Iteration, not enough data");
+//         DEBUG_ERROR("Cannot perform Q-Iteration, not enough data");
 //         return 0;
 //     }
 
@@ -579,7 +579,7 @@ double UTree::value_iteration() {
     // check if any leaf nodes exist //
     //-------------------------------//
     if(leaf_nodes.size()<1) {
-        DEBUG_OUT(0,"Error: Cannot perform value iteration, not enough leaf nodes");
+        DEBUG_ERROR("Cannot perform value iteration, not enough leaf nodes");
         return 0;
     }
 
@@ -873,7 +873,7 @@ double UTree::score_leaf_node(const node_t leaf_node, f_ptr_t feature) const {
     // check if it's really a leaf node //
     //----------------------------------//
     if(graph_t::OutArcIt(graph,leaf_node)!=INVALID) {
-        DEBUG_OUT(0,"Error: Scoring non-leaf node");
+        DEBUG_ERROR("Scoring non-leaf node");
         return default_score;
     }
 
@@ -937,7 +937,7 @@ double UTree::score_leaf_node(const node_t leaf_node, f_ptr_t feature) const {
     //--------------------------------------------------//
     int feature_return_n = feature_return_values.size();
     if(feature_return_n>2) {
-        DEBUG_OUT(0,"Error: Got " << feature_return_n << " different feature values. Expecting only two.");
+        DEBUG_ERROR("Got " << feature_return_n << " different feature values. Expecting only two.");
         return default_score;
     } else if(feature_return_n<2) { // nothing to compare
         DEBUG_OUT(3,"Not enough samples, returning default score");
@@ -1000,7 +1000,7 @@ UTree::node_t UTree::find_leaf_node(const instance_t *i) const {
     node_t current_node = root_node;
 
     if(current_node==INVALID) {
-        DEBUG_OUT(0,"Error: root node is INVALID");
+        DEBUG_ERROR("root node is INVALID");
         return current_node;
     }
 
@@ -1022,7 +1022,7 @@ UTree::node_t UTree::find_leaf_node(const instance_t *i) const {
 
         // no matching child node found
         if(!child_found) {
-            DEBUG_OUT(0,"Error: Unable to descend to leaf because no matching child node was found");
+            DEBUG_ERROR("Unable to descend to leaf because no matching child node was found");
             return current_node;
         }
     }

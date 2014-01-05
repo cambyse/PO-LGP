@@ -399,7 +399,7 @@ LookAheadSearch::probability_t LookAheadSearch::get_predicted_transition_probabi
         }
     }
     if(action_node==lemon::INVALID) {
-        DEBUG_OUT(0,"Error: Action " << action << " not available from root node");
+        DEBUG_ERROR("Action " << action << " not available from root node");
         return 0;
     }
 
@@ -422,7 +422,7 @@ LookAheadSearch::probability_t LookAheadSearch::get_predicted_transition_probabi
     }
     if(observation_node==lemon::INVALID) {
         probability_t prob = model.get_prediction(node_info_map[root_node].instance, action, observation, reward);
-        DEBUG_OUT(0,"Error: Node with observation " << observation << ", reward " << reward << " could not be found (Maze probability: " << prob << ")" );
+        DEBUG_ERROR("Node with observation " << observation << ", reward " << reward << " could not be found (Maze probability: " << prob << ")" );
         return 0;
     }
 
@@ -454,7 +454,7 @@ void LookAheadSearch::prune_tree(const action_ptr_t& a, const instance_t * new_r
         }
     }
     if(arc_to_action==lemon::INVALID) {
-        DEBUG_OUT(0,"Error: Could not identify choosen action");
+        DEBUG_ERROR("Could not identify choosen action");
         clear_tree();
         root_node = graph.addNode();
         ++number_of_nodes;
@@ -483,7 +483,7 @@ void LookAheadSearch::prune_tree(const action_ptr_t& a, const instance_t * new_r
         }
     }
     if(arc_to_observation==lemon::INVALID) {
-        DEBUG_OUT(0,"Error: Could not identify new root node");
+        DEBUG_ERROR("Could not identify new root node");
         if(DEBUG_LEVEL>0) {
             DEBUG_OUT(0,"    Need observation " << observation << ", reward " << reward);
             for(arc_to_observation = graph_t::OutArcIt(graph,action_node); arc_to_observation!=lemon::INVALID; ++arc_to_observation) {
@@ -537,7 +537,7 @@ void LookAheadSearch::prune_tree(const action_ptr_t& a, const instance_t * new_r
     ugraph_t::NodeMap<int> component_map(ugraph);
     int component_n = lemon::connectedComponents(ugraph,component_map);
     if(component_n<2) {
-        DEBUG_OUT(0,"Error: Search tree was not split by removing chosen action node");
+        DEBUG_ERROR("Search tree was not split by removing chosen action node");
         return;
     } else {
         DEBUG_OUT(2,"    " << component_n << " connected components");
@@ -585,7 +585,7 @@ void LookAheadSearch::prune_tree(const action_ptr_t& a, const instance_t * new_r
         if(new_root_instance->action!=ins->action ||
            new_root_instance->observation!=ins->observation ||
            new_root_instance->reward!=ins->reward) {
-            DEBUG_OUT(0,"Error: Old and new instance of new root node do not match");
+            DEBUG_ERROR("Old and new instance of new root node do not match");
             DEBUG_OUT(0,"    old: " << *ins << ", new: " << *new_root_instance);
         }
     }
@@ -617,7 +617,7 @@ void LookAheadSearch::prune_tree(const action_ptr_t& a, const instance_t * new_r
 
     // check graph structure
     if(!lemon::tree(ugraph)) {
-        DEBUG_OUT(0,"Error: Search graph is not a tree");
+        DEBUG_ERROR("Search graph is not a tree");
     }
 
     DEBUG_OUT(2,"DONE");
@@ -635,10 +635,10 @@ void LookAheadSearch::expand_leaf_node(
     }
 
     if(node_info_map[observation_node].type!=OBSERVATION) {
-        DEBUG_OUT(0,"Error: trying to expand non-observation node as observation node");
+        DEBUG_ERROR("trying to expand non-observation node as observation node");
     }
     if(node_info_map[observation_node].expansion!=NOT_EXPANDED) {
-        DEBUG_OUT(0,"Error: trying to expand observation node with expansion other than NOT_EXPANDED");
+        DEBUG_ERROR("trying to expand observation node with expansion other than NOT_EXPANDED");
     }
 
     instance_t * instance_from = node_info_map[observation_node].instance;
@@ -687,10 +687,10 @@ void LookAheadSearch::expand_action_node(
     }
 
     if(node_info_map[action_node].type!=ACTION) {
-        DEBUG_OUT(0,"Error: trying to expand non-action node as action node");
+        DEBUG_ERROR("trying to expand non-action node as action node");
     }
     if(node_info_map[action_node].expansion!=NOT_EXPANDED) {
-        DEBUG_OUT(0,"Error: trying to expand action node with expansion other than NOT_EXPANDED");
+        DEBUG_ERROR("trying to expand action node with expansion other than NOT_EXPANDED");
     }
 
     const instance_t * instance_from = node_info_map[action_node].instance;
@@ -730,7 +730,7 @@ void LookAheadSearch::expand_action_node(
     }
 
     if(graph_t::OutArcIt(graph,action_node)==lemon::INVALID) {
-        DEBUG_OUT(0,"Error: No possible observation transition.")
+        DEBUG_ERROR("No possible observation transition.")
     }
 
     node_info_map[action_node].expansion = FULLY_EXPANDED;

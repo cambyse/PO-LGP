@@ -519,7 +519,7 @@ void Maze::render_update() {
     }
 
     if(!matching_reward) {
-        DEBUG_OUT(0,"Error: Current reward is invalid (" << current_instance->reward << ")");
+        DEBUG_ERROR("Current reward is invalid (" << current_instance->reward << ")");
     }
 
     // Change State Color
@@ -1258,7 +1258,7 @@ void Maze::render_wall(wall_t w) {
         scene->addEllipse( x-0.5-wall_width/2, y_min+0.5-wall_width/2, wall_width, wall_width, wall_pen, wall_brush );
         scene->addEllipse( x+0.5-wall_width/2, y_min+0.5-wall_width/2, wall_width, wall_width, wall_pen, wall_brush );
     } else {
-        DEBUG_OUT(0,"Error: No wall possible between (" <<
+        DEBUG_ERROR("No wall possible between (" <<
                   x_1 << "," << y_1 << ") and (" <<
                   x_2 << "," << y_2 << ")" );
     }
@@ -1293,7 +1293,7 @@ void Maze::render_door(door_t dt) {
         idx_t y_min = min<idx_t>(y1,y2);
         scene->addLine( x+0.3, y_min+0.5, x-0.3, y_min+0.7, door_pen );
     } else {
-        DEBUG_OUT(0,"Error: No door possible between (" <<
+        DEBUG_ERROR("No door possible between (" <<
                   x1 << "," << y1 << ") and (" <<
                   x2 << "," << y2 << ")" );
     }

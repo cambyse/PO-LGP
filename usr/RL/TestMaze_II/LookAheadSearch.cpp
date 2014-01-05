@@ -53,7 +53,7 @@ LookAheadSearch::NodeInfo::NodeInfo(
     lower_value_bound(lv)
 {
     if(lower_value_bound>upper_value_bound) {
-        DEBUG_OUT(0,"Error: Lower value bound above upper value bound");
+        DEBUG_ERROR("Lower value bound above upper value bound");
     }
 }
 
@@ -116,7 +116,7 @@ LookAheadSearch::action_ptr_t LookAheadSearch::get_optimal_action() const {
     // select one action randomly
     action_ptr_t selected_action = action_ptr_t();
     if(optimal_action_node_vector.size()==0) {
-        DEBUG_OUT(0,"Error: No action available from root node. Choosing " << selected_action << ".");
+        DEBUG_ERROR("No action available from root node. Choosing " << selected_action << ".");
         return selected_action;
     } else {
         // random select action
@@ -129,7 +129,7 @@ LookAheadSearch::action_ptr_t LookAheadSearch::get_optimal_action() const {
 
         // check
         if(node_info_map[selected_action_node].type!=ACTION) {
-            DEBUG_OUT(0,"Error: Next action node is not of type ACTION");
+            DEBUG_ERROR("Next action node is not of type ACTION");
         }
 
         // get action
@@ -210,7 +210,7 @@ void LookAheadSearch::print_tree(const bool& text,
                 right_neighbor[current_node] = idx==current_level_size-1 ? INVALID : get<NODE>((*current_level)[idx+1]);
                 coords[current_node] = Point(3*((double)idx-(double)current_level_size/2), level_counter);
                 if(current_level_type!=node_info_map[current_node].type) {
-                    DEBUG_OUT(0,"Error: Level of mixed type");
+                    DEBUG_ERROR("Level of mixed type");
                 }
                 node_vector_t optimal_action_node_vector;
                 if(current_level_type==OBSERVATION) {
@@ -231,7 +231,7 @@ void LookAheadSearch::print_tree(const bool& text,
                     }
                     double next_level_node_weight = current_weight*weight_factor;
                     if(next_level_node_weight>1 || next_level_node_weight<0) {
-                        DEBUG_OUT(0,"Error: Invalid node weight (" << next_level_node_weight << ")");
+                        DEBUG_ERROR("Invalid node weight (" << next_level_node_weight << ")");
                     }
                     node_color_weights[next_level_node] = next_level_node_weight;
                     next_level->push_back(make_tuple(next_level_node, next_level_node_weight));
@@ -430,7 +430,7 @@ void LookAheadSearch::print_tree_statistics() {
         for(idx_t idx=0; idx<(idx_t)current_level->size(); ++idx) {
             ++total_node_counter;
             if(current_level_type!=node_info_map[(*current_level)[idx]].type) {
-                DEBUG_OUT(0,"Error: Level of mixed type");
+                DEBUG_ERROR("Level of mixed type");
             }
             for(graph_t::OutArcIt out_arc(graph,(*current_level)[idx]); out_arc!=INVALID; ++out_arc) {
                 ++total_arc_counter;
@@ -448,7 +448,7 @@ void LookAheadSearch::print_tree_statistics() {
 
     // error check
     if(total_node_counter!=number_of_nodes) {
-        DEBUG_OUT(0,"Error: Total node counter (" << total_node_counter << ") is different from number of nodes " << number_of_nodes << " (correcting)");
+        DEBUG_ERROR("Total node counter (" << total_node_counter << ") is different from number of nodes " << number_of_nodes << " (correcting)");
         number_of_nodes = total_node_counter;
     }
 
@@ -551,7 +551,7 @@ LookAheadSearch::node_t LookAheadSearch::select_next_action_node(node_t observat
         break;
     }
     default:
-        DEBUG_OUT(0,"Error: Action selection type not implemented.");
+        DEBUG_ERROR("Action selection type not implemented.");
         break;
     }
 
@@ -565,7 +565,7 @@ LookAheadSearch::node_t LookAheadSearch::select_next_action_node(node_t observat
 
     // check
     if(node_info_map[selected_action_node].type!=ACTION) {
-        DEBUG_OUT(0,"Error: Next action node is not of type ACTION");
+        DEBUG_ERROR("Next action node is not of type ACTION");
     }
 
     DEBUG_OUT(4,"    Next action:");
@@ -599,7 +599,7 @@ LookAheadSearch::node_t LookAheadSearch::select_next_observation_node(node_t act
         break;
     }
     default:
-        DEBUG_OUT(0,"Error: Observation selection type not implemented.");
+        DEBUG_ERROR("Observation selection type not implemented.");
         break;
     }
 
@@ -613,7 +613,7 @@ LookAheadSearch::node_t LookAheadSearch::select_next_observation_node(node_t act
 
     // check
     if(node_info_map[selected_observation_node].type!=OBSERVATION) {
-        DEBUG_OUT(0,"Error: Next observation node is not of type OBSERVATION");
+        DEBUG_ERROR("Next observation node is not of type OBSERVATION");
     }
     DEBUG_OUT(4,"    Next observation:");
     if(DEBUG_LEVEL>=4) {
@@ -625,7 +625,7 @@ LookAheadSearch::node_t LookAheadSearch::select_next_observation_node(node_t act
 LookAheadSearch::node_vector_t LookAheadSearch::optimal_action_nodes(const node_t& observation_node) const {
     // check
     if(node_info_map[observation_node].type!=OBSERVATION) {
-        DEBUG_OUT(0,"Error: Given observation node is not of type OBSERVATION");
+        DEBUG_ERROR("Given observation node is not of type OBSERVATION");
     }
 
     // determine optimal actions
@@ -670,7 +670,7 @@ LookAheadSearch::node_vector_t LookAheadSearch::optimal_action_nodes(const node_
         break;
     }
     default:
-        DEBUG_OUT(0,"Error: Optimal action selection type not implemented");
+        DEBUG_ERROR("Optimal action selection type not implemented");
         break;
     }
 
@@ -693,7 +693,7 @@ LookAheadSearch::node_t LookAheadSearch::update_action_node(node_t action_node) 
             node_info_map[action_node].lower_value_bound += observation_prob * (transition_reward->get_value() + discount*node_info_map[observation_node].lower_value_bound);
         }
         if(fabs(prob_sum-1)>1e-10) {
-            DEBUG_OUT(0,"Error: Unnormalized observation transition probabilities (p_sum=" << prob_sum << ")");
+            DEBUG_ERROR("Unnormalized observation transition probabilities (p_sum=" << prob_sum << ")");
         }
         break;
     }
@@ -714,14 +714,14 @@ LookAheadSearch::node_t LookAheadSearch::update_action_node(node_t action_node) 
             }
         }
         if(max_upper==-DBL_MAX||min_lower==DBL_MAX) {
-            DEBUG_OUT(0,"Error: No outgoing observation node");
+            DEBUG_ERROR("No outgoing observation node");
         }
         node_info_map[action_node].upper_value_bound = max_upper;
         node_info_map[action_node].lower_value_bound = min_lower;
         break;
     }
     default:
-        DEBUG_OUT(0,"Error: Action back-propagation type not implemented.");
+        DEBUG_ERROR("Action back-propagation type not implemented.");
         break;
     }
 
@@ -734,13 +734,13 @@ LookAheadSearch::node_t LookAheadSearch::update_action_node(node_t action_node) 
     graph_t::InArcIt in_arc(graph,action_node);
     node_t parent_observation_node = graph.source(in_arc);
     if(in_arc==INVALID) {
-        DEBUG_OUT(0,"Error: No parent observation node for this action");
+        DEBUG_ERROR("No parent observation node for this action");
     }
     if(++in_arc!=INVALID) {
-        DEBUG_OUT(0,"Error: More than one parent observation node for this action");
+        DEBUG_ERROR("More than one parent observation node for this action");
     }
     if(node_info_map[parent_observation_node].type!=OBSERVATION) {
-        DEBUG_OUT(0,"Error: Parent observation node is not of type OBSERVATION");
+        DEBUG_ERROR("Parent observation node is not of type OBSERVATION");
     }
     DEBUG_OUT(4,"    Parent observation node:");
     if(DEBUG_LEVEL>=4) {
@@ -792,7 +792,7 @@ LookAheadSearch::node_t LookAheadSearch::update_observation_node(node_t observat
         break;
     }
     default:
-        DEBUG_OUT(0,"Error: Observation back-propagation type not implemented.");
+        DEBUG_ERROR("Observation back-propagation type not implemented.");
         break;
     }
 
@@ -806,13 +806,13 @@ LookAheadSearch::node_t LookAheadSearch::update_observation_node(node_t observat
         graph_t::InArcIt in_arc(graph,observation_node);
         node_t parent_action_node = graph.source(in_arc);
         if(in_arc==INVALID) {
-            DEBUG_OUT(0,"Error: No parent action node for this observation");
+            DEBUG_ERROR("No parent action node for this observation");
         }
         if(++in_arc!=INVALID) {
-            DEBUG_OUT(0,"Error: More than one parent action node for this observation");
+            DEBUG_ERROR("More than one parent action node for this observation");
         }
         if(node_info_map[parent_action_node].type!=ACTION) {
-            DEBUG_OUT(0,"Error: Parent action node is not of type ACTION");
+            DEBUG_ERROR("Parent action node is not of type ACTION");
         }
         DEBUG_OUT(4,"    Parent action node:");
         if(DEBUG_LEVEL>=4) {
@@ -903,7 +903,7 @@ void LookAheadSearch::print_node(node_t node) const {
         DEBUG_OUT(0, "    expansion: FULLY_EXPANDED");
         break;
     default:
-        DEBUG_OUT(0,"Error: Unknown expansion");
+        DEBUG_ERROR("Unknown expansion");
         break;
     }
     DEBUG_OUT(0, "    upper_bound: " << node_info_map[node].upper_value_bound );

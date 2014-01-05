@@ -63,7 +63,7 @@ Instance::~Instance() {
         current_instance->next_instance = nullptr;
         current_instance->previous_instance = nullptr;
         if(current_instance->container!=this->container) {
-            DEBUG_OUT(0,"Error: Instance to delete has different container assigned, which will not be deleted.");
+            DEBUG_ERROR("Instance to delete has different container assigned, which will not be deleted.");
         }
         current_instance->container = nullptr;
         current_instance=next;
@@ -77,7 +77,7 @@ Instance::~Instance() {
         current_instance->next_instance = nullptr;
         current_instance->previous_instance = nullptr;
         if(current_instance->container!=this->container) {
-            DEBUG_OUT(0,"Error: Instance to delete has different container assigned, which will not be deleted.");
+            DEBUG_ERROR("Instance to delete has different container assigned, which will not be deleted.");
         }
         current_instance->container = nullptr;
         current_instance=previous;
@@ -270,7 +270,7 @@ void Instance::unset_container() {
         container_t * tmp_container = container; // remember
         unset_container_elements();
         if(container!=nullptr || container_idx!=-1) {
-            DEBUG_OUT(0,"Error: Container was not correctly unset (ptr=" << container << ", idx=" << container_idx << ")");
+            DEBUG_ERROR("Container was not correctly unset (ptr=" << container << ", idx=" << container_idx << ")");
         }
         delete tmp_container;
     }
@@ -609,9 +609,9 @@ void Instance::unset_container_elements() {
         for(idx_t idx=0; idx<(idx_t)container->size(); ++idx) {
             Instance * ins = (*container)[idx];
             if(ins->container!=container) {
-                DEBUG_OUT(0,"Error: Container of instance does not point to this container");
+                DEBUG_ERROR("Container of instance does not point to this container");
             } else if(ins->container_idx!=idx) {
-                DEBUG_OUT(0,"Error: Instance in container has unmatching index");
+                DEBUG_ERROR("Instance in container has unmatching index");
             } else if(ins!=this) {
                 ins->container = nullptr;
                 ins->container_idx = -1;
@@ -637,9 +637,9 @@ void Instance::fill_container(Instance * ins) {
     // fill container
     do {
         if(ins->container!=nullptr && ins->container!=used_container) {
-            DEBUG_OUT(0,"Error: Instance already has a different container assigned");
+            DEBUG_ERROR("Instance already has a different container assigned");
         } else if(ins->container==nullptr && ins->container_idx!=-1) {
-            DEBUG_OUT(0,"Error: Instance has no container assigned but container index other than -1");
+            DEBUG_ERROR("Instance has no container assigned but container index other than -1");
         } else {
             DEBUG_OUT(2,"Setting " << (*ins) );
             ins->container = used_container;

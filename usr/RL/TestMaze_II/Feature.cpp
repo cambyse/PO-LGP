@@ -19,7 +19,7 @@ Feature::Feature():
 Feature::~Feature() {}
 
 Feature::feature_return_value Feature::evaluate(const_instanceIt_t) const {
-    DEBUG_OUT(0,"Error: Evaluating abstract type Feature");
+    DEBUG_ERROR("Evaluating abstract type Feature");
     return return_function(0);
 }
 
@@ -37,7 +37,7 @@ Feature::feature_return_value Feature::evaluate(const_instanceIt_t insIt, action
 }
 
 Feature::feature_return_value Feature::evaluate(const look_up_map_t&) const {
-    DEBUG_OUT(0,"Error: Evaluating abstract type Feature");
+    DEBUG_ERROR("Evaluating abstract type Feature");
     return return_function(0);
 }
 
@@ -346,7 +346,7 @@ AndFeature::feature_return_value AndFeature::evaluate(const look_up_map_t& look_
     for(auto feature_iterator : subfeatures) {
         auto it = look_up_map.find(feature_iterator);
         DEBUG_IF(it==look_up_map.end()) {
-            DEBUG_OUT(0,"Error: Subfeature not in look-up map");
+            DEBUG_ERROR("Subfeature not in look-up map");
             return return_function(0);
         }
         prod *= it->second;

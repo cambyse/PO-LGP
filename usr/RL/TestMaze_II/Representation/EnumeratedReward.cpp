@@ -36,7 +36,7 @@ unsigned long EnumeratedReward::index() const {
             return r_idx;
         }
     }
-    DEBUG_OUT(0,"Error: Could not find reward index");
+    DEBUG_ERROR("Could not find reward index");
     return 0;
 }
 

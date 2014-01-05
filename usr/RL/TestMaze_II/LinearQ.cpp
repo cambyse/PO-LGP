@@ -272,7 +272,7 @@ double LinearQ::optimize_TD_ridge(const double& reg) {
     DEBUG_OUT(1,"    Solving system...");
     bool solved = solve(w, L, rho);
     if(!solved) {
-        DEBUG_OUT(0,"Error: Could not solve equations");
+        DEBUG_ERROR("Could not solve equations");
         return 0;
     }
 
@@ -779,7 +779,7 @@ void LinearQ::construct_candidate_features(const int& n) {
     // construct augmenting features
     idx_t basis_n = basis_features.size();
     if(basis_n==0) {
-        DEBUG_OUT(0,"Error: Cannot construct features, no basis features available");
+        DEBUG_ERROR("Cannot construct features, no basis features available");
         return;
     }
     vector<int> aug_idx(n,0);
