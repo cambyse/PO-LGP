@@ -1,8 +1,7 @@
 #ifndef MAZE_H_
 #define MAZE_H_
 
-#include "../VisualEnvironment.h"
-#include "../PredictiveEnvironment.h"
+#include "../GUIEnvironment.h"
 
 #include <QGraphicsSvgItem>
 #include <map>
@@ -20,7 +19,7 @@
 
 #include "../debug.h"
 
-class Maze: public VisualEnvironment, public PredictiveEnvironment {
+class Maze: public GUIEnvironment {
 public:
 
     USE_CONFIG_TYPEDEFS;
@@ -80,7 +79,7 @@ public:
     /** \brief Set the current state of the agent. */
     void set_current_observation(const observation_ptr_t&);
 
-    virtual const std::vector<QString> get_maze_list() const;
+    static const std::vector<QString> get_maze_list();
 
     /** \brief Get a string describing all rewards. */
     virtual std::string get_rewards();
@@ -92,6 +91,10 @@ public:
     virtual std::string get_doors();
 
     virtual void print_transition(action_ptr_t& a, observation_ptr_t& o, reward_ptr_t& r) const;
+
+    /** \brief Checks if all observations and states used in the current maze
+     * definition are valid. */
+    bool check_maze_definition() const;
 
 private:
 
@@ -125,7 +128,7 @@ private:
         REWARD_ACTIVATION_STATE, ///< Index of state where the reward is activated.
         REWARD_RECEIVE_STATE,    ///< Index of state where the reward is received.
         REWARD_TIME_DELAY,       ///< Index of time delay between activation and reception.
-        REWARD_VALUE,            ///< Index of value of reward.
+        REWARD_VALUE,            ///< Value of reward.
         REWARD_ACTIVATION,       ///< Index of activation type.
         REWARD_R,                ///< Index of red component in [0,255] for displaying the reward.
         REWARD_G,                ///< Index of green component in [0,255] for displaying the reward.

@@ -1,18 +1,13 @@
 #ifndef PREDICTIVEENVIRONMENT_H_
 #define PREDICTIVEENVIRONMENT_H_
 
-#include "Config.h"
-#include "AbstractAction.h"
-#include "AbstractObservation.h"
-#include "AbstractReward.h"
-#include "Instance.h"
 #include "Feature.h"
 #include "FeatureLearner.h"
+#include "Predictor.h"
 
-class PredictiveEnvironment {
+class PredictiveEnvironment: public Predictor {
 public:
 
-    USE_CONFIG_TYPEDEFS;
     typedef Feature::const_feature_ptr_t f_ptr_t;
 
     PredictiveEnvironment();
@@ -26,7 +21,7 @@ public:
     virtual void perform_transition(const action_ptr_t & a, observation_ptr_t & o, reward_ptr_t & r );
 
     /** \brief Returns the transition probability. */
-    virtual probability_t get_prediction(const instance_t*, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&) const = 0;
+    virtual probability_t get_prediction(const instance_t*, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&) const override = 0;
 
     virtual void get_features(std::vector<f_ptr_t> & basis_features, FeatureLearner::LEARNER_TYPE type) const = 0;
 

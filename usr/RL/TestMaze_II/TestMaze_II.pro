@@ -32,6 +32,11 @@ HEADERS += \
     \
     PredictiveEnvironment.h \
     VisualEnvironment.h \
+    GUIEnvironment.h \
+    HistoryObserver.h \
+    FeatureLearner.h \
+    Predictor.h \
+    \
     Maze/Maze.h \
     Maze/MazeAction.h \
     Maze/AugmentedMazeAction.h \
@@ -40,8 +45,6 @@ HEADERS += \
     \
     LookAheadSearch.h \
     \
-    HistoryObserver.h \
-    FeatureLearner.h \
     KMarkovCRF.h \
     UTree.h \
     LinearQ.h \
@@ -74,6 +77,9 @@ SOURCES += \
     \
     PredictiveEnvironment.cpp \
     VisualEnvironment.cpp \
+    HistoryObserver.cpp \
+    FeatureLearner.cpp \
+    \
     Maze/Maze.cpp \
     Maze/MazeAction.cpp \
     Maze/AugmentedMazeAction.cpp \
@@ -81,8 +87,6 @@ SOURCES += \
     \
     LookAheadSearch.cpp \
     \
-    HistoryObserver.cpp \
-    FeatureLearner.cpp \
     KMarkovCRF.cpp \
     UTree.cpp \
     LinearQ.cpp \

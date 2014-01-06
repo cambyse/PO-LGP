@@ -10,12 +10,7 @@
 #include "Config.h"
 #include "util/ProgressBar.h"
 
-#ifdef BATCH_MODE_QUIET
-#define DEBUG_LEVEL 0
-#else
-#define DEBUG_LEVEL 1
-#endif
-#include "debug.h"
+#include "Predictor.h"
 
 class LookAheadSearch {
 
@@ -72,24 +67,21 @@ public:
     void clear_tree();
 
     /*! \brief Build a search tree from the root observation. */
-    template < class Model >
     void build_tree(
             const instance_t * root,
-            const Model& model,
+            const Predictor& environment,
             const size_t& max_node_counter = 0
     );
 
     /*! \brief Expand current tree by expanding one leaf
      * node and back-propagating changes. Return whether
      * tree needs further expansion. */
-    template < class Model >
-    bool expand_tree(const Model&);
+    bool expand_tree(const Predictor&);
 
     /*! \brief Repeatedly expand tree until either the optimal action is
      *  unambiguous or the maximum tree size is reached. */
-    template < class Model >
     void fully_expand_tree(
-            const Model& model,
+            const Predictor& environment,
             const size_t& max_node_counter = 0
     );
 
@@ -98,17 +90,15 @@ public:
 
     /*! \brief Returns the predicted transition probability for given action to
      *  given observation and reward. */
-    template < class Model >
     probability_t get_predicted_transition_probability(const action_ptr_t&,
                                                        const observation_ptr_t&,
                                                        const reward_ptr_t& ,
-                                                       const Model& model
+                                                       const Predictor& environment
         ) const;
 
     /*! \brief Prune obsolete branches after performing action a into observation s
      *  and reset root node. */
-    template < class Model >
-    void prune_tree(const action_ptr_t& a, const instance_t * new_root_instance, const Model& model);
+    void prune_tree(const action_ptr_t& a, const instance_t * new_root_instance, const Predictor& environment);
 
     /*! \brief Set the discount rate used for computing observation and action values. */
     void set_discount(const double& d) { discount = d; }
@@ -241,18 +231,16 @@ protected:
     /*! \brief Select the next observation node (possibly a leaf) for finding the leaf that is to be expanded. */
     node_t select_next_observation_node(node_t action_node);
 
-    /*! \brief Expand the leaf node given a predictive model. */
-    template < class Model >
+    /*! \brief Expand the leaf node given a predictive environment. */
     void expand_leaf_node(
             node_t observation_node,
-            const Model& model
+            const Predictor& environment
     );
 
-    /*! \brief Expand the action node given a predictive model. */
-    template < class Model >
+    /*! \brief Expand the action node given a predictive environment. */
     void expand_action_node(
             node_t action_node,
-            const Model& model
+            const Predictor& environment
     );
 
     /** \brief Select the optimal action from a given observation node. */
@@ -287,455 +275,5 @@ protected:
     double node_energy(node_t node, const graph_t::NodeMap<Point>& coords) const;
 
 };
-
-//=================================================================//
-//                    Function Definitions                         //
-//=================================================================//
-
-template < class Model >
-void LookAheadSearch::build_tree(
-        const instance_t * root_instance,
-        const Model& model,
-        const size_t& max_node_counter
-) {
-
-    DEBUG_OUT(2,"Building new search tree");
-
-    // clear tree
-    clear_tree();
-
-    // add root node
-    root_node = graph.addNode();
-    ++number_of_nodes;
-    node_info_map[root_node] = NodeInfo(
-            OBSERVATION,
-            NOT_EXPANDED,
-            instance_t::create(root_instance->action, root_instance->observation, root_instance->reward, root_instance->const_it()-1),
-            action_ptr_t(),
-            get_upper_value_bound(),
-            get_lower_value_bound()
-    );
-
-    expand_leaf_node(root_node,model);
-    update_observation_node(root_node);
-
-    // fully expand tree
-    fully_expand_tree(model, max_node_counter);
-}
-
-template < class Model >
-bool LookAheadSearch::expand_tree(const Model& model) {
-
-    node_t current_observation_node = root_node;
-    node_t current_action_node = lemon::INVALID;
-
-    // find leaf
-    while(node_info_map[current_observation_node].expansion==FULLY_EXPANDED) {
-        current_action_node = select_next_action_node(current_observation_node);
-        current_observation_node = select_next_observation_node(current_action_node);
-    }
-
-    // expand leaf
-    expand_leaf_node(current_observation_node, model);
-
-    // back propagation
-    while(current_observation_node!=root_node) {
-        current_action_node = update_observation_node(current_observation_node);
-        current_observation_node = update_action_node(current_action_node);
-    }
-    update_observation_node(root_node);
-
-    return tree_needs_further_expansion();
-}
-
-template < class Model >
-void LookAheadSearch::fully_expand_tree(
-        const Model& model,
-        const size_t& max_node_counter
-) {
-
-    // fully expand tree
-    if(DEBUG_LEVEL>=1) {
-        ProgressBar::init("Building Tree: ");
-    }
-    if(tree_needs_further_expansion()) {
-        while(expand_tree(model)) {
-            if(max_node_counter>0 && number_of_nodes>max_node_counter) {
-                if(DEBUG_LEVEL>0) {
-                    std::cout << "Abort: Tree has more than " << max_node_counter << " nodes (" << number_of_nodes << ")" << std::endl;
-                }
-                break;
-            } else {
-                if(DEBUG_LEVEL>=1) {
-                    ProgressBar::print(number_of_nodes, max_node_counter);
-                }
-            }
-        }
-    }
-    if(DEBUG_LEVEL>=1) {
-        ProgressBar::terminate();
-    }
-
-    if(DEBUG_LEVEL>=4) {
-        print_tree(false,true);
-    }
-}
-
-template < class Model >
-LookAheadSearch::probability_t LookAheadSearch::get_predicted_transition_probability(const action_ptr_t& action,
-                                                                                     const observation_ptr_t& observation,
-                                                                                     const reward_ptr_t& reward,
-                                                                                     const Model& model
-    ) const {
-
-    DEBUG_OUT(2,"Get predicted transition probability for (" << action << "," << observation << "," << reward << ")" );
-
-    // find action node
-    node_t action_node = lemon::INVALID;
-    for(graph_t::OutArcIt out_arc(graph,root_node); out_arc!=lemon::INVALID; ++out_arc) {
-        action_node = graph.target(out_arc);
-        if(node_info_map[action_node].action==action) {
-            break;
-        }
-    }
-    if(action_node==lemon::INVALID) {
-        DEBUG_ERROR("Action " << action << " not available from root node");
-        return 0;
-    }
-
-    // find observation node
-    node_t observation_node = lemon::INVALID;
-    arc_t observation_node_in_arc = lemon::INVALID;
-    for(graph_t::OutArcIt out_arc(graph,action_node); out_arc!=lemon::INVALID; ++out_arc) {
-        node_t tmp_observation_node = graph.target(out_arc);
-        if(node_info_map[tmp_observation_node].instance->observation==observation &&
-           node_info_map[tmp_observation_node].instance->reward==reward) {
-            observation_node = tmp_observation_node;
-            observation_node_in_arc = out_arc;
-            if(DEBUG_LEVEL==0) {
-                break;
-            }
-        }
-        DEBUG_OUT(2,"        Found observation " << node_info_map[tmp_observation_node].instance->observation <<
-                  ", reward " << node_info_map[tmp_observation_node].instance->reward <<
-                  ", prob " << arc_info_map[out_arc].prob);
-    }
-    if(observation_node==lemon::INVALID) {
-        probability_t prob = model.get_prediction(node_info_map[root_node].instance, action, observation, reward);
-        DEBUG_ERROR("Node with observation " << observation << ", reward " << reward << " could not be found (Maze probability: " << prob << ")" );
-        return 0;
-    }
-
-    // return transition probability
-    return arc_info_map[observation_node_in_arc].prob;
-}
-
-template < class Model >
-void LookAheadSearch::prune_tree(const action_ptr_t& a, const instance_t * new_root_instance, const Model& model) {
-
-    // get undirected graph for using standard algorithms
-    typedef lemon::Undirector<graph_t> ugraph_t;
-    ugraph_t ugraph(graph);
-
-    // some variables
-    std::vector<node_t> nodes_to_delete;
-    node_t new_root_node;
-
-    DEBUG_OUT(2,"Pruning tree...");
-
-    // identify action node
-    graph_t::OutArcIt arc_to_action;
-    node_t action_node;
-    for(arc_to_action = graph_t::OutArcIt(graph,root_node); arc_to_action!=lemon::INVALID; ++arc_to_action) {
-        action_node = graph.target(arc_to_action);
-        if(node_info_map[action_node].action==a) {
-            DEBUG_OUT(2,"    Found chosen action node (" << graph.id(action_node) << ")");
-            break;
-        }
-    }
-    if(arc_to_action==lemon::INVALID) {
-        DEBUG_ERROR("Could not identify choosen action");
-        clear_tree();
-        root_node = graph.addNode();
-        ++number_of_nodes;
-        node_info_map[root_node] = NodeInfo(
-            OBSERVATION,
-            NOT_EXPANDED,
-            instance_t::create(new_root_instance->action, new_root_instance->observation, new_root_instance->reward, new_root_instance->const_it()-1),
-            action_ptr_t(),
-            get_upper_value_bound(),
-            get_lower_value_bound()
-            );
-        return;
-    }
-
-    // find new root node
-    observation_ptr_t observation = new_root_instance->observation;
-    reward_ptr_t reward = new_root_instance->reward;
-    graph_t::OutArcIt arc_to_observation;
-    for(arc_to_observation = graph_t::OutArcIt(graph,action_node); arc_to_observation!=lemon::INVALID; ++arc_to_observation) {
-        node_t observation_node = graph.target(arc_to_observation);
-        if(node_info_map[observation_node].instance->observation==observation &&
-           node_info_map[observation_node].instance->reward==reward) {
-            DEBUG_OUT(2,"    Found new root node (" << graph.id(observation_node) << ")");
-            new_root_node=observation_node;
-            break;
-        }
-    }
-    if(arc_to_observation==lemon::INVALID) {
-        DEBUG_ERROR("Could not identify new root node");
-        if(DEBUG_LEVEL>0) {
-            DEBUG_OUT(0,"    Need observation " << observation << ", reward " << reward);
-            for(arc_to_observation = graph_t::OutArcIt(graph,action_node); arc_to_observation!=lemon::INVALID; ++arc_to_observation) {
-                node_t observation_node = graph.target(arc_to_observation);
-                DEBUG_OUT(0,"        Found observation " << node_info_map[observation_node].instance->observation <<
-                          ", reward " << node_info_map[observation_node].instance->reward );
-            }
-            DEBUG_OUT(0,"    Old root instance " );
-            for( const_instanceIt_t old_instance(node_info_map[root_node].instance); old_instance!=util::INVALID; --old_instance) {
-                DEBUG_OUT(0,"        " << *old_instance );
-            }
-            DEBUG_OUT(0,"    New root instance " );
-            for( const_instanceIt_t new_instance(new_root_instance); new_instance!=util::INVALID; --new_instance) {
-                DEBUG_OUT(0,"        " << *new_instance );
-            }
-            // print_tree(false,true,"pruning_tree_error.eps");
-            // clear_tree();
-            // root_node = graph.addNode();
-            // ++number_of_nodes;
-            // node_info_map[root_node] = NodeInfo(
-            //     OBSERVATION,
-            //     NOT_EXPANDED,
-            //     instance_t::create(new_root_instance->action, new_root_instance->observation, new_root_instance->reward, new_root_instance->const_it()-1),
-            //     action_ptr_t::NULL_ACTION,
-            //     get_upper_value_bound(),
-            //     get_lower_value_bound()
-            //     );
-        }
-        return;
-    }
-
-    // remember successor observations and other data for debugging purposes
-    std::vector<std::tuple<node_t,ArcInfo> > successor_observations;
-    NodeInfo action_node_info;
-    ArcInfo arc_to_action_info;
-    for(graph_t::OutArcIt arc_to_observation(graph,action_node); arc_to_observation!=lemon::INVALID; ++arc_to_observation) {
-        node_t successor = graph.target(arc_to_observation);
-        successor_observations.push_back(std::make_tuple(successor,arc_info_map[arc_to_observation]));
-    }
-    action_node_info = node_info_map[action_node];
-    arc_to_action_info = arc_info_map[graph_t::InArcIt(graph,action_node)];
-
-    // remove selected action node from tree to split into two components (we
-    // don't need to worry about arcs since they are erased along with the
-    // corresponding nodes)
-    graph.erase(action_node);
-
-    // identify and remember nodes that are not in the same component as the new
-    // root node
-    node_color_map_t pruning_map(graph);
-    ugraph_t::NodeMap<int> component_map(ugraph);
-    int component_n = lemon::connectedComponents(ugraph,component_map);
-    if(component_n<2) {
-        DEBUG_ERROR("Search tree was not split by removing chosen action node");
-        return;
-    } else {
-        DEBUG_OUT(2,"    " << component_n << " connected components");
-    }
-    int main_component = component_map[new_root_node];
-    DEBUG_OUT(2,"    main component: " << main_component);
-    for(ugraph_t::NodeIt node(ugraph); node!=lemon::INVALID; ++node) {
-        if(component_map[node]!=main_component) {
-            nodes_to_delete.push_back(node); // remember
-            DEBUG_OUT(3,"    node " << graph.id(node) << " NOT in main component");
-            pruning_map[node] = lemon::Color(1,0.5,0.5);
-        } else {
-            DEBUG_OUT(3,"    node " << graph.id(node) << " IS in main component");
-            pruning_map[node] = lemon::Color(0.5,1,0.5);
-        }
-    }
-
-    // print the pruning tree to a file
-    if(DEBUG_LEVEL>2) {
-        node_t tmp_action_node = graph.addNode();
-        arc_t tmp_arc = graph.addArc(root_node,tmp_action_node);
-        node_info_map[tmp_action_node] = action_node_info;
-        arc_info_map[tmp_arc] = arc_to_action_info;
-        pruning_map[tmp_action_node] = lemon::Color(0.5,0.5,1);
-        for( auto successor : successor_observations ) {
-            arc_t arc = graph.addArc(tmp_action_node, std::get<0>(successor));
-            arc_info_map[arc] = std::get<1>(successor);
-        }
-        print_tree(false,true,"pruning_tree.eps",&pruning_map);
-        graph.erase(tmp_action_node);
-    }
-
-    // erase nodes that are not in the main component
-    for(node_t node : nodes_to_delete) {
-        if(node_info_map[node].type==OBSERVATION) {
-            delete node_info_map[node].instance;
-        }
-        graph.erase(node);
-    }
-
-    // update root node
-    if(DEBUG_LEVEL>=1) {
-        // sanity check
-        instance_t * ins = node_info_map[new_root_node].instance;
-        if(new_root_instance->action!=ins->action ||
-           new_root_instance->observation!=ins->observation ||
-           new_root_instance->reward!=ins->reward) {
-            DEBUG_ERROR("Old and new instance of new root node do not match");
-            DEBUG_OUT(0,"    old: " << *ins << ", new: " << *new_root_instance);
-        }
-    }
-    root_node = new_root_node;
-    instance_t * new_root_instance_copy = instance_t::create(new_root_instance->action, new_root_instance->observation, new_root_instance->reward, new_root_instance->const_it()-1);
-    *(node_info_map[root_node].instance) = *new_root_instance_copy;
-    delete new_root_instance_copy;
-
-    // update number of nodes
-    DEBUG_OUT(3,"    Updating number of nodes...");
-    number_of_nodes = 0;
-    for(graph_t::NodeIt node(graph); node!=lemon::INVALID; ++node) {
-        ++number_of_nodes;
-    }
-    DEBUG_OUT(3,"        " << number_of_nodes << " nodes");
-
-    // make sure root node is expanded
-    switch(node_info_map[root_node].expansion) {
-    case FULLY_EXPANDED:
-        // everythin fine
-        break;
-    case NOT_EXPANDED:
-        DEBUG_OUT(1,"Expanding root node");
-        expand_leaf_node(root_node, model);
-        break;
-    default:
-        DEBUG_DEAD_LINE;
-    }
-
-    // check graph structure
-    if(!lemon::tree(ugraph)) {
-        DEBUG_ERROR("Search graph is not a tree");
-    }
-
-    DEBUG_OUT(2,"DONE");
-}
-
-template < class Model >
-void LookAheadSearch::expand_leaf_node(
-        node_t observation_node,
-        const Model& model
-) {
-
-    DEBUG_OUT(3,"Expanding leaf node");
-    if(DEBUG_LEVEL>=3) {
-        print_node(observation_node);
-    }
-
-    if(node_info_map[observation_node].type!=OBSERVATION) {
-        DEBUG_ERROR("trying to expand non-observation node as observation node");
-    }
-    if(node_info_map[observation_node].expansion!=NOT_EXPANDED) {
-        DEBUG_ERROR("trying to expand observation node with expansion other than NOT_EXPANDED");
-    }
-
-    instance_t * instance_from = node_info_map[observation_node].instance;
-
-    // create action nodes
-    for(action_ptr_t action : action_space) {
-        node_t action_node = graph.addNode();
-        ++number_of_nodes;
-        node_info_map[action_node] = NodeInfo(
-                ACTION,
-                NOT_EXPANDED,
-                instance_from, // use instance from parent observation node
-                action,
-                get_upper_value_bound(),
-                get_lower_value_bound()
-        );
-        arc_t observation_to_action_arc = graph.addArc(observation_node,action_node);
-        arc_info_map[observation_to_action_arc] = ArcInfo(0,0); // never used
-
-        DEBUG_OUT(4,"    Added action node:");
-        if(DEBUG_LEVEL>=4) {
-            print_node(action_node);
-        }
-    }
-
-    // expand and update all newly added action nodes
-    for(graph_t::OutArcIt out_arc(graph,observation_node); out_arc!=lemon::INVALID; ++out_arc) {
-        node_t action_node = graph.target(out_arc);
-        expand_action_node(action_node, model);
-        update_action_node(action_node);
-    }
-
-    // set to fully expanded
-    node_info_map[observation_node].expansion = FULLY_EXPANDED;
-}
-
-template < class Model >
-void LookAheadSearch::expand_action_node(
-        node_t action_node,
-        const Model& model
-) {
-
-    DEBUG_OUT(3,"Expanding action node");
-    if(DEBUG_LEVEL>=4) {
-        print_node(action_node);
-    }
-
-    if(node_info_map[action_node].type!=ACTION) {
-        DEBUG_ERROR("trying to expand non-action node as action node");
-    }
-    if(node_info_map[action_node].expansion!=NOT_EXPANDED) {
-        DEBUG_ERROR("trying to expand action node with expansion other than NOT_EXPANDED");
-    }
-
-    const instance_t * instance_from = node_info_map[action_node].instance;
-    action_ptr_t action = node_info_map[action_node].action;
-
-    // add all target observations (MDP-observation-reward combinations)
-    for(observation_ptr_t new_observation : observation_space) {
-
-        node_t new_observation_node = lemon::INVALID;
-
-        for(reward_ptr_t new_reward : reward_space) {
-
-            probability_t prob = model.get_prediction(instance_from, action, new_observation, new_reward);
-            if(prob>0) {
-                new_observation_node = graph.addNode();
-                ++number_of_nodes;
-                node_info_map[new_observation_node] = NodeInfo(
-                        OBSERVATION,
-                        NOT_EXPANDED,
-                        instance_t::create(action, new_observation, new_reward, instance_from, nullptr),
-                        action_ptr_t(), // not defined for observation nodes
-                        get_upper_value_bound(),
-                        get_lower_value_bound()
-                );
-                arc_t action_to_observation_arc = graph.addArc(action_node,new_observation_node);
-                arc_info_map[action_to_observation_arc].prob = prob;
-                arc_info_map[action_to_observation_arc].transition_reward = new_reward;
-            }
-        }
-
-        if(new_observation_node!=lemon::INVALID){
-            DEBUG_OUT(4,"    Added observation node");
-            if(DEBUG_LEVEL>=4) {
-                print_node(new_observation_node);
-            }
-        }
-    }
-
-    if(graph_t::OutArcIt(graph,action_node)==lemon::INVALID) {
-        DEBUG_ERROR("No possible observation transition.")
-    }
-
-    node_info_map[action_node].expansion = FULLY_EXPANDED;
-}
-
-#include "debug_exclude.h"
 
 #endif /* LOOKAHEADSEARCH_H_ */

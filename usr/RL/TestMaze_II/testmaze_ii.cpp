@@ -6,6 +6,8 @@
 
 #include "SmoothingKernelSigmoid.h"
 
+#include "Maze/Maze.h"
+
 #include <float.h>  // for DBL_MAX
 #include <vector>
 #include <map>
@@ -36,7 +38,7 @@ using util::arg_string;
 TestMaze_II::TestMaze_II(QWidget *parent):
     QWidget(parent),
     planner_type(OPTIMAL_PLANNER),
-    maze(0.0),
+    environment(nullptr),
     current_instance(nullptr),
     record(false), plot(false), start_new_episode(false), search_tree_invalid(false), save_png_on_transition(false),
     png_counter(0),
@@ -45,6 +47,7 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     history_position(0),
     history_file("console_history.txt"),
     discount(0.7),
+    epsilon(0.0),
     l1_factor(0),
     utree(discount),
     linQ(discount),
@@ -89,8 +92,11 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     action_timer = new QTimer(this);
     connect(action_timer, SIGNAL(timeout()), this, SLOT(choose_action()));
 
+    // select environment
+    environment = new Maze(epsilon);
+
     // initialize display
-    maze.render_initialize(ui.graphicsView);
+    environment->render_initialize(ui.graphicsView);
 
     // initiate delayed render action
     QTimer::singleShot(0, this, SLOT(render()));
@@ -100,8 +106,8 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     ui.graphicsView->installEventFilter(moveByKeys);
 
     // set maze initial state
-    maze.get_spaces(action_space,observation_space,reward_space);
-    const_instanceIt_t maze_instance = maze.get_current_instance()->const_last();
+    environment->get_spaces(action_space,observation_space,reward_space);
+    const_instanceIt_t maze_instance = environment->get_current_instance()->const_last();
     current_instance = instance_t::create(maze_instance->action,maze_instance->observation,maze_instance->reward,maze_instance-1);
 }
 
@@ -109,6 +115,7 @@ TestMaze_II::~TestMaze_II() {
     delete random_timer;
     delete action_timer;
     delete current_instance;
+    delete environment;
     plot_file.close();
 }
 
@@ -118,11 +125,11 @@ void TestMaze_II::collect_episode(const int& length) {
         action_ptr_t action = action_space->random_element();
         observation_ptr_t observation_to;
         reward_ptr_t reward;
-        maze.perform_transition(action,observation_to,reward);
+        environment->perform_transition(action,observation_to,reward);
         update_current_instance(action,observation_to,reward);
         add_action_observation_reward_tripel(action,observation_to,reward);
     }
-    maze.render_update();
+    environment->render_update();
 }
 
 void TestMaze_II::update_current_instance(action_ptr_t action, observation_ptr_t observation, reward_ptr_t reward, bool invalidate_search_tree) {
@@ -178,9 +185,9 @@ void TestMaze_II::perform_transition(const action_ptr_t& action) {
 }
 
 void TestMaze_II::perform_transition(const action_ptr_t& action, observation_ptr_t& observation_to, reward_ptr_t& reward) {
-    maze.perform_transition(action,observation_to,reward);
+    environment->perform_transition(action,observation_to,reward);
     update_current_instance(action,observation_to,reward);
-    maze.render_update();
+    environment->render_update();
     if(record) {
         add_action_observation_reward_tripel(action,observation_to,reward);
     }
@@ -191,7 +198,7 @@ void TestMaze_II::perform_transition(const action_ptr_t& action, observation_ptr
 }
 
 void TestMaze_II::render() {
-    maze.render_update();
+    environment->render_update();
 }
 
 void TestMaze_II::random_action() {
@@ -211,15 +218,15 @@ void TestMaze_II::choose_action() {
     case OPTIMAL_PLANNER:
         if(clear_seach_tree) {
             look_ahead_search.clear_tree();
-            look_ahead_search.build_tree<Maze>(
+            look_ahead_search.build_tree(
                 current_instance,
-                maze,
+                *environment,
                 max_tree_size
                 );
             search_tree_invalid = false;
         } else {
-            look_ahead_search.fully_expand_tree<Maze>(
-                maze,
+            look_ahead_search.fully_expand_tree(
+                *environment,
                 max_tree_size
                 );
         }
@@ -228,14 +235,14 @@ void TestMaze_II::choose_action() {
     case SPARSE_PLANNER:
         if(clear_seach_tree) {
             look_ahead_search.clear_tree();
-            look_ahead_search.build_tree<KMarkovCRF>(
+            look_ahead_search.build_tree(
                 current_instance,
                 crf,
                 max_tree_size
                 );
             search_tree_invalid = false;
         } else {
-            look_ahead_search.fully_expand_tree<KMarkovCRF>(
+            look_ahead_search.fully_expand_tree(
                 crf,
                 max_tree_size
                 );
@@ -245,14 +252,14 @@ void TestMaze_II::choose_action() {
     case UTREE_PLANNER:
         if(clear_seach_tree) {
             look_ahead_search.clear_tree();
-            look_ahead_search.build_tree<UTree>(
+            look_ahead_search.build_tree(
                 current_instance,
                 utree,
                 max_tree_size
                 );
             search_tree_invalid = false;
         } else {
-            look_ahead_search.fully_expand_tree<UTree>(
+            look_ahead_search.fully_expand_tree(
                 utree,
                 max_tree_size
                 );
@@ -285,9 +292,9 @@ void TestMaze_II::choose_action() {
         }
         // sanity check
         if(DEBUG_LEVEL>=1) {
-            probability_t prob = look_ahead_search.get_predicted_transition_probability<Maze>(action, observation_to, reward, maze);
+            probability_t prob = look_ahead_search.get_predicted_transition_probability(action, observation_to, reward, *environment);
             if(prob==0) {
-                probability_t prob_maze = maze.get_prediction(current_instance->const_it()-1, action, observation_to, reward);
+                probability_t prob_maze = environment->get_prediction(current_instance->const_it()-1, action, observation_to, reward);
                 DEBUG_OUT(0,"Warning: Transition with predicted probability of zero for (" << action << "," << observation_to << "," << reward << ") (Maze predicts " << prob_maze << ")" );
             }
         }
@@ -304,7 +311,7 @@ void TestMaze_II::choose_action() {
     if(prune_search_tree) {
         switch(planner_type) {
         case OPTIMAL_PLANNER:
-            look_ahead_search.prune_tree(action,current_instance,maze);
+            look_ahead_search.prune_tree(action,current_instance,*environment);
             break;
         case SPARSE_PLANNER:
             look_ahead_search.prune_tree(action,current_instance,crf);
@@ -346,7 +353,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
         // check for sequence
         QStringList command_list = input.split(";");
         if(command_list.length()==0) {
-            DEBUG_OUT(0, "Error: Empty command list");
+            DEBUG_ERROR("Empty command list");
             return;
         } else if(command_list.length()>1) {
             for(int command_idx=0; command_idx<command_list.length(); ++command_idx) {
@@ -543,20 +550,35 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             TO_CONSOLE( pair_delay_distribution_s );
             TO_CONSOLE( mediator_probability_s );
         } else if(str_args[0]=="left" || str_args[0]=="l") { // left
-#warning check for maze
-            perform_transition(action_ptr_t(new MazeAction("left")));
+            if(dynamic_cast<Maze *>(environment)==nullptr) {
+                TO_CONSOLE("    Allowed for maze-environments only");
+            } else {
+                perform_transition(action_ptr_t(new MazeAction("left")));
+            }
         } else if(str_args[0]=="right" || str_args[0]=="r") { // right
-#warning check for maze
-            perform_transition(action_ptr_t(new MazeAction("right")));
+            if(dynamic_cast<Maze *>(environment)==nullptr) {
+                TO_CONSOLE("    Allowed for maze-environments only");
+            } else {
+                perform_transition(action_ptr_t(new MazeAction("right")));
+            }
         } else if(str_args[0]=="up" || str_args[0]=="u") { // up
-#warning check for maze
-            perform_transition(action_ptr_t(new MazeAction("up")));
+            if(dynamic_cast<Maze *>(environment)==nullptr) {
+                TO_CONSOLE("    Allowed for maze-environments only");
+            } else {
+                perform_transition(action_ptr_t(new MazeAction("up")));
+            }
         } else if(str_args[0]=="down" || str_args[0]=="d") { // down
-#warning check for maze
-            perform_transition(action_ptr_t(new MazeAction("down")));
+            if(dynamic_cast<Maze *>(environment)==nullptr) {
+                TO_CONSOLE("    Allowed for maze-environments only");
+            } else {
+                perform_transition(action_ptr_t(new MazeAction("down")));
+            }
         } else if(str_args[0]=="stay" || str_args[0]=="s") { // stay
-#warning check for maze
-            perform_transition(action_ptr_t(new MazeAction("stay")));
+            if(dynamic_cast<Maze *>(environment)==nullptr) {
+                TO_CONSOLE("    Allowed for maze-environments only");
+            } else {
+                perform_transition(action_ptr_t(new MazeAction("stay")));
+            }
         } else if(str_args[0]=="move") { // start/stop moving
             if(str_args_n==1) {
                 choose_action();
@@ -690,53 +712,72 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 TO_CONSOLE( lq_alpha_s );
             }
         } else if(str_args[0]=="epsilon") {
-            if(str_args_n==1) {
-                TO_CONSOLE( QString("    maze epsilon is %1").arg(maze.get_epsilon()) );
-            } else if(double_args_ok[1] && double_args[1]>=0 && double_args[1]<=1) {
-                maze.set_epsilon(double_args[1]);
+            Maze * maze = dynamic_cast<Maze *>(environment);
+            if(maze==nullptr) {
+                TO_CONSOLE("    Allowed for maze-environments only");
             } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( epsilon_s );
+                if(str_args_n==1) {
+                    if(maze->get_epsilon()!=epsilon) {
+                        DEBUG_ERROR("Maze epsion (" << maze->get_epsilon() << ") is different from stored one (" << epsilon << ")");
+                    }
+                    TO_CONSOLE( QString("    maze epsilon is %1").arg(epsilon) );
+                } else if(double_args_ok[1] && double_args[1]>=0 && double_args[1]<=1) {
+                    epsilon = double_args[1];
+                    maze->set_epsilon(epsilon);
+                } else {
+                    TO_CONSOLE( invalid_args_s );
+                    TO_CONSOLE( epsilon_s );
+                }
             }
         } else if(str_args[0]=="reward-activation" || str_args[0]=="ra") {
-            if(str_args_n==2 && int_args_ok[1]) {
-                maze.print_reward_activation_on_random_walk(int_args[1]);
-                maze.render_update();
+            Maze * maze = dynamic_cast<Maze *>(environment);
+            if(maze==nullptr) {
+                TO_CONSOLE("    Allowed for maze-environments only");
             } else {
-                TO_CONSOLE(invalid_args_s);
-                TO_CONSOLE(reward_activation_s);
+                if(str_args_n==2 && int_args_ok[1]) {
+                    maze->print_reward_activation_on_random_walk(int_args[1]);
+                    maze->render_update();
+                } else {
+                    TO_CONSOLE(invalid_args_s);
+                    TO_CONSOLE(reward_activation_s);
+                }
             }
         } else if(str_args[0]=="random-distribution" || str_args[0]=="rd") { // test
-            if(str_args_n==2 && int_args_ok[1]) {
-                // initialize state counts to zero
-                map<observation_ptr_t,int> state_counts;
-                for(observation_ptr_t observation : observation_space) {
-                    state_counts[observation] = 0;
-                }
-                // get state counts
-                int n = int_args[1];
-                int max_count = 1;
-                for(int idx=0; idx<n; ++idx) {
-                    action_ptr_t action = (action_ptr_t)(action_space->random_element());
-                    observation_ptr_t observation_to;
-                    reward_ptr_t reward;
-                    maze.perform_transition(action,observation_to,reward);
-                    ++state_counts[observation_to];
-                    max_count = max(state_counts[observation_to],max_count);
-                }
-                // transform into colors
-                Maze::color_vector_t cols;
-                for(observation_ptr_t observation : observation_space) {
-                    double p = state_counts[observation];
-                    DEBUG_OUT(0,"State " << observation << ": p = " << p/max(n,1) );
-                    p /= max_count;
-                    cols.push_back( std::make_tuple(1,1-p,1-p) );
-                }
-                maze.set_state_colors(cols);
-                maze.render_update();
+            Maze * maze = dynamic_cast<Maze *>(environment);
+            if(maze==nullptr) {
+                TO_CONSOLE("    Allowed for maze-environments only");
             } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( random_distribution_s );
+                if(str_args_n==2 && int_args_ok[1]) {
+                    // initialize state counts to zero
+                    map<observation_ptr_t,int> state_counts;
+                    for(observation_ptr_t observation : observation_space) {
+                        state_counts[observation] = 0;
+                    }
+                    // get state counts
+                    int n = int_args[1];
+                    int max_count = 1;
+                    for(int idx=0; idx<n; ++idx) {
+                        action_ptr_t action = (action_ptr_t)(action_space->random_element());
+                        observation_ptr_t observation_to;
+                        reward_ptr_t reward;
+                        maze->perform_transition(action,observation_to,reward);
+                        ++state_counts[observation_to];
+                        max_count = max(state_counts[observation_to],max_count);
+                    }
+                    // transform into colors
+                    Maze::color_vector_t cols;
+                    for(observation_ptr_t observation : observation_space) {
+                        double p = state_counts[observation];
+                        DEBUG_OUT(0,"State " << observation << ": p = " << p/max(n,1) );
+                        p /= max_count;
+                        cols.push_back( std::make_tuple(1,1-p,1-p) );
+                    }
+                    maze->set_state_colors(cols);
+                    maze->render_update();
+                } else {
+                    TO_CONSOLE( invalid_args_s );
+                    TO_CONSOLE( random_distribution_s );
+                }
             }
         } else if(str_args[0]=="expand" || str_args[0]=="ex") {
             if(str_args_n==1) {
@@ -816,7 +857,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
         //         if(str_args[2]=="mc") {
         //             if( str_args_n>3 && int_args_ok[3] && int_args[3]>0 ) {
         //                 probability_t model_l, maze_l;
-        //                 probability_t kl = maze.validate_model<KMarkovCRF>(
+        //                 probability_t kl = maze.validate_model(
         //                         crf,
         //                         int_args[3],
         //                         &model_l,
@@ -981,53 +1022,67 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 }
             } else if(str_args[1]=="maze") {
                 bool print_list = false;
-                if(str_args_n>2) {
-                    if(str_args[0]=="unset") {
-                        TO_CONSOLE( "    set different maze to unset current" );
-                    } else {
-                        if(!maze.set_maze(str_args[2])) {
+                if(str_args[0]=="unset") {
+                    TO_CONSOLE( "    set different environment to unset current" );
+                } else {
+                    if(str_args_n>2) {
+                        // tear down old environment
+                        environment->render_tear_down();
+                        // reinitialize environment if necessary
+                        Maze * maze = dynamic_cast<Maze *>(environment);
+                        if(maze==nullptr) {
+                            delete environment;
+                            maze = new Maze(epsilon);
+                            environment = maze;
+                        }
+                        // set requested maze
+                        bool success = maze->set_maze(str_args[2]);
+                        if(!success) {
                             TO_CONSOLE("    No maze named '"+str_args[2]+"'");
                             print_list = true;
-                        } else {
-                            maze.render_tear_down();
-                            maze.render_initialize(ui.graphicsView);
-                            maze.render_update();
                         }
+                        maze->render_initialize(ui.graphicsView);
+                        maze->render_update();
+                    } else {
+                        print_list = true;
                     }
-                } else {
-                    print_list = true;
                 }
                 if(print_list) {
                     TO_CONSOLE( "    Available mazes:" );
-                    for(QString name : maze.get_maze_list()) {
+                    for(QString name : Maze::get_maze_list()) {
                         TO_CONSOLE("        "+name);
                     }
                 }
             } else if(str_args[1]=="target") {
-                if(str_args[0]=="set") {
-                    if(target_activated) {
-                        TO_CONSOLE( "    target already active" );
-                    } else {
-                        target_activated = true;
-                        target_state = current_instance->observation;
-                        Maze::color_vector_t cols;
-                        for(auto observation : observation_space) {
-                            if(observation==target_state) {
-                                cols.push_back( Maze::color_t(0,1,0) );
-                            } else {
-                                cols.push_back( Maze::color_t(1,1,1) );
-                            }
-                        }
-                        maze.set_state_colors(cols);
-                        maze.render_update();
-                        TO_CONSOLE( "    target active" );
-                    }
+                Maze * maze = dynamic_cast<Maze *>(environment);
+                if(maze==nullptr) {
+                    TO_CONSOLE("    Allowed for maze-environments only");
                 } else {
-                    if(!target_activated) {
-                        TO_CONSOLE( "    target already inactive" );
+                    if(str_args[0]=="set") {
+                        if(target_activated) {
+                            TO_CONSOLE( "    target already active" );
+                        } else {
+                            target_activated = true;
+                            target_state = current_instance->observation;
+                            Maze::color_vector_t cols;
+                            for(auto observation : observation_space) {
+                                if(observation==target_state) {
+                                    cols.push_back( Maze::color_t(0,1,0) );
+                                } else {
+                                    cols.push_back( Maze::color_t(1,1,1) );
+                                }
+                            }
+                            maze->set_state_colors(cols);
+                            maze->render_update();
+                            TO_CONSOLE( "    target active" );
+                        }
                     } else {
-                        target_activated = false;
-                        TO_CONSOLE( "    target inactive" );
+                        if(!target_activated) {
+                            TO_CONSOLE( "    target already inactive" );
+                        } else {
+                            target_activated = false;
+                            TO_CONSOLE( "    target inactive" );
+                        }
                     }
                 }
             } else if(str_args[1]=="prune-tree") {
@@ -1075,50 +1130,60 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
 
             //TO_CONSOLE( "    currently no test function implemented" );
         } else if(str_args[0]=="col-states") { // color states
-            Maze::color_vector_t cols;
-            for(observation_ptr_t observation : observation_space) {
-                cols.push_back( std::make_tuple(drand48(),drand48(),drand48()) );
-            }
-            maze.set_state_colors(cols);
-            maze.render_update();
-        } else if(str_args[0]=="fixed-dt-dist" || str_args[0]=="fdd") { // show delay probability
-            if(str_args_n!=2 || !int_args_ok[1]) {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( fixed_dt_distribution_s );
+            Maze * maze = dynamic_cast<Maze *>(environment);
+            if(maze==nullptr) {
+                TO_CONSOLE("    Allowed for maze-environments only");
             } else {
-                // get probabilites for all states
-                observation_ptr_t s1 = current_instance->observation;
-                idx_t delay = int_args[1];
-                vector<probability_t> probs = delay_dist.get_fixed_delay_probability_distribution(s1,delay);
-
-                // get maximum probability for rescaling and target state idx
-                double max_prob = -DBL_MAX;
-                idx_t target_idx = 0, state_idx = 0;
-                for(observation_ptr_t observation : observation_space) {
-                    if(probs[state_idx]>max_prob) {
-                        max_prob = probs[state_idx];
-                    }
-                    if(observation==target_state) {
-                        target_idx=state_idx;
-                    }
-                }
-
-                // rescale and define colors
                 Maze::color_vector_t cols;
-                for( double p : probs ) {
-                    if(max_prob!=0) {
-                        cols.push_back( std::make_tuple(1,1-p/max_prob,1-p/max_prob) );
-                    } else {
-                        cols.push_back( std::make_tuple(1,1,1) );
-                    }
+                for(observation_ptr_t observation : observation_space) {
+                    cols.push_back( std::make_tuple(drand48(),drand48(),drand48()) );
                 }
-                if(target_activated) {
-                    cols[target_idx]=std::make_tuple(0,1,0);
-                }
+                maze->set_state_colors(cols);
+                maze->render_update();
+            }
+        } else if(str_args[0]=="fixed-dt-dist" || str_args[0]=="fdd") { // show delay probability
+            Maze * maze = dynamic_cast<Maze *>(environment);
+            if(maze==nullptr) {
+                TO_CONSOLE("    Allowed for maze-environments only");
+            } else {
+                if(str_args_n!=2 || !int_args_ok[1]) {
+                    TO_CONSOLE( invalid_args_s );
+                    TO_CONSOLE( fixed_dt_distribution_s );
+                } else {
+                    // get probabilites for all states
+                    observation_ptr_t s1 = current_instance->observation;
+                    idx_t delay = int_args[1];
+                    vector<probability_t> probs = delay_dist.get_fixed_delay_probability_distribution(s1,delay);
 
-                // render
-                maze.set_state_colors(cols);
-                maze.render_update();
+                    // get maximum probability for rescaling and target state idx
+                    double max_prob = -DBL_MAX;
+                    idx_t target_idx = 0, state_idx = 0;
+                    for(observation_ptr_t observation : observation_space) {
+                        if(probs[state_idx]>max_prob) {
+                            max_prob = probs[state_idx];
+                        }
+                        if(observation==target_state) {
+                            target_idx=state_idx;
+                        }
+                    }
+
+                    // rescale and define colors
+                    Maze::color_vector_t cols;
+                    for( double p : probs ) {
+                        if(max_prob!=0) {
+                            cols.push_back( std::make_tuple(1,1-p/max_prob,1-p/max_prob) );
+                        } else {
+                            cols.push_back( std::make_tuple(1,1,1) );
+                        }
+                    }
+                    if(target_activated) {
+                        cols[target_idx]=std::make_tuple(0,1,0);
+                    }
+
+                    // render
+                    maze->set_state_colors(cols);
+                    maze->render_update();
+                }
             }
         } else if(str_args[0]=="pair-delay-dist" || str_args[0]=="pdd") { // show delay distribution
             if(str_args_n>1 && !int_args_ok[1]) {
@@ -1191,47 +1256,52 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 }
             }
         } else if(str_args[0]=="mediator-probability" || str_args[0]=="mp") { // show mediator probability
-            if(str_args_n==2 && int_args_ok[1]) {
-                if(!target_activated) {
-                    TO_CONSOLE( "    Target state must be activated to calculate mediator probabilities" );
-                } else {
-                    // get probabilites for all states
-                    DEBUG_OUT(2,"Calculating mediator distribution...");
-                    observation_ptr_t s1 = current_instance->observation;
-                    observation_ptr_t s3 = target_state;
-                    vector<double> probs;
-                    double max_prob = -DBL_MAX;
-                    idx_t target_idx = 0, state_idx = 0;
-                    for(observation_ptr_t observation : observation_space) {
-                        probability_t prob = delay_dist.get_mediator_probability(s1,observation,s3,int_args[1]);
-                        probs.push_back(prob);
-                        if(prob>max_prob) {
-                            max_prob = prob;
-                        }
-                        if(observation==target_state) {
-                            target_idx=state_idx;
-                        }
-                        DEBUG_OUT(3,"    " << s1 << " --> " << observation << " --> " << s3 << " : " << prob);
-                        ++state_idx;
-                    }
-                    DEBUG_OUT(2,"DONE");
-                    // rescale and define colors
-                    Maze::color_vector_t cols;
-                    for( double prob : probs ) {
-                        if(max_prob!=0) {
-                            cols.push_back( std::make_tuple(1,1-prob/max_prob,1-prob/max_prob) );
-                        } else {
-                            cols.push_back( std::make_tuple(1,1,1) );
-                        }
-                    }
-                    cols[target_idx]=std::make_tuple(0,1,0);
-                    // render
-                    maze.set_state_colors(cols);
-                    maze.render_update();
-                }
+            Maze * maze = dynamic_cast<Maze *>(environment);
+            if(maze==nullptr) {
+                TO_CONSOLE("    Allowed for maze-environments only");
             } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( mediator_probability_s );
+                if(str_args_n==2 && int_args_ok[1]) {
+                    if(!target_activated) {
+                        TO_CONSOLE( "    Target state must be activated to calculate mediator probabilities" );
+                    } else {
+                        // get probabilites for all states
+                        DEBUG_OUT(2,"Calculating mediator distribution...");
+                        observation_ptr_t s1 = current_instance->observation;
+                        observation_ptr_t s3 = target_state;
+                        vector<double> probs;
+                        double max_prob = -DBL_MAX;
+                        idx_t target_idx = 0, state_idx = 0;
+                        for(observation_ptr_t observation : observation_space) {
+                            probability_t prob = delay_dist.get_mediator_probability(s1,observation,s3,int_args[1]);
+                            probs.push_back(prob);
+                            if(prob>max_prob) {
+                                max_prob = prob;
+                            }
+                            if(observation==target_state) {
+                                target_idx=state_idx;
+                            }
+                            DEBUG_OUT(3,"    " << s1 << " --> " << observation << " --> " << s3 << " : " << prob);
+                            ++state_idx;
+                        }
+                        DEBUG_OUT(2,"DONE");
+                        // rescale and define colors
+                        Maze::color_vector_t cols;
+                        for( double prob : probs ) {
+                            if(max_prob!=0) {
+                                cols.push_back( std::make_tuple(1,1-prob/max_prob,1-prob/max_prob) );
+                            } else {
+                                cols.push_back( std::make_tuple(1,1,1) );
+                            }
+                        }
+                        cols[target_idx]=std::make_tuple(0,1,0);
+                        // render
+                        maze->set_state_colors(cols);
+                        maze->render_update();
+                    }
+                } else {
+                    TO_CONSOLE( invalid_args_s );
+                    TO_CONSOLE( mediator_probability_s );
+                }
             }
         } else {
             TO_CONSOLE("    unknown command");

@@ -130,7 +130,7 @@ TEST(EnvironmentTest, Maze) {
     Maze maze;
 
     // get list of mazes
-    auto maze_list = maze.get_maze_list();
+    auto maze_list = Maze::get_maze_list();
 
     for(auto name : maze_list) {
 
@@ -138,7 +138,8 @@ TEST(EnvironmentTest, Maze) {
         DEBUG_OUT(1,bold() << "Testing maze '" << name << "'" << reset_all());
 
         // set maze
-        maze.set_maze(name);
+        EXPECT_TRUE(maze.set_maze(name));
+        EXPECT_TRUE(maze.check_maze_definition()) << "erroneous definition of maze named '" << name << "'";
 
         // get spaces
         action_ptr_t action_space;

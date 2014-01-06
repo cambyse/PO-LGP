@@ -3,6 +3,7 @@
 
 #include "FeatureLearner.h"
 #include "HistoryObserver.h"
+#include "Predictor.h"
 
 #include <lemon/list_graph.h>
 
@@ -10,7 +11,7 @@
 #include <set>
 #include <map>
 
-class UTree: public HistoryObserver, public FeatureLearner {
+class UTree: public HistoryObserver, public FeatureLearner, public Predictor {
 private:
     struct NodeInfo; // forward declaration of private type
 
@@ -49,7 +50,7 @@ public:
 
     /** \brief Returns a prediction of how probable the observation and reward are
      * give the instance and action. */
-    probability_t get_prediction(const instance_t *, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&) const;
+    probability_t get_prediction(const instance_t *, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&) const override;
     /** \brief Return function pointer to be used by LookAheadSearch. */
     probability_t (UTree::*get_prediction_ptr())(const instance_t *, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&) const {
         return &UTree::get_prediction;

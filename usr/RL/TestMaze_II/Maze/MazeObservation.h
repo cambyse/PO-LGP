@@ -28,6 +28,7 @@ public:
     inline virtual int get_y_pos() const { return y_position; }
     inline virtual int get_x_dim() const { return x_dimensions; }
     inline virtual int get_y_dim() const { return y_dimensions; }
+    inline virtual int get_index() const { return y_position*x_dimensions + x_position; }
     MazeObservation new_observation(int x_pos, int y_pos) const;
     MazeObservation new_observation(int index) const;
 protected:

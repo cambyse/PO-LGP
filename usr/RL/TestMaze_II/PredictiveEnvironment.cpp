@@ -30,7 +30,7 @@ void PredictiveEnvironment::perform_transition(const action_ptr_t & action) {
         }
     }
     if(!was_set) {
-        DEBUG_OUT(0, "Error: Unnormalized probabilities [sum(p)=" << prob_accum << "]--> no transition performed." );
+        DEBUG_ERROR("Unnormalized probabilities [sum(p)=" << prob_accum << "]--> no transition performed." );
     }
 }
 

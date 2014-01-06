@@ -16,8 +16,9 @@
 
 #include "HistoryObserver.h"
 #include "FeatureLearner.h"
+#include "Predictor.h"
 
-class KMarkovCRF: public HistoryObserver, public FeatureLearner {
+class KMarkovCRF: public HistoryObserver, public FeatureLearner, public Predictor {
 
 public:
 
@@ -165,7 +166,7 @@ public:
 
     unsigned long int get_training_data_length();
 
-    probability_t get_prediction(const instance_t *, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&) const;
+    probability_t get_prediction(const instance_t *, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&) const override;
     probability_t (KMarkovCRF::*get_prediction_ptr())(const instance_t *, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&) const {
         return &KMarkovCRF::get_prediction;
     }

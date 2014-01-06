@@ -66,32 +66,33 @@ const vector<QString> BatchMaze::sample_method_vector = {
 };
 
 const vector<BatchMaze::switch_t> BatchMaze::switch_vector = {
-    switch_t("-mode",         "char",   "",       "major mode BatchMaze runs in"),
-    switch_t("-sample",       "char",   "",       "the way samples are selected"),
-    switch_t("-nEp",          "int",    "100",    "number of episodes to run"),
-    switch_t("-minTran",      "int",    "10",     "minimum number of transitions (mode 'TRANSITIONS' only)"),
-    switch_t("-maxTran",      "int",    "1000",   "maximum number of transitions"),
-    switch_t("-e",            "double", "0.0",    "epsilon (probability for unintended random actions)"),
-    switch_t("-d",            "double", "0.5",    "discount"),
-    switch_t("-minTrain",     "int",    "100",    "minimum length of traning data"),
-    switch_t("-maxTrain",     "int",    "10000",  "maximum length of traning data"),
-    switch_t("-minTree",      "int",    "1000",   "minimum size of search tree (mode 'SEARCH_TREE' only)"),
-    switch_t("-maxTree",      "int",    "10000",  "maximum size of search tree"),
-    switch_t("-f",            "int",    "2",      "number of feature conjunctions"),
-    switch_t("-l1",           "double", "0.001",  "L1-regularization factor"),
-    switch_t("-pruneTree",    "bool",   "true",   "whether to prune the search tree"),
-    switch_t("-kWidth",       "double", "0",      "kernel width for 'ACTIVE' sampling (0 for auto)"),
-    switch_t("-incr",         "int",    "0",      "increment for 'UNIFORM' and 'EXP' sampling (0 for auto, negative for resampling)"),
-    switch_t("-exp",          "double", "0",      "factor for 'EXP' sampling"),
-    switch_t("-printSamples", "bool",   "false",  "don't run, only print sampling locations"),
-    switch_t("-optTran",      "double", "0",      "probability of optimal training transitions (vs. random)"),
-    switch_t("-fincr",        "int",    "0",      "feature increment (positive value for incremental feature discovery)"),
-    switch_t("-dl",           "double", "0.001",  "minimum change of data likelihood (only for incremental feature discovery with CRFs)"),
-    switch_t("-dloss",        "double", "0.0001", "minimum change loss (only for incremental feature discovery with Linear-Q)"),
-    switch_t("-l1incr",       "double", "0.0",    "L1-regularization increment (non-zero activates L1-sweep)"),
-    switch_t("-maxl1",        "double", "0.001",  "maximum L1-regularization (for L1-sweep)"),
-    switch_t("-utreegrowth",  "bool",   "false",  "grow UTree leaf by leaf tracking performance"),
-    switch_t("-alpha",        "double", "0",      "soft-max parameter for LinearQ with Bellman error")
+    switch_t("-mode",         "char",   "",        "major mode BatchMaze runs in"),
+    switch_t("-sample",       "char",   "",        "the way samples are selected"),
+    switch_t("-nEp",          "int",    "100",     "number of episodes to run"),
+    switch_t("-minTran",      "int",    "10",      "minimum number of transitions (mode 'TRANSITIONS' only)"),
+    switch_t("-maxTran",      "int",    "1000",    "maximum number of transitions"),
+    switch_t("-e",            "double", "0.0",     "epsilon (probability for unintended random actions)"),
+    switch_t("-d",            "double", "0.5",     "discount"),
+    switch_t("-minTrain",     "int",    "100",     "minimum length of traning data"),
+    switch_t("-maxTrain",     "int",    "10000",   "maximum length of traning data"),
+    switch_t("-minTree",      "int",    "1000",    "minimum size of search tree (mode 'SEARCH_TREE' only)"),
+    switch_t("-maxTree",      "int",    "10000",   "maximum size of search tree"),
+    switch_t("-f",            "int",    "2",       "number of feature conjunctions"),
+    switch_t("-l1",           "double", "0.001",   "L1-regularization factor"),
+    switch_t("-pruneTree",    "bool",   "true",    "whether to prune the search tree"),
+    switch_t("-kWidth",       "double", "0",       "kernel width for 'ACTIVE' sampling (0 for auto)"),
+    switch_t("-incr",         "int",    "0",       "increment for 'UNIFORM' and 'EXP' sampling (0 for auto, negative for resampling)"),
+    switch_t("-exp",          "double", "0",       "factor for 'EXP' sampling"),
+    switch_t("-printSamples", "bool",   "false",   "don't run, only print sampling locations"),
+    switch_t("-optTran",      "double", "0",       "probability of optimal training transitions (vs. random)"),
+    switch_t("-fincr",        "int",    "0",       "feature increment (positive value for incremental feature discovery)"),
+    switch_t("-dl",           "double", "0.001",   "minimum change of data likelihood (only for incremental feature discovery with CRFs)"),
+    switch_t("-dloss",        "double", "0.0001",  "minimum change loss (only for incremental feature discovery with Linear-Q)"),
+    switch_t("-l1incr",       "double", "0.0",     "L1-regularization increment (non-zero activates L1-sweep)"),
+    switch_t("-maxl1",        "double", "0.001",   "maximum L1-regularization (for L1-sweep)"),
+    switch_t("-utreegrowth",  "bool",   "false",   "grow UTree leaf by leaf tracking performance"),
+    switch_t("-alpha",        "double", "0",       "soft-max parameter for LinearQ with Bellman error"),
+    switch_t("-maze",         "char",   "Default", "the maze to use")
 };
 
 BatchMaze::BatchMaze() {
@@ -134,6 +135,15 @@ int BatchMaze::run(int argn, char ** argarr) {
         }
     }
 
+    // check for valid maze
+    QString maze_str = switch_char("-maze");
+    QString maze_name = "";
+    for(QString s : Maze::get_maze_list()) {
+        if(maze_str==s) {
+            maze_name=s;
+        }
+    }
+
     // print help and exit in case of errors
     if(mode=="") {
         DEBUG_ERROR("No valid mode given ('" << switch_char("-mode") << "')" );
@@ -141,7 +151,10 @@ int BatchMaze::run(int argn, char ** argarr) {
     if(sample_method=="") {
         DEBUG_ERROR("No valid sample method given ('" << switch_char("-sample") << "')" );
     }
-    if(mode=="" || sample_method=="") {
+    if(maze_name=="") {
+        DEBUG_ERROR("No valid maze given ('" << switch_char("-sample") << "')" );
+    }
+    if(mode=="" || sample_method=="" || maze_name=="") {
         print_help();
         return 1;
     }
@@ -451,7 +464,7 @@ int BatchMaze::run_active() {
 	    reward_ptr_t reward;
 	    if(drand48()<switch_double("-optTran")) {
 	      look_ahead_search->clear_tree();
-	      look_ahead_search->build_tree<Maze>(current_instance, *maze, switch_int("-maxTree"));
+	      look_ahead_search->build_tree(current_instance, *maze, switch_int("-maxTree"));
 	      action = look_ahead_search->get_optimal_action();
 	    } else {
                 action = action_space->random_element();
@@ -637,9 +650,9 @@ int BatchMaze::run_active() {
                 if(mode=="OPTIMAL" || mode=="TRANSITIONS") {
                     if(look_ahead_search->get_number_of_nodes()==0 || !switch_bool("-pruneTree")) {
                         look_ahead_search->clear_tree();
-                        look_ahead_search->build_tree<Maze>(current_instance, *maze, switch_int("-maxTree"));
+                        look_ahead_search->build_tree(current_instance, *maze, switch_int("-maxTree"));
                     } else {
-                        look_ahead_search->fully_expand_tree<Maze>(*maze, switch_int("-maxTree"));
+                        look_ahead_search->fully_expand_tree(*maze, switch_int("-maxTree"));
                     }
                     action = look_ahead_search->get_optimal_action();
                 } else if(mode=="RANDOM") {
@@ -647,17 +660,17 @@ int BatchMaze::run_active() {
                 } else if(mode=="SPARSE") {
                     if(look_ahead_search->get_number_of_nodes()==0 || !switch_bool("-pruneTree")) {
                         look_ahead_search->clear_tree();
-                        look_ahead_search->build_tree<KMarkovCRF>(current_instance, *crf, switch_int("-maxTree"));
+                        look_ahead_search->build_tree(current_instance, *crf, switch_int("-maxTree"));
                     } else {
-                        look_ahead_search->fully_expand_tree<KMarkovCRF>(*crf, switch_int("-maxTree"));
+                        look_ahead_search->fully_expand_tree(*crf, switch_int("-maxTree"));
                     }
                     action = look_ahead_search->get_optimal_action();
                 } else if(mode=="UTREE_PROB") {
                     if(look_ahead_search->get_number_of_nodes()==0 || !switch_bool("-pruneTree")) {
                         look_ahead_search->clear_tree();
-                        look_ahead_search->build_tree<UTree>(current_instance, *utree, switch_int("-maxTree"));
+                        look_ahead_search->build_tree(current_instance, *utree, switch_int("-maxTree"));
                     } else {
-                        look_ahead_search->fully_expand_tree<UTree>(*utree, switch_int("-maxTree"));
+                        look_ahead_search->fully_expand_tree(*utree, switch_int("-maxTree"));
                     }
                     action = look_ahead_search->get_optimal_action();
                 } else if(mode=="UTREE_VALUE") {
@@ -666,9 +679,9 @@ int BatchMaze::run_active() {
                     action = linQ->get_max_value_action(current_instance);
                 } else if(mode=="SEARCH_TREE") {
                     if(look_ahead_search->get_number_of_nodes()==0 || !switch_bool("-pruneTree")) {
-                        look_ahead_search->build_tree<Maze>(current_instance, *maze, search_tree_size);
+                        look_ahead_search->build_tree(current_instance, *maze, search_tree_size);
                     } else {
-                        look_ahead_search->fully_expand_tree<Maze>(*maze, search_tree_size);
+                        look_ahead_search->fully_expand_tree(*maze, search_tree_size);
                     }
                     action = look_ahead_search->get_optimal_action();
                 } else {
@@ -914,10 +927,11 @@ void BatchMaze::initialize_log_file() {
     log_file_name.append("_log_file.txt");
     log_file.open((const char*)log_file_name.toLatin1());
 
-#warning not generic
-    std::string tmp_reward_str = Maze().get_rewards(), reward_str;
-    std::string tmp_wall_str = Maze().get_walls(), wall_str;
-    std::string tmp_door_str = Maze().get_doors(), door_str;
+    Maze maze;
+    maze.set_maze(switch_char("-maze"));
+    std::string tmp_reward_str = maze.get_rewards(), reward_str;
+    std::string tmp_wall_str = maze.get_walls(), wall_str;
+    std::string tmp_door_str = maze.get_doors(), door_str;
     for( auto c : tmp_reward_str ) {
         if(c!='\n') {
             reward_str += c;
@@ -957,7 +971,6 @@ void BatchMaze::initialize_log_file() {
         }
     }
     LOG_COMMENT("");
-#warning check for maze
     LOG_COMMENT("Maze size: " << observation_space.get_derived<const MazeObservation>()->get_x_dim() << "x" << observation_space.get_derived<const MazeObservation>()->get_y_dim());
     LOG_COMMENT("");
     LOG_COMMENT(reward_str);

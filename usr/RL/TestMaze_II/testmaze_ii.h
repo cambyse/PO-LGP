@@ -5,7 +5,7 @@
 
 #include "Config.h"
 
-#include "Maze/Maze.h"
+#include "GUIEnvironment.h"
 #include "KMarkovCRF.h"
 #include "UTree.h"
 #include "LinearQ.h"
@@ -60,8 +60,8 @@ private:
     // the user interface
     Ui::TestMaze_IIClass ui;
 
-    // the maze / the world
-    Maze maze;
+    // the environment
+    GUIEnvironment * environment;
     action_ptr_t action_space;             ///< Action space to be used.
     observation_ptr_t observation_space;   ///< Observation space to be used.
     reward_ptr_t reward_space;             ///< Reward space to be used.
@@ -86,8 +86,11 @@ private:
     size_t history_position;
     QFile history_file;
 
-    // this discout that is used
+    // discout that is used
     double discount;
+
+    // epsion (randomness) that is used
+    double epsilon;
 
     //--------//
     // Models //

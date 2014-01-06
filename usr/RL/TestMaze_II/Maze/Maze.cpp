@@ -295,7 +295,7 @@ const vector<Maze::maze_t> Maze::maze_list = {
         6,
         action_ptr_t(new action_t("stay")),
         observation_ptr_t(new observation_t(10,10,4,4)),
-        reward_ptr_t(new reward_t({0,1},0)),
+        reward_ptr_t(new reward_t({-1,0,1},1)),
         vector<wall_t>({
                 {  2,  3},
                 { 12, 13},
@@ -362,7 +362,29 @@ const vector<Maze::maze_t> Maze::maze_list = {
                 door_t(observation_t(10,10,4,5), observation_t(10,10,5,5), observation_t(10,10,4,6),  LEFT_BUTTON,-5, color_t(0.0,0.0,1.0) ),
                 door_t(observation_t(10,10,6,5), observation_t(10,10,6,6), observation_t(10,10,4,7), RIGHT_BUTTON, 5, color_t(1.0,0.0,1.0) )
             })
-        )
+        )// ,
+//     /* === Wrong maze for testing unit tests === */
+//     maze_t(
+//         QString("Wrong"),
+//         1,
+//         action_ptr_t(new action_t("stay")),
+//         observation_ptr_t(new observation_t(2,2,0,0)),
+//         reward_ptr_t(new reward_t({-1,0,1,2},1)),
+//         vector<wall_t>({
+// //                { 0, 3},
+// //                { 3, 4}
+//             }),
+//         vector<maze_reward_t>({
+// //                { 0, 1, 1,  3, ON_RELEASE_NO_PUNISH,   0, 200, 200},
+//                 { 0, 1, 1,  2, EACH_TIME_NO_PUNISH,   0, 200, 200},
+//                 { 0, 1, 1, -1, ON_RELEASE_PUNISH_FAILURE,   0, 200, 200},
+// //                { 0, 1, 1,  2, EACH_TIME_PUNISH_FAILURE,   0, 200, 200}
+//             }),
+//         vector<door_t>({
+// //                door_t(observation_t(2,2,0,0), observation_t(2,2,1,1), observation_t(2,2,0,0),  PASS_BUTTON, 0, color_t(1.0,0.5,0.0) ),
+// //                door_t(observation_t(2,3,0,0), observation_t(2,2,0,1), observation_t(2,2,0,0), RIGHT_BUTTON, 5, color_t(1.0,0.0,1.0) )
+//             })
+//         )
 };
 
 Maze::Maze(const double& eps):
@@ -414,6 +436,9 @@ bool Maze::set_maze(const QString& s) {
 
     // set state colors to default
     set_state_colors();
+
+    // check maze
+    check_maze_definition();
 
     return found;
 }
@@ -590,7 +615,7 @@ void Maze::perform_transition(const action_ptr_t& action, std::vector<std::pair<
         }
     }
     if(!was_set) {
-        DEBUG_OUT(0, "Error: Unnormalized probabilities [sum(p)=" << prob_accum << "]--> no transition performed." );
+        DEBUG_ERROR("Unnormalized probabilities [sum(p)=" << prob_accum << "]--> no transition performed." );
     }
 
     DEBUG_OUT(1, "(" <<
@@ -1032,7 +1057,7 @@ void Maze::set_current_observation(const observation_ptr_t& observation) {
     }
 }
 
-const vector<QString> Maze::get_maze_list() const {
+const vector<QString> Maze::get_maze_list() {
     vector<QString> return_list;
     for(maze_t maze : maze_list) {
         return_list.push_back(maze.name);
@@ -1487,4 +1512,149 @@ const char* Maze::reward_activation_type_str(REWARD_ACTIVATION_TYPE ra) {
         DEBUG_DEAD_LINE;
         return "Error!";
     }
+}
+
+bool Maze::check_maze_definition() const {
+
+    typedef std::vector<idx_t> wall_t;
+
+    bool all_walls_ok = true;
+    for(wall_t wall : walls) {
+        // check if both states exist
+        bool this_wall_ok_0 = false;
+        bool this_wall_ok_1 = false;
+        for(observation_ptr_t o : observation_space) {
+            if(o.get_derived<MazeObservation>()->get_index()==wall[0]) {
+                this_wall_ok_0 = true;
+            }
+            if(o.get_derived<MazeObservation>()->get_index()==wall[1]) {
+                this_wall_ok_1 = true;
+            }
+            if(this_wall_ok_0 && this_wall_ok_1) {
+                break;
+            }
+        }
+        // check if states are next to each other
+        MazeObservation o0 = observation_space.get_derived<MazeObservation>()->new_observation(wall[0]);
+        MazeObservation o1 = observation_space.get_derived<MazeObservation>()->new_observation(wall[1]);
+        bool next_to_each_other = ( (abs(o0.get_x_pos()-o1.get_x_pos())==0 && abs(o0.get_y_pos()-o1.get_y_pos())==1) ||
+                                    (abs(o0.get_x_pos()-o1.get_x_pos())==1 && abs(o0.get_y_pos()-o1.get_y_pos())==0) );
+        // process result
+        if(!this_wall_ok_0) {
+            DEBUG_WARNING("incorrect wall: " << o0 << " is not within observation space");
+        }
+        if(!this_wall_ok_1) {
+            DEBUG_WARNING("incorrect wall: " << o1 << " is not within observation space");
+        }
+        if(!next_to_each_other) {
+            DEBUG_WARNING("incorrect wall: " << o0 << " and " << o1 << " are NOT next to each other");
+        }
+        if(!this_wall_ok_0 || !this_wall_ok_1 || !next_to_each_other) {
+            all_walls_ok = false;
+        }
+    }
+
+    bool all_rewards_ok = true;
+    for(maze_reward_t reward : rewards) {
+        // check if activation and receive state exist
+        bool this_reward_ok_activation = false;
+        bool this_reward_ok_receive = false;
+        for(observation_ptr_t o : observation_space) {
+            if(o.get_derived<MazeObservation>()->get_index()==reward[REWARD_ACTIVATION_STATE]) {
+                this_reward_ok_activation = true;
+            }
+            if(o.get_derived<MazeObservation>()->get_index()==reward[REWARD_RECEIVE_STATE]) {
+                this_reward_ok_receive = true;
+            }
+            if(this_reward_ok_activation && this_reward_ok_receive) {
+                break;
+            }
+        }
+        // check if reward value (and opposite value for rewards with
+        // punishment) exists
+        bool reward_value_ok = false;
+        bool punish_value_ok = false;
+        double reward_value = reward[REWARD_VALUE];
+        for(reward_ptr_t r : reward_space) {
+            if(r->get_value()==reward_value) {
+                reward_value_ok = true;
+            }
+            if(reward[REWARD_ACTIVATION]==EACH_TIME_PUNISH_FAILURE ||
+               reward[REWARD_ACTIVATION]==ON_RELEASE_PUNISH_FAILURE) {
+                if(r->get_value()==(-1*reward_value)) {
+                    punish_value_ok = true;
+                }
+            } else {
+                punish_value_ok = reward_value_ok;
+            }
+            if(reward_value_ok && punish_value_ok) {
+                break;
+            }
+        }
+        // process result
+        if(!this_reward_ok_activation) {
+            DEBUG_WARNING("incorrect reward: index " << reward[REWARD_ACTIVATION_STATE] << " is not within observation space");
+        }
+        if(!this_reward_ok_receive) {
+            DEBUG_WARNING("incorrect reward: index" << reward[REWARD_RECEIVE_STATE] << " is not within observation space");
+        }
+        if(!reward_value_ok) {
+            DEBUG_WARNING("incorrect reward: value " << reward[REWARD_VALUE] << " is not within reward space");
+        }
+        if(!punish_value_ok) {
+            DEBUG_WARNING("incorrect reward: punish value " << -reward[REWARD_VALUE] << " is not within reward space");
+        }
+        if(!this_reward_ok_activation ||
+           !this_reward_ok_receive ||
+           !reward_value_ok ||
+           !punish_value_ok) {
+            all_rewards_ok = false;
+        }
+    }
+
+    bool all_doors_ok = true;
+    for(door_t door : doors) {
+        // check if both states exist
+        bool this_door_ok_FROM = false;
+        bool this_door_ok_TO = false;
+        bool this_door_ok_KEY = false;
+        for(observation_ptr_t o : observation_space) {
+            if(o==get<DOOR_STATE_FROM>(door)) {
+                this_door_ok_FROM = true;
+            }
+            if(o==get<DOOR_STATE_TO>(door)) {
+                this_door_ok_TO = true;
+            }
+            if(o==get<DOOR_KEY_STATE>(door)) {
+                this_door_ok_KEY = true;
+            }
+            if(this_door_ok_FROM && this_door_ok_TO && this_door_ok_KEY) {
+                break;
+            }
+        }
+        // check if states are next to each other
+        MazeObservation o_FROM = get<DOOR_STATE_FROM>(door);
+        MazeObservation o_TO = get<DOOR_STATE_TO>(door);
+        MazeObservation o_KEY = get<DOOR_KEY_STATE>(door); // for warnings only
+        bool next_to_each_other = ( (abs(o_FROM.get_x_pos()-o_TO.get_x_pos())==0 && abs(o_FROM.get_y_pos()-o_TO.get_y_pos())==1) ||
+                                    (abs(o_FROM.get_x_pos()-o_TO.get_x_pos())==1 && abs(o_FROM.get_y_pos()-o_TO.get_y_pos())==0) );
+        // process result
+        if(!this_door_ok_FROM) {
+            DEBUG_WARNING("incorrect door: " << o_FROM << " is not within observation space");
+        }
+        if(!this_door_ok_TO) {
+            DEBUG_WARNING("incorrect door: " << o_TO << " is not within observation space");
+        }
+        if(!this_door_ok_KEY) {
+            DEBUG_WARNING("incorrect door: " << o_KEY << " is not within observation space");
+        }
+        if(!next_to_each_other) {
+            DEBUG_WARNING("incorrect door: " << o_FROM << " and " << o_TO << " are NOT next to each other");
+        }
+        if(!this_door_ok_FROM || !this_door_ok_TO || !this_door_ok_KEY || !next_to_each_other) {
+            all_doors_ok = false;
+        }
+    }
+
+    return all_walls_ok && all_rewards_ok && all_doors_ok;
 }

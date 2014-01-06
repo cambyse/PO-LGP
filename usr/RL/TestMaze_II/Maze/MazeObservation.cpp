@@ -88,7 +88,7 @@ bool MazeObservation::operator<(const AbstractObservation &other) const {
 const string MazeObservation::print() const {
     std::stringstream ret;
     if(DEBUG_LEVEL>1) {
-        ret << "MazeObservation(" << x_position << "," << y_position << ",(" << x_dimensions << "," << y_dimensions << "))";
+        ret << "MazeObservation(" << "(" << x_dimensions << "," << y_dimensions << "), " <<  x_position << "," << y_position << ")";
     } else {
         ret << "MazeObservation(" << x_position << "," << y_position << ")";
     }

@@ -256,6 +256,15 @@ namespace {
         EXPECT_NE(o2,o3);
         EXPECT_EQ(o1,o3);
 
+        // check index function
+        repeat(100) {
+            int x_dim = rand()%10 + 1;
+            int y_dim = rand()%10 + 1;
+            int index = rand()%(x_dim*y_dim);
+            MazeObservation o(x_dim, y_dim, index);
+            EXPECT_EQ(index, o.get_index());
+        }
+
         // check functions to create new observations with same dimensions
         MazeObservation o4 = o1.new_observation(1,1);
         MazeObservation o5 = o1.new_observation(3);
@@ -266,7 +275,7 @@ namespace {
         EXPECT_EQ(o4,o5);
 
         // bound check
-        DEBUG_WARNING("Expect three errors:");
+        DEBUG_WARNING("Expecting three errors:");
         MazeObservation o6(2,2,2,1);
         MazeObservation o7(2,2,1,2);
         MazeObservation o8(2,2,4);
@@ -292,7 +301,7 @@ namespace {
         EXPECT_EQ(1,r5.get_value());
         r4.set_value(3.5);
         EXPECT_EQ(3.5,r4.get_value());
-        DEBUG_WARNING("Expect one error:");
+        DEBUG_WARNING("Expecting one error:");
         r4.set_value(3);
         EXPECT_EQ(3.5,r4.get_value());
     }
