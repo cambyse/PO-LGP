@@ -1,13 +1,17 @@
 #include <Core/util.h>
-#include <Gui/opengl.h>
+#include <Ors/ors.h>
+
 #include <Motion/motion.h>
 #include <Motion/taskMap_default.h>
 #include <Motion/taskMap_proxy.h>
+
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
-#include <vector>
+
 #include <GL/glu.h>
+#include <Gui/opengl.h>
 #include <stdlib.h>
+#include <vector>
 #include "mpc.h"
 #include "../pfc/mobject.h"
 
@@ -118,8 +122,9 @@ void plotTraj(arr &x, double dt) {
 }
 
 void scenario1() {
+
   // Create Trajectory with start velocity using PREFIX
-  ors::KinematicWorld G("scenes/scene1.ors");
+  ors::KinematicWorld G("scenes/scene1");
   makeConvexHulls(G.shapes);
 
   MotionProblem P(G);
@@ -169,7 +174,7 @@ void scenario1() {
 }
 
 void scenario2() {
-  ors::KinematicWorld G("scenes/scene1.ors");
+  ors::KinematicWorld G("scenes/scene1");
   makeConvexHulls(G.shapes);
 
   MotionProblem P(G);
@@ -257,40 +262,90 @@ void scenario2() {
 }
 
 void scenario3() {
-  ors::KinematicWorld G("scenes/scene1");
-  makeConvexHulls(G.shapes);
+  ors::KinematicWorld world("scenes/scene1");
+  arr q, qdot;
+  world.getJointState(q, qdot);
+  /*
+  ** Plan Trajectory
+  */
+  makeConvexHulls(world.shapes);
+  MotionProblem P(world);
 
-  MPC mpc(10,G);
+  P.loadTransitionParameters();
 
-  arr q0, qd0, q, qd, goal, qn;
-  double t = 0.0;
-  double simRate = 0.01;
-  // set initial state
-  q0 = mpc.yRef[0]; qd0 = 0.*q0;
-  G.setJointState(q0,qd0);
-  G.calcBodyFramesFromJoints();
-  G.getJointState(q);
+  arr goalRef = ARRAY(P.world.getBodyByName("goalRef")->X.pos);
 
-  G.gl().add(drawActTraj, &(mpc.y_cart));
-  MObject goalMO(&G, MT::String("goal"), MObject::GOAL , 0.01, ARRAY(0.,0.,1.));
+  //-- create an optimal trajectory to trainTarget
+  TaskCost *c;
+  c = P.addTaskMap("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly, goalRef, 1e4);
+  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
 
-  // execute trajectory while continiously replanning
-  while (t < (mpc.T*mpc.dt-1e-2)) {
-    // Compute current task states
-    G.getJointState(q,qd);
+  c = P.addTaskMap("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(1.,0.,0.), 1e4);
+  P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
+
+  P.x0 = 0.1;
+
+  MotionProblemFunction F(P);
+  uint T=F.get_T();
+  uint k=F.get_k();
+  uint n=F.dim_x();
+  double dt = P.tau;
+  cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<" # joints=" <<world.getJointStateDimension()<<endl;
+
+  arr x(T+1,n);
+  x.setZero();
+  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+  //  P.costReport();
+  //  displayTrajectory(x, 1, world, "planned trajectory", 0.01);
+
+
+  /*
+  ** Execute Trajectory
+  */
+  arr q0 = x[0];
+  arr y_target, yPos_target,Phi,PhiJ,yVec_target,qd,W,yPos,yVec,JPos,JVec;
+
+  q = P.x0;
+  double fPos_deviation = 1e-2;
+  double fVec_deviation = 1e-3;
+  double w_reg = 100.;
+
+  W.setDiag(1.,world.getJointStateDimension());  // W is equal the Id_n matrix
+  W = W*w_reg;
+
+  double tau_plan = P.tau;
+  double t = 0.;
+  double t_final = T*dt;
+
+  MObject goalMO(&world, MT::String("goal"), MObject::GOAL , 0.01, ARRAY(0.,0.,1.));
+  MPC mpc(P,x);
+  world.setJointState(q);
+  world.calcBodyFramesFromJoints();
+  world.getJointState(q);
+
+  // gl visualization
+  world.gl().add(drawActTraj,&(mpc.x_cart));
+
+  // RUN //
+  while ((world.getBodyByName("endeff")->X.pos - goalMO.position).length() >1e-1) {
 
     goalMO.move();
-    qn = mpc.iterate(t,q,goalMO.position,simRate);
+    mpc.replan(goalMO.position, q);
 
-    // Set Joint states
-    G.setJointState(qn);
-    G.calcBodyFramesFromJoints();
-    G.gl().update();
-    t += simRate;
+    q += (mpc.x[2]-mpc.x[1]);
+
+    world.setJointState(q);
+    world.calcBodyFramesFromJoints();
+
+    t += tau_plan;
+    world.watch(false, STRING(t));
   }
-
-  G.gl().watch();
+  world.watch(true,STRING(t));
 }
+
+
 
 int main(int argc,char **argv){
   MT::initCmdLine(argc,argv);
