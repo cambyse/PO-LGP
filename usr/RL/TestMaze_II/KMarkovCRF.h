@@ -193,6 +193,8 @@ public:
 
     void print_all_features() const;
 
+    void print_scores() const;
+
     void store_features();
 
     void apply_features();

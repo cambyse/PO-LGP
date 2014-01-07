@@ -39,9 +39,3 @@ void PredictiveEnvironment::perform_transition(const action_ptr_t& a, observatio
     final_observation = current_instance->observation;
     r = current_instance->reward;
 }
-
-void PredictiveEnvironment::get_spaces(action_ptr_t & a, observation_ptr_t & o, reward_ptr_t & r) const {
-    a = action_space;
-    o = observation_space;
-    r = reward_space;
-}

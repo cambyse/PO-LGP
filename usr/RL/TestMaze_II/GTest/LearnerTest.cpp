@@ -94,7 +94,7 @@ TEST(LearnerTest, KMarkovCRF) {
         action_ptr_t action;
         int max_tree_size = 10000;
         planner.clear_tree();
-        planner.build_tree<KMarkovCRF>(
+        planner.build_tree(
             current_instance,
             crf,
             max_tree_size
@@ -231,7 +231,7 @@ TEST(LearnerTest, UTree) {
             action_ptr_t action;
             int max_tree_size = 10000;
             planner.clear_tree();
-            planner.build_tree<UTree>(
+            planner.build_tree(
                 current_instance,
                 utree,
                 max_tree_size

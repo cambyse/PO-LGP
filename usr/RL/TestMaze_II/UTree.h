@@ -91,7 +91,7 @@ public:
     /** \brief Get the expansion type. */
     EXPANSION_TYPE get_expansion_type() const { return expansion_type; }
 
-    virtual void set_features(const PredictiveEnvironment & environment) override;
+    virtual void set_features(const Environment & environment) override;
 
 private:
 

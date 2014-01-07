@@ -1,12 +1,12 @@
-#ifndef VISUALENVIRONMENT_H_
-#define VISUALENVIRONMENT_H_
+#ifndef VISUALIZER_H_
+#define VISUALIZER_H_
 
 #include <QGraphicsView>
 
 #include <vector>
 #include <tuple>
 
-class VisualEnvironment {
+class Visualizer {
 
 public:
 
@@ -14,19 +14,19 @@ public:
     typedef std::vector<color_t>             color_vector_t;
     enum COLOR_IDX { COLOR_R, COLOR_G, COLOR_B };
 
-    VisualEnvironment() = default;
-    virtual ~VisualEnvironment() = default;
+    Visualizer() = default;
+    virtual ~Visualizer() = default;
 
     /** \brief Initializes get graphics view (or initialize).
      *
-     * After calling this method VisualEnvironment::view points to the the view used
+     * After calling this method Visualizer::view points to the the view used
      * by the given QGraphcisView. */
     virtual void render_initialize(QGraphicsView * v);
 
     /** \brief Updates the graphical representation. */
     virtual void render_update() = 0;
 
-    /** \brief Clears the scene used by VisualEnvironment::view. */
+    /** \brief Clears the scene used by Visualizer::view. */
     virtual void render_tear_down();
 
 protected:
@@ -39,4 +39,4 @@ protected:
 
 };
 
-#endif /* VISUALENVIRONMENT_H_ */
+#endif /* VISUALIZER_H_ */

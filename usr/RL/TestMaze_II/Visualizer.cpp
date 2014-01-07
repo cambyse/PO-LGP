@@ -1,6 +1,6 @@
-#include "VisualEnvironment.h"
+#include "Visualizer.h"
 
-void VisualEnvironment::render_initialize(QGraphicsView * v) {
+void Visualizer::render_initialize(QGraphicsView * v) {
 
     // Set view
     view = v;
@@ -16,13 +16,13 @@ void VisualEnvironment::render_initialize(QGraphicsView * v) {
     rescale_scene(view);
 }
 
-void VisualEnvironment::rescale_scene(QGraphicsView * view) {
+void Visualizer::rescale_scene(QGraphicsView * view) {
     QGraphicsScene * scene = view->scene();
     scene->setSceneRect(scene->itemsBoundingRect());
     view->fitInView(scene->itemsBoundingRect(),Qt::KeepAspectRatio);
     view->scale(0.95,0.95);
 }
 
-void VisualEnvironment::render_tear_down() {
+void Visualizer::render_tear_down() {
     view->scene()->clear();
 }

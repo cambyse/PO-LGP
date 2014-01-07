@@ -12,6 +12,8 @@
 
 #include "Predictor.h"
 
+class Environment;
+
 class LookAheadSearch {
 
 public:
@@ -59,6 +61,9 @@ public:
 
     LookAheadSearch(const double& d);
     virtual ~LookAheadSearch();
+
+    /** \brief Initialize action, observation, and reward spaces. */
+    virtual void set_spaces(const Environment & environment);
 
     /** \brief Set the spaces used for planning. */
     void set_spaces(const action_ptr_t & a, const observation_ptr_t & o, const reward_ptr_t & r);

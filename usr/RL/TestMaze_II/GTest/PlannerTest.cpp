@@ -61,13 +61,13 @@ TEST(PlannerTest, LookAheadSearch) {
             action_ptr_t action;
             int max_tree_size = 10000;
             if(prune_search_tree && step_idx>0) {
-                planner.fully_expand_tree<Maze>(
+                planner.fully_expand_tree(
                     maze,
                     max_tree_size
                     );
             } else {
                 planner.clear_tree();
-                planner.build_tree<Maze>(
+                planner.build_tree(
                     current_instance,
                     maze,
                     max_tree_size
@@ -124,7 +124,7 @@ TEST(PlannerTest, LookAheadSearch) {
             }
 
             // sanity check
-            probability_t prob = planner.get_predicted_transition_probability<Maze>(action, observation_to, reward, maze);
+            probability_t prob = planner.get_predicted_transition_probability(action, observation_to, reward, maze);
             if(prob==0) {
                 probability_t prob_maze = maze.get_prediction(current_instance->const_it()-1, action, observation_to, reward);
                 DEBUG_ERROR("Warning: Transition with predicted probability of zero for (" << action << "," << observation_to << "," << reward << ") (Maze predicts " << prob_maze << ")" );

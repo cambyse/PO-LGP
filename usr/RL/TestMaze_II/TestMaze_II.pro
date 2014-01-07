@@ -30,12 +30,12 @@ HEADERS += \
     AbstractReward.h \
     ListedReward.h \
     \
+    Predictor.h \
+    Environment.h \
     PredictiveEnvironment.h \
-    VisualEnvironment.h \
-    GUIEnvironment.h \
+    Visualizer.h \
     HistoryObserver.h \
     FeatureLearner.h \
-    Predictor.h \
     \
     Maze/Maze.h \
     Maze/MazeAction.h \
@@ -75,8 +75,9 @@ SOURCES += \
     AbstractReward.cpp \
     ListedReward.cpp \
     \
+    Environment.cpp \
     PredictiveEnvironment.cpp \
-    VisualEnvironment.cpp \
+    Visualizer.cpp \
     HistoryObserver.cpp \
     FeatureLearner.cpp \
     \

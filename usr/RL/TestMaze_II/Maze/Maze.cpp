@@ -446,7 +446,7 @@ bool Maze::set_maze(const QString& s) {
 void Maze::render_initialize(QGraphicsView * v) {
 
     // intitialize view
-    VisualEnvironment::render_initialize(v);
+    Visualizer::render_initialize(v);
 
     // Get scene or initialize.
     QGraphicsScene * scene = view->scene();

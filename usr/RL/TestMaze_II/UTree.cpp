@@ -715,7 +715,7 @@ void UTree::set_expansion_type(const EXPANSION_TYPE& ex) {
     }
 }
 
-void UTree::set_features(const PredictiveEnvironment & environment) {
+void UTree::set_features(const Environment & environment) {
     FeatureLearner::set_features(environment);
     basis_features_value = basis_features;
     basis_features_model = basis_features;

@@ -1,7 +1,8 @@
 #ifndef MAZE_H_
 #define MAZE_H_
 
-#include "../GUIEnvironment.h"
+#include "../PredictiveEnvironment.h"
+#include "../Visualizer.h"
 
 #include <QGraphicsSvgItem>
 #include <map>
@@ -17,9 +18,7 @@
 #include "MazeAction.h"
 #include "../ListedReward.h"
 
-#include "../debug.h"
-
-class Maze: public GUIEnvironment {
+class Maze: public PredictiveEnvironment, public Visualizer {
 public:
 
     USE_CONFIG_TYPEDEFS;
@@ -40,22 +39,18 @@ public:
     /** \brief Updates the graphical representation. */
     virtual void render_update() override;
 
-    /** \brief Clears the scene used by VisualEnvironment::view and resets all
+    /** \brief Clears the scene used by Visualizer::view and resets all
      * pointers to nullptr. */
     virtual void render_tear_down() override;
 
     void set_state_colors(const color_vector_t colors = color_vector_t());
 
-    /** \brief Perform a transition by executing an action. */
-    void perform_transition(const action_ptr_t& action) override;
-
-    /** \brief Perform a transition by executing an action and return resulting
-     * observation and reward by reference. */
-    void perform_transition(const action_ptr_t& a, observation_ptr_t& final_observation, reward_ptr_t& r ) override;
-
     /** \brief Perform a transition by executing an action and return which rewards
      * were active. */
-    void perform_transition(const action_ptr_t& a, std::vector<std::pair<int,int> > * reward_vector);
+    virtual void perform_transition(const action_ptr_t& a, std::vector<std::pair<int,int> > * reward_vector);
+
+    /** \brief Perform a transition by executing an action. */
+    virtual void perform_transition(const action_ptr_t& action) override;
 
     /** \brief Returns the transition probability. */
     probability_t get_prediction(const instance_t*, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&) const override;
@@ -232,7 +227,5 @@ private:
     /** \brief Returns the reward activation type as string. */
     static const char* reward_activation_type_str(REWARD_ACTIVATION_TYPE);
 };
-
-#include "../debug_exclude.h"
 
 #endif /* MAZE_H_ */

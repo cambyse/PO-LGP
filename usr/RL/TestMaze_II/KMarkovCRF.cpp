@@ -11,7 +11,7 @@
 #ifdef BATCH_MODE_QUIET
 #define DEBUG_LEVEL 0
 #else
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 2
 #endif
 #define DEBUG_STRING "CRF: "
 #include "debug.h"
@@ -1434,6 +1434,12 @@ void KMarkovCRF::print_all_features() const {
         cout << "Feature " << f_idx << ":	" << lambda[f_idx] << "	" << active_features[f_idx] << endl;
     }
     DEBUG_OUT(0,"========================================");
+}
+
+void KMarkovCRF::print_scores() const {
+    for(int f_idx=0; f_idx<(int)candidate_features.size(); ++f_idx) {
+        DEBUG_OUT(0,"    " << candidate_feature_scores[f_idx] << "	<-- " << candidate_features[f_idx]);
+    }
 }
 
 void KMarkovCRF::store_features() {

@@ -8,6 +8,7 @@
 
 #include "util.h"
 #include "Maze/Maze.h"
+#include "Environment.h"
 
 #ifdef BATCH_MODE_QUIET
 #define DEBUG_LEVEL 0
@@ -91,6 +92,10 @@ LookAheadSearch::LookAheadSearch(const double& d):
 {}
 
 LookAheadSearch::~LookAheadSearch() {}
+
+void LookAheadSearch::set_spaces(const Environment & environment) {
+    environment.get_spaces(action_space,observation_space,reward_space);
+}
 
 void LookAheadSearch::set_spaces(const action_ptr_t & a, const observation_ptr_t & o, const reward_ptr_t & r) {
     action_space = a;

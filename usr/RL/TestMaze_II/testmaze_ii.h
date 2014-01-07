@@ -5,7 +5,6 @@
 
 #include "Config.h"
 
-#include "GUIEnvironment.h"
 #include "KMarkovCRF.h"
 #include "UTree.h"
 #include "LinearQ.h"
@@ -20,6 +19,9 @@
 #include <deque>
 #include <iostream>
 #include <fstream>
+#include <memory> // for shared_ptr
+
+class Environment;
 
 class TestMaze_II : public QWidget
 {
@@ -46,7 +48,7 @@ private:
     // for the plotting window
     QCustomPlot * plotter;
 
-    // for setting the different planers
+    // for setting the different planners
     enum PLANNER_TYPE {
         NONE,
         OPTIMAL_PLANNER,
@@ -61,7 +63,7 @@ private:
     Ui::TestMaze_IIClass ui;
 
     // the environment
-    GUIEnvironment * environment;
+    std::shared_ptr<Environment> environment;
     action_ptr_t action_space;             ///< Action space to be used.
     observation_ptr_t observation_space;   ///< Observation space to be used.
     reward_ptr_t reward_space;             ///< Reward space to be used.
@@ -96,20 +98,22 @@ private:
     // Models //
     //--------//
 
-    // CRF
-    KMarkovCRF crf;
+    // L1-regularization
     double l1_factor;
 
+    // CRF
+    std::shared_ptr<KMarkovCRF> crf;
+
     // UTree
-    UTree utree;
+    std::shared_ptr<UTree> utree;
 
     // Linear_Q
-    LinearQ linQ;
+    std::shared_ptr<LinearQ> linQ;
 
     //----------//
     // Planners //
     //----------//
-    LookAheadSearch look_ahead_search;
+    std::shared_ptr<LookAheadSearch> look_ahead_search;
     size_t max_tree_size;
     bool prune_search_tree;
 
@@ -136,9 +140,11 @@ private:
     void save_to_png(QString file_name) const;
     void perform_transition(const action_ptr_t& action);
     void perform_transition(const action_ptr_t& action, observation_ptr_t& observation_to, reward_ptr_t& reward);
+    void change_environment(std::shared_ptr<Environment> new_environment);
+    void clear_all_learners();
 
 private slots:
-    void render();
+    void render_update();
     void random_action();
     void choose_action();
     void process_console_input(QString sequence_input = QString(), bool sequence = false);

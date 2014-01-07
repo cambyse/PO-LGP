@@ -25,8 +25,10 @@ HEADERS += \
     ../AbstractReward.h \
     ../ListedReward.h \
     \
+    ../Predictor.h \
+    ../Environment.h \
     ../PredictiveEnvironment.h \
-    ../VisualEnvironment.h \
+    ../Visualizer.h \
     ../Maze/Maze.h \
     ../Maze/MazeAction.h \
     ../Maze/AugmentedMazeAction.h \
@@ -66,8 +68,9 @@ SOURCES += \
     ../AbstractReward.cpp \
     ../ListedReward.cpp \
     \
+    ../Environment.cpp \
     ../PredictiveEnvironment.cpp \
-    ../VisualEnvironment.cpp \
+    ../Visualizer.cpp \
     ../Maze/Maze.cpp \
     ../Maze/MazeAction.cpp \
     ../Maze/AugmentedMazeAction.cpp \
@@ -88,10 +91,12 @@ SOURCES += \
     \
     RepresentationTest.cpp \
     FeatureTest.cpp \
-#    TemplateTest.cpp \
     EnvironmentTest.cpp \
     PlannerTest.cpp \
-    LearnerTest.cpp
+    LearnerTest.cpp \
+    \
+#    TemplateTest.cpp \
+    SandBox.cpp
 LIBS += -llbfgs \
     -lemon \
     -larmadillo \
