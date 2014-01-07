@@ -631,12 +631,6 @@ void Maze::perform_transition(const action_ptr_t& action) {
     perform_transition(action, nullptr);
 }
 
-void Maze::perform_transition(const action_ptr_t& a, observation_ptr_t& final_observation, reward_ptr_t& r) {
-    perform_transition(a);
-    final_observation = observation_ptr_t(new observation_t(current_observation));
-    r = current_instance->reward;
-}
-
 Maze::probability_t Maze::get_prediction(
     const instance_t*        instance_from,
     const action_ptr_t&      action,

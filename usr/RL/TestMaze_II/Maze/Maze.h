@@ -27,6 +27,8 @@ public:
     typedef MazeObservation observation_t;
     typedef ListedReward reward_t;
 
+    using PredictiveEnvironment::perform_transition; // so that lookup works
+
     Maze(const double& eps = 0);
     virtual ~Maze();
 
