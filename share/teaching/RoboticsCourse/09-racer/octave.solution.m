@@ -12,7 +12,7 @@ B=[
   -523.529 ]
 
 Q = diag([1 0 1 0]) #position costs
-R = diag([100])      #control costs
+R = diag([2])      #control costs
 
 P = care(A,B,Q,R)
 

@@ -1,11 +1,10 @@
-#include<Core/array.h>
-#include<MT/util.h>
-#include<MT/plot.h>
+#include <Core/array.h>
+#include <Core/util.h>
+#include <Gui/plot.h>
 
 using namespace std;
 
-#include <MT/MLcourse.h>
-#include <MT/util.h>
+#include <Algo/MLcourse.h>
 
 void loadUSPS(arr& X,arr& y,const char* filename){
   X.readTagged(filename,"usps");

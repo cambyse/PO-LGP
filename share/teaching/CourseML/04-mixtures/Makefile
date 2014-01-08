@@ -1,5 +1,5 @@
 BASE = ../../..
 
-DEPEND = Core Gui CourseML
+DEPEND = Core Algo Gui
 
 include $(BASE)/make-generic

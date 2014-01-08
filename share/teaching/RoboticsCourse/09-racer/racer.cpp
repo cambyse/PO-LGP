@@ -20,9 +20,11 @@ Racer::Racer(){
   g = 9.8;
   noise_dynamics = 0;
 
-  c1=c2=1.;
+  c1=c3=c5=1.;
+  c2=c4=0.;
   noise_accel = .1;
   noise_gyro = .1;
+  noise_enc = .01;
 
   gl.add(drawEnv, this);
   gl.add(Racer::glStaticDraw, this);
@@ -81,33 +83,38 @@ void Racer::getDynamics(arr& M, arr& F, arr& B, arr& M_dash, arr& M_ddash, arr& 
   }
 }
 
-void Racer::fv(arr& q_ddot, arr& J, const arr& q__q_dot){
-  q = q__q_dot[0];
-  q_dot = q__q_dot[1];
+VectorFunction& Racer::dynamicsFct(){
+  static struct DynFct:VectorFunction{
+    Racer& R;
+    DynFct(Racer& _R):R(_R){}
+    void fv(arr& y, arr& J, const arr& q__q_dot){
+      R.q = q__q_dot[0];
+      R.q_dot = q__q_dot[1];
 
-  arr M_dash, M_ddash, F_dash;
-  getDynamics(M, F, B, M_dash, (&J?M_ddash:NoArr), (&J?F_dash:NoArr));
-  inverse_SymPosDef(Minv, M);
+      arr M_dash, M_ddash, F_dash;
+      R.getDynamics(R.M, R.F, R.B, M_dash, (&J?M_ddash:NoArr), (&J?F_dash:NoArr));
+      inverse_SymPosDef(R.Minv, R.M);
 
-  this->q_ddot = Minv * (B*u - F);
+      R.q_ddot = R.Minv * (R.B*R.u - R.F);
 
-  if(&q_ddot)
-    q_ddot = this->q_ddot;
+      if(&y) y = R.q_ddot;
 
-  if(&J){
-    J.resize(2,4).setZero();
-    J.setMatrixBlock(-Minv*(M_dash*this->q_ddot + F_dash), 0, 1);
-    arr F_q_dot = q_dot(1)*M_dash+(M_dash*q_dot)*~ARR(0.,1.) - ARR(0,1)*(~q_dot*M_dash);
-    J.setMatrixBlock(-Minv*F_q_dot, 0, 2);
-  }
-
+      if(&J){
+        J.resize(2,4).setZero();
+        J.setMatrixBlock(-R.Minv*(M_dash*R.q_ddot + F_dash), 0, 1);
+        arr F_q_dot = R.q_dot(1)*M_dash+(M_dash*R.q_dot)*~ARR(0.,1.) - ARR(0,1)*(~R.q_dot*M_dash);
+        J.setMatrixBlock(-R.Minv*F_q_dot, 0, 2);
+      }
+    }
+  } f(*this);
+  return f;
 }
 
 void Racer::getDynamicsAB(arr& A, arr& a, arr& barB){
   u=0.;
   arr q_ddot, J;
   arr x=cat(q, q_dot).reshape(2,2);
-  fv(q_ddot, J, x);
+  dynamicsFct().fv(q_ddot, J, x);
   A.resize(4,4).setZero();
   A.setMatrixBlock(eye(2),0,2);
   A.setMatrixBlock(J,2,0);
@@ -127,7 +134,7 @@ double Racer::getEnergy(){
 }
 
 void Racer::getObservation(arr& y, arr& C, arr& c, arr& W){
-  double ct=cos(q(1)), st=sin(q(1));
+  double ct=cos(q(1)+c2), st=sin(q(1)+c2);
   arr R = ARR(ct,-st,st,ct).reshape(2,2);
   arr R_dash = ARR(-st,-ct,ct,-st).reshape(2,2);
 
@@ -138,22 +145,25 @@ void Racer::getObservation(arr& y, arr& C, arr& c, arr& W){
 
   //we need the dynamics
   arr q_ddot, J;
-  fv(q_ddot, (&C?J:NoArr), cat(q, q_dot).reshape(2,2));
+  dynamicsFct().fv(q_ddot, (&C?J:NoArr), cat(q, q_dot).reshape(2,2));
 
   //3-dimensional observation
   arr acc = (q_dot(1) * J_B_dash * q_dot + J_B * q_ddot) - ARR(0,g);
   y = c1 * R * acc; //2D: accelerations
-  y.append(c2 * q_dot(1)); //1D: gyro
+  y.append(c3 * (q_dot(1)+c4)); //1D: gyro
+  y.append(c5 * (q(0)/r-q(1))); //1D: encoder
 
   if(&C){
     arr acc_dash = q_dot(1) * J_B_ddash * q_dot + J_B_dash * q_ddot;
     arr acc_d_qdot = q_dot(1) * J_B_dash + (J_B_dash*q_dot)*~ARR(0.,1.);
 
-    C.resize(3,6).setZero();
+    C.resize(4,6).setZero();
     C.setMatrixBlock(c1 * (R_dash * acc + R*acc_dash), 0, 1); //w.r.t. th
     C.setMatrixBlock(c1*R * acc_d_qdot, 0, 2); //w.r.t. q_dot
     C.setMatrixBlock(c1*R * J_B, 0, 4); //w.r.t q_ddot
-    C(2, 3) = c2; //gyro
+    C(2, 3) = c3; //gyro
+    C(3, 0) = c5/r; //encoder
+    C(3, 1) = -c5; //encoder
 
     //use linearization of dynamics to resolve gradient w.r.t. q_ddot
     C = C.sub(0,-1,0,3) + C.sub(0,-1,4,5)*J;
@@ -164,13 +174,14 @@ void Racer::getObservation(arr& y, arr& C, arr& c, arr& W){
   }
 
   if(&W){
-    W.resize(3,3).setZero();
+    W.resize(4,4).setZero();
     W(0,0) = W(1,1) = noise_accel;
     W(2,2) = noise_gyro;
+    W(3,3) = noise_enc;
   }
 }
 
-VectorFunction& Racer::getObs(){
+VectorFunction& Racer::observationFct(){
   static struct ObsFct:VectorFunction{
     Racer& R;
     ObsFct(Racer& _R):R(_R){}
@@ -186,11 +197,20 @@ VectorFunction& Racer::getObs(){
 void Racer::stepDynamics(double _u){
   u=_u;
   arr x;
-  rk4_2ndOrder(x, cat(q,q_dot).reshape(2,2), *this, tau);
+  rk4_2ndOrder(x, cat(q,q_dot).reshape(2,2), dynamicsFct(), tau);
   q=x[0];
   q_dot=x[1];
 
   if(noise_dynamics) rndGauss(q_dot, ::sqrt(tau)*noise_dynamics, true);
+}
+
+void Racer::stepDynamicsAcc(double u_acc){
+  arr M_dash;
+  getDynamics(M, F, B, M_dash);
+  Minv = inverse_SymPosDef(M);
+  arr BMB = inverse_SymPosDef((~B*Minv*B).reshape(1,1));
+  u = (BMB * (u_acc + ~B*Minv*F)).scalar();
+  stepDynamics(u);
 }
 
 void Racer::glDraw(){

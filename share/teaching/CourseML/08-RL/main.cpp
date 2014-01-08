@@ -1,5 +1,5 @@
 #include <Core/array.h>
-#include <MT/opengl.h>
+#include <Gui/opengl.h>
 
 struct MDP{
   arr Ps;    ///< start distribution
