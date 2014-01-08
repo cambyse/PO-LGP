@@ -17,6 +17,12 @@ struct sG4Poller{
 
   MT::Array<G4_FRAMEDATA> framedata;
   floatA poses;
+
+  uint num_hubs_read;
+  uint init_frame;
+  uint last_frame;
+  uint num_frames;
+  double dropped_frames;
 };
 
 namespace {
@@ -77,6 +83,7 @@ G4Poller::G4Poller():Module("G4Tracker"){
 }
 
 void G4Poller::open(){
+  // TODO put this in the MT.cfg file
   const char *src_cfg_file = "../../../configurations/g4_source_configuration.g4c";
   uint numHubs = MT::getParameter<int>("g4_numHubs");
   G4_CMD_STRUCT cs;
@@ -85,10 +92,9 @@ void G4Poller::open(){
   //--outer initialization loop - try multiple times
   bool isInitialized = false;
   while(!isInitialized){
-
     //-- initialization
     cout <<"G4 initialization ..." <<flush;
-    for(uint i=0;i<10;i++){
+    for(uint i=0;i<100;i++){
       res = g4_init_sys(&s->sysId, src_cfg_file, NULL);
       if(res==G4_ERROR_NONE) { 
         break; //success!
@@ -102,7 +108,7 @@ void G4Poller::open(){
     cout <<" success" <<endl;
 
     //-- query #hubs
-    cout <<"G4 quering #hubs, should be = " <<numHubs <<" ..." <<flush;
+    cout <<"G4 quering #hubs, should be = " <<numHubs <<" ... " <<flush;
     cs.cmd = G4_CMD_GET_ACTIVE_HUBS;
     cs.cds.id = G4_CREATE_ID(s->sysId, 0, 0);
     cs.cds.action=G4_ACTION_GET;
@@ -156,25 +162,30 @@ void G4Poller::open(){
   cs.cds.pParam=(void*)&meter_unit;
   res = g4_set_query(&cs);
   if(res!=G4_ERROR_NONE){ close(); HALT(""); }
+
+  s->num_hubs_read = 0;
+  s->init_frame = 0;
+  s->last_frame = 0;
+  s->num_frames = 0;
+  s->dropped_frames = 0;
 }
 
 void G4Poller::step(){
   int res=g4_get_frame_data(s->framedata.p, s->sysId, s->hubList.p, s->hubs);
   int num_hubs_read=res&0xffff;
+  //int num_hubs_reg=res>>16;
 
-  /*
-  int tot_sys_hubs=res>>16;
-  cout <<"#existing hubs=" <<tot_sys_hubs
-        <<" #data-avail hubs=" <<num_hubs_read <<endl;
-  */
+  cout << num_hubs_read << flush;
+  if(!num_hubs_read) return;
+  cout << endl;
 
-  if(num_hubs_read!=s->hubs) return; //-- assuming that g4 either returns all hubs or none
+  s->num_hubs_read += num_hubs_read;
+  s->last_frame = s->framedata(0).frame;
+  if(s->init_frame == 0)
+    s->init_frame = s->framedata(0).frame;
+  s->num_frames = s->last_frame-s->init_frame+1;
+  s->dropped_frames = 100*(1-s->num_hubs_read*1./(s->hubs*s->num_frames));
 
-  // TODO by all means this is exactly the same as if the new positions were
-  // identical to the previous ones.. is that reasonable? maybe it would be
-  // better to avoid setting to 0, at least the previous values are maintained,
-  // in that case. Keep this here just for now to see if that can actually
-  // happen.
   s->poses.resize(s->hubs, G4_SENSORS_PER_HUB, 7);
   s->poses.setZero();
 
@@ -186,12 +197,12 @@ void G4Poller::step(){
         s_id = s->framedata(hub).sfd[sen].id;
         memmove(&s->poses(h_id, s_id, 0), s->framedata(hub).sfd[sen].pos, 7*s->poses.sizeT); //low level copy of data
 #if 0
-        cout <<" hub " <<s->framedata(h).hub
+        cout <<" hub " <<s->framedata(hub).hub
             <<" sensor " <<s
-           <<" frame " <<s->framedata(h).frame
-          <<" id=" <<s->framedata(h).sfd[s].id
-         <<" pos=" <<s->framedata(h).sfd[s].pos[0] <<' '<<s->framedata(h).sfd[s].pos[1] <<' ' <<s->framedata(h).sfd[s].pos[2]
-        <<" ori=" <<s->framedata(h).sfd[s].ori[0] <<' '<<s->framedata(h).sfd[s].ori[1] <<' ' <<s->framedata(h).sfd[s].ori[2] <<' ' <<s->framedata(h).sfd[s].ori[3]
+           <<" frame " <<s->framedata(hub).frame
+          <<" id=" <<s->framedata(hub).sfd[s].id
+         <<" pos=" <<s->framedata(hub).sfd[s].pos[0] <<' '<<s->framedata(hub).sfd[s].pos[1] <<' ' <<s->framedata(hub).sfd[s].pos[2]
+        <<" ori=" <<s->framedata(hub).sfd[s].ori[0] <<' '<<s->framedata(hub).sfd[s].ori[1] <<' ' <<s->framedata(hub).sfd[s].ori[2] <<' ' <<s->framedata(hub).sfd[s].ori[3]
         <<endl;
 #endif
       }
@@ -199,14 +210,24 @@ void G4Poller::step(){
   }
 
   s->poses.reshape(s->hubs*G4_SENSORS_PER_HUB, 7);
+  //cout << "poses: " << s->poses << endl;
+  //cout << "currentPoses: " << currentPoses.get() << endl;
   currentPoses.set() = s->poses; //publish the result
+  //cout << "currentPoses: " << currentPoses.get() << endl;
 }
 
 #include <unistd.h>
 
 void G4Poller::close(){
+  cout << "stats: " << endl;
+  cout << " - num_hubs_read: " << s->num_hubs_read << endl;
+  cout << " - num_frames: " << s->num_frames << endl;
+  cout << " - dropped_frames: " << s->dropped_frames << endl;
+
   usleep(1000000l);
+  cout << "closing.. " << flush;
   g4_close_tracker();
+  cout << "DONE" << endl;
   usleep(1000000l);
 }
 
