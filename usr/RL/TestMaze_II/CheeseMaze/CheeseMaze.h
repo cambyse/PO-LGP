@@ -52,21 +52,27 @@ private:
      *   ┗━━━┛   ┗━━━┛   ┗━━━┛
      */
 
-    QGraphicsSvgItem *mouse;                         ///< Svg image for rendering the mouse.
-    QGraphicsSvgItem *cheese;                        ///< Svg image for rendering the cheese.
-    QGraphicsLineItem *action_line;                  ///< Line showing the last action.
-    QGraphicsEllipseItem *action_point;              ///< Circle showing the last position for showing the last action.
+    QGraphicsSvgItem *mouse = nullptr;                         ///< Svg image for rendering the mouse.
+    QGraphicsSvgItem *cheese = nullptr;                        ///< Svg image for rendering the cheese.
+    QGraphicsLineItem *action_line = nullptr;                  ///< Line showing the last action.
+    QGraphicsEllipseItem *action_point = nullptr;              ///< Circle showing the last position for showing the last action.
 
-    QGraphicsSvgItem * CheeseMazeObservation_N;
-    QGraphicsSvgItem * CheeseMazeObservation_NE;
-    QGraphicsSvgItem * CheeseMazeObservation_NS;
-    QGraphicsSvgItem * CheeseMazeObservation_NW;
-    QGraphicsSvgItem * CheeseMazeObservation_EW;
-    QGraphicsSvgItem * CheeseMazeObservation_ESW;
+    QGraphicsSvgItem * CheeseMazeObservation_N = nullptr;
+    QGraphicsSvgItem * CheeseMazeObservation_NE = nullptr;
+    QGraphicsSvgItem * CheeseMazeObservation_NS = nullptr;
+    QGraphicsSvgItem * CheeseMazeObservation_NW = nullptr;
+    QGraphicsSvgItem * CheeseMazeObservation_EW = nullptr;
+    QGraphicsSvgItem * CheeseMazeObservation_ESW = nullptr;
+
+    QGraphicsSvgItem * cheese_reward = nullptr;
+    QGraphicsSvgItem * wall_punish = nullptr;
+    QGraphicsSvgItem * normal_punish = nullptr;
 
     int current_state_idx = 0;
     int last_state_idx    = 0;
-    action_t last_action  = CheeseMazeAction("north");
+    action_t last_action;
+    observation_t last_observation;
+    reward_t last_reward;
 
     static int get_x_pos(int state_idx);
     static int get_y_pos(int state_idx);
@@ -74,7 +80,7 @@ private:
     int current_y_pos() const;
     int last_x_pos() const;
     int last_y_pos() const;
-    observation_ptr_t get_observation(int state_idx) const;
+    observation_t get_observation(int state_idx) const;
 
 };
 

@@ -15,13 +15,29 @@ CheeseMaze::CheeseMaze():
                 observation_ptr_t(new CheeseMazeObservation()),
                 reward_ptr_t(new ListedReward({-1,-0.1,1},1))),
     mouse(nullptr),
-    cheese(nullptr)
+    cheese(nullptr),
+    last_action("north"),
+    last_observation("N"),
+    last_reward({-1,-0.1,1},1)
 {}
 
 
 CheeseMaze::~CheeseMaze() {
     delete mouse;
     delete cheese;
+    delete action_line;
+    delete action_point;
+
+    delete CheeseMazeObservation_N;
+    delete CheeseMazeObservation_NE;
+    delete CheeseMazeObservation_NS;
+    delete CheeseMazeObservation_NW;
+    delete CheeseMazeObservation_EW;
+    delete CheeseMazeObservation_ESW;
+
+    delete cheese_reward;
+    delete wall_punish;
+    delete normal_punish;
 }
 
 void CheeseMaze::render_initialize(QGraphicsView * v) {
@@ -89,11 +105,11 @@ void CheeseMaze::render_initialize(QGraphicsView * v) {
         scene->addItem(mouse);
     }
 
-    // render observations
+    // render observations and rewards
+    double observation_x_pos = 2;
+    double observation_y_pos = 4;
     {
-        double scale = 0.3;
-        double x_pos = 2;
-        double y_pos = 4;
+        double scale = 0.6;
         CheeseMazeObservation_N = new QGraphicsSvgItem("Images/CheeseMazeObservation_N.svg");
         QSizeF s = CheeseMazeObservation_N->boundingRect().size()*scale;
         CheeseMazeObservation_NS = new QGraphicsSvgItem("Images/CheeseMazeObservation_NS.svg");
@@ -107,18 +123,54 @@ void CheeseMaze::render_initialize(QGraphicsView * v) {
         CheeseMazeObservation_NW->setScale(scale);
         CheeseMazeObservation_EW->setScale(scale);
         CheeseMazeObservation_ESW->setScale(scale);
-        CheeseMazeObservation_N->setPos(x_pos-s.width()/2, y_pos-s.height()/2);
-        CheeseMazeObservation_NS->setPos(x_pos-s.width()/2, y_pos-s.height()/2);
-        CheeseMazeObservation_NE->setPos(x_pos-s.width()/2, y_pos-s.height()/2);
-        CheeseMazeObservation_NW->setPos(x_pos-s.width()/2, y_pos-s.height()/2);
-        CheeseMazeObservation_EW->setPos(x_pos-s.width()/2, y_pos-s.height()/2);
-        CheeseMazeObservation_ESW->setPos(x_pos-s.width()/2, y_pos-s.height()/2);
+        CheeseMazeObservation_N->setPos(observation_x_pos-s.width()/2, observation_y_pos-s.height()/2);
+        CheeseMazeObservation_NS->setPos(observation_x_pos-s.width()/2, observation_y_pos-s.height()/2);
+        CheeseMazeObservation_NE->setPos(observation_x_pos-s.width()/2, observation_y_pos-s.height()/2);
+        CheeseMazeObservation_NW->setPos(observation_x_pos-s.width()/2, observation_y_pos-s.height()/2);
+        CheeseMazeObservation_EW->setPos(observation_x_pos-s.width()/2, observation_y_pos-s.height()/2);
+        CheeseMazeObservation_ESW->setPos(observation_x_pos-s.width()/2, observation_y_pos-s.height()/2);
         scene->addItem(CheeseMazeObservation_N);
         scene->addItem(CheeseMazeObservation_NS);
         scene->addItem(CheeseMazeObservation_NE);
         scene->addItem(CheeseMazeObservation_NW);
         scene->addItem(CheeseMazeObservation_EW);
         scene->addItem(CheeseMazeObservation_ESW);
+    }
+    {
+        // cheese reward
+        if(!cheese_reward) {
+            delete cheese_reward;
+        }
+        cheese_reward = new QGraphicsSvgItem("Images/cheese.svg");
+        double scale = 0.2;
+        cheese_reward->setScale(scale);
+        QSizeF s = cheese_reward->boundingRect().size()*scale;
+        cheese_reward->setPos(observation_x_pos-s.width()/2, observation_y_pos-s.height()/2);
+        scene->addItem(cheese_reward);
+    }
+    {
+        // wall punishment
+        if(!wall_punish) {
+            delete wall_punish;
+        }
+        wall_punish = new QGraphicsSvgItem("Images/blitz.svg");
+        double scale = 0.3;
+        wall_punish->setScale(scale);
+        QSizeF s = wall_punish->boundingRect().size()*scale;
+        wall_punish->setPos(observation_x_pos-s.width()/2, observation_y_pos-s.height()/2);
+        scene->addItem(wall_punish);
+    }
+    {
+        // normal punishment
+        if(!normal_punish) {
+            delete normal_punish;
+        }
+        normal_punish = new QGraphicsSvgItem("Images/blitz.svg");
+        double scale = 0.1;
+        normal_punish->setScale(scale);
+        QSizeF s = normal_punish->boundingRect().size()*scale;
+        normal_punish->setPos(observation_x_pos-s.width()/2, observation_y_pos-s.height()/2);
+        scene->addItem(normal_punish);
     }
 
     rescale_scene(view);
@@ -146,26 +198,69 @@ void CheeseMaze::render_update() {
         DEBUG_ERROR("Invalid action (" << last_action << ")");
     }
 
+    // show correct observation
+    CheeseMazeObservation_N->setVisible(false);
+    CheeseMazeObservation_NS->setVisible(false);
+    CheeseMazeObservation_NE->setVisible(false);
+    CheeseMazeObservation_NW->setVisible(false);
+    CheeseMazeObservation_EW->setVisible(false);
+    CheeseMazeObservation_ESW->setVisible(false);
+    if(last_observation==CheeseMazeObservation("N")) {
+        CheeseMazeObservation_N->setVisible(true);
+    } else if(last_observation==CheeseMazeObservation("NS")) {
+        CheeseMazeObservation_NS->setVisible(true);
+    } else if(last_observation==CheeseMazeObservation("NE")) {
+        CheeseMazeObservation_NE->setVisible(true);
+    } else if(last_observation==CheeseMazeObservation("NW")) {
+        CheeseMazeObservation_NW->setVisible(true);
+    } else if(last_observation==CheeseMazeObservation("EW")) {
+        CheeseMazeObservation_EW->setVisible(true);
+    } else if(last_observation==CheeseMazeObservation("ESW")) {
+        CheeseMazeObservation_ESW->setVisible(true);
+    } else {
+        DEBUG_DEAD_LINE;
+    }
+
+    // show correct reward
+    cheese_reward->setVisible(false);
+    wall_punish->setVisible(false);
+    normal_punish->setVisible(false);
+    if(last_reward.get_value()==1) {
+        cheese_reward->setVisible(true);
+    } else if(last_reward.get_value()==-1) {
+        wall_punish->setVisible(true);
+    } else if(last_reward.get_value()==-0.1) {
+        normal_punish->setVisible(true);
+    } else {
+        DEBUG_ERROR("Unknown reward value");
+    }
+
     rescale_scene(view);
 }
 
 void CheeseMaze::render_tear_down() {
     view->scene()->clear();
-    action_line = nullptr;
-    action_point = nullptr;
+
     mouse = nullptr;
     cheese = nullptr;
+    action_line = nullptr;
+    action_point = nullptr;
+
     CheeseMazeObservation_N = nullptr;
     CheeseMazeObservation_NE = nullptr;
     CheeseMazeObservation_NS = nullptr;
     CheeseMazeObservation_NW = nullptr;
     CheeseMazeObservation_EW = nullptr;
     CheeseMazeObservation_ESW = nullptr;
+
+    cheese_reward = nullptr;
+    wall_punish = nullptr;
+    normal_punish = nullptr;
 }
 
 void CheeseMaze::perform_transition(const action_ptr_t& action) {
-    observation_ptr_t o;
-    reward_ptr_t r;
+    observation_ptr_t o; // dummy
+    reward_ptr_t r;      // dummy
     perform_transition(action, o, r);
 }
 
@@ -316,8 +411,10 @@ void CheeseMaze::perform_transition(const action_ptr_t & a, observation_ptr_t & 
     } else {
         r = reward_space.get_derived<const ListedReward>()->new_reward(-0.1);
     }
+    last_reward = *(r.get_derived<const ListedReward>());
     // determine observation
-    o = get_observation(current_state_idx);
+    last_observation = get_observation(current_state_idx);
+    o = observation_ptr_t(new CheeseMazeObservation(last_observation));
 }
 
 void CheeseMaze::get_features(std::vector<f_ptr_t> & basis_features, FeatureLearner::LEARNER_TYPE type) const {
@@ -460,32 +557,32 @@ int CheeseMaze::last_y_pos() const {
     return get_y_pos(last_state_idx);
 }
 
-CheeseMaze::observation_ptr_t CheeseMaze::get_observation(int state_idx) const {
+CheeseMaze::observation_t CheeseMaze::get_observation(int state_idx) const {
     switch(state_idx) {
     case 0:
-        return observation_ptr_t(new CheeseMazeObservation("NW"));
+        return CheeseMazeObservation("NW");
     case 1:
-        return observation_ptr_t(new CheeseMazeObservation("EW"));
+        return CheeseMazeObservation("EW");
     case 2:
-        return observation_ptr_t(new CheeseMazeObservation("ESW"));
+        return CheeseMazeObservation("ESW");
     case 3:
-        return observation_ptr_t(new CheeseMazeObservation("NS"));
+        return CheeseMazeObservation("NS");
     case 4:
-        return observation_ptr_t(new CheeseMazeObservation("N"));
+        return CheeseMazeObservation("N");
     case 5:
-        return observation_ptr_t(new CheeseMazeObservation("EW"));
+        return CheeseMazeObservation("EW");
     case 6:
-        return observation_ptr_t(new CheeseMazeObservation("ESW"));
+        return CheeseMazeObservation("ESW");
     case 7:
-        return observation_ptr_t(new CheeseMazeObservation("NS"));
+        return CheeseMazeObservation("NS");
     case 8:
-        return observation_ptr_t(new CheeseMazeObservation("NE"));
+        return CheeseMazeObservation("NE");
     case 9:
-        return observation_ptr_t(new CheeseMazeObservation("EW"));
+        return CheeseMazeObservation("EW");
     case 10:
-        return observation_ptr_t(new CheeseMazeObservation("ESW"));
+        return CheeseMazeObservation("ESW");
     default:
         DEBUG_DEAD_LINE;
-        return observation_ptr_t(new CheeseMazeObservation());
+        return CheeseMazeObservation();
     }
 }
