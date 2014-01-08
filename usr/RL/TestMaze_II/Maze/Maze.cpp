@@ -388,6 +388,7 @@ const vector<Maze::maze_t> Maze::maze_list = {
 };
 
 Maze::Maze(const double& eps):
+    PredictiveEnvironment(action_ptr_t(), observation_ptr_t(), reward_ptr_t()), // set by calling set_maze in body
     current_observation(*(maze_list[0].observation_space.get_derived<observation_t>())),
     epsilon(eps),
     agent(nullptr),

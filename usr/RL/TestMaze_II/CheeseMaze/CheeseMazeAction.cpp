@@ -1,4 +1,4 @@
-#include "CheseMazeAction.h"
+#include "CheeseMazeAction.h"
 
 #include "../util/Macro.h"
 
@@ -6,15 +6,15 @@
 
 using std::string;
 
-CheseMazeAction::CheseMazeAction(ACTION a):
+CheeseMazeAction::CheeseMazeAction(ACTION a):
     action(a)
 {
-    set_type(ACTION_TYPE::CHESE_MAZE_ACTION);
+    set_type(ACTION_TYPE::CHEESE_MAZE_ACTION);
 }
 
-CheseMazeAction::CheseMazeAction(const char * a) {
+CheeseMazeAction::CheeseMazeAction(const char * a) {
     // set type
-    set_type(ACTION_TYPE::CHESEMAZE_ACTION);
+    set_type(ACTION_TYPE::CHEESE_MAZE_ACTION);
     // set action
     if(!strcmp(a,"north") || !strcmp(a,"n")) {
         action = ACTION::NORTH;
@@ -30,27 +30,27 @@ CheseMazeAction::CheseMazeAction(const char * a) {
     }
 }
 
-CheseMazeAction::ptr_t CheseMazeAction::next() const {
+CheeseMazeAction::ptr_t CheeseMazeAction::next() const {
     ACTION a = (ACTION)((int)action+1);
     if(a>=ACTION::END) {
         return ptr_t(new AbstractAction());
     } else {
-        return ptr_t(new CheseMazeAction(a));
+        return ptr_t(new CheeseMazeAction(a));
     }
 }
 
-bool CheseMazeAction::operator!=(const AbstractAction &other) const {
-    COMPARE_ABSTRACT_TYPE_AND_CAST(!=,get_type,const CheseMazeAction *);
+bool CheeseMazeAction::operator!=(const AbstractAction &other) const {
+    COMPARE_ABSTRACT_TYPE_AND_CAST(!=,get_type,const CheeseMazeAction *);
     return this->action!=ptr->action;
 }
 
-bool CheseMazeAction::operator<(const AbstractAction &other) const {
-    COMPARE_ABSTRACT_TYPE_AND_CAST(<,get_type,const CheseMazeAction *);
+bool CheeseMazeAction::operator<(const AbstractAction &other) const {
+    COMPARE_ABSTRACT_TYPE_AND_CAST(<,get_type,const CheeseMazeAction *);
     return this->action < ptr->action;
 }
 
-const string CheseMazeAction::print() const {
-    string ret("CheseMazeAction(");
+const string CheeseMazeAction::print() const {
+    string ret("CheeseMazeAction(");
     switch(action) {
     case ACTION::NORTH:
         ret+="   NORTH";
@@ -73,6 +73,6 @@ const string CheseMazeAction::print() const {
     return ret;
 }
 
-void CheseMazeAction::set_type(ACTION_TYPE t) {
+void CheeseMazeAction::set_type(ACTION_TYPE t) {
     AbstractAction::set_type(t);
 }

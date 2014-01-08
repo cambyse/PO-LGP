@@ -6,7 +6,25 @@
 #define DEBUG_LEVEL 0
 #include "../debug.h"
 
+static const double state_size = 0.9;                             // Size of states for rendering.
+static const double wall_width = 0.08;                            // Width of walls for rendering.
+static const double reward_start_size = 0.15;                     // Size of reward start marker for rendering.
+static const double reward_end_size = 0.2;                        // Size of reward end marker for rendering.
+static const double reward_end_ratio = 0.5;                       // Length-to-width ratio of reward end marker (arrow) for rendering.
+static const double reward_end_notch = 0.25;                      // Depth of the arrow notch.
+static const double text_scale = 0.008;                           // Scale factor for text size.
+static const QFont  text_font = QFont("Helvetica [Cronyx]", 12);  // Font for texts.
+static const double text_center = 0.3;                            // How close the text should be positioned to the midpoint between start and end marker.
+static const double border_margin = 0.4*state_size;               // Margin for drawing the border around the maze.
+static const double action_line_length_factor = 0.8;              // How long the action line is relative to the state size.
+static const double action_point_size_factor = 0.5;               // How large the action point is relative to the state size.
+static const bool draw_text = false;                              // Whether to draw texts.
+
+
 CheeseMaze::CheeseMaze():
+    Environment(action_ptr_t(new CheeseMazeAction()),
+                observation_ptr_t(new CheeseMazeObservation()),
+                reward_ptr_t(new ListedReward({-1,0,1},1))),
     mouse(nullptr)
 {}
 
@@ -27,9 +45,9 @@ void CheeseMaze::render_initialize(QGraphicsView * v) {
     QPen action_line_pen(QColor(0,0,0,50),0.1,Qt::SolidLine,Qt::RoundCap);
     QPen action_point_pen(QColor(0,0,0),0.01,Qt::SolidLine,Qt::RoundCap);
     QBrush action_point_brush(QColor(0,0,0,30));
-    action_line = scene->addLine(current_observation.get_x_pos(),current_observation.get_y_pos(),current_observation.get_x_pos(),current_observation.get_y_pos(),action_line_pen);
+    action_line = scene->addLine(current_x_pos,current_y_pos,current_x_pos,current_y_pos,action_line_pen);
     double ap_size = state_size*action_point_size_factor;
-    action_point = scene->addEllipse(current_observation.get_x_pos()-ap_size/2,current_observation.get_y_pos()-ap_size/2,ap_size,ap_size,action_point_pen,action_point_brush);
+    action_point = scene->addEllipse(current_x_pos-ap_size/2,current_y_pos-ap_size/2,ap_size,ap_size,action_point_pen,action_point_brush);
 
     // render mouse
     if(!mouse) {
@@ -38,7 +56,7 @@ void CheeseMaze::render_initialize(QGraphicsView * v) {
     mouse = new QGraphicsSvgItem("mouse.svg");
     mouse->setScale(0.2);
     QSizeF s = mouse->boundingRect().size();
-    mouse->setPos(current_observation.get_x_pos()-s.width()/2, current_observation.get_y_pos()-s.height()/2);
+    mouse->setPos(current_x_pos-s.width()/2, current_y_pos-s.height()/2);
 
     scene->addItem(mouse);
 
@@ -49,28 +67,22 @@ void CheeseMaze::render_initialize(QGraphicsView * v) {
 void CheeseMaze::render_update() {
     // set mouse position and mirror to make 'stay' actions visible
     QSizeF s = mouse->boundingRect().size();
-    mouse->setPos(current_observation.get_x_pos()-mouse->scale()*s.width()/2, current_observation.get_y_pos()-mouse->scale()*s.height()/2);
+    mouse->setPos(current_x_pos-mouse->scale()*s.width()/2, current_y_pos-mouse->scale()*s.height()/2);
 
     // set action line and circle
-    observation_t last_state(*((current_instance->const_it()-1)->observation.get_derived<observation_t>()));
     double al_length = state_size*action_line_length_factor;
     double ap_size = state_size*action_point_size_factor;
-    action_point->setRect(last_state.get_x_pos()-ap_size/2,last_state.get_y_pos()-ap_size/2,ap_size,ap_size);
-    switch(current_instance->action.get_derived<action_t>()->get_action()) {
-    case action_t::ACTION::UP:
-        action_line->setLine(last_state.get_x_pos(),last_state.get_y_pos(),last_state.get_x_pos(),last_state.get_y_pos()-al_length);
-        break;
-    case action_t::ACTION::DOWN:
-        action_line->setLine(last_state.get_x_pos(),last_state.get_y_pos(),last_state.get_x_pos(),last_state.get_y_pos()+al_length);
-        break;
-    case action_t::ACTION::LEFT:
-        action_line->setLine(last_state.get_x_pos(),last_state.get_y_pos(),last_state.get_x_pos()-al_length,last_state.get_y_pos());
-        break;
-    case action_t::ACTION::RIGHT:
-        action_line->setLine(last_state.get_x_pos(),last_state.get_y_pos(),last_state.get_x_pos()+al_length,last_state.get_y_pos());
-        break;
-    default:
-        DEBUG_ERROR("Invalid action (" << current_instance->action << ")");
+    action_point->setRect(last_x_pos-ap_size/2,last_y_pos-ap_size/2,ap_size,ap_size);
+    if(last_action==action_t(action_t::ACTION::NORTH)) {
+        action_line->setLine(last_x_pos,last_y_pos,last_x_pos,last_y_pos-al_length);
+    } else if(last_action==action_t(action_t::ACTION::SOUTH)) {
+        action_line->setLine(last_x_pos,last_y_pos,last_x_pos,last_y_pos+al_length);
+    } else if(last_action==action_t(action_t::ACTION::WEST)) {
+        action_line->setLine(last_x_pos,last_y_pos,last_x_pos-al_length,last_y_pos);
+    } else if(last_action==action_t(action_t::ACTION::EAST)) {
+        action_line->setLine(last_x_pos,last_y_pos,last_x_pos+al_length,last_y_pos);
+    } else {
+        DEBUG_ERROR("Invalid action (" << last_action << ")");
     }
 
     rescale_scene(view);
@@ -84,6 +96,10 @@ void CheeseMaze::render_tear_down() {
 }
 
 void CheeseMaze::perform_transition(const action_ptr_t& action) {
+#warning todo
+}
+
+void CheeseMaze::perform_transition(const action_ptr_t & a, observation_ptr_t & o, reward_ptr_t & r ) {
 #warning todo
 }
 

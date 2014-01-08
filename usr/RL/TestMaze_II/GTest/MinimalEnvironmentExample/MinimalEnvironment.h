@@ -10,12 +10,12 @@
 
 class MinimalEnvironment: public PredictiveEnvironment {
 public:
-    MinimalEnvironment() {
-        current_instance = instance_t::create(
-            action_ptr_t(new MinimalAction(MinimalAction::ACTION::STAY)),
-            observation_ptr_t(new MinimalObservation(MinimalObservation::OBSERVATION::RED)),
-            reward_ptr_t(new MinimalReward(MinimalReward::REWARD::NO_REWARD))
-            );
+    MinimalEnvironment():
+    PredictiveEnvironment(action_ptr_t(new MinimalAction(MinimalAction::ACTION::STAY)),
+                          observation_ptr_t(new MinimalObservation(MinimalObservation::OBSERVATION::RED)),
+                          reward_ptr_t(new MinimalReward(MinimalReward::REWARD::NO_REWARD)))
+    {
+        current_instance = instance_t::create(action_space, observation_space, reward_space);
         action_space = action_ptr_t(new MinimalAction());
         observation_space = observation_ptr_t(new MinimalObservation());
         reward_space = reward_ptr_t(new MinimalReward());

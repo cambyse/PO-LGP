@@ -8,8 +8,9 @@
 #include "../util/ColorOutput.h"
 
 #include "../PredictiveEnvironment.h"
-#include "../Maze/Maze.h"
 #include "MinimalEnvironmentExample/MinimalEnvironment.h"
+#include "../Maze/Maze.h"
+#include "../CheeseMaze/CheeseMaze.h"
 
 #define DEBUG_LEVEL 1
 #include "../debug.h"
@@ -121,6 +122,29 @@ TEST(EnvironmentTest, Minimal) {
         if(DEBUG_LEVEL>1) {
             mini.print_last_transition();
         }
+    }
+}
+
+TEST(EnvironmentTest, CheeseMaze) {
+
+   // initialize environment
+    CheeseMaze cheese_maze;
+
+    // get spaces
+    action_ptr_t action_space;
+    observation_ptr_t observation_space;
+    reward_ptr_t reward_space;
+    cheese_maze.get_spaces(action_space, observation_space, reward_space);
+
+    // get all actions for random selection
+    vector<action_ptr_t> action_vector;
+    for(auto a : action_space) {
+        action_vector.push_back(a);
+    }
+
+    // perform random transitions
+    repeat(10) {
+        cheese_maze.perform_transition(util::random_select(action_vector));
     }
 }
 

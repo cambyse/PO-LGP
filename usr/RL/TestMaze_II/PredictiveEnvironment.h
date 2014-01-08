@@ -10,7 +10,7 @@ public:
 
     DISAMBIGUATE_CONFIG_TYPEDEFS(Predictor);
 
-    PredictiveEnvironment();
+    PredictiveEnvironment(action_ptr_t as, observation_ptr_t os, reward_ptr_t rs);
 
     virtual ~PredictiveEnvironment() = default;
 

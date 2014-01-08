@@ -15,7 +15,7 @@ public:
     USE_CONFIG_TYPEDEFS;
     typedef Feature::const_feature_ptr_t f_ptr_t;
 
-    Environment() = default;
+    Environment(action_ptr_t as, observation_ptr_t os, reward_ptr_t rs);
     virtual ~Environment() = default;
 
     /** \brief Perform a transition by executing an action. */

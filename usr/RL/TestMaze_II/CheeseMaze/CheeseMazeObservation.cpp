@@ -1,8 +1,10 @@
 #include "CheeseMazeObservation.h"
 
-#include "../../util/Macro.h"
+#include "../util/Macro.h"
 
-#include "../../debug.h"
+#include "../debug.h"
+
+using std::string;
 
 CheeseMazeObservation::CheeseMazeObservation(OBSERVATION o) {
     observation = o;
