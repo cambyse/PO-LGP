@@ -11,12 +11,12 @@ struct Racer{
   double u, tau;
 
   //constant parameters
-  double r, l, mA, mB, IA, IB, g, noise_dynamics; //dynamics parameters
+  double r, l, lC, mA, mB, IA, IB, g, noise_dynamics; //dynamics parameters
   double c1, c2, c3, c4, c5, noise_accel, noise_gyro, noise_enc; //observation parameters
 
   OpenGL gl;
   Racer();
-  void getJacobians(arr& J_A, arr& J_B, arr& J_B_dash=NoArr, arr &J_B_ddash=NoArr);
+  void getJacobians(arr& J_A, arr& J_B, arr& J_B_dash=NoArr, arr &J_B_ddash=NoArr, bool getJ_C=false);
   void getDynamics(arr& M, arr& F, arr& B, arr &M_dash=NoArr, arr &M_ddash=NoArr, arr &F_dash=NoArr);
   void getDynamicsAB(arr& A, arr& a, arr& barB);
   double getEnergy();

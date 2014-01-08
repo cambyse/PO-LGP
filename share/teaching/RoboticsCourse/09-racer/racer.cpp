@@ -11,20 +11,24 @@ Racer::Racer(){
 
   //init constants
   tau = 0.01;
-  r=.05;
-  l=.5;
-  mA=.05;
-  mB=.5;
-  IA=mA*MT::sqr(.5*r);
-  IB=mB*MT::sqr(.2*l);
-  g = 9.8;
+  r = 0.05;  //radius of wheel
+  l = 0.325; //height of pendulum COM
+  lC = 0.49; //height of IMU
+  mA = 0.05; //mass of wheel
+  mB = 1.5;  //mass of pendulum
+  IA = mA*MT::sqr(.9*r); //the mass averages at .9*r from the center
+  IB = mB*MT::sqr(.8*l); //0.3705
+  g = 9.81;
   noise_dynamics = 0;
 
-  c1=c3=c5=1.;
+  c1 = 1./9.6; //9.81;
+  c3 = 1.;
+  c5 = 1.;
   c2=c4=0.;
-  noise_accel = .1;
+
+  noise_accel = 1.;
   noise_gyro = .1;
-  noise_enc = .01;
+  noise_enc = 1e-3;
 
   gl.add(drawEnv, this);
   gl.add(Racer::glStaticDraw, this);
@@ -34,7 +38,9 @@ Racer::Racer(){
   gl.update();
 }
 
-void Racer::getJacobians(arr& J_A, arr& J_B, arr& J_B_dash, arr& J_B_ddash){
+void Racer::getJacobians(arr& J_A, arr& J_B, arr& J_B_dash, arr& J_B_ddash, bool getJ_C){
+  double L=l;
+  if(getJ_C) L=lC;
   if(&J_A){
     J_A.resize(3,2).setZero();
     J_A(0,0)=1.;
@@ -43,18 +49,18 @@ void Racer::getJacobians(arr& J_A, arr& J_B, arr& J_B_dash, arr& J_B_ddash){
   if(&J_B){
     J_B.resize(3,2).setZero();
     J_B(0,0) = J_B(2,1) = 1.;
-    J_B(0,1) = +l*::cos(q(1));
-    J_B(1,1) = -l*::sin(q(1));
+    J_B(0,1) = +L*::cos(q(1));
+    J_B(1,1) = -L*::sin(q(1));
   }
   if(&J_B_dash){
     J_B_dash.resize(3,2).setZero();
-    J_B_dash(0,1) = -l*::sin(q(1));
-    J_B_dash(1,1) = -l*::cos(q(1));
+    J_B_dash(0,1) = -L*::sin(q(1));
+    J_B_dash(1,1) = -L*::cos(q(1));
   }
   if(&J_B_ddash){
     J_B_ddash.resize(3,2).setZero();
-    J_B_ddash(0,1) = -l*::cos(q(1));
-    J_B_ddash(1,1) = +l*::sin(q(1));
+    J_B_ddash(0,1) = -L*::cos(q(1));
+    J_B_ddash(1,1) = +L*::sin(q(1));
   }
 }
 
@@ -138,29 +144,30 @@ void Racer::getObservation(arr& y, arr& C, arr& c, arr& W){
   arr R = ARR(ct,-st,st,ct).reshape(2,2);
   arr R_dash = ARR(-st,-ct,ct,-st).reshape(2,2);
 
-  arr J_B,J_B_dash,J_B_ddash;
-  getJacobians(NoArr, J_B, J_B_dash, J_B_ddash);
+  arr J_C,J_C_dash,J_C_ddash;
+  getJacobians(NoArr, J_C, J_C_dash, J_C_ddash, true);
   //pick only relevant (x,y) directions:
-  J_B.resizeCopy(2,2);  J_B_dash.resizeCopy(2,2);  J_B_ddash.resizeCopy(2,2);
+  J_C.resizeCopy(2,2);  J_C_dash.resizeCopy(2,2);  J_C_ddash.resizeCopy(2,2);
 
   //we need the dynamics
   arr q_ddot, J;
   dynamicsFct().fv(q_ddot, (&C?J:NoArr), cat(q, q_dot).reshape(2,2));
+//  q_ddot.setZero();
 
   //3-dimensional observation
-  arr acc = (q_dot(1) * J_B_dash * q_dot + J_B * q_ddot) - ARR(0,g);
+  arr acc = (q_dot(1) * J_C_dash * q_dot + J_C * q_ddot) + ARR(0,g);
   y = c1 * R * acc; //2D: accelerations
   y.append(c3 * (q_dot(1)+c4)); //1D: gyro
   y.append(c5 * (q(0)/r-q(1))); //1D: encoder
 
   if(&C){
-    arr acc_dash = q_dot(1) * J_B_ddash * q_dot + J_B_dash * q_ddot;
-    arr acc_d_qdot = q_dot(1) * J_B_dash + (J_B_dash*q_dot)*~ARR(0.,1.);
+    arr acc_dash = q_dot(1) * J_C_ddash * q_dot + J_C_dash * q_ddot;
+    arr acc_d_qdot = q_dot(1) * J_C_dash + (J_C_dash*q_dot)*~ARR(0.,1.);
 
     C.resize(4,6).setZero();
     C.setMatrixBlock(c1 * (R_dash * acc + R*acc_dash), 0, 1); //w.r.t. th
     C.setMatrixBlock(c1*R * acc_d_qdot, 0, 2); //w.r.t. q_dot
-    C.setMatrixBlock(c1*R * J_B, 0, 4); //w.r.t q_ddot
+    C.setMatrixBlock(c1*R * J_C, 0, 4); //w.r.t q_ddot
     C(2, 3) = c3; //gyro
     C(3, 0) = c5/r; //encoder
     C(3, 1) = -c5; //encoder
@@ -174,10 +181,7 @@ void Racer::getObservation(arr& y, arr& C, arr& c, arr& W){
   }
 
   if(&W){
-    W.resize(4,4).setZero();
-    W(0,0) = W(1,1) = noise_accel;
-    W(2,2) = noise_gyro;
-    W(3,3) = noise_enc;
+    W = diag(ARR(noise_accel, noise_accel, noise_gyro, noise_enc));
   }
 }
 
@@ -233,6 +237,12 @@ void Racer::glDraw(){
   glLoadMatrixd(GLmatrix);
   glColor(.2,.2,.2);
   glDrawBox(.01, .05, 2.*l);
+  //sensor
+  f.addRelativeTranslation(0., 0., lC-l);
+  f.getAffineMatrixGL(GLmatrix);
+  glLoadMatrixd(GLmatrix);
+  glColor(.1,.2,.2);
+  glDrawBox(.02, .05, .03);
   glLoadIdentity();
 }
 

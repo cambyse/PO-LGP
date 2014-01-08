@@ -43,7 +43,7 @@ void TestControl(){
   cout <<"*** ZERO LQG: \nA=" <<A <<"\na=" <<a <<"\nB=" <<B <<endl;
 
   R.q(1)=.5;
-  R.noise_dynamics = .1;
+  R.noise_dynamics = 0;//.1;
 
   Kalman K;
   K.initialize(cat(R.q, R.q_dot),1.*eye(4)); //correct initialization...
@@ -55,7 +55,7 @@ void TestControl(){
     double u = 1.*(R.q(1)-th_ref) + .1*R.q_dot(1);
     double u_acc = 200.*(R.q(1)-th_ref) + .1*R.q_dot(1);
 #else //CARE1
-    arr k = ARR(1.00000,   2.72602,   0.81404,   0.60338);
+    arr k = ARR(3.1623,   8.6762,   2.6463,   2.0126);
     arr x = cat(R.q, R.q_dot);
     x = K.b_mean;
     x(0) -= x_ref;
@@ -75,11 +75,14 @@ void TestControl(){
     //-- observations
     arr y,C,c,W;
     R.getObservation(y, C, c, W);
-    rndGauss(y, 1., true);
+    y(0) += R.noise_accel*rnd.gauss();
+    y(1) += R.noise_accel*rnd.gauss();
+    y(2) += R.noise_gyro*rnd.gauss();
+    y(3) += R.noise_enc*rnd.gauss();
 
     //-- state estimation
-    K.stepPredict(eye(4)+R.tau*A, R.tau*(a+B*ARR(u)), .0001*eye(4));
-    K.stepObserve(y, C, c, 1.*eye(4));
+    K.stepPredict(eye(4)+R.tau*A, R.tau*(a+B*ARR(u)),  diag(ARR(1e-6, 1e-6, 1., 1.)));
+    K.stepObserve(y, C, c, W);
 
     MT::arrayBrackets="  ";
     data <<t <<' ' <<t*R.tau <<' ' <<R.u <<' ' <<u_acc <<' '
@@ -125,6 +128,65 @@ void FollowSignal(){
   }
 }
 
+void FollowIMU(){
+  ofstream data("z.data");
+  data <<"iteration time u u_acc x th x_dot th_dot x_ddot th_ddot y0 y1 y2 y4 Y0 Y1 Y2 Y4 E(x) E(th) E(x_dot) E(th_dot) V(x) V(th) V(x_dot) V(th_dot)" <<endl;
+
+  arr imu;
+  MT::load(imu,"nogit-data/imu-02.dat");
+  uint T=imu.d0;
+  imu = ~imu;
+  arr times;
+  times = imu[0];
+  imu[0] = imu[3]*(-1./(1<<14));
+  imu[1] = imu[1]*(1./(1<<14));
+  imu[2] = imu[5]*(1./(1<<13));
+  imu[3] = 0.;
+
+  double gyro_off = sum(imu.sub(2,2,0,99))/100.;
+  imu[2]() -= gyro_off;
+
+  //for(uint t=1;t<imu.d1;t++) imu(3,t) = imu(3,t-1) + (times(t)-times(t-1))*imu(2,t-1);
+
+  imu.resizeCopy(4, imu.d1);
+  imu = ~imu;
+  MT::arrayBrackets="  ";
+  imu >>FILE("z");
+  ~(~times) >>FILE("z.t");
+
+  Racer R;
+  R.q(1)=MT_PI/2.;
+
+  Kalman K;
+  K.initialize(cat(R.q, R.q_dot),1.*eye(4)); //correct initialization...
+  for (uint t=1; t<T; t++){
+    //-- state estimation
+    arr y_pred, C, c, W;
+    R.getObservation(y_pred, C, c, W);
+    arr y_true = imu[t];
+
+    double tau=times(t)-times(t-1);
+
+    arr A,a,B;
+    R.getDynamicsAB(A,a,B);
+    K.stepPredict(eye(4)+tau*A, tau*a, diag(ARR(1e-6, 1e-6, 1., 1.)));
+    K.stepObserve(y_true, C, c, W);
+
+    R.q = K.b_mean.sub(0,1);
+    R.q_dot = K.b_mean.sub(2,3);
+    R.gl.text.clear() <<t <<' ' <<times(t) <<" ; " <<R.q(0) << " ; " <<R.q(1);
+    if(!(t%2)) R.gl.update();
+
+    MT::arrayBrackets="  ";
+    double u_acc=0.;
+
+    data <<t <<' ' <<times(t) <<' ' <<R.u <<' ' <<u_acc <<' '
+        <<R.q <<R.q_dot <<R.q_ddot
+       <<y_true <<y_pred
+      <<K.b_mean <<K.b_mean+2.*::sqrt(getDiag(K.b_var)) <<endl;
+  }
+}
+
 int main(int argc,char **argv){
 //  testDraw();
 //  TestMove();
@@ -132,6 +194,7 @@ int main(int argc,char **argv){
   TestControl();
 
 //  FollowSignal();
+//  FollowIMU();
 
   return 0;
 }
