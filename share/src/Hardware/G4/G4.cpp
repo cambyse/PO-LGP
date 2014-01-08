@@ -2,6 +2,8 @@
 
 #include "G4.h"
 #include <G4TrackIncl.h>
+#include <string>
+#include <iostream>
 
 REGISTER_MODULE(G4Poller)
 
@@ -62,7 +64,7 @@ namespace {
         return "total";
       default:
       {
-        std::ostrstream msg;
+        std::ostringstream msg;
         msg << "unknown error, code " << errcode;
         return msg.str();
       }      
@@ -91,7 +93,7 @@ void G4Poller::open(){
       if(res==G4_ERROR_NONE) { 
         break; //success!
       } else {
-        clog << "Error initializing G4 system: " << errcode2string(res) << endl;
+        std::clog << "Error initializing G4 system: " << errcode2string(res) << std::endl;
       }
       MT::wait(.1, false);
     }

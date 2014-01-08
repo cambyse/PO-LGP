@@ -14,8 +14,8 @@ include(.sources.cmake)
 
 set(TARGET Hardware_${NAME})
 add_library(${TARGET} SHARED ${SOURCES})
-#include_directories(${DEPLIB_INCLUDE_DIRS})
-#add_definitions(${DEPLIB_CFLAGS})
+include_directories(${G4ROOT}/include)
+add_definitions(-DG4_INSTALLED)
 target_link_libraries(${TARGET} 
         LINK_PRIVATE Core ${G4TRACK})
 
