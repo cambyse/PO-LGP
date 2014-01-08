@@ -33,7 +33,7 @@ if(WITH_GRAPHVIZ)
   endif(GRAPHVIZ_FOUND)
 endif(WITH_GRAPHVIZ)
 
-pkg_check_modules(GTKGL REQUIRED gtkglext-1.0)
+pkg_check_modules(GTKGL gtkglext-1.0)
 
 set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
 
@@ -41,7 +41,9 @@ include(.sources.cmake)
 
 add_definitions(-DMT_GTK )
 if(WITH_OPENGL)
+if(FOUND_GTKGL)
 add_definitions(-DMT_GTKGL)
+endif(FOUND_GTKGL)
 endif(WITH_OPENGL)
 
 include_directories(${GTK2_INCLUDE_DIRS} ${GTKGL_INCLUDE_DIRS})
