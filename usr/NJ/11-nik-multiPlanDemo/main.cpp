@@ -87,7 +87,7 @@ void MultiPlan::init(RobotProcessGroup *_master){
 }
 
 void MultiPlan::initTaskVariables(ControllerModule *ctrl){
-  ors::Graph &ors=ctrl->ors;
+  ors::KinematicWorld &ors=ctrl->ors;
   TV_fNew   = new TaskVariable("posNew",ors,posTVT,"m9","<t( -.0000031   .000002 -.357)>",0,0,0);//.031   .02 -.357 for opposite finger, better chose another
   TV_fNew->targetType=directTT;
   TVall.append(TV_fNew);//keep in mind, this is in place 0, others come after it

@@ -362,7 +362,7 @@ TaskAbstraction::TaskAbstraction(){
 }
 
 void TaskAbstraction::initTaskVariables(ControllerProcess* ctrl){
-  ors::Graph &ors=ctrl->ors;
+  ors::KinematicWorld &ors=ctrl->ors;
   
   // get refs to joystick and plan from controller (SSD)
   planVar = ctrl->planVar;

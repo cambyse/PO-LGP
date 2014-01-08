@@ -21,7 +21,7 @@ struct TrivialBwdMsgTask:public TaskAbstraction {
 // helper
 //
 
-void reattachShape(ors::Graph& ors, SwiftInterface *swift, const char* objShape, const char* toBody, const char* belowShape);
+void reattachShape(ors::KinematicWorld& ors, SwiftInterface *swift, const char* objShape, const char* toBody, const char* belowShape);
 
 
 //===========================================================================

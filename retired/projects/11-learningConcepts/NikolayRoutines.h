@@ -14,7 +14,7 @@
 
 
 
-void ResetObjects(ors::Graph * C,const uintA & objects){
+void ResetObjects(ors::KinematicWorld * C,const uintA & objects){
 	ors::Body * table = C->getBodyByName("table");
 	cout << " table " << table->X.pos << endl;
 	//	for(uint z = 0; z < 1000; z++)		cout << rnd.uni() << endl;
@@ -40,7 +40,7 @@ void ResetObjects(ors::Graph * C,const uintA & objects){
 }
 
 //print objects sorting by object acted on
-void PrintData(const uintA & objs, const uint & nTarget, ors::Graph * C, ofstream & f, ofstream & f2){
+void PrintData(const uintA & objs, const uint & nTarget, ors::KinematicWorld * C, ofstream & f, ofstream & f2){
 	MT::IOraw = true;
 	MT::Array< arr > objects_data;
 	relational::getFeatureVectors(objects_data, *C, objs);

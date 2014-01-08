@@ -1,13 +1,17 @@
 #include <Core/util.h>
-#include <Gui/opengl.h>
+#include <Ors/ors.h>
+
 #include <Motion/motion.h>
 #include <Motion/taskMap_default.h>
 #include <Motion/taskMap_proxy.h>
+
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
-#include <vector>
+
 #include <GL/glu.h>
+#include <Gui/opengl.h>
 #include <stdlib.h>
+#include <vector>
 #include "mpc.h"
 #include "../pfc/mobject.h"
 
@@ -118,14 +122,12 @@ void plotTraj(arr &x, double dt) {
 }
 
 void scenario1() {
-  // Create Trajectory with start velocity using PREFIX
-  OpenGL gl;
-  ors::Graph G;
 
-  init(G, gl, "scenes/scene1.ors");
+  // Create Trajectory with start velocity using PREFIX
+  ors::KinematicWorld G("scenes/scene1");
   makeConvexHulls(G.shapes);
 
-  MotionProblem P(&G);
+  MotionProblem P(G);
   P.loadTransitionParameters();
 
   cout << "Loaded scene: " << endl;
@@ -134,7 +136,7 @@ void scenario1() {
   c = P.addTaskMap("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.ors->getBodyByName("goalRef")->X.pos), 1e4,
+                          ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           ARRAY(0.,0.,0.), 1e-3);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
                              ARRAY(0.,0.,0.), 1e3,
@@ -166,19 +168,16 @@ void scenario1() {
 
   plotTraj(x,dt);
 
-  displayTrajectory(x, 1, G, gl,"planned trajectory");
-  gl.watch();
+  displayTrajectory(x, 1, G, "planned trajectory");
+  G.gl().watch();
 
 }
 
 void scenario2() {
-  OpenGL gl;
-  ors::Graph G;
-
-  init(G, gl, "scenes/scene1.ors");
+  ors::KinematicWorld G("scenes/scene1");
   makeConvexHulls(G.shapes);
 
-  MotionProblem P(&G);
+  MotionProblem P(G);
   P.loadTransitionParameters();
 
   cout << "Loaded scene: " << endl;
@@ -187,7 +186,7 @@ void scenario2() {
   c = P.addTaskMap("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.ors->getBodyByName("goalRef")->X.pos), 1e4,
+                          ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           ARRAY(0.,0.,0.), 1e-3);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
                              ARRAY(0.,0.,0.), 1e3,
@@ -212,7 +211,7 @@ void scenario2() {
 
 
   //** Replan from index i **//
-  uint i = 50;
+  uint i = 2;
   arr x0 = xRef[i];
   arr v0 = (xRef[i+1]-xRef[i])/dt;
   arr a0 = (xRef[i+1]+xRef[i-1]-2.*xRef[i])/(dt*dt);
@@ -227,7 +226,7 @@ void scenario2() {
   c2 = P.addTaskMap("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c2, MotionProblem::finalOnly,
-                          ARRAY(P.ors->getBodyByName("goalRef")->X.pos), 1e4,
+                          ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           ARRAY(0.,0.,0.), 1e-3);
   P.setInterpolatingVelCosts(c2, MotionProblem::finalOnly,
                              ARRAY(0.,0.,0.), 1e3,
@@ -258,49 +257,95 @@ void scenario2() {
 
   cout << sum((x- xRef.subRange(i,xRef.d0-1))%(x- xRef.subRange(i,xRef.d0-1))) << endl;
 
-  displayTrajectory(x, 1, G, gl,"planned trajectory");
+  displayTrajectory(x, 1, G, "planned trajectory");
 
 }
 
 void scenario3() {
-  OpenGL gl;
-  ors::Graph G;
+  ors::KinematicWorld world("scenes/scene1");
+  arr q, qdot;
+  world.getJointState(q, qdot);
+  /*
+  ** Plan Trajectory
+  */
+  makeConvexHulls(world.shapes);
+  MotionProblem P(world);
 
-  init(G, gl, "scenes/scene1.ors");
-  makeConvexHulls(G.shapes);
+  P.loadTransitionParameters();
 
-  MPC mpc(10,G);
-  //  plotTraj(mpc.yRef,mpc.dt);
+  arr goalRef = ARRAY(P.world.getBodyByName("goalRef")->X.pos);
 
-  arr q0, qd0, q, qd, goal, qn;
-  double t = 0.0;
-  double simRate = 0.01;
-  // set initial state
-  q0 = mpc.yRef[0]; qd0 = 0.*q0;
-  G.setJointState(q0,qd0);
-  G.calcBodyFramesFromJoints();
-  G.getJointState(q);
+  //-- create an optimal trajectory to trainTarget
+  TaskCost *c;
+  c = P.addTaskMap("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly, goalRef, 1e4);
+  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
 
-  gl.add(drawActTraj,&(mpc.y_cart));
-  MObject goalMO(&G, MT::String("goal"), MObject::GOAL , 0.001, ARRAY(0.,0.,1.));
+  c = P.addTaskMap("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(1.,0.,0.), 1e4);
+  P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
 
-  // execute trajectory while continiously replanning
-  while (t < (mpc.T*mpc.dt-1e-2)) {
-    // Compute current task states
-    G.getJointState(q,qd);
+  P.x0 = 0.1;
+
+  MotionProblemFunction F(P);
+  uint T=F.get_T();
+  uint k=F.get_k();
+  uint n=F.dim_x();
+  double dt = P.tau;
+  cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<" # joints=" <<world.getJointStateDimension()<<endl;
+
+  arr x(T+1,n);
+  x.setZero();
+  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+  //  P.costReport();
+  //  displayTrajectory(x, 1, world, "planned trajectory", 0.01);
+
+
+  /*
+  ** Execute Trajectory
+  */
+  arr q0 = x[0];
+  arr y_target, yPos_target,Phi,PhiJ,yVec_target,qd,W,yPos,yVec,JPos,JVec;
+
+  q = P.x0;
+  double fPos_deviation = 1e-2;
+  double fVec_deviation = 1e-3;
+  double w_reg = 100.;
+
+  W.setDiag(1.,world.getJointStateDimension());  // W is equal the Id_n matrix
+  W = W*w_reg;
+
+  double tau_plan = P.tau;
+  double t = 0.;
+  double t_final = T*dt;
+
+  MObject goalMO(&world, MT::String("goal"), MObject::GOAL , 0.01, ARRAY(0.,0.,1.));
+  MPC mpc(P,x);
+  world.setJointState(q);
+  world.calcBodyFramesFromJoints();
+  world.getJointState(q);
+
+  // gl visualization
+  world.gl().add(drawActTraj,&(mpc.x_cart));
+
+  // RUN //
+  while ((world.getBodyByName("endeff")->X.pos - goalMO.position).length() >1e-1) {
 
     goalMO.move();
-    qn = mpc.iterate(t,q,goalMO.position,simRate);
+    mpc.replan(goalMO.position, q);
 
-    // Set Joint states
-    G.setJointState(qn);
-    G.calcBodyFramesFromJoints();
-    gl.update();
-    t += simRate;
+    q += (mpc.x[2]-mpc.x[1]);
+
+    world.setJointState(q);
+    world.calcBodyFramesFromJoints();
+
+    t += tau_plan;
+    world.watch(false, STRING(t));
   }
-
-  gl.watch();
+  world.watch(true,STRING(t));
 }
+
+
 
 int main(int argc,char **argv){
   MT::initCmdLine(argc,argv);

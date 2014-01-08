@@ -42,7 +42,7 @@ struct OrsSystem: ControlledSystem {
   OrsSystem* newClone(bool deep) const;
 
   /// @name initialization methods
-  void initBasics(ors::Graph *_ors, SwiftInterface *_swift, OpenGL *_gl,
+  void initBasics(ors::KinematicWorld *_ors, SwiftInterface *_swift, OpenGL *_gl,
                   uint trajectory_steps, double trajectory_time, bool _dynamic, arr *W);
   /// @name exemplary problem setups: read specifications from MT.cfg
   void initStandardReachProblem(uint rand_seed=0, uint T=0, bool _dynamic=false);
@@ -56,7 +56,7 @@ struct OrsSystem: ControlledSystem {
   void setTox0();
   void setx0(const arr& x0);
   uint get_qDim();
-  ors::Graph& getOrs();
+  ors::KinematicWorld& getOrs();
   SwiftInterface& getSwift();
   MT::Array<TaskVariable*>& vars();
 

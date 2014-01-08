@@ -1,13 +1,13 @@
 #include<Core/array.h>
-#include<MT/util.h>
-#include<MT/plot.h>
+#include<Core/util.h>
+#include<Gui/plot.h>
 
 using namespace std;
 
-#include <MT/MLcourse.h>
+#include <Algo/MLcourse.h>
 #include <Algo/ann.h>
-#include <MT/util.h>
-#include <MT/plot.h>
+#include <Core/util.h>
+#include <Gui/plot.h>
 
 
 void generateSpiralData(){

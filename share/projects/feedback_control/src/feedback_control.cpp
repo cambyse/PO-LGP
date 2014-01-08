@@ -35,7 +35,7 @@ typedef actionlib::SimpleActionClient<control_msgs::JointTrajectoryAction> TrajC
 
 class PfControl{
 private:
-  ors::Graph G;
+  ors::KinematicWorld G;
   Pfc* pfc;
   MObject* goalMO;
   arr xRef, x0, x0_opt;
@@ -49,7 +49,7 @@ private:
   ros::NodeHandle nh_;
   ros::Subscriber jointSub_;
   TrajClient* traj_client_;
-
+  ros::Duration timer;
   rosbag::Bag bag;
 
 public:
@@ -80,7 +80,7 @@ public:
     goal.trajectory.points[0].accelerations.resize(7);
 
 #ifdef LOGGING
-    bag.open("test.bag", rosbag::bagmode::Write);
+    bag.open("real_test.bag", rosbag::bagmode::Write);
 #endif
   }
 
@@ -105,7 +105,7 @@ public:
     c = P.addTaskMap("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
     P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                            ARRAY(P.ors->getBodyByName("goalRef")->X.pos), 1e4,
+                            ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                             ARRAY(0.,0.,0.), 1e-3);
     P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
                                ARRAY(0.,0.,0.), 1e3,
@@ -141,7 +141,7 @@ public:
 
     P.costReport();
     gl.watch();
-//    displayTrajectory(x, 1, G, gl,"planned trajectory");
+    displayTrajectory(x, 1, G, gl,"planned trajectory");
 
     //------------------------------------------------//
     // Transform trajectory into task space
@@ -151,8 +151,8 @@ public:
     for (uint t=0;t<=T;t++) {
       G.setJointState(x[t]);
       G.calcBodyFramesFromJoints();
-      G.kinematicsPos(kinPos,P.ors->getBodyByName("endeff")->index);
-      G.kinematicsVec(kinVec,P.ors->getBodyByName("endeff")->index);
+      G.kinematicsPos(kinPos,P.world.getBodyByName("endeff")->index);
+      G.kinematicsVec(kinVec,P.world.getBodyByName("endeff")->index);
       xRefPos.append(~kinPos);
       xRefVec.append(~kinVec);
     }
@@ -170,19 +170,22 @@ public:
 
   }
 
+
+
   void execTrajectoryUpdate()
   {
-//    ROS_INFO("execTrajectoryUpdate");
+    //    ROS_INFO("execTrajectoryUpdate");
     arr qd, q, qdd,qd_old;
 
     G.setJointState(joints);
     G.calcBodyFramesFromJoints();
-//    gl.update();
+    //    gl.update();
 
     G.getJointState(q,qd_old);
     pfc->computeIK(q,qd);
     qd = qd/dt;
     qdd = (qd-qd_old)/dt;
+    //    qd = qd + qdd*dt;
 
     // send 1 step trajectory to ROS
     goal.trajectory.header.stamp = ros::Time::now();
@@ -191,7 +194,7 @@ public:
     {
       goal.trajectory.points[0].positions[i] = q(i);
       goal.trajectory.points[0].velocities[i] = qd(i);
-      goal.trajectory.points[0].accelerations[i] = qdd(i);
+      //      goal.trajectory.points[0].accelerations[i] = qdd(i);
     }
 
     goal.trajectory.points[0].time_from_start = ros::Duration(dt);
@@ -202,9 +205,10 @@ public:
 #endif
   }
 
+
   void syncJoints(const sensor_msgs::JointState::ConstPtr& msg)
   {
-//    ROS_INFO("syncJoints");
+    //    ROS_INFO("syncJoints");
 #ifdef LOGGING
     bag.write("pfc_currState",ros::Time::now(),msg);
 #endif
@@ -232,7 +236,7 @@ public:
     ROS_INFO("run");
     ros::Rate loop_rate(1/dt);
     uint i =0;
-    while (ros::ok() && (pfc->s.last() < 0.99))
+    while (ros::ok() && (pfc->s.last() < 0.9))
     {
 #ifdef LOGGING
       std_msgs::UInt32 ik; ik.data = i; bag.write("pfc_iterator", ros::Time::now(), ik);
@@ -241,6 +245,7 @@ public:
 #endif
       ros::spinOnce();
       execTrajectoryUpdate();
+      ros::spinOnce();
       loop_rate.sleep();
     }
 #ifdef LOGGING
@@ -273,7 +278,7 @@ public:
       goal.trajectory.points[0].velocities[i] = 0.;
     }
 
-    goal.trajectory.points[0].time_from_start = ros::Duration(3.0);
+    goal.trajectory.points[0].time_from_start = ros::Duration(10.0);
 
     traj_client_->sendGoal(goal);
   }
@@ -309,6 +314,6 @@ int main(int argc, char** argv)
 
   /* Log Trajectories
        */
-//  pfcontrol.plotResult();
+  pfcontrol.plotResult();
   return 0;
 }

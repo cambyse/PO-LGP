@@ -16,7 +16,6 @@ import_array();
 // For numerical types, we want to get numpy arrays, to keep the shape of the
 // array, etc.
 
-%naturalvar MT::Array;
 
 // actual translation of numpy array to MT::Array<double>
 %fragment("ArrayTransform", "header") {
@@ -30,8 +29,8 @@ import_array();
     PyArrayObject* src = (PyArrayObject*) nparray;
 
     // cast array entries to the correct type if necessary
-    if (PyArray_TYPE(nparray) != type) {
-      if (PyArray_CanCastSafely(PyArray_TYPE(nparray), type)) {
+    if (PyArray_TYPE(src) != type) {
+      if (PyArray_CanCastSafely(PyArray_TYPE(src), type)) {
         src = (PyArrayObject*) PyArray_SimpleNew(array_numdims(nparray), array_dimensions(nparray), type);
         PyArray_CastTo(src, (PyArrayObject*) nparray);
       }
@@ -317,7 +316,11 @@ import_array();
 //===========================================================================
 
 %typemap(memberin) MT::Array<Type*> {
-  $1 = $input;  
+#ifdef SWIG_DEREFERENCE_MEMBERS
+  $1 = *$input;
+#else
+  $1 = $input;
+#endif
 }
 
 %typemap(memberin) MT::Array<Type*> & {

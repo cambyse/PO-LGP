@@ -2,23 +2,20 @@
 #include <Gui/opengl.h>
 #include <Core/array.h>
 #include <Core/util.h>
+#include <Ors/ors_swift.h>
 
 /*----------------------------------------------------------------------------*/
 
 void TEST(PhysxObstacleAvoidance) {
-  ors::Graph ors;
+  ors::KinematicWorld ors;
   ors.init("doorComplex.ors");
   ors::Body* robot = ors.getBodyByName("robot");
   ors.calcBodyFramesFromJoints();
 
-  OpenGL glMy;
   OpenGL glPh("PhysX");
-  PhysXInterface physx;
-  bindOrsToOpenGL(ors, glMy);
-  bindOrsToPhysX(ors, glPh, physx);
+  //bindOrsToPhysX(ors, glPh, physx);
 
-  SwiftInterface swift;
-  swift.init(ors,0.3);
+  ors.swift().setCutoff(0.3);
 
   double wGoal=1.5;
   double wObs=1;
@@ -49,7 +46,7 @@ void TEST(PhysxObstacleAvoidance) {
       dir = wGoal*(goal - x)/length(goal - x);
 
       // obstacle avoidance
-      swift.computeProxies(ors,false);
+      ors.computeProxies();
       dirObs.setZero();
       for (uint j = 0; j < ors.proxies.N; j++) {
         p = ors.proxies(j);
@@ -76,15 +73,16 @@ void TEST(PhysxObstacleAvoidance) {
       robot->X.pos = robot->X.pos + dt*dir/length(dir);
 
       // update sim
-      physx.step();
-      glMy.update();
-      glPh.update();
+      ors.stepPhysx(0.01);
+      ors.gl().update();
+      //glPh.update();
 
     }
 
     // add collision avoidance for current door again
     (ors.getBodyByName(bname)->shapes(0))->cont = true;
-    swift.init(ors,1);
+    ors.swift().initActivations();
+    ors.swift().setCutoff(1.);
   }
 }
 

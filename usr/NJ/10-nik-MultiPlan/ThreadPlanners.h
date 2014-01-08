@@ -79,7 +79,7 @@ struct SecKinPlanner:public StepThread{
 #endif
   }
 
-  ors::Vector	EndEffPos(ors::Graph * C, const arr & q){
+  ors::Vector	EndEffPos(ors::KinematicWorld * C, const arr & q){
     C->setJointState(q);
     C->calcNodeFramesFromEdges();
 

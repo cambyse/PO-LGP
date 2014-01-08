@@ -15,14 +15,14 @@ struct tactile_arr_t {
   type t;
 
   tactile_arr_t(){};
-  tactile_arr_t(ors::Graph &G, const char *name, uintA mapparam, type t1){
+  tactile_arr_t(ors::KinematicWorld &G, const char *name, uintA mapparam, type t1){
     init(G,name,mapparam,t1); }
-  void init(ors::Graph &G, const char *name, uintA mapparam, type t1){
+  void init(ors::KinematicWorld &G, const char *name, uintA mapparam, type t1){
     b = G.getBodyByName(name);
     mapp = mapparam;
     t = t1;
   }
-  void add_sensor_shapes(ors::Graph &);
+  void add_sensor_shapes(ors::KinematicWorld &);
   void update_shapes();
   void senseskin(SchunkSkinModule *);
   void senseimg(const byteA &img);
@@ -41,7 +41,7 @@ struct grobi_skin_t {
   MT::Array<fing_skin_t> fingers;
   fing_skin_t *th, *f2, *f3;
   
-  grobi_skin_t(ors::Graph &);
+  grobi_skin_t(ors::KinematicWorld &);
   void sense(SchunkSkinModule*,const byteA*const,const byteA*const);
   void update_shapes();
 };

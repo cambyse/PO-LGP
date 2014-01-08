@@ -135,7 +135,8 @@ void exercise1() {
   arr beta;
 
   //load the data, split in input and output
-  X.read("./dataQuadReg2D_noisy.txt");
+  ifstream noise("./dataQuadReg2D_noisy.txt");
+  X.read(noise);
   y = (~X)[X.d1-1];    //last row of transposed X
   X.delColumns(X.d1-1);
   
@@ -182,7 +183,8 @@ void exercise2() {
   } cv;
 
   //load the data, split in input and output
-  X.read("./dataQuadReg2D_noisy.txt");
+  ifstream datafile("./dataQuadReg2D_noisy.txt");
+  X.read(datafile);
   y = (~X)[X.d1-1];    //last row of transposed X
   X.delColumns(X.d1-1);
 

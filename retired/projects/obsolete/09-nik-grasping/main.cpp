@@ -16,7 +16,7 @@ void drawEnv(void*){
   glStandardLight(NULL);
   //glDrawFloor(4.,1,1,1);
 }
-void init(ors::Graph& ors,OpenGL& gl,const char *filename){
+void init(ors::KinematicWorld& ors,OpenGL& gl,const char *filename){
   ors.init(filename);
   
   gl.add(drawEnv,0);
@@ -28,7 +28,7 @@ void init(ors::Graph& ors,OpenGL& gl,const char *filename){
 
 
 void testPlan(){
-  ors::Graph ors;
+  ors::KinematicWorld ors;
   SwiftInterface swift;
   OpenGL gl;
   nShape = MT::getParameter<int>("nShape");

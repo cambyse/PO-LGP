@@ -86,7 +86,7 @@ MT::Array<const char*> pr2_full_get_bodynames() {
     
 }
 
-uintA pr2_get_shapes(ors::Graph &G) {
+uintA pr2_get_shapes(ors::KinematicWorld &G) {
   MT::Array<const char*> bodynames = pr2_left_get_bodynames();
   uintA shape_idx;
   for (const char* bodyname: bodynames) {

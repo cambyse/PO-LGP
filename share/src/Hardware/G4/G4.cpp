@@ -2,6 +2,8 @@
 
 #include "G4.h"
 #include <G4TrackIncl.h>
+#include <string>
+#include <iostream>
 
 REGISTER_MODULE(G4Poller)
 
@@ -17,6 +19,58 @@ struct sG4Poller{
   floatA poses;
 };
 
+namespace {
+  std::string errcode2string(int errcode) {
+    switch(errcode) {
+      case G4_ERROR_NONE:
+        return "success";
+      case G4_ERROR_NO_FRAME_DATA_AVAIL:
+        return "no frame data available";
+      case G4_ERROR_UNSUPPORTED_ACTION:
+        return "unsupported action";
+      case G4_ERROR_UNSUPPORTED_COMMAND:
+        return "unsupported command";
+      case G4_ERROR_NO_CONNECTION:
+        return "no connection";
+      case G4_ERROR_NO_HUBS:
+        return "no hubs";
+      case G4_ERROR_FRAMERATE_SET:
+        return "error framerate set";
+      case G4_ERROR_MEMORY_ALLOCATION:
+        return "error memory allocation";
+      case G4_ERROR_INVALID_SYSTEM_ID:
+        return "invalid system id";
+      case G4_ERROR_SRC_CFG_FILE_OPEN:
+        return "error opening src cfg file";
+      case G4_ERROR_INVALID_SRC_CFG_FILE:
+        return "invalid src cfg file";
+      case G4_ERROR_UNABLE_TO_START_TIMER:
+        return "unable to start timer";
+      case G4_ERROR_HUB_NOT_ACTIVE:
+        return "hub not active";
+      case G4_ERROR_SYS_RESET_FAIL:
+        return "system reset failed";
+      case G4_ERROR_DONGLE_CONNECTION:
+        return "error dongle connection";
+      case G4_ERROR_DONGLE_USB_CONFIGURATION:
+        return "error on dongle usb configuration";
+      case G4_ERROR_DONGLE_USB_INTERFACE_0:
+        return "error on dongle usb interface";
+      case G4_ERROR_DUPLICATE_SYS_IDS:
+        return "duplicate system ids";
+      case G4_ERROR_INVALID_WILDCARD_USE:
+        return "invalid wildcard use";
+      case G4_ERROR_TOTAL:
+        return "total";
+      default:
+      {
+        std::ostringstream msg;
+        msg << "unknown error, code " << errcode;
+        return msg.str();
+      }      
+    }
+  }
+}
 
 G4Poller::G4Poller():Module("G4Tracker"){
   s = new sG4Poller;
@@ -36,7 +90,11 @@ void G4Poller::open(){
     cout <<"G4 initialization ..." <<flush;
     for(uint i=0;i<10;i++){
       res = g4_init_sys(&s->sysId, src_cfg_file, NULL);
-      if(res==G4_ERROR_NONE) break; //success!
+      if(res==G4_ERROR_NONE) { 
+        break; //success!
+      } else {
+        std::clog << "Error initializing G4 system: " << errcode2string(res) << std::endl;
+      }
       MT::wait(.1, false);
     }
     if(res!=G4_ERROR_NONE)

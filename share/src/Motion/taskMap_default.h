@@ -50,13 +50,13 @@ struct DefaultTaskMap:TaskMap {
                  int jShape=-1, const ors::Vector& jvec=NoVector,
                  const arr& params=NoArr);
 
-  DefaultTaskMap(DefaultTaskMapType type, const ors::Graph& G,
+  DefaultTaskMap(DefaultTaskMapType type, const ors::KinematicWorld& G,
                  const char* iShapeName=NULL, const ors::Vector& ivec=NoVector,
                  const char* jShapeName=NULL, const ors::Vector& jvec=NoVector,
                  const arr& params=NoArr);
 
-  virtual void phi(arr& y, arr& J, const ors::Graph& G);
-  virtual uint dim_phi(const ors::Graph& G);
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
+  virtual uint dim_phi(const ors::KinematicWorld& G);
 };
 
 #endif

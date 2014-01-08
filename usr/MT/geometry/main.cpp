@@ -1,7 +1,7 @@
 #include <MT/ors.h>
 #include <MT/opengl.h>
 
-void addRndShape(ors::Graph& ors){
+void addRndShape(ors::KinematicWorld& ors){
   ors::Shape *s = new ors::Shape;
   s->X.setRandom();
   s->type = (ors::ShapeType)rnd(4);
@@ -11,7 +11,7 @@ void addRndShape(ors::Graph& ors){
 }
 
 int main(int argc, char** argv){
-  ors::Graph ors;
+  ors::KinematicWorld ors;
   OpenGL gl;
   gl.add(glStandardScene,NULL);
   gl.add(ors::glDrawGraph,&ors);

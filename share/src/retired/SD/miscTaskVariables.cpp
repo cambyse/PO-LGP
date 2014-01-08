@@ -1,13 +1,13 @@
 #include "miscTaskVariables.h"
 
 zOpposeTaskVariable::zOpposeTaskVariable(const char* _name,
-                                         ors::Graph& _ors,
+                                         ors::KinematicWorld& _ors,
                                          ShapeList& _refs){
   refs=_refs;
   set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, ARR());
 }
 
-void zOpposeTaskVariable::userUpdate(const ors::Graph& ors){
+void zOpposeTaskVariable::userUpdate(const ors::KinematicWorld& ors){
     //compute sum of z-vectors for n shapes
     //return sunOfSqr of this sum (is a scalar task variable)
   uint i;
@@ -30,13 +30,13 @@ void zOpposeTaskVariable::userUpdate(const ors::Graph& ors){
 }
 
 zFocusTargetTaskVariable::zFocusTargetTaskVariable(const char* _name,
-    ors::Graph& _ors,
+    ors::KinematicWorld& _ors,
     ShapeList& _refs){
   refs=_refs;
   set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, ARR());
 }
 
-void zFocusTargetTaskVariable::userUpdate(const ors::Graph& ors){
+void zFocusTargetTaskVariable::userUpdate(const ors::KinematicWorld& ors){
     //for all n shapes:
     //diff=target-shape->X.p;
     //z = shape->X.getZ();

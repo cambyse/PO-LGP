@@ -1,6 +1,6 @@
-BASE = ../..
+BASE = ../../..
 
 OPENCV = 1
-FELZ = 1
+DEPEND = Gui Perception Core extern_libcolorseg
 
 include $(BASE)/make-generic
