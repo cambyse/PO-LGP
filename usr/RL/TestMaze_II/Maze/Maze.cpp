@@ -485,16 +485,18 @@ void Maze::render_initialize(QGraphicsView * v) {
     }
 
     // render agent
-    if(!agent) {
-        delete agent;
+    {
+        if(!agent) {
+            delete agent;
+        }
+        agent = new QGraphicsSvgItem("Images/agent.svg");
+        double scale = 0.2;
+        agent->setScale(scale);
+        QSizeF s = agent->boundingRect().size()*scale;
+        agent->setPos(current_observation.get_x_pos()-s.width()/2, current_observation.get_y_pos()-s.height()/2);
+        agent->setElementId("normal");
+        scene->addItem(agent);
     }
-    agent = new QGraphicsSvgItem("agent.svg");
-    agent->setScale(0.2);
-    QSizeF s = agent->boundingRect().size();
-    agent->setPos(current_observation.get_x_pos()-s.width()/2, current_observation.get_y_pos()-s.height()/2);
-    agent->setElementId("normal");
-
-    scene->addItem(agent);
 
     rescale_scene(view);
 }

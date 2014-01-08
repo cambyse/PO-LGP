@@ -40,8 +40,10 @@ HEADERS += \
     Maze/Maze.h \
     Maze/MazeAction.h \
     Maze/AugmentedMazeAction.h \
-    AbstractObservation.h \
     Maze/MazeObservation.h \
+    CheeseMaze/CheeseMaze.h \
+    CheeseMaze/CheeseMazeAction.h \
+    CheeseMaze/CheeseMazeObservation.h \
     \
     LookAheadSearch.h \
     \
@@ -85,6 +87,9 @@ SOURCES += \
     Maze/MazeAction.cpp \
     Maze/AugmentedMazeAction.cpp \
     Maze/MazeObservation.cpp \
+    CheeseMaze/CheeseMaze.cpp \
+    CheeseMaze/CheeseMazeAction.cpp \
+    CheeseMaze/CheeseMazeObservation.cpp \
     \
     LookAheadSearch.cpp \
     \

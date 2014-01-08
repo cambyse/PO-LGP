@@ -11,6 +11,25 @@ CheeseMazeObservation::CheeseMazeObservation(OBSERVATION o) {
     set_type(OBSERVATION_TYPE::CHEESE_MAZE_OBSERVATION);
 }
 
+CheeseMazeObservation::CheeseMazeObservation(const char * c) {
+    if(!strcmp(c,"N")) {
+        observation = OBSERVATION::N;
+    } else if(!strcmp(c,"NE")) {
+        observation = OBSERVATION::NE;
+    } else if(!strcmp(c,"NS")) {
+        observation = OBSERVATION::NS;
+    } else if(!strcmp(c,"NW")) {
+        observation = OBSERVATION::NW;
+    } else if(!strcmp(c,"EW")) {
+        observation = OBSERVATION::EW;
+    } else if(!strcmp(c,"ESW")) {
+        observation = OBSERVATION::ESW;
+    } else {
+        DEBUG_ERROR("Not valid observation ('" << c << "'");
+        observation = OBSERVATION::N;
+    }
+}
+
 CheeseMazeObservation::ptr_t CheeseMazeObservation::next() const {
     OBSERVATION a = (OBSERVATION)((int)observation+1);
     if(a>=OBSERVATION::END) {

@@ -12,20 +12,20 @@ CheeseMazeAction::CheeseMazeAction(ACTION a):
     set_type(ACTION_TYPE::CHEESE_MAZE_ACTION);
 }
 
-CheeseMazeAction::CheeseMazeAction(const char * a) {
+CheeseMazeAction::CheeseMazeAction(const string a) {
     // set type
     set_type(ACTION_TYPE::CHEESE_MAZE_ACTION);
     // set action
-    if(!strcmp(a,"north") || !strcmp(a,"n")) {
+    if(a=="north" || a=="n") {
         action = ACTION::NORTH;
-    } else if(!strcmp(a,"south") || !strcmp(a,"s")) {
+    } else if(a=="south" || a=="s") {
         action = ACTION::SOUTH;
-    } else if(!strcmp(a,"west") || !strcmp(a,"w")) {
+    } else if(a=="west" || a=="w") {
         action = ACTION::WEST;
-    } else if(!strcmp(a,"east") || !strcmp(a,"e")) {
+    } else if(a=="east" || a=="e") {
         action = ACTION::EAST;
     } else {
-        DEBUG_ERROR("Not valid action ('" << a << "'");
+        DEBUG_ERROR("Not valid action: '" << a << "'");
         action = ACTION::END;
     }
 }

@@ -47,6 +47,10 @@ public:
 
     virtual value_t max_reward() const override;
 
+    virtual ptr_t new_reward(const int& idx) const;
+
+    virtual ptr_t new_reward(const double& value) const;
+
 protected:
     virtual void set_type(REWARD_TYPE t) override;
     std::vector<value_t> reward_list; ///< List of all possible reward values.

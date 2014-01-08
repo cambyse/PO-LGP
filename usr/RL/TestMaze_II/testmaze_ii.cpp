@@ -9,6 +9,7 @@
 #include "Visualizer.h"
 #include "PredictiveEnvironment.h"
 #include "Maze/Maze.h"
+#include "CheeseMaze/CheeseMaze.h"
 
 #include <float.h>  // for DBL_MAX
 #include <vector>
@@ -106,7 +107,8 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     ui.graphicsView->installEventFilter(moveByKeys);
 
     // select environment
-    change_environment(make_shared<Maze>(epsilon));
+    //change_environment(make_shared<Maze>(epsilon));
+    change_environment(make_shared<CheeseMaze>());
 }
 
 TestMaze_II::~TestMaze_II() {
@@ -189,7 +191,7 @@ void TestMaze_II::perform_transition(const action_ptr_t& action, observation_ptr
         add_action_observation_reward_tripel(action,observation_to,reward);
     }
     if(save_png_on_transition) {
-        QString file_name = QString("Maze_%1.png").arg(QString::number(png_counter++),(int)4,QChar('0'));
+        QString file_name = QString("Environment_%1.png").arg(QString::number(png_counter++),(int)4,QChar('0'));
         save_to_png(file_name);
     }
 }
@@ -455,7 +457,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString option_4_s(                      "                               target. . . . . . . . . . . . . . . . . . .-> activate a target state");
     QString option_5_s(                      "                               prune-tree. . . . . . . . . . . . . . . . .-> prune search tree");
     QString option_6_s(                      "                               png . . . . . . . . . . . . . . . . . . . .-> save a png image of the maze on transition");
-    QString option_7_s(                      "                               maze [<string>] . . . . . . . . . . . . . .-> load maze with name <string> [display available maze names]");
+    QString option_7_s(                      "                               maze [<string>] . . . . . . . . . . . . . .-> display available maze names [load maze with name <string>]");
+    QString option_8_s(                      "                               cheese. . . . . . . . . . . . . . . . . . .-> load cheese maze");
     QString test_s(                          "    test . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> test");
 
     QString maze_s(                        "\n    -----------------------------------Maze-----------------------------------");
@@ -524,6 +527,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     set_s += "\n" + option_5_s;
     set_s += "\n" + option_6_s;
     set_s += "\n" + option_7_s;
+    set_s += "\n" + option_8_s;
 
     QString invalid_args_s( "    invalid arguments" );
 
@@ -614,34 +618,42 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             TO_CONSOLE( pair_delay_distribution_s );
             TO_CONSOLE( mediator_probability_s );
         } else if(str_args[0]=="left" || str_args[0]=="l") { // left
-            if(dynamic_pointer_cast<Maze>(environment)==nullptr) {
-                TO_CONSOLE("    Allowed for maze-environments only");
-            } else {
+            if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
                 perform_transition(action_ptr_t(new MazeAction("left")));
+            } else if(dynamic_pointer_cast<CheeseMaze>(environment)!=nullptr) {
+                perform_transition(action_ptr_t(new CheeseMazeAction("west")));
+            } else {
+                TO_CONSOLE("    Not defined in current environment");
             }
         } else if(str_args[0]=="right" || str_args[0]=="r") { // right
-            if(dynamic_pointer_cast<Maze>(environment)==nullptr) {
-                TO_CONSOLE("    Allowed for maze-environments only");
-            } else {
+            if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
                 perform_transition(action_ptr_t(new MazeAction("right")));
+            } else if(dynamic_pointer_cast<CheeseMaze>(environment)!=nullptr) {
+                perform_transition(action_ptr_t(new CheeseMazeAction("east")));
+            } else {
+                TO_CONSOLE("    Not defined in current environment");
             }
         } else if(str_args[0]=="up" || str_args[0]=="u") { // up
-            if(dynamic_pointer_cast<Maze>(environment)==nullptr) {
-                TO_CONSOLE("    Allowed for maze-environments only");
-            } else {
+            if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
                 perform_transition(action_ptr_t(new MazeAction("up")));
+            } else if(dynamic_pointer_cast<CheeseMaze>(environment)!=nullptr) {
+                perform_transition(action_ptr_t(new CheeseMazeAction("north")));
+            } else {
+                TO_CONSOLE("    Not defined in current environment");
             }
         } else if(str_args[0]=="down" || str_args[0]=="d") { // down
-            if(dynamic_pointer_cast<Maze>(environment)==nullptr) {
-                TO_CONSOLE("    Allowed for maze-environments only");
-            } else {
+            if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
                 perform_transition(action_ptr_t(new MazeAction("down")));
+            } else if(dynamic_pointer_cast<CheeseMaze>(environment)!=nullptr) {
+                perform_transition(action_ptr_t(new CheeseMazeAction("south")));
+            } else {
+                TO_CONSOLE("    Not defined in current environment");
             }
         } else if(str_args[0]=="stay" || str_args[0]=="s") { // stay
-            if(dynamic_pointer_cast<Maze>(environment)==nullptr) {
-                TO_CONSOLE("    Allowed for maze-environments only");
-            } else {
+            if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
                 perform_transition(action_ptr_t(new MazeAction("stay")));
+            } else {
+                TO_CONSOLE("    Not defined in current environment");
             }
         } else if(str_args[0]=="move") { // start/stop moving
             if(str_args_n==1) {
@@ -1107,6 +1119,12 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     for(QString name : Maze::get_maze_list()) {
                         TO_CONSOLE("        "+name);
                     }
+                }
+            } else if(str_args[1]=="cheese") {
+                if(str_args[0]=="unset") {
+                    TO_CONSOLE( "    set different environment to unset current" );
+                } else {
+                    change_environment(make_shared<CheeseMaze>());
                 }
             } else if(str_args[1]=="target") {
                 shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);

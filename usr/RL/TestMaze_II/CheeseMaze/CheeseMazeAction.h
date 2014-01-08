@@ -7,7 +7,7 @@ class CheeseMazeAction: public AbstractAction {
 public:
     enum class ACTION { NORTH, SOUTH, WEST, EAST, END };
     CheeseMazeAction(ACTION a = ACTION::NORTH);
-    CheeseMazeAction(const char * a);
+    CheeseMazeAction(const std::string a);
     ABSTRACT_ITERATABLE_SPACE_BEGIN(CheeseMazeAction);
     virtual ptr_t next() const override;
     virtual bool operator!=(const AbstractAction &other) const override;

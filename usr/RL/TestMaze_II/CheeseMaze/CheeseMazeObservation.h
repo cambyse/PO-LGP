@@ -7,6 +7,7 @@ class CheeseMazeObservation: public AbstractObservation {
 public:
     enum OBSERVATION { N, NE, NS, NW, EW, ESW, END } observation;
     CheeseMazeObservation(OBSERVATION o = N);
+    CheeseMazeObservation(const char * c);
     virtual ~CheeseMazeObservation() = default;
     ABSTRACT_ITERATABLE_SPACE_BEGIN(CheeseMazeObservation);
     virtual ptr_t next() const override;

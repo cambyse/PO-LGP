@@ -35,15 +35,46 @@ public:
 
 private:
 
+    /* Relation between state index and observation.
+     *   ┏━━━┳━━━┳━━━┳━━━┳━━━┓
+     *   ┃ 0 ┃ 3 ┃ 4 ┃ 7 ┃ 8 ┃
+     *   ┣━━━╋━━━╋━━━╋━━━╋━━━┫
+     *   ┃ 1 ┃   ┃ 5 ┃   ┃ 9 ┃
+     *   ┣━━━┫   ┣━━━┫   ┣━━━┫
+     *   ┃ 2 ┃   ┃ 6 ┃   ┃10 ┃
+     *   ┗━━━┛   ┗━━━┛   ┗━━━┛
+     *   ┏━━━┳━━━┳━━━┳━━━┳━━━┓
+     *   ┃ NW┃ NS┃  N┃ NS┃ NE┃
+     *   ┣━━━╋━━━╋━━━╋━━━╋━━━┫
+     *   ┃ EW┃   ┃ EW┃   ┃ EW┃
+     *   ┣━━━┫   ┣━━━┫   ┣━━━┫
+     *   ┃ESW┃   ┃ESW┃   ┃ESW┃
+     *   ┗━━━┛   ┗━━━┛   ┗━━━┛
+     */
+
     QGraphicsSvgItem *mouse;                         ///< Svg image for rendering the mouse.
+    QGraphicsSvgItem *cheese;                        ///< Svg image for rendering the cheese.
     QGraphicsLineItem *action_line;                  ///< Line showing the last action.
     QGraphicsEllipseItem *action_point;              ///< Circle showing the last position for showing the last action.
 
-    int current_x_pos;
-    int current_y_pos;
-    int last_x_pos;
-    int last_y_pos;
-    action_t last_action;
+    QGraphicsSvgItem * CheeseMazeObservation_N;
+    QGraphicsSvgItem * CheeseMazeObservation_NE;
+    QGraphicsSvgItem * CheeseMazeObservation_NS;
+    QGraphicsSvgItem * CheeseMazeObservation_NW;
+    QGraphicsSvgItem * CheeseMazeObservation_EW;
+    QGraphicsSvgItem * CheeseMazeObservation_ESW;
+
+    int current_state_idx = 0;
+    int last_state_idx    = 0;
+    action_t last_action  = CheeseMazeAction("north");
+
+    static int get_x_pos(int state_idx);
+    static int get_y_pos(int state_idx);
+    int current_x_pos() const;
+    int current_y_pos() const;
+    int last_x_pos() const;
+    int last_y_pos() const;
+    observation_ptr_t get_observation(int state_idx) const;
 
 };
 
