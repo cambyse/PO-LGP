@@ -195,7 +195,8 @@ void G4Poller::step(){
       if(s->framedata(hub).stationMap&(0x01<<sen)){ // we have data on hub h and sensors
         h_id = s->hubMap(s->framedata(hub).hub);
         s_id = s->framedata(hub).sfd[sen].id;
-        memmove(&s->poses(h_id, s_id, 0), s->framedata(hub).sfd[sen].pos, 7*s->poses.sizeT); //low level copy of data
+        memmove(&s->poses(h_id, s_id, 0), s->framedata(hub).sfd[sen].pos, 3*s->poses.sizeT); //low level copy of data
+        memmove(&s->poses(h_id, s_id, 3), s->framedata(hub).sfd[sen].ori, 4*s->poses.sizeT); //low level copy of data
 #if 0
         cout <<" hub " <<s->framedata(hub).hub
             <<" sensor " <<s
