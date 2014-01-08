@@ -7,7 +7,7 @@ if(G4TRACK)
 include(.sources.cmake)
 add_executable(x_${NAME} ${SOURCES})
 
-target_link_libraries(x_${NAME} Core Hardware_G4)
+target_link_libraries(x_${NAME} Core System Hardware_G4)
 
 add_test(x_${NAME}_test ${NAME} --gtest_output=xml:${NAME}-unit.xml)
 
