@@ -1,0 +1,25 @@
+option(WITH_G4 "Enable G4 Tracker" ON)
+set(G4ROOT $ENV{MLR_LIBPATH} CACHE PATH "Base dir for G4 tracker" )
+
+if(WITH_G4)
+  include(CheckLibraryExists)
+  
+  message(STATUS "Checking for G4Track library")
+  find_library(G4TRACK G4Track HINTS ${G4ROOT}/lib)
+  if(G4TRACK)
+    message(STATUS "G4Track found at ${G4TRACK}")
+  else(G4TRACK)
+    message(STATUS "Performing Windows specific check for G4Track")
+    check_library_exists(G4Track g4_close_tracker ${G4ROOT}/Lib/Win32 G4TRACK_FOUND)
+    if(G4TRACK_FOUND)
+      message(STATUS "G4Track found at ${G4TRACK}")
+    	set(HAVE_G4TRACK 1)
+      set(G4TRACK G4Track)
+	    link_directories(${G4ROOT}/Lib/Win32)
+    else(G4TRACK_FOUND)
+        message(STATUS "G4Track not found, giving up")
+    endif(G4TRACK_FOUND)
+  endif(G4TRACK)
+endif(WITH_G4)
+
+
