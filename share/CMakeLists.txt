@@ -100,11 +100,6 @@ set(MLR_CXX_FLAGS "-std=c++0x ${MLR_CXX_FLAGS}")
 include(src/Gui/gl.cmake OPTIONAL)
 message(STATUS "Using OpenGL: ${WITH_OPENGL}")
 
-# target to create includes
-add_custom_target(sourceinc ALL
-  COMMAND ${CMAKE_SOURCE_DIR}/bin/update-includes.sh
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-)
 
 # set MT definitions depending on which external libs we have
 find_file(SLICE_EXTERN .slicedef.cmake 
