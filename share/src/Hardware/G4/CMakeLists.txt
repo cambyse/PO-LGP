@@ -6,7 +6,7 @@ set(G4ROOT $ENV{MLR_LIBPATH} CACHE PATH "Base dir for G4 tracker" )
 
 if(WITH_G4)
 
-find_library(G4TRACK G4Track PATHS ${G4ROOT})
+find_library(G4TRACK G4Track PATHS ${G4ROOT}/lib)
 message(STATUS "G4Track location: ${G4TRACK}")
 
 if(G4TRACK)
