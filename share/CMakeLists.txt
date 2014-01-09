@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 2.8.1)
 project(MLR_SHARE)
 cmake_policy(SET CMP0015 NEW)
 
+# default release type
+if(CMAKE_BUILD_TYPE STREQUAL "")
+set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Defaults to RelWithDebInfo" FORCE)
+endif(CMAKE_BUILD_TYPE STREQUAL "")
+
 # path for find macros
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
@@ -99,12 +104,8 @@ set(MLR_CXX_FLAGS "-std=c++0x ${MLR_CXX_FLAGS}")
 # set Gui-GL definition globally for convenience
 include(src/Gui/gl.cmake OPTIONAL)
 message(STATUS "Using OpenGL: ${WITH_OPENGL}")
-
-# target to create includes
-add_custom_target(sourceinc ALL
-  COMMAND ${CMAKE_SOURCE_DIR}/bin/update-includes.sh
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-)
+# need the result of this for the examples
+include(src/Hardware/G4/find_G4.cmake OPTIONAL)
 
 # set MT definitions depending on which external libs we have
 find_file(SLICE_EXTERN .slicedef.cmake 
@@ -126,4 +127,5 @@ message(STATUS "MLR CXX Flags: ${MLR_CXX_FLAGS}")
 foreach(DIR ${CURRENT_SLICE})
 add_subdirectory(${DIR})
 endforeach(DIR ${CURRENT_SLICE})
+
 

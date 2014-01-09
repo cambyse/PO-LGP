@@ -3,7 +3,6 @@
 #include <Motion/motion.h>
 #include <Motion/taskMap_default.h>
 #include <Motion/taskMap_proxy.h>
-#include <Gui/opengl.h>
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
 #include "../splines/spline.h"
@@ -226,15 +225,6 @@ void executeTrajectoryMPC(MT::String scene){
 
   P.loadTransitionParameters();
 
-  //  P.transitionType = P.pseudoDynamic;
-  //  double duration = 4.;
-  //  double Hrate = 1e-0;
-  //  P.T = 100;
-  //  P.tau = duration/P.T;
-  //  arr W_diag = world.naturalQmetric();
-  //  P.H_rate_diag = Hrate*W_diag;
-
-
   arr goalRef = ARRAY(P.world.getBodyByName("goalRef")->X.pos);
 
   //-- create an optimal trajectory to trainTarget
@@ -260,7 +250,7 @@ void executeTrajectoryMPC(MT::String scene){
   x.setZero();
   optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
   //  P.costReport();
-  //  displayTrajectory(x, 1, world, world.gl(),"planned trajectory", 0.01);
+  //  displayTrajectory(x, 1, world, "planned trajectory", 0.01);
 
 
   /*
@@ -412,7 +402,7 @@ void executeTrajectoryDMP(MT::String scene){
 
     // Inner Controlling Loop [1/tau_control Hz]
     MP.setState(q, qdot);
-    //    world.stepPhysx(tau_control);
+    // world.stepPhysx(tau_control);
     world.computeProxies();
 
     arr a = MP.operationalSpaceControl();
@@ -428,8 +418,7 @@ void executeTrajectoryDMP(MT::String scene){
 int main(int argc,char **argv) {
   MT::initCmdLine(argc,argv);
   executeTrajectoryPFC(String("scene1.ors"));
-  //    executeTrajectoryMPC(String("scene1.ors"));
-
-  //    executeTrajectoryDMP(String("scene1.ors"));
+  executeTrajectoryMPC(String("scene1.ors"));
+  executeTrajectoryDMP(String("scene1.ors"));
   return 0;
 }

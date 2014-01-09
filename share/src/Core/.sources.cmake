@@ -6,6 +6,7 @@ set(SOURCES ./registry.cpp
 ./util.h
 ./util_t.h
 ./thread.h
+./cygwin_compat.h
 ./core.cpp
 ./tests.cpp
 ./array.h

@@ -176,8 +176,8 @@ void Pfc::printState()
 
 
 
-void Pfc::computeIK(arr &q, arr &qd)
-{
+//void Pfc::computeIK(arr &q, arr &qd)
+//{
   //    arr W, yPos, JPos, yVec, JVec, yPos_target,yVec_target, y_target, Phi, PhiJ, yCol,JCol,costs;
 
   //    W.setDiag(1.,world->getJointStateDimension());  // W is equal the Id_n matrix
@@ -230,4 +230,4 @@ void Pfc::computeIK(arr &q, arr &qd)
   //    // compute joint updates
   //    qd = -inverse(~PhiJ*PhiJ + W)*~PhiJ* Phi;
   //    q += qd;
-}
+//}
