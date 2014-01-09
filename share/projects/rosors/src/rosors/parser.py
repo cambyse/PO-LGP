@@ -122,9 +122,14 @@ def ors_shape_to_msg(ors_shape, with_mesh=False):
     shape_msg.X, shape_msg.Xvel = ors_to_ros_transform(ors_shape.X)
     shape_msg.rel, shape_msg.relvel = ors_to_ros_transform(ors_shape.rel)
 
-    shape_msg.shape_type = ors_shape.type
+    shape_msg.size[0] = ors_shape.get_size(0)
+    shape_msg.size[1] = ors_shape.get_size(1)
+    shape_msg.size[2] = ors_shape.get_size(2)
+    shape_msg.size[3] = ors_shape.get_size(3)
+
     shape_msg.contact = ors_shape.cont
 
+    shape_msg.shape_type = ors_shape.type
     if with_mesh and ors_shape.type == orspy.meshST:
         shape_msg.mesh = ors_mesh_to_msg(ors_shape.mesh)
 
@@ -146,6 +151,8 @@ def msg_to_ors_shape(msg, graph=None, body=None):
     shape.rel = ros_to_ors_transform(msg.rel, msg.relvel)
 
     shape.type = msg.shape_type
+    shape.set_size(msg.size[0], msg.size[1], msg.size[2], msg.size[3])
+
     shape.cont = msg.contact
     if shape.type == orspy.meshST and msg.mesh is not None:
         shape.mesh = msg_to_ors_mesh(msg.mesh)
