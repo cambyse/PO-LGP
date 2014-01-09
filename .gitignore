@@ -32,7 +32,9 @@ Makefile.dep
 CTestTestfile.cmake
 
 
+# PYTHON
 *.pyc
+_*.py
 
 
 # EXECUTION
