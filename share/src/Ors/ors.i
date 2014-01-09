@@ -84,26 +84,15 @@ created: <2013-03-20 Wed>
 
 %extend ors::Shape {
   void set_size(double a, double b, double c, double d) {
-    cout << "parameters: "
-         << a << " "
-         << b << " "
-         << c << " "
-         << d << " " << endl;
-
     $self->size[0] = a;
     $self->size[1] = b;
     $self->size[2] = c;
     $self->size[3] = d;
-
-    cout << "after setting:"
-         << $self->size[0] << " "
-         << $self->size[1] << " "
-         << $self->size[2] << " "
-         << $self->size[3] << " " << endl;
   };
   double get_size(int index) {
-    return $self->color[index];
+    return $self->size[index];
   };
+
   void set_color(double red, double green, double blue) {
     $self->color[0] = red;
     $self->color[1] = green;
@@ -112,6 +101,7 @@ created: <2013-03-20 Wed>
   double get_color(int index) {
     return $self->color[index];
   };
+
   std::string __str__() {
     std::ostringstream oss(std::ostringstream::out);
     oss << (*$self);
