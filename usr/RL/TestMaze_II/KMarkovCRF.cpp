@@ -354,10 +354,9 @@ int KMarkovCRF::progress_model(
     DEBUG_OUT(2,"Iteration " << k << " (fx = " << fx << ", xnorm = " << xnorm << ", p = " << exp(-fx) << "):");
     for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) {
         DEBUG_OUT(2, "    " <<
-                active_features[f_idx].identifier() <<
-                " --> t[" <<
-                f_idx << "] = " <<
-                x[f_idx]);
+                  "t[" << f_idx << "] = " << x[f_idx] << "	<--> " <<
+                  active_features[f_idx].identifier()
+            );
     }
     DEBUG_OUT(1,"Iteration " << k << " (fx = " << fx << ", xnorm = " << xnorm << ", p = " << exp(-fx) << "):");
     DEBUG_OUT(1,QString("    Ignored %1 out of %2 data points (%3% to %4% excluded)")

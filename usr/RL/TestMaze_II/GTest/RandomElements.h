@@ -13,11 +13,15 @@ AbstractAction::ptr_t get_random_maze_action();
 
 AbstractAction::ptr_t get_random_augmented_maze_action();
 
+AbstractAction::ptr_t get_random_cheese_maze_action();
+
 AbstractObservation::ptr_t get_random_observation();
 
 AbstractObservation::ptr_t get_random_minimal_observation();
 
 AbstractObservation::ptr_t get_random_maze_observation();
+
+AbstractObservation::ptr_t get_random_cheese_maze_observation();
 
 AbstractReward::ptr_t get_random_reward();
 

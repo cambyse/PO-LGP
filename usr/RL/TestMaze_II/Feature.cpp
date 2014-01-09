@@ -212,7 +212,7 @@ Feature::feature_return_value ObservationFeature::evaluate(const_instanceIt_t in
 }
 
 string ObservationFeature::identifier() const {
-    return QString("s(%1,%2)").arg(observation->print().c_str()).arg(delay).toStdString()+Feature::identifier();
+    return QString("o(%1,%2)").arg(observation->print().c_str()).arg(delay).toStdString()+Feature::identifier();
 }
 
 bool ObservationFeature::features_contradict(const ObservationFeature& f1, const ObservationFeature& f2) {

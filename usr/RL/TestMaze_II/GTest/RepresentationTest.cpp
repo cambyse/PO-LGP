@@ -5,11 +5,13 @@
 #include "../AbstractAction.h"
 #include "MinimalEnvironmentExample/MinimalAction.h"
 #include "../Maze/MazeAction.h"
+#include "../CheeseMaze/CheeseMazeAction.h"
 #include "../Maze/AugmentedMazeAction.h"
 
 #include "../AbstractObservation.h"
 #include "MinimalEnvironmentExample/MinimalObservation.h"
 #include "../Maze/MazeObservation.h"
+#include "../CheeseMaze/CheeseMazeObservation.h"
 
 #include "../AbstractReward.h"
 #include "MinimalEnvironmentExample/MinimalReward.h"
@@ -96,6 +98,7 @@ namespace {
         action_vector.push_back(new MinimalAction(MinimalAction::ACTION::STAY));
         action_vector.push_back(new MazeAction(MazeAction::ACTION::DOWN));
         action_vector.push_back(new AugmentedMazeAction(AugmentedMazeAction::ACTION::LEFT,AugmentedMazeAction::TAG::TAG_2));
+        action_vector.push_back(new CheeseMazeAction(CheeseMazeAction::ACTION::EAST));
 
         int action_type_idx = 0;
         // for all action types (represented by one specific action of each type)
@@ -146,6 +149,7 @@ namespace {
         observation_vector.push_back(new AbstractObservation());
         observation_vector.push_back(new MinimalObservation(MinimalObservation::OBSERVATION::RED));
         observation_vector.push_back(new MazeObservation(10,10,3,4));
+        observation_vector.push_back(new CheeseMazeObservation("N"));
 
         int observation_type_idx = 0;
         // for all observation types (represented by one specific observation of each type)

@@ -405,7 +405,7 @@ void CheeseMaze::perform_transition(const action_ptr_t & a, observation_ptr_t & 
     // determine reward
     if(current_state_idx==6) {
         r = reward_space.get_derived<const ListedReward>()->new_reward(1.0);
-        current_state_idx = rand()%11;
+        current_state_idx = util::random_select<int>({0,1,2,3,4,5 ,7,8,9,10});
     } else if(current_state_idx==last_state_idx) {
         r = reward_space.get_derived<const ListedReward>()->new_reward(-1.0);
     } else {
@@ -423,7 +423,7 @@ void CheeseMaze::get_features(std::vector<f_ptr_t> & basis_features, FeatureLear
     basis_features.clear();
 
 #warning hack: k is not fixed!
-    int k = 5;
+    int k = 2;
 
     // add features
     for(int k_idx = 0; k_idx>=-k; --k_idx) {

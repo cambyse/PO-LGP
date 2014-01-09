@@ -4,9 +4,11 @@
 
 #include "MinimalEnvironmentExample/MinimalAction.h"
 #include "../Maze/MazeAction.h"
+#include "../CheeseMaze/CheeseMazeAction.h"
 #include "../Maze/AugmentedMazeAction.h"
 #include "MinimalEnvironmentExample/MinimalObservation.h"
 #include "../Maze/MazeObservation.h"
+#include "../CheeseMaze/CheeseMazeObservation.h"
 #include "MinimalEnvironmentExample/MinimalReward.h"
 #include "../ListedReward.h"
 
@@ -21,7 +23,8 @@ AbstractAction::ptr_t get_random_action() {
     switch(random_select<AbstractAction::ACTION_TYPE>({
                     AbstractAction::ACTION_TYPE::MINIMAL,
                     AbstractAction::ACTION_TYPE::MAZE_ACTION,
-                    AbstractAction::ACTION_TYPE::AUGMENTED_MAZE_ACTION
+                    AbstractAction::ACTION_TYPE::AUGMENTED_MAZE_ACTION,
+                    AbstractAction::ACTION_TYPE::CHEESE_MAZE_ACTION
                     })) {
     case AbstractAction::ACTION_TYPE::MINIMAL:
         return get_random_minimal_action();
@@ -29,6 +32,8 @@ AbstractAction::ptr_t get_random_action() {
         return get_random_maze_action();
     case AbstractAction::ACTION_TYPE::AUGMENTED_MAZE_ACTION:
         return get_random_augmented_maze_action();
+    case AbstractAction::ACTION_TYPE::CHEESE_MAZE_ACTION:
+        return get_random_cheese_maze_action();
     default:
         DEBUG_ERROR("Unexpected type");
         return AbstractAction::ptr_t();
@@ -67,15 +72,27 @@ AbstractAction::ptr_t get_random_augmented_maze_action() {
                         })));
 }
 
+AbstractAction::ptr_t get_random_cheese_maze_action() {
+    return AbstractAction::ptr_t(new CheeseMazeAction(random_select<CheeseMazeAction::ACTION>({
+                        CheeseMazeAction::ACTION::NORTH,
+                        CheeseMazeAction::ACTION::SOUTH,
+                        CheeseMazeAction::ACTION::EAST,
+                        CheeseMazeAction::ACTION::WEST
+                        })));
+}
+
 AbstractObservation::ptr_t get_random_observation() {
     switch(random_select<AbstractObservation::OBSERVATION_TYPE>({
                     AbstractObservation::OBSERVATION_TYPE::MINIMAL,
-                    AbstractObservation::OBSERVATION_TYPE::MAZE_OBSERVATION
+                    AbstractObservation::OBSERVATION_TYPE::MAZE_OBSERVATION,
+                    AbstractObservation::OBSERVATION_TYPE::CHEESE_MAZE_OBSERVATION
                     })) {
     case AbstractObservation::OBSERVATION_TYPE::MINIMAL:
         return get_random_minimal_observation();
     case AbstractObservation::OBSERVATION_TYPE::MAZE_OBSERVATION:
         return get_random_maze_observation();
+    case AbstractObservation::OBSERVATION_TYPE::CHEESE_MAZE_OBSERVATION:
+        return get_random_cheese_maze_observation();
     default:
         DEBUG_ERROR("Unexpected type");
         return AbstractObservation::ptr_t();
@@ -95,6 +112,17 @@ AbstractObservation::ptr_t get_random_maze_observation() {
     int x_pos = rand()%x_dim;
     int y_pos = rand()%y_dim;
     return AbstractObservation::ptr_t(new MazeObservation(x_dim,y_dim,x_pos,y_pos));
+}
+
+AbstractObservation::ptr_t get_random_cheese_maze_observation() {
+    return AbstractObservation::ptr_t(new CheeseMazeObservation(random_select<CheeseMazeObservation::OBSERVATION>({
+                        CheeseMazeObservation::OBSERVATION::N,
+                        CheeseMazeObservation::OBSERVATION::NW,
+                        CheeseMazeObservation::OBSERVATION::NS,
+                        CheeseMazeObservation::OBSERVATION::NE,
+                        CheeseMazeObservation::OBSERVATION::EW,
+                        CheeseMazeObservation::OBSERVATION::ESW
+                        })));
 }
 
 AbstractReward::ptr_t get_random_reward() {

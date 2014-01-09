@@ -28,6 +28,7 @@ CheeseMazeObservation::CheeseMazeObservation(const char * c) {
         DEBUG_ERROR("Not valid observation ('" << c << "'");
         observation = OBSERVATION::N;
     }
+    set_type(OBSERVATION_TYPE::CHEESE_MAZE_OBSERVATION);
 }
 
 CheeseMazeObservation::ptr_t CheeseMazeObservation::next() const {
