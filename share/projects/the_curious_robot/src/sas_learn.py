@@ -23,7 +23,7 @@ from belief_representations import ObjectTypeHypo, JointBelief
 import require_provide as rp
 from timer import Timer
 # python std
-# import numpy as np
+import numpy as np
 
 
 class LearnActionServer:
@@ -106,13 +106,6 @@ class LearnActionServer:
                                                       shape_msg.Xvel)
                 shape.rel = parser.ros_to_ors_transform(shape_msg.rel,
                                                         shape_msg.relvel)
-                shape.set_color(.5, .5, .5)
-
-                self.gl.update()
-                print shape.X
-                print shape.rel
-
-                # self.belief.calcShapeFramesFromBodies()
 
         print "###############################################################"
         print "Number of shapes in belief %d." % len(self.belief.shapes)
@@ -131,10 +124,6 @@ class LearnActionServer:
         shape_anno.object_type.update(ObjectTypeHypo.STATIC
                                       if len(self.trajectory) == 0 else
                                       ObjectTypeHypo.FREE)
-        if shape_anno.object_type.is_static():
-            shape.set_color(0., 0., 0.)
-        else:
-            shape.set_color(1., 1., 1.)
 
         # Update JointInformation
         if len(self.trajectory) > 1:
