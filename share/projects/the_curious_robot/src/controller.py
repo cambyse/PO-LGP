@@ -142,7 +142,7 @@ class FakeController():
         rp.Provide("Controller")
         """ the controller loop """
         while not rospy.is_shutdown():
-            self.step()
+            self.pstep()
 
     def compute_trajectory(self):
         rospy.loginfo("start computing trajectory")
