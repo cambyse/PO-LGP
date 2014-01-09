@@ -219,7 +219,7 @@ class FakeController():
         # P-Controller
         Kp = 10e-3
         # tolerance for he movement
-        eps = 10e-3
+        eps = 10e-2
         agent = self.world.graph.getBodyByName("robot")
 
         if self.goal:
