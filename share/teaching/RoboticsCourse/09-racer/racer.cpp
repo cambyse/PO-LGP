@@ -19,12 +19,13 @@ Racer::Racer(){
   IA = mA*MT::sqr(.9*r); //the mass averages at .9*r from the center
   IB = mB*MT::sqr(.8*l); //0.3705
   g = 9.81;
-  noise_dynamics = 0;
+  noise_dynamics = 0.;
 
   c1 = 1./9.6; //9.81;
+  c2 = 0.16-MT_PI/2.;
   c3 = 1.;
+  c4 = -0.0417273;
   c5 = 1.;
-  c2=c4=0.;
 
   noise_accel = 1.;
   noise_gyro = .1;

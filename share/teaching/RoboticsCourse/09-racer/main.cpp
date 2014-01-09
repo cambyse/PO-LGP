@@ -132,19 +132,21 @@ void FollowIMU(){
   ofstream data("z.data");
   data <<"iteration time u u_acc x th x_dot th_dot x_ddot th_ddot y0 y1 y2 y4 Y0 Y1 Y2 Y4 E(x) E(th) E(x_dot) E(th_dot) V(x) V(th) V(x_dot) V(th_dot)" <<endl;
 
+  Racer R;
+
   arr imu;
-  MT::load(imu,"nogit-data/imu-02.dat");
+  MT::load(imu,"nogit-data/imu-01.dat");
   uint T=imu.d0;
   imu = ~imu;
   arr times;
   times = imu[0];
-  imu[0] = imu[3]*(-1./(1<<14));
-  imu[1] = imu[1]*(1./(1<<14));
+  imu[0] = imu[1]*(1./(1<<14));
+  imu[1] = imu[3]*(1./(1<<14));
   imu[2] = imu[5]*(1./(1<<13));
   imu[3] = 0.;
 
-  double gyro_off = sum(imu.sub(2,2,0,99))/100.;
-  imu[2]() -= gyro_off;
+//  R.c4 = sum(imu.sub(2,2,0,199))/200.;
+//  cout <<"gyro_off = c4 = " <<R.c4 <<endl;
 
   //for(uint t=1;t<imu.d1;t++) imu(3,t) = imu(3,t-1) + (times(t)-times(t-1))*imu(2,t-1);
 
@@ -154,7 +156,6 @@ void FollowIMU(){
   imu >>FILE("z");
   ~(~times) >>FILE("z.t");
 
-  Racer R;
   R.q(1)=MT_PI/2.;
 
   Kalman K;
@@ -191,10 +192,10 @@ int main(int argc,char **argv){
 //  testDraw();
 //  TestMove();
 //  CheckGradients();
-  TestControl();
+//  TestControl();
 
 //  FollowSignal();
-//  FollowIMU();
+  FollowIMU();
 
   return 0;
 }
