@@ -164,6 +164,7 @@ class Test_TransformationOperatorOverloading(unittest.TestCase):
         assert t1 != t3
         assert t2 != t3
 
+
 # TODO: reactivate!
 #class Test_Graph_serialization(unittest.TestCase):
     #def test_graph_de_serialization(self):
