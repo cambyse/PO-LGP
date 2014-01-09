@@ -135,8 +135,40 @@ class LearnActionServer:
         for key, value in self.belief_annotation.iteritems():
             rospy.loginfo("%d: %s", key, str(value))
 
+        # VISUALIZE
+        # self.visualize_object_type()
+        self.visualize_object_entropy()
+
         self.gl.update()
         self.server.set_succeeded()
+
+    def visualize_object_type(self):
+        for shape_anno in self.belief_annotation:
+            shape = self.getShapeById(shape_anno.belief_shape_id)
+            if shape_anno.object_type.is_static():
+                shape.set_color(0., 0., 0.)
+                pass
+            else:
+                shape.set_color(1., 1., 1.)
+                pass
+
+    def visualize_object_entropy(self):
+        # use entropy to visualize the scene.
+        # normalize entropy to be between 0 - 1
+        entropies = {k: (shape.object_type.get_entropy(), shape)
+                     for k, shape in
+                     self.belief_annotation.iteritems()}
+        print entropies
+        min_entropy = min(entropy for (entropy, _) in entropies.values())
+        max_entropy = max(entropy for (entropy, _) in entropies.values())
+        diff = max_entropy - min_entropy
+        # print "min:", min_entropy, " max:", max_entropy, " diff:", diff
+        for k, (entropy, shape) in entropies.iteritems():
+            color = (entropy - min_entropy) / diff
+
+            # set color according to the entropy
+            self.getShapeById(shape.belief_shape_id).set_color(
+                color, color, color)
 
     def update_dof(self, shape_anno):
         request = TrackModelSrvRequest()
