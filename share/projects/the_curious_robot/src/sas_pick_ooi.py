@@ -94,22 +94,22 @@ class PickOOIActionServer:
         # self.select_ooi = _strategy_door_frame_top
         # self.select_ooi = _strategy_select_shape_with_index
 
-        self.oois = None
+        self.possible_oois = None
         rp.Provide("PickOOI")
 
     def execute(self, msg):
         # We assume that we "see" all shapes from the beginning and the number
         # does not change. Therfore, we only request it once.
 
-        if self.oois is None:
+        if self.possible_oois is None:
             with Timer("PICK: initial if", rospy.logwarn):
                 all_shapes_msg = self.request_all_shapes(with_mesh=False)
-                self.oois = [shape.index for shape in all_shapes_msg.shapes
+                self.possible_oois = [shape.index for shape in all_shapes_msg.shapes
                              if shape.name not in ["base", "robot"]]
 
         # select an ooi
         with Timer("PICK: select ooi", rospy.logwarn):
-            ooi_id_msg = self.select_ooi(self.oois)
+            ooi_id_msg = self.select_ooi(self.possible_oois)
 
         with Timer("PICK: publish", rospy.logwarn):
             self.ooi_id_pub.publish(ooi_id_msg)
