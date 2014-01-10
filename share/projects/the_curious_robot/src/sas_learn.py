@@ -58,8 +58,7 @@ class LearnActionServer:
         self.belief_ors = orspy.Graph()
         # The BeliefAnnotation is the probabilistic counterpart to the ors
         # graph/belief representation.
-        # It's a mapping:  "shape_id" --> ShapeBelief
-        self.belief_annotation = {}
+        self.belief_annotation = bel_rep.Annotation()
         self._added_bodies = []
         self._added_shapes = []
 
@@ -88,9 +87,7 @@ class LearnActionServer:
                 self._added_shapes.append(orspy.Shape(self.belief_ors, body))
                 shape = self._added_shapes[-1]
 
-                self.belief_annotation[self.ooi] = rep.ShapeBelief(
-                    self.belief.shapes[-1].index
-                )
+                self.belief_annotation[self.ooi] = bel_rep.ShapeBelief(shape)
 
                 # Set BODY infos
                 body.pose = parser.ros_to_ors_transform(shape_msg.X,
@@ -118,7 +115,7 @@ class LearnActionServer:
         #  - TODO then transfer all information from the annotation to the
         #    belief_ors
         shape_anno = self.belief_annotation[self.ooi]
-        shape = self.getShapeById(shape_anno.belief_shape_id)
+        shape = shape_anno.belief_shape
 
         # Update ObjectTypeHypo
         shape_anno.object_type.update(ObjectTypeHypo.STATIC
