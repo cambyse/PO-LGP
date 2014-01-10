@@ -129,8 +129,7 @@ class LearnActionServer:
             # self.update_dynamics()
 
         # PRINT
-        for key, value in self.belief_annotation.iteritems():
-            rospy.loginfo("%d: %s", key, str(value))
+        rospy.loginfo(str(self.belief_annotation))
 
         # VISUALIZE
         # self.visualize_object_type()
@@ -144,10 +143,8 @@ class LearnActionServer:
             shape = self.getShapeById(shape_anno.belief_shape_id)
             if shape_anno.object_type.is_static():
                 shape.set_color(0., 0., 0.)
-                pass
             else:
                 shape.set_color(1., 1., 1.)
-                pass
 
     def visualize_object_entropy(self):
         # use entropy to visualize the scene.
