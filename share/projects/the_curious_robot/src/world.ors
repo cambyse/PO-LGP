@@ -173,7 +173,7 @@ body wall_right_to_right {
 # }}}
 # cabinet {{{
 body cabinet_base {
-  X=<T t(1 -3 0) d(90 0 0 1)> size=[1. 1. 1. .0] color=[.8 0 0]
+  X=<T t(1 -3 0) d(90 0 0 1)> size=[1. 1. 1. .0] color=[.8 0 0] fixed
 }
 shape (cabinet_base) {
   name="top" type=0 color=[0 0.3 0.7] rel=<T t(.0 .0 1.3)> size=[1. 1. .2 .0]
@@ -188,7 +188,7 @@ shape (cabinet_base) {
   name="left" type=0 color=[0 .3 .7] rel=<T t(.0 -.55 .7)> size=[1. .1 1.4 .0]
 }
 
-body cabinet_drawer {type=0 size=[1.2 1. .4 .0] color=[.5 .5 0] }
+body cabinet_drawer {type=0 size=[1.2 1. .4 .0] color=[.5 .5 0] kinematic }
 
 joint (cabinet_base cabinet_drawer) { type=3 A=<T t(0 0 1)> }
 # }}}
