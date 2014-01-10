@@ -102,17 +102,17 @@ class PickOOIActionServer:
         # does not change. Therfore, we only request it once.
 
         if self.possible_oois is None:
-            with Timer("PICK: initial if", rospy.logwarn):
+            with Timer("PICK: initial if", rospy.logdebug):
                 all_shapes_msg = self.request_all_shapes(with_mesh=False)
                 self.possible_oois = [shape.index
                                       for shape in all_shapes_msg.shapes
                                       if shape.name not in ["base", "robot"]]
 
         # select an ooi
-        with Timer("PICK: select ooi", rospy.logwarn):
+        with Timer("PICK: select ooi", rospy.logdebug):
             ooi_id_msg = self.select_ooi(self.possible_oois)
 
-        with Timer("PICK: publish", rospy.logwarn):
+        with Timer("PICK: publish", rospy.logdebug):
             self.ooi_id_pub.publish(ooi_id_msg)
 
         self.server.set_succeeded()
