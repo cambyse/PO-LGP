@@ -44,7 +44,7 @@ class Annotation(collections.OrderedDict):
 ###############################################################################
 class ShapeBelief(object):
     """
-    ShapeBelief is a container for all beliefs about an shape.
+    ShapeBelief is a container for all beliefs about one shape.
     """
     def __init__(self, belief_shape_id):
         self.belief_shape_id = belief_shape_id
