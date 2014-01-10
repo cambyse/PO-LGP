@@ -18,7 +18,7 @@ import the_curious_robot.msg as msgs
 from articulation_msgs.srv import TrackModelSrv, TrackModelSrvRequest
 import util
 import pickle_logger
-import belief_representations as rep
+import belief_representations as bel_rep
 from belief_representations import ObjectTypeHypo, JointBelief
 import require_provide as rp
 from timer import Timer
@@ -54,8 +54,8 @@ class LearnActionServer:
         self.ooi = None
         self.trajectory = []
 
-        # Belief
-        self.belief = orspy.Graph()
+        # Belief in ors
+        self.belief_ors = orspy.Graph()
         # The BeliefAnnotation is the probabilistic counterpart to the ors
         # graph/belief representation.
         # It's a mapping:  "shape_id" --> ShapeBelief
@@ -67,7 +67,7 @@ class LearnActionServer:
         self.gl = guipy.OpenGL()
         # self.physx = orspy.PhysXInterface()
         # orspy.bindOrsToPhysX(self.belief, self.gl, self.physx)
-        orspy.bindOrsToOpenGL(self.belief, self.gl)
+        orspy.bindOrsToOpenGL(self.belief_ors, self.gl)
 
         # require/provide
         rp.Provide("Learn")
@@ -83,9 +83,9 @@ class LearnActionServer:
                 print shape_msg
 
                 # add shape and body to belief
-                self._added_bodies.append(orspy.Body(self.belief))
+                self._added_bodies.append(orspy.Body(self.belief_ors))
                 body = self._added_bodies[-1]
-                self._added_shapes.append(orspy.Shape(self.belief, body))
+                self._added_shapes.append(orspy.Shape(self.belief_ors, body))
                 shape = self._added_shapes[-1]
 
                 self.belief_annotation[self.ooi] = rep.ShapeBelief(
@@ -116,7 +116,7 @@ class LearnActionServer:
         # This consists of two parts:
         #  - updating all parts of the belief annotation
         #  - TODO then transfer all information from the annotation to the
-        #    belief
+        #    belief_ors
         shape_anno = self.belief_annotation[self.ooi]
         shape = self.getShapeById(shape_anno.belief_shape_id)
 
@@ -257,7 +257,7 @@ class LearnActionServer:
         Return the shape with the given `id`.
         TODO this should be part of ors.
         """
-        for shape in self.belief.shapes:
+        for shape in self.belief_ors.shapes:
             if shape.index == idx:
                 return shape
         return None
