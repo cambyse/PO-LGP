@@ -130,8 +130,8 @@ class LearnActionServer:
         rospy.loginfo(str(self.belief_annotation))
 
         # VISUALIZE
-        # self.visualize_object_type()
-        self.visualize_object_entropy()
+        self.visualize_object_type()
+        # self.visualize_object_entropy()
 
         self.gl.update()
         self.server.set_succeeded()
@@ -154,7 +154,6 @@ class LearnActionServer:
         entropies = {k: (shape.object_type.get_entropy(), shape)
                      for k, shape in
                      self.belief_annotation.iteritems()}
-        print entropies
         min_entropy = min(entropy for (entropy, _) in entropies.values())
         max_entropy = max(entropy for (entropy, _) in entropies.values())
         diff = max_entropy - min_entropy
