@@ -99,13 +99,11 @@ class LearnActionServer:
                                shape_msg.size[2], shape_msg.size[3])
                 if shape.type == orspy.meshST and shape_msg.mesh is not None:
                     shape.mesh = parser.msg_to_ors_mesh(shape_msg.mesh)
+
                 shape.X = parser.ros_to_ors_transform(shape_msg.X,
                                                       shape_msg.Xvel)
                 shape.rel = parser.ros_to_ors_transform(shape_msg.rel,
                                                         shape_msg.relvel)
-
-        print "###############################################################"
-        print "Number of shapes in belief %d." % len(self.belief.shapes)
 
         #######################################################################
         # Belief update
