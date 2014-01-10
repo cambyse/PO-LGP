@@ -62,6 +62,15 @@ class ShapeBelief(object):
             result += "    %s: %s\n" % (attr_name, attr_val)
         return result
 
+    def __getstate__(self):
+        """
+        To avoid pickling SwigObjects we have to overwrite __getstate__ and
+        ignore the varibales.
+        """
+        exclude_members = ["belief_shape"]
+        return dict((k, v) for (k, v) in self.__dict__.iteritems()
+                    if k not in exclude_members)
+
 
 ###############################################################################
 class ObjectTypeHypo():
