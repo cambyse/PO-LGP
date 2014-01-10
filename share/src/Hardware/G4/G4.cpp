@@ -26,8 +26,10 @@ struct sG4Poller{
   uint init_frame;
   uint last_frame;
   uint num_frames;
-  int dropped_frames;
+  uint dropped_frames;
+  uint dropped_hubs;
   double dropped_frames_pct;
+  double dropped_hubs_pct;
 };
 
 namespace {
@@ -177,6 +179,9 @@ void G4Poller::open(){
   s->last_frame = 0;
   s->num_frames = 0;
   s->dropped_frames = 0;
+  s->dropped_frames_pct = 0;
+  s->dropped_hubs = 0;
+  s->dropped_hubs_pct = 0;
 }
 
 void G4Poller::step(){
@@ -195,14 +200,16 @@ void G4Poller::step(){
   s->num_data_reads++;
 
   s->num_hubs_read += num_hubs_read;
+
+  s->dropped_frames += s->framedata(0).frame - s->last_frame - 1;
   s->last_frame = s->framedata(0).frame;
   if(s->init_frame == 0)
     s->init_frame = s->framedata(0).frame;
   s->num_frames = s->last_frame - s->init_frame + 1;
-  s->dropped_frames = (s->hubs * s->num_frames) - s->num_hubs_read;
+  s->dropped_frames_pct = (100. * s->dropped_frames) / s->num_frames;
 
-  s->dropped_frames_pct = 100*(1 - s->num_hubs_read*1./
-		(s->hubs * s->num_frames));
+  s->dropped_hubs = (s->hubs * s->num_frames) - s->num_hubs_read;
+  s->dropped_hubs_pct = (100. * s->dropped_hubs) / (s->hubs * s->num_frames);
 
   s->poses.resize(s->hubs, G4_SENSORS_PER_HUB, 7);
   s->poses.setZero();
@@ -250,6 +257,8 @@ void G4Poller::close(){
   cout << " - num_frames: " << s->num_frames << " (expected: " << expected_frames << ", reads: " << s->num_reads << ", data: " << s->num_data_reads << ")" << endl;  
   cout << " - dropped_frames: " << s->dropped_frames << " (" 
 	<< s->dropped_frames_pct << "%)" << endl;
+  cout << " - dropped_hubs: " << s->dropped_hubs << " (" 
+	<< s->dropped_hubs_pct << "%)" << endl;
 
   usleep(1000000l);
   cout << "closing.. " << flush;
