@@ -36,9 +36,9 @@ class Annotation(collections.OrderedDict):
         min_entropy = min(entropies)
         max_entropy = max(entropies)
 
-        for shape_bel, entropy in zip(self.itervalues(), entropies):
+        for shape_anno, entropy in zip(self.itervalues(), entropies):
             normalized = (entropy - min_entropy) / (max_entropy - min_entropy)
-            yield shape_bel, normalized
+            yield shape_anno.belief_shape, normalized
 
 
 ###############################################################################
