@@ -56,9 +56,9 @@ class ShapeBelief(object):
 
     def __str__(self):
         result = ""
-        for attr_name in vars(self):
+        for attr_name in ["object_type", "joint"]:
             attr_val = str(getattr(self, attr_name))
-            result += "%s: %s\n" % (attr_name, attr_val)
+            result += "    %s: %s\n" % (attr_name, attr_val)
         return result
 
 
