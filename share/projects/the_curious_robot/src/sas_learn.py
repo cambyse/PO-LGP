@@ -41,6 +41,15 @@ class LearnActionServer:
         self.dof_learner = rospy.ServiceProxy('model_select', TrackModelSrv)
         self.request_shapes = rospy.ServiceProxy('/world/shapes',
                                                  rosors.srv.Shapes)
+        self.request_all_shapes = rospy.ServiceProxy('/world/shapes',
+                                                     rosors.srv.Shapes)
+
+        all_shapes_msg = self.request_all_shapes(with_mesh=False)
+        # uninitialized_oois are interesting because we don't know anything
+        # about them.
+        self.uninitialized_oois = set(shape.index
+                                      for shape in all_shapes_msg.shapes
+                                      if shape.name not in ["base", "robot"])
 
         # action server
         self.server = SimpleActionServer(name,
@@ -76,6 +85,9 @@ class LearnActionServer:
         # add object to belief and belief_annotation if it does not exist yet
         if self.ooi not in self.belief_annotation:
             with Timer("Adding new shape with id %d", rospy.loginfo):
+                # rm ooi from list of uninitialized_oois
+                self.uninitialized_oois -= set(self.ooi)
+
                 shape_response = self.request_shapes(index=self.ooi,
                                                      with_mesh=True)
                 shape_msg = shape_response.shapes[0]
