@@ -149,21 +149,12 @@ class LearnActionServer:
                 shape.set_color(1., 1., 1.)
 
     def visualize_object_entropy(self):
-        # use entropy to visualize the scene.
-        # normalize entropy to be between 0 - 1
-        entropies = {k: (shape.object_type.get_entropy(), shape)
-                     for k, shape in
-                     self.belief_annotation.iteritems()}
-        min_entropy = min(entropy for (entropy, _) in entropies.values())
-        max_entropy = max(entropy for (entropy, _) in entropies.values())
-        diff = max_entropy - min_entropy
-        # print "min:", min_entropy, " max:", max_entropy, " diff:", diff
-        for k, (entropy, shape) in entropies.iteritems():
-            color = (entropy - min_entropy) / diff
-
-            # set color according to the entropy
-            self.getShapeById(shape.belief_shape_id).set_color(
-                color, color, color)
+        """
+        Colorie the shapes depending on the object_type entropy.
+        """
+        gentor = self.belief_annotation.iter_entropy_normalized("object_type")
+        for shape, entropy in gentor:
+            shape.set_color(entropy, entropy, entropy)
 
     def update_dof(self, shape_anno):
         request = TrackModelSrvRequest()
