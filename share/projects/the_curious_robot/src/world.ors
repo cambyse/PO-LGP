@@ -16,26 +16,26 @@ body door1-door {
   mass=2000000
   contact
 }
-body door1-handle {
-  type=3
-  mesh='door_model/handle_hacd.obj'
-  meshscale=.01
-  color=[0 0 0]
-  submeshsizes=[73 50 71 51]
-  contact
-}
+# body door1-handle {
+#   type=3
+#   mesh='door_model/handle_hacd.obj'
+#   meshscale=.01
+#   color=[0 0 0]
+#   submeshsizes=[73 50 71 51]
+#   contact
+# }
 joint (door1-frame, door1-door) {
   A=<T t(.46 0 0) d(90 0 1 0)>
   limit=[-.9 .9 0 0 0]
   BinvA
   agent = 99
 }
-joint (door1-door, door1-handle) {
-  A=<T t(-.39 0 1) d(90 0 0 1)>
-  limit=[0 .1 0 0 0]
-  BinvA
-  agent = 99
-}
+# joint (door1-door, door1-handle) {
+#   A=<T t(-.39 0 1) d(90 0 0 1)>
+#   limit=[0 .1 0 0 0]
+#   BinvA
+#   agent = 99
+# }
 # }}}
 # door2 {{{
 body door2-frame {
@@ -56,26 +56,26 @@ body door2-door {
   mass=2000000
   contact
 }
-body door2-handle {
-  X=<T t(-2 -2 0) d(90 0 0 1)>
-  type=3
-  mesh='door_model/handle_hacd.obj'
-  meshscale=.01
-  color=[0 0 0]
-  submeshsizes=[73 50 71 51]
-  contact
-}
+# body door2-handle {
+#   X=<T t(-2 -2 0) d(90 0 0 1)>
+#   type=3
+#   mesh='door_model/handle_hacd.obj'
+#   meshscale=.01
+#   color=[0 0 0]
+#   submeshsizes=[73 50 71 51]
+#   contact
+# }
 joint (door2-frame, door2-door) {
   A=<T t(.46 0 0) d(90 0 1 0)>
   BinvA
   agent = 99
 }
-joint (door2-door, door2-handle) {
-  A=<T t(-.39 0 1) d(90 0 0 1)>
-  limit=[0 .1 0 0 0]
-  BinvA
-  agent = 99
-}
+# joint (door2-door, door2-handle) {
+#   A=<T t(-.39 0 1) d(90 0 0 1)>
+#   limit=[0 .1 0 0 0]
+#   BinvA
+#   agent = 99
+# }
 # }}}
 # door3 (locked) {{{
 # this door is locked (due to a bug in the rotation of the joint)
