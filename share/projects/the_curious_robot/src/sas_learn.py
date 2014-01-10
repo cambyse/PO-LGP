@@ -137,8 +137,12 @@ class LearnActionServer:
         self.server.set_succeeded()
 
     def visualize_object_type(self):
-        for shape_anno in self.belief_annotation:
-            shape = self.getShapeById(shape_anno.belief_shape_id)
+        """
+        Colorize the shapes depending on the ObjectTypeHypo.
+        """
+        for shape_anno in self.belief_annotation.itervalues():
+            shape = shape_anno.belief_shape
+
             if shape_anno.object_type.is_static():
                 shape.set_color(0., 0., 0.)
             else:
