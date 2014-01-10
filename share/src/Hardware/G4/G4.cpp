@@ -4,6 +4,7 @@
 #include <G4TrackIncl.h>
 #include <string>
 #include <iostream>
+#include <time.h>
 
 REGISTER_MODULE(G4Poller)
 
@@ -18,6 +19,9 @@ struct sG4Poller{
   MT::Array<G4_FRAMEDATA> framedata;
   floatA poses;
 
+  timespec start;
+  uint num_reads;
+  uint num_data_reads;
   uint num_hubs_read;
   uint init_frame;
   uint last_frame;
@@ -98,6 +102,7 @@ void G4Poller::open(){
     for(uint i=0;i<100;i++){
       res = g4_init_sys(&s->sysId, src_cfg_file, NULL);
       if(res==G4_ERROR_NONE) { 
+	clock_gettime(CLOCK_REALTIME, &(s->start));
         break; //success!
       } else {
         std::clog << "Error initializing G4 system: " << errcode2string(res) << std::endl;
@@ -107,6 +112,7 @@ void G4Poller::open(){
     if(res!=G4_ERROR_NONE)
       HALT("G4Tracker initialization failed 10 times. g4_init_sys returned " <<res);
     cout <<" success" <<endl;
+
 
     //-- query #hubs
     cout <<"G4 quering #hubs, should be = " <<numHubs <<" ... " <<flush;
@@ -121,7 +127,7 @@ void G4Poller::open(){
       s->hubs = cs.cds.iParam;
       if(s->hubs == (int)numHubs) break;
       cout << s->hubs << ", " << flush;
-      MT::wait(.01, false);
+      MT::wait(.1, false);
     }
     if(k==10){
       cout <<" FAILED ... restarting" <<endl;
@@ -164,6 +170,8 @@ void G4Poller::open(){
   res = g4_set_query(&cs);
   if(res!=G4_ERROR_NONE){ close(); HALT(""); }
 
+  s->num_reads = 0;
+  s->num_data_reads = 0;
   s->num_hubs_read = 0;
   s->init_frame = 0;
   s->last_frame = 0;
@@ -173,12 +181,18 @@ void G4Poller::open(){
 
 void G4Poller::step(){
   int res=g4_get_frame_data(s->framedata.p, s->sysId, s->hubList.p, s->hubs);
+  if(res < 0) {
+	std::clog << "Error reading frame data:" << errcode2string(res) << std::endl;
+	return;
+  }
+  s->num_reads++;
   int num_hubs_read=res&0xffff;
   //int num_hubs_reg=res>>16;
 
   //cout << num_hubs_read << flush;
   if(!num_hubs_read) return;
   //cout << endl;
+  s->num_data_reads++;
 
   s->num_hubs_read += num_hubs_read;
   s->last_frame = s->framedata(0).frame;
@@ -224,9 +238,16 @@ void G4Poller::step(){
 #include <unistd.h>
 
 void G4Poller::close(){
+  // compute expected number of frames
+  timespec end_time;
+  clock_gettime(CLOCK_REALTIME, &end_time);
+  double diff_time = (((double)end_time.tv_sec) * 1e9 + (double)end_time.tv_nsec) - (((double)s->start.tv_sec) * 1e9 + (double)s->start.tv_nsec);
+  diff_time/=1e9;
+  int expected_frames = diff_time * 120;
+
   cout << "stats: " << endl;
-  cout << " - num_hubs_read: " << s->num_hubs_read << endl;
-  cout << " - num_frames: " << s->num_frames << endl;
+  cout << " - num_hubs_read: " << s->num_hubs_read << " (expected: " << (expected_frames * s->hubs) << ")" << endl;
+  cout << " - num_frames: " << s->num_frames << " (expected: " << expected_frames << ", reads: " << s->num_reads << ", data: " << s->num_data_reads << ")" << endl;  
   cout << " - dropped_frames: " << s->dropped_frames << " (" 
 	<< s->dropped_frames_pct << "%)" << endl;
 
