@@ -33,11 +33,16 @@ class Annotation(collections.OrderedDict):
         """
         entropies = [getattr(shape_bel, property_).get_entropy()
                      for key, shape_bel in self.iteritems()]
-        min_entropy = min(entropies)
-        max_entropy = max(entropies)
+        # beta(2, 1).entropy() =! beta(1, 2).entropy()
+        # The tiny difference fucks up the visualization, therefore we round
+        # it.
+        min_entropy = round(min(entropies), 5)
+        max_entropy = round(max(entropies), 5)
 
         for shape_anno, entropy in zip(self.itervalues(), entropies):
             normalized = (entropy - min_entropy) / (max_entropy - min_entropy)
+            if normalized == float('Inf'):
+                normalized = 1.
             yield shape_anno.belief_shape, normalized
 
 
