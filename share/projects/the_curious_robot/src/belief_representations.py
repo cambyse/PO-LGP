@@ -2,6 +2,43 @@
 This file contains various representations of different part of the belief.
 """
 import scipy.stats as ss
+import collections
+
+
+###############################################################################
+class Annotation(collections.OrderedDict):
+    """
+    Annotation contains all beliefs over a shape.
+
+    It's a mapping: ooi_id --> ShapeBelief
+
+    It offers some convenient functions.
+    """
+
+    def __str__(self):
+        result = "\n" + "=" * 60
+        result += "\nbelief annotation (%d items)\n" % len(self)
+        result += "=" * 60 + "\n"
+        for key, value in self.iteritems():
+            tmp = "ID %d\n%s\n" % (key, str(value))
+            result += tmp
+        result += "=" * 60
+        return result
+
+    def iter_entropy_normalized(self, property_):
+        """
+        Return the entropy normalized between 0 and 1.
+
+        This is useful for visualization.
+        """
+        entropies = [getattr(shape_bel, property_).get_entropy()
+                     for key, shape_bel in self.iteritems()]
+        min_entropy = min(entropies)
+        max_entropy = max(entropies)
+
+        for shape_bel, entropy in zip(self.itervalues(), entropies):
+            normalized = (entropy - min_entropy) / (max_entropy - min_entropy)
+            yield shape_bel, normalized
 
 
 ###############################################################################
