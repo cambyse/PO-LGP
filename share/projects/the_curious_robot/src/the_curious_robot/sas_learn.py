@@ -15,8 +15,8 @@ from rosors import parser
 import rosors.srv
 # import corepy
 
-import the_curious_robot.util
 import the_curious_robot as tcr
+import the_curious_robot.util
 import the_curious_robot.msg as msgs
 import the_curious_robot.belief_representations as bel_rep
 from the_curious_robot.belief_representations import ObjectTypeHypo
@@ -183,7 +183,7 @@ class LearnActionServer(object):
 
     def update_dof(self, shape_anno):
         request = TrackModelSrvRequest()
-        request.model.track = util.create_track_msg(self.trajectory)
+        request.model.track = tcr.util.create_track_msg(self.trajectory)
 
         # here we learn
         response = self.dof_learner(request)
@@ -279,22 +279,18 @@ class LearnActionServer(object):
         """
         res = srv.EntropyResponse()
 
-        # if we have uninitialized shapes explore them
+        # uninitialized shapes have a high entropy
         for shape_idx in self.uninitialized_oois:
             res.shape_ids.append(shape_idx)
             res.entropies.append(sys.float_info.max)
 
+        # add the already explored shapes
+        entropies = self.belief_annotation.get_entropy()
+        for shape_id, entropy in entropies:
+            res.shape_ids.append(shape_id)
+            res.entropies.append(entropy)
+
         return res
-
-        # entropies = collections.defaultdict(0.)
-        # max_entropy = -100000
-        # for k, shape_bel in self.belief_annotation.iteritems():
-        #     shape_bel.object_type.get_entropy()
-
-        #     if shape_bel:
-        #         shape_bel.joint.get_entropy()
-
-        # return res
 
         # if req.type_ == "sum":
         #     res.shape_idx = 0
