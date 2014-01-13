@@ -292,17 +292,6 @@ class LearnActionServer(object):
 
         return res
 
-        # if req.type_ == "sum":
-        #     res.shape_idx = 0
-        # elif req.type_ == "average":
-        #     res.shape_idx = 0
-        # elif req.type_ == "independent":
-        #     res.shape_idx = 0
-        # else:
-        #     print "NOT HANDLED"
-
-        # return res
-
 
 def main():
     rospy.init_node('tcr_sas_learn')

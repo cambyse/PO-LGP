@@ -95,14 +95,17 @@ def _strategy_select_max_entropy(selection_type):
         if selection_type == "sum":
             ooi, entropy = max(entropies.iteritems(),
                                key=lambda key_ent: sum(key_ent[1]))
+            entropy = sum(entropy)
 
         elif selection_type == "mean":
             ooi, entropy = max(entropies.iteritems(),
                                key=lambda key_ent: np.mean(key_ent[1]))
+            entropy = np.mean(entropy)
 
         elif selection_type == "max":
             ooi, entropy = max(entropies.iteritems(),
                                key=lambda key_ent: max(key_ent[1]))
+            entropy = max(entropy)
 
         else:
             print "NOT HANDLED"
