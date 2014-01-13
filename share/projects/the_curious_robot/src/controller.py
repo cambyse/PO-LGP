@@ -217,7 +217,7 @@ class FakeController(object):
 
     def pstep(self):
         # P-Controller
-        Kp = 10e-3
+        Kp = 10e-2
         # tolerance for he movement
         eps = 10e-2
         agent = self.world.graph.getBodyByName("robot")
