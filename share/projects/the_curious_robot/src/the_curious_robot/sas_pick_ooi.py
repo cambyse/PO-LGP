@@ -12,9 +12,10 @@ from the_curious_robot import srv
 import the_curious_robot as tcr
 import rosors.srv
 import rospy
+from timer import Timer
 # python std
 import random
-from timer import Timer
+import collections
 
 
 #########################################################################
@@ -74,26 +75,31 @@ def _strategy_select_max_entropy(entropy_type):
 
     def call(oois):
         response = request_entropy()
-        print response
         entropies = zip(response.shape_ids, response.entropies)
-        entropies.sort(key=lambda e: e[1], reverse=True)
-        print "=" * 79
-        print "entropies"
-        print entropies
 
-        # if entropy_type == "sum":
-        #     print "NOT HANDLED"
-        # elif entropy_type == "average":
-        #     print "NOT HANDLED"
-        # elif entropy_type == "independent":
-        #     print "NOT HANDLED"
-        # else:
-        #     # print "NOT HANDLED"
-        #     pass
+        rospy.logdebug(entropies)
+        # print "=" * 79
+        # print "entropies"
+        # print entropies
 
-        # return res
-        ooi = entropies[0][0]
-        print "selected shape id", ooi, "with entropy", entropies[0][1], type(ooi)
+        if entropy_type == "sum":
+            summed_entropies = collections.defautdict(0.)
+            for id_, entropy in entropies:
+                summed_entropies[id_] += entropy
+            ooi = max(summed_entropies,
+                      key=lambda id_and_entropy: id_and_entropy[1])
+
+        elif entropy_type == "average":
+            print "NOT HANDLED"
+
+        elif entropy_type == "independent":
+            entropies.sort(key=lambda e: e[1], reverse=True)
+            ooi = entropies[0][0]
+
+        else:
+            # print "NOT HANDLED"
+            pass
+
         return ooi
 
     return call
@@ -129,7 +135,8 @@ class PickOOIActionServer(object):
         # self.select_ooi = _strategy_sequential_select()
         # self.select_ooi = _strategy_door_frame_top
         # self.select_ooi = _strategy_select_shape_with_index
-        self.select_ooi = _strategy_select_max_entropy("independent")
+        # self.select_ooi = _strategy_select_max_entropy("independent")
+        self.select_ooi = _strategy_select_max_entropy("sum")
 
         self.possible_oois = None
         rp.Provide("PickOOI")
