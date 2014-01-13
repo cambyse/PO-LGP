@@ -16,6 +16,7 @@ from timer import Timer
 # python std
 import random
 import collections
+import numpy as np
 
 
 #########################################################################
@@ -29,6 +30,7 @@ import collections
 
 def _strategy_random_select(oois):
     """Select a random object of all possibes objects."""
+    rospy.loginfo("Selection strategy: RANDOM")
     ooi = random.choice(oois)
     ooi_id_msg = tcr.msg.ObjectID()
     ooi_id_msg.id = ooi
@@ -43,6 +45,7 @@ class _strategy_sequential_select():
         self.ooi_index = 0
 
     def __call__(self, oois):
+        rospy.loginfo("Selection strategy: SEQUENTIAL")
         ooi_id_msg = tcr.msg.ObjectID()
         ooi_id_msg.id = oois[32 + self.ooi_index]
         # self.ooi_index = (self.ooi_index + 1) % len(oois)
@@ -52,6 +55,7 @@ class _strategy_sequential_select():
 
 def _strategy_door_frame_top(oois):
     """Always go for the door1-door."""
+    rospy.loginfo("Selection strategy: FRAME_TOP")
     ooi_id_msg = tcr.msg.ObjectID()
     ooi_id_msg.id = 4
     return ooi_id_msg
@@ -64,6 +68,7 @@ def _strategy_select_shape_with_index(oois, index=5):
     4: top door frame
     5: door_door
     """
+    rospy.loginfo("Selection strategy: SHAPE WITH ID")
     ooi_id_msg = tcr.msg.ObjectID()
     ooi_id_msg.id = index
     return ooi_id_msg
@@ -74,6 +79,8 @@ def _strategy_select_max_entropy(entropy_type):
     entropy_type = entropy_type
 
     def call(oois):
+        rospy.loginfo("Selection strategy: ENTROPY with type %s",
+                      selection_type)
         response = request_entropy()
         entropies = zip(response.shape_ids, response.entropies)
 
