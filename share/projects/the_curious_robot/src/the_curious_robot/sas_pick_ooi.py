@@ -74,37 +74,41 @@ def _strategy_select_shape_with_index(oois, index=5):
     return ooi_id_msg
 
 
-def _strategy_select_max_entropy(entropy_type):
+def _strategy_select_max_entropy(selection_type):
     request_entropy = rospy.ServiceProxy("/belief/entropy/", srv.Entropy)
-    entropy_type = entropy_type
+    selection_type = selection_type
 
     def call(oois):
         rospy.loginfo("Selection strategy: ENTROPY with type %s",
                       selection_type)
         response = request_entropy()
-        entropies = zip(response.shape_ids, response.entropies)
+
+        entropies = collections.defaultdict(list)
+        for id_, entropy in zip(response.shape_ids, response.entropies):
+            entropies[id_].append(entropy)
 
         rospy.logdebug(entropies)
         # print "=" * 79
         # print "entropies"
         # print entropies
 
-        if entropy_type == "sum":
-            summed_entropies = collections.defautdict(0.)
-            for id_, entropy in entropies:
-                summed_entropies[id_] += entropy
-            ooi = max(summed_entropies,
-                      key=lambda id_and_entropy: id_and_entropy[1])
+        if selection_type == "sum":
+            ooi, entropy = max(entropies.iteritems(),
+                               key=lambda key_ent: sum(key_ent[1]))
 
-        elif entropy_type == "average":
-            print "NOT HANDLED"
+        elif selection_type == "mean":
+            ooi, entropy = max(entropies.iteritems(),
+                               key=lambda key_ent: np.mean(key_ent[1]))
 
-        elif entropy_type == "independent":
-            ooi = max(entropies, key=lambda e: e[1])
+        elif selection_type == "max":
+            ooi, entropy = max(entropies.iteritems(),
+                               key=lambda key_ent: max(key_ent[1]))
 
         else:
-            # print "NOT HANDLED"
-            pass
+            print "NOT HANDLED"
+            raise NotImplementedError()
+
+        rospy.loginfo("Selecting %d with H=%f", ooi, entropy)
 
         return ooi
 
