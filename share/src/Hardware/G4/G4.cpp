@@ -23,8 +23,7 @@ struct sG4Poller{
   uint num_reads;
   uint num_data_reads;
   uint num_hubs_read;
-  uint init_frame;
-  uint last_frame;
+  uint32_t last_frame;
   uint num_frames;
   uint dropped_frames;
   uint dropped_hubs;
@@ -175,8 +174,7 @@ void G4Poller::open(){
   s->num_reads = 0;
   s->num_data_reads = 0;
   s->num_hubs_read = 0;
-  s->init_frame = 0;
-  s->last_frame = 0;
+  s->last_frame = 1<<16;
   s->num_frames = 0;
   s->dropped_frames = 0;
   s->dropped_frames_pct = 0;
@@ -197,16 +195,36 @@ void G4Poller::step(){
   //cout << num_hubs_read << flush;
   if(!num_hubs_read) return;
   //cout << endl;
+  uint32_t frame = s->framedata(0).frame;
+  bool first_frame = (s->last_frame == 1<<16);
+
+  if(!first_frame &&
+      frame <= s->last_frame &&
+      frame + 100 >= s->last_frame)
+    return; // ignoring repeated frames, for the moment at least..
   s->num_data_reads++;
 
   s->num_hubs_read += num_hubs_read;
 
-  s->dropped_frames += s->framedata(0).frame - s->last_frame - 1;
-  s->last_frame = s->framedata(0).frame;
-  if(s->init_frame == 0)
-    s->init_frame = s->framedata(0).frame;
-  s->num_frames = s->last_frame - s->init_frame + 1;
+  if(first_frame) {
+    s->num_frames = 1;
+  }
+  else {
+    long int dframe = (long int)frame - (long int)s->last_frame;
+    if(dframe < 0)
+      dframe += 1 << 16;
+    s->dropped_frames += dframe - 1;
+    s->num_frames += dframe;
+  }
+  //if(frame < s->last_frame) {
+    //cout << "====================================" << endl;
+    //cout << "last: " << s->last_frame << endl;
+    //cout << "====================================" << endl;
+  //}
+  s->last_frame = frame;
   s->dropped_frames_pct = (100. * s->dropped_frames) / s->num_frames;
+  //cout << "num_frames: " << s->num_frames << endl;
+  //cout << "now:  " << frame << " (" << num_hubs_read << " hubs: ";
 
   s->dropped_hubs = (s->hubs * s->num_frames) - s->num_hubs_read;
   s->dropped_hubs_pct = (100. * s->dropped_hubs) / (s->hubs * s->num_frames);
@@ -216,6 +234,7 @@ void G4Poller::step(){
 
   int h_id, s_id;
   for(int hub=0; hub<num_hubs_read; hub++) {
+    //cout << s->framedata(hub).hub << ", ";
     for(uint sen=0; sen<G4_SENSORS_PER_HUB; sen++) {
       if(s->framedata(hub).stationMap&(0x01<<sen)){ // we have data on hub h and sensors
         h_id = s->hubMap(s->framedata(hub).hub);
@@ -234,6 +253,7 @@ void G4Poller::step(){
       }
     }
   }
+  //cout << ")" << endl;
 
   s->poses.reshape(s->hubs*G4_SENSORS_PER_HUB, 7);
   //cout << "poses: " << s->poses << endl;
