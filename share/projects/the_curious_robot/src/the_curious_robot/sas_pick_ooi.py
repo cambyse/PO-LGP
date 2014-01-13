@@ -93,8 +93,7 @@ def _strategy_select_max_entropy(entropy_type):
             print "NOT HANDLED"
 
         elif entropy_type == "independent":
-            entropies.sort(key=lambda e: e[1], reverse=True)
-            ooi = entropies[0][0]
+            ooi = max(entropies, key=lambda e: e[1])
 
         else:
             # print "NOT HANDLED"
