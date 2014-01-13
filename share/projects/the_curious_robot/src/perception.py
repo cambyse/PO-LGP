@@ -14,7 +14,7 @@ from rosors import parser
 import require_provide as rp
 
 
-class FakePerception():
+class FakePerception(object):
     """
     The fake perception of the curious robot publishes shapes.
     """

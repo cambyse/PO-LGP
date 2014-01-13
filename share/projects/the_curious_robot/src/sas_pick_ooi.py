@@ -64,7 +64,7 @@ def _strategy_select_shape_with_index(oois, index=5):
 
 
 #########################################################################
-class PickOOIActionServer:
+class PickOOIActionServer(object):
 
     def __init__(self, name):
         # right now we don't need the world_belief, that might change

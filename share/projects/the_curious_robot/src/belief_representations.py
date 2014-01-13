@@ -78,7 +78,7 @@ class ShapeBelief(object):
 
 
 ###############################################################################
-class ObjectTypeHypo():
+class ObjectTypeHypo(object):
     """
     ObjectType represents the probability that an object has a certain type.
 

@@ -26,7 +26,7 @@ def get_ooi(oois, ooi_id):
             return ooi
 
 
-class ObserveOOITrajActionServer:
+class ObserveOOITrajActionServer(object):
 
     def __init__(self, name):
         # Subscriber

@@ -26,7 +26,12 @@ from timer import Timer
 import numpy as np
 
 
-class LearnActionServer:
+class LearnActionServer(object):
+    """
+    Learn from the given observation and build a rich model of the world.
+
+    This class contains the belief (ors & probabilicit counterpart).
+    """
 
     def __init__(self, name):
         # subscriber

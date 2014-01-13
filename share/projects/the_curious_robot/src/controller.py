@@ -25,7 +25,7 @@ import require_provide as rp
 import numpy as np
 
 
-class RRTPlanner():
+class RRTPlanner(object):
     def __init__(self, graph):
         self.graph = graph
         shapes = ors.makeConvexHulls(self.graph.shapes)
@@ -102,7 +102,7 @@ class RRTPlanner():
         return traj
 
 
-class FakeController():
+class FakeController(object):
     def __init__(self):
         # init the node: test_fitting
         rospy.init_node('tcr_controller', log_level=rospy.DEBUG)
