@@ -45,6 +45,21 @@ class Annotation(collections.OrderedDict):
                 normalized = 1.
             yield shape_anno.belief_shape, normalized
 
+    def get_entropy(self):
+        """
+        Return a list of tuples of the form (shape_id, entropy).
+        """
+        result = []
+        for k, shape_bel in self.iteritems():
+            # iterate over all belief members
+            for bel_name in shape_bel._beliefs:
+                bel = getattr(shape_bel, bel_name)
+                # and add the entropy to the results if the member exists
+                if bel:
+                    result.append((k, bel.get_entropy()))
+
+        return result
+
 
 ###############################################################################
 class ShapeBelief(object):
