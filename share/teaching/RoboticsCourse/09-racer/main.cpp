@@ -135,7 +135,7 @@ void FollowIMU(){
   Racer R;
 
   arr imu;
-  MT::load(imu,"nogit-data/imu-01.dat");
+  MT::load(imu,"nogit-data/imu-02.dat");
   uint T=imu.d0;
   imu = ~imu;
   arr times;
@@ -153,8 +153,8 @@ void FollowIMU(){
   imu.resizeCopy(4, imu.d1);
   imu = ~imu;
   MT::arrayBrackets="  ";
-  imu >>FILE("z");
-  ~(~times) >>FILE("z.t");
+  imu >>FILE("02-imu.dat");
+  ~(~times) >>FILE("02-times.dat");
 
   R.q(1)=MT_PI/2.;
 

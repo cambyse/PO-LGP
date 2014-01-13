@@ -153,7 +153,7 @@ void Racer::getObservation(arr& y, arr& C, arr& c, arr& W){
   //we need the dynamics
   arr q_ddot, J;
   dynamicsFct().fv(q_ddot, (&C?J:NoArr), cat(q, q_dot).reshape(2,2));
-//  q_ddot.setZero();
+  q_ddot.setZero();
 
   //3-dimensional observation
   arr acc = (q_dot(1) * J_C_dash * q_dot + J_C * q_ddot) + ARR(0,g);
