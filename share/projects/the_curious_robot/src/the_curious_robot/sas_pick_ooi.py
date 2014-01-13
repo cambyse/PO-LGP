@@ -68,13 +68,32 @@ def _strategy_select_shape_with_index(oois, index=5):
     return ooi_id_msg
 
 
-def _strategy_select_max_entropy():
+def _strategy_select_max_entropy(entropy_type):
     request_entropy = rospy.ServiceProxy("/belief/entropy/", srv.Entropy)
+    entropy_type = entropy_type
 
     def call(oois):
         response = request_entropy()
-        # TODO select highest entropy
-        ooi = random.choice(response.shape_ids)
+        print response
+        entropies = zip(response.shape_ids, response.entropies)
+        entropies.sort(key=lambda e: e[1], reverse=True)
+        print "=" * 79
+        print "entropies"
+        print entropies
+
+        # if entropy_type == "sum":
+        #     print "NOT HANDLED"
+        # elif entropy_type == "average":
+        #     print "NOT HANDLED"
+        # elif entropy_type == "independent":
+        #     print "NOT HANDLED"
+        # else:
+        #     # print "NOT HANDLED"
+        #     pass
+
+        # return res
+        ooi = entropies[0][0]
+        print "selected shape id", ooi, "with entropy", entropies[0][1], type(ooi)
         return ooi
 
     return call
@@ -110,7 +129,7 @@ class PickOOIActionServer(object):
         # self.select_ooi = _strategy_sequential_select()
         # self.select_ooi = _strategy_door_frame_top
         # self.select_ooi = _strategy_select_shape_with_index
-        self.select_ooi = _strategy_select_max_entropy()
+        self.select_ooi = _strategy_select_max_entropy("independent")
 
         self.possible_oois = None
         rp.Provide("PickOOI")
