@@ -145,7 +145,8 @@ class PickOOIActionServer(object):
         # self.select_ooi = _strategy_sequential_select()
         # self.select_ooi = _strategy_door_frame_top
         # self.select_ooi = _strategy_select_shape_with_index
-        # self.select_ooi = _strategy_select_max_entropy("independent")
+        # self.select_ooi = _strategy_select_max_entropy("mean")
+        # self.select_ooi = _strategy_select_max_entropy("max")
         self.select_ooi = _strategy_select_max_entropy("sum")
 
         self.possible_oois = None
