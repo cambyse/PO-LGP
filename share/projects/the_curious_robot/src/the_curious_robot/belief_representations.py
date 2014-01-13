@@ -60,9 +60,13 @@ class ShapeBelief(object):
         self.joint = None  # JointBelief()
         # TODO add more
 
+        # list of all sub belief members is used to easily iterate over the
+        # belief and retrieve information
+        self._beliefs = ["object_type", "joint"]
+
     def __str__(self):
         result = ""
-        for attr_name in ["object_type", "joint"]:
+        for attr_name in self._beliefs:
             attr_val = str(getattr(self, attr_name))
             result += "    %s: %s\n" % (attr_name, attr_val)
         return result
