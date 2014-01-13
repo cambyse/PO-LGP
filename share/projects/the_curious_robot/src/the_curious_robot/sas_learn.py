@@ -15,6 +15,7 @@ from rosors import parser
 import rosors.srv
 # import corepy
 import the_curious_robot.msg as msgs
+import the_curious_robot.srv
 from articulation_msgs.srv import TrackModelSrv, TrackModelSrvRequest
 import util
 import pickle_logger
@@ -22,8 +23,11 @@ import belief_representations as bel_rep
 from belief_representations import ObjectTypeHypo, JointBelief
 import require_provide as rp
 from timer import Timer
+from the_curious_robot import srv
 # python std
 import numpy as np
+import collections
+import sys
 
 
 class LearnActionServer(object):
@@ -34,28 +38,24 @@ class LearnActionServer(object):
     """
 
     def __init__(self, name):
-        # subscriber
-        self.trajectory_sub = rospy.Subscriber(
-            "ooi_trajectory", msgs.Trajectory, self.trajectory_cb
-        )
+        # SUBSCRIBER
+        self.trajectory_sub = rospy.Subscriber("ooi_trajectory",
+                                               msgs.Trajectory,
+                                               self.trajectory_cb)
+        # PUBLISHER
+        # None
 
-        # publisher
-        self.world_belief_pub = rospy.Publisher('world_belief', msgs.ors)
-
-        # services
-        self.dof_learner = rospy.ServiceProxy('model_select', TrackModelSrv)
-        self.request_shapes = rospy.ServiceProxy('/world/shapes',
-                                                 rosors.srv.Shapes)
+        # SERVICE PUBLISHER
+        self.entropy_service = rospy.Service("/belief/entropy",
+                                             the_curious_robot.srv.Entropy,
+                                             self.handle_entropy_request)
+        # SERVICE PROXIES
+        self.dof_learner = rospy.ServiceProxy('model_select',
+                                              TrackModelSrv)
+        self.request_shape = rospy.ServiceProxy('/world/shapes',
+                                                rosors.srv.Shapes)
         self.request_all_shapes = rospy.ServiceProxy('/world/shapes',
                                                      rosors.srv.Shapes)
-
-        all_shapes_msg = self.request_all_shapes(with_mesh=False)
-        # uninitialized_oois are interesting because we don't know anything
-        # about them.
-        self.uninitialized_oois = set(shape.index
-                                      for shape in all_shapes_msg.shapes
-                                      if shape.name not in ["base", "robot"])
-
         # action server
         self.server = SimpleActionServer(name,
                                          msgs.LearnAction,
@@ -63,6 +63,14 @@ class LearnActionServer(object):
                                          auto_start=False)
         self.server.register_preempt_callback(self.preempt_cb)
         self.server.start()
+
+        # REAL DATA
+        all_shapes_msg = self.request_all_shapes(with_mesh=False)
+        # uninitialized_oois are interesting because we don't know anything
+        # about them.
+        self.uninitialized_oois = set(shape.index
+                                      for shape in all_shapes_msg.shapes
+                                      if shape.name not in ["base", "robot"])
 
         # real member
         self.ooi = None
@@ -76,10 +84,8 @@ class LearnActionServer(object):
         self._added_bodies = []
         self._added_shapes = []
 
-        # PhysX & OpenGL of belief
+        # OpenGL window for belief
         self.gl = guipy.OpenGL()
-        # self.physx = orspy.PhysXInterface()
-        # orspy.bindOrsToPhysX(self.belief, self.gl, self.physx)
         orspy.bindOrsToOpenGL(self.belief_ors, self.gl)
 
         # require/provide
@@ -91,10 +97,10 @@ class LearnActionServer(object):
         if self.ooi not in self.belief_annotation:
             with Timer("Adding new shape with id %d", rospy.loginfo):
                 # rm ooi from list of uninitialized_oois
-                self.uninitialized_oois -= set(self.ooi)
+                self.uninitialized_oois -= set([self.ooi])
 
-                shape_response = self.request_shapes(index=self.ooi,
-                                                     with_mesh=True)
+                shape_response = self.request_shape(index=self.ooi,
+                                                    with_mesh=True)
                 shape_msg = shape_response.shapes[0]
                 print shape_msg
 
@@ -147,8 +153,8 @@ class LearnActionServer(object):
         rospy.loginfo(str(self.belief_annotation))
 
         # VISUALIZE
-        self.visualize_object_type()
-        # self.visualize_object_entropy()
+        # self.visualize_object_type()
+        self.visualize_object_entropy()
 
         self.gl.update()
         self.server.set_succeeded()
@@ -171,6 +177,7 @@ class LearnActionServer(object):
         """
         gentor = self.belief_annotation.iter_entropy_normalized("object_type")
         for shape, entropy in gentor:
+            # print "ID:", shape.index, "H/color:", entropy
             shape.set_color(entropy, entropy, entropy)
 
     def update_dof(self, shape_anno):
@@ -255,15 +262,49 @@ class LearnActionServer(object):
         self.trajectory = []
         self.ooi, self.trajectory = util.parse_trajectory_msg(msg)
 
-    def getShapeById(self, idx):
+    # def getShapeById(self, idx):
+    #     """
+    #     Return the shape with the given `id`.
+    #     TODO this should be part of ors.
+    #     """
+    #     for shape in self.belief_ors.shapes:
+    #         if shape.index == idx:
+    #             return shape
+    #     return None
+
+    def handle_entropy_request(self, req):
         """
-        Return the shape with the given `id`.
-        TODO this should be part of ors.
+        Calculate the entropy denpending on the requested entropy type.
         """
-        for shape in self.belief_ors.shapes:
-            if shape.index == idx:
-                return shape
-        return None
+        res = srv.EntropyResponse()
+
+        # if we have uninitialized shapes explore them
+        for shape_idx in self.uninitialized_oois:
+            res.shape_ids.append(shape_idx)
+            res.entropies.append(sys.float_info.max)
+
+        return res
+
+        # entropies = collections.defaultdict(0.)
+        # max_entropy = -100000
+        # for k, shape_bel in self.belief_annotation.iteritems():
+        #     shape_bel.object_type.get_entropy()
+
+        #     if shape_bel:
+        #         shape_bel.joint.get_entropy()
+
+        # return res
+
+        # if req.type_ == "sum":
+        #     res.shape_idx = 0
+        # elif req.type_ == "average":
+        #     res.shape_idx = 0
+        # elif req.type_ == "independent":
+        #     res.shape_idx = 0
+        # else:
+        #     print "NOT HANDLED"
+
+        # return res
 
 
 def main():

@@ -108,7 +108,7 @@ class FakeController(object):
         rospy.init_node('tcr_controller', log_level=rospy.DEBUG)
 
         # World & PhysX & OpenGL
-        orspath = "share/projects/the_curious_robot/src"
+        orspath = "share/projects/the_curious_robot/src/the_curious_robot"
         orsfile = corepy.getStringParameter("orsFile")
         worldfile = os.path.join(
             corepy.get_mlr_path(), orspath, orsfile

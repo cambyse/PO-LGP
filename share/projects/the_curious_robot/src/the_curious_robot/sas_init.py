@@ -17,7 +17,7 @@ import util
 import require_provide as rp
 
 
-class InitServer(object)
+class InitServer(object):
     """
     This node initializes all other nodes
     """

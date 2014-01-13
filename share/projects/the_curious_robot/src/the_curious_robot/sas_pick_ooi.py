@@ -7,9 +7,10 @@ from actionlib import SimpleActionServer
 # MLR
 roslib.load_manifest('the_curious_robot')
 import require_provide as rp
+from the_curious_robot import srv
+import the_curious_robot as tcr
 import rosors.srv
 import rospy
-import the_curious_robot as tcr
 # python std
 import random
 from timer import Timer
@@ -35,12 +36,15 @@ def _strategy_random_select(oois):
 
 class _strategy_sequential_select():
     def __init__(self):
+        self.ooi_index = 15
+        self.ooi_index = 32
         self.ooi_index = 0
 
     def __call__(self, oois):
         ooi_id_msg = tcr.msg.ObjectID()
-        ooi_id_msg.id = oois[self.ooi_index]
-        self.ooi_index = (self.ooi_index + 1) % len(oois)
+        ooi_id_msg.id = oois[32 + self.ooi_index]
+        # self.ooi_index = (self.ooi_index + 1) % len(oois)
+        self.ooi_index = (self.ooi_index + 1) % 2
         return ooi_id_msg
 
 
@@ -61,6 +65,19 @@ def _strategy_select_shape_with_index(oois, index=5):
     ooi_id_msg = tcr.msg.ObjectID()
     ooi_id_msg.id = index
     return ooi_id_msg
+
+
+def _strategy_select_max_entropy():
+    request_entropy = rospy.ServiceProxy("/belief/entropy/", srv.Entropy)
+
+    def call(oois):
+        response = request_entropy()
+        print response
+
+        ooi = random.choice(response.shape_ids)
+        return ooi
+
+    return call
 
 
 #########################################################################
@@ -87,12 +104,13 @@ class PickOOIActionServer(object):
         self.server.start()
 
         # Select the exploration strategies
-        # self.select_ooi = _strategy_random_select
+        self.select_ooi = _strategy_random_select
         # this is a class and must be initiated; does it help if we use a
         # closure?
-        self.select_ooi = _strategy_sequential_select()
+        # self.select_ooi = _strategy_sequential_select()
         # self.select_ooi = _strategy_door_frame_top
         # self.select_ooi = _strategy_select_shape_with_index
+        self.select_ooi = _strategy_select_max_entropy()
 
         self.possible_oois = None
         rp.Provide("PickOOI")
