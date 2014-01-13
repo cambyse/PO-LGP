@@ -14,19 +14,20 @@ import rosors
 from rosors import parser
 import rosors.srv
 # import corepy
+
+import the_curious_robot.util
+import the_curious_robot as tcr
 import the_curious_robot.msg as msgs
-import the_curious_robot.srv
-from articulation_msgs.srv import TrackModelSrv, TrackModelSrvRequest
-import util
-import pickle_logger
-import belief_representations as bel_rep
-from belief_representations import ObjectTypeHypo, JointBelief
-import require_provide as rp
-from timer import Timer
+import the_curious_robot.belief_representations as bel_rep
+from the_curious_robot.belief_representations import ObjectTypeHypo
+from the_curious_robot.belief_representations import JointBelief
+from the_curious_robot import require_provide
+from the_curious_robot import pickle_logger
+from the_curious_robot.timer import Timer
 from the_curious_robot import srv
+
+from articulation_msgs.srv import TrackModelSrv, TrackModelSrvRequest
 # python std
-import numpy as np
-import collections
 import sys
 
 
@@ -40,14 +41,14 @@ class LearnActionServer(object):
     def __init__(self, name):
         # SUBSCRIBER
         self.trajectory_sub = rospy.Subscriber("ooi_trajectory",
-                                               msgs.Trajectory,
+                                               tcr.msg.Trajectory,
                                                self.trajectory_cb)
         # PUBLISHER
         # None
 
         # SERVICE PUBLISHER
         self.entropy_service = rospy.Service("/belief/entropy",
-                                             the_curious_robot.srv.Entropy,
+                                             tcr.srv.Entropy,
                                              self.handle_entropy_request)
         # SERVICE PROXIES
         self.dof_learner = rospy.ServiceProxy('model_select',
@@ -89,7 +90,7 @@ class LearnActionServer(object):
         orspy.bindOrsToOpenGL(self.belief_ors, self.gl)
 
         # require/provide
-        rp.Provide("Learn")
+        require_provide.Provide("Learn")
 
     @pickle_logger.pickle_member("belief_annotation")
     def execute(self, msg):
@@ -260,7 +261,7 @@ class LearnActionServer(object):
     def trajectory_cb(self, msg):
         del self.trajectory[:]
         self.trajectory = []
-        self.ooi, self.trajectory = util.parse_trajectory_msg(msg)
+        self.ooi, self.trajectory = tcr.util.parse_trajectory_msg(msg)
 
     # def getShapeById(self, idx):
     #     """

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# encoding: utf-8
 
 # ROS
 import roslib
@@ -72,8 +73,7 @@ def _strategy_select_max_entropy():
 
     def call(oois):
         response = request_entropy()
-        print response
-
+        # TODO select highest entropy
         ooi = random.choice(response.shape_ids)
         return ooi
 
