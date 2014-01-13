@@ -9,7 +9,7 @@ enum Mode {SEPERATE_0_TO_255 = 0,
 
 enum Motor {MOTOR_1 = 0, MOTOR_2 = 1};  
  
-//static const char* DEVICE = "/dev/ttyACM0";
+static const char* DEVICE = "/dev/ttyACM0";
 
 static const unsigned char I2C_INTERFACE = 0x55;
 

@@ -38,7 +38,7 @@
 // Array class
 //
 
-template<class T> char MT::Array<T>::memMove=-1;
+template<class T> char MT::Array<T>::memMove=(char)-1;
 template<class T> int MT::Array<T>::sizeT=-1;
 
 /** @brief Simple array container to store arbitrary-dimensional arrays
@@ -56,7 +56,7 @@ template<class T> int MT::Array<T>::sizeT=-1;
 template<class T> void MT::Array<T>::init() {
   reference=false;
   if(sizeT==-1) sizeT=sizeof(T);
-  if(memMove==-1) {
+  if(memMove==(char)-1) {
     memMove=0;
     if(typeid(T)==typeid(bool) ||
         typeid(T)==typeid(char) ||
