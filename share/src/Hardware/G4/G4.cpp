@@ -25,6 +25,7 @@ struct sG4Poller{
   uint num_hubs_read;
   uint32_t last_frame;
   uint num_frames;
+  uint rep_frames;
   uint dropped_frames;
   uint dropped_hubs;
   double dropped_frames_pct;
@@ -176,6 +177,7 @@ void G4Poller::open(){
   s->num_hubs_read = 0;
   s->last_frame = 1<<16;
   s->num_frames = 0;
+  s->rep_frames = 0;
   s->dropped_frames = 0;
   s->dropped_frames_pct = 0;
   s->dropped_hubs = 0;
@@ -200,8 +202,10 @@ void G4Poller::step(){
 
   if(!first_frame &&
       frame <= s->last_frame &&
-      frame + 100 >= s->last_frame)
+      frame + 100 >= s->last_frame) {
+    s->rep_frames++;
     return; // ignoring repeated frames, for the moment at least..
+  }
   s->num_data_reads++;
 
   s->num_hubs_read += num_hubs_read;
@@ -279,6 +283,7 @@ void G4Poller::close(){
 	<< s->dropped_frames_pct << "%)" << endl;
   cout << " - dropped_hubs: " << s->dropped_hubs << " (" 
 	<< s->dropped_hubs_pct << "%)" << endl;
+  cout << " - repeated_frames: " << s->rep_frames << endl;
 
   usleep(1000000l);
   cout << "closing.. " << flush;
