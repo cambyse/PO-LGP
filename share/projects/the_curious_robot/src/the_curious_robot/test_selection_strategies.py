@@ -12,11 +12,13 @@ class TestEntropyMaxStrategy(object):
         selected = strategy.execute(oois=None, entropies=entropies)
         assert selected == 0
 
-        entropies = {0: [-.2], 1: [-.4]}
+        entropies = {0: [-.2],
+                     1: [-.4]}
         selected = strategy.execute(oois=None, entropies=entropies)
         assert selected == 0
 
-        entropies = {0: [-.2], 1: [-.1]}
+        entropies = {0: [-.2],
+                     1: [-.1]}
         selected = strategy.execute(oois=None, entropies=entropies)
         assert selected == 1
 
@@ -27,7 +29,8 @@ class TestEntropyMaxStrategy(object):
         selected = strategy.execute(oois=None, entropies=entropies)
         assert selected == 0
 
-        entropies = {0: [-.2, -.2], 1: [-.4]}
+        entropies = {0: [-.2, -.2],
+                     1: [-.4]}
         selected = strategy.execute(oois=None, entropies=entropies)
         assert selected == 0
 
@@ -50,10 +53,12 @@ class TestEntropyMeanStrategy(object):
         selected = strategy.execute(oois=None, entropies=entropies)
         assert selected == 0
 
-        entropies = {0: [-.2], 1: [-.25, -.1]}
+        entropies = {0: [-.2],
+                     1: [-.25, -.1]}
         selected = strategy.execute(oois=None, entropies=entropies)
         assert selected == 1
 
-        entropies = {0: [-.2], 1: [-.35, -.1]}
+        entropies = {0: [-.2],
+                     1: [-.35, -.1]}
         selected = strategy.execute(oois=None, entropies=entropies)
         assert selected == 0
