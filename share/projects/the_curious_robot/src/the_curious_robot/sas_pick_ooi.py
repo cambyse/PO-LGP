@@ -34,7 +34,7 @@ class SelectionStrategy(object):
 
 ###############################################################################
 class StrategyRandomSelect(SelectionStrategy):
-    def execute(oois, entropies):
+    def execute(self, oois, entropies):
         """Select a random object of all possibes objects."""
         rospy.loginfo("Selection strategy: RANDOM")
         ooi = random.choice(oois)
