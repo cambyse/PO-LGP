@@ -6,6 +6,8 @@
 
 using std::string;
 
+#define USE_UTF8
+
 CheeseMazeObservation::CheeseMazeObservation(OBSERVATION o) {
     observation = o;
     set_type(OBSERVATION_TYPE::CHEESE_MAZE_OBSERVATION);
@@ -54,6 +56,26 @@ bool CheeseMazeObservation::operator<(const AbstractObservation &other) const {
 const std::string CheeseMazeObservation::print() const {
     string ret("CheeseMazeObservation(");
     switch(observation) {
+#ifdef USE_UTF8
+    case OBSERVATION::N:
+        ret+=" ̅ ̅";
+        break;
+    case OBSERVATION::NE:
+        ret+="╶┐";
+        break;
+    case OBSERVATION::NS:
+        ret+=" ̲̅ ̲̅";
+        break;
+    case OBSERVATION::NW:
+        ret+="┌╴";
+        break;
+    case OBSERVATION::EW:
+        ret+="||";
+        break;
+    case OBSERVATION::ESW:
+        ret+="└┘";
+        break;
+#else
     case OBSERVATION::N:
         ret+="  N";
         break;
@@ -72,6 +94,7 @@ const std::string CheeseMazeObservation::print() const {
     case OBSERVATION::ESW:
         ret+="ESW";
         break;
+#endif
     default:
         DEBUG_ERROR("Invalid observation");
         ret+="INVALID";

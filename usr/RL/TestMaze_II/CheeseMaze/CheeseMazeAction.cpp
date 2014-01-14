@@ -6,6 +6,8 @@
 
 using std::string;
 
+#define USE_UTF8
+
 CheeseMazeAction::CheeseMazeAction(ACTION a):
     action(a)
 {
@@ -52,18 +54,33 @@ bool CheeseMazeAction::operator<(const AbstractAction &other) const {
 const string CheeseMazeAction::print() const {
     string ret("CheeseMazeAction(");
     switch(action) {
+#ifdef USE_UTF8
     case ACTION::NORTH:
-        ret+="   NORTH";
+        ret+="↑";
         break;
     case ACTION::SOUTH:
-        ret+=" SOUTH";
+        ret+="↓";
+        break;
+    case ACTION::WEST:
+        ret+="←";
+        break;
+    case ACTION::EAST:
+        ret+="→";
+        break;
+#else
+    case ACTION::NORTH:
+        ret+="NORTH";
+        break;
+    case ACTION::SOUTH:
+        ret+="SOUTH";
         break;
     case ACTION::WEST:
         ret+=" WEST";
         break;
     case ACTION::EAST:
-        ret+="EAST";
+        ret+=" EAST";
         break;
+#endif
     default:
         DEBUG_ERROR("Invalid action");
         ret+="INVALID";
