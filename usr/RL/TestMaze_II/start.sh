@@ -1,4 +1,6 @@
-start_string="-m VALUE_BASED_UTREE --minT 100 --maxT 200 --incT 10 -e 100 -r 10"
+
+#start_string="-m VALUE_BASED_UTREE --minT 1000 --maxT 10000 --incT 1000 -e 100 -r 100"
+start_string="-m CRF --minT 1000 --maxT 10000 --incT 1000 -e 100 -r 10 --l1 0.001 --incF 50 --delta 0.001"
 
 ## print kind of help if no arguments are given
 if [ $# -lt 1 ]; then
