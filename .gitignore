@@ -2,8 +2,12 @@
 *.o
 *.a
 *.so
-*.exe
 *.swp
+
+
+%% EXECUTABLE
+*.exe
+x_*
 
 tags
 .cccc
@@ -32,7 +36,9 @@ Makefile.dep
 CTestTestfile.cmake
 
 
+# PYTHON
 *.pyc
+_*.py
 
 
 # EXECUTION

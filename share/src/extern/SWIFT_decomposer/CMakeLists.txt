@@ -1,4 +1,6 @@
-find_package(TCL REQUIRED)
+find_package(TCL)
+
+if(TCL_FOUND)
 
 get_filename_component(NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
@@ -14,4 +16,5 @@ include_directories(. RAPID ${TCL_INCLUDE_PATH} ${TK_INCLUDE_PATH})
 target_link_libraries(extern_${NAME} ${TCL_LIBRARY} ${TK_LIBRARY} ${GL_LIBRARIES})
 
 #add_executable(decomposer.exe main.cxx)
+endif(TCL_FOUND)
 
