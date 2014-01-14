@@ -35,12 +35,8 @@ class pickle_member(object):
 
     def _pickle(self, decorated_class):
         """The pickling logic"""
-        # we need the filename for the pkl file
-        now = datetime.datetime.now()
-        filename = "{}_{}_{}_{}_{}_{}_{}.pkl".format(
-            now.year, now.month, now.day, now.hour, now.minute,
-            now.second, now.microsecond
-        )
+        # construct filename for pkl file
+        filename = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%f.pkl")
         filename = os.path.join(self.foldername, filename)
 
         # pickle the instance variable
