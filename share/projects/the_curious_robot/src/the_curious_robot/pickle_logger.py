@@ -16,7 +16,7 @@ class pickle_member(object):
 
         # Create a folder for the logs
         self.foldername = datetime.datetime.now().strftime(
-            "log/%Y_%m_%d_%H_%M/" + self.member_name
+            "log_tcr/%Y_%m_%d_%H_%M/" + self.member_name
         )
         print "Initializing pickler for {}; will be saved in {}.".format(
             member_name, self.foldername)
