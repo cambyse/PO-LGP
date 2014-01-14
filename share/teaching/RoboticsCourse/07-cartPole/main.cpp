@@ -168,7 +168,7 @@ void playController(const arr& w, bool noise){
 
 int main(int argc,char **argv){
   //testDraw();
-  //TestMove();
+  TestMove();
   //TestStability(false);//parameter tells whether noise is used or not
 
   arr w=ARR(1.00000, 2.58375, 52.36463, 15.25927);

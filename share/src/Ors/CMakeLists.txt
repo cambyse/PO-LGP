@@ -78,7 +78,6 @@ include(.sources.cmake)
 add_library(Ors SHARED ${SOURCES})
 target_link_libraries(Ors LINK_PUBLIC ${PHYSX_LIBRARIES} LINK_PRIVATE Algo Core Gui extern_SWIFT ${ODE_LIBRARIES})
 
-
 # Python wrappers
 if(PYTHON_OK)
   set(SWIG_SOURCES ors.i)

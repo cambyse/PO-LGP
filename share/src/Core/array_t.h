@@ -2017,10 +2017,7 @@ template<class T> T sumOfSqr(const MT::Array<T>& v) {
 /// \f$\sqrt{\sum_i x_i^2}\f$
 template<class T> T length(const MT::Array<T>& v) { return (T)::sqrt((double)sumOfSqr(v)); }
 
-/// \f$\sqrt{\sum_i x_i^2}\f$
-template<class T> T mean(const MT::Array<T>& v) { return sum(v)/v.N; }
-
-template<class T> T var(const MT::Array<T>& v) { T m=mean(v); return sumOfSqr(v)/v.N-m*m; }
+template<class T> T var(const MT::Array<T>& v) { T m=sum(v)/v.N; return sumOfSqr(v)/v.N-m*m; }
 
 /// \f$\sum_i x_{ii}\f$
 template<class T> T trace(const MT::Array<T>& v) {
