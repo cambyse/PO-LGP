@@ -10,12 +10,17 @@
 #include "../UTree.h"
 #include "../LookAheadSearch.h"
 
+#include <QDateTime>
+
 #include <omp.h>
 
 #define DEBUG_LEVEL 2
 #include "../debug.h"
 
-//#define USE_OMP
+#define USE_OMP
+
+#define LOG_COMMENT(x) DEBUG_OUT(2,x); log_file << "# " << x << std::endl;
+#define LOG(x) DEBUG_OUT(2,x); log_file << x << std::endl;
 
 using std::string;
 using std::vector;
@@ -40,7 +45,6 @@ BatchWorker::BatchWorker(int argc, char ** argv):
     maxT_arg(           "", "maxT"         , "maximum number of training samples"           ,false,        -1,     "int"),
     incT_arg(           "", "incT"         , "increment of training samples"                ,false,        -1,     "int"),
     eval_arg(          "e", "eval"         , "length of evaluation episode"                 , true,        10,     "int"),
-    epsilon_arg(        "", "epsilon"      , "epsilon (randomness)"                         ,false,       0.0,  "double"),
     discount_arg(      "d", "discount"     , "discount"                                     ,false,       0.5,  "double"),
     tree_arg(          "t", "tree"         , "maximum size of search tree"                  ,false,     10000,     "int"),
     l1_arg(             "", "l1"           , "L1-regularization factor"                     ,false,     0.001,  "double"),
@@ -57,7 +61,6 @@ BatchWorker::BatchWorker(int argc, char ** argv):
         cmd.add(l1_arg);
         cmd.add(tree_arg);
         cmd.add(discount_arg);
-        cmd.add(epsilon_arg);
         cmd.add(eval_arg);
         cmd.add(incT_arg);
         cmd.add(maxT_arg);
@@ -141,6 +144,9 @@ void BatchWorker::collect_data() {
         return;
     }
 
+    std::ofstream log_file;
+    initialize_log_file(log_file);
+
 #ifdef USE_OMP
 #pragma omp parallel for schedule(dynamic,1) collapse(1)
 #endif
@@ -156,7 +162,7 @@ void BatchWorker::collect_data() {
         observation_ptr_t observation_space;
         reward_ptr_t reward_space;
         // current instance
-        instance_t * current_instance;
+        instance_t * current_instance = nullptr;
         // data
         double mean_reward = 0;  // for all
         double data_likelihood;  // for CRF
@@ -220,7 +226,6 @@ void BatchWorker::collect_data() {
                 reward_ptr_t reward;
                 environment->perform_transition(action, observation, reward);
                 mean_reward += reward->get_value();
-                current_instance = current_instance->append_instance(action, observation, reward);
                 DEBUG_OUT(2,"    " << action << "	" << observation << "	" << reward);
             }
         } else if(mode=="CRF" || mode=="MODEL_BASED_UTREE"){
@@ -270,6 +275,27 @@ void BatchWorker::collect_data() {
         } else {
             DEBUG_DEAD_LINE;
         }
+
+        // calculate mean reward
+        mean_reward/=eval_arg.getValue();
+
+        // write output
+#ifdef USE_OMP
+#pragma omp critical
+#endif
+        {
+            if(mode=="CRF") {
+                LOG("x" << "	" << training_length << "	" << eval_arg.getValue() << "	" << mean_reward << "	" << data_likelihood << "	" << nr_features << "	" << l1_arg.getValue());
+            } else if(mode=="MODEL_BASED_UTREE" || mode=="VALUE_BASED_UTREE") {
+                LOG("x" << "	" << training_length << "	" << eval_arg.getValue() << "	" << mean_reward << "	" << utree_score << "	" << utree_size);
+            } else if(mode=="RANDOM") {
+                LOG("x" << "	" << training_length << "	" << eval_arg.getValue() << "	" << mean_reward);
+            } else {
+                DEBUG_DEAD_LINE;
+            }
+        }
+
+        delete current_instance;
     } // end omp parallel for
 }
 
@@ -359,4 +385,40 @@ void BatchWorker::train_model_based_UTree(std::shared_ptr<FeatureLearner> learne
     }
     // get tree size
     size = utree->get_tree_size();
+}
+
+void BatchWorker::initialize_log_file(std::ofstream& log_file) {
+    QString log_file_name = QDateTime::currentDateTime().toString("yyyy-MM-dd_hh:mm:ss");
+    log_file_name.append("_");
+    log_file_name.append(mode.c_str());
+    log_file_name.append("_log_file.txt");
+    log_file.open((const char*)log_file_name.toLatin1());
+
+    LOG_COMMENT("Mode: " << mode);
+    LOG_COMMENT("Training Length: " << minT << "--" << maxT << " (step size: " << incT << ")");
+    LOG_COMMENT("Evaluation Length: " << eval_arg.getValue());
+    LOG_COMMENT("Discount: " << discount_arg.getValue());
+    if(mode=="CRF" || mode=="MODEL_BASED_UTREE") {
+        LOG_COMMENT("Max Look-Ahead Tree Size: " << tree_arg.getValue());
+        LOG_COMMENT("Pruning: " << (pruningOff_arg.getValue()?"off":"on"));
+    }
+    if(mode=="CRF") {
+        LOG_COMMENT("L1-factor: " << l1_arg.getValue());
+        LOG_COMMENT("Feature Increment: " << incF_arg.getValue());
+        LOG_COMMENT("Likelihood Delta: " << delta_arg.getValue());
+    }
+
+    LOG("");
+
+    if(mode=="CRF") {
+        LOG_COMMENT("Episode	training_length	evaluation_length	mean_reward	data_likelihood	nr_features	l1_factor");
+    } else if(mode=="MODEL_BASED_UTREE" || mode=="VALUE_BASED_UTREE") {
+        LOG_COMMENT("Episode	training_length	evaluation_length	mean_reward	utree_score	utree_size");
+    } else if(mode=="RANDOM") {
+        LOG_COMMENT("Episode	training_length	evaluation_length	mean_reward");
+    } else {
+        DEBUG_DEAD_LINE;
+    }
+
+    LOG("");
 }

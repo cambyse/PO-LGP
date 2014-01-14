@@ -6,6 +6,7 @@
 #include <tclap/CmdLine.h>
 
 #include <memory> // for shared_ptr
+#include <fstream> // for ofstream
 
 class HistoryObserver;
 class Environment;
@@ -38,7 +39,6 @@ private:
     int incT;
     TCLAP::ValueArg<int> incT_arg;
     TCLAP::ValueArg<int> eval_arg;
-    TCLAP::ValueArg<double> epsilon_arg;
     TCLAP::ValueArg<double> discount_arg;
     TCLAP::ValueArg<int> tree_arg;
     TCLAP::ValueArg<double> l1_arg;
@@ -59,6 +59,9 @@ private:
     void train_CRF(std::shared_ptr<FeatureLearner> learner, double& likelihood, int& features);
     void train_value_based_UTree(std::shared_ptr<FeatureLearner> learner, int& size, double& score);
     void train_model_based_UTree(std::shared_ptr<FeatureLearner> learner, int& size, double& score);
+
+    /** \brief Set the log file name and write the header with general information. */
+    void initialize_log_file(std::ofstream& log_file);
 };
 
 #endif /* BATCHWORKER_H_ */
