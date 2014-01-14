@@ -143,11 +143,11 @@ class PickOOIActionServer(object):
         self.server.start()
 
         # Select the exploration strategies
-        # self.selection_strategy = StrategyRandomSelect()
+        self.selection_strategy = StrategyRandomSelect()
         # self.selection_strategy = StrategySequentialSelect()
         # self.selection_strategy = StrategyDoorFrameTop()
         # self.selection_strategy = StrategySelectShapeWithIndex()
-        self.selection_strategy = StrategySelectEntropy("max")
+        # self.selection_strategy = StrategySelectEntropy("max")
 
         self.possible_oois = None
         rp.Provide("PickOOI")
