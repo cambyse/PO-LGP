@@ -12,13 +12,14 @@ class pickle_member(object):
     automatically created.
     """
     def __init__(self, member_name):
-        print member_name
         self.member_name = member_name
 
         # Create a folder for the logs
         self.foldername = datetime.datetime.now().strftime(
             "log/%Y_%m_%d_%H_%M/" + self.member_name
         )
+        print "Initializing pickler for {}; will be saved in {}.".format(
+            member_name, self.foldername)
         try:
             os.makedirs(self.foldername)
         except OSError:
