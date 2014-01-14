@@ -19,32 +19,38 @@ import collections
 import numpy as np
 
 
-#########################################################################
+###############################################################################
 # different strategies for selecting OOIs
-#########################################################################
-#
-# to add new strategies add a method that takes the the list of oois. the
-# `select_ooi` in `PickOOIActionServer` must be set to this method.
+###############################################################################
+# To add new strategies Create a class that inherits from SelectionStrategy
+# and implement all function.
 #
 # TODO selecting the strategy should be done via dynamic reconfigure.
 
-def _strategy_random_select(oois):
-    """Select a random object of all possibes objects."""
-    rospy.loginfo("Selection strategy: RANDOM")
-    ooi = random.choice(oois)
-    ooi_id_msg = tcr.msg.ObjectID()
-    ooi_id_msg.id = ooi
-    rospy.logdebug(ooi)
-    return ooi_id_msg
+class SelectionStrategy(object):
+    def execute(self, oois, entropies):
+        raise NotImplementedError()
 
 
-class _strategy_sequential_select():
+###############################################################################
+class StrategyRandomSelect(SelectionStrategy):
+    def execute(oois, entropies):
+        """Select a random object of all possibes objects."""
+        rospy.loginfo("Selection strategy: RANDOM")
+        ooi = random.choice(oois)
+        ooi_id_msg = tcr.msg.ObjectID()
+        ooi_id_msg.id = ooi
+        rospy.logdebug(ooi)
+        return ooi_id_msg
+
+
+class StrategySequentialSelect(SelectionStrategy):
     def __init__(self):
         self.ooi_index = 15
         self.ooi_index = 32
         self.ooi_index = 0
 
-    def __call__(self, oois):
+    def execute(self, oois, entropies):
         rospy.loginfo("Selection strategy: SEQUENTIAL")
         ooi_id_msg = tcr.msg.ObjectID()
         ooi_id_msg.id = oois[32 + self.ooi_index]
@@ -53,56 +59,51 @@ class _strategy_sequential_select():
         return ooi_id_msg
 
 
-def _strategy_door_frame_top(oois):
-    """Always go for the door1-door."""
-    rospy.loginfo("Selection strategy: FRAME_TOP")
-    ooi_id_msg = tcr.msg.ObjectID()
-    ooi_id_msg.id = 4
-    return ooi_id_msg
+class StrategyDoorFrameTop(SelectionStrategy):
+    def execute(self, oois, entropies):
+        """Always go for the door1-door."""
+        rospy.loginfo("Selection strategy: FRAME_TOP")
+        ooi_id_msg = tcr.msg.ObjectID()
+        ooi_id_msg.id = 4
+        return ooi_id_msg
 
 
-def _strategy_select_shape_with_index(oois, index=5):
-    """
-    Pick a shape with the given index.
+class StrategySelectShapeWithIndex(SelectionStrategy):
+    def __init__(self):
+        self.index = 5
 
-    4: top door frame
-    5: door_door
-    """
-    rospy.loginfo("Selection strategy: SHAPE WITH ID")
-    ooi_id_msg = tcr.msg.ObjectID()
-    ooi_id_msg.id = index
-    return ooi_id_msg
+    def execute(self, oois, entropies):
+        """
+        Pick a shape with the given index.
+
+        4: top door frame
+        5: door_door
+        """
+        rospy.loginfo("Selection strategy: SHAPE WITH ID")
+        ooi_id_msg = tcr.msg.ObjectID()
+        ooi_id_msg.id = self.index
+        return ooi_id_msg
 
 
-def _strategy_select_max_entropy(selection_type):
-    request_entropy = rospy.ServiceProxy("/belief/entropy/", srv.Entropy)
-    selection_type = selection_type
+class StrategySelectEntropy(SelectionStrategy):
+    def __init__(self, selection_type):
+        self.selection_type = selection_type
 
-    def call(oois):
+    def execute(self, oois, entropies):
         rospy.loginfo("Selection strategy: ENTROPY with type %s",
-                      selection_type)
-        response = request_entropy()
+                      self.selection_type)
 
-        entropies = collections.defaultdict(list)
-        for id_, entropy in zip(response.shape_ids, response.entropies):
-            entropies[id_].append(entropy)
-
-        rospy.logdebug(entropies)
-        # print "=" * 79
-        # print "entropies"
-        # print entropies
-
-        if selection_type == "sum":
+        if self.selection_type == "sum":
             ooi, entropy = max(entropies.iteritems(),
                                key=lambda key_ent: sum(key_ent[1]))
             entropy = sum(entropy)
 
-        elif selection_type == "mean":
+        elif self.selection_type == "mean":
             ooi, entropy = max(entropies.iteritems(),
                                key=lambda key_ent: np.mean(key_ent[1]))
             entropy = np.mean(entropy)
 
-        elif selection_type == "max":
+        elif self.selection_type == "max":
             ooi, entropy = max(entropies.iteritems(),
                                key=lambda key_ent: max(key_ent[1]))
             entropy = max(entropy)
@@ -115,8 +116,6 @@ def _strategy_select_max_entropy(selection_type):
 
         return ooi
 
-    return call
-
 
 #########################################################################
 class PickOOIActionServer(object):
@@ -126,6 +125,8 @@ class PickOOIActionServer(object):
         # self.world_belief_sub = rospy.Subscriber ...
 
         # Services
+        self.request_entropy = rospy.ServiceProxy("/belief/entropy/",
+                                                  srv.Entropy)
         self.request_all_shapes = rospy.ServiceProxy('/world/shapes',
                                                      rosors.srv.Shapes)
         # Publisher
@@ -142,15 +143,11 @@ class PickOOIActionServer(object):
         self.server.start()
 
         # Select the exploration strategies
-        self.select_ooi = _strategy_random_select
-        # this is a class and must be initiated; does it help if we use a
-        # closure?
-        # self.select_ooi = _strategy_sequential_select()
-        # self.select_ooi = _strategy_door_frame_top
-        # self.select_ooi = _strategy_select_shape_with_index
-        # self.select_ooi = _strategy_select_max_entropy("mean")
-        # self.select_ooi = _strategy_select_max_entropy("max")
-        self.select_ooi = _strategy_select_max_entropy("sum")
+        # self.selection_strategy = StrategyRandomSelect()
+        # self.selection_strategy = StrategySequentialSelect()
+        # self.selection_strategy = StrategyDoorFrameTop()
+        # self.selection_strategy = StrategySelectShapeWithIndex()
+        self.selection_strategy = StrategySelectEntropy("max")
 
         self.possible_oois = None
         rp.Provide("PickOOI")
@@ -168,7 +165,16 @@ class PickOOIActionServer(object):
 
         # select an ooi
         with Timer("PICK: select ooi", rospy.logdebug):
-            ooi_id_msg = self.select_ooi(self.possible_oois)
+
+            # save entropy info in a dict of lists: {key: [ent1, ...], ...}
+            response = self.request_entropy()
+            entropies = collections.defaultdict(list)
+            for id_, entropy in zip(response.shape_ids, response.entropies):
+                entropies[id_].append(entropy)
+            rospy.logdebug(entropies)
+
+            ooi_id_msg = self.selection_strategy.execute(self.possible_oois,
+                                                         entropies)
 
         with Timer("PICK: publish", rospy.logdebug):
             self.ooi_id_pub.publish(ooi_id_msg)
