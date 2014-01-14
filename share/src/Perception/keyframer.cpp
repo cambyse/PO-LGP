@@ -269,22 +269,13 @@ arr KeyFramer::getCorrPCA(uint b1, uint b2, uint wlen, uint npc) {
     x = wins(wi).cols(cumdofs1, cumdofs1+dofs);
     y = wins(wi).cols(cumdofs2, cumdofs2+dofs);
 
-    // center x
-    // TODO put this into pca..
-    // TODO should already be there..
-    /*
-    t = sum(x, 0);
-    for(uint i = 0; i < x.d0; i++)
-      x[i]() -= t;
-    */
-
     // run pca on x and then y
     pca(x, t, w, x, npc);
     y = y * w;
 
-    xx = elemWiseProd(x, x);
-    yy = elemWiseProd(y, y);
-    xy = elemWiseProd(x, y);
+    xx = x % x;
+    yy = y % y;
+    xy = x % y;
 
     sx = sum(x, 0);
     sy = sum(y, 0);
@@ -292,12 +283,10 @@ arr KeyFramer::getCorrPCA(uint b1, uint b2, uint wlen, uint npc) {
     syy = sum(yy, 0);
     sxy = sum(xy, 0);
 
-    corr[wi]() = elemWiseDiv(
-                    dwlen*sxy - elemWiseProd(sx, sy),
-                    sqrt(elemWiseProd(
-                        dwlen*sxx - elemWiseProd(sx, sx),
-                        dwlen*syy - elemWiseProd(sy, sy)
-                    ))
+    corr[wi]() = (dwlen*sxy - sx % sy) / 
+                  sqrt(
+                      (dwlen*sxx - sx % sx) %
+                      (dwlen*syy - sy % sy)
                   );
 
     /*
@@ -346,9 +335,9 @@ arr KeyFramer::getCorr(uint b1, uint b2, uint wlen) {
 
     x = wins(wi).cols(cumdofs1, cumdofs1+dofs);
     y = wins(wi).cols(cumdofs2, cumdofs2+dofs);
-    xx = elemWiseProd(x, x);
-    yy = elemWiseProd(y, y);
-    xy = elemWiseProd(x, y);
+    xx = x % x;
+    yy = y % y;
+    xy = x % y;
 
     sx = sum(x, 0);
     sy = sum(y, 0);
@@ -368,13 +357,11 @@ arr KeyFramer::getCorr(uint b1, uint b2, uint wlen) {
     t6 = elemWiseDiv(t6a, t5);
     corr[wi]() = t6;
     */
-    corr[wi]() = elemWiseDiv(
-                    dwlen*sxy - elemWiseProd(sx, sy),
-                    sqrt(elemWiseProd(
-                        dwlen*sxx - elemWiseProd(sx, sx),
-                        dwlen*syy - elemWiseProd(sy, sy)
-                    ))
-                  );
+    corr[wi]() = (dwlen*sxy - sx % sy) /
+                  sqrt(
+                      (dwlen*sxx - sx % sx) %
+                      (dwlen*syy - sy % sy
+                  ));
   }
 
   return corr;
@@ -466,7 +453,7 @@ arr KeyFramer::getAngleVar(uint b1, uint b2, uint wlen) {
       continue;
     }
     t.referToSubRange(angle, fi-wlen+1, fi);
-    var(fi) = sumOfSqr(t-mean(t));
+    var(fi) = sumOfSqr(t-(sum(t)/t.N));
   }
 
   return var;
@@ -849,9 +836,13 @@ void KeyFramer::Mstep(arrL& theta, const arrL &ql, const arr& c, const arr &v){
     p += q[t];
     P += q_pair[t];
   }
+  cout << "-------------------------------" << endl;
+  cout << "P: " << P << endl;
   for(uint k = 0; k < K; k++)
     for(uint j = 0; j < K; j++)
       P(j, k) = P(j, k) / p(k);
+  cout << "P: " << P << endl;
+  cout << "-------------------------------" << endl;
 
   arr w(K,T);
   arr qsum = sum(q,0);
