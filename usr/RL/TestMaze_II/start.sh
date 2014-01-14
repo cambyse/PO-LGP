@@ -1,31 +1,9 @@
-## define string for calling the program
-
-## 2x2
-
-# Learning curves
-#start_string="-mode SPARSE -sample UNIFORM -nEp 2700 -maxTran 12 -minTrain 600 -maxTrain 1000 -maxTree 10000 -f 2 -l1 0.0002 -incr 200"
-#start_string="-mode LINEAR_Q -sample UNIFORM -nEp 2700 -maxTran 12 -minTrain 600 -maxTrain 1000 -f 3 -l1 0.0005 -incr 200"
-start_string="-mode LINEAR_Q_BELLMAN -sample UNIFORM -nEp 100 -maxTran 100 -minTrain 5000 -maxTrain 5000 -incr 0 -l1 0.001 -f 3 -alpha 5"
-#start_string="-mode UTREE_PROB -sample UNIFORM -nEp 3000 -maxTran 12 -minTrain 600 -maxTrain 1000 -maxTree 10000 -incr 200"
-
-# L1 sweep / UTree growth
-#start_string="-mode SPARSE -sample UNIFORM -nEp 100 -maxTran 12 -minTrain 500 -maxTrain 500 -maxTree 10000 -f 2 -l1 0.005 -incr 0 -l1incr 0.005 -maxl1 0.1"
-#start_string="-mode UTREE_PROB -sample UNIFORM -nEp 100 -maxTran 12 -minTrain 1500 -maxTrain 1500 -maxTree 10000 -incr 0 -utreegrowth t"
-
-## 4x4
-
-# Learning curves
-#start_string="-mode SPARSE -sample UNIFORM -nEp 300 -maxTran 22 -minTrain 3000 -maxTrain 5000 -maxTree 50000 -l1 0.0005 -incr 1000 -fincr 50 -dl 0.0001"
-#start_string="-mode UTREE_PROB -sample UNIFORM -nEp 400 -maxTran 22 -minTrain 500 -maxTrain 2000 -maxTree 50000 -incr 500"
-
-# L1 sweep
-#start_string="-mode SPARSE -sample UNIFORM -nEp 8 -maxTran 22 -minTrain 2000 -maxTrain 2000 -maxTree 50000 -l1 0.0001 -incr 0 -fincr 50 -dl 0.0001 -l1incr 0.0004 -maxl1 0.002"
-#start_string="-mode LINEAR_Q_BELLMAN -sample UNIFORM -nEp 100 -maxTran 12 -minTrain 500 -maxTrain 500 -incr 0 -l1 0.01 -l1incr 0.005 -maxl1 0.1 -fincr 10 -dloss 1e-10 -alpha 5"
+start_string="-m VALUE_BASED_UTREE --minT 100 --maxT 200 --incT 10 -e 100 -r 10"
 
 ## print kind of help if no arguments are given
 if [ $# -lt 1 ]; then
     echo "expecting at least one argument"
-    echo "    [ verbose | quiet [ OMP_NUM_THREADS ] ]"
+    echo "    { verbose | quiet } [ OMP_NUM_THREADS ]"
     exit 0
 fi
 
@@ -50,15 +28,16 @@ fi
 
 ## call the program
 if [ "$1" == "verbose" ]; then
-    if [ -e TestMaze_II_verbose ]; then
-	eval "./TestMaze_II_verbose $start_string"
+    if [ -e ./BatchWorker_verbose/BatchWorker_verbose ]; then
+	eval "./BatchWorker_verbose/BatchWorker_verbose $start_string"
     else
-	eval "./TestMaze_II $start_string"
+	echo "Error: BatchWorker_verbose does not exist"
     fi
 else
-    if [ -e TestMaze_II_quiet ]; then
-	eval "nohup ./TestMaze_II_quiet $start_string &"
+    if [ -e ./BatchWorker_quiet/BatchWorker_quiet ]; then
+	eval "nohup ./BatchWorker_quiet/BatchWorker_quiet $start_string &"
+#	eval "./BatchWorker_quiet/BatchWorker_quiet $start_string"
     else
-	eval "nohup ./TestMaze_II $start_string &"
+	echo "Error: BatchWorker_quiet does not exist"
     fi
 fi

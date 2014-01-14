@@ -39,6 +39,7 @@ private:
     int incT;
     TCLAP::ValueArg<int> incT_arg;
     TCLAP::ValueArg<int> eval_arg;
+    TCLAP::ValueArg<int> repeat_arg;
     TCLAP::ValueArg<double> discount_arg;
     TCLAP::ValueArg<int> tree_arg;
     TCLAP::ValueArg<double> l1_arg;

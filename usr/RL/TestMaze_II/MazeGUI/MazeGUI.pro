@@ -1,6 +1,6 @@
 CONFIG += debug
 TEMPLATE = app
-TARGET = BatchWorker_quiet
+TARGET = MazeGUI
 QT += core \
     gui \
     svg \
@@ -51,9 +51,10 @@ HEADERS += \
     ../UTree.h \
     ../LinearQ.h \
     \
-    BatchWorker.h
+    ../BatchMaze.h \
+    ../testmaze_ii.h
 SOURCES += \
-    main.cpp \
+    ../main.cpp \
     \
     ../util.cpp \
     ../util/ProgressBar.cpp \
@@ -96,14 +97,15 @@ SOURCES += \
     ../UTree.cpp \
     ../LinearQ.cpp \
     \
-    BatchWorker.cpp
+    ../BatchMaze.cpp \
+    ../testmaze_ii.cpp
 LIBS += -llbfgs \
     -lemon \
     -larmadillo \
     -lgomp
 INCLUDEPATH +=
 LIBPATH += /usr/share/lib
-FORMS +=
+FORMS += ../testmaze_ii.ui
 RESOURCES +=
 QMAKE_CXXFLAGS += -std=c++0x \
     -fopenmp

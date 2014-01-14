@@ -14,8 +14,13 @@
 
 #include <omp.h>
 
+#ifdef BATCH_MODE_QUIET
+#define DEBUG_LEVEL 0
+#else
 #define DEBUG_LEVEL 2
-#include "../debug.h"
+#endif
+#define DEBUG_STRING "BatchWorker: "
+#include "debug.h"
 
 #define USE_OMP
 
@@ -28,7 +33,8 @@ using std::shared_ptr;
 using std::make_shared;
 using std::dynamic_pointer_cast;
 
-const vector<string> BatchWorker::mode_vector = {"RANDOM",
+const vector<string> BatchWorker::mode_vector = {"DRY",
+                                                 "RANDOM",
                                                  "OPTIMAL",
                                                  "CRF",
                                                  "MODEL_BASED_UTREE",
@@ -45,6 +51,7 @@ BatchWorker::BatchWorker(int argc, char ** argv):
     maxT_arg(           "", "maxT"         , "maximum number of training samples"           ,false,        -1,     "int"),
     incT_arg(           "", "incT"         , "increment of training samples"                ,false,        -1,     "int"),
     eval_arg(          "e", "eval"         , "length of evaluation episode"                 , true,        10,     "int"),
+    repeat_arg(        "r", "repeat"       , "how many times to repeat everything"          ,false,         1,     "int"),
     discount_arg(      "d", "discount"     , "discount"                                     ,false,       0.5,  "double"),
     tree_arg(          "t", "tree"         , "maximum size of search tree"                  ,false,     10000,     "int"),
     l1_arg(             "", "l1"           , "L1-regularization factor"                     ,false,     0.001,  "double"),
@@ -61,6 +68,7 @@ BatchWorker::BatchWorker(int argc, char ** argv):
         cmd.add(l1_arg);
         cmd.add(tree_arg);
         cmd.add(discount_arg);
+        cmd.add(repeat_arg);
         cmd.add(eval_arg);
         cmd.add(incT_arg);
         cmd.add(maxT_arg);
@@ -98,7 +106,7 @@ bool BatchWorker::post_process_args() {
             DEBUG_OUT(1,"    " << s);
         }
     } else {
-        if(mode=="OPTIMAL" || mode=="LINEAR_Q_TD" || mode=="LINEAR_Q_BELLMAN" || mode=="TRANSITIONS" || mode=="SEARCH_TREE") {
+        if(mode!="DRY" && mode!="RANDOM" && mode!="CRF" && mode!="MODEL_BASED_UTREE" && mode!="VALUE_BASED_UTREE") {
             DEBUG_OUT(1,"mode '" << mode << "' currently not supported");
             mode_ok = false;
         }
@@ -147,155 +155,169 @@ void BatchWorker::collect_data() {
     std::ofstream log_file;
     initialize_log_file(log_file);
 
+    int repeat_n = repeat_arg.getValue();
+    int episode_counter = 1;
 #ifdef USE_OMP
 #pragma omp parallel for schedule(dynamic,1) collapse(1)
 #endif
-    for(int training_length=minT; training_length<=maxT; training_length+=incT) {
-        DEBUG_OUT(2,"Training length: " << training_length);
+    for(int repeat_index=1; repeat_index<=repeat_n; ++repeat_index) {
+        for(int training_length=minT; training_length<=maxT; training_length+=incT) {
+            DEBUG_OUT(2,"Training length: " << training_length);
 
-        // environment
-        shared_ptr<Environment> environment;
-        // learner
-        shared_ptr<FeatureLearner> learner;
-        // spaces
-        action_ptr_t action_space;
-        observation_ptr_t observation_space;
-        reward_ptr_t reward_space;
-        // current instance
-        instance_t * current_instance = nullptr;
-        // data
-        double mean_reward = 0;  // for all
-        double data_likelihood;  // for CRF
-        int nr_features;         // for CRF
-        int utree_size;          // for UTree
-        double utree_score;      // for UTree
-
-        // initialize environment and get spaces
-        environment = make_shared<CheeseMaze>();
-        environment->get_spaces(action_space,observation_space,reward_space);
-
-        // initialize learner
-        if(mode=="RANDOM") {
-            // no learner
-        } else if(mode=="CRF") {
-            learner = make_shared<KMarkovCRF>();
-        } else if(mode=="MODEL_BASED_UTREE") {
-            learner = make_shared<UTree>(discount_arg.getValue());
-        } else if(mode=="VALUE_BASED_UTREE") {
-            learner = make_shared<UTree>(discount_arg.getValue());
-        } else {
-            DEBUG_DEAD_LINE;
-        }
-
-        // collect data and train learner
-        if(mode=="RANDOM") {
-            // no data to collect, nothing to learn
-        } else if(mode=="CRF" || mode=="MODEL_BASED_UTREE" || mode=="VALUE_BASED_UTREE"){
-            // get features and spaces
-            learner->set_spaces(*environment);
-            learner->set_features(*environment);
-            // collect data
-            auto observer = dynamic_pointer_cast<HistoryObserver>(learner);
-            if(observer==nullptr) {
-                DEBUG_DEAD_LINE;
-            } else {
-                collect_random_data(environment, observer, training_length, current_instance);
-            }
-            // train learner
-            if(mode=="CRF") {
-                train_CRF(learner, data_likelihood, nr_features);
-            } else if(mode=="MODEL_BASED_UTREE") {
-                train_model_based_UTree(learner, utree_size, utree_score);
-            } else if(mode=="VALUE_BASED_UTREE") {
-                train_value_based_UTree(learner, utree_size, utree_score);
-            } else {
-                DEBUG_DEAD_LINE;
-            }
-
-        } else {
-            DEBUG_DEAD_LINE;
-        }
-
-        // evaluate
-        if(mode=="RANDOM") {
-            // perform random transitions
-            DEBUG_OUT(2,"Performing random transitions:");
-            repeat(eval_arg.getValue()) {
-                action_ptr_t action = action_space->random_element();
-                observation_ptr_t observation;
-                reward_ptr_t reward;
-                environment->perform_transition(action, observation, reward);
-                mean_reward += reward->get_value();
-                DEBUG_OUT(2,"    " << action << "	" << observation << "	" << reward);
-            }
-        } else if(mode=="CRF" || mode=="MODEL_BASED_UTREE"){
-            // cast to predictor
-            auto pred = dynamic_pointer_cast<Predictor>(learner);
-            if(pred==nullptr) {
-                DEBUG_DEAD_LINE;
-            }
-            // initialize planner
-            LookAheadSearch planner(discount_arg.getValue());
-            planner.set_spaces(action_space, observation_space, reward_space);
-            // do planned steps
-            for(int step_idx=0; step_idx<eval_arg.getValue(); ++step_idx) {
-                // do planning and select action
-                action_ptr_t action;
-                if(pruningOff_arg.getValue() || step_idx==0) {
-                    planner.clear_tree();
-                    planner.build_tree(current_instance, *pred, tree_arg.getValue());
-                } else {
-                    planner.fully_expand_tree(*pred, tree_arg.getValue());
-                }
-                action = planner.get_optimal_action();
-                // actually perform the transition
-                observation_ptr_t observation;
-                reward_ptr_t reward;
-                environment->perform_transition(action, observation, reward);
-                mean_reward += reward->get_value();
-                current_instance = current_instance->append_instance(action, observation, reward);
-                DEBUG_OUT(2,"    " << action << "	" << observation << "	" << reward);
-            }
-        } else if(mode=="VALUE_BASED_UTREE"){
-            // cast to utree
-            auto utree = dynamic_pointer_cast<UTree>(learner);
-            if(utree==nullptr) {
-                DEBUG_DEAD_LINE;
-            }
-            // do optimal transition
-            repeat(eval_arg.getValue()) {
-                action_ptr_t action = utree->get_max_value_action(current_instance);
-                observation_ptr_t observation;
-                reward_ptr_t reward;
-                environment->perform_transition(action, observation, reward);
-                mean_reward += reward->get_value();
-                current_instance = current_instance->append_instance(action, observation, reward);
-                DEBUG_OUT(2,"    " << action << "	" << observation << "	" << reward);
-            }
-        } else {
-            DEBUG_DEAD_LINE;
-        }
-
-        // calculate mean reward
-        mean_reward/=eval_arg.getValue();
-
-        // write output
+            int this_episode_counter;
 #ifdef USE_OMP
 #pragma omp critical
 #endif
-        {
-            if(mode=="CRF") {
-                LOG("x" << "	" << training_length << "	" << eval_arg.getValue() << "	" << mean_reward << "	" << data_likelihood << "	" << nr_features << "	" << l1_arg.getValue());
-            } else if(mode=="MODEL_BASED_UTREE" || mode=="VALUE_BASED_UTREE") {
-                LOG("x" << "	" << training_length << "	" << eval_arg.getValue() << "	" << mean_reward << "	" << utree_score << "	" << utree_size);
-            } else if(mode=="RANDOM") {
-                LOG("x" << "	" << training_length << "	" << eval_arg.getValue() << "	" << mean_reward);
+            {
+                this_episode_counter = episode_counter++;
+            }
+
+            // environment
+            shared_ptr<Environment> environment;
+            // learner
+            shared_ptr<FeatureLearner> learner;
+            // spaces
+            action_ptr_t action_space;
+            observation_ptr_t observation_space;
+            reward_ptr_t reward_space;
+            // current instance
+            instance_t * current_instance = nullptr;
+            // data
+            double mean_reward = 0;  // for all
+            double data_likelihood;  // for CRF
+            int nr_features;         // for CRF
+            int utree_size;          // for UTree
+            double utree_score;      // for UTree
+
+            // initialize environment and get spaces
+            environment = make_shared<CheeseMaze>();
+            environment->get_spaces(action_space,observation_space,reward_space);
+
+            // initialize learner
+            if(mode=="DRY" || mode=="RANDOM") {
+                // no learner
+            } else if(mode=="CRF") {
+                learner = make_shared<KMarkovCRF>();
+            } else if(mode=="MODEL_BASED_UTREE") {
+                learner = make_shared<UTree>(discount_arg.getValue());
+            } else if(mode=="VALUE_BASED_UTREE") {
+                learner = make_shared<UTree>(discount_arg.getValue());
             } else {
                 DEBUG_DEAD_LINE;
             }
-        }
 
-        delete current_instance;
+            // collect data and train learner
+            if(mode=="DRY" || mode=="RANDOM") {
+                // no data to collect, nothing to learn
+            } else if(mode=="CRF" || mode=="MODEL_BASED_UTREE" || mode=="VALUE_BASED_UTREE"){
+                // get features and spaces
+                learner->set_spaces(*environment);
+                learner->set_features(*environment);
+                // collect data
+                auto observer = dynamic_pointer_cast<HistoryObserver>(learner);
+                if(observer==nullptr) {
+                    DEBUG_DEAD_LINE;
+                } else {
+                    collect_random_data(environment, observer, training_length, current_instance);
+                }
+                // train learner
+                if(mode=="CRF") {
+                    train_CRF(learner, data_likelihood, nr_features);
+                } else if(mode=="MODEL_BASED_UTREE") {
+                    train_model_based_UTree(learner, utree_size, utree_score);
+                } else if(mode=="VALUE_BASED_UTREE") {
+                    train_value_based_UTree(learner, utree_size, utree_score);
+                } else {
+                    DEBUG_DEAD_LINE;
+                }
+
+            } else {
+                DEBUG_DEAD_LINE;
+            }
+
+            // evaluate
+            if(mode=="DRY") {
+                // do nothing -- dry run
+            } else if(mode=="RANDOM") {
+                // perform random transitions
+                DEBUG_OUT(2,"Performing random transitions:");
+                repeat(eval_arg.getValue()) {
+                    action_ptr_t action = action_space->random_element();
+                    observation_ptr_t observation;
+                    reward_ptr_t reward;
+                    environment->perform_transition(action, observation, reward);
+                    mean_reward += reward->get_value();
+                    DEBUG_OUT(2,"    " << action << "	" << observation << "	" << reward);
+                }
+            } else if(mode=="CRF" || mode=="MODEL_BASED_UTREE"){
+                // cast to predictor
+                auto pred = dynamic_pointer_cast<Predictor>(learner);
+                if(pred==nullptr) {
+                    DEBUG_DEAD_LINE;
+                }
+                // initialize planner
+                LookAheadSearch planner(discount_arg.getValue());
+                planner.set_spaces(action_space, observation_space, reward_space);
+                // do planned steps
+                for(int step_idx=0; step_idx<eval_arg.getValue(); ++step_idx) {
+                    // do planning and select action
+                    action_ptr_t action;
+                    if(pruningOff_arg.getValue() || step_idx==0) {
+                        planner.clear_tree();
+                        planner.build_tree(current_instance, *pred, tree_arg.getValue());
+                    } else {
+                        planner.fully_expand_tree(*pred, tree_arg.getValue());
+                    }
+                    action = planner.get_optimal_action();
+                    // actually perform the transition
+                    observation_ptr_t observation;
+                    reward_ptr_t reward;
+                    environment->perform_transition(action, observation, reward);
+                    mean_reward += reward->get_value();
+                    current_instance = current_instance->append_instance(action, observation, reward);
+                    DEBUG_OUT(2,"    " << action << "	" << observation << "	" << reward);
+                }
+            } else if(mode=="VALUE_BASED_UTREE"){
+                // cast to utree
+                auto utree = dynamic_pointer_cast<UTree>(learner);
+                if(utree==nullptr) {
+                    DEBUG_DEAD_LINE;
+                }
+                // do optimal transition
+                repeat(eval_arg.getValue()) {
+                    action_ptr_t action = utree->get_max_value_action(current_instance);
+                    observation_ptr_t observation;
+                    reward_ptr_t reward;
+                    environment->perform_transition(action, observation, reward);
+                    mean_reward += reward->get_value();
+                    current_instance = current_instance->append_instance(action, observation, reward);
+                    DEBUG_OUT(2,"    " << action << "	" << observation << "	" << reward);
+                }
+            } else {
+                DEBUG_DEAD_LINE;
+            }
+
+            // calculate mean reward
+            mean_reward/=eval_arg.getValue();
+
+            // write output
+#ifdef USE_OMP
+#pragma omp critical
+#endif
+            {
+                if(mode=="CRF") {
+                    LOG(this_episode_counter << "	" << training_length << "	" << eval_arg.getValue() << "	" << mean_reward << "	" << data_likelihood << "	" << nr_features << "	" << l1_arg.getValue());
+                } else if(mode=="MODEL_BASED_UTREE" || mode=="VALUE_BASED_UTREE") {
+                    LOG(this_episode_counter << "	" << training_length << "	" << eval_arg.getValue() << "	" << mean_reward << "	" << utree_score << "	" << utree_size);
+                } else if(mode=="DRY" || mode=="RANDOM") {
+                    LOG(this_episode_counter << "	" << training_length << "	" << eval_arg.getValue() << "	" << mean_reward);
+                } else {
+                    DEBUG_DEAD_LINE;
+                }
+            }
+
+            delete current_instance;
+        }
     } // end omp parallel for
 }
 
@@ -397,6 +419,7 @@ void BatchWorker::initialize_log_file(std::ofstream& log_file) {
     LOG_COMMENT("Mode: " << mode);
     LOG_COMMENT("Training Length: " << minT << "--" << maxT << " (step size: " << incT << ")");
     LOG_COMMENT("Evaluation Length: " << eval_arg.getValue());
+    LOG_COMMENT("Repetitions: " << repeat_arg.getValue());
     LOG_COMMENT("Discount: " << discount_arg.getValue());
     if(mode=="CRF" || mode=="MODEL_BASED_UTREE") {
         LOG_COMMENT("Max Look-Ahead Tree Size: " << tree_arg.getValue());
@@ -414,7 +437,7 @@ void BatchWorker::initialize_log_file(std::ofstream& log_file) {
         LOG_COMMENT("Episode	training_length	evaluation_length	mean_reward	data_likelihood	nr_features	l1_factor");
     } else if(mode=="MODEL_BASED_UTREE" || mode=="VALUE_BASED_UTREE") {
         LOG_COMMENT("Episode	training_length	evaluation_length	mean_reward	utree_score	utree_size");
-    } else if(mode=="RANDOM") {
+    } else if(mode=="DRY" || mode=="RANDOM") {
         LOG_COMMENT("Episode	training_length	evaluation_length	mean_reward");
     } else {
         DEBUG_DEAD_LINE;

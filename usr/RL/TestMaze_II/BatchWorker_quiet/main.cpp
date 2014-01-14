@@ -1,7 +1,7 @@
 #include <time.h>
 #include <stdlib.h>
 
-#include "BatchWorker.h"
+#include "../BatchWorker.h"
 
 int main(int argc, char *argv[]) {
 
