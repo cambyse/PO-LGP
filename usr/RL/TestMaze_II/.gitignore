@@ -1,1 +1,7 @@
 data
+console_history.txt
+nohup.out
+BatchWorker_quiet/BatchWorker_quiet
+BatchWorker_verbose/BatchWorker_verbose
+GTest/GTest
+MazeGUI/MazeGUI
