@@ -101,7 +101,7 @@ TEST(LearnerTest, KMarkovCRF) {
             );
         action = planner.get_optimal_action();
 
-        // actually the perform transition
+        // actually perform the transition
         observation_ptr_t observation_to;
         reward_ptr_t reward;
         maze.perform_transition(action,observation_to,reward);
@@ -238,7 +238,7 @@ TEST(LearnerTest, UTree) {
                 );
             action = planner.get_optimal_action();
 
-            // actually the perform transition
+            // actually perform the transition
             observation_ptr_t observation_to;
             reward_ptr_t reward;
             maze.perform_transition(action,observation_to,reward);

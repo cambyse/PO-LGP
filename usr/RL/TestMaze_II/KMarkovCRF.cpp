@@ -1075,6 +1075,7 @@ void KMarkovCRF::erase_zero_features(const bool& store) {
     }
 
     if( new_size == active_features.size() ) {
+        DEBUG_OUT(1, "    No zero weighted features to erase");
         DEBUG_OUT(1, "DONE");
         return;
     }
@@ -1091,6 +1092,9 @@ void KMarkovCRF::erase_zero_features(const bool& store) {
             ++new_f_idx;
         }
     }
+
+    // Report number of erased features
+    DEBUG_OUT(1,"    Erased " << active_features.size()-new_size << " features");
 
     // Swap new and old data
     lbfgs_free(lambda);
