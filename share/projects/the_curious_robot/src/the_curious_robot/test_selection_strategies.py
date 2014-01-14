@@ -40,3 +40,20 @@ class TestEntropyMaxStrategy(object):
                      1: [-.2]}
         selected = strategy.execute(oois=None, entropies=entropies)
         assert selected == 0
+
+
+class TestEntropyMeanStrategy(object):
+    def test_(self):
+        strategy = StrategySelectEntropy("mean")
+
+        entropies = {0: [-.2]}
+        selected = strategy.execute(oois=None, entropies=entropies)
+        assert selected == 0
+
+        entropies = {0: [-.2], 1: [-.25, -.1]}
+        selected = strategy.execute(oois=None, entropies=entropies)
+        assert selected == 1
+
+        entropies = {0: [-.2], 1: [-.35, -.1]}
+        selected = strategy.execute(oois=None, entropies=entropies)
+        assert selected == 0
