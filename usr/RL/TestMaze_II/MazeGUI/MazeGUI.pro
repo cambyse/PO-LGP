@@ -109,8 +109,8 @@ FORMS += ../testmaze_ii.ui
 RESOURCES +=
 QMAKE_CXXFLAGS += -std=c++0x \
     -fopenmp
-QMAKE_CC = $$system( if [ "$(which gcc-4.8)"!="" ]; then echo "gcc-4.8"; else echo "gcc"; fi )
-QMAKE_CXX = $$system( if [ "$(which g++-4.8)"!="" ]; then echo "g++-4.8"; else echo "g++"; fi )
+QMAKE_CC = $$system( if [ `which gcc-4.8 2>/dev/null` ]; then echo "gcc-4.8"; else echo "gcc"; fi )
+QMAKE_CXX = $$system( if [ `which g++-4.8 2>/dev/null` ]; then echo "g++-4.8"; else echo "g++"; fi )
 message("Project $$TARGET uses:")
 message("--> $$QMAKE_CC")
 message("--> $$QMAKE_CXX")
