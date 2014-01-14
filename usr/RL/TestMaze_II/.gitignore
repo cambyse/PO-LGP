@@ -5,3 +5,6 @@ BatchWorker_quiet/BatchWorker_quiet
 BatchWorker_verbose/BatchWorker_verbose
 GTest/GTest
 MazeGUI/MazeGUI
+html
+latex
+doc_images
