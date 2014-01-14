@@ -16,10 +16,8 @@ class pickle_member(object):
         self.member_name = member_name
 
         # Create a folder for the logs
-        now = datetime.datetime.now()
-        self.foldername = "log/{}_{}_{}_{}_{}/{}".format(
-            now.year, now.month, now.day, now.hour, now.minute,
-            self.member_name,
+        self.foldername = datetime.datetime.now().strftime(
+            "log/%Y_%m_%d_%H_%M/" + self.member_name
         )
         try:
             os.makedirs(self.foldername)
