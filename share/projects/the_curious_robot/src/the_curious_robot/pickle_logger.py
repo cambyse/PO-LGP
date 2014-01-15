@@ -11,19 +11,19 @@ class pickle_member(object):
     Just decorate a function and supply the member_name.  Folders are
     automatically created.
     """
-    def __init__(self, member_name):
-        self.member_name = member_name
+    def __init__(self, name, folder):
+        self.member_name = name
 
         # Create a folder for the logs
         self.foldername = datetime.datetime.now().strftime(
-            "log_tcr/%Y_%m_%d_%H_%M/" + self.member_name
+            "log_tcr/" + folder + "/%Y_%m_%d_%H_%M/" + self.member_name
         )
         print "Initializing pickler for {}; will be saved in {}.".format(
-            member_name, self.foldername)
+            self.member_name, self.foldername)
         try:
             os.makedirs(self.foldername)
         except OSError:
-            print self.foldername, "already exists."
+            print "%s already exists.".format(self.foldername)
 
     def __call__(self, func):
         def wrapped(*args, **kwargs):
