@@ -101,13 +101,13 @@ bool BatchWorker::post_process_args() {
         }
     }
     if(!mode_ok) {
-        DEBUG_OUT(1,"Argument value for '" << mode_arg.getName() << "' must be one of:");
+        DEBUG_OUT(0,"Argument value for '" << mode_arg.getName() << "' must be one of:");
         for(string s : mode_vector) {
-            DEBUG_OUT(1,"    " << s);
+            DEBUG_OUT(0,"    " << s);
         }
     } else {
         if(mode!="DRY" && mode!="RANDOM" && mode!="CRF" && mode!="MODEL_BASED_UTREE" && mode!="VALUE_BASED_UTREE") {
-            DEBUG_OUT(1,"mode '" << mode << "' currently not supported");
+            DEBUG_OUT(0,"mode '" << mode << "' currently not supported");
             mode_ok = false;
         }
     }
