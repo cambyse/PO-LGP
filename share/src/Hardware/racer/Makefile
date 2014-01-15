@@ -2,7 +2,8 @@ BASE   = ../../..
 NAME   = libHardware_$(shell basename `pwd`)
 OUTPUT := $(BASE)/lib/$(NAME).so
 
-DEPEND = Core
+GTKGL = 1
+DEPEND = Core Gui Algo
 
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS = $(SRCS:%.cpp=%.o)
