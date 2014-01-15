@@ -133,12 +133,10 @@ class PickOOIActionServer(object):
         self.ooi_id_pub = rospy.Publisher('ooi_id', tcr.msg.ObjectID)
 
         # Actionlib Server
-        self.server = SimpleActionServer(
-            name,
-            tcr.msg.PickOOIAction,
-            execute_cb=self.execute,
-            auto_start=False
-        )
+        self.server = SimpleActionServer(name,
+                                         tcr.msg.PickOOIAction,
+                                         execute_cb=self.execute,
+                                         auto_start=False)
         self.server.register_preempt_callback(self.preempt_cb)
         self.server.start()
 
