@@ -26,8 +26,8 @@ import numpy as np
 # and implement all function.
 #
 # TODO selecting the strategy should be done via dynamic reconfigure.
-
 class SelectionStrategy(object):
+    """ABC for every SelectionStrategy."""
     def execute(self, oois, entropies):
         raise NotImplementedError()
 
