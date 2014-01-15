@@ -1,4 +1,10 @@
 <launch>
+  <!-- PARAMETERS -->
+  <!-- declare arg to be passed in -->
+  <arg name="strategy_name" default="random" />
+  <param name="strategy_name" value="$(arg strategy_name)"/>
+
+  <!-- NODES -->
   <node pkg="the_curious_robot" type="perception.py" name="tcr_perception" output="screen" />
   <node pkg="the_curious_robot" type="controller.py" name="tcr_controller" output="screen" />
   <node pkg="articulation_models" type="model_learner_srv" name="model_learner_srv" output="screen"/>
