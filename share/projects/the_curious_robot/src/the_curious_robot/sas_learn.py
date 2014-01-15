@@ -92,7 +92,8 @@ class LearnActionServer(object):
         # require/provide
         require_provide.Provide("Learn")
 
-    @pickle_logger.pickle_member("belief_annotation")
+    @pickle_logger.pickle_member(name="belief_annotation",
+                                 folder=rospy.get_param("strategy_name"))
     def execute(self, msg):
         # add object to belief and belief_annotation if it does not exist yet
         if self.ooi not in self.belief_annotation:
