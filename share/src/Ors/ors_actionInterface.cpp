@@ -120,18 +120,16 @@ void ActionInterface::shutdownAll() {
 
 void ActionInterface::loadConfiguration(const char* ors_filename) {
 
-  char *path, *name, cwd[200];
-  MT::decomposeFilename(path, name, ors_filename);
-  getcwd(cwd, 200);
-  chdir(path);
+//  char *path, *name, cwd[200];
+//  MT::decomposeFilename(path, name, ors_filename);
+//  getcwd(cwd, 200);
+//  chdir(path);
   
   if(C) delete C;
   C = new ors::KinematicWorld();
-  MT::load(*C, name);
+  FILE(ors_filename) >> *C;
   C->calcBodyFramesFromJoints();
   //C->reconfigureRoot(C->getName("rfoot"));
-  
-  chdir(cwd);
   
   C->getJointState(q0);
   

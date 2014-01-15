@@ -60,18 +60,7 @@ template<class T> void load(T& x, const char *filename, bool change_directory) {
     file >>x;
     file.close();
   } else {
-#ifndef MT_MSVC
-    char *path, *name, cwd[200];
-    MT::decomposeFilename(path, name, filename);
-    if(!getcwd(cwd, 200)) HALT("couldn't get current dir");
-    if(path[0]) if(chdir(path)) HALT("couldn't change to directory " <<path);
-    std::ifstream file;
-    open(file, name);
-    file >>x;
-    file.close();
-    if(path[0]) if(chdir(cwd)) HALT("couldn't change to directory " <<cwd);
-//     if(!getcwd(cwd, 200)) HALT("couldn't get current dir");
-#endif
+    FILE(filename) >>x;
   }
 }
 

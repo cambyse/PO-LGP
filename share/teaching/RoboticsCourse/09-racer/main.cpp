@@ -130,7 +130,7 @@ void FollowSignal(){
 
 void FollowIMU(){
   ofstream data("z.data");
-  data <<"iteration time u u_acc x th x_dot th_dot x_ddot th_ddot y0 y1 y2 y4 Y0 Y1 Y2 Y4 E(x) E(th) E(x_dot) E(th_dot) V(x) V(th) V(x_dot) V(th_dot)" <<endl;
+  data <<"iteration time E(x) E(th) E(x_dot) E(th_dot) sin(E_th) cos(E_th) Y0 Y1 Y2 Y4 y0 y1 y2 y4" <<endl;
 
   Racer R;
 
@@ -167,6 +167,7 @@ void FollowIMU(){
     arr y_true = imu[t];
 
     double tau=times(t)-times(t-1);
+    arr K_old = K.b_mean;
 
     arr A,a,B;
     R.getDynamicsAB(A,a,B);
@@ -176,15 +177,15 @@ void FollowIMU(){
     R.q = K.b_mean.sub(0,1);
     R.q_dot = K.b_mean.sub(2,3);
     R.gl.text.clear() <<t <<' ' <<times(t) <<" ; " <<R.q(0) << " ; " <<R.q(1);
-    if(!(t%2)) R.gl.update();
+    if(!(t%10)) R.gl.update();
 
     MT::arrayBrackets="  ";
-    double u_acc=0.;
 
-    data <<t <<' ' <<times(t) <<' ' <<R.u <<' ' <<u_acc <<' '
-        <<R.q <<R.q_dot <<R.q_ddot
-       <<y_true <<y_pred
-      <<K.b_mean <<K.b_mean+2.*::sqrt(getDiag(K.b_var)) <<endl;
+    data <<t <<' ' <<times(t) <<' '
+        <<K_old <<' ' <<sin(K_old(1)) <<' ' <<cos(K_old(1)) <<' '
+       <<y_pred
+      <<y_true
+     <<endl;
   }
 }
 

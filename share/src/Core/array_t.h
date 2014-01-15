@@ -101,19 +101,6 @@ template<class T> MT::Array<T>::Array(uint i, uint j) { init(); resize(i, j); }
 /// constructor with resize
 template<class T> MT::Array<T>::Array(uint i, uint j, uint k) { init(); resize(i, j, k); }
 
-/*  OBSOLETE
-/// constructor with resize
-template<class T> MT::Array<T>::Array(uint i, uint j, uint k, uint l){ init(); resize(i, j, k, l); }
-*/
-
-/*OBSOLETE! Use Array x = a[8] instead!
-/// this becomes a reference on a subdimension of \c a
-template<class T> MT::Array<T>::Array(const MT::Array<T>& a, uint i){ init(); referToSubDim(a, i); }
-
-/// this becomes a reference on a subdimension of \c a
-template<class T> MT::Array<T>::Array(const MT::Array<T>& a, uint i, uint j){ init(); referToSubDim(a, i, j); }
-*/
-
 /// this becomes a reference on the C-array \c p
 template<class T> MT::Array<T>::Array(const T* p, uint size) { init(); referTo(p, size); }
 
@@ -129,10 +116,14 @@ arr a = { 1.1, 2, 25.7, 12 };
  *
  * @param list the list used to initialize the array.
  */
-template<class T>
-MT::Array<T>::Array(std::initializer_list<T> list) {
+template<class T> MT::Array<T>::Array(std::initializer_list<T> list) {
   init();
   for(T t : list) append(t);
+}
+
+template<class T> MT::Array<T>::Array(MT::FileToken& f) {
+  init();
+  read(f.getIs());
 }
 
 template<class T> MT::Array<T>::~Array() {
