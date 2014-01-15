@@ -141,11 +141,21 @@ class PickOOIActionServer(object):
         self.server.start()
 
         # Select the exploration strategies
-        self.selection_strategy = StrategyRandomSelect()
-        # self.selection_strategy = StrategySequentialSelect()
-        # self.selection_strategy = StrategyDoorFrameTop()
-        # self.selection_strategy = StrategySelectShapeWithIndex()
-        # self.selection_strategy = StrategySelectEntropy("max")
+        all_strategies = {
+            "random": (StrategyRandomSelect, None),
+            "sequential": (StrategySequentialSelect, None),
+            "door_frame": (StrategyDoorFrameTop, None),
+            "shape_id": (StrategySelectShapeWithIndex, None),
+            "entropy_sum": (StrategySelectEntropy, "sum"),
+            "entropy_max": (StrategySelectEntropy, "max"),
+            "entropy_mean": (StrategySelectEntropy, "mean"),
+        }
+        strategy_name = rospy.get_param("strategy_name", "random")
+        strategy, parameter = all_strategies[strategy_name]
+        if parameter:
+            self.selection_strategy = strategy(parameter)
+        else:
+            self.selection_strategy = strategy()
 
         self.possible_oois = None
         rp.Provide("PickOOI")
