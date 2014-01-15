@@ -260,7 +260,7 @@ void BatchWorker::collect_data() {
                 planner.set_spaces(action_space, observation_space, reward_space);
                 // do planned steps
                 for(int step_idx=0; step_idx<eval_arg.getValue(); ++step_idx) {
-                    // do planning and select action
+                    // do planning
                     action_ptr_t action;
                     if(pruningOff_arg.getValue() || step_idx==0) {
                         planner.clear_tree();
@@ -268,6 +268,7 @@ void BatchWorker::collect_data() {
                     } else {
                         planner.fully_expand_tree(*pred, tree_arg.getValue());
                     }
+                    // get action
                     action = planner.get_optimal_action();
                     // actually perform the transition
                     observation_ptr_t observation;
@@ -276,6 +277,10 @@ void BatchWorker::collect_data() {
                     mean_reward += reward->get_value();
                     current_instance = current_instance->append_instance(action, observation, reward);
                     DEBUG_OUT(2,"    " << action << "	" << observation << "	" << reward);
+                    // prune tree
+                    if(!pruningOff_arg.getValue()) {
+                        planner.prune_tree(action,current_instance,*pred);
+                    }
                 }
             } else if(mode=="VALUE_BASED_UTREE"){
                 // cast to utree
