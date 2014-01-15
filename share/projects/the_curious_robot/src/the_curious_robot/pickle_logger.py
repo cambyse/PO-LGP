@@ -16,7 +16,7 @@ class pickle_member(object):
 
         # Create a folder for the logs
         self.foldername = datetime.datetime.now().strftime(
-            "log_tcr/" + folder + "/%Y_%m_%d_%H_%M/" + self.member_name
+            "log_tcr/" + folder + "/%Y-%m-%d %H:%M:%S/" + self.member_name
         )
         print "Initializing pickler for {}; will be saved in {}.".format(
             self.member_name, self.foldername)
@@ -36,8 +36,9 @@ class pickle_member(object):
     def _pickle(self, decorated_class):
         """The pickling logic"""
         # construct filename for pkl file
-        filename = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%f.pkl")
+        filename = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f.pkl")
         filename = os.path.join(self.foldername, filename)
+        print "Pickling {}".format(filename)
 
         # pickle the instance variable
         member = getattr(decorated_class, self.member_name)
