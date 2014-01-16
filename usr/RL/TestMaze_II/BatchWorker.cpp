@@ -158,19 +158,13 @@ void BatchWorker::collect_data() {
     int repeat_n = repeat_arg.getValue();
     int episode_counter = 1;
 #ifdef USE_OMP
-#pragma omp parallel for schedule(dynamic,1) collapse(1)
+#pragma omp parallel for schedule(dynamic,1) collapse(2)
 #endif
     for(int repeat_index=1; repeat_index<=repeat_n; ++repeat_index) {
         for(int training_length=minT; training_length<=maxT; training_length+=incT) {
             DEBUG_OUT(2,"Training length: " << training_length);
 
             int this_episode_counter;
-#ifdef USE_OMP
-#pragma omp critical
-#endif
-            {
-                this_episode_counter = episode_counter++;
-            }
 
             // environment
             shared_ptr<Environment> environment;
@@ -189,22 +183,31 @@ void BatchWorker::collect_data() {
             int utree_size;          // for UTree
             double utree_score;      // for UTree
 
-            // initialize environment and get spaces
-            environment = make_shared<CheeseMaze>();
-            environment->get_spaces(action_space,observation_space,reward_space);
+#ifdef USE_OMP
+#pragma omp critical
+#endif
+            {
+                this_episode_counter = episode_counter++;
 
-            // initialize learner
-            if(mode=="DRY" || mode=="RANDOM") {
-                // no learner
-            } else if(mode=="CRF") {
-                learner = make_shared<KMarkovCRF>();
-            } else if(mode=="MODEL_BASED_UTREE") {
-                learner = make_shared<UTree>(discount_arg.getValue());
-            } else if(mode=="VALUE_BASED_UTREE") {
-                learner = make_shared<UTree>(discount_arg.getValue());
-            } else {
-                DEBUG_DEAD_LINE;
-            }
+
+                // initialize environment and get spaces
+                environment = make_shared<CheeseMaze>();
+                environment->get_spaces(action_space,observation_space,reward_space);
+
+                // initialize learner
+                if(mode=="DRY" || mode=="RANDOM") {
+                    // no learner
+                } else if(mode=="CRF") {
+                    learner = make_shared<KMarkovCRF>();
+                } else if(mode=="MODEL_BASED_UTREE") {
+                    learner = make_shared<UTree>(discount_arg.getValue());
+                } else if(mode=="VALUE_BASED_UTREE") {
+                    learner = make_shared<UTree>(discount_arg.getValue());
+                } else {
+                    DEBUG_DEAD_LINE;
+                }
+
+            } // end omp critical
 
             // collect data and train learner
             if(mode=="DRY" || mode=="RANDOM") {
@@ -436,7 +439,7 @@ void BatchWorker::initialize_log_file(std::ofstream& log_file) {
         LOG_COMMENT("Likelihood Delta: " << delta_arg.getValue());
     }
 
-    LOG("");
+    LOG_COMMENT("");
 
     if(mode=="CRF") {
         LOG_COMMENT("Episode	training_length	evaluation_length	mean_reward	data_likelihood	nr_features	l1_factor");
@@ -448,5 +451,5 @@ void BatchWorker::initialize_log_file(std::ofstream& log_file) {
         DEBUG_DEAD_LINE;
     }
 
-    LOG("");
+    LOG_COMMENT("");
 }
