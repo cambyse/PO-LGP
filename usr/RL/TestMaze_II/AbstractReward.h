@@ -8,6 +8,7 @@ public:
     typedef double value_t;
     enum class REWARD_TYPE { NONE, MINIMAL, LISTED_REWARD };
     AbstractReward(REWARD_TYPE t = REWARD_TYPE::NONE);
+    virtual ~AbstractReward() override {}
     ABSTRACT_ITERATABLE_SPACE_BEGIN(AbstractReward);
     virtual ptr_t next() const override;
     virtual bool operator!=(const AbstractIteratableSpace& other) const override;

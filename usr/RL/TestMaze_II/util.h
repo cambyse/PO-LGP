@@ -203,6 +203,10 @@ namespace util {
             ptr_t object;
         };
 
+        AbstractIteratableSpace() = default;
+
+        virtual ~AbstractIteratableSpace() = default;
+
         /** \brief Returns Iterator to first object of the space. */
         virtual Iterator begin() const = 0;
 

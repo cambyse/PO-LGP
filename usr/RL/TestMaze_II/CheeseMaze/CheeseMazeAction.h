@@ -8,6 +8,7 @@ public:
     enum class ACTION { NORTH, SOUTH, WEST, EAST, END };
     CheeseMazeAction(ACTION a = ACTION::NORTH);
     CheeseMazeAction(const std::string a);
+    virtual ~CheeseMazeAction() override {}
     ABSTRACT_ITERATABLE_SPACE_BEGIN(CheeseMazeAction);
     virtual ptr_t next() const override;
     virtual bool operator!=(const AbstractAction &other) const override;

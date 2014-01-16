@@ -25,7 +25,7 @@ public:
     DISAMBIGUATE_CONFIG_TYPEDEFS(HistoryObserver);
 
     KMarkovCRF();
-    virtual ~KMarkovCRF();
+    virtual ~KMarkovCRF() override;
 
     /** \brief Calls evaluate_model() on instance. */
     static lbfgsfloatval_t static_evaluate_model(

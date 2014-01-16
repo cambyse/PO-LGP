@@ -8,6 +8,7 @@ public:
     enum class ACTION { UP, DOWN, LEFT, RIGHT, STAY, END };
     MazeAction(ACTION a = ACTION::UP);
     MazeAction(const char * a);
+    virtual ~MazeAction() override {}
     ABSTRACT_ITERATABLE_SPACE_BEGIN(MazeAction);
     virtual ptr_t next() const override;
     virtual bool operator!=(const AbstractAction &other) const override;

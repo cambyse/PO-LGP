@@ -34,7 +34,7 @@ public:
     enum EXPANSION_TYPE { UTILITY_EXPANSION, OBSERVATION_REWARD_EXPANSION };
 
     UTree(const double&);
-    virtual ~UTree();
+    virtual ~UTree() override ;
 
     /** \brief Add a new instance to the tree. */
     virtual void add_action_observation_reward_tripel(

@@ -18,6 +18,7 @@ public:
         int y_dim,
         int index
         );
+    virtual ~MazeObservation() override {}
     /** \brief Defined explicitly because the maze dimensions need to be given. */
     virtual Iterator begin() const override;
     virtual ptr_t next() const override;

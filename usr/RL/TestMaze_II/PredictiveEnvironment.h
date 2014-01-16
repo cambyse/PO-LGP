@@ -12,7 +12,7 @@ public:
 
     PredictiveEnvironment(action_ptr_t as, observation_ptr_t os, reward_ptr_t rs);
 
-    virtual ~PredictiveEnvironment() = default;
+    virtual ~PredictiveEnvironment() override = default;
 
     /** \brief Perform a transition by executing an action. */
     virtual void perform_transition(const action_ptr_t & action) override;

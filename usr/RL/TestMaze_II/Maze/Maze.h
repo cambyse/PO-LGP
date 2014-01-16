@@ -30,7 +30,7 @@ public:
     using PredictiveEnvironment::perform_transition; // so that lookup works
 
     Maze(const double& eps = 0);
-    virtual ~Maze();
+    virtual ~Maze() override;
 
     /** \brief Set a maze by name. */
     virtual bool set_maze(const QString& s);

@@ -7,7 +7,7 @@ class MinimalAction: public AbstractAction {
 public:
     enum ACTION { CHANGE, STAY } action;
     MinimalAction(ACTION a = ACTION::CHANGE);
-    virtual ~MinimalAction() = default;
+    virtual ~MinimalAction() override = default;
     ABSTRACT_ITERATABLE_SPACE_BEGIN(MinimalAction);
     virtual ptr_t next() const override;
     virtual bool operator!=(const AbstractAction &other) const override;

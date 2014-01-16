@@ -8,7 +8,7 @@ class MinimalObservation: public AbstractObservation {
 public:
     enum OBSERVATION { RED, GREEN } observation;
     MinimalObservation(OBSERVATION o = RED);
-    virtual ~MinimalObservation() = default;
+    virtual ~MinimalObservation() override = default;
     ABSTRACT_ITERATABLE_SPACE_BEGIN(MinimalObservation);
     virtual ptr_t next() const override;
     virtual bool operator!=(const AbstractObservation &other) const override;

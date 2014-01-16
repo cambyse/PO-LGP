@@ -21,6 +21,8 @@ public:
         const double & value
         );
 
+    virtual ~ListedReward() override {}
+
     /** \brief Defined explicitly because the reward list needs to be given. */
     virtual Iterator begin() const override;
 

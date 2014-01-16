@@ -24,7 +24,7 @@ public:
     typedef ListedReward reward_t;
 
     CheeseMaze();
-    virtual ~CheeseMaze();
+    virtual ~CheeseMaze() override;
 
     virtual void render_initialize(QGraphicsView * v) override;
     virtual void render_update() override;

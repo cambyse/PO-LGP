@@ -7,6 +7,7 @@ class AbstractObservation: public util::AbstractIteratableSpace<AbstractObservat
 public:
     enum class OBSERVATION_TYPE { NONE, MINIMAL, MAZE_OBSERVATION, CHEESE_MAZE_OBSERVATION };
     AbstractObservation(OBSERVATION_TYPE t = OBSERVATION_TYPE::NONE);
+    virtual ~AbstractObservation() override {}
     ABSTRACT_ITERATABLE_SPACE_BEGIN(AbstractObservation);
     virtual ptr_t next() const override;
     virtual bool operator!=(const AbstractIteratableSpace& other) const override;

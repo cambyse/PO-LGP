@@ -7,6 +7,7 @@ class AbstractAction: public util::AbstractIteratableSpace<AbstractAction> {
 public:
     enum class ACTION_TYPE { NONE, MINIMAL, MAZE_ACTION, AUGMENTED_MAZE_ACTION, CHEESE_MAZE_ACTION };
     AbstractAction(ACTION_TYPE t = ACTION_TYPE::NONE);
+    virtual ~AbstractAction() {}
     ABSTRACT_ITERATABLE_SPACE_BEGIN(AbstractAction);
     virtual ptr_t next() const override;
     virtual bool operator!=(const AbstractIteratableSpace& other) const override;

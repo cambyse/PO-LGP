@@ -7,7 +7,7 @@ class MinimalReward: public AbstractReward {
 public:
     enum REWARD { NO_REWARD, SOME_REWARD } reward;
     MinimalReward(REWARD o = NO_REWARD);
-    virtual ~MinimalReward() = default;
+    virtual ~MinimalReward() override = default;
     ABSTRACT_ITERATABLE_SPACE_BEGIN(MinimalReward);
     virtual ptr_t next() const override;
     virtual bool operator!=(const AbstractReward &other) const override;
