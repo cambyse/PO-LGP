@@ -18,7 +18,7 @@ void computeEvidences(arr& rho, const arr& y, const arr& mu, double sigma){
   }
   
   if(plot){
-    MT::save(rho,"z.rho");
+    rho >>FILE("z.rho");
     gnuplot("plot 'z.y' w p title 'data', 'z.rho' us 0:2 w l title 'evidences'", false, true, "z.pdf");
     MT::wait();
   }
@@ -41,8 +41,8 @@ void Estep(arr& a, arr& b, const arr& P0, const arr& P, const arr& rho){
   }
 
   if(plot){
-    MT::save(a,"z.alpha");
-    MT::save(b,"z.beta");
+    a >>FILE("z.alpha");
+    b >>FILE("z.beta");
     gnuplot("plot 'z.y' w p title 'data', 'z.alpha' us 0:2 w l title 'filtering', 'z.beta' us 0:2 w l title 'betas', 'z.x' w l title 'true state' lw 1", false, true, "z.pdf");
     MT::wait();
   }
@@ -65,7 +65,7 @@ void EstepQ(arr& q, arr& q_pair, const arr& P0, const arr& P, const arr& rho){
   for(t=0;t<T-1;t++) normalizeDist(q_pair[t]());
 
   if(plot){
-    MT::save(q,"z.q");
+    q >>FILE("z.q");
     gnuplot("plot 'z.y' w p title 'data', 'z.q' us 0:2 w l title 'posterior q' lw 4, 'z.x' w l title 'true state' lw 1", false, true, "z.pdf");
     MT::wait();
   }
@@ -104,8 +104,8 @@ void generateData(arr& y, uintA& x,  uint T, const arr& P0, const arr& P, const 
     y(t) = mu(x(t)) + sigma*rnd.gauss(); //SUS(B[x(t)]); //observation
     p = P[x(t)];
   }
-  x.reshape(T,1);  MT::save(x,"z.x");  x.reshape(T);
-  y.reshape(T,1);  MT::save(y,"z.y");  y.reshape(T);
+  x.reshape(T,1);  x >>FILE("z.x");  x.reshape(T);
+  y.reshape(T,1);  y >>FILE("z.y");  y.reshape(T);
   if(plot){
     gnuplot("plot 'z.y' w p title 'data'", false, true, "z.pdf");
     MT::wait();
@@ -154,6 +154,6 @@ int main(int argc,char** argv){
     Mstep(P0,P,mu, q, q_pair, y);
   }
   
-  MT::save(q,"z.q");
+  q >>FILE("z.q");
   gnuplot("plot 'z.y' w p title 'data', 'z.q' us 0:2 w l title 'posterior q' lw 4, 'z.x' w l title 'true state' lw 1", false, true, "z.pdf");
 }

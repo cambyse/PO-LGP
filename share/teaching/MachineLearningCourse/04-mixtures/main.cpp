@@ -16,19 +16,19 @@ void generateArtificialGauss(){
   X = X * D * ~V;
   arr mu=ARR(3,5);
   X += ones(X.d0,1)*~mu;
-  MT::save(X,"gauss.txt");
+  X >>FILE("gauss.txt");
 }
 
 void generateArtificialMixData(){
   arr X,y;
   rnd.clockSeed();
   artificialData_GaussianMixture(X, y);
-  MT::save(X,"mixture.txt");
+  X >>FILE("mixture.txt");
 }
 
 void exercise1(){
   arr X;
-  MT::load(X,"gauss.txt");
+  X <<FILE("gauss.txt");
   uint n=X.d0;
   arr mu=(1./n)*sum(X,0);
   arr C = (1./n)*~X*X - mu*~mu;
@@ -45,7 +45,7 @@ void exercise1(){
   lines[1] = mu + sqrt(d(0))*U[0];
   lines[2] = mu;
   lines[3] = mu + sqrt(d(1))*U[1];
-  MT::save(lines,"z.lines");
+  lines >>FILE("z.lines");
   gnuplot("plot './gauss.txt' with points,'./z.lines' with lines lw 5", true, true);
 }
 
@@ -132,7 +132,7 @@ void gaussianMixture(const arr& X){
 
 void exercise2(){
   arr X;
-  MT::load(X,"mixture.txt");
+  X <<FILE("mixture.txt");
   gnuplot("plot 'mixture.txt' w p", false, true);
   for(uint k=0;k<10;k++)
     gaussianMixture(X);

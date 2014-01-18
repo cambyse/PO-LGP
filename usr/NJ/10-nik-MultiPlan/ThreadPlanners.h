@@ -48,7 +48,7 @@ struct SecKinPlanner:public StepThread{
     bInited = false;
     nSteps = 0;
     nInit = _nInit;
-    MT::load(Clusters, "ClustQ4.txt");
+    Clusters <<FILE("ClustQ4.txt");
     MT::getParameter(midPrec,"reachPlanMidPrec");
     MT::getParameter(endPrec,"reachPlanEndPrec");//load here to avoid tthread problems with CFG file
 

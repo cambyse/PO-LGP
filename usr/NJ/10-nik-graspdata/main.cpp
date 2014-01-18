@@ -127,7 +127,7 @@ void InitLoadedData(int nMode){
 	if (nMode == 0 && false){//pos has to exist BUGGED, ignore
 		lastCenter = arr(3);
 		arr temp;
-		MT::load(temp,"pos.txt");
+		temp <<FILE("pos.txt");
 		int index = temp.d0;
 		if (index < 27){
 			//27 totally, index to determine
@@ -151,19 +151,19 @@ void InitLoadedData(int nMode){
 	sDiscriminant = MT::getParameter<MT::String>("sDiscriminant");
 	if (nMode == 5){//batch
 		arr temp;
-		MT::load(temp,sDiscriminant + MT::String("/validate.txt"));
+		temp <<FILE(sDiscriminant + MT::String("/validate.txt"));
 		int nTest = MT::getParameter<int>("nTest");
 		int ns = floor(temp.d0/nTest) +1 ;//careful, divide number of test data situations
 		sDiscriminant = sDiscriminant + MT::String("/allW") + ns;
 	}
 	if(meaN.N == 0){//load arrays
-		MT::load(meaN, sDiscriminant + MT::String("/mean.txt"));
-		MT::load(prN, sDiscriminant + MT::String("/pr.txt"));
+		meaN <<FILE(sDiscriminant + MT::String("/mean.txt"));
+		prN <<FILE(sDiscriminant + MT::String("/pr.txt"));
 	}
 	if(w1.N == 0 && bDynamical < 2){
-		MT::load(w1, sDiscriminant + MT::String("/w1.txt"));
-		MT::load(w2, sDiscriminant + MT::String("/w2.txt"));
-		MT::load(w3, sDiscriminant + MT::String("/w3.txt"));
+		w1 <<FILE(sDiscriminant + MT::String("/w1.txt"));
+		w2 <<FILE(sDiscriminant + MT::String("/w2.txt"));
+		w3 <<FILE(sDiscriminant + MT::String("/w3.txt"));
 		//now scale w2 in a meaningful range, does not change discriminants
 		double nSum = 0;
 		for(uint i = 0; i < w2.d0; i++)
@@ -177,15 +177,15 @@ void InitLoadedData(int nMode){
 	}
 
 	if(w1.N == 0 && bDynamical == 2){//lin regression in task sapce
-		MT::load(w1, sDiscriminant + MT::String("/linW.txt"));
+		w1 <<FILE(sDiscriminant + MT::String("/linW.txt"));
 
 	}
 
 	if(w1.N == 0 && bDynamical == 3){//x and u task spaces regressions
-		//MT::load(w1, sDiscriminant + MT::String("/linW.txt"));
+		//w1 <<FILE(sDiscriminant + MT::String("/linW.txt"));
 
-		MT::load(w1, sDiscriminant + MT::String("/w1.txt"));
-		MT::load(w2, sDiscriminant + MT::String("/w2.txt"));
+		w1 <<FILE(sDiscriminant + MT::String("/w1.txt"));
+		w2 <<FILE(sDiscriminant + MT::String("/w2.txt"));
 
 	}
 }

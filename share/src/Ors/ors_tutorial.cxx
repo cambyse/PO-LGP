@@ -125,7 +125,7 @@ void ActionInterface::loadConfiguration(const char* ors_filename){
 
   if(C) delete C;
   C = new ors::KinematicWorld();
-  MT::load(*C,name);
+  *C <<FILE(name);
   C->calcBodyFramesFromJoints();
   //C->reconfigureRoot(C->getName("rfoot"));
 

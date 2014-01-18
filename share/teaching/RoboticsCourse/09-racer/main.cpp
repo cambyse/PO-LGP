@@ -98,7 +98,7 @@ void FollowSignal(){
   data <<"iteration time u u_acc x th x_dot th_dot x_ddot th_ddot B_q B_qdot B_qddot ref ref_v y0 y1 y2 y4 E(x) E(th) E(x_dot) E(th_dot) V(x) V(th) V(x_dot) V(th_dot)" <<endl;
   Racer R;
   arr ctrl,ctrl_v;
-  MT::load(ctrl,"ctrl_ref");
+  ctrl <<FILE("ctrl_ref");
   ctrl = (~ctrl)[1];
   ctrl.reshape(ctrl.N,1);
   ctrl *= .001;
@@ -135,7 +135,7 @@ void FollowIMU(){
   Racer R;
 
   arr imu;
-  MT::load(imu,"nogit-data/imu-02.dat");
+  imu <<FILE("nogit-data/imu-02.dat");
   uint T=imu.d0;
   imu = ~imu;
   arr times;

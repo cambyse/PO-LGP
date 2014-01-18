@@ -108,12 +108,12 @@ void ors::Body::parseAts(KinematicWorld& G) {
   ats.getValue<Transformation>(X, "pose");
   
   //mass properties
-//  double d;
-//  if(ats.getValue<double>(d, "mass")) {
-//    mass=d;
-//    inertia.setId();
-//    inertia *= .2*d;
-//  }
+  double d;
+  if(ats.getValue<double>(d, "mass")) {
+    mass=d;
+    inertia.setId();
+    inertia *= .2*d;
+  }
 
   type=dynamicBT;
   if(ats.getValue<bool>("fixed"))      type=staticBT;
@@ -443,7 +443,7 @@ ors::KinematicWorld::~KinematicWorld() {
 }
 
 void ors::KinematicWorld::init(const char* filename) {
-  MT::load(*this, filename, true);
+  *this <<FILE(filename);
   calcBodyFramesFromJoints();
   calcJointState();
 }
@@ -1898,6 +1898,7 @@ void ors::KinematicWorld::meldFixedJoints() {
     b->outLinks.clear();
     //reassociate mass
     a->mass += b->mass;
+    a->inertia += b->inertia;
     b->mass = 0.;
   }
 }
@@ -1991,7 +1992,6 @@ MT::Array<std::tuple<long, long> > getSubMeshPositions(const char* filename) {
 template void MT::Parameter<ors::Vector>::initialize();
 
 #ifndef  MT_ORS_ONLY_BASICS
-template void MT::save<ors::KinematicWorld>(const ors::KinematicWorld&, const char*);
 template MT::Array<ors::Shape*>::Array(uint);
 template ors::Shape* listFindByName(const MT::Array<ors::Shape*>&,const char*);
 

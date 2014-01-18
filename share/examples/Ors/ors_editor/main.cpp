@@ -33,7 +33,7 @@ void TEST(OrsEditor) {
   G.calcBodyFramesFromJoints();
 //  G.topSort();
   G.makeLinkTree();
-  MT::save(G,"z.ors");
+  G >>FILE("z.ors");
 
   editConfiguration(file, G);
 }

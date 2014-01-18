@@ -137,7 +137,7 @@ void TEST(BSpline){
     os <<t <<x <<v <<dx <<std::endl;
   }
 
-  MT::save(P,"z.points");
+  P >>FILE("z.points");
   gnuplot("plot 'z.spline' us 2:3 with lines,'z.points' with points");
   gnuplot("plot 'z.spline' us 2 with lines title 'z.spline f(x)','z.spline' us 4 with lines title 'v=df/dx' lw 3,'z.spline' us 6 with lines title 'numerical v'");
   gnuplot("plot 'z.spline' us 3 with lines title 'z.spline f(x)','z.spline' us 5 with lines title 'v=df/dx' lw 3,'z.spline' us 7 with lines title 'numerical v'");

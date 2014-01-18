@@ -5,7 +5,7 @@ void testRead(const char *filename="../rules/coffee_shop.fg"){
   KeyValueGraph H;
 
   cout <<"reading graph..." <<endl;
-  MT::load(H,filename);
+  H <<FILE(filename);
   //cout <<H <<endl;
   H.sortByDotOrder();
   cout <<H <<endl;
