@@ -6,7 +6,7 @@
 void test(){
   HyperGraph G;
   cout <<"reading graph..." <<endl;
-  MT::load(G,"graph");
+  G <<FILE("graph");
   writeDot(G);
   
   GraphView gv(G);

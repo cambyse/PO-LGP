@@ -276,7 +276,7 @@ void soc::createEndeffectorReachProblem(SocSystem_Ors &sys,
 {
 
   //setup the workspace
-  MT::load(*sys.ors, ors_file);
+  *sys.ors <<FILE(ors_file);
   if(rand_seed>0){
     rnd.seed(rand_seed);
     ors::Body &t=*sys.ors->getBodyByName("target");
@@ -603,7 +603,7 @@ void drawOrsSocEnv(void*){
                           uint trajectory_steps){
 
   //setup the workspace
-  MT::load(*sys.ors, ors_file);
+  *sys.ors <<FILE(ors_file);
   sys.ors->calcBodyFramesFromJoints();
   sys.ors->getJointState(sys.s->q0, sys.s->v0);
   sys.swift->init(*sys.ors);

@@ -273,7 +273,7 @@ wr->userUpdate();
    // ifstream qitstr("q.rrt"); tr_q.readRaw(qitstr);  qitstr.close(); 
   //! Replaying RRT trajectory here
 //     arr tr_q; tr_q.resize(21,20); 
-//   MT::load(tr_q,"q.rrt");
+//   tr_q <<FILE("q.rrt");
 //   soc.totalCost(NULL,tr_q, 1);
 //   for (;;)  soc.displayTrajectory(tr_q,NULL,20,"AICO (planned trajectory)");
   //! end of REPLAY

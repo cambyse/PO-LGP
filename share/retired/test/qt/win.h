@@ -48,7 +48,7 @@ public slots:
     //QGLWidget gl;
     /*
       NeuralGas ngas;
-      MT::load(ngas,"../neuralGas/output");
+      ngas <<FILE("../neuralGas/output");
       NeuralGas::node n;
       forall(n,ngas){ n->feat.x=n->weights(0); n->feat.y=n->weights(1); }
       ngas.watch();

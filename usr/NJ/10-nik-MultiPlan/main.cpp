@@ -40,7 +40,7 @@ void MultiPlan::init(RobotProcessGroup *_master){
   MT::IOraw = true;
   started_track = false;
   arr p2;
-  MT::load(p2, "../../src/NJ/regparams");
+  p2 <<FILE("../../src/NJ/regparams");
   Pl = p2.sub(0,2,0,3);
   Pr = p2.sub(3,5,0,3);
 

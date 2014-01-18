@@ -25,7 +25,7 @@ void makeMazeGraph(){
   p.G.setForeignGraph(ng,CopyStruct());
   p.layout();
   gl2.watch();
-  MT::save(p.G,"maze.graph");
+  p.G >>FILE("maze.graph");
 }
 
 void makeLineGraph(){
@@ -43,7 +43,7 @@ void makeLineGraph(){
   OpenGL gl; gl.add(p.G);
   p.layout();
   gl.watch();
-  MT::save(p.G,"line.graph");
+  p.G >>FILE("line.graph");
 }
 #endif
 

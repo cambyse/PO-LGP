@@ -135,7 +135,7 @@ void GraspEvaluation::copyGraspFromOrs(const ors::KinematicWorld& all,
 
   grasp.calcBodyFramesFromJoints();
   init(grasp,gl,NULL);
-  MT::save(grasp, "grasp.ors");
+  grasp >>FILE("grasp.ors");
 }
   
 void GraspEvaluation::simulateInPhysX(){

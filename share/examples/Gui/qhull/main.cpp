@@ -130,7 +130,7 @@ void drawInit(void*){
 /*
 void testFCinOrs(){
   ors::KinematicWorld C;
-  MT::load(C,"../../configurations/forceClosureTest.ors");
+  C <<FILE("../../configurations/forceClosureTest.ors");
 
   OpenGL gl;
   gl.add(drawInit,0);

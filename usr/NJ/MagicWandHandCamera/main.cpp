@@ -34,7 +34,7 @@ void MyDemo::init(RobotProcessGroup *_master){
   started_track = false;
 
   arr p2;
-  MT::load(p2, "../../src/NJ/regparams");
+  p2 <<FILE("../../src/NJ/regparams");
   Pl = p2.sub(0,2,0,3);
   Pr = p2.sub(3,5,0,3);
   Kal1.Init();
@@ -58,7 +58,7 @@ void MyDemo::init(RobotProcessGroup *_master){
       br->X.p = CameraLocation(Pr);cout << "camera " << b->X.p << " " << br->X.p << endl;
 
       arr Rot;
-      MT::load(Rot, "../../src/NJ/RotationMatrix");arr r2; transpose(r2,Rot);Rot = r2;
+      Rot <<FILE("../../src/NJ/RotationMatrix");arr r2; transpose(r2,Rot);Rot = r2;
       Rot = Rot*-1.0;//hack to get positive trace and determinant 1
       ors::Quaternion q;
       q.setMatrix(Rot.p);

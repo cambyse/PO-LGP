@@ -67,7 +67,7 @@ void TEST(ANNIncremental) {
     if(!(i%20)){
       ann.map(X,Z);
       write(X,Z,"z.Z");
-      MT::save(ann.X,"z.X");
+      ann.X >>FILE("z.X");
       gnuplot("plot 'z.X' with points,'z.Y','z.Z'");
     }
   }
