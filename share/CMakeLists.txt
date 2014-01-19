@@ -37,7 +37,7 @@ endif(WITH_OPENCV)
 # allow users to switch off compilation of unit-tests
 option(WITH_GTEST "Should we run unit-tests (default yes)" ON)
 if(WITH_GTEST)
-  option(EXAMPLES_AS_TESTS "Should examples be used as tests? (default yes)" ON)
+  option(EXAMPLES_AS_TESTS "Should examples be used as tests? (default yes)" OFF)
         include(CheckIncludeFileCXX)
         check_include_file_cxx("gtest/gtest.h" GTEST_H_FOUND)
         if(GTEST_H_FOUND)
