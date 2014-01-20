@@ -220,6 +220,7 @@ void Racer::stepDynamicsAcc(double u_acc){
 }
 
 void Racer::glDraw(){
+#ifdef MT_GL
   double GLmatrix[16];
   ors::Transformation f;
   f.setZero();
@@ -246,6 +247,7 @@ void Racer::glDraw(){
   glColor(.1,.2,.2);
   glDrawBox(.02, .05, .03);
   glLoadIdentity();
+#endif
 }
 
 void Racer::glStaticDraw(void *classP){
