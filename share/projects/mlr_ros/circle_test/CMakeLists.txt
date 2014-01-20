@@ -1,11 +1,10 @@
 cmake_minimum_required(VERSION 2.4.6)
-project(circle_test)
 
 if(ROSBUILD)
 
 include(.sources.cmake)
 rosbuild_add_executable(circle_test ${SOURCES})
-target_link_libraries(circle_test Core Ors Gui)
+target_link_libraries(circle_test Core Ors Gui )
 
 #uncomment if you have defined messages
 #rosbuild_genmsg()
