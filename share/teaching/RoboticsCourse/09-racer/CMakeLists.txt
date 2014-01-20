@@ -4,6 +4,6 @@ set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
 
 add_executable(${NAME} main.cpp)
 
-target_link_libraries(${NAME} )
+target_link_libraries(${NAME} Ors Core Gui extern_SWIFT Racer)
 
 add_test(${NAME}_test ${NAME} --gtest_output=xml:${NAME}-unit.xml)

@@ -1,17 +1,9 @@
-add_subdirectory(./01-kinematics)
-add_subdirectory(./02-pegInAHole)
-add_subdirectory(./03-dynamics)
-add_subdirectory(./04-rrt)
-add_subdirectory(./05-car)
-add_subdirectory(./06-kalmanSLAM)
-add_subdirectory(./07-cartPole)
-add_subdirectory(./08-pinBalancing)
-add_subdirectory(./09-racer)
+set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
 
-add_subdirectory(./roboticsCourse10)
-add_subdirectory(./roboticsCourse11)
-add_subdirectory(./roboticsCourse12)
-add_subdirectory(./roboticsCourse3)
-add_subdirectory(./roboticsCourse6)
-add_subdirectory(./roboticsCourse8)
-add_subdirectory(./roboticsCourse9)
+# select what to compile
+include(.slicedef.cmake)
+
+foreach(DIR ${CURRENT_SLICE})
+add_subdirectory(${DIR})
+endforeach(DIR ${CURRENT_SLICE})
+
