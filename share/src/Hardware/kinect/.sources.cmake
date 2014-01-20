@@ -1,2 +1,2 @@
-set(SOURCES ./kinect.cpp
-./kinect.h)
+set(SOURCES ./kinect.h
+./kinect.cpp)

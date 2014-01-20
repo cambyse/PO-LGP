@@ -1,2 +1,2 @@
-set(SOURCES ./G4.h
-./G4.cpp)
+set(SOURCES ./G4.cpp
+./G4.h)

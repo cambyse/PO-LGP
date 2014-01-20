@@ -20,6 +20,11 @@ do
     echo -n > $tmpname
     # look for C++ source
     CPP_SOURCES=$(find . -maxdepth 1 -type f -name '*.cpp' -a ! -name 'main.*.cpp' -o -name '*.h' -o -name '*.c')
+    # check source dir, too
+    if [ -d src ]
+    then
+    	CPP_SOURCES+=$(find src -maxdepth 1 -type f -name '*.cpp' -a ! -name 'main.*.cpp' -o -name '*.h' -o -name '*.c')
+    fi
     if [ ! -z "$CPP_SOURCES" ]
     then
       echo "set(SOURCES ${CPP_SOURCES})" >> $tmpname

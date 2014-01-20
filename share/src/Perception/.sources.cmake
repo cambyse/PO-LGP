@@ -1,21 +1,21 @@
-set(SOURCES ./videoEncoder.cpp
-./opencv.cpp
-./keyframe.h
-./g4data.h
-./keyframe.cpp
-./perception.h
-./video_opencv.cpp
-./shapeFitter.cpp
-./g4data.cpp
+set(SOURCES ./pointcloud.h
 ./opencv.h
+./perception.h
+./keyframe.h
+./opencv.cpp
+./video_opencv.cpp
 ./libcolorseg.h
+./videoEncoder.h
+./g4data.h
 ./pointcloud.cpp
 ./perception.cpp
-./keyframer.h
+./keyframe.cpp
 ./keyframer.cpp
-./perception_views.cpp
-./videoEncoder.h
 ./shapeFitter.h
+./shapeFitter.cpp
 ./libcolorseg.cpp
-./vision.h
-./pointcloud.h)
+./videoEncoder.cpp
+./g4data.cpp
+./perception_views.cpp
+./keyframer.h
+./vision.h)

@@ -38,19 +38,22 @@ RM = /usr/bin/cmake -E remove -f
 # Escaping for special characters.
 EQUALS = =
 
+# The program to use to edit the cache.
+CMAKE_EDIT_COMMAND = /usr/bin/ccmake
+
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/peter/git/mlr/share
+CMAKE_SOURCE_DIR = /home/ingo/Source/mlr/share
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/peter/git/mlr/share
+CMAKE_BINARY_DIR = /home/ingo/Source/mlr/share
 
 #=============================================================================
 # Targets provided globally by CMake.
 
 # Special rule for the target edit_cache
 edit_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running interactive CMake command-line interface..."
-	/usr/bin/cmake -i .
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake cache editor..."
+	/usr/bin/ccmake -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : edit_cache
 
 # Special rule for the target edit_cache
@@ -79,14 +82,14 @@ test/fast: test
 
 # The main all target
 all: cmake_check_build_system
-	cd /home/peter/git/mlr/share && $(CMAKE_COMMAND) -E cmake_progress_start /home/peter/git/mlr/share/CMakeFiles /home/peter/git/mlr/share/examples/Motion/trajectoryExecution/CMakeFiles/progress.marks
-	cd /home/peter/git/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 examples/Motion/trajectoryExecution/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/peter/git/mlr/share/CMakeFiles 0
+	cd /home/ingo/Source/mlr/share && $(CMAKE_COMMAND) -E cmake_progress_start /home/ingo/Source/mlr/share/CMakeFiles /home/ingo/Source/mlr/share/examples/Motion/trajectoryExecution/CMakeFiles/progress.marks
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 examples/Motion/trajectoryExecution/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ingo/Source/mlr/share/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /home/peter/git/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 examples/Motion/trajectoryExecution/clean
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 examples/Motion/trajectoryExecution/clean
 .PHONY : clean
 
 # The main clean target
@@ -95,22 +98,22 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /home/peter/git/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 examples/Motion/trajectoryExecution/preinstall
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 examples/Motion/trajectoryExecution/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /home/peter/git/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 examples/Motion/trajectoryExecution/preinstall
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 examples/Motion/trajectoryExecution/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /home/peter/git/mlr/share && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /home/ingo/Source/mlr/share && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/rule:
-	cd /home/peter/git/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/rule
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/rule
 .PHONY : examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/rule
 
 # Convenience name for target.
@@ -119,7 +122,7 @@ x_trajectoryExecution: examples/Motion/trajectoryExecution/CMakeFiles/x_trajecto
 
 # fast build rule for target.
 x_trajectoryExecution/fast:
-	cd /home/peter/git/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build
 .PHONY : x_trajectoryExecution/fast
 
 __/dmp/dmp.o: __/dmp/dmp.cpp.o
@@ -127,7 +130,7 @@ __/dmp/dmp.o: __/dmp/dmp.cpp.o
 
 # target to build an object file
 __/dmp/dmp.cpp.o:
-	cd /home/peter/git/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/dmp/dmp.cpp.o
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/dmp/dmp.cpp.o
 .PHONY : __/dmp/dmp.cpp.o
 
 __/dmp/dmp.i: __/dmp/dmp.cpp.i
@@ -135,7 +138,7 @@ __/dmp/dmp.i: __/dmp/dmp.cpp.i
 
 # target to preprocess a source file
 __/dmp/dmp.cpp.i:
-	cd /home/peter/git/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/dmp/dmp.cpp.i
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/dmp/dmp.cpp.i
 .PHONY : __/dmp/dmp.cpp.i
 
 __/dmp/dmp.s: __/dmp/dmp.cpp.s
@@ -143,7 +146,7 @@ __/dmp/dmp.s: __/dmp/dmp.cpp.s
 
 # target to generate assembly for a file
 __/dmp/dmp.cpp.s:
-	cd /home/peter/git/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/dmp/dmp.cpp.s
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/dmp/dmp.cpp.s
 .PHONY : __/dmp/dmp.cpp.s
 
 __/mpc/mpc.o: __/mpc/mpc.cpp.o
@@ -151,7 +154,7 @@ __/mpc/mpc.o: __/mpc/mpc.cpp.o
 
 # target to build an object file
 __/mpc/mpc.cpp.o:
-	cd /home/peter/git/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/mpc/mpc.cpp.o
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/mpc/mpc.cpp.o
 .PHONY : __/mpc/mpc.cpp.o
 
 __/mpc/mpc.i: __/mpc/mpc.cpp.i
@@ -159,7 +162,7 @@ __/mpc/mpc.i: __/mpc/mpc.cpp.i
 
 # target to preprocess a source file
 __/mpc/mpc.cpp.i:
-	cd /home/peter/git/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/mpc/mpc.cpp.i
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/mpc/mpc.cpp.i
 .PHONY : __/mpc/mpc.cpp.i
 
 __/mpc/mpc.s: __/mpc/mpc.cpp.s
@@ -167,7 +170,7 @@ __/mpc/mpc.s: __/mpc/mpc.cpp.s
 
 # target to generate assembly for a file
 __/mpc/mpc.cpp.s:
-	cd /home/peter/git/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/mpc/mpc.cpp.s
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/mpc/mpc.cpp.s
 .PHONY : __/mpc/mpc.cpp.s
 
 __/pfc/mobject.o: __/pfc/mobject.cpp.o
@@ -175,7 +178,7 @@ __/pfc/mobject.o: __/pfc/mobject.cpp.o
 
 # target to build an object file
 __/pfc/mobject.cpp.o:
-	cd /home/peter/git/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/pfc/mobject.cpp.o
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/pfc/mobject.cpp.o
 .PHONY : __/pfc/mobject.cpp.o
 
 __/pfc/mobject.i: __/pfc/mobject.cpp.i
@@ -183,7 +186,7 @@ __/pfc/mobject.i: __/pfc/mobject.cpp.i
 
 # target to preprocess a source file
 __/pfc/mobject.cpp.i:
-	cd /home/peter/git/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/pfc/mobject.cpp.i
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/pfc/mobject.cpp.i
 .PHONY : __/pfc/mobject.cpp.i
 
 __/pfc/mobject.s: __/pfc/mobject.cpp.s
@@ -191,7 +194,7 @@ __/pfc/mobject.s: __/pfc/mobject.cpp.s
 
 # target to generate assembly for a file
 __/pfc/mobject.cpp.s:
-	cd /home/peter/git/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/pfc/mobject.cpp.s
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/pfc/mobject.cpp.s
 .PHONY : __/pfc/mobject.cpp.s
 
 __/pfc/pfc.o: __/pfc/pfc.cpp.o
@@ -199,7 +202,7 @@ __/pfc/pfc.o: __/pfc/pfc.cpp.o
 
 # target to build an object file
 __/pfc/pfc.cpp.o:
-	cd /home/peter/git/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/pfc/pfc.cpp.o
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/pfc/pfc.cpp.o
 .PHONY : __/pfc/pfc.cpp.o
 
 __/pfc/pfc.i: __/pfc/pfc.cpp.i
@@ -207,7 +210,7 @@ __/pfc/pfc.i: __/pfc/pfc.cpp.i
 
 # target to preprocess a source file
 __/pfc/pfc.cpp.i:
-	cd /home/peter/git/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/pfc/pfc.cpp.i
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/pfc/pfc.cpp.i
 .PHONY : __/pfc/pfc.cpp.i
 
 __/pfc/pfc.s: __/pfc/pfc.cpp.s
@@ -215,7 +218,7 @@ __/pfc/pfc.s: __/pfc/pfc.cpp.s
 
 # target to generate assembly for a file
 __/pfc/pfc.cpp.s:
-	cd /home/peter/git/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/pfc/pfc.cpp.s
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/pfc/pfc.cpp.s
 .PHONY : __/pfc/pfc.cpp.s
 
 __/splines/spline.o: __/splines/spline.cpp.o
@@ -223,7 +226,7 @@ __/splines/spline.o: __/splines/spline.cpp.o
 
 # target to build an object file
 __/splines/spline.cpp.o:
-	cd /home/peter/git/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/splines/spline.cpp.o
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/splines/spline.cpp.o
 .PHONY : __/splines/spline.cpp.o
 
 __/splines/spline.i: __/splines/spline.cpp.i
@@ -231,7 +234,7 @@ __/splines/spline.i: __/splines/spline.cpp.i
 
 # target to preprocess a source file
 __/splines/spline.cpp.i:
-	cd /home/peter/git/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/splines/spline.cpp.i
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/splines/spline.cpp.i
 .PHONY : __/splines/spline.cpp.i
 
 __/splines/spline.s: __/splines/spline.cpp.s
@@ -239,7 +242,7 @@ __/splines/spline.s: __/splines/spline.cpp.s
 
 # target to generate assembly for a file
 __/splines/spline.cpp.s:
-	cd /home/peter/git/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/splines/spline.cpp.s
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/__/splines/spline.cpp.s
 .PHONY : __/splines/spline.cpp.s
 
 main.o: main.cpp.o
@@ -247,7 +250,7 @@ main.o: main.cpp.o
 
 # target to build an object file
 main.cpp.o:
-	cd /home/peter/git/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/main.cpp.o
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/main.cpp.o
 .PHONY : main.cpp.o
 
 main.i: main.cpp.i
@@ -255,7 +258,7 @@ main.i: main.cpp.i
 
 # target to preprocess a source file
 main.cpp.i:
-	cd /home/peter/git/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/main.cpp.i
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/main.cpp.i
 .PHONY : main.cpp.i
 
 main.s: main.cpp.s
@@ -263,7 +266,7 @@ main.s: main.cpp.s
 
 # target to generate assembly for a file
 main.cpp.s:
-	cd /home/peter/git/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/main.cpp.s
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/build.make examples/Motion/trajectoryExecution/CMakeFiles/x_trajectoryExecution.dir/main.cpp.s
 .PHONY : main.cpp.s
 
 # Help Target
@@ -305,6 +308,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /home/peter/git/mlr/share && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /home/ingo/Source/mlr/share && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

@@ -38,19 +38,22 @@ RM = /usr/bin/cmake -E remove -f
 # Escaping for special characters.
 EQUALS = =
 
+# The program to use to edit the cache.
+CMAKE_EDIT_COMMAND = /usr/bin/ccmake
+
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/mtoussai/git/mlr/share
+CMAKE_SOURCE_DIR = /home/ingo/Source/mlr/share
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/mtoussai/git/mlr/share
+CMAKE_BINARY_DIR = /home/ingo/Source/mlr/share
 
 #=============================================================================
 # Targets provided globally by CMake.
 
 # Special rule for the target edit_cache
 edit_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running interactive CMake command-line interface..."
-	/usr/bin/cmake -i .
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake cache editor..."
+	/usr/bin/ccmake -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : edit_cache
 
 # Special rule for the target edit_cache
@@ -79,14 +82,14 @@ test/fast: test
 
 # The main all target
 all: cmake_check_build_system
-	cd /home/mtoussai/git/mlr/share && $(CMAKE_COMMAND) -E cmake_progress_start /home/mtoussai/git/mlr/share/CMakeFiles /home/mtoussai/git/mlr/share/examples/Perception/vision-opencvRaw/CMakeFiles/progress.marks
-	cd /home/mtoussai/git/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 examples/Perception/vision-opencvRaw/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/mtoussai/git/mlr/share/CMakeFiles 0
+	cd /home/ingo/Source/mlr/share && $(CMAKE_COMMAND) -E cmake_progress_start /home/ingo/Source/mlr/share/CMakeFiles /home/ingo/Source/mlr/share/examples/Perception/vision-opencvRaw/CMakeFiles/progress.marks
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 examples/Perception/vision-opencvRaw/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ingo/Source/mlr/share/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /home/mtoussai/git/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 examples/Perception/vision-opencvRaw/clean
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 examples/Perception/vision-opencvRaw/clean
 .PHONY : clean
 
 # The main clean target
@@ -95,22 +98,22 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /home/mtoussai/git/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 examples/Perception/vision-opencvRaw/preinstall
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 examples/Perception/vision-opencvRaw/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /home/mtoussai/git/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 examples/Perception/vision-opencvRaw/preinstall
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 examples/Perception/vision-opencvRaw/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /home/mtoussai/git/mlr/share && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /home/ingo/Source/mlr/share && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 examples/Perception/vision-opencvRaw/CMakeFiles/x_vision-opencvRaw.dir/rule:
-	cd /home/mtoussai/git/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 examples/Perception/vision-opencvRaw/CMakeFiles/x_vision-opencvRaw.dir/rule
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 examples/Perception/vision-opencvRaw/CMakeFiles/x_vision-opencvRaw.dir/rule
 .PHONY : examples/Perception/vision-opencvRaw/CMakeFiles/x_vision-opencvRaw.dir/rule
 
 # Convenience name for target.
@@ -119,7 +122,7 @@ x_vision-opencvRaw: examples/Perception/vision-opencvRaw/CMakeFiles/x_vision-ope
 
 # fast build rule for target.
 x_vision-opencvRaw/fast:
-	cd /home/mtoussai/git/mlr/share && $(MAKE) -f examples/Perception/vision-opencvRaw/CMakeFiles/x_vision-opencvRaw.dir/build.make examples/Perception/vision-opencvRaw/CMakeFiles/x_vision-opencvRaw.dir/build
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f examples/Perception/vision-opencvRaw/CMakeFiles/x_vision-opencvRaw.dir/build.make examples/Perception/vision-opencvRaw/CMakeFiles/x_vision-opencvRaw.dir/build
 .PHONY : x_vision-opencvRaw/fast
 
 main.o: main.cpp.o
@@ -127,7 +130,7 @@ main.o: main.cpp.o
 
 # target to build an object file
 main.cpp.o:
-	cd /home/mtoussai/git/mlr/share && $(MAKE) -f examples/Perception/vision-opencvRaw/CMakeFiles/x_vision-opencvRaw.dir/build.make examples/Perception/vision-opencvRaw/CMakeFiles/x_vision-opencvRaw.dir/main.cpp.o
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f examples/Perception/vision-opencvRaw/CMakeFiles/x_vision-opencvRaw.dir/build.make examples/Perception/vision-opencvRaw/CMakeFiles/x_vision-opencvRaw.dir/main.cpp.o
 .PHONY : main.cpp.o
 
 main.i: main.cpp.i
@@ -135,7 +138,7 @@ main.i: main.cpp.i
 
 # target to preprocess a source file
 main.cpp.i:
-	cd /home/mtoussai/git/mlr/share && $(MAKE) -f examples/Perception/vision-opencvRaw/CMakeFiles/x_vision-opencvRaw.dir/build.make examples/Perception/vision-opencvRaw/CMakeFiles/x_vision-opencvRaw.dir/main.cpp.i
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f examples/Perception/vision-opencvRaw/CMakeFiles/x_vision-opencvRaw.dir/build.make examples/Perception/vision-opencvRaw/CMakeFiles/x_vision-opencvRaw.dir/main.cpp.i
 .PHONY : main.cpp.i
 
 main.s: main.cpp.s
@@ -143,7 +146,7 @@ main.s: main.cpp.s
 
 # target to generate assembly for a file
 main.cpp.s:
-	cd /home/mtoussai/git/mlr/share && $(MAKE) -f examples/Perception/vision-opencvRaw/CMakeFiles/x_vision-opencvRaw.dir/build.make examples/Perception/vision-opencvRaw/CMakeFiles/x_vision-opencvRaw.dir/main.cpp.s
+	cd /home/ingo/Source/mlr/share && $(MAKE) -f examples/Perception/vision-opencvRaw/CMakeFiles/x_vision-opencvRaw.dir/build.make examples/Perception/vision-opencvRaw/CMakeFiles/x_vision-opencvRaw.dir/main.cpp.s
 .PHONY : main.cpp.s
 
 # Help Target
@@ -170,6 +173,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /home/mtoussai/git/mlr/share && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /home/ingo/Source/mlr/share && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 
