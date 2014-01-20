@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8.1)
 project(MLR_SHARE)
 cmake_policy(SET CMP0015 NEW)
+cmake_policy(SET CMP0002 OLD)
 
 # default release type
 if(CMAKE_BUILD_TYPE STREQUAL "")
@@ -87,6 +88,17 @@ if(WITH_PYTHON)
 else(WITH_PYTHON)
    set(PYTHON_OK OFF) # remove from cache, if earlier configured with python 
 endif(WITH_PYTHON)
+
+option(WITH_ROS "Use ROS, if available" ON)
+if(WITH_ROS)
+  message(STATUS "Looking for rosbuild")
+  find_file(ROSBUILD rosbuild.cmake HINTS $ENV{ROS_ROOT}/core/rosbuild/)
+  if(ROSBUILD)
+    message(STATUS "rosbuild found at ${ROSBUILD}")
+  else(ROSBUILD)
+    message(STATUS "rosbuild not found, not compiling anything that requires it")
+  endif(ROSBUILD)
+endif(WITH_ROS)
 
 # common configuration
 include_directories(src)
