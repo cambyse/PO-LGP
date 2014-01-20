@@ -5,7 +5,8 @@ cmake_policy(SET CMP0002 OLD)
 
 # default release type
 if(CMAKE_BUILD_TYPE STREQUAL "")
-set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Defaults to RelWithDebInfo" FORCE)
+  set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Defaults to RelWithDebInfo" FORCE)
+  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -DNDEBUG")
 endif(CMAKE_BUILD_TYPE STREQUAL "")
 
 # path for find macros
