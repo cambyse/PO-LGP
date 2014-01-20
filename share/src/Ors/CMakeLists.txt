@@ -15,7 +15,12 @@ if(WITH_PHYSX)
   check_include_file_cxx("physx/PxPhysicsAPI.h" PHYSX_H_FOUND)
 
   if(PHYSX_H_FOUND)
-    add_definitions(-DMT_PHYSX -D_DEBUG)
+    add_definitions(-DMT_PHYSX)
+    # check if we already have a debug flag set
+    string(FIND ${CMAKE_BUILD_TYPE} "DEBUG" DEBUG_BUILD)
+    if(NOT DEBUG_BUILD)
+      add_definitions(-D_DEBUG)
+    endif(NOT DEBUG_BUILD)
     include_directories(${CMAKE_REQUIRED_INCLUDES})
     link_directories(${PHYSX_ROOT}/lib)
     set(PHYSX_LIBRARIES  
