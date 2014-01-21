@@ -85,7 +85,8 @@ target_link_libraries(Ors LINK_PUBLIC ${PHYSX_LIBRARIES} LINK_PRIVATE Algo Core 
 
 # Python wrappers
 if(PYTHON_OK)
-  set(SWIG_SOURCES ors.i)
+  set(SWIG_SOURCES _orspy.i)
+  set(NAME Ors)
   include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${PYTHON_INCLUDES})
   set_source_files_properties(${SWIG_SOURCES} PROPERTIES CPLUSPLUS ON)
   string(TOLOWER ${NAME}py PY)

@@ -17,8 +17,8 @@ created: <2013-03-20 Wed>
 %include "std_string.i"
 
 %include "Core/array_typemaps.i"
-%import "Core/core.i"
-%import "Gui/gui.i"
+%import "Core/_corepy.i"
+%import "Gui/_guipy.i"
 
 //===========================================================================
 %module orspy

@@ -46,11 +46,12 @@ endif(GTEST_H_FOUND)
 
 # Python wrappers
 if(PYTHON_OK)
-  set(SWIG_SOURCES core.i)
+  set(SWIG_SOURCES _corepy.i)
   include_directories(${PYTHON_INCLUDES})
   set_source_files_properties(${SWIG_SOURCES} PROPERTIES CPLUSPLUS ON)
   string(TOLOWER ${NAME}py PY)
   set(CMAKE_SWIG_FLAGS -module _${PY})
   swig_add_module(${PY} python ${SWIG_SOURCES})
   swig_link_libraries(${PY} ${NAME} ${PYTHON_LIBRARIES})
+  message(STATUS "Python deps: ${SWIG_MODULE_${PY}_EXTRA_DEPS}")
 endif(PYTHON_OK)

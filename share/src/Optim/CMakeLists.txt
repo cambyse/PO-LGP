@@ -10,7 +10,7 @@ add_definitions(-DMT_Core)
 
 # Python wrappers
 if(PYTHON_OK)
-  set(SWIG_SOURCES optim.i)
+  set(SWIG_SOURCES _optimpy.i)
   include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${PYTHON_INCLUDES})
   set_source_files_properties(${SWIG_SOURCES} PROPERTIES CPLUSPLUS ON)
   string(TOLOWER ${NAME}py PY)
