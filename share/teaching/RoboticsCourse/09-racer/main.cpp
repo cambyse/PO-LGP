@@ -193,10 +193,10 @@ int main(int argc,char **argv){
 //  testDraw();
 //  TestMove();
 //  CheckGradients();
-//  TestControl();
+  TestControl();
 
 //  FollowSignal();
-  FollowIMU();
+//  FollowIMU();
 
   return 0;
 }

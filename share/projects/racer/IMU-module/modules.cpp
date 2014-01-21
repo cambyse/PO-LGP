@@ -1,10 +1,13 @@
 #include "modules.h"
 
 #include <Algo/kalman.h>
+#include <Core/thread.h>
 
 #include <Hardware/racer/racer.h>
 #include <Hardware/racer/MD25.h>
 #include <Hardware/racer/MPU9150.h>
+
+Mutex i2cmutex;
 
 //===========================================================================
 //
@@ -19,14 +22,18 @@ struct sIMU_Poller{
 void IMU_Poller::open(){
   s = new sIMU_Poller;
   s->imu = new MPU9150();
+  i2cmutex.lock();
   if(s->imu->open()) std::cout << "Open connection successfully" << std::endl;
+  i2cmutex.unlock();
   MT::open(s->fil, "nogit-data/IMU_Poller.dat");
   s->fil <<"time acc0 acc1 acc2 gyro0 gyro1 gyro2" <<endl;
   MT::arrayBrackets="  ";
 }
 
 void IMU_Poller::close(){
+  i2cmutex.lock();
   s->imu->close();
+  i2cmutex.unlock();
   s->fil.close();
   delete s;
   s=NULL;
@@ -34,7 +41,9 @@ void IMU_Poller::close(){
 
 void IMU_Poller::step(){
   double time=MT::realTime();
+  i2cmutex.lock();
   s->imu->step();
+  i2cmutex.unlock();
   imuData.writeAccess();
   imuData().resize(7);
   imuData()(0) = time;
@@ -43,6 +52,70 @@ void IMU_Poller::step(){
   s->fil <<imuData() <<endl;
   imuData.deAccess();
 };
+
+
+//===========================================================================
+//
+// Motors interface
+//
+
+struct sMotors{
+  MD25* motor;
+  ofstream fil;
+  double lastTime;
+  arr lastEnc;
+};
+
+void Motors::open(){
+  s = new sMotors;
+  s->motor = new MD25();
+  i2cmutex.lock();
+  if (s->motor->open()) std::cout << "Open connection to MD25 successfully " << std::endl;
+  i2cmutex.unlock();
+  MT::open(s->fil, "nogit-data/Motors.dat");
+  s->fil <<"time enc0 enc1 vel0 vel1 acc dtime denc0 denc1" <<endl;
+  MT::arrayBrackets="  ";
+}
+
+void Motors::step(){
+  double time=MT::realTime();
+  arr u = controls.get();
+  if(!u.N) return;
+  CHECK(u.N==3," need u=(vel1, vel2, acc)");
+
+  if(u(2)<0) u*=-1.;
+  int vel0=128 + int(u(0));  if(vel0<0) vel0=0;  if(vel0>255) vel0=255;
+  int vel1=128 + int(u(1));  if(vel1<0) vel1=0;  if(vel1>255) vel1=255;
+  int acc=u(2);
+  int32_t encoder1 = 0;
+  int32_t encoder2 = 0;
+  i2cmutex.lock();
+  s->motor->setMotorSpeedAndAcceleration("", vel0, vel1, acc);
+  s->motor->readEncoder1(encoder1);
+  s->motor->readEncoder2(encoder2);
+  i2cmutex.unlock();
+
+  encoderData.writeAccess();
+  encoderData().resize(3);
+  encoderData()(0) = time;
+  encoderData()(1) = 0.11*encoder1;
+  encoderData()(2) = 0.11*encoder2;
+  s->fil <<encoderData() <<' ' <<u;
+  if(s->lastEnc.N) s->fil <<(encoderData()-s->lastEnc)/(time-s->lastTime) <<endl;
+  else s->fil <<"0 0 0" <<endl;
+  s->lastEnc=encoderData();
+  s->lastTime=time;
+  encoderData.deAccess();
+}
+
+void Motors::close(){
+  i2cmutex.lock();
+  s->motor->close();
+  i2cmutex.unlock();
+  s->fil.close();
+  delete s;
+  s=NULL;
+}
 
 
 //===========================================================================
@@ -59,7 +132,7 @@ struct sKalmanFilter{
 
 void KalmanFilter::open(){
   s = new sKalmanFilter;
-  s->R.q(1)=MT_PI/2.;
+//  s->R.q(1)=MT_PI/2.;
   s->K.initialize(cat(s->R.q, s->R.q_dot),1.*eye(4));
   s->time=0.;
   MT::open(s->fil, "nogit-data/KalmanFilter.dat");
@@ -135,33 +208,6 @@ void RacerDisplay::step(){
 }
 
 void RacerDisplay::close(){
-  delete s;
-  s=NULL;
-}
-
-//===========================================================================
-//
-// MotorController
-//
-
-struct sMotorController{
-  Racer R;
-};
-
-void MotorController::open(){
-  s = new sMotorController;
-}
-
-void MotorController::step(){
-  arr x = stateEstimate.get();
-  if(!x.N) return;
-
-  s->R.q = x.sub(0,1);
-  s->R.q_dot = x.sub(2,3);
-  s->R.gl.update();
-}
-
-void MotorController::close(){
   delete s;
   s=NULL;
 }
