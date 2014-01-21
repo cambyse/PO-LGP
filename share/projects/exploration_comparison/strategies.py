@@ -1,4 +1,5 @@
 import random
+import math
 import scipy.stats as ss
 
 
@@ -51,3 +52,47 @@ def strategy_expected_change_of_entropy(belief):
             max_diff = diff
             idx = i
     return idx
+
+
+class strategy_sequential(object):
+    def __init__(self):
+        self.last_selection = -1
+
+    def __call__(self, belief):
+        self.last_selection = (self.last_selection + 1) % len(belief)
+        return self.last_selection
+
+
+class StrategyUCB(object):
+    """Upper Confident Bound strategy.
+
+    See Marc's lecture on "Bandits, Global Optimization, AL and Bayesian RL"
+
+    """
+    def __init__(self, not_pushed_yet):
+        self.not_pushed_yet = not_pushed_yet
+
+    def __call__(self, belief):
+        # we push every object once to estimate the reward
+        if self.not_pushed_yet:
+            choice = random.choice(self.not_pushed_yet)
+            self.not_pushed_yet -= choice
+            return choice
+
+        # push the "best" door
+        else:
+            # play machine i that maximizes: rewarad_i + srqt(2 * ln n / n_i)
+            # reward = average reward of machine i
+
+            # n = number of total rounds
+            n = sum(bel.opened + bel.closed - 2 for bel in belief)
+            ucb_score = []
+            for bel in belief:
+                # we could use the expected change of entropy here
+                reward = bel.entropy()
+                # n_i = how often did we push door i
+                n_i = bel.opened + bel.closed - 2
+                score = reward + math.sqrt(2 * math.log(n) / n_i)
+                ucb_score.append(score)
+            print(ucb_score)
+            max(ucb_score)
