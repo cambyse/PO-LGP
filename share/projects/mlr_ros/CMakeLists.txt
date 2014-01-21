@@ -6,9 +6,11 @@ set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
 include(.slicedef.cmake)
 
 if(ROSBUILD)
-  include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
-  set(ENV{ROS_PACKAGE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}:$ENV{ROS_PACKAGE_PATH})
+  set(ENV{ROS_PACKAGE_PATH} ${CMAKE_SOURCE_DIR}/projects/mlr_ros:$ENV{ROS_PACKAGE_PATH} FORCE)
   set(ROSBUILD_DONT_REDEFINE_PROJECT ON)
+  include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+
+  message(STATUS "ROS Variables: ROS_ROOT: $ENV{ROS_ROOT}, ROS_PACKAGE_PATH: $ENV{ROS_PACKAGE_PATH}, ROS_SETUP: $ENV{ROS_SETUP}")
 
   rosbuild_init()
   # all 
