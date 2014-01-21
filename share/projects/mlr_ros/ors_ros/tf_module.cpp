@@ -32,14 +32,14 @@ void RosTf::step() {
   ros::Time timestamp(ros::Time::now());
   std::ostringstream name;
 
-  for(ors::Joint* j : ((ors::KinematicWorld&) w).joints) {
+  for(ors::Body* b : ((ors::KinematicWorld&) w).bodies) {
       name.str("");
-      if(((const char*)j->name) != NULL) {
-          name << (const char*)j->name;
+      if(((const char*)b->name) != NULL) {
+          name << (const char*)b->name;
       } else {
-          name << "joint-" << j->index;
+          name << "body-" << b->index;
       }
-      tf_sender->sendTransform(tf::StampedTransform(convert(j->X), timestamp, "world",
+      tf_sender->sendTransform(tf::StampedTransform(convert(b->X), timestamp, "world",
                                                     name.str()));
   }
 }
