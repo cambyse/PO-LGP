@@ -8,6 +8,8 @@ set(CURRENT_SLICE
 07-cartPole
 08-pinBalancing
 09-racer
+10-racerRegression
+11-racerSearch
 roboticsCourse10
 roboticsCourse11
 roboticsCourse12

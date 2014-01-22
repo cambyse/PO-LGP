@@ -1,5 +1,5 @@
-set(SOURCES ./mobject.cpp
-./main.cpp
-./mobject.h
+set(SOURCES ./main.cpp
+./pfc.h
 ./pfc.cpp
-./pfc.h)
+./mobject.h
+./mobject.cpp)

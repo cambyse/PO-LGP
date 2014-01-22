@@ -42,10 +42,10 @@ EQUALS = =
 CMAKE_EDIT_COMMAND = /usr/bin/ccmake
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/ingo/Source/mlr/share
+CMAKE_SOURCE_DIR = /home/mtoussai/git/mlr/share
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/ingo/Source/mlr/share
+CMAKE_BINARY_DIR = /home/mtoussai/git/mlr/share
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -82,6 +82,16 @@ install/local: preinstall
 install/local/fast: install/local
 .PHONY : install/local/fast
 
+# Special rule for the target install/strip
+install/strip: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
+	/usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip
+
+# Special rule for the target install/strip
+install/strip/fast: install/strip
+.PHONY : install/strip/fast
+
 # Special rule for the target list_install_components
 list_install_components:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Available install components are: \"Unspecified\""
@@ -113,14 +123,14 @@ test/fast: test
 
 # The main all target
 all: cmake_check_build_system
-	cd /home/ingo/Source/mlr/share && $(CMAKE_COMMAND) -E cmake_progress_start /home/ingo/Source/mlr/share/CMakeFiles /home/ingo/Source/mlr/share/src/Hardware/racer/CMakeFiles/progress.marks
-	cd /home/ingo/Source/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 src/Hardware/racer/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/ingo/Source/mlr/share/CMakeFiles 0
+	cd /home/mtoussai/git/mlr/share && $(CMAKE_COMMAND) -E cmake_progress_start /home/mtoussai/git/mlr/share/CMakeFiles /home/mtoussai/git/mlr/share/src/Hardware/racer/CMakeFiles/progress.marks
+	cd /home/mtoussai/git/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 src/Hardware/racer/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/mtoussai/git/mlr/share/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /home/ingo/Source/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 src/Hardware/racer/clean
+	cd /home/mtoussai/git/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 src/Hardware/racer/clean
 .PHONY : clean
 
 # The main clean target
@@ -129,22 +139,22 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /home/ingo/Source/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 src/Hardware/racer/preinstall
+	cd /home/mtoussai/git/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 src/Hardware/racer/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /home/ingo/Source/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 src/Hardware/racer/preinstall
+	cd /home/mtoussai/git/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 src/Hardware/racer/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /home/ingo/Source/mlr/share && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /home/mtoussai/git/mlr/share && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 src/Hardware/racer/CMakeFiles/Hardware_racer.dir/rule:
-	cd /home/ingo/Source/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 src/Hardware/racer/CMakeFiles/Hardware_racer.dir/rule
+	cd /home/mtoussai/git/mlr/share && $(MAKE) -f CMakeFiles/Makefile2 src/Hardware/racer/CMakeFiles/Hardware_racer.dir/rule
 .PHONY : src/Hardware/racer/CMakeFiles/Hardware_racer.dir/rule
 
 # Convenience name for target.
@@ -153,7 +163,7 @@ Hardware_racer: src/Hardware/racer/CMakeFiles/Hardware_racer.dir/rule
 
 # fast build rule for target.
 Hardware_racer/fast:
-	cd /home/ingo/Source/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build
+	cd /home/mtoussai/git/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build
 .PHONY : Hardware_racer/fast
 
 Connection.o: Connection.cpp.o
@@ -161,7 +171,7 @@ Connection.o: Connection.cpp.o
 
 # target to build an object file
 Connection.cpp.o:
-	cd /home/ingo/Source/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/Connection.cpp.o
+	cd /home/mtoussai/git/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/Connection.cpp.o
 .PHONY : Connection.cpp.o
 
 Connection.i: Connection.cpp.i
@@ -169,7 +179,7 @@ Connection.i: Connection.cpp.i
 
 # target to preprocess a source file
 Connection.cpp.i:
-	cd /home/ingo/Source/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/Connection.cpp.i
+	cd /home/mtoussai/git/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/Connection.cpp.i
 .PHONY : Connection.cpp.i
 
 Connection.s: Connection.cpp.s
@@ -177,7 +187,7 @@ Connection.s: Connection.cpp.s
 
 # target to generate assembly for a file
 Connection.cpp.s:
-	cd /home/ingo/Source/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/Connection.cpp.s
+	cd /home/mtoussai/git/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/Connection.cpp.s
 .PHONY : Connection.cpp.s
 
 Controller.o: Controller.cpp.o
@@ -185,7 +195,7 @@ Controller.o: Controller.cpp.o
 
 # target to build an object file
 Controller.cpp.o:
-	cd /home/ingo/Source/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/Controller.cpp.o
+	cd /home/mtoussai/git/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/Controller.cpp.o
 .PHONY : Controller.cpp.o
 
 Controller.i: Controller.cpp.i
@@ -193,7 +203,7 @@ Controller.i: Controller.cpp.i
 
 # target to preprocess a source file
 Controller.cpp.i:
-	cd /home/ingo/Source/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/Controller.cpp.i
+	cd /home/mtoussai/git/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/Controller.cpp.i
 .PHONY : Controller.cpp.i
 
 Controller.s: Controller.cpp.s
@@ -201,7 +211,7 @@ Controller.s: Controller.cpp.s
 
 # target to generate assembly for a file
 Controller.cpp.s:
-	cd /home/ingo/Source/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/Controller.cpp.s
+	cd /home/mtoussai/git/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/Controller.cpp.s
 .PHONY : Controller.cpp.s
 
 MD25.o: MD25.cpp.o
@@ -209,7 +219,7 @@ MD25.o: MD25.cpp.o
 
 # target to build an object file
 MD25.cpp.o:
-	cd /home/ingo/Source/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/MD25.cpp.o
+	cd /home/mtoussai/git/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/MD25.cpp.o
 .PHONY : MD25.cpp.o
 
 MD25.i: MD25.cpp.i
@@ -217,7 +227,7 @@ MD25.i: MD25.cpp.i
 
 # target to preprocess a source file
 MD25.cpp.i:
-	cd /home/ingo/Source/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/MD25.cpp.i
+	cd /home/mtoussai/git/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/MD25.cpp.i
 .PHONY : MD25.cpp.i
 
 MD25.s: MD25.cpp.s
@@ -225,7 +235,7 @@ MD25.s: MD25.cpp.s
 
 # target to generate assembly for a file
 MD25.cpp.s:
-	cd /home/ingo/Source/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/MD25.cpp.s
+	cd /home/mtoussai/git/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/MD25.cpp.s
 .PHONY : MD25.cpp.s
 
 MD25Controller.o: MD25Controller.cpp.o
@@ -233,7 +243,7 @@ MD25Controller.o: MD25Controller.cpp.o
 
 # target to build an object file
 MD25Controller.cpp.o:
-	cd /home/ingo/Source/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/MD25Controller.cpp.o
+	cd /home/mtoussai/git/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/MD25Controller.cpp.o
 .PHONY : MD25Controller.cpp.o
 
 MD25Controller.i: MD25Controller.cpp.i
@@ -241,7 +251,7 @@ MD25Controller.i: MD25Controller.cpp.i
 
 # target to preprocess a source file
 MD25Controller.cpp.i:
-	cd /home/ingo/Source/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/MD25Controller.cpp.i
+	cd /home/mtoussai/git/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/MD25Controller.cpp.i
 .PHONY : MD25Controller.cpp.i
 
 MD25Controller.s: MD25Controller.cpp.s
@@ -249,7 +259,7 @@ MD25Controller.s: MD25Controller.cpp.s
 
 # target to generate assembly for a file
 MD25Controller.cpp.s:
-	cd /home/ingo/Source/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/MD25Controller.cpp.s
+	cd /home/mtoussai/git/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/MD25Controller.cpp.s
 .PHONY : MD25Controller.cpp.s
 
 MPU9150.o: MPU9150.cpp.o
@@ -257,7 +267,7 @@ MPU9150.o: MPU9150.cpp.o
 
 # target to build an object file
 MPU9150.cpp.o:
-	cd /home/ingo/Source/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/MPU9150.cpp.o
+	cd /home/mtoussai/git/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/MPU9150.cpp.o
 .PHONY : MPU9150.cpp.o
 
 MPU9150.i: MPU9150.cpp.i
@@ -265,7 +275,7 @@ MPU9150.i: MPU9150.cpp.i
 
 # target to preprocess a source file
 MPU9150.cpp.i:
-	cd /home/ingo/Source/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/MPU9150.cpp.i
+	cd /home/mtoussai/git/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/MPU9150.cpp.i
 .PHONY : MPU9150.cpp.i
 
 MPU9150.s: MPU9150.cpp.s
@@ -273,7 +283,7 @@ MPU9150.s: MPU9150.cpp.s
 
 # target to generate assembly for a file
 MPU9150.cpp.s:
-	cd /home/ingo/Source/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/MPU9150.cpp.s
+	cd /home/mtoussai/git/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/MPU9150.cpp.s
 .PHONY : MPU9150.cpp.s
 
 MPU9150Controller.o: MPU9150Controller.cpp.o
@@ -281,7 +291,7 @@ MPU9150Controller.o: MPU9150Controller.cpp.o
 
 # target to build an object file
 MPU9150Controller.cpp.o:
-	cd /home/ingo/Source/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/MPU9150Controller.cpp.o
+	cd /home/mtoussai/git/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/MPU9150Controller.cpp.o
 .PHONY : MPU9150Controller.cpp.o
 
 MPU9150Controller.i: MPU9150Controller.cpp.i
@@ -289,7 +299,7 @@ MPU9150Controller.i: MPU9150Controller.cpp.i
 
 # target to preprocess a source file
 MPU9150Controller.cpp.i:
-	cd /home/ingo/Source/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/MPU9150Controller.cpp.i
+	cd /home/mtoussai/git/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/MPU9150Controller.cpp.i
 .PHONY : MPU9150Controller.cpp.i
 
 MPU9150Controller.s: MPU9150Controller.cpp.s
@@ -297,7 +307,7 @@ MPU9150Controller.s: MPU9150Controller.cpp.s
 
 # target to generate assembly for a file
 MPU9150Controller.cpp.s:
-	cd /home/ingo/Source/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/MPU9150Controller.cpp.s
+	cd /home/mtoussai/git/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/MPU9150Controller.cpp.s
 .PHONY : MPU9150Controller.cpp.s
 
 racer.o: racer.cpp.o
@@ -305,7 +315,7 @@ racer.o: racer.cpp.o
 
 # target to build an object file
 racer.cpp.o:
-	cd /home/ingo/Source/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/racer.cpp.o
+	cd /home/mtoussai/git/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/racer.cpp.o
 .PHONY : racer.cpp.o
 
 racer.i: racer.cpp.i
@@ -313,7 +323,7 @@ racer.i: racer.cpp.i
 
 # target to preprocess a source file
 racer.cpp.i:
-	cd /home/ingo/Source/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/racer.cpp.i
+	cd /home/mtoussai/git/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/racer.cpp.i
 .PHONY : racer.cpp.i
 
 racer.s: racer.cpp.s
@@ -321,7 +331,7 @@ racer.s: racer.cpp.s
 
 # target to generate assembly for a file
 racer.cpp.s:
-	cd /home/ingo/Source/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/racer.cpp.s
+	cd /home/mtoussai/git/mlr/share && $(MAKE) -f src/Hardware/racer/CMakeFiles/Hardware_racer.dir/build.make src/Hardware/racer/CMakeFiles/Hardware_racer.dir/racer.cpp.s
 .PHONY : racer.cpp.s
 
 # Help Target
@@ -334,6 +344,7 @@ help:
 	@echo "... edit_cache"
 	@echo "... install"
 	@echo "... install/local"
+	@echo "... install/strip"
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
 	@echo "... test"
@@ -369,6 +380,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /home/ingo/Source/mlr/share && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /home/mtoussai/git/mlr/share && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

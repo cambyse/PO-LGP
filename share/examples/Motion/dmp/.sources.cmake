@@ -1,3 +1,3 @@
-set(SOURCES ./main.cpp
-./dmp.h
-./dmp.cpp)
+set(SOURCES ./dmp.cpp
+./main.cpp
+./dmp.h)
