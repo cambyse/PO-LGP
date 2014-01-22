@@ -48,7 +48,7 @@ void TestControl(){
   Kalman K;
   K.initialize(cat(R.q, R.q_dot),1.*eye(4)); //correct initialization...
 
-  for (uint t=0; t<1000; t++){
+  for (uint t=0; t<10000; t++){
     double x_ref=(t/200)&1;
 #if 0 //heuristic
     double th_ref = -0.1*(R.q(0)-x_ref)-0.1*R.q_dot(0);
@@ -193,10 +193,10 @@ int main(int argc,char **argv){
 //  testDraw();
 //  TestMove();
 //  CheckGradients();
-//  TestControl();
+  TestControl();
 
 //  FollowSignal();
-  FollowIMU();
+//  FollowIMU();
 
   return 0;
 }
