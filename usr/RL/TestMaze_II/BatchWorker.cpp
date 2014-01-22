@@ -57,11 +57,13 @@ BatchWorker::BatchWorker(int argc, char ** argv):
     l1_arg(             "", "l1"           , "L1-regularization factor"                     ,false,     0.001,  "double"),
     pruningOff_arg(    "p", "pruningOff"   , "whether to turn off pruning the search tree"  ,           false           ),
     incF_arg(          "f", "incF"         , "how many candidate features to include"       ,false,        50,     "int"),
-    delta_arg(         "D", "delta"        , "minimum change of data likelihood"            ,false,     0.001,  "double")
+    delta_arg(         "D", "delta"        , "minimum change of data likelihood"            ,false,     0.001,  "double"),
+    maxLearnIteration_arg("","maxLearnIteration","maximum number of iterations for learning",false,         0,     "int")
 {
     try {
 	TCLAP::CmdLine cmd("This program is BatchWorker. It collects data.", ' ', "");
 
+        cmd.add(maxLearnIteration_arg);
         cmd.add(delta_arg);
         cmd.add(incF_arg);
         cmd.add(pruningOff_arg);
@@ -366,6 +368,7 @@ void BatchWorker::train_CRF(std::shared_ptr<FeatureLearner> learner, double& lik
     }
     // optimize crf
     double old_likelihood = -DBL_MAX, new_likelihood = 0;
+    int iteration_counter = 0, max_iterations = maxLearnIteration_arg.getValue();
     while(new_likelihood-old_likelihood>delta_arg.getValue()) {
         old_likelihood = new_likelihood;
         crf->construct_candidate_features(1);
@@ -373,6 +376,9 @@ void BatchWorker::train_CRF(std::shared_ptr<FeatureLearner> learner, double& lik
         crf->add_candidate_features_to_active(incF_arg.getValue());
         crf->optimize_model(l1_arg.getValue(), 50, &new_likelihood);
         crf->erase_zero_features();
+        if(max_iterations>0 && ++iteration_counter>=max_iterations) {
+            break;
+        }
     }
     crf->optimize_model(0,100, &likelihood);
     // get number of features
@@ -437,6 +443,7 @@ void BatchWorker::initialize_log_file(std::ofstream& log_file) {
         LOG_COMMENT("L1-factor: " << l1_arg.getValue());
         LOG_COMMENT("Feature Increment: " << incF_arg.getValue());
         LOG_COMMENT("Likelihood Delta: " << delta_arg.getValue());
+        LOG_COMMENT("Max Learn Iterations: " << maxLearnIteration_arg.getValue());
     }
 
     LOG_COMMENT("");
