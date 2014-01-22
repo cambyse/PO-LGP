@@ -15,7 +15,7 @@ if(ROSBUILD)
   rosbuild_init()
   # all 
   #set the default path for built executables to the "bin" directory
-  set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
+  set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR})
   #set the default path for built libraries to the "lib" directory
   set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 
