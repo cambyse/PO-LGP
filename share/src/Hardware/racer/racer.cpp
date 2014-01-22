@@ -23,14 +23,14 @@ Racer::Racer(){
   noise_dynamics = 0.;
 
   c1 = 1./9.6; //9.81;
-  c2 = 0.16-MT_PI/2.;
+  c2 = MT::getParameter<double>("IMU_tilt",0.16)-MT_PI/2.;
   c3 = 1.;
   c4 = -0.0417273;
   c5 = 1.;
 
-  noise_accel = 1.;
-  noise_gyro = .1;
-  noise_enc = 1e-3;
+  noise_accel = MT::getParameter<double>("IMU_accelNoise",1.);
+  noise_gyro = MT::getParameter<double>("IMU_gyroNoise",.1);
+  noise_enc = 1.; //e-3;
 
 //  gl.add(drawEnv, this);
   gl.add(Racer::glStaticDraw, this);
@@ -154,7 +154,7 @@ void Racer::getObservation(arr& y, arr& C, arr& c, arr& W){
   //we need the dynamics
   arr q_ddot, J;
   dynamicsFct().fv(q_ddot, (&C?J:NoArr), cat(q, q_dot).reshape(2,2));
-  q_ddot.setZero();
+//  q_ddot.setZero();
 
   //3-dimensional observation
   arr acc = (q_dot(1) * J_C_dash * q_dot + J_C * q_ddot) + ARR(0,g);

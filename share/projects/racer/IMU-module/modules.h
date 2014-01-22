@@ -44,14 +44,14 @@ struct RacerDisplay : Module{
 };
 
 
-struct MotorController : Module{
-  struct sMotorController *s;
+struct Motors : Module{
+  struct sMotors *s;
 
-  ACCESS(arr, stateEstimate)
+  ACCESS(arr, controls)
   ACCESS(arr, encoderData)
 
-  MotorController():s(NULL){}
-  virtual ~MotorController(){}
+  Motors():s(NULL){}
+  virtual ~Motors(){}
 
   void open();
   void step();
