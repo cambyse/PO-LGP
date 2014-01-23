@@ -5,7 +5,7 @@
 
 //void drawEnv(void*);
 
-Racer::Racer(){
+Racer::Racer():dynamicsFct(*this),observationFct(*this),_gl(NULL){
   q.resize(2).setZero();
   q_dot.resize(2).setZero();
   q(1) = .01; //1MT_PI/2; //slighly non-upright //MT_PI; //haning down
@@ -31,13 +31,11 @@ Racer::Racer(){
   noise_accel = MT::getParameter<double>("IMU_accelNoise",1.);
   noise_gyro = MT::getParameter<double>("IMU_gyroNoise",.1);
   noise_enc = 1.; //e-3;
+}
 
-//  gl.add(drawEnv, this);
-  gl.add(Racer::glStaticDraw, this);
-  gl.camera.setPosition(0., -20., 5.);
-  gl.camera.focus(0, 0, .2);
-  gl.camera.upright();
-  gl.update();
+Racer::~Racer(){
+  if(_gl) delete _gl;
+  _gl=NULL;
 }
 
 void Racer::getJacobians(arr& J_A, arr& J_B, arr& J_B_dash, arr& J_B_ddash, bool getJ_C){
@@ -91,31 +89,24 @@ void Racer::getDynamics(arr& M, arr& F, arr& B, arr& M_dash, arr& M_ddash, arr& 
   }
 }
 
-VectorFunction& Racer::dynamicsFct(){
-  static struct DynFct:VectorFunction{
-    Racer& R;
-    DynFct(Racer& _R):R(_R){}
-    void fv(arr& y, arr& J, const arr& q__q_dot){
-      R.q = q__q_dot[0];
-      R.q_dot = q__q_dot[1];
+void DynFct::fv(arr& y, arr& J, const arr& q__q_dot){
+  R.q = q__q_dot[0];
+  R.q_dot = q__q_dot[1];
 
-      arr M_dash, M_ddash, F_dash;
-      R.getDynamics(R.M, R.F, R.B, M_dash, (&J?M_ddash:NoArr), (&J?F_dash:NoArr));
-      inverse_SymPosDef(R.Minv, R.M);
+  arr M_dash, M_ddash, F_dash;
+  R.getDynamics(R.M, R.F, R.B, M_dash, (&J?M_ddash:NoArr), (&J?F_dash:NoArr));
+  inverse_SymPosDef(R.Minv, R.M);
 
-      R.q_ddot = R.Minv * (R.B*R.u - R.F);
+  R.q_ddot = R.Minv * (R.B*R.u - R.F);
 
-      if(&y) y = R.q_ddot;
+  if(&y) y = R.q_ddot;
 
-      if(&J){
-        J.resize(2,4).setZero();
-        J.setMatrixBlock(-R.Minv*(M_dash*R.q_ddot + F_dash), 0, 1);
-        arr F_q_dot = R.q_dot(1)*M_dash+(M_dash*R.q_dot)*~ARR(0.,1.) - ARR(0,1)*(~R.q_dot*M_dash);
-        J.setMatrixBlock(-R.Minv*F_q_dot, 0, 2);
-      }
-    }
-  } f(*this);
-  return f;
+  if(&J){
+    J.resize(2,4).setZero();
+    J.setMatrixBlock(-R.Minv*(M_dash*R.q_ddot + F_dash), 0, 1);
+    arr F_q_dot = R.q_dot(1)*M_dash+(M_dash*R.q_dot)*~ARR(0.,1.) - ARR(0,1)*(~R.q_dot*M_dash);
+    J.setMatrixBlock(-R.Minv*F_q_dot, 0, 2);
+  }
 }
 
 void Racer::getDynamicsAB(arr& A, arr& a, arr& barB){
@@ -187,17 +178,10 @@ void Racer::getObservation(arr& y, arr& C, arr& c, arr& W){
   }
 }
 
-VectorFunction& Racer::observationFct(){
-  static struct ObsFct:VectorFunction{
-    Racer& R;
-    ObsFct(Racer& _R):R(_R){}
-    void fv(arr& y, arr& C, const arr& q__q_dot){
-      R.q = q__q_dot[0];
-      R.q_dot = q__q_dot[1];
-      R.getObservation(y, C, NoArr, NoArr);
-    }
-  } f(*this);
-  return f;
+void ObsFct::fv(arr& y, arr& C, const arr& q__q_dot){
+  R.q = q__q_dot[0];
+  R.q_dot = q__q_dot[1];
+  R.getObservation(y, C, NoArr, NoArr);
 }
 
 void Racer::stepDynamics(double _u){
@@ -217,6 +201,19 @@ void Racer::stepDynamicsAcc(double u_acc){
   arr BMB = inverse_SymPosDef((~B*Minv*B).reshape(1,1));
   u = (BMB * (u_acc + ~B*Minv*F)).scalar();
   stepDynamics(u);
+}
+
+OpenGL& Racer::gl(){
+  if(!_gl){
+    _gl = new OpenGL;
+    //  _gl.add(drawEnv, this);
+    _gl->add(Racer::glStaticDraw, this);
+    _gl->camera.setPosition(0., -20., 5.);
+    _gl->camera.focus(0, 0, .2);
+    _gl->camera.upright();
+    _gl->update();
+  }
+  return *_gl;
 }
 
 void Racer::glDraw(){
