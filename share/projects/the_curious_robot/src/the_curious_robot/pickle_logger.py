@@ -11,20 +11,19 @@ class pickle_member(object):
     Just decorate a function and supply the member_name.  Folders are
     automatically created.
     """
-    def __init__(self, member_name):
-        print member_name
-        self.member_name = member_name
+    def __init__(self, name, folder):
+        self.member_name = name
 
         # Create a folder for the logs
-        now = datetime.datetime.now()
-        self.foldername = "log/{}_{}_{}_{}_{}/{}".format(
-            now.year, now.month, now.day, now.hour, now.minute,
-            self.member_name,
-        )
+        pattern = "log_tcr/{}/%Y-%m-%d %H:%M:%S/{}/".format(folder,
+                                                            self.member_name)
+        self.foldername = datetime.datetime.now().strftime(pattern)
+        print "Initializing pickler for {}; will be saved in {}.".format(
+            self.member_name, self.foldername)
         try:
             os.makedirs(self.foldername)
         except OSError:
-            print self.foldername, "already exists."
+            print "%s already exists.".format(self.foldername)
 
     def __call__(self, func):
         def wrapped(*args, **kwargs):
@@ -36,13 +35,10 @@ class pickle_member(object):
 
     def _pickle(self, decorated_class):
         """The pickling logic"""
-        # we need the filename for the pkl file
-        now = datetime.datetime.now()
-        filename = "{}_{}_{}_{}_{}_{}_{}.pkl".format(
-            now.year, now.month, now.day, now.hour, now.minute,
-            now.second, now.microsecond
-        )
+        # construct filename for pkl file
+        filename = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f.pkl")
         filename = os.path.join(self.foldername, filename)
+        print "Pickling {}".format(filename)
 
         # pickle the instance variable
         member = getattr(decorated_class, self.member_name)

@@ -16,7 +16,7 @@ import threading
 # TODO: import ActionServer
 
 
-class StateMachine:
+class StateMachine(object):
 
     def __init__(self):
         rospy.init_node('tcr_state_machine')

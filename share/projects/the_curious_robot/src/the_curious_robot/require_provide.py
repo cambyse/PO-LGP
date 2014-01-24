@@ -4,7 +4,7 @@ import rospy
 import the_curious_robot.msg as msgs
 
 
-class Require:
+class Require(object):
     def __init__(self, modules):
         self.modules = dict(map(lambda x: (x, False), modules))
         self.wait = True
@@ -26,7 +26,7 @@ class Require:
         self.wait = not all(self.modules.values())
 
 
-class Provide:
+class Provide(object):
     def __init__(self, module):
         self.module = module
         self.is_alive_sub = rospy.Subscriber("is_alive", msgs.Alive,

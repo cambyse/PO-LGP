@@ -25,7 +25,7 @@ import require_provide as rp
 import numpy as np
 
 
-class RRTPlanner():
+class RRTPlanner(object):
     def __init__(self, graph):
         self.graph = graph
         shapes = ors.makeConvexHulls(self.graph.shapes)
@@ -68,7 +68,7 @@ class RRTPlanner():
                                              MotionProblem.finalOnly,
                                              np.array([0., 0., 0.]), pos_prec)
 
-        _, x = motionpy.keyframeOptimizer(start_q, problem, True, 2)
+        _, x = motionpy.keyframeOptimizer(start_q, problem, True, 0)
 
         self.graph.setJointState(start)
         rospy.logdebug("done calculating endpose")
@@ -102,13 +102,13 @@ class RRTPlanner():
         return traj
 
 
-class FakeController():
+class FakeController(object):
     def __init__(self):
         # init the node: test_fitting
         rospy.init_node('tcr_controller', log_level=rospy.DEBUG)
 
         # World & PhysX & OpenGL
-        orspath = "share/projects/the_curious_robot/src"
+        orspath = "share/projects/the_curious_robot/src/the_curious_robot"
         orsfile = corepy.getStringParameter("orsFile")
         worldfile = os.path.join(
             corepy.get_mlr_path(), orspath, orsfile
@@ -142,7 +142,7 @@ class FakeController():
         rp.Provide("Controller")
         """ the controller loop """
         while not rospy.is_shutdown():
-            self.step()
+            self.pstep()
 
     def compute_trajectory(self):
         rospy.loginfo("start computing trajectory")
@@ -190,16 +190,16 @@ class FakeController():
     def step(self):
         if self.recompute_trajectory and self.goal:
             self.compute_trajectory()
-            rospy.loginfo(self.trajectory)
-            rospy.loginfo("new trajectory")
+            # rospy.loginfo(self.trajectory)
+            # rospy.loginfo("new trajectory")
 
         if self.trajectory is not None:
-            rospy.loginfo("Move one step")
+            # rospy.loginfo("Move one step")
             if self.tpos == self.trajectory.shape[0]:
                 self.control_done()
             else:
-                rospy.logdebug("next step: " + str(self.trajectory[self.tpos,
-                               :]))
+                # rospy.logdebug("next step: " +
+                #                str(self.trajectory[self.tpos, :]))
                 self.world.graph.setJointState(self.trajectory[self.tpos, :])
                 self.world.graph.calcBodyFramesFromJoints()
                 self.tpos += 1
@@ -217,9 +217,9 @@ class FakeController():
 
     def pstep(self):
         # P-Controller
-        Kp = 10e-3
+        Kp = 10e-2
         # tolerance for he movement
-        eps = 10e-3
+        eps = 10e-2
         agent = self.world.graph.getBodyByName("robot")
 
         if self.goal:

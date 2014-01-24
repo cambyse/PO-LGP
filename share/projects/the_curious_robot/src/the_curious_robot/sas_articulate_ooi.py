@@ -14,7 +14,7 @@ import the_curious_robot.msg as msgs
 import corepy
 
 
-class ArticulateOOIActionServer:
+class ArticulateOOIActionServer(object):
 
     def __init__(self, name):
         self.ooi_id = ""

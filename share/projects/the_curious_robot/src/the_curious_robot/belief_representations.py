@@ -2,31 +2,102 @@
 This file contains various representations of different part of the belief.
 """
 import scipy.stats as ss
+import collections
+
+
+###############################################################################
+class Annotation(collections.OrderedDict):
+    """
+    Annotation contains all beliefs over a shape.
+
+    It's a mapping: ooi_id --> ShapeBelief
+
+    It offers some convenient functions.
+    """
+
+    def __str__(self):
+        result = "\n" + "=" * 60
+        result += "\nbelief annotation (%d items)\n" % len(self)
+        result += "=" * 60 + "\n"
+        for key, value in self.iteritems():
+            tmp = "ID %d\n%s\n" % (key, str(value))
+            result += tmp
+        result += "=" * 60
+        return result
+
+    def iter_entropy_normalized(self, property_):
+        """
+        Return the entropy normalized between 0 and 1.
+
+        This is useful for visualization.
+        """
+        entropies = [getattr(shape_bel, property_).get_entropy()
+                     for key, shape_bel in self.iteritems()]
+        # beta(2, 1).entropy() =! beta(1, 2).entropy()
+        # The tiny difference fucks up the visualization, therefore we round
+        # it.
+        min_entropy = round(min(entropies), 5)
+        max_entropy = round(max(entropies), 5)
+
+        for shape_anno, entropy in zip(self.itervalues(), entropies):
+            normalized = (entropy - min_entropy) / (max_entropy - min_entropy)
+            if normalized == float('Inf'):
+                normalized = 1.
+            yield shape_anno.belief_shape, normalized
+
+    def get_entropy(self):
+        """
+        Return a list of tuples of the form (shape_id, entropy).
+        """
+        result = []
+        for k, shape_bel in self.iteritems():
+            # iterate over all belief members
+            for bel_name in shape_bel._beliefs:
+                bel = getattr(shape_bel, bel_name)
+                # and add the entropy to the results if the member exists
+                if bel:
+                    result.append((k, bel.get_entropy()))
+
+        return result
 
 
 ###############################################################################
 class ShapeBelief(object):
     """
-    ShapeBelief is a container for all beliefs about an shape.
+    ShapeBelief is a container for all beliefs about one shape.
     """
-    def __init__(self, belief_shape_id):
-        self.belief_shape_id = belief_shape_id
+    def __init__(self, belief_shape):
+        self.belief_shape = belief_shape
+        self.belief_shape_id = self.belief_shape.index
 
         # members / sub beliefs
         self.object_type = ObjectTypeHypo()
         self.joint = None  # JointBelief()
         # TODO add more
 
+        # list of all sub belief members is used to easily iterate over the
+        # belief and retrieve information
+        self._beliefs = ["object_type", "joint"]
+
     def __str__(self):
         result = ""
-        for attr_name in vars(self):
+        for attr_name in self._beliefs:
             attr_val = str(getattr(self, attr_name))
-            result += "%s: %s\n" % (attr_name, attr_val)
+            result += "    %s: %s\n" % (attr_name, attr_val)
         return result
+
+    def __getstate__(self):
+        """
+        To avoid pickling SwigObjects we have to overwrite __getstate__ and
+        ignore the varibales.
+        """
+        exclude_members = ["belief_shape"]
+        return dict((k, v) for (k, v) in self.__dict__.iteritems()
+                    if k not in exclude_members)
 
 
 ###############################################################################
-class ObjectTypeHypo():
+class ObjectTypeHypo(object):
     """
     ObjectType represents the probability that an object has a certain type.
 

@@ -17,10 +17,8 @@ class RosOrs(object):
     RosOrs represents a ors graph and provides ORS services to query the
     state of the graph.
 
-    TODO should we transport subtypes, e.g. transport shapes and meshes for
-    a given body? maybe a flag?
-
     Supported information:
+        - Graph
         - Body
         - Shape
     """

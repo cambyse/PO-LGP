@@ -6,7 +6,7 @@ import geometry_msgs.msg
 from articulation_msgs.msg import TrackMsg
 
 
-class Properties():
+class Properties(object):
     """A collection of potential properties a DoF can have."""
     def __init__(self):
         self.joint = None  # ss.norm(loc=?, scale=)
