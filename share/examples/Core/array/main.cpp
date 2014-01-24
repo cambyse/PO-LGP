@@ -378,8 +378,7 @@ void TEST(PCA) {
   y.reshape(4, 2);
   cout << "y = " << y << endl;
 
-  arr yp;
-  pca(yp, w, y);
+  arr yp = y * w;
   cout << "yp = " << yp << endl;
 }
 
