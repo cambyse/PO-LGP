@@ -17,43 +17,41 @@ namespace ors {
 
     sRRTPlanner(RRTPlanner *p, RRT rrt) : p(p), rrt(rrt) { };
 
-    bool growTowards(RRT& growing, RRT& passive, ors::Graph &G);
+    bool growTowards(RRT& growing, RRT& passive);
+
+    bool isFeasible(const arr& q);
 
     uint success_growing;
     uint success_passive;
   };
 }
 
+bool ors::sRRTPlanner::isFeasible(const arr& q) {
+  arr phi, J_x, J_v;
+  p->problem.setState(q, NoArr);
+  return p->problem.getTaskCosts(phi, J_x, J_v, 0);
+}
 
-bool ors::sRRTPlanner::growTowards(RRT& growing, RRT& passive, ors::Graph &G) {
+bool ors::sRRTPlanner::growTowards(RRT& growing, RRT& passive) {
   arr q;
   if(rnd.uni()<.5) {
-    q = p->joint_min + rand(G.getJointStateDimension(), 1) % ( p->joint_max - p->joint_min );
+    q = p->joint_min + rand(p->problem.ors->getJointStateDimension(), 1) % ( p->joint_max - p->joint_min );
     q.reshape(q.d0);
   }
   else { 
-    passive.getRandomNode(q);
+    q = passive.getRandomNode();
   }
+  arr proposal;
+  growing.getProposalTowards(proposal, q);
 
-  growing.getProposalTowards(q);
-
-  G.setJointState(q);
-  G.calcBodyFramesFromJoints();
-
-  ors::Graph *G_t = p->problem.ors;
-  p->problem.ors = &G;
-  arr phi, J_x, J_v;
-  p->problem.swift->computeProxies(G);
-  bool feasible = p->problem.getTaskCosts(phi, J_x, J_v, 0);
-  p->problem.ors = G_t;
-
-  if (feasible) {
-
-    growing.add(q);
-    double d = passive.getProposalTowards(q);
+  bool feasible = isFeasible(proposal);
+  if (feasible) { 
+    growing.add(proposal);
+    arr tmp_prop;
+    double d = passive.getProposalTowards(tmp_prop, proposal);
 
     if (d < growing.getStepsize()) {
-      growing.getProposalTowards(q); // to actually get the latest point
+      growing.getProposalTowards(tmp_prop, proposal); // to actually get the latest point
       success_growing = growing.getNearest();
       success_passive = passive.getNearest();
       return true;
@@ -73,7 +71,6 @@ arr buildTrajectory(RRT& rrt, uint node, bool forward) {
     ++i;
   }
   while(node);
-
   // append the root node
   q.append(rrt.getNode(0));
 
@@ -100,32 +97,32 @@ void drawRRT(RRT rrt) {
   }
 }
 
-arr ors::RRTPlanner::getTrajectoryTo(const arr& target, OpenGL* gl) {
-  ors::Graph *copy = G->newClone();
+arr ors::RRTPlanner::getTrajectoryTo(const arr& target, OpenGL *gl) {
   arr q;
+
+  if (!s->isFeasible(target))
+    return { };
 
   RRT target_rrt(target, s->rrt.getStepsize());
 
   bool found = false;
-
   uint node0 = 0, node1 = 0;
 
   while(!found) {
-    found = s->growTowards(s->rrt, target_rrt, *copy);
+    found = s->growTowards(s->rrt, target_rrt);
     if(found) {
       node0 = s->success_growing;
       node1 = s->success_passive;
       break;
     }
 
-    found = s->growTowards(target_rrt, s->rrt, *copy);
+    found = s->growTowards(target_rrt, s->rrt);
     if(found) {
       node0 = s->success_passive;
       node1 = s->success_growing;
       break;
     }
   }
-  delete copy;
 
   if (gl) {
     gl->add(glDrawPlot, &plotModule);
