@@ -1,3 +1,3 @@
-set(SOURCES ./tf_module.cpp
-./main.cpp
+set(SOURCES ./main.cpp
+./tf_module.cpp
 ./ros_module.h)

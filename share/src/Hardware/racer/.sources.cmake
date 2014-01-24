@@ -1,17 +1,17 @@
-set(SOURCES ./Controller.h
-./MPU9150Controller.h
-./racer.cpp
-./Connection.h
+set(SOURCES ./Connection.h
+./MPU9150.h
 ./MD25Controller.cpp
+./MPU9150Controller.h
 ./MPU9150Controller.cpp
-./Connection.cpp
+./MD25.cpp
 ./Controller.cpp
 ./IMUInterface.h
-./MPU9150.cpp
-./MPU9150.h
-./MD25.cpp
-./racer.h
 ./MotorInterface.h
-./Constants.h
+./Controller.h
+./racer.cpp
+./MD25Controller.h
+./Connection.cpp
 ./MD25.h
-./MD25Controller.h)
+./Constants.h
+./racer.h
+./MPU9150.cpp)
