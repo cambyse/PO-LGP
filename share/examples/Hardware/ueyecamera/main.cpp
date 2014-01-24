@@ -33,12 +33,17 @@ void threadedRun() {
   byteA rgbImg;
   timeval time;
 
+  cout << "OPENING" << endl;
   engine().open(S);
+  cout << "OPENED" << endl;
 
-  MT::timerStart();
-  uint t;
+  //MT::timerStart();
+  //uint t;
 
-  MT::wait(10);
+  //MT::wait(10);
+  engine().shutdown.waitForSignal();
+
+
   /*
   for(t=0; ; t++){
     if(engine().shutdown.getValue()) break;
@@ -60,3 +65,4 @@ int main(int argc,char **argv){
   threadedRun();
   return 0;
 };
+
