@@ -93,6 +93,7 @@ Convert::operator ScalarFunction&() {
   if(!s->sf) {
 //    if(s->vcf) s->sf = new sConvert::VectorChainFunction_ScalarFunction(*s->vcf);
     if(s->kom) s->vf = new sConvert::KOrderMarkovFunction_VectorFunction(*s->kom);
+    if(s->cstyle_fv) s->vf = new sConvert::cfunc_VectorFunction(s->cstyle_fv, s->data);
     if(s->vf)  s->sf = new sConvert::VectorFunction_ScalarFunction(*s->vf);
     if(s->cstyle_fs)  s->sf = new sConvert::cfunc_ScalarFunction(s->cstyle_fs, s->data);
   }

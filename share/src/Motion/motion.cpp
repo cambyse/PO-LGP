@@ -20,6 +20,8 @@
 #include "motion.h"
 #include "taskMap_default.h"
 #include <Gui/opengl.h>
+#include <devTools/logging.h>
+SET_LOG(motion, DEBUG);
 
 MotionProblem::MotionProblem(ors::Graph *_ors, SwiftInterface *_swift) {
   if(_ors)   ors   = _ors;   else { ors=new ors::Graph;        ors  ->init(MT::getParameter<MT::String>("orsFile")); } // ormakeLinkTree(); }
@@ -174,6 +176,7 @@ void MotionProblem::setState(const arr& q, const arr& v) {
   ors->setJointState(q);
 //  if(q_external.N)
 //    ors->setExternalState(q_external[0]);
+  ors->calcBodyFramesFromJoints();
   ors->calcBodyFramesFromJoints();
   swift->computeProxies(*ors, false);
   if(transitionType == realDynamic) {
@@ -485,4 +488,13 @@ void MotionProblem_EndPoseFunction::fv(arr& phi, arr& J, const arr& x){
   }
 
   if(&J) CHECK(J.d0==phi.N,"");
+
+  //store in CostMatrix
+  if(!MP.costMatrix.N) {
+    MP.costMatrix.resize(MP.T+1,phi.N);
+    MP.costMatrix.setZero();
+  }
+  
+  CHECK(MP.costMatrix.d1==phi.N,"");
+  MP.costMatrix[MP.T]() = phi;
 }
