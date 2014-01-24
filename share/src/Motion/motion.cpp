@@ -175,6 +175,7 @@ void MotionProblem::setState(const arr& q, const arr& v) {
 //  if(q_external.N)
 //    ors->setExternalState(q_external[0]);
   ors->calcBodyFramesFromJoints();
+  ors->calcBodyFramesFromJoints();
   swift->computeProxies(*ors, false);
   if(transitionType == realDynamic) {
     NIY;
