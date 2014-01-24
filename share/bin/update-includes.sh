@@ -19,7 +19,7 @@ do
     # clear out tmp file
     echo -n > $tmpname
     # look for C++ source
-    CPP_SOURCES=$(find . -maxdepth 1 -type f -name '*.cpp' -a ! -name 'main.*.cpp' -o -name '*.h' -o -name '*.c')
+    CPP_SOURCES=$(find . -maxdepth 1 -type f -name '*.cpp' -a ! -name 'main.*.cpp' -o -name '*.h' -o -name '*.c'|grep -v './ui_')
     # check source dir, too
     if [ -d src ]
     then
