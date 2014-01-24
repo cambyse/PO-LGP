@@ -3,6 +3,7 @@ NAME   = lib$(shell basename `pwd`)
 OUTPUT := $(BASE)/lib/$(NAME).so
 
 FREENECT = 1
+PLIB = 1
 DEPEND = Core
 
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )

@@ -2,14 +2,11 @@
 #define MT_joystick_h
 
 #include <Core/array.h>
-#include <System/biros.h>
+#include <Core/module.h>
 
-class jsJoystick;
-
-struct JoystickInterface:public Process, public Variable {
-  jsJoystick *joy;
-  FIELD(intA, state);
-  uint n;
+struct JoystickInterface:Module {
+  struct jsJoystick *joy;
+  ACCESS(arr, joystickState);
   JoystickInterface();
   void open();
   void step();

@@ -35,12 +35,12 @@ void SearchCMA::init(uint D, int mu, int lambda, double lo, double hi){
   init(D, mu, lambda, startPoint, hi-lo);
 }
 
-void SearchCMA::step(arr& samples, arr& values){
-  if(values.N){
-    cmaes_ReestimateDistribution(&s->evo, values.p);
+void SearchCMA::step(arr& samples, arr& costs){
+  if(costs.N){
+    cmaes_ReestimateDistribution(&s->evo, costs.p);
   }else{ //first iteration: initialize arrays:
     samples.resize(s->evo.sp.lambda, s->evo.sp.N);
-    values.resize(s->evo.sp.lambda).setZero();
+    costs.resize(s->evo.sp.lambda).setZero();
   }
 
   //generate samples
