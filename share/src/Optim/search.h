@@ -1,4 +1,4 @@
-/*  ---------------------------------------------------------------------
+/*  -------------b--------------------------------------------------------
     Copyright 2013 Marc Toussaint
     email: mtoussai@cs.tu-berlin.de
 
@@ -20,13 +20,20 @@
 
 #include <Core/array.h>
 
+/// Wrapper for CMA stochastic optimization
 struct SearchCMA{
   struct sSearchCMA *s;
 
   SearchCMA();
   ~SearchCMA();
 
-  void init(uint D, int mu, int lambda, arr &startPoint, double _startDev);
+  /// D=problem dimension, lambda=#samples taken in each iteration, mu \approx lambda/3 specifies the selection size, lo and hi specify an initialization range
   void init(uint D, int mu=-1, int lambda=-1, double lo=-1., double hi=1.);
-  void step(arr& samples, arr& values);
+
+  /// instead of lo and hi, explicitly give a start point and standard deviation around this point
+  void init(uint D, int mu, int lambda, arr &startPoint, double _startDev);
+
+  /// first call: generate initial random samples
+  /// further calls: costs needs to contain the cost function values for all elements in samples; returns a new set of samples
+  void step(arr& samples, arr& costs);
 };
