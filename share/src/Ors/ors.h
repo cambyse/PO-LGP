@@ -238,6 +238,9 @@ struct Graph {
   bool checkUniqueNames() const;
   void prefixNames();
 
+  ShapeL getShapesByAgent(const int agent) const;
+  uintA getShapeIdxByAgent(const int agent) const;
+
   /// @name changes of configuration
   void clear();
   void revertJoint(Joint *e);

@@ -1367,6 +1367,29 @@ ors::Joint* ors::Graph::getJointByBodyNames(const char* from, const char* to) co
   return graphGetEdge<Body, Joint>(f, t);
 }
 
+ShapeL ors::Graph::getShapesByAgent(const int agent) const {
+  ShapeL agent_shapes;
+  for(ors::Joint *j : joints) {
+    if(j->agent==agent) {
+      ShapeL tmp;
+      tmp.append(bodies(j->ifrom)->shapes);
+      tmp.append(bodies(j->ito)->shapes);
+      for(ors::Shape* s : tmp) {
+        if (!agent_shapes.contains(s)) agent_shapes.append(s);
+      }
+    } 
+  }  
+  return agent_shapes;
+}
+
+uintA ors::Graph::getShapeIdxByAgent(const int agent) const {
+  uintA agent_shape_idx;
+  ShapeL agent_shapes = getShapesByAgent(agent);
+  for(ors::Shape* s : agent_shapes)
+    agent_shape_idx.append(s->index);
+  return agent_shape_idx;
+}
+
 /** @brief creates uniques names by prefixing the node-index-number to each name */
 void ors::Graph::prefixNames() {
   Body *n;
