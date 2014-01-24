@@ -938,7 +938,7 @@ void soc::SocSolver::go(soc::SocSystemAbstraction &sys){
 
   ofstream summary;
   if(MT::checkCmdLineTag("file")){
-    //MT::save(q, filename+".q");
+    //q >>FILE(filename+".q");
     MT::String str(filename);
     summary.open(str+".dat");
     sys.os=&summary;

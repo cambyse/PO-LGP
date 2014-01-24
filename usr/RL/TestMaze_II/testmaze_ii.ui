@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TestMaze_IIClass</class>
+ <widget class="QWidget" name="TestMaze_IIClass">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>564</width>
+    <height>552</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>TestMaze_II</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="1" column="1">
+    <widget class="QDockWidget" name="_wConsoleDockWidget">
+     <widget class="QWidget" name="_wConsoleDockWidgetContent">
+      <layout class="QGridLayout" name="gridLayout_4">
+       <item row="1" column="0" rowspan="2">
+        <widget class="QLineEdit" name="_wConsoleInput"/>
+       </item>
+       <item row="0" column="0" colspan="2">
+        <widget class="QPlainTextEdit" name="_wConsoleOutput">
+         <property name="font">
+          <font>
+           <family>Monospace</family>
+          </font>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QPushButton" name="_wBackInHistory">
+         <property name="maximumSize">
+          <size>
+           <width>60</width>
+           <height>18</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>&amp;previous</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QPushButton" name="_wForwardInHistory">
+         <property name="maximumSize">
+          <size>
+           <width>60</width>
+           <height>18</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>&amp;next</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item row="0" column="0" colspan="3">
+    <widget class="QGraphicsView" name="graphicsView"/>
+   </item>
+   <item row="1" column="2">
+    <widget class="QDockWidget" name="_wGraphDockWidget">
+     <widget class="QWidget" name="_wGraphDockWidgetContent">
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="0" column="0">
+        <layout class="QGridLayout" name="_lGraphWidgetLayout"/>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>_wConsoleInput</sender>
+   <signal>returnPressed()</signal>
+   <receiver>TestMaze_IIClass</receiver>
+   <slot>process_console_input()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>484</x>
+     <y>496</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>544</x>
+     <y>492</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>_wBackInHistory</sender>
+   <signal>clicked()</signal>
+   <receiver>TestMaze_IIClass</receiver>
+   <slot>back_in_history()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>516</x>
+     <y>473</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>554</x>
+     <y>445</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>_wForwardInHistory</sender>
+   <signal>clicked()</signal>
+   <receiver>TestMaze_IIClass</receiver>
+   <slot>forward_in_history()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>502</x>
+     <y>501</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>541</x>
+     <y>527</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>process_console_input()</slot>
+  <slot>back_in_history()</slot>
+  <slot>forward_in_history()</slot>
+ </slots>
+</ui>

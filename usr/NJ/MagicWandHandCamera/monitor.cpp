@@ -31,10 +31,10 @@ void Monitor::open(){
   if(MT::checkParameter<MT::String>("orsFile")){
 	String sfile;
         MT::getParameter<MT::String>(sfile,"orsFile");
-	MT::load(ors,sfile,true);
+	ors <<FILE(sfile);
 }
 else
-  MT::load(ors,"../../../share/configurations/schunk.ors",true);
+  ors <<FILE("../../../share/configurations/schunk.ors");
 
   ors.calcNodeFramesFromEdges();
 

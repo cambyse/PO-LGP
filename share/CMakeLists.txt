@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 2.8.1)
 project(MLR_SHARE)
 cmake_policy(SET CMP0015 NEW)
+cmake_policy(SET CMP0002 OLD)
 
 # default release type
 if(CMAKE_BUILD_TYPE STREQUAL "")
-set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Defaults to RelWithDebInfo" FORCE)
+  set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Defaults to RelWithDebInfo" FORCE)
+  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -DNDEBUG" CACHE STRING "Default flags including -DNDEBUG" FORCE)
 endif(CMAKE_BUILD_TYPE STREQUAL "")
 
 # path for find macros
@@ -25,19 +27,19 @@ endif(WITH_LAPACK)
 include(FindPkgConfig)
 option(WITH_OPENCV "Enable use of lapack (default: if found)" ON)
 if(WITH_OPENCV)
-pkg_search_module(OPENCV opencv>=2.4)
-if(OPENCV_FOUND)
-message(STATUS "Found OpenCV ${OPENCV_VERSION}")
-add_definitions(-DMT_OPENCV -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS ${OPENCV_CFLAGS})
-endif(OPENCV_FOUND)
+  pkg_search_module(OPENCV opencv>=2.4)
+  if(OPENCV_FOUND)
+    message(STATUS "Found OpenCV ${OPENCV_VERSION}")
+    add_definitions(-DMT_OPENCV -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS ${OPENCV_CFLAGS})
+  endif(OPENCV_FOUND)
 else(WITH_OPENCV)
-message(STATUS "Use of OpenCV disabled by user (option WITH_OPENCV)")
+  message(STATUS "Use of OpenCV disabled by user (option WITH_OPENCV)")
 endif(WITH_OPENCV)
 
 # allow users to switch off compilation of unit-tests
 option(WITH_GTEST "Should we run unit-tests (default yes)" ON)
 if(WITH_GTEST)
-  option(EXAMPLES_AS_TESTS "Should examples be used as tests? (default yes)" ON)
+  option(EXAMPLES_AS_TESTS "Should examples be used as tests? (default yes)" OFF)
         include(CheckIncludeFileCXX)
         check_include_file_cxx("gtest/gtest.h" GTEST_H_FOUND)
         if(GTEST_H_FOUND)
@@ -87,6 +89,17 @@ if(WITH_PYTHON)
 else(WITH_PYTHON)
    set(PYTHON_OK OFF) # remove from cache, if earlier configured with python 
 endif(WITH_PYTHON)
+
+option(WITH_ROS "Use ROS, if available" ON)
+if(WITH_ROS)
+  message(STATUS "Looking for rosbuild")
+  find_file(ROSBUILD rosbuild.cmake HINTS $ENV{ROS_ROOT}/core/rosbuild/)
+  if(ROSBUILD)
+    message(STATUS "rosbuild found at ${ROSBUILD}")
+  else(ROSBUILD)
+    message(STATUS "rosbuild not found, not compiling anything that requires it")
+  endif(ROSBUILD)
+endif(WITH_ROS)
 
 # common configuration
 include_directories(src)

@@ -148,10 +148,10 @@ struct SecKinPlanner:public StepThread{
 		bInited = false;
 		nInit = _nInit;
 		if(bDATAMODE || !bClustSet )
-			MT::load(Clusters, "ClustQ4.txt");
+			Clusters <<FILE("ClustQ4.txt");
 		else{
-			MT::load(Clusters, "qD.dat");
-			MT::load(xdesc, "xD.dat");
+			Clusters <<FILE("qD.dat");
+			xdesc <<FILE("xD.dat");
 		}
 		MT::getParameter(midPrec, "reachPlanMidPrec");
 		MT::getParameter(endPrec, "reachPlanEndPrec"); //load here to avoid tthread problems with CFG file

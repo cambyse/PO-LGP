@@ -9,7 +9,7 @@ int main (const int argc, char ** argv){
   sys.get_x0(x0);
   
 #if 1
-  MT::load(u,"matlab/Uout.mat");
+  u <<FILE("matlab/Uout.mat");
   //u.setZero();
   arr xt=x0;
   x=xt; x.reshape(1,x.N);
@@ -28,7 +28,7 @@ int main (const int argc, char ** argv){
   conv_KOrderMarkovFunction P(problem);
 
   //-- cost check
-  //MT::load(x,"matlab/Qout.mat");
+  //x <<FILE("matlab/Qout.mat");
   analyzeTrajectory(sys, x, true, &cout);
   arr phi;
   P.fv(phi, NoArr, x);

@@ -222,7 +222,7 @@ void init(){
 	gl->camera.setPosition(-0.1,-1.2,7.);
 	gl->camera.focus(-0.1, -1.2, 1);
 	gl->update();
-	MT::load(Clusters, "qD.dat");
+	Clusters <<FILE("qD.dat");
 	T = MT::getParameter<int>("Tplan");
 	double timeReal= MT::getParameter<int>("timereal");
 	sys.initBasics(NULL,NULL,gl,T,timeReal,true,NULL);

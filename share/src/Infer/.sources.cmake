@@ -1,5 +1,5 @@
-set(SOURCES ./BinaryBP.h
-./daiModule.h
-./BinaryBP.cpp
+set(SOURCES ./daiModule.h
 ./infer.cpp
+./BinaryBP.cpp
+./BinaryBP.h
 ./infer.h)

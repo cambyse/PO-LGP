@@ -14,6 +14,16 @@ for link in links:
     if elem is not None:
         print ' mass=%s' % elem.attrib['value'],
 
+    elem = link.find("inertial/inertia")
+    if elem is not None:
+        print ' inertiaTensor=[%s %s %s %s %s %s]' % (
+            elem.attrib['ixx'],
+            elem.attrib['ixy'],
+            elem.attrib['ixz'],
+            elem.attrib['iyy'],
+            elem.attrib['iyz'],
+            elem.attrib['izz']),
+
     elem = link.find("collision/origin")
     if elem is not None:
         print ' rel=<T t(%s) E(%s)>' % (elem.attrib['xyz'],

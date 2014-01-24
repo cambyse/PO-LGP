@@ -63,7 +63,7 @@ target_link_libraries(Gui LINK_PRIVATE Core
 
 # Python wrappers
 if(PYTHON_OK)
-  set(SWIG_SOURCES gui.i)
+  set(SWIG_SOURCES _guipy.i)
   # add local include for mesh.h
   include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${PYTHON_INCLUDES})
   set_source_files_properties(${SWIG_SOURCES} PROPERTIES CPLUSPLUS ON)

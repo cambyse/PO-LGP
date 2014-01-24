@@ -1,16 +1,16 @@
-set(SOURCES ./taskMap_default.h
-./taskMap_constrained.cpp
-./motionHeuristics.h
-./taskMap_default.cpp
-./motionHeuristics.cpp
-./rrt_planner.cpp
-./motion.h
-./rrt_planner.h
-./feedbackControl.h
-./taskMap_constrained.h
-./pr2_heuristics.h
+set(SOURCES ./taskMap_constrained.h
 ./motion.cpp
 ./taskMap_proxy.h
-./pr2_heuristics.cpp
+./feedbackControl.h
+./motionHeuristics.h
+./taskMap_constrained.cpp
 ./taskMap_proxy.cpp
-./feedbackControl.cpp)
+./motionHeuristics.cpp
+./feedbackControl.cpp
+./taskMap_default.h
+./taskMap_default.cpp
+./pr2_heuristics.h
+./pr2_heuristics.cpp
+./rrt_planner.cpp
+./rrt_planner.h
+./motion.h)

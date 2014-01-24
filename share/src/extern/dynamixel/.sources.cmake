@@ -1,4 +1,4 @@
-set(SOURCES ./dynamixel.h
-./dxl_hal.h
+set(SOURCES ./dxl_hal.h
 ./dxl_hal.c
-./dynamixel.c)
+./dynamixel.c
+./dynamixel.h)

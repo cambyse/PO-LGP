@@ -1,7 +1,7 @@
-set(SOURCES ./optimization.h
-./constrained.cpp
+set(SOURCES ./convert.cpp
 ./benchmarks.cpp
 ./constrained.h
+./constrained.cpp
 ./benchmarks.h
 ./optimization.cpp
-./convert.cpp)
+./optimization.h)

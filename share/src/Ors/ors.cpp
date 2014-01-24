@@ -108,12 +108,12 @@ void ors::Body::parseAts(KinematicWorld& G) {
   ats.getValue<Transformation>(X, "pose");
   
   //mass properties
-//  double d;
-//  if(ats.getValue<double>(d, "mass")) {
-//    mass=d;
-//    inertia.setId();
-//    inertia *= .2*d;
-//  }
+  double d;
+  if(ats.getValue<double>(d, "mass")) {
+    mass=d;
+    inertia.setId();
+    inertia *= .2*d;
+  }
 
   type=dynamicBT;
   if(ats.getValue<bool>("fixed"))      type=staticBT;
@@ -443,7 +443,7 @@ ors::KinematicWorld::~KinematicWorld() {
 }
 
 void ors::KinematicWorld::init(const char* filename) {
-  MT::load(*this, filename, true);
+  *this <<FILE(filename);
   calcBodyFramesFromJoints();
   calcJointState();
 }
@@ -1655,21 +1655,13 @@ void ors::KinematicWorld::contactsToForces(double hook, double damp) {
 }
 
 void ors::KinematicWorld::kinematicsProxyCost(arr& y, arr& J, Proxy *p, double margin, bool useCenterDist, bool addValues) const {
-  //double d;
-  ors::Shape *a, *b;
-  ors::Vector arel, brel;
-  //arr Ja, Jb, dnormal;
-
-  a=shapes(p->a);
-  b=shapes(p->b);
+  ors::Shape *a = shapes(p->a);
+  ors::Shape *b = shapes(p->b);
   CHECK(a->mesh_radius>0.,"");
   CHECK(b->mesh_radius>0.,"");
   double ab_radius = margin + 1.5*(a->mesh_radius+b->mesh_radius);
   CHECK(p->d<(1.+1e-6)*margin, "something's really wierd here!");
   CHECK(p->cenD<(1.+1e-6)*ab_radius, "something's really wierd here! You disproved the triangle inequality :-)");
-
-  //TO RESET TO PREVIOUS BEHAVIOR:
-  //ab_radius = 5.;
 
   y.resize(1);
   if(&J) J.resize(1, getJointStateDimension());
@@ -1678,35 +1670,31 @@ void ors::KinematicWorld::kinematicsProxyCost(arr& y, arr& J, Proxy *p, double m
   //costs
   double d1 = 1.-p->d/margin;
   double d2 = 1.-p->cenD/ab_radius;
-  //NORMALS ALWAYS GO FROM b TO a !!
   if(!useCenterDist) d2=1.;
-  y += d1*d2;
+  y(0) += d1*d2;
  
   //Jacobian
   if(&J){
     arr Jpos;
+    ors::Vector arel, brel;
     if(p->d>0.) { //we have a gradient on pos only when outside
-      ors::Vector arel=a->X.rot/(p->posA-a->X.pos);
-      ors::Vector brel=b->X.rot/(p->posB-b->X.pos);
+      arel=a->X.rot/(p->posA-a->X.pos);
+      brel=b->X.rot/(p->posB-b->X.pos);
       CHECK(p->normal.isNormalized(), "proxy normal is not normalized");
-      arr posN; posN.referTo(&p->normal.x, 3); posN.reshape(1, 3);
+      arr normal; normal.referTo(&p->normal.x, 3); normal.reshape(1, 3);
           
-      //grad on posA
-      kinematicsPos(NoArr, Jpos, a->body->index, &arel); J -= d2/margin*(posN*Jpos);
-      //grad on posA
-      kinematicsPos(NoArr, Jpos, b->body->index, &brel); J += d2/margin*(posN*Jpos);
+      kinematicsPos(NoArr, Jpos, a->body->index, &arel);  J -= d2/margin*(normal*Jpos);
+      kinematicsPos(NoArr, Jpos, b->body->index, &brel);  J += d2/margin*(normal*Jpos);
     }
         
     if(useCenterDist){
-      ors::Vector arel=a->X.rot/(p->cenA-a->X.pos);
-      ors::Vector brel=b->X.rot/(p->cenB-b->X.pos);
+      arel=a->X.rot/(p->cenA-a->X.pos);
+      brel=b->X.rot/(p->cenB-b->X.pos);
       CHECK(p->cenN.isNormalized(), "proxy normal is not normalized");
-      arr cenN; cenN.referTo(&p->cenN.x, 3); cenN.reshape(1, 3);
+      arr normal; normal.referTo(&p->cenN.x, 3); normal.reshape(1, 3);
         
-      //grad on cenA
-      kinematicsPos(NoArr, Jpos, a->body->index, &arel); J -= d1/ab_radius*(cenN*Jpos);
-      //grad on cenB
-      kinematicsPos(NoArr, Jpos, b->body->index, &brel); J += d1/ab_radius*(cenN*Jpos);
+      kinematicsPos(NoArr, Jpos, a->body->index, &arel);  J -= d1/ab_radius*(normal*Jpos);
+      kinematicsPos(NoArr, Jpos, b->body->index, &brel);  J += d1/ab_radius*(normal*Jpos);
     }
   }
 }
@@ -1720,7 +1708,37 @@ void ors::KinematicWorld::kinematicsProxyCost(arr &y, arr& J, double margin, boo
   }
 }
 
-/// measure (=scalar kinematics) for the contact cost summed over all bodies
+void ors::KinematicWorld::kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, double margin, bool addValues) const {
+  g.resize(1);
+  if(&J) J.resize(1, getJointStateDimension());
+  if(!addValues){ g.setZero();  if(&J) J.setZero(); }
+
+  g(0) += margin - p->d;
+
+  //Jacobian
+  if(&J){
+    arr Jpos, normal;
+    ors::Vector arel,brel;
+    ors::Shape *a = shapes(p->a);
+    ors::Shape *b = shapes(p->b);
+    if(p->d>0.) { //we have a gradient on pos only when outside
+      arel=a->X.rot/(p->posA-a->X.pos);
+      brel=b->X.rot/(p->posB-b->X.pos);
+      CHECK(p->normal.isNormalized(), "proxy normal is not normalized");
+      normal.referTo(&p->normal.x, 3);
+    } else { //otherwise take gradient w.r.t. centers...
+      arel=a->X.rot/(p->cenA-a->X.pos);
+      brel=b->X.rot/(p->cenB-b->X.pos);
+      CHECK(p->cenN.isNormalized(), "proxy normal is not normalized");
+      normal.referTo(&p->cenN.x, 3);
+    }
+    normal.reshape(1, 3);
+
+    kinematicsPos(NoArr, Jpos, a->body->index, &arel);  J -= (normal*Jpos);
+    kinematicsPos(NoArr, Jpos, b->body->index, &brel);  J += (normal*Jpos);
+  }
+}
+
 void ors::KinematicWorld::kinematicsContactConstraints(arr& y, arr &J) const {
   J.clear();
   ors::Vector normal;
@@ -1880,6 +1898,7 @@ void ors::KinematicWorld::meldFixedJoints() {
     b->outLinks.clear();
     //reassociate mass
     a->mass += b->mass;
+    a->inertia += b->inertia;
     b->mass = 0.;
   }
 }
@@ -1973,7 +1992,6 @@ MT::Array<std::tuple<long, long> > getSubMeshPositions(const char* filename) {
 template void MT::Parameter<ors::Vector>::initialize();
 
 #ifndef  MT_ORS_ONLY_BASICS
-template void MT::save<ors::KinematicWorld>(const ors::KinematicWorld&, const char*);
 template MT::Array<ors::Shape*>::Array(uint);
 template ors::Shape* listFindByName(const MT::Array<ors::Shape*>&,const char*);
 

@@ -282,7 +282,7 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   void jacobianR(arr& J, uint a, int agent=0) const;
   void kinematicsProxyCost(arr& y, arr& J, Proxy *p, double margin=.02, bool useCenterDist=true, bool addValues=false) const;
   void kinematicsProxyCost(arr& y, arr& J, double margin=.02, bool useCenterDist=true) const;
-  void kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, double margin=.02, bool useCenterDist=true, bool addValues=false) const;
+  void kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, double margin=.02, bool addValues=false) const;
   void kinematicsContactConstraints(arr& y, arr &J) const; //TODO: should depend on agent...
 
   /// @name dynamics
