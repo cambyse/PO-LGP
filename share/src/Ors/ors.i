@@ -48,6 +48,9 @@ created: <2013-03-20 Wed>
 %List_Typemap(ors::Proxy)
 %List_Typemap(const char)
 
+%inline %{
+  typedef MT::Array<ors::Shape*> ShapeL;
+%}
 
 //===========================================================================
 
@@ -59,6 +62,7 @@ created: <2013-03-20 Wed>
 %ignore ProxyTaskVariable;
 %ignore forceClosureFromProxies;
 %ignore getJointYchange;
+%ignore getShapesByAgent;
 
 %include "ors.h"
 %include "ors_physx.h"
