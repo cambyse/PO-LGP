@@ -17,16 +17,9 @@ vc60.idb
 .*.files
 .*.includes
 
-*.config
-*.creator
-*.creator.user
-*.files
-*.includes
-
 .cproject
 .project
 *eclipse*
-Makefile.dep
 *_moc.cpp
 *_ui.h
 
@@ -36,7 +29,6 @@ Makefile.dep
 # EXECUTION
 core
 CORE
-*.log
 
 
 %% BACKUP/temporary files
@@ -47,6 +39,12 @@ z/
 MT.log
 .#*#
 .#*
+
+
+%% MAKE
+Makefile.dep
+Make.lock
+.lastMake
 
 
 %% CMAKE

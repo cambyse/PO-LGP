@@ -6,6 +6,8 @@ void CollisionConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
 }
 
 void PairCollisionConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
+  y.resize(1) = -1.;
+  if(&J) J.resize(1,G.q.N).setZero();
   for(ors::Proxy *p: G.proxies){
     if((p->a==i && p->b==j) || (p->a==j && p->b==i)){
       G.kinematicsProxyConstraint(y, J, p, margin, false);
