@@ -1,6 +1,6 @@
-#include "testmaze_ii.h"
-#include "BatchMaze.h"
-#include "Config.h"
+#include "../testmaze_ii.h"
+#include "../BatchMaze.h"
+#include "../Config.h"
 
 #include <QtGui>
 #include <QApplication>

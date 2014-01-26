@@ -54,7 +54,7 @@ HEADERS += \
     ../BatchMaze.h \
     ../testmaze_ii.h
 SOURCES += \
-    ../main.cpp \
+    main.cpp \
     \
     ../util.cpp \
     ../util/ProgressBar.cpp \
