@@ -188,12 +188,39 @@ int main(int argc, char** argv){
     for(uint i=0;i<7;i++) desired_joint_positions[i] = x(t,i);
     for(uint i=0;i<7;i++) desired_joint_velocities[i] = v(t,i);
     for(uint i=0;i<7;i++) desired_joint_accelerations[i] = a(t,i);
-//    tic.waitForTic();
+
+
+    sl_controller_msgs::Trajectory traj;
+    /*
+    joint_client.moveTo(desired_joint_positions,
+        desired_joint_velocities,
+        desired_joint_accelerations,
+        0.095,
+        true); // false);
+        */
+    traj.preempt = false;
+    traj.dimension_names = joint_names;
+
+    double time_step = 0.1;
+    sl_controller_msgs::TrajectoryPoint point;
+    point.time_from_start = ros::Duration(time_step);
+    point.positions = desired_joint_positions;
+    point.velocities = desired_joint_velocities;
+    point.accelerations = desired_joint_accelerations;
+
+    traj.points.push_back(point);
+    traj.poke = false;
+    traj.keep_trajectory_goal = true;
+
+    joint_client.sendCommand(traj, false);
+
+    /*
+    // tic.waitForTic();
     cout <<"tic " <<t <<" time:" <<MT::realTime() <<endl;
     joint_client.moveTo(desired_joint_positions, desired_joint_velocities, desired_joint_accelerations, 0.095, true); // false);
-//    cout <<"tic " <<t <<" time:" <<MT::realTime() <<endl;
-
-//    joint_client.moveTo(desired_joint_positions, 0.1);
+    //cout <<"tic " <<t <<" time:" <<MT::realTime() <<endl;
+    */
+    // joint_client.moveTo(desired_joint_positions, 0.1);
   }
 
 
