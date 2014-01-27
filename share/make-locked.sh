@@ -3,7 +3,7 @@
 cd $1
 LASTFILE=`ls -Art | tail -n 1`
 if [ $LASTFILE = '.lastMake' ]; then
-    echo "up to date: " $1
+    echo "                                         ***** UpToDate " $1
 else
     if mkdir Make.lock 2> /dev/null
     then    # lock did not exist and was created successfully
@@ -12,7 +12,7 @@ else
 	if [ $? -eq 0 ] ; then
             date +'%y-%m-%d-%T' > .lastMake
 	else
-	    echo "                                         ***** FAILED: " $1
+	    echo "                                         ***** FAILED " $1
 	fi
 	rm -rf Make.lock
     else
