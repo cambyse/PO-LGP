@@ -9,6 +9,10 @@
 #include <GL/gl.h>
 #include <Optim/optimization.h>
 
+#include "ros_module.h"
+
+#include <ros/ros.h>
+
 void createScene(ors::KinematicWorld& ors, OpenGL& gl) {
   ors.clear();
 
@@ -54,23 +58,30 @@ void createScene(ors::KinematicWorld& ors, OpenGL& gl) {
 
 void run() {
 
+  RosTf sender;
+  sender.open();
+
   while(true) {
     ors::KinematicWorld G;
 
     createScene(G, G.gl());
 
     for(uint t=0; t<500; t++) {
-      cout <<"\r t=" <<t <<std::flush;
+      //cout <<"\r t=" <<t <<std::flush;
       G.physx().step();
+      sender.publish(G);
       G.gl().update();
     }
 
     sleep(1);
   }
 
+  sender.close();
+
 }
 
 int MAIN(int argc,char **argv){
+  ros::init(argc, argv, "ors_ros");
 
   run();
 
