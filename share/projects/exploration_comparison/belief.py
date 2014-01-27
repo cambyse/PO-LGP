@@ -1,5 +1,9 @@
 import copy
+import math
+
+import numpy as np
 import scipy as sp
+import scipy.stats as ss
 
 import probdist
 
@@ -31,28 +35,85 @@ class ObjectBel(probdist.CategoricalDist):
 
 class JointBel(probdist.CategoricalDist):
     def __init__(self, name):
-        super(JointBel, self).__init__({"nil": 1, "rot": 0, "pris": 0})
+        super(JointBel, self).__init__({"nil": 1, "rot": 1, "pris": 1})
         self.name = name
 
         self.rot = sp.stats.norm(loc=0, scale=1)
         self.pris = sp.stats.norm(loc=0, scale=1)
         self.nil = sp.stats.norm(loc=0, scale=.1)
 
-    def H_tmp(self):
-        print("P {}\nH: {:.2f} H_diff: {:.2f} H_rot: {} H_pris: {}\n". format(
-            self.probs(),
-            self.H(),
-            self.H_diff(),
-            self.rot.entropy(),
-            self.pris.entropy()
-        ))
+        #
+        precision = 0.1
+        self.scaler = .25 / precision
 
-        entropy_sum = 0
-        for k, p in self.iterprobs():
-            try:
-                d = getattr(self, k)
-                print(k, p, d.entropy(), p * d.entropy())
-                entropy_sum += p * d.entropy()
-            except AttributeError:
-                print(k, "not found")
-        print("entropy sum", entropy_sum)
+    def H_tmp(self):
+        """How do we want to calculate the change of entropy for the joint bel?
+
+        - icrement the counter for each label in JointBel
+        - update the appropiate Gaussian with a simple forward model::
+            new gauss = old gauss * fake msmt (+ noise)
+
+        nil only "collapses" the entropy of the other distributions. We don't
+        have to calc the entropy here.
+
+        """
+        Ps = []
+        prior_entropy = []
+        expected_entropy = []
+        expected_change = {}
+
+        update_sigma = .9
+        noise = .01
+
+        for name in self:
+            print("calc {}".format(name))
+
+            distribution = getattr(self, name)
+            if name == "nil":
+                H = distribution.entropy()
+            else:
+                # Simple Forward Model
+                # only the std determines the entropy for gaussians. therefore,
+                # only update the std
+                prior_std = distribution.std()
+                prior_sigma = math.sqrt(prior_std)
+                post_sigma = math.sqrt((prior_sigma * update_sigma) /
+                                       (prior_sigma + update_sigma))
+                post_sigma += noise
+                post_sigma *= self.scaler
+                H = ss.norm.entropy(0, post_sigma)
+                print("post sigma {}".format(post_sigma))
+
+            P = self.prob(name)
+            Ps.append(P)
+            expected_entropy.append(H)
+            prior_entropy_scaled = ss.norm.entropy(0, post_sigma * self.scaler)
+            prior_entropy.append(prior_entropy_scaled)
+            expected_change[name] = P * (prior_entropy[-1]
+                                         - expected_entropy[-1])
+
+        # print("current_entropy", self.H())
+        print("Ps", Ps)
+        print("prior entropy", prior_entropy)
+        print("exp_entropy", expected_entropy)
+
+        return expected_change
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
