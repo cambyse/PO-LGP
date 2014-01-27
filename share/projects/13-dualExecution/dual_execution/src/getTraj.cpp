@@ -8,7 +8,7 @@
 
 #include "getTraj.h"
 
-void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
+void getTrajectory(arr& x, arr& y, arr& ori, arr& dual, ors::KinematicWorld& world){
   MotionProblem P(world, false);
   P.loadTransitionParameters();
   x = P.getInitialization();
@@ -45,10 +45,13 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
     TaskMap *m = new DefaultTaskMap(posTMT, world, "SL_endeff", NoVector);
 
     y.resize(x.d0, pos->map.dim_phi(world));
+    ori.resize(x.d0, 4);
+    ors::Shape *s_SL_endeff = world.getShapeByName("SL_endeff");
     for(uint t=0;t<x.d0;t++){
       world.setJointState(x[t]);
       world.calcBodyFramesFromJoints();
       m->phi(y[t](), NoArr, world);
+      ori[t]() = ARRAY(s_SL_endeff->X.rot);
     }
     delete m;
   }

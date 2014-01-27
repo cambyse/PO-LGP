@@ -8,4 +8,4 @@ shape miniTarget(table) { rel=<T t(0 -.5 .3)> type=1 size=[0 0 0 .05] color=[0 .
 
 shape endeff (R_HAND_M_FINGER_KNUCKLE_3){ type=5 rel=<T t(0 0 .058)> size=[.02 0 0 .1] }
 
-shape SL_endeff (R_LOWER_WRIST){ type=5 rel=<T d(90 0 1 0) t(.0 0 .132)> size=[.02 0 0 .5] }
+shape SL_endeff (R_LOWER_WRIST){ type=5 rel=<T d(90 0 1 0) t(.0 0 .1)> size=[.02 0 0 .5] }

@@ -20,7 +20,7 @@ struct FastControllerInterface{
   void getEndeffForce(arr& forceVector);
 };
 
-void dualExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWorld& world);
+void dualExecution(const arr& x, const arr& y, const arr& ori, const arr& dual, ors::KinematicWorld& world, double tau);
 
 
 //struct OuterController{

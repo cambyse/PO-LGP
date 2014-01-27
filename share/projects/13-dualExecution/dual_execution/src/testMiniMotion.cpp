@@ -99,28 +99,34 @@ int main(int argc,char** argv){
 
   ors::KinematicWorld world(MT::getParameter<MT::String>("orsFile"));
 
-  arr x, y, dual;
-  getTrajectory(x, y, dual, world);
+  arr x, y, ori, dual;
+  getTrajectory(x, y, ori, dual, world);
 
 //  arr x2 = reverseTrajectory(x);
 //  x.append(x2);
-  for(uint i=0;i<2;i++)
-    displayTrajectory(x, 1, world, "planned trajectory");
+//  for(uint i=0;i<2;i++)
+//    displayTrajectory(x, 1, world, "planned trajectory");
 
 //  world.getBodyByName("table")->X.pos.z += .1;
 //  world.setJointState(x[0]);
 
+  ors::Quaternion rotZ;
+  rotZ.setDeg(180,0,0,1);
   arr baseOrg={0, 0.2, 1.305};
-  for(uint i=0;i<y.d0;i++){
-    y[i]() -= baseOrg;
-    y(i,0) *= -1.;
-    y(i,1) *= -1.;
+  for(uint t=0;t<y.d0;t++){
+    y[t]() -= baseOrg;
+    y(t,0) *= -1.;
+    y(t,1) *= -1.;
+
+    ors::Quaternion q;
+    q.set(&ori(t,0));
+    q = rotZ*q;
+    ori[t]() = ARRAY(q);
   }
 
   cout <<"initial cfg: " <<"q=" <<x[0] <<endl <<"y=" <<y[0] <<endl;
 
   //-- launch ROS
-
   ros::init(argc, argv, "TestJointTrajectoryGenerator");
   ros::AsyncSpinner spinner(4);
   spinner.start();
@@ -130,7 +136,7 @@ int main(int argc,char** argv){
   moveArm(x[0]);
   moveHand();
 
-  dualExecution(x, y, dual, world);
+  dualExecution(x, y, ori, dual, world, 0.1);
 
   return 0;
 }
