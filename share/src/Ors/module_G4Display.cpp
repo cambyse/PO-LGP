@@ -40,9 +40,9 @@ void G4Display::open(){
 void G4Display::close(){}
 
 void G4Display::step(){
-  uint t=currentPoses.readAccess();
-  floatA poses = currentPoses();
-  currentPoses.deAccess();
+  uint t=g4data.readAccess();
+  floatA poses = g4data().poses;
+  g4data.deAccess();
 
   if(!t) return; //no revision yet -> nothing to display
 

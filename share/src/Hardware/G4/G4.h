@@ -2,8 +2,16 @@
 
 #include <Core/module.h>
 
-struct G4Poller : Module{
-  ACCESS(floatA, currentPoses)
+struct G4DataStruct {
+  floatA poses;
+  struct timespec timestamp;
+
+  friend std::istream &operator>>(std::istream &is, G4DataStruct &g4d);
+  friend std::ostream &operator<<(std::ostream &os, G4DataStruct &g4d);
+};
+
+struct G4Poller: Module{
+  ACCESS(G4DataStruct, g4data)
 
   G4Poller();
 

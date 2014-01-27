@@ -5,6 +5,24 @@
 #include <string>
 #include <iostream>
 #include <time.h>
+#include <sys/time.h>
+
+std::istream &operator>>(std::istream &is, G4DataStruct &g4d) {
+  double time, time_sec, time_nsec;
+  is >> time >> g4d.poses;
+  time_nsec = modf(time, &time_sec);
+  g4d.timestamp.tv_sec = time_sec;
+  g4d.timestamp.tv_nsec = 1000000000 * time_nsec;
+  return is;
+}
+
+std::ostream &operator<<(std::ostream &os, G4DataStruct &g4d) {
+  double time = g4d.timestamp.tv_sec + g4d.timestamp.tv_nsec / 1000000000.;
+  MT::String tag;
+  tag.resize(30, false);
+  sprintf(tag.p, "%13.6f", time);
+  return os << tag << ' ' << g4d.poses;
+}
 
 REGISTER_MODULE(G4Poller)
 
@@ -17,9 +35,8 @@ struct sG4Poller{
   intA hubMap;
 
   MT::Array<G4_FRAMEDATA> framedata;
-  floatA poses;
+  G4DataStruct g4d;
 
-  timespec start;
   uint num_reads;
   uint num_data_reads;
   uint num_hubs_read;
@@ -104,7 +121,6 @@ void G4Poller::open(){
     for(uint i=0;i<100;i++){
       res = g4_init_sys(&s->sysId, src_cfg_file, NULL);
       if(res==G4_ERROR_NONE) { 
-	clock_gettime(CLOCK_REALTIME, &(s->start));
         break; //success!
       } else {
         std::clog << "Error initializing G4 system: " << errcode2string(res) << std::endl;
@@ -147,8 +163,8 @@ void G4Poller::open(){
   res = g4_set_query(&cs);
   if(res!=G4_ERROR_NONE){ close(); HALT(""); }
   s->framedata.resize(s->hubs);
-  s->poses.resize(s->hubs, G4_SENSORS_PER_HUB, 7);
-  s->poses.setZero();
+  s->g4d.poses.resize(s->hubs, G4_SENSORS_PER_HUB, 7);
+  s->g4d.poses.setZero();
 
   //-- allocate hubMap converter from hub ID to sequential hub ID
   s->hubMap.resize(s->hubList.max() + 1);
@@ -186,6 +202,9 @@ void G4Poller::open(){
 
 void G4Poller::step(){
   int res=g4_get_frame_data(s->framedata.p, s->sysId, s->hubList.p, s->hubs);
+  // get the earlies timestamp you can
+  //gettimeofday(&(s->g4d.timestamp), NULL);
+  clock_gettime(CLOCK_REALTIME, &s->g4d.timestamp);
   if(res < 0) {
 	std::clog << "Error reading frame data:" << errcode2string(res) << std::endl;
 	return;
@@ -233,8 +252,8 @@ void G4Poller::step(){
   s->dropped_hubs = (s->hubs * s->num_frames) - s->num_hubs_read;
   s->dropped_hubs_pct = (100. * s->dropped_hubs) / (s->hubs * s->num_frames);
 
-  s->poses.resize(s->hubs, G4_SENSORS_PER_HUB, 7);
-  s->poses.setZero();
+  s->g4d.poses.resize(s->hubs, G4_SENSORS_PER_HUB, 7);
+  s->g4d.poses.setZero();
 
   int h_id, s_id;
   for(int hub=0; hub<num_hubs_read; hub++) {
@@ -243,8 +262,8 @@ void G4Poller::step(){
       if(s->framedata(hub).stationMap&(0x01<<sen)){ // we have data on hub h and sensors
         h_id = s->hubMap(s->framedata(hub).hub);
         s_id = s->framedata(hub).sfd[sen].id;
-        memmove(&s->poses(h_id, s_id, 0), s->framedata(hub).sfd[sen].pos, 3*s->poses.sizeT); //low level copy of data
-        memmove(&s->poses(h_id, s_id, 3), s->framedata(hub).sfd[sen].ori, 4*s->poses.sizeT); //low level copy of data
+        memmove(&s->g4d.poses(h_id, s_id, 0), s->framedata(hub).sfd[sen].pos, 3*s->g4d.poses.sizeT); //low level copy of data
+        memmove(&s->g4d.poses(h_id, s_id, 3), s->framedata(hub).sfd[sen].ori, 4*s->g4d.poses.sizeT); //low level copy of data
 #if 0
         cout <<" hub " <<s->framedata(hub).hub
             <<" sensor " <<s
@@ -259,26 +278,19 @@ void G4Poller::step(){
   }
   //cout << ")" << endl;
 
-  s->poses.reshape(s->hubs*G4_SENSORS_PER_HUB, 7);
+  s->g4d.poses.reshape(s->hubs*G4_SENSORS_PER_HUB, 7);
   //cout << "poses: " << s->poses << endl;
   //cout << "currentPoses: " << currentPoses.get() << endl;
-  currentPoses.set() = s->poses; //publish the result
+  g4data.set() = s->g4d; //publish the result
   //cout << "currentPoses: " << currentPoses.get() << endl;
 }
 
 #include <unistd.h>
 
 void G4Poller::close(){
-  // compute expected number of frames
-  timespec end_time;
-  clock_gettime(CLOCK_REALTIME, &end_time);
-  double diff_time = (((double)end_time.tv_sec) * 1e9 + (double)end_time.tv_nsec) - (((double)s->start.tv_sec) * 1e9 + (double)s->start.tv_nsec);
-  diff_time/=1e9;
-  int expected_frames = diff_time * 120;
-
   cout << "stats: " << endl;
-  cout << " - num_hubs_read: " << s->num_hubs_read << " (expected: " << (expected_frames * s->hubs) << ")" << endl;
-  cout << " - num_frames: " << s->num_frames << " (expected: " << expected_frames << ", reads: " << s->num_reads << ", data: " << s->num_data_reads << ")" << endl;  
+  cout << " - num_hubs_read: " << s->num_hubs_read << " (expected: " << (s->num_frames * s->hubs) << ")" << endl;
+  cout << " - num_data_reads: " << s->num_data_reads << " (expected: " << s->num_frames << ", reads: " << s->num_reads << ")" << endl;
   cout << " - dropped_frames: " << s->dropped_frames << " (" 
 	<< s->dropped_frames_pct << "%)" << endl;
   cout << " - dropped_hubs: " << s->dropped_hubs << " (" 
