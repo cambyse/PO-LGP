@@ -16,6 +16,8 @@
 #define DEBUG_STRING ""
 #include "../debug.h"
 
+#define USE_OMP
+
 using std::vector;
 using std::deque;
 using std::map;
@@ -214,11 +216,15 @@ int main(int, char **) {
                 }
             }
         }
+#ifdef USE_OMP
 #pragma omp parallel for schedule(dynamic,1) collapse(1)
+#endif
         for(int c_vec_idx=0; c_vec_idx<(int)count_vectors.size(); ++c_vec_idx) {
             vector<sequence_t> local_histories;
             vector<sequence_t> local_tests;
+#ifdef USE_OMP
 #pragma omp critical
+#endif
             {
                 local_histories = histories;
                 local_tests = tests;
@@ -271,8 +277,9 @@ int main(int, char **) {
                 // print rank
                 // DEBUG_OUT(0,"Rank of D = " << rank(D) );
                 // DEBUG_OUT(0,"--------------------------------------------------");
-
+#ifdef USE_OMP
 #pragma omp critical
+#endif
                 {
                     int this_rank = rank(D);
                     if(this_rank>max_rank) {
