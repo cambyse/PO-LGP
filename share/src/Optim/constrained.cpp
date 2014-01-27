@@ -53,7 +53,7 @@ void UnconstrainedProblem::augmentedLagrangian_LambdaUpdate(const arr& x, double
 
   for(uint i=0;i<g.N;i++) if(lambda(i)<0.) lambda(i)=0.;
 
-  cout <<"Update Lambda: g=" <<g <<" lambda=" <<lambda <<endl;
+//  cout <<"Update Lambda: g=" <<g <<" lambda=" <<lambda <<endl;
 }
 
 //==============================================================================

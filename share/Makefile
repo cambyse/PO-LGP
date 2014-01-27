@@ -23,6 +23,10 @@ examples: $(exas:%=makePath/%)
 
 depend: $(srcs:%=dependPath/%)
 
+clr: force
+	@find $(BASE) -type d -name 'Make.lock' -delete -print
+	@find $(BASE) -type f \( -name '*.o' -or -name '*.so' -or -name '.lastMake' \) -delete -print
+
 clean: $(srcs:%=cleanPath/%) $(exas:%=cleanPath/%) cleanLocks
 
 inf:
