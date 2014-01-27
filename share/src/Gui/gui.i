@@ -27,7 +27,7 @@ author: Johannes kulick
 
 %ignore glDrawRobotArm;
 %ignore glClickUI;
-%ignore Camera::setOffset;
+%ignore ors::Camera::setOffset;
 
 %include "mesh.h"
 %include "opengl.h"

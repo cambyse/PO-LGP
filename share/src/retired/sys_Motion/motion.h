@@ -32,9 +32,9 @@ struct FeedbackControlTaskAbstraction;
 //
 
 struct GeometricState:Variable {
-  FIELD(ors::Graph, ors);
+  FIELD(ors::KinematicWorld, ors);
   GeometricState();
-  ors::Graph& get_ors() { return ors; }
+  ors::KinematicWorld& get_ors() { return ors; }
 };
 
 

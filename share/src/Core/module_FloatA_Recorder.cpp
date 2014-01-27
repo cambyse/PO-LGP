@@ -6,9 +6,7 @@ FloatA_Recorder::FloatA_Recorder():Module("FloatA_Recorder"){
 }
 
 void FloatA_Recorder::open(){
-  MT::String nowStr;
-  MT::getNowString(nowStr);
-  file.open(STRING("z." << nowStr << ".something.dat"));
+  file.open(STRING("z." <<x.name <<'.' <<MT::getNowString() <<".dat"));
 }
 
 

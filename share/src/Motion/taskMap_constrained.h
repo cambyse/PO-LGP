@@ -26,19 +26,36 @@ struct CollisionConstraint:public TaskMap {
 
   CollisionConstraint():margin(.1){ constraint=true; }
 
-  virtual void phi(arr& y, arr& J, const ors::Graph& G);
-  virtual uint dim_phi(const ors::Graph& G){ return 1; }
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
+  virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
+};
+
+struct PairCollisionConstraint:public TaskMap {
+  int i;       ///< which shapes does it refer to?
+  int j;       ///< which shapes does it refer to?
+  double margin;
+
+  PairCollisionConstraint(const ors::KinematicWorld& G, const char* iShapeName, const char* jShapeName):
+    i(G.getShapeByName(iShapeName)->index),
+    j(G.getShapeByName(jShapeName)->index),
+    margin(.02)
+  {
+    constraint=true;
+  }
+
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
+  virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
 };
 
 struct PlaneConstraint:public TaskMap {
   int i;       ///< which shapes does it refer to?
   arr planeParams;  ///< parameters of the variable (e.g., liner coefficients, limits, etc)
 
-  PlaneConstraint(const ors::Graph& G, const char* iShapeName, const arr& _planeParams):
+  PlaneConstraint(const ors::KinematicWorld& G, const char* iShapeName, const arr& _planeParams):
     i(G.getShapeByName(iShapeName)->index), planeParams(_planeParams){ constraint=true; }
 
-  virtual void phi(arr& y, arr& J, const ors::Graph& G);
-  virtual uint dim_phi(const ors::Graph& G){ return 1; }
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
+  virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
 };
 
 #endif

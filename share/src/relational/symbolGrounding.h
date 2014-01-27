@@ -71,10 +71,10 @@ public:
 void read(MT::Array<GroundedSymbol*>& pns, const char* prefix, GroundedSymbol::GroundingType grounding_type);
   
   
-// ors::Graph interface
-void getFeatureVector(arr& f, const ors::Graph& C, uint obj);
-void getFeatureVectors(MT::Array< arr >& fs, const ors::Graph& C, const uintA& objs);
-void calculateSymbols(LitL& lits, const MT::Array<GroundedSymbol*>& sgs, ors::Graph* C);
+// ors::KinematicWorld interface
+void getFeatureVector(arr& f, const ors::KinematicWorld& C, uint obj);
+void getFeatureVectors(MT::Array< arr >& fs, const ors::KinematicWorld& C, const uintA& objs);
+void calculateSymbols(LitL& lits, const MT::Array<GroundedSymbol*>& sgs, ors::KinematicWorld* C);
 
 
 }
@@ -97,7 +97,7 @@ struct ContinuousState {
 };
 
 
-ContinuousState* getContinuousState(const ors::Graph& C, const uintA& objects);
+ContinuousState* getContinuousState(const ors::KinematicWorld& C, const uintA& objects);
 
 
 

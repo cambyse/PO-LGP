@@ -5,7 +5,7 @@
 #include "ComputeSum_Module.h"
 
 void ComputeSum::step(){
-  s.set() = sum(x.get());
+  s.set() = sum(x.get()());
 }
 
 bool ComputeSum::test(){

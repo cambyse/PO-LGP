@@ -28,14 +28,14 @@
  */
 
 
+#include "ors_ode.h"
 #include "ors_sceneGui.h"
 
 enum EditMode { emNone, emMove, emOde };
 
 struct sOrsSceneGui:OpenGL::GLKeyCall,OpenGL::GLHoverCall,OpenGL::GLClickCall {
   OpenGL *gl;
-  ors::Graph *ors;
-  OdeInterface ode;
+  ors::KinematicWorld *ors;
   EditMode mode;
   ors::Body *movingBody;
   ors::Vector selpos;
@@ -108,9 +108,9 @@ bool sOrsSceneGui::hoverCallback(OpenGL&) {
     }
     case emOde: {
       cout <<"ODE step" <<endl;
-      ode.exportStateToOde(*ors);
-      ode.step(.01);
-      ode.importStateFromOde(*ors);
+      ors->ode().exportStateToOde();
+      ors->ode().step(.01);
+      ors->ode().importStateFromOde();
       break;
     }
   }
@@ -154,17 +154,18 @@ bool sOrsSceneGui::keyCallback(OpenGL&) {
       break;
     }
     case 'v': {
-      if(mode==emOde) { mode=emNone; ode.clear();  cout <<"ODE off" <<endl;  return true; }
-      cout <<"ODE mode" <<endl;
-      mode=emOde;
-      ode.createOde(*ors);
+      NIY;
+//      if(mode==emOde) { mode=emNone; ors->ode.clear();  cout <<"ODE off" <<endl;  return true; }
+//      cout <<"ODE mode" <<endl;
+//      mode=emOde;
+//      ode.createOde(*ors);
       return true;
     }
   }
   return true;
 }
 
-OrsSceneGui::OrsSceneGui(ors::Graph& ors, OpenGL* gl) {
+OrsSceneGui::OrsSceneGui(ors::KinematicWorld& ors, OpenGL* gl) {
   s=new sOrsSceneGui();
   s->ors = &ors;
   orsDrawZlines=true;

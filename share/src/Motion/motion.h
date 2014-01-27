@@ -35,8 +35,10 @@
 
 struct TaskMap {
   bool constraint;  ///< whether this is a hard constraint (implementing a constraint function g)
-  virtual void phi(arr& y, arr& J, const ors::Graph& G) = 0;
-  virtual uint dim_phi(const ors::Graph& G) = 0; //the dimensionality of $y$
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G) = 0;
+  virtual uint dim_phi(const ors::KinematicWorld& G) = 0; //the dimensionality of $y$
+
+  virtual ~TaskMap() {};
 
   TaskMap():constraint(false) {}
 };
@@ -65,11 +67,11 @@ struct TaskCost {
 // a motion problem description
 //
 
-/// This class allows you to DESCRIBE a motion problem, nothing more
-struct MotionProblem {
+/// This class allows you to DESCRIBE a motion planning problem, nothing more
+struct MotionProblem { //TODO: rename MotionPlanningProblem
   //engines to compute things
-  ors::Graph *ors;
-  SwiftInterface *swift;
+  ors::KinematicWorld& world;
+  bool useSwift;
   
   //******* the following three sections are parameters that define the problem
 
@@ -77,7 +79,7 @@ struct MotionProblem {
   enum TaskCostInterpolationType { constant, finalOnly, final_restConst, early_restConst, final_restLinInterpolated };
   MT::Array<TaskCost*> taskCosts;
   
-  //-- transition cost descriptions
+  //-- transition cost descriptions //TODO: make own little class
   enum TransitionType { kinematic=0, pseudoDynamic=1, realDynamic=2 };
   TransitionType transitionType;
   arr H_rate_diag; ///< cost rate
@@ -87,23 +89,21 @@ struct MotionProblem {
   //-- start constraints
   arr x0, v0; ///< fixed start state and velocity
   arr prefix; ///< a set of states PRECEEDING x[0] (having 'negative' time indices) and which influence the control cost on x[0]. NOTE: x[0] is subject to optimization. DEFAULT: constantly equals x0
-  arr x_current, v_current; ///< memory for which state was set (which state ors is in)
-  
 
   //-- return values of an optimizer
   arr costMatrix;
   arr dualMatrix;
 
-  MotionProblem(ors::Graph *_ors=NULL, SwiftInterface *_swift=NULL, bool useSwift=true);
+  MotionProblem(ors::KinematicWorld& _world, bool useSwift=true);
   
-  void loadTransitionParameters(); ///< loads transition parameters from cfgFile
+  void loadTransitionParameters(); ///< loads transition parameters from cfgFile //TODO: do in constructor of TransitionCost
   
   //-- methods for defining the task
-  void setx0(const arr&);
-  void setx0v0(const arr&, const arr&);
+  void setx0(const arr&); //TODO: obsolete
+  void setx0v0(const arr&, const arr&); //TODO: obsolete
 
   //adding task spaces
-  TaskCost* addTaskMap(const char* name, TaskMap *map);
+  TaskCost* addTaskMap(const char* name, TaskMap *map); //TODO: rename addTask
 
   //setting costs in a task space TODO: move to be member of TaskCost
   void setInterpolatingCosts(TaskCost *c,

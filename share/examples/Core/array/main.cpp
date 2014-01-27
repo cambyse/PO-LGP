@@ -358,6 +358,31 @@ void TEST(SVD){
   CHECK_ZERO(maxDiff(A, U*D*~V), 1e-10, "Lapack SVD failed");
 }
 
+void TEST(PCA) {
+  // TODO: not really checking values automatically, just visualizing them
+  // (and they are ok).
+
+  cout <<"\n*** principal component analysis\n";
+  arr x = { 1, -2, 1, -1, 1, 1, 1, 2 };
+  x.reshape(4, 2);
+  cout << "x = " << x << endl;
+
+  arr xp, v, w;
+  pca(xp, v, w, x, 1);
+
+  cout << "xp = " << xp << endl;
+  cout << "v = " << v << endl;
+  cout << "w = " << w << endl;
+
+  arr y = { 1, 1, -1, 1, -1, -1, 1, -1 };
+  y.reshape(4, 2);
+  cout << "y = " << y << endl;
+
+  arr yp;
+  pca(yp, w, y);
+  cout << "yp = " << yp << endl;
+}
+
 void TEST(Inverse){
   cout <<"\n*** matrix inverse\n";
   uint m=500,n=500,svdr;
@@ -570,6 +595,9 @@ void TEST(RowShiftedPackedMatrix){
 
 int MAIN(int argc, char *argv[]){
 
+  //testPCA();
+  //testCheatSheet();
+
   testBasics();
   testCheatSheet();
   testInitializationList();
@@ -587,6 +615,7 @@ int MAIN(int argc, char *argv[]){
   testInverse();
   testMM();
   testSVD();
+  testPCA();
   testTensor();
   testGaussElimintation();
   

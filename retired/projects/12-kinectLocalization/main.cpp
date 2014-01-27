@@ -496,8 +496,8 @@ void extractMode() {
   //
 }
 void computeMode() {
-  MT::load(X, "kt.points");
-  MT::load(Y, "wd.points");
+  X <<FILE("kt.points");
+  Y <<FILE("wd.points");
 
   int xd0 = X.d0;
   int yd0 = Y.d0;
@@ -523,8 +523,8 @@ void computeMode() {
   //kinect_points << X << std::endl;
   //world_points << Y << std::endl;
   //
-  MT::load(X, "kt.points");
-  MT::load(Y, "wd.points");
+  X <<FILE("kt.points");
+  Y <<FILE("wd.points");
 
   X = ~X;
   Y = ~Y;

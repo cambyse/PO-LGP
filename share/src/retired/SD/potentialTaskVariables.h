@@ -12,27 +12,27 @@ struct PotentialValuesTaskVariable:public DefaultTaskVariable{
   PotentialField *f;
   ShapeList refs;
   
-  PotentialValuesTaskVariable(const char* _name, ors::Graph& _ors, const ShapeList& _refs, PotentialField& _f);
+  PotentialValuesTaskVariable(const char* _name, ors::KinematicWorld& _ors, const ShapeList& _refs, PotentialField& _f);
   virtual TaskVariable* newClone(){ return new PotentialValuesTaskVariable(*this); }
-  virtual void userUpdate(const ors::Graph& ors);
+  virtual void userUpdate(const ors::KinematicWorld& ors);
 };
 
 struct PotentialFieldAlignTaskVariable:public DefaultTaskVariable{
   PotentialField *f;
   ShapeList refs;
 
-  PotentialFieldAlignTaskVariable(const char* _name, ors::Graph& _ors, const ShapeList& _refs, PotentialField& _f);
+  PotentialFieldAlignTaskVariable(const char* _name, ors::KinematicWorld& _ors, const ShapeList& _refs, PotentialField& _f);
   virtual TaskVariable* newClone(){ return new PotentialFieldAlignTaskVariable(*this); }
-  virtual void userUpdate(const ors::Graph& ors);
+  virtual void userUpdate(const ors::KinematicWorld& ors);
 };
 
 struct GPVarianceTaskVariable:public DefaultTaskVariable{
   GraspObject_GP *f;
   ShapeList refs;
 
-  GPVarianceTaskVariable(const char* _name, ors::Graph& _ors, const ShapeList& _refs, GraspObject_GP& _f);
+  GPVarianceTaskVariable(const char* _name, ors::KinematicWorld& _ors, const ShapeList& _refs, GraspObject_GP& _f);
   virtual TaskVariable* newClone(){ return new GPVarianceTaskVariable(*this); }
-  virtual void userUpdate(const ors::Graph& ors);
+  virtual void userUpdate(const ors::KinematicWorld& ors);
 };
 
 #ifdef  MT_IMPLEMENTATION

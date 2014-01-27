@@ -103,7 +103,7 @@ void sine_trajectory(const arr& q,arr& sine_q,const uint _N)
 }
 
 int problem4(){      
-  ors::Graph ors;  
+  ors::KinematicWorld ors;  
   ors.init(MT::getParameter<MT::String>("orsfile",MT::String("rope_grasp_20.ors")));//e.g._test
   bool usebwd=MT::getParameter<double>("usebwd") ;
   SwiftInterface swift;
@@ -273,7 +273,7 @@ wr->userUpdate();
    // ifstream qitstr("q.rrt"); tr_q.readRaw(qitstr);  qitstr.close(); 
   //! Replaying RRT trajectory here
 //     arr tr_q; tr_q.resize(21,20); 
-//   MT::load(tr_q,"q.rrt");
+//   tr_q <<FILE("q.rrt");
 //   soc.totalCost(NULL,tr_q, 1);
 //   for (;;)  soc.displayTrajectory(tr_q,NULL,20,"AICO (planned trajectory)");
   //! end of REPLAY
@@ -286,7 +286,7 @@ wr->userUpdate();
        
 
 int problem41(){      
-  ors::Graph ors;  
+  ors::KinematicWorld ors;  
   ors.init(MT::getParameter<MT::String>("orsfile",MT::String("rope_grasp_20.ors")));
   SwiftInterface swift;
   swift.init(ors,.5);   
@@ -376,7 +376,7 @@ soc.gl->watch();
 
 
 int problem42(){      
-  ors::Graph ors;  
+  ors::KinematicWorld ors;  
   ors.init(MT::getParameter<MT::String>("orsfile",MT::String("rope_grasp_20.ors")));
   SwiftInterface swift;
   swift.init(ors,.5);   
@@ -464,7 +464,7 @@ soc.gl->watch();
 }
 
 int problem43(){      
-  ors::Graph ors;  
+  ors::KinematicWorld ors;  
   ors.init(MT::getParameter<MT::String>("orsfile",MT::String("rope_grasp_20.ors")));
   SwiftInterface swift;
   swift.init(ors,.5);   
@@ -533,7 +533,7 @@ soc.gl->watch();
 }
 
 int problem5(){      
-  ors::Graph ors;  
+  ors::KinematicWorld ors;  
   ors.init(MT::getParameter<MT::String>("orsfile",MT::String("rope_grasp_20.ors")));
   SwiftInterface swift;
   swift.init(ors,.5);   
@@ -642,7 +642,7 @@ Tlist.append(reach);
 
 
 int problem6(){      
-  ors::Graph ors;  
+  ors::KinematicWorld ors;  
   ors.init(MT::getParameter<MT::String>("orsfile",MT::String("rope_grasp_20.ors")));
   SwiftInterface swift;
   swift.init(ors,.5);    

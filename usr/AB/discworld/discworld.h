@@ -5,7 +5,7 @@
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
 
-#include "keyframer.h"
+#include <Perception/keyframer.h>
 
 class DiscWorld {
   public:
@@ -13,7 +13,7 @@ class DiscWorld {
     static float const GOAL_HEIGHT;
     static float const RADIUS;
 
-    ors::Graph *ors;
+    ors::KinematicWorld *ors;
     OpenGL *gl;
     PhysXInterface *physx;
 

@@ -26,7 +26,7 @@ void addCollisionSphere (RigidBody *b, Real radius);
 ~IbdsModule::IbdsModule() { delete sim; }
 
 
-void IbdsModule::create(ors::Graph& C) {
+void IbdsModule::create(ors::KinematicWorld& C) {
   ors = &C;
   
 #if 1
@@ -168,7 +168,7 @@ void IbdsModule::create(ors::Graph& C) {
 }
 
 
-void importStateFromIbds(ors::Graph& C,IbdsModule& ibds) {
+void importStateFromIbds(ors::KinematicWorld& C,IbdsModule& ibds) {
   // Bodies
   ors::Body *n;
   RigidBody *b;
@@ -334,7 +334,7 @@ void drawEnv(void*) {
 
 #else //MT_IBDS
 
-void IbdsModule::create(ors::Graph& C) { NICO }
+void IbdsModule::create(ors::KinematicWorld& C) { NICO }
 void IbdsModule::step(){ NICO }
 
 #include <Core/array_t.h>

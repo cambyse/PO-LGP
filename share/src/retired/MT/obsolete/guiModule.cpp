@@ -34,7 +34,7 @@ GuiModule::GuiModule():Process("GuiProcess"){
   ors=ors2=NULL;
 }
 
-void GuiModule::createOrsClones(ors::Graph *_ors){
+void GuiModule::createOrsClones(ors::KinematicWorld *_ors){
   if(_ors) ors  = _ors->newClone(); else ors =NULL;
   if(_ors) ors2 = _ors->newClone(); else ors2=NULL;
 }
@@ -48,7 +48,7 @@ void GuiModule::open(){
 // #endif
   
   /*//-- ors
-  MT::load(ors, "../../../share/configurations/schunk.ors", true);
+  ors <<FILE("../../../share/configurations/schunk.ors");
   ors.calcNodeFramesFromEdges();
   */
   

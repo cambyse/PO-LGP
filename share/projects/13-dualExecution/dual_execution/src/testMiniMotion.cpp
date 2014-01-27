@@ -1,18 +1,14 @@
-/*
- * test_switch_controller_stack.cpp
- *
- *  Created on: Aug 15, 2011
- *      Author: mrinal
- */
+//#define USE_SL
 
+#include <ros/ros.h>
 
+#ifdef USE_SL
 #include <sl_controller_interface/controller_interface.h>
 #include <sl_controller_interface/joint_trajectory_client.h>
 #include <sl_controller_interface/switch_controller_stack_client.h>
 #include <sl_controller_interface/data_collector_client.h>
-#include <ros/ros.h>
-#include <boost/thread.hpp>
-
+//#include <boost/thread.hpp>
+#endif
 
 #include <Motion/motion.h>
 #include <Motion/taskMap_default.h>
@@ -21,9 +17,9 @@
 #include <Optim/optimization.h>
 #include <Optim/constrained.h>
 #include <Core/thread.h>
+#include "execution.h"
 
-
-arr getSimpleTrajectory(ors::Graph& G){
+arr getSimpleTrajectory(ors::KinematicWorld& G){
   MotionProblem P(&G, NULL, false);
   P.loadTransitionParameters();
 
@@ -32,7 +28,7 @@ arr getSimpleTrajectory(ors::Graph& G){
   c = P.addTaskMap("position",
                    new DefaultTaskMap(posTMT, G, "endeff", NoVector));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.ors->getShapeByName("miniTarget")->X.pos), 1e2);
+                          ARRAY(P.world.getShapeByName("miniTarget")->X.pos), 1e2);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e1);
 
   MotionProblemFunction MF(P);
@@ -43,7 +39,7 @@ arr getSimpleTrajectory(ors::Graph& G){
   return x;
 }
 
-arr getKindOfSimpleTrajectory(ors::Graph& G){
+arr getKindOfSimpleTrajectory(ors::KinematicWorld& G){
   MotionProblem P(&G, NULL, false);
   P.loadTransitionParameters();
   arr x = P.getInitialization();
@@ -53,7 +49,7 @@ arr getKindOfSimpleTrajectory(ors::Graph& G){
   c = P.addTaskMap("position",
                    new DefaultTaskMap(posTMT, G, "endeff", NoVector));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.ors->getShapeByName("target")->X.pos), 1e2);
+                          ARRAY(P.world.getShapeByName("target")->X.pos), 1e2);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e1);
 
   //c = P.addTaskMap("collisionConstraints", new CollisionConstraint());
@@ -77,6 +73,7 @@ arr getKindOfSimpleTrajectory(ors::Graph& G){
   return x;
 }
 
+#ifdef USE_SL
 void moveHand(){
     std::string robot_part("RIGHT_HAND");
     std::string stack_name("RightHandJointPDControl");
@@ -107,6 +104,7 @@ void moveHand(){
     desired_joint_positions[3] = 2.;
     joint_client.moveTo(desired_joint_positions, 3.);
 }
+#endif
 
 int main(int argc, char** argv){
 
@@ -116,7 +114,7 @@ int main(int argc, char** argv){
 
 
   OpenGL gl;
-  ors::Graph G;
+  ors::KinematicWorld G;
   init(G, gl, MT::getParameter<MT::String>("orsFile"));
 
   arr x = getKindOfSimpleTrajectory(G);
@@ -136,6 +134,7 @@ int main(int argc, char** argv){
   ros::AsyncSpinner spinner(4);
   spinner.start();
 
+#if USE_SL
   sl_controller_interface::init();
 
 
@@ -222,7 +221,7 @@ int main(int argc, char** argv){
     */
     // joint_client.moveTo(desired_joint_positions, 0.1);
   }
-
+#endif
 
   return 0;
 }

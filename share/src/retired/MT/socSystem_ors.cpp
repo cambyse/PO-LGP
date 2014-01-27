@@ -98,9 +98,9 @@ soc::SocSystem_Ors* soc::SocSystem_Ors::newClone(bool deep) const {
   return sys;
 }
 
-void soc::SocSystem_Ors::initBasics(ors::Graph *_ors, SwiftInterface *_swift, OpenGL *_gl,
+void soc::SocSystem_Ors::initBasics(ors::KinematicWorld *_ors, SwiftInterface *_swift, OpenGL *_gl,
                                     uint trajectory_steps, double trajectory_duration, bool _dynamic, arr *W){
-  if(_ors)   ors   = _ors;   else { ors=new ors::Graph;        ors  ->init(MT::getParameter<MT::String>("orsFile")); } // ors->makeLinkTree(); }
+  if(_ors)   ors   = _ors;   else { ors=new ors::KinematicWorld;        ors  ->init(MT::getParameter<MT::String>("orsFile")); } // ors->makeLinkTree(); }
   if(_swift) swift = _swift; else { swift=new SwiftInterface;  swift->init(*ors, 2.*MT::getParameter<double>("swiftCutoff", 0.11)); }
   gl    = _gl;
   if(gl && !_ors){
@@ -198,7 +198,7 @@ void soc::SocSystem_Ors::initStandardBenchmark(uint rand_seed){
   //generate the configuration
   ors::Body *b, *target, *endeff;  ors::Shape *s;  ors::Joint *j;
   MT::String str;
-  ors=new ors::Graph;
+  ors=new ors::KinematicWorld;
   //the links
   for(uint k=0; k<=K; k++){
     b=new ors::Body(*ors);
@@ -276,7 +276,7 @@ void soc::createEndeffectorReachProblem(SocSystem_Ors &sys,
 {
 
   //setup the workspace
-  MT::load(*sys.ors, ors_file);
+  *sys.ors <<FILE(ors_file);
   if(rand_seed>0){
     rnd.seed(rand_seed);
     ors::Body &t=*sys.ors->getBodyByName("target");
@@ -603,7 +603,7 @@ void drawOrsSocEnv(void*){
                           uint trajectory_steps){
 
   //setup the workspace
-  MT::load(*sys.ors, ors_file);
+  *sys.ors <<FILE(ors_file);
   sys.ors->calcBodyFramesFromJoints();
   sys.ors->getJointState(sys.s->q0, sys.s->v0);
   sys.swift->init(*sys.ors);
@@ -640,7 +640,7 @@ void drawOrsSocEnv(void*){
 }
 
 void createNikolayReachProblem(soc::SocSystem_Ors& sys,
-                                   ors::Graph& _ors,
+                                   ors::KinematicWorld& _ors,
                                    SwiftInterface& _swift,
                                    uint trajectory_length,
                                    const arr& endeffector_target,
@@ -679,7 +679,7 @@ void createNikolayReachProblem(soc::SocSystem_Ors& sys,
 
 #if 0
 //old code to give system relative to a linear transform
-//now realized a level deeper within ors::Graph
+//now realized a level deeper within ors::KinematicWorld
 void transformSystemMatricesWithQlin(){
   //clone operator operator
   sys->Qlin = Qlin;

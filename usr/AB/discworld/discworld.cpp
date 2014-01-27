@@ -1,4 +1,7 @@
+#include <stdlib.h>
 #include "discworld.h"
+
+#include <unistd.h>
 
 float const DiscWorld::HEIGHT       = .1;
 float const DiscWorld::GOAL_HEIGHT  = .25;
@@ -12,7 +15,7 @@ void DiscWorld::clear() {
   bodies.clear();
   names.clear();
   goals.clear();
-  kf.clearS();
+  kf.clearState();
 
   N = 0;
   G = 0;
@@ -23,7 +26,7 @@ void DiscWorld::clearGui() {
   delete gl;
   delete physx;
 
-  ors = new ors::Graph;
+  ors = new ors::KinematicWorld;
   gl = new OpenGL;
   physx = new PhysXInterface;
 }
@@ -98,7 +101,7 @@ void DiscWorld::play() {
   ors::Body *agent = ors->getBodyByName("A");
   ors::Body *goal = ors->getBodyByName("G");
 
-  kf.clearT();
+  kf.clearFrames();
 
   if(mode)
     cout << "Running until t == " << T << endl;
@@ -169,18 +172,19 @@ void DiscWorld::replay() {
 
   gl->watch();
 
+  kf.setAgent(0);
   kf.run();
 
   MT::String cmd;
-  int T = kf.getT();
+  int T = kf.getNFrames();
   cout << "Replay until t == " << T << endl;
-  for(int t = 0; t < T; t++) {
+  for(uint t = 0; t < T; t++) {
     cout << "\r t = " << t << flush;
 
     playStep(t);
     gl->update();
 
-    if(t >= T-lwin)
+    if(t <= lwin)
       continue;
 
     arr TEMP;
@@ -192,8 +196,8 @@ void DiscWorld::replay() {
     for(int b = 0; b < kf.getNBodies(); b++) {
       fname.clear() << basename << b;
       TEMP = kf.getErr(b);
-      TEMP.subRange(t, T-lwin-1).setZero();
-      MT::save(TEMP, fname);
+      TEMP.subRange(t-lwin, T-lwin-1).setZero();
+      TEMP >>FILE(fname);
     }
     MT::arrayBrackets = "[]";
     MT::IOraw = false;

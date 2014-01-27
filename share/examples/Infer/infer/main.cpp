@@ -251,8 +251,8 @@ void testLoop(){
   infer::Variable C(2, "C");
   infer::VariableList vars = LIST(A,B,C);
   
-  arr coupling;
-  coupling.setText("[ .75 .25 ; .25 .75]");
+  arr coupling = ARR(.75, .25, .25, .75);
+  coupling.reshape(2,2);
   //coupling.setText("[ 1 0 ; 0 1]");
   
   infer::Factor f_ab(LIST(A,B), coupling);
@@ -260,8 +260,7 @@ void testLoop(){
   infer::Factor f_ca(LIST(C,A), coupling);
   infer::FactorList facs = LIST(f_ab, f_bc, f_ca);
   
-  arr p_evid;
-  p_evid.setText("[.2 .8]"); 
+  arr p_evid = ARR(.2,.8);
   infer::Factor evid(LIST(A), p_evid);
   facs.append(&evid);
   
@@ -309,8 +308,8 @@ void testGridBP2(){
   evid(0,0,0)=.2;
   evid(0,0,1)=.8;
 
-  arr coupling;
-  coupling.setText("[ .75 .25 ; .25 .75]");
+  arr coupling = ARR(.75, .25, .25, .75);
+  coupling.reshape(2,2);
   
   arr post;
   gridBP(post, evid, coupling);

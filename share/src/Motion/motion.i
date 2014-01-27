@@ -43,7 +43,11 @@ author: Johannes kulick
 %}
 
 %include "motion.h"
+
+%ignore setPlaceGoals;
+%ignore setHomingGoals;
 %include "motionHeuristics.h"
+
 %include "rrt_planner.h"
 %include "taskMap_constrained.h"
 %include "taskMap_default.h"

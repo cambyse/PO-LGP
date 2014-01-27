@@ -1,8 +1,8 @@
-#include<MT/ors.h>
-#include<MT/aico.h>
+#include<Ors/ors.h>
+//#include<MT/aico.h> // retired
 #include<Algo/algos.h>
-#include<MT/opengl.h>
-#include<MT/plot.h>
+#include<Gui/opengl.h>
+#include<Gui/plot.h>
 #include<GL/gl.h>
 
 #include<fstream>
@@ -73,7 +73,7 @@ void testHand() {
     int sid_to_fid[num_fings+1]={0,0,1,2,3,4}; // the first one is a dummy offset
 
     // ors objects and related init
-    ors::Graph G;
+    ors::KinematicWorld G;
     OpenGL gl;
     init(G,gl,"models/hand.ors");
 

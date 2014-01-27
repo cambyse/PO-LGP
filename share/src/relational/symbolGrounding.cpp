@@ -351,9 +351,9 @@ void relational::RBF_Grounding::write() const {
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 //
-// ors::Graph interface
+// ors::KinematicWorld interface
 
-void relational::getFeatureVector(arr& f, const ors::Graph& C, uint obj) {
+void relational::getFeatureVector(arr& f, const ors::KinematicWorld& C, uint obj) {
   f.clear();
   f.resize(4);
   f(0) = C.bodies(obj)->X.pos.x;  // position
@@ -367,7 +367,7 @@ void relational::getFeatureVector(arr& f, const ors::Graph& C, uint obj) {
 }
 
 
-void relational::getFeatureVectors(MT::Array< arr >& fs, const ors::Graph& C, const uintA& objs) {
+void relational::getFeatureVectors(MT::Array< arr >& fs, const ors::KinematicWorld& C, const uintA& objs) {
   fs.clear();
   uint i;
   FOR1D(objs, i) {
@@ -378,7 +378,7 @@ void relational::getFeatureVectors(MT::Array< arr >& fs, const ors::Graph& C, co
 }
 
 
-void relational::calculateSymbols(LitL& lits, const MT::Array<relational::GroundedSymbol*>& sgs, ors::Graph* C) {
+void relational::calculateSymbols(LitL& lits, const MT::Array<relational::GroundedSymbol*>& sgs, ors::KinematicWorld* C) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"GroundedSymbol::calculateSymbols [START]"<<endl;}
   
@@ -447,7 +447,7 @@ bool relational::ContinuousState::operator!=(const ContinuousState& other) const
   return !(*this==other);
 }
 
-relational::ContinuousState* relational::getContinuousState(const ors::Graph& C, const uintA& objects) {
+relational::ContinuousState* relational::getContinuousState(const ors::KinematicWorld& C, const uintA& objects) {
   MT::Array< arr > objects_data;
   relational::getFeatureVectors(objects_data, C, objects);
   relational::ContinuousState* cont_state = new relational::ContinuousState;

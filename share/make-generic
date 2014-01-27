@@ -507,7 +507,7 @@ endif
 
 MODULE_NAME=$(shell echo $(notdir $(CURDIR)) | tr A-Z a-z)
 
-SWC_FLAGS=-std=c++0x
+SWC_FLAGS=-std=c++0x -g
 SWC_INCLUDES=-I$(MLR_PATH)/share/src -I/usr/include/python2.7 
 SWC_LIB_PATH=-L$(MLR_PATH)/share/lib -Xlinker -rpath $(MLR_PATH)/share/lib
 SWC_CXXFLAGS=-c $(SWC_FLAGS) -fPIC $(SWC_INCLUDES) -DSWIG_TYPE_TABLE=mlr
@@ -557,8 +557,8 @@ default: $(OUTPUT)
 
 clean:
 	@rm -f $(OUTPUT) $(OBJS) $(PREOBJS) callgrind.out.* $(CLEAN)
-	@find $(BASE) -name 'Make.lock' -type d -delete
-	@rm -f $(MODULE_NAME)_wrap.* $(MODULE_NAME)py.so
+	@find $(BASE) -type d -name 'Make.lock' -delete
+	@rm -f $(MODULE_NAME)_wrap.* $(MODULE_NAME)py.so $(MODULE_NAME)py.py
 
 cleanLocks: force
 	@find $(BASE) -name 'Make.lock' -type d -delete

@@ -8,7 +8,7 @@ REGISTER_MODULE(G4Display)
 struct sG4Display{
   uint sensors;
   OpenGL gl;
-  ors::Graph ors;
+  ors::KinematicWorld ors;
 };
 
 G4Display::G4Display():Module("G4Display"){

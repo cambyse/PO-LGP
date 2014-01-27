@@ -1,18 +1,19 @@
 #include "pfc.h"
 
-Pfc::Pfc(ors::Graph &_orsG, arr& _trajRef, double _TRef, arr &_x0, MObject &_goalMO, \
+Pfc::Pfc(ors::KinematicWorld &_orsG, arr& _trajRef, double _TRef, arr &_x0, arr &_q0, MObject &_goalMO, \
         bool _useOrientation, bool _useCollAvoid, \
         double _fPos_deviation, double _fVec_deviation, double _yCol_deviation, double _w_reg):
-        orsG(&_orsG),
-        TRef(_TRef),
-        x0(_x0),
-        goalMO(&_goalMO),
-        useOrientation(_useOrientation),
-        useCollAvoid(_useCollAvoid),
         fPos_deviation(_fPos_deviation),
         fVec_deviation(_fVec_deviation),
         yCol_deviation(_yCol_deviation),
-        w_reg(_w_reg)
+        w_reg(_w_reg),
+        TRef(_TRef),
+        useOrientation(_useOrientation),
+        useCollAvoid(_useCollAvoid),
+        goalMO(&_goalMO),
+        orsG(&_orsG),
+        x0(_x0),
+        q0(_q0)
 {
   goalRef = _trajRef[_trajRef.d0-1];
   dt = TRef/(_trajRef.d0-1);
@@ -25,6 +26,7 @@ Pfc::Pfc(ors::Graph &_orsG, arr& _trajRef, double _TRef, arr &_x0, MObject &_goa
 
   traj = ~x0;
   s = ARR(0.);
+  joints_bk.append(~q0);
 
   lastGoal = goalRef+(x0-_trajRef[0]);
   eps_goal = 0.1;
@@ -88,11 +90,11 @@ void Pfc::computeIK(arr &q, arr &qd)
     W.setDiag(1.,orsG->getJointStateDimension());  // W is equal the Id_n matrix
     W = W*w_reg;
 
+    joints_bk.append(~q);
+
     // Compute current task states
-    orsG->kinematicsPos(yPos, orsG->getBodyByName("endeff")->index);
-    orsG->jacobianPos(JPos, orsG->getBodyByName("endeff")->index);
-    orsG->kinematicsVec(yVec, orsG->getBodyByName("endeff")->index);
-    orsG->jacobianVec(JVec, orsG->getBodyByName("endeff")->index);
+    orsG->kinematicsPos(yPos, JPos, orsG->getBodyByName("endeff")->index);
+    orsG->kinematicsVec(yVec, JVec, orsG->getBodyByName("endeff")->index);
 
     // iterate pfc
     arr y = yPos;
@@ -100,6 +102,7 @@ void Pfc::computeIK(arr &q, arr &qd)
       y.append(yVec);
     }
     iterate(y);
+
 
     // next target
     y_target = traj[traj.d0-1];
@@ -122,7 +125,7 @@ void Pfc::computeIK(arr &q, arr &qd)
 
     // task 3: COLLISION
     if (useCollAvoid) {
-      orsG->phiCollision(yCol,JCol,0.15);
+      orsG->kinematicsProxyCost(yCol,JCol,0.15);
       costs = yCol / yCol_deviation;
       colCosts.append(~costs*costs);
       Phi.append(costs);
@@ -130,36 +133,49 @@ void Pfc::computeIK(arr &q, arr &qd)
     }
 
     // compute joint updates
-    qd = inverse(~PhiJ*PhiJ + W)*~PhiJ* Phi;
-    q -= qd;
+    qd = -inverse(~PhiJ*PhiJ + W)*~PhiJ* Phi;
+    q += qd;
+
+
 }
 
 void Pfc::plotState()
 {
-  write(LIST<arr>(trajRef->points),"out/trajRef.output");
-  write(LIST<arr>(trajWrap->points),"out/trajWrap.output");
-  write(LIST<arr>(traj),"out/traj.output");
+  if (scene.M==0) {
+    scene = STRING("out");
+  }else {
+    scene = STRING("out/"<<scene);
+  }
+  cout << "Save Path: " << scene << endl;
+
+  write(LIST<arr>(joints_bk),STRING(scene<<"/joints_bk.output"));
+  write(ARR(dt),STRING(scene<<"/dt.output"));
+  write(LIST<arr>(goal),STRING(scene<<"/goal.output"));
+
+  write(LIST<arr>(trajRef->points), STRING(scene<<"/trajRef.output"));
+  write(LIST<arr>(trajWrap->points),STRING(scene<<"/trajWrap.output"));
+  write(LIST<arr>(traj),STRING(scene<<"/traj.output"));
 
   gnuplot("set term wxt 1 title 'position 1'");
-  gnuplot("plot 'out/trajRef.output' us 1,'out/trajWrap.output' us 1, 'out/traj.output' us 1");
+  gnuplot(STRING("plot '"<<scene<<"/trajRef.output' us 1,'"<<scene<<"/trajWrap.output' us 1, '"<<scene<<"/traj.output' us 1"));
   gnuplot("set term wxt 2 title 'position 2'");
-  gnuplot("plot 'out/trajRef.output' us 2,'out/trajWrap.output' us 2, 'out/traj.output' us 2");
+  gnuplot(STRING("plot '"<<scene<<"/trajRef.output' us 2,'"<<scene<<"/trajWrap.output' us 2, '"<<scene<<"/traj.output' us 2"));
   gnuplot("set term wxt 3 title 'position 3'");
-  gnuplot("plot 'out/trajRef.output' us 3,'out/trajWrap.output' us 3, 'out/traj.output' us 3");
+  gnuplot(STRING("plot '"<<scene<<"/trajRef.output' us 3,'"<<scene<<"/trajWrap.output' us 3, '"<<scene<<"/traj.output' us 3"));
 
   if (useOrientation) {
     gnuplot("set term wxt 4 title 'orientation 1'");
-    gnuplot("plot 'out/trajRef.output' us 4,'out/trajWrap.output' us 4, 'out/traj.output' us 4");
+    gnuplot(STRING("plot '"<<scene<<"/trajRef.output' us 4,'"<<scene<<"/trajWrap.output' us 4, '"<<scene<<"/traj.output' us 4"));
     gnuplot("set term wxt 5 title 'orientation 2'");
-    gnuplot("plot 'out/trajRef.output' us 5,'out/trajWrap.output' us 5, 'out/traj.output' us 5");
+    gnuplot(STRING("plot '"<<scene<<"/trajRef.output' us 5,'"<<scene<<"/trajWrap.output' us 5, '"<<scene<<"/traj.output' us 5"));
     gnuplot("set term wxt 6 title 'orientation 3'");
-    gnuplot("plot 'out/trajRef.output' us 6,'out/trajWrap.output' us 6, 'out/traj.output' us 6");
+    gnuplot(STRING("plot '"<<scene<<"/trajRef.output' us 6,'"<<scene<<"/trajWrap.output' us 6, '"<<scene<<"/traj.output' us 6"));
   }
 
-  write(LIST<arr>(s),"out/s.output");
-  write(LIST<arr>(sRef),"out/sRef.output");
+  write(LIST<arr>(s),STRING(scene<<"/s.output"));
+  write(LIST<arr>(sRef),STRING(scene<<"/sRef.output"));
   gnuplot("set term wxt 7 title 'phase profile'");
-  gnuplot("plot 'out/s.output' us 1, 'out/sRef.output' us 1");
+  gnuplot(STRING("plot '"<<scene<<"/s.output' us 1, '"<<scene<<"/sRef.output' us 1"));
 
 
   //compute velocity of trajectory
@@ -176,23 +192,23 @@ void Pfc::plotState()
       }
     }
   }
-  write(LIST<arr>(sqrt(sum(sqr(~(~dtrajRef).subRange(0,2)),1)) ),"out/dtrajRef.output");
-  write(LIST<arr>(sqrt(sum(sqr(~(~dtraj).subRange(0,2)),1)) ),"out/dtraj.output");
+  write(LIST<arr>(sqrt(sum(sqr(~(~dtrajRef).subRange(0,2)),1)) ),STRING(scene<<"/dtrajRef.output"));
+  write(LIST<arr>(sqrt(sum(sqr(~(~dtraj).subRange(0,2)),1)) ),STRING(scene<<"/dtraj.output"));
   gnuplot("set term wxt 11 title 'velocity profile'");
-  gnuplot("plot 'out/dtrajRef.output' us 1,'out/dtraj.output' us 1");
+  gnuplot(STRING("plot '"<<scene<<"/dtrajRef.output' us 1,'"<<scene<<"/dtraj.output' us 1"));
 
   //plot costs
   gnuplot("set term wxt 21 title 'cost overview'");
-  write(LIST<arr>(posCosts),"out/posCosts.output");
-  gnuplot("plot 'out/posCosts.output' us 1");
+  write(LIST<arr>(posCosts),STRING(scene<<"/posCosts.output"));
+  gnuplot(STRING("plot '"<<scene<<"/posCosts.output' us 1"));
 
   if (useOrientation) {
-    write(LIST<arr>(vecCosts),"out/vecCosts.output");
-     gnuplot("replot 'out/vecCosts.output' us 1");
+    write(LIST<arr>(vecCosts),STRING(scene<<"/vecCosts.output"));
+     gnuplot(STRING("replot '"<<scene<<"/vecCosts.output' us 1"));
   }
   if (useCollAvoid) {
-    write(LIST<arr>(colCosts),"out/colCosts.output");
-      gnuplot("replot 'out/colCosts.output' us 1");
+    write(LIST<arr>(colCosts),STRING(scene<<"/colCosts.output"));
+      gnuplot(STRING("replot '"<<scene<<"/colCosts.output' us 1"));
   }
 }
 

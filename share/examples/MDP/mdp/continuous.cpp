@@ -31,10 +31,10 @@ void planLine(bool line=false){
   Planner p;
   Planner::node a,b;
   if(line){
-    MT::load(p.G,"line.graph");
+    p.G <<FILE("line.graph");
     a=p.G.first; b=p.G.last;
   }else{
-    MT::load(p.G,"maze.graph");
+    p.G <<FILE("maze.graph");
     a=p.G.rndNode(); b=p.G.rndNode();
   }
   p.plan(a,b);

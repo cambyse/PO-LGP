@@ -38,7 +38,7 @@ namespace soc {
  * @{
  */
 struct SocSystem_Ors: public virtual SocSystemAbstraction {
-  ors::Graph *ors;
+  ors::KinematicWorld *ors;
   SwiftInterface *swift;
   MT::Array<TaskVariable*> vars;
   struct sSocSystem_Ors *s;
@@ -48,7 +48,7 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction {
   SocSystem_Ors* newClone(bool deep) const;
 
   /// @name initialization methods
-  void initBasics(ors::Graph *_ors, SwiftInterface *_swift, OpenGL *_gl,
+  void initBasics(ors::KinematicWorld *_ors, SwiftInterface *_swift, OpenGL *_gl,
                   uint trajectory_steps, double trajectory_time, bool _dynamic, arr *W);
   void setTimeInterval(double trajectory_time, uint trajectory_steps);
   void setTaskVariables(const TaskVariableList& CVlist);

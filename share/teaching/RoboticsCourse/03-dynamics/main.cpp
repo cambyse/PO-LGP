@@ -25,7 +25,8 @@ void holdSteady(){
     u = 0.; //use M, F, and some desired qddot to compute u
 
     //dynamic simulation (simple Euler integration of the system dynamics, look into the code)
-    S.stepDynamic(u, tau);
+    S.stepDynamics(u, tau);
+    S.watch(false);
     S.getJointAnglesAndVels(q, qdot);
 
     cout  <<" t=" <<tau*t  <<"sec E=" <<S.getEnergy()  <<"  q = " <<q <<endl;

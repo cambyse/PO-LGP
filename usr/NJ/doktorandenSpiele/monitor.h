@@ -17,7 +17,7 @@ NEVER DO THIS() forcing compiler error!
 #endif
   bool useOpengl,logData,plotData;
   OpenGL *gl;
-  ors::Graph ors;
+  ors::KinematicWorld ors;
   RobotController  *ctrl;
   bool isOpen;
 	uint width,height;

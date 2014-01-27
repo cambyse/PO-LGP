@@ -34,15 +34,7 @@ else()
   message("WARNING: $MLR_PATH is not set. I assume ${MLR_PATH} to be your path.")
 endif()
 
-include_directories(
-  ${MLR_PATH}/share/src
-  ${MLR_PATH}/share/src/Algo
-  ${MLR_PATH}/share/src/Core
-  ${MLR_PATH}/share/src/Gui
-  ${MLR_PATH}/share/src/Optim
-  ${MLR_PATH}/share/src/Ors
-  ${MLR_PATH}/share/src/Motion
-)
+include_directories( ${MLR_PATH}/share/src )
 
 #common commands for building c++ executables and libraries
 #rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
@@ -50,9 +42,9 @@ include_directories(
 #rosbuild_add_boost_directories()
 #rosbuild_link_boost(${PROJECT_NAME} thread)
 
-rosbuild_add_executable(test_mini_motion src/testMiniMotion.cpp)
+rosbuild_add_executable(test_mini_motion.exe src/testMiniMotion.cpp)
 
-target_link_libraries(test_mini_motion
+target_link_libraries(test_mini_motion.exe
   ${MLR_PATH}/share/lib/libAlgo.so
   ${MLR_PATH}/share/lib/libCore.so
   ${MLR_PATH}/share/lib/libGui.so

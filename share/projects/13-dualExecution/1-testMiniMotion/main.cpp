@@ -3,7 +3,7 @@
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 
-arr getSimpleTrajectory(ors::Graph& G){
+arr getSimpleTrajectory(ors::KinematicWorld& G){
   MotionProblem P(&G, NULL, false);
   P.loadTransitionParameters();
 
@@ -12,7 +12,7 @@ arr getSimpleTrajectory(ors::Graph& G){
   c = P.addTaskMap("position",
                    new DefaultTaskMap(posTMT, G, "endeff", NoVector));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.ors->getShapeByName("miniTarget")->X.pos), 1e2);
+                          ARRAY(P.world.getShapeByName("miniTarget")->X.pos), 1e2);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e1);
 
   MotionProblemFunction MF(P);
@@ -28,7 +28,7 @@ int main(int argc,char** argv){
   MT::initCmdLine(argc,argv);
 
   OpenGL gl;
-  ors::Graph G;
+  ors::KinematicWorld G;
   init(G, gl, MT::getParameter<MT::String>("orsFile"));
 
   arr x = getSimpleTrajectory(G);

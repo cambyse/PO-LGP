@@ -37,7 +37,7 @@ void Data::loadSpecific(bool test){
 
 void Data::loadToyData(const char *filename, uint labels){
   arr XY;
-  MT::load(XY, filename);
+  XY <<FILE(filename);
   uint s=XY.d1-labels;
   X = XY.sub(0, -1, 0, s-1);
   Y = XY.sub(0, -1, s, -1);
@@ -75,7 +75,7 @@ void Data::loadSvmMultiLabelData(const char *filename, bool inSharePath){
 
 #if 0
 arr X;
-MT::load(X, "/home/mtoussai/share/data/USPS-handwritten-digits/usps-ascii.arr");
+X <<FILE("/home/mtoussai/share/data/USPS-handwritten-digits/usps-ascii.arr");
 cout <<X.getDim() <<endl;
 
 byteA tmp;

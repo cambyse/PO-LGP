@@ -4,7 +4,7 @@
 void TEST(Dot){
   const char* filename = MT::argc<2?NULL:MT::argv[1];
   KeyValueGraph G;
-  MT::load(G, filename?filename:"coffee_shop.fg");
+  G <<FILE(filename?filename:"coffee_shop.fg");
   G.sortByDotOrder();
   G.writeDot();
   GraphView gv(G);

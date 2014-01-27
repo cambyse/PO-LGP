@@ -32,6 +32,7 @@ author: Johannes kulick
 
 %ignore checkDirectionalGradient;
 %ignore checkDirectionalJacobian;
+%ignore optGaussNewton;
 
 %rename(asScalarFunction) Convert::operator ScalarFunction&();
 %rename(asVectorFunction) Convert::operator VectorFunction&();

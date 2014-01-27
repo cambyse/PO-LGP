@@ -12,8 +12,8 @@
 #include <devTools/logging.h>
 SET_LOG(main, DEBUG);
 
-arr create_endpose(ors::Graph& G) {
-  MotionProblem P(&G);
+arr create_endpose(ors::KinematicWorld& G) {
+  MotionProblem P(G);
 
   P.loadTransitionParameters();
   P.H_rate_diag = pr2_reasonable_W();
@@ -24,7 +24,7 @@ arr create_endpose(ors::Graph& G) {
   P.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1e-0);
 
   c = P.addTaskMap("position", new DefaultTaskMap(posTMT, G, "tip1", ors::Vector(0, 0, .0)));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(P.ors->getBodyByName("target")->X.pos), 1e2);
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(P.world.getBodyByName("target")->X.pos), 1e2);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e1);
 
   arr x = P.x0;
@@ -33,11 +33,11 @@ arr create_endpose(ors::Graph& G) {
   return x;
 }
 
-arr create_rrt_trajectory(ors::Graph& G, arr& target) {
+arr create_rrt_trajectory(ors::KinematicWorld& G, arr& target) {
   double stepsize = MT::getParameter<double>("rrt_stepsize", .005);
 
   // create MotionProblem
-  MotionProblem P(&G);
+  MotionProblem P(G);
   P.loadTransitionParameters();
 
   // add a collision cost with threshold 0 to avoid collisions
@@ -55,9 +55,9 @@ arr create_rrt_trajectory(ors::Graph& G, arr& target) {
   return planner.getTrajectoryTo(target);
 }
 
-arr optimize_trajectory(ors::Graph& G, arr& init_trajectory) {
+arr optimize_trajectory(ors::KinematicWorld& G, arr& init_trajectory) {
   // create MotionProblem
-  MotionProblem P(&G);
+  MotionProblem P(G);
   P.loadTransitionParameters();
   P.H_rate_diag = pr2_reasonable_W();
   P.T = init_trajectory.d0-1;
@@ -68,7 +68,7 @@ arr optimize_trajectory(ors::Graph& G, arr& init_trajectory) {
   P.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1e1);
 
   c = P.addTaskMap("position", new DefaultTaskMap(posTMT, G, "tip1", ors::Vector(0, 0, .0)));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(P.ors->getBodyByName("target")->X.pos), 1e2);
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(P.world.getBodyByName("target")->X.pos), 1e2);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
 
   MotionProblemFunction MF(P);
@@ -77,11 +77,11 @@ arr optimize_trajectory(ors::Graph& G, arr& init_trajectory) {
   return x;
 }
 
-void show_trajectory(ors::Graph& G, OpenGL& gl, arr& trajectory, const char* title) {
+void show_trajectory(ors::KinematicWorld& G, arr& trajectory, const char* title) {
   arr start;
   G.getJointState(start);
-  displayTrajectory(trajectory, trajectory.d0, G, gl, title);
-  gl.watch();
+  displayTrajectory(trajectory, trajectory.d0, G, title);
+  G.gl().watch();
   G.setJointState(start);
 }
 
@@ -91,13 +91,11 @@ int main(int argc, char** argv) {
 
   rnd.seed(seed);
 
-  ors::Graph G("world.ors");
+  ors::KinematicWorld G("world.ors");
   makeConvexHulls(G.shapes);
 
-  OpenGL gl;
-  bindOrsToOpenGL(G, gl);
-
-  arr start = G.getJointState();
+  arr start;
+  G.getJointState(start);
   std::cout << "q = " << start << std::endl;
 
   arr target = create_endpose(G);
@@ -106,10 +104,10 @@ int main(int argc, char** argv) {
   std::cout << "target = " << target << std::endl;
 
   arr rrt_trajectory = create_rrt_trajectory(G, target);
-  show_trajectory(G, gl, rrt_trajectory, "RRT");
+  show_trajectory(G,  rrt_trajectory, "RRT");
 
   arr opt_trajectory = optimize_trajectory(G, rrt_trajectory);
-  show_trajectory(G, gl, opt_trajectory, "optimized");
+  show_trajectory(G,  opt_trajectory, "optimized");
 
   return 0;
 }

@@ -33,6 +33,6 @@ void testDelaunay(){
 
   OpenGL gl; gl.add(g); gl.watch();
 
-  MT::save(g,"graph");
+  g >>FILE("graph");
 }
 #endif
