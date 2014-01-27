@@ -4,7 +4,7 @@ OUTPUT := $(BASE)/lib/$(NAME).so
 
 DEPEND = Core
 
-SRCS = $(shell find . -maxdepth 1 -name '*.cpp') cmaes.c
-OBJS = $(SRCS:%.cpp=%.o) cmaes.o
+SRCS = $(shell find . -maxdepth 1 -name '*.cpp')
+OBJS = $(SRCS:%.cpp=%.o)
 
 include $(BASE)/make-generic
