@@ -522,15 +522,15 @@ arr reverseTrajectory(const arr& q){
 void getVel(arr& v, const arr& q, double tau){
   uint T=q.d0-1;
   v.resizeAs(q);
-  v[0] = (q[1] - q[0])/tau;
   for(uint t=1; t<T; t++)  v[t] = (q[t+1] - q[t-1])/(2.*tau);
+  v[0] = (q[1] - q[0])/tau;
   v[T] = (q[T] - q[T-1])/tau;
 }
 
 void getAcc(arr& a, const arr& q, double tau){
   uint T=q.d0-1;
   a.resizeAs(q);
-  a[0] = 0.;
   for(uint t=1; t<T; t++)  a[t] = (q[t+1] + q[t-1] - 2.*q[t])/(tau*tau);
-  a[T] = 0.;
+  a[0] = a[1]/2.;
+  a[T] = a[T-1]/2.;
 }
