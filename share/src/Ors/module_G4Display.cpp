@@ -40,17 +40,17 @@ void G4Display::open(){
 void G4Display::close(){}
 
 void G4Display::step(){
-  uint t=currentPoses.readAccess();
-  floatA poses = currentPoses();
-  currentPoses.deAccess();
+  uint t = poses.readAccess();
+  floatA p = poses();
+  poses.deAccess();
 
   if(!t) return; //no revision yet -> nothing to display
 
-  CHECK_EQ(poses.d0, s->sensors, "poses dim is wrong");
+  CHECK_EQ(p.d0, s->sensors, "poses dim is wrong");
   CHECK_EQ(s->ors.shapes.N, 1+s->sensors, "ors.shapes dim is wrong")
   for(uint sen=0; sen+1<s->ors.shapes.N && sen<s->sensors; sen++){
-    s->ors.shapes(sen)->X.pos.set(poses(sen,0), poses(sen,1), poses(sen,2));
-    s->ors.shapes(sen)->X.rot.set(poses(sen,3), poses(sen,4), poses(sen,5), poses(sen,6));
+    s->ors.shapes(sen)->X.pos.set(p(sen,0), p(sen,1), p(sen,2));
+    s->ors.shapes(sen)->X.rot.set(p(sen,3), p(sen,4), p(sen,5), p(sen,6));
   }
   s->gl.text.clear() <<"frame " <<t;
   s->gl.update();

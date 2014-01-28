@@ -8,7 +8,5 @@ if(ROSBUILD)
     rosbuild_add_executable(x_${NAME} ${SOURCES})
     target_link_libraries(x_${NAME} Ors Core Algo Gui extern_SWIFT Optim)
     add_test(x_${NAME}_test ${NAME} --gtest_output=xml:${NAME}-unit.xml)
-
-
     file(COPY ${CMAKE_SOURCE_DIR}/examples/Ors/ors_physx/pin1.off DESTINATION . )
 endif(ROSBUILD)
