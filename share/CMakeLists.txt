@@ -101,6 +101,13 @@ if(WITH_ROS)
   endif(ROSBUILD)
 endif(WITH_ROS)
 
+#find_package(DOXYGEN)
+#if(DOXYGEN_FOUND)
+
+#else(DOXYGEN_FOUND)
+#message(STATUS "Doxygen not found, documentation will not be generated")
+#endif(DOXYGEN_FOUND)
+
 # common configuration
 include_directories(src)
 include_directories(include)

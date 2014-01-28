@@ -22,7 +22,7 @@
 #define MT_NoLognormScale
 
 #ifdef MT_QT
-#  include"gui.h"
+#  include "gui.h"
 #endif
 #include <MDP/mdp_EMSolver.h>
 
