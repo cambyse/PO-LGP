@@ -7,8 +7,7 @@
 #include <Hardware/G4/module_G4Recorder.h>
 
 struct G4System:System {
-  //ACCESS(floatA, currentPoses);
-  ACCESS(G4DataStruct, g4data);
+  ACCESS(floatA, poses);
   G4System(){
     addModule<G4Poller>("POLLER", ModuleThread::loopWithBeat, .001);//8333); // 120Hz
     addModule<G4Display>("DISPLAY", ModuleThread::loopWithBeat, .033); // 30Hz

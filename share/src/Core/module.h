@@ -48,7 +48,7 @@ struct VariableAccess{
   MT::String name;  ///< Variable name
   Type *type;       ///< Variable type
   void *data;       ///< pointer to data struct; Access_typed knows how to cast it
-  timespec tstamp;  ///< timestamp of the data's origin
+  double data_time; ///< time of origin of the data
   VariableAccess(const char* _name):name(_name), type(NULL), data(NULL){}
   virtual int writeAccess(Module*) = 0; ///< tell the engine that a module accesses -> mutex or publish
   virtual int readAccess(Module*) = 0;  ///< tell the engine that a module accesses
@@ -145,7 +145,7 @@ struct Access_typed:Access{
   T& operator()(){ CHECK(var && var->data,""); return *((T*)var->data); }
   ReadToken get(){ return ReadToken(this); } ///< read access to the variable's data
   WriteToken set(){ return WriteToken(this); } ///< write access to the variable's data
-  timespec& tstamp(){ CHECK(var,""); return var->tstamp; } ///< reference to variable's timestamp. Make sure to have locked the variable first.
+  double& tstamp(){ CHECK(var,""); return var->data_time; } ///< reference to the data's time. Variable should be locked while accessing this.
 };
 
 

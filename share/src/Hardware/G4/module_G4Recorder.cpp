@@ -16,21 +16,11 @@ void G4Recorder::close() {
 void G4Recorder::step() {
   uint rev = poses.readAccess();
   floatA data = poses();
-  double time = poses.tstamp().tv_sec + poses.tstamp().tv_nsec/1000000000.;
+  double tstamp = poses.tstamp();
   poses.deAccess();
 
   MT::String tag;
   tag.resize(30, false);
-  sprintf(tag.p, "%6i %13.6f", rev, time);
+  sprintf(tag.p, "%6i %13.6f", rev, tstamp);
   file << tag << ' ' << data << endl;
-  /*
-  uint rev = g4data.readAccess();
-  G4DataStruct g4d = g4data();
-  g4data.deAccess();
-
-  MT::String tag;
-  tag.resize(10, false);
-  sprintf(tag.p, "%6i", rev);
-  file << tag << ' ' << g4d << endl;
-  */
 }
