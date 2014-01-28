@@ -101,7 +101,7 @@ arr ors::RRTPlanner::getTrajectoryTo(const arr& target, OpenGL *gl) {
   arr q;
 
   if (!s->isFeasible(target))
-    return { };
+    return arr(0);
 
   RRT target_rrt(target, s->rrt.getStepsize());
 
