@@ -93,7 +93,7 @@ struct SimpleTrack{
 		}
 		R2 = arr(4,4);R2.setDiag(0.6);
 		//arr cov;
-		//MT::load(cov, "COV");cov = cov*1.0;//created from measured data
+		//cov <<FILE("COV");cov = cov*1.0;//created from measured data
 		//R1 = 5.0*cov.sub(0,5,0,5);
 		//R2 = 2.0*cov.sub(6,9,6,9);
 		R12 = arr(6,4);R12.setZero();

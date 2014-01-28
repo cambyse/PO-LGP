@@ -10,7 +10,7 @@ target_link_libraries(Motion Core Ors Optim Algo)
 
 # Python wrappers
 if(PYTHON_OK)
-  set(SWIG_SOURCES motion.i)
+  set(SWIG_SOURCES _motionpy.i)
   include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${PYTHON_INCLUDES})
   set_source_files_properties(${SWIG_SOURCES} PROPERTIES CPLUSPLUS ON)
   string(TOLOWER ${NAME}py PY)

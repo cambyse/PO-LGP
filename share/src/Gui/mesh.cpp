@@ -1425,6 +1425,7 @@ void Mesh::glDraw() {
 #else //MT_GL
 void Mesh::glDraw() { NICO }
 void glDrawMesh(void*) { NICO }
+void glTransform(const ors::Transformation&) { NICO }
 #endif
 
 //==============================================================================

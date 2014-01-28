@@ -1,5 +1,6 @@
 set(CURRENT_SLICE 
- examples
+ data
+examples
 projects
 src
 teaching

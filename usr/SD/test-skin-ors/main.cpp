@@ -92,7 +92,7 @@ main(int argc,char** argv){
   MT::initCmdLine(argc,argv);
   signal(SIGINT,usrbreak_callback);
   
-  MT::load(ors,"schunk.ors",true);
+  ors <<FILE("schunk.ors");
   ors.calcBodyFramesFromJoints();
   gui.createOrsClones(&ors);
   

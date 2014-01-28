@@ -1,0 +1,19 @@
+set(CURRENT_SLICE 
+ 01-kinematics
+02-pegInAHole
+03-dynamics
+04-rrt
+05-car
+06-kalmanSLAM
+07-cartPole
+08-pinBalancing
+09-racer
+10-racerRegression
+roboticsCourse10
+roboticsCourse11
+roboticsCourse12
+roboticsCourse3
+roboticsCourse6
+roboticsCourse8
+roboticsCourse9
+ )

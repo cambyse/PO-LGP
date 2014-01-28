@@ -11,7 +11,7 @@ void testTracking(){
   uint T=200;
 
   ors::KinematicWorld ors;
-  MT::load(ors,"../../../share/configurations/schunk.ors",true);
+  ors <<FILE("../../../share/configurations/schunk.ors");
   ors.calcNodeFramesFromEdges();
   
   OpenGL gl;
@@ -147,7 +147,7 @@ void loadOrsFile(ors::KinematicWorld& C, OpenGL& gl,const char *file="../../../s
   gl.s->camera.setPosition(7.,-0.,2.);
   gl.s->camera.focus(0,0,.8);
 
-  MT::load(C,name);
+  C <<FILE(name);
   C.calcNodeFramesFromEdges();
 
   chdir(cwd);

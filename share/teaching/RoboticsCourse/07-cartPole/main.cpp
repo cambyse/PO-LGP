@@ -54,6 +54,7 @@ struct CartPoleState{
 };
 
 void glDrawCartPole(void *classP){
+#ifdef MT_GL //FIXME: this should really use our GL abstraction, should it not?
   CartPoleState *s=(CartPoleState*)classP;
   double GLmatrix[16];
   ors::Transformation f;
@@ -72,6 +73,7 @@ void glDrawCartPole(void *classP){
   glColor(.2,.2,.2);
   glDrawBox(.1, .1, 1.);
   glLoadIdentity();
+#endif
 }
 
 void testDraw(){

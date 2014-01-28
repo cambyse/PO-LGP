@@ -1,0 +1,19 @@
+<package>
+  <description brief="circle_test">
+
+     circle_test
+
+  </description>
+  <author>Ingo Lütkebohle</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/circle_test</url>
+  <depend package="actionlib"/>
+  <depend package="roscpp"/>
+  <depend package="pr2_controllers_msgs"/>
+  <depend package="tf"/>
+  <depend package="visualization_msgs"/>
+
+</package>
+
+

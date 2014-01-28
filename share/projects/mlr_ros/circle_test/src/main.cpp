@@ -4,13 +4,14 @@
 #include <Core/array.h>
 #include <Core/keyValueGraph.h>
 #include <Ors/roboticsCourse.h>
+#include <Ors/ors_swift.h>
 #include <Gui/opengl.h>
 
 
 typedef actionlib::SimpleActionClient< pr2_controllers_msgs::JointTrajectoryAction > TrajClient;
 
 struct sSimulator {
-  ors::Graph G;
+  ors::KinematicWorld G;
   OpenGL gl;
   SwiftInterface swift;
   double margin;
@@ -23,7 +24,7 @@ struct sSimulator {
 #ifdef MT_ODE
   OdeInterface ode;
 #endif
-  sSimulator(){ margin=.1; dynamicNoise=0.; gravity=true; } //default margin = 10cm
+  sSimulator() : swift(G) { margin=.1; dynamicNoise=0.; gravity=true; } //default margin = 10cm
 };
 
 
@@ -151,7 +152,7 @@ void circle(){
   //goal.trajectory.joint_names.push_back("r_shoulder_pan_joint");
 
   S.watch();
-  ors::Graph& G=S.s->G;
+  ors::KinematicWorld& G=S.s->G;
   for(uint i=0;i<G.joints.N;i++){
        goal.trajectory.joint_names.push_back(G.joints(i)->name.p);
        cout << G.joints(i)->name <<endl;
