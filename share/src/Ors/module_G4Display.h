@@ -4,7 +4,7 @@
 #include <Hardware/G4/G4.h>
 
 struct G4Display: Module{
-  ACCESS(G4DataStruct, g4data);
+  ACCESS(floatA, poses);
 
   G4Display();
 
