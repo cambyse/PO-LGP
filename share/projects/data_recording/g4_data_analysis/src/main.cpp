@@ -30,22 +30,14 @@ void display(G4Data &g4d) {
   String bp1(STRING(b1 << ":pos")), bp2(STRING(b2 << ":pos"));
   String bo1(STRING(b1 << ":ori")), bo2(STRING(b2 << ":ori"));
 
-  arr corr;
-  arr corrVar;
-  uint wlen = 60;
-  //uintA wlens = { wlen, wlen+10, wlen-10 };
-  uintA wlens = { wlen };
+  uint wlen = 61;
+  arr c = kf.getCorrPCA(bp1, bp2, wlen, 1).flatten();
+  arr c3d = kf.getCorr(bp1, bp2, wlen);
 
-  corr = kf.getCorrPCA(bp1, bp2, wlens(0), 1);
-  corrVar = kf.getAngleVar(bo1, bo2, wlens(0));
-  for(uint i = 1; i < wlens.N; i++) {
-    corr = corr % kf.getCorrPCA(bp1, bp2, wlen, 1);
-    corrVar += kf.getAngleVar(bo1, bo2, wlen);
-  }
-  corr.flatten();
-  corrVar *= 1./wlens.N;
-
-  arr corrXYZ = kf.getCorr(bp1, bp2, wlen);
+  arr aVar = kf.getAngleVar(bo1, bo2, wlen);
+  arr pdVar = kf.getDiffVar(bp1, bp2, wlen);
+  arr qdVar = kf.getDiffVar(bo1, bo2, wlen);
+  arr tVar = kf.getDiffVar(b1, b2, wlen);
 
   //arr dists = kf.getDists(b1, b2);
 
@@ -59,23 +51,31 @@ void display(G4Data &g4d) {
   //    * Best thing would be to check IF there is motion, and check if the
   //    motion is rigid, oder?
   //
-  //arr q = kf.EM(corrXYZ);
-  arr q = kf.EM(corr, corrVar);
 
-  corr.flatten();
+  uintA vit;
+  kf.EM(vit, c, sqrt(aVar));
 
 #if 1
-  Feedgnuplot gnup1, gnup2;
+  Feedgnuplot gnup1;
   gnup1.setDataID(true);
   gnup1.setAutolegend(true);
   gnup1.setStream(.75);
   gnup1.setTitle("1-dim PCA aligned");
   gnup1.open();
+
+  Feedgnuplot gnup2;
   gnup2.setDataID(true);
   gnup2.setAutolegend(true);
   gnup2.setStream(.75);
   gnup2.setTitle("3-dim X-, Y-, Z-axis aligned");
   gnup2.open();
+  
+  Feedgnuplot gnup3;
+  gnup3.setDataID(true);
+  gnup3.setAutolegend(true);
+  gnup3.setStream(.75);
+  gnup3.setTitle("Misc.");
+  gnup3.open();
 
   MT::String bname;
   uint F = g4d.getNumFrames();
@@ -86,24 +86,27 @@ void display(G4Data &g4d) {
     //flip_image(gl.captureImage);
     //vid.addFrame(gl.captureImage);
 
-    String ss1, ss2;
-    ss1 << f << " var " << sqrt(corrVar(f))
-            << " corr " << corr(f)
-            << " q " << q(f, 1)
+    String ss1, ss2, ss3;
+    ss1 << f << " vit " << vit(f)
+            << " c " << c(f)
+            << " aVar " << sqrt(aVar(f))
             ;
-    ss2 << f << " corrX " << corrXYZ(f, 0)
-            << " corrY " << corrXYZ(f, 1)
-            << " corrZ " << corrXYZ(f, 2)
+    ss2 << f << " corrX " << c3d(f, 0)
+            << " corrY " << c3d(f, 1)
+            << " corrZ " << c3d(f, 2)
+            ;
+    ss3 << f << " c " << c(f)
+            << " aVar " << sqrt(aVar(f))
+            << " pdVar " << sqrt(pdVar(f))
+            << " qdVar " << sqrt(qdVar(f))
             ;
     gnup1() << ss1;
     gnup2() << ss2;
+    gnup3() << ss3;
   }
 #endif
 
-  //ProxyL proxies = kf.getProxies(b1, b2);
-  //KeyFrameL kfs = kf.getKeyFrames(corr, proxies);
-  KeyFrameL kfs = kf.getKeyFrames(q);
-  kf.clearProxies();
+  KeyFrameL kfs = kf.getKeyFrames(vit);
   kf.saveKeyFrameScreens(kfs, 30);
   cout << "Tot num keyframes: " << kfs.N << endl;
 

@@ -42,6 +42,19 @@ struct KeyFramer {
   arr getAngleVar(uint b1, uint b2, uint wlen);
   arr getAngleVar(const String &n1, const String &n2, uint wlen);
 
+  arr getDiff(uint b1, uint b2);
+  arr getDiff(const String &n1, const String &n2);
+  arr getDiffVar(uint b1, uint b2, uint wlen);
+  arr getDiffVar(const String &n1, const String &n2, uint wlen);
+
+  arr getPosLen(uint b1, uint b2);
+  arr getPosLen(const String &n1, const String &n2);
+  arr getPosLenVar(uint b1, uint b2, uint wlen);
+  arr getPosLenVar(const String &n1, const String &n2, uint wlen);
+
+  arr getTransfVar(uint b1, uint b2, uint wlen);
+  arr getTransfVar(const String &n1, const String &n2, uint wlen);
+  
   ProxyL getProxies(uint b1, uint b2);
   ProxyL getProxies(const String &n1, const String &n2);
   void calcProxies(uint b1, uint b2);
@@ -52,15 +65,15 @@ struct KeyFramer {
   arr getDists(uint b1, uint b2);
   arr getDists(const String &n1, const String &n2);
 
-  KeyFrameL getKeyFrames(const arr &corr, const ProxyL &proxies);
-  KeyFrameL getKeyFrames(const arr &q);
+  KeyFrameL getKeyFrames(const uintA &vit);
   void saveKeyFrameScreens(const KeyFrameL &keyframes, uint df = 60);
 
   void computeEvidences(arrL &rho, const arr &c, const arr &v, const arrL &theta);
-  void Estep(arr& a, arr& b, const arr& P0, const arr& P, const arr& rho);
-  void EstepQ(arrL &ql, const arrL &theta, const arrL &rho);
+  void Estep(arrL &ql, const arrL &theta, const arrL &rho);
   void Mstep(arrL &theta, const arrL &ql, const arr& c, const arr &v);
-  arr EM(const arr &corr, const arr &var);
+  void EM(uintA &vit, const arr &c, const arr &v);
 
+  void viterbiZ(uintA &vit, arrL &theta, arrL &rho, const arr &c, const arr &v);
+  //void viterbiZY(uintA &vit, arrL &theta, arrL &rho, const arr &c, const arr &v);
 };
 
