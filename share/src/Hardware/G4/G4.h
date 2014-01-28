@@ -3,8 +3,6 @@
 #include <Core/module.h>
 #include "data.h"
 
-typedef DataStruct<floatA> G4DataStruct;
-
 struct G4Poller: Module {
   ACCESS(floatA, poses)
 
