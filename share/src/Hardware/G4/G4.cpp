@@ -5,8 +5,8 @@
 #include <string>
 #include <iostream>
 #include <time.h>
-#include <sys/time.h>
 
+/*
 std::istream &operator>>(std::istream &is, G4DataStruct &g4d) {
   double time, time_sec, time_nsec;
   is >> time >> g4d.poses;
@@ -23,6 +23,7 @@ std::ostream &operator<<(std::ostream &os, G4DataStruct &g4d) {
   sprintf(tag.p, "%13.6f", time);
   return os << tag << ' ' << g4d.poses;
 }
+*/
 
 REGISTER_MODULE(G4Poller)
 
@@ -163,8 +164,8 @@ void G4Poller::open(){
   res = g4_set_query(&cs);
   if(res!=G4_ERROR_NONE){ close(); HALT(""); }
   s->framedata.resize(s->hubs);
-  s->g4d.poses.resize(s->hubs, G4_SENSORS_PER_HUB, 7);
-  s->g4d.poses.setZero();
+  s->g4d.getData().resize(s->hubs, G4_SENSORS_PER_HUB, 7);
+  s->g4d.getData().setZero();
 
   //-- allocate hubMap converter from hub ID to sequential hub ID
   s->hubMap.resize(s->hubList.max() + 1);
@@ -204,7 +205,7 @@ void G4Poller::step(){
   int res=g4_get_frame_data(s->framedata.p, s->sysId, s->hubList.p, s->hubs);
   // get the earlies timestamp you can
   //gettimeofday(&(s->g4d.timestamp), NULL);
-  clock_gettime(CLOCK_REALTIME, &s->g4d.timestamp);
+  clock_gettime(CLOCK_REALTIME, &s->g4d.getTimestamp());
   if(res < 0) {
 	std::clog << "Error reading frame data:" << errcode2string(res) << std::endl;
 	return;
@@ -252,8 +253,8 @@ void G4Poller::step(){
   s->dropped_hubs = (s->hubs * s->num_frames) - s->num_hubs_read;
   s->dropped_hubs_pct = (100. * s->dropped_hubs) / (s->hubs * s->num_frames);
 
-  s->g4d.poses.resize(s->hubs, G4_SENSORS_PER_HUB, 7);
-  s->g4d.poses.setZero();
+  s->g4d.getData().resize(s->hubs, G4_SENSORS_PER_HUB, 7);
+  s->g4d.getData().setZero();
 
   int h_id, s_id;
   for(int hub=0; hub<num_hubs_read; hub++) {
@@ -262,8 +263,8 @@ void G4Poller::step(){
       if(s->framedata(hub).stationMap&(0x01<<sen)){ // we have data on hub h and sensors
         h_id = s->hubMap(s->framedata(hub).hub);
         s_id = s->framedata(hub).sfd[sen].id;
-        memmove(&s->g4d.poses(h_id, s_id, 0), s->framedata(hub).sfd[sen].pos, 3*s->g4d.poses.sizeT); //low level copy of data
-        memmove(&s->g4d.poses(h_id, s_id, 3), s->framedata(hub).sfd[sen].ori, 4*s->g4d.poses.sizeT); //low level copy of data
+        memmove(&s->g4d.getData()(h_id, s_id, 0), s->framedata(hub).sfd[sen].pos, 3*s->g4d.getData().sizeT); //low level copy of data
+        memmove(&s->g4d.getData()(h_id, s_id, 3), s->framedata(hub).sfd[sen].ori, 4*s->g4d.getData().sizeT); //low level copy of data
 #if 0
         cout <<" hub " <<s->framedata(hub).hub
             <<" sensor " <<s
@@ -278,7 +279,7 @@ void G4Poller::step(){
   }
   //cout << ")" << endl;
 
-  s->g4d.poses.reshape(s->hubs*G4_SENSORS_PER_HUB, 7);
+  s->g4d.getData().reshape(s->hubs*G4_SENSORS_PER_HUB, 7);
   //cout << "poses: " << s->poses << endl;
   //cout << "currentPoses: " << currentPoses.get() << endl;
   g4data.set() = s->g4d; //publish the result

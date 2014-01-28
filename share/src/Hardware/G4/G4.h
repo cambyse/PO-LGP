@@ -1,7 +1,9 @@
 #pragma once
 
 #include <Core/module.h>
+#include "data.h"
 
+/*
 struct G4DataStruct {
   floatA poses;
   struct timespec timestamp;
@@ -9,8 +11,11 @@ struct G4DataStruct {
   friend std::istream &operator>>(std::istream &is, G4DataStruct &g4d);
   friend std::ostream &operator<<(std::ostream &os, G4DataStruct &g4d);
 };
+*/
 
-struct G4Poller: Module{
+typedef DataStruct<floatA> G4DataStruct;
+
+struct G4Poller: Module {
   ACCESS(G4DataStruct, g4data)
 
   G4Poller();
