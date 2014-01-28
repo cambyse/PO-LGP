@@ -4,11 +4,11 @@ import roslib
 roslib.load_manifest('the_curious_robot')
 import rospy
 
-import motionpy as motion
 import orspy as ors
-import corepy as core
+import motionpy as motion
 import optimpy as optim
 import guipy as gui
+import corepy as core
 
 import numpy as np
 
