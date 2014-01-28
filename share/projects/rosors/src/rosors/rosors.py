@@ -25,7 +25,9 @@ class RosOrs(object):
 
     def __init__(self, orsfile, srv_prefix):
         # the actual ors graph
+        rospy.loginfo("Init ors graph...")
         self.graph = orspy.Graph()
+        rospy.loginfo("Load ors file \"%s\"" % orsfile)
         self.graph.init(orsfile)
         rospy.loginfo("Starting rosors services with prefix: %s " % srv_prefix)
 
