@@ -192,8 +192,8 @@ void FollowIMU(){
 int main(int argc,char **argv){
 //  testDraw();
 //  TestMove();
-//  CheckGradients();
-  TestControl();
+  CheckGradients();
+//  TestControl();
 
 //  FollowSignal();
 //  FollowIMU();
