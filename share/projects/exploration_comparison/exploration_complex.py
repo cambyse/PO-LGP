@@ -37,10 +37,15 @@ def run_experiment(world, belief, select_strategy, num_interactions,
     for i in range(num_interactions):
 
         idx = select_strategy(belief)
+        print("selecting object {}".format(idx))
         observations = world[idx].interact()
         # if observation_model:
         #     opened = observation_model(opened)
-        belief[idx].update(observations)
+        belief[idx].observe(observations)
+
+        for obj in belief:
+            print(str(obj))
+        print("=" * 80)
 
         bel_history.append(copy.deepcopy(belief))
     return bel_history

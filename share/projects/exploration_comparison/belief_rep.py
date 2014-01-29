@@ -1,8 +1,7 @@
-import copy
 import math
 
 import collections
-import numpy as np
+#import numpy as np
 import scipy as sp
 import scipy.stats as ss
 
@@ -18,13 +17,19 @@ class ObjectBel(probdist.CategoricalDist):
 
         self.joint_bel = JointBel(name)
 
-    def update(self, observations):
-        obs_obj_type, obs_joint_type = observations
+    def observe(self, key):
+        """ OVERWRITE function """
+        obs_obj_type, obs_joint_type = key
 
-        self.observe(obs_obj_type)
+        super(ObjectBel, self).observe(obs_obj_type)
+
         if obs_obj_type == "movable":
             self.joint_bel.observe(obs_joint_type)
-            # TODO update gaussians
+
+    def __str__(self):
+        result = "{} {} H={}\n  joint {}".format(
+            self.name, self.probs(), self.entropy(), str(self.joint_bel))
+        return result
 
 
 class JointBel(probdist.CategoricalDist):
@@ -47,6 +52,28 @@ class JointBel(probdist.CategoricalDist):
         zero_entropy_of_gaussian = .248
         self.scaler = zero_entropy_of_gaussian / precision
 
+        self.update_var = .9
+        self.noise = .01
+
+    def observe(self, key):
+        """ OVERWRITE function """
+        super(JointBel, self).observe(key)
+
+        if key == "nil":
+            return
+
+        # forward model
+        # update all three parameters of the joint
+        for subname in ["_limit_max", "_limit_min", "_damping"]:
+            fullname = key + subname
+            distribution = getattr(self, fullname)
+
+            prior_var = distribution.var()
+            post_std = math.sqrt((prior_var * self.update_var) /
+                                 (prior_var + self.update_var))
+            post_std += self.noise
+            setattr(self, fullname, ss.norm(0, post_std))
+
     def entropy_tmp(self):
         """How do we want to calculate the change of entropy for the joint bel?
 
@@ -61,9 +88,6 @@ class JointBel(probdist.CategoricalDist):
         h_stats = {}
         HStat = collections.namedtuple("HStat", "cur exp P")
         h_change = {}
-
-        update_var = .9
-        noise = .01
 
         for name in self:
             P = self.prob(name)
@@ -85,9 +109,9 @@ class JointBel(probdist.CategoricalDist):
                     # therefore, only update the std
                     prior_var = distribution.var()
                     # prior_sigma = math.sqrt(prior_std)
-                    post_std = math.sqrt((prior_var * update_var) /
-                                         (prior_var + update_var))
-                    post_std += noise
+                    post_std = math.sqrt((prior_var * self.update_var) /
+                                         (prior_var + self.update_var))
+                    post_std += self.noise
                     H_expected = ss.norm.entropy(0, post_std)
 
                     # TODO Scaling and Gaussians
