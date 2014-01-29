@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Core/module.h>
-#include "data.h"
 
 struct G4Poller: Module {
   ACCESS(floatA, poses)
