@@ -2,6 +2,7 @@ set style data lines
 
 plot 'nogit-data/IMU_Poller.dat' \
    us 1:'acc0',\
+'' us 1:'acc1',\
 '' us 1:'acc2',\
 'nogit-data/KalmanFilter.dat' \
    us 1:'th'

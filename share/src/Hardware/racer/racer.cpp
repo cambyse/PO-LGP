@@ -23,7 +23,7 @@ Racer::Racer():dynamicsFct(*this),observationFct(*this),_gl(NULL){
   noise_dynamics = 0.;
 
   c1 = 1./9.6; //9.81;
-  c2 = MT::getParameter<double>("IMU_tilt",0.16)-MT_PI/2.;
+  c2 = MT::getParameter<double>("IMU_tilt",0.16);
   c3 = 1.;
   c4 = -0.0417273;
   c5 = 1.;
@@ -148,7 +148,7 @@ void Racer::getObservation(arr& y, arr& C, arr& c, arr& W){
   q_ddot.setZero();
 
   //3-dimensional observation
-  arr acc = (q_dot(1) * J_C_dash * q_dot + J_C * q_ddot) + ARR(0,g);
+  arr acc = /*(q_dot(1) * J_C_dash * q_dot + J_C * q_ddot) +*/ ARR(0,g);
   y = c1 * R * acc; //2D: accelerations
   y.append(c3 * (q_dot(1)+c4)); //1D: gyro
   y.append(c5 * (q(0)/r-q(1))); //1D: encoder
@@ -156,11 +156,12 @@ void Racer::getObservation(arr& y, arr& C, arr& c, arr& W){
   if(&C){
     arr acc_dash = q_dot(1) * J_C_ddash * q_dot + J_C_dash * q_ddot;
     arr acc_d_qdot = q_dot(1) * J_C_dash + (J_C_dash*q_dot)*~ARR(0.,1.);
+    acc_dash = 0.; acc_d_qdot=0.;
 
     C.resize(4,6).setZero();
-    C.setMatrixBlock(c1 * (R_dash * acc + R*acc_dash), 0, 1); //w.r.t. th
-    C.setMatrixBlock(c1*R * acc_d_qdot, 0, 2); //w.r.t. q_dot
-    C.setMatrixBlock(c1*R * J_C, 0, 4); //w.r.t q_ddot
+    C.setMatrixBlock(c1 * (R_dash*acc + R*acc_dash), 0, 1); //w.r.t. th
+    C.setMatrixBlock(c1 * R * acc_d_qdot, 0, 2); //w.r.t. q_dot
+    C.setMatrixBlock(c1 * R * J_C, 0, 4); //w.r.t q_ddot
     C(2, 3) = c3; //gyro
     C(3, 0) = c5/r; //encoder
     C(3, 1) = -c5; //encoder

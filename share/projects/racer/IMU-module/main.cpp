@@ -46,6 +46,8 @@ void testMotors(){
 
   engine().open(S);
 
+  S.controls.set()() = ARR(5.,5.,10.);
+  MT::wait(3);
   S.controls.set()() = ARR(128.,128.,10.);
   MT::wait(3);
   S.controls.set()() = ARR(0.,0.,10.);
@@ -90,7 +92,7 @@ void testBalance(){
     arr enc = S.encoderData.get();
 
     double u = k_th*(zeroTh - x(1)) + k_thDot * (0. - x(3));
-
+//    u=5.;
     cout <<"\r state = " <<x <<std::flush;
 //    cout <<"enc= " <<enc/MT_2PI <<std::endl;
 
@@ -108,9 +110,9 @@ void testBalance(){
 int main(int argc, char **argv) {
   MT::initCmdLine(argc, argv);
 
-//  testIMU();
+  testIMU();
 //  testMotors();
-  testBalance();
+//  testBalance();
 //  findBalancePoint();
 
   return 0;

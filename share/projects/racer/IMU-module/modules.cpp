@@ -54,10 +54,10 @@ void IMU_Poller::step(){
   //scale to double, and flip coordinate axes
   imuData()(1) =  s->imu->_accel[2]*(1./(1<<14));
   imuData()(2) = -s->imu->_accel[1]*(1./(1<<14));
-  imuData()(3) = -s->imu->_accel[0]*(1./(1<<14));
+  imuData()(3) =  s->imu->_accel[0]*(1./(1<<14));
   imuData()(4) =  s->imu->_gyro[2]*(1./(1<<13));
   imuData()(5) = -s->imu->_gyro[1]*(1./(1<<13));
-  imuData()(6) = -s->imu->_gyro[0]*(1./(1<<13));
+  imuData()(6) =  s->imu->_gyro[0]*(1./(1<<13));
   s->fil <<imuData() <<endl;
   imuData.deAccess();
 };
@@ -215,7 +215,7 @@ void RacerDisplay::step(){
 
   s->R.q = x.sub(0,1);
   s->R.q_dot = x.sub(2,3);
-  s->R.gl.update();
+  s->R.gl().update();
 }
 
 void RacerDisplay::close(){
