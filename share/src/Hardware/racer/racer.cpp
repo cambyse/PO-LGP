@@ -141,14 +141,16 @@ void Racer::getObservation(arr& y, arr& C, arr& c, arr& W){
   getJacobians(NoArr, J_C, J_C_dash, J_C_ddash, true);
   //pick only relevant (x,y) directions:
   J_C.resizeCopy(2,2);  J_C_dash.resizeCopy(2,2);  J_C_ddash.resizeCopy(2,2);
+//  J_C=0.;
 
   //we need the dynamics
   arr q_ddot, J;
   dynamicsFct().fv(q_ddot, (&C?J:NoArr), cat(q, q_dot).reshape(2,2));
-  q_ddot.setZero();
+//  q_ddot.setZero();
 
   //3-dimensional observation
-  arr acc = /*(q_dot(1) * J_C_dash * q_dot + J_C * q_ddot) +*/ ARR(0,g);
+  arr acc = ARR(0,g);
+  acc += (q_dot(1) * J_C_dash * q_dot + J_C * q_ddot);
   y = c1 * R * acc; //2D: accelerations
   y.append(c3 * (q_dot(1)+c4)); //1D: gyro
   y.append(c5 * (q(0)/r-q(1))); //1D: encoder
@@ -156,7 +158,7 @@ void Racer::getObservation(arr& y, arr& C, arr& c, arr& W){
   if(&C){
     arr acc_dash = q_dot(1) * J_C_ddash * q_dot + J_C_dash * q_ddot;
     arr acc_d_qdot = q_dot(1) * J_C_dash + (J_C_dash*q_dot)*~ARR(0.,1.);
-    acc_dash = 0.; acc_d_qdot=0.;
+//    acc_dash = 0.; acc_d_qdot=0.; J_C=0.;
 
     C.resize(4,6).setZero();
     C.setMatrixBlock(c1 * (R_dash*acc + R*acc_dash), 0, 1); //w.r.t. th

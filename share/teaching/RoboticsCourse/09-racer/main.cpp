@@ -24,10 +24,10 @@ void TestMove(){
 void CheckGradients(){
   Racer R;
   arr x(2,2);
-  for (uint t=0; t<20; t++){
+  for (uint t=0; t<10; t++){
     rndUniform(x, -.1, .1);
     R.u = 0.; //rnd.uni(-.1,.1);
-    cout <<"dyn: q=" <<R.q; checkJacobian(R.dynamicsFct(), x, 1e-4);
+//    cout <<"dyn: q=" <<R.q; checkJacobian(R.dynamicsFct(), x, 1e-4);
     cout <<"obs: q=" <<R.q; checkJacobian(R.observationFct(), x, 1e-4);
   }
 }
