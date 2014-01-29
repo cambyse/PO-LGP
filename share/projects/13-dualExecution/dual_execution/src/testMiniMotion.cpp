@@ -1,4 +1,4 @@
-//#define USE_SL
+#define USE_SL
 
 #include <ros/ros.h>
 
@@ -18,62 +18,49 @@
 #include <Optim/constrained.h>
 #include <Core/thread.h>
 #include "execution.h"
+#include "getTraj.h"
 
-arr getSimpleTrajectory(ors::KinematicWorld& G){
-  MotionProblem P(&G, NULL, false);
-  P.loadTransitionParameters();
 
-  //-- setup the motion problem
-  TaskCost *c;
-  c = P.addTaskMap("position",
-                   new DefaultTaskMap(posTMT, G, "endeff", NoVector));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.world.getShapeByName("miniTarget")->X.pos), 1e2);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e1);
 
-  MotionProblemFunction MF(P);
-  arr x = P.getInitialization();
+void moveArm(const arr& x0){
+  std::string robot_part("RIGHT_ARM");
+  // arm position control
+  std::string stack_name("RightArmJointInverseDynamicsControl");
+  std::string controller_name("RightArmJointTrajectoryGenerator");
 
-  optNewton(x, Convert(MF), OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1e-3, maxStep=.5));
-  P.costReport();
-  return x;
+  // First, bring the left arm into a useful configuration ///////////////
+  int part = sl_controller_interface::RobotInfo::getRobotPartId(robot_part);
+  ROS_INFO("part id %d\n", part);
+  // Bring up the Joint Controller Client
+  sl_controller_interface::JointTrajectoryClient joint_client(controller_name,part);
+  // Switch to the appropriate Joint Inverse Dynamics Controller
+  sl_controller_interface::SwitchControllerStackClient scs;
+  ROS_INFO("Switching to %s",stack_name.c_str());
+  scs.switchControllerStack(stack_name);
+
+  // Print the joint names that will be controlled
+  std::vector<std::string> joint_names = joint_client.getJointNames();
+  printf("joint names\n");
+  for(int i=0; i<(int)joint_names.size(); ++i)
+    printf("%s \n", joint_names[i].c_str());
+
+  ros::Duration(2.0).sleep();
+
+  std::vector<double> desired_joint_positions;
+  desired_joint_positions.resize(joint_names.size(),0.0);
+  CHECK(x0.N == joint_names.size(), "wrong #joints");
+
+  std::vector<double> desired_velocities = desired_joint_positions;
+  std::vector<double> desired_accelerations = desired_joint_positions;
+
+  //get initial position
+  //robot_monitor.getJointPositions(sl_controller_interface::RobotInfo::getRobotPartId(robot_part), joint_pos);
+  // useful hard-coded joint configuration for left arm
+  for(uint i=0;i<x0.N;i++) desired_joint_positions[i] = x0(i);
+
+  joint_client.moveTo(desired_joint_positions, desired_velocities, desired_accelerations, 5.0, true);
 }
 
-arr getKindOfSimpleTrajectory(ors::KinematicWorld& G){
-  MotionProblem P(&G, NULL, false);
-  P.loadTransitionParameters();
-  arr x = P.getInitialization();
-
-  //-- setup the motion problem
-  TaskCost *c;
-  c = P.addTaskMap("position",
-                   new DefaultTaskMap(posTMT, G, "endeff", NoVector));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.world.getShapeByName("target")->X.pos), 1e2);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e1);
-
-  //c = P.addTaskMap("collisionConstraints", new CollisionConstraint());
-  c = P.addTaskMap("planeConstraint", new PlaneConstraint(G, "endeff", ARR(0,0,-1,.7)));
-
-  MotionProblemFunction MF(P);
-  Convert ConstrainedP(MF);
-  UnconstrainedProblem UnConstrainedP(ConstrainedP);
-  UnConstrainedP.mu = 10.;
-
-  for(uint k=0;k<5;k++){
-    optNewton(x, UnConstrainedP, OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1e-3, stopTolerance=1e-4, maxStep=.5));
-//    optNewton(x, UCP, OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
-    P.costReport();
-//    displayTrajectory(x, 1, G, gl,"planned trajectory");
-    UnConstrainedP.augmentedLagrangian_LambdaUpdate(x, .9);
-    P.dualMatrix = UnConstrainedP.lambda;
-    UnConstrainedP.mu *= 2.;
-  }
-  P.costReport();
-  return x;
-}
-
-#ifdef USE_SL
 void moveHand(){
     std::string robot_part("RIGHT_HAND");
     std::string stack_name("RightHandJointPDControl");
@@ -104,124 +91,56 @@ void moveHand(){
     desired_joint_positions[3] = 2.;
     joint_client.moveTo(desired_joint_positions, 3.);
 }
-#endif
 
-int main(int argc, char** argv){
 
+
+int main(int argc,char** argv){
   MT::initCmdLine(argc,argv);
-  //testMarcs();
-  //testLudos();
 
+  ors::KinematicWorld world(MT::getParameter<MT::String>("orsFile"));
 
-  OpenGL gl;
-  ors::KinematicWorld G;
-  init(G, gl, MT::getParameter<MT::String>("orsFile"));
+  arr x, y, ori, dual;
+  getTrajectory(x, y, ori, dual, world);
 
-  arr x = getKindOfSimpleTrajectory(G);
-  arr x2 = reverseTrajectory(x);
-  x.append(x2);
-  arr v,a;
-  getVel(v, x, .1);
-  getAcc(a, x, .1);
+//  arr x2 = reverseTrajectory(x);
+//  x.append(x2);
+//  for(uint i=0;i<2;i++)
+//    displayTrajectory(x, 1, world, "planned trajectory");
 
+//  world.getBodyByName("table")->X.pos.z += .1;
+//  world.setJointState(x[0]);
 
-//  for(uint i=0;i<1;i++)
-//    displayTrajectory(x, 1, G, gl,"planned trajectory");
+  ors::Quaternion rotZ;
+  rotZ.setDeg(180,0,0,1);
+  arr baseOrg={0, 0.2, 1.305};
+  for(uint t=0;t<y.d0;t++){
+    y[t]() -= baseOrg;
+    y(t,0) *= -1.;
+    y(t,1) *= -1.;
 
+    ors::Quaternion q;
+    q.set(&ori(t,0));
+    q = rotZ*q;
+    ori[t]() = ARRAY(q);
+  }
 
+  cout <<"initial cfg: " <<"q=" <<x[0] <<endl <<"y=" <<y[0] <<endl;
+
+  //-- launch ROS
   ros::init(argc, argv, "TestJointTrajectoryGenerator");
-
   ros::AsyncSpinner spinner(4);
   spinner.start();
-
-#if USE_SL
   sl_controller_interface::init();
 
 
+  moveArm(x[0]);
   moveHand();
 
-
-  std::string robot_part("RIGHT_ARM");
-  std::string stack_name("RightArmJointInverseDynamicsControl");
-  std::string controller_name("RightArmJointTrajectoryGenerator");
-
-  int part = sl_controller_interface::RobotInfo::getRobotPartId(robot_part);
-  printf("part id %d\n", part);
-  sl_controller_interface::JointTrajectoryClient joint_client(controller_name,part);
-
-  sl_controller_interface::SwitchControllerStackClient scs;
-  ROS_INFO("Switching to %s",stack_name.c_str());
-  scs.switchControllerStack(stack_name);
-
-  std::vector<std::string> joint_names = joint_client.getJointNames();
-  printf("joint names\n");
-  for(int i=0; i<(int)joint_names.size(); ++i)
-    printf("%s \n", joint_names[i].c_str());
-
-  std::vector<double> desired_joint_positions;
-  desired_joint_positions.resize(joint_names.size(),0.0);
-
-  CHECK(joint_names.size()==7, "");
-
-  ros::Duration(1.0).sleep();
-
-    //-- Jeannette's zero position
-//  for(uint i=0;i<7;i++) desired_joint_positions[i] = 0.0;
-//  desired_joint_positions[1] = -1.0;
-//  desired_joint_positions[3] = 1.5;
-//  joint_client.moveTo(desired_joint_positions, 10.);
-
-  //-- our starting pose
-  ROS_INFO("moving to x[0]");
-  for(uint i=0;i<7;i++) desired_joint_positions[i] = x(0,i);
-  joint_client.moveTo(desired_joint_positions, 3.);
-
-  sl_controller_interface::DataCollectorClient data_collect;
-  data_collect.collectData();
-
-  Metronome tic("myticcer",.1);
-  ROS_INFO("sending trajectory");
-  for(uint t=0;t<x.d0;t++){
-    std::vector<double> desired_joint_velocities(7);
-    std::vector<double> desired_joint_accelerations(7);
-    for(uint i=0;i<7;i++) desired_joint_positions[i] = x(t,i);
-    for(uint i=0;i<7;i++) desired_joint_velocities[i] = v(t,i);
-    for(uint i=0;i<7;i++) desired_joint_accelerations[i] = a(t,i);
-
-
-    sl_controller_msgs::Trajectory traj;
-    /*
-    joint_client.moveTo(desired_joint_positions,
-        desired_joint_velocities,
-        desired_joint_accelerations,
-        0.095,
-        true); // false);
-        */
-    traj.preempt = false;
-    traj.dimension_names = joint_names;
-
-    double time_step = 0.1;
-    sl_controller_msgs::TrajectoryPoint point;
-    point.time_from_start = ros::Duration(time_step);
-    point.positions = desired_joint_positions;
-    point.velocities = desired_joint_velocities;
-    point.accelerations = desired_joint_accelerations;
-
-    traj.points.push_back(point);
-    traj.poke = false;
-    traj.keep_trajectory_goal = true;
-
-    joint_client.sendCommand(traj, false);
-
-    /*
-    // tic.waitForTic();
-    cout <<"tic " <<t <<" time:" <<MT::realTime() <<endl;
-    joint_client.moveTo(desired_joint_positions, desired_joint_velocities, desired_joint_accelerations, 0.095, true); // false);
-    //cout <<"tic " <<t <<" time:" <<MT::realTime() <<endl;
-    */
-    // joint_client.moveTo(desired_joint_positions, 0.1);
-  }
-#endif
+  dualExecution(x, y, ori, dual, world, 0.1);
 
   return 0;
 }
+
+
+
+

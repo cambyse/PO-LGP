@@ -4,19 +4,19 @@
 #include <Algo/kalman.h>
 #include <Motion/motion.h>
 
-#include "racer.h"
+#include <Hardware/racer/racer.h>
 
 void testDraw(){
-  Racer s;
-  s.gl.watch();
+  Racer R;
+  R.gl().watch();
 }
 
 void TestMove(){
   Racer R;
   for (uint t=0; t<400000; t++){
     R.stepDynamics(0.0);
-    R.gl.text.clear() <<t <<" ; " <<R.q(0) << " ; " <<R.q(1);
-    R.gl.update();
+    R.gl().text.clear() <<t <<" ; " <<R.q(0) << " ; " <<R.q(1);
+    R.gl().update();
     R.getEnergy();
   }
 }
@@ -26,9 +26,9 @@ void CheckGradients(){
   arr x(2,2);
   for (uint t=0; t<20; t++){
     rndUniform(x, -.1, .1);
-    R.u = 1.; //rnd.uni(-.1,.1);
-    checkJacobian(R.dynamicsFct(), x, 1e-4);
-    checkJacobian(R.observationFct(), x, 1e-4);
+    R.u = 0.; //rnd.uni(-.1,.1);
+    cout <<"dyn: q=" <<R.q; checkJacobian(R.dynamicsFct(), x, 1e-4);
+    cout <<"obs: q=" <<R.q; checkJacobian(R.observationFct(), x, 1e-4);
   }
 }
 
@@ -69,8 +69,8 @@ void TestControl(){
 
     //-- dynamics
     R.stepDynamics(u);
-    R.gl.text.clear() <<t <<" ; " <<R.q(0) << " ; " <<R.q(1);
-    R.gl.update();
+    R.gl().text.clear() <<t <<" ; " <<R.q(0) << " ; " <<R.q(1);
+    R.gl().update();
 
     //-- observations
     arr y,C,c,W;
@@ -116,8 +116,8 @@ void FollowSignal(){
 
     //-- dynamics
     R.stepDynamicsAcc(u_acc);
-    R.gl.text.clear() <<t <<" ; " <<R.q(0) << " ; " <<R.q(1);
-    R.gl.update();
+    R.gl().text.clear() <<t <<" ; " <<R.q(0) << " ; " <<R.q(1);
+    R.gl().update();
 
     MT::arrayBrackets="  ";
     data <<t <<' ' <<t*R.tau <<' ' <<R.u <<' ' <<u_acc <<' '
@@ -176,8 +176,8 @@ void FollowIMU(){
 
     R.q = K.b_mean.sub(0,1);
     R.q_dot = K.b_mean.sub(2,3);
-    R.gl.text.clear() <<t <<' ' <<times(t) <<" ; " <<R.q(0) << " ; " <<R.q(1);
-    if(!(t%10)) R.gl.update();
+    R.gl().text.clear() <<t <<' ' <<times(t) <<" ; " <<R.q(0) << " ; " <<R.q(1);
+    if(!(t%10)) R.gl().update();
 
     MT::arrayBrackets="  ";
 
