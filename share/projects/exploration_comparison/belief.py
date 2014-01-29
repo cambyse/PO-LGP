@@ -1,6 +1,7 @@
 import copy
 import math
 
+import collections
 import numpy as np
 import scipy as sp
 import scipy.stats as ss
@@ -17,7 +18,7 @@ class ObjectBel(probdist.CategoricalDist):
 
         self.joint_bel = JointBel(name)
 
-    def H_diff_hier(self):
+    def entropy_diff_hier(self):
         """Return the expected change of entropy"""
         # print(self.H())
         change = []
@@ -26,7 +27,7 @@ class ObjectBel(probdist.CategoricalDist):
             distribution = copy.copy(self)
             distribution.observe(k)
             P = probs[k]
-            H = distribution.H()
+            H = distribution.entropy()
             # print("{} -- P: {:.2f} H: {:.3f} P*H: {:.3f}".format(
             #     distribution, P, H, P * H))
             change.append(P * H)
@@ -46,14 +47,14 @@ class JointBel(probdist.CategoricalDist):
         self.pris_limit_max = sp.stats.norm(loc=2, scale=2)
         self.pris_damping = sp.stats.norm(loc=0, scale=.5)
 
-        self.nil = sp.stats.norm(loc=0, scale=.1)
+        self.nil = sp.stats.norm(loc=0, scale=.05)
 
         # TODO Scaling and Gaussians
         precision = 0.1
         zero_entropy_of_gaussian = .248
         self.scaler = zero_entropy_of_gaussian / precision
 
-    def H_tmp(self):
+    def entropy_tmp(self):
         """How do we want to calculate the change of entropy for the joint bel?
 
         - icrement the counter for each label in JointBel
@@ -64,40 +65,45 @@ class JointBel(probdist.CategoricalDist):
         have to calc the entropy here.
 
         """
-        expected_change = {}
+        h_stats = {}
+        HStat = collections.namedtuple("HStat", "cur exp P")
+        h_change = {}
 
-        update_sigma = .9
+        update_var = .9
         noise = .01
 
         for name in self:
-            print("calc {}".format(name))
-
             P = self.prob(name)
 
             if name == "nil":
                 H = self.nil.entropy()
-                expected_change[name] = (H, H, P)
+                H_expected = H
+                h_stats[name] = HStat(float(H), float(H_expected), P)
+                change = 0
             else:
+                change = 0
                 for subname in ["_limit_max", "_limit_min", "_damping"]:
                     fullname = name + subname
 
                     distribution = getattr(self, fullname)
+                    H = distribution.entropy()
                     # Simple Forward Model
                     # only the std determines the entropy for gaussians.
                     # therefore, only update the std
-                    prior_std = distribution.std()
-                    prior_sigma = math.sqrt(prior_std)
-                    post_sigma = math.sqrt((prior_sigma * update_sigma) /
-                                           (prior_sigma + update_sigma))
-                    post_sigma += noise
-                    post_sigma *= self.scaler
-                    H_expected = ss.norm.entropy(0, post_sigma)
-                    print("post sigma {}".format(post_sigma))
+                    prior_var = distribution.var()
+                    # prior_sigma = math.sqrt(prior_std)
+                    post_std = math.sqrt((prior_var * update_var) /
+                                         (prior_var + update_var))
+                    post_std += noise
+                    H_expected = ss.norm.entropy(0, post_std)
 
                     # TODO Scaling and Gaussians
-                    expected_change[fullname] = (H, H_expected, P)
+                    h_stats[fullname] = HStat(float(H), float(H_expected), P)
+                    change += P * (H - H_expected)
 
-        return expected_change
+            h_change[name] = change
+
+        return (h_change, h_stats)
 
 
 
