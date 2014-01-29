@@ -1,0 +1,9 @@
+BASE = ../..
+
+OBJ = \
+  main.o
+
+LDFLAGS += -lncurses
+
+include $(BASE)/gofMake/make-generic
+
