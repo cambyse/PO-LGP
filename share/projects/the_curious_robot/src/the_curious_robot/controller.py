@@ -17,11 +17,15 @@ import the_curious_robot.msg as msgs
 
 import rosors.rosors
 import rosors.srv
+import util
 
 import require_provide as rp
 
 import random
 import os
+
+class TrajectoryException(Exception):
+    pass
 
 
 class RRTPlanner(object):
@@ -31,7 +35,7 @@ class RRTPlanner(object):
         shapes = ors.makeConvexHulls(self.graph.shapes)
         self.graph.shapes = shapes
 
-    def is_feasible(self, pose, col_prec, pos_prec):
+    def is_feasible(self, pose, col_prec, pos_prec, goal):
         problem = motion.MotionProblem(self.graph)
         problem.loadTransitionParameters()
 
@@ -54,47 +58,18 @@ class RRTPlanner(object):
             task_cost = problem.addTaskMap("position", position_tm)
             problem.setInterpolatingCosts(task_cost,
                                           motion.MotionProblem.finalOnly,
-                                          core.ARRAY(problem.ors
-                                                     .getBodyByName("target")
-                                                     .X.pos),
+                                          core.ARRAY(goal),
                                           pos_prec)
             problem.setInterpolatingVelCosts(task_cost, motion
                                              .MotionProblem.finalOnly,
                                              np.array([0., 0., 0.]), 1e1)
 
-        problem.setState(pose)
-        feasiblity, _, _, _ = problem.getTaskCosts(np.array(), np.array(),
-                                                   np.array(), 0)
+        #problem.setState(pose)
+        feasiblity, _, _, _ = problem.getTaskCosts(np.array([]), np.array([]),
+                                                   np.array([]), 0)
         return feasiblity
 
-        if col_prec != 0:
-            shapes = self.graph.getShapeIdxByAgent(0)
-            proxy_tm = motion.ProxyTaskMap(motion.allVersusListedPTMT,
-                                           shapes,
-                                           .05,
-                                           True)
-            task_cost2 = problem.addTaskMap("proxyColls", proxy_tm)
-            problem.setInterpolatingCosts(task_cost2,
-                                          motion.MotionProblem.constant,
-                                          np.array([0]), col_prec)
-
-        if pos_prec != 0:
-            position_tm = motion.DefaultTaskMap(motion.posTMT,
-                                                self.graph,
-                                                "eff",
-                                                core.Vector(0, 0, 0))
-            task_cost = problem.addTaskMap("position", position_tm)
-            problem.setInterpolatingCosts(task_cost,
-                                          motion.MotionProblem.finalOnly,
-                                          core.ARRAY(problem.ors
-                                                     .getBodyByName("target")
-                                                     .X.pos),
-                                          pos_prec)
-            problem.setInterpolatingVelCosts(task_cost, motion
-                                             .MotionProblem.finalOnly,
-                                             np.array([0., 0., 0.]), 1e1)
-
-    def create_endpose(self, start, col_prec, pos_prec, endeff, target):
+    def create_endpose(self, start, col_prec, pos_prec, endeff, goal):
         problem = motion.MotionProblem(self.graph)
         problem.loadTransitionParameters()
 
@@ -102,7 +77,7 @@ class RRTPlanner(object):
             shapes = self.graph.getShapeIdxByAgent(0)
             proxy_tm = motion.ProxyTaskMap(motion.allVersusListedPTMT,
                                            shapes,
-                                           .05,
+                                           .1,
                                            True)
             task_cost2 = problem.addTaskMap("proxyColls", proxy_tm)
             problem.setInterpolatingCosts(task_cost2,
@@ -117,15 +92,13 @@ class RRTPlanner(object):
             task_cost = problem.addTaskMap("position", position_tm)
             problem.setInterpolatingCosts(task_cost,
                                           motion.MotionProblem.finalOnly,
-                                          core.ARRAY(problem.ors
-                                                     .getBodyByName(target)
-                                                     .X.pos),
+                                          core.ARRAY(goal),
                                           pos_prec)
             problem.setInterpolatingVelCosts(task_cost, motion
                                              .MotionProblem.finalOnly,
                                              np.array([0., 0., 0.]), 1e1)
 
-        _, x = motion.keyframeOptimizer(start, problem, True, 2)
+        _, x = motion.keyframeOptimizer(start, problem, True, 0)
 
         return x
 
@@ -147,14 +120,14 @@ class RRTPlanner(object):
                                           np.array([0]), 1e-0)
             task_cost.y_threshold = 0
 
-        planner = motion.RRTPlanner(self.graph, problem, stepsize)
+        planner = motion.RRTPlanner(self.graph, problem, stepsize, True)
         planner.joint_max = core.getArrayParameter("joint_max")
         planner.joint_min = core.getArrayParameter("joint_min")
 
-        return planner.getTrajectoryTo(target)
+        return planner.getTrajectoryTo(target, 50000)
 
     def optimize_trajectory(self, trajectory, collisions, endeff,
-                            target_shape):
+                            goal):
         problem = motion.MotionProblem(self.graph)
         problem.loadTransitionParameters()
         problem.T = trajectory.shape[0]-1
@@ -174,12 +147,11 @@ class RRTPlanner(object):
                                                 self.graph,
                                                 endeff,
                                                 core.Vector(0, 0, 0))
+
         task_cost = problem.addTaskMap("position", position_tm)
         problem.setInterpolatingCosts(task_cost,
                                       motion.MotionProblem.finalOnly,
-                                      core.ARRAY(problem.ors
-                                                 .getBodyByName(target_shape)
-                                                 .X.pos),
+                                      core.ARRAY(goal),
                                       1e3)
         problem.setInterpolatingVelCosts(task_cost, motion
                                          .MotionProblem.finalOnly,
@@ -211,11 +183,8 @@ class FakeController(object):
         worldfile = os.path.join(
             core.get_mlr_path(), orspath, orsfile
         )
-        print "init rosors"
         self.world = rosors.rosors.RosOrs(orsfile=worldfile,
                                           srv_prefix="/world")
-
-        print "init gui"
         self.gl = gui.OpenGL()
         self.physx = ors.PhysXInterface()
         ors.bindOrsToPhysX(self.world.graph, self.gl, self.physx)
@@ -235,6 +204,7 @@ class FakeController(object):
         self.frame_id = 1
         self.recompute_trajectory = False
         self.trajectory = None
+        self.max_tries = 10
 
         self.rrt = RRTPlanner(self.world.graph)
 
@@ -248,9 +218,12 @@ class FakeController(object):
     def compute_trajectory(self):
         rospy.loginfo("start computing trajectory")
 
+        start = self.rrt.graph.getJointState()
+
+        # this is pr2-only :(
         opt_start = self.rrt.graph.getJointState()
-        opt_start[0] = self.rrt.graph.getBodyByName("target").X.pos.x
-        opt_start[1] = self.rrt.graph.getBodyByName("target").X.pos.y
+        opt_start[0] = self.goal.pos.x
+        opt_start[1] = self.goal.pos.y
 
         if self.collisions:
             col_prec = 1e1
@@ -258,38 +231,50 @@ class FakeController(object):
             col_prec = 0
 
         feasible = False
-        while not feasible:
+        for i in range(self.max_tries):
             opt_start[2] = random.uniform(-np.pi, np.pi)
 
             target = self.rrt.create_endpose(opt_start,
-                                             col_prec,
+                                             col_prec=col_prec,
                                              pos_prec=1e3,
-                                             target="target",
+                                             goal=self.goal.pos,
                                              endeff=self.endeff)
-            print(target)
             if self.collisions:
                 target2 = self.rrt.create_endpose(target,
                                                   col_prec=1e3,
                                                   pos_prec=1e1,
-                                                  target="target",
+                                                  goal=self.goal.pos,
                                                   endeff=self.endeff)
             else:
                 target2 = target
 
-            feasible = self.rrt.is_feasible(target2)
+            feasible = self.rrt.is_feasible(target2,
+                                            col_prec=col_prec,
+                                            pos_prec=0,
+                                            goal=self.goal.pos)
+            if feasible:
+                break
+
+        if not feasible:
+            self.trajectory = None
+            raise TrajectoryException()
 
         if self.teleport:
-            self.trajectory = np.reshape(target, (1, target.shape[0]))
+            self.trajectory = np.reshape(target2, (1, target2.shape[0]))
         else:
+            self.rrt.graph.setJointState(start)
             rrt_trajectory = self.rrt.create_rrt_trajectory(target2,
                                                             self.collisions)
-            std_traj = self.shorten_trajectory(rrt_trajectory, 250)
-            self.trajectory = self.rrt.optimize_trajectory(std_traj,
-                                                           collisions=
-                                                           self.collisions,
-                                                           endeff=self.endeff,
-                                                           target_shape=
-                                                           "target")
+            self.rrt.graph.setJointState(start)
+            if rrt_trajectory.size == 0:
+                raise TrajectoryException()
+            #std_traj = util.shorten_trajectory(rrt_trajectory, 250)
+            #self.trajectory = self.rrt.optimize_trajectory(std_traj,
+                                                           #collisions=
+                                                           #self.collisions,
+                                                           #endeff=self.endeff,
+                                                           #goal=self.goal.pos)
+            self.trajectory = rrt_trajectory
 
         self.tpos = 0
         self.recompute_trajectory = False
@@ -297,31 +282,36 @@ class FakeController(object):
         rospy.loginfo("done computing trajectory")
 
     def step(self):
-        print "step"
+        #print "step"
         if self.recompute_trajectory and self.goal:
-            self.compute_trajectory()
-            # rospy.loginfo(self.trajectory)
-            # rospy.loginfo("new trajectory")
+            try:
+                self.compute_trajectory()
+            except TrajectoryException:
+                rospy.loginfo("abort computing trajectory")
+                self.control_done(success=False)
 
         if self.trajectory is not None:
             # rospy.loginfo("Move one step")
             if self.tpos == self.trajectory.shape[0]:
                 self.control_done()
             else:
-                # rospy.logdebug("next step: " +
-                #                str(self.trajectory[self.tpos, :]))
+                rospy.logdebug("next step: " +
+                               str(self.trajectory[self.tpos, :]))
                 self.world.graph.setJointState(self.trajectory[self.tpos, :])
+                self.world.graph.calcBodyFramesFromJoints()
                 self.world.graph.calcBodyFramesFromJoints()
                 self.tpos += 1
 
         self.physx.step()
         self.world.graph.calcBodyFramesFromJoints()
+        self.world.graph.calcBodyFramesFromJoints()
         self.gl.update()
 
-    def control_done(self):
+    def control_done(self, success=True):
         self.trajectory = None
         msg = msgs.control_done()
         msg.header.frame_id = 'control done'
+        msg.success = success
         self.control_done_pub.publish(msg)
         self.goal = None
 
@@ -339,10 +329,7 @@ class FakeController(object):
                                (self.goal.pos - agent.X.pos) * Kp)
 
             else:
-                msg = msgs.control_done()
-                msg.header.frame_id = 'control done'
-                self.control_done_pub.publish(msg)
-                self.goal = None
+                self.control_done()
 
         self.physx.step()
         self.world.graph.calcBodyFramesFromJoints()
