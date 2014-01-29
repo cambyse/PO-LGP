@@ -9,6 +9,10 @@
 
 Mutex i2cmutex;
 
+static const double counts_per_motorTurn = 360.;
+static const double motorTurn_per_wheelTurn = 30.;
+static const double rad_per_count = MT_2PI/(counts_per_motorTurn);
+
 //===========================================================================
 //
 // IMU_Poller
@@ -47,8 +51,13 @@ void IMU_Poller::step(){
   imuData.writeAccess();
   imuData().resize(7);
   imuData()(0) = time;
-  for(uint i=0;i<3;i++) imuData()(1+i) = s->imu->_accel[i]*(1./(1<<14));
-  for(uint i=0;i<3;i++) imuData()(4+i) = s->imu->_gyro[i]*(1./(1<<13));
+  //scale to double, and flip coordinate axes
+  imuData()(1) =  s->imu->_accel[2]*(1./(1<<14));
+  imuData()(2) = -s->imu->_accel[1]*(1./(1<<14));
+  imuData()(3) = -s->imu->_accel[0]*(1./(1<<14));
+  imuData()(4) =  s->imu->_gyro[2]*(1./(1<<13));
+  imuData()(5) = -s->imu->_gyro[1]*(1./(1<<13));
+  imuData()(6) = -s->imu->_gyro[0]*(1./(1<<13));
   s->fil <<imuData() <<endl;
   imuData.deAccess();
 };
@@ -70,7 +79,10 @@ void Motors::open(){
   s = new sMotors;
   s->motor = new MD25();
   i2cmutex.lock();
-  if (s->motor->open()) std::cout << "Open connection to MD25 successfully " << std::endl;
+  if(s->motor->open()) std::cout << "Open connection to MD25 successfully ... " <<std::flush;
+  byte volts;
+  s->motor->readVoltage(volts);
+  std::cout <<"VOLTAGE = " <<double(volts)/10 <<'V' <<endl;
   i2cmutex.unlock();
   MT::open(s->fil, "nogit-data/Motors.dat");
   s->fil <<"time enc0 enc1 vel0 vel1 acc dtime denc0 denc1" <<endl;
@@ -98,8 +110,8 @@ void Motors::step(){
   encoderData.writeAccess();
   encoderData().resize(3);
   encoderData()(0) = time;
-  encoderData()(1) = 0.11*encoder1;
-  encoderData()(2) = 0.11*encoder2;
+  encoderData()(1) = rad_per_count*encoder1; //0.11
+  encoderData()(2) = rad_per_count*encoder2;
   s->fil <<encoderData() <<' ' <<u;
   if(s->lastEnc.N) s->fil <<(encoderData()-s->lastEnc)/(time-s->lastTime) <<endl;
   else s->fil <<"0 0 0" <<endl;
@@ -149,8 +161,7 @@ void KalmanFilter::step(){
   y_true(1)=imu(3);
   y_true(2)=imu(5);
   if(enc.N==0) y_true(3) = 0.;
-  if(enc.N==1) y_true(3) = enc(0);
-  if(enc.N==2) y_true(3) = 0.5*(enc(0)+enc(1));
+  if(enc.N==3) y_true(3) = 0.5*(enc(1)+enc(2));
 
   double tau=imu(0)-s->time;
   s->time=imu(0);
