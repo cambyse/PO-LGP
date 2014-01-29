@@ -96,8 +96,8 @@ void Motors::step(){
   CHECK(u.N==3," need u=(vel1, vel2, acc)");
 
   if(u(2)<0) u*=-1.;
-  int vel0=128 + int(u(0));  if(vel0<0) vel0=0;  if(vel0>255) vel0=255;
-  int vel1=128 + int(u(1));  if(vel1<0) vel1=0;  if(vel1>255) vel1=255;
+  int vel0=128 - int(u(0));  if(vel0<0) vel0=0;  if(vel0>255) vel0=255;
+  int vel1=128 - int(u(1));  if(vel1<0) vel1=0;  if(vel1>255) vel1=255;
   int acc=u(2);
   int32_t encoder1 = 0;
   int32_t encoder2 = 0;
@@ -110,8 +110,8 @@ void Motors::step(){
   encoderData.writeAccess();
   encoderData().resize(3);
   encoderData()(0) = time;
-  encoderData()(1) = rad_per_count*encoder1; //0.11
-  encoderData()(2) = rad_per_count*encoder2;
+  encoderData()(1) = -rad_per_count*encoder1;
+  encoderData()(2) = -rad_per_count*encoder2;
   s->fil <<encoderData() <<' ' <<u;
   if(s->lastEnc.N) s->fil <<(encoderData()-s->lastEnc)/(time-s->lastTime) <<endl;
   else s->fil <<"0 0 0" <<endl;

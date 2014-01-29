@@ -5,7 +5,8 @@
 
 void testIMU(){
   struct MySystem:System{
-    ACCESS(arr, imuData)
+    ACCESS(arr, imuData);
+    ACCESS(arr, stateEstimate);
     MySystem(){
       addModule<IMU_Poller>("IMU_Poller", ModuleThread::loopFull);
       addModule<KalmanFilter>("KalmanFilter", ModuleThread::listenFirst);
@@ -21,7 +22,10 @@ void testIMU(){
 
 
   for(;;){
-    S.imuData.var->waitForNextWriteAccess();
+    S.stateEstimate.var->waitForNextWriteAccess();
+    arr x = S.stateEstimate.get();
+//    arr enc = S.encoderData.get();
+    cout <<"\r state = " <<x <<std::flush;
     if(engine().shutdown.getValue()) break;
 //    if(S.imuData.get()()(0)>10.) break;
   }
@@ -110,9 +114,9 @@ void testBalance(){
 int main(int argc, char **argv) {
   MT::initCmdLine(argc, argv);
 
-  testIMU();
+//  testIMU();
 //  testMotors();
-//  testBalance();
+  testBalance();
 //  findBalancePoint();
 
   return 0;

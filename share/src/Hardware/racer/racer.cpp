@@ -25,7 +25,7 @@ Racer::Racer():dynamicsFct(*this),observationFct(*this),_gl(NULL){
   c1 = 1./9.6; //9.81;
   c2 = MT::getParameter<double>("IMU_tilt",0.16);
   c3 = 1.;
-  c4 = -0.0417273;
+  c4 = MT::getParameter<double>("IMU_gyroOff",0.0417273);
   c5 = 1.;
 
   noise_accel = MT::getParameter<double>("IMU_accelNoise",1.);
@@ -141,12 +141,11 @@ void Racer::getObservation(arr& y, arr& C, arr& c, arr& W){
   getJacobians(NoArr, J_C, J_C_dash, J_C_ddash, true);
   //pick only relevant (x,y) directions:
   J_C.resizeCopy(2,2);  J_C_dash.resizeCopy(2,2);  J_C_ddash.resizeCopy(2,2);
-//  J_C=0.;
 
   //we need the dynamics
   arr q_ddot, J;
   dynamicsFct().fv(q_ddot, (&C?J:NoArr), cat(q, q_dot).reshape(2,2));
-//  q_ddot.setZero();
+  q_ddot.setZero(); J_C.setZero();
 
   //3-dimensional observation
   arr acc = ARR(0,g);
