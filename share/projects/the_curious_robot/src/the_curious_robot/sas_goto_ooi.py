@@ -66,13 +66,17 @@ class GotoOOIActionServer:
         self.react_to_controller = False
         self.control_done = False
 
-        self.server.set_succeeded()
+        if self.success:
+            self.server.set_succeeded()
+        else:
+            self.server.set_aborted()
 
     def ooi_id_cb(self, msg):
         self.ooi_id = msg.id
 
     def control_done_cb(self, msg):
         if self.react_to_controller:
+            self.success = msg.success
             self.control_done = True
 
     def preempt_cb(self):
