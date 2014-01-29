@@ -25,9 +25,7 @@ class RosOrs(object):
 
     def __init__(self, orsfile, srv_prefix):
         # the actual ors graph
-        rospy.loginfo("Init ors graph...")
         self.graph = orspy.Graph()
-        rospy.loginfo("Load ors file \"%s\"" % orsfile)
         self.graph.init(orsfile)
         rospy.loginfo("Starting rosors services with prefix: %s " % srv_prefix)
 
@@ -79,7 +77,14 @@ class RosOrs(object):
                 res.shapes.append(parser.ors_shape_to_msg(ors_shape,
                                                           req.with_mesh))
             return res
-        elif req.name:
+        if req.agent_number_set:
+            for shape_idx in self.graph.getShapeIdxByAgent(req.agent_number):
+                res.shapes.append(parser.ors_shape_to_msg(
+                                  self.graph.shapes[shape_idx],
+                                  req.with_mesh))
+            return res
+
+        if req.name:
             ors_shape = self.graph.getShapeByName(req.name)
             res.shapes.append(parser.ors_shape_to_msg(ors_shape,
                                                       req.with_mesh))
