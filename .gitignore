@@ -2,8 +2,12 @@
 *.o
 *.a
 *.so
-*.exe
 *.swp
+
+
+%% EXECUTABLE
+*.exe
+x_*
 
 tags
 .cccc
@@ -22,8 +26,12 @@ vc60.idb
 *eclipse*
 *_moc.cpp
 *_ui.h
+CTestTestfile.cmake
 
+
+# PYTHON
 *.pyc
+_*.py
 
 
 # EXECUTION

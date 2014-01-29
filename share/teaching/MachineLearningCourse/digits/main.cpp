@@ -9,8 +9,8 @@ using namespace std;
 
 void digits() {
   arr X,y;
-  X.read("digit_pca.txt");
-  y.read("digit_label.txt");
+  X <<FILE("digit_pca.txt");
+  y <<FILE("digit_label.txt");
   y.reshape(y.N);
 
 

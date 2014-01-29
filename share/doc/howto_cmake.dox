@@ -1,0 +1,34 @@
+/** @page page_cmake Cmake and MLR
+
+@section cmake_general General
+Since 2014 we use cmake to compile MLR.
+
+Initially you have to call "cmake ." in share/ so create all makes files.
+\verbatim
+cd share
+cmake .
+\endverbatim
+
+
+\note
+Don't call "cmake ." from any other folder!
+
+There should be Makefile in every folder.
+Simply call "make" in the folder you want to build.
+Alternatively call "make -C folder_to_compile".
+
+
+@section cmake_source Handling source files
+
+The files to compile are specified in ".source.cmake" in every folder.
+There is a script that automatically updates the .source.cmake files.
+\verbatim
+bin/update_includes.sh
+\endverbatim
+If you add new files to the repo you should call the script and commit the
+updated ".source.cmake" files.
+
+\TODO how to configure your build (change compiler etc.)
+
+
+*/

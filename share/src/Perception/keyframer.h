@@ -2,7 +2,6 @@
 
 #include <Core/array.h>
 #include <Ors/ors.h>
-#include <Gui/opengl.h>
 #include <Perception/g4data.h>
 #include "keyframe.h"
 
@@ -10,7 +9,7 @@ struct KeyFramer {
   struct sKeyFramer;
   sKeyFramer *s;
 
-  KeyFramer(ors::KinematicWorld &G, G4Data &g4d);
+  KeyFramer(ors::KinematicWorld &kw, G4Data &g4d);
   ~KeyFramer();
 
   //uint getNBodies();
@@ -28,10 +27,11 @@ struct KeyFramer {
 
   void updateOrs(uint f);
 
-  arr getCorrPCA(uint b1, uint b2, uint wlen);
-  arr getCorrWOPCA(uint b1, uint b2, uint wlen);
-  arr getCorr(uint b1, uint b2, uint wlen, bool pca);
-  arr getCorr(const String &n1, const String &n2, uint wlen, bool pca);
+  arr getCorr(uint b1, uint b2, uint wlen);
+  arr getCorr(const String &n1, const String &n2, uint wlen);
+  arr getCorrPCA(uint b1, uint b2, uint wlen, uint npc);
+  arr getCorrPCA(const String &n1, const String &n2, uint wlen, uint npc);
+
   /*
   MT::Array<arr> getCorrEnsemble(uint b1, uint b2, uintA &wlens, bool pca);
   MT::Array<arr> getCorrEnsemble(const String &n1, const String &n2, uintA &wlens, bool pca);
@@ -53,6 +53,14 @@ struct KeyFramer {
   arr getDists(const String &n1, const String &n2);
 
   KeyFrameL getKeyFrames(const arr &corr, const ProxyL &proxies);
+  KeyFrameL getKeyFrames(const arr &q);
   void saveKeyFrameScreens(const KeyFrameL &keyframes, uint df = 60);
+
+  void computeEvidences(arrL &rho, const arr &c, const arr &v, const arrL &theta);
+  void Estep(arr& a, arr& b, const arr& P0, const arr& P, const arr& rho);
+  void EstepQ(arrL &ql, const arrL &theta, const arrL &rho);
+  void Mstep(arrL &theta, const arrL &ql, const arr& c, const arr &v);
+  arr EM(const arr &corr, const arr &var);
+
 };
 

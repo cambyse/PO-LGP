@@ -100,3 +100,4 @@ Create the doxygen documentation with:
 
     cd share
     make doc
+

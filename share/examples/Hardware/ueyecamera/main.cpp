@@ -15,11 +15,13 @@ void threadedRun() {
   lib_Perception();
 
   struct MySystem:System{
-    ACCESS(byteA, ueye_rgb);
+    //ACCESS(byteA, ueye_rgb);
 
     MySystem(){
-      addModule("UEyeCamera", NULL, ModuleThread::loopWithBeat, .1);
-      addModule("ImageViewer", NULL, STRINGS("ueye_rgb"), ModuleThread::listenFirst, 0);
+      //addModule("UEyePoller", NULL, ModuleThread::loopWithBeat, .1);
+      addModule("UEyePoller", "POLLER", ModuleThread::loopFull);
+      addModule("ImageViewer", "VIEWER", STRINGS("ueye_rgb"), ModuleThread::listenFirst);
+      addModule("VideoEncoder", "ENCODER", STRINGS("ueye_rgb"), ModuleThread::listenFirst);
       connect();
     }
   } S;
@@ -36,7 +38,9 @@ void threadedRun() {
   MT::timerStart();
   uint t;
 
-  for(t=0;/*t<100*/;t++){
+  MT::wait(10);
+  /*
+  for(t=0; ; t++){
     if(engine().shutdown.getValue()) break;
     S.ueye_rgb.var->waitForNextWriteAccess();
     rgbImg = S.ueye_rgb.get();
@@ -46,6 +50,7 @@ void threadedRun() {
     }
   }
   cout <<"fps = " << t/MT::timerRead() <<endl;
+  */
 
   engine().close(S);
   cout <<"bye bye" <<endl;

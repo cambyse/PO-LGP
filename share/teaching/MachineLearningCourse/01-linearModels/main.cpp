@@ -182,7 +182,12 @@ void exercise2() {
   } cv;
 
   //load the data, split in input and output
+<<<<<<< HEAD:share/teaching/CourseML/01-linearModels/main.cpp
+  ifstream datafile("./dataQuadReg2D_noisy.txt");
+  X.read(datafile);
+=======
   X <<FILE("./dataQuadReg2D_noisy.txt");
+>>>>>>> marc:share/teaching/MachineLearningCourse/01-linearModels/main.cpp
   y = (~X)[X.d1-1];    //last row of transposed X
   X.delColumns(X.d1-1);
 

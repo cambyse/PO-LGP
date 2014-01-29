@@ -26,13 +26,13 @@
  **/
 
 
-#include <Gui/opengl.h>
-#include <Gui/plot.h>
 #include "ors.h"
 #include "ors_oldTaskVariables.h"
 #include "ors_swift.h"
 #include "ors_ode.h"
 #include "ors_actionInterface.h"
+#include <Gui/opengl.h>
+#include <Gui/plot.h>
 #include <sstream>
 #include <limits.h>
 #include <unistd.h>

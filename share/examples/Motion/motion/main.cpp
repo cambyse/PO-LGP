@@ -17,23 +17,23 @@ int main(int argc,char** argv){
   //-- setup the motion problem
   TaskCost *c;
   c = MP.addTaskMap("position",
-                   new DefaultTaskMap(posTMT, G, "endeff", ors::Vector(0, 0, .2)));
+                    new DefaultTaskMap(posTMT, G, "endeff", ors::Vector(0, 0, .2)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(MP.world.getBodyByName("target")->X.pos), 1e2);
+                           ARRAY(MP.world.getBodyByName("target")->X.pos), 1e2);
   MP.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
-                          ARRAY(0.,0.,0.), 1e1);
+                              ARRAY(0.,0.,0.), 1e1);
 
-//  c = P.addDefaultTaskMap("collision", collTMT, 0, Transformation_Id, 0, Transformation_Id, ARR(.1));
-//  P.setInterpolatingCosts(c, MotionProblem::1constFinalMid, ARRAY(0.), 1e-0);
+  //  c = P.addDefaultTaskMap("collision", collTMT, 0, Transformation_Id, 0, Transformation_Id, ARR(.1));
+  //  P.setInterpolatingCosts(c, MotionProblem::1constFinalMid, ARRAY(0.), 1e-0);
 
-//  c = P.addDefaultTaskMap("qitself", qItselfTMT, (int)0, Transformation_Id, 0, Transformation_Id, 0);
-//  P.setInterpolatingCosts(   c, MotionProblem::constFinalMid, ARRAY(0.), 1e-4);
-//  //P.setInterpolatingVelCosts(c, MotionProblem::constFinalMid, ARRAY(0.), 1e4, ARRAY(0.), 1e-2);
+  //  c = P.addDefaultTaskMap("qitself", qItselfTMT, (int)0, Transformation_Id, 0, Transformation_Id, 0);
+  //  P.setInterpolatingCosts(   c, MotionProblem::constFinalMid, ARRAY(0.), 1e-4);
+  //  //P.setInterpolatingVelCosts(c, MotionProblem::constFinalMid, ARRAY(0.), 1e4, ARRAY(0.), 1e-2);
 
   //-- collisions with other objects
   uintA shapes = ARRAY<uint>(MP.world.getBodyByName("endeff")->shapes(0)->index);
   c = MP.addTaskMap("proxyColls",
-                   new ProxyTaskMap(allVersusListedPTMT, shapes, .2, true));
+                    new ProxyTaskMap(allVersusListedPTMT, shapes, .2, true));
   MP.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e2);
 
   //-- create the Optimization problem (of type kOrderMarkov)
@@ -42,10 +42,10 @@ int main(int argc,char** argv){
   uint k=MF.get_k();
   uint n=MF.dim_x();
   cout <<"Problem parameters:"
-       <<"\n T=" <<T
-       <<"\n k=" <<k
-       <<"\n n=" <<n
-       <<endl;
+      <<"\n T=" <<T
+     <<"\n k=" <<k
+    <<"\n n=" <<n
+   <<endl;
 
   //mini evaluation test:
   arr x(T+1,n);
@@ -65,7 +65,7 @@ int main(int argc,char** argv){
     checkJacobian(Convert(MF), x, 1e-5);
   }
   
-//  OpenGL costs(STRING("PHI ("<<F.dim_phi(0)<<" tasks)"), 3*T+10, 3*F.dim_phi(0)+10 );
+  //  OpenGL costs(STRING("PHI ("<<F.dim_phi(0)<<" tasks)"), 3*T+10, 3*F.dim_phi(0)+10 );
   //-- optimize
   for(uint k=0;k<10;k++){
     optNewton(x, Convert(MF), OPT(verbose=2, stopIters=40, useAdaptiveDamping=false, damping=1e-0, maxStep=1.));
