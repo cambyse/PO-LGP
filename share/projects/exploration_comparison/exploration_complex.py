@@ -2,102 +2,27 @@ from __future__ import division
 import random
 import scipy.stats as ss
 import numpy as np
+arr = np.array
 import copy
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-arr = np.array
-
-
-class Door(object):
-    def __init__(self, prob_open, name, verbose=False):
-        self.p = prob_open
-        self.name = name
-        self.verbose = verbose
-
-    def push(self):
-        result = random.random() < self.p
-        if self.verbose:
-            print("{} (prob_open={}) {}".format(
-                self.name, self.p,
-                "opened" if result else "didn't open"
-            ))
-        return result
-
-
-class DoorBel(object):
-    """"DoorBel is a beta dist."""
-    def __init__(self, name, opened=1, closed=1):
-        self.name = name
-        # uninformed prior
-        self.opened = opened
-        self.closed = closed
-
-    def __str__(self):
-        return "Beta(opened={}, closed={}) --> H={}".format(
-            self.opened, self.closed, self.entropy()
-        )
-
-    def entropy(self):
-        return ss.beta(self.opened, self.closed).entropy()
-
-    def exp_diff_H(self):
-        H = self.entropy()
-        # prob for outcome "a" and "b"
-        P_a = self.mean()
-        P_b = 1 - P_a
-        # entropy for outcome "a" and "b"
-        H_a = ss.beta.entropy(self.opened + 1, self.closed)
-        H_b = ss.beta.entropy(self.opened, self.closed + 1)
-        # new estimated entropy
-        H_est = (P_a * H_a + P_b * H_b)
-        # change of H
-        exp_diff = H - H_est
-
-        return exp_diff
-
-    def update(self, opened):
-        if opened:
-            self.opened += 1
-        else:
-            self.closed += 1
-
-    def mean(self):
-        return ss.beta.mean(self.opened, self.closed)
-
-    def likelihood(self, loc):
-        return ss.beta.pdf(loc, self.opened, self.closed)
-
-    def logpdf(self, loc):
-        return ss.beta.logpdf(loc, self.opened, self.closed)
+###############################################################################
+import belief_rep
+import world_rep
 
 
 ###############################################################################
 def init():
-    world = [Door(1, "d0"), Door(.2, "d1")]
-    belief = [DoorBel(door.name) for door in world]
-    return world, belief
-
-
-def init_all_openable(num=2):
-    world = [Door(1, "d" + str(i)) for i in range(num)]
-    belief = [DoorBel(door.name) for door in world]
-    return world, belief
-
-
-def init_all_openable_big():
-    return init_all_openable(num=5)
-
-
-def init_some_openable_big(num=5):
-    world = [Door(i % 2, "d" + str(i)) for i in range(num)]
-    belief = [DoorBel(door.name) for door in world]
-    return world, belief
-
-
-def init_stochastic_world(num=5):
-    world = [Door(1 / (i+1), "d" + str(i)) for i in range(num)]
-    belief = [DoorBel(door.name) for door in world]
+    n = 5
+    world = [
+        world_rep.Object("obj1", object_type="static", joint_type="nil"),
+        world_rep.Object("obj2", object_type="movable", joint_type="pris"),
+        world_rep.Object("obj3", object_type="movable", joint_type="pris"),
+        world_rep.Object("obj4", object_type="movable", joint_type="rot"),
+        world_rep.Object("obj5", object_type="movable", joint_type="rot"),
+    ]
+    belief = [belief_rep.ObjectBel("obj" + str(i + 1)) for i in range(n)]
     return world, belief
 
 
@@ -112,10 +37,10 @@ def run_experiment(world, belief, select_strategy, num_interactions,
     for i in range(num_interactions):
 
         idx = select_strategy(belief)
-        opened = world[idx].push()
-        if observation_model:
-            opened = observation_model(opened)
-        belief[idx].update(opened)
+        observations = world[idx].interact()
+        # if observation_model:
+        #     opened = observation_model(opened)
+        belief[idx].update(observations)
 
         bel_history.append(copy.deepcopy(belief))
     return bel_history

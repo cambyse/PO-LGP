@@ -26,10 +26,10 @@ class CategoricalDist(dict):
     def _normalizer(self):
         return sum(self.itervalues())
 
-    def H(self):
+    def entropy(self):
         return - sum(p * math.log(p) for _, p in self.iterprobs() if p > 0)
 
-    def H_diff(self):
+    def entropy_diff(self):
         """Return the expected change of entropy"""
         # print(self.H())
         change = []
@@ -38,11 +38,16 @@ class CategoricalDist(dict):
             distribution = copy.copy(self)
             distribution.observe(k)
             P = probs[k]
-            H = distribution.H()
+            H = distribution.entropy()
             # print("{} -- P: {:.2f} H: {:.3f} P*H: {:.3f}".format(
             #     distribution, P, H, P * H))
             change.append(P * H)
-        return self.H() - sum(change)
+        return self.entropy() - sum(change)
+
+    def __str__(self):
+        result = "{} --> H={:.3f} H_exp_diff={:.3f}".format(
+            self.probs(), self.entropy(), self.entropy_diff())
+        return result
 
 
 class PMF(dict):
@@ -56,6 +61,6 @@ class PMF(dict):
         for key in self:
             self[key] /= normalizer
 
-    def H(self):
+    def entropy(self):
         result = - sum([self[k] * math.log(self[k]) for k in self])
         return result
