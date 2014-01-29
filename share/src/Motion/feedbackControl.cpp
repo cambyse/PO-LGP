@@ -26,6 +26,7 @@ arr PDtask::getDesiredAcceleration(const arr& y, const arr& ydot){
   if(!v_ref.N) v_ref.resizeAs(ydot).setZero();
   Perr = y_ref-y;
   Derr = v_ref-ydot;
+  cout <<" TASK " <<name <<": y=(" <<Pgain <<'*' <<y_ref <<'-' <<y <<") v=(" <<Dgain <<'*' <<v_ref <<'-' <<ydot <<')' <<endl;
   return Pgain*Perr + Dgain*Derr;
 }
 
@@ -38,20 +39,20 @@ void ConstraintForceTask::updateConstraintControl(const arr& _g, const double& l
 
   if(g<0 && lambda_desired>0.){ //steer towards constraint
     desiredApproach.y_ref=ARR(.05); //set goal to overshoot!
-    desiredApproach.setGainsAsNatural(.2, 1.);
+    desiredApproach.setGainsAsNatural(.1, 1.);
     desiredApproach.prec=1e4;
   }
 
   if(g>-1e-2 && lambda_desired>0.){ //stay in constraint -> constrain dynamics
     desiredApproach.y_ref=ARR(0.);
-    desiredApproach.setGainsAsNatural(.01, .7);
+    desiredApproach.setGainsAsNatural(.02, .7);
     desiredApproach.prec=1e6;
   }
 
   if(g>-0.02 && lambda_desired==0.){ //release constraint -> softly push out
     desiredApproach.y_ref=ARR(-0.02);
-    desiredApproach.setGainsAsNatural(.2, 1.);
-    desiredApproach.prec=100.;
+    desiredApproach.setGainsAsNatural(.1, 1.);
+    desiredApproach.prec=1e4;
   }
 
   if(g<=-0.02 && lambda_desired==0.){ //stay out of contact -> constrain dynamics
@@ -64,14 +65,16 @@ void ConstraintForceTask::updateConstraintControl(const arr& _g, const double& l
 FeedbackMotionControl::FeedbackMotionControl(ors::KinematicWorld& _world, bool useSwift)
   : MotionProblem(_world, useSwift), nullSpacePD(NULL) {
   loadTransitionParameters();
+  nullSpacePD.name="nullSpacePD";
   nullSpacePD.setGainsAsNatural(1.,1.);
   nullSpacePD.prec=1.;
 }
 
-PDtask* FeedbackMotionControl::addTask(const char* name, TaskMap *map){
+PDtask* FeedbackMotionControl::addPDTask(const char* name, double decayTime, double dampingRatio, TaskMap *map){
   PDtask *t = new PDtask(map);
   t->name=name;
   tasks.append(t);
+  t->setGainsAsNatural(decayTime, dampingRatio);
   return t;
 }
 
@@ -91,8 +94,7 @@ PDtask* FeedbackMotionControl::addPDTask(const char* name,
                                          const char* iShapeName, const ors::Vector& ivec,
                                          const char* jShapeName, const ors::Vector& jvec,
                                          const arr& params){
-  PDtask *t = addTask(name, new DefaultTaskMap(type, world, iShapeName, ivec, jShapeName, jvec, params));
-  t->setGainsAsNatural(decayTime, dampingRatio);
+  PDtask *t = addPDTask(name, decayTime, dampingRatio, new DefaultTaskMap(type, world, iShapeName, ivec, jShapeName, jvec, params));
   return t;
 }
 

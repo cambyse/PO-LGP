@@ -562,6 +562,7 @@ clean:
 
 cleanLocks: force
 	@find $(BASE) -name 'Make.lock' -type d -delete
+	@find $(BASE) -type f -name '.lastMake' -delete
 
 depend: generate_Makefile.dep
 
@@ -712,33 +713,21 @@ includeAll.cxx: force
 ################################################################################
 
 $(BASE)/lib/libextern_%.so: $(BASE)/src/extern/%
-	+@-$(BASE)/make-locked.sh $< $@
+	+@-$(BASE)/make-locked.sh $<
 
 $(BASE)/lib/libHardware_%.so: $(BASE)/src/Hardware/%
-	+@-$(BASE)/make-locked.sh $< $@
+	+@-$(BASE)/make-locked.sh $<
 
 $(BASE)/lib/lib%.so: $(BASE)/src/%
-	+@-$(BASE)/make-locked.sh $< $@
+	+@-$(BASE)/make-locked.sh $<
 
 makePath/%: %
-	+@-$(BASE)/make-locked.sh $< $<
+	+@-$(BASE)/make-locked.sh $<
 
 cleanPath/%: %
 	@echo "                                                ***** clean " $*
 	@-rm -f $*/Makefile.dep
 	@-$(MAKE) -C $* clean --no-print-directory
-
-dependPath/%: %
-	@echo "                                                ***** depend " $*
-	@-rm -f $*/Makefile.dep
-	@-$(MAKE) -C $* depend --no-print-directory
-
-
-makeSubpaths/%::
-	-@find -L $* -maxdepth 1 -follow -type d -not -name '$*' -not -name 'SHARE' -exec $(MAKE) -C {} \;
-
-cleanSubpaths/%::
-	-@find -L $* -maxdepth 1 -follow -type d -not -name '$*' -not -name 'SHARE' -exec $(MAKE) -C {} clean \;
 
 makePythonPath/%: %
 	make --directory=$< pywrapper
