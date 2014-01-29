@@ -18,6 +18,14 @@ class ObjectBel(probdist.CategoricalDist):
 
         self.joint_bel = JointBel(name)
 
+    def update(self, observations):
+        obs_obj_type, obs_joint_type = observations
+
+        self.observe(obs_obj_type)
+        if obs_obj_type == "movable":
+            self.joint_bel.observe(obs_joint_type)
+            # TODO update gaussians
+
 
 class JointBel(probdist.CategoricalDist):
     def __init__(self, name):

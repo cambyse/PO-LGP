@@ -8,17 +8,22 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 ###############################################################################
-import belief
-import world
+import belief_rep
+import world_rep
 
 
 ###############################################################################
 def init():
     n = 5
-    world = [i for i in range(n)]
-    bel = [belief.ObjectBel("obj" + str(i+1)) for i in range(n)]
-    return world, bel
-
+    world = [
+        world_rep.Object("obj1", object_type="static", joint_type="nil"),
+        world_rep.Object("obj2", object_type="movable", joint_type="pris"),
+        world_rep.Object("obj3", object_type="movable", joint_type="pris"),
+        world_rep.Object("obj4", object_type="movable", joint_type="rot"),
+        world_rep.Object("obj5", object_type="movable", joint_type="rot"),
+    ]
+    belief = [belief_rep.ObjectBel("obj" + str(i + 1)) for i in range(n)]
+    return world, belief
 
 
 ###############################################################################
@@ -32,10 +37,10 @@ def run_experiment(world, belief, select_strategy, num_interactions,
     for i in range(num_interactions):
 
         idx = select_strategy(belief)
-        opened = world[idx].push()
-        if observation_model:
-            opened = observation_model(opened)
-        belief[idx].update(opened)
+        observations = world[idx].interact()
+        # if observation_model:
+        #     opened = observation_model(opened)
+        belief[idx].update(observations)
 
         bel_history.append(copy.deepcopy(belief))
     return bel_history

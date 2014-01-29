@@ -1,12 +1,17 @@
 class Object(object):
     # OBJECT TYPE
-    STATIC = 1
-    MOVABLE = 2
+    # - "static"
+    # - "movable"
     # JOINT TYPE
-    NIL = 3
-    ROT = 4
-    PRIS = 5
+    # - "nil"
+    # - "rot"
+    # - "pris"
 
-    def __init__(self, object_type=STATIC, joint_type=NIL):
+    def __init__(self, name, object_type="static", joint_type="nil"):
+        self.name = name
         self.object_type = object_type
         self.joint_type = joint_type
+
+    def interact(self):
+        """Interact and return the observations."""
+        return self.object_type, self.joint_type
