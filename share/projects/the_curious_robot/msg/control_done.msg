@@ -1,1 +1,2 @@
 Header header
+bool success
