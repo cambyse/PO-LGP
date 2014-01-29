@@ -88,15 +88,15 @@ body door3-frame {
   fixed
   contact
 }
-body door3-door {
-  X=<T t(2 0 0)>
-  type=3 mesh='door_model/door_hacd.obj'
-  meshscale=.01
-  submeshsizes=[8 36 41 36 41]
-  color=[1 0 0]
-  fixed
-  contact
-}
+#body door3-door {
+  #X=<T t(2 0 0)>
+  #type=3 mesh='door_model/door_hacd.obj'
+  #meshscale=.01
+  #submeshsizes=[8 36 41 36 41]
+  #color=[1 0 0]
+  #fixed
+  #contact
+#}
 #body door3-handle {
 #  X=<T t(2 0 0)>
 #  type=3
@@ -190,6 +190,6 @@ shape (cabinet_base) {
 
 body cabinet_drawer {type=0 size=[1.2 1. .4 .0] color=[.5 .5 0] kinematic }
 
-joint (cabinet_base cabinet_drawer) { type=3 A=<T t(0 0 1)> }
+joint (cabinet_base cabinet_drawer) { type=3 A=<T t(0 0 1)> agent = 99 }
 # }}}
 // vim:ft=ors:foldmethod=indent:

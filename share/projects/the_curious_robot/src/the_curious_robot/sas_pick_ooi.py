@@ -160,16 +160,26 @@ class PickOOIActionServer(object):
         self.possible_oois = None
         rp.Provide("PickOOI")
 
+    def get_agent_shapes(self):
+        req = rosors.srv.ShapesRequest()
+        req.agent_number = 0
+        req.agent_number_set = True
+        shapes = self.request_all_shapes(req)
+        return [shape.index for shape in shapes.shapes]
+
     def execute(self, msg):
         # We assume that we "see" all shapes from the beginning and the number
         # does not change. Therfore, we only request it once.
 
         if self.possible_oois is None:
             with Timer("PICK: initial if", rospy.logdebug):
-                all_shapes_msg = self.request_all_shapes(with_mesh=False)
+                all_shapes_msg = self.request_all_shapes(with_mesh=False,
+                        agent_number_set=False)
                 self.possible_oois = [shape.index
                                       for shape in all_shapes_msg.shapes
-                                      if shape.name not in ["base", "robot"]]
+                                      if shape.index not in
+                                      range(34, 85)] 
+                print self.possible_oois
 
         # select an ooi
         with Timer("PICK: select ooi", rospy.logdebug):

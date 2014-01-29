@@ -4,6 +4,7 @@ import rospy
 import the_curious_robot.msg as msgs
 import geometry_msgs.msg
 from articulation_msgs.msg import TrackMsg
+import numpy as np
 
 
 class Properties(object):
@@ -155,3 +156,15 @@ def create_track_msg(trajectory):
         )
         msg.pose.append(pose)
     return msg
+
+
+#########################################################################
+def shorten_trajectory(traj, num):
+    if traj.shape[0] < num:
+        return traj
+    stepsize = traj.shape[0] / num
+    new_traj = np.ndarray([num, traj.shape[1]])
+    for i in range(num):
+        pos = int(i * stepsize)
+        new_traj[i, :] = traj[pos, :]
+    return new_traj

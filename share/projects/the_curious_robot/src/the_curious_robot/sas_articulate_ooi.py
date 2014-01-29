@@ -65,6 +65,7 @@ class ArticulateOOIActionServer(object):
 
     def control_done_cb(self, msg):
         if self.react_to_controller:
+            self.success = msg.success
             self.control_done = True
 
     def preempt_cb(self):

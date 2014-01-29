@@ -15,7 +15,7 @@ namespace ors {
     RRTPlanner *p;
     RRT rrt;
 
-    sRRTPlanner(RRTPlanner *p, RRT rrt) : p(p), rrt(rrt) { };
+    sRRTPlanner(RRTPlanner *p, RRT rrt, bool verbose) : p(p), rrt(rrt), verbose(verbose) { };
 
     bool growTowards(RRT& growing, RRT& passive);
 
@@ -23,6 +23,8 @@ namespace ors {
 
     uint success_growing;
     uint success_passive;
+
+    bool verbose;
   };
 }
 
@@ -82,8 +84,8 @@ arr buildTrajectory(RRT& rrt, uint node, bool forward) {
   return q;
 }
     
-ors::RRTPlanner::RRTPlanner(ors::Graph *G, MotionProblem &problem, double stepsize) : 
-  s(new ors::sRRTPlanner(this, RRT(G->getJointState(), stepsize))), G(G), problem(problem) {
+ors::RRTPlanner::RRTPlanner(ors::Graph *G, MotionProblem &problem, double stepsize, bool verbose) : 
+  s(new ors::sRRTPlanner(this, RRT(G->getJointState(), stepsize), verbose)), G(G), problem(problem) {
     joint_min = zeros(G->getJointStateDimension(), 1);
     joint_max = ones(G->getJointStateDimension(), 1);
   }
@@ -97,7 +99,7 @@ void drawRRT(RRT rrt) {
   }
 }
 
-arr ors::RRTPlanner::getTrajectoryTo(const arr& target, OpenGL *gl) {
+arr ors::RRTPlanner::getTrajectoryTo(const arr& target, int max_iter) {
   arr q;
 
   if (!s->isFeasible(target))
@@ -108,6 +110,7 @@ arr ors::RRTPlanner::getTrajectoryTo(const arr& target, OpenGL *gl) {
   bool found = false;
   uint node0 = 0, node1 = 0;
 
+  int iter = 0;
   while(!found) {
     found = s->growTowards(s->rrt, target_rrt);
     if(found) {
@@ -122,13 +125,11 @@ arr ors::RRTPlanner::getTrajectoryTo(const arr& target, OpenGL *gl) {
       node1 = s->success_growing;
       break;
     }
+    if (s->verbose && iter % 20 == 0) std::cout << "." << std::flush;
+    if (max_iter && iter >= max_iter) return arr(0);
+    iter++;
   }
-
-  if (gl) {
-    gl->add(glDrawPlot, &plotModule);
-    drawRRT(s->rrt);
-    drawRRT(target_rrt);
-  }
+  if (s->verbose) std::cout << std::endl;
 
   arr q0 = buildTrajectory(s->rrt, node0, true);
   arr q1 = buildTrajectory(target_rrt, node1, false);

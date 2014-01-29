@@ -120,7 +120,7 @@ struct MotionProblem {
   bool getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t); ///< the general (`big') task vector and its Jacobian
   void costReport(bool gnuplt=true);
   
-  void setState(const arr& x, const arr& v);
+  void setState(const arr& x, const arr& v=NoArr);
   void activateAllTaskCosts(bool activate=true);
 };
 
