@@ -44,6 +44,11 @@ class CategoricalDist(dict):
             change.append(P * H)
         return self.entropy() - sum(change)
 
+    def __str__(self):
+        result = "{} --> H={:.3f} H_exp_diff={:.3f}".format(
+            self.probs(), self.entropy(), self.entropy_diff())
+        return result
+
 
 class PMF(dict):
     def update(self, likelihood):

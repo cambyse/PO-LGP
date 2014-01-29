@@ -18,21 +18,6 @@ class ObjectBel(probdist.CategoricalDist):
 
         self.joint_bel = JointBel(name)
 
-    def entropy_diff_hier(self):
-        """Return the expected change of entropy"""
-        # print(self.H())
-        change = []
-        probs = self.probs()
-        for k in self:
-            distribution = copy.copy(self)
-            distribution.observe(k)
-            P = probs[k]
-            H = distribution.entropy()
-            # print("{} -- P: {:.2f} H: {:.3f} P*H: {:.3f}".format(
-            #     distribution, P, H, P * H))
-            change.append(P * H)
-        return self.H() - sum(change)
-
 
 class JointBel(probdist.CategoricalDist):
     def __init__(self, name):
@@ -104,22 +89,3 @@ class JointBel(probdist.CategoricalDist):
             h_change[name] = change
 
         return (h_change, h_stats)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
