@@ -22,8 +22,8 @@ class ObjectBel(probdist.CategoricalDist):
 
         self.observe(obs_obj_type)
 
-        if obs_obj_type == "movable":
-            self.joint_bel.update(obs_joint_type)
+        #if obs_obj_type == "movable":
+        self.joint_bel.update(obs_joint_type)
 
     def __str__(self):
         result = "{} {} H={}\n  joint {}".format(
