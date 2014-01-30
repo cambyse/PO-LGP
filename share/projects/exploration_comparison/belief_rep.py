@@ -36,13 +36,16 @@ class JointBel(probdist.CategoricalDist):
         super(JointBel, self).__init__({"nil": 1, "rot": 1, "pris": 1})
         self.name = name
 
-        self.rot_limit_min = sp.stats.norm(loc=-1, scale=2)
-        self.rot_limit_max = sp.stats.norm(loc=2, scale=2)
-        self.rot_damping = sp.stats.norm(loc=0, scale=.5)
+        std = .69
+        std = 1.09
 
-        self.pris_limit_min = sp.stats.norm(loc=-1, scale=2)
-        self.pris_limit_max = sp.stats.norm(loc=2, scale=2)
-        self.pris_damping = sp.stats.norm(loc=0, scale=.5)
+        self.rot_limit_min = sp.stats.norm(loc=-1, scale=std)
+        self.rot_limit_max = sp.stats.norm(loc=2, scale=std)
+        self.rot_damping = sp.stats.norm(loc=0, scale=std)
+
+        self.pris_limit_min = sp.stats.norm(loc=-1, scale=std)
+        self.pris_limit_max = sp.stats.norm(loc=2, scale=std)
+        self.pris_damping = sp.stats.norm(loc=0, scale=std)
 
         self.nil = sp.stats.norm(loc=0, scale=.05)
 
@@ -51,7 +54,7 @@ class JointBel(probdist.CategoricalDist):
         zero_entropy_of_gaussian = .248
         self.scaler = zero_entropy_of_gaussian / precision
 
-        self.update_var = .9
+        self.update_var = 1.
         self.noise = .01
 
     def update(self, key):
@@ -102,6 +105,8 @@ class JointBel(probdist.CategoricalDist):
 
                     distribution = getattr(self, fullname)
                     H = distribution.entropy()
+                    H = max(0, ss.norm.entropy(0, distribution.std()
+                                               * self.scaler))
                     # Simple Forward Model
                     # only the std determines the entropy for gaussians.
                     # therefore, only update the std
@@ -110,9 +115,9 @@ class JointBel(probdist.CategoricalDist):
                     post_std = math.sqrt((prior_var * self.update_var) /
                                          (prior_var + self.update_var))
                     post_std += self.noise
-                    H_expected = ss.norm.entropy(0, post_std)
+                    H_expected = max(0, ss.norm.entropy(0, post_std
+                                                        * self.scaler))
 
-                    # TODO Scaling and Gaussians
                     h_stats[fullname] = HStat(float(H), float(H_expected), P)
                     change += P * (H - H_expected)
 
