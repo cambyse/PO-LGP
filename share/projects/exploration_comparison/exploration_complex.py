@@ -6,6 +6,7 @@ arr = np.array
 import copy
 import seaborn as sns
 import matplotlib.pyplot as plt
+import collections
 
 ###############################################################################
 import belief_rep
@@ -27,6 +28,118 @@ def init():
 
 
 ###############################################################################
+def plot_belief(belief):
+    colors = sns.color_palette("husl", 8)
+
+    n = len(belief)
+    width = .5
+    ind = np.arange(n)
+
+    # COLLECT DATA
+    obj_names = [obj.name for obj in belief]
+
+    # probabilities
+    P = collections.OrderedDict()
+    P["static"] = arr([obj.prob("static") for obj in belief])
+    P["movable"] = arr([obj.prob("movable") for obj in belief])
+    P["nil"] = arr([obj.joint_bel.prob("nil") for obj in belief])
+    P["rot"] = arr([obj.joint_bel.prob("rot") for obj in belief])
+    P["pris"] = arr([obj.joint_bel.prob("pris") for obj in belief])
+
+    # entropy
+    distnames_diff = ["rot_limit_min", "rot_limit_max", "rot_damping",
+                      "pris_limit_min", "pris_limit_max", "pris_damping",
+                      "nil"]
+    H = collections.OrderedDict(
+        [(name, [float(getattr(b.joint_bel, name).entropy()) for b in belief])
+         for name in distnames_diff])
+    H["obj"] = [obj.entropy() for obj in belief]
+    H["joint"] = [obj.joint_bel.entropy() for obj in belief]
+
+    # expected change of entropy
+    distnames = ["nil", "pris", "rot"]
+    Hd = collections.OrderedDict(
+        [(name, [o.joint_bel.entropy_tmp()[0][name] for o in belief])
+         for name in distnames])
+    Hd["obj"] = [obj.entropy_diff() for obj in belief]
+    Hd["joint"] = [obj.joint_bel.entropy_diff() for obj in belief]
+
+    # PLOT DATA
+    fig, axes = plt.subplots(1, 5, figsize=(20, 4))
+
+    # object bel
+    ax = axes[0]
+    ax.bar(ind, P["static"], width, color=colors[0], label="static")
+    ax.bar(ind, P["movable"], width, bottom=P["static"], color=colors[1],
+           label="movable")
+    ax.bar(ind+width, H["obj"], width/4, color=colors[4], label="entropy")
+    ax.bar(ind+width+width/4, Hd["obj"], width/4, color=colors[5],
+           label="exp entropy diff")
+
+    ax.set_ylim([0, 1.2])
+    ax.set_xticklabels(obj_names, ind)
+    ax.set_xticks(ind + width/2)
+    ax.legend()
+    ax.set_ylabel("P")
+    ax.set_title("Prob for object type")
+
+    # joint bel
+    ax = axes[1]
+    ax.bar(ind, P["nil"], width, color=colors[0], label="nil")
+    ax.bar(ind, P["rot"], width, bottom=P["nil"], color=colors[1], label="rot")
+    ax.bar(ind, P["pris"], width, bottom=P["nil"]+P["rot"], color=colors[2],
+           label="pris")
+    ax.bar(ind+width, H["joint"], width/4, color=colors[4], label="entropy")
+    ax.bar(ind+width+width/4, Hd["joint"], width/4, color=colors[5],
+           label="exp entropy diff")
+
+    ax.set_ylim([0, 1.2])
+    ax.set_xticklabels(obj_names, ind)
+    ax.set_xticks(ind + width/2)
+    ax.legend()
+    ax.set_ylabel("P")
+    ax.set_title("Prob for joint type")
+
+    # Entropy
+    ax = axes[2]
+    discrete = ["obj", "joint"]
+    w = 1 / (len(discrete) + 1)
+    for i, name in enumerate(discrete):
+        ax.bar(ind + (i * w), H[name], w, color=colors[i % n], label=name)
+
+    # ax.set_ylim([0, 1.2])
+    ax.set_ylabel("Entropy")
+    ax.set_xticklabels(obj_names, ind)
+    ax.set_xticks(ind + width/2)
+    ax.legend()
+    ax.set_title("Entropy discrete")
+
+    # Entropy differential
+    ax = axes[3]
+    w = 1 / (len(distnames_diff) + 1)
+    for i, name in enumerate(distnames_diff):
+        ax.bar(ind + (i * w), H[name], w, color=colors[i], label=name)
+
+    ax.set_ylabel("Entropy differential")
+    ax.set_xticklabels(obj_names, ind)
+    ax.set_xticks(ind + width/2)
+    ax.legend()
+    ax.set_title("Entropy  differential")
+
+    # # Entropy diff
+    ax = axes[4]
+    w = 1 / (len(Hd) + 1)
+    for i, name in enumerate(Hd):
+        ax.bar(ind + i * w, Hd[name], w, label=name, color=colors[i])
+
+    ax.set_ylabel("Expected Change of Entropy")
+    ax.set_xticklabels(obj_names, ind)
+    ax.set_xticks(ind + width/2)
+    ax.legend()
+    ax.set_title("Expected Change of Entropy")
+
+
+###############################################################################
 def run_experiment(world, belief, select_strategy, num_interactions,
                    observation_model=None):
     """Run the given `select_strategy` for the given `num_inteactions` and
@@ -41,7 +154,7 @@ def run_experiment(world, belief, select_strategy, num_interactions,
         observations = world[idx].interact()
         # if observation_model:
         #     opened = observation_model(opened)
-        belief[idx].observe(observations)
+        belief[idx].update(observations)
 
         for obj in belief:
             print(str(obj))
