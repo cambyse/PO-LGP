@@ -17,14 +17,13 @@ class ObjectBel(probdist.CategoricalDist):
 
         self.joint_bel = JointBel(name)
 
-    def observe(self, key):
-        """ OVERWRITE function """
+    def update(self, key):
         obs_obj_type, obs_joint_type = key
 
-        super(ObjectBel, self).observe(obs_obj_type)
+        self.observe(obs_obj_type)
 
         if obs_obj_type == "movable":
-            self.joint_bel.observe(obs_joint_type)
+            self.joint_bel.update(obs_joint_type)
 
     def __str__(self):
         result = "{} {} H={}\n  joint {}".format(
@@ -55,9 +54,8 @@ class JointBel(probdist.CategoricalDist):
         self.update_var = .9
         self.noise = .01
 
-    def observe(self, key):
-        """ OVERWRITE function """
-        super(JointBel, self).observe(key)
+    def update(self, key):
+        self.observe(key)
 
         if key == "nil":
             return
