@@ -48,19 +48,3 @@ class CategoricalDist(dict):
         result = "{} --> H={:.3f} H_exp_diff={:.3f}".format(
             self.probs(), self.entropy(), self.entropy_diff())
         return result
-
-
-class PMF(dict):
-    def update(self, likelihood):
-        for key in likelihood:
-            self[key] *= likelihood[key]
-        self._normalize()
-
-    def _normalize(self):
-        normalizer = sum(self.itervalues())
-        for key in self:
-            self[key] /= normalizer
-
-    def entropy(self):
-        result = - sum([self[k] * math.log(self[k]) for k in self])
-        return result
