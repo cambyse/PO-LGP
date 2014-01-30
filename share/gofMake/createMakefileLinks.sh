@@ -1,0 +1,1 @@
+find . -name 'Makefile.gof' -exec gofMake/createMakefileLinks_sub.sh {} \;
