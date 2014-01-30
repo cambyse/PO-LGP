@@ -1,0 +1,3 @@
+BASE = ../../../share
+LIBS += -lutil
+include $(BASE)/gofMake/make-generic

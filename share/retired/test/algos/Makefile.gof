@@ -1,0 +1,6 @@
+BASE = ../..
+
+FREEGLUT = 1
+
+include $(BASE)/gofMake/make-generic
+

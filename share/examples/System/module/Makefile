@@ -1,8 +1,0 @@
-BASE = ../../..
-
-GTK = 1
-DEPEND = Core Gui System
-
-OBJS = main.o ComputeSum_Module.o
-
-include $(BASE)/make-generic
