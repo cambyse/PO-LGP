@@ -1,5 +1,6 @@
 import random
 import math
+import numpy as np
 import scipy.stats as ss
 
 
@@ -23,17 +24,10 @@ class StrategyRoundRobin(object):
         return self.last_selection
 
 
-class StrategyEntropy(object):
+class StrategyMaxEntropyObjType(object):
     """Select the object with the highest entropy."""
     def __call__(self, belief):
-            # select max entropy door
-        max_ent = -999999
-        for i, door in enumerate(belief):
-            ent = door.entropy()
-            if ent > max_ent:
-                max_ent = ent
-                idx = i
-        return idx
+        return max_idx(belief, f=(lambda obj: obj.entropy()))
 
 
 class StrategyExpectedChangeOfEntropy(object):
@@ -105,3 +99,15 @@ class StrategyUCB(object):
                 ucb_score.append(score)
             print(ucb_score)
             max(ucb_score)
+
+
+def max_idx(iterable, f):
+    """Return the index where f(elem) is max"""
+    current_max = -99999
+    for i, obj in enumerate(iterable):
+        val = f(obj)
+        if val > current_max:
+            current_max, idx = val, i
+        # print("looking at {}: {} current_max {} with {}".format(
+        #     i, val, idx, current_max))
+    return idx
