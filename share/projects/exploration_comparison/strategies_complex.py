@@ -5,6 +5,9 @@ import scipy.stats as ss
 
 class StrategyRandom(object):
     """Select objects randomly."""
+    def __init__(self):
+        self.name = "Random"
+
     def __call__(self, belief):
         return random.randint(0, len(belief) - 1)
 
@@ -12,6 +15,7 @@ class StrategyRandom(object):
 class StrategyRoundRobin(object):
     """Select objects in a round robin fashion."""
     def __init__(self):
+        self.name = "Round Robin"
         self.last_selection = -1
 
     def __call__(self, belief):
