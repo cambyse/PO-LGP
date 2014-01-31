@@ -378,7 +378,8 @@ void TEST(PCA) {
   y.reshape(4, 2);
   cout << "y = " << y << endl;
 
-  cout << "yp = " << w*y << endl;
+  arr yp = y * w;
+  cout << "yp = " << yp << endl;
 }
 
 void TEST(Inverse){

@@ -18,8 +18,8 @@ struct sG4Poller{
 
   MT::Array<G4_FRAMEDATA> framedata;
   floatA poses;
+  timespec tstamp;
 
-  timespec start;
   uint num_reads;
   uint num_data_reads;
   uint num_hubs_read;
@@ -104,7 +104,6 @@ void G4Poller::open(){
     for(uint i=0;i<100;i++){
       res = g4_init_sys(&s->sysId, src_cfg_file, NULL);
       if(res==G4_ERROR_NONE) { 
-	clock_gettime(CLOCK_REALTIME, &(s->start));
         break; //success!
       } else {
         std::clog << "Error initializing G4 system: " << errcode2string(res) << std::endl;
@@ -186,6 +185,8 @@ void G4Poller::open(){
 
 void G4Poller::step(){
   int res=g4_get_frame_data(s->framedata.p, s->sysId, s->hubList.p, s->hubs);
+  // get the earlies timestamp you can
+  clock_gettime(CLOCK_REALTIME, &s->tstamp);
   if(res < 0) {
 	std::clog << "Error reading frame data:" << errcode2string(res) << std::endl;
 	return;
@@ -262,23 +263,19 @@ void G4Poller::step(){
   s->poses.reshape(s->hubs*G4_SENSORS_PER_HUB, 7);
   //cout << "poses: " << s->poses << endl;
   //cout << "currentPoses: " << currentPoses.get() << endl;
-  currentPoses.set() = s->poses; //publish the result
+  poses.writeAccess();
+  poses() = s->poses;
+  poses.tstamp() = s->tstamp.tv_sec + s->tstamp.tv_nsec / 1000000000.;
+  poses.deAccess();
   //cout << "currentPoses: " << currentPoses.get() << endl;
 }
 
 #include <unistd.h>
 
 void G4Poller::close(){
-  // compute expected number of frames
-  timespec end_time;
-  clock_gettime(CLOCK_REALTIME, &end_time);
-  double diff_time = (((double)end_time.tv_sec) * 1e9 + (double)end_time.tv_nsec) - (((double)s->start.tv_sec) * 1e9 + (double)s->start.tv_nsec);
-  diff_time/=1e9;
-  int expected_frames = diff_time * 120;
-
   cout << "stats: " << endl;
-  cout << " - num_hubs_read: " << s->num_hubs_read << " (expected: " << (expected_frames * s->hubs) << ")" << endl;
-  cout << " - num_frames: " << s->num_frames << " (expected: " << expected_frames << ", reads: " << s->num_reads << ", data: " << s->num_data_reads << ")" << endl;  
+  cout << " - num_hubs_read: " << s->num_hubs_read << " (expected: " << (s->num_frames * s->hubs) << ")" << endl;
+  cout << " - num_data_reads: " << s->num_data_reads << " (expected: " << s->num_frames << ", reads: " << s->num_reads << ")" << endl;
   cout << " - dropped_frames: " << s->dropped_frames << " (" 
 	<< s->dropped_frames_pct << "%)" << endl;
   cout << " - dropped_hubs: " << s->dropped_hubs << " (" 

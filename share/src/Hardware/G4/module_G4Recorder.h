@@ -1,16 +1,17 @@
 #pragma once
 
 #include <Core/module.h>
-#include <Hardware/G4/G4.h>
+#include "G4.h"
 
-struct G4Display: Module{
+struct G4Recorder: Module {
   ACCESS(floatA, poses);
 
-  G4Display();
+  G4Recorder();
 
   virtual void open();
   virtual void close();
   virtual void step();
 
-  struct sG4Display *s;
+  MT::String varName;
+  ofstream file;
 };

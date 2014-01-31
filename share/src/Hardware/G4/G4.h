@@ -2,8 +2,8 @@
 
 #include <Core/module.h>
 
-struct G4Poller : Module{
-  ACCESS(floatA, currentPoses)
+struct G4Poller: Module {
+  ACCESS(floatA, poses)
 
   G4Poller();
 
