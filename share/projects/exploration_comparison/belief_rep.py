@@ -1,6 +1,6 @@
 import math
-
 import collections
+
 #import numpy as np
 import scipy as sp
 import scipy.stats as ss
@@ -105,8 +105,10 @@ class JointBel(probdist.CategoricalDist):
 
                     distribution = getattr(self, fullname)
                     H = distribution.entropy()
-                    H = max(0, ss.norm.entropy(0, distribution.std()
-                                               * self.scaler))
+                    # Scale
+                    # H = max(0, ss.norm.entropy(0, distribution.std()
+                    #                            * self.scaler))
+
                     # Simple Forward Model
                     # only the std determines the entropy for gaussians.
                     # therefore, only update the std
@@ -115,8 +117,11 @@ class JointBel(probdist.CategoricalDist):
                     post_std = math.sqrt((prior_var * self.update_var) /
                                          (prior_var + self.update_var))
                     post_std += self.noise
-                    H_expected = max(0, ss.norm.entropy(0, post_std
-                                                        * self.scaler))
+
+                    # Scale
+                    # distribution = ss.norm(0, post_std * self.scaler)
+                    # H_expected = max(0, distribution.entropy())
+                    H_expected = ss.norm.entropy(0, post_std)
 
                     h_stats[fullname] = HStat(float(H), float(H_expected), P)
                     change += P * (H - H_expected)
