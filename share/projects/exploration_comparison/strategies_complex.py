@@ -61,6 +61,32 @@ class StrategyExpectedChangeOfEntropy(object):
         return idx
 
 
+class StrategyExpectedChangeOfEntropyVote(object):
+    """Select the object with the highest expected change of entropy."""
+
+    def __call__(self, belief):
+        # collect change of entropy
+        ent_discrete = []
+        ent_diff = []
+        for i, obj_bel in enumerate(belief):
+            ent_discrete.append((i, obj_bel.entropy_diff()))
+            ent_discrete.append((i, obj_bel.joint_bel.entropy_diff()))
+
+            change, stats = obj_bel.joint_bel.entropy_tmp()
+            for key, val in change.iteritems():
+                ent_diff.append((i, val))
+
+        # select change of entropy
+        select = lambda tuple_: tuple_[1]
+        idx_discrete, val = max(ent_discrete, key=select)
+        idx_diff, val = max(ent_diff, key=select)
+
+        if idx_diff == idx_discrete:
+            return idx_diff
+        else:
+            return random.choice([idx_discrete, idx_diff])
+
+
 def max_idx(iterable, f):
     """Return the index where f(elem) is max"""
     current_max = -99999
