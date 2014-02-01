@@ -164,8 +164,8 @@ def run_experiment(world, belief, select_strategy, num_interactions,
         idx = select_strategy(belief)
         print("selecting object {}".format(idx))
         observations = world[idx].interact()
-        # if observation_model:
-        #     opened = observation_model(opened)
+        if observation_model:
+            observations = observation_model(observations)
         belief[idx].update(observations)
 
         if make_pics:
