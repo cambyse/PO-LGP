@@ -45,3 +45,10 @@ struct PhaseOneProblem:ConstrainedProblem{
   virtual uint dim_g(){ return f.dim_g()+1; }
 };
 
+
+//==============================================================================
+//
+// Solvers
+//
+
+void optConstrained(arr& x, ConstrainedProblem& P, OptOptions opt);

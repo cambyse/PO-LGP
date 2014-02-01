@@ -27,6 +27,7 @@ vc60.idb
 *_moc.cpp
 *_ui.h
 CTestTestfile.cmake
+makefile
 
 
 # PYTHON

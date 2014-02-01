@@ -81,3 +81,41 @@ double PhaseOneProblem::fc(arr& df, arr& Hf, arr& meta_g, arr& meta_Jg, const ar
   }
 }
 
+
+//==============================================================================
+//
+// Solvers
+//
+
+const char* MethodName[]={ "NoMethod", "SquaredPenalty", "AugmentedLagrangian", "LogBarrier" };
+
+void optConstrained(arr& x, ConstrainedProblem& P, OptOptions opt){
+  UnconstrainedProblem UCP(P);
+
+  //switch on penalty terms
+  switch(opt.constrainedMethod){
+    case squaredPenalty: UCP.mu=1.;  break;
+    case augmentedLag:   UCP.mu=1.;  break;
+    case logBarrier:     UCP.muLB=1.;  break;
+  }
+
+  if(opt.verbose>1) cout <<"***** optConstrained: method=" <<MethodName[opt.constrainedMethod] <<endl;
+
+  for(uint k=0;;k++){
+    if(opt.verbose>1) cout <<"***** optConstrained: iteration=" <<k
+                             <<" mu=" <<UCP.mu <<" lambda=" <<UCP.lambda <<" muLB=" <<UCP.muLB <<endl;
+    arr x_old = x;
+    optNewton(x, UCP, opt);
+
+    //upate unconstraint problem parameters
+    switch(opt.constrainedMethod){
+      case squaredPenalty: UCP.mu *= 10;  break;
+      case augmentedLag:   UCP.augmentedLagrangian_LambdaUpdate(x);  break;
+      case logBarrier:     UCP.muLB /= 2;  break;
+    }
+
+    //stopping criteron
+    if(k>10 && absMax(x_old-x)<opt.stopTolerance){ cout << " --- optConstrained StoppingCriterion Delta<" <<opt.stopTolerance <<endl;  break; }
+  }
+}
+
