@@ -12,6 +12,16 @@ class CategoricalDist(dict):
     def prob(self, key):
         return self[key] / self._normalizer()
 
+    def prob_cond(self, key, cond):
+        name, p = cond
+        if name not in self:
+            raise KeyError()
+
+        if key == name:
+            return p
+        else:
+            return (self.prob(key) / (1 - self.prob(name))) * (1-p)
+
     def probs(self):
         normalizer = self._normalizer()
         return {key: self[key] / normalizer for key in self}
@@ -47,20 +57,4 @@ class CategoricalDist(dict):
     def __str__(self):
         result = "{} --> H={:.3f} H_exp_diff={:.3f}".format(
             self.probs(), self.entropy(), self.entropy_diff())
-        return result
-
-
-class PMF(dict):
-    def update(self, likelihood):
-        for key in likelihood:
-            self[key] *= likelihood[key]
-        self._normalize()
-
-    def _normalize(self):
-        normalizer = sum(self.itervalues())
-        for key in self:
-            self[key] /= normalizer
-
-    def entropy(self):
-        result = - sum([self[k] * math.log(self[k]) for k in self])
         return result
