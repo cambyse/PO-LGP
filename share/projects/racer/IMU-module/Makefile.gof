@@ -1,6 +1,6 @@
 BASE = ../../..
 
-OBJS = main.o modules.o
+OBJS = main.o 
 
 DEPEND = Core Algo Hardware_racer System Gui
 
