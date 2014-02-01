@@ -124,7 +124,7 @@ class RRTPlanner(object):
         planner.joint_max = core.getArrayParameter("joint_max")
         planner.joint_min = core.getArrayParameter("joint_min")
 
-        return planner.getTrajectoryTo(target, 50000)
+        return planner.getTrajectoryTo(target, 10)
 
     def optimize_trajectory(self, trajectory, collisions, endeff,
                             goal):
@@ -143,10 +143,10 @@ class RRTPlanner(object):
                                           motion.MotionProblem.constant,
                                           np.array([0]), 1e1)
 
-            position_tm = motion.DefaultTaskMap(motion.posTMT,
-                                                self.graph,
-                                                endeff,
-                                                core.Vector(0, 0, 0))
+        position_tm = motion.DefaultTaskMap(motion.posTMT,
+                                            self.graph,
+                                            endeff,
+                                            core.Vector(0, 0, 0))
 
         task_cost = problem.addTaskMap("position", position_tm)
         problem.setInterpolatingCosts(task_cost,
@@ -219,6 +219,7 @@ class FakeController(object):
         rospy.loginfo("start computing trajectory")
 
         start = self.rrt.graph.getJointState()
+        print start
 
         # this is pr2-only :(
         opt_start = self.rrt.graph.getJointState()
@@ -257,6 +258,9 @@ class FakeController(object):
 
         if not feasible:
             self.trajectory = None
+            self.rrt.graph.setJointState(start)
+            self.rrt.graph.calcBodyFramesFromJoints()
+            self.rrt.graph.calcBodyFramesFromJoints()
             raise TrajectoryException()
 
         if self.teleport:
@@ -265,19 +269,23 @@ class FakeController(object):
             self.rrt.graph.setJointState(start)
             rrt_trajectory = self.rrt.create_rrt_trajectory(target2,
                                                             self.collisions)
-            self.rrt.graph.setJointState(start)
             if rrt_trajectory.size == 0:
+                self.trajectory = None
+                self.rrt.graph.setJointState(start)
+                self.rrt.graph.calcBodyFramesFromJoints()
+                self.rrt.graph.calcBodyFramesFromJoints()
                 raise TrajectoryException()
-            #std_traj = util.shorten_trajectory(rrt_trajectory, 250)
-            #self.trajectory = self.rrt.optimize_trajectory(std_traj,
-                                                           #collisions=
-                                                           #self.collisions,
-                                                           #endeff=self.endeff,
-                                                           #goal=self.goal.pos)
+            std_traj = util.shorten_trajectory(rrt_trajectory, 250)
+            self.trajectory = self.rrt.optimize_trajectory(std_traj,
+                                                           collisions=
+                                                           self.collisions,
+                                                           endeff=self.endeff,
+                                                           goal=self.goal.pos)
             self.trajectory = rrt_trajectory
 
         self.tpos = 0
         self.recompute_trajectory = False
+        print start
 
         rospy.loginfo("done computing trajectory")
 
