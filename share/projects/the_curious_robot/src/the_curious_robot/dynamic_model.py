@@ -32,7 +32,7 @@ def point_mass_integrate(p0, v0, damping, N, dt, min_limit, max_limit):
     return (positions, velocities)
 
 
-class DynamicModel:
+class DynamicModel(object):
     def __init__(self,
                  prior_damping=pm.Uniform("damping", lower=0., upper=10.),
                  prior_init_pos=pm.Uniform("init_pos", lower=-1.0, upper=1.0),
