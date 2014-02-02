@@ -19,8 +19,6 @@ import the_curious_robot as tcr
 import the_curious_robot.util
 import the_curious_robot.msg as msgs
 import the_curious_robot.belief_representations as bel_rep
-from the_curious_robot.belief_representations import ObjectTypeHypo
-from the_curious_robot.belief_representations import JointBelief
 from the_curious_robot import require_provide
 from the_curious_robot import pickle_logger
 from the_curious_robot.timer import Timer
@@ -81,7 +79,7 @@ class LearnActionServer(object):
         self.belief_ors = orspy.Graph()
         # The BeliefAnnotation is the probabilistic counterpart to the ors
         # graph/belief representation.
-        self.belief_annotation = bel_rep.Annotation()
+        self.belief = bel_rep.Belief()
         self._added_bodies = []
         self._added_shapes = []
 
@@ -92,11 +90,11 @@ class LearnActionServer(object):
         # require/provide
         require_provide.Provide("Learn")
 
-    @pickle_logger.pickle_member(name="belief_annotation",
-                                 folder=rospy.get_param("strategy_name"))
+    # @pickle_logger.pickle_member(name="belief",
+    #                              folder=rospy.get_param("strategy_name"))
     def execute(self, msg):
-        # add object to belief and belief_annotation if it does not exist yet
-        if self.ooi not in self.belief_annotation:
+        # add object to belief and belief if it does not exist yet
+        if self.ooi not in self.belief:
             with Timer("Adding new shape with id %d", rospy.loginfo):
                 # rm ooi from list of uninitialized_oois
                 self.uninitialized_oois -= set([self.ooi])
@@ -110,25 +108,25 @@ class LearnActionServer(object):
                 self._added_bodies.append(orspy.Body(self.belief_ors))
                 body = self._added_bodies[-1]
                 self._added_shapes.append(orspy.Shape(self.belief_ors, body))
-                shape = self._added_shapes[-1]
+                ors_shape = self._added_shapes[-1]
 
-                self.belief_annotation[self.ooi] = bel_rep.ShapeBelief(shape)
+                self.belief[self.ooi] = bel_rep.ObjectBel(ors_shape)
 
                 # Set BODY infos
                 body.pose = parser.ros_to_ors_transform(shape_msg.X,
                                                         shape_msg.Xvel)
 
                 # Set SHAPE infos
-                shape.type = shape_msg.shape_type
-                shape.set_size(shape_msg.size[0], shape_msg.size[1],
-                               shape_msg.size[2], shape_msg.size[3])
-                if shape.type == orspy.meshST and shape_msg.mesh is not None:
-                    shape.mesh = parser.msg_to_ors_mesh(shape_msg.mesh)
+                ors_shape.type = shape_msg.shape_type
+                ors_shape.set_size(shape_msg.size[0], shape_msg.size[1],
+                                   shape_msg.size[2], shape_msg.size[3])
+                if ors_shape.type == orspy.meshST and shape_msg.mesh is not None:
+                    ors_shape.mesh = parser.msg_to_ors_mesh(shape_msg.mesh)
 
-                shape.X = parser.ros_to_ors_transform(shape_msg.X,
-                                                      shape_msg.Xvel)
-                shape.rel = parser.ros_to_ors_transform(shape_msg.rel,
-                                                        shape_msg.relvel)
+                ors_shape.X = parser.ros_to_ors_transform(shape_msg.X,
+                                                          shape_msg.Xvel)
+                ors_shape.rel = parser.ros_to_ors_transform(shape_msg.rel,
+                                                            shape_msg.relvel)
 
         #######################################################################
         # Belief update
@@ -137,26 +135,24 @@ class LearnActionServer(object):
         #  - updating all parts of the belief annotation
         #  - TODO then transfer all information from the annotation to the
         #    belief_ors
-        shape_anno = self.belief_annotation[self.ooi]
-        shape = shape_anno.belief_shape
+        obj_bel = self.belief[self.ooi]
+        ors_shape = obj_bel.ors_shape
 
         # Update ObjectTypeHypo
-        shape_anno.object_type.update(ObjectTypeHypo.STATIC
-                                      if len(self.trajectory) == 0 else
-                                      ObjectTypeHypo.FREE)
+        obj_bel.update("movable" if self.trajectory else "static")
 
         # Update JointInformation
-        if len(self.trajectory) > 1:
+        if self.trajectory:
             rospy.loginfo("Learning DoF")
-            self.update_dof(shape_anno)
+            self.update_dof(obj_bel)
             # self.update_dynamics()
 
         # PRINT
-        rospy.loginfo(str(self.belief_annotation))
+        rospy.loginfo(str(self.belief))
 
         # VISUALIZE
         # self.visualize_object_type()
-        self.visualize_object_entropy()
+        # self.visualize_object_entropy()
 
         self.gl.update()
         self.server.set_succeeded()
@@ -165,24 +161,22 @@ class LearnActionServer(object):
         """
         Colorize the shapes depending on the ObjectTypeHypo.
         """
-        for shape_anno in self.belief_annotation.itervalues():
-            shape = shape_anno.belief_shape
+        for obj_bel in self.belief.itervalues():
+            ors_shape = obj_bel.ors_shape
 
-            if shape_anno.object_type.is_static():
-                shape.set_color(0., 0., 0.)
+            if obj_bel.object_type.is_static():
+                ors_shape.set_color(0., 0., 0.)
             else:
-                shape.set_color(1., 1., 1.)
+                ors_shape.set_color(1., 1., 1.)
 
     def visualize_object_entropy(self):
-        """
-        Colorie the shapes depending on the object_type entropy.
-        """
-        gentor = self.belief_annotation.iter_entropy_normalized("object_type")
+        """Colorize the shapes depending on the object_type entropy."""
+        gentor = self.belief.iter_entropy_normalized("object_type")
         for shape, entropy in gentor:
             # print "ID:", shape.index, "H/color:", entropy
             shape.set_color(entropy, entropy, entropy)
 
-    def update_dof(self, shape_anno):
+    def update_dof(self, obj_bel):
         request = TrackModelSrvRequest()
         request.model.track = tcr.util.create_track_msg(self.trajectory)
 
@@ -196,21 +190,17 @@ class LearnActionServer(object):
 
         rospy.loginfo("joint classified as, %s", response.model.name)
 
-        # make sure we have an JointBelief instance
-        if shape_anno.joint is None:
-            shape_anno.joint = JointBelief()
-
         # update common stuff
         loglikelihood = filter(lambda param: param.name == 'loglikelihood',
                                response.model.params)[0]
-        shape_anno.joint.loglikelihood = loglikelihood
+        # obj_bel.joint_bel.loglikelihood = loglikelihood
         # save all parameters in the belief
-        for p in response.model.params:
-            # if p.name.startswith("rot"):
-            shape_anno.joint.values[p.name] = p.value
+        # for p in response.model.params:
+        #     # if p.name.startswith("rot"):
+        #     obj_bel.joint_bel.values[p.name] = p.value
 
         if response.model.name == "rotational":
-            shape_anno.joint.update(JointBelief.ROTATIONAL)
+            obj_bel.joint_bel.update("rot")
             # important information
             # - rot_center[3], points to the rotational center of the
             #   rotational joint
@@ -230,7 +220,7 @@ class LearnActionServer(object):
             #               response.model.params)
 
         elif response.model.name == "prismatic":
-            shape_anno.joint.update(JointBelief.PRISMATIC)
+            obj_bel.joint_bel.update("pris")
             # The parameters of the prismatic model are:
             #
             # rigid_position[3], gives the average position of the articulated
@@ -286,7 +276,7 @@ class LearnActionServer(object):
             res.entropies.append(sys.float_info.max)
 
         # add the already explored shapes
-        entropies = self.belief_annotation.get_entropy()
+        entropies = self.belief.get_entropy()
         for shape_id, entropy in entropies:
             res.shape_ids.append(shape_id)
             res.entropies.append(entropy)
