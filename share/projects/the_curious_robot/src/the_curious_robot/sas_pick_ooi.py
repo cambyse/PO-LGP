@@ -173,12 +173,11 @@ class PickOOIActionServer(object):
 
         if self.possible_oois is None:
             with Timer("PICK: initial if", rospy.logdebug):
-                all_shapes_msg = self.request_all_shapes(with_mesh=False,
-                        agent_number_set=False)
+                all_shapes_msg = self.request_all_shapes(
+                    with_mesh=False, agent_number_set=False)
                 self.possible_oois = [shape.index
                                       for shape in all_shapes_msg.shapes
-                                      if shape.index not in
-                                      range(34, 85)] 
+                                      if shape.index not in range(34, 85)]
                 print self.possible_oois
 
         # select an ooi
