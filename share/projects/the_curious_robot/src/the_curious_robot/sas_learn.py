@@ -102,7 +102,7 @@ class LearnActionServer(object):
                 shape_response = self.request_shape(index=self.ooi,
                                                     with_mesh=True)
                 shape_msg = shape_response.shapes[0]
-                print shape_msg
+                # print shape_msg
 
                 # add shape and body to belief
                 self._added_bodies.append(orspy.Body(self.belief_ors))
@@ -179,13 +179,13 @@ class LearnActionServer(object):
 
         # here we learn
         response = self.dof_learner(request)
-        # rospy.loginfo(response)
+        rospy.loginfo(response)
 
         # stop if it's not an rotational or prismatic joint
         if response.model.name not in ["rotational", "prismatic"]:
             return
 
-        rospy.loginfo("joint classified as, %s", response.model.name)
+        rospy.loginfo("joint classified as %s", response.model.name)
 
         # update common stuff
         loglikelihood = filter(lambda param: param.name == 'loglikelihood',
