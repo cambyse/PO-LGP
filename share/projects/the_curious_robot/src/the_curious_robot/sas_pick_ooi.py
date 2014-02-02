@@ -10,6 +10,7 @@ roslib.load_manifest('the_curious_robot')
 import require_provide as rp
 from the_curious_robot import srv
 import the_curious_robot as tcr
+from the_curious_robot import strategies
 import rosors.srv
 import rospy
 from timer import Timer
@@ -17,104 +18,6 @@ from timer import Timer
 import random
 import collections
 import numpy as np
-
-
-###############################################################################
-# different strategies for selecting OOIs
-###############################################################################
-# To add new strategies Create a class that inherits from SelectionStrategy
-# and implement all function.
-#
-# TODO selecting the strategy should be done via dynamic reconfigure.
-class SelectionStrategy(object):
-    """ABC for every SelectionStrategy."""
-    def execute(self, oois, entropies):
-        raise NotImplementedError()
-
-
-###############################################################################
-class StrategyRandomSelect(SelectionStrategy):
-    def execute(self, oois, entropies):
-        """Select a random object of all possibes objects."""
-        rospy.loginfo("Selection strategy: RANDOM")
-        ooi = random.choice(oois)
-        ooi_id_msg = tcr.msg.ObjectID()
-        ooi_id_msg.id = ooi
-        rospy.logdebug(ooi)
-        return ooi_id_msg
-
-
-class StrategySequentialSelect(SelectionStrategy):
-    def __init__(self):
-        self.ooi_index = 15
-        self.ooi_index = 32
-        self.ooi_index = 0
-
-    def execute(self, oois, entropies):
-        rospy.loginfo("Selection strategy: SEQUENTIAL")
-        ooi_id_msg = tcr.msg.ObjectID()
-        ooi_id_msg.id = oois[32 + self.ooi_index]
-        # self.ooi_index = (self.ooi_index + 1) % len(oois)
-        self.ooi_index = (self.ooi_index + 1) % 2
-        return ooi_id_msg
-
-
-class StrategyDoorFrameTop(SelectionStrategy):
-    def execute(self, oois, entropies):
-        """Always go for the door1-door."""
-        rospy.loginfo("Selection strategy: FRAME_TOP")
-        ooi_id_msg = tcr.msg.ObjectID()
-        ooi_id_msg.id = 4
-        return ooi_id_msg
-
-
-class StrategySelectShapeWithIndex(SelectionStrategy):
-    def __init__(self):
-        self.index = 5
-
-    def execute(self, oois, entropies):
-        """
-        Pick a shape with the given index.
-
-        4: top door frame
-        5: door_door
-        """
-        rospy.loginfo("Selection strategy: SHAPE WITH ID")
-        ooi_id_msg = tcr.msg.ObjectID()
-        ooi_id_msg.id = self.index
-        return ooi_id_msg
-
-
-class StrategySelectEntropy(SelectionStrategy):
-    def __init__(self, selection_type):
-        self.selection_type = selection_type
-
-    def execute(self, oois, entropies):
-        rospy.loginfo("Selection strategy: ENTROPY with type %s",
-                      self.selection_type)
-
-        if self.selection_type == "sum":
-            ooi, entropy = max(entropies.iteritems(),
-                               key=lambda key_ent: sum(key_ent[1]))
-            entropy = sum(entropy)
-
-        elif self.selection_type == "mean":
-            ooi, entropy = max(entropies.iteritems(),
-                               key=lambda key_ent: np.mean(key_ent[1]))
-            entropy = np.mean(entropy)
-
-        elif self.selection_type == "max":
-            ooi, entropy = max(entropies.iteritems(),
-                               key=lambda key_ent: max(key_ent[1]))
-            entropy = max(entropy)
-
-        else:
-            print "NOT HANDLED"
-            raise NotImplementedError()
-
-        rospy.loginfo("Selecting %d with H=%f", ooi, entropy)
-
-        return ooi
 
 
 #########################################################################
@@ -142,13 +45,13 @@ class PickOOIActionServer(object):
 
         # Select the exploration strategies
         all_strategies = {
-            "random": (StrategyRandomSelect, None),
-            "sequential": (StrategySequentialSelect, None),
-            "door_frame": (StrategyDoorFrameTop, None),
-            "shape_id": (StrategySelectShapeWithIndex, None),
-            "entropy_sum": (StrategySelectEntropy, "sum"),
-            "entropy_max": (StrategySelectEntropy, "max"),
-            "entropy_mean": (StrategySelectEntropy, "mean"),
+            "random": (strategies.StrategyRandomSelect, None),
+            "sequential": (strategies.StrategySequentialSelect, None),
+            "door_frame": (strategies.StrategyDoorFrameTop, None),
+            "shape_id": (strategies.StrategySelectShapeWithIndex, None),
+            "entropy_sum": (strategies.StrategySelectEntropy, "sum"),
+            "entropy_max": (strategies.StrategySelectEntropy, "max"),
+            "entropy_mean": (strategies.StrategySelectEntropy, "mean"),
         }
         strategy_name = rospy.get_param("strategy_name", "random")
         strategy, parameter = all_strategies[strategy_name]
