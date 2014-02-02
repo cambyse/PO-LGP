@@ -10,7 +10,7 @@ import scipy.stats as ss
 
 import probdist
 import util
-from dynamic_movel import DynamicModel
+from dynamic_model import DynamicModel
 
 
 ###############################################################################
