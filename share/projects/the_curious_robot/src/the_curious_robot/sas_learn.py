@@ -176,6 +176,7 @@ class LearnActionServer(object):
     def update_dof(self, obj_bel):
         request = TrackModelSrvRequest()
         request.model.track = tcr.util.create_track_msg(self.trajectory)
+        print self.trajectory
 
         # here we learn
         response = self.dof_learner(request)
