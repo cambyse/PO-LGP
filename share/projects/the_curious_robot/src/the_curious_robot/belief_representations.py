@@ -35,8 +35,10 @@ class ObjectBel(probdist.CategoricalDist):
         # self.joint_bel.update(obs_joint_type)
 
     def __str__(self):
-        result = "{} {} H={}\n  joint {}".format(
-            self.name, self.probs(), self.entropy(), str(self.joint_bel))
+        result = "{} {}\n  joint {}".format(
+            self.name,
+            str(super(ObjectBel, self).probs()),
+            str(self.joint_bel))
         return result
 
     def __getstate__(self):
@@ -78,7 +80,7 @@ class JointBel(probdist.CategoricalDist):
         self.update_var = 1.
         self.noise = .01
 
-    def update(self, obs_classification, trajectory):
+    def update(self, obs_classification, trajectory, articulation_response):
         self.observe(obs_classification)
 
         # TODO what is dt?

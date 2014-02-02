@@ -197,7 +197,7 @@ class LearnActionServer(object):
         #     obj_bel.joint_bel.values[p.name] = p.value
 
         if response.model.name == "rotational":
-            obj_bel.joint_bel.update("rot", self.trajectory)
+            obj_bel.joint_bel.update("rot", self.trajectory, response)
             # important information
             # - rot_center[3], points to the rotational center of the
             #   rotational joint
@@ -217,7 +217,7 @@ class LearnActionServer(object):
             #               response.model.params)
 
         elif response.model.name == "prismatic":
-            obj_bel.joint_bel.update("pris", self.trajectory)
+            obj_bel.joint_bel.update("pris", self.trajectory, response)
             # The parameters of the prismatic model are:
             #
             # rigid_position[3], gives the average position of the articulated
