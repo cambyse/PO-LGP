@@ -124,7 +124,7 @@ class RRTPlanner(object):
         planner.joint_max = core.getArrayParameter("joint_max")
         planner.joint_min = core.getArrayParameter("joint_min")
 
-        return planner.getTrajectoryTo(target, 10)
+        return planner.getTrajectoryTo(target, 10000)
 
     def optimize_trajectory(self, trajectory, collisions, endeff,
                             goal):
