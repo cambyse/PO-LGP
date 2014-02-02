@@ -41,7 +41,7 @@ class ObjectBel(probdist.CategoricalDist):
 
     def __getstate__(self):
         """
-        To avoid pickling SwigObjects we have to overwrite __getstate__ and
+        To avoid pickling certain stuff we have to overwrite __getstate__ and
         ignore the varibales.
         """
         exclude_members = ["ors_shape"]
@@ -177,6 +177,16 @@ class JointBel(probdist.CategoricalDist):
             h_change[name] = change
 
         return (h_change, h_stats)
+
+    def __getstate__(self):
+        """
+        To avoid pickling certain stuff we have to overwrite __getstate__ and
+        ignore the varibales.
+        """
+        exclude_members = ["rot_model", "pris_model"]
+        return dict((k, v)
+                    for (k, v) in self.__dict__.iteritems()
+                    if k not in exclude_members)
 
 
 ###############################################################################
