@@ -110,7 +110,8 @@ class LearnActionServer(object):
                 self._added_shapes.append(orspy.Shape(self.belief_ors, body))
                 ors_shape = self._added_shapes[-1]
 
-                self.belief[self.ooi] = bel_rep.ObjectBel(ors_shape)
+                self.belief[self.ooi] = bel_rep.ObjectBel(ors_shape.name)
+                self.belief[self.ooi].ors_shape = ors_shape
 
                 # Set BODY infos
                 body.pose = parser.ros_to_ors_transform(shape_msg.X,
