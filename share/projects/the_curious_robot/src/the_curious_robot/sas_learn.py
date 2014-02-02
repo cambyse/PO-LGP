@@ -129,9 +129,9 @@ class LearnActionServer(object):
                 ors_shape.rel = parser.ros_to_ors_transform(shape_msg.rel,
                                                             shape_msg.relvel)
 
-        #######################################################################
+        #############################################################
         # Belief update
-        #######################################################################
+        #############################################################
         # This consists of two parts:
         #  - updating all parts of the belief annotation
         #  - TODO then transfer all information from the annotation to the
@@ -139,14 +139,10 @@ class LearnActionServer(object):
         obj_bel = self.belief[self.ooi]
         ors_shape = obj_bel.ors_shape
 
-        # Update ObjectTypeHypo
         obj_bel.update("movable" if self.trajectory else "static")
-
-        # Update JointInformation
         if self.trajectory:
             rospy.loginfo("Learning DoF")
             self.update_dof(obj_bel)
-            # self.update_dynamics()
 
         # PRINT
         rospy.loginfo(str(self.belief))
@@ -201,7 +197,7 @@ class LearnActionServer(object):
         #     obj_bel.joint_bel.values[p.name] = p.value
 
         if response.model.name == "rotational":
-            obj_bel.joint_bel.update("rot")
+            obj_bel.joint_bel.update("rot", self.trajectory)
             # important information
             # - rot_center[3], points to the rotational center of the
             #   rotational joint
@@ -221,7 +217,7 @@ class LearnActionServer(object):
             #               response.model.params)
 
         elif response.model.name == "prismatic":
-            obj_bel.joint_bel.update("pris")
+            obj_bel.joint_bel.update("pris", self.trajectory)
             # The parameters of the prismatic model are:
             #
             # rigid_position[3], gives the average position of the articulated
