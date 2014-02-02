@@ -12,6 +12,10 @@ import probdist
 
 
 ###############################################################################
+Gauss = collections.namedtuple("Gauss", "mu sigma")
+
+
+###############################################################################
 class ObjectBel(probdist.CategoricalDist):
     """ObjectBel"""
 
@@ -33,6 +37,16 @@ class ObjectBel(probdist.CategoricalDist):
             self.name, self.probs(), self.entropy(), str(self.joint_bel))
         return result
 
+    def __getstate__(self):
+        """
+        To avoid pickling SwigObjects we have to overwrite __getstate__ and
+        ignore the varibales.
+        """
+        exclude_members = ["ors_shape"]
+        return dict((k, v)
+                    for (k, v) in self.__dict__.iteritems()
+                    if k not in exclude_members)
+
 
 class JointBel(probdist.CategoricalDist):
     def __init__(self, name):
@@ -43,16 +57,16 @@ class JointBel(probdist.CategoricalDist):
         std = 1.09
 
         # TODO use pymc graphical model
-        self.rot_limit_min = sp.stats.norm(loc=-1, scale=std)
-        self.rot_limit_max = sp.stats.norm(loc=2, scale=std)
-        self.rot_damping = sp.stats.norm(loc=0, scale=std)
+        self.rot_limit_min = Gauss(-1, std)
+        self.rot_limit_max = Gauss(2, std)
+        self.rot_damping = Gauss(0, std)
 
         # TODO use pymc graphical model
-        self.pris_limit_min = sp.stats.norm(loc=-1, scale=std)
-        self.pris_limit_max = sp.stats.norm(loc=2, scale=std)
-        self.pris_damping = sp.stats.norm(loc=0, scale=std)
+        self.pris_limit_min = Gauss(-1, std)
+        self.pris_limit_max = Gauss(2, std)
+        self.pris_damping = Gauss(0, std)
 
-        self.nil = sp.stats.norm(loc=0, scale=.05)
+        self.nil = Gauss(0, .05)
 
         # Scaling and Gaussians
         precision = 0.1
@@ -72,13 +86,14 @@ class JointBel(probdist.CategoricalDist):
         # update all three parameters of the joint
         for subname in ["_limit_max", "_limit_min", "_damping"]:
             fullname = key + subname
-            distribution = getattr(self, fullname)
+            gauss = getattr(self, fullname)
+            distribution = ss.norm(gauss.mu, gauss.sigma)
 
             prior_var = distribution.var()
             post_std = math.sqrt((prior_var * self.update_var) /
                                  (prior_var + self.update_var))
             post_std += self.noise
-            setattr(self, fullname, ss.norm(0, post_std))
+            setattr(self, fullname, Gauss(gauss.mu, post_std))
 
     def entropy_tmp(self):
         """How do we want to calculate the change of entropy for the joint bel?
@@ -108,7 +123,8 @@ class JointBel(probdist.CategoricalDist):
                 for subname in ["_limit_max", "_limit_min", "_damping"]:
                     fullname = name + subname
 
-                    distribution = getattr(self, fullname)
+                    gauss = getattr(self, fullname)
+                    distribution = ss.norm(gauss.mu, gauss.sigma)
                     H = distribution.entropy()
                     # Scale
                     # H = max(0, ss.norm.entropy(0, distribution.std()
