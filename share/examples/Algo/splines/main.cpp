@@ -117,36 +117,31 @@ void TEST(BSpline){
 }
 
 
-/*
- void testOldSplines(){
-  uint N=10;
+void testPath(){
+  arr X(11,1);
+  rndUniform(X,-1,1,false);
 
-  arr P(N,2);
-  rndUniform(P,-1,1,false);
+//  struct
+  MT::Path P(X);
+  cout <<"times = " <<P.times
+      <<"\npoints= " <<P.points <<endl;
 
-  XSpline S;
-  S.referTo(P);
-  S.type(false,1.); //is default
+  MT::arrayBrackets="  ";
+  FILE("z.points") <<X;
 
-  std::ofstream os("z.spline");
-  MT::IOraw=true;
-  arr x,v,dx;
-  for(double t=0.;t<N-1;t+=.01){
-    S.eval(t,x,v);
-    if(t+.001<N-1){ S.eval(t+.001,dx); dx=(dx-x)/.001; }//numerical derivative
-    os <<t <<x <<v <<dx <<std::endl;
+  ofstream fil("z.test");
+  for(uint t=0;t<=1000;t++){
+    double time=(double)t/1000;
+    fil <<time <<' ' <<P.getPosition(time) <<' ' <<P.getVelocity(time) <<endl;
   }
+  fil.close();
+  gnuplot("plot 'z.test' us 1:2, '' us 1:3, 'z.points' us ($0/10):1 w p", true);
 
-  P >>FILE("z.points");
-  gnuplot("plot 'z.spline' us 2:3 with lines,'z.points' with points");
-  gnuplot("plot 'z.spline' us 2 with lines title 'z.spline f(x)','z.spline' us 4 with lines title 'v=df/dx' lw 3,'z.spline' us 6 with lines title 'numerical v'");
-  gnuplot("plot 'z.spline' us 3 with lines title 'z.spline f(x)','z.spline' us 5 with lines title 'v=df/dx' lw 3,'z.spline' us 7 with lines title 'numerical v'");
 }
-*/
 
 int MAIN(int argc,char** argv){
-  testBSpline();
-  //testOldSplines();
+//  testBSpline();
+  testPath();
 
   return 0;
 }
