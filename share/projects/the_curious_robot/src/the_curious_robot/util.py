@@ -174,13 +174,14 @@ def shorten_trajectory(traj, num):
 #########################################################################
 # create 1D trajectories from real trajectories and the joint param.
 
-def rotational_to_angle(trajectory, axis):
-    start = trajectory[0, :]
+def rotational_to_angle(trajectory, axis, axis_pos):
+    start = (trajectory[0, :] - axis_pos) - \
+        np.dot(trajectory[0, :] - axis_pos, axis) * axis
     start_norm = la.norm(start)
     angle_trajectory = np.ndarray([trajectory.shape[0]])
 
     for i, t in enumerate(trajectory):
-        vector_to_axis = (t - np.dot(t, axis) * axis)
+        vector_to_axis = ((t - axis_pos) - np.dot((t - axis_pos), axis) * axis)
         angle_trajectory[i] = np.dot(vector_to_axis, start) / \
             (la.norm(vector_to_axis) * start_norm)
 
