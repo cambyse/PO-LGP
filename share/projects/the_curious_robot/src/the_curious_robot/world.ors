@@ -190,6 +190,8 @@ shape (cabinet_base) {
 
 body cabinet_drawer {type=0 size=[1.2 1. .4 .0] color=[.5 .5 0] contact }
 
-joint (cabinet_base cabinet_drawer) { type=3 A=<T t(0 0 1)> agent = 99 }
+joint (cabinet_base cabinet_drawer) { type=3 A=<T t(0 0 1)> agent=99
+  limit=[-.9 .9 0 0 0]
+ }
 # }}}
 // vim:ft=ors:foldmethod=indent:
