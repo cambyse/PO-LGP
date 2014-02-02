@@ -9,6 +9,8 @@ import scipy as sp
 import scipy.stats as ss
 
 import probdist
+import util
+from dynamic_movel import DynamicModel
 
 
 ###############################################################################
@@ -56,12 +58,12 @@ class JointBel(probdist.CategoricalDist):
         std = .69
         std = 1.09
 
-        # TODO use pymc graphical model
+        self.rot_model = DynamicModel()
         self.rot_limit_min = Gauss(-1, std)
         self.rot_limit_max = Gauss(2, std)
         self.rot_damping = Gauss(0, std)
 
-        # TODO use pymc graphical model
+        self.pris_model = DynamicModel()
         self.pris_limit_min = Gauss(-1, std)
         self.pris_limit_max = Gauss(2, std)
         self.pris_damping = Gauss(0, std)
@@ -76,12 +78,37 @@ class JointBel(probdist.CategoricalDist):
         self.update_var = 1.
         self.noise = .01
 
-    def update(self, key):
-        self.observe(key)
+    def update(self, obs_classification, trajectory):
+        self.observe(obs_classification)
 
-        if key == "nil":
+        # TODO what is dt?
+        dt = .1
+        if obs_classification == "nil":
             return
 
+        elif obs_classification == "pris":
+            trajectory_1D = util.prismatic_to_position(trajectory)
+            self.pris_model.add_observations(trajectory_1D, dt)
+
+            mu, sigma = self.pris_model.get_approx_gaussian("min_limit")
+            self.pris_limit_min = Gauss(mu, sigma)
+            mu, sigma = self.pris_model.get_approx_gaussian("max_limit")
+            self.pris_limit_max = Gauss(mu, sigma)
+            mu, sigma = self.pris_model.get_approx_gaussian("damping")
+            self.pris_damping = Gauss(mu, sigma)
+
+        elif obs_classification == "rot":
+            trajectory_angle = util.rotational_to_angle(trajectory)
+            self.rot_model.add_observations(trajectory_angle, dt)
+
+            mu, sigma = self.rot_model.get_approx_gaussian("min_limit")
+            self.rot_limit_min = Gauss(mu, sigma)
+            mu, sigma = self.rot_model.get_approx_gaussian("max_limit")
+            self.rot_limit_max = Gauss(mu, sigma)
+            mu, sigma = self.rot_model.get_approx_gaussian("damping")
+            self.rot_damping = Gauss(mu, sigma)
+
+    def fwd_model(self, key):
         # forward model
         # update all three parameters of the joint
         for subname in ["_limit_max", "_limit_min", "_damping"]:
