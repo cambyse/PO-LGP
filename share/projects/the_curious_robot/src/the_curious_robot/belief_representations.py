@@ -134,9 +134,6 @@ class JointBel(probdist.CategoricalDist):
                     axis[2] = param.value
                 elif param.name == "rot_axis.w":
                     axis_w = float(param.value)
-            print("Axis (before): ", axis)
-            axis = axis / axis_w
-            print("Axis (after): ", axis)
 
             trajectory_angle = util.rotational_to_angle(projected_trajectory,
                                                         axis,
