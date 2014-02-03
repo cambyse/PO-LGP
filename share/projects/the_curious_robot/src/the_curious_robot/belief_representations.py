@@ -4,8 +4,7 @@ This file contains various representations of different part of the belief.
 import math
 import collections
 
-#import numpy as np
-import scipy as sp
+import numpy as np
 import scipy.stats as ss
 
 import probdist
@@ -80,8 +79,15 @@ class JointBel(probdist.CategoricalDist):
         self.update_var = 1.
         self.noise = .01
 
-    def update(self, obs_classification, trajectory, articulation_response):
+    def update(self, obs_classification, articulation_response):
         self.observe(obs_classification)
+
+        pose_projected = articulation_response.model.track.pose_projected
+        projected_trajectory = np.ndarray([len(pose_projected), 3])
+        for i, p in enumerate(pose_projected):
+            projected_trajectory[i, 0] = p.position.x
+            projected_trajectory[i, 1] = p.position.y
+            projected_trajectory[i, 2] = p.position.z
 
         # TODO what is dt?
         dt = .1
@@ -89,7 +95,16 @@ class JointBel(probdist.CategoricalDist):
             return
 
         elif obs_classification == "pris":
-            trajectory_1D = util.prismatic_to_position(trajectory)
+            for param in articulation_response.model.params:
+                direction = np.array([0, 0, 0])
+                if param.name == "prismatic_dir.x":
+                    direction[0] = param.value
+                if param.name == "prismatic_dir.y":
+                    direction[1] = param.value
+                if param.name == "prismatic_dir.z":
+                    direction[2] = param.value
+            trajectory_1D = util.prismatic_to_position(projected_trajectory,
+                                                       direction)
             self.pris_model.add_observations(trajectory_1D, dt)
 
             mu, sigma = self.pris_model.get_approx_gaussian("min_limit")
@@ -100,7 +115,27 @@ class JointBel(probdist.CategoricalDist):
             self.pris_damping = Gauss(mu, sigma)
 
         elif obs_classification == "rot":
-            trajectory_angle = util.rotational_to_angle(trajectory)
+            for param in articulation_response.model.params:
+                axis_pos = np.array([0, 0, 0])
+                axis = np.array([0, 0, 0])
+                if param.name == "rot_center.x":
+                    axis_pos[0] = param.value
+                elif param.name == "rot_center.y":
+                    axis_pos[1] = param.value
+                elif param.name == "rot_center.z":
+                    axis_pos[2] = param.value
+                elif param.name == "rot_axis.x":
+                    axis[0] = param.value
+                elif param.name == "rot_axis.y":
+                    axis[1] = param.value
+                elif param.name == "rot_axis.z":
+                    axis[2] = param.value
+                elif param.name == "rot_axis.w":
+                    axis_w = param.value
+            axis = axis / axis_w
+            trajectory_angle = util.rotational_to_angle(projected_trajectory,
+                                                        axis,
+                                                        axis_pos)
             self.rot_model.add_observations(trajectory_angle, dt)
 
             mu, sigma = self.rot_model.get_approx_gaussian("min_limit")
@@ -226,7 +261,7 @@ class Belief(collections.OrderedDict):
     #     max_entropy = round(max(entropies), 5)
 
     #     for shape_anno, entropy in zip(self.itervalues(), entropies):
-    #         normalized = (entropy - min_entropy) / (max_entropy - min_entropy)
+    #        normalized = (entropy - min_entropy) / (max_entropy - min_entropy)
     #         if normalized == float('Inf'):
     #             normalized = 1.
     #         yield shape_anno.belief_shape, normalized
@@ -345,7 +380,7 @@ class Belief(collections.OrderedDict):
 #         )
 
 #     def get_entropy(self):
-#         return ss.beta(self._prismatic_count, self._rotational_count).entropy()
+#       return ss.beta(self._prismatic_count, self._rotational_count).entropy()
 
 #     def update(self, JOINT_TYPE):
 #         """Update the hypothesis. We can observe STATIC or FREE."""

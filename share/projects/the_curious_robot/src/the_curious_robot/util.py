@@ -190,4 +190,4 @@ def rotational_to_angle(trajectory, axis, axis_pos):
 
 def prismatic_to_position(trajectory, direction):
     start = trajectory[0, :]
-    return np.dot(trajectory, direction) - np.dot(start, dir)
+    return np.dot(trajectory, direction) - np.dot(start, direction)

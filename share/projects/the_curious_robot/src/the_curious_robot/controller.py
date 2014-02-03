@@ -30,7 +30,7 @@ class TrajectoryException(Exception):
 
 class RRTPlanner(object):
     def __init__(self, graph):
-        print "init rrt planner"
+        rospy.loginfo("init rrt planner")
         self.graph = graph
         shapes = ors.makeConvexHulls(self.graph.shapes)
         self.graph.shapes = shapes
@@ -172,12 +172,10 @@ class RRTPlanner(object):
 
 class FakeController(object):
     def __init__(self):
-        print "init controller"
         # init the node: test_fitting
         rospy.init_node('tcr_controller', log_level=rospy.DEBUG)
 
         # World & PhysX & OpenGL
-        print "get path"
         orspath = "share/projects/the_curious_robot/src/the_curious_robot"
         orsfile = core.getStringParameter("orsFile")
         worldfile = os.path.join(
@@ -209,7 +207,7 @@ class FakeController(object):
         self.rrt = RRTPlanner(self.world.graph)
 
     def run(self):
-        print "Controller up and running"
+        rospy.loginfo("Controller up and running")
         rp.Provide("Controller")
         """ the controller loop """
         while not rospy.is_shutdown():
@@ -219,7 +217,6 @@ class FakeController(object):
         rospy.loginfo("start computing trajectory")
 
         start = self.rrt.graph.getJointState()
-        print start
 
         # this is pr2-only :(
         opt_start = self.rrt.graph.getJointState()
@@ -285,7 +282,7 @@ class FakeController(object):
 
         self.tpos = 0
         self.recompute_trajectory = False
-        print start
+        #print start
 
         rospy.loginfo("done computing trajectory")
 
@@ -303,8 +300,8 @@ class FakeController(object):
             if self.tpos == self.trajectory.shape[0]:
                 self.control_done()
             else:
-                rospy.logdebug("next step: " +
-                               str(self.trajectory[self.tpos, :]))
+                #rospy.logdebug("next step: " +
+                               #str(self.trajectory[self.tpos, :]))
                 self.world.graph.setJointState(self.trajectory[self.tpos, :])
                 self.world.graph.calcBodyFramesFromJoints()
                 self.world.graph.calcBodyFramesFromJoints()
@@ -385,6 +382,6 @@ class FakeController(object):
 
 
 if __name__ == '__main__':
-    print "Controller starting..."
+    #print "Controller starting..."
     controller = FakeController()
     controller.run()

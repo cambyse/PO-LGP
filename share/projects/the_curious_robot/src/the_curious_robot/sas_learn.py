@@ -145,7 +145,7 @@ class LearnActionServer(object):
             self.update_dof(obj_bel)
 
         # PRINT
-        rospy.loginfo(str(self.belief))
+        #rospy.loginfo(str(self.belief))
 
         # VISUALIZE
         # self.visualize_object_type()
@@ -176,11 +176,11 @@ class LearnActionServer(object):
     def update_dof(self, obj_bel):
         request = TrackModelSrvRequest()
         request.model.track = tcr.util.create_track_msg(self.trajectory)
-        print self.trajectory
+        #print self.trajectory
 
         # here we learn
         response = self.dof_learner(request)
-        rospy.loginfo(response)
+        #rospy.loginfo(response)
 
         # stop if it's not an rotational or prismatic joint
         if response.model.name not in ["rotational", "prismatic"]:
@@ -198,7 +198,7 @@ class LearnActionServer(object):
         #     obj_bel.joint_bel.values[p.name] = p.value
 
         if response.model.name == "rotational":
-            obj_bel.joint_bel.update("rot", self.trajectory, response)
+            obj_bel.joint_bel.update("rot", response)
             # important information
             # - rot_center[3], points to the rotational center of the
             #   rotational joint
@@ -218,7 +218,7 @@ class LearnActionServer(object):
             #               response.model.params)
 
         elif response.model.name == "prismatic":
-            obj_bel.joint_bel.update("pris", self.trajectory, response)
+            obj_bel.joint_bel.update("pris", response)
             # The parameters of the prismatic model are:
             #
             # rigid_position[3], gives the average position of the articulated
