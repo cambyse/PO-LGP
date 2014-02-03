@@ -89,8 +89,9 @@ class JointBel(probdist.CategoricalDist):
             projected_trajectory[i, 1] = p.position.y
             projected_trajectory[i, 2] = p.position.z
 
-        # TODO what is dt?
-        dt = .1
+        dt = 1./60.  # Since we step the physic engine on our own, this is
+                     # constant. Otherwise ask the perception system
+
         if obs_classification == "nil":
             return
 
