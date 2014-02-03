@@ -7,6 +7,7 @@ import rospy
 import orspy as ors
 import motionpy as motion
 import optimpy as optim
+
 import guipy as gui
 import corepy as core
 
@@ -103,7 +104,7 @@ class RRTPlanner(object):
         return x
 
     def create_rrt_trajectory(self, target, collisions):
-        stepsize = core.getDoubleParameter("rrt_stepsize", .005)
+        stepsize = core.getDoubleParameter("rrt_stepsize", .002)
 
         problem = motion.MotionProblem(self.graph)
         problem.loadTransitionParameters()
@@ -230,7 +231,8 @@ class FakeController(object):
 
         feasible = False
         for i in range(self.max_tries):
-            opt_start[2] = random.uniform(-np.pi, np.pi)
+            #opt_start[2] = random.uniform(-np.pi, np.pi)
+            opt_start[2] = 1
 
             target = self.rrt.create_endpose(opt_start,
                                              col_prec=col_prec,
