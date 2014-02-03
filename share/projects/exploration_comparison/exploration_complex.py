@@ -162,7 +162,7 @@ def run_experiment(world, belief, select_strategy, num_interactions,
     for i in range(num_interactions):
 
         idx = select_strategy(belief)
-        print("selecting object {}".format(idx))
+        # print("selecting object {}".format(idx))
         observations = world[idx].interact()
         if observation_model:
             observations = observation_model(observations)
@@ -174,25 +174,26 @@ def run_experiment(world, belief, select_strategy, num_interactions,
                 "%Y-%m-%d_%H:%M:%S:%f.png")
             fig.savefig(filename)
 
-        for obj in belief:
-            print(str(obj))
-        print("=" * 80)
+        # for obj in belief:
+        #     print(str(obj))
+        # print("=" * 80)
 
         bel_history.append(copy.deepcopy(belief))
     return bel_history
 
 
-def multi_run(f_init, strategy_name, select_strategy, num_interactions=100,
+def multi_run(f_init, select_strategy, num_interactions=100,
               runs=50, observation_model=None):
     """Execute multiple runs of the given strategy (with the given parameters).
 
     """
+    strategy_name = select_strategy.name
     print(strategy_name)
 
     # often used stuff
     world, belief = f_init()
     num_objects = len(world)
-    names = [door.name for door in world]
+    names = [str(door) for door in world]
 
     # Initialze arrays that we need throughout the runs
     entropy_obj = np.empty((runs, num_interactions, num_objects))
@@ -208,8 +209,9 @@ def multi_run(f_init, strategy_name, select_strategy, num_interactions=100,
     log_likelihood_total = np.ones_like(entropy_total)
 
     estimated_p_obj = np.empty_like(entropy_obj)
-    real_p_obj = [np.full((1, num_interactions), world[i].p)
-                  for i in range(num_objects)]
+    real_p_obj = np.empty_like(entropy_obj)
+                #[np.full((1, num_interactions), world[i].p)
+                #  for i in range(num_objects)]
 
     error_obj = np.empty_like(entropy_obj)
     error_total = np.zeros_like(entropy_total)
@@ -229,35 +231,47 @@ def multi_run(f_init, strategy_name, select_strategy, num_interactions=100,
 
         #======================================================================
         # COLLECT AND SUMMARIZE DATA
-        for obj in range(num_objects):
+        for i in range(num_objects):
             # Entropy over time
-            entropy_obj[run, :, obj] = arr([b[obj].entropy() for b in bel])
-            entropy_total[run, :] += entropy_obj[run, :, obj]
+            entropy_obj[run, :, i] = arr([
+                b[i].entropy()
+                + b[i].joint_bel.entropy() +
+                + b[i].joint_bel.prob("pris") * (
+                    b[i].joint_bel.rot_limit_max.entropy()
+                    + b[i].joint_bel.rot_limit_min.entropy()
+                    + b[i].joint_bel.rot_damping.entropy())
+                + b[i].joint_bel.prob("pris") * (
+                    b[i].joint_bel.pris_limit_max.entropy()
+                    + b[i].joint_bel.pris_limit_min.entropy()
+                    + b[i].joint_bel.pris_damping.entropy())
+                + b[i].joint_bel.prob("nil") * b[i].joint_bel.nil.entropy()
+                for b in bel])
+            entropy_total[run, :] += entropy_obj[run, :, i]
 
             # Expected change of entropy over time
-            expected_diff_H_obj[run, :, obj] = arr([b[obj].exp_diff_H()
-                                                    for b in bel])
-            expected_diff_H_total[run, :] += expected_diff_H_obj[run, :, obj]
-            # Esimate over time
-            estimated_p_obj[run, :, obj] = arr([b[obj].mean() for b in bel])
+            # expected_diff_H_obj[run, :, i] = arr([b[i].exp_diff_H()
+            #                                         for b in bel])
+            # expected_diff_H_total[run, :] += expected_diff_H_obj[run, :, i]
+            # # Esimate over time
+            # estimated_p_obj[run, :, i] = arr([b[i].mean() for b in bel])
 
-            # Error over time: abs(p_true, p_estimated)
-            error_obj[run, :, obj] = np.abs(real_p_obj[obj] -
-                                            estimated_p_obj[run, :, obj])
-            error_total[run, :] += error_obj[run, :, obj]
+            # # Error over time: abs(p_true, p_estimated)
+            # error_obj[run, :, i] = np.abs(real_p_obj[i] -
+            #                                 estimated_p_obj[run, :, i])
+            # error_total[run, :] += error_obj[run, :, i]
 
-            # Squared error over time
-            squared_error_obj[run, :, obj] = error_obj[run, :, obj]**2
-            squared_error_total[run, :] += squared_error_obj[run, :, obj]
+            # # Squared error over time
+            # squared_error_obj[run, :, i] = error_obj[run, :, i]**2
+            # squared_error_total[run, :] += squared_error_obj[run, :, i]
 
-            # Likelihood over time
-            likelihood_obj[run, :, obj] = arr([b[obj].likelihood(world[obj].p)
-                                               for b in bel])
-            likelihood_total[run, :] *= likelihood_obj[run, :, obj]
+            # # Likelihood over time
+            # likelihood_obj[run, :, i] = arr([b[i].likelihood(world[i].p)
+            #                                    for b in bel])
+            # likelihood_total[run, :] *= likelihood_obj[run, :, i]
 
-            log_likelihood_obj[run, :, obj] = arr([b[obj].logpdf(world[obj].p)
-                                                   for b in bel])
-            log_likelihood_total[run, :] *= log_likelihood_obj[run, :, obj]
+            # log_likelihood_obj[run, :, i] = arr([b[i].logpdf(world[i].p)
+            #                                        for b in bel])
+            # log_likelihood_total[run, :] *= log_likelihood_obj[run, :, i]
 
     data["error"] = error_total
     data["MSE"] = squared_error_total
@@ -273,6 +287,7 @@ def multi_run(f_init, strategy_name, select_strategy, num_interactions=100,
     summary["likelihood"] = likelihood_total[:, -1].mean()
     summary["log_likelihood"] = log_likelihood_total[:, -1].mean()
 
+    return summary, data
     #========================================================================
     # PLOT strategies seperately
     fig, (ax1, ax2, ax3, ax4, ax5, ax6) = plt.subplots(1, 6, figsize=(22, 4))

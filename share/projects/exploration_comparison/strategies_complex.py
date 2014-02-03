@@ -42,8 +42,27 @@ class StrategyMaxEntropyJointType(object):
         return max_idx(belief, f=(lambda obj: obj.joint_bel.entropy()))
 
 
+class StrategyMaxEntropyGauss(object):
+    def __init__(self):
+        self.name = "Max Entropy for the joint type"
+
+    def __call__(self, belief):
+        f = (lambda obj:
+             max([
+                 obj.joint_bel.prob_cond("pris", ("nil", obj.prob("static")))
+                 * obj.joint_bel.pris_limit_max.entropy(),
+                 obj.joint_bel.prob_cond("rot", ("nil", obj.prob("static")))
+                 * obj.joint_bel.pris_limit_max.entropy(),
+                 obj.joint_bel.prob_cond("nil", ("nil", obj.prob("static")))
+                 * obj.joint_bel.pris_limit_max.entropy()]))
+        return max_idx(belief, f=f)
+
+
 class StrategyExpectedChangeOfEntropy(object):
     """Select the object with the highest expected change of entropy."""
+
+    def __init__(self):
+        self.name = "Exp. change of entropy"
 
     def __call__(self, belief):
         # collect change of entropy
@@ -63,6 +82,8 @@ class StrategyExpectedChangeOfEntropy(object):
 
 class StrategyExpectedChangeOfEntropyVote(object):
     """Select the object with the highest expected change of entropy."""
+    def __init__(self):
+        self.name = "Exp. change of entropy Vote"
 
     def __call__(self, belief):
         # collect change of entropy
