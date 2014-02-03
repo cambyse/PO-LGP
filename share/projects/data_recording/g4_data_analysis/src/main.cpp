@@ -27,56 +27,41 @@ void display(G4Data &g4d) {
   KeyFramer kf(kw, g4d);
 
   String b1("rh:thumb"), b2("sbox");
+  uint wlen = 121;
+
+  uintA vit;
+  kf.EM(vit, b1, b2, wlen);
+
+#if 1
+  // OK this is stupid, but cope with it
   String bp1(STRING(b1 << ":pos")), bp2(STRING(b2 << ":pos"));
   String bo1(STRING(b1 << ":ori")), bo2(STRING(b2 << ":ori"));
 
-  uint wlen = 61;
   arr c = kf.getCorrPCA(bp1, bp2, wlen, 1).flatten();
-  arr c3d = kf.getCorr(bp1, bp2, wlen);
+  arr pD = kf.getPos(b1, b2);
+  arr pAVar = kf.getStateVar(bp1, wlen);
+  arr pBVar = kf.getStateVar(bp2, wlen);
+  arr qD = kf.getQuat(bo1, bo2);
+  arr qAVar = kf.getStateVar(bo1, wlen);
+  arr qBVar = kf.getStateVar(bo2, wlen);
+  arr pVar = kf.getPosVar(b1, b2, wlen);
+  arr qVar = kf.getQuatVar(bo1, bo2, wlen);
 
-  arr aVar = kf.getAngleVar(bo1, bo2, wlen);
-  arr pdVar = kf.getDiffVar(bp1, bp2, wlen);
-  arr qdVar = kf.getDiffVar(bo1, bo2, wlen);
-  arr tVar = kf.getDiffVar(b1, b2, wlen);
-
-  //arr dists = kf.getDists(b1, b2);
-
-  // TODO:
-  //  - MAP-em, so that you can also estimate the variance
-  //  - try different observations:
-  //    * 1-dim corr, 3-dim corr XYZ, etc
-  //    * Angle Variance
-  //    * Transformation variance (i.e. check whether the motion is rigid or
-  //    not.)
-  //    * Best thing would be to check IF there is motion, and check if the
-  //    motion is rigid, oder?
-  //
-
-  uintA vit;
-  kf.EM(vit, c, sqrt(aVar));
-
-#if 1
   Feedgnuplot gnup1;
   gnup1.setDataID(true);
   gnup1.setAutolegend(true);
   gnup1.setStream(.75);
-  gnup1.setTitle("1-dim PCA aligned");
+  gnup1.setTitle("Observations + Viterbi");
+  gnup1.setYRange(-1.5, 1.5);
   gnup1.open();
 
   Feedgnuplot gnup2;
   gnup2.setDataID(true);
   gnup2.setAutolegend(true);
   gnup2.setStream(.75);
-  gnup2.setTitle("3-dim X-, Y-, Z-axis aligned");
+  gnup2.setTitle("Misc.");
   gnup2.open();
   
-  Feedgnuplot gnup3;
-  gnup3.setDataID(true);
-  gnup3.setAutolegend(true);
-  gnup3.setStream(.75);
-  gnup3.setTitle("Misc.");
-  gnup3.open();
-
   MT::String bname;
   uint F = g4d.getNumFrames();
   for(uint f = 0; f < F; f++) {
@@ -87,22 +72,21 @@ void display(G4Data &g4d) {
     //vid.addFrame(gl.captureImage);
 
     String ss1, ss2, ss3;
-    ss1 << f << " vit " << vit(f)
+    ss1 << f
+            << " vit " << vit(f)
             << " c " << c(f)
-            << " aVar " << sqrt(aVar(f))
+            << " qVar " << qVar(f)
+            << " pVar " << pVar(f)
             ;
-    ss2 << f << " corrX " << c3d(f, 0)
-            << " corrY " << c3d(f, 1)
-            << " corrZ " << c3d(f, 2)
+    ss2 << f
+            << " pAVar " << pAVar(f)
+            << " pBVar " << pBVar(f)
+            << " qAVar " << qAVar(f)
+            << " qBVar " << qBVar(f)
             ;
-    ss3 << f << " c " << c(f)
-            << " aVar " << sqrt(aVar(f))
-            << " pdVar " << sqrt(pdVar(f))
-            << " qdVar " << sqrt(qdVar(f))
             ;
     gnup1() << ss1;
     gnup2() << ss2;
-    gnup3() << ss3;
   }
 #endif
 

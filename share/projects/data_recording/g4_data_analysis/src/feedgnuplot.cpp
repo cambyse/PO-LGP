@@ -30,6 +30,7 @@ void Feedgnuplot::setDefault() {
   title = NULL;
   hardcopy = NULL;
   stream = .5;
+  yrange = false;
 }
 
 void Feedgnuplot::setLines(bool l) {
@@ -64,6 +65,12 @@ void Feedgnuplot::setStream(double s) {
   stream = s;
 }
 
+void Feedgnuplot::setYRange(double min, double max) {
+  yrange = true;
+  ymin = min;
+  ymax = max;
+}
+
 void Feedgnuplot::open() {
   std::stringstream cmd;
   cmd << "feedgnuplot";
@@ -79,6 +86,8 @@ void Feedgnuplot::open() {
     cmd << " --hardcopy " << hardcopy;
   if(stream>0)
     cmd << " --stream " << stream;
+  if(yrange)
+    cmd << " --ymin " << ymin << " --ymax " << ymax;
 
   f = popen(cmd.str().c_str(), "w");
   CHECK(f, "popen failed to connect to feedgnuplot.");

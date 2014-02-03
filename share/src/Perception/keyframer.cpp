@@ -168,65 +168,6 @@ KeyFramer::~KeyFramer() {
   delete s;
 }
 
-//uint KeyFramer::getNBodies() {
-  //return s->nbodies;
-//}
-
-//uint KeyFramer::getCumNDofs(uint b) {
-  //CHECK(b < s->nbodies, "Body index out of bounds.");
-  //return s->cumdofs(b);
-//}
-
-//uint KeyFramer::getNDofs(uint b) {
-  //CHECK(b < s->nbodies, "Body index out of bounds.");
-  //return s->dofs(b);
-//}
-
-//uint KeyFramer::getNDofs() {
-  //return s->ndofs;
-//}
-
-
-//uint KeyFramer::getNFrames() {
-  //return s->nframes;
-//}
-
-//uint KeyFramer::getNWindows(uint wlen) {
-  //return s->nframes>=wlen? s->nframes-wlen+1: 0;
-//}
-
-//arr KeyFramer::getState() {
-  //return s->state;
-//}
-
-//arr KeyFramer::getState(uint f) {
-  //CHECK(f < s->nframes, "Frame number out of bounds.");
-  //return s->state.sub(f, f, 0, -1).resize(s->ndofs); // TODO can this be optimized?
-//}
-
-//arr KeyFramer::getState(uint f, uint b) {
-  //CHECK(f < s->nframes, "Frame number out of bounds.");
-  //CHECK(b < s->nbodies, "Body index out of bounds.");
-  //uint dofs = s->dofs(b);
-  //uint cumdofs = s->cumdofs(b);
-  //return s->state.sub(f, f, cumdofs, cumdofs+dofs-1).resize(dofs); // TODO can this be optimized?
-//}
-
-/*
-arr KeyFramer::getWindow(uint f) {
-  CHECK(f < s->nframes, "Frame number out of bounds.");
-  return s->state.sub(f, f+s->lwin-1, 0, -1);
-}
-
-arr KeyFramer::getWindow(uint f, uint b) {
-  CHECK(f < s->nframes, "Frame number out of bounds.");
-  CHECK(b < s->nbodies, "Body index out of bounds.");
-  uint dofs = s->dofs(b);
-  uint cumdofs = s->cumdofs(b);
-  return s->state.sub(f, f+s->lwin-1, cumdofs, cumdofs+dofs-1);
-}
-*/
-
 void KeyFramer::updateOrs(uint f) {
   arr x;
   for(auto &b: s->kw->bodies) {
@@ -236,8 +177,6 @@ void KeyFramer::updateOrs(uint f) {
 
     b->X.pos.set(x(0), x(1), x(2));
     b->X.rot.set(x(3), x(4), x(5), x(6));
-
-    //s->kw->computeProxies();
   }
   s->kw->calcBodyFramesFromJoints();
   //s->kw.calcShapeFramesFromBodies(); TODO which one?
@@ -385,33 +324,44 @@ arr KeyFramer::getCorr(const String &n1, const String &n2, uint wlen) {
   return getCorr(b1, b2, wlen);
 }
 
-/*
-MT::Array<arr> KeyFramer::getCorrEnsemble(uint b1, uint b2, uintA &wlens, bool pca) {
-  // NB: here nwins is not the same number of windows as in the other methods.
-  // other methods: nwins = number of windows of a certain size throughout the
-  // whole stream
-  // this method: nwins = number of different window sizes.
-  uint nwins = wlens.N;
-
-  CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
-  CHECK(nwins>0, "Specify at least one window size.");
-
-  MT::Array<arr> corr(s->nframes);
-  for(uint wi = 0; wi < nwins; wi++)
-    corr(wi) = getCorr(b1, b2, wlens(wi), pca);
-
-  return corr;
+arr KeyFramer::getState(uint b) {
+  uint dofs = s->dofs(b);
+  uint cumdofs = s->cumdofs(b);
+  return s->state.cols(cumdofs, cumdofs + dofs);
 }
 
-MT::Array<arr> KeyFramer::getCorrEnsemble(const String &n1, const String &n2, uintA &wlens, bool pca) {
-  int b1 = s->names.findValue(n1);
-  CHECK(b1 >= 0, "Invalid name.");
-  int b2 = s->names.findValue(n2);
-  CHECK(b2 >= 0, "Invalid name.");
+arr KeyFramer::getState(const String &n) {
+  int b = s->names.findValue(n);
+  CHECK(b >= 0, "Invalid name.");
 
-  return getCorrEnsemble(b1, b2, wlens, pca);
+  return getState(b);
 }
-*/
+
+arr KeyFramer::getStateVar(uint b, uint wlen) {
+  arr var(s->nframes);
+  arr win, m;
+  arr state = getState(b);
+
+  uint ff = wlen / 2;
+  uint ft = s->nframes - ff;
+  var.subRange(0, ff - 1).setZero();
+  var.subRange(ft, -1).setZero();
+  for(uint fi = ff; fi < ft; fi++) {
+    uint wi = fi - ff;
+    win.referToSubRange(state, wi, wi + wlen - 1);
+    m = sum(win, 0) / (double)win.d0;
+    m = ~repmat(m, 1, win.d0);
+    var(fi) = sumOfSqr(win - m); // TODO is this right?
+  }
+  return var / (double) wlen;
+}
+
+arr KeyFramer::getStateVar(const String &n, uint wlen) {
+  int b = s->names.findValue(n);
+  CHECK(b >= 0, "Invalid name.");
+
+  return getStateVar(b, wlen);
+}
 
 arr KeyFramer::getAngle(uint b1, uint b2) {
   CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
@@ -451,8 +401,6 @@ arr KeyFramer::getAngleVar(uint b1, uint b2, uint wlen) {
   CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
 
   arr var(s->nframes);
-  var.setZero();
-
   arr win;
   arr angle = getAngle(b1, b2);
 
@@ -466,7 +414,7 @@ arr KeyFramer::getAngleVar(uint b1, uint b2, uint wlen) {
     var(fi) = sumOfSqr(win - sum(win) / win.N);
   }
 
-  return var;
+  return var / (double)wlen;
 }
 
 arr KeyFramer::getAngleVar(const String &n1, const String &n2, uint wlen) {
@@ -476,6 +424,139 @@ arr KeyFramer::getAngleVar(const String &n1, const String &n2, uint wlen) {
   CHECK(b2 >= 0, "Invalid name.");
 
   return getAngleVar(b1, b2, wlen);
+}
+
+arr KeyFramer::getQuat(uint b1, uint b2) {
+  CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
+
+  uint dofs = s->dofs(b1);
+  uint cumdofs1 = s->cumdofs(b1);
+  uint cumdofs2 = s->cumdofs(b2);
+
+  arr quat(s->nframes, 4);
+
+  arr s1, s2;
+  s1 = s->state.cols(cumdofs1, cumdofs1+dofs);
+  s2 = s->state.cols(cumdofs2, cumdofs2+dofs);
+  ors::Quaternion q1, q2, q;
+  ors::Quaternion A;
+  for(uint f = 0; f < s->nframes; f++) {
+    q1.set(s1[f].p);
+    q2.set(s2[f].p);
+    if(f == 0)
+      A = q1 / q2;
+    q = q1 / (A * q2);
+    quat[f]() = {q.w, q.x, q.y, q.z};
+  }
+
+  return quat;
+}
+
+arr KeyFramer::getQuat(const String &n1, const String &n2) {
+  int b1 = s->names.findValue(n1);
+  CHECK(b1 >= 0, "Invalid name.");
+  int b2 = s->names.findValue(n2);
+  CHECK(b2 >= 0, "Invalid name.");
+
+  return getQuat(b1, b2);
+}
+
+arr KeyFramer::getQuatVar(uint b1, uint b2, uint wlen) {
+  CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
+
+  arr var(s->nframes);
+  arr win, m;
+  arr quat = getQuat(b1, b2);
+
+  uint ff = wlen / 2;
+  uint ft = s->nframes - ff;
+  var.subRange(0, ff - 1).setZero();
+  var.subRange(ft, -1).setZero();
+  for(uint fi = ff; fi < ft; fi++) {
+    uint wi = fi - ff;
+    win.referToSubRange(quat, wi, wi + wlen - 1);
+    m = sum(win, 0) / (double)win.d0;
+    m = ~repmat(m, 1, win.d0);
+    var(fi) = sumOfSqr(win - m);
+  }
+
+  return var / (double) wlen;
+}
+
+arr KeyFramer::getQuatVar(const String &n1, const String &n2, uint wlen) {
+  int b1 = s->names.findValue(n1);
+  CHECK(b1 >= 0, "Invalid name.");
+  int b2 = s->names.findValue(n2);
+  CHECK(b2 >= 0, "Invalid name.");
+
+  return getQuatVar(b1, b2, wlen);
+}
+
+arr KeyFramer::getPos(uint b1, uint b2) {
+  CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
+
+  uint dofs = s->dofs(b1);
+  uint cumdofs1 = s->cumdofs(b1);
+  uint cumdofs2 = s->cumdofs(b2);
+
+  arr pos(s->nframes, 3);
+
+  arr s1, s2, s3;
+  s1 = s->state.cols(cumdofs1+3, cumdofs1+dofs);
+  s2 = s->state.cols(cumdofs2+3, cumdofs2+dofs);
+  s3 = s->state.cols(cumdofs1, cumdofs1+3);
+  ors::Vector v1, v2, v;
+  ors::Quaternion q1;
+  for(uint f = 0; f < s->nframes; f++) {
+    v1.set(s1[f].p);
+    v2.set(s2[f].p);
+    q1.set(s3[f].p);
+    
+    v = q1 * (v2 - v1);
+    pos[f]() = {v.x, v.y, v.z};
+  }
+
+  return pos;
+}
+
+arr KeyFramer::getPos(const String &n1, const String &n2) {
+  int b1 = s->names.findValue(n1);
+  CHECK(b1 >= 0, "Invalid name.");
+  int b2 = s->names.findValue(n2);
+  CHECK(b2 >= 0, "Invalid name.");
+
+  return getPos(b1, b2);
+}
+
+arr KeyFramer::getPosVar(uint b1, uint b2, uint wlen) {
+  CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
+
+  arr var(s->nframes);
+  arr win, m;
+  arr pos = getPos(b1, b2);
+
+  uint ff = wlen / 2;
+  uint ft = s->nframes - ff;
+  var.subRange(0, ff - 1).setZero();
+  var.subRange(ft, -1).setZero();
+  for(uint fi = ff; fi < ft; fi++) {
+    uint wi = fi - ff;
+    win.referToSubRange(pos, wi, wi + wlen - 1);
+    m = sum(win, 0) / (double)win.d0;
+    m = ~repmat(m, 1, win.d0);
+    var(fi) = sumOfSqr(win - m);
+  }
+
+  return var / (double) wlen;
+}
+
+arr KeyFramer::getPosVar(const String &n1, const String &n2, uint wlen) {
+  int b1 = s->names.findValue(n1);
+  CHECK(b1 >= 0, "Invalid name.");
+  int b2 = s->names.findValue(n2);
+  CHECK(b2 >= 0, "Invalid name.");
+
+  return getPosVar(b1, b2, wlen);
 }
 
 arr KeyFramer::getDiff(uint b1, uint b2) {
@@ -505,10 +586,9 @@ arr KeyFramer::getDiffVar(uint b1, uint b2, uint wlen) {
   CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
 
   arr var(s->nframes);
-  var.setZero();
-
   arr win, m;
   arr diff = getDiff(b1, b2);
+
   uint ff = wlen / 2;
   uint ft = s->nframes - ff;
   var.subRange(0, ff - 1).setZero();
@@ -557,10 +637,9 @@ arr KeyFramer::getPosLenVar(uint b1, uint b2, uint wlen) {
   CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
 
   arr var(s->nframes);
-  var.setZero();
-
   arr win;
   arr posLen = getPosLen(b1, b2);
+
   uint ff = wlen / 2;
   uint ft = s->nframes - ff;
   var.subRange(0, ff - 1).setZero();
@@ -571,7 +650,7 @@ arr KeyFramer::getPosLenVar(uint b1, uint b2, uint wlen) {
     var(fi) = sumOfSqr(win - (sum(win)/win.N));
   }
 
-  return var;
+  return var / (double) wlen;
 }
 
 arr KeyFramer::getPosLenVar(const String &n1, const String &n2, uint wlen) {
@@ -614,91 +693,6 @@ arr KeyFramer::getTransfVar(const String &n1, const String &n2, uint wlen) {
   CHECK(b2 >= 0, "Invalid name.");
 
   return getTransfVar(b1, b2, wlen);
-}
-
-ProxyL KeyFramer::getProxies(uint b1, uint b2) {
-  ProxyL proxies;
-  bool found;
-  for(uint f = 0; f < s->nframes; f++) {
-    updateOrs(f);
-    found = false;
-    for(auto &proxy: s->kw->proxies) {
-      if(proxy->a == (int)b1 && proxy->b == (int)b2) {
-        found = true;
-        proxies.append(new ors::Proxy(*proxy));
-        break;
-      }
-    }
-    if(!found)
-      proxies.append(NULL);
-  }
-
-  return proxies;
-}
-
-ProxyL KeyFramer::getProxies(const String &n1, const String &n2) {
-  ors::Body *b1 = s->kw->getBodyByName(n1);
-  CHECK(b1, "Invalid name.");
-  ors::Body *b2 = s->kw->getBodyByName(n2);
-  CHECK(b2, "Invalid name.");
-
-  return getProxies(b1->index, b2->index);
-}
-
-void KeyFramer::calcProxies(uint b1, uint b2) {
-  NIY;
-}
-
-arr KeyFramer::getDists(uint b1, uint b2) {
-  arr dist;
-  for(auto &shape: s->kw->bodies(b1)->shapes)
-    if(shape->type != ors::markerST)
-      shape->cont = true;
-  for(auto &shape: s->kw->bodies(b2)->shapes)
-    if(shape->type != ors::markerST)
-      shape->cont = true;
-  s->kw->swift().setCutoff(2.);
-  s->kw->swift().initActivations();
-  for(uint f = 0; f < s->nframes; f++) {
-    updateOrs(f);
-    ors::Proxy *minProxy = NULL;
-    for(auto &proxy: s->kw->proxies) {
-      if( s->kw->shapes(proxy->a)->body->index == b1
-          && s->kw->shapes(proxy->b)->body->index == b2
-          && (!minProxy || proxy->d < minProxy->d)) {
-        minProxy = proxy;
-      }
-    }
-    CHECK(minProxy, "Something is wrong here. Call Andrea.");
-    dist.append(minProxy->d);
-  }
-  for(auto &shape: s->kw->bodies(b1)->shapes)
-    shape->cont = false;
-  for(auto &shape: s->kw->bodies(b2)->shapes)
-    shape->cont = false;
-  return dist;
-}
-
-arr KeyFramer::getDists(const String &n1, const String &n2) {
-  ors::Body *b1 = s->kw->getBodyByName(n1);
-  CHECK(b1, "Invalid name.");
-  ors::Body *b2 = s->kw->getBodyByName(n2);
-  CHECK(b2, "Invalid name.");
-
-  return getDists(b1->index, b2->index);
-}
-
-void KeyFramer::calcProxies(const String &n1, const String &n2) {
-  ors::Body *b1 = s->kw->getBodyByName(n1);
-  CHECK(b1, "Invalid name.");
-  ors::Body *b2 = s->kw->getBodyByName(n2);
-  CHECK(b2, "Invalid name.");
-
-  calcProxies(b1->index, b2->index);
-}
-
-void KeyFramer::clearProxies() {
-  listDelete(s->kw->proxies);
 }
 
 KeyFrameL KeyFramer::getKeyFrames(const uintA &vit) {
@@ -767,67 +761,255 @@ void KeyFramer::saveKeyFrameScreens(const KeyFrameL &keyframes, uint df) {
   }
 }
 
-void KeyFramer::EM(uintA &vit, const arr &c, const arr &v) {
-  arr p = { 1, 0 };
-  arr A = { .5, .5, .5, .5 };
+void KeyFramer::EM(uintA &vit, const String &b1, const String &b2, uint wlen) {
+  // Observations {{{
+  String bp1(STRING(b1 << ":pos")), bp2(STRING(b2 << ":pos"));
+  String bo1(STRING(b1 << ":ori")), bo2(STRING(b2 << ":ori"));
+
+  arr c = getCorrPCA(bp1, bp2, wlen, 1).flatten();
+  arr c3d = getCorr(bp1, bp2, wlen);
+
+  arr pD = getPos(b1, b2);
+  arr pAVar = getStateVar(bp1, wlen);
+  arr pBVar = getStateVar(bp2, wlen);
+
+  arr qD = getQuat(bo1, bo2);
+  arr qAVar = getStateVar(bo1, wlen);
+  arr qBVar = getStateVar(bo2, wlen);
+
+  arr pVar = getPosVar(b1, b2, wlen);
+  arr qVar = getQuatVar(bo1, bo2, wlen);
+
+  // }}}
+  // Parameters & other {{{
+  uint T, K, J;
+  double sigma_small, sigma_big;
+  arr pi, A;
+  arr c_mu, c_sigma;
+  arr B;
+  arr p_mu, p_sigma;
+  arr q_mu, q_sigma;
+  arr rho_z_c, rho_z_cpq, rho_z_cypq, rho_y_p, rho_y_q, rho_y_d;
+  arr rho_y_pqd ;
+  arr qz, qzz, qzy, qy;
+  arr a, b;
+  arr pz, pzz;
+
+  pi = { 1, 0 };
+  A = { .5, .5,
+        .5, .5 };
   A.reshape(2, 2);
-
-  arr c_mu = { 0, 1 };
-  arr c_sigma = { 1, .3 };
-
-  arr B = { .9, 1, .1, 0 };
+  c_mu = { 0, 1 };
+  c_sigma = { 1, .2 };
+  B = { .2, 0,
+        .8, 1 };
   B.reshape(2, 2);
+  sigma_small = .3; sigma_big = .7;
+  p_mu = {0, 0}; p_sigma = { sigma_big, sigma_small };
+  q_mu = {0, 0}; q_sigma = { sigma_big, sigma_small };
 
-  arr v_mu = { 0, 0 };
-  arr v_sigma = { .7, .3 };
+  T = c.d0;
+  K = 2;
+  J = 2;
 
-  arrL theta;
-  theta.append(&p);
-  theta.append(&A);
-  theta.append(&c_mu);
-  theta.append(&c_sigma);
-  theta.append(&B);
-  theta.append(&v_mu);
-  theta.append(&v_sigma);
+  rho_z_c.resize(T, K);
+  rho_z_cpq.resize(T, K);
+  rho_z_cypq.resize(T, J, K);
+  rho_y_p.resize(T, J);
+  rho_y_q.resize(T, J);
+  rho_y_d.resize(T, J);
+  rho_y_pqd.resize(T, J);
 
-  uint T = c.d0, K = c_mu.N, J = v_mu.N;
-  arr rho_z_c(T, K), rho_z_cv(T, K), rho_y_v(T, J), rho_z_cyv(T, J, K);
-  arrL rho;
-  rho.append(&rho_z_c);
-  rho.append(&rho_z_cv);
-  rho.append(&rho_y_v);
-  rho.append(&rho_z_cyv);
+  qz.resize(T, K);
+  qzz.resize(T-1, K, K);
+  qzy.resize(T, K, J);
+  qy.resize(T, J);
 
-  arr qz(T, K), qzz(T-1, K, K), qzy(T, K, J), qy(T, J);
-  arrL ql;
-  ql.append(&qz);
-  ql.append(&qzz);
-  ql.append(&qzy);
-  ql.append(&qy);
+  a.resize(T, K);
+  b.resize(T, K);
 
-  for(uint i = 0; i < 50; i++) {
+  pz.resize(K);
+  pzz.resize(K, K);
+  // }}}
+
+  arr prev_qz;
+  for(uint i = 0; ; i++) {
+    // Cout Parameters {{{
     cout << endl;
     cout << "---------------------------" << endl;
     cout << "step: " << i << endl;
-    cout << "p: " << p << endl;
+    cout << "pi: " << pi << endl;
     cout << "A: " << A << endl;
     cout << "c_mu: " << c_mu << endl;
     //cout << "c_sigma: " << c_sigma << endl;
     cout << "B: " << B << endl;
-    //cout << "v_mu: " << v_mu << endl;
-    cout << "v_sigma: " << v_sigma << endl;
+    //cout << "q_mu: " << q_mu << endl;
+    cout << "q_sigma: " << q_sigma << endl;
+    //cout << "p_mu: " << p_mu << endl;
+    cout << "p_sigma: " << p_sigma << endl;
+    // }}}
+    // COMPUTE EVIDENCES {{{
+    //computeEvidences(rho, obs, theta);
+    for(uint t = 0; t < T; t++) {
+      for(uint j = 0; j < J; j++) {
+        rho_y_p(t, j) = ::exp(
+            -.5 * MT::sqr(pVar(t) - p_mu(j)) / MT::sqr(p_sigma(j))
+          );
+        rho_y_q(t, j) = ::exp(
+            -.5 * MT::sqr(qVar(t) - q_mu(j)) / MT::sqr(q_sigma(j))
+          );
+        //rho_y_d(t, j) = ::exp(
+            //-.5 * MT::sqr(qD(t)) / MT::sqr(d_sigma(j))
+          //);
+      }
+    }
+    rho_y_pqd = rho_y_p % rho_y_q; // % rho_y_d;
+    for(uint t = 0; t < T; t++) {
+      for(uint k = 0; k < K; k++)
+        rho_z_c(t, k) = ::exp(
+            -.5 * MT::sqr(c(t) - c_mu(k)) / (c_sigma(k) * c_sigma(k))
+            );
+      rho_z_cpq[t]() = rho_z_c[t] % (~B * rho_y_pqd[t]);
+      rho_z_cypq[t]() = B % (rho_y_pqd[t] ^ rho_z_c[t]);
+    }
+    // }}}
+    // E-STEP {{{
+    //Estep(ql, theta, rho);
+    a[0]() = pi;   //initialization of alpha
+    b[T-1]() = 1; //initialization of beta
+    //--- fwd and bwd iterations:
+    for(uint t = 1; t < T; t++) {
+      a[t]() =  A * (rho_z_cpq[t-1] % a[t-1]);
+      normalizeDist(a[t]());
+    }
+    for(uint t = T-1; t--; ) {
+      b[t]() = ~A * (rho_z_cpq[t+1] % b[t+1]);
+      normalizeDist(b[t]());
+    }
 
-    computeEvidences(rho, c, v, theta);
-    Estep(ql, theta, rho);
-    Mstep(theta, ql, c, v);
+    for(uint t = 0; t < T; t++) {
+      qz[t]() = a[t] % rho_z_cpq[t] % b[t];
+      // TODO is this right? shouldn't there be a rho_y somewhere?
+      qzy[t]() = repmat(a[t] % b[t], 1, J) % ~rho_z_cypq[t];
+      qy[t]() = sum(qzy[t], 0);
+      normalizeDist(qz[t]());
+      normalizeDist(qzy[t]());
+      normalizeDist(qy[t]());
+    }
+    for(uint t = 0; t < T-1; t++) {
+      qzz[t]() = A % ( (rho_z_cpq[t+1] % b[t+1]) ^ (a[t] % rho_z_cpq[t]) );
+      normalizeDist(qzz[t]());
+    }
+    // }}}
+    // M-STEP {{{
+    //Mstep(theta, ql, obs);
+    pi = qz[0];
+
+    pz.setZero();
+    pzz.setZero();
+    for(uint t = 0; t < T-1; t++) {
+      pz += qz[t];
+      pzz += qzz[t];
+    }
+    for(uint k = 0; k < K; k++)
+      for(uint l = 0; l < K; l++)
+        A(k, l) = pzz(k, l) / pz(l);
+
+    arr w(K,T);
+    arr qz_sum = sum(qz, 0);
+    arr qzy_sum = sum(qzy, 0).reshape(K, J);
+
+    for(uint t = 0; t < T; t++)
+      for(uint k = 0; k < K; k++)
+        w(k, t) = qz(t, k) / qz_sum(k);
+
+    //c_mu = w*c;
+    //c_sigma = w*(y%y) - mu%mu;
+
+    /*
+    arr e = qzy_sum[0];
+    cout << "THESE SHOULD BE THE SAME: " << endl;
+    cout << "qz_sum(0): " << qz_sum(0) << endl;
+    cout << "sum(e): " << sum(e) << endl;
+    e = qzy_sum[0] / qz_sum(0);
+    cout << "e: " << e << endl;
+    cout << "sum(e): " << sum(e) << endl;
+    e = qzy_sum[0];
+    normalizeDist(e);
+    cout << "e: " << e << endl;
+    cout << "sum(e): " << sum(e) << endl;
+    //normalizeDist(e);
+    for(uint j = 0; j < J; j++)
+      B(j, 0) = e(j);
+    */
+
+    // TODO NB: activating this breaks viterbi.....
+    /*
+    for(uint j = 0; j < J; j++) {
+      double n = 0, d = 0;
+      for(uint t = 0; t < T; t++) {
+        n += qy(t, j) * q(t) * q(t);
+        d += qy(t, j);
+      }
+      q_sigma(j) = sqrt(n / d);
+    }
+
+    for(uint j = 0; j < J; j++) {
+      double n = 0, d = 0;
+      for(uint t = 0; t < T; t++) {
+        n += qy(t, j) * p(t) * p(t);
+        d += qy(t, j);
+      }
+      p_sigma(j) = sqrt(n / d);
+    }
+    */
+    // }}}
+
+    if(i && sumOfSqr(qz-prev_qz) < 1e-10) break;
+    prev_qz = qz;
+  }
+  cout << endl;
+  cout << "DONE!" << endl;
+
+  // Viterbi {{{
+  //viterbi(vit, theta, rho, c, q);
+  double m;
+  int mi;
+  arr wz(T, K), wzind(T, K), temp;
+  cout << "pi: " << pi << endl;
+  cout << "log(pi): " << log(pi) << endl;
+  cout << "rho_z_cpq[0]: " << rho_z_cpq[0] << endl;
+  cout << "log(rho_z_cpq[0]): " << log(rho_z_cpq[0]) << endl;
+
+  wz[0]() = pi + log(rho_z_cpq[0]);
+  for(uint t = 1; t < T; t++) {
+    temp = log(A) + ~repmat(wz[t-1], 1, K); // TODO is this necessary? test
+
+    wz[t]() = log(rho_z_cpq[t]);
+    for(uint k = 0; k < K; k++) {
+      m = temp(k, 0);
+      mi = 0;
+      for(uint kk = 1; kk < K; kk++) {
+        if(m < temp(k, kk)) {
+          m = temp(k, kk);
+          mi = kk;
+        }
+      }
+      wz(t, k) += m;
+      wzind(t, k) = mi;
+    }
   }
 
-  viterbiZ(vit, theta, rho, c, v);
+  vit.resize(T);
+  vit(T-1) = (wz(T-1, 0) > wz(T-1, 1))? 0: 1;
+  for(uint t = T-1; t > 0; t--)
+    vit(t-1) = wzind(t, vit(t));
+  // }}}
 }
 
-void KeyFramer::viterbiZ(uintA &vit, arrL &theta, arrL &rho, const arr &c, const arr &v) {
-  arr p, A, B;
-  p.referTo(*theta(0));
+void KeyFramer::viterbi(uintA &vit, arrL &theta, arrL &rho, const arr &c, const arr &v) {
+  arr pi, A, B;
+  pi.referTo(*theta(0));
   A.referTo(*theta(1));
   B.referTo(*theta(4));
 
@@ -839,84 +1021,12 @@ void KeyFramer::viterbiZ(uintA &vit, arrL &theta, arrL &rho, const arr &c, const
   double m;
   int mi;
   arr wz(T, K), wzind(T, K), temp;
-  cout << "p: " << p << endl;
-  cout << "log(p): " << log(p) << endl;
+  cout << "pi: " << pi << endl;
+  cout << "log(pi): " << log(pi) << endl;
   cout << "rho_z_cv[0]: " << rho_z_cv[0] << endl;
   cout << "log(rho_z_cv[0]): " << log(rho_z_cv[0]) << endl;
 
-  wz[0]() = p + log(rho_z_cv[0]);
-  // TODO this shouldn't be necessary
-  //for(uint k = 0; k < K; k++)
-    //wzind(0, k) = k;
-
-  //cout << "wz[0]: " << wz[0] << endl;
-  //cout << "repmat: " << ~repmat(wz[0], 1, 2) << endl;
-  for(uint t = 1; t < T; t++) {
-    temp = log(A) + ~repmat(wz[t-1], 1, K); // TODO is this necessary? test
-
-    wz[t]() = log(rho_z_cv[t]);
-    for(uint k = 0; k < K; k++) {
-      m = temp(k, 0);
-      mi = 0;
-      for(uint kk = 1; kk < K; kk++) {
-        if(m < temp(k, kk)) {
-          m = temp(k, kk);
-          mi = kk;
-        }
-      }
-      wz(t, k) += m;
-      wzind(t, k) = mi;
-    }
-    //cout << "wzind[" << t << "]: " << wzind[t] << endl;
-  }
-
-  vit.resize(T);
-  vit(T-1) = (wz(T-1, 0) > wz(T-1, 1))? 0: 1;
-  for(uint t = T-1; t > 0; t--)
-    vit(t-1) = wzind(t, vit(t));
-}
-
-/*
-void KeyFramer::viterbiZY(uintA &vit, arrL &theta, arrL &rho, const arr &c, const arr &v) {
-  arr p, A, B;
-  p.referTo(*theta(0));
-  A.referTo(*theta(1));
-  B.referTo(*theta(4));
-
-  uint T = c.d0, K = A.d0, J = B.d0;
-
-  arr rho_z_cv, rho_y_v;
-  rho_z_cv.referTo(*rho(1));
-  rho_y_v.referTo(*rho(2));
-
-  double m;
-  int mi;
-  arr wz(T, K), wy(T, J), wzind(T, K), wyind(T, K), temp;
-  cout << "p: " << p << endl;
-  cout << "log(p): " << log(p) << endl;
-  cout << "rho_z_cv[0]: " << rho_z_cv[0] << endl;
-  cout << "log(rho_z_cv[0]): " << log(rho_z_cv[0]) << endl;
-
-  wy[0]() = log(rho_y_v[0]);
-  temp = log(B) + ~repmat(wy[0], 1, K);
-  for(uint k = 0; k < K; k++) {
-    m = temp(k, 0);
-    mi = 0;
-    for(uint j = 1; j < J; j++) {
-      if(m < temp(k, j)) {
-        m = temp(k, j);
-        mi = j;
-      }
-    }
-    wz[0]() = log(p) + log(rho_z_cv[0]);
-    wyind(0, k) = mi;
-  }
-  // TODO this shouldn't be necessary
-  //for(uint k = 0; k < K; k++)
-    //wzind(0, k) = k;
-
-  //cout << "wz[0]: " << wz[0] << endl;
-  //cout << "repmat: " << ~repmat(wz[0], 1, 2) << endl;
+  wz[0]() = pi + log(rho_z_cv[0]);
 
   for(uint t = 1; t < T; t++) {
     temp = log(A) + ~repmat(wz[t-1], 1, K); // TODO is this necessary? test
@@ -934,7 +1044,6 @@ void KeyFramer::viterbiZY(uintA &vit, arrL &theta, arrL &rho, const arr &c, cons
       wz(t, k) += m;
       wzind(t, k) = mi;
     }
-    //cout << "wzind[" << t << "]: " << wzind[t] << endl;
   }
 
   vit.resize(T);
@@ -942,15 +1051,21 @@ void KeyFramer::viterbiZY(uintA &vit, arrL &theta, arrL &rho, const arr &c, cons
   for(uint t = T-1; t > 0; t--)
     vit(t-1) = wzind(t, vit(t));
 }
-*/
 
-void KeyFramer::computeEvidences(arrL &rho, const arr &c, const arr &v, const arrL &theta) {
-  arr c_mu, c_sigma, B, v_mu, v_sigma;
+void KeyFramer::computeEvidences(arrL &rho, const arrL &obs, const arrL &theta) {
+  arr c, q, p;
+  c.referTo(*obs(0));
+  q.referTo(*obs(1));
+  p.referTo(*obs(2));
+
+  arr c_mu, c_sigma, B, q_mu, q_sigma, p_mu, p_sigma;
   c_mu.referTo(*theta(2));
   c_sigma.referTo(*theta(3));
   B.referTo(*theta(4));
-  v_mu.referTo(*theta(5));
-  v_sigma.referTo(*theta(6));
+  q_mu.referTo(*theta(5));
+  q_sigma.referTo(*theta(6));
+  p_mu.referTo(*theta(7));
+  p_sigma.referTo(*theta(8));
 
   arr rho_z_c, rho_z_cv, rho_y_v, rho_z_cyv;
   // TODO correct referrals
@@ -960,20 +1075,19 @@ void KeyFramer::computeEvidences(arrL &rho, const arr &c, const arr &v, const ar
   rho_z_cyv.referTo(*rho(3));
   
   //-- evidences from observations
-  uint T = c.d0, K = c_mu.N, J = v_mu.N;
+  uint T = c.d0, K = c_mu.N, J = q_mu.N;
   for(uint t = 0; t < T; t++) {
     for(uint j = 0; j < J; j++)
       rho_y_v(t, j) = ::exp(
-          -.5 * MT::sqr(v(t) - v_mu(j)) / (v_sigma(j) * v_sigma(j))
+          -.5 * MT::sqr(q(t) - q_mu(j)) / (q_sigma(j) * q_sigma(j))
+          -.5 * MT::sqr(p(t) - p_mu(j)) / (p_sigma(j) * p_sigma(j))
         );
     for(uint k = 0; k < K; k++)
       rho_z_c(t, k) = ::exp(
           -.5 * MT::sqr(c(t) - c_mu(k)) / (c_sigma(k) * c_sigma(k))
           );
-    rho_z_cv[t]() = rho_z_c[t] * sum(rho_y_v[t]);
-    for(uint k = 0; k < K; k++)
-      for(uint j = 0; j < J; j++)
-        rho_z_cyv(t, j, k) = rho_z_c(t, k) * B(j, k) * rho_y_v(t, j);
+    rho_z_cv[t]() = rho_z_c[t] % (~B * rho_y_v[t]);
+    rho_z_cyv[t]() = B % (rho_y_v[t] ^ rho_z_c[t]);
   }
 }
 
@@ -990,8 +1104,8 @@ void KeyFramer::Estep(arrL &ql, const arrL &theta, const arrL &rho) {
   qzy.referTo(*ql(2));
   qy.referTo(*ql(3));
 
-  arr p, A, B;
-  p.referTo(*theta(0));
+  arr pi, A, B;
+  pi.referTo(*theta(0));
   A.referTo(*theta(1));
   B.referTo(*theta(4));
 
@@ -999,7 +1113,7 @@ void KeyFramer::Estep(arrL &ql, const arrL &theta, const arrL &rho) {
 
   // alpha and beta
   arr a(T, K), b(T, K);
-  a[0]() = p;   //initialization of alpha
+  a[0]() = pi;   //initialization of alpha
   b[T-1]() = 1; //initialization of beta
   //--- fwd and bwd iterations:
   for(uint t = 1; t < T; t++) {
@@ -1012,7 +1126,7 @@ void KeyFramer::Estep(arrL &ql, const arrL &theta, const arrL &rho) {
   }
 
   for(uint t = 0; t < T; t++) {
-    qz[t]() = a[t]() % rho_z_cv[t]() % b[t](); // %=element-wise multiplication
+    qz[t]() = a[t] % rho_z_cv[t] % b[t]; // %=element-wise multiplication
     for(uint k = 0; k < K; k++)
       for(uint j = 0; j < J; j++)
         qzy(t, k, j) = a(t, k) * b(t, k) * rho_z_cyv(t, j, k);
@@ -1032,22 +1146,28 @@ void KeyFramer::Estep(arrL &ql, const arrL &theta, const arrL &rho) {
     normalizeDist(qzz[t]());
 }
 
-void KeyFramer::Mstep(arrL& theta, const arrL &ql, const arr& c, const arr &v){
+void KeyFramer::Mstep(arrL& theta, const arrL &ql, const arrL &obs){
+  arr c, q, p;
+  c.referTo(*obs(0));
+  q.referTo(*obs(1));
+  p.referTo(*obs(2));
+
   arr qz, qzz, qzy, qy;
   qz.referTo(*ql(0));
   qzz.referTo(*ql(1));
   qzy.referTo(*ql(2));
   qy.referTo(*ql(3));
 
-  arr p, A, c_mu, B, v_sigma;
-  p.referTo(*theta(0));
+  arr pi, A, c_mu, B, q_sigma, p_sigma;
+  pi.referTo(*theta(0));
   A.referTo(*theta(1));
   c_mu.referTo(*theta(2));
   B.referTo(*theta(4));
-  v_sigma.referTo(*theta(6));
+  q_sigma.referTo(*theta(6));
+  p_sigma.referTo(*theta(8));
 
   uint T = c.d0, K = A.d0, J = B.d0;
-  p = qz[0];
+  pi = qz[0];
 
   arr pz(K), pzz(K, K);
   pz.setZero();
@@ -1089,14 +1209,25 @@ void KeyFramer::Mstep(arrL& theta, const arrL &ql, const arr& c, const arr &v){
   */
 
   // TODO NB: activating this breaks viterbi.....
+  /*
   for(uint j = 0; j < J; j++) {
     double n = 0, d = 0;
     for(uint t = 0; t < T; t++) {
-      n += qy(t, j) * v(t) * v(t);
+      n += qy(t, j) * q(t) * q(t);
       d += qy(t, j);
     }
-    v_sigma(j) = sqrt(n / d);
+    q_sigma(j) = sqrt(n / d);
   }
+
+  for(uint j = 0; j < J; j++) {
+    double n = 0, d = 0;
+    for(uint t = 0; t < T; t++) {
+      n += qy(t, j) * p(t) * p(t);
+      d += qy(t, j);
+    }
+    p_sigma(j) = sqrt(n / d);
+  }
+  */
 
   //cout << "=========================" << endl;
   //cout << "q: " << q[1] << endl;
