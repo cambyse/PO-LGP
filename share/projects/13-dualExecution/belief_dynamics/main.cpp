@@ -33,6 +33,16 @@ void integrate(){
 
 struct MiniBeliefProblem:KOrderMarkovFunction {
   double tau;
+  enum BeliefRewardModel { none, beliefGoal, sticky } mode;
+  double margin, alpha, stickyPrec, beliefDynPrec, beliefGoalPrec, posGoalPrec;
+  MiniBeliefProblem(){
+    margin = MT::getParameter<double>("margin", .01);
+    alpha = MT::getParameter<double>("alpha", 10.);
+    stickyPrec =  MT::getParameter<double>("stickyPrec", .01);
+    beliefDynPrec =  MT::getParameter<double>("belDynPrec", 10.);
+    beliefGoalPrec =  MT::getParameter<double>("belGoalPrec", 10.);
+    posGoalPrec =  MT::getParameter<double>("posGoalPrec", 10.);
+  }
   void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);
 
   uint get_T(){ return 400; }
@@ -44,7 +54,11 @@ struct MiniBeliefProblem:KOrderMarkovFunction {
 };
 
 uint MiniBeliefProblem::dim_phi(uint t){
-  if(t==get_T()) return 5;
+  if(t==get_T()){
+    if(mode==none) return 4;
+    return 5;
+  }
+  if(mode==sticky) return 4;
   return 3;
 }
 
@@ -56,16 +70,17 @@ void MiniBeliefProblem::phi_t(arr& phi, arr& J, uint t, const arr& x_bar){
   phi.append(H*(x_bar(2,0)-2.*x_bar(1,0)+x_bar(0,0))); //penalize acceleration
 
   //-- belief transition costs
-  double m=.1;
-  double xi = MT::sigmoid(-x_bar(1,0)/m+1);
-  double belPrec=100.;
-  phi.append(belPrec*(x_bar(2,1) - (1.-tau*xi)*x_bar(1,1) - tau*b0)); //penalize acceleration
+  double xi = MT::sigmoid(-x_bar(1,0)/margin+1);
+  phi.append(beliefDynPrec*(x_bar(2,1) - (1.-tau*alpha*xi)*x_bar(1,1) - tau*b0)); //penalize acceleration
+
+  //-- final pos cost
+  if(t==T) phi.append(posGoalPrec*(x_bar(2,0)-.1));
 
   //-- belief final costs
-  if(t==T){
-    phi.append(x_bar(2,0));
-    phi.append(x_bar(2,1));
-  }
+  if(t==T && mode==beliefGoal) phi.append(beliefGoalPrec*x_bar(2,1));
+
+  //-- sticky reward
+  if(mode==sticky) phi.append(stickyPrec*(x_bar(2,0)+.2));
 
   //-- constraint
   phi.append(-x_bar(2,0));
@@ -79,14 +94,17 @@ void MiniBeliefProblem::phi_t(arr& phi, arr& J, uint t, const arr& x_bar){
     J(0,2,0) = H*1.;  J(0,1,0) = -H*2.;  J(0,0,0) = H*1.;
 
     //-- belief transition costs
-    J(1,2,1) = belPrec;  J(1,1,1) = -belPrec*(1.-tau*xi);
-    J(1,1,0) = belPrec * (tau*x_bar(1,1)) * xi*(1.-xi)/m*(-1.);
+    J(1,2,1) = beliefDynPrec;  J(1,1,1) = -beliefDynPrec*(1.-tau*alpha*xi);
+    J(1,1,0) = beliefDynPrec * (tau*x_bar(1,1)) * alpha*xi*(1.-xi)/margin*(-1.);
+
+    //-- final pos cost
+    if(t==T) J(2,2,0) = posGoalPrec;
 
     //-- belief final costs
-    if(t==T){
-      J(2,2,0)=1.;
-      J(3,2,1)=1.;
-    }
+    if(t==T && mode==beliefGoal) J(3,2,1) = beliefGoalPrec;
+
+    //-- sticky reward
+    if(mode==sticky) J(phi.N-2,2,0) = stickyPrec;
 
     //-- constraint
     J(phi.N-1,2,0) = -1.;
@@ -98,6 +116,7 @@ void MiniBeliefProblem::phi_t(arr& phi, arr& J, uint t, const arr& x_bar){
 void optim(){
 
   MiniBeliefProblem P;
+  P.mode = (MiniBeliefProblem::BeliefRewardModel)MT::getParameter<int>("mode",1);
   P.tau=.01;
   uint T=P.get_T();
   uint n=P.dim_x();
@@ -112,11 +131,13 @@ void optim(){
   //-- optimize
   rndUniform(x,-10.,-1.);
   x=1.;
-  optConstrained(x, Convert(P), OPT(verbose=2, useAdaptiveDamping=false, constrainedMethod=augmentedLag));
-//  optNewton(x, Convert(P), OPT(verbose=2, useAdaptiveDamping=true));
+  arr dual;
+  optConstrained(x, dual, Convert(P), OPT(verbose=2, useAdaptiveDamping=false, constrainedMethod=augmentedLag));
 
-  write(LIST<arr>(x),"z.output");
-  gnuplot("plot 'z.output' us 1,'z.output' us 2", true, true);
+  for(double& x:dual) if(x>0.) x=1.;
+
+  write(LIST<arr>(x, dual),"z.output");
+  gnuplot("plot [:][-.1:] 'z.output' us 1 t 'position','' us 2 t 'uncertainty', '' us 3 t 'dual>0'", true, true);
 }
 
 //===========================================================================

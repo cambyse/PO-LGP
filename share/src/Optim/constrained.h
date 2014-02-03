@@ -51,4 +51,4 @@ struct PhaseOneProblem:ConstrainedProblem{
 // Solvers
 //
 
-void optConstrained(arr& x, ConstrainedProblem& P, OptOptions opt);
+void optConstrained(arr& x, arr &dual, ConstrainedProblem& P, OptOptions opt);

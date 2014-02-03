@@ -89,7 +89,7 @@ double PhaseOneProblem::fc(arr& df, arr& Hf, arr& meta_g, arr& meta_Jg, const ar
 
 const char* MethodName[]={ "NoMethod", "SquaredPenalty", "AugmentedLagrangian", "LogBarrier" };
 
-void optConstrained(arr& x, ConstrainedProblem& P, OptOptions opt){
+void optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
   UnconstrainedProblem UCP(P);
 
   //switch on penalty terms
@@ -117,5 +117,7 @@ void optConstrained(arr& x, ConstrainedProblem& P, OptOptions opt){
     //stopping criteron
     if(k>10 && absMax(x_old-x)<opt.stopTolerance){ cout << " --- optConstrained StoppingCriterion Delta<" <<opt.stopTolerance <<endl;  break; }
   }
+
+  if(&dual) dual=UCP.lambda;
 }
 

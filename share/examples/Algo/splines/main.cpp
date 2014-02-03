@@ -121,11 +121,31 @@ void testPath(){
   arr X(11,1);
   rndUniform(X,-1,1,false);
 
-//  struct
   MT::Path P(X);
   cout <<"times = " <<P.times
       <<"\npoints= " <<P.points <<endl;
 
+  //-- gradient check of velocity
+  struct TestGrad:VectorFunction{
+    MT::Path &P;
+    TestGrad(MT::Path& _P):P(_P){}
+    void fv(arr& y, arr& J, const arr& x){
+      CHECK(x.N==1,"");
+      y = P.getPosition(x(0));
+      if(&J) J = P.getVelocity(x(0));
+    }
+  } Test(P);
+  for(uint k=0;k<10;k++){
+    arr x(1);
+    x(0) = rnd.uni();
+    checkJacobian(Test, x, 1e-4);
+  }
+
+  //-- transform spline
+  P.transform_CurrentBecomes_EndFixed(ARR(1.), .25);
+  P.transform_CurrentFixed_EndBecomes(ARR(-1.), .25);
+
+  //-- write spline
   MT::arrayBrackets="  ";
   FILE("z.points") <<X;
 
