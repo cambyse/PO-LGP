@@ -701,12 +701,12 @@ KeyFrameL KeyFramer::getKeyFrames(const uintA &vit) {
 
   bool kf_flag = false;
   for(uint f = 0; f < vit.d0; f++) {
-    if(!kf_flag && vit(f, 1) > .5) {
+    if(!kf_flag && vit(f) > .5) {
       kf = new KeyFrame(f);
       keyframes.append(kf);
       kf_flag = true;
     }
-    else if(kf_flag && vit(f, 1) < .5) {
+    else if(kf_flag && vit(f) < .5) {
       kf = new KeyFrame(f);
       keyframes.append(kf);
       kf_flag = false;
@@ -801,8 +801,8 @@ void KeyFramer::EM(uintA &vit, const String &b1, const String &b2, uint wlen) {
   A.reshape(2, 2);
   c_mu = { 0, 1 };
   c_sigma = { 1, .2 };
-  B = { .2, 0,
-        .8, 1 };
+  B = { .6, .01,
+        .4, .99 };
   B.reshape(2, 2);
   sigma_small = .3; sigma_big = .7;
   p_mu = {0, 0}; p_sigma = { sigma_big, sigma_small };
@@ -1005,234 +1005,5 @@ void KeyFramer::EM(uintA &vit, const String &b1, const String &b2, uint wlen) {
   for(uint t = T-1; t > 0; t--)
     vit(t-1) = wzind(t, vit(t));
   // }}}
-}
-
-void KeyFramer::viterbi(uintA &vit, arrL &theta, arrL &rho, const arr &c, const arr &v) {
-  arr pi, A, B;
-  pi.referTo(*theta(0));
-  A.referTo(*theta(1));
-  B.referTo(*theta(4));
-
-  uint T = c.d0, K = A.d0, J = B.d0;
-
-  arr rho_z_cv;
-  rho_z_cv.referTo(*rho(1));
-
-  double m;
-  int mi;
-  arr wz(T, K), wzind(T, K), temp;
-  cout << "pi: " << pi << endl;
-  cout << "log(pi): " << log(pi) << endl;
-  cout << "rho_z_cv[0]: " << rho_z_cv[0] << endl;
-  cout << "log(rho_z_cv[0]): " << log(rho_z_cv[0]) << endl;
-
-  wz[0]() = pi + log(rho_z_cv[0]);
-
-  for(uint t = 1; t < T; t++) {
-    temp = log(A) + ~repmat(wz[t-1], 1, K); // TODO is this necessary? test
-
-    wz[t]() = log(rho_z_cv[t]);
-    for(uint k = 0; k < K; k++) {
-      m = temp(k, 0);
-      mi = 0;
-      for(uint kk = 1; kk < K; kk++) {
-        if(m < temp(k, kk)) {
-          m = temp(k, kk);
-          mi = kk;
-        }
-      }
-      wz(t, k) += m;
-      wzind(t, k) = mi;
-    }
-  }
-
-  vit.resize(T);
-  vit(T-1) = (wz(T-1, 0) > wz(T-1, 1))? 0: 1;
-  for(uint t = T-1; t > 0; t--)
-    vit(t-1) = wzind(t, vit(t));
-}
-
-void KeyFramer::computeEvidences(arrL &rho, const arrL &obs, const arrL &theta) {
-  arr c, q, p;
-  c.referTo(*obs(0));
-  q.referTo(*obs(1));
-  p.referTo(*obs(2));
-
-  arr c_mu, c_sigma, B, q_mu, q_sigma, p_mu, p_sigma;
-  c_mu.referTo(*theta(2));
-  c_sigma.referTo(*theta(3));
-  B.referTo(*theta(4));
-  q_mu.referTo(*theta(5));
-  q_sigma.referTo(*theta(6));
-  p_mu.referTo(*theta(7));
-  p_sigma.referTo(*theta(8));
-
-  arr rho_z_c, rho_z_cv, rho_y_v, rho_z_cyv;
-  // TODO correct referrals
-  rho_z_c.referTo(*rho(0));
-  rho_z_cv.referTo(*rho(1));
-  rho_y_v.referTo(*rho(2));
-  rho_z_cyv.referTo(*rho(3));
-  
-  //-- evidences from observations
-  uint T = c.d0, K = c_mu.N, J = q_mu.N;
-  for(uint t = 0; t < T; t++) {
-    for(uint j = 0; j < J; j++)
-      rho_y_v(t, j) = ::exp(
-          -.5 * MT::sqr(q(t) - q_mu(j)) / (q_sigma(j) * q_sigma(j))
-          -.5 * MT::sqr(p(t) - p_mu(j)) / (p_sigma(j) * p_sigma(j))
-        );
-    for(uint k = 0; k < K; k++)
-      rho_z_c(t, k) = ::exp(
-          -.5 * MT::sqr(c(t) - c_mu(k)) / (c_sigma(k) * c_sigma(k))
-          );
-    rho_z_cv[t]() = rho_z_c[t] % (~B * rho_y_v[t]);
-    rho_z_cyv[t]() = B % (rho_y_v[t] ^ rho_z_c[t]);
-  }
-}
-
-void KeyFramer::Estep(arrL &ql, const arrL &theta, const arrL &rho) {
-  arr rho_z_c, rho_z_cv, rho_y_v, rho_z_cyv;
-  rho_z_c.referTo(*rho(0));
-  rho_z_cv.referTo(*rho(1));
-  rho_y_v.referTo(*rho(2));
-  rho_z_cyv.referTo(*rho(3));
-
-  arr qz, qzz, qzy, qy;
-  qz.referTo(*ql(0));
-  qzz.referTo(*ql(1));
-  qzy.referTo(*ql(2));
-  qy.referTo(*ql(3));
-
-  arr pi, A, B;
-  pi.referTo(*theta(0));
-  A.referTo(*theta(1));
-  B.referTo(*theta(4));
-
-  uint T = qz.d0, K = A.d0, J = B.d0;
-
-  // alpha and beta
-  arr a(T, K), b(T, K);
-  a[0]() = pi;   //initialization of alpha
-  b[T-1]() = 1; //initialization of beta
-  //--- fwd and bwd iterations:
-  for(uint t = 1; t < T; t++) {
-    a[t]() =  A * (rho_z_cv[t-1] % a[t-1]); // %=element-wise multiplication, *=inner product
-    normalizeDist(a[t]()); //for numerical stability
-  }
-  for(uint t = T-1; t--; ) {
-    b[t]() = ~A * (rho_z_cv[t+1] % b[t+1]);
-    normalizeDist(b[t]());
-  }
-
-  for(uint t = 0; t < T; t++) {
-    qz[t]() = a[t] % rho_z_cv[t] % b[t]; // %=element-wise multiplication
-    for(uint k = 0; k < K; k++)
-      for(uint j = 0; j < J; j++)
-        qzy(t, k, j) = a(t, k) * b(t, k) * rho_z_cyv(t, j, k);
-    qy[t]() = sum(qzy[t], 0);
-  }
-  for(uint t = 0; t < T-1; t++)
-    for(uint k = 0; k < K; k++)
-      for(uint l = 0; l < K; l++)
-        qzz(t, k, l) = a(t, l)*rho_z_cv(t, l)*A(k, l)*rho_z_cv(t+1, k)*b(t+1, k);
-
-  for(uint t = 0; t < T; t++) {
-    normalizeDist(qz[t]());
-    normalizeDist(qzy[t]());
-    normalizeDist(qy[t]());
-  }
-  for(uint t = 0; t < T-1; t++)
-    normalizeDist(qzz[t]());
-}
-
-void KeyFramer::Mstep(arrL& theta, const arrL &ql, const arrL &obs){
-  arr c, q, p;
-  c.referTo(*obs(0));
-  q.referTo(*obs(1));
-  p.referTo(*obs(2));
-
-  arr qz, qzz, qzy, qy;
-  qz.referTo(*ql(0));
-  qzz.referTo(*ql(1));
-  qzy.referTo(*ql(2));
-  qy.referTo(*ql(3));
-
-  arr pi, A, c_mu, B, q_sigma, p_sigma;
-  pi.referTo(*theta(0));
-  A.referTo(*theta(1));
-  c_mu.referTo(*theta(2));
-  B.referTo(*theta(4));
-  q_sigma.referTo(*theta(6));
-  p_sigma.referTo(*theta(8));
-
-  uint T = c.d0, K = A.d0, J = B.d0;
-  pi = qz[0];
-
-  arr pz(K), pzz(K, K);
-  pz.setZero();
-  pzz.setZero();
-  for(uint t = 0; t < T-1; t++) {
-    pz += qz[t];
-    pzz += qzz[t];
-  }
-  for(uint k = 0; k < K; k++)
-    for(uint l = 0; l < K; l++)
-      A(k, l) = pzz(k, l) / pz(l);
-
-  arr w(K,T);
-  arr qz_sum = sum(qz, 0);
-  arr qzy_sum = sum(qzy, 0).reshape(K, J);
-
-  for(uint t = 0; t < T; t++)
-    for(uint k = 0; k < K; k++)
-      w(k, t) = qz(t, k) / qz_sum(k);
-
-  c_mu = w*c;
-  //c_sigma = w*(y%y) - mu%mu;
-
-  /*
-  arr e = qzy_sum[0];
-  cout << "THESE SHOULD BE THE SAME: " << endl;
-  cout << "qz_sum(0): " << qz_sum(0) << endl;
-  cout << "sum(e): " << sum(e) << endl;
-  e = qzy_sum[0] / qz_sum(0);
-  cout << "e: " << e << endl;
-  cout << "sum(e): " << sum(e) << endl;
-  e = qzy_sum[0];
-  normalizeDist(e);
-  cout << "e: " << e << endl;
-  cout << "sum(e): " << sum(e) << endl;
-  //normalizeDist(e);
-  for(uint j = 0; j < J; j++)
-    B(j, 0) = e(j);
-  */
-
-  // TODO NB: activating this breaks viterbi.....
-  /*
-  for(uint j = 0; j < J; j++) {
-    double n = 0, d = 0;
-    for(uint t = 0; t < T; t++) {
-      n += qy(t, j) * q(t) * q(t);
-      d += qy(t, j);
-    }
-    q_sigma(j) = sqrt(n / d);
-  }
-
-  for(uint j = 0; j < J; j++) {
-    double n = 0, d = 0;
-    for(uint t = 0; t < T; t++) {
-      n += qy(t, j) * p(t) * p(t);
-      d += qy(t, j);
-    }
-    p_sigma(j) = sqrt(n / d);
-  }
-  */
-
-  //cout << "=========================" << endl;
-  //cout << "q: " << q[1] << endl;
-  //cout << "q_y: " << q_y[1] << endl;
-  //cout << "B: " << B[0] << endl;
-  //cout << "=========================" << endl;
 }
 

@@ -55,10 +55,6 @@ struct KeyFramer {
   KeyFrameL getKeyFrames(const uintA &vit);
   void saveKeyFrameScreens(const KeyFrameL &keyframes, uint df = 60);
 
-  void computeEvidences(arrL &rho, const arrL &obs, const arrL &theta);
-  void Estep(arrL &ql, const arrL &theta, const arrL &rho);
-  void Mstep(arrL &theta, const arrL &ql, const arrL &obs);
   void EM(uintA &vit, const String &b1, const String &b2, uint wlen);
-  void viterbi(uintA &vit, arrL &theta, arrL &rho, const arr &c, const arr &v);
 };
 
