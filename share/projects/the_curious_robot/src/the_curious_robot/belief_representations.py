@@ -95,8 +95,8 @@ class JointBel(probdist.CategoricalDist):
             return
 
         elif obs_classification == "pris":
+            direction = np.array([0, 0, 0])
             for param in articulation_response.model.params:
-                direction = np.array([0, 0, 0])
                 if param.name == "prismatic_dir.x":
                     direction[0] = param.value
                 if param.name == "prismatic_dir.y":
@@ -105,6 +105,7 @@ class JointBel(probdist.CategoricalDist):
                     direction[2] = param.value
             trajectory_1D = util.prismatic_to_position(projected_trajectory,
                                                        direction)
+            print trajectory_1D
             self.pris_model.add_observations(trajectory_1D, dt)
 
             mu, sigma = self.pris_model.get_approx_gaussian("min_limit")
@@ -115,9 +116,9 @@ class JointBel(probdist.CategoricalDist):
             self.pris_damping = Gauss(mu, sigma)
 
         elif obs_classification == "rot":
+            axis_pos = np.array([0., 0., 0.])
+            axis = np.array([0., 0., 0.])
             for param in articulation_response.model.params:
-                axis_pos = np.array([0, 0, 0])
-                axis = np.array([0, 0, 0])
                 if param.name == "rot_center.x":
                     axis_pos[0] = param.value
                 elif param.name == "rot_center.y":
@@ -131,11 +132,15 @@ class JointBel(probdist.CategoricalDist):
                 elif param.name == "rot_axis.z":
                     axis[2] = param.value
                 elif param.name == "rot_axis.w":
-                    axis_w = param.value
+                    axis_w = float(param.value)
+            print("Axis (before): ", axis)
             axis = axis / axis_w
+            print("Axis (after): ", axis)
+
             trajectory_angle = util.rotational_to_angle(projected_trajectory,
                                                         axis,
                                                         axis_pos)
+            print trajectory_angle
             self.rot_model.add_observations(trajectory_angle, dt)
 
             mu, sigma = self.rot_model.get_approx_gaussian("min_limit")
