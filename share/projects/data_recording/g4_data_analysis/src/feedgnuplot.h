@@ -27,9 +27,10 @@ StreamCollector& StreamCollector::operator<<(const T &t) {
 struct Feedgnuplot {
   FILE *f;
 
-  bool lines, points, domain, dataid, autolegend;
+  bool lines, points, domain, dataid, autolegend, yrange;
   const char *title, *hardcopy;
   double stream;
+  double ymin, ymax;
 
   Feedgnuplot();
   ~Feedgnuplot();
@@ -43,6 +44,7 @@ struct Feedgnuplot {
   void setTitle(const char *s);
   void setHardcopy(const char *s);
   void setStream(double s);
+  void setYRange(double min, double max);
   void open();
 
   StreamCollector operator()();
