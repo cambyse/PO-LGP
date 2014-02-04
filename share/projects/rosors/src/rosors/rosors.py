@@ -77,12 +77,6 @@ class RosOrs(object):
                 res.shapes.append(parser.ors_shape_to_msg(ors_shape,
                                                           req.with_mesh))
             return res
-        if req.agent_number_set:
-            for shape_idx in self.graph.getShapeIdxByAgent(req.agent_number):
-                res.shapes.append(parser.ors_shape_to_msg(
-                                  self.graph.shapes[shape_idx],
-                                  req.with_mesh))
-            return res
 
         if req.name:
             ors_shape = self.graph.getShapeByName(req.name)
