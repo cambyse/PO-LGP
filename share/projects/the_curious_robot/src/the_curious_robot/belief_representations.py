@@ -116,7 +116,7 @@ class JointBel(probdist.CategoricalDist):
                                                        direction, self.start)
             vel = trajectory_1D[1] - trajectory_1D[0]
 
-            self.pris_model.add_observations(trajectory_1D, dt, 
+            self.pris_model.add_observations(trajectory_1D, dt,
                                              trajectory_1D[0], vel)
 
             mu, sigma = self.pris_model.get_approx_gaussian("min_limit")
