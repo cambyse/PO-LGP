@@ -78,7 +78,8 @@ class PickOOIActionServer(object):
                     with_mesh=False)
                 self.possible_oois = [shape.index
                                       for shape in all_shapes_msg.shapes
-                                      if shape.index not in range(34, 85)]
+                                      #if shape.index not in range(34, 85)
+                                      if shape.name not in ["base", "agent"]]
                 print self.possible_oois
 
         # select an ooi
