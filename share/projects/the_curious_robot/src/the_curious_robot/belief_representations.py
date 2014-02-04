@@ -296,6 +296,26 @@ class Belief(collections.OrderedDict):
         result += "=" * 60
         return result
 
+    def get_total_entropy(self):
+        """return the total weighted entropy for the belief."""
+        H_total = 0
+        for obj in self.itervalues():
+            P_static = obj.prob("static")
+            P = {
+                "static": P_static,
+                "movable": obj.prob("movable"),
+                "nil": obj.joint_bel.prob_cond("nil", ("nil", P_static)),
+                "rot": obj.joint_bel.prob_cond("rot", ("nil", P_static)),
+                "pris": obj.joint_bel.prob_cond("pris", ("nil", P_static))
+            }
+            H_gauss = obj.joint_bel.entropy_gauss()
+            H_total += (obj.entropy()
+                        + P["movable"] * obj.joint_bel.entropy()
+                        + P["rot"] * H_gauss["rot"]
+                        + P["pris"] * H_gauss["pris"]
+                        + P["nil"] * H_gauss["nil"])
+        return H_total
+
     # def iter_entropy_normalized(self, property_):
     #     """
     #     Return the entropy normalized between 0 and 1.
