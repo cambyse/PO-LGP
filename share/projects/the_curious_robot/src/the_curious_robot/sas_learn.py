@@ -148,7 +148,7 @@ class LearnActionServer(object):
         #rospy.loginfo(str(self.belief))
 
         # VISUALIZE
-        # self.visualize_object_type()
+        self.visualize_object_type()
         # self.visualize_object_entropy()
 
         self.gl.update()
@@ -161,10 +161,10 @@ class LearnActionServer(object):
         for obj_bel in self.belief.itervalues():
             ors_shape = obj_bel.ors_shape
 
-            if obj_bel.object_type.is_static():
-                ors_shape.set_color(0., 0., 0.)
-            else:
+            if obj_bel.is_static():
                 ors_shape.set_color(1., 1., 1.)
+            else:
+                ors_shape.set_color(1., 0., 0.)
 
     def visualize_object_entropy(self):
         """Colorize the shapes depending on the object_type entropy."""
