@@ -161,7 +161,7 @@ class RRTPlanner(object):
         mp_function = motion.MotionProblemFunction(problem)
         x = trajectory
         options = optim.OptOptions()
-        options.verbose = 2
+        options.verbose = 0
         options.stopIters = 40
         options.useAdaptiveDamping = False
         options.damping = 1e-0
