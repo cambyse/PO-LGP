@@ -65,8 +65,6 @@ class PickOOIActionServer(object):
 
     def get_agent_shapes(self):
         req = rosors.srv.ShapesRequest()
-        req.agent_number = 0
-        req.agent_number_set = True
         shapes = self.request_all_shapes(req)
         return [shape.index for shape in shapes.shapes]
 
@@ -77,7 +75,7 @@ class PickOOIActionServer(object):
         if self.possible_oois is None:
             with Timer("PICK: initial if", rospy.logdebug):
                 all_shapes_msg = self.request_all_shapes(
-                    with_mesh=False, agent_number_set=False)
+                    with_mesh=False)
                 self.possible_oois = [shape.index
                                       for shape in all_shapes_msg.shapes
                                       if shape.index not in range(34, 85)]
