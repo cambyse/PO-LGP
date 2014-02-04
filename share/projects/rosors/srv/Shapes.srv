@@ -3,8 +3,6 @@ int32 index
 int32 index_body
 string name
 bool with_mesh
-int32 agent_number
-bool agent_number_set
 
 ---
 ors_msgs/Shape[] shapes
