@@ -69,6 +69,8 @@ class JointBel(probdist.CategoricalDist):
         self.pris_limit_max = Gauss(2, std)
         self.pris_damping = Gauss(0, std)
 
+        self.start = None
+
         self.nil = Gauss(0, .05)
 
         # Scaling and Gaussians
@@ -84,6 +86,9 @@ class JointBel(probdist.CategoricalDist):
 
         pose_projected = articulation_response.model.track.pose_projected
         projected_trajectory = np.ndarray([len(pose_projected), 3])
+        if self.start is None:
+            self.start = projected_trajectory[0, :]
+
         for i, p in enumerate(pose_projected):
             projected_trajectory[i, 0] = p.position.x
             projected_trajectory[i, 1] = p.position.y
@@ -96,7 +101,7 @@ class JointBel(probdist.CategoricalDist):
             return
 
         elif obs_classification == "pris":
-            direction = np.array([0, 0, 0])
+            direction = np.array([0., 0., 0.])
             for param in articulation_response.model.params:
                 if param.name == "prismatic_dir.x":
                     direction[0] = param.value
@@ -105,9 +110,11 @@ class JointBel(probdist.CategoricalDist):
                 if param.name == "prismatic_dir.z":
                     direction[2] = param.value
             trajectory_1D = util.prismatic_to_position(projected_trajectory,
-                                                       direction)
-            print trajectory_1D
-            self.pris_model.add_observations(trajectory_1D, dt)
+                                                       direction, self.start)
+            vel = trajectory_1D[1] - trajectory_1D[0]
+
+            self.pris_model.add_observations(trajectory_1D, dt, 
+                                             trajectory_1D[0], vel)
 
             mu, sigma = self.pris_model.get_approx_gaussian("min_limit")
             self.pris_limit_min = Gauss(mu, sigma)
@@ -118,7 +125,7 @@ class JointBel(probdist.CategoricalDist):
 
         elif obs_classification == "rot":
             axis_pos = np.array([0., 0., 0.])
-            axis = np.array([0., 0., 0.])
+            axis = np.array([0., 0., 1.])
             for param in articulation_response.model.params:
                 if param.name == "rot_center.x":
                     axis_pos[0] = param.value
@@ -126,26 +133,37 @@ class JointBel(probdist.CategoricalDist):
                     axis_pos[1] = param.value
                 elif param.name == "rot_center.z":
                     axis_pos[2] = param.value
-                elif param.name == "rot_axis.x":
-                    axis[0] = param.value
-                elif param.name == "rot_axis.y":
-                    axis[1] = param.value
-                elif param.name == "rot_axis.z":
-                    axis[2] = param.value
-                elif param.name == "rot_axis.w":
-                    axis_w = float(param.value)
+                #elif param.name == "rot_axis.x":
+                    #axis[0] = param.value
+                #elif param.name == "rot_axis.y":
+                    #axis[1] = param.value
+                #elif param.name == "rot_axis.z":
+                    #axis[2] = param.value
+                #elif param.name == "rot_radius":
+                    #print("Radius: ", param.value)
 
+            print projected_trajectory
+            print axis
+            print axis_pos
             trajectory_angle = util.rotational_to_angle(projected_trajectory,
                                                         axis,
-                                                        axis_pos)
+                                                        axis_pos,
+                                                        self.start)
+
+            vel = trajectory_angle[1] - trajectory_angle[0]
+
             print trajectory_angle
-            self.rot_model.add_observations(trajectory_angle, dt)
+            self.rot_model.add_observations(trajectory_angle, dt,
+                                            trajectory_angle[0], vel)
 
             mu, sigma = self.rot_model.get_approx_gaussian("min_limit")
+            print("Min. Limit: ", mu, sigma)
             self.rot_limit_min = Gauss(mu, sigma)
             mu, sigma = self.rot_model.get_approx_gaussian("max_limit")
+            print("Max. Limit: ", mu, sigma)
             self.rot_limit_max = Gauss(mu, sigma)
             mu, sigma = self.rot_model.get_approx_gaussian("damping")
+            print("Damping:    ", mu, sigma)
             self.rot_damping = Gauss(mu, sigma)
 
     def fwd_model(self, key):

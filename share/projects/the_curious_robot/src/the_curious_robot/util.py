@@ -155,6 +155,7 @@ def create_track_msg(trajectory):
             t.pos,
             geometry_msgs.msg.Quaternion(0, 0, 0, 1)
         )
+        print pose
         msg.pose.append(pose)
     return msg
 
@@ -174,20 +175,33 @@ def shorten_trajectory(traj, num):
 #########################################################################
 # create 1D trajectories from real trajectories and the joint param.
 
-def rotational_to_angle(trajectory, axis, axis_pos):
-    start = (trajectory[0, :] - axis_pos) - \
-        np.dot(trajectory[0, :] - axis_pos, axis) * axis
+def _get_vector_from_axis(t, ap, a):
+    ts = t - ap
+    x = (np.dot(ts, a) * a) / (la.norm(a) * la.norm(a))
+    return (ts - x)
+
+
+def rotational_to_angle(trajectory, axis, axis_pos, start_pos):
+    start = _get_vector_from_axis(start_pos, axis_pos, axis)
+
     start_norm = la.norm(start)
     angle_trajectory = np.ndarray([trajectory.shape[0]])
 
     for i, t in enumerate(trajectory):
-        vector_to_axis = ((t - axis_pos) - np.dot((t - axis_pos), axis) * axis)
-        angle_trajectory[i] = np.dot(vector_to_axis, start) / \
-            (la.norm(vector_to_axis) * start_norm)
+        vector_from_axis = _get_vector_from_axis(t, axis_pos, axis)
+        print("v=", vector_from_axis)
+        angle_trajectory[i] = np.dot(vector_from_axis, start) / \
+            (la.norm(vector_from_axis) * start_norm)
 
-    return angle_trajectory
+    #for i, t in enumerate(angle_trajectory):
+        #if np.isnan(t):
+            #if i < len(angle_trajectory) - 1:
+                #t = angle_trajectory[i + 1]
+            #elif i > 0:
+                #t = angle_trajectory[i - 1]
+
+    return np.arccos(angle_trajectory)
 
 
-def prismatic_to_position(trajectory, direction):
-    start = trajectory[0, :]
+def prismatic_to_position(trajectory, direction, start):
     return np.dot(trajectory, direction) - np.dot(start, direction)

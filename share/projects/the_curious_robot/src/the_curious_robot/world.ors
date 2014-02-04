@@ -26,7 +26,7 @@ body door1-door {
 # }
 joint (door1-frame, door1-door) {
   A=<T t(.46 0 0) d(90 0 1 0)>
-  limit=[-.9 .9 0 0 0]
+  limit=[-1.8 1.8 1. 100. .0001]
   BinvA
   agent = 99
 }
@@ -67,6 +67,7 @@ body door2-door {
 # }
 joint (door2-frame, door2-door) {
   A=<T t(.46 0 0) d(90 0 1 0)>
+  limit=[-1.8 1.8 1. 100. .0001]
   BinvA
   agent = 99
 }

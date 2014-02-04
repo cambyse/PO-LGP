@@ -51,9 +51,11 @@ class DynamicModel(object):
         # Standard deviation is modelled with a Uniform prior
         self.std_pos = pm.Uniform("std", lower=0.0, upper=.1)
 
-    def add_observations(self, observations, dt, samples=10000, burnout=5000,
-                         thinning=2):
+    def add_observations(self, observations, dt, start_pos, start_vel, 
+                         samples=10000, burnout=5000, thinning=2):
         N = observations.shape[0]
+        self.prior_init_pos = pm.Normal("init_pos", mu=start_pos, tau=10.)
+        self.prior_init_vel = pm.Normal("init_vel", mu=start_vel, tau=10.)
 
         @pm.deterministic
         def est_pos(damping=self.prior_damping,
@@ -92,8 +94,6 @@ class DynamicModel(object):
 
         # update priors to posteriors
         self.prior_damping = self._get_approx_gaussian("damping")
-        self.prior_init_pos = self._get_approx_gaussian("init_pos")
-        self.prior_init_vel = self._get_approx_gaussian("init_vel")
         self.prior_min_limit = self._get_approx_gaussian("min_limit")
         self.prior_max_limit = self._get_approx_gaussian("max_limit")
 
