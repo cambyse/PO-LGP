@@ -239,6 +239,32 @@ class JointBel(probdist.CategoricalDist):
 
         return (h_change, h_stats)
 
+    def entropy_gauss(self):
+        """return dict for the unweighted entropy for ["pris", "rot", "nil"]"""
+        result = {}
+
+        gauss = self.rot_damping
+        H = ss.norm.entropy(gauss.mu, gauss.sigma)
+        gauss = self.rot_limit_max
+        H += ss.norm.entropy(gauss.mu, gauss.sigma)
+        gauss = self.rot_limit_max
+        H += ss.norm.entropy(gauss.mu, gauss.sigma)
+        result["rot"] = H
+
+        gauss = self.pris_damping
+        H = ss.norm.entropy(gauss.mu, gauss.sigma)
+        gauss = self.pris_limit_max
+        H += ss.norm.entropy(gauss.mu, gauss.sigma)
+        gauss = self.pris_limit_max
+        H += ss.norm.entropy(gauss.mu, gauss.sigma)
+        result["pris"] = H
+
+        gauss = self.nil
+        H = ss.norm.entropy(gauss.mu, gauss.sigma)
+        result["nil"] = H
+
+        return result
+
     def __getstate__(self):
         """
         To avoid pickling certain stuff we have to overwrite __getstate__ and
