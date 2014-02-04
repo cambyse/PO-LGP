@@ -33,6 +33,9 @@ class ObjectBel(probdist.CategoricalDist):
         #if obs_obj_type == "movable":
         # self.joint_bel.update(obs_joint_type)
 
+    def is_static(self):
+        return self.prob("static") > self.prob("movable")
+
     def __str__(self):
         result = "{} {}\n  joint {}".format(
             self.name,
