@@ -1,7 +1,7 @@
 <launch>
   <!-- PARAMETERS -->
   <!-- declare arg to be passed in -->
-  <arg name="strategy_name" default="random" />
+  <arg name="strategy_name" default="sequential" />
   <param name="strategy_name" value="$(arg strategy_name)"/>
 
   <!-- NODES -->
