@@ -91,7 +91,8 @@ class JointBel(probdist.CategoricalDist):
         h_change = {}
 
         for name in self:
-            P = self.prob(name)
+            # P = self.prob(name)
+            P = 1
 
             if name == "nil":
                 H = self.nil.entropy()
@@ -124,7 +125,8 @@ class JointBel(probdist.CategoricalDist):
                     H_expected = ss.norm.entropy(0, post_std)
 
                     h_stats[fullname] = HStat(float(H), float(H_expected), P)
-                    change += P * (H - H_expected)
+                    # change += P * (H - H_expected)
+                    change += (H - H_expected)
 
             h_change[name] = change
 
