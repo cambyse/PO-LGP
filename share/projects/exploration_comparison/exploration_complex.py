@@ -43,8 +43,6 @@ def init_wall_and_door():
 
 ###############################################################################
 def plot_belief(belief):
-    colors = sns.color_palette("husl", 8)
-
     n = len(belief)
     width = .5
     ind = np.arange(n)
@@ -64,34 +62,74 @@ def plot_belief(belief):
                     for i, obj in enumerate(belief)])
 
     # entropy
-    distnames_diff = ["rot_limit_min", "rot_limit_max", "rot_damping",
-                      "pris_limit_min", "pris_limit_max", "pris_damping",
-                      "nil"]
-    H = collections.OrderedDict(
-        [(name, [float(getattr(b.joint_bel, name).entropy()) for b in belief])
-         for name in distnames_diff])
-    H["obj"] = [obj.entropy() for obj in belief]
-    H["joint"] = [obj.joint_bel.entropy() for obj in belief]
-
+    H = collections.OrderedDict()
+    H["nil"] = arr([
+        P["nil"][i] * float(obj.joint_bel.nil.entropy())
+        for i, obj in enumerate(belief)
+    ])
+    H["obj"] = arr([obj.entropy() for obj in belief])
+    H["joint"] = arr([
+        P["movable"][i] * obj.joint_bel.entropy()
+        for i, obj in enumerate(belief)
+    ])
+    H["rot_limit_min"] = arr([
+        P["rot"][i] * float(obj.joint_bel.rot_limit_min.entropy())
+        for i, obj in enumerate(belief)
+    ])
+    H["rot_limit_max"] = arr([
+        P["rot"][i] * float(obj.joint_bel.rot_limit_max.entropy())
+        for i, obj in enumerate(belief)
+    ])
+    H["rot_damping"] = arr([
+        P["rot"][i] * float(obj.joint_bel.rot_damping.entropy())
+        for i, obj in enumerate(belief)
+    ])
+    H["pris_limit_min"] = arr([
+        P["pris"][i] * float(obj.joint_bel.pris_limit_min.entropy())
+        for i, obj in enumerate(belief)
+    ])
+    H["pris_limit_max"] = arr([
+        P["pris"][i] * float(obj.joint_bel.pris_limit_max.entropy())
+        for i, obj in enumerate(belief)
+    ])
+    H["pris_damping"] = arr([
+        P["pris"][i] * float(obj.joint_bel.pris_damping.entropy())
+        for i, obj in enumerate(belief)
+    ])
+    differential_dists = ["nil",
+                          "rot_limit_min", "rot_limit_max", "rot_damping",
+                          "pris_limit_min", "pris_limit_max", "pris_damping"]
     # expected change of entropy
-    distnames = ["nil", "pris", "rot"]
-    Hd = collections.OrderedDict(
-        [(name, [o.joint_bel.entropy_tmp()[0][name] for o in belief])
-         for name in distnames])
+    Hd = collections.OrderedDict()
+    Hd["nil"] = arr([P["nil"][i] * obj.joint_bel.entropy_tmp()[0]["nil"]
+                     for obj in belief])
     Hd["obj"] = [obj.entropy_diff() for obj in belief]
-    Hd["joint"] = [obj.joint_bel.entropy_diff() for obj in belief]
+    Hd["joint"] = [P["movable"][i] * obj.joint_bel.entropy_diff()
+                   for i, obj in enumerate(belief)]
+    Hd["rot"] = arr([P["rot"][i] * obj.joint_bel.entropy_tmp()[0]["rot"]
+                     for obj in belief])
+    Hd["pris"] = arr([P["pris"][i] * obj.joint_bel.entropy_tmp()[0]["pris"]
+                      for obj in belief])
 
     # PLOT DATA
     fig, axes = plt.subplots(1, 5, figsize=(20, 4))
+    colors = sns.color_palette("husl", 8)
+    c_st = colors[0]
+    c_mo = colors[1]
+    c_rot = colors[2]
+    c_pris = colors[3]
+    c_misc1 = colors[6]
+    c_misc2 = colors[7]
+    c_misc = [c_misc1, c_misc2]
 
     # object bel
     ax = axes[0]
-    ax.bar(ind, P["static"], width, color=colors[0], label="static")
-    ax.bar(ind, P["movable"], width, bottom=P["static"], color=colors[1],
+    ax.bar(ind, P["static"], width, color=c_st, label="static")
+    ax.bar(ind, P["movable"], width, bottom=P["static"], color=c_mo,
            label="movable")
-    ax.bar(ind+width, H["obj"], width/4, color=colors[4], label="entropy")
-    ax.bar(ind+width+width/4, Hd["obj"], width/4, color=colors[5],
-           label="exp H")
+    # ax.bar(ind+width, H["obj"], width/4, color=c_misc, label="entropy")
+    # ax.bar(ind+width+width/4, Hd["obj"], width/4, color=c_misc,
+    #        label="exp H")
 
     ax.set_ylim([0, 1.6])
     ax.set_xticklabels(obj_names, ind)
@@ -102,14 +140,14 @@ def plot_belief(belief):
 
     # joint bel
     ax = axes[1]
-    ax.bar(ind, P["nil"], width, color=colors[0], label="nil")
-    ax.bar(ind, P["pris"], width, bottom=P["nil"], color=colors[1],
+    ax.bar(ind, P["nil"], width, color=c_st, label="nil")
+    ax.bar(ind, P["pris"], width, bottom=P["nil"], color=c_pris,
            label="pris")
-    ax.bar(ind, P["rot"], width, bottom=P["nil"]+P["pris"], color=colors[2],
+    ax.bar(ind, P["rot"], width, bottom=P["nil"]+P["pris"], color=c_rot,
            label="rot")
-    ax.bar(ind+width, H["joint"], width/4, color=colors[4], label="entropy")
-    ax.bar(ind+width+width/4, Hd["joint"], width/4, color=colors[5],
-           label="exp H")
+    # ax.bar(ind+width, H["joint"], width/4, color=colors[4], label="entropy")
+    # ax.bar(ind+width+width/4, Hd["joint"], width/4, color=colors[5],
+    #        label="exp H")
 
     ax.set_ylim([0, 1.6])
     ax.set_xticklabels(obj_names, ind)
@@ -123,7 +161,7 @@ def plot_belief(belief):
     discrete = ["obj", "joint"]
     w = 1 / (len(discrete) + 1)
     for i, name in enumerate(discrete):
-        ax.bar(ind + (i * w), H[name], w, color=colors[i % n], label=name)
+        ax.bar(ind + (i * w), H[name], w, color=c_misc[i % 2], label=name)
 
     ax.set_ylim([0, 1.6])
     ax.set_ylabel("Entropy")
@@ -134,8 +172,8 @@ def plot_belief(belief):
 
     # Entropy differential
     ax = axes[3]
-    w = 1 / (len(distnames_diff) + 1)
-    for i, name in enumerate(distnames_diff):
+    w = 1 / (len(differential_dists) + 1)
+    for i, name in enumerate(differential_dists):
         ax.bar(ind + (i * w), H[name], w, color=colors[i], label=name)
 
     ax.set_ylim([-2, 6.])
@@ -148,8 +186,9 @@ def plot_belief(belief):
     # # Entropy diff
     ax = axes[4]
     w = 1 / (len(Hd) + 1)
-    for i, name in enumerate(Hd):
-        ax.bar(ind + i * w, Hd[name], w, label=name, color=colors[i])
+    for i, (name, val) in enumerate(Hd.iteritems()):
+        # ax.bar(ind + i * w, Hd[name], w, label=name, color=colors[i])
+        ax.bar(ind + i * w, val, w, label=name, color=colors[i])
 
     ax.set_ylabel("Expected Change of Entropy")
     ax.set_ylim([0, .4])
