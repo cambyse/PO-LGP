@@ -75,12 +75,9 @@ class StrategyExpectedChangeOfEntropy(object):
     def __call__(self, belief):
         # collect change of entropy
         l = []
-        for i, obj_bel in enumerate(belief):
-            l.append((i, obj_bel.entropy_diff()))
-            l.append((i, obj_bel.joint_bel.entropy_diff()))
-
-            change, stats = obj_bel.joint_bel.entropy_tmp()
-            for key, val in change.iteritems():
+        for i, obj in enumerate(belief):
+            ent_dict = obj.all_entropy_diff()
+            for key, val in ent_dict.iteritems():
                 l.append((i, val))
 
         # select change of entropy
