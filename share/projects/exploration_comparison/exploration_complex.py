@@ -49,6 +49,7 @@ def plot_belief(belief):
 
     # COLLECT DATA
     obj_names = [obj.name for obj in belief]
+    n = len(belief)
 
     # probabilities
     P = collections.OrderedDict()
@@ -100,16 +101,23 @@ def plot_belief(belief):
                           "rot_limit_min", "rot_limit_max", "rot_damping",
                           "pris_limit_min", "pris_limit_max", "pris_damping"]
     # expected change of entropy
-    Hd = collections.OrderedDict()
-    Hd["nil"] = arr([P["nil"][i] * obj.joint_bel.entropy_tmp()[0]["nil"]
-                     for obj in belief])
-    Hd["obj"] = [obj.entropy_diff() for obj in belief]
-    Hd["joint"] = [P["movable"][i] * obj.joint_bel.entropy_diff()
-                   for i, obj in enumerate(belief)]
-    Hd["rot"] = arr([P["rot"][i] * obj.joint_bel.entropy_tmp()[0]["rot"]
-                     for i, obj in enumerate(belief)])
-    Hd["pris"] = arr([P["pris"][i] * obj.joint_bel.entropy_tmp()[0]["pris"]
-                      for i, obj in enumerate(belief)])
+    Hd = collections.OrderedDict(
+        [("nil", []), ("obj",  []), ("joint", []), ("rot", []), ("pris", [])]
+    )
+    for i, obj in enumerate(belief):
+        ent_dict = obj.all_entropy_diff()
+        for name in ["nil", "obj", "joint", "rot", "pris"]:
+            Hd[name].append(ent_dict[name])
+
+    # Hd["nil"] = arr([P["nil"][i] * obj.joint_bel.entropy_tmp()[0]["nil"]
+    #                  for obj in belief])
+    # Hd["obj"] = [obj.entropy_diff() for obj in belief]
+    # Hd["joint"] = [P["movable"][i] * obj.joint_bel.entropy_diff()
+    #                for i, obj in enumerate(belief)]
+    # Hd["rot"] = arr([P["rot"][i] * obj.joint_bel.entropy_tmp()[0]["rot"]
+    #                  for i, obj in enumerate(belief)])
+    # Hd["pris"] = arr([P["pris"][i] * obj.joint_bel.entropy_tmp()[0]["pris"]
+    #                   for i, obj in enumerate(belief)])
 
     # PLOT DATA
     fig, axes = plt.subplots(1, 5, figsize=(20, 4))

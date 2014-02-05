@@ -25,6 +25,22 @@ class ObjectBel(probdist.CategoricalDist):
         #if obs_obj_type == "movable":
         self.joint_bel.update(obs_joint_type)
 
+    def all_entropy_diff(self):
+        P_mo = self.prob("movable")
+        P_nil = self.joint_bel.prob_cond("nil", ("nil", self.prob("static")))
+        P_rot = self.joint_bel.prob_cond("rot", ("nil", self.prob("static")))
+        P_pris = self.joint_bel.prob_cond("pris", ("nil", self.prob("static")))
+
+        h_change, _ = self.joint_bel.entropy_tmp()
+        result = collections.OrderedDict([
+            ("obj", self.entropy_diff()),
+            ("joint", P_mo * self.joint_bel.entropy_diff()),
+            ("nil", P_nil * h_change["nil"]),
+            ("rot", P_rot * h_change["rot"]),
+            ("pris", P_pris * h_change["pris"])
+        ])
+        return result
+
     def __str__(self):
         result = "{} {} H={}\n  joint {}".format(
             self.name, self.probs(), self.entropy(), str(self.joint_bel))
