@@ -24,6 +24,14 @@ class StrategyRoundRobin(object):
         return self.last_selection
 
 
+class StrategyMaxEntropy(object):
+    def __init__(self):
+        self.name = "Max entropy"
+
+    def __call__(self, belief):
+        return max_idx(belief, f=(lambda obj: obj.total_entropy()))
+
+
 class StrategyMaxEntropyObjType(object):
     """Select the object with the highest entropy."""
     def __init__(self):
