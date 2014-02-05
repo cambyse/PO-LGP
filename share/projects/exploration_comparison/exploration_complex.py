@@ -107,9 +107,9 @@ def plot_belief(belief):
     Hd["joint"] = [P["movable"][i] * obj.joint_bel.entropy_diff()
                    for i, obj in enumerate(belief)]
     Hd["rot"] = arr([P["rot"][i] * obj.joint_bel.entropy_tmp()[0]["rot"]
-                     for obj in belief])
+                     for i, obj in enumerate(belief)])
     Hd["pris"] = arr([P["pris"][i] * obj.joint_bel.entropy_tmp()[0]["pris"]
-                      for obj in belief])
+                      for i, obj in enumerate(belief)])
 
     # PLOT DATA
     fig, axes = plt.subplots(1, 5, figsize=(20, 4))
@@ -134,17 +134,17 @@ def plot_belief(belief):
     ax.set_ylim([0, 1.6])
     ax.set_xticklabels(obj_names, ind)
     ax.set_xticks(ind + width/2)
-    ax.legend()
+    ax.legend(loc="upper left")
     ax.set_ylabel("P")
-    ax.set_title("Prob for object type")
+    ax.set_title("Probability for object type")
 
     # joint bel
     ax = axes[1]
     ax.bar(ind, P["nil"], width, color=c_st, label="nil")
     ax.bar(ind, P["pris"], width, bottom=P["nil"], color=c_pris,
-           label="pris")
+           label="prismatic")
     ax.bar(ind, P["rot"], width, bottom=P["nil"]+P["pris"], color=c_rot,
-           label="rot")
+           label="rotational")
     # ax.bar(ind+width, H["joint"], width/4, color=colors[4], label="entropy")
     # ax.bar(ind+width+width/4, Hd["joint"], width/4, color=colors[5],
     #        label="exp H")
@@ -152,9 +152,9 @@ def plot_belief(belief):
     ax.set_ylim([0, 1.6])
     ax.set_xticklabels(obj_names, ind)
     ax.set_xticks(ind + width/2)
-    ax.legend()
+    ax.legend(loc="upper left")
     ax.set_ylabel("P")
-    ax.set_title("Prob for joint type")
+    ax.set_title("Probability for joint type")
 
     # Entropy
     ax = axes[2]
@@ -167,7 +167,7 @@ def plot_belief(belief):
     ax.set_ylabel("Entropy")
     ax.set_xticklabels(obj_names, ind)
     ax.set_xticks(ind + width/2)
-    ax.legend()
+    ax.legend(loc="upper left")
     ax.set_title("Entropy discrete")
 
     # Entropy differential
@@ -180,7 +180,7 @@ def plot_belief(belief):
     ax.set_ylabel("Entropy differential")
     ax.set_xticklabels(obj_names, ind)
     ax.set_xticks(ind + width/2)
-    ax.legend()
+    ax.legend(loc="upper left")
     ax.set_title("Entropy  differential")
 
     # # Entropy diff
@@ -190,12 +190,12 @@ def plot_belief(belief):
         # ax.bar(ind + i * w, Hd[name], w, label=name, color=colors[i])
         ax.bar(ind + i * w, val, w, label=name, color=colors[i])
 
-    ax.set_ylabel("Expected Change of Entropy")
+    ax.set_ylabel("Expected change of entropy")
     ax.set_ylim([0, .4])
     ax.set_xticklabels(obj_names, ind)
     ax.set_xticks(ind + width/2)
-    ax.legend()
-    ax.set_title("Expected Change of Entropy")
+    ax.legend(loc="upper left")
+    ax.set_title("Expected change of entropy")
 
     return fig
 
