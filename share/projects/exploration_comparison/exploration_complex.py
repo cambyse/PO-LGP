@@ -292,16 +292,22 @@ def multi_run(f_init, select_strategy, num_interactions=100,
             # Entropy over time
             entropy_obj[run, :, i] = arr([
                 b[i].entropy()
-                + b[i].joint_bel.entropy() +
-                + b[i].joint_bel.prob("pris") * (
+                + b[i].prob("movable") * b[i].joint_bel.entropy() +
+
+                + b[i].joint_bel.prob_cond("rot",
+                                           ("nil", b[i].prob("static"))) * (
                     b[i].joint_bel.rot_limit_max.entropy()
                     + b[i].joint_bel.rot_limit_min.entropy()
                     + b[i].joint_bel.rot_damping.entropy())
-                + b[i].joint_bel.prob("pris") * (
+
+                + b[i].joint_bel.prob_cond("pris",
+                                           ("nil", b[i].prob("static"))) * (
                     b[i].joint_bel.pris_limit_max.entropy()
                     + b[i].joint_bel.pris_limit_min.entropy()
                     + b[i].joint_bel.pris_damping.entropy())
-                + b[i].joint_bel.prob("nil") * b[i].joint_bel.nil.entropy()
+
+                + b[i].joint_bel.prob_cond("nil",
+                                           ("nil", b[i].prob("static")))
                 for b in bel])
             entropy_total[run, :] += entropy_obj[run, :, i]
 
