@@ -22,6 +22,8 @@
 #include <Gui/opengl.h>
 #include <Ors/ors_swift.h>
 
+double stickyWeight=1.;
+
 MotionProblem::MotionProblem(ors::KinematicWorld& _world, bool _useSwift)
   : world(_world) {
   useSwift=_useSwift;
@@ -232,9 +234,9 @@ bool MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
       CHECK(y.N==J.d0,"");
       for(uint j=0;j<y.N;j++) y(j) = -y(j)+.1; //MT::sigmoid(y(j));
       if(J.N) for(uint j=0;j<J.d0;j++) J[j]() *= -1.; // ( y(j)*(1.-y(j)) );
-      phi.append(y);
+      phi.append(stickyWeight*y);
       if(phi(phi.N-1) > c->y_threshold) feasible = false;
-      if(&J_x) J_x.append(J);
+      if(&J_x) J_x.append(stickyWeight*J);
       if(&J_v) J_v.append(0.*J);
     }
 #endif
