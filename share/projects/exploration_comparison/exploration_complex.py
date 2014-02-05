@@ -31,6 +31,16 @@ def init():
     return world, belief
 
 
+def init_wall_and_door():
+    n = 2
+    world = [
+        world_rep.Object("obj1", object_type="static", joint_type="nil"),
+        world_rep.Object("obj2", object_type="movable", joint_type="pris"),
+    ]
+    belief = [belief_rep.ObjectBel("obj" + str(i + 1)) for i in range(n)]
+    return world, belief
+
+
 ###############################################################################
 def plot_belief(belief):
     colors = sns.color_palette("husl", 8)
