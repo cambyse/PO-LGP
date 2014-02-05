@@ -25,6 +25,24 @@ class ObjectBel(probdist.CategoricalDist):
         #if obs_obj_type == "movable":
         self.joint_bel.update(obs_joint_type)
 
+    def total_entropy(self):
+        P_mo = self.prob("movable")
+        P_nil = self.joint_bel.prob_cond("nil", ("nil", self.prob("static")))
+        P_rot = self.joint_bel.prob_cond("rot", ("nil", self.prob("static")))
+        P_pris = self.joint_bel.prob_cond("pris", ("nil", self.prob("static")))
+
+        return sum([
+            self.entropy_diff(),
+            P_mo * self.joint_bel.entropy(),
+            P_nil * self.joint_bel.nil.entropy(),
+            P_rot * (self.joint_bel.rot_damping.entropy() +
+                     self.joint_bel.rot_limit_min.entropy() +
+                     self.joint_bel.rot_limit_max.entropy()),
+            P_pris * (self.joint_bel.pris_damping.entropy() +
+                      self.joint_bel.pris_limit_min.entropy() +
+                      self.joint_bel.pris_limit_max.entropy())
+            ])
+
     def all_entropy_diff(self):
         P_mo = self.prob("movable")
         P_nil = self.joint_bel.prob_cond("nil", ("nil", self.prob("static")))
