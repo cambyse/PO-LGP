@@ -155,7 +155,7 @@ class LearnActionServer(object):
             self.update_dof(obj_bel)
 
         # PRINT
-        #rospy.loginfo(str(self.belief))
+        rospy.loginfo(str(self.belief))
 
         # VISUALIZE
         self.visualize_object_type()
