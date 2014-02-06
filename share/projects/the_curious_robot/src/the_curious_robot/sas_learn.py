@@ -157,6 +157,7 @@ class LearnActionServer(object):
 
         # PRINT
         rospy.loginfo(str(self.belief))
+        rospy.loginfo("Explored {}".format(self.ooi))
 
         # VISUALIZE
         self.visualize_object_type()
@@ -295,11 +296,15 @@ class LearnActionServer(object):
         return res
 
     def handle_entropy_change_request(self, req):
+        print("=" * 80)
         ent = []
         for idx, obj in self.belief.iteritems():
             ent_dict = obj.all_entropy_diff()
+            print("-" * 30)
             for key, change in ent_dict.iteritems():
                 ent.append((idx, change))
+                print(idx, key, change)
+        print("=" * 80)
         # select change of entropy
         idx, val = max(ent, key=lambda tuple_: tuple_[1])
 
