@@ -229,42 +229,31 @@ class JointBel(probdist.CategoricalDist):
 
         for name in self:
             P = self.prob(name)
+            P = 1
 
             if name == "nil":
                 H = ss.norm.entropy(self.nil.mu, self.nil.sigma)
                 H_expected = H
                 h_stats[name] = HStat(float(H), float(H_expected), P)
                 change = 0
+                h_change[name] = change
+
             else:
                 change = 0
                 for subname in ["_limit_max", "_limit_min", "_damping"]:
                     fullname = name + subname
-
                     gauss = getattr(self, fullname)
                     distribution = ss.norm(gauss.mu, gauss.sigma)
                     H = distribution.entropy()
-                    # Scale
-                    # H = max(0, ss.norm.entropy(0, distribution.std()
-                    #                            * self.scaler))
 
-                    # Simple Forward Model
-                    # only the std determines the entropy for gaussians.
-                    # therefore, only update the std
                     prior_var = distribution.var()
-                    # prior_sigma = math.sqrt(prior_std)
                     post_std = math.sqrt((prior_var * self.update_var) /
                                          (prior_var + self.update_var))
                     post_std += self.noise
-
-                    # Scale
-                    # distribution = ss.norm(0, post_std * self.scaler)
-                    # H_expected = max(0, distribution.entropy())
                     H_expected = ss.norm.entropy(0, post_std)
-
                     h_stats[fullname] = HStat(float(H), float(H_expected), P)
-                    change += P * (H - H_expected)
-
-            h_change[name] = change
+                    change += (H - H_expected)
+                h_change[name] = change
 
         return (h_change, h_stats)
 
