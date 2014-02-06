@@ -3,6 +3,8 @@ import roslib
 roslib.load_manifest('the_curious_robot')
 import rospy
 import the_curious_robot as tcr
+from the_curious_robot import srv
+
 import numpy as np
 
 # python std
@@ -43,6 +45,16 @@ class StrategySequentialSelect(SelectionStrategy):
         # self.ooi_index = (self.ooi_index + 1) % len(oois)
         self.ooi_index = (self.ooi_index + 1) % len(oois)
         return ooi_id_msg
+
+
+class StrategySelectExpChangeOfEntropy(SelectionStrategy):
+    def __init__(self):
+        self.request_entropy = rospy.ServiceProxy("/belief/entropy_change",
+                                                  srv.EntropyChange)
+
+    def execute(self, oois, entropies):
+        response = self.request_entropy()
+        return response.idx
 
 
 class StrategyDoorFrameTop(SelectionStrategy):
