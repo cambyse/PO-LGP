@@ -231,7 +231,7 @@ class JointBel(probdist.CategoricalDist):
             P = self.prob(name)
 
             if name == "nil":
-                H = self.nil.entropy()
+                H = ss.norm.entropy(self.nil.mu, self.nil.sigma)
                 H_expected = H
                 h_stats[name] = HStat(float(H), float(H_expected), P)
                 change = 0
