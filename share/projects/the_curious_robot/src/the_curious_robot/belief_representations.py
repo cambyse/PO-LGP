@@ -276,7 +276,7 @@ class JointBel(probdist.CategoricalDist):
         H = ss.norm.entropy(gauss.mu, gauss.sigma)
         gauss = self.rot_limit_max
         H += ss.norm.entropy(gauss.mu, gauss.sigma)
-        gauss = self.rot_limit_max
+        gauss = self.rot_limit_min
         H += ss.norm.entropy(gauss.mu, gauss.sigma)
         result["rot"] = H
 
@@ -284,7 +284,7 @@ class JointBel(probdist.CategoricalDist):
         H = ss.norm.entropy(gauss.mu, gauss.sigma)
         gauss = self.pris_limit_max
         H += ss.norm.entropy(gauss.mu, gauss.sigma)
-        gauss = self.pris_limit_max
+        gauss = self.pris_limit_min
         H += ss.norm.entropy(gauss.mu, gauss.sigma)
         result["pris"] = H
 
