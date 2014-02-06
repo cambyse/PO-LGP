@@ -27,56 +27,41 @@ void display(G4Data &g4d) {
   KeyFramer kf(kw, g4d);
 
   String b1("rh:thumb"), b2("sbox");
+  uint wlen = 121;
+
+  uintA vit;
+  kf.EM(vit, b1, b2, wlen);
+
+#if 1
+  // OK this is stupid, but cope with it
   String bp1(STRING(b1 << ":pos")), bp2(STRING(b2 << ":pos"));
   String bo1(STRING(b1 << ":ori")), bo2(STRING(b2 << ":ori"));
 
-  arr corr;
-  arr corrVar;
-  uint wlen = 60;
-  //uintA wlens = { wlen, wlen+10, wlen-10 };
-  uintA wlens = { wlen };
+  arr c = kf.getCorrPCA(bp1, bp2, wlen, 1).flatten();
+  arr pD = kf.getPos(b1, b2);
+  arr pAVar = kf.getStateVar(bp1, wlen);
+  arr pBVar = kf.getStateVar(bp2, wlen);
+  arr qD = kf.getQuat(bo1, bo2);
+  arr qAVar = kf.getStateVar(bo1, wlen);
+  arr qBVar = kf.getStateVar(bo2, wlen);
+  arr pVar = kf.getPosVar(b1, b2, wlen);
+  arr qVar = kf.getQuatVar(bo1, bo2, wlen);
 
-  corr = kf.getCorrPCA(bp1, bp2, wlens(0), 1);
-  corrVar = kf.getAngleVar(bo1, bo2, wlens(0));
-  for(uint i = 1; i < wlens.N; i++) {
-    corr = corr % kf.getCorrPCA(bp1, bp2, wlen, 1);
-    corrVar += kf.getAngleVar(bo1, bo2, wlen);
-  }
-  corr.flatten();
-  corrVar *= 1./wlens.N;
-
-  arr corrXYZ = kf.getCorr(bp1, bp2, wlen);
-
-  //arr dists = kf.getDists(b1, b2);
-
-  // TODO:
-  //  - MAP-em, so that you can also estimate the variance
-  //  - try different observations:
-  //    * 1-dim corr, 3-dim corr XYZ, etc
-  //    * Angle Variance
-  //    * Transformation variance (i.e. check whether the motion is rigid or
-  //    not.)
-  //    * Best thing would be to check IF there is motion, and check if the
-  //    motion is rigid, oder?
-  //
-  //arr q = kf.EM(corrXYZ);
-  arr q = kf.EM(corr, corrVar);
-
-  corr.flatten();
-
-#if 1
-  Feedgnuplot gnup1, gnup2;
+  Feedgnuplot gnup1;
   gnup1.setDataID(true);
   gnup1.setAutolegend(true);
   gnup1.setStream(.75);
-  gnup1.setTitle("1-dim PCA aligned");
+  gnup1.setTitle("Observations + Viterbi");
+  gnup1.setYRange(-1.5, 1.5);
   gnup1.open();
+
+  Feedgnuplot gnup2;
   gnup2.setDataID(true);
   gnup2.setAutolegend(true);
   gnup2.setStream(.75);
-  gnup2.setTitle("3-dim X-, Y-, Z-axis aligned");
+  gnup2.setTitle("Misc.");
   gnup2.open();
-
+  
   MT::String bname;
   uint F = g4d.getNumFrames();
   for(uint f = 0; f < F; f++) {
@@ -86,24 +71,26 @@ void display(G4Data &g4d) {
     //flip_image(gl.captureImage);
     //vid.addFrame(gl.captureImage);
 
-    String ss1, ss2;
-    ss1 << f << " var " << sqrt(corrVar(f))
-            << " corr " << corr(f)
-            << " q " << q(f, 1)
+    String ss1, ss2, ss3;
+    ss1 << f
+            << " vit " << vit(f)
+            << " c " << c(f)
+            << " qVar " << qVar(f)
+            << " pVar " << pVar(f)
             ;
-    ss2 << f << " corrX " << corrXYZ(f, 0)
-            << " corrY " << corrXYZ(f, 1)
-            << " corrZ " << corrXYZ(f, 2)
+    ss2 << f
+            << " pAVar " << pAVar(f)
+            << " pBVar " << pBVar(f)
+            << " qAVar " << qAVar(f)
+            << " qBVar " << qBVar(f)
+            ;
             ;
     gnup1() << ss1;
     gnup2() << ss2;
   }
 #endif
 
-  //ProxyL proxies = kf.getProxies(b1, b2);
-  //KeyFrameL kfs = kf.getKeyFrames(corr, proxies);
-  KeyFrameL kfs = kf.getKeyFrames(q);
-  kf.clearProxies();
+  KeyFrameL kfs = kf.getKeyFrames(vit);
   kf.saveKeyFrameScreens(kfs, 30);
   cout << "Tot num keyframes: " << kfs.N << endl;
 

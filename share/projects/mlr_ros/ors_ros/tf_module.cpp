@@ -7,6 +7,8 @@
 #include <ros/ros.h>
 #include <tf/transform_datatypes.h>
 #include <visualization_msgs/MarkerArray.h>
+#include <visualization_msgs/InteractiveMarker.h>
+#include <interactive_markers/interactive_marker_server.h>
 #include <geometry_msgs/Pose.h>
 #include "ros_private.h"
 
@@ -33,6 +35,7 @@ void TF_Sender::publish_bodies(const ros::Time& timestamp, const ors::KinematicW
   }
 }
 
+
 struct sRosTf {
   TF_Sender tf;
   MarkerSender markers;
@@ -54,6 +57,10 @@ namespace {
 MarkerSender::MarkerSender() {
   marker_pub = node_handle.advertise<visualization_msgs::Marker>( "visualization_marker", 0 );
 }
+MarkerSender::~MarkerSender() {
+  node_handle.shutdown();
+}
+
 void MarkerSender::publish_bodies(const ros::Time& timestamp, const ors::KinematicWorld& w) {
   visualization_msgs::Marker marker;
 
@@ -92,7 +99,6 @@ void RosTf::close() {
 }
 
 void RosTf::step() {
-  std::clog << "Sending world to RVIZ" << endl;
   publish(world.get());
 }
 
@@ -101,3 +107,73 @@ void RosTf::publish(const ors::KinematicWorld& w) {
   s->tf.publish_bodies(timestamp, w);
   s->markers.publish_bodies(timestamp, w);
 }
+
+// PHYSICS MENU SERVER
+
+using namespace visualization_msgs;
+using namespace interactive_markers;
+
+namespace  {
+void processFeedback(
+    const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback ) {
+
+  }
+}
+
+struct sPhysicsMenu {
+  InteractiveMarkerServer server;
+  InteractiveMarker marker;
+  InteractiveMarkerControl box_control, rotate_control;
+  Marker box;
+
+  sPhysicsMenu() : server("simple_marker") {
+    marker.header.frame_id = "/world";
+    marker.name = "test_marker";
+    marker.description = "simple marker";
+
+
+    box.type = Marker::CUBE;
+    box.scale.x=.3;
+    box.scale.y=.3;
+    box.scale.z=.3;
+    box.color.r=.5;
+    box.color.g=.5;
+    box.color.b=.5;
+    box.color.a=1;
+
+    box_control.always_visible = true;
+    box_control.markers.push_back(box);
+    box_control.interaction_mode = InteractiveMarkerControl::BUTTON; // get some feedback when selected
+    marker.controls.push_back(box_control);
+
+    rotate_control.name = "rotate_x";
+    rotate_control.interaction_mode = InteractiveMarkerControl::MOVE_ROTATE;
+    marker.controls.push_back(rotate_control);
+
+    server.insert(marker, boost::bind(&sPhysicsMenu::processFeedback, this, _1));
+    server.applyChanges();
+    cout << "interactive marker created" << endl;
+  }
+
+  void processFeedback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback) {
+    ROS_INFO_STREAM( feedback->marker_name << " is now at "
+                     << feedback->pose.position.x << ", " << feedback->pose.position.y
+                     << ", " << feedback->pose.position.z
+                     << ", etype: " << (int)feedback->event_type
+                     << ", valid: " << (int)feedback->mouse_point_valid
+                     );
+  }
+};
+
+void PhysicsMenu::open() {
+  s = new sPhysicsMenu();
+}
+void PhysicsMenu::close() {
+  delete s;
+}
+void PhysicsMenu::step() {
+  ros::spinOnce();
+}
+
+REGISTER_MODULE(RosTf)
+REGISTER_MODULE(PhysicsMenu)

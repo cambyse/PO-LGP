@@ -9,4 +9,8 @@ BEGIN_MODULE(RosTf)
   void publish(const ors::KinematicWorld&);
 END_MODULE()
 
+BEGIN_MODULE(PhysicsMenu)
+  ACCESS(bool, do_physics)
+END_MODULE()
+
 #endif // ROS_MODULE_H
