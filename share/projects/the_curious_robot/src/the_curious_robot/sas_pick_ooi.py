@@ -52,6 +52,8 @@ class PickOOIActionServer(object):
             "entropy_sum": (strategies.StrategySelectEntropy, "sum"),
             "entropy_max": (strategies.StrategySelectEntropy, "max"),
             "entropy_mean": (strategies.StrategySelectEntropy, "mean"),
+            "exp_change_entropy": (strategies.StrategySelectExpChangeOfEntropy,
+                                   None),
         }
         strategy_name = rospy.get_param("strategy_name", "random")
         strategy, parameter = all_strategies[strategy_name]
