@@ -97,6 +97,10 @@ class LearnActionServer(object):
         # require/provide
         require_provide.Provide("Learn")
 
+        # initialize the belief (ors not attached yet)
+        for ooi in self.uninitialized_oois:
+            self.belief[ooi] = bel_rep.ObjectBel("tmp")
+
     @pickle_logger.pickle_member(name="belief",
                                  folder=rospy.get_param("strategy_name"))
     def execute(self, msg):
@@ -114,11 +118,10 @@ class LearnActionServer(object):
                 # add shape and body to belief
                 self._added_bodies.append(orspy.Body(self.belief_ors))
                 body = self._added_bodies[-1]
-                self._added_shapes.append(orspy.Shape(self.belief_ors, body))
                 ors_shape = self._added_shapes[-1]
 
-                self.belief[self.ooi] = bel_rep.ObjectBel(ors_shape.name)
                 self.belief[self.ooi].ors_shape = ors_shape
+                self.belief[self.ooi].name = ors_shape.name
 
                 # Set BODY infos
                 body.pose = parser.ros_to_ors_transform(shape_msg.X,
