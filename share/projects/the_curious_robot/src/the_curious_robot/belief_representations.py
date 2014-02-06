@@ -326,7 +326,10 @@ class Belief(collections.OrderedDict):
         return result
 
     def get_total_entropy(self):
-        """return the total weighted entropy for the belief."""
+        """Return the total weighted entropy for the belief.
+
+        Use for visualization.
+        """
         H_total = 0
         for obj in self.itervalues():
             P_static = obj.prob("static")
