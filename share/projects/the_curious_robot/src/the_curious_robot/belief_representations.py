@@ -174,9 +174,9 @@ class JointBel(probdist.CategoricalDist):
                 #elif param.name == "rot_radius":
                     #print("Radius: ", param.value)
 
-            print projected_trajectory
-            print axis
-            print axis_pos
+            # print projected_trajectory
+            # print axis
+            # print axis_pos
             trajectory_angle = util.rotational_to_angle(projected_trajectory,
                                                         axis,
                                                         axis_pos,
@@ -184,7 +184,7 @@ class JointBel(probdist.CategoricalDist):
 
             vel = trajectory_angle[1] - trajectory_angle[0]
 
-            print trajectory_angle
+            # print trajectory_angle
             self.rot_model.add_observations(trajectory_angle, dt,
                                             trajectory_angle[0], vel)
 
