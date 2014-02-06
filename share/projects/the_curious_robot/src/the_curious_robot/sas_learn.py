@@ -294,11 +294,8 @@ class LearnActionServer(object):
     def handle_entropy_change_request(self, req):
         ent = []
         for idx, obj in self.belief.iteritems():
-            ent.append((idx, obj.entropy_diff()))
-            ent.append((idx, obj.joint_bel.entropy_diff()))
-
-            h_change, h_stats = obj.joint_bel.entropy_tmp()
-            for key, change in h_change.iteritems():
+            ent_dict = obj.all_entropy_diff()
+            for key, change in ent_dict.iteritems():
                 ent.append((idx, change))
         # select change of entropy
         idx, val = max(ent, key=lambda tuple_: tuple_[1])
