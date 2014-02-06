@@ -276,9 +276,9 @@ class LearnActionServer(object):
         res = srv.EntropyResponse()
 
         # uninitialized shapes have a high entropy
-        for shape_idx in self.uninitialized_oois:
-            res.shape_ids.append(shape_idx)
-            res.entropies.append(sys.float_info.max)
+        # for shape_idx in self.uninitialized_oois:
+        #     res.shape_ids.append(shape_idx)
+        #     res.entropies.append(sys.float_info.max)
 
         # add the already explored shapes
         entropies = self.belief.get_entropy()
