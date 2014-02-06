@@ -26,7 +26,6 @@ from the_curious_robot import srv
 
 from articulation_msgs.srv import TrackModelSrv, TrackModelSrvRequest
 # python std
-import sys
 
 
 class LearnActionServer(object):
@@ -45,9 +44,17 @@ class LearnActionServer(object):
         # None
 
         # SERVICE PUBLISHER
-        self.entropy_service = rospy.Service("/belief/entropy",
-                                             tcr.srv.Entropy,
-                                             self.handle_entropy_request)
+        self.entropy_service = rospy.Service(
+            "/belief/entropy",
+            tcr.srv.Entropy,
+            self.handle_entropy_request
+        )
+        self.entropy_change_service = rospy.Service(
+            "/belief/entropy_change",
+            tcr.srv.EntropyChange,
+            self.handle_entropy_change_request
+        )
+
         # SERVICE PROXIES
         self.dof_learner = rospy.ServiceProxy('model_select',
                                               TrackModelSrv)
@@ -279,6 +286,22 @@ class LearnActionServer(object):
             res.shape_ids.append(shape_id)
             res.entropies.append(entropy)
 
+        return res
+
+    def handle_entropy_change_request(self, req):
+        ent = []
+        for idx, obj in self.belief.iteritems():
+            ent.append((idx, obj.entropy_diff()))
+            ent.append((idx, obj.joint_bel.entropy_diff()))
+
+            h_change, h_stats = obj.joint_bel.entropy_tmp()
+            for key, change in h_change.iteritems():
+                ent.append((idx, change))
+        # select change of entropy
+        idx, val = max(ent, key=lambda tuple_: tuple_[1])
+
+        res = srv.EntropyChangeResponse()
+        res.idx = idx
         return res
 
 
