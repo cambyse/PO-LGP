@@ -36,6 +36,35 @@ class ObjectBel(probdist.CategoricalDist):
     def is_static(self):
         return self.prob("static") > self.prob("movable")
 
+    def total_entropy(self):
+        P_mo = self.prob("movable")
+        P_nil = self.joint_bel.prob_cond("nil", ("nil", self.prob("static")))
+        P_rot = self.joint_bel.prob_cond("rot", ("nil", self.prob("static")))
+        P_pris = self.joint_bel.prob_cond("pris", ("nil", self.prob("static")))
+
+        H_gauss = self.joint_bel.entropy_gauss()
+        return sum([self.entropy(),
+                    P_mo * self.joint_bel.entropy(),
+                    P_nil * H_gauss["nil"],
+                    P_rot * H_gauss["rot"],
+                    P_pris * H_gauss["pris"]])
+
+    def all_entropy_diff(self):
+        P_mo = self.prob("movable")
+        P_nil = self.joint_bel.prob_cond("nil", ("nil", self.prob("static")))
+        P_rot = self.joint_bel.prob_cond("rot", ("nil", self.prob("static")))
+        P_pris = self.joint_bel.prob_cond("pris", ("nil", self.prob("static")))
+
+        h_change, _ = self.joint_bel.entropy_tmp()
+        result = collections.OrderedDict([
+            ("obj", self.entropy_diff()),
+            ("joint", P_mo * self.joint_bel.entropy_diff()),
+            ("nil", P_nil * h_change["nil"]),
+            ("rot", P_rot * h_change["rot"]),
+            ("pris", P_pris * h_change["pris"])
+        ])
+        return result
+
     def __str__(self):
         result = "{} {}\n  joint {}".format(
             self.name,
