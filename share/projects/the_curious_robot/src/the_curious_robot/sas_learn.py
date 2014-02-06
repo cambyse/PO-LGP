@@ -105,7 +105,7 @@ class LearnActionServer(object):
                                  folder=rospy.get_param("strategy_name"))
     def execute(self, msg):
         # add object to belief and belief if it does not exist yet
-        if self.ooi not in self.belief:
+        if self.ooi in self.uninitialized_oois:
             with Timer("Adding new shape with id %d", rospy.loginfo):
                 # rm ooi from list of uninitialized_oois
                 self.uninitialized_oois -= set([self.ooi])
@@ -118,6 +118,7 @@ class LearnActionServer(object):
                 # add shape and body to belief
                 self._added_bodies.append(orspy.Body(self.belief_ors))
                 body = self._added_bodies[-1]
+                self._added_shapes.append(orspy.Shape(self.belief_ors, body))
                 ors_shape = self._added_shapes[-1]
 
                 self.belief[self.ooi].ors_shape = ors_shape
@@ -170,6 +171,8 @@ class LearnActionServer(object):
         """
         for obj_bel in self.belief.itervalues():
             ors_shape = obj_bel.ors_shape
+            if ors_shape is None:
+                continue
 
             if obj_bel.is_static():
                 ors_shape.set_color(1., 1., 1.)
