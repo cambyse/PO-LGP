@@ -18,4 +18,5 @@ set(SOURCES ./pointcloud.h
 ./g4data.cpp
 ./perception_views.cpp
 ./keyframer.h
+./videoEncoderX264.cpp
 ./vision.h)
