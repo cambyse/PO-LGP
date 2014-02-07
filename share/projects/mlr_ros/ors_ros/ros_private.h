@@ -18,8 +18,10 @@ private:
   ros::NodeHandle node_handle;
   ros::Publisher marker_pub;
   std::map<int,bool> known_markers;
+
 public:
   MarkerSender();
+  virtual ~MarkerSender();
   void publish_bodies(const ros::Time& time, const ors::KinematicWorld& w);
 };
 

@@ -123,7 +123,7 @@ set(MLR_CXX_FLAGS "-std=c++0x ${MLR_CXX_FLAGS}")
 
 # set Gui-GL definition globally for convenience
 include(src/Gui/gl.cmake OPTIONAL)
-message(STATUS "Using OpenGL: ${WITH_OPENGL}")
+message(STATUS "Using OpenGL: ${HAVE_OPENGL}")
 # need the result of this for the examples
 include(src/Hardware/G4/find_G4.cmake OPTIONAL)
 

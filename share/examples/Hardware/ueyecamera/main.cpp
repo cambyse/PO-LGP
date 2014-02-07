@@ -10,22 +10,35 @@
 void lib_hardware_ueyecamera();
 void lib_Perception();
 
+struct UEyeSystem: System {
+  ACCESS(byteA, ueye_rgb_1);
+  //ACCESS(byteA, ueye_rgb_3);
+  //ACCESS(byteA, ueye_rgb_4);
+
+  UEyeSystem(){
+    //addModule("UEyePoller", "POLLER_1", STRINGS("ueye_rgb_1"), ModuleThread::loopWithBeat, 0.005);
+    addModule("UEyePoller", "POLLER_1", STRINGS("ueye_rgb_1"), ModuleThread::loopFull);
+    addModule("VideoEncoder", "ENCODER_1", STRINGS("ueye_rgb_1"), ModuleThread::listenFirst);
+    addModule("ImageViewer", "VIEWER_1", STRINGS("ueye_rgb_1"), ModuleThread::listenFirst);
+
+    //addModule("UEyePoller", "POLLER_3", STRINGS("ueye_rgb_3"), ModuleThread::loopWithBeat, 0.005);
+    //addModule("UEyePoller", "POLLER_3", STRINGS("ueye_rgb_3"), ModuleThread::loopFull);
+    //addModule("VideoEncoder", "ENCODER_3", STRINGS("ueye_rgb_3"), ModuleThread::listenFirst);
+    //addModule("ImageViewer", "VIEWER_3", STRINGS("ueye_rgb_3"), ModuleThread::listenFirst);
+
+    //addModule("UEyePoller", "POLLER_5", STRINGS("ueye_rgb_5"), ModuleThread::loopWithBeat, 0.005);
+    //addModule("UEyePoller", "POLLER_4", STRINGS("ueye_rgb_4"), ModuleThread::loopFull);
+    //addModule("VideoEncoder", "ENCODER_4", STRINGS("ueye_rgb_4"), ModuleThread::listenFirst);
+    //addModule("ImageViewer", "VIEWER_4", STRINGS("ueye_rgb_4"), ModuleThread::listenFirst);
+    connect();
+  }
+};
+
 void threadedRun() {
   lib_hardware_ueyecamera();
   lib_Perception();
 
-  struct MySystem:System{
-    //ACCESS(byteA, ueye_rgb);
-
-    MySystem(){
-      //addModule("UEyePoller", NULL, ModuleThread::loopWithBeat, .1);
-      addModule("UEyePoller", "POLLER", ModuleThread::loopFull);
-      addModule("ImageViewer", "VIEWER", STRINGS("ueye_rgb"), ModuleThread::listenFirst);
-      addModule("VideoEncoder", "ENCODER", STRINGS("ueye_rgb"), ModuleThread::listenFirst);
-      connect();
-    }
-  } S;
-
+  UEyeSystem S;
   cout << S << endl;
 
   OpenGL gl;
@@ -34,11 +47,9 @@ void threadedRun() {
   timeval time;
 
   engine().open(S);
+  engine().shutdown.waitForSignal();
 
-  MT::timerStart();
-  uint t;
 
-  MT::wait(10);
   /*
   for(t=0; ; t++){
     if(engine().shutdown.getValue()) break;
@@ -57,6 +68,9 @@ void threadedRun() {
 }
 
 int main(int argc,char **argv){
+  MT::initCmdLine(argc, argv);
+
   threadedRun();
   return 0;
 };
+
