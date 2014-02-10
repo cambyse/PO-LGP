@@ -24,10 +24,10 @@ void PDtask::setGainsAsNatural(double decayTime, double dampingRatio) {
 arr PDtask::getDesiredAcceleration(const arr& y, const arr& ydot){
   if(!y_ref.N) y_ref.resizeAs(y).setZero();
   if(!v_ref.N) v_ref.resizeAs(ydot).setZero();
-  Perr = y_ref-y;
-  Derr = v_ref-ydot;
+  this->y = y;
+  this->v = ydot;
   cout <<" TASK " <<name <<": y=(" <<Pgain <<'*' <<y_ref <<'-' <<y <<") v=(" <<Dgain <<'*' <<v_ref <<'-' <<ydot <<')' <<endl;
-  return Pgain*Perr + Dgain*Derr;
+  return Pgain*(y_ref-y) + Dgain*(v_ref-ydot);
 }
 
 //===========================================================================
@@ -142,10 +142,14 @@ arr FeedbackMotionControl::operationalSpaceControl(){
   arr phi, J, q_ddot;
   q_ddot.resizeAs(world.q).setZero();
   getTaskCosts(phi, J, q_ddot);
-  if(!phi.N) return q_ddot;
+  if(!phi.N && !nullSpacePD.active) return q_ddot;
   arr H = diag(1./H_rate_diag);
-  arr A = H + comp_At_A(J);
-  arr a = -comp_At_x(J, phi);
+  arr A=H;
+  arr a(H.d0); a.setZero();
+  if(phi.N){
+    A += comp_At_A(J);
+    a -= comp_At_x(J, phi);
+  }
   if(nullSpacePD.active) a += H * nullSpacePD.prec * nullSpacePD.getDesiredAcceleration(world.q, world.qdot);
   q_ddot = inverse_SymPosDef(A) * a;
   return q_ddot;

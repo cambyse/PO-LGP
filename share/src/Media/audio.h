@@ -5,12 +5,14 @@
 #define SAMPLE_RATE 16000
 
 struct SineSound{
-  float t, dt;
+  float sampleRate;
   floatA notes;
+  floatA SIN;
 
-  SineSound(float sampleRate=SAMPLE_RATE);
+  SineSound(float _sampleRate=SAMPLE_RATE);
 
-  void addNote(float freq, float a=.1);
+  void addNote(float freq, float a=.1, float decay=0.0007);
+  void changeFreq(uint i,float freq);
   void reset();
   void clean();
   float get();

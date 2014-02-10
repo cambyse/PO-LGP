@@ -44,8 +44,8 @@ void JoystickInterface::step(){
   joystickState().resize(n+1);
   joystickState()(0)=B;
   for(uint i=0; i<n; i++) joystickState()(i+1)=(double)A(i)/(1<<15);
-  MT::arrayElemsep=" \t ";
-  cout <<"\r joystickState=" <<joystickState() <<std::flush;
+//  MT::arrayElemsep=" \t ";
+//  cout <<"\r joystickState=" <<joystickState() <<std::flush;
   joystickState.deAccess();
 }
 

@@ -12,7 +12,11 @@ void threadedRun() {
 
   engine().open(S);
 
-  engine().shutdown.waitForSignal();
+  for(;;){
+    S.joystickState.var->waitForNextWriteAccess();
+    cout <<"\r" <<S.joystickState.get()() <<std::flush;
+    if(engine().shutdown.getValue()) break;
+  }
 
   engine().close(S);
   cout <<"bye bye" <<endl;

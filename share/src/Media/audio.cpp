@@ -1,12 +1,19 @@
 #include <portaudio.h>
 #include "audio.h"
 
-SineSound::SineSound(float sampleRate):t(0), dt(1.f/sampleRate){}
+SineSound::SineSound(float _sampleRate):sampleRate(_sampleRate){
+  SIN.resize(1024);
+  for(uint i=0;i<SIN.N;i++) SIN(i) = ::sin((MT_2PI*i)/SIN.N);
+}
 
-void SineSound::addNote(float freq, float a){
-  floatA note = { float(MT_2PI*freq), a, t };
+void SineSound::addNote(float freq, float a, float decay){
+  floatA note = { float(SIN.N*freq/sampleRate), a, 0., decay };
   notes.append( note );
-  notes.reshape(notes.N/3, 3);
+  notes.reshape(notes.N/4, 4);
+}
+
+void SineSound::changeFreq(uint i,float freq){
+  notes(i,0) = float(SIN.N*freq/sampleRate);
 }
 
 void SineSound::reset(){ notes.clear(); }
@@ -21,11 +28,14 @@ float SineSound::get(){
   double x=0.;
   for(uint i=0;i<notes.d0; i++){
     float &a=notes(i, 1);
-    x += a * sin(notes(i,0) * (t-notes(i,2)));
-    if(a>0.05) a *= .995;
-    else a *= .9993;
+    float &t=notes(i, 2);
+    float &dt=notes(i,0);
+    float decay=notes(i,3);
+    x += a * SIN(int(t)&0x3ff); //sin(t);
+    t += dt;
+    if(a>0.05) a *= 1.-10.*decay;
+    else a *= 1.-decay;
   }
-  t += dt;
   return x;
 }
 

@@ -80,16 +80,17 @@ struct sOpenGL{
 /// constructor
 
 void OpenGL::postRedrawEvent(bool fromWithinCallback){
-  if(!fromWithinCallback) gtkLock();
+  //I belief this doesn't need a Lock!
+//  if(!fromWithinCallback) gtkLock();
   gtk_widget_queue_draw(s->glArea);
-  if(!fromWithinCallback) gdk_window_process_updates(gtk_widget_get_window(s->glArea), false);
-  if(!fromWithinCallback) gtkUnlock();
+//  if(!fromWithinCallback) gdk_window_process_updates(gtk_widget_get_window(s->glArea), false);
+//  if(!fromWithinCallback) gtkUnlock();
 }
 
 void OpenGL::processEvents(){
   gtkLock();
   gdk_window_process_updates(gtk_widget_get_window(s->glArea), false);
-  while (gtk_events_pending())  gtk_main_iteration();
+//  while (gtk_events_pending())  gtk_main_iteration();
   gtkUnlock();
 }
 

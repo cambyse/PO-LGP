@@ -374,6 +374,8 @@ void ors::Joint::parseAts() {
 
 uint ors::Joint::qDim() {
   if(type>=JT_hingeX && type<=JT_transZ) return 1;
+  if(type==JT_transXY) return 2;
+  if(type==JT_transXYPhi) return 3;
   if(type==JT_trans3) return 3;
   if(type==JT_universal) return 2;
   if(type==JT_glue || type==JT_fixed) return 0;
@@ -516,7 +518,7 @@ void ors::KinematicWorld::calcBodyFramesFromJoints() {
       e->X = f;
       if(e->type==JT_hingeX || e->type==JT_transX)  e->X.rot.getX(e->axis);
       if(e->type==JT_hingeY || e->type==JT_transY)  e->X.rot.getY(e->axis);
-      if(e->type==JT_hingeZ || e->type==JT_transZ)  e->X.rot.getZ(e->axis);
+      if(e->type==JT_hingeZ || e->type==JT_transZ || e->type==JT_transXYPhi)  e->X.rot.getZ(e->axis);
       f.appendTransformation(e->Q);
       if(!isLinkTree) f.appendTransformation(e->B);
       n->X=f;
@@ -757,6 +759,25 @@ void ors::KinematicWorld::calcJointState(int agent) {
         if(&qdot) qdot(n)=j->Q.vel.z;
         n++;
         break;
+      case JT_transXY:
+        q(n)=j->Q.pos.x;  q(n+1)=j->Q.pos.y;
+        if(&qdot){  qdot(n)=j->Q.vel.x;  qdot(n+1)=j->Q.vel.y;  }
+        n+=2;
+        break;
+      case JT_transXYPhi:
+        q(n)=j->Q.pos.x;
+        q(n+1)=j->Q.pos.y;
+        j->Q.rot.getRad(q(n+2), rotv);
+        if(q(n+2)>MT_PI) q(n+2)-=MT_2PI;
+        if(rotv*Vector_z<0.) q(n+2)=-q(n+2);
+        if(&qdot){
+          qdot(n)=j->Q.vel.x;
+          qdot(n+1)=j->Q.vel.y;
+          qdot(n+2)=j->Q.angvel.length();
+          if(j->Q.angvel*Vector_z<0.) qdot(n)=-qdot(n);
+        }
+        n+=3;
+        break;
       case JT_trans3:
         q(n)=j->Q.pos.x;
         q(n+1)=j->Q.pos.y;
@@ -783,8 +804,8 @@ void ors::KinematicWorld::setJointState(const arr& _q, const arr& _qdot, int age
   if(q.N){
     CHECK(_q.N==q.N && (!(&_qdot) || _qdot.N==q.N), "wrong joint state dimensionalities");
   }
-  q=_q;
-  if(&_qdot) qdot=_qdot; else qdot.clear();
+  if(&_q!=&q) q=_q;
+  if(&_qdot){ if(&_qdot!=&qdot) qdot=_qdot; }else qdot.clear();
   q_agent = agent;
 
   uint n=0;
@@ -892,6 +913,22 @@ void ors::KinematicWorld::setJointState(const arr& _q, const arr& _qdot, int age
         n++;
       } break;
 
+      case JT_transXY: {
+        j->Q.pos.set(q(n), q(n+1), 0.);
+        if(&_qdot){ j->Q.vel.set(qdot(n), qdot(n+1), 0.); j->Q.zeroVels=false; }
+        n+=2;
+      } break;
+
+      case JT_transXYPhi: {
+        j->Q.pos.set(q(n), q(n+1), 0.);
+        j->Q.rot.setRadZ(q(n+2));
+        if(&_qdot){
+          j->Q.vel.set(qdot(n), qdot(n+1), 0.);  j->Q.zeroVels=false;
+          j->Q.angvel.set(0., 0., qdot(n+2));  j->Q.zeroVels=false;
+        }
+        n+=3;
+      } break;
+
       case JT_trans3: {
         j->Q.pos.set(q(n), q(n+1), q(n+2));
         if(&_qdot){ j->Q.vel.set(qdot(n), qdot(n+1), qdot(n+2)); j->Q.zeroVels=false; }
@@ -959,6 +996,20 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, uint a, ors::Vector *rel
           J(1, j_idx) += j->axis.y;
           J(2, j_idx) += j->axis.z;
         }
+        else if(j->type==JT_transXY) {
+          if(j->mimic) NIY;
+          arr R(3,3); j->X.rot.getMatrix(R.p);
+          J.setMatrixBlock(R.sub(0,-1,0,1), 0, j_idx);
+        }
+        else if(j->type==JT_transXYPhi) {
+          if(j->mimic) NIY;
+          arr R(3,3); j->X.rot.getMatrix(R.p);
+          J.setMatrixBlock(R.sub(0,-1,0,1), 0, j_idx);
+          tmp = j->axis ^ (pos-j->X.pos);
+          J(0, j_idx+2) += tmp.x;
+          J(1, j_idx+2) += tmp.y;
+          J(2, j_idx+2) += tmp.z;
+        }
         else if(j->type==JT_trans3) {
           if(j->mimic) NIY;
           arr R(3,3); j->X.rot.getMatrix(R.p);
@@ -1011,6 +1062,12 @@ void ors::KinematicWorld::hessianPos(arr& H, uint a, ors::Vector *rel, int agent
           H(0, j1_idx, j2_idx) = H(0, j2_idx, j1_idx) = r.x;
           H(1, j1_idx, j2_idx) = H(1, j2_idx, j1_idx) = r.y;
           H(2, j1_idx, j2_idx) = H(2, j2_idx, j1_idx) = r.z;
+        }
+        if(j1->type==JT_transXY && j2->type>=JT_hingeX && j2->type<=JT_hingeZ) { //i=trans3, j=hinge
+          NIY;
+        }
+        if(j1->type==JT_transXYPhi && j2->type>=JT_hingeX && j2->type<=JT_hingeZ) { //i=trans3, j=hinge
+          NIY;
         }
         if(j1->type==JT_trans3 && j2->type>=JT_hingeX && j2->type<=JT_hingeZ) { //i=trans3, j=hinge
           Matrix R,A;

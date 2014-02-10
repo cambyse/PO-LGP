@@ -14,7 +14,7 @@ int main(void){
 
   audio.open(S);
 
-  uint mode=1;
+  uint mode=3;
   for(uint k=0;k<200;k++){
     MT::wait(.1);
     switch(mode){
