@@ -1,5 +1,6 @@
 set(CURRENT_SLICE 
- libav_raw
+ bench_rgb2yuv
+libav_raw
 videoEncoder
 videoEncoder_threaded
 vision-modules
