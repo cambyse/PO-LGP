@@ -117,7 +117,7 @@ void sUEyeInterface::camSetup() {
   if(setup_flag)
     return;
 
-  /*uint enable = IS_CONFIG_OPEN_MP_ENABLE;
+  uint enable = IS_CONFIG_OPEN_MP_ENABLE;
   int ret;
   switch((ret = is_Configuration(IS_CONFIG_OPEN_MP_CMD_SET_ENABLE, &enable, 4))) {
       case IS_SUCCESS:
@@ -128,7 +128,7 @@ void sUEyeInterface::camSetup() {
       break;
   default:
       std::clog << "Error configuring OpenMP: " << ret << endl;
-  }*/
+  }
 
   tout(this) << "camSetup()" << endl;
   module->ueye_rgb.set()().resize(c_ueye_height, c_ueye_width, c_ueye_bypp);
