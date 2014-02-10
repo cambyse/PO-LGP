@@ -68,7 +68,7 @@ void bench_rgb2yuv(const unsigned int width, const unsigned int height) {
     uint8_t * const vc = out_plane[2];
     const unsigned int num_pixel = width * height;
 
-#pragma omp parallel for num_threads(2)
+#pragma omp parallel for schedule(dynamic, 256) num_threads(2)
     for(int i = 0; i < num_pixel; ++i) {
         const int pixel_index = i*3;
         rgbToYuvVis(in_plane[pixel_index+2], in_plane[pixel_index+1], in_plane[pixel_index], yc + i, uc + i, vc + i);

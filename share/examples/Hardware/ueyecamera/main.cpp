@@ -33,7 +33,6 @@ struct UEyeSystem: System {
     connect();
   }
 };
-
 void threadedRun() {
   lib_hardware_ueyecamera();
   lib_Perception();
