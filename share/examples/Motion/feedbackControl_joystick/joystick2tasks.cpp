@@ -17,6 +17,8 @@ Joystick2Tasks::Joystick2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL
 void Joystick2Tasks::updateTasks(const arr& joys){
   for(PDtask* pdt:MP.tasks) pdt->active=false;
 
+  if(joys.N<6) return;
+
   double joyRate=.5;
 
   enum {none, up, down, left, right} sel=none;

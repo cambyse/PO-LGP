@@ -4,10 +4,10 @@
 #include <Gui/opengl.h>
 
 struct sPR2Simulator{
-  ors::KinematicWorld pr2;
-  double dt;
-  double t;
-  sPR2Simulator():dt(.01), t(0.){}
+  ors::KinematicWorld pr2, openglCopy;
+  double t, dt;
+  uint step;
+  sPR2Simulator():t(0.), dt(.001), step(0){}
 };
 
 PR2Simulator::PR2Simulator():Module("PR2Simulator"), s(NULL){}
@@ -20,7 +20,8 @@ void PR2Simulator::open(){
   s->pr2.calcBodyFramesFromJoints();
   s->pr2.calcBodyFramesFromJoints();
   s->pr2.calcJointState();
-  s->pr2.gl().update(STRING("PR2 Simulator. time=" <<s->t));
+  s->openglCopy = s->pr2;
+  s->openglCopy.gl().update(STRING("PR2 Simulator. time=" <<s->t));
   q_obs.set() = s->pr2.q;
   qdot_obs.set() = s->pr2.qdot;
   q_ref.set() = s->pr2.q;
@@ -45,8 +46,15 @@ void PR2Simulator::step(){
   qdot_obs.set() = s->pr2.qdot;
 
   //-- update display
-  s->pr2.gl().update(STRING("PR2 Simulator. time=" <<s->t));
+  if(!(s->step%100)){
+//    s->openglCopy.gl().lock.writeLock();
+    s->openglCopy.setJointState(s->pr2.q, s->pr2.qdot);
+    s->openglCopy.calcBodyFramesFromJoints();
+//    s->openglCopy.gl().lock.unlock();
+    s->openglCopy.gl().update(STRING("PR2 Simulator.  time=" <<s->t));
+  }
   s->t += s->dt;
+  s->step ++;
 }
 
 void PR2Simulator::close(){

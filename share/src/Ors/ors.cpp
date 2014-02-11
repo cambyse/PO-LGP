@@ -830,7 +830,7 @@ void ors::KinematicWorld::setJointState(const arr& _q, const arr& _qdot, int age
         }*/
         
         //velocity
-        if(&_qdot){  j->Q.angvel.set(qdot(n) ,0., 0.);  j->Q.zeroVels=false;  }
+        if(false && &_qdot){  j->Q.angvel.set(qdot(n) ,0., 0.);  j->Q.zeroVels=false;  }
         else{  j->Q.angvel.setZero();  j->Q.zeroVels=true;  }
         //if(e->Q.w.isZero()) e->Q.w=Vector_x;
         //if(e->Q.w*Vector_x<0.) e->Q.w.setLength(-v(n)); else e->Q.w.setLength(v(n));
@@ -840,14 +840,14 @@ void ors::KinematicWorld::setJointState(const arr& _q, const arr& _qdot, int age
 
       case JT_hingeY: {
         j->Q.rot.setRadY(q(n));
-        if(&_qdot){  j->Q.angvel.set(0., qdot(n) ,0.);  j->Q.zeroVels=false;  }
+        if(false && &_qdot){  j->Q.angvel.set(0., qdot(n) ,0.);  j->Q.zeroVels=false;  }
         else{  j->Q.angvel.setZero();  j->Q.zeroVels=true;  }
         n++;
       } break;
 
       case JT_hingeZ: {
         j->Q.rot.setRadZ(q(n));
-        if(&_qdot){  j->Q.angvel.set(0., 0., qdot(n));  j->Q.zeroVels=false;  }
+        if(false && &_qdot){  j->Q.angvel.set(0., 0., qdot(n));  j->Q.zeroVels=false;  }
         else{  j->Q.angvel.setZero();  j->Q.zeroVels=true;  }
         n++;
       } break;
@@ -896,42 +896,47 @@ void ors::KinematicWorld::setJointState(const arr& _q, const arr& _qdot, int age
         }*/
         
         //velocity
-        if(&_qdot){ j->Q.vel.set(qdot(n), 0., 0.); j->Q.zeroVels=false; }
-        
+        if(false && &_qdot){ j->Q.vel.set(qdot(n), 0., 0.); j->Q.zeroVels=false; }
+        else{  j->Q.vel.setZero();  j->Q.zeroVels=true;  }
+
         n++;
       } break;
 
       case JT_transY: {
         j->Q.pos = q(n)*Vector_y;
-        if(&_qdot){ j->Q.vel.set(0., qdot(n), 0.); j->Q.zeroVels=false; }
+        if(false && &_qdot){ j->Q.vel.set(0., qdot(n), 0.); j->Q.zeroVels=false; }
+        else{  j->Q.vel.setZero();  j->Q.zeroVels=true;  }
         n++;
       } break;
 
       case JT_transZ: {
         j->Q.pos = q(n)*Vector_z;
-        if(&_qdot){ j->Q.vel.set(0., 0., qdot(n)); j->Q.zeroVels=false; }
+        if(false && &_qdot){ j->Q.vel.set(0., 0., qdot(n)); j->Q.zeroVels=false; }
+        else{  j->Q.vel.setZero();  j->Q.zeroVels=true;  }
         n++;
       } break;
 
       case JT_transXY: {
         j->Q.pos.set(q(n), q(n+1), 0.);
-        if(&_qdot){ j->Q.vel.set(qdot(n), qdot(n+1), 0.); j->Q.zeroVels=false; }
+        if(false && &_qdot){ j->Q.vel.set(qdot(n), qdot(n+1), 0.); j->Q.zeroVels=false; }
+        else{  j->Q.vel.setZero();  j->Q.zeroVels=true;  }
         n+=2;
       } break;
 
       case JT_transXYPhi: {
         j->Q.pos.set(q(n), q(n+1), 0.);
         j->Q.rot.setRadZ(q(n+2));
-        if(&_qdot){
+        if(false && &_qdot){
           j->Q.vel.set(qdot(n), qdot(n+1), 0.);  j->Q.zeroVels=false;
           j->Q.angvel.set(0., 0., qdot(n+2));  j->Q.zeroVels=false;
-        }
+        }else{  j->Q.vel.setZero();  j->Q.angvel.setZero();  j->Q.zeroVels=true;  }
         n+=3;
       } break;
 
       case JT_trans3: {
         j->Q.pos.set(q(n), q(n+1), q(n+2));
-        if(&_qdot){ j->Q.vel.set(qdot(n), qdot(n+1), qdot(n+2)); j->Q.zeroVels=false; }
+        if(false && &_qdot){ j->Q.vel.set(qdot(n), qdot(n+1), qdot(n+2)); j->Q.zeroVels=false; }
+        else{  j->Q.vel.setZero();   j->Q.zeroVels=true;  }
         n+=3;
       } break;
 

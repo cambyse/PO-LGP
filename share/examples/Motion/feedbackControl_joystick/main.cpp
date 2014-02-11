@@ -12,6 +12,7 @@ void testSimulator(){
     ACCESS(arr, q_ref);
     ACCESS(arr, qdot_ref);
     ACCESS(arr, q_obs);
+    ACCESS(arr, qdot_obs);
     ACCESS(arr, joystickState);
     MySystem(){
       addModule<PR2Simulator>(NULL, ModuleThread::loopWithBeat, .001);
@@ -31,19 +32,10 @@ void testSimulator(){
   engine().enableAccessLog();
   engine().open(S);
 
-  uint idx = world.getJointByName("l_shoulder_pan_joint")->qIndex;
-
   for(;;){
-    S.joystickState.var->waitForNextWriteAccess();
+    S.qdot_obs.var->waitForNextWriteAccess();
     arr joy = S.joystickState.get();
-#if 0
-    arr q = S.q_obs.get();
-    if(q.N && joy.N){
-      q(idx) += 10.*joy(4);
-      S.q_ref.set() = q;
-    }
-#else
-    MP.setState(q, qdot);
+    MP.setState(S.q_obs.get(), S.qdot_obs.get());
 //    MP.world.gl().update("operational space sim");
     j2t.updateTasks(joy);
     for(uint tt=0;tt<10;tt++){
@@ -53,7 +45,6 @@ void testSimulator(){
     }
     S.q_ref.set() = q;
     S.qdot_ref.set() = qdot;
-#endif
     if(engine().shutdown.getValue()) break; //waitForSignal();
   }
 

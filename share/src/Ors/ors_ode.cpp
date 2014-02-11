@@ -124,7 +124,7 @@ OdeInterface::OdeInterface(ors::KinematicWorld &_C):C(_C) {
     // need to fix: "mass" is not a mass but a density (in dMassSetBox)
     ors::Shape *s;
     for_list(i, s, n->shapes) {
-      if(!(s->rel.rot.isZero()) || !(s->rel.pos.isZero())) { //we need a relative transformation
+      if(!(s->rel.rot.isZero) || !(s->rel.pos.isZero)) { //we need a relative transformation
         trans = dCreateGeomTransform(space);
         myspace = NULL; //the object is added to no space, but (below) associated with the transform
       } else {
