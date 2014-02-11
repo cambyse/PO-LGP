@@ -35,11 +35,7 @@
 #include "plot.h"
 
 extern "C" {
-#ifdef ARCH_LINUX
-  #include <libqhull/qhull_a.h>
-#else
   #include <qhull/qhull_a.h>
-#endif
 }
 #undef dX
 #undef dY
