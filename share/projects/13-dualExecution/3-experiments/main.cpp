@@ -111,8 +111,8 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
 #ifdef USE_DUAL
     //recalibrate the target based on touch
     double d=0.;
-    if(pd_c->desiredApproach.Perr.N){
-      d = pd_c->desiredApproach.y_ref(0) - pd_c->desiredApproach.Perr(0); //d = distance measured by constraint task
+    if(pd_c->desiredApproach.y.N){
+      d = pd_c->desiredApproach.y(0); //d = distance measured by constraint task
       if(pd_c->desiredApproach.y_ref(0)==0. && d<1e-2){
         est_target->X.pos.z = endeff->X.pos.z+0.1; //est_target position update
       }
@@ -133,10 +133,10 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
     }
 
     //display and record video
-    world.watch(true, STRING(t));
-//    world.gl().update(STRING(t), true, false);
-//    flip_image(world.gl().captureImage);
-//    vid -> addFrame(world.gl().captureImage);
+//    world.watch(false, STRING(t));
+    world.gl().update(STRING(t), true, false, true);
+    flip_image(world.gl().captureImage);
+    vid -> addFrame(world.gl().captureImage);
 
     //write data
     MT::arrayBrackets="  ";
@@ -168,10 +168,11 @@ int main(int argc,char** argv){
 //  return 0;
 
 //  world.getBodyByName("table")->X.pos.z -= .1;
+  orsDrawJoints=orsDrawProxies=orsDrawMarkers=false;
   world.setJointState(x[0]);
   world.gl().watch();
 
-  vid = new VideoEncoder_libav_simple("data.avi", 50);
+  vid = new VideoEncoder_libav_simple("data.avi", 200./4.);
   for(uint i=0;i<10;i++){
     world.getBodyByName("table")->X.pos.z = .6 + .1*rnd.gauss();
     testExecution(x, y, dual, world, i);

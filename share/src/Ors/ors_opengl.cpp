@@ -31,7 +31,7 @@
 #include <iomanip>
 
 //global options
-bool orsDrawJoints=true, orsDrawShapes=true, orsDrawBodies=true, orsDrawProxies=true;
+bool orsDrawJoints=true, orsDrawShapes=true, orsDrawBodies=true, orsDrawProxies=true, orsDrawMarkers=true;
 bool orsDrawMeshes=true, orsDrawZlines=false;
 bool orsDrawBodyNames=false;
 double orsDrawAlpha=1.00;
@@ -119,7 +119,9 @@ void glDrawShape(ors::Shape *s) {
         else glDrawCappedCylinder(s->size[3], s->size[2]);
         break;
       case ors::markerST:
-        glDrawDiamond(s->size[0]/5., s->size[0]/5., s->size[0]/5.); glDrawAxes(s->size[0]);
+        if(orsDrawMarkers){
+          glDrawDiamond(s->size[0]/5., s->size[0]/5., s->size[0]/5.); glDrawAxes(s->size[0]);
+        }
         break;
       case ors::meshST:
         CHECK(s->mesh.V.N, "mesh needs to be loaded to draw mesh object");

@@ -16,24 +16,24 @@ body R_HAND_R_FINGER_KNUCKLE_2 { pose=<T -0.354925 0.0474174 0.326623 0.0151139 
 body R_HAND_R_FINGER_KNUCKLE_3 { pose=<T -0.424861 0.0474103 0.323624 -0.0151139 0.0151845 -0.706962 -0.706927 >  }
 
 shape (BASE){ type=3 rel=<T 0.00218987 0.154271 0.615566 -1 0 0 -2.06823e-13 >  mass=1  mesh='meshes/collision/stand.stl'  rel_includes_mesh_center=true  }
-shape (BASE){ type=3 rel=<T 0.0909555 0.144709 1.30252 -0.5 0 0 0.866025 >  mass=1  mesh='meshes/collision/lbr0_smpl.stl'  rel_includes_mesh_center=true  }
-shape (BASE){ type=3 rel=<T 0.235143 0.0872249 1.3068 0.683013 0.183013 0.683013 -0.183013 >  mass=5.9907  mesh='meshes/collision/lbr1_smpl.stl'  rel_includes_mesh_center=true  }
-shape (BASE){ type=3 rel=<T 0.296218 0.00898121 1.24405 0.18298 -0.183046 -0.683004 0.683022 >  mass=5.73494  mesh='meshes/collision/lbr2_smpl.stl'  rel_includes_mesh_center=true  }
-shape (BASE){ type=3 rel=<T 0.28773 0.0263192 0.99558 4.65223e-05 0.707108 0.707106 1.24657e-05 >  mass=4.21467  mesh='meshes/collision/lbr3_smpl.stl'  rel_includes_mesh_center=true  }
-shape (BASE){ type=3 rel=<T 0.322556 0.0263282 0.864465 -0.500034 -0.499968 -0.499991 -0.500008 >  mass=3.66982  mesh='meshes/collision/lbr4_smpl.stl'  rel_includes_mesh_center=true  }
-shape (BASE){ type=3 rel=<T 0.306652 0.0468981 0.616058 4.17119e-05 4.93878e-05 1 -2.40796e-05 >  mass=2.31327  mesh='meshes/collision/lbr5_smpl.stl'  rel_includes_mesh_center=true  }
-shape (BASE){ type=3 rel=<T 0.305454 0.0152575 0.517009 5.42779e-06 -6.44172e-05 -0.707088 0.707125 >  mass=2.05786  mesh='meshes/collision/lbr6_smpl.stl'  rel_includes_mesh_center=true  }
-shape (BASE){ type=3 rel=<T 0.30792 0.0249925 0.456247 1.11692e-05 -0.707072 0.707142 -4.78203e-05 >  mass=1.1202  mesh='meshes/collision/lbr7_smpl.stl'  rel_includes_mesh_center=true  }
-shape (BASE){ type=3 rel=<T 0.297382 0.0277243 0.371069 -0.499991 0.500059 0.499983 -0.499967 >  mass=1e-08  mesh='meshes/collision/wamLowerWristFTPalmLink7_smpl.stl'  rel_includes_mesh_center=true  }
-shape (BASE){ type=3 rel=<T 0.22138 0.0247851 0.32769 -0.5106 0.48912 -0.489141 0.510676 >  mass=0.057957  mesh='meshes/collision/secondFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
-shape (BASE){ type=3 rel=<T 0.159208 0.0261591 0.324824 -0.48912 -0.5106 0.510676 0.489141 >  mass=0.0342178  mesh='meshes/collision/thirdFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
-shape (BASE){ type=3 rel=<T 0.336106 0.0514505 0.342701 0.499991 -0.500059 -0.499983 0.499967 >  mass=0.162527  mesh='meshes/collision/firstFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
-shape (BASE){ type=3 rel=<T 0.388468 0.0530892 0.327702 -0.51061 0.489211 0.489136 -0.510585 >  mass=0.057957  mesh='meshes/collision/secondFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
-shape (BASE){ type=3 rel=<T 0.45064 0.0517149 0.324847 -0.489211 -0.51061 -0.510585 -0.489136 >  mass=0.0342178  mesh='meshes/collision/thirdFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
-shape (BASE){ type=3 rel=<T 0.336101 0.00151046 0.342703 0.499991 -0.500059 -0.499983 0.499967 >  mass=0.162527  mesh='meshes/collision/firstFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
-shape (BASE){ type=3 rel=<T 0.388463 0.00314921 0.327705 -0.51061 0.489211 0.489136 -0.510585 >  mass=0.057957  mesh='meshes/collision/secondFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
-shape (BASE){ type=3 rel=<T 0.450635 0.00177485 0.324849 -0.489211 -0.51061 -0.510585 -0.489136 >  mass=0.0342178  mesh='meshes/collision/thirdFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
-shape (BASE){ type=3 rel=<T -0.0909555 0.144709 1.30748 -5.17058e-14 -0.866025 0.5 -8.9557e-14 >  mass=1  mesh='meshes/collision/lbr0_smpl.stl'  rel_includes_mesh_center=true  }
+#shape (BASE){ type=3 rel=<T 0.0909555 0.144709 1.30252 -0.5 0 0 0.866025 >  mass=1  mesh='meshes/collision/lbr0_smpl.stl'  rel_includes_mesh_center=true  }
+#shape (BASE){ type=3 rel=<T 0.235143 0.0872249 1.3068 0.683013 0.183013 0.683013 -0.183013 >  mass=5.9907  mesh='meshes/collision/lbr1_smpl.stl'  rel_includes_mesh_center=true  }
+#shape (BASE){ type=3 rel=<T 0.296218 0.00898121 1.24405 0.18298 -0.183046 -0.683004 0.683022 >  mass=5.73494  mesh='meshes/collision/lbr2_smpl.stl'  rel_includes_mesh_center=true  }
+#shape (BASE){ type=3 rel=<T 0.28773 0.0263192 0.99558 4.65223e-05 0.707108 0.707106 1.24657e-05 >  mass=4.21467  mesh='meshes/collision/lbr3_smpl.stl'  rel_includes_mesh_center=true  }
+#shape (BASE){ type=3 rel=<T 0.322556 0.0263282 0.864465 -0.500034 -0.499968 -0.499991 -0.500008 >  mass=3.66982  mesh='meshes/collision/lbr4_smpl.stl'  rel_includes_mesh_center=true  }
+#shape (BASE){ type=3 rel=<T 0.306652 0.0468981 0.616058 4.17119e-05 4.93878e-05 1 -2.40796e-05 >  mass=2.31327  mesh='meshes/collision/lbr5_smpl.stl'  rel_includes_mesh_center=true  }
+#shape (BASE){ type=3 rel=<T 0.305454 0.0152575 0.517009 5.42779e-06 -6.44172e-05 -0.707088 0.707125 >  mass=2.05786  mesh='meshes/collision/lbr6_smpl.stl'  rel_includes_mesh_center=true  }
+#shape (BASE){ type=3 rel=<T 0.30792 0.0249925 0.456247 1.11692e-05 -0.707072 0.707142 -4.78203e-05 >  mass=1.1202  mesh='meshes/collision/lbr7_smpl.stl'  rel_includes_mesh_center=true  }
+#shape (BASE){ type=3 rel=<T 0.297382 0.0277243 0.371069 -0.499991 0.500059 0.499983 -0.499967 >  mass=1e-08  mesh='meshes/collision/wamLowerWristFTPalmLink7_smpl.stl'  rel_includes_mesh_center=true  }
+#shape (BASE){ type=3 rel=<T 0.22138 0.0247851 0.32769 -0.5106 0.48912 -0.489141 0.510676 >  mass=0.057957  mesh='meshes/collision/secondFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
+#shape (BASE){ type=3 rel=<T 0.159208 0.0261591 0.324824 -0.48912 -0.5106 0.510676 0.489141 >  mass=0.0342178  mesh='meshes/collision/thirdFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
+#shape (BASE){ type=3 rel=<T 0.336106 0.0514505 0.342701 0.499991 -0.500059 -0.499983 0.499967 >  mass=0.162527  mesh='meshes/collision/firstFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
+#shape (BASE){ type=3 rel=<T 0.388468 0.0530892 0.327702 -0.51061 0.489211 0.489136 -0.510585 >  mass=0.057957  mesh='meshes/collision/secondFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
+#shape (BASE){ type=3 rel=<T 0.45064 0.0517149 0.324847 -0.489211 -0.51061 -0.510585 -0.489136 >  mass=0.0342178  mesh='meshes/collision/thirdFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
+#shape (BASE){ type=3 rel=<T 0.336101 0.00151046 0.342703 0.499991 -0.500059 -0.499983 0.499967 >  mass=0.162527  mesh='meshes/collision/firstFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
+#shape (BASE){ type=3 rel=<T 0.388463 0.00314921 0.327705 -0.51061 0.489211 0.489136 -0.510585 >  mass=0.057957  mesh='meshes/collision/secondFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
+#shape (BASE){ type=3 rel=<T 0.450635 0.00177485 0.324849 -0.489211 -0.51061 -0.510585 -0.489136 >  mass=0.0342178  mesh='meshes/collision/thirdFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
+#shape (BASE){ type=3 rel=<T -0.0909555 0.144709 1.30748 -5.17058e-14 -0.866025 0.5 -8.9557e-14 >  mass=1  mesh='meshes/collision/lbr0_smpl.stl'  rel_includes_mesh_center=true  }
 shape (R_SHOULDER){ type=3 rel=<T -0.0199055 -0.0017974 0.0995275 0.707107 0 0 0.707107 >  mass=5.9907  mesh='meshes/collision/lbr1_smpl.stl'  rel_includes_mesh_center=true  color=[.1 .1 .5] }
 shape (R_UPPER_ARM_IN_SHOULDER){ type=3 rel=<T -0.0629513 -3.59874e-05 0.0173179 0.707107 0 0 0.707107 >  mass=5.73494  mesh='meshes/collision/lbr2_smpl.stl'  rel_includes_mesh_center=true  color=[.1 .1 .5] }
 shape (R_UPPER_ARM){ type=3 rel=<T 0.0171367 0.00233411 0.102918 0.707107 0 0 0.707107 >  mass=4.21467  mesh='meshes/collision/lbr3_smpl.stl'  rel_includes_mesh_center=true  color=[.1 .1 .5] }
