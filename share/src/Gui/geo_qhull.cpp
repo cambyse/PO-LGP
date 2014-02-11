@@ -336,13 +336,8 @@ void getTriangulatedHull(uintA& T, arr& V) {
   uint f, i, v;
   
   arr Vnew;
-#ifdef ARCH_LINUX
-  Vnew.resize(qh_qh.num_vertices, 3);
-  T.resize(qh_qh.num_facets, 3);
-#else
-  Vnew.resize(qh_qh->num_vertices, 3);
-  T.resize(qh_qh->num_facets, 3);
-#endif
+  Vnew.resize(qh num_vertices, 3);
+  T.resize(qh num_facets, 3);
   i=0;
   FORALLvertices {
     vertex->id = i;
