@@ -1,2 +1,9 @@
-mencoder data.avi -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=1600:abitrate=1 -oac copy -o z.avi
+mencoder data.avi -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=3200k:abitrate=1 -oac copy -o z.avi
+
+
+
+avconv -r 50 -i data.avi -c:v mpeg4 -b 2400k -g 30 -f avi -an -r 25 z.avi
+
+
+avconv -i data.avi -pass 2 -threads auto -c:v libxvid -b:v 672k -g 300 -bf 2 -an video.avi
 
