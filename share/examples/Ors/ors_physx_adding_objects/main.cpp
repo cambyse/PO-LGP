@@ -6,7 +6,7 @@
 #include <Ors/ors_physx.h>
 #include <Gui/opengl.h>
 
-void addRandomObject(ors::Graph &ors) {
+void addRandomObject(ors::KinematicWorld &ors) {
   ors::Body *b = new ors::Body(ors);
   b->X.setRandom();
   b->X.pos.z += 1.;
@@ -18,7 +18,7 @@ void addRandomObject(ors::Graph &ors) {
 
 
 void TEST(OrsPhysx) {
-  ors::Graph graph;
+  ors::KinematicWorld graph;
   addRandomObject(graph);
 
   OpenGL glMy;

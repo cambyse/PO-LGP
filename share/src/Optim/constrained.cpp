@@ -97,6 +97,7 @@ void optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
     case squaredPenalty: UCP.mu=1.;  break;
     case augmentedLag:   UCP.mu=1.;  break;
     case logBarrier:     UCP.muLB=1.;  break;
+    case noMethod: HALT("need to set method before");  break;
   }
 
   if(opt.verbose>1) cout <<"***** optConstrained: method=" <<MethodName[opt.constrainedMethod] <<endl;
@@ -112,6 +113,7 @@ void optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
       case squaredPenalty: UCP.mu *= 10;  break;
       case augmentedLag:   UCP.augmentedLagrangian_LambdaUpdate(x);  break;
       case logBarrier:     UCP.muLB /= 2;  break;
+      case noMethod: HALT("need to set method before");  break;
     }
 
     //stopping criteron

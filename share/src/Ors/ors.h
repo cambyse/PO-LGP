@@ -275,6 +275,7 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   void getJointState(arr &_q, arr& _qdot=NoArr) const {
     _q=q; if(&_qdot){ _qdot=qdot; if(!_qdot.N) _qdot.resizeAs(q).setZero();  }
   }
+  arr getJointState() const { return q; }
 
   /// @name set state
   void setJointState(const arr& _q, const arr& _qdot, int agent=0);

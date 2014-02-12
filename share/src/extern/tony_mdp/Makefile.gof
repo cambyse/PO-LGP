@@ -39,7 +39,7 @@ CC = g++ -fPIC -Wno-write-strings
 LEX = flex
 
 # For parsing
-YACC = bison -v #-d
+YACC = bison -v -d
 
 # Removing files
 RM = /bin/rm -f
@@ -120,6 +120,7 @@ parser.tab.cpp:	parser.ypp  parse_err.h mdp.h \
 		parse_hash.h parse_constant.h sparse-matrix.h \
 		imm-reward.h
 		$(YACC) parser.ypp
+		ln -s parser.tab.hpp parser.tab.h
 
 ######################################################################
 #  Specifies the dependencies
@@ -139,7 +140,7 @@ endif
 # Do this to clean up before a fresh make
 
 clean:
-	$(RM) *.o parser.tab.cpp 
+	$(RM) *.o parser.tab.*
 #libmdp.a libmdp*
 #lex.yy.c
 

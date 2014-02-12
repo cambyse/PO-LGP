@@ -37,7 +37,7 @@ bool ors::sRRTPlanner::isFeasible(const arr& q) {
 bool ors::sRRTPlanner::growTowards(RRT& growing, RRT& passive) {
   arr q;
   if(rnd.uni()<.5) {
-    q = p->joint_min + rand(p->problem.ors->getJointStateDimension(), 1) % ( p->joint_max - p->joint_min );
+    q = p->joint_min + rand(p->problem.world.getJointStateDimension(), 1) % ( p->joint_max - p->joint_min );
     q.reshape(q.d0);
   }
   else { 
@@ -99,7 +99,7 @@ void drawRRT(RRT rrt) {
   }
 }
 
-arr ors::RRTPlanner::getTrajectoryTo(const arr& target, OpenGL* gl) {
+arr ors::RRTPlanner::getTrajectoryTo(const arr& target, int max_iter) {
   ors::KinematicWorld copy;
   copy = *G;
   arr q;
@@ -114,14 +114,14 @@ arr ors::RRTPlanner::getTrajectoryTo(const arr& target, OpenGL* gl) {
 
   int iter = 0;
   while(!found) {
-    found = s->growTowards(s->rrt, target_rrt, copy);
+    found = s->growTowards(s->rrt, target_rrt/*, copy*/);
     if(found) {
       node0 = s->success_growing;
       node1 = s->success_passive;
       break;
     }
 
-    found = s->growTowards(target_rrt, s->rrt, copy);
+    found = s->growTowards(target_rrt, s->rrt/*, copy*/);
     if(found) {
       node0 = s->success_passive;
       node1 = s->success_growing;
@@ -132,12 +132,12 @@ arr ors::RRTPlanner::getTrajectoryTo(const arr& target, OpenGL* gl) {
     iter++;
   }
 
-  if (gl) {
-    gl->add(glDrawPlot, &plotModule);
+  if(s->verbose) {
+    G->gl().add(glDrawPlot, &plotModule);
     drawRRT(s->rrt);
     drawRRT(target_rrt);
   }
-  if (s->verbose) std::cout << std::endl;
+  if(s->verbose) std::cout << std::endl;
 
   arr q0 = buildTrajectory(s->rrt, node0, true);
   arr q1 = buildTrajectory(target_rrt, node1, false);

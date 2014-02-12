@@ -1026,7 +1026,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
   // (2) move towards new object
   for(t=0; t<Tabort; t++) {
     controlledStep(this, MP, msg_string);
-    if(absMax(x->Perr) <.05 || getContact(fingIdx, obj->index)) break;
+    if(absMax(x->y_ref - x->y) <.05 || getContact(fingIdx, obj->index)) break;
   }
   if(t==Tabort) { indicateFailure(); return; }
 
@@ -1048,7 +1048,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
   x->y_ref(2) = .5;
   for(t=0; t<Tabort; t++) {
     controlledStep(this, MP, msg_string);
-    if(absMax(x->Perr) < .05) break;
+    if(absMax(x->y_ref - x->y) < .05) break;
 
     // might drop object
     if(t==50  &&  !object_is_clear  &&  obj->index!=getTableID()) {
@@ -1266,7 +1266,7 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   o->y_ref(2) = neutralHeight;
   for(t=0; t<Tabort; t++) {
     controlledStep(this, MP, msg_string);
-    if(absMax(o->Perr) < 0.01) break;
+    if(absMax(o->y_ref - o->y) < 0.01) break;
   }
   if(t==Tabort) { indicateFailure(); return; }
 
@@ -1275,7 +1275,7 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   o->y_ref = ARR( x_target, y_target, highestPosition(x_target, y_target, 0.06, obj_dropped1_index) + .2);
   for(t=0; t<Tabort; t++) {
     controlledStep(this, MP, msg_string);
-    if(absMax(o->Perr) < 0.01) break;
+    if(absMax(o->y_ref - o->y) < 0.01) break;
   }
   if(t==Tabort) { indicateFailure(); return; }
 
@@ -1303,7 +1303,7 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
 //        o->y_ref(2) -= 0.01;
 //    }
     controlledStep(this, MP, msg_string);
-    if(absMax(o->Perr) < 0.001) break;
+    if(absMax(o->y_ref - o->y) < 0.001) break;
   }
   if(t==Tabort) { indicateFailure(); return; }
 #else
@@ -1578,7 +1578,7 @@ void RobotManipulationSimulator::relaxPosition(const char* message) {
   uint t;
   for(t=0; t<Tabort; t++) {
     controlledStep(this, MP, msg_string);
-    if(absMax(x->Perr) < 0.05) break;
+    if(absMax(x->y_ref - x->y) < 0.05) break;
   }
 #else
   arr q,dq;
@@ -1627,7 +1627,7 @@ void RobotManipulationSimulator::moveToPosition(const arr& pos, const char* mess
   uint t;
   for(t=0; t<Tabort; t++) {
     controlledStep(this, MP, msg_string);
-    if(absMax(x->Perr) < 0.01) break;
+    if(absMax(x->y_ref - x->y) < 0.01) break;
   }
   if(t==Tabort) { indicateFailure(); return; }
 #else
