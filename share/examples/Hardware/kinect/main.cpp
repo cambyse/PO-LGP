@@ -4,6 +4,7 @@
 //#include <sys/time.h>
 
 #include <Hardware/kinect/kinect.h>
+#include <Perception/perception.h>
 
 void lib_hardware_kinect();
 void lib_Perception();
@@ -49,8 +50,9 @@ void threadedRun() {
       addModule("ImageViewer", "ImageViewer_depth", STRINGS("kinect_depthRgb"), ModuleThread::listenFirst);
 //      addModule("Kinect2PointCloud", NULL, ModuleThread::loopWithBeat, .2);
 //      addModule("PointCloudViewer", NULL, STRINGS("kinect_points", "kinect_pointColors"), ModuleThread::listenFirst);
-      addModule("VideoEncoder", "VideoEncoder_rgb", STRINGS("kinect_rgb"), ModuleThread::listenFirst);
-      addModule("VideoEncoder", "VideoEncoder_depth", STRINGS("kinect_depthRgb"), ModuleThread::listenFirst);
+      VideoEncoderX264 *m_enc = addModule<VideoEncoderX264>("VideoEncoder_rgb", STRINGS("kinect_rgb"), ModuleThread::listenFirst);
+      m_enc->set_rgb(true);
+      addModule("VideoEncoderX264", "VideoEncoder_depth", STRINGS("kinect_depthRgb"), ModuleThread::listenFirst);
       connect();
     }
   } S;
