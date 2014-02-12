@@ -21,24 +21,21 @@ void TEST(OrsPhysx) {
   ors::KinematicWorld graph;
   addRandomObject(graph);
 
-  OpenGL glMy;
   OpenGL glPh("PhysX");
-  PhysXInterface physx;
-  bindOrsToOpenGL(graph, glMy);
-  bindOrsToPhysX(graph, glPh, physx);
+  bindOrsToPhysX(graph, glPh, graph.physx());
 
   for (uint t = 0; t < 500; t++) {
 
     // add objects periodically
     if (t % 30 == 0) {
       addRandomObject(graph);
-      physx.syncWithOrs();
+      graph.physx().pullFromPhysx();
       cout << "adding object: " << endl;
     }
 
-    physx.step();
+    graph.physx().step();
     glPh.update();
-    glMy.update();
+    graph.gl().update();
   }
 }
 

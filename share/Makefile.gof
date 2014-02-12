@@ -33,6 +33,10 @@ cleanLocks: force
 
 cleanAll: $(srcs:%=cleanPath/%) $(exas:%=cleanPath/%) cleanLocks
 
+cleanCmake:
+	@find . -type f \( -name 'CMakeCache.txt' -or -name 'CTestTestfile.cmake' -or -name 'cmake_install.cmake' \) -print -delete
+	@find . -type d \( -name 'CMakeFiles' \) -exec rm -Rf {} \;
+
 inf:
 	@echo "srcs =" $(srcs)
 
