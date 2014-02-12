@@ -1,9 +1,12 @@
-%% C++/IDEs
+%% C++
 *.o
 *.a
 *.so
 *.swp
-
+parser.tab.h
+parser.tab.cpp
+parser.tab.hpp
+lex.yy.c
 
 %% EXECUTABLE
 *.exe
