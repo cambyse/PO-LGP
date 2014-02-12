@@ -40,6 +40,7 @@ CC	= gcc
 endif
 MOC = moc-qt4
 UIC = uic-qt4
+YACC = bison -d
 
 ifndef MLR_LIBPATH
 MLR_LIBPATH = /home/lib
@@ -282,6 +283,12 @@ endif
 
 %_moc.cxx: %.h
 	$(MOC) -o $*_moc.cxx $*.h
+
+%.tab.cpp: %.ypp
+	$(YACC) $<
+
+%.tab.h: %.ypp
+	$(YACC) --defines=$@ $<
 
 ## generate a make dependency file
 generate_Makefile.dep: $(SRCS)
