@@ -37,15 +37,17 @@ namespace T1{
   ors::KinematicWorld *G;
   ors::Vector rel;
   ors::Vector axis;
-  static void f  (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsPos(y,*J,i,&rel); }
+  static void f_pos (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->calcBodyFramesFromJoints();  G->kinematicsPos(y,*J,i,&rel); }
   //static void f_hess (arr &J, arr *H, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->jacobianPos(J,i,&rel);  if(H) G->hessianPos (*H,i,&rel); }
-  static void f_vec (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsVec(y,*J,i,&axis); }
+  static void f_vec (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);   G->calcBodyFramesFromJoints();  G->kinematicsVec(y,*J,i,&axis); }
   //static void f3 (arr &y,const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsOri2(y,i,axis); }
   //static void df3(arr &J,const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->jacobianOri2(J,i,axis); }
 }
 
 void TEST(Kinematics){
-  ors::KinematicWorld G("arm3.ors");
+  //ors::KinematicWorld G("test.ors");
+  ors::KinematicWorld G("../../../data/pr2_model/pr2_clean_comfi.ors");
+  G.makeLinkTree();
   uint n=G.getJointStateDimension();
   arr x(n);
   T1::axis.set(1,0,0);
@@ -56,7 +58,7 @@ void TEST(Kinematics){
     rndUniform(x,-.5,.5,false);
     //G.gl().text.clear() <<"k=" <<k <<"  gradient checks of kinematics on random postures";
     //G.watch(false);
-    checkJacobian(Convert(T1::f, NULL), x, 1e-5);
+    checkJacobian(Convert(T1::f_pos, NULL), x, 1e-5);
     //checkJacobian(Convert(T1::f_hess, NULL), x, 1e-5);
     checkJacobian(Convert(T1::f_vec, NULL), x, 1e-5);
   }
@@ -441,6 +443,8 @@ void TEST(BlenderImport){
 #endif
 
 int MAIN(int argc,char **argv){
+  testKinematics();
+  return 0;
 
   testLoadSave();
   testPlayStateSequence();

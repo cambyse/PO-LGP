@@ -518,7 +518,8 @@ void ors::KinematicWorld::calcBodyFramesFromJoints() {
       e->X = f;
       if(e->type==JT_hingeX || e->type==JT_transX)  e->X.rot.getX(e->axis);
       if(e->type==JT_hingeY || e->type==JT_transY)  e->X.rot.getY(e->axis);
-      if(e->type==JT_hingeZ || e->type==JT_transZ || e->type==JT_transXYPhi)  e->X.rot.getZ(e->axis);
+      if(e->type==JT_hingeZ || e->type==JT_transZ)  e->X.rot.getZ(e->axis);
+      if(e->type==JT_transXYPhi)  e->X.rot.getZ(e->axis);
       f.appendTransformation(e->Q);
       if(!isLinkTree) f.appendTransformation(e->B);
       n->X=f;
@@ -740,7 +741,7 @@ void ors::KinematicWorld::calcJointState(int agent) {
         }
         
         // velocity: need to fix
-        if(&qdot) NIY;
+        if(&qdot){}// NIY;
 
         n+=2;
         break;
@@ -1010,7 +1011,7 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, uint a, ors::Vector *rel
           if(j->mimic) NIY;
           arr R(3,3); j->X.rot.getMatrix(R.p);
           J.setMatrixBlock(R.sub(0,-1,0,1), 0, j_idx);
-          tmp = j->axis ^ (pos-j->X.pos);
+          tmp = j->axis ^ (pos-(j->X.pos + j->Q.pos));
           J(0, j_idx+2) += tmp.x;
           J(1, j_idx+2) += tmp.y;
           J(2, j_idx+2) += tmp.z;
@@ -1131,11 +1132,17 @@ void ors::KinematicWorld::kinematicsVec(arr& y, arr& J, uint a, ors::Vector *vec
       if(j->agent==agent && j_idx<q.N){
         CHECK(j->type!=JT_glue && j->type!=JT_fixed, "resort joints so that fixed and glued are last");
 
-        if(j->type>=JT_hingeX && j->type<=JT_hingeZ) { //i=hinge
+        if(j->type>=JT_hingeX && j->type<=JT_hingeZ) {
           r = j->axis ^ ta;
           J(0, j_idx) += r.x;
           J(1, j_idx) += r.y;
           J(2, j_idx) += r.z;
+        }
+        if(j->type==JT_transXYPhi) {
+          r = j->axis ^ ta;
+          J(0, j_idx+2) += r.x;
+          J(1, j_idx+2) += r.y;
+          J(2, j_idx+2) += r.z;
         }
         if(j->type>=JT_transX && j->type<=JT_trans3) { //i=trans
           //J(0, i) = J(1, i) = J(2, i) = 0.; /was set zero already

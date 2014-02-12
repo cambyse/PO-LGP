@@ -411,7 +411,7 @@ void animateConfiguration(ors::KinematicWorld& C) {
       x(i)=x0(i) + .5*sin(MT_2PI*t/20);
       C.setJointState(x);
       C.calcBodyFramesFromJoints();
-      C.gl().update();
+      C.gl().update(STRING("joint = " <<i), false, false, true);
       MT::wait(0.01);
     }
   }
