@@ -223,7 +223,7 @@ import_array();
 
 %typemap(in, fragment="asMTArrayList") MT::Array<Type*> & {
   if(PyList_Check($input)) {
-    $1->resize(PyList_Size($input));
+    $1 = new MT::Array<Type*>(PyList_Size($input));
     for(uint i=0; i<PyList_Size($input); ++i) {
       Type *tm;
       PyObject *iter = PyList_GetItem($input, i);
@@ -291,12 +291,15 @@ import_array();
     Type **iter = &((*$1)(i));
     {
       Type *$1 = *iter;
-      int $owner = 1; // this is hacky
+      int $owner = 0; // this is hacky
       PyObject *$result = NULL;
+
+      // this sets result.
       $typemap(out, Type*)
+
       obj = $result; 
     }
-    PyList_SetItem($result, i, obj);
+    PyList_SetItem(argout, i, obj);
   }
   %append_output(argout);
 }
@@ -316,11 +319,7 @@ import_array();
 //===========================================================================
 
 %typemap(memberin) MT::Array<Type*> {
-#ifdef SWIG_DEREFERENCE_MEMBERS
-  $1 = *$input;
-#else
-  $1 = $input;
-#endif
+  $1 = *$input;  
 }
 
 %typemap(memberin) MT::Array<Type*> & {

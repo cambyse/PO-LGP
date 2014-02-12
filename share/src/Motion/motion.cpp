@@ -21,6 +21,8 @@
 #include "taskMap_default.h"
 #include <Gui/opengl.h>
 #include <Ors/ors_swift.h>
+#include <devTools/logging.h>
+SET_LOG(motion, DEBUG);
 
 double stickyWeight=1.;
 
@@ -162,6 +164,7 @@ void MotionProblem::setInterpolatingVelCosts(
 
 void MotionProblem::setState(const arr& q, const arr& v) {
   world.setJointState(q, v);
+  world.calcBodyFramesFromJoints();
   world.calcBodyFramesFromJoints();
   if(useSwift) world.computeProxies();
   if(transitionType == realDynamic) {
@@ -505,6 +508,15 @@ void MotionProblem_EndPoseFunction::fv(arr& phi, arr& J, const arr& x){
   }
 
   if(&J) CHECK(J.d0==phi.N,"");
+
+  //store in CostMatrix
+  if(!MP.costMatrix.N) {
+    MP.costMatrix.resize(MP.T+1,phi.N);
+    MP.costMatrix.setZero();
+  }
+  
+  CHECK(MP.costMatrix.d1==phi.N,"");
+  MP.costMatrix[MP.T]() = phi;
 }
 
 //===========================================================================

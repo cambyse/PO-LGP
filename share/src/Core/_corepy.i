@@ -48,6 +48,7 @@ def get_mlr_path():
 %{
   #include "Core/geo.h"
   #include "Core/array.h"
+  #include "Core/util_t.h"
   #include "Core/array_t.h"
   // #include "Core/algos.h"
   #include "Gui/opengl.h"
@@ -96,6 +97,12 @@ def get_mlr_path():
 
 %typemap(in) MT::String {
     $1 = PyString_AsString($input);
+}
+%typemap(in) MT::String & {
+    $1 = new MT::String(PyString_AsString($input));
+}
+%typemap(in) MT::String * {
+    $1 = new MT::String(PyString_AsString($input));
 }
 %typemap(out) MT::String {
     $result = PyString_FromString($1.p);
@@ -152,6 +159,21 @@ inline uint argmax(const arr& x) { return x.maxIndex(); }
 inline uint argmin(const arr& x) { return x.minIndex(); }
 
 inline uintA randperm(uint n) {  uintA z;  z.setRandomPerm(n);  return z; }
+
+//===========================================================================
+
+
+namespace MT {
+  template<class T> T getParameter(const char* tag);
+  template<class T> T getParameter(const char* tag, const T& Default);
+}
+
+%template(getDoubleParameter) MT::getParameter<double>;
+%template(getIntParameter) MT::getParameter<int>;
+%template(getArrayParameter) MT::getParameter<arr>;
+%template(getIntAParameter) MT::getParameter<intA>;
+%template(getStringParameter) MT::getParameter<MT::String>;
+%template(getBoolParameter) MT::getParameter<bool>;
 
 //===========================================================================
 
