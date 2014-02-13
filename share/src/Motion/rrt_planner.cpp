@@ -15,46 +15,49 @@ namespace ors {
     RRTPlanner *p;
     RRT rrt;
 
-    sRRTPlanner(RRTPlanner *p, RRT rrt) : p(p), rrt(rrt) { };
+    sRRTPlanner(RRTPlanner *p, RRT rrt, bool verbose) : p(p), rrt(rrt), verbose(verbose) { };
 
+<<<<<<< HEAD
+    bool growTowards(RRT& growing, RRT& passive);
+
+    bool isFeasible(const arr& q);
+=======
     bool growTowards(RRT& growing, RRT& passive, ors::KinematicWorld &G);
+>>>>>>> master
 
     uint success_growing;
     uint success_passive;
+
+    bool verbose;
   };
 }
 
+bool ors::sRRTPlanner::isFeasible(const arr& q) {
+  arr phi, J_x, J_v;
+  p->problem.setState(q, NoArr);
+  return p->problem.getTaskCosts(phi, J_x, J_v, 0);
+}
 
-bool ors::sRRTPlanner::growTowards(RRT& growing, RRT& passive, ors::KinematicWorld &G) {
+bool ors::sRRTPlanner::growTowards(RRT& growing, RRT& passive) {
   arr q;
   if(rnd.uni()<.5) {
-    q = p->joint_min + rand(G.getJointStateDimension(), 1) % ( p->joint_max - p->joint_min );
+    q = p->joint_min + rand(p->problem.world.getJointStateDimension(), 1) % ( p->joint_max - p->joint_min );
     q.reshape(q.d0);
   }
   else { 
-    passive.getRandomNode(q);
+    q = passive.getRandomNode();
   }
+  arr proposal;
+  growing.getProposalTowards(proposal, q);
 
-  growing.getProposalTowards(q);
-
-  G.setJointState(q);
-  G.calcBodyFramesFromJoints();
-
-  HALT("SORRY! I didn't know how to fix this. What is it doing?");
-//  ors::KinematicWorld *G_t = &p->problem.world;
-//  p->problem.world = &G;
-  arr phi, J_x, J_v;
-//  p->problem.world.computeProxies();
-  bool feasible = p->problem.getTaskCosts(phi, J_x, J_v, 0);
-//  p->problem.world = G_t;
-
-  if (feasible) {
-
-    growing.add(q);
-    double d = passive.getProposalTowards(q);
+  bool feasible = isFeasible(proposal);
+  if (feasible) { 
+    growing.add(proposal);
+    arr tmp_prop;
+    double d = passive.getProposalTowards(tmp_prop, proposal);
 
     if (d < growing.getStepsize()) {
-      growing.getProposalTowards(q); // to actually get the latest point
+      growing.getProposalTowards(tmp_prop, proposal); // to actually get the latest point
       success_growing = growing.getNearest();
       success_passive = passive.getNearest();
       return true;
@@ -74,7 +77,6 @@ arr buildTrajectory(RRT& rrt, uint node, bool forward) {
     ++i;
   }
   while(node);
-
   // append the root node
   q.append(rrt.getNode(0));
 
@@ -86,8 +88,8 @@ arr buildTrajectory(RRT& rrt, uint node, bool forward) {
   return q;
 }
     
-ors::RRTPlanner::RRTPlanner(ors::KinematicWorld *G, MotionProblem &problem, double stepsize) : 
-  s(new ors::sRRTPlanner(this, RRT(G->q, stepsize))), G(G), problem(problem) {
+ors::RRTPlanner::RRTPlanner(ors::KinematicWorld *G, MotionProblem &problem, double stepsize, bool verbose) : 
+  s(new ors::sRRTPlanner(this, RRT(G->getJointState(), stepsize), verbose)), G(G), problem(problem) {
     joint_min = zeros(G->getJointStateDimension(), 1);
     joint_max = ones(G->getJointStateDimension(), 1);
   }
@@ -101,38 +103,37 @@ void drawRRT(RRT rrt) {
   }
 }
 
-arr ors::RRTPlanner::getTrajectoryTo(const arr& target, OpenGL* gl) {
-  ors::KinematicWorld copy;
-  copy = *G;
+arr ors::RRTPlanner::getTrajectoryTo(const arr& target, int max_iter) {
   arr q;
+
+  if (!s->isFeasible(target))
+    return arr(0);
 
   RRT target_rrt(target, s->rrt.getStepsize());
 
   bool found = false;
-
   uint node0 = 0, node1 = 0;
 
+  int iter = 0;
   while(!found) {
-    found = s->growTowards(s->rrt, target_rrt, copy);
+    found = s->growTowards(s->rrt, target_rrt);
     if(found) {
       node0 = s->success_growing;
       node1 = s->success_passive;
       break;
     }
 
-    found = s->growTowards(target_rrt, s->rrt, copy);
+    found = s->growTowards(target_rrt, s->rrt);
     if(found) {
       node0 = s->success_passive;
       node1 = s->success_growing;
       break;
     }
+    if (s->verbose && iter % 20 == 0) std::cout << "." << std::flush;
+    if (max_iter && iter >= max_iter) return arr(0);
+    iter++;
   }
-
-  if (gl) {
-    gl->add(glDrawPlot, &plotModule);
-    drawRRT(s->rrt);
-    drawRRT(target_rrt);
-  }
+  if (s->verbose) std::cout << std::endl;
 
   arr q0 = buildTrajectory(s->rrt, node0, true);
   arr q1 = buildTrajectory(target_rrt, node1, false);

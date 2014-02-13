@@ -39,4 +39,9 @@ struct Kinect2PointCloud: Module {
   void close(){};
 };
 
+BEGIN_MODULE(KinectDepthPacking)
+    ACCESS(MT::Array<uint16_t>, kinect_depth);
+    ACCESS(byteA, kinect_depthRgb);
+END_MODULE()
+
 #endif

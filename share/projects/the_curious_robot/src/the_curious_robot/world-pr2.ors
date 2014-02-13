@@ -1,0 +1,2 @@
+%include pr2_model/pr2_left_arm.ors
+%include world.ors

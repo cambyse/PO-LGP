@@ -14,6 +14,8 @@ import shape_msgs.msg
 import ors_msgs.msg
 
 
+###############################################################################
+# helper function for asserts
 def assert_vector_equal(ros, ors):
     assert type(ros) == geometry_msgs.msg.Vector3
     assert type(ors) == Vector
@@ -60,11 +62,19 @@ def assert_mesh_equal(ros, ors):
 
 
 def assert_ors_mesh_equal(ors1, ors2):
-    assert (ors1.V == ors2.V).all()
-    assert (ors1.T == ors2.T).all()
+    return
+    if isinstance(ors1.V == ors2.V, bool):
+        assert ors1.V == ors2.V
+    else:
+        assert (ors1.V == ors2.V).all()
+
+    if isinstance(ors1.T == ors2.T, bool):
+        assert ors1.T == ors2.T
+    else:
+        assert (ors1.T == ors2.T).all()
 
 
-def assert_shape_equal(ros, ors):
+def assert_ros_shape_equals_ors_shape(ros, ors):
     assert ros.index == ors.index
     assert ros.index_body == ors.ibody
     assert ros.name == ors.name
@@ -72,6 +82,12 @@ def assert_shape_equal(ros, ors):
     assert_transform_equal(ros.rel, ros.relvel, ors.rel)
     assert ros.shape_type == ors.type
     assert ros.contact == ors.cont
+
+    assert ros.size[0] == ors.get_size(0)
+    assert ros.size[1] == ors.get_size(1)
+    assert ros.size[2] == ors.get_size(2)
+    assert ros.size[3] == ors.get_size(3)
+
     if ors.type == meshST or ros.shape_type == meshST:
         assert_mesh_equal(ros.mesh, ors.mesh)
 
@@ -89,6 +105,10 @@ def assert_ors_shape_equal(ors1, ors2, check_bodies_set=False):
     assert ors1.name == ors2.name
     assert ors1.X == ors2.X
     assert ors1.rel == ors2.rel
+    assert ors1.get_size(0) == ors2.get_size(0)
+    assert ors1.get_size(1) == ors2.get_size(1)
+    assert ors1.get_size(2) == ors2.get_size(2)
+    assert ors1.get_size(3) == ors2.get_size(3)
     assert ors1.type == ors2.type
     assert ors1.cont == ors2.cont
     if ors1.type == meshST or ors2.type == meshST:
@@ -110,7 +130,7 @@ def assert_body_equal(ros, ors):
     assert_vector_equal(ros.torque, ors.torque)
 
     for i, _ in enumerate(ros.shapes):
-        assert_shape_equal(ros.shapes[i], ors.shapes[i])
+        assert_ros_shape_equals_ors_shape(ros.shapes[i], ors.shapes[i])
 
 
 def assert_ors_body_equal(ors1, ors2):
@@ -170,7 +190,7 @@ def assert_graph_equal(ros, ors):
         assert ros.bodies[i].index == i
 
     for i, _ in enumerate(ros.shapes):
-        assert_shape_equal(ros.shapes[i], ors.shapes[i])
+        assert_ros_shape_equals_ors_shape(ros.shapes[i], ors.shapes[i])
         assert ors.shapes[i].index == i
         assert ros.shapes[i].index == i
 
@@ -202,6 +222,8 @@ def assert_ors_graph_equal(ors1, ors2):
     assert ors1.isLinkTree == ors2.isLinkTree
 
 
+###############################################################################
+# Real tests
 class Test_Vector(unittest.TestCase):
     def test_ors_to_ros(self):
         ors_v1 = Vector(1, 2, 3)
@@ -412,6 +434,7 @@ class Test_PrimitiveShape(unittest.TestCase):
 
         ors_s1.type = sphereST
         ors_s1.cont = True
+        ors_s1.set_size(1, 2, 3, 4)
 
         copy_shape = ors_s1
 
@@ -420,7 +443,7 @@ class Test_PrimitiveShape(unittest.TestCase):
         # assert ors_s1 didn't change
         assert copy_shape == ors_s1
 
-        assert_shape_equal(ros_s1, ors_s1)
+        assert_ros_shape_equals_ors_shape(ros_s1, ors_s1)
 
     def test_ros_to_ors(self):
         shape_msg = ors_msgs.msg.Shape()
@@ -440,12 +463,17 @@ class Test_PrimitiveShape(unittest.TestCase):
         shape_msg.shape_type = sphereST
         shape_msg.contact = True
 
+        shape_msg.size[0] = 1
+        shape_msg.size[1] = 2
+        shape_msg.size[2] = 3
+        shape_msg.size[3] = 4
+
         copy_shape = shape_msg
 
         ors_shape = parser.msg_to_ors_shape(shape_msg)
 
         assert copy_shape == shape_msg
-        assert_shape_equal(shape_msg, ors_shape)
+        assert_ros_shape_equals_ors_shape(shape_msg, ors_shape)
 
     def test_ors_ros_ors(self):
         ors_s1 = Shape()
@@ -459,6 +487,8 @@ class Test_PrimitiveShape(unittest.TestCase):
         ors_s1.rel.pos = Vector(6, 7, 8)
         ors_s1.X.rot = Quaternion(1, 9, 1, 2)
         ors_s1.rel.rot = Quaternion(1, 3, 4, 5)
+
+        ors_s1.set_size(1, 2, 3, 4)
 
         ors_s1.type = sphereST
         ors_s1.cont = True
@@ -487,14 +517,26 @@ class Test_PrimitiveShape(unittest.TestCase):
             Quaternion(1, 3, 4, 5))
 
         shape_msg.shape_type = sphereST
+        shape_msg.size[0] = 1.
+        shape_msg.size[1] = 2.
+        shape_msg.size[2] = 3.
+        shape_msg.size[3] = 4.
+
         shape_msg.contact = True
 
         copy_shape = shape_msg
 
         ors_shape = parser.msg_to_ors_shape(shape_msg)
-        shape_msg2 = parser.ors_shape_to_msg(ors_shape)
+        assert_ros_shape_equals_ors_shape(shape_msg, ors_shape)
+
+        assert ors_shape.get_size(0) == 1.
+        assert ors_shape.get_size(1) == 2.
+        assert ors_shape.get_size(2) == 3.
+        assert ors_shape.get_size(3) == 4.
 
         assert copy_shape == shape_msg
+
+        shape_msg2 = parser.ors_shape_to_msg(ors_shape)
         assert shape_msg == shape_msg2
 
 
@@ -528,18 +570,17 @@ class Test_MeshShape(unittest.TestCase):
         ros_s1 = parser.ors_shape_to_msg(ors_s1)
 
         assert_ors_shape_equal(copy_shape, ors_s1)
-        assert_shape_equal(ros_s1, ors_s1)
+        assert_ros_shape_equals_ors_shape(ros_s1, ors_s1)
 
     def test_ors_ros_ors(self):
         g = Graph('handle.ors')
         ors_s1 = g.shapes[0]
 
         shape_msg = parser.ors_shape_to_msg(ors_s1)
-        assert_shape_equal(shape_msg, ors_s1)
+        assert_ros_shape_equals_ors_shape(shape_msg, ors_s1)
 
         ors_s2 = parser.msg_to_ors_shape(shape_msg)
-        assert_shape_equal(shape_msg, ors_s2)
-
+        assert_ros_shape_equals_ors_shape(shape_msg, ors_s2)
         assert_ors_shape_equal(ors_s1, ors_s2)
 
 

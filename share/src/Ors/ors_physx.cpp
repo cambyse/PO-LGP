@@ -224,8 +224,9 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
   PxTransform A = OrsTrans2PxTrans(jj->A);
   PxTransform B = OrsTrans2PxTrans(jj->B);
   switch(jj->type) {
-    case ors::JT_hingeX: {
-      PxRevoluteJoint* desc;
+    case ors::JT_hingeX: 
+    case ors::JT_hingeY:
+    case ors::JT_hingeZ: {
       //  CHECK(A.p!=B.p,"Something is horribly wrong!");
       desc = PxRevoluteJointCreate(*mPhysics, actors(jj->ifrom), A, actors(jj->ito), B.getInverse());
       
@@ -252,6 +253,23 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
     case ors::JT_trans3: {
       break; 
     }
+    case ors::JT_transX: 
+    case ors::JT_transY:
+    case ors::JT_transZ:
+    {
+      PxPrismaticJoint* desc = PxPrismaticJointCreate(*mPhysics, this->s->actors(jj->ifrom), A, this->s->actors(jj->ito), B.getInverse());
+      if(jj->ats.getValue<arr>("limit")) {
+        arr limits = *(jj->ats.getValue<arr>("limit"));
+        PxJointLimitPair limit(limits(0), limits(1), 0.1f);
+        limit.restitution = limits(2);
+        limit.spring = limits(3);
+        limit.damping= limits(4);
+        desc->setLimit(limit);
+        desc->setPrismaticJointFlag(physx::PxPrismaticJointFlag::eLIMIT_ENABLED, true);
+        //desc->setProjectionAngularTolerance(3.14);
+      }
+    }
+    break;
     default:
       NIY;
   }

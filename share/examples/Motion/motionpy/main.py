@@ -1,59 +1,105 @@
 import orspy as ors
 import corepy as core
+import guipy as gui
 import motionpy as motion
-import optimpy as optim
 import numpy as np
+import random
 
-gl = core.OpenGL()
-G = ors.Graph()
-G.init("test.ors")
-ors.bindOrsToOpenGL(G, gl)
 
-P = motion.MotionProblem(G)
-P.loadTransitionParameters()
+class Controller:
+    def __init__(self):
+        self.graph = ors.Graph("world.ors")
+        shapes = ors.makeConvexHulls(self.graph.shapes)
+        self.graph.shapes = shapes
+        self.gl = gui.OpenGL()
+        ors.bindOrsToOpenGL(self.graph, self.gl)
 
-t = core.Transformation()
-t.setText("<t(0 0 .2)>")
+    def create_endpose(self, start, col_prec, pos_prec):
 
-c = P.addDefaultTaskMap_Bodies("position", motion.posTMT, "endeff", t)
-P.setInterpolatingCosts(c, motion.MotionProblem.constFinalMid,
-                        core.ARRAY(P.ors.getBodyByName("target").X.pos), 1e3, 
-                        np.array([0, 0, 0]), 1e-3)
-P.setInterpolatingVelCosts(c, motion.MotionProblem.constFinalMid,
-                           np.array([0, -1, 0]), 1e-0,
-                           np.array([0, 0, 0]), 0)
+        problem = motion.MotionProblem(self.graph)
+        problem.loadTransitionParameters()
+        problem.H_rate_diag = core.getArrayParameter("Hratediag")
 
-c = P.addDefaultTaskMap("collision", motion.collTMT , 0, core.Transformation_Id,
-                        0, core.Transformation_Id, np.array([.1]))
-P.setInterpolatingCosts(c, motion.MotionProblem.constFinalMid, np.array([0.]),
-                        1e-0)
+        shapes = core.getIntAParameter("agent_shapes")
 
-c = P.addDefaultTaskMap("qitself", motion.qItselfTMT, 0, core.Transformation_Id,
-                        0, core.Transformation_Id, np.array([0]))
-P.setInterpolatingCosts(c, motion.MotionProblem.constFinalMid, np.array([0.]),
-                        1e-4)
+        proxy_tm = motion.ProxyTaskMap(motion.allVersusListedPTMT,
+                                       shapes,
+                                       .01,
+                                       True)
+        task_cost2 = problem.addTaskMap("proxyColls", proxy_tm)
+        problem.setInterpolatingCosts(task_cost2,
+                                      motion.MotionProblem.constant,
+                                      np.array([0]), col_prec)
 
-F = motion.MotionProblemFunction(P)
-T = F.get_T()
-k = F.get_k()
-n = F.dim_x()
+        position_tm = motion.DefaultTaskMap(motion.posTMT,
+                                            self.graph,
+                                            "tip1",
+                                            core.Vector(0, 0, 0))
+        task_cost = problem.addTaskMap("position", position_tm)
+        problem.setInterpolatingCosts(task_cost,
+                                      motion.MotionProblem.finalOnly,
+                                      core.ARRAY(problem.ors
+                                                 .getBodyByName("target")
+                                                 .X.pos),
+                                      pos_prec)
+        problem.setInterpolatingVelCosts(task_cost, motion
+                                         .MotionProblem.finalOnly,
+                                         np.array([0., 0., 0.]), 1e1)
 
-print("Problem parameters:")
-print("T=" + str(T))
-print("k=" + str(k))
-print("n=" + str(n))
+        _, x = motion.keyframeOptimizer(start, problem, True, 2)
+        return x
 
-x = core.zeros(T+1, n)
+    def create_rrt_trajectory(self, target):
+        stepsize = .005
 
-print("fx = " + str(optim.evaluateVF(optim.Convert(F).asVectorFunction(), x)))
+        problem = motion.MotionProblem(self.graph)
+        problem.loadTransitionParameters()
+        
+        shapes = core.getIntAParameter("agent_shapes")
+        proxy_tm = motion.ProxyTaskMap(motion.allVersusListedPTMT, shapes, .01,
+                                       True)
+        task_cost = problem.addTaskMap("proxyColls", proxy_tm)
 
-opt = optim.OptOptions();
-opt.verbose = 2
-opt.stopIters = 40
-opt.useAdaptiveDamping = False
-opt.damping = 1e-0
-opt.maxStep = 1.
+        problem.setInterpolatingCosts(task_cost,
+                                      motion.MotionProblem.constant,
+                                      np.array([0]), 1e-0)
+        task_cost.y_threshold = 0
 
-for k in range(0,1):
-    (r, x) = optim.optNewton(x, optim.Convert(F).asScalarFunction(), opt)
-    ors.displayTrajectory(x, 1, G, gl, "planned trajectory")
+        planner = motion.RRTPlanner(self.graph, problem, stepsize)
+        planner.joint_max = core.getArrayParameter("joint_max")
+        planner.joint_min = core.getArrayParameter("joint_min")
+
+        traj = planner.getTrajectoryTo(target)
+        return traj
+
+    def show_trajectory(self, trajectory):
+        for pos in trajectory:
+            self.graph.setJointState(pos)
+            self.graph.calcBodyFramesFromJoints()
+            self.gl.update()
+
+
+def main():
+    con = Controller()
+
+    start = con.graph.getJointState()
+    opt_start = con.graph.getJointState()
+    opt_start[0] = con.graph.getBodyByName("target").X.pos.x
+    opt_start[1] = con.graph.getBodyByName("target").X.pos.y
+
+    print("q = " + str(opt_start))
+
+    target = con.create_endpose(opt_start, 1e0, 1e3)
+    target2 = con.create_endpose(target, 1e3, 0)
+    print("target = " + str(target2))
+
+    con.graph.setJointState(start)
+
+    traj = con.create_rrt_trajectory(target2)
+    print(traj)
+
+    con.show_trajectory(traj)
+
+
+if __name__ == '__main__':
+    main()

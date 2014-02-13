@@ -47,6 +47,8 @@ struct ProxyTaskMap:public TaskMap {
   
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
   virtual uint dim_phi(const ors::KinematicWorld& G);
+
+  virtual ~ProxyTaskMap() {};
 };
 
 /** proxy align task variable */
