@@ -1,0 +1,2308 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+   <FileVersion major="1" minor="6" />
+   <Project>
+      <Option title="rt_amex" />
+      <Option makefile_is_custom="1" />
+      <Option compiler="gcc" />
+      <Option virtualFolders="CMake Files\;CMake Files\src\;CMake Files\src\Algo\;CMake Files\src\MDP\;CMake Files\src\System\;CMake Files\src\Core\;CMake Files\src\Gui\;CMake Files\src\extern\;CMake Files\src\extern\dynamixel\;CMake Files\src\extern\GJK\;CMake Files\src\extern\Lewiner\;CMake Files\src\extern\libcolorseg\;CMake Files\src\extern\ply\;CMake Files\src\extern\SWIFT\;CMake Files\src\extern\SWIFT_decomposer\;CMake Files\src\extern\tony_mdp\;CMake Files\src\extern\usbreset\;CMake Files\src\devTools\;CMake Files\src\Hardware\;CMake Files\src\Hardware\G4\;CMake Files\src\Hardware\ueyecamera\;CMake Files\src\Infer\;CMake Files\src\Motion\;CMake Files\src\Optim\;CMake Files\src\Ors\;CMake Files\src\relational\;CMake Files\cmake\;CMake Files\..\;CMake Files\..\..\;CMake Files\..\..\..\;CMake Files\..\..\..\..\;CMake Files\..\..\..\..\..\;CMake Files\..\..\..\..\..\usr\;CMake Files\..\..\..\..\..\usr\src\;CMake Files\..\..\..\..\..\usr\src\gtest\;CMake Files\..\..\..\..\..\usr\src\gtest\cmake\;CMake Files\..\..\..\..\..\opt\;CMake Files\..\..\..\..\..\opt\ros\;CMake Files\..\..\..\..\..\opt\ros\groovy\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\ros\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\ros\core\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\ros\core\rosbuild\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosunit\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosunit\cmake\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\platform\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\test\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\tools\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\..\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\env-hooks\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\em\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\roslib\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\roslib\cmake\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\roslang\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\roslang\cmake\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\genmsg\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\genmsg\cmake\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\gencpp\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\gencpp\cmake\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\genlisp\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\genlisp\cmake\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\genpy\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\genpy\cmake\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\roslisp\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\roslisp\rosbuild\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\roscpp\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\roscpp\rosbuild\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\roscpp\cmake\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\rospy\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\rospy\rosbuild\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\actionlib\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\actionlib\cmake\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\actionlib_msgs\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\actionlib_msgs\cmake\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\message_runtime\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\message_runtime\cmake\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\cpp_common\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\cpp_common\cmake\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\roscpp_serialization\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\roscpp_serialization\cmake\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\roscpp_traits\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\roscpp_traits\cmake\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\rostime\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\rostime\cmake\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\std_msgs\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\std_msgs\cmake\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosconsole\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosconsole\cmake\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosgraph_msgs\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosgraph_msgs\cmake\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\xmlrpcpp\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\xmlrpcpp\cmake\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\control_msgs\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\control_msgs\cmake\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\geometry_msgs\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\geometry_msgs\cmake\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\trajectory_msgs\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\trajectory_msgs\cmake\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\sensor_msgs\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\sensor_msgs\cmake\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosbag\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosbag\cmake\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\topic_tools\;CMake Files\..\..\..\..\..\opt\ros\groovy\share\topic_tools\cmake\;CMake Files\examples\;CMake Files\examples\Algo\;CMake Files\examples\Algo\ann\;CMake Files\examples\Algo\gaussianProcess\;CMake Files\examples\Algo\RRT\;CMake Files\examples\Core\;CMake Files\examples\Core\array\;CMake Files\examples\Core\geo\;CMake Files\examples\Core\keyValueGraph\;CMake Files\examples\Core\registry\;CMake Files\examples\Core\thread\;CMake Files\examples\Core\util\;CMake Files\examples\Gui\;CMake Files\examples\Gui\graphView\;CMake Files\examples\Gui\mesh\;CMake Files\examples\Gui\mesh_implicitSurface\;CMake Files\examples\Gui\meshTools\;CMake Files\examples\Gui\opengl\;CMake Files\examples\Gui\opengl_threaded\;CMake Files\examples\Gui\plot\;CMake Files\examples\Gui\qhull\;CMake Files\examples\Hardware\;CMake Files\examples\Hardware\g4_data\;CMake Files\examples\Hardware\g4_module\;CMake Files\examples\Hardware\g4_ors\;CMake Files\examples\Hardware\g4_player\;CMake Files\examples\Hardware\g4_raw\;CMake Files\examples\Hardware\ueyecamera\;CMake Files\examples\Infer\;CMake Files\examples\Infer\infer\;CMake Files\examples\MDP\;CMake Files\examples\MDP\mdp\;CMake Files\examples\MDP\mdp_pomdp\;CMake Files\examples\Motion\;CMake Files\examples\Motion\dmp\;CMake Files\examples\Motion\grasp\;CMake Files\examples\Motion\grasp_PR2\;CMake Files\examples\Motion\motion\;CMake Files\examples\Motion\mpc\;CMake Files\examples\Motion\pfc\;CMake Files\examples\Motion\RRT-PR2\;CMake Files\examples\Motion\splines\;CMake Files\examples\Motion\trajectoryExecution\;CMake Files\examples\Motion\trajectoryExecutionPlot\;CMake Files\examples\Motion\motion_PR2\;CMake Files\examples\Optim\;CMake Files\examples\Optim\constrained\;CMake Files\examples\Optim\exercises\;CMake Files\examples\Optim\kOrderMarkov\;CMake Files\examples\Optim\optimization\;CMake Files\examples\Ors\;CMake Files\examples\Ors\ors\;CMake Files\examples\Ors\ors_collision\;CMake Files\examples\Ors\ors_editor\;CMake Files\examples\Ors\ors_physx\;CMake Files\examples\Ors\ors_physx_convex_submeshes\;CMake Files\examples\Ors\ors_physx_obstacle_avoidance\;CMake Files\examples\Ors\orspy\;CMake Files\examples\Ors\ors_sceneGui\;CMake Files\examples\Ors\ors_swift\;CMake Files\examples\relational\;CMake Files\examples\relational\relational_armani_basic\;CMake Files\examples\relational\relational_armani_symbolic\;CMake Files\examples\relational\relational_basic\;CMake Files\examples\relational\relational_learn\;CMake Files\examples\relational\relational_nonBinarySymbols\;CMake Files\examples\relational\relational_plan\;CMake Files\examples\System\;CMake Files\examples\System\module\;CMake Files\examples\System\module-sorting\;CMake Files\projects\;CMake Files\projects\mlr_ros\;CMake Files\projects\mlr_ros\circle_test\;CMake Files\projects\mlr_ros\my_realtime_controller_pkg\;CMake Files\projects\mlr_ros\rt_amex\;CMake Files\projects\mlr_ros\rt_amex\catkin_generated\;CMake Files\projects\amex\;CMake Files\projects\amex\test_motion\;CMake Files\projects\amex\test_motion\catkin_generated\;CMake Files\catkin\;CMake Files\catkin\catkin_generated\;CMake Files\catkin\catkin_generated\version\;CMake Files\teaching\;CMake Files\teaching\CourseML\;CMake Files\teaching\CourseML\04-mixtures\;CMake Files\teaching\CourseML\xx-usps\;CMake Files\teaching\CourseML\01-linearModels\;CMake Files\teaching\CourseML\03-outlier\;CMake Files\teaching\CourseML\07-RL\;CMake Files\teaching\CourseML\08-RL\;CMake Files\teaching\CourseML\06-hmmBinary\;CMake Files\teaching\CourseML\digits\;CMake Files\teaching\CourseML\05-kernelPCA\;CMake Files\teaching\CourseML\02-carData\;" />
+      <Build>
+      <Target title="all">
+         <Option working_dir="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 all" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="ROSBUILD_genmsg_cpp">
+         <Option working_dir="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 ROSBUILD_genmsg_cpp" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="ROSBUILD_genmsg_lisp">
+         <Option working_dir="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 ROSBUILD_genmsg_lisp" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="ROSBUILD_gensrv_cpp">
+         <Option working_dir="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 ROSBUILD_gensrv_cpp" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="ROSBUILD_gensrv_lisp">
+         <Option working_dir="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 ROSBUILD_gensrv_lisp" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="_catkin_empty_exported_target">
+         <Option working_dir="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 _catkin_empty_exported_target" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="clean_test_results">
+         <Option working_dir="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean_test_results" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="doxygen">
+         <Option working_dir="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 doxygen" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="rosbuild_clean-test-results">
+         <Option working_dir="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 rosbuild_clean-test-results" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="rosbuild_precompile">
+         <Option working_dir="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 rosbuild_precompile" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="rosbuild_premsgsrvgen">
+         <Option working_dir="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 rosbuild_premsgsrvgen" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="rospack_genmsg">
+         <Option working_dir="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 rospack_genmsg" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="rospack_genmsg_libexe">
+         <Option working_dir="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 rospack_genmsg_libexe" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="rospack_gensrv">
+         <Option working_dir="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 rospack_gensrv" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="rt_amex">
+         <Option output="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/bin/rt_amex" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/bin" />
+         <Option object_output="./" />
+         <Option type="1" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add option="-DMT_LAPACK" />
+            <Add option="-DMT_OPENCV" />
+            <Add option="-D__STDC_LIMIT_MACROS" />
+            <Add option="-D__STDC_CONSTANT_MACROS" />
+            <Add option="-DMLR_EXAMPLES_AS_TESTS" />
+            <Add option="-DMT_GL" />
+            <Add option="-DMT_GTKGL" />
+            <Add option="-DMT_extern_dynamixel" />
+            <Add option="-DMT_extern_GJK" />
+            <Add option="-DMT_extern_Lewiner" />
+            <Add option="-DMT_extern_libcolorseg" />
+            <Add option="-DMT_extern_ply" />
+            <Add option="-DMT_extern_SWIFT" />
+            <Add option="-DMT_extern_SWIFT_decomposer" />
+            <Add option="-DMT_extern_tony_mdp" />
+            <Add option="-DMT_extern_usbreset" />
+            <Add directory="/home/peter/catkin_ws/devel/include" />
+            <Add directory="/home/peter/catkin_ws/src/ar_track_alvar/include" />
+            <Add directory="/home/peter/git/mlr/share/include" />
+            <Add directory="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/include" />
+            <Add directory="/home/peter/git/mlr/share/src" />
+            <Add directory="/home/peter/rosbuild_ws/sandbox/goal_publisher/srv_gen/cpp/include" />
+            <Add directory="/home/peter/rosbuild_ws/sandbox/my_controller_pkg/msg_gen/cpp/include" />
+            <Add directory="/home/peter/rosbuild_ws/sandbox/my_controller_pkg/srv_gen/cpp/include" />
+            <Add directory="/opt/ros/groovy/include" />
+            <Add directory="/opt/ros/groovy/include/opencv" />
+            <Add directory="/opt/ros/groovy/include/pcl-1.6" />
+            <Add directory="/opt/ros/groovy/stacks/pr2_mechanism/pr2_controller_interface/include" />
+            <Add directory="/opt/ros/groovy/stacks/pr2_mechanism/pr2_hardware_interface/include" />
+            <Add directory="/opt/ros/groovy/stacks/pr2_mechanism/pr2_mechanism_model/include" />
+            <Add directory="/opt/ros/groovy/stacks/ros_control/controller_interface/include" />
+            <Add directory="/opt/ros/groovy/stacks/ros_control/hardware_interface/include" />
+            <Add directory="/usr/include/eigen3" />
+            <Add directory="/usr/include/qhull" />
+            <Add directory="/usr/include/vtk-5.8" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 rt_amex" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="rt_amex/fast">
+         <Option output="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/bin/rt_amex" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/bin" />
+         <Option object_output="./" />
+         <Option type="1" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add option="-DMT_LAPACK" />
+            <Add option="-DMT_OPENCV" />
+            <Add option="-D__STDC_LIMIT_MACROS" />
+            <Add option="-D__STDC_CONSTANT_MACROS" />
+            <Add option="-DMLR_EXAMPLES_AS_TESTS" />
+            <Add option="-DMT_GL" />
+            <Add option="-DMT_GTKGL" />
+            <Add option="-DMT_extern_dynamixel" />
+            <Add option="-DMT_extern_GJK" />
+            <Add option="-DMT_extern_Lewiner" />
+            <Add option="-DMT_extern_libcolorseg" />
+            <Add option="-DMT_extern_ply" />
+            <Add option="-DMT_extern_SWIFT" />
+            <Add option="-DMT_extern_SWIFT_decomposer" />
+            <Add option="-DMT_extern_tony_mdp" />
+            <Add option="-DMT_extern_usbreset" />
+            <Add directory="/home/peter/catkin_ws/devel/include" />
+            <Add directory="/home/peter/catkin_ws/src/ar_track_alvar/include" />
+            <Add directory="/home/peter/git/mlr/share/include" />
+            <Add directory="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/include" />
+            <Add directory="/home/peter/git/mlr/share/src" />
+            <Add directory="/home/peter/rosbuild_ws/sandbox/goal_publisher/srv_gen/cpp/include" />
+            <Add directory="/home/peter/rosbuild_ws/sandbox/my_controller_pkg/msg_gen/cpp/include" />
+            <Add directory="/home/peter/rosbuild_ws/sandbox/my_controller_pkg/srv_gen/cpp/include" />
+            <Add directory="/opt/ros/groovy/include" />
+            <Add directory="/opt/ros/groovy/include/opencv" />
+            <Add directory="/opt/ros/groovy/include/pcl-1.6" />
+            <Add directory="/opt/ros/groovy/stacks/pr2_mechanism/pr2_controller_interface/include" />
+            <Add directory="/opt/ros/groovy/stacks/pr2_mechanism/pr2_hardware_interface/include" />
+            <Add directory="/opt/ros/groovy/stacks/pr2_mechanism/pr2_mechanism_model/include" />
+            <Add directory="/opt/ros/groovy/stacks/ros_control/controller_interface/include" />
+            <Add directory="/opt/ros/groovy/stacks/ros_control/hardware_interface/include" />
+            <Add directory="/usr/include/eigen3" />
+            <Add directory="/usr/include/qhull" />
+            <Add directory="/usr/include/vtk-5.8" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 rt_amex/fast" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="run_tests">
+         <Option working_dir="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 run_tests" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="test-future">
+         <Option working_dir="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 test-future" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="test-results">
+         <Option working_dir="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 test-results" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="test-results-run">
+         <Option working_dir="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 test-results-run" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="tests">
+         <Option working_dir="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 tests" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      </Build>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/pfc/mobject.cpp">
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/pfc/pfc.cpp">
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/splines/spline.cpp">
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/src/main.cpp">
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/pfc/mobject.h">
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/pfc/pfc.h">
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/splines/spline.h">
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/.slicedef.cmake">
+          <Option virtualFolder="CMake Files\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/.slicedef.cmake">
+          <Option virtualFolder="CMake Files\src\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/Algo/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\Algo\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/Algo/.sources.cmake">
+          <Option virtualFolder="CMake Files\src\Algo\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/Algo/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\Algo\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/Algo/.sources.cmake">
+          <Option virtualFolder="CMake Files\src\Algo\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/MDP/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\MDP\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/MDP/.sources.cmake">
+          <Option virtualFolder="CMake Files\src\MDP\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/MDP/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\MDP\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/MDP/.sources.cmake">
+          <Option virtualFolder="CMake Files\src\MDP\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/System/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\System\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/System/.sources.cmake">
+          <Option virtualFolder="CMake Files\src\System\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/System/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\System\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/System/.sources.cmake">
+          <Option virtualFolder="CMake Files\src\System\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/Core/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\Core\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/Core/.sources.cmake">
+          <Option virtualFolder="CMake Files\src\Core\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/Core/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\Core\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/Core/.sources.cmake">
+          <Option virtualFolder="CMake Files\src\Core\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/Gui/gl.cmake">
+          <Option virtualFolder="CMake Files\src\Gui\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/Gui/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\Gui\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/Gui/.sources.cmake">
+          <Option virtualFolder="CMake Files\src\Gui\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/extern/.slicedef.cmake">
+          <Option virtualFolder="CMake Files\src\extern\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/extern/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\extern\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/extern/.slicedef.cmake">
+          <Option virtualFolder="CMake Files\src\extern\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/extern/dynamixel/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\extern\dynamixel\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/extern/dynamixel/.sources.cmake">
+          <Option virtualFolder="CMake Files\src\extern\dynamixel\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/extern/GJK/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\extern\GJK\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/extern/Lewiner/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\extern\Lewiner\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/extern/Lewiner/.sources.cmake">
+          <Option virtualFolder="CMake Files\src\extern\Lewiner\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/extern/libcolorseg/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\extern\libcolorseg\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/extern/libcolorseg/.sources.cmake">
+          <Option virtualFolder="CMake Files\src\extern\libcolorseg\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/extern/ply/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\extern\ply\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/extern/SWIFT/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\extern\SWIFT\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/extern/SWIFT/.sources.cmake">
+          <Option virtualFolder="CMake Files\src\extern\SWIFT\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/extern/SWIFT_decomposer/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\extern\SWIFT_decomposer\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/extern/SWIFT_decomposer/.sources.cmake">
+          <Option virtualFolder="CMake Files\src\extern\SWIFT_decomposer\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/extern/tony_mdp/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\extern\tony_mdp\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/extern/usbreset/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\extern\usbreset\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/extern/usbreset/.sources.cmake">
+          <Option virtualFolder="CMake Files\src\extern\usbreset\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/devTools/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\devTools\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/devTools/.sources.cmake">
+          <Option virtualFolder="CMake Files\src\devTools\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/Hardware/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\Hardware\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/Hardware/.slicedef.cmake">
+          <Option virtualFolder="CMake Files\src\Hardware\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/Hardware/G4/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\Hardware\G4\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/Hardware/ueyecamera/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\Hardware\ueyecamera\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/Infer/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\Infer\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/Infer/.sources.cmake">
+          <Option virtualFolder="CMake Files\src\Infer\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/Motion/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\Motion\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/Motion/.sources.cmake">
+          <Option virtualFolder="CMake Files\src\Motion\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/Optim/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\Optim\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/Optim/.sources.cmake">
+          <Option virtualFolder="CMake Files\src\Optim\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/Ors/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\Ors\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/Ors/.sources.cmake">
+          <Option virtualFolder="CMake Files\src\Ors\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/relational/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\relational\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/src/relational/.sources.cmake">
+          <Option virtualFolder="CMake Files\src\relational\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/cmake/FindLAPACK.cmake">
+          <Option virtualFolder="CMake Files\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/cmake/FindNumPy.cmake">
+          <Option virtualFolder="CMake Files\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../usr/src/gtest/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\usr\src\gtest\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../usr/src/gtest/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\usr\src\gtest\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../usr/src/gtest/cmake/internal_utils.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\usr\src\gtest\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../usr/src/gtest/cmake/internal_utils.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\usr\src\gtest\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/ros/core/rosbuild/rosbuild.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\ros\core\rosbuild\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/ros/core/rosbuild/private.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\ros\core\rosbuild\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/ros/core/rosbuild/public.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\ros\core\rosbuild\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/ros/core/rosbuild/ProcessorCount.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\ros\core\rosbuild\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/ros/core/rosbuild/rosconfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\ros\core\rosbuild\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/ros/core/rosbuild/rosbuild.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\ros\core\rosbuild\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/ros/core/rosbuild/private.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\ros\core\rosbuild\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/ros/core/rosbuild/public.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\ros\core\rosbuild\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/ros/core/rosbuild/ProcessorCount.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\ros\core\rosbuild\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/ros/core/rosbuild/rosconfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\ros\core\rosbuild\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/rosunit/cmake/rosunitConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosunit\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/rosunit/cmake/rosunitConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosunit\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/rosunit/cmake/rosunit-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosunit\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/rosunit/cmake/rosunitConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosunit\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/rosunit/cmake/rosunitConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosunit\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/rosunit/cmake/rosunit-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosunit\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkinConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkinConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/all.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/assert.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_add_env_hooks.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_destinations.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_generate_environment.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_metapackage.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_package.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_package_xml.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_workspace.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/debug_message.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/em_expand.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/python.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/empy.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/find_program_required.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/legacy.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/list_append_unique.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/list_insert_in_workspace_order.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/parse_arguments.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/safe_execute_process.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/stamp.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_python_setup.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/interrogate_setup_dot_py.py">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkinConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkinConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkinConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkinConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/all.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/assert.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_add_env_hooks.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_destinations.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_generate_environment.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_metapackage.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_package.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_package_xml.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_workspace.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/debug_message.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/em_expand.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/python.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/empy.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/find_program_required.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/legacy.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/list_append_unique.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/list_insert_in_workspace_order.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/parse_arguments.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/safe_execute_process.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/stamp.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_python_setup.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/interrogate_setup_dot_py.py">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkinConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkinConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkinConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkinConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/all.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/assert.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_add_env_hooks.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_destinations.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_generate_environment.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_metapackage.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_package.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_package_xml.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_workspace.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/debug_message.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/em_expand.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/python.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/empy.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/find_program_required.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/legacy.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/list_append_unique.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/list_insert_in_workspace_order.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/parse_arguments.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/safe_execute_process.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/stamp.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_python_setup.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/interrogate_setup_dot_py.py">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkinConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkinConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkinConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkinConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/all.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/assert.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_add_env_hooks.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_destinations.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_generate_environment.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_metapackage.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_package.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_package_xml.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_workspace.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/debug_message.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/em_expand.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/python.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/empy.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/find_program_required.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/legacy.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/list_append_unique.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/list_insert_in_workspace_order.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/parse_arguments.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/safe_execute_process.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/stamp.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkin_python_setup.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/interrogate_setup_dot_py.py">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkinConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/catkinConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/platform/lsb.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\platform\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/platform/ubuntu.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\platform\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/platform/windows.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\platform\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/platform/lsb.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\platform\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/platform/ubuntu.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\platform\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/platform/windows.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\platform\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/platform/lsb.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\platform\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/platform/ubuntu.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\platform\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/platform/windows.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\platform\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/platform/lsb.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\platform\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/platform/ubuntu.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\platform\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/platform/windows.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\platform\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/test/tests.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\test\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/test/catkin_download_test_data.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\test\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/test/download_test_data.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\test\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/test/gtest.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\test\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/test/nosetests.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\test\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/test/tests.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\test\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/test/catkin_download_test_data.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\test\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/test/download_test_data.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\test\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/test/gtest.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\test\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/test/nosetests.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\test\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/test/tests.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\test\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/test/catkin_download_test_data.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\test\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/test/download_test_data.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\test\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/test/gtest.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\test\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/test/nosetests.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\test\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/test/tests.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\test\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/test/catkin_download_test_data.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\test\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/test/download_test_data.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\test\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/test/gtest.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\test\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/test/nosetests.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\test\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/tools/doxygen.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\tools\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/tools/libraries.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\tools\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/tools/rt.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\tools\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/tools/doxygen.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\tools\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/tools/libraries.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\tools\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/tools/rt.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\tools\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/tools/doxygen.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\tools\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/tools/libraries.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\tools\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/tools/rt.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\tools\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/tools/doxygen.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\tools\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/tools/libraries.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\tools\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/tools/rt.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\tools\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/../package.xml">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\..\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/../package.xml">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\..\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/../package.xml">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\..\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/../package.xml">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\..\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/_setup_util.py.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/env.sh.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/setup.bash.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/setup.sh.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/setup.zsh.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/rosinstall.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/_setup_util.py.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/env.sh.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/setup.bash.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/setup.sh.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/setup.zsh.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/rosinstall.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/generate_cached_setup.py.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/env.sh.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/_setup_util.py.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/env.sh.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/setup.bash.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/setup.sh.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/setup.zsh.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/rosinstall.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/_setup_util.py.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/env.sh.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/setup.bash.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/setup.sh.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/setup.zsh.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/rosinstall.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/generate_cached_setup.py.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/env.sh.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/pkg.context.pc.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/pkgConfig.cmake.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/pkgConfig-version.cmake.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/pkg.context.pc.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/pkgConfig.cmake.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/pkgConfig-version.cmake.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/_setup_util.py.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/env.sh.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/setup.bash.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/setup.sh.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/setup.zsh.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/rosinstall.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/_setup_util.py.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/env.sh.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/setup.bash.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/setup.sh.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/setup.zsh.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/rosinstall.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/generate_cached_setup.py.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/env.sh.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/_setup_util.py.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/env.sh.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/setup.bash.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/setup.sh.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/setup.zsh.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/rosinstall.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/_setup_util.py.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/env.sh.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/setup.bash.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/setup.sh.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/setup.zsh.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/rosinstall.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/generate_cached_setup.py.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/env.sh.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/pkg.context.pc.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/pkgConfig.cmake.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/pkgConfig-version.cmake.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/pkg.context.pc.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/pkgConfig.cmake.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/templates/pkgConfig-version.cmake.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\templates\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/env-hooks/05.catkin-test-results.sh.develspace.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\env-hooks\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/env-hooks/05.catkin-test-results.sh.develspace.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\env-hooks\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/env-hooks/05.catkin-test-results.sh.develspace.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\env-hooks\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/env-hooks/05.catkin-test-results.sh.develspace.in">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\env-hooks\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/em/pkg.pc.em">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\em\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/em/pkg.pc.em">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\em\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/em/pkg.pc.em">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\em\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/catkin/cmake/em/pkg.pc.em">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\catkin\cmake\em\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roslib/cmake/roslibConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roslib\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roslib/cmake/roslibConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roslib\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roslib/cmake/roslib-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roslib\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roslib/cmake/roslibConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roslib\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roslib/cmake/roslibConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roslib\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roslib/cmake/roslib-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roslib\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roslang/cmake/roslang.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roslang\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roslang/cmake/roslang.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roslang\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genmsg/cmake/genmsgConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genmsg\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genmsg/cmake/genmsgConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genmsg\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genmsg/cmake/genmsg-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genmsg\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genmsg/cmake/genmsgConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genmsg\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genmsg/cmake/genmsgConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genmsg\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genmsg/cmake/genmsgConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genmsg\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genmsg/cmake/genmsgConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genmsg\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genmsg/cmake/genmsg-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genmsg\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genmsg/cmake/genmsgConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genmsg\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genmsg/cmake/genmsgConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genmsg\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genmsg/cmake/genmsgConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genmsg\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genmsg/cmake/genmsgConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genmsg\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genmsg/cmake/genmsg-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genmsg\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genmsg/cmake/genmsgConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genmsg\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genmsg/cmake/genmsgConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genmsg\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genmsg/cmake/genmsgConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genmsg\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genmsg/cmake/genmsgConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genmsg\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genmsg/cmake/genmsg-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genmsg\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genmsg/cmake/genmsgConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genmsg\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genmsg/cmake/genmsgConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genmsg\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/gencpp/cmake/gencppConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\gencpp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/gencpp/cmake/gencppConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\gencpp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/gencpp/cmake/gencpp-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\gencpp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/gencpp/cmake/gencppConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\gencpp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/gencpp/cmake/gencppConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\gencpp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/gencpp/cmake/gencpp-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\gencpp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/gencpp/cmake/gencppConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\gencpp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/gencpp/cmake/gencppConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\gencpp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/gencpp/cmake/gencpp-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\gencpp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/gencpp/cmake/gencppConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\gencpp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/gencpp/cmake/gencppConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\gencpp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/gencpp/cmake/gencpp-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\gencpp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genlisp/cmake/genlispConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genlisp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genlisp/cmake/genlispConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genlisp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genlisp/cmake/genlisp-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genlisp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genlisp/cmake/genlispConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genlisp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genlisp/cmake/genlispConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genlisp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genlisp/cmake/genlisp-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genlisp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genlisp/cmake/genlispConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genlisp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genlisp/cmake/genlispConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genlisp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genlisp/cmake/genlisp-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genlisp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genlisp/cmake/genlispConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genlisp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genlisp/cmake/genlispConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genlisp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genlisp/cmake/genlisp-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genlisp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genpy/cmake/genpyConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genpy\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genpy/cmake/genpyConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genpy\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genpy/cmake/genpy-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genpy\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genpy/cmake/genpyConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genpy\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genpy/cmake/genpyConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genpy\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genpy/cmake/genpy-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genpy\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genpy/cmake/genpyConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genpy\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genpy/cmake/genpyConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genpy\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genpy/cmake/genpy-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genpy\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genpy/cmake/genpyConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genpy\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genpy/cmake/genpyConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genpy\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/genpy/cmake/genpy-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\genpy\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roslisp/rosbuild/roslisp.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roslisp\rosbuild\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roslisp/rosbuild/roslisp.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roslisp\rosbuild\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roscpp/rosbuild/roscpp.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roscpp\rosbuild\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roscpp/rosbuild/roscpp.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roscpp\rosbuild\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roscpp/cmake/roscppConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roscpp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roscpp/cmake/roscppConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roscpp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roscpp/cmake/roscpp-msg-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roscpp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roscpp/cmake/roscppConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roscpp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roscpp/cmake/roscppConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roscpp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roscpp/cmake/roscppConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roscpp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roscpp/cmake/roscppConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roscpp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roscpp/cmake/roscpp-msg-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roscpp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roscpp/cmake/roscppConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roscpp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roscpp/cmake/roscppConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roscpp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/rospy/rosbuild/rospy.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\rospy\rosbuild\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/rospy/rosbuild/rospy.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\rospy\rosbuild\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/actionlib/cmake/actionlibConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\actionlib\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/actionlib/cmake/actionlibConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\actionlib\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/actionlib/cmake/actionlib-msg-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\actionlib\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/actionlib/cmake/actionlibConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\actionlib\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/actionlib/cmake/actionlibConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\actionlib\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/actionlib/cmake/actionlib-msg-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\actionlib\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/actionlib_msgs/cmake/actionlib_msgsConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\actionlib_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/actionlib_msgs/cmake/actionlib_msgsConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\actionlib_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/actionlib_msgs/cmake/actionlib_msgs-msg-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\actionlib_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/actionlib_msgs/cmake/actionlib_msgs-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\actionlib_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/actionlib_msgs/cmake/actionlib_msgsConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\actionlib_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/actionlib_msgs/cmake/actionlib_msgsConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\actionlib_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/actionlib_msgs/cmake/actionlib_msgs-msg-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\actionlib_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/actionlib_msgs/cmake/actionlib_msgs-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\actionlib_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/message_runtime/cmake/message_runtimeConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\message_runtime\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/message_runtime/cmake/message_runtimeConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\message_runtime\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/message_runtime/cmake/message_runtimeConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\message_runtime\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/message_runtime/cmake/message_runtimeConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\message_runtime\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/cpp_common/cmake/cpp_commonConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\cpp_common\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/cpp_common/cmake/cpp_commonConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\cpp_common\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/cpp_common/cmake/cpp_commonConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\cpp_common\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/cpp_common/cmake/cpp_commonConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\cpp_common\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roscpp_serialization/cmake/roscpp_serializationConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roscpp_serialization\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roscpp_serialization/cmake/roscpp_serializationConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roscpp_serialization\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roscpp_serialization/cmake/roscpp_serializationConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roscpp_serialization\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roscpp_serialization/cmake/roscpp_serializationConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roscpp_serialization\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roscpp_traits/cmake/roscpp_traitsConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roscpp_traits\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roscpp_traits/cmake/roscpp_traitsConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roscpp_traits\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roscpp_traits/cmake/roscpp_traitsConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roscpp_traits\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/roscpp_traits/cmake/roscpp_traitsConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\roscpp_traits\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/rostime/cmake/rostimeConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\rostime\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/rostime/cmake/rostimeConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\rostime\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/rostime/cmake/rostimeConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\rostime\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/rostime/cmake/rostimeConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\rostime\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/std_msgs/cmake/std_msgsConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\std_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/std_msgs/cmake/std_msgsConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\std_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/std_msgs/cmake/std_msgs-msg-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\std_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/std_msgs/cmake/std_msgsConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\std_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/std_msgs/cmake/std_msgsConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\std_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/std_msgs/cmake/std_msgs-msg-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\std_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/rosconsole/cmake/rosconsoleConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosconsole\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/rosconsole/cmake/rosconsoleConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosconsole\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/rosconsole/cmake/rosconsole-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosconsole\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/rosconsole/cmake/rosconsoleConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosconsole\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/rosconsole/cmake/rosconsoleConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosconsole\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/rosconsole/cmake/rosconsole-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosconsole\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/rosgraph_msgs/cmake/rosgraph_msgsConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosgraph_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/rosgraph_msgs/cmake/rosgraph_msgsConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosgraph_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/rosgraph_msgs/cmake/rosgraph_msgs-msg-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosgraph_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/rosgraph_msgs/cmake/rosgraph_msgsConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosgraph_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/rosgraph_msgs/cmake/rosgraph_msgsConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosgraph_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/rosgraph_msgs/cmake/rosgraph_msgs-msg-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosgraph_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/xmlrpcpp/cmake/xmlrpcppConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\xmlrpcpp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/xmlrpcpp/cmake/xmlrpcppConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\xmlrpcpp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/xmlrpcpp/cmake/xmlrpcppConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\xmlrpcpp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/xmlrpcpp/cmake/xmlrpcppConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\xmlrpcpp\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/control_msgs/cmake/control_msgsConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\control_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/control_msgs/cmake/control_msgsConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\control_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/control_msgs/cmake/control_msgs-msg-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\control_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/control_msgs/cmake/control_msgsConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\control_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/control_msgs/cmake/control_msgsConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\control_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/control_msgs/cmake/control_msgs-msg-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\control_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/geometry_msgs/cmake/geometry_msgsConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\geometry_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/geometry_msgs/cmake/geometry_msgsConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\geometry_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/geometry_msgs/cmake/geometry_msgs-msg-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\geometry_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/geometry_msgs/cmake/geometry_msgsConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\geometry_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/geometry_msgs/cmake/geometry_msgsConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\geometry_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/geometry_msgs/cmake/geometry_msgs-msg-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\geometry_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/trajectory_msgs/cmake/trajectory_msgsConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\trajectory_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/trajectory_msgs/cmake/trajectory_msgsConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\trajectory_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/trajectory_msgs/cmake/trajectory_msgs-msg-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\trajectory_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/trajectory_msgs/cmake/trajectory_msgsConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\trajectory_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/trajectory_msgs/cmake/trajectory_msgsConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\trajectory_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/trajectory_msgs/cmake/trajectory_msgs-msg-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\trajectory_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/sensor_msgs/cmake/sensor_msgsConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\sensor_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/sensor_msgs/cmake/sensor_msgsConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\sensor_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/sensor_msgs/cmake/sensor_msgs-msg-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\sensor_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/sensor_msgs/cmake/sensor_msgsConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\sensor_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/sensor_msgs/cmake/sensor_msgsConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\sensor_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/sensor_msgs/cmake/sensor_msgs-msg-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\sensor_msgs\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/rosbag/cmake/rosbagConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosbag\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/rosbag/cmake/rosbagConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosbag\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/rosbag/cmake/rosbagConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosbag\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/rosbag/cmake/rosbagConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\rosbag\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/topic_tools/cmake/topic_toolsConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\topic_tools\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/topic_tools/cmake/topic_toolsConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\topic_tools\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/topic_tools/cmake/topic_tools-msg-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\topic_tools\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/topic_tools/cmake/topic_toolsConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\topic_tools\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/topic_tools/cmake/topic_toolsConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\topic_tools\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/../../../../../opt/ros/groovy/share/topic_tools/cmake/topic_tools-msg-extras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\ros\groovy\share\topic_tools\cmake\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/.slicedef.cmake">
+          <Option virtualFolder="CMake Files\examples\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Algo/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Algo\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Algo/.slicedef.cmake">
+          <Option virtualFolder="CMake Files\examples\Algo\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Algo/ann/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Algo\ann\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Algo/ann/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Algo\ann\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Algo/gaussianProcess/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Algo\gaussianProcess\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Algo/gaussianProcess/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Algo\gaussianProcess\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Algo/RRT/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Algo\RRT\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Algo/RRT/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Algo\RRT\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Core/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Core\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Core/.slicedef.cmake">
+          <Option virtualFolder="CMake Files\examples\Core\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Core/array/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Core\array\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Core/array/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Core\array\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Core/geo/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Core\geo\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Core/geo/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Core\geo\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Core/keyValueGraph/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Core\keyValueGraph\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Core/keyValueGraph/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Core\keyValueGraph\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Core/registry/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Core\registry\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Core/registry/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Core\registry\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Core/thread/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Core\thread\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Core/thread/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Core\thread\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Core/util/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Core\util\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Core/util/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Core\util\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Gui/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Gui\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Gui/.slicedef.cmake">
+          <Option virtualFolder="CMake Files\examples\Gui\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Gui/graphView/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Gui\graphView\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Gui/graphView/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Gui\graphView\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Gui/mesh/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Gui\mesh\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Gui/mesh/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Gui\mesh\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Gui/mesh_implicitSurface/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Gui\mesh_implicitSurface\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Gui/mesh_implicitSurface/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Gui\mesh_implicitSurface\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Gui/meshTools/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Gui\meshTools\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Gui/meshTools/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Gui\meshTools\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Gui/opengl/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Gui\opengl\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Gui/opengl/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Gui\opengl\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Gui/opengl_threaded/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Gui\opengl_threaded\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Gui/opengl_threaded/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Gui\opengl_threaded\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Gui/plot/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Gui\plot\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Gui/plot/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Gui\plot\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Gui/qhull/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Gui\qhull\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Gui/qhull/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Gui\qhull\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Hardware/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Hardware\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Hardware/.slicedef.cmake">
+          <Option virtualFolder="CMake Files\examples\Hardware\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Hardware/g4_data/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Hardware\g4_data\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Hardware/g4_module/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Hardware\g4_module\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Hardware/g4_ors/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Hardware\g4_ors\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Hardware/g4_player/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Hardware\g4_player\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Hardware/g4_raw/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Hardware\g4_raw\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Hardware/ueyecamera/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Hardware\ueyecamera\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Infer/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Infer\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Infer/.slicedef.cmake">
+          <Option virtualFolder="CMake Files\examples\Infer\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Infer/infer/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Infer\infer\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Infer/infer/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Infer\infer\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/MDP/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\MDP\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/MDP/.slicedef.cmake">
+          <Option virtualFolder="CMake Files\examples\MDP\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/MDP/mdp/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\MDP\mdp\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/MDP/mdp_pomdp/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\MDP\mdp_pomdp\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/MDP/mdp_pomdp/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\MDP\mdp_pomdp\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Motion\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/.slicedef.cmake">
+          <Option virtualFolder="CMake Files\examples\Motion\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/dmp/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Motion\dmp\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/dmp/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Motion\dmp\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/grasp/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Motion\grasp\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/grasp/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Motion\grasp\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/grasp_PR2/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Motion\grasp_PR2\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/grasp_PR2/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Motion\grasp_PR2\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/motion/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Motion\motion\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/motion/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Motion\motion\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/mpc/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Motion\mpc\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/mpc/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Motion\mpc\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/pfc/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Motion\pfc\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/pfc/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Motion\pfc\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/RRT-PR2/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Motion\RRT-PR2\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/RRT-PR2/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Motion\RRT-PR2\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/splines/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Motion\splines\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/splines/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Motion\splines\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/trajectoryExecution/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Motion\trajectoryExecution\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/trajectoryExecution/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Motion\trajectoryExecution\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/trajectoryExecutionPlot/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Motion\trajectoryExecutionPlot\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/trajectoryExecutionPlot/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Motion\trajectoryExecutionPlot\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/motion_PR2/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Motion\motion_PR2\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Motion/motion_PR2/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Motion\motion_PR2\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Optim/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Optim\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Optim/.slicedef.cmake">
+          <Option virtualFolder="CMake Files\examples\Optim\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Optim/constrained/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Optim\constrained\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Optim/constrained/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Optim\constrained\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Optim/exercises/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Optim\exercises\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Optim/exercises/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Optim\exercises\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Optim/kOrderMarkov/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Optim\kOrderMarkov\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Optim/kOrderMarkov/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Optim\kOrderMarkov\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Optim/optimization/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Optim\optimization\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Optim/optimization/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Optim\optimization\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Ors/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Ors\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Ors/.slicedef.cmake">
+          <Option virtualFolder="CMake Files\examples\Ors\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Ors/ors/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Ors\ors\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Ors/ors/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Ors\ors\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Ors/ors_collision/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Ors\ors_collision\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Ors/ors_collision/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Ors\ors_collision\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Ors/ors_editor/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Ors\ors_editor\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Ors/ors_editor/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Ors\ors_editor\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Ors/ors_physx/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Ors\ors_physx\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Ors/ors_physx/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Ors\ors_physx\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Ors/ors_physx_convex_submeshes/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Ors\ors_physx_convex_submeshes\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Ors/ors_physx_convex_submeshes/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Ors\ors_physx_convex_submeshes\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Ors/ors_physx_obstacle_avoidance/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Ors\ors_physx_obstacle_avoidance\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Ors/ors_physx_obstacle_avoidance/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Ors\ors_physx_obstacle_avoidance\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Ors/orspy/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Ors\orspy\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Ors/ors_sceneGui/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Ors\ors_sceneGui\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Ors/ors_sceneGui/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Ors\ors_sceneGui\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Ors/ors_swift/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\Ors\ors_swift\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/Ors/ors_swift/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\Ors\ors_swift\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/relational/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\relational\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/relational/.slicedef.cmake">
+          <Option virtualFolder="CMake Files\examples\relational\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/relational/relational_armani_basic/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\relational\relational_armani_basic\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/relational/relational_armani_basic/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\relational\relational_armani_basic\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/relational/relational_armani_symbolic/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\relational\relational_armani_symbolic\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/relational/relational_armani_symbolic/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\relational\relational_armani_symbolic\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/relational/relational_basic/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\relational\relational_basic\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/relational/relational_basic/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\relational\relational_basic\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/relational/relational_learn/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\relational\relational_learn\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/relational/relational_learn/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\relational\relational_learn\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/relational/relational_nonBinarySymbols/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\relational\relational_nonBinarySymbols\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/relational/relational_nonBinarySymbols/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\relational\relational_nonBinarySymbols\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/relational/relational_plan/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\relational\relational_plan\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/relational/relational_plan/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\relational\relational_plan\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/System/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\System\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/System/.slicedef.cmake">
+          <Option virtualFolder="CMake Files\examples\System\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/System/module/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\System\module\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/System/module/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\System\module\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/System/module-sorting/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\examples\System\module-sorting\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/examples/System/module-sorting/.sources.cmake">
+          <Option virtualFolder="CMake Files\examples\System\module-sorting\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\projects\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/mlr_ros/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\projects\mlr_ros\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/mlr_ros/.slicedef.cmake">
+          <Option virtualFolder="CMake Files\projects\mlr_ros\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/mlr_ros/circle_test/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\projects\mlr_ros\circle_test\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/mlr_ros/circle_test/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\projects\mlr_ros\circle_test\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/mlr_ros/my_realtime_controller_pkg/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\projects\mlr_ros\my_realtime_controller_pkg\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/mlr_ros/my_realtime_controller_pkg/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\projects\mlr_ros\my_realtime_controller_pkg\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\projects\mlr_ros\rt_amex\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/.sources.cmake">
+          <Option virtualFolder="CMake Files\projects\mlr_ros\rt_amex\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\projects\mlr_ros\rt_amex\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/.sources.cmake">
+          <Option virtualFolder="CMake Files\projects\mlr_ros\rt_amex\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/catkin_generated/ordered_paths.cmake">
+          <Option virtualFolder="CMake Files\projects\mlr_ros\rt_amex\catkin_generated\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/catkin_generated/ordered_paths.cmake">
+          <Option virtualFolder="CMake Files\projects\mlr_ros\rt_amex\catkin_generated\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/catkin_generated/ordered_paths.cmake">
+          <Option virtualFolder="CMake Files\projects\mlr_ros\rt_amex\catkin_generated\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/mlr_ros/rt_amex/catkin_generated/ordered_paths.cmake">
+          <Option virtualFolder="CMake Files\projects\mlr_ros\rt_amex\catkin_generated\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/amex/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\projects\amex\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/amex/.slicedef.cmake">
+          <Option virtualFolder="CMake Files\projects\amex\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/amex/test_motion/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\projects\amex\test_motion\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/amex/test_motion/package.xml">
+          <Option virtualFolder="CMake Files\projects\amex\test_motion\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/amex/test_motion/.sources.cmake">
+          <Option virtualFolder="CMake Files\projects\amex\test_motion\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/amex/test_motion/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\projects\amex\test_motion\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/amex/test_motion/package.xml">
+          <Option virtualFolder="CMake Files\projects\amex\test_motion\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/amex/test_motion/.sources.cmake">
+          <Option virtualFolder="CMake Files\projects\amex\test_motion\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/amex/test_motion/catkin_generated/ordered_paths.cmake">
+          <Option virtualFolder="CMake Files\projects\amex\test_motion\catkin_generated\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/amex/test_motion/catkin_generated/ordered_paths.cmake">
+          <Option virtualFolder="CMake Files\projects\amex\test_motion\catkin_generated\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/amex/test_motion/catkin_generated/package.cmake">
+          <Option virtualFolder="CMake Files\projects\amex\test_motion\catkin_generated\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/amex/test_motion/catkin_generated/ordered_paths.cmake">
+          <Option virtualFolder="CMake Files\projects\amex\test_motion\catkin_generated\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/amex/test_motion/catkin_generated/ordered_paths.cmake">
+          <Option virtualFolder="CMake Files\projects\amex\test_motion\catkin_generated\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/projects/amex/test_motion/catkin_generated/package.cmake">
+          <Option virtualFolder="CMake Files\projects\amex\test_motion\catkin_generated\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/catkin/catkin_generated/version/package.cmake">
+          <Option virtualFolder="CMake Files\catkin\catkin_generated\version\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/catkin/catkin_generated/version/package.cmake">
+          <Option virtualFolder="CMake Files\catkin\catkin_generated\version\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/catkin/catkin_generated/version/package.cmake">
+          <Option virtualFolder="CMake Files\catkin\catkin_generated\version\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/catkin/catkin_generated/version/package.cmake">
+          <Option virtualFolder="CMake Files\catkin\catkin_generated\version\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/teaching/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\teaching\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/teaching/.slicedef.cmake">
+          <Option virtualFolder="CMake Files\teaching\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/teaching/CourseML/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\teaching\CourseML\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/teaching/CourseML/04-mixtures/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\teaching\CourseML\04-mixtures\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/teaching/CourseML/04-mixtures/.sources.cmake">
+          <Option virtualFolder="CMake Files\teaching\CourseML\04-mixtures\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/teaching/CourseML/xx-usps/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\teaching\CourseML\xx-usps\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/teaching/CourseML/xx-usps/.sources.cmake">
+          <Option virtualFolder="CMake Files\teaching\CourseML\xx-usps\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/teaching/CourseML/01-linearModels/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\teaching\CourseML\01-linearModels\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/teaching/CourseML/01-linearModels/.sources.cmake">
+          <Option virtualFolder="CMake Files\teaching\CourseML\01-linearModels\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/teaching/CourseML/03-outlier/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\teaching\CourseML\03-outlier\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/teaching/CourseML/03-outlier/.sources.cmake">
+          <Option virtualFolder="CMake Files\teaching\CourseML\03-outlier\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/teaching/CourseML/07-RL/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\teaching\CourseML\07-RL\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/teaching/CourseML/07-RL/.sources.cmake">
+          <Option virtualFolder="CMake Files\teaching\CourseML\07-RL\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/teaching/CourseML/08-RL/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\teaching\CourseML\08-RL\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/teaching/CourseML/08-RL/.sources.cmake">
+          <Option virtualFolder="CMake Files\teaching\CourseML\08-RL\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/teaching/CourseML/06-hmmBinary/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\teaching\CourseML\06-hmmBinary\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/teaching/CourseML/06-hmmBinary/.sources.cmake">
+          <Option virtualFolder="CMake Files\teaching\CourseML\06-hmmBinary\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/teaching/CourseML/digits/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\teaching\CourseML\digits\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/teaching/CourseML/digits/.sources.cmake">
+          <Option virtualFolder="CMake Files\teaching\CourseML\digits\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/teaching/CourseML/05-kernelPCA/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\teaching\CourseML\05-kernelPCA\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/teaching/CourseML/05-kernelPCA/.sources.cmake">
+          <Option virtualFolder="CMake Files\teaching\CourseML\05-kernelPCA\" />
+      </Unit>
+      <Unit filename="/home/peter/git/mlr/share/teaching/CourseML/02-carData/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\teaching\CourseML\02-carData\" />
+      </Unit>
+   </Project>
+</CodeBlocks_project_file>
