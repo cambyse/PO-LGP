@@ -42,25 +42,8 @@ struct PDtask{
 
 //===========================================================================
 
-struct ConstraintForceTask{
-  TaskMap& map;
-  MT::String name;
-  bool active;
-
-  double desiredForce;
-  PDtask desiredApproach;
-
-  ConstraintForceTask(TaskMap* m):map(*m), active(true), desiredForce(0.), desiredApproach(m){}
-
-  void updateConstraintControl(const arr& g, const double& lambda_desired);
-};
-
-//===========================================================================
-
-
 struct FeedbackMotionControl : MotionProblem {
   MT::Array<PDtask*> tasks;
-  MT::Array<ConstraintForceTask*> forceTasks;
   PDtask nullSpacePD;
 
   FeedbackMotionControl(ors::KinematicWorld& _world, bool useSwift=true);
@@ -73,12 +56,9 @@ struct FeedbackMotionControl : MotionProblem {
                     const char* iShapeName=NULL, const ors::Vector& ivec=NoVector,
                     const char* jShapeName=NULL, const ors::Vector& jvec=NoVector,
                     const arr& params=NoArr);
-  ConstraintForceTask* addConstraintForceTask(const char* name, TaskMap *map);
 
-  void getTaskCosts(arr& phi, arr& J, arr& q_ddot); ///< the general (`big') task vector and its Jacobian
-  arr getDesiredConstraintForces(); ///< J^T lambda^*
-  arr operationalSpaceControl();
-  void updateConstraintControllers();
+  void getTaskCosts(arr& phi, arr& J, arr& a); ///< the general (`big') task vector and its Jacobian
+  arr operationalSpaceControl(double regularization=1e-6);
 };
 
 //===========================================================================

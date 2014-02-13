@@ -26,6 +26,7 @@ Pfc::Pfc(ors::KinematicWorld &_world, arr& _trajRef, double _dt, double _TRef, a
 
   trajWrap = new Spline(sRef,_trajRef,2);
   trajRef = new Spline(sRef,_trajRef,2);
+
 }
 
 void Pfc::getNextState(arr& _state, arr& _dstate) {
@@ -33,8 +34,12 @@ void Pfc::getNextState(arr& _state, arr& _dstate) {
   _dstate = desVel;
 }
 
-void Pfc::iterate(arr& _state)
+void Pfc::iterate(arr& _state, double _dtReal)
 {
+  if (_dtReal > 0.) {
+    dsRef = _dtReal/TRef;
+  }
+
   state = _state;
   goal = goalMO->position;
   if (useOrientation) {
@@ -59,7 +64,8 @@ void Pfc::iterate(arr& _state)
   arr dir = trajWrap->deval(s.last());
   dir = dir/length(dir);
 
-  desVel = dir*dsRef*length(trajRef->deval(s.last()))/dt;
+//  desVel = dir*dsRef*length(trajRef->deval(s.last()))/dt;
+  desVel = dir*length(trajRef->deval(s.last()))/TRef;
   desState = traj[traj.d0-1] + desVel*dt;
   traj.append(desState);
 }

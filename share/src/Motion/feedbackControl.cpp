@@ -31,36 +31,6 @@ arr PDtask::getDesiredAcceleration(const arr& y, const arr& ydot){
 
 //===========================================================================
 
-void ConstraintForceTask::updateConstraintControl(const arr& _g, const double& lambda_desired){
-  CHECK(_g.N==1, "can handle only 1D constraints so far");
-  double g=_g(0);
-  CHECK(lambda_desired>=0., "lambda must be positive or zero");
-
-  if(g<0 && lambda_desired>0.){ //steer towards constraint
-    desiredApproach.y_ref=ARR(.05); //set goal to overshoot!
-    desiredApproach.setGainsAsNatural(.2, 1.);
-    desiredApproach.prec=1e4;
-  }
-
-  if(g>-1e-2 && lambda_desired>0.){ //stay in constraint -> constrain dynamics
-    desiredApproach.y_ref=ARR(0.);
-    desiredApproach.setGainsAsNatural(.01, .7);
-    desiredApproach.prec=1e6;
-  }
-
-  if(g>-0.02 && lambda_desired==0.){ //release constraint -> softly push out
-    desiredApproach.y_ref=ARR(-0.02);
-    desiredApproach.setGainsAsNatural(.2, 1.);
-    desiredApproach.prec=100.;
-  }
-
-  if(g<=-0.02 && lambda_desired==0.){ //stay out of contact -> constrain dynamics
-    desiredApproach.active=false;
-  }
-}
-
-//===========================================================================
-
 FeedbackMotionControl::FeedbackMotionControl(ors::KinematicWorld& _world, bool useSwift)
   : MotionProblem(_world, useSwift), nullSpacePD(NULL) {
   loadTransitionParameters();
@@ -68,20 +38,10 @@ FeedbackMotionControl::FeedbackMotionControl(ors::KinematicWorld& _world, bool u
   nullSpacePD.prec=1.;
 }
 
-PDtask* FeedbackMotionControl::addTask(const char* name, TaskMap *map){
-  PDtask *t = new PDtask(map);
+PDtask* FeedbackMotionControl::addTask(const char* name, TaskMap *m){
+  PDtask *t = new PDtask(m);
   t->name=name;
   tasks.append(t);
-  return t;
-}
-
-ConstraintForceTask* FeedbackMotionControl::addConstraintForceTask(const char* name, TaskMap *map){
-  ConstraintForceTask *t = new ConstraintForceTask(map);
-  t->name=name;
-  t->desiredApproach.name=STRING(name <<"_PD");
-  t->desiredApproach.active=false;
-  forceTasks.append(t);
-  tasks.append(&t->desiredApproach);
   return t;
 }
 
@@ -96,7 +56,7 @@ PDtask* FeedbackMotionControl::addPDTask(const char* name,
   return t;
 }
 
-void FeedbackMotionControl::getTaskCosts(arr& phi, arr& J, arr& q_ddot){
+void FeedbackMotionControl::getTaskCosts(arr& phi, arr& J, arr& a){
   phi.clear();
   if(&J) J.clear();
   arr y, J_y, a_des;
@@ -104,47 +64,26 @@ void FeedbackMotionControl::getTaskCosts(arr& phi, arr& J, arr& q_ddot){
     if(t->active) {
       t->map.phi(y, J_y, world);
       a_des = t->getDesiredAcceleration(y, J_y*world.qdot);
-      phi.append(::sqrt(t->prec)*(J_y*q_ddot - a_des));
+      phi.append(::sqrt(t->prec)*(J_y*a - a_des));
       if(&J) J.append(::sqrt(t->prec)*J_y);
     }
   }
-  if(&J) J.reshape(phi.N, q_ddot.N);
+  if(&J) J.reshape(phi.N, a.N);
 }
 
-void FeedbackMotionControl::updateConstraintControllers(){
-  arr y;
-  for(ConstraintForceTask* t: forceTasks){
-    if(t->active){
-      t->map.phi(y, NoArr, world);
-      t->updateConstraintControl(y, t->desiredForce);
-    }
+arr FeedbackMotionControl::operationalSpaceControl(double regularization){
+  arr phi, J, a;
+  a.resizeAs(world.q).setZero();
+  getTaskCosts(phi, J, a);
+  if(!phi.N) return a;
+  arr H, Jinv;
+  H.setDiag(1./H_rate_diag);
+  pseudoInverse(Jinv, J, H, regularization);
+  a = - Jinv * phi;
+  if(nullSpacePD.prec){
+    arr Null = eye(a.N) - Jinv * J;
+    a += Null * nullSpacePD.getDesiredAcceleration(world.q, world.qdot);
   }
+  return a;
 }
 
-arr FeedbackMotionControl::getDesiredConstraintForces(){
-  arr Jl(world.q.N, 1);
-  Jl.setZero();
-  arr y, J_y;
-  for(ConstraintForceTask* t: forceTasks){
-    if(t->active) {
-      t->map.phi(y, J_y, world);
-      CHECK(y.N==1," can only handle 1D constraints for now");
-      Jl += ~J_y * t->desiredForce;
-    }
-  }
-  Jl.reshape(Jl.N);
-  return Jl;
-}
-
-arr FeedbackMotionControl::operationalSpaceControl(){
-  arr phi, J, q_ddot;
-  q_ddot.resizeAs(world.q).setZero();
-  getTaskCosts(phi, J, q_ddot);
-  if(!phi.N) return q_ddot;
-  arr H = diag(1./H_rate_diag);
-  arr A = H + comp_At_A(J);
-  arr a = -comp_At_x(J, phi);
-  if(nullSpacePD.active) a += H * nullSpacePD.prec * nullSpacePD.getDesiredAcceleration(world.q, world.qdot);
-  q_ddot = inverse_SymPosDef(A) * a;
-  return q_ddot;
-}

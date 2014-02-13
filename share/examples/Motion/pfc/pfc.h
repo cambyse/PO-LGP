@@ -18,7 +18,7 @@ struct Pfc{
     void printState();
     void plotState();
     void warpTrajectory();
-    void iterate(arr &state);
+    void iterate(arr &state, double _dtReal=0.);
     void getNextState(arr &state, arr &dstate);
 
     void moveGoal(arr &_pos);
