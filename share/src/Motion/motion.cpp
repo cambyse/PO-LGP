@@ -489,7 +489,7 @@ void MotionProblem_EndPoseFunction::fv(arr& phi, arr& J, const arr& x){
 
   //-- task costs
   arr _phi, J_x;
-  MP.setState(x, NoArr);
+  MP.setState(x, zeros(x.N, 1).reshape(x.N));
   MP.getTaskCosts(_phi, J_x, NoArr, MP.T);
   phi.append(_phi);
   if(&J && _phi.N) {
