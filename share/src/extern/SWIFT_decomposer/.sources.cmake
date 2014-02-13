@@ -1,15 +1,15 @@
-set(SOURCES ./viewer.h
-./tk8.4a3.h
+set(SOURCES ./convex.h
+./viewer.cpp
 ./convex.cpp
-./cvxutils.cpp
+./viewer.h
+./io.h
+./cvxutils.h
+./io.cpp
+./togl.cpp
 ./gui.h
 ./guidraw.h
-./cvxutils.h
-./gui.cpp
+./cvxutils.cpp
 ./togl.h
-./io.h
-./convex.h
-./io.cpp
-./viewer.cpp
-./guidraw.cpp
-./togl.cpp)
+./tk8.4a3.h
+./gui.cpp
+./guidraw.cpp)

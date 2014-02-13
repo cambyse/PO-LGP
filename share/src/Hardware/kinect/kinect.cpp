@@ -1,5 +1,6 @@
 #include "kinect.h"
 #include <libfreenect.hpp>
+#include <Core/util.h>
 
 void lib_hardware_kinect(){ MT_MSG("loading"); }
 
@@ -19,14 +20,18 @@ struct sKinectInterface : Freenect::FreenectDevice {
   KinectPoller *module;
 
   sKinectInterface(freenect_context *_ctx, int _index) : Freenect::FreenectDevice(_ctx, _index), module(NULL) {
-  };
+  }
 
   void DepthCallback(void *depth, uint32_t timestamp) {
     memmove(module->kinect_depth.set()().p, depth, 2*image_width*image_height);
+    // use receive time, and subtract processing and communication delay of 120ms (experimentally determined)
+    module->kinect_depth.tstamp() = MT::clockTime() - .12;
   }
 
   void VideoCallback(void *rgb, uint32_t timestamp) {
     memmove(module->kinect_rgb.set()().p, rgb, 3*image_width*image_height);
+    // see above
+    module->kinect_rgb.tstamp() = MT::clockTime() - .12;
   }
 };
 

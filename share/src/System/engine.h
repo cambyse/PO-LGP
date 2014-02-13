@@ -150,8 +150,8 @@ struct System:Module{
   }
 
   Module* addModule(const char *dclName, const char *name=NULL, ModuleThread::StepMode mode=ModuleThread::listenFirst, double beat=0.);
-  void addModule(const char *dclName, const char *name, const uintA& accIdxs, ModuleThread::StepMode mode=ModuleThread::listenFirst, double beat=0.);
-  void addModule(const char *dclName, const char *name, const StringA& accRenamings, ModuleThread::StepMode mode=ModuleThread::listenFirst, double beat=0.);
+  Module* addModule(const char *dclName, const char *name, const uintA& accIdxs, ModuleThread::StepMode mode=ModuleThread::listenFirst, double beat=0.);
+  Module* addModule(const char *dclName, const char *name, const StringA& accRenamings, ModuleThread::StepMode mode=ModuleThread::listenFirst, double beat=0.);
 
 
   KeyValueGraph graph() const;

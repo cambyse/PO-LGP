@@ -19,7 +19,7 @@ do
     # clear out tmp file
     echo -n > $tmpname
     # look for C++ source
-    CPP_SOURCES=$(find . -maxdepth 1 -type f -name '*.cpp' -a ! -name 'main.*.cpp' -o -name '*.h' -o -name '*.c')
+    CPP_SOURCES=$(find . -maxdepth 1 -type f -name '*.cpp' -a ! -name 'main.*.cpp' -o -name '*.h' -o -name '*.c'|grep -v './ui_')
     # check source dir, too
     if [ -d src ]
     then
@@ -28,6 +28,14 @@ do
     if [ ! -z "$CPP_SOURCES" ]
     then
       echo "set(SOURCES ${CPP_SOURCES})" >> $tmpname
+    else
+      rm -f $tmpname      
+    fi
+    # if no output, remove existing definition, if any, and skip rest
+    if [ ! -f "$tmpname" ]
+    then
+      rm -f $incname
+      continue
     fi
     # only update include if content changed, to prevent unnecessary cmake calls
     if cmp $incname $tmpname >/dev/null 2>&1
