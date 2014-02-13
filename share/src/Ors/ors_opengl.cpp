@@ -243,7 +243,6 @@ void ors::KinematicWorld::glDraw() {
 
 void displayState(const arr& x, ors::KinematicWorld& G, const char *tag){
   G.setJointState(x);
-  G.calcBodyFramesFromJoints();
   G.gl().watch(tag);
 }
 
@@ -255,7 +254,6 @@ void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, const ch
   for(k=0; k<=(uint)num; k++) {
     t = k*T/num;
     G.setJointState(x[t]);
-    G.calcBodyFramesFromJoints();
     G.gl().update(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
     if(delay) MT::wait(delay);
   }
@@ -401,7 +399,6 @@ void _glDrawOdeWorld(dWorldID world)
 void animateConfiguration(ors::KinematicWorld& C) {
   arr x, x0;
   uint t, i;
-  C.calcBodyFramesFromJoints();
   C.getJointState(x0);
   C.gl().pressedkey=0;
   for(i=x0.N; i--;) {
@@ -410,13 +407,11 @@ void animateConfiguration(ors::KinematicWorld& C) {
       if(C.gl().pressedkey==13 || C.gl().pressedkey==27) return;
       x(i)=x0(i) + .5*sin(MT_2PI*t/20);
       C.setJointState(x);
-      C.calcBodyFramesFromJoints();
       C.gl().update(STRING("joint = " <<i), false, false, true);
       MT::wait(0.01);
     }
   }
   C.setJointState(x0);
-  C.calcBodyFramesFromJoints();
 }
 
 

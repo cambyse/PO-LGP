@@ -363,8 +363,9 @@ void sPhysXInterface::addBody(ors::Body *b, physx::PxMaterial *mMaterial) {
 
 void PhysXInterface::pullFromPhysx() {
   for_index(i, s->actors) PxTrans2OrsTrans(world.bodies(i)->X, s->actors(i)->getGlobalPose());
-  world.calcShapeFramesFromBodies();
-  world.calcJointsFromBodyFrames();
+  world.calc_fwdPropagateShapeFrames();
+  world.calc_Q_from_BodyFrames();
+  world.calc_q_from_Q();
 }
 
 void PhysXInterface::pushToPhysx() {

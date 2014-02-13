@@ -17,7 +17,7 @@ void TEST(LoadSave){
   ors::KinematicWorld G;
   ifstream fil("arm7.ors");
   fil >>G;
-  G.calcBodyFramesFromJoints();
+  G.calc_fwdPropagateFrames();
   cout <<G <<endl;
 
   for(uint i=0;i<0;i++){
@@ -37,9 +37,9 @@ namespace T1{
   ors::KinematicWorld *G;
   ors::Vector rel;
   ors::Vector axis;
-  static void f_pos (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->calcBodyFramesFromJoints();  G->kinematicsPos(y,*J,i,&rel); }
+  static void f_pos (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->kinematicsPos(y,*J,i,&rel); }
   //static void f_hess (arr &J, arr *H, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->jacobianPos(J,i,&rel);  if(H) G->hessianPos (*H,i,&rel); }
-  static void f_vec (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);   G->calcBodyFramesFromJoints();  G->kinematicsVec(y,*J,i,&axis); }
+  static void f_vec (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->kinematicsVec(y,*J,i,&axis); }
   //static void f3 (arr &y,const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsOri2(y,i,axis); }
   //static void df3(arr &J,const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->jacobianOri2(J,i,axis); }
 }
@@ -47,7 +47,7 @@ namespace T1{
 void TEST(Kinematics){
   //ors::KinematicWorld G("test.ors");
   ors::KinematicWorld G("../../../data/pr2_model/pr2_clean_comfi.ors");
-  G.makeLinkTree();
+  G.makeTree(G.bodies(0));
   uint n=G.getJointStateDimension();
   arr x(n);
   T1::axis.set(1,0,0);
@@ -80,7 +80,7 @@ void TEST(KinematicSpeed){
   for(uint k=0;k<NUM;k++){
     rndUniform(x,-.5,.5,false);
     G.setJointState(x);
-    G.calcBodyFramesFromJoints();
+    G.calc_fwdPropagateFrames();
   }
   cout <<"kinematics timing: "<< MT::timerRead() <<"sec" <<endl;
 #endif
@@ -112,7 +112,7 @@ void TEST(KinematicSpeed){
 namespace Ctest{
   ors::KinematicWorld *G;
   void f(arr& c, arr *dfdx, const arr &x,void*){
-    G->setJointState(x); G->calcBodyFramesFromJoints();
+    G->setJointState(x); G->calc_fwdPropagateFrames();
     G->computeProxies();
     G->kinematicsProxyCost(c, (dfdx?*dfdx:NoArr), .2);
   }
@@ -131,7 +131,7 @@ void TEST(Contacts){
   x = G.q;
   for(t=0;t<100;t++){
     G.setJointState(x);
-    G.calcBodyFramesFromJoints();
+    G.calc_fwdPropagateFrames();
     G.computeProxies();
 
     G.reportProxies();
@@ -173,7 +173,7 @@ void TEST(PlayStateSequence){
   arr v(X.d1); v=0.;
   for(uint t=0;t<X.d0;t++){
     G.setJointState(X[t](),v);
-    G.calcBodyFramesFromJoints();
+    G.calc_fwdPropagateFrames();
     G.watch(false, STRING("replay of a state sequence -- time " <<t));
   }
 }
@@ -236,7 +236,7 @@ void TEST(FollowRedundantSequence){
   Z *= .8;
   T=Z.d0;
   G.setJointState(x);
-  G.calcBodyFramesFromJoints();
+  G.calc_fwdPropagateFrames();
   G.kinematicsPos(z, NoArr, N, &rel);
   for(t=0;t<T;t++) Z[t]() += z; //adjust coordinates to be inside the arm range
   plotLine(Z);
@@ -251,7 +251,7 @@ void TEST(FollowRedundantSequence){
     v = invJ * (Z[t]-z);     //multiply endeffector velocity with inverse jacobian
     x += v;                  //simulate a time step (only kinematically)
     G.setJointState(x);
-    G.calcBodyFramesFromJoints();
+    G.calc_fwdPropagateFrames();
     //cout <<J * invJ <<invJ <<v <<endl <<x <<endl <<"tracking error = " <<maxDiff(Z[t],z) <<endl;
     G.watch(false, STRING("follow redundant trajectory -- time " <<t));
     //G.gl().timedupdate(.01);
@@ -287,7 +287,7 @@ void TEST(Dynamics){
     DiffEqn(ors::KinematicWorld& _G):G(_G),friction(false){}
     void fv(arr& y,arr&,const arr& x){
       G.setJointState(x[0],x[1]);
-      G.calcBodyFramesFromJoints();
+      G.calc_fwdPropagateFrames();
       if(!u.N) u.resize(x.d1).setZero();
       if(friction) u = -10. * x[1];
       G.clearForces();
@@ -325,7 +325,7 @@ void TEST(Dynamics){
       qd +=    dt*qdd;
       q  += .5*dt*qd;
       G.setJointState(q,qd);
-      G.calcBodyFramesFromJoints();
+      G.calc_fwdPropagateFrames();
       //cout <<q <<qd <<qdd <<endl;
       G.gl().text.clear() <<"t=" <<t <<"  torque controlled damping (acc = - vel)\n(checking consistency of forward and inverse dynamics),  energy=" <<G.getEnergy();
     }else{
@@ -443,9 +443,6 @@ void TEST(BlenderImport){
 #endif
 
 int MAIN(int argc,char **argv){
-  testKinematics();
-  return 0;
-
   testLoadSave();
   testPlayStateSequence();
   testKinematics();
@@ -454,7 +451,7 @@ int MAIN(int argc,char **argv){
   testDynamics();
   testContacts();
 #ifdef MT_ODE
-  testMeshShapesInOde();
+//  testMeshShapesInOde();
   testPlayTorqueSequenceInOde();
 #endif
   //testBlenderImport();

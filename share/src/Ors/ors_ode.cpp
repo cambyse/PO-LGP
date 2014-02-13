@@ -101,7 +101,6 @@ OdeInterface::OdeInterface(ors::KinematicWorld &_C):C(_C) {
   uint i, j;
 
   clear();
-  C.calcBodyFramesFromJoints();
 
   bodies.resize(C.bodies.N); bodies=0;
   geoms .resize(C.shapes.N); geoms =0;
@@ -549,8 +548,6 @@ void OdeInterface::exportStateToOde() {
   uint j, i;
   dBodyID b;
   
-  C.calcBodyFramesFromJoints();
-  
   for_list(i, n, C.bodies) {
     CHECK(n->X.rot.isNormalized(), "quaternion is not normalized!");
     b = bodies(n->index);
@@ -625,10 +622,9 @@ void OdeInterface::importStateFromOde() {
     CP3(n->X.angvel.p(), b->avel);
     CHECK(n->X.rot.isNormalized(), "quaternion is not normalized!");
   }
-  C.calcJointsFromBodyFrames();
-  C.calcShapeFramesFromBodies();
+  C.calc_Q_from_BodyFrames();
+  C.calc_fwdPropagateShapeFrames();
 }
-
 
 void OdeInterface::addJointForce(ors::Joint *e, double f1, double f2) {
   switch(e->type) {

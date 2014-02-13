@@ -218,6 +218,7 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   struct sKinematicWorld *s;
 
   /// @name data fields
+  uintA qdim;  ///< dimensionality depending on the agent number
   arr q, qdot; ///< the current joint configuration vector and velocities
   int q_agent; ///< the agent index of the current q,qdot
   BodyL  bodies;
@@ -250,8 +251,10 @@ struct KinematicWorld { //TODO: rename KinematicWorld
 
   /// @name changes of configuration
   void clear();
+  void makeTree(Body *root){ reconfigureRoot(root); makeLinkTree(); }
+  //-- low level: don't use..
   void revertJoint(Joint *e);
-  void reconfigureRoot(Body *n);  ///< n becomes the root of the kinematic tree; joints accordingly reversed; lists resorted
+  void reconfigureRoot(Body *root);  ///< n becomes the root of the kinematic tree; joints accordingly reversed; lists resorted
   void transformJoint(Joint *e, const ors::Transformation &f); ///< A <- A*f, B <- f^{-1}*B
   void zeroGaugeJoints();         ///< A <- A*Q, Q <- Id
   void makeLinkTree();            ///< modify transformations so that B's become identity
@@ -260,12 +263,13 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   void meldFixedJoints();         ///< prune fixed joints; shapes of fixed bodies are reassociated to non-fixed boides
   void removeUselessBodies();     ///< prune non-articulated bodies; they become shapes of other bodies
   
-  /// @name computations on the DoFs
-  void calcBodyFramesFromJoints();    ///< elementary forward kinematics; also computes all Shape frames
-  void calcShapeFramesFromBodies();   ///< TODO: shouldn't that be done by above
-  void calcJointsFromBodyFrames();    ///< fill in the joint transformations assuming that body poses are known (makes sense when reading files)
-  void calcJointState(int agent=0);
-  void fillInRelativeTransforms();    ///< fill in the joint relative transforms (A & B) if body and joint world poses are known
+  /// @name computations on the graph
+  void calc_Q_from_q(int agent=0, bool vels=false); ///< from the set (q,qdot) compute the joint's Q transformations
+  void calc_q_from_Q(int agent=0, bool vels=false);  ///< updates (q,qdot) based on the joint's Q transformations
+  void calc_fwdPropagateFrames();    ///< elementary forward kinematics; also computes all Shape frames
+  void calc_fwdPropagateShapeFrames();   ///< same as above, but only shape frames (body frames are assumed up-to-date)
+  void calc_Q_from_BodyFrames();    ///< fill in the joint transformations assuming that body poses are known (makes sense when reading files)
+  void calc_missingAB_from_BodyAndJointFrames();    ///< fill in the missing joint relative transforms (A & B) if body and joint world poses are known
   void clearJointErrors();
   void invertTime();
   arr naturalQmetric();               ///< returns diagonal of a natural metric in q-space, depending on tree depth
@@ -278,8 +282,7 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   arr getJointState() const { return q; }
 
   /// @name set state
-  void setJointState(const arr& _q, const arr& _qdot, int agent=0);
-  void setJointState(const arr& _q, int agent=0);
+  void setJointState(const arr& _q, const arr& _qdot=NoArr, int agent=0);
 
   /// @name kinematics
   void kinematicsPos(arr& y, arr& J, uint i, ors::Vector *rel=0, int agent=0) const;

@@ -164,8 +164,8 @@ void MotionProblem::setInterpolatingVelCosts(
 
 void MotionProblem::setState(const arr& q, const arr& v) {
   world.setJointState(q, v);
-  world.calcBodyFramesFromJoints();
-  world.calcBodyFramesFromJoints();
+  world.calc_fwdPropagateFrames();
+  world.calc_fwdPropagateFrames();
   if(useSwift) world.computeProxies();
   if(transitionType == realDynamic) {
     NIY;
