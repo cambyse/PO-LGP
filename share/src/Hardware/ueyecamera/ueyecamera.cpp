@@ -37,6 +37,7 @@ struct sUEyeInterface {
     UINT pixelclock;
     double real_fps, live_fps;
     double exposure;
+    int frame_count;
 
     uint cid;
     INT camStatus;
@@ -133,6 +134,7 @@ void sUEyeInterface::camSetup() {
   tout(this) << "camSetup()" << endl;
   module->ueye_rgb.set()().resize(c_ueye_height, c_ueye_width, c_ueye_bypp);
   setup_flag = true;
+  frame_count = 0;
 }
 
 void sUEyeInterface::camInit() {
@@ -264,8 +266,12 @@ void sUEyeInterface::camGrab() {
   UnlockSeqBuf_wr(imgBuffNum, img);
 
   // TODO do we even want this?
-  //GetFramesPerSecond_wr();
-  //module->ueye_fps.set() = live_fps;
+  frame_count++;
+  if(frame_count % 1000 == 0) {
+      GetFramesPerSecond_wr();
+      tout(this) << "current fps: " << live_fps << endl;
+      //module->ueye_fps.set() = live_fps;
+  }
 }
 
 void sUEyeInterface::camClose() {
