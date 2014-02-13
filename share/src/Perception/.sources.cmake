@@ -1,4 +1,6 @@
 set(SOURCES ./pointcloud.h
+./colorspace.h
+./colorspace.cpp
 ./opencv.h
 ./perception.h
 ./keyframe.h
