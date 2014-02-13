@@ -8,11 +8,32 @@
 #include "../splines/spline.h"
 #include <GL/glu.h>
 #include <Gui/opengl.h>
+#include <iomanip>
 
 #include "../pfc/pfc.h"
 #include "../pfc/mobject.h"
 #include "../mpc/mpc.h"
 #include "../dmp/dmp.h"
+
+#define VISUALIZE 0
+
+// GLOBAL OPTION VARS
+double goalAccuracy;
+String evalName;
+String sceneName;
+int numScenes;
+enum ControlType {CT_DMP, CT_PFC, CT_MPC};
+double maxDuration;
+bool moveGoal;
+bool moveObs;
+
+
+
+// BOOKKEEPING VARS
+arr q_bk;    // joint angles at each time step
+arr x_bk;    // task variables at each time step
+arr goal_bk; // goal position at each time step
+arr ct_bk;   // computational time at each time step
 
 
 void drawEnv(void* classP){
@@ -30,7 +51,6 @@ void drawPoint(void* classP){
   glPointSize(7.0f);
   glLineWidth(2);
   glBegin(GL_POINTS);
-  //  cout << p->elem(0) << p->elem(1) << p->elem(2) << endl;
   glVertex3f(p->elem(0), p->elem(1), p->elem(2));
   glVertex3f(p->elem(0), p->elem(1), p->elem(2));
   glEnd();
@@ -68,13 +88,23 @@ void drawPlanTraj(void* classP){
   drawTraj(2,*p,2);
 }
 
-void executeTrajectoryPFC(MT::String scene){
-  ors::KinematicWorld world(scene);
+
+void executeTrajectory(String scene, ControlType cType){
+  //-----------------------------------------------------//
+  //--------------------- optimize reference trajectory //
+  //-------------------------------------------------- //
+  String currScene = STRING("scenes/"<<evalName<<"/"<<scene);
+  String folder = STRING("out/"<<evalName<<"/"<<scene);
+  cout << currScene << endl;
+
+  ors::KinematicWorld world(currScene);
+#if VISUALIZE
+  world.gl().resize(800, 800);
+#endif
   arr q, qdot;
   world.getJointState(q, qdot);
-  /*
-  ** Plan Trajectory
-  */
+
+  // Plan Trajectory
   makeConvexHulls(world.shapes);
   MotionProblem P(world);
   P.loadTransitionParameters();
@@ -91,8 +121,8 @@ void executeTrajectoryPFC(MT::String scene){
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(1.,0.,0.), 1e4);
   P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
 
-  //  c = P.addTaskMap("contact", new DefaultTaskMap(collTMT,-1,NoVector,-1,NoVector,ARR(0.15)));
-  //  P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e0);
+//  c = P.addTaskMap("contact", new DefaultTaskMap(collTMT,-1,NoVector,-1,NoVector,ARR(0.1)));
+//  P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e0);
 
 
   //-- create the Optimization problem (of type kOrderMarkov)
@@ -124,301 +154,234 @@ void executeTrajectoryPFC(MT::String scene){
 
   xRef = ~cat(~xRefPos,~xRefVec);
 
-  arr knots = linspace(0.,T*dt,xRefPos.d0-1);
-  Spline trajPos(knots,xRefPos,2);
-  Spline trajVec(knots,xRefVec,2);
-
-  /*
-  ** Execute Trajectory
-  */
+  // set initial positions
   arr q0 = x[0];
   arr x0 = xRef[0];
   q = P.x0;
   world.setJointState(q,qdot);
   world.calcBodyFramesFromJoints();
 
+
+  //-----------------------------------------------------//
+  //-------------------------------- execute controller //
+  //-------------------------------------------------- //
   double tau_plan = 0.01;
   double tau_control = 0.001;
   double t = 0.;
   double t_final = T*dt;
 
+  arr dir;
+  if (moveGoal){
+    dir = ARRAY(world.getBodyByName("dir")->X.pos);
+    cout << dir << endl;
+  } else {
+    dir = ARRAY(1.,0.,0.);
+  }
+
+  std::vector<MObject*> mobstacles;
+  if (moveObs) {
+    arr obsdir = ARRAY(world.getBodyByName("obsdir")->X.pos);
+    mobstacles.push_back(new MObject(&world, MT::String("obstacle"), MObject::OBSTACLE , 0.0005, obsdir));
+  }
+
+
+  MObject goalMO(&world, MT::String("goal"), MObject::GOAL , 0.0005, dir);
+
   FeedbackMotionControl MP(world, false);
-  MP.nullSpacePD.prec=0.;
-  double regularization=1e-3;
-  PDtask *taskPos = MP.addPDTask("pos", tau_plan*5, 1, posTMT, "endeff");
-  PDtask *taskVec = MP.addPDTask("vec", tau_plan*5, 1, vecTMT, "endeff",ARR(0.,0.,1.));
-  PDtask *taskCol = MP.addPDTask("col", .02, 1., collTMT, NULL, NoVector, NULL, NoVector, ARR(0.1));
-  PDtask *taskHome = MP.addPDTask("home", .02, 0.5, qItselfTMT);
+  PDtask *taskPos, *taskVec, *taskHome, *taskCol, *jointPos;
+  double regularization = 1e-3;
 
-  taskPos->setGains(1.,100.); taskPos->prec=1e0;
-  taskVec->setGains(1.,100.); taskVec->prec=1e0;
-  taskHome->setGains(0.,10.); taskHome->prec=1e-1;
-  taskCol->prec=1e0;
+  // initialize controllers
+  Pfc* pfc; MPC* mpc; DMP* dmp;
+  switch (cType) {
+  case(CT_DMP):
+    MP.nullSpacePD.prec=0.;
+    taskPos = MP.addPDTask("pos", tau_plan*5, 1, posTMT, "endeff");
+    taskVec = MP.addPDTask("vec", tau_plan*5, 1, vecTMT, "endeff",ARR(0.,0.,1.));
+    taskCol = MP.addPDTask("col", .02, 1., collTMT, NULL, NoVector, NULL, NoVector, ARR(0.1));
+    taskHome = MP.addPDTask("home", .02, 0.5, qItselfTMT);
+    taskHome->setGains(0.,10.); taskHome->prec=1e-1;
+    taskCol->prec=1e0;
+    taskPos->prec=1e0;
+    taskVec->prec=1e0;
+    dmp = new DMP(xRef,100,tau_plan);
+    dmp->trainDMP();
+    // world.gl().add(drawPoint,&(taskPos->y_ref));
+    // world.gl().add(drawActTraj,&(dmp->y_ref));
+    // world.gl().add(drawPlanTraj,&(dmp->y_bk));
+    break;
+  case(CT_MPC):
+    MP.nullSpacePD.prec=0.;
+    jointPos = MP.addPDTask("pos", tau_plan*2, 1, qItselfTMT, "endeff");
+    jointPos->setGains(100.,100.);
+    mpc = new MPC(P,x);
+    // world.gl().add(drawActTraj,&(mpc->x_cart));
+    break;
+  case(CT_PFC):
+    MP.nullSpacePD.prec=0.;
+    taskPos = MP.addPDTask("pos", tau_plan*5, 1, posTMT, "endeff");
+    taskVec = MP.addPDTask("vec", tau_plan*5, 1, vecTMT, "endeff",ARR(0.,0.,1.));
+    taskCol = MP.addPDTask("col", .02, 1., collTMT, NULL, NoVector, NULL, NoVector, ARR(0.1));
+    taskHome = MP.addPDTask("home", .02, 0.5, qItselfTMT);
+
+    taskPos->setGains(1.,100.); taskPos->prec=1e0;
+    taskVec->setGains(1.,100.); taskVec->prec=1e0;
+    taskHome->setGains(0.,10.); taskHome->prec=1e-1;
+    taskCol->prec=1e0;
+    pfc = new Pfc(world,xRef,tau_plan,t_final,x0,q0,goalMO,true);
+    // world.gl().add(drawPoint,&(taskPos->y_ref));
+    // world.gl().add(drawActTraj,&(pfc->traj));
+    // world.gl().add(drawPlanTraj,&(pfc->trajWrap->points));
+    break;
+  }
+
+  // init bookkeeping
+  q_bk = ~q;
+  x_bk = ~x0;
+  goal_bk = ~goalMO.position;
+  ct_bk = ARR(0);
 
 
-  MObject goalMO(&world, MT::String("goal"), MObject::GOAL , 0.001, ARRAY(0.,0.,1.));
-  Pfc* pfc = new Pfc(world,xRef,tau_plan,t_final,x0,q0,goalMO,true);
-//  pfc->dsRef = tau_plan/t_final;
-//  pfc->dt = tau_plan;
 
-  // gl visualization
-  world.gl().add(drawPoint,&(taskPos->y_ref));
-  world.gl().add(drawActTraj,&(pfc->traj));
-  world.gl().add(drawPlanTraj,&(pfc->trajWrap->points));
-
+  world.setJointState(q,qdot); world.calcBodyFramesFromJoints();
   arr state,stateVec;
   // RUN //
-  while (pfc->s.last() <0.99){
+  while (((world.getBodyByName("endeff")->X.pos - goalMO.position).length() > goalAccuracy) && t < maxDuration && sum(ct_bk)<50.) {
     if ( (fmod(t,tau_plan-1e-12) < tau_control) ) {
       // Outer Planning Loop [1/tau_plan Hz]
+      MT::timerStart(true);
       // Get current task state
       world.kinematicsPos(state,NoArr,P.world.getBodyByName("endeff")->index);
       world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeff")->index);
       state.append(stateVec);
 
-      if (pfc->s.last() < 0.9){
-        pfc->goalMO->move();
+      // Move goal
+      if (t < 0.7*t_final && moveGoal) {
+        goalMO.move();
       }
-      pfc->iterate(state);
+      if (moveObs) {
+        mobstacles[0]->move();
+      }
+
 
       arr yNext, ydNext;
-      pfc->getNextState(yNext,ydNext);
+      switch (cType) {
+      case(CT_DMP):
+        dmp->goal.subRange(0,2) = goalMO.position;
+        dmp->iterate();
 
-      // compute desired state postion and velocity
-//      arr yNext = pfc->traj[pfc->traj.d0-1];
-//      arr ydNext = pfc->dsRef*pfc->trajWrap->deval(pfc->s.last())/tau_plan;
-//      arr dir = pfc->trajWrap->deval(pfc->s.last());
-//      dir = dir/length(dir);
-//      arr ydNext = dir*pfc->dsRef*length(pfc->trajRef->deval(pfc->s.last()))/tau_plan;
-      taskPos->y_ref = yNext.subRange(0,2);
-      taskPos->v_ref = ydNext.subRange(0,2);
-      taskVec->y_ref = yNext.subRange(3,5);
-      taskVec->v_ref = ydNext.subRange(3,5);
-      world.watch(false, STRING(t));
+        yNext = dmp->Y;
+        ydNext = dmp->Yd;
+        break;
+      case(CT_MPC):
+#if VISUALIZE
+        world.watch(false, STRING(t));
+#endif
+        if (mpc->P.T<2) {
+          t = maxDuration;
+          break;
+        }
+        mpc->replan(goalMO.position,q);
+        jointPos->y_ref = mpc->x[1];
+        jointPos->v_ref = (mpc->x[1]-mpc->x[0])/tau_plan;
+        break;
+      case(CT_PFC):
+        pfc->iterate(state);
+        pfc->getNextState(yNext,ydNext);
+        break;
+      }
+
+      if (cType == CT_DMP || cType == CT_PFC) {
+        taskPos->y_ref = yNext.subRange(0,2);
+        taskPos->v_ref = ydNext.subRange(0,2);
+        taskVec->y_ref = yNext.subRange(3,5);
+        taskVec->v_ref = ydNext.subRange(3,5);
+#if VISUALIZE
+        world.watch(false, STRING(t));
+#endif
+      }
+      ct_bk.append(MT::timerRead());
     }
 
     // Inner Controlling Loop [1/tau_control Hz]
     MP.setState(q, qdot);
-    //    world.stepPhysx(tau_control);
-    world.computeProxies();
 
-    arr a = MP.operationalSpaceControl(regularization);
-    q += tau_control*qdot;
-    qdot += tau_control*a;
-    t += tau_control;
-  }
-  pfc->plotState();
-  world.watch(true,STRING(t));
-}
-
-
-
-void executeTrajectoryMPC(MT::String scene){
-  ors::KinematicWorld world(scene);
-  arr q, qdot;
-  world.getJointState(q, qdot);
-  /*
-  ** Plan Trajectory
-  */
-  makeConvexHulls(world.shapes);
-  MotionProblem P(world);
-
-  P.loadTransitionParameters();
-
-  arr goalRef = ARRAY(P.world.getBodyByName("goalRef")->X.pos);
-
-  //-- create an optimal trajectory to trainTarget
-  TaskCost *c;
-  c = P.addTaskMap("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, goalRef, 1e4);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
-
-  c = P.addTaskMap("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(1.,0.,0.), 1e4);
-  P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
-
-  P.x0 = 0.1;
-
-  MotionProblemFunction F(P);
-  uint T=F.get_T();
-  uint k=F.get_k();
-  uint n=F.dim_x();
-  double dt = P.tau;
-  cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<" # joints=" <<world.getJointStateDimension()<<endl;
-
-  arr x(T+1,n);
-  x.setZero();
-  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
-  //  P.costReport();
-  //  displayTrajectory(x, 1, world, "planned trajectory", 0.01);
-
-
-  /*
-  ** Execute Trajectory
-  */
-  arr q0 = x[0];
-  q = P.x0;
-  world.setJointState(q,0.*qdot);
-  world.calcBodyFramesFromJoints();
-
-  double tau_plan = P.tau;
-  double tau_control = 0.01;
-  double t = 0.;
-  double t_final = T*dt;
-
-  FeedbackMotionControl MP(world, false);
-  PDtask *jointPos = MP.addPDTask("pos", tau_plan*5, 1, qItselfTMT, "endeff");
-
-  MObject goalMO(&world, MT::String("goal"), MObject::GOAL , 0.001, ARRAY(0.,0.,1.));
-
-  MPC mpc(P,x);
-  // gl visualization
-  world.gl().add(drawActTraj,&(mpc.x_cart));
-
-  // RUN //
-  while ((world.getBodyByName("endeff")->X.pos - goalMO.position).length() >1e-2) {
-    if ( (fmod(t,tau_plan-1e-12) < tau_control) ) {
-      goalMO.move();
-      mpc.replan(goalMO.position,q);
-      jointPos->y_ref = mpc.x[1];
-      jointPos->v_ref = (mpc.x[2]-mpc.x[1])/tau_plan;
-    }
-
-
-    // Inner Controlling Loop [1/tau_control Hz]
-    arr qw;world.getJointState(qw);
-    MP.setState(q, qdot);
-    //    world.stepPhysx(tau_control);
-    world.computeProxies();
-
-    arr a = MP.operationalSpaceControl();
-    q += tau_control*qdot;
-    qdot += tau_control*a;
-    t += tau_control;
-    world.watch(false, STRING(t));
-  }
-  world.watch(true,STRING(t));
-}
-
-
-void executeTrajectoryDMP(MT::String scene){
-  ors::KinematicWorld world(scene);
-  arr q, qdot;
-  world.getJointState(q, qdot);
-
-  /*********************************
-  ** Plan Trajectory ***************
-  *********************************/
-  makeConvexHulls(world.shapes);
-  MotionProblem P(world);
-
-  P.loadTransitionParameters();
-
-  TaskCost *c;
-  arr goalRef = ARRAY(P.world.getBodyByName("goalRef")->X.pos);
-  c = P.addTaskMap("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, goalRef, 1e4);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
-
-  c = P.addTaskMap("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(1.,0.,0.), 1e4);
-  P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
-
-  P.x0 = 0.1;
-
-  MotionProblemFunction F(P);
-  uint T=F.get_T();
-  uint k=F.get_k();
-  uint n=F.dim_x();
-  double dt = P.tau;
-  cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<" # joints=" <<world.getJointStateDimension()<<endl;
-
-  arr x(T+1,n);
-  x.setZero();
-  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
-  //  P.costReport();
-  //  displayTrajectory(x, 1, world, world.gl(),"planned trajectory", 0.01);
-
-
-  //-- Transform trajectory into task space
-  arr kinPos, kinVec, xRefPos, xRefVec, xRef;
-  // store cartesian coordinates and endeffector orientation
-  for (uint t=0;t<=T;t++) {
-    world.setJointState(x[t]);
-    world.calcBodyFramesFromJoints();
-    world.kinematicsPos(kinPos,NoArr,P.world.getBodyByName("endeff")->index);
-    world.kinematicsVec(kinVec,NoArr,P.world.getBodyByName("endeff")->index);
-    xRefPos.append(~kinPos);
-    xRefVec.append(~kinVec);
-  }
-
-  xRef = ~cat(~xRefPos,~xRefVec);;
-
-  /*********************************
-  ** Execute Trajectory ************
-  *********************************/
-  arr q0 = x[0];
-  q = P.x0;
-  world.setJointState(q,0.*qdot);
-  world.calcBodyFramesFromJoints();
-
-  double tau_plan = P.tau;
-  double tau_control = 0.01;
-  double t = 0.;
-  double t_final = T*dt;
-
-  FeedbackMotionControl MP(world);
-  PDtask *taskPos = MP.addPDTask("pos", tau_plan*5, 1, posTMT, "endeff");
-  PDtask *taskVec = MP.addPDTask("vec", tau_plan*5, 1, vecTMT, "endeff",ARR(0.,0.,1.));
-
-  MObject goalMO(&world, MT::String("goal"), MObject::GOAL , 0.001, ARRAY(0.,0.,1.));
-
-  DMP dmp(xRef,100,tau_plan);
-  dmp.trainDMP();
-
-  // gl visualization
-  world.gl().add(drawPoint,&(taskPos->y_ref));
-  world.gl().add(drawActTraj,&(dmp.y_ref));
-  world.gl().add(drawPlanTraj,&(dmp.y_bk));
-
-  // RUN //
-  while ((world.getBodyByName("endeff")->X.pos - goalMO.position).length() >1e-2) {
-    if ( (fmod(t,tau_plan-1e-12) < tau_control) ) {
-      //      goalMO.move();
-
-      dmp.goal.subRange(0,2) = goalMO.position;
-      dmp.iterate();
-
-      arr state, dstate;
-      state = dmp.Y;
-      dstate = dmp.Yd;
-
-      taskPos->y_ref = state.subRange(0,2);
-      taskPos->v_ref = dstate.subRange(0,2);
-      taskVec->y_ref = state.subRange(3,5);
-      taskVec->v_ref = dstate.subRange(3,5);
-    }
-
-
-    // Inner Controlling Loop [1/tau_control Hz]
-    MP.setState(q, qdot);
     // world.stepPhysx(tau_control);
     world.computeProxies();
 
-    arr a = MP.operationalSpaceControl();
+    arr qddot = MP.operationalSpaceControl(regularization);
     q += tau_control*qdot;
-    qdot += tau_control*a;
+    qdot += tau_control*qddot;
     t += tau_control;
-    world.watch(false, STRING(t));
+
+    // Bookkeeping
+    q_bk.append(q);
+    x_bk.append(state);
+    goal_bk.append(goalMO.position);
   }
-  dmp.plotDMP();
-  world.watch(true,STRING(t));
+
+  switch (cType) {
+  case(CT_DMP):
+    folder = STRING(folder<<"_DMP_");
+    break;
+  case(CT_MPC):
+    folder = STRING(folder<<"_MPC_");
+    break;
+  case(CT_PFC):
+    folder = STRING(folder<<"_PFC_");
+    break;
+  }
+
+  // save bookkeeping files
+  write(LIST<arr>(q_bk),STRING(folder<<"q_bk.output"));
+  write(LIST<arr>(x_bk),STRING(folder<<"x_bk.output"));
+  write(LIST<arr>(goal_bk),STRING(folder<<"goal_bk.output"));
+  write(LIST<arr>(ct_bk),STRING(folder<<"ct_bk.output"));
+
+  write(LIST<arr>(xRef),STRING(folder<<"xRef.output"));
+  write(ARR(tau_control),STRING(folder<<"tau_control.output"));
+  write(ARR(tau_plan),STRING(folder<<"tau_plan.output"));
+  write(ARR(numScenes),STRING("out/"<<evalName<<"/"<<"numScenes.output"));
+
+  return;
 }
 
 int main(int argc,char **argv) {
   MT::initCmdLine(argc,argv);
-  executeTrajectoryPFC(String("scene1.ors"));
-  executeTrajectoryMPC(String("scene1.ors"));
-  executeTrajectoryDMP(String("scene1.ors"));
+  //-------------// Init Evaluation Parameters //-------------//
+  // distance between robot and endeffector when movement is stopped
+  goalAccuracy = MT::getParameter<double>("goalAccuracy");
+  // folder name of evaluation result
+  evalName = MT::getParameter<String>("evalName");
+  //--- scene name describing robot and environment
+  // the scene names is assembled by sceneName[1-numScenes]
+  sceneName = MT::getParameter<String>("sceneName");
+  numScenes = MT::getParameter<int>("numScenes");
+  // time after which motion is stopped
+  maxDuration = MT::getParameter<double>("maxDuration");
+  // flag if goal should move
+  moveGoal = MT::getParameter<int>("moveGoal");
+  // flag if obs should move
+  moveObs = MT::getParameter<int>("moveObstacle");
+
+  //-------------// Run Evaluation with all methods for each scene //-------------//
+  int sceneIter = 1;
+  while (sceneIter <= numScenes) {
+    String currScene = STRING(sceneName<<sceneIter);
+    cout << sceneIter << endl;
+    executeTrajectory(currScene,CT_MPC);
+    q_bk.clear(); x_bk.clear(); goal_bk.clear(); ct_bk.clear();
+    executeTrajectory(currScene,CT_DMP);
+    q_bk.clear(); x_bk.clear(); goal_bk.clear(); ct_bk.clear();
+    executeTrajectory(currScene,CT_PFC);
+    q_bk.clear(); x_bk.clear(); goal_bk.clear(); ct_bk.clear();
+    sceneIter++;
+  }
+
+  /* TODO
+   *
+   * phase variables speichern
+   * DMP fixen
+  */
   return 0;
 }
