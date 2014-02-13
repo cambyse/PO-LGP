@@ -230,6 +230,7 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   
   /// @name constructors
   KinematicWorld();
+  KinematicWorld(const ors::KinematicWorld& other) { *this = other; };
   KinematicWorld(const char* filename);
   ~KinematicWorld();
   void operator=(const ors::KinematicWorld& G);
