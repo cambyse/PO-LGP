@@ -1,0 +1,3 @@
+ors_rt_r_wrist_roll_joint:
+  type: my_controller_pkg/MyControllerPlugin
+  joint_name: r_wrist_roll_joint
