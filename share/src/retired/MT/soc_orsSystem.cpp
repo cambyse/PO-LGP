@@ -38,7 +38,7 @@
 //
 
 struct sOrsSystem {
-  ors::Graph *ors;
+  ors::KinematicWorld *ors;
   SwiftInterface *swift;
   MT::Array<TaskVariable*> vars;
   arr x, x0;
@@ -112,9 +112,9 @@ OrsSystem* OrsSystem::newClone(bool deep) const {
   return sys;
 }
 
-void OrsSystem::initBasics(ors::Graph *_ors, SwiftInterface *_swift, OpenGL *_gl,
+void OrsSystem::initBasics(ors::KinematicWorld *_ors, SwiftInterface *_swift, OpenGL *_gl,
                                     uint trajectory_steps, double trajectory_duration, bool _dynamic, arr *W){
-  if(_ors)   s->ors   = _ors;   else { s->ors=new ors::Graph;        s->ors  ->init(MT::getParameter<MT::String>("orsFile")); } // ors->makeLinkTree(); }
+  if(_ors)   s->ors   = _ors;   else { s->ors=new ors::KinematicWorld;        s->ors  ->init(MT::getParameter<MT::String>("orsFile")); } // ors->makeLinkTree(); }
   if(_swift) s->swift = _swift; else { s->swift=new SwiftInterface;  s->swift->init(*s->ors, 2.*MT::getParameter<double>("swiftCutoff", 0.11)); }
   gl    = _gl;
   if(gl && !_ors){
@@ -207,7 +207,7 @@ void OrsSystem::initStandardBenchmark(uint rand_seed){
   //generate the configuration
   ors::Body *b, *target, *endeff;  ors::Shape *sh;  ors::Joint *j;
   MT::String str;
-  s->ors=new ors::Graph;
+  s->ors=new ors::KinematicWorld;
   //the links
   for(uint k=0; k<=K; k++){
     b=new ors::Body(*s->ors);
@@ -564,7 +564,7 @@ void OrsSystem::getTaskCostInfos(uintA& dims, MT::Array<MT::String>& names, uint
   }
 }
 
-ors::Graph& OrsSystem::getOrs(){ return *s->ors; }
+ors::KinematicWorld& OrsSystem::getOrs(){ return *s->ors; }
 
 SwiftInterface& OrsSystem::getSwift(){ return *s->swift; }
 

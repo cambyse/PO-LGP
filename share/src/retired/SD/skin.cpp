@@ -49,7 +49,7 @@ tactile_arr_t::update_shapes(){
 }
 
 void
-tactile_arr_t::add_sensor_shapes(ors::Graph &G){
+tactile_arr_t::add_sensor_shapes(ors::KinematicWorld &G){
   ors::Shape *s1,*s2;
   MT::String *n,*a; 
   uint i,j;
@@ -80,7 +80,7 @@ tactile_arr_t::add_sensor_shapes(ors::Graph &G){
   sh_n.reshapeAs(sh_s);
 }
 
-grobi_skin_t::grobi_skin_t(ors::Graph &ors){
+grobi_skin_t::grobi_skin_t(ors::KinematicWorld &ors){
   uint i;
 
   /* 3 fingers */

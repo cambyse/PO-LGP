@@ -5,15 +5,16 @@
 struct UEyePoller: Module {
   struct sUEyeInterface *s;
 
-  ACCESS(uint, cid);
+  ACCESS(byteA, ueye_rgb);
   ACCESS(int, ueye_num);
-  //ACCESS(byteA, ueye_rgb);
-  //ACCESS(floatA, ueye_fps);
+  ACCESS(floatA, ueye_fps);
+  ACCESS(uint, cid);
 
   UEyePoller();
   virtual ~UEyePoller();
 
-  void open(uint _cid);
+  //void open(uint _cid);
+  void open();
   void step();
   void close();
 };

@@ -4,7 +4,7 @@
 #include <Gui/plot.h>
 
 WritheTaskVariable::WritheTaskVariable(const char* _name,
-                                         ors::Graph& _ors,
+                                         ors::KinematicWorld& _ors,
                                          const char* _obj_name,
 				         int _segments1,int _segments2,
 				         int _param){
@@ -26,7 +26,7 @@ void plot_writhe(arr WM,int dim1,int dim2)
  plot(false);
 }
 
-void GetRopes(arr& r1,arr& r2,const ors::Graph& _ors,int rope_points1,int rope_points2,const char* obj_name){
+void GetRopes(arr& r1,arr& r2,const ors::KinematicWorld& _ors,int rope_points1,int rope_points2,const char* obj_name){
   //// TODO change it all!!!
   
   arr rope1=arr(rope_points1,3); 
@@ -55,7 +55,7 @@ void GetRopes(arr& r1,arr& r2,const ors::Graph& _ors,int rope_points1,int rope_p
 }
 /// Matrix
 
-void WritheTaskVariable::userUpdate(const ors::Graph& ors){
+void WritheTaskVariable::userUpdate(const ors::KinematicWorld& ors){
     arr rope1,rope2,yy,Jp,JM,points;
     GetRopes(rope1,rope2,ors,segments1+1,segments2+1,obj_name);
     GetWritheMatrix(yy,rope1,rope2,segments1,segments2);
@@ -120,7 +120,7 @@ transpose(Jt,J);
 // }
 /// End of scalar
 
-void WritheTaskVariable::epsilon_check(arr& delta_q, const ors::Graph& ors){
+void WritheTaskVariable::epsilon_check(arr& delta_q, const ors::KinematicWorld& ors){
     arr rope1,rope2,yy,Jp,JM,points,y1,y2;
     GetRopes(rope1,rope2,ors,segments1+1,segments2+1,obj_name); 
     GetWritheMatrix(yy,rope1,rope2,segments1,segments2);
@@ -173,7 +173,7 @@ cout<<"\nDelta_q"<<delta_q<<endl;
 //cout<<"\nSum of Delta_q"<<sum(delta_q)<<endl;
 }
 
-void WritheTaskVariable::delta_check(arr& delta_q, const ors::Graph& ors){
+void WritheTaskVariable::delta_check(arr& delta_q, const ors::KinematicWorld& ors){
     arr rope1,rope2,yy,Jp,JM,points,y1,y2;
     GetRopes(rope1,rope2,ors,segments1+1,segments2+1,obj_name); 
     GetScalarWrithe(yy,rope1,rope2,segments1);

@@ -86,9 +86,9 @@ double mdp::pomdpEM_structured(
     eliminationAlgorithm(Fz, allInits, leftVars);
     Fz.P.reshape(dz);
     
-    //MT::save(Fz, "z.sFz");
-    //MT::save(FRz, "z.sFRz");
-    //MT::save(Fzz, "z.sFzz");
+    //Fz >>FILE("z.sFz");
+    //FRz >>FILE("z.sFRz");
+    //Fzz >>FILE("z.sFzz");
     
     //----- E-STEP
     arr _alpha, _beta;

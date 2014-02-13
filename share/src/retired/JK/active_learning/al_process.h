@@ -30,7 +30,7 @@ class ActiveLearningP: public Process {
     void step();
     void close();
 
-    ors::Graph* ors; 
+    ors::KinematicWorld* ors; 
     TrainingsDataV* traindata;
     ActiveLearningV* al;
     GuiDataV* guiData;

@@ -7,7 +7,7 @@ void TEST(Read){
   KeyValueGraph G;
 
   cout <<"\n** reading graph..." <<flush;
-  MT::load(G, filename?filename:"example.kvg");
+  G <<FILE(filename?filename:"example.kvg");
   cout <<"done" <<endl;
   cout <<G <<endl;
 
@@ -20,7 +20,7 @@ void TEST(Read){
 
 void TEST(Dot){
   KeyValueGraph G;
-  MT::load(G, filename?filename:"coffee_shop.fg");
+  G <<FILE(filename?filename:"coffee_shop.fg");
   G.sortByDotOrder();
   G.writeDot();
 }

@@ -17,7 +17,7 @@ NEVER DO THIS()
 #endif
   bool useOpengl,logData,plotData;
   OpenGL *gl;
-  ors::Graph ors;
+  ors::KinematicWorld ors;
   RobotController  *ctrl;
   bool isOpen;
   

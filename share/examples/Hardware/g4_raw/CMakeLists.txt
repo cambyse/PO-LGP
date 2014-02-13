@@ -1,0 +1,15 @@
+get_filename_component(NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+
+set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
+
+if(G4TRACK)
+
+include(.sources.cmake)
+include_directories(${G4ROOT}/include ${G4ROOT}/Inc)
+add_executable(x_${NAME} ${SOURCES})
+
+target_link_libraries(x_${NAME} Hardware_G4)
+
+add_test(x_${NAME}_test ${NAME} --gtest_output=xml:${NAME}-unit.xml)
+
+endif(G4TRACK)

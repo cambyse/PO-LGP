@@ -70,7 +70,8 @@ void holdSteady(){
       u = M*qddot_desired + F;
     }
 
-    S.stepDynamic(u, tau);
+    S.stepDynamics(u, tau);
+    S.watch(false);
     S.getJointAnglesAndVels(q, qdot);
     //output
     cout <<" t = " <<.01*i
@@ -152,7 +153,8 @@ void followReferenceTrajectory(){
     //u = 100. * (q_ref[t] - q) - 1. * qdot;
 
     //dynamic simulation (simple Euler integration of the system dynamics, look into the code)
-    S.stepDynamic(u, tau);
+    S.stepDynamics(u, tau);
+    S.watch(false);
     S.getJointAnglesAndVels(q, qdot);
 
     cout  <<" t = " <<tau*t  <<"sec   q = " <<q <<endl;

@@ -19,7 +19,7 @@ joint (arm6 peg) { A=<T t(0 0 0.2) d(45 0 0 1) > B=<T t(0 0 .4) >  m }
 
 
 ### hole
-body hole { X = <T t(0 -1 1)> }
+body hole { X = <T t(0 -1 1)> type=5 size=[.1 .1 .1 0] }
 shape (hole){ rel = <T t(0 -.30 0)> type=0 size=[1.0 .40 .4 .05] color=[0 0 .5] contact }
 shape (hole){ rel = <T t(0  .30 0)> type=0 size=[1.0 .40 .4 .05] color=[0 0 .5] contact }
 shape (hole){ rel = <T t( .30 0 0)> type=0 size=[.40 1.0 .4 .05] color=[0 0 .5] contact }

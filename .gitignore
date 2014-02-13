@@ -2,8 +2,12 @@
 *.o
 *.a
 *.so
-*.exe
 *.swp
+
+
+%% EXECUTABLE
+*.exe
+x_*
 
 tags
 .cccc
@@ -29,8 +33,12 @@ vc60.idb
 Makefile.dep
 *_moc.cpp
 *_ui.h
+CTestTestfile.cmake
 
+
+# PYTHON
 *.pyc
+_*.py
 
 
 # EXECUTION
@@ -100,6 +108,10 @@ html
 
 %% ROS
 build/
+catkin/
+catkin_generated/
+devel/
+gtest/
 msg_gen
 srv_gen
 *Action.msg

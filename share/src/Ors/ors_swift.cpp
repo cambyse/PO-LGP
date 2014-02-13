@@ -29,7 +29,7 @@
  */
 
 
-#include "ors.h"
+#include "ors_swift.h"
 #include <Algo/ann.h>
 
 #ifdef MT_extern_SWIFT
@@ -42,45 +42,30 @@
 #undef min
 #undef max
 
-// internal use
-void exportStateToSwift(const ors::Graph& C, SwiftInterface& swift);
-void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpReport=false);
-void swiftQueryExactDistance(SwiftInterface& swift);
 ANN *global_ANN=NULL;
 ors::Shape *global_ANN_shape;
 
 SwiftInterface::~SwiftInterface() {
-  close();
-}
-
-SwiftInterface* SwiftInterface::newClone(const ors::Graph& G) const {
-  SwiftInterface* s=new SwiftInterface;
-  s->init(G, cutoff);
-  return s;
-}
-
-void SwiftInterface::close() {
   if(scene) delete scene;
   if(global_ANN) delete global_ANN;
   scene=NULL;
   cout <<" -- SwiftInterface closed" <<endl;
-  isOpen=false;
 }
 
-void SwiftInterface::init(const ors::Graph& C, double _cutoff) {
+SwiftInterface::SwiftInterface(ors::KinematicWorld& _world)
+  : world(_world), scene(NULL), cutoff(.1) {
   ors::Shape *s;
   uint k;
   bool r, add;
   
-  cutoff=_cutoff;
   if(scene) delete scene;
   scene=new SWIFT_Scene(true, false);
-  
-  INDEXswift2shape.resize(C.shapes.N);  INDEXswift2shape=-1;
-  INDEXshape2swift.resize(C.shapes.N);  INDEXshape2swift=-1;
+
+  INDEXswift2shape.resize(world.shapes.N);  INDEXswift2shape=-1;
+  INDEXshape2swift.resize(world.shapes.N);  INDEXshape2swift=-1;
   
   cout <<" -- SwiftInterface init";
-  for_list(k, s, C.shapes) {
+  for_list(k, s, world.shapes) {
     cout <<'.' <<flush;
     add=true;
     switch(s->type) {
@@ -124,14 +109,13 @@ void SwiftInterface::init(const ors::Graph& C, double _cutoff) {
     }
   }
   
-  initActivations(C);
+  initActivations();
   
-  exportStateToSwift(C, *this);
+  pushToSwift();
   cout <<"...done" <<endl;
-  isOpen=true;
 }
 
-void SwiftInterface::reinitShape(const ors::Graph& ors, const ors::Shape *s) {
+void SwiftInterface::reinitShape(const ors::Shape *s) {
   int sw = INDEXshape2swift(s->index);
   scene->Delete_Object(sw);
   INDEXswift2shape(sw) = -1;
@@ -148,7 +132,7 @@ void SwiftInterface::reinitShape(const ors::Graph& ors, const ors::Shape *s) {
   if(s->cont) scene->Activate(sw);
 }
 
-void SwiftInterface::initActivations(const ors::Graph& C, uint parentLevelsToDeactivate) {
+void SwiftInterface::initActivations(uint parentLevelsToDeactivate) {
   ors::Shape *s;
   ors::Body *b, *b2;
   ors::Joint *e;
@@ -162,9 +146,9 @@ void SwiftInterface::initActivations(const ors::Graph& C, uint parentLevelsToDea
   */
   
   //cout <<"collision active shapes: ";
-  //for_list(k, s, C.shapes) if(s->cont) cout <<s->name <<' ';
+  //for_list(k, s, world.shapes) if(s->cont) cout <<s->name <<' ';
   
-  for_list(k, s, C.shapes) {
+  for_list(k, s, world.shapes) {
     if(!s->cont) {
       if(INDEXshape2swift(s->index)!=-1) scene->Deactivate(INDEXshape2swift(s->index));
     } else {
@@ -172,14 +156,14 @@ void SwiftInterface::initActivations(const ors::Graph& C, uint parentLevelsToDea
     }
   }
   //shapes within a body
-  for_list(j, b, C.bodies) deactivate(b->shapes);
+  for_list(j, b, world.bodies) deactivate(b->shapes);
   //deactivate along edges...
-  for_list(j, e, C.joints) {
+  for_list(j, e, world.joints) {
     //cout <<"deactivating edge pair"; listWriteNames(ARRAY(e->from, e->to), cout); cout <<endl;
     deactivate(ARRAY(e->from, e->to));
   }
   //deactivate along trees...
-  for_list(k, b, C.bodies) {
+  for_list(k, b, world.bodies) {
     MT::Array<ors::Body*> group, children;
     group.append(b);
     for(uint l=0; l<parentLevelsToDeactivate; l++) {
@@ -220,29 +204,29 @@ void SwiftInterface::deactivate(ors::Shape *s1, ors::Shape *s2) {
   scene->Deactivate(INDEXshape2swift(s1->index), INDEXshape2swift(s2->index));
 }
 
-void exportStateToSwift(const ors::Graph& C, SwiftInterface& swift) {
-  CHECK(swift.INDEXshape2swift.N==C.shapes.N,"the number of shapes has changed");
+void SwiftInterface::pushToSwift() {
+  CHECK(INDEXshape2swift.N==world.shapes.N,"the number of shapes has changed");
   ors::Shape *s;
   uint k;
   ors::Matrix rot;
-  for_list(k, s, C.shapes) {
+  for_list(k, s, world.shapes) {
     rot = s->X.rot.getMatrix();
-    if(swift.INDEXshape2swift(s->index)!=-1) {
-      swift.scene->Set_Object_Transformation(swift.INDEXshape2swift(s->index), rot.p(), s->X.pos.p());
-      if(!s->cont) swift.scene->Deactivate(swift.INDEXshape2swift(s->index));
-      //else         swift.scene->Activate( swift.INDEXshape2swift(s->index) );
+    if(INDEXshape2swift(s->index)!=-1) {
+      scene->Set_Object_Transformation(INDEXshape2swift(s->index), rot.p(), s->X.pos.p());
+      if(!s->cont) scene->Deactivate(INDEXshape2swift(s->index));
+      //else         scene->Activate( INDEXshape2swift(s->index) );
     }
   }
 }
 
-void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpReport) {
+void SwiftInterface::pullFromSwift(bool dumpReport) {
   int i, j, k, np;
   int *oids, *num_contacts;
   SWIFT_Real *dists, *nearest_pts, *normals;
   
   try {
-    swift.scene->Query_Contact_Determination(
-      false, swift.cutoff, np,
+    scene->Query_Contact_Determination(
+      false, cutoff, np,
       &oids, &num_contacts,
       &dists,
       &nearest_pts,
@@ -255,7 +239,7 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
   if(dumpReport) {
     cout <<"contacts: np=" <<np <<endl;
     for(k=0, i=0; i<np; i++) {
-      cout <<"* Shape '" <<C.shapes(oids[i <<1])->name <<"' vs. Shape '" <<C.shapes(oids[(i <<1)+1])->name <<"'" <<endl;
+      cout <<"* Shape '" <<world.shapes(oids[i <<1])->name <<"' vs. Shape '" <<world.shapes(oids[(i <<1)+1])->name <<"'" <<endl;
       cout <<"  #contacts = " <<num_contacts[i] <<endl;
       for(j=0; j<num_contacts[i]; j++, k++) {
         cout <<"  - contact " <<j <<endl;
@@ -272,29 +256,31 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
     if(num_contacts[i]==-1) k++;
   }
   
-  listResize(C.proxies, k);
+  listResize(world.proxies, k);
   
   //add contacts to list
   ors::Proxy *proxy;
   int a, b;
   for(k=0, i=0; i<np; i++) {
-    a=swift.INDEXswift2shape(oids[i <<1]);
-    b=swift.INDEXswift2shape(oids[(i <<1)+1]);
-    //CHECK(swift.ids(a)==a && swift.ids(b)==b, "shape index does not coincide with swift index");
+    a=INDEXswift2shape(oids[i <<1]);
+    b=INDEXswift2shape(oids[(i <<1)+1]);
+    //CHECK(ids(a)==a && ids(b)==b, "shape index does not coincide with swift index");
     
     //non-penetrating pair of objects
     if(num_contacts[i]>=0) for(j=0; j<num_contacts[i]; j++, k++) {
-        proxy=C.proxies(k);
+        proxy=world.proxies(k);
         proxy->a=a;
         proxy->b=b;
         proxy->d = dists[k];
         proxy->normal.set(&normals[3*k+0]);
         proxy->normal.normalize();
         //swift returns nearest points in the local frame -> transform them
-        proxy->posA.set(&nearest_pts[6*k+0]);  proxy->posA = C.shapes(a)->X * proxy->posA;
-        proxy->posB.set(&nearest_pts[6*k+3]);  proxy->posB = C.shapes(b)->X * proxy->posB;
-        if(C.shapes(a)->type==ors::meshST) proxy->cenA = C.shapes(a)->X * C.shapes(a)->mesh.getMeanVertex(); else proxy->cenA = C.shapes(a)->X.pos;
-        if(C.shapes(b)->type==ors::meshST) proxy->cenB = C.shapes(b)->X * C.shapes(b)->mesh.getMeanVertex(); else proxy->cenB = C.shapes(b)->X.pos;
+        proxy->posA.set(&nearest_pts[6*k+0]);  proxy->posA = world.shapes(a)->X * proxy->posA;
+        proxy->posB.set(&nearest_pts[6*k+3]);  proxy->posB = world.shapes(b)->X * proxy->posB;
+        proxy->cenA = world.shapes(a)->X.pos;
+        proxy->cenB = world.shapes(b)->X.pos;
+//        if(world.shapes(a)->type==ors::meshST) proxy->cenA = world.shapes(a)->X * world.shapes(a)->mesh.getMeanVertex(); else proxy->cenA = world.shapes(a)->X.pos;
+//        if(world.shapes(b)->type==ors::meshST) proxy->cenB = world.shapes(b)->X * world.shapes(b)->mesh.getMeanVertex(); else proxy->cenB = world.shapes(b)->X.pos;
         proxy->cenN = proxy->cenA - proxy->cenB; //normal always points from b to a
         proxy->cenD = proxy->cenN.length();
         proxy->cenN /= proxy->cenD;
@@ -302,12 +288,12 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
       
     //penetrating pair of objects
     if(num_contacts[i]==-1) {
-      proxy=C.proxies(k);
+      proxy=world.proxies(k);
       proxy->a=a;
       proxy->b=b;
       proxy->d = -.0;
-      if(C.shapes(a)->type==ors::meshST) proxy->cenA = C.shapes(a)->X * C.shapes(a)->mesh.getMeanVertex(); else proxy->cenA = C.shapes(a)->X.pos;
-      if(C.shapes(b)->type==ors::meshST) proxy->cenB = C.shapes(b)->X * C.shapes(b)->mesh.getMeanVertex(); else proxy->cenB = C.shapes(b)->X.pos;
+      if(world.shapes(a)->type==ors::meshST) proxy->cenA = world.shapes(a)->X * world.shapes(a)->mesh.getMeanVertex(); else proxy->cenA = world.shapes(a)->X.pos;
+      if(world.shapes(b)->type==ors::meshST) proxy->cenB = world.shapes(b)->X * world.shapes(b)->mesh.getMeanVertex(); else proxy->cenB = world.shapes(b)->X.pos;
       proxy->cenN = proxy->cenA - proxy->cenB; //normal always points from b to a
       proxy->cenD = proxy->cenN.length();
       proxy->cenN /= proxy->cenD;
@@ -322,7 +308,7 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
       k++;
     }
   }
-  CHECK(k == (int)C.proxies.N, "");
+  CHECK(k == (int)world.proxies.N, "");
   
   //add pointClound stuff to list
   if(global_ANN) {
@@ -331,7 +317,7 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
     arr R(3, 3), t(3);
     arr v, dists, _dists;
     intA idx, _idx;
-    for_list(k, s, C.shapes) {
+    for_list(k, s, world.shapes) {
       if(!s->cont || s==global_ANN_shape) continue;
       
       //relative rotation and translation of shapes
@@ -349,10 +335,10 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
           _i=i;  _dists=dists;  _idx=idx;
         }
       }
-      if(_dists(0)>swift.cutoff) continue;
+      if(_dists(0)>cutoff) continue;
       
       proxy = new ors::Proxy;
-      C.proxies.append(proxy);
+      world.proxies.append(proxy);
       proxy->a=global_ANN_shape->index;
       proxy->b=s->index;
       proxy->d = _dists(0);
@@ -364,17 +350,17 @@ void importProxiesFromSwift(ors::Graph& C, SwiftInterface& swift, bool dumpRepor
   }
 }
 
-void SwiftInterface::computeProxies(ors::Graph& C, bool dumpReport) {
-  exportStateToSwift(C, *this);
-  importProxiesFromSwift(C, *this, dumpReport);
+void SwiftInterface::step(bool dumpReport) {
+  pushToSwift();
+  pullFromSwift(dumpReport);
 }
 
-void swiftQueryExactDistance(SwiftInterface& swift) {
+void SwiftInterface::swiftQueryExactDistance() {
   int i, np;
   int *oids;
   SWIFT_Real *dists;
   
-  swift.scene->Query_Exact_Distance(false, SWIFT_INFINITY, np, &oids, &dists);
+  scene->Query_Exact_Distance(false, SWIFT_INFINITY, np, &oids, &dists);
   
   cout <<"exact distances: np=" <<np <<endl;
   for(i=0; i<np; i++) {
@@ -385,15 +371,18 @@ void swiftQueryExactDistance(SwiftInterface& swift) {
 
 #else
 #include <Core/util.h>
-//#warning "MT_extern_SWIFT undefined - using HALT implementations"
-void SwiftInterface::init(const ors::Graph& C, double _cutoff) { MT_MSG("WARNING - creating dummy SwiftInterface"); }
-void SwiftInterface::initActivations(const ors::Graph& C, uint parentLevelsToDeactivate) {}
-void SwiftInterface::close() {}
-void SwiftInterface::deactivate(const MT::Array<ors::Body*>& bodies) {}
-void SwiftInterface::deactivate(ors::Shape *s1, ors::Shape *s2) {}
-void SwiftInterface::computeProxies(ors::Graph& C, bool dumpReport) {}
-SwiftInterface* SwiftInterface::newClone(const ors::Graph& G) const { return NULL; }
-void swiftQueryExactDistance(SwiftInterface& swift) {}
-SwiftInterface::~SwiftInterface() {}
+void setCutoff(double _cutoff){ cutoff=_cutoff; }
+
+  void SwiftInterface::step(bool dumpReport=false){}
+  void SwiftInterface::pushToSwift() {}
+  void SwiftInterface::pullFromSwift(bool dumpReport) {}
+
+  void SwiftInterface::reinitShape(const ors::Shape *s) {}
+//  void close();
+  void SwiftInterface::deactivate(ors::Shape *s1, ors::Shape *s2) {}
+  void SwiftInterface::deactivate(const MT::Array<ors::Shape*>& shapes) {}
+  void SwiftInterface::deactivate(const MT::Array<ors::Body*>& bodies) {}
+  void SwiftInterface::initActivations(uint parentLevelsToDeactivate=3) {}
+  void SwiftInterface::swiftQueryExactDistance() {}
 #endif
 /** @} */

@@ -7,17 +7,17 @@ struct MotionProblem;
 struct OpenGL;
 
 namespace ors { 
-  struct Graph;
+  struct KinematicWorld;
   struct RRTPlanner {
     private:
       struct sRRTPlanner *s;
     public:
-      Graph *G;                 ///< the graph to plan in
+      KinematicWorld *G;                 ///< the graph to plan in
       MotionProblem& problem;   ///< the MotionProblem gives the feasibility test for new states
 
       arr joint_max, joint_min; ///< in which range are the joints allowed (boundaries for the sample space)
 
-      RRTPlanner(ors::Graph* G, MotionProblem &problem, double stepsize, bool verbose = false);
+      RRTPlanner(ors::KinematicWorld* G, MotionProblem &problem, double stepsize, bool verbose = false);
 
       arr getTrajectoryTo(const arr& target, int max_iter=0); ///< returns the trajectory created by the RRT
 

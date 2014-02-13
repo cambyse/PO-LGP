@@ -148,7 +148,7 @@ void reachAndAlign(const char* shapeName, const arr& posGoal, const arr& vecGoal
 
 void setMesh(const char* shapeName, const ors::Mesh& mesh){
 #if 0
-  ors::Graph *ors = s->robotProcesses.ctrl.sys.ors;
+  ors::KinematicWorld *ors = s->robotProcesses.ctrl.sys.ors;
   ors::Shape *shape = ors->getShapeByName(shapeName);
   shape->mesh = mesh;
   shape->type = ors::meshST;

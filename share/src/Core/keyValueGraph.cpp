@@ -340,10 +340,3 @@ void KeyValueGraph::sortByDotOrder() {
   for_list_(Item, it2, list()) it2->index=it2_COUNT;
 }
 
-
-//===========================================================================
-//
-// explicit instantiations
-//
-
-template void MT::load<KeyValueGraph>(KeyValueGraph&, const char*, bool);

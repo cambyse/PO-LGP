@@ -137,6 +137,13 @@ void blas_MsymMsym(arr& X, const arr& A, const arr& B) {
 #endif
 
 void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b) {
+  if(b.nd==2){ //b is a matrix (unusual) repeat for each col:
+    arr bT = ~b;
+    x.resizeAs(bT);
+    for(uint i=0;i<bT.d0;i++) lapack_Ainv_b_sym(x[i](), A, bT[i]);
+    x=~x;
+    return;
+  }
   if(A.special==arr::RowShiftedPackedMatrixST) {
     RowShiftedPackedMatrix *Aaux = (RowShiftedPackedMatrix*) A.aux;
     for(uint i=0; i<A.d0; i++) if(Aaux->rowShift(i)!=i) HALT("this is not shifted as an upper triangle");
@@ -153,7 +160,7 @@ void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b) {
     HALT("lapack_Ainv_b_sym error info = " <<INFO
          <<"\n typically this is because A is not invertible or sym-pos-def,\nA=" <<A <<"\nb=" <<b);
   }
-  
+
 #if 0
   arr y = inverse(A)*b;
   std::cout  <<"lapack_Ainv_b_sym error = " <<sqrDistance(x, y) <<std::endl;

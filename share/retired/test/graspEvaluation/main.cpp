@@ -6,7 +6,7 @@
 #include "graspEvaluation.h"
 
 void evaluate(){
-  ors::Graph ors;
+  ors::KinematicWorld ors;
   OpenGL gl;
   init(ors, gl, "test.ors");
   gl.update();

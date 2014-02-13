@@ -10,7 +10,7 @@ struct KinectPoller : Module {
   struct sKinectInterface *s;
 
   ACCESS(byteA, kinect_rgb)
-  ACCESS(floatA, kinect_depth)
+  ACCESS(MT::Array<uint16_t>, kinect_depth)
 
   KinectPoller();
   virtual ~KinectPoller();
@@ -22,7 +22,7 @@ struct KinectPoller : Module {
 
 struct Kinect2PointCloud: Module {
   ACCESS(byteA, kinect_rgb)
-  ACCESS(floatA, kinect_depth)
+  ACCESS(MT::Array<uint16_t>, kinect_depth)
 
   ACCESS(arr, kinect_points);
   ACCESS(arr, kinect_pointColors);

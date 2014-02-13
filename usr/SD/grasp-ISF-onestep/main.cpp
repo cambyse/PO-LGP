@@ -317,7 +317,7 @@ void problem5(){
 
   //setup the problem
   soc::SocSystem_Ors sys,sys2;
-  ors::Graph ors;
+  ors::KinematicWorld ors;
   OpenGL gl;
   GraspObject *o;
   arr c=MT::Parameter<arr>("center");

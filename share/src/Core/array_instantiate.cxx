@@ -76,7 +76,6 @@ template MT::Array<T> sum(const MT::Array<T>& v, uint d);
 template T sumOfAbs(const MT::Array<T>& v);
 template T sumOfSqr(const MT::Array<T>& v);
 template T length(const MT::Array<T>& v);
-template T mean(const MT::Array<T>& v);
 
 template T var(const MT::Array<T>& v);
 template T trace(const MT::Array<T>& v);

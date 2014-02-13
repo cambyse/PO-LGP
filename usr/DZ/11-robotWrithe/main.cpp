@@ -107,7 +107,7 @@ void setMyGraspGoals(soc::SocSystem_Ors& sys, uint T){
 }
                                       
   
-void GetRopesTest(arr& r1,arr& r2,ors::Graph& _ors,int rope_points){
+void GetRopesTest(arr& r1,arr& r2,ors::KinematicWorld& _ors,int rope_points){
   //// TODO change it all!!!
   
   arr rope1=arr(rope_points,3); 
@@ -139,7 +139,7 @@ void GetRopesTest(arr& r1,arr& r2,ors::Graph& _ors,int rope_points){
 void problem7(){        
   cout <<"\n=Kuka ring task, severe problems with control=\n" <<endl;
   soc::SocSystem_Ors sys;  
-  ors::Graph ors;
+  ors::KinematicWorld ors;
   ors.init(MT::getParameter<MT::String>("orsfile",MT::String("kuka.ors")));
   OpenGL gl;                       
   arr p,q0;       

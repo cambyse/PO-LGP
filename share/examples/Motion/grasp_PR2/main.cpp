@@ -8,13 +8,11 @@ void testGraspHeuristic(){
   cout <<"\n= 1-step grasp optimization=\n" <<endl;
 
   //setup the problem
-  OpenGL gl;
-  ors::Graph G;
-  init(G, gl, MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
   makeConvexHulls(G.shapes);
-  gl.watch();
+  G.watch(true);
 
-  MotionProblem MP(&G);
+  MotionProblem MP(G);
   MP.loadTransitionParameters();
   MP.H_rate_diag = pr2_reasonable_W();
   cout <<MP.x0 <<endl;
@@ -34,11 +32,11 @@ void testGraspHeuristic(){
     MP.costReport();
     gnuplot("load 'z.costReport.plt'", false, true);
 
-    displayTrajectory(x, 1, G, gl,"planned trajectory");
-    displayTrajectory(x, 1, G, gl,"planned trajectory");
-    displayTrajectory(x, 1, G, gl,"planned trajectory");
+    displayTrajectory(x, 1, G, "planned trajectory");
+    displayTrajectory(x, 1, G, "planned trajectory");
+    displayTrajectory(x, 1, G, "planned trajectory");
 
-    MT::save(G,"z.ors");
+    G >>FILE("z.ors");
 
     if(k%2) s=G.getShapeByName("target1");
     else    s=G.getShapeByName("target2");
@@ -48,8 +46,8 @@ void testGraspHeuristic(){
     s->size[3] = rnd.uni(.02,.07);
     s->mesh.clear();
 
-    MP.setx0(MP.x_current);
-    gl.watch();
+    MP.setx0(MP.world.q);
+    G.watch(true);
   }
   
 }

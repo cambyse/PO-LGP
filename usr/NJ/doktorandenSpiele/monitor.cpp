@@ -29,7 +29,7 @@ void Monitor::open(){
 #endif
   
   //-- ors
-  MT::load(ors,"../../../share/configurations/schunk.ors",true);
+  ors <<FILE("../../../share/configurations/schunk.ors");
   ors.calcNodeFramesFromEdges();
 
 #ifdef MT_QT

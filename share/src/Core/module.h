@@ -48,11 +48,13 @@ struct VariableAccess{
   MT::String name;  ///< Variable name
   Type *type;       ///< Variable type
   void *data;       ///< pointer to data struct; Access_typed knows how to cast it
+  double data_time; ///< time of origin of the data
   VariableAccess(const char* _name):name(_name), type(NULL), data(NULL){}
   virtual int writeAccess(Module*) = 0; ///< tell the engine that a module accesses -> mutex or publish
   virtual int readAccess(Module*) = 0;  ///< tell the engine that a module accesses
   virtual int deAccess(Module*) = 0;    ///< tell the engine that the module de-accesses
   virtual double revisionTime() = 0;
+  virtual int revisionNumber() = 0;
   virtual int waitForNextWriteAccess() = 0;
   virtual int waitForRevisionGreaterThan(int rev) = 0; //returns the revision
 };
@@ -128,19 +130,22 @@ struct Access_typed:Access{
     Access_typed<T> *a;
     ReadToken(Access_typed<T> *_a):a(_a){ a->readAccess(); }
     ~ReadToken(){ a->deAccess(); }
+    operator const T&(){ return (*a)(); }
     const T& operator()(){ return (*a)(); }
   };
   struct WriteToken{
     Access_typed<T> *a;
     WriteToken(Access_typed<T> *_a):a(_a){ a->writeAccess(); }
     ~WriteToken(){ a->deAccess(); }
+    WriteToken& operator=(const T& x){ (*a)() = x; return *this; }
     T& operator()(){ return (*a)(); }
   };
 
   Access_typed(const char* name, Module *m=NULL, VariableAccess *d=NULL):Access(name){ type=new Type_typed<T, void>();  module=currentlyCreating; var=d; if(module) module->accesses.append(this); }
   T& operator()(){ CHECK(var && var->data,""); return *((T*)var->data); }
-  const T& get(){ return ReadToken(this)(); } ///< read access to the variable's data
-  T& set(){ return WriteToken(this)(); } ///< write access to the variable's data
+  ReadToken get(){ return ReadToken(this); } ///< read access to the variable's data
+  WriteToken set(){ return WriteToken(this); } ///< write access to the variable's data
+  double& tstamp(){ CHECK(var,""); return var->data_time; } ///< reference to the data's time. Variable should be locked while accessing this.
 };
 
 

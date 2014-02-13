@@ -31,7 +31,7 @@
  *
  * @return pointer to the robot body.
  */
-ors::Body* createRobot(ors::Graph& graph) {
+ors::Body* createRobot(ors::KinematicWorld& graph) {
   ors::Body* robot = new ors::Body(graph);
   robot->X.setRandom();
   robot->X.pos.x -= .5;
@@ -53,7 +53,7 @@ ors::Body* createRobot(ors::Graph& graph) {
 }
 
 /*----------------------------------------------------------------------------*/
-void bindOrsToPhysX(ors::Graph& graph, OpenGL& gl, PhysXInterface& physx) {
+void bindOrsToPhysX(ors::KinematicWorld& graph, OpenGL& gl, PhysXInterface& physx) {
   physx.G = &graph;
   physx.create();
 
@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
 
   // Load ORS into a varbiable
   GeometricState geometricState;
-  ors::Graph& graph = geometricState.get_ors();
+  ors::KinematicWorld& graph = geometricState.get_ors();
 
   // add simple robot to graph
   ors::Body* robot = createRobot(graph);

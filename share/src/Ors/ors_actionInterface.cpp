@@ -26,11 +26,13 @@
  **/
 
 
-#include <Gui/opengl.h>
-#include <Gui/plot.h>
 #include "ors.h"
 #include "ors_oldTaskVariables.h"
+#include "ors_swift.h"
+#include "ors_ode.h"
 #include "ors_actionInterface.h"
+#include <Gui/opengl.h>
+#include <Gui/plot.h>
 #include <sstream>
 #include <limits.h>
 #include <unistd.h>
@@ -63,29 +65,29 @@ void drawOrsActionInterfaceEnv(void*) {
   glDrawFloor(4., 1, 1, 1);
 }
 
-void oneStep(const arr &q, ors::Graph *C, OdeInterface *ode, SwiftInterface *swift) {
+void oneStep(const arr &q, ors::KinematicWorld *C, OdeInterface *ode, SwiftInterface *swift) {
   C->setJointState(q);
   C->calcBodyFramesFromJoints();
 #ifdef MT_ODE
   if(ode) {
-    ode->exportStateToOde(*C);
-    ode->step(.01);
-    ode->importStateFromOde(*C);
-    //ode->importProxiesFromOde(*C);
+    C->ode().exportStateToOde();
+    C->ode().step(.01);
+    C->ode().importStateFromOde();
+    //C->ode().importProxiesFromOde(*C);
     //C->getJointState(q);
   }
 #endif
   if(swift) {
-    swift->computeProxies(*C);
+    swift->step();
   } else {
 #ifdef MT_ODE
-    if(ode) ode->importProxiesFromOde(*C);
+    C->ode().importProxiesFromOde();
 #endif
   }
   
 }
 
-void controlledStep(arr &q, arr &W, ors::Graph *C, OdeInterface *ode, SwiftInterface *swift, TaskVariableList& TVs) {
+void controlledStep(arr &q, arr &W, ors::KinematicWorld *C, OdeInterface *ode, SwiftInterface *swift, TaskVariableList& TVs) {
   static arr dq;
   updateState(TVs, *C);
   updateChanges(TVs); //computeXchangeWithAttractor(globalSpace);
@@ -118,18 +120,16 @@ void ActionInterface::shutdownAll() {
 
 void ActionInterface::loadConfiguration(const char* ors_filename) {
 
-  char *path, *name, cwd[200];
-  MT::decomposeFilename(path, name, ors_filename);
-  getcwd(cwd, 200);
-  chdir(path);
+//  char *path, *name, cwd[200];
+//  MT::decomposeFilename(path, name, ors_filename);
+//  getcwd(cwd, 200);
+//  chdir(path);
   
   if(C) delete C;
-  C = new ors::Graph();
-  MT::load(*C, name);
+  C = new ors::KinematicWorld();
+  FILE(ors_filename) >> *C;
   C->calcBodyFramesFromJoints();
   //C->reconfigureRoot(C->getName("rfoot"));
-  
-  chdir(cwd);
   
   C->getJointState(q0);
   
@@ -185,25 +185,20 @@ void ActionInterface::startOde(double ode_coll_bounce, double ode_coll_erp,
                                double ode_coll_cfm, double ode_friction) {
   CHECK(C, "load a configuration first");
 #ifdef MT_ODE
-  if(ode) delete ode;
-  ode = new OdeInterface;
-#endif
+  C->ode();
   
   // SIMULATOR PARAMETER
-#ifdef MT_ODE
-  ode->coll_bounce = ode_coll_bounce; // huepfen der bloecke, falls sie zb runterfallen
-  ode->coll_ERP = ode_coll_erp;   //usually .2!! stiffness (time-scale of contact reaction) umso groesser, desto mehr Fehlerkorrektur; muss zwischen 0.1 und 0.5 sein (ungefaehr)
-  ode->coll_CFM = ode_coll_cfm;  //softness // umso groesser, desto breiter, desto weicher, desto weniger Fehlerkorrektur; zwischen 10e-10 und 10e5
-  ode->friction = ode_friction;  //alternative: dInfinity;
-  ode->createOde(*C);
+  C->ode().coll_bounce = ode_coll_bounce; // huepfen der bloecke, falls sie zb runterfallen
+  C->ode().coll_ERP = ode_coll_erp;   //usually .2!! stiffness (time-scale of contact reaction) umso groesser, desto mehr Fehlerkorrektur; muss zwischen 0.1 und 0.5 sein (ungefaehr)
+  C->ode().coll_CFM = ode_coll_cfm;  //softness // umso groesser, desto breiter, desto weicher, desto weniger Fehlerkorrektur; zwischen 10e-10 und 10e5
+  C->ode().friction = ode_friction;  //alternative: dInfinity;
+//  C->ode().createOde(*C);
 #endif
 }
 
 void ActionInterface::startSwift() {
   if(swift) delete swift;
-  swift = new SwiftInterface;
-  
-  swift->init(*C);
+  swift = new SwiftInterface(*C);
 }
 
 /*void ActionInterface::startSchunk(){
@@ -258,7 +253,7 @@ void ActionInterface::relaxPosition() {
 //   DefaultTaskVariable x("endeffector", *C, posTVT, man_id, 0, 0, 0, ARR());
 //   x.setGainsAsAttractor(20, .2);
 //   x.y_prec=1000.;
-//   ors::Graph::node obj=C->getName(obj_id);
+//   ors::KinematicWorld::node obj=C->getName(obj_id);
 //
 //   uint t;
 //   arr q, dq;
@@ -526,7 +521,7 @@ bool ActionInterface::partOfBody(uint id) {
 
 uint ActionInterface::getCatched(uint man_id) {
 #if 0
-  //   ors::Graph::node n = C->bodies(man_id);
+  //   ors::KinematicWorld::node n = C->bodies(man_id);
   ors::Proxy *p;
   //  cout <<"davor";
   uint obj=C->getBodyByName(convertObjectID2name(man_id))->index;

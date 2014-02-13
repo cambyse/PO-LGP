@@ -17,9 +17,13 @@ namespace ors {
 
     sRRTPlanner(RRTPlanner *p, RRT rrt, bool verbose) : p(p), rrt(rrt), verbose(verbose) { };
 
+<<<<<<< HEAD
     bool growTowards(RRT& growing, RRT& passive);
 
     bool isFeasible(const arr& q);
+=======
+    bool growTowards(RRT& growing, RRT& passive, ors::KinematicWorld &G);
+>>>>>>> master
 
     uint success_growing;
     uint success_passive;
@@ -37,7 +41,7 @@ bool ors::sRRTPlanner::isFeasible(const arr& q) {
 bool ors::sRRTPlanner::growTowards(RRT& growing, RRT& passive) {
   arr q;
   if(rnd.uni()<.5) {
-    q = p->joint_min + rand(p->problem.ors->getJointStateDimension(), 1) % ( p->joint_max - p->joint_min );
+    q = p->joint_min + rand(p->problem.world.getJointStateDimension(), 1) % ( p->joint_max - p->joint_min );
     q.reshape(q.d0);
   }
   else { 
@@ -84,7 +88,7 @@ arr buildTrajectory(RRT& rrt, uint node, bool forward) {
   return q;
 }
     
-ors::RRTPlanner::RRTPlanner(ors::Graph *G, MotionProblem &problem, double stepsize, bool verbose) : 
+ors::RRTPlanner::RRTPlanner(ors::KinematicWorld *G, MotionProblem &problem, double stepsize, bool verbose) : 
   s(new ors::sRRTPlanner(this, RRT(G->getJointState(), stepsize), verbose)), G(G), problem(problem) {
     joint_min = zeros(G->getJointStateDimension(), 1);
     joint_max = ones(G->getJointStateDimension(), 1);
