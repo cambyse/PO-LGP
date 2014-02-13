@@ -328,7 +328,7 @@ void sUEyeInterface::updateTimestamp() {
   cout << "tm: " << b << endl;
   */
 
-  tstamp = mktime(&tmp)
+  tstamp = MT::toTime(tmp)
           + imgInfo.TimestampSystem.wMilliseconds / 1000.;
 }
 
