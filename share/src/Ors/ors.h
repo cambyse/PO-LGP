@@ -266,7 +266,7 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   void fillInRelativeTransforms();    ///< fill in the joint relative transforms (A & B) if body and joint world poses are known
   void clearJointErrors();
   void invertTime();
-  arr naturalQmetric();               ///< returns diagonal of a natural metric in q-space, depending on tree depth
+  arr naturalQmetric(int agent=0);    ///< returns diagonal of a natural metric in q-space, depending on tree depth
   
   /// @name get state
   uint getJointStateDimension(int agent=0) const;
