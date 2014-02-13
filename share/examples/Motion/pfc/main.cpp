@@ -125,7 +125,6 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   // store cartesian coordinates and endeffector orientation
   for (uint t=0;t<=T;t++) {
     world.setJointState(x[t]);
-    world.calcBodyFramesFromJoints();
     world.kinematicsPos(kinPos, NoArr, P.world.getBodyByName("endeff")->index);
     world.kinematicsVec(kinVec, NoArr, P.world.getBodyByName("endeff")->index);
     xRefPos.append(~kinPos);
@@ -152,7 +151,6 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   // Set start state
   q0 = x[0]; dq0 = 0.*q0;
   world.setJointState(q0,dq0);
-  world.calcBodyFramesFromJoints();
   world.getJointState(q);
 
   //------------------------------------------------//
@@ -216,7 +214,6 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
 
     // sets joint angles AND computes all frames AND update display
     world.setJointState(q);
-    world.calcBodyFramesFromJoints();
 
     world.gl().update();
   }

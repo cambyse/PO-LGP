@@ -1495,8 +1495,12 @@ void ors::KinematicWorld::read(std::istream& is) {
     }
   }
 
+  //-- clean up the graph
   graphMakeLists(bodies, joints);
+  topSort();
+  makeLinkTree();
   calc_missingAB_from_BodyAndJointFrames();
+  getJointStateDimension();
   calc_q_from_Q();
   calc_fwdPropagateFrames();
 }

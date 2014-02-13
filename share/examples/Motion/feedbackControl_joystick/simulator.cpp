@@ -17,9 +17,6 @@ PR2Simulator::~PR2Simulator(){}
 void PR2Simulator::open(){
   s = new sPR2Simulator;
   s->pr2 <<FILE("model.kvg");
-  s->pr2.calcBodyFramesFromJoints();
-  s->pr2.calcBodyFramesFromJoints();
-  s->pr2.calcJointState();
   s->openglCopy = s->pr2;
   s->openglCopy.gl().update(STRING("PR2 Simulator. time=" <<s->t));
   q_obs.set() = s->pr2.q;
@@ -39,7 +36,6 @@ void PR2Simulator::step(){
   s->pr2.q += s->dt*s->pr2.qdot + 0.5*(s->dt*s->dt)*qddot;
   s->pr2.qdot += s->dt*qddot;
   s->pr2.setJointState(s->pr2.q, s->pr2.qdot);
-  s->pr2.calcBodyFramesFromJoints();
 
   //-- point pos/vel sensors
   q_obs.set() = s->pr2.q;
@@ -49,7 +45,6 @@ void PR2Simulator::step(){
   if(!(s->step%100)){
 //    s->openglCopy.gl().lock.writeLock();
     s->openglCopy.setJointState(s->pr2.q, s->pr2.qdot);
-    s->openglCopy.calcBodyFramesFromJoints();
 //    s->openglCopy.gl().lock.unlock();
     s->openglCopy.gl().update(STRING("PR2 Simulator.  time=" <<s->t));
   }

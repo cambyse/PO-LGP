@@ -123,7 +123,6 @@ void controlledStep(arr &q, arr &W, ors::KinematicWorld *C, TaskVariableList& TV
 //   if (q.N==0) q.resizeAs(dq); // TOBIAS-Aenderung
   q += dq;
   C->setJointState(q);
-  C->calcBodyFramesFromJoints();
   oneStep(q, C, text);
 }
 #endif

@@ -48,7 +48,6 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
     y.resize(x.d0, pos->map.dim_phi(world));
     for(uint t=0;t<x.d0;t++){
       world.setJointState(x[t]);
-      world.calcBodyFramesFromJoints();
       pos->map.phi(y[t](), NoArr, world);
     }
   }

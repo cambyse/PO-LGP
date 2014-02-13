@@ -27,7 +27,6 @@ void GraspEvaluation::closeFingers(){
     for(uint t=0;t<100;t++){
       q(i) += step;
       grasp.setJointState(q);
-      grasp.calcBodyFramesFromJoints();
       s->swift.computeProxies(grasp, false);
       //grasp.reportProxies();
       gl.update();
@@ -40,12 +39,10 @@ void GraspEvaluation::closeFingers(){
     }
   }
   grasp.setJointState(q);
-  grasp.calcBodyFramesFromJoints();
   s->swift.computeProxies(grasp, false);
   //grasp.reportProxies();
 //   for(uint i=3;i<q.N;i++) q(i) += step;
 //   grasp.setJointState(q);
-//   grasp.calcBodyFramesFromJoints();
   //s->swift.computeProxies(grasp, false);
   //grasp.reportProxies();
 }

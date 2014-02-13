@@ -41,13 +41,11 @@ struct PoseViewer:Process {
       if (q.N==2*n) q = q.sub(0,q.N/2-1); //check dynamic state
       if (q.N!=n){ MT_MSG("pose view on wrong dimension");  return; }
       geo().ors.setJointState(q);
-      geo().ors.calcBodyFramesFromJoints();
       gl->text.clear() <<"pose view";
       gl->update();
     } else {
       for (uint t=0; t<q.d0; t++) {
         geo().ors.setJointState(q[t]);
-        geo().ors.calcBodyFramesFromJoints();
         gl->text.clear() <<"pose view at step " <<t <<"/" <<q.d0-1;
         gl->update();
       }

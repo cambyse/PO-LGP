@@ -49,7 +49,6 @@ void getTrajectory(arr& x, arr& y, arr& ori, arr& dual, ors::KinematicWorld& wor
     ors::Shape *s_SL_endeff = world.getShapeByName("SL_endeff");
     for(uint t=0;t<x.d0;t++){
       world.setJointState(x[t]);
-      world.calcBodyFramesFromJoints();
       m->phi(y[t](), NoArr, world);
       ori[t]() = ARRAY(s_SL_endeff->X.rot);
     }

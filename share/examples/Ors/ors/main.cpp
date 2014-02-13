@@ -38,16 +38,15 @@ namespace T1{
   ors::Vector rel;
   ors::Vector axis;
   static void f_pos (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->kinematicsPos(y,*J,i,&rel); }
-  //static void f_hess (arr &J, arr *H, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->jacobianPos(J,i,&rel);  if(H) G->hessianPos (*H,i,&rel); }
+  //static void f_hess (arr &J, arr *H, const arr &x,void*){  G->setJointState(x);  G->jacobianPos(J,i,&rel);  if(H) G->hessianPos (*H,i,&rel); }
   static void f_vec (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->kinematicsVec(y,*J,i,&axis); }
-  //static void f3 (arr &y,const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsOri2(y,i,axis); }
-  //static void df3(arr &J,const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->jacobianOri2(J,i,axis); }
+  //static void f3 (arr &y,const arr &x,void*){  G->setJointState(x);  G->kinematicsOri2(y,i,axis); }
+  //static void df3(arr &J,const arr &x,void*){  G->setJointState(x);  G->jacobianOri2(J,i,axis); }
 }
 
 void TEST(Kinematics){
   //ors::KinematicWorld G("test.ors");
   ors::KinematicWorld G("../../../data/pr2_model/pr2_clean_comfi.ors");
-  G.makeTree(G.bodies(0));
   uint n=G.getJointStateDimension();
   arr x(n);
   T1::axis.set(1,0,0);
@@ -347,7 +346,6 @@ void TEST(Dynamics){
 
 /*void switchfunction(arr& s,const arr& x,const arr& v){
   G.setJointState(x,v);
-  G.calcBodyFramesFromJoints();
   slGetProxies(C,ode);
   s.resize(G.bodies.N); s=.01;
   boolA c; c.resize(G.bodies.N);  c=false;
@@ -387,9 +385,8 @@ void TEST(ContactDynamics){
   for(t=0;t<T;t++){
     if(!(t%1)){
       G.setJointState(q,qd);
-      G.calcBodyFramesFromJoints();
       G.zeroGaugeJoints();
-      G.calcBodyFramesFromJoints();
+      G.calc_fwdPropagateFrames();
       G.getJointState(q,qd);
     }
     z <<q <<qd <<qdd <<endl;
@@ -443,6 +440,7 @@ void TEST(BlenderImport){
 #endif
 
 int MAIN(int argc,char **argv){
+
   testLoadSave();
   testPlayStateSequence();
   testKinematics();
