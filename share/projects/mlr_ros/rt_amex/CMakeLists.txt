@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.4.6)
 project(rt_amex)
 
-#if(WITH_ROS)
+if(WITH_ROS)
 
 include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 set(ENV{ROS_PACKAGE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/..:$ENV{ROS_PACKAGE_PATH})
@@ -42,4 +42,4 @@ target_link_libraries(rt_amex Core Ors Gui Motion)
 #rosbuild_add_boost_directories()
 #rosbuild_link_boost(${PROJECT_NAME} thread)
 
-#endif(WITH_ROS)
+endif(WITH_ROS)
