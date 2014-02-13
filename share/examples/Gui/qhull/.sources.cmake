@@ -1,2 +1,2 @@
-set(SOURCES ./main.cpp
-./main-old.cpp)
+set(SOURCES ./main-old.cpp
+./main.cpp)

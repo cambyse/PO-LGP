@@ -1,3 +1,3 @@
-set(SOURCES src/main.cpp
-src/fgplot.h
+set(SOURCES src/fgplot.h
+src/main.cpp
 src/fgplot.cpp)

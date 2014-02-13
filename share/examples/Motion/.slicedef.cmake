@@ -1,6 +1,5 @@
 set(CURRENT_SLICE 
- constraint
-dmp
+ dmp
 grasp
 grasp_PR2
 motion
