@@ -1275,7 +1275,7 @@ ors::Joint* ors::KinematicWorld::getJointByBodyNames(const char* from, const cha
   return graphGetEdge<Body, Joint>(f, t);
 }
 
-ShapeL ors::Graph::getShapesByAgent(const int agent) const {
+ShapeL ors::KinematicWorld::getShapesByAgent(const int agent) const {
   ShapeL agent_shapes;
   for(ors::Joint *j : joints) {
     if(j->agent==agent) {
@@ -1290,7 +1290,7 @@ ShapeL ors::Graph::getShapesByAgent(const int agent) const {
   return agent_shapes;
 }
 
-uintA ors::Graph::getShapeIdxByAgent(const int agent) const {
+uintA ors::KinematicWorld::getShapeIdxByAgent(const int agent) const {
   uintA agent_shape_idx;
   ShapeL agent_shapes = getShapesByAgent(agent);
   for(ors::Shape* s : agent_shapes)
