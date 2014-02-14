@@ -25,6 +25,7 @@ struct TomsyRecorderSystem:System{
 
         VideoEncoder *m_enc = addModule<VideoEncoder>("VideoEncoder_rgb", STRINGS("kinect_rgb"), ModuleThread::listenFirst);
         m_enc->set_rgb(true);
+        m_enc->set_fps(30);
         addModule("VideoEncoder", "VideoEncoder_depth", STRINGS("kinect_depthRgb"), ModuleThread::listenFirst);
 
         addModule("UEyePoller", "POLLER_1", STRINGS("ueye_rgb_1"), ModuleThread::loopFull);
