@@ -23,20 +23,23 @@ struct TomsyRecorderSystem:System{
         //      addModule("Kinect2PointCloud", NULL, ModuleThread::loopWithBeat, .2);
         //      addModule("PointCloudViewer", NULL, STRINGS("kinect_points", "kinect_pointColors"), ModuleThread::listenFirst);
 
-        VideoEncoderX264 *m_enc = addModule<VideoEncoderX264>("VideoEncoder_rgb", STRINGS("kinect_rgb"), ModuleThread::listenFirst);
+        VideoEncoder *m_enc = addModule<VideoEncoder>("VideoEncoder_rgb", STRINGS("kinect_rgb"), ModuleThread::listenFirst);
         m_enc->set_rgb(true);
-        addModule("VideoEncoderX264", "VideoEncoder_depth", STRINGS("kinect_depthRgb"), ModuleThread::listenFirst);
+        addModule("VideoEncoder", "VideoEncoder_depth", STRINGS("kinect_depthRgb"), ModuleThread::listenFirst);
 
         addModule("UEyePoller", "POLLER_1", STRINGS("ueye_rgb_1"), ModuleThread::loopFull);
-        addModule("VideoEncoderX264", "ENCODER_1", STRINGS("ueye_rgb_1"), ModuleThread::listenFirst);
+        VideoEncoder *enc1 = addModule<VideoEncoder>("ENCODER_1", STRINGS("ueye_rgb_1"), ModuleThread::listenFirst);
+        enc1->set_fps(60);
         addModule("ImageViewer", "VIEWER_1", STRINGS("ueye_rgb_1"), ModuleThread::listenFirst);
 
         addModule("UEyePoller", "POLLER_3", STRINGS("ueye_rgb_3"), ModuleThread::loopFull);
-        addModule("VideoEncoderX264", "ENCODER_3", STRINGS("ueye_rgb_3"), ModuleThread::listenFirst);
+        VideoEncoder *enc3 = addModule<VideoEncoder>("ENCODER_3", STRINGS("ueye_rgb_3"), ModuleThread::listenFirst);
+        enc3->set_fps(60);
         addModule("ImageViewer", "VIEWER_3", STRINGS("ueye_rgb_3"), ModuleThread::listenFirst);
 
         addModule("UEyePoller", "POLLER_4", STRINGS("ueye_rgb_4"), ModuleThread::loopFull);
-        addModule("VideoEncoderX264", "ENCODER_4", STRINGS("ueye_rgb_4"), ModuleThread::listenFirst);
+        VideoEncoder *enc4 = addModule<VideoEncoder>("ENCODER_4", STRINGS("ueye_rgb_4"), ModuleThread::listenFirst);
+        enc4->set_fps(60);
         addModule("ImageViewer", "VIEWER_4", STRINGS("ueye_rgb_4"), ModuleThread::listenFirst);
         connect();
     }
