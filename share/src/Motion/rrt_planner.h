@@ -17,9 +17,10 @@ namespace ors {
 
       arr joint_max, joint_min; ///< in which range are the joints allowed (boundaries for the sample space)
 
-      RRTPlanner(ors::KinematicWorld* G, MotionProblem &problem, double stepsize);
+      RRTPlanner(ors::KinematicWorld* G, MotionProblem &problem, double stepsize, bool verbose = false);
 
-      arr getTrajectoryTo(const arr& target, OpenGL* gl = NULL); ///< returns the trajectory created by the RRT
+      arr getTrajectoryTo(const arr& target, int max_iter=0); ///< returns the trajectory created by the RRT
+
   };
 }
 

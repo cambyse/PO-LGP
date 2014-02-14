@@ -591,7 +591,7 @@ void ors::KinematicWorld::invertTime() {
   }
 }
 
-arr ors::KinematicWorld::naturalQmetric() {
+arr ors::KinematicWorld::naturalQmetric(int agent) {
 #if 0
   if(!q.N) getJointStateDimension();
   arr Wdiag(q.N);
@@ -610,7 +610,9 @@ arr ors::KinematicWorld::naturalQmetric() {
   if(!q.N) getJointStateDimension();
   arr Wdiag(q.N);
   for_list_(Joint, j, joints) {
-    for(uint i=0; i<j->qDim(); i++) Wdiag(j->qIndex+i) = ::pow(BM(j->to->index), .5);
+    for(uint i=0; i<j->qDim(); i++) { 
+      if(j->agent == agent) Wdiag(j->qIndex+i) = ::pow(BM(j->to->index), .5);
+    }
   }
   return Wdiag;
 #endif
@@ -1271,6 +1273,29 @@ ors::Joint* ors::KinematicWorld::getJointByBodyNames(const char* from, const cha
   for_list(j, t, bodies) if(t->name==to) break;
   if(!f || !t) return 0;
   return graphGetEdge<Body, Joint>(f, t);
+}
+
+ShapeL ors::KinematicWorld::getShapesByAgent(const int agent) const {
+  ShapeL agent_shapes;
+  for(ors::Joint *j : joints) {
+    if(j->agent==agent) {
+      ShapeL tmp;
+      tmp.append(bodies(j->ifrom)->shapes);
+      tmp.append(bodies(j->ito)->shapes);
+      for(ors::Shape* s : tmp) {
+        if (!agent_shapes.contains(s)) agent_shapes.append(s);
+      }
+    } 
+  }  
+  return agent_shapes;
+}
+
+uintA ors::KinematicWorld::getShapeIdxByAgent(const int agent) const {
+  uintA agent_shape_idx;
+  ShapeL agent_shapes = getShapesByAgent(agent);
+  for(ors::Shape* s : agent_shapes)
+    agent_shape_idx.append(s->index);
+  return agent_shape_idx;
 }
 
 /** @brief creates uniques names by prefixing the node-index-number to each name */

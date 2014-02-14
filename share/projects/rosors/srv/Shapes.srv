@@ -2,6 +2,7 @@
 int32 index
 int32 index_body
 string name
+bool with_mesh
 
 ---
 ors_msgs/Shape[] shapes

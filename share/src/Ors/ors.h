@@ -230,6 +230,7 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   
   /// @name constructors
   KinematicWorld();
+  KinematicWorld(const ors::KinematicWorld& other) { *this = other; };
   KinematicWorld(const char* filename);
   ~KinematicWorld();
   void operator=(const ors::KinematicWorld& G);
@@ -244,6 +245,9 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   Joint *getJointByBodyNames(const char* from, const char* to) const;
   bool checkUniqueNames() const;
   void prefixNames();
+
+  ShapeL getShapesByAgent(const int agent) const;
+  uintA getShapeIdxByAgent(const int agent) const;
 
   /// @name changes of configuration
   void clear();
@@ -265,7 +269,7 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   void fillInRelativeTransforms();    ///< fill in the joint relative transforms (A & B) if body and joint world poses are known
   void clearJointErrors();
   void invertTime();
-  arr naturalQmetric();               ///< returns diagonal of a natural metric in q-space, depending on tree depth
+  arr naturalQmetric(int agent=0);    ///< returns diagonal of a natural metric in q-space, depending on tree depth
   
   /// @name get state
   uint getJointStateDimension(int agent=0) const;
