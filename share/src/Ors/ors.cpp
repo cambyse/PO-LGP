@@ -29,6 +29,7 @@
 #undef abs
 #include <algorithm>
 #include <sstream>
+#include <climits>
 #include "ors.h"
 #include "ors_swift.h"
 #include "ors_physx.h"
@@ -451,6 +452,7 @@ void ors::KinematicWorld::init(const char* filename) {
 }
 
 void ors::KinematicWorld::clear() {
+  qdim.clear();
   q.clear();
   qdot.clear();
   listDelete(proxies);
@@ -666,8 +668,8 @@ void ors::KinematicWorld::reconfigureRoot(Body *root) {
 /** @brief returns the joint (actuator) dimensionality */
 uint ors::KinematicWorld::getJointStateDimension(int agent) const {
   CHECK(agent>=0,"");
-  while(qdim.N<=(uint)agent) ((KinematicWorld*)this)->qdim.append(0);
-  if(qdim(agent)==0){
+  while(qdim.N<=(uint)agent) ((KinematicWorld*)this)->qdim.append(UINT_MAX);
+  if(qdim(agent)==UINT_MAX){
     uint qd=0;
     for_list_(Joint, j, joints) if(j->agent==agent){
       if(!j->mimic){
@@ -712,6 +714,7 @@ void ors::KinematicWorld::calc_q_from_Q(int agent, bool vels) {
   uint n=0;
   for_list_(Joint, j, joints) if(j->agent==agent){
     if(j->mimic) continue; //don't count dependent joints
+    CHECK(j->qIndex==n,"joint indexing is inconsistent");
     switch(j->type) {
       case JT_hingeX:
       case JT_hingeY:
@@ -798,7 +801,7 @@ void ors::KinematicWorld::calc_q_from_Q(int agent, bool vels) {
       default: NIY;
     }
   }
-  CHECK(n==q.N,"");
+  CHECK(n==N,"");
 }
 
 void ors::KinematicWorld::calc_Q_from_q(int agent, bool vels){
@@ -806,79 +809,82 @@ void ors::KinematicWorld::calc_Q_from_q(int agent, bool vels){
   for(Joint *j: joints) if(j->agent==agent){
     if(j->mimic){
       j->Q=j->mimic->Q;
-    }else switch(j->type) {
-      case JT_hingeX: {
-        j->Q.rot.setRadX(q(n));
-        if(vels){  j->Q.angvel.set(qdot(n) ,0., 0.);  j->Q.zeroVels=false;  }
-        n++;
-      } break;
+    }else{
+      CHECK(j->qIndex==n,"joint indexing is inconsistent");
+      switch(j->type) {
+        case JT_hingeX: {
+          j->Q.rot.setRadX(q(n));
+          if(vels){  j->Q.angvel.set(qdot(n) ,0., 0.);  j->Q.zeroVels=false;  }
+          n++;
+        } break;
 
-      case JT_hingeY: {
-        j->Q.rot.setRadY(q(n));
-        if(vels){  j->Q.angvel.set(0., qdot(n) ,0.);  j->Q.zeroVels=false;  }
-        n++;
-      } break;
+        case JT_hingeY: {
+          j->Q.rot.setRadY(q(n));
+          if(vels){  j->Q.angvel.set(0., qdot(n) ,0.);  j->Q.zeroVels=false;  }
+          n++;
+        } break;
 
-      case JT_hingeZ: {
-        j->Q.rot.setRadZ(q(n));
-        if(vels){  j->Q.angvel.set(0., 0., qdot(n));  j->Q.zeroVels=false;  }
-        n++;
-      } break;
-      
-      case JT_universal:{
-        ors::Quaternion rot1, rot2;
-        rot1.setRadX(q(n));
-        rot2.setRadY(q(n+1));
-        j->Q.rot = rot1*rot2;
-        if(vels) NIY;
-        n+=2;
-      } break;
-      case JT_transX: {
-        j->Q.pos = q(n)*Vector_x;
-        if(vels){ j->Q.vel.set(qdot(n), 0., 0.); j->Q.zeroVels=false; }
-        n++;
-      } break;
+        case JT_hingeZ: {
+          j->Q.rot.setRadZ(q(n));
+          if(vels){  j->Q.angvel.set(0., 0., qdot(n));  j->Q.zeroVels=false;  }
+          n++;
+        } break;
 
-      case JT_transY: {
-        j->Q.pos = q(n)*Vector_y;
-        if(vels){ j->Q.vel.set(0., qdot(n), 0.); j->Q.zeroVels=false; }
-        n++;
-      } break;
+        case JT_universal:{
+          ors::Quaternion rot1, rot2;
+          rot1.setRadX(q(n));
+          rot2.setRadY(q(n+1));
+          j->Q.rot = rot1*rot2;
+          if(vels) NIY;
+          n+=2;
+        } break;
+        case JT_transX: {
+          j->Q.pos = q(n)*Vector_x;
+          if(vels){ j->Q.vel.set(qdot(n), 0., 0.); j->Q.zeroVels=false; }
+          n++;
+        } break;
 
-      case JT_transZ: {
-        j->Q.pos = q(n)*Vector_z;
-        if(vels){ j->Q.vel.set(0., 0., qdot(n)); j->Q.zeroVels=false; }
-        n++;
-      } break;
+        case JT_transY: {
+          j->Q.pos = q(n)*Vector_y;
+          if(vels){ j->Q.vel.set(0., qdot(n), 0.); j->Q.zeroVels=false; }
+          n++;
+        } break;
 
-      case JT_transXY: {
-        j->Q.pos.set(q(n), q(n+1), 0.);
-        if(vels){ j->Q.vel.set(qdot(n), qdot(n+1), 0.); j->Q.zeroVels=false; }
-        n+=2;
-      } break;
+        case JT_transZ: {
+          j->Q.pos = q(n)*Vector_z;
+          if(vels){ j->Q.vel.set(0., 0., qdot(n)); j->Q.zeroVels=false; }
+          n++;
+        } break;
 
-      case JT_trans3: {
-        j->Q.pos.set(q(n), q(n+1), q(n+2));
-        if(vels){ j->Q.vel.set(qdot(n), qdot(n+1), qdot(n+2)); j->Q.zeroVels=false; }
-        n+=3;
-      } break;
+        case JT_transXY: {
+          j->Q.pos.set(q(n), q(n+1), 0.);
+          if(vels){ j->Q.vel.set(qdot(n), qdot(n+1), 0.); j->Q.zeroVels=false; }
+          n+=2;
+        } break;
 
-      case JT_transXYPhi: {
-        j->Q.pos.set(q(n), q(n+1), 0.);
-        j->Q.rot.setRadZ(q(n+2));
-        if(vels){
-          j->Q.vel.set(qdot(n), qdot(n+1), 0.);  j->Q.zeroVels=false;
-          j->Q.angvel.set(0., 0., qdot(n+2));  j->Q.zeroVels=false;
-        }
-        n+=3;
-      } break;
+        case JT_trans3: {
+          j->Q.pos.set(q(n), q(n+1), q(n+2));
+          if(vels){ j->Q.vel.set(qdot(n), qdot(n+1), qdot(n+2)); j->Q.zeroVels=false; }
+          n+=3;
+        } break;
 
-      case JT_glue:
-      case JT_fixed:
-        j->Q.setZero();
-        j->Q.zeroVels=true;
-        break;
-      default: NIY;
+        case JT_transXYPhi: {
+          j->Q.pos.set(q(n), q(n+1), 0.);
+          j->Q.rot.setRadZ(q(n+2));
+          if(vels){
+            j->Q.vel.set(qdot(n), qdot(n+1), 0.);  j->Q.zeroVels=false;
+            j->Q.angvel.set(0., 0., qdot(n+2));  j->Q.zeroVels=false;
+          }
+          n+=3;
+        } break;
+
+        case JT_glue:
+        case JT_fixed:
+          j->Q.setZero();
+          j->Q.zeroVels=true;
+          break;
+        default: NIY;
+      }
     }
   }
 
@@ -1882,6 +1888,9 @@ void ors::KinematicWorld::removeUselessBodies() {
   for_list_(Body, bb, bodies) bb->index=bb_COUNT;
   for_list_(Joint, j, joints) { j->index=j_COUNT;  j->ifrom = j->from->index;  j->ito = j->to->index;  }
   for_list_(Shape, s, shapes) s->ibody = s->body->index;
+  qdim.clear();
+  q.clear();
+  qdot.clear();
   proxies.clear();
 }
 
