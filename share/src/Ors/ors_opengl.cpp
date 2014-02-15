@@ -532,7 +532,9 @@ void editConfiguration(const char* filename, ors::KinematicWorld& C) {
     cout <<"reloading `" <<filename <<"' ... " <<std::endl;
     try {
       MT::lineCount=1;
-      C.init(filename);
+      C.gl().lock.writeLock();
+      C <<FILE(filename);
+      C.gl().lock.unlock();
     } catch(const char* msg) {
       cout <<"line " <<MT::lineCount <<": " <<msg <<" -- please check the file and press ENTER" <<endl;
       C.gl().watch();

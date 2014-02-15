@@ -9,10 +9,6 @@ getJointDimension is not const
 
 ** lock in OpenGL
 
-** check gradient in Motion/motion
-
-** 
-
 ** Logging:
 
 LOG(1) <<"message on level 1 (normal verbose level)";

@@ -43,10 +43,10 @@ void PR2Simulator::step(){
 
   //-- update display
   if(!(s->step%100)){
-//    s->openglCopy.gl().lock.writeLock();
+    s->openglCopy.gl().lock.writeLock();
     s->openglCopy.setJointState(s->pr2.q, s->pr2.qdot);
-//    s->openglCopy.gl().lock.unlock();
-    s->openglCopy.gl().update(STRING("PR2 Simulator.  time=" <<s->t));
+    s->openglCopy.gl().lock.unlock();
+    s->openglCopy.gl().update(STRING("PR2 Simulator.  time=" <<s->t), false, false, true);
   }
   s->t += s->dt;
   s->step ++;
