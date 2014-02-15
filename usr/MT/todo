@@ -2,3 +2,35 @@ LOG in motion.cpp
 double calc Body From Frames
 world copy in  rrt planner?? -> delete copy
 clearly introduce constraint maps as tasks -- feasibility, automatic penalty reduction
+
+
+** checkJointDimension is really const (HALT if state was not set)
+getJointDimension is not const
+
+** lock in OpenGL
+
+** check gradient in Motion/motion
+
+** 
+
+** Logging:
+
+LOG(1) <<"message on level 1 (normal verbose level)";
+LOG(0) <<"warning -- replaces as MT_MSG(...)";
+LOG(-1) <<"error -- throws error, replaces as HALT(...)";
+LOG(-2) <<"error -- exits, replaces as HALT(...)";
+
+#define LOG(log_level) LogToken(__FILE, log_level, __FILE__, __LINE__)
+
+struct LogToken{
+       MT::String msg;
+       LogToken(const char* topic, int log_level, const char* filename, uint line);
+       ~LogToken();
+       ostream&()(){ return msg; }
+};
+
+void setLogLevel(const char* topic, int l, bool forLogFile=false);
+
+The destructor ~LogToken writes into the log file and
+console. setLogLevel allows to adjust cout verbosity (0 by default),
+and what is written into the log file (1 by default)

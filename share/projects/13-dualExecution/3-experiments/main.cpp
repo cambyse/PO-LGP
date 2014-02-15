@@ -134,8 +134,8 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
     //display and record video
 //    world.watch(false, STRING(t));
     world.gl().update(STRING(t), true, false, true);
-    flip_image(world.gl().captureImage);
-    vid -> addFrame(world.gl().captureImage);
+    //    flip_image(world.gl().captureImage);
+    //    vid->addFrame(world.gl().captureImage);
 
     //write data
     MT::arrayBrackets="  ";
