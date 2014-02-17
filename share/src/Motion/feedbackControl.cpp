@@ -26,7 +26,7 @@ arr PDtask::getDesiredAcceleration(const arr& y, const arr& ydot){
   if(!v_ref.N) v_ref.resizeAs(ydot).setZero();
   this->y = y;
   this->v = ydot;
-  cout <<" TASK " <<name <<": y=(" <<Pgain <<'*' <<y_ref <<'-' <<y <<") v=(" <<Dgain <<'*' <<v_ref <<'-' <<ydot <<')' <<endl;
+  cout <<" TASK " <<name <<":  \tPterm=(" <<Pgain <<'*' <<length(y_ref-y) <<")  \tDterm=(" <<Dgain <<'*' <<length(v_ref-ydot) <<')' <<endl;
   return Pgain*(y_ref-y) + Dgain*(v_ref-ydot);
 }
 
@@ -143,7 +143,7 @@ arr FeedbackMotionControl::operationalSpaceControl(){
   q_ddot.resizeAs(world.q).setZero();
   getTaskCosts(phi, J, q_ddot);
   if(!phi.N && !nullSpacePD.active) return q_ddot;
-  arr H = diag(1./H_rate_diag);
+  arr H = diag(H_rate_diag);
   arr A=H;
   arr a(H.d0); a.setZero();
   if(phi.N){

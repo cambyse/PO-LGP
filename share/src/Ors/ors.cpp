@@ -319,13 +319,13 @@ void makeConvexHulls(ShapeL& shapes){
 //
 
 ors::Joint::Joint()
-  : index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0) { reset(); }
+  : index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0), H(1.) { reset(); }
 
 ors::Joint::Joint(const Joint& j)
-  : index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0) { reset(); *this=j; }
+  : index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0), H(1.) { reset(); *this=j; }
 
 ors::Joint::Joint(KinematicWorld& G, Body *f, Body *t, const Joint* copyJoint)
-  : index(0), qIndex(-1), ifrom(f->index), ito(t->index), from(f), to(t), mimic(NULL), agent(0){
+  : index(0), qIndex(-1), ifrom(f->index), ito(t->index), from(f), to(t), mimic(NULL), agent(0), H(1.) {
   reset();
   if(copyJoint) *this=*copyJoint;
   index=G.joints.N;
@@ -357,8 +357,8 @@ void ors::Joint::parseAts() {
     if(type==JT_fixed)  A.addRelativeRotationRad(d, 1., 0., 0.);
     if(type==JT_transX) Q.addRelativeTranslation(d, 0., 0.);
   }
-  if(ats.getValue<double>(d, "agent")) agent=(int)d;
-  if(ats.getValue<bool>("fixed")) agent=-1; 
+  if(ats.getValue<double>(d, "agent")) agent=(uint)d;
+  if(ats.getValue<bool>("fixed")) agent=UINT_MAX;
   //axis
   arr axis;
   ats.getValue<arr>(axis, "axis");
@@ -368,6 +368,17 @@ void ors::Joint::parseAts() {
     Quaternion rot;  rot.setDiff(Vector_x, ax);
     A.rot = A.rot * rot;
     B.rot = -rot * B.rot;
+  }
+  arr ctrl_limits;
+  ats.getValue<arr>(limits, "limits");
+  if(limits.N){
+    CHECK(limits.N==2*qDim(), "parsed limits have wrong dimension");
+  }
+  ats.getValue<arr>(ctrl_limits, "ctrl_limits");
+  if(ctrl_limits.N){
+    if(!limits.N) limits.resizeAs(ctrl_limits).setZero();
+    CHECK(limits.N==ctrl_limits.N, "parsed ctrl_limits have wrong dimension");
+    limits.append(ctrl_limits);
   }
   //coupled to another joint requires post-processing by the Graph::read!!
   if(ats.getValue<MT::String>("mimic")) mimic=(Joint*)1;
@@ -596,7 +607,7 @@ void ors::KinematicWorld::invertTime() {
   }
 }
 
-arr ors::KinematicWorld::naturalQmetric() {
+arr ors::KinematicWorld::naturalQmetric(double power) const {
 #if 0
   if(!q.N) getJointStateDimension();
   arr Wdiag(q.N);
@@ -612,11 +623,13 @@ arr ors::KinematicWorld::naturalQmetric() {
 //      BM(i) += BM(bodies(i)->outLinks(j)->to->index);
     }
   }
+  cout <<BM <<endl;
   if(!q.N) getJointStateDimension();
   arr Wdiag(q.N);
   for_list_(Joint, j, joints) {
-    for(uint i=0; i<j->qDim(); i++) Wdiag(j->qIndex+i) = ::pow(BM(j->to->index), .5);
+    for(uint i=0; i<j->qDim(); i++) Wdiag(j->qIndex+i) = ::pow(BM(j->to->index), power);
   }
+  cout <<Wdiag <<endl;
   return Wdiag;
 #endif
 }
@@ -666,8 +679,8 @@ void ors::KinematicWorld::reconfigureRoot(Body *root) {
 }
 
 /** @brief returns the joint (actuator) dimensionality */
-uint ors::KinematicWorld::getJointStateDimension(int agent) const {
-  CHECK(agent>=0,"");
+uint ors::KinematicWorld::getJointStateDimension(uint agent) const {
+  CHECK(agent!=UINT_MAX,"");
   while(qdim.N<=(uint)agent) ((KinematicWorld*)this)->qdim.append(UINT_MAX);
   if(qdim(agent)==UINT_MAX){
     uint qd=0;
@@ -687,6 +700,23 @@ uint ors::KinematicWorld::getJointStateDimension(int agent) const {
   return qdim(agent);
 }
 
+/** @brief returns the vector of joint limts */
+arr ors::KinematicWorld::getLimits(uint agent) const {
+  uint N=getJointStateDimension(agent);
+  arr limits(N,2);
+  limits.setZero();
+  for_list_(Joint, j, joints) if(j->agent==agent && j->limits.N){
+    uint i=j->qIndex;
+    uint d=j->qDim();
+    for(uint k=0;k<d;k++){//in case joint has multiple dimensions
+      limits(i+k,0)=j->limits(0); //lo
+      limits(i+k,1)=j->limits(1); //up
+    }
+  }
+//  cout <<"limits=" <<limits <<endl;
+  return limits;
+}
+
 void ors::KinematicWorld::zeroGaugeJoints() {
   Body *n;
   Joint *e;
@@ -703,7 +733,7 @@ void ors::KinematicWorld::zeroGaugeJoints() {
   }
 }
 
-void ors::KinematicWorld::calc_q_from_Q(int agent, bool vels) {
+void ors::KinematicWorld::calc_q_from_Q(uint agent, bool vels) {
   ors::Vector rotv;
   ors::Quaternion rot;
   
@@ -804,7 +834,7 @@ void ors::KinematicWorld::calc_q_from_Q(int agent, bool vels) {
   CHECK(n==N,"");
 }
 
-void ors::KinematicWorld::calc_Q_from_q(int agent, bool vels){
+void ors::KinematicWorld::calc_Q_from_q(uint agent, bool vels){
   uint n=0;
   for(Joint *j: joints) if(j->agent==agent){
     if(j->mimic){
@@ -894,7 +924,7 @@ void ors::KinematicWorld::calc_Q_from_q(int agent, bool vels){
 
 /** @brief sets the joint state vectors separated in positions and
   velocities */
-void ors::KinematicWorld::setJointState(const arr& _q, const arr& _qdot, int agent) {
+void ors::KinematicWorld::setJointState(const arr& _q, const arr& _qdot, uint agent) {
   uint N=getJointStateDimension(agent);
   CHECK(_q.N==N && (!(&_qdot) || _qdot.N==N), "wrong joint state dimensionalities");
   if(&_q!=&q) q=_q;
@@ -913,7 +943,7 @@ void ors::KinematicWorld::setJointState(const arr& _q, const arr& _qdot, int age
 
 /** @brief return the jacobian \f$J = \frac{\partial\phi_i(q)}{\partial q}\f$ of the position
   of the i-th body (3 x n tensor)*/
-void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, uint a, ors::Vector *rel, int agent) const {
+void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, uint a, ors::Vector *rel, uint agent) const {
   Joint *j;
   uint j_idx;
   ors::Vector tmp;
@@ -977,7 +1007,7 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, uint a, ors::Vector *rel
 
 /** @brief return the Hessian \f$H = \frac{\partial^2\phi_i(q)}{\partial q\partial q}\f$ of the position
   of the i-th body (3 x n x n tensor) */
-void ors::KinematicWorld::hessianPos(arr& H, uint a, ors::Vector *rel, int agent) const {
+void ors::KinematicWorld::hessianPos(arr& H, uint a, ors::Vector *rel, uint agent) const {
   HALT("this is buggy: a sign error: see examples/Ors/ors testKinematics");
   Joint *j1, *j2;
   uint j1_idx, j2_idx;
@@ -1053,7 +1083,7 @@ void ors::KinematicWorld::hessianPos(arr& H, uint a, ors::Vector *rel, int agent
 /* takes the joint state x and returns the jacobian dz of
    the position of the ith body (w.r.t. all joints) -> 2D array */
 /// Jacobian of the i-th body's z-orientation vector
-void ors::KinematicWorld::kinematicsVec(arr& y, arr& J, uint a, ors::Vector *vec, int agent) const {
+void ors::KinematicWorld::kinematicsVec(arr& y, arr& J, uint a, ors::Vector *vec, uint agent) const {
   Joint *j;
   uint j_idx;
   ors::Vector r, ta;
@@ -1103,7 +1133,7 @@ void ors::KinematicWorld::kinematicsVec(arr& y, arr& J, uint a, ors::Vector *vec
 
 /* takes the joint state x and returns the jacobian dz of
    the position of the ith body (w.r.t. all joints) -> 2D array */
-void ors::KinematicWorld::jacobianR(arr& J, uint a, int agent) const {
+void ors::KinematicWorld::jacobianR(arr& J, uint a, uint agent) const {
   uint j_idx;
   ors::Transformation Xi;
   Joint *j;
@@ -1289,7 +1319,7 @@ ors::Joint* ors::KinematicWorld::getJointByBodyNames(const char* from, const cha
   return graphGetEdge<Body, Joint>(f, t);
 }
 
-ShapeL ors::KinematicWorld::getShapesByAgent(const int agent) const {
+ShapeL ors::KinematicWorld::getShapesByAgent(const uint agent) const {
   ShapeL agent_shapes;
   for(ors::Joint *j : joints) {
     if(j->agent==agent) {
@@ -1304,7 +1334,7 @@ ShapeL ors::KinematicWorld::getShapesByAgent(const int agent) const {
   return agent_shapes;
 }
 
-uintA ors::KinematicWorld::getShapeIdxByAgent(const int agent) const {
+uintA ors::KinematicWorld::getShapeIdxByAgent(const uint agent) const {
   uintA agent_shape_idx;
   ShapeL agent_shapes = getShapesByAgent(agent);
   for(ors::Shape* s : agent_shapes)
@@ -1785,35 +1815,17 @@ void ors::KinematicWorld::kinematicsContactConstraints(arr& y, arr &J) const {
   J.reshape(con, q.N);
 }
 
-void ors::KinematicWorld::getLimitsMeasure(arr &x, const arr& limits, double margin) const {
-  CHECK(limits.d0==q.N && limits.d1==2, "joint limits parameter size mismatch");
-  x.resize(1);
-  x=0.;
-  uint i;
+void ors::KinematicWorld::kinematicsLimitsCost(arr &y, arr &J, const arr& limits, double margin) const {
+  y.resize(1).setZero();
+  if(&J) J.resize(1, getJointStateDimension()).setZero();
   double d;
-  for(i=0; i<q.N; i++) {
-    d = q(i) - limits(i, 0);
-    if(d<margin) {  d-=margin;  x(0) += d*d;  }
-    d = limits(i, 1) - q(i);
-    if(d<margin) {  d-=margin;  x(0) += d*d;  }
+  for(uint i=0; i<q.N; i++) if(limits(i,1)>limits(i,0)){ //only consider proper limits (non-zero interval)
+    double m = margin*(limits(i,1)-limits(i,0));
+    d = limits(i, 0) + m - q(i); //lo
+    if(d>0.) {  y(0) += d;  if(&J) J(0, i)-=1.;  }
+    d = q(i) - limits(i, 1) + m; //up
+    if(d>0.) {  y(0) += d;  if(&J) J(0, i)+=1.;  }
   }
-}
-
-double ors::KinematicWorld::getLimitsGradient(arr &grad, const arr& limits, double margin) const {
-  CHECK(limits.d0==q.N && limits.d1==2, "");
-  uint i;
-  double d;
-  double cost=0.;
-  arr J;
-  grad.resize(1, getJointStateDimension());
-  grad.setZero();
-  for(i=0; i<q.N; i++) {
-    d = q(i) - limits(i, 0);
-    if(d<margin) {  d-=margin;  grad(0, i) += 2.*d;  }
-    d = limits(i, 1) - q(i);
-    if(d<margin) {  d-=margin;  grad(0, i) -= 2.*d;  }
-  }
-  return cost;
 }
 
 /// center of mass of the whole configuration (3 vector)

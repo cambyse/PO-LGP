@@ -1,9 +1,21 @@
 #include "taskMap_constrained.h"
 
+//===========================================================================
+
 void CollisionConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
   G.kinematicsProxyCost(y, J, 2.*margin, false);
   y -= .9;
 }
+
+//===========================================================================
+
+void LimitsConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
+  if(!limits.N) limits = G.getLimits();
+  G.kinematicsLimitsCost(y, J, limits, margin);
+  y -= .9;
+}
+
+//===========================================================================
 
 void PairCollisionConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
   y.resize(1) = -1.;
@@ -15,6 +27,8 @@ void PairCollisionConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
     }
   }
 }
+
+//===========================================================================
 
 void PlaneConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
   int body_i = G.shapes(i)->body->index;
@@ -30,3 +44,5 @@ void PlaneConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
   y(0) = scalarProduct(y_eff, planeParams);
   if(&J) J = ~planeParams * J_eff;
 }
+
+//===========================================================================

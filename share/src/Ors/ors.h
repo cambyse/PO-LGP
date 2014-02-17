@@ -139,7 +139,7 @@ struct Joint {
   int ifrom, ito;       ///< indices of from and to bodies
   Body *from, *to;      ///< pointers to from and to bodies
   Joint *mimic;         ///< if non-NULL, this joint's state is identical to another's
-  int agent;            ///< associate this Joint to a specific agent (0=default robot)
+  uint agent;            ///< associate this Joint to a specific agent (0=default robot)
 
   MT::String name;      ///< name
   JointType type;       ///< joint type
@@ -148,6 +148,8 @@ struct Joint {
   Transformation B;     ///< transformation from joint to child body (attachment, usually static)
   Transformation X;     ///< joint pose in world coordinates (same as from->X*A)
   Vector axis;          ///< joint axis (same as X.rot.getX() for standard hinge joints)
+  arr limits;           ///< joint limits (lo, up, [maxvel, maxeffort])
+  double H;             ///< control cost factor
   KeyValueGraph ats;    ///< list of any-type attributes
   
   Joint();
@@ -155,11 +157,11 @@ struct Joint {
   explicit Joint(KinematicWorld& G, Body *f, Body *t, const Joint *copyJoint=NULL); //new Shape, being added to graph and body's joint lists
   ~Joint();
   void operator=(const Joint& j) {
-    index=j.index; qIndex=j.qIndex; ifrom=j.ifrom; ito=j.ito; mimic=reinterpret_cast<Joint*>(j.mimic?1:0);
-    type=j.type; A=j.A; Q=j.Q; B=j.B; X=j.X; axis=j.axis; name=j.name;
-    ats=j.ats; agent=j.agent;
+    index=j.index; qIndex=j.qIndex; ifrom=j.ifrom; ito=j.ito; mimic=reinterpret_cast<Joint*>(j.mimic?1:0); agent=j.agent;
+    name=j.name; type=j.type; A=j.A; Q=j.Q; B=j.B; X=j.X; axis=j.axis; limits=j.limits; H=j.H;
+    ats=j.ats;
   }
-  void reset() { listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); X.setZero(); axis.setZero(); type=JT_none; }
+  void reset() { listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); X.setZero(); axis.setZero(); limits.clear(); H=1.; type=JT_none; }
   void parseAts();
   uint qDim();
   void write(std::ostream& os) const;
@@ -246,8 +248,8 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   bool checkUniqueNames() const;
   void prefixNames();
 
-  ShapeL getShapesByAgent(const int agent) const;
-  uintA getShapeIdxByAgent(const int agent) const;
+  ShapeL getShapesByAgent(const uint agent) const;
+  uintA getShapeIdxByAgent(const uint agent) const;
 
   /// @name changes of configuration
   void clear();
@@ -264,35 +266,38 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   void removeUselessBodies();     ///< prune non-articulated bodies; they become shapes of other bodies
   
   /// @name computations on the graph
-  void calc_Q_from_q(int agent=0, bool vels=false); ///< from the set (q,qdot) compute the joint's Q transformations
-  void calc_q_from_Q(int agent=0, bool vels=false);  ///< updates (q,qdot) based on the joint's Q transformations
+  void calc_Q_from_q(uint agent=0, bool vels=false); ///< from the set (q,qdot) compute the joint's Q transformations
+  void calc_q_from_Q(uint agent=0, bool vels=false);  ///< updates (q,qdot) based on the joint's Q transformations
   void calc_fwdPropagateFrames();    ///< elementary forward kinematics; also computes all Shape frames
   void calc_fwdPropagateShapeFrames();   ///< same as above, but only shape frames (body frames are assumed up-to-date)
   void calc_Q_from_BodyFrames();    ///< fill in the joint transformations assuming that body poses are known (makes sense when reading files)
   void calc_missingAB_from_BodyAndJointFrames();    ///< fill in the missing joint relative transforms (A & B) if body and joint world poses are known
   void clearJointErrors();
   void invertTime();
-  arr naturalQmetric();               ///< returns diagonal of a natural metric in q-space, depending on tree depth
-  
+  arr naturalQmetric(double power=.5) const;               ///< returns diagonal of a natural metric in q-space, depending on tree depth
+  arr getLimits(uint agent=0) const;
+
   /// @name get state
-  uint getJointStateDimension(int agent=0) const;
+  uint getJointStateDimension(uint agent=0) const;
   void getJointState(arr &_q, arr& _qdot=NoArr) const {
     _q=q; if(&_qdot){ _qdot=qdot; if(!_qdot.N) _qdot.resizeAs(q).setZero();  }
   }
   arr getJointState() const { return q; }
 
   /// @name set state
-  void setJointState(const arr& _q, const arr& _qdot=NoArr, int agent=0);
+  void setJointState(const arr& _q, const arr& _qdot=NoArr, uint agent=0);
 
   /// @name kinematics
-  void kinematicsPos(arr& y, arr& J, uint i, ors::Vector *rel=0, int agent=0) const;
-  void kinematicsVec(arr& y, arr& J, uint i, ors::Vector *vec=0, int agent=0) const;
-  void hessianPos(arr& H, uint i, ors::Vector *rel=0, int agent=0) const;
-  void jacobianR(arr& J, uint a, int agent=0) const;
+  void kinematicsPos(arr& y, arr& J, uint i, ors::Vector *rel=0, uint agent=0) const;
+  void kinematicsVec(arr& y, arr& J, uint i, ors::Vector *vec=0, uint agent=0) const;
+  void hessianPos(arr& H, uint i, ors::Vector *rel=0, uint agent=0) const;
+  void jacobianR(arr& J, uint a, uint agent=0) const;
   void kinematicsProxyCost(arr& y, arr& J, Proxy *p, double margin=.02, bool useCenterDist=true, bool addValues=false) const;
   void kinematicsProxyCost(arr& y, arr& J, double margin=.02, bool useCenterDist=true) const;
   void kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, double margin=.02, bool addValues=false) const;
   void kinematicsContactConstraints(arr& y, arr &J) const; //TODO: should depend on agent...
+  void getLimitsMeasure(arr &x, const arr& limits, double margin=.1) const;
+  void kinematicsLimitsCost(arr& y, arr& J, const arr& limits, double margin=.1) const;
 
   /// @name dynamics
   void fwdDynamics(arr& qdd, const arr& qd, const arr& tau);
@@ -303,8 +308,6 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   /// @name older 'kinematic maps'
   //void getContactMeasure(arr &x, double margin=.02, bool linear=false) const;
   //double getContactGradient(arr &grad, double margin=.02, bool linear=false) const;
-  void getLimitsMeasure(arr &x, const arr& limits, double margin=.1) const;
-  double getLimitsGradient(arr &grad, const arr& limits, double margin=.1) const;
   double getCenterOfMass(arr& com) const;
   void getComGradient(arr &grad) const;
 

@@ -1,6 +1,6 @@
 body world {}
 body base_footprint { mass=5.55  }
-joint (world base_footprint){ type=8 }
+joint worldTranslationRotation (world base_footprint){ type=8 }
 
 body base_footprint { mass=123.551  }
 body fl_caster_rotation_link { pose=<T 0.2246 0.2246 0.0792 0.707107 0 -0.707107 0 > mass=3.47308  }

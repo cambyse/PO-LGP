@@ -4,6 +4,10 @@ Joystick2Tasks::Joystick2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL
   endeffR = MP.addPDTask("endeffR", .1, .8, posTMT, "endeffR");
   endeffL = MP.addPDTask("endeffL", .1, .8, posTMT, "endeffL");
   base = MP.addPDTask("endeffBase", .1, .8, posTMT, "endeffBase");
+  limits = MP.addPDTask("limits", .1, .3, qLimitsTMT);
+  limits->setGains(100.,0.);
+  qitself = MP.addPDTask("qitself", .1, 1., qItselfTMT);
+  qitself->setGains(0.,100.);
 //  MP.addPDtask("endeffHead", .1, .8, posTMT, "handR", NoVector, "rightTarget");
 //  MP.addPDtask("endeffBase", .1, .8, posTMT, "handR", NoVector, "rightTarget");
 //  TaskVariable *eff  = new DefaultTaskVariable("endeffector", ors, posTVT, "m9", "<t(0 0 -.24)>", 0, 0, 0);
@@ -14,12 +18,22 @@ Joystick2Tasks::Joystick2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL
 //  TaskVariable *skin = new DefaultTaskVariable("skin", ors, skinTVT, 0, 0, 0, 0, skinIndex);
 }
 
-void Joystick2Tasks::updateTasks(const arr& joys){
+void Joystick2Tasks::updateTasks(arr& joys, double dt){
   for(PDtask* pdt:MP.tasks) pdt->active=false;
+
+  qitself->active=true;
+  qitself->prec=10.;
+
+  limits->active=true;
+  limits->prec=10.;
 
   if(joys.N<6) return;
 
-  double joyRate=.5;
+  double joyRate=5.;
+  for(uint i=1;i<joys.N;i++) if(fabs(joys(i))<0.05) joys(i)=0.;
+  double joyLeftRight = -joyRate*MT::sign(joys(4))*(exp(MT::sqr(joys(4)))-1.);
+  double joyForwardBack = -joyRate*MT::sign(joys(3))*(exp(MT::sqr(joys(3)))-1.);
+  double joyUpDown = -joyRate*MT::sign(joys(2))*(exp(MT::sqr(joys(2)))-1.);
 
   enum {none, up, down, left, right} sel=none;
   if(joys(5)>.5) sel=right;
@@ -36,6 +50,7 @@ void Joystick2Tasks::updateTasks(const arr& joys){
         case left:   pdt=endeffL;  break;
         case up:     pdt=endeffR;  break;
         case down:   pdt=base;  break;
+        case none:   pdt=NULL;  break;
       }
       if(!pdt) break;
       pdt->active=true;
@@ -43,10 +58,11 @@ void Joystick2Tasks::updateTasks(const arr& joys){
         pdt->map.phi(pdt->y, NoArr, MP.world);
         pdt->v_ref.resizeAs(pdt->y);
       }
-      pdt->y_ref = pdt->y;
-      pdt->v_ref(0) = -joyRate*MT::sign(joys(4))*(exp(MT::sqr(joys(4)))-1.);
-      pdt->v_ref(1) = -joyRate*MT::sign(joys(3))*(exp(MT::sqr(joys(3)))-1.);
-      pdt->v_ref(2) = -joyRate*MT::sign(joys(2))*(exp(MT::sqr(joys(2)))-1.);
+      arr vel(3);
+      vel(0) = joyLeftRight;
+      vel(1) = joyForwardBack;
+      vel(2) = joyUpDown;
+      pdt->y_ref = pdt->y + dt*vel;
       cout <<"pdt->v_ref=" <<pdt->v_ref <<endl;
       break;
     }

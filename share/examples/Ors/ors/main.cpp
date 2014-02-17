@@ -146,6 +146,35 @@ void TEST(Contacts){
   }
 }
 
+//===========================================================================
+
+void TEST(Limits){
+  ors::KinematicWorld G("arm7.ors");
+  struct MyFct:VectorFunction{
+    ors::KinematicWorld& world;
+    arr limits;
+    MyFct(ors::KinematicWorld& _world):world(_world),limits(world.getLimits()){}
+    void fv(arr& y, arr& J, const arr& x){
+      world.setJointState(x);
+      world.kinematicsLimitsCost(y,J,limits);
+    }
+  } F(G);
+
+  uint n=G.getJointStateDimension();
+  arr x(n),y,J;
+  for(uint k=0;k<10;k++){
+    rndUniform(x,-2.,2.,false);
+    checkJacobian(F,x,1e-4);
+    for(uint t=0;t<10;t++){
+      F.fv(y,J,x);
+      cout <<"y=" <<y <<"  " <<flush;
+      x -= .1 * J.reshape(n);
+      checkJacobian(F,x,1e-4);
+      G.setJointState(x);
+      G.gl().update();
+    }
+  }
+}
 
 //===========================================================================
 //
@@ -440,6 +469,8 @@ void TEST(BlenderImport){
 #endif
 
 int MAIN(int argc,char **argv){
+  testLimits();
+  return 0;
 
   testLoadSave();
   testPlayStateSequence();
@@ -448,6 +479,7 @@ int MAIN(int argc,char **argv){
   testFollowRedundantSequence();
   testDynamics();
   testContacts();
+  testLimits();
 #ifdef MT_ODE
 //  testMeshShapesInOde();
   testPlayTorqueSequenceInOde();

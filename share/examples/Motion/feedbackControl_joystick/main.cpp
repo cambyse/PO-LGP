@@ -3,6 +3,7 @@
 #include <Hardware/joystick.h>
 #include <System/engine.h>
 #include <Gui/opengl.h>
+#include <Motion/pr2_heuristics.h>
 
 #include "simulator.h"
 #include "joystick2tasks.h"
@@ -28,6 +29,7 @@ void testSimulator(){
   world.getJointState(q, qdot);
   MP.nullSpacePD.y_ref = q;
   MP.nullSpacePD.active=false;
+  MP.H_rate_diag = pr2_reasonable_W(world);
 
   engine().enableAccessLog();
   engine().open(S);
@@ -37,7 +39,7 @@ void testSimulator(){
     arr joy = S.joystickState.get();
     MP.setState(S.q_obs.get(), S.qdot_obs.get());
 //    MP.world.gl().update("operational space sim");
-    j2t.updateTasks(joy);
+    j2t.updateTasks(joy,0.01);
     for(uint tt=0;tt<10;tt++){
       arr a = MP.operationalSpaceControl();
       q += .001*qdot;
