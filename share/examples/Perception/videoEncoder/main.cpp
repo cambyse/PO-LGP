@@ -15,7 +15,8 @@ void testVideo(){
   gl.add(draw,0);
   //gl.watch();
 
-  VideoEncoder_libav_simple video;
+  VideoEncoder_libav_simple video("z.avi", 60, 0, true); // set is_rgb to true, because, CURRENTLY, captureImage works using RGB
+
   for(angle=0.;angle<180.;angle+=180./150.){
     gl.update(NULL, true);
     flip_image(gl.captureImage);
