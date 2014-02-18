@@ -55,7 +55,7 @@ arr create_rrt_trajectory(ors::KinematicWorld& G, arr& target) {
   return planner.getTrajectoryTo(target);
 }
 
-arr optimize_trajectory(ors::KinematicWorld& G, arr& init_trajectory) {
+arr optimize_trajectory(ors::KinematicWorld& G, const arr& init_trajectory) {
   // create MotionProblem
   MotionProblem P(G);
   P.loadTransitionParameters();
@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
   std::cout << "target = " << target << std::endl;
 
   arr rrt_trajectory = create_rrt_trajectory(G, target);
-  //show_trajectory(G,  rrt_trajectory, "RRT");
+  //show_trajectory(G, rrt_trajectory, "RRT");
 
   arr opt_trajectory = optimize_trajectory(G, rrt_trajectory);
   show_trajectory(G,  opt_trajectory, "optimized");

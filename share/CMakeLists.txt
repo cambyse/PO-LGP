@@ -101,6 +101,13 @@ if(WITH_ROS)
   endif(ROSBUILD)
 endif(WITH_ROS)
 
+#find_package(DOXYGEN)
+#if(DOXYGEN_FOUND)
+
+#else(DOXYGEN_FOUND)
+#message(STATUS "Doxygen not found, documentation will not be generated")
+#endif(DOXYGEN_FOUND)
+
 # common configuration
 include_directories(src)
 include_directories(include)
@@ -111,14 +118,30 @@ link_directories(ENV{MLR_LIBPATH}/lib)
 include_directories(ENV{MLR_LIBPATH}/include)
 endif(ENV{MLR_LIBPATH})
 
+# check wether OpenMP is available and use it be default it if it
+option(WITH_OPENMP "Use OpenMP, if available (default ON)" ON)
+if(WITH_OPENMP)
+    message(STATUS "Looking for OpenMP")
+    find_package(OpenMP)
+    if (OPENMP_FOUND)
+        message(STATUS "Found OpenMP, enabling it")
+        set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+        set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fopenmp")
+    else()
+        message(STATUS "OpenMP not found, compiling without it")
+    endif()
+endif()
+
 # our code uses C++ 10x stuff by now
 set(MLR_CXX_FLAGS "-std=c++0x ${MLR_CXX_FLAGS}")
 
 # set Gui-GL definition globally for convenience
 include(src/Gui/gl.cmake OPTIONAL)
-message(STATUS "Using OpenGL: ${WITH_OPENGL}")
+message(STATUS "Using OpenGL: ${HAVE_OPENGL}")
 # need the result of this for the examples
 include(src/Hardware/G4/find_G4.cmake OPTIONAL)
+include(src/Hardware/kinect/freenect.cmake OPTIONAL)
 
 # set MT definitions depending on which external libs we have
 find_file(SLICE_EXTERN .slicedef.cmake 

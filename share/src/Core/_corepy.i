@@ -75,9 +75,9 @@ def get_mlr_path():
   int numpy_type_uint() { return NPY_UINT; }
 %}
 
-%Array_Typemap(double)  // arr
-%Array_Typemap(int)     // intA
-%Array_Typemap(uint)    // uintA
+/*%Array_Typemap(double)  // arr*/
+/*%Array_Typemap(int)     // intA*/
+/*%Array_Typemap(uint)    // uintA*/
 
 // we need to typedef array. Otherwise python complains about arr.
 %inline %{

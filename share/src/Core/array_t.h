@@ -1975,7 +1975,7 @@ template<class T> MT::Array<T> sum(const MT::Array<T>& v, uint d) {
   MT::Array<T> x;
   x.referTo(v);
   MT::Array<T> S;
-  uint i, j;
+  uint i, j, k;
   if(d==v.nd-1) {  //sum over last index - contiguous in memory
     x.reshape(x.N/x.dim(x.nd-1), x.dim(x.nd-1));
     S.resize(x.d0);  S.setZero();
@@ -1988,7 +1988,28 @@ template<class T> MT::Array<T> sum(const MT::Array<T>& v, uint d) {
     for(i=0; i<x.d0; i++) for(j=0; j<x.d1; j++) S(j) += x(i, j);
     return S;
   }
-  NIY;
+  //any other index (includes the previous cases, but marginally slower)
+  uintA IV, IS, dimV, dimS;
+  dimV = v.getDim();
+  dimS.resize(dimV.N-1);
+  for(i = 0, j = 0; i < dimS.N; i++, j++) {
+    if(i == d) j++;
+    dimS(i) = dimV(j);
+  }
+  x.referTo(v);
+  x.reshape(x.N);
+  S.resize(dimS); S.setZero();
+  IS.resize(dimS.N);
+  for(k = 0; k < x.N; k++) {
+    v.getIndexTuple(IV, k);
+    for(i = 0, j = 0; i < IS.N; i++, j++) {
+      if(i == d) j++;
+      IS(i) = IV(j);
+    }
+    S(IS) += x(k);
+  }
+  S.reshape(S.N);
+  return S;
 }
 
 /// \f$\sum_i |x_i|\f$

@@ -319,7 +319,11 @@ import_array();
 //===========================================================================
 
 %typemap(memberin) MT::Array<Type*> {
-  $1 = *$input;  
+#ifdef SWIG_DEREFERENCE_MEMBERS
+  $1 = *$input;
+#else
+  $1 = $input;
+#endif
 }
 
 %typemap(memberin) MT::Array<Type*> & {
