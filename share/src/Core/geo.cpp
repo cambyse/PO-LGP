@@ -46,30 +46,36 @@ double scalarProduct(const ors::Quaternion& a, const ors::Quaternion& b);
 namespace ors {
 
 /// set the vector
-void Vector::set(double _x, double _y, double _z) { x=_x; y=_y; z=_z; }
+void Vector::set(double _x, double _y, double _z) { x=_x; y=_y; z=_z; isZero=(x==0. && y==0. && z==0.); }
 
 /// set the vector
-void Vector::set(double* p) { x=p[0]; y=p[1]; z=p[2]; }
+void Vector::set(double* p) { x=p[0]; y=p[1]; z=p[2]; isZero=(x==0. && y==0. && z==0.); }
 
 /// set the vector
-void Vector::setZero() { memset(this, 0, sizeof(Vector)); }
+void Vector::setZero() { memset(this, 0, sizeof(Vector)); isZero=true; }
 
 /// a random vector in [-1, 1]^3
-void Vector::setRandom(double range) { x=rnd.uni(-range, range); y=rnd.uni(-range, range); z=rnd.uni(-range, range); }
+void Vector::setRandom(double range) { x=rnd.uni(-range, range); y=rnd.uni(-range, range); z=rnd.uni(-range, range); isZero=false; }
 
 //{ vector operations
 
 /// this=this/length(this)
-void Vector::normalize() {(*this)/=length(); }
+void Vector::normalize() {
+  if(isZero){
+    MT_MSG("can't normalize length of null vector");
+  }
+  (*this)/=length();
+}
 
 /// this=this*l/length(this)
 void Vector::setLength(double l) {
-  if(isZero()) MT_MSG("can't change length of null vector");
+  if(isZero) MT_MSG("can't change length of null vector");
   (*this)*=l/length();
 }
 
 /// this=component of this normal to \c b, (unnormalized!)
 void Vector::makeNormal(const Vector& b) {
+  if(b.isZero) MT_MSG("can't makeNormal with null vector");
   double l=b.length(), s=x*b.x+y*b.y+z*b.z;
   s/=l*l;
   x-=s*b.x; y-=s*b.y; z-=s*b.z;
@@ -77,6 +83,7 @@ void Vector::makeNormal(const Vector& b) {
 
 /// this=component of this colinear to \c b, (unnormalized!)
 void Vector::makeColinear(const Vector& b) {
+  if(b.isZero) MT_MSG("can't makeColinear with null vector");
   // *this = ((*this)*b)/b.length()) * (*this);
   double l=b.length(), s=x*b.x+y*b.y+z*b.z;
   s/=l*l;
@@ -84,9 +91,6 @@ void Vector::makeColinear(const Vector& b) {
 }
 
 //{ measuring the vector
-
-/// is zero?
-bool Vector::isZero() const { return (x==0. && y==0. && z==0.); }
 
 /// 1-norm to zero
 double Vector::diffZero() const { return fabs(x)+fabs(y)+fabs(z); }
@@ -155,6 +159,7 @@ Vector operator^(const Vector& b, const Vector& c) {
   a.x=b.y*c.z-b.z*c.y;
   a.y=b.z*c.x-b.x*c.z;
   a.z=b.x*c.y-b.y*c.x;
+  a.isZero = (a.x==0. && a.y==0. && a.z==0.);
   return a;
 }
 
@@ -164,6 +169,7 @@ Vector operator+(const Vector& b, const Vector& c) {
   a.x=b.x+c.x;
   a.y=b.y+c.y;
   a.z=b.z+c.z;
+  a.isZero = (a.x==0. && a.y==0. && a.z==0.);
   return a;
 }
 
@@ -173,6 +179,7 @@ Vector operator-(const Vector& b, const Vector& c) {
   a.x=b.x-c.x;
   a.y=b.y-c.y;
   a.z=b.z-c.z;
+  a.isZero = (a.x==0. && a.y==0. && a.z==0.);
   return a;
 }
 
@@ -182,6 +189,7 @@ Vector operator*(double b, const Vector& c) {
   a.x=b*c.x;
   a.y=b*c.y;
   a.z=b*c.z;
+  a.isZero = c.isZero && (b==0.);
   return a;
 }
 
@@ -194,6 +202,7 @@ Vector operator/(const Vector& b, double c) { return (1./c)*b; }
 /// multiplication with a scalar
 Vector& operator*=(Vector& a, double c) {
   a.x*=c; a.y*=c; a.z*=c;
+  a.isZero = a.isZero && (c==0.);
   return a;
 }
 
@@ -206,12 +215,14 @@ Vector& operator/=(Vector& a, double c) {
 /// add a vector
 Vector& operator+=(Vector& a, const Vector& b) {
   a.x+=b.x; a.y+=b.y; a.z+=b.z;
+  a.isZero = (a.x==0. && a.y==0. && a.z==0.);
   return a;
 }
 
 /// subtract a vector
 Vector& operator-=(Vector& a, const Vector& b) {
   a.x-=b.x; a.y-=b.y; a.z-=b.z;
+  a.isZero = (a.x==0. && a.y==0. && a.z==0.);
   return a;
 }
 
@@ -219,6 +230,7 @@ Vector& operator-=(Vector& a, const Vector& b) {
 Vector operator-(const Vector& b) {
   Vector a;
   a.x=-b.x; a.y=-b.y; a.z=-b.z;
+  a.isZero = b.isZero;
   return a;
 }
 
@@ -380,6 +392,7 @@ Vector operator*(const Matrix& b, const Vector& c) {
   a.x=b.m00*c.x+b.m01*c.y+b.m02*c.z;
   a.y=b.m10*c.x+b.m11*c.y+b.m12*c.z;
   a.z=b.m20*c.x+b.m21*c.y+b.m22*c.z;
+  a.isZero = (a.x==0. && a.y==0. && a.z==0.);
   return a;
 }
 /// multiplication with a scalar
@@ -444,13 +457,13 @@ void Quaternion::alignWith(const Vector& v) {
 
 
 /// set the quad
-void Quaternion::set(double* p) { w=p[0]; x=p[1]; y=p[2]; z=p[3]; }
+void Quaternion::set(double* p) { w=p[0]; x=p[1]; y=p[2]; z=p[3]; isZero=(w==1. || w==-1.); }
 
 /// set the quad
-void Quaternion::set(double _w, double _x, double _y, double _z) { w=_w; x=_x; y=_y; z=_z; }
+void Quaternion::set(double _w, double _x, double _y, double _z) { w=_w; x=_x; y=_y; z=_z; isZero=(w==1. || w==-1.); }
 
 /// reset the rotation to identity
-void Quaternion::setZero() { memset(this, 0, sizeof(Quaternion));  w=1; }
+void Quaternion::setZero() { memset(this, 0, sizeof(Quaternion));  w=1; isZero=true; }
 
 /// samples the rotation uniformly from the whole SO(3)
 void Quaternion::setRandom() {
@@ -464,6 +477,7 @@ void Quaternion::setRandom() {
   x=sin(t1)*s1;
   y=cos(t1)*s1;
   z=sin(t2)*s2;
+  isZero=false;
 }
 
 /// sets this to a smooth interpolation between two rotations
@@ -475,6 +489,7 @@ void Quaternion::setInterpolate(double t, const Quaternion& a, const Quaternion 
   y=a.y+t*(sign*b.y-a.y);
   z=a.z+t*(sign*b.z-a.z);
   normalize();
+  isZero=(w==1. || w==-1.);
 }
 
 /// assigns the rotation to \c a DEGREES around the vector (x, y, z)
@@ -492,6 +507,7 @@ void Quaternion::setRad(double angle, double _x, double _y, double _z) {
   x=_x*l;
   y=_y*l;
   z=_z*l;
+  isZero=(w==1. || w==-1.);
 }
 
 /// ..
@@ -509,6 +525,7 @@ void Quaternion::setRad(double angle) {
   x*=l;
   y*=l;
   z*=l;
+  isZero=(w==1. || w==-1.);
 }
 
 /// rotation around X-axis by given radiants
@@ -517,6 +534,7 @@ void Quaternion::setRadX(double angle) {
   w=cos(angle);
   x=sin(angle);
   y=z=0.;
+  isZero=(w==1. || w==-1.);
 }
 
 /// rotation around Y-axis by given radiants
@@ -525,6 +543,7 @@ void Quaternion::setRadY(double angle) {
   w=cos(angle);
   y=sin(angle);
   x=z=0.;
+  isZero=(w==1. || w==-1.);
 }
 
 /// rotation around Z-axis by given radiants
@@ -533,6 +552,7 @@ void Quaternion::setRadZ(double angle) {
   w=cos(angle);
   z=sin(angle);
   x=y=0.;
+  isZero=(w==1. || w==-1.);
 }
 
 Quaternion& Quaternion::setRpy(double r, double p, double y) {
@@ -552,6 +572,7 @@ Quaternion& Quaternion::setRpy(double r, double p, double y) {
   y = cr*sp*cy + sr*cp*sy;
   z = cr*cp*sy - sr*sp*cy;
 #endif
+  isZero=(w==1. || w==-1.);
   CHECK(isNormalized(),"bad luck");
   return *this;
 }
@@ -567,12 +588,9 @@ void Quaternion::setDiff(const Vector& from, const Vector& to) {
   double phi=acos(from*to/(from.length()*to.length()));
   if(!phi){ setZero(); return; }
   Vector axis(from^to);
-  if(axis.isZero()) axis=Vector(0, 0, 1)^to;
+  if(axis.isZero) axis=Vector(0, 0, 1)^to;
   setRad(phi, axis);
 }
-
-/// is zero (i.e., identical rotation)
-bool Quaternion::isZero() const { return w==1. || w==-1.; }
 
 /// 1-norm to zero (i.e., identical rotation)
 double Quaternion::diffZero() const { return (w>0.?fabs(w-1.):fabs(w+1.))+fabs(x)+fabs(y)+fabs(z); }
@@ -637,6 +655,7 @@ void Quaternion::setMatrix(double* m) {
   z = (m[3]-m[1])/(4.*w);
   y = (m[2]-m[6])/(4.*w);
   x = (m[7]-m[5])/(4.*w);
+  isZero=(w==1. || w==-1.);
   normalize();
   //CHECK(normalized(), "failed :-(");
 }
@@ -742,6 +761,7 @@ Quaternion operator*(const Quaternion& b, const Quaternion& c) {
   a.x = b.w*c.x + b.x*c.w + b.y*c.z - b.z*c.y;
   a.y = b.w*c.y + b.y*c.w + b.z*c.x - b.x*c.z;
   a.z = b.w*c.z + b.z*c.w + b.x*c.y - b.y*c.x;
+  a.isZero=(a.w==1. || a.w==-1.);
   return a;
 }
 
@@ -752,6 +772,7 @@ Quaternion operator/(const Quaternion& b, const Quaternion& c) {
   a.x = b.w*c.x - b.x*c.w + b.y*c.z - b.z*c.y;
   a.y = b.w*c.y - b.y*c.w + b.z*c.x - b.x*c.z;
   a.z = b.w*c.z - b.z*c.w + b.x*c.y - b.y*c.x;
+  a.isZero=(a.w==1. || a.w==-1.);
   return a;
 }
 
@@ -775,6 +796,7 @@ Vector operator*(const Quaternion& b, const Vector& c) {
   a.x=m0*c.x+m1*c.y+m2*c.z;
   a.y=m3*c.x+m4*c.y+m5*c.z;
   a.z=m6*c.x+m7*c.y+m8*c.z;
+  a.isZero = c.isZero;
   return a;
 #else
   return b.getMatrix()*c;
@@ -788,6 +810,7 @@ Vector operator/(const Quaternion& b, const Vector& c) {
   a.x = M.m00*c.x + M.m10*c.y + M.m20*c.z;
   a.y = M.m01*c.x + M.m11*c.y + M.m21*c.z;
   a.z = M.m02*c.x + M.m12*c.y + M.m22*c.z;
+  a.isZero = (a.x==0. && a.y==0. && a.z==0.);
   return a;
 }
 
@@ -834,6 +857,7 @@ Transformation& Transformation::setText(const char* txt) { read(MT::String(txt)(
 Transformation& Transformation::setZero() {
   memset(this, 0, sizeof(Transformation));
   rot.w=1.;
+  pos.isZero=rot.isZero=vel.isZero=angvel.isZero=true;
   zeroVels = true;
   return *this;
 }
@@ -922,8 +946,8 @@ void Transformation::addRelativeRotationQuat(double s, double x, double y, doubl
     (new = f * old) */
 void Transformation::appendTransformation(const Transformation& f) {
   if(zeroVels && f.zeroVels) {
-    if(!f.pos.isZero()) pos += rot*f.pos;
-    if(!f.rot.isZero()) rot = rot*f.rot;
+    if(!f.pos.isZero){ if(rot.isZero) pos += f.pos; else pos += rot*f.pos; }
+    if(!f.rot.isZero){ if(rot.isZero) rot = f.rot; else rot = rot*f.rot; }
   } else {
     //Vector P(r*(s*f.p)); //relative offset in global coords
     //Vector V(r*(s*f.v)); //relative vel in global coords
@@ -1058,7 +1082,7 @@ double* Transformation::getInverseAffineMatrixGL(double *m) const {
 }
 
 bool Transformation::isZero() const {
-  return pos.isZero() && rot.isZero() && vel.isZero() && angvel.isZero();
+  return pos.isZero && rot.isZero && vel.isZero && angvel.isZero;
 }
 
 /// 1-norm to zero
@@ -1107,7 +1131,7 @@ void Transformation::read(std::istream& is) {
     if(is.fail()) HALT("error reading '" <<c <<"' parameters in frame");
   }
   if(is.fail()) HALT("could not read Transformation struct");
-  zeroVels = vel.isZero() && angvel.isZero();
+  zeroVels = vel.isZero && angvel.isZero;
 }
 
 //==============================================================================

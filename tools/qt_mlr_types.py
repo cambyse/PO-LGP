@@ -28,6 +28,8 @@ def qdump__MT__Array(d, value):
         s = "<%i>" %d0
     if nd==2:
         s = "<%i %i>"%(d0,d1)
+    if nd==3:
+        s = "<%i %i %i>"%(d0,d1,d2)
     # for i in xrange(N):
     #     s += str(p.dereference()) + " "
     #     p += 1

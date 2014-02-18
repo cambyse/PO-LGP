@@ -1,0 +1,3 @@
+BASE = ../../../share
+
+include $(BASE)/gofMake/make-generic

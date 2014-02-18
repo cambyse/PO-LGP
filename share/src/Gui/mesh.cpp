@@ -330,8 +330,8 @@ void Mesh::computeNormals() {
     Vn(T(i, 1), 0)+=a.x;  Vn(T(i, 1), 1)+=a.y;  Vn(T(i, 1), 2)+=a.z;
     Vn(T(i, 2), 0)+=a.x;  Vn(T(i, 2), 1)+=a.y;  Vn(T(i, 2), 2)+=a.z;
   }
-  Vector *d;
-  for(i=0; i<Vn.d0; i++) { d=(Vector*)&Vn(i, 0); d->normalize(); }
+  Vector d;
+  for(i=0; i<Vn.d0; i++) { d.set(&Vn(i, 0)); Vn[i]()/=d.length(); }
 }
 
 /** @brief add triangles according to the given grid; grid has to be a 2D

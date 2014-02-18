@@ -1,14 +1,16 @@
 set style data lines
 
-plot 'nogit-data/z.IMU_Poller' \
+plot 'nogit-data/IMU_Poller.dat' \
    us 1:'acc0',\
+'' us 1:'gyro1',\
 '' us 1:'acc2',\
-'' us 1:'gyro1'
+'nogit-data/KalmanFilter.dat' \
+   us 1:'th'
 
-plot 'nogit-data/z.kalman' \
-   us 1:'x',\
-'' us 1:'th',\
-'' us 1:'th_dot'
+#plot 'nogit-data/KalmanFilter.dat' \
+#   us 1:'x',\
+#'' us 1:'th',\
+#'' us 1:'th_dot'
 
 #'' us 1:'gyro0',\
 #'' us 1:'gyro2'

@@ -1,5 +1,5 @@
 
-body stem { X=<T t(0 0 1)>  type=2 size=[0.1 0.1 2 .1] fixed, }
+body stem { X=<T t(0 0 1)> type=2 size=[0.1 0.1 2 .1] fixed, }
 
 body arm1 { type=2 size=[0.1 0.1 .4 .1] contact, }
 body arm2 { type=2 size=[0.1 0.1 .4 .1] contact, }
@@ -24,5 +24,5 @@ body target { X=<T t(1. -.5 1.)>  type=1 size=[.1 .1 .1 .05] color=[0 .5 0] fixe
 #body ball  { X=<T t(.0 -1.0 2.1)>  type=1 size=[.3 .3 .3 .1] color=[1 0 0] contact, fixed, }
 #body ball2 { X=<T t(.7 -1. 1.5)>  type=1 size=[.3 .3 .3 .1] color=[1 0 0] contact, fixed, }
 #body ball3 { X=<T t(-.22 -1.5 2.)>  type=1 size=[.3 .3 .3 .1] color=[1 0 0] contact, fixed, }
-body obstacle { X=<T t(1. -1.5 1.)>  type=1 size=[1. .1 5. .5] color=[1 0 0] contact, fixed, }
+body obstacle { X=<T t(1. -1.5 .8)>  type=1 size=[1. .1 5. .5] color=[1 0 0] contact, fixed, }
 

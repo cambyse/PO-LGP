@@ -12,7 +12,6 @@ MPC::MPC(MotionProblem &_P, arr &_x):
   // store cartesian coordinates and endeffector orientation
   for (uint j=0;j<x.d0-1;j++) {
     P.world.setJointState(x[j]);
-    P.world.calcBodyFramesFromJoints();
     P.world.kinematicsPos(kinPos,NoArr, P.world.getBodyByName("endeff")->index);
     x_cart.append(~kinPos);
   }
@@ -59,7 +58,6 @@ void MPC::replan(arr &_goal, arr &_q) {
   // store cartesian coordinates and endeffector orientation
   for (uint j=0;j<x.d0-1;j++) {
     P.world.setJointState(x[j]);
-    P.world.calcBodyFramesFromJoints();
     P.world.kinematicsPos(kinPos,NoArr, P.world.getBodyByName("endeff")->index);
     x_cart.append(~kinPos);
   }

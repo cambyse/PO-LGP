@@ -322,7 +322,6 @@ void scenario3() {
   MObject goalMO(&world, MT::String("goal"), MObject::GOAL , 0.01, ARRAY(0.,0.,1.));
   MPC mpc(P,x);
   world.setJointState(q);
-  world.calcBodyFramesFromJoints();
   world.getJointState(q);
 
   // gl visualization
@@ -337,7 +336,6 @@ void scenario3() {
     q += (mpc.x[2]-mpc.x[1]);
 
     world.setJointState(q);
-    world.calcBodyFramesFromJoints();
 
     t += tau_plan;
     world.watch(false, STRING(t));

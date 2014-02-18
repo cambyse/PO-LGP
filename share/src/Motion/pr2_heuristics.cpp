@@ -7,12 +7,21 @@ arr pr2_zero_pose(){
   return q;
 }
 
-arr pr2_reasonable_W(){
-  arr W(pr2_q_dim());
-  W=1.;
-  W(0)=1e2;
-//  W(12)=1e2;
-  return 1e-1*W;
+arr pr2_reasonable_W(ors::KinematicWorld& world){
+  arr W = world.naturalQmetric(4.);
+  ors::Joint *j = world.getJointByName("torso_lift_joint");
+  if(j){
+    CHECK(j->type == ors::JT_transX, "");
+    W(j->qIndex) *= 10;
+  }
+  j = world.getJointByName("worldTranslationRotation");
+  if(j){
+    CHECK(j->type == ors::JT_transXYPhi, "");
+    W(j->qIndex+0) *= 10;
+    W(j->qIndex+1) *= 10;
+//    W(j->qIndex+2) *= 10;
+  }
+  return W;
 }
 
 uintA _get_shape_indices(ors::Body* b) {

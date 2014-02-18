@@ -1,6 +1,0 @@
-BASE = ../..
-
-CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES -std=c++0x
-LIBS += -lbiros
-
-include $(BASE)/make-generic

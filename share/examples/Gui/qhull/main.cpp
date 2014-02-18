@@ -147,7 +147,6 @@ void testFCinOrs(){
   C.getJointState(x,v);
   for(t=0;t<100;t++){
     C.setJointState(x);
-    C.calcBodyFramesFromJoints();
     swift.computeProxies(C,false);
     C.sortProxies(true);
 

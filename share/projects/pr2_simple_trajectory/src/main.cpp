@@ -183,7 +183,6 @@ void circle(bool FIRE=false){
     q += inverse(~J*J + W/prec)*~J*(y_target - y);
 
     G.setJointState(q);
-    G.calcBodyFramesFromJoints();
     gl.update();
 
     if(FIRE){

@@ -2,6 +2,7 @@
 
 from lxml import etree
 
+#inFile = "pr2-with-ft-sensors.urdf" #misses the mimic entries!?
 inFile = "pr2.urdf"
 xmlData = etree.parse(inFile)
 
@@ -83,6 +84,17 @@ for joint in joints:
                 print ' A=<T t(%s) E(%s)>' % (elem.attrib['xyz'], att),
             else:
                 print ' A=<T t(%s)>' % (elem.attrib['xyz']),
+
+        elem = joint.find("limit")
+        if elem is not None:
+            lo = elem.attrib.get('lower')
+            up = elem.attrib.get('upper')
+            eff = elem.attrib.get('effort')
+            vel = elem.attrib.get('velocity')
+            if lo is not None:
+                print ' limits=[%s %s]' % (lo, up),
+            if vel is not None:
+                print ' ctrl_limits=[%s %s]' % (vel, eff),
 
         print '}\n',
 

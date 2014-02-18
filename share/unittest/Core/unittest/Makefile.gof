@@ -1,0 +1,7 @@
+BASE = ../../..
+
+LIBS += -lgtest -lpthread
+
+DEPEND = Core
+
+include $(BASE)/gofMake/make-generic

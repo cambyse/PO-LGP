@@ -1,0 +1,123 @@
+body ORIG { }
+body BASE {  mass=1.0  rel=<T t(0 0.02 -1.305) E(0 0 3.14159265359)>  type=3 mesh="meshes/collision/stand.stl" }
+body L_COLLARBONE {  mass=1.0  rel=<T t(0 0.05 0) E(0 0 0)>  type=3 mesh="meshes/collision/lbr0_smpl.stl" }
+body L_SHOULDER {  mass=5.9907  rel=<T t(0 0 0) E(0 0 1.57079632679)>  type=3 mesh="meshes/collision/lbr1_smpl.stl" }
+body L_UPPER_ARM_IN_SHOULDER {  mass=5.734939  rel=<T t(0 0 0) E(0 0 1.57079632679)>  type=3 mesh="meshes/collision/lbr2_smpl.stl" }
+body L_UPPER_ARM {  mass=4.214668  rel=<T t(0 0 0) E(0 0 1.57079632679)>  type=3 mesh="meshes/collision/lbr3_smpl.stl" }
+body L_FOREARM {  mass=3.669819  rel=<T t(0 0 0) E(0 0 1.57079632679)>  type=3 mesh="meshes/collision/lbr4_smpl.stl" }
+body L_UPPER_WRIST_YAW {  mass=2.313272  rel=<T t(0 0 0) E(0 0 1.57079632679)>  type=3 mesh="meshes/collision/lbr5_smpl.stl" }
+body L_UPPER_WRIST_PITCH {  mass=2.057856  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/collision/lbr6_smpl.stl" }
+body L_LOWER_WRIST {  mass=1.120198  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/collision/lbr7_smpl.stl" }
+body L_ARM_PALM {  mass=0.00000001  rel=<T t(0 0 0) E(1.57079632679 0 0)>  type=3 mesh="meshes/collision/wamLowerWristFTPalmLink7_smpl.stl" }
+body L_PALM { }
+body L_KUKA_TOOL { }
+body L_FORCE_TORQUE_SENSOR { }
+body L_HAND_M_FINGER_KNUCKLE_2 {  mass=0.057957  rel=<T t(0 0 0) E(3.14159265359 1.57079632679 0)>  type=3 mesh="meshes/collision/secondFingerLink_smpl.stl" }
+body L_HAND_M_FINGER_KNUCKLE_3 {  mass=0.03421781  rel=<T t(0 0 0) E(0 1.57079632679 0)>  type=3 mesh="meshes/collision/thirdFingerLink_smpl.stl" }
+body L_HAND_M_FINGER_TIP { }
+body L_HAND_L_FINGER_KNUCKLE_1 {  mass=0.16252678  rel=<T t(0 0 0) E(1.57079632679 0 -1.57079632679)>  type=3 mesh="meshes/collision/firstFingerLink_smpl.stl" }
+body L_HAND_L_FINGER_KNUCKLE_2 {  mass=0.057957  rel=<T t(0 0 0) E(3.14159265359 1.57079632679 0)>  type=3 mesh="meshes/collision/secondFingerLink_smpl.stl" }
+body L_HAND_L_FINGER_KNUCKLE_3 {  mass=0.03421781  rel=<T t(0 0 0) E(0 1.57079632679 0)>  type=3 mesh="meshes/collision/thirdFingerLink_smpl.stl" }
+body L_HAND_L_FINGER_TIP { }
+body L_HAND_R_FINGER_KNUCKLE_1 {  mass=0.16252678  rel=<T t(0 0 0) E(1.57079632679 0 -1.57079632679)>  type=3 mesh="meshes/collision/firstFingerLink_smpl.stl" }
+body L_HAND_R_FINGER_KNUCKLE_2 {  mass=0.057957  rel=<T t(0 0 0) E(3.14159265359 1.57079632679 0)>  type=3 mesh="meshes/collision/secondFingerLink_smpl.stl" }
+body L_HAND_R_FINGER_KNUCKLE_3 {  mass=0.03421781  rel=<T t(0 0 0) E(0 1.57079632679 0)>  type=3 mesh="meshes/collision/thirdFingerLink_smpl.stl" }
+body L_HAND_R_FINGER_TIP { }
+body R_COLLARBONE {  mass=1.0  rel=<T t(0 0.05 0) E(0 0 0)>  type=3 mesh="meshes/collision/lbr0_smpl.stl" }
+body R_SHOULDER {  mass=5.9907  rel=<T t(0 0 0) E(0 0 1.57079632679)>  type=3 mesh="meshes/collision/lbr1_smpl.stl" }
+body R_UPPER_ARM_IN_SHOULDER {  mass=5.734939  rel=<T t(0 0 0) E(0 0 1.57079632679)>  type=3 mesh="meshes/collision/lbr2_smpl.stl" }
+body R_UPPER_ARM {  mass=4.214668  rel=<T t(0 0 0) E(0 0 1.57079632679)>  type=3 mesh="meshes/collision/lbr3_smpl.stl" }
+body R_FOREARM {  mass=3.669819  rel=<T t(0 0 0) E(0 0 1.57079632679)>  type=3 mesh="meshes/collision/lbr4_smpl.stl" }
+body R_UPPER_WRIST_YAW {  mass=2.313272  rel=<T t(0 0 0) E(0 0 1.57079632679)>  type=3 mesh="meshes/collision/lbr5_smpl.stl" }
+body R_UPPER_WRIST_PITCH {  mass=2.057856  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/collision/lbr6_smpl.stl" }
+body R_LOWER_WRIST {  mass=1.120198  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/collision/lbr7_smpl.stl" }
+body R_ARM_PALM {  mass=0.00000001  rel=<T t(0 0 0) E(1.57079632679 0 0)>  type=3 mesh="meshes/collision/wamLowerWristFTPalmLink7_smpl.stl" }
+body R_PALM { }
+body R_KUKA_TOOL { }
+body R_FORCE_TORQUE_SENSOR { }
+body R_HAND_M_FINGER_KNUCKLE_2 {  mass=0.057957  rel=<T t(0 0 0) E(3.14159265359 1.57079632679 0)>  type=3 mesh="meshes/collision/secondFingerLink_smpl.stl" }
+body R_HAND_M_FINGER_KNUCKLE_3 {  mass=0.03421781  rel=<T t(0 0 0) E(0 1.57079632679 0)>  type=3 mesh="meshes/collision/thirdFingerLink_smpl.stl" }
+body R_HAND_M_FINGER_TIP { }
+body R_HAND_L_FINGER_KNUCKLE_1 {  mass=0.16252678  rel=<T t(0 0 0) E(1.57079632679 0 -1.57079632679)>  type=3 mesh="meshes/collision/firstFingerLink_smpl.stl" }
+body R_HAND_L_FINGER_KNUCKLE_2 {  mass=0.057957  rel=<T t(0 0 0) E(3.14159265359 1.57079632679 0)>  type=3 mesh="meshes/collision/secondFingerLink_smpl.stl" }
+body R_HAND_L_FINGER_KNUCKLE_3 {  mass=0.03421781  rel=<T t(0 0 0) E(0 1.57079632679 0)>  type=3 mesh="meshes/collision/thirdFingerLink_smpl.stl" }
+body R_HAND_L_FINGER_TIP { }
+body R_HAND_R_FINGER_KNUCKLE_1 {  mass=0.16252678  rel=<T t(0 0 0) E(1.57079632679 0 -1.57079632679)>  type=3 mesh="meshes/collision/firstFingerLink_smpl.stl" }
+body R_HAND_R_FINGER_KNUCKLE_2 {  mass=0.057957  rel=<T t(0 0 0) E(3.14159265359 1.57079632679 0)>  type=3 mesh="meshes/collision/secondFingerLink_smpl.stl" }
+body R_HAND_R_FINGER_KNUCKLE_3 {  mass=0.03421781  rel=<T t(0 0 0) E(0 1.57079632679 0)>  type=3 mesh="meshes/collision/thirdFingerLink_smpl.stl" }
+body R_HAND_R_FINGER_TIP { }
+body B_MOTORS {  rel=<T t(0.0 0.05 -0.06) E(0 0 0)>  type=0 size=[0.2 0.15 0.12  0] }
+body B_CERVICALS {  rel=<T t(0 0 0.19685) E(0 0 0)>  type=2 size=[0 0 0.3937 0.03] }
+body B_NECK { }
+body B_CERVICAL1 { }
+body B_CERVICAL2 { }
+body B_HEAD {  mass=1.0  rel=<T t(-0.035 -0.065 -0.08) E(-1.57079632679 0 0)>  type=3 mesh="meshes/collision/humanoidHead_smpl.stl" }
+body R_PAN_UNIT { }
+body R_EYE {  mass=1.0 }
+body R_EYE_UPPER {  mass=1.0 }
+body R_EYE_LOWER {  mass=1.0 }
+body L_PAN_UNIT { }
+body L_EYE {  mass=1.0 }
+body L_EYE_UPPER {  mass=1.0 }
+body L_EYE_LOWER {  mass=1.0 }
+joint fixedJoint (ORIG BASE) {  type=10  A=<T t(0 0.2 1.305) E(0 0 3.14159265359)> }
+joint L_BASE (BASE L_COLLARBONE) {  type=10  A=<T t(0 0 0) E(0 0 1.0471975512)> }
+joint L_SFE (L_COLLARBONE L_SHOULDER) {  type=0  axis=[0 0 -1.0]  A=<T t(0 0.1605 0) E(-1.57079632679 -0.0 0)> }
+joint L_SAA (L_SHOULDER L_UPPER_ARM_IN_SHOULDER) {  type=0  axis=[0 0 -1.0]  A=<T t(0 -0.002 0.1915) E(1.57079632679 3.14149632679 1.57079632679)> }
+joint L_HR (L_UPPER_ARM_IN_SHOULDER L_UPPER_ARM) {  type=0  axis=[0 0 -1.0]  A=<T t(-0.2085 0 0) E(-1.57079632679  -0.523596326795 1.57079632679)> }
+joint L_EB (L_UPPER_ARM L_FOREARM) {  type=0  axis=[0 0 -1.0]  A=<T t(0 0.002 0.1915) E(-1.57079632679 -1.57079632679 1.57079632679)> }
+joint L_WR (L_FOREARM L_UPPER_WRIST_YAW) {  type=0  axis=[0 0 -1.0]  A=<T t(0.2085 0 0) E(1.57079632679 3.14149632679 1.57079632679)> }
+joint L_WFE (L_UPPER_WRIST_YAW L_UPPER_WRIST_PITCH) {  type=0  axis=[0 0 -1.0]  A=<T t(-0.046 0 0.1815) E(1.5708 -0.0 1.57079632679)> }
+joint L_WAA (L_UPPER_WRIST_PITCH L_LOWER_WRIST) {  type=0  axis=[0 0 -1.0]  A=<T t(0 0.057 0.0455) E(-1.57079632679 -1.57079632679 0)> }
+joint L_Arm_PalmBlueComponentJoint (L_LOWER_WRIST L_ARM_PALM) {  type=10  A=<T t(0 0 0.03) E(0 0 3.14159265359)> }
+joint L_Arm_ForceTorqueJoint (L_ARM_PALM L_FORCE_TORQUE_SENSOR) {  type=10  A=<T t(0 0 0.0131834) E(0 0 1.57079632679)> }
+joint L_Arm_PalmJoint (L_ARM_PALM L_PALM) {  type=10  A=<T t(0 0 0.1033) E(0 0 3.14159265359)> }
+joint L_Arm_ToolJoint (L_ARM_PALM L_KUKA_TOOL) {  type=10  A=<T t(0 0 0) E(0 0 1.57079632679)> }
+joint L_MF (L_ARM_PALM L_HAND_M_FINGER_KNUCKLE_2) {  type=0  axis=[0 0 -1]  A=<T t(0 -0.05 0.09938) E(-1.57079632679 -0.0429350996 -1.57079632679)> }
+joint L_MF2 (L_HAND_M_FINGER_KNUCKLE_2 L_HAND_M_FINGER_KNUCKLE_3) {  type=0  axis=[0 0 -1]  A=<T t(0.07 0 0) E(0 0 0)> }
+joint L_MF3 (L_HAND_M_FINGER_KNUCKLE_3 L_HAND_M_FINGER_TIP) {  type=10  A=<T t(0.056 0 0) E(0 0 0)> }
+joint L_LF (L_HAND_L_FINGER_KNUCKLE_1 L_HAND_L_FINGER_KNUCKLE_2) {  type=0  axis=[0 0 -1]  A=<T t(.05 0 0.02140) E(-1.57079632679 -0.0429350996 0)> }
+joint L_LF2 (L_HAND_L_FINGER_KNUCKLE_2 L_HAND_L_FINGER_KNUCKLE_3) {  type=0  axis=[0 0 -1]  A=<T t(0.07 0 0) E(0 0 0)> }
+joint L_LF3 (L_HAND_L_FINGER_KNUCKLE_3 L_HAND_L_FINGER_TIP) {  type=10  A=<T t(0.056 0 0) E(0 0 0)> }
+joint L_RF (L_HAND_R_FINGER_KNUCKLE_1 L_HAND_R_FINGER_KNUCKLE_2) {  type=0  axis=[0 0 -1]  A=<T t(.05 0 0.02140) E(-1.57079632679 -0.0429350996 0)> }
+joint L_RF2 (L_HAND_R_FINGER_KNUCKLE_2 L_HAND_R_FINGER_KNUCKLE_3) {  type=0  axis=[0 0 -1]  A=<T t(0.07 0 0) E(0 0 0)> }
+joint L_RF3 (L_HAND_R_FINGER_KNUCKLE_3 L_HAND_R_FINGER_TIP) {  type=10  A=<T t(0.056 0 0) E(0 0 0)> }
+joint L_FR (L_ARM_PALM L_HAND_L_FINGER_KNUCKLE_1) {  type=0  axis=[0 0 -1]  A=<T t(.02497 0 0.07798) E(0 0 1.57079632679)> }
+joint L_FR2 (L_ARM_PALM L_HAND_R_FINGER_KNUCKLE_1) {  type=0  mimic=L_FR  axis=[0 0 1]  A=<T t(-.02497 0 0.07798) E(0 0 1.57079632679)> }
+joint R_BASE (BASE R_COLLARBONE) {  type=10  A=<T t(0 0 0) E(0 3.14159265359 -1.0471975512)> }
+joint R_SFE (R_COLLARBONE R_SHOULDER) {  type=0  axis=[0 0 1.0]  A=<T t(0 0.1605 0) E(-1.57079632679 0.0 0)> }
+joint R_SAA (R_SHOULDER R_UPPER_ARM_IN_SHOULDER) {  type=0  axis=[0 0 1.0]  A=<T t(0 -0.002 0.1915) E(1.57079632679 9.63267948966e-05 1.57079632679)> }
+joint R_HR (R_UPPER_ARM_IN_SHOULDER R_UPPER_ARM) {  type=0  axis=[0 0 1.0]  A=<T t(-0.2085 0 0) E(-1.57079632679  -2.61799632679 1.57079632679)> }
+joint R_EB (R_UPPER_ARM R_FOREARM) {  type=0  axis=[0 0 1.0]  A=<T t(0 0.002 0.1915) E(-1.57079632679 -1.57079632679 1.57079632679)> }
+joint R_WR (R_FOREARM R_UPPER_WRIST_YAW) {  type=0  axis=[0 0 1.0]  A=<T t(0.2085 0 0) E(1.57079632679 9.63267948966e-05 1.57079632679)> }
+joint R_WFE (R_UPPER_WRIST_YAW R_UPPER_WRIST_PITCH) {  type=0  axis=[0 0 1.0]  A=<T t(-0.046 0 0.1815) E(1.5708 0.0 1.57079632679)> }
+joint R_WAA (R_UPPER_WRIST_PITCH R_LOWER_WRIST) {  type=0  axis=[0 0 1.0]  A=<T t(0 0.057 0.0455) E(-1.57079632679 1.57079632679 0)> }
+joint R_Arm_PalmBlueComponentJoint (R_LOWER_WRIST R_ARM_PALM) {  type=10  A=<T t(0 0 0.03) E(0 0 3.14159265359)> }
+joint R_Arm_ForceTorqueJoint (R_ARM_PALM R_FORCE_TORQUE_SENSOR) {  type=10  A=<T t(0 0 0.0131834) E(0 0 1.57079632679)> }
+joint R_Arm_PalmJoint (R_ARM_PALM R_PALM) {  type=10  A=<T t(0 0 0.1033) E(0 0 3.14159265359)> }
+joint R_Arm_ToolJoint (R_ARM_PALM R_KUKA_TOOL) {  type=10  A=<T t(0 0 0) E(0 0 1.57079632679)> }
+joint R_MF (R_ARM_PALM R_HAND_M_FINGER_KNUCKLE_2) {  type=0  axis=[0 0 -1]  A=<T t(0 -0.05 0.09938) E(-1.57079632679 -0.0429350996 -1.57079632679)> }
+joint R_MF2 (R_HAND_M_FINGER_KNUCKLE_2 R_HAND_M_FINGER_KNUCKLE_3) {  type=0  axis=[0 0 -1]  A=<T t(0.07 0 0) E(0 0 0)> }
+joint R_MF3 (R_HAND_M_FINGER_KNUCKLE_3 R_HAND_M_FINGER_TIP) {  type=10  A=<T t(0.056 0 0) E(0 0 0)> }
+joint R_LF (R_HAND_L_FINGER_KNUCKLE_1 R_HAND_L_FINGER_KNUCKLE_2) {  type=0  axis=[0 0 -1]  A=<T t(.05 0 0.02140) E(-1.57079632679 -0.0429350996 0)> }
+joint R_LF2 (R_HAND_L_FINGER_KNUCKLE_2 R_HAND_L_FINGER_KNUCKLE_3) {  type=0  axis=[0 0 -1]  A=<T t(0.07 0 0) E(0 0 0)> }
+joint R_LF3 (R_HAND_L_FINGER_KNUCKLE_3 R_HAND_L_FINGER_TIP) {  type=10  A=<T t(0.056 0 0) E(0 0 0)> }
+joint R_RF (R_HAND_R_FINGER_KNUCKLE_1 R_HAND_R_FINGER_KNUCKLE_2) {  type=0  axis=[0 0 -1]  A=<T t(.05 0 0.02140) E(-1.57079632679 -0.0429350996 0)> }
+joint R_RF2 (R_HAND_R_FINGER_KNUCKLE_2 R_HAND_R_FINGER_KNUCKLE_3) {  type=0  axis=[0 0 -1]  A=<T t(0.07 0 0) E(0 0 0)> }
+joint R_RF3 (R_HAND_R_FINGER_KNUCKLE_3 R_HAND_R_FINGER_TIP) {  type=10  A=<T t(0.056 0 0) E(0 0 0)> }
+joint R_FR (R_ARM_PALM R_HAND_L_FINGER_KNUCKLE_1) {  type=0  axis=[0 0 -1]  A=<T t(.02497 0 0.07798) E(0 0 1.57079632679)> }
+joint R_FR2 (R_ARM_PALM R_HAND_R_FINGER_KNUCKLE_1) {  type=0  mimic=R_FR  axis=[0 0 1]  A=<T t(-.02497 0 0.07798) E(0 0 1.57079632679)> }
+joint B_STAND_MOTORS (BASE B_MOTORS) {  type=10  A=<T t(0 0.15 -0.25) E(0 0 0)> }
+joint B_MOTORS_neck (B_MOTORS B_CERVICALS) {  type=10  A=<T t(0 0 0) E(0 0 0)> }
+joint B_NECK (BASE B_NECK) {  type=10  A=<T t(0.0 0.15 0.1437) E(-1.57079632679 0 1.57079632679)> }
+joint B_HN (B_NECK B_CERVICAL1) {  type=0  axis=[0 0 1]  A=<T t(0 0 0) E(0 0 0)> }
+joint B_HT (B_CERVICAL1 B_CERVICAL2) {  type=0  axis=[0 0 1]  A=<T t(0 0 0) E(0 1.57079632679 0)> }
+joint B_HR (B_CERVICAL2 B_HEAD) {  type=0  axis=[0 0 1]  A=<T t(0 0 0) E(-1.57079632679 0 0)> }
+joint R_EP (B_HEAD R_PAN_UNIT) {  type=0  axis=[0 0 1]  A=<T t(0.0366 -0.0674 -0.1356) E(0 0 0)> }
+joint R_ET (R_PAN_UNIT R_EYE) {  type=0  axis=[0 0 1]  A=<T t(0 0 0) E(0 -1.57079632679 0)> }
+joint R_E_UPPER (R_EYE R_EYE_UPPER) {  type=10  A=<T t(0 -0.023 0) E(0 0 0)> }
+joint R_E_LOWER (R_EYE R_EYE_LOWER) {  type=10  A=<T t(0.017 -0.021 0) E(0 0 0)> }
+joint L_EP (B_HEAD L_PAN_UNIT) {  type=0  axis=[0 0 1]  A=<T t(-0.0366 -0.0674 -0.1356) E(0 0 0)> }
+joint L_ET (L_PAN_UNIT L_EYE) {  type=0  axis=[0 0 1]  A=<T t(0 0 0) E(0 -1.57079632679 0)> }
+joint L_E_UPPER (L_EYE L_EYE_UPPER) {  type=10  A=<T t(0 -0.023 0) E(0 0 0)> }
+joint L_E_LOWER (L_EYE L_EYE_LOWER) {  type=10  A=<T t(0.017 -0.021 0) E(0 0 0)> }

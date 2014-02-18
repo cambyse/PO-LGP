@@ -115,7 +115,6 @@ void executeTrajectoryPFC(MT::String scene){
   // store cartesian coordinates and endeffector orientation
   for (uint t=0;t<=T;t++) {
     world.setJointState(x[t]);
-    world.calcBodyFramesFromJoints();
     world.kinematicsPos(kinPos,NoArr,P.world.getBodyByName("endeff")->index);
     world.kinematicsVec(kinVec,NoArr,P.world.getBodyByName("endeff")->index);
     xRefPos.append(~kinPos);
@@ -135,7 +134,6 @@ void executeTrajectoryPFC(MT::String scene){
   arr x0 = xRef[0];
   q = P.x0;
   world.setJointState(q,qdot);
-  world.calcBodyFramesFromJoints();
 
   double tau_plan = 0.01;
   double tau_control = 0.001;
@@ -259,7 +257,6 @@ void executeTrajectoryMPC(MT::String scene){
   arr q0 = x[0];
   q = P.x0;
   world.setJointState(q,0.*qdot);
-  world.calcBodyFramesFromJoints();
 
   double tau_plan = P.tau;
   double tau_control = 0.01;
@@ -345,7 +342,6 @@ void executeTrajectoryDMP(MT::String scene){
   // store cartesian coordinates and endeffector orientation
   for (uint t=0;t<=T;t++) {
     world.setJointState(x[t]);
-    world.calcBodyFramesFromJoints();
     world.kinematicsPos(kinPos,NoArr,P.world.getBodyByName("endeff")->index);
     world.kinematicsVec(kinVec,NoArr,P.world.getBodyByName("endeff")->index);
     xRefPos.append(~kinPos);
@@ -360,7 +356,6 @@ void executeTrajectoryDMP(MT::String scene){
   arr q0 = x[0];
   q = P.x0;
   world.setJointState(q,0.*qdot);
-  world.calcBodyFramesFromJoints();
 
   double tau_plan = P.tau;
   double tau_control = 0.01;
