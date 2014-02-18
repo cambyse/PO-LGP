@@ -345,8 +345,8 @@ import_array();
   else $1 = 0;
 }
 
-%typemap(typecheck) MT::Array<Type*> & = MT::Array<Type*>;
+/*%typemap(typecheck) MT::Array<Type*> & = MT::Array<Type*>;*/
 
-%apply MT::Array<Type*> & { MT::Array<Type*> * }
+/*%apply MT::Array<Type*> & { MT::Array<Type*> * }*/
 
 %enddef
