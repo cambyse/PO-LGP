@@ -1,12 +1,12 @@
 #include "joystick2tasks.h"
 
 Joystick2Tasks::Joystick2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL), endeffL(NULL){
-  endeffR = MP.addPDTask("endeffR", .1, .8, posTMT, "endeffR");
-  endeffL = MP.addPDTask("endeffL", .1, .8, posTMT, "endeffL");
-  base = MP.addPDTask("endeffBase", .1, .8, posTMT, "endeffBase");
-  limits = MP.addPDTask("limits", .1, .3, qLimitsTMT);
-  limits->setGains(100.,0.);
-  qitself = MP.addPDTask("qitself", .1, 1., qItselfTMT);
+  endeffR = MP.addPDTask("endeffR", .02, .8, posTMT, "endeffR");
+  endeffL = MP.addPDTask("endeffL", .02, .8, posTMT, "endeffL");
+  base = MP.addPDTask("endeffBase", .02, .8, posTMT, "endeffBase");
+  limits = MP.addPDTask("limits", .02, .8, qLimitsTMT);
+  //limits->setGains(100.,0.);
+  qitself = MP.addPDTask("qitself", .1, 1., qLinearTMT, NULL, NoVector, NULL, NoVector, 0.01*MP.H_rate_diag);
   qitself->setGains(0.,100.);
 //  MP.addPDtask("endeffHead", .1, .8, posTMT, "handR", NoVector, "rightTarget");
 //  MP.addPDtask("endeffBase", .1, .8, posTMT, "handR", NoVector, "rightTarget");
@@ -18,16 +18,19 @@ Joystick2Tasks::Joystick2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL
 //  TaskVariable *skin = new DefaultTaskVariable("skin", ors, skinTVT, 0, 0, 0, 0, skinIndex);
 }
 
-void Joystick2Tasks::updateTasks(arr& joys, double dt){
+bool Joystick2Tasks::updateTasks(arr& joys, double dt){
   for(PDtask* pdt:MP.tasks) pdt->active=false;
 
   qitself->active=true;
-  qitself->prec=10.;
+  qitself->v_ref.setZero();
+  qitself->prec=100.;
 
   limits->active=true;
-  limits->prec=10.;
+  limits->v_ref.setZero();
+  limits->v_ref.setZero();
+  limits->prec=100.;
 
-  if(joys.N<6) return;
+  if(joys.N<6) return false;
 
   double joyRate=5.;
   for(uint i=1;i<joys.N;i++) if(fabs(joys(i))<0.05) joys(i)=0.;
@@ -41,6 +44,7 @@ void Joystick2Tasks::updateTasks(arr& joys, double dt){
   else if(joys(6)> .5) sel=down;
   else if(joys(6)<-.5) sel=up;
   uint mode = uint(joys(0));
+  if(mode&0x10 || mode&0x20 || mode&0x40 || mode&0x80) return true;
 
   switch (mode) {
     case 0: { //(NIL) motion rate control
@@ -63,7 +67,8 @@ void Joystick2Tasks::updateTasks(arr& joys, double dt){
       vel(1) = joyForwardBack;
       vel(2) = joyUpDown;
       pdt->y_ref = pdt->y + dt*vel;
-      cout <<"pdt->v_ref=" <<pdt->v_ref <<endl;
+      pdt->v_ref.setZero();
+      MP.world.getShapeByName("mymarker")->rel.pos = pdt->y_ref;
       break;
     }
 //    case 1: { //(1) homing
@@ -107,5 +112,6 @@ void Joystick2Tasks::updateTasks(arr& joys, double dt){
 //      break;
 //    }
   }
+  return false;
 }
 

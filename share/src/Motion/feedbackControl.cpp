@@ -143,6 +143,7 @@ arr FeedbackMotionControl::operationalSpaceControl(){
   q_ddot.resizeAs(world.q).setZero();
   getTaskCosts(phi, J, q_ddot);
   if(!phi.N && !nullSpacePD.active) return q_ddot;
+  cout <<H_rate_diag <<endl;
   arr H = diag(H_rate_diag);
   arr A=H;
   arr a(H.d0); a.setZero();

@@ -28,13 +28,17 @@ void PR2Simulator::open(){
 void PR2Simulator::step(){
   arr qref = q_ref.get();
   arr qdotref = qdot_ref.get();
-
+#if 0
   //-- joint gains
   arr qddot = 10.*(qref - s->pr2.q) + 10.*(qdotref - s->pr2.qdot);
 
   //-- integrator
   s->pr2.q += s->dt*s->pr2.qdot + 0.5*(s->dt*s->dt)*qddot;
   s->pr2.qdot += s->dt*qddot;
+#else
+  s->pr2.q = qref;
+  s->pr2.qdot = qdotref;
+#endif
   s->pr2.setJointState(s->pr2.q, s->pr2.qdot);
 
   //-- point pos/vel sensors

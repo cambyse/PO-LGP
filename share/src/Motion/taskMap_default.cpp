@@ -80,7 +80,7 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G) {
       NIY; //TODO: Jacobian?
       break;
     case qItselfTMT:   G.getJointState(q);    y = q;   if(&J) J.setId(q.N);  break;
-    case qLinearTMT:   G.getJointState(q);    y = params * q;   if(&J) J=params;  break;
+    case qLinearTMT:   G.getJointState(q);    if(params.N==q.N){ y=params%q; if(&J) J.setDiag(params); }else{ y=params*q; if(&J) J=params; }  break;
     case qSquaredTMT:
       G.getJointState(q);
       y.resize(1);  y(0) = scalarProduct(params, q, q);

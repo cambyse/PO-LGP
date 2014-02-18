@@ -260,7 +260,7 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   void transformJoint(Joint *e, const ors::Transformation &f); ///< A <- A*f, B <- f^{-1}*B
   void zeroGaugeJoints();         ///< A <- A*Q, Q <- Id
   void makeLinkTree();            ///< modify transformations so that B's become identity
-  void topSort(){ graphTopsort(bodies, joints); for(Shape *s: shapes) s->ibody=s->body->index; }
+  void topSort(){ graphTopsort(bodies, joints); for(Shape *s: shapes) if(s->body) s->ibody=s->body->index; }
   void glueBodies(Body *a, Body *b);
   void meldFixedJoints();         ///< prune fixed joints; shapes of fixed bodies are reassociated to non-fixed boides
   void removeUselessBodies();     ///< prune non-articulated bodies; they become shapes of other bodies
