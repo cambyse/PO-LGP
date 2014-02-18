@@ -608,7 +608,7 @@ void ors::KinematicWorld::invertTime() {
   }
 }
 
-arr ors::KinematicWorld::naturalQmetric(double power) const {
+arr ors::KinematicWorld::naturalQmetric(double power, int agent) const {
 #if 0
   if(!q.N) getJointStateDimension();
   arr Wdiag(q.N);
@@ -627,7 +627,9 @@ arr ors::KinematicWorld::naturalQmetric(double power) const {
   if(!q.N) getJointStateDimension();
   arr Wdiag(q.N);
   for_list_(Joint, j, joints) {
-    for(uint i=0; i<j->qDim(); i++) Wdiag(j->qIndex+i) = ::pow(BM(j->to->index), power);
+    for(uint i=0; i<j->qDim(); i++) { 
+      if(j->agent == agent) Wdiag(j->qIndex+i) = ::pow(BM(j->to->index), power);
+    }
   }
   return Wdiag;
 #endif
