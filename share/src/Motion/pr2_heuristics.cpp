@@ -8,7 +8,8 @@ arr pr2_zero_pose(){
 }
 
 arr pr2_reasonable_W(ors::KinematicWorld& world){
-  arr W = world.naturalQmetric(4.);
+#if 0
+  arr W = world.naturalQmetric(5.);
   ors::Joint *j = world.getJointByName("torso_lift_joint");
   if(j){
     CHECK(j->type == ors::JT_transX, "");
@@ -17,10 +18,18 @@ arr pr2_reasonable_W(ors::KinematicWorld& world){
   j = world.getJointByName("worldTranslationRotation");
   if(j){
     CHECK(j->type == ors::JT_transXYPhi, "");
-    W(j->qIndex+0) *= 10;
-    W(j->qIndex+1) *= 10;
+    W(j->qIndex+0) *= 3;
+    W(j->qIndex+1) *= 3;
 //    W(j->qIndex+2) *= 10;
   }
+#else
+  arr W(world.getJointStateDimension());
+  for(ors::Joint *j:world.joints){
+    double h=j->H;
+    for(uint k=0;k<j->qDim();k++) W(j->qIndex+k)=h;
+  }
+  cout <<W <<endl;
+#endif
   return W;
 }
 

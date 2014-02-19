@@ -180,11 +180,11 @@ std::ostream& operator<<(std::ostream& os, const Joint& x) { x.write(os); return
 // Shape implementations
 //
 
-ors::Shape::Shape() { reset(); }
+ors::Shape::Shape(): ibody(UINT_MAX),body(NULL) { reset(); }
 
-ors::Shape::Shape(const Shape& s): body(NULL){ *this=s; }
+ors::Shape::Shape(const Shape& s): ibody(UINT_MAX),body(NULL){ *this=s; }
 
-ors::Shape::Shape(KinematicWorld& G, Body& b, const Shape *copyShape):body(NULL) {
+ors::Shape::Shape(KinematicWorld& G, Body& b, const Shape *copyShape): ibody(UINT_MAX),body(NULL) {
   reset();
   if(copyShape) *this = *copyShape;
   if(&b && !&G) MT_MSG("You're attaching a Shape to a Body, but not to a Graph -- you're not supposed to do that!");
@@ -350,6 +350,7 @@ void ors::Joint::parseAts() {
   ats.getValue<Transformation>(B, "to");
   ats.getValue<Transformation>(Q, "Q");
   ats.getValue<Transformation>(X, "X");
+  ats.getValue<double>(H, "ctrl_H");
   if(ats.getValue<double>(d, "type")) type=(JointType)(int)d; else type=JT_hingeX;
   if(type==JT_fixed && !Q.isZero()){ A.appendTransformation(Q); Q.setZero(); }
   if(ats.getValue<double>(d, "q")){
@@ -623,7 +624,6 @@ arr ors::KinematicWorld::naturalQmetric(double power, uint agent) const {
 //      BM(i) += BM(bodies(i)->outLinks(j)->to->index);
     }
   }
-  cout <<BM <<endl;
   if(!q.N) getJointStateDimension();
   arr Wdiag(q.N);
   for_list_(Joint, j, joints) {
@@ -631,7 +631,6 @@ arr ors::KinematicWorld::naturalQmetric(double power, uint agent) const {
       if(j->agent == agent) Wdiag(j->qIndex+i) = ::pow(BM(j->to->index), power);
     }
   }
-  cout <<Wdiag <<endl;
   return Wdiag;
 #endif
 }
@@ -1133,8 +1132,6 @@ void ors::KinematicWorld::kinematicsVec(arr& y, arr& J, uint a, ors::Vector *vec
   }
 }
 
-/* takes the joint state x and returns the jacobian dz of
-   the position of the ith body (w.r.t. all joints) -> 2D array */
 void ors::KinematicWorld::jacobianR(arr& J, uint a, uint agent) const {
   uint j_idx;
   ors::Transformation Xi;
@@ -1824,9 +1821,9 @@ void ors::KinematicWorld::kinematicsLimitsCost(arr &y, arr &J, const arr& limits
   for(uint i=0; i<q.N; i++) if(limits(i,1)>limits(i,0)){ //only consider proper limits (non-zero interval)
     double m = margin*(limits(i,1)-limits(i,0));
     d = limits(i, 0) + m - q(i); //lo
-    if(d>0.) {  y(0) += d;  if(&J) J(0, i)-=1.;  }
+    if(d>0.) {  y(0) += d/m;  if(&J) J(0, i)-=1./m;  }
     d = q(i) - limits(i, 1) + m; //up
-    if(d>0.) {  y(0) += d;  if(&J) J(0, i)+=1.;  }
+    if(d>0.) {  y(0) += d/m;  if(&J) J(0, i)+=1./m;  }
   }
 }
 

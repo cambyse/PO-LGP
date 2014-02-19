@@ -29,7 +29,7 @@ void testSimulator(){
   world.getJointState(q, qdot);
   MP.nullSpacePD.y_ref = q;
   MP.nullSpacePD.active=false;
-  MP.H_rate_diag = pr2_reasonable_W(world);
+  MP.H_rate_diag = .001* pr2_reasonable_W(world);
 
   engine().enableAccessLog();
   engine().open(S);
@@ -38,8 +38,9 @@ void testSimulator(){
     S.qdot_obs.var->waitForNextWriteAccess();
     arr joy = S.joystickState.get();
     MP.setState(S.q_obs.get(), S.qdot_obs.get());
-//    MP.world.gl().update("operational space sim");
-    j2t.updateTasks(joy,0.01);
+    MP.world.gl().update("operational space sim");
+    bool shutdown = j2t.updateTasks(joy,0.01);
+    if(shutdown) engine().shutdown.incrementValue();
     for(uint tt=0;tt<10;tt++){
       arr a = MP.operationalSpaceControl();
       q += .001*qdot;

@@ -1,6 +1,6 @@
 body world {}
 body base_footprint { mass=5.55  }
-joint worldTranslationRotation (world base_footprint){ type=8 }
+joint worldTranslationRotation (world base_footprint){ type=8  ctrl_H=100 }
 
 body base_footprint { mass=123.551  }
 body fl_caster_rotation_link { pose=<T 0.2246 0.2246 0.0792 0.707107 0 -0.707107 0 > mass=3.47308  }
@@ -122,7 +122,7 @@ joint br_caster_l_wheel_joint (br_caster_rotation_link br_caster_l_wheel_link){ 
 
 joint br_caster_r_wheel_joint (br_caster_rotation_link br_caster_r_wheel_link){ from=<T 0 -0.049 0 -0.5 -0.5 -0.5 -0.5 >  type=0  ctrl_limits=[ 100 100 ]  }
 
-joint torso_lift_joint (base_footprint torso_lift_link){ from=<T -0.05 0 0.790675 0.707107 0 -0.707107 0 >  type=3 q=.1  limits=[ 0 0.33 ]  ctrl_limits=[ 0.013 10000 ]  }
+joint torso_lift_joint (base_footprint torso_lift_link){ from=<T -0.05 0 0.790675 0.707107 0 -0.707107 0 >  type=3 q=.1  limits=[ 0 0.33 ]  ctrl_limits=[ 0.013 10000 ]  ctrl_H=100 }
 
 joint head_pan_joint (torso_lift_link head_pan_link){ from=<T 0.38145 0 0.01707 1 0 0 0 >  type=0  limits=[ -3.007 3.007 ]  ctrl_limits=[ 6 2.645 ]  }
 
