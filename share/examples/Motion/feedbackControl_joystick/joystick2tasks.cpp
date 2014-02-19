@@ -4,6 +4,7 @@ Joystick2Tasks::Joystick2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL
   endeffR = MP.addPDTask("endeffR", .02, .8, posTMT, "endeffR");
   endeffL = MP.addPDTask("endeffL", .02, .8, posTMT, "endeffL");
   base = MP.addPDTask("endeffBase", .02, .8, posTMT, "endeffBase");
+  baseQuat = MP.addPDTask("endeffBase", .02, .8, quatTMT, "endeffBase");
   limits = MP.addPDTask("limits", .02, .8, qLimitsTMT);
   //limits->setGains(100.,0.);
   qitself = MP.addPDTask("qitself", .1, 1., qLinearTMT, NULL, NoVector, NULL, NoVector, 0.01*MP.H_rate_diag);
@@ -37,6 +38,7 @@ bool Joystick2Tasks::updateTasks(arr& joys, double dt){
   double joyLeftRight = -joyRate*MT::sign(joys(4))*(exp(MT::sqr(joys(4)))-1.);
   double joyForwardBack = -joyRate*MT::sign(joys(3))*(exp(MT::sqr(joys(3)))-1.);
   double joyUpDown = -joyRate*MT::sign(joys(2))*(exp(MT::sqr(joys(2)))-1.);
+  double joyRotate = -joyRate*MT::sign(joys(1))*(exp(MT::sqr(joys(1)))-1.);
 
   enum {none, up, down, left, right} sel=none;
   if(joys(5)>.5) sel=right;
@@ -48,12 +50,12 @@ bool Joystick2Tasks::updateTasks(arr& joys, double dt){
 
   switch (mode) {
     case 0: { //(NIL) motion rate control
-      PDtask *pdt=NULL;
+      PDtask *pdt=NULL, *pdt_rot=NULL;
       switch(sel){
         case right:  pdt=endeffR;  break;
         case left:   pdt=endeffL;  break;
         case up:     pdt=endeffR;  break;
-        case down:   pdt=base;  break;
+        case down:   pdt=base;  pdt_rot=baseQuat; break;
         case none:   pdt=NULL;  break;
       }
       if(!pdt) break;
@@ -62,13 +64,28 @@ bool Joystick2Tasks::updateTasks(arr& joys, double dt){
         pdt->map.phi(pdt->y, NoArr, MP.world);
         pdt->v_ref.resizeAs(pdt->y);
       }
-      arr vel(3);
-      vel(0) = joyLeftRight;
-      vel(1) = joyForwardBack;
-      vel(2) = joyUpDown;
-      pdt->y_ref = pdt->y + dt*vel;
+      ors::Vector vel;
+      vel.x = joyLeftRight;
+      vel.y = joyForwardBack;
+      vel.z = joyUpDown;
+      vel = MP.world.getShapeByName("endeffBase")->X.rot*vel;
+      pdt->y_ref = pdt->y + dt*ARRAY(vel);
       pdt->v_ref.setZero();
       MP.world.getShapeByName("mymarker")->rel.pos = pdt->y_ref;
+
+      if(pdt_rot && fabs(joyRotate)>0.){
+        pdt_rot->active=true;
+        if(!pdt_rot->y.N || !pdt_rot->v.N){
+          pdt_rot->map.phi(pdt_rot->y, NoArr, MP.world);
+          pdt_rot->v_ref.resizeAs(pdt_rot->y);
+        }
+        ors::Quaternion vel(0., 0., 0., joyRotate);
+        vel = vel*ors::Quaternion(pdt_rot->y);
+        pdt_rot->y_ref = pdt_rot->y + dt*0.5*ARRAY(vel);
+        cout <<joyRotate <<endl;
+        pdt_rot->v_ref.setZero();
+      }
+
       break;
     }
 //    case 1: { //(1) homing

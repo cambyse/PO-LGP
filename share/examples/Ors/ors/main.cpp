@@ -45,7 +45,7 @@ void TEST(Kinematics){
       switch(mode){
         case Pos:  W.kinematicsPos(y,J,i,&vec); break;
         case Vec:  W.kinematicsVec(y,J,i,&vec); break;
-//        case Quat: W.kinematicsQuat(y,J,i); break;
+        case Quat: W.kinematicsQuat(y,J,i); break;
       }
     }
     VectorFunction& operator()(){ return *this; }
@@ -63,7 +63,7 @@ void TEST(Kinematics){
 
     cout <<"kinematicsPos: "; checkJacobian(MyFct(MyFct::Pos , G, i, vec)(), x, 1e-5);
     cout <<"kinematicsVec: "; checkJacobian(MyFct(MyFct::Vec , G, i, vec)(), x, 1e-5);
-//    checkJacobian(MyFct(MyFct::Quat, G, i, vec), x, 1e-5);
+    cout <<"kinematicsQuat: "; checkJacobian(MyFct(MyFct::Quat, G, i, vec)(), x, 1e-5);
 
     //checkJacobian(Convert(T1::f_hess, NULL), x, 1e-5);
   }
