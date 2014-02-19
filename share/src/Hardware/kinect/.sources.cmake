@@ -1,3 +1,3 @@
-set(SOURCES ./depth_packing.cpp
-./kinect.h
-./kinect.cpp)
+set(SOURCES ./kinect.cpp
+./depth_packing.cpp
+./kinect.h)

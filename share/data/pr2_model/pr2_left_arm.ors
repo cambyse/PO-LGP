@@ -1,7 +1,7 @@
 # fake base
 body world0 {type=2 X=<T t(0 0 0)> size=[.01 .01 .01 .01] fixed}
-body world1 {type=2 X=<T t(0 0 0)> size=[.01 .01 .01 .01] }
-body world2 {type=2 X=<T t(0 -2 0)> size=[.01 .01 .01 .01] }
+body world1 {type=2 X=<T t(0 0 0)> size=[.01 .01 .01 .01] kinematic }
+body world2 {type=2 X=<T t(0 -2 0)> size=[.01 .01 .01 .01] kinematic }
 
 body base_footprint {  mass=1 kinematic contact }
 body torso_lift_link { pose=<T -0.0500001 0 0.890675 0.707107 0 -0.707107 0 > mass=36.248 kinematic contact }

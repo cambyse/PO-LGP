@@ -55,6 +55,8 @@ SHAREFLAG = -shared #-Wl,--warn-unresolved-symbols #-Wl,--no-allow-shlib-undefin
 CXXFLAGS += -fPIC
 CXXFLAGS += $(EXTRA_CXXFLAGS)
 
+CFLAGS += -fPIC
+
 ifndef MLR_NO_CXX11
 CXXFLAGS += -std=c++0x
 endif

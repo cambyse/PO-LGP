@@ -1,22 +1,22 @@
-set(SOURCES ./ors_swift.cpp
-./ors_actionInterface.h
-./ors_physx.cpp
-./roboticsCourse.cpp
+set(SOURCES ./module_G4Display.h
+./ors.cpp
 ./ors_ode.h
-./ors_ode.cpp
-./roboticsCourse.h
-./ors_swift.h
-./module_G4Display.h
+./ors_oldTaskVariables.cpp
 ./ors_opengl.cpp
-./ors_oldTaskVariables.h
-./ors_featherstone.cpp
-./ors_tutorial.h
+./roboticsCourse.h
 ./ors_physx.h
-./module_G4Display.cpp
+./ors_physx.cpp
+./ors_actionInterface.h
 ./ors_sceneGui.h
 ./ors_sceneGui.cpp
-./ors.cpp
 ./ors_blender.cpp
-./ors_oldTaskVariables.cpp
+./module_G4Display.cpp
+./ors_ode.cpp
+./ors_featherstone.cpp
+./ors_swift.cpp
+./ors.h
+./ors_tutorial.h
+./roboticsCourse.cpp
 ./ors_actionInterface.cpp
-./ors.h)
+./ors_oldTaskVariables.h
+./ors_swift.h)

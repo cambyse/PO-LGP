@@ -627,7 +627,7 @@ arr ors::KinematicWorld::naturalQmetric(double power, uint agent) const {
   if(!q.N) getJointStateDimension();
   arr Wdiag(q.N);
   for_list_(Joint, j, joints) {
-    for(uint i=0; i<j->qDim(); i++) { 
+    for(uint i=0; i<j->qDim(); i++) {
       if(j->agent == agent) Wdiag(j->qIndex+i) = ::pow(BM(j->to->index), power);
     }
   }

@@ -1,6 +1,5 @@
 set(CURRENT_SLICE 
  bench_rgb2yuv
-libav_raw
 tomsy-recorder
 videoEncoder
 videoEncoder_threaded
