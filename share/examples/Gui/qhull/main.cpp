@@ -2,7 +2,7 @@
 #include <Gui/opengl.h>
 #include <Algo/algos.h>
 #include <Gui/plot.h>
-#include <qhull/qhull.h>
+#include <qhull/qhull_a.h>
 #include <Optim/optimization.h>
 
 //===========================================================================
