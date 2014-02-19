@@ -275,7 +275,7 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   void calc_missingAB_from_BodyAndJointFrames();    ///< fill in the missing joint relative transforms (A & B) if body and joint world poses are known
   void clearJointErrors();
   void invertTime();
-  arr naturalQmetric(double power=.5) const;               ///< returns diagonal of a natural metric in q-space, depending on tree depth
+  arr naturalQmetric(double power=.5, uint agent=0) const;               ///< returns diagonal of a natural metric in q-space, depending on tree depth
   arr getLimits(uint agent=0) const;
 
   /// @name get state

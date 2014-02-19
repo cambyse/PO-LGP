@@ -607,7 +607,7 @@ void ors::KinematicWorld::invertTime() {
   }
 }
 
-arr ors::KinematicWorld::naturalQmetric(double power, int agent) const {
+arr ors::KinematicWorld::naturalQmetric(double power, uint agent) const {
 #if 0
   if(!q.N) getJointStateDimension();
   arr Wdiag(q.N);
@@ -1321,7 +1321,7 @@ ors::Joint* ors::KinematicWorld::getJointByBodyNames(const char* from, const cha
   return graphGetEdge<Body, Joint>(f, t);
 }
 
-ShapeL ors::KinematicWorld::getShapesByAgent(const int agent) const {
+ShapeL ors::KinematicWorld::getShapesByAgent(const uint agent) const {
   ShapeL agent_shapes;
   for(ors::Joint *j : joints) {
     if(j->agent==agent) {
@@ -1336,7 +1336,7 @@ ShapeL ors::KinematicWorld::getShapesByAgent(const int agent) const {
   return agent_shapes;
 }
 
-uintA ors::KinematicWorld::getShapeIdxByAgent(const int agent) const {
+uintA ors::KinematicWorld::getShapeIdxByAgent(const uint agent) const {
   uintA agent_shape_idx;
   ShapeL agent_shapes = getShapesByAgent(agent);
   for(ors::Shape* s : agent_shapes)
