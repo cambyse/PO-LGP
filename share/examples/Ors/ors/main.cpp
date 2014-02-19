@@ -32,34 +32,40 @@ void TEST(LoadSave){
 // Jacobian test
 //
 
-namespace T1{
-  uint i,j;
-  ors::KinematicWorld *G;
-  ors::Vector rel;
-  ors::Vector axis;
-  static void f_pos (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->kinematicsPos(y,*J,i,&rel); }
-  //static void f_hess (arr &J, arr *H, const arr &x,void*){  G->setJointState(x);  G->jacobianPos(J,i,&rel);  if(H) G->hessianPos (*H,i,&rel); }
-  static void f_vec (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->kinematicsVec(y,*J,i,&axis); }
-  //static void f3 (arr &y,const arr &x,void*){  G->setJointState(x);  G->kinematicsOri2(y,i,axis); }
-  //static void df3(arr &J,const arr &x,void*){  G->setJointState(x);  G->jacobianOri2(J,i,axis); }
-}
 
 void TEST(Kinematics){
+  struct MyFct:VectorFunction{
+    enum Mode {Pos, Vec, Quat} mode;
+    ors::KinematicWorld& W;
+    uint& i;
+    ors::Vector& vec;
+    MyFct(Mode _mode, ors::KinematicWorld &_W, uint &_i, ors::Vector &_vec): mode(_mode), W(_W), i(_i), vec(_vec){}
+    virtual void fv(arr& y, arr& J, const arr& x){
+      W.setJointState(x);
+      switch(mode){
+        case Pos:  W.kinematicsPos(y,J,i,&vec); break;
+        case Vec:  W.kinematicsVec(y,J,i,&vec); break;
+//        case Quat: W.kinematicsQuat(y,J,i); break;
+      }
+    }
+    VectorFunction& operator()(){ return *this; }
+  };
+
   //ors::KinematicWorld G("test.ors");
   ors::KinematicWorld G("../../../data/pr2_model/pr2_clean_comfi.ors");
   uint n=G.getJointStateDimension();
   arr x(n);
-  T1::axis.set(1,0,0);
-  T1::G = &G;
+  ors::Vector vec;
   for(uint k=0;k<100;k++){
-    T1::i=rnd.num(0,G.bodies.N-1);
-    T1::rel.setRandom();
+    uint i=rnd.num(0,G.bodies.N-1);
+    vec.setRandom();
     rndUniform(x,-.5,.5,false);
-    //G.gl().text.clear() <<"k=" <<k <<"  gradient checks of kinematics on random postures";
-    //G.watch(false);
-    checkJacobian(Convert(T1::f_pos, NULL), x, 1e-5);
+
+    cout <<"kinematicsPos: "; checkJacobian(MyFct(MyFct::Pos , G, i, vec)(), x, 1e-5);
+    cout <<"kinematicsVec: "; checkJacobian(MyFct(MyFct::Vec , G, i, vec)(), x, 1e-5);
+//    checkJacobian(MyFct(MyFct::Quat, G, i, vec), x, 1e-5);
+
     //checkJacobian(Convert(T1::f_hess, NULL), x, 1e-5);
-    checkJacobian(Convert(T1::f_vec, NULL), x, 1e-5);
   }
 }
 
@@ -469,7 +475,7 @@ void TEST(BlenderImport){
 #endif
 
 int MAIN(int argc,char **argv){
-  testLimits();
+  testKinematics();
   return 0;
 
   testLoadSave();

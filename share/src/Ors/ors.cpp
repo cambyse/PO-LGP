@@ -608,7 +608,7 @@ void ors::KinematicWorld::invertTime() {
   }
 }
 
-arr ors::KinematicWorld::naturalQmetric(double power, int agent) const {
+arr ors::KinematicWorld::naturalQmetric(double power, uint agent) const {
 #if 0
   if(!q.N) getJointStateDimension();
   arr Wdiag(q.N);
