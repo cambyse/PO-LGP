@@ -1,7 +1,12 @@
 set(SOURCES ./benchmarks.cpp
-./optimization.h
-./constrained.cpp
-./constrained.h
+./cmaes_interface.h
 ./optimization.cpp
+./search_CMA.cpp
+./cmaes.c
+./search.h
 ./convert.cpp
-./benchmarks.h)
+./benchmarks.h
+./cmaes.h
+./constrained.h
+./constrained.cpp
+./optimization.h)

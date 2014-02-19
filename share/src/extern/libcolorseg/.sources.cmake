@@ -1,19 +1,19 @@
-set(SOURCES ./disjoint-set.cpp
-./segment-image.cpp
+set(SOURCES ./pnmfile.cpp
+./disjoint-set.h
 ./segment-image.h
-./convolve.cpp
-./imconv.h
-./image.cpp
+./imutil.cpp
 ./filter.cpp
+./disjoint-set.cpp
+./image.cpp
+./image.h
+./misc.h
+./imutil.h
 ./segment-graph.h
-./imconv.cpp
-./pnmfile.h
+./convolve.cpp
 ./convolve.h
 ./filter.h
-./imutil.cpp
-./misc.h
-./image.h
+./pnmfile.h
+./segment-image.cpp
 ./segment-graph.cpp
-./pnmfile.cpp
-./disjoint-set.h
-./imutil.h)
+./imconv.h
+./imconv.cpp)

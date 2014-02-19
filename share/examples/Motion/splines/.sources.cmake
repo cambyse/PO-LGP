@@ -1,3 +1,3 @@
-set(SOURCES ./spline.cpp
-./main.cpp
-./spline.h)
+set(SOURCES ./main.cpp
+./spline.h
+./spline.cpp)
