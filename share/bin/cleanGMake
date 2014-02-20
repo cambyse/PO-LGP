@@ -1,0 +1,4 @@
+git reset --hard
+git clean -f -d -x
+gofMake/createMakefileLinks.sh
+make -k -j4
