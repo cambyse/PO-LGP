@@ -1,6 +1,6 @@
-#include "dmp.h"
+#include "dynamicMovementPrimitives.h"
 
-DMP::DMP(arr &y_ref_, uint nBase_, double dt_) {
+DynamicMovementPrimitives::DynamicMovementPrimitives(arr &y_ref_, uint nBase_, double dt_) {
   y_ref = y_ref_;
   dt = dt_;
   nBase = nBase_;
@@ -43,15 +43,15 @@ DMP::DMP(arr &y_ref_, uint nBase_, double dt_) {
   H(nBase-1) = H(nBase-2);
 }
 
-DMP::~DMP() {
+DynamicMovementPrimitives::~DynamicMovementPrimitives() {
 
 }
 
-void DMP::changeGoal(const arr &goal_) {
+void DynamicMovementPrimitives::changeGoal(const arr &goal_) {
   goal = goal_;
 }
 
-void DMP::trainDMP() {
+void DynamicMovementPrimitives::trainDMP() {
 
   uint i,j;
   arr PHI = zeros(y_ref.d0,nBase);
@@ -108,7 +108,7 @@ void DMP::trainDMP() {
 
 }
 
-void DMP::iterate() {
+void DynamicMovementPrimitives::iterate() {
 
   uint i;
   arr psi;
@@ -131,7 +131,7 @@ void DMP::iterate() {
   x_bk.append(X);
 }
 
-void DMP::reset() {
+void DynamicMovementPrimitives::reset() {
   X = 1.;
   Xd = 0.;
   Y = y_ref[0];
@@ -145,7 +145,7 @@ void DMP::reset() {
 
 
 
-void DMP::plotDMP() {
+void DynamicMovementPrimitives::plotDMP() {
 
   write(LIST<arr>(x_bk),"out/x_bk.output");
   gnuplot("set term wxt 2 title 'phase variable x'");
@@ -169,7 +169,7 @@ void DMP::plotDMP() {
 
 }
 
-void DMP::printDMP() {
+void DynamicMovementPrimitives::printDMP() {
   std::cout <<"tau : " << tau << std::endl;
   std::cout <<"T : " << T << std::endl;
   std::cout <<"dt : " << dt << std::endl;

@@ -5,6 +5,8 @@
 #include <Core/array.h>
 #include <Ors/ors.h>
 
+/* M(oving)Objects represents an object in the scene and moves or rotates the object
+ */
 
 struct MObject {
   enum ObjectType {OBSTACLE, GOAL};
@@ -28,13 +30,10 @@ struct MObject {
   void move();  // simulate object for one time step along direction
   void move(const arr& _offset);  // simulate object for one time step
   void rotate(const arr& _offset);
-  void drawPrediction();
 
   // Getter
   void setPosition(const arr& _position);
   void setOrientation(const arr& _orientation);
-
-
 };
 
 #endif // MOBJECT_H

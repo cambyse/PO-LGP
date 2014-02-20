@@ -1,14 +1,14 @@
-#ifndef DMP_H
-#define DMP_H
+#ifndef DYNAMICMOVEMENTPRIMITIVES_H
+#define DYNAMICMOVEMENTPRIMITIVES_H
 
 #include <Core/util.h>
 #include <Core/array.h>
 #include <Ors/ors.h>
 
 
-struct DMP {
-  DMP(arr &y_ref_, uint nBase_, double dt_);
-  ~DMP();
+struct DynamicMovementPrimitives {
+  DynamicMovementPrimitives(arr &y_ref_, uint nBase_, double dt_);
+  ~DynamicMovementPrimitives();
 
   void trainDMP();
   void iterate();
@@ -53,4 +53,4 @@ struct DMP {
 
 };
 
-#endif // DMP_H
+#endif // DYNAMICMOVEMENTPRIMITIVES_H

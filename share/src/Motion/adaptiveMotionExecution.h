@@ -1,5 +1,5 @@
-#ifndef PFC_H
-#define PFC_H
+#ifndef ADAPTIVEMOTIONEXECUTION_H
+#define ADAPTIVEMOTIONEXECUTION_H
 
 #include <Core/util.h>
 #include <Core/array.h>
@@ -8,12 +8,12 @@
 #include <Core/util.h>
 #include <stdlib.h>
 #include "mobject.h"
-#include "../splines/spline.h"
+#include <Algo/spline.h>
 #include <Gui/opengl.h>
 
-struct Pfc{
+struct AdaptiveMotionExecution{
 
-    Pfc(ors::KinematicWorld &_world, arr& _trajRef, double _dt, double _TRef, arr &_x0, arr &_q0, MObject &_goalMO, \
+    AdaptiveMotionExecution(ors::KinematicWorld &_world, arr& _trajRef, double _dt, double _TRef, arr &_x0, arr &_q0, MObject &_goalMO, \
         bool _useOrientation);
     void printState();
     void plotState();
@@ -31,7 +31,6 @@ struct Pfc{
     double dsRef;
 
     bool useOrientation;
-    bool useCollAvoid;
 
     MObject *goalMO;
 
@@ -53,17 +52,16 @@ struct Pfc{
     arr colCosts;
 
     // Wrapped Trajectory
-    Spline *trajWrap;
+    MT::Path *trajWrap;
 
     // Reference Trajectory
-    Spline *trajRef;
+    MT::Path *trajRef;
     arr dtrajRef;
     arr goalRef;
     arr sRef;
 
     String scene;
     arr joints_bk;
-
 };
 
-#endif // PFC_H
+#endif // ADAPTIVEMOTIONEXECUTION_H

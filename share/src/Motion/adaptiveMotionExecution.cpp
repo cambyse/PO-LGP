@@ -1,6 +1,6 @@
-#include "pfc.h"
+#include "adaptiveMotionExecution.h"
 
-Pfc::Pfc(ors::KinematicWorld &_world, arr& _trajRef, double _dt, double _TRef, arr &_x0, arr &_q0, MObject &_goalMO, \
+AdaptiveMotionExecution::AdaptiveMotionExecution(ors::KinematicWorld &_world, arr& _trajRef, double _dt, double _TRef, arr &_x0, arr &_q0, MObject &_goalMO, \
          bool _useOrientation):
   world(&_world),
   dt(_dt),
@@ -24,17 +24,16 @@ Pfc::Pfc(ors::KinematicWorld &_world, arr& _trajRef, double _dt, double _TRef, a
 
   lastGoal = goalRef+(x0-_trajRef[0]);
 
-  trajWrap = new Spline(sRef,_trajRef,2);
-  trajRef = new Spline(sRef,_trajRef,2);
-
+  trajWrap = new MT::Path(_trajRef);
+  trajRef = new MT::Path(_trajRef);
 }
 
-void Pfc::getNextState(arr& _state, arr& _dstate) {
+void AdaptiveMotionExecution::getNextState(arr& _state, arr& _dstate) {
   _state = desState;
   _dstate = desVel;
 }
 
-void Pfc::iterate(arr& _state, double _dtReal)
+void AdaptiveMotionExecution::iterate(arr& _state, double _dtReal)
 {
   if (_dtReal > 0.) {
     dsRef = _dtReal/TRef;
@@ -61,25 +60,26 @@ void Pfc::iterate(arr& _state, double _dtReal)
   lastGoal = goal;
 
   // compute next state
-  arr dir = trajWrap->deval(s.last());
+  arr dir = trajWrap->getVelocity(s.last());
   dir = dir/length(dir);
 
 //  desVel = dir*dsRef*length(trajRef->deval(s.last()))/dt;
-  desVel = dir*length(trajRef->deval(s.last()))/TRef;
+  desVel = dir*length(trajRef->getVelocity(s.last()))/TRef;
   desState = traj[traj.d0-1] + desVel*dt;
   traj.append(desState);
 }
 
-void Pfc::warpTrajectory()
+void AdaptiveMotionExecution::warpTrajectory()
 {
-  arr stateDiff = state-trajWrap->eval(s.last());
+  arr stateDiff = state-trajWrap->getPosition(s.last());
   arr goalDiff = goal-lastGoal;
-  trajWrap->transform(goalDiff, stateDiff, s.last());
+  trajWrap->transform_CurrentFixed_EndBecomes(goal,s.last());
+  trajWrap->transform_CurrentBecomes_EndFixed(state,s.last());
 }
 
 
 
-void Pfc::plotState()
+void AdaptiveMotionExecution::plotState()
 {
   if (scene.M==0) {
     scene = STRING("out");
@@ -155,7 +155,7 @@ void Pfc::plotState()
 
 }
 
-void Pfc::printState()
+void AdaptiveMotionExecution::printState()
 {
   cout << "TRef = " << TRef << endl;
   cout << "dt = " << dt << endl;
@@ -182,7 +182,7 @@ void Pfc::printState()
 
 
 
-//void Pfc::computeIK(arr &q, arr &qd)
+//void AdaptiveMotionExecution::computeIK(arr &q, arr &qd)
 //{
   //    arr W, yPos, JPos, yVec, JVec, yPos_target,yVec_target, y_target, Phi, PhiJ, yCol,JCol,costs;
 
@@ -197,7 +197,7 @@ void Pfc::printState()
   //    world->kinematicsVec(yVec, world->getBodyByName("endeff")->index);
   //    world->jacobianVec(JVec, world->getBodyByName("endeff")->index);
 
-  //    // iterate pfc
+  //    // iterate amex
   //    arr y = yPos;
   //    if (useOrientation) {
   //      y.append(yVec);
@@ -236,4 +236,4 @@ void Pfc::printState()
   //    // compute joint updates
   //    qd = -inverse(~PhiJ*PhiJ + W)*~PhiJ* Phi;
   //    q += qd;
-//}
+  //}
