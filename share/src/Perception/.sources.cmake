@@ -21,4 +21,7 @@ set(SOURCES ./pointcloud.h
 ./perception_views.cpp
 ./keyframer.h
 ./videoEncoderX264.cpp
-./vision.h)
+./vision.h
+./avutil.h
+./avutil.cpp
+)
