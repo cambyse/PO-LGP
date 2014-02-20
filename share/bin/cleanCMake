@@ -1,4 +1,4 @@
-read -p " *** WARNING: This will rm ALL local files/changes (e.g. project files) - do you want to continue? -- y/[n] ?" yn
+read -p " *** WARNING: This will rm ALL local files/changes (e.g. project/temporary/data files) - do you want to continue? -- y/[n] ?" yn
 case $yn in
      y|Y)
 	git reset --hard
