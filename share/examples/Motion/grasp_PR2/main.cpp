@@ -14,7 +14,7 @@ void testGraspHeuristic(){
 
   MotionProblem MP(G);
   MP.loadTransitionParameters();
-  MP.H_rate_diag = pr2_reasonable_W();
+  MP.H_rate_diag = pr2_reasonable_W(G);
   cout <<MP.x0 <<endl;
 
   ors::Shape *s = G.getShapeByName("target1");

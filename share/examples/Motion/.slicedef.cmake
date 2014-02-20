@@ -8,4 +8,5 @@ mpc
 pfc
 RRT-PR2
 splines
+trajectoryExecution
  )

@@ -3,9 +3,12 @@
 #define VISUALIZE 1
 
 MPC::MPC(MotionProblem &_P, arr &_x):
-  P(_P),
-  x(_x)
+x(_x),
+P(_P)
 {
+//  P = &_P;
+//  MotionProblem c = _P;
+//  x = _x;
   arr kinPos;
 
   x_cart.clear();
@@ -46,6 +49,9 @@ void MPC::replan(arr &_goal, arr &_q) {
   c2 = P.addTaskMap("orientation", new DefaultTaskMap(vecTMT,P.world,"endeff",ors::Vector(0., 0., 1.)));
   P.setInterpolatingCosts(c2, MotionProblem::finalOnly, ARRAY(1.,0.,0.), 1e4);
   P.setInterpolatingVelCosts(c2,MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
+
+  c2 = P.addTaskMap("contact", new DefaultTaskMap(collTMT,-1,NoVector,-1,NoVector,ARR(0.1)));
+  P.setInterpolatingCosts(c2, MotionProblem::constant, ARRAY(0.), 1e0);
 
   x = x.rows(1,x.d0);
   MotionProblemFunction F(P);

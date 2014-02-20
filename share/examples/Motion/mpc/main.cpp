@@ -330,7 +330,7 @@ void scenario3() {
   // RUN //
   while ((world.getBodyByName("endeff")->X.pos - goalMO.position).length() >1e-1) {
 
-    goalMO.move();
+//    goalMO.move();
     mpc.replan(goalMO.position, q);
 
     q += (mpc.x[2]-mpc.x[1]);

@@ -19,7 +19,7 @@ struct MPC {
 
   void replan(arr& _goal, arr &_q);
 
-  MotionProblem P;
+  MotionProblem& P;
   arr x;
 
   // bookkeeping
