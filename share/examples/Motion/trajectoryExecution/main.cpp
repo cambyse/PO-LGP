@@ -317,7 +317,7 @@ void executeTrajectory(String scene, ControlType cType){
     goal_bk.append(goalMO.position);
   }
   world.watch(true,STRING(t));
-}
+
 
   switch (cType) {
   case(CT_DMP):
@@ -376,14 +376,8 @@ int main(int argc,char **argv) {
     q_bk.clear(); x_bk.clear(); goal_bk.clear(); ct_bk.clear();
     sceneIter++;
   }
-  dmp.plotDMP();
-  world.watch(true,STRING(t));
-}
 
-  /* TODO
-   *
-   * phase variables speichern
-   * DMP fixen
-  */
   return 0;
 }
+
+
