@@ -1,4 +1,10 @@
-git reset --hard
-git clean -f -d -x
-cmake .
-make -k -j4
+read -p " *** WARNING: This will rm ALL local files/changes (e.g. project files) - do you want to continue? -- y/[n] ?" yn
+case $yn in
+     y|Y)
+	git reset --hard
+	git clean -f -d -x
+	cmake .
+	make -k -j4
+	;;
+    *) ;;
+esac
