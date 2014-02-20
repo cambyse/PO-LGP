@@ -1,13 +1,6 @@
-<<<<<<< HEAD
-set(SOURCES ./pfc.cpp
-./main.cpp
+set(SOURCES ./main.cpp
+./pfc.h
+./pfc.h
+./mobject.cpp
 ./mobject.h
-./mobject.cpp
-./pfc.h)
-=======
-set(SOURCES ./pfc.h
-./main.cpp
-./mobject.cpp
-./pfc.cpp
-./mobject.h)
->>>>>>> peter
+)
