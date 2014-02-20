@@ -26,7 +26,7 @@ void drawEnv(void* classP){
 void drawTraj(uint color, arr& p, uint lineStyle) {
   glColor(color);
   glPointSize(4.0f);
-  glLineWidth(2);
+  glLineWidth(6);
   if (lineStyle == 1) {
     glBegin(GL_POINTS);
   } else {
@@ -45,25 +45,27 @@ void drawTraj(uint color, arr& p, uint lineStyle) {
 
 void drawActTraj(void* classP){
   arr *p = (arr*)classP;
-  drawTraj(5,*p,1);
+  drawTraj(5,*p,3);
 }
 void drawPlanTraj(void* classP){
   arr *p = (arr*)classP;
-  drawTraj(1,*p,2);
+  drawTraj(5,*p,3);
 }
 void drawRefTraj(void* classP){
   arr *p = (arr*)classP;
-  drawTraj(2,*p,1);
+  drawTraj(2,*p,3);
 }
 
 
-void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
+
+void runPFC(String scene, bool useOrientation, bool useCollAvoid, bool moveGoal, arr dir=ARR(0.,0.,0.),arr axis=ARR(0.,0.,0.)) {
 
   //------------------------------------------------//
   // Compute optimal trajectory
   //------------------------------------------------//
   ors::KinematicWorld world(scene);
-  world.gl().resize(800,800);
+  world.gl().resize(1000,800);
+
 
   makeConvexHulls(world.shapes);
   cout << "Loaded scene: " << scene << endl;
@@ -91,12 +93,14 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   }
 
   if (useCollAvoid) {
-    c = P.addTaskMap("collision", new DefaultTaskMap(collTMT, 0, ors::Vector(0., 0., 0.), 0, ors::Vector(0., 0., 0.), ARR(.1)));
-    P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e0);
+//    c = P.addTaskMap("collision", new DefaultTaskMap(collTMT, 0, ors::Vector(0., 0., 0.), 0, ors::Vector(0., 0., 0.), ARR(.1)));
+//    P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e0);
   }
 
   //-- create the Optimization problem (of type kOrderMarkov)
-  P.x0 = ARRAY(0.,0.,0.,0.,-0.2,-.2,0.);
+  arr start = {M_PI_2,-M_PI_2,0.,0.,0.,0.,0.};
+  P.x0 = start;//ARRAY(0.,0.,0.,0.,-0.2,-.2,0.);
+  //  P.x0 = ARRAY(0.,0.,0.,0.,-0.2,-.2,0.);
 
   MotionProblemFunction F(P);
   uint T=F.get_T();
@@ -114,8 +118,8 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   //-- optimize
   optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
 
-  P.costReport();
-  //  displayTrajectory(x, 1, G,"planned trajectory");
+  //  P.costReport();
+  //  displayTrajectory(x, 1, world,"planned trajectory");
 
 
   //------------------------------------------------//
@@ -139,11 +143,12 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   //------------------------------------------------//
   // Create obstacles and goals
   //------------------------------------------------//
-  MObject goalMO(&world, MT::String("goal"), MObject::GOAL , 0., ARRAY(0.,0.,1.));
+  MObject goalMO(&world, MT::String("goal"), MObject::GOAL , 0.0015, dir);
+
   std::vector<MObject*> mobjects;
 
-  //    mobjects.push_back(new MObject(&G, MT::String("obstacle1"), MObject::OBSTACLE , 0.003, ARRAY(0.,0.,-1.)));
-  //    gl.add(drawEnv,mobjects.at(0));
+  mobjects.push_back(new MObject(&world, MT::String("obstacle"), MObject::OBSTACLE , 0.003, dir));
+//  gl.add(drawEnv,mobjects.at(0));
 
 
   arr q, dq, q0, dq0;
@@ -158,10 +163,11 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   //------------------------------------------------//
   arr x0 = xRef[0];
 
+  double dtAmex = 0.01;
   //  Pfc *pfc = new Pfc(G, xRef,2.,x0, q0, goalMO, useOrientation, useCollAvoid,fPos_deviation,fVec_deviation,yCol_deviation,w_reg);
-  Pfc* pfc = new Pfc(world,xRef,dt,T*dt,x0,q0,goalMO,true);
+  Pfc* pfc = new Pfc(world,xRef,dtAmex,T*dt,x0,q0,goalMO,true);
   pfc->scene = scene;
-  world.gl().add(drawActTraj,&(pfc->traj));
+  //  world.gl().add(drawActTraj,&(pfc->traj));
   world.gl().add(drawRefTraj,&(pfc->trajRef->points));
   world.gl().add(drawPlanTraj,&(pfc->trajWrap->points));
 
@@ -172,16 +178,21 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
   arr state,stateVec;
   double fPos_deviation = 1e-2;
   double fVec_deviation = 1e-3;
-  double w_reg = 100.;
-  arr qd, W, yPos, JPos, yPos_target, y_target, Phi, PhiJ ,costs, yVec, JVec, yVec_target;
+  double yCol_deviation = 1e-2;
+  double w_reg = 2e2;
+  arr qd, W, yPos, JPos, yPos_target, y_target, Phi, PhiJ ,costs, yVec, JVec, yVec_target, yCol, JCol;
   W.setDiag(1.,world.getJointStateDimension());  // W is equal the Id_n matrix
   W = W*w_reg;
 
-  while((pfc->s.last()<0.99) && t++ < 2*T)
+  world.gl().watch();
+  cout << world.gl().camera.X->pos << world.gl().camera.X->rot << endl;
+
+  while((pfc->s.last()<0.95) && t++ < 4*T)
   {
     // move obstacles
     for (std::vector<MObject*>::iterator moIter = mobjects.begin() ; moIter != mobjects.end() ; ++moIter) {
       (*moIter)->move();
+      (*moIter)->rotate(axis);
     }
 
     world.kinematicsPos(yPos,JPos,world.getBodyByName("endeff")->index);
@@ -190,8 +201,9 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
     state.append(yVec);
 
     // move goal
-    goalMO.move();
-
+    if (moveGoal && pfc->s.last()<0.9) {
+      goalMO.move();
+    }
     P.world.computeProxies();
     pfc->iterate(state);
 
@@ -208,6 +220,11 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
     Phi.append((yVec - yVec_target)/ fVec_deviation);
     PhiJ.append(JVec / fVec_deviation);
 
+    // task 3: OBSTACLE
+    P.world.kinematicsProxyCost(yCol,JCol,0.15);
+    Phi.append(yCol / yCol_deviation);
+    PhiJ.append(JCol / yCol_deviation);
+
     // compute joint updates
     qd = inverse(~PhiJ*PhiJ + W)*~PhiJ* Phi;
     q -= qd;
@@ -215,13 +232,16 @@ void runPFC(String scene, bool useOrientation, bool useCollAvoid) {
     // sets joint angles AND computes all frames AND update display
     world.setJointState(q);
 
+
     world.gl().update();
+    MT::wait(dtAmex);
+    //    world.gl().watch();
   }
 
   //------------------------------------------------//
   // Plot results
   //------------------------------------------------//
-  pfc->plotState();
+  //  pfc->plotState();
 
   world.gl().watch();
 
@@ -233,16 +253,24 @@ int main(int argc,char **argv){
   MT::initCmdLine(argc,argv);
 
   //  runPFC(String("model.kvg"),true,true);
-
-  runPFC(String("scenes/scene1"),true,true);
-  runPFC(String("scenes/scene2"),true,true);
-  runPFC(String("scenes/scene3"),true,true);
-  runPFC(String("scenes/scene4"),true,true);
-  runPFC(String("scenes/scene5"),true,true);
-  runPFC(String("scenes/scene6"),true,true);
-  runPFC(String("scenes/scene7"),true,true);
-  runPFC(String("scenes/scene8"),true,true);
-  runPFC(String("scenes/scene9"),true,true);
+//  runPFC(String("scenes/apollo_right_ref"),true,true,false);
+//  runPFC(String("scenes/apollo_right_stat1"),true,true,false);
+//  runPFC(String("scenes/apollo_right_stat2"),true,true,false);
+//  runPFC(String("scenes/apollo_right_stat3"),true,true,false);
+//  runPFC(String("scenes/apollo_right_dyn1"),true,true,true,ARR(0.5,0.3,1.));
+//  runPFC(String("scenes/apollo_right_dyn2"),true,true,true,ARR(-1.,0.2,-1.));
+//  runPFC(String("scenes/apollo_right_dyn3"),true,true,true,ARR(-1.,0.2,1.));
+  runPFC(String("scenes/apollo_right_obs1"),true,true,false);
+  runPFC(String("scenes/apollo_right_obs2"),true,true,false,ARR(0.,0.,1.));
+  runPFC(String("scenes/apollo_right_obs3"),true,true,false,ARR(0.,0.,0.),ARR(1.,0,0.));
+//    runPFC(String("scenes/scene2"),true,true);
+//    runPFC(String("scenes/scene3"),true,true);
+  //  runPFC(String("scenes/scene4"),true,true);
+  //  runPFC(String("scenes/scene5"),true,true);
+  //  runPFC(String("scenes/scene6"),true,true);
+  //  runPFC(String("scenes/scene7"),true,true);
+  //  runPFC(String("scenes/scene8"),true,true);
+  //  runPFC(String("scenes/scene9"),true,true);
 
   return 0;
 }

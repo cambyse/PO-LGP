@@ -1,0 +1,17 @@
+<package>
+  <description brief="rt_amex">
+
+     rt_amex
+
+  </description>
+  <author>Peter Englert</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/circle_test</url>
+  <depend package="roscpp"/>
+  <depend package="my_controller_pkg"/>
+  <depend package="goal_publisher"/>
+
+</package>
+
+

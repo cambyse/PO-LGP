@@ -1,3 +1,3 @@
 set(SOURCES ./main.cpp
-./mpc.h
-./mpc.cpp)
+./mpc.cpp
+./mpc.h)

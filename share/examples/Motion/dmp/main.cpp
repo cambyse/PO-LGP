@@ -54,18 +54,18 @@ void scenario1() {
 
 //** optimized trajectory in joint space **//
 void scenario2() {
-  ors::KinematicWorld G("scenes/scene1.ors");
-  G.gl().resize(800, 800);
+  ors::KinematicWorld world("scenes/scene1.ors");
+  world.gl().resize(800, 800);
 
-  makeConvexHulls(G.shapes);
+  makeConvexHulls(world.shapes);
   cout << "Loaded scene: " << endl;
 
-  MotionProblem P(G);
+  MotionProblem P(world);
   P.loadTransitionParameters();
 
   //-- create an optimal trajectory to trainTarget
   TaskCost *c;
-  c = P.addTaskMap("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTaskMap("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                           ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
@@ -80,7 +80,7 @@ void scenario2() {
   uint k=F.get_k();
   uint n=F.dim_x();
 
-  cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n<<" # joints=" <<G.getJointStateDimension()<<endl;
+  cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n<<" # joints=" <<world.getJointStateDimension()<<endl;
 
   //-- mini evaluation test:
   arr x(T+1,n);
@@ -115,16 +115,16 @@ void scenario2() {
   // Set start state
   arr q0,dq0,q;
   q0 = x[0]; dq0 = 0.*q0;
-  G.setJointState(q0,dq0);
-  G.getJointState(q);
+  world.setJointState(q0,dq0);
+  world.getJointState(q);
 
   // apply DMP on robot
   while(d.X>1e-3) {
 
-    G.setJointState(d.Y);
+    world.setJointState(d.Y);
 
     d.iterate();
-    G.gl().update();
+    world.gl().update();
   }
 
 }

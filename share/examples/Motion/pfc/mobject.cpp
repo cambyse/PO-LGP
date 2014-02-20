@@ -53,4 +53,6 @@ void MObject::move(const arr& _offset) {
 void MObject::rotate(const arr& _offset) {
   orientationHistory.append(~orientation);
   orientation = orientation + _offset;
+  world->getBodyByName(name)->X.rot.setDeg( world->getBodyByName(name)->X.rot.getDeg()+0.7,_offset);
 }
+
