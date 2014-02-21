@@ -16,8 +16,9 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 include_directories( ${MLR_PATH}/share/src )
+include_directories( src )
 
-rosbuild_add_executable(amex_controller src/amex_controller.cpp)
+rosbuild_add_executable(amex_controller src/main.cpp src/traj_optimizer.cpp src/amex_controller.cpp)
 
 target_link_libraries(amex_controller
 ${MLR_PATH}/share/lib/libMotion.so
