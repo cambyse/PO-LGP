@@ -2,7 +2,7 @@
 
 cd $1
 LASTFILE=`ls -Art | tail -n 1`
-if [ $LASTFILE = '.lastMake' ]; then
+if [ "$LASTFILE" = '.lastMake' ]; then
     echo "                                         ***** UpToDate " $1
 else
     if mkdir Make.lock 2> /dev/null
