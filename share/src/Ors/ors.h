@@ -75,7 +75,7 @@ namespace ors {
  * @{
  */
 enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, meshST, cylinderST, markerST, pointCloudST };
-enum JointType { JT_none=-1, JT_hingeX=0, JT_hingeY=1, JT_hingeZ=2, JT_transX=3, JT_transY=4, JT_transZ=5, JT_trans3, JT_universal, JT_fixed=10, JT_glue };
+enum JointType { JT_none=-1, JT_hingeX=0, JT_hingeY=1, JT_hingeZ=2, JT_transX=3, JT_transY=4, JT_transZ=5, JT_transXY=6, JT_trans3=7, JT_transXYPhi=8, JT_universal=9, JT_fixed=10, JT_glue };
 enum BodyType  { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };
 /** @} */
 
@@ -139,7 +139,7 @@ struct Joint {
   int ifrom, ito;       ///< indices of from and to bodies
   Body *from, *to;      ///< pointers to from and to bodies
   Joint *mimic;         ///< if non-NULL, this joint's state is identical to another's
-  int agent;            ///< associate this Joint to a specific agent (0=default robot)
+  uint agent;            ///< associate this Joint to a specific agent (0=default robot)
 
   MT::String name;      ///< name
   JointType type;       ///< joint type
@@ -148,6 +148,8 @@ struct Joint {
   Transformation B;     ///< transformation from joint to child body (attachment, usually static)
   Transformation X;     ///< joint pose in world coordinates (same as from->X*A)
   Vector axis;          ///< joint axis (same as X.rot.getX() for standard hinge joints)
+  arr limits;           ///< joint limits (lo, up, [maxvel, maxeffort])
+  double H;             ///< control cost factor
   KeyValueGraph ats;    ///< list of any-type attributes
   
   Joint();
@@ -155,11 +157,11 @@ struct Joint {
   explicit Joint(KinematicWorld& G, Body *f, Body *t, const Joint *copyJoint=NULL); //new Shape, being added to graph and body's joint lists
   ~Joint();
   void operator=(const Joint& j) {
-    index=j.index; qIndex=j.qIndex; ifrom=j.ifrom; ito=j.ito; mimic=reinterpret_cast<Joint*>(j.mimic?1:0);
-    type=j.type; A=j.A; Q=j.Q; B=j.B; X=j.X; axis=j.axis; name=j.name;
-    ats=j.ats; agent=j.agent;
+    index=j.index; qIndex=j.qIndex; ifrom=j.ifrom; ito=j.ito; mimic=reinterpret_cast<Joint*>(j.mimic?1:0); agent=j.agent;
+    name=j.name; type=j.type; A=j.A; Q=j.Q; B=j.B; X=j.X; axis=j.axis; limits=j.limits; H=j.H;
+    ats=j.ats;
   }
-  void reset() { listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); X.setZero(); axis.setZero(); type=JT_none; }
+  void reset() { listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); X.setZero(); axis.setZero(); limits.clear(); H=1.; type=JT_none; }
   void parseAts();
   uint qDim();
   void write(std::ostream& os) const;
@@ -218,6 +220,7 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   struct sKinematicWorld *s;
 
   /// @name data fields
+  uintA qdim;  ///< dimensionality depending on the agent number
   arr q, qdot; ///< the current joint configuration vector and velocities
   int q_agent; ///< the agent index of the current q,qdot
   BodyL  bodies;
@@ -246,48 +249,57 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   bool checkUniqueNames() const;
   void prefixNames();
 
-  ShapeL getShapesByAgent(const int agent) const;
-  uintA getShapeIdxByAgent(const int agent) const;
+  ShapeL getShapesByAgent(const uint agent) const;
+  uintA getShapeIdxByAgent(const uint agent) const;
 
   /// @name changes of configuration
   void clear();
+  void makeTree(Body *root){ reconfigureRoot(root); makeLinkTree(); }
+  //-- low level: don't use..
   void revertJoint(Joint *e);
-  void reconfigureRoot(Body *n);  ///< n becomes the root of the kinematic tree; joints accordingly reversed; lists resorted
+  void reconfigureRoot(Body *root);  ///< n becomes the root of the kinematic tree; joints accordingly reversed; lists resorted
   void transformJoint(Joint *e, const ors::Transformation &f); ///< A <- A*f, B <- f^{-1}*B
   void zeroGaugeJoints();         ///< A <- A*Q, Q <- Id
   void makeLinkTree();            ///< modify transformations so that B's become identity
-  void topSort(){ graphTopsort(bodies, joints); for(Shape *s: shapes) s->ibody=s->body->index; }
+  void topSort(){ graphTopsort(bodies, joints); for(Shape *s: shapes) if(s->body) s->ibody=s->body->index; }
   void glueBodies(Body *a, Body *b);
   void meldFixedJoints();         ///< prune fixed joints; shapes of fixed bodies are reassociated to non-fixed boides
   void removeUselessBodies();     ///< prune non-articulated bodies; they become shapes of other bodies
   
-  /// @name computations on the DoFs
-  void calcBodyFramesFromJoints();    ///< elementary forward kinematics; also computes all Shape frames
-  void calcShapeFramesFromBodies();   ///< TODO: shouldn't that be done by above
-  void calcJointsFromBodyFrames();    ///< fill in the joint transformations assuming that body poses are known (makes sense when reading files)
-  void calcJointState(int agent=0);
-  void fillInRelativeTransforms();    ///< fill in the joint relative transforms (A & B) if body and joint world poses are known
+  /// @name computations on the graph
+  void calc_Q_from_q(uint agent=0, bool vels=false); ///< from the set (q,qdot) compute the joint's Q transformations
+  void calc_q_from_Q(uint agent=0, bool vels=false);  ///< updates (q,qdot) based on the joint's Q transformations
+  void calc_fwdPropagateFrames();    ///< elementary forward kinematics; also computes all Shape frames
+  void calc_fwdPropagateShapeFrames();   ///< same as above, but only shape frames (body frames are assumed up-to-date)
+  void calc_Q_from_BodyFrames();    ///< fill in the joint transformations assuming that body poses are known (makes sense when reading files)
+  void calc_missingAB_from_BodyAndJointFrames();    ///< fill in the missing joint relative transforms (A & B) if body and joint world poses are known
   void clearJointErrors();
   void invertTime();
-  arr naturalQmetric(int agent=0);    ///< returns diagonal of a natural metric in q-space, depending on tree depth
-  
+  arr naturalQmetric(double power=.5, uint agent=0) const;               ///< returns diagonal of a natural metric in q-space, depending on tree depth
+  arr getLimits(uint agent=0) const;
+
   /// @name get state
-  uint getJointStateDimension(int agent=0) const;
-  void getJointState(arr &_q, arr& _qdot=NoArr) const { _q=q; if(&_qdot) _qdot=qdot; };
+  uint getJointStateDimension(uint agent=0) const;
+  void getJointState(arr &_q, arr& _qdot=NoArr) const {
+    _q=q; if(&_qdot){ _qdot=qdot; if(!_qdot.N) _qdot.resizeAs(q).setZero();  }
+  }
+  arr getJointState() const { return q; }
 
   /// @name set state
-  void setJointState(const arr& _q, const arr& _qdot, int agent=0);
-  void setJointState(const arr& _q, int agent=0);
+  void setJointState(const arr& _q, const arr& _qdot=NoArr, uint agent=0);
 
   /// @name kinematics
-  void kinematicsPos(arr& y, arr& J, uint i, ors::Vector *rel=0, int agent=0) const;
-  void kinematicsVec(arr& y, arr& J, uint i, ors::Vector *vec=0, int agent=0) const;
-  void hessianPos(arr& H, uint i, ors::Vector *rel=0, int agent=0) const;
-  void jacobianR(arr& J, uint a, int agent=0) const;
+  void kinematicsPos (arr& y, arr& J, uint a, ors::Vector *rel=0, uint agent=0) const;
+  void kinematicsVec (arr& y, arr& J, uint a, ors::Vector *vec=0, uint agent=0) const;
+  void kinematicsQuat(arr& y, arr& J, uint a, uint agent=0) const;
+  void hessianPos(arr& H, uint i, ors::Vector *rel=0, uint agent=0) const;
+  void jacobianR(arr& J, uint a, uint agent=0) const;
   void kinematicsProxyCost(arr& y, arr& J, Proxy *p, double margin=.02, bool useCenterDist=true, bool addValues=false) const;
   void kinematicsProxyCost(arr& y, arr& J, double margin=.02, bool useCenterDist=true) const;
   void kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, double margin=.02, bool addValues=false) const;
   void kinematicsContactConstraints(arr& y, arr &J) const; //TODO: should depend on agent...
+  void getLimitsMeasure(arr &x, const arr& limits, double margin=.1) const;
+  void kinematicsLimitsCost(arr& y, arr& J, const arr& limits, double margin=.1) const;
 
   /// @name dynamics
   void fwdDynamics(arr& qdd, const arr& qd, const arr& tau);
@@ -298,8 +310,6 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   /// @name older 'kinematic maps'
   //void getContactMeasure(arr &x, double margin=.02, bool linear=false) const;
   //double getContactGradient(arr &grad, double margin=.02, bool linear=false) const;
-  void getLimitsMeasure(arr &x, const arr& limits, double margin=.1) const;
-  double getLimitsGradient(arr &grad, const arr& limits, double margin=.1) const;
   double getCenterOfMass(arr& com) const;
   void getComGradient(arr &grad) const;
 
@@ -405,7 +415,7 @@ double forceClosureFromProxies(ors::KinematicWorld& C, uint bodyIndex,
 struct OpenGL;
 
 //-- global draw options
-extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines, orsDrawBodyNames;
+extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines, orsDrawBodyNames, orsDrawMarkers;
 extern uint orsDrawLimit;
 
 void displayState(const arr& x, ors::KinematicWorld& G, const char *tag);

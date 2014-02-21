@@ -80,6 +80,7 @@ struct sOpenGL{
 /// constructor
 
 void OpenGL::postRedrawEvent(bool fromWithinCallback){
+  //I belief this doesn't need a Lock!
   if(!fromWithinCallback) gtkLock();
   gtk_widget_queue_draw(s->glArea);
   if(!fromWithinCallback) gdk_window_process_updates(gtk_widget_get_window(s->glArea), false);

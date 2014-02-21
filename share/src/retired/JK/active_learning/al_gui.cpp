@@ -33,7 +33,7 @@ void Gui::step() {
       //relational::generateOrsFromTraySample(s->ors, *guiData->sample);
     //else
       relational::generateOrsFromSample(s->ors, *guiData->sample);
-    s->ors.calcBodyFramesFromJoints();
+    s->ors.calc_fwdPropagateFrames();
   }
   guiData->deAccess(this);
   s->gl.timedupdate(0.01);

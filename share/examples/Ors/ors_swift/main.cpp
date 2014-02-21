@@ -18,7 +18,7 @@ void TEST(Swift) {
   for(t=0;t<50;t++){
     G.bodies(0)->X.addRelativeTranslation(0,0,-.01);
     G.bodies(0)->X.addRelativeRotationDeg(10,1,0,0);
-    G.calcBodyFramesFromJoints();
+    G.calc_fwdPropagateFrames();
 
     G.computeProxies();
 

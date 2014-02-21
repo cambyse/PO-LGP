@@ -33,7 +33,7 @@ void createScene(ors::KinematicWorld& ors, OpenGL& gl) {
     s->type=ors::meshST;
     s->mesh.readFile("pin1.off");
   }
-  ors.calcShapeFramesFromBodies();
+  ors.calc_fwdPropagateFrames();
   cout <<ors <<endl;
   
   gl.add(glStandardScene,NULL);

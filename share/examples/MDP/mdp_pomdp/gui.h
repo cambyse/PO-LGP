@@ -4,8 +4,7 @@
 //#include <Qt/qmetatype.h>
 //#include <Qt/qobject.h>
 #include <qfiledialog.h>
-#include "ui_gui.h"
-#define MT_IMPLEMENT_TEMPLATES
+#include "gui_ui.h"
 #include <Core/util.h>
 #include <MDP/mdp_EMSolver.h>
 

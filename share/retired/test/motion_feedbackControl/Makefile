@@ -1,8 +1,0 @@
-BASE = ../..
-
-CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES
-
-BUILDS += buildComponent/motion
-LIBS += -lmotion
-
-include $(BASE)/make-generic

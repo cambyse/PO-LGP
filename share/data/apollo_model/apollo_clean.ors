@@ -1,0 +1,107 @@
+body ORIG { mass=7.71316  }
+body L_SHOULDER { pose=<T 0.138997 0.11975 1.305 0.353553 -0.353553 0.612372 -0.612372 > mass=5.9907  }
+body L_UPPER_ARM_IN_SHOULDER { pose=<T 0.304841 0.024 1.307 0.612355 0.353524 -0.612389 0.353583 > mass=5.73494  }
+body L_UPPER_ARM { pose=<T 0.304858 0.02399 1.0985 4.17108e-05 1.2244e-06 1 -2.40817e-05 > mass=4.21467  }
+body L_FOREARM { pose=<T 0.304874 0.0259807 0.907 -0.707136 1.61625e-05 -0.707077 1.78941e-05 > mass=3.66982  }
+body L_UPPER_WRIST_YAW { pose=<T 0.304892 0.0259707 0.6985 1.24679e-05 -0.707072 0.707142 -4.65217e-05 > mass=2.31327  }
+body L_UPPER_WRIST_PITCH { pose=<T 0.304911 0.071962 0.516998 5.42779e-06 -6.44172e-05 -0.707088 0.707125 > mass=2.05786  }
+body L_LOWER_WRIST { pose=<T 0.304912 0.026459 0.46 1.11692e-05 -0.707072 0.707142 -4.78203e-05 > mass=1.1202  }
+body L_HAND_M_FINGER_KNUCKLE_2 { pose=<T 0.254922 0.0264572 0.330616 -0.0152427 0.0151737 -0.706962 -0.706924 > mass=0.057957  }
+body L_HAND_M_FINGER_KNUCKLE_3 { pose=<T 0.184987 0.026464 0.327606 0.0152427 -0.0151737 0.706962 0.706924 > mass=0.0342178  }
+body L_HAND_L_FINGER_KNUCKLE_1 { pose=<T 0.304923 0.0514234 0.352019 -2.59162e-05 -1 4.93879e-05 -4.17118e-05 > mass=0.162527  }
+body L_HAND_L_FINGER_KNUCKLE_2 { pose=<T 0.354925 0.0514174 0.330623 0.706962 0.706927 0.0151139 -0.0151845 > mass=0.057957  }
+body L_HAND_L_FINGER_KNUCKLE_3 { pose=<T 0.424861 0.0514103 0.327624 -0.706962 -0.706927 -0.0151139 0.0151845 > mass=0.0342178  }
+body L_HAND_R_FINGER_KNUCKLE_1 { pose=<T 0.304918 0.0014834 0.352021 -2.59162e-05 -1 4.93879e-05 -4.17118e-05 > mass=0.162527  }
+body L_HAND_R_FINGER_KNUCKLE_2 { pose=<T 0.35492 0.00147735 0.330626 0.706962 0.706927 0.0151139 -0.0151845 > mass=0.057957  }
+body L_HAND_R_FINGER_KNUCKLE_3 { pose=<T 0.424856 0.00147029 0.327627 -0.706962 -0.706927 -0.0151139 0.0151845 > mass=0.0342178  }
+body R_SHOULDER { pose=<T -0.138997 0.11975 1.305 0.612372 0.612372 -0.353553 -0.353553 > mass=5.9907  }
+body R_UPPER_ARM_IN_SHOULDER { pose=<T -0.304841 0.024 1.303 -0.353583 -0.612389 0.353524 -0.612355 > mass=5.73494  }
+body R_UPPER_ARM { pose=<T -0.304858 0.02399 1.0945 2.40816e-05 1 1.2244e-06 -4.17108e-05 > mass=4.21467  }
+body R_FOREARM { pose=<T -0.304874 0.0219807 0.903 -1.78941e-05 -0.707077 1.61625e-05 0.707136 > mass=3.66982  }
+body R_UPPER_WRIST_YAW { pose=<T -0.304892 0.0219707 0.6945 4.65217e-05 0.707142 -0.707072 -1.24679e-05 > mass=2.31327  }
+body R_UPPER_WRIST_PITCH { pose=<T -0.304911 0.067962 0.512998 5.42778e-06 -6.44172e-05 0.707088 -0.707125 > mass=2.05786  }
+body R_LOWER_WRIST { pose=<T -0.304912 0.022459 0.456 1.11692e-05 -0.707072 -0.707142 4.78203e-05 > mass=1.1202  }
+body R_HAND_M_FINGER_KNUCKLE_2 { pose=<T -0.254922 0.0224572 0.326616 0.706962 0.706924 0.0152427 -0.0151737 > mass=0.057957  }
+body R_HAND_M_FINGER_KNUCKLE_3 { pose=<T -0.184987 0.022464 0.323606 -0.706962 -0.706924 -0.0152427 0.0151737 > mass=0.0342178  }
+body R_HAND_L_FINGER_KNUCKLE_1 { pose=<T -0.304918 -0.0025166 0.348022 4.17118e-05 4.93879e-05 -1 2.59162e-05 > mass=0.162527  }
+body R_HAND_L_FINGER_KNUCKLE_2 { pose=<T -0.35492 -0.00252265 0.326626 0.0151139 -0.0151845 0.706962 0.706927 > mass=0.057957  }
+body R_HAND_L_FINGER_KNUCKLE_3 { pose=<T -0.424856 -0.00252971 0.323627 -0.0151139 0.0151845 -0.706962 -0.706927 > mass=0.0342178  }
+body R_HAND_R_FINGER_KNUCKLE_1 { pose=<T -0.304923 0.0474234 0.348019 4.17118e-05 4.93879e-05 -1 2.59162e-05 > mass=0.162527  }
+body R_HAND_R_FINGER_KNUCKLE_2 { pose=<T -0.354925 0.0474174 0.326623 0.0151139 -0.0151845 0.706962 0.706927 > mass=0.057957  }
+body R_HAND_R_FINGER_KNUCKLE_3 { pose=<T -0.424861 0.0474103 0.323624 -0.0151139 0.0151845 -0.706962 -0.706927 > mass=0.0342178  }
+body B_CERVICAL1 { pose=<T 3.10235e-14 0.05 1.4487 0.5 -0.5 0.5 -0.5 >  }
+body B_CERVICAL2 { pose=<T 3.10235e-14 0.05 1.4487 -7.31637e-14 -3.38923e-12 -0.707107 0.707107 >  }
+body B_HEAD { pose=<T 3.10235e-14 0.05 1.4487 2.44826e-12 2.34489e-12 1 -2.44828e-12 > mass=1  }
+
+shape (ORIG){ type=3 rel=<T 0.00218987 0.154271 0.615566 -1 0 0 -2.06823e-13 >  mass=1  mesh='meshes/collision/stand.stl'  rel_includes_mesh_center=true  }
+shape (ORIG){ type=3 rel=<T 0.0909555 0.144709 1.30252 -0.5 0 0 0.866025 >  mass=1  mesh='meshes/collision/lbr0_smpl.stl'  rel_includes_mesh_center=true  }
+shape (L_SHOULDER){ type=3 rel=<T -0.0995275 -0.0017974 -0.0199055 -0.5 0.5 0.5 -0.5 >  mass=5.9907  mesh='meshes/collision/lbr1_smpl.stl'  rel_includes_mesh_center=true  }
+shape (L_UPPER_ARM_IN_SHOULDER){ type=3 rel=<T -0.0173179 -3.59874e-05 -0.0629513 -0.5 0.5 0.5 -0.5 >  mass=5.73494  mesh='meshes/collision/lbr2_smpl.stl'  rel_includes_mesh_center=true  }
+shape (L_UPPER_ARM){ type=3 rel=<T -0.102918 0.00233411 0.0171367 -0.5 0.5 0.5 -0.5 >  mass=4.21467  mesh='meshes/collision/lbr3_smpl.stl'  rel_includes_mesh_center=true  }
+shape (L_FOREARM){ type=3 rel=<T -0.0176778 0.000349607 0.0425368 -0.5 0.5 0.5 -0.5 >  mass=3.66982  mesh='meshes/collision/lbr4_smpl.stl'  rel_includes_mesh_center=true  }
+shape (L_UPPER_WRIST_YAW){ type=3 rel=<T -0.082441 -0.00175102 -0.0209316 -0.5 0.5 0.5 -0.5 >  mass=2.31327  mesh='meshes/collision/lbr5_smpl.stl'  rel_includes_mesh_center=true  }
+shape (L_UPPER_WRIST_PITCH){ type=3 rel=<T -0.0567044 -8.05224e-06 -0.000547712 -0.707107 0 0.707107 0 >  mass=2.05786  mesh='meshes/collision/lbr6_smpl.stl'  rel_includes_mesh_center=true  }
+shape (L_LOWER_WRIST){ type=3 rel=<T -0.00375371 -0.00300832 0.00146598 -0.707107 0 0.707107 0 >  mass=1.1202  mesh='meshes/collision/lbr7_smpl.stl'  rel_includes_mesh_center=true  }
+shape (L_LOWER_WRIST){ type=3 rel=<T -0.0889307 0.00753743 -0.00126913 -0.5 0.5 -0.5 -0.5 >  mass=1e-08  mesh='meshes/collision/wamLowerWristFTPalmLink7_smpl.stl'  rel_includes_mesh_center=true  }
+shape (L_HAND_M_FINGER_KNUCKLE_2){ type=3 rel=<T 0.00167533 -0.00148109 0.0336375 1.03412e-13 -1 -2.53174e-25 -2.44826e-12 >  mass=0.057957  mesh='meshes/collision/secondFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
+shape (L_HAND_M_FINGER_KNUCKLE_3){ type=3 rel=<T 0.000307256 -0.00167072 0.0258747 -1 0 2.44826e-12 0 >  mass=0.0342178  mesh='meshes/collision/thirdFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
+shape (L_HAND_L_FINGER_KNUCKLE_1){ type=3 rel=<T -0.00932083 -3.06227e-05 0.0311825 -3.46245e-12 -0.707107 0.707107 5.55112e-17 >  mass=0.162527  mesh='meshes/collision/firstFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
+shape (L_HAND_L_FINGER_KNUCKLE_2){ type=3 rel=<T 0.00167533 -0.00148109 0.0336375 1.03412e-13 -1 -2.53174e-25 -2.44826e-12 >  mass=0.057957  mesh='meshes/collision/secondFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
+shape (L_HAND_L_FINGER_KNUCKLE_3){ type=3 rel=<T 0.000307256 -0.00167072 0.0258747 -1 0 2.44826e-12 0 >  mass=0.0342178  mesh='meshes/collision/thirdFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
+shape (L_HAND_R_FINGER_KNUCKLE_1){ type=3 rel=<T 0.00932083 -3.06227e-05 -0.0311825 -0.707107 -5.55112e-17 -3.46234e-12 0.707107 >  mass=0.162527  mesh='meshes/collision/firstFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
+shape (L_HAND_R_FINGER_KNUCKLE_2){ type=3 rel=<T 0.00167533 -0.00148109 0.0336375 1.03412e-13 -1 -2.53174e-25 -2.44826e-12 >  mass=0.057957  mesh='meshes/collision/secondFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
+shape (L_HAND_R_FINGER_KNUCKLE_3){ type=3 rel=<T 0.000307256 -0.00167072 0.0258747 -1 0 2.44826e-12 0 >  mass=0.0342178  mesh='meshes/collision/thirdFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
+shape (ORIG){ type=3 rel=<T -0.0909555 0.144709 1.30748 -5.17058e-14 -0.866025 0.5 -8.9557e-14 >  mass=1  mesh='meshes/collision/lbr0_smpl.stl'  rel_includes_mesh_center=true  }
+shape (R_SHOULDER){ type=3 rel=<T 0.0995275 -0.0017974 0.0199055 -0.5 -0.5 -0.5 -0.5 >  mass=5.9907  mesh='meshes/collision/lbr1_smpl.stl'  rel_includes_mesh_center=true  }
+shape (R_UPPER_ARM_IN_SHOULDER){ type=3 rel=<T 0.0173179 -3.59874e-05 0.0629513 -0.5 -0.5 -0.5 -0.5 >  mass=5.73494  mesh='meshes/collision/lbr2_smpl.stl'  rel_includes_mesh_center=true  }
+shape (R_UPPER_ARM){ type=3 rel=<T 0.102918 0.00233411 -0.0171367 -0.5 -0.5 -0.5 -0.5 >  mass=4.21467  mesh='meshes/collision/lbr3_smpl.stl'  rel_includes_mesh_center=true  }
+shape (R_FOREARM){ type=3 rel=<T 0.0176778 0.000349607 -0.0425368 -0.5 -0.5 -0.5 -0.5 >  mass=3.66982  mesh='meshes/collision/lbr4_smpl.stl'  rel_includes_mesh_center=true  }
+shape (R_UPPER_WRIST_YAW){ type=3 rel=<T 0.082441 -0.00175102 0.0209316 -0.5 -0.5 -0.5 -0.5 >  mass=2.31327  mesh='meshes/collision/lbr5_smpl.stl'  rel_includes_mesh_center=true  }
+shape (R_UPPER_WRIST_PITCH){ type=3 rel=<T 0.0567044 -8.05224e-06 0.000547712 -0.707107 0 -0.707107 0 >  mass=2.05786  mesh='meshes/collision/lbr6_smpl.stl'  rel_includes_mesh_center=true  }
+shape (R_LOWER_WRIST){ type=3 rel=<T 0.00375371 -0.00300832 -0.00146598 -0.707107 0 -0.707107 0 >  mass=1.1202  mesh='meshes/collision/lbr7_smpl.stl'  rel_includes_mesh_center=true  }
+shape (R_LOWER_WRIST){ type=3 rel=<T 0.0889307 0.00753743 0.00126913 0.5 -0.5 -0.5 -0.5 >  mass=1e-08  mesh='meshes/collision/wamLowerWristFTPalmLink7_smpl.stl'  rel_includes_mesh_center=true  }
+shape (R_HAND_M_FINGER_KNUCKLE_2){ type=3 rel=<T 0.00167533 -0.00148109 0.0336375 1.03412e-13 -1 -2.53174e-25 -2.44826e-12 >  mass=0.057957  mesh='meshes/collision/secondFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
+shape (R_HAND_M_FINGER_KNUCKLE_3){ type=3 rel=<T 0.000307256 -0.00167072 0.0258747 -1 0 2.44826e-12 0 >  mass=0.0342178  mesh='meshes/collision/thirdFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
+shape (R_HAND_L_FINGER_KNUCKLE_1){ type=3 rel=<T -0.00932083 -3.06227e-05 0.0311825 -3.46245e-12 -0.707107 0.707107 5.55112e-17 >  mass=0.162527  mesh='meshes/collision/firstFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
+shape (R_HAND_L_FINGER_KNUCKLE_2){ type=3 rel=<T 0.00167533 -0.00148109 0.0336375 1.03412e-13 -1 -2.53174e-25 -2.44826e-12 >  mass=0.057957  mesh='meshes/collision/secondFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
+shape (R_HAND_L_FINGER_KNUCKLE_3){ type=3 rel=<T 0.000307256 -0.00167072 0.0258747 -1 0 2.44826e-12 0 >  mass=0.0342178  mesh='meshes/collision/thirdFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
+shape (R_HAND_R_FINGER_KNUCKLE_1){ type=3 rel=<T 0.00932083 -3.06227e-05 -0.0311825 -0.707107 -5.55112e-17 -3.46234e-12 0.707107 >  mass=0.162527  mesh='meshes/collision/firstFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
+shape (R_HAND_R_FINGER_KNUCKLE_2){ type=3 rel=<T 0.00167533 -0.00148109 0.0336375 1.03412e-13 -1 -2.53174e-25 -2.44826e-12 >  mass=0.057957  mesh='meshes/collision/secondFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
+shape (R_HAND_R_FINGER_KNUCKLE_3){ type=3 rel=<T 0.000307256 -0.00167072 0.0258747 -1 0 2.44826e-12 0 >  mass=0.0342178  mesh='meshes/collision/thirdFingerLink_smpl.stl'  rel_includes_mesh_center=true  }
+shape B_MOTORS (ORIG){ type=0 rel=<T 4.13646e-14 1.38778e-17 0.995 -1.03412e-13 0 0 1 >  size=[ 0.2 0.15 0.12 0 ]  rel_includes_mesh_center=true  }
+shape B_CERVICALS (ORIG){ type=2 rel=<T 3.10234e-14 0.05 1.22869 -1.03412e-13 0 0 1 >  size=[ 0 0 0.3937 0.03 ]  rel_includes_mesh_center=true  }
+shape (B_HEAD){ type=3 rel=<T -0.135065 0.0174024 -0.00494741 -0.5 0.5 -0.5 -0.5 >  mass=1  mesh='meshes/collision/humanoidHead_smpl.stl'  rel_includes_mesh_center=true  }
+
+joint L_SFE (ORIG L_SHOULDER){ from=<T 0.138997 0.11975 1.305 0.183013 -0.183013 -0.683013 0.683013 >  type=0  }
+joint L_SAA (L_SHOULDER L_UPPER_ARM_IN_SHOULDER){ from=<T -0.1915 -0.002 4.25215e-17 -0.500024 -0.499976 -0.500024 0.499976 >  type=0  }
+joint L_HR (L_UPPER_ARM_IN_SHOULDER L_UPPER_ARM){ from=<T -4.62963e-17 0 -0.2085 -0.612372 0.353554 0.612372 0.353554 >  type=0  }
+joint L_EB (L_UPPER_ARM L_FOREARM){ from=<T -0.1915 0.002 4.25215e-17 -0.707107 1.73123e-12 0.707107 1.73117e-12 >  type=0  }
+joint L_WR (L_FOREARM L_UPPER_WRIST_YAW){ from=<T 4.62963e-17 0 0.2085 -0.500024 -0.499976 -0.500024 0.499976 >  type=0  }
+joint L_WFE (L_UPPER_WRIST_YAW L_UPPER_WRIST_PITCH){ from=<T -0.1815 0 -0.046 -0.499999 0.499999 -0.500001 -0.500001 >  type=0  }
+joint L_WAA (L_UPPER_WRIST_PITCH L_LOWER_WRIST){ from=<T -0.0455 0.057 1.0103e-17 -0.5 -0.5 0.5 0.5 >  type=0  }
+joint L_MF (L_LOWER_WRIST L_HAND_M_FINGER_KNUCKLE_2){ from=<T -0.12938 0.05 -1.03124e-14 -0.510618 0.489152 0.510618 0.489152 >  type=0  }
+joint L_MF2 (L_HAND_M_FINGER_KNUCKLE_2 L_HAND_M_FINGER_KNUCKLE_3){ from=<T 1.55431e-17 0 0.07 -1 0 0 0 >  type=0  }
+joint L_LF (L_HAND_L_FINGER_KNUCKLE_1 L_HAND_L_FINGER_KNUCKLE_2){ from=<T -0.0214 0 0.05 -0.706944 -0.0151787 0.0151787 0.706944 >  type=0  }
+joint L_LF2 (L_HAND_L_FINGER_KNUCKLE_2 L_HAND_L_FINGER_KNUCKLE_3){ from=<T 1.55431e-17 0 0.07 -1 0 0 0 >  type=0  }
+joint L_RF (L_HAND_R_FINGER_KNUCKLE_1 L_HAND_R_FINGER_KNUCKLE_2){ from=<T 0.0214 0 -0.05 -0.0151787 0.706944 -0.706944 0.0151787 >  type=0  }
+joint L_RF2 (L_HAND_R_FINGER_KNUCKLE_2 L_HAND_R_FINGER_KNUCKLE_3){ from=<T 1.55431e-17 0 0.07 -1 0 0 0 >  type=0  }
+joint L_FR (L_LOWER_WRIST L_HAND_L_FINGER_KNUCKLE_1){ from=<T -0.10798 -5.16437e-15 -0.02497 0.707107 0.707107 0 -1.66533e-16 >  type=0  }
+joint L_FR2 (L_LOWER_WRIST L_HAND_R_FINGER_KNUCKLE_1){ from=<T -0.10798 5.16437e-15 0.02497 1.11022e-16 5.55112e-17 -0.707107 -0.707107 >  type=0  mimic='L_FR'  }
+joint R_SFE (ORIG R_SHOULDER){ from=<T -0.138997 0.11975 1.305 -0.183013 -0.183013 0.683013 0.683013 >  type=0  }
+joint R_SAA (R_SHOULDER R_UPPER_ARM_IN_SHOULDER){ from=<T 0.1915 -0.002 4.25215e-17 -0.500024 -0.499976 -0.500024 0.499976 >  type=0  }
+joint R_HR (R_UPPER_ARM_IN_SHOULDER R_UPPER_ARM){ from=<T -4.62963e-17 0 0.2085 -0.612372 0.353554 0.612372 0.353554 >  type=0  }
+joint R_EB (R_UPPER_ARM R_FOREARM){ from=<T 0.1915 0.002 4.25215e-17 -0.707107 -1.73123e-12 0.707107 -1.73117e-12 >  type=0  }
+joint R_WR (R_FOREARM R_UPPER_WRIST_YAW){ from=<T 4.62963e-17 0 -0.2085 -0.500024 -0.499976 -0.500024 0.499976 >  type=0  }
+joint R_WFE (R_UPPER_WRIST_YAW R_UPPER_WRIST_PITCH){ from=<T 0.1815 0 0.046 -0.499999 -0.499999 -0.500001 0.500001 >  type=0  }
+joint R_WAA (R_UPPER_WRIST_PITCH R_LOWER_WRIST){ from=<T 0.0455 0.057 1.0103e-17 -0.5 -0.5 -0.5 -0.5 >  type=0  }
+joint R_MF (R_LOWER_WRIST R_HAND_M_FINGER_KNUCKLE_2){ from=<T 0.12938 0.05 1.03699e-14 -0.510618 0.489152 -0.510618 -0.489152 >  type=0  }
+joint R_MF2 (R_HAND_M_FINGER_KNUCKLE_2 R_HAND_M_FINGER_KNUCKLE_3){ from=<T 1.55431e-17 0 0.07 -1 0 0 0 >  type=0  }
+joint R_LF (R_HAND_L_FINGER_KNUCKLE_1 R_HAND_L_FINGER_KNUCKLE_2){ from=<T -0.0214 0 0.05 -0.706944 -0.0151787 0.0151787 0.706944 >  type=0  }
+joint R_LF2 (R_HAND_L_FINGER_KNUCKLE_2 R_HAND_L_FINGER_KNUCKLE_3){ from=<T 1.55431e-17 0 0.07 -1 0 0 0 >  type=0  }
+joint R_RF (R_HAND_R_FINGER_KNUCKLE_1 R_HAND_R_FINGER_KNUCKLE_2){ from=<T 0.0214 0 -0.05 -0.0151787 0.706944 -0.706944 0.0151787 >  type=0  }
+joint R_RF2 (R_HAND_R_FINGER_KNUCKLE_2 R_HAND_R_FINGER_KNUCKLE_3){ from=<T 1.55431e-17 0 0.07 -1 0 0 0 >  type=0  }
+joint R_FR (R_LOWER_WRIST R_HAND_L_FINGER_KNUCKLE_1){ from=<T 0.10798 -5.16437e-15 0.02497 1.11022e-16 -5.55112e-17 0.707107 -0.707107 >  type=0  }
+joint R_FR2 (R_LOWER_WRIST R_HAND_R_FINGER_KNUCKLE_1){ from=<T 0.10798 5.16437e-15 -0.02497 0.707107 -0.707107 0 -1.66533e-16 >  type=0  mimic='R_FR'  }
+joint B_HN (ORIG B_CERVICAL1){ from=<T 3.10235e-14 0.05 1.4487 -0.707107 0.707107 7.30527e-14 3.38934e-12 >  type=0  }
+joint B_HT (B_CERVICAL1 B_CERVICAL2){ from=<T 0 0 0 -0.707107 0 -0.707107 0 >  type=0  }
+joint B_HR (B_CERVICAL2 B_HEAD){ from=<T 0 0 0 -0.707107 1.11022e-16 -5.55112e-17 -0.707107 >  type=0  }

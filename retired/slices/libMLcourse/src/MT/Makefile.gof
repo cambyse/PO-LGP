@@ -1,0 +1,22 @@
+BASE   = ../..
+NAME   = $(shell basename $(BASE))
+OUTPUT = $(BASE)/lib/$(NAME).so
+CXXFLAGS += -fPIC
+LIBS   += -lrt
+
+#OPTIM  = fast_debug
+OPTIM  = debug
+
+CXXFLAGS += -DMT_ORS_ONLY_BASICS -DMT_GLOBALMEM -DMT_NO_THREADS
+
+FREEGLUT = 1
+ANN = 1
+LAPACK = 1
+#NO_BLAS = 1
+
+CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES #causes all *.cpp to implement the used templates
+
+OBJS  = $(shell find . -maxdepth 1 \( -name '*.cpp' -and -not -name '*_t.cpp' -and -not -name '*_instantiate.cpp' \) )
+OBJS := $(OBJS:%.cpp=%.o)
+
+include $(BASE)/gofMake/make-generic

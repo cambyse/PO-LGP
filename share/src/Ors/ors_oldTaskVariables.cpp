@@ -397,7 +397,7 @@ void DefaultTaskVariable::updateState(const ors::KinematicWorld& ors, double tau
       J.setZero();
       J(0, -i) = 1.;
       break;
-    case qLimitsTVT:   ors.getLimitsMeasure(y, params);  ors.getLimitsGradient(J, params);   break;
+    case qLimitsTVT:   ors.kinematicsLimitsCost(y, J, params);  break;
     case comTVT:       ors.getCenterOfMass(y);     y.resizeCopy(2); ors.getComGradient(J);  J.resizeCopy(2, J.d1);  break;
     case collTVT:      ors.kinematicsProxyCost(y, J, params(0));  break;
     case colConTVT:    ors.kinematicsContactConstraints(y, J); break;

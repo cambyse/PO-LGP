@@ -25,6 +25,8 @@ class MD25  {
     bool readEncoder2(int32_t& result);
     bool setMotorSpeedAndAcceleration(const std::string& description, unsigned char speed_1, unsigned char speed_2, int acceleration);
     bool resetEncoders();
+    bool readVoltage(unsigned char& volts);
+
     
     void close();
 

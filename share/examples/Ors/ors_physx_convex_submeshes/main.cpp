@@ -5,7 +5,6 @@ void TEST(PhysxConvexSubmeshes) {
   ors::KinematicWorld graph;
   graph.init("doorSimple.ors");
   ors::Body* robot = graph.getBodyByName("robot");
-  graph.calcBodyFramesFromJoints();
 
   OpenGL glPh("PhysX");
   //  bindOrsToPhysX(graph, glPh, physx);
@@ -15,7 +14,7 @@ void TEST(PhysxConvexSubmeshes) {
 
     // move robot
     robot->X.pos += control;
-    graph.calcBodyFramesFromJoints();
+    graph.calc_fwdPropagateFrames();
 
     // update sim
     graph.stepPhysx(0.01);

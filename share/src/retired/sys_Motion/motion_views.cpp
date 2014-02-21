@@ -33,13 +33,11 @@ void PoseView::glDraw() {
     if (q.N==2*n) q = q.sub(0,q.N/2-1); //check dynamic state
     if (q.N!=n){ MT_MSG("pose view on wrong dimension");  return; }
     geo().ors.setJointState(q); //it's using the ors copy to interpret the pose array (field->p)
-    geo().ors.calcBodyFramesFromJoints(); //it's using the ors copy to interpret the pose array (field->p)
   }
   if(q.nd==2){
     t++;
     if(t>=q.d0) t=0;
     geo().ors.setJointState(q[t]);
-    geo().ors.calcBodyFramesFromJoints();
   }
   glStandardScene(NULL);
   geo().ors.glDraw(); //..and draws it

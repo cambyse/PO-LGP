@@ -116,6 +116,19 @@ bool MD25::readEncoder2(int32_t& result) {
     return success;
 }
 
+bool MD25::readVoltage(unsigned char& volts) {
+
+    bool success = false;
+
+    if (_controller.readVoltage(volts)) {
+
+        success = true;
+
+    }
+
+    return success;
+}
+
 bool MD25::resetEncoders() {
 
     bool success = false;

@@ -16,6 +16,8 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
+#pragma once
+
 #include "motion.h"
 #include "taskMap_default.h"
 
@@ -29,7 +31,7 @@ struct PDtask{
 
   arr y_ref, v_ref;      ///< immediate (next step) desired target reference
   double Pgain, Dgain;   ///< parameters of the PD controller or attractor dynamics
-  arr Perr, Derr;
+  arr y, v; ///< the observations when LAST getDesiredAcceleration was called -- use carefully! (in online mode only)
 
   PDtask(TaskMap* m):map(*m), active(true), prec(0.), Pgain(0.), Dgain(0.) {}
 
@@ -66,7 +68,7 @@ struct FeedbackMotionControl : MotionProblem {
   FeedbackMotionControl(ors::KinematicWorld& _world, bool useSwift=true);
 
   //adding task spaces
-  PDtask* addTask(const char* name, TaskMap *map);
+  PDtask* addPDTask(const char* name, double decayTime, double dampingRatio, TaskMap *map);
   PDtask* addPDTask(const char* name,
                     double decayTime, double dampingRatio,
                     DefaultTaskMapType type,

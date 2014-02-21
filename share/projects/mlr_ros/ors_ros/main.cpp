@@ -45,7 +45,7 @@ void createScene(ors::KinematicWorld& ors, OpenGL& gl) {
     s->type=ors::meshST;
     s->mesh.readFile("pin1.off");
   }
-  ors.calcShapeFramesFromBodies();
+  //ors.calcShapeFramesFromBodies();
   cout <<ors <<endl;
 
   gl.clear();

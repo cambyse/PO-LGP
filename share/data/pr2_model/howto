@@ -1,0 +1,5 @@
+./urdf2ors.py > z.ors
+sed 's/mesh="pr2_model/mesh="meshes/g' z.ors > pr2-1-org.ors
+ors_editor pr2-1-org.ors
+cp z.ors pr2-2-clean.ors
+

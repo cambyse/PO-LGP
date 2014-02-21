@@ -65,7 +65,7 @@ void drawEnv(void*){
 
 void oneStep(const arr &q,ors::KinematicWorld *C,OdeModule *ode,SwiftInterface *swift){
   C->setJointState(q);
-  C->calcBodyFramesFromJoints();
+  C->calc_fwdPropagateFrames();
 #ifdef MT_ODE
   if(ode){
     ode->exportStateToOde(*C);
@@ -126,7 +126,7 @@ void ActionInterface::loadConfiguration(const char* ors_filename){
   if(C) delete C;
   C = new ors::KinematicWorld();
   *C <<FILE(name);
-  C->calcBodyFramesFromJoints();
+  C->calc_fwdPropagateFrames();
   //C->reconfigureRoot(C->getName("rfoot"));
 
   chdir(cwd);

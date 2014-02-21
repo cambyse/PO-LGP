@@ -228,7 +228,7 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
     case ors::JT_hingeY:
     case ors::JT_hingeZ: {
       //  CHECK(A.p!=B.p,"Something is horribly wrong!");
-      desc = PxRevoluteJointCreate(*mPhysics, actors(jj->ifrom), A, actors(jj->ito), B.getInverse());
+      PxRevoluteJoint* desc = PxRevoluteJointCreate(*mPhysics, actors(jj->ifrom), A, actors(jj->ito), B.getInverse());
       
       if(jj->ats.getValue<arr>("limit")) {
         arr limits = *(jj->ats.getValue<arr>("limit"));
@@ -257,7 +257,7 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
     case ors::JT_transY:
     case ors::JT_transZ:
     {
-      PxPrismaticJoint* desc = PxPrismaticJointCreate(*mPhysics, this->s->actors(jj->ifrom), A, this->s->actors(jj->ito), B.getInverse());
+      PxPrismaticJoint* desc = PxPrismaticJointCreate(*mPhysics, actors(jj->ifrom), A, actors(jj->ito), B.getInverse());
       if(jj->ats.getValue<arr>("limit")) {
         arr limits = *(jj->ats.getValue<arr>("limit"));
         PxJointLimitPair limit(limits(0), limits(1), 0.1f);
@@ -363,8 +363,9 @@ void sPhysXInterface::addBody(ors::Body *b, physx::PxMaterial *mMaterial) {
 
 void PhysXInterface::pullFromPhysx() {
   for_index(i, s->actors) PxTrans2OrsTrans(world.bodies(i)->X, s->actors(i)->getGlobalPose());
-  world.calcShapeFramesFromBodies();
-  world.calcJointsFromBodyFrames();
+  world.calc_fwdPropagateShapeFrames();
+  world.calc_Q_from_BodyFrames();
+  world.calc_q_from_Q();
 }
 
 void PhysXInterface::pushToPhysx() {

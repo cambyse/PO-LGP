@@ -1,0 +1,12 @@
+BASE = ../../..
+
+DEPEND = Motion Core Ors Gui Optim Algo
+GL = 1
+LIBS += -lGL
+include $(BASE)/gofMake/make-generic
+
+
+# OUTPUTLIB = $(BASE)/lib/$(NAME).so
+# SRCSLIB = mobject.cpp pfc.cpp
+# OBJSLIB = $(SRCSLIB:%.cpp=%.o)
+# lib: $(OUTPUTLIB) $(SRCSLIB) $(OBJSLIB)

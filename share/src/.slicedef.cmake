@@ -4,13 +4,11 @@ Core
 devTools
 extern
 Gui
-Hardware
 Infer
 MDP
 Motion
 Optim
 Ors
-Perception
 relational
 System
  )

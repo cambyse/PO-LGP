@@ -17,10 +17,19 @@
     -----------------------------------------------------------------  */
 
 
-void glDrawFloor(float, float, float, float){}
-void glGrabImage(MT::Array<unsigned char>&){}
-void glStandardLight(void*){}
-void glDrawAxes(double){}
+void glDrawFloor(float, float, float, float){ NICO }
+void glGrabImage(MT::Array<unsigned char>&){ NICO }
+void glStandardLight(void*){ NICO }
+void glDrawAxes(double){ NICO }
+void glDrawPointCloud(MT::Array<double>&, MT::Array<double>&) { NICO }
+void glDrawSphere(float) { NICO }
+void glDrawCappedCylinder(float, float) { NICO }
+void glDrawText(char const*, float, float, float){ NICO }
+void glDrawDiamond(float, float, float){ NICO }
+void glDrawDisk(float){ NICO }
+void glDrawBox(float, float, float){ NICO }
+void glDrawCylinder(float, float, bool){ NICO }
+
 //void OpenGL::watchImage(MT::Array<unsigned char> const&, bool, float){}
 
 struct sOpenGL {
