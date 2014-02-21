@@ -12,19 +12,17 @@ endif()
 
 set(CMAKE_CXX_FLAGS "-std=c++0x")
 
-#set the default path for built executables to the "bin" directory
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-#set the default path for built libraries to the "lib" directory
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
-
 
 include_directories( ${MLR_PATH}/share/src )
 
-rosbuild_add_library(tree_controller_lib src/tree_controller.cpp)
+rosbuild_add_executable(amex_controller src/amex_controller.cpp)
 
-target_link_libraries(tree_controller_lib 
+target_link_libraries(amex_controller
 ${MLR_PATH}/share/lib/libMotion.so
 ${MLR_PATH}/share/lib/libOrs.so
 ${MLR_PATH}/share/lib/libCore.so)
 
-rosbuild_gensrv()
+#rosbuild_genmsg()
+#rosbuild_gensrv()
