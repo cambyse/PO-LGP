@@ -41,12 +41,14 @@ struct Item {
   ItemL parentOf;
   uint index;
   virtual ~Item() {};
-  template<class T> T *value();    //access the value
-  template<class T> const T *value() const;
+  template<class T> T *getValue();    ///< query whether the Item is of a certain value, return the value if so
+  template<class T> const T *getValue() const; ///< as above
   void write(std::ostream &os) const;
+
+  //-- virtuals implemented by Item_typed
   virtual bool hasValue() const {NIY};
   virtual void writeValue(std::ostream &os) const {NIY}
-  virtual const std::type_info& valueType() const {NIY}
+  virtual const std::type_info& getValueType() const {NIY}
   virtual bool is_derived_from_RootType() const {NIY}
   virtual Item *newClone() const {NIY}
 };
@@ -55,6 +57,8 @@ stdOutPipe(Item);
 
 struct KeyValueGraph:ItemL {
   struct sKeyValueGraph *s;
+  KeyValueGraph *parentKvg;
+  bool isReference;
   
   KeyValueGraph();
   ~KeyValueGraph();
@@ -62,33 +66,32 @@ struct KeyValueGraph:ItemL {
   KeyValueGraph& operator=(const KeyValueGraph&);
   ItemL& list() { return *this; }
   
+  //-- get values directly
+  template<class T> T* getValue(const char *key);
+  template<class T> bool getValue(T& x, const char *key) { T* y=getValue<T>(key); if(y) { x=*y; return true; } return false; }
+
   //-- get items
   Item* getItem(const char *key);
   Item* getItem(const char *key1, const char *key2);
   Item* operator[](const char *key) { return getItem(key); }
   
-  //-- get values directly
-  template<class T> T* getValue(const char *key);
-  template<class T> bool getValue(T& x, const char *key) { T* y=getValue<T>(key); if(y) { x=*y; return true; } return false; }
-  
   //-- get lists of items
-  KeyValueGraph getItems(const char*);
-  template<class T> KeyValueGraph getTypedItems(const char*);
-  template<class T> MT::Array<T*> getTypedValues(const char*);
-  
-  //-- get lists of values
-  template<class T> MT::Array<T*> getDerivedValues();
+  KeyValueGraph getItems(const char* key);
+  template<class T> KeyValueGraph getTypedItems(const char* key);
   template<class T> ItemL getDerivedItems();
+
+  //-- get lists of values
+  template<class T> MT::Array<T*> getTypedValues(const char* key);
+  template<class T> MT::Array<T*> getDerivedValues();
   
-  Item *append(Item* it) { ItemL::append(it); return it; }
+  //-- adding items
+  Item *append(Item* it) { return ItemL::append(it); }
   template<class T> Item *append(const StringA& keys, const ItemL& parents, T *x);
   template<class T> Item *append(const StringA& keys, T *x) { return append(keys, ItemL(), x); }
   template<class T> Item *append(const char *key, T *x) { return append(ARRAY<MT::String>(MT::String(key)), ItemL(), x); }
   template<class T> Item *append(const char *key1, const char* key2, T *x) {  return append(ARRAY<MT::String>(MT::String(key1), MT::String(key2)), ItemL(), x); }
 
-  Item *add(const uintA& tuple);
-  ItemL& getParents(uint i);
-  
+  //-- I/O
   void sortByDotOrder();
   
   void read(std::istream& is);

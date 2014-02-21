@@ -30,6 +30,10 @@ k={ a, b=0.2 x="hallo"	  # KeyValueGraph with 6 items
   y
   z()=filename.org x }
 
+## referring to items (constants/macros)
+macro = 5
+val=(macro) # *G["val"]->getValue<double>() will return 5
+
 ## any types
 trans=<T t(10 0 0)>  # 'T' is the tag for an arbitrary type (here an ors::Transformation) which was registered somewhere in the code using the registry()
 

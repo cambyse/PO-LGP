@@ -127,7 +127,7 @@ void ors::Body::parseAts(KinematicWorld& G) {
   // shapes that belong to the same body
   item = ats.getItem("mesh");
   if(item){
-    MT::String *filename = item->value<MT::String>();
+    MT::String *filename = item->getValue<MT::String>();
 
     // if mesh is not .obj we only have one shape
     if(!filename->endsWith("obj")) {
@@ -1521,11 +1521,11 @@ void ors::KinematicWorld::read(std::istream& is) {
   ItemL bs = G.getItems("body");
   for_list(i, it, bs) {
     CHECK(it->keys(0)=="body","");
-    CHECK(it->valueType()==typeid(KeyValueGraph), "bodies must have value KeyValueGraph");
+    CHECK(it->getValueType()==typeid(KeyValueGraph), "bodies must have value KeyValueGraph");
     
     Body *b=new Body(*this);
     if(it->keys.N>1) b->name=it->keys(1);
-    b->ats = *it->value<KeyValueGraph>();
+    b->ats = *it->getValue<KeyValueGraph>();
     b->parseAts(*this);
   }
   
@@ -1533,7 +1533,7 @@ void ors::KinematicWorld::read(std::istream& is) {
   for_list(i, it, ss) {
     CHECK(it->keys(0)=="shape","");
     CHECK(it->parents.N<=1,"shapes must have no or one parent");
-    CHECK(it->valueType()==typeid(KeyValueGraph),"shape must have value KeyValueGraph");
+    CHECK(it->getValueType()==typeid(KeyValueGraph),"shape must have value KeyValueGraph");
     
     Shape *s;
     if(it->parents.N==1){
@@ -1544,7 +1544,7 @@ void ors::KinematicWorld::read(std::istream& is) {
       s=new Shape(*this, NoBody);
     }
     if(it->keys.N>1) s->name=it->keys(1);
-    s->ats = *it->value<KeyValueGraph>();
+    s->ats = *it->getValue<KeyValueGraph>();
     s->parseAts();
   }
   
@@ -1553,7 +1553,7 @@ void ors::KinematicWorld::read(std::istream& is) {
   for_list(i, it, js) {
     CHECK(it->keys(0)=="joint","");
     CHECK(it->parents.N==2,"joints must have two parents");
-    CHECK(it->valueType()==typeid(KeyValueGraph),"joints must have value KeyValueGraph");
+    CHECK(it->getValueType()==typeid(KeyValueGraph),"joints must have value KeyValueGraph");
     
     Body *from=listFindByName(bodies, it->parents(0)->keys(1));
     Body *to=listFindByName(bodies, it->parents(1)->keys(1));
@@ -1561,7 +1561,7 @@ void ors::KinematicWorld::read(std::istream& is) {
     CHECK(to,"JOINT: to '" <<it->parents(1)->keys(1) <<"' does not exist ["<<*it <<"]");
     Joint *j=new Joint(*this, from, to);
     if(it->keys.N>1) j->name=it->keys(1);
-    j->ats = *it->value<KeyValueGraph>();
+    j->ats = *it->getValue<KeyValueGraph>();
     j->parseAts();
 
     //if the joint is coupled to another:

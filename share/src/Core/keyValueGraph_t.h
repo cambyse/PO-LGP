@@ -50,7 +50,7 @@ struct Item_typed:Item {
     else os <<*value;
   }
   
-  virtual const std::type_info& valueType() const {
+  virtual const std::type_info& getValueType() const {
     return typeid(T);
   }
   
@@ -61,48 +61,59 @@ struct Item_typed:Item {
   virtual Item *newClone() const { return new Item_typed<T>(keys, parents, value); }
 };
 
-template<class T> T *Item::value() {
+template<class T> T *Item::getValue() {
   Item_typed<T>* typed = dynamic_cast<Item_typed<T>*>(this);
   if(!typed) {
-    MT_MSG("can't cast type '" <<valueType().name() <<"' to type '" <<typeid(T).name() <<"' -- returning NULL");
-    return NULL;
+    if(getValueType() == typeid(KeyValueGraph)){ //try to get the item from the key value graph
+      const KeyValueGraph *kvg = getValue<KeyValueGraph>();
+      if(kvg->N==1){ //only if it has size 1??
+        typed = dynamic_cast<Item_typed<T>*>(kvg->elem(0));
+      }
+    }
+    if(!typed){
+      MT_MSG("can't cast type '" <<getValueType().name() <<"' to type '" <<typeid(T).name() <<"' -- returning NULL");
+      return NULL;
+    }
   }
   return typed->value;
 }
 
-template<class T> const T *Item::value() const {
+template<class T> const T *Item::getValue() const {
   const Item_typed<T>* typed = dynamic_cast<const Item_typed<T>*>(this);
   if(!typed) {
-    MT_MSG("can't cast type '" <<valueType().name() <<"' to type '" <<typeid(T).name() <<"' -- returning reference-to-NULL");
+    if(getValueType() == typeid(KeyValueGraph)){ //try to get the item from the key value graph
+      const KeyValueGraph *kvg = getValue<KeyValueGraph>();
+      if(kvg->N==1){ //only if it has size 1??
+        typed = dynamic_cast<const Item_typed<T>*>(kvg->elem(0));
+      }
+    }
+    MT_MSG("can't cast type '" <<getValueType().name() <<"' to type '" <<typeid(T).name() <<"' -- returning reference-to-NULL");
     return NULL;
   }
   return typed->value;
 }
-
 
 template<class T> T* KeyValueGraph::getValue(const char *key) {
   Item *it = getItem(key);
   if(!it) return NULL;
-  T *x=it->value<T>();
-  if(!x) MT_MSG("type conversion of item '" <<*it <<"' to '" <<typeid(T).name() <<"' failed");
-  return x;
+  return it->getValue<T>();
 }
 
 template<class T> MT::Array<T*> KeyValueGraph::getTypedValues(const char* key) {
   MT::Array<T*> ret;
-  for_list_(Item, it, (*this)) if(it->valueType()==typeid(T)) {
-    if(!key) ret.append(it->value<T>());
+  for_list_(Item, it, (*this)) if(it->getValueType()==typeid(T)) {
+    if(!key) ret.append(it->getValue<T>());
     else for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key) {
-          ret.append(it->value<T>());
-          break;
-        }
+      ret.append(it->getValue<T>());
+      break;
+    }
   }
   return ret;
 }
 
 template<class T> KeyValueGraph KeyValueGraph::getTypedItems(const char* key) {
   KeyValueGraph ret;
-  for_list_(Item, it, (*this)) if(it->valueType()==typeid(T)) {
+  for_list_(Item, it, (*this)) if(it->getValueType()==typeid(T)) {
     if(!key) ret.append(it);
     else for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key) {
           ret.append(it);
