@@ -65,8 +65,6 @@ int MAIN(int argc,char** argv){
 
   uint double_size=sizeof(double);
   uint long_int_size=sizeof(long);
-  CHECK(double_size==8,"oh oh");
-  CHECK(long_int_size==4,"oh oh");
   cout <<"double size: " <<double_size <<"\nlong int size: " <<long_int_size <<endl;
   
   testString();
