@@ -1,3 +1,3 @@
-set(SOURCES ./racer.h
-./main.cpp
-./racer.cpp)
+set(SOURCES ./main.cpp
+./racer.cpp
+./racer.h)
