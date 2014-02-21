@@ -156,13 +156,13 @@ void sInsideOut::update(bool fromWithinCallback){
   uint i,j,k;
   GtkTreeIter i_it, j_it;
   //engine().readAccess(NULL);
-  for_list_(Item, it, (*engine().system)) {
+  for(Item *it: (*engine().system)) {
     i_it = appendToStore(procStore, it, it_COUNT, NULL);
-//    for_list(j, v, p->s->listensTo) {
+//    for_list(Type,  v,  p->s->listensTo) {
 //      j_it = appendToStore(procStore, v, j, &i_it);
-//      for_list(k, f, v->s->fields) appendToStore(procStore, f, k, &j_it);
+//      for_list(Type,  f,  v->s->fields) appendToStore(procStore, f, k, &j_it);
 //    }
-//    for_list(j, pa, p->s->dependsOn) appendToStore(procStore, pa, j, &i_it);
+//    for_list(Type,  pa,  p->s->dependsOn) appendToStore(procStore, pa, j, &i_it);
   }
   //engine().deAccess(NULL);
   if(!fromWithinCallback) gtkUnlock();
@@ -273,7 +273,7 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
 //      if(false && vis.N>1){ //multiple choices -> open menu
 //	ViewRegistration *vi;  uint i;
 //	StringL choices;
-//	for_list(i, vi, vis) choices.append(new MT::String(vi->userType));
+//	for_list(Type,  vi,  vis) choices.append(new MT::String(vi->userType));
 //	choice = gtkPopupMenuChoice(choices);
 //	listDelete(choices);
 //      }
@@ -301,7 +301,7 @@ extern "C" G_MODULE_EXPORT void on_row_activated(GtkTreeView* caller){
 //      if(false && vis.N>1){ //multiple choices -> menu
 //	ViewRegistration *vi;  uint i;
 //	StringL choices;
-//	for_list(i, vi, vis) choices.append(new MT::String(vi->userType));
+//	for_list(Type,  vi,  vis) choices.append(new MT::String(vi->userType));
 //	choice = gtkPopupMenuChoice(choices);
 //	listDelete(choices);
 //      }

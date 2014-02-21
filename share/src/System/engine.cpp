@@ -97,7 +97,7 @@ int Variable::writeAccess(Module *m) {
   int r = revision.incrementValue();
   revision_time = MT::clockTime();
   engine().acc->logWriteAccess(this, p);
-  for_list_(Module, l, listeners) if(l!=m) engine().step(*l, true);
+  for(Module *l: listeners) if(l!=m) engine().step(*l, true);
   return r;
 }
 
@@ -209,9 +209,9 @@ Module* System::addModule(const char *dclName, const char *name, ModuleThread::S
     MT_MSG("could not find Decl_Module " <<dclName);
     return NULL;
   }
-  Module *m = (Module*)modReg->value<Type>()->newInstance();
+  Module *m = (Module*)modReg->getValue<Type>()->newInstance();
   currentlyCreating = NULL;
-  for_list_(Access, a, m->accesses) a->module = m;
+  for(Access *a: m->accesses) a->module = m;
   mts.append(m);
 
   m->thread = new ModuleThread(m, name?name:dclName);
@@ -223,14 +223,14 @@ Module* System::addModule(const char *dclName, const char *name, ModuleThread::S
 Module* System::addModule(const char *dclName, const char *name, const uintA& accIdxs, ModuleThread::StepMode mode, double beat){
   Module *m = addModule(dclName, name, mode, beat);
   if(accIdxs.N != m->accesses.N) HALT("given and needed #acc mismatch");
-  for_list_(Access, a, m->accesses) a->var = vars(accIdxs(a_COUNT));
+  for_list(Access, a, m->accesses) a->var = vars(accIdxs(a_COUNT));
   return m;
 }
 
 Module* System::addModule(const char *dclName, const char *name, const StringA& accRenamings, ModuleThread::StepMode mode, double beat){
   Module *m = addModule(dclName, name, mode, beat);
   if(accRenamings.N != m->accesses.N) HALT("given and needed #acc mismatch");
-  for_list_(Access, a, m->accesses) a->name = accRenamings(a_COUNT);
+  for_list(Access, a, m->accesses) a->name = accRenamings(a_COUNT);
   return m;
 }
 
@@ -251,10 +251,10 @@ void System::connect(){
   //first collect all accesses
   AccessL accs;
 
-  { for_list_(Module, m, mts){ for_list_(Access, a, m->accesses) accs.append(a); } }
-  { for_list_(Access, a, accesses) accs.append(a); }
+  { for(Module *m: mts){ for(Access *a: m->accesses) accs.append(a); } }
+  { for(Access *a: accesses) accs.append(a); }
 
-  for_list_(Access, a, accs){
+  for(Access *a: accs){
     Module *m=a->module;
     Variable *v = NULL;
     if(!a->var) v = connect(*a, a->name); //access is not connected yet
@@ -280,10 +280,10 @@ KeyValueGraph System::graph() const{
   KeyValueGraph g;
   g.append<bool>("SystemModule", name, NULL);
   std::map<VariableAccess*, Item*> vit;
-  for_list_(Variable, v, vars) vit[v] = g.append("Variable", v->name, v);
-  for_list_(Module, m, mts){
+  for(Variable *v: vars) vit[v] = g.append("Variable", v->name, v);
+  for(Module *m: mts){
     Item *mit = g.append("Module", m->name, m);
-    for_list_(Access, a, m->accesses){
+    for(Access *a: m->accesses){
       Item *ait = g.append("Access", a->name, a);
       ait->parents.append(mit);
       if(a->var) ait->parents.append(vit[a->var]);
@@ -334,7 +334,7 @@ void Engine::open(System& S){
 
 //  //create pre-defined variables
 //  ItemL variables = S.system.getTypedItems<SystemDescription::VariableEntry>("Variable");
-//  for_list_(Item, varIt, variables){
+//  for(Item *varIt: variables){
 //    SystemDescription::VariableEntry *v = varIt->value<SystemDescription::VariableEntry>();
 //    cout <<"creating " <<varIt->keys(1) <<": " <<*(v->type) <<endl;
 //    v->var = new Variable(varIt->keys(1));
@@ -343,7 +343,7 @@ void Engine::open(System& S){
 
 //  //create modules
 //  ItemL modules = S.system.getTypedItems<SystemDescription::ModuleEntry>("Module");
-//  for_list_(Item, modIt, modules){
+//  for(Item *modIt: modules){
 //    SystemDescription::ModuleEntry *m = modIt->value<SystemDescription::ModuleEntry>();
 //    cout <<"creating " <<modIt->keys(1) <<": " <<*(m->type) <<endl;
 //    if(mode==threaded){
@@ -359,7 +359,7 @@ void Engine::open(System& S){
 //    //accesses have automatically been created as member of a module,
 //    //need to link them now
 //    CHECK(m->mod->accesses.N==modIt->parentOf.N,"dammit");
-//    for_list_(Item, accIt, modIt->parentOf){
+//    for(Item *accIt: modIt->parentOf){
 //      Access *a = m->mod->accesses(accIt_COUNT);
 //      //SystemDescription::AccessEntry *acc = accIt->value<SystemDescription::AccessEntry>();
 //      //CHECK(acc->type == a->type,"");
@@ -379,7 +379,7 @@ void Engine::open(System& S){
 
   //open modules
   if(mode==threaded){
-    for_list_(Module, m, S.mts){
+    for(Module *m: S.mts){
       m->thread->threadOpen();
       //start looping if in loop mode:
       switch(m->thread->mode){
@@ -391,13 +391,13 @@ void Engine::open(System& S){
   }
 
   if(mode==serial){
-    for_list_(Module, m, S.mts) m->open();
+    for(Module *m: S.mts) m->open();
   }
 }
 
 void Engine::step(System &S){
   if(&S) system=&S;
-  for_list_(Module, m, S.mts) step(*m);
+  for(Module *m: S.mts) step(*m);
 }
 
 void Engine::step(Module &m, bool threadedOnly){
@@ -412,13 +412,13 @@ void Engine::test(System& S){
   CHECK(mode!=threaded,"");
   mode=serial;
   open(S);
-  for_list_(Module, m, S.mts) m->test();
+  for(Module *m: S.mts) m->test();
   close(S);
 }
 
 void Engine::close(System& S){
   if(&S) system=&S;
-  for_list_(Module, m, system->mts){
+  for(Module *m: system->mts){
     if(mode==threaded) m->thread->threadClose();
     if(mode==serial)   m->close();
   }
@@ -595,10 +595,8 @@ void EventController::writeEventList(ostream& os, bool blocked, uint max, bool c
     }
   }
   eventsLock.unlock();
-  uint i;
-  EventRecord *e;
-  for_list(i,e,copy){
-    if(!i && max && copy.N>max){ i=copy.N-max; e=copy(i); }
+  for_list(EventRecord, e, copy){
+    if(!e_COUNT && max && copy.N>max){ e_COUNT=copy.N-max; e=copy(e_COUNT); }
     switch(e->type){
     case EventRecord::read: os <<'r';  break;
     case EventRecord::write: os <<'w';  break;

@@ -99,9 +99,9 @@ struct System:Module{
 
   System(const char* name=NULL):Module(name){}
 
-  virtual void step(){  for_list_(Module, m, mts) m->step();  }
-  virtual void open(){  for_list_(Module, m, mts) m->open();  }
-  virtual void close(){  for_list_(Module, m, mts) m->close();  }
+  virtual void step(){  for(Module *m: mts) m->step();  }
+  virtual void open(){  for(Module *m: mts) m->open();  }
+  virtual void close(){  for(Module *m: mts) m->close();  }
 
   //-- add variables
   Variable* addVariable(Access& acc){
@@ -132,7 +132,7 @@ struct System:Module{
   template<class T> T* addModule(const char *name=NULL, ModuleThread::StepMode mode=ModuleThread::listenFirst, double beat=0.){
     T *m = new T;
     currentlyCreating=NULL;
-    for_list_(Access, a, m->accesses) a->module = m;
+    for(Access *a: m->accesses) a->module = m;
     mts.append(m);
 
     m->thread = new ModuleThread(m, name);
@@ -145,7 +145,7 @@ struct System:Module{
   template<class T> T* addModule(const char *name, const StringA& accessConnectRules, ModuleThread::StepMode mode=ModuleThread::listenFirst, double beat=0.){
     T *m = addModule<T>(name, mode, beat);
     if(accessConnectRules.N != m->accesses.N) HALT("given and needed #acc in accessConnectRules cmismatch");
-    for_list_(Access, a, m->accesses) connect(*a, accessConnectRules(a_COUNT));
+    for_list(Access, a, m->accesses) connect(*a, accessConnectRules(a_COUNT));
     return m;
   }
 

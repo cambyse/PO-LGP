@@ -59,7 +59,7 @@ struct Type:RootType {
     os <<"Type '" <<typeId().name() <<"' ";
     if(parents.N) {
       cout <<"parents=[";
-      for_list_(Type, p, parents) cout <<' ' <<p->typeId().name();
+      for(Type *p: parents) cout <<' ' <<p->typeId().name();
       cout <<" ]";
     }
   }
@@ -80,7 +80,7 @@ typedef MT::Array<Type*> TypeInfoL;
 //-- query existing types
 inline Item *reg_findType(const char* key) {
   ItemL types = registry().getDerivedItems<Type>();
-  for_list_(Item, ti, types) {
+  for(Item *ti: types) {
     if(MT::String(ti->getValue<Type>()->typeId().name())==key) return ti;
     for(uint i=0; i<ti->keys.N; i++) if(ti->keys(i)==key) return ti;
   }
@@ -90,7 +90,7 @@ inline Item *reg_findType(const char* key) {
 template<class T>
 Item *reg_findType() {
   ItemL types = registry().getDerivedItems<Type>();
-  for_list_(Item, ti, types) {
+  for(Item *ti: types) {
     if(ti->getValue<Type>()->typeId()==typeid(T)) return ti;
   }
   return NULL;

@@ -157,17 +157,17 @@ Parameter::Parameter() {
 
 void open(const ModuleThreadL& P) {
   ModuleThread *p; uint i;
-  for_list(i, p, P) p->threadOpen();
+  for_list(Type,  p,  P) p->threadOpen();
 }
 
 void step(const ModuleThreadL& P) {
   ModuleThread *p; uint i;
-  for_list(i, p, P) p->threadStep();
+  for_list(Type,  p,  P) p->threadStep();
 }
 
 void loop(const ModuleThreadL& P) {
   ModuleThread *p; uint i;
-  for_list(i, p, P) p->threadLoop();
+  for_list(Type,  p,  P) p->threadLoop();
 }
 
 /**
@@ -180,7 +180,7 @@ void loop(const ModuleThreadL& P) {
  */
 void stepInSequence(const ModuleThreadL& P) {
   //ModuleThread *p; uint i;
-  NIY//for_list(i, p, P) p->step();
+  NIY//for_list(Type,  p,  P) p->step();
 }
 
 /**
@@ -191,7 +191,7 @@ void stepInSequence(const ModuleThreadL& P) {
  */
 void stepInSequenceThreaded(const ModuleThreadL& P) {
   ModuleThread *p; uint i;
-  for_list(i, p, P) {
+  for_list(Type,  p,  P) {
     p->threadStep();
     p->waitForIdle();
   }
@@ -199,7 +199,7 @@ void stepInSequenceThreaded(const ModuleThreadL& P) {
 
 void loopWithBeat(const ModuleThreadL& P, double sec) {
   ModuleThread *p; uint i;
-  for_list(i, p, P) p->threadLoopWithBeat(sec);
+  for_list(Type,  p,  P) p->threadLoopWithBeat(sec);
 }
 
 
@@ -220,7 +220,7 @@ Biros::~Biros(){
 ModuleThread *Biros::getProcessFromPID() {
   pid_t tid = syscall(SYS_gettid);
   uint i;  ModuleThread *p;
-  for_list(i, p, processes) {
+  for_list(Type,  p,  processes) {
     if(p->tid==tid) break;
   }
   if(i>=processes.N) return NULL;
@@ -238,34 +238,34 @@ void Biros::dump() {
   Parameter *par;
   FieldRegistration *f;
   readAccess(NULL);
-  for_list(i, v, variables) {
+  for_list(Type,  v,  variables) {
     cout <<"Variable " <<v->name <<" {\n  ";
     writeInfo(cout, *v, false, ' ');
-    for_list(j, f, v->s->fields) {
+    for_list(Type,  f,  v->s->fields) {
       cout <<"\n  Field " <<j <<' ' <<f->name <<' ';
       writeInfo(cout, *f, false, ' ');
     }
     cout <<"\n}" <<endl;
   }
   cout <<"\n +++ PROCESSES +++" <<endl;
-  for_list(i, p, processes) {
+  for_list(Type,  p,  processes) {
     cout <<"ModuleThread " <<p->name <<" {\n  ";
     writeInfo(cout, *p, false, ' ');
     cout <<"\n}" <<endl;
     /*<<" ("; //process doesn't contain list of variables anymore
-    for_list(j, v, p->V){
+    for_list(Type,  v,  p->V){
       if(j) cout <<',';
       cout <<v->id <<'_' <<v->name;
     }
     cout <<") {" <<endl;*/
   }
   cout <<"\n +++ PARAMETERS +++" <<endl;
-  for_list(i, par, parameters) {
+  for_list(Type,  par,  parameters) {
     cout <<"Parameter " <<par->name <<" {\n  ";
     writeInfo(cout, *par, false, ' ');
     cout <<"\n  accessed by=";
     ModuleThread *m;
-    for_list(j, m, par->dependers) {
+    for_list(Type,  m,  par->dependers) {
       if(j) cout <<',';
       cout <<' ' <<(m?m->name:STRING("NULL"));
     }

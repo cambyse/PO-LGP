@@ -1057,12 +1057,11 @@ template<class T> void MT::Array<T>::setZero(byte zero) {
 
 /// concatenate 2D matrices (or vectors) column-wise
 template<class T> MT::Array<T> catCol(const MT::Array<MT::Array<T>*>& X) {
-  uint i, d0=X(0)->d0, d1=0;
-  MT::Array<T>* x;
-  for_list(i, x, X) { CHECK((x->nd==2 || x->nd==1) && x->d0==d0, ""); d1+=x->nd==2?x->d1:1; }
+  uint d0=X(0)->d0, d1=0;
+  for_list(MT::Array<T>,  x,  X) { CHECK((x->nd==2 || x->nd==1) && x->d0==d0, ""); d1+=x->nd==2?x->d1:1; }
   MT::Array<T> z(d0, d1);
   d1=0;
-  for_list(i, x, X) { z.setMatrixBlock(*x, 0, d1); d1+=x->nd==2?x->d1:1; }
+  for(MT::Array<T> *x:  X) { z.setMatrixBlock(*x, 0, d1); d1+=x->nd==2?x->d1:1; }
   return z;
 }
 
@@ -3149,25 +3148,19 @@ template<class T> void listDelete(MT::Array<T*>& L) {
 }
 
 template<class T> T* listFindByName(const MT::Array<T*>& L, const char* name) {
-  uint i;
-  T *e;
-  for_list(i, e, L) if(e->name==name) return e;
+  for_list(T,  e,  L) if(e->name==name) return e;
   //std::cerr <<"\n*** name '" <<name <<"' not in this list!" <<std::endl;
   return NULL;
 }
 
 template<class T> T* listFindByType(const MT::Array<T*>& L, const char* type) {
-  uint i;
-  T *e;
-  for_list(i, e, L) if(!strcmp(e->type, type)) return e;
+  for_list(T,  e,  L) if(!strcmp(e->type, type)) return e;
   //std::cerr <<"type '" <<type <<"' not in this list!" <<std::endl;
   return NULL;
 }
 
 template<class T> T* listFindValue(const MT::Array<T*>& L, const T& x) {
-  uint i;
-  T *e;
-  for_list(i, e, L) if(*e==x) return e;
+  for_list(T,  e,  L) if(*e==x) return e;
   //std::cerr <<"value '" <<x <<"' not in this list!" <<std::endl;
   return NULL;
 }
@@ -3189,9 +3182,7 @@ template<class vert, class edge> void graphDelete(MT::Array<vert*>& V, MT::Array
 }
 
 template<class vert, class edge> edge* graphGetEdge(vert *from, vert *to) {
-  edge *e;
-  uint i;
-  for_list(i, e, from->outLinks) if(e->from==to) return e;
+  for_list(edge,  e,  from->outLinks) if(e->from==to) return e;
   return NULL;
 }
 
@@ -3277,7 +3268,6 @@ template<class vert, class edge> void graphRandomFixedDegree(MT::Array<vert*>& V
   CHECK((N*d)%2==0, "");
   
   uint i, j;
-  edge *e;
   for(i=0; i<N; i++) V.append(new vert);
   
   bool ready = false;
@@ -3318,7 +3308,7 @@ template<class vert, class edge> void graphRandomFixedDegree(MT::Array<vert*>& V
       // If G is d-regular, output, otherwise return to Step 1.
       uintA degrees(N);
       degrees.setZero();
-      for_list(j, e, E) {
+      for_list(edge,  e,  E) {
         degrees(e->ifrom)++;
         degrees(e->ito)  ++;
       }
@@ -3354,14 +3344,11 @@ template<class vert, class edge> void graphLayered(MT::Array<vert*>& V, MT::Arra
 }
 
 template<class vert, class edge> void graphMakeLists(MT::Array<vert*>& V, MT::Array<edge*>& E) {
-  vert *v;
-  edge *e;
-  uint i;
-  for_list(i, v, V) {
+  for_list(vert,  v,  V) {
     v->outLinks.clear();
     v-> inLinks.clear();
   }
-  for_list(i, e, E) {
+  for_list(edge,  e,  E) {
     e->from = V(e->ifrom);
     e->to   = V(e->ito);
     e->from->outLinks.append(e);
@@ -3370,11 +3357,8 @@ template<class vert, class edge> void graphMakeLists(MT::Array<vert*>& V, MT::Ar
 }
 
 template<class vert, class edge> void graphConnectUndirected(MT::Array<vert*>& V, MT::Array<edge*>& E) {
-  vert *v;
-  edge *e;
-  uint i;
-  for_list(i, v, V) v->edges.clear();
-  for_list(i, e, E) {
+  for_list(vert,  v,  V) v->edges.clear();
+  for_list(edge,  e,  E) {
     e->from = V(e->ifrom);
     e->to   = V(e->ito);
     e->from->edges.append(e);
@@ -3414,30 +3398,24 @@ template<class vert, class edge> edge *del_edge(edge *e, MT::Array<vert*>& V, MT
 
 
 template<class vert, class edge> void graphWriteDirected(std::ostream& os, const MT::Array<vert*>& V, const MT::Array<edge*>& E) {
-  vert *v;
-  edge *e;
-  uint i, j;
-  for_list(j, v, V) {
-    for_list(i, e, v->inLinks) os <<e->ifrom <<' ';
+  for_list(vert,  v,  V) {
+    for_list(edge,  e,  v->inLinks) os <<e->ifrom <<' ';
     os <<"-> ";
-    os <<j <<" -> ";
-    for_list(i, e, v->outLinks) os <<e->ito <<' ';
+    os <<v_COUNT <<" -> ";
+    for_list(edge,  e2,  v->outLinks) os <<e2->ito <<' ';
     os <<'\n';
   }
-  for_list(j, e, E) os <<e->ifrom <<"->" <<e->ito <<'\n';
-  //for_list(j, e, E) os <<e->from->name <<"->" <<e->to->name <<'\n';
+  for_list(edge,  e,  E) os <<e->ifrom <<"->" <<e->ito <<'\n';
+  //for_list(Type,  e,  E) os <<e->from->name <<"->" <<e->to->name <<'\n';
 }
 
 template<class vert, class edge> void graphWriteUndirected(std::ostream& os, const MT::Array<vert*>& V, const MT::Array<edge*>& E) {
-  vert *v;
-  edge *e;
-  uint i, j;
-  for_list(i, v, V) {
-    os <<i <<": ";
-    for_list(j, e, v->edges) if(e->ifrom==i) os <<e->ito <<' '; else os <<e->ifrom <<' ';
+  for_list(vert,  v,  V) {
+    os <<v_COUNT <<": ";
+    for_list(edge,  e,  v->edges) if(e->ifrom==v_COUNT) os <<e->ito <<' '; else os <<e->ifrom <<' ';
     os <<'\n';
   }
-  for_list(j, e, E) os <<e->ifrom <<"-" <<e->ito <<'\n';
+  for_list(edge,  e,  E) os <<e->ifrom <<"-" <<e->ito <<'\n';
 }
 
 template<class vert, class edge> bool graphTopsort(MT::Array<vert*>& V, MT::Array<edge*>& E) {
@@ -3447,11 +3425,8 @@ template<class vert, class edge> bool graphTopsort(MT::Array<vert*>& V, MT::Arra
   intA inputs(V.N);
   
   uint count=0;
-  vert *v;
-  edge *e;
-  uint i;
   
-  for_list(i, v, V) {
+  for_list(vert,  v,  V) {
     inputs(v->index)=v->inLinks.N;
     if(!inputs(v->index)) noInputs.append(v);
   }
@@ -3460,7 +3435,7 @@ template<class vert, class edge> bool graphTopsort(MT::Array<vert*>& V, MT::Arra
     v=noInputs.popFirst();
     newIndex(v->index)=count;
     count++;
-    for_list(i, e, v->outLinks) {
+    for_list(edge,  e,  v->outLinks) {
       inputs(e->to->index)--;
       if(!inputs(e->to->index)) noInputs.append(e->to);
     }
@@ -3470,11 +3445,11 @@ template<class vert, class edge> bool graphTopsort(MT::Array<vert*>& V, MT::Arra
   
   //success!
   //give each edge and vert new index:
-  for_list(i, e, E) {
+  for_list(edge,  e,  E) {
     e->ifrom=newIndex(e->ifrom);
     e->ito  =newIndex(e->ito);
   }
-  for_list(i, v, V) {
+  for(vert *v:  V) {
     v->index=newIndex(v->index);
   }
   //permute vertex array:
@@ -3492,9 +3467,8 @@ void graphRevertEdge(MT::Array<vert*>& V, MT::Array<edge*>& E, edge *e) {
 
 template<class vert, class edge, class CompareOp>
 void maximumSpanningTree(MT::Array<vert*>& V, MT::Array<edge*>& E, const CompareOp& cmp) {
-  uint i;
   vert *n;
-  edge *e, *m;  uint ei;
+  edge *m;
   boolA nodeAdded(V.N);  nodeAdded=false;
   boolA edgeAdded(E.N);  edgeAdded=false;
   uintA addedNodes;
@@ -3505,10 +3479,10 @@ void maximumSpanningTree(MT::Array<vert*>& V, MT::Array<edge*>& E, const Compare
   addedNodes.append(n->index); nodeAdded(n->index)=true;
   while(addedNodes.N<V.N) {
     m=0;
-    for(i=0; i<addedNodes.N; i++) {
+    for(uint i=0; i<addedNodes.N; i++) {
       n=V(addedNodes(i));
-      for_list(ei, e, n->outLinks) if(!nodeAdded(e->to  ->index) && (!m || cmp(e, m))) m=e;
-      for_list(ei, e, n->inLinks) if(!nodeAdded(e->from->index) && (!m || cmp(e, m))) m=e;
+      for_list(edge,  e,  n->outLinks) if(!nodeAdded(e->to  ->index) && (!m || cmp(e, m))) m=e;
+      for(edge *e: n->inLinks) if(!nodeAdded(e->from->index) && (!m || cmp(e, m))) m=e;
     }
     CHECK(m, "graph is not connected!");
     edgeAdded(m->index)=true;
@@ -3517,14 +3491,12 @@ void maximumSpanningTree(MT::Array<vert*>& V, MT::Array<edge*>& E, const Compare
     nodeAdded(m->to->index)=true;
     addedNodes.append(m->to->index);
   }
-  for_list_rev(ei, e, E) if(!edgeAdded(ei)) del_edge(e, V, E, true);
+  for_list_rev(edge, e, E) if(!edgeAdded(e_COUNT)) del_edge(e, V, E, true);
   graphMakeLists(V, E);
 }
 
 /*template<class T> MT::Array<T> get(const AnyList& L, const char* tag){
-  uint i;
-  Any *a;
-  for_list(i, a, L) if(!strcmp(a->tag, tag)) break;
+  for_list(Any,  a,  L) if(!strcmp(a->tag, tag)) break;
   if(i==L.N) HALT("tag '" <<tag <<"' is not in this AnyList");
   if(!a->n) return MT::Array<T>((T*)a->p, 1);
   return MT::Array<T>((T*)a->p, a->n);

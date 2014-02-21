@@ -27,7 +27,7 @@ void SystemDescription::addModule(const char *dclName, const char *name, const I
   m->beat = beat;
   Item* modIt = system.append<ModuleEntry>(STRINGS("Module", (name?name:modReg->keys(1))), m);
 
-  for_list_(Item, accReg, modReg->parentOf){
+  for(Item *accReg: modReg->parentOf){
     AccessEntry *a = new AccessEntry;
     a->reg = accReg;
     a->type = accReg->value<Type>();
@@ -46,11 +46,11 @@ void SystemDescription::addModule(const char *dclName, const char *name, const I
 void SystemDescription::complete(){
 #if 0
   ItemL modules = system.getTypedItems<ModuleEntry>("Module");
-  for_list_(Item, it, modules){
+  for(Item *it: modules){
     ModuleEntry *m=it->value<ModuleEntry>();
     Item *reg=m->reg;
     if(!m->accs.N && reg->parentOf.N){ //declaration has children but description no accesses...
-      for_list_(Item, acc, reg->parentOf){
+      for(Item *acc: reg->parentOf){
         CHECK(acc->keys(0)=="Decl_Access","");
         Item* varIt = getVariableEntry(acc->keys(1), *acc->value<Type>());
         VariableEntry *v=NULL;
@@ -71,7 +71,7 @@ void SystemDescription::complete(){
   }
 #else
   ItemL accesses = system.getTypedItems<AccessEntry>("Access");
-  for_list_(Item, accIt, accesses){
+  for(Item *accIt: accesses){
     AccessEntry *a=accIt->value<AccessEntry>();
     CHECK(accIt->parents.N==1 || accIt->parents.N==2,"");
     if(accIt->parents.N==1){ //access has no variable yet...
@@ -100,7 +100,7 @@ Item* SystemDescription::getVariableEntry(const Access& acc){
 
 Item* SystemDescription::getVariableEntry(const char* name, const Type& type){
   ItemL variables = system.getTypedItems<VariableEntry>("Variable");
-  for_list_(Item, it, variables){
+  for(Item *it: variables){
     VariableEntry *v = it->value<VariableEntry>();
     if(it->keys(1)==name){
       if(v->type->typeId()!=type.typeId())
@@ -140,7 +140,7 @@ void Engine::create(SystemDescription& S){
 
   //create pre-defined variables
   ItemL variables = S.system.getTypedItems<SystemDescription::VariableEntry>("Variable");
-  for_list_(Item, varIt, variables){
+  for(Item *varIt: variables){
     SystemDescription::VariableEntry *v = varIt->value<SystemDescription::VariableEntry>();
     cout <<"creating " <<varIt->keys(1) <<": " <<*(v->type) <<endl;
     v->var = new Variable(varIt->keys(1));
@@ -149,7 +149,7 @@ void Engine::create(SystemDescription& S){
 
   //create modules
   ItemL modules = S.system.getTypedItems<SystemDescription::ModuleEntry>("Module");
-  for_list_(Item, modIt, modules){
+  for(Item *modIt: modules){
     SystemDescription::ModuleEntry *m = modIt->value<SystemDescription::ModuleEntry>();
     cout <<"creating " <<modIt->keys(1) <<": " <<*(m->type) <<endl;
     if(mode==threaded){
@@ -165,7 +165,7 @@ void Engine::create(SystemDescription& S){
     //accesses have automatically been created as member of a module,
     //need to link them now
     CHECK(m->mod->accesses.N==modIt->parentOf.N,"dammit");
-    for_list_(Item, accIt, modIt->parentOf){
+    for(Item *accIt: modIt->parentOf){
       Access *a = m->mod->accesses(accIt_COUNT);
       //SystemDescription::AccessEntry *acc = accIt->value<SystemDescription::AccessEntry>();
       //CHECK(acc->type == a->type,"");
@@ -185,7 +185,7 @@ void Engine::create(SystemDescription& S){
 
   //start modules modules
   if(mode==threaded){
-    for_list_(Item, modIt, modules){
+    for(Item *modIt: modules){
       SystemDescription::ModuleEntry *m = modIt->value<SystemDescription::ModuleEntry>();
       switch(m->mode){
       case SystemDescription::loopWithBeat:  m->mod->proc->threadLoopWithBeat(m->beat);  break;
@@ -206,7 +206,7 @@ void Engine::step(Module &m){
 
 void Engine::step(SystemDescription& S){
   ModuleEntryL modules = S.system.getTypedValues<SystemDescription::ModuleEntry>("Module");
-  for_list_(SystemDescription::ModuleEntry, m, modules) step(*m->mod);
+  for(SystemDescription::ModuleEntry *m: modules) step(*m->mod);
 }
 
 void Engine::test(SystemDescription& S){
@@ -214,7 +214,7 @@ void Engine::test(SystemDescription& S){
   mode=serial;
   create(S);
   ModuleEntryL modules = S.system.getTypedValues<SystemDescription::ModuleEntry>("Module");
-  for_list_(SystemDescription::ModuleEntry, m, modules) m->mod->test();
+  for(SystemDescription::ModuleEntry *m: modules) m->mod->test();
 }
 
 void Engine::enableAccessLog(){
@@ -390,7 +390,7 @@ void EventController::writeEventList(ostream& os, bool blocked, uint max, bool c
   eventsLock.unlock();
   uint i;
   Event *e;
-  for_list(i,e,copy){
+  for_list(Type, e, copy){
     if(!i && max && copy.N>max){ i=copy.N-max; e=copy(i); }
     switch(e->type){
     case Event::read: os <<'r';  break;

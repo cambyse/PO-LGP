@@ -158,7 +158,7 @@ void ors::Body::write(std::ostream& os) const {
   if(mass) os <<"mass=" <<mass <<' ';
   if(type!=dynamicBT) os <<"type=" <<(int)type <<' ';
 //  uint i; Item *a;
-//  for_list(i, a, ats)
+//  for_list(Type,  a,  ats)
 //      if(a->keys(0)!="X" && a->keys(0)!="pose") os <<*a <<' ';
 }
 
@@ -286,8 +286,7 @@ void ors::Shape::reset() {
 void ors::Shape::write(std::ostream& os) const {
   os <<"type=" <<type <<' ';
   if(!rel.isZero()) os <<"rel=<T " <<rel <<" > ";
-  uint i; Item *a;
-  for_list(i,a,ats)
+  for_list(Item, a, ats)
   if(a->keys(0)!="rel" && a->keys(0)!="type") os <<*a <<' ';
 }
 
@@ -309,7 +308,7 @@ uintA stringListToShapeIndices(const MT::Array<const char*>& names, const MT::Ar
 }
 
 void makeConvexHulls(ShapeL& shapes){
-  for_list_(ors::Shape, s, shapes) s->mesh.makeConvexHull();
+  for(ors::Shape *s: shapes) s->mesh.makeConvexHull();
 }
 
 
@@ -400,8 +399,7 @@ void ors::Joint::write(std::ostream& os) const {
   if(!A.isZero()) os <<"from=<T " <<A <<" > ";
   if(!B.isZero()) os <<"to=<T " <<B <<" > ";
   if(!Q.isZero()) os <<"Q=<T " <<Q <<" > ";
-  uint i; Item *a;
-  for_list(i,a,ats)
+  for_list(Item, a, ats)
   if(a->keys(0)!="A" && a->keys(0)!="from"
       && a->keys(0)!="axis" //because this was subsumed in A during read
       && a->keys(0)!="B" && a->keys(0)!="to"
@@ -475,12 +473,11 @@ void ors::KinematicWorld::clear() {
 }
 
 void ors::KinematicWorld::operator=(const ors::KinematicWorld& G) {
-  uint i;  Shape *s;  Body *b;
   q = G.q;
   qdot = G.qdot;
   listCopy(proxies, G.proxies);
   listCopy(joints, G.joints);
-  for_list_(Joint, j, joints) 
+  for(Joint *j: joints) 
     if(j->mimic){
     MT::String jointName;
     bool good = j->ats.getValue<MT::String>(jointName, "mimic");
@@ -492,8 +489,8 @@ void ors::KinematicWorld::operator=(const ors::KinematicWorld& G) {
   listCopy(shapes, G.shapes);
   listCopy(bodies, G.bodies);
   graphMakeLists(bodies, joints);
-  for_list(i, b, bodies) b->shapes.clear();
-  for_list(i, s, shapes) {
+  for_list(Body,  b,  bodies) b->shapes.clear();
+  for_list(Shape,  s,  shapes) {
     b=bodies(s->ibody);
     s->body=b;
     b->shapes.append(s);
@@ -508,9 +505,9 @@ void ors::KinematicWorld::transformJoint(ors::Joint *e, const ors::Transformatio
 }
 
 void ors::KinematicWorld::makeLinkTree() {
-  for_list_(Joint, j, joints) {
-    for_list_(Shape, s, j->to->shapes)  s->rel = j->B * s->rel;
-    for_list_(Joint, j2, j->to->outLinks) j2->A = j->B * j2->A;
+  for(Joint *j: joints) {
+    for(Shape *s: j->to->shapes)  s->rel = j->B * s->rel;
+    for(Joint *j2: j->to->outLinks) j2->A = j->B * j2->A;
     j->B.setZero();
   }
   isLinkTree=true;
@@ -520,13 +517,10 @@ void ors::KinematicWorld::makeLinkTree() {
     on the edges, this calculates the absolute frames of all other nodes (propagating forward
     through trees and testing consistency of loops). */
 void ors::KinematicWorld::calc_fwdPropagateFrames() {
-  Body *n;
-  Joint *e;
-  uint i, j;
   ors::Transformation f;
-  for_list(j, n, bodies) {
+  for_list(Body,  n,  bodies) {
     CHECK(n->inLinks.N<=1,"loopy geometry - body '" <<n->name <<"' has more than 1 input link");
-    for_list(i, e, n->inLinks) {
+    for_list(Joint,  e,  n->inLinks) {
       f = e->from->X;
       f.appendTransformation(e->A);
       e->X = f;
@@ -543,12 +537,9 @@ void ors::KinematicWorld::calc_fwdPropagateFrames() {
 }
 
 void ors::KinematicWorld::calc_fwdPropagateShapeFrames() {
-  Body *n;
-  Shape *s;
-  uint i, j;
   ors::Transformation f;
-  for_list(j, n, bodies) {
-    for_list(i, s, n->shapes) {
+  for_list(Body,  n,  bodies) {
+    for_list(Shape,  s,  n->shapes) {
       s->X = n->X;
       s->X.appendTransformation(s->rel);
     }
@@ -556,7 +547,7 @@ void ors::KinematicWorld::calc_fwdPropagateShapeFrames() {
 }
 
 void ors::KinematicWorld::calc_missingAB_from_BodyAndJointFrames() {
-  for_list_(Joint, e, joints) {
+  for(Joint *e: joints) {
     if(!e->X.isZero() && e->A.isZero() && e->B.isZero()) {
       e->A.setDifference(e->from->X, e->X);
       e->B.setDifference(e->X, e->to->X);
@@ -568,9 +559,7 @@ void ors::KinematicWorld::calc_missingAB_from_BodyAndJointFrames() {
     frames A & B of each edge, this calculates the dynamic (relative) joint
     frame X for each edge (which includes joint transformation and errors) */
 void ors::KinematicWorld::calc_Q_from_BodyFrames() {
-  Joint *e;
-  uint i;
-  for_list(i, e, joints) {
+  for_list(Joint,  e,  joints) {
     ors::Transformation A(e->from->X), B(e->to->X);
     A.appendTransformation(e->A);
     B.appendInvTransformation(e->B);
@@ -582,10 +571,8 @@ void ors::KinematicWorld::calc_Q_from_BodyFrames() {
     After this, edges and nodes are not coherent anymore. You might want to call
     calcBodyFramesFromJoints() */
 void ors::KinematicWorld::clearJointErrors() {
-  Joint *e;
   ors::Vector xaxis(1, 0, 0);
-  uint i;
-  for_list(i, e, joints) {
+  for_list(Joint,  e,  joints) {
     e->Q.pos.setZero();
     e->Q.vel.setZero();
     e->Q.rot.alignWith(xaxis);
@@ -595,13 +582,10 @@ void ors::KinematicWorld::clearJointErrors() {
 
 /** @brief invert all velocity variables of all frames */
 void ors::KinematicWorld::invertTime() {
-  Body *n;
-  Joint *e;
-  uint i, j;
-  for_list(j, n, bodies) {
+  for_list(Body,  n,  bodies) {
     n->X.vel*=-1.;
     n->X.angvel*=-1.;
-    for_list(i, e, n->inLinks) {
+    for_list(Joint,  e,  n->inLinks) {
       e->Q.vel*=-1.;
       e->Q.angvel*=-1.;
     }
@@ -626,7 +610,7 @@ arr ors::KinematicWorld::naturalQmetric(double power, uint agent) const {
   }
   if(!q.N) getJointStateDimension();
   arr Wdiag(q.N);
-  for_list_(Joint, j, joints) {
+  for(Joint *j: joints) {
     for(uint i=0; i<j->qDim(); i++) {
       if(j->agent == agent) Wdiag(j->qIndex+i) = ::pow(BM(j->to->index), power);
     }
@@ -655,12 +639,10 @@ void ors::KinematicWorld::revertJoint(ors::Joint *e) {
 void ors::KinematicWorld::reconfigureRoot(Body *root) {
   MT::Array<Body*> list, list2;
   Body **m,**mstop;
-  Joint *e;
   list.append(root);
   uintA level(bodies.N);
   level=0;
   int i=0;
-  uint j;
   
   while(list.N>0) {
     i++;
@@ -668,10 +650,10 @@ void ors::KinematicWorld::reconfigureRoot(Body *root) {
     mstop=list.p+list.N;
     for(m=list.p; m!=mstop; m++) {
       level((*m)->index)=i;
-      for_list(j, e, (*m)->inLinks) {
-        if(!level(e->from->index)) { revertJoint(e); j--; }
+      for_list(Joint,  e,  (*m)->inLinks) {
+        if(!level(e->from->index)) { revertJoint(e); e_COUNT--; }
       }
-      for_list(j, e, (*m)->outLinks) list2.append(e->to);
+      for(Joint *e: (*m)->outLinks) list2.append(e->to);
     }
     list=list2;
   }
@@ -685,7 +667,7 @@ uint ors::KinematicWorld::getJointStateDimension(uint agent) const {
   while(qdim.N<=(uint)agent) ((KinematicWorld*)this)->qdim.append(UINT_MAX);
   if(qdim(agent)==UINT_MAX){
     uint qd=0;
-    for_list_(Joint, j, joints) if(j->agent==agent){
+    for(Joint *j: joints) if(j->agent==agent){
       if(!j->mimic){
         j->qIndex = qd;
         qd += j->qDim();
@@ -706,7 +688,7 @@ arr ors::KinematicWorld::getLimits(uint agent) const {
   uint N=getJointStateDimension(agent);
   arr limits(N,2);
   limits.setZero();
-  for_list_(Joint, j, joints) if(j->agent==agent && j->limits.N){
+  for(Joint *j: joints) if(j->agent==agent && j->limits.N){
     uint i=j->qIndex;
     uint d=j->qDim();
     for(uint k=0;k<d;k++){//in case joint has multiple dimensions
@@ -719,11 +701,9 @@ arr ors::KinematicWorld::getLimits(uint agent) const {
 }
 
 void ors::KinematicWorld::zeroGaugeJoints() {
-  Body *n;
   Joint *e;
   ors::Vector w;
-  uint j;
-  for_list(j, n, bodies) if(n->type!=staticBT) {
+  for_list(Body,  n,  bodies) if(n->type!=staticBT) {
     e=n->inLinks(0);
     if(e) {
       w=e->Q.rot / e->Q.angvel; e->Q.angvel.setZero();
@@ -743,7 +723,7 @@ void ors::KinematicWorld::calc_q_from_Q(uint agent, bool vels) {
   qdot.resize(N);
 
   uint n=0;
-  for_list_(Joint, j, joints) if(j->agent==agent){
+  for(Joint *j: joints) if(j->agent==agent){
     if(j->mimic) continue; //don't count dependent joints
     CHECK(j->qIndex==n,"joint indexing is inconsistent");
     switch(j->type) {
@@ -1315,20 +1295,14 @@ void ors::KinematicWorld::inverseDynamics(arr& tau, const arr& qd, const arr& qd
 
 /// [prelim] some heuristic measure for the joint errors
 double ors::KinematicWorld::getJointErrors() const {
-  Joint *e;
   double err=0.0;
-  uint i;
-  
-  for_list(i, e, joints) err+=e->Q.pos.lengthSqr();
-  
+  for_list(Joint, e, joints) err+=e->Q.pos.lengthSqr();
   return ::sqrt(err);
 }
 
 /** @brief checks if all names of the bodies are disjoint */
 bool ors::KinematicWorld::checkUniqueNames() const {
-  Body *n, *m;
-  uint i, j;
-  for_list(i, n, bodies) for_list(j, m, bodies) {
+  for_list(Body,  n,  bodies) for(Body *m: bodies) {
     if(n==m) break;
     if(n->name==m->name) return false;
   }
@@ -1337,7 +1311,7 @@ bool ors::KinematicWorld::checkUniqueNames() const {
 
 /// find body with specific name
 ors::Body* ors::KinematicWorld::getBodyByName(const char* name) const {
-  for_list_(Body, b, bodies) if(b->name==name) return b;
+  for(Body *b: bodies) if(b->name==name) return b;
   if(strcmp("glCamera", name)!=0)
     MT_MSG("cannot find Body named '" <<name <<"' in Graph");
   return 0;
@@ -1345,24 +1319,22 @@ ors::Body* ors::KinematicWorld::getBodyByName(const char* name) const {
 
 /// find shape with specific name
 ors::Shape* ors::KinematicWorld::getShapeByName(const char* name) const {
-  for_list_(Shape, s, shapes) if(s->name==name) return s;
+  for(Shape *s: shapes) if(s->name==name) return s;
   MT_MSG("cannot find Shape named '" <<name <<"' in Graph");
   return NULL;
 }
 
 /// find shape with specific name
 ors::Joint* ors::KinematicWorld::getJointByName(const char* name) const {
-  for_list_(Joint, j, joints) if(j->name==name) return j;
+  for(Joint *j: joints) if(j->name==name) return j;
   MT_MSG("cannot find Joint named '" <<name <<"' in Graph");
   return NULL;
 }
 
 /// find joint connecting two bodies with specific names
 ors::Joint* ors::KinematicWorld::getJointByBodyNames(const char* from, const char* to) const {
-  Body *f=NULL, *t=NULL;
-  uint j;
-  for_list(j, f, bodies) if(f->name==from) break;
-  for_list(j, t, bodies) if(t->name==to) break;
+  for_list(Body, f, bodies) if(f->name==from) break;
+  for_list(Body, t, bodies) if(t->name==to) break;
   if(!f || !t) return 0;
   return graphGetEdge<Body, Joint>(f, t);
 }
@@ -1392,9 +1364,7 @@ uintA ors::KinematicWorld::getShapeIdxByAgent(const uint agent) const {
 
 /** @brief creates uniques names by prefixing the node-index-number to each name */
 void ors::KinematicWorld::prefixNames() {
-  Body *n;
-  uint j;
-  for_list(j, n, bodies) n->name=STRING(n->index<< n->name);
+  for_list(Body, n, bodies) n->name=STRING(n->index<< n->name);
 }
 
 /// return a OpenGL extension
@@ -1486,19 +1456,19 @@ void ors::KinematicWorld::stepDynamics(const arr& Bu_control, double tau, double
 
 /** @brief prototype for \c operator<< */
 void ors::KinematicWorld::write(std::ostream& os) const {
-  for_list_(Body, b, bodies) {
+  for(Body *b: bodies) {
     os <<"body " <<b->name <<" { ";
     b->write(os);  os <<" }\n";
   }
   os <<std::endl;
-  for_list_(Shape, s, shapes) {
+  for(Shape *s: shapes) {
     os <<"shape ";
     if(s->name.N) os <<s->name <<' ';
     os <<"(" <<s->body->name <<"){ ";
     s->write(os);  os <<" }\n";
   }
   os <<std::endl;
-  for_list_(Joint, j, joints) {
+  for(Joint *j: joints) {
     os <<"joint ";
     if (j->name.N) os <<j->name <<' ';
     os <<"(" <<j->from->name <<' ' <<j->to->name <<"){ ";
@@ -1510,7 +1480,6 @@ void ors::KinematicWorld::write(std::ostream& os) const {
 
 /** @brief prototype for \c operator>> */
 void ors::KinematicWorld::read(std::istream& is) {
-  uint i; Item *it;
   KeyValueGraph G;
   
   G.read(is);
@@ -1519,7 +1488,7 @@ void ors::KinematicWorld::read(std::istream& is) {
   clear();
   
   ItemL bs = G.getItems("body");
-  for_list(i, it, bs) {
+  for_list(Item,  it,  bs) {
     CHECK(it->keys(0)=="body","");
     CHECK(it->getValueType()==typeid(KeyValueGraph), "bodies must have value KeyValueGraph");
     
@@ -1530,7 +1499,7 @@ void ors::KinematicWorld::read(std::istream& is) {
   }
   
   ItemL ss = G.getItems("shape");
-  for_list(i, it, ss) {
+  for(Item *it: ss) {
     CHECK(it->keys(0)=="shape","");
     CHECK(it->parents.N<=1,"shapes must have no or one parent");
     CHECK(it->getValueType()==typeid(KeyValueGraph),"shape must have value KeyValueGraph");
@@ -1550,7 +1519,7 @@ void ors::KinematicWorld::read(std::istream& is) {
   
   uint nCoupledJoints=0;
   ItemL js = G.getItems("joint");
-  for_list(i, it, js) {
+  for(Item *it: js) {
     CHECK(it->keys(0)=="joint","");
     CHECK(it->parents.N==2,"joints must have two parents");
     CHECK(it->getValueType()==typeid(KeyValueGraph),"joints must have value KeyValueGraph");
@@ -1569,7 +1538,7 @@ void ors::KinematicWorld::read(std::istream& is) {
   }
 
   if(nCoupledJoints){
-    for_list_(Joint, j, joints) if(j->mimic){
+    for(Joint *j: joints) if(j->mimic){
       MT::String jointName;
       bool good = j->ats.getValue<MT::String>(jointName, "mimic");
       CHECK(good, "something is wrong");
@@ -1593,10 +1562,9 @@ void ors::KinematicWorld::writePlyFile(const char* filename) const {
   ofstream os;
   MT::open(os, filename);
   uint nT=0,nV=0;
-  uint i,j;
-  ors::Shape *s;
+  uint j;
   ors::Mesh *m;
-  for_list(i,s,shapes) { nV += s->mesh.V.d0; nT += s->mesh.T.d0; }
+  for(Shape *s: shapes) { nV += s->mesh.V.d0; nT += s->mesh.T.d0; }
   
   os <<"\
 ply\n\
@@ -1615,7 +1583,7 @@ end_header\n";
   uint k=0;
   ors::Transformation t;
   ors::Vector v;
-  for_list(i,s,shapes) {
+  for_list(Shape, s, shapes) {
     m = &s->mesh;
     t = s->X;
     if(m->C.d0!=m->V.d0) {
@@ -1631,7 +1599,7 @@ end_header\n";
     k+=j;
   }
   uint offset=0;
-  for_list(i,s,shapes) {
+  for(Shape *s: shapes) {
     m=&s->mesh;
     for(j=0; j<m->T.d0; j++) {
       os <<"3 " <<offset+m->T(j, 0) <<' ' <<offset+m->T(j, 1) <<' ' <<offset+m->T(j, 2) <<endl;
@@ -1642,15 +1610,13 @@ end_header\n";
 
 /// dump the list of current proximities on the screen
 void ors::KinematicWorld::reportProxies(std::ostream *os) {
-  uint i;
   int a, b;
   (*os) <<"Proximity report: #" <<proxies.N <<endl;
-  ors::Proxy *p;
-  for_list(i,p,proxies) {
+  for_list(Proxy, p, proxies) {
     a=p->a;
     b=p->b;
     (*os)
-        <<i <<" ("
+        <<p_COUNT <<" ("
         <<a <<':' <<(a!=-1?shapes(a)->body->name.p:"earth") <<")-("
         <<b <<':' <<(b!=-1?shapes(b)->body->name.p:"earth")
         <<") d=" <<p->d
@@ -1682,9 +1648,7 @@ void ors::KinematicWorld::glueBodies(Body *f, Body *t) {
 
 /// clear all forces currently stored at bodies
 void ors::KinematicWorld::clearForces() {
-  Body *n;
-  uint j;
-  for_list(j, n, bodies) {
+  for_list(Body,  n,  bodies) {
     n->force.setZero();
     n->torque.setZero();
   }
@@ -1699,12 +1663,10 @@ void ors::KinematicWorld::addForce(ors::Vector force, Body *n, ors::Vector pos) 
 
 void ors::KinematicWorld::frictionToForces(double coeff) {
   HALT("never do this: add it directly in the equations...");
-  Joint *e;
   ors::Vector a;
   ors::Transformation X;
   double v;
-  uint i;
-  for_list(i, e, joints) {
+  for_list(Joint,  e,  joints) {
     X = e->from->X;
     X.appendTransformation(e->A);
     X.rot.getX(a);//rotation axis
@@ -1718,10 +1680,8 @@ void ors::KinematicWorld::frictionToForces(double coeff) {
 }
 
 void ors::KinematicWorld::gravityToForces() {
-  Body *n;
-  uint j;
   ors::Vector g(0, 0, -9.81);
-  for_list(j, n, bodies) n->force += n->mass * g;
+  for_list(Body,  n,  bodies) n->force += n->mass * g;
 }
 
 /// compute forces from the current contacts
@@ -1879,11 +1839,9 @@ void ors::KinematicWorld::kinematicsLimitsCost(arr &y, arr &J, const arr& limits
 /// center of mass of the whole configuration (3 vector)
 double ors::KinematicWorld::getCenterOfMass(arr& x_) const {
   double M=0.;
-  Body *n;
-  uint j;
   ors::Vector x;
   x.setZero();
-  for_list(j, n, bodies) {
+  for_list(Body,  n,  bodies) {
     M+=n->mass;
     x+=n->mass*n->X.pos;
   }
@@ -1895,11 +1853,9 @@ double ors::KinematicWorld::getCenterOfMass(arr& x_) const {
 /// gradient (Jacobian) of the COM w.r.t. q (3 x n tensor)
 void ors::KinematicWorld::getComGradient(arr &grad) const {
   double M=0.;
-  Body *n;
-  uint j;
   arr J(3, getJointStateDimension());
   grad.resizeAs(J); grad.setZero();
-  for_list(j, n, bodies) {
+  for_list(Body, n, bodies) {
     M += n->mass;
     kinematicsPos(NoArr, J, n->index);
     grad += n->mass * J;
@@ -1918,14 +1874,12 @@ ors::Proxy* ors::KinematicWorld::getContact(uint a, uint b) const {
 
 /** @brief */
 double ors::KinematicWorld::getEnergy() const {
-  Body *n;
-  uint j;
   double m, v, E;
   ors::Matrix I;
   ors::Vector w;
   
   E=0.;
-  for_list(j, n, bodies) {
+  for_list(Body, n, bodies) {
     m=n->mass;
     ors::Quaternion &rot = n->X.rot;
     I=(rot).getMatrix() * n->inertia * (-rot).getMatrix();
@@ -1940,14 +1894,14 @@ double ors::KinematicWorld::getEnergy() const {
 }
 
 void ors::KinematicWorld::removeUselessBodies() {
-  for_list_rev_(Body, b, bodies) if(!b->shapes.N && !b->outLinks.N) {
-    for_list_rev_(Joint, j, b->inLinks) joints.removeValue(j);
+  for_list_rev(Body, b, bodies) if(!b->shapes.N && !b->outLinks.N) {
+    for_list_rev(Joint, j, b->inLinks) joints.removeValue(j);
     bodies.remove(b_COUNT);
     delete b;
   }
-  for_list_(Body, bb, bodies) bb->index=bb_COUNT;
-  for_list_(Joint, j, joints) { j->index=j_COUNT;  j->ifrom = j->from->index;  j->ito = j->to->index;  }
-  for_list_(Shape, s, shapes) s->ibody = s->body->index;
+  for_list(Body, bb, bodies) bb->index=bb_COUNT;
+  for_list(Joint, j, joints) { j->index=j_COUNT;  j->ifrom = j->from->index;  j->ito = j->to->index;  }
+  for(Shape *s: shapes) s->ibody = s->body->index;
   qdim.clear();
   q.clear();
   qdot.clear();
@@ -1955,12 +1909,12 @@ void ors::KinematicWorld::removeUselessBodies() {
 }
 
 void ors::KinematicWorld::meldFixedJoints() {
-  for_list_(Joint, j, joints) if(j->type==JT_fixed) {
+  for(Joint *j: joints) if(j->type==JT_fixed) {
     Body *a = j->from;
     Body *b = j->to;
     Transformation bridge = j->A * j->Q * j->B;
     //reassociate shapes with a
-    for_list_(Shape, s, b->shapes) {
+    for(Shape *s: b->shapes) {
       s->body=a;
       s->ibody = a->index;
       s->rel = bridge * s->rel;
@@ -1968,7 +1922,7 @@ void ors::KinematicWorld::meldFixedJoints() {
     }
     b->shapes.clear();
     //reassociate out-joints with a
-    for_list_(Joint, jj, b->outLinks) {
+    for(Joint *jj: b->outLinks) {
       jj->from=a;
       jj->ifrom=a->index;
       jj->A = bridge * jj->A;
@@ -1995,11 +1949,9 @@ void ors::KinematicWorld::meldFixedJoints() {
 #undef LEN
 
 double forceClosureFromProxies(ors::KinematicWorld& ORS, uint bodyIndex, double distanceThreshold, double mu, double torqueWeights) {
-  uint k;
   ors::Vector c, cn;
   arr C, Cn;
-  ors::Proxy *p;
-  for_list(k,p,ORS.proxies){
+  for_list(ors::Proxy, p, ORS.proxies){
     int body_a = ORS.shapes(p->a)->body?ORS.shapes(p->a)->body->index:-1;
     int body_b = ORS.shapes(p->b)->body?ORS.shapes(p->b)->body->index:-1;
     if(p->d<distanceThreshold && (body_a==(int)bodyIndex || body_b==(int)bodyIndex)) {

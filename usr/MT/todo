@@ -1,6 +1,4 @@
 LOG in motion.cpp
-double calc Body From Frames
-world copy in  rrt planner?? -> delete copy
 clearly introduce constraint maps as tasks -- feasibility, automatic penalty reduction
 
 

@@ -40,7 +40,7 @@ void createDai(DaiInterface& dai, const VariableList& vars, const FactorList& fa
   uint i, j;
   Factor *f;
   std::vector<dai::Factor> dai_facs;
-  for_list(i, f, facs){
+  for_list(Type,  f,  facs){
     uint nr_members = f->varIds.N;
     
     std::vector<long> labels(nr_members);

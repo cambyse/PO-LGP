@@ -37,7 +37,7 @@ void Item::write(std::ostream& os) const {
   //-- write parents
   if(parents.N) {
     os <<" (";
-    for_list_(Item, it, parents) {
+    for_list(Item, it, parents) {
       if(it_COUNT) os <<' ';
       CHECK(it->keys.N,"");
       os <<it->keys.last();
@@ -53,7 +53,7 @@ void Item::write(std::ostream& os) const {
     os <<" }";
   } else if(getValueType()==typeid(ItemL)) {
     os <<"=(";
-    for_list_(Item, it, (*getValue<ItemL>())) os <<' ' <<it->keys.last();
+    for(Item *it: (*getValue<ItemL>())) os <<' ' <<it->keys.last();
     os <<" )";
   } else if(getValueType()==typeid(MT::String)) {
     os <<"='" <<*getValue<MT::String>() <<'\'';
@@ -236,13 +236,13 @@ KeyValueGraph::~KeyValueGraph() {
 }
 
 Item* KeyValueGraph::getItem(const char *key) {
-  for_list_(Item, it, (*this))
+  for(Item *it: (*this))
   for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key) return it;
   return NULL;
 }
 
 Item* KeyValueGraph::getItem(const char *key1, const char *key2) {
-  for_list_(Item, it, (*this)) {
+  for(Item *it: (*this)) {
     for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key1) {
         for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key2)
             return it;
@@ -253,7 +253,7 @@ Item* KeyValueGraph::getItem(const char *key1, const char *key2) {
 
 KeyValueGraph KeyValueGraph::getItems(const char* key) {
   KeyValueGraph ret;
-  for_list_(Item, it, (*this)) {
+  for(Item *it: (*this)) {
     for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key) { ret.append(it); break; }
   }
   return ret;
@@ -300,13 +300,13 @@ void KeyValueGraph::writeDot(const char *filename) {
   fil <<"graph [ rankdir=\"LR\", ranksep=0.05 ];" <<endl;
   fil <<"node [ fontsize=9, width=.3, height=.3 ];" <<endl;
   fil <<"edge [ arrowtail=dot, arrowsize=.5, fontsize=6 ];" <<endl;
-  for_list_(Item, it, list()) {
+  for(Item *it: list()) {
     fil <<it->index <<" [ ";
     if(it->keys.N) fil <<"label=\"" <<it->keys.last() <<"\", ";
     if(it->parents.N) fil <<"shape=box";
     else fil <<"shape=ellipse";
     fil <<" ];" <<endl;
-    for_list_(Item, pa, it->parents) {
+    for_list(Item, pa, it->parents) {
       if(pa->index<it->index)
         fil <<pa->index <<" -- " <<it->index <<" [ ";
       else
@@ -321,7 +321,7 @@ void KeyValueGraph::writeDot(const char *filename) {
 
 void KeyValueGraph::sortByDotOrder() {
   uintA perm(N); perm.setZero();
-  for_list_(Item, it, list()) {
+  for_list(Item, it, list()) {
     if(it->getValueType()==typeid(KeyValueGraph)) {
       double *order = it->getValue<KeyValueGraph>()->getValue<double>("dot_order");
       if(!order) { MT_MSG("doesn't have dot_order attribute"); return; }
@@ -329,6 +329,6 @@ void KeyValueGraph::sortByDotOrder() {
     }
   }
   permuteInv(perm);
-  for_list_(Item, it2, list()) it2->index=it2_COUNT;
+  for_list(Item, it2, list()) it2->index=it2_COUNT;
 }
 

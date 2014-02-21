@@ -14,8 +14,8 @@ void convert(LoopyBP& lbp,BinaryBPNet& net){
   VariableList vars;
   FactorList facs;
   uint i;
-  for_list(i,n,net.nodes) vars.append(new Variable(2,STRING("var"<<i)));
-  for_list(i,e,net.edges){
+  for_list(Type, n, net.nodes) vars.append(new Variable(2,STRING("var"<<i)));
+  for_list(Type, e, net.edges){
     f=new Factor(TUPLE(vars(e->ifrom),vars(e->ito)));
     facs.append(f);
     double g=exp(e->J);
@@ -24,7 +24,7 @@ void convert(LoopyBP& lbp,BinaryBPNet& net){
   connectThemUp(vars,facs);
   //-- generate evidence factors
   Factor evid;
-  for_list(i,n,net.nodes){
+  for_list(Type, n, net.nodes){
     v=vars(i);
     CHECK(v->factors.N,"");
     f=v->factors(0);
@@ -75,7 +75,7 @@ void testEvidenceDiscounting(){
 
     // test perturbation
     double eps=1e-6;
-    for_list(i,n,net.nodes){
+    for_list(Type, n, net.nodes){
       n->evidence += eps;
       for(t=0;t<100;t++) net.stepBP();
       net.getNodeBeliefs(b);
@@ -107,7 +107,7 @@ void testEvidenceDiscounting(){
 #else
     gamma /= gradDiag;
 #endif
-    for_list(i,n,net.nodes) n->discount=gamma(i);
+    for_list(Type, n, net.nodes) n->discount=gamma(i);
     cout <<"adapted gamma= " <<gamma <<endl;
   }
 
@@ -162,7 +162,7 @@ void testGradient(){
   double eps=1e-6;
   delta_b.resize(net.nodes.N);
   delta_bb.resize(net.nodes.N);
-  for_list(i,n,net.nodes){
+  for_list(Type, n, net.nodes){
     n->evidence += eps;
     for(t=0;t<100;t++) net.stepBP();
     net.getNodeBeliefs(b);
@@ -186,7 +186,7 @@ void testGradient(){
   eps=1e-6;
   delta_b.resize(net.edges.N);
   delta_bb.resize(net.edges.N);
-  for_list(i,e,net.edges){
+  for_list(Type, e, net.edges){
     e->J += eps;
     for(t=0;t<100;t++) net.stepBP();
     net.getNodeBeliefs(b);

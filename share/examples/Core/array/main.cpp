@@ -21,7 +21,7 @@ void TEST(Basics){
 
   //easier looping:
   cout <<"\neasier looping:";
-  for_(double, e, a) (*e)++;
+  for(double *e: a) (*e)++;
   cout <<a <<endl;
 
   //fancy writing:

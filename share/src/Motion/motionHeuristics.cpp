@@ -256,7 +256,7 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
   shapes.append(shapeId); shapes.append(shapeId);
   shapes.reshape(2,2); shapes = ~shapes;
   c = MP.addTaskMap("graspContacts", new ProxyTaskMap(vectorPTMT, shapes, .1, false));
-  for_(uint, i, shapes) cout <<' ' <<MP.world.shapes(*i)->name;
+  for(ors::Shape *s: MP.world.shapes) cout <<' ' <<s->name;
   double grip=.98; //specifies the desired proxy value
   target = ARR(grip,grip);
   MP.setInterpolatingCosts(c, MotionProblem::early_restConst,

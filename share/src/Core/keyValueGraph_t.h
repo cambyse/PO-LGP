@@ -101,7 +101,7 @@ template<class T> T* KeyValueGraph::getValue(const char *key) {
 
 template<class T> MT::Array<T*> KeyValueGraph::getTypedValues(const char* key) {
   MT::Array<T*> ret;
-  for_list_(Item, it, (*this)) if(it->getValueType()==typeid(T)) {
+  for(Item *it: (*this)) if(it->getValueType()==typeid(T)) {
     if(!key) ret.append(it->getValue<T>());
     else for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key) {
       ret.append(it->getValue<T>());
@@ -113,7 +113,7 @@ template<class T> MT::Array<T*> KeyValueGraph::getTypedValues(const char* key) {
 
 template<class T> KeyValueGraph KeyValueGraph::getTypedItems(const char* key) {
   KeyValueGraph ret;
-  for_list_(Item, it, (*this)) if(it->getValueType()==typeid(T)) {
+  for(Item *it: (*this)) if(it->getValueType()==typeid(T)) {
     if(!key) ret.append(it);
     else for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key) {
           ret.append(it);
@@ -125,13 +125,13 @@ template<class T> KeyValueGraph KeyValueGraph::getTypedItems(const char* key) {
 
 template<class T> Item *KeyValueGraph::append(const StringA& keys, const ItemL& parents, T *x) {
   Item *it= ItemL::append(new Item_typed<T>(keys, parents, x, NULL));
-  for_list_(Item, par, parents) par->parentOf.append(it);
+  for(Item *par: parents) par->parentOf.append(it);
   return it;
 }
 
 template <class T> MT::Array<T*> KeyValueGraph::getDerivedValues() {
   MT::Array<T*> ret;
-  for_list_(Item, it, (*this)) {
+  for(Item *it: (*this)) {
     if(it->is_derived_from_RootType()) {
       T *val= dynamic_cast<T*>(((Item_typed<RootType>*)it)->value);
       if(val) ret.append(val);
@@ -142,7 +142,7 @@ template <class T> MT::Array<T*> KeyValueGraph::getDerivedValues() {
 
 template <class T> ItemL KeyValueGraph::getDerivedItems() {
   ItemL ret;
-  for_list_(Item, it, (*this)) {
+  for(Item *it: (*this)) {
     if(it->is_derived_from_RootType()) {
       T *val= dynamic_cast<T*>(((Item_typed<RootType>*)it)->value);
       if(val) ret.append(it);

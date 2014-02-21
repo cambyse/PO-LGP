@@ -266,7 +266,7 @@ uint MotionProblem::dim_psi() {
 }
 
 void MotionProblem::activateAllTaskCosts(bool active) {
-  for_list_(TaskCost, c, taskCosts) c->active=active;
+  for(TaskCost *c: taskCosts) c->active=active;
 }
 
 void MotionProblem::costReport(bool gnuplt) {
