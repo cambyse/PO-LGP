@@ -127,13 +127,13 @@ void ors::Body::parseAts(KinematicWorld& G) {
   // shapes that belong to the same body
   item = ats.getItem("mesh");
   if(item){
-    MT::String *filename = item->getValue<MT::String>();
+    MT::FileToken *file = item->getValue<MT::FileToken>();
 
     // if mesh is not .obj we only have one shape
-    if(!filename->endsWith("obj")) {
+    if(!file->name.endsWith("obj")) {
       new Shape(G, *this);
     }else{  // if .obj file create Shape for all submeshes
-      auto subMeshPositions = getSubMeshPositions(*filename);
+      auto subMeshPositions = getSubMeshPositions(file->name);
       for (auto parsing_pos : subMeshPositions) {
         Shape *s = new Shape(G, *this);
         s->mesh.parsing_pos_start = std::get<0>(parsing_pos);
@@ -208,12 +208,13 @@ void ors::Shape::parseAts() {
   double d;
   arr x;
   MT::String str;
+  MT::FileToken *fil;
   ats.getValue<Transformation>(rel, "rel");
   if(ats.getValue<arr>(x, "size"))          { CHECK(x.N==4,"size=[] needs 4 entries"); memmove(size, x.p, 4*sizeof(double)); }
   if(ats.getValue<arr>(x, "color"))         { CHECK(x.N==3,"color=[] needs 3 entries"); memmove(color, x.p, 3*sizeof(double)); }
   if(ats.getValue<double>(d, "type"))       { type=(ShapeType)(int)d;}
   if(ats.getValue<bool>("contact"))         { cont=true; }
-  if(ats.getValue<MT::String>(str, "mesh")) { mesh.readFile(str); }
+  fil=ats.getValue<MT::FileToken>("mesh");  if(fil) { mesh.read(fil->getIs(), fil->name.getLastN(3).p); }
   if(ats.getValue<double>(d, "meshscale"))  { mesh.scale(d); }
 
   //create mesh for basic shapes

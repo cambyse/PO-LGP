@@ -56,7 +56,9 @@ void Item::write(std::ostream& os) const {
     for(Item *it: (*getValue<ItemL>())) os <<' ' <<it->keys.last();
     os <<" )";
   } else if(getValueType()==typeid(MT::String)) {
-    os <<"='" <<*getValue<MT::String>() <<'\'';
+    os <<"=\"" <<*getValue<MT::String>() <<'"';
+  } else if(getValueType()==typeid(MT::FileToken)) {
+    os <<"='" <<getValue<MT::FileToken>()->name <<'\'';
   } else if(getValueType()==typeid(arr)) {
     os <<'=' <<*getValue<arr>();
   } else if(getValueType()==typeid(double)) {
@@ -132,9 +134,11 @@ bool readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=false
       try { is >>d; } catch(...) PARSERR("can't parse double");
       item = new Item_typed<double>(keys, parents, new double(d));
     } else switch(c) {
-        case '\'': { //MT::String
+        case '\'': { //MT::FileToken
           str.read(is, "", "\'", true);
-          item = new Item_typed<MT::String>(keys, parents, new MT::String(str));
+          item = new Item_typed<MT::FileToken>(keys, parents, new MT::FileToken(str, false));
+          std::ifstream &is = item->getValue<MT::FileToken>()->getIs();
+          if(!is.good())  PARSERR("can't open file '" <<str <<"'");
         } break;
         case '\"': { //MT::String
           str.read(is, "", "\"", true);
