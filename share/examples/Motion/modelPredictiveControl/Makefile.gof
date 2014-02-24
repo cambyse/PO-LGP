@@ -1,8 +1,8 @@
 BASE = ../../..
 
 GL = 1
-OBJS = main.o mpc.o ../splines/spline.o ../pfc/mobject.o
-DEPEND = Motion Core Ors Gui Optim
+OBJS = main.o mpc.o 
+DEPEND = Motion Core Ors Gui Optim Algo
 LIBS += -lGL
 include $(BASE)/gofMake/make-generic
 

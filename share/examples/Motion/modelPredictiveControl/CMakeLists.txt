@@ -1,7 +1,6 @@
 get_filename_component(NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
 include(.sources.cmake)
-set(SOURCES "${SOURCES}" ../pfc/mobject.cpp ../splines/spline.cpp)
 add_executable(x_${NAME} ${SOURCES})
 
 include(FindPkgConfig)

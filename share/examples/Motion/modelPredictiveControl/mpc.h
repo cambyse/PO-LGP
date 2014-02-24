@@ -9,7 +9,7 @@
 #include <Motion/motion.h>
 #include <Motion/taskMap_default.h>
 #include <Motion/taskMap_proxy.h>
-#include "../splines/spline.h"
+#include <Algo/spline.h>
 
 
 struct MPC {

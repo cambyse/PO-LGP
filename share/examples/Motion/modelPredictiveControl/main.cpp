@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <vector>
 #include "mpc.h"
-#include "../pfc/mobject.h"
+#include <Motion/mobject.h>
 
 const double PI = 3.1415926535897932384626;
 //** Model Predictive Control **//
