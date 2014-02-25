@@ -393,7 +393,7 @@ void _glDrawOdeWorld(dWorldID world)
 }
 */
 
-void animateConfiguration(ors::KinematicWorld& C) {
+void animateConfiguration(ors::KinematicWorld& C, Inotify *ino) {
   arr x, x0;
   uint t, i;
   C.getJointState(x0);
@@ -402,6 +402,7 @@ void animateConfiguration(ors::KinematicWorld& C) {
     x=x0;
     for(t=0; t<20; t++) {
       if(C.gl().pressedkey==13 || C.gl().pressedkey==27) return;
+      if(ino && ino->pollForModification()) return;
       x(i)=x0(i) + .5*sin(MT_2PI*t/20);
       C.setJointState(x);
       C.gl().update(STRING("joint = " <<i), false, false, true);
@@ -525,6 +526,7 @@ void editConfiguration(const char* filename, ors::KinematicWorld& C) {
   bool exit=false;
   C.gl().addHoverCall(new EditConfigurationHoverCall(C));
   C.gl().addKeyCall(new EditConfigurationKeyCall(C,exit));
+  Inotify ino(filename);
   for(;!exit;) {
     cout <<"reloading `" <<filename <<"' ... " <<std::endl;
     try {
@@ -538,9 +540,10 @@ void editConfiguration(const char* filename, ors::KinematicWorld& C) {
       continue;
     }
     cout <<"animating.." <<endl;
-    animateConfiguration(C);
+    while(ino.pollForModification());
+    animateConfiguration(C, &ino);
     cout <<"watching..." <<endl;
-    C.gl().watch();
+    ino.waitForModification();
   }
 }
 

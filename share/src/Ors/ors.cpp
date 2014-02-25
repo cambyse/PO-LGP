@@ -128,6 +128,7 @@ void ors::Body::parseAts(KinematicWorld& G) {
   item = ats.getItem("mesh");
   if(item){
     MT::FileToken *file = item->getValue<MT::FileToken>();
+    CHECK(file,"somethings wrong");
 
     // if mesh is not .obj we only have one shape
     if(!file->name.endsWith("obj")) {
