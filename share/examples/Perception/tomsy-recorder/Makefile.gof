@@ -1,0 +1,9 @@
+BASE = ../../..
+
+GL = 1
+DEPEND = Core Gui Perception System Hardware_kinect Hardware_ueyecamera
+
+CLEAN = z.*
+
+include $(BASE)/gofMake/make-generic
+

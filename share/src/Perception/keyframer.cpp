@@ -190,7 +190,7 @@ void KeyFramer::updateOrs(uint f) {
     b->X.pos.set(xPos.p);
     b->X.rot.set(xQuat.p);
   }
-  s->kw->calcBodyFramesFromJoints();
+  s->kw->calc_fwdPropagateFrames();
   //s->kw.calcShapeFramesFromBodies(); TODO which one?
   s->kw->gl().text.clear() << "frame " << f << "/" << s->g4d->getNumFrames();
   s->kw->gl().update(NULL, false);

@@ -1,5 +1,7 @@
 set(CURRENT_SLICE 
- libav_raw
+ audioEncoder
+bench_rgb2yuv
+tomsy-recorder
 videoEncoder
 videoEncoder_threaded
 vision-modules

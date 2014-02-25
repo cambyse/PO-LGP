@@ -23,8 +23,9 @@
 
 enum DefaultTaskMapType {
   noneTMT,     ///< undefined
-  posTMT,      ///< 3D position of reference, can have 2nd reference, no param
-  vecTMT,      ///< 3D vec (orientation), no 2nd reference, no param
+  posTMT,      ///< 3D position of reference
+  vecTMT,      ///< 3D vec (orientation)
+  quatTMT,      ///< 4D quaterion
   vecAlignTMT, ///< 1D vector alignment, can have 2nd reference, param (optional) determins alternative reference world vector
   qItselfTMT,  ///< q itself as task variable, no param
   qLinearTMT,  ///< k-dim variable linear in q, no references, param: k-times-n matrix

@@ -1,5 +1,3 @@
-//#define MT_IMPLEMENTATION
-
 #include <Gui/plot.h>
 #include <Gui/opengl.h>
 #include <Gui/mesh.h>
@@ -7,8 +5,8 @@
 #  include <QtGui/QApplication>
 #endif
 
-#  include <GL/gl.h>
-#  include <GL/glut.h>
+#include <GL/gl.h>
+#include <GL/glut.h>
 
 using namespace std;
 

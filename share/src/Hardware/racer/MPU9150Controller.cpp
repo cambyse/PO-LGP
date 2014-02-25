@@ -180,12 +180,7 @@ bool MPU9150Controller::readGyro(int16_t gyro[]) {
     success = true;
 
   } 
-
-  
-
   return success;
-
-
 }
 
 
@@ -209,7 +204,7 @@ bool MPU9150Controller::readAccel(int16_t accel[]) {
 
     tmpBuffer[0] = (int16_t)((buffer[0] << 8) + buffer[1]);
     tmpBuffer[1] = (int16_t)((buffer[2] << 8) + buffer[3]);
-    tmpBuffer[2]= (int16_t)((buffer[4] << 8) + buffer[5]);
+    tmpBuffer[2] = (int16_t)((buffer[4] << 8) + buffer[5]);
 
     if (tmpBuffer[0] != -1){
 

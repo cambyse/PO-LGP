@@ -8,6 +8,7 @@ set(SOURCES ./algos.h
 ./rrt.cpp
 ./spline.h
 ./kalman.h
+./gaussianProcess_plot.cpp
 ./rrt.h
 ./ann.h
 ./MLcourse.cpp

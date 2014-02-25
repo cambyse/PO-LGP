@@ -1,8 +1,10 @@
 set(SOURCES ./Connection.h
 ./MPU9150.h
+./modules.h
 ./MD25Controller.cpp
 ./MPU9150Controller.h
 ./MPU9150Controller.cpp
+./modules.cpp
 ./MD25.cpp
 ./Controller.cpp
 ./IMUInterface.h

@@ -1,0 +1,5 @@
+BASE = ../..
+OBJS = main.o
+
+include $(BASE)/gofMake/make-generic
+

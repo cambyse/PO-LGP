@@ -1,0 +1,6 @@
+BASE = ../../..
+
+DEPEND = Core Algo
+LIBS += -lgtest
+
+include $(BASE)/gofMake/make-generic

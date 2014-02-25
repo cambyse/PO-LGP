@@ -32,7 +32,8 @@ namespace ors {
 /// a 3D vector (double[3])
 struct Vector {
   double x, y, z;
-  
+  bool isZero;
+
   Vector() {}
   Vector(double x, double y, double z) { set(x, y, z); }
   Vector(const Vector& v) { set(v.x, v.y, v.z); }
@@ -48,7 +49,6 @@ struct Vector {
   void makeNormal(const Vector&);
   void makeColinear(const Vector&);
   
-  bool isZero() const;
   double diffZero() const;
   bool isNormalized() const;
   double isColinear(const Vector&) const;
@@ -93,7 +93,8 @@ struct Matrix {
 /// a quaternion (double[4])
 struct Quaternion {
   double w, x, y, z;
-  
+  bool isZero;
+
   Quaternion() {}
   Quaternion(double w, double x, double y, double z) { set(w,x,y,z); }
   Quaternion(const arr& q) { CHECK(q.N==4, "");  set(q.p); };
@@ -122,7 +123,6 @@ struct Quaternion {
   void multiply(double f);
   void alignWith(const Vector& v);
   
-  bool isZero() const;
   double diffZero() const;
   bool isNormalized() const;
   double getDeg() const;

@@ -10,8 +10,8 @@
   <material name="DarpaBlue">
     <color rgba="0.0 0.5 0.5 1.0"/>
   </material>
-  <link name="BASE"/>
-  <link name="STAND">
+  <link name="ORIG"/>
+  <link name="BASE">
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <mass value="1.0"/>
@@ -27,11 +27,11 @@
     <collision>
       <origin rpy="0 0 3.14159265359" xyz="0 0.02 -1.305"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/stand.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/stand.stl"/>
       </geometry>
     </collision>
   </link>
-  <gazebo reference="STAND">
+  <gazebo reference="BASE">
     <material>
                 PR2/Grey2
             </material>
@@ -43,14 +43,14 @@
             </selfCollide>
   </gazebo>
   <joint name="fixedJoint" type="fixed">
-    <parent link="BASE"/>
-    <child link="STAND"/>
+    <parent link="ORIG"/>
+    <child link="BASE"/>
     <origin rpy="0 0 3.14159265359" xyz="0 0.2 1.305"/>
   </joint>
   <!-- Adding Left and Right arm -->
-  <joint name="L_STAND" type="fixed">
+  <joint name="L_BASE" type="fixed">
     <origin rpy="0 0 1.0471975512" xyz="0 0 0"/>
-    <parent link="STAND"/>
+    <parent link="BASE"/>
     <child link="L_COLLARBONE"/>
   </joint>
   <link name="L_COLLARBONE">
@@ -69,7 +69,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0.05 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/lbr0.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/lbr0_smpl.stl"/>
       </geometry>
     </collision>
   </link>
@@ -97,7 +97,7 @@
     <collision>
       <origin rpy="0 0 1.57079632679" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/lbr1.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/lbr1_smpl.stl"/>
       </geometry>
     </collision>
   </link>
@@ -125,7 +125,7 @@
     <collision>
       <origin rpy="0 0 1.57079632679" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/lbr2.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/lbr2_smpl.stl"/>
       </geometry>
     </collision>
   </link>
@@ -153,7 +153,7 @@
     <collision>
       <origin rpy="0 0 1.57079632679" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/lbr3.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/lbr3_smpl.stl"/>
       </geometry>
     </collision>
   </link>
@@ -181,7 +181,7 @@
     <collision>
       <origin rpy="0 0 1.57079632679" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/lbr4.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/lbr4_smpl.stl"/>
       </geometry>
     </collision>
   </link>
@@ -209,7 +209,7 @@
     <collision>
       <origin rpy="0 0 1.57079632679" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/lbr5.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/lbr5_smpl.stl"/>
       </geometry>
     </collision>
   </link>
@@ -237,7 +237,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/lbr6.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/lbr6_smpl.stl"/>
       </geometry>
     </collision>
   </link>
@@ -265,7 +265,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/lbr7.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/lbr7_smpl.stl"/>
       </geometry>
     </collision>
   </link>
@@ -291,11 +291,12 @@
     <collision>
       <origin rpy="1.57079632679 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/wamLowerWristFTPalmLink7.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/wamLowerWristFTPalmLink7_smpl.stl"/>
       </geometry>
     </collision>
   </link>
   <link name="L_PALM"/>
+  <link name="L_KUKA_TOOL"/>
   <link name="L_FORCE_TORQUE_SENSOR"/>
   <joint name="L_Arm_ForceTorqueJoint" type="fixed">
     <parent link="L_ARM_PALM"/>
@@ -307,6 +308,11 @@
     <parent link="L_ARM_PALM"/>
     <child link="L_PALM"/>
     <origin rpy="0 0 3.14159265359" xyz="0 0 0.1033"/>
+  </joint>
+  <joint name="L_Arm_ToolJoint" type="fixed">
+    <parent link="L_ARM_PALM"/>
+    <child link="L_KUKA_TOOL"/>
+    <origin rpy="0 0 1.57079632679" xyz="0 0 0"/>
   </joint>
   <gazebo reference="L_0_link">
     <material value="PR2/Red"/>
@@ -391,7 +397,7 @@
     <collision>
       <origin rpy="3.14159265359 1.57079632679 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/secondFingerLink.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/secondFingerLink_smpl.stl"/>
       </geometry>
       <mu1 value="50000.0"/>
       <mu2 value="50000.0"/>
@@ -433,7 +439,7 @@
     <collision>
       <origin rpy="0 1.57079632679 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/thirdFingerLink.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/thirdFingerLink_smpl.stl"/>
       </geometry>
       <mu1 value="50000.0"/>
       <mu2 value="50000.0"/>
@@ -503,7 +509,7 @@
     <collision>
       <origin rpy="1.57079632679 0 -1.57079632679" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/firstFingerLink.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/firstFingerLink_smpl.stl"/>
       </geometry>
     </collision>
   </link>
@@ -541,7 +547,7 @@
     <collision>
       <origin rpy="3.14159265359 1.57079632679 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/secondFingerLink.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/secondFingerLink_smpl.stl"/>
       </geometry>
       <mu1 value="50000.0"/>
       <mu2 value="50000.0"/>
@@ -583,7 +589,7 @@
     <collision>
       <origin rpy="0 1.57079632679 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/thirdFingerLink.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/thirdFingerLink_smpl.stl"/>
       </geometry>
       <mu1 value="50000.0"/>
       <mu2 value="50000.0"/>
@@ -649,7 +655,7 @@
     <collision>
       <origin rpy="1.57079632679 0 -1.57079632679" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/firstFingerLink.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/firstFingerLink_smpl.stl"/>
       </geometry>
     </collision>
   </link>
@@ -687,7 +693,7 @@
     <collision>
       <origin rpy="3.14159265359 1.57079632679 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/secondFingerLink.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/secondFingerLink_smpl.stl"/>
       </geometry>
       <mu1 value="50000.0"/>
       <mu2 value="50000.0"/>
@@ -729,7 +735,7 @@
     <collision>
       <origin rpy="0 1.57079632679 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/thirdFingerLink.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/thirdFingerLink_smpl.stl"/>
       </geometry>
       <mu1 value="50000.0"/>
       <mu2 value="50000.0"/>
@@ -796,9 +802,9 @@
     <dynamics damping="0.005" friction="100.0"/>
     <mimic joint="L_FR" multiplier="1" offset="0"/>
   </joint>
-  <joint name="R_STAND" type="fixed">
+  <joint name="R_BASE" type="fixed">
     <origin rpy="0 3.14159265359 -1.0471975512" xyz="0 0 0"/>
-    <parent link="STAND"/>
+    <parent link="BASE"/>
     <child link="R_COLLARBONE"/>
   </joint>
   <link name="R_COLLARBONE">
@@ -817,7 +823,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0.05 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/lbr0.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/lbr0_smpl.stl"/>
       </geometry>
     </collision>
   </link>
@@ -845,7 +851,7 @@
     <collision>
       <origin rpy="0 0 1.57079632679" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/lbr1.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/lbr1_smpl.stl"/>
       </geometry>
     </collision>
   </link>
@@ -873,7 +879,7 @@
     <collision>
       <origin rpy="0 0 1.57079632679" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/lbr2.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/lbr2_smpl.stl"/>
       </geometry>
     </collision>
   </link>
@@ -901,7 +907,7 @@
     <collision>
       <origin rpy="0 0 1.57079632679" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/lbr3.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/lbr3_smpl.stl"/>
       </geometry>
     </collision>
   </link>
@@ -929,7 +935,7 @@
     <collision>
       <origin rpy="0 0 1.57079632679" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/lbr4.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/lbr4_smpl.stl"/>
       </geometry>
     </collision>
   </link>
@@ -957,7 +963,7 @@
     <collision>
       <origin rpy="0 0 1.57079632679" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/lbr5.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/lbr5_smpl.stl"/>
       </geometry>
     </collision>
   </link>
@@ -985,7 +991,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/lbr6.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/lbr6_smpl.stl"/>
       </geometry>
     </collision>
   </link>
@@ -1013,7 +1019,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/lbr7.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/lbr7_smpl.stl"/>
       </geometry>
     </collision>
   </link>
@@ -1039,11 +1045,12 @@
     <collision>
       <origin rpy="1.57079632679 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/wamLowerWristFTPalmLink7.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/wamLowerWristFTPalmLink7_smpl.stl"/>
       </geometry>
     </collision>
   </link>
   <link name="R_PALM"/>
+  <link name="R_KUKA_TOOL"/>
   <link name="R_FORCE_TORQUE_SENSOR"/>
   <joint name="R_Arm_ForceTorqueJoint" type="fixed">
     <parent link="R_ARM_PALM"/>
@@ -1055,6 +1062,11 @@
     <parent link="R_ARM_PALM"/>
     <child link="R_PALM"/>
     <origin rpy="0 0 3.14159265359" xyz="0 0 0.1033"/>
+  </joint>
+  <joint name="R_Arm_ToolJoint" type="fixed">
+    <parent link="R_ARM_PALM"/>
+    <child link="R_KUKA_TOOL"/>
+    <origin rpy="0 0 1.57079632679" xyz="0 0 0"/>
   </joint>
   <gazebo reference="R_0_link">
     <material value="PR2/Red"/>
@@ -1139,7 +1151,7 @@
     <collision>
       <origin rpy="3.14159265359 1.57079632679 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/secondFingerLink.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/secondFingerLink_smpl.stl"/>
       </geometry>
       <mu1 value="50000.0"/>
       <mu2 value="50000.0"/>
@@ -1181,7 +1193,7 @@
     <collision>
       <origin rpy="0 1.57079632679 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/thirdFingerLink.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/thirdFingerLink_smpl.stl"/>
       </geometry>
       <mu1 value="50000.0"/>
       <mu2 value="50000.0"/>
@@ -1251,7 +1263,7 @@
     <collision>
       <origin rpy="1.57079632679 0 -1.57079632679" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/firstFingerLink.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/firstFingerLink_smpl.stl"/>
       </geometry>
     </collision>
   </link>
@@ -1289,7 +1301,7 @@
     <collision>
       <origin rpy="3.14159265359 1.57079632679 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/secondFingerLink.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/secondFingerLink_smpl.stl"/>
       </geometry>
       <mu1 value="50000.0"/>
       <mu2 value="50000.0"/>
@@ -1331,7 +1343,7 @@
     <collision>
       <origin rpy="0 1.57079632679 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/thirdFingerLink.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/thirdFingerLink_smpl.stl"/>
       </geometry>
       <mu1 value="50000.0"/>
       <mu2 value="50000.0"/>
@@ -1397,7 +1409,7 @@
     <collision>
       <origin rpy="1.57079632679 0 -1.57079632679" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/firstFingerLink.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/firstFingerLink_smpl.stl"/>
       </geometry>
     </collision>
   </link>
@@ -1435,7 +1447,7 @@
     <collision>
       <origin rpy="3.14159265359 1.57079632679 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/secondFingerLink.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/secondFingerLink_smpl.stl"/>
       </geometry>
       <mu1 value="50000.0"/>
       <mu2 value="50000.0"/>
@@ -1477,7 +1489,7 @@
     <collision>
       <origin rpy="0 1.57079632679 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/thirdFingerLink.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/thirdFingerLink_smpl.stl"/>
       </geometry>
       <mu1 value="50000.0"/>
       <mu2 value="50000.0"/>
@@ -1546,33 +1558,48 @@
   </joint>
   <!-- Adding Apollo's Head-->
   <joint name="B_STAND_MOTORS" type="fixed">
-    <origin rpy="0 0 0" xyz="0.0 0.05 -0.06"/>
-    <parent link="STAND"/>
+    <origin rpy="0 0 0" xyz="0 0.15 -0.25"/>
+    <parent link="BASE"/>
     <child link="B_MOTORS"/>
   </joint>
   <link name="B_MOTORS">
-    <inertial>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="1.0"/>
-      <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
-    </inertial>
     <visual>
       <material name="DarpaGrey"/>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0.0 0.05 -0.06"/>
       <geometry>
         <box size="0.2 0.15 0.12 "/>
       </geometry>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0.0 0.05 -0.06"/>
       <geometry>
         <box size="0.2 0.15 0.12 "/>
       </geometry>
     </collision>
   </link>
+  <joint name="B_MOTORS_neck" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <parent link="B_MOTORS"/>
+    <child link="B_CERVICALS"/>
+  </joint>
+  <link name="B_CERVICALS">
+    <visual>
+      <material name="DarpaGrey"/>
+      <origin rpy="0 0 0" xyz="0 0 0.19685"/>
+      <geometry>
+        <cylinder length="0.3937" radius="0.03"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0.19685"/>
+      <geometry>
+        <cylinder length="0.3937" radius="0.03"/>
+      </geometry>
+    </collision>
+  </link>
   <joint name="B_NECK" type="fixed">
     <origin rpy="-1.57079632679 0 1.57079632679" xyz="0.0 0.15 0.1437"/>
-    <parent link="STAND"/>
+    <parent link="BASE"/>
     <child link="B_NECK"/>
   </joint>
   <link name="B_NECK"/>
@@ -1610,15 +1637,15 @@
     </inertial>
     <visual>
       <material name="DarpaGrey"/>
-      <origin rpy="-1.57079632679 0 0" xyz="-0.035 -0.055 -0.08"/>
+      <origin rpy="-1.57079632679 0 0" xyz="-0.035 -0.065 -0.08"/>
       <geometry>
         <mesh filename="package://apollo_robot_model/meshes/humanoidHead.stl"/>
       </geometry>
     </visual>
     <collision>
-      <origin rpy="-1.57079632679 0 0" xyz="-0.035 -0.055 -0.08"/>
+      <origin rpy="-1.57079632679 0 0" xyz="-0.035 -0.065 -0.08"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/humanoidHead.stl"/>
+        <mesh filename="package://apollo_robot_model/meshes/collision/humanoidHead_smpl.stl"/>
       </geometry>
     </collision>
   </link>
@@ -1652,12 +1679,52 @@
         <mesh filename="package://apollo_robot_model/meshes/humanoidHeadRightEye.stl"/>
       </geometry>
     </visual>
-    <collision>
+    <!--
+      <collision>
+	<origin xyz="0.0545 0 0.072" rpy="0 ${PI/2.0} ${PI/2.0}"/>
+	<geometry>
+	  <mesh filename="package://apollo_robot_model/meshes/collision/humanoidHeadRightEye.stl" />
+	</geometry>
+      </collision>
+      -->
+  </link>
+  <joint name="R_E_UPPER" type="fixed">
+    <parent link="R_EYE"/>
+    <child link="R_EYE_UPPER"/>
+    <origin rpy="0 0 0" xyz="0 -0.023 0"/>
+  </joint>
+  <link name="R_EYE_UPPER">
+    <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="1.0"/>
+      <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
+    </inertial>
+    <visual>
+      <material name="DarpaGrey"/>
+      <origin rpy="0 1.57079632679 1.57079632679" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/humanoidHeadRightEye.stl"/>
+        <cylinder length="0.001" radius="0.007"/>
       </geometry>
-    </collision>
+    </visual>
+  </link>
+  <joint name="R_E_LOWER" type="fixed">
+    <parent link="R_EYE"/>
+    <child link="R_EYE_LOWER"/>
+    <origin rpy="0 0 0" xyz="0.017 -0.021 0"/>
+  </joint>
+  <link name="R_EYE_LOWER">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="1.0"/>
+      <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
+    </inertial>
+    <visual>
+      <material name="DarpaGrey"/>
+      <origin rpy="0 1.57079632679 1.57079632679" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="0.01" radius="0.006"/>
+      </geometry>
+    </visual>
   </link>
   <joint name="L_EP" type="revolute">
     <parent link="B_HEAD"/>
@@ -1689,12 +1756,52 @@
         <mesh filename="package://apollo_robot_model/meshes/humanoidHeadRightEye.stl"/>
       </geometry>
     </visual>
-    <collision>
+    <!--
+      <collision>
+	<origin xyz="0.0545 0 0.072" rpy="0 ${PI/2.0} ${PI/2.0}"/>
+	<geometry>
+	  <mesh filename="package://apollo_robot_model/meshes/collision/humanoidHeadRightEye.stl" />
+	</geometry>
+      </collision>
+      -->
+  </link>
+  <joint name="L_E_UPPER" type="fixed">
+    <parent link="L_EYE"/>
+    <child link="L_EYE_UPPER"/>
+    <origin rpy="0 0 0" xyz="0 -0.023 0"/>
+  </joint>
+  <link name="L_EYE_UPPER">
+    <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="1.0"/>
+      <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
+    </inertial>
+    <visual>
+      <material name="DarpaGrey"/>
+      <origin rpy="0 1.57079632679 1.57079632679" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://apollo_robot_model/meshes/humanoidHeadRightEye.stl"/>
+        <cylinder length="0.001" radius="0.007"/>
       </geometry>
-    </collision>
+    </visual>
+  </link>
+  <joint name="L_E_LOWER" type="fixed">
+    <parent link="L_EYE"/>
+    <child link="L_EYE_LOWER"/>
+    <origin rpy="0 0 0" xyz="0.017 -0.021 0"/>
+  </joint>
+  <link name="L_EYE_LOWER">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="1.0"/>
+      <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
+    </inertial>
+    <visual>
+      <material name="DarpaGrey"/>
+      <origin rpy="0 1.57079632679 1.57079632679" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="0.01" radius="0.006"/>
+      </geometry>
+    </visual>
   </link>
 </robot>
 

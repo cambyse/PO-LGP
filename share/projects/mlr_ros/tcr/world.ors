@@ -1,0 +1,5 @@
+%include pr2_left_arm.ors
+
+body obstacle { X=<T t(.5 .1 .8)> type=0 size=[.5 .05 .5 .5] color=[.9 .1 .1] contact }
+
+body target{ X=<T t(.5 .0 1.)> type=1 size=[.0 .0 .108 .0375] color=[.3 .9 .1]}

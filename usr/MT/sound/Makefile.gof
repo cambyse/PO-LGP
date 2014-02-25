@@ -1,0 +1,5 @@
+BASE = ../../../share
+
+DEPEND = Core Media
+
+include $(BASE)/gofMake/make-generic

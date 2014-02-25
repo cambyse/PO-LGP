@@ -1,0 +1,23 @@
+<launch>
+   <rosparam file="$(find my_controller_pkg)/joints/ors_rt_r_upper_arm_roll_joint.yaml" command="load" />
+   <node pkg="pr2_controller_manager" type="spawner" args="ors_rt_r_upper_arm_roll_joint" name="ors_rt_r_upper_arm_roll_joint_spawner" />
+
+   <rosparam file="$(find my_controller_pkg)/joints/ors_rt_r_shoulder_pan_joint.yaml" command="load" />
+   <node pkg="pr2_controller_manager" type="spawner" args="ors_rt_r_shoulder_pan_joint" name="ors_rt_r_shoulder_pan_joint_spawner" />
+
+   <rosparam file="$(find my_controller_pkg)/joints/ors_rt_r_shoulder_lift_joint.yaml" command="load" />
+   <node pkg="pr2_controller_manager" type="spawner" args="ors_rt_r_shoulder_lift_joint" name="ors_rt_r_shoulder_lift_joint_spawner" />
+
+   <rosparam file="$(find my_controller_pkg)/joints/ors_rt_r_forearm_roll_joint.yaml" command="load" />
+   <node pkg="pr2_controller_manager" type="spawner" args="ors_rt_r_forearm_roll_joint" name="ors_rt_r_forearm_roll_joint_spawner" />
+
+   <rosparam file="$(find my_controller_pkg)/joints/ors_rt_r_elbow_flex_joint.yaml" command="load" />
+   <node pkg="pr2_controller_manager" type="spawner" args="ors_rt_r_elbow_flex_joint" name="ors_rt_r_elbow_flex_joint_spawner" />
+
+   <rosparam file="$(find my_controller_pkg)/joints/ors_rt_r_wrist_flex_joint.yaml" command="load" />
+   <node pkg="pr2_controller_manager" type="spawner" args="ors_rt_r_wrist_flex_joint" name="ors_rt_r_wrist_flex_joint_spawner" />
+
+   <rosparam file="$(find my_controller_pkg)/joints/ors_rt_r_wrist_roll_joint.yaml" command="load" />
+   <node pkg="pr2_controller_manager" type="spawner" args="ors_rt_r_wrist_roll_joint" name="ors_rt_r_wrist_roll_joint_spawner" />
+
+</launch>

@@ -83,7 +83,6 @@ void reattachShape(const char* objShape, const char* toBody){
   arr q=_HardwareReference->get_q_reference(NULL);
   arr v=_HardwareReference->get_v_reference(NULL);
   _GeometricState->ors.setJointState(q,v);
-  _GeometricState->ors.calcBodyFramesFromJoints();
   reattachShape(_GeometricState->ors, NULL, objShape, toBody);
   _GeometricState->deAccess(NULL);
 }

@@ -1,0 +1,6 @@
+BASE = ../../../share
+
+WX = 1
+
+include $(BASE)/gofMake/make-generic
+

@@ -20,7 +20,7 @@ struct Racer{
   void getDynamics(arr& M, arr& F, arr& B, arr &M_dash=NoArr, arr &M_ddash=NoArr, arr &F_dash=NoArr);
   void getDynamicsAB(arr& A, arr& a, arr& barB);
   double getEnergy();
-  void getObservation(arr& y, arr& C, arr& c, arr &W);
+  void getObservation(arr& y, arr& C=NoArr, arr& c=NoArr, arr &W=NoArr);
   void stepDynamics(double _u);
   void stepDynamicsAcc(double u_acc);
 

@@ -1,0 +1,6 @@
+BASE = ../..
+
+BUILDS += buildComponent/motion
+LIBS += -lmotion
+
+include $(BASE)/gofMake/make-generic

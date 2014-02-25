@@ -18,7 +18,7 @@ struct UEyeSystem: System {
   UEyeSystem(){
     //addModule("UEyePoller", "POLLER_1", STRINGS("ueye_rgb_1"), ModuleThread::loopWithBeat, 0.005);
     addModule("UEyePoller", "POLLER_1", STRINGS("ueye_rgb_1"), ModuleThread::loopFull);
-    addModule("VideoEncoder", "ENCODER_1", STRINGS("ueye_rgb_1"), ModuleThread::listenFirst);
+    addModule("VideoEncoderX264", "ENCODER_1", STRINGS("ueye_rgb_1"), ModuleThread::listenFirst);
     addModule("ImageViewer", "VIEWER_1", STRINGS("ueye_rgb_1"), ModuleThread::listenFirst);
 
     //addModule("UEyePoller", "POLLER_3", STRINGS("ueye_rgb_3"), ModuleThread::loopWithBeat, 0.005);
@@ -33,7 +33,6 @@ struct UEyeSystem: System {
     connect();
   }
 };
-
 void threadedRun() {
   lib_hardware_ueyecamera();
   lib_Perception();
@@ -46,6 +45,8 @@ void threadedRun() {
   byteA rgbImg;
   timeval time;
 
+  /*engine().enableAccessLog();
+  engine().dumpAccessLog();*/
   engine().open(S);
   engine().shutdown.waitForSignal();
 

@@ -37,6 +37,7 @@ struct sUEyeInterface {
     UINT pixelclock;
     double real_fps, live_fps;
     double exposure;
+    int frame_count;
 
     uint cid;
     INT camStatus;
@@ -117,9 +118,23 @@ void sUEyeInterface::camSetup() {
   if(setup_flag)
     return;
 
+  uint enable = IS_CONFIG_OPEN_MP_ENABLE;
+  int ret;
+  switch((ret = is_Configuration(IS_CONFIG_OPEN_MP_CMD_SET_ENABLE, &enable, 4))) {
+      case IS_SUCCESS:
+      std::clog << "Using OpenMP for uEYE color conversion" << endl;
+      break;
+    case IS_NOT_SUPPORTED:
+      std::clog << "OpenMP for uEYE color conversion not supported" << endl;
+      break;
+  default:
+      std::clog << "Error configuring OpenMP: " << ret << endl;
+  }
+
   tout(this) << "camSetup()" << endl;
   module->ueye_rgb.set()().resize(c_ueye_height, c_ueye_width, c_ueye_bypp);
   setup_flag = true;
+  frame_count = 0;
 }
 
 void sUEyeInterface::camInit() {
@@ -137,9 +152,11 @@ void sUEyeInterface::camInit() {
   tout(this) << "- name = " << name << endl;
 
   SetColorMode_wr(IS_CM_BGR8_PACKED);
+  //SetColorMode_wr(IS_CM_UYVY_PACKED);
   if(err_flag) return;
 
   SetColorConverter_wr(IS_CM_BGR8_PACKED, IS_CONV_MODE_SOFTWARE_3X3);
+  //SetColorConverter_wr(IS_CM_UYVY_PACKED, IS_CONV_MODE_SOFTWARE_3X3);
   if(err_flag) return;
 
   SetExternalTrigger_wr(IS_SET_TRIGGER_OFF);
@@ -189,7 +206,7 @@ void sUEyeInterface::camInit() {
   tout(this) << "- real pixelclock = " << pixelclock << endl;
 
   SetFrameRate_wr();
-  if(err_flag) return;
+  //if(err_flag) return;
   tout(this) << "- set fps = " << c_ueye_fps << endl;
   tout(this) << "- real fps = " << real_fps << endl;
 
@@ -249,8 +266,12 @@ void sUEyeInterface::camGrab() {
   UnlockSeqBuf_wr(imgBuffNum, img);
 
   // TODO do we even want this?
-  //GetFramesPerSecond_wr();
-  //module->ueye_fps.set() = live_fps;
+  frame_count++;
+  if(frame_count % 1000 == 0) {
+      GetFramesPerSecond_wr();
+      tout(this) << "current fps: " << live_fps << endl;
+      //module->ueye_fps.set() = live_fps;
+  }
 }
 
 void sUEyeInterface::camClose() {
@@ -313,7 +334,7 @@ void sUEyeInterface::updateTimestamp() {
   cout << "tm: " << b << endl;
   */
 
-  tstamp = mktime(&tmp)
+  tstamp = MT::toTime(tmp)
           + imgInfo.TimestampSystem.wMilliseconds / 1000.;
 }
 
@@ -577,7 +598,7 @@ void sUEyeInterface::handleCamStatus() {
     UEYE_ERR_CASE(IS_TIMED_OUT)
     UEYE_ERR_CASE(IS_TRIGGER_ACTIVATED)
     default:
-      tout(this) << "error - unhandled camStatus" << endl;
+      tout(this) << "error - unhandled camStatus: " << camStatus << endl;
   }
   err_flag = true;
   HALT("FIND THAT ERROR!");

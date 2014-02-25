@@ -1,0 +1,9 @@
+BASE = ../../..
+
+GL = 1
+OBJS = main.o mpc.o 
+DEPEND = Motion Core Ors Gui Optim Algo
+LIBS += -lGL
+include $(BASE)/gofMake/make-generic
+
+

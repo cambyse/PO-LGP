@@ -220,16 +220,18 @@ Module* System::addModule(const char *dclName, const char *name, ModuleThread::S
   return m;
 }
 
-void System::addModule(const char *dclName, const char *name, const uintA& accIdxs, ModuleThread::StepMode mode, double beat){
+Module* System::addModule(const char *dclName, const char *name, const uintA& accIdxs, ModuleThread::StepMode mode, double beat){
   Module *m = addModule(dclName, name, mode, beat);
   if(accIdxs.N != m->accesses.N) HALT("given and needed #acc mismatch");
   for_list_(Access, a, m->accesses) a->var = vars(accIdxs(a_COUNT));
+  return m;
 }
 
-void System::addModule(const char *dclName, const char *name, const StringA& accRenamings, ModuleThread::StepMode mode, double beat){
+Module* System::addModule(const char *dclName, const char *name, const StringA& accRenamings, ModuleThread::StepMode mode, double beat){
   Module *m = addModule(dclName, name, mode, beat);
   if(accRenamings.N != m->accesses.N) HALT("given and needed #acc mismatch");
   for_list_(Access, a, m->accesses) a->name = accRenamings(a_COUNT);
+  return m;
 }
 
 Variable* System::connect(Access& acc, const char *variable_name){

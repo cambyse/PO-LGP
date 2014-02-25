@@ -21,6 +21,10 @@
 #include "taskMap_default.h"
 #include <Gui/opengl.h>
 #include <Ors/ors_swift.h>
+#include <devTools/logging.h>
+SET_LOG(motion, DEBUG);
+
+double stickyWeight=1.;
 
 MotionProblem::MotionProblem(ors::KinematicWorld& _world, bool _useSwift)
   : world(_world) {
@@ -160,7 +164,8 @@ void MotionProblem::setInterpolatingVelCosts(
 
 void MotionProblem::setState(const arr& q, const arr& v) {
   world.setJointState(q, v);
-  world.calcBodyFramesFromJoints();
+  world.calc_fwdPropagateFrames();
+  world.calc_fwdPropagateFrames();
   if(useSwift) world.computeProxies();
   if(transitionType == realDynamic) {
     NIY;
@@ -214,13 +219,13 @@ bool MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
       }
       if(c->y_target.N) { //pose costs
         phi.append(sqrt(c->y_prec(t))*(y - c->y_target[t]));
-        if(phi(phi.N-1) > c->y_threshold) feasible = false;
+        if(phi.last() > c->y_threshold) feasible = false;
         if(&J_x) J_x.append(sqrt(c->y_prec(t))*J);
         if(&J_v) J_v.append(0.*J);
       }
       if(transitionType!=kinematic && c->v_target.N) { //velocity costs
         phi.append(sqrt(c->v_prec(t))*(J*world.qdot - c->v_target[t]));
-        if(phi(phi.N-1) > c->v_threshold) feasible = false;
+        if(phi.last() > c->v_threshold) feasible = false;
         if(&J_x) J_x.append(0.*J);
         if(&J_v) J_v.append(sqrt(c->v_prec(t))*J);
       }
@@ -232,9 +237,9 @@ bool MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
       CHECK(y.N==J.d0,"");
       for(uint j=0;j<y.N;j++) y(j) = -y(j)+.1; //MT::sigmoid(y(j));
       if(J.N) for(uint j=0;j<J.d0;j++) J[j]() *= -1.; // ( y(j)*(1.-y(j)) );
-      phi.append(y);
-      if(phi(phi.N-1) > c->y_threshold) feasible = false;
-      if(&J_x) J_x.append(J);
+      phi.append(stickyWeight*y);
+      if(phi.last() > c->y_threshold) feasible = false;
+      if(&J_x) J_x.append(stickyWeight*J);
       if(&J_v) J_v.append(0.*J);
     }
 #endif
@@ -245,7 +250,7 @@ bool MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
       CHECK(!c->y_target.N && !c->v_target.N,"constraints cannot have targets");
       c->map.phi(y, J, world);
       phi.append(y);
-      if(phi(phi.N-1) > c->y_threshold) feasible = false;
+      if(phi.last() > c->y_threshold) feasible = false;
       if(&J_x) J_x.append(J);
       if(&J_v) J_v.append(0.*J);
     }
@@ -449,7 +454,7 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
   arr _phi, J_x, J_v;
   if(k>0) MP.setState(x_bar[k], (x_bar[k]-x_bar[k-1])/tau);
   else    MP.setState(x_bar[k], NoArr); //don't set velocities
-  MP.getTaskCosts(_phi, J_x, J_v, t);
+  MP.getTaskCosts(_phi, (&J?J_x:NoArr), (&J?J_v:NoArr), t);
   phi.append(_phi);
   if(&J && _phi.N) {
     arr Japp(_phi.N, (k+1)*n);
@@ -489,7 +494,7 @@ void MotionProblem_EndPoseFunction::fv(arr& phi, arr& J, const arr& x){
 
   //-- task costs
   arr _phi, J_x;
-  MP.setState(x, NoArr);
+  MP.setState(x, zeros(x.N, 1).reshape(x.N));
   MP.getTaskCosts(_phi, J_x, NoArr, MP.T);
   phi.append(_phi);
   if(&J && _phi.N) {
@@ -503,6 +508,15 @@ void MotionProblem_EndPoseFunction::fv(arr& phi, arr& J, const arr& x){
   }
 
   if(&J) CHECK(J.d0==phi.N,"");
+
+  //store in CostMatrix
+  if(!MP.costMatrix.N) {
+    MP.costMatrix.resize(MP.T+1,phi.N);
+    MP.costMatrix.setZero();
+  }
+  
+  CHECK(MP.costMatrix.d1==phi.N,"");
+  MP.costMatrix[MP.T]() = phi;
 }
 
 //===========================================================================
@@ -522,14 +536,15 @@ arr reverseTrajectory(const arr& q){
 void getVel(arr& v, const arr& q, double tau){
   uint T=q.d0-1;
   v.resizeAs(q);
-  for(uint t=0; t<T; t++)  v[t] = (q[t+1] - q[t])/tau;
-  v[T] = 0.;
+  for(uint t=1; t<T; t++)  v[t] = (q[t+1] - q[t-1])/(2.*tau);
+  v[0] = (q[1] - q[0])/tau;
+  v[T] = (q[T] - q[T-1])/tau;
 }
 
 void getAcc(arr& a, const arr& q, double tau){
   uint T=q.d0-1;
   a.resizeAs(q);
-  a[0] = 0.;
   for(uint t=1; t<T; t++)  a[t] = (q[t+1] + q[t-1] - 2.*q[t])/(tau*tau);
-  a[T] = 0.;
+  a[0] = a[1]/2.;
+  a[T] = a[T-1]/2.;
 }

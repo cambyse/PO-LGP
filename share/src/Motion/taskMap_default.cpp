@@ -79,8 +79,15 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G) {
 //      y = ARRAY(c);
       NIY; //TODO: Jacobian?
       break;
+    case quatTMT:
+      if(body_j==-1) {
+        G.kinematicsQuat(y, J, body_i);
+        break;
+      }
+      NIY;
+      break;
     case qItselfTMT:   G.getJointState(q);    y = q;   if(&J) J.setId(q.N);  break;
-    case qLinearTMT:   G.getJointState(q);    y = params * q;   if(&J) J=params;  break;
+    case qLinearTMT:   G.getJointState(q);    if(params.N==q.N){ y=params%q; if(&J) J.setDiag(params); }else{ y=params*q; if(&J) J=params; }  break;
     case qSquaredTMT:
       G.getJointState(q);
       y.resize(1);  y(0) = scalarProduct(params, q, q);
@@ -99,7 +106,7 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G) {
         J(0, -i) = 1.;
       }
       break;
-    case qLimitsTMT:   G.getLimitsMeasure(y, params);  if(&J) G.getLimitsGradient(J, params);   break;
+    case qLimitsTMT:   if(!params.N) params=G.getLimits();  G.kinematicsLimitsCost(y, J, params);  break;
     case comTMT:       G.getCenterOfMass(y);     y.resizeCopy(2); if(&J) { G.getComGradient(J);  J.resizeCopy(2, J.d1); }  break;
     case collTMT:      G.kinematicsProxyCost(y, J, params(0));  break;
     case colConTMT:    G.kinematicsContactConstraints(y, J);  break;

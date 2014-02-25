@@ -1,0 +1,11 @@
+BASE   = ../../..
+NAME   = libHardware_$(shell basename `pwd`)
+OUTPUT := $(BASE)/lib/$(NAME).so
+
+GTKGL = 1
+DEPEND = Core Gui Algo
+
+SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
+OBJS = $(SRCS:%.cpp=%.o)
+
+include $(BASE)/gofMake/make-generic

@@ -109,6 +109,7 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
     prefix = other.prefix;
     costMatrix = other.costMatrix;
     dualMatrix = other.dualMatrix;
+    return *this;
   };
 
   void loadTransitionParameters(); ///< loads transition parameters from cfgFile //TODO: do in constructor of TransitionCost
@@ -137,7 +138,7 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
   bool getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t); ///< the general (`big') task vector and its Jacobian
   void costReport(bool gnuplt=true); ///< also computes the costMatrix
   
-  void setState(const arr& x, const arr& v);
+  void setState(const arr& x, const arr& v=NoArr);
   void activateAllTaskCosts(bool activate=true);
 
   //-- helpers
