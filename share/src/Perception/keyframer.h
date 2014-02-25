@@ -19,10 +19,18 @@ struct KeyFramer {
   arr getCorrPCA(uint b1, uint b2, uint wlen, uint npc);
   arr getCorrPCA(const String &n1, const String &n2, uint wlen, uint npc);
 
+  void computeVar(String type, uint wlen, bool force = false);
+  void computeSpeed(String type, bool force = false);
+  void computeGP(String type, bool force = false);
+  void computeDPos(const String &b, bool force = false);
+  void computeDQuat(const String &b, bool force = false);
+
   arr getState(uint b);
   arr getState(const String &n);
   arr getStateVar(uint b, uint wlen);
   arr getStateVar(const String &n, uint wlen);
+  arr getStateSpeed(uint b);
+  arr getStateSpeed(const String &n);
 
   arr getAngle(uint b1, uint b2);
   arr getAngle(const String &n1, const String &n2);
@@ -55,7 +63,8 @@ struct KeyFramer {
   KeyFrameL getKeyFrames(const uintA &vit);
   void saveKeyFrameScreens(const KeyFrameL &keyframes, uint df = 60);
 
-  void EM(KeyValueGraph &kvg, const String &b1, const String &b2, uint wlen);
-  void EM(KeyValueGraph &kvg, const String &b, uint wlen);
+  void EM(KeyValueGraph &kvg, const String &bA, const String &bB, uint wlen);
+  void EM_r(KeyValueGraph &kvg, const String &bA, const String &bB, uint wlen);
+  void EM_m(KeyValueGraph &kvg, const String &b, uint wlen);
 };
 

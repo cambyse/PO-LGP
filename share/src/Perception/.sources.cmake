@@ -7,6 +7,7 @@ set(SOURCES ./pointcloud.h
 ./libcolorseg.h
 ./videoEncoder.h
 ./g4data.h
+./g4data_t.h
 ./pointcloud.cpp
 ./perception.cpp
 ./keyframe.cpp

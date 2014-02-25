@@ -23,7 +23,10 @@ FGPlot::FGPlot():f(NULL) {
 }
 
 FGPlot::~FGPlot() {
-  if(f) pclose(f);
+  if(f) {
+    pclose(f);
+    f = NULL;
+  }
 }
 
 void FGPlot::setDefault() {
@@ -101,7 +104,7 @@ void FGPlot::open() {
     cmd << " --ymax " << ymax;
 
   f = popen(cmd.str().c_str(), "w");
-  CHECK(f, "popen failed to connect to feedgnuplot.");
+  CHECK(f, "popen() failed to connect to feedgnuplot.");
 }
 
 struct FGPlots::sFGPlots {
@@ -128,7 +131,7 @@ FGPlots::FGPlots() {
 }
 
 FGPlots::~FGPlots() {
-  delete[] s;
+  delete s;
 }
 
 void FGPlots::open(const KeyValueGraph &k) {
