@@ -37,10 +37,13 @@ HEADERS += \
     ../CheeseMaze/CheeseMazeAction.h \
     ../CheeseMaze/CheeseMazeObservation.h \
     \
-    ../LookAheadSearch.h \
+    ../Planning/Policy.h \
+    ../Planning/LookAheadSearch.h \
+    ../Planning/LookAheadPolicy.h \
     \
     ../HistoryObserver.h \
     ../FeatureLearner.h \
+    ../SpaceManager.h \
     ../KMarkovCRF.h \
     ../UTree.h \
     ../LinearQ.h \
@@ -70,7 +73,6 @@ SOURCES += \
     ../AbstractReward.cpp \
     ../ListedReward.cpp \
     \
-    ../Environment.cpp \
     ../PredictiveEnvironment.cpp \
     ../Visualizer.cpp \
     ../Maze/Maze.cpp \
@@ -81,10 +83,12 @@ SOURCES += \
     ../CheeseMaze/CheeseMazeAction.cpp \
     ../CheeseMaze/CheeseMazeObservation.cpp \
     \
-    ../LookAheadSearch.cpp \
+    ../Planning/LookAheadSearch.cpp \
+    ../Planning/LookAheadPolicy.cpp \
     \
     ../HistoryObserver.cpp \
     ../FeatureLearner.cpp \
+    ../SpaceManager.cpp \
     ../KMarkovCRF.cpp \
     ../UTree.cpp \
     ../LinearQ.cpp \

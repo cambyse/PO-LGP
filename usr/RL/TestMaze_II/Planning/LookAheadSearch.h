@@ -7,10 +7,10 @@
 #include <lemon/connectivity.h>
 #include <lemon/adaptors.h>
 
-#include "Config.h"
-#include "util/ProgressBar.h"
+#include "../Config.h"
+#include "../util/ProgressBar.h"
 
-#include "Predictor.h"
+#include "../Predictor.h"
 
 class Environment;
 
@@ -116,7 +116,7 @@ public:
         ) const;
 
     /*! \brief Print the tree statistics to console. */
-    void print_tree_statistics();
+    void print_tree_statistics() const;
 
     size_t get_number_of_nodes() const { return number_of_nodes; }
 

@@ -6,16 +6,16 @@
 #include <vector>
 #include <tuple>
 
-#include "util.h"
-#include "Maze/Maze.h"
-#include "Environment.h"
+#include "../util.h"
+#include "../Maze/Maze.h"
+#include "../Environment.h"
 
 #ifdef BATCH_MODE_QUIET
 #define DEBUG_LEVEL 0
 #else
 #define DEBUG_LEVEL 1
 #endif
-#include "debug.h"
+#include "../debug.h"
 
 using lemon::INVALID;
 using lemon::Color;
@@ -741,7 +741,7 @@ void LookAheadSearch::print_tree(const bool& text,
     }
 }
 
-void LookAheadSearch::print_tree_statistics() {
+void LookAheadSearch::print_tree_statistics() const {
 
     // check for invalid root node
     if(root_node==INVALID) {
@@ -783,8 +783,7 @@ void LookAheadSearch::print_tree_statistics() {
 
     // error check
     if(total_node_counter!=number_of_nodes) {
-        DEBUG_ERROR("Total node counter (" << total_node_counter << ") is different from number of nodes " << number_of_nodes << " (correcting)");
-        number_of_nodes = total_node_counter;
+        DEBUG_ERROR("Total node counter (" << total_node_counter << ") is different from number of nodes " << number_of_nodes);
     }
 
     // print result

@@ -11,15 +11,17 @@ static const double action_line_length_factor = 0.8; // How long the action line
 static const double action_point_size_factor = 0.5;  // How large the action point is relative to the state size.
 
 CheeseMaze::CheeseMaze():
-    Environment(action_ptr_t(new CheeseMazeAction()),
-                observation_ptr_t(new CheeseMazeObservation()),
-                reward_ptr_t(new ListedReward({-1,-0.1,1},1))),
     mouse(nullptr),
     cheese(nullptr),
     last_action("north"),
     last_observation("N"),
     last_reward({-1,-0.1,1},1)
-{}
+{
+    set_spaces(     action_ptr_t(new CheeseMazeAction()          ),
+               observation_ptr_t(new CheeseMazeObservation()     ),
+                    reward_ptr_t(new ListedReward({-1,-0.1,1},1) )
+        );
+}
 
 
 CheeseMaze::~CheeseMaze() {
@@ -422,7 +424,8 @@ void CheeseMaze::get_features(std::vector<f_ptr_t> & basis_features, FeatureLear
     // clear first
     basis_features.clear();
 
-#warning hack: k is not fixed!
+    // Actually there is no sufficiently large history window, but k=2 seems to
+    // be enough.
     int k = 2;
 
     // add features

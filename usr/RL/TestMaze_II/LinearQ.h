@@ -6,6 +6,7 @@
 #include "Feature.h"
 #include "HistoryObserver.h"
 #include "FeatureLearner.h"
+#include "Planning/Policy.h"
 #include "optimization/LBFGS_Optimizer.h"
 
 #define ARMA_NO_DEBUG
@@ -17,7 +18,7 @@
 
 #include "debug.h"
 
-class LinearQ: public HistoryObserver, public LBFGS_Optimizer, public FeatureLearner
+class LinearQ: public HistoryObserver, public LBFGS_Optimizer, public FeatureLearner, public Policy
 {
 public:
 
@@ -48,6 +49,8 @@ public:
     virtual void clear_data();
 
     action_ptr_t get_max_value_action(const instance_t *);
+
+    virtual action_ptr_t get_action(const instance_t* i) { return get_max_value_action(i); }
 
     /*! \brief Set the discount rate used for computing observation and action values. */
     void set_discount(const double& d) { discount = d; }

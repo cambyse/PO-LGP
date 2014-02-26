@@ -4,6 +4,7 @@
 #include "FeatureLearner.h"
 #include "HistoryObserver.h"
 #include "Predictor.h"
+#include "Planning/Policy.h"
 
 #include <lemon/list_graph.h>
 
@@ -11,7 +12,7 @@
 #include <set>
 #include <map>
 
-class UTree: public HistoryObserver, public FeatureLearner, public Predictor {
+class UTree: public HistoryObserver, public FeatureLearner, public Predictor, public Policy {
 private:
     struct NodeInfo; // forward declaration of private type
 
@@ -82,6 +83,8 @@ public:
     double value_iteration();
 
     action_ptr_t get_max_value_action(const instance_t *);
+
+    virtual action_ptr_t get_action(const instance_t* i) { return get_max_value_action(i); }
 
     /*! \brief Set the discount rate used for computing observation and action values. */
     void set_discount(const double& d) { discount = d; }

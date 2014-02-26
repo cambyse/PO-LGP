@@ -8,7 +8,7 @@
 #include "../CheeseMaze/CheeseMaze.h"
 #include "../KMarkovCRF.h"
 #include "../UTree.h"
-#include "../LookAheadSearch.h"
+#include "../Planning/LookAheadSearch.h"
 
 #include <QDateTime>
 
@@ -261,6 +261,7 @@ void BatchWorker::collect_data() {
                     DEBUG_DEAD_LINE;
                 }
                 // initialize planner
+                // TODO: This should be done using LookAheadPolicy as in PlannerTest.cpp
                 LookAheadSearch planner(discount_arg.getValue());
                 planner.set_spaces(action_space, observation_space, reward_space);
                 // do planned steps

@@ -3,7 +3,7 @@
 #include "util.h"
 #include "Maze/Maze.h"
 #include "KMarkovCRF.h"
-#include "LookAheadSearch.h"
+#include "Planning/LookAheadSearch.h"
 #include "UTree.h"
 #include "LinearQ.h"
 #include "SmoothingKernelSigmoid.h"
@@ -390,6 +390,7 @@ int BatchMaze::run_active() {
             current_instance = instance_t::create(maze_instance->action,maze_instance->observation,maze_instance->reward,maze_instance-1);
 
             // initialize look ahead search
+            // TODO: This should be done using LookAheadPolicy as in PlannerTest.cpp
             look_ahead_search = new LookAheadSearch(switch_double("-d"));
 
             // initialize learners

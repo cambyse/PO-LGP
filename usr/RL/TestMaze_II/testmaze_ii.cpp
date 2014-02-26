@@ -10,6 +10,7 @@
 #include "PredictiveEnvironment.h"
 #include "Maze/Maze.h"
 #include "CheeseMaze/CheeseMaze.h"
+#include "Planning/LookAheadPolicy.h"
 
 #include <float.h>  // for DBL_MAX
 #include <vector>
@@ -43,10 +44,10 @@ using util::arg_string;
 
 TestMaze_II::TestMaze_II(QWidget *parent):
     QWidget(parent),
-    planner_type(OPTIMAL_PLANNER),
+    planner_type(OPTIMAL_LOOK_AHEAD),
     environment(nullptr),
     current_instance(nullptr),
-    record(false), plot(false), start_new_episode(false), search_tree_invalid(false), save_png_on_transition(false),
+    record(false), plot(false), start_new_episode(false), save_png_on_transition(false),
     png_counter(0),
     random_timer(nullptr), action_timer(nullptr),
     console_history(1,"END OF HISTORY"),
@@ -58,7 +59,7 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     crf(new KMarkovCRF()),
     utree(new UTree(discount)),
     linQ(new LinearQ(discount)),
-    look_ahead_search(new LookAheadSearch(discount)),
+    policy(nullptr),
     max_tree_size(10000),
     prune_search_tree(true),
     target_activated(false)
@@ -107,8 +108,8 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     ui.graphicsView->installEventFilter(moveByKeys);
 
     // select environment
-    //change_environment(make_shared<Maze>(epsilon));
-    change_environment(make_shared<CheeseMaze>());
+    change_environment(make_shared<Maze>(epsilon));
+    // change_environment(make_shared<CheeseMaze>());
 }
 
 TestMaze_II::~TestMaze_II() {
@@ -140,7 +141,12 @@ void TestMaze_II::update_current_instance(action_ptr_t action, observation_ptr_t
     if(plot) {
         plot_file << action << " " << observation << " " << reward << endl;
     }
-    search_tree_invalid = invalidate_search_tree;
+    if(invalidate_search_tree) {
+        shared_ptr<LookAheadPolicy> look_ahead_policy = dynamic_pointer_cast<LookAheadPolicy>(policy);
+        if(look_ahead_policy!=nullptr) {
+            look_ahead_policy->invalidate_search_tree();
+        }
+    }
 }
 
 void TestMaze_II::add_action_observation_reward_tripel(
@@ -197,6 +203,7 @@ void TestMaze_II::perform_transition(const action_ptr_t& action, observation_ptr
 }
 
 void TestMaze_II::change_environment(shared_ptr<Environment> new_environment) {
+
     // clear old environment
     if(environment!=nullptr) {
         // tear down visualization
@@ -207,8 +214,10 @@ void TestMaze_II::change_environment(shared_ptr<Environment> new_environment) {
         // destroy current environment
         environment.reset();
     }
+
     // clear learners
     clear_all_learners();
+
     // set new environment
     if(new_environment!=nullptr) {
         // set new environment
@@ -219,7 +228,7 @@ void TestMaze_II::change_environment(shared_ptr<Environment> new_environment) {
             vis->render_initialize(ui.graphicsView);
             vis->render_update();
         }
-        // get all spaces
+        // get/set all spaces
         environment->get_spaces(action_space,observation_space,reward_space);
         utree->set_spaces(*environment);
         utree->set_features(*environment);
@@ -227,7 +236,6 @@ void TestMaze_II::change_environment(shared_ptr<Environment> new_environment) {
         crf->set_features(*environment);
         linQ->set_spaces(*environment);
         linQ->set_features(*environment);
-        look_ahead_search->set_spaces(*environment);
         // set current instance
         delete current_instance;
         current_instance = nullptr;
@@ -237,13 +245,63 @@ void TestMaze_II::change_environment(shared_ptr<Environment> new_environment) {
             current_instance = instance_t::create(env_instance->action,env_instance->observation,env_instance->reward,env_instance-1);
         }
     }
+
+    // set policy
+    set_policy();
 }
 
 void TestMaze_II::clear_all_learners() {
     crf.reset(new KMarkovCRF());
     utree.reset(new UTree(discount));
     linQ.reset(new LinearQ(discount));
-    look_ahead_search.reset(new LookAheadSearch(discount));
+}
+
+void TestMaze_II::set_policy() {
+    switch(planner_type) {
+    case OPTIMAL_LOOK_AHEAD: {
+        shared_ptr<Predictor> pred = dynamic_pointer_cast<Predictor>(environment);
+        if(pred!=nullptr) {
+            policy.reset(new LookAheadPolicy(discount,pred,prune_search_tree,max_tree_size));
+        } else {
+            DEBUG_ERROR("No optimal look-ahead planning possible because environment does not provide predictions.");
+        }
+        break;
+    }
+    case SPARSE_LOOK_AHEAD: {
+        shared_ptr<Predictor> pred = dynamic_pointer_cast<Predictor>(crf);
+        if(pred!=nullptr) {
+            policy.reset(new LookAheadPolicy(discount,pred,prune_search_tree,max_tree_size));
+        } else {
+            DEBUG_DEAD_LINE;
+        }
+        break;
+    }
+    case UTREE_LOOK_AHEAD: {
+        shared_ptr<Predictor> pred = dynamic_pointer_cast<Predictor>(utree);
+        if(pred!=nullptr) {
+            policy.reset(new LookAheadPolicy(discount,pred,prune_search_tree,max_tree_size));
+        } else {
+            DEBUG_DEAD_LINE;
+        }
+        break;
+    }
+    case UTREE_VALUE: {
+        shared_ptr<Policy> p = dynamic_pointer_cast<Policy>(utree);
+        if(p==nullptr) { DEBUG_DEAD_LINE; }
+        policy = p;
+        break;
+    }
+    case LINEAR_Q_VALUE: {
+        shared_ptr<Policy> p = dynamic_pointer_cast<Policy>(linQ);
+        if(p==nullptr) { DEBUG_DEAD_LINE; }
+        policy = p;
+        break;
+    }
+    case NONE:
+    case KMDP_LOOK_AHEAD:
+    default:
+        policy.reset();
+    }
 }
 
 void TestMaze_II::render_update() {
@@ -258,146 +316,16 @@ void TestMaze_II::random_action() {
 }
 
 void TestMaze_II::choose_action() {
-
-    if(DEBUG_LEVEL>2) {
-        DEBUG_OUT(0,"Before planning:");
-        look_ahead_search->print_tree_statistics();
-    }
-
     action_ptr_t action;
-    bool clear_seach_tree = (look_ahead_search->get_number_of_nodes()==0 || !prune_search_tree || search_tree_invalid);
-    switch(planner_type) {
-    case OPTIMAL_PLANNER: {
-        shared_ptr<PredictiveEnvironment> pred = dynamic_pointer_cast<PredictiveEnvironment>(environment);
-        if(pred!=nullptr) {
-            if(clear_seach_tree) {
-                look_ahead_search->clear_tree();
-                look_ahead_search->build_tree(
-                    current_instance,
-                    *pred,
-                    max_tree_size
-                    );
-                search_tree_invalid = false;
-            } else {
-                look_ahead_search->fully_expand_tree(
-                    *pred,
-                    max_tree_size
-                    );
-            }
-            action = look_ahead_search->get_optimal_action();
-        } else {
-            action = action_space;
-            TO_CONSOLE("    Environment does not provide predictions for planning. Choosing default action");
-        }
-    }
-        break;
-    case SPARSE_PLANNER:
-        if(clear_seach_tree) {
-            look_ahead_search->clear_tree();
-            look_ahead_search->build_tree(
-                current_instance,
-                *crf,
-                max_tree_size
-                );
-            search_tree_invalid = false;
-        } else {
-            look_ahead_search->fully_expand_tree(
-                *crf,
-                max_tree_size
-                );
-        }
-        action = look_ahead_search->get_optimal_action();
-        break;
-    case UTREE_PLANNER:
-        if(clear_seach_tree) {
-            look_ahead_search->clear_tree();
-            look_ahead_search->build_tree(
-                current_instance,
-                *utree,
-                max_tree_size
-                );
-            search_tree_invalid = false;
-        } else {
-            look_ahead_search->fully_expand_tree(
-                *utree,
-                max_tree_size
-                );
-        }
-        action = look_ahead_search->get_optimal_action();
-        break;
-    case UTREE_VALUE:
-        action = utree->get_max_value_action(current_instance);
-        break;
-    case LINEAR_Q_VALUE:
-        action = linQ->get_max_value_action(current_instance);
-        break;
-    default:
+    if(policy==nullptr) {
         action = action_space;
-        DEBUG_ERROR("undefined planner type --> choosing " << action);
-        break;
+        TO_CONSOLE("    No policy available");
+    } else {
+        action = policy->get_action(current_instance);
     }
     observation_ptr_t observation_to;
     reward_ptr_t reward;
     perform_transition(action,observation_to,reward);
-
-    // debugging
-    switch(planner_type) {
-    case OPTIMAL_PLANNER:
-    case SPARSE_PLANNER:
-    case UTREE_PLANNER:
-        if(DEBUG_LEVEL>2) {
-            DEBUG_OUT(0,"After planning, before pruning:");
-            look_ahead_search->print_tree_statistics();
-        }
-        // sanity check
-        if(DEBUG_LEVEL>=1) {
-            shared_ptr<PredictiveEnvironment> pred = dynamic_pointer_cast<PredictiveEnvironment>(environment);
-            if(pred!=nullptr) {
-                probability_t prob = look_ahead_search->get_predicted_transition_probability(action, observation_to, reward, *pred);
-                if(prob==0) {
-                    probability_t prob_maze = pred->get_prediction(current_instance->const_it()-1, action, observation_to, reward);
-                    DEBUG_OUT(0,"Warning: Transition with predicted probability of zero for (" << action << "," << observation_to << "," << reward << ") (Maze predicts " << prob_maze << ")" );
-                }
-            }
-        }
-        break;
-    case UTREE_VALUE:
-    case LINEAR_Q_VALUE:
-        // no search tree
-        break;
-    default:
-        DEBUG_DEAD_LINE;
-    }
-
-    // prune tree
-    if(prune_search_tree) {
-        switch(planner_type) {
-        case OPTIMAL_PLANNER: {
-            shared_ptr<PredictiveEnvironment> pred = dynamic_pointer_cast<PredictiveEnvironment>(environment);
-            if(pred!=nullptr) {
-                look_ahead_search->prune_tree(action,current_instance,*pred);
-            }
-        }
-            break;
-        case SPARSE_PLANNER:
-            look_ahead_search->prune_tree(action,current_instance,*crf);
-            break;
-        case UTREE_PLANNER:
-            look_ahead_search->prune_tree(action,current_instance,*utree);
-            break;
-        case UTREE_VALUE:
-        case LINEAR_Q_VALUE:
-            // no search tree
-            break;
-        default:
-            DEBUG_DEAD_LINE;
-        }
-    }
-
-    if(DEBUG_LEVEL>2) {
-        DEBUG_OUT(0,"After pruning:");
-        look_ahead_search->print_tree_statistics();
-    }
 }
 
 void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
@@ -916,9 +844,12 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 TO_CONSOLE( QString("    discount is %1").arg(discount) );
             } else if(double_args_ok[1] && double_args[1]>=0 && double_args[1]<=1) {
                 discount = double_args[1];
-                look_ahead_search->set_discount(discount);
                 utree->set_discount(discount);
                 linQ->set_discount(discount);
+                shared_ptr<LookAheadPolicy> look_ahead_policy = dynamic_pointer_cast<LookAheadPolicy>(policy);
+                if(look_ahead_policy!=nullptr) {
+                    look_ahead_policy->set_discount(discount);
+                }
             } else {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( discount_s );
@@ -1032,13 +963,21 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     TO_CONSOLE( print_look_ahead_tree_s );
                 }
             }
-            look_ahead_search->print_tree_statistics();
-            look_ahead_search->print_tree(text, graphic);
+            shared_ptr<LookAheadPolicy> look_ahead_policy = dynamic_pointer_cast<LookAheadPolicy>(policy);
+            if(look_ahead_policy!=nullptr) {
+                const LookAheadSearch & s = look_ahead_policy->get_look_ahead_search();
+                s.print_tree_statistics();
+                s.print_tree(text, graphic);
+            }
         } else if(str_args[0]=="max-tree-size") { // set tree size
             if(str_args_n==1) {
                 TO_CONSOLE( QString( "    max tree size is %1" ).arg(max_tree_size) );
             } else if(int_args_ok[1] && int_args[1]>=0) {
                 max_tree_size = int_args[1];
+                shared_ptr<LookAheadPolicy> look_ahead_policy = dynamic_pointer_cast<LookAheadPolicy>(policy);
+                if(look_ahead_policy!=nullptr) {
+                    look_ahead_policy->set_max_tree_size(max_tree_size);
+                }
             } else {
                 TO_CONSOLE( "    Please specify a valid tree size" );
             }
@@ -1071,19 +1010,17 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 }
             } else if( (str_args[1]=="p" || str_args[1]=="planner") ) {
                 if(str_args_n>2) {
+                    // set planner
                     if(str_args[0]=="unset") {
                         TO_CONSOLE( "    set different planner to unset current" );
                     } else if(str_args[2]=="optimal" || str_args[2]=="o") {
-                        planner_type = OPTIMAL_PLANNER;
-                        search_tree_invalid = true;
+                        planner_type = OPTIMAL_LOOK_AHEAD;
                         TO_CONSOLE( "    using optimal planner" );
                     } else if(str_args[2]=="sparse" || str_args[2]=="s") {
-                        planner_type = SPARSE_PLANNER;
-                        search_tree_invalid = true;
+                        planner_type = SPARSE_LOOK_AHEAD;
                         TO_CONSOLE( "    using sparse planner" );
                     } else if(str_args[2]=="utree" || str_args[2]=="u") {
-                        planner_type = UTREE_PLANNER;
-                        search_tree_invalid = true;
+                        planner_type = UTREE_LOOK_AHEAD;
                         TO_CONSOLE( "    using UTree planner" );
                     } else if(str_args[2]=="uv" || str_args[2]=="utree-value") {
                         planner_type = UTREE_VALUE;
@@ -1093,6 +1030,11 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                         TO_CONSOLE( "    using linear Q-approximation for action selection" );
                     } else {
                         TO_CONSOLE( "    unknown planner" );
+                    }
+                    // invalidate search tree (if look-ahead policy is used)
+                    shared_ptr<LookAheadPolicy> look_ahead_policy = dynamic_pointer_cast<LookAheadPolicy>(policy);
+                    if(look_ahead_policy!=nullptr) {
+                        look_ahead_policy->invalidate_search_tree();
                     }
                 } else {
                     TO_CONSOLE( "    please supply a planner to use" );
@@ -1161,12 +1103,15 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             } else if(str_args[1]=="prune-tree") {
                 if(str_args[0]=="set") {
                     prune_search_tree=true;
-                    search_tree_invalid = true;
                     TO_CONSOLE( "    prune search tree" );
                 } else {
                     prune_search_tree=false;
-                    search_tree_invalid = true;
                     TO_CONSOLE( "    don't prune search tree" );
+                }
+                shared_ptr<LookAheadPolicy> look_ahead_policy = dynamic_pointer_cast<LookAheadPolicy>(policy);
+                if(look_ahead_policy!=nullptr) {
+                    look_ahead_policy->set_pruning(prune_search_tree);
+                    look_ahead_policy->invalidate_search_tree();
                 }
             } else if(str_args[1]=="png") {
                 if(str_args[0]=="set") {

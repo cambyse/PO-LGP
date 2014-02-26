@@ -8,7 +8,7 @@
 #include "KMarkovCRF.h"
 #include "UTree.h"
 #include "LinearQ.h"
-#include "LookAheadSearch.h"
+#include "Planning/Policy.h"
 #include "DelayDistribution.h"
 
 #include "qcustomplot.h"
@@ -51,10 +51,10 @@ private:
     // for setting the different planners
     enum PLANNER_TYPE {
         NONE,
-        OPTIMAL_PLANNER,
-        SPARSE_PLANNER,
-        KMDP_PLANNER,
-        UTREE_PLANNER,
+        OPTIMAL_LOOK_AHEAD,
+        SPARSE_LOOK_AHEAD,
+        KMDP_LOOK_AHEAD,
+        UTREE_LOOK_AHEAD,
         UTREE_VALUE,
         LINEAR_Q_VALUE
     } planner_type;
@@ -113,7 +113,7 @@ private:
     //----------//
     // Planners //
     //----------//
-    std::shared_ptr<LookAheadSearch> look_ahead_search;
+    std::shared_ptr<Policy> policy;
     size_t max_tree_size;
     bool prune_search_tree;
 
@@ -142,6 +142,7 @@ private:
     void perform_transition(const action_ptr_t& action, observation_ptr_t& observation_to, reward_ptr_t& reward);
     void change_environment(std::shared_ptr<Environment> new_environment);
     void clear_all_learners();
+    void set_policy();
 
 private slots:
     void render_update();

@@ -757,8 +757,6 @@ void LinearQ::update_loss_terms() {
 
 void LinearQ::construct_candidate_features(const int& n) {
 
-#define DEBUG_LEVEL 4
-
     DEBUG_OUT(1, "Constructing candidate features of distance " << n << "...");
 
     if(n<0) {
@@ -838,9 +836,6 @@ void LinearQ::construct_candidate_features(const int& n) {
     DEBUG_OUT(1, "    Constructed " << candidate_features.size() << " features");
 
     DEBUG_OUT(1, "DONE");
-
-#define DEBUG_LEVEL 1
-
 }
 
 LinearQ::probability_t LinearQ::prior_probability(const observation_ptr_t&, const reward_ptr_t& r) const {
