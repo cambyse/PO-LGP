@@ -11,6 +11,7 @@
 #include "Maze/Maze.h"
 #include "CheeseMaze/CheeseMaze.h"
 #include "Planning/LookAheadPolicy.h"
+#include "Planning/GoalIteration.h"
 
 #include <float.h>  // for DBL_MAX
 #include <vector>
@@ -62,7 +63,7 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     policy(nullptr),
     max_tree_size(10000),
     prune_search_tree(true),
-    target_activated(false)
+    goal_activated(false)
 {
 
     // initialize UI
@@ -108,7 +109,7 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     ui.graphicsView->installEventFilter(moveByKeys);
 
     // select environment
-    change_environment(make_shared<Maze>(epsilon));
+    change_environment(make_shared<Maze>(epsilon,"Minimal"));
     // change_environment(make_shared<CheeseMaze>());
 }
 
@@ -297,6 +298,15 @@ void TestMaze_II::set_policy() {
         policy = p;
         break;
     }
+    case GOAL_ITERATION: {
+        shared_ptr<Predictor> pred = dynamic_pointer_cast<Predictor>(environment);
+        if(pred!=nullptr) {
+            policy.reset(new GoalIteration(discount,*pred));
+        } else {
+            DEBUG_ERROR("No goal iteration possible because environment does not provide predictions.");
+        }
+        break;
+    }
     case NONE:
     case KMDP_LOOK_AHEAD:
     default:
@@ -382,7 +392,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString option_3c_s(                     "                                          u/utree. . . . . . . . . . . . .-> use UTree as predictive model");
     QString option_3d_s(                     "                                          uv/utree-value . . . . . . . . .-> use UTree as value function");
     QString option_3e_s(                     "                                          lq/linear-q. . . . . . . . . . .-> use linear Q-function approximation");
-    QString option_4_s(                      "                               target. . . . . . . . . . . . . . . . . . .-> activate a target state");
+    QString option_3f_s(                     "                                          g/goal . . . . . . . . . . . . .-> use goal-guided value iteration");
+    QString option_4_s(                      "                               goal. . . . . . . . . . . . . . . . . . . .-> activate a goal state");
     QString option_5_s(                      "                               prune-tree. . . . . . . . . . . . . . . . .-> prune search tree");
     QString option_6_s(                      "                               png . . . . . . . . . . . . . . . . . . . .-> save a png image of the maze on transition");
     QString option_7_s(                      "                               maze [<string>] . . . . . . . . . . . . . .-> display available maze names [load maze with name <string>]");
@@ -440,8 +451,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString new_s(                         "\n    ---------------------------------New Stuff----------------------------------");
     QString color_states_s(                  "    col-states . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> color states (random)");
     QString fixed_dt_distribution_s(         "    fixed-dt-dist / fdd. . . . <int> . . . . . . . . . . . . . . . . . . .-> show probability for a state to occur <int> steps after current state");
-    QString pair_delay_distribution_s(       "    pair-delay-dist / pdd. . . [<int>] . . . . . . . . . . . . . . . . . .-> show temporal delay distribution from current state to target state (restrict to time window of width <int>");
-    QString mediator_probability_s(          "    mediator-probability / mp. <int> . . . . . . . . . . . . . . . . . . .-> show probability for a state to occurr between current state and target state given a time window of width <int>");
+    QString pair_delay_distribution_s(       "    pair-delay-dist / pdd. . . [<int>] . . . . . . . . . . . . . . . . . .-> show temporal delay distribution from current state to goal state (restrict to time window of width <int>");
+    QString mediator_probability_s(          "    mediator-probability / mp. <int> . . . . . . . . . . . . . . . . . . .-> show probability for a state to occurr between current state and goal state given a time window of width <int>");
 
     set_s += "\n" + option_1_s;
     set_s += "\n" + option_2_s;
@@ -451,6 +462,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     set_s += "\n" + option_3c_s;
     set_s += "\n" + option_3d_s;
     set_s += "\n" + option_3e_s;
+    set_s += "\n" + option_3f_s;
     set_s += "\n" + option_4_s;
     set_s += "\n" + option_5_s;
     set_s += "\n" + option_6_s;
@@ -1028,14 +1040,13 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     } else if(str_args[2]=="lq" || str_args[2]=="linear-q") {
                         planner_type = LINEAR_Q_VALUE;
                         TO_CONSOLE( "    using linear Q-approximation for action selection" );
+                    } else if(str_args[2]=="g" || str_args[2]=="goal") {
+                        planner_type = GOAL_ITERATION;
+                        TO_CONSOLE( "    using goal-guided value iteration" );
                     } else {
                         TO_CONSOLE( "    unknown planner" );
                     }
-                    // invalidate search tree (if look-ahead policy is used)
-                    shared_ptr<LookAheadPolicy> look_ahead_policy = dynamic_pointer_cast<LookAheadPolicy>(policy);
-                    if(look_ahead_policy!=nullptr) {
-                        look_ahead_policy->invalidate_search_tree();
-                    }
+                    set_policy();
                 } else {
                     TO_CONSOLE( "    please supply a planner to use" );
                 }
@@ -1068,35 +1079,41 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 } else {
                     change_environment(make_shared<CheeseMaze>());
                 }
-            } else if(str_args[1]=="target") {
+            } else if(str_args[1]=="goal") {
                 shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
                 if(maze==nullptr) {
                     TO_CONSOLE("    Allowed for maze-environments only");
                 } else {
                     if(str_args[0]=="set") {
-                        if(target_activated) {
-                            TO_CONSOLE( "    target already active" );
+                        if(goal_activated) {
+                            TO_CONSOLE( "    goal already active" );
                         } else {
-                            target_activated = true;
-                            target_state = current_instance->observation;
-                            Maze::color_vector_t cols;
-                            for(auto observation : observation_space) {
-                                if(observation==target_state) {
-                                    cols.push_back( Maze::color_t(0,1,0) );
-                                } else {
-                                    cols.push_back( Maze::color_t(1,1,1) );
-                                }
+                            TO_CONSOLE( "    goal active" );
+                        }
+                        goal_activated = true;
+                        goal_state = current_instance->observation;
+                        // color maze
+                        Maze::color_vector_t cols;
+                        for(auto observation : observation_space) {
+                            if(observation==goal_state) {
+                                cols.push_back( Maze::color_t(0,1,0) );
+                            } else {
+                                cols.push_back( Maze::color_t(1,1,1) );
                             }
-                            maze->set_state_colors(cols);
-                            maze->render_update();
-                            TO_CONSOLE( "    target active" );
+                        }
+                        maze->set_state_colors(cols);
+                        maze->render_update();
+                        // set goal in GoalIteration policy
+                        shared_ptr<GoalIteration> goal_iteration = dynamic_pointer_cast<GoalIteration>(policy);
+                        if(goal_iteration!=nullptr) {
+                            goal_iteration->set_goal(goal_state);
                         }
                     } else {
-                        if(!target_activated) {
-                            TO_CONSOLE( "    target already inactive" );
+                        if(!goal_activated) {
+                            TO_CONSOLE( "    goal already inactive" );
                         } else {
-                            target_activated = false;
-                            TO_CONSOLE( "    target inactive" );
+                            goal_activated = false;
+                            TO_CONSOLE( "    goal inactive" );
                         }
                     }
                 }
@@ -1173,15 +1190,15 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     idx_t delay = int_args[1];
                     vector<probability_t> probs = delay_dist.get_fixed_delay_probability_distribution(s1,delay);
 
-                    // get maximum probability for rescaling and target state idx
+                    // get maximum probability for rescaling and goal state idx
                     double max_prob = -DBL_MAX;
-                    idx_t target_idx = 0, state_idx = 0;
+                    idx_t goal_idx = 0, state_idx = 0;
                     for(observation_ptr_t observation : observation_space) {
                         if(probs[state_idx]>max_prob) {
                             max_prob = probs[state_idx];
                         }
-                        if(observation==target_state) {
-                            target_idx=state_idx;
+                        if(observation==goal_state) {
+                            goal_idx=state_idx;
                         }
                     }
 
@@ -1194,8 +1211,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                             cols.push_back( std::make_tuple(1,1,1) );
                         }
                     }
-                    if(target_activated) {
-                        cols[target_idx]=std::make_tuple(0,1,0);
+                    if(goal_activated) {
+                        cols[goal_idx]=std::make_tuple(0,1,0);
                     }
 
                     // render
@@ -1208,8 +1225,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 TO_CONSOLE( invalid_args_s );
                 TO_CONSOLE( pair_delay_distribution_s );
             } else {
-                if(!target_activated) {
-                    TO_CONSOLE( "    Target state must be activated to calculate delay distribution" );
+                if(!goal_activated) {
+                    TO_CONSOLE( "    Goal state must be activated to calculate delay distribution" );
                 } else {
 
                     // get distribution
@@ -1222,7 +1239,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
 
                     // apply to current states
                     observation_ptr_t s1 = current_instance->observation;
-                    observation_ptr_t s2 = target_state;
+                    observation_ptr_t s2 = goal_state;
                     vector<double> forward;
                     vector<double> backward;
                     for( auto el : dist_map ) {
@@ -1279,24 +1296,24 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 TO_CONSOLE("    Allowed for maze-environments only");
             } else {
                 if(str_args_n==2 && int_args_ok[1]) {
-                    if(!target_activated) {
-                        TO_CONSOLE( "    Target state must be activated to calculate mediator probabilities" );
+                    if(!goal_activated) {
+                        TO_CONSOLE( "    Goal state must be activated to calculate mediator probabilities" );
                     } else {
                         // get probabilites for all states
                         DEBUG_OUT(2,"Calculating mediator distribution...");
                         observation_ptr_t s1 = current_instance->observation;
-                        observation_ptr_t s3 = target_state;
+                        observation_ptr_t s3 = goal_state;
                         vector<double> probs;
                         double max_prob = -DBL_MAX;
-                        idx_t target_idx = 0, state_idx = 0;
+                        idx_t goal_idx = 0, state_idx = 0;
                         for(observation_ptr_t observation : observation_space) {
                             probability_t prob = delay_dist.get_mediator_probability(s1,observation,s3,int_args[1]);
                             probs.push_back(prob);
                             if(prob>max_prob) {
                                 max_prob = prob;
                             }
-                            if(observation==target_state) {
-                                target_idx=state_idx;
+                            if(observation==goal_state) {
+                                goal_idx=state_idx;
                             }
                             DEBUG_OUT(3,"    " << s1 << " --> " << observation << " --> " << s3 << " : " << prob);
                             ++state_idx;
@@ -1311,7 +1328,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                                 cols.push_back( std::make_tuple(1,1,1) );
                             }
                         }
-                        cols[target_idx]=std::make_tuple(0,1,0);
+                        cols[goal_idx]=std::make_tuple(0,1,0);
                         // render
                         maze->set_state_colors(cols);
                         maze->render_update();

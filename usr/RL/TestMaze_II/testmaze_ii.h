@@ -56,7 +56,8 @@ private:
         KMDP_LOOK_AHEAD,
         UTREE_LOOK_AHEAD,
         UTREE_VALUE,
-        LINEAR_Q_VALUE
+        LINEAR_Q_VALUE,
+        GOAL_ITERATION
     } planner_type;
 
     // the user interface
@@ -121,8 +122,8 @@ private:
     // Other //
     //-------//
     DelayDistribution delay_dist;
-    bool target_activated;
-    observation_ptr_t target_state;
+    bool goal_activated;
+    observation_ptr_t goal_state;
 
     //==================//
     // Member Functions //

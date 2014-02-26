@@ -1,0 +1,101 @@
+#include "GoalIteration.h"
+#include "../util.h"
+#include <vector>
+#include <algorithm> // for std::max
+#include "../debug.h"
+
+using std::vector;
+using std::max;
+using arma::mat;
+using arma::vec;
+using arma::zeros;
+
+GoalIteration::GoalIteration(const double & d, const Predictor & predictor):
+    discount(d)
+{
+    // set spaces and initialize vectors/matrices
+    set_spaces(predictor);
+    int o_size = observation_space->space_size();
+    int a_size = action_space->space_size();
+    Q = zeros(o_size*a_size);
+    R = zeros(o_size);
+    V = zeros(o_size);
+    p = mat(o_size*a_size,o_size);
+    // fill prediction matrix
+    int a_o_idx = 0;
+    for(auto from_observation : observation_space) {
+        for(auto performed_action : action_space) {
+            int to_o_idx = 0;
+            for(auto to_observation : observation_space) {
+                probability_t prob = 0;
+                for(auto to_reward : reward_space) {
+                    instance_t * i = instance_t::create(action_space,from_observation,reward_space);
+                    prob += predictor.get_prediction(i, performed_action, to_observation, to_reward);
+                }
+                p(a_o_idx,to_o_idx) = prob;
+                ++to_o_idx;
+            }
+            a_o_idx_map[performed_action][from_observation] = a_o_idx;
+            ++a_o_idx;
+        }
+    }
+}
+
+GoalIteration::action_ptr_t GoalIteration::get_action(const instance_t* i) {
+    iterate();
+    print_matrices();
+    observation_ptr_t o = i->observation;
+    vector<action_ptr_t> optimal_actions;
+    double max_value = -DBL_MAX;
+    for(auto a : action_space) {
+        double value = Q(a_o_idx_map[a][o]);
+        if(value > max_value) {
+            optimal_actions.clear();
+            optimal_actions.push_back(a);
+            max_value = value;
+        } else if(value == max_value) {
+            optimal_actions.push_back(a);
+        }
+    }
+    return util::random_select(optimal_actions);
+}
+
+void GoalIteration::set_goal(observation_ptr_t o) {
+    R = zeros(observation_space->space_size());
+    bool found = false;
+    int o_idx = 0;
+    for(auto obs : observation_space) {
+        if(o==obs) {
+            found = true;
+            R(o_idx) = 1;
+            break;
+        }
+        ++o_idx;
+    }
+    // report error if goal observation was not found
+    if(!found) {
+        DEBUG_ERROR("Observation " << o << " is not within space of " << observation_space);
+    }
+    print_matrices();
+}
+
+void GoalIteration::print_matrices() const {
+    Q.print("Q: ");
+    R.print("R: ");
+    V.print("V: ");
+    p.print("p: ");
+}
+
+void GoalIteration::iterate() {
+    // update Q
+    Q = p * (R + discount*V);
+    // update V
+    V.zeros();
+    int o_idx = 0;
+    for(auto o : observation_space) {
+        for(auto a : action_space) {
+            V(o_idx) = max(V(o_idx),Q(a_o_idx_map[a][o]));
+        }
+        ++o_idx;
+    }
+}

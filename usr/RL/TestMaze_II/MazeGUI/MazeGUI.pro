@@ -49,6 +49,7 @@ HEADERS += \
     ../Planning/Policy.h \
     ../Planning/LookAheadSearch.h \
     ../Planning/LookAheadPolicy.h \
+    ../Planning/GoalIteration.h \
     \
     ../KMarkovCRF.h \
     ../UTree.h \
@@ -96,6 +97,7 @@ SOURCES += \
     \
     ../Planning/LookAheadSearch.cpp \
     ../Planning/LookAheadPolicy.cpp \
+    ../Planning/GoalIteration.cpp \
     \
     ../KMarkovCRF.cpp \
     ../UTree.cpp \

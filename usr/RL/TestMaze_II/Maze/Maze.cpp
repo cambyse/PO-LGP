@@ -362,6 +362,52 @@ const vector<Maze::maze_t> Maze::maze_list = {
                 door_t(observation_t(10,10,4,5), observation_t(10,10,5,5), observation_t(10,10,4,6),  LEFT_BUTTON,-5, color_t(0.0,0.0,1.0) ),
                 door_t(observation_t(10,10,6,5), observation_t(10,10,6,6), observation_t(10,10,4,7), RIGHT_BUTTON, 5, color_t(1.0,0.0,1.0) )
             })
+        ),
+    /* === Markov Maze === */
+    maze_t(
+        QString("MarkovMaze"),
+        1,
+        action_ptr_t(new action_t("stay")),
+        observation_ptr_t(new observation_t(10,10,0,0)),
+        reward_ptr_t(new reward_t({0},0)),
+        vector<wall_t>({
+                {  2,  3},
+                { 12, 13},
+                { 22, 23},
+                { 32, 33},
+                { 30, 40},
+                { 31, 41},
+                { 33, 34},
+                { 43, 44},
+                { 53, 54},
+                { 63, 64},
+                { 73, 74},
+                { 83, 84},
+                { 61, 71},
+                { 62, 72},
+                { 63, 73},
+                { 44, 45},
+                { 54, 55},
+                { 74, 75},
+                { 84, 85},
+                { 75, 85},
+                { 76, 86},
+                { 77, 87},
+                { 23, 24},
+                { 25, 35},
+                { 26, 36},
+                { 27, 37},
+                { 28, 38},
+                {  6,  7},
+                { 16, 17},
+                { 78, 88},
+                { 59, 69},
+                { 58, 68},
+                { 57, 67},
+                { 56, 66}
+            }),
+        vector<maze_reward_t>(),
+        vector<door_t>()
         )// ,
 //     /* === Wrong maze for testing unit tests === */
 //     maze_t(
@@ -386,8 +432,7 @@ const vector<Maze::maze_t> Maze::maze_list = {
 //             })
 //         )
 };
-
-Maze::Maze(const double& eps):
+Maze::Maze(const double& eps, const QString& s):
     PredictiveEnvironment(action_ptr_t(), observation_ptr_t(), reward_ptr_t()), // set by calling set_maze in body
     current_observation(*(maze_list[0].observation_space.get_derived<observation_t>())),
     epsilon(eps),
@@ -395,9 +440,8 @@ Maze::Maze(const double& eps):
     current_maze(maze_list[0])
 {
     // set a maze
-    set_maze("Default");
+    set_maze(s);
 }
-
 
 Maze::~Maze() {
     delete agent;
@@ -1215,6 +1259,9 @@ void Maze::frame_maze() {
         max_reward = max(max_reward,r->get_value());
     }
     double reward_magnitude = max_reward - min_reward;
+    if(reward_magnitude==0) {
+        reward_magnitude = 1;
+    }
 
     // create frames for different reward values
     for(reward_ptr_t r : reward_space) {
