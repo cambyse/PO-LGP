@@ -11,6 +11,7 @@
 #include "Maze/Maze.h"
 #include "CheeseMaze/CheeseMaze.h"
 #include "Planning/LookAheadPolicy.h"
+#include "Planning/RandomPolicy.h"
 #include "Planning/GoalIteration.h"
 
 #include <float.h>  // for DBL_MAX
@@ -40,17 +41,14 @@ using util::arg_int;
 using util::arg_double;
 using util::arg_string;
 
-
-#define TO_CONSOLE(x) { ui._wConsoleOutput->appendPlainText(x); }
-
 TestMaze_II::TestMaze_II(QWidget *parent):
     QWidget(parent),
-    planner_type(OPTIMAL_LOOK_AHEAD),
+    planner_type(GOAL_ITERATION),
     environment(nullptr),
     current_instance(nullptr),
-    record(false), plot(false), start_new_episode(false), save_png_on_transition(false),
+    record(false), plot(false), start_new_episode(false), save_png_on_transition(false), color_maze(true),
     png_counter(0),
-    random_timer(nullptr), action_timer(nullptr),
+    action_timer(nullptr),
     console_history(1,"END OF HISTORY"),
     history_position(0),
     history_file("console_history.txt"),
@@ -96,8 +94,6 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     ui._wConsoleOutput->setPlainText("    Please enter your commands (type 'help' for an overview)");
 
     // initialize timers
-    random_timer = new QTimer(this);
-    connect(random_timer, SIGNAL(timeout()), this, SLOT(random_action()));
     action_timer = new QTimer(this);
     connect(action_timer, SIGNAL(timeout()), this, SLOT(choose_action()));
 
@@ -109,28 +105,31 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     ui.graphicsView->installEventFilter(moveByKeys);
 
     // select environment
-    change_environment(make_shared<Maze>(epsilon,"Minimal"));
+    change_environment(make_shared<Maze>(epsilon,"Markov"));
     // change_environment(make_shared<CheeseMaze>());
 }
 
 TestMaze_II::~TestMaze_II() {
-    delete random_timer;
     delete action_timer;
     delete current_instance;
     plot_file.close();
 }
 
 void TestMaze_II::collect_episode(const int& length) {
-    start_new_episode = true;
-    for(int idx=0; idx<length; ++idx) {
-        action_ptr_t action = action_space->random_element();
-        observation_ptr_t observation_to;
-        reward_ptr_t reward;
-        environment->perform_transition(action,observation_to,reward);
-        update_current_instance(action,observation_to,reward);
-        add_action_observation_reward_tripel(action,observation_to,reward);
+    if(policy==nullptr) {
+        to_console("    No policy available");
+    } else {
+        start_new_episode = true;
+        for(int idx=0; idx<length; ++idx) {
+            action_ptr_t action = policy->get_action(current_instance);
+            observation_ptr_t observation_to;
+            reward_ptr_t reward;
+            environment->perform_transition(action,observation_to,reward);
+            update_current_instance(action,observation_to,reward);
+            add_action_observation_reward_tripel(action,observation_to,reward);
+        }
+        render_update();
     }
-    render_update();
 }
 
 void TestMaze_II::update_current_instance(action_ptr_t action, observation_ptr_t observation, reward_ptr_t reward, bool invalidate_search_tree) {
@@ -259,6 +258,9 @@ void TestMaze_II::clear_all_learners() {
 
 void TestMaze_II::set_policy() {
     switch(planner_type) {
+    case RANDOM:
+        policy.reset(new RandomPolicy(action_space));
+        break;
     case OPTIMAL_LOOK_AHEAD: {
         shared_ptr<Predictor> pred = dynamic_pointer_cast<Predictor>(environment);
         if(pred!=nullptr) {
@@ -321,18 +323,29 @@ void TestMaze_II::render_update() {
     }
 }
 
-void TestMaze_II::random_action() {
-    perform_transition(action_space->random_element());
-}
-
 void TestMaze_II::choose_action() {
+    // get action
     action_ptr_t action;
     if(policy==nullptr) {
         action = action_space;
-        TO_CONSOLE("    No policy available");
+        to_console("    No policy available");
     } else {
         action = policy->get_action(current_instance);
     }
+    // color maze
+    if(color_maze) {
+        shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
+        shared_ptr<GoalIteration> gi = dynamic_pointer_cast<GoalIteration>(policy);
+        if(maze!=nullptr && gi!=nullptr) {
+            maze->set_state_colors(gi->get_value_as_color());
+        }
+    } else {
+        shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
+        if(maze!=nullptr) {
+            maze->set_state_colors();
+        }
+    }
+    // perform action
     observation_ptr_t observation_to;
     reward_ptr_t reward;
     perform_transition(action,observation_to,reward);
@@ -348,7 +361,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     } else {
         input = ui._wConsoleInput->text();
         ui._wConsoleInput->setText("");
-        TO_CONSOLE(input);
+        to_console(input);
         console_history.push_back(input);
         history_position = console_history.size();
         QTextStream history_file_stream(&history_file);
@@ -393,11 +406,13 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString option_3d_s(                     "                                          uv/utree-value . . . . . . . . .-> use UTree as value function");
     QString option_3e_s(                     "                                          lq/linear-q. . . . . . . . . . .-> use linear Q-function approximation");
     QString option_3f_s(                     "                                          g/goal . . . . . . . . . . . . .-> use goal-guided value iteration");
-    QString option_4_s(                      "                               goal. . . . . . . . . . . . . . . . . . . .-> activate a goal state");
+    QString option_3g_s(                     "                                          r/random . . . . . . . . . . . .-> use random policy");
+    QString option_4_s(                      "                               g/goal [r/random] . . . . . . . . . . . . .-> activate a [random] goal state");
     QString option_5_s(                      "                               prune-tree. . . . . . . . . . . . . . . . .-> prune search tree");
     QString option_6_s(                      "                               png . . . . . . . . . . . . . . . . . . . .-> save a png image of the maze on transition");
     QString option_7_s(                      "                               maze [<string>] . . . . . . . . . . . . . .-> display available maze names [load maze with name <string>]");
     QString option_8_s(                      "                               cheese. . . . . . . . . . . . . . . . . . .-> load cheese maze");
+    QString option_9_s(                      "                               c/color . . . . . . . . . . . . . . . . . .-> color maze (if applicable)");
     QString test_s(                          "    test . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> test");
 
     QString maze_s(                        "\n    -----------------------------------Maze-----------------------------------");
@@ -407,7 +422,6 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     QString down_s(                          "    down  / d. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> move down");
     QString stay_s(                          "    stay  / s. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> stay-action");
     QString move_s(                          "    move . . . . . . . . . . . [<int>|stop]. . . . . . . . . . . . . . . .-> start/stop moving using planner");
-    QString random_s(                        "    random . . . . . . . . . . [<int>|stop]. . . . . . . . . . . . . . . .-> start/stop moving randomly");
     QString epsilon_s(                       "    epsilon. . . . . . . . . . [<double>]. . . . . . . . . . . . . . . . .-> get [set] random transition probability");
     QString reward_activation_s(             "    reward-activation / ra . . <int> . . . . . . . . . . . . . . . . . . .-> print mean reward activation probability for length-<int> random walk");
     QString random_distribution_s(           "    random-distribution / rd . <int> . . . . . . . . . . . . . . . . . . .-> run <int> random transitions and display relative counts for all states");
@@ -463,11 +477,13 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     set_s += "\n" + option_3d_s;
     set_s += "\n" + option_3e_s;
     set_s += "\n" + option_3f_s;
+    set_s += "\n" + option_3g_s;
     set_s += "\n" + option_4_s;
     set_s += "\n" + option_5_s;
     set_s += "\n" + option_6_s;
     set_s += "\n" + option_7_s;
     set_s += "\n" + option_8_s;
+    set_s += "\n" + option_9_s;
 
     QString invalid_args_s( "    invalid arguments" );
 
@@ -496,74 +512,73 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
     if(str_args_n>0) {
         if(str_args[0]=="help" || str_args[0]=="h") { // help
             // Headline
-            TO_CONSOLE( headline_s );
+            to_console( headline_s );
             // General
-            TO_CONSOLE( general_s );
-            TO_CONSOLE( help_s );
-            TO_CONSOLE( exit_s );
-            TO_CONSOLE( set_s );
-            TO_CONSOLE( test_s );
+            to_console( general_s );
+            to_console( help_s );
+            to_console( exit_s );
+            to_console( set_s );
+            to_console( test_s );
             // Maze
-            TO_CONSOLE( maze_s );
-            TO_CONSOLE( left_s );
-            TO_CONSOLE( right_s );
-            TO_CONSOLE( up_s );
-            TO_CONSOLE( down_s );
-            TO_CONSOLE( stay_s );
-            TO_CONSOLE( move_s );
-            TO_CONSOLE( random_s );
-            TO_CONSOLE( epsilon_s );
-            TO_CONSOLE( reward_activation_s );
-            TO_CONSOLE( random_distribution_s );
+            to_console( maze_s );
+            to_console( left_s );
+            to_console( right_s );
+            to_console( up_s );
+            to_console( down_s );
+            to_console( stay_s );
+            to_console( move_s );
+            to_console( epsilon_s );
+            to_console( reward_activation_s );
+            to_console( random_distribution_s );
             // Learning
-            TO_CONSOLE( learning_s );
-            TO_CONSOLE( episode_s );
-            TO_CONSOLE( learning_crf_s ); // CRF
-            TO_CONSOLE( optimize_crf_s );
-            TO_CONSOLE( score_crf_s );
-            TO_CONSOLE( score1D_crf_s );
-            TO_CONSOLE( add_crf_s );
-            TO_CONSOLE( crf_erase_s );
-            TO_CONSOLE( l1_s );
-            TO_CONSOLE( evaluate_s );
-//            TO_CONSOLE( validate_s );
-            TO_CONSOLE( examine_crf_features_s );
-            TO_CONSOLE( apply_old_crf_features_s );
-            TO_CONSOLE( learning_utree_s ); // UTree
-            TO_CONSOLE( expand_leaf_nodes_s );
-            TO_CONSOLE( print_utree_s );
-            TO_CONSOLE( print_leaves_s );
-            TO_CONSOLE( clear_utree_s );
-            TO_CONSOLE( utree_value_iteration_s );
-            TO_CONSOLE( utree_expansion_type_s );
-            TO_CONSOLE( examine_utree_features_s );
-            TO_CONSOLE( learning_linQ_s ); // linear-Q
-            TO_CONSOLE( optimize_linQ_ridge_s );
-            TO_CONSOLE( optimize_linQ_l1_s );
-            TO_CONSOLE( optimize_linQ_s );
-            TO_CONSOLE( construct_s );
-            TO_CONSOLE( score_lq_s );
-            TO_CONSOLE( add_lq_s );
-            TO_CONSOLE( lq_erase_zero_weight_s );
-            TO_CONSOLE( lq_alpha_s );
+            to_console( learning_s );
+            to_console( episode_s );
+            to_console( learning_crf_s ); // CRF
+            to_console( optimize_crf_s );
+            to_console( score_crf_s );
+            to_console( score1D_crf_s );
+            to_console( add_crf_s );
+            to_console( crf_erase_s );
+            to_console( l1_s );
+            to_console( evaluate_s );
+//            to_console( validate_s );
+            to_console( examine_crf_features_s );
+            to_console( apply_old_crf_features_s );
+            to_console( learning_utree_s ); // UTree
+            to_console( expand_leaf_nodes_s );
+            to_console( print_utree_s );
+            to_console( print_leaves_s );
+            to_console( clear_utree_s );
+            to_console( utree_value_iteration_s );
+            to_console( utree_expansion_type_s );
+            to_console( examine_utree_features_s );
+            to_console( learning_linQ_s ); // linear-Q
+            to_console( optimize_linQ_ridge_s );
+            to_console( optimize_linQ_l1_s );
+            to_console( optimize_linQ_s );
+            to_console( construct_s );
+            to_console( score_lq_s );
+            to_console( add_lq_s );
+            to_console( lq_erase_zero_weight_s );
+            to_console( lq_alpha_s );
             // Planning
-            TO_CONSOLE( planning_s );
-            TO_CONSOLE( discount_s );
-            TO_CONSOLE( print_look_ahead_tree_s );
-            TO_CONSOLE( max_tree_size_s );
+            to_console( planning_s );
+            to_console( discount_s );
+            to_console( print_look_ahead_tree_s );
+            to_console( max_tree_size_s );
             // New
-            TO_CONSOLE( new_s );
-            TO_CONSOLE( color_states_s );
-            TO_CONSOLE( fixed_dt_distribution_s );
-            TO_CONSOLE( pair_delay_distribution_s );
-            TO_CONSOLE( mediator_probability_s );
+            to_console( new_s );
+            to_console( color_states_s );
+            to_console( fixed_dt_distribution_s );
+            to_console( pair_delay_distribution_s );
+            to_console( mediator_probability_s );
         } else if(str_args[0]=="left" || str_args[0]=="l") { // left
             if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
                 perform_transition(action_ptr_t(new MazeAction("left")));
             } else if(dynamic_pointer_cast<CheeseMaze>(environment)!=nullptr) {
                 perform_transition(action_ptr_t(new CheeseMazeAction("west")));
             } else {
-                TO_CONSOLE("    Not defined in current environment");
+                to_console("    Not defined in current environment");
             }
         } else if(str_args[0]=="right" || str_args[0]=="r") { // right
             if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
@@ -571,7 +586,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             } else if(dynamic_pointer_cast<CheeseMaze>(environment)!=nullptr) {
                 perform_transition(action_ptr_t(new CheeseMazeAction("east")));
             } else {
-                TO_CONSOLE("    Not defined in current environment");
+                to_console("    Not defined in current environment");
             }
         } else if(str_args[0]=="up" || str_args[0]=="u") { // up
             if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
@@ -579,7 +594,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             } else if(dynamic_pointer_cast<CheeseMaze>(environment)!=nullptr) {
                 perform_transition(action_ptr_t(new CheeseMazeAction("north")));
             } else {
-                TO_CONSOLE("    Not defined in current environment");
+                to_console("    Not defined in current environment");
             }
         } else if(str_args[0]=="down" || str_args[0]=="d") { // down
             if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
@@ -587,13 +602,13 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             } else if(dynamic_pointer_cast<CheeseMaze>(environment)!=nullptr) {
                 perform_transition(action_ptr_t(new CheeseMazeAction("south")));
             } else {
-                TO_CONSOLE("    Not defined in current environment");
+                to_console("    Not defined in current environment");
             }
         } else if(str_args[0]=="stay" || str_args[0]=="s") { // stay
             if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
                 perform_transition(action_ptr_t(new MazeAction("stay")));
             } else {
-                TO_CONSOLE("    Not defined in current environment");
+                to_console("    Not defined in current environment");
             }
         } else if(str_args[0]=="move") { // start/stop moving
             if(str_args_n==1) {
@@ -604,32 +619,20 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 action_timer->stop();
                 action_timer->start(int_args[1]);
             } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( move_s );
-            }
-        } else if(str_args[0]=="random") { // start/stop moving
-            if(str_args_n==1) {
-                random_action();
-            } else if(str_args[1]=="stop") {
-                random_timer->stop();
-            } else if(int_args_ok[1] && int_args[1]>=0){
-                random_timer->stop();
-                random_timer->start(int_args[1]);
-            } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( random_s );
+                to_console( invalid_args_s );
+                to_console( move_s );
             }
         } else if(str_args[0]=="episode" || str_args[0]=="e") { // record episode
             if(str_args_n==1) {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( episode_s );
+                to_console( invalid_args_s );
+                to_console( episode_s );
             } else if( str_args[1]=="clear" || str_args[1]=="c" ) {
                 clear_data();
             } else if(int_args_ok[1] && int_args[1]>=0){
                 collect_episode(int_args[1]);
             } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( episode_s );
+                to_console( invalid_args_s );
+                to_console( episode_s );
             }
         } else if(str_args[0]=="crf-optimize" || str_args[0]=="co") { // optimize CRF
             if(str_args_n==1 || int_args_ok[1] ) {
@@ -645,8 +648,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             } else if(str_args[1]=="check" || str_args[1]=="c") {
                 crf->check_derivatives(3,10,1e-6,1e-3);
             } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( optimize_crf_s );
+                to_console( invalid_args_s );
+                to_console( optimize_crf_s );
             }
         } else if(str_args[0]=="utree-f") {
             utree->print_features();
@@ -664,8 +667,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                         .optimize();
                 }
             } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( optimize_linQ_ridge_s );
+                to_console( invalid_args_s );
+                to_console( optimize_linQ_ridge_s );
             }
         } else if(str_args[0]=="lq-optimize-l1" || str_args[0]=="lqol1") { // optimize linear-Q
             if(str_args_n>1 && double_args_ok[1] ) {
@@ -682,8 +685,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             } else if(str_args_n>1 && (str_args[1]=="check" || str_args[1]=="c") ) {
                 linQ->check_derivatives(3,10,1e-6,1e-3);
             } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( optimize_linQ_l1_s );
+                to_console( invalid_args_s );
+                to_console( optimize_linQ_l1_s );
             }
         } else if(str_args[0]=="lq-optimize" || str_args[0]=="lqo") { // optimize linear-Q
             if(str_args_n>1 && double_args_ok[1] ) {
@@ -701,8 +704,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             } else if(str_args_n>1 && (str_args[1]=="check" || str_args[1]=="c") ) {
                 linQ->check_derivatives(10,10,1e-6,1e-3);
             } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( optimize_linQ_s );
+                to_console( invalid_args_s );
+                to_console( optimize_linQ_s );
             }
         } else if(str_args[0]=="lq-erase" || str_args[0]=="lqe") {
             if(str_args_n==1 || double_args_ok[1]) {
@@ -712,8 +715,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     linQ->erase_features_by_weight();
                 }
             } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( lq_erase_zero_weight_s );
+                to_console( invalid_args_s );
+                to_console( lq_erase_zero_weight_s );
             }
         } else if(str_args[0]=="lq-alpha") {
             if(str_args_n==1 || double_args_ok[1]) {
@@ -721,47 +724,47 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     linQ->set_alpha(double_args[1]);
                 } else {
                     double alpha = linQ->get_alpha();
-                    TO_CONSOLE( QString("    alpha = %1").arg(alpha) );
+                    to_console( QString("    alpha = %1").arg(alpha) );
                 }
             } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( lq_alpha_s );
+                to_console( invalid_args_s );
+                to_console( lq_alpha_s );
             }
         } else if(str_args[0]=="epsilon") {
             shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
             if(maze==nullptr) {
-                TO_CONSOLE("    Allowed for maze-environments only");
+                to_console("    Allowed for maze-environments only");
             } else {
                 if(str_args_n==1) {
                     if(maze->get_epsilon()!=epsilon) {
                         DEBUG_ERROR("Maze epsion (" << maze->get_epsilon() << ") is different from stored one (" << epsilon << ")");
                     }
-                    TO_CONSOLE( QString("    maze epsilon is %1").arg(epsilon) );
+                    to_console( QString("    maze epsilon is %1").arg(epsilon) );
                 } else if(double_args_ok[1] && double_args[1]>=0 && double_args[1]<=1) {
                     epsilon = double_args[1];
                     maze->set_epsilon(epsilon);
                 } else {
-                    TO_CONSOLE( invalid_args_s );
-                    TO_CONSOLE( epsilon_s );
+                    to_console( invalid_args_s );
+                    to_console( epsilon_s );
                 }
             }
         } else if(str_args[0]=="reward-activation" || str_args[0]=="ra") {
             shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
             if(maze==nullptr) {
-                TO_CONSOLE("    Allowed for maze-environments only");
+                to_console("    Allowed for maze-environments only");
             } else {
                 if(str_args_n==2 && int_args_ok[1]) {
                     maze->print_reward_activation_on_random_walk(int_args[1]);
                     maze->render_update();
                 } else {
-                    TO_CONSOLE(invalid_args_s);
-                    TO_CONSOLE(reward_activation_s);
+                    to_console(invalid_args_s);
+                    to_console(reward_activation_s);
                 }
             }
         } else if(str_args[0]=="random-distribution" || str_args[0]=="rd") { // test
             shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
             if(maze==nullptr) {
-                TO_CONSOLE("    Allowed for maze-environments only");
+                to_console("    Allowed for maze-environments only");
             } else {
                 if(str_args_n==2 && int_args_ok[1]) {
                     // initialize state counts to zero
@@ -791,25 +794,25 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     maze->set_state_colors(cols);
                     maze->render_update();
                 } else {
-                    TO_CONSOLE( invalid_args_s );
-                    TO_CONSOLE( random_distribution_s );
+                    to_console( invalid_args_s );
+                    to_console( random_distribution_s );
                 }
             }
         } else if(str_args[0]=="expand" || str_args[0]=="ex") {
             if(str_args_n==1) {
                 double score = utree->expand_leaf_node();
-                TO_CONSOLE( QString("    Score was %1").arg(score) );
+                to_console( QString("    Score was %1").arg(score) );
             } else if(int_args_ok[1] && int_args[1]>=0 ) {
                 double score = 0;
                 for(int i=0; i<int_args[1]; ++i) {
                     score = utree->expand_leaf_node();
                 }
-                TO_CONSOLE( QString("    Last score was %1").arg(score) );
+                to_console( QString("    Last score was %1").arg(score) );
             } else if(double_args_ok[1]) {
                 while( double_args[1] <= utree->expand_leaf_node(double_args[1]) ) {}
             } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( expand_leaf_nodes_s );
+                to_console( invalid_args_s );
+                to_console( expand_leaf_nodes_s );
             }
         } else if(str_args[0]=="print-utree") {
             utree->print_tree();
@@ -824,36 +827,36 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 repeat(rep) {
                     max_diff = utree->value_iteration();
                 }
-                TO_CONSOLE( QString(    "run %1 iteration(s), last maximum update was %2").arg(rep).arg(max_diff) );
+                to_console( QString(    "run %1 iteration(s), last maximum update was %2").arg(rep).arg(max_diff) );
             } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( utree_value_iteration_s );
+                to_console( invalid_args_s );
+                to_console( utree_value_iteration_s );
             }
         } else if(str_args[0]=="ex-type" || str_args[0]=="ext") {
             if(str_args_n==1) {
                 switch(utree->get_expansion_type()) {
                 case UTree::UTILITY_EXPANSION:
-                    TO_CONSOLE("    expansion type: UTILITY_EXPANSION");
+                    to_console("    expansion type: UTILITY_EXPANSION");
                     break;
                 case UTree::OBSERVATION_REWARD_EXPANSION:
-                    TO_CONSOLE("    expansion type: OBSERVATION_REWARD_EXPANSION");
+                    to_console("    expansion type: OBSERVATION_REWARD_EXPANSION");
                     break;
                 default:
                     DEBUG_DEAD_LINE;
                 }
             } else if(str_args[1]=="utility" || str_args[1]=="u") {
                 utree->set_expansion_type(UTree::UTILITY_EXPANSION);
-                TO_CONSOLE("    expansion type: UTILITY_EXPANSION");
+                to_console("    expansion type: UTILITY_EXPANSION");
             } else if(str_args[1]=="observationreward" ||str_args[1]=="or") {
                 utree->set_expansion_type(UTree::OBSERVATION_REWARD_EXPANSION);
-                TO_CONSOLE("    expansion type: OBSERVATION_REWARD_EXPANSION");
+                to_console("    expansion type: OBSERVATION_REWARD_EXPANSION");
             } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( utree_expansion_type_s );
+                to_console( invalid_args_s );
+                to_console( utree_expansion_type_s );
             }
         } else if(str_args[0]=="discount") {
             if(str_args_n==1) {
-                TO_CONSOLE( QString("    discount is %1").arg(discount) );
+                to_console( QString("    discount is %1").arg(discount) );
             } else if(double_args_ok[1] && double_args[1]>=0 && double_args[1]<=1) {
                 discount = double_args[1];
                 utree->set_discount(discount);
@@ -863,15 +866,15 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     look_ahead_policy->set_discount(discount);
                 }
             } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( discount_s );
+                to_console( invalid_args_s );
+                to_console( discount_s );
             }
         } else if(str_args[0]=="evaluate") {
             crf->evaluate_features();
         // } else if(str_args[0]=="validate" || str_args[0]=="v") {
         //     if(str_args_n==1 ) {
-        //         TO_CONSOLE( invalid_args_s );
-        //         TO_CONSOLE( validate_s );
+        //         to_console( invalid_args_s );
+        //         to_console( validate_s );
         //     } else if(str_args[1]=="crf") {
         //         if(str_args[2]=="mc") {
         //             if( str_args_n>3 && int_args_ok[3] && int_args[3]>0 ) {
@@ -882,82 +885,82 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
         //                         &model_l,
         //                         &maze_l
         //                 );
-        //                 TO_CONSOLE(QString("    MC KL-Divergence = %1 (%2 samples)").arg(kl).arg(int_args[3]));
-        //                 TO_CONSOLE(QString("    Mean Likelihood: model = %1, maze = %2").arg(model_l).arg(maze_l));
+        //                 to_console(QString("    MC KL-Divergence = %1 (%2 samples)").arg(kl).arg(int_args[3]));
+        //                 to_console(QString("    Mean Likelihood: model = %1, maze = %2").arg(model_l).arg(maze_l));
         //             } else {
-        //                 TO_CONSOLE( "    Please specify a valid sample size" );
+        //                 to_console( "    Please specify a valid sample size" );
         //             }
         //         } else {
-        //             TO_CONSOLE( invalid_args_s );
-        //             TO_CONSOLE( validate_s );
+        //             to_console( invalid_args_s );
+        //             to_console( validate_s );
         //         }
         //     } else if(str_args[1]=="kmdp") {
-        //         TO_CONSOLE( "    Sorry, not implemented" );
+        //         to_console( "    Sorry, not implemented" );
         //     } else {
-        //         TO_CONSOLE( invalid_args_s );
-        //         TO_CONSOLE( validate_s );
+        //         to_console( invalid_args_s );
+        //         to_console( validate_s );
         //     }
         } else if(str_args[0]=="crf-f") {
             crf->print_all_features();
         } else if(str_args[0]=="l1") {
             if(str_args_n==1) {
-                TO_CONSOLE(QString("    %1").arg(l1_factor));
+                to_console(QString("    %1").arg(l1_factor));
             } else if(double_args_ok[1] && double_args[1]>=0) {
                 l1_factor = double_args[1];
             } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( l1_s );
+                to_console( invalid_args_s );
+                to_console( l1_s );
             }
         } else if(str_args[0]=="score-crf" || str_args[0]=="scrf") {
             if(str_args_n==1) {
-                TO_CONSOLE(score_crf_s);
+                to_console(score_crf_s);
             } else if(int_args_ok[1] && int_args[1]>=0 ) {
                 crf->construct_candidate_features(int_args[1]);
                 crf->score_candidates_by_gradient();
                 crf->print_scores();
             } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( score_crf_s );
+                to_console( invalid_args_s );
+                to_console( score_crf_s );
             }
         } else if(str_args[0]=="score1D-crf" || str_args[0]=="s1Dcrf") {
             if(str_args_n==1) {
-                TO_CONSOLE(score1D_crf_s);
+                to_console(score1D_crf_s);
             } else if(int_args_ok[1] && int_args[1]>=0 ) {
                 crf->construct_candidate_features(int_args[1]);
                 crf->score_candidates_by_1D_optimization();
             } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( score1D_crf_s );
+                to_console( invalid_args_s );
+                to_console( score1D_crf_s );
             }
         } else if(str_args[0]=="add-crf") {
             if(str_args_n==1) {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( add_crf_s );
+                to_console( invalid_args_s );
+                to_console( add_crf_s );
             } else if(int_args_ok[1] && int_args[1]>=0 ) {
                 crf->add_candidate_features_to_active(int_args[1]);
             } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( add_crf_s );
+                to_console( invalid_args_s );
+                to_console( add_crf_s );
             }
         } else if(str_args[0]=="score-lq" || str_args[0]=="slq") {
             if(str_args_n==1) {
-                TO_CONSOLE(score_lq_s);
+                to_console(score_lq_s);
             } else if(int_args_ok[1] && int_args[1]>=0 ) {
                 linQ->construct_candidate_features(int_args[1]);
                 linQ->score_candidates_by_gradient();
             } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( score_lq_s );
+                to_console( invalid_args_s );
+                to_console( score_lq_s );
             }
         } else if(str_args[0]=="add-lq") {
             if(str_args_n==1) {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( add_lq_s );
+                to_console( invalid_args_s );
+                to_console( add_lq_s );
             } else if(int_args_ok[1] && int_args[1]>=0 ) {
                 linQ->add_candidates_by_score(int_args[1]);
             } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( add_lq_s );
+                to_console( invalid_args_s );
+                to_console( add_lq_s );
             }
         } else if(str_args[0]=="crf-erase" || str_args[0]=="ce") {
             crf->erase_zero_features();
@@ -971,8 +974,8 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                 } else if(str_args[1]=="t" || str_args[1]=="text") {
                     text = true;
                 } else {
-                    TO_CONSOLE( invalid_args_s );
-                    TO_CONSOLE( print_look_ahead_tree_s );
+                    to_console( invalid_args_s );
+                    to_console( print_look_ahead_tree_s );
                 }
             }
             shared_ptr<LookAheadPolicy> look_ahead_policy = dynamic_pointer_cast<LookAheadPolicy>(policy);
@@ -983,7 +986,7 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             }
         } else if(str_args[0]=="max-tree-size") { // set tree size
             if(str_args_n==1) {
-                TO_CONSOLE( QString( "    max tree size is %1" ).arg(max_tree_size) );
+                to_console( QString( "    max tree size is %1" ).arg(max_tree_size) );
             } else if(int_args_ok[1] && int_args[1]>=0) {
                 max_tree_size = int_args[1];
                 shared_ptr<LookAheadPolicy> look_ahead_policy = dynamic_pointer_cast<LookAheadPolicy>(policy);
@@ -991,20 +994,20 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     look_ahead_policy->set_max_tree_size(max_tree_size);
                 }
             } else {
-                TO_CONSOLE( "    Please specify a valid tree size" );
+                to_console( "    Please specify a valid tree size" );
             }
         } else if(str_args[0]=="set" || str_args[0]=="unset") { // set option
             if(str_args_n==1) {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( set_s );
+                to_console( invalid_args_s );
+                to_console( set_s );
             } else if(str_args[1]=="record") {
                 if(str_args[0]=="set") {
                     record = true;
                     start_new_episode = true;
-                    TO_CONSOLE( "    record on" );
+                    to_console( "    record on" );
                 } else if(str_args[0]=="unset") {
                     record = false;
-                    TO_CONSOLE( "    record off" );
+                    to_console( "    record off" );
                 } else {
                     DEBUG_DEAD_LINE;
                 }
@@ -1014,52 +1017,55 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     // open plot file
                     plot_file.open("plot_file.txt");
                     plot_file << "# action observation reward" << endl;
-                    TO_CONSOLE( "    plot on" );
+                    to_console( "    plot on" );
                 } else {
                     // close plot file
                     plot_file.close();
-                    TO_CONSOLE( "    plot off" );
+                    to_console( "    plot off" );
                 }
             } else if( (str_args[1]=="p" || str_args[1]=="planner") ) {
                 if(str_args_n>2) {
                     // set planner
                     if(str_args[0]=="unset") {
-                        TO_CONSOLE( "    set different planner to unset current" );
+                        to_console( "    set different planner to unset current" );
                     } else if(str_args[2]=="optimal" || str_args[2]=="o") {
                         planner_type = OPTIMAL_LOOK_AHEAD;
-                        TO_CONSOLE( "    using optimal planner" );
+                        to_console( "    using optimal planner" );
                     } else if(str_args[2]=="sparse" || str_args[2]=="s") {
                         planner_type = SPARSE_LOOK_AHEAD;
-                        TO_CONSOLE( "    using sparse planner" );
+                        to_console( "    using sparse planner" );
                     } else if(str_args[2]=="utree" || str_args[2]=="u") {
                         planner_type = UTREE_LOOK_AHEAD;
-                        TO_CONSOLE( "    using UTree planner" );
+                        to_console( "    using UTree planner" );
                     } else if(str_args[2]=="uv" || str_args[2]=="utree-value") {
                         planner_type = UTREE_VALUE;
-                        TO_CONSOLE( "    using UTree-value for action selection" );
+                        to_console( "    using UTree-value for action selection" );
                     } else if(str_args[2]=="lq" || str_args[2]=="linear-q") {
                         planner_type = LINEAR_Q_VALUE;
-                        TO_CONSOLE( "    using linear Q-approximation for action selection" );
+                        to_console( "    using linear Q-approximation for action selection" );
                     } else if(str_args[2]=="g" || str_args[2]=="goal") {
                         planner_type = GOAL_ITERATION;
-                        TO_CONSOLE( "    using goal-guided value iteration" );
+                        to_console( "    using goal-guided value iteration" );
+                    } else if(str_args[2]=="r" || str_args[2]=="random") {
+                        planner_type = RANDOM;
+                        to_console( "    using random policy" );
                     } else {
-                        TO_CONSOLE( "    unknown planner" );
+                        to_console( "    unknown planner" );
                     }
                     set_policy();
                 } else {
-                    TO_CONSOLE( "    please supply a planner to use" );
+                    to_console( "    please supply a planner to use" );
                 }
             } else if(str_args[1]=="maze") {
                 bool print_list = false;
                 if(str_args[0]=="unset") {
-                    TO_CONSOLE( "    set different environment to unset current" );
+                    to_console( "    set different environment to unset current" );
                 } else {
                     if(str_args_n>2) {
                         shared_ptr<Maze> maze(new Maze(epsilon));
                         bool success = maze->set_maze(str_args[2]);
                         if(!success) {
-                            TO_CONSOLE("    No maze named '"+str_args[2]+"'");
+                            to_console("    No maze named '"+str_args[2]+"'");
                             print_list = true;
                         }
                         change_environment(maze);
@@ -1068,30 +1074,39 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     }
                 }
                 if(print_list) {
-                    TO_CONSOLE( "    Available mazes:" );
+                    to_console( "    Available mazes:" );
                     for(QString name : Maze::get_maze_list()) {
-                        TO_CONSOLE("        "+name);
+                        to_console("        "+name);
                     }
                 }
             } else if(str_args[1]=="cheese") {
                 if(str_args[0]=="unset") {
-                    TO_CONSOLE( "    set different environment to unset current" );
+                    to_console( "    set different environment to unset current" );
                 } else {
                     change_environment(make_shared<CheeseMaze>());
                 }
-            } else if(str_args[1]=="goal") {
+            } else if(str_args[1]=="c" || str_args[1]=="color") {
+                if(str_args[0]=="unset") {
+                    color_maze = false;
+                    to_console( "    don't color maze" );
+                } else {
+                    color_maze = true;
+                    to_console( "    color maze" );
+                }
+            } else if(str_args[1]=="g" || str_args[1]=="goal") {
                 shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
                 if(maze==nullptr) {
-                    TO_CONSOLE("    Allowed for maze-environments only");
+                    to_console("    Allowed for maze-environments only");
                 } else {
                     if(str_args[0]=="set") {
-                        if(goal_activated) {
-                            TO_CONSOLE( "    goal already active" );
-                        } else {
-                            TO_CONSOLE( "    goal active" );
-                        }
+                        // set flag
                         goal_activated = true;
-                        goal_state = current_instance->observation;
+                        // get state
+                        if(str_args_n>2 && (str_args[2]=="r" || str_args[2]=="random")) {
+                            goal_state = observation_space->random_element();
+                        } else {
+                            goal_state = current_instance->observation;
+                        }
                         // color maze
                         Maze::color_vector_t cols;
                         for(auto observation : observation_space) {
@@ -1108,22 +1123,24 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                         if(goal_iteration!=nullptr) {
                             goal_iteration->set_goal(goal_state);
                         }
+                        // print message
+                        to_console( "    goal set" );
                     } else {
                         if(!goal_activated) {
-                            TO_CONSOLE( "    goal already inactive" );
+                            to_console( "    goal already inactive" );
                         } else {
                             goal_activated = false;
-                            TO_CONSOLE( "    goal inactive" );
+                            to_console( "    goal inactive" );
                         }
                     }
                 }
             } else if(str_args[1]=="prune-tree") {
                 if(str_args[0]=="set") {
                     prune_search_tree=true;
-                    TO_CONSOLE( "    prune search tree" );
+                    to_console( "    prune search tree" );
                 } else {
                     prune_search_tree=false;
-                    TO_CONSOLE( "    don't prune search tree" );
+                    to_console( "    don't prune search tree" );
                 }
                 shared_ptr<LookAheadPolicy> look_ahead_policy = dynamic_pointer_cast<LookAheadPolicy>(policy);
                 if(look_ahead_policy!=nullptr) {
@@ -1133,23 +1150,23 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             } else if(str_args[1]=="png") {
                 if(str_args[0]=="set") {
                     save_png_on_transition=true;
-                    TO_CONSOLE( "    save png on transition" );
+                    to_console( "    save png on transition" );
                 } else {
                     save_png_on_transition=false;
-                    TO_CONSOLE( "    don't save png on transition" );
+                    to_console( "    don't save png on transition" );
                 }
             } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( set_s );
+                to_console( invalid_args_s );
+                to_console( set_s );
             }
         } else if(str_args[0]=="construct" || str_args[0]=="con") {
             if(str_args_n==1) {
-                TO_CONSOLE(construct_s);
+                to_console(construct_s);
             } else if(int_args_ok[1] && int_args[1]>=0 ) {
                 linQ->add_all_candidates(int_args[1]);
             } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( construct_s );
+                to_console( invalid_args_s );
+                to_console( construct_s );
             }
         } else if(str_args[0]=="test") { // test
             // if(str_args_n==2 && int_args_ok[1]) {
@@ -1161,13 +1178,13 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             // utree->print_features();
 
             probability_t like = crf->cross_validation(10);
-            TO_CONSOLE( QString("    Mean Data Likelihood: %1").arg(like) );
+            to_console( QString("    Mean Data Likelihood: %1").arg(like) );
 
-            //TO_CONSOLE( "    currently no test function implemented" );
+            //to_console( "    currently no test function implemented" );
         } else if(str_args[0]=="col-states") { // color states
             shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
             if(maze==nullptr) {
-                TO_CONSOLE("    Allowed for maze-environments only");
+                to_console("    Allowed for maze-environments only");
             } else {
                 Maze::color_vector_t cols;
                 for(observation_ptr_t observation : observation_space) {
@@ -1179,11 +1196,11 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
         } else if(str_args[0]=="fixed-dt-dist" || str_args[0]=="fdd") { // show delay probability
             shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
             if(maze==nullptr) {
-                TO_CONSOLE("    Allowed for maze-environments only");
+                to_console("    Allowed for maze-environments only");
             } else {
                 if(str_args_n!=2 || !int_args_ok[1]) {
-                    TO_CONSOLE( invalid_args_s );
-                    TO_CONSOLE( fixed_dt_distribution_s );
+                    to_console( invalid_args_s );
+                    to_console( fixed_dt_distribution_s );
                 } else {
                     // get probabilites for all states
                     observation_ptr_t s1 = current_instance->observation;
@@ -1222,11 +1239,11 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
             }
         } else if(str_args[0]=="pair-delay-dist" || str_args[0]=="pdd") { // show delay distribution
             if(str_args_n>1 && !int_args_ok[1]) {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( pair_delay_distribution_s );
+                to_console( invalid_args_s );
+                to_console( pair_delay_distribution_s );
             } else {
                 if(!goal_activated) {
-                    TO_CONSOLE( "    Goal state must be activated to calculate delay distribution" );
+                    to_console( "    Goal state must be activated to calculate delay distribution" );
                 } else {
 
                     // get distribution
@@ -1293,11 +1310,11 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
         } else if(str_args[0]=="mediator-probability" || str_args[0]=="mp") { // show mediator probability
             shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
             if(maze==nullptr) {
-                TO_CONSOLE("    Allowed for maze-environments only");
+                to_console("    Allowed for maze-environments only");
             } else {
                 if(str_args_n==2 && int_args_ok[1]) {
                     if(!goal_activated) {
-                        TO_CONSOLE( "    Goal state must be activated to calculate mediator probabilities" );
+                        to_console( "    Goal state must be activated to calculate mediator probabilities" );
                     } else {
                         // get probabilites for all states
                         DEBUG_OUT(2,"Calculating mediator distribution...");
@@ -1334,12 +1351,12 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                         maze->render_update();
                     }
                 } else {
-                    TO_CONSOLE( invalid_args_s );
-                    TO_CONSOLE( mediator_probability_s );
+                    to_console( invalid_args_s );
+                    to_console( mediator_probability_s );
                 }
             }
         } else {
-            TO_CONSOLE("    unknown command");
+            to_console("    unknown command");
         }
     }
 }

@@ -47,6 +47,7 @@ HEADERS += \
     ../CheeseMaze/CheeseMazeObservation.h \
     \
     ../Planning/Policy.h \
+    ../Planning/RandomPolicy.h \
     ../Planning/LookAheadSearch.h \
     ../Planning/LookAheadPolicy.h \
     ../Planning/GoalIteration.h \

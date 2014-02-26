@@ -51,6 +51,7 @@ private:
     // for setting the different planners
     enum PLANNER_TYPE {
         NONE,
+        RANDOM,
         OPTIMAL_LOOK_AHEAD,
         SPARSE_LOOK_AHEAD,
         KMDP_LOOK_AHEAD,
@@ -73,7 +74,7 @@ private:
     instance_t * current_instance;
 
     // state flags
-    bool record, plot, start_new_episode, search_tree_invalid, save_png_on_transition;
+    bool record, plot, start_new_episode, search_tree_invalid, save_png_on_transition, color_maze;
 
     // file for writing out transitions
     std::ofstream plot_file;
@@ -82,7 +83,7 @@ private:
     unsigned int png_counter;
 
     // time for repeated execution of actions
-    QTimer * random_timer, * action_timer;
+    QTimer * action_timer;
 
     // stuff for a persistent console history
     std::vector<QString> console_history;
@@ -92,7 +93,7 @@ private:
     // discout that is used
     double discount;
 
-    // epsion (randomness) that is used
+    // epsilon (randomness) that is used
     double epsilon;
 
     //--------//
@@ -129,6 +130,7 @@ private:
     // Member Functions //
     //==================//
 
+    void to_console(QString x) { ui._wConsoleOutput->appendPlainText(x); }
     void collect_episode(const int& length);
     void update_current_instance(action_ptr_t, observation_ptr_t, reward_ptr_t, bool invalidate_search_tree = true);
     void add_action_observation_reward_tripel(
@@ -147,7 +149,6 @@ private:
 
 private slots:
     void render_update();
-    void random_action();
     void choose_action();
     void process_console_input(QString sequence_input = QString(), bool sequence = false);
     void back_in_history();
