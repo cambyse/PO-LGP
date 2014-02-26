@@ -58,21 +58,26 @@ KeyFramer::sKeyFramer::sKeyFramer(ors::KinematicWorld *_kw, G4Data *_g4d): kw(_k
 
 KeyFramer::sKeyFramer::~sKeyFramer() {}
 
+// clear {{{
 void KeyFramer::sKeyFramer::clear() {
   clearState();
 }
-
+// }}}
+// clearState {{{
 void KeyFramer::sKeyFramer::clearState() {
   nbodies = 0;
   ndofs = 0;
   clearFrames();
 }
-
+// }}}
+// clearFrames {{{
 void KeyFramer::sKeyFramer::clearFrames() {
   state.clear();
   nframes = 0;
 }
+// }}}
 
+// init {{{
 void KeyFramer::sKeyFramer::init() {
   StringA posNames;
   StringA oriNames;
@@ -105,7 +110,8 @@ void KeyFramer::sKeyFramer::init() {
     }
   }
 }
-
+// }}}
+// addBody {{{
 void KeyFramer::sKeyFramer::addBody(String &name, uint body_ndofs) {
   CHECK(body_ndofs > 0, "Number of Dofs for a body must be positive.");
   CHECK(!names.contains(name), "Body name already exists.");
@@ -117,44 +123,50 @@ void KeyFramer::sKeyFramer::addBody(String &name, uint body_ndofs) {
   dofs.append(body_ndofs);
   names.append(name);
 }
+// }}}
 
+// addState {{{
 void KeyFramer::sKeyFramer::addState(arr st) {
   CHECK(st.N == ndofs, "Wrong number of dofs.");
   nframes++;
   state.append(st);
   state.reshape(nframes, ndofs);
 }
-
+// }}}
+// addState {{{
 void KeyFramer::sKeyFramer::addState() {
   arr st(ndofs);
   st.setZero();
   addState(st);
 }
-
+// }}}
+// setState {{{
 void KeyFramer::sKeyFramer::setState(uint b, arr st, uint f) {
   CHECK(b < nbodies, "Invalid body index.");
   CHECK(dofs(b) == st.N, "Wrong number of dofs.");
   CHECK(f <= nframes, "Frame number out of bounds.");
-  /*
-  for(uint i = 0; i < st.N; i++)
-    s->state(f, s->cumdofs(b)+i) = st(i);
-  */
+  //for(uint i = 0; i < st.N; i++)
+    //s->state(f, s->cumdofs(b)+i) = st(i);
   // TODO does this work?
   state[f]().replace(cumdofs(b), st.N, st);
 }
-
+// }}}
+// setState {{{
 void KeyFramer::sKeyFramer::setState(String n, arr st, uint f) {
   int b = names.findValue(n);
   CHECK(b >= 0, "Invalid name.");
   setState(b, st, f);
 }
-
+// }}}
+// setState {{{
 void KeyFramer::sKeyFramer::setState(arr st, uint f) {
   CHECK(st.N == ndofs, "Wrong number of dofs.");
   CHECK(f < nframes, "Frame number out of bounds.");
   state[f]() = st;
 }
+// }}}
 
+// setupWindows {{{
 void KeyFramer::sKeyFramer::setupWindows(MT::Array<arr> &wins, uint wlen) {
   //uint nwins = getNWindows(wlen);
   uint nwins = nframes>=wlen? nframes-wlen+1: 0;
@@ -166,6 +178,7 @@ void KeyFramer::sKeyFramer::setupWindows(MT::Array<arr> &wins, uint wlen) {
   for(uint wi = 0; wi < nwins; wi++)
     wins(wi).referToSubRange(state, wi, wi+wlen-1);
 }
+// }}}
 
 // ============================================================================
 // KeyFramer
@@ -179,6 +192,7 @@ KeyFramer::~KeyFramer() {
   delete s;
 }
 
+// updateOrs {{{
 void KeyFramer::updateOrs(uint f) {
   arr xPos, xQuat;
   for(auto &b: s->kw->bodies) {
@@ -195,7 +209,9 @@ void KeyFramer::updateOrs(uint f) {
   s->kw->gl().text.clear() << "frame " << f << "/" << s->g4d->getNumFrames();
   s->kw->gl().update(NULL, false);
 }
+// }}}
 
+// getCorrPCA {{{
 arr KeyFramer::getCorrPCA(uint b1, uint b2, uint wlen, uint npc) {
   // TODO this still has to be fixed, in terms of the wlen offset
   //HALT("STILL HAVE TO FIX WLEN OFFSET")
@@ -247,20 +263,19 @@ arr KeyFramer::getCorrPCA(uint b1, uint b2, uint wlen, uint npc) {
                       (dwlen*syy - sy % sy)
                   );
 
-    /*
-    sx = sum(x);
-    sy = sum(y);
-    sxx = (~x*x).elem(0); // or even sum(elemWiseProd(x, x));
-    sxy = (~x*y).elem(0);
-    syy = (~y*y).elem(0);
+    //sx = sum(x);
+    //sy = sum(y);
+    //sxx = (~x*x).elem(0); // or even sum(elemWiseProd(x, x));
+    //sxy = (~x*y).elem(0);
+    //syy = (~y*y).elem(0);
 
-    corr(fi) = (sxy*wlen - sx*sy) / sqrt(fabs((sxx*wlen - sx*sx)*(syy*wlen - sy*sy)));
-    */
+    //corr(fi) = (sxy*wlen - sx*sy) / sqrt(fabs((sxx*wlen - sx*sx)*(syy*wlen - sy*sy)));
   }
 
   return corr;
 }
-
+// }}}
+// getCorrPCA {{{
 arr KeyFramer::getCorrPCA(const String &n1, const String &n2, uint wlen, uint npc) {
   int b1 = s->names.findValue(n1);
   CHECK(b1 >= 0, "Invalid name.");
@@ -269,7 +284,8 @@ arr KeyFramer::getCorrPCA(const String &n1, const String &n2, uint wlen, uint np
 
   return getCorrPCA(b1, b2, wlen, npc);
 }
-
+// }}}
+// getCorr {{{
 arr KeyFramer::getCorr(uint b1, uint b2, uint wlen) {
   CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
 
@@ -305,18 +321,16 @@ arr KeyFramer::getCorr(uint b1, uint b2, uint wlen) {
     syy = sum(yy, 0);
     sxy = sum(xy, 0);
 
-    /*
-    t1 = elemWiseProd(sx, sy);
-    t2 = elemWiseProd(sx, sx);
-    t3 = elemWiseProd(sy, sy);
-    t4a = dwlen*sxx - t2;
-    t4b = dwlen*syy - t3;
-    t4 = elemWiseProd(t4a, t4b);
-    t5 = sqrt(t4);
-    t6a = dwlen*sxy - t1;
-    t6 = elemWiseDiv(t6a, t5);
-    corr[wi]() = t6;
-    */
+    //t1 = elemWiseProd(sx, sy);
+    //t2 = elemWiseProd(sx, sx);
+    //t3 = elemWiseProd(sy, sy);
+    //t4a = dwlen*sxx - t2;
+    //t4b = dwlen*syy - t3;
+    //t4 = elemWiseProd(t4a, t4b);
+    //t5 = sqrt(t4);
+    //t6a = dwlen*sxy - t1;
+    //t6 = elemWiseDiv(t6a, t5);
+    //corr[wi]() = t6;
     corr[fi]() = (dwlen * sxy - sx % sy) /
                   sqrt(
                       (dwlen * sxx - sx % sx) %
@@ -326,7 +340,8 @@ arr KeyFramer::getCorr(uint b1, uint b2, uint wlen) {
 
   return corr;
 }
-
+// }}}
+// getCorr {{{
 arr KeyFramer::getCorr(const String &n1, const String &n2, uint wlen) {
   int b1 = s->names.findValue(n1);
   CHECK(b1 >= 0, "Invalid name.");
@@ -335,7 +350,9 @@ arr KeyFramer::getCorr(const String &n1, const String &n2, uint wlen) {
 
   return getCorr(b1, b2, wlen);
 }
+// }}}
 
+// computeVar {{{
 void KeyFramer::computeVar(String type, uint wlen, bool force) {
   String typeVar = STRING(type << "Var");
   if(!force && s->g4d->hasBAM(typeVar)) {
@@ -364,7 +381,8 @@ void KeyFramer::computeVar(String type, uint wlen, bool force) {
 
   s->g4d->appendBam(typeVar, y);
 }
-
+// }}}
+// computeSpeed {{{
 void KeyFramer::computeSpeed(String type, bool force) {
   String typeSpeed = STRING(type << "Speed");
   if(!force && s->g4d->hasBAM(typeSpeed)) {
@@ -382,12 +400,14 @@ void KeyFramer::computeSpeed(String type, bool force) {
   uint numF = s->g4d->getNumFrames();
   for(uint i = 0; i < numS; i++) {
     for(uint f = 1; f < numF; f++)
-      y(i, f) = 120. * 100. * sqrt(sumOfSqr(x[i][f] - x[i][f-1]));
+      // speed in cm/s (measurements in 100cm, and at 120/s)
+      y(i, f) = 12000. * sqrt(sumOfSqr(x[i][f] - x[i][f-1]));
   }
 
   s->g4d->appendBam(typeSpeed, y);
 }
-
+// }}}
+// computeGP {{{
 void KeyFramer::computeGP(String type, bool force) {
   String typeGP = STRING(type << "GP");
   if(!force && s->g4d->hasBAM(typeGP)) {
@@ -422,7 +442,8 @@ void KeyFramer::computeGP(String type, bool force) {
 
   s->g4d->appendBam(typeGP, y);
 }
-
+// }}}
+// computeDPos {{{
 void KeyFramer::computeDPos(const String &b, bool force) {
   String typeDPos;
   typeDPos << b << "_dPos";
@@ -457,7 +478,8 @@ void KeyFramer::computeDPos(const String &b, bool force) {
 
   s->g4d->appendBam(typeDPos, y);
 }
-
+// }}}
+// computeDQuat {{{
 void KeyFramer::computeDQuat(const String &b, bool force) {
   String typeDQuat;
   typeDQuat << b << "_dQuat";
@@ -489,20 +511,24 @@ void KeyFramer::computeDQuat(const String &b, bool force) {
 
   s->g4d->appendBam(typeDQuat, y);
 }
+// }}}
 
+// getState {{{
 arr KeyFramer::getState(uint b) {
   uint dofs = s->dofs(b);
   uint cumdofs = s->cumdofs(b);
   return s->state.cols(cumdofs, cumdofs + dofs);
 }
-
+// }}}
+// getState {{{
 arr KeyFramer::getState(const String &n) {
   int b = s->names.findValue(n);
   CHECK(b >= 0, "Invalid name.");
 
   return getState(b);
 }
-
+// }}}
+// getStateVar {{{
 arr KeyFramer::getStateVar(uint b, uint wlen) {
   arr var(s->nframes);
   arr win, m;
@@ -521,14 +547,16 @@ arr KeyFramer::getStateVar(uint b, uint wlen) {
   }
   return var / (double) wlen;
 }
-
+// }}}
+// getStateVar {{{
 arr KeyFramer::getStateVar(const String &n, uint wlen) {
   int b = s->names.findValue(n);
   CHECK(b >= 0, "Invalid name.");
 
   return getStateVar(b, wlen);
 }
-
+// }}}
+// getStateSpeed {{{
 arr KeyFramer::getStateSpeed(uint b) {
   arr speed(s->nframes);
   arr state = getState(b);
@@ -538,14 +566,17 @@ arr KeyFramer::getStateSpeed(uint b) {
     speed(t) = 120. * 100. * sqrt(sumOfSqr((state[t] - state[t-1])));
   return speed;
 }
-
+// }}}
+// getStateSpeed {{{
 arr KeyFramer::getStateSpeed(const String &n) {
   int b = s->names.findValue(n);
   CHECK(b >= 0, "Invalid name.");
 
   return getStateSpeed(b);
 }
+// }}}
 
+// getAngle {{{
 arr KeyFramer::getAngle(uint b1, uint b2) {
   CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
 
@@ -570,7 +601,8 @@ arr KeyFramer::getAngle(uint b1, uint b2) {
 
   return angle;
 }
-
+// }}}
+// getAngle {{{
 arr KeyFramer::getAngle(const String &n1, const String &n2) {
   int b1 = s->names.findValue(n1);
   CHECK(b1 >= 0, "Invalid name.");
@@ -579,7 +611,8 @@ arr KeyFramer::getAngle(const String &n1, const String &n2) {
 
   return getAngle(b1, b2);
 }
-
+// }}}
+// getAngleVar {{{
 arr KeyFramer::getAngleVar(uint b1, uint b2, uint wlen) {
   CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
 
@@ -599,7 +632,8 @@ arr KeyFramer::getAngleVar(uint b1, uint b2, uint wlen) {
 
   return var / (double)wlen;
 }
-
+// }}}
+// getAngleVar {{{
 arr KeyFramer::getAngleVar(const String &n1, const String &n2, uint wlen) {
   int b1 = s->names.findValue(n1);
   CHECK(b1 >= 0, "Invalid name.");
@@ -608,7 +642,9 @@ arr KeyFramer::getAngleVar(const String &n1, const String &n2, uint wlen) {
 
   return getAngleVar(b1, b2, wlen);
 }
+// }}}
 
+// getQuat {{{
 arr KeyFramer::getQuat(uint b1, uint b2) {
   CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
 
@@ -633,7 +669,8 @@ arr KeyFramer::getQuat(uint b1, uint b2) {
 
   return quat;
 }
-
+// }}}
+// getQuat {{{
 arr KeyFramer::getQuat(const String &n1, const String &n2) {
   int b1 = s->names.findValue(n1);
   CHECK(b1 >= 0, "Invalid name.");
@@ -642,7 +679,8 @@ arr KeyFramer::getQuat(const String &n1, const String &n2) {
 
   return getQuat(b1, b2);
 }
-
+// }}}
+// getQuatVar {{{
 arr KeyFramer::getQuatVar(uint b1, uint b2, uint wlen) {
   CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
 
@@ -664,7 +702,8 @@ arr KeyFramer::getQuatVar(uint b1, uint b2, uint wlen) {
 
   return var / (double) wlen;
 }
-
+// }}}
+// getQuatVar {{{
 arr KeyFramer::getQuatVar(const String &n1, const String &n2, uint wlen) {
   int b1 = s->names.findValue(n1);
   CHECK(b1 >= 0, "Invalid name.");
@@ -673,7 +712,9 @@ arr KeyFramer::getQuatVar(const String &n1, const String &n2, uint wlen) {
 
   return getQuatVar(b1, b2, wlen);
 }
+// }}}
 
+// getPos {{{
 arr KeyFramer::getPos(uint b1, uint b2) {
   CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
 
@@ -702,7 +743,8 @@ arr KeyFramer::getPos(uint b1, uint b2) {
 
   return pos;
 }
-
+// }}}
+// getPos {{{
 arr KeyFramer::getPos(const String &n1, const String &n2) {
   int b1 = s->names.findValue(n1);
   CHECK(b1 >= 0, "Invalid name.");
@@ -711,7 +753,8 @@ arr KeyFramer::getPos(const String &n1, const String &n2) {
 
   return getPos(b1, b2);
 }
-
+// }}}
+// getPosVar {{{
 arr KeyFramer::getPosVar(uint b1, uint b2, uint wlen) {
   CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
 
@@ -733,7 +776,8 @@ arr KeyFramer::getPosVar(uint b1, uint b2, uint wlen) {
 
   return var / (double) wlen;
 }
-
+// }}}
+// getPosVar {{{
 arr KeyFramer::getPosVar(const String &n1, const String &n2, uint wlen) {
   int b1 = s->names.findValue(n1);
   CHECK(b1 >= 0, "Invalid name.");
@@ -742,7 +786,9 @@ arr KeyFramer::getPosVar(const String &n1, const String &n2, uint wlen) {
 
   return getPosVar(b1, b2, wlen);
 }
+// }}}
 
+// getDiff {{{
 arr KeyFramer::getDiff(uint b1, uint b2) {
   CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
 
@@ -756,7 +802,8 @@ arr KeyFramer::getDiff(uint b1, uint b2) {
 
   return s2 - s1;
 }
-
+// }}}
+// getDiff {{{
 arr KeyFramer::getDiff(const String &n1, const String &n2) {
   
   int b1 = s->names.findValue(n1);
@@ -766,7 +813,8 @@ arr KeyFramer::getDiff(const String &n1, const String &n2) {
 
   return getDiff(b1, b2);
 }
-
+// }}}
+// getDiffVar {{{
 arr KeyFramer::getDiffVar(uint b1, uint b2, uint wlen) {
   CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
 
@@ -788,7 +836,8 @@ arr KeyFramer::getDiffVar(uint b1, uint b2, uint wlen) {
 
   return var / (double)wlen;
 }
-
+// }}}
+// getDiffVar {{{
 arr KeyFramer::getDiffVar(const String &n1, const String &n2, uint wlen) {
   int b1 = s->names.findValue(n1);
   CHECK(b1 >= 0, "Invalid name.");
@@ -797,7 +846,9 @@ arr KeyFramer::getDiffVar(const String &n1, const String &n2, uint wlen) {
 
   return getDiffVar(b1, b2, wlen);
 }
+// }}}
 
+// getPosLen {{{
 arr KeyFramer::getPosLen(uint b1, uint b2) {
   CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
 
@@ -808,7 +859,8 @@ arr KeyFramer::getPosLen(uint b1, uint b2) {
 
   return posLen;
 }
-
+// }}}
+// getPosLen {{{
 arr KeyFramer::getPosLen(const String &n1, const String &n2) {
   int b1 = s->names.findValue(n1);
   CHECK(b1 >= 0, "Invalid name.");
@@ -817,7 +869,8 @@ arr KeyFramer::getPosLen(const String &n1, const String &n2) {
 
   return getPosLen(b1, b2);
 }
-
+// }}}
+// getPosLenVar {{{
 arr KeyFramer::getPosLenVar(uint b1, uint b2, uint wlen) {
   CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
 
@@ -837,7 +890,8 @@ arr KeyFramer::getPosLenVar(uint b1, uint b2, uint wlen) {
 
   return var / (double) wlen;
 }
-
+// }}}
+// getPosLenVar {{{
 arr KeyFramer::getPosLenVar(const String &n1, const String &n2, uint wlen) {
   int b1 = s->names.findValue(n1);
   CHECK(b1 >= 0, "Invalid name.");
@@ -846,7 +900,9 @@ arr KeyFramer::getPosLenVar(const String &n1, const String &n2, uint wlen) {
 
   return getPosLenVar(b1, b2, wlen);
 }
+// }}}
 
+// getTransfVar {{{
 arr KeyFramer::getTransfVar(uint b1, uint b2, uint wlen) {
   CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
 
@@ -870,7 +926,8 @@ arr KeyFramer::getTransfVar(uint b1, uint b2, uint wlen) {
 
   return var;
 }
-
+// }}}
+// getTransfVar {{{
 arr KeyFramer::getTransfVar(const String &n1, const String &n2, uint wlen) {
   int b1 = s->names.findValue(n1);
   CHECK(b1 >= 0, "Invalid name.");
@@ -879,7 +936,9 @@ arr KeyFramer::getTransfVar(const String &n1, const String &n2, uint wlen) {
 
   return getTransfVar(b1, b2, wlen);
 }
+// }}}
 
+// getKeyFrames {{{
 KeyFrameL KeyFramer::getKeyFrames(const uintA &vit) {
   KeyFrameL keyframes;
   KeyFrame *kf;
@@ -899,7 +958,8 @@ KeyFrameL KeyFramer::getKeyFrames(const uintA &vit) {
   }
   return keyframes;
 }
-
+// }}}
+// saveKeyFrameScreens {{{
 void KeyFramer::saveKeyFrameScreens(const KeyFrameL &keyframes, uint df) {
   uint f;
   uint h, w;
@@ -945,6 +1005,7 @@ void KeyFramer::saveKeyFrameScreens(const KeyFrameL &keyframes, uint df) {
     write_ppm(comp, STRING("z.keyframe."<<ss<<".ppm"));
   }
 }
+// }}}
 
 //#define EM_CORR_ORIG
 //#define EM_CORR_NEW
@@ -1261,7 +1322,6 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &bA, const String &bB, uint 
 }
 #endif // EM_NO_CORR
 // }}}
-
  // EM_CORR_NEW {{{
 #ifdef EM_CORR_NEW
 #define update_mu_c
@@ -1603,7 +1663,6 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &bA, const String &bB, uint 
 }
 #endif // EM_CORR_NEW
 // }}}
-
 // EM CORR_ORIG {{{
 #ifdef EM_CORR_ORIG
 #define update_mu_c
@@ -1868,7 +1927,6 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &b1, const String &b2, uint 
 }
 #endif // EM_CORR_ORIG
 // }}}
-
 // EM MOV {{{
 #ifdef EM_MOV
 #define update_mu_pVar
@@ -2086,7 +2144,7 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &bb, uint wlen) {
 //#define update_sigma_pSpeedGP
 //#define update_mu_qSpeedGP
 //#define update_sigma_qSpeedGP
-void KeyFramer::EM_m(KeyValueGraph &kvg, const String &bb, uint wlen) {
+void KeyFramer::EM_m(KeyValueGraph &kvg, const String &bb) {
   // Computing other BAMS {{{
   cout << " * computing posSpeed" << endl;
   computeSpeed(STRING("pos"));
@@ -2126,11 +2184,11 @@ void KeyFramer::EM_m(KeyValueGraph &kvg, const String &bb, uint wlen) {
   A = { .5, .5,
         .5, .5 };
   A.reshape(2, 2);
-  p_zmm = { 9, 1,
+  p_zmm = { 50, 1,
             1, 1,
 
             1, 9,
-            9, 9 };
+            9, 50 };
   p_zmm.reshape(2, 2, 2);
   normalizeDist(p_zmm);
   p_z = my_sum(p_zmm, 0);
@@ -2280,8 +2338,7 @@ void KeyFramer::EM_m(KeyValueGraph &kvg, const String &bb, uint wlen) {
   cout << "DONE!" << endl;
 
   // Viterbi {{{
-  double m;
-  int mi;
+  uint mi;
   arr wz(T, K), wzind(T, K), temp;
   cout << "pi: " << pi << endl;
   cout << "log(pi): " << log(pi) << endl;
@@ -2291,18 +2348,10 @@ void KeyFramer::EM_m(KeyValueGraph &kvg, const String &bb, uint wlen) {
   wz[0]() = pi + log(rho_z[0]);
   for(uint t = 1; t < T; t++) {
     temp = log(A) + ~repmat(wz[t-1], 1, K); // TODO is this necessary? test
-
     wz[t]() = log(rho_z[t]);
     for(uint k = 0; k < K; k++) {
-      m = temp(k, 0);
-      mi = 0;
-      for(uint kk = 1; kk < K; kk++) {
-        if(m < temp(k, kk)) {
-          m = temp(k, kk);
-          mi = kk;
-        }
-      }
-      wz(t, k) += m;
+      mi = temp[k].maxIndex();
+      wz(t, k) += temp(k, mi);
       wzind(t, k) = mi;
     }
   }
@@ -2339,13 +2388,12 @@ void KeyFramer::EM_m(KeyValueGraph &kvg, const String &bb, uint wlen) {
   // }}}
 }
 // }}}
-
 // EM_r {{{
 //#define update_mu_dpSpeedGP
 //#define update_sigma_dpSpeedGP
 //#define update_mu_dqSpeedGP
 //#define update_sigma_dqSpeedGP
-void KeyFramer::EM_r(KeyValueGraph &kvg, const String &bA, const String &bB, uint wlen) {
+void KeyFramer::EM_r(KeyValueGraph &kvg, const String &bA, const String &bB) {
   // Computing other BAMS {{{
   String bA_dPos = STRING(bA << "_dPos");
   String bA_dQuat = STRING(bA << "_dQuat");
@@ -2403,11 +2451,11 @@ void KeyFramer::EM_r(KeyValueGraph &kvg, const String &bA, const String &bB, uin
   A = { .5, .5,
         .5, .5 };
   A.reshape(2, 2);
-  p_zmm = { 9, 9,
+  p_zmm = { 50, 9,
             9, 1,
 
             1, 1,
-            1, 9 };
+            1, 50 };
   p_zmm.reshape(2, 2, 2);
   normalizeDist(p_zmm);
   p_z = my_sum(p_zmm, 0);
@@ -2557,8 +2605,7 @@ void KeyFramer::EM_r(KeyValueGraph &kvg, const String &bA, const String &bB, uin
   cout << "DONE!" << endl;
 
   // Viterbi {{{
-  double m;
-  int mi;
+  uint mi;
   arr wz(T, K), wzind(T, K), temp;
   cout << "pi: " << pi << endl;
   cout << "log(pi): " << log(pi) << endl;
@@ -2568,18 +2615,10 @@ void KeyFramer::EM_r(KeyValueGraph &kvg, const String &bA, const String &bB, uin
   wz[0]() = pi + log(rho_z[0]);
   for(uint t = 1; t < T; t++) {
     temp = log(A) + ~repmat(wz[t-1], 1, K); // TODO is this necessary? test
-
     wz[t]() = log(rho_z[t]);
     for(uint k = 0; k < K; k++) {
-      m = temp(k, 0);
-      mi = 0;
-      for(uint kk = 1; kk < K; kk++) {
-        if(m < temp(k, kk)) {
-          m = temp(k, kk);
-          mi = kk;
-        }
-      }
-      wz(t, k) += m;
+      mi =temp[k].maxIndex();
+      wz(t, k) += temp(k, mi);
       wzind(t, k) = mi;
     }
   }
@@ -2616,8 +2655,7 @@ void KeyFramer::EM_r(KeyValueGraph &kvg, const String &bA, const String &bB, uin
   // }}}
 }
 // }}}
-
-// EM {{{
+// EM_c {{{
 //#define with_object_emission
 //#define update_mu_pSpeedGP
 //#define update_sigma_pSpeedGP
@@ -2627,7 +2665,7 @@ void KeyFramer::EM_r(KeyValueGraph &kvg, const String &bA, const String &bB, uin
 //#define update_sigma_dpSpeedGP
 //#define update_mu_dqSpeedGP
 //#define update_sigma_dqSpeedGP
-void KeyFramer::EM(KeyValueGraph &kvg, const String &bA, const String &bB, uint wlen) {
+void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
   // Computing other BAMS {{{
   cout << " * computing posSpeed" << endl;
   computeSpeed(STRING("pos"));
@@ -2678,10 +2716,10 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &bA, const String &bB, uint 
   // Observations {{{
   arr pSpeedGP = s->g4d->query("posGPSpeed", bA);
   arr qSpeedGP = s->g4d->query("quatGPSpeed", bA);
-  // with_object_emission
+#ifdef with_object_emission
   arr pBSpeedGP = s->g4d->query("posGPSpeed", bB);
   arr qBSpeedGP = s->g4d->query("quatGPSpeed", bB);
-  // end
+#endif
   arr dpSpeedGP = s->g4d->query(bA_dPosGPSpeed, bB);
   arr dqSpeedGP = s->g4d->query(bA_dQuatGPSpeed, bB);
   uint T = pSpeedGP.d0;
@@ -2713,7 +2751,7 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &bA, const String &bB, uint 
         .5, .5 };
   A.reshape(2, 2);
 #ifdef with_object_emission
-  phi_zmr = { 9, 9,
+  phi_zmr = { 50, 9,
               9, 9,
 
               9, 9,
@@ -2723,7 +2761,7 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &bA, const String &bB, uint 
               1, 1,
 
               1, 1,
-              1, 9 };
+              1, 50 };
   phi_zmr.reshape(TUP(2, 2, 2, 2));
 #else
   phi_zmr = { 50, 9,
@@ -2782,11 +2820,11 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &bA, const String &bB, uint 
   rho_m.resize(T, M);
   rho_mp.resize(T, Mp);
   rho_mq.resize(T, Mq);
-  // with_object_emission
+#ifdef with_object_emission
   rho_mB.resize(T, M);
   rho_mpB.resize(T, Mp);
   rho_mqB.resize(T, Mq);
-  // end
+#endif
   rho_r.resize(T, R);
   rho_rdp.resize(T, Rdp);
   rho_rdq.resize(T, Rdq);
@@ -2836,14 +2874,14 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &bA, const String &bB, uint 
         rho_mq(t, k) = ::exp(
             -.5 * MT::sqr(qSpeedGP(t) - mu_qSpeedGP(k)) / MT::sqr(sigma_qSpeedGP(k))
           );
-        // with_object_emission
+#ifdef with_object_emission
         rho_mpB(t, k) = ::exp(
             -.5 * MT::sqr(pBSpeedGP(t) - mu_pSpeedGP(k)) / MT::sqr(sigma_pSpeedGP(k))
           );
         rho_mqB(t, k) = ::exp(
             -.5 * MT::sqr(qBSpeedGP(t) - mu_qSpeedGP(k)) / MT::sqr(sigma_qSpeedGP(k))
           );
-        // end
+#endif
         rho_rdp(t, k) = ::exp(
             -.5 * MT::sqr(dpSpeedGP(t) - mu_dpSpeedGP(k)) / MT::sqr(sigma_dpSpeedGP(k))
           );
@@ -2854,13 +2892,11 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &bA, const String &bB, uint 
 
       for(uint m = 0; m < M; m++)
         rho_m(t, m) = sum(phi_mpq[m] % (rho_mp[t] ^ rho_mq[t]));
-      // with_object_emission
-      for(uint m = 0; m < M; m++)
-        rho_mB(t, m) = sum(phi_mpq[m] % (rho_mpB[t] ^ rho_mqB[t]));
-      // end
       for(uint r = 0; r < R; r++)
         rho_r(t, r) = sum(phi_rpq[r] % (rho_rdp[t] ^ rho_rdq[t]));
 #ifdef with_object_emission
+      for(uint m = 0; m < M; m++)
+        rho_mB(t, m) = sum(phi_mpq[m] % (rho_mpB[t] ^ rho_mqB[t]));
       arr temp; temp.resize(TUP(M, M, R));
       tensorEquation(temp, rho_m[t] ^ rho_mB[t], {0, 1}, rho_r[t], {2}, 0);
       for(uint k = 0; k < K; k++)
@@ -2938,10 +2974,9 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &bA, const String &bB, uint 
     for(uint k = 0; k < K; k++)
       for(uint l = 0; l < K; l++)
         A(k, l) = pzz(k, l) / pz(l);
-    // I almost find it absurd that I have to normalize here too..
     arr tmp = sum(A, 0);
     for(uint k = 0; k < K; k++)
-        A[k]() /= tmp;
+      A[k]() /= tmp;
 
     // TODO change pz to appropriate
 #ifdef update_mu_pSpeedGP
@@ -2977,8 +3012,7 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &bA, const String &bB, uint 
   cout << "DONE!" << endl;
 
   // Viterbi {{{
-  double m;
-  int mi;
+  uint mi;
   arr wz(T, K), wzind(T, K), temp;
   cout << "pi: " << pi << endl;
   cout << "log(pi): " << log(pi) << endl;
@@ -2988,18 +3022,10 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &bA, const String &bB, uint 
   wz[0]() = pi + log(rho_z[0]);
   for(uint t = 1; t < T; t++) {
     temp = log(A) + ~repmat(wz[t-1], 1, K); // TODO is this necessary? test
-
     wz[t]() = log(rho_z[t]);
     for(uint k = 0; k < K; k++) {
-      m = temp(k, 0);
-      mi = 0;
-      for(uint kk = 1; kk < K; kk++) {
-        if(m < temp(k, kk)) {
-          m = temp(k, kk);
-          mi = kk;
-        }
-      }
-      wz(t, k) += m;
+      mi = temp[k].maxIndex();
+      wz(t, k) += temp(k, mi);
       wzind(t, k) = mi;
     }
   }
@@ -3015,9 +3041,6 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &bA, const String &bB, uint 
   kvg.append("data", "qSpeedGP", new arr(qSpeedGP));
   kvg.append("data", "dpSpeedGP", new arr(dpSpeedGP));
   kvg.append("data", "dqSpeedGP", new arr(dqSpeedGP));
-  // with_object_emission
-  kvg.append("data", "pBSpeedGP", new arr(pBSpeedGP));
-  kvg.append("data", "qBSpeedGP", new arr(qBSpeedGP));
   KeyValueGraph *plot;
   
   plot = new KeyValueGraph();
@@ -3040,6 +3063,9 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &bA, const String &bB, uint 
   kvg.append("plot", plot);
 
 #ifdef with_object_emission
+  kvg.append("data", "pBSpeedGP", new arr(pBSpeedGP));
+  kvg.append("data", "qBSpeedGP", new arr(qBSpeedGP));
+
   plot = new KeyValueGraph();
   plot->append("title", new String("pB, qB"));
   plot->append("dataid", new bool(true));
