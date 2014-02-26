@@ -37,25 +37,25 @@ static const double action_point_size_factor = 0.5;               // How large t
 static const bool draw_text = false;                              // Whether to draw texts.
 
 const vector<Maze::maze_t> Maze::maze_list = {
-#include "Maze_Default.cpp"
+#include "Default.maze"
     ,
-#include "Maze_Minimal.cpp"
+#include "Minimal.maze"
     ,
-#include "Maze_3x3.cpp"
+#include "3x3.maze"
     ,
-#include "Maze_4x4_I.cpp"
+#include "4x4_I.maze"
     ,
-#include "Maze_4x4_II.cpp"
+#include "4x4_II.maze"
     ,
-#include "Maze_4x4_III.cpp"
+#include "4x4_III.maze"
     ,
-#include "Maze_6x6.cpp"
+#include "6x6.maze"
     ,
-#include "Maze_10x10.cpp"
+#include "10x10.maze"
     ,
-#include "Maze_Markov.cpp"
+#include "Markov.maze"
 //     ,
-// #include "Maze_Wrong.cpp" // for testing unit tests
+// #include "Wrong.maze" // for testing unit tests
 };
 Maze::Maze(const double& eps, const QString& s):
     PredictiveEnvironment(action_ptr_t(), observation_ptr_t(), reward_ptr_t()), // set by calling set_maze in body
