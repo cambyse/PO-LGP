@@ -8,8 +8,8 @@ void TEST(Read){
 
   cout <<"\n** reading graph..." <<flush;
   G <<FILE(filename?filename:"example.kvg");
-  cout <<"done" <<endl;
-  cout <<G <<endl;
+  cout <<"\ndone" <<endl;
+  cout <<"read kvg=\n--------------------\n" <<G <<"\n--------------------" <<endl;
 
   if(filename) return; //below only for "example.kvg"
   cout <<"\n** access to individual items:" <<endl;

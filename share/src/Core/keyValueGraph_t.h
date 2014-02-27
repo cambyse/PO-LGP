@@ -124,7 +124,8 @@ template<class T> KeyValueGraph KeyValueGraph::getTypedItems(const char* key) {
 }
 
 template<class T> Item *KeyValueGraph::append(const StringA& keys, const ItemL& parents, T *x) {
-  Item *it= ItemL::append(new Item_typed<T>(keys, parents, x, NULL));
+  Item *it = append(new Item_typed<T>(keys, parents, x, NULL));
+
   for(Item *par: parents) par->parentOf.append(it);
   return it;
 }

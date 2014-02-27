@@ -88,7 +88,7 @@ bool readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=false
   if(verbose) { cout <<"\nITEM (line="<<MT::lineCount <<")"; }
   
 #define PARSERR(x) { cout <<"[[error in parsing KeyValueGraph file (line=" <<MT::lineCount <<"):\n"\
-                            <<"  item keys=" <<keys <<"\n  error=" <<x <<"]]"; is.clear(); return false; }
+                            <<"  item keys=" <<keys <<"\n  error=" <<x <<"]]"; is.clear(); }
   
   //-- read keys
   MT::skip(is," \t\n\r");
@@ -111,6 +111,7 @@ bool readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=false
         e->parentOf.append(containingKvg);
       } else { //this element is not known!!
         PARSERR("unknown " <<j <<". parent '" <<str <<"'");
+        MT::skip(is, NULL, ")", false);
       }
     }
     MT::parse(is, ")");
@@ -136,9 +137,14 @@ bool readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=false
     } else switch(c) {
         case '\'': { //MT::FileToken
           str.read(is, "", "\'", true);
-          item = new Item_typed<MT::FileToken>(keys, parents, new MT::FileToken(str, false));
-          std::ifstream &is = item->getValue<MT::FileToken>()->getIs();
-          if(!is.good())  PARSERR("can't open file '" <<str <<"'");
+          MT::FileToken *f = new MT::FileToken(str, false);
+          try{
+            f->getIs(); //creates the ifstream and might throw an error
+            item = new Item_typed<MT::FileToken>(keys, parents, f);
+          } catch(...){
+            PARSERR("kvg indicates file which does not exist -> converting to string!");
+            item = new Item_typed<MT::String>(keys, parents, new MT::String(str));
+          }
         } break;
         case '\"': { //MT::String
           str.read(is, "", "\"", true);
@@ -193,19 +199,22 @@ bool readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=false
         default: { //error
           is.putback(c);
           PARSERR("unknown value indicator '" <<c <<"'");
+          return false;
         }
       }
   } else { //no '=' or '{' -> boolean
     is.putback(c);
     item = new Item_typed<bool>(keys, parents, new bool(true));
   }
-  
+
+#undef PARSERR
+
   if(verbose) {
     if(item) { cout <<" value:"; item->writeValue(cout); cout <<" FULL:"; item->write(cout); cout <<endl; }
     else { cout <<"FAILED" <<endl; }
   }
   
-  if(item) containingKvg.ItemL::append(item);
+  if(item) containingKvg.append(item);
   else {
     cout <<"FAILED reading item with keys ";
     keys.write(cout, " ", NULL, "()");
