@@ -63,8 +63,8 @@ struct KeyFramer {
   KeyFrameL getKeyFrames(const uintA &vit);
   void saveKeyFrameScreens(const KeyFrameL &keyframes, uint df = 60);
 
-  void EM(KeyValueGraph &kvg, const String &bA, const String &bB, uint wlen);
-  void EM_r(KeyValueGraph &kvg, const String &bA, const String &bB, uint wlen);
-  void EM_m(KeyValueGraph &kvg, const String &b, uint wlen);
+  void EM_c(KeyValueGraph &kvg, const String &bA, const String &bB);
+  void EM_r(KeyValueGraph &kvg, const String &bA, const String &bB);
+  void EM_m(KeyValueGraph &kvg, const String &b);
 };
 
