@@ -303,7 +303,11 @@ void TestMaze_II::set_policy() {
     case GOAL_ITERATION: {
         shared_ptr<Predictor> pred = dynamic_pointer_cast<Predictor>(environment);
         if(pred!=nullptr) {
-            policy.reset(new GoalIteration(discount,*pred));
+            GoalIteration * p = new GoalIteration(discount,*pred);
+            if(goal_activated) {
+                p->set_goal(goal_state);
+            }
+            policy.reset(p);
         } else {
             DEBUG_ERROR("No goal iteration possible because environment does not provide predictions.");
         }
