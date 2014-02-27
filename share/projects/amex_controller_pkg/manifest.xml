@@ -10,7 +10,8 @@
   <url>http://ros.org/wiki/amex_controller_pkg</url>
   <depend package="roscpp"/>
   <depend package="tree_controller_pkg"/>
-
+  <depend package="goal_publisher"/>
+  <depend package="pr2_mechanism"/>
 </package>
 
 

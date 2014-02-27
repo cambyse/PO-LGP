@@ -275,7 +275,7 @@ void executeTrajectory(String scene){
     // world.stepPhysx(tau_control);
     world.computeProxies();
 
-    arr qddot = MP.operationalSpaceControl(regularization);//MP.operationalSpaceControl(regularization);
+    arr qddot = MP.operationalSpaceControl();//MP.operationalSpaceControl(regularization);
     q += tau_control*qdot;
     qdot += tau_control*qddot;
     t += tau_control;

@@ -20,7 +20,7 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 include_directories( ${MLR_PATH}/share/src )
 
-rosbuild_add_library(tree_controller_lib src/tree_controller.cpp)
+rosbuild_add_library(tree_controller_lib src/tree_controller.cpp include/tree_controller_pkg/tree_controller.h)
 
 target_link_libraries(tree_controller_lib 
 ${MLR_PATH}/share/lib/libMotion.so

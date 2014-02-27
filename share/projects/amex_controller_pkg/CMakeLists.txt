@@ -23,7 +23,8 @@ rosbuild_add_executable(amex_controller src/main.cpp src/traj_optimizer.cpp src/
 target_link_libraries(amex_controller
 ${MLR_PATH}/share/lib/libMotion.so
 ${MLR_PATH}/share/lib/libOrs.so
-${MLR_PATH}/share/lib/libCore.so)
+${MLR_PATH}/share/lib/libCore.so
+${MLR_PATH}/share/lib/libOptim.so)
 
 #rosbuild_genmsg()
 #rosbuild_gensrv()
