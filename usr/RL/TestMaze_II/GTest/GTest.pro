@@ -17,6 +17,7 @@ HEADERS += \
     ../util/KolmogorovSmirnovTest.h \
     \
     ../optimization/LBFGS_Optimizer.h \
+    ../optimization/LBFGS_Object.h \
     \
     ../Feature.h \
     ../Instance.h \
@@ -65,6 +66,7 @@ SOURCES += \
     ../util/KolmogorovSmirnovTest.cpp \
     \
     ../optimization/LBFGS_Optimizer.cpp \
+    ../optimization/LBFGS_Object.cpp \
     \
     ../Feature.cpp \
     ../Instance.cpp \
@@ -103,6 +105,7 @@ SOURCES += \
     EnvironmentTest.cpp \
     PlannerTest.cpp \
     LearnerTest.cpp \
+    LBFGSTest.cpp \
     \
 #    TemplateTest.cpp \
     SandBox.cpp
