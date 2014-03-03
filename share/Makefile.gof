@@ -51,8 +51,8 @@ reformatSources:
 	cd src; find MT/ \( -name "*.h" -or -name "*.cpp" -or -name "*.cxx" \) -exec ./style.sed.sh {} \;
 
 %.tgz:: force
-	mv -f make-config make-config.mine
-	cp -f slices/$*.make-config ./make-config
+	-mv -f gofMake/config.mk config.mk.mine
+	cp -f slices/$*.config.mk ./gofMake/config.mk
 	rm -f $*.tgz;
 	cd ..; \
 	tar cvzf $*.tgz --exclude-vcs \
@@ -60,7 +60,7 @@ reformatSources:
 	--files-from $(PWD)/slices/$*.tar.incl \
 	--exclude-from $(PWD)/slices/tar.excl \
 	--exclude-from $(PWD)/slices/$*.tar.excl
-	cp -f make-config.mine make-config
+	cp -f gofMake/config.mk.mine gofMake/config.mk
 
 makePath/%: %
 	+@-$(BASE)/gofMake/make-path.sh $<

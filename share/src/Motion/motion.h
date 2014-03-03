@@ -87,7 +87,7 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
   double tau; ///< duration of single step
   
   //-- start constraints
-  arr x0, v0; ///< fixed start state and velocity
+  arr x0, v0; ///< fixed start state and velocity [[TODO: remove this and replace by prefix only (redundant...)]]
   arr prefix; ///< a set of states PRECEEDING x[0] (having 'negative' time indices) and which influence the control cost on x[0]. NOTE: x[0] is subject to optimization. DEFAULT: constantly equals x0
 
   //-- return values of an optimizer

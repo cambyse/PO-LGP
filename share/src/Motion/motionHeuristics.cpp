@@ -11,18 +11,17 @@
 // the rest is on the three base routines
 //
 
-void threeStepGraspHeuristic(arr& x, MotionProblem& MP, const arr& x0, uint shapeId, uint verbose) {
+void threeStepGraspHeuristic(arr& x, MotionProblem& MP, uint shapeId, uint verbose) {
   uint T = MP.T;
   //double duration = sys.getTau() * T;
   
-  MP.setx0(x0);
   listDelete(MP.taskCosts());
   
   uint side=0;
   
   //-- optimize ignoring hand -- testing different options for aligning with the object
   if (MP.world.shapes(shapeId)->type==ors::boxST) {
-    arr cost_side(3),x_side(3,x0.N);
+    arr cost_side(3), x_side(3, MP.x0.N);
     for (side=0; side<3; side++) {
       setGraspGoals_PR2(MP, T, shapeId, side, 0);
       cost_side(side) = keyframeOptimizer(x, MP, false, verbose);
@@ -46,8 +45,7 @@ void threeStepGraspHeuristic(arr& x, MotionProblem& MP, const arr& x0, uint shap
   
   //-- open hand
   //x.subRange(7,13) = ARR(0,-1.,.8,-1.,.8,-1.,.8);
-  x(MP.world.getJointByName("finger_l_l")->qIndex) = 1.;
-  x(MP.world.getJointByName("finger_l_r")->qIndex) = 1.;
+  x(MP.world.getJointByName("l_gripper_l_finger_joint")->qIndex) = 1.;
 
   if (verbose>=2) {
     displayState(x, MP.world, "posture estimate phase 1");
@@ -56,10 +54,7 @@ void threeStepGraspHeuristic(arr& x, MotionProblem& MP, const arr& x0, uint shap
   //-- reoptimize with close hand
   setGraspGoals_PR2(MP, T, shapeId, side, 1);
   keyframeOptimizer(x, MP, true, verbose);
-  //listDelete(M.vars); //DON'T delete the grasp goals - the system should keep them for the planner
   if (verbose>=1) displayState(x, MP.world, "posture estimate phase 2");
-//  M.displayCurrentState("posture estimate phase 2", false, false);
-  //if (verbose>=2) M.gl->watch();
 }
 
 void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, uint phase) {
@@ -202,8 +197,8 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
   //set the time horizon
   CHECK(T==MP.T, "");
 
-  //deactivate all variables
-  MP.activateAllTaskCosts(false);
+  //delete all previous variables
+  MP.taskCosts.clear();
 
   //activate collision testing with target shape
   ors::Shape *target_shape = MP.world.shapes(shapeId);
@@ -282,13 +277,6 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
     }
   }
 #endif
-
-//  //-- opposing fingers -- PR2-fingers always oppose!
-//  c = M.addDefaultTaskMap_Shapes("oppose12", zalignTMT, "tipNormal1", NoVector, "tipNormal2", NoVector);
-//  target = ARR(-1.);
-//  M.setInterpolatingCosts(c, MotionProblem::constEarlyMid,
-//                          target, oppositionPrec, ARR(0.,0.,0.), 0., 0.8);
-
 
   //-- homing
   c = MP.addTaskMap("qitself",

@@ -107,15 +107,16 @@ LIBS += -lSWIFT++
 QHULL := 1
 endif
 
+ifeq ($(GJK),1)
+DEPEND +=  extern_GJK
+endif
+
 ifeq ($(LEWINER),1)
-CXXFLAGS += -DMT_Lewiner
-CPATH := $(CPATH):$(BASE)/extern/Lewiner
-LIBS += -llewiner
+DEPEND += extern_Lewiner
 endif
 
 ifeq ($(PLY),1)
-CXXFLAGS += -DMT_PLY
-LIBS += -lply
+DEPEND += extern_ply
 endif
 
 ifeq ($(SOLID),1)

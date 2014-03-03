@@ -7,6 +7,18 @@ getJointDimension is not const
 
 ** lock in OpenGL
 
+** KVG
+Mod Include special keys
+
+** Proper ConstrainedTaskMap:
+virtual function g
+can provide also $y=(1+g/m) [g>-m]$ (is consistent with lecture & code)
+bool constraint;
+double margin;
+arr getY()
+arr getFeasible()
+arr getG()
+
 ** Logging:
 
 LOG(1) <<"message on level 1 (normal verbose level)";

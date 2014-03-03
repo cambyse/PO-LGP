@@ -1,8 +1,10 @@
 share/lib/.force
-share/Makefile
-share/make-generic
-share/make-config
-share/make-locked.sh
+share/makefile
+share/Makefile.gof
+share/gofMake/make-generic
+share/gofMake/config.mk
+share/gofMake/defines.mk
+share/gofMake/make-path.sh
 README.md
 COPYING
 install/INSTALL_DEPENDENCIES.sh

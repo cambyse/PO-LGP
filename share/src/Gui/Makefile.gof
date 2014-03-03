@@ -9,7 +9,10 @@ GTKGL = 1
 FREEGLUT = 0
 QHULL = 1
 GRAPHVIZ = 1
-DEPEND = Core extern_ply extern_GJK extern_Lewiner
+GJK = 1
+LEWINER = 1
+PLY = 1
+DEPEND = Core
 else
 QHULL = 1
 FREEGLUT = 1

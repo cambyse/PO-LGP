@@ -212,7 +212,6 @@ void ors::KinematicWorld::glDraw() {
  
   //proxies
   if(orsDrawProxies) for(Proxy *proxy: proxies) {
-      proxy = proxies(i);
       glLoadIdentity();
       if(!proxy->colorCode) glColor(.75,.75,.75);
       else glColor(proxy->colorCode);

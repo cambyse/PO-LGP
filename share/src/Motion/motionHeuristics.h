@@ -21,7 +21,7 @@
 
 #include "motion.h"
 
-void threeStepGraspHeuristic(arr& q, MotionProblem& M, const arr& q0, uint shapeId, uint verbose);
+void threeStepGraspHeuristic(arr& q, MotionProblem& M, uint shapeId, uint verbose);
 void setGraspGoals_Schunk(MotionProblem& M, uint T, uint shapeId, uint side, uint phase);
 void setGraspGoals_PR2(MotionProblem& M, uint T, uint shapeId, uint side, uint phase);
 void setPlaceGoals(MotionProblem& M, uint T, uint shapeId, int belowToShapeId, const arr& locationTo);
