@@ -32,6 +32,7 @@ class TreeControllerClass: public pr2_controller_interface::Controller
 private:
   pr2_mechanism_model::JointState* joint_state_;
   pr2_mechanism_model::Tree tree_;
+  pr2_mechanism_model::RobotState* robot_;
 
   KDL::JntArray jnt_pos_;
   KDL::JntArrayVel jnt_vel_;
@@ -82,6 +83,10 @@ private:
   arr p_effort_bk;
   arr d_effort_bk;
   arr dt_bk;
+  arr taskPos_y_bk;
+  arr taskPos_yRef_bk;
+  arr taskVec_y_bk;
+  arr taskVec_yRef_bk;
 
 public:
   virtual bool init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);

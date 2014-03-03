@@ -86,9 +86,9 @@ void AmexController::runAmex(double dtReal) {
 
 void AmexController::initController(){
   /// Set Joint PD Gains
-  pos_gains = {150,150,30,30,10,6,6};
-  vel_gains = { 60, 60, 4,10, 2,2,2};
-//  vel_gains = { 0.,0.,0.,0.,0.,0.,0.};
+  pos_gains = {150,150,80,50,40,80,20};
+  vel_gains = {60,60,10,10,10,30,20};
+
   cout << "pos_gains" << pos_gains << endl;
   cout << "vel_gains" << vel_gains << endl;
 

@@ -6,6 +6,7 @@ namespace tree_controller_ns {
 /// Controller initialization in non-realtime
 bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n)
 {
+  robot_ = robot;
   std::string joint_name;
   if (!tree_.init(robot))
   {
@@ -50,19 +51,11 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   taskPos = MP->addPDTask("pos", tau_plan*5, 1, posTMT, "endeffR");
   taskVec = MP->addPDTask("vec", tau_plan*5, 1, vecTMT, "endeffR",ARR(0.,0.,1.));
   taskHome = MP->addPDTask("home", .02, 0.5, qItselfTMT);
-//  taskLimits = MP->addPDTask("limits", .02, 0.5, qLimitsTMT);
+  //  taskLimits = MP->addPDTask("limits", .02, 0.5, qLimitsTMT);
   taskPos->setGains(1.,100.); taskPos->prec=1e4;
   taskVec->setGains(1.,100.); taskVec->prec=1e2;
   taskHome->setGains(1.,100.); taskHome->prec=1e2;
-//  taskLimits->setGains(100.,100.); taskLimits->prec=1e3;
-
-  //  MP->nullSpacePD.prec=0.;
-  //  taskPos = MP->addPDTask("pos", 5, 1, posTMT, "endeff");
-  //  taskVec = MP->addPDTask("vec", 5, 1, vecTMT, "endeff",ARR(0.,0.,1.));
-  //  taskHome = MP->addPDTask("home", .02, 0.5, qItselfTMT);
-  //  taskPos->setGains(10.,100.); taskPos->prec=1e0;
-  //  taskVec->setGains(10.,100.); taskVec->prec=1e0;
-  //  taskHome->setGains(0.,10.); taskHome->prec=1e-1;
+  //  taskLimits->setGains(100.,100.); taskLimits->prec=1e3;
 
   controlIdx = {30,31,32,33,34,35,36};
   q = arr(controlIdx.d0);
@@ -83,6 +76,10 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   p_effort_bk = arr(StoreLen,controlIdx.d0);
   d_effort_bk = arr(StoreLen,controlIdx.d0);
   dt_bk = arr(StoreLen);
+  taskPos_y_bk = arr(StoreLen,3);
+  taskPos_yRef_bk = arr(StoreLen,3);
+  taskVec_y_bk = arr(StoreLen,3);
+  taskVec_yRef_bk = arr(StoreLen,3);
 
   /// Initialize joint state
   tree_.getPositions(jnt_pos_);
@@ -129,15 +126,21 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
 /// Controller startup in realtime
 void TreeControllerClass::starting()
 {
-  // 30: r_shoulder_pan_joint,   150 60
-  // 31: r_shoulder_lift_joint,  150 60
-  // 32: r_upper_arm_roll_joint,  30  4
-  // 33: r_elbow_flex_joint,      30 10
-  // 34: r_forearm_roll_joint,    10  2
-  // 35: r_wrist_flex_joint,       6  2
-  // 36: r_wrist_roll_joint,       6  2
-  Kp = {150,150,30,30,10,6,6};
-  Kd = {60,60,4,10,2,2,2};
+  //                                       ROS_GAINS
+  //                                          P    D    I
+  // 30: r_shoulder_pan_joint,   150 60    2400   18  800
+  // 31: r_shoulder_lift_joint,  150 60    1200   10  700
+  // 32: r_upper_arm_roll_joint,  30  4    1000    6  600
+  // 33: r_elbow_flex_joint,      30 10     700    4  450
+  // 34: r_forearm_roll_joint,    10  2     300    6  300
+  // 35: r_wrist_flex_joint,       6  2     300    4  300
+  // 36: r_wrist_roll_joint,       6  2     300    4  300
+  //  Kp = {150,150,30,30,10,6,6};
+  //  Kd = {60,60,4,10,2,2,2};
+  Kp = {150,150,80,50,40,80,20};
+  Kd = {60,60,10,10,10,30,20};
+
+  //[1000,1,1] [100,100,100] [10000,100,100]
 
   q_filt = 0.;
   qd_filt = 0.95;
@@ -164,8 +167,6 @@ void TreeControllerClass::update()
 
   /// OSC
   qdd = MP->operationalSpaceControl();
-//  des_q += tau_control*des_qd;
-//  des_qd += tau_control*qdd;
   des_q = q + tau_control*des_qd;
   des_qd = qd + tau_control*qdd;
 
@@ -176,17 +177,16 @@ void TreeControllerClass::update()
   u = p_effort + d_effort;
   /// Convert ORS to KDL
   for (uint i =0;i<controlIdx.d0;i++) {
-    // Safety Check
-    if (u(i)>upperEffortLimits(i) || u(i) < lowerEffortLimits(i) || q(i) > upperJointLimits(i) || q(i) < lowerJointLimits(i)) {
-      ROS_ERROR("SAFETY CHECK FAILED!");
+    tree_.getJoint(controlIdx(i))->commanded_effort_ = u(i);
+    tree_.getJoint(controlIdx(i))->enforceLimits();
+
+    // Additional Safety Check
+    if (u(i)>upperEffortLimits(i) || u(i) < lowerEffortLimits(i)) {
+      ROS_ERROR("SAFETY CHECK FAILED! Max u(%d): %f , Min u(%d): %f",i,upperEffortLimits(i),i,lowerEffortLimits(i));
       tree_.getJoint(controlIdx(i))->commanded_effort_ = 0.;
-      cout << "i " << i << endl;
-      cout << "u(i) " << u(i) << " Max u(i) " << upperEffortLimits(i) << " Min u(i) " << lowerEffortLimits(i) << endl;
-      cout << "q(i) " << q(i) << " Max q(i) " << upperJointLimits(i) << " Min q(i) " << lowerJointLimits(i) << endl;
-    } else {
-      tree_.getJoint(controlIdx(i))->commanded_effort_ = u(i);
     }
   }
+
 
   /// Logging
   int index = storage_index_;
@@ -198,7 +198,11 @@ void TreeControllerClass::update()
     u_bk[index] = u;
     p_effort_bk[index] = p_effort;
     d_effort_bk[index] = d_effort;
-    dt_bk(index) = ros::Time::now().toSec();
+    dt_bk(index) = robot_->getTime().now().toSec(); //ros::Time::now().toSec();
+    taskPos_y_bk[index] = taskPos->y;
+    taskPos_yRef_bk[index] = taskPos->y_ref;
+    taskVec_y_bk[index] = taskVec->y;
+    taskVec_yRef_bk[index] = taskVec->y_ref;
 
     storage_index_++;
   }
@@ -244,8 +248,8 @@ bool TreeControllerClass::getVecTarget(tree_controller_pkg::GetVecTarget::Reques
 }
 
 bool TreeControllerClass::getTaskState(tree_controller_pkg::GetTaskState::Request &req, tree_controller_pkg::GetTaskState::Response &resp){
-//  world->kinematicsPos(state,NoArr,world->getBodyByName("endeffR")->index);
-//  world->kinematicsVec(stateVec,NoArr,world->getBodyByName("endeffR")->index);
+  //  world->kinematicsPos(state,NoArr,world->getBodyByName("endeffR")->index);
+  //  world->kinematicsVec(stateVec,NoArr,world->getBodyByName("endeffR")->index);
   state = taskPos->y;
   stateVec = taskVec->y;
   resp.pos.resize(state.d0);
@@ -310,7 +314,6 @@ bool TreeControllerClass::startLogging(tree_controller_pkg::StartLogging::Reques
 }
 bool TreeControllerClass::stopLogging(tree_controller_pkg::StopLogging::Request &req, tree_controller_pkg::StopLogging::Response &resp){
   LOGGING = false;
-  storage_index_ = 0;
   write(LIST<arr>(q_bk),STRING("q_bk.output"));
   write(LIST<arr>(qd_bk),STRING("qd_bk.output"));
   write(LIST<arr>(des_q_bk),STRING("des_q_bk.output"));
@@ -320,6 +323,11 @@ bool TreeControllerClass::stopLogging(tree_controller_pkg::StopLogging::Request 
   write(LIST<arr>(d_effort_bk),STRING("d_effort_bk.output"));
   write(LIST<arr>(dt_bk),STRING("dt_bk.output"));
   write(LIST<arr>(ARR(storage_index_)),STRING("storage_index.output"));
+  write(LIST<arr>(taskPos_y_bk),STRING("taskPos_y_bk.output"));
+  write(LIST<arr>(taskPos_yRef_bk),STRING("taskPos_yRef_bk.output"));
+  write(LIST<arr>(taskVec_y_bk),STRING("taskVec_y_bk.output"));
+  write(LIST<arr>(taskVec_yRef_bk),STRING("taskVec_yRef_bk.output"));
+  storage_index_ = 0;
   return true;
 }
 } // namespace

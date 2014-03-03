@@ -17,18 +17,6 @@ void TrajOptimizer::optimizeTrajectory(arr &_goal, arr &_q0) {
   // reference frame for planning and execution
   arr refFrame = ARRAY(world.getBodyByName("torso_lift_link")->X.pos);
 
-  //-- set qLimits of joints
-  arr qLimits = { -130, 40,   //30 r_shoulder_pan_joint
-                  -30, 80,    //31 r_shoulder_lift_joint
-                  -224, 44,   //32 r_upper_arm_roll_joint
-                  -133, 0,    //33 r_elbow_flex_joint
-                  -360, 360,  //34 r_forearm_roll_joint
-                  -130, 0,    //35 r_wrist_flex_joint
-                  -360, 360}; //36 r_wrist_roll_joint
-
-  qLimits = M_PI*qLimits/180.;
-  qLimits.reshape(7,2);
-
   //-- create tasks for optimization problem
   TaskCost *c;
   c = MP.addTaskMap("position", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));

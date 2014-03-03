@@ -4,6 +4,8 @@
 #include "traj_optimizer.h"
 #include <goal_publisher/GetGoal.h>
 #include <tree_controller_pkg/GetJointState.h>
+#include <tree_controller_pkg/StartLogging.h>
+#include <tree_controller_pkg/StopLogging.h>
 #include <pr2_mechanism_msgs/LoadController.h>
 #include <pr2_mechanism_msgs/SwitchController.h>
 
@@ -84,10 +86,22 @@ int main(int argc, char** argv)
     return 0;
   }
 
+  /// Start Logging
+  ros::ServiceClient startLoggingClient = nh.serviceClient<tree_controller_pkg::StartLogging>("/tree_rt_controller/start_logging");
+  tree_controller_pkg::StartLogging startLoggingSrv;
+  startLoggingClient.call(startLoggingSrv);
+
+
   /// Start adaptive motion execution
   AmexController amex(nh, world, to.refPlan, q0, to.TRef, useARtag);
   amex.initRosServices();
   amex.initController();
   amex.startController();
+
+
+  /// Stop Logging
+  ros::ServiceClient stopLoggingClient = nh.serviceClient<tree_controller_pkg::StopLogging>("/tree_rt_controller/stop_logging");
+  tree_controller_pkg::StopLogging stopLoggingSrv;
+  stopLoggingClient.call(stopLoggingSrv);
   return 0;
 }
