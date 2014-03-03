@@ -15,13 +15,13 @@ void TEST(Basics){
   a.resize(7,5);
   double *ap=a.p, *astop=ap+a.N;
   for(; ap!=astop; ap++) *ap=ap-a.p; //assign pointer offsets to entries
-  cout <<"\narray filled with pointer offsets (-> memory is linear):" <<a <<endl;
-  cout <<"\nsubarray (of the original) [2:4,:] (in MATLAB notation)" <<a.sub(2,4,0,-1) <<endl;
+  cout <<"\narray filled with pointer offsets (-> memory is linear):\n" <<a <<endl;
+  cout <<"\nsubarray (of the original) [2:4,:] (in MATLAB notation)\n" <<a.sub(2,4,0,-1) <<endl;
   CHECK(a.last()==a.N-1,"");
 
   //easier looping:
-  cout <<"\neasier looping:";
-  for(double *e: a) (*e)++;
+  cout <<"\neasier looping:\n";
+  for(double& e: a) e++;
   cout <<a <<endl;
 
   //fancy writing:
@@ -30,28 +30,28 @@ void TEST(Basics){
   
   //deleting rows/columns
   a.delRows(1);
-  cout <<"\n\nrow 1 deleted:" <<a <<endl;
+  cout <<"\n\nrow 1 deleted:\n" <<a <<endl;
   a.delColumns(1,2);
-  cout <<"\n2 columns deleted at 1:" <<a <<endl;
+  cout <<"\n2 columns deleted at 1:\n" <<a <<endl;
   a.insColumns(1,3);
-  cout <<"\n3 columns inserted at 1:" <<a <<endl;
+  cout <<"\n3 columns inserted at 1:\n" <<a <<endl;
   CHECK(a.d1==6,"");
   CHECK(a(0,1)==0,"non-zeros inserted");
 
   //access:
-  cout <<"\n3rd line:" <<a[2] <<endl; //gets a const-version of the []-subarray
+  cout <<"\n3rd line:\n" <<a[2] <<endl; //gets a const-version of the []-subarray
   a[2](1)=7.; //same as a(2,1)=7 (but much slower)
   a[3]()+=1.; //use operator() to get a non-const &-version of the []-subarray 
   a[1]()=a[2];
-  cout <<"\nrows manipulated:" <<a <<endl;
+  cout <<"\nrows manipulated:\n" <<a <<endl;
   CHECK(a(2,1)==7.,"");
   CHECK(a[1]==a[2],"");
 
   //setting arrays ``by hand''
   a = ARR(0, 1, 2, 3, 4); //ARR() is equivalent to ARRAY<double>()
-  cout <<"\nset by hand: " <<a <<endl;
+  cout <<"\nset by hand:\n" <<a <<endl;
   ints = ARRAY<int>(0, -1, -2, -3, -4);
-  cout <<"\nset by hand: " <<ints <<endl;
+  cout <<"\nset by hand:\n" <<ints <<endl;
   copy(a, ints); //copying between different types
   CHECK(a(2)==-2,"");
 
@@ -75,7 +75,7 @@ void TEST(Basics){
   a.resize(3,7,2);
   arr b;
   rndInteger(a,1,9,false);
-  cout <<"\nbefore save/load: " <<a <<endl;
+  cout <<"\nbefore save/load:\n " <<a <<endl;
 
   ofstream of("z.tmp");
   of <<a;

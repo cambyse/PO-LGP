@@ -56,6 +56,22 @@ void UnconstrainedProblem::augmentedLagrangian_LambdaUpdate(const arr& x, double
 //  cout <<"Update Lambda: g=" <<g <<" lambda=" <<lambda <<endl;
 }
 
+void UnconstrainedProblem::aula_update(const arr& x, double lambdaStepsize){
+  arr g, Jg, Jfbar;
+  P.fc(NoArr, NoArr, g, Jg, x);
+  fs(Jfbar, NoArr, x);
+
+  if(!lambda.N){ lambda.resize(g.N); lambda.setZero(); }
+
+  for(uint i=0;i<g.N;i++){
+    lambda(i) += lambdaStepsize * (2.*mu*g(i) - scalarProduct(Jfbar, Jg[i])/length(Jg[i]) );
+  }
+
+  for(uint i=0;i<g.N;i++) if(lambda(i)<0.) lambda(i)=0.;
+
+//  cout <<"Update Lambda: g=" <<g <<" lambda=" <<lambda <<endl;
+}
+
 //==============================================================================
 //
 // PhaseOneProblem
