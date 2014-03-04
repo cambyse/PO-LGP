@@ -12,28 +12,8 @@ AbstractAction::ptr_t AbstractAction::next() const {
     return ptr_t(new AbstractAction());
 }
 
-bool AbstractAction::operator!=(const AbstractIteratableSpace& other) const {
-    auto abstract_action = dynamic_cast<const AbstractAction *>(&other);
-    if(abstract_action==nullptr) {
-        DEBUG_ERROR("Dynamic cast failed");
-        return true;
-    } else {
-        return *this!=*abstract_action;
-    }
-}
-
 bool AbstractAction::operator!=(const AbstractAction& other) const {
     return this->action_type!=other.action_type;
-}
-
-bool AbstractAction::operator<(const AbstractIteratableSpace& other) const {
-    auto abstract_action = dynamic_cast<const AbstractAction *>(&other);
-    if(abstract_action==nullptr) {
-        DEBUG_ERROR("Dynamic cast failed");
-        return true;
-    } else {
-        return *this<*abstract_action;
-    }
 }
 
 bool AbstractAction::operator<(const AbstractAction& other) const {

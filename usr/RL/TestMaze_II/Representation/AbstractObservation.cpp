@@ -12,28 +12,8 @@ AbstractObservation::ptr_t AbstractObservation::next() const {
     return ptr_t(new AbstractObservation());
 }
 
-bool AbstractObservation::operator!=(const AbstractIteratableSpace& other) const {
-    auto abstract_observation = dynamic_cast<const AbstractObservation *>(&other);
-    if(abstract_observation==nullptr) {
-        DEBUG_ERROR("Dynamic cast failed");
-        return true;
-    } else {
-        return *this!=*abstract_observation;
-    }
-}
-
 bool AbstractObservation::operator!=(const AbstractObservation& other) const {
     return this->observation_type!=other.observation_type;
-}
-
-bool AbstractObservation::operator<(const AbstractIteratableSpace& other) const {
-    auto abstract_observation = dynamic_cast<const AbstractObservation *>(&other);
-    if(abstract_observation==nullptr) {
-        DEBUG_ERROR("Dynamic cast failed");
-        return true;
-    } else {
-        return *this<*abstract_observation;
-    }
 }
 
 bool AbstractObservation::operator<(const AbstractObservation& other) const {

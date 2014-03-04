@@ -2,6 +2,7 @@
 #define ABSTRACTOBSERVATION_H_
 
 #include "../util/util.h"
+#include "../util/debug.h"
 
 class AbstractObservation: public util::AbstractIteratableSpace<AbstractObservation> {
 public:
@@ -10,9 +11,9 @@ public:
     virtual ~AbstractObservation() override {}
     ABSTRACT_ITERATABLE_SPACE_BEGIN(AbstractObservation);
     virtual ptr_t next() const override;
-    virtual bool operator!=(const AbstractIteratableSpace& other) const override;
+    ABSTRACT_ITERATABLE_SPACE_NE(AbstractObservation);
     virtual bool operator!=(const AbstractObservation& other) const;
-    virtual bool operator<(const AbstractIteratableSpace& other) const override;
+    ABSTRACT_ITERATABLE_SPACE_LT(AbstractObservation);
     virtual bool operator<(const AbstractObservation& other) const;
     virtual const std::string print() const;
     friend inline std::ostream& operator<<(std::ostream& out, const AbstractObservation& a) {
@@ -24,5 +25,7 @@ protected:
 private:
     OBSERVATION_TYPE observation_type;
 };
+
+#include "../util/debug_exclude.h"
 
 #endif /* ABSTRACTOBSERVATION_H_ */

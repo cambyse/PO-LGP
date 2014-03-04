@@ -2,6 +2,7 @@
 #define ABSTRACTACTION_H_
 
 #include "../util/util.h"
+#include "../util/debug.h"
 
 class AbstractAction: public util::AbstractIteratableSpace<AbstractAction> {
 public:
@@ -10,9 +11,9 @@ public:
     virtual ~AbstractAction() {}
     ABSTRACT_ITERATABLE_SPACE_BEGIN(AbstractAction);
     virtual ptr_t next() const override;
-    virtual bool operator!=(const AbstractIteratableSpace& other) const override;
+    ABSTRACT_ITERATABLE_SPACE_NE(AbstractAction);
     virtual bool operator!=(const AbstractAction& other) const;
-    virtual bool operator<(const AbstractIteratableSpace& other) const override;
+    ABSTRACT_ITERATABLE_SPACE_LT(AbstractAction);
     virtual bool operator<(const AbstractAction& other) const;
     virtual const std::string print() const;
     friend inline std::ostream& operator<<(std::ostream& out, const AbstractAction& a) {
@@ -24,5 +25,7 @@ protected:
 private:
     ACTION_TYPE action_type;
 };
+
+#include "../util/debug_exclude.h"
 
 #endif /* ABSTRACTACTION_H_ */

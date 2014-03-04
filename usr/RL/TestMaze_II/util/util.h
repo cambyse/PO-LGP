@@ -211,7 +211,8 @@ namespace util {
         virtual Iterator begin() const = 0;
 
         /** \brief Macro that should be used in derived classes to define the
-         * begin function. */
+         * begin function, so that it returns a default constructed object of
+         * the derived class. */
 #define ABSTRACT_ITERATABLE_SPACE_BEGIN(C)              \
         virtual Iterator begin() const override {       \
             return Iterator(ptr_t(new C()));            \
@@ -242,6 +243,19 @@ namespace util {
             return *this!=*other;
         }
 
+        /** \brief Macro that can be used in abstract derived classes for
+         * convenience. */
+#define ABSTRACT_ITERATABLE_SPACE_NE(C)                                 \
+        virtual bool operator!=(const AbstractIteratableSpace& other) const override { \
+            const C * derived_class = dynamic_cast<const C *>(&other);  \
+            if(derived_class==nullptr) {                                \
+                DEBUG_ERROR("Dynamic cast failed");                     \
+                return true;                                            \
+            } else {                                                    \
+                return *this!=*derived_class;                           \
+            }                                                           \
+        }
+
         /** \brief Equality operator.
          *
          * To define equality simply define the inequality operator
@@ -258,6 +272,19 @@ namespace util {
 
         /** \brief operator< */
         virtual bool operator<(const AbstractIteratableSpace& other) const = 0;
+
+        /** \brief Macro that can be used in abstract derived classes for
+         * convenience. */
+#define ABSTRACT_ITERATABLE_SPACE_LT(C)                                 \
+        virtual bool operator<(const AbstractIteratableSpace& other) const override { \
+            const C * derived_class = dynamic_cast<const C *>(&other);  \
+            if(derived_class==nullptr) {                                \
+                DEBUG_ERROR("Dynamic cast failed");                     \
+                return true;                                            \
+            } else {                                                    \
+                return *this<*derived_class;                            \
+            }                                                           \
+        }
 
         virtual unsigned long int space_size() const {
             unsigned long int size = 0;

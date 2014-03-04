@@ -2,6 +2,7 @@
 #define ABSTRACTREWARD_H_
 
 #include "../util/util.h"
+#include "../util/debug.h"
 
 class AbstractReward: public util::AbstractIteratableSpace<AbstractReward> {
 public:
@@ -11,9 +12,9 @@ public:
     virtual ~AbstractReward() override {}
     ABSTRACT_ITERATABLE_SPACE_BEGIN(AbstractReward);
     virtual ptr_t next() const override;
-    virtual bool operator!=(const AbstractIteratableSpace& other) const override;
+    ABSTRACT_ITERATABLE_SPACE_NE(AbstractReward);
     virtual bool operator!=(const AbstractReward& other) const;
-    virtual bool operator<(const AbstractIteratableSpace& other) const override;
+    ABSTRACT_ITERATABLE_SPACE_LT(AbstractReward);
     virtual bool operator<(const AbstractReward& other) const;
     virtual const std::string print() const;
     friend std::ostream& operator<<(std::ostream& out, const AbstractReward& a) {
@@ -33,5 +34,7 @@ protected:
 private:
     REWARD_TYPE reward_type;
 };
+
+#include "../util/debug_exclude.h"
 
 #endif /* ABSTRACTREWARD_H_ */

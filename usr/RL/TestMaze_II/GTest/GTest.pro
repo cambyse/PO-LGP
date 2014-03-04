@@ -23,6 +23,7 @@ HEADERS += \
     \
     ../Representation/Feature.h \
     ../Instance.h \
+    ../Representation/AbstractInstance.h \
     ../Representation/AbstractAction.h \
     ../Representation/AbstractObservation.h \
     ../Representation/AbstractReward.h \
@@ -73,6 +74,7 @@ SOURCES += \
     \
     ../Representation/Feature.cpp \
     ../Instance.cpp \
+    ../Representation/AbstractInstance.cpp \
     ../Representation/AbstractAction.cpp \
     ../Representation/AbstractObservation.cpp \
     ../Representation/AbstractReward.cpp \
