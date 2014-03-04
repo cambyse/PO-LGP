@@ -46,4 +46,4 @@ if(WITH_LIBPULSE)
 endif(WITH_LIBPULSE)
 
 add_library(Perception SHARED ${SOURCES})
-target_link_libraries(Perception LINK_PRIVATE Core Gui Ors extern_SWIFT extern_libcolorseg ${LIBAV_AVCODEC_LIBRARIES} ${LIBAV_SWSCALE_LIBRARIES} ${X264_LIBRARIES} ${OPENCV_LIBRARIES} ${PA_LIBRARIES})
+target_link_libraries(Perception LINK_PRIVATE Core Gui Ors Algo extern_SWIFT extern_libcolorseg ${LIBAV_AVCODEC_LIBRARIES} ${LIBAV_SWSCALE_LIBRARIES} ${X264_LIBRARIES} ${OPENCV_LIBRARIES} ${PA_LIBRARIES})
