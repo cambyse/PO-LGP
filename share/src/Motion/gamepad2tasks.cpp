@@ -33,7 +33,7 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState, double dt){
 
   if(gamepadState.N<6) return false;
 
-  double joyRate=5.;
+  double joyRate=MT::getParameter<double>("joyRate",5.);
   for(uint i=1;i<gamepadState.N;i++) if(fabs(gamepadState(i))<0.05) gamepadState(i)=0.;
   double joyLeftRight = -joyRate*MT::sign(gamepadState(4))*(exp(MT::sqr(gamepadState(4)))-1.);
   double joyForwardBack = -joyRate*MT::sign(gamepadState(3))*(exp(MT::sqr(gamepadState(3)))-1.);
@@ -70,7 +70,7 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState, double dt){
       vel.z = joyUpDown;
       vel = MP.world.getShapeByName("endeffBase")->X.rot*vel;
       pdt->y_ref = pdt->y + dt*ARRAY(vel);
-      pdt->v_ref.setZero();
+      pdt->v_ref = ARRAY(vel); //setZero();
       MP.world.getShapeByName("mymarker")->rel.pos = pdt->y_ref;
 
       if(pdt_rot && fabs(joyRotate)>0.){
