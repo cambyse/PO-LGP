@@ -2,14 +2,17 @@
 #define TRAJ_OPTIMIZER_h
 
 #include <Motion/motion.h>
+#include <Motion/taskMap_default.h>
+#include <Motion/taskMap_proxy.h>
 
 struct TrajOptimizer {
 
+  ors::KinematicWorld world;
+  arr refPlan;
+  double TRef;
 
-
-TrajOptimizer();
-void optimizeTrajectory();
-
+  TrajOptimizer(ors::KinematicWorld &_world);
+  void optimizeTrajectory(arr &_goal, arr &_q0);
 };
 
 #endif

@@ -142,6 +142,7 @@ message(STATUS "Using OpenGL: ${HAVE_OPENGL}")
 # need the result of this for the examples
 include(src/Hardware/G4/find_G4.cmake OPTIONAL)
 include(src/Hardware/kinect/freenect.cmake OPTIONAL)
+include(src/Ors/physx.cmake OPTIONAL)
 
 # set MT definitions depending on which external libs we have
 find_file(SLICE_EXTERN .slicedef.cmake 
