@@ -238,6 +238,7 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
         limit.damping= limits(4);
         desc->setLimit(limit);
         desc->setRevoluteJointFlag(physx::PxRevoluteJointFlag::eLIMIT_ENABLED, true);
+        desc->setDriveForceLimit(1);
         //desc->setProjectionAngularTolerance(3.14);
       }
       
@@ -342,15 +343,15 @@ void sPhysXInterface::addBody(ors::Body *b, physx::PxMaterial *mMaterial) {
     }
     //actor = PxCreateDynamic(*mPhysics, OrsTrans2PxTrans(s->X), *geometry, *mMaterial, 1.f);
   }
-  if(b->ats.getValue<double>("mass")) {
-    PxRigidBodyExt::setMassAndUpdateInertia(*actor, *(b->ats.getValue<double>("mass")));
-  }
-  if (b->type == ors::dynamicBT) {
-    if(!b->ats.getValue<double>("mass")) 
-      PxRigidBodyExt::updateMassAndInertia(*actor, 1.f);
-  }
   if(b->type == ors::dynamicBT) {
-    PxRigidBodyExt::updateMassAndInertia(*actor, 1.f);
+    cout << "Mass in .ors: " << b->mass << endl;
+    if(b->mass) {
+      PxRigidBodyExt::setMassAndUpdateInertia(*actor, b->mass);
+    }
+    else {
+      PxRigidBodyExt::updateMassAndInertia(*actor, 1.f);
+    }
+    cout << "Mass: " << actor->getMass() << endl;
     actor->setAngularDamping(0.75);
     actor->setLinearVelocity(PxVec3(b->X.vel.x, b->X.vel.y, b->X.vel.z));
     actor->setAngularVelocity(PxVec3(b->X.angvel.x, b->X.angvel.y, b->X.angvel.z));
