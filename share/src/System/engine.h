@@ -184,6 +184,7 @@ struct Engine{
   void step(System& S=NoSystem);
   void test(System& S=NoSystem);
   void close(System& S=NoSystem);
+  void cancel(System& S=NoSystem);
 
   /// @name event control
   void enableAccessLog();

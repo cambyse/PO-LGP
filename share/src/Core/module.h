@@ -130,19 +130,23 @@ struct Access_typed:Access{
     Access_typed<T> *a;
     ReadToken(Access_typed<T> *_a):a(_a){ a->readAccess(); }
     ~ReadToken(){ a->deAccess(); }
-    operator const T&(){ return (*a)(); }
-    const T& operator()(){ return (*a)(); }
+    const T* operator->(){ return a->object(); }
+    operator const T&(){ return *a->object(); }
+    const T& operator()(){ return *a->object(); }
   };
   struct WriteToken{
     Access_typed<T> *a;
     WriteToken(Access_typed<T> *_a):a(_a){ a->writeAccess(); }
     ~WriteToken(){ a->deAccess(); }
-    WriteToken& operator=(const T& x){ (*a)() = x; return *this; }
-    T& operator()(){ return (*a)(); }
+    WriteToken& operator=(const T& x){ (*a->object()) = x; return *this; }
+    T* operator->(){ return a->object(); }
+    operator T&(){ return *a->object(); }
+    T& operator()(){ return *a->object(); }
   };
 
   Access_typed(const char* name, Module *m=NULL, VariableAccess *d=NULL):Access(name){ type=new Type_typed<T, void>();  module=currentlyCreating; var=d; if(module) module->accesses.append(this); }
-  T& operator()(){ CHECK(var && var->data,""); return *((T*)var->data); }
+  T* object(){ CHECK(var && var->data,""); return ((T*)var->data); }
+  T& operator()(){ return *object(); }
   ReadToken get(){ return ReadToken(this); } ///< read access to the variable's data
   WriteToken set(){ return WriteToken(this); } ///< write access to the variable's data
   double& tstamp(){ CHECK(var,""); return var->data_time; } ///< reference to the data's time. Variable should be locked while accessing this.

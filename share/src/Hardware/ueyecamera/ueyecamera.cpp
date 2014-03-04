@@ -132,7 +132,7 @@ void sUEyeInterface::camSetup() {
   }
 
   tout(this) << "camSetup()" << endl;
-  module->ueye_rgb.set()().resize(c_ueye_height, c_ueye_width, c_ueye_bypp);
+  module->ueye_rgb.set()->resize(c_ueye_height, c_ueye_width, c_ueye_bypp);
   setup_flag = true;
   frame_count = 0;
 }

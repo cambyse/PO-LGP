@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 2.6)
-project(MLR_CORE)
 
 set(NAME Perception)
 
@@ -36,5 +35,15 @@ if(OPENCV_FOUND)
     link_directories(${OPENCV_LIBRARY_DIRS})
 endif(OPENCV_FOUND)
 
+option(WITH_LIBPULSE "Use libpulse for PulseAudio based input" ON)
+if(WITH_LIBPULSE)
+    pkg_check_modules(PA libpulse-simple)
+    if(PA_FOUND)
+        add_definitions(-DHAVE_PULSEAUDIO ${PA_CFLAGS_OTHER})
+        include_directories(${PA_INCLUDE_DIRS})
+        link_directories(${PA_LIBRARY_DIRS})
+    endif(PA_FOUND)
+endif(WITH_LIBPULSE)
+
 add_library(Perception SHARED ${SOURCES})
-target_link_libraries(Perception LINK_PRIVATE Core Gui Ors extern_SWIFT extern_libcolorseg ${LIBAV_AVCODEC_LIBRARIES} ${LIBAV_SWSCALE_LIBRARIES} ${X264_LIBRARIES} ${OPENCV_LIBRARIES})
+target_link_libraries(Perception LINK_PRIVATE Core Gui Ors extern_SWIFT extern_libcolorseg ${LIBAV_AVCODEC_LIBRARIES} ${LIBAV_SWSCALE_LIBRARIES} ${X264_LIBRARIES} ${OPENCV_LIBRARIES} ${PA_LIBRARIES})

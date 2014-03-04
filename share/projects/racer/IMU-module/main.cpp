@@ -27,7 +27,7 @@ void testIMU(){
 //    arr enc = S.encoderData.get();
     cout <<"\r state = " <<x <<std::flush;
     if(engine().shutdown.getValue()) break;
-//    if(S.imuData.get()()(0)>10.) break;
+//    if(S.imuData.get()->(0)>10.) break;
   }
 
   //    engine().shutdown.waitForSignal();
@@ -50,15 +50,15 @@ void testMotors(){
 
   engine().open(S);
 
-  S.controls.set()() = ARR(5.,5.,10.);
+  S.controls.set() = ARR(5.,5.,10.);
   MT::wait(3);
-  S.controls.set()() = ARR(128.,128.,10.);
+  S.controls.set() = ARR(128.,128.,10.);
   MT::wait(3);
-  S.controls.set()() = ARR(0.,0.,10.);
+  S.controls.set() = ARR(0.,0.,10.);
   MT::wait(3);
-  S.controls.set()() = ARR(128.,128.,1.);
+  S.controls.set() = ARR(128.,128.,1.);
   MT::wait(3);
-  S.controls.set()() = ARR(0.,0.,1.);
+  S.controls.set() = ARR(0.,0.,1.);
   MT::wait(3);
 
   engine().close(S);
@@ -105,7 +105,7 @@ void testBalance(){
 //    cout <<"\r state = " <<x <<std::flush;
 //    cout <<"enc= " <<enc/MT_2PI <<std::endl;
 
-    S.controls.set()() = ARR(motor_vel, motor_vel, 10.);
+    S.controls.set() = ARR(motor_vel, motor_vel, 10.);
 
     if(engine().shutdown.getValue()) break;
   }

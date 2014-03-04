@@ -31,7 +31,7 @@ void JoystickInterface::open(){
 
 void JoystickInterface::close(){
   delete joy;
-  joystickState.set()().clear();
+  joystickState.set()->clear();
 }
 
 void JoystickInterface::step(){

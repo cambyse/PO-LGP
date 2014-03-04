@@ -1,0 +1,2 @@
+tree_rt_controller:
+  type: tree_controller_pkg/TreeControllerPlugin

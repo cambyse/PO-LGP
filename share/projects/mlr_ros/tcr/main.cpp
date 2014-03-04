@@ -10,6 +10,8 @@
 #include <Gui/opengl.h>
 #include <ctime>
 
+#include <ros/ros.h>
+
 #include <devTools/logging.h>
 SET_LOG(main, DEBUG);
 
