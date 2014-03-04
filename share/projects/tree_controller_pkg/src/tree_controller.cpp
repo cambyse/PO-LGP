@@ -120,6 +120,11 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   taskPos->v_ref = ARR(0.,0.,0.);
   taskVec->y_ref = stateVec;
   taskVec->v_ref = ARR(0.,0.,0.);
+
+
+  joint_pub = n.advertise<tree_controller_pkg::JointState>("joint_state", 1);
+
+
   return true;
 }
 
@@ -156,11 +161,22 @@ void TreeControllerClass::update()
   tree_.getVelocities(jnt_vel_);
   tree_.getEfforts(jnt_efforts_);
 
+
+
   /// Convert KDL to ORS
   for (uint i =0;i<controlIdx.d0;i++) {
     q(i) = jnt_pos_(controlIdx(i));
     qd(i) = qd_filt*qd(i) + (1.-qd_filt)*jnt_vel_.qdot(controlIdx(i));
   }
+
+  joint_pub_state.N = q.d0;
+  joint_pub_state.q.resize(q.d0);
+  joint_pub_state.qd.resize(q.d0);
+  for(uint i=0; i<q.N; i++){
+    joint_pub_state.q[i] = q(i);
+    joint_pub_state.qd[i] = qd(i);
+  }
+  joint_pub.publish(joint_pub_state);
 
   /// set current state
   MP->setState(q,qd);
