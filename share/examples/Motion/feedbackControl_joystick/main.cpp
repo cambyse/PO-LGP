@@ -6,7 +6,7 @@
 #include <Motion/pr2_heuristics.h>
 
 #include "simulator.h"
-#include "joystick2tasks.h"
+#include <Motion/gamepad2tasks.h>
 
 void testSimulator(){
   struct MySystem:System{
@@ -24,7 +24,7 @@ void testSimulator(){
 
   ors::KinematicWorld world("model.kvg");
   FeedbackMotionControl MP(world, false);
-  Joystick2Tasks j2t(MP);
+  Gamepad2Tasks j2t(MP);
   arr q, qdot;
   world.getJointState(q, qdot);
   MP.nullSpacePD.y_ref = q;

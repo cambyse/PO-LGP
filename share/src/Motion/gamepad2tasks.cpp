@@ -1,6 +1,6 @@
-#include "joystick2tasks.h"
+#include "gamepad2tasks.h"
 
-Joystick2Tasks::Joystick2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL), endeffL(NULL){
+Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL), endeffL(NULL){
   endeffR = MP.addPDTask("endeffR", .02, .8, posTMT, "endeffR");
   endeffL = MP.addPDTask("endeffL", .02, .8, posTMT, "endeffL");
   base = MP.addPDTask("endeffBase", .02, .8, posTMT, "endeffBase");
@@ -19,7 +19,7 @@ Joystick2Tasks::Joystick2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL
 //  TaskVariable *skin = new DefaultTaskVariable("skin", ors, skinTVT, 0, 0, 0, 0, skinIndex);
 }
 
-bool Joystick2Tasks::updateTasks(arr& joys, double dt){
+bool Gamepad2Tasks::updateTasks(arr& gamepadState, double dt){
   for(PDtask* pdt:MP.tasks) pdt->active=false;
 
   qitself->active=true;
@@ -31,21 +31,21 @@ bool Joystick2Tasks::updateTasks(arr& joys, double dt){
   limits->v_ref.setZero();
   limits->prec=100.;
 
-  if(joys.N<6) return false;
+  if(gamepadState.N<6) return false;
 
   double joyRate=5.;
-  for(uint i=1;i<joys.N;i++) if(fabs(joys(i))<0.05) joys(i)=0.;
-  double joyLeftRight = -joyRate*MT::sign(joys(4))*(exp(MT::sqr(joys(4)))-1.);
-  double joyForwardBack = -joyRate*MT::sign(joys(3))*(exp(MT::sqr(joys(3)))-1.);
-  double joyUpDown = -joyRate*MT::sign(joys(2))*(exp(MT::sqr(joys(2)))-1.);
-  double joyRotate = -joyRate*MT::sign(joys(1))*(exp(MT::sqr(joys(1)))-1.);
+  for(uint i=1;i<gamepadState.N;i++) if(fabs(gamepadState(i))<0.05) gamepadState(i)=0.;
+  double joyLeftRight = -joyRate*MT::sign(gamepadState(4))*(exp(MT::sqr(gamepadState(4)))-1.);
+  double joyForwardBack = -joyRate*MT::sign(gamepadState(3))*(exp(MT::sqr(gamepadState(3)))-1.);
+  double joyUpDown = -joyRate*MT::sign(gamepadState(2))*(exp(MT::sqr(gamepadState(2)))-1.);
+  double joyRotate = -joyRate*MT::sign(gamepadState(1))*(exp(MT::sqr(gamepadState(1)))-1.);
 
   enum {none, up, down, left, right} sel=none;
-  if(joys(5)>.5) sel=right;
-  else if(joys(5)<-.5) sel=left;
-  else if(joys(6)> .5) sel=down;
-  else if(joys(6)<-.5) sel=up;
-  uint mode = uint(joys(0));
+  if(gamepadState(5)>.5) sel=right;
+  else if(gamepadState(5)<-.5) sel=left;
+  else if(gamepadState(6)> .5) sel=down;
+  else if(gamepadState(6)<-.5) sel=up;
+  uint mode = uint(gamepadState(0));
   if(mode&0x10 || mode&0x20 || mode&0x40 || mode&0x80) return true;
 
   switch (mode) {
