@@ -1,6 +1,6 @@
 #include "LookAheadPolicy.h"
 
-#include "../debug.h"
+#include "../util/debug.h"
 
 LookAheadPolicy::LookAheadPolicy(const double& discount,
                                  std::shared_ptr<const Predictor> pred,

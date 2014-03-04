@@ -1,8 +1,8 @@
 #ifndef FEATURELEARNER_H_
 #define FEATURELEARNER_H_
 
-#include "Feature.h"
-#include "SpaceManager.h"
+#include "../Representation/Feature.h"
+#include "../SpaceManager.h"
 
 class Environment;
 

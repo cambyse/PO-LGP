@@ -6,7 +6,7 @@
 #include <float.h>
 
 #define DEBUG_STRING "Chi-Square: "
-#include "../debug.h"
+#include "debug.h"
 
 /** \example Chi_Square_Example.cpp This is an an example of how to use the
  * ChiSquareTest class. */
@@ -144,6 +144,6 @@ double ChiSquareTest::chi_square_statistic(
     return chi_square;
 }
 
-#include "../debug_exclude.h"
+#include "debug_exclude.h"
 
 #endif /* CHI_SQUARE_TEST_H_ */

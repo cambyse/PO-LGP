@@ -3,14 +3,14 @@
 #include "../util/ColorOutput.h"
 
 #include "../Maze/Maze.h"
-#include "../KMarkovCRF.h"
-#include "../UTree.h"
 #include "../PredictiveEnvironment.h"
 #include "../Planning/LookAheadSearch.h"
-#include "../LinearQ.h"
+#include "../Learner/KMarkovCRF.h"
+#include "../Learner/UTree.h"
+#include "../Learner/LinearQ.h"
 
 #define DEBUG_LEVEL 1
-#include "../debug.h"
+#include "../util/debug.h"
 
 using std::vector;
 using std::shared_ptr;

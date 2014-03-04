@@ -4,7 +4,7 @@
 #include "../util/ColorOutput.h"
 
 #define DEBUG_LEVEL 0
-#include "../debug.h"
+#include "../util/debug.h"
 
 #include <algorithm>
 

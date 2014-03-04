@@ -6,7 +6,7 @@
 #include <vector>
 #include <tuple>
 
-#include "../util.h"
+#include "../util/util.h"
 #include "../Maze/Maze.h"
 #include "../Environment.h"
 
@@ -15,7 +15,7 @@
 #else
 #define DEBUG_LEVEL 1
 #endif
-#include "../debug.h"
+#include "../util/debug.h"
 
 using lemon::INVALID;
 using lemon::Color;

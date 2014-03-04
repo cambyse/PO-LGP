@@ -4,7 +4,7 @@
 #include "../util/ColorOutput.h"
 
 #define DEBUG_LEVEL 0
-#include "../debug.h"
+#include "../util/debug.h"
 
 static const double state_size = 1;                  // Size of states for rendering.
 static const double action_line_length_factor = 0.8; // How long the action line is relative to the state size.

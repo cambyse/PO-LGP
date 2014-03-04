@@ -1,13 +1,13 @@
 #ifndef LINEARQ_H_
 #define LINEARQ_H_
 
-#include "Config.h"
+#include "../Config.h"
 
-#include "Feature.h"
-#include "HistoryObserver.h"
+#include "../Representation/Feature.h"
+#include "../HistoryObserver.h"
 #include "FeatureLearner.h"
-#include "Planning/Policy.h"
-#include "optimization/LBFGS_Optimizer.h"
+#include "../Planning/Policy.h"
+#include "../optimization/LBFGS_Optimizer.h"
 
 #define ARMA_NO_DEBUG
 #include <armadillo>
@@ -16,7 +16,7 @@
 
 #include <vector>
 
-#include "debug.h"
+#include "../util/debug.h"
 
 class LinearQ: public HistoryObserver, public LBFGS_Optimizer, public FeatureLearner, public Policy
 {
@@ -219,6 +219,6 @@ private:
     void sort_candidates_by_score(bool divide_by_complexity = false);
 };
 
-#include "debug_exclude.h"
+#include "../util/debug_exclude.h"
 
 #endif /* LINEARQ_H_ */

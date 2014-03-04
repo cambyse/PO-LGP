@@ -1,7 +1,7 @@
 #include "LBFGS_Object.h"
 
 #include "../util/lbfgs_codes.h"
-#include "../util.h"
+#include "../util/util.h"
 #include "../Config.h"
 
 #include <math.h> // for fabs()

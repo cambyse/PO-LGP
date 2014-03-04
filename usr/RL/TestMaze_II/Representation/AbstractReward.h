@@ -1,7 +1,7 @@
 #ifndef ABSTRACTREWARD_H_
 #define ABSTRACTREWARD_H_
 
-#include "util.h"
+#include "../util/util.h"
 
 class AbstractReward: public util::AbstractIteratableSpace<AbstractReward> {
 public:

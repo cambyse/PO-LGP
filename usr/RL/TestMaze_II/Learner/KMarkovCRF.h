@@ -12,11 +12,11 @@
 
 #include <lbfgs.h>
 
-#include "Config.h"
+#include "../Config.h"
 
-#include "HistoryObserver.h"
+#include "../HistoryObserver.h"
+#include "../Predictor.h"
 #include "FeatureLearner.h"
-#include "Predictor.h"
 
 class KMarkovCRF: public HistoryObserver, public FeatureLearner, public Predictor {
 

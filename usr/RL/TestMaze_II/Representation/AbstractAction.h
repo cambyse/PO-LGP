@@ -1,7 +1,7 @@
 #ifndef ABSTRACTACTION_H_
 #define ABSTRACTACTION_H_
 
-#include "util.h"
+#include "../util/util.h"
 
 class AbstractAction: public util::AbstractIteratableSpace<AbstractAction> {
 public:

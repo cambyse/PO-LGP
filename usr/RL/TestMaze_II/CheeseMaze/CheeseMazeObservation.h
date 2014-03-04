@@ -1,7 +1,7 @@
 #ifndef CHEESEMAZEOBSERVATION_H_
 #define CHEESEMAZEOBSERVATION_H_
 
-#include "../AbstractObservation.h"
+#include "../Representation/AbstractObservation.h"
 
 class CheeseMazeObservation: public AbstractObservation {
 public:

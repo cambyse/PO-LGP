@@ -1,7 +1,7 @@
 #include "PredictiveEnvironment.h"
 
 #define DEBUG_LEVEL 0
-#include "debug.h"
+#include "util/debug.h"
 
 PredictiveEnvironment::PredictiveEnvironment(action_ptr_t as, observation_ptr_t os, reward_ptr_t rs):
     current_instance(nullptr)

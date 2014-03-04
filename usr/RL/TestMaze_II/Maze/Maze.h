@@ -11,12 +11,12 @@
 #include <sstream>
 
 #include "../Config.h"
-#include "../util.h"
-#include "../Feature.h"
+#include "../util/util.h"
+#include "../Representation/Feature.h"
 
 #include "MazeObservation.h"
 #include "MazeAction.h"
-#include "../ListedReward.h"
+#include "../Representation/ListedReward.h"
 
 class Maze: public PredictiveEnvironment, public Visualizer {
 public:

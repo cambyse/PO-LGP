@@ -1,9 +1,9 @@
 #include "KMarkovCRF.h"
 
-#include "util.h"
-#include "util/lbfgs_codes.h"
-#include "util/ProgressBar.h"
-#include "util/QtUtil.h" // for << operator
+#include "../util/util.h"
+#include "../util/lbfgs_codes.h"
+#include "../util/ProgressBar.h"
+#include "../util/QtUtil.h" // for << operator
 
 #include <list>
 #include <map>
@@ -14,7 +14,7 @@
 #define DEBUG_LEVEL 2
 #endif
 #define DEBUG_STRING "CRF: "
-#include "debug.h"
+#include "../util/debug.h"
 
 using std::vector;
 using std::list;

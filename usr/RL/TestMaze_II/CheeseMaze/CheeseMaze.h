@@ -7,11 +7,11 @@
 #include <QGraphicsSvgItem>
 
 #include "../Config.h"
-#include "../Feature.h"
+#include "../Representation/Feature.h"
 
 #include "CheeseMazeObservation.h"
 #include "CheeseMazeAction.h"
-#include "../ListedReward.h"
+#include "../Representation/ListedReward.h"
 
 class CheeseMaze: public Environment, public Visualizer {
 

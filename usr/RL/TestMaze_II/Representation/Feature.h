@@ -9,7 +9,7 @@
 #include <memory> // for shared_ptr
 #include <unordered_map>
 
-#include "Config.h"
+#include "../Config.h"
 
 class Feature {
 public:

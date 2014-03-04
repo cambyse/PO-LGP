@@ -7,7 +7,7 @@
 #include "../Planning/LookAheadPolicy.h"
 
 #define DEBUG_LEVEL 2
-#include "../debug.h"
+#include "../util/debug.h"
 
 using std::vector;
 using std::shared_ptr;

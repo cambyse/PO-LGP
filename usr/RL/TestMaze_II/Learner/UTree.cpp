@@ -1,7 +1,7 @@
 #include "UTree.h"
-#include "util.h"
-#include "util/KolmogorovSmirnovTest.h"
-#include "util/ChiSquareTest.h"
+#include "../util/util.h"
+#include "../util/KolmogorovSmirnovTest.h"
+#include "../util/ChiSquareTest.h"
 
 #include <queue>
 #include <utility> // for std::pair
@@ -15,7 +15,7 @@
 #define DEBUG_LEVEL 1
 #endif
 #define DEBUG_STRING "UTree: "
-#include "debug.h"
+#include "../util/debug.h"
 
 using std::vector;
 using std::map;

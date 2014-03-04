@@ -6,7 +6,7 @@
 #include <math.h>
 
 #define DEBUG_LEVEL 1
-#include "../debug.h"
+#include "../util/debug.h"
 
 using std::function;
 

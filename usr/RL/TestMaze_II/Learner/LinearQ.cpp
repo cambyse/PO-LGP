@@ -8,10 +8,10 @@
 #include <tuple>
 #include <float.h> // for DBL_MAX
 
-#include "util/lbfgs_codes.h"
+#include "../util/lbfgs_codes.h"
 
-#include "util/ProgressBar.h"
-#include "util.h"
+#include "../util/ProgressBar.h"
+#include "../util/util.h"
 
 #ifdef BATCH_MODE_QUIET
 #define DEBUG_LEVEL 0
@@ -19,7 +19,7 @@
 #define DEBUG_LEVEL 1
 #endif
 #define DEBUG_STRING "LinearQ: "
-#include "debug.h"
+#include "../util/debug.h"
 
 using std::vector;
 using std::set;

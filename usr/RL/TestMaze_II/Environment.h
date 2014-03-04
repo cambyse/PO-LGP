@@ -3,8 +3,8 @@
 
 #include "SpaceManager.h"
 
-#include "Feature.h"
-#include "FeatureLearner.h"
+#include "Representation/Feature.h"
+#include "Learner/FeatureLearner.h"
 
 class Environment: public virtual SpaceManager {
 

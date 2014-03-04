@@ -12,7 +12,7 @@
 #define DEBUG_H_
 
 #include <iostream>
-#include "./util/ColorOutput.h"
+#include "ColorOutput.h"
 
 #ifndef DEBUG_STRING
 #define DEBUG_STRING __FILE__ << ": "

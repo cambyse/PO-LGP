@@ -2,9 +2,9 @@
 #define UTREE_H_
 
 #include "FeatureLearner.h"
-#include "HistoryObserver.h"
-#include "Predictor.h"
-#include "Planning/Policy.h"
+#include "../HistoryObserver.h"
+#include "../Predictor.h"
+#include "../Planning/Policy.h"
 
 #include <lemon/list_graph.h>
 

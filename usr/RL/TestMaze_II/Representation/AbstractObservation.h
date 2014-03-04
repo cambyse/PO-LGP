@@ -1,7 +1,7 @@
 #ifndef ABSTRACTOBSERVATION_H_
 #define ABSTRACTOBSERVATION_H_
 
-#include "util.h"
+#include "../util/util.h"
 
 class AbstractObservation: public util::AbstractIteratableSpace<AbstractObservation> {
 public:
