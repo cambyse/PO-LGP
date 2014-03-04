@@ -7,4 +7,4 @@ LPATHS += /opt/XIMEA/lib
 
 LIBS += -lXIMEA_GenTL
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

@@ -6,4 +6,4 @@ LPATHS += /usr/local/lib
 
 DEPEND = Core System Hardware_ueyecamera Hardware_VideoWriter Perception Gui
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

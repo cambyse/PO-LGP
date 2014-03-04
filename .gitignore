@@ -84,7 +84,7 @@ orspy.py
 
 
 %% SPECIAL for git/mlr:
-share/gofMake/config.mk*
+share/gofMake/config.mk
 share/extern/tony_mdp/parser.tab.cpp
 share/extern/ODE_0.11/download
 share/extern/ODE_0.11/ode-0.11

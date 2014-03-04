@@ -34,5 +34,5 @@ PLIB = 1  #for the Joystick
 
 CLEAN = *_moc.cpp *_ui.h MT.log
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk
 

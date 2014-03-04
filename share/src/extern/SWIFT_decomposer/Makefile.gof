@@ -17,4 +17,4 @@ target: $(OUTPUT) ./decomposer.exe
 
 DEPEND = extern_SWIFT
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

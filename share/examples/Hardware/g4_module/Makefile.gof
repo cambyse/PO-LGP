@@ -4,4 +4,4 @@ OBJS = main.o
 
 DEPEND = Core System Hardware_G4
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

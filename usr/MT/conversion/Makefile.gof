@@ -2,4 +2,4 @@ BASE = ../../../share
 
 CXXFLAGS += -std=c++0x
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

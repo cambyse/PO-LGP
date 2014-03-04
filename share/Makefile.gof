@@ -72,4 +72,4 @@ cleanPath/%: %
 
 force:	;
 
-#include gofMake/make-generic
+#include gofMake/generic.mk

@@ -3,4 +3,4 @@ BASE = ../../..
 GL = 1
 DEPEND = Motion Core Ors Gui Optim Algo
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

@@ -10,4 +10,4 @@ GTKL = 1
 PCL = 0
 MAKEMODE = app
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk
