@@ -19,6 +19,7 @@
 #include <tree_controller_pkg/SetTaskGains.h>
 #include <tree_controller_pkg/StartLogging.h>
 #include <tree_controller_pkg/StopLogging.h>
+#include <tree_controller_pkg/JointState.h>
 
 namespace tree_controller_ns{
 
@@ -51,6 +52,9 @@ private:
   arr p_effort,d_effort,i_effort;
   arr y,yd,yVec,ydVec;
   arr state,stateVec;
+
+  ros::Publisher joint_pub;
+  tree_controller_pkg::JointState joint_pub_state;
 
   // Limits
   arr lowerEffortLimits, upperEffortLimits;

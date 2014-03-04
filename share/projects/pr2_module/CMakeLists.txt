@@ -20,12 +20,17 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 include_directories( ${MLR_PATH}/share/src )
 
-rosbuild_add_library(tree_controller_lib src/tree_controller.cpp include/tree_controller_pkg/tree_controller.h)
+rosbuild_add_executable(pr2_module src/main.cpp)
 
-target_link_libraries(tree_controller_lib 
+
+
+target_link_libraries(pr2_module
 ${MLR_PATH}/share/lib/libMotion.so
 ${MLR_PATH}/share/lib/libOrs.so
-${MLR_PATH}/share/lib/libCore.so)
+${MLR_PATH}/share/lib/libCore.so
+${MLR_PATH}/share/lib/libOptim.so
+${MLR_PATH}/share/lib/libSystem.so
+${MLR_PATH}/share/lib/libHardware.so
+${MLR_PATH}/share/lib/libGui.so)
 
-rosbuild_gensrv()
-rosbuild_genmsg()
+
