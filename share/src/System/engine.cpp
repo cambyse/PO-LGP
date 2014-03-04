@@ -304,10 +304,20 @@ void System::write(ostream& os) const{
 
 void signalhandler(int s){
   int calls = engine().shutdown.incrementValue();
-  cerr <<"\n*** System/Engine received signal " <<s <<" -- count " <<calls <<" trying to shutdown all threads" <<endl;
-  if(calls==1) engine().close();
-  if(calls>2){
-    cerr <<"*** Shutdown failed - emergency exit!" <<endl;
+  cerr <<"\n*** System received signal " <<s <<" -- count " <<calls;
+  if(calls==1){
+    cout <<" -- waiting for main loop to break on engine().shutdown.getValue()" <<endl;
+  }
+  if(calls==2){
+    cout <<" -- smoothly closing modules directly" <<endl;
+    engine().close(); //might lead to a hangup of the main loop, but processes should close
+  }
+  if(calls==3){
+    cout <<" -- cancelling threads to force closing" <<endl;
+    engine().cancel();
+  }
+  if(calls>3){
+    cerr <<" ** shutdown failed - hard exit!" <<endl;
     exit(1);
   }
 }
@@ -421,6 +431,13 @@ void Engine::close(System& S){
   for_list_(Module, m, system->mts){
     if(mode==threaded) m->thread->threadClose();
     if(mode==serial)   m->close();
+  }
+}
+
+void Engine::cancel(System& S){
+  if(&S) system=&S;
+  for_list_(Module, m, system->mts){
+    if(mode==threaded) m->thread->threadCancel();
   }
 }
 

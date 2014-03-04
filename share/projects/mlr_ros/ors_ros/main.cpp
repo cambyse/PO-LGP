@@ -77,7 +77,7 @@ public:
     if(revision < world.var->revisionNumber()) {
       w = world.get();
     }
-    if(do_physics.get()()) {
+    if(do_physics.get()) {
       w.physx().step();
       world.set() = w;
       revision = world.var->revisionNumber();
@@ -96,7 +96,7 @@ void run() {
   S.connect();
   cout << S << endl; // get some info
 
-  S.getAccess<bool>("do_physics")->set()() = true;
+  S.getAccess<bool>("do_physics")->set() = true;
 
   // run it
   engine().open(S);

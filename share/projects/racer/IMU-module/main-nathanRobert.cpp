@@ -22,7 +22,7 @@ void testIMU(){
 
   for(;;){
     S.imuData.var->waitForNextWriteAccess();
-    if(S.imuData.get()()(0)>10.) break;
+    if(S.imuData.get()->(0)>10.) break;
   }
 
   //    engine().shutdown.waitForSignal();
@@ -45,7 +45,7 @@ void findBalancePoint(){
       connect();
     }
     double get_time() {
-      return imuData.get()()(0);
+      return imuData.get()->(0);
     }
   } S;
 
@@ -61,7 +61,7 @@ void findBalancePoint(){
     S.stateEstimate.var->waitForNextWriteAccess();
     if (start_time == -1) start_time = S.get_time();
 
-    S.controls.set()() = ARR(0., 0., 0.);
+    S.controls.set() = ARR(0., 0., 0.);
 
     double current_time = S.get_time();
     if (current_time - start_time > 0.25) {
@@ -70,7 +70,7 @@ void findBalancePoint(){
       cout << "[" << current_time << "] angle: " << x(1) << endl;
       start_time = current_time;
     }
-    //if(S.imuData.get()()(0)>10.) break;
+    //if(S.imuData.get()->(0)>10.) break;
   }
 
   //    engine().shutdown.waitForSignal();
@@ -93,13 +93,13 @@ void testMotors(){
 
   engine().open(S);
 
-  S.controls.set()() = ARR(128.,128.,10.);
+  S.controls.set() = ARR(128.,128.,10.);
   MT::wait(3);
-  S.controls.set()() = ARR(0.,0.,10.);
+  S.controls.set() = ARR(0.,0.,10.);
   MT::wait(3);
-  S.controls.set()() = ARR(128.,128.,1.);
+  S.controls.set() = ARR(128.,128.,1.);
   MT::wait(3);
-  S.controls.set()() = ARR(0.,0.,1.);
+  S.controls.set() = ARR(0.,0.,1.);
   MT::wait(3);
 
   engine().close(S);
@@ -138,7 +138,7 @@ void testBalance(){
       connect();
     }
     double get_time() {
-      return imuData.get()()(0);
+      return imuData.get()->(0);
     }
   } S;
 
@@ -182,9 +182,9 @@ void testBalance(){
       cerr << "ERROR: - limit hit" << endl;
       u = -127;
     }
-    S.controls.set()() = ARR(u, u, 10.);
+    S.controls.set() = ARR(u, u, 10.);
 
-    //if(S.imuData.get()()(0)>10.) break;
+    //if(S.imuData.get()->(0)>10.) break;
   }
 
   //    engine().shutdown.waitForSignal();
