@@ -19,27 +19,28 @@ void init_display(ors::KinematicWorld &kw) {
   kw.gl().camera.upright();
 }
 
+#include <Algo/spline.h>
 void display(G4Data &g4d) {
   ors::KinematicWorld kw;
 
   init_display(kw);
 
   KeyFramer kf(kw, g4d);
-  String b1("rh:thumb"), b2("sbox");
-  //uint wlen = 61;
+  String b1("rh:thumb"), b2("bbox");
 
   KeyValueGraph kvg;
   //kf.EM_m(kvg, b1);
   //kf.EM_r(kvg, b1, b2);
-  kf.EM_c(kvg, b1, b2);
+  //kf.EM_c(kvg, b1, b2);
+  //FGPlots fgp;
+  //fgp.open(kvg);
+  //uint F = g4d.getNumFrames();
+  //for(uint f = 0; f < F; f++) {
+    //kf.updateOrs(f);
+    //fgp.step(f);
+  //}
 
-  FGPlots fgp;
-  fgp.open(kvg);
-  uint F = g4d.getNumFrames();
-  for(uint f = 0; f < F; f++) {
-    kf.updateOrs(f);
-    fgp.step(f);
-  }
+  kf.playScene(b1);
 }
 
 int main(int argc, char **argv) {
