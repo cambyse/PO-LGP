@@ -14,7 +14,7 @@ void threadedRun() {
 
   for(;;){
     S.joystickState.var->waitForNextWriteAccess();
-    cout <<"\r" <<S.joystickState.get() <<std::flush;
+    cout <<"\r" <<S.joystickState.get()() <<std::flush;
     if(engine().shutdown.getValue()) break;
   }
 

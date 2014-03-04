@@ -436,7 +436,7 @@ void Engine::close(System& S){
 
 void Engine::cancel(System& S){
   if(&S) system=&S;
-  for_list_(Module, m, system->mts){
+  for(Module *m: system->mts){
     if(mode==threaded) m->thread->threadCancel();
   }
 }

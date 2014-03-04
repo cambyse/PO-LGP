@@ -2,6 +2,6 @@ BASE = ../../..
 
 OBJS = main.o
 
-DEPEND = Core System Hardware_G4
+DEPEND = Core System Hardware_G4 Gui Ors
 
 include $(BASE)/gofMake/generic.mk

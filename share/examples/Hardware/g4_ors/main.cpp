@@ -2,7 +2,7 @@
 #include <sys/time.h>
 
 #include <Hardware/G4/G4.h>
-#include <Ors/module_G4Display.h>
+#include <Hardware/G4/module_G4Display.h>
 #include <Core/module_FloatA_Recorder.h>
 #include <Hardware/G4/module_G4Recorder.h>
 

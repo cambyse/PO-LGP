@@ -1,1 +1,2 @@
-find . -name 'Makefile.gof' -exec bin/createMakefileLinks_sub.sh {} \;
+echo "creating makefile -> Makefile.gof everywhere"
+find . -name 'Makefile.gof' -execdir ln -f -s {} makefile \;

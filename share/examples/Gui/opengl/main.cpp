@@ -126,13 +126,13 @@ void TEST(Mesh) {
 void TEST(Obj) {
   ors::Mesh mesh,mesh2;
 
-  //mesh.readObjFile("../../external/3dmodel/obj/gipshand2-273k.obj");
-  mesh.readObjFile("base-male-nude.obj");
-  //mesh.readObjFile("../../../3dmodel/obj/gipshand2-273k.obj");
-  //mesh.readObjFile("../../../3dmodel/obj/base-male-nude.obj");
+  //mesh.readObjFile(FILE("../../external/3dmodel/obj/gipshand2-273k.obj"));
+  mesh.readObjFile(FILE("base-male-nude.obj"));
+  //mesh.readObjFile(FILE("../../../3dmodel/obj/gipshand2-273k.obj"));
+  //mesh.readObjFile(FILE("../../../3dmodel/obj/base-male-nude.obj"));
   mesh.scale(.1,.1,.1);
   mesh.computeNormals();
-  mesh2.readObjFile("magnolia.obj");
+  mesh2.readObjFile(FILE("magnolia.obj"));
   mesh2.scale(.01,.01,.01);
   mesh2.computeNormals();
   OpenGL gl;

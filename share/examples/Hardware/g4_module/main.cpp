@@ -30,7 +30,7 @@ void serialRun(){
   for(uint i=0;i<100;i++){
     S.step();
     MT::wait(.01, false);
-    cout <<i <<' ' <<S.currentPoses.get() <<endl;
+    cout <<i <<' ' <<S.currentPoses.get()() <<endl;
   }
   S.close();
 }
@@ -42,7 +42,7 @@ void threadedRun(){
   engine().open(S);
   for(uint i=0;i<10;i++){
     S.currentPoses.var->waitForNextWriteAccess();
-    cout <<i <<' ' <<S.currentPoses.get() <<endl;
+    cout <<i <<' ' <<S.currentPoses.get()() <<endl;
   }
   engine().close(S);
 }
