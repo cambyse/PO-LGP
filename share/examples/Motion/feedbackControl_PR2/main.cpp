@@ -53,7 +53,7 @@ void drawPoint(void* classP){
 }
 
 void drawVector(uint color, arr& p){
-//  arr *p = (arr*)classP;
+  //  arr *p = (arr*)classP;
   glPointSize(7.0f);
   glColor(color);
   glLineWidth(2);
@@ -125,21 +125,26 @@ void executeTrajectory(String scene){
   MotionProblem P(world);
   P.loadTransitionParameters();
 
-  arr goal = ARRAY(P.world.getBodyByName("goalRef")->X.pos);
+  arr Rgoal = ARRAY(P.world.getBodyByName("RgoalRef")->X.pos);
+  arr Lgoal = ARRAY(P.world.getBodyByName("LgoalRef")->X.pos);
 
   //-- create an optimal trajectory to trainTarget
   TaskCost *c;
-  c = P.addTaskMap("position", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, goal, 1e5);
+  c = P.addTaskMap("position_right_hand", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly, Rgoal, 1e5);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
 
-//  c = P.addTaskMap("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
-//  P.setInterpolatingCosts(c, MEotionProblem::finalOnly, ARRAY(-0.5,0.3,0.8), 1e3);
-//  P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
+  c = P.addTaskMap("position_left_hand", new DefaultTaskMap(posTMT,world,"endeffL", ors::Vector(0., 0., 0.)));
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly, Lgoal, 1e5);
+  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
+
+  //  c = P.addTaskMap("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
+  //  P.setInterpolatingCosts(c, MEotionProblem::finalOnly, ARRAY(-0.5,0.3,0.8), 1e3);
+  //  P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
 
   c = P.addTaskMap("qLimits", new DefaultTaskMap(qLimitsTMT,world));
-  P.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),1e2);
-  P.setInterpolatingVelCosts(c,MotionProblem::constant,ARRAY(0.),1e2);
+  P.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),1e0);
+  P.setInterpolatingVelCosts(c,MotionProblem::constant,ARRAY(0.),1e1);
 
   c = P.addTaskMap("homing", new DefaultTaskMap(qItselfTMT,world));
   P.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),0);
@@ -147,7 +152,7 @@ void executeTrajectory(String scene){
 
 
   //-- create the Optimization problem (of type kOrderMarkov)
-  P.x0 = arr{0., 0.,0.,0.,0.,-0.1,-0.1,0.};
+  P.x0 = {0.,0.,0.,0.,0.,0.,0.,0.,-0.3,-0.3,0.,0.,0.,0.,0.,-0.3,-0.3,0};
 
   MotionProblemFunction F(P);
   uint T=F.get_T();
@@ -162,22 +167,28 @@ void executeTrajectory(String scene){
 //  displayTrajectory(x, 1, world, "planned trajectory", 0.01);
 
   //-- Transform trajectory into task space
-  arr kinPos, kinVec, xRefPos, xRefVec, xRef;
+  arr kinPos, kinVec, xRefPosR, xRefVecR, xRefPosL, xRefVecL, xRefR, xRefL;
   // store cartesian coordinates and endeffector orientation
   for (uint t=0;t<=T;t++) {
     world.setJointState(x[t]);
     world.kinematicsPos(kinPos,NoArr,P.world.getBodyByName("endeffR")->index);
     world.kinematicsVec(kinVec,NoArr,P.world.getBodyByName("endeffR")->index);
+    xRefPosR.append(~kinPos);
+    xRefVecR.append(~kinVec);
 
-    xRefPos.append(~kinPos);
-    xRefVec.append(~kinVec);
+    world.kinematicsPos(kinPos,NoArr,P.world.getBodyByName("endeffL")->index);
+    world.kinematicsVec(kinVec,NoArr,P.world.getBodyByName("endeffL")->index);
+    xRefPosL.append(~kinPos);
+    xRefVecL.append(~kinVec);
   }
 
-  xRef = ~cat(~xRefPos,~xRefVec);
+  xRefR = ~cat(~xRefPosR,~xRefVecR);
+  xRefL = ~cat(~xRefPosL,~xRefVecL);
 
   // set initial positions
   arr q0 = x[0];
-  arr x0 = xRef[0];
+  arr x0_L = xRefL[0];
+  arr x0_R = xRefR[0];
   q = P.x0;
   world.setJointState(q,qdot);
 
@@ -190,77 +201,100 @@ void executeTrajectory(String scene){
   double t = 0.;
   double t_final = T*dt;
 
-  arr dir;
-  dir = ARRAY(1.,0.,0.);
+  arr dirR = ARRAY(0.,0.,-1.);
+  arr dirL = ARRAY(0.,0.,0.);
 
-  MObject goalMO(&world, MT::String("goal"), MObject::GOAL , 0.0005, dir);
+  MObject goalMO_R(&world, MT::String("Rgoal"), MObject::GOAL , 0.0005, dirL);
+  MObject goalMO_L(&world, MT::String("Lgoal"), MObject::GOAL , 0.0005, dirR);
 
   FeedbackMotionControl MP(world, false);
-  PDtask *taskPos, *taskVec, *taskHome, *taskCol, *taskLimits;
+  PDtask *taskPosR, *taskVecR, *taskHome, *taskCol, *taskLimits;
+  PDtask *taskPosL, *taskVecL;
   double regularization = 1e-2;
 
   // initialize controllers
-  AdaptiveMotionExecution* amex;
+  AdaptiveMotionExecution* amexL;
+  AdaptiveMotionExecution* amexR;
 
-//  MP.nullSpacePD.prec=0.;
+  //  MP.nullSpacePD.prec=0.;
   MP.nullSpacePD.active=false;
-  taskPos = MP.addPDTask("pos", tau_plan*5, 1, posTMT, "endeffR");
-  taskVec = MP.addPDTask("vec", tau_plan*5, 1, vecTMT, "endeffR",ARR(0.,0.,1.));
+  taskPosR = MP.addPDTask("posR", tau_plan*5, 1, posTMT, "endeffR");
+  taskVecR = MP.addPDTask("vecR", tau_plan*5, 1, vecTMT, "endeffR",ARR(0.,0.,1.));
+  taskPosL = MP.addPDTask("posL", tau_plan*5, 1, posTMT, "endeffL");
+  taskVecL = MP.addPDTask("vecL", tau_plan*5, 1, vecTMT, "endeffL",ARR(0.,0.,1.));
   taskHome = MP.addPDTask("home", .02, 0.5, qItselfTMT);
   taskLimits = MP.addPDTask("limits", .02, 0.5, qLimitsTMT);
 
-//  taskPos->setGains(10.,100.); taskPos->prec=1e1;
-//  taskVec->setGains(10.,100.); taskVec->prec=1e0;
-//  taskHome->setGains(0.,100.); taskHome->prec=1e-1;
-//  taskLimits->setGains(0.,100.); taskLimits->prec=1e2;
+  //  taskPos->setGains(10.,100.); taskPos->prec=1e1;
+  //  taskVec->setGains(10.,100.); taskVec->prec=1e0;
+  //  taskHome->setGains(0.,100.); taskHome->prec=1e-1;
+  //  taskLimits->setGains(0.,100.); taskLimits->prec=1e2;
 
-  taskPos->setGains(1.,100.); taskPos->prec=1e4;
-  taskVec->setGains(1.,100.); taskVec->prec=1e2;
+  taskPosL->setGains(1.,100.); taskPosL->prec=1e5;
+  taskVecL->setGains(1.,100.); taskVecL->prec=1e2;
+  taskPosR->setGains(1.,100.); taskPosR->prec=1e5;
+  taskVecR->setGains(1.,100.); taskVecR->prec=1e2;
   taskHome->setGains(1.,100.); taskHome->prec=1e2;
   taskLimits->setGains(100.,100.); taskLimits->prec=1e3;
 
 
-  amex = new AdaptiveMotionExecution(world,xRef,tau_plan,t_final,x0,q0,goalMO,true);
-  world.gl().add(drawPoint,&(taskPos->y_ref));
-  world.gl().add(drawActTraj,&(amex->traj));
-  world.gl().add(drawPlanTraj,&(amex->trajRef->points));
-//  world.gl().add(drawPlanTraj,&(amex->tr));
+  amexL = new AdaptiveMotionExecution(world,xRefL,tau_plan,t_final,x0_L,q0,goalMO_L,true);
+  amexR = new AdaptiveMotionExecution(world,xRefR,tau_plan,t_final,x0_R,q0,goalMO_R,true);
+
+  world.gl().add(drawPoint,&(taskPosL->y_ref));
+  world.gl().add(drawPoint,&(taskPosR->y_ref));
+  world.gl().add(drawActTraj,&(amexL->traj));
+  world.gl().add(drawPlanTraj,&(amexL->trajRef->points));
+  world.gl().add(drawActTraj,&(amexR->traj));
+  world.gl().add(drawPlanTraj,&(amexR->trajRef->points));
   arr current_dir = ARRAY(1.,1.,1.,0.,0.,0.);
   world.gl().add(drawCurrentDir,&current_dir);
   arr des_dir = current_dir;
   world.gl().add(drawDesiredDir,&(des_dir));
 
+
   // init bookkeeping
   q_bk = ~q;
-  x_bk = ~x0;
-  goal_bk = ~goalMO.position;
+  x_bk = ~x0_R;
+  goal_bk = ~goalMO_R.position;
   ct_bk = ARR(0);
 
   world.setJointState(q,qdot);
   arr state,stateVec;
   // RUN //
-  while (((world.getShapeByName("endeffR")->X.pos - goalMO.position).length() > goalAccuracy) && t < maxDuration && sum(ct_bk)<50.) {
+  while (((world.getShapeByName("endeffR")->X.pos - goalMO_R.position).length() > goalAccuracy) && t < maxDuration && sum(ct_bk)<50.) {
     if ( (fmod(t,tau_plan-1e-12) < tau_control) ) {
       // Outer Planning Loop [1/tau_plan Hz]
       MT::timerStart(true);
       // Get current task state
-      world.kinematicsPos(state,NoArr,P.world.getBodyByName("endeffR")->index);
-      world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeffR")->index);
+      world.kinematicsPos(state,NoArr,P.world.getBodyByName("endeffL")->index);
+      world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeffL")->index);
       state.append(stateVec);
       // Move goal
       if (t < 0.7*t_final && moveGoal) {
-        goalMO.move();
+        goalMO_R.move();
+        goalMO_L.move();
       }
 
       arr yNext, ydNext;
+      amexL->iterate(state);
+      amexL->getNextState(yNext,ydNext);
+      taskPosL->y_ref = yNext.subRange(0,2);
+      taskPosL->v_ref = ydNext.subRange(0,2);
+      taskVecL->y_ref = yNext.subRange(3,5);
+      taskVecL->v_ref = ydNext.subRange(3,5);
 
-      amex->iterate(state);
-      amex->getNextState(yNext,ydNext);
+      world.kinematicsPos(state,NoArr,P.world.getBodyByName("endeffR")->index);
+      world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeffR")->index);
+      state.append(stateVec);
 
-      taskPos->y_ref = yNext.subRange(0,2);
-      taskPos->v_ref = ydNext.subRange(0,2);
-      taskVec->y_ref = yNext.subRange(3,5);
-      taskVec->v_ref = ydNext.subRange(3,5);
+      amexR->iterate(state);
+      amexR->getNextState(yNext,ydNext);
+      taskPosR->y_ref = yNext.subRange(0,2);
+      taskPosR->v_ref = ydNext.subRange(0,2);
+      taskVecR->y_ref = yNext.subRange(3,5);
+      taskVecR->v_ref = ydNext.subRange(3,5);
+
 #if VISUALIZE
       current_dir = state;
       des_dir = yNext;
@@ -283,7 +317,7 @@ void executeTrajectory(String scene){
     // Bookkeeping
     q_bk.append(q);
     x_bk.append(state);
-    goal_bk.append(goalMO.position);
+    goal_bk.append(goalMO_R.position);
   }
   world.watch(true,STRING(t));
 
@@ -293,7 +327,7 @@ void executeTrajectory(String scene){
   write(LIST<arr>(goal_bk),STRING(folder<<"goal_bk.output"));
   write(LIST<arr>(ct_bk),STRING(folder<<"ct_bk.output"));
 
-  write(LIST<arr>(xRef),STRING(folder<<"xRef.output"));
+  write(LIST<arr>(xRefR),STRING(folder<<"xRef.output"));
   write(ARR(tau_control),STRING(folder<<"tau_control.output"));
   write(ARR(tau_plan),STRING(folder<<"tau_plan.output"));
   write(ARR(numScenes),STRING(folder<<"numScenes.output"));
@@ -319,13 +353,6 @@ int main(int argc,char **argv) {
   // flag if obs should move
   moveObs = MT::getParameter<int>("moveObstacle");
 
-//  arr q_bk;
-//  q_bk.append(~ARR(3.,3.,3.));
-//  q_bk.append(~ARR(3.,3.,3.));
-//  cout << q_bk << endl;
-//  write(LIST<arr>(q_bk),STRING("q_bk.output"));
-
-//  return 0;
 
   String currScene = STRING("scene");
   executeTrajectory(currScene);

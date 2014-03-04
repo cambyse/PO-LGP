@@ -1,4 +1,4 @@
 
-%include pr2_my_arm.ors
+%include pr2_upper_body.ors
 %include target.ors
 
