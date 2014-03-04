@@ -60,10 +60,11 @@ public:
         int ls                         ///< Number of evaluation for this iteration
         );
 
-    void check_derivatives(const int& number_of_samples,
+    bool check_derivatives(const int& number_of_samples,
                            const double& range,
-                           const double& delta = 1e-10,
-                           const double& allowed_maximum_relative_deviation = 1e-10,
+                           const double& delta = 1e-5,
+                           const double& allowed_maximum_relative_deviation = 1e-5,
+                           const double& minimum_gradient = 0,
                            const bool use_current_values = false
         );
 

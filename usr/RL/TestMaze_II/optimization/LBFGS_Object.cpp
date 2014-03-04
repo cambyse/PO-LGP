@@ -14,7 +14,7 @@
 #define DEBUG_LEVEL 1
 #endif
 #define DEBUG_STRING "LBFGS: "
-#include "../debug.h"
+#include "../util/debug.h"
 
 using std::min;
 using std::max;
@@ -148,11 +148,12 @@ int LBFGS_Object::static_progress(
     }
 }
 
-void LBFGS_Object::check_derivatives(
+bool LBFGS_Object::check_derivatives(
     const int& number_of_samples,
     const double& range,
     const double& delta,
     const double& allowed_maximum_relative_deviation,
+    const double& minimum_gradient,
     const bool use_current_values
     ) {
 
@@ -165,13 +166,13 @@ void LBFGS_Object::check_derivatives(
     lbfgsfloatval_t achieved_maximum_relative_deviation = 0;
 
     // print inital info
-    DEBUG_OUT(0,"===============================================================================================");
+    DEBUG_OUT(0,"====================================================================================================");
     DEBUG_OUT(0,"Checking first derivatives:");
-    DEBUG_OUT(0,"    #samples                   " << number_of_samples );
-    DEBUG_OUT(0,"    range                      " << range << (use_current_values?" (centered around current values)":" (centered around zero)") );
-    DEBUG_OUT(0,"    delta                      " << delta );
-    DEBUG_OUT(0,"    maximum allowed deviation  " << allowed_maximum_relative_deviation );
-    DEBUG_OUT(1,"    -------------------------------------------------------------------------------------------");
+    DEBUG_OUT(0,"    #samples                            " << number_of_samples );
+    DEBUG_OUT(0,"    range                               " << range << (use_current_values?" (centered around current values)":" (centered around zero)") );
+    DEBUG_OUT(0,"    delta                               " << delta );
+    DEBUG_OUT(0,"    maximum allowed relative deviation  " << allowed_maximum_relative_deviation );
+    DEBUG_OUT(1,"    ------------------------------------------------------------------------------------------------");
 
     // draw and evaluate samples
     for(int sample_counter : Range(1,number_of_samples)) {
@@ -187,16 +188,17 @@ void LBFGS_Object::check_derivatives(
         // calculate objective and analytical gradient at current point
         lbfgsfloatval_t fx = objective(x,grad);
         DEBUG_OUT(1, "Sample " << sample_counter << " (fx = " << fx << ")" );
-        DEBUG_OUT(1,"    -------------------------------------------------------------------------------------------");
+        DEBUG_OUT(1,"    ------------------------------------------------------------------------------------------------");
             DEBUG_OUT(1,"    " <<
-                      std::setw(5) << "idx" <<
-                      std::setw(15) << "var" <<
+                      std::setw(10) << "var idx" <<
+                      std::setw(15) << "var value" <<
                       std::setw(15) << "grad_a" <<
                       std::setw(15) << "grad_n" <<
                       std::setw(15) << "dev" <<
-                      std::setw(15) << "dev/|grad|"
+                      std::setw(15) << "dev/|grad|" <<
+                      std::setw(15) << ""
                 );
-        DEBUG_OUT(1,"    -------------------------------------------------------------------------------------------");
+        DEBUG_OUT(1,"    ------------------------------------------------------------------------------------------------");
 
         // calculate numerical gradient
         for(int idx : Range(number_of_variables)) {
@@ -216,30 +218,41 @@ void LBFGS_Object::check_derivatives(
             // compute relative deviation and update maximum relative deviation
             lbfgsfloatval_t current_deviation = fabs(ngrad-grad[idx]);
             lbfgsfloatval_t current_relative_deviation = current_deviation/min(fabs(ngrad),fabs(grad[idx]));
+            bool used_min_grad = false;
+            if(minimum_gradient>min(fabs(ngrad),fabs(grad[idx]))) {
+                current_relative_deviation = current_deviation/minimum_gradient;
+                used_min_grad = true;
+            }
             achieved_maximum_relative_deviation = max(achieved_maximum_relative_deviation,current_relative_deviation);
 
             // print result
             DEBUG_OUT(1,"    " <<
-                      std::setw(5) << idx <<
+                      std::setw(10) << idx <<
                       std::setw(15) << x[idx] <<
                       std::setw(15) << grad[idx] <<
                       std::setw(15) << ngrad <<
                       std::setw(15) << current_deviation <<
-                      std::setw(15) << current_relative_deviation
+                      std::setw(15) << current_relative_deviation <<
+                      std::setw(15) << (used_min_grad?"*":"")
                 );
         }
     }
+    bool check_passed;
     if(achieved_maximum_relative_deviation>allowed_maximum_relative_deviation) {
+        check_passed = false;
         DEBUG_OUT(0, "ERRORS in first derivative (" << achieved_maximum_relative_deviation << " > " << allowed_maximum_relative_deviation << ")" );
     } else {
+        check_passed = true;
         DEBUG_OUT(0, "No errors in first derivative (" << achieved_maximum_relative_deviation << " < " << allowed_maximum_relative_deviation << ")" );
     }
-    DEBUG_OUT(0,"===============================================================================================");
+    DEBUG_OUT(0,"====================================================================================================");
 
     // free arrays
     lbfgs_free(x);
     lbfgs_free(grad);
     lbfgs_free(grad_dummy);
+
+    return check_passed;
 }
 
 LBFGS_Object& LBFGS_Object::set_objective(objective_t obj) {

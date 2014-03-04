@@ -69,5 +69,5 @@ TEST(LBFGSTest, CallWithProgress) {
 
 TEST(LBFGSTest, CheckDerivatives) {
     LBFGS_Object o;
-    o.set_objective(LBFGS_Object::objective_t(&f)).set_number_of_variables(2).check_derivatives(10,5);
+    EXPECT_TRUE(o.set_objective(LBFGS_Object::objective_t(&f)).set_number_of_variables(2).check_derivatives(10,5));
 }
