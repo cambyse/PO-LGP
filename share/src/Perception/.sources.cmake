@@ -9,6 +9,7 @@ set(SOURCES ./pointcloud.h
 ./colorspace.cpp
 ./videoEncoder.h
 ./g4data.h
+./g4data_t.h
 ./audio.h
 ./pointcloud.cpp
 ./perception.cpp

@@ -1,10 +1,10 @@
 set(CURRENT_SLICE 
- constraint
+ adaptiveMotionExecution
+constraint
 dynamicMovementPrimtives
 grasp
 grasp_PR2
-motion
 modelPredictiveControl
-adaptiveMotionExecution
+motion
 RRT-PR2
  )
