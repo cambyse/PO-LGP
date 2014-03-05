@@ -353,8 +353,15 @@ arr KeyFramer::getCorr(const String &n1, const String &n2, uint wlen) {
 // }}}
 
 // computeVar {{{
-void KeyFramer::computeVar(String type, uint wlen, bool force) {
+void KeyFramer::computeVar(const StringA &types, uint wlen, bool force) {
+  for(const String &type: types)
+    computeVar(type, wlen, force);
+}
+// }}}
+// computeVar {{{
+void KeyFramer::computeVar(const String &type, uint wlen, bool force) {
   String typeVar = STRING(type << "Var");
+  cout << " * computing " << typeVar << endl;
   if(!force && s->g4d->hasBAM(typeVar)) {
     cout << " * " << typeVar << " already computed (force = 0). Skipping." << endl;
     return;
@@ -382,9 +389,143 @@ void KeyFramer::computeVar(String type, uint wlen, bool force) {
   s->g4d->appendBam(typeVar, y);
 }
 // }}}
+// computeMA {{{
+void KeyFramer::computeMA(const StringA &types, uint wlen, bool force) {
+  for(const String &type: types)
+    computeMA(type, wlen, force);
+}
+// }}}
+// computeMA {{{
+void KeyFramer::computeMA(const String &type, uint wlen, bool force) {
+  CHECK(wlen >= 2, "Parameter wlen (" << wlen << ") must be >= 2.");
+  String typeMA = STRING(type << "MA");
+  cout << " * computing " << typeMA << endl;
+  if(!force && s->g4d->hasBAM(typeMA)) {
+    cout << " * " << typeMA << " already computed (force = 0). Skipping." <<
+      endl;
+    return;
+  }
+  uint numS = s->g4d->getNumSensors();
+  uint numF = s->g4d->getNumFrames();
+  uint numD = s->g4d->getNumDim(type);
+
+  arr x, y, tx, ma;
+
+  x = s->g4d->query(type);
+  y.resize(x.d0, x.d1);
+  y.setZero();
+
+  ma.resize(numF);
+  for(uint i = 0; i < numS; i++) {
+    for(uint d = 0; d < numD; d++) {
+      cout << " * computing " << typeMA << " for sensor " << i << ", dim " << d << endl;
+      tx = (~x[i])[d];
+      ma.setZero();
+      ma(0) = tx(0);
+      for(uint f = 1; f < wlen; f++)
+        ma(f) = (ma(f-1)*f + tx(f)) / (f+1);
+      for(uint f = wlen; f < numF; f++)
+        ma += (tx(f) - tx(f-wlen)) / wlen;
+      for(uint f = 0; f < numF; f++)
+        y(i, f, d) = ma(f);
+    }
+  }
+
+  s->g4d->appendBam(typeMA, y);
+}
+// }}}
+// computeES {{{
+void KeyFramer::computeES(const StringA &types, double alpha, bool force) {
+  for(const String &type: types)
+    computeES(type, alpha, force);
+}
+// }}}
+// computeES {{{
+void KeyFramer::computeES(const String &type, double alpha, bool force) {
+  CHECK(alpha >= 0. && alpha <= 1., "Parameter alpha (" << alpha << ") must be 0 <= alpha <= 1.");
+  String typeES = STRING(type << "ES");
+  cout << " * computing " << typeES << endl;
+  if(!force && s->g4d->hasBAM(typeES)) {
+    cout << " * " << typeES << " already computed (force = 0). Skipping." <<
+      endl;
+    return;
+  }
+  uint numS = s->g4d->getNumSensors();
+  uint numF = s->g4d->getNumFrames();
+  uint numD = s->g4d->getNumDim(type);
+  double beta = 1-alpha;
+
+  arr x, y, es;
+
+  x = s->g4d->query(type);
+  y.resizeAs(x);
+  y.setZero();
+
+  es.resize(numF);
+  for(uint i = 0; i < numS; i++) {
+    for(uint d = 0; d < numD; d++) {
+      es = (~x[i])[d];
+      for(uint f = 1; f < numF; f++)
+        es(f) = es(f) * alpha + es(f-1) * beta;
+      for(uint f = 0; f < numF; f++)
+        y(i, f, d) = es(f);
+    }
+  }
+
+  s->g4d->appendBam(typeES, y);
+}
+// }}}
+// computeSpline {{{
+void KeyFramer::computeSpline(const StringA &types, double lambda, bool force) {
+  for(const String &type: types)
+    computeSpline(type, lambda, force);
+}
+// }}}
+// computeSpline {{{
+#include<Algo/spline.h>
+void KeyFramer::computeSpline(const String &type, double lambda, bool force) {
+  CHECK(lambda >= 0., "Parameter lambda (" << lambda << ") must be non-negative.");
+  String typeSpline = STRING(type << "Spline");
+  cout << " * computing " << typeSpline << endl;
+  if(!force && s->g4d->hasBAM(typeSpline)) {
+    cout << " * " << typeSpline << " already computed (force = 0). Skipping." <<
+      endl;
+    return;
+  }
+  uint numS = s->g4d->getNumSensors();
+  uint numF = s->g4d->getNumFrames();
+  uint numD = s->g4d->getNumDim(type);
+
+  arr x, y, tx, ty;
+
+  x = s->g4d->query(type);
+  y.resizeAs(x);
+  y.setZero();
+
+  for(uint i = 0; i < numS; i++) {
+    for(uint d = 0; d < numD; d++) {
+      cout << " * computing " << typeSpline << " for sensor " << i << ", dim " << d << endl;
+      tx = (~x[i])[d];
+      MT::Spline spl(numF, tx);
+      ty = spl.smooth(lambda);
+      for(uint f = 0; f < numF; f++)
+        y(i, f, d) = ty(f);
+    }
+  }
+
+  s->g4d->appendBam(typeSpline, y);
+}
+// }}}
 // computeSpeed {{{
-void KeyFramer::computeSpeed(String type, bool force) {
+void KeyFramer::computeSpeed(const StringA &types, bool force) {
+  for(const String &type: types)
+    computeSpeed(type, force);
+}
+// }}}
+// computeSpeed {{{
+void KeyFramer::computeSpeed(const String &type, bool force) {
   String typeSpeed = STRING(type << "Speed");
+  cout << " * computing " << typeSpeed << endl;
   if(!force && s->g4d->hasBAM(typeSpeed)) {
     cout << " * " << typeSpeed << " already computed (force = 0). Skipping." << endl;
     return;
@@ -408,8 +549,15 @@ void KeyFramer::computeSpeed(String type, bool force) {
 }
 // }}}
 // computeGP {{{
-void KeyFramer::computeGP(String type, bool force) {
+void KeyFramer::computeGP(const StringA &types, bool force) {
+  for(const String &type: types)
+    computeGP(type, force);
+}
+// }}}
+// computeGP {{{
+void KeyFramer::computeGP(const String &type, bool force) {
   String typeGP = STRING(type << "GP");
+  cout << " * computing " << typeGP << endl;
   if(!force && s->g4d->hasBAM(typeGP)) {
     cout << " * " << typeGP << " already computed (force = 0). Skipping." << endl;
     return;
@@ -447,6 +595,7 @@ void KeyFramer::computeGP(String type, bool force) {
 void KeyFramer::computeDPos(const String &b, bool force) {
   String typeDPos;
   typeDPos << b << "_dPos";
+  cout << " * computing " << typeDPos << endl;
   if(!force && s->g4d->hasBAM(typeDPos)) {
     cout << " * " << typeDPos << " already computed (force = 0). Skipping." << endl;
     return;
@@ -483,6 +632,7 @@ void KeyFramer::computeDPos(const String &b, bool force) {
 void KeyFramer::computeDQuat(const String &b, bool force) {
   String typeDQuat;
   typeDQuat << b << "_dQuat";
+  cout << " * computing " << typeDQuat << endl;
   if(!force && s->g4d->hasBAM(typeDQuat)) {
     cout << " * " << typeDQuat << " already computed (force = 0). Skipping." << endl;
     return;
@@ -2667,58 +2817,32 @@ void KeyFramer::EM_r(KeyValueGraph &kvg, const String &bA, const String &bB) {
 //#define update_sigma_dqSpeedGP
 void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
   // Computing other BAMS {{{
-  cout << " * computing posSpeed" << endl;
-  computeSpeed(STRING("pos"));
-  cout << " * computing quatSpeed" << endl;
-  computeSpeed(STRING("quat"));
-
-  cout << " * computing posSpeedGP" << endl;
-  computeGP(STRING("posSpeed"));
-  cout << " * computing quatSpeedGP" << endl;
-  computeGP(STRING("quatSpeed"));
+  // TODO view the actual 3d path!!
+  double alpha = .5;
+  bool force = true;
+  computeES(STRINGS("pos", "quat"), alpha, force);
+  computeSpeed(STRINGS("posES", "quatES"), force);
 
   String bA_dPos = STRING(bA << "_dPos");
   String bA_dQuat = STRING(bA << "_dQuat");
-
-  String bA_dPosSpeed = STRING(bA_dPos << "Speed");
-  String bA_dQuatSpeed = STRING(bA_dQuat << "Speed");
-  String bA_dPosSpeedGP = STRING(bA_dPosSpeed << "GP");
-  String bA_dQuatSpeedGP = STRING(bA_dQuatSpeed << "GP");
-
-  String bA_dPosGP = STRING(bA_dPos << "GP");
-  String bA_dQuatGP = STRING(bA_dQuat << "GP");
+  String bA_dPosGP = STRING(bA_dPos << "ES");
+  String bA_dQuatGP = STRING(bA_dQuat << "ES");
   String bA_dPosGPSpeed = STRING(bA_dPosGP << "Speed");
   String bA_dQuatGPSpeed = STRING(bA_dQuatGP << "Speed");
 
-  cout << " * computing " << bA_dPos << endl;
-  computeDPos(bA);
-  cout << " * computing " << bA_dQuat << endl;
-  computeDQuat(bA);
-
-  cout << " * computing " << bA_dPosSpeed << endl;
-  computeSpeed(bA_dPos);
-  cout << " * computing " << bA_dQuatSpeed << endl;
-  computeSpeed(bA_dQuat);
-  cout << " * computing " << bA_dPosSpeedGP << endl;
-  computeGP(bA_dPosSpeed);
-  cout << " * computing " << bA_dQuatSpeedGP << endl;
-  computeGP(bA_dQuatSpeed);
-
-  cout << " * computing " << bA_dPosGP << endl;
-  computeGP(bA_dPos);
-  cout << " * computing " << bA_dQuatGP << endl;
-  computeGP(bA_dQuat);
-  cout << " * computing " << bA_dPosGPSpeed << endl;
-  computeSpeed(bA_dPosGP);
-  cout << " * computing " << bA_dQuatGPSpeed << endl;
-  computeSpeed(bA_dQuatGP);
+  computeDPos(bA, force);
+  computeDQuat(bA, force);
+  computeES(bA_dPos, alpha, force);
+  computeES(bA_dQuat, alpha, force);
+  computeSpeed(bA_dPosGP, force);
+  computeSpeed(bA_dQuatGP, force);
   // }}}
   // Observations {{{
-  arr pSpeedGP = s->g4d->query("posGPSpeed", bA);
-  arr qSpeedGP = s->g4d->query("quatGPSpeed", bA);
+  arr pSpeedGP = s->g4d->query("posESSpeed", bA);
+  arr qSpeedGP = s->g4d->query("quatESSpeed", bA);
 #ifdef with_object_emission
-  arr pBSpeedGP = s->g4d->query("posGPSpeed", bB);
-  arr qBSpeedGP = s->g4d->query("quatGPSpeed", bB);
+  arr pBSpeedGP = s->g4d->query("posESSpeed", bB);
+  arr qBSpeedGP = s->g4d->query("quatESSpeed", bB);
 #endif
   arr dpSpeedGP = s->g4d->query(bA_dPosGPSpeed, bB);
   arr dqSpeedGP = s->g4d->query(bA_dQuatGPSpeed, bB);
@@ -3087,3 +3211,42 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
   // }}}
 }
 // }}}
+
+// playScene {{{
+void KeyFramer::playScene(const String &b) {
+  KeyValueGraph kvg;
+  arrL vits;
+  for(String bO: s->g4d->getNames()) {
+    if(s->g4d->isObject(bO)) {
+      kvg.clear();
+      EM_c(kvg, b, bO);
+      vits.append(kvg.getItem("data", "vit")->value<arr>());
+    }
+  }
+
+  uint numF = vits(0)->N;
+  for(uint f = 0; f < numF; f++) {
+    uint i = 0;
+    for(String bO: s->g4d->getNames()) {
+      if(s->g4d->isObject(bO)) {
+        ors::Body *body = s->kw->getBodyByName(bO);
+        for(ors::Shape *shape: body->shapes) {
+          if(vits(i)->operator()(f)) {
+            shape->color[0] = 1;
+            shape->color[1] = .5;
+            shape->color[2] = .5;
+          }
+          else {
+            shape->color[0] = 1;
+            shape->color[1] = 1;
+            shape->color[2] = 1;
+          }
+        }
+        i++;
+      }
+    }
+    updateOrs(f);
+  }
+}
+// }}}
+

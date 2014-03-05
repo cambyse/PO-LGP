@@ -6,13 +6,13 @@ sensor lh lh:thumb { name = "lh:thumb", hid = 1, sid = 0, agent }
 sensor lh lh:index { name = "lh:index", hid = 1, sid = 1, agent }
 sensor lh lh:middle { name = "lh:middle", hid = 1 , sid = 2, agent }
 
-sensor lh lh:back { name = "lh:back", hid = 2, sid = 0, agent, ignore }
-sensor rh rh:back { name = "rh:back", hid = 2, sid = 1, agent, ignore }
+sensor lh lh:back { name = "lh:back", hid = 2, sid = 0, agent }
+sensor rh rh:back { name = "rh:back", hid = 2, sid = 1, agent }
 
-sensor sbox { name = "sbox", hid = 3, sid = 0 }
-sensor bottle { name = "bottle", hid = 3, sid = 1 }
-sensor book { name = "book", hid = 3, sid = 2 }
+sensor sbox { name = "sbox", hid = 3, sid = 0, object }
+sensor bottle { name = "bottle", hid = 3, sid = 1, object }
+sensor book { name = "book", hid = 3, sid = 2, object }
 
-sensor ball { name = "ball", hid = 4, sid = 0 }
-sensor bbox bbox:body { name = "bbox:body", hid = 4, sid = 1 }
-sensor bbox bbox:lid { name = "bbox:lid", hid = 4, sid = 2 }
+sensor ball { name = "ball", hid = 4, sid = 0, object }
+sensor bbox bbox:body { name = "bbox:body", hid = 4, sid = 1, object }
+sensor bbox bbox:lid { name = "bbox:lid", hid = 4, sid = 2, object }
