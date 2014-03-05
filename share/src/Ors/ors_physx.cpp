@@ -242,8 +242,10 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
         arr limits = *(jj->ats.getValue<arr>("limit"));
         PxJointLimitPair limit(limits(0), limits(1), 0.1f);
         limit.restitution = limits(2);
-        limit.spring = limits(3);
-        limit.damping= limits(4);
+        if(limits(3)>0) {
+          limit.spring = limits(3);
+          limit.damping= limits(4);
+        }
         desc->setTwistLimit(limit);
       }
       else {
@@ -279,8 +281,10 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
         arr limits = *(jj->ats.getValue<arr>("limit"));
         PxJointLimit limit(limits(0), 0.1f);
         limit.restitution = limits(2);
-        limit.spring = limits(3);
-        limit.damping= limits(4);
+        if(limits(3)>0) {
+          limit.spring = limits(3);
+          limit.damping= limits(4);
+        }
         desc->setLinearLimit(limit);
       }
       else {
