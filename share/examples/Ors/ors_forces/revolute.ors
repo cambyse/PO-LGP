@@ -1,0 +1,31 @@
+body door1-frame {
+  type=0
+  X=<T t(.5 0 1.13)>
+  size=[.05 .05 2.25 0]
+  contact
+  fixed
+}
+body door1-door {
+  type=0
+  rel=<T t(-.5 0 0)>
+  size=[.95 .03 2.25 0] 
+}
+#body door1-door {
+#  type=3
+#  mass=1.
+#  mesh='door_model/door_hacd.obj'
+#  meshscale=.01
+#  submeshsizes=[8 36 41 36 41]
+#  color=[1 0 0]
+#  contact
+#}
+
+joint (door1-frame, door1-door) {
+  type=0
+  A=<T t(0 0 0) d(90 0 1 0)>
+  limit=[-1.8 1.8 1. 100. .0001]
+  BinvA
+  agent = 99
+}
+
+body robot { type=1 size=[.1 .1 .1 .1] X=<T t(0 -.5 1)> kinematic }
