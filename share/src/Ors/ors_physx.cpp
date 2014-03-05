@@ -380,7 +380,16 @@ void sPhysXInterface::addBody(ors::Body *b, physx::PxMaterial *mMaterial) {
 }
 
 void PhysXInterface::pullFromPhysx() {
-  for_index(i, s->actors) PxTrans2OrsTrans(world.bodies(i)->X, s->actors(i)->getGlobalPose());
+  for_index(i, s->actors) {
+    PxTrans2OrsTrans(world.bodies(i)->X, s->actors(i)->getGlobalPose());
+    if(s->actors(i)->getType() == PxActorType::eRIGID_DYNAMIC) {
+      PxRigidBody *px_body = (PxRigidBody*) s->actors(i);
+      PxVec3 vel = px_body->getLinearVelocity();
+      PxVec3 angvel = px_body->getAngularVelocity();
+      world.bodies(i)->X.vel = ors::Vector(vel[0], vel[1], vel[2]);
+      world.bodies(i)->X.angvel = ors::Vector(angvel[0], angvel[1], angvel[2]);
+    }
+  }
   world.calc_fwdPropagateShapeFrames();
   world.calc_Q_from_BodyFrames();
   world.calc_q_from_Q();
