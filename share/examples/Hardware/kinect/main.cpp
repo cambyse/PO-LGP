@@ -22,8 +22,11 @@ void threadedRun() {
 //      addModule("Kinect2PointCloud", NULL, ModuleThread::loopWithBeat, .2);
 //      addModule("PointCloudViewer", NULL, STRINGS("kinect_points", "kinect_pointColors"), ModuleThread::listenFirst);
       VideoEncoderX264 *m_enc = addModule<VideoEncoderX264>("VideoEncoder_rgb", STRINGS("kinect_rgb"), ModuleThread::listenFirst);
+      VideoEncoderX264 *m_d = addModule<VideoEncoderX264>("VideoEncoder_depth", STRINGS("kinect_depthRgb"), ModuleThread::listenFirst);
+
       m_enc->set_rgb(true);
-      addModule("VideoEncoderX264", "VideoEncoder_depth", STRINGS("kinect_depthRgb"), ModuleThread::listenFirst);
+      m_enc->set_fps(30);
+      m_d->set_fps(30);
       connect();
     }
   } S;
