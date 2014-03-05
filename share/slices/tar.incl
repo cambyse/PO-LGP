@@ -1,7 +1,7 @@
 share/lib/.force
 share/makefile
 share/Makefile.gof
-share/gofMake/make-generic
+share/gofMake/generic.mk
 share/gofMake/config.mk
 share/gofMake/defines.mk
 share/gofMake/make-path.sh

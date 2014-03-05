@@ -2,7 +2,7 @@
 #include <System/engine.h>
 
 #include <Hardware/racer/modules.h>
-#include <Hardware/joystick.h>
+#include <Hardware/joystick/joystick.h>
 
 void testJoystick(){
   struct MySystem:System{

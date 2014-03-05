@@ -2,7 +2,7 @@
 #include <ros/service_client.h>
 #include <Motion/gamepad2tasks.h>
 #include <Motion/feedbackControl.h>
-#include <Hardware/joystick.h>
+#include <Hardware/joystick/joystick.h>
 #include <System/engine.h>
 #include <tree_controller_pkg/SetPosTarget.h>
 #include <tree_controller_pkg/GetJointState.h>

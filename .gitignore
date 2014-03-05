@@ -2,6 +2,7 @@
 *.o
 *.a
 *.so
+*.exe
 *.swp
 parser.tab.h
 parser.tab.cpp
