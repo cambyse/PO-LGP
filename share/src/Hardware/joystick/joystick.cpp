@@ -51,7 +51,7 @@ void JoystickInterface::step(){
 
 #else //dummy implementations
 JoystickInterface::JoystickInterface():Module("JoystickInterfaceINACTIVE"){}
-void JoystickInterface::open(){ joystickState.resize(10); joystickState.setZero(); MT_MSG("WARNING: dummy joystick implementation"); }
+void JoystickInterface::open(){ joystickState.set()->resize(10); joystickState.set()->setZero(); MT_MSG("WARNING: dummy joystick implementation"); }
 void JoystickInterface::step(){ }
 void JoystickInterface::close(){ }
 #endif
