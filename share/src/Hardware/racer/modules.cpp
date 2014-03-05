@@ -122,6 +122,7 @@ void Motors::step(){
 
 void Motors::close(){
   i2cmutex.lock();
+  s->motor->setMotorSpeedAndAcceleration("", 0, 0, 10);
   s->motor->close();
   i2cmutex.unlock();
   s->fil.close();

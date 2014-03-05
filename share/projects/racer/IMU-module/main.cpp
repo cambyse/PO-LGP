@@ -75,7 +75,7 @@ void testBalance(){
     MySystem(){
       addModule<IMU_Poller>("IMU_Poller", ModuleThread::loopFull);
       addModule<KalmanFilter>("KalmanFilter", ModuleThread::listenFirst);
-      addModule<RacerDisplay>("RacerDisplay", ModuleThread::loopWithBeat, 0.1);
+      //      addModule<RacerDisplay>("RacerDisplay", ModuleThread::loopWithBeat, 0.1);
       addModule<Motors>("Motors", ModuleThread::loopFull);
       connect();
     }
@@ -122,7 +122,6 @@ int main(int argc, char **argv) {
 //  testIMU();
 //  testMotors();
   testBalance();
-//  findBalancePoint();
 
   return 0;
 }

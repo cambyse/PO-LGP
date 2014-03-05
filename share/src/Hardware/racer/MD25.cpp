@@ -144,13 +144,13 @@ bool MD25::resetEncoders() {
 
 void MD25::close() {
 
+  _controller.setMotorSpeed("stop motor", 128, 128);
+
   _controller.closeConnection();
 
 }
 
 MD25::~MD25() {
-
-  _controller.setMotorSpeed("stop motor", 128, 128);
 
 }
 
