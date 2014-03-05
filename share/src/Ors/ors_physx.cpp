@@ -227,21 +227,24 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
     case ors::JT_hingeX: 
     case ors::JT_hingeY:
     case ors::JT_hingeZ: {
-      //  CHECK(A.p!=B.p,"Something is horribly wrong!");
-      PxRevoluteJoint* desc = PxRevoluteJointCreate(*mPhysics, actors(jj->ifrom), A, actors(jj->ito), B.getInverse());
+      PxD6Joint *desc = PxD6JointCreate(*mPhysics, actors(jj->ifrom), A, actors(jj->ito), B.getInverse());
+
+      PxD6JointDrive drive(0.0f, 5.0f, PX_MAX_F32, true);
+      desc->setDrive(PxD6Drive::eTWIST, drive);
       
       if(jj->ats.getValue<arr>("limit")) {
+        desc->setMotion(PxD6Axis::eTWIST, PxD6Motion::eLIMITED);
+
         arr limits = *(jj->ats.getValue<arr>("limit"));
         PxJointLimitPair limit(limits(0), limits(1), 0.1f);
         limit.restitution = limits(2);
         limit.spring = limits(3);
         limit.damping= limits(4);
-        desc->setLimit(limit);
-        desc->setRevoluteJointFlag(physx::PxRevoluteJointFlag::eLIMIT_ENABLED, true);
-        desc->setDriveForceLimit(1);
-        //desc->setProjectionAngularTolerance(3.14);
+        desc->setTwistLimit(limit);
       }
-      
+      else {
+        desc->setMotion(PxD6Axis::eTWIST, PxD6Motion::eFREE);
+      }
     }
     break;
     case ors::JT_fixed: {
@@ -258,16 +261,24 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
     case ors::JT_transY:
     case ors::JT_transZ:
     {
-      PxPrismaticJoint* desc = PxPrismaticJointCreate(*mPhysics, actors(jj->ifrom), A, actors(jj->ito), B.getInverse());
+      cout << "Prismatic " << endl;
+      PxD6Joint *desc = PxD6JointCreate(*mPhysics, actors(jj->ifrom), A, actors(jj->ito), B.getInverse());
+
+      PxD6JointDrive drive(0.0f, .001f, PX_MAX_F32, true);
+      desc->setDrive(PxD6Drive::eX, drive);
+      
       if(jj->ats.getValue<arr>("limit")) {
+        desc->setMotion(PxD6Axis::eX, PxD6Motion::eLIMITED);
+
         arr limits = *(jj->ats.getValue<arr>("limit"));
-        PxJointLimitPair limit(limits(0), limits(1), 0.1f);
+        PxJointLimit limit(limits(0), 0.1f);
         limit.restitution = limits(2);
         limit.spring = limits(3);
         limit.damping= limits(4);
-        desc->setLimit(limit);
-        desc->setPrismaticJointFlag(physx::PxPrismaticJointFlag::eLIMIT_ENABLED, true);
-        //desc->setProjectionAngularTolerance(3.14);
+        desc->setLinearLimit(limit);
+      }
+      else {
+        desc->setMotion(PxD6Axis::eX, PxD6Motion::eFREE);
       }
     }
     break;
@@ -344,22 +355,23 @@ void sPhysXInterface::addBody(ors::Body *b, physx::PxMaterial *mMaterial) {
     //actor = PxCreateDynamic(*mPhysics, OrsTrans2PxTrans(s->X), *geometry, *mMaterial, 1.f);
   }
   if(b->type == ors::dynamicBT) {
-    cout << "Mass in .ors: " << b->mass << endl;
+    cout << b->name << endl;
     if(b->mass) {
       PxRigidBodyExt::setMassAndUpdateInertia(*actor, b->mass);
     }
     else {
       PxRigidBodyExt::updateMassAndInertia(*actor, 1.f);
     }
-    cout << "Mass: " << actor->getMass() << endl;
     actor->setAngularDamping(0.75);
     actor->setLinearVelocity(PxVec3(b->X.vel.x, b->X.vel.y, b->X.vel.z));
     actor->setAngularVelocity(PxVec3(b->X.angvel.x, b->X.angvel.y, b->X.angvel.z));
   }
   gScene->addActor(*actor);
+  actor->userData = b;
 
   actors.append(actor);
   //WARNING: actors must be aligned (indexed) exactly as G->bodies
+  // TODO: we could use the data void pointer of an actor instead?
 }
 
 void PhysXInterface::pullFromPhysx() {
@@ -454,7 +466,18 @@ void glPhysXInterface(void *classP) {
   ((PhysXInterface*)classP)->glDraw();
 }
 
+void PhysXInterface::addForce(ors::Vector& force, ors::Body* b) {
+  PxVec3 px_force = PxVec3(force.x, force.y, force.z);
+  PxRigidBody *actor = (PxRigidBody*) (s->actors(b->index)); // dynamic_cast fails for missing RTTI in physx
+  actor->addForce(px_force);
+}
 
+void PhysXInterface::addForce(ors::Vector& force, ors::Body* b, ors::Vector& pos) {
+  PxVec3 px_force = PxVec3(force.x, force.y, force.z);
+  PxVec3 px_pos = PxVec3(pos.x, pos.y, pos.z);
+  PxRigidBody *actor = (PxRigidBody*)(s->actors(b->index));
+  PxRigidBodyExt::addForceAtPos(*actor, px_force, px_pos);
+}
 ///////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////
