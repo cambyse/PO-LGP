@@ -26,7 +26,8 @@ struct TomsyRecorderSystem:System{
         VideoEncoderX264 *m_enc = addModule<VideoEncoderX264>("VideoEncoder_rgb", STRINGS("kinect_rgb"), ModuleThread::listenFirst);
         m_enc->set_rgb(true);
         m_enc->set_fps(30);
-        addModule("VideoEncoder", "VideoEncoder_depth", STRINGS("kinect_depthRgb"), ModuleThread::listenFirst);
+        VideoEncoderX264 *m_denc = addModule<VideoEncoderX264>("VideoEncoder_depth", STRINGS("kinect_depthRgb"), ModuleThread::listenFirst);
+        m_denc->set_fps(30);
 
         addModule("UEyePoller", "POLLER_1", STRINGS("ueye_rgb_1"), ModuleThread::loopFull);
         VideoEncoderX264 *enc1 = addModule<VideoEncoderX264>("ENCODER_1", STRINGS("ueye_rgb_1"), ModuleThread::listenFirst);
@@ -43,8 +44,8 @@ struct TomsyRecorderSystem:System{
         enc4->set_fps(60);
         addModule("ImageViewer", "VIEWER_4", STRINGS("ueye_rgb_4"), ModuleThread::listenFirst);
 
-        addModule("AudioReader", "MIKE_1", ModuleThread::loopFull);
-        addModule("AudioWriter", "WAV_1", ModuleThread::listenFirst);
+        //addModule("AudioReader", "MIKE_1", ModuleThread::loopFull);
+        //addModule("AudioWriter", "WAV_1", ModuleThread::listenFirst);
         connect();
     }
 };
