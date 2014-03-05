@@ -82,7 +82,7 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState, double dt){
         ors::Quaternion vel(0., 0., 0., joyRotate);
         vel = vel*ors::Quaternion(pdt_rot->y);
         pdt_rot->y_ref = pdt_rot->y + dt*0.5*ARRAY(vel);
-        cout <<joyRotate <<endl;
+        //cout <<joyRotate <<endl;
         pdt_rot->v_ref.setZero();
       }
 

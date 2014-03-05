@@ -1,7 +1,7 @@
 <package>
-  <description brief="pr2_module">
+  <description brief="marc_controller_pkg">
 
-     pr2_module
+     marc_controller_pkg
 
   </description>
   <author>englerpr</author>
@@ -12,7 +12,7 @@
   <depend package="pr2_mechanism_model"/>
   <depend package="pluginlib"/>
   <depend package="std_srvs"/>
-  <depend package="marc_controller_pkg"/>
+  <depend package="kdl"/>
   <export>
     <pr2_controller_interface plugin="${prefix}/controller_plugins.xml" />
   </export>

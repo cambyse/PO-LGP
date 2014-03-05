@@ -18,20 +18,14 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 
-include_directories( ${MLR_PATH}/share/src
-${HOME}/git/mlr/share/projects/marc_controller_pkg/srv_gen/cpp/include )
+include_directories( ${MLR_PATH}/share/src )
 
-rosbuild_add_executable(pr2_module src/main.cpp)
+rosbuild_add_library(marc_controller_lib src/marc_controller.cpp include/marc_controller_pkg/marc_controller.h)
 
-
-
-target_link_libraries(pr2_module
+target_link_libraries(marc_controller_lib 
 ${MLR_PATH}/share/lib/libMotion.so
 ${MLR_PATH}/share/lib/libOrs.so
-${MLR_PATH}/share/lib/libCore.so
-${MLR_PATH}/share/lib/libOptim.so
-${MLR_PATH}/share/lib/libSystem.so
-${MLR_PATH}/share/lib/libHardware.so
-${MLR_PATH}/share/lib/libGui.so)
+${MLR_PATH}/share/lib/libCore.so)
 
-
+rosbuild_gensrv()
+rosbuild_genmsg()

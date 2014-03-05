@@ -2,6 +2,7 @@
 #include <Core/util.h>
 #include <Core/array.h>
 #include "array_cheatsheet.h"
+#include <Core/array-vector.h>
 
 using namespace std;
 
@@ -87,6 +88,16 @@ void TEST(Basics){
 
   cout <<"\nafter saved and loaded from a file: " <<b <<endl;
   CHECK_ZERO(maxDiff(a,b), 1e-4, "non-exact save load");
+}
+
+void TEST(StdVectorCompat) {
+  std::vector<double> x(3);
+  x[0]=1.;
+  cout <<"std::vector to arr:" <<ARRAY(x) <<endl;
+  arr y(10);
+  y.setStraightPerm(10);
+  x=VECTOR(y);
+  cout <<"arr -> std::vector -> arr = " <<ARRAY(x) <<endl;
 }
 
 void TEST(SimpleIterators) {
@@ -593,7 +604,9 @@ void TEST(RowShiftedPackedMatrix){
 //------------------------------------------------------------------------------
 
 int MAIN(int argc, char *argv[]){
+  testStdVectorCompat();
 
+  return 0;
   //testPCA();
   //testCheatSheet();
 
