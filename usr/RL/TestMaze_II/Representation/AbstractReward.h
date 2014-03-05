@@ -4,6 +4,7 @@
 #include "../util/util.h"
 #include "../util/debug.h"
 
+/** \brief Base class for all rewards. */
 class AbstractReward: public util::AbstractIteratableSpace<AbstractReward> {
 public:
     typedef double value_t;

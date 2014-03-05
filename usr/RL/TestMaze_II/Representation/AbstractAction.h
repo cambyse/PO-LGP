@@ -4,6 +4,7 @@
 #include "../util/util.h"
 #include "../util/debug.h"
 
+/** \brief Base class for all actions. */
 class AbstractAction: public util::AbstractIteratableSpace<AbstractAction> {
 public:
     enum class ACTION_TYPE { NONE, MINIMAL, MAZE_ACTION, AUGMENTED_MAZE_ACTION, CHEESE_MAZE_ACTION };

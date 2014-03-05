@@ -24,6 +24,7 @@ HEADERS += \
     ../Representation/Feature.h \
     ../Instance.h \
     ../Representation/AbstractInstance.h \
+    ../Representation/DoublyLinkedInstance.h \
     ../Representation/AbstractAction.h \
     ../Representation/AbstractObservation.h \
     ../Representation/AbstractReward.h \
@@ -75,6 +76,7 @@ SOURCES += \
     ../Representation/Feature.cpp \
     ../Instance.cpp \
     ../Representation/AbstractInstance.cpp \
+    ../Representation/DoublyLinkedInstance.cpp \
     ../Representation/AbstractAction.cpp \
     ../Representation/AbstractObservation.cpp \
     ../Representation/AbstractReward.cpp \
@@ -107,6 +109,7 @@ SOURCES += \
     RandomElements.cpp \
     \
     RepresentationTest.cpp \
+    InstanceTest.cpp \
     FeatureTest.cpp \
     EnvironmentTest.cpp \
     PlannerTest.cpp \

@@ -117,6 +117,7 @@ namespace util {
         public:
         PointerType(): ptr(new const DerivedSpace()) {}
         PointerType(const DerivedSpace * d): ptr(d) {}
+        PointerType(std::shared_ptr<const DerivedSpace> d): ptr(d) {}
             PointerType(const PointerType&) = default;
             virtual ~PointerType() final = default;
             virtual const DerivedSpace & operator*() const final {

@@ -4,6 +4,7 @@
 #include "../util/util.h"
 #include "../util/debug.h"
 
+/** \brief Base class for all observations. */
 class AbstractObservation: public util::AbstractIteratableSpace<AbstractObservation> {
 public:
     enum class OBSERVATION_TYPE { NONE, MINIMAL, MAZE_OBSERVATION, CHEESE_MAZE_OBSERVATION };
