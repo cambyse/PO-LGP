@@ -229,8 +229,12 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
     case ors::JT_hingeZ: {
       PxD6Joint *desc = PxD6JointCreate(*mPhysics, actors(jj->ifrom), A, actors(jj->ito), B.getInverse());
 
-      PxD6JointDrive drive(0.0f, 5.0f, PX_MAX_F32, true);
-      desc->setDrive(PxD6Drive::eTWIST, drive);
+
+      if(jj->ats.getValue<arr>("drive")) {
+        arr drive_values = *jj->ats.getValue<arr>("drive");
+        PxD6JointDrive drive(drive_values(0), drive_values(1), PX_MAX_F32, true);
+        desc->setDrive(PxD6Drive::eTWIST, drive);
+      }
       
       if(jj->ats.getValue<arr>("limit")) {
         desc->setMotion(PxD6Axis::eTWIST, PxD6Motion::eLIMITED);
@@ -261,11 +265,13 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
     case ors::JT_transY:
     case ors::JT_transZ:
     {
-      cout << "Prismatic " << endl;
       PxD6Joint *desc = PxD6JointCreate(*mPhysics, actors(jj->ifrom), A, actors(jj->ito), B.getInverse());
 
-      PxD6JointDrive drive(0.0f, .001f, PX_MAX_F32, true);
-      desc->setDrive(PxD6Drive::eX, drive);
+      if(jj->ats.getValue<arr>("drive")) {
+        arr drive_values = *jj->ats.getValue<arr>("drive");
+        PxD6JointDrive drive(drive_values(0), drive_values(1), PX_MAX_F32, true);
+        desc->setDrive(PxD6Drive::eX, drive);
+      }
       
       if(jj->ats.getValue<arr>("limit")) {
         desc->setMotion(PxD6Axis::eX, PxD6Motion::eLIMITED);
@@ -355,7 +361,6 @@ void sPhysXInterface::addBody(ors::Body *b, physx::PxMaterial *mMaterial) {
     //actor = PxCreateDynamic(*mPhysics, OrsTrans2PxTrans(s->X), *geometry, *mMaterial, 1.f);
   }
   if(b->type == ors::dynamicBT) {
-    cout << b->name << endl;
     if(b->mass) {
       PxRigidBodyExt::setMassAndUpdateInertia(*actor, b->mass);
     }
