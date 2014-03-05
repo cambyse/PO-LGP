@@ -8,6 +8,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
 {
   robot_ = robot;
   std::string joint_name;
+
   if (!tree_.init(robot))
   {
     ROS_ERROR("Could not load robot tree");
@@ -161,8 +162,6 @@ void TreeControllerClass::update()
   tree_.getVelocities(jnt_vel_);
   tree_.getEfforts(jnt_efforts_);
 
-
-
   /// Convert KDL to ORS
   for (uint i =0;i<controlIdx.d0;i++) {
     q(i) = jnt_pos_(controlIdx(i));
@@ -197,7 +196,7 @@ void TreeControllerClass::update()
     tree_.getJoint(controlIdx(i))->enforceLimits();
 
     // Additional Safety Check
-    if (u(i)>upperEffortLimits(i) || u(i) < lowerEffortLimits(i)) {
+    if (tree_.getJoint(controlIdx(i))->commanded_effort_>upperEffortLimits(i) || tree_.getJoint(controlIdx(i))->commanded_effort_ < lowerEffortLimits(i)) {
       ROS_ERROR("SAFETY CHECK FAILED! Max u(%d): %f , Min u(%d): %f",i,upperEffortLimits(i),i,lowerEffortLimits(i));
       tree_.getJoint(controlIdx(i))->commanded_effort_ = 0.;
     }
