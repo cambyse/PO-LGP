@@ -611,8 +611,8 @@ void PhysXInterface::pullFromPhysx() { NICO }
 void PhysXInterface::setArticulatedBodiesKinematic(int agent) { NICO }
 void PhysXInterface::ShutdownPhysX() { NICO }
 void PhysXInterface::glDraw() { NICO }
-void addForce(ors::Vector& force, ors::Body* b) { NICO }
-void addForce(ors::Vector& force, ors::Body* b, ors::Vector& pos) { NICO }
+void PhysXInterface::addForce(ors::Vector& force, ors::Body* b) { NICO }
+void PhysXInterface::addForce(ors::Vector& force, ors::Body* b, ors::Vector& pos) { NICO }
 
 void glPhysXInterface(void *classP) { NICO }
 void bindOrsToPhysX(ors::KinematicWorld& graph, OpenGL& gl, PhysXInterface& physx) { NICO }
