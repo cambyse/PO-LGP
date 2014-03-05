@@ -320,3 +320,8 @@ LIBS += -Wl,--start-group -lpthread -lrt\
 -lPhysXProfileSDKCHECKED \
 -lPxTaskCHECKED -Wl,--end-group
 endif
+
+ifeq ($(PORTAUDIO),1)
+CXXFLAGS  += -DMT_PORTAUDIO
+LIBS += -lportaudio
+endif
