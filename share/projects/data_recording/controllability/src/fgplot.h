@@ -27,7 +27,7 @@ StreamCollector& StreamCollector::operator<<(const T &t) {
 struct FGPlot {
   FILE *f;
 
-  bool lines, points, domain, dataid, autolegend, ymin_b, ymax_b;
+  bool lines, points, domain, dim3d, dataid, autolegend, ymin_b, ymax_b;
   const char *title, *hardcopy;
   double stream;
   double ymin, ymax;
@@ -39,6 +39,7 @@ struct FGPlot {
   void setLines(bool l);
   void setPoints(bool p);
   void setDomain(bool d);
+  void setDim3D(bool d);
   void setDataID(bool d);
   void setAutolegend(bool al);
   void setTitle(const char *s);
@@ -46,6 +47,9 @@ struct FGPlot {
   void setStream(double s);
   void setYMin(double min);
   void setYMax(double max);
+
+  bool isDim3D();
+
   void open();
 
   StreamCollector operator()();

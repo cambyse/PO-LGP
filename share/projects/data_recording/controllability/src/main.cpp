@@ -26,12 +26,13 @@ void display(G4Data &g4d) {
   init_display(kw);
 
   KeyFramer kf(kw, g4d);
-  String b1("rh:thumb"), b2("bbox");
+  String b1("rh:thumb"), b2("sbox");
 
   KeyValueGraph kvg;
   //kf.EM_m(kvg, b1);
   //kf.EM_r(kvg, b1, b2);
   //kf.EM_c(kvg, b1, b2);
+
   //FGPlots fgp;
   //fgp.open(kvg);
   //uint F = g4d.getNumFrames();

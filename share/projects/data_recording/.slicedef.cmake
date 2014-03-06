@@ -1,5 +1,5 @@
 set(CURRENT_SLICE 
-  g4_data_analysis
+  controllability
   g4-recorder
   tomsy-recorder
  )

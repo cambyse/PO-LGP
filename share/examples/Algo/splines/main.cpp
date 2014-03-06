@@ -80,6 +80,17 @@ void TEST(BSpline){
   plotPoints(S.points);
   plot();
 
+  for(double lambda = 0.; lambda < .1; lambda += .001) {
+    path = S.smooth(lambda);
+    plotClear();
+    plotFunction(path);
+    plotFunction(S.points);
+    plotPoints(S.points);
+    plot();
+  }
+
+  HALT("");
+
   ofstream fil("z.test");
   for(uint t=0;t<=1000;t++){
     fil <<(double)t/1000 <<' ' <<S.eval(t/10) <<' ' <<S.eval((double)t/1000) <<endl;
@@ -160,7 +171,7 @@ void testPath(){
 }
 
 int MAIN(int argc,char** argv){
-//  testBSpline();
+  //testBSpline();
   testPath();
 
   return 0;
