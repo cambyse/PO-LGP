@@ -10,7 +10,7 @@ void TEST(ModuleVision) {
   cout <<registry() <<endl;
 
   System S;
-  S.addModule("OpencvCamera", NULL, ModuleThread::loopFull);
+  S.addModule("OpencvCamera", NULL, Module_Thread::loopFull);
   S.addModule("CvtGray");
   S.addModule("MotionFilter");
   S.addModule("DifferenceFilter", NULL, STRINGS("rgb", "ground", "diffImage"));
@@ -26,8 +26,8 @@ void TEST(ModuleVision) {
   S.addModule<GenericDisplayViewer<Patching> >(NULL, STRINGS("patches"));
 //  S.addModule<GenericDisplayViewer<SURFfeatures> >(NULL, STRINGS("features"));
 
-  //  S.addModule("VideoEncoder", NULL, STRINGS("rgb"), ModuleThread::listenFirst);
-  //  S.addModule("VideoEncoder", "MyMotionWriter", STRINGS("motion"), ModuleThread::listenFirst);
+  //  S.addModule("VideoEncoder", NULL, STRINGS("rgb"), Module_Thread::listenFirst);
+  //  S.addModule("VideoEncoder", "MyMotionWriter", STRINGS("motion"), Module_Thread::listenFirst);
 
   S.connect();
 

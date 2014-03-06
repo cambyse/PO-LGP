@@ -29,7 +29,7 @@ int main(int argc, char** argv){
 
   // wait for the job done
   while(motionPrimitive.get_mode(NULL)!=MotionPrimitive::done)
-    motionPrimitive.waitForNextWriteAccess();
+    motionPrimitive.waitForNextRevision();
 
   cout <<"** setting grasp action" <<endl;
   motionPrimitive.writeAccess(NULL);
@@ -39,7 +39,7 @@ int main(int argc, char** argv){
 
   // wait for the job done
   while(motionPrimitive.get_mode(NULL)!=MotionPrimitive::done)
-    motionPrimitive.waitForNextWriteAccess();
+    motionPrimitive.waitForNextRevision();
 
   close(biros().processes);
   //biros().dump();

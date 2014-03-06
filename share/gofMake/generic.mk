@@ -47,7 +47,7 @@ MLR_LIBPATH = /home/lib
 endif
 
 LINK	= $(CXX)
-CPATH	:= $(BASE)/include:$(BASE)/src:$(MLR_LIBPATH)/include:$(CPATH)
+CPATHS	+= $(BASE)/include $(BASE)/src $(MLR_LIBPATH)/include
 LPATHS	+= $(BASE)/lib $(MLR_LIBPATH)/lib
 LIBS += -lrt
 SHAREFLAG = -shared #-Wl,--warn-unresolved-symbols #-Wl,--no-allow-shlib-undefined
@@ -133,7 +133,8 @@ CXXFLAGS := $(DEPEND:%=-DMT_%) $(CXXFLAGS)
 # export Linux/MSVC include/lib paths
 #
 ################################################################################
-LPATH = $(LPATHS:%=:%:)
+CPATH := $(CPATH):$(CPATHS:%=:%:)
+LPATH := $(LPATH):$(LPATHS:%=:%:)
 LDFLAGS += $(LPATHS:%=-L%)
 LD_RUN_PATH := $(LD_RUN_PATH):$(LPATH)
 LD_LIBRARY_PATH := $(LD_LIBRARY_PATH):$(LPATH)

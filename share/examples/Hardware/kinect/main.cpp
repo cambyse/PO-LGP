@@ -15,15 +15,15 @@ void threadedRun() {
 
   struct MySystem:System{
     MySystem(){
-      addModule("KinectPoller", NULL, ModuleThread::loopWithBeat, .01); //this is callback driven...
-      addModule<KinectDepthPacking>("KinectDepthPacking", ModuleThread::listenFirst);
-      addModule("ImageViewer", "ImageViewer_rgb", STRINGS("kinect_rgb"), ModuleThread::listenFirst);
-      addModule("ImageViewer", "ImageViewer_depth", STRINGS("kinect_depthRgb"), ModuleThread::listenFirst);
-//      addModule("Kinect2PointCloud", NULL, ModuleThread::loopWithBeat, .2);
-//      addModule("PointCloudViewer", NULL, STRINGS("kinect_points", "kinect_pointColors"), ModuleThread::listenFirst);
-      VideoEncoderX264 *m_enc = addModule<VideoEncoderX264>("VideoEncoder_rgb", STRINGS("kinect_rgb"), ModuleThread::listenFirst);
+      addModule("KinectPoller", NULL, Module_Thread::loopWithBeat, .01); //this is callback driven...
+      addModule<KinectDepthPacking>("KinectDepthPacking", Module_Thread::listenFirst);
+      addModule("ImageViewer", "ImageViewer_rgb", STRINGS("kinect_rgb"), Module_Thread::listenFirst);
+      addModule("ImageViewer", "ImageViewer_depth", STRINGS("kinect_depthRgb"), Module_Thread::listenFirst);
+//      addModule("Kinect2PointCloud", NULL, Module_Thread::loopWithBeat, .2);
+//      addModule("PointCloudViewer", NULL, STRINGS("kinect_points", "kinect_pointColors"), Module_Thread::listenFirst);
+      VideoEncoderX264 *m_enc = addModule<VideoEncoderX264>("VideoEncoder_rgb", STRINGS("kinect_rgb"), Module_Thread::listenFirst);
       m_enc->set_rgb(true);
-      addModule("VideoEncoderX264", "VideoEncoder_depth", STRINGS("kinect_depthRgb"), ModuleThread::listenFirst);
+      addModule("VideoEncoderX264", "VideoEncoder_depth", STRINGS("kinect_depthRgb"), Module_Thread::listenFirst);
       connect();
     }
   } S;

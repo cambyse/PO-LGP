@@ -13,7 +13,7 @@
 struct MySystem:System{
   ACCESS(arr, joystickState);
   MySystem(){
-    addModule<JoystickInterface>(NULL, ModuleThread::loopWithBeat, .01);
+    addModule<JoystickInterface>(NULL, Module_Thread::loopWithBeat, .01);
     connect();
   }
 };
@@ -52,7 +52,7 @@ int main(int argc, char** argv)
 
 
   for(;;){
-    S.joystickState.var->waitForNextWriteAccess();
+    S.joystickState.var->waitForNextRevision();
     arr joy = S.joystickState.get();
 
     // Get current joint state

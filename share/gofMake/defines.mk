@@ -325,3 +325,17 @@ ifeq ($(PORTAUDIO),1)
 CXXFLAGS  += -DMT_PORTAUDIO
 LIBS += -lportaudio
 endif
+
+ifeq ($(ROS),1)
+ROSP=pr2_mechanism/pr2_controller_interface\
+pr2_mechanism/pr2_mechanism_model\
+pr2_mechanism/pr2_hardware_interface\
+ros_control/hardware_interface\
+ros_control/controller_interface
+
+CPATHS += /opt/ros/groovy/include $(ROSP:%=/opt/ros/groovy/stacks/%/include)
+
+LPATHS += /opt/ros/groovy/lib $(ROSP:%=/opt/ros/groovy/stacks/%/lib)
+
+LIBS += -rdynamic -lpr2_mechanism_model -lkdl_parser -lurdf -lurdfdom_model -lurdfdom_model_state -lurdfdom_sensor -lurdfdom_world -lcollada_parser -lrosconsole_bridge -lroscpp -lboost_signals-mt -lxmlrpcpp -ltinyxml -lboost_filesystem-mt -lclass_loader -lPocoFoundation -ldl -lrosconsole -lboost_regex-mt -llog4cxx -lroslib -lconsole_bridge -lroscpp_serialization -lrostime -lboost_date_time-mt -lboost_system-mt -lboost_thread-mt -lpthread -lcpp_common -lorocos-kdl
+endif

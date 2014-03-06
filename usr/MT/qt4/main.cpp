@@ -1,4 +1,5 @@
 #include <iostream>
+#include <unistd.h>
 
 #include <QApplication>
 #include <QMainWindow>
@@ -37,7 +38,7 @@ struct QtThread:QThread{
 int main(int argc, char *argv[]) {
 #if 1
   pthread_t thread1;
-  int rc = pthread_create(&thread1, NULL, StartQAppThread, NULL);
+  pthread_create(&thread1, NULL, StartQAppThread, NULL);
 #else
   QtThread bla;
   bla.start();

@@ -63,7 +63,7 @@ int Variable::deAccess(Module *p) {
   return rev;
 }
 
-void Variable::waitForNextWriteAccess(){
+void Variable::waitForNextRevision(){
   revision.waitForSignal();
 }
 

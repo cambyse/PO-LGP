@@ -1,6 +1,6 @@
 #include <Ors/ors.h>
 #include <Motion/feedbackControl.h>
-#include <Hardware/joystick.h>
+#include <Hardware/joystick/joystick.h>
 #include <System/engine.h>
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
@@ -16,8 +16,8 @@ void testSimulator(){
     ACCESS(arr, qdot_obs);
     ACCESS(arr, joystickState);
     MySystem(){
-      addModule<PR2Simulator>(NULL, ModuleThread::loopWithBeat, .001);
-      addModule<JoystickInterface>(NULL, ModuleThread::loopWithBeat, .01);
+      addModule<PR2Simulator>(NULL, Module_Thread::loopWithBeat, .001);
+      addModule<JoystickInterface>(NULL, Module_Thread::loopWithBeat, .01);
       connect();
     }
   } S;
@@ -35,7 +35,7 @@ void testSimulator(){
   engine().open(S);
 
   for(;;){
-    S.qdot_obs.var->waitForNextWriteAccess();
+    S.qdot_obs.var->waitForNextRevision();
     arr joy = S.joystickState.get();
     MP.setState(S.q_obs.get(), S.qdot_obs.get());
     MP.world.gl().update("operational space sim");
