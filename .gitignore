@@ -63,6 +63,7 @@ Make.lock
 CMakeCache.txt
 CMakeFiles
 cmake_install.cmake
+CMakeLists.txt.user
 
 
 %% SWIG
