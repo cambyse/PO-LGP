@@ -164,7 +164,7 @@ struct Access_typed:Access{
 #define ACCESS(type, name)\
 struct __##name##__Access:Access_typed<type>{ \
   __##name##__Access():Access_typed<type>(#name){} \
-} name; \
+} name;
 
 
 //===========================================================================
