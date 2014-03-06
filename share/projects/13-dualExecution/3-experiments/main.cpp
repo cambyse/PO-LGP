@@ -17,15 +17,15 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
 
   //-- setup the motion problem
   TaskCost *pos =
-      P.addTaskMap("position",
+      P.addTask("position",
                    new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
   P.setInterpolatingCosts(pos, MotionProblem::finalOnly,
                           ARRAY(0.,0.,0.), 1e3);
 //                          ARRAY(P.world.getShapeByName("target")->X.pos), 1e3);
   P.setInterpolatingVelCosts(pos, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e1);
 
-  //c = P.addTaskMap("collisionConstraints", new CollisionConstraint());
-  P.addTaskMap("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1,.7)));
+  //c = P.addTask("collisionConstraints", new CollisionConstraint());
+  P.addTask("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1,.7)));
   stickyWeight=1.;
 
   MotionProblemFunction MF(P);

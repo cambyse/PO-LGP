@@ -34,9 +34,9 @@ RRTPlannerTest::RRTPlannerTest() {
 
   // add a collision cost with threshold 0 to avoid collisions
   uintA shapes = ARRAY<uint>(P.world.getBodyByName("endeff")->shapes(0)->index);
-  TaskCost *c = P.addTaskMap("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .01, true));
+  TaskCost *c = P.addTask("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .01, true));
   P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
-  c->y_threshold = 0;
+  c->threshold = 0;
 
   ors::RRTPlanner planner(&G, P, stepsize);
 

@@ -57,7 +57,7 @@ void testGraspHeuristic(){
     s->size[3] = rnd.uni(.02,.07);
     s->mesh.clear();
 
-    P.setx0(P.world.q);
+    P.x0 = P.world.q;
     G.gl().watch();
   }
   

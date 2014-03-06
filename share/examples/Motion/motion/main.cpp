@@ -16,11 +16,15 @@ int main(int argc,char** argv){
 
   //-- setup the motion problem
   TaskCost *c;
-  c = MP.addTaskMap("position",
+  c = MP.addTask("position",
                     new DefaultTaskMap(posTMT, G, "endeff", ors::Vector(0, 0, .2)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly,
                            ARRAY(MP.world.getBodyByName("target")->X.pos), 1e3);
-  MP.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
+
+  c = MP.addTask("position_vel",
+                    new DefaultTaskMap(posTMT, G, "endeff", ors::Vector(0, 0, .2)));
+  c->map.order=1; //make this a velocity variable!
+  MP.setInterpolatingCosts(c, MotionProblem::finalOnly,
                               ARRAY(0.,0.,0.), 1e1);
 
   //  c = P.addDefaultTaskMap("collision", collTMT, 0, Transformation_Id, 0, Transformation_Id, ARR(.1));
@@ -32,7 +36,7 @@ int main(int argc,char** argv){
 
   //-- collisions with other objects
   uintA shapes = ARRAY<uint>(MP.world.getBodyByName("endeff")->shapes(0)->index);
-  c = MP.addTaskMap("proxyColls",
+  c = MP.addTask("proxyColls",
                     new ProxyTaskMap(allVersusListedPTMT, shapes, .2, true));
   MP.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e2);
 

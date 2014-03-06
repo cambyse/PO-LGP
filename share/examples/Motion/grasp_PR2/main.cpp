@@ -46,7 +46,7 @@ void testGraspHeuristic(){
     s->size[3] = rnd.uni(.02,.07);
     s->mesh.clear();
 
-    MP.setx0(x[MP.T-1]);
+    MP.x0 = x[MP.T-1];
     MP.prefix.clear();
     G.watch(true);
   }
