@@ -23,8 +23,6 @@ struct KeyFramer {
   void computeVar(const StringA &types, uint wlen, bool force = false);
   void computeSpline(const StringA &types, double lambda, bool force = false);
   void computeSpline(const String &type, double lambda, bool force = false);
-  void computeMA(const StringA &types, uint wlen, bool force = false);
-  void computeMA(const String &type, uint wlen, bool force = false);
   void computeES(const StringA &types, double alpha, bool force = false);
   void computeES(const String &type, double alpha, bool force = false);
   void computeSpeed(const StringA &types, bool force = false);
