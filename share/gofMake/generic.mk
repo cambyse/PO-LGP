@@ -6,6 +6,8 @@
 
 .SECONDARY:
 
+BASE_REAL = $(shell realpath $(BASE))
+
 ################################################################################
 #
 # load user options from the local make-config
@@ -171,6 +173,7 @@ info: force
 	@echo ----------------------------------------; echo
 	@echo "  PWD =" "$(PWD)"
 	@echo "  BASE =" "$(BASE)"
+	@echo "  BASE_REAL =" "$(BASE_REAL)"
 	@echo "  NAME =" "$(NAME)"
 	@echo "  LIBPATH =" "$(LIBPATH)"
 	@echo "  EXTERNALS =" "$(EXTERNALS)"
@@ -239,6 +242,7 @@ pywrapper: $(OUTPUT) $(MODULE_NAME)py.so $(MODULE_NAME)py.py
 
 %.exe: $(PREOBJS) $(BUILDS) $(OBJS)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+#	@echo $(PWD:$(BASE_REAL)/%=%/$@)
 
 ## this RULE only applies to $(NAME).so
 ## other %.so files are created by calling make in their directory
@@ -265,6 +269,7 @@ endif
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
+#	@echo $(PWD:$(BASE_REAL)/%=%/$<)
 
 %.o: %.cxx
 	$(CXX) $(CXXFLAGS) -o $@ -c $<

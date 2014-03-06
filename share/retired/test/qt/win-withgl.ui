@@ -672,6 +672,16 @@
     <string>user function</string>
    </property>
   </widget>
+  <widget class="sOpenGL" name="glview" native="true">
+   <property name="geometry">
+    <rect>
+     <x>130</x>
+     <y>230</y>
+     <width>231</width>
+     <height>161</height>
+    </rect>
+   </property>
+  </widget>
   <action name="actionRead">
    <property name="text">
     <string>read</string>
@@ -679,6 +689,14 @@
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>sOpenGL</class>
+   <extends>QWidget</extends>
+   <header>Gui/opengl_qt.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>Slider2</tabstop>
   <tabstop>browseB</tabstop>
