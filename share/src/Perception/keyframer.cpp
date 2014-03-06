@@ -2776,7 +2776,8 @@ void KeyFramer::EM_r(KeyValueGraph &kvg, const String &bA, const String &bB) {
 void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
   // Computing other BAMS {{{
   double alpha = .3;
-  //bool force = true;
+  bool force = true;
+  force = false;
   computeES(STRINGS("pos", "quat"), alpha, force);
   computeSpeed(STRINGS("posES", "quatES"), force);
   computeSpeed(STRINGS("pos", "quat"), force);
