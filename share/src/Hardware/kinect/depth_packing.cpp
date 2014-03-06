@@ -24,9 +24,19 @@ void KinectDepthPacking::step(){
         for(uint i=0;i<depth.N;i++){
             d=depth.p[i];
             rgb=buffer.p+3*i;
-            rgb[0]=0xff&(d>>8);
-            rgb[1]=0xff&(d>>4);
-            rgb[2]=0xff&(d);
+            // old packing
+            //rgb[0]=0xff&(d>>8);
+            //rgb[1]=0xff&(d>>4);
+            //rgb[2]=0xff&(d);
+            // new packing, similar to matlab's "hot" heatmap
+            rgb[2] = 0x0f & (d >> 8);
+            rgb[1] = rgb[2]? 0x0f: (0x0f & (d >> 4));
+            rgb[0] = rgb[1]? 0x0f: (0x0f & (d));
+            rgb[2] += rgb[2] << 4;
+            rgb[1] += rgb[1] << 4;
+            rgb[0] += rgb[0] << 4;
+            // TODO: rgb is actually in bgr order.. fix?
+            // (BLUE heatmap is actuallypretty nice)
         }
 #endif
         buffer.reshape(depth.d0, depth.d1, 3);
