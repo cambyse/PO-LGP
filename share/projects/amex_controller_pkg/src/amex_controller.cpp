@@ -45,66 +45,69 @@ void AmexController::startController(){
 }
 
 void AmexController::runAmex(double dtReal) {
-    /// get current goal
-    if (useGoalPub) {
-      getGoalClient.call(getGoalSrv);
-      goalMO->setPosition(refFrame + ARRAY(getGoalSrv.response.x,getGoalSrv.response.y,getGoalSrv.response.z));
-    }
-
-    /// get current state of real time controllers
-    getJointStateClient.call(getJointStateSrv);
-    for(uint i=0;i<NUM_JOINTS;i++) q(i) = getJointStateSrv.response.q[i];
-    for(uint i=0;i<NUM_JOINTS;i++) qd(i) = getJointStateSrv.response.qd[i];
-
-    if (dtReal > 1.) {
-      dtReal = dtAmex;
-    }
-    cout << "qd: " <<qd << endl;
-
-    /// Get current task state
-    arr stateVec, yNext, ydNext;
-    world.setJointState(q,qd);
-    world.kinematicsPos(state,NoArr,world.getBodyByName("endeffR")->index);
-    world.kinematicsVec(stateVec,NoArr,world.getBodyByName("endeffR")->index);
-    state.append(stateVec);
-
-
-    /// Adapt motion and compute next state
-    amex->iterate(state,dtReal);
-    amex->getNextState(yNext,ydNext);
-
-    cout << "yPrev: " << state << endl;
-    cout << "yNext: " << yNext << endl;
-    cout << "ydNext: " << ydNext << endl;
-
-    /// Send next target to Realtime Controller
-    for(uint i=0;i<3;i++) setPosTargetSrv.request.pos[i] = yNext(i);
-    for(uint i=0;i<3;i++) setVecTargetSrv.request.pos[i] = yNext(i+3);
-    for(uint i=0;i<3;i++) setPosTargetSrv.request.vel[i] = ydNext(i);
-    for(uint i=0;i<3;i++) setVecTargetSrv.request.vel[i] = ydNext(i+3);
-    setPosTargetClient.call(setPosTargetSrv);
-    setVecTargetClient.call(setVecTargetSrv);
-
-    cout << "\n \n" << endl;
+  /// get current goal
+  if (useGoalPub) {
+    getGoalClient.call(getGoalSrv);
+    goalMO->setPosition(refFrame + ARRAY(getGoalSrv.response.x,getGoalSrv.response.y,getGoalSrv.response.z));
   }
+
+  /// get current state of real time controllers
+  getJointStateClient.call(getJointStateSrv);
+  for(uint i=0;i<NUM_JOINTS;i++) q(i) = getJointStateSrv.response.q[i];
+  for(uint i=0;i<NUM_JOINTS;i++) qd(i) = getJointStateSrv.response.qd[i];
+
+  if (dtReal > 1.) {
+    dtReal = dtAmex;
+  }
+  cout << "qd: " <<qd << endl;
+
+  /// Get current task state
+  arr stateVec, yNext, ydNext;
+  world.setJointState(q,qd);
+  world.kinematicsPos(state,NoArr,world.getBodyByName("endeffR")->index);
+  world.kinematicsVec(stateVec,NoArr,world.getBodyByName("endeffR")->index);
+  state.append(stateVec);
+
+
+  /// Adapt motion and compute next state
+  amex->iterate(state,dtReal);
+  amex->getNextState(yNext,ydNext);
+
+  cout << "yPrev: " << state << endl;
+  cout << "yNext: " << yNext << endl;
+  cout << "ydNext: " << ydNext << endl;
+
+  /// Send next target to Realtime Controller
+  for(uint i=0;i<3;i++) setPosTargetSrv.request.pos[i] = yNext(i);
+  for(uint i=0;i<3;i++) setVecTargetSrv.request.pos[i] = yNext(i+3);
+  for(uint i=0;i<3;i++) setPosTargetSrv.request.vel[i] = ydNext(i);
+  for(uint i=0;i<3;i++) setVecTargetSrv.request.vel[i] = ydNext(i+3);
+  setPosTargetClient.call(setPosTargetSrv);
+  setVecTargetClient.call(setVecTargetSrv);
+
+  cout << "\n \n" << endl;
+}
 
 void AmexController::initController(){
   /// Set Joint PD Gains
   pos_gains = {200,200,100,100,50,40,40};
   vel_gains = {50,50,10,10,5,15,10};
-  i_claim = {0,0,0,0,0,0,0};
-  i_claim=0.1;
+  i_gains = pos_gains*0.1;
+  i_claim = {3.,3.,3.,2.,2.,3.,1.5};
+
   cout << "pos_gains" << pos_gains << endl;
   cout << "vel_gains" << vel_gains << endl;
+  cout << "i_gains" << vel_gains << endl;
   cout << "i_claim" << i_claim << endl;
-
+  // [3, 3, 3, 2, 2, 3, 1.5]
   for(uint i=0;i<NUM_JOINTS;i++) setJointGainsSrv.request.pos_gains[i] = pos_gains(i);
   for(uint i=0;i<NUM_JOINTS;i++) setJointGainsSrv.request.vel_gains[i] = vel_gains(i);
+  for(uint i=0;i<NUM_JOINTS;i++) setJointGainsSrv.request.i_gains[i] = i_gains(i);
   for(uint i=0;i<NUM_JOINTS;i++) setJointGainsSrv.request.i_claim[i] = i_claim(i);
   setJointGainsClient.call(setJointGainsSrv);
 
   /// Set Task PD Gains
-  arr pos_task_gains = {1000.,100.,1};
+  arr pos_task_gains = {1.,1.,1};
   arr vel_task_gains = {100.,100.,100.};
   arr task_precisions = {10000.,100.,100.};
 
@@ -143,7 +146,7 @@ void AmexController::initRosServices(){
   setPosTargetSrv.request.pos.resize(3); setPosTargetSrv.request.vel.resize(3);
   setVecTargetSrv.request.pos.resize(3); setVecTargetSrv.request.vel.resize(3);
   setJointGainsSrv.request.pos_gains.resize(NUM_JOINTS); setJointGainsSrv.request.vel_gains.resize(NUM_JOINTS);
-  setJointGainsSrv.request.i_claim.resize(NUM_JOINTS);
+  setJointGainsSrv.request.i_claim.resize(NUM_JOINTS); setJointGainsSrv.request.i_gains.resize(NUM_JOINTS);
 
   getJointStateClient.waitForExistence();
   setPosTargetClient.waitForExistence();

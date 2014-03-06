@@ -96,20 +96,11 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   for (uint i =0;i<controlIdx.d0;i++) {
     double low_tmp, high_tmp;
     tree_.getJoint(controlIdx(i))->getLimits(low_tmp,high_tmp);
-    lowerEffortLimits.append(low_tmp*0.9);
-    upperEffortLimits.append(high_tmp*0.9);
-    if (tree_.getJoint(controlIdx(i))->joint_->type ==tree_.getJoint(controlIdx(i))->joint_->CONTINUOUS) {
-      lowerJointLimits.append(-1e5);
-      upperJointLimits.append(1e5);
-    } else {
-      lowerJointLimits.append(tree_.getJoint(controlIdx(i))->joint_->limits->lower);
-      upperJointLimits.append(tree_.getJoint(controlIdx(i))->joint_->limits->upper);
-    }
+    lowerEffortLimits.append(-0.9*tree_.getJoint(controlIdx(i))->joint_->limits->effort);
+    upperEffortLimits.append(0.9*tree_.getJoint(controlIdx(i))->joint_->limits->effort);
   }
   cout << "lowEffortLimits: " << lowerEffortLimits << endl;
   cout << "highEffortLimits: " << upperEffortLimits << endl;
-  cout << "lowJointLimits: " << lowerJointLimits << endl;
-  cout << "highJointLimits: " << upperJointLimits << endl;
 
   /// Initialize Task Space
   arr state,stateVec;
@@ -144,6 +135,7 @@ void TreeControllerClass::starting()
   //  Kd = {60,60,4,10,2,2,2};
   Kp = {150,150,80,50,40,80,20};
   Kd = {60,60,10,10,10,3,20};
+  Ki = Kp*0.1;
   integral.setZero();
   //[1000,1,1] [100,100,100] [10000,100,100]
 
@@ -168,15 +160,6 @@ void TreeControllerClass::update()
     qd(i) = qd_filt*qd(i) + (1.-qd_filt)*jnt_vel_.qdot(controlIdx(i));
   }
 
-//  joint_pub_state.N = q.d0;
-//  joint_pub_state.q.resize(q.d0);
-//  joint_pub_state.qd.resize(q.d0);
-//  for(uint i=0; i<q.N; i++){
-//    joint_pub_state.q[i] = q(i);
-//    joint_pub_state.qd[i] = qd(i);
-//  }
-//  joint_pub.publish(joint_pub_state);
-
   /// set current state
   MP->setState(q,qd);
 
@@ -189,7 +172,7 @@ void TreeControllerClass::update()
 
   p_effort = (Kp % (des_q - q));
   d_effort = (Kd % (des_qd - qd));
-  i_effort = 0.1*Kp % integral;
+  i_effort = Ki % integral;
 
   /// Convert ORS to KDL
   for (uint i =0;i<controlIdx.d0;i++) {
@@ -286,6 +269,7 @@ bool TreeControllerClass::setJointGains(tree_controller_pkg::SetJointGains::Requ
   for(uint i =0;i<Kp.d0;i++) {
     Kp(i) = req.pos_gains[i];
     Kd(i) = req.vel_gains[i];
+    Ki(i) = req.i_gains[i];
     i_claim(i) = req.i_claim[i];
   }
   integral.setZero();
@@ -294,10 +278,12 @@ bool TreeControllerClass::setJointGains(tree_controller_pkg::SetJointGains::Requ
 bool TreeControllerClass::getJointGains(tree_controller_pkg::GetJointGains::Request &req, tree_controller_pkg::GetJointGains::Response &resp){
   resp.pos_gains.resize(Kp.d0);
   resp.vel_gains.resize(Kd.d0);
+  resp.i_gains.resize(Ki.d0);
   resp.i_claim.resize(i_claim.d0);
   for(uint i =0;i<Kp.d0;i++) {
     resp.pos_gains[i] = Kp(i);
     resp.vel_gains[i] = Kd(i);
+    resp.i_gains[i] = Ki(i);
     resp.i_claim[i] = i_claim(i);
   }
   return true;

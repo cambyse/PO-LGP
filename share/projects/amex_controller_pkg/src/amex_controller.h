@@ -47,7 +47,7 @@ struct AmexController {
   AdaptiveMotionExecution* amex;  // Motion adaptation method
   MObject* goalMO;                // Target goal state
   arr pos_gains, vel_gains;       // PD Gains for joints
-  arr i_claim;
+  arr i_gains, i_claim;
 
   // BOOKKEEPING VARS
   String folder;

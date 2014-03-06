@@ -45,7 +45,7 @@ private:
   PDtask *taskPos, *taskVec, *taskHome, *taskLimits;
   arr u;
   double tau_control, tau_plan;
-  arr Kd,Kp;
+  arr Kd,Kp,Ki;
   arr i_claim, integral;
   arr q, qd, qdd;
   arr des_q, des_qd;
@@ -59,7 +59,6 @@ private:
 
   // Limits
   arr lowerEffortLimits, upperEffortLimits;
-  arr lowerJointLimits, upperJointLimits;
 
   // Logging
   volatile int storage_index_;
