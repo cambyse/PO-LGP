@@ -19,6 +19,7 @@ pl = 2; pc =4;
 d_effort_bk = load([folder,'/d_effort_bk.output']);
 des_qd_bk   = load([folder,'/des_qd_bk.output']);
 p_effort_bk = load([folder,'/p_effort_bk.output']);
+i_effort_bk = load([folder,'/i_effort_bk.output']);
 qd_bk	      = load([folder,'/qd_bk.output']);
 u_bk        = load([folder,'/u_bk.output']);
 des_q_bk    = load([folder,'/des_q_bk.output']);
@@ -58,8 +59,9 @@ for i=1:nq
   plot(t,d_effort_bk(1:ni,i),'r');
   plot(t,u_bk(1:ni,i));
   plot(t,p_effort_bk(1:ni,i),'k');
+  plot(t,i_effort_bk(1:ni,i),'m');
 end
-legend('vel u','total u','pos u');
+legend('vel u','total u','pos u', 'integral u');
 
 figure(4);clf;hold on;
 for i=1:ny

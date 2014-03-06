@@ -38,8 +38,8 @@ void AmexController::startController(){
   ROS_INFO("-------------------------");
 
   /// Set Velocity to zero after execution
-  for(uint i=0;i<NUM_JOINTS;i++) setPosTargetSrv.request.vel[i] = 0.;
-  for(uint i=0;i<NUM_JOINTS;i++) setVecTargetSrv.request.vel[i] = 0.;
+  for(uint i=0;i<3;i++) setPosTargetSrv.request.vel[i] = 0.;
+  for(uint i=0;i<3;i++) setVecTargetSrv.request.vel[i] = 0.;
   setPosTargetClient.call(setPosTargetSrv);
   setVecTargetClient.call(setVecTargetSrv);
 }
@@ -73,6 +73,10 @@ void AmexController::runAmex(double dtReal) {
     amex->iterate(state,dtReal);
     amex->getNextState(yNext,ydNext);
 
+    cout << "yPrev: " << state << endl;
+    cout << "yNext: " << yNext << endl;
+    cout << "ydNext: " << ydNext << endl;
+
     /// Send next target to Realtime Controller
     for(uint i=0;i<3;i++) setPosTargetSrv.request.pos[i] = yNext(i);
     for(uint i=0;i<3;i++) setVecTargetSrv.request.pos[i] = yNext(i+3);
@@ -86,15 +90,33 @@ void AmexController::runAmex(double dtReal) {
 
 void AmexController::initController(){
   /// Set Joint PD Gains
-  pos_gains = {150,150,80,50,40,80,20};
-  vel_gains = {60,60,10,10,10,30,20};
-
+  pos_gains = {200,200,100,100,50,40,40};
+  vel_gains = {50,50,10,10,5,15,10};
+  i_claim = {0,0,0,0,0,0,0};
+  i_claim=0.1;
   cout << "pos_gains" << pos_gains << endl;
   cout << "vel_gains" << vel_gains << endl;
+  cout << "i_claim" << i_claim << endl;
 
   for(uint i=0;i<NUM_JOINTS;i++) setJointGainsSrv.request.pos_gains[i] = pos_gains(i);
   for(uint i=0;i<NUM_JOINTS;i++) setJointGainsSrv.request.vel_gains[i] = vel_gains(i);
+  for(uint i=0;i<NUM_JOINTS;i++) setJointGainsSrv.request.i_claim[i] = i_claim(i);
   setJointGainsClient.call(setJointGainsSrv);
+
+  /// Set Task PD Gains
+  arr pos_task_gains = {1000.,100.,1};
+  arr vel_task_gains = {100.,100.,100.};
+  arr task_precisions = {10000.,100.,100.};
+
+  cout << "pos_task_gains" << pos_task_gains << endl;
+  cout << "vel_task_gains" << vel_task_gains << endl;
+  cout << "task_precisions" << task_precisions << endl;
+
+  for(uint i=0;i<3;i++) setTaskGainsSrv.request.pos_gains[i] = pos_task_gains(i);
+  for(uint i=0;i<3;i++) setTaskGainsSrv.request.vel_gains[i] = vel_task_gains(i);
+  for(uint i=0;i<3;i++) setTaskGainsSrv.request.precision[i] = task_precisions(i);
+  setTaskGainsClient.call(setTaskGainsSrv);
+
 
   /// Check Initial State
   getJointStateClient.call(getJointStateSrv);
@@ -116,15 +138,18 @@ void AmexController::initRosServices(){
   setVecTargetClient = nh.serviceClient<tree_controller_pkg::SetVecTarget>("/tree_rt_controller/set_vec_target",true);
   getJointStateClient = nh.serviceClient<tree_controller_pkg::GetJointState>("/tree_rt_controller/get_joint_state",true);
   setJointGainsClient = nh.serviceClient<tree_controller_pkg::SetJointGains>("/tree_rt_controller/set_joint_gains",true);
+  setTaskGainsClient = nh.serviceClient<tree_controller_pkg::SetTaskGains>("/tree_rt_controller/set_task_gains",true);
 
-  setPosTargetSrv.request.pos.resize(NUM_JOINTS); setPosTargetSrv.request.vel.resize(NUM_JOINTS);
-  setVecTargetSrv.request.pos.resize(NUM_JOINTS); setVecTargetSrv.request.vel.resize(NUM_JOINTS);
+  setPosTargetSrv.request.pos.resize(3); setPosTargetSrv.request.vel.resize(3);
+  setVecTargetSrv.request.pos.resize(3); setVecTargetSrv.request.vel.resize(3);
   setJointGainsSrv.request.pos_gains.resize(NUM_JOINTS); setJointGainsSrv.request.vel_gains.resize(NUM_JOINTS);
+  setJointGainsSrv.request.i_claim.resize(NUM_JOINTS);
 
   getJointStateClient.waitForExistence();
   setPosTargetClient.waitForExistence();
   setVecTargetClient.waitForExistence();
   setJointGainsClient.waitForExistence();
+  setTaskGainsClient.waitForExistence();
 
   if (useGoalPub) {
     refFrame = ARRAY(world.getBodyByName("torso_lift_link")->X.pos);

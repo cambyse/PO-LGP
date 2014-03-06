@@ -46,6 +46,7 @@ private:
   arr u;
   double tau_control, tau_plan;
   arr Kd,Kp;
+  arr i_claim, integral;
   arr q, qd, qdd;
   arr des_q, des_qd;
   arr controlIdx;
@@ -86,6 +87,7 @@ private:
   arr u_bk;
   arr p_effort_bk;
   arr d_effort_bk;
+  arr i_effort_bk;
   arr dt_bk;
   arr taskPos_y_bk;
   arr taskPos_yRef_bk;

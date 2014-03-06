@@ -9,6 +9,7 @@
 #include <tree_controller_pkg/SetPosTarget.h>
 #include <tree_controller_pkg/SetVecTarget.h>
 #include <tree_controller_pkg/GetJointState.h>
+#include <tree_controller_pkg/SetTaskGains.h>
 #include <goal_publisher/GetGoal.h>
 #include <Ors/ors.h>
 
@@ -24,11 +25,13 @@ struct AmexController {
   ros::ServiceClient getJointStateClient;
   ros::ServiceClient setJointGainsClient;
   ros::ServiceClient getGoalClient;
+  ros::ServiceClient setTaskGainsClient;
   goal_publisher::GetGoal getGoalSrv;
   tree_controller_pkg::SetPosTarget setPosTargetSrv;
   tree_controller_pkg::SetVecTarget setVecTargetSrv;
   tree_controller_pkg::GetJointState getJointStateSrv;
   tree_controller_pkg::SetJointGains setJointGainsSrv;
+  tree_controller_pkg::SetTaskGains setTaskGainsSrv;
 
   arr q, qd;                      // Joint position, velocity
   arr state;                      // Task position
@@ -44,7 +47,7 @@ struct AmexController {
   AdaptiveMotionExecution* amex;  // Motion adaptation method
   MObject* goalMO;                // Target goal state
   arr pos_gains, vel_gains;       // PD Gains for joints
-
+  arr i_claim;
 
   // BOOKKEEPING VARS
   String folder;
