@@ -319,6 +319,7 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   
   /// @name forces and gravity
   void clearForces();
+  void addForce(ors::Vector force, Body *n);
   void addForce(ors::Vector force, Body *n, ors::Vector pos);
   void contactsToForces(double hook=.01, double damp=.0003);
   void gravityToForces();

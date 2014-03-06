@@ -33,6 +33,7 @@ void FGPlot::setDefault() {
   lines = true;
   points = false;
   domain = true;
+  dim3d = false;
   dataid = false;
   title = NULL;
   hardcopy = NULL;
@@ -51,6 +52,10 @@ void FGPlot::setPoints(bool p) {
 
 void FGPlot::setDomain(bool d) {
   domain = d;
+}
+
+void FGPlot::setDim3D(bool d) {
+  dim3d = d;
 }
 
 void FGPlot::setDataID(bool d) {
@@ -83,6 +88,10 @@ void FGPlot::setYMax(double max) {
   ymax = max;
 }
 
+bool FGPlot::isDim3D() {
+  return dim3d;
+}
+
 void FGPlot::open() {
   std::stringstream cmd;
   cmd << "feedgnuplot";
@@ -90,6 +99,8 @@ void FGPlot::open() {
   cmd << " " << (points? "--points": "--nopoints");
   cmd << " " << (domain? "--domain": "--nodomain");
   cmd << " " << (dataid? "--dataid": "--nodataid");
+  if(dim3d)
+    cmd << " --3d";
   if(autolegend)
     cmd << " --autolegend";
   if(title)
@@ -180,6 +191,13 @@ void FGPlots::open(const KeyValueGraph &k) {
       s->plots[i].setDomain(*b);
     }
     // }}}
+    // dim3d {{{
+    b = plot_kvg->getValue<bool>("dim3d");
+    if(b) {
+      cout << " - dim3d: " << *b << endl;
+      s->plots[i].setDim3D(*b);
+    }
+    // }}}
     // dataid {{{
     b = plot_kvg->getValue<bool>("dataid");
     if(b) {
@@ -234,16 +252,33 @@ void FGPlots::open(const KeyValueGraph &k) {
 
 void FGPlots::step(uint t) {
   String ss, *str;
+  arr *data;
   for(uint i = 0; i < s->nplots; i++) {
-    ss.clear() << t;
-    for(auto j: s->data[i]) {
-      str = j->value<String>();
-      ss << " " << *str
-        << " " << s->kvg[*str]->value<arr>()->elem(t);
-        ;
+    if(s->plots[i].isDim3D()) {
+      for(auto j: s->data[i]) {
+        str = j->value<String>();
+        data = s->kvg[*str]->value<arr>();
+        ss.clear() << data->operator()(t, 0) << " "
+                    << data->operator()(t, 1) << " "
+                    << *str << " "
+                    << data->operator()(t, 2)
+                    ;
+        //cout << "cmd: " << ss << endl;
+        s->plots[i]() << ss;
+      }
     }
-    //cout << "cmd: " << ss << endl;
-    s->plots[i]() << ss;
+    else {
+      ss.clear() << t;
+      for(auto j: s->data[i]) {
+        str = j->value<String>();
+        data = s->kvg[*str]->value<arr>();
+        ss << " " << *str
+          << " " << data->elem(t)
+          ;
+      }
+      //cout << "cmd: " << ss << endl;
+      s->plots[i]() << ss;
+    }
   }
 }
 
