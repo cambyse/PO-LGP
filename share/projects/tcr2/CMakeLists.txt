@@ -99,18 +99,19 @@ add_definitions("-std=c++0x"
   "-DCORELIB" 
   "-DPX32" 
   "-DLINUX"
+  "-DMT_PHYSX"
 )
 
 include_directories(
   ${catkin_INCLUDE_DIRS}
-  /home/johannes/mlr/mlr/share/src
+  ../../src
   /home/lib/include/physx
 )
 
 link_directories(
- /home/johannes/mlr/mlr/share/src/Core
- /home/johannes/mlr/mlr/share/src/Ors
- /home/johannes/mlr/mlr/share/src/Gui
+ ../../src/Core
+ ../../src/Ors
+ ../../src/Gui
  /home/lib/lib
 )
 
