@@ -7,7 +7,10 @@ void KinectDepthPacking::open(){}
 void KinectDepthPacking::close(){}
 
 void KinectDepthPacking::step(){
-    MT::Array<uint16_t> depth = kinect_depth.get();
+    kinect_depth.readAccess();
+    MT::Array<uint16_t> depth = kinect_depth();
+    double tstamp = kinect_depth.tstamp();
+    kinect_depth.deAccess();
 
     if(depth.N>0){
         byteA buffer(depth.N, 3);
@@ -27,6 +30,9 @@ void KinectDepthPacking::step(){
         }
 #endif
         buffer.reshape(depth.d0, depth.d1, 3);
-        kinect_depthRgb.set() = buffer;
+        kinect_depthRgb.writeAccess();
+        kinect_depthRgb() = buffer;
+        kinect_depthRgb.tstamp() = tstamp;
+        kinect_depthRgb.deAccess();
     }
 }

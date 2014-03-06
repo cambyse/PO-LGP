@@ -1,7 +1,8 @@
 BASE = ../../..
 
-OBJS = main.o
+DEPEND = Ors Gui Core
 
-DEPEND = Core System Hardware_G4
+ODE=0
+PHYSX = 1
 
 include $(BASE)/gofMake/make-generic
