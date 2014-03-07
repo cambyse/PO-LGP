@@ -164,8 +164,13 @@ include(.slicedef.cmake)
 
 message(STATUS "MLR CXX Flags: ${MLR_CXX_FLAGS}")
 
+# always need this, always needs to be first (for variables)
+add_subdirectory(src)
+
 foreach(DIR ${CURRENT_SLICE})
-add_subdirectory(${DIR})
+    if(NOT ${DIR} MATCHES "src")
+        add_subdirectory(${DIR})
+    endif()
 endforeach(DIR ${CURRENT_SLICE})
 
 
