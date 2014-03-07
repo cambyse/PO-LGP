@@ -25,6 +25,8 @@ struct KeyFramer {
   void computeSpline(const String &type, double lambda, bool force = false);
   void computeES(const StringA &types, double alpha, bool force = false);
   void computeES(const String &type, double alpha, bool force = false);
+  void computeSmooth(const StringA &types, double alpha, bool force = false);
+  void computeSmooth(const String &type, double alpha, bool force = false);
   void computeSpeed(const StringA &types, bool force = false);
   void computeSpeed(const String &type, bool force = false);
   void computeGP(const StringA &types, bool force = false);
