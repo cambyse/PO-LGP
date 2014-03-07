@@ -2,6 +2,8 @@
 #include <gtest/gtest.h>
 #include <iostream>
 
+using namespace MLR;
+
 TEST(mt_guess_format, test_std_formats) {
     AVOutputFormat *fmt = mt_guess_format("test.wav", nullptr);
     ASSERT_NE(nullptr, fmt);
