@@ -77,7 +77,7 @@ int main(int argc,char** argv){
   
   //  OpenGL costs(STRING("PHI ("<<F.dim_phi(0)<<" tasks)"), 3*T+10, 3*F.dim_phi(0)+10 );
   //-- optimize
-  for(uint k=0;k<10;k++){
+  for(uint k=0;k<1;k++){
     optNewton(x, Convert(MF), OPT(verbose=2, stopIters=40, useAdaptiveDamping=false, damping=1e-0, maxStep=1.));
     //costs.displayRedBlue(~sqr(P.costMatrix), false, 3);
     MP.costReport();

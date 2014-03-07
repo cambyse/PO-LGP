@@ -216,13 +216,9 @@ bool MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
     TaskCost *c = taskCosts(i);
     if(c->active && !c->map.constraint) {
       c->map.phi(y, J, world);
-      if(absMax(y)>1e10){
-        MT_MSG("WARNING y=" <<y);
-        c->map.phi(y, J, world);
-      }
-      if(!c->target.N/* && !c->v_target.N*/){
-        MT_MSG("active task costs "<< c->name <<" have no targets defined - ignoring");
-      }
+      if(absMax(y)>1e10)  MT_MSG("WARNING y=" <<y);
+      CHECK(c->target.N, "active task costs "<< c->name <<" have no targets defined");
+      CHECK(c->map.order==0 || c->map.order==1,"");
       if(c->map.order==0) { //pose costs
         phi.append(sqrt(c->prec(t))*(y - c->target[t]));
         if(phi.last() > c->threshold) feasible = false;
@@ -293,11 +289,13 @@ void MotionProblem::costReport(bool gnuplt) {
     
     cout <<"\t '" <<c->name <<"' [" <<d <<"] ";
     
-    double tc=sumOfSqr(costMatrix.sub(0,-1,m,m+d-1));
-    taskC+=tc;
-    if(c->map.order==0) cout <<"\t state=" <<tc;
-    if(c->map.order==1) cout <<"\t vel=" <<tc;
-    m += d;
+    if(!c->map.constraint){
+      double tc=sumOfSqr(costMatrix.sub(0,-1,m,m+d-1));
+      taskC+=tc;
+      if(c->map.order==0) cout <<"\t state=" <<tc;
+      if(c->map.order==1) cout <<"\t vel=" <<tc;
+      m += d;
+    }
     if(c->map.constraint){
 #ifdef STICK
       double tc=sumOfSqr(costMatrix.sub(0,-1,m,m+d-1));
@@ -347,8 +345,10 @@ void MotionProblem::costReport(bool gnuplt) {
     uint m_dual=0;
     for(auto c:taskCosts){
       uint d=c->map.dim_phi(world);
-      fil <<sqrt(sumOfSqr(costMatrix.sub(t,t,m,m+d-1))) <<' ';
-      m += d;
+      if(!c->map.constraint){
+        fil <<sqrt(sumOfSqr(costMatrix.sub(t,t,m,m+d-1))) <<' ';
+        m += d;
+      }
       if(c->map.constraint){
   #ifdef STICK
         fil <<sqrt(sumOfSqr(costMatrix.sub(t,t,m,m+d-1))) <<' ';
