@@ -8,7 +8,7 @@ int main(int argc, char ** argv) {
 
   String in;
   double tf, tt;
-  MT::getParameter(in, "in");
+  in = MT::getParameter<String>("in");
   MT::getParameter(tf, "f", 0.);
   MT::getParameter(tt, "t", -1.);
 
@@ -17,7 +17,7 @@ int main(int argc, char ** argv) {
 
   uint fnum;
   char tag[30];
-  double stamp;
+  double tstamp;
   arr data;
   while(is.good()) {
     is >> fnum >> tstamp >> data;
