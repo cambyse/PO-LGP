@@ -53,7 +53,7 @@ reformatSources:
 	cd src; find MT/ \( -name "*.h" -or -name "*.cpp" -or -name "*.cxx" \) -exec ./style.sed.sh {} \;
 
 %.tgz:: force
-	-mv -f gofMake/config.mk config.mk.mine
+	-mv -f gofMake/config.mk gofMake/config.mk.mine
 	cp -f slices/$*.config.mk ./gofMake/config.mk
 	rm -f $*.tgz;
 	cd ..; \
