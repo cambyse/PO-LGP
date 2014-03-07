@@ -1,0 +1,8 @@
+if(LIBAV_AVFORMAT_LIBRARY)
+    add_definitions(-DHAVE_LIBAV)
+    get_filename_component(NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+    include(.sources.cmake)
+    add_executable(${NAME} ${SOURCES})
+    target_link_libraries(${NAME} Core Perception)
+    add_test(${NAME}_test ${NAME} --gtest_output=xml:${NAME}-unit.xml)
+endif()
