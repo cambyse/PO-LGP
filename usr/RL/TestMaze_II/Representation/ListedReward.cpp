@@ -15,8 +15,14 @@ using std::string;
 ListedReward::ListedReward(const std::vector<value_t> & list, const int & idx):
     reward_list(list), reward_index(idx)
 {
-    if(DEBUG_LEVEL>0 && reward_index>=(int)reward_list.size()) {
-        DEBUG_ERROR("Reward index (" << reward_index << ")out of bounds (0-" << reward_list.size()-1 << ")");
+    if(DEBUG_LEVEL>0) {
+        if(reward_list.size()==0) {
+            DEBUG_ERROR("Empty reward list");
+        } else if(idx<0) {
+            DEBUG_ERROR("Index (" << idx << ") must be non-negative");
+        } else if(reward_index>=(int)reward_list.size()) {
+            DEBUG_ERROR("Reward index (" << reward_index << ") out of bounds (0 to " << reward_list.size()-1 << ")");
+        }
     }
     set_type(REWARD_TYPE::LISTED_REWARD);
 }
