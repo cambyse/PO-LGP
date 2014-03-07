@@ -1,4 +1,4 @@
 set(SOURCES ./main.cpp
-./tf_module.cpp
 ./ros_module.h
+./tf_module.cpp
 ./ros_private.h)
