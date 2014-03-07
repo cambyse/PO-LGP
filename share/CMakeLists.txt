@@ -12,6 +12,9 @@ endif(CMAKE_BUILD_TYPE STREQUAL "")
 # path for find macros
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
+# change target locations
+set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
+
 # perform common checks
 find_package (Threads REQUIRED)
 option(WITH_LAPACK "Enable use of lapack (default: if found)" ON)
