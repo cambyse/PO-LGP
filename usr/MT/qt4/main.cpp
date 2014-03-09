@@ -17,6 +17,11 @@ void* StartQAppThread(void*) {
   QMainWindow w;
   w.show();
   w.setCentralWidget(new QPushButton("NewButton"));
+
+  Gui gui;
+  //gui.moveToThread(&bla);
+  gui.show();
+
   app.exec();
   pthread_exit(NULL);
 }
@@ -36,13 +41,12 @@ struct QtThread:QThread{
 
 
 int main(int argc, char *argv[]) {
-#if 1
+#if 0
   pthread_t thread1;
   pthread_create(&thread1, NULL, StartQAppThread, NULL);
 #elif 0
   pid_t pid = fork();
-  if(pid<0){ perror("fork failed"); return -1; }
-  if(pid){ //parent process
+  if(pid<0){ perror("fork failed"); return -1; }  if(pid){ //parent process
     StartQAppThread(NULL);
     return 1;
   }
