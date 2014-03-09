@@ -27,5 +27,5 @@ include(.sources.cmake)
 add_executable(x_${NAME} ${SOURCES} ${${NAME}_FORMS_HEADERS})
 
 target_link_libraries(x_${NAME} Core Algo MDP ${QT_LIBRARIES})
-add_test(x_${NAME}_test ${NAME} --gtest_output=xml:${NAME}-unit.xml)
+mlr_example_test(${NAME})
 

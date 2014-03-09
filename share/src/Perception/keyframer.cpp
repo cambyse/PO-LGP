@@ -389,51 +389,6 @@ void KeyFramer::computeVar(const String &type, uint wlen, bool force) {
   s->g4d->appendBam(typeVar, y);
 }
 // }}}
-// computeMA {{{
-void KeyFramer::computeMA(const StringA &types, uint wlen, bool force) {
-  for(const String &type: types)
-    computeMA(type, wlen, force);
-}
-// }}}
-// computeMA {{{
-void KeyFramer::computeMA(const String &type, uint wlen, bool force) {
-  CHECK(wlen >= 2, "Parameter wlen (" << wlen << ") must be >= 2.");
-  String typeMA = STRING(type << "MA");
-  cout << " * computing " << typeMA << endl;
-  if(!force && s->g4d->hasBAM(typeMA)) {
-    cout << " * " << typeMA << " already computed (force = 0). Skipping." <<
-      endl;
-    return;
-  }
-  uint numS = s->g4d->getNumSensors();
-  uint numF = s->g4d->getNumFrames();
-  uint numD = s->g4d->getNumDim(type);
-
-  arr x, y, tx, ma;
-
-  x = s->g4d->query(type);
-  y.resize(x.d0, x.d1);
-  y.setZero();
-
-  ma.resize(numF);
-  for(uint i = 0; i < numS; i++) {
-    for(uint d = 0; d < numD; d++) {
-      cout << " * computing " << typeMA << " for sensor " << i << ", dim " << d << endl;
-      tx = (~x[i])[d];
-      ma.setZero();
-      ma(0) = tx(0);
-      for(uint f = 1; f < wlen; f++)
-        ma(f) = (ma(f-1)*f + tx(f)) / (f+1);
-      for(uint f = wlen; f < numF; f++)
-        ma += (tx(f) - tx(f-wlen)) / wlen;
-      for(uint f = 0; f < numF; f++)
-        y(i, f, d) = ma(f);
-    }
-  }
-
-  s->g4d->appendBam(typeMA, y);
-}
-// }}}
 // computeES {{{
 void KeyFramer::computeES(const StringA &types, double alpha, bool force) {
   for(const String &type: types)
@@ -456,12 +411,10 @@ void KeyFramer::computeES(const String &type, double alpha, bool force) {
   double beta = 1-alpha;
 
   arr x, y, es;
-
   x = s->g4d->query(type);
   y.resizeAs(x);
   y.setZero();
 
-  es.resize(numF);
   for(uint i = 0; i < numS; i++) {
     for(uint d = 0; d < numD; d++) {
       es = (~x[i])[d];
@@ -473,6 +426,47 @@ void KeyFramer::computeES(const String &type, double alpha, bool force) {
   }
 
   s->g4d->appendBam(typeES, y);
+}
+// }}}
+// computeSmooth {{{
+void KeyFramer::computeSmooth(const StringA &types, double alpha, bool force) {
+  for(const String &type: types)
+    computeSmooth(type, alpha, force);
+}
+// }}}
+// computeSmooth {{{
+void KeyFramer::computeSmooth(const String &type, double alpha, bool force) {
+  CHECK(alpha >= 0. && alpha <= 1., "Parameter alpha (" << alpha << ") must be 0 <= alpha <= 1.");
+  String typeSmooth = STRING(type << "Smooth");
+  cout << " * computing " << typeSmooth << endl;
+  if(!force && s->g4d->hasBAM(typeSmooth)) {
+    cout << " * " << typeSmooth << " already computed (force = 0). Skipping." <<
+      endl;
+    return;
+  }
+  uint numS = s->g4d->getNumSensors();
+  uint numF = s->g4d->getNumFrames();
+  uint numD = s->g4d->getNumDim(type);
+  double beta = 1-alpha;
+
+  arr x, y, es;
+  x = s->g4d->query(type);
+  y.resizeAs(x);
+  y.setZero();
+
+  for(uint i = 0; i < numS; i++) {
+    for(uint d = 0; d < numD; d++) {
+      es = (~x[i])[d];
+      for(uint f = numF-2; f-- > 0;)
+        es(f) = es(f) * alpha + es(f+1) * beta;
+      for(uint f = 1; f < numF; f++)
+        es(f) = es(f) * alpha + es(f-1) * beta;
+      for(uint f = 0; f < numF; f++)
+        y(i, f, d) = es(f);
+    }
+  }
+
+  s->g4d->appendBam(typeSmooth, y);
 }
 // }}}
 // computeSpline {{{
@@ -2807,46 +2801,46 @@ void KeyFramer::EM_r(KeyValueGraph &kvg, const String &bA, const String &bB) {
 // }}}
 // EM_c {{{
 //#define with_object_emission
-//#define update_mu_pSpeedGP
-//#define update_sigma_pSpeedGP
-//#define update_mu_qSpeedGP
-//#define updage_sigma_qSpeedGP
-//#define update_mu_dpSpeedGP
-//#define update_sigma_dpSpeedGP
-//#define update_mu_dqSpeedGP
-//#define update_sigma_dqSpeedGP
+//#define update_mu_p
+//#define update_sigma_p
+//#define update_mu_q
+//#define updage_sigma_q
+//#define update_mu_dp
+//#define update_sigma_dp
+//#define update_mu_dq
+//#define update_sigma_dq
 void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
   // Computing other BAMS {{{
-  // TODO view the actual 3d path!!
-  double alpha = .5;
+  double alpha = .3;
   bool force = true;
-  computeES(STRINGS("pos", "quat"), alpha, force);
-  computeSpeed(STRINGS("posES", "quatES"), force);
+  force = false;
+  computeSmooth(STRINGS("pos", "quat"), alpha, force);
+  computeSpeed(STRINGS("posSmooth", "quatSmooth"), force);
 
   String bA_dPos = STRING(bA << "_dPos");
   String bA_dQuat = STRING(bA << "_dQuat");
-  String bA_dPosGP = STRING(bA_dPos << "ES");
-  String bA_dQuatGP = STRING(bA_dQuat << "ES");
-  String bA_dPosGPSpeed = STRING(bA_dPosGP << "Speed");
-  String bA_dQuatGPSpeed = STRING(bA_dQuatGP << "Speed");
+  String bA_dPosSmooth = STRING(bA_dPos << "Smooth");
+  String bA_dQuatSmooth = STRING(bA_dQuat << "Smooth");
+  String bA_dPosSmoothSpeed = STRING(bA_dPosSmooth << "Speed");
+  String bA_dQuatSmoothSpeed = STRING(bA_dQuatSmooth << "Speed");
 
   computeDPos(bA, force);
   computeDQuat(bA, force);
-  computeES(bA_dPos, alpha, force);
-  computeES(bA_dQuat, alpha, force);
-  computeSpeed(bA_dPosGP, force);
-  computeSpeed(bA_dQuatGP, force);
+  computeSmooth(bA_dPos, alpha, force);
+  computeSmooth(bA_dQuat, alpha, force);
+  computeSpeed(bA_dPosSmooth, force);
+  computeSpeed(bA_dQuatSmooth, force);
   // }}}
   // Observations {{{
-  arr pSpeedGP = s->g4d->query("posESSpeed", bA);
-  arr qSpeedGP = s->g4d->query("quatESSpeed", bA);
+  arr pSpeed = s->g4d->query("posSmoothSpeed", bA);
+  arr qSpeed = s->g4d->query("quatSmoothSpeed", bA);
 #ifdef with_object_emission
-  arr pBSpeedGP = s->g4d->query("posESSpeed", bB);
-  arr qBSpeedGP = s->g4d->query("quatESSpeed", bB);
+  arr pBSpeed = s->g4d->query("posSmoothSpeed", bB);
+  arr qBSpeed = s->g4d->query("quatSmoothSpeed", bB);
 #endif
-  arr dpSpeedGP = s->g4d->query(bA_dPosGPSpeed, bB);
-  arr dqSpeedGP = s->g4d->query(bA_dQuatGPSpeed, bB);
-  uint T = pSpeedGP.d0;
+  arr dpSpeed = s->g4d->query(bA_dPosSmoothSpeed, bB);
+  arr dqSpeed = s->g4d->query(bA_dQuatSmoothSpeed, bB);
+  uint T = pSpeed.d0;
   // }}}
   // Parameters & other {{{
   double mu_m_L, mu_m_H;
@@ -2855,10 +2849,10 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
   double sigma_r_L, sigma_r_H;
   arr pi, A;
   arr p_zmm, p_z;
-  arr mu_pSpeedGP, sigma_pSpeedGP;
-  arr mu_qSpeedGP, sigma_qSpeedGP;
-  arr mu_dpSpeedGP, sigma_dpSpeedGP;
-  arr mu_dqSpeedGP, sigma_dqSpeedGP;
+  arr mu_p, sigma_p;
+  arr mu_q, sigma_q;
+  arr mu_dp, sigma_dp;
+  arr mu_dq, sigma_dq;
   arr rho_z;
   arr rho_m, rho_mp, rho_mq;
   arr rho_mB, rho_mpB, rho_mqB;
@@ -2866,8 +2860,8 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
   arr qz, qzz, qmp, qmq, qzmm;
   arr a, b;
   arr pz, pzz, pmp, pmq;
-  arr pmpmpSpeedGP, pmpspSpeedGP, pmqmqSpeedGP, pmqsqSpeedGP;
-  arr pmpmdpSpeedGP, pmpsdpSpeedGP, pmqmdqSpeedGP, pmqsdqSpeedGP;
+  arr pmpmp, pmpsp, pmqmq, pmqsq;
+  arr pmpmdp, pmpsdp, pmqmdq, pmqsdq;
   arr phi_zmr, phi_mpq, phi_rpq;
 
   pi = { 1, 0 };
@@ -2918,19 +2912,19 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
   mu_m_H = 100;
   sigma_m_L = 50;
   sigma_m_H = 50;
-  mu_pSpeedGP = { mu_m_L, mu_m_H };
-  sigma_pSpeedGP = { sigma_m_L, sigma_m_H };
-  mu_qSpeedGP = { mu_m_L, mu_m_H };
-  sigma_qSpeedGP = { sigma_m_L, sigma_m_H };
+  mu_p= { mu_m_L, mu_m_H };
+  sigma_p= { sigma_m_L, sigma_m_H };
+  mu_q= { mu_m_L, mu_m_H };
+  sigma_q= { sigma_m_L, sigma_m_H };
 
   mu_r_L = 0;
   mu_r_H = 100;
   sigma_r_L = 50;
   sigma_r_H = 50;
-  mu_dpSpeedGP = { mu_r_H, mu_r_L };
-  sigma_dpSpeedGP = { sigma_r_H, sigma_r_L };
-  mu_dqSpeedGP = { 2*mu_r_H, 2*mu_r_L };
-  sigma_dqSpeedGP = { 2*sigma_r_H, 2*sigma_r_L };
+  mu_dp= { mu_r_H, mu_r_L };
+  sigma_dp= { sigma_r_H, sigma_r_L };
+  mu_dq= { 2*mu_r_H, 2*mu_r_L };
+  sigma_dq= { 2*sigma_r_H, 2*sigma_r_L };
 
   uint K = 2;
   uint M = 2;
@@ -2966,10 +2960,10 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
   pzz.resize(K, K);
   //pmp.resize(K);
   //pmq.resize(K);
-  //pmpmdpSpeedGP.resize(K);
-  //pmpsdpSpeedGP.resize(K);
-  //pmqmdqSpeedGP.resize(K);
-  //pmqsdqSpeedGP.resize(K);
+  //pmpmdp.resize(K);
+  //pmpsdp.resize(K);
+  //pmqmdq.resize(K);
+  //pmqsdq.resize(K);
   // }}}
 
   arr prev_qz;
@@ -2980,37 +2974,37 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
     cout << "step: " << i << endl;
     cout << "pi: " << pi << endl;
     cout << "A: " << A << endl;
-    cout << "mu_pSpeedGP: " << mu_pSpeedGP << endl;
-    cout << "sigma_pSpeedGP: " << sigma_pSpeedGP << endl;
-    cout << "mu_qSpeedGP: " << mu_qSpeedGP << endl;
-    cout << "sigma_qSpeedGP: " << sigma_qSpeedGP << endl;
-    cout << "mu_dpSpeedGP: " << mu_dpSpeedGP << endl;
-    cout << "sigma_dpSpeedGP: " << sigma_dpSpeedGP << endl;
-    cout << "mu_dqSpeedGP: " << mu_dqSpeedGP << endl;
-    cout << "sigma_dqSpeedGP: " << sigma_dqSpeedGP << endl;
+    cout << "mu_p: " << mu_p<< endl;
+    cout << "sigma_p: " << sigma_p<< endl;
+    cout << "mu_q: " << mu_q<< endl;
+    cout << "sigma_q: " << sigma_q<< endl;
+    cout << "mu_dp: " << mu_dp<< endl;
+    cout << "sigma_dp: " << sigma_dp<< endl;
+    cout << "mu_dq: " << mu_dq<< endl;
+    cout << "sigma_dq: " << sigma_dq<< endl;
     // }}}
     //COMPUTE EVIDENCES {{{
     for(uint t = 0; t < T; t++) {
       for(uint k = 0; k < K; k++) {
         rho_mp(t, k) = ::exp(
-            -.5 * MT::sqr(pSpeedGP(t) - mu_pSpeedGP(k)) / MT::sqr(sigma_pSpeedGP(k))
+            -.5 * MT::sqr(pSpeed(t) - mu_p(k)) / MT::sqr(sigma_p(k))
           );
         rho_mq(t, k) = ::exp(
-            -.5 * MT::sqr(qSpeedGP(t) - mu_qSpeedGP(k)) / MT::sqr(sigma_qSpeedGP(k))
+            -.5 * MT::sqr(qSpeed(t) - mu_q(k)) / MT::sqr(sigma_q(k))
           );
 #ifdef with_object_emission
         rho_mpB(t, k) = ::exp(
-            -.5 * MT::sqr(pBSpeedGP(t) - mu_pSpeedGP(k)) / MT::sqr(sigma_pSpeedGP(k))
+            -.5 * MT::sqr(pBSpeed(t) - mu_p(k)) / MT::sqr(sigma_p(k))
           );
         rho_mqB(t, k) = ::exp(
-            -.5 * MT::sqr(qBSpeedGP(t) - mu_qSpeedGP(k)) / MT::sqr(sigma_qSpeedGP(k))
+            -.5 * MT::sqr(qBSpeed(t) - mu_q(k)) / MT::sqr(sigma_q(k))
           );
 #endif
         rho_rdp(t, k) = ::exp(
-            -.5 * MT::sqr(dpSpeedGP(t) - mu_dpSpeedGP(k)) / MT::sqr(sigma_dpSpeedGP(k))
+            -.5 * MT::sqr(dpSpeed(t) - mu_dp(k)) / MT::sqr(sigma_dp(k))
           );
         rho_rdq(t, k) = ::exp(
-            -.5 * MT::sqr(dqSpeedGP(t) - mu_dqSpeedGP(k)) / MT::sqr(sigma_dqSpeedGP(k))
+            -.5 * MT::sqr(dqSpeed(t) - mu_dq(k)) / MT::sqr(sigma_dq(k))
           );
       }
 
@@ -3070,28 +3064,28 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
     pzz.setZero();
     //pmp.setZero();
     //pmq.setZero();
-    //pmpmpSpeedGP.setZero();
-    //pmpspSpeedGP.setZero();
-    //pmqmqSpeedGP.setZero();
-    //pmqsqSpeedGP.setZero();
-    //pmpmdpSpeedGP.setZero();
-    //pmpsdpSpeedGP.setZero();
-    //pmqmdqSpeedGP.setZero();
-    //pmqsdqSpeedGP.setZero();
+    //pmpmp.setZero();
+    //pmpsp.setZero();
+    //pmqmq.setZero();
+    //pmqsq.setZero();
+    //pmpmdp.setZero();
+    //pmpsdp.setZero();
+    //pmqmdq.setZero();
+    //pmqsdq.setZero();
     for(uint t = 0; t < T; t++) {
       pz += qz[t];
       if(t < T-1)
         pzz += qzz[t];
       //pmp += qmp[t];
       //pmq += qmq[t];
-      //pmpmpSpeedGP += pSpeedGP(t) * qz[t];
-      //pmpspSpeedGP += sqr(pSpeedGP(t) - mu_pSpeedGP) % qz[t];
-      //pmqmqSpeedGP += qSpeedGP(t) * qz[t];
-      //pmqsqSpeedGP += sqr(qSpeedGP(t) - mu_qSpeedGP) % qz[t];
-      //pmpmdpSpeedGP += dpSpeedGP(t) * qz[t];
-      //pmpsdpSpeedGP += sqr(dpSpeedGP(t) - mu_dpSpeedGP) % qz[t];
-      //pmqmdqSpeedGP += dqSpeedGP(t) * qz[t];
-      //pmqsdqSpeedGP += sqr(dqSpeedGP(t) - mu_dqSpeedGP) % qz[t];
+      //pmpmp+= pSpeed(t) * qz[t];
+      //pmpsp+= sqr(pSpeed(t) - mu_p) % qz[t];
+      //pmqmq+= qSpeed(t) * qz[t];
+      //pmqsq+= sqr(qSpeed(t) - mu_q) % qz[t];
+      //pmpmdp+= dpSpeed(t) * qz[t];
+      //pmpsdp+= sqr(dpSpeed(t) - mu_dp) % qz[t];
+      //pmqmdq+= dqSpeed(t) * qz[t];
+      //pmqsdq+= sqr(dqSpeed(t) - mu_dq) % qz[t];
     }
 
     pi = qz[0];
@@ -3103,29 +3097,29 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
       A[k]() /= tmp;
 
     // TODO change pz to appropriate
-#ifdef update_mu_pSpeedGP
-    mu_pSpeedGP = pmpmpSpeedGP / pz;
+#ifdef update_mu_p
+    mu_p = pmpmp/ pz;
 #endif
-#ifdef update_sigma_pSpeedGP
-    sigma_pSpeedGP = sqrt(pmpspSpeedGP / pz);
+#ifdef update_sigma_p
+    sigma_p = sqrt(pmpsp/ pz);
 #endif
-#ifdef update_mu_qSpeedGP
-    mu_qSpeedGP = pmqmqSpeedGP / pz;
+#ifdef update_mu_q
+    mu_q = pmqmq/ pz;
 #endif
-#ifdef update_sigma_qSpeedGP
-    sigma_qSpeedGP = sqrt(pmqsqSpeedGP / pz);
+#ifdef update_sigma_q
+    sigma_q = sqrt(pmqsq/ pz);
 #endif
-#ifdef update_mu_dpSpeedGP
-    mu_dpSpeedGP = pmpmdpSpeedGP / pz;
+#ifdef update_mu_dp
+    mu_dp = pmpmdp/ pz;
 #endif
-#ifdef update_sigma_dpSpeedGP
-    sigma_dpSpeedGP = sqrt(pmpsdpSpeedGP / pz);
+#ifdef update_sigma_dp
+    sigma_dp = sqrt(pmpsdp/ pz);
 #endif
-#ifdef update_mu_dqSpeedGP
-    mu_dqSpeedGP = pmqmdqSpeedGP / pz;
+#ifdef update_mu_dq
+    mu_dq = pmqmdq/ pz;
 #endif
-#ifdef update_sigma_dqSpeedGP
-    sigma_dqSpeedGP = sqrt(pmqsdqSpeedGP / pz);
+#ifdef update_sigma_dq
+    sigma_dq = sqrt(pmqsdq/ pz);
 #endif
     // }}}
     
@@ -3161,52 +3155,73 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
   // }}}
   // Return results as KVG {{{
   kvg.append("data", "vit", new arr(vit));
-  kvg.append("data", "pSpeedGP", new arr(pSpeedGP));
-  kvg.append("data", "qSpeedGP", new arr(qSpeedGP));
-  kvg.append("data", "dpSpeedGP", new arr(dpSpeedGP));
-  kvg.append("data", "dqSpeedGP", new arr(dqSpeedGP));
+  kvg.append("data", "pSpeed", new arr(pSpeed));
+  kvg.append("data", "qSpeed", new arr(qSpeed));
+  kvg.append("data", "dpSpeed", new arr(dpSpeed));
+  kvg.append("data", "dqSpeed", new arr(dqSpeed));
   KeyValueGraph *plot;
   
-  plot = new KeyValueGraph();
-  plot->append("title", new String("Full System: Viterbi"));
-  plot->append("dataid", new bool(true));
-  plot->append("autolegend", new bool(true));
-  plot->append("stream", new double(.75));
-  plot->append("ymin", new double(-.1));
-  plot->append("ymax", new double(1.1));
-  plot->append("data", new String("vit"));
-  kvg.append("plot", plot);
+  //plot = new KeyValueGraph();
+  //plot->append("title", new String("Full System: Viterbi"));
+  //plot->append("dataid", new bool(true));
+  //plot->append("autolegend", new bool(true));
+  //plot->append("stream", new double(.75));
+  //plot->append("ymin", new double(-.1));
+  //plot->append("ymax", new double(1.1));
+  //plot->append("data", new String("vit"));
+  //kvg.append("plot", plot);
 
-  plot = new KeyValueGraph();
-  plot->append("title", new String("p, q"));
-  plot->append("dataid", new bool(true));
-  plot->append("autolegend", new bool(true));
-  plot->append("stream", new double(.75));
-  plot->append("data", new String("pSpeedGP"));
-  plot->append("data", new String("qSpeedGP"));
-  kvg.append("plot", plot);
+  //plot = new KeyValueGraph();
+  //plot->append("title", new String("p, q"));
+  //plot->append("dataid", new bool(true));
+  //plot->append("autolegend", new bool(true));
+  //plot->append("stream", new double(.75));
+  //plot->append("data", new String("pSpeed"));
+  //plot->append("data", new String("qSpeed"));
+  //kvg.append("plot", plot);
 
 #ifdef with_object_emission
-  kvg.append("data", "pBSpeedGP", new arr(pBSpeedGP));
-  kvg.append("data", "qBSpeedGP", new arr(qBSpeedGP));
+  kvg.append("data", "pBSpeed", new arr(pBSpeed));
+  kvg.append("data", "qBSpeed", new arr(qBSpeed));
 
-  plot = new KeyValueGraph();
-  plot->append("title", new String("pB, qB"));
-  plot->append("dataid", new bool(true));
-  plot->append("autolegend", new bool(true));
-  plot->append("stream", new double(.75));
-  plot->append("data", new String("pBSpeedGP"));
-  plot->append("data", new String("qBSpeedGP"));
-  kvg.append("plot", plot);
+  //plot = new KeyValueGraph();
+  //plot->append("title", new String("pBSpeed, qBSpeed"));
+  //plot->append("dataid", new bool(true));
+  //plot->append("autolegend", new bool(true));
+  //plot->append("stream", new double(.75));
+  //plot->append("data", new String("pBSpeed"));
+  //plot->append("data", new String("qBSpeed"));
+  //kvg.append("plot", plot);
 #endif
 
+  //plot = new KeyValueGraph();
+  //plot->append("title", new String("dp, dq"));
+  //plot->append("dataid", new bool(true));
+  //plot->append("autolegend", new bool(true));
+  //plot->append("stream", new double(.75));
+  //plot->append("data", new String("dpSpeed"));
+  //plot->append("data", new String("dqSpeed"));
+  //kvg.append("plot", plot);
+  
+  // TODO remove this, and uncomment the previous
+  force = true;
+  computeES(STRING("pos"), alpha, force);
+  computeSmooth(STRING("pos"), alpha, force);
+  computeSpeed(STRINGS("pos", "posES", "posSmooth"), force);
+  arr pSpeed_orig = s->g4d->query("posSpeed", bA);
+  arr pSpeed_smooth = s->g4d->query("posSmoothSpeed", bA);
+  arr pSpeed_es = s->g4d->query("posESSpeed", bA);
+  kvg.append("data", "pSpeed_orig", new arr(pSpeed_orig));
+  kvg.append("data", "pSpeed_smooth", new arr(pSpeed_smooth));
+  kvg.append("data", "pSpeed_es", new arr(pSpeed_es));
   plot = new KeyValueGraph();
-  plot->append("title", new String("dp, dq"));
+  plot->append("title", new String("Smoothing"));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
   plot->append("stream", new double(.75));
-  plot->append("data", new String("dpSpeedGP"));
-  plot->append("data", new String("dqSpeedGP"));
+  plot->append("data", new String("pSpeed_orig"));
+  plot->append("data", new String("pSpeed_smooth"));
+  plot->append("data", new String("pSpeed_es"));
   kvg.append("plot", plot);
   // }}}
 }

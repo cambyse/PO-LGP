@@ -1,15 +1,15 @@
-set(SOURCES ./opengl.cpp
-./opengl.h
-./plot.cpp
+set(SOURCES ./gtk.cpp
+./opengl.cpp
 ./mesh_lewiner.cpp
 ./geo_qhull.cpp
-./mesh.h
 ./plot.h
-./ors_opengl.cpp
 ./graphview.h
+./mesh.h
+./opengl.h
 ./graphview.cpp
-./gtk.cpp
 ./gtk.h
+./plot.cpp
+./mesh.cpp
 ./color.h
 ./opengl_qt.h
-./mesh.cpp)
+./ors_opengl.cpp)

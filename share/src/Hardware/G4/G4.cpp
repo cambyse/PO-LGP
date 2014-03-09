@@ -265,7 +265,8 @@ void G4Poller::step(){
   //cout << "currentPoses: " << currentPoses.get() << endl;
   poses.writeAccess();
   poses() = s->poses;
-  poses.tstamp() = s->tstamp.tv_sec + s->tstamp.tv_nsec / 1000000000.;
+  // modulo today
+  poses.tstamp() = s->tstamp.tv_sec % 86400 + s->tstamp.tv_nsec / 1000000000.;
   poses.deAccess();
   //cout << "currentPoses: " << currentPoses.get() << endl;
 }

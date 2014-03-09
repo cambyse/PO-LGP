@@ -1656,10 +1656,27 @@ void ors::KinematicWorld::clearForces() {
   }
 }
 
+/// apply a force on body n 
+void ors::KinematicWorld::addForce(ors::Vector force, Body *n) {
+  n->force += force;
+  if (!s->physx) {
+    NIY;
+  }
+  else {
+    s->physx->addForce(force, n);
+  }
+  //n->torque += (pos - n->X.p) ^ force;
+}
+
 /// apply a force on body n at position pos (in world coordinates)
 void ors::KinematicWorld::addForce(ors::Vector force, Body *n, ors::Vector pos) {
   n->force += force;
-  NIY;
+  if (!s->physx) {
+    NIY;
+  }
+  else {
+    s->physx->addForce(force, n, pos);
+  }
   //n->torque += (pos - n->X.p) ^ force;
 }
 
