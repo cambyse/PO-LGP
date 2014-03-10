@@ -31,7 +31,7 @@ void GraspEvaluation::closeFingers(){
       //grasp.reportProxies();
       gl.update();
       dmin=1.;
-      for_list(pi,p,grasp.proxies) if(p->d<dmin) dmin=p->d;
+      for_list(Type, p, grasp.proxies) if(p->d<dmin) dmin=p->d;
       if(dmin<1e-10){
 	q(i) -= step;
 	break;
@@ -55,7 +55,7 @@ void GraspEvaluation::getContactPoints(double distanceThreshold){
   //grasp.reportProxies();
   uint i;
   ors::Proxy *p;
-  for_list(i,p,grasp.proxies){
+  for_list(Type, p, grasp.proxies){
     ors::Vector contact, normal;
     if(grasp.shapes(p->a)->body->index==0){ //index==0 is the object
       contact=p->posA; normal=-p->normal;
@@ -100,7 +100,7 @@ void GraspEvaluation::copyGraspFromOrs(const ors::KinematicWorld& all,
   ors::Shape *obj = all.getShapeByName(objShapeName);
   MT::Array<ors::Body*> handBodies;
   handBodies.append(palm);
-  for_list(i,b,handBodies) for_list(j,l,b->outLinks) handBodies.append(l->to);
+  for_list(Type, b, handBodies) for_list(Type, l, b->outLinks) handBodies.append(l->to);
   cout <<"hand bodies:";  listWrite(handBodies, cout);
   cout <<endl;
 
@@ -116,15 +116,15 @@ void GraspEvaluation::copyGraspFromOrs(const ors::KinematicWorld& all,
   
   //copy hand
   MT::Array<ors::Body*> bodyMap(all.bodies.N);
-  for_list(i,b,handBodies){
+  for_list(Type, b, handBodies){
     bodyMap(b->index) = new ors::Body(grasp, b);
     bodyMap(b->index)->type = ors::kinematicBT;
-    for_list(j,s,b->shapes){
+    for_list(Type, s, b->shapes){
       new ors::Shape(grasp, bodyMap(b->index), s);
     }
   }
-  for_list(i,b,handBodies){
-    for_list(j,l,b->outLinks){
+  for_list(Type, b, handBodies){
+    for_list(Type, l, b->outLinks){
       CHECK(l->from->index == b->index,"");
       new ors::Joint(grasp, bodyMap(l->from->index), bodyMap(l->to->index), l);
     }

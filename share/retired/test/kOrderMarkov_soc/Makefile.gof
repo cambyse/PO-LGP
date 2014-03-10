@@ -4,4 +4,4 @@ OCTAVE = 1
 
 BUILDS += buildComponent/MT
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

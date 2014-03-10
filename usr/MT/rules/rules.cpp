@@ -72,7 +72,7 @@ void Rule::read(std::istream& is) {
     if (!s) {
       int r;
       uint j;
-      for_list(j,s,globalVars) {
+      for_list(Type, s, globalVars) {
         r=s->valueNames.findValue(varName);
         if (r>=0) {
           values.append(r);

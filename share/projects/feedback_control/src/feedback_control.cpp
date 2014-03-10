@@ -102,7 +102,7 @@ public:
     P.loadTransitionParameters();
 
     TaskCost *c;
-    c = P.addTaskMap("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
+    c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
     P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                             ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
@@ -112,14 +112,14 @@ public:
                                ARRAY(0.,0.,0.), 0.);
 
     if (useOrientation) {
-      c = P.addTaskMap("orientation", new DefaultTaskMap(vecTMT,G,"endeff",ors::Vector(0., 0., 0.)));
+      c = P.addTask("orientation", new DefaultTaskMap(vecTMT,G,"endeff",ors::Vector(0., 0., 0.)));
       P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                               ARRAY(0.,0.,-1.), 1e4,
                               ARRAY(0.,0.,0.), 1e-3);
     }
 
     if (useCollAvoid) {
-      c = P.addTaskMap("collision", new DefaultTaskMap(collTMT, 0, ors::Vector(0., 0., 0.), 0, ors::Vector(0., 0., 0.), ARR(.1)));
+      c = P.addTask("collision", new DefaultTaskMap(collTMT, 0, ors::Vector(0., 0., 0.), 0, ors::Vector(0., 0., 0.), ARR(.1)));
       P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e0);
     }
 

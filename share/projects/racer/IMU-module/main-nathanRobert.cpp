@@ -7,9 +7,9 @@ void testIMU(){
   struct MySystem:System{
     ACCESS(arr, imuData)
     MySystem(){
-      addModule<IMU_Poller>("IMU_Poller", ModuleThread::loopFull);
-      addModule<KalmanFilter>("KalmanFilter", ModuleThread::listenFirst);
-      addModule<RacerDisplay>("RacerDisplay", ModuleThread::loopWithBeat, 0.1);
+      addModule<IMU_Poller>("IMU_Poller", Module_Thread::loopFull);
+      addModule<KalmanFilter>("KalmanFilter", Module_Thread::listenFirst);
+      addModule<RacerDisplay>("RacerDisplay", Module_Thread::loopWithBeat, 0.1);
       connect();
     }
   } S;
@@ -21,8 +21,8 @@ void testIMU(){
 
 
   for(;;){
-    S.imuData.var->waitForNextWriteAccess();
-    if(S.imuData.get()()(0)>10.) break;
+    S.imuData.var->waitForNextRevision();
+    if(S.imuData.get()->(0)>10.) break;
   }
 
   //    engine().shutdown.waitForSignal();
@@ -38,14 +38,14 @@ void findBalancePoint(){
     ACCESS(arr, stateEstimate)
     ACCESS(arr, controls)
     MySystem(){
-      addModule<IMU_Poller>("IMU_Poller", ModuleThread::loopFull);
-      addModule<KalmanFilter>("KalmanFilter", ModuleThread::listenFirst);
-      addModule<RacerDisplay>("RacerDisplay", ModuleThread::loopWithBeat, 0.1);
-      addModule<Motors>("Motors", ModuleThread::loopFull);
+      addModule<IMU_Poller>("IMU_Poller", Module_Thread::loopFull);
+      addModule<KalmanFilter>("KalmanFilter", Module_Thread::listenFirst);
+      addModule<RacerDisplay>("RacerDisplay", Module_Thread::loopWithBeat, 0.1);
+      addModule<Motors>("Motors", Module_Thread::loopFull);
       connect();
     }
     double get_time() {
-      return imuData.get()()(0);
+      return imuData.get()->(0);
     }
   } S;
 
@@ -57,11 +57,11 @@ void findBalancePoint(){
 
   double start_time = -1;
   for(;;){
-    //S.imuData.var->waitForNextWriteAccess();
-    S.stateEstimate.var->waitForNextWriteAccess();
+    //S.imuData.var->waitForNextRevision();
+    S.stateEstimate.var->waitForNextRevision();
     if (start_time == -1) start_time = S.get_time();
 
-    S.controls.set()() = ARR(0., 0., 0.);
+    S.controls.set() = ARR(0., 0., 0.);
 
     double current_time = S.get_time();
     if (current_time - start_time > 0.25) {
@@ -70,7 +70,7 @@ void findBalancePoint(){
       cout << "[" << current_time << "] angle: " << x(1) << endl;
       start_time = current_time;
     }
-    //if(S.imuData.get()()(0)>10.) break;
+    //if(S.imuData.get()->(0)>10.) break;
   }
 
   //    engine().shutdown.waitForSignal();
@@ -84,7 +84,7 @@ void testMotors(){
   struct MySystem:System{
     ACCESS(arr, controls)
     MySystem(){
-      addModule<Motors>("Motors", ModuleThread::loopFull);
+      addModule<Motors>("Motors", Module_Thread::loopFull);
       connect();
     }
   } S;
@@ -93,13 +93,13 @@ void testMotors(){
 
   engine().open(S);
 
-  S.controls.set()() = ARR(128.,128.,10.);
+  S.controls.set() = ARR(128.,128.,10.);
   MT::wait(3);
-  S.controls.set()() = ARR(0.,0.,10.);
+  S.controls.set() = ARR(0.,0.,10.);
   MT::wait(3);
-  S.controls.set()() = ARR(128.,128.,1.);
+  S.controls.set() = ARR(128.,128.,1.);
   MT::wait(3);
-  S.controls.set()() = ARR(0.,0.,1.);
+  S.controls.set() = ARR(0.,0.,1.);
   MT::wait(3);
 
   engine().close(S);
@@ -131,14 +131,14 @@ void testBalance(){
     ACCESS(arr, stateEstimate)
     ACCESS(arr, controls)
     MySystem(){
-      addModule<IMU_Poller>("IMU_Poller", ModuleThread::loopFull);
-      addModule<KalmanFilter>("KalmanFilter", ModuleThread::listenFirst);
-      addModule<RacerDisplay>("RacerDisplay", ModuleThread::loopWithBeat, 0.1);
-      addModule<Motors>("Motors", ModuleThread::loopFull);
+      addModule<IMU_Poller>("IMU_Poller", Module_Thread::loopFull);
+      addModule<KalmanFilter>("KalmanFilter", Module_Thread::listenFirst);
+      addModule<RacerDisplay>("RacerDisplay", Module_Thread::loopWithBeat, 0.1);
+      addModule<Motors>("Motors", Module_Thread::loopFull);
       connect();
     }
     double get_time() {
-      return imuData.get()()(0);
+      return imuData.get()->(0);
     }
   } S;
 
@@ -152,7 +152,7 @@ void testBalance(){
   Sigmoid sigmoid(10.);
   double prev_time = -1;
   for(int i = 0;; ++i){
-    S.stateEstimate.var->waitForNextWriteAccess();
+    S.stateEstimate.var->waitForNextRevision();
     arr x = S.stateEstimate.get();
 
     double current_time = S.get_time();
@@ -182,9 +182,9 @@ void testBalance(){
       cerr << "ERROR: - limit hit" << endl;
       u = -127;
     }
-    S.controls.set()() = ARR(u, u, 10.);
+    S.controls.set() = ARR(u, u, 10.);
 
-    //if(S.imuData.get()()(0)>10.) break;
+    //if(S.imuData.get()->(0)>10.) break;
   }
 
   //    engine().shutdown.waitForSignal();

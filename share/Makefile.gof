@@ -6,22 +6,23 @@ target: src
 
 NAME   = $(shell basename $(PWD))
 
-srcs =  $(shell find src -mindepth 1 -maxdepth 1 -type d -not -name 'extern' -not -name 'CMakeFiles' -not -name 'retired')
-srcs += $(shell find src/extern -mindepth 1 -maxdepth 1 -type d -not -name 'CMakeFiles')
-exas = $(shell find examples -mindepth 2 -maxdepth 2 -type d -not -name '*py' -not -name 'CMakeFiles')
-pysrcs = src/Core src/Ors src/Gui src/Motion src/Optim
+src_paths =  $(shell find src -mindepth 1 -maxdepth 1 -type d -not -name 'extern' -not -name 'CMakeFiles' -not -name 'retired')
+src_paths += $(shell find src/extern -mindepth 1 -maxdepth 1 -type d -not -name 'CMakeFiles')
+#exa_paths = $(shell find examples -mindepth 2 -maxdepth 2 -type d -not -name '*py' -not -name 'CMakeFiles')
+exa_paths = $(shell find examples -maxdepth 3 -name 'Makefile.gof' | grep -o '.*/')
+pysrc_paths = src/Core src/Ors src/Gui src/Motion src/Optim
 
 ################################################################################
 
-all: $(srcs:%=makePath/%) $(exas:%=makePath/%)
+all: $(src_paths:%=makePath/%) $(exa_paths:%=makePath/%)
 
-src: $(srcs:%=makePath/%)
+src: $(src_paths:%=makePath/%)
 
-python: $(srcs:%=makePath/%) $(pysrcs:%=makePythonPath/%)
+python: $(src_paths:%=makePath/%) $(pysrc_paths:%=makePythonPath/%)
 
-examples: $(exas:%=makePath/%)
+examples: $(exa_paths:%=makePath/%)
 
-depend: $(srcs:%=dependPath/%)
+depend: $(src_paths:%=dependPath/%)
 
 clean: force
 	@find $(BASE) -type d -name 'Make.lock' -delete -print
@@ -31,14 +32,15 @@ cleanLocks: force
 	@find $(BASE) -type d -name 'Make.lock' -delete -print
 	@find $(BASE) -type f -name '.lastMake' -delete -print
 
-cleanAll: $(srcs:%=cleanPath/%) $(exas:%=cleanPath/%) cleanLocks
+cleanAll: $(src_paths:%=cleanPath/%) $(exa_paths:%=cleanPath/%) cleanLocks
 
 cleanCmake:
 	@find . -type f \( -name 'CMakeCache.txt' -or -name 'CTestTestfile.cmake' -or -name 'cmake_install.cmake' \) -print -delete
 	@find . -type d \( -name 'CMakeFiles' \) -exec rm -Rf {} \;
 
 inf:
-	@echo "srcs =" $(srcs)
+	@echo "src_paths =" $(src_paths)
+	@echo "exa_paths =" $(exa_paths)
 
 ################################################################################
 
@@ -51,8 +53,8 @@ reformatSources:
 	cd src; find MT/ \( -name "*.h" -or -name "*.cpp" -or -name "*.cxx" \) -exec ./style.sed.sh {} \;
 
 %.tgz:: force
-	mv -f make-config make-config.mine
-	cp -f slices/$*.make-config ./make-config
+	-mv -f gofMake/config.mk gofMake/config.mk.mine
+	cp -f slices/$*.config.mk ./gofMake/config.mk
 	rm -f $*.tgz;
 	cd ..; \
 	tar cvzf $*.tgz --exclude-vcs \
@@ -60,7 +62,7 @@ reformatSources:
 	--files-from $(PWD)/slices/$*.tar.incl \
 	--exclude-from $(PWD)/slices/tar.excl \
 	--exclude-from $(PWD)/slices/$*.tar.excl
-	cp -f make-config.mine make-config
+	cp -f gofMake/config.mk.mine gofMake/config.mk
 
 makePath/%: %
 	+@-$(BASE)/gofMake/make-path.sh $<
@@ -72,4 +74,4 @@ cleanPath/%: %
 
 force:	;
 
-#include gofMake/make-generic
+#include gofMake/generic.mk

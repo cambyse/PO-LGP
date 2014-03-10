@@ -20,4 +20,4 @@ OBJS := $(OBJS:%.cpp=%.o)
 OBJS += ../MT/array.o \
 	../MT/util.o
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

@@ -6,8 +6,9 @@ GL = 1
 PHYSX = 1
 ODE = 1
 DEPEND = Core Algo Gui extern_SWIFT
+CXXFLAGS += -Wno-unknown-pragmas -Wno-unused-local-typedefs
 
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS = $(SRCS:%.cpp=%.o)
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

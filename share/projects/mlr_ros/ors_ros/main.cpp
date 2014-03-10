@@ -45,7 +45,7 @@ void createScene(ors::KinematicWorld& ors, OpenGL& gl) {
     s->type=ors::meshST;
     s->mesh.readFile("pin1.off");
   }
-  ors.calcShapeFramesFromBodies();
+  //ors.calcShapeFramesFromBodies();
   cout <<ors <<endl;
 
   gl.clear();
@@ -77,7 +77,7 @@ public:
     if(revision < world.var->revisionNumber()) {
       w = world.get();
     }
-    if(do_physics.get()()) {
+    if(do_physics.get()) {
       w.physx().step();
       world.set() = w;
       revision = world.var->revisionNumber();
@@ -90,13 +90,13 @@ REGISTER_MODULE(SetupWorld);
 void run() {
   System S;
 
-  S.addModule<SetupWorld>("SetupWorld", ModuleThread::loopWithBeat, .03); // ~30 Hz
-  S.addModule<RosTf>("RosTf", ModuleThread::loopWithBeat, .03);
-  S.addModule<PhysicsMenu>("PhysicsMenu", ModuleThread::loopWithBeat, .03);
+  S.addModule<SetupWorld>("SetupWorld", Module_Thread::loopWithBeat, .03); // ~30 Hz
+  S.addModule<RosTf>("RosTf", Module_Thread::loopWithBeat, .03);
+  S.addModule<PhysicsMenu>("PhysicsMenu", Module_Thread::loopWithBeat, .03);
   S.connect();
   cout << S << endl; // get some info
 
-  S.getAccess<bool>("do_physics")->set()() = true;
+  S.getAccess<bool>("do_physics")->set() = true;
 
   // run it
   engine().open(S);

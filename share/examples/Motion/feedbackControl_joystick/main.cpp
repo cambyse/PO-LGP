@@ -1,12 +1,12 @@
 #include <Ors/ors.h>
 #include <Motion/feedbackControl.h>
-#include <Hardware/joystick.h>
+#include <Hardware/joystick/joystick.h>
 #include <System/engine.h>
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
 
 #include "simulator.h"
-#include "joystick2tasks.h"
+#include <Motion/gamepad2tasks.h>
 
 void testSimulator(){
   struct MySystem:System{
@@ -16,15 +16,15 @@ void testSimulator(){
     ACCESS(arr, qdot_obs);
     ACCESS(arr, joystickState);
     MySystem(){
-      addModule<PR2Simulator>(NULL, ModuleThread::loopWithBeat, .001);
-      addModule<JoystickInterface>(NULL, ModuleThread::loopWithBeat, .01);
+      addModule<PR2Simulator>(NULL, Module_Thread::loopWithBeat, .001);
+      addModule<JoystickInterface>(NULL, Module_Thread::loopWithBeat, .01);
       connect();
     }
   } S;
 
   ors::KinematicWorld world("model.kvg");
   FeedbackMotionControl MP(world, false);
-  Joystick2Tasks j2t(MP);
+  Gamepad2Tasks j2t(MP);
   arr q, qdot;
   world.getJointState(q, qdot);
   MP.nullSpacePD.y_ref = q;
@@ -35,7 +35,7 @@ void testSimulator(){
   engine().open(S);
 
   for(;;){
-    S.qdot_obs.var->waitForNextWriteAccess();
+    S.qdot_obs.var->waitForNextRevision();
     arr joy = S.joystickState.get();
     MP.setState(S.q_obs.get(), S.qdot_obs.get());
     MP.world.gl().update("operational space sim");

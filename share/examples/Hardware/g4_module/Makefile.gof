@@ -1,7 +1,5 @@
 BASE = ../../..
 
-OBJS = main.o
+DEPEND = Hardware_G4 Core System
 
-DEPEND = Core System Hardware_G4
-
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

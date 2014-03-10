@@ -1,10 +1,12 @@
 #ifndef MT_gui_h
 #define MT_gui_h
 
-#include "win_ui.h"
+#include <QtCore/QTextStream>
+#include <QtCore/QEvent>
 #include <QtGui/QFileDialog>
 #include <QtGui/QMessageBox>
 #include <iostream>
+#include "win_ui.h"
 
 class Gui:public QDialog{
 Q_OBJECT

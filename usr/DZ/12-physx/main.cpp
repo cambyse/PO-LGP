@@ -159,11 +159,11 @@ void problem4(){
    ors::Body *bb;
     uint i;
  /*
-    for_list(i,jj,ors.joints) { 
+    for_list(Type, jj, ors.joints) { 
        jj->type  = ors::JT_fixed; 
   }
    */
-    for_list(i,bb,ors.bodies){
+    for_list(Type, bb, ors.bodies){
       if (bb->index>7) bb->type  = ors::dynamicBT; 
      else 
 	bb->type = ors::kinematicBT; ;//ors::staticBT; 

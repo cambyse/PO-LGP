@@ -1,0 +1,15 @@
+struct Object{
+  byteA currentAppearance; ///< 2D pixel appearance for pixel-based tracking
+  geo::Transformation pose; ///< MAP position and quaternion
+
+  Kalman 2Dtracker;
+  Kalman 3Dtracker;
+      
+  double posePrecision;
+  String name;
+  geo::Mesh mesh;
+  uint ID;
+  LitL constantLiterals; ///< constant properties of the object
+  
+  
+};

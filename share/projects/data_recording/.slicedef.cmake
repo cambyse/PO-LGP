@@ -1,3 +1,7 @@
 set(CURRENT_SLICE 
- g4_data_analysis
+  controllability
+  g4-video
+  g4-segment
+  g4-recorder
+  tomsy-recorder
  )

@@ -23,8 +23,7 @@ void randomPairNet(infer::VariableList& vars,infer::FactorList &facs,uint N,uint
   
   //-- generate evidence factors
   infer::Factor evid;
-  infer::Variable *v;
-  for_list(i,v,vars) if(v->factors.N){
+  for(infer::Variable *v: vars) if(v->factors.N){
     f=v->factors(0);
     evid.init(ARRAY(v));
     evid.setText("[.2 .8]");

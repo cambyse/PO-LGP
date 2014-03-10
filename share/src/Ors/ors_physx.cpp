@@ -165,13 +165,10 @@ PhysXInterface::PhysXInterface(ors::KinematicWorld& _world): world(_world), s(NU
   s->gScene->addActor(*plane);
   // create ORS equivalent in PhysX
   // loop through ors
-  uint i;
-  ors::Body* b;
-  for_list(i, b, world.bodies) s->addBody(b, mMaterial);
+  for_list(ors::Body,  b,  world.bodies) s->addBody(b, mMaterial);
 
   /// ADD joints here!
-  ors::Joint* jj;
-  for_list(i, jj, world.joints) s->addJoint(jj);
+  for_list(ors::Joint,  jj,  world.joints) s->addJoint(jj);
 }
 
 PhysXInterface::~PhysXInterface() {
@@ -180,10 +177,8 @@ PhysXInterface::~PhysXInterface() {
 
 void PhysXInterface::step(double tau) {
   //-- push positions of all kinematic objects
-  uint i;
-  ors::Body *b;
-  for_list(i,b,world.bodies) if(b->type==ors::kinematicBT) {
-    ((PxRigidDynamic*)s->actors(i))->setKinematicTarget(OrsTrans2PxTrans(b->X));
+  for_list(ors::Body, b, world.bodies) if(b->type==ors::kinematicBT) {
+    ((PxRigidDynamic*)s->actors(b_COUNT))->setKinematicTarget(OrsTrans2PxTrans(b->X));
   }
   
   //-- dynamic simulation
@@ -227,20 +222,30 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
     case ors::JT_hingeX: 
     case ors::JT_hingeY:
     case ors::JT_hingeZ: {
-      //  CHECK(A.p!=B.p,"Something is horribly wrong!");
-      PxRevoluteJoint* desc = PxRevoluteJointCreate(*mPhysics, actors(jj->ifrom), A, actors(jj->ito), B.getInverse());
+      PxD6Joint *desc = PxD6JointCreate(*mPhysics, actors(jj->ifrom), A, actors(jj->ito), B.getInverse());
+
+
+      if(jj->ats.getValue<arr>("drive")) {
+        arr drive_values = *jj->ats.getValue<arr>("drive");
+        PxD6JointDrive drive(drive_values(0), drive_values(1), PX_MAX_F32, true);
+        desc->setDrive(PxD6Drive::eTWIST, drive);
+      }
       
       if(jj->ats.getValue<arr>("limit")) {
+        desc->setMotion(PxD6Axis::eTWIST, PxD6Motion::eLIMITED);
+
         arr limits = *(jj->ats.getValue<arr>("limit"));
         PxJointLimitPair limit(limits(0), limits(1), 0.1f);
         limit.restitution = limits(2);
-        limit.spring = limits(3);
-        limit.damping= limits(4);
-        desc->setLimit(limit);
-        desc->setRevoluteJointFlag(physx::PxRevoluteJointFlag::eLIMIT_ENABLED, true);
-        //desc->setProjectionAngularTolerance(3.14);
+        if(limits(3)>0) {
+          limit.spring = limits(3);
+          limit.damping= limits(4);
+        }
+        desc->setTwistLimit(limit);
       }
-      
+      else {
+        desc->setMotion(PxD6Axis::eTWIST, PxD6Motion::eFREE);
+      }
     }
     break;
     case ors::JT_fixed: {
@@ -257,16 +262,28 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
     case ors::JT_transY:
     case ors::JT_transZ:
     {
-      PxPrismaticJoint* desc = PxPrismaticJointCreate(*mPhysics, actors(jj->ifrom), A, actors(jj->ito), B.getInverse());
+      PxD6Joint *desc = PxD6JointCreate(*mPhysics, actors(jj->ifrom), A, actors(jj->ito), B.getInverse());
+
+      if(jj->ats.getValue<arr>("drive")) {
+        arr drive_values = *jj->ats.getValue<arr>("drive");
+        PxD6JointDrive drive(drive_values(0), drive_values(1), PX_MAX_F32, true);
+        desc->setDrive(PxD6Drive::eX, drive);
+      }
+      
       if(jj->ats.getValue<arr>("limit")) {
+        desc->setMotion(PxD6Axis::eX, PxD6Motion::eLIMITED);
+
         arr limits = *(jj->ats.getValue<arr>("limit"));
-        PxJointLimitPair limit(limits(0), limits(1), 0.1f);
+        PxJointLimit limit(limits(0), 0.1f);
         limit.restitution = limits(2);
-        limit.spring = limits(3);
-        limit.damping= limits(4);
-        desc->setLimit(limit);
-        desc->setPrismaticJointFlag(physx::PxPrismaticJointFlag::eLIMIT_ENABLED, true);
-        //desc->setProjectionAngularTolerance(3.14);
+        if(limits(3)>0) {
+          limit.spring = limits(3);
+          limit.damping= limits(4);
+        }
+        desc->setLinearLimit(limit);
+      }
+      else {
+        desc->setMotion(PxD6Axis::eX, PxD6Motion::eFREE);
       }
     }
     break;
@@ -276,8 +293,6 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
 }
 
 void sPhysXInterface::addBody(ors::Body *b, physx::PxMaterial *mMaterial) {
-  uint j;
-  ors::Shape* s;
   PxRigidDynamic* actor;
   switch(b->type) {
     case ors::staticBT:
@@ -296,7 +311,7 @@ void sPhysXInterface::addBody(ors::Body *b, physx::PxMaterial *mMaterial) {
       break;
   }
   CHECK(actor, "create actor failed!");
-  for_list(j, s, b->shapes) {
+  for_list(ors::Shape,  s,  b->shapes) {
     PxGeometry* geometry;
     switch(s->type) {
       case ors::boxST: {
@@ -342,27 +357,36 @@ void sPhysXInterface::addBody(ors::Body *b, physx::PxMaterial *mMaterial) {
     }
     //actor = PxCreateDynamic(*mPhysics, OrsTrans2PxTrans(s->X), *geometry, *mMaterial, 1.f);
   }
-  if(b->ats.getValue<double>("mass")) {
-    PxRigidBodyExt::setMassAndUpdateInertia(*actor, *(b->ats.getValue<double>("mass")));
-  }
-  if (b->type == ors::dynamicBT) {
-    if(!b->ats.getValue<double>("mass")) 
-      PxRigidBodyExt::updateMassAndInertia(*actor, 1.f);
-  }
   if(b->type == ors::dynamicBT) {
-    PxRigidBodyExt::updateMassAndInertia(*actor, 1.f);
+    if(b->mass) {
+      PxRigidBodyExt::setMassAndUpdateInertia(*actor, b->mass);
+    }
+    else {
+      PxRigidBodyExt::updateMassAndInertia(*actor, 1.f);
+    }
     actor->setAngularDamping(0.75);
     actor->setLinearVelocity(PxVec3(b->X.vel.x, b->X.vel.y, b->X.vel.z));
     actor->setAngularVelocity(PxVec3(b->X.angvel.x, b->X.angvel.y, b->X.angvel.z));
   }
   gScene->addActor(*actor);
+  actor->userData = b;
 
   actors.append(actor);
   //WARNING: actors must be aligned (indexed) exactly as G->bodies
+  // TODO: we could use the data void pointer of an actor instead?
 }
 
 void PhysXInterface::pullFromPhysx() {
-  for_index(i, s->actors) PxTrans2OrsTrans(world.bodies(i)->X, s->actors(i)->getGlobalPose());
+  for_list(PxRigidActor, a, s->actors) {
+    PxTrans2OrsTrans(world.bodies(a_COUNT)->X, a->getGlobalPose());
+    if(a->getType() == PxActorType::eRIGID_DYNAMIC) {
+      PxRigidBody *px_body = (PxRigidBody*) a;
+      PxVec3 vel = px_body->getLinearVelocity();
+      PxVec3 angvel = px_body->getAngularVelocity();
+      world.bodies(a_COUNT)->X.vel = ors::Vector(vel[0], vel[1], vel[2]);
+      world.bodies(a_COUNT)->X.angvel = ors::Vector(angvel[0], angvel[1], angvel[2]);
+    }
+  }
   world.calc_fwdPropagateShapeFrames();
   world.calc_Q_from_BodyFrames();
   world.calc_q_from_Q();
@@ -370,19 +394,19 @@ void PhysXInterface::pullFromPhysx() {
 
 void PhysXInterface::pushToPhysx() {
   PxMaterial* mMaterial = mPhysics->createMaterial(1.f, 1.f, 0.5f);
-  for_index(i, world.bodies) {
-    if(s->actors.N > i) {
-      s->actors(i)->setGlobalPose(OrsTrans2PxTrans(world.bodies(i)->X));
+  for_list(ors::Body, b, world.bodies) {
+    if(s->actors.N > b_COUNT) {
+      s->actors(b_COUNT)->setGlobalPose(OrsTrans2PxTrans(b->X));
     } else {
-      s->addBody(world.bodies(i), mMaterial);
+      s->addBody(b, mMaterial);
     }
   }
 }
 
 void PhysXInterface::ShutdownPhysX() {
-  for_index(i, s->actors) {
-    s->gScene->removeActor(*s->actors(i));
-    s->actors(i)->release();
+  for_list(PxRigidActor, a, s->actors) {
+    s->gScene->removeActor(*a);
+    a->release();
   }
   s->gScene->release();
   mPhysics->release();
@@ -446,14 +470,25 @@ void DrawActor(PxRigidActor* actor, ors::Body *body) {
 }
 
 void PhysXInterface::glDraw() {
-  for_index(i, s->actors)  DrawActor(s->actors(i), world.bodies(i));
+  for_list(PxRigidActor, a, s->actors)  DrawActor(a, world.bodies(a_COUNT));
 }
 
 void glPhysXInterface(void *classP) {
   ((PhysXInterface*)classP)->glDraw();
 }
 
+void PhysXInterface::addForce(ors::Vector& force, ors::Body* b) {
+  PxVec3 px_force = PxVec3(force.x, force.y, force.z);
+  PxRigidBody *actor = (PxRigidBody*) (s->actors(b->index)); // dynamic_cast fails for missing RTTI in physx
+  actor->addForce(px_force);
+}
 
+void PhysXInterface::addForce(ors::Vector& force, ors::Body* b, ors::Vector& pos) {
+  PxVec3 px_force = PxVec3(force.x, force.y, force.z);
+  PxVec3 px_pos = PxVec3(pos.x, pos.y, pos.z);
+  PxRigidBody *actor = (PxRigidBody*)(s->actors(b->index));
+  PxRigidBodyExt::addForceAtPos(*actor, px_force, px_pos);
+}
 ///////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -569,6 +604,8 @@ void PhysXInterface::pullFromPhysx() { NICO }
 void PhysXInterface::setArticulatedBodiesKinematic(int agent) { NICO }
 void PhysXInterface::ShutdownPhysX() { NICO }
 void PhysXInterface::glDraw() { NICO }
+void PhysXInterface::addForce(ors::Vector& force, ors::Body* b) { NICO }
+void PhysXInterface::addForce(ors::Vector& force, ors::Body* b, ors::Vector& pos) { NICO }
 
 void glPhysXInterface(void *classP) { NICO }
 void bindOrsToPhysX(ors::KinematicWorld& graph, OpenGL& gl, PhysXInterface& physx) { NICO }

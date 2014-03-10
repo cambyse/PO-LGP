@@ -60,11 +60,7 @@
 #include "SWIFT_array.h"
 
 extern "C" {
-#ifdef ARCH_LINUX
-#include <libqhull/qhull_a.h>
-#else
 #include <qhull/qhull_a.h>
-#endif
 }
 
 // Call this before calling any other mesh utils functions

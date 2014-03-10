@@ -9,12 +9,10 @@ QT = 1## comment this line if you don't want to compile the GUI
 
 default: mdp.exe
 
-ifdef QT
 OBJS := gui_moc.o $(OBJS)
 gui_moc.o: gui_ui.h gui_moc.cpp
-endif
 
 CLEAN = *_moc.cpp *_ui.h MT.log
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk
 

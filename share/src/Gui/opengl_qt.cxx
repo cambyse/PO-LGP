@@ -87,9 +87,9 @@ void OpenGL::enterEventLoop(){ qtApp->exec(); }
 void OpenGL::exitEventLoop(){  qtApp->exit(); }
 
 
-int OpenGL::width(){  return s->QGLWidget::width(); }
+//int OpenGL::width(){  return s->QGLWidget::width(); }
 
-int OpenGL::height(){ return s->QGLWidget::height(); }
+//int OpenGL::height(){ return s->QGLWidget::height(); }
 
 /// resize the window
 void OpenGL::resize(int w,int h){

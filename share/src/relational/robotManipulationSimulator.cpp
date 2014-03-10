@@ -282,9 +282,7 @@ void RobotManipulationSimulator::watch() {
 
 void RobotManipulationSimulator::indicateFailure() {
   // drop object
-  ors::Joint* e;
-  uint i;
-  for_list(i,e,getBodyByName("fing1c")->outLinks) {
+  for_list(ors::Joint, e, getBodyByName("fing1c")->outLinks) {
     del_edge(e,bodies,joints,true); //otherwise: no object in hand
   }
   std::cerr << "RobotManipulationSimulator: CONTROL FAILURE" << endl;

@@ -25,7 +25,7 @@ void loopSerialized(const ProcessL& P) {
     }
     Process* p;
     uint i;
-    for_list(i, p, P) {
+    for_list(Type,  p,  P) {
       //cout << "checking " << p->id << endl;
       if ((int) p->id == pID) {
         cout << "step by process " << pID << endl;
@@ -96,7 +96,7 @@ Threadless::Threadless() :
   MT::Array<MT::String> filenames;
   s->getdir(filenames, MT::String("./log/"));
   MT::String name;
-  for_list_(name, filenames) {
+  for_list(name, filenames) {
     if ('a' == name(0)) {
       s->readfile(name);
     }

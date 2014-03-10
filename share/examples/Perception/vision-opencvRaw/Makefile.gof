@@ -3,4 +3,4 @@ BASE = ../../..
 OPENCV = 1
 DEPEND = Core Gui Perception
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

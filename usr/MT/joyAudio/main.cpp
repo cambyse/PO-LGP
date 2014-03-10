@@ -6,7 +6,7 @@
 //  struct MySystem:System{
 //    ACCESS(arr, joystickState);
 //    MySystem(){
-//      addModule<JoystickInterface>(NULL, ModuleThread::loopWithBeat, .01);
+//      addModule<JoystickInterface>(NULL, Module_Thread::loopWithBeat, .01);
 //      connect();
 //    }
 //  } S;

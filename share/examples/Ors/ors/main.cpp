@@ -52,7 +52,7 @@ void TEST(Kinematics){
   };
 
   //ors::KinematicWorld G("test.ors");
-  ors::KinematicWorld G("../../../data/pr2_model/pr2_clean_comfi.ors");
+  ors::KinematicWorld G("../../../data/pr2_model/pr2-3-comfi.ors");
   uint n=G.getJointStateDimension();
   arr x(n);
   ors::Vector vec;

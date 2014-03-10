@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
     while(!allClosed) {
       MT::wait(1.);
       allClosed = true;
-      for_list(i, p, P)  if(!p->isClosed())
+      for_list(Type,  p,  P)  if(!p->isClosed())
           allClosed = false;
       cout << step << endl;
       step++;
