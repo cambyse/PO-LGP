@@ -24,8 +24,6 @@ TStream tout(cout);
 
 struct sUEyeInterface {
   public:
-    UEyePoller *module;
-
     HIDS camID;
     SENSORINFO camInfo;
     String name;
@@ -50,14 +48,14 @@ struct sUEyeInterface {
 
     bool setup_flag, init_flag, open_flag, err_flag; // TODO err_flag?
 
-    sUEyeInterface(UEyePoller *m);
+    sUEyeInterface(int cameraID, UEyePoller *m);
     ~sUEyeInterface();
 
     // NB very important, never call these if process is underway
     void camSetup();
     void camInit();
     void camOpen();
-    void camGrab();
+    void camGrab(byteA& image, double& timestamp);
     void camClose();
     void camExit();
 
@@ -102,9 +100,9 @@ struct sUEyeInterface {
     void handleCaptStatus();
 };
 
-sUEyeInterface::sUEyeInterface(UEyePoller *m): module(m), img(NULL), setup_flag(false), init_flag(false), open_flag(false), err_flag(false) {
-  camID = MT::getParameter<int>(STRING(m->name << "_camID"));
-  tout.reg(this) << "UEyeCamera(" << camID << "): ";
+sUEyeInterface::sUEyeInterface(int cameraID, UEyePoller *m): camID(cameraID), img(NULL), setup_flag(false), init_flag(false), open_flag(false), err_flag(false) {
+	//camID = MT::getParameter<int>(STRING(m->name << "_camID"));
+	tout.reg(this) << "UEyeCamera(" << camID << "): ";
 }
 
 sUEyeInterface::~sUEyeInterface() {
@@ -132,7 +130,6 @@ void sUEyeInterface::camSetup() {
   }
 
   tout(this) << "camSetup()" << endl;
-  module->ueye_rgb.set()().resize(c_ueye_height, c_ueye_width, c_ueye_bypp);
   setup_flag = true;
   frame_count = 0;
 }
@@ -248,7 +245,7 @@ void sUEyeInterface::camOpen() {
   open_flag = true;
 }
 
-void sUEyeInterface::camGrab() {
+void sUEyeInterface::camGrab(byteA& image, double& timestamp) {
   if(!setup_flag || !init_flag || !open_flag) {
     err_flag = true;
     return;
@@ -258,10 +255,10 @@ void sUEyeInterface::camGrab() {
   imgBuffNum = 0;
   WaitForNextImage_wr();
   updateTimestamp();
-  int r = module->ueye_rgb.writeAccess();
-  memcpy(module->ueye_rgb().p, img, c_ueye_size);
-  module->ueye_rgb.tstamp() = tstamp;
-  module->ueye_rgb.deAccess();
+  // make sure receiver is large enough
+  image.resize(c_ueye_height, c_ueye_width, c_ueye_bypp);
+  memcpy(image.p, img, c_ueye_size);
+  timestamp = tstamp;
   
   UnlockSeqBuf_wr(imgBuffNum, img);
 
@@ -638,7 +635,7 @@ UEyePoller::~UEyePoller() {
 void UEyePoller::open() {
   tout(this) << "opening" << endl;
 
-  s = new sUEyeInterface(this);
+  s = new sUEyeInterface(MT::getParameter<int>(STRING(name << "_camID")), this);
 
   s->camSetup();
   s->camInit();
@@ -648,7 +645,8 @@ void UEyePoller::open() {
 }
 
 void UEyePoller::step() {
-  s->camGrab();
+	Access_typed<byteA>::WriteToken token(&ueye_rgb);
+	s->camGrab(ueye_rgb(), ueye_rgb.tstamp());
 }
 
 void UEyePoller::close() {

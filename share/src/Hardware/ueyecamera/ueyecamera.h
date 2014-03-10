@@ -3,6 +3,15 @@
 #include<sys/time.h>
 #include <Core/module.h>
 
+namespace MLR {
+class UEyeInterface {
+private:
+	struct sUEyeInterface *s;
+public:
+	UEyeInterface(const uint cameraID);
+};
+}
+
 struct UEyePoller: Module {
   struct sUEyeInterface *s;
 
