@@ -120,13 +120,13 @@ void sUEyeInterface::camSetup() {
   int ret;
   switch((ret = is_Configuration(IS_CONFIG_OPEN_MP_CMD_SET_ENABLE, &enable, 4))) {
       case IS_SUCCESS:
-      std::clog << "Using OpenMP for uEYE color conversion" << endl;
+      tout(this) << "Using OpenMP for uEYE color conversion" << endl;
       break;
     case IS_NOT_SUPPORTED:
-      std::clog << "OpenMP for uEYE color conversion not supported" << endl;
+      tout(this) << "OpenMP for uEYE color conversion not supported" << endl;
       break;
   default:
-      std::clog << "Error configuring OpenMP: " << ret << endl;
+      tout(this) << "Error configuring OpenMP: " << ret << endl;
   }
 
   tout(this) << "camSetup()" << endl;
