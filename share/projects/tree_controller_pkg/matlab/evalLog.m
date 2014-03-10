@@ -9,6 +9,7 @@ if NEW
   if SIM
     unix(['cp ~/.ros/*.output ', folder]);
   else
+    %unix(['sshpass -p *** scp pr2admin@bigbirdc1:.ros/*.output ', folder]);
     unix(['scp pr2admin@bigbirdc1:.ros/*.output ', folder]);
   end
 end

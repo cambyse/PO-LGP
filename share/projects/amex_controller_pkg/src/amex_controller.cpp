@@ -25,7 +25,7 @@ void AmexController::startController(){
   double dtReal = dtAmex;
 
   /// Run Controller until goal is reached
-  while (ros::ok() && (amex->s.last() < 0.95))
+  while (ros::ok() && (amex->s.last() < 0.98))
   {
     double last_time = ros::Time::now().toSec();
     runAmex(dtReal);
@@ -37,11 +37,24 @@ void AmexController::startController(){
   ROS_INFO("AMEX CONTROLLER: COMPLETE");
   ROS_INFO("-------------------------");
 
-  /// Set Velocity to zero after execution
+  /// Set Velocity to zero after execution and position to target position
+  for(uint i=0;i<3;i++) setPosTargetSrv.request.pos[i] = amex->goal(i);
   for(uint i=0;i<3;i++) setPosTargetSrv.request.vel[i] = 0.;
   for(uint i=0;i<3;i++) setVecTargetSrv.request.vel[i] = 0.;
   setPosTargetClient.call(setPosTargetSrv);
   setVecTargetClient.call(setVecTargetSrv);
+
+
+  arr pos_task_gains = {1000.,100.,1};
+  for(uint i=0;i<3;i++) setTaskGainsSrv.request.pos_gains[i] = pos_task_gains(i);
+
+//  pos_gains = {200,200,100,100,50,40,40};
+//  vel_gains = {50,50,10,10,5,15,10};
+//  for(uint i=0;i<NUM_JOINTS;i++) setJointGainsSrv.request.pos_gains[i] = pos_gains(i);
+//  for(uint i=0;i<NUM_JOINTS;i++) setJointGainsSrv.request.vel_gains[i] = vel_gains(i);
+
+  setTaskGainsClient.call(setTaskGainsSrv);
+//  setJointGainsClient.call(setJointGainsSrv);
 }
 
 void AmexController::runAmex(double dtReal) {
@@ -92,8 +105,9 @@ void AmexController::initController(){
   /// Set Joint PD Gains
   pos_gains = {200,200,100,100,50,40,40};
   vel_gains = {50,50,10,10,5,15,10};
-  i_gains = pos_gains*0.1;
-  i_claim = {3.,3.,3.,2.,2.,3.,1.5};
+  vel_gains = vel_gains * 8.;
+  i_gains = pos_gains*0.4;
+  i_claim = {3.,3.,3.,3.,2.,3.,1.5};
 
   cout << "pos_gains" << pos_gains << endl;
   cout << "vel_gains" << vel_gains << endl;
@@ -107,7 +121,7 @@ void AmexController::initController(){
   setJointGainsClient.call(setJointGainsSrv);
 
   /// Set Task PD Gains
-  arr pos_task_gains = {1.,1.,1};
+  arr pos_task_gains = {10.,10.,1};
   arr vel_task_gains = {100.,100.,100.};
   arr task_precisions = {10000.,100.,100.};
 
