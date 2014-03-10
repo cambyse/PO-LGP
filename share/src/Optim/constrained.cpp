@@ -12,6 +12,7 @@ double UnconstrainedProblem::fs(arr& df, arr& Hf, const arr& x){
 
 //  if(&Hf && Hf.special) Hf = unpack(Hf);
 //  if(Jg.special) Jg = unpack(Jg);
+//  cout <<"g= " <<g <<" lambda= " <<lambda <<endl;
 
   //in log barrier case, check feasibility
   if(muLB)     for(uint i=0;i<g.N;i++) if(g(i)>0.) return NAN; //CHECK(phi(i)<=0., "log barrier: constraints must be fulfiled!");
@@ -19,6 +20,8 @@ double UnconstrainedProblem::fs(arr& df, arr& Hf, const arr& x){
   if(muLB)     for(uint i=0;i<g.N;i++) f -= muLB * ::log(-g(i));  //log barrier
   if(mu)       for(uint i=0;i<g.N;i++) if(g(i)>0. || (lambda.N && lambda(i)>0.)) f += mu * MT::sqr(g(i));  //penalty
   if(lambda.N) for(uint i=0;i<g.N;i++) if(lambda(i)>0.) f += lambda(i) * g(i);  //augments
+
+  f += f0;
 
   if(&df){
     arr coeff(Jg.d0); coeff.setZero();
@@ -56,12 +59,14 @@ void UnconstrainedProblem::augmentedLagrangian_LambdaUpdate(const arr& x, double
 //  cout <<"Update Lambda: g=" <<g <<" lambda=" <<lambda <<endl;
 }
 
-void UnconstrainedProblem::aula_update(const arr& x, double lambdaStepsize){
+void UnconstrainedProblem::aula_update(const arr& x, double lambdaStepsize, arr& f_g, arr& f_H){
   arr g, Jg, Jfbar;
   P.fc(NoArr, NoArr, g, Jg, x);
   fs(Jfbar, NoArr, x);
 
   if(!lambda.N){ lambda.resize(g.N); lambda.setZero(); }
+
+  arr lambdaOld = lambda;
 
   for(uint i=0;i<g.N;i++){
     lambda(i) += lambdaStepsize * (2.*mu*g(i) - scalarProduct(Jfbar, Jg[i])/length(Jg[i]) );
@@ -69,6 +74,17 @@ void UnconstrainedProblem::aula_update(const arr& x, double lambdaStepsize){
 
   for(uint i=0;i<g.N;i++) if(lambda(i)<0.) lambda(i)=0.;
 
+  f0 -= scalarProduct(lambda - lambdaOld, g);
+  for(uint i=0;i<g.N;i++){
+    if( lambda(i)>0 && !lambdaOld(i)>0.) f0 -= mu * MT::sqr(g(i));
+    if(!lambda(i)>0 &&  lambdaOld(i)>0.) f0 += mu * MT::sqr(g(i));
+  }
+  f0 -= 1e-16;
+
+  if(&f_g || &f_H) fs(f_g, f_H, x);
+
+//  double fxx = fs(NoArr, NoArr, x);
+//  cout <<"BEFORE=" <<fx <<" AFTER=" <<fxx <<endl;
 //  cout <<"Update Lambda: g=" <<g <<" lambda=" <<lambda <<endl;
 }
 

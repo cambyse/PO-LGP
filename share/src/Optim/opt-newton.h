@@ -1,18 +1,25 @@
+#pragma once
+
 #include "optimization.h"
 
-uint optNewton(arr& x, ScalarFunction& f, OptOptions opt, arr *addRegularizer=NULL, double *fx_user=NULL, arr *gx_user=NULL, arr *Hx_user=NULL);
+int optNewton(arr& x, ScalarFunction& f, OptOptions opt);
 
 struct OptNewton{
   arr& x;
   ScalarFunction& f;
-  OptOptions opt;
+  OptOptions o;
+  arr *additionalRegularizer;
 
+  enum StopCriterion { stopNone, stopCrit1, stopCrit2, stopCritEvals };
   double fx;
   arr gx, Hx;
   double alpha, lambda;
-  uint evals;
-  bool stoppingCriterion;
-  OptNewton(arr& x, ScalarFunction& f, OptOptions opt);
-  bool step(); ///< returns true on improvement; check 'stoppingCriterion' for convergence
-  void run();
+  uint it, evals;
+  bool x_changed;
+  ofstream fil;
+
+  OptNewton(arr& x, ScalarFunction& f, OptOptions o);
+  ~OptNewton();
+  StopCriterion step();
+  StopCriterion run();
 };

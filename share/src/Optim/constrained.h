@@ -16,14 +16,15 @@ struct UnconstrainedProblem : ScalarFunction{
   double muLB;       ///< log barrier weight
   double mu;         ///< squared penalty weight
   arr lambda;        ///< lagrange multiplier in augmented lagrangian
+  double f0;
 
-  UnconstrainedProblem(ConstrainedProblem &_P):P(_P), muLB(0.), mu(0.) {}
+  UnconstrainedProblem(ConstrainedProblem &_P):P(_P), muLB(0.), mu(0.), f0(0.) {}
 
   virtual double fs(arr& df, arr& Hf, const arr& x); ///< this assumes that only the first entry is costs, rest constraints
 //  virtual void fv(arr& y, arr& J, const arr& x); ///< first entries: GaussNewton-type costs, following entries: constraints
   void augmentedLagrangian_LambdaUpdate(const arr& x, double lambdaStepsize=1.);
 
-  void aula_update(const arr& x, double lambdaStepsize=1.);
+  void aula_update(const arr& x, double lambdaStepsize=1., arr &f_g=NoArr, arr &f_H=NoArr);
 };
 
 

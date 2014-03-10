@@ -77,7 +77,11 @@ void TEST(KOrderMarkov) {
 //      checkAll(CP, x, 1e-4);
       //checkGradient(UCP, x, 1e-4);
       cout <<" mu=" <<UCP.mu <<" lambda=" <<UCP.lambda <<endl;
-      optNewton(x, UCP, OPT(verbose=2, useAdaptiveDamping=false, damping=1., stopIters=20), (K.N? &K : NULL));
+      //optNewton(x, UCP, OPT(verbose=2, useAdaptiveDamping=false, damping=1., stopIters=20), (K.N? &K : NULL));
+      OptNewton opt(x, UCP, OPT(verbose=2,  useAdaptiveDamping=false, damping=1., stopIters=20));
+      if(K.N) opt.additionalRegularizer=&K;
+      opt.run();
+
       UCP.augmentedLagrangian_LambdaUpdate(x);
 //      UCP.mu *= 10;
       write(LIST<arr>(x),"z.output");
@@ -85,7 +89,9 @@ void TEST(KOrderMarkov) {
       MT::wait();
     }
   }else{
-    optNewton(x, Convert(P), OPT(verbose=2, useAdaptiveDamping=true), (K.N? &K : NULL));
+    OptNewton opt(x, Convert(P), OPT(verbose=2, useAdaptiveDamping=true));
+    if(K.N) opt.additionalRegularizer=&K;
+    opt.run();
   }
 
   //analyzeTrajectory(sys, x, true, &cout);

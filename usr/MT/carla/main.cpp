@@ -45,6 +45,7 @@ void testAula(ConstrainedProblem& p){
 
   system("rm -f z.grad_all");
 
+  OptNewton opt(x, UCP, OPT(verbose=1, damping=1., stepInc=.5, stopTolerance=1e-6, stepInc=1.));
 
   for(uint k=0;k<10;k++){
 //    cout <<"x_start=" <<x <<" mu=" <<UCP.mu <<" lambda=" <<UCP.lambda <<endl;
@@ -52,14 +53,20 @@ void testAula(ConstrainedProblem& p){
 //    checkAllGradients(p, x, 1e-4);
 
 //    optNewton(x, UCP, OPT(verbose=2));
+#if 0
     arr g,H;
     double f = UCP.fs(g, H, x);
     H += 1e-0 *eye(H.d0);
-    cout <<"f=" <<f  <<" \tx=" <<x <<" \tlambda=" <<UCP.lambda <<endl;
+    cout <<"f(x)=" <<f-UCP.f0  <<" \tx=" <<x <<" \tlambda=" <<UCP.lambda <<" \tf0=" <<UCP.f0  <<endl;
     arr Delta = -inverse_SymPosDef(H)*g;
     x += 1. * Delta;
+#else
+//    OptNewton(x, UCP, OPT(verbose=1, damping=1., stepInc=.5, stopTolerance=1e-6, dampingDec=1., stepInc=1., nonStrict=true)).step();
+    opt.step();
+    cout <<"f(x)=" <<opt.fx-UCP.f0 <<" \tx=" <<opt.x <<" \tlambda=" <<UCP.lambda <<" \tf0=" <<UCP.f0 <<endl;
+#endif
 
-    UCP.aula_update(x,1.);
+    UCP.aula_update(x, 1., opt.gx, opt.Hx);
   }
 }
 
