@@ -2210,6 +2210,31 @@ void outerProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z)
   HALT("outer product - not yet implemented for these dimensions");
 }
 
+/** @brief index wise (element-wise for vectors) product (also ordinary matrix or scalar product):
+  \f$\forall_{ik}:~ x_{ik} = \sum_j v_{ij}\, w_{jk}\f$ but also:
+  \f$\forall_{i}:~ x_{i} = \sum_j v_{ij}\, w_{j}\f$*/
+template<class T>
+void indexWiseProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z) {
+  if(y.nd==1 && z.nd==1) {  //vector x vector -> element wise
+    x=y;
+    x*=z;
+    return;
+  }
+  if(y.nd==1 && z.nd==2) {  //vector x matrix -> index-wise
+    CHECK(y.N==z.d0,"wrong dims for indexWiseProduct:" <<y.N <<"!=" <<z.d0);
+    x=z;
+    for(uint i=0;i<x.d0;i++) x[i]() *= y(i);
+    return;
+  }
+  if(y.nd==1 && z.nd==2) {  //matrix x vector -> index-wise
+    CHECK(y.d1==z.N,"wrong dims for indexWiseProduct:" <<y.d1 <<"!=" <<z.N);
+    x=y;
+    for(uint i=0;i<x.d0;i++) for(uint j=0;j<x.d1;j++) x(i,j) *= z(j);
+    return;
+  }
+  HALT("operator% not implemented for "<<y.getDim() <<"%" <<z.getDim() <<" [I would like to change convention on the interpretation of operator% - contact Marc!")
+}
+
 /// \f$\sum_i v_i\, w_i\f$, or \f$\sum_{ij} v_{ij}\, w_{ij}\f$, etc.
 template<class T>
 T scalarProduct(const MT::Array<T>& v, const MT::Array<T>& w) {
@@ -2853,12 +2878,6 @@ template<class T> uint softMax(const MT::Array<T>& a, arr& soft, double beta) {
 //
 
 
-
-
-
-
-
-
 namespace MT {
 /// transpose
 template<class T> Array<T> operator~(const Array<T>& y) { Array<T> x; transpose(x, y); return x; }
@@ -2874,6 +2893,8 @@ template<class T> Array<T> operator*(const Array<T>& y, T z) {             Array
 /// scalar multiplication
 template<class T> Array<T> operator*(T y, const Array<T>& z) {             Array<T> x(z); x*=y; return x; }
 
+/// index-wise (elem-wise) product (x_i = y_i z_i   or  X_{ij} = y_i Z_{ij}  or  X_{ijk} = Y_{ij} Z_{jk}   etc)
+template<class T> Array<T> operator%(const Array<T>& y, const Array<T>& z) { Array<T> x; indexWiseProduct(x, y, z); return x; }
 
 #define UpdateOperator( op )        \
   template<class T> Array<T>& operator op (Array<T>& x, const Array<T>& y){ \
@@ -2908,7 +2929,7 @@ UpdateOperator(%=)
 
 BinaryOperator(+ , +=);
 BinaryOperator(- , -=);
-BinaryOperator(% , *=);
+//BinaryOperator(% , *=);
 BinaryOperator(/ , /=);
 #undef BinaryOperator
 

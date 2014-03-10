@@ -13,18 +13,22 @@ struct UnconstrainedProblem : ScalarFunction{
       concatenated to one vector:
       phi(0) = cost,   phi(1,..,phi.N-1) = constraints */
   ConstrainedProblem &P;
+  //-- parameters of the unconstrained meta function F
   double muLB;       ///< log barrier weight
   double mu;         ///< squared penalty weight
   arr lambda;        ///< lagrange multiplier in augmented lagrangian
   double f0;
 
+  //-- buffers to avoid recomputing gradients
+  arr x, df_x, Hf_x, g_x, Jg_x;
+  double f_x;
+
   UnconstrainedProblem(ConstrainedProblem &_P):P(_P), muLB(0.), mu(0.), f0(0.) {}
 
-  virtual double fs(arr& df, arr& Hf, const arr& x); ///< this assumes that only the first entry is costs, rest constraints
-//  virtual void fv(arr& y, arr& J, const arr& x); ///< first entries: GaussNewton-type costs, following entries: constraints
-  void augmentedLagrangian_LambdaUpdate(const arr& x, double lambdaStepsize=1.);
+  virtual double fs(arr& dF, arr& HF, const arr& x); ///< the unconstrained meta function F
 
-  void aula_update(const arr& x, double lambdaStepsize=1., arr &f_g=NoArr, arr &f_H=NoArr);
+  void augmentedLagrangian_LambdaUpdate(const arr& x, double lambdaStepsize=1.);
+  void aula_update(const arr& x, double lambdaStepsize=1., arr &dF_x=NoArr, arr &HF_x=NoArr);
 };
 
 

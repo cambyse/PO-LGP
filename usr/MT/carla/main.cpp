@@ -45,7 +45,7 @@ void testAula(ConstrainedProblem& p){
 
   system("rm -f z.grad_all");
 
-  OptNewton opt(x, UCP, OPT(verbose=1, damping=1., stepInc=.5, stopTolerance=1e-6, stepInc=1.));
+  OptNewton opt(x, UCP, OPT(verbose=1, damping=1., stopTolerance=1e-6, stepInc=1.));
 
   for(uint k=0;k<10;k++){
 //    cout <<"x_start=" <<x <<" mu=" <<UCP.mu <<" lambda=" <<UCP.lambda <<endl;
@@ -61,7 +61,7 @@ void testAula(ConstrainedProblem& p){
     arr Delta = -inverse_SymPosDef(H)*g;
     x += 1. * Delta;
 #else
-//    OptNewton(x, UCP, OPT(verbose=1, damping=1., stepInc=.5, stopTolerance=1e-6, dampingDec=1., stepInc=1., nonStrict=true)).step();
+//    OptNewton(x, UCP, OPT(verbose=1, damping=1., stopTolerance=1e-6, stepInc=1.)).step();
     opt.step();
     cout <<"f(x)=" <<opt.fx-UCP.f0 <<" \tx=" <<opt.x <<" \tlambda=" <<UCP.lambda <<" \tf0=" <<UCP.f0 <<endl;
 #endif
