@@ -48,7 +48,7 @@ struct sUEyeInterface {
 
     bool setup_flag, init_flag, open_flag, err_flag; // TODO err_flag?
 
-    sUEyeInterface(int cameraID, UEyePoller *m);
+    sUEyeInterface(int cameraID);
     ~sUEyeInterface();
 
     // NB very important, never call these if process is underway
@@ -100,7 +100,7 @@ struct sUEyeInterface {
     void handleCaptStatus();
 };
 
-sUEyeInterface::sUEyeInterface(int cameraID, UEyePoller *m): camID(cameraID), img(NULL), setup_flag(false), init_flag(false), open_flag(false), err_flag(false) {
+sUEyeInterface::sUEyeInterface(int cameraID): camID(cameraID), img(NULL), setup_flag(false), init_flag(false), open_flag(false), err_flag(false) {
 	//camID = MT::getParameter<int>(STRING(m->name << "_camID"));
 	tout.reg(this) << "UEyeCamera(" << camID << "): ";
 }
@@ -635,7 +635,7 @@ UEyePoller::~UEyePoller() {
 void UEyePoller::open() {
   tout(this) << "opening" << endl;
 
-  s = new sUEyeInterface(MT::getParameter<int>(STRING(name << "_camID")), this);
+  s = new sUEyeInterface(MT::getParameter<int>(STRING(name << "_camID")));
 
   s->camSetup();
   s->camInit();
