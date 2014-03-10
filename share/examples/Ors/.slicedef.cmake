@@ -1,0 +1,11 @@
+set(CURRENT_SLICE 
+ ors
+ors_collision
+ors_editor
+ors_physx
+ors_physx_convex_submeshes
+ors_physx_obstacle_avoidance
+orspy
+ors_sceneGui
+ors_swift
+ )

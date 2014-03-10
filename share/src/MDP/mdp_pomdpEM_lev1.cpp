@@ -117,9 +117,9 @@ double mdp::pomdpEM_lev1(
     eliminationAlgorithm(Fz, allInits, leftVars);
     Fz.P.reshape(dz);
     
-    //MT::save(Fz, "z.gFz");
-    //MT::save(FRz, "z.gFRz");
-    //MT::save(Fzz, "z.gFzz");
+    //Fz >>FILE("z.gFz");
+    //FRz >>FILE("z.gFRz");
+    //Fzz >>FILE("z.gFzz");
     
     //----- E-STEP
     arr _alpha, _beta;

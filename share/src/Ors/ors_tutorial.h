@@ -100,7 +100,7 @@ public:
   
   OpenGL *gl;
 //private:
-  ors::Graph *C;
+  ors::KinematicWorld *C;
   OdeModule *ode; // HIER PARAMETER verstellen
   SwiftInterface *swift;
   TaskVariableList TVs;

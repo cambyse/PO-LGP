@@ -34,7 +34,7 @@ int main(int argc,char** argv){
   
   // cost checks
 //  arr q,x,xx;
-//  MT::load(q, "z.q");
+//  q <<FILE("z.q");
 //  getPhaseTrajectory(xx, q, sys.get_tau());
 //  analyzeTrajectory(sys, xx, true, &cout);
   

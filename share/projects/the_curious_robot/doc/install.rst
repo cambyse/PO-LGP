@@ -88,6 +88,9 @@ Setup & Compile TCR
     make
     rosmake the_curious_robot
 
+- We need an `MT.cfg` for the RRT of TCR in `~/.ros`:: 
+
+      ln -s ~/fuerte_workspace/sandbox/the_curious_robot/src/MT.cfg ~/.ros/MT.cfg
 
 Run
 ----

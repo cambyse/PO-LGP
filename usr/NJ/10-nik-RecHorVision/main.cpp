@@ -45,7 +45,7 @@ struct SimpleTrack{
 		}
 		R2 = arr(4,4);R2.setDiag(0.6);
 		arr cov;
-		MT::load(cov, "COV");cov = cov*1.0;//created from measured data
+		cov <<FILE("COV");cov = cov*1.0;//created from measured data
 		//R1 = 5.0*cov.sub(0,5,0,5);
 		//R2 = 2.0*cov.sub(6,9,6,9);
 		R12 = arr(6,4);R12.setZero();
@@ -256,7 +256,7 @@ void RHV::init(RobotProcessGroup *robot){
 	started_track = false;
 
 	arr p2;
-	MT::load(p2, "regparams");
+	p2 <<FILE("regparams");
 	Pl = p2.sub(0,2,0,3);
 	Pr = p2.sub(3,5,0,3);
 
@@ -279,7 +279,7 @@ void RHV::init(RobotProcessGroup *robot){
 	br->X.p = CameraLocation(Pr);cout << "camera " << b->X.p << " " << br->X.p << endl;
 
 	arr Rot;
-	MT::load(Rot, "RotationMatrix");arr r2; transpose(r2,Rot);Rot = r2;
+	Rot <<FILE("RotationMatrix");arr r2; transpose(r2,Rot);Rot = r2;
 	Rot = Rot*-1.0;//hack to get positive trace and determinant 1
 	ors::Quaternion q;
 	q.setMatrix(Rot.p);
@@ -299,7 +299,7 @@ void RHV::init(RobotProcessGroup *robot){
 }
 
 void RHV::initTaskVariables(ControllerModule *ctrl){
-	ors::Graph &ors=ctrl->ors;
+	ors::KinematicWorld &ors=ctrl->ors;
 	TV_fNew   = new TaskVariable("posNew",ors,posTVT,"m9","<t( .02   .022 -.366)>",0,0,0);
 	TV_fNew->targetType=directTT;
 	TVall.append(TV_fNew);

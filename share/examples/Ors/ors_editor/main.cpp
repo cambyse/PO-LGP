@@ -25,9 +25,7 @@ void TEST(OrsEditor) {
   if(MT::argc==2) file=MT::argv[1];
   cout <<"opening file `" <<file <<"'" <<endl;
 
-  ors::Graph G;
-  OpenGL gl;
-  init(G, gl, file);
+  ors::KinematicWorld G(file);
 
   //some optional manipulations
   G.meldFixedJoints();
@@ -35,9 +33,9 @@ void TEST(OrsEditor) {
   G.calcBodyFramesFromJoints();
 //  G.topSort();
   G.makeLinkTree();
-  MT::save(G,"z.ors");
+  G >>FILE("z.ors");
 
-  editConfiguration(file, G, gl);
+  editConfiguration(file, G);
 }
 
 int MAIN(int argc,char **argv){

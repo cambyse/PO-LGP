@@ -40,7 +40,7 @@ void MultiPlan::init(RobotProcessGroup *_master){
   MT::IOraw = true;
   started_track = false;
   arr p2;
-  MT::load(p2, "../../src/NJ/regparams");
+  p2 <<FILE("../../src/NJ/regparams");
   Pl = p2.sub(0,2,0,3);
   Pr = p2.sub(3,5,0,3);
 
@@ -78,7 +78,7 @@ void MultiPlan::init(RobotProcessGroup *_master){
 }
 
 void MultiPlan::initTaskVariables(ControllerModule *ctrl){
-  ors::Graph &ors=ctrl->ors;
+  ors::KinematicWorld &ors=ctrl->ors;
   TV_fNew   = new TaskVariable("posNew",ors,posTVT,"m9","<t( .02   .022 -.366)>",0,0,0);
   TV_fNew->targetType=directTT;
   TVall.append(TV_fNew);//keep in mind, this is in place 0, others come after it

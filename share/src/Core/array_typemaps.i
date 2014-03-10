@@ -16,7 +16,6 @@ import_array();
 // For numerical types, we want to get numpy arrays, to keep the shape of the
 // array, etc.
 
-%naturalvar MT::Array;
 
 // actual translation of numpy array to MT::Array<double>
 %fragment("ArrayTransform", "header") {
@@ -30,8 +29,8 @@ import_array();
     PyArrayObject* src = (PyArrayObject*) nparray;
 
     // cast array entries to the correct type if necessary
-    if (PyArray_TYPE(nparray) != type) {
-      if (PyArray_CanCastSafely(PyArray_TYPE(nparray), type)) {
+    if (PyArray_TYPE(src) != type) {
+      if (PyArray_CanCastSafely(PyArray_TYPE(src), type)) {
         src = (PyArrayObject*) PyArray_SimpleNew(array_numdims(nparray), array_dimensions(nparray), type);
         PyArray_CastTo(src, (PyArrayObject*) nparray);
       }
@@ -224,7 +223,7 @@ import_array();
 
 %typemap(in, fragment="asMTArrayList") MT::Array<Type*> & {
   if(PyList_Check($input)) {
-    $1->resize(PyList_Size($input));
+    $1 = new MT::Array<Type*>(PyList_Size($input));
     for(uint i=0; i<PyList_Size($input); ++i) {
       Type *tm;
       PyObject *iter = PyList_GetItem($input, i);
@@ -292,12 +291,15 @@ import_array();
     Type **iter = &((*$1)(i));
     {
       Type *$1 = *iter;
-      int $owner = 1; // this is hacky
+      int $owner = 0; // this is hacky
       PyObject *$result = NULL;
+
+      // this sets result.
       $typemap(out, Type*)
+
       obj = $result; 
     }
-    PyList_SetItem($result, i, obj);
+    PyList_SetItem(argout, i, obj);
   }
   %append_output(argout);
 }
@@ -317,7 +319,11 @@ import_array();
 //===========================================================================
 
 %typemap(memberin) MT::Array<Type*> {
-  $1 = $input;  
+#ifdef SWIG_DEREFERENCE_MEMBERS
+  $1 = *$input;
+#else
+  $1 = $input;
+#endif
 }
 
 %typemap(memberin) MT::Array<Type*> & {

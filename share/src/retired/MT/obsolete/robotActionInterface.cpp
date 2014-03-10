@@ -8,7 +8,7 @@
 #include "robot.h"
 #include "specialTaskVariables.h"
 
-void reattachShape(ors::Graph& ors, SwiftInterface *swift, const char* objShape, const char* toBody, const char* belowShape);
+void reattachShape(ors::KinematicWorld& ors, SwiftInterface *swift, const char* objShape, const char* toBody, const char* belowShape);
 
 //private space:
 struct sRobotActionInterface {
@@ -148,7 +148,7 @@ void RobotActionInterface::reachAndAlign(const char* shapeName, const arr& posGo
 }
 
 void RobotActionInterface::setMesh(const char* shapeName, const ors::Mesh& mesh){
-  ors::Graph *ors = s->robotProcesses.ctrl.sys.ors;
+  ors::KinematicWorld *ors = s->robotProcesses.ctrl.sys.ors;
   ors::Shape *shape = ors->getShapeByName(shapeName);
   shape->mesh = mesh;
   shape->type = ors::meshST;
@@ -375,7 +375,7 @@ void RobotActionInterface::graspISF(){
   */
 }
 
-void reattachShape(ors::Graph& ors, SwiftInterface *swift, const char* objShape, const char* toBody, const char* belowShape){
+void reattachShape(ors::KinematicWorld& ors, SwiftInterface *swift, const char* objShape, const char* toBody, const char* belowShape){
   ors::Shape *obj  = ors.getShapeByName(objShape);
   obj->body->shapes.removeValue(obj);
   obj->body = ors.getBodyByName(toBody);

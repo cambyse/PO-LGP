@@ -378,9 +378,7 @@ void TEST(PCA) {
   y.reshape(4, 2);
   cout << "y = " << y << endl;
 
-  arr yp;
-  pca(yp, w, y);
-  cout << "yp = " << yp << endl;
+  cout << "yp = " << w*y << endl;
 }
 
 void TEST(Inverse){
@@ -595,8 +593,8 @@ void TEST(RowShiftedPackedMatrix){
 
 int MAIN(int argc, char *argv[]){
 
-  testPCA();
-  testCheatSheet();
+  //testPCA();
+  //testCheatSheet();
 
   testBasics();
   testCheatSheet();

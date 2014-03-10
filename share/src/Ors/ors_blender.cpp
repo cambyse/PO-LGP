@@ -42,7 +42,7 @@ struct VertGroup {
 //template class MT::Array<VertGroup>;
 //template class MT::Array<String>;
 
-void readBlender(const char* filename, ors::Mesh& mesh, ors::Graph& bl) {
+void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl) {
   ifstream is(filename, std::ios::binary);
   CHECK(is.good(), "couldn't open file " <<filename);
   

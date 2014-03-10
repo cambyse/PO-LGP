@@ -6,15 +6,15 @@
 
 void prepare_skin(TaskVariable *skin, const arr& skinState, bool cut_and_nil);
 
-void DoNothing_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {
+void DoNothing_FeedbackControlTask::initTaskVariables(const ors::KinematicWorld& ors) {
   listDelete(TVs);
   requiresInit = false;
 }
 
-void DoNothing_FeedbackControlTask::updateTaskVariableGoals(const ors::Graph& ors) {
+void DoNothing_FeedbackControlTask::updateTaskVariableGoals(const ors::KinematicWorld& ors) {
 }
 
-void Stop_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {
+void Stop_FeedbackControlTask::initTaskVariables(const ors::KinematicWorld& ors) {
   listDelete(TVs);
   TaskVariable *q = new DefaultTaskVariable("qitself", ors, qItselfTVT, 0, 0, 0, 0, 0);
   TVs = ARRAY<TaskVariable*>(q);
@@ -27,10 +27,10 @@ void Stop_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {
   requiresInit = false;
 }
 
-void Stop_FeedbackControlTask::updateTaskVariableGoals(const ors::Graph& ors) {
+void Stop_FeedbackControlTask::updateTaskVariableGoals(const ors::KinematicWorld& ors) {
 }
 
-void Homing_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {
+void Homing_FeedbackControlTask::initTaskVariables(const ors::KinematicWorld& ors) {
   double margin = biros().getParameter<double>("TV_margin",.03);
   arr limits = biros().getParameter<arr>("TV_limits");
   listDelete(TVs);
@@ -54,14 +54,14 @@ void Homing_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {
   requiresInit = false;
 }
 
-void Homing_FeedbackControlTask::updateTaskVariableGoals(const ors::Graph& ors) {
+void Homing_FeedbackControlTask::updateTaskVariableGoals(const ors::KinematicWorld& ors) {
   TaskVariable *q = TVs(0);
   q->v_target = -5.*q->y;
   double vmax=.3, v=absMax(q->v_target);
   if (v>vmax) q->v_target*=vmax/v;
 }
 
-void OpenHand_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {
+void OpenHand_FeedbackControlTask::initTaskVariables(const ors::KinematicWorld& ors) {
   count=0;
   listDelete(TVs);
   TaskVariable *q = new DefaultTaskVariable("qitself", ors, qItselfTVT, 0, 0, 0, 0, 0);
@@ -77,14 +77,14 @@ void OpenHand_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {
   requiresInit = false;
 }
 
-void OpenHand_FeedbackControlTask::updateTaskVariableGoals(const ors::Graph& ors) {
+void OpenHand_FeedbackControlTask::updateTaskVariableGoals(const ors::KinematicWorld& ors) {
   count ++;
   if(count > 300) {
     done = true;
   }
 }
 
-void CloseHand_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {
+void CloseHand_FeedbackControlTask::initTaskVariables(const ors::KinematicWorld& ors) {
   biros().getVariable(skinPressure, "SkinPressure", NULL);
 
   count = 0;
@@ -113,7 +113,7 @@ void CloseHand_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {
   requiresInit = false;
 }
 
-void CloseHand_FeedbackControlTask::updateTaskVariableGoals(const ors::Graph& ors) {
+void CloseHand_FeedbackControlTask::updateTaskVariableGoals(const ors::KinematicWorld& ors) {
   TaskVariable *skin = TVs(1);
   arr skinState = ARR(.01,.01,.01,.01,.01,.01);
   if(skinPressure) skinPressure->get_y_real(NULL); //TODO specify process
@@ -127,7 +127,7 @@ void CloseHand_FeedbackControlTask::updateTaskVariableGoals(const ors::Graph& or
   }
 }
 
-void Reach_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {
+void Reach_FeedbackControlTask::initTaskVariables(const ors::KinematicWorld& ors) {
   double margin = biros().getParameter<double>("TV_margin",.03);
   arr limits = biros().getParameter<arr>("TV_limits");
   listDelete(TVs);
@@ -151,14 +151,14 @@ void Reach_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {
   requiresInit = false;
 }
 
-void Reach_FeedbackControlTask::updateTaskVariableGoals(const ors::Graph& ors) {
+void Reach_FeedbackControlTask::updateTaskVariableGoals(const ors::KinematicWorld& ors) {
   TaskVariable *eff = TVs(0);
   eff->v_target = reachPoint - eff->y;
   double vmax=.2, v=length(eff->v_target);
   if (v>vmax) eff->v_target*=vmax/v;
 }
 
-void Joystick_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {
+void Joystick_FeedbackControlTask::initTaskVariables(const ors::KinematicWorld& ors) {
   //access the joystick Variable
   biros().getVariable(joyState, "JoystickState", NULL); //TODO get process pid
   biros().getVariable(skinPressure, "SkinPressure", NULL);
@@ -202,7 +202,7 @@ void Joystick_FeedbackControlTask::initTaskVariables(const ors::Graph& ors) {
   requiresInit = false;
 }
 
-void Joystick_FeedbackControlTask::updateTaskVariableGoals(const ors::Graph& ors) {
+void Joystick_FeedbackControlTask::updateTaskVariableGoals(const ors::KinematicWorld& ors) {
   TaskVariable *eff = TVs(0);
   TaskVariable *q = TVs(1);
   TaskVariable *rot = TVs(2);

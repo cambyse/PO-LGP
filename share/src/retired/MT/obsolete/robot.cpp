@@ -60,8 +60,8 @@ void ControllerProcess::open(){
   if(MT::checkParameter<MT::String>("orsFile")){
     MT::String sfile;
     MT::getParameter<MT::String>(sfile, "orsFile");
-    MT::load(ors, sfile, true);
-  } else MT::load(ors, STRING(getenv("MLR") <<"/configurations/schunk_clean.ors"), true);
+    ors <<FILE(sfile);
+  } else ors <<FILE(STRING(getenv("MLR") <<"/configurations/schunk_clean.ors"));
   
   ors.calcBodyFramesFromJoints();
   ors.getJointState(q_reference, v_reference);
@@ -362,7 +362,7 @@ TaskAbstraction::TaskAbstraction(){
 }
 
 void TaskAbstraction::initTaskVariables(ControllerProcess* ctrl){
-  ors::Graph &ors=ctrl->ors;
+  ors::KinematicWorld &ors=ctrl->ors;
   
   // get refs to joystick and plan from controller (SSD)
   planVar = ctrl->planVar;

@@ -37,7 +37,7 @@ void drawBase(void*){
   glColor(1.,.5,0.);
 }
 
-void loadOrsFile(ors::Graph& C, OpenGL& gl,const char *file="../../configurations/schunk.ors"){
+void loadOrsFile(ors::KinematicWorld& C, OpenGL& gl,const char *file="../../configurations/schunk.ors"){
   char *path,*name,cwd[200];
   MT::decomposeFilename(path,name,file);
   getcwd(cwd,200);
@@ -49,7 +49,7 @@ void loadOrsFile(ors::Graph& C, OpenGL& gl,const char *file="../../configuration
   gl.camera.setPosition(7.,-0.,2.);
   gl.camera.focus(0,0,.8);
 
-  MT::load(C,name);
+  C <<FILE(name);
   C.calcBodyFramesFromJoints();
 
   chdir(cwd);

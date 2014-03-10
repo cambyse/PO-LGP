@@ -26,7 +26,7 @@ Process* newMotionController(HardwareReference* hw, MotionPrimitive* mp, MotionF
 struct sMotionController {
   WorkingCopy<GeometricState> geo;
   
-  //ors::Graph *ors;
+  //ors::KinematicWorld *ors;
   OrsSystem sys;
   
   double tau;

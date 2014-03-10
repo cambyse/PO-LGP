@@ -1,6 +1,8 @@
 #include "perception.h"
 #include "pointcloud.h"
 
+void lib_Perception(){ MT_MSG("loading"); }
+
 #ifdef MT_OPENCV
 
 #include "opencv.h"
@@ -11,13 +13,13 @@
 
 #undef COUNT
 #include <opencv2/opencv.hpp>
+//#include <opencv2/features2d/features2d.hpp>
+//#include <opencv2/gpu/gpu.hpp>
 #ifdef ARCH_LINUX
 #include <opencv2/nonfree/nonfree.hpp>
 #endif
 #undef MIN
 #undef MAX
-
-void lib_Perception(){ MT_MSG("loading"); }
 
 REGISTER_MODULE (ImageViewer)
 REGISTER_MODULE (VideoEncoder)
@@ -40,9 +42,12 @@ REGISTER_MODULE (HoughLineFilter)
 // ImageViewer
 //
 
-struct sImageViewer{  OpenGL gl; };
+struct sImageViewer{
+  OpenGL gl;
+  sImageViewer(const char* tit):gl(tit){};
+};
 
-void ImageViewer::open(){ s = new sImageViewer; }
+void ImageViewer::open(){ s = new sImageViewer(STRING("ImageViewer '"<<img.name()<<'\'')); }
 void ImageViewer::close(){ delete s; }
 void ImageViewer::step(){ s->gl.background = img.get(); s->gl.update(); }
 
@@ -387,6 +392,7 @@ struct sSURFer{
 void SURFer::open() {
   s = new sSURFer;
 //  s->surf = new cv::SURF(500);
+HALT("something in opencv changed... please upate the code")
 }
 
 void SURFer::close() {

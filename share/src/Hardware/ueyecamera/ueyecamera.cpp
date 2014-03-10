@@ -4,16 +4,16 @@
 #include <ueye.h>
 #include "ueyecamera.h"
 
-void lib_hardware_ueyecamera() { cout << "loading ueyecamera" << endl; }
-
 REGISTER_MODULE(UEyePoller)
 
-const unsigned int ueye_width = 1280;
-const unsigned int ueye_height = 1024;
-const unsigned int ueye_fps = 60;
-const unsigned int ueye_bpp = 24;
-const unsigned int ueye_bypp = ueye_bpp / 8;
-const unsigned int ueye_size = ueye_width * ueye_height * ueye_bypp;
+void lib_hardware_ueyecamera() { cout << "loading ueyecamera" << endl; }
+
+const unsigned int c_ueye_width = 1280;
+const unsigned int c_ueye_height = 1024;
+const unsigned int c_ueye_fps = 60;
+const unsigned int c_ueye_bpp = 24;
+const unsigned int c_ueye_bypp = c_ueye_bpp / 8;
+const unsigned int c_ueye_size = c_ueye_width * c_ueye_height * c_ueye_bypp;
 
 //===========================================================================
 //
@@ -52,13 +52,7 @@ struct sUEyeInterface {
     ~sUEyeInterface();
 
     // NB very important, never call these if process is underway
-    void setup();
-    void init();
-    void open();
-    void grab();
-    void close();
-    void exit();
-
+    void camSetup();
     void camInit();
     void camOpen();
     void camGrab();
@@ -117,23 +111,22 @@ sUEyeInterface::~sUEyeInterface() {
   delete[] camBuffID;
 }
 
-void sUEyeInterface::setup() {
+void sUEyeInterface::camSetup() {
   if(setup_flag)
     return;
-  /*
-  module->ueye_rgb.set().resize(nUsedCams, ueye_size);
-  module->ueye_fps.set().resize(nUsedCams);
-  */
+
+  tout(this) << "camSetup()" << endl;
+  module->ueye_rgb.set().resize(c_ueye_height, c_ueye_width, c_ueye_bypp);
   setup_flag = true;
 }
 
-void sUEyeInterface::init() {
+void sUEyeInterface::camInit() {
   if(!setup_flag || init_flag || open_flag) {
     err_flag = true;
     return;
   }
 
-  tout(this) << "init()" << endl;
+  tout(this) << "camInit()" << endl;
   InitCamera_wr();
   if(err_flag) return;
 
@@ -180,7 +173,7 @@ void sUEyeInterface::init() {
   // query possible values
   PixelClock_wr(IS_PIXELCLOCK_CMD_GET_RANGE, (void*)pr, sizeof(pr));
   if(err_flag) return;
-  tout(this) << "- poxelclock range = " << pr[0] << ":" << pr[2] << ":" << pr[1] << endl;
+  tout(this) << "- pixelclock range = " << pr[0] << ":" << pr[2] << ":" << pr[1] << endl;
 
   // set value
   pixelclock = pr[1];
@@ -195,7 +188,7 @@ void sUEyeInterface::init() {
 
   SetFrameRate_wr();
   if(err_flag) return;
-  tout(this) << "- set fps = " << ueye_fps << endl;
+  tout(this) << "- set fps = " << c_ueye_fps << endl;
   tout(this) << "- real fps = " << real_fps << endl;
 
   double er[3];
@@ -220,13 +213,13 @@ void sUEyeInterface::init() {
   init_flag = true;
 }
 
-void sUEyeInterface::open() {
+void sUEyeInterface::camOpen() {
   if(!setup_flag || !init_flag || open_flag) {
     err_flag = true;
     return;
   }
 
-  tout(this) << "open()" << endl;
+  tout(this) << "camOpen()" << endl;
   CaptureVideo_wr(IS_WAIT);
   if(err_flag) return;
 
@@ -236,7 +229,9 @@ void sUEyeInterface::open() {
   open_flag = true;
 }
 
-void sUEyeInterface::grab() {
+void sUEyeInterface::camGrab() {
+  tout(this) << "step" << endl;
+
   if(!setup_flag || !init_flag || !open_flag) {
     err_flag = true;
     return;
@@ -245,21 +240,21 @@ void sUEyeInterface::grab() {
   img = NULL;
   imgBuffNum = 0;
   WaitForNextImage_wr();
-  //memcpy(module->ueye_rgb.set()().p, img, ueye_size);
+  memcpy(module->ueye_rgb.set()().p, img, c_ueye_size);
   
   UnlockSeqBuf_wr(imgBuffNum, img);
 
   GetFramesPerSecond_wr();
-  module->ueye_fps.set()(cid) = live_fps;
+  module->ueye_fps.set() = live_fps;
 }
 
-void sUEyeInterface::close() {
+void sUEyeInterface::camClose() {
   if(!setup_flag || !init_flag || !open_flag) {
     err_flag = true;
     return;
   }
 
-  tout(this) << "close()" << endl;
+  tout(this) << "camClose()" << endl;
 
   ExitImageQueue_wr();
   StopLiveVideo_wr(IS_WAIT);
@@ -271,13 +266,13 @@ void sUEyeInterface::close() {
   open_flag = false;
 }
 
-void sUEyeInterface::exit() {
+void sUEyeInterface::camExit() {
   if(!setup_flag || !init_flag || open_flag) {
     err_flag = true;
     return;
   }
 
-  tout(this) << "exit()" << endl;
+  tout(this) << "camExit()" << endl;
   ExitCamera_wr();
 
   init_flag = false;
@@ -383,7 +378,7 @@ void sUEyeInterface::GetSensorInfo_wr() {
 }
 
 void sUEyeInterface::AllocImageMem_wr(char **buff, INT *buffID) {
-  camStatus = is_AllocImageMem(camID, ueye_width, ueye_height, ueye_bpp, buff, buffID);
+  camStatus = is_AllocImageMem(camID, c_ueye_width, c_ueye_height, c_ueye_bpp, buff, buffID);
   if(camStatus == IS_SUCCESS)
     return;
   tout(this) << "AllocImageMem() failed" << endl;
@@ -423,7 +418,7 @@ void sUEyeInterface::PixelClock_wr(UINT nCommand, void *pParam, UINT cbSizeOfPar
 }
 
 void sUEyeInterface::SetFrameRate_wr() {
-  camStatus = is_SetFrameRate(camID, ueye_fps, &real_fps);
+  camStatus = is_SetFrameRate(camID, c_ueye_fps, &real_fps);
   if(camStatus == IS_SUCCESS)
     return;
   tout(this) << "SetFrameRate() failed" << endl;
@@ -595,6 +590,7 @@ void sUEyeInterface::handleCamStatus() {
       tout(this) << "error - unhandled camStatus" << endl;
   }
   err_flag = true;
+  HALT("FIND THAT ERROR!");
 }
 
 #define UEYE_ERR_IF(X) if(captInfo.adwCapStatusCnt_Detail[X]) \
@@ -628,32 +624,34 @@ UEyePoller::~UEyePoller() {
   tout.unreg(this);
 }
 
-void UEyePoller::open(uint _cid) {
-  cid.set() = _cid;
+//void UEyePoller::open(uint _cid) {
+  //cid.set() = _cid;
+void UEyePoller::open() {
+  cid.set() = 0;
   tout(this) << "opening" << endl;
 
   //uint numCams = MT::getParameter<int>("ueye_numCams");
   // TODO how to get the actual camera numbers through parameters
   // TODO doesn't matter.. now this code only manages one camera
 
-  s = new sUEyeInterface(_cid);
+  s = new sUEyeInterface(cid.get());
   s->module = this;
 
-  s->setup(); // TODO include in init?
-  s->init();
-  s->open();
+  s->camSetup();
+  s->camInit();
+  s->camOpen();
 
   tout(this) << "opened successfully" << endl;
 }
 
 void UEyePoller::step() {
-  s->grab();
+  s->camGrab();
 }
 
 void UEyePoller::close() {
   tout(this) << "closing" << endl;
-  s->close();
-  s->exit();
+  s->camClose();
+  s->camExit();
   delete s;
   tout(this) << "closed successfully" << endl;
 }

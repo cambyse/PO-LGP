@@ -48,6 +48,23 @@ in your make-config. This fixes the qhull change.
 Everything else is equal to ubuntu.
 
 
+## QtCreator tips
+
+* Enable Debugging helpers:
+  .gdbinit -> git/mlr/tools/qt_mlr_types.py
+
+* set formatting:
+  Options > C++ > Import...   git/mlr/tools/qt_coding_style.xml
+  
+* Change signal handling of gdb
+  Open 'Debugger Log' window
+  write gdb commands:
+  handle SIGINT pass
+
+* append source directory to all "*.files" files:
+echo "echo '/home/mtoussai/git/mlr/share/src' >> $1" > nogit_append_path
+find . -name '\.*\.includes' -exec ./nogit_append_path {} \;
+
 ## Getting started
 
 The best way to learn about this code and understand what is can do it to go through all examples.
@@ -83,3 +100,4 @@ Create the doxygen documentation with:
 
     cd share
     make doc
+

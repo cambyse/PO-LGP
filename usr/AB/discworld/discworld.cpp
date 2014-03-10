@@ -26,7 +26,7 @@ void DiscWorld::clearGui() {
   delete gl;
   delete physx;
 
-  ors = new ors::Graph;
+  ors = new ors::KinematicWorld;
   gl = new OpenGL;
   physx = new PhysXInterface;
 }
@@ -197,7 +197,7 @@ void DiscWorld::replay() {
       fname.clear() << basename << b;
       TEMP = kf.getErr(b);
       TEMP.subRange(t-lwin, T-lwin-1).setZero();
-      MT::save(TEMP, fname);
+      TEMP >>FILE(fname);
     }
     MT::arrayBrackets = "[]";
     MT::IOraw = false;

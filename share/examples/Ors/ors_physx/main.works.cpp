@@ -212,7 +212,7 @@ void InitializePhysX() {
     boxes.append(actor);
 }
 
-void addOrs(ors::Graph& ors){
+void addOrs(ors::KinematicWorld& ors){
   uint i,j;
   ors::Body *b;
   ors::Shape *s;
@@ -426,7 +426,7 @@ void OnIdle() {
 
 
 
-void createOrs(ors::Graph& ors, OpenGL& gl){
+void createOrs(ors::KinematicWorld& ors, OpenGL& gl){
   ors.clear();
   
   for(uint k=0;k<10;k++){
@@ -452,7 +452,7 @@ void createOrs(ors::Graph& ors, OpenGL& gl){
 
 
 int main(int argc, char** argv) {
-  ors::Graph ors;
+  ors::KinematicWorld ors;
   OpenGL gl;
   createOrs(ors, gl);
   

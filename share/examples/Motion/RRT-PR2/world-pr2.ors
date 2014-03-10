@@ -1,0 +1,5 @@
+%include ../../../data/pr2_model/pr2_left_arm.ors
+
+%include world.ors
+
+body target { type=2 size=[0 0 0 .05] X=<T t(0 0 1)> }

@@ -32,7 +32,7 @@ MT::IOraw = true;
   }
   cout <<"loaded " <<pointCloud.d0 <<" points" <<endl;
   MT::IOraw = true;
-  MT::save(pointCloud,"data3d");
+  pointCloud >>FILE("data3d");
   OpenGL gl;
   gl.add(glDrawPlot,&plotModule);
   plotPoints(pointCloud);

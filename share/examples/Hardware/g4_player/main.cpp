@@ -1,10 +1,10 @@
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
-#include <Perception/video.h>
+#include <Perception/videoEncoder.h>
 
 void lib_hardware_G4();
 
-void setup_opengl_for_g4(ors::Graph& ors, OpenGL& gl, uint hubs){
+void setup_opengl_for_g4(ors::KinematicWorld& ors, OpenGL& gl, uint hubs){
   bindOrsToOpenGL(ors, gl);
   gl.camera.setPosition(7., .5, 3.);
   gl.camera.focus(0, .5, .5);
@@ -25,10 +25,10 @@ void setup_opengl_for_g4(ors::Graph& ors, OpenGL& gl, uint hubs){
 void display(const arr& X){
   VideoEncoder_libav_simple vid;
   OpenGL gl;
-  ors::Graph ors;
+  ors::KinematicWorld ors;
   setup_opengl_for_g4(ors, gl, X.d1);
 
-  CHECK(X.nd==3 && X.d0==7,"wrong sized g4 data set");
+  CHECK(X.nd==3 && X.d2==7,"wrong sized g4 data set");
 
   for(uint t=0;t<X.d0;t++){
     for(uint b=0; b+1<ors.shapes.N && b<X.d1; b++){
