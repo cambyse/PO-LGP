@@ -36,5 +36,4 @@ void KinectDepthPacking::step(){
     kinect_depthRgb.deAccess();
     kinect_depth.deAccess();
 
-    }
 }
