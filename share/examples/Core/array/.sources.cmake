@@ -1,2 +1,2 @@
-set(SOURCES ./main.cpp
-./array_cheatsheet.h)
+set(SOURCES ./array_cheatsheet.h
+./main.cpp)

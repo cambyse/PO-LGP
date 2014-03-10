@@ -2,11 +2,11 @@ get_filename_component(NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
 set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
 
-if(LIBFREENECT_FOUND)
+if(LIBFREENECT_FOUND AND UEYE)
 
     include(.sources.cmake)
     add_executable(x_${NAME} ${SOURCES})
 
     target_link_libraries(x_${NAME} Core Ors Perception Hardware_kinect Hardware_ueyecamera System)
 
-endif(LIBFREENECT_FOUND)
+endif()

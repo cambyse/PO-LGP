@@ -44,8 +44,8 @@ struct TomsyRecorderSystem:System{
         enc4->set_fps(60);
         addModule("ImageViewer", "VIEWER_4", STRINGS("ueye_rgb_4"), ModuleThread::listenFirst);
 
-        //addModule("AudioReader", "MIKE_1", ModuleThread::loopFull);
-        //addModule("AudioWriter", "WAV_1", ModuleThread::listenFirst);
+        addModule("AudioReader", "MIKE_1", ModuleThread::loopFull);
+        addModule("AudioWriter", "WAV_1", ModuleThread::listenFirst);
         connect();
     }
 };
