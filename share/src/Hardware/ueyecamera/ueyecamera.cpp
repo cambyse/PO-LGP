@@ -611,7 +611,6 @@ void sUEyeInterface::handleCamStatus() {
       tout(this) << "error - unhandled camStatus: " << camStatus << endl;
   }
   err_flag = true;
-  HALT("FIND THAT ERROR!");
 }
 
 #define UEYE_ERR_IF(X) if(captInfo.adwCapStatusCnt_Detail[X]) \
