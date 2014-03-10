@@ -13,6 +13,7 @@ else
 	    date +'%y-%m-%d-%T' > .lastMake
 	else
 	    echo "     ***** FAILED   " $1
+#	    echo -e '\e[1;31m     ***** FAILED   ' $1 '\e[0m'
 	fi
 	rm -rf Make.lock
     else
