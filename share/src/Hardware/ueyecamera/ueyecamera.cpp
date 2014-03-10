@@ -669,3 +669,29 @@ void UEyePoller::close() {
   tout(this) << "closed successfully" << endl;
 }
 
+namespace MLR {
+	UEyeInterface::UEyeInterface(int cameraID) : s(new ::sUEyeInterface(cameraID)), streaming(false) {
+		s->camSetup();
+		s->camInit();
+		if(s->err_flag) {
+			throw UEyeException("Could not initialize camera");
+		}
+	}
+	UEyeInterface::~UEyeInterface() {
+		cout << "Closing camera " << s->camID << endl;
+		s->camClose();
+		s->camExit();
+		cout << "Closed camera " << s->camID << endl;
+		delete s;
+	}
+	void UEyeInterface::startStreaming() {
+		if(!streaming) {
+			s->camOpen();
+			streaming = true;
+		}
+	}
+	bool UEyeInterface::grab(byteA& image, double& timestamp, unsigned int timeout) {
+		startStreaming();
+		return s->camGrab(image, timestamp, timeout);
+	}
+}
