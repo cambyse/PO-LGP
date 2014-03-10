@@ -4,7 +4,7 @@ case $yn in
 	git reset --hard
 	git clean -f -d -x
 	bin/createMakefileLinks.sh
-	make -k -j4 src examples
+	colormake -k -j4 src examples
 	;;
     *) ;;
 esac

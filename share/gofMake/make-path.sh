@@ -9,11 +9,12 @@ else
     then    # lock did not exist and was created successfully
 	echo "       *** Make     " $1
 	make --no-print-directory -f Makefile.gof
-	if [ $? -eq 0 ] ; then
+	if [ $? -eq 0 ] ; then # success
 	    date +'%y-%m-%d-%T' > .lastMake
-	else
+	else # fail
+	    tput bold; tput setaf 1
 	    echo "     ***** FAILED   " $1
-#	    echo -e '\e[1;31m     ***** FAILED   ' $1 '\e[0m'
+	    tput sgr0
 	fi
 	rm -rf Make.lock
     else

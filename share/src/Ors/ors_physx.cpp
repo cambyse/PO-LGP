@@ -193,7 +193,7 @@ void PhysXInterface::step(double tau) {
   
 }
 
-void PhysXInterface::setArticulatedBodiesKinematic(int agent){
+void PhysXInterface::setArticulatedBodiesKinematic(uint agent){
   for(ors::Joint* j:world.joints){
     if(j->agent==agent){
       if(j->from->type==ors::dynamicBT) j->from->type=ors::kinematicBT;
