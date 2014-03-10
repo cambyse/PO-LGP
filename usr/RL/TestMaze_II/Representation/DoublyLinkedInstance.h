@@ -8,14 +8,19 @@ class DoublyLinkedInstance: public AbstractInstance {
     //------------------------------------------------------------//
 private:
     shared_ptr_t prev_ptr, next_ptr;
-    bool prev_dismissed = false, next_dismissed = false;
+    bool destruction_running = false;
     //------------------------------------------------------------//
     //                        methods                             //
     //------------------------------------------------------------//
 public:
     virtual ~DoublyLinkedInstance() = default;
     static ptr_t create(action_ptr_t a, observation_ptr_t o, reward_ptr_t r);
-    virtual void dismiss() override;
+    static ptr_t create(action_ptr_t a, observation_ptr_t o, reward_ptr_t r, ptr_t before, ptr_t after);
+    /* virtual int destroy() override; */
+    /* virtual int destroy_unused_reachable() override; */
+    /* virtual int destroy_all_reachable() override; */
+    /* virtual int destroy_inverse_reachable() override; */
+    virtual int destroy_sequence() override;
     virtual Iterator begin() override;
     virtual ptr_t next(const int& n = 1) const override;
     virtual ptr_t prev(const int& n = 1) const override;

@@ -2,6 +2,7 @@
 #define ABSTRACTINSTANCE_H_
 
 #include <memory>
+#include <set>
 
 #include "AbstractAction.h"
 #include "AbstractObservation.h"
@@ -24,6 +25,7 @@ public:
 protected:
     typedef std::shared_ptr<AbstractInstance> shared_ptr_t;
     typedef std::weak_ptr<AbstractInstance> weak_ptr_t;
+    typedef std::set<weak_ptr_t, std::owner_less<weak_ptr_t> > subscriber_set_t;
     //------------------------------------------------------------//
     //                  internal class definitions                //
     //------------------------------------------------------------//
@@ -83,6 +85,8 @@ public:
     const action_ptr_t action;
     const observation_ptr_t observation;
     const reward_ptr_t reward;
+protected:
+    subscriber_set_t subscribers;
 private:
     weak_ptr_t self_ptr;
 
@@ -95,7 +99,11 @@ public:
                         observation_ptr_t o,
                         reward_ptr_t r);
     static ptr_t create_invalid();
-    virtual void dismiss();
+    virtual int destroy();
+    virtual int destroy_unused_reachable();
+    virtual int destroy_all_reachable();
+    virtual int destroy_inverse_reachable();
+    virtual int destroy_sequence();
     virtual Iterator begin();
     virtual Iterator end() const final;
     virtual ptr_t next(const int& n = 1) const;
@@ -111,6 +119,8 @@ public:
         return out << a.print();
     }
     virtual ptr_t append(action_ptr_t a, observation_ptr_t o, reward_ptr_t r);
+    virtual void set_predecessor(ptr_t pre);
+    virtual void set_successor(ptr_t suc);
     virtual ptr_t get_self_ptr() const final;
 protected:
     /** \brief Objects have to be created using create() function. */
@@ -120,7 +130,12 @@ protected:
     /** \brief Set the self_ptr. This function MUST be called after creating a
      * new object. */
     virtual void set_self_ptr(shared_ptr_t p) final;
-    static ptr_t create(AbstractInstance * p);
+    /** \brief Subscribe to this instance to be taken into account for destroy
+     * callbacks. */
+    virtual void subscribe(ptr_t ins);
+    /** \brief This function should be used by derived classes in their create
+     * methods to set the self pointer. */
+    static ptr_t create(AbstractInstance * pointer);
 };
 
 #include "../util/debug_exclude.h"

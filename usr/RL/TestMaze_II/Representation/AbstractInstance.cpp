@@ -95,8 +95,29 @@ AbstractInstance::ptr_t AbstractInstance::create_invalid() {
     return create(action_ptr_t(),observation_ptr_t(),reward_ptr_t());
 }
 
-void AbstractInstance::dismiss() {
-    DEBUG_OUT(1, *this << " dismissed");
+int AbstractInstance::destroy() {
+    DEBUG_OUT(1, *this << " destroy");
+    return 1;
+}
+
+int AbstractInstance::destroy_unused_reachable() {
+    DEBUG_OUT(1, *this << " destroy_unused_reachable");
+    return 1;
+}
+
+int AbstractInstance::destroy_all_reachable() {
+    DEBUG_OUT(1, *this << " destroy_all_reachable");
+    return 1;
+}
+
+int AbstractInstance::destroy_inverse_reachable() {
+    DEBUG_OUT(1, *this << " destroy_inverse_reachable");
+    return 1;
+}
+
+int AbstractInstance::destroy_sequence() {
+    DEBUG_OUT(1, *this << " destroy_sequence");
+    return 1;
 }
 
 AbstractInstance::Iterator AbstractInstance::begin() {
@@ -161,6 +182,14 @@ AbstractInstance::ptr_t AbstractInstance::append(action_ptr_t, observation_ptr_t
     return self_ptr.lock();
 }
 
+void AbstractInstance::set_predecessor(ptr_t) {
+    DEBUG_ERROR("Cannot set predecessor of " << *this);
+}
+
+void AbstractInstance::set_successor(ptr_t) {
+    DEBUG_ERROR("Cannot set successor of " << *this);
+}
+
 AbstractInstance::ptr_t AbstractInstance::get_self_ptr() const {
     return ptr_t(self_ptr.lock());
 }
@@ -179,4 +208,8 @@ AbstractInstance::ptr_t AbstractInstance::create(AbstractInstance * pointer) {
     shared_ptr_t p(pointer);
     p->set_self_ptr(p);
     return ptr_t(p);
+}
+
+void AbstractInstance::subscribe(ptr_t ins) {
+    subscribers.insert(weak_ptr_t(shared_ptr_t(ins)));
 }

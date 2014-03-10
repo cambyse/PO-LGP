@@ -12,19 +12,52 @@ DoublyLinkedInstance::ptr_t DoublyLinkedInstance::create(action_ptr_t a,
                                         ));
 }
 
-void DoublyLinkedInstance::dismiss() {
-    DEBUG_OUT(1, *this << " dismissed");
-    if(!prev_dismissed) {
-        DEBUG_OUT(2,*this << " dismisses " << prev());
-        prev_dismissed = true;
-        prev()->dismiss();
+DoublyLinkedInstance::ptr_t DoublyLinkedInstance::create(action_ptr_t a,
+                                                         observation_ptr_t o,
+                                                         reward_ptr_t r,
+                                                         ptr_t before,
+                                                         ptr_t after) {
+    return AbstractInstance::create(new DoublyLinkedInstance(a,o,r,
+                                                             before,
+                                                             after
+                                        ));
+}
+
+// int DoublyLinkedInstance::destroy() {
+
+// }
+
+// int DoublyLinkedInstance::destroy_unused_reachable() {
+
+// }
+
+// int DoublyLinkedInstance::destroy_all_reachable() {
+
+// }
+
+// int DoublyLinkedInstance::destroy_inverse_reachable() {
+
+// }
+
+int DoublyLinkedInstance::destroy_sequence() {
+    if(destruction_running) {
+        return 0;
+    } else {
+        destruction_running = true;
+        DEBUG_OUT(1, *this << " destroy sequence");
+        int destroyed = 1;
+        // destroy previous
+        DEBUG_OUT(2,*this << " destroyes " << prev());
+        destroyed += prev()->destroy_sequence();
         prev_ptr = create_invalid();
-    }
-    if(!next_dismissed) {
-        DEBUG_OUT(2,*this << " dismisses " << next());
-        next_dismissed = true;
-        next()->dismiss();
+        // destroy next
+        DEBUG_OUT(2,*this << " destroyes " << next());
+        destroyed += next()->destroy_sequence();
         next_ptr = create_invalid();
+        // finalize
+        DEBUG_OUT(1, *this << " destroyed " << destroyed);
+        destruction_running = false;
+        return destroyed;
     }
 }
 
