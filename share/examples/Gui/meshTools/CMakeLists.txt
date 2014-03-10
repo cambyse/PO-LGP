@@ -8,5 +8,5 @@ target_link_libraries(x_${NAME} Core Gui ${GL_LIBRARIES} qhull extern_SWIFT
         extern_SWIFT_decomposer)
 add_definitions(-DMT_GL)
 
-add_test(x_${NAME}_test ${NAME} --gtest_output=xml:${NAME}-unit.xml)
+mlr_example_test(${NAME})
 

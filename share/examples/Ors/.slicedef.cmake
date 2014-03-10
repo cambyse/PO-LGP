@@ -2,6 +2,7 @@ set(CURRENT_SLICE
  ors
 ors_collision
 ors_editor
+ors_forces
 ors_physx
 ors_physx_convex_submeshes
 ors_physx_obstacle_avoidance

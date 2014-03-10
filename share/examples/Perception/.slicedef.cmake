@@ -1,7 +1,6 @@
 set(CURRENT_SLICE 
  audioEncoder
 bench_rgb2yuv
-tomsy-recorder
 videoEncoder
 videoEncoder_threaded
 vision-modules

@@ -4,4 +4,5 @@ examples
 projects
 src
 teaching
+unittest
  )

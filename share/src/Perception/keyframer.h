@@ -19,9 +19,18 @@ struct KeyFramer {
   arr getCorrPCA(uint b1, uint b2, uint wlen, uint npc);
   arr getCorrPCA(const String &n1, const String &n2, uint wlen, uint npc);
 
-  void computeVar(String type, uint wlen, bool force = false);
-  void computeSpeed(String type, bool force = false);
-  void computeGP(String type, bool force = false);
+  void computeVar(const String &type, uint wlen, bool force = false);
+  void computeVar(const StringA &types, uint wlen, bool force = false);
+  void computeSpline(const StringA &types, double lambda, bool force = false);
+  void computeSpline(const String &type, double lambda, bool force = false);
+  void computeES(const StringA &types, double alpha, bool force = false);
+  void computeES(const String &type, double alpha, bool force = false);
+  void computeSmooth(const StringA &types, double alpha, bool force = false);
+  void computeSmooth(const String &type, double alpha, bool force = false);
+  void computeSpeed(const StringA &types, bool force = false);
+  void computeSpeed(const String &type, bool force = false);
+  void computeGP(const StringA &types, bool force = false);
+  void computeGP(const String &type, bool force = false);
   void computeDPos(const String &b, bool force = false);
   void computeDQuat(const String &b, bool force = false);
 
@@ -66,5 +75,7 @@ struct KeyFramer {
   void EM_c(KeyValueGraph &kvg, const String &bA, const String &bB);
   void EM_r(KeyValueGraph &kvg, const String &bA, const String &bB);
   void EM_m(KeyValueGraph &kvg, const String &b);
+
+  void playScene(const String &b);
 };
 
