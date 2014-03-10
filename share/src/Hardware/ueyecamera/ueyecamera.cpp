@@ -236,7 +236,7 @@ void sUEyeInterface::camOpen() {
   }
 
   tout(this) << "camOpen()" << endl;
-  CaptureVideo_wr(IS_WAIT);
+  CaptureVideo_wr(IS_DONT_WAIT);
   if(err_flag) return;
 
   InitImageQueue_wr();
