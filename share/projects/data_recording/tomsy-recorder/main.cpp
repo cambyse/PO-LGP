@@ -122,7 +122,7 @@ private:
 	TimeTagFile times1, times2, times3, kinect_video_times, kinect_depth_times;
 	AudioWriter_libav audio_writer;
 	AudioPoller_PA audio_poller;
-	byteA buf1, buf2, buf3, audio_buf, video_buf, kinect_depth_repack;
+	byteA buf1, buf2, buf3, audio_buf, kinect_depth_repack;
 	KinectCallbackReceiver kinect;
 	int kin_video_count, kin_depth_count;
 
