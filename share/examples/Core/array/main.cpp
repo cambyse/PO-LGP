@@ -604,9 +604,7 @@ void TEST(RowShiftedPackedMatrix){
 //------------------------------------------------------------------------------
 
 int MAIN(int argc, char *argv[]){
-  testStdVectorCompat();
 
-  return 0;
   //testPCA();
   //testCheatSheet();
 
@@ -615,6 +613,7 @@ int MAIN(int argc, char *argv[]){
   testInitializationList();
   testSimpleIterators();
   testRowsAndColumsAccess();
+  testStdVectorCompat();
   testMatlab();
   testException();
   testMemoryBound();

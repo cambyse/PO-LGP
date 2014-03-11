@@ -108,7 +108,6 @@ bool readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=false
       Item *e=containingKvg.getItem(str);
       if(e) { //sucessfully found
         parents.append(e);
-        e->parentOf.append(containingKvg);
       } else { //this element is not known!!
         PARSERR("unknown " <<j <<". parent '" <<str <<"'");
         MT::skip(is, NULL, ")", false);
@@ -214,8 +213,10 @@ bool readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=false
     else { cout <<"FAILED" <<endl; }
   }
   
-  if(item) containingKvg.append(item);
-  else {
+  if(item){
+    for(Item *it:item->parents) it->parentOf.append(item);
+    containingKvg.append(item);
+  }else {
     cout <<"FAILED reading item with keys ";
     keys.write(cout, " ", NULL, "()");
     cout <<" and parents ";

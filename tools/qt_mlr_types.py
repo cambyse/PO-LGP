@@ -3,17 +3,38 @@ python
 def qdump__MT__String(d, value):
     p = value["p"]
     N = value["N"]
-    s = ""
-    for i in xrange(N):
-        s += "%c" % int(p.dereference())
-        p += 1
-    d.putValue("'%s' [%i]" % (s,N))
-
+    s = "'"
+    i = 0
+    while(i<N):
+        s += "%c" % int((p+i).dereference())
+        i = i+1
+    s += "' [%i]" % N
+    d.putValue(s)
     d.putNumChild(2)
     if d.isExpanded():
         with Children(d):
             d.putSubItem("N", N)
             d.putSubItem("p", p)
+
+
+def qdump__LIST(d, value):
+    p = value["p"]
+    N = value["N"]
+    s = "<%i>" %N
+    d.putValue(s)
+    m=N
+    if m>10:
+        m=10
+    d.putNumChild(m+1)
+    if d.isExpanded():
+        with Children(d):
+            i=0
+            while (i<m):
+                s = "(%i)" %i
+                d.putSubItem(s, (p+i).dereference().dereference())
+                i = i+1
+            d.putSubItem("p", p)
+
 
 def qdump__MT__Array(d, value):
     p = value["p"]
@@ -30,10 +51,6 @@ def qdump__MT__Array(d, value):
         s = "<%i %i>"%(d0,d1)
     if nd==3:
         s = "<%i %i %i>"%(d0,d1,d2)
-    # for i in xrange(N):
-    #     s += str(p.dereference()) + " "
-    #     p += 1
-    # s += "]"
     d.putValue(s)
     m=N
     if m>10:
@@ -42,7 +59,8 @@ def qdump__MT__Array(d, value):
     if d.isExpanded():
         with Children(d):
             d.putSubItem("N", N)
-            for i in xrange(m):
+            i=0
+            while (i<m):
                 if nd==1:
                     s = "(%i)" %(i)
                 if nd==2:
@@ -50,10 +68,42 @@ def qdump__MT__Array(d, value):
                 if nd==3:
                     s = "(%i,%i,%i)"%(i/d1,(i/d2)%d1,i%d2)
                 d.putSubItem(s, (p+i).dereference())
+                i = i+1
             d.putSubItem("p", p)
             d.putSubItem("reference", value["reference"])
             d.putSubItem("special", value["special"])
             d.putSubItem("aux", value["aux"])
             
+def qdump__Item_typed(d, value):
+    keys_N = value["keys"]["N"]
+    keys_p = value["keys"]["p"]
+    s = "'"
+    i = 0
+    while(i<keys_N):
+        string = (keys_p+i).dereference()
+        string_N = string["N"]
+        string_p = string["p"]
+        j = 0
+        while(j<string_N):
+            s += "%c" % int((string_p+j).dereference())
+            j = j+1
+        i = i+1
+        if(i<keys_N):
+            s += " "
+    s += "'"
+    d.putValue(s)
+    d.putNumChild(4)
+    if d.isExpanded():
+        with Children(d):
+            d.putSubItem("value", value["value"].dereference())
+            d.putSubItem("parents", value["parents"])
+            d.putSubItem("parentOf", value["parentOf"])
+            d.putSubItem("index", value["index"])
+
+def qdump__ItemL(d, value):
+    qdump__LIST(d,value)
+
+def qdump__KeyValueGraph(d, value):
+    qdump__LIST(d,value)
 
 end
