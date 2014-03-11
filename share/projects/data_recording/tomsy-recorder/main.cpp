@@ -122,7 +122,7 @@ private:
 	TimeTagFile times1, times2, times3, kinect_video_times, kinect_depth_times;
 	AudioWriter_libav audio_writer;
 	AudioPoller_PA audio_poller;
-	byteA buf1, buf2, buf3, audio_buf, kinect_depth_repack;
+	byteA buf1, buf2, buf3, audio_buf, video_buf, kinect_depth_repack;
 	KinectCallbackReceiver kinect;
 	int kin_video_count, kin_depth_count;
 
@@ -173,7 +173,14 @@ protected:
 		kinect_video.addFrame(rgb);
 		kinect_video_times.add_stamp(timestamp);
 	}
-
+	void kinect_depth_cb(const MT::Array<uint16_t>& depth, double timestamp) {
+		// as above
+		if(kin_depth_count++ < 3)
+				return;
+		MLR::pack_kindepth2rgb(depth, kinect_depth_repack);
+		kinect_depth.addFrame(kinect_depth_repack);
+		kinect_depth_times.add_stamp(timestamp);
+	}
 
 public:
 	RecordingSystem(int id1, int id2, int id3) : created(MT::getNowString()), cam1(id1), cam2(id2), cam3(id3),
@@ -185,7 +192,8 @@ public:
 		times1(enc1.name()), times2(enc2.name()), times3(enc3.name()),
 		kinect_video_times(kinect_video.name()), kinect_depth_times(kinect_depth.name()),
 		audio_writer(STRING("z.mike." << created << ".wav")),
-		audio_buf(8192), kinect(nullptr, std::bind(&RecordingSystem::kinect_video_cb, this, _1, _2)),
+		audio_buf(8192), kinect(std::bind(&RecordingSystem::kinect_depth_cb, this, _1, _2),
+				std::bind(&RecordingSystem::kinect_video_cb, this, _1, _2)),
 		kin_video_count(0), kin_depth_count(0) {
 	}
 
