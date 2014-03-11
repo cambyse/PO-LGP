@@ -13,6 +13,12 @@
 
 class AbstractInstance {
     //------------------------------------------------------------//
+    //                         friends                            //
+    //------------------------------------------------------------//
+    // befriend derived classes so that they can access protected methods
+    friend class DoublyLinkedInstance;
+
+    //------------------------------------------------------------//
     //                         typedefs                           //
     //------------------------------------------------------------//
 public:
@@ -85,9 +91,8 @@ public:
     const action_ptr_t action;
     const observation_ptr_t observation;
     const reward_ptr_t reward;
-protected:
-    subscriber_set_t subscribers;
 private:
+    subscriber_set_t subscribers;
     weak_ptr_t self_ptr;
 
     //------------------------------------------------------------//
@@ -121,21 +126,28 @@ public:
     virtual ptr_t append(action_ptr_t a, observation_ptr_t o, reward_ptr_t r);
     virtual void set_predecessor(ptr_t pre);
     virtual void set_successor(ptr_t suc);
+private:
     virtual ptr_t get_self_ptr() const final;
-protected:
     /** \brief Objects have to be created using create() function. */
     AbstractInstance(action_ptr_t a,
                      observation_ptr_t o,
                      reward_ptr_t r);
-    /** \brief Set the self_ptr. This function MUST be called after creating a
-     * new object. */
-    virtual void set_self_ptr(shared_ptr_t p) final;
+    /** \brief This function should be used by derived classes in their create
+     * methods. It ensures that the self pointer is set. */
+    static ptr_t create(AbstractInstance * pointer);
+    /** \brief Subscribe to this instance to be taken into account for
+     * destruction notifications. */
+    virtual void subscribe(ptr_t ins) final;
+    /** \brief Unsubscribe from this instance. */
+    virtual void unsubscribe(ptr_t ins) final;
     /** \brief Subscribe to this instance to be taken into account for destroy
      * callbacks. */
-    virtual void subscribe(ptr_t ins);
-    /** \brief This function should be used by derived classes in their create
-     * methods to set the self pointer. */
-    static ptr_t create(AbstractInstance * pointer);
+    virtual void destruction_notification(ptr_t ins);
+    /** \brief Notify all subscribers of pending destruction. */
+    virtual void notify_subscribers() const final;
+    /** \brief Set the self_ptr. This function MUST be called after creating a
+     * new object. Use AbstractInstance::create(AbstractInstance * pointer). */
+    virtual void set_self_ptr(shared_ptr_t p) final;
 };
 
 #include "../util/debug_exclude.h"

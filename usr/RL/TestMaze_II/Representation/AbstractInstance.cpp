@@ -97,27 +97,32 @@ AbstractInstance::ptr_t AbstractInstance::create_invalid() {
 
 int AbstractInstance::destroy() {
     DEBUG_OUT(1, *this << " destroy");
-    return 1;
+    notify_subscribers();
+    return 0;
 }
 
 int AbstractInstance::destroy_unused_reachable() {
     DEBUG_OUT(1, *this << " destroy_unused_reachable");
-    return 1;
+    notify_subscribers();
+    return 0;
 }
 
 int AbstractInstance::destroy_all_reachable() {
     DEBUG_OUT(1, *this << " destroy_all_reachable");
-    return 1;
+    notify_subscribers();
+    return 0;
 }
 
 int AbstractInstance::destroy_inverse_reachable() {
     DEBUG_OUT(1, *this << " destroy_inverse_reachable");
-    return 1;
+    notify_subscribers();
+    return 0;
 }
 
 int AbstractInstance::destroy_sequence() {
     DEBUG_OUT(1, *this << " destroy_sequence");
-    return 1;
+    notify_subscribers();
+    return 0;
 }
 
 AbstractInstance::Iterator AbstractInstance::begin() {
@@ -200,10 +205,6 @@ AbstractInstance::AbstractInstance(action_ptr_t a,
     action(a), observation(o), reward(r), self_ptr()
 {}
 
-void AbstractInstance::set_self_ptr(shared_ptr_t p) {
-    self_ptr = p;
-}
-
 AbstractInstance::ptr_t AbstractInstance::create(AbstractInstance * pointer) {
     shared_ptr_t p(pointer);
     p->set_self_ptr(p);
@@ -211,5 +212,39 @@ AbstractInstance::ptr_t AbstractInstance::create(AbstractInstance * pointer) {
 }
 
 void AbstractInstance::subscribe(ptr_t ins) {
+    DEBUG_OUT(2,"Subscribe " << ins << " to " << *this);
     subscribers.insert(weak_ptr_t(shared_ptr_t(ins)));
+}
+
+void AbstractInstance::unsubscribe(ptr_t ins) {
+    auto it = subscribers.find(weak_ptr_t(shared_ptr_t(ins)));
+    if(it==subscribers.end()) {
+        DEBUG_ERROR("Trying to unsubscribe " << ins << " from " << *this);
+    } else {
+        DEBUG_OUT(2,"Unsubscribe " << ins << " from " << *this);
+        subscribers.erase(it);
+    }
+}
+
+void AbstractInstance::destruction_notification(ptr_t) {
+    // nothing to do for AbstractInstance
+    return;
+}
+
+void AbstractInstance::notify_subscribers() const {
+    // Subscribers may unsubscribe in response to notification, which possibly
+    // invalidates iterators. We therefore use a copy.
+    subscriber_set_t old_subscribers = subscribers;
+    for(weak_ptr_t p : old_subscribers) {
+        if(p.expired()) {
+            DEBUG_DEAD_LINE;
+        } else {
+            DEBUG_OUT(2,*this << " sends destruction notification to " << *(p.lock()));
+            p.lock()->destruction_notification(get_self_ptr());
+        }
+    }
+}
+
+void AbstractInstance::set_self_ptr(shared_ptr_t p) {
+    self_ptr = p;
 }

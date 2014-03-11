@@ -25,81 +25,120 @@ reward_ptr_t reward(int n) {
     return reward_ptr_t(new ListedReward({0,1,2,3,4,5,6,7,8,9,10},n));
 }
 
-// Create a sequence like
+// Create a structure like
 //
-//    <--7==8==9==10               //
-//               \                 //
-//                V                //
-//    <--0==1==2==3==4==5==6-->    //
+//    <--0==1==2==3.               //
+//                  \              //
+//                   V             //
+//    <--4==5==6==7==8==9==10-->   //
 //
-// and return instance nr 10 (== means the instances are linked forwards AND
-// backwards, --> are singlelinks). Backwards iteration is expected run from 10
+// and return instance nr 3 (== means the instances are linked forwards AND
+// backwards, --> are single links). Backwards iteration is expected run from 10
 // down to 0, forwards iteration should then run from 0 to 7.
 ptr_t create_test_sequence(set<shared_ptr_t> * ins_set = nullptr) {
-    #warning does not produce the above sequence
-    ptr_t ins3;
-    ptr_t ins = DoublyLinkedInstance::create(action_ptr_t(), observation_ptr_t(), reward(0));
+    DEBUG_OUT(2,"Building test sequence...");
+    ptr_t ins8;
+    ptr_t ins = DoublyLinkedInstance::create(action_ptr_t(), observation_ptr_t(), reward(4));
     if(ins_set) ins_set->insert(ins);
-    for(int i : Range(1,7)) {
+    for(int i : Range(5,10)) {
         ins = ins->append(action_ptr_t(), observation_ptr_t(), reward(i));
         if(ins_set) ins_set->insert(ins);
-        if(i==3) {
-            ins3 = ins;
+        if(i==8) {
+            ins8 = ins;
         }
     }
-    ins = DoublyLinkedInstance::create(action_ptr_t(), observation_ptr_t(), reward(8), ins3, AbstractInstance::create_invalid());
+    ins = DoublyLinkedInstance::create(action_ptr_t(), observation_ptr_t(), reward(0));
     if(ins_set) ins_set->insert(ins);
-    for(int i : Range(9,10)) {
+    for(int i : Range(1,3)) {
         ins = ins->append(action_ptr_t(), observation_ptr_t(), reward(i));
         if(ins_set) ins_set->insert(ins);
     }
+    ins->set_successor(ins8);
+    DEBUG_OUT(2,"...DONE");
     return ins;
 }
 
 namespace {
 
-    TEST(InstanceTest, Iteration) {
-        ptr_t ins = create_test_sequence();
-        EXPECT_EQ(10,ins->reward->get_value());
-        EXPECT_EQ(8,ins->prev(2)->reward->get_value());
-        EXPECT_EQ(0,ins->prev(6)->reward->get_value());
-        EXPECT_EQ(7,ins->prev(6)->next(7)->reward->get_value());
+    TEST(InstanceTest, Minimal) {
+        ptr_t ins = DoublyLinkedInstance::create(action_ptr_t(),observation_ptr_t(),reward(0));
+        ins = ins->append(action_ptr_t(),observation_ptr_t(),reward(1));
+        ins = ins->append(action_ptr_t(),observation_ptr_t(),reward(2));
     }
 
-    TEST(InstanceTest, DestroySequence) {
+    TEST(InstanceTest, Iteration) {
+        ptr_t ins = create_test_sequence();
+        EXPECT_EQ(3,ins->reward->get_value());
+        EXPECT_EQ(0,ins->prev(3)->reward->get_value());
+        EXPECT_EQ(8,ins->next(1)->reward->get_value());
+        EXPECT_EQ(10,ins->next(3)->reward->get_value());
+        EXPECT_EQ(4,ins->next(1)->prev(4)->reward->get_value());
+        EXPECT_EQ(10,ins->next(1)->prev(4)->next(6)->reward->get_value());
+    }
+
+    TEST(InstanceTest, Destroy) {
 
         set<shared_ptr_t> ins_set;
 
-        // create and destroy sequence from nr 10
-        create_test_sequence(&ins_set)->destroy_sequence();
+        // create and destroy nr 6
+        EXPECT_EQ(1,create_test_sequence(&ins_set)->next()->prev(2)->destroy());
 
         // check use counts
         for(shared_ptr_t i : ins_set) {
-            EXPECT_EQ(2,i.use_count());
             DEBUG_OUT(1, *i << " has " << i.use_count() << " owners");
-        }
-
-        ins_set.clear();
-
-        // create and destroy sequence from nr 0
-        create_test_sequence(&ins_set)->prev(6)->destroy_sequence();
-
-        // check use counts
-        for(shared_ptr_t i : ins_set) {
             switch((int)i->reward->get_value()) {
-            case 3:
-            case 8:
-            case 10:
-                EXPECT_EQ(3,i.use_count());
-                DEBUG_OUT(1, *i << " has " << i.use_count() << " owners");
+            case 6:
+                EXPECT_EQ(2,i.use_count());
                 break;
+            case 8:
+                EXPECT_EQ(5,i.use_count());
+                break;
+            case 1:
+            case 2:
             case 9:
                 EXPECT_EQ(4,i.use_count());
-                DEBUG_OUT(1, *i << " has " << i.use_count() << " owners");
                 break;
             default:
+                EXPECT_EQ(3,i.use_count());
+            }
+        }
+    }
+
+    TEST(InstanceTest, DestroyAllReachable) {
+        {
+            set<shared_ptr_t> ins_set;
+
+            // create and destroy all reachable from nr 3
+            EXPECT_EQ(11,create_test_sequence(&ins_set)->destroy_all_reachable());
+
+            // check use counts
+            for(shared_ptr_t i : ins_set) {
                 EXPECT_EQ(2,i.use_count());
                 DEBUG_OUT(1, *i << " has " << i.use_count() << " owners");
+            }
+        }
+        {
+            set<shared_ptr_t> ins_set;
+
+            // create and destroy all reachable from nr 6
+            EXPECT_EQ(7,create_test_sequence(&ins_set)->next()->prev(2)->destroy_all_reachable());
+
+            // check use counts
+            for(shared_ptr_t i : ins_set) {
+                DEBUG_OUT(1, *i << " has " << i.use_count() << " owners");
+                switch((int)i->reward->get_value()) {
+                case 3:
+                    EXPECT_EQ(i->next(),*(i->end()));
+                case 0:
+                    EXPECT_EQ(3,i.use_count());
+                    break;
+                case 1:
+                case 2:
+                    EXPECT_EQ(4,i.use_count());
+                    break;
+                default:
+                    EXPECT_EQ(2,i.use_count());
+                }
             }
         }
     }

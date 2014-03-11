@@ -23,12 +23,9 @@ public:
     }
     virtual REWARD_TYPE get_type() const;
 
-    /** \brief Always return a value of zero. */
-    virtual value_t get_value() const { return 0; }
-
-    virtual value_t min_reward() const { return 0; }
-
-    virtual value_t max_reward() const { return 0; }
+    virtual value_t get_value() const;
+    virtual value_t min_reward() const;
+    virtual value_t max_reward() const;
 
 protected:
     virtual void set_type(REWARD_TYPE t);

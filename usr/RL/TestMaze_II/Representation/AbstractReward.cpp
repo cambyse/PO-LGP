@@ -29,6 +29,21 @@ AbstractReward::REWARD_TYPE AbstractReward::get_type() const {
     return reward_type;
 }
 
+AbstractReward::value_t AbstractReward::get_value() const {
+    DEBUG_ERROR("Getting value of " << *this);
+    return 0;
+}
+
+AbstractReward::value_t AbstractReward::min_reward() const {
+    DEBUG_ERROR("Getting min reward of " << *this);
+    return 0;
+}
+
+AbstractReward::value_t AbstractReward::max_reward() const {
+    DEBUG_ERROR("Getting max reward of " << *this);
+    return 0;
+}
+
 void AbstractReward::set_type(REWARD_TYPE t) {
     reward_type = t;
 }
