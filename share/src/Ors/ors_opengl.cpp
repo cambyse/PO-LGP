@@ -31,7 +31,7 @@
 #include <iomanip>
 
 //global options
-bool orsDrawJoints=true, orsDrawShapes=true, orsDrawBodies=true, orsDrawProxies=true;
+bool orsDrawJoints=true, orsDrawShapes=true, orsDrawBodies=true, orsDrawProxies=true, orsDrawMarkers=true;
 bool orsDrawMeshes=true, orsDrawZlines=false;
 bool orsDrawBodyNames=false;
 double orsDrawAlpha=1.00;
@@ -119,7 +119,9 @@ void glDrawShape(ors::Shape *s) {
         else glDrawCappedCylinder(s->size[3], s->size[2]);
         break;
       case ors::markerST:
-        glDrawDiamond(s->size[0]/5., s->size[0]/5., s->size[0]/5.); glDrawAxes(s->size[0]);
+        if(orsDrawMarkers){
+          glDrawDiamond(s->size[0]/5., s->size[0]/5., s->size[0]/5.); glDrawAxes(s->size[0]);
+        }
         break;
       case ors::meshST:
         CHECK(s->mesh.V.N, "mesh needs to be loaded to draw mesh object");
@@ -241,7 +243,6 @@ void ors::KinematicWorld::glDraw() {
 
 void displayState(const arr& x, ors::KinematicWorld& G, const char *tag){
   G.setJointState(x);
-  G.calcBodyFramesFromJoints();
   G.gl().watch(tag);
 }
 
@@ -253,7 +254,6 @@ void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, const ch
   for(k=0; k<=(uint)num; k++) {
     t = k*T/num;
     G.setJointState(x[t]);
-    G.calcBodyFramesFromJoints();
     G.gl().update(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
     if(delay) MT::wait(delay);
   }
@@ -399,7 +399,6 @@ void _glDrawOdeWorld(dWorldID world)
 void animateConfiguration(ors::KinematicWorld& C) {
   arr x, x0;
   uint t, i;
-  C.calcBodyFramesFromJoints();
   C.getJointState(x0);
   C.gl().pressedkey=0;
   for(i=x0.N; i--;) {
@@ -408,13 +407,11 @@ void animateConfiguration(ors::KinematicWorld& C) {
       if(C.gl().pressedkey==13 || C.gl().pressedkey==27) return;
       x(i)=x0(i) + .5*sin(MT_2PI*t/20);
       C.setJointState(x);
-      C.calcBodyFramesFromJoints();
-      C.gl().update();
+      C.gl().update(STRING("joint = " <<i), false, false, true);
       MT::wait(0.01);
     }
   }
   C.setJointState(x0);
-  C.calcBodyFramesFromJoints();
 }
 
 
@@ -535,7 +532,9 @@ void editConfiguration(const char* filename, ors::KinematicWorld& C) {
     cout <<"reloading `" <<filename <<"' ... " <<std::endl;
     try {
       MT::lineCount=1;
-      C.init(filename);
+      C.gl().lock.writeLock();
+      C <<FILE(filename);
+      C.gl().lock.unlock();
     } catch(const char* msg) {
       cout <<"line " <<MT::lineCount <<": " <<msg <<" -- please check the file and press ENTER" <<endl;
       C.gl().watch();

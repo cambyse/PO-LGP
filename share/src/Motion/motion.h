@@ -109,6 +109,7 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
     prefix = other.prefix;
     costMatrix = other.costMatrix;
     dualMatrix = other.dualMatrix;
+    return *this;
   };
 
   void loadTransitionParameters(); ///< loads transition parameters from cfgFile //TODO: do in constructor of TransitionCost

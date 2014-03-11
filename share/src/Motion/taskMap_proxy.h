@@ -44,11 +44,10 @@ struct ProxyTaskMap:public TaskMap {
                uintA _shapes,
                double _margin=.02,
                bool _useCenterDist=true);
+  virtual ~ProxyTaskMap() {};
   
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
   virtual uint dim_phi(const ors::KinematicWorld& G);
-
-  virtual ~ProxyTaskMap() {};
 };
 
 /** proxy align task variable */

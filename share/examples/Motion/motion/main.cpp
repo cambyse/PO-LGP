@@ -19,7 +19,7 @@ int main(int argc,char** argv){
   c = MP.addTaskMap("position",
                     new DefaultTaskMap(posTMT, G, "endeff", ors::Vector(0, 0, .2)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                           ARRAY(MP.world.getBodyByName("target")->X.pos), 1e2);
+                           ARRAY(MP.world.getBodyByName("target")->X.pos), 1e3);
   MP.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
                               ARRAY(0.,0.,0.), 1e1);
 
@@ -47,22 +47,28 @@ int main(int argc,char** argv){
     <<"\n n=" <<n
    <<endl;
 
-  //mini evaluation test:
+  //initialize trajectory
   arr x(T+1,n);
-  if(MP.x0.N==3){ //assume 3D ball!
-    for(uint t=0;t<=T;t++){
-      double a=(double)t/T;
-      x[t]() = (1.-a)*MP.x0 + a*ARRAY(MP.world.getBodyByName("target")->X.pos);
-    }
-  }else{
+//  if(MP.x0.N==3){ //assume 3D ball!
+//    for(uint t=0;t<=T;t++){
+//      double a=(double)t/T;
+//      x[t]() = (1.-a)*MP.x0 + a*ARRAY(MP.world.getBodyByName("target")->X.pos);
+//    }
+//  }else{
     for(uint t=0;t<=T;t++) x[t]() = MP.x0;
-  }
-  cout <<"fx = " <<evaluateVF(Convert(MF), x) <<endl;
+//  }
+
+  //evaluation test
+  //  cout <<"fx = " <<evaluateVF(Convert(MF), x) <<endl;
 
   //gradient check
   for(uint k=0;k<0;k++){
     rndUniform(x,-1.,1.);
     checkJacobian(Convert(MF), x, 1e-5);
+    /* Why the gradient check fails:
+     * When final velocity is conditioned: the Jacobian w.r.t. the final time slice depends on the final configuration -- in motion.cpp:231
+     * the Hessian is not used to estimate the velocity gradient -- that's an approximation! For small velocities (optimized traj) it should still be ok.
+     * When collisions are conditions: the Jacobian is in principle approximate. */
   }
   
   //  OpenGL costs(STRING("PHI ("<<F.dim_phi(0)<<" tasks)"), 3*T+10, 3*F.dim_phi(0)+10 );
@@ -71,6 +77,7 @@ int main(int argc,char** argv){
     optNewton(x, Convert(MF), OPT(verbose=2, stopIters=40, useAdaptiveDamping=false, damping=1e-0, maxStep=1.));
     //costs.displayRedBlue(~sqr(P.costMatrix), false, 3);
     MP.costReport();
+//    checkJacobian(Convert(MF), x, 1e-5);
     write(LIST<arr>(x),"z.output");
     //gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", false, true);
     gnuplot("load 'z.costReport.plt'", false, true);

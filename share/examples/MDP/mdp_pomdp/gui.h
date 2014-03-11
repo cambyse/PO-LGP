@@ -3,9 +3,8 @@
 #undef None
 //#include <Qt/qmetatype.h>
 //#include <Qt/qobject.h>
-#include <Qt/qfiledialog.h>
+#include <qfiledialog.h>
 #include "gui_ui.h"
-#define MT_IMPLEMENT_TEMPLATES
 #include <Core/util.h>
 #include <MDP/mdp_EMSolver.h>
 
@@ -29,6 +28,7 @@ public:
     isRunning=false;
     ui.readme->setSource(QUrl("README.html#gui"));
   }
+  virtual ~Gui() {};
   
 public slots:
   void reportParameters(){ getParams();  sol.reportParameters(cout); }

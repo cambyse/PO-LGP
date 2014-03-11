@@ -1,0 +1,8 @@
+BASE = ../../../share
+OBJS = main.o
+
+STANIMIR = 1
+DMITRY = 1
+
+include $(BASE)/gofMake/make-generic
+

@@ -871,7 +871,7 @@ void Togl_SetTimerFunc( struct Togl *togl, Togl_Callback *proc )
  *   Every time the sub-command is called from Tcl, the
  *   C routine will be called with all the arguments from Tcl.
  */
-void Togl_CreateCommand( char *cmd_name, Togl_CmdProc *cmd_proc)
+void Togl_CreateCommand(const char *cmd_name, Togl_CmdProc *cmd_proc)
 {
    int new_item;
    Tcl_HashEntry *entry;

@@ -1,0 +1,5 @@
+BASE = ../..
+
+OPENGL=1
+
+include $(BASE)/gofMake/make-generic

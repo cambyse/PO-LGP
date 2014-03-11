@@ -1,11 +1,12 @@
 #include <Core/util.h>
 #include <System/engine.h>
 
-#include "modules.h"
+#include <Hardware/racer/modules.h>
 
 void testIMU(){
   struct MySystem:System{
-    ACCESS(arr, imuData)
+    ACCESS(arr, imuData);
+    ACCESS(arr, stateEstimate);
     MySystem(){
       addModule<IMU_Poller>("IMU_Poller", ModuleThread::loopFull);
       addModule<KalmanFilter>("KalmanFilter", ModuleThread::listenFirst);
@@ -21,8 +22,12 @@ void testIMU(){
 
 
   for(;;){
-    S.imuData.var->waitForNextWriteAccess();
-    if(S.imuData.get()()(0)>10.) break;
+    S.stateEstimate.var->waitForNextWriteAccess();
+    arr x = S.stateEstimate.get();
+//    arr enc = S.encoderData.get();
+    cout <<"\r state = " <<x <<std::flush;
+    if(engine().shutdown.getValue()) break;
+//    if(S.imuData.get()()(0)>10.) break;
   }
 
   //    engine().shutdown.waitForSignal();
@@ -45,6 +50,8 @@ void testMotors(){
 
   engine().open(S);
 
+  S.controls.set()() = ARR(5.,5.,10.);
+  MT::wait(3);
   S.controls.set()() = ARR(128.,128.,10.);
   MT::wait(3);
   S.controls.set()() = ARR(0.,0.,10.);
@@ -62,7 +69,8 @@ void testMotors(){
 void testBalance(){
   struct MySystem:System{
     ACCESS(arr, imuData)
-    ACCESS(arr, stateEstimate)
+    ACCESS(arr, stateEstimate);
+    ACCESS(arr, encoderData)
     ACCESS(arr, controls)
     MySystem(){
       addModule<IMU_Poller>("IMU_Poller", ModuleThread::loopFull);
@@ -78,19 +86,26 @@ void testBalance(){
   double zeroTh=MT::getParameter<double>("zeroTh", 0.);
   double k_th=MT::getParameter<double>("k_th", 0.);
   double k_thDot=MT::getParameter<double>("k_thDot", 0.);
+  double k_acc=MT::getParameter<double>("k_acc", 0.);
 
   //    engine().enableAccessLog();
   engine().open(S);
+  double motor_vel=0.;
 
   for(int i = 0;; ++i){
     S.stateEstimate.var->waitForNextWriteAccess();
     arr x = S.stateEstimate.get();
+    arr enc = S.encoderData.get();
 
-    double u = k_th*(zeroTh - x(1)) + k_thDot * (0. - x(3));
+    double x_ref = 0.;
+    double th_ref = 0.1 * (x_ref-x(0)) + 0.1 * (0.-x(2));
+    double u = k_th*(th_ref - x(1)) + k_thDot * (0.-x(3));
 
-    cout <<"\r state = " <<x <<std::flush;
+    motor_vel += k_acc*u;
+//    cout <<"\r state = " <<x <<std::flush;
+//    cout <<"enc= " <<enc/MT_2PI <<std::endl;
 
-    S.controls.set()() = ARR(u, u, 10.);
+    S.controls.set()() = ARR(motor_vel, motor_vel, 10.);
 
     if(engine().shutdown.getValue()) break;
   }

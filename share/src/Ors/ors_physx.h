@@ -48,6 +48,9 @@ struct PhysXInterface {
   void ShutdownPhysX();
 
   void glDraw();
+
+  void addForce(ors::Vector& force, ors::Body* b);
+  void addForce(ors::Vector& force, ors::Body* b, ors::Vector& pos);
 };
 
 void glPhysXInterface(void *classP);

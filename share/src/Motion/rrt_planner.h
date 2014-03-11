@@ -20,7 +20,6 @@ namespace ors {
       RRTPlanner(ors::KinematicWorld* G, MotionProblem &problem, double stepsize, bool verbose = false);
 
       arr getTrajectoryTo(const arr& target, int max_iter=0); ///< returns the trajectory created by the RRT
-
   };
 }
 

@@ -10,7 +10,8 @@
   <url>http://ros.org/wiki/dual_execution</url>
 
   <depend package="roscpp"/>
-<!--  <depend package="sl_controller_interface"/> -->
+  <depend package="sl_controller_interface"/>
+  <depend package="sl_barrett_controller_interface"/>
 
 
 </package>

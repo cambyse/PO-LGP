@@ -12,6 +12,7 @@ if(WITH_UEYE)
     include(.sources.cmake)
 
     set(TARGET Hardware_${NAME})
+    add_definitions(-DUEYE_INSTALLED)
     add_library(${TARGET} SHARED ${SOURCES})
     target_link_libraries(${TARGET} 
             LINK_PRIVATE Core ueye_api)

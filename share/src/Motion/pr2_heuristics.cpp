@@ -7,12 +7,30 @@ arr pr2_zero_pose(){
   return q;
 }
 
-arr pr2_reasonable_W(){
-  arr W(pr2_q_dim());
-  W=1.;
-  W(0)=1e2;
-//  W(12)=1e2;
-  return 1e-1*W;
+arr pr2_reasonable_W(ors::KinematicWorld& world){
+#if 0
+  arr W = world.naturalQmetric(5.);
+  ors::Joint *j = world.getJointByName("torso_lift_joint");
+  if(j){
+    CHECK(j->type == ors::JT_transX, "");
+    W(j->qIndex) *= 10;
+  }
+  j = world.getJointByName("worldTranslationRotation");
+  if(j){
+    CHECK(j->type == ors::JT_transXYPhi, "");
+    W(j->qIndex+0) *= 3;
+    W(j->qIndex+1) *= 3;
+//    W(j->qIndex+2) *= 10;
+  }
+#else
+  arr W(world.getJointStateDimension());
+  for(ors::Joint *j:world.joints){
+    double h=j->H;
+    for(uint k=0;k<j->qDim();k++) W(j->qIndex+k)=h;
+  }
+  cout <<W <<endl;
+#endif
+  return W;
 }
 
 uintA _get_shape_indices(ors::Body* b) {

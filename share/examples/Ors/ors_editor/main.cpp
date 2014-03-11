@@ -30,9 +30,10 @@ void TEST(OrsEditor) {
   //some optional manipulations
   G.meldFixedJoints();
   G.removeUselessBodies();
-  G.calcBodyFramesFromJoints();
-//  G.topSort();
+  G.topSort();
   G.makeLinkTree();
+  G.calc_q_from_Q();
+  G.calc_fwdPropagateFrames();
   G >>FILE("z.ors");
 
   editConfiguration(file, G);

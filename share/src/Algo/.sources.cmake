@@ -1,14 +1,15 @@
-set(SOURCES ./ann.h
-./rrt.h
-./MLcourse.cpp
-./MLcourse.h
-./spline.cpp
+set(SOURCES ./spline.h
 ./kalman.h
-./kalman.cpp
-./rrt.cpp
-./algos.h
+./spline.cpp
 ./algos.cpp
-./gaussianProcess.cpp
+./MLcourse.h
+./gaussianProcess_plot.cpp
+./rrt.h
 ./ann.cpp
-./spline.h
-./gaussianProcess.h)
+./ann.h
+./kalman.cpp
+./algos.h
+./MLcourse.cpp
+./rrt.cpp
+./gaussianProcess.h
+./gaussianProcess.cpp)

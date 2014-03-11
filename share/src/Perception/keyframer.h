@@ -12,19 +12,6 @@ struct KeyFramer {
   KeyFramer(ors::KinematicWorld &kw, G4Data &g4d);
   ~KeyFramer();
 
-  //uint getNBodies();
-  //uint getNDofs(uint b);
-  //uint getNDofs();
-  //uint getCumNDofs(uint b);
-  //uint getNFrames();
-  //uint getNWindows(uint wlen);
-
-  //arr getState();
-  //arr getState(uint f);
-  //arr getState(uint f, uint b);
-  //arr getWindow(uint f);
-  //arr getWindow(uint f, uint b);
-
   void updateOrs(uint f);
 
   arr getCorr(uint b1, uint b2, uint wlen);
@@ -32,35 +19,63 @@ struct KeyFramer {
   arr getCorrPCA(uint b1, uint b2, uint wlen, uint npc);
   arr getCorrPCA(const String &n1, const String &n2, uint wlen, uint npc);
 
-  /*
-  MT::Array<arr> getCorrEnsemble(uint b1, uint b2, uintA &wlens, bool pca);
-  MT::Array<arr> getCorrEnsemble(const String &n1, const String &n2, uintA &wlens, bool pca);
-  */
+  void computeVar(const String &type, uint wlen, bool force = false);
+  void computeVar(const StringA &types, uint wlen, bool force = false);
+  void computeSpline(const StringA &types, double lambda, bool force = false);
+  void computeSpline(const String &type, double lambda, bool force = false);
+  void computeES(const StringA &types, double alpha, bool force = false);
+  void computeES(const String &type, double alpha, bool force = false);
+  void computeSmooth(const StringA &types, double alpha, bool force = false);
+  void computeSmooth(const String &type, double alpha, bool force = false);
+  void computeSpeed(const StringA &types, bool force = false);
+  void computeSpeed(const String &type, bool force = false);
+  void computeGP(const StringA &types, bool force = false);
+  void computeGP(const String &type, bool force = false);
+  void computeDPos(const String &b, bool force = false);
+  void computeDQuat(const String &b, bool force = false);
+
+  arr getState(uint b);
+  arr getState(const String &n);
+  arr getStateVar(uint b, uint wlen);
+  arr getStateVar(const String &n, uint wlen);
+  arr getStateSpeed(uint b);
+  arr getStateSpeed(const String &n);
 
   arr getAngle(uint b1, uint b2);
   arr getAngle(const String &n1, const String &n2);
   arr getAngleVar(uint b1, uint b2, uint wlen);
   arr getAngleVar(const String &n1, const String &n2, uint wlen);
 
-  ProxyL getProxies(uint b1, uint b2);
-  ProxyL getProxies(const String &n1, const String &n2);
-  void calcProxies(uint b1, uint b2);
-  void calcProxies(const String &n1, const String &n2);
-  void clearProxies();
+  arr getQuat(uint b1, uint b2);
+  arr getQuat(const String &n1, const String &n2);
+  arr getQuatVar(uint b1, uint b2, uint wlen);
+  arr getQuatVar(const String &n1, const String &n2, uint wlen);
 
-  // TODO probably change all indeces b1 and b2, into body indeces
-  arr getDists(uint b1, uint b2);
-  arr getDists(const String &n1, const String &n2);
+  arr getPos(uint b1, uint b2);
+  arr getPos(const String &n1, const String &n2);
+  arr getPosVar(uint b1, uint b2, uint wlen);
+  arr getPosVar(const String &n1, const String &n2, uint wlen);
 
-  KeyFrameL getKeyFrames(const arr &corr, const ProxyL &proxies);
-  KeyFrameL getKeyFrames(const arr &q);
+  arr getDiff(uint b1, uint b2);
+  arr getDiff(const String &n1, const String &n2);
+  arr getDiffVar(uint b1, uint b2, uint wlen);
+  arr getDiffVar(const String &n1, const String &n2, uint wlen);
+
+  arr getPosLen(uint b1, uint b2);
+  arr getPosLen(const String &n1, const String &n2);
+  arr getPosLenVar(uint b1, uint b2, uint wlen);
+  arr getPosLenVar(const String &n1, const String &n2, uint wlen);
+
+  arr getTransfVar(uint b1, uint b2, uint wlen);
+  arr getTransfVar(const String &n1, const String &n2, uint wlen);
+  
+  KeyFrameL getKeyFrames(const uintA &vit);
   void saveKeyFrameScreens(const KeyFrameL &keyframes, uint df = 60);
 
-  void computeEvidences(arrL &rho, const arr &c, const arr &v, const arrL &theta);
-  void Estep(arr& a, arr& b, const arr& P0, const arr& P, const arr& rho);
-  void EstepQ(arrL &ql, const arrL &theta, const arrL &rho);
-  void Mstep(arrL &theta, const arrL &ql, const arr& c, const arr &v);
-  arr EM(const arr &corr, const arr &var);
+  void EM_c(KeyValueGraph &kvg, const String &bA, const String &bB);
+  void EM_r(KeyValueGraph &kvg, const String &bA, const String &bB);
+  void EM_m(KeyValueGraph &kvg, const String &b);
 
+  void playScene(const String &b);
 };
 

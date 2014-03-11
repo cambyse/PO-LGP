@@ -17,13 +17,9 @@ namespace ors {
 
     sRRTPlanner(RRTPlanner *p, RRT rrt, bool verbose) : p(p), rrt(rrt), verbose(verbose) { };
 
-<<<<<<< HEAD
     bool growTowards(RRT& growing, RRT& passive);
 
     bool isFeasible(const arr& q);
-=======
-    bool growTowards(RRT& growing, RRT& passive, ors::KinematicWorld &G);
->>>>>>> master
 
     uint success_growing;
     uint success_passive;
@@ -89,7 +85,9 @@ arr buildTrajectory(RRT& rrt, uint node, bool forward) {
 }
     
 ors::RRTPlanner::RRTPlanner(ors::KinematicWorld *G, MotionProblem &problem, double stepsize, bool verbose) : 
-  s(new ors::sRRTPlanner(this, RRT(G->getJointState(), stepsize), verbose)), G(G), problem(problem) {
+   G(G), problem(problem) {
+    arr q; G->getJointState(q);
+    s = new ors::sRRTPlanner(this, RRT(q, stepsize), verbose);
     joint_min = zeros(G->getJointStateDimension(), 1);
     joint_max = ones(G->getJointStateDimension(), 1);
   }

@@ -1,0 +1,6 @@
+BASE = ../../..
+
+OBJS = main.o simulator.o joystick2tasks.o
+DEPEND = Core Ors Motion System Gui Hardware
+
+include $(BASE)/gofMake/make-generic

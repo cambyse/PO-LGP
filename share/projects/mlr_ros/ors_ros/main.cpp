@@ -7,7 +7,12 @@
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
 #include <GL/gl.h>
-#include <Optim/optimization.h>
+#include <Core/module.h>
+#include <System/engine.h>
+
+#include "ros_module.h"
+
+#include <ros/ros.h>
 
 void createScene(ors::KinematicWorld& ors, OpenGL& gl) {
   ors.clear();
@@ -40,7 +45,7 @@ void createScene(ors::KinematicWorld& ors, OpenGL& gl) {
     s->type=ors::meshST;
     s->mesh.readFile("pin1.off");
   }
-  ors.calcShapeFramesFromBodies();
+  //ors.calcShapeFramesFromBodies();
   cout <<ors <<endl;
 
   gl.clear();
@@ -52,25 +57,58 @@ void createScene(ors::KinematicWorld& ors, OpenGL& gl) {
   gl.update();
 }
 
-void run() {
+class SetupWorld : public Module {
+private:
+  int revision = 0;
+  ors::KinematicWorld w;
+  OpenGL gl;
 
-  while(true) {
-    ors::KinematicWorld G;
+public:
+  ACCESS(ors::KinematicWorld, world);
+  ACCESS(bool, do_physics)
 
-    createScene(G, G.gl());
-
-    for(uint t=0; t<500; t++) {
-      cout <<"\r t=" <<t <<std::flush;
-      G.physx().step();
-      G.gl().update();
-    }
-
-    sleep(1);
+  virtual void open() {
+    createScene(w, gl);
+    world.set() = w;
   }
+
+  virtual void step() {
+    // if world has been changed externally
+    if(revision < world.var->revisionNumber()) {
+      w = world.get();
+    }
+    if(do_physics.get()()) {
+      w.physx().step();
+      world.set() = w;
+      revision = world.var->revisionNumber();
+    }
+  }
+};
+
+REGISTER_MODULE(SetupWorld);
+
+void run() {
+  System S;
+
+  S.addModule<SetupWorld>("SetupWorld", ModuleThread::loopWithBeat, .03); // ~30 Hz
+  S.addModule<RosTf>("RosTf", ModuleThread::loopWithBeat, .03);
+  S.addModule<PhysicsMenu>("PhysicsMenu", ModuleThread::loopWithBeat, .03);
+  S.connect();
+  cout << S << endl; // get some info
+
+  S.getAccess<bool>("do_physics")->set()() = true;
+
+  // run it
+  engine().open(S);
+  engine().shutdown.waitForSignal();
+
+  cout << "bye bye" << endl;
+  engine().close(S);
 
 }
 
 int MAIN(int argc,char **argv){
+  ros::init(argc, argv, "ors_ros", ros::init_options::NoSigintHandler);
 
   run();
 

@@ -25,7 +25,6 @@ int main(int argc, char **argv){
     xdot += tau * xddot;
 
     G.setJointState(x, xdot);
-    G.calcBodyFramesFromJoints();
     gl.update();
   }
 

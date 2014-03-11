@@ -4,8 +4,6 @@
 #include <Motion/motionHeuristics.h>
 #include <Motion/taskMap_proxy.h>
 #include <Motion/taskMap_default.h>
-#include <Core/array_t.h>
-#include <Core/util_t.h>
 #include <Ors/ors.h>
 #include <gtest/gtest.h>
 #include <Gui/opengl.h>
@@ -28,7 +26,7 @@ arr create_endpose(ors::KinematicWorld& G, double col_prec, double pos_prec, arr
   P.setInterpolatingCosts(c, MotionProblem::constant, {0.}, col_prec);
 
   c = P.addTaskMap("position", new DefaultTaskMap(posTMT, G, "tip1", ors::Vector(0, 0, .0)));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(P.world.getBodyByName("target")->X.pos), 1e2);
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(P.world.getBodyByName("target")->X.pos), pos_prec);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e1);
 
   keyframeOptimizer(start, P, true, 2);
