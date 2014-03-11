@@ -10,9 +10,8 @@ namespace marc_controller_ns{
 class TreeControllerClass: public pr2_controller_interface::Controller
 {
 private:
-  //pr2_mechanism_model::JointState* joint_state_;
+  ors::KinematicWorld world;
   pr2_mechanism_model::Tree pr2_tree;
-//  pr2_mechanism_model::RobotState* pr2_robot;
 
   KDL::JntArray jnt_pos_;
   KDL::JntArrayVel jnt_vel_;
@@ -23,15 +22,14 @@ private:
   arr q, qd;
   arr q_ref, qdot_ref;
 
-  uintA pr2_jointIndex;
+  uintA ROS_qIndex;
 
   ros::Publisher jointState_publisher;
   ros::Subscriber jointReference_subscriber;
   marc_controller_pkg::JointState jointStateMsg;
 
   // Limits
-  arr lowerEffortLimits, upperEffortLimits;
-  arr lowerJointLimits, upperJointLimits;
+  arr limits;
 
   // Filter
   double q_filt;

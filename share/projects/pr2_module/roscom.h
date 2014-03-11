@@ -5,10 +5,10 @@ bool rosOk();
 
 struct RosCom:Module{
   struct sRosCom *s;
-  ACCESS(arr, q);
-  ACCESS(arr, qdot);
   ACCESS(arr, q_ref);
   ACCESS(arr, qdot_ref);
+  ACCESS(arr, q_obs);
+  ACCESS(arr, qdot_obs);
 
   RosCom();
 

@@ -5,18 +5,14 @@ Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL),
   endeffL = MP.addPDTask("endeffL", .02, .8, posTMT, "endeffL");
   base = MP.addPDTask("endeffBase", .02, .8, posTMT, "endeffBase");
   baseQuat = MP.addPDTask("endeffBase", .02, .8, quatTMT, "endeffBase");
+  head = MP.addPDTask("endeffHead", .02, .8, posTMT, "endeffHead");
   limits = MP.addPDTask("limits", .02, .8, qLimitsTMT);
   //limits->setGains(100.,0.);
-  qitself = MP.addPDTask("qitself", .1, 1., qLinearTMT, NULL, NoVector, NULL, NoVector, 0.01*MP.H_rate_diag);
+  qitself = MP.addPDTask("qitself", .1, 1., qLinearTMT, NULL, NoVector, NULL, NoVector, MP.H_rate_diag);
   qitself->setGains(0.,100.);
+
 //  MP.addPDtask("endeffHead", .1, .8, posTMT, "handR", NoVector, "rightTarget");
 //  MP.addPDtask("endeffBase", .1, .8, posTMT, "handR", NoVector, "rightTarget");
-//  TaskVariable *eff  = new DefaultTaskVariable("endeffector", ors, posTVT, "m9", "<t(0 0 -.24)>", 0, 0, 0);
-//  TaskVariable *q    = new DefaultTaskVariable("qitself", ors, qItselfTVT, 0, 0, 0, 0, 0);
-//  TaskVariable *rot  = new DefaultTaskVariable("endeffector rotation", ors, rotTVT, "m9", 0, 0, 0, 0);
-//  TaskVariable *col  = new DefaultTaskVariable("collision", ors, collTVT, 0, 0, 0, 0, ARR(margin));
-//  TaskVariable *lim  = new DefaultTaskVariable("limits", ors, qLimitsTVT, 0, 0, 0, 0, limits);
-//  TaskVariable *skin = new DefaultTaskVariable("skin", ors, skinTVT, 0, 0, 0, 0, skinIndex);
 }
 
 bool Gamepad2Tasks::updateTasks(arr& gamepadState, double dt){
@@ -33,28 +29,36 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState, double dt){
 
   if(gamepadState.N<6) return false;
 
-  double joyRate=MT::getParameter<double>("joyRate",5.);
+  double joyRate=MT::getParameter<double>("joyRate",1.);
   for(uint i=1;i<gamepadState.N;i++) if(fabs(gamepadState(i))<0.05) gamepadState(i)=0.;
-  double joyLeftRight = -joyRate*MT::sign(gamepadState(4))*(exp(MT::sqr(gamepadState(4)))-1.);
-  double joyForwardBack = -joyRate*MT::sign(gamepadState(3))*(exp(MT::sqr(gamepadState(3)))-1.);
-  double joyUpDown = -joyRate*MT::sign(gamepadState(2))*(exp(MT::sqr(gamepadState(2)))-1.);
-  double joyRotate = -joyRate*MT::sign(gamepadState(1))*(exp(MT::sqr(gamepadState(1)))-1.);
+  double joyLeftRight = -joyRate*MT::sign(gamepadState(2))*(exp(MT::sqr(gamepadState(2)))-1.);
+  double joyForwardBack = -joyRate*MT::sign(gamepadState(1))*(exp(MT::sqr(gamepadState(1)))-1.);
+  double joyUpDown = -joyRate*MT::sign(gamepadState(4))*(exp(MT::sqr(gamepadState(4)))-1.);
+  double joyRotate = -10.*joyRate*MT::sign(gamepadState(3))*(exp(MT::sqr(gamepadState(3)))-1.);
 
   enum {none, up, down, left, right} sel=none;
+  uint mode = uint(gamepadState(0));
+  cout <<"mode " <<mode <<endl;
+  if(mode&0x10 || mode&0x20 || mode&0x40 || mode&0x80) return true;
+#if 0
   if(gamepadState(5)>.5) sel=right;
   else if(gamepadState(5)<-.5) sel=left;
   else if(gamepadState(6)> .5) sel=down;
   else if(gamepadState(6)<-.5) sel=up;
-  uint mode = uint(gamepadState(0));
-  if(mode&0x10 || mode&0x20 || mode&0x40 || mode&0x80) return true;
+#else
+  if(mode==1) sel=down;
+  else if(mode==2) sel=right;
+  else if(mode==4) sel=left;
+  else if(mode==8) sel=up;
+#endif
 
-  switch (mode) {
+  switch (0) {
     case 0: { //(NIL) motion rate control
       PDtask *pdt=NULL, *pdt_rot=NULL;
       switch(sel){
         case right:  pdt=endeffR;  break;
         case left:   pdt=endeffL;  break;
-        case up:     pdt=endeffR;  break;
+        case up:     pdt=head;  break;
         case down:   pdt=base;  pdt_rot=baseQuat; break;
         case none:   pdt=NULL;  break;
       }

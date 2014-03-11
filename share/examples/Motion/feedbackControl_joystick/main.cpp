@@ -23,13 +23,14 @@ void testSimulator(){
   } S;
 
   ors::KinematicWorld world("model.kvg");
-  FeedbackMotionControl MP(world, false);
-  Gamepad2Tasks j2t(MP);
   arr q, qdot;
   world.getJointState(q, qdot);
+
+  FeedbackMotionControl MP(world, false);
   MP.nullSpacePD.y_ref = q;
   MP.nullSpacePD.active=false;
-  MP.H_rate_diag = .001* pr2_reasonable_W(world);
+  MP.H_rate_diag = pr2_reasonable_W(world);
+  Gamepad2Tasks j2t(MP);
 
   engine().enableAccessLog();
   engine().open(S);
@@ -41,6 +42,7 @@ void testSimulator(){
     MP.world.gl().update("operational space sim");
     bool shutdown = j2t.updateTasks(joy,0.01);
     if(shutdown) engine().shutdown.incrementValue();
+
     for(uint tt=0;tt<10;tt++){
       arr a = MP.operationalSpaceControl();
       q += .001*qdot;

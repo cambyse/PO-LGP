@@ -25,15 +25,16 @@ RosCom::RosCom():Module("RosCom"){
 }
 
 void sRosCom::joinstState_callback(const marc_controller_pkg::JointState::ConstPtr& msg){
-  base->q.set() = ARRAY(msg->q);
-  base->qdot.set() = ARRAY(msg->qd);
+//  cout <<"** joinstState_callback" <<endl;
+  base->q_obs.set() = ARRAY(msg->q);
+  base->qdot_obs.set() = ARRAY(msg->qd);
 }
 
 void RosCom::publishJointReference(){
   marc_controller_pkg::JointState jointRef;
   jointRef.N = 0;
-  jointRef.q = VECTOR(q.get()());
-  jointRef.qd = VECTOR(qdot.get()());
+  jointRef.q = VECTOR(q_ref.get()());
+  jointRef.qd = VECTOR(qdot_ref.get()());
   s->pub_jointReference.publish(jointRef);
 }
 
@@ -43,7 +44,9 @@ void RosCom::open(){
   s->pub_jointReference = nh.advertise<marc_controller_pkg::JointState>("/tree_rt_controller/jointReference", 1);
 }
 
-void RosCom::step(){ ros::spin(); }
+void RosCom::step(){
+  ros::spinOnce();
+}
 
 void RosCom::close(){}
 
