@@ -1,2 +1,2 @@
-tree_rt_controller:
+marc_rt_controller:
   type: marc_controller_pkg/TreeControllerPlugin

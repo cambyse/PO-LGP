@@ -19,6 +19,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
 
   //-- match ROS and ORS joint ids
   world <<FILE("model.kvg");
+  ROS_INFO("ORS model loaded");
   ROS_qIndex.resize(world.q.N) = UINT_MAX;
   q.resize(world.q.N).setZero();
   qd.resize(world.q.N).setZero();
