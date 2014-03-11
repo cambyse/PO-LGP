@@ -38,15 +38,25 @@ int main(int argc, char** argv){
   engine().open(S);
   S.joystickState.var->waitForNextRevision();
 
+  //wait for first q observation
+  for(;;){
+    S.q_obs.var->waitForNextRevision();
+    if(S.q_obs.get()->N==MP.world.q.N && S.qdot_obs.get()->N==MP.world.q.N)
+      break;
+  }
+
+  q = S.q_obs.get();
+  qdot = S.qdot_obs.get();
+  MP.setState(q, qdot);
+  MP.world.gl().update();
+  arr zero_qdot(qdot.N);
+  zero_qdot.setZero();
+
+  MT::wait(1.);
+  cout <<"START" <<endl;
   for(;;){
     S.joystickState.var->waitForNextRevision();
     arr joy = S.joystickState.get();
-    q = S.q_obs.get();
-    qdot = S.qdot_obs.get();
-    if(q.N!=MP.world.q.N) continue;
-    MP.setState(q, qdot);
-//    if(q.N==7 && qdot.N==7){
-//    }
 
     //cout <<S.q.get()() <<endl;
     bool shutdown = j2t.updateTasks(joy, 0.01);
@@ -59,9 +69,10 @@ int main(int argc, char** argv){
     }
     MP.setState(q, qdot);
     MP.world.gl().update();
+
 //    cout <<"q=" <<q <<endl;
     S.q_ref.set() = q;
-    S.qdot_ref.set() = qdot;
+    S.qdot_ref.set() = zero_qdot;
     S.ros->publishJointReference();
 
     if(engine().shutdown.getValue()/* || !rosOk()*/) break;

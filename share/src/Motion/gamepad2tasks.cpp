@@ -22,14 +22,14 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState, double dt){
   qitself->v_ref.setZero();
   qitself->prec=100.;
 
-  limits->active=true;
+  limits->active=false;
   limits->v_ref.setZero();
   limits->v_ref.setZero();
   limits->prec=100.;
 
   if(gamepadState.N<6) return false;
 
-  double joyRate=MT::getParameter<double>("joyRate",1.);
+  double joyRate=MT::getParameter<double>("joyRate",.2);
   for(uint i=1;i<gamepadState.N;i++) if(fabs(gamepadState(i))<0.05) gamepadState(i)=0.;
   double joyLeftRight = -joyRate*MT::sign(gamepadState(2))*(exp(MT::sqr(gamepadState(2)))-1.);
   double joyForwardBack = -joyRate*MT::sign(gamepadState(1))*(exp(MT::sqr(gamepadState(1)))-1.);
@@ -38,7 +38,7 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState, double dt){
 
   enum {none, up, down, left, right} sel=none;
   uint mode = uint(gamepadState(0));
-  cout <<"mode " <<mode <<endl;
+  //cout <<"mode " <<mode <<endl;
   if(mode&0x10 || mode&0x20 || mode&0x40 || mode&0x80) return true;
 #if 0
   if(gamepadState(5)>.5) sel=right;

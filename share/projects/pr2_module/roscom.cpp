@@ -40,8 +40,8 @@ void RosCom::publishJointReference(){
 
 void RosCom::open(){
   ros::NodeHandle nh;
-  s->sub_jointState = nh.subscribe("/tree_rt_controller/jointState", 1, &sRosCom::joinstState_callback, s);
-  s->pub_jointReference = nh.advertise<marc_controller_pkg::JointState>("/tree_rt_controller/jointReference", 1);
+  s->sub_jointState = nh.subscribe("/marc_rt_controller/jointState", 1, &sRosCom::joinstState_callback, s);
+  s->pub_jointReference = nh.advertise<marc_controller_pkg::JointState>("/marc_rt_controller/jointReference", 1);
 }
 
 void RosCom::step(){

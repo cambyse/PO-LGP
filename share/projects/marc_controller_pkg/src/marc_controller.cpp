@@ -30,7 +30,6 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
 //    ROS_INFO("Joint Name %d: %s: %f", i, pr2_tree.getJoint(i)->joint_->name.c_str(), jnt_pos_(i));
     ors::Joint *j = world.getJointByName(pr2_tree.getJoint(i)->joint_->name.c_str());
     if(j){
-//      cout <<"JOINT MATCH: ROS-id=" <<i <<" ORS-id=" <<j->qIndex <<endl;
       ROS_qIndex(j->qIndex) = i;
       q(j->qIndex) = jnt_pos_(i);
       arr *info;
@@ -75,7 +74,7 @@ void TreeControllerClass::update() {
   pr2_tree.getVelocities(jnt_vel_);
   pr2_tree.getEfforts(jnt_efforts_);
 
-  //-- convert KDL to ORS
+  //-- get current point pos
   for (uint i =0;i<q.N;i++) if(ROS_qIndex(i)!=UINT_MAX){
     q(i) = jnt_pos_(ROS_qIndex(i));
     qd(i) = qd_filt*qd(i) + (1.-qd_filt)*jnt_vel_.qdot(ROS_qIndex(i));
@@ -87,13 +86,15 @@ void TreeControllerClass::update() {
   jointStateMsg.qd = VECTOR(qd);
   jointState_publisher.publish(jointStateMsg);
 
-  //-- PD on q_ref!
-  if(q_ref.N!=q.N || qdot_ref.N!=qd.N) cout <<'#' <<flush; //hashes indicate that q_ref has wrong size...
-  else{
+  //-- PD on q_ref
+  if(q_ref.N!=q.N || qdot_ref.N!=qd.N){
+    cout <<'#' <<flush; //hashes indicate that q_ref has wrong size...
+  }else{
     u = (Kp % (q_ref - q)) + (Kd % (qdot_ref - qd));
 
     //-- command efforts to KDL
     for (uint i=0;i<q.N;i++) if(ROS_qIndex(i)!=UINT_MAX){
+	//TODO: velocity limits!
       if(u(i)<-limits(i,3)) u(i)=-limits(i,3);
       if(u(i)> limits(i,3)) u(i)= limits(i,3);
       pr2_tree.getJoint(ROS_qIndex(i))->commanded_effort_ = u(i);
