@@ -25,7 +25,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   Kp.resize(world.q.N).setZero();
   Kd.resize(world.q.N).setZero();
   limits.resize(world.q.N,4).setZero();
-  for(i=0;i<pr2_tree.size();i++) {
+  for(uint i=0;i<(uint)pr2_tree.size();i++) {
 //    ROS_INFO("Joint Name %d: %s: %f", i, pr2_tree.getJoint(i)->joint_->name.c_str(), jnt_pos_(i));
     ors::Joint *j = world.getJointByName(pr2_tree.getJoint(i)->joint_->name.c_str());
     if(j){
@@ -62,7 +62,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
 /// Controller startup in realtime
 void TreeControllerClass::starting(){
   q_ref = q;
-  qdot_ref = qdot;
+  qdot_ref = qd;
   q_filt = 0.;
   qd_filt = 0.95;
 }

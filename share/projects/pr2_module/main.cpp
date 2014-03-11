@@ -16,7 +16,7 @@ struct MySystem:System{
   RosCom *ros;
   MySystem(){
     addModule<JoystickInterface>(NULL, Module_Thread::loopWithBeat, .01);
-//    ros = addModule<RosCom>(NULL, Module_Thread::loopFull);
+    ros = addModule<RosCom>(NULL, Module_Thread::loopFull);
     connect();
   }
 };
@@ -41,10 +41,11 @@ int main(int argc, char** argv){
   for(;;){
     S.joystickState.var->waitForNextRevision();
     arr joy = S.joystickState.get();
-//    arr q = S.q_obs.get();
-//    arr qdot = S.qdot_obs.get();
+    q = S.q_obs.get();
+    qdot = S.qdot_obs.get();
+    if(q.N!=MP.world.q.N) continue;
+    MP.setState(q, qdot);
 //    if(q.N==7 && qdot.N==7){
-//      MP.setState(q, qdot);
 //    }
 
     //cout <<S.q.get()() <<endl;
@@ -61,7 +62,7 @@ int main(int argc, char** argv){
 //    cout <<"q=" <<q <<endl;
     S.q_ref.set() = q;
     S.qdot_ref.set() = qdot;
-//    S.ros->publishJointReference();
+    S.ros->publishJointReference();
 
     if(engine().shutdown.getValue()/* || !rosOk()*/) break;
   }
