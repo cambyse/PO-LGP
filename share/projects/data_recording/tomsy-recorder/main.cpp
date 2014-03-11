@@ -33,6 +33,9 @@ public:
 	void add_stamp(double timestamp) {
 		timeTagFile << setw(6) << sequence_num++ << setprecision(20) << setw(20) << timestamp << endl;
 	}
+	void mark_missing() {
+		sequence_num++;
+	}
 };
 
 struct TomsyRecorderSystem:System{
@@ -105,6 +108,7 @@ void grab_one(const char* id, UEyeInterface& cam, VideoEncoder_x264_simple& enc,
 		enc.addFrame(buf);
 		times.add_stamp(timestamp);
 	} else {
+		times.mark_missing();
 		cerr << "grab " << id << " failed" << endl;
 	}
 }
