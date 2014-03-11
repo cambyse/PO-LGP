@@ -13,8 +13,70 @@ const unsigned int image_height = 480; //kinect resolution
 const unsigned int depth_size = image_width*image_height;
 
 namespace MLR {
+	Freenect::Freenect receiver_freenect;
+
+	class sKinectCallbackReceiver : public Freenect::FreenectDevice {
+	private:
+		kinect_depth_cb depth_cb;
+		kinect_video_cb video_cb;
+		bool streaming;
+	public:
+		sKinectCallbackReceiver(freenect_context *ctx, int index) :
+			Freenect::FreenectDevice(ctx, index), depth_cb(nullptr), video_cb(nullptr), streaming(false) {
 		}
+		~sKinectCallbackReceiver() {
+			stopStreaming();
 		}
+		void add_callbacks(kinect_depth_cb depth_cb, kinect_video_cb video_cb) {
+			this->depth_cb = depth_cb;
+			this->video_cb = video_cb;
+		}
+		void startStreaming() {
+			if(!streaming) {
+				startVideo();
+				startDepth();
+				setDepthFormat(FREENECT_DEPTH_REGISTERED);
+				streaming = true;
+			}
+		}
+		void stopStreaming() {
+			if(streaming) {
+				stopVideo();
+				stopDepth();
+				streaming = false;
+			}
+		}
+
+		void DepthCallback(void *depth, uint32_t ) {
+			MT::Array<uint16_t> depth_buf((uint16_t*)depth, depth_size);
+			double timestamp = MT::clockTime() - .12;
+			if(depth_cb != nullptr)
+				depth_cb(depth_buf, timestamp);
+		}
+		void VideoCallback(void *rgb, uint32_t ) {
+			byteA video_buf((byte*)rgb, depth_size*3);
+			video_buf.reshape(image_height, image_width, 3);
+			double timestamp = MT::clockTime() - .12;
+			if(video_cb != nullptr)
+				video_cb(video_buf, timestamp);
+		}
+	};
+
+
+	KinectCallbackReceiver::KinectCallbackReceiver(kinect_depth_cb depth_cb, kinect_video_cb video_cb,
+			int cameraNum) : s(&(receiver_freenect.createDevice<sKinectCallbackReceiver>(cameraNum))),
+					cameraNum(cameraNum) {
+		s->add_callbacks(depth_cb, video_cb);
+	}
+	KinectCallbackReceiver::~KinectCallbackReceiver() {
+		receiver_freenect.deleteDevice(cameraNum);
+		s = NULL;
+	};
+	void KinectCallbackReceiver::startStreaming() {
+		s->startStreaming();
+	}
+	void KinectCallbackReceiver::stopStreaming() {
+		s->stopStreaming();
 	}
 }
 
