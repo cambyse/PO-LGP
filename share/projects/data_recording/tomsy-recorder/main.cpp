@@ -236,6 +236,8 @@ int main(int argc,char **argv){
 		cerr << ex.what() << endl;
 	} catch(const std::exception& ex) {
 		cerr << ex.what() << endl;
+	} catch(const char* msg) {
+		cerr << msg << endl;
 	}
     return 0;
 }
