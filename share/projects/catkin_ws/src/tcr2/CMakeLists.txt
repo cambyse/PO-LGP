@@ -8,6 +8,8 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  geometry_msgs
+  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -51,11 +53,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+add_service_files(
+  FILES
+  SetGoal.srv 
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -65,10 +66,11 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
+ generate_messages(
+   DEPENDENCIES
+   std_msgs
+   geometry_msgs
+ )
 
 ###################################
 ## catkin specific configuration ##
@@ -92,8 +94,12 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-# include_directories(include)
+#include_directories(include)
 add_definitions("-std=c++0x"
+  "-fPIC"
+  "-DMT_Ors"
+  "-DMT_Core"
+  "-DMT_Gui"
   "-D_DEBUG"
   "-DPX_DISABLE_FLUIDS"
   "-DCORELIB" 
@@ -104,14 +110,13 @@ add_definitions("-std=c++0x"
 
 include_directories(
   ${catkin_INCLUDE_DIRS}
-  ../../src
+  include
+  ../../../../src
   /home/lib/include/physx
 )
 
 link_directories(
- ../../src/Core
- ../../src/Ors
- ../../src/Gui
+ ../../../../lib
  /home/lib/lib
 )
 
@@ -122,7 +127,7 @@ link_directories(
 # )
 
 ## Declare a cpp executable
- add_executable(tcr2_controller src/controller.cpp)
+ add_executable(tcr2_controller src/controller.cpp src/util.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
