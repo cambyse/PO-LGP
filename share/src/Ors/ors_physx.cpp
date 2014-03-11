@@ -601,7 +601,7 @@ PhysXInterface::~PhysXInterface() { NICO }
 void PhysXInterface::step(double tau) { NICO }
 void PhysXInterface::pushToPhysx() { NICO }
 void PhysXInterface::pullFromPhysx() { NICO }
-void PhysXInterface::setArticulatedBodiesKinematic(int agent) { NICO }
+void PhysXInterface::setArticulatedBodiesKinematic(uint agent) { NICO }
 void PhysXInterface::ShutdownPhysX() { NICO }
 void PhysXInterface::glDraw() { NICO }
 void PhysXInterface::addForce(ors::Vector& force, ors::Body* b) { NICO }
