@@ -31,7 +31,7 @@ public:
 
 	}
 	void add_stamp(double timestamp) {
-		timeTagFile << setw(6) << sequence_num++ << setprecision(20) << setw(20) << timestamp << endl;
+		timeTagFile << setw(6) << sequence_num++ << setprecision(14) << setw(20) << timestamp << endl;
 	}
 	void mark_missing() {
 		sequence_num++;
