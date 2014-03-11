@@ -13,27 +13,7 @@ const unsigned int image_height = 480; //kinect resolution
 const unsigned int depth_size = image_width*image_height;
 
 namespace MLR {
-	void kinect_sync_get_depth(MT::Array<uint16_t>& depth, double& timestamp) {
-		void* depth_buffer;
-		uint32_t integer_time;
-		if(freenect_sync_get_depth(&depth_buffer, &integer_time, 0, FREENECT_DEPTH_REGISTERED)) {
-			depth.referTo((uint16_t*)depth_buffer, depth_size);
-			depth.reshape(image_width, image_height);
-			// ignore passed time and use receive time
-			timestamp = MT::clockTime() - .12;
-		} else {
-			std::clog << "error getting kinect depth buffer synchronously" << endl;
 		}
-	}
-	// get video image as reference (see above)
-	void kinect_sync_get_video(byteA& video, double& timestamp) {
-		void* video_buffer;
-		uint32_t integer_time;
-		if(freenect_sync_get_video(&video_buffer, &integer_time, 0, FREENECT_VIDEO_RGB)) {
-			video.referTo((byte*)video_buffer, depth_size);
-			video.reshape(image_width, image_height);
-			// ignore passed time and use receive time
-			timestamp = MT::clockTime() - .12;
 		}
 	}
 }
