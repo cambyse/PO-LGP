@@ -40,7 +40,18 @@ struct Kinect2PointCloud: Module {
 };
 
 namespace MLR {
+	// pack 16bit depth image into 3 8-bit channels
 	void pack_kindepth2rgb(const MT::Array<uint16_t>& depth, byteA& buffer);
+
+
+	// these methods are for synchronous grabbing. they can *not* be used
+	// in conjunction with the modules!#
+
+	// get depth image. will make the array a reference to an internal buffer, which is only valid
+	// until the next call of this method!
+	void kinect_sync_get_depth(MT::Array<uint16_t>& depth, double& timestamp);
+	// get video image as reference (see above)
+	void kinect_sync_get_video(byteA& video, double& timestamp);
 }
 
 BEGIN_MODULE(KinectDepthPacking)
