@@ -389,19 +389,19 @@ void KeyFramer::computeVar(const String &type, uint wlen, bool force) {
   s->g4d->appendBam(typeVar, y);
 }
 // }}}
-// computeES {{{
-void KeyFramer::computeES(const StringA &types, double alpha, bool force) {
+// computeFilter {{{
+void KeyFramer::computeFilter(const StringA &types, double alpha, bool force) {
   for(const String &type: types)
-    computeES(type, alpha, force);
+    computeFilter(type, alpha, force);
 }
 // }}}
-// computeES {{{
-void KeyFramer::computeES(const String &type, double alpha, bool force) {
+// computeFilter {{{
+void KeyFramer::computeFilter(const String &type, double alpha, bool force) {
   CHECK(alpha >= 0. && alpha <= 1., "Parameter alpha (" << alpha << ") must be 0 <= alpha <= 1.");
-  String typeES = STRING(type << "ES");
-  cout << " * computing " << typeES << endl;
-  if(!force && s->g4d->hasBAM(typeES)) {
-    cout << " * " << typeES << " already computed (force = 0). Skipping." <<
+  String typeFilter = STRING(type << "Filter");
+  cout << " * computing " << typeFilter << endl;
+  if(!force && s->g4d->hasBAM(typeFilter)) {
+    cout << " * " << typeFilter << " already computed (force = 0). Skipping." <<
       endl;
     return;
   }
@@ -425,7 +425,7 @@ void KeyFramer::computeES(const String &type, double alpha, bool force) {
     }
   }
 
-  s->g4d->appendBam(typeES, y);
+  s->g4d->appendBam(typeFilter, y);
 }
 // }}}
 // computeSmooth {{{
@@ -2813,7 +2813,6 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
   // Computing other BAMS {{{
   double alpha = .3;
   bool force = true;
-  force = false;
   computeSmooth(STRINGS("pos", "quat"), alpha, force);
   computeSpeed(STRINGS("posSmooth", "quatSmooth"), force);
 
@@ -3161,67 +3160,46 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
   kvg.append("data", "dqSpeed", new arr(dqSpeed));
   KeyValueGraph *plot;
   
-  //plot = new KeyValueGraph();
-  //plot->append("title", new String("Full System: Viterbi"));
-  //plot->append("dataid", new bool(true));
-  //plot->append("autolegend", new bool(true));
-  //plot->append("stream", new double(.75));
-  //plot->append("ymin", new double(-.1));
-  //plot->append("ymax", new double(1.1));
-  //plot->append("data", new String("vit"));
-  //kvg.append("plot", plot);
+  plot = new KeyValueGraph();
+  plot->append("title", new String("Full System: Viterbi"));
+  plot->append("dataid", new bool(true));
+  plot->append("autolegend", new bool(true));
+  plot->append("stream", new double(.75));
+  plot->append("ymin", new double(-.1));
+  plot->append("ymax", new double(1.1));
+  plot->append("data", new String("vit"));
+  kvg.append("plot", plot);
 
-  //plot = new KeyValueGraph();
-  //plot->append("title", new String("p, q"));
-  //plot->append("dataid", new bool(true));
-  //plot->append("autolegend", new bool(true));
-  //plot->append("stream", new double(.75));
-  //plot->append("data", new String("pSpeed"));
-  //plot->append("data", new String("qSpeed"));
-  //kvg.append("plot", plot);
+  plot = new KeyValueGraph();
+  plot->append("title", new String("p, q"));
+  plot->append("dataid", new bool(true));
+  plot->append("autolegend", new bool(true));
+  plot->append("stream", new double(.75));
+  plot->append("data", new String("pSpeed"));
+  plot->append("data", new String("qSpeed"));
+  kvg.append("plot", plot);
 
 #ifdef with_object_emission
   kvg.append("data", "pBSpeed", new arr(pBSpeed));
   kvg.append("data", "qBSpeed", new arr(qBSpeed));
 
-  //plot = new KeyValueGraph();
-  //plot->append("title", new String("pBSpeed, qBSpeed"));
-  //plot->append("dataid", new bool(true));
-  //plot->append("autolegend", new bool(true));
-  //plot->append("stream", new double(.75));
-  //plot->append("data", new String("pBSpeed"));
-  //plot->append("data", new String("qBSpeed"));
-  //kvg.append("plot", plot);
-#endif
-
-  //plot = new KeyValueGraph();
-  //plot->append("title", new String("dp, dq"));
-  //plot->append("dataid", new bool(true));
-  //plot->append("autolegend", new bool(true));
-  //plot->append("stream", new double(.75));
-  //plot->append("data", new String("dpSpeed"));
-  //plot->append("data", new String("dqSpeed"));
-  //kvg.append("plot", plot);
-  
-  // TODO remove this, and uncomment the previous
-  force = true;
-  computeES(STRING("pos"), alpha, force);
-  computeSmooth(STRING("pos"), alpha, force);
-  computeSpeed(STRINGS("pos", "posES", "posSmooth"), force);
-  arr pSpeed_orig = s->g4d->query("posSpeed", bA);
-  arr pSpeed_smooth = s->g4d->query("posSmoothSpeed", bA);
-  arr pSpeed_es = s->g4d->query("posESSpeed", bA);
-  kvg.append("data", "pSpeed_orig", new arr(pSpeed_orig));
-  kvg.append("data", "pSpeed_smooth", new arr(pSpeed_smooth));
-  kvg.append("data", "pSpeed_es", new arr(pSpeed_es));
   plot = new KeyValueGraph();
-  plot->append("title", new String("Smoothing"));
+  plot->append("title", new String("pBSpeed, qBSpeed"));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
   plot->append("stream", new double(.75));
-  plot->append("data", new String("pSpeed_orig"));
-  plot->append("data", new String("pSpeed_smooth"));
-  plot->append("data", new String("pSpeed_es"));
+  plot->append("data", new String("pBSpeed"));
+  plot->append("data", new String("qBSpeed"));
+  kvg.append("plot", plot);
+#endif
+
+  plot = new KeyValueGraph();
+  plot->append("title", new String("dp, dq"));
+  plot->append("dataid", new bool(true));
+  plot->append("autolegend", new bool(true));
+  plot->append("stream", new double(.75));
+  plot->append("data", new String("dpSpeed"));
+  plot->append("data", new String("dqSpeed"));
   kvg.append("plot", plot);
   // }}}
 }
@@ -3265,3 +3243,23 @@ void KeyFramer::playScene(const String &b) {
 }
 // }}}
 
+void KeyFramer::testSmoothing(KeyValueGraph &kvg, const String &bA, double alpha) {
+  computeFilter(STRING("pos"), alpha, true);
+  computeSmooth(STRING("pos"), alpha, true);
+  computeSpeed(STRINGS("pos", "posFilter", "posSmooth"), true);
+  arr pSpeed_orig = s->g4d->query("posSpeed", bA);
+  arr pSpeed_smooth = s->g4d->query("posSmoothSpeed", bA);
+  arr pSpeed_filter = s->g4d->query("posFilterSpeed", bA);
+  kvg.append("data", "pSpeed_orig", new arr(pSpeed_orig));
+  kvg.append("data", "pSpeed_smooth", new arr(pSpeed_smooth));
+  kvg.append("data", "pSpeed_filter", new arr(pSpeed_filter));
+  KeyValueGraph *plot = new KeyValueGraph();
+  plot->append("title", new String("Smoothing"));
+  plot->append("dataid", new bool(true));
+  plot->append("autolegend", new bool(true));
+  plot->append("stream", new double(.75));
+  plot->append("data", new String("pSpeed_orig"));
+  plot->append("data", new String("pSpeed_smooth"));
+  plot->append("data", new String("pSpeed_filter"));
+  kvg.append("plot", plot);
+}

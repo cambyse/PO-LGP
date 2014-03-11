@@ -23,8 +23,8 @@ struct KeyFramer {
   void computeVar(const StringA &types, uint wlen, bool force = false);
   void computeSpline(const StringA &types, double lambda, bool force = false);
   void computeSpline(const String &type, double lambda, bool force = false);
-  void computeES(const StringA &types, double alpha, bool force = false);
-  void computeES(const String &type, double alpha, bool force = false);
+  void computeFilter(const StringA &types, double alpha, bool force = false);
+  void computeFilter(const String &type, double alpha, bool force = false);
   void computeSmooth(const StringA &types, double alpha, bool force = false);
   void computeSmooth(const String &type, double alpha, bool force = false);
   void computeSpeed(const StringA &types, bool force = false);
@@ -77,5 +77,6 @@ struct KeyFramer {
   void EM_m(KeyValueGraph &kvg, const String &b);
 
   void playScene(const String &b);
+  void testSmoothing(KeyValueGraph &kvg, const String &b, double alpha);
 };
 
