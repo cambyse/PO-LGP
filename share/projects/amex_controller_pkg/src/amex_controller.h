@@ -10,6 +10,7 @@
 #include <tree_controller_pkg/SetVecTarget.h>
 #include <tree_controller_pkg/GetJointState.h>
 #include <tree_controller_pkg/SetTaskGains.h>
+#include <tree_controller_pkg/SetNaturalGains.h>
 #include <goal_publisher/GetGoal.h>
 #include <Ors/ors.h>
 
@@ -26,12 +27,14 @@ struct AmexController {
   ros::ServiceClient setJointGainsClient;
   ros::ServiceClient getGoalClient;
   ros::ServiceClient setTaskGainsClient;
+  ros::ServiceClient setNaturalGainsClient;
   goal_publisher::GetGoal getGoalSrv;
   tree_controller_pkg::SetPosTarget setPosTargetSrv;
   tree_controller_pkg::SetVecTarget setVecTargetSrv;
   tree_controller_pkg::GetJointState getJointStateSrv;
   tree_controller_pkg::SetJointGains setJointGainsSrv;
   tree_controller_pkg::SetTaskGains setTaskGainsSrv;
+  tree_controller_pkg::SetNaturalGains setNaturalGainsSrv;
 
   arr q, qd;                      // Joint position, velocity
   arr state;                      // Task position
@@ -46,7 +49,7 @@ struct AmexController {
   ors::KinematicWorld world;      //
   AdaptiveMotionExecution* amex;  // Motion adaptation method
   MObject* goalMO;                // Target goal state
-  arr pos_gains, vel_gains;       // PD Gains for joints
+  arr acc_gains, vel_gains;       // PD Gains for joints
   arr i_gains, i_claim;
 
   // BOOKKEEPING VARS
@@ -62,6 +65,7 @@ struct AmexController {
   void initController();
   void iterate();
   void startController();
+
   void runAmex(double dtReal);
 };
 #endif

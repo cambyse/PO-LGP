@@ -25,17 +25,20 @@ void AmexController::startController(){
   double dtReal = dtAmex;
 
   /// Run Controller until goal is reached
-  while (ros::ok() && (amex->s.last() < 0.98))
+  while (ros::ok() && (amex->s.last() < 0.95))
   {
     double last_time = ros::Time::now().toSec();
     runAmex(dtReal);
     loop_rate.sleep();
     dtReal = ros::Time::now().toSec() - last_time ;
     cout << "Time: " << dtReal << endl;
+    cout << "Phase: " << amex->s.last() << endl;
   }
-  ROS_INFO("-------------------------");
-  ROS_INFO("AMEX CONTROLLER: COMPLETE");
-  ROS_INFO("-------------------------");
+
+  /// Set Task PD Gains
+  setNaturalGainsSrv.request.decayTime = 1./4.;
+  setNaturalGainsSrv.request.dampingRatio = 0.9;
+  setNaturalGainsClient.call(setNaturalGainsSrv);
 
   /// Set Velocity to zero after execution and position to target position
   for(uint i=0;i<3;i++) setPosTargetSrv.request.pos[i] = amex->goal(i);
@@ -44,17 +47,9 @@ void AmexController::startController(){
   setPosTargetClient.call(setPosTargetSrv);
   setVecTargetClient.call(setVecTargetSrv);
 
-
-  arr pos_task_gains = {1000.,100.,1};
-  for(uint i=0;i<3;i++) setTaskGainsSrv.request.pos_gains[i] = pos_task_gains(i);
-
-//  pos_gains = {200,200,100,100,50,40,40};
-//  vel_gains = {50,50,10,10,5,15,10};
-//  for(uint i=0;i<NUM_JOINTS;i++) setJointGainsSrv.request.pos_gains[i] = pos_gains(i);
-//  for(uint i=0;i<NUM_JOINTS;i++) setJointGainsSrv.request.vel_gains[i] = vel_gains(i);
-
-  setTaskGainsClient.call(setTaskGainsSrv);
-//  setJointGainsClient.call(setJointGainsSrv);
+  ROS_INFO("-------------------------");
+  ROS_INFO("AMEX CONTROLLER: COMPLETE");
+  ROS_INFO("-------------------------");
 }
 
 void AmexController::runAmex(double dtReal) {
@@ -72,7 +67,6 @@ void AmexController::runAmex(double dtReal) {
   if (dtReal > 1.) {
     dtReal = dtAmex;
   }
-  cout << "qd: " <<qd << endl;
 
   /// Get current task state
   arr stateVec, yNext, ydNext;
@@ -85,10 +79,6 @@ void AmexController::runAmex(double dtReal) {
   /// Adapt motion and compute next state
   amex->iterate(state,dtReal);
   amex->getNextState(yNext,ydNext);
-
-  cout << "yPrev: " << state << endl;
-  cout << "yNext: " << yNext << endl;
-  cout << "ydNext: " << ydNext << endl;
 
   /// Send next target to Realtime Controller
   for(uint i=0;i<3;i++) setPosTargetSrv.request.pos[i] = yNext(i);
@@ -103,37 +93,23 @@ void AmexController::runAmex(double dtReal) {
 
 void AmexController::initController(){
   /// Set Joint PD Gains
-  pos_gains = {200,200,100,100,50,40,40};
-  vel_gains = {50,50,10,10,5,15,10};
-  vel_gains = vel_gains * 8.;
-  i_gains = pos_gains*0.4;
+  acc_gains = {0.05, 0.05, 0.05, 0.05, 0.01, 0.01, 0.01};
+  i_gains = {80,80,40,40,20,16,16};
   i_claim = {3.,3.,3.,3.,2.,3.,1.5};
 
-  cout << "pos_gains" << pos_gains << endl;
-  cout << "vel_gains" << vel_gains << endl;
+  cout << "acc_gains" << acc_gains << endl;
   cout << "i_gains" << vel_gains << endl;
   cout << "i_claim" << i_claim << endl;
-  // [3, 3, 3, 2, 2, 3, 1.5]
-  for(uint i=0;i<NUM_JOINTS;i++) setJointGainsSrv.request.pos_gains[i] = pos_gains(i);
-  for(uint i=0;i<NUM_JOINTS;i++) setJointGainsSrv.request.vel_gains[i] = vel_gains(i);
+
+  for(uint i=0;i<NUM_JOINTS;i++) setJointGainsSrv.request.acc_gains[i] = acc_gains(i);
   for(uint i=0;i<NUM_JOINTS;i++) setJointGainsSrv.request.i_gains[i] = i_gains(i);
   for(uint i=0;i<NUM_JOINTS;i++) setJointGainsSrv.request.i_claim[i] = i_claim(i);
   setJointGainsClient.call(setJointGainsSrv);
 
   /// Set Task PD Gains
-  arr pos_task_gains = {10.,10.,1};
-  arr vel_task_gains = {100.,100.,100.};
-  arr task_precisions = {10000.,100.,100.};
-
-  cout << "pos_task_gains" << pos_task_gains << endl;
-  cout << "vel_task_gains" << vel_task_gains << endl;
-  cout << "task_precisions" << task_precisions << endl;
-
-  for(uint i=0;i<3;i++) setTaskGainsSrv.request.pos_gains[i] = pos_task_gains(i);
-  for(uint i=0;i<3;i++) setTaskGainsSrv.request.vel_gains[i] = vel_task_gains(i);
-  for(uint i=0;i<3;i++) setTaskGainsSrv.request.precision[i] = task_precisions(i);
-  setTaskGainsClient.call(setTaskGainsSrv);
-
+  setNaturalGainsSrv.request.decayTime = dtAmex/4.;
+  setNaturalGainsSrv.request.dampingRatio = 0.9;
+  setNaturalGainsClient.call(setNaturalGainsSrv);
 
   /// Check Initial State
   getJointStateClient.call(getJointStateSrv);
@@ -156,10 +132,11 @@ void AmexController::initRosServices(){
   getJointStateClient = nh.serviceClient<tree_controller_pkg::GetJointState>("/tree_rt_controller/get_joint_state",true);
   setJointGainsClient = nh.serviceClient<tree_controller_pkg::SetJointGains>("/tree_rt_controller/set_joint_gains",true);
   setTaskGainsClient = nh.serviceClient<tree_controller_pkg::SetTaskGains>("/tree_rt_controller/set_task_gains",true);
+  setNaturalGainsClient = nh.serviceClient<tree_controller_pkg::SetNaturalGains>("/tree_rt_controller/set_natural_gains",true);
 
   setPosTargetSrv.request.pos.resize(3); setPosTargetSrv.request.vel.resize(3);
   setVecTargetSrv.request.pos.resize(3); setVecTargetSrv.request.vel.resize(3);
-  setJointGainsSrv.request.pos_gains.resize(NUM_JOINTS); setJointGainsSrv.request.vel_gains.resize(NUM_JOINTS);
+  setJointGainsSrv.request.acc_gains.resize(NUM_JOINTS);
   setJointGainsSrv.request.i_claim.resize(NUM_JOINTS); setJointGainsSrv.request.i_gains.resize(NUM_JOINTS);
 
   getJointStateClient.waitForExistence();
@@ -167,6 +144,7 @@ void AmexController::initRosServices(){
   setVecTargetClient.waitForExistence();
   setJointGainsClient.waitForExistence();
   setTaskGainsClient.waitForExistence();
+  setNaturalGainsClient.waitForExistence();
 
   if (useGoalPub) {
     refFrame = ARRAY(world.getBodyByName("torso_lift_link")->X.pos);

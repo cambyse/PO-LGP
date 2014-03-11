@@ -1,8 +1,9 @@
 clear
 % copy log files from .ros/ to local folder
 NEW = 1
-SIM = 0
+SIM = 1
 [~, b] = unix('ls logs'); id = max(str2num(b))+NEW;
+% id = 34
 folder = ['logs/',num2str(id)];
 if NEW
   unix(['mkdir -p ', folder]);
@@ -21,6 +22,8 @@ d_effort_bk = load([folder,'/d_effort_bk.output']);
 des_qd_bk   = load([folder,'/des_qd_bk.output']);
 p_effort_bk = load([folder,'/p_effort_bk.output']);
 i_effort_bk = load([folder,'/i_effort_bk.output']);
+a_effort_bk = load([folder,'/a_effort_bk.output']);
+measured_effort_bk = load([folder,'/measured_effort_bk.output']);
 qd_bk	      = load([folder,'/qd_bk.output']);
 u_bk        = load([folder,'/u_bk.output']);
 des_q_bk    = load([folder,'/des_q_bk.output']);
@@ -59,10 +62,12 @@ for i=1:nq
   subplot(pl,pc,i);hold on;
   plot(t,d_effort_bk(1:ni,i),'r');
   plot(t,u_bk(1:ni,i));
+  plot(t,measured_effort_bk(1:ni,i),'c');
   plot(t,p_effort_bk(1:ni,i),'k');
   plot(t,i_effort_bk(1:ni,i),'m');
+  plot(t,a_effort_bk(1:ni,i),'g');
 end
-legend('vel u','total u','pos u', 'integral u');
+legend('vel u','total u','measured u','pos u', 'integral u','acc u');
 
 figure(4);clf;hold on;
 for i=1:ny
@@ -90,6 +95,6 @@ for i=1:1000:ni
 end
 legend('Task State','Des. Task State')
 
-figure(6);clf;hold on;
-plot(diff(dt_bk(1:ni)));
-legend('dt');
+% figure(6);clf;hold on;
+% plot(diff(dt_bk(1:ni)));
+% legend('dt');

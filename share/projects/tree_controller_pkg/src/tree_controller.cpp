@@ -41,6 +41,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   setTaskGainsSrv_ = n.advertiseService("set_task_gains", &TreeControllerClass::setTaskGains, this);
   startLoggingSrv_ = n.advertiseService("start_logging", &TreeControllerClass::startLogging, this);
   stopLoggingSrv_ = n.advertiseService("stop_logging", &TreeControllerClass::stopLogging, this);
+  setNaturalGainsSrv_ = n.advertiseService("set_natural_gains", &TreeControllerClass::setNaturalGains, this);
 
   /// init ORS
   world = new ors::KinematicWorld("scene");
@@ -49,14 +50,19 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
 
   /// Initialize PD Controller
   MP->nullSpacePD.active=false;
-  taskPos = MP->addPDTask("pos", tau_plan*5, 1, posTMT, "endeffR");
-  taskVec = MP->addPDTask("vec", tau_plan*5, 1, vecTMT, "endeffR",ARR(0.,0.,1.));
-  taskHome = MP->addPDTask("home", .02, 0.5, qItselfTMT);
-  //  taskLimits = MP->addPDTask("limits", .02, 0.5, qLimitsTMT);
-  taskPos->setGains(1.,100.); taskPos->prec=1e4;
-  taskVec->setGains(1.,100.); taskVec->prec=1e2;
-  taskHome->setGains(1.,100.); taskHome->prec=1e2;
-  //  taskLimits->setGains(100.,100.); taskLimits->prec=1e3;
+  taskPos = MP->addPDTask("pos", .1, 1, posTMT, "endeffR");
+  taskVec = MP->addPDTask("vec", .1, 1, vecTMT, "endeffR",ARR(0.,0.,1.));
+  taskHome = MP->addPDTask("home", .1, 1., qLinearTMT, NULL, NoVector, NULL, NoVector, 0.01*MP->H_rate_diag);
+
+  double t_PD = 1./4.;
+  double damp_PD = 0.9;
+  taskPos->setGainsAsNatural(t_PD,damp_PD);
+  taskVec->setGainsAsNatural(t_PD,damp_PD);
+  taskHome->setGainsAsNatural(t_PD,damp_PD); taskHome->Pgain = 0.;
+  taskPos->prec=1e5;
+  taskVec->prec=1e3;
+  taskHome->prec=1e2;
+
 
   controlIdx = {30,31,32,33,34,35,36};
   q = arr(controlIdx.d0);
@@ -67,6 +73,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   integral = arr(controlIdx.d0); integral.setZero();
   i_claim = arr(controlIdx.d0); i_claim.setZero();
   u = arr(controlIdx.d0); u.setZero();
+  measured_effort = arr(controlIdx.d0);
 
   /// Initialize Logging
   LOGGING = false;
@@ -75,10 +82,13 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   qd_bk = arr(StoreLen,controlIdx.d0);
   des_q_bk = arr(StoreLen,controlIdx.d0);
   des_qd_bk = arr(StoreLen,controlIdx.d0);
+  des_qdd_bk = arr(StoreLen,controlIdx.d0);
   u_bk = arr(StoreLen,controlIdx.d0);
   p_effort_bk = arr(StoreLen,controlIdx.d0);
+  measured_effort_bk = arr(StoreLen,controlIdx.d0);
   d_effort_bk = arr(StoreLen,controlIdx.d0);
   i_effort_bk = arr(StoreLen,controlIdx.d0);
+  a_effort_bk = arr(StoreLen,controlIdx.d0);
   dt_bk = arr(StoreLen);
   taskPos_y_bk = arr(StoreLen,3);
   taskPos_yRef_bk = arr(StoreLen,3);
@@ -131,17 +141,34 @@ void TreeControllerClass::starting()
   // 34: r_forearm_roll_joint,    10  2     300    6  300
   // 35: r_wrist_flex_joint,       6  2     300    4  300
   // 36: r_wrist_roll_joint,       6  2     300    4  300
-  //  Kp = {150,150,30,30,10,6,6};
-  //  Kd = {60,60,4,10,2,2,2};
-  Kp = {150,150,80,50,40,80,20};
-  Kd = {60,60,10,10,10,3,20};
-  Ki = Kp*0.1;
+  Ka = {0.05, 0.05, 0.05, 0.05, 0.01, 0.01, 0.01};
+  Ki = {150,150,80,50,40,80,20}; Ki=Ki*0.1;
+
   integral.setZero();
-  //[1000,1,1] [100,100,100] [10000,100,100]
 
   q_filt = 0.;
   qd_filt = 0.95;
 
+  /// Initialize joint state
+  tree_.getPositions(jnt_pos_);
+  for (uint i =0;i<controlIdx.d0;i++) {
+    q(i) = jnt_pos_(controlIdx(i));
+    des_q(i) = jnt_pos_(controlIdx(i));
+  }
+
+  /// Initialize Task Space
+  arr state,stateVec;
+  world->setJointState(q,qd);
+  world->kinematicsPos(state,NoArr,world->getBodyByName("endeffR")->index);
+  world->kinematicsVec(stateVec,NoArr,world->getBodyByName("endeffR")->index);
+
+  cout << "initial state: " << state << endl;
+  cout << "initial stateVec: " << stateVec << endl;
+
+  taskPos->y_ref = state;
+  taskPos->v_ref = ARR(0.,0.,0.);
+  taskVec->y_ref = stateVec;
+  taskVec->v_ref = ARR(0.,0.,0.);
 
   LOGGING = true;
 }
@@ -158,6 +185,7 @@ void TreeControllerClass::update()
   for (uint i =0;i<controlIdx.d0;i++) {
     q(i) = jnt_pos_(controlIdx(i));
     qd(i) = qd_filt*qd(i) + (1.-qd_filt)*jnt_vel_.qdot(controlIdx(i));
+    measured_effort(i) = jnt_efforts_(controlIdx(i));
   }
 
   /// set current state
@@ -170,9 +198,8 @@ void TreeControllerClass::update()
   des_q = q + tau_control*des_qd;
   des_qd = qd + tau_control*qdd;
 
-  p_effort = (Kp % (des_q - q));
-  d_effort = (Kd % (des_qd - qd));
   i_effort = Ki % integral;
+  a_effort = Ka % qdd;
 
   /// Convert ORS to KDL
   for (uint i =0;i<controlIdx.d0;i++) {
@@ -183,7 +210,7 @@ void TreeControllerClass::update()
       i_effort(i) = -1.*i_claim(i);
     }
 
-    u(i) = p_effort(i) + d_effort(i) + i_effort(i);
+    u(i) = a_effort(i) + i_effort(i);
     tree_.getJoint(controlIdx(i))->commanded_effort_ = u(i);
     tree_.getJoint(controlIdx(i))->enforceLimits();
 
@@ -194,6 +221,7 @@ void TreeControllerClass::update()
     }
   }
 
+
   /// Logging
   int index = storage_index_;
   if (LOGGING && (index < StoreLen)) {
@@ -201,10 +229,11 @@ void TreeControllerClass::update()
     qd_bk[index] = qd;
     des_q_bk[index] = des_q;
     des_qd_bk[index] = des_qd;
+    des_qdd_bk[index] = qdd;
     u_bk[index] = u;
-    p_effort_bk[index] = p_effort;
-    d_effort_bk[index] = d_effort;
     i_effort_bk[index] = i_effort;
+    a_effort_bk[index] = a_effort;
+    measured_effort_bk[index] = measured_effort;
     dt_bk(index) = robot_->getTime().now().toSec();
     taskPos_y_bk[index] = taskPos->y;
     taskPos_yRef_bk[index] = taskPos->y_ref;
@@ -266,9 +295,8 @@ bool TreeControllerClass::getTaskState(tree_controller_pkg::GetTaskState::Reques
   return true;
 }
 bool TreeControllerClass::setJointGains(tree_controller_pkg::SetJointGains::Request &req, tree_controller_pkg::SetJointGains::Response &resp){
-  for(uint i =0;i<Kp.d0;i++) {
-    Kp(i) = req.pos_gains[i];
-    Kd(i) = req.vel_gains[i];
+  for(uint i =0;i<Ki.d0;i++) {
+    Ka(i) = req.acc_gains[i];
     Ki(i) = req.i_gains[i];
     i_claim(i) = req.i_claim[i];
   }
@@ -276,13 +304,11 @@ bool TreeControllerClass::setJointGains(tree_controller_pkg::SetJointGains::Requ
   return true;
 }
 bool TreeControllerClass::getJointGains(tree_controller_pkg::GetJointGains::Request &req, tree_controller_pkg::GetJointGains::Response &resp){
-  resp.pos_gains.resize(Kp.d0);
-  resp.vel_gains.resize(Kd.d0);
+  resp.acc_gains.resize(Ka.d0);
   resp.i_gains.resize(Ki.d0);
   resp.i_claim.resize(i_claim.d0);
-  for(uint i =0;i<Kp.d0;i++) {
-    resp.pos_gains[i] = Kp(i);
-    resp.vel_gains[i] = Kd(i);
+  for(uint i =0;i<Ka.d0;i++) {
+    resp.acc_gains[i] = Ka(i);
     resp.i_gains[i] = Ki(i);
     resp.i_claim[i] = i_claim(i);
   }
@@ -319,6 +345,12 @@ bool TreeControllerClass::setTaskGains(tree_controller_pkg::SetTaskGains::Reques
   taskHome->setGains(req.pos_gains[2],req.vel_gains[2]); taskHome->prec=req.precision[2];
   return true;
 }
+bool TreeControllerClass::setNaturalGains(tree_controller_pkg::SetNaturalGains::Request &req, tree_controller_pkg::SetNaturalGains::Response &resp){
+  taskPos->setGainsAsNatural(req.decayTime,req.dampingRatio);
+  taskVec->setGainsAsNatural(req.decayTime,req.dampingRatio);
+  taskHome->setGainsAsNatural(req.decayTime,req.dampingRatio); taskHome->Pgain = 0.;
+  return true;
+}
 bool TreeControllerClass::startLogging(tree_controller_pkg::StartLogging::Request &req, tree_controller_pkg::StartLogging::Response &resp){
   storage_index_ = 0;
   LOGGING=true;
@@ -330,10 +362,13 @@ bool TreeControllerClass::stopLogging(tree_controller_pkg::StopLogging::Request 
   write(LIST<arr>(qd_bk),STRING("qd_bk.output"));
   write(LIST<arr>(des_q_bk),STRING("des_q_bk.output"));
   write(LIST<arr>(des_qd_bk),STRING("des_qd_bk.output"));
+  write(LIST<arr>(des_qdd_bk),STRING("des_qdd_bk.output"));
   write(LIST<arr>(u_bk),STRING("u_bk.output"));
+  write(LIST<arr>(measured_effort_bk),STRING("measured_effort_bk.output"));
   write(LIST<arr>(p_effort_bk),STRING("p_effort_bk.output"));
   write(LIST<arr>(d_effort_bk),STRING("d_effort_bk.output"));
   write(LIST<arr>(i_effort_bk),STRING("i_effort_bk.output"));
+  write(LIST<arr>(a_effort_bk),STRING("a_effort_bk.output"));
   write(LIST<arr>(dt_bk),STRING("dt_bk.output"));
   write(LIST<arr>(ARR(storage_index_)),STRING("storage_index.output"));
   write(LIST<arr>(taskPos_y_bk),STRING("taskPos_y_bk.output"));

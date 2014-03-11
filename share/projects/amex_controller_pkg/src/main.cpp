@@ -102,6 +102,6 @@ int main(int argc, char** argv)
   /// Stop Logging
   ros::ServiceClient stopLoggingClient = nh.serviceClient<tree_controller_pkg::StopLogging>("/tree_rt_controller/stop_logging");
   tree_controller_pkg::StopLogging stopLoggingSrv;
-  stopLoggingClient.call(stopLoggingSrv);
+//  stopLoggingClient.call(stopLoggingSrv);
   return 0;
 }
