@@ -1,6 +1,6 @@
 #include "DoublyLinkedInstance.h"
 
-#define DEBUG_LEVEL 0
+#define DEBUG_LEVEL 2
 #include "../util/debug.h"
 
 DoublyLinkedInstance::ptr_t DoublyLinkedInstance::create(action_ptr_t a,
@@ -10,8 +10,8 @@ DoublyLinkedInstance::ptr_t DoublyLinkedInstance::create(action_ptr_t a,
                                                          ptr_t after) {
     DoublyLinkedInstance * d = new DoublyLinkedInstance(a,o,r,before,after);
     ptr_t ret =  AbstractInstance::create(d); // sets self pointer
-    d->prev_ptr->subscribe(d->get_self_ptr());
-    d->next_ptr->subscribe(d->get_self_ptr());
+    d->prev_ptr->subscribe(d->get_self_ptr(),SUCCESSOR);
+    d->next_ptr->subscribe(d->get_self_ptr(),PREDECESSOR);
     return ret;
 }
 
@@ -20,49 +20,6 @@ DoublyLinkedInstance::ptr_t DoublyLinkedInstance::create(action_ptr_t a,
                                                          reward_ptr_t r) {
     return DoublyLinkedInstance::create(a,o,r,create_invalid(),create_invalid());
 }
-
-int DoublyLinkedInstance::destroy() {
-    DEBUG_OUT(1, *this << " destroy");
-    notify_subscribers();
-    set_successor(create_invalid());
-    set_predecessor(create_invalid());
-    return 1;
-}
-
-// int DoublyLinkedInstance::destroy_unused_reachable() {
-
-// }
-
-int DoublyLinkedInstance::destroy_all_reachable() {
-    if(destruction_running) {
-        return 0;
-    } else {
-        destruction_running = true;
-        notify_subscribers();
-        DEBUG_OUT(1, *this << " destroy sequence");
-        int destroyed = 1;
-        // destroy previous
-        DEBUG_OUT(2,*this << " destroy sequence --> " << prev());
-        destroyed += prev()->destroy_all_reachable();
-        set_predecessor(create_invalid());
-        // destroy next
-        DEBUG_OUT(2,*this << " destroy sequence --> " << next());
-        destroyed += next()->destroy_all_reachable();
-        set_successor(create_invalid());
-        // finalize
-        DEBUG_OUT(1, *this << " destroyed " << destroyed);
-        destruction_running = false;
-        return destroyed;
-    }
-}
-
-// int DoublyLinkedInstance::destroy_inverse_reachable() {
-
-// }
-
-// int DoublyLinkedInstance::destroy_sequence() {
-
-// }
 
 DoublyLinkedInstance::Iterator DoublyLinkedInstance::begin() {
     DEBUG_OUT(2,*this << "->begin()");
@@ -110,27 +67,33 @@ DoublyLinkedInstance::ptr_t DoublyLinkedInstance::append(action_ptr_t a,
 }
 
 void DoublyLinkedInstance::set_predecessor(ptr_t pre) {
-    prev_ptr->unsubscribe(get_self_ptr());
+    prev_ptr->unsubscribe(get_self_ptr(),SUCCESSOR);
     prev_ptr = pre;
-    prev_ptr->subscribe(get_self_ptr());
+    prev_ptr->subscribe(get_self_ptr(),SUCCESSOR);
 }
 
 void DoublyLinkedInstance::set_successor(ptr_t suc) {
-    next_ptr->unsubscribe(get_self_ptr());
+    next_ptr->unsubscribe(get_self_ptr(),PREDECESSOR);
     next_ptr = suc;
-    next_ptr->subscribe(get_self_ptr());
+    next_ptr->subscribe(get_self_ptr(),PREDECESSOR);
 }
 
-void DoublyLinkedInstance::destruction_notification(ptr_t ins) {
-    DEBUG_OUT(2,*this << " got destruction notification from " << ins);
-    if(DEBUG_LEVEL>1 && ins!=next_ptr && ins!=prev_ptr) {
-        DEBUG_ERROR(ins << " is neither successor nor predecessor of " << *this);
-    }
-    if(ins==next_ptr) {
-        set_successor(create_invalid());
-    }
-    if(ins==prev_ptr) {
-        set_predecessor(create_invalid());
+void DoublyLinkedInstance::detachment_notification(ptr_t ins, SUBSCRIBTION_TYPE t) {
+    DEBUG_OUT(2,*this << " got detachment notification from " << ins);
+    switch(t) {
+    case PREDECESSOR:
+        if(DEBUG_LEVEL>1 && ins!=next_ptr) {
+            DEBUG_ERROR(ins << " is not successor of " << *this);
+        } else if(ins==next_ptr) {
+            set_successor(create_invalid());
+        }
+        break;
+    case SUCCESSOR:
+        if(DEBUG_LEVEL>1 && ins!=prev_ptr) {
+            DEBUG_ERROR(ins << " is not predecessor of " << *this);
+        } else if(ins==prev_ptr) {
+            set_predecessor(create_invalid());
+        }
     }
 }
 

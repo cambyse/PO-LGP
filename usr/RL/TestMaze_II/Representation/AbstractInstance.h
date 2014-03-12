@@ -19,7 +19,7 @@ class AbstractInstance {
     friend class DoublyLinkedInstance;
 
     //------------------------------------------------------------//
-    //                         typedefs                           //
+    //                    typedefs and enums                      //
     //------------------------------------------------------------//
 public:
     class Iterator;
@@ -32,6 +32,7 @@ protected:
     typedef std::shared_ptr<AbstractInstance> shared_ptr_t;
     typedef std::weak_ptr<AbstractInstance> weak_ptr_t;
     typedef std::set<weak_ptr_t, std::owner_less<weak_ptr_t> > subscriber_set_t;
+    enum SUBSCRIBTION_TYPE { PREDECESSOR, SUCCESSOR };
     //------------------------------------------------------------//
     //                  internal class definitions                //
     //------------------------------------------------------------//
@@ -67,7 +68,7 @@ public:
     class Iterator {
     public:
         Iterator(ptr_t ptr);
-        /** \brief Default descructor. */
+        /** \brief Default destructor. */
         virtual ~Iterator() final = default;
         /** \brief Dereference operator returns pointer. */
         virtual ptr_t operator*() const final;
@@ -92,8 +93,10 @@ public:
     const observation_ptr_t observation;
     const reward_ptr_t reward;
 private:
-    subscriber_set_t subscribers;
+    bool detachment_running = false;
+    subscriber_set_t predecessors, successors;
     weak_ptr_t self_ptr;
+    static subscriber_set_t all_instances; ///< used for memory check (only for DEBUG_LEVEL > 0)
 
     //------------------------------------------------------------//
     //                         methods                            //
@@ -104,11 +107,10 @@ public:
                         observation_ptr_t o,
                         reward_ptr_t r);
     static ptr_t create_invalid();
-    virtual int destroy();
-    virtual int destroy_unused_reachable();
-    virtual int destroy_all_reachable();
-    virtual int destroy_inverse_reachable();
-    virtual int destroy_sequence();
+    static int memory_check();
+    virtual int detach() final;
+    virtual int detach_reachable() final;
+    virtual int detach_all() final;
     virtual Iterator begin();
     virtual Iterator end() const final;
     virtual ptr_t next(const int& n = 1) const;
@@ -136,14 +138,14 @@ private:
      * methods. It ensures that the self pointer is set. */
     static ptr_t create(AbstractInstance * pointer);
     /** \brief Subscribe to this instance to be taken into account for
-     * destruction notifications. */
-    virtual void subscribe(ptr_t ins) final;
+     * detachment notifications. */
+    virtual void subscribe(ptr_t ins, SUBSCRIBTION_TYPE t) final;
     /** \brief Unsubscribe from this instance. */
-    virtual void unsubscribe(ptr_t ins) final;
-    /** \brief Subscribe to this instance to be taken into account for destroy
+    virtual void unsubscribe(ptr_t ins, SUBSCRIBTION_TYPE t) final;
+    /** \brief Subscribe to this instance to be taken into account for detach
      * callbacks. */
-    virtual void destruction_notification(ptr_t ins);
-    /** \brief Notify all subscribers of pending destruction. */
+    virtual void detachment_notification(ptr_t ins, SUBSCRIBTION_TYPE t);
+    /** \brief Notify all subscribers of pending detachment. */
     virtual void notify_subscribers() const final;
     /** \brief Set the self_ptr. This function MUST be called after creating a
      * new object. Use AbstractInstance::create(AbstractInstance * pointer). */
