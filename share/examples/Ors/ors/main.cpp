@@ -15,8 +15,7 @@
 
 void TEST(LoadSave){
   ors::KinematicWorld G;
-  ifstream fil("arm7.ors");
-  fil >>G;
+  FILE("arm7.ors") >>G;
   G.calc_fwdPropagateFrames();
   cout <<G <<endl;
 
@@ -475,8 +474,6 @@ void TEST(BlenderImport){
 #endif
 
 int MAIN(int argc,char **argv){
-  testKinematics();
-  return 0;
 
   testLoadSave();
   testPlayStateSequence();

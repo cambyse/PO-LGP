@@ -1,5 +1,7 @@
 python
 
+import math
+
 def qdump__MT__String(d, value):
     p = value["p"]
     N = value["N"]
@@ -105,5 +107,42 @@ def qdump__ItemL(d, value):
 
 def qdump__KeyValueGraph(d, value):
     qdump__LIST(d,value)
+
+def qdump__BodyL(d, value):
+    qdump__LIST(d,value)
+
+def qdump__ShapeL(d, value):
+    qdump__LIST(d,value)
+
+def qdump__JointL(d, value):
+    qdump__LIST(d,value)
+
+def qdump__ProxyL(d, value):
+    qdump__LIST(d,value)
+
+def qdump__ors__Vector(d, value):
+    x=float(value["x"]); y=float(value["y"]); z=float(value["z"])
+    s = "[%f %f %f]" % (x,y,z)
+    d.putValue(s)
+    d.putNumChild(1)
+    if d.isExpanded():
+        with Children(d):
+            with SubItem(d, "length"):
+                d.putValue(math.sqrt(x*x+y*y+z*z))
+                d.putType("float")
+                d.putNumChild(0)
+
+def qdump__ors__Quaternion(d, value):
+    w=float(value["w"]); x=float(value["x"]);
+    y=float(value["y"]); z=float(value["z"])
+    s = "[%f %f %f %f]" % (w,x,y,z)
+    d.putValue(s)
+    d.putNumChild(1)
+    if d.isExpanded():
+        with Children(d):
+            with SubItem(d, "degrees"):
+                d.putValue(360.0/math.pi*math.acos(w))
+                d.putType("float")
+                d.putNumChild(0)
 
 end
