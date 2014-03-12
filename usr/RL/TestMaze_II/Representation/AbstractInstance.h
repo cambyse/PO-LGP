@@ -108,6 +108,7 @@ public:
                         reward_ptr_t r);
     static ptr_t create_invalid();
     static int memory_check();
+    static bool memory_check_request();
     virtual int detach() final;
     virtual int detach_reachable() final;
     virtual int detach_all() final;
@@ -145,8 +146,12 @@ private:
     /** \brief Subscribe to this instance to be taken into account for detach
      * callbacks. */
     virtual void detachment_notification(ptr_t ins, SUBSCRIBTION_TYPE t);
-    /** \brief Notify all subscribers of pending detachment. */
-    virtual void notify_subscribers() const final;
+    /** \brief Notify all subscribers of pending detachment.
+     *
+     * If detach_all is true, the detach_all() method is called on all
+     * subscribers and the (possibly non-zero) number of resulting detachments
+     * is returned.*/
+    virtual int notify_subscribers(bool detach_all = false) const final;
     /** \brief Set the self_ptr. This function MUST be called after creating a
      * new object. Use AbstractInstance::create(AbstractInstance * pointer). */
     virtual void set_self_ptr(shared_ptr_t p) final;

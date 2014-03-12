@@ -4,7 +4,7 @@
 
 #include <utility>
 
-#define DEBUG_LEVEL 2
+#define DEBUG_LEVEL 0
 #include "../util/debug.h"
 
 using std::string;
@@ -100,9 +100,6 @@ AbstractInstance::ptr_t AbstractInstance::create(action_ptr_t a,
                                                  reward_ptr_t r) {
     shared_ptr_t p(new AbstractInstance(a,o,r));
     p->set_self_ptr(p);
-#if DEBUG_LEVEL > 0
-    all_instances.insert(p);
-#endif
     return ptr_t(p);
 }
 
@@ -111,15 +108,43 @@ AbstractInstance::ptr_t AbstractInstance::create_invalid() {
 }
 
 int AbstractInstance::memory_check() {
+#if DEBUG_LEVEL > 0
+    if(DEBUG_LEVEL > 1) {
+        for(weak_ptr_t p : all_instances) {
+            if(p.expired()) {
+                DEBUG_ERROR("Pointer expired");
+            } else {
+                DEBUG_ERROR(*(p.lock()) << " not deleted");
+            }
+        }
+    }
     return all_instances.size();
+#else
+    DEBUG_ERROR("No memory check possible (compile with DEBUG_LEVEL > 0)");
+    return -1;
+#endif
+}
+
+bool AbstractInstance::memory_check_request() {
+#if DEBUG_LEVEL > 0
+    return true;
+#else
+    return false;
+#endif
 }
 
 int AbstractInstance::detach() {
-    DEBUG_OUT(1, *this << " detach");
-    notify_subscribers();
-    set_successor(create_invalid());
-    set_predecessor(create_invalid());
-    return 1;
+    if(detachment_running) {
+        return 0;
+    } else {
+        detachment_running = true;
+        DEBUG_OUT(1, *this << " detach");
+        set_successor(create_invalid());
+        set_predecessor(create_invalid());
+        notify_subscribers();
+        detachment_running = false;
+        return 1;
+    }
 }
 
 int AbstractInstance::detach_reachable() {
@@ -127,16 +152,24 @@ int AbstractInstance::detach_reachable() {
         return 0;
     } else {
         detachment_running = true;
-        detach();
         DEBUG_OUT(1, *this << " detach reachable");
         int detached = 1;
         // detach previous
-        DEBUG_OUT(2,*this << " detach reachable --> " << prev());
-        detached += prev()->detach_reachable();
+        ptr_t p = prev();
+        if(p!=create_invalid()) {
+            DEBUG_OUT(2,*this << " detach reachable --> " << p);
+            detached += p->detach_reachable();
+            set_predecessor(create_invalid());
+        }
         // detach next
-        DEBUG_OUT(2,*this << " detach reachable --> " << next());
-        detached += next()->detach_reachable();
+        ptr_t n = next();
+        if(n!=create_invalid()) {
+            DEBUG_OUT(2,*this << " detach reachable --> " << n);
+            detached += n->detach_reachable();
+            set_successor(create_invalid());
+        }
         // finalize
+        notify_subscribers();
         DEBUG_OUT(1, *this << " detached " << detached);
         detachment_running = false;
         return detached;
@@ -148,18 +181,24 @@ int AbstractInstance::detach_all() {
         return 0;
     } else {
         detachment_running = true;
-        notify_subscribers();
-        DEBUG_OUT(1, *this << " detach all");
+        DEBUG_OUT(1, *this << " detach reachable");
         int detached = 1;
         // detach previous
-        DEBUG_OUT(2,*this << " detach all --> " << prev());
-        detached += prev()->detach_reachable();
-        set_predecessor(create_invalid());
+        ptr_t p = prev();
+        if(p!=create_invalid()) {
+            DEBUG_OUT(2,*this << " detach reachable --> " << p);
+            detached += p->detach_reachable();
+            set_predecessor(create_invalid());
+        }
         // detach next
-        DEBUG_OUT(2,*this << " detach all --> " << next());
-        detached += next()->detach_reachable();
-        set_successor(create_invalid());
+        ptr_t n = next();
+        if(n!=create_invalid()) {
+            DEBUG_OUT(2,*this << " detach reachable --> " << n);
+            detached += n->detach_reachable();
+            set_successor(create_invalid());
+        }
         // finalize
+        detached += notify_subscribers(true);
         DEBUG_OUT(1, *this << " detached " << detached);
         detachment_running = false;
         return detached;
@@ -290,7 +329,8 @@ void AbstractInstance::detachment_notification(ptr_t, SUBSCRIBTION_TYPE) {
     return;
 }
 
-void AbstractInstance::notify_subscribers() const {
+int AbstractInstance::notify_subscribers(bool detach_all) const {
+    int detached = 0;
     // Subscribers may unsubscribe in response to notification, which possibly
     // invalidates iterators. We therefore use a copy. Note that auto results in
     // a copy not a reference!
@@ -301,11 +341,22 @@ void AbstractInstance::notify_subscribers() const {
             } else {
                 DEBUG_OUT(2,*this << " sends detachment notification to " << *(p.lock()));
                 p.lock()->detachment_notification(get_self_ptr(),old_subscribers.second);
+                if(detach_all) {
+                    detached += p.lock()->detach_all();
+                }
             }
         }
     }
+    return detached;
 }
 
 void AbstractInstance::set_self_ptr(shared_ptr_t p) {
-    self_ptr = p;
+    if(!self_ptr.expired()) {
+        DEBUG_ERROR("Self pointer is already set");
+    } else {
+        self_ptr = p;
+    }
+#if DEBUG_LEVEL > 0
+    all_instances.insert(self_ptr);
+#endif
 }

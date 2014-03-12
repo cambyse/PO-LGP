@@ -1,6 +1,6 @@
 #include "DoublyLinkedInstance.h"
 
-#define DEBUG_LEVEL 2
+#define DEBUG_LEVEL 0
 #include "../util/debug.h"
 
 DoublyLinkedInstance::ptr_t DoublyLinkedInstance::create(action_ptr_t a,
