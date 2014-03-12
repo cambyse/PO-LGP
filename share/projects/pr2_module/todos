@@ -1,9 +1,3 @@
-* joystick: back to old up/down/left/right convention
-* joystick: set gaze to watch left or right hand
-* faster
-* velocity limits in controller
-* reactivate joint limits
-* activate lift
 * use force sensor:
   * get fL and fR from the two force sensors as message
   * have fL_ref adn fR_ref as messages
@@ -11,4 +5,5 @@
   * does that work???
   * how adapt q_ref? Reduce gains?
 * have a Kd_gainFactor, Kp_gainFactor, fL_.. fR_.. \in[0,1] message
+
 * POSTPONE: feedback? q_obs -> q?
