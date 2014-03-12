@@ -1,4 +1,7 @@
 #include "controller.h"
+#include "util.h"
+
+#include "tcr2/SetGoal.h"
 
 #include <Core/util.h>
 #include <Ors/ors.h>
@@ -17,6 +20,7 @@ Controller::Controller(ros::NodeHandle& n, const char* endeff) :
   Ki = MT::getParameter<double>("Ki");
 
   bindOrsToOpenGL(G, gl);
+  G.physx();
 }
 
 void Controller::step() {
@@ -30,14 +34,26 @@ void Controller::step() {
   
   ors::Vector force = Kp * dPos + Kd * dVel + Ki * integrate;
 
-  //G.addForce(force, robot);
+  G.addForce(force, robot);
+}
+
+bool Controller::set_goal(tcr2::SetGoal::Request &req,
+                          tcr2::SetGoal::Response &res) {
+  goal = ros_to_ors_vector(req.pose.position);
+  double eps = 10e-5;
+  while ((G.getBodyByName(endeff)->X.pos - goal).length() > eps &&
+         G.getBodyByName(endeff)->X.vel.length() > eps) {
+    ros::Duration(.5).sleep();
+  }
 }
 
 void Controller::run() {
+  goal = G.getBodyByName(endeff)->X.pos;
   while (ros::ok()) {
-    step();
+    this->step(); 
     G.physx().step();
     gl.update();
+    ros::spinOnce();
   }
     
 }
@@ -46,7 +62,9 @@ int main(int argc, char** argv) {
   ros::init(argc, argv, "Controller");
 
   ros::NodeHandle n;
+  Controller c(n, "robot");
 
-  Controller c(n, "endeff");
+  ros::ServiceServer service = n.advertiseService("set_goal", &Controller::set_goal, &c);
+
   c.run();
 }

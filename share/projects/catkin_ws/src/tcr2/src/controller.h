@@ -1,3 +1,5 @@
+#include "tcr2/SetGoal.h"
+
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
 
@@ -12,6 +14,9 @@ class Controller {
     Controller(ros::NodeHandle& n, const char* endeff);
     void run();  
     void step();
+
+    bool set_goal(tcr2::SetGoal::Request &req,
+                  tcr2::SetGoal::Response &res);
 
   private:
     ros::NodeHandle& n;
