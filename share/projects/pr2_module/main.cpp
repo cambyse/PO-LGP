@@ -16,7 +16,7 @@ struct MySystem:System{
   RosCom *ros;
   MySystem(){
     addModule<JoystickInterface>(NULL, Module_Thread::loopWithBeat, .01);
-    ros = addModule<RosCom>(NULL, Module_Thread::loopFull);
+    ros = addModule<RosCom>(NULL, Module_Thread::loopWithBeat, .001);
     connect();
   }
 };
@@ -38,28 +38,29 @@ int main(int argc, char** argv){
   engine().open(S);
   S.joystickState.var->waitForNextRevision();
 
-  //wait for first q observation
+  //-- wait for first q observation!
   for(;;){
     S.q_obs.var->waitForNextRevision();
     if(S.q_obs.get()->N==MP.world.q.N && S.qdot_obs.get()->N==MP.world.q.N)
       break;
   }
 
+  //-- set current state
   q = S.q_obs.get();
   qdot = S.qdot_obs.get();
   MP.setState(q, qdot);
-  MP.world.gl().update();
   arr zero_qdot(qdot.N);
   zero_qdot.setZero();
 
-  MT::wait(1.);
-  cout <<"START" <<endl;
-  for(;;){
+  for(uint t=0;;t++){
     S.joystickState.var->waitForNextRevision();
     arr joy = S.joystickState.get();
 
-    //cout <<S.q.get()() <<endl;
-    bool shutdown = j2t.updateTasks(joy, 0.01);
+//    q    = S.q_obs.get();
+//    qdot = S.qdot_obs.get();
+//    MP.setState(q,qdot);
+
+    bool shutdown = j2t.updateTasks(joy);
     if(shutdown) engine().shutdown.incrementValue();
 
     for(uint tt=0;tt<10;tt++){
@@ -68,9 +69,9 @@ int main(int argc, char** argv){
       qdot += .001*a;
     }
     MP.setState(q, qdot);
-    MP.world.gl().update();
+    if(!(t%10))
+      MP.world.gl().update(STRING("local operational space controller state t="<<(double)t/100.), false, false, false);
 
-//    cout <<"q=" <<q <<endl;
     S.q_ref.set() = q;
     S.qdot_ref.set() = zero_qdot;
     S.ros->publishJointReference();

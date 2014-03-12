@@ -113,11 +113,11 @@ joint br_caster_l_wheel_joint (br_caster_rotation_link br_caster_l_wheel_link){ 
 joint br_caster_r_wheel_joint (br_caster_rotation_link br_caster_r_wheel_link){ from=<T 0 -0.049 0 -0.5 -0.5 -0.5 -0.5 >  type=10  ctrl_limits=[ 100 100 ]  }
 
 ## TORS0
-joint torso_lift_joint (base_footprint torso_lift_link){ from=<T -0.05 0 0.790675 0.707107 0 -0.707107 0 >  type=3 q=.1  limits=[ 0 0.33 ]  ctrl_limits=[ 0.013 10000 ]  ctrl_H=3 }
+joint torso_lift_joint (base_footprint torso_lift_link){ from=<T -0.05 0 0.790675 0.707107 0 -0.707107 0 >  type=3 q=.1  limits=[ 0 0.33 ]  ctrl_limits=[ 0.013 10000 ]  ctrl_H=3  gains=[100000 10] }
 
 ## HEAD
 joint head_pan_joint (torso_lift_link head_pan_link){ from=<T 0.38145 0 0.01707 1 0 0 0 >  type=0  limits=[ -3.007 3.007 ]  ctrl_limits=[ 6 2.645 ] gains=[10 2] }
-joint head_tilt_joint (head_pan_link head_tilt_link){ from=<T 1.5099e-17 0 -0.068 -0.5 -0.5 -0.5 -0.5 >  type=0  limits=[ -0.471238 1.39626 ]  ctrl_limits=[ 5 18 ] gains=[10 2] }
+joint head_tilt_joint (head_pan_link head_tilt_link){ from=<T 1.5099e-17 0 -0.068 -0.5 -0.5 -0.5 -0.5 >  type=0  limits=[ -0.471238 1.39626 ]  ctrl_limits=[ 5 18 ] gains=[100 10] }
 joint laser_tilt_mount_joint (torso_lift_link laser_tilt_mount_link){ from=<T 0.227 0 -0.09893 -0.5 -0.5 -0.5 -0.5 >  type=0  limits=[ -0.7854 1.48353 ]  ctrl_limits=[ 10 0.65 ] }
 
 ## RIGHT

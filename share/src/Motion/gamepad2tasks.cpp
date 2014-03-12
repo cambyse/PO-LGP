@@ -15,14 +15,18 @@ Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL),
 //  MP.addPDtask("endeffBase", .1, .8, posTMT, "handR", NoVector, "rightTarget");
 }
 
-bool Gamepad2Tasks::updateTasks(arr& gamepadState, double dt){
+double joySignalMap(double x){
+  return MT::sign(x)*(exp(MT::sqr(x))-1.);
+}
+
+bool Gamepad2Tasks::updateTasks(arr& gamepadState){
   for(PDtask* pdt:MP.tasks) pdt->active=false;
 
   qitself->active=true;
   qitself->v_ref.setZero();
   qitself->prec=100.;
 
-  limits->active=false;
+  limits->active=true;
   limits->v_ref.setZero();
   limits->v_ref.setZero();
   limits->prec=100.;
@@ -31,26 +35,19 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState, double dt){
 
   double joyRate=MT::getParameter<double>("joyRate",.2);
   for(uint i=1;i<gamepadState.N;i++) if(fabs(gamepadState(i))<0.05) gamepadState(i)=0.;
-  double joyLeftRight = -joyRate*MT::sign(gamepadState(2))*(exp(MT::sqr(gamepadState(2)))-1.);
-  double joyForwardBack = -joyRate*MT::sign(gamepadState(1))*(exp(MT::sqr(gamepadState(1)))-1.);
-  double joyUpDown = -joyRate*MT::sign(gamepadState(4))*(exp(MT::sqr(gamepadState(4)))-1.);
-  double joyRotate = -10.*joyRate*MT::sign(gamepadState(3))*(exp(MT::sqr(gamepadState(3)))-1.);
+  double joyLeftRight   = -joyRate*joySignalMap(gamepadState(4));
+  double joyForwardBack = -joyRate*joySignalMap(gamepadState(3));
+  double joyUpDown      = -joyRate*joySignalMap(gamepadState(2));
+  double joyRotate  = -10.*joyRate*joySignalMap(gamepadState(1));
 
   enum {none, up, down, left, right} sel=none;
   uint mode = uint(gamepadState(0));
   //cout <<"mode " <<mode <<endl;
   if(mode&0x10 || mode&0x20 || mode&0x40 || mode&0x80) return true;
-#if 0
   if(gamepadState(5)>.5) sel=right;
   else if(gamepadState(5)<-.5) sel=left;
   else if(gamepadState(6)> .5) sel=down;
   else if(gamepadState(6)<-.5) sel=up;
-#else
-  if(mode==1) sel=down;
-  else if(mode==2) sel=right;
-  else if(mode==4) sel=left;
-  else if(mode==8) sel=up;
-#endif
 
   switch (0) {
     case 0: { //(NIL) motion rate control
@@ -58,8 +55,8 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState, double dt){
       switch(sel){
         case right:  pdt=endeffR;  break;
         case left:   pdt=endeffL;  break;
-        case up:     pdt=head;  break;
-        case down:   pdt=base;  pdt_rot=baseQuat; break;
+        case up:     pdt=head;    head->setGainsAsNatural(.02, .8);  break;
+        case down:   pdt=base;   break;
         case none:   pdt=NULL;  break;
       }
       if(!pdt) break;
@@ -73,11 +70,23 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState, double dt){
       vel.y = joyForwardBack;
       vel.z = joyUpDown;
       vel = MP.world.getShapeByName("endeffBase")->X.rot*vel;
-      pdt->y_ref = pdt->y + dt*ARRAY(vel);
+      pdt->y_ref = pdt->y + 0.01*ARRAY(vel);
       pdt->v_ref = ARRAY(vel); //setZero();
       MP.world.getShapeByName("mymarker")->rel.pos = pdt->y_ref;
 
-      if(pdt_rot && fabs(joyRotate)>0.){
+      //-- left right: control head
+      if(sel==left || sel==right){
+        head->active=true;
+        head->setGainsAsNatural(.1, .8);
+        arr gaze = pdt->y - ARRAY(MP.world.getShapeByName("endeffHead")->X.pos);
+        gaze /= length(gaze);
+        head->y_ref = gaze;
+        head->v_ref.setZero();
+      }
+
+      //-- if down: also control rotation
+      if(sel==down && fabs(joyRotate)>0.){
+        pdt_rot=baseQuat;
         pdt_rot->active=true;
         if(!pdt_rot->y.N || !pdt_rot->v.N){
           pdt_rot->map.phi(pdt_rot->y, NoArr, MP.world);
@@ -85,7 +94,7 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState, double dt){
         }
         ors::Quaternion vel(0., 0., 0., joyRotate);
         vel = vel*ors::Quaternion(pdt_rot->y);
-        pdt_rot->y_ref = pdt_rot->y + dt*0.5*ARRAY(vel);
+        pdt_rot->y_ref = pdt_rot->y + 0.5*0.01*ARRAY(vel);
         //cout <<joyRotate <<endl;
         pdt_rot->v_ref.setZero();
       }

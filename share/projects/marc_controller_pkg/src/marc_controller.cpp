@@ -5,6 +5,16 @@
 
 namespace marc_controller_ns {
 
+double marginMap(double x, double lo, double hi, double marginRatio=.1){
+  double m=(hi-lo)*marginRatio;
+  double lom = lo + m;
+  double him = hi - m;
+  if(x>=lom && x<=him) return 0.;
+  if(x<lom) return (x-lom)/m;
+  if(x>him) return (x-him)/m;
+  return 0.;
+}
+
 /// Controller initialization in non-realtime
 bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &nh){
   cout <<"*** Starting TreeControllerClass" <<endl;
@@ -47,7 +57,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
       cout <<"  " <<i <<'\t' <<ROS_qIndex(i)
           <<" \tgains=" <<Kp(i) <<' '<<Kd(i)
          <<" \tlimits=" <<limits[i]
-         <<" \t" <<pr2_tree.getJoint(ROS_qIndex(i))->joint_->name.c_str() <<endl;
+         <<" \t" <<pr2_tree.getJoint(ROS_qIndex(i))->joint_->name.c_str() <<' ' <<j->name <<endl;
     }else{
       cout <<"  " <<i <<" not matched " <<j->name <<endl;
     }
@@ -94,9 +104,10 @@ void TreeControllerClass::update() {
 
     //-- command efforts to KDL
     for (uint i=0;i<q.N;i++) if(ROS_qIndex(i)!=UINT_MAX){
-	//TODO: velocity limits!
-      if(u(i)<-limits(i,3)) u(i)=-limits(i,3);
-      if(u(i)> limits(i,3)) u(i)= limits(i,3);
+//      double velM = marginMap(qd(i), -limits(i,2), limits(i,2), .1);
+//      if(velM<0. && u(i)<0.) u(i)*=(1.+velM); //decrease effort close to velocity margin
+//      if(velM>0. && u(i)>0.) u(i)*=(1.-velM); //decrease effort close to velocity margin
+      MT::constrain(u(i), -limits(i,3), limits(i,3));
       pr2_tree.getJoint(ROS_qIndex(i))->commanded_effort_ = u(i);
       pr2_tree.getJoint(ROS_qIndex(i))->enforceLimits();
     }
