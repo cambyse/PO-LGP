@@ -72,11 +72,13 @@ struct KeyFramer {
   KeyFrameL getKeyFrames(const uintA &vit);
   void saveKeyFrameScreens(const KeyFrameL &keyframes, uint df = 60);
 
+  void EM_c(KeyValueGraph &kvg, const StringA &bAs, const String &bB);
   void EM_c(KeyValueGraph &kvg, const String &bA, const String &bB);
   void EM_r(KeyValueGraph &kvg, const String &bA, const String &bB);
   void EM_m(KeyValueGraph &kvg, const String &b);
 
   void playScene(const String &b);
+  void playScene(const StringA &bb);
   void testSmoothing(KeyValueGraph &kvg, const String &b, double alpha);
 };
 

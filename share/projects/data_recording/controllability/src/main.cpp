@@ -27,22 +27,30 @@ void display(G4Data &g4d) {
 
   KeyFramer kf(kw, g4d);
   String b1("rh:thumb"), b2("sbox");
+  StringA bb;
+  bb.append(STRING("rh:thumb"));
+  //bb.append(STRING("rh:index"));
+  //bb.append(STRING("rh:middle"));
+  bb.append(STRING("lh:thumb"));
+  //bb.append(STRING("lh:index"));
+  //bb.append(STRING("lh:middle"));
 
   KeyValueGraph kvg;
   //kf.EM_m(kvg, b1);
   //kf.EM_r(kvg, b1, b2);
   //kf.EM_c(kvg, b1, b2);
-  kf.testSmoothing(kvg, b1, .3);
+  //kf.testSmoothing(kvg, b1, .3);
 
-  FGPlots fgp;
-  fgp.open(kvg);
-  uint F = g4d.getNumFrames();
-  for(uint f = 0; f < F; f++) {
-    kf.updateOrs(f);
-    fgp.step(f);
-  }
+  //FGPlots fgp;
+  //fgp.open(kvg);
+  //uint F = g4d.getNumFrames();
+  //for(uint f = 0; f < F; f++) {
+    //kf.updateOrs(f);
+    //fgp.step(f);
+  //}
 
   //kf.playScene(b1);
+  kf.playScene(bb);
 }
 
 int main(int argc, char **argv) {
