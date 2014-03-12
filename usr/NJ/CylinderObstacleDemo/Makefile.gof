@@ -20,7 +20,7 @@ PLIB = 1  #for the Joystick
 
 CXXFLAGS += -DMT_NO_GLOBALMEM
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk
 
 
 

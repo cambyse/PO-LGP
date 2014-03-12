@@ -15,8 +15,7 @@
 
 void TEST(LoadSave){
   ors::KinematicWorld G;
-  ifstream fil("arm7.ors");
-  fil >>G;
+  FILE("arm7.ors") >>G;
   G.calc_fwdPropagateFrames();
   cout <<G <<endl;
 
@@ -52,7 +51,7 @@ void TEST(Kinematics){
   };
 
   //ors::KinematicWorld G("test.ors");
-  ors::KinematicWorld G("../../../data/pr2_model/pr2_clean_comfi.ors");
+  ors::KinematicWorld G("../../../data/pr2_model/pr2-3-comfi.ors");
   uint n=G.getJointStateDimension();
   arr x(n);
   ors::Vector vec;
@@ -475,8 +474,6 @@ void TEST(BlenderImport){
 #endif
 
 int MAIN(int argc,char **argv){
-  testKinematics();
-  return 0;
 
   testLoadSave();
   testPlayStateSequence();

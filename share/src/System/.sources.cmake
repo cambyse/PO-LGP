@@ -1,3 +1,3 @@
-set(SOURCES ./engine.h
-./engine_internal.h
+set(SOURCES ./engine_internal.h
+./engine.h
 ./engine.cpp)

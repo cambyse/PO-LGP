@@ -4,5 +4,5 @@ OBJS = main.o ors_ibds.o
 
 GTKGL = 1
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk
 

@@ -4,11 +4,13 @@ OUTPUT := $(BASE)/lib/libextern_$(NAME).a
 
 MLR_NO_CXX11 = 1
 
-CXXFLAGS += -DSWIFT_DECOMP -DDECOMP_GRAPHICS -O3 -fPIC -w -IRAPID -I/usr/include/tcl8.5
+#CXXFLAGS += -DSWIFT_DECOMP -DDECOMP_GRAPHICS -O3 -fPIC -w -IRAPID -I/usr/include/tcl8.5
+CXXFLAGS += -DSWIFT_DECOMP -O3 -fPIC -w -IRAPID
+
 
 LIBS += -lqhull -lm -ltcl -ltk -lglut -lGLU -lXmu -lX11 -lGL
 
-SRCS = $(shell find . -maxdepth 2 -name '*.cpp' )
+SRCS = $(shell find . -maxdepth 2 -name '*.cpp' -not -name 'togl.cpp')
 OBJS = $(SRCS:%.cpp=%.o)
 
 target: $(OUTPUT) ./decomposer.exe
@@ -17,4 +19,4 @@ target: $(OUTPUT) ./decomposer.exe
 
 DEPEND = extern_SWIFT
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

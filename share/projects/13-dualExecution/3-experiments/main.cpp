@@ -17,15 +17,19 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
 
   //-- setup the motion problem
   TaskCost *pos =
-      P.addTaskMap("position",
+      P.addTask("position",
                    new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
   P.setInterpolatingCosts(pos, MotionProblem::finalOnly,
                           ARRAY(0.,0.,0.), 1e3);
 //                          ARRAY(P.world.getShapeByName("target")->X.pos), 1e3);
-  P.setInterpolatingVelCosts(pos, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e1);
+  TaskCost *q_vel =
+      P.addTask("q_vel",
+                new DefaultTaskMap(qItselfTMT, world));
+  q_vel->map.order=1;
+  P.setInterpolatingCosts(q_vel, MotionProblem::finalOnly, NoArr, 1e1);
 
-  //c = P.addTaskMap("collisionConstraints", new CollisionConstraint());
-  P.addTaskMap("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1,.7)));
+  //c = P.addTask("collisionConstraints", new CollisionConstraint());
+  P.addTask("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1,.7)));
   stickyWeight=1.;
 
   MotionProblemFunction MF(P);
@@ -171,13 +175,13 @@ int main(int argc,char** argv){
   world.setJointState(x[0]);
   world.gl().watch();
 
-  vid = new VideoEncoder_libav_simple("data.avi", 200./4.);
+//  vid = new VideoEncoder_libav_simple("data.avi", 200./4.);
   for(uint i=0;i<10;i++){
     world.getBodyByName("table")->X.pos.z = .6 + .1*rnd.gauss();
     testExecution(x, y, dual, world, i);
   }
-  vid -> close();
-  delete vid;
+//  vid -> close();
+//  delete vid;
 
   return 0;
 }

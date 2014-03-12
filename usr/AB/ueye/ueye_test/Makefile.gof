@@ -9,4 +9,4 @@ CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES -D__STDC_CONSTANT_MACROS #-march=native
 LPATHS += /usr/local/lib
 LIBS += -lueye_api
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

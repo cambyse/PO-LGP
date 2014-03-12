@@ -5,4 +5,4 @@ OBJS = main.o
 LAPACK = 1
 FREEGLUT = 1
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

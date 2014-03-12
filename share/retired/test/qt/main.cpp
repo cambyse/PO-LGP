@@ -4,6 +4,7 @@
 
 using namespace std;
 
+#if 0
 void glDraw(void*){
 #ifdef MT_GL
   glStandardLight(NULL);
@@ -13,6 +14,7 @@ void glDraw(void*){
   glFrontFace(GL_CCW);
 #endif
 }
+#endif
 
 int main(int argc,char **argv){
 
@@ -21,7 +23,7 @@ int main(int argc,char **argv){
   Gui gui;
   gui.show();
   
-  gui.ui.glview->gl->add(glDraw,NULL);
+//  gui.ui.glview->gl->add(glDraw,NULL);
 
   gui.exec();
 

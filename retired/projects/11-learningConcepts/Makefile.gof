@@ -9,6 +9,6 @@ RELATIONAL = 1
 #QHULL   = 1
 #MT = 1
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk
 
 

@@ -5,5 +5,5 @@ OBJS = main.o
 FLTK = 1
 NAME = nix
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk
 

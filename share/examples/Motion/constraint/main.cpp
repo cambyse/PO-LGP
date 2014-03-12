@@ -31,17 +31,21 @@ int main(int argc,char** argv){
 
   //-- setup the motion problem
   TaskCost *c;
-  c = P.addTaskMap("position",
+  c = P.addTask("position",
                    new DefaultTaskMap(posTMT, G, "endeff", NoVector));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                           ARRAY(P.world.getBodyByName("target")->X.pos), 1e2);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
-                             ARRAY(0.,0.,0.), 1e1);
+
+  c = P.addTask("position_vel",
+                   new DefaultTaskMap(posTMT, G, "endeff", NoVector));
+  c->map.order=1;
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly,
+                          ARRAY(0.,0.,0.), 1e1);
 
   if(con){
-    c = P.addTaskMap("collisionConstraints", new CollisionConstraint());
+    c = P.addTask("collisionConstraints", new CollisionConstraint());
   }else{
-    c = P.addTaskMap("collision",
+    c = P.addTask("collision",
                      new DefaultTaskMap(collTMT, 0, NoVector, 0, NoVector, ARR(.1)));
     P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
   }

@@ -9,7 +9,7 @@ TOBIAS = 1
 CXXFLAGS += -fPIC -DMT_IMPLEMENT_TEMPLATES #causes all *.cpp to implement the used templates
 # CXXFLAGS += -DENFORCED_SILENCE
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk
 
 # Hand-selected files instead of library:
 #

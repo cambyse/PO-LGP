@@ -70,7 +70,7 @@ endif()
 endmacro()
 
 # configure Python
-option(WITH_PYTHON "Build python bindings using SWIG. Will be omitted of swig or NumPy are not found" ON)
+option(WITH_PYTHON "Build python bindings using SWIG. Will be omitted if swig or NumPy are not found" ON)
 if(WITH_PYTHON)
   find_package(SWIG 2.0)
   if(SWIG_FOUND)

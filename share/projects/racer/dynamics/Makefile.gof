@@ -2,5 +2,5 @@ BASE = ../../..
 
 DEPEND = Ors Gui Core
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk
 

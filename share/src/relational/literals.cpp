@@ -61,7 +61,7 @@ struct LiteralStorage {
     uint i;
     if (s->arity == 0) {listDelete(mem_arity0);}
     else {
-      FOR_ALL(mem, i) {
+      FOR1D(mem, i) {
         listDelete((*mem(i)));
         delete mem(i);
       }
@@ -83,13 +83,13 @@ struct LiteralStorage {
     uint i, k;
     if (s->arity == 0) {listDelete(mem_arity0);}
     else if (s->arity == 1) {
-      FOR_ALL(mem_arity1, i) {
+      FOR1D(mem_arity1, i) {
         listDelete(mem_arity1(i));
       }
     }
     else {
-      FOR_ALL(mem_arity2plus, i) {
-        FOR_ALL(mem_arity2plus(i), k) {
+      FOR1D(mem_arity2plus, i) {
+        FOR1D(mem_arity2plus(i), k) {
           listDelete(mem_arity2plus(i)(k));
         }
       }

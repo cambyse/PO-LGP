@@ -165,13 +165,10 @@ PhysXInterface::PhysXInterface(ors::KinematicWorld& _world): world(_world), s(NU
   s->gScene->addActor(*plane);
   // create ORS equivalent in PhysX
   // loop through ors
-  uint i;
-  ors::Body* b;
-  for_list(i, b, world.bodies) s->addBody(b, mMaterial);
+  for_list(ors::Body,  b,  world.bodies) s->addBody(b, mMaterial);
 
   /// ADD joints here!
-  ors::Joint* jj;
-  for_list(i, jj, world.joints) s->addJoint(jj);
+  for_list(ors::Joint,  jj,  world.joints) s->addJoint(jj);
 }
 
 PhysXInterface::~PhysXInterface() {
@@ -180,10 +177,8 @@ PhysXInterface::~PhysXInterface() {
 
 void PhysXInterface::step(double tau) {
   //-- push positions of all kinematic objects
-  uint i;
-  ors::Body *b;
-  for_list(i,b,world.bodies) if(b->type==ors::kinematicBT) {
-    ((PxRigidDynamic*)s->actors(i))->setKinematicTarget(OrsTrans2PxTrans(b->X));
+  for_list(ors::Body, b, world.bodies) if(b->type==ors::kinematicBT) {
+    ((PxRigidDynamic*)s->actors(b_COUNT))->setKinematicTarget(OrsTrans2PxTrans(b->X));
   }
   
   //-- dynamic simulation
@@ -198,7 +193,7 @@ void PhysXInterface::step(double tau) {
   
 }
 
-void PhysXInterface::setArticulatedBodiesKinematic(int agent){
+void PhysXInterface::setArticulatedBodiesKinematic(uint agent){
   for(ors::Joint* j:world.joints){
     if(j->agent==agent){
       if(j->from->type==ors::dynamicBT) j->from->type=ors::kinematicBT;
@@ -298,8 +293,6 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
 }
 
 void sPhysXInterface::addBody(ors::Body *b, physx::PxMaterial *mMaterial) {
-  uint j;
-  ors::Shape* s;
   PxRigidDynamic* actor;
   switch(b->type) {
     case ors::staticBT:
@@ -318,7 +311,7 @@ void sPhysXInterface::addBody(ors::Body *b, physx::PxMaterial *mMaterial) {
       break;
   }
   CHECK(actor, "create actor failed!");
-  for_list(j, s, b->shapes) {
+  for_list(ors::Shape,  s,  b->shapes) {
     PxGeometry* geometry;
     switch(s->type) {
       case ors::boxST: {
@@ -384,14 +377,14 @@ void sPhysXInterface::addBody(ors::Body *b, physx::PxMaterial *mMaterial) {
 }
 
 void PhysXInterface::pullFromPhysx() {
-  for_index(i, s->actors) {
-    PxTrans2OrsTrans(world.bodies(i)->X, s->actors(i)->getGlobalPose());
-    if(s->actors(i)->getType() == PxActorType::eRIGID_DYNAMIC) {
-      PxRigidBody *px_body = (PxRigidBody*) s->actors(i);
+  for_list(PxRigidActor, a, s->actors) {
+    PxTrans2OrsTrans(world.bodies(a_COUNT)->X, a->getGlobalPose());
+    if(a->getType() == PxActorType::eRIGID_DYNAMIC) {
+      PxRigidBody *px_body = (PxRigidBody*) a;
       PxVec3 vel = px_body->getLinearVelocity();
       PxVec3 angvel = px_body->getAngularVelocity();
-      world.bodies(i)->X.vel = ors::Vector(vel[0], vel[1], vel[2]);
-      world.bodies(i)->X.angvel = ors::Vector(angvel[0], angvel[1], angvel[2]);
+      world.bodies(a_COUNT)->X.vel = ors::Vector(vel[0], vel[1], vel[2]);
+      world.bodies(a_COUNT)->X.angvel = ors::Vector(angvel[0], angvel[1], angvel[2]);
     }
   }
   world.calc_fwdPropagateShapeFrames();
@@ -401,19 +394,19 @@ void PhysXInterface::pullFromPhysx() {
 
 void PhysXInterface::pushToPhysx() {
   PxMaterial* mMaterial = mPhysics->createMaterial(1.f, 1.f, 0.5f);
-  for_index(i, world.bodies) {
-    if(s->actors.N > i) {
-      s->actors(i)->setGlobalPose(OrsTrans2PxTrans(world.bodies(i)->X));
+  for_list(ors::Body, b, world.bodies) {
+    if(s->actors.N > b_COUNT) {
+      s->actors(b_COUNT)->setGlobalPose(OrsTrans2PxTrans(b->X));
     } else {
-      s->addBody(world.bodies(i), mMaterial);
+      s->addBody(b, mMaterial);
     }
   }
 }
 
 void PhysXInterface::ShutdownPhysX() {
-  for_index(i, s->actors) {
-    s->gScene->removeActor(*s->actors(i));
-    s->actors(i)->release();
+  for_list(PxRigidActor, a, s->actors) {
+    s->gScene->removeActor(*a);
+    a->release();
   }
   s->gScene->release();
   mPhysics->release();
@@ -477,7 +470,7 @@ void DrawActor(PxRigidActor* actor, ors::Body *body) {
 }
 
 void PhysXInterface::glDraw() {
-  for_index(i, s->actors)  DrawActor(s->actors(i), world.bodies(i));
+  for_list(PxRigidActor, a, s->actors)  DrawActor(a, world.bodies(a_COUNT));
 }
 
 void glPhysXInterface(void *classP) {
@@ -608,7 +601,7 @@ PhysXInterface::~PhysXInterface() { NICO }
 void PhysXInterface::step(double tau) { NICO }
 void PhysXInterface::pushToPhysx() { NICO }
 void PhysXInterface::pullFromPhysx() { NICO }
-void PhysXInterface::setArticulatedBodiesKinematic(int agent) { NICO }
+void PhysXInterface::setArticulatedBodiesKinematic(uint agent) { NICO }
 void PhysXInterface::ShutdownPhysX() { NICO }
 void PhysXInterface::glDraw() { NICO }
 void PhysXInterface::addForce(ors::Vector& force, ors::Body* b) { NICO }

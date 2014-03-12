@@ -64,13 +64,13 @@ inline void sortByDotOrder(ElementL& G){
   Element *e;
   double *order;
   uint i;
-  for_list(i,e,G){
+  for_list(Type, e, G){
     order = anyListGet<double>(e->ats, "dot_order", 1);
     if(!order){ MT_MSG("doesn't have dot_order attribute"); return; }
     perm(i) = (uint)*order;
   }
   G.permuteInv(perm);
-  for_list(i,e,G) e->index=i;
+  for_list(Type, e, G) e->index=i;
 }
 
 inline void writeDot(ElementL& G){
@@ -82,14 +82,14 @@ inline void writeDot(ElementL& G){
   fil <<"edge [ arrowtail=dot, arrowsize=.5, fontsize=6 ];" <<endl;
   uint i, j;
   Element *e, *n;
-  for_list(i, e, G){
+  for_list(Type,  e,  G){
     fil <<e->index <<" [ ";
     if(e->name.N) fil <<"label=\"" <<e->name <<"\", ";
     if(e->type=="edge" || e->type=="joint" || e->type=="Process" || e->type=="factor") fil <<"shape=box";
     else if(e->type=="shape") fil <<"shape=diamond";
     else fil <<"shape=ellipse";
     fil <<" ];" <<endl;
-    for_list(j, n, e->parents){
+    for_list(Type,  n,  e->parents){
       if(n->index<e->index)
         fil <<n->index <<" -- " <<e->index <<" [ ";
       else
