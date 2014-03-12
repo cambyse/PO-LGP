@@ -64,7 +64,8 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   }
 
   jointState_publisher = nh.advertise<marc_controller_pkg::JointState>("jointState", 1);
-  jointReference_subscriber = nh.subscribe("jointReference", 1, &TreeControllerClass::jointReferenceSubscriber, this);
+  jointReference_subscriber = nh.subscribe("jointReference", 1, &TreeControllerClass::jointReference_subscriber_callback, this);
+  forceSensor_subscriber = nh.subscribe("ft/l_gripper_motor", 1, &TreeControllerClass::forceSensor_subscriber_callback, this);
 
   return true;
 }
@@ -91,9 +92,9 @@ void TreeControllerClass::update() {
   }
 
   //-- publish joint state
-  jointStateMsg.N = q.d0;
   jointStateMsg.q = VECTOR(q);
-  jointStateMsg.qd = VECTOR(qd);
+  jointStateMsg.qdot = VECTOR(qd);
+  jointStateMsg.f = VECTOR(fL_obs);
   jointState_publisher.publish(jointStateMsg);
 
   //-- PD on q_ref
@@ -117,12 +118,20 @@ void TreeControllerClass::update() {
 /// Controller stopping in realtime
 void TreeControllerClass::stopping() {}
 
-void TreeControllerClass::jointReferenceSubscriber(const marc_controller_pkg::JointState::ConstPtr& msg){
+void TreeControllerClass::jointReference_subscriber_callback(const marc_controller_pkg::JointState::ConstPtr& msg){
 //  cout <<"subscriber callback" <<endl;
   q_ref = ARRAY(msg->q);
-  qdot_ref = ARRAY(msg->qd);
+  qdot_ref = ARRAY(msg->qdot);
+}
+
+void TreeControllerClass::forceSensor_subscriber_callback(const geometry_msgs::WrenchStamped::ConstPtr& msg){
+//  cout <<"subscriber callback" <<endl;
+  const geometry_msgs::Vector3 &f=msg->wrench.force;
+  //const geometry_msgs::Vector3 &t=msg->wrench.torque;
+  fL_obs = ARR(f.x, f.y, f.z);
+  //ef = ARR(t.x, t.y, t.z);
 }
 
 } // namespace
 
-PLUGINLIB_DECLARE_CLASS(marc_controller_pkg,TreeControllerPlugin, marc_controller_ns::TreeControllerClass, pr2_controller_interface::Controller)
+PLUGINLIB_DECLARE_CLASS(marc_controller_pkg, TreeControllerPlugin, marc_controller_ns::TreeControllerClass, pr2_controller_interface::Controller)
