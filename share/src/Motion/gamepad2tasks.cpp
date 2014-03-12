@@ -9,8 +9,7 @@ Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL),
   limits = MP.addPDTask("limits", .02, .8, qLimitsTMT);
   //limits->setGains(100.,0.);
   qitself = MP.addPDTask("qitself", .1, 1., qLinearTMT, NULL, NoVector, NULL, NoVector, MP.H_rate_diag);
-  qitself->setGains(0.,100.);
-
+  qitself->y_ref = MP.nullSpacePD.y_ref;
 //  MP.addPDtask("endeffHead", .1, .8, posTMT, "handR", NoVector, "rightTarget");
 //  MP.addPDtask("endeffBase", .1, .8, posTMT, "handR", NoVector, "rightTarget");
 }
@@ -23,6 +22,7 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
   for(PDtask* pdt:MP.tasks) pdt->active=false;
 
   qitself->active=true;
+  qitself->setGains(0.,100.);
   qitself->v_ref.setZero();
   qitself->prec=100.;
 
@@ -49,7 +49,7 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
   else if(gamepadState(6)> .5) sel=down;
   else if(gamepadState(6)<-.5) sel=up;
 
-  switch (0) {
+  switch (mode) {
     case 0: { //(NIL) motion rate control
       PDtask *pdt=NULL, *pdt_rot=NULL;
       switch(sel){
@@ -101,12 +101,11 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
 
       break;
     }
-//    case 1: { //(1) homing
-//      q->v_target = -5.*q->y;
-//      double vmax=.3, v=absMax(q->v_target);
-//      if (v>vmax) q->v_target*=vmax/v;
-//      break;
-//    }
+    case 1: { //(1) homing
+      cout <<"HOMING" <<endl;
+      qitself->setGainsAsNatural(1.,1.);
+      break;
+    }
 //    case 2: { //(2) CRAZY tactile guiding
 //      skin->active=true;
 //      skin->y_prec = 5e1;

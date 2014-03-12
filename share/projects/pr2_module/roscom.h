@@ -7,8 +7,11 @@ struct RosCom:Module{
   struct sRosCom *s;
   ACCESS(arr, q_ref);
   ACCESS(arr, qdot_ref);
+  ACCESS(arr, fL_ref);
+
   ACCESS(arr, q_obs);
   ACCESS(arr, qdot_obs);
+  ACCESS(arr, fL_obs);
 
   RosCom();
 

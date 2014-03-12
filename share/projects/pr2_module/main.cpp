@@ -12,6 +12,7 @@ struct MySystem:System{
   ACCESS(arr, qdot_ref);
   ACCESS(arr, q_obs);
   ACCESS(arr, qdot_obs);
+  ACCESS(arr, fL_obs);
   ACCESS(arr, joystickState);
   RosCom *ros;
   MySystem(){
@@ -39,18 +40,23 @@ int main(int argc, char** argv){
   S.joystickState.var->waitForNextRevision();
 
   //-- wait for first q observation!
+  cout <<"** Waiting for ROS message on initial configuration.." <<endl;
   for(;;){
     S.q_obs.var->waitForNextRevision();
-    if(S.q_obs.get()->N==MP.world.q.N && S.qdot_obs.get()->N==MP.world.q.N)
+    if(S.q_obs.get()->N==MP.world.q.N
+       && S.qdot_obs.get()->N==MP.world.q.N
+       && S.fL_obs.get()->N==3)
       break;
   }
 
   //-- set current state
+  cout <<"** GO!" <<endl;
   q = S.q_obs.get();
   qdot = S.qdot_obs.get();
   MP.setState(q, qdot);
   arr zero_qdot(qdot.N);
   zero_qdot.setZero();
+  arr fL_base = S.fL_obs.get();
 
   for(uint t=0;;t++){
     S.joystickState.var->waitForNextRevision();
@@ -59,6 +65,8 @@ int main(int argc, char** argv){
 //    q    = S.q_obs.get();
 //    qdot = S.qdot_obs.get();
 //    MP.setState(q,qdot);
+
+    cout <<S.fL_obs.get()() <<endl;
 
     bool shutdown = j2t.updateTasks(joy);
     if(shutdown) engine().shutdown.incrementValue();
@@ -74,7 +82,7 @@ int main(int argc, char** argv){
 
     S.q_ref.set() = q;
     S.qdot_ref.set() = zero_qdot;
-    S.ros->publishJointReference();
+//    S.ros->publishJointReference();
 
     if(engine().shutdown.getValue()/* || !rosOk()*/) break;
   }
