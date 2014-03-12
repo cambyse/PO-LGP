@@ -32,8 +32,7 @@ TEST(Ors, ParseObjFirstPart) {
   ors::Mesh mesh;
   mesh.parsing_pos_start = 0;
   mesh.parsing_pos_end = 50;
-  const char* filename = "example.obj";
-  mesh.readObjFile(filename);
+  mesh.readObjFile(FILE("example.obj"));
 
   // check V dimensions
   EXPECT_EQ(mesh.V.d0, 3);
@@ -54,8 +53,7 @@ TEST(Ors, ParseObjSecondPart) {
   ors::Mesh mesh;
   mesh.parsing_pos_start = 50;
   mesh.parsing_pos_end = 100;
-  const char* filename = "example.obj";
-  mesh.readObjFile(filename);
+  mesh.readObjFile(FILE("example.obj"));
 
   // check V dimensions
   EXPECT_EQ(mesh.V.d0, 3);
