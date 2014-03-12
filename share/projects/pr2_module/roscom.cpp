@@ -26,16 +26,21 @@ RosCom::RosCom():Module("RosCom"){
 
 void sRosCom::joinstState_callback(const marc_controller_pkg::JointState::ConstPtr& msg){
 //  cout <<"** joinstState_callback" <<endl;
-  base->q_obs.set() = ARRAY(msg->q);
-  base->qdot_obs.set() = ARRAY(msg->qdot);
-  base->fL_obs.set() = ARRAY(msg->f);
+  CtrlMsg m = { ARRAY(msg->q), ARRAY(msg->qdot), ARRAY(msg->fL), ARRAY(msg->fR), 0., 0., 0., 0.};
+  base->ctrl_obs.set() = m;
 }
 
 void RosCom::publishJointReference(){
+  CtrlMsg m = ctrl_ref.get();
   marc_controller_pkg::JointState jointRef;
-  jointRef.q = VECTOR(q_ref.get()());
-  jointRef.qdot = VECTOR(qdot_ref.get()());
-  jointRef.f = VECTOR(fL_ref.get()());
+  jointRef.q = VECTOR(m.q);
+  jointRef.qdot= VECTOR(m.qdot);
+  jointRef.fL = VECTOR(m.fL);
+  jointRef.fR = VECTOR(m.fR);
+  jointRef.Kp_gainFactor = m.Kp_gainFactor;
+  jointRef.Kd_gainFactor = m.Kd_gainFactor;
+  jointRef.fL_gainFactor = m.fL_gainFactor;
+  jointRef.fR_gainFactor = m.fR_gainFactor;
   s->pub_jointReference.publish(jointRef);
 }
 

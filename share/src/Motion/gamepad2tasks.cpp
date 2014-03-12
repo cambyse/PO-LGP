@@ -40,14 +40,18 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
   double joyUpDown      = -joyRate*joySignalMap(gamepadState(2));
   double joyRotate  = -10.*joyRate*joySignalMap(gamepadState(1));
 
-  enum {none, up, down, left, right} sel=none;
   uint mode = uint(gamepadState(0));
   //cout <<"mode " <<mode <<endl;
   if(mode&0x10 || mode&0x20 || mode&0x40 || mode&0x80) return true;
-  if(gamepadState(5)>.5) sel=right;
-  else if(gamepadState(5)<-.5) sel=left;
-  else if(gamepadState(6)> .5) sel=down;
-  else if(gamepadState(6)<-.5) sel=up;
+
+  enum {none, up, down, left, right} sel=none;
+  if(fabs(gamepadState(5))>.5 || fabs(gamepadState(6))>.5){
+    if(fabs(gamepadState(5))>fabs(gamepadState(6))){
+      if(gamepadState(5)>0.) sel=right; else sel=left;
+    }else{
+      if(gamepadState(6)>0.) sel=down; else sel=up;
+    }
+  }
 
   switch (mode) {
     case 0: { //(NIL) motion rate control
@@ -74,10 +78,10 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
       pdt->v_ref = ARRAY(vel); //setZero();
       MP.world.getShapeByName("mymarker")->rel.pos = pdt->y_ref;
 
-      //-- left right: control head
+      //-- left right: gaze control
       if(sel==left || sel==right){
         head->active=true;
-        head->setGainsAsNatural(.1, .8);
+        head->setGainsAsNatural(.05, .8);
         arr gaze = pdt->y - ARRAY(MP.world.getShapeByName("endeffHead")->X.pos);
         gaze /= length(gaze);
         head->y_ref = gaze;

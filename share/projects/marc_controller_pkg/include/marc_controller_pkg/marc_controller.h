@@ -22,12 +22,14 @@ private:
   arr u, Kd, Kp;
   arr q, qd;
   arr q_ref, qdot_ref;
+  double Kp_gainFactor, Kd_gainFactor, fL_gainFactor, fR_gainFactor;
+
 
   //force related things
   ors::Shape *ft_shape;
   arr fL_obs;
-  arr fL_ref;
-  arr J_ft;
+  arr fL_ref, fR_ref;
+  arr y_fL, J_fL;
 
   uintA ROS_qIndex;
 

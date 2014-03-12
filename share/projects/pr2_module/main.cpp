@@ -8,11 +8,8 @@
 #include "roscom.h"
 
 struct MySystem:System{
-  ACCESS(arr, q_ref);
-  ACCESS(arr, qdot_ref);
-  ACCESS(arr, q_obs);
-  ACCESS(arr, qdot_obs);
-  ACCESS(arr, fL_obs);
+  ACCESS(CtrlMsg, ctrl_ref);
+  ACCESS(CtrlMsg, ctrl_obs);
   ACCESS(arr, joystickState);
   RosCom *ros;
   MySystem(){
@@ -42,33 +39,33 @@ int main(int argc, char** argv){
   //-- wait for first q observation!
   cout <<"** Waiting for ROS message on initial configuration.." <<endl;
   for(;;){
-    S.q_obs.var->waitForNextRevision();
-    if(S.q_obs.get()->N==MP.world.q.N
-       && S.qdot_obs.get()->N==MP.world.q.N
-       && S.fL_obs.get()->N==3)
+    S.ctrl_obs.var->waitForNextRevision();
+    if(S.ctrl_obs.get()->q.N==MP.world.q.N
+       && S.ctrl_obs.get()->qdot.N==MP.world.q.N)
       break;
   }
 
   //-- set current state
   cout <<"** GO!" <<endl;
-  q = S.q_obs.get();
-  qdot = S.qdot_obs.get();
+  q = S.ctrl_obs.get()->q;
+  qdot = S.ctrl_obs.get()->qdot;
   MP.setState(q, qdot);
   arr zero_qdot(qdot.N);
   zero_qdot.setZero();
-  arr fL_base = S.fL_obs.get();
+  //arr fL_base = S.fL_obs.get();
+  CtrlMsg refs;
 
   for(uint t=0;;t++){
     S.joystickState.var->waitForNextRevision();
-    arr joy = S.joystickState.get();
+    arr joypadState = S.joystickState.get();
 
 //    q    = S.q_obs.get();
 //    qdot = S.qdot_obs.get();
 //    MP.setState(q,qdot);
 
-    cout <<S.fL_obs.get()() <<endl;
+    cout <<S.ctrl_obs.get()->fL <<endl;
 
-    bool shutdown = j2t.updateTasks(joy);
+    bool shutdown = j2t.updateTasks(joypadState);
     if(shutdown) engine().shutdown.incrementValue();
 
     for(uint tt=0;tt<10;tt++){
@@ -80,9 +77,23 @@ int main(int argc, char** argv){
     if(!(t%10))
       MP.world.gl().update(STRING("local operational space controller state t="<<(double)t/100.), false, false, false);
 
-    S.q_ref.set() = q;
-    S.qdot_ref.set() = zero_qdot;
-//    S.ros->publishJointReference();
+    //-- force task
+    uint mode = uint(joypadState(0));
+    if(mode==2){
+      cout <<"FORCE TASK" <<endl;
+      refs.fL = ARR(10., 0., 0.);
+      refs.fL_gainFactor = 1.;
+      refs.Kp_gainFactor = .02;
+    }else{
+      refs.fL = ARR(0., 0., 0.);
+      refs.fL_gainFactor = 0.;
+      refs.Kp_gainFactor = 3.;
+    }
+
+    refs.q=q;
+    refs.qdot=zero_qdot;
+    S.ctrl_ref.set() = refs;
+    S.ros->publishJointReference();
 
     if(engine().shutdown.getValue()/* || !rosOk()*/) break;
   }

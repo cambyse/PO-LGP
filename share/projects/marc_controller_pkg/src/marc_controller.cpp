@@ -30,11 +30,14 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   //-- match ROS and ORS joint ids
   world <<FILE("model.kvg");
   ROS_INFO("ORS model loaded");
+  ft_shape = world.getShapeByName("endeffForceL");
   ROS_qIndex.resize(world.q.N) = UINT_MAX;
   q.resize(world.q.N).setZero();
   qd.resize(world.q.N).setZero();
   Kp.resize(world.q.N).setZero();
   Kd.resize(world.q.N).setZero();
+  Kp_gainFactor=Kd_gainFactor=1.;
+  fL_gainFactor=fR_gainFactor=0.;
   limits.resize(world.q.N,4).setZero();
   for(uint i=0;i<(uint)pr2_tree.size();i++) {
 //    ROS_INFO("Joint Name %d: %s: %f", i, pr2_tree.getJoint(i)->joint_->name.c_str(), jnt_pos_(i));
@@ -48,8 +51,6 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
       info = j->ats.getValue<arr>("ctrl_limits");  if(info){ limits(j->qIndex,2)=info->elem(0); limits(j->qIndex,3)=info->elem(1); }
     }
   }
-
-  fL_ref.resize(3).setZero();
 
   //-- output info on joints
   cout <<"*** JOINTS" <<endl;
@@ -65,9 +66,13 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
     }
   }
 
+  cout <<"*** starting publisher and subscriber" <<endl;
+
   jointState_publisher = nh.advertise<marc_controller_pkg::JointState>("jointState", 1);
   jointReference_subscriber = nh.subscribe("jointReference", 1, &TreeControllerClass::jointReference_subscriber_callback, this);
   forceSensor_subscriber = nh.subscribe("/ft/l_gripper_motor", 1, &TreeControllerClass::forceSensor_subscriber_callback, this);
+
+  cout <<"*** TreeControllerClass Started" <<endl;
 
   return true;
 }
@@ -96,28 +101,28 @@ void TreeControllerClass::update() {
   //-- publish joint state
   jointStateMsg.q = VECTOR(q);
   jointStateMsg.qdot = VECTOR(qd);
-  jointStateMsg.f = VECTOR(fL_obs);
+  jointStateMsg.fL = VECTOR(fL_obs);
   jointState_publisher.publish(jointStateMsg);
 
   //-- update ORS
   world.setJointState(q, qd);
-  world.kinematicsPos(y_fL, J_fL, fl_shape->body->index, fl_shape->rel.pos);
+  world.kinematicsPos(y_fL, J_fL, ft_shape->body->index, &ft_shape->rel.pos);
 
   //-- PD on q_ref
   if(q_ref.N!=q.N || qdot_ref.N!=qd.N){
     cout <<'#' <<flush; //hashes indicate that q_ref has wrong size...
   }else{
-    u = (Kp % (q_ref - q)) + (Kd % (qdot_ref - qd));
+    u = Kp_gainFactor*(Kp % (q_ref - q)) + Kd_gainFactor*(Kd % (qdot_ref - qd));
 
     if(fL_ref.N==3){
-      u += ~J_fL * fL_ref;
+      u += fL_gainFactor*(~J_fL * fL_ref);
     }
 
     //-- command efforts to KDL
     for (uint i=0;i<q.N;i++) if(ROS_qIndex(i)!=UINT_MAX){
-//      double velM = marginMap(qd(i), -limits(i,2), limits(i,2), .1);
-//      if(velM<0. && u(i)<0.) u(i)*=(1.+velM); //decrease effort close to velocity margin
-//      if(velM>0. && u(i)>0.) u(i)*=(1.-velM); //decrease effort close to velocity margin
+      double velM = marginMap(qd(i), -limits(i,2), limits(i,2), .1);
+      if(velM<0. && u(i)<0.) u(i)*=(1.+velM); //decrease effort close to velocity margin
+      if(velM>0. && u(i)>0.) u(i)*=(1.-velM); //decrease effort close to velocity margin
       MT::constrain(u(i), -limits(i,3), limits(i,3));
       pr2_tree.getJoint(ROS_qIndex(i))->commanded_effort_ = u(i);
       pr2_tree.getJoint(ROS_qIndex(i))->enforceLimits();
@@ -132,7 +137,12 @@ void TreeControllerClass::jointReference_subscriber_callback(const marc_controll
 //  cout <<"subscriber callback" <<endl;
   q_ref = ARRAY(msg->q);
   qdot_ref = ARRAY(msg->qdot);
-  fL_ref = ARRAY(msg->f);
+  fL_ref = ARRAY(msg->fL);
+  fR_ref = ARRAY(msg->fL);
+  Kp_gainFactor = msg->Kp_gainFactor;
+  Kd_gainFactor = msg->Kd_gainFactor;
+  fL_gainFactor = msg->fL_gainFactor;
+  fR_gainFactor = msg->fR_gainFactor;
 }
 
 void TreeControllerClass::forceSensor_subscriber_callback(const geometry_msgs::WrenchStamped::ConstPtr& msg){
