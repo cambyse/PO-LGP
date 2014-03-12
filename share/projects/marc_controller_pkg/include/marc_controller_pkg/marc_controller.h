@@ -2,6 +2,7 @@
 #include <pr2_controller_interface/controller.h>
 #include <pr2_mechanism_model/joint.h>
 #include <pr2_mechanism_model/tree.h>
+#include <geometry_msgs/WrenchStamped.h>
 #include <Ors/ors.h>
 #include <marc_controller_pkg/JointState.h>
 
@@ -21,11 +22,13 @@ private:
   arr u, Kd, Kp;
   arr q, qd;
   arr q_ref, qdot_ref;
+  arr fL_obs;
 
   uintA ROS_qIndex;
 
   ros::Publisher jointState_publisher;
   ros::Subscriber jointReference_subscriber;
+  ros::Subscriber forceSensor_subscriber;
   marc_controller_pkg::JointState jointStateMsg;
 
   // Limits
@@ -41,7 +44,8 @@ public:
   virtual void update();
   virtual void stopping();
 
-  void jointReferenceSubscriber(const marc_controller_pkg::JointState::ConstPtr& msg);
+  void jointReference_subscriber_callback(const marc_controller_pkg::JointState::ConstPtr& msg);
+  void forceSensor_subscriber_callback(const geometry_msgs::WrenchStamped::ConstPtr& msg);
 };
 
 }
