@@ -7,6 +7,12 @@
 #define DEBUG_LEVEL 0
 #include "../util/debug.h"
 
+// Define MEMORY_CHECK to use memory_check() function (is automatically defined
+// for DEBUG_LEVEL > 0).
+#if DEBUG_LEVEL > 0
+#define MEMORY_CHECK
+#endif
+
 using std::string;
 using std::stringstream;
 
@@ -84,7 +90,7 @@ bool AbstractInstance::Iterator::operator!=(const Iterator& other) const {
 AbstractInstance::subscriber_set_t AbstractInstance::all_instances;
 
 AbstractInstance::~AbstractInstance() {
-#if DEBUG_LEVEL > 0
+#ifdef MEMORY_CHECK
     auto it = all_instances.find(self_ptr);
     if(it==all_instances.end()) {
         DEBUG_ERROR(*this << " was not registered correctly");
@@ -108,7 +114,7 @@ AbstractInstance::ptr_t AbstractInstance::create_invalid() {
 }
 
 int AbstractInstance::memory_check() {
-#if DEBUG_LEVEL > 0
+#ifdef MEMORY_CHECK
     if(DEBUG_LEVEL > 1) {
         for(weak_ptr_t p : all_instances) {
             if(p.expired()) {
@@ -120,13 +126,13 @@ int AbstractInstance::memory_check() {
     }
     return all_instances.size();
 #else
-    DEBUG_ERROR("No memory check possible (compile with DEBUG_LEVEL > 0)");
+    DEBUG_ERROR("No memory check possible");
     return -1;
 #endif
 }
 
 bool AbstractInstance::memory_check_request() {
-#if DEBUG_LEVEL > 0
+#ifdef MEMORY_CHECK
     return true;
 #else
     return false;
@@ -356,7 +362,7 @@ void AbstractInstance::set_self_ptr(shared_ptr_t p) {
     } else {
         self_ptr = p;
     }
-#if DEBUG_LEVEL > 0
+#ifdef MEMORY_CHECK
     all_instances.insert(self_ptr);
 #endif
 }
