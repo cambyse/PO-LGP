@@ -3,8 +3,8 @@
 #include <pr2_mechanism_model/joint.h>
 #include <pr2_mechanism_model/tree.h>
 #include <geometry_msgs/WrenchStamped.h>
-#include <Ors/ors.h>
 #include <marc_controller_pkg/JointState.h>
+#include <Ors/ors.h>
 
 namespace marc_controller_ns{
 
@@ -22,7 +22,12 @@ private:
   arr u, Kd, Kp;
   arr q, qd;
   arr q_ref, qdot_ref;
+
+  //force related things
+  ors::Shape *ft_shape;
   arr fL_obs;
+  arr fL_ref;
+  arr J_ft;
 
   uintA ROS_qIndex;
 

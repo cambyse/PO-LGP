@@ -49,6 +49,8 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
     }
   }
 
+  fL_ref.resize(3).setZero();
+
   //-- output info on joints
   cout <<"*** JOINTS" <<endl;
   for_list(ors::Joint, j, world.joints){
@@ -65,7 +67,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
 
   jointState_publisher = nh.advertise<marc_controller_pkg::JointState>("jointState", 1);
   jointReference_subscriber = nh.subscribe("jointReference", 1, &TreeControllerClass::jointReference_subscriber_callback, this);
-  forceSensor_subscriber = nh.subscribe("ft/l_gripper_motor", 1, &TreeControllerClass::forceSensor_subscriber_callback, this);
+  forceSensor_subscriber = nh.subscribe("/ft/l_gripper_motor", 1, &TreeControllerClass::forceSensor_subscriber_callback, this);
 
   return true;
 }
@@ -97,11 +99,19 @@ void TreeControllerClass::update() {
   jointStateMsg.f = VECTOR(fL_obs);
   jointState_publisher.publish(jointStateMsg);
 
+  //-- update ORS
+  world.setJointState(q, qd);
+  world.kinematicsPos(y_fL, J_fL, fl_shape->body->index, fl_shape->rel.pos);
+
   //-- PD on q_ref
   if(q_ref.N!=q.N || qdot_ref.N!=qd.N){
     cout <<'#' <<flush; //hashes indicate that q_ref has wrong size...
   }else{
     u = (Kp % (q_ref - q)) + (Kd % (qdot_ref - qd));
+
+    if(fL_ref.N==3){
+      u += ~J_fL * fL_ref;
+    }
 
     //-- command efforts to KDL
     for (uint i=0;i<q.N;i++) if(ROS_qIndex(i)!=UINT_MAX){
@@ -122,6 +132,7 @@ void TreeControllerClass::jointReference_subscriber_callback(const marc_controll
 //  cout <<"subscriber callback" <<endl;
   q_ref = ARRAY(msg->q);
   qdot_ref = ARRAY(msg->qdot);
+  fL_ref = ARRAY(msg->f);
 }
 
 void TreeControllerClass::forceSensor_subscriber_callback(const geometry_msgs::WrenchStamped::ConstPtr& msg){
