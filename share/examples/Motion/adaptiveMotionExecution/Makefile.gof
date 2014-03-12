@@ -3,7 +3,7 @@ BASE = ../../..
 DEPEND = Motion Core Ors Gui Optim Algo
 GL = 1
 LIBS += -lGL
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk
 
 
 # OUTPUTLIB = $(BASE)/lib/$(NAME).so

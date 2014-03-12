@@ -108,7 +108,7 @@ int main(int argc, char** argv){
 
   for (int images=0; images<1000 ;images++){
     // getting image from camera
-    v->waitForNextWriteAccess();
+    v->waitForNextRevision();
     v->readAccess(NULL);
     img = *(byteA*)v->data;
     v->deAccess(NULL);

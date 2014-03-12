@@ -3,5 +3,5 @@ BASE = ../..
 FREEGLUT = 1
 LAPACK = 1
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk
 

@@ -82,12 +82,13 @@ struct Mesh {
   
   /// @name IO
   void write(std::ostream&) const; ///< only writes generic info
+  void read(std::istream&, const char* fileExtension);
   void readFile(const char* filename);
-  void readTriFile(const char* filename);
-  void readObjFile(const char* filename);
-  void readOffFile(const char* filename);
-  void readPlyFile(const char* filename);
-  void readStlFile(const char* filename);
+  void readTriFile(std::istream& is);
+  void readObjFile(std::istream& is);
+  void readOffFile(std::istream& is);
+  void readPlyFile(std::istream& is);
+  void readStlFile(std::istream& is);
   void writeTriFile(const char* filename);
   void writeOffFile(const char* filename);
   void writePLY(const char *fn, bool bin);

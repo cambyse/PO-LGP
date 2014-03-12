@@ -5,5 +5,5 @@ OBJ = \
 
 LDFLAGS += -lncurses
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk
 

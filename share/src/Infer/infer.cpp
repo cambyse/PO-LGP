@@ -235,51 +235,41 @@ void infer::Variable::write(ostream& os) const {
 //
 
 void disconnectFactor(infer::Factor &f){
-  uint i;
-  infer::Variable *v;
-  for_list(i, v, f.variables) v->factors.removeValue(&f);
+  for_list(infer::Variable, v,  f.variables) v->factors.removeValue(&f);
   f.variables.clear();
   f.varIds.clear();
   f.dim.clear();
 }
 
 void infer::Factor::relinkTo(const infer::VariableList& vars){
-  uint i;
-  infer::Variable *v;
-  for_list(i, v, variables) v->factors.removeValue(this);
+  for_list(Variable, v,  variables) v->factors.removeValue(this);
   variables=vars;
-  for_list(i, v, variables) v->factors.append(this);
+  for(Variable *v: variables) v->factors.append(this);
   for(uint i=0; i<vars.N; i++) varIds(i)=variables(i)->id;
   for(uint i=0; i<vars.N; i++) CHECK(dim(i)==variables(i)->dim, "relinking to variables with different dimension!");
 }
 
 void infer::Factor::init(const infer::VariableList& vars){
   disconnectFactor(*this);
-  uint i;
-  infer::Variable *v;
   variables=vars;
   varIds.resize(vars.N);
   dim.resize(vars.N);
   for(uint i=0; i<vars.N; i++) varIds(i)=vars(i)->id;
   for(uint i=0; i<vars.N; i++) dim(i)   =vars(i)->dim;
-  for_list(i, v, variables) v->factors.append(this);
+  for_list(Variable, v,  variables) v->factors.append(this);
 }
 
 void infer::checkConsistent(const infer::Factor &f){
-  uint i;
-  infer::Variable *v;
   CHECK(f.variables.N==f.varIds.N, "");
   CHECK(f.variables.N==f.dim.N, "");
-  for_list(i, v, f.variables){
-    CHECK(v->id ==f.varIds(i), "");
-    CHECK(v->dim==f.dim(i), "");
+  for_list(Variable, v,  f.variables){
+    CHECK(v->id ==f.varIds(v_COUNT), "");
+    CHECK(v->dim==f.dim(v_COUNT), "");
   }
 }
 
 void infer::checkConsistent(const infer::FactorList& F){
-  uint i;
-  infer::Factor *f;
-  for_list(i, f, F) checkConsistent(*f);
+  for_list(Factor, f,  F) checkConsistent(*f);
 }
 
 
@@ -437,7 +427,7 @@ void infer::Factor::checkCondNormalization(uint left, double tol){
 uint infer::Factor::numberNonZeroEntries(){
   uint num = 0;
   uint i;
-  FOR_ALL(P, i){
+  FOR1D(P, i){
     if(fabs(P.elem(i) > 10e-10))
       num++;
   }
@@ -938,10 +928,8 @@ void infer::LoopyBP_obsolete::constructBipartiteFactorGraph(infer::FactorGraph& 
 
 /// collects a belief at a factor, optionally exluding one incoming message
 void infer::collectBelief(infer::Factor& belief, const infer::Factor& f, const infer::MessagePair *exclude){
-  infer::MessagePair *s;
-  uint i;
   belief = f;
-  for_list(i, s, f.messages){
+  for_list(MessagePair,  s,  f.messages){
     if(s==exclude) continue;
     if(s->f1==&f){
       tensorMultiply(belief, s->m21);
@@ -954,11 +942,9 @@ void infer::collectBelief(infer::Factor& belief, const infer::Factor& f, const i
 
 /// collects a belief at a factor, optionally exluding one incoming message
 void infer::collectBelief(infer::Factor& belief, infer::Variable *v, const MessagePair *exclude){
-  infer::MessagePair *s;
-  uint i;
   belief.init(ARRAY(v));
   belief.setOne();
-  for_list(i, s, v->messages){
+  for_list(MessagePair,  s,  v->messages){
     if(s==exclude) continue;
     if(s->v1==v){
       tensorMultiply(belief, s->m21);
@@ -2417,17 +2403,15 @@ void check_atLeastOneConditional(infer::VariableList& vars, infer::FactorList& f
 
 void infer::connectThemUp(infer::VariableList& V, infer::FactorList& F){
   MT_MSG("you shouldn't use this anymore!!");
-  infer::Factor *f;
-  uint i;
-  for_list(i, f, F) checkConsistent(*f);
+  for_list(Factor, f,  F) checkConsistent(*f);
 #if 0
   NIY;
   infer::Variable *v;
   infer::Factor *f;
   uint i, j;
-  for_list(i, v, V) v->factors.clear();
-  for_list(i, f, F) f->variables.clear();
-  for_list(i, f, F) for(j=0; j<f->varIds.N; j++){
+  for_list(Variable, v,  V) v->factors.clear();
+  for_list(Factor, f,  F) f->variables.clear();
+  for_list(Factor, f,  F) for(j=0; j<f->varIds.N; j++){
     v=V(f->varIds(j));
     v->factors.append(f);
     f->variables.append(v);
@@ -2445,10 +2429,8 @@ void infer::LoopyBP::initBipartite(const infer::VariableList& _vars, const infer
   CHECK(!msgs.N, "delete list before");
   vars=_vars;
   facs=_facs;
-  uint i, j;
-  infer::Factor *f;
-  for_list(i, f, facs){
-    for(j=0; j<f->variables.N; j++){
+  for_list(Factor, f,  facs){
+    for(uint j=0; j<f->variables.N; j++){
       msgs.append(new MessagePair(f, f->variables(j)));
     }
   }
@@ -2458,9 +2440,7 @@ void infer::LoopyBP::initPairwise(const infer::VariableList& _vars, const infer:
   CHECK(!msgs.N, "delete list before");
   vars=_vars;
   facs=_facs;
-  uint i;
-  infer::Factor *f;
-  for_list(i, f, facs){
+  for_list(Factor, f,  facs){
     CHECK(f->variables.N<=2, "only for pair-wise networks!");
     if(f->variables.N==1) msgs.append(new MessagePair(f, f->variables(0)));
     if(f->variables.N==2) msgs.append(new MessagePair(f->variables(0), f->variables(1), f));
@@ -2533,9 +2513,9 @@ void meanField_collectBeliefs(arr& beliefs, const infer::VariableList& vars){
   infer::Variable *v;
   infer::Factor *f;
   arr b(2);
-  for_list(i, v, vars){
+  for_list(infer::Variable, v,  vars){
     b.setZero();
-    for_list(j, f, v->factors){
+    for_list(infer::Factor, f,  v->factors){
       if(f->variables(0)==v){
         b += f->P * ARR(1.-beliefs(f->variables(1)), beliefs(f->variables(1)));
       }else{

@@ -147,34 +147,31 @@ void BinaryPairFG::write(std::ostream& os){
 //
 
 void BinaryBPNet::randomizeWeightsUniform(double theta_range, double J_range, bool attractive){
-  uint i;  edge *e;  node *n;
-  for_list(i, n, nodes) n->theta=rnd.uni(-theta_range, theta_range);
+  for(node *n: nodes) n->theta=rnd.uni(-theta_range, theta_range);
   if(attractive){
-    for_list(i, e, edges) e->J = rnd.uni(0., J_range);
+    for(edge *e: edges) e->J = rnd.uni(0., J_range);
   }else{
-    for_list(i, e, edges) e->J = rnd.uni(-J_range, J_range);
+    for(edge *e: edges) e->J = rnd.uni(-J_range, J_range);
   }
-  for_list(i, e, edges) e->tanhJ = TANH(e->J);
+  for(edge *e: edges) e->tanhJ = TANH(e->J);
   zeroMessages();
 }
 
 void BinaryBPNet::randomizeWeightsGauss(double theta_sig, double J_sig, bool attractive){
-  uint i;  edge *e;  node *n;
-  for_list(i, n, nodes) n->theta = theta_sig*rnd.gauss();
-  for_list(i, e, edges) e->J = J_sig*rnd.gauss();
-  if(attractive) for_list(i, e, edges) e->J = fabs(e->J);
-  for_list(i, e, edges) e->tanhJ = TANH(e->J);
+  for(node *n: nodes) n->theta = theta_sig*rnd.gauss();
+  for(edge *e: edges) e->J = J_sig*rnd.gauss();
+  if(attractive) for(edge *e: edges) e->J = fabs(e->J);
+  for(edge *e: edges) e->tanhJ = TANH(e->J);
   zeroMessages();
 }
 
 void BinaryBPNet::zeroMessages(){
-  uint i;  edge *e;  node *n;
   graphConnectUndirected(nodes, edges);
-  for_list(i, n, nodes){
+  for(node *n: nodes){
     n->b = n->theta;
     n->conditioned=false;
   }
-  for_list(i, e, edges){
+  for(edge *e: edges){
     e->mf=e->mb=0.;
   }
   steps=0;
@@ -224,22 +221,20 @@ void BinaryBPNet::zeroDeltas(uint dim){
 #else
 #  define ZERO(z) z=0.;
 #endif
-  uint i;  node *n;  edge *e;
-  for_list(i, n, nodes){ ZERO(n->delT) ZERO(n->G) ZERO(n->G_sum) }
-  for_list(i, e, edges){ ZERO(e->delJ) ZERO(e->delf) ZERO(e->delb) ZERO(e->Gf) ZERO(e->Gb) ZERO(e->G_sum) }
+  for(node *n: nodes){ ZERO(n->delT) ZERO(n->G) ZERO(n->G_sum) }
+  for(edge *e: edges){ ZERO(e->delJ) ZERO(e->delf) ZERO(e->delb) ZERO(e->Gf) ZERO(e->Gb) ZERO(e->G_sum) }
 #undef ZERO
   firstGrad=true;
 }
 
 void BinaryBPNet::addBeliefDeltas(const arr& delta){
 #ifndef GradTypeArr
-  uint i, j;  node *n;  edge *e;
   CHECK(delta.N==nodes.N, "");
-  for_list(i, n, nodes){
-    n->delT += delta(i);
-    for_list(j, e, n->edges){
-      if(e->to==n) e->delf += delta(i);
-      else         e->delb += delta(i);
+  for_list(node, n, nodes){
+    n->delT += delta(n_COUNT);
+    for(edge *e: n->edges){
+      if(e->to==n) e->delf += delta(n_COUNT);
+      else         e->delb += delta(n_COUNT);
     }
   }
 #else
@@ -249,9 +244,8 @@ void BinaryBPNet::addBeliefDeltas(const arr& delta){
 
 void BinaryBPNet::addThetaDeltas(const arr& delta){
 #ifndef GradTypeArr
-  uint i;  node *n;
   CHECK(delta.N==nodes.N, "");
-  for_list(i, n, nodes) n->delT += delta(i);
+  for_list(node, n, nodes) n->delT += delta(n_COUNT);
 #else
   HALT("this feature requires NO GradTypeArr compile flag");
 #endif
@@ -259,9 +253,8 @@ void BinaryBPNet::addThetaDeltas(const arr& delta){
 
 void BinaryBPNet::addJDeltas(const arr& delta){
 #ifndef GradTypeArr
-  uint i;  edge *e;
   CHECK(delta.N==edges.N, "");
-  for_list(i, e, edges) e->delJ += delta(i);
+  for_list(edge, e, edges) e->delJ += delta(e_COUNT);
 #else
   HALT("this feature requires NO GradTypeArr compile flag");
 #endif
@@ -269,11 +262,10 @@ void BinaryBPNet::addJDeltas(const arr& delta){
 
 void BinaryBPNet::setNodeBeliefDeltas(){
 #ifdef GradTypeArr
-  uint i, j;  node *n;  edge *e;
   zeroDeltas(nodes.N);
-  for_list(i, n, nodes){
+  for(node *n: nodes){
     n->delT(i) += 1.;
-    for_list(j, e, n->edges){
+    for_list(Type,  e,  n->edges){
       if(e->to==n) e->delf(i) += 1.;
       else         e->delb(i) += 1.;
     }
@@ -285,9 +277,8 @@ void BinaryBPNet::setNodeBeliefDeltas(){
 
 void BinaryBPNet::setPairBeliefDeltas(){
 #ifdef GradTypeArr
-  uint i;  edge *e;
   zeroDeltas(edges.N);
-  for_list(i, e, edges){ //pair
+  for(edge *e: edges){ //pair
     double tanh_b = TANH(e->mf) * TANH(e->mb) / e->tanhJ;
     //e->from->delT(i) = (e->tanhJ * (1.-MT::sqr(TANH(collect(e->from, e)))) * TANH(collect(e->to, e))) / (1.-MT::sqr(tanh_b));
     //e->to  ->delT(i) = (e->tanhJ * TANH(collect(e->from, e)) * (1.-MT::sqr(TANH(collect(e->to, e))))) / (1.-MT::sqr(tanh_b));
@@ -303,17 +294,15 @@ void BinaryBPNet::setPairBeliefDeltas(){
 
 void BinaryBPNet::stepBP(){
 #if 0
-  uint i;  node *n;  edge *e;
-  for_list(i, e, edges){ e->mf_old=e->mf;  e->mb_old=e->mb; }
-  for_list(i, n, nodes){ n->b=collect(n); }
-  for_list(i, e, edges){
+  for(edge *e: edges){ e->mf_old=e->mf;  e->mb_old=e->mb; }
+  for(node *n: nodes){ n->b=collect(n); }
+  for(edge *e: edges){
     e->mf = ATANH(e->tanhJ * TANH(e->from->b-e->mb_old));
     e->mb = ATANH(e->tanhJ * TANH(e->to  ->b-e->mf_old));
   }
 #else
-  uint i;  node *n;  edge *e;
-  for_list(i, n, nodes){ n->b_old[steps]=n->b; n->b=n->theta; }
-  for_list(i, e, edges){
+  for(node *n: nodes){ n->b_old[steps]=n->b; n->b=n->theta; }
+  for(edge *e: edges){
     e->mf_old[steps] = e->mf;
     e->mb_old[steps] = e->mb;
     e->to->b   += e->mf = ATANH(e->tanhJ * TANH(e->from->b_old[steps]-e->mb_old[steps]));
@@ -325,10 +314,9 @@ void BinaryBPNet::stepBP(){
 
 void BinaryBPNet::stepGradBP(){
 #if 0
-  uint i;  node *n;  edge *e;
   GradType e__Gf;
-  for_list(i, n, nodes){ n->G_old[steps-1]=n->G; n->G=0.; }
-  for_list(i, e, edges){ //G_{jil} update equation
+  for(node *n: nodes){ n->G_old[steps-1]=n->G; n->G=0.; }
+  for(edge *e: edges){ //G_{jil} update equation
     e__Gf = e->Gf;
     e->Gf_old[steps-1] = e->Gf;
     e->Gb_old[steps-1] = e->Gb;
@@ -337,9 +325,8 @@ void BinaryBPNet::stepGradBP(){
   }
 #else
   steps--;
-  uint i;  node *n;  edge *e;
-  for_list(i, n, nodes){ n->G_old=n->G; n->G=0.; }
-  for_list(i, e, edges){ //G_{jil} update equation
+  for(node *n: nodes){ n->G_old=n->G; n->G=0.; }
+  for(edge *e: edges){ //G_{jil} update equation
     e->Gf_old = e->Gf;
     e->Gb_old = e->Gb;
     if(firstGrad){
@@ -350,8 +337,8 @@ void BinaryBPNet::stepGradBP(){
       e->to->G   += e->Gb = e->tanhJ * RATIO(e->to  ->b_old[steps]-e->mf_old[steps], e->mb_old[steps+1]) * (e->from->G_old - e->Gf_old);
     }
   }
-  for_list(i, n, nodes){  n->G_sum += n->G;  }
-  for_list(i, e, edges){
+  for(node *n: nodes){  n->G_sum += n->G;  }
+  for(edge *e: edges){
     if(firstGrad){
       e->G_sum += TANH(e->from->b_old[steps]-e->mb_old[steps]) * RATIO(e->J, e->mf) * e->delf;
       e->G_sum += TANH(e->to  ->b_old[steps]-e->mf_old[steps]) * RATIO(e->J, e->mb) * e->delb;
@@ -373,38 +360,34 @@ double BinaryBPNet::edgeBelief(const edge *e){
 }
 
 void BinaryBPNet::getNodeBeliefs(arr &b){
-  uint i;  node *n;
   b.resize(nodes.N);
-  for_list(i, n, nodes) b(i)=nodeBelief(n);
+  for_list(node, n, nodes) b(n_COUNT)=nodeBelief(n);
 }
 
 void BinaryBPNet::getNodeBeliefTables(arr &b, bool addOn){
-  uint i;  node *n;
   if(!addOn || !b.N){  b.resize(nodes.N, 2);  b.setZero();  }
   CHECK(b.nd==2 && b.d0==nodes.N && b.d1==2, "");
   arr P;
-  for_list(i, n, nodes){
+  for_list(node, n, nodes){
     nodeExp_to_Table(P, nodeBelief(n));
     P/=sum(P);
-    b[i]() += P;
+    b[n_COUNT]() += P;
   }
 }
 
 void BinaryBPNet::getPairBeliefs(arr &b){
-  uint i;  edge *e;
   b.resize(edges.N);
-  for_list(i, e, edges) b(i)=edgeBelief(e);
+  for_list(edge, e, edges) b(e_COUNT)=edgeBelief(e);
 }
 
 void BinaryBPNet::getPairBeliefTables(arr &b, bool addOn){
-  uint i;  edge *e;
   if(!addOn || !b.N){  b.resize(edges.N, 2, 2);  b.setZero();  }
   CHECK(b.nd==3 && b.d0==edges.N && b.d1==2 && b.d2==2, "");
   arr P;
-  for_list(i, e, edges){
+  for_list(edge, e, edges){
     pairExp_to_Table(P, e->J, e->from->b-e->mb, e->to->b-e->mf);
     P/=sum(P);
-    b[i]() += P;
+    b[e_COUNT]() += P;
   }
 }
 
@@ -414,24 +397,24 @@ void BinaryBPNet::getPairBeliefTables(arr &b, bool addOn){
 //
 
 void BinaryBPNet::getFG(BinaryPairFG &FG, bool betheForm){
-  node *n;
-  edge *e;
-  uint i, N=nodes.N, E=edges.N;
+  uint N=nodes.N, E=edges.N;
   
   FG.logZ=0.;
   FG.f_i .resize(N, 2);
   FG.f_ij.resize(E, 2, 2);
   FG.edges.resize(E, 2);
   
-  for_list(i, e, edges){  FG.edges(i, 0)=e->ifrom;  FG.edges(i, 1)=e->ito;  }
-  if(betheForm)  for_list(i, e, edges){  pairExp_to_Table(FG.f_ij[i](), e->J, e->from->theta, e->to->theta);  } else           for_list(i, e, edges){  pairExp_to_Table(FG.f_ij[i](), e->J, 0., 0.);  }
-  for_list(i, n, nodes){  nodeExp_to_Table(FG.f_i[i](), n->theta);  }
+  for_list(edge, e, edges){  FG.edges(e_COUNT, 0)=e->ifrom;  FG.edges(e_COUNT, 1)=e->ito;  }
+  if(betheForm){
+    for_list(edge, e, edges) pairExp_to_Table(FG.f_ij[e_COUNT](), e->J, e->from->theta, e->to->theta);
+  } else {
+    for_list(edge, e, edges) pairExp_to_Table(FG.f_ij[e_COUNT](), e->J, 0., 0.);
+  }
+  for_list(node, n, nodes){  nodeExp_to_Table(FG.f_i[n_COUNT](), n->theta);  }
 }
 
 void BinaryBPNet::getBeliefFG(BinaryPairFG &FG, bool addOn, bool normalized){
-  node *n;
-  edge *e;
-  uint i, N=nodes.N, E=edges.N;
+  uint N=nodes.N, E=edges.N;
   arr P;
   
   if(addOn){
@@ -443,27 +426,26 @@ void BinaryBPNet::getBeliefFG(BinaryPairFG &FG, bool addOn, bool normalized){
     FG.f_i .resize(N, 2);    FG.f_i .setZero();
     FG.f_ij.resize(E, 2, 2);  FG.f_ij.setZero();
     FG.edges.resize(E, 2);
-    for_list(i, e, edges){  FG.edges(i, 0)=e->ifrom;  FG.edges(i, 1)=e->ito;  }
+    for_list(edge, e, edges){  FG.edges(e_COUNT, 0)=e->ifrom;  FG.edges(e_COUNT, 1)=e->ito;  }
   }
   
-  for_list(i, e, edges){
+  for_list(edge, e, edges){
     pairExp_to_Table(P, e->J, e->from->b-e->mb, e->to->b-e->mf);
     if(normalized) P/=sum(P);
-    FG.f_ij[i]() += P;
+    FG.f_ij[e_COUNT]() += P;
   }
   
-  for_list(i, n, nodes){
+  for_list(node, n, nodes){
     nodeExp_to_Table(P, n->b);
     if(normalized) P/=sum(P);
-    FG.f_i[i]() += P;
+    FG.f_i[n_COUNT]() += P;
   }
   
 }
 
 double BinaryBPNet::Bethe(){
-  uint i;  node *n;  edge *e;
   double logZ=0.;
-  for_list(i, e, edges){
+  for(edge *e: edges){
     double a=e->from->b-e->mb, b=e->to->b-e->mf, thi=e->from->theta, thj=e->to->theta;
     double tJ=e->tanhJ, ta=tanh(a), tb=tanh(b);
     double cJ=cosh(e->J), ca=cosh(a), cb=cosh(b);
@@ -476,7 +458,7 @@ double BinaryBPNet::Bethe(){
       + (a-thi)*tbi
       + (b-thj)*tbj;
   }
-  for_list(i, n, nodes){
+  for(node *n: nodes){
     double b=n->b, th=n->theta;
     logZ += (1.-n->edges.N) * (-log(2.*cosh(b)) + (b-th)*tanh(b));
   }
@@ -487,9 +469,8 @@ void BinaryBPNet::addBetheGradientDeltas(){
 #ifdef GradTypeArr
   HALT("this feature requires NO GradTypeArr compile flag");
 #endif
-  uint i, j;  node *n;  edge *e, *ee;
   //double logZ=0.;
-  for_list(i, e, edges){
+  for(edge *e: edges){
     double a=e->from->b-e->mb, b=e->to->b-e->mf, thi=e->from->theta, thj=e->to->theta;
     double tJ=e->tanhJ, ta=tanh(a), tb=tanh(b);
     //double cJ=cosh(e->J), ca=cosh(a), cb=cosh(b);
@@ -517,9 +498,9 @@ void BinaryBPNet::addBetheGradientDeltas(){
       
     e->delJ += delta_J;
     
-    n=e->from;
+    node *n=e->from;
     n->delT += delta_a;
-    for_list(j, ee, n->edges){
+    for(edge *ee: n->edges){
       if(ee==e) continue; //exclude edge j->i
       if(ee->to==n) ee->delf += delta_a + tbi; //the tbi stems from the (a-thi)*tbi term...
       else          ee->delb += delta_a + tbi;
@@ -527,20 +508,20 @@ void BinaryBPNet::addBetheGradientDeltas(){
     
     n=e->to;
     n->delT += delta_b;
-    for_list(j, ee, n->edges){
+    for(edge *ee: n->edges){
       if(ee==e) continue; //exclude edge i->j
       if(ee->to==n) ee->delf += delta_b + tbj;
       else          ee->delb += delta_b + tbj;
     }
   }
-  for_list(i, n, nodes){
+  for(node *n: nodes){
     double b=n->b, th=n->theta;
     double tb=tanh(b);
     //logZ += (1.-n->edges.N) * (-log(2.*cosh(b)) + (b-th)*tanh(b));
     double delta_th = (1.-n->edges.N) * (-tb + (b-th)*(1.-tb*tb));
     double delta_mu = (1.-n->edges.N) * (b-th)*(1.-tb*tb);
     n->delT += delta_th;
-    for_list(j, e, n->edges){
+    for(edge *e: n->edges){
       if(e->to==n) e->delf += delta_mu;
       else         e->delb += delta_mu;
     }
@@ -549,61 +530,55 @@ void BinaryBPNet::addBetheGradientDeltas(){
 
 void BinaryBPNet::setT(const arr &w){
   CHECK(w.N==nodes.N, "");
-  uint i;  node *n;
-  for_list(i, n, nodes) n->theta = w(i);
+  for_list(node, n, nodes) n->theta = w(n_COUNT);
 }
 
 void BinaryBPNet::setJ(const arr &w){
   CHECK(w.N==edges.N, "");
-  uint i;  edge *e;
-  for_list(i, e, edges){ e->J = w(i);  e->tanhJ=TANH(e->J);  }
+  for_list(edge, e, edges){ e->J = w(e_COUNT);  e->tanhJ=TANH(e->J);  }
 }
 
 void BinaryBPNet::getT(arr &w){
-  uint i;  node *n;
   w.resize(nodes.N);
-  for_list(i, n, nodes) w(i) = n->theta;
+  for_list(node, n, nodes) w(n_COUNT) = n->theta;
 }
 
 void BinaryBPNet::getJ(arr &w){
-  uint i;  edge *e;
   w.resize(edges.N);
-  for_list(i, e, edges) w(i) = e->J;
+  for_list(edge, e, edges) w(e_COUNT) = e->J;
 }
 
 void BinaryBPNet::getGradT(arr &g){
   CHECK(!steps, "");
-  uint i;  node *n;
 #ifdef GradTypeArr
   g.resize(nodes.N, nodes(0)->delT.N);
-  for_list(i, n, nodes){
-    g[i]() = n->delT;
-    g[i]() += n->G_sum;
+  for_list(node, n, nodes){
+    g[n_COUNT]() = n->delT;
+    g[n_COUNT]() += n->G_sum;
     //g[i]() *= n->discount;
   }
 #else
   g.resize(nodes.N);
-  for_list(i, n, nodes){
-    g(i) = n->delT;
-    g(i) += n->G_sum;
+  for_list(node, n, nodes){
+    g(n_COUNT) = n->delT;
+    g(n_COUNT) += n->G_sum;
     //g(i) *= n->discount;
   }
 #endif
 }
 
 void BinaryBPNet::getGradJ(arr &g){
-  uint i;  edge *e;
 #ifdef GradTypeArr
   g.resize(edges.N, nodes(0)->delT.N);
-  for_list(i, e, edges){
-    g[i]() = e->delJ;
-    g[i]() += e->G_sum;
+  for_list(edge, e, edges){
+    g[e_COUNT]() = e->delJ;
+    g[e_COUNT]() += e->G_sum;
   }
 #else
   g.resize(edges.N);
-  for_list(i, e, edges){
-    g(i) = e->delJ;
-    g(i) += e->G_sum;
+  for_list(edge, e, edges){
+    g(e_COUNT) = e->delJ;
+    g(e_COUNT) += e->G_sum;
   }
 #endif
 }
@@ -614,7 +589,7 @@ void BinaryBPNet::getPerturbationGradT(arr &g){
   uint i;  node *n;
   CHECK(nodes(0)->delT.N==nodes.N, "need to set node belief deltas to compute perturbation grad");
   g.resize(nodes.N);
-  for_list(i, n, nodes){
+  for(node *n: nodes){
     g(i) = n->delT(i);
     g(i) += n->G_sum(i);
   }
@@ -629,7 +604,7 @@ void BinaryBPNet::getNeighborPerturbationError(arr &g, const arr &J0, bool modul
   CHECK(nodes(0)->delT.N==nodes.N, "need to set node belief deltas to compute perturbation grad");
   g.resize(edges.N, 2);
   //g.setZero();
-  for_list(i, e, edges){
+  for(edge *e: edges){
     //-- these are the true perturbation gradients
     g(i, 0) = e->to  ->delT(e->ifrom) + e->to  ->G_sum(e->ifrom); //how does 'to' vary when I perturb at 'from'
     g(i, 1) = e->from->delT(e->ito) + e->from->G_sum(e->ito);
@@ -653,7 +628,7 @@ void BinaryBPNet::getPerturbationGradJ(arr &g){
   CHECK(nodes(0)->delT.N==nodes.N, "need to set node belief deltas to compute perturbation grad");
   g.resize(edges.N, nodes.N);
   arr dFdm;
-  for_list(i, e, edges){
+  for(edge *e: edges){
     g[i]() = 0.;
     g(i, e->ito)   += (1.-MT::sqr(TANH(e->from->b-e->mb))) * RATIO(e->J, e->mf) * (e->to  ->G-e->Gb)(e->ito);
     g(i, e->ifrom) += (1.-MT::sqr(TANH(e->to  ->b-e->mf))) * RATIO(e->J, e->mb) * (e->from->G-e->Gf)(e->ifrom);
@@ -668,10 +643,9 @@ void BinaryBPNet::report(std::ostream &os){
   arr theta, J, b, M;
   getT(theta);
   getNodeBeliefs(b);
-  uint i;  edge *e;
   J.resize(nodes.N, nodes.N);  J.setZero();
   M.resize(nodes.N, nodes.N);  M.setZero();
-  for_list(i, e, edges){
+  for(edge *e: edges){
     J(e->ifrom, e->ito) = e->J;
     J(e->ito, e->ifrom) = e->J;
     M(e->ifrom, e->ito) = e->mf;
@@ -685,23 +659,22 @@ void BinaryBPNet::report(std::ostream &os){
 }
 
 void BinaryBPNet::getSamples(uintA &samples, uint S){
-  uint i, s, t;  node *n;
   arr phi(nodes.N);
   samples.resize(S, nodes.N);
   samples.setZero();
-  for_list(i, n, nodes) phi(i)=n->theta;
-  for(s=0; s<S; s++){
-    for_list(i, n, nodes) n->theta=phi(i); //reset all evidences
+  {for_list(node, n, nodes) phi(n_COUNT)=n->theta;}
+  for(uint s=0; s<S; s++){
+    {for_list(node, n, nodes) n->theta=phi(n_COUNT);} //reset all evidences
     zeroMessages();                                 //reset all messages
-    for_list(i, n, nodes){
-      for(t=0; t<100; t++) stepBP();  //do inference for some time
+    for_list(node, n, nodes){
+      for(uint t=0; t<100; t++) stepBP();  //do inference for some time
       //get the belief at node i
       //translate to a probability
-      if(rnd.uni()<ratio_to_p(nodeBelief(n))) samples(s, i)=1; //sample a state of node i
-      if(samples(s, i)) n->theta=1000.; else n->theta=-1000.; //set hard evidence at node i
+      if(rnd.uni()<ratio_to_p(nodeBelief(n))) samples(s, n_COUNT)=1; //sample a state of node i
+      if(samples(s, n_COUNT)) n->theta=1000.; else n->theta=-1000.; //set hard evidence at node i
     }
   }
-  for_list(i, n, nodes) n->theta=phi(i); //reset all evidences
+  for_list(node, n, nodes) n->theta=phi(n_COUNT); //reset all evidences
 }
 
 /////////////////////////////////////////////////////////////////////

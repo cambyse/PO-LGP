@@ -1,2 +1,2 @@
-set(SOURCES ./ueyecamera.h
-./ueyecamera.cpp)
+set(SOURCES ./ueyecamera.cpp
+./ueyecamera.h)

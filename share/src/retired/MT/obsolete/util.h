@@ -262,11 +262,11 @@ void anyListRead(AnyList& ats, std::istream& is) {
       MT::parse(is, "(");
       node1.read(is, " ", " , )", true);
       DEBUG(cout <<"node1=" <<node1 <<endl);
-      for_list(j, n, bodies) if(n->name==node1) { f=n; break; }
+      for_list(Type,  n,  bodies) if(n->name==node1) { f=n; break; }
       if(!f) RERR("reading edge: don't know from-name " <<node1);
       node2.read(is, " ", " , )", true);
       DEBUG(cout <<"node2=" <<node2 <<endl);
-      for_list(j, n, bodies) if(n->name==node2) { t=n; break; }
+      for_list(Type,  n,  bodies) if(n->name==node2) { t=n; break; }
       if(!t) RERR("reading edge: don't know to-name " <<node2);
       e=new Joint(*this, f, t);
       MT::parse(is, "{");
@@ -283,7 +283,7 @@ void anyListRead(AnyList& ats, std::istream& is) {
       MT::parse(is, "(");
       node1.read(is, " ", " )", true);
       DEBUG(cout <<"node1=" <<node1 <<endl);
-      for_list(j, n, bodies) if(n->name==node1) { f=n; break; }
+      for_list(Type,  n,  bodies) if(n->name==node1) { f=n; break; }
       if(!f) RERR("reading shape: don't know from-name " <<node1);
       s=new Shape(*this, f);
       s->name=name;

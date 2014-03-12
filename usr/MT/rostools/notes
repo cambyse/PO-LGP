@@ -1,0 +1,6 @@
+symbolic links to config files in ~/.ros
+
+echo $ROS_PACKAGE_PATH
+
+rosrun pr2_controller_manager pr2_controller_manager list
+rosrun pr2_controller_manager pr2_controller_manager stop r_arm_controller

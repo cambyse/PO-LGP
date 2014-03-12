@@ -7,10 +7,10 @@ OPENCV = 1
 #PCL = 1
 DEPEND = Core Gui extern_libcolorseg Ors
 
-CXXFLAGS += -D__STDC_CONSTANT_MACROS -DHAVE_LIBAV
-LIBS += -lavformat -lavcodec -lavutil -lswscale -lx264 -lz
+#CXXFLAGS += -D__STDC_CONSTANT_MACROS -DHAVE_LIBAV
+#LIBS += -lavformat -lavcodec -lavutil -lswscale -lx264 -lz
 
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS = $(SRCS:%.cpp=%.o)
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

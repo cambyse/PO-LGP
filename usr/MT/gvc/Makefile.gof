@@ -9,4 +9,4 @@ BASE = ../../../share
 
 #LIBS += -lgraph -lgvc
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

@@ -60,8 +60,7 @@ void mdp::writeMDP_fg(const MDP_structured& mdp, std::ostream& os, bool brief){
   if(!brief){
     os <<mdp.facs <<endl;
   }else{
-    uint i; infer::Factor *f;
-    for_list(i, f, mdp.facs){ if(i) os <<"\n"; f->write(os, true); }
+    for_list(infer::Factor,  f,  mdp.facs){ if(f_COUNT) os <<"\n"; f->write(os, true); }
     os <<endl;
   }
   os <<"\nmdp . {";
@@ -82,8 +81,7 @@ void mdp::writeFSC_fg(const FSC_structured& fsc, std::ostream& os, bool brief){
   if(!brief){
     os <<fsc.facs <<endl;
   }else{
-    uint i; infer::Factor *f;
-    for_list(i, f, fsc.facs){ if(i) os <<"\n"; f->write(os, true); }
+    for_list(infer::Factor,  f,  fsc.facs){ if(f_COUNT) os <<"\n"; f->write(os, true); }
     os <<endl;
   }
   os <<"\nfsc . {";
@@ -244,15 +242,14 @@ void mdp::readMDP_fg(MDP_structured& mdp, const char *filename, bool binary){
   KeyValueGraph H;
   H <<FILE(filename);
   //cout <<"read hypergraph: " <<H <<endl;
-  Element *e;
-  uint i, d;
+  uint d;
   //variables
-  for_list(i, e, H.T) if(e->type=="variable"){
+  for_list(Element, e,  H.T) if(e->type=="variable"){
     d=get<MT::String>(e->ats, "values").N;
     mdp.vars.append(new infer::Variable(d, e->name));
   }
   //cout <<"read variables:" <<endl;  listWrite(mdp.vars, cout, "\n  ");
-  for_list(i, e, H.T) if(e->type=="factor"){
+  for_list(Type,  e,  H.T) if(e->type=="factor"){
     mdp.facs.append(new infer::Factor(e->containsIds, get<double>(e->ats, "P")));
     mdp.facs.last()->name = e->name;
   }
@@ -279,8 +276,8 @@ void mdp::readMDP_fg(MDP_structured& mdp, const char *filename, bool binary){
   for(uint i=0; i<S.N; i++) mdp.ctrlVars.append(listFindByName(mdp.vars, S(i)));
   
   //infer::Factor *f;
-  //for_list(i, f, mdp.transFacs) tensorCheckCondNormalization(f->P, 1);
-  //for_list(i, f, mdp.initFacs) tensorCheckCondNormalization(f->P, 1);
+  //for_list(infer::Factor, f,  mdp.transFacs) tensorCheckCondNormalization(f->P, 1);
+  //for_list(infer::Factor, f,  mdp.initFacs) tensorCheckCondNormalization(f->P, 1);
 #endif
 }
 
@@ -292,7 +289,6 @@ void mdp::readMDP_ddgm_tabular(MDP_structured& mdp, const char *filename){
   MT::Array<MT::String> strings;
   MT::Array<MT::Array<MT::String> > values;
   infer::VariableList vars, rewardVars;
-  infer::Variable *v;
   infer::Factor *f;
   arr P;
   uint i;
@@ -303,7 +299,7 @@ void mdp::readMDP_ddgm_tabular(MDP_structured& mdp, const char *filename){
     if(tag=="variable"){
       name.read(is, " \t\n\r", " \t\n\r({", false);
       readStringList(strings, is);
-      v=new infer::Variable(strings.N, name);
+      infer::Variable *v=new infer::Variable(strings.N, name);
       mdp.vars.append(v);
       if(v->id>=values.N) values.resizeCopy(v->id+1);      values(v->id)=strings;
       name <<'\'';
@@ -339,7 +335,7 @@ void mdp::readMDP_ddgm_tabular(MDP_structured& mdp, const char *filename){
     if(tag=="horizon"){      CHECK(insidePomdp, "");  double z; is >>PARSE("(") >>z >>PARSE(")");  continue; }
     //a CPT declaration:
     name.read(is, " \t\n\r(", ")", true);
-    v=listFindByName(mdp.vars, tag);  CHECK(v, "");
+    infer::Variable *v=listFindByName(mdp.vars, tag);  CHECK(v, "");
     f=listFindByName(mdp.facs, name); CHECK(f, "");
     if(tag(tag.N-1)!='\''){
       mdp.initFacs.append(f);
@@ -350,7 +346,7 @@ void mdp::readMDP_ddgm_tabular(MDP_structured& mdp, const char *filename){
   }
   
   //get rightVars from leftVars
-  for_list(i, v, mdp.leftVars){
+  for(infer::Variable *v: mdp.leftVars){
     int vid=mdp.vars.findValue(v);
     CHECK(vid!=-1, "");
     mdp.rightVars.append(mdp.vars(vid+1));
@@ -361,7 +357,7 @@ void mdp::readMDP_ddgm_tabular(MDP_structured& mdp, const char *filename){
   uint j;
   infer::Factor tmp;
   infer::VariableList tmpVars;
-  for_list(i, v, rewardVars){
+  for_list(infer::Variable,  v,  rewardVars){
     arr val(v->dim);
     strings=values(v->id);
     CHECK(strings.N==v->dim, "");
@@ -369,7 +365,7 @@ void mdp::readMDP_ddgm_tabular(MDP_structured& mdp, const char *filename){
     //cout <<"reward values = " <<strings <<' ' <<val <<endl;
     infer::Factor R(ARRAY(v));
     R.setP(val);
-    for_list(j, f, mdp.rewardFacs) if(f->variables.findValue(v)!=-1){
+    for_list(infer::Factor, f,  mdp.rewardFacs) if(f->variables.findValue(v)!=-1){
       //cout <<*f <<endl;
       tensorMultiply(*f, R);
       tmpVars=f->variables;
@@ -381,17 +377,17 @@ void mdp::readMDP_ddgm_tabular(MDP_structured& mdp, const char *filename){
   }
   if(mdp.rewardFacs.N>1){ // multiple reward functions -> add them to a single factor
     tmpVars.clear();
-    for_list(i, f, mdp.rewardFacs) setUnion(tmpVars, tmpVars, f->variables);
+    for_list(infer::Factor, f,  mdp.rewardFacs) setUnion(tmpVars, tmpVars, f->variables);
     infer::Factor *ff=new infer::Factor(tmpVars);
     ff->name="REWARD_AUTO";
     ff->P.setZero();
     //cout <<*ff <<endl;
-    for_list(i, f, mdp.rewardFacs){
+    for(infer::Factor *f: mdp.rewardFacs){
       //cout <<*f <<endl;
       tensorAdd(*ff, *f);
       //cout <<*ff <<endl;
     }
-    for_list(i, f, mdp.rewardFacs) mdp.facs.removeValue(f);
+    for(infer::Factor *f: mdp.rewardFacs) mdp.facs.removeValue(f);
     listDelete(mdp.rewardFacs);
     mdp.rewardFacs.append(ff);
     mdp.facs.append(ff);
@@ -1011,7 +1007,6 @@ void mdp::standardInitFsc_structured_levels(FSC_structured& fsc, const MDP_struc
   clearFSC(fsc);
   
   uint i, m=levels.N;
-  infer::Variable *v;
   
   //----- find the variable ids for the mdp world:
   //infer::Variable *x  = listFindByName(mdp.vars, "state0");
@@ -1021,7 +1016,7 @@ void mdp::standardInitFsc_structured_levels(FSC_structured& fsc, const MDP_struc
   //infer::Variable *y_ = listFindByName(mdp.vars, "observation1");
   
   uint adim=1;
-  for_list(i, v, mdp.ctrlVars) adim*=v->dim;
+  for_list(infer::Variable,  v,  mdp.ctrlVars) adim*=v->dim;
   
   if(adim>levels(0)) MT_MSG("#actions " <<adim <<" > #node0-states " <<levels(0) <<" -- that's not going to work well!");
   infer::VariableList nodes(m), nodes_(m);

@@ -10,4 +10,4 @@ OBJS := $(OBJS:%.cpp=%.o)
 
 CLEAN = $(shell find . -maxdepth 1 -name 'z.*')
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

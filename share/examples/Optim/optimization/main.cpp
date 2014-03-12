@@ -17,14 +17,9 @@ void TEST(SqrProblem) {
   system("cp z.opt z.rprop");
 //  MT::wait();
 
-//  x=x0;
-//  optGradDescent(x, P, OPT(stopEvals=10000));
-//  system("cp z.opt z.grad");
-//  MT::wait();
-
   x=x0;
-  optNewton(x, Convert(P), OPT(stopEvals=1000, stopTolerance=1e-5, useAdaptiveDamping=0., verbose=2, damping=.1));
-  system("cp z.opt z.gaussNewton");
+  optGradDescent(x, Convert(P), OPT(stopEvals=10000));
+  system("cp z.opt z.grad");
 //  MT::wait();
 
   x=x0;
@@ -32,7 +27,7 @@ void TEST(SqrProblem) {
   system("cp z.opt z.newton");
 //  MT::wait();
 
-  gnuplot("set log y; plot 'z.gaussNewton' us 1:3 w l,'z.newton' us 1:3 w l,'z.grad' us 1:3 w l,'z.rprop' us 1:3 w l",NULL,true);
+  gnuplot("set log y; plot 'z.newton' us 1:3 w l,'z.grad' us 1:3 w l,'z.rprop' us 1:3 w l",NULL,true);
 }
 
 

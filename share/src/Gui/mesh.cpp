@@ -806,15 +806,17 @@ void Mesh::write(std::ostream& os) const {
 }
 
 void Mesh::readFile(const char* filename) {
+  read(FILE(filename).getIs(), filename+(strlen(filename)-3));
+}
+
+void Mesh::read(std::istream& is, const char* fileExtension) {
   bool loaded=false;
-  const char *type = filename+(strlen(filename)-3);
-  //cout <<"reading mesh file '" <<filename <<"' of type '" <<type <<"'" <<endl;
-  if(!strcmp(type, "obj")) { readObjFile(filename); loaded=true; }
-  if(!strcmp(type, "off")) { readOffFile(filename); loaded=true; }
-  if(!strcmp(type, "ply")) { readPLY(filename); loaded=true; }
-  if(!strcmp(type, "tri")) { readTriFile(filename); loaded=true; }
-  if(!strcmp(type, "stl")) { readStlFile(filename); loaded=true; }
-  if(!loaded) HALT("can't read file type '" <<type <<"'");
+  if(!strcmp(fileExtension, "obj")) { readObjFile(is); loaded=true; }
+  if(!strcmp(fileExtension, "off")) { readOffFile(is); loaded=true; }
+  if(!strcmp(fileExtension, "ply")) { readPlyFile(is); loaded=true; }
+  if(!strcmp(fileExtension, "tri")) { readTriFile(is); loaded=true; }
+  if(!strcmp(fileExtension, "stl")) { readStlFile(is); loaded=true; }
+  if(!loaded) HALT("can't read fileExtension '" <<fileExtension <<"'");
 }
 
 void Mesh::writeTriFile(const char* filename) {
@@ -829,9 +831,7 @@ void Mesh::writeTriFile(const char* filename) {
   T.write(os, " ", "\n ", "  ");
 }
 
-void Mesh::readTriFile(const char* filename) {
-  ifstream is;
-  MT::open(is, filename);
+void Mesh::readTriFile(std::istream& is) {
   uint i, nV, nT;
   is >>PARSE("TRI") >>nV >>nT;
   V.resize(nV, 3);
@@ -849,9 +849,7 @@ void Mesh::writeOffFile(const char* filename) {
   for(i=0; i<T.d0; i++) os <<3 <<' ' <<T(i, 0) <<' ' <<T(i, 1) <<' ' <<T(i, 2) <<endl;
 }
 
-void Mesh::readOffFile(const char* filename) {
-  ifstream is;
-  MT::open(is, filename);
+void Mesh::readOffFile(std::istream& is) {
   uint i, k, nVertices, nFaces, nEdges;
   is >>PARSE("OFF") >>nVertices >>nFaces >>nEdges;
   CHECK(!nEdges, "can't read edges in off file");
@@ -865,9 +863,7 @@ void Mesh::readOffFile(const char* filename) {
   }
 }
 
-void Mesh::readPlyFile(const char* filename) {
-  ifstream is;
-  MT::open(is, filename);
+void Mesh::readPlyFile(std::istream& is) {
   uint i, k, nVertices, nFaces;
   MT::String str;
   is >>PARSE("ply") >>PARSE("format") >>str;
@@ -1035,16 +1031,14 @@ void Mesh::writePLY(const char *fn, bool bin) { NICO }
 void Mesh::readPLY(const char *fn) { NICO }
 #endif
 
-void Mesh::readStlFile(const char* filename) {
-  ifstream is;
-  MT::open(is, filename);
+void Mesh::readStlFile(std::istream& is) {
   //first check if binary
   if(MT::parse(is, "solid", true)) { //is ascii
     MT::String name;
     is >>name;
     uint i, k=0, k0;
     double x, y, z;
-    cout <<"reading STL file '" <<filename <<"' object name '" <<name <<"'..." <<endl;
+    cout <<"reading STL file -- object name '" <<name <<"'..." <<endl;
     V.resize(10000);
     //1st pass
     for(i=0, k=0;; i++) {
@@ -1118,7 +1112,7 @@ uint& Tti(uint, uint) { static uint dummy; return dummy; } //texture index
 
 
 /** initialises the ascii-obj file "filename"*/
-void Mesh::readObjFile(const char* filename) {
+void Mesh::readObjFile(std::istream& is) {
   // make a first pass through the file to get a count of the number
   // of vertices, normals, texcoords & triangles
   uint nV, nN, nTex, nT;
@@ -1128,8 +1122,9 @@ void Mesh::readObjFile(const char* filename) {
   
   // open the file
   FILE* file;
-  file = fopen(filename, "r");
-  if(!file) HALT("readObjFile() failed: can't open data file " <<filename);
+  //file = fopen(filename, "r");
+  NIY; //use the is!
+  //if(!file) HALT("readObjFile() failed: can't open data file " <<filename);
 
   // we only want to parse the relevant subpart/submesh of the mesh therefore
   // jump to the right position and stop parsing at the right positon.

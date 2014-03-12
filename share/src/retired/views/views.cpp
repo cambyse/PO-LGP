@@ -95,7 +95,7 @@ void View::gtkNewText(GtkWidget *container){ NICO }
 ItemL getViews(const char* appliesOn_sysType){
   ItemL types = registry().getDerivedItems<Type>();
   ItemL ret;
-  for_list_(Item, ti, types){
+  for(Item *ti: types){
     if(ti->keys(0)!="View") continue;
     if(ti->keys(2)==appliesOn_sysType) ret.append(ti);
   }
@@ -104,7 +104,7 @@ ItemL getViews(const char* appliesOn_sysType){
 
 Item* getViewByName(const char *name){
   ItemL types = registry().getDerivedItems<Type>();
-  for_list_(Item, ti, types){
+  for(Item *ti: types){
     if(ti->keys(0)!="View") continue;
     if(ti->keys(1)==name || ti->value<Type>()->typeId().name()==name) return ti;
   }
@@ -112,10 +112,8 @@ Item* getViewByName(const char *name){
 }
 #else
 ViewRegistrationL getViews(const char* appliesOn_sysType){
-  uint i;
-  ViewRegistration *vi;
   ViewRegistrationL vis;
-  for_list_rev(i,vi,viewRegistrations()){
+  for_list_rev(ViewRegistration, vi, viewRegistrations()){
     if(!strcmp(vi->appliesOn_sysType,"ALL"))
       vis.append(vi);
     else
@@ -128,7 +126,7 @@ ViewRegistrationL getViews(const char* appliesOn_sysType){
 ViewRegistration* getViewByName(const char *name){
   uint i;
   ViewRegistration *vi;
-  for_list(i,vi,viewRegistrations()) if(!strcmp(vi->userType, name)) return vi;
+  for_list(Type, vi, viewRegistrations()) if(!strcmp(vi->userType, name)) return vi;
   return NULL;
 }
 #endif

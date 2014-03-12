@@ -933,7 +933,7 @@ Literal* RobotManipulationInterface::generateAction_wellBiased_2Dactions(const S
 }
 
 
-StateTransitionL& RobotManipulationInterface::generateSimulationSequence(RobotManipulationSimulator* sim, uint maxSeqLength, uint id_table) {
+StateTransitionL RobotManipulationInterface::generateSimulationSequence(RobotManipulationSimulator* sim, uint maxSeqLength, uint id_table) {
   uint DEBUG = 3;
   if (DEBUG>0) cout << "New sampling sequence" << endl;
   if (DEBUG > 1) {

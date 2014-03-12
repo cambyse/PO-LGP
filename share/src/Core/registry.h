@@ -59,7 +59,7 @@ struct Type:RootType {
     os <<"Type '" <<typeId().name() <<"' ";
     if(parents.N) {
       cout <<"parents=[";
-      for_list_(Type, p, parents) cout <<' ' <<p->typeId().name();
+      for(Type *p: parents) cout <<' ' <<p->typeId().name();
       cout <<" ]";
     }
   }
@@ -80,8 +80,8 @@ typedef MT::Array<Type*> TypeInfoL;
 //-- query existing types
 inline Item *reg_findType(const char* key) {
   ItemL types = registry().getDerivedItems<Type>();
-  for_list_(Item, ti, types) {
-    if(MT::String(ti->value<Type>()->typeId().name())==key) return ti;
+  for(Item *ti: types) {
+    if(MT::String(ti->getValue<Type>()->typeId().name())==key) return ti;
     for(uint i=0; i<ti->keys.N; i++) if(ti->keys(i)==key) return ti;
   }
   return NULL;
@@ -90,8 +90,8 @@ inline Item *reg_findType(const char* key) {
 template<class T>
 Item *reg_findType() {
   ItemL types = registry().getDerivedItems<Type>();
-  for_list_(Item, ti, types) {
-    if(ti->value<Type>()->typeId()==typeid(T)) return ti;
+  for(Item *ti: types) {
+    if(ti->getValue<Type>()->typeId()==typeid(T)) return ti;
   }
   return NULL;
 }
@@ -105,7 +105,7 @@ Item *reg_findType() {
 inline Item* readTypeIntoItem(const char* key, std::istream& is) {
   TypeInfoL types = registry().getDerivedValues<Type>();
   Item *ti = reg_findType(key);
-  if(ti) return ti->value<Type>()->readItem(is);
+  if(ti) return ti->getValue<Type>()->readItem(is);
   return NULL;
 }
 
@@ -121,7 +121,7 @@ struct Type_typed:Type {
   Type_typed(const char *userBase, TypeInfoL *container) {
     if(userBase) {
       Item *it=reg_findType<Base>();
-      if(it) parents.append(it->value<Type>());
+      if(it) parents.append(it->getValue<Type>());
     }
     if(container) {
       container->append(this);

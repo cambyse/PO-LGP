@@ -279,7 +279,7 @@ __init_search_operators();
   // Init default rule
   rulesC.rules.append(Rule::generateDefaultRule());
   rulesC.recomputeDefaultRule();
-  bool betterRulesFound = true;
+  //bool betterRulesFound = true;
   uint round = 0;
   double bestscore = score(rulesC, experiences, TL::TL_DOUBLE_MIN, experience_weights);
   scores.append(bestscore);
@@ -324,7 +324,7 @@ __init_search_operators();
     if (op < 0)
       break;
     if (DEBUG > 0) {cout << "========== LEARN RULE-SET ROUND " << round << " ==========" << endl;}
-    betterRulesFound = false;
+    //betterRulesFound = false;
     if (DEBUG > 1) {cout<<">>> Search operator ***"<<__searchOperators(op)->getName()<<"*** gives it a try. <<<"<<endl;}
     if (DEBUG > 1) {if(so_useAgain) cout<<"Using op again."<<endl; else cout<<"Using fresh operator."<<endl;}
     so_UsageHistory.append(op);
@@ -376,7 +376,7 @@ __init_search_operators();
       // algorithmic part
       rulesC = set_of__rulesC_new(maxIdx);
       bestscore = new_scores(maxIdx);
-      betterRulesFound = true;
+      //betterRulesFound = true;
       betterRulesFound_thisSearchOperator = true;
       op_applicable.setUni(true); // now, all sos are applicable again since we have a rule-set change
       learn::so_successfulUsageHistory.append(op);
@@ -1877,10 +1877,10 @@ double learn::learn_parameters(const MT::Array< LitL >& outcomes, doubleA& probs
   // OPTIMIZATION
   
   // prepare optimization algorithm
-  double (*f)(const arr&);
-  f = CostFunction::calc;
-  void (*df)(arr&,const arr&);
-  df = CostFunction::calc_grad;
+  //double (*f)(const arr&);
+  //f = CostFunction::calc;
+  //void (*df)(arr&,const arr&);
+  //df = CostFunction::calc_grad;
   
 //  MT::checkGradient(f, df, probs, 0.05);
   

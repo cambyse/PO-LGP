@@ -1273,7 +1273,7 @@ double soc::AICO::stepMinSum(){
                      AICO *A;
                      double pS, pSsum=0., pV, pVsum=0.;;
                      uint i, t_;
-                     for_list(i, A, multiScales){
+                     for_list(Type,  A,  multiScales){
                      CHECK(i==A->scale, "");
                      if(!A->s.N) continue; //assume this wasn't computed yet..
                      if(i <scale){
