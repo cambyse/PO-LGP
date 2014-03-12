@@ -9,3 +9,5 @@ rosrun pr2_controller_manager pr2_controller_manager stop head_traj_controller
 rosrun pr2_controller_manager pr2_controller_manager stop r_gripper_controller
 rosrun pr2_controller_manager pr2_controller_manager stop l_gripper_controller
 rosrun pr2_controller_manager pr2_controller_manager stop torso_controller
+
+roslaunch marc_rt_controller.launch
