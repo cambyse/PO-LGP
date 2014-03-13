@@ -3,12 +3,12 @@
 #ifndef TL__RULE_EXPLORER
 #define TL__RULE_EXPLORER
 
-#include <relational/robotManipulationSymbols.h>
-#include <relational/robotManipulationSimulator.h>
-#include <relational/learn.h>
-#include <relational/ruleLearner_ground.h>
-#include <relational/plan.h>
-#include <relational/prada.h>
+#include "robotManipulationSymbols.h"
+#include "robotManipulationSimulator.h"
+#include "learn.h"
+#include "ruleLearner_ground.h"
+#include "plan.h"
+#include "prada.h"
 
 
 // ---------------------------------------------------

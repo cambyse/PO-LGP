@@ -24,7 +24,7 @@
 #include <stdlib.h>
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
-#include <relational/utilTL.h>
+#include "utilTL.h"
 #include <Ors/ors_ode.h>
 #include <Ors/ors_swift.h>
 #include <Motion/feedbackControl.h>

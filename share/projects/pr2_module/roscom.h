@@ -3,6 +3,7 @@
 
 bool rosOk();
 
+//-- a basic message type for communication with the PR2 controller
 struct CtrlMsg{
   arr q, qdot, fL, fR;
   double Kp_gainFactor, Kd_gainFactor, fL_gainFactor, fR_gainFactor;
@@ -10,6 +11,7 @@ struct CtrlMsg{
 };
 inline void operator<<(ostream& os, const CtrlMsg& m){ os<<"BLA"; }
 inline void operator>>(istream& os, CtrlMsg& m){  }
+
 
 struct RosCom:Module{
   struct sRosCom *s;
