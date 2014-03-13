@@ -1,4 +1,5 @@
 #include <iostream>
+#include <unistd.h>
 
 #include <QApplication>
 #include <QMainWindow>
@@ -8,7 +9,7 @@
 
 #include "win.h"
 
-void *StartQAppThread(void *) {
+void* StartQAppThread(void*) {
   int argc=1;
   char **argv = new char*[1];
   argv[0] = (char*)"x.exe";
@@ -16,6 +17,11 @@ void *StartQAppThread(void *) {
   QMainWindow w;
   w.show();
   w.setCentralWidget(new QPushButton("NewButton"));
+
+  Gui gui;
+  //gui.moveToThread(&bla);
+  gui.show();
+
   app.exec();
   pthread_exit(NULL);
 }
@@ -35,9 +41,16 @@ struct QtThread:QThread{
 
 
 int main(int argc, char *argv[]) {
-#if 1
+#if 0
   pthread_t thread1;
-  int rc = pthread_create(&thread1, NULL, StartQAppThread, NULL);
+  pthread_create(&thread1, NULL, StartQAppThread, NULL);
+#elif 0
+  pid_t pid = fork();
+  if(pid<0){ perror("fork failed"); return -1; }  if(pid){ //parent process
+    StartQAppThread(NULL);
+    return 1;
+  }
+  //child process
 #else
   QtThread bla;
   bla.start();

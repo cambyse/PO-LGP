@@ -3,5 +3,5 @@ BASE = ../..
 BUILDS += buildComponent/SD
 LIBS += -lSD
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk
 

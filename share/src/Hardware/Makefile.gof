@@ -9,7 +9,7 @@ DEPEND = Core
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS = $(SRCS:%.cpp=%.o)
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk
 
 # BASE   = ../..
 # NAME   = libhardware
@@ -27,4 +27,4 @@ include $(BASE)/gofMake/make-generic
 # SRCS = $(shell find . -maxdepth 1 \( -name '*.cpp' -and -not -name '*_t.cpp' -and -not -name '*_instantiate.cpp' \) )
 # OBJS = $(SRCS:%.cpp=%.o)
 
-# include $(BASE)/gofMake/make-generic
+# include $(BASE)/gofMake/generic.mk

@@ -6,6 +6,6 @@ FREEGLUT = 1
 SWIFT   = 1
 QHULL   = 1
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk
 
 

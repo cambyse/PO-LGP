@@ -1,3 +1,5 @@
+#ifdef MT_PORTAUDIO
+
 #include <portaudio.h>
 #include "audio.h"
 
@@ -110,3 +112,5 @@ void Audio::close(){
 }
 
 
+#else //PORTAUDIO
+#endif

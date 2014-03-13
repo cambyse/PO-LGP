@@ -8,4 +8,4 @@ CFLAGS += -fPIC -w -g
 SRCS = gjk.c
 OBJS = gjk.o
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

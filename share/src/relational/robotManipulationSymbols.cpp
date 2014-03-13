@@ -1255,10 +1255,10 @@ LiteralListReward* RobotManipulationSymbols::sampleGroundGoal__clearance(const S
 void RobotManipulationSymbols::writeStateInfo(const SymbolicState& state, ostream& out) {
   out<<"--"<<endl;
   uint i, k;
-  uint id_table = TL::UINT_NIL;
+  //uint id_table = TL::UINT_NIL;
   FOR1D(state.lits, i) {
     if (state.lits(i)->s->name == "table") {
-      id_table = state.lits(i)->args(0);
+      //id_table = state.lits(i)->args(0);
       break;
     }
   }   

@@ -7,9 +7,9 @@ void testIMU(){
   struct MySystem:System{
     ACCESS(arr, imuData)
     MySystem(){
-      addModule<IMU_Poller>("IMU_Poller", ModuleThread::loopFull);
-      addModule<KalmanFilter>("KalmanFilter", ModuleThread::listenFirst);
-      addModule<RacerDisplay>("RacerDisplay", ModuleThread::loopWithBeat, 0.1);
+      addModule<IMU_Poller>("IMU_Poller", Module_Thread::loopFull);
+      addModule<KalmanFilter>("KalmanFilter", Module_Thread::listenFirst);
+      addModule<RacerDisplay>("RacerDisplay", Module_Thread::loopWithBeat, 0.1);
       connect();
     }
   } S;
@@ -21,7 +21,7 @@ void testIMU(){
 
 
   for(;;){
-    S.imuData.var->waitForNextWriteAccess();
+    S.imuData.var->waitForNextRevision();
     if(S.imuData.get()->(0)>10.) break;
   }
 
@@ -38,10 +38,10 @@ void findBalancePoint(){
     ACCESS(arr, stateEstimate)
     ACCESS(arr, controls)
     MySystem(){
-      addModule<IMU_Poller>("IMU_Poller", ModuleThread::loopFull);
-      addModule<KalmanFilter>("KalmanFilter", ModuleThread::listenFirst);
-      addModule<RacerDisplay>("RacerDisplay", ModuleThread::loopWithBeat, 0.1);
-      addModule<Motors>("Motors", ModuleThread::loopFull);
+      addModule<IMU_Poller>("IMU_Poller", Module_Thread::loopFull);
+      addModule<KalmanFilter>("KalmanFilter", Module_Thread::listenFirst);
+      addModule<RacerDisplay>("RacerDisplay", Module_Thread::loopWithBeat, 0.1);
+      addModule<Motors>("Motors", Module_Thread::loopFull);
       connect();
     }
     double get_time() {
@@ -57,8 +57,8 @@ void findBalancePoint(){
 
   double start_time = -1;
   for(;;){
-    //S.imuData.var->waitForNextWriteAccess();
-    S.stateEstimate.var->waitForNextWriteAccess();
+    //S.imuData.var->waitForNextRevision();
+    S.stateEstimate.var->waitForNextRevision();
     if (start_time == -1) start_time = S.get_time();
 
     S.controls.set() = ARR(0., 0., 0.);
@@ -84,7 +84,7 @@ void testMotors(){
   struct MySystem:System{
     ACCESS(arr, controls)
     MySystem(){
-      addModule<Motors>("Motors", ModuleThread::loopFull);
+      addModule<Motors>("Motors", Module_Thread::loopFull);
       connect();
     }
   } S;
@@ -131,10 +131,10 @@ void testBalance(){
     ACCESS(arr, stateEstimate)
     ACCESS(arr, controls)
     MySystem(){
-      addModule<IMU_Poller>("IMU_Poller", ModuleThread::loopFull);
-      addModule<KalmanFilter>("KalmanFilter", ModuleThread::listenFirst);
-      addModule<RacerDisplay>("RacerDisplay", ModuleThread::loopWithBeat, 0.1);
-      addModule<Motors>("Motors", ModuleThread::loopFull);
+      addModule<IMU_Poller>("IMU_Poller", Module_Thread::loopFull);
+      addModule<KalmanFilter>("KalmanFilter", Module_Thread::listenFirst);
+      addModule<RacerDisplay>("RacerDisplay", Module_Thread::loopWithBeat, 0.1);
+      addModule<Motors>("Motors", Module_Thread::loopFull);
       connect();
     }
     double get_time() {
@@ -152,7 +152,7 @@ void testBalance(){
   Sigmoid sigmoid(10.);
   double prev_time = -1;
   for(int i = 0;; ++i){
-    S.stateEstimate.var->waitForNextWriteAccess();
+    S.stateEstimate.var->waitForNextRevision();
     arr x = S.stateEstimate.get();
 
     double current_time = S.get_time();

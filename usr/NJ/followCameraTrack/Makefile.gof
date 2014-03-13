@@ -17,7 +17,7 @@ SWIFT = 1
 SCHUNK = 1
 PLIB = 1  #for the Joystick
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk
 
 
 

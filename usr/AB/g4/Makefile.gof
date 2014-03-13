@@ -7,4 +7,4 @@ LIBS += -lG4Track
 
 DEPEND = Core
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

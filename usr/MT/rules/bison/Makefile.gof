@@ -1,6 +1,6 @@
 BASE = ..
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk
 
 grammar:
 	bison rule_parser.y

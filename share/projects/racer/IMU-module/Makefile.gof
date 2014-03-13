@@ -4,5 +4,5 @@ OBJS = main.o
 
 DEPEND = Core Algo Hardware_racer System Gui
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk
 

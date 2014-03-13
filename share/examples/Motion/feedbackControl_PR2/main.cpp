@@ -130,25 +130,29 @@ void executeTrajectoryWholeBody(String scene){
 
   //-- create an optimal trajectory to trainTarget
   TaskCost *c;
-  c = P.addTaskMap("position_right_hand", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, Rgoal, 1e5);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
+  c = P.addTask("position_right_hand_vel", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
+  c->map.order=1;
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
 
-  c = P.addTaskMap("position_left_hand", new DefaultTaskMap(posTMT,world,"endeffL", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position_left_hand", new DefaultTaskMap(posTMT,world,"endeffL", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, Lgoal, 1e5);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
+  c = P.addTask("position_left_hand_vel", new DefaultTaskMap(posTMT,world,"endeffL", ors::Vector(0., 0., 0.)));
+  c->map.order=1;
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
 
-  //  c = P.addTaskMap("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
+  //  c = P.addTask("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
   //  P.setInterpolatingCosts(c, MEotionProblem::finalOnly, ARRAY(-0.5,0.3,0.8), 1e3);
   //  P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
 
-  c = P.addTaskMap("qLimits", new DefaultTaskMap(qLimitsTMT,world));
+  c = P.addTask("qLimits", new DefaultTaskMap(qLimitsTMT,world));
   P.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),1e0);
-  P.setInterpolatingVelCosts(c,MotionProblem::constant,ARRAY(0.),1e1);
+  //P.setInterpolatingVelCosts(c,MotionProblem::constant,ARRAY(0.),1e1);
 
-  c = P.addTaskMap("homing", new DefaultTaskMap(qItselfTMT,world));
+  c = P.addTask("homing", new DefaultTaskMap(qItselfTMT,world));
   P.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),0);
-  P.setInterpolatingVelCosts(c,MotionProblem::constant,ARRAY(0.),1e0);
+  //P.setInterpolatingVelCosts(c,MotionProblem::constant,ARRAY(0.),1e0);
 
 
   //-- create the Optimization problem (of type kOrderMarkov)
@@ -208,9 +212,9 @@ void executeTrajectoryWholeBody(String scene){
   MObject goalMO_L(&world, MT::String("Lgoal"), MObject::GOAL , 0.0005, dirR);
 
   FeedbackMotionControl MP(world, false);
-  PDtask *taskPosR, *taskVecR, *taskHome, *taskCol, *taskLimits;
+  PDtask *taskPosR, *taskVecR, *taskHome, *taskLimits; //, *taskCol
   PDtask *taskPosL, *taskVecL;
-  double regularization = 1e-2;
+  //double regularization = 1e-2;
 
   // initialize controllers
   AdaptiveMotionExecution* amexL;

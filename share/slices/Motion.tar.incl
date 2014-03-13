@@ -13,6 +13,5 @@ share/examples/Optim
 share/examples/Motion
 
 share/include/lapack
-share/src/extern/ply
 share/src/extern/SWIFT
 share/src/extern/SWIFT_decomposer

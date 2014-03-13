@@ -4,4 +4,4 @@ LIBS += -lgtest -lpthread
 
 DEPEND = Core
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

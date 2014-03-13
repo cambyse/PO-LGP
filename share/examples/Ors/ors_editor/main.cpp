@@ -12,12 +12,6 @@ viewing the model in the OpenGL window (after pressing ENTER).\n\
 Use the number keys 1 2 3 4 5 to toggle display options.\n\
 ";
 
-void drawBase(void*){
-  glStandardLight(NULL);
-  glDrawFloor(10,.8,.8,.8);
-  glColor(1.,.5,0.);
-}
-
 void TEST(OrsEditor) {
   cout <<USAGE <<endl;
 

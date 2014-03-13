@@ -90,9 +90,9 @@ REGISTER_MODULE(SetupWorld);
 void run() {
   System S;
 
-  S.addModule<SetupWorld>("SetupWorld", ModuleThread::loopWithBeat, .03); // ~30 Hz
-  S.addModule<RosTf>("RosTf", ModuleThread::loopWithBeat, .03);
-  S.addModule<PhysicsMenu>("PhysicsMenu", ModuleThread::loopWithBeat, .03);
+  S.addModule<SetupWorld>("SetupWorld", Module_Thread::loopWithBeat, .03); // ~30 Hz
+  S.addModule<RosTf>("RosTf", Module_Thread::loopWithBeat, .03);
+  S.addModule<PhysicsMenu>("PhysicsMenu", Module_Thread::loopWithBeat, .03);
   S.connect();
   cout << S << endl; // get some info
 

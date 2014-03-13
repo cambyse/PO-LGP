@@ -1,0 +1,59 @@
+Variable byteA camImgL
+Variable byteA camImgR
+Variable floatA depthImg
+Variable floatA laserPointCloud
+
+Process camPollerL(camImgL){ loop; }
+Process camPollerR(camImgR){ loop; }
+Process kinectPoller(depthImg){ loop; }
+Process laserPoller(laserPointCloud){ loop; }
+
+Variable arr cameraProjectionMatrixL
+Variable arr cameraProjectionMatrixR
+
+Variable byteA selfProjectionL
+Variable byteA selfProjectionR
+
+Variable ors::Graph robotModel
+
+Process selfProjectorL(selfProjectionL, cameraProjectionMatrixL, robotModel){
+  listenFirst;
+  info="computes the binary image of the robot's self projection given the
+   robot model and the camera projection matrix"
+}
+Process selfProjectorR(selfProjectionR, cameraProjectionMatrixR, robotModel){
+  listenFirst;
+}
+
+Variable byteA motionL
+Variable byteA motionR
+
+Process motionDetectorL(camImgL, motionL){ listenFirst; }
+Process motionDetectorR(camImgR, motionR){ listenFirst; }
+
+Variable ObjectL movingObjectHypotheses
+
+Process movingObjectTracker(camImgL, motionL, depthImg){
+  listenFirst;
+  info="blurs motion, detects peaks in motion, segments the image around these peaks, augments with depth, segments w.r.t.\ depth, updates ObjectL"
+}
+
+Variable TaskMap taskMap
+
+Process PereptionToTask (movingObjectHypotheses taskMap){ listenFirst; }
+
+Variable expectedEndPose{ arr q; double time; }
+
+Process EndPoseOptimizer (taskMap, robotModel, expectedEndPose)
+
+Variable referenceTrajectory{ arr q_ref; arr y_ref; }
+
+Process TrajectoryOptimizer (taskMap, robotModel, expectedEndPose, referenceTrajectory)
+
+Variable controllerReferences{ arr q_ref; arr y_ref; arr f_ref; precisions }
+Variable arr robotConfiguration
+Variable arr forceTorqueSensor
+
+Process ForceTorquePoller (forceTorqueSensor){ loop; }
+
+Process ExecutionController (taskMap, robotModel, referenceTrajectory, robotConfiguration, forceTorqueSensor, controllerReferences)

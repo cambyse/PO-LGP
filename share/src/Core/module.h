@@ -39,26 +39,25 @@ typedef MT::Array<Access*> AccessL;
 
 //===========================================================================
 //
-/** VariableAccess is an abstraction of how a module may access
-    variables. Its implementation is engine dependent. Currently a
+/** Variable is an abstraction of how a module may access
+    variables (data). Its implementation is engine dependent. Currently a
     shared memory (mutexed and revisioned) is used. ROS topics could
     equally be used. */
 
-struct VariableAccess{
+struct Variable{
   MT::String name;  ///< Variable name
   Type *type;       ///< Variable type
-  void *data;       ///< pointer to data struct; Access_typed knows how to cast it
-  double data_time; ///< time of origin of the data
-  VariableAccess(const char* _name):name(_name), type(NULL), data(NULL){}
+  void *data;       ///< pointer to data struct; Access_typed knows how to cast it [alternative 'virtual template' not possible]
+  double data_time; ///< time of origin of the data  --- MT: this is redundant to the revision_time?? or have virtual dataTime()
+  Variable(const char* _name):name(_name), type(NULL), data(NULL)/*, data_time(0.)*/{}
   virtual int writeAccess(Module*) = 0; ///< tell the engine that a module accesses -> mutex or publish
   virtual int readAccess(Module*) = 0;  ///< tell the engine that a module accesses
   virtual int deAccess(Module*) = 0;    ///< tell the engine that the module de-accesses
   virtual double revisionTime() = 0;
   virtual int revisionNumber() = 0;
-  virtual int waitForNextWriteAccess() = 0;
+  virtual int waitForNextRevision() = 0;
   virtual int waitForRevisionGreaterThan(int rev) = 0; //returns the revision
 };
-
 
 extern Module *currentlyCreating;
 
@@ -67,14 +66,14 @@ extern Module *currentlyCreating;
 /** This is the core abstraction for users to code modules: derive
     from this class (and perhaps REGISTER_MODULE(...)) to enable the
     engine to instantiate your module and run/schedule it. The
-    accesses stores all accesses of this module; the engine can
+    accesses store all accesses of this module; the engine can
     automatically analyze them and instantiate respective variables if
     necessary */
 
 struct Module{
   MT::String name;
   AccessL accesses;
-  struct ModuleThread *thread;
+  struct Module_Thread *thread;
 
   /** DON'T open drivers/devices/files or so here in the constructor,
       but in open(). Sometimes a module might be created only to see
@@ -113,8 +112,8 @@ struct Access{
   MT::String name; ///< name; by default the access' name; redefine to a variable's name to autoconnect
   Type *type;      ///< type; must be the same as the variable's type
   Module *module;  ///< which module is this a member of
-  VariableAccess *var; ///< which variable does it access
-  Access(const char* _name):name(_name), type(NULL), module(NULL), var(NULL){}
+  Variable *var; ///< which variable does it access
+  Access(const char* _name, Type *_type, Module *_module, Variable *_var):name(_name), type(_type), module(_module), var(_var){}
   int readAccess(){  CHECK(var,""); return var->readAccess(module); }
   int writeAccess(){ CHECK(var,""); return var->writeAccess(module); }
   int deAccess(){    CHECK(var,""); return var->deAccess(module); }
@@ -144,7 +143,10 @@ struct Access_typed:Access{
     T& operator()(){ return *a->object(); }
   };
 
-  Access_typed(const char* name, Module *m=NULL, VariableAccess *d=NULL):Access(name){ type=new Type_typed<T, void>();  module=currentlyCreating; var=d; if(module) module->accesses.append(this); }
+  Access_typed(const char* name, Variable *v=NULL):Access(name, new Type_typed<T, void>(), currentlyCreating, v){
+    if(module) module->accesses.append(this);
+  }
+  ~Access_typed(){ delete type; }
   T* object(){ CHECK(var && var->data,""); return ((T*)var->data); }
   T& operator()(){ return *object(); }
   ReadToken get(){ return ReadToken(this); } ///< read access to the variable's data
@@ -162,7 +164,7 @@ struct Access_typed:Access{
 #define ACCESS(type, name)\
 struct __##name##__Access:Access_typed<type>{ \
   __##name##__Access():Access_typed<type>(#name){} \
-} name; \
+} name;
 
 
 //===========================================================================

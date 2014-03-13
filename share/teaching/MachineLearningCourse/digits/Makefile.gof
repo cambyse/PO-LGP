@@ -5,4 +5,4 @@ LIBS   += -lMLcourse
 
 DEPEND := externalMake_src/MT
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

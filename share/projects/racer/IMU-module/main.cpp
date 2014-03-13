@@ -8,9 +8,9 @@ void testIMU(){
     ACCESS(arr, imuData);
     ACCESS(arr, stateEstimate);
     MySystem(){
-      addModule<IMU_Poller>("IMU_Poller", ModuleThread::loopFull);
-      addModule<KalmanFilter>("KalmanFilter", ModuleThread::listenFirst);
-      addModule<RacerDisplay>("RacerDisplay", ModuleThread::loopWithBeat, 0.1);
+      addModule<IMU_Poller>("IMU_Poller", Module_Thread::loopFull);
+      addModule<KalmanFilter>("KalmanFilter", Module_Thread::listenFirst);
+      addModule<RacerDisplay>("RacerDisplay", Module_Thread::loopWithBeat, 0.1);
       connect();
     }
   } S;
@@ -22,7 +22,7 @@ void testIMU(){
 
 
   for(;;){
-    S.stateEstimate.var->waitForNextWriteAccess();
+    S.stateEstimate.var->waitForNextRevision();
     arr x = S.stateEstimate.get();
 //    arr enc = S.encoderData.get();
     cout <<"\r state = " <<x <<std::flush;
@@ -41,7 +41,7 @@ void testMotors(){
   struct MySystem:System{
     ACCESS(arr, controls)
     MySystem(){
-      addModule<Motors>("Motors", ModuleThread::loopFull);
+      addModule<Motors>("Motors", Module_Thread::loopFull);
       connect();
     }
   } S;
@@ -73,10 +73,10 @@ void testBalance(){
     ACCESS(arr, encoderData)
     ACCESS(arr, controls)
     MySystem(){
-      addModule<IMU_Poller>("IMU_Poller", ModuleThread::loopFull);
-      addModule<KalmanFilter>("KalmanFilter", ModuleThread::listenFirst);
-      addModule<RacerDisplay>("RacerDisplay", ModuleThread::loopWithBeat, 0.1);
-      addModule<Motors>("Motors", ModuleThread::loopFull);
+      addModule<IMU_Poller>("IMU_Poller", Module_Thread::loopFull);
+      addModule<KalmanFilter>("KalmanFilter", Module_Thread::listenFirst);
+      //      addModule<RacerDisplay>("RacerDisplay", Module_Thread::loopWithBeat, 0.1);
+      addModule<Motors>("Motors", Module_Thread::loopFull);
       connect();
     }
   } S;
@@ -93,7 +93,7 @@ void testBalance(){
   double motor_vel=0.;
 
   for(int i = 0;; ++i){
-    S.stateEstimate.var->waitForNextWriteAccess();
+    S.stateEstimate.var->waitForNextRevision();
     arr x = S.stateEstimate.get();
     arr enc = S.encoderData.get();
 
@@ -122,7 +122,6 @@ int main(int argc, char **argv) {
 //  testIMU();
 //  testMotors();
   testBalance();
-//  findBalancePoint();
 
   return 0;
 }

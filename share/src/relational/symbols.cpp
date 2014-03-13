@@ -731,13 +731,13 @@ void DifferenceFunction::getDefiningSymbols(MT::Array< Symbol* > & symbols, bool
     baseSymbol->getDefiningSymbols(local_symbols, only_direct_predecessors);
     symbols.setAppend(local_symbols);
 
-    for (int i = 0; i < restrictionLits.N; i++) {
+    for (uint i = 0; i < restrictionLits.N; i++) {
       restrictionLits(i)->s->getDefiningSymbols(local_symbols, only_direct_predecessors);
       symbols.setAppend(local_symbols);
     }
   }
   symbols.setAppend(baseSymbol);
-    for (int i = 0; i < restrictionLits.N; i++) {
+    for (uint i = 0; i < restrictionLits.N; i++) {
       symbols.setAppend(restrictionLits(i)->s);
     }
 }

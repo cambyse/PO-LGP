@@ -46,7 +46,7 @@ int Variable::writeAccess(Module *p) {
   int r = revision.incrementValue();
   engine().acc->logWriteAccess(this, p);
   uint i; Module *l;
-  for_list(i, l, s->listeners) if(l!=p) engine().step(*l);
+  for_list(Type,  l,  s->listeners) if(l!=p) engine().step(*l);
   return r;
 }
 
@@ -63,7 +63,7 @@ int Variable::deAccess(Module *p) {
   return rev;
 }
 
-void Variable::waitForNextWriteAccess(){
+void Variable::waitForNextRevision(){
   revision.waitForSignal();
 }
 

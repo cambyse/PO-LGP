@@ -389,19 +389,19 @@ void KeyFramer::computeVar(const String &type, uint wlen, bool force) {
   s->g4d->appendBam(typeVar, y);
 }
 // }}}
-// computeES {{{
-void KeyFramer::computeES(const StringA &types, double alpha, bool force) {
+// computeFilter {{{
+void KeyFramer::computeFilter(const StringA &types, double alpha, bool force) {
   for(const String &type: types)
-    computeES(type, alpha, force);
+    computeFilter(type, alpha, force);
 }
 // }}}
-// computeES {{{
-void KeyFramer::computeES(const String &type, double alpha, bool force) {
+// computeFilter {{{
+void KeyFramer::computeFilter(const String &type, double alpha, bool force) {
   CHECK(alpha >= 0. && alpha <= 1., "Parameter alpha (" << alpha << ") must be 0 <= alpha <= 1.");
-  String typeES = STRING(type << "ES");
-  cout << " * computing " << typeES << endl;
-  if(!force && s->g4d->hasBAM(typeES)) {
-    cout << " * " << typeES << " already computed (force = 0). Skipping." <<
+  String typeFilter = STRING(type << "Filter");
+  cout << " * computing " << typeFilter << endl;
+  if(!force && s->g4d->hasBAM(typeFilter)) {
+    cout << " * " << typeFilter << " already computed (force = 0). Skipping." <<
       endl;
     return;
   }
@@ -425,7 +425,7 @@ void KeyFramer::computeES(const String &type, double alpha, bool force) {
     }
   }
 
-  s->g4d->appendBam(typeES, y);
+  s->g4d->appendBam(typeFilter, y);
 }
 // }}}
 // computeSmooth {{{
@@ -1400,10 +1400,6 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &bA, const String &bB, uint 
   double m;
   int mi;
   arr wz(T, K), wzind(T, K), temp;
-  cout << "pi: " << pi << endl;
-  cout << "log(pi): " << log(pi) << endl;
-  cout << "rho_z[0]: " << rho_z[0] << endl;
-  cout << "log(rho_z[0]): " << log(rho_z[0]) << endl;
 
   wz[0]() = pi + log(rho_z[0]);
   for(uint t = 1; t < T; t++) {
@@ -1748,10 +1744,6 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &bA, const String &bB, uint 
   double m;
   int mi;
   arr wz(T, K), wzind(T, K), temp;
-  cout << "pi: " << pi << endl;
-  cout << "log(pi): " << log(pi) << endl;
-  cout << "rho_z_cpq[0]: " << rho_z_cpq[0] << endl;
-  cout << "log(rho_z_cpq[0]): " << log(rho_z_cpq[0]) << endl;
 
   wz[0]() = pi + log(rho_z_cpq[0]);
   for(uint t = 1; t < T; t++) {
@@ -2018,10 +2010,6 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &b1, const String &b2, uint 
   double m;
   int mi;
   arr wz(T, K), wzind(T, K), temp;
-  cout << "pi: " << pi << endl;
-  cout << "log(pi): " << log(pi) << endl;
-  cout << "rho_z_cpq[0]: " << rho_z_cpq[0] << endl;
-  cout << "log(rho_z_cpq[0]): " << log(rho_z_cpq[0]) << endl;
 
   wz[0]() = pi + log(rho_z_cpq[0]);
   for(uint t = 1; t < T; t++) {
@@ -2231,10 +2219,6 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &bb, uint wlen) {
   double m;
   int mi;
   arr wz(T, K), wzind(T, K), temp;
-  cout << "pi: " << pi << endl;
-  cout << "log(pi): " << log(pi) << endl;
-  cout << "rho_z[0]: " << rho_z[0] << endl;
-  cout << "log(rho_z[0]): " << log(rho_z[0]) << endl;
 
   wz[0]() = pi + log(rho_z[0]);
   for(uint t = 1; t < T; t++) {
@@ -2484,10 +2468,6 @@ void KeyFramer::EM_m(KeyValueGraph &kvg, const String &bb) {
   // Viterbi {{{
   uint mi;
   arr wz(T, K), wzind(T, K), temp;
-  cout << "pi: " << pi << endl;
-  cout << "log(pi): " << log(pi) << endl;
-  cout << "rho_z[0]: " << rho_z[0] << endl;
-  cout << "log(rho_z[0]): " << log(rho_z[0]) << endl;
 
   wz[0]() = pi + log(rho_z[0]);
   for(uint t = 1; t < T; t++) {
@@ -2531,6 +2511,10 @@ void KeyFramer::EM_m(KeyValueGraph &kvg, const String &bb) {
   kvg.append("plot", plot);
   // }}}
 }
+#undef update_mu_pSpeedGP
+#undef update_sigma_pSpeedGP
+#undef update_mu_qSpeedGP
+#undef update_sigma_qSpeedGP
 // }}}
 // EM_r {{{
 //#define update_mu_dpSpeedGP
@@ -2751,10 +2735,6 @@ void KeyFramer::EM_r(KeyValueGraph &kvg, const String &bA, const String &bB) {
   // Viterbi {{{
   uint mi;
   arr wz(T, K), wzind(T, K), temp;
-  cout << "pi: " << pi << endl;
-  cout << "log(pi): " << log(pi) << endl;
-  cout << "rho_z[0]: " << rho_z[0] << endl;
-  cout << "log(rho_z[0]): " << log(rho_z[0]) << endl;
 
   wz[0]() = pi + log(rho_z[0]);
   for(uint t = 1; t < T; t++) {
@@ -2798,8 +2778,12 @@ void KeyFramer::EM_r(KeyValueGraph &kvg, const String &bA, const String &bB) {
   kvg.append("plot", plot);
   // }}}
 }
+#undef update_mu_dpSpeedGP
+#undef update_sigma_dpSpeedGP
+#undef update_mu_dqSpeedGP
+#undef update_sigma_dqSpeedGP
 // }}}
-// EM_c {{{
+// EM_c (single-agent) {{{
 //#define with_object_emission
 //#define update_mu_p
 //#define update_sigma_p
@@ -2812,8 +2796,7 @@ void KeyFramer::EM_r(KeyValueGraph &kvg, const String &bA, const String &bB) {
 void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
   // Computing other BAMS {{{
   double alpha = .3;
-  bool force = true;
-  force = false;
+  bool force = false;
   computeSmooth(STRINGS("pos", "quat"), alpha, force);
   computeSpeed(STRINGS("posSmooth", "quatSmooth"), force);
 
@@ -2853,10 +2836,10 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
   arr mu_q, sigma_q;
   arr mu_dp, sigma_dp;
   arr mu_dq, sigma_dq;
-  arr rho_z;
-  arr rho_m, rho_mp, rho_mq;
-  arr rho_mB, rho_mpB, rho_mqB;
-  arr rho_r, rho_rdp, rho_rdq;
+  arr rho_z, rho_mr, rho_mmr;
+  arr rho_m, rho_mp, rho_mq, rho_mpq;
+  arr rho_mB, rho_mpB, rho_mqB, rho_mpqB;
+  arr rho_r, rho_rdp, rho_rdq, rho_rdpdq;
   arr qz, qzz, qmp, qmq, qzmm;
   arr a, b;
   arr pz, pzz, pmp, pmq;
@@ -2935,17 +2918,22 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
   uint Rdq = 2;
 
   rho_z.resize(T, K);
+  rho_mr.resize(T, M, R);
+  rho_mmr.resize(TUP(T, M, M, R));
   rho_m.resize(T, M);
   rho_mp.resize(T, Mp);
   rho_mq.resize(T, Mq);
+  rho_mpq.resize(T, Mp, Mq);
 #ifdef with_object_emission
   rho_mB.resize(T, M);
   rho_mpB.resize(T, Mp);
   rho_mqB.resize(T, Mq);
+  rho_mpqB.resize(T, Mp, Mq);
 #endif
   rho_r.resize(T, R);
   rho_rdp.resize(T, Rdp);
   rho_rdq.resize(T, Rdq);
+  rho_rdpdq.resize(T, Rdp, Rdq);
 
   qz.resize(T, K);
   qzz.resize(T-1, K, K);
@@ -2992,6 +2980,12 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
         rho_mq(t, k) = ::exp(
             -.5 * MT::sqr(qSpeed(t) - mu_q(k)) / MT::sqr(sigma_q(k))
           );
+        rho_rdp(t, k) = ::exp(
+            -.5 * MT::sqr(dpSpeed(t) - mu_dp(k)) / MT::sqr(sigma_dp(k))
+          );
+        rho_rdq(t, k) = ::exp(
+            -.5 * MT::sqr(dqSpeed(t) - mu_dq(k)) / MT::sqr(sigma_dq(k))
+          );
 #ifdef with_object_emission
         rho_mpB(t, k) = ::exp(
             -.5 * MT::sqr(pBSpeed(t) - mu_p(k)) / MT::sqr(sigma_p(k))
@@ -3000,30 +2994,21 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
             -.5 * MT::sqr(qBSpeed(t) - mu_q(k)) / MT::sqr(sigma_q(k))
           );
 #endif
-        rho_rdp(t, k) = ::exp(
-            -.5 * MT::sqr(dpSpeed(t) - mu_dp(k)) / MT::sqr(sigma_dp(k))
-          );
-        rho_rdq(t, k) = ::exp(
-            -.5 * MT::sqr(dqSpeed(t) - mu_dq(k)) / MT::sqr(sigma_dq(k))
-          );
       }
-
-      for(uint m = 0; m < M; m++)
-        rho_m(t, m) = sum(phi_mpq[m] % (rho_mp[t] ^ rho_mq[t]));
-      for(uint r = 0; r < R; r++)
-        rho_r(t, r) = sum(phi_rpq[r] % (rho_rdp[t] ^ rho_rdq[t]));
-#ifdef with_object_emission
-      for(uint m = 0; m < M; m++)
-        rho_mB(t, m) = sum(phi_mpq[m] % (rho_mpB[t] ^ rho_mqB[t]));
-      arr temp; temp.resize(TUP(M, M, R));
-      tensorEquation(temp, rho_m[t] ^ rho_mB[t], {0, 1}, rho_r[t], {2}, 0);
-      for(uint k = 0; k < K; k++)
-        rho_z(t, k) = sum(phi_zmr[k] % temp);
-#else
-      for(uint k = 0; k < K; k++)
-        rho_z(t, k) = sum(phi_zmr[k] % (rho_m[t] ^ rho_r[t]));
-#endif
     }
+    tensorEquation(rho_mpq, rho_mp, TUP(0, 1), rho_mq, TUP(0, 2), 0);
+    tensorEquation(rho_m, phi_mpq, TUP(1, 2, 3), rho_mpq, TUP(0, 2, 3), 2);
+    tensorEquation(rho_rdpdq, rho_rdp, TUP(0, 1), rho_rdq, TUP(0, 2), 0);
+    tensorEquation(rho_r, phi_rpq, TUP(1, 2, 3), rho_rdpdq, TUP(0, 2, 3), 2);
+    tensorEquation(rho_mr, rho_m, TUP(0, 1), rho_r, TUP(0, 2), 0);
+#ifdef with_object_emission
+    tensorEquation(rho_mpqB, rho_mpB, TUP(0, 1), rho_mqB, TUP(0, 2), 0);
+    tensorEquation(rho_mB, phi_mpq, TUP(1, 2, 3), rho_mpqB, TUP(0, 2, 3), 2);
+    tensorEquation(rho_mmr, rho_mr, TUP(0, 1, 3), rho_mB, TUP(0, 2), 0);
+    tensorEquation(rho_z, phi_zmr, TUP(1, 2, 3, 4), rho_mmr, TUP(0, 2, 3, 4), 3);
+#else
+    tensorEquation(rho_z, phi_zmr, TUP(1, 2, 3), rho_mr, TUP(0, 2, 3), 2);
+#endif
     // }}}
     // E-STEP {{{
     a[0]() = pi;   //initialization of alpha
@@ -3132,10 +3117,6 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
   // Viterbi {{{
   uint mi;
   arr wz(T, K), wzind(T, K), temp;
-  cout << "pi: " << pi << endl;
-  cout << "log(pi): " << log(pi) << endl;
-  cout << "rho_z[0]: " << rho_z[0] << endl;
-  cout << "log(rho_z[0]): " << log(rho_z[0]) << endl;
 
   wz[0]() = pi + log(rho_z[0]);
   for(uint t = 1; t < T; t++) {
@@ -3161,73 +3142,498 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
   kvg.append("data", "dqSpeed", new arr(dqSpeed));
   KeyValueGraph *plot;
   
-  //plot = new KeyValueGraph();
-  //plot->append("title", new String("Full System: Viterbi"));
-  //plot->append("dataid", new bool(true));
-  //plot->append("autolegend", new bool(true));
-  //plot->append("stream", new double(.75));
-  //plot->append("ymin", new double(-.1));
-  //plot->append("ymax", new double(1.1));
-  //plot->append("data", new String("vit"));
-  //kvg.append("plot", plot);
+  plot = new KeyValueGraph();
+  plot->append("title", new String("Full System: Viterbi"));
+  plot->append("dataid", new bool(true));
+  plot->append("autolegend", new bool(true));
+  plot->append("stream", new double(.75));
+  plot->append("ymin", new double(-.1));
+  plot->append("ymax", new double(1.1));
+  plot->append("data", new String("vit"));
+  kvg.append("plot", plot);
 
-  //plot = new KeyValueGraph();
-  //plot->append("title", new String("p, q"));
-  //plot->append("dataid", new bool(true));
-  //plot->append("autolegend", new bool(true));
-  //plot->append("stream", new double(.75));
-  //plot->append("data", new String("pSpeed"));
-  //plot->append("data", new String("qSpeed"));
-  //kvg.append("plot", plot);
+  plot = new KeyValueGraph();
+  plot->append("title", new String("p, q"));
+  plot->append("dataid", new bool(true));
+  plot->append("autolegend", new bool(true));
+  plot->append("stream", new double(.75));
+  plot->append("data", new String("pSpeed"));
+  plot->append("data", new String("qSpeed"));
+  kvg.append("plot", plot);
 
 #ifdef with_object_emission
   kvg.append("data", "pBSpeed", new arr(pBSpeed));
   kvg.append("data", "qBSpeed", new arr(qBSpeed));
 
-  //plot = new KeyValueGraph();
-  //plot->append("title", new String("pBSpeed, qBSpeed"));
-  //plot->append("dataid", new bool(true));
-  //plot->append("autolegend", new bool(true));
-  //plot->append("stream", new double(.75));
-  //plot->append("data", new String("pBSpeed"));
-  //plot->append("data", new String("qBSpeed"));
-  //kvg.append("plot", plot);
-#endif
-
-  //plot = new KeyValueGraph();
-  //plot->append("title", new String("dp, dq"));
-  //plot->append("dataid", new bool(true));
-  //plot->append("autolegend", new bool(true));
-  //plot->append("stream", new double(.75));
-  //plot->append("data", new String("dpSpeed"));
-  //plot->append("data", new String("dqSpeed"));
-  //kvg.append("plot", plot);
-  
-  // TODO remove this, and uncomment the previous
-  force = true;
-  computeES(STRING("pos"), alpha, force);
-  computeSmooth(STRING("pos"), alpha, force);
-  computeSpeed(STRINGS("pos", "posES", "posSmooth"), force);
-  arr pSpeed_orig = s->g4d->query("posSpeed", bA);
-  arr pSpeed_smooth = s->g4d->query("posSmoothSpeed", bA);
-  arr pSpeed_es = s->g4d->query("posESSpeed", bA);
-  kvg.append("data", "pSpeed_orig", new arr(pSpeed_orig));
-  kvg.append("data", "pSpeed_smooth", new arr(pSpeed_smooth));
-  kvg.append("data", "pSpeed_es", new arr(pSpeed_es));
   plot = new KeyValueGraph();
-  plot->append("title", new String("Smoothing"));
+  plot->append("title", new String("pBSpeed, qBSpeed"));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
   plot->append("stream", new double(.75));
-  plot->append("data", new String("pSpeed_orig"));
-  plot->append("data", new String("pSpeed_smooth"));
-  plot->append("data", new String("pSpeed_es"));
+  plot->append("data", new String("pBSpeed"));
+  plot->append("data", new String("qBSpeed"));
+  kvg.append("plot", plot);
+#endif
+
+  plot = new KeyValueGraph();
+  plot->append("title", new String("dp, dq"));
+  plot->append("dataid", new bool(true));
+  plot->append("autolegend", new bool(true));
+  plot->append("stream", new double(.75));
+  plot->append("data", new String("dpSpeed"));
+  plot->append("data", new String("dqSpeed"));
   kvg.append("plot", plot);
   // }}}
 }
+#undef with_object_emission
+#undef update_mu_p
+#undef update_sigma_p
+#undef update_mu_q
+#undef updage_sigma_q
+#undef update_mu_dp
+#undef update_sigma_dp
+#undef update_mu_dq
+#undef update_sigma_dq
+// }}}
+// EM_c (multi-agent) {{{
+#define with_object_emission
+//#define update_mu_p
+//#define update_sigma_p
+//#define update_mu_q
+//#define updage_sigma_q
+//#define update_mu_dp
+//#define update_sigma_dp
+//#define update_mu_dq
+//#define update_sigma_dq
+void KeyFramer::EM_c(KeyValueGraph &kvg, const StringA &bA, const String &bB) {
+  // Computing other BAMS {{{
+  double alpha = .3;
+  bool force = false;
+  computeSmooth(STRINGS("pos", "quat"), alpha, force);
+  computeSpeed(STRINGS("posSmooth", "quatSmooth"), force);
+
+  StringA bA_dPos, bA_dQuat, bA_dPosSmooth, bA_dQuatSmooth, bA_dPosSmoothSpeed, bA_dQuatSmoothSpeed;
+
+  uint A = bA.N;
+  for(uint a = 0; a < A; a++) {
+    bA_dPos.append(STRING(bA(a) << "_dPos"));
+    bA_dQuat.append(STRING(bA(a) << "_dQuat"));
+    bA_dPosSmooth.append(STRING(bA_dPos(a) << "Smooth"));
+    bA_dQuatSmooth.append(STRING(bA_dQuat(a) << "Smooth"));
+    bA_dPosSmoothSpeed.append(STRING(bA_dPosSmooth(a) << "Speed"));
+    bA_dQuatSmoothSpeed.append(STRING(bA_dQuatSmooth(a) << "Speed"));
+
+    computeDPos(bA(a), force);
+    computeDQuat(bA(a), force);
+    computeSmooth(bA_dPos(a), alpha, force);
+    computeSmooth(bA_dQuat(a), alpha, force);
+    computeSpeed(bA_dPosSmooth(a), force);
+    computeSpeed(bA_dQuatSmooth(a), force);
+  }
+  // }}}
+  // Observations {{{
+  uint T = s->g4d->getNumFrames();
+  arr pSpeed(A, T), qSpeed(A, T);
+  arr dpSpeed(A, T), dqSpeed(A, T);
+  
+  for(uint a = 0; a < A; a++) {
+    pSpeed[a]() = s->g4d->query("posSmoothSpeed", bA(a));
+    qSpeed[a]() = s->g4d->query("quatSmoothSpeed", bA(a));
+    dpSpeed[a]() = s->g4d->query(bA_dPosSmoothSpeed(a), bB);
+    dqSpeed[a]() = s->g4d->query(bA_dQuatSmoothSpeed(a), bB);
+  }
+#ifdef with_object_emission
+  arr pBSpeed = s->g4d->query("posSmoothSpeed", bB);
+  arr qBSpeed = s->g4d->query("quatSmoothSpeed", bB);
+#endif
+  // }}}
+  // Parameters & other {{{
+  double mu_m_L, mu_m_H;
+  double sigma_m_L, sigma_m_H;
+  double mu_r_L, mu_r_H;
+  double sigma_r_L, sigma_r_H;
+  arr pi, P;
+  arr p_zmm, p_z;
+  arr mu_p, sigma_p;
+  arr mu_q, sigma_q;
+  arr mu_dp, sigma_dp;
+  arr mu_dq, sigma_dq;
+  arr rho_z, rho_za, rho_mr;
+  arr rho_m, rho_mp, rho_mq, rho_mpq;
+  arr rho_mB, rho_mpB, rho_mqB, rho_mpqB;
+  arr rho_r, rho_rdp, rho_rdq, rho_rdpdq;
+  arr qz, qzz, qmp, qmq, qzmm;
+  arr a, b;
+  arr pz, pzz, pmp, pmq;
+  arr pmpmp, pmpsp, pmqmq, pmqsq;
+  arr pmpmdp, pmpsdp, pmqmdq, pmqsdq;
+  arr phi_zmr, phi_mpq, phi_rpq;
+
+  pi = { 1, 0 };
+  P = { .5, .5,
+        .5, .5 };
+  P.reshape(2, 2);
+#ifdef with_object_emission
+  phi_zmr = { 50, 9,
+              9, 9,
+
+              9, 9,
+              9, 1,
+
+              1, 1,
+              1, 1,
+
+              1, 1,
+              1, 50 };
+  phi_zmr.reshape(TUP(2, 2, 2, 2));
+#else
+  phi_zmr = { 50, 9,
+              9, 1,
+
+              1, 1,
+              1, 50 };
+  phi_zmr.reshape(2, 2, 2);
+#endif
+  normalizeDist(phi_zmr);
+  //p_z = my_sum(p_zmm, 0);
+  
+  phi_mpq = { 50, 1,
+              1, 1,
+
+              1, 9,
+              9, 50 };
+  phi_mpq.reshape(2, 2, 2);
+  normalizeDist(phi_mpq);
+
+  phi_rpq = { 50, 9,
+              9, 1,
+
+              1, 1,
+              1, 50 };
+  phi_rpq.reshape(2, 2, 2);
+  normalizeDist(phi_rpq);
+
+  mu_m_L = 0;
+  mu_m_H = 100;
+  sigma_m_L = 50;
+  sigma_m_H = 50;
+  mu_p= { mu_m_L, mu_m_H };
+  sigma_p= { sigma_m_L, sigma_m_H };
+  mu_q= { mu_m_L, mu_m_H };
+  sigma_q= { sigma_m_L, sigma_m_H };
+
+  mu_r_L = 0;
+  mu_r_H = 100;
+  sigma_r_L = 50;
+  sigma_r_H = 50;
+  mu_dp= { mu_r_H, mu_r_L };
+  sigma_dp= { sigma_r_H, sigma_r_L };
+  mu_dq= { 2*mu_r_H, 2*mu_r_L };
+  sigma_dq= { 2*sigma_r_H, 2*sigma_r_L };
+
+  uint K = 2;
+  uint M = 2;
+  uint Mp = 2;
+  uint Mq = 2;
+  uint R = 2;
+  uint Rdp = 2;
+  uint Rdq = 2;
+
+  rho_z.resize(T, K);
+  rho_za.resize(A, T, K);
+  rho_mr.resize(TUP(A, T, M, R));
+  rho_m.resize(A, T, M);
+  rho_mp.resize(A, T, Mp);
+  rho_mq.resize(A, T, Mq);
+  rho_mpq.resize(TUP(A, T, Mp, Mq));
+#ifdef with_object_emission
+  rho_za.resize(TUP(A, T, K, M));
+  rho_mB.resize(T, M);
+  rho_mpB.resize(T, Mp);
+  rho_mqB.resize(T, Mq);
+  rho_mpqB.resize(T, Mp, Mq);
+#endif
+  rho_r.resize(A, T, R);
+  rho_rdp.resize(A, T, Rdp);
+  rho_rdq.resize(A, T, Rdq);
+  rho_rdpdq.resize(TUP(A, T, Rdp, Rdq));
+
+  // TODO do I have to resize these too?
+  qz.resize(T, K);
+  qzz.resize(T-1, K, K);
+  //qmp.resize(T, K);
+  //qmq.resize(T, K);
+  //qzmm.resize({T, K, K, K});
+
+  a.resize(T, K);
+  b.resize(T, K);
+
+  pz.resize(K);
+  pzz.resize(K, K);
+  //pmp.resize(K);
+  //pmq.resize(K);
+  //pmpmdp.resize(K);
+  //pmpsdp.resize(K);
+  //pmqmdq.resize(K);
+  //pmqsdq.resize(K);
+  // }}}
+
+  arr prev_qz;
+  for(uint i = 0; ; i++) {
+    // Cout Parameters {{{
+    cout << endl;
+    cout << "---------------------------" << endl;
+    cout << "step: " << i << endl;
+    cout << "pi: " << pi << endl;
+    cout << "P: " << P << endl;
+    cout << "mu_p: " << mu_p<< endl;
+    cout << "sigma_p: " << sigma_p<< endl;
+    cout << "mu_q: " << mu_q<< endl;
+    cout << "sigma_q: " << sigma_q<< endl;
+    cout << "mu_dp: " << mu_dp<< endl;
+    cout << "sigma_dp: " << sigma_dp<< endl;
+    cout << "mu_dq: " << mu_dq<< endl;
+    cout << "sigma_dq: " << sigma_dq<< endl;
+    // }}}
+    //COMPUTE EVIDENCES {{{
+    for(uint a = 0; a < A; a++) {
+      for(uint t = 0; t < T; t++) {
+        for(uint k = 0; k < K; k++) {
+          rho_mp(a, t, k) = ::exp(
+              -.5 * MT::sqr(pSpeed(a, t) - mu_p(k)) / MT::sqr(sigma_p(k))
+            );
+          rho_mq(a, t, k) = ::exp(
+              -.5 * MT::sqr(qSpeed(a, t) - mu_q(k)) / MT::sqr(sigma_q(k))
+            );
+          rho_rdp(a, t, k) = ::exp(
+              -.5 * MT::sqr(dpSpeed(a, t) - mu_dp(k)) / MT::sqr(sigma_dp(k))
+            );
+          rho_rdq(a, t, k) = ::exp(
+              -.5 * MT::sqr(dqSpeed(a, t) - mu_dq(k)) / MT::sqr(sigma_dq(k))
+            );
+#ifdef with_object_emission
+          rho_mpB(t, k) = ::exp(
+              -.5 * MT::sqr(pBSpeed(t) - mu_p(k)) / MT::sqr(sigma_p(k))
+            );
+          rho_mqB(t, k) = ::exp(
+              -.5 * MT::sqr(qBSpeed(t) - mu_q(k)) / MT::sqr(sigma_q(k))
+            );
+#endif
+        }
+      }
+    }
+    tensorEquation(rho_mpq, rho_mp, TUP(0, 1, 2), rho_mq, TUP(0, 1, 3), 0);
+    tensorEquation(rho_m, phi_mpq, TUP(2, 3, 4), rho_mpq, TUP(0, 1, 3, 4), 2);
+    tensorEquation(rho_rdpdq, rho_rdp, TUP(0, 1, 2), rho_rdq, TUP(0, 1, 3), 0);
+    tensorEquation(rho_r, phi_rpq, TUP(2, 3, 4), rho_rdpdq, TUP(0, 1, 3, 4), 2);
+    tensorEquation(rho_mr, rho_m, TUP(0, 1, 2), rho_r, TUP(0, 1, 3), 0);
+#ifdef with_object_emission
+    tensorEquation(rho_mpqB, rho_mpB, TUP(0, 1), rho_mqB, TUP(0, 2), 0);
+    tensorEquation(rho_mB, phi_mpq, TUP(1, 2, 3), rho_mpqB, TUP(0, 2, 3), 2);
+
+    arr rho_zmB;
+    arr phi_z;
+    rho_zmB.resize(TUP(A, T, K, M));
+    phi_z.resize(TUP(T, K, M));
+    tensorEquation(rho_zmB, rho_mr, TUP(0, 1, 4, 5), phi_zmr, TUP(2, 4, 3, 5), 2);
+    phi_z = rho_zmB[0];
+    for(uint a = 1; a < A; a++)
+      tensorMultiply(phi_z, rho_zmB[a], TUP(0, 1, 2));
+    tensorEquation(rho_z, rho_mB, TUP(0, 1), phi_z, TUP(0, 1, 2), 1);
+#else
+    tensorEquation(rho_za, phi_zmr, TUP(2, 3, 4), rho_mr, TUP(0, 1, 3, 4), 2);
+    rho_z = rho_za[0];
+    for(uint a = 1; a < A; a++)
+      tensorMultiply(rho_z, rho_za[a], TUP(0, 1));
+#endif
+    // }}}
+    // E-STEP {{{
+    a[0]() = pi;   //initialization of alpha
+    b[T-1]() = 1; //initialization of beta
+    //--- fwd and bwd iterations:
+    for(uint t = 1; t < T; t++) {
+      a[t]() =  P * (rho_z[t-1] % a[t-1]);
+      normalizeDist(a[t]());
+    }
+    for(uint t = T-1; t--; ) {
+      b[t]() = ~P * (rho_z[t+1] % b[t+1]);
+      normalizeDist(b[t]());
+    }
+
+    for(uint t = 0; t < T; t++) {
+      qz[t]() = a[t] % rho_z[t] % b[t];
+      normalizeDist(qz[t]());
+
+      if(t < T-1) {
+        qzz[t]() = P % ( (rho_z[t+1] % b[t+1]) ^ (a[t] % rho_z[t]) );
+        normalizeDist(qzz[t]());
+      }
+
+      //for(uint k = 0; k < K; k++)
+        //qzmm[t][k]() = a(t, k) * b(t, k) * p_zmm[k] % ( rho_mp[t] ^ rho_mq[t] );
+      //normalizeDist(qzmm[t]());
+
+      //qmp[t]() = my_sum(qzmm[t], 1);
+      //normalizeDist(qmp[t]());
+
+      //qmq[t]() = my_sum(qzmm[t], 2);
+      //normalizeDist(qmq[t]());
+    }
+
+    // }}}
+    // M-STEP {{{
+    pz.setZero();
+    pzz.setZero();
+    //pmp.setZero();
+    //pmq.setZero();
+    //pmpmp.setZero();
+    //pmpsp.setZero();
+    //pmqmq.setZero();
+    //pmqsq.setZero();
+    //pmpmdp.setZero();
+    //pmpsdp.setZero();
+    //pmqmdq.setZero();
+    //pmqsdq.setZero();
+    for(uint t = 0; t < T; t++) {
+      pz += qz[t];
+      if(t < T-1)
+        pzz += qzz[t];
+      //pmp += qmp[t];
+      //pmq += qmq[t];
+      //pmpmp+= pSpeed(t) * qz[t];
+      //pmpsp+= sqr(pSpeed(t) - mu_p) % qz[t];
+      //pmqmq+= qSpeed(t) * qz[t];
+      //pmqsq+= sqr(qSpeed(t) - mu_q) % qz[t];
+      //pmpmdp+= dpSpeed(t) * qz[t];
+      //pmpsdp+= sqr(dpSpeed(t) - mu_dp) % qz[t];
+      //pmqmdq+= dqSpeed(t) * qz[t];
+      //pmqsdq+= sqr(dqSpeed(t) - mu_dq) % qz[t];
+    }
+
+    pi = qz[0];
+    for(uint k = 0; k < K; k++)
+      for(uint l = 0; l < K; l++)
+        P(k, l) = pzz(k, l) / pz(l);
+    arr tmp = sum(P, 0);
+    for(uint k = 0; k < K; k++)
+      P[k]() /= tmp;
+
+    // TODO change pz to appropriate
+#ifdef update_mu_p
+    mu_p = pmpmp/ pz;
+#endif
+#ifdef update_sigma_p
+    sigma_p = sqrt(pmpsp/ pz);
+#endif
+#ifdef update_mu_q
+    mu_q = pmqmq/ pz;
+#endif
+#ifdef update_sigma_q
+    sigma_q = sqrt(pmqsq/ pz);
+#endif
+#ifdef update_mu_dp
+    mu_dp = pmpmdp/ pz;
+#endif
+#ifdef update_sigma_dp
+    sigma_dp = sqrt(pmpsdp/ pz);
+#endif
+#ifdef update_mu_dq
+    mu_dq = pmqmdq/ pz;
+#endif
+#ifdef update_sigma_dq
+    sigma_dq = sqrt(pmqsdq/ pz);
+#endif
+    // }}}
+    
+    if(i && sumOfSqr(qz-prev_qz) < 1e-10) break;
+    prev_qz = qz;
+  }
+  cout << endl;
+  cout << "DONE!" << endl;
+
+  // Viterbi {{{
+  uint mi;
+  arr wz(T, K), wzind(T, K), temp;
+
+  wz[0]() = pi + log(rho_z[0]);
+  for(uint t = 1; t < T; t++) {
+    temp = log(P) + ~repmat(wz[t-1], 1, K); // TODO is this necessary? test
+    wz[t]() = log(rho_z[t]);
+    for(uint k = 0; k < K; k++) {
+      mi = temp[k].maxIndex();
+      wz(t, k) += temp(k, mi);
+      wzind(t, k) = mi;
+    }
+  }
+
+  arr vit(T);
+  vit(T-1) = (wz(T-1, 0) > wz(T-1, 1))? 0: 1;
+  for(uint t = T-1; t > 0; t--)
+    vit(t-1) = wzind(t, vit(t));
+  // }}}
+  // Return results as KVG {{{
+  kvg.append("data", "vit", new arr(vit));
+  kvg.append("data", "pSpeed", new arr(pSpeed));
+  kvg.append("data", "qSpeed", new arr(qSpeed));
+  kvg.append("data", "dpSpeed", new arr(dpSpeed));
+  kvg.append("data", "dqSpeed", new arr(dqSpeed));
+  KeyValueGraph *plot;
+  
+  plot = new KeyValueGraph();
+  plot->append("title", new String("Full System: Viterbi"));
+  plot->append("dataid", new bool(true));
+  plot->append("autolegend", new bool(true));
+  plot->append("stream", new double(.75));
+  plot->append("ymin", new double(-.1));
+  plot->append("ymax", new double(1.1));
+  plot->append("data", new String("vit"));
+  kvg.append("plot", plot);
+
+  plot = new KeyValueGraph();
+  plot->append("title", new String("p, q"));
+  plot->append("dataid", new bool(true));
+  plot->append("autolegend", new bool(true));
+  plot->append("stream", new double(.75));
+  plot->append("data", new String("pSpeed"));
+  plot->append("data", new String("qSpeed"));
+  kvg.append("plot", plot);
+
+#ifdef with_object_emission
+  kvg.append("data", "pBSpeed", new arr(pBSpeed));
+  kvg.append("data", "qBSpeed", new arr(qBSpeed));
+
+  plot = new KeyValueGraph();
+  plot->append("title", new String("pBSpeed, qBSpeed"));
+  plot->append("dataid", new bool(true));
+  plot->append("autolegend", new bool(true));
+  plot->append("stream", new double(.75));
+  plot->append("data", new String("pBSpeed"));
+  plot->append("data", new String("qBSpeed"));
+  kvg.append("plot", plot);
+#endif
+
+  plot = new KeyValueGraph();
+  plot->append("title", new String("dp, dq"));
+  plot->append("dataid", new bool(true));
+  plot->append("autolegend", new bool(true));
+  plot->append("stream", new double(.75));
+  plot->append("data", new String("dpSpeed"));
+  plot->append("data", new String("dqSpeed"));
+  kvg.append("plot", plot);
+  // }}}
+}
+#undef with_object_emission
+#undef update_mu_p
+#undef update_sigma_p
+#undef update_mu_q
+#undef updage_sigma_q
+#undef update_mu_dp
+#undef update_sigma_dp
+#undef update_mu_dq
+#undef update_sigma_dq
 // }}}
 
-// playScene {{{
+// playScene (single-agent) {{{
 void KeyFramer::playScene(const String &b) {
   KeyValueGraph kvg;
   arrL vits;
@@ -3235,7 +3641,44 @@ void KeyFramer::playScene(const String &b) {
     if(s->g4d->isObject(bO)) {
       kvg.clear();
       EM_c(kvg, b, bO);
-      vits.append(kvg.getItem("data", "vit")->value<arr>());
+      vits.append(kvg.getItem("data", "vit")->getValue<arr>());
+    }
+  }
+
+  uint numF = vits(0)->N;
+  for(uint f = 0; f < numF; f++) {
+    uint i = 0;
+    for(String bO: s->g4d->getNames()) {
+      if(s->g4d->isObject(bO)) {
+        ors::Body *body = s->kw->getBodyByName(bO);
+        for(ors::Shape *shape: body->shapes) {
+          if(vits(i)->operator()(f)) {
+            shape->color[0] = 1;
+            shape->color[1] = .5;
+            shape->color[2] = .5;
+          }
+          else {
+            shape->color[0] = 1;
+            shape->color[1] = 1;
+            shape->color[2] = 1;
+          }
+        }
+        i++;
+      }
+    }
+    updateOrs(f);
+  }
+}
+// }}}
+// playScene (multi-agent) {{{
+void KeyFramer::playScene(const StringA &bb) {
+  KeyValueGraph kvg;
+  arrL vits;
+  for(String bO: s->g4d->getNames()) {
+    if(s->g4d->isObject(bO)) {
+      kvg.clear();
+      EM_c(kvg, bb, bO);
+      vits.append(kvg.getItem("data", "vit")->getValue<arr>());
     }
   }
 
@@ -3265,3 +3708,23 @@ void KeyFramer::playScene(const String &b) {
 }
 // }}}
 
+void KeyFramer::testSmoothing(KeyValueGraph &kvg, const String &bA, double alpha) {
+  computeFilter(STRING("pos"), alpha, true);
+  computeSmooth(STRING("pos"), alpha, true);
+  computeSpeed(STRINGS("pos", "posFilter", "posSmooth"), true);
+  arr pSpeed_orig = s->g4d->query("posSpeed", bA);
+  arr pSpeed_smooth = s->g4d->query("posSmoothSpeed", bA);
+  arr pSpeed_filter = s->g4d->query("posFilterSpeed", bA);
+  kvg.append("data", "pSpeed_orig", new arr(pSpeed_orig));
+  kvg.append("data", "pSpeed_smooth", new arr(pSpeed_smooth));
+  kvg.append("data", "pSpeed_filter", new arr(pSpeed_filter));
+  KeyValueGraph *plot = new KeyValueGraph();
+  plot->append("title", new String("Smoothing"));
+  plot->append("dataid", new bool(true));
+  plot->append("autolegend", new bool(true));
+  plot->append("stream", new double(.75));
+  plot->append("data", new String("pSpeed_orig"));
+  plot->append("data", new String("pSpeed_smooth"));
+  plot->append("data", new String("pSpeed_filter"));
+  kvg.append("plot", plot);
+}
