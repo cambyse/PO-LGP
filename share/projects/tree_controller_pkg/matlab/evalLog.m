@@ -1,7 +1,7 @@
 clear
 % copy log files from .ros/ to local folder
 NEW = 1
-SIM = 1
+SIM = 0
 [~, b] = unix('ls logs'); id = max(str2num(b))+NEW;
 % id = 34
 folder = ['logs/',num2str(id)];
@@ -10,8 +10,8 @@ if NEW
   if SIM
     unix(['cp ~/.ros/*.output ', folder]);
   else
-    %unix(['sshpass -p *** scp pr2admin@bigbirdc1:.ros/*.output ', folder]);
-    unix(['scp pr2admin@bigbirdc1:.ros/*.output ', folder]);
+    unix(['sshpass -p elfmeter scp pr2admin@bigbirdc1:.ros/*.output ', folder]);
+    %unix(['scp pr2admin@bigbirdc1:.ros/*.output ', folder]);
   end
 end
 
@@ -60,14 +60,13 @@ legend('velocity','filtered velocity','desired_velocity');
 figure(3);clf;hold on;
 for i=1:nq
   subplot(pl,pc,i);hold on;
-  plot(t,d_effort_bk(1:ni,i),'r');
-  plot(t,u_bk(1:ni,i));
-  plot(t,measured_effort_bk(1:ni,i),'c');
-  plot(t,p_effort_bk(1:ni,i),'k');
+%  plot(t,measured_effort_bk(1:ni,i),'c');
   plot(t,i_effort_bk(1:ni,i),'m');
   plot(t,a_effort_bk(1:ni,i),'g');
+  plot(t,u_bk(1:ni,i));
+
 end
-legend('vel u','total u','measured u','pos u', 'integral u','acc u');
+legend('integral u','acc u','total u');
 
 figure(4);clf;hold on;
 for i=1:ny

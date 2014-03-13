@@ -24,6 +24,7 @@ void AmexController::startController(){
   ros::Rate loop_rate(1./dtAmex);
   double dtReal = dtAmex;
 
+  cout << amex->goal << endl;
   /// Run Controller until goal is reached
   while (ros::ok() && (amex->s.last() < 0.95))
   {
@@ -36,7 +37,7 @@ void AmexController::startController(){
   }
 
   /// Set Task PD Gains
-  setNaturalGainsSrv.request.decayTime = 1./4.;
+  setNaturalGainsSrv.request.decayTime = 1.;
   setNaturalGainsSrv.request.dampingRatio = 0.9;
   setNaturalGainsClient.call(setNaturalGainsSrv);
 
@@ -93,9 +94,14 @@ void AmexController::runAmex(double dtReal) {
 
 void AmexController::initController(){
   /// Set Joint PD Gains
-  acc_gains = {0.05, 0.05, 0.05, 0.05, 0.01, 0.01, 0.01};
-  i_gains = {80,80,40,40,20,16,16};
+  ///[0.5,0.5,0.5,0.5,0.1,0.1,0.1]
+  ///[400,400,250,200,100,100,100]
+  ///[3.,3.,4,3.,2.,4,1.5]
+  acc_gains = {0.5, 0.5, 0.5, 0.3, 0.1, 0.1, 0.1};
+  i_gains = {200,200,150,100,100,100,100};
   i_claim = {3.,3.,3.,3.,2.,3.,1.5};
+
+  acc_gains = acc_gains*0.2;
 
   cout << "acc_gains" << acc_gains << endl;
   cout << "i_gains" << vel_gains << endl;
@@ -107,7 +113,7 @@ void AmexController::initController(){
   setJointGainsClient.call(setJointGainsSrv);
 
   /// Set Task PD Gains
-  setNaturalGainsSrv.request.decayTime = dtAmex/4.;
+  setNaturalGainsSrv.request.decayTime = dtAmex;
   setNaturalGainsSrv.request.dampingRatio = 0.9;
   setNaturalGainsClient.call(setNaturalGainsSrv);
 
