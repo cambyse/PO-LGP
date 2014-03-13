@@ -2210,9 +2210,10 @@ void outerProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z)
   HALT("outer product - not yet implemented for these dimensions");
 }
 
-/** @brief index wise (element-wise for vectors) product (also ordinary matrix or scalar product):
+/** @brief index wise (element-wise for vectors and matrices) product (also ordinary matrix or scalar product).:
   \f$\forall_{ik}:~ x_{ik} = \sum_j v_{ij}\, w_{jk}\f$ but also:
-  \f$\forall_{i}:~ x_{i} = \sum_j v_{ij}\, w_{j}\f$*/
+  \f$\forall_{i}:~ x_{i} = \sum_j v_{ij}\, w_{j}\f$
+  \f$\forall_{i}:~ x_{ij} = v_{ij} w_{ij}\f$*/
 template<class T>
 void indexWiseProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z) {
   if(y.nd==1 && z.nd==1) {  //vector x vector -> element wise
@@ -2226,10 +2227,16 @@ void indexWiseProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>
     for(uint i=0;i<x.d0;i++) x[i]() *= y(i);
     return;
   }
-  if(y.nd==1 && z.nd==2) {  //matrix x vector -> index-wise
+  if(y.nd==2 && z.nd==1) {  //matrix x vector -> index-wise
     CHECK(y.d1==z.N,"wrong dims for indexWiseProduct:" <<y.d1 <<"!=" <<z.N);
     x=y;
     for(uint i=0;i<x.d0;i++) for(uint j=0;j<x.d1;j++) x(i,j) *= z(j);
+    return;
+  }
+  if(y.getDim() == z.getDim()) { //matrix x matrix -> element-wise
+    x = y;
+    for(uint i = 0; i < x.N; i++)
+      x.elem(i) *= z.elem(i);
     return;
   }
   HALT("operator% not implemented for "<<y.getDim() <<"%" <<z.getDim() <<" [I would like to change convention on the interpretation of operator% - contact Marc!")
