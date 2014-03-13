@@ -368,7 +368,7 @@ void executeTrajectoryRightArm(String scene){
 
   //-- create an optimal trajectory to trainTarget
   TaskCost *c;
-  c = P.addTaskMap("position_right_hand", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, Rgoal, 1e4);
   //  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
 
@@ -376,14 +376,14 @@ void executeTrajectoryRightArm(String scene){
   //  P.setInterpolatingCosts(c, MEotionProblem::finalOnly, ARRAY(-0.5,0.3,0.8), 1e3);
   //  P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
 
-  c = P.addTaskMap("qLimits", new DefaultTaskMap(qLimitsTMT,world));
+  c = P.addTask("qLimits", new DefaultTaskMap(qLimitsTMT,world));
   P.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),1e0,ARRAY(0.),1e0);
-  P.setInterpolatingVelCosts(c,MotionProblem::constant,ARRAY(0.),1e-1);
+//  P.setInterpolatingVelCosts(c,MotionProblem::constant,ARRAY(0.),1e-1);
 
-  c = P.addTaskMap("homing", new DefaultTaskMap(qItselfTMT,world));
+  c = P.addTask("homing", new DefaultTaskMap(qItselfTMT,world));
   P.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),0);
   //  P.setInterpolatingVelCosts(c,MotionProblem::constant,ARRAY(0.),1e0);
-  P.setInterpolatingVelCosts(c,MotionProblem::finalOnly,ARRAY(0.),1e2);
+  //P.setInterpolatingVelCosts(c,MotionProblem::finalOnly,ARRAY(0.),1e2);
 
 
   //-- create the Optimization problem (of type kOrderMarkov)
