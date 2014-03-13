@@ -1,15 +1,17 @@
 clear
 % copy log files from .ros/ to local folder
 NEW = 1
-SIM = 1
+SIM = 0
 [~, b] = unix('ls logs'); id = max(str2num(b))+NEW;
+% id = 34
 folder = ['logs/',num2str(id)];
 if NEW
   unix(['mkdir -p ', folder]);
   if SIM
     unix(['cp ~/.ros/*.output ', folder]);
   else
-    unix(['scp pr2admin@bigbirdc1:.ros/*.output ', folder]);
+    unix(['sshpass -p elfmeter scp pr2admin@bigbirdc1:.ros/*.output ', folder]);
+    %unix(['scp pr2admin@bigbirdc1:.ros/*.output ', folder]);
   end
 end
 
@@ -19,6 +21,9 @@ pl = 2; pc =4;
 d_effort_bk = load([folder,'/d_effort_bk.output']);
 des_qd_bk   = load([folder,'/des_qd_bk.output']);
 p_effort_bk = load([folder,'/p_effort_bk.output']);
+i_effort_bk = load([folder,'/i_effort_bk.output']);
+a_effort_bk = load([folder,'/a_effort_bk.output']);
+measured_effort_bk = load([folder,'/measured_effort_bk.output']);
 qd_bk	      = load([folder,'/qd_bk.output']);
 u_bk        = load([folder,'/u_bk.output']);
 des_q_bk    = load([folder,'/des_q_bk.output']);
@@ -55,11 +60,13 @@ legend('velocity','filtered velocity','desired_velocity');
 figure(3);clf;hold on;
 for i=1:nq
   subplot(pl,pc,i);hold on;
-  plot(t,d_effort_bk(1:ni,i),'r');
+%  plot(t,measured_effort_bk(1:ni,i),'c');
+  plot(t,i_effort_bk(1:ni,i),'m');
+  plot(t,a_effort_bk(1:ni,i),'g');
   plot(t,u_bk(1:ni,i));
-  plot(t,p_effort_bk(1:ni,i),'k');
+
 end
-legend('vel u','total u','pos u');
+legend('integral u','acc u','total u');
 
 figure(4);clf;hold on;
 for i=1:ny
@@ -87,6 +94,6 @@ for i=1:1000:ni
 end
 legend('Task State','Des. Task State')
 
-figure(6);clf;hold on;
-plot(diff(dt_bk(1:ni)));
-legend('dt');
+% figure(6);clf;hold on;
+% plot(diff(dt_bk(1:ni)));
+% legend('dt');

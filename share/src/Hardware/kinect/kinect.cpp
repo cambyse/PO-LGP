@@ -23,23 +23,15 @@ struct sKinectInterface : Freenect::FreenectDevice {
   }
 
   void DepthCallback(void *depth, uint32_t timestamp) {
+    memmove(module->kinect_depth.set()->p, depth, 2*image_width*image_height);
     // use receive time, and subtract processing and communication delay of 120ms (experimentally determined)
-    double tstamp = MT::clockTime() - .12;
-
-    module->kinect_depth.writeAccess();
-    memmove(module->kinect_depth().p, depth, 2*image_width*image_height);
-    module->kinect_depth.tstamp() = tstamp;
-    module->kinect_depth.deAccess();
+    module->kinect_depth.tstamp() = MT::clockTime() - .12;
   }
 
   void VideoCallback(void *rgb, uint32_t timestamp) {
+    memmove(module->kinect_rgb.set()->p, rgb, 3*image_width*image_height);
     // see above
-    double tstamp = MT::clockTime() - .12;
-
-    module->kinect_rgb.writeAccess();
-    memmove(module->kinect_rgb().p, rgb, 3*image_width*image_height);
-    module->kinect_rgb.tstamp() = tstamp;
-    module->kinect_rgb.deAccess();
+    module->kinect_rgb.tstamp() = MT::clockTime() - .12;
   }
 };
 
@@ -68,14 +60,6 @@ void KinectPoller::open() {
   s = &(freenect->createDevice<sKinectInterface>(0));
   s->module = this;
 
-  // The following is only available for newer versions of libfreenect
-  // (newer versions actually also have a much improved interface)
-  //int ret;
-  //ret = freenect_set_flag(s->getDevice(), FREENECT_AUTO_EXPOSURE, FREENECT_OFF);
-  //if(ret != 0)
-    //cout << "freenect_set_flag failed!" << endl;
-  //else
-    //cout << "freenect_set_flag worked!" << endl;
   s->startVideo();
   s->startDepth();
   s->setDepthFormat(FREENECT_DEPTH_REGISTERED);  // use hardware registration
