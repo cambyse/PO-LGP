@@ -5,10 +5,10 @@ AdaptiveMotionExecution::AdaptiveMotionExecution(ors::KinematicWorld &_world, ar
   world(&_world),
   dt(_dt),
   TRef(_TRef),
-  x0(_x0),
-  q0(_q0),
+  useOrientation(_useOrientation),
   goalMO(&_goalMO),
-  useOrientation(_useOrientation)
+  x0(_x0),
+  q0(_q0)
 {
   goalRef = _trajRef[_trajRef.d0-1];
   dsRef = dt/TRef;
