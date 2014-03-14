@@ -50,6 +50,7 @@ struct Item {
   virtual void writeValue(std::ostream &os) const {NIY}
   virtual const std::type_info& getValueType() const {NIY}
   virtual bool is_derived_from_RootType() const {NIY}
+  virtual void setEq(Item*) {NIY}
   virtual Item *newClone() const {NIY}
 };
 stdOutPipe(Item);
@@ -77,7 +78,8 @@ struct KeyValueGraph:ItemL {
   
   //-- get lists of items
   KeyValueGraph getItems(const char* key);
-  template<class T> KeyValueGraph getTypedItems(const char* key);
+  KeyValueGraph getTypedItems(const char* key, const std::type_info& type);
+  template<class T> KeyValueGraph getTypedItems(const char* key){ return getTypedItems(key, typeid(T)); }
   template<class T> ItemL getDerivedItems();
 
   //-- get lists of values
@@ -90,6 +92,10 @@ struct KeyValueGraph:ItemL {
   template<class T> Item *append(const StringA& keys, T *x) { return append(keys, ItemL(), x); }
   template<class T> Item *append(const char *key, T *x) { return append(ARRAY<MT::String>(MT::String(key)), ItemL(), x); }
   template<class T> Item *append(const char *key1, const char* key2, T *x) {  return append(ARRAY<MT::String>(MT::String(key1), MT::String(key2)), ItemL(), x); }
+
+  //-- merging items
+  Item *merge(Item* m); //removes m and deletes, if it is a member of This and merged with another Item
+  void merge(const ItemL& L){ for(Item *m:L) merge(m); }
 
   //-- I/O
   void sortByDotOrder();

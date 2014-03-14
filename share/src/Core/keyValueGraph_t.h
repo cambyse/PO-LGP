@@ -45,6 +45,13 @@ struct Item_typed:Item {
     return value!=NULL;
   }
 
+  virtual void setEq(Item *it) {
+    T *x = it->getValue<T>();
+    CHECK(x,"can't assign to nothing");
+    if(value) delete value;
+    value = new T(*x);
+  }
+
   virtual void writeValue(std::ostream &os) const {
     if(typeid(T)==typeid(ItemL)) listWrite(*(ItemL*)(value), os, " ");
     else os <<*value;
@@ -107,18 +114,6 @@ template<class T> MT::Array<T*> KeyValueGraph::getTypedValues(const char* key) {
       ret.append(it->getValue<T>());
       break;
     }
-  }
-  return ret;
-}
-
-template<class T> KeyValueGraph KeyValueGraph::getTypedItems(const char* key) {
-  KeyValueGraph ret;
-  for(Item *it: (*this)) if(it->getValueType()==typeid(T)) {
-    if(!key) ret.append(it);
-    else for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key) {
-          ret.append(it);
-          break;
-        }
   }
   return ret;
 }
