@@ -291,7 +291,7 @@ arr KeyFramer::getCorr(uint b1, uint b2, uint wlen) {
 
   MT::Array<arr> wins;
   s->setupWindows(wins, wlen);
-  //uint nwins = wins.N;
+  uint nwins = wins.N;
 
   uint dofs = s->dofs(b1);
   uint cumdofs1 = s->cumdofs(b1);
@@ -3678,7 +3678,7 @@ void KeyFramer::playScene(const StringA &bb) {
     if(s->g4d->isObject(bO)) {
       kvg.clear();
       EM_c(kvg, bb, bO);
-      vits.append(kvg.getItem("data", "vit")->value<arr>());
+      vits.append(kvg.getItem("data", "vit")->getValue<arr>());
     }
   }
 

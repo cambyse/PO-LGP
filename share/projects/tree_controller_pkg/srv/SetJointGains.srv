@@ -1,4 +1,5 @@
-float64[] pos_gains
-float64[] vel_gains
+float64[] acc_gains
+float64[] i_gains
+float64[] i_claim
 ---
 

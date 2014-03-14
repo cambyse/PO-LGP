@@ -5,13 +5,11 @@
 #include "fgplot.h"
 #include <unistd.h>
 
-const char *home = getenv("HOME");
-
 void lib_hardware_G4();
 
 void init_display(ors::KinematicWorld &kw) {
   MT::String shapes;
-  shapes << home << "/git/mlr/share/" << MT::getParameter<MT::String>("shapes");
+  MT::getParameter(shapes, "shapes");
   kw.init(shapes);
   //init(G, gl, shapes);
   kw.gl().camera.setPosition(7., .5, 3.);
@@ -59,11 +57,10 @@ int main(int argc, char **argv) {
   G4Data g4d;
 
   // load data
-  MT::String base, meta, poses, data;
-  base << home << "/git/mlr/share/";
-  meta << base << MT::getParameter<MT::String>("meta");
-  poses << base << MT::getParameter<MT::String>("poses");
-  data << base << MT::getParameter<MT::String>("data");
+  MT::String meta, poses, data;
+  MT::getParameter(data, "data");
+  MT::getParameter(meta, "meta");
+  MT::getParameter(poses, "poses");
 
   g4d.load(data, meta, poses, true);
   display(g4d);
