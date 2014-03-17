@@ -94,7 +94,7 @@ void MotionPlanner::step() {
       m->set_frame0(x0, this);
     }
     CHECK(x0.N==s->sys.get_xDim(),"You need to initialize frame0 to start pose!");
-    s->sys.setx0(x0);
+    s->sys.x0 = x0;
     //cout <<"0-state! in motion primitive\n" <<x0 <<"\n ...frame=" <<x0->frameCount <<' ' <<frame1->frameCount <<' ' <<m->frameCount <<endl;
 
     //-- estimate the keyframe

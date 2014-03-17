@@ -349,7 +349,7 @@ void soc::SocSystem_Ors::setTimeInterval(double trajectory_duration,  uint traje
 void soc::SocSystem_Ors::setTaskVariables(const TaskVariableList& _CVlist){
   vars=_CVlist;
   uint i; TaskVariable *v;
-  for_list(i, v, vars) v->updateState(*ors);
+  for_list(Type,  v,  vars) v->updateState(*ors);
 }
 
 /// report on some
@@ -392,7 +392,7 @@ void soc::SocSystem_Ors::displayState(const arr *x, const arr *Qinv, const char 
     plotClear();
     TaskVariable *v;
     uint i;
-    for_list(i, v, vars){
+    for_list(Type,  v,  vars){
       if(v->type==posTVT){
         arr X(3, 3);
         X = v->J * Q * v->Jt;
@@ -457,7 +457,7 @@ void soc::SocSystem_Ors::setq(const arr& q, uint t){
   s->v_act.setZero();
   uint i;
   TaskVariable *v;
-  for_list(i, v, vars)  if(v->active)  v->updateState(*ors);
+  for_list(Type,  v,  vars)  if(v->active)  v->updateState(*ors);
 }
 
 void soc::SocSystem_Ors::setqv(const arr& q, const arr& qd, uint t){
@@ -469,7 +469,7 @@ void soc::SocSystem_Ors::setqv(const arr& q, const arr& qd, uint t){
   s->v_act=qd;
   uint i;
   TaskVariable *v;
-  for_list(i, v, vars)  if(v->active)  v->updateState(*ors);
+  for_list(Type,  v,  vars)  if(v->active)  v->updateState(*ors);
 }
 
 void soc::SocSystem_Ors::setx(const arr& x, uint t){

@@ -218,8 +218,8 @@ void addOrs(ors::KinematicWorld& ors){
   ors::Shape *s;
   PxMaterial* mMaterial = gPhysicsSDK->createMaterial(0.5,0.5,0.5);
   
-  for_list(i,b,ors.bodies){
-    for_list(j,s,b->shapes){
+  for_list(ors::Body, b, ors.bodies){
+    for_list(ors::Shape, s, b->shapes){
       //2) Create cube	 
       PxTransform transform(PxVec3(s->X.pos.x, s->X.pos.y, s->X.pos.z), PxQuat(s->X.rot.p[1], s->X.rot.p[2], s->X.rot.p[3], s->X.rot.p[0]));
       PxBoxGeometry geometry(PxVec3(s->size[0], s->size[1], s->size[2]));

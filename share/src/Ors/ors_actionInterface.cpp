@@ -309,9 +309,7 @@ void ActionInterface::grab(const char *man_id, const char *obj_id) {
 //   if(!swift) c.active=false;
 
   // (1) drop object if one is in hand
-  ors::Joint *e;
-  uint i;
-  for_list(i, e, C->bodies(x.i)->outLinks) {
+  for_list(ors::Joint,  e,  C->bodies(x.i)->outLinks) {
     NIY;
     //C->del_edge(e);
   }
@@ -749,9 +747,7 @@ void ActionInterface::printObjectInfo() {
 
 void ActionInterface::indicateFailure() {
   // drop object
-  ors::Joint *e;
-  uint i;
-  for_list(i, e, C->getBodyByName("fing1c")->outLinks) {
+  for_list(ors::Joint,  e,  C->getBodyByName("fing1c")->outLinks) {
     NIY;
     //C->del_edge(e); //otherwise: no object in hand
   }

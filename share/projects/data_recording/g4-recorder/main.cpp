@@ -2,16 +2,16 @@
 #include <sys/time.h>
 
 #include <Hardware/G4/G4.h>
-#include <Ors/module_G4Display.h>
+#include <Hardware/G4/module_G4Display.h>
 #include <Core/module_FloatA_Recorder.h>
 #include <Hardware/G4/module_G4Recorder.h>
 
 struct G4System:System {
   ACCESS(floatA, poses);
   G4System(){
-    addModule<G4Poller>("POLLER", ModuleThread::loopWithBeat, .001);//8333); // 120Hz
-    addModule<G4Display>("DISPLAY", ModuleThread::loopWithBeat, .033); // 30Hz
-    addModule<G4Recorder>("RECORDER", ModuleThread::listenFirst, .1);
+    addModule<G4Poller>("POLLER", Module_Thread::loopWithBeat, .001);//8333); // 120Hz
+    addModule<G4Display>("DISPLAY", Module_Thread::loopWithBeat, .033); // 30Hz
+    addModule<G4Recorder>("RECORDER", Module_Thread::listenFirst, .1);
     connect();
   }
 };

@@ -25,7 +25,7 @@ void Element::write(std::ostream& os) const {
   if(name.N) os <<name <<' '; else os <<index <<' ';
   if(parents.N){
     os <<" (";
-    for_list(i, e, parents){
+    for_list(Type,  e,  parents){
       if(i) os <<' ';
       if(e->name.N) os <<e->name; else os <<e->index;
     }
@@ -59,7 +59,7 @@ void Element::read(std::istream& is, ElementL& list){
         //check if this is a derived element (notationally: new_name = old_name+'one_char')
         MT::String sublink;
         sublink.set(link.p, link.N-1);
-        for_list(i, e, list) if(e->name==sublink) break;
+        for_list(Type,  e,  list) if(e->name==sublink) break;
         if(i<list.N){//sucessfully found
           //create new element with same type and attributes, but extended name!!
           e2=new Element;
@@ -134,7 +134,7 @@ void HyperGraph::write(std::ostream &os) const {
 /*void connectElements(){
 uint i;
 Element *e;
-for_list(i, e, T){
+for_list(Type,  e,  T){
   e->id=i;
   for(i=0;i<e->linksIds.N;i++){
     T(e->linksIds(i))->elemof[i].append(e);

@@ -232,7 +232,7 @@ void MotionController::step() {
     //check if a collition and limit variable are active
     bool colActive=false, limActive=false;
     uint i; TaskVariable *v;
-    for_list(i, v, s->sys.vars()) if (v->active) {
+    for_list(Type,  v,  s->sys.vars()) if (v->active) {
       //?? ist sys.vars und task->vars eigentlich das gleiche??
       if (v->type==collTVT) colActive=true;
       if (v->type==qLimitsTVT) limActive=true;

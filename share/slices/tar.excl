@@ -13,6 +13,7 @@ MT.log
 html
 Makefile.dep
 retired
+obsolete
 
 SHARE
 PROJ
@@ -33,5 +34,13 @@ teaching/*/main.cpp
 
 *ors_mesh*
 
+nogit*
+
 blender-*
 m494.chr
+
+CMake*
+*.cmake
+Makefile
+
+.lastMake

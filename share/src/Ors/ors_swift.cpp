@@ -54,8 +54,6 @@ SwiftInterface::~SwiftInterface() {
 
 SwiftInterface::SwiftInterface(ors::KinematicWorld& _world)
   : world(_world), scene(NULL), cutoff(.1) {
-  ors::Shape *s;
-  uint k;
   bool r, add;
   
   if(scene) delete scene;
@@ -65,7 +63,7 @@ SwiftInterface::SwiftInterface(ors::KinematicWorld& _world)
   INDEXshape2swift.resize(world.shapes.N);  INDEXshape2swift=-1;
   
   cout <<" -- SwiftInterface init";
-  for_list(k, s, world.shapes) {
+  for_list(ors::Shape, s,  world.shapes) {
     cout <<'.' <<flush;
     add=true;
     switch(s->type) {
@@ -133,11 +131,6 @@ void SwiftInterface::reinitShape(const ors::Shape *s) {
 }
 
 void SwiftInterface::initActivations(uint parentLevelsToDeactivate) {
-  ors::Shape *s;
-  ors::Body *b, *b2;
-  ors::Joint *e;
-  uint j, k, k2;
-  
   /* deactivate some collision pairs:
     -- no `cont' -> no collisions with this object at all
     -- no collisions between shapes of same object
@@ -146,9 +139,9 @@ void SwiftInterface::initActivations(uint parentLevelsToDeactivate) {
   */
   
   //cout <<"collision active shapes: ";
-  //for_list(k, s, world.shapes) if(s->cont) cout <<s->name <<' ';
+  //for_list(Type,  s,  world.shapes) if(s->cont) cout <<s->name <<' ';
   
-  for_list(k, s, world.shapes) {
+  for_list(ors::Shape, s, world.shapes) {
     if(!s->cont) {
       if(INDEXshape2swift(s->index)!=-1) scene->Deactivate(INDEXshape2swift(s->index));
     } else {
@@ -156,21 +149,21 @@ void SwiftInterface::initActivations(uint parentLevelsToDeactivate) {
     }
   }
   //shapes within a body
-  for_list(j, b, world.bodies) deactivate(b->shapes);
+  for(ors::Body *b: world.bodies) deactivate(b->shapes);
   //deactivate along edges...
-  for_list(j, e, world.joints) {
+  for_list(ors::Joint, e, world.joints) {
     //cout <<"deactivating edge pair"; listWriteNames(ARRAY(e->from, e->to), cout); cout <<endl;
     deactivate(ARRAY(e->from, e->to));
   }
   //deactivate along trees...
-  for_list(k, b, world.bodies) {
+  for_list(ors::Body,  b,  world.bodies) {
     MT::Array<ors::Body*> group, children;
     group.append(b);
     for(uint l=0; l<parentLevelsToDeactivate; l++) {
       //listWriteNames(group, cout);
       children.clear();
-      for_list(k2, b2, group) {
-        for_list(j, e, b2->outLinks) {
+      for_list(ors::Body,  b2,  group) {
+        for_list(ors::Joint,  e,  b2->outLinks) {
           children.setAppend(e->to);
           //listWriteNames(children, cout);
         }
@@ -184,17 +177,16 @@ void SwiftInterface::initActivations(uint parentLevelsToDeactivate) {
 void SwiftInterface::deactivate(const MT::Array<ors::Body*>& bodies) {
   //cout <<"deactivating body group "; listWriteNames(bodies, cout); cout <<endl;
   MT::Array<ors::Shape*> shapes;
-  uint i;  ors::Body *b;
-  for_list(i,b,bodies) shapes.setAppend(b->shapes);
+  for_list(ors::Body, b, bodies) shapes.setAppend(b->shapes);
   deactivate(shapes);
 }
 
 void SwiftInterface::deactivate(const MT::Array<ors::Shape*>& shapes) {
   //cout <<"deactivating shape group "; listWriteNames(shapes, cout); cout <<endl;
-  uint k1, k2;
-  ors::Shape *s1, *s2;
-  for_list(k1, s1, shapes) for_list(k2, s2, shapes) {
-    if(k1>k2) deactivate(s1, s2);
+  for_list(ors::Shape, s1, shapes){
+    for_list(ors::Shape, s2, shapes) {
+      if(s1_COUNT>s2_COUNT) deactivate(s1, s2);
+    }
   }
 }
 
@@ -206,10 +198,8 @@ void SwiftInterface::deactivate(ors::Shape *s1, ors::Shape *s2) {
 
 void SwiftInterface::pushToSwift() {
   CHECK(INDEXshape2swift.N==world.shapes.N,"the number of shapes has changed");
-  ors::Shape *s;
-  uint k;
   ors::Matrix rot;
-  for_list(k, s, world.shapes) {
+  for_list(ors::Shape,  s,  world.shapes) {
     rot = s->X.rot.getMatrix();
     if(INDEXshape2swift(s->index)!=-1) {
       scene->Set_Object_Transformation(INDEXshape2swift(s->index), rot.p(), s->X.pos.p());
@@ -312,12 +302,11 @@ void SwiftInterface::pullFromSwift(bool dumpReport) {
   
   //add pointClound stuff to list
   if(global_ANN) {
-    ors::Shape *s;
-    uint i, k, _i;
+    uint i, _i;
     arr R(3, 3), t(3);
     arr v, dists, _dists;
     intA idx, _idx;
-    for_list(k, s, world.shapes) {
+    for_list(ors::Shape,  s,  world.shapes) {
       if(!s->cont || s==global_ANN_shape) continue;
       
       //relative rotation and translation of shapes

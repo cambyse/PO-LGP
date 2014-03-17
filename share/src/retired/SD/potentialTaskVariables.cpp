@@ -16,7 +16,7 @@ void PotentialValuesTaskVariable::userUpdate(const ors::KinematicWorld& ors){
   arr xi,Ji,grad;
   y.resize(refs.N);
   J.resize(refs.N,ors.getJointStateDimension());
-  for_list(i,s,refs){
+  for_list(Type, s, refs){
     ors.kinematicsPos(xi,s->body->index,&s->rel.pos);
     ors.jacobian  (Ji,s->body->index,&s->rel.pos);
     y(i) = f->psi(&grad,NULL,xi);
@@ -44,7 +44,7 @@ void PotentialFieldAlignTaskVariable::userUpdate(const ors::KinematicWorld& ors)
   arr xi,zi,Jzi,Jxi,grad,hess;
   y.resize(refs.N);
   J.resize(refs.N,ors.getJointStateDimension());
-  for_list(i,s,refs){
+  for_list(Type, s, refs){
     ors.kinematics   (xi,s->body->index,&s->rel.pos);
     ors.jacobian     (Jxi,s->body->index,&s->rel.pos);
     ors.kinematicsVec(zi,s->body->index,&s->rel.rot.getZ(tmp));
@@ -77,7 +77,7 @@ void GPVarianceTaskVariable::userUpdate(const ors::KinematicWorld& ors){
   y.resize(refs.N);
   J.resize(refs.N,ors.getJointStateDimension());
   Ginv = &f->isf_gp.gp.Ginv;
-  for_list(i,s,refs){
+  for_list(Type, s, refs){
     ors.kinematicsPos(xi,s->body->index,&s->rel.pos);
     ors.jacobian  (Ji,s->body->index,&s->rel.pos);
     f->isf_gp.gp.k_star(xi,ki);

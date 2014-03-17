@@ -1,0 +1,5 @@
+BASE = ../../..
+
+DEPEND = Hardware_G4 Core System
+
+include $(BASE)/gofMake/generic.mk

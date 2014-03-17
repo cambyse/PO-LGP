@@ -139,8 +139,8 @@ double BinaryBPNetModel::loss(arr& output, const arr& target, const arr& input, 
   for(i=0; i<output.N; i++) if(target(i)<.5){ if(output(i)>-.1) C+=1.; }else{ if(output(i)<.1) C+=1.; } //classification error
 #endif
   //C += sqrDistance(target, output);
-  for_list(i, n, net.nodes) C += regT*fabs(n->theta); //diff
-  for_list(i, e, net.edges) C += regJ*fabs(e->J);
+  for_list(Type,  n,  net.nodes) C += regT*fabs(n->theta); //diff
+  for_list(Type,  e,  net.edges) C += regJ*fabs(e->J);
   
   if(grad){
     //reinit everything
@@ -166,10 +166,10 @@ double BinaryBPNetModel::loss(arr& output, const arr& target, const arr& input, 
     
     //compute regularization deltas
     delta.resize(net.nodes.N);
-    for_list(i, n, net.nodes) delta(i) = regT*MT::sign(n->theta); //diff
+    for_list(Type,  n,  net.nodes) delta(i) = regT*MT::sign(n->theta); //diff
     net.addThetaDeltas(delta);
     delta.resize(net.edges.N);
-    for_list(i, e, net.edges) delta(i) = regJ*MT::sign(e->J);
+    for_list(Type,  e,  net.edges) delta(i) = regJ*MT::sign(e->J);
     net.addJDeltas(delta);
     
     for(i=0; i<ITER; i++) net.stepGradBP();
@@ -214,8 +214,8 @@ void BinaryBPNetModel::EMtrain(const arr& w, const Data& data){
   }
   //cout <<"** expectations: b_t=\n" <<b_t <<"\n  b_J=\n" <<b_J <<endl;
   //-- M-step:
-  for_list(i, n, net.nodes) n->theta=0.;
-  for_list(i, e, net.edges){
+  for_list(Type,  n,  net.nodes) n->theta=0.;
+  for_list(Type,  e,  net.edges){
     //marginals:
     /*
     double pf0, pf1, pt0, pt1;
@@ -232,7 +232,7 @@ void BinaryBPNetModel::EMtrain(const arr& w, const Data& data){
     e->to  ->theta += t2;
   }
   //cout <<"** after J updates"; net.report(cout);
-  for_list(i, n, net.nodes){
+  for_list(Type,  n,  net.nodes){
     double p=table_to_nodeExp(b_t[i]);
     if(n->edges.N>1) n->theta -= (n->edges.N-1)*p;
     if(!n->edges.N) n->theta += p;
@@ -241,7 +241,7 @@ void BinaryBPNetModel::EMtrain(const arr& w, const Data& data){
   /* --OLD CODE
     //same as the 'collect' routine:
   double x=0.;
-  for_list(j, e, n->edges){
+  for_list(Type,  e,  n->edges){
   CHECK(e->to==n || e->from==n, "something's wrong...");
   if(e->to==n) x += atanh( tanh(e->J) * tanh( hatb_t(e->ifrom) - atanh(tanh(e->J)*tanh(hatb_t(i))) ) );
   else         x += atanh( tanh(e->J) * tanh( hatb_t(e->ito  ) - atanh(tanh(e->J)*tanh(hatb_t(i))) ) );

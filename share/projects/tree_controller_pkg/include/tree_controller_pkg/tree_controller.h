@@ -19,6 +19,8 @@
 #include <tree_controller_pkg/SetTaskGains.h>
 #include <tree_controller_pkg/StartLogging.h>
 #include <tree_controller_pkg/StopLogging.h>
+#include <tree_controller_pkg/JointState.h>
+#include <tree_controller_pkg/SetNaturalGains.h>
 
 namespace tree_controller_ns{
 
@@ -44,17 +46,21 @@ private:
   PDtask *taskPos, *taskVec, *taskHome, *taskLimits;
   arr u;
   double tau_control, tau_plan;
-  arr Kd,Kp;
+  arr Kd,Kp,Ki,Ka;
+  arr i_claim, integral;
   arr q, qd, qdd;
   arr des_q, des_qd;
   arr controlIdx;
-  arr p_effort,d_effort,i_effort;
+  arr p_effort,d_effort,i_effort, a_effort;
   arr y,yd,yVec,ydVec;
   arr state,stateVec;
+  arr measured_effort;
+
+  ros::Publisher joint_pub;
+  tree_controller_pkg::JointState joint_pub_state;
 
   // Limits
   arr lowerEffortLimits, upperEffortLimits;
-  arr lowerJointLimits, upperJointLimits;
 
   // Logging
   volatile int storage_index_;
@@ -73,20 +79,26 @@ private:
   ros::ServiceServer startLoggingSrv_;    ros::ServiceServer stopLoggingSrv_;
   ros::ServiceServer getJointStateSrv_;
   ros::ServiceServer getTaskStateSrv_;
+  ros::ServiceServer setNaturalGainsSrv_;
 
   // Bookkeeping variables
   arr q_bk;
   arr qd_bk;
   arr des_q_bk;
   arr des_qd_bk;
+  arr des_qdd_bk;
   arr u_bk;
   arr p_effort_bk;
   arr d_effort_bk;
+  arr i_effort_bk;
+  arr a_effort_bk;
   arr dt_bk;
   arr taskPos_y_bk;
   arr taskPos_yRef_bk;
   arr taskVec_y_bk;
   arr taskVec_yRef_bk;
+  arr measured_effort_bk;
+
 
 public:
   virtual bool init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
@@ -108,5 +120,6 @@ public:
   bool setTaskGains(tree_controller_pkg::SetTaskGains::Request &req, tree_controller_pkg::SetTaskGains::Response &resp);
   bool startLogging(tree_controller_pkg::StartLogging::Request &req, tree_controller_pkg::StartLogging::Response &resp);
   bool stopLogging(tree_controller_pkg::StopLogging::Request &req, tree_controller_pkg::StopLogging::Response &resp);
+  bool setNaturalGains(tree_controller_pkg::SetNaturalGains::Request &req, tree_controller_pkg::SetNaturalGains::Response &resp);
 };
 }

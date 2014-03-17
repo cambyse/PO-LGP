@@ -2,5 +2,5 @@ BASE = ../../..
 
 DEPEND = Core Hardware_racer
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk
 
