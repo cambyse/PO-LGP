@@ -50,14 +50,14 @@ namespace MLR {
 		void DepthCallback(void *depth, uint32_t ) {
 			MT::Array<uint16_t> depth_buf((uint16_t*)depth, depth_size);
 			depth_buf.reshape(image_height, image_width);
-			double timestamp = MT::clockTime() - .12;
+			double timestamp = MT::clockTime();// - .12;
 			if(depth_cb != nullptr)
 				depth_cb(depth_buf, timestamp);
 		}
 		void VideoCallback(void *rgb, uint32_t ) {
 			byteA video_buf((byte*)rgb, depth_size*3);
 			video_buf.reshape(image_height, image_width, 3);
-			double timestamp = MT::clockTime() - .12;
+			double timestamp = MT::clockTime(); // - .12;
 			if(video_cb != nullptr)
 				video_cb(video_buf, timestamp);
 		}
