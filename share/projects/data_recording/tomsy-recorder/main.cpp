@@ -117,14 +117,16 @@ void grab_one(const char* id, UEyeInterface& cam, VideoEncoder_x264_simple& enc,
 
 class GrabAndSave {
 private:
+	static Mutex start_lock;
 	const bool& terminated;
+	bool ready;
 	int id;
 	MT::String name;
 	UEyeInterface cam;
 	VideoEncoder_x264_simple enc;
 	TimeTagFile times;
 	byteA buffer;
-	static Mutex start_lock;
+	double start_time;
 
 public:
 	GrabAndSave(int camID, const char* name, const MT::String& created, const bool& terminated) :
@@ -132,30 +134,19 @@ public:
 		times(enc.name()) {
 	}
 
-	bool preroll() {
-		// parallel start of streaming reliably crashes the ueye daemon...
-		{
-			Lock l(start_lock);
-			cam.startStreaming();
-		}
-		double timestamp;
-		int count = 0;
-		while(!terminated) {
-			if(cam.grab(buffer, timestamp))
-				return true;
-			else {
-				cerr << name << " failed pre-roll " << ++count << " times" << endl;
-				if(count > 10)
-					return false;
-			}
-		}
-		return false;
+
+	bool isReady() const {
+		return ready;
+	}
+	void setActiveTime(double start_time) {
+		this->start_time = start_time;
 	}
 
-	void run(const double& start_time) {
+	void run() {
+		cam.startStreaming();
 		double timestamp;
 		while(!terminated) {
-			if(cam.grab(buffer, timestamp, 500)) {
+			if((ready = cam.grab(buffer, timestamp, 500))) {
 				if(timestamp > start_time) {
 					enc.addFrame(buffer);
 					times.add_stamp(timestamp);
