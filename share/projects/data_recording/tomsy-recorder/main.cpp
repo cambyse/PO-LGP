@@ -201,13 +201,13 @@ protected:
 	}
 
 	void kinect_video_cb(const byteA& rgb, double timestamp) {
-		if(timestamp >= start_time) {
+		if(!terminated && (timestamp > start_time || (start_time - timestamp < .016))) {
 			kinect_video.addFrame(rgb);
 			kinect_video_times.add_stamp(timestamp);
 		}
 	}
 	void kinect_depth_cb(const MT::Array<uint16_t>& depth, double timestamp) {
-		if(timestamp >= start_time) {
+		if(!terminated && (timestamp > start_time || (start_time - timestamp < .016))) {
 			MLR::pack_kindepth2rgb(depth, kinect_depth_repack);
 			kinect_depth.addFrame(kinect_depth_repack);
 			kinect_depth_times.add_stamp(timestamp);
