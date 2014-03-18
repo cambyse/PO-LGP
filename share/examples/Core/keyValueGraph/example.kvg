@@ -13,9 +13,9 @@ edge C(A,B){ width=2 }	   	# keys=edge C, value=<KVG>, parents=A B
 hyperedge(B C) = 5   		# keys=hyperedge, value=5, parents=B C
 
 ## standard value types
-a=string	# MT::String (except for keywords 'true' and 'false')
-b='string'	# MT::String
-c="string"	# MT::String
+a=string	# MT::String (except for keywords 'true' and 'false' and 'Mod' and 'Include')
+b="string"	# MT::String
+c='file.txt'	# MT::FileToken
 d=-0.1234	# double
 e=[1 2 3 0.5]	# MT::arr
 f=(c d e)	# MT::Array<*Item> (list of other items in the KVG)
@@ -29,6 +29,10 @@ b0=false b1 b2, b3() b4   # 4 booleans with keys 'b0', 'b1 b2', 'b3', 'b4'
 k={ a, b=0.2 x="hallo"	  # KeyValueGraph with 6 items
   y
   z()=filename.org x }
+
+## referring to items (constants/macros)
+macro = 5
+val=(macro) # *G["val"]->getValue<double>() will return 5
 
 ## any types
 trans=<T t(10 0 0)>  # 'T' is the tag for an arbitrary type (here an ors::Transformation) which was registered somewhere in the code using the registry()

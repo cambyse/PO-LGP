@@ -6,11 +6,14 @@ G4Recorder::G4Recorder(): Module("G4Recorder") {
 }
 
 void G4Recorder::open() {
-  file.open(STRING("z." << poses.name << '.' << MT::getNowString() << ".dat"));
+  String fname = STRING("z." << poses.name << '.' << MT::getNowString() << ".dat");
+  MT::open(datafile, fname);
+  MT::open(tstampfile, STRING(fname << ".times"));
 }
 
 void G4Recorder::close() {
-  file.close();
+  datafile.close();
+  tstampfile.close();
 }
 
 void G4Recorder::step() {
@@ -19,8 +22,10 @@ void G4Recorder::step() {
   double tstamp = poses.tstamp();
   poses.deAccess();
 
-  MT::String tag;
-  tag.resize(30, false);
-  sprintf(tag.p, "%6i %13.6f", rev, tstamp);
-  file << tag << ' ' << data << endl;
+  uint tstampsec = tstamp;
+  uint tstampusec = (tstamp-tstampsec)*1e6;
+  char tag[31];
+  sprintf(tag, "%6i %13d.%06d", rev, tstampsec, tstampusec);
+  datafile << data << endl;
+  tstampfile << tag << endl;
 }

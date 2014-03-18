@@ -9,6 +9,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "")
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -DNDEBUG" CACHE STRING "Default flags including -DNDEBUG" FORCE)
 endif(CMAKE_BUILD_TYPE STREQUAL "")
 
+# always warn
+set(CMAKE_CXX_FLAGS "-Wall ${CMAKE_CXX_FLAGS}")
+
 # path for find macros
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
@@ -67,7 +70,7 @@ endif()
 endmacro()
 
 # configure Python
-option(WITH_PYTHON "Build python bindings using SWIG. Will be omitted of swig or NumPy are not found" ON)
+option(WITH_PYTHON "Build python bindings using SWIG. Will be omitted if swig or NumPy are not found" ON)
 if(WITH_PYTHON)
   find_package(SWIG 2.0)
   if(SWIG_FOUND)

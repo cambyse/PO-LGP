@@ -25,7 +25,7 @@ arr getSimpleTrajectory(ors::KinematicWorld& G){
 
   //-- setup the motion problem
   TaskCost *c;
-  c = P.addTaskMap("position",
+  c = P.addTask("position",
                    new DefaultTaskMap(posTMT, G, "endeff", NoVector));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                           ARRAY(P.world.getShapeByName("miniTarget")->X.pos), 1e2);
@@ -46,14 +46,14 @@ arr getKindOfSimpleTrajectory(ors::KinematicWorld& G){
 
   //-- setup the motion problem
   TaskCost *c;
-  c = P.addTaskMap("position",
+  c = P.addTask("position",
                    new DefaultTaskMap(posTMT, G, "endeff", NoVector));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                           ARRAY(P.world.getShapeByName("target")->X.pos), 1e2);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e1);
 
-  //c = P.addTaskMap("collisionConstraints", new CollisionConstraint());
-  c = P.addTaskMap("planeConstraint", new PlaneConstraint(G, "endeff", ARR(0,0,-1,.7)));
+  //c = P.addTask("collisionConstraints", new CollisionConstraint());
+  c = P.addTask("planeConstraint", new PlaneConstraint(G, "endeff", ARR(0,0,-1,.7)));
 
   MotionProblemFunction MF(P);
   Convert ConstrainedP(MF);

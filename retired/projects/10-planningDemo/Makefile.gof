@@ -20,5 +20,5 @@ BASE = ../..
 # buildAndLink_TOBIAS = 1
 # buildAndLink_NILS = 1
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk
 

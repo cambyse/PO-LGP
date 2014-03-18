@@ -16,7 +16,7 @@ void zOpposeTaskVariable::userUpdate(const ors::KinematicWorld& ors){
   arr zi,Ji,sum_z,sum_J;
   sum_J.resize(refs.N,ors.getJointStateDimension()); sum_J.setZero();
   sum_z.resize(3); sum_z.setZero();
-  for_list(i,s,refs){
+  for_list(Type, s, refs){
     ors.kinematicsVec(zi,s->body->index,&s->rel.rot.getZ(tmp));
     sum_z += zi/length(zi);
     ors.jacobianVec  (Ji,s->body->index,&s->rel.rot.getZ(tmp));

@@ -19,7 +19,7 @@
 //  bodies.append(b);
 //  int ibody = bodies.N - 1;
 //  uint i; ors::Shape *s;
-//  for_list(i, s, b->shapes) {
+//  for_list(Type,  s,  b->shapes) {
 //    s->ibody = ibody;
 //    s->index = shapes.N;
 //    shapes.append(s);
@@ -34,7 +34,7 @@ ors::KinematicWorld* ors::KinematicWorld::newClone() const {
   listCopy(G->bodies, bodies);
   listCopy(G->joints, joints);
   // post-process coupled joints
-  for_list_(Joint, j, G->joints)
+  for(Joint *j: G->joints)
     if(j->mimic){
     MT::String jointName;
     bool good = j->ats.getValue<MT::String>(jointName, "mimic");
@@ -45,7 +45,7 @@ ors::KinematicWorld* ors::KinematicWorld::newClone() const {
   }
   graphMakeLists(G->bodies, G->joints);
   uint i;  Shape *s;  Body *b;
-  for_list(i, s, G->shapes) {
+  for_list(Type,  s,  G->shapes) {
     b=G->bodies(s->ibody);
     s->body=b;
     b->shapes.append(s);
@@ -56,10 +56,10 @@ ors::KinematicWorld* ors::KinematicWorld::newClone() const {
 
 //void ors::KinematicWorld::copyShapesAndJoints(const Graph& G) {
 //  uint i;  Shape *s;  Body *b;  Joint *j;
-//  for_list(i, s, shapes)(*s) = *G.shapes(i);
-//  for_list(i, j, joints)(*j) = *G.joints(i);
-//  for_list(i, b, bodies) b->shapes.clear();
-//  for_list(i, s, shapes) {
+//  for_list(Type,  s,  shapes)(*s) = *G.shapes(i);
+//  for_list(Type,  j,  joints)(*j) = *G.joints(i);
+//  for_list(Type,  b,  bodies) b->shapes.clear();
+//  for_list(Type,  s,  shapes) {
 //    b=bodies(s->ibody);
 //    s->body=b;
 //    b->shapes.append(s);
@@ -298,7 +298,7 @@ uint ors::KinematicWorld::getTouchDimension() {
   uint i=0, j;
 
   // count touchsensors
-  for_list(j, n, bodies) if(ats.getValue<double>(n->ats, "touchsensor", 0)) i++;
+  for_list(Type,  n,  bodies) if(ats.getValue<double>(n->ats, "touchsensor", 0)) i++;
   td=i;
   return i;
 }
@@ -310,7 +310,7 @@ void ors::KinematicWorld::getTouchState(arr& touch) {
   getPenetrationState(pen);
   Body *n;
   uint i=0, j;
-  for_list(j, n, bodies) {
+  for_list(Type,  n,  bodies) {
     if(ats.getValue<double>(n->ats, "touchsensor", 0)) {
       touch(i)=pen(n->index);
       i++;
@@ -338,7 +338,7 @@ void ors::KinematicWorld::getTotals(ors::Vector& c, ors::Vector& v, ors::Vector&
   o.setZero();
   //Iall.setZero();
   M=0.;
-  for_list(j, n, bodies) {
+  for_list(Type,  n,  bodies) {
     l+=n->inertia*n->X.angvel;
     //TP.setTensorProduct(n->X.p, n->X.p);
     //Iall+=m*((n->X.p*n->X.p)*ID + TP);

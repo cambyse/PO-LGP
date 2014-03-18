@@ -44,7 +44,7 @@ struct PhysXInterface {
   void pushToPhysx();
   void pullFromPhysx();
 
-  void setArticulatedBodiesKinematic(int agent=0);
+  void setArticulatedBodiesKinematic(uint agent=0);
   void ShutdownPhysX();
 
   void glDraw();

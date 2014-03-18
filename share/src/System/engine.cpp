@@ -29,10 +29,10 @@ System& NoSystem = *((System*)NULL);
 
 //===========================================================================
 //
-// ModuleThread
+// Module_Thread
 //
 
-void ModuleThread::step(){
+void Module_Thread::step(){
   engine().acc->logStepBegin(this);
   m->step();
   step_count++;
@@ -55,7 +55,7 @@ struct sVariable {
   sVariable():loggerData(NULL){}
 };
 
-Variable::Variable(const char *_name):VariableAccess(_name), s(NULL), revision(0) {
+Variable_SharedMemory::Variable_SharedMemory(const char *_name):Variable(_name), s(NULL), revision(0) {
   s = new sVariable();
   listeners.memMove=true;
   //MT logValues = false;
@@ -69,7 +69,7 @@ Variable::Variable(const char *_name):VariableAccess(_name), s(NULL), revision(0
 //  }
 }
 
-Variable::~Variable() {
+Variable_SharedMemory::~Variable_SharedMemory() {
 //  if(this != global_birosInfo) { //-> birosInfo itself will not be de-registered!
 //    biros().writeAccess(NULL);
 //    biros().variables.removeValue(this);
@@ -82,27 +82,27 @@ Variable::~Variable() {
   delete s;
 }
 
-int Variable::readAccess(Module *m) {
-  ModuleThread *p = m?(ModuleThread*) m->thread:NULL;
+int Variable_SharedMemory::readAccess(Module *m) {
+  Module_Thread *p = m?(Module_Thread*) m->thread:NULL;
   engine().acc->queryReadAccess(this, p);
   rwlock.readLock();
   engine().acc->logReadAccess(this, p);
   return revision.getValue();
 }
 
-int Variable::writeAccess(Module *m) {
-  ModuleThread *p = m?(ModuleThread*) m->thread:NULL;
+int Variable_SharedMemory::writeAccess(Module *m) {
+  Module_Thread *p = m?(Module_Thread*) m->thread:NULL;
   engine().acc->queryWriteAccess(this, p);
   rwlock.writeLock();
   int r = revision.incrementValue();
   revision_time = MT::clockTime();
   engine().acc->logWriteAccess(this, p);
-  for_list_(Module, l, listeners) if(l!=m) engine().step(*l, true);
+  for(Module *l: listeners) if(l!=m) engine().step(*l, true);
   return r;
 }
 
-int Variable::deAccess(Module *m) {
-  ModuleThread *p = m?(ModuleThread*) m->thread:NULL;
+int Variable_SharedMemory::deAccess(Module *m) {
+  Module_Thread *p = m?(Module_Thread*) m->thread:NULL;
   if(rwlock.state == -1) { //log a revision after write access
     //MT logService.logRevision(this);
     //MT logService.setValueIfDbDriven(this); //this should be done within queryREADAccess, no?!
@@ -115,15 +115,15 @@ int Variable::deAccess(Module *m) {
   return rev;
 }
 
-double Variable::revisionTime(){
+double Variable_SharedMemory::revisionTime(){
   return revision_time;
 }
 
-int Variable::revisionNumber(){
+int Variable_SharedMemory::revisionNumber(){
   return revision.getValue();
 }
 
-int Variable::waitForNextWriteAccess(){
+int Variable_SharedMemory::waitForNextRevision(){
   revision.lock();
   revision.waitForSignal(true);
   int rev = revision.value;
@@ -131,7 +131,7 @@ int Variable::waitForNextWriteAccess(){
   return rev;
 }
 
-int Variable::waitForRevisionGreaterThan(int rev) {
+int Variable_SharedMemory::waitForRevisionGreaterThan(int rev) {
   revision.lock();
   revision.waitForValueGreaterThan(rev, true);
   rev = revision.value;
@@ -139,7 +139,7 @@ int Variable::waitForRevisionGreaterThan(int rev) {
   return rev;
 }
 
-FieldRegistration& Variable::get_field(uint i) const{
+FieldRegistration& Variable_SharedMemory::get_field(uint i) const{
   return *s->fields(i);
 }
 
@@ -202,40 +202,40 @@ void sVariable::deSerializeFromString(const MT::String &string) {
 // SystemDescription
 //
 
-Module* System::addModule(const char *dclName, const char *name, ModuleThread::StepMode mode, double beat){
+Module* System::addModule(const char *dclName, const char *name, Module_Thread::StepMode mode, double beat){
   //find the dcl in the registry
   Item *modReg = registry().getItem("Decl_Module", dclName);
   if(!modReg){
     MT_MSG("could not find Decl_Module " <<dclName);
     return NULL;
   }
-  Module *m = (Module*)modReg->value<Type>()->newInstance();
+  Module *m = (Module*)modReg->getValue<Type>()->newInstance();
   currentlyCreating = NULL;
-  for_list_(Access, a, m->accesses) a->module = m;
+  for(Access *a: m->accesses) a->module = m;
   mts.append(m);
 
-  m->thread = new ModuleThread(m, name?name:dclName);
+  m->thread = new Module_Thread(m, name?name:dclName);
   m->thread->mode = mode;
   m->thread->beat = beat;
   return m;
 }
 
-Module* System::addModule(const char *dclName, const char *name, const uintA& accIdxs, ModuleThread::StepMode mode, double beat){
+Module* System::addModule(const char *dclName, const char *name, const uintA& accIdxs, Module_Thread::StepMode mode, double beat){
   Module *m = addModule(dclName, name, mode, beat);
   if(accIdxs.N != m->accesses.N) HALT("given and needed #acc mismatch");
-  for_list_(Access, a, m->accesses) a->var = vars(accIdxs(a_COUNT));
+  for_list(Access, a, m->accesses) a->var = vars(accIdxs(a_COUNT));
   return m;
 }
 
-Module* System::addModule(const char *dclName, const char *name, const StringA& accRenamings, ModuleThread::StepMode mode, double beat){
+Module* System::addModule(const char *dclName, const char *name, const StringA& accRenamings, Module_Thread::StepMode mode, double beat){
   Module *m = addModule(dclName, name, mode, beat);
   if(accRenamings.N != m->accesses.N) HALT("given and needed #acc mismatch");
-  for_list_(Access, a, m->accesses) a->name = accRenamings(a_COUNT);
+  for_list(Access, a, m->accesses) a->name = accRenamings(a_COUNT);
   return m;
 }
 
-Variable* System::connect(Access& acc, const char *variable_name){
-  Variable *v = listFindByName(vars, variable_name);
+Variable_SharedMemory* System::connect(Access& acc, const char *variable_name){
+  Variable_SharedMemory *v = listFindByName(vars, variable_name);
   if(v){ //variable exists -> check type
     if(*v->type != *acc.type) HALT("trying to connect an access '" <<acc.name <<*acc.type <<" with a variable " <<v->name <<*v->type);
     //good: just connect
@@ -248,21 +248,21 @@ Variable* System::connect(Access& acc, const char *variable_name){
 }
 
 void System::connect(){
-  //first collect all accesses
+  //first collect all accesses; the union of System accesses and all module accesses
   AccessL accs;
 
-  { for_list_(Module, m, mts){ for_list_(Access, a, m->accesses) accs.append(a); } }
-  { for_list_(Access, a, accesses) accs.append(a); }
+  for(Module *m: mts){ for(Access *a: m->accesses) accs.append(a); }
+  for(Access *a: accesses) accs.append(a);
 
-  for_list_(Access, a, accs){
+  for(Access *a: accs){
     Module *m=a->module;
-    Variable *v = NULL;
+    Variable_SharedMemory *v = NULL;
     if(!a->var) v = connect(*a, a->name); //access is not connected yet
-    else v = dynamic_cast<Variable*>(a->var);
+    else v = dynamic_cast<Variable_SharedMemory*>(a->var);
 
     if(m->thread &&
-       ( m->thread->mode==ModuleThread::listenAll ||
-         (m->thread->mode==ModuleThread::listenFirst && a==m->accesses(0)) ) ){
+       ( m->thread->mode==Module_Thread::listenAll ||
+         (m->thread->mode==Module_Thread::listenFirst && a==m->accesses(0)) ) ){
       v->listeners.setAppend(m);
     }
   }
@@ -279,11 +279,11 @@ VariableL createVariables(const ModuleL& ms){
 KeyValueGraph System::graph() const{
   KeyValueGraph g;
   g.append<bool>("SystemModule", name, NULL);
-  std::map<VariableAccess*, Item*> vit;
-  for_list_(Variable, v, vars) vit[v] = g.append("Variable", v->name, v);
-  for_list_(Module, m, mts){
+  std::map<Variable*, Item*> vit;
+  for(Variable_SharedMemory *v: vars) vit[v] = g.append("Variable", v->name, v);
+  for(Module *m: mts){
     Item *mit = g.append("Module", m->name, m);
-    for_list_(Access, a, m->accesses){
+    for(Access *a: m->accesses){
       Item *ait = g.append("Access", a->name, a);
       ait->parents.append(mit);
       if(a->var) ait->parents.append(vit[a->var]);
@@ -304,10 +304,20 @@ void System::write(ostream& os) const{
 
 void signalhandler(int s){
   int calls = engine().shutdown.incrementValue();
-  cerr <<"\n*** System/Engine received signal " <<s <<" -- count " <<calls <<" trying to shutdown all threads" <<endl;
-  if(calls==1) engine().close();
-  if(calls>2){
-    cerr <<"*** Shutdown failed - emergency exit!" <<endl;
+  cerr <<"\n*** System received signal " <<s <<" -- count " <<calls;
+  if(calls==1){
+    cout <<" -- waiting for main loop to break on engine().shutdown.getValue()" <<endl;
+  }
+  if(calls==2){
+    cout <<" -- smoothly closing modules directly" <<endl;
+    engine().close(); //might lead to a hangup of the main loop, but processes should close
+  }
+  if(calls==3){
+    cout <<" -- cancelling threads to force closing" <<endl;
+    engine().cancel();
+  }
+  if(calls>3){
+    cerr <<" ** shutdown failed - hard exit!" <<endl;
     exit(1);
   }
 }
@@ -334,7 +344,7 @@ void Engine::open(System& S){
 
 //  //create pre-defined variables
 //  ItemL variables = S.system.getTypedItems<SystemDescription::VariableEntry>("Variable");
-//  for_list_(Item, varIt, variables){
+//  for(Item *varIt: variables){
 //    SystemDescription::VariableEntry *v = varIt->value<SystemDescription::VariableEntry>();
 //    cout <<"creating " <<varIt->keys(1) <<": " <<*(v->type) <<endl;
 //    v->var = new Variable(varIt->keys(1));
@@ -343,7 +353,7 @@ void Engine::open(System& S){
 
 //  //create modules
 //  ItemL modules = S.system.getTypedItems<SystemDescription::ModuleEntry>("Module");
-//  for_list_(Item, modIt, modules){
+//  for(Item *modIt: modules){
 //    SystemDescription::ModuleEntry *m = modIt->value<SystemDescription::ModuleEntry>();
 //    cout <<"creating " <<modIt->keys(1) <<": " <<*(m->type) <<endl;
 //    if(mode==threaded){
@@ -359,7 +369,7 @@ void Engine::open(System& S){
 //    //accesses have automatically been created as member of a module,
 //    //need to link them now
 //    CHECK(m->mod->accesses.N==modIt->parentOf.N,"dammit");
-//    for_list_(Item, accIt, modIt->parentOf){
+//    for(Item *accIt: modIt->parentOf){
 //      Access *a = m->mod->accesses(accIt_COUNT);
 //      //SystemDescription::AccessEntry *acc = accIt->value<SystemDescription::AccessEntry>();
 //      //CHECK(acc->type == a->type,"");
@@ -379,25 +389,25 @@ void Engine::open(System& S){
 
   //open modules
   if(mode==threaded){
-    for_list_(Module, m, S.mts){
+    for(Module *m: S.mts){
       m->thread->threadOpen();
       //start looping if in loop mode:
       switch(m->thread->mode){
-      case ModuleThread::loopWithBeat:  m->thread->threadLoopWithBeat(m->thread->beat);  break;
-      case ModuleThread::loopFull:  m->thread->threadLoop();  break;
+      case Module_Thread::loopWithBeat:  m->thread->threadLoopWithBeat(m->thread->beat);  break;
+      case Module_Thread::loopFull:  m->thread->threadLoop();  break;
       default:  break;
       }
     }
   }
 
   if(mode==serial){
-    for_list_(Module, m, S.mts) m->open();
+    for(Module *m: S.mts) m->open();
   }
 }
 
 void Engine::step(System &S){
   if(&S) system=&S;
-  for_list_(Module, m, S.mts) step(*m);
+  for(Module *m: S.mts) step(*m);
 }
 
 void Engine::step(Module &m, bool threadedOnly){
@@ -412,15 +422,22 @@ void Engine::test(System& S){
   CHECK(mode!=threaded,"");
   mode=serial;
   open(S);
-  for_list_(Module, m, S.mts) m->test();
+  for(Module *m: S.mts) m->test();
   close(S);
 }
 
 void Engine::close(System& S){
   if(&S) system=&S;
-  for_list_(Module, m, system->mts){
+  for(Module *m: system->mts){
     if(mode==threaded) m->thread->threadClose();
     if(mode==serial)   m->close();
+  }
+}
+
+void Engine::cancel(System& S){
+  if(&S) system=&S;
+  for(Module *m: system->mts){
+    if(mode==threaded) m->thread->threadCancel();
   }
 }
 
@@ -501,7 +518,7 @@ void EventController::breakpointNext(){ //first in the queue is being woke up
   delete c;
 }
 
-void EventController::queryReadAccess(Variable *v, const ModuleThread *p){
+void EventController::queryReadAccess(Variable_SharedMemory *v, const Module_Thread *p){
   blockMode.lock();
   if(blockMode.value>=1){
     EventRecord *e = new EventRecord(v, p, EventRecord::read, v->revision.getValue(), p?p->step_count:0, 0.);
@@ -514,7 +531,7 @@ void EventController::queryReadAccess(Variable *v, const ModuleThread *p){
   blockMode.unlock();
 }
 
-void EventController::queryWriteAccess(Variable *v, const ModuleThread *p){
+void EventController::queryWriteAccess(Variable_SharedMemory *v, const Module_Thread *p){
   blockMode.lock();
   if(blockMode.value>=1){
     EventRecord *e = new EventRecord(v, p, EventRecord::write, v->revision.getValue(), p?p->step_count:0, 0.);
@@ -527,7 +544,7 @@ void EventController::queryWriteAccess(Variable *v, const ModuleThread *p){
   blockMode.unlock();
 }
 
-void EventController::logReadAccess(const Variable *v, const ModuleThread *p) {
+void EventController::logReadAccess(const Variable_SharedMemory *v, const Module_Thread *p) {
   if(!enableEventLog || enableReplay) return;
   EventRecord *e = new EventRecord(v, p, EventRecord::read, v->revision.getValue(), p?p->step_count:0, MT::realTime());
   eventsLock.writeLock();
@@ -536,7 +553,7 @@ void EventController::logReadAccess(const Variable *v, const ModuleThread *p) {
   if(events.N>100) dumpEventList();
 }
 
-void EventController::logWriteAccess(const Variable *v, const ModuleThread *p) {
+void EventController::logWriteAccess(const Variable_SharedMemory *v, const Module_Thread *p) {
   if(!enableEventLog || enableReplay) return;
   EventRecord *e = new EventRecord(v, p, EventRecord::write, v->revision.getValue(), p?p->step_count:0, MT::realTime());
   eventsLock.writeLock();
@@ -545,20 +562,20 @@ void EventController::logWriteAccess(const Variable *v, const ModuleThread *p) {
   if(events.N>100) dumpEventList();
 }
 
-void EventController::logReadDeAccess(const Variable *v, const ModuleThread *p) {
+void EventController::logReadDeAccess(const Variable_SharedMemory *v, const Module_Thread *p) {
   //do something if in replay mode
   if(getVariableData(v)->controllerBlocksRead)
     breakpointSleep();
 }
 
-void EventController::logWriteDeAccess(const Variable *v, const ModuleThread *p) {
+void EventController::logWriteDeAccess(const Variable_SharedMemory *v, const Module_Thread *p) {
   //do something if in replay mode
   //do something if enableDataLog
   if(getVariableData(v)->controllerBlocksWrite)
     breakpointSleep();
 }
 
-void EventController::logStepBegin(const ModuleThread *p) {
+void EventController::logStepBegin(const Module_Thread *p) {
   if(!enableEventLog || enableReplay) return;
   EventRecord *e = new EventRecord(NULL, p, EventRecord::stepBegin, 0, p->step_count, MT::realTime());
   eventsLock.writeLock();
@@ -567,7 +584,7 @@ void EventController::logStepBegin(const ModuleThread *p) {
   if(events.N>100) dumpEventList();
 }
 
-void EventController::logStepEnd(const ModuleThread *p) {
+void EventController::logStepEnd(const Module_Thread *p) {
   if(!enableEventLog || enableReplay) return;
   EventRecord *e = new EventRecord(NULL, p, EventRecord::stepEnd, 0, p->step_count, MT::realTime());
   eventsLock.writeLock();
@@ -595,10 +612,8 @@ void EventController::writeEventList(ostream& os, bool blocked, uint max, bool c
     }
   }
   eventsLock.unlock();
-  uint i;
-  EventRecord *e;
-  for_list(i,e,copy){
-    if(!i && max && copy.N>max){ i=copy.N-max; e=copy(i); }
+  for_list(EventRecord, e, copy){
+    if(!e_COUNT && max && copy.N>max){ e_COUNT=copy.N-max; e=copy(e_COUNT); }
     switch(e->type){
     case EventRecord::read: os <<'r';  break;
     case EventRecord::write: os <<'w';  break;
@@ -627,7 +642,7 @@ void EventController::dumpEventList(){
   writeEventList(*eventsFile, false, 0, true);
 }
 
-LoggerVariableData* EventController::getVariableData(const Variable* v){
+LoggerVariableData* EventController::getVariableData(const Variable_SharedMemory* v){
   if(!v->s->loggerData) v->s->loggerData = new LoggerVariableData();
   return v->s->loggerData;
 }

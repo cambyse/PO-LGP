@@ -3,5 +3,5 @@ BASE = ../..
 OBJ = \
   main.o
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk
 

@@ -65,12 +65,14 @@ void scenario2() {
 
   //-- create an optimal trajectory to trainTarget
   TaskCost *c;
-  c = P.addTaskMap("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                           ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           ARRAY(0.,0.,0.), 1e-3);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
+  c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c->map.order=1;
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                              ARRAY(0.,0.,0.), 1e3,
                              ARRAY(0.,0.,0.), 0.);
 
@@ -142,12 +144,14 @@ void scenario3() {
 
   //-- create an optimal trajectory to trainTarget
   TaskCost *c;
-  c = P.addTaskMap("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                           ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           ARRAY(0.,0.,0.), 1e-3);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
+  c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
+  c->map.order=1;
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                              ARRAY(0.,0.,0.), 1e3,
                              ARRAY(0.,0.,0.), 0.);
 
@@ -259,17 +263,19 @@ void scenario4() {
 
   //-- create an optimal trajectory to trainTarget
   TaskCost *c;
-  c = P.addTaskMap("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                           ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           ARRAY(0.,0.,0.), 1e-3);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
+  c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
+  c->map.order=1;
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                              ARRAY(0.,0.,0.), 1e3,
                              ARRAY(0.,0.,0.), 0.);
 
   if (useOrientation) {
-    c = P.addTaskMap("orientation", new DefaultTaskMap(vecTMT,G,"endeff",ors::Vector(0., 1., 0.)));
+    c = P.addTask("orientation", new DefaultTaskMap(vecTMT,G,"endeff",ors::Vector(0., 1., 0.)));
     P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                             ARRAY(1.,0.,0.), 1e3,
                             ARRAY(0.,0.,0.), 1e-3);

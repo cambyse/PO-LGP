@@ -5,4 +5,4 @@ CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES
 BUILDS += buildComponent/motion
 LIBS += -lmotion
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

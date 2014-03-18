@@ -3,7 +3,8 @@
 #include <Core/array.h>
 #include <Ors/ors.h>
 #include <Perception/g4data.h>
-#include "keyframe.h"
+
+typedef MT::Array<KeyValueGraph*> kvgL;
 
 struct KeyFramer {
   struct sKeyFramer;
@@ -23,8 +24,8 @@ struct KeyFramer {
   void computeVar(const StringA &types, uint wlen, bool force = false);
   void computeSpline(const StringA &types, double lambda, bool force = false);
   void computeSpline(const String &type, double lambda, bool force = false);
-  void computeES(const StringA &types, double alpha, bool force = false);
-  void computeES(const String &type, double alpha, bool force = false);
+  void computeFilter(const StringA &types, double alpha, bool force = false);
+  void computeFilter(const String &type, double alpha, bool force = false);
   void computeSmooth(const StringA &types, double alpha, bool force = false);
   void computeSmooth(const String &type, double alpha, bool force = false);
   void computeSpeed(const StringA &types, bool force = false);
@@ -69,13 +70,18 @@ struct KeyFramer {
   arr getTransfVar(uint b1, uint b2, uint wlen);
   arr getTransfVar(const String &n1, const String &n2, uint wlen);
   
-  KeyFrameL getKeyFrames(const uintA &vit);
-  void saveKeyFrameScreens(const KeyFrameL &keyframes, uint df = 60);
-
+  void EM_c(KeyValueGraph &kvg, const StringA &bAs, const String &bB);
   void EM_c(KeyValueGraph &kvg, const String &bA, const String &bB);
   void EM_r(KeyValueGraph &kvg, const String &bA, const String &bB);
   void EM_m(KeyValueGraph &kvg, const String &b);
 
   void playScene(const String &b);
+  void playScene(const StringA &bb);
+  void testSmoothing(KeyValueGraph &kvg, const String &b, double alpha);
+
+  void getCtrlSeq(kvgL &ctrls, const String &b1, const String &b2);
+  void getDeltaSeq(kvgL &deltas, kvgL ctrls);
+
+  void objFeatures(KeyValueGraph &feats, const String &b, uint fnum);
 };
 

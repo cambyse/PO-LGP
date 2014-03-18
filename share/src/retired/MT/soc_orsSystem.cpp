@@ -301,7 +301,7 @@ void OrsSystem::setTimeInterval(double trajectory_duration,  uint trajectory_ste
 void OrsSystem::setTaskVariables(const TaskVariableList& _CVlist){
   s->vars=_CVlist;
   uint i; TaskVariable *v;
-  for_list(i, v, s->vars) v->updateState(*s->ors);
+  for_list(Type,  v,  s->vars) v->updateState(*s->ors);
 }
 
 //overload the display method to include variances
@@ -345,7 +345,7 @@ void sOrsSystem::setq(const arr& q){
   swift->computeProxies(*ors, false);
   uint i;
   TaskVariable *v;
-  for_list(i, v, vars)  if(v->active)  v->updateState(*ors);
+  for_list(Type,  v,  vars)  if(v->active)  v->updateState(*ors);
 }
 
 void sOrsSystem::setqv(const arr& q, const arr& qd){
@@ -357,7 +357,7 @@ void sOrsSystem::setqv(const arr& q, const arr& qd){
   swift->computeProxies(*ors, false);
   uint i;
   TaskVariable *v;
-  for_list(i, v, vars)  if(v->active)  v->updateState(*ors);
+  for_list(Type,  v,  vars)  if(v->active)  v->updateState(*ors);
 }
 
 void OrsSystem::getDynamics(arr& A, arr& a, arr& B, arr& Q, uint t){

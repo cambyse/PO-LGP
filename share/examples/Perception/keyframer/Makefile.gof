@@ -1,5 +1,0 @@
-BASE = ../../..
-
-DEPEND = Ors Gui Core Perception
-
-include $(BASE)/gofMake/make-generic

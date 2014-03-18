@@ -2,4 +2,4 @@ BASE = ../../..
 
 LIBS += -lG4Track -lusb-1.0
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

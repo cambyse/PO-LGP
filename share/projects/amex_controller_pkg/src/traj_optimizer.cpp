@@ -19,29 +19,18 @@ void TrajOptimizer::optimizeTrajectory(arr &_goal, arr &_q0) {
 
   //-- create tasks for optimization problem
   TaskCost *c;
-  c = MP.addTaskMap("position", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
+  c = MP.addTask("position", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, refGoal, 1e5);
   MP.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
 
-  c = MP.addTaskMap("qLimits", new DefaultTaskMap(qLimitsTMT,world));
+  c = MP.addTask("qLimits", new DefaultTaskMap(qLimitsTMT,world));
   MP.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),1e2);
   MP.setInterpolatingVelCosts(c,MotionProblem::constant,ARRAY(0.),1e2);
 
-  c = MP.addTaskMap("homing", new DefaultTaskMap(qItselfTMT,world));
+  c = MP.addTask("homing", new DefaultTaskMap(qItselfTMT,world));
   MP.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),0);
   MP.setInterpolatingVelCosts(c,MotionProblem::constant,ARRAY(0.),1e0);
 
-
-//
-//  c = MP.addTaskMap("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
-//  MP.setInterpolatingCosts(c, MotionProblem::finalOnly,refGoal, 1e1,ARRAY(0.,0.,0.), 1e-4);
-//  MP.setInterpolatingVelCosts(c, MotionProblem::finalOnly,ARRAY(0.,0.,0.), 1e1,ARRAY(0.,0.,0.), 0.);
-
-//  c = MP.addTaskMap("qlimits", new DefaultTaskMap(qLimitsTMT,world, NULL, NoVector, NULL, NoVector, qLimits));
-//  MP.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),1e2);
-
-//  c = MP.addTaskMap("homing", new DefaultTaskMap(qItselfTMT,world, NULL, NoVector, NULL, NoVector));
-//  MP.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),1e-3);
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MP.x0 = _q0;

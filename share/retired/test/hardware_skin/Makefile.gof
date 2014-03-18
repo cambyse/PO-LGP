@@ -2,5 +2,5 @@ BASE = ../../..
 
 DEPEND = Hardware_schunk
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk
 

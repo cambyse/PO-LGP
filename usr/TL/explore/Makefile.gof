@@ -14,4 +14,4 @@ QHULL	= 1
 
 CXXFLAGS += -fPIC -DMT_IMPLEMENT_TEMPLATES #causes all *.cpp to implement the used templates
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

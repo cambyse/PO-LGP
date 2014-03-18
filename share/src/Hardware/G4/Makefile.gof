@@ -9,9 +9,9 @@ endif
 CXXFLAGS += -DG4_INSTALLED
 LIBS += -lG4Track -lusb-1.0
 
-DEPEND = Core
+DEPEND = Core Ors Gui
 
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS = $(SRCS:%.cpp=%.o)
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

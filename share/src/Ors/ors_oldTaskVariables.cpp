@@ -613,28 +613,25 @@ void ProxyTaskVariable::updateState(const ors::KinematicWorld& ors, double tau) 
   v_old=v;
   y_old=y;
   
-  uint i;
-  ors::Proxy *p;
-  
   y.resize(1);  y.setZero();
   J.resize(1, ors.getJointStateDimension());  J.setZero();
   
   switch(type) {
     case allCTVT:
-      for_list(i,p,ors.proxies)  if(p->d<margin) {
+      for(ors::Proxy *p: ors.proxies)  if(p->d<margin) {
         ors.kinematicsProxyCost(y, J, p, margin, linear, true);
         p->colorCode = 1;
       }
       break;
     case allListedCTVT:
-      for_list(i,p,ors.proxies)  if(p->d<margin) {
+      for(ors::Proxy *p: ors.proxies)  if(p->d<margin) {
         if(shapes.contains(p->a) && shapes.contains(p->b)) {
           ors.kinematicsProxyCost(y, J, p, margin, linear, true);
           p->colorCode = 2;
         }
       }
     case allExceptListedCTVT:
-      for_list(i,p,ors.proxies)  if(p->d<margin) {
+      for(ors::Proxy *p: ors.proxies)  if(p->d<margin) {
         if(!shapes.contains(p->a) && !shapes.contains(p->b)) {
           ors.kinematicsProxyCost(y, J, p, margin, linear, true);
           p->colorCode = 3;
@@ -642,7 +639,7 @@ void ProxyTaskVariable::updateState(const ors::KinematicWorld& ors, double tau) 
       }
       break;
     case bipartiteCTVT:
-      for_list(i,p,ors.proxies)  if(p->d<margin) {
+      for(ors::Proxy *p: ors.proxies)  if(p->d<margin) {
         if((shapes.contains(p->a) && shapes2.contains(p->b)) ||
             (shapes.contains(p->b) && shapes2.contains(p->a))) {
           ors.kinematicsProxyCost(y, J, p, margin, linear, true);
@@ -653,7 +650,7 @@ void ProxyTaskVariable::updateState(const ors::KinematicWorld& ors, double tau) 
       shapes.reshape(shapes.N/2,2);
       // only explicit paris in 2D array shapes
       uint j;
-      for_list(i,p,ors.proxies)  if(p->d<margin) {
+      for(ors::Proxy *p: ors.proxies)  if(p->d<margin) {
         for(j=0; j<shapes.d0; j++) {
           if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
             break;
@@ -668,7 +665,7 @@ void ProxyTaskVariable::updateState(const ors::KinematicWorld& ors, double tau) 
       shapes.reshape(shapes.N/2,2);
       // only explicit paris in 2D array shapes
       uint j;
-      for_list(i,p,ors.proxies)  if(p->d<margin) {
+      for(ors::Proxy *p: ors.proxies)  if(p->d<margin) {
         for(j=0; j<shapes.d0; j++) {
           if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
             break;
@@ -685,7 +682,7 @@ void ProxyTaskVariable::updateState(const ors::KinematicWorld& ors, double tau) 
       y.resize(shapes.d0,1).setZero();
       J.resize(shapes.d0,J.d1).setZero();
       uint j;
-      for_list(i,p,ors.proxies)  if(p->d<margin) {
+      for(ors::Proxy *p: ors.proxies)  if(p->d<margin) {
         for(j=0; j<shapes.d0; j++) {
           if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
             break;
@@ -823,9 +820,8 @@ void bayesianControl(TaskVariableList& CS, arr& dq, const arr& W) {
 
 void TaskVariableTable::init(const ors::KinematicWorld& ors) {
   uint i,j,k,m=0,T=0,t,qdim;
-  TaskVariable *v;
   //count the total task dimension, q-d
-  for_list(i,v,list) {
+  for_list(TaskVariable, v, list) {
     v->updateState(ors);
     if(v->active) {
       m+=y.N;
@@ -846,8 +842,7 @@ void TaskVariableTable::init(const ors::KinematicWorld& ors) {
 //recompute all phi in time slice t using the pose in ors
 void TaskVariableTable::updateTimeSlice(uint t, const ors::KinematicWorld& ors, bool alsoTargets) {
   uint i,j,k,m=0;
-  TaskVariable *v;
-  for_list(i,v,list) {
+  for_list(TaskVariable, v, list) {
     v->updateState(ors);
     if(v->active) {
       for(j=0; j<v->y.N; j++) {

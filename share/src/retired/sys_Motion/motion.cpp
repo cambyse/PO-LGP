@@ -67,7 +67,7 @@ void MotionFuture::appendNewAction(const MotionPrimitive::ActionPredicate _actio
 #else
   MotionPrimitive *m = get_motions(p)(nextFreePrimitive);
   while(m->get_action(p)!=MotionPrimitive::toBeAssigned)
-    m->waitForNextWriteAccess();
+    m->waitForNextRevision();
 
   writeAccess(p);
   m->writeAccess(p);

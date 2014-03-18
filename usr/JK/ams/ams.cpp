@@ -14,13 +14,13 @@ double expected_entropy_on_y(model_list_t& models, const arr& x_s, const double 
  
   //compute the mixture 
   uint i; ams_model *model;
-  for_list(i, model, models) {
+  for_list(Type,  model,  models) {
     p_y_given_xM(i) = model->prediction(x_s, yi); // cache the conditioned probability
     mixture += (likelihood(i) * p_y_given_xM(i));
   }
 
   uint m; 
-  for_list(m, model, models) {
+  for_list(Type,  model,  models) {
     exp_entropy += likelihood(m) * p_y_given_xM(m) * (log_likelihood(m) + log(p_y_given_xM(m)) - log(mixture));
   }
   return exp_entropy;  
@@ -62,7 +62,7 @@ double exp_entropy_learned(model_list_t& models, const arr& x_s) {
     arr log_likelihood(models.N);
 
     uint m; ams_model* model;
-    for_list(m, model, models) {
+    for_list(Type,  model,  models) {
       ams_model* learned_model = model->clone();
       learned_model->add_observation(x_s, yi*eps);
       log_likelihood(m) = learned_model->log_likelihood();

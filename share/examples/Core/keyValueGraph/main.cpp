@@ -8,13 +8,14 @@ void TEST(Read){
 
   cout <<"\n** reading graph..." <<flush;
   G <<FILE(filename?filename:"example.kvg");
-  cout <<"done" <<endl;
-  cout <<G <<endl;
+  cout <<"\ndone" <<endl;
+  cout <<"read kvg=\n--------------------\n" <<G <<"\n--------------------" <<endl;
 
   if(filename) return; //below only for "example.kvg"
   cout <<"\n** access to individual items:" <<endl;
   cout <<*G["k"] <<endl;
-  cout <<*G["k"]->value<KeyValueGraph>() <<endl;
+  cout <<*G["k"]->getValue<KeyValueGraph>() <<endl;
+  cout <<*G["val"]->getValue<double>() <<endl;
   cout <<*G.getValue<KeyValueGraph>("k")->getValue<MT::String>("z") <<endl;
 }
 
