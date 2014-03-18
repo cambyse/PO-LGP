@@ -139,7 +139,10 @@ struct Joint {
   int ifrom, ito;       ///< indices of from and to bodies
   Body *from, *to;      ///< pointers to from and to bodies
   Joint *mimic;         ///< if non-NULL, this joint's state is identical to another's
-  uint agent;            ///< associate this Joint to a specific agent (0=default robot)
+  uint agent;           ///< associate this Joint to a specific agent (0=default robot)
+
+  bool (*locked_func)(void*);  ///< this function should return true if the joint is locked
+  void *locked_data;           ///< this pointer is handed to the locked_func on each call
 
   MT::String name;      ///< name
   JointType type;       ///< joint type
@@ -160,8 +163,9 @@ struct Joint {
     index=j.index; qIndex=j.qIndex; ifrom=j.ifrom; ito=j.ito; mimic=reinterpret_cast<Joint*>(j.mimic?1:0); agent=j.agent;
     name=j.name; type=j.type; A=j.A; Q=j.Q; B=j.B; X=j.X; axis=j.axis; limits=j.limits; H=j.H;
     ats=j.ats;
+    locked_func=j.locked_func; locked_data=j.locked_data;
   }
-  void reset() { listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); X.setZero(); axis.setZero(); limits.clear(); H=1.; type=JT_none; }
+  void reset();
   void parseAts();
   uint qDim();
   void write(std::ostream& os) const;

@@ -100,11 +100,15 @@ PxTransform OrsTrans2PxTrans(const ors::Transformation& f) {
 struct sPhysXInterface {
   PxScene* gScene;
   MT::Array<PxRigidActor*> actors;
+  MT::Array<PxD6Joint*> joints;
   
   sPhysXInterface():gScene(NULL) {}
 
   void addBody(ors::Body *b, physx::PxMaterial *material);
   void addJoint(ors::Joint *jj);
+
+  void lockJoint(PxD6Joint *joint);
+  void unlockJoint(PxD6Joint *joint, ors::Joint *ors_joint);
 };
 
 // ============================================================================
@@ -170,6 +174,7 @@ PhysXInterface::PhysXInterface(ors::KinematicWorld& _world): world(_world), s(NU
   for_list(i, b, world.bodies) s->addBody(b, mMaterial);
 
   /// ADD joints here!
+  s->joints.resize(world.joints.N);
   ors::Joint* jj;
   for_list(i, jj, world.joints) s->addJoint(jj);
 }
@@ -184,6 +189,16 @@ void PhysXInterface::step(double tau) {
   ors::Body *b;
   for_list(i,b,world.bodies) if(b->type==ors::kinematicBT) {
     ((PxRigidDynamic*)s->actors(i))->setKinematicTarget(OrsTrans2PxTrans(b->X));
+  }
+
+  ors::Joint *j;
+  for_list(i,j,world.joints) {
+    if(j->locked_func((void*) j->locked_data)) {
+      s->lockJoint(s->joints(i));
+    }
+    else {
+      s->unlockJoint(s->joints(i), j);  
+    }
   }
   
   //-- dynamic simulation
@@ -221,6 +236,7 @@ void PhysXInterface::setArticulatedBodiesKinematic(int agent){
  */
 
 void sPhysXInterface::addJoint(ors::Joint *jj) {
+  joints(jj->index) = NULL;
   PxTransform A = OrsTrans2PxTrans(jj->A);
   PxTransform B = OrsTrans2PxTrans(jj->B);
   switch(jj->type) {
@@ -251,6 +267,7 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
       else {
         desc->setMotion(PxD6Axis::eTWIST, PxD6Motion::eFREE);
       }
+      joints(jj->index) = desc;
     }
     break;
     case ors::JT_fixed: {
@@ -290,10 +307,31 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
       else {
         desc->setMotion(PxD6Axis::eX, PxD6Motion::eFREE);
       }
+      joints(jj->index) = desc;
     }
     break;
     default:
       NIY;
+  }
+}
+void sPhysXInterface::lockJoint(PxD6Joint *joint) {
+  joint->setMotion(PxD6Axis::eX, PxD6Motion::eLOCKED);
+  joint->setMotion(PxD6Axis::eTWIST, PxD6Motion::eLOCKED);
+}
+void sPhysXInterface::unlockJoint(PxD6Joint *joint, ors::Joint *ors_joint) {
+  switch(ors_joint->type) {
+    case ors::JT_hingeX:
+    case ors::JT_hingeY:
+    case ors::JT_hingeZ:
+      joint->setMotion(PxD6Axis::eX, PxD6Motion::eLOCKED);
+      break;
+    case ors::JT_transX:
+    case ors::JT_transY:
+    case ors::JT_transZ:
+      joint->setMotion(PxD6Axis::eTWIST, PxD6Motion::eLOCKED);
+      break;
+    default:
+      break;
   }
 }
 

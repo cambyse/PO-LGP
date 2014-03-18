@@ -16,7 +16,7 @@ void move_robot(ors::KinematicWorld& G, int time) {
     double dPos = 1 - pos.z;
     double dVel = 0 - vel.z;
 
-    double dyPos = 1 - pos.y;
+    double dyPos = 1. - pos.y;
     double dyVel = 0 - vel.y;
     
     G.addForce(ors::Vector(0, kp * dyPos + kd * dyVel, b->mass * GRAVITY + kp * dPos + kd * dVel), b);
