@@ -123,7 +123,7 @@ private:
 	VideoEncoder_x264_simple enc;
 	TimeTagFile times;
 	byteA buffer;
-	Mutex start_lock;
+	static Mutex start_lock;
 
 public:
 	GrabAndSave(int camID, const char* name, const MT::String& created, const bool& terminated) :
@@ -159,6 +159,7 @@ public:
 		}
 	}
 };
+Mutex GrabAndSave::start_lock;
 
 }
 
@@ -243,7 +244,7 @@ public:
 		audio_writer(STRING("z.mike." << created << ".wav")),
 		audio_buf(8192), kinect(std::bind(&RecordingSystem::kinect_depth_cb, this, _1, _2),
 				std::bind(&RecordingSystem::kinect_video_cb, this, _1, _2)),
-		kin_video_count(0), kin_depth_count(0) {
+		kin_video_count(0), kin_depth_count(0), start_time() {
 	}
 
 	void run() {
