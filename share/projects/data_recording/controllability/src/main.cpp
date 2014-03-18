@@ -5,19 +5,17 @@
 #include "fgplot.h"
 #include <unistd.h>
 
-void lib_hardware_G4();
+//void lib_hardware_G4();
 
 void init_display(ors::KinematicWorld &kw) {
   MT::String shapes;
   MT::getParameter(shapes, "shapes");
   kw.init(shapes);
-  //init(G, gl, shapes);
   kw.gl().camera.setPosition(7., .5, 3.);
   kw.gl().camera.focus(0, .5, .5);
   kw.gl().camera.upright();
 }
 
-#include <Algo/spline.h>
 void display(G4Data &g4d) {
   ors::KinematicWorld kw;
 
@@ -27,9 +25,9 @@ void display(G4Data &g4d) {
   String b1("rh:thumb"), b2("sbox");
   StringA bb;
   bb.append(STRING("rh:thumb"));
-  //bb.append(STRING("rh:index"));
-  //bb.append(STRING("rh:middle"));
-  bb.append(STRING("lh:thumb"));
+  bb.append(STRING("rh:index"));
+  bb.append(STRING("rh:middle"));
+  //bb.append(STRING("lh:thumb"));
   //bb.append(STRING("lh:index"));
   //bb.append(STRING("lh:middle"));
 
@@ -48,7 +46,19 @@ void display(G4Data &g4d) {
   //}
 
   //kf.playScene(b1);
-  kf.playScene(bb);
+  //kf.playScene(bb);
+
+  kvgL ctrls, deltas;
+
+  kf.getCtrlSeq(ctrls, b1, b2);
+  cout << "# CtrlSeq: " << ctrls.N << endl;
+  for(auto cs: ctrls)
+    cout << " * " << *cs << endl;
+
+  kf.getDeltaSeq(deltas, ctrls);
+  cout << "# DeltaSeq: " << deltas.N << endl;
+  for(auto d: deltas)
+    cout << " * " << *d << endl;
 }
 
 int main(int argc, char **argv) {
