@@ -190,9 +190,8 @@ protected:
 
 		bool cam1_ready = false, cam2_ready = false, cam3_ready = false;
 
-#pragma omp parallel num_threads(4)
 		// make sure everything is running smoothly before starting to record
-#pragma omp sections
+#pragma omp parallel sections num_threads(3)
 		{
 #pragma omp section
 		cam1_ready = cam1.preroll();
@@ -208,8 +207,9 @@ protected:
 			return;
 		}
 		start_time = MT::clockTime();
+		clog << "Prerolled ueye cams, record start time is " << start_time << endl;
 
-#pragma omp sections
+#pragma omp parallel sections num_threads(4)
 		{
 #pragma omp section
 			cam1.run(start_time);
