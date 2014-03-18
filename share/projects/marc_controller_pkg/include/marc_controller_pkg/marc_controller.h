@@ -26,10 +26,11 @@ private:
 
 
   //force related things
-  ors::Shape *ft_shape;
+  ors::Shape *ftL_shape, *ftR_shape;
   arr fL_obs;
   arr fL_ref, fR_ref;
   arr y_fL, J_fL;
+  arr y_fR, J_fR;
 
   uintA ROS_qIndex;
 
