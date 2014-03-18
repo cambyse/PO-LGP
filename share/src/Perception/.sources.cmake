@@ -7,14 +7,12 @@ set(SOURCES ./audio.h
 ./shapeFitter.cpp
 ./perception_views.cpp
 ./videoEncoderX264.cpp
-./keyframe.h
 ./videoEncoder.cpp
 ./keyframer.h
 ./shapeFitter.h
 ./g4data.cpp
 ./vision.h
 ./pointcloud.h
-./keyframe.cpp
 ./keyframer.cpp
 ./perception.h
 ./avutil.h
