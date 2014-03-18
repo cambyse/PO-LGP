@@ -7,9 +7,12 @@
 rxplot /ft/r_gripper_motor/wrench/force/x:y:z /ft/r_gripper_motor/wrench/torque/x:y:z
 ```
 
-## Arm controller
+## Arm and Gripper controll
 
-## Gripper
 
+## rosbag
+```
+rosbag record /tf /ft /kinect_head/rgb/image_mono /r_forearm_cam/image_mono
+```
 
 :vim: set ft=markdown
