@@ -104,20 +104,13 @@ void got_signal(int) {
 }
 
 namespace {
-void grab_one(const char* id, UEyeInterface& cam, VideoEncoder_x264_simple& enc, byteA& buf, TimeTagFile& times) {
-	double timestamp;
-	if(cam.grab(buf, timestamp, 500)) {
-		enc.addFrame(buf);
-		times.add_stamp(timestamp);
-	} else {
-		times.mark_missing();
-		cerr << "grab " << id << " failed" << endl;
-	}
-}
+class Condition {
+public:
+
+};
 
 class GrabAndSave {
 private:
-	static Mutex start_lock;
 	const bool& terminated;
 	bool ready;
 	int id;
@@ -130,10 +123,9 @@ private:
 
 public:
 	GrabAndSave(int camID, const char* name, const MT::String& created, const bool& terminated) :
-		terminated(terminated), id(camID), name(name), cam(id), enc(STRING("z." << name << "." << created << ".264")),
-		times(enc.name()) {
+		terminated(terminated), ready(false), id(camID), name(name), cam(id), enc(STRING("z." << name << "." << created << ".264")),
+		times(enc.name()), start_time(ULONG_MAX) {
 	}
-
 
 	bool isReady() const {
 		return ready;
@@ -142,22 +134,18 @@ public:
 		this->start_time = start_time;
 	}
 
-	void run() {
-		cam.startStreaming();
+	void step() {
 		double timestamp;
-		while(!terminated) {
-			if((ready = cam.grab(buffer, timestamp, 500))) {
-				if(timestamp > start_time) {
-					enc.addFrame(buffer);
-					times.add_stamp(timestamp);
-				}
-			} else {
-				cerr << "grab " << id << " failed" << endl;
+		if((ready = cam.grab(buffer, timestamp, 500))) {
+			if(timestamp >= start_time) {
+				enc.addFrame(buffer);
+				times.add_stamp(timestamp);
 			}
+		} else {
+			cerr << "grab " << id << " failed" << endl;
 		}
 	}
 };
-Mutex GrabAndSave::start_lock;
 
 }
 
@@ -178,54 +166,48 @@ protected:
 
 	void openmp_run() {
 		kinect.startStreaming();
-
-		bool cam1_ready = false, cam2_ready = false, cam3_ready = false;
+		bool ready = false;
 
 		// make sure everything is running smoothly before starting to record
-#pragma omp parallel sections num_threads(3)
+#pragma omp parallel sections num_threads(5)
 		{
 #pragma omp section
-		cam1_ready = cam1.preroll();
+			while(!terminated)
+				cam1.step();
 #pragma omp section
-		cam2_ready = cam2.preroll();
+			while(!terminated)
+				cam2.step();
 #pragma omp section
-		cam3_ready = cam3.preroll();
-		}
-
-		if(!cam1_ready || !cam2_ready || !cam3_ready) {
-			cerr << "Cameras not initialized correctly, cam1_ready=" << cam1_ready
-					<< ", cam2_ready=" << cam2_ready << ", cam3_ready=" << cam3_ready << endl;
-			return;
-		}
-		start_time = MT::clockTime();
-		clog << "Prerolled ueye cams, record start time is " << start_time << endl;
-
-#pragma omp parallel sections num_threads(4)
-		{
+			while(!terminated)
+				cam3.step();
 #pragma omp section
-			cam1.run(start_time);
-#pragma omp section
-			cam2.run(start_time);
-#pragma omp section
-			cam3.run(start_time);
-#pragma omp section
-			{
-				while(!terminated) {
-					audio_poller.read(audio_buf);
+			while(!terminated) {
+				audio_poller.read(audio_buf);
+				if(ready) {
 					audio_writer.writeSamples_R48000_2C_S16_NE(audio_buf);
+				}
+			}
+#pragma omp section
+			while(!terminated && !ready) {
+				if(cam1.isReady() && cam2.isReady() && cam3.isReady()) {
+					start_time = MT::clockTime();
+					cam1.setActiveTime(start_time);
+					cam2.setActiveTime(start_time);
+					cam3.setActiveTime(start_time);
+					ready = true;
 				}
 			}
 		}
 	}
 
 	void kinect_video_cb(const byteA& rgb, double timestamp) {
-		if(timestamp > start_time) {
+		if(timestamp >= start_time) {
 			kinect_video.addFrame(rgb);
 			kinect_video_times.add_stamp(timestamp);
 		}
 	}
 	void kinect_depth_cb(const MT::Array<uint16_t>& depth, double timestamp) {
-		if(timestamp > start_time) {
+		if(timestamp >= start_time) {
 			MLR::pack_kindepth2rgb(depth, kinect_depth_repack);
 			kinect_depth.addFrame(kinect_depth_repack);
 			kinect_depth_times.add_stamp(timestamp);
