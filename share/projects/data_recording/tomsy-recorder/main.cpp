@@ -119,6 +119,7 @@ class GrabAndSave {
 private:
 	const bool& terminated;
 	int id;
+	MT::String name;
 	UEyeInterface cam;
 	VideoEncoder_x264_simple enc;
 	TimeTagFile times;
@@ -127,7 +128,7 @@ private:
 
 public:
 	GrabAndSave(int camID, const char* name, const MT::String& created, const bool& terminated) :
-		terminated(terminated), id(camID), cam(id), enc(STRING("z." << name << created << ".264")),
+		terminated(terminated), id(camID), name(name), cam(id), enc(STRING("z." << name << "." << created << ".264")),
 		times(enc.name()) {
 	}
 
@@ -138,9 +139,15 @@ public:
 			cam.startStreaming();
 		}
 		double timestamp;
+		int count = 0;
 		while(!terminated) {
 			if(cam.grab(buffer, timestamp))
 				return true;
+			else {
+				cerr << name << " failed pre-roll " << ++count << " times" << endl;
+				if(count > 10)
+					return false;
+			}
 		}
 		return false;
 	}
