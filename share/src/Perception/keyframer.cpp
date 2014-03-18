@@ -291,7 +291,7 @@ arr KeyFramer::getCorr(uint b1, uint b2, uint wlen) {
 
   MT::Array<arr> wins;
   s->setupWindows(wins, wlen);
-  uint nwins = wins.N;
+  //uint nwins = wins.N;
 
   uint dofs = s->dofs(b1);
   uint cumdofs1 = s->cumdofs(b1);
@@ -1082,71 +1082,55 @@ arr KeyFramer::getTransfVar(const String &n1, const String &n2, uint wlen) {
 }
 // }}}
 
-// getKeyFrames {{{
-KeyFrameL KeyFramer::getKeyFrames(const uintA &vit) {
-  KeyFrameL keyframes;
-  KeyFrame *kf;
+// getCtrlSeq {{{
+void KeyFramer::getCtrlSeq(kvgL &ctrls, const String &a, const String &o) {
+  KeyValueGraph data_kvg;
+  EM_c(data_kvg, a, o);
+  arr *vit = data_kvg.getValue<arr>("vit");
 
+  KeyValueGraph *kf, *feats;
   bool kf_flag = false;
-  for(uint f = 0; f < vit.d0; f++) {
-    if(!kf_flag && vit(f) > .5) {
-      kf = new KeyFrame(f);
-      keyframes.append(kf);
+  for(uint f = 0; f < vit->d0; f++) {
+    if(!kf_flag && vit->elem(f)) { // inset
+      feats = new KeyValueGraph();
+      objFeatures(*feats, o, f);
+      kf = new KeyValueGraph();
+      kf->append("inset", feats);
       kf_flag = true;
     }
-    else if(kf_flag && vit(f) < .5) {
-      kf = new KeyFrame(f);
-      keyframes.append(kf);
+    else if(kf_flag && !vit->elem(f)) { // offset
+      feats = new KeyValueGraph();
+      objFeatures(*feats, o, f);
+      kf->append("offset", feats);
+      ctrls.append(new KeyValueGraph(*kf));
       kf_flag = false;
     }
   }
-  return keyframes;
 }
 // }}}
-// saveKeyFrameScreens {{{
-void KeyFramer::saveKeyFrameScreens(const KeyFrameL &keyframes, uint df) {
-  uint f;
-  uint h, w;
-  byteA img1, img2, img3;
-  for(KeyFrame *kf: keyframes) {
-    //cout << *kf;
-    f = kf->getFrame();
+// getDeltaSeq {{{
+void KeyFramer::getDeltaSeq(kvgL &deltas, kvgL ctrls) {
+  KeyValueGraph *inset, *offset, *delta;
+  arr *posi, *poso;
+  uint fi, fo;
 
-    if(f < df || f+df >= s->g4d->getNumFrames())
-      continue;
+  cout << "N: " << ctrls.N << endl;
+  for(auto ctrl: ctrls) {
+    cout << "in" << endl;
+    inset = ctrl->getValue<KeyValueGraph>("inset");
+    offset = ctrl->getValue<KeyValueGraph>("offset");
 
-    // saving keyframe image
-    updateOrs(f-df);
-    s->kw->gl().text.clear() <<"frame " <<f-df << endl;
-    s->kw->gl().update(NULL, true);
-    flip_image(s->kw->gl().captureImage);
-    byteA img1 = s->kw->gl().captureImage;
+    fi = *inset->getValue<double>("fnum");
+    posi = inset->getValue<arr>("f_pos");
 
-    updateOrs(f);
-    s->kw->gl().text.clear() <<"frame " <<f << endl;
-    s->kw->gl().update(NULL, true);
-    flip_image(s->kw->gl().captureImage);
-    byteA img2 = s->kw->gl().captureImage;
+    fo = *offset->getValue<double>("fnum");
+    poso = offset->getValue<arr>("f_pos");
 
-    updateOrs(f+df);
-    s->kw->gl().text.clear() <<"frame " <<f+df << endl;
-    s->kw->gl().update(NULL, true);
-    flip_image(s->kw->gl().captureImage);
-    byteA img3 = s->kw->gl().captureImage;
-
-    h = img1.d0;
-    w = 3*img1.d1;
-    byteA comp(h, w, 3);
-
-    for(uint i = 0; i < h; i++) {
-      memcpy(comp[i]().p    , img1[i]().p, w);
-      memcpy(comp[i]().p+w  , img2[i]().p, w);
-      memcpy(comp[i]().p+2*w, img3[i]().p, w);
-    }
-
-    char ss[10];
-    sprintf(ss, "%05d", f);
-    write_ppm(comp, STRING("z.keyframe."<<ss<<".ppm"));
+    delta = new KeyValueGraph();
+    delta->append("fi", new double(fi));
+    delta->append("fo", new double(fo));
+    delta->append("f_dpos", new arr(*poso - *posi));
+    deltas.append(delta);
   }
 }
 // }}}
@@ -3728,3 +3712,13 @@ void KeyFramer::testSmoothing(KeyValueGraph &kvg, const String &bA, double alpha
   plot->append("data", new String("pSpeed_filter"));
   kvg.append("plot", plot);
 }
+
+void KeyFramer::objFeatures(KeyValueGraph &feats, const String &b, uint fnum) {
+  feats.clear();
+
+  feats.append("fnum", new double(fnum));
+  // TODO only xy features for now.
+  arr pos = s->g4d->query("pos", b, fnum);
+  feats.append("f_pos", new arr(pos.sub(0, 1)));
+}
+
