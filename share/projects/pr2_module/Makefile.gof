@@ -1,6 +1,6 @@
 BASE = ../..
 
-OBJS = main.o roscom.o
+OBJS = main.o roscom.o puppeteer.o
 PLIB = 1
 ROS = 1
 DEPEND = Core System Hardware

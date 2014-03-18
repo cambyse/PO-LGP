@@ -26,7 +26,7 @@ RosCom::RosCom():Module("RosCom"){
 
 void sRosCom::joinstState_callback(const marc_controller_pkg::JointState::ConstPtr& msg){
 //  cout <<"** joinstState_callback" <<endl;
-  CtrlMsg m = { ARRAY(msg->q), ARRAY(msg->qdot), ARRAY(msg->fL), ARRAY(msg->fR), 0., 0., 0., 0.};
+  CtrlMsg m(ARRAY(msg->q), ARRAY(msg->qdot), ARRAY(msg->fL), ARRAY(msg->fR));
   base->ctrl_obs.set() = m;
 }
 

@@ -6,6 +6,7 @@
 #include <Motion/pr2_heuristics.h>
 
 #include "roscom.h"
+#include "puppeteer.h"
 
 struct MySystem:System{
   ACCESS(CtrlMsg, ctrl_ref);
@@ -19,9 +20,7 @@ struct MySystem:System{
   }
 };
 
-int main(int argc, char** argv){
-  MT::initCmdLine(argc, argv);
-
+void testJoypad(){
   ors::KinematicWorld world("model.kvg");
   arr q, qdot;
   world.getJointState(q, qdot);
@@ -100,5 +99,19 @@ int main(int argc, char** argv){
 
   engine().close(S);
 
+}
+
+void testPuppeteer(){
+  Puppeteer P;
+  P.open();
+  P.addLiteral(coreTasks, NULL, NULL, NoArr, NoArr);
+  P.addLiteral(moveEffTo, "endeffR", NULL, ARR(.5,0,1.2), NoArr);
+  P.run();
+}
+
+int main(int argc, char** argv){
+  MT::initCmdLine(argc, argv);
+//  testJoypad();
+  testPuppeteer();
   return 0;
 }

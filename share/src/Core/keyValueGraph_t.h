@@ -49,7 +49,7 @@ struct Item_typed:Item {
     T *x = it->getValue<T>();
     CHECK(x,"can't assign to nothing");
     if(value) delete value;
-    value = new T(*x);
+    NIY; //value = new T(*x);
   }
 
   virtual void writeValue(std::ostream &os) const {

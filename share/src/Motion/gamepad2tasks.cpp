@@ -18,6 +18,14 @@ double joySignalMap(double x){
   return MT::sign(x)*(exp(MT::sqr(x))-1.);
 }
 
+bool stopButtons(const arr& gamepadState){
+  if(!gamepadState.N) return false;
+  uint mode = uint(gamepadState(0));
+//cout <<"mode " <<mode <<endl;
+  if(mode&0x10 || mode&0x20 || mode&0x40 || mode&0x80) return true;
+  return false;
+}
+
 bool Gamepad2Tasks::updateTasks(arr& gamepadState){
   for(PDtask* pdt:MP.tasks) pdt->active=false;
 
