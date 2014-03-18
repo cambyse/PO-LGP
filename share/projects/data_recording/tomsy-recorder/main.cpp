@@ -8,6 +8,8 @@
 #include <iomanip>
 #include <omp.h>
 
+#include <Core/util.h>
+#include <Core/module.h>
 #include <Perception/audio.h>
 #include <Perception/perception.h>
 #include <Perception/videoEncoder.h>
@@ -54,7 +56,7 @@ struct TomsyRecorderSystem:System{
         VideoEncoderX264 *m_enc = addModule<VideoEncoderX264>("VideoEncoder_rgb", STRINGS("kinect_rgb"), Module_Thread::listenFirst);
         m_enc->set_rgb(true);
         m_enc->set_fps(30);
-        VideoEncoderX264 *m_denc = addModule<VideoEncoderX264>("VideoEncoder_depth", STRINGS("kinect_depthRgb"), ModuleThread::listenFirst);
+        VideoEncoderX264 *m_denc = addModule<VideoEncoderX264>("VideoEncoder_depth", STRINGS("kinect_depthRgb"), Module_Thread::listenFirst);
         m_denc->set_fps(30);
 
         addModule("UEyePoller", "POLLER_1", STRINGS("ueye_rgb_1"), Module_Thread::loopFull);
@@ -112,48 +114,101 @@ void grab_one(const char* id, UEyeInterface& cam, VideoEncoder_x264_simple& enc,
 		cerr << "grab " << id << " failed" << endl;
 	}
 }
+
+class GrabAndSave {
+private:
+	const bool& terminated;
+	int id;
+	UEyeInterface cam;
+	VideoEncoder_x264_simple enc;
+	TimeTagFile times;
+	byteA buffer;
+	Mutex start_lock;
+
+public:
+	GrabAndSave(int camID, const char* name, const MT::String& created, const bool& terminated) :
+		terminated(terminated), id(camID), cam(id), enc(STRING("z." << name << created << ".264")),
+		times(enc.name()) {
+	}
+
+	bool preroll() {
+		// parallel start of streaming reliably crashes the ueye daemon...
+		{
+			Lock l(start_lock);
+			cam.startStreaming();
+		}
+		double timestamp;
+		while(!terminated) {
+			if(cam.grab(buffer, timestamp))
+				return true;
+		}
+		return false;
+	}
+
+	void run(const double& start_time) {
+		double timestamp;
+		while(!terminated) {
+			if(cam.grab(buffer, timestamp, 500)) {
+				if(timestamp > start_time) {
+					enc.addFrame(buffer);
+					times.add_stamp(timestamp);
+				}
+			} else {
+				cerr << "grab " << id << " failed" << endl;
+			}
+		}
+	}
+};
+
 }
 
 class RecordingSystem {
 private:
 	MT::String created;
-	UEyeInterface cam1, cam2, cam3;
-	VideoEncoder_x264_simple enc1, enc2, enc3, kinect_video, kinect_depth;
-	TimeTagFile times1, times2, times3, kinect_video_times, kinect_depth_times;
+	GrabAndSave cam1, cam2, cam3;
+	VideoEncoder_x264_simple kinect_video, kinect_depth;
+	TimeTagFile kinect_video_times, kinect_depth_times;
 	AudioWriter_libav audio_writer;
 	AudioPoller_PA audio_poller;
-	byteA buf1, buf2, buf3, audio_buf, kinect_depth_repack;
+	byteA audio_buf, kinect_depth_repack;
 	KinectCallbackReceiver kinect;
 	int kin_video_count, kin_depth_count;
+	double start_time;
 
 protected:
 
 	void openmp_run() {
-		// doing the start in parallel seems to cause lock-ups, so lets do it serially
-		// TODO: time-sync grab start more accurately
-		cam1.startStreaming();
-		cam2.startStreaming();
-		cam3.startStreaming();
 		kinect.startStreaming();
 
+		bool cam1_ready = false, cam2_ready = false, cam3_ready = false;
+
 #pragma omp parallel num_threads(4)
+		// make sure everything is running smoothly before starting to record
 #pragma omp sections
 		{
 #pragma omp section
-			{
-				while(!terminated)
-					grab_one("1", cam1, enc1, buf1, times1);
-			}
+		cam1_ready = cam1.preroll();
 #pragma omp section
-			{
-				while(!terminated)
-					grab_one("2", cam2, enc2, buf2, times2);
-			}
+		cam2_ready = cam2.preroll();
 #pragma omp section
-			{
-				while(!terminated)
-					grab_one("3", cam3, enc3, buf3, times3);
-			}
+		cam3_ready = cam3.preroll();
+		}
+
+		if(!cam1_ready || !cam2_ready || !cam3_ready) {
+			cerr << "Cameras not initialized correctly, cam1_ready=" << cam1_ready
+					<< ", cam2_ready=" << cam2_ready << ", cam3_ready=" << cam3_ready << endl;
+			return;
+		}
+		start_time = MT::clockTime();
+
+#pragma omp sections
+		{
+#pragma omp section
+			cam1.run(start_time);
+#pragma omp section
+			cam2.run(start_time);
+#pragma omp section
+			cam3.run(start_time);
 #pragma omp section
 			{
 				while(!terminated) {
@@ -165,31 +220,25 @@ protected:
 	}
 
 	void kinect_video_cb(const byteA& rgb, double timestamp) {
-		// crude attempt at synchronization with cameras -- kinect has 120ms delay, at 30fps that
-		// is ca. 3.6 frames. given that cameras also have delay, skipping 3 frames should do it
-		// about as well as we need.
-		if(kin_video_count++ < 3)
-			return;
-		kinect_video.addFrame(rgb);
-		kinect_video_times.add_stamp(timestamp);
+		if(timestamp > start_time) {
+			kinect_video.addFrame(rgb);
+			kinect_video_times.add_stamp(timestamp);
+		}
 	}
 	void kinect_depth_cb(const MT::Array<uint16_t>& depth, double timestamp) {
-		// as above
-		if(kin_depth_count++ < 3)
-				return;
-		MLR::pack_kindepth2rgb(depth, kinect_depth_repack);
-		kinect_depth.addFrame(kinect_depth_repack);
-		kinect_depth_times.add_stamp(timestamp);
+		if(timestamp > start_time) {
+			MLR::pack_kindepth2rgb(depth, kinect_depth_repack);
+			kinect_depth.addFrame(kinect_depth_repack);
+			kinect_depth_times.add_stamp(timestamp);
+		}
 	}
 
 public:
-	RecordingSystem(int id1, int id2, int id3) : created(MT::getNowString()), cam1(id1), cam2(id2), cam3(id3),
-		enc1(STRING("z.ueye1." << created <<".264"), 60),
-		enc2(STRING("z.ueye2." << created <<".264"), 60),
-		enc3(STRING("z.ueye3." << created <<".264"), 60),
+	RecordingSystem(int id1, int id2, int id3) :
+		created(MT::getNowString()), cam1(id1, "ueye1", created, terminated),
+		cam2(id2, "ueye2", created, terminated), cam3(id3, "ueye3", created, terminated),
 		kinect_video(STRING("z.kinect_rgb." << created <<".264")),
 		kinect_depth(STRING("z.kinect_depthRgb." << created <<".264")),
-		times1(enc1.name()), times2(enc2.name()), times3(enc3.name()),
 		kinect_video_times(kinect_video.name()), kinect_depth_times(kinect_depth.name()),
 		audio_writer(STRING("z.mike." << created << ".wav")),
 		audio_buf(8192), kinect(std::bind(&RecordingSystem::kinect_depth_cb, this, _1, _2),
