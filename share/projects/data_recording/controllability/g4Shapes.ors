@@ -34,42 +34,6 @@ shape sh:rh:back (rh:back) {
   #contact
 }
 
-body lh:thumb {}
-shape sh:lh:thumb (lh:thumb) {
-  type = 2
-  rel = <T t(0 0 .0075) t(0 0 .008) d(90 0 1 0)>
-  size = [ 0 0 .01 .0075 ]
-  color = [ 0 0 1 ]
-  #contact
-}
-
-body lh:index {}
-shape sh:lh:index (lh:index) {
-  type = 2
-  rel = <T t(0 0 .0075) t(0 0 .008) d(90 0 1 0)>
-  size = [ 0 0 .01 .0075 ]
-  color = [ 0 0 1 ]
-  #contact
-}
-
-body lh:middle {}
-shape sh:lh:middle (lh:middle) {
-  type = 2
-  rel = <T t(0 0 .0075) t(0 0 .008) d(90 0 1 0)>
-  size = [ 0 0 .01 .0075 ]
-  color = [ 0 0 1 ]
-  #contact
-}
-
-body lh:back {}
-shape sh:lh:back (lh:back) {
-  type = 0
-  rel = <T t(-.015 0 0) t(0 0 .008)>
-  size = [ .07 .035 .015 0 ]
-  color = [ 0 0 1 ]
-  #contact
-}
-
 body sbox {}
 shape sh:sbox (sbox) {
   type = 0
@@ -78,95 +42,6 @@ shape sh:sbox (sbox) {
   #contact
 }
 shape sh:sbox:axes (sbox) {
-  type = 5
-  size = [ .03 0 0 0 ]
-  color = [ 0 0 0 ]
-}
-
-body bottle {}
-shape sh:bottle (bottle) {
-  type = 4
-  rel = <T t(-.03 0 .06) t(0 0 .008) d(90 0 1 0)>
-  size = [ 0 0 .23 .06 ]
-  #contact
-}
-shape sh:bottle:axes (bottle) {
-  type = 5
-  size = [ .03 0 0 0 ]
-  color = [ 0 0 0 ]
-}
-
-body book {}
-shape sh:book (book) {
-  type = 0
-  rel = <T t(-.0925 0 .0255)>
-  size = [ .21 .235 .035  0 ]
-  #contact
-}
-shape sh:book:axes (book) {
-  type = 5
-  size = [ .03 0 0 0 ]
-  color = [ 0 0 0 ]
-}
-
-body ball {}
-shape sh:ball (ball) {
-  type = 1
-  rel = <T t(0 0 .075) t(0 0 .008)>
-  size = [ 0 0 0 .075 ]
-  #contact
-}
-shape sh:ball:axes (ball) {
-  type = 5
-  size = [ .03 0 0 0 ]
-  color = [ 0 0 0 ]
-}
-
-body bbox:lid {}
-shape sh:bbox:lid (bbox:lid) {
-  type = 0
-  rel = <T t(-.0535 .042 .008)>
-  size = [ .15 .15 .002  0 ]
-  #contact
-}
-shape sh:bbox:lid:axes (bbox:lid) {
-  type = 5
-  size = [ .03 0 0 0 ]
-  color = [ 0 0 0 ]
-}
- 
-body bbox:body {}
-shape sh:bbox:body:back (bbox:body) {
-  type = 0
-  rel = <T t(-.05 .0435 .008)>
-  size = [ .15 .197 .002  0 ]
-  #contact
-}
-shape sh:bbox:body:front (bbox:body) {
-  type = 0
-  rel = <T t(-.05 .0435 .008) t(0 0 -.15)>
-  size = [ .15 .197 .002  0 ]
-  #contact
-}
-shape sh:bbox:body:left (bbox:body) {
-  type = 0
-  rel = <T t(-.05 .0435 .008) t(.075 0 0) d(90 0 1 0) t(.075 0 0)>
-  size = [ .15 .197 .002  0 ]
-  #contact
-}
-shape sh:bbox:body:right (bbox:body) {
-  type = 0
-  rel = <T t(-.05 .0435 .008) t(-.075 0 0) d(90 0 1 0) t(.075 0 0)>
-  size = [ .15 .197 .002  0 ]
-  #contact
-}
-shape sh:bbox:body:down (bbox:body) {
-  type = 0
-  rel = <T t(-.05 .0435 .008) t(0 0 -.075) d(90 1 0 0) t(0 0 -.0985)>
-  size = [ .15 .15 .002  0 ]
-  #contact
-}
-shape sh:bbox:body:axes (bbox:body) {
   type = 5
   size = [ .03 0 0 0 ]
   color = [ 0 0 0 ]

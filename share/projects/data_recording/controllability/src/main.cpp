@@ -26,7 +26,7 @@ void display(G4Data &g4d) {
   StringA bb;
   bb.append(STRING("rh:thumb"));
   bb.append(STRING("rh:index"));
-  bb.append(STRING("rh:middle"));
+  //bb.append(STRING("rh:middle"));
   //bb.append(STRING("lh:thumb"));
   //bb.append(STRING("lh:index"));
   //bb.append(STRING("lh:middle"));
@@ -36,14 +36,15 @@ void display(G4Data &g4d) {
   //kf.EM_r(kvg, b1, b2);
   //kf.EM_c(kvg, b1, b2);
   //kf.testSmoothing(kvg, b1, .3);
+  kf.testDist(kvg, b1, b2);
 
-  //FGPlots fgp;
-  //fgp.open(kvg);
-  //uint F = g4d.getNumFrames();
-  //for(uint f = 0; f < F; f++) {
-    //kf.updateOrs(f);
-    //fgp.step(f);
-  //}
+  FGPlots fgp;
+  fgp.open(kvg);
+  uint F = g4d.getNumFrames();
+  for(uint f = 0; f < F; f++) {
+    kf.updateOrs(f, true);
+    fgp.step(f);
+  }
 
   //kf.playScene(b1);
   //kf.playScene(bb);

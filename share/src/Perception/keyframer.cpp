@@ -28,6 +28,7 @@ struct KeyFramer::sKeyFramer {
 
   uint nframes;
   arr state;
+  arr ood, dird, indd; // distance matrices
 
   sKeyFramer(ors::KinematicWorld *_kw, G4Data *_g4d);
   ~sKeyFramer();
@@ -193,21 +194,23 @@ KeyFramer::~KeyFramer() {
 }
 
 // updateOrs {{{
-void KeyFramer::updateOrs(uint f) {
+void KeyFramer::updateOrs(uint f, bool show) {
   arr xPos, xQuat;
-  for(auto &b: s->kw->bodies) {
-    xPos = s->g4d->query("pos", b->name, f);
-    xQuat = s->g4d->query("quat", b->name, f);
-    xPos.flatten();
-    xQuat.flatten();
+  ors::Body *b;
+  for(String &name: s->g4d->getNames()) {
+    b = s->kw->getBodyByName(name);
+    xPos = s->g4d->query("pos", name, f);
+    xQuat = s->g4d->query("quat", name, f);
+    //xPos.flatten();
+    //xQuat.flatten();
 
     b->X.pos.set(xPos.p);
     b->X.rot.set(xQuat.p);
   }
-  s->kw->calc_fwdPropagateFrames();
-  //s->kw.calcShapeFramesFromBodies(); TODO which one?
+  s->kw->calc_fwdPropagateShapeFrames();
+  s->kw->computeProxies();
   s->kw->gl().text.clear() << "frame " << f << "/" << s->g4d->getNumFrames();
-  s->kw->gl().update(NULL, false);
+  if(show) s->kw->gl().update(NULL, false);
 }
 // }}}
 
@@ -654,6 +657,94 @@ void KeyFramer::computeDQuat(const String &b, bool force) {
   }
 
   s->g4d->appendBam(typeDQuat, y);
+}
+// }}}
+
+// computeDist {{{
+void KeyFramer::computeDist(uint f) {
+  uint numA = s->g4d->getNumAgents();
+  uint numO = s->g4d->getNumObjects();
+
+  updateOrs(f, false);
+  // direct agent-object and object-object distances
+  uint idsa, idsb, ida, idb;
+  bool aa, ab;
+  ors::Body *ba, *bb;
+  for(ors::Proxy *proxy: s->kw->proxies) {
+    idsa = s->kw->swift().INDEXswift2shape(proxy->a);
+    idsb = s->kw->swift().INDEXswift2shape(proxy->b);
+    ba = s->kw->shapes(idsa)->body;
+    bb = s->kw->shapes(idsb)->body;
+    aa = s->g4d->isAgent(ba->name);
+    ab = s->g4d->isAgent(bb->name);
+    ida = aa? s->g4d->getAgentIndex(ba->name): s->g4d->getObjectIndex(ba->name);
+    idb = ab? s->g4d->getAgentIndex(bb->name): s->g4d->getObjectIndex(bb->name);
+    if(aa && !ab)
+      s->dird(f, ida, idb) = proxy->d;
+    if(ab && !aa)
+      s->dird(f, idb, ida) = proxy->d;
+    if(!aa && !ab)
+      s->ood(f, ida, idb) = s->ood(f, ida, idb) = proxy->d;
+  }
+  //for(uint o = 0; o < numO; o++) {
+    //for(uint a = 0; a < numA; a++)
+      //s->dird(f, a, o) = s->kw->getContact(); // TODO convert s, o to object ids..
+    //for(uint o2 = 1; o2 < o; o2++)
+      //s->ood(f, o, o2) = s->ood(f, o2, o) = s->kw->getContact(); // TODO convert
+  //}
+  // object-object indirect distances
+  arr tmpd;
+  for(bool done = false; !done; ) {
+    tmpd = s->ood[f];
+    for(uint o = 0; o < numO; o++)
+      for(uint o2 = 0; o2 < numO; o2++)
+        tmpd(o, o2) = (s->ood[o] + s->ood[o2]).min();
+    if(s->ood[f] == tmpd)
+      done = true;
+    s->ood[f]() = tmpd;
+  }
+  // agent-object indirect distances
+  for(uint a = 0; a < numA; a++)
+    for(uint o = 0; o < numO; o++)
+      s->indd(f, a, o) = (s->dird[f][a] + s->ood[o]).min();
+}
+// }}}
+// computeDist {{{
+void KeyFramer::computeDist() {
+  uint numF = s->g4d->getNumFrames();
+  uint numA = s->g4d->getNumAgents();
+  uint numO = s->g4d->getNumObjects();
+
+  s->ood.resize(numF, numO, numO); s->ood.setZero();
+  s->dird.resize(numF, numA, numO); s->dird.setZero(-1); // can remove this?
+  s->indd.resize(numF, numA, numO);
+
+  for(uint f = 0; f < numF; f++)
+    computeDist(f);
+}
+// }}}
+// testDist {{{
+void KeyFramer::testDist(KeyValueGraph &kvg, const String &a, const String &o) {
+  KeyValueGraph *plot;
+  arr dist;
+
+  computeDist();
+
+  uint numF = s->g4d->getNumFrames();
+  uint ia = s->g4d->getAgentIndex(a);
+  uint io = s->g4d->getObjectIndex(o);
+  dist.resize(numF);
+  for(uint f = 0; f < numF; f++)
+    dist(f) = s->indd(f, ia, io);
+
+  kvg.append("data", "dist", new arr(dist));
+  plot = new KeyValueGraph();
+  plot->append("title", new String(STRING("Dist " << a << "-" << o)));
+  plot->append("dataid", new bool(true));
+  plot->append("autolegend", new bool(true));
+  plot->append("stream", new double(.75));
+  plot->append("data", new String("dist"));
+  kvg.append("plot", plot);
 }
 // }}}
 
@@ -3650,7 +3741,7 @@ void KeyFramer::playScene(const String &b) {
         i++;
       }
     }
-    updateOrs(f);
+    updateOrs(f, true);
   }
 }
 // }}}
@@ -3687,7 +3778,7 @@ void KeyFramer::playScene(const StringA &bb) {
         i++;
       }
     }
-    updateOrs(f);
+    updateOrs(f, true);
   }
 }
 // }}}

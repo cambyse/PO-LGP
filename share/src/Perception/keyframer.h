@@ -13,7 +13,7 @@ struct KeyFramer {
   KeyFramer(ors::KinematicWorld &kw, G4Data &g4d);
   ~KeyFramer();
 
-  void updateOrs(uint f);
+  void updateOrs(uint f, bool show);
 
   arr getCorr(uint b1, uint b2, uint wlen);
   arr getCorr(const String &n1, const String &n2, uint wlen);
@@ -34,6 +34,10 @@ struct KeyFramer {
   void computeGP(const String &type, bool force = false);
   void computeDPos(const String &b, bool force = false);
   void computeDQuat(const String &b, bool force = false);
+
+  void computeDist();
+  void computeDist(uint f);
+  void testDist(KeyValueGraph &kvg, const String &a, const String &b);
 
   arr getState(uint b);
   arr getState(const String &n);
