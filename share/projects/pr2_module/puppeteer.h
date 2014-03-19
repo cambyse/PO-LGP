@@ -17,7 +17,7 @@ coreTasks,
 amex, //shapeArg=task space, poseArg=reference trajectory
 moveEffTo, //shapeArg=body part, poseArg=whereTo
 alignEffTo, //shapeArg=body part, poseArg=whereTo
-exertForce, //shapeArg=body part, poseArg=orientation
+pushForce, //shapeArg=body part, poseArg=orientation
 grasp, //shapeArg=object, shapeArg1=hand selection
 gazeAt, //poseArg=whereTo
 headShakeNo, //no args
@@ -56,11 +56,12 @@ struct Puppeteer {
 
   Puppeteer();
   ~Puppeteer();
-  void open();
-
   ATom* addLiteral(const Symbol& sym,
                const char *shapeArg1, const char *shapeArg2,
-               const arr& poseArg1, arr& poseArg2);
+               const arr& poseArg1, const arr& poseArg2);
+  void removeLiteral(ATom* a);
 
-  void run();
+  void open();
+  void run(double secs);
+  void close();
 };

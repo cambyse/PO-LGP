@@ -62,7 +62,7 @@ void testJoypad(){
 //    qdot = S.qdot_obs.get();
 //    MP.setState(q,qdot);
 
-    cout <<S.ctrl_obs.get()->fL <<endl;
+//    cout <<S.ctrl_obs.get()->fL <<endl;
 
     bool shutdown = j2t.updateTasks(joypadState);
     if(shutdown) engine().shutdown.incrementValue();
@@ -82,11 +82,11 @@ void testJoypad(){
       cout <<"FORCE TASK" <<endl;
       refs.fL = ARR(10., 0., 0.);
       refs.fL_gainFactor = 1.;
-      refs.Kp_gainFactor = .02;
+      refs.Kp_gainFactor = .3;
     }else{
       refs.fL = ARR(0., 0., 0.);
       refs.fL_gainFactor = 0.;
-      refs.Kp_gainFactor = 3.;
+      refs.Kp_gainFactor = 1.;
     }
 
     refs.q=q;
@@ -105,8 +105,14 @@ void testPuppeteer(){
   Puppeteer P;
   P.open();
   P.addLiteral(coreTasks, NULL, NULL, NoArr, NoArr);
-  P.addLiteral(moveEffTo, "endeffR", NULL, ARR(.5,0,1.2), NoArr);
-  P.run();
+  P.addLiteral(moveEffTo, "endeffR", NULL, ARR(.5,-.4,.7), NoArr);
+  P.addLiteral(alignEffTo, "endeffR", NULL, ARR(1., 0., 0.), ARR(1., 0., 0.));
+  P.run(5.);
+  ATom *a = P.addLiteral(pushForce, "endeffR", NULL, ARR(10., 0., 0.), NoArr);
+  P.run(1.);
+  P.removeLiteral(a);
+  P.run(1.);
+  P.close();
 }
 
 int main(int argc, char** argv){

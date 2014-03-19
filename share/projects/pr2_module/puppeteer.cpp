@@ -10,6 +10,8 @@
 
 Symbol moveEffTo = {0, MT::String("MoveEffTo"), 2};
 Symbol coreTasks = {1, MT::String("CoreTasks"), 0};
+Symbol alignEffTo = {2, MT::String("AlignEffTo"), 2};
+Symbol pushForce = {3, MT::String("PushForce"), 2};
 
 struct ThePuppeteerSystem:System{
   ACCESS(CtrlMsg, ctrl_ref);
@@ -18,7 +20,7 @@ struct ThePuppeteerSystem:System{
   RosCom *ros;
   ThePuppeteerSystem():ros(NULL){
     addModule<JoystickInterface>(NULL, Module_Thread::loopWithBeat, .01);
-    //ros = addModule<RosCom>(NULL, Module_Thread::loopWithBeat, .001);
+    ros = addModule<RosCom>(NULL, Module_Thread::loopWithBeat, .001);
     connect();
   }
 };
@@ -87,7 +89,7 @@ void Puppeteer::open(){ s->open(); }
 
 ATom* Puppeteer::addLiteral(const Symbol& sym,
                                const char *shapeArg1, const char *shapeArg2,
-                               const arr& poseArg1, arr& poseArg2){
+                               const arr& poseArg1, const arr &poseArg2){
   ATom *a = A.append(new ATom);
   a->symbol = sym;
   if(shapeArg1) a->shapeArg1 = shapeArg1;
@@ -98,6 +100,14 @@ ATom* Puppeteer::addLiteral(const Symbol& sym,
   if(a->symbol==moveEffTo){
     PDtask *task = s->MP.addPDTask(STRING("MoveEffTo_" <<a->shapeArg1), .1, .8, posTMT, a->shapeArg1);
     a->tasks.append(task);
+  }
+  if(a->symbol==alignEffTo){
+    PDtask *task = s->MP.addPDTask(STRING("AlignEffTo_" <<a->shapeArg1), .2, .8, vecTMT, a->shapeArg1, ors::Vector(a->poseArg1));
+    task->y_ref = a->poseArg2;
+    a->tasks.append(task);
+  }
+  if(a->symbol==pushForce){
+    //nothing to be done?
   }
   if(a->symbol==coreTasks){
     PDtask *qitself = s->MP.addPDTask("DampMotion_qitself", .1, 1., qLinearTMT, NULL, NoVector, NULL, NoVector, s->MP.H_rate_diag);
@@ -117,17 +127,28 @@ ATom* Puppeteer::addLiteral(const Symbol& sym,
   return a;
 }
 
+void Puppeteer::removeLiteral(ATom* a){
+  for(PDtask *t:a->tasks) s->MP.tasks.removeValue(t);
+  listDelete(a->tasks);
+  A.removeValue(a);
+}
 
 Puppeteer::Puppeteer(){
+  AtomL::memMove=true;
   s = new sPuppeteer();
 }
 Puppeteer::~Puppeteer(){
   delete s;
 }
 
-void Puppeteer::run(){
+void Puppeteer::run(double secs){
+  //defaults
+  s->refs.fR = ARR(0., 0., 0.);
+  s->refs.fR_gainFactor = 0.;
+  s->refs.Kp_gainFactor = 1.;
+
   for(uint t=0;;t++){
-//    s->S.joystickState.var->waitForNextRevision();
+    s->S.joystickState.var->waitForNextRevision();
     arr joypadState = s->S.joystickState.get();
     if(stopButtons(joypadState)) engine().shutdown.incrementValue();
 
@@ -140,19 +161,12 @@ void Puppeteer::run(){
       if(a->symbol==moveEffTo){
         a->tasks(0)->y_ref = a->poseArg1;
       }
-
-//      //-- force task
-//      uint mode = uint(joypadState(0));
-//      if(mode==2){
-//        cout <<"FORCE TASK" <<endl;
-//        refs.fL = ARR(10., 0., 0.);
-//        refs.fL_gainFactor = 1.;
-//        refs.Kp_gainFactor = .02;
-//      }else{
-//        refs.fL = ARR(0., 0., 0.);
-//        refs.fL_gainFactor = 0.;
-//        refs.Kp_gainFactor = 3.;
-//      }
+      if(a->symbol==pushForce){
+        cout <<"FORCE TASK" <<endl;
+        s->refs.fR = a->poseArg1;
+        s->refs.fR_gainFactor = 1.;
+        s->refs.Kp_gainFactor = .2;
+      }
     }
 
     //    q    = S.q_obs.get();
@@ -162,7 +176,12 @@ void Puppeteer::run(){
     s->step(t);
 
     if(engine().shutdown.getValue()/* || !rosOk()*/) break;
-  }
 
+    if(((double)t)/100. > secs) break;
+  }
+}
+
+void Puppeteer::close(){
   engine().close(s->S);
 }
+
