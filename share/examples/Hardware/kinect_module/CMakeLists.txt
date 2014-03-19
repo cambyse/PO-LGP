@@ -7,7 +7,7 @@ if(LIBFREENECT_FOUND)
 	include(.sources.cmake)
 	add_executable(x_${NAME} ${SOURCES})
 	
-	target_link_libraries(x_${NAME} Hardware_kinect Gui)
+	target_link_libraries(x_${NAME} Hardware_kinect Gui Core System Perception)
 	
 	mlr_example_test(${NAME})
 

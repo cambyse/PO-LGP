@@ -1,4 +1,5 @@
 #include <Core/thread.h>
+#include <Core/util.h>
 #include <ueye.h>
 #include "ueyecamera.h"
 
@@ -670,6 +671,8 @@ void UEyePoller::close() {
 }
 
 namespace MLR {
+	Mutex start_lock;
+
 	UEyeInterface::UEyeInterface(int cameraID) : s(new ::sUEyeInterface(cameraID)), streaming(false) {
 		s->camSetup();
 		s->camInit();
@@ -686,7 +689,10 @@ namespace MLR {
 	}
 	void UEyeInterface::startStreaming() {
 		if(!streaming) {
-			s->camOpen();
+			{
+				Lock l(start_lock);
+				s->camOpen();
+			}
 			streaming = true;
 		}
 	}
