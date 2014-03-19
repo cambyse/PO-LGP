@@ -29,7 +29,8 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   //-- match ROS and ORS joint ids
   world <<FILE("model.kvg");
   ROS_INFO("*** ORS model loaded");
-  ft_shape = world.getShapeByName("endeffForceL");
+  ftL_shape = world.getShapeByName("endeffForceL");
+  ftR_shape = world.getShapeByName("endeffForceR");
   ROS_qIndex.resize(world.q.N) = UINT_MAX;
   q.resize(world.q.N).setZero();
   qd.resize(world.q.N).setZero();
@@ -106,7 +107,8 @@ void TreeControllerClass::update() {
 
   //-- update ORS
   world.setJointState(q, qd);
-  world.kinematicsPos(y_fL, J_fL, ft_shape->body->index, &ft_shape->rel.pos);
+  world.kinematicsPos(y_fL, J_fL, ftL_shape->body->index, &ftL_shape->rel.pos);
+  world.kinematicsPos(y_fR, J_fR, ftR_shape->body->index, &ftR_shape->rel.pos);
 
   //-- PD on q_ref
   if(q_ref.N!=q.N || qdot_ref.N!=qd.N){
@@ -116,6 +118,9 @@ void TreeControllerClass::update() {
 
     if(fL_ref.N==3){
       u += fL_gainFactor*(~J_fL * fL_ref);
+    }
+    if(fR_ref.N==3){
+      u += fR_gainFactor*(~J_fR * fR_ref);
     }
 
     //-- command efforts to KDL
@@ -138,7 +143,7 @@ void TreeControllerClass::jointReference_subscriber_callback(const marc_controll
   q_ref = ARRAY(msg->q);
   qdot_ref = ARRAY(msg->qdot);
   fL_ref = ARRAY(msg->fL);
-  fR_ref = ARRAY(msg->fL);
+  fR_ref = ARRAY(msg->fR);
 #define CP(x) x=msg->x;  if(x>1.) x=1.;  if(x<0.) x=0.;
   CP(Kp_gainFactor);
   CP(Kd_gainFactor);
