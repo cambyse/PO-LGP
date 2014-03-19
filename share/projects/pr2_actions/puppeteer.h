@@ -2,6 +2,7 @@
 
 struct ATom;
 struct Symbol;
+struct PDtask;
 typedef MT::Array<ATom*> AtomL;
 
 struct Symbol{
@@ -46,7 +47,6 @@ struct ATom{
 };
 
 void autoTransition(AtomL& s);
-
 
 
 struct Puppeteer {

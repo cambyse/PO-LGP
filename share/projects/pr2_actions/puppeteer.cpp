@@ -6,21 +6,22 @@
 #include <Motion/pr2_heuristics.h>
 
 #include "puppeteer.h"
-#include "roscom.h"
+#include <System/ros/roscom.h>
 
 Symbol moveEffTo = {0, MT::String("MoveEffTo"), 2};
 Symbol coreTasks = {1, MT::String("CoreTasks"), 0};
 Symbol alignEffTo = {2, MT::String("AlignEffTo"), 2};
 Symbol pushForce = {3, MT::String("PushForce"), 2};
 
-struct ThePuppeteerSystem:System{
+struct PuppeteerSystem:System{
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
   ACCESS(arr, joystickState);
   RosCom *ros;
-  ThePuppeteerSystem():ros(NULL){
+  PuppeteerSystem():ros(NULL){
     addModule<JoystickInterface>(NULL, Module_Thread::loopWithBeat, .01);
-    ros = addModule<RosCom>(NULL, Module_Thread::loopWithBeat, .001);
+    if(MT::getParameter<bool>("useRos",false))
+      ros = addModule<RosCom>(NULL, Module_Thread::loopWithBeat, .001);
     connect();
   }
 };
@@ -29,7 +30,7 @@ struct sPuppeteer{
   ors::KinematicWorld world;
   FeedbackMotionControl MP;
 //  Gamepad2Tasks j2t;
-  ThePuppeteerSystem S;
+  PuppeteerSystem S;
   arr q, qdot, zero_qdot;
   CtrlMsg refs;
   sPuppeteer():world("model.kvg"), MP(world,false)/*, j2t(MP)*/{}
@@ -148,7 +149,7 @@ void Puppeteer::run(double secs){
   s->refs.Kp_gainFactor = 1.;
 
   for(uint t=0;;t++){
-    s->S.joystickState.var->waitForNextRevision();
+    //s->S.joystickState.var->waitForNextRevision();
     arr joypadState = s->S.joystickState.get();
     if(stopButtons(joypadState)) engine().shutdown.incrementValue();
 

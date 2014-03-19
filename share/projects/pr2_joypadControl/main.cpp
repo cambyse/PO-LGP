@@ -4,18 +4,18 @@
 #include <System/engine.h>
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
+#include <System/ros/roscom.h>
 
-#include "roscom.h"
-#include "puppeteer.h"
 
 struct MySystem:System{
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
   ACCESS(arr, joystickState);
   RosCom *ros;
-  MySystem(){
+  MySystem():ros(NULL){
     addModule<JoystickInterface>(NULL, Module_Thread::loopWithBeat, .01);
-    ros = addModule<RosCom>(NULL, Module_Thread::loopWithBeat, .001);
+    if(MT::getParameter<bool>("useRos", false))
+      ros = addModule<RosCom>(NULL, Module_Thread::loopWithBeat, .001);
     connect();
   }
 };
@@ -33,25 +33,26 @@ void testJoypad(){
 
   MySystem S;
   engine().open(S);
-  S.joystickState.var->waitForNextRevision();
 
-  //-- wait for first q observation!
-  cout <<"** Waiting for ROS message on initial configuration.." <<endl;
-  for(;;){
-    S.ctrl_obs.var->waitForNextRevision();
-    if(S.ctrl_obs.get()->q.N==MP.world.q.N
-       && S.ctrl_obs.get()->qdot.N==MP.world.q.N)
-      break;
+  if(S.ros){
+    //-- wait for first q observation!
+    cout <<"** Waiting for ROS message on initial configuration.." <<endl;
+    for(;;){
+      S.ctrl_obs.var->waitForNextRevision();
+      if(S.ctrl_obs.get()->q.N==MP.world.q.N
+         && S.ctrl_obs.get()->qdot.N==MP.world.q.N)
+        break;
+    }
+
+    //-- set current state
+    cout <<"** GO!" <<endl;
+    q = S.ctrl_obs.get()->q;
+    qdot = S.ctrl_obs.get()->qdot;
+    //arr fL_base = S.fL_obs.get();
+    MP.setState(q, qdot);
   }
-
-  //-- set current state
-  cout <<"** GO!" <<endl;
-  q = S.ctrl_obs.get()->q;
-  qdot = S.ctrl_obs.get()->qdot;
-  MP.setState(q, qdot);
   arr zero_qdot(qdot.N);
   zero_qdot.setZero();
-  //arr fL_base = S.fL_obs.get();
   CtrlMsg refs;
 
   for(uint t=0;;t++){
@@ -92,7 +93,7 @@ void testJoypad(){
     refs.q=q;
     refs.qdot=zero_qdot;
     S.ctrl_ref.set() = refs;
-    S.ros->publishJointReference();
+    if(S.ros) S.ros->publishJointReference();
 
     if(engine().shutdown.getValue()/* || !rosOk()*/) break;
   }
@@ -101,23 +102,8 @@ void testJoypad(){
 
 }
 
-void testPuppeteer(){
-  Puppeteer P;
-  P.open();
-  P.addLiteral(coreTasks, NULL, NULL, NoArr, NoArr);
-  P.addLiteral(moveEffTo, "endeffR", NULL, ARR(.5,-.4,.7), NoArr);
-  P.addLiteral(alignEffTo, "endeffR", NULL, ARR(1., 0., 0.), ARR(1., 0., 0.));
-  P.run(5.);
-  ATom *a = P.addLiteral(pushForce, "endeffR", NULL, ARR(10., 0., 0.), NoArr);
-  P.run(1.);
-  P.removeLiteral(a);
-  P.run(1.);
-  P.close();
-}
-
 int main(int argc, char** argv){
   MT::initCmdLine(argc, argv);
-//  testJoypad();
-  testPuppeteer();
+  testJoypad();
   return 0;
 }

@@ -1,2 +1,0 @@
-body goalRef { X=<T t(0.55 -0.58 1.0)>  type=1 size=[.15 .15 .15 .01] color=[0 1. 0] fixed, }
-body goal { X=<T t(0.55 -0.58 1.0)>  type=1 size=[.15 .15 .15 .01] color=[1. 0 0] fixed, }
