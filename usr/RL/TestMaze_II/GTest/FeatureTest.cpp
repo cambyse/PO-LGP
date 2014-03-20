@@ -1,18 +1,18 @@
 #include <gtest/gtest.h>
 
-#include "../util.h"
+#include "../util/util.h"
 
-#include "../Feature.h"
-#include "../AbstractAction.h"
+#include "../Representation/Feature.h"
+#include "../Representation/AbstractAction.h"
 #include "MinimalEnvironmentExample/MinimalAction.h"
 #include "../Maze/MazeAction.h"
 #include "../Maze/AugmentedMazeAction.h"
-#include "../AbstractObservation.h"
+#include "../Representation/AbstractObservation.h"
 #include "MinimalEnvironmentExample/MinimalObservation.h"
 #include "../Maze/MazeObservation.h"
-#include "../AbstractReward.h"
+#include "../Representation/AbstractReward.h"
 #include "MinimalEnvironmentExample/MinimalReward.h"
-#include "../ListedReward.h"
+#include "../Representation/ListedReward.h"
 
 #include "RandomElements.h"
 
@@ -24,7 +24,7 @@
 #include <sstream>
 
 #define DEBUG_LEVEL 1
-#include "../debug.h"
+#include "../util/debug.h"
 
 using std::vector;
 using std::list;

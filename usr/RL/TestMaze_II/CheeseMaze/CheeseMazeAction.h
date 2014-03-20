@@ -1,7 +1,7 @@
 #ifndef CHEESEMAZEACTION_H_
 #define CHEESEMAZEACTION_H_
 
-#include "../AbstractAction.h"
+#include "../Representation/AbstractAction.h"
 
 class CheeseMazeAction: public AbstractAction {
 public:

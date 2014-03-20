@@ -1,11 +1,13 @@
 #include "PredictiveEnvironment.h"
 
 #define DEBUG_LEVEL 0
-#include "debug.h"
+#include "util/debug.h"
 
 PredictiveEnvironment::PredictiveEnvironment(action_ptr_t as, observation_ptr_t os, reward_ptr_t rs):
-    Environment(as, os, rs), current_instance(nullptr)
-{}
+    current_instance(nullptr)
+{
+    set_spaces(as, os, rs);
+}
 
 void PredictiveEnvironment::perform_transition(const action_ptr_t & action) {
     // perform transition

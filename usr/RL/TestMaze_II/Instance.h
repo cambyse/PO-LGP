@@ -7,7 +7,7 @@ class ConstInstanceIt;
 
 #include "Config.h"
 
-#include "util.h"
+#include "util/util.h"
 
 #include <ostream>
 #include <vector>

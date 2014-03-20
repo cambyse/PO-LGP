@@ -4,7 +4,7 @@
 
 #define DEBUG_STRING "Instance: "
 #define DEBUG_LEVEL 1
-#include "debug.h"
+#include "util/debug.h"
 
 using util::INVALID;
 using std::cout;

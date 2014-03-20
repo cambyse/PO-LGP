@@ -1,11 +1,11 @@
 #include "BatchMaze.h"
 
-#include "util.h"
+#include "util/util.h"
 #include "Maze/Maze.h"
-#include "KMarkovCRF.h"
-#include "LookAheadSearch.h"
-#include "UTree.h"
-#include "LinearQ.h"
+#include "Learner/KMarkovCRF.h"
+#include "Planning/LookAheadSearch.h"
+#include "Learner/UTree.h"
+#include "Learner/LinearQ.h"
 #include "SmoothingKernelSigmoid.h"
 
 #include <omp.h>
@@ -29,7 +29,7 @@
 #else
 #define DEBUG_LEVEL 1
 #endif
-#include "debug.h"
+#include "util/debug.h"
 
 #define LOG_COMMENT(x) DEBUG_OUT(2,x); log_file << "# " << x << std::endl;
 #define LOG(x) DEBUG_OUT(2,x); log_file << x << std::endl;
@@ -390,6 +390,7 @@ int BatchMaze::run_active() {
             current_instance = instance_t::create(maze_instance->action,maze_instance->observation,maze_instance->reward,maze_instance-1);
 
             // initialize look ahead search
+            // TODO: This should be done using LookAheadPolicy as in PlannerTest.cpp
             look_ahead_search = new LookAheadSearch(switch_double("-d"));
 
             // initialize learners

@@ -21,9 +21,9 @@
 #ifndef CONFIG_TYPE_INCLUDES_H_
 #define CONFIG_TYPE_INCLUDES_H_
 
-#include "AbstractAction.h"
-#include "AbstractObservation.h"
-#include "AbstractReward.h"
+#include "Representation/AbstractAction.h"
+#include "Representation/AbstractObservation.h"
+#include "Representation/AbstractReward.h"
 #include "Instance.h"
 
 #endif /* CONFIG_TYPE_INCLUDES_H_ */

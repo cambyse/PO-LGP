@@ -3,14 +3,14 @@
 #include "../util/ColorOutput.h"
 
 #include "../Maze/Maze.h"
-#include "../KMarkovCRF.h"
-#include "../UTree.h"
 #include "../PredictiveEnvironment.h"
-#include "../LookAheadSearch.h"
-#include "../LinearQ.h"
+#include "../Planning/LookAheadSearch.h"
+#include "../Learner/KMarkovCRF.h"
+#include "../Learner/UTree.h"
+#include "../Learner/LinearQ.h"
 
 #define DEBUG_LEVEL 1
-#include "../debug.h"
+#include "../util/debug.h"
 
 using std::vector;
 using std::shared_ptr;
@@ -75,6 +75,7 @@ TEST(LearnerTest, KMarkovCRF) {
     //-----------------------------//
 
     // initialize planner
+    // TODO: This should be done using LookAheadPolicy as in PlannerTest.cpp
     LookAheadSearch planner(0.5);
     planner.set_spaces(action_space, observation_space, reward_space);
 
@@ -290,7 +291,7 @@ TEST(LearnerTest, LinearQ) {
     }
 
     // do some random actions to collect data
-    repeat(500) {
+    repeat(1000) {
         action_ptr_t action = util::random_select(action_vector);
         observation_ptr_t observation_to;
         reward_ptr_t reward;
