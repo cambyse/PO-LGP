@@ -1,13 +1,13 @@
 #include "BatchWorker.h"
 
-#include "../util.h"
+#include "../util/util.h"
 #include "../Environment.h"
 #include "../Predictor.h"
 #include "../HistoryObserver.h"
-#include "../FeatureLearner.h"
+#include "../Learner/FeatureLearner.h"
 #include "../CheeseMaze/CheeseMaze.h"
-#include "../KMarkovCRF.h"
-#include "../UTree.h"
+#include "../Learner/KMarkovCRF.h"
+#include "../Learner/UTree.h"
 #include "../Planning/LookAheadSearch.h"
 
 #include <QDateTime>
@@ -20,7 +20,7 @@
 #define DEBUG_LEVEL 2
 #endif
 #define DEBUG_STRING "BatchWorker: "
-#include "debug.h"
+#include "util/debug.h"
 
 #define USE_OMP
 

@@ -5,9 +5,9 @@
 
 #include "Config.h"
 
-#include "KMarkovCRF.h"
-#include "UTree.h"
-#include "LinearQ.h"
+#include "Learner/KMarkovCRF.h"
+#include "Learner/UTree.h"
+#include "Learner/LinearQ.h"
 #include "Planning/Policy.h"
 #include "DelayDistribution.h"
 

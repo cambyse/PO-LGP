@@ -1,7 +1,7 @@
 #include "testmaze_ii.h"
 
 #include "Config.h"
-#include "util.h"
+#include "util/util.h"
 #include "util/QtUtil.h"
 
 #include "SmoothingKernelSigmoid.h"
@@ -24,7 +24,7 @@
 #else
 #define DEBUG_LEVEL 1
 #endif
-#include "debug.h"
+#include "util/debug.h"
 
 using std::vector;
 using std::map;

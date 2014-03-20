@@ -1,11 +1,11 @@
 #include "BatchMaze.h"
 
-#include "util.h"
+#include "util/util.h"
 #include "Maze/Maze.h"
-#include "KMarkovCRF.h"
+#include "Learner/KMarkovCRF.h"
 #include "Planning/LookAheadSearch.h"
-#include "UTree.h"
-#include "LinearQ.h"
+#include "Learner/UTree.h"
+#include "Learner/LinearQ.h"
 #include "SmoothingKernelSigmoid.h"
 
 #include <omp.h>
@@ -29,7 +29,7 @@
 #else
 #define DEBUG_LEVEL 1
 #endif
-#include "debug.h"
+#include "util/debug.h"
 
 #define LOG_COMMENT(x) DEBUG_OUT(2,x); log_file << "# " << x << std::endl;
 #define LOG(x) DEBUG_OUT(2,x); log_file << x << std::endl;

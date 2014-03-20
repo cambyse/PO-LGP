@@ -1,8 +1,8 @@
 #include "GoalIteration.h"
-#include "../util.h"
+#include "../util/util.h"
 #include <vector>
 #include <algorithm> // for std::max
-#include "../debug.h"
+#include "../util/debug.h"
 
 using std::vector;
 using std::max;
