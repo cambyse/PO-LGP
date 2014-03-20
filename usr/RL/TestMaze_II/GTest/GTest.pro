@@ -7,7 +7,7 @@ QT += core \
 HEADERS += \
     ../Config.h \
     \
-    ../util.h \
+    ../util/util.h \
     ../util/Macro.h \
     ../util/ProgressBar.h \
     ../util/ColorOutput.h \
@@ -15,15 +15,20 @@ HEADERS += \
     ../util/lbfgs_codes.h \
     ../util/KolmogorovSmirnovDist.h \
     ../util/KolmogorovSmirnovTest.h \
+    ../util/debug.h \
+    ../util/debug_exclude.h \
     \
     ../optimization/LBFGS_Optimizer.h \
+    ../optimization/LBFGS_Object.h \
     \
-    ../Feature.h \
+    ../Representation/Feature.h \
     ../Instance.h \
-    ../AbstractAction.h \
-    ../AbstractObservation.h \
-    ../AbstractReward.h \
-    ../ListedReward.h \
+    ../Representation/AbstractInstance.h \
+    ../Representation/DoublyLinkedInstance.h \
+    ../Representation/AbstractAction.h \
+    ../Representation/AbstractObservation.h \
+    ../Representation/AbstractReward.h \
+    ../Representation/ListedReward.h \
     \
     ../Predictor.h \
     ../Environment.h \
@@ -37,13 +42,17 @@ HEADERS += \
     ../CheeseMaze/CheeseMazeAction.h \
     ../CheeseMaze/CheeseMazeObservation.h \
     \
-    ../LookAheadSearch.h \
+    ../Planning/Policy.h \
+    ../Planning/LookAheadSearch.h \
+    ../Planning/LookAheadPolicy.h \
     \
     ../HistoryObserver.h \
-    ../FeatureLearner.h \
-    ../KMarkovCRF.h \
-    ../UTree.h \
-    ../LinearQ.h \
+    ../SpaceManager.h \
+    \
+    ../Learner/FeatureLearner.h \
+    ../Learner/KMarkovCRF.h \
+    ../Learner/UTree.h \
+    ../Learner/LinearQ.h \
     \
     MinimalEnvironmentExample/MinimalAction.h \
     MinimalEnvironmentExample/MinimalObservation.h \
@@ -53,7 +62,7 @@ HEADERS += \
 SOURCES += \
     main.cpp \
     \
-    ../util.cpp \
+    ../util/util.cpp \
     ../util/ProgressBar.cpp \
     ../util/ColorOutput.cpp \
     ../util/QtUtil.cpp \
@@ -62,15 +71,17 @@ SOURCES += \
     ../util/KolmogorovSmirnovTest.cpp \
     \
     ../optimization/LBFGS_Optimizer.cpp \
+    ../optimization/LBFGS_Object.cpp \
     \
-    ../Feature.cpp \
+    ../Representation/Feature.cpp \
     ../Instance.cpp \
-    ../AbstractAction.cpp \
-    ../AbstractObservation.cpp \
-    ../AbstractReward.cpp \
-    ../ListedReward.cpp \
+    ../Representation/AbstractInstance.cpp \
+    ../Representation/DoublyLinkedInstance.cpp \
+    ../Representation/AbstractAction.cpp \
+    ../Representation/AbstractObservation.cpp \
+    ../Representation/AbstractReward.cpp \
+    ../Representation/ListedReward.cpp \
     \
-    ../Environment.cpp \
     ../PredictiveEnvironment.cpp \
     ../Visualizer.cpp \
     ../Maze/Maze.cpp \
@@ -81,13 +92,16 @@ SOURCES += \
     ../CheeseMaze/CheeseMazeAction.cpp \
     ../CheeseMaze/CheeseMazeObservation.cpp \
     \
-    ../LookAheadSearch.cpp \
+    ../Planning/LookAheadSearch.cpp \
+    ../Planning/LookAheadPolicy.cpp \
     \
     ../HistoryObserver.cpp \
-    ../FeatureLearner.cpp \
-    ../KMarkovCRF.cpp \
-    ../UTree.cpp \
-    ../LinearQ.cpp \
+    ../SpaceManager.cpp \
+    \
+    ../Learner/FeatureLearner.cpp \
+    ../Learner/KMarkovCRF.cpp \
+    ../Learner/UTree.cpp \
+    ../Learner/LinearQ.cpp \
     \
     MinimalEnvironmentExample/MinimalAction.cpp \
     MinimalEnvironmentExample/MinimalObservation.cpp \
@@ -95,10 +109,12 @@ SOURCES += \
     RandomElements.cpp \
     \
     RepresentationTest.cpp \
+    InstanceTest.cpp \
     FeatureTest.cpp \
     EnvironmentTest.cpp \
     PlannerTest.cpp \
     LearnerTest.cpp \
+    LBFGSTest.cpp \
     \
 #    TemplateTest.cpp \
     SandBox.cpp

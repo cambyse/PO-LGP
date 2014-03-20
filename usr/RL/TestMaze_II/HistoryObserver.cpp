@@ -2,7 +2,7 @@
 #include "HistoryObserver.h"
 #define DEBUG_STRING "HistoryObserver: "
 #define DEBUG_LEVEL 1
-#include "debug.h"
+#include "util/debug.h"
 
 HistoryObserver::HistoryObserver():
     number_of_data_points(0)

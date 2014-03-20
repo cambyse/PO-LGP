@@ -1,6 +1,6 @@
 #include "RandomElements.h"
 
-#include "../util.h"
+#include "../util/util.h"
 
 #include "MinimalEnvironmentExample/MinimalAction.h"
 #include "../Maze/MazeAction.h"
@@ -10,11 +10,11 @@
 #include "../Maze/MazeObservation.h"
 #include "../CheeseMaze/CheeseMazeObservation.h"
 #include "MinimalEnvironmentExample/MinimalReward.h"
-#include "../ListedReward.h"
+#include "../Representation/ListedReward.h"
 
 #include <vector>
 
-#include "../debug.h"
+#include "../util/debug.h"
 
 using util::random_select;
 using std::vector;

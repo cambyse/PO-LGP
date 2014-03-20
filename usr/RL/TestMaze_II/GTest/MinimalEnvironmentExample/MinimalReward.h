@@ -1,7 +1,7 @@
 #ifndef MINIMALREWARD_H_
 #define MINIMALREWARD_H_
 
-#include "../../AbstractReward.h"
+#include "../../Representation/AbstractReward.h"
 
 class MinimalReward: public AbstractReward {
 public:
@@ -15,6 +15,6 @@ public:
     virtual const std::string print() const override;
 };
 
-#include "../../debug_exclude.h"
+#include "../../util/debug_exclude.h"
 
 #endif /* MINIMALREWARD_H_ */

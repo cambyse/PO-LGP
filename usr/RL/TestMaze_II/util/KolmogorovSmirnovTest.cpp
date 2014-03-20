@@ -4,7 +4,7 @@
 #include <float.h>
 
 #define DEBUG_STRING "K-S-Test: "
-#include "../debug.h"
+#include "../util/debug.h"
 
 using std::vector;
 

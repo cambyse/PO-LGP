@@ -1,7 +1,7 @@
 #ifndef MAZEACTION_H_
 #define MAZEACTION_H_
 
-#include "../AbstractAction.h"
+#include "../Representation/AbstractAction.h"
 
 class MazeAction: public AbstractAction {
 public:
