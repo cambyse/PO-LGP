@@ -16,6 +16,7 @@ namespace MLR {
 			rgb[1] = 0x03 & (d>>2);
 			rgb[2] = 0x03 & d;
 		}
+		buffer.reshape(depth.d0, depth.d1, 3);
 	}
 }
 
