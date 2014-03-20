@@ -1,42 +1,11 @@
-#include <Motion/gamepad2tasks.h>
-#include <Motion/feedbackControl.h>
-#include <Hardware/joystick/joystick.h>
-#include <System/engine.h>
-#include <Gui/opengl.h>
-#include <Motion/pr2_heuristics.h>
 
-#include "puppeteer.h"
-#include <System/ros/roscom.h>
+#include "puppeteer_internal.h"
 
-Symbol moveEffTo = {0, MT::String("MoveEffTo"), 2};
-Symbol coreTasks = {1, MT::String("CoreTasks"), 0};
-Symbol alignEffTo = {2, MT::String("AlignEffTo"), 2};
-Symbol pushForce = {3, MT::String("PushForce"), 2};
+//===========================================================================
 
-struct PuppeteerSystem:System{
-  ACCESS(CtrlMsg, ctrl_ref);
-  ACCESS(CtrlMsg, ctrl_obs);
-  ACCESS(arr, joystickState);
-  RosCom *ros;
-  PuppeteerSystem():ros(NULL){
-    addModule<JoystickInterface>(NULL, Module_Thread::loopWithBeat, .01);
-    if(MT::getParameter<bool>("useRos",false))
-      ros = addModule<RosCom>(NULL, Module_Thread::loopWithBeat, .001);
-    connect();
-  }
-};
+Singleton<SymbolL> symbols;
 
-struct sPuppeteer{
-  ors::KinematicWorld world;
-  FeedbackMotionControl MP;
-//  Gamepad2Tasks j2t;
-  PuppeteerSystem S;
-  arr q, qdot, zero_qdot;
-  CtrlMsg refs;
-  sPuppeteer():world("model.kvg"), MP(world,false)/*, j2t(MP)*/{}
-  void open();
-  void step(uint t);
-};
+//===========================================================================
 
 void sPuppeteer::open(){
   world.getJointState(q, qdot);
@@ -88,54 +57,33 @@ void sPuppeteer::step(uint t){
 
 void Puppeteer::open(){ s->open(); }
 
-ATom* Puppeteer::addLiteral(const Symbol& sym,
+GroundedAction* Puppeteer::addGroundedAction(ActionSymbol &sym,
                                const char *shapeArg1, const char *shapeArg2,
                                const arr& poseArg1, const arr &poseArg2){
-  ATom *a = A.append(new ATom);
-  a->symbol = sym;
+  GroundedAction *a = A.append(new GroundedAction(sym));
   if(shapeArg1) a->shapeArg1 = shapeArg1;
   if(shapeArg2) a->shapeArg2 = shapeArg2;
   if(&poseArg1) a->poseArg1 = poseArg1;
   if(&poseArg2) a->poseArg2 = poseArg2;
 
-  if(a->symbol==moveEffTo){
-    PDtask *task = s->MP.addPDTask(STRING("MoveEffTo_" <<a->shapeArg1), .1, .8, posTMT, a->shapeArg1);
-    a->tasks.append(task);
-  }
-  if(a->symbol==alignEffTo){
-    PDtask *task = s->MP.addPDTask(STRING("AlignEffTo_" <<a->shapeArg1), .2, .8, vecTMT, a->shapeArg1, ors::Vector(a->poseArg1));
-    task->y_ref = a->poseArg2;
-    a->tasks.append(task);
-  }
-  if(a->symbol==pushForce){
-    //nothing to be done?
-  }
-  if(a->symbol==coreTasks){
-    PDtask *qitself = s->MP.addPDTask("DampMotion_qitself", .1, 1., qLinearTMT, NULL, NoVector, NULL, NoVector, s->MP.H_rate_diag);
-    qitself->setGains(0.,100.);
-    qitself->y_ref = s->MP.nullSpacePD.y_ref;
-    qitself->v_ref.setZero();
-    qitself->prec=100.;
-    a->tasks.append(qitself);
-
-    PDtask *limits = s->MP.addPDTask("limits", .02, .8, qLimitsTMT);
-    limits->active=true;
-    limits->v_ref.setZero();
-    limits->v_ref.setZero();
-    limits->prec=100.;
-    a->tasks.append(limits);
-  }
+  a->symbol.initYourself(*a, *this);
+//  if(a->symbol==alignEffTo){
+//  }
+//  if(a->symbol==pushForce){
+//    //nothing to be done?
+//  }
+//  if(a->symbol==coreTasks){
+//  }
   return a;
 }
 
-void Puppeteer::removeLiteral(ATom* a){
-  for(PDtask *t:a->tasks) s->MP.tasks.removeValue(t);
-  listDelete(a->tasks);
+void Puppeteer::removeGroundedAction(GroundedAction* a){
+  a->symbol.deinitYourself(*a, *this);
   A.removeValue(a);
 }
 
 Puppeteer::Puppeteer(){
-  AtomL::memMove=true;
+  ActionL::memMove=true;
   s = new sPuppeteer();
 }
 Puppeteer::~Puppeteer(){
@@ -154,7 +102,7 @@ void Puppeteer::run(double secs){
     if(stopButtons(joypadState)) engine().shutdown.incrementValue();
 
     cout <<"active actions:";
-    for(ATom *a : A) if(a->active){
+    for(GroundedAction *a : A) if(a->active){
       cout <<' ' <<a->symbol.name;
       if(a->symbol==moveEffTo){
         //nothing to be done
@@ -186,3 +134,45 @@ void Puppeteer::close(){
   engine().close(s->S);
 }
 
+//===========================================================================
+
+void reportExistingSymbols(){
+  for(Symbol *s:symbols()){
+    cout <<"Symbol '" <<s->name <<"' nargs=" <<s->nargs;
+    if(dynamic_cast<ActionSymbol*>(s)) cout <<" is ActionSymbol";
+    cout <<endl;
+  }
+}
+
+void reportActions(ActionL &A){
+  cout <<"* ActionL" <<endl;
+  for(GroundedAction *a:A){
+    cout <<a->symbol.name <<" [" <<a->shapeArg1 <<' ' <<a->shapeArg2 <<" ] [ " <<a->poseArg1 <<' ' <<a->poseArg2 <<" ]" <<endl;
+  }
+}
+
+void Puppeteer::transition(){
+  //-- first remove all old successes and fails
+  for_list_rev(GroundedAction, a, A) if(a->value==GroundedAction::success || a->value==GroundedAction::failed){
+    removeGroundedAction(a);
+    a=NULL; //a has deleted itself, for_list_rev should be save, using a_COUNTER
+  }
+
+  //-- check new successes and fails
+  for(GroundedAction *a:A) if(a->value==GroundedAction::active){
+    if(a->symbol.finishedSuccess(*a, *this)) a->value=GroundedAction::success;
+    if(a->symbol.finishedFail(*a, *this)) a->value=GroundedAction::failed;
+  }
+
+  //-- progress with queued
+  for(GroundedAction *a:A) if(a->value==GroundedAction::queued){
+    bool fail=false, succ=true;
+    for(GroundedAction *b:a->dependsOnCompletion){
+      if(b->value==GroundedAction::failed) fail=true;
+      if(!b->value==GroundedAction::success) succ=false;
+    }
+    if(fail) a->value=GroundedAction::failed; //if ONE dependence failed -> fail
+    if(succ) a->value=GroundedAction::active; //if ALL dependences succ -> active
+    //in all other cases -> queued
+  }
+}

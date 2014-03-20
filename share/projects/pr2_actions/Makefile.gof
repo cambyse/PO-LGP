@@ -1,6 +1,6 @@
 BASE = ../..
 
-OBJS = main.o puppeteer.o
+OBJS = main.o puppeteer.o actions.o
 PLIB = 1
 DEPEND = Core System Hardware Hardware_joystick Motion Ors Gui System System_ros
 
