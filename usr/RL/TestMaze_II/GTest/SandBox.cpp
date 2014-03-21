@@ -1,10 +1,24 @@
 #include <gtest/gtest.h>
 
+#include "SandBox.h"
+
 #include <memory> // for shared_ptr
 
 #include "../util/debug.h"
 
 using std::shared_ptr;
+
+Notifier::Notifier(): to_be_notified(nullptr) {}
+Notifier::~Notifier() { to_be_notified->notify_me(); }
+void Notifier::set_to_be_notified(A * p) { to_be_notified = p; }
+
+A::A(): notifier(new Notifier()) {}
+A::~A() { delete notifier; }
+void A::set_to_be_notified(A * p) const { notifier->set_to_be_notified(p); }
+void A::notify_me() {
+    got_notified = true;
+    DEBUG_OUT(0,"I got notified");
+}
 
 TEST(SandBox, SharedPtr) {
     shared_ptr<int> i1(new int(0));
@@ -55,4 +69,16 @@ TEST(SandBox, Inheritance) {
     A * a = new C();
     a->f(0);
     a->f(0,0,0);
+}
+
+TEST(SandBox, ConstPtrMember) {
+    // Problem: How can I "subscribe" to a const object A to be notified?
+    // Solution: The const object A holds a pointer to a Notifyer object. In
+    // that way A remains unchanged and only its Notifyer object "remembers" to
+    // other object to be notified.
+    A * a_ptr = new A();
+    {
+        const A a;
+        a.set_to_be_notified(a_ptr);
+    }
 }

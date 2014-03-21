@@ -23,11 +23,11 @@
 #endif
 
 #define DEBUG_ERROR(message) {                                          \
-        std::cout << ColorOutput::fg_red() << ColorOutput::bold() << DEBUG_STRING << "Error(L" << __LINE__ << "): " << message << ColorOutput::reset_all() << std::endl; \
+        std::cout << ColorOutput::fg_red() << ColorOutput::bold() << "Error(" << __FILE__ << ":" << __LINE__ << "): " << message << ColorOutput::reset_all() << std::endl; \
     }
 
 #define DEBUG_WARNING(message) {                                          \
-        std::cout << ColorOutput::fg_magenta() << DEBUG_STRING << "Warning(L" << __LINE__ << "): " << message << ColorOutput::reset_all() << std::endl; \
+        std::cout << ColorOutput::fg_magenta() << "Warning(" << __FILE__ << ":" << __LINE__ << "): " << message << ColorOutput::reset_all() << std::endl; \
     }
 
 #define DEBUG_OUT(level,message) {                              \
@@ -36,10 +36,8 @@
         }                                                       \
     }
 
-#define DEBUG_DEAD_LINE {                               \
-        DEBUG_ERROR("This line (" << __LINE__ <<        \
-                    ") in file " << __FILE__ <<         \
-                    " should never be reached");        \
+#define DEBUG_DEAD_LINE {                                       \
+        DEBUG_ERROR("This line should never be reached");       \
     }
 
 #define DEBUG_IF(check) if(DEBUG_LEVEL>0 && (check))

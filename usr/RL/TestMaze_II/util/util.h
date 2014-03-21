@@ -395,6 +395,8 @@ namespace util {
     InvalidBase(const bool& b = true): invalid(b) {}
         /** \brief Returns whether the object is invalid. */
         bool is_invalid() const { return invalid; }
+        bool operator!=(const InvalidBase& other) const { return invalid!=other.invalid; }
+        bool operator==(const InvalidBase& other) const { return !(*this!=other); }
     protected:
         /** \brief Holds whether the object is invalid. */
         bool invalid;
