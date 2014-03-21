@@ -5,7 +5,7 @@
 #include <sstream>
 #include <tuple> // for std::tie
 
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 2
 #include "../util/debug.h"
 
 using std::string;

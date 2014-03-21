@@ -1,7 +1,7 @@
 #include "DoublyLinkedInstance.h"
 
 #define DEBUG_STRING "DoublyLinkedInstance	("<<this<<") / "<<*this<<":	"
-#define DEBUG_LEVEL 2
+#define DEBUG_LEVEL 0
 #include "../util/debug.h"
 
 using util::INVALID;

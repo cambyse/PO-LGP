@@ -3,7 +3,7 @@
 #include <utility>
 
 #define DEBUG_STRING "AbstractInstance	("<<this<<") / "<<*this<<":	"
-#define DEBUG_LEVEL 2
+#define DEBUG_LEVEL 0
 #include "../util/debug.h"
 
 // Define MEMORY_CHECK to use memory_check() function (is automatically defined
@@ -38,12 +38,12 @@ AbstractInstance::PointerType::operator shared_ptr_t() {
     return ptr;
 }
 
-AbstractInstance::PointerType::operator InvalidBase() const {
-    return (InvalidBase)*ptr;
-}
-
 AbstractInstance::PointerType::operator shared_const_ptr_t() {
     return ptr;
+}
+
+AbstractInstance::PointerType::operator ConstPointerType() {
+    return ConstPointerType(*this);
 }
 
 AbstractInstance & AbstractInstance::PointerType::operator*() const {
@@ -52,6 +52,16 @@ AbstractInstance & AbstractInstance::PointerType::operator*() const {
 
 AbstractInstance * AbstractInstance::PointerType::operator->() const {
     return ptr.operator->();
+}
+
+AbstractInstance::PointerType& AbstractInstance::PointerType::operator++() {
+    ptr = ptr->non_const_next();
+    return *this;
+}
+
+AbstractInstance::PointerType& AbstractInstance::PointerType::operator--() {
+    ptr = ptr->non_const_prev();
+    return *this;
 }
 
 AbstractInstance::ConstPointerType::ConstPointerType(): ptr(create_invalid()) {}
@@ -68,16 +78,22 @@ AbstractInstance::ConstPointerType::operator shared_const_ptr_t() {
     return ptr;
 }
 
-AbstractInstance::ConstPointerType::operator InvalidBase() const {
-    return (InvalidBase)*ptr;
-}
-
 const AbstractInstance & AbstractInstance::ConstPointerType::operator*() const {
     return ptr.operator*();
 }
 
 const AbstractInstance * AbstractInstance::ConstPointerType::operator->() const {
     return ptr.operator->();
+}
+
+AbstractInstance::ConstPointerType& AbstractInstance::ConstPointerType::operator++() {
+    ptr = ptr->const_next();
+    return *this;
+}
+
+AbstractInstance::ConstPointerType& AbstractInstance::ConstPointerType::operator--() {
+    ptr = ptr->const_prev();
+    return *this;
 }
 
 //------------------------------------------------------------//

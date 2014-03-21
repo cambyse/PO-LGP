@@ -5,7 +5,7 @@
 #include <sstream>
 #include <algorithm> // for min, max
 
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 2
 #include "../util/debug.h"
 
 using std::min;

@@ -22,7 +22,7 @@ HEADERS += \
     ../optimization/LBFGS_Object.h \
     \
     ../Representation/Feature.h \
-    ../Instance.h \
+    \
     ../Representation/AbstractInstance.h \
     ../Representation/DoublyLinkedInstance.h \
     ../Representation/AbstractAction.h \
@@ -49,10 +49,10 @@ HEADERS += \
     ../HistoryObserver.h \
     ../SpaceManager.h \
     \
-    ../Learner/FeatureLearner.h \
-    ../Learner/KMarkovCRF.h \
-    ../Learner/UTree.h \
-    ../Learner/LinearQ.h \
+#    ../Learner/FeatureLearner.h \
+#    ../Learner/KMarkovCRF.h \
+#    ../Learner/UTree.h \
+#    ../Learner/LinearQ.h \
     \
     MinimalEnvironmentExample/MinimalAction.h \
     MinimalEnvironmentExample/MinimalObservation.h \
@@ -74,7 +74,7 @@ SOURCES += \
     ../optimization/LBFGS_Object.cpp \
     \
     ../Representation/Feature.cpp \
-    ../Instance.cpp \
+    \
     ../Representation/AbstractInstance.cpp \
     ../Representation/DoublyLinkedInstance.cpp \
     ../Representation/AbstractAction.cpp \
@@ -98,10 +98,10 @@ SOURCES += \
     ../HistoryObserver.cpp \
     ../SpaceManager.cpp \
     \
-    ../Learner/FeatureLearner.cpp \
-    ../Learner/KMarkovCRF.cpp \
-    ../Learner/UTree.cpp \
-    ../Learner/LinearQ.cpp \
+#    ../Learner/FeatureLearner.cpp \
+#    ../Learner/KMarkovCRF.cpp \
+#    ../Learner/UTree.cpp \
+#    ../Learner/LinearQ.cpp \
     \
     MinimalEnvironmentExample/MinimalAction.cpp \
     MinimalEnvironmentExample/MinimalObservation.cpp \
@@ -113,10 +113,10 @@ SOURCES += \
     FeatureTest.cpp \
     EnvironmentTest.cpp \
     PlannerTest.cpp \
-    LearnerTest.cpp \
+#    LearnerTest.cpp \
     LBFGSTest.cpp \
     \
-#    TemplateTest.cpp \
+    TemplateTest.cpp \
     SandBox.cpp
 LIBS += -llbfgs \
     -lemon \

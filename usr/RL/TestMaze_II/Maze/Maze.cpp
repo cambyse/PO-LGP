@@ -3,6 +3,8 @@
 #include "../util/QtUtil.h"
 #include "../util/ColorOutput.h"
 
+#include "../Representation/DoublyLinkedInstance.h"
+
 #define DEBUG_LEVEL 0
 #include "../util/debug.h"
 
@@ -70,7 +72,6 @@ Maze::Maze(const double& eps, const QString& s):
 
 Maze::~Maze() {
     delete agent;
-    delete current_instance;
 }
 
 bool Maze::set_maze(const QString& s) {
@@ -178,7 +179,7 @@ void Maze::render_update() {
     agent->setElementId(agent->elementId()=="normal" ? "mirrored" : "normal");
 
     // set action line and circle
-    observation_t last_state(*((current_instance->const_it()-1)->observation.get_derived<observation_t>()));
+    observation_t last_state(*(current_instance->const_prev()->observation.get_derived<observation_t>()));
     double al_length = state_size*action_line_length_factor;
     double ap_size = state_size*action_point_size_factor;
     action_point->setRect(last_state.get_x_pos()-ap_size/2,last_state.get_y_pos()-ap_size/2,ap_size,ap_size);
@@ -255,10 +256,10 @@ void Maze::perform_transition(const action_ptr_t& action, std::vector<std::pair<
 
     if(DEBUG_LEVEL>=1) {
         DEBUG_OUT(1,"Current instance: ");
-        const_instanceIt_t insIt = current_instance->it();
+        const_instance_ptr_t ins = current_instance;
         for(idx_t k_idx=0; k_idx<k; ++k_idx) {
-            DEBUG_OUT(1,"    " << (*insIt) );
-            --insIt;
+            DEBUG_OUT(1,"    " << ins );
+            --ins;
         }
     }
 
@@ -280,7 +281,7 @@ void Maze::perform_transition(const action_ptr_t& action, std::vector<std::pair<
             prob_accum += prob;
             if(prob_accum>prob_threshold) {
                 current_observation = *(observation_to.get_derived<observation_t>());
-                current_instance = current_instance->append_instance(action, observation_to, reward);
+                current_instance = current_instance->append(action, observation_to, reward);
                 was_set = true;
                 DEBUG_OUT(2,"CHOOSE");
             }
@@ -304,7 +305,7 @@ void Maze::perform_transition(const action_ptr_t& action) {
 }
 
 Maze::probability_t Maze::get_prediction(
-    const instance_t*        instance_from,
+    const_instance_ptr_t     instance_from,
     const action_ptr_t&      action,
     const observation_ptr_t& observation_to,
     const reward_ptr_t&      reward
@@ -313,7 +314,7 @@ Maze::probability_t Maze::get_prediction(
 }
 
 Maze::probability_t Maze::get_prediction(
-    const instance_t*        instance_from,
+    const_instance_ptr_t     instance_from,
     const action_ptr_t&      action,
     const observation_ptr_t& observation_to,
     const reward_ptr_t&      reward,
@@ -385,15 +386,15 @@ Maze::probability_t Maze::get_prediction(
 
                 // check if key was activated
                 idx_t steps_in_past = 0;
-                for(const_instanceIt_t insIt = instance_from->const_it();
-                    insIt!=INVALID && steps_in_past<=abs(delay);
-                    past_action=*(insIt->action.get_derived<action_t>()), --insIt, ++steps_in_past) {
+                for(const_instance_ptr_t ins = instance_from;
+                    ins!=INVALID && steps_in_past<=abs(delay);
+                    past_action=*(ins->action.get_derived<action_t>()), --ins, ++steps_in_past) {
 
                     // check if delay matches
                     if(delay<0 || steps_in_past==delay) { // exact match for positve delay less-equal match for negative
 
                         // check if key state was visited at that time
-                        if(insIt->observation==s3) {
+                        if(ins->observation==s3) {
 
                             // check action
                             switch(kt) {
@@ -522,7 +523,7 @@ Maze::probability_t Maze::get_prediction(
         if(receive_reward || rat==EACH_TIME_PUNISH_FAILURE || rat==ON_RELEASE_PUNISH_FAILURE) {
             idx_t steps_in_past = 1;
             bool reward_invalidated = false;
-            for( const_instanceIt_t insIt = instance_from->const_it(); insIt!=INVALID && steps_in_past<=abs(delay); --insIt, ++steps_in_past) {
+            for(const_instance_ptr_t ins = instance_from; ins!=INVALID && steps_in_past<=abs(delay); --ins, ++steps_in_past) {
 
                 // check if delay matches
                 bool delay_matches = false;
@@ -533,7 +534,7 @@ Maze::probability_t Maze::get_prediction(
 
                 // check if agent was on activation state
                 bool activation_state = false;
-                if(insIt->observation==activate_state) {
+                if(ins->observation==activate_state) {
                     activation_state = true;
                 }
 
@@ -714,10 +715,10 @@ void Maze::set_current_observation(const observation_ptr_t& observation) {
         DEBUG_ERROR("Cast failed. Please provide an observation of correct type");
     } else {
         current_observation = *o;
-        delete current_instance;
-        current_instance = instance_t::create(action_space, observation_space, reward_space);
+        current_instance->detach_reachable();
+        current_instance = DoublyLinkedInstance::create(action_space, observation_space, reward_space);
         for(idx_t k_idx=0; k_idx<k; ++k_idx) {
-            current_instance = current_instance->append_instance(action_space, observation_space, reward_space);
+            current_instance = current_instance->append(action_space, observation_space, reward_space);
         }
         DEBUG_OUT(1,"Set current state to " << current_observation);
     }

@@ -29,7 +29,7 @@ public:
         NodeInfo(
                 const NODE_TYPE&,
                 const EXPANSION_TYPE&,
-                instance_t *,
+                instance_ptr_t,
                 const action_ptr_t&,
                 const value_t&,
                 const value_t&
@@ -39,7 +39,7 @@ public:
         NodeInfo& operator=(const NodeInfo&);
         NODE_TYPE type;
         EXPANSION_TYPE expansion;
-        instance_t * instance; // !!!Needs to be set and deleted manually!!!
+        instance_ptr_t instance; // !!!Needs to be set and deleted manually!!!
         action_ptr_t action;
         value_t upper_value_bound, lower_value_bound;
     };
@@ -73,7 +73,7 @@ public:
 
     /*! \brief Build a search tree from the root observation. */
     void build_tree(
-            const instance_t * root,
+            const_instance_ptr_t root,
             const Predictor& environment,
             const size_t& max_node_counter = 0
     );
@@ -103,7 +103,7 @@ public:
 
     /*! \brief Prune obsolete branches after performing action a into observation s
      *  and reset root node. */
-    void prune_tree(const action_ptr_t& a, const instance_t * new_root_instance, const Predictor& environment);
+    void prune_tree(const action_ptr_t& a, const_instance_ptr_t new_root_instance, const Predictor& environment);
 
     /*! \brief Set the discount rate used for computing observation and action values. */
     void set_discount(const double& d) { discount = d; }

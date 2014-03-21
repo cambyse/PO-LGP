@@ -4,6 +4,7 @@
 
 #include <memory> // for shared_ptr
 
+#define DEBUG_LEVEL 0
 #include "../util/debug.h"
 
 using std::shared_ptr;
@@ -17,19 +18,19 @@ A::~A() { delete notifier; }
 void A::set_to_be_notified(A * p) const { notifier->set_to_be_notified(p); }
 void A::notify_me() {
     got_notified = true;
-    DEBUG_OUT(0,"I got notified");
+    DEBUG_OUT(1,"I got notified");
 }
 
 TEST(SandBox, SharedPtr) {
     shared_ptr<int> i1(new int(0));
     shared_ptr<int> i2(new int(0));
     shared_ptr<int> i3(i1);
-    DEBUG_OUT(0,"i1 (" << i1 << "): " << *i1);
-    DEBUG_OUT(0,"i2 (" << i2 << "): " << *i2);
-    DEBUG_OUT(0,"i3 (" << i3 << "): " << *i3);
-    DEBUG_OUT(0,"i1" << (i1==i2?"==":"!=") << "i2");
-    DEBUG_OUT(0,"i1" << (i1==i3?"==":"!=") << "i3");
-    DEBUG_OUT(0,"i3" << (i3==i2?"==":"!=") << "i2");
+    DEBUG_OUT(1,"i1 (" << i1 << "): " << *i1);
+    DEBUG_OUT(1,"i2 (" << i2 << "): " << *i2);
+    DEBUG_OUT(1,"i3 (" << i3 << "): " << *i3);
+    DEBUG_OUT(1,"i1" << (i1==i2?"==":"!=") << "i2");
+    DEBUG_OUT(1,"i1" << (i1==i3?"==":"!=") << "i3");
+    DEBUG_OUT(1,"i3" << (i3==i2?"==":"!=") << "i2");
 }
 
 TEST(SandBox, Inheritance) {
@@ -41,7 +42,7 @@ TEST(SandBox, Inheritance) {
     class AA {
     public:
         virtual void f(int, double) {
-            DEBUG_OUT(0,"AA::f(int, double)");
+            DEBUG_OUT(1,"AA::f(int, double)");
         }
     };
     class B: public A, public AA {
@@ -60,7 +61,7 @@ TEST(SandBox, Inheritance) {
     class C: public B {
     public:
         virtual void f(int, double) {
-            DEBUG_OUT(0,"C::f(int, double)");
+            DEBUG_OUT(1,"C::f(int, double)");
         }
         virtual void f(int) override {
             f(0,0.);

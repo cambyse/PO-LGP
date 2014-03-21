@@ -25,7 +25,7 @@ HEADERS += \
     ../optimization/LBFGS_Optimizer.h \
     \
     ../Representation/Feature.h \
-    ../Instance.h \
+    \
     ../Representation/AbstractInstance.h \
     ../Representation/DoublyLinkedInstance.h \
     ../Representation/AbstractAction.h \
@@ -76,7 +76,7 @@ SOURCES += \
     ../optimization/LBFGS_Optimizer.cpp \
     \
     ../Representation/Feature.cpp \
-    ../Instance.cpp \
+    \
     ../Representation/AbstractInstance.cpp \
     ../Representation/DoublyLinkedInstance.cpp \
     ../Representation/AbstractAction.cpp \

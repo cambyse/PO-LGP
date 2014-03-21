@@ -21,7 +21,7 @@ public:
     );
     virtual void clear_data();
 protected:
-    std::vector<instance_t*> instance_data;
+    std::vector<instance_ptr_t> instance_data;
     size_t number_of_data_points;
 };
 

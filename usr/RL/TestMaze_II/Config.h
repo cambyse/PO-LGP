@@ -24,7 +24,7 @@
 #include "Representation/AbstractAction.h"
 #include "Representation/AbstractObservation.h"
 #include "Representation/AbstractReward.h"
-#include "Instance.h"
+#include "Representation/AbstractInstance.h"
 
 #endif /* CONFIG_TYPE_INCLUDES_H_ */
 
@@ -40,9 +40,8 @@
     typedef AbstractAction::ptr_t      action_ptr_t;            \
     typedef AbstractObservation::ptr_t observation_ptr_t;       \
     typedef AbstractReward::ptr_t      reward_ptr_t;            \
-    typedef Instance                   instance_t;              \
-    typedef InstanceIt                 instanceIt_t;            \
-    typedef ConstInstanceIt            const_instanceIt_t;
+    typedef AbstractInstance::ptr_t    instance_ptr_t;          \
+    typedef AbstractInstance::const_ptr_t const_instance_ptr_t;
 
 #define DISAMBIGUATE_CONFIG_TYPEDEFS(class)     \
     using class::size_t;                        \
@@ -51,9 +50,8 @@
     using class::action_ptr_t;                  \
     using class::observation_ptr_t;             \
     using class::reward_ptr_t;                  \
-    using class::instance_t;                    \
-    using class::instanceIt_t;                  \
-    using class::const_instanceIt_t;
+    using class::instance_ptr_t;                \
+    using class::const_instance_ptr_t;
 
 #endif /* CONFIG_TYPEDEFS_H_ */
 

@@ -9,6 +9,7 @@
 #include "../util/util.h"
 #include "../Maze/Maze.h"
 #include "../Environment.h"
+#include "../Representation/DoublyLinkedInstance.h"
 
 #ifdef BATCH_MODE_QUIET
 #define DEBUG_LEVEL 0
@@ -45,7 +46,7 @@ LookAheadSearch::NodeInfo::NodeInfo():
 LookAheadSearch::NodeInfo::NodeInfo(
     const NODE_TYPE& t,
     const EXPANSION_TYPE& e,
-    instance_t * i,
+    instance_ptr_t i,
     const action_ptr_t& a,
     const value_t& uv,
     const value_t& lv
@@ -108,9 +109,10 @@ void LookAheadSearch::clear_tree() {
     for(graph_t::NodeIt node(graph); node!=INVALID; ++node) {
         // DEBUG_OUT(0,"Deleting instance of:");
         // print_node(node);
-        if(node_info_map[node].type==OBSERVATION) {
-            delete node_info_map[node].instance;
-        }
+        // if(node_info_map[node].type==OBSERVATION) {
+        //     delete node_info_map[node].instance;
+        // }
+#warning do I need to do something here?
     }
     graph.clear();
     number_of_nodes = 0;
@@ -118,7 +120,7 @@ void LookAheadSearch::clear_tree() {
 }
 
 void LookAheadSearch::build_tree(
-        const instance_t * root_instance,
+        const_instance_ptr_t root_instance,
         const Predictor& environment,
         const size_t& max_node_counter
 ) {
@@ -134,7 +136,11 @@ void LookAheadSearch::build_tree(
     node_info_map[root_node] = NodeInfo(
             OBSERVATION,
             NOT_EXPANDED,
-            instance_t::create(root_instance->action, root_instance->observation, root_instance->reward, root_instance->const_it()-1),
+            DoublyLinkedInstance::create(root_instance->action,
+                                         root_instance->observation,
+                                         root_instance->reward,
+                                         root_instance->const_prev(),
+                                         util::INVALID),
             action_ptr_t(),
             get_upper_value_bound(),
             get_lower_value_bound()
@@ -283,7 +289,7 @@ LookAheadSearch::probability_t LookAheadSearch::get_predicted_transition_probabi
     return arc_info_map[observation_node_in_arc].prob;
 }
 
-void LookAheadSearch::prune_tree(const action_ptr_t& a, const instance_t * new_root_instance, const Predictor& environment) {
+void LookAheadSearch::prune_tree(const action_ptr_t& a, const_instance_ptr_t new_root_instance, const Predictor& environment) {
 
     // get undirected graph for using standard algorithms
     typedef lemon::Undirector<graph_t> ugraph_t;
@@ -313,7 +319,11 @@ void LookAheadSearch::prune_tree(const action_ptr_t& a, const instance_t * new_r
         node_info_map[root_node] = NodeInfo(
             OBSERVATION,
             NOT_EXPANDED,
-            instance_t::create(new_root_instance->action, new_root_instance->observation, new_root_instance->reward, new_root_instance->const_it()-1),
+            DoublyLinkedInstance::create(new_root_instance->action,
+                                         new_root_instance->observation,
+                                         new_root_instance->reward,
+                                         new_root_instance->const_prev(),
+                                         util::INVALID),
             action_ptr_t(),
             get_upper_value_bound(),
             get_lower_value_bound()
@@ -344,12 +354,12 @@ void LookAheadSearch::prune_tree(const action_ptr_t& a, const instance_t * new_r
                           ", reward " << node_info_map[observation_node].instance->reward );
             }
             DEBUG_OUT(0,"    Old root instance " );
-            for( const_instanceIt_t old_instance(node_info_map[root_node].instance); old_instance!=util::INVALID; --old_instance) {
-                DEBUG_OUT(0,"        " << *old_instance );
+            for(const_instance_ptr_t old_instance = node_info_map[root_node].instance; old_instance!=util::INVALID; --old_instance) {
+                DEBUG_OUT(0,"        " << old_instance );
             }
             DEBUG_OUT(0,"    New root instance " );
-            for( const_instanceIt_t new_instance(new_root_instance); new_instance!=util::INVALID; --new_instance) {
-                DEBUG_OUT(0,"        " << *new_instance );
+            for(const_instance_ptr_t new_instance = new_root_instance; new_instance!=util::INVALID; --new_instance) {
+                DEBUG_OUT(0,"        " << new_instance );
             }
             // print_tree(false,true,"pruning_tree_error.eps");
             // clear_tree();
@@ -424,16 +434,17 @@ void LookAheadSearch::prune_tree(const action_ptr_t& a, const instance_t * new_r
 
     // erase nodes that are not in the main component
     for(node_t node : nodes_to_delete) {
-        if(node_info_map[node].type==OBSERVATION) {
-            delete node_info_map[node].instance;
-        }
+        // if(node_info_map[node].type==OBSERVATION) {
+        //     delete node_info_map[node].instance;
+        // }
+#warning do I need to do something here?
         graph.erase(node);
     }
 
     // update root node
     if(DEBUG_LEVEL>=1) {
         // sanity check
-        instance_t * ins = node_info_map[new_root_node].instance;
+        instance_ptr_t ins = node_info_map[new_root_node].instance;
         if(new_root_instance->action!=ins->action ||
            new_root_instance->observation!=ins->observation ||
            new_root_instance->reward!=ins->reward) {
@@ -442,9 +453,11 @@ void LookAheadSearch::prune_tree(const action_ptr_t& a, const instance_t * new_r
         }
     }
     root_node = new_root_node;
-    instance_t * new_root_instance_copy = instance_t::create(new_root_instance->action, new_root_instance->observation, new_root_instance->reward, new_root_instance->const_it()-1);
-    *(node_info_map[root_node].instance) = *new_root_instance_copy;
-    delete new_root_instance_copy;
+    node_info_map[root_node].instance = DoublyLinkedInstance::create(new_root_instance->action,
+            new_root_instance->observation,
+            new_root_instance->reward,
+            new_root_instance->const_prev(),
+            util::INVALID);
 
     // update number of nodes
     DEBUG_OUT(3,"    Updating number of nodes...");
@@ -973,7 +986,7 @@ void LookAheadSearch::expand_leaf_node(
         DEBUG_ERROR("trying to expand observation node with expansion other than NOT_EXPANDED");
     }
 
-    instance_t * instance_from = node_info_map[observation_node].instance;
+    instance_ptr_t instance_from = node_info_map[observation_node].instance;
 
     // create action nodes
     for(action_ptr_t action : action_space) {
@@ -1024,7 +1037,7 @@ void LookAheadSearch::expand_action_node(
         DEBUG_ERROR("trying to expand action node with expansion other than NOT_EXPANDED");
     }
 
-    const instance_t * instance_from = node_info_map[action_node].instance;
+    const_instance_ptr_t instance_from = node_info_map[action_node].instance;
     action_ptr_t action = node_info_map[action_node].action;
 
     // add all target observations (MDP-observation-reward combinations)
@@ -1041,7 +1054,7 @@ void LookAheadSearch::expand_action_node(
                 node_info_map[new_observation_node] = NodeInfo(
                         OBSERVATION,
                         NOT_EXPANDED,
-                        instance_t::create(action, new_observation, new_reward, instance_from, nullptr),
+                        DoublyLinkedInstance::create(action, new_observation, new_reward, instance_from, util::INVALID),
                         action_ptr_t(), // not defined for observation nodes
                         get_upper_value_bound(),
                         get_lower_value_bound()

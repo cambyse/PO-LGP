@@ -1136,7 +1136,7 @@ unsigned long KMarkovCRF::get_number_of_features() {
 }
 
 KMarkovCRF::probability_t KMarkovCRF::get_prediction(
-        const instance_t * instance,
+        const_instance_ptr_t instance,
         const action_ptr_t& action,
         const observation_ptr_t& observation_to,
         const reward_ptr_t& reward) const {
@@ -1167,7 +1167,7 @@ KMarkovCRF::probability_t KMarkovCRF::get_prediction(
 }
 
 KMarkovCRF::probability_t KMarkovCRF::get_kmdp_prediction(
-        const instance_t * instance,
+        const_instance_ptr_t instance,
         const action_ptr_t& action,
         const observation_ptr_t& observation_to,
         const reward_ptr_t& reward)
@@ -1295,7 +1295,7 @@ void KMarkovCRF::update_prediction_map() {
     // normalize to get a probability distribution
     for(auto it = prediction_map.begin(); it!=prediction_map.end(); ++it) {
 
-        const instance_t * instance = std::get<0>(it->first);
+        const_instance_ptr_t instance = std::get<0>(it->first);
         action_ptr_t action = std::get<1>(it->first);
         auto input_tuple = std::make_tuple(instance, action);
         auto ret_input = counts.find(input_tuple);

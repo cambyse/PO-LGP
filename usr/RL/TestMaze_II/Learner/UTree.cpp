@@ -2,6 +2,7 @@
 #include "../util/util.h"
 #include "../util/KolmogorovSmirnovTest.h"
 #include "../util/ChiSquareTest.h"
+#include "../Representation/DoublyLinkedInstance.h"
 
 #include <queue>
 #include <utility> // for std::pair
@@ -130,19 +131,13 @@ void UTree::clear_data() {
 }
 
 UTree::probability_t UTree::get_prediction(
-        const instance_t * instance,
+        const_instance_ptr_t instance,
         const action_ptr_t& action,
         const observation_ptr_t& observation_to,
         const reward_ptr_t& reward) const {
 
-    // construct instance
-    const instance_t * next_instance = instance_t::create(action, observation_to, reward, instance);
-
     // find leaf node
-    node_t node = find_leaf_node(next_instance);
-
-    // delete instance
-    delete next_instance;
+    node_t node = find_leaf_node(DoublyLinkedInstance::create(action, observation_to, reward, instance, util::INVALID));
 
     //----------------------------------//
     // calculate transition probability //
@@ -157,7 +152,7 @@ UTree::probability_t UTree::get_prediction(
         // number of times action a was performed.
         unsigned long transition_counter = 0;
         unsigned long action_counter = 0;
-        for( const instance_t * node_instance : node_info_map[node].instance_vector ) {
+        for(const_instance_ptr_t node_instance : node_info_map[node].instance_vector) {
             if(node_instance->action==action) {
                 ++action_counter;
                 if(node_instance->observation==observation_to && node_instance->reward==reward) {
@@ -354,9 +349,9 @@ void UTree::clear_tree() {
 
     // reinsert data into root node
     if(number_of_data_points>0) {
-        for(instance_t * current_episode : instance_data) {
-            for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=util::INVALID; ++insIt) {
-                insert_instance(insIt,root_node);
+        for(instance_ptr_t current_episode : instance_data) {
+            for(const_instance_ptr_t ins=current_episode->const_first(); ins!=util::INVALID; ++ins) {
+                insert_instance(ins,root_node);
             }
         }
     }
@@ -514,7 +509,7 @@ double UTree::expand_leaf_node(const double& score_threshold) {
 
 //     // run Q-iteration
 //     bool enought_data = false;
-//     for(instance_t * current_episode : instance_data) {
+//     for(instance_ptr_t current_episode : instance_data) {
 //         const_instanceIt_t current_instance = current_episode->const_first();
 //         const_instanceIt_t next_instance = current_instance+1;
 //         if(next_instance!=util::INVALID) {
@@ -678,12 +673,12 @@ double UTree::value_iteration() {
     return max_diff;
 }
 
-UTree::action_ptr_t UTree::get_max_value_action(const instance_t * i) {
+UTree::action_ptr_t UTree::get_max_value_action(const_instance_ptr_t i) {
     // assert values are up-to-date
     assert_values_up_to_date();
 
     // get leaf node
-    const instance_t * next_instance = instance_t::create(action_ptr_t(),
+    const_instance_ptr_t next_instance = instance_t::create(action_ptr_t(),
                                                           observation_ptr_t(),
                                                           reward_ptr_t(),
                                                           i);
@@ -828,7 +823,7 @@ UTree::node_t UTree::add_child(const node_t& node) {
     return new_child;
 }
 
-void UTree::insert_instance(const instance_t * i, const node_t& node, const bool& descendants_only) {
+void UTree::insert_instance(const_instance_ptr_t i, const node_t& node, const bool& descendants_only) {
 
     DEBUG_OUT(4,"Inserting instance " << *i << " into UTree (node " << graph.id(node) << ")" );
 
@@ -889,7 +884,7 @@ double UTree::score_leaf_node(const node_t leaf_node, f_ptr_t feature) const {
     set<f_ret_t> feature_return_values; // corresponds to different child nodes
 
     // iterate through instances
-    for(const instance_t * instance : instance_vector) {
+    for(const_instance_ptr_t instance : instance_vector) {
 
         // construct observation-action pair
         f_ret_t f_ret = feature->evaluate(instance); // feature return value defining the potential new leaf node
@@ -909,7 +904,7 @@ double UTree::score_leaf_node(const node_t leaf_node, f_ptr_t feature) const {
         {
             // create (virtual) next instance (UTree features are expected to
             // ignore action, observation, and reward with time index zero).
-            const instance_t * next_instance = instance_t::create(action_ptr_t(),
+            const_instance_ptr_t next_instance = instance_t::create(action_ptr_t(),
                                                                   observation_ptr_t(),
                                                                   reward_ptr_t(),
                                                                   instance);
@@ -995,7 +990,7 @@ double UTree::sample_size_factor(const int& n1, const int& n2) const {
     return factor;
 }
 
-UTree::node_t UTree::find_leaf_node(const instance_t *i) const {
+UTree::node_t UTree::find_leaf_node(const_instance_ptr_t i) const {
 
     node_t current_node = root_node;
 
@@ -1055,10 +1050,10 @@ void UTree::update_statistics(const node_t& leaf_node) {
     map< pair<action_ptr_t,node_t>, double > reward_sums;
 
     // go through instances
-    for( const instance_t * ins : node_info_map[leaf_node].instance_vector ) {
+    for(const_instance_ptr_t ins : node_info_map[leaf_node].instance_vector ) {
         action_ptr_t action = ins->action;
         reward_ptr_t reward = ins->reward;
-        const instance_t * next_instance = instance_t::create(action_ptr_t(),
+        const_instance_ptr_t next_instance = instance_t::create(action_ptr_t(),
                                                               observation_ptr_t(),
                                                               reward_ptr_t(),
                                                               ins);

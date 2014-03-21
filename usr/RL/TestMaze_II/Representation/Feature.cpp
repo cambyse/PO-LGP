@@ -1,5 +1,7 @@
 #include "Feature.h"
 
+#include "DoublyLinkedInstance.h"
+
 #define DEBUG_LEVEL 1
 #include "../util/debug.h"
 
@@ -18,21 +20,22 @@ Feature::Feature():
 
 Feature::~Feature() {}
 
-Feature::feature_return_value Feature::evaluate(const_instanceIt_t) const {
+Feature::feature_return_value Feature::evaluate(const_instance_ptr_t) const {
     DEBUG_ERROR("Evaluating abstract type Feature");
     return return_function(0);
 }
 
-Feature::feature_return_value Feature::evaluate(const_instanceIt_t insIt, action_ptr_t action, observation_ptr_t observation, reward_ptr_t reward) const {
-    const instance_t * new_ins;
-    if(insIt!=INVALID) {
-        new_ins = instance_t::create(action,observation,reward,insIt);
+Feature::feature_return_value Feature::evaluate(const_instance_ptr_t ins,
+                                                action_ptr_t action,
+                                                observation_ptr_t observation,
+                                                reward_ptr_t reward) const {
+    const_instance_ptr_t new_ins;
+    if(ins!=INVALID) {
+        new_ins = DoublyLinkedInstance::create(action,observation,reward,ins,INVALID);
     } else {
-        new_ins = instance_t::create(action,observation,reward,nullptr);
+        new_ins = AbstractInstance::create(action,observation,reward);
     }
-    const_instanceIt_t new_insIt(new_ins);
-    Feature::feature_return_value ret = this->evaluate(new_insIt);
-    delete new_ins;
+    Feature::feature_return_value ret = this->evaluate(new_ins);
     return return_function(ret);
 }
 
@@ -95,13 +98,13 @@ Feature::const_feature_ptr_t ConstFeature::create(const feature_return_value& v)
 
 ConstFeature::~ConstFeature() {}
 
-Feature::feature_return_value ConstFeature::evaluate(const_instanceIt_t insIt) const {
-    return return_function(insIt==INVALID ? 0 : const_return_value);
+Feature::feature_return_value ConstFeature::evaluate(const_instance_ptr_t ins) const {
+    return return_function(ins==INVALID ? 0 : const_return_value);
 }
 
-Feature::feature_return_value ConstFeature::evaluate(const_instanceIt_t insIt, action_ptr_t, observation_ptr_t, reward_ptr_t) const {
+Feature::feature_return_value ConstFeature::evaluate(const_instance_ptr_t ins, action_ptr_t, observation_ptr_t, reward_ptr_t) const {
     // re-implement because it's more efficient
-    return return_function(insIt==INVALID ? 0 : const_return_value);
+    return return_function(ins==INVALID ? 0 : const_return_value);
 }
 
 string ConstFeature::identifier() const {
@@ -145,8 +148,8 @@ Feature::const_feature_ptr_t ActionFeature::create(const action_ptr_t& a, const 
     return return_ptr;
 }
 
-Feature::feature_return_value ActionFeature::evaluate(const_instanceIt_t insIt) const {
-    if( insIt!=INVALID && (insIt+=delay)!=INVALID && *(insIt->action)==*action ) {
+Feature::feature_return_value ActionFeature::evaluate(const_instance_ptr_t ins) const {
+    if(ins->const_next(delay)!=INVALID && ins->action==action) {
         return return_function(1);
     } else {
         return return_function(0);
@@ -203,8 +206,8 @@ Feature::const_feature_ptr_t ObservationFeature::create(const observation_ptr_t&
     return return_ptr;
 }
 
-Feature::feature_return_value ObservationFeature::evaluate(const_instanceIt_t insIt) const {
-    if( insIt!=INVALID && (insIt+=delay)!=INVALID && *(insIt->observation)==*observation ) {
+Feature::feature_return_value ObservationFeature::evaluate(const_instance_ptr_t ins) const {
+    if(ins->const_next(delay)!=INVALID && ins->observation==observation ) {
         return return_function(1);
     } else {
         return return_function(0);
@@ -261,8 +264,8 @@ Feature::const_feature_ptr_t RewardFeature::create(const reward_ptr_t& r, const 
     return return_ptr;
 }
 
-Feature::feature_return_value RewardFeature::evaluate(const_instanceIt_t insIt) const {
-    if( insIt!=INVALID && (insIt+=delay)!=INVALID && *(insIt->reward)==*reward ) {
+Feature::feature_return_value RewardFeature::evaluate(const_instance_ptr_t ins) const {
+    if(ins->const_next(delay)!=INVALID && ins->reward==reward ) {
         return return_function(1);
     } else {
         return return_function(0);
@@ -322,14 +325,14 @@ AndFeature::AndFeature(const_feature_ptr_t f1, const_feature_ptr_t f2) {
 
 AndFeature::~AndFeature() {}
 
-Feature::feature_return_value AndFeature::evaluate(const_instanceIt_t insIt) const {
-    if(insIt!=INVALID) {
+Feature::feature_return_value AndFeature::evaluate(const_instance_ptr_t ins) const {
+    if(ins!=INVALID) {
         if(const_feature) {
             return return_function(const_return_value);
         } else {
             Feature::feature_return_value prod = 1;
             for(auto feature_iterator : subfeatures) {
-                prod *= feature_iterator->evaluate(insIt);
+                prod *= feature_iterator->evaluate(ins);
                 if(prod==0) {
                     break;
                 }

@@ -40,6 +40,14 @@ private:
     //------------------------------------------------------------//
     //                      pointer class                         //
     //------------------------------------------------------------//
+
+    // to pass on functions to the pointed-to object
+#define PASS_ON(return_t,function) \
+    return_t function() const { return this->ptr->function(); }
+#define BINARY_PASS_ON(return_t,function) \
+    template <class T> \
+    return_t function(const T& other) const { return this->ptr->function(other); }
+
 public:
     class PointerType {
         friend class ConstPointerType;
@@ -50,17 +58,17 @@ public:
         PointerType(const util::InvalidBase&);
         PointerType(const PointerType&) = default;
         virtual ~PointerType() final = default;
-        virtual operator util::InvalidBase() const;
-        virtual operator shared_ptr_t();
-        virtual operator shared_const_ptr_t();
+        virtual operator shared_ptr_t() final;
+        virtual operator shared_const_ptr_t() final;
+        virtual operator ConstPointerType() final;
         virtual AbstractInstance & operator*() const final;
-        virtual  AbstractInstance * operator->() const final;
-        template <class T>
-            bool operator!=(const T& other) const { return *(this->ptr)!=other; }
-        template <class T>
-            bool operator<(const T& other) const { return *(this->ptr)<other; }
-        template <class T>
-            bool operator==(const T& other) const { return !(*this!=other); }
+        virtual AbstractInstance * operator->() const final;
+        virtual PointerType& operator++() final;
+        virtual PointerType& operator--() final;
+        PASS_ON(,operator util::InvalidBase);
+        BINARY_PASS_ON(bool,operator!=);
+        BINARY_PASS_ON(bool,operator==);
+        BINARY_PASS_ON(bool,operator<);
         friend inline std::ostream& operator<<(std::ostream& out, const PointerType& ptr) {
             return out << *ptr;
         }
@@ -77,22 +85,24 @@ public:
         ConstPointerType(const util::InvalidBase&);
         ConstPointerType(const ConstPointerType&) = default;
         virtual ~ConstPointerType() final = default;
-        virtual operator util::InvalidBase() const;
-        virtual operator shared_const_ptr_t();
+        virtual operator shared_const_ptr_t() final;
         virtual const AbstractInstance & operator*() const final;
         virtual const AbstractInstance * operator->() const final;
-        template <class T>
-            bool operator!=(const T& other) const { return *(this->ptr)!=other; }
-        template <class T>
-            bool operator<(const T& other) const { return *(this->ptr)<other; }
-        template <class T>
-            bool operator==(const T& other) const { return !(*this!=other); }
+        virtual ConstPointerType& operator++() final;
+        virtual ConstPointerType& operator--() final;
+        PASS_ON(,operator util::InvalidBase);
+        BINARY_PASS_ON(bool,operator!=);
+        BINARY_PASS_ON(bool,operator==);
+        BINARY_PASS_ON(bool,operator<);
         friend inline std::ostream& operator<<(std::ostream& out, const ConstPointerType& ptr) {
             return out << *ptr;
         }
     protected:
         shared_const_ptr_t ptr;
     };
+
+#undef PASS_ON
+#undef BINARY_PASS_ON
 
     //------------------------------------------------------------//
     //                         members                            //
@@ -116,7 +126,7 @@ public:
                         reward_ptr_t r);
     static int memory_check(bool report_entries = false);
     static bool memory_check_request();
-    virtual operator util::InvalidBase() const;
+    virtual operator util::InvalidBase() const final;
     virtual int detach() final;
     virtual int detach_reachable() final;
     virtual int detach_all() final;

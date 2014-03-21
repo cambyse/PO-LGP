@@ -25,7 +25,7 @@ public:
     typedef graph_t::Arc                     arc_t;
     typedef std::vector<node_t>              node_vector_t;
     typedef std::set<node_t>                 node_container_t;
-    typedef std::vector<const instance_t *>  instance_vector_t;
+    typedef std::vector<const_instance_ptr_t>  instance_vector_t;
 
     /** \brief Type of the map storing the NodeInfo objects. */
     typedef graph_t::NodeMap<NodeInfo> node_info_map_t;
@@ -51,9 +51,9 @@ public:
 
     /** \brief Returns a prediction of how probable the observation and reward are
      * give the instance and action. */
-    probability_t get_prediction(const instance_t *, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&) const override;
+    probability_t get_prediction(const_instance_ptr_t, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&) const override;
     /** \brief Return function pointer to be used by LookAheadSearch. */
-    probability_t (UTree::*get_prediction_ptr())(const instance_t *, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&) const {
+    probability_t (UTree::*get_prediction_ptr())(const_instance_ptr_t, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&) const {
         return &UTree::get_prediction;
     }
 
@@ -82,9 +82,9 @@ public:
 
     double value_iteration();
 
-    action_ptr_t get_max_value_action(const instance_t *);
+    action_ptr_t get_max_value_action(const_instance_ptr_t);
 
-    virtual action_ptr_t get_action(const instance_t* i) { return get_max_value_action(i); }
+    virtual action_ptr_t get_action(const_instance_ptr_t i) { return get_max_value_action(i); }
 
     /*! \brief Set the discount rate used for computing observation and action values. */
     void set_discount(const double& d) { discount = d; }
@@ -187,7 +187,7 @@ private:
 
     node_t add_child(const node_t& node);
 
-    void insert_instance(const instance_t *, const node_t& node, const bool& descendants_only = false);
+    void insert_instance(const_instance_ptr_t, const node_t& node, const bool& descendants_only = false);
 
     double score_leaf_node(const node_t leaf_node, f_ptr_t feature) const;
 
@@ -198,7 +198,7 @@ private:
      * function. */
     double sample_size_factor(const int& n1, const int& n2) const;
 
-    node_t find_leaf_node(const instance_t *) const;
+    node_t find_leaf_node(const_instance_ptr_t) const;
 
     probability_t prior_probability(const observation_ptr_t&, const reward_ptr_t&) const;
 

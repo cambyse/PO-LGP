@@ -82,7 +82,7 @@ TEST(FeatureTest, ComparisonAndOrdering) {
     vector<f_ptr_t> feature_vector;
 
     // Construct a random set of features
-    int number_of_features = 1000;
+    int number_of_features = 500;
     repeat(number_of_features) {
         if(drand48()<0.8) {
             // use basis feature
