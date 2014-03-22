@@ -50,7 +50,7 @@ struct Item {
   virtual void writeValue(std::ostream &os) const {NIY}
   virtual const std::type_info& getValueType() const {NIY}
   virtual bool is_derived_from_RootType() const {NIY}
-  virtual void setEq(Item*) {NIY}
+  virtual void takeoverValue(Item*) {NIY}
   virtual Item *newClone() const {NIY}
 };
 stdOutPipe(Item);

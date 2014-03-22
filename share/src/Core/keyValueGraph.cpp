@@ -296,7 +296,7 @@ Item* KeyValueGraph::merge(Item *m){
     if(it->getValueType()==typeid(KeyValueGraph)){ //merge the KVGs
       it->getValue<KeyValueGraph>()->merge(*m->getValue<KeyValueGraph>());
     }else{ //overwrite the value
-      it->setEq(m);
+      it->takeoverValue(m);
     }
     if(mIsMember) ItemL::removeValue(m);
   }else{ //nothing to merge, append

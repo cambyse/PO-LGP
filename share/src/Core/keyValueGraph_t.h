@@ -45,11 +45,13 @@ struct Item_typed:Item {
     return value!=NULL;
   }
 
-  virtual void setEq(Item *it) {
-    T *x = it->getValue<T>();
-    CHECK(x,"can't assign to nothing");
+  virtual void takeoverValue(Item *it) {
+    Item_typed<T> *itt = dynamic_cast<Item_typed<T>*>(it);
+    CHECK(itt,"can't assign to wrong type");
+    CHECK(itt->value,"can't assign to nothing");
     if(value) delete value;
-    NIY; //value = new T(*x);
+    value = itt->value;
+    itt->value = NULL;
   }
 
   virtual void writeValue(std::ostream &os) const {
