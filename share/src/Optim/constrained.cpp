@@ -81,7 +81,9 @@ void UnconstrainedProblem::aula_update(const arr& _x, double lambdaStepsize, arr
 
   arr beta = /*Ilambda_x%*/Jg_x;
 //  cout <<"beta=" <<beta <<endl;
-  beta = ~beta * inverse_SymPosDef( beta*~beta );
+  arr tmp;
+  inverse_SVD(tmp, beta*~beta );
+  beta = ~beta * tmp;
 //  cout <<"beta=" <<beta <<endl;
 
   lambda += lambdaStepsize * (2.*mu*g_x - ~dF_x*beta);

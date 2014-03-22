@@ -39,18 +39,18 @@ void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=10){
 
   UnconstrainedProblem UCP(p);
 
-  //switch on penalty terms
+  //-- choose constrained method
   switch(method){
   case squaredPenalty: UCP.mu=10.;  break;
   case augmentedLag:   UCP.mu=10.;  break;
   case logBarrier:     UCP.muLB=1.;  break;
   }
 
-  uint d=MT::getParameter<uint>("dim", 2);
-  arr x(d);
+  //-- initial x
+  arr x(p.dim_x());
   if(&x_start) x=x_start;
   else{
-    if(method==logBarrier) x = ARRAY(.3, .3); //log barrier needs a starting point
+    if(method==logBarrier) x.setZero(); //log barrier needs a starting point
     else rndUniform(x, -1., 1.);
   }
   cout <<"x0=" <<x <<endl;
@@ -60,9 +60,9 @@ void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=10){
 
   for(uint k=0;k<iters;k++){
     cout <<"x_start=" <<x <<" mu=" <<UCP.mu <<" lambda=" <<UCP.lambda <<endl;
-    checkGradient(UCP, x, 1e-4);
+//    checkGradient(UCP, x, 1e-4);
     //checkHessian (UCP, x, 1e-4); //will throw errors: no Hessians for g!
-    checkAllGradients(p, x, 1e-4);
+//    checkAllGradients(p, x, 1e-4);
     //checkJacobian(p, x, 1e-4);
 
 //    optRprop(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
@@ -70,10 +70,12 @@ void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=10){
     optNewton(x, UCP, OPT(verbose=2, stopTolerance=1e-3, maxStep=1e-1, stopIters=20, damping=1e-3, useAdaptiveDamping=true));
 //    optGaussNewton(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
 
-    displayFunction((ScalarFunction&)UCP);
-    MT::wait();
-    gnuplot("load 'plt'", false, true);
-    MT::wait();
+    if(x.N==2){
+      displayFunction((ScalarFunction&)UCP);
+      MT::wait();
+      gnuplot("load 'plt'", false, true);
+      MT::wait();
+    }
 
     //upate unconstraint problem parameters
     switch(method){
@@ -91,7 +93,6 @@ void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=10){
 
   if(&x_start) x_start = x;
 }
-
 
 
 //==============================================================================
