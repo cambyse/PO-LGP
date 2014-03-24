@@ -9,7 +9,7 @@ Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL),
   limits = MP.addPDTask("limits", .02, .8, qLimitsTMT);
   //limits->setGains(100.,0.);
   qitself = MP.addPDTask("qitself", .1, 1., qLinearTMT, NULL, NoVector, NULL, NoVector, MP.H_rate_diag);
-  qitself->y_ref = MP.nullSpacePD.y_ref;
+  qitself->y_ref = MP.qitselfPD.y_ref;
 //  MP.addPDtask("endeffHead", .1, .8, posTMT, "handR", NoVector, "rightTarget");
 //  MP.addPDtask("endeffBase", .1, .8, posTMT, "handR", NoVector, "rightTarget");
 }

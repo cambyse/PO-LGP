@@ -1,11 +1,8 @@
 BASE = ../..
 
-OBJS = main.o puppeteer.o actions.o
 PLIB = 1
-DEPEND = Core System Hardware Hardware_joystick Motion Ors Gui System System_ros
+DEPEND = Core System pr2 Hardware_joystick
 
 LPATHS += /opt/ros/groovy/lib
-
-#CXXFLAGS += -DROS_PACKAGE_NAME='"pr2_module"'
 
 include $(BASE)/gofMake/generic.mk

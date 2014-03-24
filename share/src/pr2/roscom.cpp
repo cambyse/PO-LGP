@@ -1,7 +1,7 @@
 #include "roscom.h"
 #include <ros/ros.h>
 #include <Core/array-vector.h>
-#include <marc_controller_pkg/JointState.h>
+#include <pr2/marc_controller_pkg/msg_gen/cpp/include/marc_controller_pkg/JointState.h>
 
 void rosCheckInit(){
   ros::init(MT::argc, MT::argv, "pr2_module");

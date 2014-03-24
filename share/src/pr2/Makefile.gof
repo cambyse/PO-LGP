@@ -1,9 +1,9 @@
-BASE   = ../../..
-NAME   = libSystem_$(shell basename `pwd`)
+BASE   = ../..
+NAME   = lib$(shell basename `pwd`)
 OUTPUT := $(BASE)/lib/$(NAME).so
 
 ROS = 1
-DEPEND = Core System 
+DEPEND = Core System Hardware Hardware_joystick Motion Ors Gui System
 
 #CXXFLAGS += -DROS_PACKAGE_NAME='"pr2_module"'
 

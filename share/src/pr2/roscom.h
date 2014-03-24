@@ -1,3 +1,5 @@
+#pragma once
+
 #include <Core/module.h>
 #include <Core/array.h>
 
