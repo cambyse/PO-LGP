@@ -13,6 +13,7 @@
 #include "Planning/LookAheadPolicy.h"
 #include "Planning/RandomPolicy.h"
 #include "Planning/GoalIteration.h"
+#include "Representation/DoublyLinkedInstance.h"
 
 #include <float.h>  // for DBL_MAX
 #include <vector>
@@ -22,7 +23,7 @@
 #ifdef BATCH_MODE_QUIET
 #define DEBUG_LEVEL 0
 #else
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 3
 #endif
 #include "util/debug.h"
 
@@ -40,12 +41,13 @@ using std::make_shared;
 using util::arg_int;
 using util::arg_double;
 using util::arg_string;
+using util::INVALID;
 
 TestMaze_II::TestMaze_II(QWidget *parent):
     QWidget(parent),
     planner_type(GOAL_ITERATION),
     environment(nullptr),
-    current_instance(nullptr),
+    current_instance(INVALID),
     record(false), plot(false), start_new_episode(false), save_png_on_transition(false), color_maze(true),
     png_counter(0),
     action_timer(nullptr),
@@ -111,7 +113,7 @@ TestMaze_II::TestMaze_II(QWidget *parent):
 
 TestMaze_II::~TestMaze_II() {
     delete action_timer;
-    delete current_instance;
+    current_instance->detach_reachable();
     plot_file.close();
 }
 
@@ -133,10 +135,19 @@ void TestMaze_II::collect_episode(const int& length) {
 }
 
 void TestMaze_II::update_current_instance(action_ptr_t action, observation_ptr_t observation, reward_ptr_t reward, bool invalidate_search_tree) {
-    if(current_instance==nullptr) {
-        current_instance = instance_t::create(action,observation,reward);
+    if(current_instance==INVALID) {
+        DEBUG_OUT(3,"Current instance INVALID. Creating.");
+        current_instance = DoublyLinkedInstance::create(action,observation,reward);
     } else {
-        current_instance = current_instance->append_instance(action,observation,reward);
+#warning
+        DEBUG_OUT(3,"Current instance is " << current_instance << ". Appending.");
+#define PRINT                                                          \
+        for(int idx=0; current_instance->const_prev(idx)!=INVALID; ++idx) { \
+            DEBUG_OUT(3,idx << " back [[[" << current_instance->const_prev(idx) << "]]]"); \
+        }
+        PRINT;
+        current_instance = current_instance->append(action,observation,reward);
+#undef PRINT
     }
     if(plot) {
         plot_file << action << " " << observation << " " << reward << endl;
@@ -237,12 +248,14 @@ void TestMaze_II::change_environment(shared_ptr<Environment> new_environment) {
         linQ->set_spaces(*environment);
         linQ->set_features(*environment);
         // set current instance
-        delete current_instance;
-        current_instance = nullptr;
+        current_instance->detach_reachable();
+        current_instance = INVALID;
         shared_ptr<PredictiveEnvironment> pred = dynamic_pointer_cast<PredictiveEnvironment>(environment);
         if(pred!=nullptr) {
-            const_instanceIt_t env_instance(pred->get_current_instance());
-            current_instance = instance_t::create(env_instance->action,env_instance->observation,env_instance->reward,env_instance-1);
+            const_instance_ptr_t env_instance = pred->get_current_instance();
+#warning
+            current_instance = DoublyLinkedInstance::create(env_instance->action,env_instance->observation,env_instance->reward,env_instance->const_prev(),INVALID);
+//            current_instance = DoublyLinkedInstance::create(env_instance->action,env_instance->observation,env_instance->reward);
         }
     }
 

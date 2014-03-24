@@ -99,6 +99,26 @@ namespace {
         MEMORY_CHECK;
     }
 
+    TEST(InstanceTest, Reconnecting) {
+        {
+            ptr_t ins0 = DoublyLinkedInstance::create(action_ptr_t(),observation_ptr_t(),reward(0));
+            ptr_t ins1 = ins0->append(action_ptr_t(),observation_ptr_t(),reward(1));
+            ptr_t ins2 = ins1->append(action_ptr_t(),observation_ptr_t(),reward(2));
+            ptr_t ins3 = ins2->append(action_ptr_t(),observation_ptr_t(),reward(3));
+            ptr_t ins4 = ins3->append(action_ptr_t(),observation_ptr_t(),reward(4));
+
+            ptr_t ins5 = DoublyLinkedInstance::create(action_ptr_t(),observation_ptr_t(),reward(5),const_ptr_t(ins3),INVALID);
+            ptr_t ins6 = ins5->append(action_ptr_t(),observation_ptr_t(),reward(6));
+            ptr_t ins7 = ins6->append(action_ptr_t(),observation_ptr_t(),reward(7));
+
+            ptr_t ins8 = DoublyLinkedInstance::create(action_ptr_t(),observation_ptr_t(),reward(8),const_ptr_t(ins6),const_ptr_t(ins3));
+            ins8->set_const_successor(ins4);
+
+            ins8->detach_reachable();
+        }
+        MEMORY_CHECK;
+    }
+
     TEST(InstanceTest, Equality) {
         ptr_t ins1_a = DoublyLinkedInstance::create(action_ptr_t(),observation_ptr_t(),reward(1));
         ptr_t ins1_b = DoublyLinkedInstance::create(action_ptr_t(),observation_ptr_t(),reward(1));
@@ -185,14 +205,47 @@ namespace {
 
     TEST(InstanceTest, Iteration) {
         {
-            ptr_t ins = create_test_sequence();
-            EXPECT_EQ(3,ins->reward->get_value());
-            EXPECT_EQ(0,ins->non_const_prev(3)->reward->get_value());
-            EXPECT_EQ(8,ins->non_const_next(1)->reward->get_value());
-            EXPECT_EQ(10,ins->non_const_next(3)->reward->get_value());
-            EXPECT_EQ(4,ins->non_const_next(1)->non_const_prev(4)->reward->get_value());
-            EXPECT_EQ(10,ins->non_const_next(1)->non_const_prev(4)->non_const_next(6)->reward->get_value());
-            EXPECT_EQ(11,ins->detach_reachable());
+            // create
+            ptr_t ins3 = create_test_sequence();
+            ptr_t ins8 = ins3->non_const_next();
+            // negative argument
+            EXPECT_EQ(ins8->non_const_prev(2),ins8->non_const_next(-2));
+            EXPECT_EQ(ins8->non_const_next(2),ins8->non_const_prev(-2));
+            EXPECT_EQ(ins8->const_prev(2),ins8->const_next(-2));
+            EXPECT_EQ(ins8->const_next(2),ins8->const_prev(-2));
+            // non-const iteration
+            EXPECT_EQ(3,ins3->reward->get_value());
+            EXPECT_EQ(0,ins3->non_const_prev(3)->reward->get_value());
+            EXPECT_EQ(8,ins3->non_const_next(1)->reward->get_value());
+            EXPECT_EQ(10,ins3->non_const_next(3)->reward->get_value());
+            EXPECT_EQ(4,ins3->non_const_next(1)->non_const_prev(4)->reward->get_value());
+            EXPECT_EQ(10,ins3->non_const_next(1)->non_const_prev(4)->non_const_next(6)->reward->get_value());
+            EXPECT_EQ(0,ins3->non_const_first()->reward->get_value());
+            EXPECT_EQ(10,ins3->non_const_last()->reward->get_value());
+            EXPECT_EQ(4,ins3->non_const_last()->non_const_first()->reward->get_value());
+            // reconnect
+            ins3->set_const_successor(ins8);
+            // non-const iteration with const link
+            EXPECT_EQ(0,ins3->non_const_prev(3)->reward->get_value());
+            EXPECT_EQ(INVALID,ins3->non_const_next(1));
+            EXPECT_EQ(10,ins8->non_const_next(2)->reward->get_value());
+            EXPECT_EQ(4,ins8->non_const_prev(4)->reward->get_value());
+            EXPECT_EQ(0,ins3->non_const_first()->reward->get_value());
+            EXPECT_EQ(3,ins3->non_const_last()->reward->get_value());
+            EXPECT_EQ(4,ins8->non_const_first()->reward->get_value());
+            EXPECT_EQ(10,ins8->non_const_last()->reward->get_value());
+            // const iteration
+            EXPECT_EQ(0,ins3->const_prev(3)->reward->get_value());
+            EXPECT_EQ(8,ins3->const_next()->reward->get_value());
+            EXPECT_EQ(10,ins8->const_next(2)->reward->get_value());
+            EXPECT_EQ(4,ins8->const_prev(4)->reward->get_value());
+            EXPECT_EQ(0,ins3->const_first()->reward->get_value());
+            EXPECT_EQ(10,ins3->const_last()->reward->get_value());
+            EXPECT_EQ(4,ins8->const_first()->reward->get_value());
+            EXPECT_EQ(10,ins8->const_last()->reward->get_value());
+            // detach
+            EXPECT_EQ(4,ins3->detach_reachable());
+            EXPECT_EQ(7,ins8->detach_reachable());
         }
         MEMORY_CHECK;
     }

@@ -13,6 +13,8 @@
 #include "../Representation/AbstractReward.h"
 #include "MinimalEnvironmentExample/MinimalReward.h"
 #include "../Representation/ListedReward.h"
+#include "../Representation/AbstractInstance.h"
+#include "../Representation/DoublyLinkedInstance.h"
 
 #include "RandomElements.h"
 
@@ -38,6 +40,8 @@ typedef AbstractAction::ptr_t action_ptr_t;
 typedef AbstractObservation::ptr_t observation_ptr_t;
 typedef AbstractReward::ptr_t reward_ptr_t;
 typedef Feature::const_feature_ptr_t f_ptr_t;
+typedef AbstractInstance::ptr_t instance_ptr_t;
+typedef AbstractInstance::const_ptr_t const_instance_ptr_t;
 
 int get_time_delay();
 f_ptr_t get_basis_feature();
@@ -46,6 +50,121 @@ f_ptr_t get_action_feature();
 f_ptr_t get_observation_feature();
 f_ptr_t get_reward_feature();
 f_ptr_t get_and_feature();
+
+TEST(FeatureTest, Evaluation) {
+    {
+        // representation
+        action_ptr_t stay(new MinimalAction(MinimalAction::STAY));
+        action_ptr_t change(new MinimalAction(MinimalAction::CHANGE));
+        observation_ptr_t red(new MinimalObservation(MinimalObservation::RED));
+        observation_ptr_t green(new MinimalObservation(MinimalObservation::GREEN));
+        reward_ptr_t some_reward(new MinimalReward(MinimalReward::SOME_REWARD));
+        reward_ptr_t no_reward(new MinimalReward(MinimalReward::NO_REWARD));
+
+        f_ptr_t action_f = ActionFeature::create(change,-2);
+        f_ptr_t observation_f = ObservationFeature::create(green,-2);
+        f_ptr_t reward_f = RewardFeature::create(some_reward,-2);
+
+        instance_ptr_t ins = DoublyLinkedInstance::create(stay,red,some_reward);
+        ins = ins->append(stay,red,no_reward);
+        ins = ins->append(stay,green,some_reward);
+        ins = ins->append(stay,green,no_reward);
+        ins = ins->append(change,red,some_reward);
+        ins = ins->append(change,red,no_reward);
+        ins = ins->append(change,green,some_reward);
+        ins = ins->append(change,green,no_reward);
+
+        DEBUG_OUT(2,"Sequence:");
+        for(instance_ptr_t i = ins->non_const_first(); i!=util::INVALID; ++i) {
+            DEBUG_OUT(2,i);
+        }
+
+        DEBUG_OUT(2,"A	O	R	I");
+        int ins_counter = 0;
+        for(instance_ptr_t i = ins->non_const_first(); i!=util::INVALID; ++i, ++ins_counter) {
+            DEBUG_OUT(2,action_f->evaluate(i) << "/" <<
+                      action_f->evaluate(i,stay,red,some_reward) << "	" <<
+                      observation_f->evaluate(i) << "/" <<
+                      observation_f->evaluate(i,stay,red,some_reward) << "	" <<
+                      reward_f->evaluate(i) << "/" <<
+                      reward_f->evaluate(i,stay,red,some_reward) << "	" <<
+                      i
+                );
+            switch(ins_counter) {
+            case 0:
+                EXPECT_EQ(0,action_f->evaluate(i));
+                EXPECT_EQ(0,action_f->evaluate(i,stay,red,some_reward));
+                EXPECT_EQ(0,observation_f->evaluate(i));
+                EXPECT_EQ(0,observation_f->evaluate(i,stay,red,some_reward));
+                EXPECT_EQ(0,reward_f->evaluate(i));
+                EXPECT_EQ(0,reward_f->evaluate(i,stay,red,some_reward));
+                break;
+            case 1:
+                EXPECT_EQ(0,action_f->evaluate(i));
+                EXPECT_EQ(0,action_f->evaluate(i,stay,red,some_reward));
+                EXPECT_EQ(0,observation_f->evaluate(i));
+                EXPECT_EQ(0,observation_f->evaluate(i,stay,red,some_reward));
+                EXPECT_EQ(0,reward_f->evaluate(i));
+                EXPECT_EQ(1,reward_f->evaluate(i,stay,red,some_reward));
+                break;
+            case 2:
+                EXPECT_EQ(0,action_f->evaluate(i));
+                EXPECT_EQ(0,action_f->evaluate(i,stay,red,some_reward));
+                EXPECT_EQ(0,observation_f->evaluate(i));
+                EXPECT_EQ(0,observation_f->evaluate(i,stay,red,some_reward));
+                EXPECT_EQ(1,reward_f->evaluate(i));
+                EXPECT_EQ(0,reward_f->evaluate(i,stay,red,some_reward));
+                break;
+            case 3:
+                EXPECT_EQ(0,action_f->evaluate(i));
+                EXPECT_EQ(0,action_f->evaluate(i,stay,red,some_reward));
+                EXPECT_EQ(0,observation_f->evaluate(i));
+                EXPECT_EQ(1,observation_f->evaluate(i,stay,red,some_reward));
+                EXPECT_EQ(0,reward_f->evaluate(i));
+                EXPECT_EQ(1,reward_f->evaluate(i,stay,red,some_reward));
+                break;
+            case 4:
+                EXPECT_EQ(0,action_f->evaluate(i));
+                EXPECT_EQ(0,action_f->evaluate(i,stay,red,some_reward));
+                EXPECT_EQ(1,observation_f->evaluate(i));
+                EXPECT_EQ(1,observation_f->evaluate(i,stay,red,some_reward));
+                EXPECT_EQ(1,reward_f->evaluate(i));
+                EXPECT_EQ(0,reward_f->evaluate(i,stay,red,some_reward));
+                break;
+            case 5:
+                EXPECT_EQ(0,action_f->evaluate(i));
+                EXPECT_EQ(1,action_f->evaluate(i,stay,red,some_reward));
+                EXPECT_EQ(1,observation_f->evaluate(i));
+                EXPECT_EQ(0,observation_f->evaluate(i,stay,red,some_reward));
+                EXPECT_EQ(0,reward_f->evaluate(i));
+                EXPECT_EQ(1,reward_f->evaluate(i,stay,red,some_reward));
+                break;
+            case 6:
+                EXPECT_EQ(1,action_f->evaluate(i));
+                EXPECT_EQ(1,action_f->evaluate(i,stay,red,some_reward));
+                EXPECT_EQ(0,observation_f->evaluate(i));
+                EXPECT_EQ(0,observation_f->evaluate(i,stay,red,some_reward));
+                EXPECT_EQ(1,reward_f->evaluate(i));
+                EXPECT_EQ(0,reward_f->evaluate(i,stay,red,some_reward));
+                break;
+            case 7:
+                EXPECT_EQ(1,action_f->evaluate(i));
+                EXPECT_EQ(1,action_f->evaluate(i,stay,red,some_reward));
+                EXPECT_EQ(0,observation_f->evaluate(i));
+                EXPECT_EQ(1,observation_f->evaluate(i,stay,red,some_reward));
+                EXPECT_EQ(0,reward_f->evaluate(i));
+                EXPECT_EQ(1,reward_f->evaluate(i,stay,red,some_reward));
+                break;
+            default:
+                DEBUG_DEAD_LINE;
+                EXPECT_TRUE(false);
+            }
+        }
+
+        ins->detach_reachable();
+    }
+    EXPECT_TRUE(AbstractInstance::empty_memory_check());
+}
 
 TEST(FeatureTest, SharedPtr) {
 

@@ -105,15 +105,6 @@ void LookAheadSearch::set_spaces(const action_ptr_t & a, const observation_ptr_t
 }
 
 void LookAheadSearch::clear_tree() {
-    DEBUG_OUT(2,"Clearing graph");
-    for(graph_t::NodeIt node(graph); node!=INVALID; ++node) {
-        // DEBUG_OUT(0,"Deleting instance of:");
-        // print_node(node);
-        // if(node_info_map[node].type==OBSERVATION) {
-        //     delete node_info_map[node].instance;
-        // }
-#warning do I need to do something here?
-    }
     graph.clear();
     number_of_nodes = 0;
     root_node = INVALID;
@@ -434,10 +425,6 @@ void LookAheadSearch::prune_tree(const action_ptr_t& a, const_instance_ptr_t new
 
     // erase nodes that are not in the main component
     for(node_t node : nodes_to_delete) {
-        // if(node_info_map[node].type==OBSERVATION) {
-        //     delete node_info_map[node].instance;
-        // }
-#warning do I need to do something here?
         graph.erase(node);
     }
 

@@ -44,9 +44,10 @@ private:
     // to pass on functions to the pointed-to object
 #define PASS_ON(return_t,function) \
     return_t function() const { return this->ptr->function(); }
-#define BINARY_PASS_ON(return_t,function) \
-    template <class T> \
-    return_t function(const T& other) const { return this->ptr->function(other); }
+#define BINARY_PASS_ON(return_t,operator,other_t) \
+    return_t operator(other_t other) const { return this->ptr->operator(other); }
+#define BINARY_DEREF_PASS_ON(return_t,operator,other_t) \
+    return_t operator(other_t other) const { return this->ptr->operator(*other); }
 
 public:
     class PointerType {
@@ -66,9 +67,15 @@ public:
         virtual PointerType& operator++() final;
         virtual PointerType& operator--() final;
         PASS_ON(,operator util::InvalidBase);
-        BINARY_PASS_ON(bool,operator!=);
-        BINARY_PASS_ON(bool,operator==);
-        BINARY_PASS_ON(bool,operator<);
+        BINARY_PASS_ON(template<class T> bool, operator!=, const T&);
+        BINARY_PASS_ON(template<class T> bool, operator==, const T&);
+        BINARY_PASS_ON(template<class T> bool, operator<,  const T&);
+        BINARY_DEREF_PASS_ON(bool, operator!=,  const PointerType);
+        BINARY_DEREF_PASS_ON(bool, operator!=,  const ConstPointerType);
+        BINARY_DEREF_PASS_ON(bool, operator==,  const PointerType);
+        BINARY_DEREF_PASS_ON(bool, operator==,  const ConstPointerType);
+        BINARY_DEREF_PASS_ON(bool, operator<,  const PointerType);
+        BINARY_DEREF_PASS_ON(bool, operator<,  const ConstPointerType);
         friend inline std::ostream& operator<<(std::ostream& out, const PointerType& ptr) {
             return out << *ptr;
         }
@@ -91,9 +98,15 @@ public:
         virtual ConstPointerType& operator++() final;
         virtual ConstPointerType& operator--() final;
         PASS_ON(,operator util::InvalidBase);
-        BINARY_PASS_ON(bool,operator!=);
-        BINARY_PASS_ON(bool,operator==);
-        BINARY_PASS_ON(bool,operator<);
+        BINARY_PASS_ON(template<class T> bool, operator!=, const T&);
+        BINARY_PASS_ON(template<class T> bool, operator==, const T&);
+        BINARY_PASS_ON(template<class T> bool, operator<,  const T&);
+        BINARY_DEREF_PASS_ON(bool, operator!=,  const PointerType);
+        BINARY_DEREF_PASS_ON(bool, operator!=,  const ConstPointerType);
+        BINARY_DEREF_PASS_ON(bool, operator==,  const PointerType);
+        BINARY_DEREF_PASS_ON(bool, operator==,  const ConstPointerType);
+        BINARY_DEREF_PASS_ON(bool, operator<,  const PointerType);
+        BINARY_DEREF_PASS_ON(bool, operator<,  const ConstPointerType);
         friend inline std::ostream& operator<<(std::ostream& out, const ConstPointerType& ptr) {
             return out << *ptr;
         }
@@ -103,6 +116,7 @@ public:
 
 #undef PASS_ON
 #undef BINARY_PASS_ON
+#undef BINARY_DEREF_PASS_ON
 
     //------------------------------------------------------------//
     //                         members                            //
@@ -126,6 +140,7 @@ public:
                         reward_ptr_t r);
     static int memory_check(bool report_entries = false);
     static bool memory_check_request();
+    static bool empty_memory_check();
     virtual operator util::InvalidBase() const final;
     virtual int detach() final;
     virtual int detach_reachable() final;
@@ -134,9 +149,11 @@ public:
     virtual const_ptr_t const_prev(const int& n = 1) const;
     virtual ptr_t non_const_next(const int& n = 1) const;
     virtual ptr_t non_const_prev(const int& n = 1) const;
+    virtual const_ptr_t const_first() const;
+    virtual const_ptr_t const_last() const;
+    virtual ptr_t non_const_first() const;
+    virtual ptr_t non_const_last() const;
     virtual bool operator!=(const AbstractInstance& other) const;
-    virtual bool operator!=(const ptr_t& other) const;
-    virtual bool operator!=(const const_ptr_t& other) const;
     virtual bool operator!=(const util::InvalidBase& other) const;
     template <class T>
         bool operator==(const T& other) const { return !(*this!=other); }

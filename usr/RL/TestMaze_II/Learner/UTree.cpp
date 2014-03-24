@@ -678,12 +678,11 @@ UTree::action_ptr_t UTree::get_max_value_action(const_instance_ptr_t i) {
     assert_values_up_to_date();
 
     // get leaf node
-    const_instance_ptr_t next_instance = instance_t::create(action_ptr_t(),
-                                                          observation_ptr_t(),
-                                                          reward_ptr_t(),
-                                                          i);
-    node_t node = find_leaf_node(next_instance);
-    delete next_instance;
+    node_t node = find_leaf_node(DoublyLinkedInstance::create(action_ptr_t(),
+                                                              observation_ptr_t(),
+                                                              reward_ptr_t(),
+                                                              i,
+                                                              util::INVALID));
 
     // find maximum-value action (random tie break)
     if(node_info_map[node].observation_action_values.size()==0) {
@@ -904,15 +903,14 @@ double UTree::score_leaf_node(const node_t leaf_node, f_ptr_t feature) const {
         {
             // create (virtual) next instance (UTree features are expected to
             // ignore action, observation, and reward with time index zero).
-            const_instance_ptr_t next_instance = instance_t::create(action_ptr_t(),
-                                                                  observation_ptr_t(),
-                                                                  reward_ptr_t(),
-                                                                  instance);
-            node_t next_node = find_leaf_node(next_instance);
+            node_t next_node = find_leaf_node(DoublyLinkedInstance::create(action_ptr_t(),
+                                                                           observation_ptr_t(),
+                                                                           reward_ptr_t(),
+                                                                           instance,
+                                                                           util::INVALID));
             double util = instance->reward->get_value() + discount*node_info_map[next_node].max_observation_action_value;
             utility_samples[node_action_pair].push_back(util);
             DEBUG_OUT(4,"    Adding utility of " << util << " for f_ret=" << f_ret << "	" << action);
-            delete next_instance;
         }
         break;
         case OBSERVATION_REWARD_EXPANSION:
@@ -1053,12 +1051,11 @@ void UTree::update_statistics(const node_t& leaf_node) {
     for(const_instance_ptr_t ins : node_info_map[leaf_node].instance_vector ) {
         action_ptr_t action = ins->action;
         reward_ptr_t reward = ins->reward;
-        const_instance_ptr_t next_instance = instance_t::create(action_ptr_t(),
-                                                              observation_ptr_t(),
-                                                              reward_ptr_t(),
-                                                              ins);
-        node_t next_observation = find_leaf_node(next_instance);
-        delete next_instance;
+        node_t next_observation = find_leaf_node(DoublyLinkedInstance::create(action_ptr_t(),
+                                                                              observation_ptr_t(),
+                                                                              reward_ptr_t(),
+                                                                              ins,
+                                                                              util::INVALID));
         action_counts[action] += 1;
         transition_counts[make_pair(action,next_observation)] += 1;
         reward_sums[make_pair(action,next_observation)] += reward->get_value();

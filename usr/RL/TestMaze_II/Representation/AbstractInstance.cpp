@@ -152,6 +152,15 @@ bool AbstractInstance::memory_check_request() {
 #endif
 }
 
+bool AbstractInstance::empty_memory_check() {
+#ifdef MEMORY_CHECK
+    return all_instances.size()==0;
+#else
+    //DEBUG_WARNING("No memory check possible");
+    return false;
+#endif
+}
+
 AbstractInstance::operator InvalidBase() const {
     if(*this==INVALID) {
         return INVALID;
@@ -263,6 +272,47 @@ AbstractInstance::ptr_t AbstractInstance::non_const_prev(const int& n) const {
     }
 }
 
+AbstractInstance::const_ptr_t AbstractInstance::const_first() const {
+    const_ptr_t prev = get_self_ptr();
+    const_ptr_t before_prev = prev->const_prev();
+    while(before_prev!=INVALID) {
+        prev = before_prev;
+        before_prev = prev->const_prev();
+    }
+    return prev;
+}
+
+AbstractInstance::const_ptr_t AbstractInstance::const_last() const {
+    const_ptr_t next = get_self_ptr();
+    const_ptr_t before_next = next->const_next();
+    while(before_next!=INVALID) {
+        next = before_next;
+        before_next = next->const_next();
+    }
+    return next;
+}
+
+AbstractInstance::ptr_t AbstractInstance::non_const_first() const {
+    ptr_t prev = get_self_ptr();
+    ptr_t before_prev = prev->non_const_prev();
+    while(before_prev!=INVALID) {
+        prev = before_prev;
+        before_prev = prev->non_const_prev();
+    }
+    return prev;
+}
+
+AbstractInstance::ptr_t AbstractInstance::non_const_last() const {
+    ptr_t next = get_self_ptr();
+    ptr_t before_next = next->non_const_next();
+    while(before_next!=INVALID) {
+        next = before_next;
+        before_next = next->non_const_next();
+    }
+    return next;
+}
+
+
 bool AbstractInstance::operator!=(const AbstractInstance& other) const {
     if(action!=other.action) return true;
     if(observation!=other.observation) return true;
@@ -274,14 +324,6 @@ bool AbstractInstance::operator!=(const AbstractInstance& other) const {
     if((const_prev()!=INVALID || other.const_prev()!=INVALID) && shared_const_ptr_t(const_prev())!=shared_const_ptr_t(other.const_prev())) return true;
     if((const_next()!=INVALID || other.const_next()!=INVALID) && shared_const_ptr_t(const_next())!=shared_const_ptr_t(other.const_next())) return true;
     return false;
-}
-
-bool AbstractInstance::operator!=(const ptr_t& other) const {
-    return *this!=*other;
-}
-
-bool AbstractInstance::operator!=(const const_ptr_t& other) const {
-    return *this!=*other;
 }
 
 bool AbstractInstance::operator!=(const util::InvalidBase& other) const {
@@ -370,7 +412,7 @@ void AbstractInstance::unsubscribe(ptr_t ins, SUBSCRIBTION_TYPE t) const {
     }
     auto it = subscribers->find(weak_ptr_t(shared_ptr_t(ins)));
     if(it==subscribers->end()) {
-        DEBUG_ERROR("trying to unsubscribe " << ins);
+        DEBUG_ERROR(DEBUG_STRING << "trying to unsubscribe " << ins);
     } else {
         DEBUG_OUT(2,"unsubscribe " << ins);
         subscribers->erase(it);

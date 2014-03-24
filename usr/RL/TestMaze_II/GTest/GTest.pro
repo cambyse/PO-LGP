@@ -49,10 +49,13 @@ HEADERS += \
     ../HistoryObserver.h \
     ../SpaceManager.h \
     \
-#    ../Learner/FeatureLearner.h \
-#    ../Learner/KMarkovCRF.h \
-#    ../Learner/UTree.h \
-#    ../Learner/LinearQ.h \
+    ../Learner/FeatureLearner.h \
+    ../Learner/KMarkovCRF.h \
+    ../Learner/UTree.h \
+    ../Learner/LinearQ.h \
+    ../Learner/TemporallyExtendedModel.h \
+    ../Learner/AdjacencyOperator.h \
+    ../Learner/ConjunctiveAdjacency.h \
     \
     MinimalEnvironmentExample/MinimalAction.h \
     MinimalEnvironmentExample/MinimalObservation.h \
@@ -98,10 +101,12 @@ SOURCES += \
     ../HistoryObserver.cpp \
     ../SpaceManager.cpp \
     \
-#    ../Learner/FeatureLearner.cpp \
-#    ../Learner/KMarkovCRF.cpp \
-#    ../Learner/UTree.cpp \
-#    ../Learner/LinearQ.cpp \
+    ../Learner/FeatureLearner.cpp \
+    ../Learner/KMarkovCRF.cpp \
+    ../Learner/UTree.cpp \
+    ../Learner/LinearQ.cpp \
+    ../Learner/TemporallyExtendedModel.cpp \
+    ../Learner/ConjunctiveAdjacency.cpp \
     \
     MinimalEnvironmentExample/MinimalAction.cpp \
     MinimalEnvironmentExample/MinimalObservation.cpp \
@@ -113,7 +118,7 @@ SOURCES += \
     FeatureTest.cpp \
     EnvironmentTest.cpp \
     PlannerTest.cpp \
-#    LearnerTest.cpp \
+    LearnerTest.cpp \
     LBFGSTest.cpp \
     \
     TemplateTest.cpp \

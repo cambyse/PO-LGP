@@ -145,7 +145,7 @@ public:
         const bool& new_episode
         );
 
-    void check_derivatives(const int& number_of_samples, const double& range, const double& max_variation, const double& max_relative_deviation);
+    void check_derivatives(const int& number_of_samples = 10, const double& range = 1, const double& delta = 1e-5 , const double& max_relative_deviation = 1e-5);
 
     void evaluate_features();
 

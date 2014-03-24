@@ -8,6 +8,8 @@
 #include "../Learner/KMarkovCRF.h"
 #include "../Learner/UTree.h"
 #include "../Learner/LinearQ.h"
+#include "../Learner/TemporallyExtendedModel.h"
+#include "../Representation/DoublyLinkedInstance.h"
 
 #define DEBUG_LEVEL 1
 #include "../util/debug.h"
@@ -18,13 +20,14 @@ using std::shared_ptr;
 using ColorOutput::bold;
 using ColorOutput::reset_all;
 
-TEST(LearnerTest, KMarkovCRF) {
+// use standard typedefs
+typedef AbstractAction::ptr_t         action_ptr_t;
+typedef AbstractObservation::ptr_t    observation_ptr_t;
+typedef AbstractReward::ptr_t         reward_ptr_t;
+typedef AbstractInstance::ptr_t       instance_ptr_t;
+typedef AbstractInstance::const_ptr_t const_instance_ptr_t;
 
-    // use standard typedefs
-    typedef AbstractAction::ptr_t      action_ptr_t;
-    typedef AbstractObservation::ptr_t observation_ptr_t;
-    typedef AbstractReward::ptr_t      reward_ptr_t;
-    typedef Instance                   instance_t;
+TEST(LearnerTest, KMarkovCRF) {
 
     // initialize environment and learner
     Maze maze;
@@ -80,8 +83,8 @@ TEST(LearnerTest, KMarkovCRF) {
     planner.set_spaces(action_space, observation_space, reward_space);
 
     // start at current state
-    const instance_t * maze_instance = maze.get_current_instance();
-    instance_t * current_instance = instance_t::create(
+    const_instance_ptr_t maze_instance = maze.get_current_instance();
+    instance_ptr_t current_instance = DoublyLinkedInstance::create(
         maze_instance->action,
         maze_instance->observation,
         maze_instance->reward
@@ -106,7 +109,7 @@ TEST(LearnerTest, KMarkovCRF) {
         observation_ptr_t observation_to;
         reward_ptr_t reward;
         maze.perform_transition(action,observation_to,reward);
-        current_instance = current_instance->append_instance(action, observation_to, reward);
+        current_instance = current_instance->append(action, observation_to, reward);
         if(DEBUG_LEVEL>0) {
             maze.print_transition(action,observation_to,reward);
         }
@@ -124,12 +127,6 @@ TEST(LearnerTest, KMarkovCRF) {
 }
 
 TEST(LearnerTest, UTree) {
-
-    // use standard typedefs
-    typedef AbstractAction::ptr_t      action_ptr_t;
-    typedef AbstractObservation::ptr_t observation_ptr_t;
-    typedef AbstractReward::ptr_t      reward_ptr_t;
-    typedef Instance                   instance_t;
 
     // initialize environment and learner
     Maze maze;
@@ -174,8 +171,8 @@ TEST(LearnerTest, UTree) {
         }
 
         // do some optimal transition
-        const instance_t * maze_instance = maze.get_current_instance();
-        instance_t * current_instance = instance_t::create(
+        const_instance_ptr_t maze_instance = maze.get_current_instance();
+        instance_ptr_t current_instance = DoublyLinkedInstance::create(
             maze_instance->action,
             maze_instance->observation,
             maze_instance->reward
@@ -187,7 +184,7 @@ TEST(LearnerTest, UTree) {
             observation_ptr_t observation_to;
             reward_ptr_t reward;
             maze.perform_transition(action, observation_to, reward);
-            current_instance = current_instance->append_instance(action, observation_to, reward);
+            current_instance = current_instance->append(action, observation_to, reward);
             reward_sum += reward->get_value();
             if(DEBUG_LEVEL>0) {
                 maze.print_transition(action, observation_to, reward);
@@ -217,8 +214,8 @@ TEST(LearnerTest, UTree) {
         planner.set_spaces(action_space, observation_space, reward_space);
 
         // start at current state
-        const instance_t * maze_instance = maze.get_current_instance();
-        instance_t * current_instance = instance_t::create(
+        const_instance_ptr_t maze_instance = maze.get_current_instance();
+        instance_ptr_t current_instance = DoublyLinkedInstance::create(
             maze_instance->action,
             maze_instance->observation,
             maze_instance->reward
@@ -243,7 +240,7 @@ TEST(LearnerTest, UTree) {
             observation_ptr_t observation_to;
             reward_ptr_t reward;
             maze.perform_transition(action,observation_to,reward);
-            current_instance = current_instance->append_instance(action, observation_to, reward);
+            current_instance = current_instance->append(action, observation_to, reward);
             if(DEBUG_LEVEL>0) {
                 maze.print_transition(action,observation_to,reward);
             }
@@ -262,12 +259,6 @@ TEST(LearnerTest, UTree) {
 }
 
 TEST(LearnerTest, LinearQ) {
-
-    // use standard typedefs
-    typedef AbstractAction::ptr_t      action_ptr_t;
-    typedef AbstractObservation::ptr_t observation_ptr_t;
-    typedef AbstractReward::ptr_t      reward_ptr_t;
-    typedef Instance                   instance_t;
 
     // initialize environment and learner
     Maze maze;
@@ -330,8 +321,8 @@ TEST(LearnerTest, LinearQ) {
     }
 
     // do some optimal transition
-    const instance_t * maze_instance = maze.get_current_instance();
-    instance_t * current_instance = instance_t::create(
+    const_instance_ptr_t maze_instance = maze.get_current_instance();
+    instance_ptr_t current_instance = DoublyLinkedInstance::create(
         maze_instance->action,
         maze_instance->observation,
         maze_instance->reward
@@ -343,7 +334,7 @@ TEST(LearnerTest, LinearQ) {
         observation_ptr_t observation_to;
         reward_ptr_t reward;
         maze.perform_transition(action, observation_to, reward);
-        current_instance = current_instance->append_instance(action, observation_to, reward);
+        current_instance = current_instance->append(action, observation_to, reward);
         reward_sum += reward->get_value();
         if(DEBUG_LEVEL>0) {
             maze.print_transition(action, observation_to, reward);
@@ -354,5 +345,42 @@ TEST(LearnerTest, LinearQ) {
         DEBUG_WARNING("Bad performance (mean reward) of value based Linear-Q (" << reward_sum/steps << ")");
     } else {
         DEBUG_OUT(1,"Performance (mean reward) of value based Linear-Q: " << reward_sum/steps);
+    }
+}
+
+TEST(LearnerTest, TemporallyExtendedModel) {
+
+    // initialize environment and learner
+    Maze maze;
+    TemporallyExtendedModel TEM;
+
+    // use the minimal maze
+    maze.set_maze("Minimal");
+
+    // get/set spaces and features
+    action_ptr_t action_space;
+    observation_ptr_t observation_space;
+    reward_ptr_t reward_space;
+    maze.get_spaces(action_space,observation_space,reward_space);
+    TEM.set_spaces(maze);
+
+    // get all actions for random selection
+    vector<action_ptr_t> action_vector;
+    for(action_ptr_t a : action_space) {
+        action_vector.push_back(a);
+    }
+
+    // do some random actions to collect data
+    repeat(1000) {
+        action_ptr_t action = util::random_select(action_vector);
+        observation_ptr_t observation_to;
+        reward_ptr_t reward;
+        maze.perform_transition(action,observation_to,reward);
+        TEM.add_action_observation_reward_tripel(action,observation_to,reward,false);
+    }
+
+    // try to learn something
+    {
+
     }
 }

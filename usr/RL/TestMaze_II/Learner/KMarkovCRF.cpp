@@ -168,8 +168,8 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
     vector<double> sumFExpNF(n,0.0);   // sumFExp(x(n),F)
     idx_t instance_idx = 0;
     ignored_data = 0;
-    for(instance_t * current_episode : instance_data) {
-        for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
+    for(instance_ptr_t current_episode : instance_data) {
+        for(const_instance_ptr_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
 
             // last action is not changed while iterating through observations and rewards
             action_ptr_t action = insIt->action;
@@ -213,7 +213,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
                 f_ret_t f_ret;
                 switch(precomputation_type) {
                 case NONE:
-                    f_ret = active_features[f_idx].evaluate(insIt-1, insIt->action, insIt->observation, insIt->reward);
+                    f_ret = active_features[f_idx].evaluate(insIt->const_prev(), insIt->action, insIt->observation, insIt->reward);
                     break;
                 case COMPOUND_LOOK_UP:
                 {
@@ -243,7 +243,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_model(
                         f_ret_t f_ret;
                         switch(precomputation_type) {
                         case NONE:
-                            f_ret = active_features[f_idx].evaluate(insIt-1,action,observation,reward);
+                            f_ret = active_features[f_idx].evaluate(insIt->const_prev(),action,observation,reward);
                             break;
                         case COMPOUND_LOOK_UP:
                         {
@@ -501,8 +501,8 @@ lbfgsfloatval_t KMarkovCRF::evaluate_candidates(
     vector<double> candidate_sumFExpNF; // sumFExp(x(n),F) for each candidate
     idx_t instance_idx = 0;
     ignored_data = 0;
-    for(instance_t * current_episode : instance_data) {
-        for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
+    for(instance_ptr_t current_episode : instance_data) {
+        for(const_instance_ptr_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
 
             // last action is not changed while iterating through observations and rewards
             action_ptr_t action = insIt->action;
@@ -529,7 +529,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_candidates(
                 f_ret_t f_ret;
                 switch(precomputation_type) {
                 case NONE:
-                    f_ret = active_features[f_idx].evaluate(insIt-1, insIt->action, insIt->observation, insIt->reward);
+                    f_ret = active_features[f_idx].evaluate(insIt->const_prev(), insIt->action, insIt->observation, insIt->reward);
                     break;
                 case COMPOUND_LOOK_UP:
                 {
@@ -553,7 +553,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_candidates(
                 switch(precomputation_type) {
                 case NONE:
                 case COMPOUND_LOOK_UP:
-                    f_ret = candidate_features[f_idx].evaluate(insIt-1, insIt->action, insIt->observation, insIt->reward);
+                    f_ret = candidate_features[f_idx].evaluate(insIt->const_prev(), insIt->action, insIt->observation, insIt->reward);
                     break;
                 case BASE_LOOK_UP:
                     f_ret = candidate_features[f_idx].evaluate(base_feature_values[instance_idx][base_feature_indices[instance_idx]]);
@@ -579,7 +579,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_candidates(
                         f_ret_t f_ret;
                         switch(precomputation_type) {
                         case NONE:
-                            f_ret = active_features[f_idx].evaluate(insIt-1,action,observation,reward);
+                            f_ret = active_features[f_idx].evaluate(insIt->const_prev(),action,observation,reward);
                             break;
                         case COMPOUND_LOOK_UP:
                         {
@@ -603,7 +603,7 @@ lbfgsfloatval_t KMarkovCRF::evaluate_candidates(
                         switch(precomputation_type) {
                         case NONE:
                         case COMPOUND_LOOK_UP:
-                            f_ret = candidate_features[f_idx].evaluate(insIt-1,action,observation,reward);
+                            f_ret = candidate_features[f_idx].evaluate(insIt->const_prev(),action,observation,reward);
                             break;
                         case BASE_LOOK_UP:
                             f_ret = candidate_features[f_idx].evaluate(base_feature_values[instance_idx][observation_reward_idx]);
@@ -749,7 +749,7 @@ void KMarkovCRF::add_action_observation_reward_tripel(
     feature_values_precomputed = false;
 }
 
-void KMarkovCRF::check_derivatives(const int& number_of_samples, const double& range, const double& max_variation, const double& max_relative_deviation) {
+void KMarkovCRF::check_derivatives(const int& number_of_samples, const double& range, const double& delta, const double& max_relative_deviation) {
 
     // initialize arrays
     lbfgsfloatval_t * x = lbfgs_malloc(active_features.size());
@@ -760,13 +760,13 @@ void KMarkovCRF::check_derivatives(const int& number_of_samples, const double& r
     // remember deviations
     lbfgsfloatval_t relative_deviation = 0;
 
-    DEBUG_OUT(0,"Checking first derivative (#samples="<<number_of_samples<<", range=+/-"<<range<<", max_var="<<max_variation<<", max_rel_dev="<<max_relative_deviation);
+    DEBUG_OUT(0,"Checking first derivative (#samples="<<number_of_samples<<", range=+/-"<<range<<", max_var="<<delta<<", max_rel_dev="<<max_relative_deviation);
     for(int count=0; count<number_of_samples; ++count) {
 
         // set test point
         for(uint x_idx=0; x_idx<active_features.size(); ++x_idx) {
             x[x_idx] = range * (2*drand48()-1);
-            dx[x_idx] = (2*drand48()-1)*max_variation;
+            dx[x_idx] = (2*(rand()%2)-1)*delta;
         }
 
         lbfgsfloatval_t fx = evaluate_model(x,grad,active_features.size());
@@ -945,8 +945,8 @@ void KMarkovCRF::score_candidates_by_gradient() {
     if(DEBUG_LEVEL>0) {
         ProgressBar::init("Scoring: ");
     }
-    for(instance_t * current_episode : instance_data) {
-        for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
+    for(instance_ptr_t current_episode : instance_data) {
+        for(const_instance_ptr_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
 
             if(DEBUG_LEVEL>0) {
                 ProgressBar::print(instance_idx, number_of_data_points);
@@ -964,7 +964,7 @@ void KMarkovCRF::score_candidates_by_gradient() {
                     // calculate sumF(x(n),y')
                     sumFN = 0.0;
                     for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
-                        sumFN += lambda[f_idx]*active_features[f_idx].evaluate(insIt-1,action,observation,reward);
+                        sumFN += lambda[f_idx]*active_features[f_idx].evaluate(insIt->const_prev(),action,observation,reward);
                         // candidate features have zero coefficient (no parameter binding possible)!
                     }
 
@@ -974,7 +974,7 @@ void KMarkovCRF::score_candidates_by_gradient() {
                     // increment sumFExp(x(n),F)
                     for(int lambda_cf_idx=0; lambda_cf_idx<cf_size; ++lambda_cf_idx) { // for all parameters/gradient components (i.e. for all candidate features)
                         // in case of parameter binding additionally sum over all features belonging to this parameter (not allowed!)
-                        sumFExpNF[lambda_cf_idx] += candidate_features[lambda_cf_idx].evaluate(insIt-1,action,observation,reward) * exp( sumFN );
+                        sumFExpNF[lambda_cf_idx] += candidate_features[lambda_cf_idx].evaluate(insIt->const_prev(),action,observation,reward) * exp( sumFN );
                     }
                 }
             }
@@ -1214,14 +1214,14 @@ KMarkovCRF::probability_t KMarkovCRF::evaluate_on_excluded_data() {
     idx_t evaluated_data = 0;
     idx_t instance_idx = 0;
     probability_t log_prob = 0;
-    for(instance_t * current_episode : instance_data) {
-        for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
+    for(instance_ptr_t current_episode : instance_data) {
+        for(const_instance_ptr_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
 
             // exclude data
             double data_percent = double(instance_idx+1)/number_of_data_points;
             if(data_percent>exclude_data_1 && data_percent<exclude_data_2) {
                 ++evaluated_data;
-                probability_t prob = get_prediction(insIt-1, insIt->action, insIt->observation, insIt->reward);
+                probability_t prob = get_prediction(insIt->const_prev(), insIt->action, insIt->observation, insIt->reward);
                 DEBUG_OUT(3,"    " << instance_idx << ":	" << prob);
                 log_prob += log(prob);
             } else {
@@ -1265,8 +1265,8 @@ void KMarkovCRF::update_prediction_map() {
     std::map<input_tuple_t, size_t > counts;
 
     // go through instance and count frequencies for transitions
-    for(instance_t * current_episode : instance_data) {
-        for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt) {
+    for(instance_ptr_t current_episode : instance_data) {
+        for(const_instance_ptr_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt) {
 
             // get data
             action_ptr_t action = insIt->action;
@@ -1319,8 +1319,8 @@ void KMarkovCRF::test() {
 
     probability_t prob = 1;
     idx_t instance_idx = 0;
-    for(instance_t * current_episode : instance_data) {
-        for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
+    for(instance_ptr_t current_episode : instance_data) {
+        for(const_instance_ptr_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
 
             action_ptr_t action = insIt->action;
             observation_ptr_t observation = insIt->observation;
@@ -1331,7 +1331,7 @@ void KMarkovCRF::test() {
             for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
                 // TODO!!! This makes a differencs (for feature return value !=
                 // {0,1}) but really should not!
-                sumFXY += lambda[f_idx]*active_features[f_idx].evaluate(insIt-1,action,observation,reward);
+                sumFXY += lambda[f_idx]*active_features[f_idx].evaluate(insIt->const_prev(),action,observation,reward);
                 //sumFXY += lambda[f_idx]*active_features[f_idx].evaluate(insIt);
             }
 
@@ -1344,7 +1344,7 @@ void KMarkovCRF::test() {
                     // calculate sumF(x,y')
                     probability_t sumFXYs = 0;
                     for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
-                        sumFXYs += lambda[f_idx]*active_features[f_idx].evaluate(insIt-1,action,sum_observation,sum_reward);
+                        sumFXYs += lambda[f_idx]*active_features[f_idx].evaluate(insIt->const_prev(),action,sum_observation,sum_reward);
                     }
 
                     // increment sumExp(x(n))
@@ -1355,7 +1355,7 @@ void KMarkovCRF::test() {
             probability_t tmp_prob = exp( sumFXY )/sumExpX;
             prob *= tmp_prob;
 
-            probability_t tmp_prob_2 = get_prediction(insIt-1,action,observation,reward);
+            probability_t tmp_prob_2 = get_prediction(insIt->const_prev(),action,observation,reward);
 
             DEBUG_OUT(0,"   " << instance_idx << ": " <<  tmp_prob << "	(" << tmp_prob_2 << ")");
         }
@@ -1381,8 +1381,8 @@ void KMarkovCRF::find_unique_feature_values() {
 
     // iterate through data
     size_t instance_idx = 0;
-    for(instance_t * current_episode : instance_data) {
-        for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
+    for(instance_ptr_t current_episode : instance_data) {
+        for(const_instance_ptr_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
 
             // update progress bar
             if(DEBUG_LEVEL>0) {
@@ -1405,7 +1405,7 @@ void KMarkovCRF::find_unique_feature_values() {
                     // iterate through all features
                     for(uint f_idx=0; f_idx<active_features.size(); ++f_idx) { // sum over features
                         // add new return value for current feature
-                        feature_value_element.back().push_back(active_features[f_idx].evaluate(insIt-1,action,observation,reward));
+                        feature_value_element.back().push_back(active_features[f_idx].evaluate(insIt->const_prev(),action,observation,reward));
                     }
 
                 }
@@ -1605,8 +1605,8 @@ void KMarkovCRF::precompute_compound_feature_values() {
     if(DEBUG_LEVEL>0) {
         ProgressBar::init("Precomputing: ");
     }
-    for(instance_t * current_episode : instance_data) {
-        for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
+    for(instance_ptr_t current_episode : instance_data) {
+        for(const_instance_ptr_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
 
             // print progress information
             if(DEBUG_LEVEL>0) {
@@ -1621,7 +1621,7 @@ void KMarkovCRF::precompute_compound_feature_values() {
 
                 // for instance itself without setting specific observation and reward
                 idx_t precomputed_index = precomputed_feature_idx(instance_idx,f_idx,feature_n);
-                compound_feature_values[precomputed_index] = active_features[f_idx].evaluate(insIt-1, insIt->action, insIt->observation, insIt->reward);
+                compound_feature_values[precomputed_index] = active_features[f_idx].evaluate(insIt->const_prev(), insIt->action, insIt->observation, insIt->reward);
                 DEBUG_OUT(3,"    Feature " << active_features[f_idx] <<
                           " --> " << compound_feature_values[precomputed_index] <<
                           " (idx=" << precomputed_index << ")"
@@ -1631,7 +1631,7 @@ void KMarkovCRF::precompute_compound_feature_values() {
                 for(observation_ptr_t observation : observation_space) {
                     for(reward_ptr_t reward : reward_space) {
                         precomputed_index = precomputed_feature_idx(instance_idx,f_idx,feature_n,observation,reward);
-                        compound_feature_values[precomputed_index] = active_features[f_idx].evaluate(insIt-1,action,observation,reward);
+                        compound_feature_values[precomputed_index] = active_features[f_idx].evaluate(insIt->const_prev(),action,observation,reward);
                         DEBUG_OUT(3,"    Feature " << active_features[f_idx] <<
                                   " with observation=" << observation << " reward=" << reward <<
                                   " --> " << compound_feature_values[precomputed_index] <<
@@ -1666,8 +1666,8 @@ void KMarkovCRF::precompute_base_feature_values() {
     if(DEBUG_LEVEL>0) {
         ProgressBar::init("Precomputing: ");
     }
-    for(instance_t * current_episode : instance_data) {
-        for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
+    for(instance_ptr_t current_episode : instance_data) {
+        for(const_instance_ptr_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
 
             // print progress information
             if(DEBUG_LEVEL>0) {
@@ -1698,7 +1698,7 @@ void KMarkovCRF::precompute_base_feature_values() {
 
                     // iterate through features
                     for(uint f_idx=0; f_idx<basis_feature_n; ++f_idx) {
-                        base_feature_values[instance_idx][observation_reward_idx][basis_features[f_idx]] = basis_features[f_idx]->evaluate(insIt-1,current_action,observation,reward);
+                        base_feature_values[instance_idx][observation_reward_idx][basis_features[f_idx]] = basis_features[f_idx]->evaluate(insIt->const_prev(),current_action,observation,reward);
                     }
                     ++observation_reward_idx;
                 }
@@ -1720,8 +1720,8 @@ void KMarkovCRF::erase_const_zero_candidate_features() {
 
     // identify features to erase
     vector<bool> erase_feature(candidate_features_n,true);
-    for(instance_t * current_episode : instance_data) {
-        for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt) {
+    for(instance_ptr_t current_episode : instance_data) {
+        for(const_instance_ptr_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt) {
             for(uint f_idx=0; f_idx<candidate_features_n; ++f_idx) {
                 if(erase_feature[f_idx] && candidate_features[f_idx].evaluate(insIt)!=0) {
                     erase_feature[f_idx]=false;

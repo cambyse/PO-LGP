@@ -71,7 +71,7 @@ private:
     reward_ptr_t reward_space;             ///< Reward space to be used.
 
     // current instance (essentially the same as the maze instance)
-    instance_t * current_instance;
+    instance_ptr_t current_instance;
 
     // state flags
     bool record, plot, start_new_episode, search_tree_invalid, save_png_on_transition, color_maze;

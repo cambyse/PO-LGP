@@ -3,6 +3,7 @@
 #include <vector>
 #include <algorithm> // for std::max
 #include "../util/debug.h"
+#include "../Representation/DoublyLinkedInstance.h"
 
 using std::vector;
 using std::max;
@@ -29,7 +30,7 @@ GoalIteration::GoalIteration(const double & d, const Predictor & predictor, bool
             for(auto to_observation : observation_space) {
                 probability_t prob = 0;
                 for(auto to_reward : reward_space) {
-                    instance_t * i = instance_t::create(action_space,from_observation,reward_space);
+                    instance_ptr_t i = DoublyLinkedInstance::create(action_space,from_observation,reward_space);
                     prob += predictor.get_prediction(i, performed_action, to_observation, to_reward);
                 }
                 p(a_o_idx,to_o_idx) = prob;
@@ -41,7 +42,7 @@ GoalIteration::GoalIteration(const double & d, const Predictor & predictor, bool
     }
 }
 
-GoalIteration::action_ptr_t GoalIteration::get_action(const instance_t* i) {
+GoalIteration::action_ptr_t GoalIteration::get_action(const_instance_ptr_t i) {
     // auto iterate
     if(auto_iterate) {
         iterate(pow(discount,observation_space->space_size()));
