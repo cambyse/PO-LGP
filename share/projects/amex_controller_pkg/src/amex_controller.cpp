@@ -97,20 +97,25 @@ void AmexController::initController(){
   ///[0.5,0.5,0.5,0.5,0.1,0.1,0.1]
   ///[400,400,250,200,100,100,100]
   ///[3.,3.,4,3.,2.,4,1.5]
-  acc_gains = {0.5, 0.5, 0.5, 0.3, 0.1, 0.1, 0.1};
+  acc_gains = {0.25,0.25,0.25,0.25,0.1,0.1,0.1};
   i_gains = {200,200,150,100,100,100,100};
   i_claim = {3.,3.,3.,3.,2.,3.,1.5};
 
-  acc_gains = acc_gains*0.2;
+  acc_gains = acc_gains*2.;
 
   cout << "acc_gains" << acc_gains << endl;
-  cout << "i_gains" << vel_gains << endl;
+  cout << "i_gains" << i_gains << endl;
   cout << "i_claim" << i_claim << endl;
 
   for(uint i=0;i<NUM_JOINTS;i++) setJointGainsSrv.request.acc_gains[i] = acc_gains(i);
   for(uint i=0;i<NUM_JOINTS;i++) setJointGainsSrv.request.i_gains[i] = i_gains(i);
   for(uint i=0;i<NUM_JOINTS;i++) setJointGainsSrv.request.i_claim[i] = i_claim(i);
   setJointGainsClient.call(setJointGainsSrv);
+
+  /// Set Filter Parameters
+  setFilterGainsSrv.request.u_filt = 0.997;
+  setFilterGainsSrv.request.qd_filt = 0.95;
+  setFilterGainsClient.call(setFilterGainsSrv);
 
   /// Set Task PD Gains
   setNaturalGainsSrv.request.decayTime = dtAmex;
@@ -139,6 +144,7 @@ void AmexController::initRosServices(){
   setJointGainsClient = nh.serviceClient<tree_controller_pkg::SetJointGains>("/tree_rt_controller/set_joint_gains",true);
   setTaskGainsClient = nh.serviceClient<tree_controller_pkg::SetTaskGains>("/tree_rt_controller/set_task_gains",true);
   setNaturalGainsClient = nh.serviceClient<tree_controller_pkg::SetNaturalGains>("/tree_rt_controller/set_natural_gains",true);
+  setFilterGainsClient = nh.serviceClient<tree_controller_pkg::SetFilterGains>("/tree_rt_controller/set_filter_gains",true);
 
   setPosTargetSrv.request.pos.resize(3); setPosTargetSrv.request.vel.resize(3);
   setVecTargetSrv.request.pos.resize(3); setVecTargetSrv.request.vel.resize(3);
@@ -151,6 +157,7 @@ void AmexController::initRosServices(){
   setJointGainsClient.waitForExistence();
   setTaskGainsClient.waitForExistence();
   setNaturalGainsClient.waitForExistence();
+  setFilterGainsClient.waitForExistence();
 
   if (useGoalPub) {
     refFrame = ARRAY(world.getBodyByName("torso_lift_link")->X.pos);

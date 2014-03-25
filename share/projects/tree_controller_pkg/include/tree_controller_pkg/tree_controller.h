@@ -67,7 +67,7 @@ private:
   bool LOGGING;
 
   // Filter
-  double q_filt;
+  double u_filt;
   double qd_filt;
 
   // Service for communication

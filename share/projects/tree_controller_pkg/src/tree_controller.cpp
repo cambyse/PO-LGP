@@ -54,7 +54,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   taskVec = MP->addPDTask("vec", .1, 1, vecTMT, "endeffR",ARR(0.,0.,1.));
   taskHome = MP->addPDTask("home", .1, 1., qLinearTMT, NULL, NoVector, NULL, NoVector, 0.01*MP->H_rate_diag);
 
-  double t_PD = 1./4.;
+  double t_PD = 1.;
   double damp_PD = 0.9;
   taskPos->setGainsAsNatural(t_PD,damp_PD);
   taskVec->setGainsAsNatural(t_PD,damp_PD);
@@ -147,7 +147,7 @@ void TreeControllerClass::starting()
 
   integral.setZero();
 
-  q_filt = 0.996;
+  u_filt = 0.996;
   qd_filt = 0.9;
 
   /// Initialize joint state
@@ -211,7 +211,7 @@ void TreeControllerClass::update()
       i_effort(i) = -1.*i_claim(i);
     }
 
-    u(i) = q_filt*u(i)+(1.-q_filt)*(a_effort(i) + i_effort(i));
+    u(i) = u_filt*u(i)+(1.-u_filt)*(a_effort(i) + i_effort(i));
     tree_.getJoint(controlIdx(i))->commanded_effort_ = u(i);
     tree_.getJoint(controlIdx(i))->enforceLimits();
 
@@ -325,12 +325,12 @@ bool TreeControllerClass::getJointState(tree_controller_pkg::GetJointState::Requ
   return true;
 }
 bool TreeControllerClass::getFilterGains(tree_controller_pkg::GetFilterGains::Request &req, tree_controller_pkg::GetFilterGains::Response &resp){
-  resp.q_filt = q_filt;
+  resp.u_filt = u_filt;
   resp.qd_filt = qd_filt;
   return true;
 }
 bool TreeControllerClass::setFilterGains(tree_controller_pkg::SetFilterGains::Request &req, tree_controller_pkg::SetFilterGains::Response &resp){
-  q_filt = req.q_filt;
+  u_filt = req.u_filt;
   qd_filt = req.qd_filt;
   return true;
 }
