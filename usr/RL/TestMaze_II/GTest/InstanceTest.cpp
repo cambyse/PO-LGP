@@ -114,7 +114,7 @@ namespace {
             ptr_t ins8 = DoublyLinkedInstance::create(action_ptr_t(),observation_ptr_t(),reward(8),const_ptr_t(ins6),const_ptr_t(ins3));
             ins8->set_const_successor(ins4);
 
-            ins8->detach_reachable();
+            ins3->detach_all();
         }
         MEMORY_CHECK;
     }

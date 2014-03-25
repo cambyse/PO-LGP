@@ -13,8 +13,8 @@ DoublyLinkedInstance::ptr_t DoublyLinkedInstance::create(action_ptr_t a,
                                                          ptr_t after) {
     DoublyLinkedInstance * d = new DoublyLinkedInstance(a,o,r,before,after);
     ptr_t ret =  AbstractInstance::create(d); // sets self pointer
-    d->prev_ptr->subscribe(d->get_self_ptr(),SUCCESSOR);
-    d->next_ptr->subscribe(d->get_self_ptr(),PREDECESSOR);
+    d->const_prev()->subscribe(d->get_self_ptr(),SUCCESSOR);
+    d->const_next()->subscribe(d->get_self_ptr(),PREDECESSOR);
     return ret;
 }
 
@@ -25,8 +25,8 @@ DoublyLinkedInstance::ptr_t DoublyLinkedInstance::create(action_ptr_t a,
                                                          const_ptr_t after) {
     DoublyLinkedInstance * d = new DoublyLinkedInstance(a,o,r,before,after);
     ptr_t ret =  AbstractInstance::create(d); // sets self pointer
-    d->prev_ptr->subscribe(d->get_self_ptr(),SUCCESSOR);
-    d->next_ptr->subscribe(d->get_self_ptr(),PREDECESSOR);
+    d->const_prev()->subscribe(d->get_self_ptr(),SUCCESSOR);
+    d->const_next()->subscribe(d->get_self_ptr(),PREDECESSOR);
     return ret;
 }
 
@@ -89,7 +89,7 @@ DoublyLinkedInstance::ptr_t DoublyLinkedInstance::append(action_ptr_t a,
                                                          reward_ptr_t r) {
     DEBUG_OUT(1,"append(" << a << "," << o << "," << r << ")");
     set_non_const_successor(DoublyLinkedInstance::create(a,o,r,get_self_ptr(),INVALID));
-    return next_ptr;
+    return non_const_next();
 }
 
 void DoublyLinkedInstance::set_non_const_predecessor(ptr_t pre) {
@@ -126,14 +126,14 @@ void DoublyLinkedInstance::detachment_notification(const_ptr_t ins, SUBSCRIBTION
     case PREDECESSOR:
         if(DEBUG_LEVEL>1 && ins!=const_next()) {
             DEBUG_ERROR(ins << " is not successor (should be " << const_next() << ")");
-        } else if(ins==next_ptr) {
+        } else if(ins==const_next()) {
             set_non_const_successor(INVALID);
         }
         break;
     case SUCCESSOR:
         if(DEBUG_LEVEL>1 && ins!=const_prev()) {
             DEBUG_ERROR(ins << " is not predecessor (should be " << const_prev() << ")");
-        } else if(ins==prev_ptr) {
+        } else if(ins==const_prev()) {
             set_non_const_predecessor(INVALID);
         }
     }

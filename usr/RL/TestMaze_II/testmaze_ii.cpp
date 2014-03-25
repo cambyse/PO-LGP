@@ -23,7 +23,7 @@
 #ifdef BATCH_MODE_QUIET
 #define DEBUG_LEVEL 0
 #else
-#define DEBUG_LEVEL 3
+#define DEBUG_LEVEL 1
 #endif
 #include "util/debug.h"
 
@@ -139,15 +139,8 @@ void TestMaze_II::update_current_instance(action_ptr_t action, observation_ptr_t
         DEBUG_OUT(3,"Current instance INVALID. Creating.");
         current_instance = DoublyLinkedInstance::create(action,observation,reward);
     } else {
-#warning
         DEBUG_OUT(3,"Current instance is " << current_instance << ". Appending.");
-#define PRINT                                                          \
-        for(int idx=0; current_instance->const_prev(idx)!=INVALID; ++idx) { \
-            DEBUG_OUT(3,idx << " back [[[" << current_instance->const_prev(idx) << "]]]"); \
-        }
-        PRINT;
         current_instance = current_instance->append(action,observation,reward);
-#undef PRINT
     }
     if(plot) {
         plot_file << action << " " << observation << " " << reward << endl;
@@ -253,9 +246,7 @@ void TestMaze_II::change_environment(shared_ptr<Environment> new_environment) {
         shared_ptr<PredictiveEnvironment> pred = dynamic_pointer_cast<PredictiveEnvironment>(environment);
         if(pred!=nullptr) {
             const_instance_ptr_t env_instance = pred->get_current_instance();
-#warning
             current_instance = DoublyLinkedInstance::create(env_instance->action,env_instance->observation,env_instance->reward,env_instance->const_prev(),INVALID);
-//            current_instance = DoublyLinkedInstance::create(env_instance->action,env_instance->observation,env_instance->reward);
         }
     }
 
