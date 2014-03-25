@@ -22,8 +22,8 @@ void TrajOptimizer::optimizeTrajectory(arr &_goal, arr &_q0) {
   c = MP.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, refGoal, 1e5);
 
-  c = MP.addTask("qLimits", new DefaultTaskMap(qLimitsTMT,world));
-  MP.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),1e0,ARRAY(0.),1e0);
+//  c = MP.addTask("qLimits", new DefaultTaskMap(qLimitsTMT,world));
+//  MP.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),1e0,ARRAY(0.),1e0);
 
   c = MP.addTask("final_vel", new DefaultTaskMap(qItselfTMT,world));
   MP.setInterpolatingCosts(c,MotionProblem::finalOnly,ARRAY(0.),1e3);

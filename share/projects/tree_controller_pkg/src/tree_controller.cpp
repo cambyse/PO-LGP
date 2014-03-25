@@ -67,6 +67,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   controlIdx = {30,31,32,33,34,35,36};
   q = arr(controlIdx.d0);
   qd = arr(controlIdx.d0);       qd.setZero();
+  qdd = arr(controlIdx.d0);      qdd.setZero();
   des_q = arr(controlIdx.d0);
   des_qd = arr(controlIdx.d0);   des_qd.setZero();
   state = arr(3); stateVec = arr(3);
@@ -147,8 +148,8 @@ void TreeControllerClass::starting()
 
   integral.setZero();
 
-  u_filt = 0.996;
-  qd_filt = 0.9;
+  u_filt = 0.99;
+  qd_filt = 0.95;
 
   /// Initialize joint state
   tree_.getPositions(jnt_pos_);
@@ -156,6 +157,8 @@ void TreeControllerClass::starting()
     q(i) = jnt_pos_(controlIdx(i));
     des_q(i) = jnt_pos_(controlIdx(i));
   }
+
+  qdd.setZero();
 
   /// Initialize Task Space
   arr state,stateVec;
@@ -195,7 +198,7 @@ void TreeControllerClass::update()
   integral = integral + (des_q - q);
 
   /// OSC
-  qdd = MP->operationalSpaceControl();
+  qdd = u_filt*qdd + (1.-u_filt)*MP->operationalSpaceControl();
   des_q = q + tau_control*des_qd;
   des_qd = qd + tau_control*qdd;
 
@@ -211,7 +214,7 @@ void TreeControllerClass::update()
       i_effort(i) = -1.*i_claim(i);
     }
 
-    u(i) = u_filt*u(i)+(1.-u_filt)*(a_effort(i) + i_effort(i));
+    u(i) = a_effort(i) + i_effort(i);
     tree_.getJoint(controlIdx(i))->commanded_effort_ = u(i);
     tree_.getJoint(controlIdx(i))->enforceLimits();
 

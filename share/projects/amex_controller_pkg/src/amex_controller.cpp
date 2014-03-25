@@ -26,7 +26,7 @@ void AmexController::startController(){
 
   cout << amex->goal << endl;
   /// Run Controller until goal is reached
-  while (ros::ok() && (amex->s.last() < 0.95))
+  while (ros::ok() && (amex->s.last() < 0.97))
   {
     double last_time = ros::Time::now().toSec();
     runAmex(dtReal);
@@ -37,12 +37,12 @@ void AmexController::startController(){
   }
 
   /// Set Task PD Gains
-  setNaturalGainsSrv.request.decayTime = 1.;
-  setNaturalGainsSrv.request.dampingRatio = 0.9;
-  setNaturalGainsClient.call(setNaturalGainsSrv);
+//  setNaturalGainsSrv.request.decayTime = 0.5;
+//  setNaturalGainsSrv.request.dampingRatio = 0.9;
+//  setNaturalGainsClient.call(setNaturalGainsSrv);
 
   /// Set Velocity to zero after execution and position to target position
-  for(uint i=0;i<3;i++) setPosTargetSrv.request.pos[i] = amex->goal(i);
+//  for(uint i=0;i<3;i++) setPosTargetSrv.request.pos[i] = amex->goal(i);
   for(uint i=0;i<3;i++) setPosTargetSrv.request.vel[i] = 0.;
   for(uint i=0;i<3;i++) setVecTargetSrv.request.vel[i] = 0.;
   setPosTargetClient.call(setPosTargetSrv);
@@ -101,8 +101,8 @@ void AmexController::initController(){
   i_gains = {200,200,150,100,100,100,100};
   i_claim = {3.,3.,3.,3.,2.,3.,1.5};
 
-  acc_gains = acc_gains*2.;
-
+  acc_gains = acc_gains*20.;
+  i_gains = i_gains*3.;
   cout << "acc_gains" << acc_gains << endl;
   cout << "i_gains" << i_gains << endl;
   cout << "i_claim" << i_claim << endl;

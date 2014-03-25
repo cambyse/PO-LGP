@@ -25,6 +25,7 @@ i_effort_bk = load([folder,'/i_effort_bk.output']);
 a_effort_bk = load([folder,'/a_effort_bk.output']);
 measured_effort_bk = load([folder,'/measured_effort_bk.output']);
 qd_bk	      = load([folder,'/qd_bk.output']);
+des_qdd_bk	      = load([folder,'/des_qdd_bk.output']);
 u_bk        = load([folder,'/u_bk.output']);
 des_q_bk    = load([folder,'/des_q_bk.output']);
 dt_bk       = load([folder,'/dt_bk.output']);
@@ -93,6 +94,14 @@ for i=1:1000:ni
   plot3([p_start(1),p_end(1)],[p_start(2),p_end(2)],[p_start(3),p_end(3)],'r')
 end
 legend('Task State','Des. Task State')
+
+figure(6);clf;hold on;
+for i=1:nq
+  subplot (pl,pc,i);hold on;
+  plot(t,des_qdd_bk(1:ni,i));
+end
+legend('velocity','filtered velocity','desired_velocity');
+
 
 % figure(6);clf;hold on;
 % plot(diff(dt_bk(1:ni)));
