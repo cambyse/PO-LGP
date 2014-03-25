@@ -361,53 +361,47 @@ void executeTrajectoryRightArm(String scene){
 
   // Plan Trajectory
   makeConvexHulls(world.shapes);
-  MotionProblem P(world);
-  P.loadTransitionParameters();
+  MotionProblem MP(world);
+  MP.loadTransitionParameters();
 
-  arr Rgoal = ARRAY(P.world.getBodyByName("goalRef")->X.pos);
+  arr refGoal = ARRAY(MP.world.getBodyByName("goalRef")->X.pos);
 
   //-- create an optimal trajectory to trainTarget
   TaskCost *c;
-  c = P.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly, Rgoal, 1e4);
-  //  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
+  c = MP.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
+  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, refGoal, 1e5);
 
-  //  c = P.addTaskMap("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
-  //  P.setInterpolatingCosts(c, MEotionProblem::finalOnly, ARRAY(-0.5,0.3,0.8), 1e3);
-  //  P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
+  c = MP.addTask("qLimits", new DefaultTaskMap(qLimitsTMT,world));
+  MP.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),1e0,ARRAY(0.),1e0);
 
-  c = P.addTask("qLimits", new DefaultTaskMap(qLimitsTMT,world));
-  P.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),1e0,ARRAY(0.),1e0);
-//  P.setInterpolatingVelCosts(c,MotionProblem::constant,ARRAY(0.),1e-1);
+  c = MP.addTask("final_vel", new DefaultTaskMap(qItselfTMT,world));
+  MP.setInterpolatingCosts(c,MotionProblem::finalOnly,ARRAY(0.),1e3);
+  c->map.order=1;
 
-  c = P.addTask("homing", new DefaultTaskMap(qItselfTMT,world));
-  P.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),0);
-  //  P.setInterpolatingVelCosts(c,MotionProblem::constant,ARRAY(0.),1e0);
-  //P.setInterpolatingVelCosts(c,MotionProblem::finalOnly,ARRAY(0.),1e2);
 
 
   //-- create the Optimization problem (of type kOrderMarkov)
-  P.x0 = {0.,0.,0.,0.,-0.3,-0.3,0.};
+  MP.x0 = {0.,0.,0.,0.,-0.3,-0.3,0.};
 
-  MotionProblemFunction F(P);
+  MotionProblemFunction F(MP);
   uint T=F.get_T();
   uint k=F.get_k();
   uint n=F.dim_x();
-  double dt = P.tau;
+  double dt = MP.tau;
   cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<" # joints=" <<world.getJointStateDimension()<<endl;
 
   arr x(T+1,n); x.setZero();
   optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
-  P.costReport();
+  MP.costReport(true);
 //  displayTrajectory(x, 1, world, "planned trajectory", 0.01);
 
   //-- Transform trajectory into task space
-  arr kinPos, kinVec, xRefPosR, xRefVecR, xRefPosL, xRefVecL, xRefR, xRefL;
+  arr kinPos, kinVec, xRefPosR, xRefVecR, xRefR;
   // store cartesian coordinates and endeffector orientation
   for (uint t=0;t<=T;t++) {
     world.setJointState(x[t]);
-    world.kinematicsPos(kinPos,NoArr,P.world.getBodyByName("endeffR")->index);
-    world.kinematicsVec(kinVec,NoArr,P.world.getBodyByName("endeffR")->index);
+    world.kinematicsPos(kinPos,NoArr,MP.world.getBodyByName("endeffR")->index);
+    world.kinematicsVec(kinVec,NoArr,MP.world.getBodyByName("endeffR")->index);
     xRefPosR.append(~kinPos);
     xRefVecR.append(~kinVec);
   }
@@ -417,7 +411,7 @@ void executeTrajectoryRightArm(String scene){
   // set initial positions
 //  arr q0 = x[0];
   arr x0_R = xRefR[0];
-  q = P.x0;
+  q = MP.x0;
   world.setJointState(q,qdot);
 
 
@@ -434,20 +428,19 @@ void executeTrajectoryRightArm(String scene){
 
   MObject goalMO(&world, MT::String("goal"), MObject::GOAL , 0.0005, dirL);
 
-  FeedbackMotionControl MP(world, false);
+  FeedbackMotionControl FMC(world, false);
   PDtask *taskPosR, *taskVecR, *taskHome, *taskCol, *taskLimits, *qitself;
-  double regularization = 1e-2;
 
   // initialize controllers
   AdaptiveMotionExecution* amexR;
 
   //  MP.nullSpacePD.prec=0.;
-  MP.nullSpacePD.active=false;
-  taskPosR = MP.addPDTask("posR", tau_plan*5, 1, posTMT, "endeffR");
-  taskVecR = MP.addPDTask("vecR", tau_plan*5, 1, vecTMT, "endeffR",ARR(0.,0.,1.));
-  qitself = MP.addPDTask("qitself", .1, 1., qLinearTMT, NULL, NoVector, NULL, NoVector, 0.01*MP.H_rate_diag);
-  cout << MP.H_rate_diag << endl;
-  double t_PD = tau_plan/4.;
+  FMC.nullSpacePD.active=false;
+  taskPosR = FMC.addPDTask("posR", tau_plan*5, 1, posTMT, "endeffR");
+  taskVecR = FMC.addPDTask("vecR", tau_plan*5, 1, vecTMT, "endeffR",ARR(0.,0.,1.));
+  qitself = FMC.addPDTask("qitself", .1, 1., qLinearTMT, NULL, NoVector, NULL, NoVector, 0.01*FMC.H_rate_diag);
+  cout << FMC.H_rate_diag << endl;
+  double t_PD = tau_plan;
   double damp_PD = 0.9;
   taskPosR->setGainsAsNatural(t_PD,damp_PD); taskPosR->prec=1e5;
   taskVecR->setGainsAsNatural(t_PD,damp_PD); taskVecR->prec=1e3;
@@ -489,8 +482,8 @@ void executeTrajectoryRightArm(String scene){
       // Outer Planning Loop [1/tau_plan Hz]
       MT::timerStart(true);
       // Get current task state
-      world.kinematicsPos(state,NoArr,P.world.getBodyByName("endeffR")->index);
-      world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeffR")->index);
+      world.kinematicsPos(state,NoArr,MP.world.getBodyByName("endeffR")->index);
+      world.kinematicsVec(stateVec,NoArr,MP.world.getBodyByName("endeffR")->index);
       state.append(stateVec);
       // Move goal
       if (t < 0.7*t_final && moveGoal) {
@@ -505,12 +498,6 @@ void executeTrajectoryRightArm(String scene){
       taskVecR->y_ref = yNext.subRange(3,5);
       taskVecR->v_ref = ydNext.subRange(3,5);
 
-//      taskPosR->y_ref = goalMO.position;
-//      taskPosR->v_ref = 0.;//ydNext.subRange(0,2);
-//      taskVecR->y_ref = goalMO.orientation;//yNext.subRange(3,5);
-//      taskVecR->v_ref = 0.;//ydNext.subRange(3,5);
-
-
 #if VISUALIZE
       current_dir = state;
       des_dir = yNext;
@@ -520,12 +507,12 @@ void executeTrajectoryRightArm(String scene){
     }
 
     // Inner Controlling Loop [1/tau_control Hz]
-    MP.setState(q, qdot);
+    FMC.setState(q, qdot);
 
     // world.stepPhysx(tau_control);
     world.computeProxies();
 
-    arr qddot = MP.operationalSpaceControl();//MP.operationalSpaceControl(regularization);
+    arr qddot = FMC.operationalSpaceControl();//MP.operationalSpaceControl(regularization);
     q += tau_control*qdot;
     qdot += tau_control*qddot;
     t += tau_control;
@@ -583,4 +570,3 @@ int main(int argc,char **argv) {
 
   return 0;
 }
-

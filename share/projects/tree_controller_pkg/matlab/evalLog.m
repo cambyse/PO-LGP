@@ -1,7 +1,7 @@
 clear
 % copy log files from .ros/ to local folder
 NEW = 1
-SIM = 0
+SIM = 1
 [~, b] = unix('ls logs'); id = max(str2num(b))+NEW;
 % id = 34
 folder = ['logs/',num2str(id)];

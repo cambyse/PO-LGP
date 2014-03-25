@@ -141,13 +141,14 @@ void TreeControllerClass::starting()
   // 34: r_forearm_roll_joint,    10  2     300    6  300
   // 35: r_wrist_flex_joint,       6  2     300    4  300
   // 36: r_wrist_roll_joint,       6  2     300    4  300
-  Ka = {0.05, 0.05, 0.05, 0.05, 0.01, 0.01, 0.01};
+//  Ka = {0.05, 0.05, 0.05, 0.05, 0.01, 0.01, 0.01};
+  Ka = {0.15, 0.15, 0.15, 0.15, 0.1, 0.1, 0.1};
   Ki = {150,150,80,50,40,80,20}; Ki=Ki*0.1;
 
   integral.setZero();
 
-  q_filt = 0.;
-  qd_filt = 0.95;
+  q_filt = 0.996;
+  qd_filt = 0.9;
 
   /// Initialize joint state
   tree_.getPositions(jnt_pos_);
@@ -210,7 +211,7 @@ void TreeControllerClass::update()
       i_effort(i) = -1.*i_claim(i);
     }
 
-    u(i) = a_effort(i) + i_effort(i);
+    u(i) = q_filt*u(i)+(1.-q_filt)*(a_effort(i) + i_effort(i));
     tree_.getJoint(controlIdx(i))->commanded_effort_ = u(i);
     tree_.getJoint(controlIdx(i))->enforceLimits();
 
