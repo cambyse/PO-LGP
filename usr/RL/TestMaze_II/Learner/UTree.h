@@ -18,13 +18,11 @@ private:
 
 public:
     DISAMBIGUATE_CONFIG_TYPEDEFS(HistoryObserver);
-    typedef Feature::feature_return_value    f_ret_t;
-    typedef Feature::const_feature_ptr_t     f_ptr_t;
-    typedef lemon::ListDigraph               graph_t;
-    typedef graph_t::Node                    node_t;
-    typedef graph_t::Arc                     arc_t;
-    typedef std::vector<node_t>              node_vector_t;
-    typedef std::set<node_t>                 node_container_t;
+    typedef lemon::ListDigraph                 graph_t;
+    typedef graph_t::Node                      node_t;
+    typedef graph_t::Arc                       arc_t;
+    typedef std::vector<node_t>                node_vector_t;
+    typedef std::set<node_t>                   node_container_t;
     typedef std::vector<const_instance_ptr_t>  instance_vector_t;
 
     /** \brief Type of the map storing the NodeInfo objects. */

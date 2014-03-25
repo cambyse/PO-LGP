@@ -14,17 +14,17 @@
 class Feature {
 public:
     // types
-    USE_CONFIG_TYPEDEFS;
     typedef std::shared_ptr<const Feature> const_feature_ptr_t;
-    typedef double feature_return_value;
-    typedef std::unordered_map<const_feature_ptr_t, feature_return_value> look_up_map_t;
+    typedef double feature_return_t;
+    USE_CONFIG_TYPEDEFS;
+    typedef std::unordered_map<const_feature_ptr_t, feature_return_t> look_up_map_t;
     enum FEATURE_TYPE { ABSTRACT, CONST_FEATURE, ACTION, OBSERVATION, REWARD, AND };
     // functions
     Feature();
     virtual ~Feature();
-    virtual feature_return_value evaluate(const_instance_ptr_t) const;
-    virtual feature_return_value evaluate(const_instance_ptr_t, action_ptr_t, observation_ptr_t, reward_ptr_t) const;
-    virtual feature_return_value evaluate(const look_up_map_t&) const;
+    virtual feature_return_t evaluate(const_instance_ptr_t) const;
+    virtual feature_return_t evaluate(const_instance_ptr_t, action_ptr_t, observation_ptr_t, reward_ptr_t) const;
+    virtual feature_return_t evaluate(const look_up_map_t&) const;
     virtual std::string identifier() const;
     friend std::ostream& operator<<(std::ostream&, const Feature&);
     /** \brief Compare features based on their type. */
@@ -40,9 +40,9 @@ protected:
     FEATURE_TYPE feature_type;
     unsigned int complexity;
     bool const_feature;
-    feature_return_value const_return_value;
+    feature_return_t const_return_value;
     // member functions
-    inline feature_return_value return_function(const feature_return_value& ret) const;
+    inline feature_return_t return_function(const feature_return_t& ret) const;
 };
 
 class BasisFeature: public Feature {
@@ -58,12 +58,12 @@ protected:
 
 class ConstFeature: public BasisFeature {
 private:
-    ConstFeature(const feature_return_value& v);
+    ConstFeature(const feature_return_t& v);
 public:
     virtual ~ConstFeature();
-    static const_feature_ptr_t create(const feature_return_value& v = 0);
-    virtual feature_return_value evaluate(const_instance_ptr_t) const;
-    virtual feature_return_value evaluate(const_instance_ptr_t, action_ptr_t, observation_ptr_t, reward_ptr_t) const;
+    static const_feature_ptr_t create(const feature_return_t& v = 0);
+    virtual feature_return_t evaluate(const_instance_ptr_t) const;
+    virtual feature_return_t evaluate(const_instance_ptr_t, action_ptr_t, observation_ptr_t, reward_ptr_t) const;
     virtual std::string identifier() const;
     virtual bool operator==(const Feature& other) const override;
     virtual bool operator<(const Feature& other) const override;
@@ -75,12 +75,13 @@ private:
 public:
     virtual ~ActionFeature();
     static const_feature_ptr_t create(const action_ptr_t& a, const int& d);
-    virtual feature_return_value evaluate(const_instance_ptr_t) const;
+    virtual feature_return_t evaluate(const_instance_ptr_t) const;
     virtual std::string identifier() const;
     static bool features_contradict(const ActionFeature& f1, const ActionFeature& f2);
     bool contradicts(const ActionFeature& f) const { return features_contradict(*this,f); }
     virtual bool operator==(const Feature& other) const override;
     virtual bool operator<(const Feature& other) const override;
+    virtual int get_delay() const { return delay; }
 protected:
     action_ptr_t action;
     int delay;
@@ -92,12 +93,13 @@ private:
 public:
     virtual ~ObservationFeature();
     static const_feature_ptr_t create(const observation_ptr_t& s, const int& d);
-    virtual feature_return_value evaluate(const_instance_ptr_t) const;
+    virtual feature_return_t evaluate(const_instance_ptr_t) const;
     virtual std::string identifier() const;
     static bool features_contradict(const ObservationFeature& f1, const ObservationFeature& f2);
     bool contradicts(const ObservationFeature& f) const { return features_contradict(*this,f); }
     virtual bool operator==(const Feature& other) const override;
     virtual bool operator<(const Feature& other) const override;
+    virtual int get_delay() const { return delay; }
 protected:
     observation_ptr_t observation;
     int delay;
@@ -109,13 +111,14 @@ private:
 public:
     virtual ~RewardFeature();
     static const_feature_ptr_t create(const reward_ptr_t& r, const int& d);
-    virtual feature_return_value evaluate(const_instance_ptr_t) const;
+    virtual feature_return_t evaluate(const_instance_ptr_t) const;
     virtual std::string identifier() const;
     static bool features_contradict(const RewardFeature& f1, const RewardFeature& f2);
     bool contradicts(const RewardFeature& f) const { return features_contradict(*this,f); }
     virtual bool operator==(const Feature& other) const override;
     virtual bool operator<(const Feature& other) const override;
     const reward_ptr_t get_reward() const { return reward; }
+    virtual int get_delay() const { return delay; }
 protected:
     reward_ptr_t reward;
     int delay;
@@ -129,18 +132,19 @@ public:
     AndFeature(const_feature_ptr_t f);
     AndFeature(const_feature_ptr_t f1, const_feature_ptr_t f2);
     virtual ~AndFeature();
-    virtual feature_return_value evaluate(const_instance_ptr_t) const;
-    virtual feature_return_value evaluate(const look_up_map_t&) const;
+    virtual feature_return_t evaluate(const_instance_ptr_t) const;
+    virtual feature_return_t evaluate(const look_up_map_t&) const;
     virtual std::string identifier() const;
     virtual bool operator==(const Feature& other) const override;
     virtual bool operator<(const Feature& other) const override;
     virtual bool operator<(const AndFeature& other) const;
+    virtual const subfeature_container_t& get_subfeatures() const { return subfeatures; }
 protected:
     subfeature_container_t subfeatures;
     virtual void add_feature(const_feature_ptr_t f);
     virtual void finalize_construction();
     void check_for_contradicting_subfeatures();
-    inline feature_return_value return_function(const feature_return_value& ret) const;
+    inline feature_return_t return_function(const feature_return_t& ret) const;
 };
 
 #endif /* FEATURE_H_ */

@@ -20,12 +20,12 @@ Feature::Feature():
 
 Feature::~Feature() {}
 
-Feature::feature_return_value Feature::evaluate(const_instance_ptr_t) const {
+Feature::feature_return_t Feature::evaluate(const_instance_ptr_t) const {
     DEBUG_ERROR("Evaluating abstract type Feature");
     return return_function(0);
 }
 
-Feature::feature_return_value Feature::evaluate(const_instance_ptr_t ins,
+Feature::feature_return_t Feature::evaluate(const_instance_ptr_t ins,
                                                 action_ptr_t action,
                                                 observation_ptr_t observation,
                                                 reward_ptr_t reward) const {
@@ -34,7 +34,7 @@ Feature::feature_return_value Feature::evaluate(const_instance_ptr_t ins,
         );
 }
 
-Feature::feature_return_value Feature::evaluate(const look_up_map_t&) const {
+Feature::feature_return_t Feature::evaluate(const look_up_map_t&) const {
     DEBUG_ERROR("Evaluating abstract type Feature");
     return return_function(0);
 }
@@ -72,19 +72,19 @@ unsigned int Feature::get_complexity() const{
     return complexity;
 }
 
-Feature::feature_return_value Feature::return_function(const feature_return_value& ret) const {
+Feature::feature_return_t Feature::return_function(const feature_return_t& ret) const {
     return ret;
     //return (complexity+1) * ret;
 }
 
-ConstFeature::ConstFeature(const feature_return_value& v) {
+ConstFeature::ConstFeature(const feature_return_t& v) {
     feature_type = CONST_FEATURE;
     complexity = 0;
     const_feature = true;
     const_return_value = v;
 }
 
-Feature::const_feature_ptr_t ConstFeature::create(const feature_return_value& v) {
+Feature::const_feature_ptr_t ConstFeature::create(const feature_return_t& v) {
     ConstFeature * new_feature = new ConstFeature(v);
     const_feature_ptr_t return_ptr(new_feature);
     new_feature->set_this_ptr(return_ptr);
@@ -93,11 +93,11 @@ Feature::const_feature_ptr_t ConstFeature::create(const feature_return_value& v)
 
 ConstFeature::~ConstFeature() {}
 
-Feature::feature_return_value ConstFeature::evaluate(const_instance_ptr_t ins) const {
+Feature::feature_return_t ConstFeature::evaluate(const_instance_ptr_t ins) const {
     return return_function(ins==INVALID ? 0 : const_return_value);
 }
 
-Feature::feature_return_value ConstFeature::evaluate(const_instance_ptr_t ins, action_ptr_t, observation_ptr_t, reward_ptr_t) const {
+Feature::feature_return_t ConstFeature::evaluate(const_instance_ptr_t ins, action_ptr_t, observation_ptr_t, reward_ptr_t) const {
     // re-implement because it's more efficient
     return return_function(ins==INVALID ? 0 : const_return_value);
 }
@@ -143,7 +143,7 @@ Feature::const_feature_ptr_t ActionFeature::create(const action_ptr_t& a, const 
     return return_ptr;
 }
 
-Feature::feature_return_value ActionFeature::evaluate(const_instance_ptr_t ins) const {
+Feature::feature_return_t ActionFeature::evaluate(const_instance_ptr_t ins) const {
     ins = ins->const_next(delay);
     if(ins!=INVALID && ins->action==action) {
         return return_function(1);
@@ -202,7 +202,7 @@ Feature::const_feature_ptr_t ObservationFeature::create(const observation_ptr_t&
     return return_ptr;
 }
 
-Feature::feature_return_value ObservationFeature::evaluate(const_instance_ptr_t ins) const {
+Feature::feature_return_t ObservationFeature::evaluate(const_instance_ptr_t ins) const {
     ins = ins->const_next(delay);
     if(ins!=INVALID && ins->observation==observation ) {
         return return_function(1);
@@ -261,7 +261,7 @@ Feature::const_feature_ptr_t RewardFeature::create(const reward_ptr_t& r, const 
     return return_ptr;
 }
 
-Feature::feature_return_value RewardFeature::evaluate(const_instance_ptr_t ins) const {
+Feature::feature_return_t RewardFeature::evaluate(const_instance_ptr_t ins) const {
     ins = ins->const_next(delay);
     if(ins!=INVALID && ins->reward==reward ) {
         return return_function(1);
@@ -323,12 +323,12 @@ AndFeature::AndFeature(const_feature_ptr_t f1, const_feature_ptr_t f2) {
 
 AndFeature::~AndFeature() {}
 
-Feature::feature_return_value AndFeature::evaluate(const_instance_ptr_t ins) const {
+Feature::feature_return_t AndFeature::evaluate(const_instance_ptr_t ins) const {
     if(ins!=INVALID) {
         if(const_feature) {
             return return_function(const_return_value);
         } else {
-            Feature::feature_return_value prod = 1;
+            Feature::feature_return_t prod = 1;
             for(auto feature_iterator : subfeatures) {
                 prod *= feature_iterator->evaluate(ins);
                 if(prod==0) {
@@ -342,8 +342,8 @@ Feature::feature_return_value AndFeature::evaluate(const_instance_ptr_t ins) con
     }
 }
 
-AndFeature::feature_return_value AndFeature::evaluate(const look_up_map_t& look_up_map) const {
-    Feature::feature_return_value prod = 1;
+AndFeature::feature_return_t AndFeature::evaluate(const look_up_map_t& look_up_map) const {
+    Feature::feature_return_t prod = 1;
     for(auto feature_iterator : subfeatures) {
         auto it = look_up_map.find(feature_iterator);
         DEBUG_IF(it==look_up_map.end()) {
@@ -458,7 +458,7 @@ void AndFeature::check_for_contradicting_subfeatures() {
     }
 }
 
-AndFeature::feature_return_value AndFeature::return_function(const feature_return_value& ret) const {
+AndFeature::feature_return_t AndFeature::return_function(const feature_return_t& ret) const {
     return ret;
     //return ret/(complexity+1);
 }

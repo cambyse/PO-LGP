@@ -22,7 +22,6 @@ class Maze: public PredictiveEnvironment, public Visualizer {
 public:
 
     USE_CONFIG_TYPEDEFS;
-    typedef Feature::const_feature_ptr_t f_ptr_t;
     typedef MazeAction action_t;
     typedef MazeObservation observation_t;
     typedef ListedReward reward_t;

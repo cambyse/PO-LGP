@@ -23,8 +23,6 @@ class LinearQ: public HistoryObserver, public LBFGS_Optimizer, public FeatureLea
 public:
 
     USE_CONFIG_TYPEDEFS;
-    typedef Feature::feature_return_value    f_ret_t;
-    typedef Feature::const_feature_ptr_t     f_ptr_t;
     typedef std::vector<const_instance_ptr_t>  instance_vector_t;
 
     /** \brief What strategy to use for optimizting the features weights. */
