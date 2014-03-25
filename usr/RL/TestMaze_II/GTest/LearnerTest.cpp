@@ -9,6 +9,7 @@
 #include "../Learner/UTree.h"
 #include "../Learner/LinearQ.h"
 #include "../Learner/TemporallyExtendedModel.h"
+#include "../Learner/ConjunctiveAdjacency.h"
 #include "../Representation/DoublyLinkedInstance.h"
 
 #define DEBUG_LEVEL 1
@@ -16,6 +17,7 @@
 
 using std::vector;
 using std::shared_ptr;
+using std::make_shared;
 
 using ColorOutput::bold;
 using ColorOutput::reset_all;
@@ -352,17 +354,31 @@ TEST(LearnerTest, TemporallyExtendedModel) {
 
     // initialize environment and learner
     Maze maze;
-    TemporallyExtendedModel TEM;
+    shared_ptr<TemporallyExtendedModel> TEM;
+    shared_ptr<ConjunctiveAdjacency> N_plus;
 
     // use the minimal maze
     maze.set_maze("Minimal");
 
-    // get/set spaces and features
+    // get spaces
     action_ptr_t action_space;
     observation_ptr_t observation_space;
     reward_ptr_t reward_space;
     maze.get_spaces(action_space,observation_space,reward_space);
-    TEM.set_spaces(maze);
+
+    // initialize N+, set horizon extension
+    N_plus = make_shared<ConjunctiveAdjacency>();
+    N_plus->set_spaces(maze);
+    N_plus->horizon_extension_on(1);
+
+    // initialize TEM using N+
+    TEM = make_shared<TemporallyExtendedModel>(N_plus);
+    TEM->set_spaces(maze);
+
+    // extend features
+    TEM->extend_features();
+    TEM->extend_features();
+    TEM->print_features();
 
     // get all actions for random selection
     vector<action_ptr_t> action_vector;
@@ -376,7 +392,7 @@ TEST(LearnerTest, TemporallyExtendedModel) {
         observation_ptr_t observation_to;
         reward_ptr_t reward;
         maze.perform_transition(action,observation_to,reward);
-        TEM.add_action_observation_reward_tripel(action,observation_to,reward,false);
+        TEM->add_action_observation_reward_tripel(action,observation_to,reward,false);
     }
 
     // try to learn something
