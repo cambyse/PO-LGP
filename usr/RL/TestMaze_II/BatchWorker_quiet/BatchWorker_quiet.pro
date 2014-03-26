@@ -10,7 +10,6 @@ HEADERS += \
     ../Config.h \
     \
     ../util/util.h \
-    ../util/Macro.h \
     ../util/ProgressBar.h \
     ../util/ColorOutput.h \
     ../util/QtUtil.h \

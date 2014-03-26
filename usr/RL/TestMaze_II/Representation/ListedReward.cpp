@@ -1,7 +1,5 @@
 #include "ListedReward.h"
 
-#include "../util/Macro.h"
-
 #include <sstream>
 #include <algorithm> // for min, max
 

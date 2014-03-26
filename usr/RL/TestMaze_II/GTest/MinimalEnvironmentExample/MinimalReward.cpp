@@ -1,6 +1,5 @@
 #include "MinimalReward.h"
 
-#include "../../util/Macro.h"
 #include "../../util/debug.h"
 
 MinimalReward::MinimalReward(REWARD o) {

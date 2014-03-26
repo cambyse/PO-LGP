@@ -1,7 +1,5 @@
 #include "MazeObservation.h"
 
-#include "../util/Macro.h"
-
 #include <sstream>
 #include <tuple> // for std::tie
 

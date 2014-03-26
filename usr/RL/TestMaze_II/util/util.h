@@ -24,6 +24,15 @@
 /** \brief Shortcut to replace for loop where the index does not play a role. */
 #define repeat(n) for(unsigned long int repeat_index=0; repeat_index<(unsigned long int)n; ++repeat_index)
 
+/** \brief Simplify comparison in hierarchies of abstract classes. */
+#define COMPARE_ABSTRACT_TYPE_AND_CAST(comp,type_getter,type_for_cast)  \
+    auto ptr = dynamic_cast<type_for_cast>(&other);                     \
+    if(this->type_getter()!=other.type_getter()) {                      \
+        return this->type_getter() comp other.type_getter();            \
+    }                                                                   \
+    if(ptr==nullptr) {                                                  \
+        DEBUG_ERROR("Dynamic cast failed");                             \
+        return true;                                                    \
 /** \brief Shortcut to define a print() function for a class that has defined
  * the outstream operator <<.
  *
