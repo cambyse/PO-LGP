@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
+#include "../Config.h"
 #include "../util/ColorOutput.h"
-
 #include "../Maze/Maze.h"
 #include "../PredictiveEnvironment.h"
 #include "../Planning/LookAheadSearch.h"
@@ -22,14 +22,8 @@ using std::make_shared;
 using ColorOutput::bold;
 using ColorOutput::reset_all;
 
-// use standard typedefs
-typedef AbstractAction::ptr_t         action_ptr_t;
-typedef AbstractObservation::ptr_t    observation_ptr_t;
-typedef AbstractReward::ptr_t         reward_ptr_t;
-typedef AbstractInstance::ptr_t       instance_ptr_t;
-typedef AbstractInstance::const_ptr_t const_instance_ptr_t;
-
 TEST(LearnerTest, KMarkovCRF) {
+    USE_CONFIG_TYPEDEFS;
 
     // initialize environment and learner
     Maze maze;
@@ -129,6 +123,7 @@ TEST(LearnerTest, KMarkovCRF) {
 }
 
 TEST(LearnerTest, UTree) {
+    USE_CONFIG_TYPEDEFS;
 
     // initialize environment and learner
     Maze maze;
@@ -261,6 +256,7 @@ TEST(LearnerTest, UTree) {
 }
 
 TEST(LearnerTest, LinearQ) {
+    USE_CONFIG_TYPEDEFS;
 
     // initialize environment and learner
     Maze maze;
@@ -351,6 +347,7 @@ TEST(LearnerTest, LinearQ) {
 }
 
 TEST(LearnerTest, TemporallyExtendedModel) {
+    USE_CONFIG_TYPEDEFS;
 
     // initialize environment and learner
     Maze maze;
@@ -369,16 +366,11 @@ TEST(LearnerTest, TemporallyExtendedModel) {
     // initialize N+, set horizon extension
     N_plus = make_shared<ConjunctiveAdjacency>();
     N_plus->set_spaces(maze);
-    N_plus->horizon_extension_on(1);
+    N_plus->horizon_extension_on(2);
 
     // initialize TEM using N+
     TEM = make_shared<TemporallyExtendedModel>(N_plus);
     TEM->set_spaces(maze);
-
-    // extend features
-    TEM->extend_features();
-    TEM->extend_features();
-    TEM->print_features();
 
     // get all actions for random selection
     vector<action_ptr_t> action_vector;
@@ -387,7 +379,7 @@ TEST(LearnerTest, TemporallyExtendedModel) {
     }
 
     // do some random actions to collect data
-    repeat(1000) {
+    repeat(100) {
         action_ptr_t action = util::random_select(action_vector);
         observation_ptr_t observation_to;
         reward_ptr_t reward;
@@ -395,8 +387,37 @@ TEST(LearnerTest, TemporallyExtendedModel) {
         TEM->add_action_observation_reward_tripel(action,observation_to,reward,false);
     }
 
-    // try to learn something
-    {
-
+    // construct feature set
+    feature_set_t f_set;
+    for(reward_ptr_t reward : reward_space) {
+        f_ptr_t reward_feature_0 = RewardFeature::create(reward,0);
+        f_set.insert(f_ptr_t(new AndFeature(reward_feature_0)));
     }
+    for(observation_ptr_t observation_a : observation_space) {
+        f_ptr_t observation_feature_0 = ObservationFeature::create(observation_a,0);
+        for(action_ptr_t action : action_space) {
+            f_ptr_t action_feature_0 = ActionFeature::create(action,0);
+            f_set.insert(f_ptr_t(new AndFeature(action_feature_0,observation_feature_0)));
+        }
+        for(observation_ptr_t observation_b : observation_space) {
+            f_ptr_t observation_feature_1 = ObservationFeature::create(observation_b,-1);
+            f_set.insert(f_ptr_t(new AndFeature(observation_feature_0,observation_feature_1)));
+        }
+    }
+    TEM->set_feature_set(f_set);
+
+    TEM->print_training_data();
+
+    TEM->check_derivatives(10,1);
+
+    TEM->optimize_weights();
+    TEM->print_features();
+
+    // // try to learn something
+    // repeat(2) {
+    //     TEM->grow_feature_set();
+    //     TEM->optimize_weights();
+    //     TEM->shrink_feature_set();
+    //     TEM->print_features();
+    // }
 }

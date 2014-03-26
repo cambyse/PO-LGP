@@ -27,6 +27,7 @@ public:
     virtual feature_return_t evaluate(const look_up_map_t&) const;
     virtual std::string identifier() const;
     friend std::ostream& operator<<(std::ostream&, const Feature&);
+    virtual operator std::string() const {return util::string_from_ostream(*this);}
     /** \brief Compare features based on their type. */
     virtual bool operator==(const Feature& other) const;
     virtual bool operator!=(const Feature& other) const final;

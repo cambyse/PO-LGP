@@ -33,16 +33,6 @@
     if(ptr==nullptr) {                                                  \
         DEBUG_ERROR("Dynamic cast failed");                             \
         return true;                                                    \
-/** \brief Shortcut to define a print() function for a class that has defined
- * the outstream operator <<.
- *
- * Use this macro inside the cpp file to prevent inlining the function (which
- * prevents it being used in a debugger). */
-#define PRINT_FROM_OSTREAM                      \
-    {                                           \
-        std::stringstream s;                    \
-        s << *this;                             \
-        return s.str().c_str();                 \
     }
 
 /** All utility functions etc are included in the util namespace. */
@@ -78,6 +68,14 @@ namespace util {
     /** \brief Return true if x<=DBL_MAX and x>=-DBL_MAX. */
     inline bool is_finite_number(double x) {
         return (x <= DBL_MAX && x >= -DBL_MAX);
+    }
+
+    /** \brief Get a std::string if operator<< is defined. */
+    template<class T>
+    std::string string_from_ostream(const T& t) {
+        std::stringstream s;
+        s << t;
+        return s.str();
     }
 
     //========================================================//

@@ -260,6 +260,13 @@ LBFGS_Object& LBFGS_Object::set_objective(objective_t obj) {
     return *this;
 }
 
+LBFGS_Object& LBFGS_Object::set_variables(const lbfgsfloatval_t* values) {
+    for(int idx=0; idx<(int)number_of_variables; ++idx) {
+        variables[idx] = values[idx];
+    }
+    return *this;
+}
+
 LBFGS_Object& LBFGS_Object::set_progress(progress_t pro) {
     progress = pro;
     return *this;
