@@ -27,7 +27,7 @@ do
     fi
     if [ ! -z "$CPP_SOURCES" ]
     then
-      SOURCES=$(cat ${CPP_SOURCES}|sort -u)
+      SOURCES=$(echo ${CPP_SOURCES}|sort -u)
       echo "set(SOURCES ${SOURCES})" >> $tmpname
     else
       rm -f $tmpname      
