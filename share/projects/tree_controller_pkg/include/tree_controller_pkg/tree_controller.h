@@ -5,6 +5,7 @@
 #include <pr2_mechanism_model/tree.h>
 #include <Ors/ors.h>
 #include <Motion/feedbackControl.h>
+#include <Algo/MLcourse.h>
 #include <tree_controller_pkg/SetVecTarget.h>
 #include <tree_controller_pkg/GetVecTarget.h>
 #include <tree_controller_pkg/SetPosTarget.h>
@@ -67,8 +68,10 @@ private:
   bool LOGGING;
 
   // Filter
-  double u_filt;
-  double qd_filt;
+  arr q_filt;
+  arr qd_filt;
+  arr gram, q_hist, beta;
+  uint filter_range;
 
   // Service for communication
   ros::ServiceServer setPosTargetSrv_;    ros::ServiceServer getPosTargetSrv_;
@@ -84,6 +87,8 @@ private:
   // Bookkeeping variables
   arr q_bk;
   arr qd_bk;
+  arr q_filt_bk;
+  arr qd_filt_bk;
   arr des_q_bk;
   arr des_qd_bk;
   arr des_qdd_bk;
