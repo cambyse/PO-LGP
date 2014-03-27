@@ -51,17 +51,18 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   MP->nullSpacePD.active=false;
   taskPos = MP->addPDTask("pos", .1, 1, posTMT, "endeffR");
   taskVec = MP->addPDTask("vec", .1, 1, vecTMT, "endeffR",ARR(0.,0.,1.));
-  taskHome = MP->addPDTask("home", .1, 1., qLinearTMT, NULL, NoVector, NULL, NoVector, 0.01*MP->H_rate_diag);
+//  taskHome = MP->addPDTask("home", .1, 1., qLinearTMT, NULL, NoVector, NULL, NoVector, 0.01*MP->H_rate_diag);
+  taskHome = MP->addPDTask("home", .1, 1., qItselfTMT);
 
-  double t_PD = 0.5;
+  double t_PD = 0.01;
   double damp_PD = 0.9;
   taskPos->setGainsAsNatural(t_PD,damp_PD);
   taskVec->setGainsAsNatural(t_PD,damp_PD);
   taskHome->setGainsAsNatural(t_PD,damp_PD); taskHome->Pgain = 0.;
   taskPos->prec=1e5;
   taskVec->prec=1e3;
-  taskHome->prec=1e2;
-
+  taskHome->prec=1e3;
+  taskHome->v_ref = 0.;
 
   controlIdx = {30,31,32,33,34,35,36};
   q = arr(controlIdx.d0);
@@ -131,7 +132,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   taskVec->v_ref = ARR(0.,0.,0.);
 
   /// Initialize Filter
-  filter_range=750;
+  filter_range=500;
   arr X;
   X.setGrid(1,-0.001*filter_range,0.,filter_range-1);
   X.reshape(X.N,1);
@@ -159,9 +160,9 @@ void TreeControllerClass::starting()
   // 34: r_forearm_roll_joint,    10  2     300    6  300
   // 35: r_wrist_flex_joint,       6  2     300    4  300
   // 36: r_wrist_roll_joint,       6  2     300    4  300
-   Ka = {0.05, 0.05, 0.05, 0.05, 0.01, 0.01, 0.01};
-//  Ka = {0.15, 0.15, 0.15, 0.15, 0.1, 0.1, 0.1};
-  Ki = {200,200,150,100,100,100,100}; //Ki=Ki*0.1;
+  Ka = {30., 30.,30., 20., 10.5, 20., 10.5}; Ka = Ka*0.;
+  Kp = {200,200,150,100,100,100,100};Kp=Kp*0.5;
+  Ki = {200,200,150,100,100,100,100};
   Ki = Ki*0.;
   integral.setZero();
   i_claim = {3.,3.,3.,3.,2.,3.,1.5};
@@ -180,7 +181,7 @@ void TreeControllerClass::starting()
   world->kinematicsPos(state,NoArr,world->getBodyByName("endeffR")->index);
   world->kinematicsVec(stateVec,NoArr,world->getBodyByName("endeffR")->index);
 
-  cout << "initial state: " << state << endl;
+  cout << "initial states: " << state << endl;
   cout << "initial stateVec: " << stateVec << endl;
 
   taskPos->y_ref = state;
@@ -220,19 +221,28 @@ void TreeControllerClass::update()
     qd_filt(i) = beta(1,i);
   }
 
-  q_filt = q;
-  /// set current state'position'
+
+  /// set current state
   MP->setState(q_filt,qd_filt);
 
   integral = integral + (des_q - q_filt);
 
   /// OSC
-  qdd = MP->operationalSpaceControl();
+  qdd = MP->operationalSpaceControl(1e-1);
   des_q = q_filt + tau_control*des_qd;
   des_qd = qd_filt + tau_control*qdd;
 
+  a_effort = Ka % (des_qd - qd_filt);
+
+//  for(uint tt=0;tt<10;tt++){
+//    qdd = MP->operationalSpaceControl();
+//    des_q += tau_control*des_qd;
+//    des_qd += tau_control*qdd;
+//  }
+
   i_effort = Ki % integral;
-  a_effort = Ka % qdd;
+  p_effort = Kp % (des_q - q_filt);
+
 
   /// Convert ORS to KDL
   for (uint i =0;i<controlIdx.d0;i++) {
@@ -243,7 +253,8 @@ void TreeControllerClass::update()
       i_effort(i) = -1.*i_claim(i);
     }
 
-    u(i) = a_effort(i) + i_effort(i);
+    //    u(i) = a_effort(i) + i_effort(i) + p_effort(i);
+    u(i) =  p_effort(i) + a_effort(i);
     tree_.getJoint(controlIdx(i))->commanded_effort_ = u(i);
     tree_.getJoint(controlIdx(i))->enforceLimits();
 
@@ -268,6 +279,7 @@ void TreeControllerClass::update()
     u_bk[index] = u;
     i_effort_bk[index] = i_effort;
     a_effort_bk[index] = a_effort;
+    p_effort_bk[index] = p_effort;
     measured_effort_bk[index] = measured_effort;
     dt_bk(index) = robot_->getTime().now().toSec();
     taskPos_y_bk[index] = taskPos->y;
@@ -331,6 +343,7 @@ bool TreeControllerClass::getTaskState(tree_controller_pkg::GetTaskState::Reques
 }
 bool TreeControllerClass::setJointGains(tree_controller_pkg::SetJointGains::Request &req, tree_controller_pkg::SetJointGains::Response &resp){
   for(uint i =0;i<Ki.d0;i++) {
+    Kp(i) = req.pos_gains[i];
     Ka(i) = req.acc_gains[i];
     Ki(i) = req.i_gains[i];
     i_claim(i) = req.i_claim[i];
@@ -339,10 +352,12 @@ bool TreeControllerClass::setJointGains(tree_controller_pkg::SetJointGains::Requ
   return true;
 }
 bool TreeControllerClass::getJointGains(tree_controller_pkg::GetJointGains::Request &req, tree_controller_pkg::GetJointGains::Response &resp){
+  resp.pos_gains.resize(Kp.d0);
   resp.acc_gains.resize(Ka.d0);
   resp.i_gains.resize(Ki.d0);
   resp.i_claim.resize(i_claim.d0);
   for(uint i =0;i<Ka.d0;i++) {
+    resp.pos_gains[i] = Kp(i);
     resp.acc_gains[i] = Ka(i);
     resp.i_gains[i] = Ki(i);
     resp.i_claim[i] = i_claim(i);

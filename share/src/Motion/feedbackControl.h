@@ -79,7 +79,7 @@ struct FeedbackMotionControl : MotionProblem {
 
   void getTaskCosts(arr& phi, arr& J, arr& q_ddot); ///< the general (`big') task vector and its Jacobian
   arr getDesiredConstraintForces(); ///< J^T lambda^*
-  arr operationalSpaceControl();
+  arr operationalSpaceControl(double regularization = 1e-12);
   void updateConstraintControllers();
 };
 
