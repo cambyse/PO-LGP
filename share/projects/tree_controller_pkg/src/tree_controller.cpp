@@ -132,7 +132,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   taskVec->v_ref = ARR(0.,0.,0.);
 
   /// Initialize Filter
-  filter_range=500;
+  filter_range=750;
   arr X;
   X.setGrid(1,-0.001*filter_range,0.,filter_range-1);
   X.reshape(X.N,1);
@@ -221,7 +221,7 @@ void TreeControllerClass::update()
     qd_filt(i) = beta(1,i);
   }
 
-
+  q_filt = q; 
   /// set current state
   MP->setState(q_filt,qd_filt);
 
