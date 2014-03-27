@@ -253,8 +253,7 @@ void TreeControllerClass::update()
       i_effort(i) = -1.*i_claim(i);
     }
 
-    //    u(i) = a_effort(i) + i_effort(i) + p_effort(i);
-    u(i) =  p_effort(i) + a_effort(i);
+    u(i) =  p_effort(i) + a_effort(i) + i_effort(i);
     tree_.getJoint(controlIdx(i))->commanded_effort_ = u(i);
     tree_.getJoint(controlIdx(i))->enforceLimits();
 
