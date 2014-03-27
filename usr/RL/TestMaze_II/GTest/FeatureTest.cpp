@@ -195,6 +195,8 @@ TEST(FeatureTest, SharedPtr) {
     EXPECT_EQ(2, basis_features[3].use_count()) << "in vector and one AND feature(a3)";
 }
 
+#warning add a test for std::set<f_ptr_t>
+
 TEST(FeatureTest, ComparisonAndOrdering) {
 
     // vector holding pointers to features

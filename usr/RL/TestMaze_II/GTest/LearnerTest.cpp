@@ -366,11 +366,12 @@ TEST(LearnerTest, TemporallyExtendedModel) {
     // initialize N+, set horizon extension
     N_plus = make_shared<ConjunctiveAdjacency>();
     N_plus->set_spaces(maze);
-    N_plus->horizon_extension_on(2);
+    N_plus->horizon_extension_on(1);
 
     // initialize TEM using N+
     TEM = make_shared<TemporallyExtendedModel>(N_plus);
     TEM->set_spaces(maze);
+    //TEM->set_l1_factor(0.001);
 
     // get all actions for random selection
     vector<action_ptr_t> action_vector;
@@ -387,35 +388,32 @@ TEST(LearnerTest, TemporallyExtendedModel) {
         TEM->add_action_observation_reward_tripel(action,observation_to,reward,false);
     }
 
-    // construct feature set
-    feature_set_t f_set;
-    for(reward_ptr_t reward : reward_space) {
-        f_ptr_t reward_feature_0 = RewardFeature::create(reward,0);
-        f_set.insert(f_ptr_t(new AndFeature(reward_feature_0)));
+    //EXPECT_TRUE(TEM->check_derivatives(10,1));
+
+    // try to learn something
+    repeat(3) {
+        TEM->grow_feature_set();
+        TEM->optimize_weights_LBFGS();
+        TEM->shrink_feature_set();
+        TEM->print_features();
     }
-    for(observation_ptr_t observation_a : observation_space) {
-        f_ptr_t observation_feature_0 = ObservationFeature::create(observation_a,0);
-        for(action_ptr_t action : action_space) {
-            f_ptr_t action_feature_0 = ActionFeature::create(action,0);
-            f_set.insert(f_ptr_t(new AndFeature(action_feature_0,observation_feature_0)));
-        }
-        for(observation_ptr_t observation_b : observation_space) {
-            f_ptr_t observation_feature_1 = ObservationFeature::create(observation_b,-1);
-            f_set.insert(f_ptr_t(new AndFeature(observation_feature_0,observation_feature_1)));
-        }
-    }
-    TEM->set_feature_set(f_set);
 
-    EXPECT_TRUE(TEM->check_derivatives(10,1));
-
-    TEM->optimize_weights_LBFGS();
-    TEM->print_features();
-
-    // // try to learn something
-    // repeat(2) {
-    //     TEM->grow_feature_set();
-    //     TEM->optimize_weights();
-    //     TEM->shrink_feature_set();
-    //     TEM->print_features();
+    // // construct feature set
+    // feature_set_t f_set;
+    // for(reward_ptr_t reward : reward_space) {
+    //     f_ptr_t reward_feature_0 = RewardFeature::create(reward,0);
+    //     f_set.insert(f_ptr_t(new AndFeature(reward_feature_0)));
     // }
+    // for(observation_ptr_t observation_a : observation_space) {
+    //     f_ptr_t observation_feature_0 = ObservationFeature::create(observation_a,0);
+    //     for(action_ptr_t action : action_space) {
+    //         f_ptr_t action_feature_0 = ActionFeature::create(action,0);
+    //         f_set.insert(f_ptr_t(new AndFeature(action_feature_0,observation_feature_0)));
+    //     }
+    //     for(observation_ptr_t observation_b : observation_space) {
+    //         f_ptr_t observation_feature_1 = ObservationFeature::create(observation_b,-1);
+    //         f_set.insert(f_ptr_t(new AndFeature(observation_feature_0,observation_feature_1)));
+    //     }
+    // }
+    // TEM->set_feature_set(f_set);
 }

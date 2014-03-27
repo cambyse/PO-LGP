@@ -30,6 +30,7 @@ private:
     std::vector<int> outcome_indices;
     vec_t weights;
     bool data_up_to_date = false;
+    double l1_factor = 0;
     //---- methods ----//
 public:
     TemporallyExtendedModel(std::shared_ptr<ConjunctiveAdjacency>);
@@ -44,11 +45,12 @@ public:
         const reward_ptr_t& reward,
         const bool& new_episode
         ) override;
-    virtual void optimize_weights_SGD();
+    /* virtual void optimize_weights_SGD(); */
     virtual void optimize_weights_LBFGS();
     virtual void grow_feature_set();
     virtual void shrink_feature_set();
     virtual void set_feature_set(const feature_set_t&);
+    virtual void set_l1_factor(const double& l1);
     virtual void print_features() const;
     virtual void print_training_data() const;
     /** \brief Directly uses LBFGS_Object::check_derivatives (see there for

@@ -3,10 +3,14 @@
 #include "ConjunctiveAdjacency.h"
 #include "../util/util.h"
 #include "../util/QtUtil.h"
+#include "../util/ProgressBar.h"
+
+#include <omp.h>
+//#define USE_OMP
 
 #include <iomanip>
 
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 2
 #include "../util/debug.h"
 
 using util::Range;
@@ -35,28 +39,28 @@ void TEM::add_action_observation_reward_tripel(
     data_up_to_date = false;
 }
 
-void TEM::optimize_weights_SGD() {
-    DEBUG_OUT(2,"Optimize weights using SGD");
-    double old_neg_log_like = -DBL_MAX;
-    double new_neg_log_like = 0;
-    int iteration_count = 0;
-    while(true) {
-        double alpha = 1e-2; // learning rate
-        vec_t grad;
-        new_neg_log_like = neg_log_likelihood(grad,weights);
-        weights = weights - alpha*grad;
-        DEBUG_OUT(1,"Iteration " << iteration_count << ": Likelihood = " << exp(-new_neg_log_like));
-        DEBUG_OUT(1,"    old neg-log-like: " << old_neg_log_like);
-        DEBUG_OUT(1,"    new neg-log-like: " << new_neg_log_like);
-        DEBUG_OUT(1,"               delta: " << fabs(old_neg_log_like-new_neg_log_like));
-        if(iteration_count>10 && fabs(old_neg_log_like-new_neg_log_like)<1e-5) {
-            break;
-        } else {
-            ++iteration_count;
-            old_neg_log_like=new_neg_log_like;
-        }
-    }
-}
+// void TEM::optimize_weights_SGD() {
+//     DEBUG_OUT(2,"Optimize weights using SGD");
+//     double old_neg_log_like = -DBL_MAX;
+//     double new_neg_log_like = 0;
+//     int iteration_count = 0;
+//     while(true) {
+//         double alpha = 1e-2; // learning rate
+//         vec_t grad;
+//         new_neg_log_like = neg_log_likelihood(grad,weights);
+//         weights = weights - alpha*grad;
+//         DEBUG_OUT(1,"Iteration " << iteration_count << ": Likelihood = " << exp(-new_neg_log_like));
+//         DEBUG_OUT(1,"    old neg-log-like: " << old_neg_log_like);
+//         DEBUG_OUT(1,"    new neg-log-like: " << new_neg_log_like);
+//         DEBUG_OUT(1,"               delta: " << fabs(old_neg_log_like-new_neg_log_like));
+//         if(iteration_count>10 && fabs(old_neg_log_like-new_neg_log_like)<1e-5) {
+//             break;
+//         } else {
+//             ++iteration_count;
+//             old_neg_log_like=new_neg_log_like;
+//         }
+//     }
+// }
 
 void TEM::optimize_weights_LBFGS() {
 
@@ -72,6 +76,7 @@ void TEM::optimize_weights_LBFGS() {
     lbfgs.set_progress(get_LBFGS_progress());
     lbfgs.set_number_of_variables(nr_vars);
     lbfgs.set_variables(values);
+    lbfgs.set_l1_factor(l1_factor);
     double neg_log_like = lbfgs.optimize(values);
     DEBUG_OUT(1,"Likelihood = " << exp(-neg_log_like));
 
@@ -112,6 +117,10 @@ void TEM::set_feature_set(const feature_set_t& new_set) {
     feature_set = new_set;
     weights.zeros(feature_set.size());
     data_up_to_date = false;
+}
+
+void TEM::set_l1_factor(const double& l1) {
+    l1_factor = l1;
 }
 
 void TEM::print_features() const {
@@ -218,6 +227,9 @@ void TEM::update_data() {
         int data_n = number_of_data_points;
         int feature_n = feature_set.size();
         int outcome_n = observation_space->space_size()*reward_space->space_size();
+        DEBUG_OUT(2,"    nr data points: " << number_of_data_points);
+        DEBUG_OUT(2,"       nr features: " << feature_n);
+        DEBUG_OUT(2,"       nr outcomes: " << outcome_n);
 
         // set vector size
         F_matrices.resize(data_n);
@@ -225,6 +237,7 @@ void TEM::update_data() {
 
         // for all data points
         int data_idx = 0;
+        if(DEBUG_LEVEL>0) {ProgressBar::init("Updating: ");}
         for(const_instance_ptr_t episode : instance_data) {
             for(const_instance_ptr_t ins=episode->const_first(); ins!=INVALID; ++ins) {
 
@@ -242,9 +255,13 @@ void TEM::update_data() {
                 for(observation_ptr_t obs : observation_space) {
                     for(reward_ptr_t rew : reward_space) {
 
+                        #warning is this faster or lower?
+                        // copy features to vector for parallelization
+                        vector<f_ptr_t> feature_vector(feature_set.begin(),feature_set.end());
+
                         // for all features
-                        int feature_idx = 0;
-                        for(f_ptr_t feature : feature_set) {
+                        for(uint feature_idx = 0; feature_idx<feature_vector.size(); ++feature_idx) {
+                            f_ptr_t feature = feature_vector[feature_idx];
 
                             // set entry to 1 for non-zero features
                             if(feature->evaluate(ins->const_prev(),ins->action,obs,rew)!=0) {
@@ -268,9 +285,11 @@ void TEM::update_data() {
                     DEBUG_DEAD_LINE;
                 }
 
+                if(DEBUG_LEVEL>0) {ProgressBar::print(data_idx,number_of_data_points);}
                 ++data_idx;
             }
         }
+        if(DEBUG_LEVEL>0) {ProgressBar::terminate();}
 
         if(DEBUG_LEVEL>=3) {
             DEBUG_OUT(0,"Feature matrices:");
@@ -296,7 +315,7 @@ double TEM::neg_log_likelihood(vec_t& grad, const vec_t& w) {
      * -- SpMat type does not mix well with other types, e.g., F*exp_lin.t()
      * below produces a 1x1 matrix if F is sparse but not if F_dense is used. */
 
-    DEBUG_OUT(2,"Compute neg-log-likelihood");
+    DEBUG_OUT(3,"Compute neg-log-likelihood");
 
     // make sure data are up to date
     update_data();
