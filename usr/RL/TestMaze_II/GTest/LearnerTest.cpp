@@ -379,7 +379,7 @@ TEST(LearnerTest, TemporallyExtendedModel) {
     }
 
     // do some random actions to collect data
-    repeat(100) {
+    repeat(1000) {
         action_ptr_t action = util::random_select(action_vector);
         observation_ptr_t observation_to;
         reward_ptr_t reward;
@@ -406,11 +406,9 @@ TEST(LearnerTest, TemporallyExtendedModel) {
     }
     TEM->set_feature_set(f_set);
 
-    TEM->print_training_data();
+    EXPECT_TRUE(TEM->check_derivatives(10,1));
 
-    TEM->check_derivatives(10,1);
-
-    TEM->optimize_weights();
+    TEM->optimize_weights_LBFGS();
     TEM->print_features();
 
     // // try to learn something

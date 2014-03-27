@@ -89,7 +89,7 @@ public:
     virtual LBFGS_Object& set_objective(objective_t objective);
 
     /** \brief Set values of the variables. */
-    virtual LBFGS_Object& set_variables(const lbfgsfloatval_t* values);
+    virtual LBFGS_Object& set_variables(const std::vector<lbfgsfloatval_t> & values);
 
     /** \brief Set the objective function. */
     virtual LBFGS_Object& set_progress(progress_t progress);

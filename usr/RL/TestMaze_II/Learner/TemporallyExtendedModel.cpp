@@ -3,15 +3,16 @@
 #include "ConjunctiveAdjacency.h"
 #include "../util/util.h"
 #include "../util/QtUtil.h"
-#include "../optimization/LBFGS_Object.h"
 
 #include <iomanip>
 
-#define DEBUG_LEVEL 3
+#define DEBUG_LEVEL 1
 #include "../util/debug.h"
 
 using util::Range;
 using util::INVALID;
+
+using std::vector;
 
 typedef TemporallyExtendedModel TEM;
 
@@ -34,26 +35,48 @@ void TEM::add_action_observation_reward_tripel(
     data_up_to_date = false;
 }
 
-void TEM::optimize_weights() {
-    DEBUG_OUT(2,"Optimize weights");
-    double old_log_like = -DBL_MAX;
-    double new_log_like = 0;
+void TEM::optimize_weights_SGD() {
+    DEBUG_OUT(2,"Optimize weights using SGD");
+    double old_neg_log_like = -DBL_MAX;
+    double new_neg_log_like = 0;
     int iteration_count = 0;
     while(true) {
+        double alpha = 1e-2; // learning rate
         vec_t grad;
-        new_log_like = log_likelihood(grad);
-        weights = 1e-10*grad;
-        DEBUG_OUT(1,"Iteration " << iteration_count << ": Likelihood = " << exp(new_log_like));
-        DEBUG_OUT(1,"    old log-like: " << old_log_like);
-        DEBUG_OUT(1,"    new log-like: " << new_log_like);
-        DEBUG_OUT(1,"           delta: " << fabs(old_log_like-new_log_like));
-        if(fabs(old_log_like-new_log_like)<1e-10) {
+        new_neg_log_like = neg_log_likelihood(grad,weights);
+        weights = weights - alpha*grad;
+        DEBUG_OUT(1,"Iteration " << iteration_count << ": Likelihood = " << exp(-new_neg_log_like));
+        DEBUG_OUT(1,"    old neg-log-like: " << old_neg_log_like);
+        DEBUG_OUT(1,"    new neg-log-like: " << new_neg_log_like);
+        DEBUG_OUT(1,"               delta: " << fabs(old_neg_log_like-new_neg_log_like));
+        if(iteration_count>10 && fabs(old_neg_log_like-new_neg_log_like)<1e-5) {
             break;
         } else {
             ++iteration_count;
-            old_log_like=new_log_like;
+            old_neg_log_like=new_neg_log_like;
         }
     }
+}
+
+void TEM::optimize_weights_LBFGS() {
+
+    DEBUG_OUT(2,"Optimize weights using L-BFGS");
+
+    // dimension
+    int nr_vars = weights.size();
+    vector<lbfgsfloatval_t> values(weights.begin(),weights.end());
+
+    // use LBFGS_Object
+    LBFGS_Object lbfgs;
+    lbfgs.set_objective(get_LBFGS_objective());
+    lbfgs.set_progress(get_LBFGS_progress());
+    lbfgs.set_number_of_variables(nr_vars);
+    lbfgs.set_variables(values);
+    double neg_log_like = lbfgs.optimize(values);
+    DEBUG_OUT(1,"Likelihood = " << exp(-neg_log_like));
+
+    // set weights
+    weights = values;
 }
 
 void TEM::grow_feature_set() {
@@ -119,20 +142,6 @@ void TEM::print_training_data() const {
     }
 }
 
-lbfgsfloatval_t TEM::LBFGS_objective(const lbfgsfloatval_t* par, lbfgsfloatval_t* grad) {
-    int nr_vars = weights.size();
-    vec_t w(nr_vars);
-    for(int idx=0; idx<nr_vars; ++idx) {
-        w(idx) = par[idx];
-    }
-    vec_t g;
-    double log_like = log_likelihood(g,w);
-    for(int idx=0; idx<nr_vars; ++idx) {
-        grad[idx] = g(idx);
-    }
-    return log_like;
-}
-
 bool TEM::check_derivatives(const int& number_of_samples,
                             const double& range,
                             const double& delta,
@@ -144,21 +153,12 @@ bool TEM::check_derivatives(const int& number_of_samples,
     // use LBFGS_Object
     LBFGS_Object lbfgs;
 
-    // create object of type LBFGS_Object::objective_t
-    using std::placeholders::_1;
-    using std::placeholders::_2;
-    std::function<lbfgsfloatval_t(const lbfgsfloatval_t*, lbfgsfloatval_t*)> objective;
-    objective = std::bind(&TEM::LBFGS_objective, *this, _1, _2);
-
     // set all values
     int nr_vars = weights.size();
-    lbfgs.set_objective(objective);
+    lbfgs.set_objective(get_LBFGS_objective());
     lbfgs.set_number_of_variables(nr_vars);
     if(use_current_values) {
-        lbfgsfloatval_t * values = lbfgs_malloc(nr_vars);
-        for(int idx : Range(nr_vars)) {
-            values[idx] = weights(idx);
-        }
+        vector<lbfgsfloatval_t> values(weights.begin(),weights.end());
         lbfgs.set_variables(values);
     }
     return lbfgs.check_derivatives(number_of_samples,
@@ -194,8 +194,7 @@ void TEM::apply_weight_map(weight_map_t weight_map) {
 }
 
 void TEM::update_data() {
-    DEBUG_OUT(2,"Update data");
-    print_training_data();
+    DEBUG_OUT(3,"Check if data up to date");
     // check size of weight vector
     if(weights.size()!=feature_set.size()) {
         DEBUG_DEAD_LINE;
@@ -213,6 +212,7 @@ void TEM::update_data() {
     }
     // update F-matrices and outcome indices
     if(!data_up_to_date) {
+        DEBUG_OUT(2,"Update data");
 
         // get dimensions
         int data_n = number_of_data_points;
@@ -286,16 +286,26 @@ void TEM::update_data() {
     }
 }
 
-double TEM::log_likelihood(vec_t& grad, const vec_t& w) {
+double TEM::neg_log_likelihood(vec_t& grad, const vec_t& w) {
+
+    /** Some issues with armadillo:
+     *
+     * -- simple exp(vector) prodoces 1x1 matrix, trunc_exp does not -- don't
+          know why
+     *
+     * -- SpMat type does not mix well with other types, e.g., F*exp_lin.t()
+     * below produces a 1x1 matrix if F is sparse but not if F_dense is used. */
+
+    DEBUG_OUT(2,"Compute neg-log-likelihood");
 
     // make sure data are up to date
     update_data();
 
-#warning why does simple exp prodoce 1x1 matrix??
-#warning why are sparse matrices interpreted as 1x1 matrices??
-
+    // initialize objective and gradient
     double obj = 0;
     grad.zeros(feature_set.size());
+
+    // sum over data
     for(int data_idx=0; data_idx<(int)number_of_data_points; ++data_idx) {
 
         // get matrix and outcome index
@@ -316,9 +326,9 @@ double TEM::log_likelihood(vec_t& grad, const vec_t& w) {
         }
 
         // interim variables
-        vec_t lin = w.t()*F;
-        vec_t exp_lin = arma::trunc_exp(lin);
-        double z = sum(exp_lin);
+        const vec_t lin = w.t()*F;
+        const vec_t exp_lin = arma::trunc_exp(lin);
+        const double z = sum(exp_lin);
 
         // debug output
         if(DEBUG_LEVEL>=3) {
@@ -327,21 +337,76 @@ double TEM::log_likelihood(vec_t& grad, const vec_t& w) {
         }
 
         // compute objective and gradient
-        DEBUG_OUT(3,"Compute objective component");
-        obj += lin(outcome_idx)-log(z);
-        DEBUG_OUT(3,"Compute gradient component");
-        grad += F.col(outcome_idx) - F_dense*exp_lin.t()/z;
-        DEBUG_OUT(3,"DONE");
+        if(DEBUG_LEVEL>=3) {
+            double obj_comp = lin(outcome_idx)-log(z);
+            vec_t grad_comp = F.col(outcome_idx) - F_dense*exp_lin.t()/z;
+            obj += obj_comp;
+            grad += grad_comp;
+            grad_comp.print("gradient component:");
+            DEBUG_OUT(0,"objective component " << obj_comp);
+        } else {
+            obj += lin(outcome_idx)-log(z);
+            grad += F.col(outcome_idx) - F_dense*exp_lin.t()/z;
+        }
     }
-    // divide by number of data points
+
+    // divide by number of data points and reverse sign
     if(number_of_data_points>0) {
-        obj /= number_of_data_points;
-        grad /= number_of_data_points;
+        obj = -obj/number_of_data_points;
+        grad = -grad/number_of_data_points;
     }
+
+    if(DEBUG_LEVEL>=3) {
+        DEBUG_OUT(0,"    Objective value: " << obj);
+        DEBUG_OUT(0,"    Parameters	Gradient: ");
+        for(int idx : Range(w.n_rows)) {
+            DEBUG_OUT(0,"    " << w(idx) << "	" << grad(idx));
+        }
+    }
+
     // return
     return obj;
 }
 
-double TEM::log_likelihood(vec_t& grad) {
-    return log_likelihood(grad,weights);
+lbfgsfloatval_t TEM::LBFGS_objective(const lbfgsfloatval_t* par, lbfgsfloatval_t* grad) {
+    int nr_vars = weights.size();
+    vec_t w(par,nr_vars);
+    vec_t g(grad,nr_vars,false);
+    double neg_log_like = neg_log_likelihood(g,w);
+    return neg_log_like;
+}
+
+int TEM::LBFGS_progress(const lbfgsfloatval_t */*x*/,
+                        const lbfgsfloatval_t */*g*/,
+                        const lbfgsfloatval_t fx,
+                        const lbfgsfloatval_t /*xnorm*/,
+                        const lbfgsfloatval_t /*gnorm*/,
+                        const lbfgsfloatval_t /*step*/,
+                        int /*nr_variables*/,
+                        int iteration_nr,
+                        int /*ls*/) const {
+    DEBUG_OUT(1,"Iteration " << iteration_nr << " (Likelihood = " << exp(-fx) << ")" );
+    //for(int x_idx : Range(nr_variables)) {
+        //DEBUG_OUT(1, "    x[" << x_idx << "] = " << x[x_idx]);
+    //}
+    //DEBUG_OUT(1,"Iteration " << iteration_nr << " (Likelihood = " << exp(-fx) << ")" );
+    return 0;
+}
+
+LBFGS_Object::objective_t TEM::get_LBFGS_objective() {
+    return std::bind(&TEM::LBFGS_objective, this, std::placeholders::_1, std::placeholders::_2);
+}
+
+LBFGS_Object::progress_t TEM::get_LBFGS_progress() const {
+    return std::bind(&TEM::LBFGS_progress, this,
+                     std::placeholders::_1,
+                     std::placeholders::_2,
+                     std::placeholders::_3,
+                     std::placeholders::_4,
+                     std::placeholders::_5,
+                     std::placeholders::_6,
+                     std::placeholders::_7,
+                     std::placeholders::_8,
+                     std::placeholders::_9
+        );
 }

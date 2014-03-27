@@ -4,8 +4,8 @@
 #include "../HistoryObserver.h"
 #include "../Predictor.h"
 #include "../Representation/Feature.h"
+#include "../optimization/LBFGS_Object.h"
 
-#include <lbfgs.h>
 #include <memory>
 #include <vector>
 #include <map>
@@ -44,13 +44,13 @@ public:
         const reward_ptr_t& reward,
         const bool& new_episode
         ) override;
-    virtual void optimize_weights();
+    virtual void optimize_weights_SGD();
+    virtual void optimize_weights_LBFGS();
     virtual void grow_feature_set();
     virtual void shrink_feature_set();
     virtual void set_feature_set(const feature_set_t&);
     virtual void print_features() const;
     virtual void print_training_data() const;
-    lbfgsfloatval_t LBFGS_objective(const lbfgsfloatval_t*, lbfgsfloatval_t*);
     /** \brief Directly uses LBFGS_Object::check_derivatives (see there for
      * docu). */
     bool check_derivatives(const int& number_of_samples,
@@ -64,8 +64,19 @@ protected:
     virtual weight_map_t get_weight_map() const;
     virtual void apply_weight_map(weight_map_t);
     virtual void update_data();
-    virtual double log_likelihood(vec_t& grad, const vec_t& weights);
-    virtual double log_likelihood(vec_t& grad);
+    virtual double neg_log_likelihood(vec_t& grad, const vec_t& weights);
+    lbfgsfloatval_t LBFGS_objective(const lbfgsfloatval_t*, lbfgsfloatval_t*);
+    int LBFGS_progress(const lbfgsfloatval_t *x,
+                       const lbfgsfloatval_t *g,
+                       const lbfgsfloatval_t fx,
+                       const lbfgsfloatval_t xnorm,
+                       const lbfgsfloatval_t gnorm,
+                       const lbfgsfloatval_t step,
+                       int nr_variables,
+                       int iteration_nr,
+                       int ls) const;
+    virtual LBFGS_Object::objective_t get_LBFGS_objective();
+    virtual LBFGS_Object::progress_t get_LBFGS_progress() const;
 };
 
 #endif /* TEMPORALLYEXTENDEDMODEL_H_ */
