@@ -16,8 +16,9 @@ void PDtask::setGains(double pgain, double dgain) {
 
 void PDtask::setGainsAsNatural(double decayTime, double dampingRatio) {
   active=true;
-  Pgain = MT::sqr(1./decayTime);
-  Dgain = 2.*dampingRatio/decayTime;
+  double lambda = -decayTime*dampingRatio/log(.1);
+  Pgain = MT::sqr(1./lambda);
+  Dgain = 2.*dampingRatio/lambda;
   if(!prec) prec=100.;
 }
 
@@ -66,7 +67,8 @@ FeedbackMotionControl::FeedbackMotionControl(ors::KinematicWorld& _world, bool u
   : MotionProblem(_world, useSwift), qitselfPD(NULL) {
   loadTransitionParameters();
   qitselfPD.name="nullSpacePD";
-  qitselfPD.setGainsAsNatural(1.,1.);
+  qitselfPD.setGains(1.,10.);
+//  qitselfPD.setGainsAsNatural(1.,1.);
   qitselfPD.prec=1.;
 }
 
@@ -146,14 +148,17 @@ arr FeedbackMotionControl::operationalSpaceControl(){
   arr H = diag(H_rate_diag);
   arr A = H;
   arr a(H.d0); a.setZero();
+  if(qitselfPD.active){
+    a += qitselfPD.prec * (H_rate_diag % qitselfPD.getDesiredAcceleration(world.q, world.qdot));
+  }
   if(phi.N){
     A += comp_At_A(J);
     a -= comp_At_x(J, phi);
   }
-  if(qitselfPD.active){
-    A += qitselfPD.prec * eye(H.d0);
-    a -= qitselfPD.prec * (q_ddot - qitselfPD.getDesiredAcceleration(world.q, world.qdot));
-  }
+//  if(qitselfPD.active){
+//    A += qitselfPD.prec * eye(H.d0);
+//    a -= qitselfPD.prec * (q_ddot - qitselfPD.getDesiredAcceleration(world.q, world.qdot));
+//  }
   q_ddot = inverse_SymPosDef(A) * a;
 
 //  if(nullSpacePD.active && nullSpacePD.prec){

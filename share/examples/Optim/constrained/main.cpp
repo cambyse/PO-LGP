@@ -33,7 +33,7 @@ void displayFunction(VectorFunction& F){
 // test standard constrained optimizers
 //
 
-void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=10){
+void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=100){
   enum MethodType { squaredPenalty=1, augmentedLag, logBarrier };
 
   MethodType method = (MethodType)MT::getParameter<int>("method");
@@ -54,14 +54,14 @@ void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=10){
     if(method==logBarrier) x.setZero(); //log barrier needs a starting point
     else rndUniform(x, -1., 1.);
   }
-  cout <<std::setprecision(2);
+//  cout <<std::setprecision(2);
   cout <<"x0=" <<x <<endl;
 
 
   system("rm -f z.grad_all");
 
   for(uint k=0;k<iters;k++){
-    cout <<"x_start=" <<x <<" mu=" <<UCP.mu <<" \tlambda=" <<UCP.lambda <<" \tg=" <<elemWiseMax(UCP.g_x,0.) <<endl;
+//    cout <<"x_start=" <<x <<flush; //<<" mu=" <<UCP.mu <<" \nlambda=" <<UCP.lambda <<" \ng=" <<elemWiseMax(UCP.g_x,0.) <<endl;
 //    checkGradient(UCP, x, 1e-4);
     //checkHessian (UCP, x, 1e-4); //will throw errors: no Hessians for g!
 //    checkAllGradients(p, x, 1e-4);
@@ -69,7 +69,7 @@ void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=10){
 
 //    optRprop(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
     //optGradDescent(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
-    optNewton(x, UCP, OPT(verbose=1, stopTolerance=1e-6, maxStep=1e-1, stopIters=20, damping=1e-3, useAdaptiveDamping=true));
+    optNewton(x, UCP, OPT(verbose=1, stopTolerance=1e-3, maxStep=1e-1, stopIters=20, damping=1e-3, useAdaptiveDamping=true));
 //    optGaussNewton(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
 
     if(x.N==2){
@@ -79,16 +79,25 @@ void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=10){
       MT::wait();
     }
 
-    arr z(UCP.lambda.N); z.setZero();
-    for(uint i=0;i<z.N;i++) z(i) = (UCP.lambda(i)>0. || UCP.g_x(i)>0.)?1.:0.;
-    cout <<"z=" <<z <<"  --  " <<sum(z) <<endl;
+    arr lambda_ = UCP.lambda;
+    arr z(lambda_.N); z.setZero();
+    for(uint i=0;i<z.N;i++) z(i) = (lambda_(i)>0. || UCP.g_x(i)>0.)?1.:0.;
+//    cout <<"old lambda=" <<lambda <<endl;
+//    cout <<"current g =" <<elemWiseMax(UCP.g_x,0.) <<endl;
+//    cout <<"I_lambda  =" <<z <<"  --  " <<sum(z) <<endl;
 
     //upate unconstraint problem parameters
     switch(method){
     case squaredPenalty: UCP.mu *= 10;  break;
     case augmentedLag:   UCP.augmentedLagrangian_LambdaUpdate(x);  break;
-    case logBarrier:     UCP.muLB /= 2;  break;
+    case logBarrier:     UCP.muLB *=.8;  break;
     }
+//    cout <<"current g =" <<UCP.g_x <<endl;
+
+    arr zz(lambda_.N); zz.setZero();
+    for(uint i=0;i<z.N;i++) zz(i) = (lambda_(i)<=1e-10 || UCP.lambda(i)>0.)?0.:1.;
+    cout <<" \tremain_active_cond="<< sum(zz) <<" \tlin_indep_cond=" <<sum(z) <<endl;
+    cout <<UCP.f_x <<endl;
 
     system("cat z.grad >>z.grad_all");
 //    cout <<"x_opt=" <<x <<" mu=" <<UCP.mu <<" \tlambda=" <<UCP.lambda <<endl;

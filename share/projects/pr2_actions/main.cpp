@@ -7,8 +7,8 @@ void testActionMachine(){
   GroundedAction *a1 = S.machine->addGroundedAction(moveEffTo, "endeffR", NULL, ARR(.5,-.4,1.2), NoArr);
   GroundedAction *a2 = S.machine->addGroundedAction(alignEffTo, "endeffR", NULL, ARR(1., 0., 0.), ARR(1., 0., 0.));
 //  GroundedAction *a2 = S.machine->addGroundedAction(moveEffTo, "endeffR", NULL, ARR(.5,-.4,.8), NoArr);
-  a2->value=GroundedAction::queued;
-  a2->dependsOnCompletion.append(a1);
+//  a2->value=GroundedAction::queued;
+//  a2->dependsOnCompletion.append(a1);
 
   engine().open(S);
 

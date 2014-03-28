@@ -9,9 +9,6 @@ getJointDimension is not const
 
 ** lock in OpenGL
 
-** KVG
-Mod Include special keys
-
 ** Proper ConstrainedTaskMap:
 virtual function g
 can provide also $y=(1+g/m) [g>-m]$ (is consistent with lecture & code)

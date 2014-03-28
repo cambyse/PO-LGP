@@ -56,9 +56,8 @@ void UnconstrainedProblem::augmentedLagrangian_LambdaUpdate(const arr& x, double
 
   if(!lambda.N){ lambda.resize(g.N); lambda.setZero(); }
 
-  for(uint i=0;i<g.N;i++) if(g(i)>0. || lambda(i)>0.) lambda(i) += lambdaStepsize * mu * 2.*g(i);
-
-  for(uint i=0;i<g.N;i++) if(lambda(i)<0.) lambda(i)=0.;
+  lambda += (lambdaStepsize * 2.*mu)*g;
+  for(uint i=0;i<lambda.N;i++) if(lambda(i)<0.) lambda(i)=0.;
 
 //  cout <<"Update Lambda: g=" <<g <<" lambda=" <<lambda <<endl;
 }

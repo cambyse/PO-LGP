@@ -47,7 +47,7 @@ void testAula(ConstrainedProblem& p){
 
   OptNewton opt(x, UCP, OPT(verbose=1, damping=1., stopTolerance=1e-6, stepInc=1.));
 
-  for(uint k=0;k<20;k++){
+  for(uint k=0;k<100;k++){
 //    cout <<"x_start=" <<x <<" mu=" <<UCP.mu <<" lambda=" <<UCP.lambda <<endl;
 //    checkGradient(UCP, x, 1e-4);
 //    checkAllGradients(p, x, 1e-4);
@@ -63,7 +63,7 @@ void testAula(ConstrainedProblem& p){
 #else
 //    OptNewton(x, UCP, OPT(verbose=1, damping=1., stopTolerance=1e-6, stepInc=1.)).step();
     opt.step();
-    cout <<"f(x)=" <<opt.fx-UCP.f0 <<" \tx=" <<opt.x <<" \tlambda=" <<UCP.lambda <<" \tf0=" <<UCP.f0 <<endl;
+    cout <<"f(x)=" <<opt.fx-UCP.f0 <<endl;//<<" \tx=" <<opt.x <<" \tlambda=" <<UCP.lambda <<" \tf0=" <<UCP.f0 <<endl;
 #endif
 
     UCP.aula_update(x, .9, opt.gx, opt.Hx);
