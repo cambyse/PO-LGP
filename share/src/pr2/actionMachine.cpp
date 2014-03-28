@@ -23,13 +23,7 @@ void ActionMachine::open(){
 
   s->MP.H_rate_diag = pr2_reasonable_W(s->world);
   s->MP.qitselfPD.y_ref = s->q;
-  s->MP.qitselfPD.v_ref.resizeAs(s->q).setZero();
-#if 0
-  s->MP.nullSpacePD.active=false;
-#else
-  s->MP.qitselfPD.setGains(0.,100.);
-  s->MP.qitselfPD.prec=100.;
-#endif
+//  s->MP.qitselfPD.setGains(1.,10.);
 
   //-- wait for first q observation!
   if(ros){
@@ -55,6 +49,9 @@ void ActionMachine::step(){
   static uint t=0;
   t++;
 
+  if(!(t%10))
+    s->MP.world.gl().update(STRING("local operational space controller state t="<<(double)t/100.), false, false, false);
+
   transition();
 
   //defaults
@@ -65,10 +62,10 @@ void ActionMachine::step(){
   arr joypadState = joystickState.get();
   if(stopButtons(joypadState)) engine().shutdown.incrementValue();
 
-  //-- gain access
+  //-- get access
   A.readAccess();
 
-//  cout <<"** active actions:";
+  //  cout <<"** active actions:";
   reportActions(A());
   for(GroundedAction *a : A()) if(a->value==GroundedAction::active){
 //    cout <<' ' <<a->symbol.name;
@@ -95,10 +92,8 @@ void ActionMachine::step(){
     arr a = s->MP.operationalSpaceControl();
     s->q += .001*s->qdot;
     s->qdot += .001*a;
+    s->MP.setState(s->q, s->qdot);
   }
-  s->MP.setState(s->q, s->qdot);
-  if(!(t%10))
-    s->MP.world.gl().update(STRING("local operational space controller state t="<<(double)t/100.), false, false, false);
 
   A.deAccess();
 

@@ -77,7 +77,7 @@ struct FeedbackMotionControl : MotionProblem {
                     const arr& params=NoArr);
   ConstraintForceTask* addConstraintForceTask(const char* name, TaskMap *map);
 
-  void getTaskCosts(arr& phi, arr& J, arr& q_ddot); ///< the general (`big') task vector and its Jacobian
+  void getCostCoeffs(arr& c, arr& J); ///< the general (`big') task vector and its Jacobian
   arr getDesiredConstraintForces(); ///< J^T lambda^*
   arr operationalSpaceControl();
   void updateConstraintControllers();

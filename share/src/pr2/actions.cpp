@@ -13,8 +13,8 @@ struct MoveEffTo_ActionSymbol:ActionSymbol{
   }
   virtual void initYourself(GroundedAction& a, ActionMachine& P) {
     PDtask *task;
-    task = P.s->MP.addPDTask(STRING("MoveEffTo_" <<a.shapeArg1), .1, .8, posTMT, a.shapeArg1);
-    task->setGains(200.,0.);
+    task = P.s->MP.addPDTask(STRING("MoveEffTo_" <<a.shapeArg1), 1., .8, posTMT, a.shapeArg1);
+//    task->setGains(200.,0.);
     task->y_ref = a.poseArg1;
     a.tasks.append(task);
   }
@@ -41,8 +41,8 @@ struct AlignEffTo_ActionSymbol:ActionSymbol{
   }
   virtual void initYourself(GroundedAction& a, ActionMachine& P) {
     PDtask *task;
-    task = P.s->MP.addPDTask(STRING("AlignEffTo_" <<a.shapeArg1), .2, .8, vecTMT, a.shapeArg1, ors::Vector(a.poseArg1));
-    task->setGains(100.,0.);
+    task = P.s->MP.addPDTask(STRING("AlignEffTo_" <<a.shapeArg1), 2., .8, vecTMT, a.shapeArg1, ors::Vector(a.poseArg1));
+//    task->setGains(100.,0.);
     task->y_ref = a.poseArg2;
     a.tasks.append(task);
   }
@@ -76,7 +76,7 @@ struct CoreTasks_ActionSymbol:ActionSymbol{
 //    a.tasks.append(qitself);
 
     PDtask *limits;
-    limits = P.s->MP.addPDTask("limits", .02, .8, qLimitsTMT);
+    limits = P.s->MP.addPDTask("limits", .1, .8, qLimitsTMT);
 //    limits->setGains(10.,0.);
     limits->v_ref.setZero();
     limits->v_ref.setZero();

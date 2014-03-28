@@ -67,7 +67,7 @@ FeedbackMotionControl::FeedbackMotionControl(ors::KinematicWorld& _world, bool u
   : MotionProblem(_world, useSwift), qitselfPD(NULL) {
   loadTransitionParameters();
   qitselfPD.name="nullSpacePD";
-  qitselfPD.setGains(1.,10.);
+  qitselfPD.setGains(0.,10.);
 //  qitselfPD.setGainsAsNatural(1.,1.);
   qitselfPD.prec=1.;
 }
@@ -100,19 +100,19 @@ PDtask* FeedbackMotionControl::addPDTask(const char* name,
   return t;
 }
 
-void FeedbackMotionControl::getTaskCosts(arr& phi, arr& J, arr& q_ddot){
-  phi.clear();
+void FeedbackMotionControl::getCostCoeffs(arr& c, arr& J){
+  c.clear();
   if(&J) J.clear();
-  arr y, J_y, a_des;
+  arr y, J_y, yddot_des;
   for(PDtask* t: tasks) {
     if(t->active) {
       t->map.phi(y, J_y, world);
-      a_des = t->getDesiredAcceleration(y, J_y*world.qdot);
-      phi.append(::sqrt(t->prec)*(J_y*q_ddot - a_des));
+      yddot_des = t->getDesiredAcceleration(y, J_y*world.qdot);
+      c.append(::sqrt(t->prec)*(yddot_des /*-Jdot*qdot*/));
       if(&J) J.append(::sqrt(t->prec)*J_y);
     }
   }
-  if(&J) J.reshape(phi.N, q_ddot.N);
+  if(&J) J.reshape(c.N, world.q.N);
 }
 
 void FeedbackMotionControl::updateConstraintControllers(){
@@ -141,25 +141,24 @@ arr FeedbackMotionControl::getDesiredConstraintForces(){
 }
 
 arr FeedbackMotionControl::operationalSpaceControl(){
-  arr phi, J, q_ddot;
-  q_ddot.resizeAs(world.q).setZero();
-  getTaskCosts(phi, J, q_ddot);
-  if(!phi.N && !qitselfPD.active) return q_ddot;
+  arr c, J;
+  getCostCoeffs(c, J);
+  if(!c.N && !qitselfPD.active) return zeros(world.q.N,1).reshape(world.q.N);
   arr H = diag(H_rate_diag);
   arr A = H;
   arr a(H.d0); a.setZero();
   if(qitselfPD.active){
-    a += qitselfPD.prec * (H_rate_diag % qitselfPD.getDesiredAcceleration(world.q, world.qdot));
+    a += H_rate_diag % qitselfPD.getDesiredAcceleration(world.q, world.qdot);
   }
-  if(phi.N){
+//    if(qitselfPD.active){
+//      A += qitselfPD.prec * eye(H.d0);
+//      a -= qitselfPD.prec * (q_ddot - qitselfPD.getDesiredAcceleration(world.q, world.qdot));
+//    }
+  if(c.N){
     A += comp_At_A(J);
-    a -= comp_At_x(J, phi);
+    a += comp_At_x(J, c);
   }
-//  if(qitselfPD.active){
-//    A += qitselfPD.prec * eye(H.d0);
-//    a -= qitselfPD.prec * (q_ddot - qitselfPD.getDesiredAcceleration(world.q, world.qdot));
-//  }
-  q_ddot = inverse_SymPosDef(A) * a;
+  arr q_ddot = inverse_SymPosDef(A) * a;
 
 //  if(nullSpacePD.active && nullSpacePD.prec){
 //    arr Null = eye(a.N) - Ainv * A;

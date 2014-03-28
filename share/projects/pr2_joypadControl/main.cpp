@@ -4,7 +4,7 @@
 #include <System/engine.h>
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
-#include <System/ros/roscom.h>
+#include <pr2/roscom.h>
 
 
 struct MySystem:System{
@@ -56,7 +56,7 @@ void testJoypad(){
   CtrlMsg refs;
 
   for(uint t=0;;t++){
-    S.joystickState.var->waitForNextRevision();
+//    S.joystickState.var->waitForNextRevision();
     arr joypadState = S.joystickState.get();
 
 //    q    = S.q_obs.get();
@@ -78,7 +78,8 @@ void testJoypad(){
       MP.world.gl().update(STRING("local operational space controller state t="<<(double)t/100.), false, false, false);
 
     //-- force task
-    uint mode = uint(joypadState(0));
+    uint mode = 0;
+    if(joypadState.N) mode = uint(joypadState(0));
     if(mode==2){
       cout <<"FORCE TASK" <<endl;
       refs.fL = ARR(10., 0., 0.);
