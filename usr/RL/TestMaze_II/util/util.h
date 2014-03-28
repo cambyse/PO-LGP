@@ -82,6 +82,13 @@ namespace util {
     //                      Classes                           //
     //========================================================//
 
+    /** \brief Comparison of pointers via their pointed-to objects. */
+    template<class A, class B = A>
+        class deref_less {
+    public:
+        bool operator()(const A& a, const B& b) { return *a<*b; }
+    };
+
     /** \brief Base class for polymorphic iteratable spaces.
      *
      * OUT OF DATE!!! An iteratable space consists of a countable set of

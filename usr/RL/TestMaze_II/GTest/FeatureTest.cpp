@@ -1,6 +1,9 @@
 #include <gtest/gtest.h>
 
+#include "../Config.h"
+
 #include "../util/util.h"
+#include "../util/ProgressBar.h"
 
 #include "../Representation/Feature.h"
 #include "../Representation/AbstractAction.h"
@@ -18,8 +21,6 @@
 
 #include "RandomElements.h"
 
-#include "../util/ProgressBar.h"
-
 #include <vector>
 #include <list>
 #include <memory> // shared_ptr
@@ -36,12 +37,7 @@ using std::shared_ptr;
 using std::dynamic_pointer_cast;
 using util::random_select;
 
-typedef AbstractAction::ptr_t action_ptr_t;
-typedef AbstractObservation::ptr_t observation_ptr_t;
-typedef AbstractReward::ptr_t reward_ptr_t;
-typedef Feature::const_feature_ptr_t f_ptr_t;
-typedef AbstractInstance::ptr_t instance_ptr_t;
-typedef AbstractInstance::const_ptr_t const_instance_ptr_t;
+USE_CONFIG_TYPEDEFS;
 
 int get_time_delay();
 f_ptr_t get_basis_feature();
@@ -52,6 +48,14 @@ f_ptr_t get_reward_feature();
 f_ptr_t get_and_feature();
 
 TEST(FeatureTest, Evaluation) {
+
+    /** Purpose: Check if action, observation, and reward features evaluate
+     * correcly. The MinimalEnvironment is used as test bed. This test should
+     * also check that the two versions of the evaluate method
+     * [evaluate(instance) and evaluate(instance->const_prev(),
+     * instance->action, instance->observation, instance->reward)] yield
+     * identical results. */
+
     {
         // representation
         action_ptr_t stay(new MinimalAction(MinimalAction::STAY));
@@ -61,10 +65,12 @@ TEST(FeatureTest, Evaluation) {
         reward_ptr_t some_reward(new MinimalReward(MinimalReward::SOME_REWARD));
         reward_ptr_t no_reward(new MinimalReward(MinimalReward::NO_REWARD));
 
+        // create a specific feature of every kind
         f_ptr_t action_f = ActionFeature::create(change,-2);
         f_ptr_t observation_f = ObservationFeature::create(green,-2);
         f_ptr_t reward_f = RewardFeature::create(some_reward,-2);
 
+        // create a sequence with all possible triplets
         instance_ptr_t ins = DoublyLinkedInstance::create(stay,red,some_reward);
         ins = ins->append(stay,red,no_reward);
         ins = ins->append(stay,green,some_reward);
@@ -168,6 +174,12 @@ TEST(FeatureTest, Evaluation) {
 
 TEST(FeatureTest, SharedPtr) {
 
+    /** Purpose: AndFeature objects hold shared pointers to their basis features
+     * in a "flat" set, i.e., an AndFeature 'A' constructed using another
+     * AndFeature 'B' should NOT hold a pointer to B but instead merge B's set
+     * of basis features into its own set. This test should check this behaviour
+     * by checking shared pointer use counts. */
+
     // vector holding pointers to basis features
     vector<f_ptr_t> basis_features;
 
@@ -193,11 +205,34 @@ TEST(FeatureTest, SharedPtr) {
     EXPECT_EQ(2, basis_features[1].use_count()) << "in vector and one AND feature (a2)";
     EXPECT_EQ(2, basis_features[2].use_count()) << "in vector and one AND feature(a2)";
     EXPECT_EQ(2, basis_features[3].use_count()) << "in vector and one AND feature(a3)";
+    EXPECT_EQ(1, a1.use_count()) << "only a1 itself";
+    EXPECT_EQ(1, a2.use_count()) << "only a2 itself";
+    EXPECT_EQ(1, a3.use_count()) << "only a3 itself";
 }
 
-#warning add a test for std::set<f_ptr_t>
-
 TEST(FeatureTest, ComparisonAndOrdering) {
+
+    /** Purpose: Some basic tests for comparison and ordering of features. A set
+     * of Test features is generated randomly.
+     *
+     * "True" equality is gained via string description (ListedReward and
+     * MazeObservation have to be compiled with DEBUG_LEVEL >= 2 to correctly
+     * differentiate between, e.g., (1,1) position in a 3x3 maze and a 5x5
+     * maze). Equality is checked against "true" equality.
+     *
+     * Inequality should be the negation of equality.
+     *
+     * Ordering is checked as follows: If two features 'A' and 'B' are equal
+     * neither A<B nor B<A should hold true; if A and B are not equal either A<B
+     * or B<A should hold true.
+     *
+     * Additionally a sorted std::list of features is constructed by
+     * consecutively inserting features (description below) and sorting is
+     * checked.
+     *
+     * Ordering within feature_set_t is compared against the sorted list (note
+     * that feature_set_t must not contain equal features while the sorted list
+     * generally does). */
 
     // vector holding pointers to features
     vector<f_ptr_t> feature_vector;
@@ -237,40 +272,40 @@ TEST(FeatureTest, ComparisonAndOrdering) {
         }
     }
 
-    // check equality, inequality, and ordering via description
-    {
-        int counter = 0;
-        ProgressBar::init("Checking Pairwise Operators: ");
-        for(f_ptr_t f1 : feature_vector) {
-            for(f_ptr_t f2 : feature_vector) {
-                // check equality
-                stringstream s1, s2;
-                s1 << *f1;
-                s2 << *f2;
-                bool description_equal = s1.str()==s2.str();
-                if(*f1==*f2) {
-                    EXPECT_TRUE(description_equal) << "'" << *f1 << "' == '" << *f2 << "'";
-                } else {
-                    EXPECT_FALSE(description_equal) << "'" << *f1 << "' != '" << *f2 << "'";
-                }
-                // check inequality
-                if(*f1==*f2) {
-                    EXPECT_FALSE(*f1!=*f2) << "inequality is not the negation of equality";
-                } else {
-                    EXPECT_TRUE(*f1!=*f2) << "inequality is not the negation of equality";
-                }
-                // check ordering
-                if(*f1==*f2) {
-                    EXPECT_FALSE(*f1<*f2) << *f1 << "==" << *f2 << " violated by ordering operator";
-                    EXPECT_FALSE(*f2<*f1) << *f1 << "==" << *f2 << " violated by ordering operator";
-                } else {
-                    EXPECT_TRUE(*f1<*f2 || *f2<*f1) << *f1 << "!=" << *f2 << " violated by ordering operator";
-                }
-            }
-            ProgressBar::print(counter++, number_of_features);
-        }
-        ProgressBar::terminate();
-    }
+    // // check equality, inequality, and ordering via description
+    // {
+    //     int counter = 0;
+    //     ProgressBar::init("Checking Pairwise Operators: ");
+    //     for(f_ptr_t f1 : feature_vector) {
+    //         for(f_ptr_t f2 : feature_vector) {
+    //             // check equality
+    //             stringstream s1, s2;
+    //             s1 << *f1;
+    //             s2 << *f2;
+    //             bool description_equal = s1.str()==s2.str();
+    //             if(*f1==*f2) {
+    //                 EXPECT_TRUE(description_equal) << "'" << *f1 << "' == '" << *f2 << "'";
+    //             } else {
+    //                 EXPECT_FALSE(description_equal) << "'" << *f1 << "' != '" << *f2 << "'";
+    //             }
+    //             // check inequality
+    //             if(*f1==*f2) {
+    //                 EXPECT_FALSE(*f1!=*f2) << "inequality is not the negation of equality";
+    //             } else {
+    //                 EXPECT_TRUE(*f1!=*f2) << "inequality is not the negation of equality";
+    //             }
+    //             // check ordering
+    //             if(*f1==*f2) {
+    //                 EXPECT_FALSE(*f1<*f2) << *f1 << "==" << *f2 << " violated by ordering operator";
+    //                 EXPECT_FALSE(*f2<*f1) << *f1 << "==" << *f2 << " violated by ordering operator";
+    //             } else {
+    //                 EXPECT_TRUE((*f1<*f2 || *f2<*f1) && !(*f1<*f2 && *f2<*f1)) << *f1 << "!=" << *f2 << " violated by ordering operator";
+    //             }
+    //         }
+    //         ProgressBar::print(counter++, number_of_features);
+    //     }
+    //     ProgressBar::terminate();
+    // }
 
     // check ordering via stupid sorting
     {
@@ -278,6 +313,10 @@ TEST(FeatureTest, ComparisonAndOrdering) {
         list<f_ptr_t> sorted_feature_list;
         ProgressBar::init("Checking Ordering: ");
         for(f_ptr_t f_unsorted : feature_vector) {
+            // f_unsorted is inserted into sorted_feature_list right before
+            // insert_before (first element that is not
+            // smaller). some_elem_after should should never compare less to
+            // f_unsorted for the rest of sorted_feature_list.
             auto insert_before = sorted_feature_list.begin();   // first element that is not smaller
             auto some_elem_after = sorted_feature_list.begin(); // all other elements after that
             bool found = false;
@@ -300,11 +339,52 @@ TEST(FeatureTest, ComparisonAndOrdering) {
         }
         ProgressBar::terminate();
 
-        // check sorting
-        for(auto low_elem=sorted_feature_list.begin(); low_elem!=sorted_feature_list.end(); ++low_elem) {
-            for(auto high_elem=low_elem; high_elem!=sorted_feature_list.end(); ++high_elem) {
-                EXPECT_FALSE(**high_elem<**low_elem) << **high_elem << "<" << **low_elem;
+        // check sorting again by pairwise comparison
+        {
+            int equality_check_counter = 0;
+            for(auto low_elem=sorted_feature_list.begin(); low_elem!=sorted_feature_list.end(); ++low_elem) {
+                for(auto high_elem=low_elem; high_elem!=sorted_feature_list.end(); ++high_elem) {
+                    EXPECT_FALSE(**high_elem<**low_elem) << **high_elem << "<" << **low_elem;
+                    if(**high_elem==**low_elem) {
+                        // expect equal objects to be created only once and share ownership
+                        EXPECT_EQ(*high_elem,*low_elem);
+                        ++equality_check_counter;
+                    }
+                }
             }
+            DEBUG_OUT(1,"Performed " << equality_check_counter << " object-pointer equality checks");
+        }
+
+        // compare/check against sorting of feature_set_t
+        {
+            // construct feature set
+            feature_set_t feature_set;
+            for(f_ptr_t feature : feature_vector) {
+                feature_set.insert(feature);
+            }
+
+            // iterate through set and list
+            auto list_it = sorted_feature_list.begin();
+            auto set_it = feature_set.begin();
+            while(list_it!=sorted_feature_list.end() && set_it!=feature_set.end()) {
+                // compare
+                EXPECT_EQ(**list_it,**set_it);
+                DEBUG_OUT(2,"");
+                DEBUG_OUT(2,**list_it);
+                DEBUG_OUT(2,**set_it);
+                // skip multiple occurrences in list
+                auto next_list_it = list_it;
+                ++next_list_it;
+                while(next_list_it!=sorted_feature_list.end() && **next_list_it==**list_it) {
+                    DEBUG_OUT(2,"    Skipping " << **next_list_it << " because of equality");
+                    list_it = next_list_it;
+                    ++next_list_it;
+                }
+                // increment
+                ++list_it;
+                ++set_it;
+            }
+
         }
 
         // print

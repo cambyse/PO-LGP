@@ -113,7 +113,7 @@ void LookAheadSearch::clear_tree() {
 void LookAheadSearch::build_tree(
         const_instance_ptr_t root_instance,
         const Predictor& environment,
-        const size_t& max_node_counter
+        const large_size_t& max_node_counter
 ) {
 
     DEBUG_OUT(2,"Building new search tree");
@@ -170,7 +170,7 @@ bool LookAheadSearch::expand_tree(const Predictor& environment) {
 
 void LookAheadSearch::fully_expand_tree(
         const Predictor& environment,
-        const size_t& max_node_counter
+        const large_size_t& max_node_counter
 ) {
 
     // fully expand tree
@@ -531,7 +531,7 @@ void LookAheadSearch::print_tree(const bool& text,
         level_vector_t * current_level = new level_vector_t();
         level_vector_t * next_level = new level_vector_t();
         NODE_TYPE current_level_type = NONE;
-        size_t level_counter = 0;
+        large_size_t level_counter = 0;
         current_level->push_back(make_tuple(root_node,1));
         current_level_type = node_info_map[root_node].type;
         node_color_weights[root_node] = 1;
@@ -753,7 +753,7 @@ void LookAheadSearch::print_tree_statistics() const {
     node_vector_t * current_level = new node_vector_t();
     node_vector_t * next_level = new node_vector_t();
     NODE_TYPE current_level_type = NONE;
-    size_t total_arc_counter = 0, total_node_counter = 0, level_counter = 0;
+    large_size_t total_arc_counter = 0, total_node_counter = 0, level_counter = 0;
     current_level->push_back(root_node);
     current_level_type = node_info_map[root_node].type;
     DEBUG_OUT(0,"Printing tree statistics");

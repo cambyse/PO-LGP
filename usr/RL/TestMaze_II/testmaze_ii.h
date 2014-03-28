@@ -87,7 +87,7 @@ private:
 
     // stuff for a persistent console history
     std::vector<QString> console_history;
-    size_t history_position;
+    large_size_t history_position;
     QFile history_file;
 
     // discout that is used
@@ -116,7 +116,7 @@ private:
     // Planners //
     //----------//
     std::shared_ptr<Policy> policy;
-    size_t max_tree_size;
+    large_size_t max_tree_size;
     bool prune_search_tree;
 
     //-------//

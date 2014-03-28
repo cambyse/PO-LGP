@@ -1291,9 +1291,9 @@ void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
                     }
 
                     // prepare for plotting
-                    size_t back_size = backward.size();
-                    size_t forw_size = forward.size();
-                    size_t point_n = forw_size + back_size - 1;
+                    large_size_t back_size = backward.size();
+                    large_size_t forw_size = forward.size();
+                    large_size_t point_n = forw_size + back_size - 1;
                     QVector<double> x(point_n), y(point_n);
                     probability_t max_y = -DBL_MAX;
                     for (int i=0; i<(int)point_n; ++i) {

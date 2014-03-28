@@ -176,7 +176,7 @@ void UTree::print_tree() {
     // initialize variables
     node_vector_t * current_level = new node_vector_t();
     node_vector_t * next_level = new node_vector_t();
-    size_t total_arc_counter = 0, total_node_counter = 0, level_counter = 0, leaf_counter = 0;
+    large_size_t total_arc_counter = 0, total_node_counter = 0, level_counter = 0, leaf_counter = 0;
     current_level->push_back(root_node);
 
     // print

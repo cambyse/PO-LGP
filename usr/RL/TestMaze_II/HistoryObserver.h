@@ -22,7 +22,7 @@ public:
     virtual void clear_data();
 protected:
     std::vector<instance_ptr_t> instance_data;
-    size_t number_of_data_points;
+    large_size_t number_of_data_points;
 };
 
 #endif /* HISTORYOBSERVER_H_ */

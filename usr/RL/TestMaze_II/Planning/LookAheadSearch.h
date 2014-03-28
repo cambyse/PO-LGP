@@ -75,7 +75,7 @@ public:
     void build_tree(
             const_instance_ptr_t root,
             const Predictor& environment,
-            const size_t& max_node_counter = 0
+            const large_size_t& max_node_counter = 0
     );
 
     /*! \brief Expand current tree by expanding one leaf
@@ -87,7 +87,7 @@ public:
      *  unambiguous or the maximum tree size is reached. */
     void fully_expand_tree(
             const Predictor& environment,
-            const size_t& max_node_counter = 0
+            const large_size_t& max_node_counter = 0
     );
 
     /*! \brief Returns the best action for the root observation. */
@@ -118,7 +118,7 @@ public:
     /*! \brief Print the tree statistics to console. */
     void print_tree_statistics() const;
 
-    size_t get_number_of_nodes() const { return number_of_nodes; }
+    large_size_t get_number_of_nodes() const { return number_of_nodes; }
 
 protected:
 
@@ -129,7 +129,7 @@ protected:
     node_info_map_t node_info_map;
     arc_info_map_t arc_info_map;
     double discount;
-    size_t number_of_nodes;
+    large_size_t number_of_nodes;
     static const bool random_tie_break;
 
     action_ptr_t action_space;

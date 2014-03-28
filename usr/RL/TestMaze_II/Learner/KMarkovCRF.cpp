@@ -1262,7 +1262,7 @@ void KMarkovCRF::update_prediction_map() {
     input_set.clear();
 
     // store count for different inputs for later normalization
-    std::map<input_tuple_t, size_t > counts;
+    std::map<input_tuple_t, large_size_t > counts;
 
     // go through instance and count frequencies for transitions
     for(instance_ptr_t current_episode : instance_data) {
@@ -1380,7 +1380,7 @@ void KMarkovCRF::find_unique_feature_values() {
     set<vector<vector<f_ret_t> > > feature_value_set;
 
     // iterate through data
-    size_t instance_idx = 0;
+    large_size_t instance_idx = 0;
     for(instance_ptr_t current_episode : instance_data) {
         for(const_instance_ptr_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
 
@@ -1715,8 +1715,8 @@ void KMarkovCRF::precompute_base_feature_values() {
 void KMarkovCRF::erase_const_zero_candidate_features() {
     DEBUG_OUT(1, "Erasing const-zero features from candidates...");
 
-    size_t candidate_features_n = candidate_features.size();
-    size_t new_candidate_features_n = 0;
+    large_size_t candidate_features_n = candidate_features.size();
+    large_size_t new_candidate_features_n = 0;
 
     // identify features to erase
     vector<bool> erase_feature(candidate_features_n,true);

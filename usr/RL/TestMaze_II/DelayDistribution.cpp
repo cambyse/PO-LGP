@@ -21,7 +21,7 @@ DelayDistribution::probability_t DelayDistribution::get_fixed_delay_probability(
     ) {
     // determine unnormalized delay probability
     probability_t prob = 0;
-    size_t normalization = 0;
+    large_size_t normalization = 0;
     if(number_of_data_points>0) {
         for(instance_ptr_t current_episode : instance_data) {
             const_instance_ptr_t insIt_1 = current_episode->const_first();
@@ -66,7 +66,7 @@ vector<DelayDistribution::probability_t> DelayDistribution::get_fixed_delay_prob
         idx_map[observation] = observation_idx;
         ++observation_idx;
     }
-    size_t normalization = 0;
+    large_size_t normalization = 0;
 
     // iterate through instances
     if(number_of_data_points>0) {
@@ -125,7 +125,7 @@ void DelayDistribution::get_delay_distribution(
     //-------------------//
     // count occurrences //
     //-------------------//
-    size_t counter = 0;
+    large_size_t counter = 0;
 
     // iterate through episodes
     for(instance_ptr_t current_episode : instance_data) {
@@ -194,7 +194,7 @@ DelayDistribution::probability_t DelayDistribution::get_mediator_probability(
     // count occurrences //
     //-------------------//
     probability_t prob = 0;
-    size_t counter = 0;
+    large_size_t counter = 0;
     for(instance_ptr_t current_episode : instance_data) {
         for(const_instance_ptr_t ins_1=current_episode->const_first(); ins_1!=INVALID; ++ins_1 ) {
             if(ins_1->observation!=s1) { continue; }

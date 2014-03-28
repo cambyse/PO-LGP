@@ -147,8 +147,8 @@ void LinearQ::score_candidates_by_gradient() {
         candidate_features.begin(),
         candidate_features.end()
         );
-    size_t old_active_n = old_active_features.size();
-    size_t new_active_n = active_features.size();
+    large_size_t old_active_n = old_active_features.size();
+    large_size_t new_active_n = active_features.size();
 
     // adjust number of variables and transfer weights
     set_number_of_variables_to_active();
@@ -159,7 +159,7 @@ void LinearQ::score_candidates_by_gradient() {
 
     // transfer (absolute value of) gradient to scores
     candidate_scores.resize(candidate_features.size());
-    for(size_t f_idx : Range(new_active_n)) {
+    for(large_size_t f_idx : Range(new_active_n)) {
         if(f_idx<old_active_n) {
             continue;
         } else {
@@ -190,7 +190,7 @@ void LinearQ::add_candidates_by_score(int n) {
 
     // add features
     int included = 0;
-    for(size_t f_idx : iRange(candidate_features.size())) {
+    for(large_size_t f_idx : iRange(candidate_features.size())) {
         if(candidate_scores[f_idx]==0 || included>=n) {
             DEBUG_OUT(1,"   ignore (" << candidate_scores[f_idx] << "):" << candidate_features[f_idx]);
         } else {
@@ -660,7 +660,7 @@ void LinearQ::update_loss_terms() {
     //-----------------------//
     // prepare for computing //
     //-----------------------//
-    size_t data_idx = 0;
+    large_size_t data_idx = 0;
     vector<f_ret_t> * f_ret_t0 = new vector<f_ret_t>(feature_n);
     vector<f_ret_t> * f_ret_t1 = new vector<f_ret_t>(feature_n);
 
@@ -847,7 +847,7 @@ LinearQ::probability_t LinearQ::prior_probability(const observation_ptr_t&, cons
 }
 
 void LinearQ::set_number_of_variables_to_active() {
-    size_t feature_n = active_features.size();
+    large_size_t feature_n = active_features.size();
     // call parent class function
     LBFGS_Optimizer::set_number_of_variables(feature_n);
     feature_weights.resize(feature_n,0);
