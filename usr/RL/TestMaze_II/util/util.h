@@ -88,6 +88,19 @@ namespace util {
     public:
         bool operator()(const A& a, const B& b) { return *a<*b; }
     };
+    template<>
+        template<class P>
+        class deref_less<std::weak_ptr<P> > {
+    public:
+        bool operator()(const std::weak_ptr<P>& a, const std::weak_ptr<P>& b) {
+            if(a.expired() || b.expired()) {
+                DEBUG_ERROR("Pointer expired");
+                return false;
+            } else {
+                return *(a.lock())<*(b.lock());
+            }
+        }
+    };
 
     /** \brief Base class for polymorphic iteratable spaces.
      *

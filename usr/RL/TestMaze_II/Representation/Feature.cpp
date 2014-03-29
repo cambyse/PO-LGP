@@ -2,7 +2,7 @@
 
 #include "DoublyLinkedInstance.h"
 
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 0
 #include "../util/debug.h"
 
 using std::get;
@@ -77,6 +77,49 @@ Feature::feature_return_t Feature::return_function(const feature_return_t& ret) 
     //return (complexity+1) * ret;
 }
 
+BasisFeature::unique_feature_set_t BasisFeature::unique_feature_set;
+
+BasisFeature::~BasisFeature() {
+    erase_from_unique();
+}
+
+Feature::const_feature_ptr_t BasisFeature::create(BasisFeature * f) {
+    // try to find identical object in unique_feature_set
+    auto unique_it = unique_feature_set.find(f);
+    if(unique_it==unique_feature_set.end()) { // identical object does not exist
+        DEBUG_OUT(3,"Insert (" << f << ") --> " << *f);
+        // insert into unique_feature_set
+        unique_feature_set.insert(f);
+        // make sure it erases itself on destruction
+        f->erase_from_unique_feature_set = true;
+        // create shared pointer to return
+        const_feature_ptr_t return_ptr(f);
+        // set self pointer
+        f->self_ptr = return_ptr;
+        // return
+        return return_ptr;
+    } else { // identical object DOES exist
+        DEBUG_OUT(3,"Found identical object (" << *unique_it << ") --> " << **unique_it);
+        // destroy f and use identical object instead
+        delete f;
+        // return already existing object
+        return (*unique_it)->self_ptr.lock();
+    }
+}
+
+void BasisFeature::erase_from_unique() {
+    if(erase_from_unique_feature_set) {
+        auto unique_it = unique_feature_set.find(this);
+        if(unique_it==unique_feature_set.end()) {
+            DEBUG_ERROR("Cannot erase from unique_feature_set (not found)");
+        } else {
+            DEBUG_OUT(3,"Erase from unique: (" << *unique_it << ") --> " << **unique_it);
+            unique_feature_set.erase(unique_it);
+        }
+        erase_from_unique_feature_set = false;
+    }
+}
+
 ConstFeature::ConstFeature(const feature_return_t& v) {
     feature_type = CONST_FEATURE;
     complexity = 0;
@@ -85,13 +128,12 @@ ConstFeature::ConstFeature(const feature_return_t& v) {
 }
 
 Feature::const_feature_ptr_t ConstFeature::create(const feature_return_t& v) {
-    ConstFeature * new_feature = new ConstFeature(v);
-    const_feature_ptr_t return_ptr(new_feature);
-    new_feature->set_this_ptr(return_ptr);
-    return return_ptr;
+    return BasisFeature::create(new ConstFeature(v));
 }
 
-ConstFeature::~ConstFeature() {}
+ConstFeature::~ConstFeature() {
+    erase_from_unique();
+}
 
 Feature::feature_return_t ConstFeature::evaluate(const_instance_ptr_t ins) const {
     return return_function(ins==INVALID ? 0 : const_return_value);
@@ -134,13 +176,12 @@ ActionFeature::ActionFeature(const action_ptr_t& a, const int& d): action(a), de
     complexity = 1;
 }
 
-ActionFeature::~ActionFeature() {}
+ActionFeature::~ActionFeature() {
+    erase_from_unique();
+}
 
 Feature::const_feature_ptr_t ActionFeature::create(const action_ptr_t& a, const int& d) {
-    ActionFeature * new_feature = new ActionFeature(a,d);
-    const_feature_ptr_t return_ptr(new_feature);
-    new_feature->set_this_ptr(return_ptr);
-    return return_ptr;
+    return BasisFeature::create(new ActionFeature(a,d));
 }
 
 Feature::feature_return_t ActionFeature::evaluate(const_instance_ptr_t ins) const {
@@ -193,13 +234,12 @@ ObservationFeature::ObservationFeature(const observation_ptr_t& s, const int& d)
     complexity = 1;
 }
 
-ObservationFeature::~ObservationFeature() {}
+ObservationFeature::~ObservationFeature() {
+    erase_from_unique();
+}
 
 Feature::const_feature_ptr_t ObservationFeature::create(const observation_ptr_t& s, const int& d) {
-    ObservationFeature * new_feature = new ObservationFeature(s,d);
-    const_feature_ptr_t return_ptr(new_feature);
-    new_feature->set_this_ptr(return_ptr);
-    return return_ptr;
+    return BasisFeature::create(new ObservationFeature(s,d));
 }
 
 Feature::feature_return_t ObservationFeature::evaluate(const_instance_ptr_t ins) const {
@@ -239,6 +279,8 @@ bool ObservationFeature::operator<(const Feature& other) const {
         const ObservationFeature * f_ptr = dynamic_cast<const ObservationFeature *>(&other);
         if(f_ptr==nullptr) {
             DEBUG_DEAD_LINE;
+            DEBUG_WARNING(this->get_feature_type() << " == " << other.get_feature_type());
+            DEBUG_WARNING(*this << " // " << other);
             return false;
         } else {
             return this->observation<f_ptr->observation ||
@@ -252,13 +294,12 @@ RewardFeature::RewardFeature(const reward_ptr_t& r, const int& d): reward(r), de
     complexity = 1;
 }
 
-RewardFeature::~RewardFeature() {}
+RewardFeature::~RewardFeature() {
+    erase_from_unique();
+}
 
 Feature::const_feature_ptr_t RewardFeature::create(const reward_ptr_t& r, const int& d) {
-    RewardFeature * new_feature = new RewardFeature(r,d);
-    const_feature_ptr_t return_ptr(new_feature);
-    new_feature->set_this_ptr(return_ptr);
-    return return_ptr;
+    return BasisFeature::create(new RewardFeature(r,d));
 }
 
 Feature::feature_return_t RewardFeature::evaluate(const_instance_ptr_t ins) const {
@@ -424,18 +465,17 @@ void AndFeature::add_feature(const_feature_ptr_t f) {
     typedef shared_ptr<const AndFeature> const_and_f_ptr_t;
     typedef shared_ptr<const BasisFeature> const_basis_f_ptr_t;
     const_and_f_ptr_t and_feature = dynamic_pointer_cast<const AndFeature>(f);
-    if(and_feature!=const_and_f_ptr_t()) {
+    if(and_feature!=nullptr) {
         subfeatures.insert(
             and_feature->subfeatures.begin(),
             and_feature->subfeatures.end()
             );
     } else {
         const_basis_f_ptr_t basis_feature = dynamic_pointer_cast<const BasisFeature>(f);
-        if(basis_feature!=const_basis_f_ptr_t()) {
-            subfeatures.insert(const_feature_ptr_t(basis_feature->get_this_ptr()));
+        if(basis_feature!=nullptr) {
+            subfeatures.insert(f);
         } else {
             DEBUG_ERROR("Unsupported feature type");
-            DEBUG_DEAD_LINE;
         }
     }
 }

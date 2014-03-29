@@ -184,10 +184,15 @@ TEST(FeatureTest, SharedPtr) {
     vector<f_ptr_t> basis_features;
 
     // Construct basis features
+    DEBUG_OUT(2,"Construct basis features:")
     basis_features.push_back(ConstFeature::create(3.5));
-    basis_features.push_back(ActionFeature::create(action_ptr_t(new AbstractAction()), 0));
-    basis_features.push_back(ObservationFeature::create(observation_ptr_t(new AbstractObservation()), 0));
-    basis_features.push_back(RewardFeature::create(reward_ptr_t(new AbstractReward()), 0));
+    DEBUG_OUT(2,"    " << *basis_features.back())
+    basis_features.push_back(ActionFeature::create(action_ptr_t(new MinimalAction()), 0));
+    DEBUG_OUT(2,"    " << *basis_features.back())
+    basis_features.push_back(ObservationFeature::create(observation_ptr_t(new MinimalObservation()), 0));
+    DEBUG_OUT(2,"    " << *basis_features.back())
+    basis_features.push_back(RewardFeature::create(reward_ptr_t(new MinimalReward()), 0));
+    DEBUG_OUT(2,"    " << *basis_features.back())
 
     // Test counters of shared pointers
     for(auto b : basis_features) {
@@ -272,40 +277,40 @@ TEST(FeatureTest, ComparisonAndOrdering) {
         }
     }
 
-    // // check equality, inequality, and ordering via description
-    // {
-    //     int counter = 0;
-    //     ProgressBar::init("Checking Pairwise Operators: ");
-    //     for(f_ptr_t f1 : feature_vector) {
-    //         for(f_ptr_t f2 : feature_vector) {
-    //             // check equality
-    //             stringstream s1, s2;
-    //             s1 << *f1;
-    //             s2 << *f2;
-    //             bool description_equal = s1.str()==s2.str();
-    //             if(*f1==*f2) {
-    //                 EXPECT_TRUE(description_equal) << "'" << *f1 << "' == '" << *f2 << "'";
-    //             } else {
-    //                 EXPECT_FALSE(description_equal) << "'" << *f1 << "' != '" << *f2 << "'";
-    //             }
-    //             // check inequality
-    //             if(*f1==*f2) {
-    //                 EXPECT_FALSE(*f1!=*f2) << "inequality is not the negation of equality";
-    //             } else {
-    //                 EXPECT_TRUE(*f1!=*f2) << "inequality is not the negation of equality";
-    //             }
-    //             // check ordering
-    //             if(*f1==*f2) {
-    //                 EXPECT_FALSE(*f1<*f2) << *f1 << "==" << *f2 << " violated by ordering operator";
-    //                 EXPECT_FALSE(*f2<*f1) << *f1 << "==" << *f2 << " violated by ordering operator";
-    //             } else {
-    //                 EXPECT_TRUE((*f1<*f2 || *f2<*f1) && !(*f1<*f2 && *f2<*f1)) << *f1 << "!=" << *f2 << " violated by ordering operator";
-    //             }
-    //         }
-    //         ProgressBar::print(counter++, number_of_features);
-    //     }
-    //     ProgressBar::terminate();
-    // }
+    // check equality, inequality, and ordering via description
+    {
+        int counter = 0;
+        ProgressBar::init("Checking Pairwise Operators: ");
+        for(f_ptr_t f1 : feature_vector) {
+            for(f_ptr_t f2 : feature_vector) {
+                // check equality
+                stringstream s1, s2;
+                s1 << *f1;
+                s2 << *f2;
+                bool description_equal = s1.str()==s2.str();
+                if(*f1==*f2) {
+                    EXPECT_TRUE(description_equal) << "'" << *f1 << "' == '" << *f2 << "'";
+                } else {
+                    EXPECT_FALSE(description_equal) << "'" << *f1 << "' != '" << *f2 << "'";
+                }
+                // check inequality
+                if(*f1==*f2) {
+                    EXPECT_FALSE(*f1!=*f2) << "inequality is not the negation of equality";
+                } else {
+                    EXPECT_TRUE(*f1!=*f2) << "inequality is not the negation of equality";
+                }
+                // check ordering
+                if(*f1==*f2) {
+                    EXPECT_FALSE(*f1<*f2) << *f1 << "==" << *f2 << " violated by ordering operator";
+                    EXPECT_FALSE(*f2<*f1) << *f1 << "==" << *f2 << " violated by ordering operator";
+                } else {
+                    EXPECT_TRUE((*f1<*f2 || *f2<*f1) && !(*f1<*f2 && *f2<*f1)) << *f1 << "!=" << *f2 << " violated by ordering operator";
+                }
+            }
+            ProgressBar::print(counter++, number_of_features);
+        }
+        ProgressBar::terminate();
+    }
 
     // check ordering via stupid sorting
     {
@@ -347,7 +352,12 @@ TEST(FeatureTest, ComparisonAndOrdering) {
                     EXPECT_FALSE(**high_elem<**low_elem) << **high_elem << "<" << **low_elem;
                     if(**high_elem==**low_elem) {
                         // expect equal objects to be created only once and share ownership
-                        EXPECT_EQ(*high_elem,*low_elem);
+                        auto high_base_ptr = dynamic_pointer_cast<const BasisFeature>(*high_elem);
+                        auto low_base_ptr = dynamic_pointer_cast<const BasisFeature>(*low_elem);
+                        // should be both nullptr or point to the same object
+                        EXPECT_EQ(high_base_ptr,low_base_ptr)
+                            << "    (" << high_base_ptr << ") <--> " << **high_elem << "\n"
+                            << "    (" << low_base_ptr << ") <--> " << **low_elem;
                         ++equality_check_counter;
                     }
                 }
@@ -357,6 +367,7 @@ TEST(FeatureTest, ComparisonAndOrdering) {
 
         // compare/check against sorting of feature_set_t
         {
+            DEBUG_OUT(1,"Compare with feature_set_t");
             // construct feature set
             feature_set_t feature_set;
             for(f_ptr_t feature : feature_vector) {
@@ -369,28 +380,20 @@ TEST(FeatureTest, ComparisonAndOrdering) {
             while(list_it!=sorted_feature_list.end() && set_it!=feature_set.end()) {
                 // compare
                 EXPECT_EQ(**list_it,**set_it);
-                DEBUG_OUT(2,"");
-                DEBUG_OUT(2,**list_it);
-                DEBUG_OUT(2,**set_it);
+                DEBUG_OUT(3,"");
+                DEBUG_OUT(3,**list_it);
+                DEBUG_OUT(3,**set_it);
                 // skip multiple occurrences in list
                 auto next_list_it = list_it;
                 ++next_list_it;
                 while(next_list_it!=sorted_feature_list.end() && **next_list_it==**list_it) {
-                    DEBUG_OUT(2,"    Skipping " << **next_list_it << " because of equality");
+                    DEBUG_OUT(3,"    Skipping " << **next_list_it << " because of equality");
                     list_it = next_list_it;
                     ++next_list_it;
                 }
                 // increment
                 ++list_it;
                 ++set_it;
-            }
-
-        }
-
-        // print
-        if(DEBUG_LEVEL>1) {
-            for(f_ptr_t sorted_feature : sorted_feature_list) {
-                DEBUG_OUT(0,"    " << *sorted_feature);
             }
         }
     }

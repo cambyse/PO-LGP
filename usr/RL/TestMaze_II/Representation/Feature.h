@@ -47,14 +47,35 @@ protected:
 };
 
 class BasisFeature: public Feature {
+    friend class AndFeature;
+
+    //----typedefs----//
+private:
+    typedef std::weak_ptr<const Feature> self_ptr_t;
+    typedef std::set<const BasisFeature *,util::deref_less<const BasisFeature *> > unique_feature_set_t;
+
+    //----members----//
+private:
+    /** \brief Ensure that all created BasisFeature objects are unique.
+     *
+     * On construction of BasisFeature objects via static create() function a
+     * new object is only created if no equal object is found within
+     * unique_feature_set, otherwise a pointer to this object is returned.*/
+    static unique_feature_set_t unique_feature_set;
+    bool erase_from_unique_feature_set = false;
+
+    /** \brief Pointer to this object.
+     *
+     * Used to return/maintain unique shared pointer. */
+    self_ptr_t self_ptr;
+
+    //----methods----//
 public:
-    typedef std::weak_ptr<const Feature> this_ptr_t;
-    virtual this_ptr_t get_this_ptr() const { return thisPtr; }
+    ~BasisFeature();
 protected:
     BasisFeature() {}
-    ~BasisFeature() {}
-    this_ptr_t thisPtr;
-    virtual void set_this_ptr(const_feature_ptr_t ptr) { thisPtr = ptr; }
+    static const_feature_ptr_t create(BasisFeature * f);
+    virtual void erase_from_unique() final;
 };
 
 class ConstFeature: public BasisFeature {
