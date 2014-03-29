@@ -24,7 +24,7 @@
 #include "Representation/AbstractInstance.h"
 #include "Representation/Feature.h"
 #include "util/util.h"
-#include <set>
+#include <unordered_set>
 
 //===================================================================
 
@@ -42,7 +42,7 @@
     typedef AbstractInstance::const_ptr_t  const_instance_ptr_t;        \
     typedef Feature::const_feature_ptr_t   f_ptr_t;                     \
     typedef Feature::feature_return_t      f_ret_t;                     \
-    typedef std::set<f_ptr_t,util::deref_less<f_ptr_t > > feature_set_t;
+    typedef std::unordered_set<f_ptr_t>    feature_set_t;
 
 #define DISAMBIGUATE_CONFIG_TYPEDEFS(class)     \
     using class::large_size_t;                  \

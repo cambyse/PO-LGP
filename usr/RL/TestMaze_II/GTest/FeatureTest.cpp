@@ -22,6 +22,7 @@
 #include "RandomElements.h"
 
 #include <vector>
+#include <set>
 #include <list>
 #include <memory> // shared_ptr
 #include <sstream>
@@ -31,6 +32,7 @@
 
 using std::vector;
 using std::list;
+using std::set;
 using std::string;
 using std::stringstream;
 using std::shared_ptr;
@@ -365,19 +367,18 @@ TEST(FeatureTest, ComparisonAndOrdering) {
             DEBUG_OUT(1,"Performed " << equality_check_counter << " object-pointer equality checks");
         }
 
-        // compare/check against sorting of feature_set_t
+        // compare/check against sorting in a std::set
         {
-            DEBUG_OUT(1,"Compare with feature_set_t");
             // construct feature set
-            feature_set_t feature_set;
+            set<f_ptr_t,util::deref_less<f_ptr_t> > std_feature_set;
             for(f_ptr_t feature : feature_vector) {
-                feature_set.insert(feature);
+                std_feature_set.insert(feature);
             }
 
             // iterate through set and list
             auto list_it = sorted_feature_list.begin();
-            auto set_it = feature_set.begin();
-            while(list_it!=sorted_feature_list.end() && set_it!=feature_set.end()) {
+            auto set_it = std_feature_set.begin();
+            while(list_it!=sorted_feature_list.end() && set_it!=std_feature_set.end()) {
                 // compare
                 EXPECT_EQ(**list_it,**set_it);
                 DEBUG_OUT(3,"");
@@ -395,7 +396,19 @@ TEST(FeatureTest, ComparisonAndOrdering) {
                 ++list_it;
                 ++set_it;
             }
+
+            // order in feature_set_t may be different but size should be
+            // identical (and different from feature_vector)
+            feature_set_t feature_set;
+            for(f_ptr_t feature : feature_vector) {
+                feature_set.insert(feature);
+            }
+            EXPECT_EQ(feature_set.size(),std_feature_set.size());
+            EXPECT_NE(feature_vector.size(),std_feature_set.size());
+            EXPECT_NE(feature_vector.size(),feature_set.size());
         }
+
+
     }
 }
 

@@ -3,7 +3,7 @@
 #include <sstream>
 #include <algorithm> // for min, max
 
-#define DEBUG_LEVEL 2
+#define DEBUG_LEVEL 1
 #include "../util/debug.h"
 
 using std::min;
