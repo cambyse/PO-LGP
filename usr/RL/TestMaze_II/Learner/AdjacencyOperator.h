@@ -8,8 +8,8 @@ public:
     USE_CONFIG_TYPEDEFS;
     AdjacencyOperator() = default;
     virtual ~AdjacencyOperator() = default;
-    virtual feature_set_t operator()(
-        const feature_set_t& current_features = feature_set_t()
+    virtual f_set_t operator()(
+        const f_set_t& current_features = f_set_t()
         ) const = 0;
 };
 

@@ -10,12 +10,12 @@ public:
     bool extend_with_basis_features_only = false;
     ConjunctiveAdjacency() = default;
     virtual ~ConjunctiveAdjacency() = default;
-    virtual feature_set_t expand_with_basis_features(
-        const feature_set_t& current_features = feature_set_t(),
-        const feature_set_t& basis_features = feature_set_t()
+    virtual f_set_t expand_with_basis_features(
+        const f_set_t& current_features = f_set_t(),
+        const f_set_t& basis_features = f_set_t()
         ) const;
-    virtual feature_set_t operator()(
-        const feature_set_t& current_features = feature_set_t()
+    virtual f_set_t operator()(
+        const f_set_t& current_features = f_set_t()
         ) const;
     virtual void horizon_extension_on(int);
     virtual void horizon_extension_off();

@@ -25,6 +25,7 @@
 #include "Representation/Feature.h"
 #include "util/util.h"
 #include <unordered_set>
+#include <set>
 
 //===================================================================
 
@@ -32,17 +33,33 @@
 #define CONFIG_TYPEDEFS_H_
 
 #define USE_CONFIG_TYPEDEFS                                             \
+    /** \brief Unsigned integer type for very large quantities. */      \
     typedef unsigned long long int         large_size_t;                \
+    /** \brief Signed integer type for very large quantities. */        \
     typedef long long int                  idx_t;                       \
+    /** \brief Type for representing probabilties. */                   \
     typedef double                         probability_t;               \
+    /** \brief Type for (pointers to) abstract actions. */              \
     typedef AbstractAction::ptr_t          action_ptr_t;                \
+    /** \brief Type for (pointers to) abstract observations. */         \
     typedef AbstractObservation::ptr_t     observation_ptr_t;           \
+    /** \brief Type for (pointers to) abstract rewards. */              \
     typedef AbstractReward::ptr_t          reward_ptr_t;                \
+    /** \brief Type for abstract instances, i.e., (sequences of)        \
+     * (action,observation,reward)-triplets. */                         \
     typedef AbstractInstance::ptr_t        instance_ptr_t;              \
+    /** \brief Constant version of instance_ptr_t. */                   \
     typedef AbstractInstance::const_ptr_t  const_instance_ptr_t;        \
+    /** \brief Type for (pointers to) abstract features. */             \
     typedef Feature::const_feature_ptr_t   f_ptr_t;                     \
+    /** \brief Return type of features. */                              \
     typedef Feature::feature_return_t      f_ret_t;                     \
-    typedef std::unordered_set<f_ptr_t>    feature_set_t;
+    /** \brief Set with (pointers to) unique features (objects are      \
+     * compared).  */                                                   \
+    typedef std::unordered_set<f_ptr_t>    f_ptr_set_t;                 \
+    /** \brief Set with unique (pointers to) features (adresses are     \
+     * compared).  */                                                   \
+    typedef std::set<f_ptr_t, util::deref_less<f_ptr_t> > f_set_t;
 
 #define DISAMBIGUATE_CONFIG_TYPEDEFS(class)     \
     using class::large_size_t;                  \
@@ -55,7 +72,8 @@
     using class::const_instance_ptr_t;          \
     using class::f_ptr_t;                       \
     using class::f_ret_t;                       \
-    using class::feature_set_t;
+    using class::f_ptr_set_t;                   \
+    using class::f_set_t;
 
 #endif /* CONFIG_TYPEDEFS_H_ */
 

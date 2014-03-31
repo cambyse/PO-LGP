@@ -87,7 +87,7 @@ void TEM::optimize_weights_LBFGS() {
 void TEM::grow_feature_set() {
     DEBUG_OUT(2,"Grow feature set");
     // get new features
-    feature_set_t extension_features = (*N_plus)(feature_set);
+    f_set_t extension_features = (*N_plus)(feature_set);
     // remember weights of old features
     weight_map_t old_weights = get_weight_map();
     // insert new features
@@ -113,7 +113,7 @@ void TEM::shrink_feature_set() {
     data_up_to_date = false;
 }
 
-void TEM::set_feature_set(const feature_set_t& new_set) {
+void TEM::set_feature_set(const f_set_t& new_set) {
     feature_set = new_set;
     weights.zeros(feature_set.size());
     data_up_to_date = false;

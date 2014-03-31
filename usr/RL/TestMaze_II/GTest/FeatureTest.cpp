@@ -222,24 +222,31 @@ TEST(FeatureTest, ComparisonAndOrdering) {
     /** Purpose: Some basic tests for comparison and ordering of features. A set
      * of Test features is generated randomly.
      *
-     * "True" equality is gained via string description (ListedReward and
-     * MazeObservation have to be compiled with DEBUG_LEVEL >= 2 to correctly
-     * differentiate between, e.g., (1,1) position in a 3x3 maze and a 5x5
-     * maze). Equality is checked against "true" equality.
+     * "True" equality is defined by comparing string description (ListedReward
+     * and MazeObservation have to be compiled with DEBUG_LEVEL >= 2 to
+     * correctly differentiate between, e.g., (1,1) position in a 3x3 maze and a
+     * 5x5 maze). Equality operator is checked against "true" equality (via
+     * string description).
      *
      * Inequality should be the negation of equality.
+     *
+     * For BasisFeature pointers to (semantically) identical objects should
+     * actually point to the same object.
      *
      * Ordering is checked as follows: If two features 'A' and 'B' are equal
      * neither A<B nor B<A should hold true; if A and B are not equal either A<B
      * or B<A should hold true.
      *
      * Additionally a sorted std::list of features is constructed by
-     * consecutively inserting features (description below) and sorting is
-     * checked.
+     * consecutively inserting features (details below) and sorting is checked.
      *
-     * Ordering within feature_set_t is compared against the sorted list (note
-     * that feature_set_t must not contain equal features while the sorted list
-     * generally does). */
+     * f_set_t and f_ptr_set_t is compared against the sorted list. We expect
+     * (1) f_ptr_set_t to contain a different number of features as the sorted
+     * list in a possibly different order since addresses are compared but
+     * identical BasisFeature objects are shared (same address) (2) f_set_t to
+     * contain a different number of features but in the same order (when
+     * ignoring duplicates in the list) since the actual objects are
+     * compared. */
 
     // vector holding pointers to features
     vector<f_ptr_t> feature_vector;
@@ -254,7 +261,8 @@ TEST(FeatureTest, ComparisonAndOrdering) {
             // use 'and' feature
             feature_vector.push_back(get_and_feature());
         }
-     }
+    }
+    DEBUG_OUT(1,"Created " << number_of_features << " random features");
 
 
     // check debug level for equality check
@@ -282,6 +290,7 @@ TEST(FeatureTest, ComparisonAndOrdering) {
     // check equality, inequality, and ordering via description
     {
         int counter = 0;
+        int ptr_equal_check_counter = 0;
         ProgressBar::init("Checking Pairwise Operators: ");
         for(f_ptr_t f1 : feature_vector) {
             for(f_ptr_t f2 : feature_vector) {
@@ -292,6 +301,15 @@ TEST(FeatureTest, ComparisonAndOrdering) {
                 bool description_equal = s1.str()==s2.str();
                 if(*f1==*f2) {
                     EXPECT_TRUE(description_equal) << "'" << *f1 << "' == '" << *f2 << "'";
+                    // expect equal BasisFeature objects to be created only once
+                    // and share ownership
+                    auto f1_basis = dynamic_pointer_cast<const BasisFeature>(f1);
+                    auto f2_basis = dynamic_pointer_cast<const BasisFeature>(f2);
+                    // should be both nullptr or point to the same object
+                    EXPECT_EQ(f1_basis,f2_basis)
+                        << "    (" << f1_basis << ") <--> " << *f1 << "\n"
+                        << "    (" << f2_basis << ") <--> " << *f2;
+                    ++ptr_equal_check_counter;
                 } else {
                     EXPECT_FALSE(description_equal) << "'" << *f1 << "' != '" << *f2 << "'";
                 }
@@ -312,22 +330,24 @@ TEST(FeatureTest, ComparisonAndOrdering) {
             ProgressBar::print(counter++, number_of_features);
         }
         ProgressBar::terminate();
+        DEBUG_OUT(1,"Performed " << ptr_equal_check_counter << " object-pointer equality checks");
     }
 
-    // check ordering via stupid sorting
+    // check ordering
     {
+        // do stupid sorting
         int counter = 0;
-        list<f_ptr_t> sorted_feature_list;
+        list<f_ptr_t> feature_list;
         ProgressBar::init("Checking Ordering: ");
         for(f_ptr_t f_unsorted : feature_vector) {
-            // f_unsorted is inserted into sorted_feature_list right before
+            // f_unsorted is inserted into feature_list right before
             // insert_before (first element that is not
             // smaller). some_elem_after should should never compare less to
-            // f_unsorted for the rest of sorted_feature_list.
-            auto insert_before = sorted_feature_list.begin();   // first element that is not smaller
-            auto some_elem_after = sorted_feature_list.begin(); // all other elements after that
+            // f_unsorted for the rest of feature_list.
+            auto insert_before = feature_list.begin();   // first element that is not smaller
+            auto some_elem_after = feature_list.begin(); // all other elements after that
             bool found = false;
-            while(insert_before!=sorted_feature_list.end() && some_elem_after!=sorted_feature_list.end()) {
+            while(insert_before!=feature_list.end() && some_elem_after!=feature_list.end()) {
                 if(!found && **insert_before<*f_unsorted) {
                     ++insert_before;
                 } else {
@@ -336,49 +356,39 @@ TEST(FeatureTest, ComparisonAndOrdering) {
                         some_elem_after = insert_before;
                     }
                     ++some_elem_after;
-                    if(some_elem_after!=sorted_feature_list.end()) {
+                    if(some_elem_after!=feature_list.end()) {
                         EXPECT_FALSE(**some_elem_after<*f_unsorted) << **some_elem_after << " should be larger or equal to " << *f_unsorted;
                     }
                 }
             }
-            sorted_feature_list.insert(insert_before,f_unsorted);
+            feature_list.insert(insert_before,f_unsorted);
             ProgressBar::print(counter++, number_of_features);
         }
         ProgressBar::terminate();
 
         // check sorting again by pairwise comparison
         {
-            int equality_check_counter = 0;
-            for(auto low_elem=sorted_feature_list.begin(); low_elem!=sorted_feature_list.end(); ++low_elem) {
-                for(auto high_elem=low_elem; high_elem!=sorted_feature_list.end(); ++high_elem) {
+            for(auto low_elem=feature_list.begin(); low_elem!=feature_list.end(); ++low_elem) {
+                for(auto high_elem=low_elem; high_elem!=feature_list.end(); ++high_elem) {
                     EXPECT_FALSE(**high_elem<**low_elem) << **high_elem << "<" << **low_elem;
-                    if(**high_elem==**low_elem) {
-                        // expect equal objects to be created only once and share ownership
-                        auto high_base_ptr = dynamic_pointer_cast<const BasisFeature>(*high_elem);
-                        auto low_base_ptr = dynamic_pointer_cast<const BasisFeature>(*low_elem);
-                        // should be both nullptr or point to the same object
-                        EXPECT_EQ(high_base_ptr,low_base_ptr)
-                            << "    (" << high_base_ptr << ") <--> " << **high_elem << "\n"
-                            << "    (" << low_base_ptr << ") <--> " << **low_elem;
-                        ++equality_check_counter;
-                    }
                 }
             }
-            DEBUG_OUT(1,"Performed " << equality_check_counter << " object-pointer equality checks");
         }
 
-        // compare/check against sorting in a std::set
+        // compare/check against f_ptr_set_t and f_set_t
         {
             // construct feature set
-            set<f_ptr_t,util::deref_less<f_ptr_t> > std_feature_set;
+            f_set_t f_set;
+            f_ptr_set_t f_ptr_set;
             for(f_ptr_t feature : feature_vector) {
-                std_feature_set.insert(feature);
+                f_set.insert(feature);
+                f_ptr_set.insert(feature);
             }
 
-            // iterate through set and list
-            auto list_it = sorted_feature_list.begin();
-            auto set_it = std_feature_set.begin();
-            while(list_it!=sorted_feature_list.end() && set_it!=std_feature_set.end()) {
+            // iterate through f_set_t and list
+            auto list_it = feature_list.begin();
+            auto set_it = f_set.begin();
+            while(list_it!=feature_list.end() && set_it!=f_set.end()) {
                 // compare
                 EXPECT_EQ(**list_it,**set_it);
                 DEBUG_OUT(3,"");
@@ -387,7 +397,7 @@ TEST(FeatureTest, ComparisonAndOrdering) {
                 // skip multiple occurrences in list
                 auto next_list_it = list_it;
                 ++next_list_it;
-                while(next_list_it!=sorted_feature_list.end() && **next_list_it==**list_it) {
+                while(next_list_it!=feature_list.end() && **next_list_it==**list_it) {
                     DEBUG_OUT(3,"    Skipping " << **next_list_it << " because of equality");
                     list_it = next_list_it;
                     ++next_list_it;
@@ -397,15 +407,13 @@ TEST(FeatureTest, ComparisonAndOrdering) {
                 ++set_it;
             }
 
-            // order in feature_set_t may be different but size should be
-            // identical (and different from feature_vector)
-            feature_set_t feature_set;
-            for(f_ptr_t feature : feature_vector) {
-                feature_set.insert(feature);
-            }
-            EXPECT_EQ(feature_set.size(),std_feature_set.size());
-            EXPECT_NE(feature_vector.size(),std_feature_set.size());
-            EXPECT_NE(feature_vector.size(),feature_set.size());
+            // generally feature_list will have a greater size than f_set and
+            // f_ptr_set (which also have different size) but the same as the
+            // unordered feature_vector
+            EXPECT_GT(feature_list.size(),f_set.size());
+            EXPECT_GT(feature_list.size(),f_ptr_set.size());
+            EXPECT_NE(f_set.size(),f_ptr_set.size());
+            EXPECT_EQ(feature_list.size(),feature_vector.size());
         }
 
 

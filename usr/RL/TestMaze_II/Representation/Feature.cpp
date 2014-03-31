@@ -497,8 +497,3 @@ void AndFeature::check_for_contradicting_subfeatures() {
         }
     }
 }
-
-AndFeature::feature_return_t AndFeature::return_function(const feature_return_t& ret) const {
-    return ret;
-    //return ret/(complexity+1);
-}

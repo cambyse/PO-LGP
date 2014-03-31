@@ -15,7 +15,7 @@ class Feature {
 public:
     // types
     typedef std::shared_ptr<const Feature> const_feature_ptr_t;
-    typedef double feature_return_t;
+    typedef unsigned char feature_return_t;
     USE_CONFIG_TYPEDEFS;
     typedef std::unordered_map<const_feature_ptr_t, feature_return_t> look_up_map_t;
     enum FEATURE_TYPE { ABSTRACT, CONST_FEATURE, ACTION, OBSERVATION, REWARD, AND };
@@ -43,7 +43,7 @@ protected:
     bool const_feature;
     feature_return_t const_return_value;
     // member functions
-    inline feature_return_t return_function(const feature_return_t& ret) const;
+    virtual inline feature_return_t return_function(const feature_return_t& ret) const final;
 };
 
 class BasisFeature: public Feature {
@@ -166,7 +166,6 @@ protected:
     virtual void add_feature(const_feature_ptr_t f);
     virtual void finalize_construction();
     void check_for_contradicting_subfeatures();
-    inline feature_return_t return_function(const feature_return_t& ret) const;
 };
 
 #endif /* FEATURE_H_ */

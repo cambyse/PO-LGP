@@ -479,7 +479,7 @@ lbfgsfloatval_t LinearQ::bellman_objective(
             vector<f_ret_t> f_it_atp1(n);
 
             // f(i_t+1,a): features for time t+1 for all actions a
-            vector<vector<f_ret_t> > f_itp1_a(action_space->space_size(),vector<double>(n));
+            vector<vector<f_ret_t> > f_itp1_a(action_space->space_size(),vector<f_ret_t>(n));
 
             // Q(i_t,a_t+1): Q-function for time t
             double Q_it_atp1 = 0;

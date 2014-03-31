@@ -9,11 +9,11 @@ using std::set;
 using std::dynamic_pointer_cast;
 using std::make_pair;
 
-ConjunctiveAdjacency::feature_set_t ConjunctiveAdjacency::expand_with_basis_features(
-    const feature_set_t& current_features,
-    const feature_set_t& basis_features) const {
+ConjunctiveAdjacency::f_set_t ConjunctiveAdjacency::expand_with_basis_features(
+    const f_set_t& current_features,
+    const f_set_t& basis_features) const {
     DEBUG_OUT(2,"Expanding with basis features");
-    feature_set_t extension_feature_set;
+    f_set_t extension_feature_set;
     f_ptr_t new_feature;
     for(f_ptr_t basis_f : basis_features) {
         new_feature = f_ptr_t(new AndFeature(basis_f));
@@ -40,8 +40,8 @@ ConjunctiveAdjacency::feature_set_t ConjunctiveAdjacency::expand_with_basis_feat
     return extension_feature_set;
 }
 
-ConjunctiveAdjacency::feature_set_t ConjunctiveAdjacency::operator()(
-    const feature_set_t& current_features
+ConjunctiveAdjacency::f_set_t ConjunctiveAdjacency::operator()(
+    const f_set_t& current_features
     ) const {
 
     // find delays for current action, observation, and reward features
@@ -64,7 +64,7 @@ ConjunctiveAdjacency::feature_set_t ConjunctiveAdjacency::operator()(
     }
     // construct basis features (always include zero order)
     DEBUG_OUT(2,"Constructing basis features");
-    feature_set_t basis_features;
+    f_set_t basis_features;
     f_ptr_t new_feature;
     for(action_ptr_t action : action_space) {
         new_feature = ActionFeature::create(action,0);

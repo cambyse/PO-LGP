@@ -24,7 +24,7 @@ public:
     typedef std::map<f_ptr_t,double> weight_map_t;
     //---- members ----//
 private:
-    feature_set_t feature_set;
+    f_set_t feature_set;
     std::shared_ptr<ConjunctiveAdjacency> N_plus;
     std::vector<f_mat_t> F_matrices;
     std::vector<int> outcome_indices;
@@ -49,7 +49,7 @@ public:
     virtual void optimize_weights_LBFGS();
     virtual void grow_feature_set();
     virtual void shrink_feature_set();
-    virtual void set_feature_set(const feature_set_t&);
+    virtual void set_feature_set(const f_set_t&);
     virtual void set_l1_factor(const double& l1);
     virtual void print_features() const;
     virtual void print_training_data() const;
