@@ -371,7 +371,7 @@ TEST(LearnerTest, TemporallyExtendedModel) {
     // initialize TEM using N+
     TEM = make_shared<TemporallyExtendedModel>(N_plus);
     TEM->set_spaces(maze);
-    //TEM->set_l1_factor(0.001);
+    TEM->set_l1_factor(0.001);
 
     // get all actions for random selection
     vector<action_ptr_t> action_vector;
@@ -380,7 +380,7 @@ TEST(LearnerTest, TemporallyExtendedModel) {
     }
 
     // do some random actions to collect data
-    repeat(1000) {
+    repeat(100) {
         action_ptr_t action = util::random_select(action_vector);
         observation_ptr_t observation_to;
         reward_ptr_t reward;
@@ -397,6 +397,10 @@ TEST(LearnerTest, TemporallyExtendedModel) {
         TEM->shrink_feature_set();
         TEM->print_features();
     }
+
+    TEM->set_l1_factor(0);
+    TEM->optimize_weights_LBFGS();
+    TEM->print_features();
 
     // // construct feature set
     // feature_set_t f_set;

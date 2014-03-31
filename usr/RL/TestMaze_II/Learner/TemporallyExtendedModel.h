@@ -22,6 +22,7 @@ public:
     typedef arma::SpMat<double> f_mat_t; // using double for compatibility to vec_t
     typedef arma::Col<double> vec_t;
     typedef std::map<f_ptr_t,double> weight_map_t;
+    typedef Feature::look_up_map_t basis_feature_map_t;
     //---- members ----//
 private:
     /** \brief The set of features used by the model. */
@@ -31,11 +32,15 @@ private:
     std::shared_ptr<ConjunctiveAdjacency> N_plus;
 
     /** \brief Contains for every data point a matrix with all feature values
-     * for all possible outcomes. */
+     * for all possible outcomes.
+     *
+     * To be updated on changes of the data or the feature set. */
     std::vector<f_mat_t> F_matrices;
 
     /** \brief Contains for every data point the index of the column in of the
-     * F-matrix that was actually observed. */
+     * F-matrix that was actually observed.
+     *
+     * To be updated on changes of the data. */
     std::vector<int> outcome_indices;
 
     /** \brief Weight for the features. */
@@ -45,15 +50,25 @@ private:
     bool data_changed = true;
 
     /** \brief Whether the features changed. */
-    bool features_changed = true;
+    bool feature_set_changed = true;
+
+    /** \brief Whether the features changed. */
+    bool basis_features_changed = true;
 
     /** \brief The coefficient for L1-regularization. */
     double l1_factor = 0;
 
+    /** \brief Set of basis features.
+     *
+     * To be updated on changes of the feature set. */
+    f_ptr_set_t basis_features;
+
     /** \brief Contains for all data points and all possible outcomes a map with
      * values of all basis features (to compute the F-matrices more
-     * efficiently). */
-    std::vector<std::vector<f_ptr_set_t> > basis_feature_map;
+     * efficiently).
+     *
+     * To be updated on changes of the basis feature set or the data. */
+    std::vector<std::vector<basis_feature_map_t> > basis_feature_map;
 
     //---- methods ----//
 public:
