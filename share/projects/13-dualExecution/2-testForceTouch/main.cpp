@@ -52,7 +52,7 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
   world.getJointState(q, qdot);
 
   FeedbackMotionControl MC(world);
-  MC.nullSpacePD.active=false;
+  MC.qitselfPD.active=false;
 
   PDtask *pd_y=
       MC.addPDTask("position", .1, .8,

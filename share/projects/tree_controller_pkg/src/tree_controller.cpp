@@ -47,7 +47,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   tau_control = 0.001;
 
   /// Initialize PD Controller
-  MP->nullSpacePD.active=false;
+  MP->qitselfPD.active=false;
   taskPos = MP->addPDTask("pos", tau_plan*5, 1, posTMT, "endeffR");
   taskVec = MP->addPDTask("vec", tau_plan*5, 1, vecTMT, "endeffR",ARR(0.,0.,1.));
   taskHome = MP->addPDTask("home", .02, 0.5, qItselfTMT);

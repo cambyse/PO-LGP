@@ -220,8 +220,8 @@ void executeTrajectory(String scene){
   AdaptiveMotionExecution* amexL;
   AdaptiveMotionExecution* amexR;
 
-  //  MP.nullSpacePD.prec=0.;
-  MP.nullSpacePD.active=false;
+  //  MP.qitselfPD.prec=0.;
+  MP.qitselfPD.active=false;
   taskPosR = MP.addPDTask("posR", tau_plan*5, 1, posTMT, "endeffR");
   taskVecR = MP.addPDTask("vecR", tau_plan*5, 1, vecTMT, "endeffR",ARR(0.,0.,1.));
   taskPosL = MP.addPDTask("posL", tau_plan*5, 1, posTMT, "endeffL");

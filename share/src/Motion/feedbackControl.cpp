@@ -66,7 +66,7 @@ void ConstraintForceTask::updateConstraintControl(const arr& _g, const double& l
 FeedbackMotionControl::FeedbackMotionControl(ors::KinematicWorld& _world, bool useSwift)
   : MotionProblem(_world, useSwift), qitselfPD(NULL) {
   loadTransitionParameters();
-  qitselfPD.name="nullSpacePD";
+  qitselfPD.name="qitselfPD";
   qitselfPD.setGains(0.,10.);
 //  qitselfPD.setGainsAsNatural(1.,1.);
   qitselfPD.prec=1.;
@@ -160,9 +160,9 @@ arr FeedbackMotionControl::operationalSpaceControl(){
   }
   arr q_ddot = inverse_SymPosDef(A) * a;
 
-//  if(nullSpacePD.active && nullSpacePD.prec){
+//  if(qitselfPD.active && qitselfPD.prec){
 //    arr Null = eye(a.N) - Ainv * A;
-//    q_ddot += Null * nullSpacePD.getDesiredAcceleration(world.q, world.qdot);
+//    q_ddot += Null * qitselfPD.getDesiredAcceleration(world.q, world.qdot);
 //  }
 
   return q_ddot;

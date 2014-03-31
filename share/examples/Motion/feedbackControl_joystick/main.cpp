@@ -27,8 +27,8 @@ void testSimulator(){
   world.getJointState(q, qdot);
 
   FeedbackMotionControl MP(world, false);
-  MP.nullSpacePD.y_ref = q;
-  MP.nullSpacePD.active=false;
+  MP.qitselfPD.y_ref = q;
+  MP.qitselfPD.active=false;
   MP.H_rate_diag = pr2_reasonable_W(world);
   Gamepad2Tasks j2t(MP);
 
