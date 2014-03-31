@@ -27,6 +27,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   pr2_tree.getPositions(jnt_pos_);
 
   //-- match ROS and ORS joint ids
+  ROS_INFO("*** trying to load ORS model... (failure means that model.kvg was not found)");
   world <<FILE("model.kvg");
   ROS_INFO("*** ORS model loaded");
   ftL_shape = world.getShapeByName("endeffForceL");
