@@ -1,8 +1,7 @@
 #include "MinimalObservation.h"
 
 #include "../../util/Macro.h"
-
-#include "../../debug.h"
+#include "../../util/debug.h"
 
 MinimalObservation::MinimalObservation(OBSERVATION o) {
     observation = o;

@@ -3,7 +3,7 @@
 #include <vector>
 #include <memory> // for shared_ptr
 
-#include "../util.h"
+#include "../util/util.h"
 #include "../util/QtUtil.h"
 #include "../util/ColorOutput.h"
 
@@ -13,7 +13,7 @@
 #include "../CheeseMaze/CheeseMaze.h"
 
 #define DEBUG_LEVEL 1
-#include "../debug.h"
+#include "../util/debug.h"
 
 using std::vector;
 using std::shared_ptr;

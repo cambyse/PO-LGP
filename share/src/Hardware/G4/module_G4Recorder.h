@@ -13,5 +13,5 @@ struct G4Recorder: Module {
   virtual void step();
 
   MT::String varName;
-  ofstream file;
+  ofstream datafile, tstampfile;
 };

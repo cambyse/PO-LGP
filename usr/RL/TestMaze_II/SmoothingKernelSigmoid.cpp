@@ -3,10 +3,10 @@
 #include <float.h> // for DBL_MAX
 
 #include "qcustomplot.h"
-#include "util.h"
+#include "util/util.h"
 
 #define DEBUG_LEVEL 1
-#include "debug.h"
+#include "util/debug.h"
 
 #include <algorithm>
 

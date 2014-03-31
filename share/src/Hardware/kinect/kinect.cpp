@@ -1,5 +1,6 @@
 #include "kinect.h"
 #include <libfreenect.hpp>
+#include <libfreenect/libfreenect_sync.h>
 #include <Core/util.h>
 
 void lib_hardware_kinect(){ MT_MSG("loading"); }
@@ -10,6 +11,75 @@ REGISTER_MODULE(Kinect2PointCloud)
 const unsigned int image_width = 640; //kinect resolution
 const unsigned int image_height = 480; //kinect resolution
 const unsigned int depth_size = image_width*image_height;
+
+namespace MLR {
+	Freenect::Freenect receiver_freenect;
+
+	class sKinectCallbackReceiver : public Freenect::FreenectDevice {
+	private:
+		kinect_depth_cb depth_cb;
+		kinect_video_cb video_cb;
+		bool streaming;
+	public:
+		sKinectCallbackReceiver(freenect_context *ctx, int index) :
+			Freenect::FreenectDevice(ctx, index), depth_cb(nullptr), video_cb(nullptr), streaming(false) {
+		}
+		~sKinectCallbackReceiver() {
+			stopStreaming();
+		}
+		void add_callbacks(kinect_depth_cb depth_cb, kinect_video_cb video_cb) {
+			this->depth_cb = depth_cb;
+			this->video_cb = video_cb;
+		}
+		void startStreaming() {
+			if(!streaming) {
+				startVideo();
+				startDepth();
+				setDepthFormat(FREENECT_DEPTH_REGISTERED);
+				streaming = true;
+			}
+		}
+		void stopStreaming() {
+			if(streaming) {
+				stopVideo();
+				stopDepth();
+				streaming = false;
+			}
+		}
+
+		void DepthCallback(void *depth, uint32_t ) {
+			MT::Array<uint16_t> depth_buf((uint16_t*)depth, depth_size);
+			depth_buf.reshape(image_height, image_width);
+			double timestamp = MT::clockTime();// - .12;
+			if(depth_cb != nullptr)
+				depth_cb(depth_buf, timestamp);
+		}
+		void VideoCallback(void *rgb, uint32_t ) {
+			byteA video_buf((byte*)rgb, depth_size*3);
+			video_buf.reshape(image_height, image_width, 3);
+			double timestamp = MT::clockTime(); // - .12;
+			if(video_cb != nullptr)
+				video_cb(video_buf, timestamp);
+		}
+	};
+
+
+	KinectCallbackReceiver::KinectCallbackReceiver(kinect_depth_cb depth_cb, kinect_video_cb video_cb,
+			int cameraNum) : s(&(receiver_freenect.createDevice<sKinectCallbackReceiver>(cameraNum))),
+					cameraNum(cameraNum) {
+		s->add_callbacks(depth_cb, video_cb);
+	}
+	KinectCallbackReceiver::~KinectCallbackReceiver() {
+		receiver_freenect.deleteDevice(cameraNum);
+		s = NULL;
+	};
+	void KinectCallbackReceiver::startStreaming() {
+		s->startStreaming();
+	}
+	void KinectCallbackReceiver::stopStreaming() {
+		s->stopStreaming();
+	}
+}
 
 //===========================================================================
 //
@@ -23,23 +93,15 @@ struct sKinectInterface : Freenect::FreenectDevice {
   }
 
   void DepthCallback(void *depth, uint32_t timestamp) {
+    memmove(module->kinect_depth.set()->p, depth, 2*image_width*image_height);
     // use receive time, and subtract processing and communication delay of 120ms (experimentally determined)
-    double tstamp = MT::clockTime() - .12;
-
-    module->kinect_depth.writeAccess();
-    memmove(module->kinect_depth().p, depth, 2*image_width*image_height);
-    module->kinect_depth.tstamp() = tstamp;
-    module->kinect_depth.deAccess();
+    module->kinect_depth.tstamp() = MT::clockTime() - .12;
   }
 
   void VideoCallback(void *rgb, uint32_t timestamp) {
+    memmove(module->kinect_rgb.set()->p, rgb, 3*image_width*image_height);
     // see above
-    double tstamp = MT::clockTime() - .12;
-
-    module->kinect_rgb.writeAccess();
-    memmove(module->kinect_rgb().p, rgb, 3*image_width*image_height);
-    module->kinect_rgb.tstamp() = tstamp;
-    module->kinect_rgb.deAccess();
+    module->kinect_rgb.tstamp() = MT::clockTime() - .12;
   }
 };
 
@@ -68,14 +130,6 @@ void KinectPoller::open() {
   s = &(freenect->createDevice<sKinectInterface>(0));
   s->module = this;
 
-  // The following is only available for newer versions of libfreenect
-  // (newer versions actually also have a much improved interface)
-  //int ret;
-  //ret = freenect_set_flag(s->getDevice(), FREENECT_AUTO_EXPOSURE, FREENECT_OFF);
-  //if(ret != 0)
-    //cout << "freenect_set_flag failed!" << endl;
-  //else
-    //cout << "freenect_set_flag worked!" << endl;
   s->startVideo();
   s->startDepth();
   s->setDepthFormat(FREENECT_DEPTH_REGISTERED);  // use hardware registration

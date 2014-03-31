@@ -5,10 +5,10 @@
 
 #include "Config.h"
 
-#include "KMarkovCRF.h"
-#include "UTree.h"
-#include "LinearQ.h"
-#include "LookAheadSearch.h"
+#include "Learner/KMarkovCRF.h"
+#include "Learner/UTree.h"
+#include "Learner/LinearQ.h"
+#include "Planning/Policy.h"
 #include "DelayDistribution.h"
 
 #include "qcustomplot.h"
@@ -51,12 +51,14 @@ private:
     // for setting the different planners
     enum PLANNER_TYPE {
         NONE,
-        OPTIMAL_PLANNER,
-        SPARSE_PLANNER,
-        KMDP_PLANNER,
-        UTREE_PLANNER,
+        RANDOM,
+        OPTIMAL_LOOK_AHEAD,
+        SPARSE_LOOK_AHEAD,
+        KMDP_LOOK_AHEAD,
+        UTREE_LOOK_AHEAD,
         UTREE_VALUE,
-        LINEAR_Q_VALUE
+        LINEAR_Q_VALUE,
+        GOAL_ITERATION
     } planner_type;
 
     // the user interface
@@ -72,7 +74,7 @@ private:
     instance_t * current_instance;
 
     // state flags
-    bool record, plot, start_new_episode, search_tree_invalid, save_png_on_transition;
+    bool record, plot, start_new_episode, search_tree_invalid, save_png_on_transition, color_maze;
 
     // file for writing out transitions
     std::ofstream plot_file;
@@ -81,7 +83,7 @@ private:
     unsigned int png_counter;
 
     // time for repeated execution of actions
-    QTimer * random_timer, * action_timer;
+    QTimer * action_timer;
 
     // stuff for a persistent console history
     std::vector<QString> console_history;
@@ -91,7 +93,7 @@ private:
     // discout that is used
     double discount;
 
-    // epsion (randomness) that is used
+    // epsilon (randomness) that is used
     double epsilon;
 
     //--------//
@@ -113,7 +115,7 @@ private:
     //----------//
     // Planners //
     //----------//
-    std::shared_ptr<LookAheadSearch> look_ahead_search;
+    std::shared_ptr<Policy> policy;
     size_t max_tree_size;
     bool prune_search_tree;
 
@@ -121,13 +123,14 @@ private:
     // Other //
     //-------//
     DelayDistribution delay_dist;
-    bool target_activated;
-    observation_ptr_t target_state;
+    bool goal_activated;
+    observation_ptr_t goal_state;
 
     //==================//
     // Member Functions //
     //==================//
 
+    void to_console(QString x) { ui._wConsoleOutput->appendPlainText(x); }
     void collect_episode(const int& length);
     void update_current_instance(action_ptr_t, observation_ptr_t, reward_ptr_t, bool invalidate_search_tree = true);
     void add_action_observation_reward_tripel(
@@ -142,10 +145,10 @@ private:
     void perform_transition(const action_ptr_t& action, observation_ptr_t& observation_to, reward_ptr_t& reward);
     void change_environment(std::shared_ptr<Environment> new_environment);
     void clear_all_learners();
+    void set_policy();
 
 private slots:
     void render_update();
-    void random_action();
     void choose_action();
     void process_console_input(QString sequence_input = QString(), bool sequence = false);
     void back_in_history();
