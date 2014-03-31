@@ -40,7 +40,7 @@ void testSimulator(){
     arr joy = S.joystickState.get();
     MP.setState(S.q_obs.get(), S.qdot_obs.get());
     MP.world.gl().update("operational space sim");
-    bool shutdown = j2t.updateTasks(joy,0.01);
+    bool shutdown = j2t.updateTasks(joy);
     if(shutdown) engine().shutdown.incrementValue();
 
     for(uint tt=0;tt<10;tt++){

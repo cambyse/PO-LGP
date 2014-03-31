@@ -442,7 +442,7 @@ void executeTrajectoryRightArm(String scene){
   AdaptiveMotionExecution* amexR;
 
   //  MP.nullSpacePD.prec=0.;
-  MP.nullSpacePD.active=false;
+  MP.qitselfPD.active=false;
   taskPosR = MP.addPDTask("posR", tau_plan*5, 1, posTMT, "endeffR");
   taskVecR = MP.addPDTask("vecR", tau_plan*5, 1, vecTMT, "endeffR",ARR(0.,0.,1.));
   qitself = MP.addPDTask("qitself", .1, 1., qLinearTMT, NULL, NoVector, NULL, NoVector, 0.01*MP.H_rate_diag);
