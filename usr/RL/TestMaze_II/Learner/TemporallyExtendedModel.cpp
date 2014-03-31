@@ -36,7 +36,7 @@ void TEM::add_action_observation_reward_tripel(
     const bool& new_episode
     ) {
     HistoryObserver::add_action_observation_reward_tripel(action,observation,reward,new_episode);
-    data_up_to_date = false;
+    data_changed = true;
 }
 
 // void TEM::optimize_weights_SGD() {
@@ -96,7 +96,7 @@ void TEM::grow_feature_set() {
     apply_weight_map(old_weights);
     DEBUG_OUT(2,"DONE (" << old_weights.size() << " --> " << feature_set.size() << " features)");
     // need to update data
-    data_up_to_date = false;
+    features_changed = true;
 }
 
 void TEM::shrink_feature_set() {
@@ -110,13 +110,13 @@ void TEM::shrink_feature_set() {
     apply_weight_map(old_weights);
     DEBUG_OUT(2,"DONE (" << old_weights.size() << " --> " << feature_set.size() << " features)");
     // need to update data
-    data_up_to_date = false;
+    features_changed = true;
 }
 
 void TEM::set_feature_set(const f_set_t& new_set) {
     feature_set = new_set;
     weights.zeros(feature_set.size());
-    data_up_to_date = false;
+    features_changed = true;
 }
 
 void TEM::set_l1_factor(const double& l1) {
@@ -202,34 +202,53 @@ void TEM::apply_weight_map(weight_map_t weight_map) {
     }
 }
 
-void TEM::update_data() {
-    DEBUG_OUT(3,"Check if data up to date");
+void TEM::update() {
+
+    DEBUG_OUT(3,"Check if everything is up to date");
+
     // check size of weight vector
-    if(weights.size()!=feature_set.size()) {
+    if(DEBUG_LEVEL>0 && weights.size()!=feature_set.size()) {
         DEBUG_DEAD_LINE;
         weight_map_t old_weights = get_weight_map();
         weights.set_size(feature_set.size());
         apply_weight_map(old_weights);
     }
     // check matching number of data points
-    if(data_up_to_date &&
+    if(DEBUG_LEVEL>0 && !data_changed &&
        (F_matrices.size()!=number_of_data_points ||
-        outcome_indices.size()!=number_of_data_points)
-        ) {
+        outcome_indices.size()!=number_of_data_points )) {
         DEBUG_DEAD_LINE;
-        data_up_to_date = false;
+        data_changed = true;
     }
-    // update F-matrices and outcome indices
+    // check dimensions of F-matrices (check one for all)
+    if(DEBUG_LEVEL>0 && !features_changed && number_of_data_points>0 &&
+       F_matrices.back().n_rows!=feature_set.size()) {
+        DEBUG_DEAD_LINE;
+        features_changed = true;
+    }
+
+    // get dimensions
+    int data_n = number_of_data_points;
+    int feature_n = feature_set.size();
+    int outcome_n = observation_space->space_size()*reward_space->space_size();
+    DEBUG_OUT(2,"    nr data points: " << number_of_data_points);
+    DEBUG_OUT(2,"       nr features: " << feature_n);
+    DEBUG_OUT(2,"       nr outcomes: " << outcome_n);
+
+    // DATA CHANGED (recompute basis feature values)
+    if(data_changed) {
+        
+        data_changed = false;
+        features_changed = true; // now F-matrices have to be recomputed too
+    }
+
+    // FEATURES CHANGED (recompute F-matrices)
+    if(features_changed) {
+
+    }
+
     if(!data_up_to_date) {
         DEBUG_OUT(2,"Update data");
-
-        // get dimensions
-        int data_n = number_of_data_points;
-        int feature_n = feature_set.size();
-        int outcome_n = observation_space->space_size()*reward_space->space_size();
-        DEBUG_OUT(2,"    nr data points: " << number_of_data_points);
-        DEBUG_OUT(2,"       nr features: " << feature_n);
-        DEBUG_OUT(2,"       nr outcomes: " << outcome_n);
 
         // set vector size
         F_matrices.resize(data_n);
@@ -315,10 +334,12 @@ double TEM::neg_log_likelihood(vec_t& grad, const vec_t& w) {
      * -- SpMat type does not mix well with other types, e.g., F*exp_lin.t()
      * below produces a 1x1 matrix if F is sparse but not if F_dense is used. */
 
+#warning todo: write a minimal example for this behavior
+
     DEBUG_OUT(3,"Compute neg-log-likelihood");
 
     // make sure data are up to date
-    update_data();
+    update();
 
     // initialize objective and gradient
     double obj = 0;

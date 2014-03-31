@@ -24,13 +24,37 @@ public:
     typedef std::map<f_ptr_t,double> weight_map_t;
     //---- members ----//
 private:
+    /** \brief The set of features used by the model. */
     f_set_t feature_set;
+
+    /** \brief Adjacency operator used to grow the feature set. */
     std::shared_ptr<ConjunctiveAdjacency> N_plus;
+
+    /** \brief Contains for every data point a matrix with all feature values
+     * for all possible outcomes. */
     std::vector<f_mat_t> F_matrices;
+
+    /** \brief Contains for every data point the index of the column in of the
+     * F-matrix that was actually observed. */
     std::vector<int> outcome_indices;
+
+    /** \brief Weight for the features. */
     vec_t weights;
-    bool data_up_to_date = false;
+
+    /** \brief Whether the training data changed. */
+    bool data_changed = true;
+
+    /** \brief Whether the features changed. */
+    bool features_changed = true;
+
+    /** \brief The coefficient for L1-regularization. */
     double l1_factor = 0;
+
+    /** \brief Contains for all data points and all possible outcomes a map with
+     * values of all basis features (to compute the F-matrices more
+     * efficiently). */
+    std::vector<std::vector<f_ptr_set_t> > basis_feature_map;
+
     //---- methods ----//
 public:
     TemporallyExtendedModel(std::shared_ptr<ConjunctiveAdjacency>);
@@ -65,7 +89,7 @@ public:
 protected:
     virtual weight_map_t get_weight_map() const;
     virtual void apply_weight_map(weight_map_t);
-    virtual void update_data();
+    virtual void update();
     virtual double neg_log_likelihood(vec_t& grad, const vec_t& weights);
     lbfgsfloatval_t LBFGS_objective(const lbfgsfloatval_t*, lbfgsfloatval_t*);
     int LBFGS_progress(const lbfgsfloatval_t *x,
