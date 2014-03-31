@@ -1,12 +1,12 @@
 #include "gamepad2tasks.h"
 
 Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL), endeffL(NULL){
-  endeffR = MP.addPDTask("endeffR", .02, .8, posTMT, "endeffR");
-  endeffL = MP.addPDTask("endeffL", .02, .8, posTMT, "endeffL");
-  base = MP.addPDTask("endeffBase", .02, .8, posTMT, "endeffBase");
-  baseQuat = MP.addPDTask("endeffBase", .02, .8, quatTMT, "endeffBase");
-  head = MP.addPDTask("endeffHead", .02, .8, vecTMT, "endeffHead");
-  limits = MP.addPDTask("limits", .02, .8, qLimitsTMT);
+  endeffR = MP.addPDTask("endeffR", .2, .8, posTMT, "endeffR");
+  endeffL = MP.addPDTask("endeffL", .2, .8, posTMT, "endeffL");
+  base = MP.addPDTask("endeffBase", .2, .8, posTMT, "endeffBase");
+  baseQuat = MP.addPDTask("endeffBase", .2, .8, quatTMT, "endeffBase");
+  head = MP.addPDTask("endeffHead", .2, .8, vecTMT, "endeffHead");
+  limits = MP.addPDTask("limits", .2, .8, qLimitsTMT);
   //limits->setGains(100.,0.);
   qitself = MP.addPDTask("qitself", .1, 1., qLinearTMT, NULL, NoVector, NULL, NoVector, MP.H_rate_diag);
   qitself->y_ref = MP.qitselfPD.y_ref;
@@ -115,7 +115,7 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
     }
     case 1: { //(1) homing
       cout <<"HOMING" <<endl;
-      qitself->setGainsAsNatural(1.,1.);
+      qitself->setGainsAsNatural(2.,1.);
       break;
     }
 //    case 2: { //(2) CRAZY tactile guiding

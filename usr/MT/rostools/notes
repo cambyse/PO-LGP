@@ -2,6 +2,10 @@ symbolic links to config files in ~/.ros
 
 echo $ROS_PACKAGE_PATH
 
+robot claim
+robot start
+rosrun pr2_dashboard pr2_dashboard 
+
 roslaunch startPR2sim.launch
 
 rosrun pr2_controller_manager pr2_controller_manager list
