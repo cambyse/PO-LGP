@@ -12,6 +12,20 @@ using std::dynamic_pointer_cast;
 
 using util::INVALID;
 
+// for binary features the "map" may be a set containing the active ('true')
+// features only
+#define LOOK_UP_MAP_IS_SET
+
+#ifdef LOOK_UP_MAP_IS_SET
+void Feature::look_up_map_t::insert_feature(f_ptr_t f, f_ret_t) {
+    this->insert(f);
+}
+#else
+void Feature::look_up_map_t::insert_feature(f_ptr_t f, f_ret_t r) {
+    (*this)[f] = r;
+}
+#endif
+
 Feature::Feature():
     feature_type(ABSTRACT),
     complexity(0),
@@ -385,14 +399,20 @@ Feature::feature_return_t AndFeature::evaluate(const_instance_ptr_t ins) const {
 
 AndFeature::feature_return_t AndFeature::evaluate(const look_up_map_t& look_up_map) const {
     Feature::feature_return_t prod = 1;
-    for(auto feature_iterator : subfeatures) {
-        auto it = look_up_map.find(feature_iterator);
-        DEBUG_IF(it==look_up_map.end()) {
+    for(auto sub_f : subfeatures) {
+        auto it = look_up_map.find(sub_f);
+        if(it!=look_up_map.end() ) {
+#ifndef LOOK_UP_MAP_IS_SET
+            prod *= it->second;
+            if(prod==0) {
+                break;
+            }
+#endif
+        } else {
+#ifndef LOOK_UP_MAP_IS_SET
             DEBUG_ERROR("Subfeature not in look-up map");
-            return return_function(0);
-        }
-        prod *= it->second;
-        if(prod==0) {
+#endif
+            prod = 0;
             break;
         }
     }
@@ -402,14 +422,14 @@ AndFeature::feature_return_t AndFeature::evaluate(const look_up_map_t& look_up_m
 string AndFeature::identifier() const {
     string id_string("^(");
     bool first = true;
-    for(auto feature_iterator=subfeatures.begin();
-            feature_iterator!=subfeatures.end();
-            ++feature_iterator) {
+    for(auto sub_f=subfeatures.begin();
+            sub_f!=subfeatures.end();
+            ++sub_f) {
         if(!first) {
             id_string += " + ";
         }
         first = false;
-        id_string += (*feature_iterator)->identifier();
+        id_string += (*sub_f)->identifier();
     }
     return id_string+")"+Feature::identifier();
 };

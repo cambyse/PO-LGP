@@ -1698,7 +1698,10 @@ void KMarkovCRF::precompute_base_feature_values() {
 
                     // iterate through features
                     for(uint f_idx=0; f_idx<basis_feature_n; ++f_idx) {
-                        base_feature_values[instance_idx][observation_reward_idx][basis_features[f_idx]] = basis_features[f_idx]->evaluate(insIt->const_prev(),current_action,observation,reward);
+                        base_feature_values[instance_idx][observation_reward_idx].insert_feature(
+                            basis_features[f_idx],
+                            basis_features[f_idx]->evaluate(insIt->const_prev(),current_action,observation,reward)
+                            );
                     }
                     ++observation_reward_idx;
                 }

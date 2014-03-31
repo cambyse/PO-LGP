@@ -40,6 +40,4 @@
         DEBUG_ERROR("This line should never be reached");       \
     }
 
-#define DEBUG_IF(check) if(DEBUG_LEVEL>0 && (check))
-
 #endif /* DEBUG_H_ */

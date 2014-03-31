@@ -13,13 +13,16 @@
 
 class Feature {
 public:
-    // types
+    //----types/classes----/
     typedef std::shared_ptr<const Feature> const_feature_ptr_t;
     typedef unsigned char feature_return_t;
     USE_CONFIG_TYPEDEFS;
-    typedef std::unordered_map<const_feature_ptr_t, feature_return_t> look_up_map_t;
     enum FEATURE_TYPE { ABSTRACT, CONST_FEATURE, ACTION, OBSERVATION, REWARD, AND };
-    // functions
+    class look_up_map_t: public f_ptr_set_t {
+    public:
+        virtual void insert_feature(f_ptr_t,f_ret_t);
+    };
+    //----methods----//
     Feature();
     virtual ~Feature();
     virtual feature_return_t evaluate(const_instance_ptr_t) const;
@@ -148,7 +151,6 @@ protected:
 
 class AndFeature: public Feature {
 public:
-    typedef std::set<const_feature_ptr_t> subfeature_container_t;
     using Feature::evaluate; // so the compiler finds them
     AndFeature();
     AndFeature(const_feature_ptr_t f);
@@ -160,9 +162,9 @@ public:
     virtual bool operator==(const Feature& other) const override;
     virtual bool operator<(const Feature& other) const override;
     virtual bool operator<(const AndFeature& other) const;
-    virtual const subfeature_container_t& get_subfeatures() const { return subfeatures; }
+    virtual const f_ptr_set_t& get_subfeatures() const { return subfeatures; }
 protected:
-    subfeature_container_t subfeatures;
+    f_ptr_set_t subfeatures;
     virtual void add_feature(const_feature_ptr_t f);
     virtual void finalize_construction();
     void check_for_contradicting_subfeatures();
