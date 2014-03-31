@@ -1,17 +1,18 @@
 clear
 % copy log files from .ros/ to local folder
 NEW = 1
-SIM = 1
-[~, b] = unix('ls logs'); id = max(str2num(b))+NEW;
+SIM = 0
+[a, b] = unix('ls logs'); id = max(max(str2num(b)))+NEW;
 % id = 34
+
 folder = ['logs/',num2str(id)];
 if NEW
   unix(['mkdir -p ', folder]);
   if SIM
     unix(['cp ~/.ros/*.output ', folder]);
   else
-    unix(['sshpass -p scp pr2admin@bigbirdc1:.ros/*.output ', folder]);
-    %unix(['scp pr2admin@bigbirdc1:.ros/*.output ', folder]);
+    %unix(['sshpass -p scp pr2admin@bigbirdc1:.ros/*.output ', folder]);
+    unix(['scp pr2admin@bigbirdc1:.ros/*.output ', folder]);
   end
 end
 
@@ -67,10 +68,11 @@ for i=1:nq
 %  plot(t,measured_effort_bk(1:ni,i),'c');
   plot(t,i_effort_bk(1:ni,i),'m');
   plot(t,a_effort_bk(1:ni,i),'g');
+  plot(t,p_effort_bk(1:ni,i),'r');
   plot(t,u_bk(1:ni,i));
 
 end
-legend('integral u','acc u','total u');
+legend('integral u','acc u','pos u','total u');
 
 figure(4);clf;hold on;
 for i=1:ny
