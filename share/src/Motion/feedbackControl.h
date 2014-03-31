@@ -37,7 +37,7 @@ struct PDtask{
 
   void setTarget(const arr& yref, const arr& vref=NoArr);
   void setGains(double Pgain, double Dgain);
-  void setGainsAsNatural(double decayTime, double dampingRatio);
+  void setGainsAsNatural(double decayTime, double dampingRatio); ///< the decayTime is the to decay to 10% of the initial offset/error
 
   arr getDesiredAcceleration(const arr& y, const arr& ydot);
 };
