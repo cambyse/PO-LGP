@@ -22,6 +22,8 @@
 #include <tree_controller_pkg/StopLogging.h>
 #include <tree_controller_pkg/JointState.h>
 #include <tree_controller_pkg/SetNaturalGains.h>
+#include <tree_controller_pkg/SetControlParam.h>
+#include <tree_controller_pkg/GetControlParam.h>
 
 namespace tree_controller_ns{
 
@@ -47,12 +49,12 @@ private:
   PDtask *taskPos, *taskVec, *taskHome, *taskLimits;
   arr u;
   double tau_control, tau_plan;
-  arr Kd,Kp,Ki,Ka;
+  arr Kp,Ki,Kd;
   arr i_claim, integral;
   arr q, qd, qdd;
   arr des_q, des_qd;
   arr controlIdx;
-  arr p_effort,d_effort,i_effort, a_effort;
+  arr p_effort,i_effort, d_effort;
   arr y,yd,yVec,ydVec;
   arr state,stateVec;
   arr measured_effort;
@@ -72,6 +74,7 @@ private:
   arr qd_filt;
   arr gram, q_hist, beta;
   uint filter_range;
+  double delta;
 
   // Service for communication
   ros::ServiceServer setPosTargetSrv_;    ros::ServiceServer getPosTargetSrv_;
@@ -83,6 +86,7 @@ private:
   ros::ServiceServer getJointStateSrv_;
   ros::ServiceServer getTaskStateSrv_;
   ros::ServiceServer setNaturalGainsSrv_;
+  ros::ServiceServer setControlParamSrv_;    ros::ServiceServer getControlParamSrv_;
 
   // Bookkeeping variables
   arr q_bk;
@@ -94,9 +98,8 @@ private:
   arr des_qdd_bk;
   arr u_bk;
   arr p_effort_bk;
-  arr d_effort_bk;
   arr i_effort_bk;
-  arr a_effort_bk;
+  arr d_effort_bk;
   arr dt_bk;
   arr taskPos_y_bk;
   arr taskPos_yRef_bk;
@@ -126,5 +129,7 @@ public:
   bool startLogging(tree_controller_pkg::StartLogging::Request &req, tree_controller_pkg::StartLogging::Response &resp);
   bool stopLogging(tree_controller_pkg::StopLogging::Request &req, tree_controller_pkg::StopLogging::Response &resp);
   bool setNaturalGains(tree_controller_pkg::SetNaturalGains::Request &req, tree_controller_pkg::SetNaturalGains::Response &resp);
+  bool setControlParam(tree_controller_pkg::SetControlParam::Request &req, tree_controller_pkg::SetControlParam::Response &resp);
+  bool getControlParam(tree_controller_pkg::GetControlParam::Request &req, tree_controller_pkg::GetControlParam::Response &resp);
 };
 }

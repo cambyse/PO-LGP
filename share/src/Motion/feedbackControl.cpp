@@ -138,7 +138,7 @@ arr FeedbackMotionControl::getDesiredConstraintForces(){
   return Jl;
 }
 
-arr FeedbackMotionControl::operationalSpaceControl(double regularization){
+arr FeedbackMotionControl::operationalSpaceControl(){
   arr phi, J, q_ddot;
   q_ddot.resizeAs(world.q).setZero();
   getTaskCosts(phi, J, q_ddot);
@@ -152,9 +152,6 @@ arr FeedbackMotionControl::operationalSpaceControl(double regularization){
     a -= comp_At_x(J, phi);
   }
   if(nullSpacePD.active) a += H * nullSpacePD.prec * nullSpacePD.getDesiredAcceleration(world.q, world.qdot);
-  arr E;
-  E.setDiag(regularization,A.d0);
-  A+=E;
   q_ddot = inverse_SymPosDef(A) * a;
   return q_ddot;
 }
