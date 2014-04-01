@@ -56,9 +56,8 @@ void UnconstrainedProblem::augmentedLagrangian_LambdaUpdate(const arr& x, double
 
   if(!lambda.N){ lambda.resize(g.N); lambda.setZero(); }
 
-  for(uint i=0;i<g.N;i++) if(g(i)>0. || lambda(i)>0.) lambda(i) += lambdaStepsize * mu * 2.*g(i);
-
-  for(uint i=0;i<g.N;i++) if(lambda(i)<0.) lambda(i)=0.;
+  lambda += (lambdaStepsize * 2.*mu)*g;
+  for(uint i=0;i<lambda.N;i++) if(lambda(i)<0.) lambda(i)=0.;
 
 //  cout <<"Update Lambda: g=" <<g <<" lambda=" <<lambda <<endl;
 }
@@ -81,7 +80,9 @@ void UnconstrainedProblem::aula_update(const arr& _x, double lambdaStepsize, arr
 
   arr beta = /*Ilambda_x%*/Jg_x;
 //  cout <<"beta=" <<beta <<endl;
-  beta = ~beta * inverse_SymPosDef( beta*~beta );
+  arr tmp;
+  inverse_SVD(tmp, beta*~beta );
+  beta = ~beta * tmp;
 //  cout <<"beta=" <<beta <<endl;
 
   lambda += lambdaStepsize * (2.*mu*g_x - ~dF_x*beta);

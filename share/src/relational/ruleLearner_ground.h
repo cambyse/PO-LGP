@@ -23,7 +23,7 @@ HEURISTISCHE WERTE:
 
 
 
-#include <relational/learn.h>
+#include "learn.h"
 
 // ANDERSDA ++++++++++++++
 #define SO_WEIGHT__EXPLAIN_EXPERIENCE 4.0

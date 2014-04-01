@@ -1,14 +1,15 @@
 LOG in motion.cpp
 clearly introduce constraint maps as tasks -- feasibility, automatic penalty reduction
 
+** drive the robot:
+http://wiki.ros.org/pr2_controllers/Tutorials/Using%20the%20robot%20base%20controllers%20to%20drive%20the%20robot
 
 ** checkJointDimension is really const (HALT if state was not set)
 getJointDimension is not const
 
-** lock in OpenGL
-
 ** KVG
-Mod Include special keys
+
+dot interpretation (dot as 2st key -> color shape everything just copy!)
 
 ** Proper ConstrainedTaskMap:
 virtual function g

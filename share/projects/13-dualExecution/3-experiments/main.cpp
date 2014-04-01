@@ -73,7 +73,7 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
   double sin_jitter = MT::getParameter<double>("sin_jitter", 0.);
 
   FeedbackMotionControl MC(world);
-  MC.nullSpacePD.active=false;
+  MC.qitselfPD.active=false;
 
   //position PD task
   PDtask *pd_y=

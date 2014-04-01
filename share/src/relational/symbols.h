@@ -24,7 +24,7 @@
 #define RELATIONAL_symbols_h
 
 #include <Core/util.h>
-#include <relational/utilTL.h>
+#include "utilTL.h"
 
 
 

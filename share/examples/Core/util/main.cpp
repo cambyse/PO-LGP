@@ -49,15 +49,16 @@ void TEST(Timer){
   MT::timerStart();
   for(uint i=0;i<4;i++){
     cout <<"i=" <<i <<flush;
-    for(uint j=0;j<10000000;j++){ j+=10; j-=10; } //do something stupid
+    for(uint j=0;j<100000;j++){ j+=10; j-=10; } //do something stupid
     MT::wait(.5);
     cout <<" cpu timer reads " <<MT::timerRead(false) <<"sec" <<endl;
     if(i==1){ MT::timerPause(); cout <<"timer paused" <<endl; }
     if(i==2){ MT::timerResume(); cout <<"timer resumed" <<endl; }
   }
-  double t=MT::timerRead();
-  CHECK_ZERO(MT::realTime()-2., .5, "wait failed");
-  CHECK(t>0. && t<1.,"no cpu time measured");
+  double cpuTime=MT::timerRead();
+  double realTime=MT::realTime();
+  CHECK_ZERO(realTime-2., .5, "wait failed");
+  CHECK(cpuTime>=0. && cpuTime<1.,"no cpu time measured");
 }
 
 int MAIN(int argc,char** argv){

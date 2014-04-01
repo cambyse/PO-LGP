@@ -27,8 +27,8 @@ void testSimulator(){
   world.getJointState(q, qdot);
 
   FeedbackMotionControl MP(world, false);
-  MP.nullSpacePD.y_ref = q;
-  MP.nullSpacePD.active=false;
+  MP.qitselfPD.y_ref = q;
+  MP.qitselfPD.active=false;
   MP.H_rate_diag = pr2_reasonable_W(world);
   Gamepad2Tasks j2t(MP);
 
@@ -40,7 +40,7 @@ void testSimulator(){
     arr joy = S.joystickState.get();
     MP.setState(S.q_obs.get(), S.qdot_obs.get());
     MP.world.gl().update("operational space sim");
-    bool shutdown = j2t.updateTasks(joy,0.01);
+    bool shutdown = j2t.updateTasks(joy);
     if(shutdown) engine().shutdown.incrementValue();
 
     for(uint tt=0;tt<10;tt++){
