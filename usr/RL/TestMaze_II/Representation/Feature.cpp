@@ -16,15 +16,15 @@ using util::INVALID;
 // features only
 #define LOOK_UP_MAP_IS_SET
 
-#ifdef LOOK_UP_MAP_IS_SET
-void Feature::look_up_map_t::insert_feature(f_ptr_t f, f_ret_t) {
-    this->insert(f);
-}
-#else
 void Feature::look_up_map_t::insert_feature(f_ptr_t f, f_ret_t r) {
+#ifdef LOOK_UP_MAP_IS_SET
+    if(r!=0) {
+        this->insert(f);
+    }
+#else
     (*this)[f] = r;
-}
 #endif
+}
 
 Feature::Feature():
     feature_type(ABSTRACT),
@@ -75,6 +75,7 @@ bool Feature::operator!=(const Feature& other) const {
 
 bool Feature::operator<(const Feature&) const {
     // sould never be used and will produce an error in unit tests
+    DEBUG_ERROR("Comparing to abstract type Feature");
     return false;
 }
 
@@ -95,6 +96,24 @@ BasisFeature::unique_feature_set_t BasisFeature::unique_feature_set;
 
 BasisFeature::~BasisFeature() {
     erase_from_unique();
+}
+
+Feature::feature_return_t BasisFeature::evaluate(const look_up_map_t& look_up_map) const {
+    auto it = look_up_map.find(self_ptr.lock());
+    if(it!=look_up_map.end()) {
+#ifdef LOOK_UP_MAP_IS_SET
+        return 1;
+#else
+        return it->second;
+#endif
+    } else {
+#ifdef LOOK_UP_MAP_IS_SET
+        return 0;
+#else
+        DEBUG_ERROR("Subfeature not in look-up map");
+        return 0;
+#endif
+    }
 }
 
 Feature::const_feature_ptr_t BasisFeature::create(BasisFeature * f) {
@@ -376,6 +395,13 @@ AndFeature::AndFeature(const_feature_ptr_t f1, const_feature_ptr_t f2) {
     finalize_construction();
 }
 
+AndFeature::AndFeature(const_feature_ptr_t f1, const_feature_ptr_t f2, const_feature_ptr_t f3) {
+    add_feature(f1);
+    add_feature(f2);
+    add_feature(f3);
+    finalize_construction();
+}
+
 AndFeature::~AndFeature() {}
 
 Feature::feature_return_t AndFeature::evaluate(const_instance_ptr_t ins) const {
@@ -400,19 +426,8 @@ Feature::feature_return_t AndFeature::evaluate(const_instance_ptr_t ins) const {
 AndFeature::feature_return_t AndFeature::evaluate(const look_up_map_t& look_up_map) const {
     Feature::feature_return_t prod = 1;
     for(auto sub_f : subfeatures) {
-        auto it = look_up_map.find(sub_f);
-        if(it!=look_up_map.end() ) {
-#ifndef LOOK_UP_MAP_IS_SET
-            prod *= it->second;
-            if(prod==0) {
-                break;
-            }
-#endif
-        } else {
-#ifndef LOOK_UP_MAP_IS_SET
-            DEBUG_ERROR("Subfeature not in look-up map");
-#endif
-            prod = 0;
+        prod *= sub_f->evaluate(look_up_map);
+        if(prod==0) {
             break;
         }
     }

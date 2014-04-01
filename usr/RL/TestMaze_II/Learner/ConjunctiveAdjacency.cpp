@@ -58,7 +58,10 @@ ConjunctiveAdjacency::f_set_t ConjunctiveAdjacency::operator()(
                 make_pair(&reward_delays,&new_reward_delays)}) {
         for(int old_delay : *(delays.first)) {
             for(int delay_extension = -horizon_extension; delay_extension<=horizon_extension; ++delay_extension) {
-                delays.second->insert(old_delay+delay_extension);
+                int new_delay = old_delay+delay_extension;
+                if(max_horizon>0 && new_delay<=max_horizon) {
+                    delays.second->insert(new_delay);
+                }
             }
         }
     }
@@ -99,7 +102,7 @@ ConjunctiveAdjacency::f_set_t ConjunctiveAdjacency::operator()(
     return this->expand_with_basis_features(current_features,basis_features);
 }
 
-void ConjunctiveAdjacency::horizon_extension_on(int h) {
+void ConjunctiveAdjacency::set_horizon_extension(int h) {
     if(action_space==action_ptr_t() ||
        observation_space==observation_ptr_t() ||
        reward_space==reward_ptr_t()) {
@@ -114,8 +117,12 @@ void ConjunctiveAdjacency::horizon_extension_on(int h) {
     horizon_extension = h;
 }
 
-void ConjunctiveAdjacency::horizon_extension_off() {
-    horizon_extension = 0;
+void ConjunctiveAdjacency::set_max_horizon(int h) {
+    max_horizon = h;
+}
+
+void ConjunctiveAdjacency::combine_features(bool b) {
+    extend_with_basis_features_only = !b;
 }
 
 void ConjunctiveAdjacency::add_delay(f_ptr_t f,

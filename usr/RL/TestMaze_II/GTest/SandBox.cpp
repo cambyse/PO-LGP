@@ -4,7 +4,7 @@
 
 #include <memory> // for shared_ptr
 
-#define DEBUG_LEVEL 0
+#define DEBUG_LEVEL 1
 #include "../util/debug.h"
 
 using std::shared_ptr;
@@ -19,6 +19,13 @@ void A::set_to_be_notified(A * p) const { notifier->set_to_be_notified(p); }
 void A::notify_me() {
     got_notified = true;
     DEBUG_OUT(1,"I got notified");
+}
+
+TEST(SandBox, CharStream) {
+    unsigned short s = 3;
+    unsigned short c = 3;
+    DEBUG_OUT(1,"This is a short: " << s);
+    DEBUG_OUT(1,"This is a char: " << c);
 }
 
 TEST(SandBox, SharedPtr) {

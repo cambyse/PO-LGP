@@ -6,17 +6,18 @@
 #include "../util/ProgressBar.h"
 
 #include <omp.h>
-//#define USE_OMP
+#define USE_OMP
 
 #include <iomanip>
 
-#define DEBUG_LEVEL 2
+#define DEBUG_LEVEL 1
 #include "../util/debug.h"
 
 using util::Range;
 using util::INVALID;
 
 using std::vector;
+using std::map;
 using std::dynamic_pointer_cast;
 
 typedef TemporallyExtendedModel TEM;
@@ -41,6 +42,7 @@ void TEM::add_action_observation_reward_tripel(
 }
 
 // void TEM::optimize_weights_SGD() {
+//     update();
 //     DEBUG_OUT(2,"Optimize weights using SGD");
 //     double old_neg_log_like = -DBL_MAX;
 //     double new_neg_log_like = 0;
@@ -67,6 +69,9 @@ void TEM::optimize_weights_LBFGS() {
 
     DEBUG_OUT(2,"Optimize weights using L-BFGS");
 
+    // make sure data are up to date
+    update();
+
     // dimension
     int nr_vars = weights.size();
     vector<lbfgsfloatval_t> values(weights.begin(),weights.end());
@@ -86,7 +91,8 @@ void TEM::optimize_weights_LBFGS() {
 }
 
 void TEM::grow_feature_set() {
-    DEBUG_OUT(2,"Grow feature set");
+    // use progress for unified output
+    if(DEBUG_LEVEL>0) {ProgressBar::init("Grow feature set:          ");}
     // get new features
     f_set_t extension_features = (*N_plus)(feature_set);
     // remember weights of old features
@@ -98,10 +104,16 @@ void TEM::grow_feature_set() {
     DEBUG_OUT(2,"DONE (" << old_weights.size() << " --> " << feature_set.size() << " features)");
     // need to update data
     feature_set_changed = true;
+    // terminate progress
+    if(DEBUG_LEVEL>0) {
+        ProgressBar::msg() << " (" << old_weights.size() << " --> " << feature_set.size() << ")";
+        ProgressBar::terminate();
+    }
 }
 
 void TEM::shrink_feature_set() {
-    DEBUG_OUT(2,"Shrink feature set");
+    // use progress for unified output
+    if(DEBUG_LEVEL>0) {ProgressBar::init("Shrink feature set:        ");}
     weight_map_t old_weights = get_weight_map();
     for(auto f_weight_pair : old_weights) {
         if(f_weight_pair.second==0) {
@@ -109,9 +121,13 @@ void TEM::shrink_feature_set() {
         }
     }
     apply_weight_map(old_weights);
-    DEBUG_OUT(2,"DONE (" << old_weights.size() << " --> " << feature_set.size() << " features)");
     // need to update data
     feature_set_changed = true;
+    // terminate progress
+    if(DEBUG_LEVEL>0) {
+        ProgressBar::msg() << " (" << old_weights.size() << " --> " << feature_set.size() << ")";
+        ProgressBar::terminate();
+    }
 }
 
 void TEM::set_feature_set(const f_set_t& new_set) {
@@ -159,6 +175,9 @@ bool TEM::check_derivatives(const int& number_of_samples,
                             const double& minimum_gradient,
                             const bool use_current_values
     ) {
+
+    // make sure data are up to date
+    update();
 
     // use LBFGS_Object
     LBFGS_Object lbfgs;
@@ -210,174 +229,392 @@ void TEM::update() {
     //---------------------------------------------//
     // some sanity checks for non-zero debug level //
     //---------------------------------------------//
-
-    // check size of weight vector
-    if(DEBUG_LEVEL>0 && weights.size()!=feature_set.size()) {
-        DEBUG_DEAD_LINE;
-        weight_map_t old_weights = get_weight_map();
-        weights.set_size(feature_set.size());
-        apply_weight_map(old_weights);
-    }
-    // check matching number of data points
-    if(DEBUG_LEVEL>0 && !data_changed &&
-       (F_matrices.size()!=number_of_data_points ||
-        outcome_indices.size()!=number_of_data_points )) {
-        DEBUG_DEAD_LINE;
-        data_changed = true;
-    }
-    // check dimensions of F-matrices (check one for all)
-    if(DEBUG_LEVEL>0 && !feature_set_changed && number_of_data_points>0 &&
-       F_matrices.back().n_rows!=feature_set.size()) {
-        DEBUG_DEAD_LINE;
-        feature_set_changed = true;
+    if(DEBUG_LEVEL>0) {
+        // check size of weight vector
+        if(weights.size()!=feature_set.size()) {
+            DEBUG_DEAD_LINE;
+            weight_map_t old_weights = get_weight_map();
+            weights.set_size(feature_set.size());
+            apply_weight_map(old_weights);
+        }
+        // check matching number of data points
+        if(!data_changed &&
+           (F_matrices.size()!=number_of_data_points || outcome_indices.size()!=number_of_data_points )) {
+            DEBUG_DEAD_LINE;
+            data_changed = true;
+        }
+        // check dimensions of F-matrices (check one for all)
+        if(!feature_set_changed && number_of_data_points>0 &&
+           F_matrices.back().n_rows!=feature_set.size()) {
+            DEBUG_DEAD_LINE;
+            feature_set_changed = true;
+        }
     }
 
     // check if anything needs to be updated
     if(data_changed || feature_set_changed) {
-        int data_n = number_of_data_points;
-        int feature_n = feature_set.size();
-        int outcome_n = observation_space->space_size()*reward_space->space_size();
-        DEBUG_OUT(2,"Update for:");
-        DEBUG_OUT(2,"    nr data points: " << number_of_data_points);
-        DEBUG_OUT(2,"       nr features: " << feature_n);
-        DEBUG_OUT(2,"       nr outcomes: " << outcome_n);
 
-        //-----------------------//
-        // update basis features //
-        //-----------------------//
+        // update basis features
         bool basis_features_changed = false;
         if(feature_set_changed) {
-            DEBUG_OUT(2,"Update basis feature set");
-            f_ptr_set_t new_basis_features;
-            for(f_ptr_t feature : feature_set) {
-                auto and_feature = dynamic_pointer_cast<const AndFeature>(feature);
-                if(and_feature!=nullptr) {
-                    auto subfeatures = and_feature->get_subfeatures();
-                    new_basis_features.insert(subfeatures.begin(),subfeatures.end());
+            basis_features_changed = update_basis_features();
+        }
+
+        // update basis feature maps
+        if(data_changed || basis_features_changed) {
+            update_basis_feature_maps();
+        }
+
+        // pick non-const features
+        bool feature_set_changed_again = false;
+        if(feature_set_changed) {
+            feature_set_changed_again = pick_non_const_features();
+        }
+
+        // again update basis features and maps
+        if(feature_set_changed_again) {
+
+            // update basis features again
+            bool basis_features_changed_again = update_basis_features();
+
+            // update basis feature maps
+            if(basis_features_changed_again) {
+                update_basis_feature_maps();
+            }
+        }
+
+        // update F-matrices
+        if(data_changed || feature_set_changed) {
+            update_F_matrices();
+        }
+
+        // update outcome indices
+        if(data_changed) {
+            update_outcome_indices();
+        }
+
+        // data and features are up to date now
+        data_changed = false;
+        feature_set_changed = false;
+    }
+}
+
+bool TEM::pick_non_const_features() {
+
+    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
+    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
+    // Caution: basis_feature_maps must be up to date //
+    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
+    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
+
+    if(DEBUG_LEVEL>0) {ProgressBar::init("Pick non-const features:   ");}
+
+    // map for storing the first return-value for every outcome and feature
+    typedef map<f_ptr_t,f_ret_t> f_ret_map_t;
+    f_ret_map_t f_ret_map;
+
+    // set of features that may be const
+    f_set_t maybe_const_set = feature_set;
+
+    // for all data points
+    bool first_data_point = true;
+    int data_idx = 0;
+    for(const_instance_ptr_t episode : instance_data) {
+        for(const_instance_ptr_t ins=episode->const_first(); ins!=INVALID; ++ins) {
+
+            // non-const features
+            f_set_t non_const_set;
+
+            // for all outcomes
+            int outcome_idx = 0;
+            for(observation_ptr_t obs : observation_space) {
+                for(reward_ptr_t rew : reward_space) {
+
+                    // for all features that may be const
+                    for(f_ptr_t feature : maybe_const_set) {
+
+                        // get return-value
+                        f_ret_t f_ret = feature->evaluate(basis_feature_maps[data_idx][outcome_idx]);
+
+                        // initialize on first data point, compare later on
+                        if(first_data_point) {
+                            f_ret_map[feature] = f_ret;
+                        } else {
+                            if(f_ret_map[feature]!=f_ret) {
+                                DEBUG_OUT(4,"    different value (" << f_ret_map[feature] << "/" << f_ret << "): " << *feature);
+                                non_const_set.insert(feature);
+                            } else {
+                                DEBUG_OUT(4,"    same value (" << f_ret << "): " << *feature);
+                            }
+                        }
+                    }
+
+                    // increment
+                    ++outcome_idx;
+                }
+            }
+
+            // first data point processed
+            first_data_point = false;
+
+            // erase non-const features from maybe-const set and return-value
+            // maps
+            for(f_ptr_t feature : non_const_set) {
+                DEBUG_OUT(3,"    non-const: " << *feature);
+                auto it_maybe = maybe_const_set.find(feature);
+                if(it_maybe!=maybe_const_set.end()) {
+                    maybe_const_set.erase(it_maybe);
+                } else {
+                    DEBUG_DEAD_LINE;
+                }
+                auto it = f_ret_map.find(feature);
+                if(it!=f_ret_map.end()) {
+                    f_ret_map.erase(it);
                 } else {
                     DEBUG_DEAD_LINE;
                 }
             }
-            if(new_basis_features!=basis_features) {
-                basis_features = new_basis_features;
-                basis_features_changed = true;
+
+            // print progress
+            if(DEBUG_LEVEL>0) {
+                ProgressBar::msg() << " (" << feature_set.size()-maybe_const_set.size() << ")";
+                ProgressBar::print(data_idx,number_of_data_points);
             }
+
+            // increment
+            ++data_idx;
         }
+    }
 
-        //----------------------------//
-        // other things to be updated //
-        //----------------------------//
-        bool update_basis_feature_map = basis_features_changed || data_changed;
-        bool update_F_matrices = data_changed || feature_set_changed;
-        bool update_outcome_indices = data_changed;
-
-        // set vectors size
-        if(update_basis_feature_map) {
-            DEBUG_OUT(2,"Update basis feature map");
-            basis_feature_map.assign(data_n,vector<basis_feature_map_t>(outcome_n));
+    // feature that still may be const actually ARE const (for the given data)
+    weight_map_t old_weights = get_weight_map();
+    for(f_ptr_t const_feature : maybe_const_set) {
+        DEBUG_OUT(3,"    const: " << *const_feature);
+        auto it = feature_set.find(const_feature);
+        if(it!=feature_set.end()) {
+            feature_set.erase(it);
+        } else {
+            DEBUG_DEAD_LINE;
         }
-        if(update_F_matrices) {
-            DEBUG_OUT(2,"Update F-matrices (" << feature_n << "," << outcome_n << ")");
-            #warning need to clear for correct dimensions -- why? --> write minimal example
-            F_matrices.clear();
-            F_matrices.resize(data_n,f_mat_t(feature_n,outcome_n));
+    }
+    apply_weight_map(old_weights);
+
+    // terminate progress
+    if(DEBUG_LEVEL>0) {
+        ProgressBar::msg() << " (" << old_weights.size() << " --> " << feature_set.size() << ")";
+        ProgressBar::terminate();
+    }
+
+    // feature set changed only if any features were actually erased
+    if(old_weights.size()!=feature_set.size()) {
+        feature_set_changed = true;
+        return true;
+    }
+
+    return false;
+}
+
+bool TEM::update_basis_features() {
+
+    if(DEBUG_LEVEL>0) {ProgressBar::init("Update basis feature set:  ");}
+
+    f_ptr_set_t new_basis_features;
+    int feature_n = feature_set.size();
+    int feature_idx = 0;
+    for(f_ptr_t feature : feature_set) {
+        // get basis features
+        auto and_feature = dynamic_pointer_cast<const AndFeature>(feature);
+        if(and_feature!=nullptr) {
+            auto subfeatures = and_feature->get_subfeatures();
+            new_basis_features.insert(subfeatures.begin(),subfeatures.end());
+        } else {
+            DEBUG_DEAD_LINE;
         }
-        if(update_outcome_indices) {
-            DEBUG_OUT(2,"Update outcome indices");
-            outcome_indices.assign(data_n,-1);
+        // print progress
+        if(DEBUG_LEVEL>0) {ProgressBar::print(feature_idx,feature_n);}
+        // increment
+        ++feature_idx;
+    }
+
+    // terminate progress
+    if(DEBUG_LEVEL>0) {ProgressBar::terminate();}
+
+    if(new_basis_features!=basis_features) {
+        basis_features = new_basis_features;
+        return true;
+    } else {
+        return false;
+    }
+}
+
+void TEM::update_basis_feature_maps() {
+
+    if(DEBUG_LEVEL>0) {ProgressBar::init("Update basis feature maps: ");}
+
+    int data_n = number_of_data_points;
+    int outcome_n = observation_space->space_size()*reward_space->space_size();
+
+    basis_feature_maps.assign(data_n,vector<basis_feature_map_t>(outcome_n));
+
+    // for all data points
+    int data_idx = 0;
+    for(const_instance_ptr_t episode : instance_data) {
+        for(const_instance_ptr_t ins=episode->const_first(); ins!=INVALID; ++ins) {
+
+            // for all outcomes
+            int outcome_idx = 0;
+            for(observation_ptr_t obs : observation_space) {
+                for(reward_ptr_t rew : reward_space) {
+
+                    // get basis feature map for this data point and outcome
+                    basis_feature_map_t& bf_map = basis_feature_maps[data_idx][outcome_idx];
+
+                    //--------------------------//
+                    // update basis feature map //
+                    //--------------------------//
+                    bf_map.clear();
+                    for(f_ptr_t bf : basis_features) {
+                        bf_map.insert_feature(bf,bf->evaluate(ins->const_prev(),ins->action,obs,rew));
+                    }
+
+                    // increment
+                    ++outcome_idx;
+                }
+            }
+
+            // print progress
+            if(DEBUG_LEVEL>0) {ProgressBar::print(data_idx,number_of_data_points);}
+
+            // increment
+            ++data_idx;
         }
+    }
 
-        // for all data points
-        int data_idx = 0;
-        if(DEBUG_LEVEL>0) {ProgressBar::init("Updating: ");}
-        for(const_instance_ptr_t episode : instance_data) {
-            for(const_instance_ptr_t ins=episode->const_first(); ins!=INVALID; ++ins) {
+    // terminate progress
+    if(DEBUG_LEVEL>0) {ProgressBar::terminate();}
+}
 
-                // get F-matrix for this data point
-                f_mat_t& F_matrix = F_matrices[data_idx];
+void TEM::update_F_matrices() {
 
-                // for all outcomes
-                int outcome_idx = 0;
-                for(observation_ptr_t obs : observation_space) {
-                    for(reward_ptr_t rew : reward_space) {
+    int data_n = number_of_data_points;
+    int feature_n = feature_set.size();
+    int outcome_n = observation_space->space_size()*reward_space->space_size();
 
-                        // get basis feature map for this data point and outcome
-                        basis_feature_map_t& bf_map = basis_feature_map[data_idx][outcome_idx];
+    if(DEBUG_LEVEL>0) {ProgressBar::init("Update F-matrices:         ");}
 
-                        //--------------------------//
-                        // update basis feature map //
-                        //--------------------------//
-                        if(update_basis_feature_map) {
-                            bf_map.clear();
-                            for(f_ptr_t bf : basis_features) {
-                                bf_map.insert_feature(bf,bf->evaluate(ins->const_prev(),ins->action,obs,rew));
-                            }
-                        }
+    #warning need to clear for correct dimensions -- why? --> write minimal example
+    F_matrices.clear();
+    F_matrices.resize(data_n,f_mat_t(feature_n,outcome_n));
 
-                        //-----------------//
-                        // update F-matrix //
-                        //-----------------//
-                        if(update_F_matrices) {
-                            int feature_idx = 0;
-                            for(f_ptr_t feature : feature_set) {
+    // for all data points
+    int data_idx = 0;
+    for(const_instance_ptr_t episode : instance_data) {
+        for(const_instance_ptr_t ins=episode->const_first(); ins!=INVALID; ++ins) {
 
-                                // set entry to 1 for non-zero features
-                                if(feature->evaluate(ins->const_prev(),ins->action,obs,rew)!=0) {
-                                    #warning use map but does not work for now
-                                    //if(feature->evaluate(bf_map)) {
-                                    DEBUG_OUT(4,"(" << F_matrix.n_rows << "," << F_matrix.n_cols << ")/(" << feature_idx << "," << outcome_idx << ")");
-                                    F_matrix(feature_idx,outcome_idx) = 1;
-                                }
+            // get F-matrix for this data point
+            f_mat_t& F_matrix = F_matrices[data_idx];
 
-                                // increment
-                                ++feature_idx;
-                            }
-                        }
+            // for all outcomes
+            int outcome_idx = 0;
+            for(observation_ptr_t obs : observation_space) {
+                for(reward_ptr_t rew : reward_space) {
 
-                        //----------------------//
-                        // update outcome index //
-                        //----------------------//
-                        if(update_outcome_indices && obs==ins->observation && rew==ins->reward) {
-                            outcome_indices[data_idx] = outcome_idx;
+                    // get basis feature map for this data point and outcome
+                    basis_feature_map_t& bf_map = basis_feature_maps[data_idx][outcome_idx];
+
+                    //-----------------//
+                    // update F-matrix //
+                    //-----------------//
+                    int feature_idx = 0;
+                    for(f_ptr_t feature : feature_set) {
+
+                        // set entry to 1 for non-zero features
+                        //if(feature->evaluate(ins->const_prev(),ins->action,obs,rew)!=0) {
+                        if(feature->evaluate(bf_map)!=0) {
+                            DEBUG_OUT(4,"(" << F_matrix.n_rows << "," << F_matrix.n_cols << ")/(" << feature_idx << "," << outcome_idx << ")");
+                            F_matrix(feature_idx,outcome_idx) = 1;
                         }
 
                         // increment
-                        ++outcome_idx;
+                        ++feature_idx;
                     }
+
+                    // increment
+                    ++outcome_idx;
                 }
-
-                // check if outcome index was set
-                if(update_outcome_indices && outcome_indices[data_idx]<0) {
-                    DEBUG_DEAD_LINE;
-                }
-
-                // print progress
-                if(DEBUG_LEVEL>0) {ProgressBar::print(data_idx,number_of_data_points);}
-
-                // increment
-                ++data_idx;
             }
+
+            // print progress
+            if(DEBUG_LEVEL>0) {ProgressBar::print(data_idx,number_of_data_points);}
+
+            // increment
+            ++data_idx;
         }
+    }
 
-        // terminate progress
-        if(DEBUG_LEVEL>0) {ProgressBar::terminate();}
+    // terminate progress
+    if(DEBUG_LEVEL>0) {ProgressBar::terminate();}
 
-        // data and features are up to date
-        data_changed = false;
-        feature_set_changed = false;
-
-        // print F-matrices
-        if(DEBUG_LEVEL>=3) {
-            DEBUG_OUT(0,"Feature matrices:");
-            int idx = 0;
-            for(auto F : F_matrices) {
-                DEBUG_OUT(0,"Nr.: " << idx);
-                F.print();
-                ++idx;
-            }
+    // print F-matrices
+    if(DEBUG_LEVEL>=3) {
+        DEBUG_OUT(0,"Feature matrices:");
+        int idx = 0;
+        for(auto F : F_matrices) {
+            DEBUG_OUT(0,"Nr.: " << idx);
+            F.print();
+            ++idx;
         }
     }
 }
+
+void TEM::update_outcome_indices() {
+
+    if(DEBUG_LEVEL>0) {ProgressBar::init("Update outcome indices:    ");}
+
+    int data_n = number_of_data_points;
+
+    outcome_indices.assign(data_n,-1);
+
+    // for all data points
+    int data_idx = 0;
+    for(const_instance_ptr_t episode : instance_data) {
+        for(const_instance_ptr_t ins=episode->const_first(); ins!=INVALID; ++ins) {
+
+            // for all outcomes
+            int outcome_idx = 0;
+            for(observation_ptr_t obs : observation_space) {
+                for(reward_ptr_t rew : reward_space) {
+
+                    //----------------------//
+                    // update outcome index //
+                    //----------------------//
+                    if(obs==ins->observation && rew==ins->reward) {
+                        outcome_indices[data_idx] = outcome_idx;
+                    }
+
+                    // increment
+                    ++outcome_idx;
+                }
+            }
+
+            // check if outcome index was set
+            if(outcome_indices[data_idx]<0) {
+                DEBUG_DEAD_LINE;
+            }
+
+            // print progress
+            if(DEBUG_LEVEL>0) {ProgressBar::print(data_idx,number_of_data_points);}
+
+            // increment
+            ++data_idx;
+        }
+    }
+
+    // terminate progress
+    if(DEBUG_LEVEL>0) {ProgressBar::terminate();}
+}
+
+
 
 double TEM::neg_log_likelihood(vec_t& grad, const vec_t& w) {
 
@@ -393,12 +630,23 @@ double TEM::neg_log_likelihood(vec_t& grad, const vec_t& w) {
 
     DEBUG_OUT(3,"Compute neg-log-likelihood");
 
-    // make sure data are up to date
-    update();
+    // check dimensions of input
+    if(DEBUG_LEVEL>0) {
+        if(grad.size()!=weights.size()){
+            DEBUG_DEAD_LINE;
+        }
+        if(w.size()!=weights.size()) {
+            DEBUG_DEAD_LINE;
+        }
+    }
 
     // initialize objective and gradient
     double obj = 0;
     grad.zeros(feature_set.size());
+
+#ifdef USE_OMP
+#pragma omp parallel for schedule(dynamic,1) collapse(1)
+#endif
 
     // sum over data
     for(int data_idx=0; data_idx<(int)number_of_data_points; ++data_idx) {
@@ -432,18 +680,22 @@ double TEM::neg_log_likelihood(vec_t& grad, const vec_t& w) {
         }
 
         // compute objective and gradient
-        if(DEBUG_LEVEL>=3) {
-            double obj_comp = lin(outcome_idx)-log(z);
-            vec_t grad_comp = F.col(outcome_idx) - F_dense*exp_lin.t()/z;
+        double obj_comp = lin(outcome_idx)-log(z);
+        vec_t grad_comp = F.col(outcome_idx) - F_dense*exp_lin.t()/z;
+
+#ifdef USE_OMP
+#pragma omp critical
+#endif
+        {
+            // update
             obj += obj_comp;
             grad += grad_comp;
-            grad_comp.print("gradient component:");
-            DEBUG_OUT(0,"objective component " << obj_comp);
-        } else {
-            obj += lin(outcome_idx)-log(z);
-            grad += F.col(outcome_idx) - F_dense*exp_lin.t()/z;
-        }
-    }
+            if(DEBUG_LEVEL>=3) {
+                grad_comp.print("gradient component:");
+                DEBUG_OUT(0,"objective component " << obj_comp);
+            }
+        } // end critical
+    } // end parallel
 
     // divide by number of data points and reverse sign
     if(number_of_data_points>0) {

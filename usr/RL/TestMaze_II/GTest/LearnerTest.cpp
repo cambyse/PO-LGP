@@ -366,7 +366,9 @@ TEST(LearnerTest, TemporallyExtendedModel) {
     // initialize N+, set horizon extension
     N_plus = make_shared<ConjunctiveAdjacency>();
     N_plus->set_spaces(maze);
-    N_plus->horizon_extension_on(1);
+    N_plus->set_horizon_extension(2);
+    N_plus->set_max_horizon(2);
+    N_plus->combine_features(false);
 
     // initialize TEM using N+
     TEM = make_shared<TemporallyExtendedModel>(N_plus);
@@ -380,7 +382,7 @@ TEST(LearnerTest, TemporallyExtendedModel) {
     }
 
     // do some random actions to collect data
-    repeat(100) {
+    repeat(1000) {
         action_ptr_t action = util::random_select(action_vector);
         observation_ptr_t observation_to;
         reward_ptr_t reward;
@@ -391,7 +393,7 @@ TEST(LearnerTest, TemporallyExtendedModel) {
     //EXPECT_TRUE(TEM->check_derivatives(10,1));
 
     // try to learn something
-    repeat(3) {
+    repeat(2) {
         TEM->grow_feature_set();
         TEM->optimize_weights_LBFGS();
         TEM->shrink_feature_set();
@@ -401,23 +403,4 @@ TEST(LearnerTest, TemporallyExtendedModel) {
     TEM->set_l1_factor(0);
     TEM->optimize_weights_LBFGS();
     TEM->print_features();
-
-    // // construct feature set
-    // feature_set_t f_set;
-    // for(reward_ptr_t reward : reward_space) {
-    //     f_ptr_t reward_feature_0 = RewardFeature::create(reward,0);
-    //     f_set.insert(f_ptr_t(new AndFeature(reward_feature_0)));
-    // }
-    // for(observation_ptr_t observation_a : observation_space) {
-    //     f_ptr_t observation_feature_0 = ObservationFeature::create(observation_a,0);
-    //     for(action_ptr_t action : action_space) {
-    //         f_ptr_t action_feature_0 = ActionFeature::create(action,0);
-    //         f_set.insert(f_ptr_t(new AndFeature(action_feature_0,observation_feature_0)));
-    //     }
-    //     for(observation_ptr_t observation_b : observation_space) {
-    //         f_ptr_t observation_feature_1 = ObservationFeature::create(observation_b,-1);
-    //         f_set.insert(f_ptr_t(new AndFeature(observation_feature_0,observation_feature_1)));
-    //     }
-    // }
-    // TEM->set_feature_set(f_set);
 }

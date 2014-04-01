@@ -68,7 +68,7 @@ private:
      * efficiently).
      *
      * To be updated on changes of the basis feature set or the data. */
-    std::vector<std::vector<basis_feature_map_t> > basis_feature_map;
+    std::vector<std::vector<basis_feature_map_t> > basis_feature_maps;
 
     //---- methods ----//
 public:
@@ -105,6 +105,29 @@ protected:
     virtual weight_map_t get_weight_map() const;
     virtual void apply_weight_map(weight_map_t);
     virtual void update();
+
+    /** \brief Pick only features that are non-constant for all data points and
+     * outcomes.
+     *
+     * Caution: For efficiency basis_feature_maps are used and must be up to
+     * date! */
+    virtual bool pick_non_const_features();
+
+    /** \brief Update basis features from current feature set and returns
+     * whether they changed. */
+    virtual bool update_basis_features();
+
+    /** \brief Update maps for basis features (needs up-to-date basis
+     * features). */
+    virtual void update_basis_feature_maps();
+
+    /** \brief Updates F-matrices for feature set (needs up-to-date basis
+     * feature maps). */
+    virtual void update_F_matrices();
+
+    /** \brief Update outcome indices. */
+    virtual void update_outcome_indices();
+
     virtual double neg_log_likelihood(vec_t& grad, const vec_t& weights);
     lbfgsfloatval_t LBFGS_objective(const lbfgsfloatval_t*, lbfgsfloatval_t*);
     int LBFGS_progress(const lbfgsfloatval_t *x,
