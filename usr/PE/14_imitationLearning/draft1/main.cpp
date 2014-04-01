@@ -5,6 +5,7 @@
 #include <Motion/taskMap_proxy.h>
 #include <Motion/feedbackControl.h>
 #include <vector>
+#include <future>
 
 void createToyDemonstrations(std::vector<arr> &demos,arr &q0) {
   uint trajIter;
@@ -56,13 +57,15 @@ double trajectoryCosts(arr &a, arr &b) {
   return sum((a-b)%(a-b));
 }
 
-void execRun(arr param, arr &y, arr q0, arr refGoal, bool vis=false) {
+arr execRun(arr param, arr q0, arr refGoal) {
+  bool vis=false;
   ors::KinematicWorld world("scene");
   arr q, qdot;
+  arr y;
   world.getJointState(q, qdot);
 
 //  makeConvexHulls(world.shapes);
-  MotionProblem MP(world);
+  MotionProblem MP(world,false);
   MP.loadTransitionParameters();
 
   world.getBodyByName("goalRef")->X.pos = refGoal;
@@ -95,8 +98,8 @@ void execRun(arr param, arr &y, arr q0, arr refGoal, bool vis=false) {
     world.kinematicsPos(kinPos,NoArr,MP.world.getBodyByName("endeff")->index);
     y.append(~kinPos);
   }
+  return y;
 }
-
 
 
 int main(int argc,char **argv) {
@@ -110,28 +113,38 @@ int main(int argc,char **argv) {
   cma.init(3);
 
   arr samples, values;
-  arr y,yRef;
+  arr yRef1,yRef2,yRef3,y1,y2,y3;
   double costs;
   for(uint t=0;t<100;t++){
     /// run cma
     cma.step(samples, values);
-    cout << exp(samples) << endl;
+//    cout << exp(samples) << endl;
+    MT::timerStart(true);
     for(uint i=0;i<samples.d0;i++) {
       /// simulate parameters for each scenario
       costs = 0.;
-      for(uint j=0;j<demos.size();j++) {
-        y.clear();
-        yRef = demos.at(j);
-        execRun(exp(samples[i]),y,q0,yRef[yRef.d0-1]);
-        costs = costs + trajectoryCosts(yRef,y);
+      std::vector<std::future<arr>> runs;
+      double t_d = MT::timerRead();
+      uint j = 0;
+      while (j < demos.size()) {
+        yRef1 = demos.at(j);
+        runs.push_back(std::async(std::launch::async,execRun,exp(samples[i]),q0,yRef1[yRef1.d0-1]));
+        j++;
       }
-
+      j = 0;
+      while (j < demos.size()) {
+        y1 = runs[j].get();
+        yRef1 = demos.at(j);
+        costs = costs + trajectoryCosts(yRef1,y1);
+        j++;
+      }
       values(i) = costs/demos.size();
     }
-    cout << values.min() << endl;
+    cout <<"Time: "<< MT::timerPause() << endl;
+    cout <<"Min Value: " << values.min() << endl;
   }
   arr optParam = samples[values.minIndex()];
-  execRun(exp(optParam),y,q0,yRef[yRef.d0-1],true);
+//  execRun(exp(optParam),y,q0,yRef[yRef.d0-1],true);
 
   return 0;
 }
