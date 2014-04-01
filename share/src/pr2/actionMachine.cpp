@@ -1,4 +1,4 @@
-
+#include "actions.h"
 #include "actionMachine_internal.h"
 
 //===========================================================================
@@ -70,17 +70,18 @@ void ActionMachine::step(){
   for(GroundedAction *a : A()) if(a->value==GroundedAction::active){
 //    cout <<' ' <<a->symbol.name;
     for(PDtask *t:a->tasks) t->active=true;
-    if(a->symbol==moveEffTo){
+
+    if(a->getSymbol()==MoveEffTo::symbol){
       //nothing to be done
     }
-    if(a->symbol==moveEffTo){
+    if(a->getSymbol()==MoveEffTo::symbol){
       //dynamic_cast<MoveEffTo_ActionSymbol&>(a->symbol).task->y_ref = a->poseArg1;
     }
-    if(a->symbol==pushForce){
+    if(a->getSymbol()==PushForce::symbol){
       cout <<"FORCE TASK" <<endl;
-      s->refs.fR = a->poseArg1;
-      s->refs.fR_gainFactor = 1.;
-      s->refs.Kp_gainFactor = .2;
+      // s->refs.fR = a->poseArg1;
+      // s->refs.fR_gainFactor = 1.;
+      // s->refs.Kp_gainFactor = .2;
     }
   } else {
     for(PDtask *t:a->tasks) t->active=false;
@@ -106,23 +107,16 @@ void ActionMachine::step(){
 void ActionMachine::close(){
 }
 
-GroundedAction* ActionMachine::addGroundedAction(ActionSymbol &sym,
-                               const char *shapeArg1, const char *shapeArg2,
-                               const arr& poseArg1, const arr &poseArg2){
-  GroundedAction *a = new GroundedAction(sym);
-  if(shapeArg1) a->shapeArg1 = shapeArg1;
-  if(shapeArg2) a->shapeArg2 = shapeArg2;
-  if(&poseArg1) a->poseArg1 = poseArg1;
-  if(&poseArg2) a->poseArg2 = poseArg2;
-  a->symbol.initYourself(*a, *this);
-  a->value=GroundedAction::active; //TODO!
+GroundedAction* ActionMachine::add(GroundedAction *action) {
+  action->initYourself(*this);
+  action->value=GroundedAction::active; //TODO!
 
-  A.set()->append(a);
-  return a;
+  A.set()->append(action);
+  return action;
 }
 
 void ActionMachine::removeGroundedAction(GroundedAction* a, bool hasLock){
-  a->symbol.deinitYourself(*a, *this);
+  a->deinitYourself(*this);
   if(!hasLock) A.set()->removeValue(a);
   else A().removeValue(a);
 }
@@ -132,16 +126,16 @@ void ActionMachine::removeGroundedAction(GroundedAction* a, bool hasLock){
 void reportExistingSymbols(){
   for(Symbol *s:symbols()){
     cout <<"Symbol '" <<s->name <<"' nargs=" <<s->nargs;
-    if(dynamic_cast<ActionSymbol*>(s)) cout <<" is ActionSymbol";
     cout <<endl;
   }
 }
 
 void reportActions(ActionL &A){
   cout <<"* ActionL" <<endl;
-  for(GroundedAction *a:A){
-    cout <<a->symbol.name <<" {" <<a->shapeArg1 <<' ' <<a->shapeArg2 <<" } { " <<a->poseArg1 <<' ' <<a->poseArg2 <<" }:";
-    cout <<"value=" <<GroundActionValueString[a->value] <<endl;
+  for(GroundedAction *a : A){
+    cout << a->name << " value=" << GroundActionValueString[a->value] << endl;
+    // cout <<a->symbol.name <<" {" <<a->shapeArg1 <<' ' <<a->shapeArg2 <<" } { " <<a->poseArg1 <<' ' <<a->poseArg2 <<" }:";
+    cout << " value=" <<GroundActionValueString[a->value] <<endl;
   }
 }
 
@@ -157,8 +151,8 @@ void ActionMachine::transition(){
 
   //-- check new successes and fails
   for(GroundedAction *a:A()) if(a->value==GroundedAction::active){
-    if(a->symbol.finishedSuccess(*a, *this)) a->value=GroundedAction::success;
-    if(a->symbol.finishedFail(*a, *this)) a->value=GroundedAction::failed;
+    if(a->finishedSuccess(*this)) a->value=GroundedAction::success;
+    if(a->finishedFail(*this)) a->value=GroundedAction::failed;
   }
 
   //-- progress with queued

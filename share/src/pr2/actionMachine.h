@@ -34,20 +34,6 @@ struct Symbol{
 
 //===========================================================================
 
-/** An ActionSymbol typically relates to a motor primitive TYPE, or also motor macro type. These provide
- *  additionally methods that allow the ActionMachine to coordinate the currently active motor
- *  primitives/macros */
-struct ActionSymbol : Symbol{
-  virtual void initYourself(GroundedAction&, ActionMachine&) = 0;
-  virtual void deinitYourself(GroundedAction&, ActionMachine&) = 0;
-  virtual bool isFeasible(GroundedAction&, ActionMachine&) { return true; } //default: always feasible
-  virtual bool finishedSuccess(GroundedAction&, ActionMachine&) { return false; } //default: never finish
-  virtual bool finishedFail(GroundedAction&, ActionMachine&) { return false; } //default: never finish
-  virtual double expTimeToGo(GroundedAction&, ActionMachine&) { return 1.; } //default: always time to go
-  virtual double expCostToGo(GroundedAction&, ActionMachine&) { return 0.; } //default: always time to go //neg-log success likelihood?
-};
-
-//===========================================================================
 
 /** A grounded action is an instantiation/grounding of an ActionSymbol (e.g. motor primitive type). The grounding
  *  is defined by the specific arguments: which objects/body parts does the action refer to; which parameters
@@ -56,11 +42,8 @@ struct ActionSymbol : Symbol{
  *  The full action state is given as a list of GroundedActions.
  *  For convenience, a grounded action can be annotated by dependencies, telling the ActionMachine how to transition the
  *  action state. */
-struct GroundedAction{
+struct GroundedAction : Symbol{
   //-- action definition
-  ActionSymbol& symbol;
-  MT::String shapeArg1, shapeArg2;
-  arr poseArg1, poseArg2;
 
   //-- state
   enum Value{ trueLV, falseLV, inactive, queued, active, failed, success }; //True, False refer to state symbols, the rest to action symbols
@@ -73,8 +56,18 @@ struct GroundedAction{
   //-- not nice: list PDtasks that this action added to the OSC
   PDtaskL tasks;
 
-  GroundedAction():symbol(*((ActionSymbol*)NULL)){}
-  GroundedAction(ActionSymbol& s):symbol(s){}
+
+  // GroundedAction():symbol(*((ActionSymbol*)NULL)){}
+  // GroundedAction(ActionSymbol& s):symbol(s){}
+
+  virtual Symbol& getSymbol() = 0;
+  virtual void initYourself(ActionMachine&) = 0;
+  virtual void deinitYourself(ActionMachine&) = 0;
+  virtual bool isFeasible(ActionMachine&) { return true; } //default: always feasible
+  virtual bool finishedSuccess(ActionMachine&) { return false; } //default: never finish
+  virtual bool finishedFail(ActionMachine&) { return false; } //default: never finish
+  virtual double expTimeToGo(ActionMachine&) { return 1.; } //default: always time to go
+  virtual double expCostToGo(ActionMachine&) { return 0.; } //default: always time to go //neg-log success likelihood?
 };
 
 //===========================================================================
@@ -104,9 +97,8 @@ struct ActionMachine : Module {
   ~ActionMachine();
 
   //-- user methods
-  GroundedAction* addGroundedAction(ActionSymbol &sym,
-                                    const char *shapeArg1, const char *shapeArg2,
-                                    const arr& poseArg1, const arr& poseArg2);
+  //
+  GroundedAction* add(GroundedAction* action);
   void removeGroundedAction(GroundedAction* a, bool hasLock=false);
   void waitForActionCompletion(GroundedAction* a);
 
@@ -140,15 +132,15 @@ struct ActionSystem:System{
 
 //===========================================================================
 
-extern ActionSymbol &joypad,
-&coreTasks,
-&amex, //shapeArg=task space, poseArg=reference trajectory
-&moveEffTo, //shapeArg=body part, poseArg=whereTo
-&alignEffTo, //shapeArg=body part, poseArg=whereTo
-&pushForce, //shapeArg=body part, poseArg=orientation
-&grasp, //shapeArg=object, shapeArg1=hand selection
-&gazeAt, //poseArg=whereTo
-&headShakeNo, //no args
-&headShakeYes, //no args
-&closeHand, //shapeArg=ehand selection
-&fullStop; //no args
+// extern ActionSymbol &joypad,
+// &coreTasks,
+// &amex, //shapeArg=task space, poseArg=reference trajectory
+// &moveEffTo, //shapeArg=body part, poseArg=whereTo
+// &alignEffTo, //shapeArg=body part, poseArg=whereTo
+// &pushForce, //shapeArg=body part, poseArg=orientation
+// &grasp, //shapeArg=object, shapeArg1=hand selection
+// &gazeAt, //poseArg=whereTo
+// &headShakeNo, //no args
+// &headShakeYes, //no args
+// &closeHand, //shapeArg=ehand selection
+// &fullStop; //no args
