@@ -5,6 +5,7 @@
 #include <System/engine.h>
 #include <pr2/roscom.h>
 
+//===========================================================================
 struct Symbol;
 struct GroundedAction;
 struct PDtask;
@@ -20,10 +21,11 @@ inline void operator<<(ostream& os, const GroundedAction& a){ }
 //void operator=(istream& is, ActionL& A){ listRead(A, is); }
 
 //===========================================================================
-
-/** A Symbol denotes is a generic predicate that, when associated to specific arguments (for a grounding of the variables),
- *  defines a literal (a factor) of the state. Symbols can refer to state or action predicates. This
- *  relates to Tobias' code on relational state representations */
+/** A Symbol denotes is a generic predicate that, when associated to specific
+ * arguments (for a grounding of the variables), defines a literal (a factor)
+ * of the state.
+ * Symbols can refer to state or action predicates. This relates to Tobias'
+ * code on relational state representations */
 struct Symbol{
   uint ID;
   MT::String name;
@@ -33,9 +35,7 @@ struct Symbol{
 };
 
 //===========================================================================
-
-
-/** A grounded action is an instantiation/grounding of an ActionSymbol (e.g. motor primitive type). The grounding
+/** A GroundedAction is an instantiation/grounding of an Symbol (e.g. motor primitive type). The grounding
  *  is defined by the specific arguments: which objects/body parts does the action refer to; which parameters
  *  does it have. While state literals typically are binary-valued (on(A,B) is true or false); action literals
  *  have a value that denotes the action state: whether it is currently active, queued, failed, etc
@@ -43,41 +43,46 @@ struct Symbol{
  *  For convenience, a grounded action can be annotated by dependencies, telling the ActionMachine how to transition the
  *  action state. */
 struct GroundedAction : Symbol{
-  //-- action definition
-
-  //-- state
-  enum Value{ trueLV, falseLV, inactive, queued, active, failed, success }; //True, False refer to state symbols, the rest to action symbols
-  Value value;
+  //-- ActionState of the GroundedAction
+  enum ActionState { trueLV, falseLV, inactive, queued, active, failed, success }; //True, False refer to state symbols, the rest to action symbols
+  ActionState actionState;
+  static const char* GroundActionValueString[7];
+  const char* getActionStateString() { return GroundActionValueString[actionState]; };
   
-  //-- dependence & hierarchy
+  /// @name dependence & hierarchy
   ActionL dependsOnCompletion;
   ActionL conflictsWith;
 
   //-- not nice: list PDtasks that this action added to the OSC
   PDtaskL tasks;
 
-
-  // GroundedAction():symbol(*((ActionSymbol*)NULL)){}
-  // GroundedAction(ActionSymbol& s):symbol(s){}
-
   virtual Symbol& getSymbol() = 0;
+
+  /// @name manage common functions to manage GroundedSymbols
   virtual void initYourself(ActionMachine&) = 0;
-  virtual void deinitYourself(ActionMachine&) = 0;
-  virtual bool isFeasible(ActionMachine&) { return true; } //default: always feasible
-  virtual bool finishedSuccess(ActionMachine&) { return false; } //default: never finish
-  virtual bool finishedFail(ActionMachine&) { return false; } //default: never finish
-  virtual double expTimeToGo(ActionMachine&) { return 1.; } //default: always time to go
-  virtual double expCostToGo(ActionMachine&) { return 0.; } //default: always time to go //neg-log success likelihood?
+  virtual void deinitYourself(ActionMachine& actionMachine);
+  /// default: always feasible
+  virtual bool isFeasible(ActionMachine& actionMachine) { return true; }
+  /// default: never finish
+  virtual bool finishedSuccess(ActionMachine& actionMachine) { return false; }
+  /// default: never finish
+  virtual bool finishedFail(ActionMachine& actionMachine) { return false; }
+  /// default: always time to go
+  virtual double expTimeToGo(ActionMachine& actionMachine) { return 1.; }
+  /// default: always time to go //neg-log success likelihood?
+  virtual double expCostToGo(ActionMachine& actionMachine) { return 0.; }
 };
 
 //===========================================================================
-
+// Helper functions
 void reportExistingSymbols();
 void reportActions(ActionL& A);
 
 //===========================================================================
-
-/** The ActionMachine (usually a singleton?) does two things in each step
+// Module System integration
+/** ActionMachine integrates the GroundedActions into the module system.
+ *
+ * The ActionMachine (usually a singleton?) does two things in each step
  *  (1) It checks the states of all GroundedActions and transitions them depending on their dependencies. This
  *      also removes actions that have been completed from the list A.
  *  (2) It takes all currently active actions in A and translates these to concrete motion control using
@@ -97,12 +102,11 @@ struct ActionMachine : Module {
   ~ActionMachine();
 
   //-- user methods
-  //
   GroundedAction* add(GroundedAction* action);
   void removeGroundedAction(GroundedAction* a, bool hasLock=false);
   void waitForActionCompletion(GroundedAction* a);
 
-  //-- module implementations
+  /// @name module implementations
   void open();
   void step();
   void close();
@@ -110,10 +114,7 @@ struct ActionMachine : Module {
   void transition();
 };
 
-//===========================================================================
-
-//for convenience this is defined here - so the user can just create it
-struct ActionSystem:System{
+struct ActionSystem : System{
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
   ACCESS(arr, joystickState);
@@ -131,7 +132,6 @@ struct ActionSystem:System{
 };
 
 //===========================================================================
-
 // extern ActionSymbol &joypad,
 // &coreTasks,
 // &amex, //shapeArg=task space, poseArg=reference trajectory
