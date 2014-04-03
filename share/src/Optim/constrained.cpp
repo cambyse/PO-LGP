@@ -13,7 +13,7 @@ double UnconstrainedProblem::fs(arr& dF, arr& HF, const arr& _x){
     CHECK(P.dim_g()==g_x.N,"this conversion requires phi.N to be m-dimensional");
   }else{ //we evaluated this before - use buffered values; the meta F is still recomputed as (dual) parameters might have changed
     if(&dF) CHECK(df_x.N && Jg_x.N,"");
-    if(&HF) CHECK(Hf_x.N && Jg_x.N,"")
+    if(&HF) CHECK(Hf_x.N && Jg_x.N,"");
   }
 
   //  cout <<"g= " <<g_x <<" lambda= " <<lambda <<endl;

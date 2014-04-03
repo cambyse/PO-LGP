@@ -12,6 +12,8 @@ int main(int argc,char** argv){
   ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
   makeConvexHulls(G.shapes);
   for(ors::Shape *s:G.shapes) s->cont=true;
+  G.getShapeByName("target")->cont=false;
+  cout <<"loaded model: n=" <<G.q.N <<endl;
 //  G.gl().watch();
 
   MotionProblem MP(G);
@@ -80,9 +82,11 @@ int main(int argc,char** argv){
 
   //  OpenGL costs(STRING("PHI ("<<F.dim_phi(0)<<" tasks)"), 3*T+10, 3*F.dim_phi(0)+10 );
   //-- optimize
-  for(uint k=0;k<3;k++){
-    optNewton(x, Convert(MF), OPT(verbose=2, stopIters=40, damping=1e-0, maxStep=1.));
+  for(uint k=0;k<5;k++){
+    MT::timerStart();
+    optNewton(x, Convert(MF), OPT(verbose=2, stopIters=20, maxStep=1., stepInc=2., nonStrict=(!k?15:5)));
 
+    cout <<"** optimization time=" <<MT::timerRead() <<endl;
     //costs.displayRedBlue(~sqr(P.costMatrix), false, 3);
     MP.costReport();
 //    checkJacobian(Convert(MF), x, 1e-5);

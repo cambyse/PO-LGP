@@ -1141,7 +1141,11 @@ template<class T> void MT::Array<T>::setMatrixBlock(const MT::Array<T>& B, uint 
   if(B.nd==2) {
     CHECK(nd==2 && lo0+B.d0<=d0 && lo1+B.d1<=d1, "");
     uint i, j;
-    for(i=0; i<B.d0; i++) for(j=0; j<B.d1; j++) p[(lo0+i)*d1+lo1+j] = B.p[i*B.d1+j];   // operator()(lo0+i, lo1+j)=B(i, j);
+    if(memMove){
+      for(i=0; i<B.d0; i++) memmove(p+(lo0+i)*d1+lo1, B.p+i*B.d1, B.d1*sizeT);
+    }else{
+      for(i=0; i<B.d0; i++) for(j=0; j<B.d1; j++) p[(lo0+i)*d1+lo1+j] = B.p[i*B.d1+j];   // operator()(lo0+i, lo1+j)=B(i, j);
+    }
   } else {
     CHECK(nd==2 && lo0+B.d0<=d0 && lo1+1<=d1, "");
     uint i;
