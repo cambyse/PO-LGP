@@ -8,14 +8,17 @@ void testActionMachine(){
   engine().open(activity);
   // for (int i = 0; i < 20; ++i) {
     auto a1 = activity.machine->add(new MoveEffTo("endeffR", ARR(.8, -.4, 1.2)));
-    activity.machine->waitForActionCompletion(a1);
-
-    auto a2 = activity.machine->add(new AlignEffTo("endeffR", ARR(1., 0., 0.), ARR(1., 0., 0.)));
-    auto a3 = activity.machine->add(new MoveEffTo("endeffL", ARR(.8, .4, 1.2)));
+    // activity.machine->waitForActionCompletion(a1);
+ 
+    auto a2 = activity.machine->add(new AlignEffTo("endeffR", ARR(1., 0., 0.), ARR(1., 0., 0.)),
+                                    ActionState::queued);
+    // auto a3 = activity.machine->add(new MoveEffTo("endeffL", ARR(.8, .4, 1.2)));
 
     activity.machine->waitForActionCompletion(a2);
-    activity.machine->waitForActionCompletion(a3);
-    MT::wait(2);
+    // activity.machine->waitForActionCompletion(a3);
+
+    // auto a4 = activity.machine->add(new PushForce("endeffR", ors::Vector(15, 0, 0), ARR(2, 0, 0)))
+    // activity.machine->waitForActionCompletion(a4);
   // }
   engine().close(activity);
 }
