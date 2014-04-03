@@ -2,13 +2,11 @@
 #include "actionMachine_internal.h"
 
 //===========================================================================
-
 Singleton<SymbolL> symbols;
 
-const char *GroundActionValueString[] = { "trueLV", "falseLV", "inactive", "queued", "active", "failed", "success" };
-
 //===========================================================================
-
+// ActionMachine
+//
 ActionMachine::ActionMachine():Module("ActionMachine"), ros(NULL){
   ActionL::memMove=true;
   s = new sActionMachine();
@@ -67,7 +65,8 @@ void ActionMachine::step(){
 
   //  cout <<"** active actions:";
   reportActions(A());
-  for(GroundedAction *a : A()) if(a->value==GroundedAction::active){
+
+  for(GroundedAction *a : A()) if(a->actionState==GroundedAction::active){
 //    cout <<' ' <<a->symbol.name;
     for(PDtask *t:a->tasks) t->active=true;
 
@@ -78,7 +77,7 @@ void ActionMachine::step(){
       //dynamic_cast<MoveEffTo_ActionSymbol&>(a->symbol).task->y_ref = a->poseArg1;
     }
     if(a->getSymbol()==PushForce::symbol){
-      cout <<"FORCE TASK" <<endl;
+      // cout <<"FORCE TASK" <<endl;
       // s->refs.fR = a->poseArg1;
       // s->refs.fR_gainFactor = 1.;
       // s->refs.Kp_gainFactor = .2;
@@ -109,7 +108,7 @@ void ActionMachine::close(){
 
 GroundedAction* ActionMachine::add(GroundedAction *action) {
   action->initYourself(*this);
-  action->value=GroundedAction::active; //TODO!
+  action->actionState=GroundedAction::active; //TODO!
 
   A.set()->append(action);
   return action;
@@ -121,49 +120,31 @@ void ActionMachine::removeGroundedAction(GroundedAction* a, bool hasLock){
   else A().removeValue(a);
 }
 
-//===========================================================================
-
-void reportExistingSymbols(){
-  for(Symbol *s:symbols()){
-    cout <<"Symbol '" <<s->name <<"' nargs=" <<s->nargs;
-    cout <<endl;
-  }
-}
-
-void reportActions(ActionL &A){
-  cout <<"* ActionL" <<endl;
-  for(GroundedAction *a : A){
-    cout << a->name << " value=" << GroundActionValueString[a->value] << endl;
-    // cout <<a->symbol.name <<" {" <<a->shapeArg1 <<' ' <<a->shapeArg2 <<" } { " <<a->poseArg1 <<' ' <<a->poseArg2 <<" }:";
-    cout << " value=" <<GroundActionValueString[a->value] <<endl;
-  }
-}
-
 void ActionMachine::transition(){
   Access_typed<ActionL>::WriteToken lock(&A); //kills itself
   //const auto& lock=A.set();
 
   //-- first remove all old successes and fails
-  for_list_rev(GroundedAction, a, A()) if(a->value==GroundedAction::success || a->value==GroundedAction::failed){
+  for_list_rev(GroundedAction, a, A()) if(a->actionState==GroundedAction::success || a->actionState==GroundedAction::failed){
     removeGroundedAction(a, true);
     a=NULL; //a has deleted itself, for_list_rev should be save, using a_COUNTER
   }
 
   //-- check new successes and fails
-  for(GroundedAction *a:A()) if(a->value==GroundedAction::active){
-    if(a->finishedSuccess(*this)) a->value=GroundedAction::success;
-    if(a->finishedFail(*this)) a->value=GroundedAction::failed;
+  for(GroundedAction *a:A()) if(a->actionState==GroundedAction::active){
+    if(a->finishedSuccess(*this)) a->actionState=GroundedAction::success;
+    if(a->finishedFail(*this)) a->actionState=GroundedAction::failed;
   }
 
   //-- progress with queued
-  for(GroundedAction *a:A()) if(a->value==GroundedAction::queued){
+  for(GroundedAction *a:A()) if(a->actionState==GroundedAction::queued){
     bool fail=false, succ=true;
     for(GroundedAction *b:a->dependsOnCompletion){
-      if(b->value==GroundedAction::failed) fail=true;
-      if(b->value!=GroundedAction::success) succ=false;
+      if(b->actionState==GroundedAction::failed) fail=true;
+      if(b->actionState!=GroundedAction::success) succ=false;
     }
-    if(fail) a->value=GroundedAction::failed; //if ONE dependence failed -> fail
-    if(succ) a->value=GroundedAction::active; //if ALL dependences succ -> active
+    if(fail) a->actionState=GroundedAction::failed; //if ONE dependence failed -> fail
+    if(succ) a->actionState=GroundedAction::active; //if ALL dependences succ -> active
     //in all other cases -> queued
   }
 }
@@ -175,5 +156,34 @@ void ActionMachine::waitForActionCompletion(GroundedAction* a){
     if(!A().contains(a)) cont=false;
     A.deAccess();
   }
+}
 
+//===========================================================================
+// GroundedAction
+//
+const char* GroundedAction::GroundActionValueString[7] = {
+ "trueLV", "falseLV", "inactive", "queued", "active", "failed", "success"
+};
+
+void GroundedAction::deinitYourself(ActionMachine& actionMachine) {
+  for (PDtask *t : tasks) actionMachine.s->MP.tasks.removeValue(t);
+  listDelete(tasks);
+}
+
+//===========================================================================
+// Helper functions
+//
+void reportExistingSymbols(){
+  for(Symbol *s:symbols()){
+    cout <<"Symbol '" <<s->name <<"' nargs=" <<s->nargs;
+    cout <<endl;
+  }
+}
+
+void reportActions(ActionL &A){
+  cout <<"* ActionL" <<endl;
+  for (GroundedAction *a : A){
+    cout << a->name << " actionState=" << a->getActionStateString() << endl;
+    // cout <<a->symbol.name <<" {" <<a->shapeArg1 <<' ' <<a->shapeArg2 <<" } { " <<a->poseArg1 <<' ' <<a->poseArg2 <<" }:";
+  }
 }
