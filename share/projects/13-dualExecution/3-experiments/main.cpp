@@ -37,6 +37,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
   UnconstrainedProblem UnConstrainedP(ConstrainedP);
   UnConstrainedP.mu = 10.;
 
+  MT::timerStart();
   for(uint k=0;k<5;k++){
     optNewton(x, UnConstrainedP, OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1e-3, stopTolerance=1e-4, maxStep=.5));
 //    optNewton(x, UCP, OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
@@ -46,6 +47,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
     P.dualMatrix = UnConstrainedP.lambda;
     UnConstrainedP.mu *= 2.;
   }
+  cout <<"** optimization time = " <<MT::timerRead() <<endl;
   P.costReport();
 
   if(&y){
@@ -73,7 +75,7 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
   double sin_jitter = MT::getParameter<double>("sin_jitter", 0.);
 
   FeedbackMotionControl MC(world);
-  MC.qitselfPD.active=false;
+  MC.qitselfPD.active=true;
 
   //position PD task
   PDtask *pd_y=
@@ -83,7 +85,7 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
 
   //joint space PD task
   PDtask *pd_x=
-      MC.addPDTask("pose", .1, .8,
+      MC.addPDTask("pose", 1., .8,
                     new DefaultTaskMap(qItselfTMT, world));
   pd_x->prec = .1;
 
@@ -108,7 +110,7 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
       pd_x->y_ref = x[t];
 #ifdef USE_DUAL
       pd_c->desiredForce=dual(t);
- #endif
+#endif
     }
 
 #ifdef USE_DUAL
@@ -166,8 +168,7 @@ int main(int argc,char** argv){
 
 //  arr x2 = reverseTrajectory(x);
 //  x.append(x2);
-//  for(uint i=0;i<2;i++)
-//    displayTrajectory(x, 1, world, "planned trajectory");
+  for(uint i=0;i<1;i++) displayTrajectory(x, 1, world, "planned trajectory");
 //  return 0;
 
 //  world.getBodyByName("table")->X.pos.z -= .1;
