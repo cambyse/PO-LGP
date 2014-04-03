@@ -66,7 +66,7 @@ void ActionMachine::step(){
   //  cout <<"** active actions:";
   reportActions(A());
 
-  for(GroundedAction *a : A()) if(a->actionState==GroundedAction::active){
+  for(GroundedAction *a : A()) if(a->actionState==ActionState::active){
 //    cout <<' ' <<a->symbol.name;
     for(PDtask *t:a->tasks) t->active=true;
 
@@ -106,10 +106,11 @@ void ActionMachine::step(){
 void ActionMachine::close(){
 }
 
-GroundedAction* ActionMachine::add(GroundedAction *action) {
+GroundedAction* ActionMachine::add(GroundedAction *action,
+                                   ActionState actionState)
+{
   action->initYourself(*this);
-  action->actionState=GroundedAction::active; //TODO!
-
+  action->actionState=actionState;
   A.set()->append(action);
   return action;
 }
@@ -125,26 +126,26 @@ void ActionMachine::transition(){
   //const auto& lock=A.set();
 
   //-- first remove all old successes and fails
-  for_list_rev(GroundedAction, a, A()) if(a->actionState==GroundedAction::success || a->actionState==GroundedAction::failed){
+  for_list_rev(GroundedAction, a, A()) if(a->actionState==ActionState::success || a->actionState==ActionState::failed){
     removeGroundedAction(a, true);
     a=NULL; //a has deleted itself, for_list_rev should be save, using a_COUNTER
   }
 
   //-- check new successes and fails
-  for(GroundedAction *a:A()) if(a->actionState==GroundedAction::active){
-    if(a->finishedSuccess(*this)) a->actionState=GroundedAction::success;
-    if(a->finishedFail(*this)) a->actionState=GroundedAction::failed;
+  for(GroundedAction *a:A()) if(a->actionState==ActionState::active){
+    if(a->finishedSuccess(*this)) a->actionState=ActionState::success;
+    if(a->finishedFail(*this)) a->actionState=ActionState::failed;
   }
 
   //-- progress with queued
-  for(GroundedAction *a:A()) if(a->actionState==GroundedAction::queued){
+  for(GroundedAction *a:A()) if(a->actionState==ActionState::queued){
     bool fail=false, succ=true;
     for(GroundedAction *b:a->dependsOnCompletion){
-      if(b->actionState==GroundedAction::failed) fail=true;
-      if(b->actionState!=GroundedAction::success) succ=false;
+      if(b->actionState==ActionState::failed) fail=true;
+      if(b->actionState!=ActionState::success) succ=false;
     }
-    if(fail) a->actionState=GroundedAction::failed; //if ONE dependence failed -> fail
-    if(succ) a->actionState=GroundedAction::active; //if ALL dependences succ -> active
+    if(fail) a->actionState=ActionState::failed; //if ONE dependence failed -> fail
+    if(succ) a->actionState=ActionState::active; //if ALL dependences succ -> active
     //in all other cases -> queued
   }
 }

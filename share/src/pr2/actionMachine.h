@@ -35,6 +35,10 @@ struct Symbol{
 };
 
 //===========================================================================
+//GroundedAction
+//True, False refer to state symbols, the rest to action symbols
+enum ActionState { trueLV, falseLV, inactive, queued, active, failed, success };
+
 /** A GroundedAction is an instantiation/grounding of an Symbol (e.g. motor primitive type). The grounding
  *  is defined by the specific arguments: which objects/body parts does the action refer to; which parameters
  *  does it have. While state literals typically are binary-valued (on(A,B) is true or false); action literals
@@ -44,7 +48,6 @@ struct Symbol{
  *  action state. */
 struct GroundedAction : Symbol{
   //-- ActionState of the GroundedAction
-  enum ActionState { trueLV, falseLV, inactive, queued, active, failed, success }; //True, False refer to state symbols, the rest to action symbols
   ActionState actionState;
   static const char* GroundActionValueString[7];
   const char* getActionStateString() { return GroundActionValueString[actionState]; };
@@ -102,7 +105,9 @@ struct ActionMachine : Module {
   ~ActionMachine();
 
   //-- user methods
-  GroundedAction* add(GroundedAction* action);
+  GroundedAction* add(GroundedAction *action,
+                      ActionState actionState=ActionState::active);
+
   void removeGroundedAction(GroundedAction* a, bool hasLock=false);
   void waitForActionCompletion(GroundedAction* a);
 
