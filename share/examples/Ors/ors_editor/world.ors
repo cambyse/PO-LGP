@@ -1,7 +1,7 @@
 # door1 {{{
 body door1-frame {
   type=3
-  mesh="door_model/frame_hacd.obj"
+  mesh='door_model/frame_hacd.obj'
   meshscale=.01
   fixed
 }

@@ -19,7 +19,7 @@ double UnconstrainedProblem::fs(arr& dF, arr& HF, const arr& _x){
   //  cout <<"g= " <<g_x <<" lambda= " <<lambda <<endl;
 
   //-- construct unconstrained problem
-  double F=f_x+f0;
+  double F=f_x;
   if(muLB)     for(uint i=0;i<g_x.N;i++){ if(g_x(i)>0.) return NAN;  F -= muLB * ::log(-g_x(i)); } //log barrier, check feasibility
   if(mu)       for(uint i=0;i<g_x.N;i++) if(g_x(i)>0. || (lambda.N && lambda(i)>0.)) F += mu * MT::sqr(g_x(i));  //penalty
   if(lambda.N) for(uint i=0;i<g_x.N;i++) if(lambda(i)>0.) F += lambda(i) * g_x(i);  //augments
@@ -62,7 +62,7 @@ void UnconstrainedProblem::augmentedLagrangian_LambdaUpdate(const arr& x, double
 //  cout <<"Update Lambda: g=" <<g <<" lambda=" <<lambda <<endl;
 }
 
-void UnconstrainedProblem::aula_update(const arr& _x, double lambdaStepsize, arr& dF_x, arr& HF_x){
+void UnconstrainedProblem::aula_update(const arr& _x, double lambdaStepsize, double *F_x, arr& dF_x, arr& HF_x){
   if(_x!=x){ //need to recompute gradients etc
     x=_x;
     f_x = P.fc(df_x, Hf_x, g_x, Jg_x, x);
@@ -92,14 +92,20 @@ void UnconstrainedProblem::aula_update(const arr& _x, double lambdaStepsize, arr
 
   for(uint i=0;i<g_x.N;i++) if(lambda(i)<0.) lambda(i)=0.;
 
-  f0 -= scalarProduct(lambda - lambdaOld, g_x);
-  for(uint i=0;i<g_x.N;i++){
-    if( lambda(i)>0 && !lambdaOld(i)>0.) f0 -= mu * MT::sqr(g_x(i));
-    if(!lambda(i)>0 &&  lambdaOld(i)>0.) f0 += mu * MT::sqr(g_x(i));
+  //rescale f
+  if(F_x){
+    double f0 = scalarProduct(lambda - lambdaOld, g_x);
+    for(uint i=0;i<g_x.N;i++){
+      if((lambda(i)>0.  && lambdaOld(i)<=0.) && g_x(i)<=0.) f0 += mu * MT::sqr(g_x(i));
+      if((lambda(i)<=0. && lambdaOld(i)>0. ) && g_x(i)<=0.) f0 -= mu * MT::sqr(g_x(i));
+    }
+    *F_x += f0;
   }
-  //f0 -= 1e-16;
 
-  if(&dF_x || &HF_x) fs(dF_x, HF_x, x); //reevaluate gradients and hessian (using buffered info)
+  if(&dF_x || &HF_x){
+    double fx = fs(dF_x, HF_x, x); //reevaluate gradients and hessian (using buffered info)
+    CHECK(fabs(fx-*F_x)<1e-10,"");
+  }
 }
 
 //==============================================================================

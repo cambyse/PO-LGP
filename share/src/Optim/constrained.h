@@ -17,18 +17,17 @@ struct UnconstrainedProblem : ScalarFunction{
   double muLB;       ///< log barrier weight
   double mu;         ///< squared penalty weight
   arr lambda;        ///< lagrange multiplier in augmented lagrangian
-  double f0;
 
   //-- buffers to avoid recomputing gradients
   arr x, df_x, Hf_x, g_x, Jg_x;
   double f_x;
 
-  UnconstrainedProblem(ConstrainedProblem &_P):P(_P), muLB(0.), mu(0.), f0(0.) {}
+  UnconstrainedProblem(ConstrainedProblem &_P):P(_P), muLB(0.), mu(0.) {}
 
   virtual double fs(arr& dF, arr& HF, const arr& x); ///< the unconstrained meta function F
 
   void augmentedLagrangian_LambdaUpdate(const arr& x, double lambdaStepsize=1.);
-  void aula_update(const arr& x, double lambdaStepsize=1., arr &dF_x=NoArr, arr &HF_x=NoArr);
+  void aula_update(const arr& x, double lambdaStepsize=1., double *F_x=NULL, arr &dF_x=NoArr, arr &HF_x=NoArr);
 };
 
 

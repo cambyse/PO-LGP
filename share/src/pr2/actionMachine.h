@@ -128,7 +128,7 @@ struct ActionSystem:System{
   RosCom *ros;
   ActionMachine *machine;
   ActionSystem():ros(NULL), machine(NULL){
-    addModule<JoystickInterface>(NULL, Module_Thread::loopWithBeat, .01);
+    //addModule<JoystickInterface>(NULL, Module_Thread::loopWithBeat, .01);
     machine = addModule<ActionMachine>(NULL, Module_Thread::loopWithBeat, .01);
     if(MT::getParameter<bool>("useRos",false)){
       ros = addModule<RosCom>(NULL, Module_Thread::loopWithBeat, .001);

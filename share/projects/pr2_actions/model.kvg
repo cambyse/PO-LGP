@@ -10,3 +10,5 @@ shape endeffForceL(l_wrist_roll_link){ rel=<T t(.5 0 0)> type=5 color=[1 0 0] si
 shape endeffForceR(r_wrist_roll_link){ rel=<T t(.5 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
 
 shape mymarker(world){ type=5 color=[1 1 0] size=[.2 0 0 0]}
+
+Merge worldTranslationRotation{ type=10 }

@@ -538,6 +538,7 @@ void editConfiguration(const char* filename, ors::KinematicWorld& C) {
       C.gl().watch();
       continue;
     }
+    C.gl().update();
     cout <<"animating.." <<endl;
     while(ino.pollForModification());
     animateConfiguration(C, &ino);

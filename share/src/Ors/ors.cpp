@@ -459,7 +459,6 @@ ors::KinematicWorld::~KinematicWorld() {
 
 void ors::KinematicWorld::init(const char* filename) {
   *this <<FILE(filename);
-  calc_fwdPropagateFrames();
   calc_q_from_Q();
 }
 
@@ -1453,7 +1452,6 @@ void ors::KinematicWorld::stepDynamics(const arr& Bu_control, double tau, double
 #endif
 
   setJointState(x1[0], x1[1]);
-  calc_fwdPropagateFrames();
 }
 
 /** @brief prototype for \c operator<< */

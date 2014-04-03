@@ -10,6 +10,9 @@ int main(int argc,char** argv){
   MT::initCmdLine(argc,argv);
 
   ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
+  makeConvexHulls(G.shapes);
+  for(ors::Shape *s:G.shapes) s->cont=true;
+//  G.gl().watch();
 
   MotionProblem MP(G);
   MP.loadTransitionParameters();
@@ -17,26 +20,27 @@ int main(int argc,char** argv){
   //-- setup the motion problem
   TaskCost *c;
   c = MP.addTask("position",
-                    new DefaultTaskMap(posTMT, G, "endeff", ors::Vector(0, 0, .2)));
+                    new DefaultTaskMap(posTMT, G, "endeff", ors::Vector(0, 0, 0)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                           ARRAY(MP.world.getBodyByName("target")->X.pos), 1e3);
+                           ARRAY(MP.world.getShapeByName("target")->X.pos), 1e3);
 
-//  c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, G));
-//  c->map.order=1; //make this a velocity variable!
-//  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
+  c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, G));
+  c->map.order=1; //make this a velocity variable!
+  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
 
-  //  c = P.addDefaultTaskMap("collision", collTMT, 0, Transformation_Id, 0, Transformation_Id, ARR(.1));
-  //  P.setInterpolatingCosts(c, MotionProblem::1constFinalMid, ARRAY(0.), 1e-0);
+    c = MP.addTask("collision",
+                   new DefaultTaskMap(collTMT, G, NULL, NoVector, NULL, NoVector, ARR(.1)));
+    MP.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
 
   //  c = P.addDefaultTaskMap("qitself", qItselfTMT, (int)0, Transformation_Id, 0, Transformation_Id, 0);
   //  P.setInterpolatingCosts(   c, MotionProblem::constFinalMid, ARRAY(0.), 1e-4);
   //  //P.setInterpolatingVelCosts(c, MotionProblem::constFinalMid, ARRAY(0.), 1e4, ARRAY(0.), 1e-2);
 
   //-- collisions with other objects
-  uintA shapes = ARRAY<uint>(MP.world.getBodyByName("endeff")->shapes(0)->index);
-  c = MP.addTask("proxyColls",
-                    new ProxyTaskMap(allVersusListedPTMT, shapes, .2, true));
-  MP.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e2);
+//  uintA shapes = ARRAY<uint>(MP.world.getShapeByName("endeff")->index);
+//  c = MP.addTask("proxyColls",
+//                    new ProxyTaskMap(allVersusListedPTMT, shapes, .2, true));
+//  MP.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e2);
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction MF(MP);
@@ -77,7 +81,8 @@ int main(int argc,char** argv){
   //  OpenGL costs(STRING("PHI ("<<F.dim_phi(0)<<" tasks)"), 3*T+10, 3*F.dim_phi(0)+10 );
   //-- optimize
   for(uint k=0;k<3;k++){
-    optNewton(x, Convert(MF), OPT(verbose=2, stopIters=40, useAdaptiveDamping=false, damping=1e-0, maxStep=1.));
+    optNewton(x, Convert(MF), OPT(verbose=2, stopIters=40, damping=1e-0, maxStep=1.));
+
     //costs.displayRedBlue(~sqr(P.costMatrix), false, 3);
     MP.costReport();
 //    checkJacobian(Convert(MF), x, 1e-5);

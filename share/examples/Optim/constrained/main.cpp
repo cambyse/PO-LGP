@@ -33,7 +33,7 @@ void displayFunction(VectorFunction& F){
 // test standard constrained optimizers
 //
 
-void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=100){
+void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=20){
   enum MethodType { squaredPenalty=1, augmentedLag, logBarrier };
 
   MethodType method = (MethodType)MT::getParameter<int>("method");
@@ -43,7 +43,7 @@ void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=100){
   //-- choose constrained method
   switch(method){
   case squaredPenalty: UCP.mu=10.;  break;
-  case augmentedLag:   UCP.mu=10.;  break;
+  case augmentedLag:   UCP.mu=1.;  break;
   case logBarrier:     UCP.muLB=1.;  break;
   }
 
@@ -51,12 +51,14 @@ void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=100){
   arr x(p.dim_x());
   if(&x_start) x=x_start;
   else{
-    if(method==logBarrier) x.setZero(); //log barrier needs a starting point
+    x.setZero();
+    if(method==logBarrier){ } //log barrier needs a feasible starting point
     else rndUniform(x, -1., 1.);
   }
 //  cout <<std::setprecision(2);
   cout <<"x0=" <<x <<endl;
 
+  rnd.seed(0);
 
   system("rm -f z.grad_all");
 
@@ -90,18 +92,22 @@ void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=100){
     switch(method){
     case squaredPenalty: UCP.mu *= 10;  break;
     case augmentedLag:   UCP.augmentedLagrangian_LambdaUpdate(x);  break;
-    case logBarrier:     UCP.muLB *=.8;  break;
+    case logBarrier:     UCP.muLB *=.3;  break;
     }
 //    cout <<"current g =" <<UCP.g_x <<endl;
 
-    arr zz(lambda_.N); zz.setZero();
-    for(uint i=0;i<z.N;i++) zz(i) = (lambda_(i)<=1e-10 || UCP.lambda(i)>0.)?0.:1.;
-    cout <<" \tremain_active_cond="<< sum(zz) <<" \tlin_indep_cond=" <<sum(z) <<endl;
-    cout <<UCP.f_x <<endl;
+    if(method==augmentedLag){
+      arr zz(lambda_.N); zz.setZero();
+      for(uint i=0;i<z.N;i++) zz(i) = (lambda_(i)<=1e-10 || UCP.lambda(i)>0.)?0.:1.;
+      cout <<" \tremain_active_cond="<< sum(zz) <<" \tlin_indep_cond=" <<sum(z) <<endl;
+    }
 
     system("cat z.grad >>z.grad_all");
-//    cout <<"x_opt=" <<x <<" mu=" <<UCP.mu <<" \tlambda=" <<UCP.lambda <<endl;
+    cout <<"f(x)=" <<UCP.f_x <<" \tmu=" <<UCP.mu <<" \tmuLB=" <<UCP.muLB;
+    if(x.N<5) cout <<" \tx=" <<x <<" \tlambda=" <<UCP.lambda;
+    cout <<endl;
   }
+  cout <<std::setprecision(6) <<"\nf(x)=" <<UCP.f_x <<"\nx_opt=" <<x <<"\nlambda=" <<UCP.lambda <<endl;
 
   system("mv z.grad_all z.grad");
   if(x.N==2) gnuplot("load 'plt'", false, true);
