@@ -16,6 +16,7 @@ HEADERS += \
     ../util/KolmogorovSmirnovTest.h \
     ../util/debug.h \
     ../util/debug_exclude.h \
+    ../util/Commander.h \
     \
     ../optimization/LBFGS_Optimizer.h \
     ../optimization/LBFGS_Object.h \
@@ -71,6 +72,7 @@ SOURCES += \
     ../util/lbfgs_codes.cpp \
     ../util/KolmogorovSmirnovDist.cpp \
     ../util/KolmogorovSmirnovTest.cpp \
+    ../util/Commander.cpp \
     \
     ../optimization/LBFGS_Optimizer.cpp \
     ../optimization/LBFGS_Object.cpp \
@@ -119,7 +121,7 @@ SOURCES += \
     PlannerTest.cpp \
     LearnerTest.cpp \
     LBFGSTest.cpp \
-    \
+    CommanderTest.cpp \
     TemplateTest.cpp \
     SandBox.cpp
 LIBS += -llbfgs \
