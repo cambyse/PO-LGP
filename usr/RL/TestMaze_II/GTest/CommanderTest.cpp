@@ -50,15 +50,50 @@ constexpr bool all_same(A<A1First, A1REST...>, A<A2First, A2REST...>) {
 
 //------------------------------------------------------------
 
-template<template<class...> class T>
-void f(T t) {
-    std::function<void(int)> ff(t);
-    ff(3);
+template<class>
+struct function_traits;
+
+// function pointer
+template<class R, class... Args>
+struct function_traits<R(*)(Args...)> {
+    void print() {}
+};
+
+// template<class R, class... Args>
+// struct function_traits<R(Args...)>
+// {};
+
+// functor
+template<class F>
+struct function_traits
+{
+    void print() {
+        //std::function<decltype(&F::operator())> f;
+        // function_traits<decltype(&F::operator())> ft;
+        // ft.print();
+    }
+};
+
+float free_function(const std::string&, int, bool) {
+    return 0;
 }
+
+template<class Ret, class ... Args>
+void test(std::function<Ret(Args...)>) {}
 
 TEST(Commander, TMP) {
 
-    f([](int){});
+    auto lamb = [](int)->bool{return false;};
+
+    test(lamb);
+
+    function_traits<decltype(lamb)> ft;
+    ft.print();
+
+    // DEBUG_OUT(0,"N:  " << Traits::arity);
+    // DEBUG_OUT(0,"a1: " << typeid(Traits::argument<0>).name());
+    // DEBUG_OUT(0,"a2: " << typeid(Traits::argument<1>).name());
+    // DEBUG_OUT(0,"a3: " << typeid(Traits::argument<2>).name());
 
     using namespace Commander;
 
