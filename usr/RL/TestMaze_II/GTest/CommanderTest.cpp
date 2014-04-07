@@ -34,19 +34,32 @@ public:
     }
 };
 
+void fun(int i, double d) {
+    DEBUG_OUT(0,"i=" << i);
+    DEBUG_OUT(0,"d=" << d);
+}
+
 TEST(Commander, TMP) {
 
     using namespace std::placeholders;
 
-    std::function<void(int,double)> f = [](int i, double j)->void{
-        DEBUG_OUT(0,"i=" << i);
-        DEBUG_OUT(0,"j=" << j);
-    };
+    std::tuple<int,double> t1(11,3.4);
+    std::tuple<bool,int,double> t2(false,5,5.9);
 
-    QString arr[2] = {"1","2"};
+    std::function<void(int,double)> std_fun(fun);
 
-    auto ff = recursive_bind<QString,0,Trafo,void,int,double>(arr,f);
-    ff();
+    auto ff = bind_tuple_as_args_idx<std::tuple<int,double>,0,void,int,double>(t1,std_fun);
+    ff(1.222);
+
+    // std::function<void(int,double)> f = [](int i, double j)->void{
+    //     DEBUG_OUT(0,"i=" << i);
+    //     DEBUG_OUT(0,"j=" << j);
+    // };
+
+    // QString arr[2] = {"1","2"};
+
+    // auto ff = recursive_bind<QString,0,Trafo,void,int,double>(arr,f);
+    // ff();
 
     return;
 

@@ -5,6 +5,7 @@
 #include <typeindex> // std::type_index
 #include <functional> // std::function
 #include <vector>
+#include <tuple>
 
 /** \brief This namespace contains some tools to infer the signature of
  * arbitrary functors (objects implementing operator() ). */
@@ -237,6 +238,58 @@ namespace function_signature {
         auto ff = std::bind(f, std::placeholders::_1, interp(arr[ParamIdx]));
         return recursive_bind<ParamType,ParamIdx+1,Interpreter,Ret,SecondArg,Rest...>(arr,ff);
     }
+
+    //======================================//
+    //==== tuple_append, tuple_prepend  ====//
+    //======================================//
+
+    template<class NewType, class ... OldTypes>
+        std::tuple<OldTypes...,NewType> tuple_append(std::tuple<OldTypes...> old, NewType n) {
+        return std::tuple_cat(old,std::make_tuple(n));
+    }
+
+    template<class NewType, class ... OldTypes>
+        std::tuple<NewType,OldTypes...> tuple_prepend(std::tuple<OldTypes...> old, NewType n) {
+        return std::tuple_cat(std::make_tuple(n),old);
+    }
+
+    //================================//
+    //==== bind_tuple_as_args_idx ====//
+    //================================//
+
+    template<class TupleType, int Idx, class Ret, class OneArg>
+        std::function<Ret()> bind_tuple_as_args_idx(TupleType t, std::function<Ret(OneArg)> f) {
+        return std::bind(f, std::get<Idx>(t));
+    }
+
+    template<class TupleType, int Idx, class Ret, class FirstArg, class SecondArg, class ... MoreArgs>
+        std::function<Ret(SecondArg,MoreArgs...)> bind_tuple_as_args_idx(TupleType t, std::function<Ret(FirstArg,SecondArg,MoreArgs...)> f) {
+        return std::bind(f, std::get<Idx>(t));
+    }
+
+    //============================//
+    //==== bind_tuple_as_args ====//
+    //============================//
+
+    /* template<class Ret, class OneArg> */
+    /*     std::function<Ret()> tuple_bind( */
+    /*         std::function<Ret(OneArg)> f, */
+    /*         std::tuple<OneArg> t) { */
+    /*     return std::bind(f, std::get<0>(t)); */
+    /* } */
+
+    /* template<class Ret, class FirstArg, class SecondArg, class ... RestArgs> */
+    /*     std::function<Ret(SecondArg,RestArgs...)> tuple_bind( */
+    /*         std::function<Ret(FirstArg,SecondArg,RestArgs...)> f, */
+    /*         std::tuple<FirstArg,SecondArg,RestArgs...> t) { */
+    /*     auto ff = std::bind(f, std::placeholders::_1, std::get<0>(t)); */
+    /*     return tuple_bind<SecondArg,RestArgs...>(ff,); */
+    /* } */
+
+    /* template<class Ret, class ... Args> */
+    /*     Ret tuple_bind(std::function<Ret(Args...)> f, std::tuple<Args...> t) { */
+    /*     return Ret(); */
+    /* } */
 };
 
 #endif /* FUNCTION_SIGNATURE_H_ */
