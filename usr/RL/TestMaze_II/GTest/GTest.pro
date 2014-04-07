@@ -17,6 +17,7 @@ HEADERS += \
     ../util/debug.h \
     ../util/debug_exclude.h \
     ../util/Commander.h \
+    ../util/function_signature.h \
     \
     ../optimization/LBFGS_Optimizer.h \
     ../optimization/LBFGS_Object.h \

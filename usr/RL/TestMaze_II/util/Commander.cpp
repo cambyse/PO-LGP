@@ -5,8 +5,15 @@
 using std::vector;
 using std::get;
 using std::max;
+using std::shared_ptr;
 
 namespace Commander {
+
+    using namespace function_signature;
+
+    ReturnType AbstractCommandFunction::wrong_number_of_parameters(int got, int need) const {
+        return {false, QString("Wrong number of parameters (got %1, need %2)").arg(got).arg(need)};
+    }
 
 // vector<QString> CommandCenter::print_commands(int space) const {
 //     // return
@@ -71,14 +78,34 @@ namespace Commander {
 //     return ret;
 // }
 
-// void CommandCenter::execute(QString command_name) const {
-//     for(auto c : commands) {
-//         if(get<0>(c)==command_name) {
-//             get<4>(c)();
-//             return;
-//         }
-//     }
-//     DEBUG_ERROR("Could not find command '" << command_name << "'");
-// }
+    QString CommandCenter::execute(QString command_string) const {
 
+        // split command string
+        QStringList command_parts = command_string.split(" ");
+        if(command_parts.size()==0) {
+            return "";
+        }
+        QString command_name = command_parts[0];
+        command_parts.pop_front();
+
+        // search for matching command alias
+        bool found = false;
+        ReturnType res = {false,"Command not found"};
+        for(auto c : command_list) {
+            if(get<0>(c)==command_name) {
+                found = true;
+                res = get<1>(c)->execute(command_parts);
+                if(res.first) {
+                    break;
+                }
+            }
+        }
+
+        // report result
+        if(!found) {
+            return QString("Could not find command '%1'").arg(command_name);
+        } else {
+            return res.second;
+        }
+    }
 }
