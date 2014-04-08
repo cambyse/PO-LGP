@@ -54,4 +54,5 @@ struct PushForce : GroundedAction {
   static Symbol symbol;
   virtual Symbol& getSymbol() {return symbol;}
   virtual void initYourself(ActionMachine& actionMachine);
+  bool finishedSuccess(ActionMachine& M);
 };

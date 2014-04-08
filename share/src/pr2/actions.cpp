@@ -106,10 +106,14 @@ PushForce::PushForce(const char* effName, ors::Vector forceVec, arr poseArg2)
 }
 
 void PushForce::initYourself(ActionMachine& actionMachine) {
-  PDtask *task;
-  task = actionMachine.s->MP.addPDTask(
+  PDtask* task = actionMachine.s->MP.addPDTask(
       STRING("PushForce_" << effName),
       .2, .8, vecTMT, effName, forceVec);
   task->y_ref = poseArg2;
   tasks.append(task);
+}
+
+bool PushForce::finishedSuccess(ActionMachine& M) {
+  PDtask *task=tasks(0);
+  return (task->y.N==task->y_ref.N && maxDiff(task->y, task->y_ref)<1e-1);
 }
