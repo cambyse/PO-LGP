@@ -55,9 +55,26 @@ namespace Commander {
         }
     };
 
-    /** \brief Converter from type U to type T. */
-    template<class T, class U>
-        T type_interpreter(const U&);
+    /** \brief Mapper for types. */
+    template<class From, class To> class Mapper {
+    public:
+        static const bool can_do = false;
+        static To map(From f) { return To(); }
+    };
+
+    /** \brief Specialization for QString-->int. */
+    template<> class Mapper<QString,int> {
+    public:
+        static const bool can_do = true;
+        static int map(QString from) { return from.toInt(); }
+    };
+
+    /** \brief Specialization for QString-->double. */
+    template<> class Mapper<QString,double> {
+    public:
+        static const bool can_do = true;
+        static double map(QString from) { return from.toDouble(); }
+    };
 
     /** \brief Return type of command-functions.
      *

@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "../util/util.h"
 #include "../util/Commander.h"
 
 #define DEBUG_STRING ""
@@ -7,61 +8,15 @@
 
 using namespace function_signature;
 using namespace Commander;
-
-template<class From, class To>
-class Trafo {
-public:
-    To operator()(From f) const {
-        return To();
-    }
-};
-
-template<>
-class Trafo<QString,int> {
-public:
-    int operator()(QString from) const {
-        //return 11;
-        return from.toInt();
-    }
-};
-
-template<>
-class Trafo<QString,double> {
-public:
-    int operator()(QString from) const {
-        //return 2.2;
-        return from.toDouble();
-    }
-};
-
-void fun(int i, double d) {
-    DEBUG_OUT(0,"i=" << i);
-    DEBUG_OUT(0,"d=" << d);
-}
+using util::operator<<;
 
 TEST(Commander, TMP) {
 
-    using namespace std::placeholders;
+    std::array<int,4> a = {1,2,3,4};
+    std::tuple<int,int,int,int> t;
+    t = array_to_tuple<decltype(a),decltype(t)>(a);
 
-    std::tuple<int,double> t1(11,3.4);
-    std::tuple<bool,int,double> t2(false,5,5.9);
-
-    std::function<void(int,double)> std_fun(fun);
-
-    auto ff = bind_tuple_as_args_idx<std::tuple<int,double>,0,void,int,double>(t1,std_fun);
-    ff(1.222);
-
-    // std::function<void(int,double)> f = [](int i, double j)->void{
-    //     DEBUG_OUT(0,"i=" << i);
-    //     DEBUG_OUT(0,"j=" << j);
-    // };
-
-    // QString arr[2] = {"1","2"};
-
-    // auto ff = recursive_bind<QString,0,Trafo,void,int,double>(arr,f);
-    // ff();
-
-    return;
+    DEBUG_OUT(0,"t = " << t);
 
     //----------------------------------//
     // Want to be able to do this

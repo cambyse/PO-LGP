@@ -158,22 +158,13 @@ namespace function_signature {
     //==== get_n_args ====//
     //====================//
 
-    /** \brief Get return type of F::operator(). */
+    /** \brief Get return number of arguments of F::operator(). */
     template<typename F>
         constexpr int get_n_args() { return get_n_args_impl<make_function_type<F>>::n_args; }
 
     //==============================//
     //==== get_arg_type_indices ====//
     //==============================//
-
-    /** \brief Get vector of argument types (via type_index). */
-    /* template<typename ... Args> */
-    /*     constexpr std::vector<std::type_index> get_arg_type_indices() { */
-    /*     static_assert(sizeof...(Args)==0, */
-    /*                   "This function should only be used for empty template lists" */
-    /*         ); */
-    /*     return {}; */
-    /* } */
 
     /** \brief Get vector of argument types (via type_index). */
     template<typename FirstArg>
@@ -220,76 +211,180 @@ namespace function_signature {
         return get_return_type_index(make_function(f));
     }
 
-    //========================//
-    //==== recursive_bind ====//
-    //========================//
+    //=========================//
+    //==== bind_first_arg  ====//
+    //=========================//
 
-    /** \brief Recursively bind function parameters. */
-    template<class ParamType, int ParamIdx, template<class,class> class Interpreter, class Ret, class FirstArg>
-        std::function<Ret()> recursive_bind(const ParamType arr[], std::function<Ret(FirstArg)> f) {
-        const Interpreter<ParamType,FirstArg> interp;
-        return std::bind(f, interp(arr[ParamIdx]));
+    /** \brief Returns a function with first argument bound. */
+    template<class Ret, class FirstArg, class SecondArg, class ... RestArgs>
+        std::function<Ret(SecondArg,RestArgs...)> bind_first_arg(std::function<Ret(FirstArg,SecondArg,RestArgs...)> f, FirstArg first_arg) {
+        return [=](SecondArg second_arg, RestArgs ... rest_args) { return f(first_arg,second_arg,rest_args...); };
     }
 
-    /** \brief Recursively bind function parameters. */
-    template<class ParamType, int ParamIdx, template<class,class> class Interpreter, class Ret, class FirstArg, class SecondArg, class ... Rest>
-        std::function<Ret()> recursive_bind(const ParamType arr[], std::function<Ret(FirstArg,SecondArg,Rest...)> f) {
-        const Interpreter<ParamType,FirstArg> interp;
-        auto ff = std::bind(f, std::placeholders::_1, interp(arr[ParamIdx]));
-        return recursive_bind<ParamType,ParamIdx+1,Interpreter,Ret,SecondArg,Rest...>(arr,ff);
+    /** \brief Overload for functions with only one argument. */
+    template<class Ret, class FirstArg>
+        std::function<Ret()> bind_first_arg(std::function<Ret(FirstArg)> f, FirstArg first_arg) {
+        return [=]() { return f(first_arg); };
     }
 
-    //======================================//
-    //==== tuple_append, tuple_prepend  ====//
-    //======================================//
+    //=======================================//
+    //==== bind_first_arg_with_tuple_idx ====//
+    //=======================================//
 
-    template<class NewType, class ... OldTypes>
-        std::tuple<OldTypes...,NewType> tuple_append(std::tuple<OldTypes...> old, NewType n) {
-        return std::tuple_cat(old,std::make_tuple(n));
+    /** \brief Returns a function with first argument bound using element from tuple given by Idx. */
+    template<class Func, class TupleType, int Idx>
+        auto bind_first_arg_with_tuple_idx(Func f, TupleType t) -> decltype(bind_first_arg(f,std::get<Idx>(t))) {
+        return bind_first_arg(f, std::get<Idx>(t));
     }
 
-    template<class NewType, class ... OldTypes>
-        std::tuple<NewType,OldTypes...> tuple_prepend(std::tuple<OldTypes...> old, NewType n) {
-        return std::tuple_cat(std::make_tuple(n),old);
-    }
+    //====================================================//
+    //==== first_arg_recursively_bound_with_tuple_idx ====//
+    //====================================================//
 
-    //================================//
-    //==== bind_tuple_as_args_idx ====//
-    //================================//
+    /** \brief Binds all arguments of a function (starting with first argument)
+     * with elements from tuple (starting at Idx, counting down).
+     *
+     * Note that the order of function aruments and tuple elements is inverse to
+     * each other.*/
+    template<class Func, class TupleType, int Idx>
+        struct first_arg_recursively_bound_with_tuple_idx {
+            static_assert(std::tuple_size<TupleType>::value>Idx,"Tuple has not enough elements");
+            static_assert(get_n_args<Func>()<=Idx+1,"Cannot bind all function arguments (index for tuple element would become negative before all arguments are bound)");
+            static std::function<get_return_type<Func>()> get(Func f, TupleType t) {
+                auto ff = bind_first_arg_with_tuple_idx<Func,TupleType,Idx>(f,t);
+                return first_arg_recursively_bound_with_tuple_idx<decltype(ff),TupleType,Idx-1>::get(ff,t);
+            }
+        };
 
-    template<class TupleType, int Idx, class Ret, class OneArg>
-        std::function<Ret()> bind_tuple_as_args_idx(TupleType t, std::function<Ret(OneArg)> f) {
-        return std::bind(f, std::get<Idx>(t));
-    }
-
-    template<class TupleType, int Idx, class Ret, class FirstArg, class SecondArg, class ... MoreArgs>
-        std::function<Ret(SecondArg,MoreArgs...)> bind_tuple_as_args_idx(TupleType t, std::function<Ret(FirstArg,SecondArg,MoreArgs...)> f) {
-        return std::bind(f, std::get<Idx>(t));
-    }
+    /** \brief Specialization for Idx=0. */
+    template<class Func, class TupleType>
+        struct first_arg_recursively_bound_with_tuple_idx<Func,TupleType,0> {
+        static_assert(get_n_args<Func>()<=1,"Cannot bind all function arguments (more than one left but index is already zero)");
+            static std::function<get_return_type<Func>()> get(Func f, TupleType t) {
+                return bind_first_arg_with_tuple_idx<Func,TupleType,0>(f,t);
+            }
+        };
 
     //============================//
     //==== bind_tuple_as_args ====//
     //============================//
 
-    /* template<class Ret, class OneArg> */
-    /*     std::function<Ret()> tuple_bind( */
-    /*         std::function<Ret(OneArg)> f, */
-    /*         std::tuple<OneArg> t) { */
-    /*     return std::bind(f, std::get<0>(t)); */
-    /* } */
+    /** \brief Binds all arguments of a function with tuple elements (last
+     * element of tuple will be bound to first argument of function and vice
+     * versa). */
+    template<class Func, class TupleType>
+        std::function<get_return_type<Func>()> bind_tuple_as_args(Func f, TupleType t) {
+        return first_arg_recursively_bound_with_tuple_idx<Func,TupleType,get_n_args<Func>()-1>::get(f,t);
+    }
 
-    /* template<class Ret, class FirstArg, class SecondArg, class ... RestArgs> */
-    /*     std::function<Ret(SecondArg,RestArgs...)> tuple_bind( */
-    /*         std::function<Ret(FirstArg,SecondArg,RestArgs...)> f, */
-    /*         std::tuple<FirstArg,SecondArg,RestArgs...> t) { */
-    /*     auto ff = std::bind(f, std::placeholders::_1, std::get<0>(t)); */
-    /*     return tuple_bind<SecondArg,RestArgs...>(ff,); */
-    /* } */
+    //=====================================//
+    //==== all_elements_below_idx_true ====//
+    //=====================================//
 
-    /* template<class Ret, class ... Args> */
-    /*     Ret tuple_bind(std::function<Ret(Args...)> f, std::tuple<Args...> t) { */
-    /*     return Ret(); */
-    /* } */
+    template<int Idx, class TupleType>
+        struct all_elements_below_idx_true {
+            static_assert(std::tuple_size<TupleType>::value>=Idx,"Index is larger than tuple size");
+            static bool get(TupleType t) {
+                return std::get<Idx-1>(t) && all_elements_below_idx_true<Idx-1,TupleType>::get(t);
+            }
+        };
+
+    template<class TupleType>
+        struct all_elements_below_idx_true<0,TupleType> {
+            static bool get(TupleType) {
+                return true;
+            }
+        };
+
+    //===========================//
+    //==== all_elements_true ====//
+    //===========================//
+
+    template<class TupleType>
+        bool all_elements_true(TupleType t) {
+        return all_elements_below_idx_true<std::tuple_size<TupleType>::value,TupleType>::get(t);
+    }
+
+    //==================================================//
+    //==== map_tuples_idx, recursive_map_tuples_idx ====//
+    //==================================================//
+
+    template<class T1, class T2, template<class,class> class Mapper, int Idx>
+        struct map_tuples_idx {
+            static_assert(Idx>=0,"Cannot use negative index to access tuple element");
+            static_assert(Idx<std::tuple_size<T1>::value,"Index is too large for first tuple");
+            static_assert(Idx<std::tuple_size<T2>::value,"Index is too large for second tuple");
+            typedef typename std::tuple_element<Idx,T1>::type T1_elem;
+            typedef typename std::tuple_element<Idx,T2>::type T2_elem;
+            typedef Mapper<T1_elem,T2_elem> mapper_t;
+            static_assert(mapper_t::can_do,"Mapper type cannot map the requested types");
+            static void get(const T1& t1, T2& t2) {
+                std::get<Idx>(t2) = mapper_t::map(std::get<Idx>(t1));
+            }
+        };
+
+    template<class T1, class T2, template<class,class> class Mapper, int Idx>
+        struct recursive_map_tuples_idx {
+            static void get (const T1& t1, T2& t2) {
+                map_tuples_idx<T1,T2,Mapper,Idx>::get(t1,t2);
+                recursive_map_tuples_idx<T1,T2,Mapper,Idx-1>::get(t1,t2);
+            }
+        };
+
+    template<class T1, class T2, template<class,class> class Mapper>
+        struct recursive_map_tuples_idx<T1,T2,Mapper,0> {
+            static void get (const T1& t1, T2& t2) {
+                map_tuples_idx<T1,T2,Mapper,0>::get(t1,t2);
+            }
+        };
+
+    //====================//
+    //==== map_tuples ====//
+    //====================//
+
+    template<class T1, class T2, template<class,class> class Mapper>
+        void map_tuples(const T1& t1, T2& t2) {
+        static_assert(std::tuple_size<T1>::value==std::tuple_size<T2>::value,"Tuples do not have equal size");
+        return recursive_map_tuples_idx<T1,T2,Mapper,std::tuple_size<T1>::value-1>::get(t1,t2);
+    }
+
+    //============================//
+    //==== array_to_tuple_idx ====//
+    //============================//
+
+    template<class ArrType, class TupleType, int Idx>
+        struct array_to_tuple_idx {
+            static void get(const ArrType& a, TupleType& t) {
+                //static_assert(a.size()==std::tuple_size<TupleType>::value,"Array and tuple do not have equal size");
+                std::get<Idx>(t) = a[Idx];
+                array_to_tuple_idx<ArrType,TupleType,Idx-1>::get(a,t);
+            }
+        };
+
+    template<class ArrType, class TupleType>
+        struct array_to_tuple_idx<ArrType,TupleType,0> {
+            static void get(const ArrType& a, TupleType& t) {
+                //static_assert(a.size()==std::tuple_size<TupleType>::value,"Array and tuple do not have equal size");
+                std::get<0>(t) = a[0];
+            }
+        };
+
+    //========================//
+    //==== array_to_tuple ====//
+    //========================//
+
+    template<class ArrType, class TupleType>
+        void array_to_tuple(const ArrType& a, TupleType& t) {
+        array_to_tuple_idx<ArrType,TupleType,std::tuple_size<TupleType>::value-1>::get(a,t);
+    }
+
+    template<class ArrType, class TupleType>
+        TupleType array_to_tuple(const ArrType& a) {
+        TupleType t;
+        array_to_tuple_idx<ArrType,TupleType,std::tuple_size<TupleType>::value-1>::get(a,t);
+        return t;
+    }
+
 };
 
 #endif /* FUNCTION_SIGNATURE_H_ */
