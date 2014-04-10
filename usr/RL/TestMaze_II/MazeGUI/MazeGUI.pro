@@ -15,6 +15,8 @@ HEADERS += \
     ../util/lbfgs_codes.h \
     ../util/KolmogorovSmirnovDist.h \
     ../util/KolmogorovSmirnovTest.h \
+    ../util/Commander.h \
+    ../util/function_signature.h \
     \
     ../SmoothingKernelSigmoid.h \
     ../qcustomplot.h \
@@ -69,6 +71,7 @@ SOURCES += \
     ../util/lbfgs_codes.cpp \
     ../util/KolmogorovSmirnovDist.cpp \
     ../util/KolmogorovSmirnovTest.cpp \
+    ../util/Commander.cpp \
     \
     ../SmoothingKernelSigmoid.cpp \
     ../qcustomplot.cpp \

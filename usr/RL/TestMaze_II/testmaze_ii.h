@@ -10,6 +10,7 @@
 #include "Learner/LinearQ.h"
 #include "Planning/Policy.h"
 #include "DelayDistribution.h"
+#include "util/Commander.h"
 
 #include "qcustomplot.h"
 
@@ -63,6 +64,7 @@ private:
 
     // the user interface
     Ui::TestMaze_IIClass ui;
+    Commander::CommandCenter command_center;
 
     // the environment
     std::shared_ptr<Environment> environment;
@@ -130,7 +132,7 @@ private:
     // Member Functions //
     //==================//
 
-    void to_console(QString x) { ui._wConsoleOutput->appendPlainText(x); }
+    void to_console(QString x, int indentation = 0) { ui._wConsoleOutput->appendPlainText(QString(" ").repeated(indentation)+x); }
     void collect_episode(const int& length);
     void update_current_instance(action_ptr_t, observation_ptr_t, reward_ptr_t, bool invalidate_search_tree = true);
     void add_action_observation_reward_tripel(
@@ -150,7 +152,7 @@ private:
 private slots:
     void render_update();
     void choose_action();
-    void process_console_input(QString sequence_input = QString(), bool sequence = false);
+    void process_console_input();
     void back_in_history();
     void forward_in_history();
 };

@@ -13,6 +13,7 @@
 #include <typeindex>
 #include <functional> // std::function
 #include <memory> // std::shared_ptr
+#include <unordered_map>
 
 #include "debug.h"
 
@@ -25,34 +26,17 @@ namespace Commander {
         std::vector<QString> commands;
         //----methods----//
     public:
-        CommandAliasList(QString com) {
-            commands = {com};
-        }
-        CommandAliasList(std::initializer_list<QString> coms) {
-            commands = std::vector<QString>(coms);
-        }
+        CommandAliasList(QString);
+        CommandAliasList(const char*);
+        CommandAliasList(std::initializer_list<QString>);
         virtual ~CommandAliasList() = default;
-        QString get_string() const {
-            QString ret;
-            bool first = true;
-            for(auto s : commands) {
-                if(first) {
-                    ret += s;
-                    first = false;
-                } else {
-                    ret += " | " + s;
-                }
-            }
-            return ret;
-        }
-        bool operator==(const QString& other) {
-            for(auto c : commands) {
-                if(other==c) {
-                    return true;
-                }
-            }
-            return false;
-        }
+        bool contains(const QString& other) const;
+        bool has_common_element(const CommandAliasList& other) const;
+        bool operator<(const CommandAliasList& other) const { return commands<other.commands; }
+        int length() const { return get_string().length(); }
+        operator QString() const { return get_string(); }
+    private:
+        QString get_string() const;
     };
 
     /** \brief Mapper for types. */
@@ -151,6 +135,7 @@ namespace Commander {
         QString arg_description;
         ReturnType wrong_number_of_parameters(int,int) const;
         virtual ReturnType execute(const QStringList&) const = 0;
+        virtual int get_n_args() const = 0;
     };
 
     /** \brief Templatized version to store specific command-functions. */
@@ -159,35 +144,31 @@ namespace Commander {
     public:
         typedef function_signature::make_function_type<Func> func_t;
         func_t func;
-        CommandFunction(Func f): func(f) {
-            arg_description = get_arg_description();
-        }
+        constexpr static int n_args = function_signature::get_n_args<Func>();
+        CommandFunction(Func f);
         virtual ReturnType execute(const QStringList& args) const override;
+        virtual int get_n_args() const override { return n_args; }
     private:
         QString get_arg_description() const;
     };
 
     /** \brief Represents a description of a command. */
-    class Description: public QString {
-    public:
-        template<class T>
-            Description(const T& t): QString(t) {}
-        virtual ~Description() = default;
-        QString get_string() const {
-            return *this;
-        }
-    };
+    typedef QString Description;
 
     /** \brief This is an evil class: it uses variadic templates and lambda
      * closures. */
     class CommandCenter {
+        //----types----//
+    private:
+        enum COMMAND_LIST_ELEMENTS { COM_ALIAS_ARGS, COM_FUNCTION_DESCRIPTION };
         //----members----//
     private:
-        std::vector<std::tuple<
-            CommandAliasList,
-            std::shared_ptr<AbstractCommandFunction>,
-            Description
-            > > command_list;
+        std::multimap<
+            std::pair<CommandAliasList,QString>,
+            std::pair<std::shared_ptr<AbstractCommandFunction>, Description>
+            > command_list;
+        QString arg_separator = " ";
+        QString command_separator = ";";
 
         //----methods----//
     public:
@@ -196,18 +177,24 @@ namespace Commander {
         template<class Func>
             void add_command(const CommandAliasList&, const Func&, const Description&);
         QString execute(QString command_string) const;
-        QString get_help(int space = 4) const;
+        std::vector<QString> get_help(int space = 4) const;
+        QString get_help_string(int space = 4) const;
         QString add_space(int from, int to) const;
     };
+
+    template<class Func>
+    CommandFunction<Func>::CommandFunction(Func f):
+    func(f)
+    {
+        arg_description = get_arg_description();
+    }
 
     template<class Func>
         ReturnType CommandFunction<Func>::execute(const QStringList& args) const {
         using namespace function_signature;
         int n_got = args.size();
-        int n_need = get_n_args<func_t>();
-        if(n_got==n_need) {
+        if(n_got==n_args) {
             // fill the arguments in an array
-            static const int n_args = get_n_args<func_t>();
             QString args_array[n_args];
             for(int arg_idx=0; arg_idx<n_args; ++arg_idx) {
                 args_array[arg_idx] = args[arg_idx];
@@ -260,7 +247,7 @@ namespace Commander {
             // execute function
             return func_bound();
         } else {
-            return wrong_number_of_parameters(n_got,n_need);
+            return wrong_number_of_parameters(n_got,n_args);
         }
     }
 
@@ -297,12 +284,19 @@ namespace Commander {
                       >::value,
                       "Function must return ReturnType (i.e. std::tuple<bool,QString>)"
             );
-        command_list.push_back(
-            std::make_tuple(com,
-                            std::shared_ptr<AbstractCommandFunction>(
-                                new CommandFunction<Func>(func)
-                                ),
-                            des)
+        auto f_ptr = std::shared_ptr<AbstractCommandFunction>(new CommandFunction<Func>(func));
+        // search for duplicats
+        for(auto c : command_list) {
+            auto alias_and_args = std::get<COM_ALIAS_ARGS>(c);
+            if(alias_and_args.first.has_common_element(com) && alias_and_args.second==f_ptr->arg_description) {
+                DEBUG_WARNING("A command with same name and same signature already exists [" << (QString)com << " (" << f_ptr->arg_description << ")]");
+                return;
+            }
+        }
+        // add command
+        command_list.emplace(
+            std::make_pair(com,f_ptr->arg_description),
+            std::make_pair(f_ptr, des)
             );
     }
 
