@@ -13,7 +13,7 @@
 #include <typeindex>
 #include <functional> // std::function
 #include <memory> // std::shared_ptr
-#include <unordered_map>
+#include <set>
 
 #include "debug.h"
 
@@ -160,13 +160,20 @@ namespace Commander {
     class CommandCenter {
         //----types----//
     private:
-        enum COMMAND_LIST_ELEMENTS { COM_ALIAS_ARGS, COM_FUNCTION_DESCRIPTION };
+        enum COMMAND_SET_ELEMENTS {
+            COM_TOPIC,
+            COM_ALIAS,
+            COM_ARGS,
+            COM_FUNCTION,
+            COM_DESCRIPTION };
+        typedef std::tuple<QString,
+            CommandAliasList,
+            QString,
+            std::shared_ptr<AbstractCommandFunction>,
+            Description> command_set_element_t;
         //----members----//
     private:
-        std::multimap<
-            std::pair<CommandAliasList,QString>,
-            std::pair<std::shared_ptr<AbstractCommandFunction>, Description>
-            > command_list;
+        std::set<command_set_element_t> command_set;
         QString arg_separator = " ";
         QString command_separator = ";";
 
@@ -175,10 +182,13 @@ namespace Commander {
         CommandCenter() = default;
         virtual ~CommandCenter() = default;
         template<class Func>
+            void add_command(const QString&, const CommandAliasList&, const Func&, const Description&);
+        template<class Func>
             void add_command(const CommandAliasList&, const Func&, const Description&);
         QString execute(QString command_string) const;
         std::vector<QString> get_help(int space = 4) const;
         QString get_help_string(int space = 4) const;
+    private:
         QString add_space(int from, int to) const;
     };
 
@@ -274,30 +284,33 @@ namespace Commander {
     }
 
     template<class Func>
-        void CommandCenter::add_command(const CommandAliasList& com,
+        void CommandCenter::add_command(const QString& top,
+                                        const CommandAliasList& com,
                                         const Func& func,
                                         const Description& des) {
         using namespace function_signature;
-        static_assert(std::is_same<
-                      get_return_type<Func>,
-                      ReturnType
-                      >::value,
+        static_assert(std::is_same<get_return_type<Func>,ReturnType>::value,
                       "Function must return ReturnType (i.e. std::tuple<bool,QString>)"
             );
         auto f_ptr = std::shared_ptr<AbstractCommandFunction>(new CommandFunction<Func>(func));
         // search for duplicats
-        for(auto c : command_list) {
-            auto alias_and_args = std::get<COM_ALIAS_ARGS>(c);
-            if(alias_and_args.first.has_common_element(com) && alias_and_args.second==f_ptr->arg_description) {
+        for(auto c : command_set) {
+            auto alias = std::get<COM_ALIAS>(c);
+            auto args = std::get<COM_ARGS>(c);
+            if(alias.has_common_element(com) && args==f_ptr->arg_description) {
                 DEBUG_WARNING("A command with same name and same signature already exists [" << (QString)com << " (" << f_ptr->arg_description << ")]");
                 return;
             }
         }
         // add command
-        command_list.emplace(
-            std::make_pair(com,f_ptr->arg_description),
-            std::make_pair(f_ptr, des)
-            );
+        command_set.insert(command_set_element_t(top, com, f_ptr->arg_description, f_ptr, des));
+    }
+
+    template<class Func>
+        void CommandCenter::add_command(const CommandAliasList& com,
+                                        const Func& func,
+                                        const Description& des) {
+        add_command("",com,func,des);
     }
 
 }

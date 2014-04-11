@@ -59,9 +59,9 @@ namespace Commander {
         // get maximum lengths
         int max_com_length = 0;
         int max_arg_length = 0;
-        for(auto current_command : command_list) {
-            max_com_length = max(max_com_length,get<COM_ALIAS_ARGS>(current_command).first.length());
-            max_arg_length = max(max_arg_length,get<COM_ALIAS_ARGS>(current_command).second.length());
+        for(auto current_command : command_set) {
+            max_com_length = max(max_com_length,get<COM_ALIAS>(current_command).length());
+            max_arg_length = max(max_arg_length,get<COM_ARGS>(current_command).length());
         }
         // adjust for header
         QString com_header("COMMAND");
@@ -84,15 +84,15 @@ namespace Commander {
         // print commands
         QString old_com_str("");
         QStringList old_multi_com_list;
-        for(auto current_command : command_list) {
+        for(auto current_command : command_set) {
             // add new help entry
             ret.push_back("");
             // get command, arguments, description
-            QString com_str = get<COM_ALIAS_ARGS>(current_command).first;
-            QString arg_str = get<COM_ALIAS_ARGS>(current_command).second;
+            QString com_str = get<COM_ALIAS>(current_command);
+            QString arg_str = get<COM_ARGS>(current_command);
             int com_length = com_str.length();
             int arg_length = arg_str.length();
-            QString des_str = get<COM_FUNCTION_DESCRIPTION>(current_command).second;
+            QString des_str = get<COM_DESCRIPTION>(current_command);
             // deal with multi-commands and identically named commands
             QString com_str_original = com_str;
             QStringList new_multi_com_list = com_str.split(arg_separator);
@@ -209,10 +209,10 @@ namespace Commander {
             // transform to string for comparison
             QString command_name = command_name_list.join(arg_separator);
 
-            for(auto c : command_list) {
-                if(get<COM_ALIAS_ARGS>(c).first.contains(command_name)) {
+            for(auto c : command_set) {
+                if(get<COM_ALIAS>(c).contains(command_name)) {
                     found = true;
-                    res = get<COM_FUNCTION_DESCRIPTION>(c).first->execute(command_arguments_list);
+                    res = get<COM_FUNCTION>(c)->execute(command_arguments_list);
                     if(res.first) {
                         break;
                     }
