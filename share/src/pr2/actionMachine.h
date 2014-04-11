@@ -115,6 +115,16 @@ struct ActionMachine : Module {
   GroundedAction* add(GroundedAction *action,
                       ActionState actionState=ActionState::active);
 
+  /** Add a sequence of actions started one after the other..
+   * The first one is started right away, the others depend on
+   * the previous action and are queued.
+   * TODO use initilizer_list or varadic templates to allow arbitrarily many
+   * actions */
+  void add_sequence(GroundedAction *action1,
+                    GroundedAction *action2,
+                    GroundedAction *action3=NULL,
+                    GroundedAction *action4=NULL);
+
   void removeGroundedAction(GroundedAction* a, bool hasLock=false);
   /// Block till the given action `a` is done
   void waitForActionCompletion(GroundedAction* a);

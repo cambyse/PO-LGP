@@ -120,6 +120,24 @@ GroundedAction* ActionMachine::add(GroundedAction *action,
   return action;
 }
 
+void ActionMachine::add_sequence(GroundedAction *action1,
+                                 GroundedAction *action2,
+                                 GroundedAction *action3,
+                                 GroundedAction *action4)
+{
+  this->add(action1);
+  this->add(action2, ActionState::queued);
+  action2->dependsOnCompletion.append(action1);
+  if (action3) {
+    this->add(action3, ActionState::queued);
+    action3->dependsOnCompletion.append(action2);
+  }
+  if (action4) {
+    this->add(action4, ActionState::queued);
+    action4->dependsOnCompletion.append(action3);
+  }
+}
+
 void ActionMachine::removeGroundedAction(GroundedAction* a, bool hasLock){
   a->deinitYourself(*this);
   if(!hasLock) A.set()->removeValue(a);
