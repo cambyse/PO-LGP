@@ -178,10 +178,12 @@ void sConvert::KOrderMarkovFunction_VectorFunction::fv(arr& phi, arr& J, const a
   uint n=f->dim_x();
   uint M=0;
   arr x_pre=f->get_prefix();
+  arr x_post=f->get_postfix();
   for(uint t=0; t<=T; t++) M+=f->dim_phi(t);
-  CHECK(x.nd==2 && x.d1==n && x.d0==(T+1),"");
+  CHECK(x.nd==2 && x.d1==n && x.d0==(T+1)-x_post.d0,"");
   CHECK(x_pre.nd==2 && x_pre.d1==n && x_pre.d0==k,"prefix is of wrong dim");
-  
+
+
   //resizing things:
   phi.resize(M);   phi.setZero();
   RowShiftedPackedMatrix* Jaux;
@@ -191,14 +193,19 @@ void sConvert::KOrderMarkovFunction_VectorFunction::fv(arr& phi, arr& J, const a
   for(uint t=0; t<=T; t++) {
     m_t = f->dim_phi(t);
     if(!m_t) continue;
-    arr phi_t,J_t;
+    arr x_bar, phi_t, J_t;
     if(t>=k) {
-      f->phi_t(phi_t, (&J?J_t:NoArr), t, x.subRange(t-k, t));
+      if(t>=x.d0) { //x_bar includes the postfix
+        x_bar.resize(k+1,n);
+        for(int i=t-k; i<=(int)t; i++) x_bar[i-t+k]() = (i>=x.d0)? x_post[i-x.d0] : x[i];
+      } else{
+        x_bar.referToSubRange(x, t-k, t);
+      }
     } else { //x_bar includes the prefix
-      arr x_bar(k+1,n);
+      x_bar.resize(k+1,n);
       for(int i=t-k; i<=(int)t; i++) x_bar[i-t+k]() = (i<0)? x_pre[k+i] : x[i];
-      f->phi_t(phi_t, (&J?J_t:NoArr), t, x_bar);
     }
+    f->phi_t(phi_t, (&J?J_t:NoArr), t, x_bar);
     CHECK(phi_t.N==m_t,"");
     phi.setVectorBlock(phi_t, M);
     if(&J) {
@@ -227,10 +234,12 @@ double sConvert::KOrderMarkovFunction_ConstrainedProblem::fc(arr& df, arr& Hf, a
   uint T=f->get_T();
   uint k=f->get_k();
   uint n=f->dim_x();
-  CHECK(x.nd==2 && x.d1==n && x.d0==(T+1),"");
-
   arr x_pre=f->get_prefix();
+  arr x_post=f->get_postfix();
+
+  CHECK(x.nd==2 && x.d1==n && x.d0==(T+1)-x_post.d0,"");
   CHECK(x_pre.nd==2 && x_pre.d1==n && x_pre.d0==k,"prefix is of wrong dim");
+  CHECK(!x_post.N || (x_post.nd==2 && x_post.d1==n),"postfix is of wrong dim");
 
   //resizing things:
   uint meta_phid = dim_phi();
@@ -258,7 +267,12 @@ double sConvert::KOrderMarkovFunction_ConstrainedProblem::fc(arr& df, arr& Hf, a
 
     //construct x_bar
     if(t>=k) {
-      x_bar.referToSubRange(x, t-k, t);
+      if(t>=x.d0) { //x_bar includes the postfix
+        x_bar.resize(k+1,n);
+        for(int i=t-k; i<=(int)t; i++) x_bar[i-t+k]() = (i>=x.d0)? x_post[i-x.d0] : x[i];
+      } else {
+        x_bar.referToSubRange(x, t-k, t);
+      }
     } else { //x_bar includes the prefix
       x_bar.resize(k+1,n);
       for(int i=t-k; i<=(int)t; i++) x_bar[i-t+k]() = (i<0)? x_pre[k+i] : x[i];

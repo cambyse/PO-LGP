@@ -1,3 +1,8 @@
+** traj optim
+
+- don't include task with zero prec in $f_t$ terms
+- mix vel and acc penalties for optimization
+
 ** ROS msgs
 
 python2 $ROSDIR/lib/gencpp/gen_cpp.py \

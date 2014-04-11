@@ -222,6 +222,7 @@ void SwiftInterface::pullFromSwift(bool dumpReport) {
       &nearest_pts,
       &normals);
   } catch(const char *msg) {
+    listResize(world.proxies, 0);
     cout <<"... catching error '" <<msg <<"' -- SWIFT failed! .. no proxies for this posture!!..." <<endl;
     return;
   }
@@ -297,6 +298,9 @@ void SwiftInterface::pullFromSwift(bool dumpReport) {
 //      proxy->d += -1.+(proxy->posA-proxy->posB).length();
       k++;
     }
+
+    double ab_radius = MT::MAX(proxy->d,0.) + 1.1*(world.shapes(a)->mesh_radius + world.shapes(b)->mesh_radius);
+    if(proxy->cenD>ab_radius) MT_MSG("shit");
   }
   CHECK(k == (int)world.proxies.N, "");
   

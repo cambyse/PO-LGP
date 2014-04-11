@@ -543,7 +543,11 @@ void editConfiguration(const char* filename, ors::KinematicWorld& C) {
     while(ino.pollForModification());
     animateConfiguration(C, &ino);
     cout <<"watching..." <<endl;
+#if 1
     ino.waitForModification();
+#else
+    C.gl().watch();
+#endif
   }
 }
 
