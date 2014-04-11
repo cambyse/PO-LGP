@@ -7,8 +7,6 @@ struct CoreTasks : GroundedAction {
   CoreTasks();
 
   /// @name Inherited stuff
-  static Symbol symbol;
-  virtual Symbol& getSymbol() { return symbol; }
   virtual void initYourself(ActionMachine& actionMachine);
 };
 
@@ -20,9 +18,6 @@ struct MoveEffTo : GroundedAction {
   MoveEffTo(const char* effName, const arr& effPos);
 
   /// @name Inherited/overwritten stuff
-  static Symbol symbol;
-  virtual Symbol& getSymbol() { return symbol; }
-
   virtual void initYourself(ActionMachine& actionMachine);
   virtual bool finishedSuccess(ActionMachine& M);
 };
@@ -36,8 +31,6 @@ struct AlignEffTo : GroundedAction {
   AlignEffTo(const char* effName, const arr& effPos, const arr& alignPos);
 
   /// @name Inherited stuff
-  static Symbol symbol;
-  virtual Symbol& getSymbol() {return symbol;}
   virtual void initYourself(ActionMachine& actionMachine);
   virtual bool finishedSuccess(ActionMachine& M);
 };
@@ -45,14 +38,12 @@ struct AlignEffTo : GroundedAction {
 //===========================================================================
 struct PushForce : GroundedAction {
   MT::String effName;
-  ors::Vector forceVec;
+  arr forceVec;
   arr poseArg2; // TODO what is this? Find a proper name.
 
-  PushForce(const char* effName, ors::Vector forceVec, arr poseArg2);
+  PushForce(const char* effName, arr forceVec, arr poseArg2);
 
   /// @name Inherited stuff
-  static Symbol symbol;
-  virtual Symbol& getSymbol() {return symbol;}
   virtual void initYourself(ActionMachine& actionMachine);
   bool finishedSuccess(ActionMachine& M);
 };

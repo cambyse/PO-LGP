@@ -1,9 +1,7 @@
 #include "actions.h"
 
-//===========================================================================
+// ============================================================================
 // CoreTasks
-Symbol CoreTasks::symbol;
-
 CoreTasks::CoreTasks() {
   ID=symbols().N;
   symbols().append(this);
@@ -19,7 +17,6 @@ void CoreTasks::initYourself(ActionMachine& actionMachine) {
 //    qitself->v_ref.setZero();
 //    qitself->prec=100.;
 //    tasks.append(qitself);
-
   PDtask *limits;
   limits = actionMachine.s->MP.addPDTask("limits", .1, .8, qLimitsTMT);
   // limits->setGains(10.,0.);
@@ -29,10 +26,8 @@ void CoreTasks::initYourself(ActionMachine& actionMachine) {
   tasks.append(limits);
 }
 
-//===========================================================================
+// ============================================================================
 // MoveEffTo
-Symbol MoveEffTo::symbol;
-
 MoveEffTo::MoveEffTo(const char* effName, const arr& effPos)
     : effName(effName)
     , effPos(effPos)
@@ -60,10 +55,8 @@ bool MoveEffTo::finishedSuccess(ActionMachine& M) {
   return (task->y.N==task->y_ref.N && maxDiff(task->y, task->y_ref)<1e-2);
 }
 
-//===========================================================================
+// ============================================================================
 // AlignEffTo
-Symbol AlignEffTo::symbol;
-
 AlignEffTo::AlignEffTo(const char* effName, const arr& effPos, const arr& alignPos)
     : effName(effName)
     , effPos(effPos)
@@ -90,11 +83,9 @@ bool AlignEffTo::finishedSuccess(ActionMachine& M) {
   return (task->y.N==task->y_ref.N && maxDiff(task->y, task->y_ref)<1e-1);
 }
 
-//===========================================================================
+// ============================================================================
 // PushForce
-Symbol PushForce::symbol;
-
-PushForce::PushForce(const char* effName, ors::Vector forceVec, arr poseArg2)
+PushForce::PushForce(const char* effName, arr forceVec, arr poseArg2)
     : effName(effName)
     , forceVec(forceVec)
     , poseArg2(poseArg2)

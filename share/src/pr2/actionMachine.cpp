@@ -66,24 +66,29 @@ void ActionMachine::step(){
   //  cout <<"** active actions:";
   reportActions(A());
 
-  for(GroundedAction *a : A()) if(a->actionState==ActionState::active){
-//    cout <<' ' <<a->symbol.name;
-    for(PDtask *t:a->tasks) t->active=true;
+  for(GroundedAction *a : A()) {
+    if(a->actionState==ActionState::active){
+      cout << a->name << ": " << a->ID << endl;
+      for(PDtask *t:a->tasks) t->active=true;
 
-    if(a->getSymbol()==MoveEffTo::symbol){
-      //nothing to be done
+      if(a->name == "MoveEffTo") {
+        cout <<" - MoveEffTo" << endl;
+        //nothing to be done
+        //dynamic_cast<MoveEffTo_ActionSymbol&>(a->symbol).task->y_ref = a->poseArg1;
+      }
+      if(a->name == "PushForce") {
+        cout <<" - FORCE TASK: " << endl;
+
+        // PushForce* pf = dynamic_cast<PushForce*>(a);
+        // cout << pf->forceVec << endl;
+        // s->refs.fR = pf->forceVec;
+        // s->refs.fR_gainFactor = 1.;
+        // s->refs.Kp_gainFactor = .2;
+      }
     }
-    if(a->getSymbol()==MoveEffTo::symbol){
-      //dynamic_cast<MoveEffTo_ActionSymbol&>(a->symbol).task->y_ref = a->poseArg1;
+    else {
+      for(PDtask *t:a->tasks) t->active=false;
     }
-    if(a->getSymbol()==PushForce::symbol){
-      // cout <<"FORCE TASK" <<endl;
-      // s->refs.fR = a->poseArg1;
-      // s->refs.fR_gainFactor = 1.;
-      // s->refs.Kp_gainFactor = .2;
-    }
-  } else {
-    for(PDtask *t:a->tasks) t->active=false;
   }
 
   cout <<"FL=" <<ctrl_obs.get()->fL <<endl;
@@ -110,7 +115,7 @@ GroundedAction* ActionMachine::add(GroundedAction *action,
                                    ActionState actionState)
 {
   action->initYourself(*this);
-  action->actionState=actionState;
+  action->actionState = actionState;
   A.set()->append(action);
   return action;
 }

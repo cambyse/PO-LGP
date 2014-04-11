@@ -31,7 +31,11 @@ struct Symbol{
   MT::String name;
   uint nargs;  //instead, it should have a list of ArgTypes; each ArgType = {type\in{String, arr}, name}
   virtual uint argType(uint i){ NIY; return 0; }
-  bool operator==(const Symbol& s) const{ return ID == s.ID; } //could we also test this==&s ?
+  // bool operator==(const Symbol& s) const {
+  //   return name == s.name; // comparing the IDs does not work.
+  //   // return ID == s.ID; // comparing the IDs does not work.
+  //   // return this == &s;
+  // }
 };
 
 //===========================================================================
@@ -39,27 +43,30 @@ struct Symbol{
 //True, False refer to state symbols, the rest to action symbols
 enum ActionState { trueLV, falseLV, inactive, queued, active, failed, success };
 
-/** A GroundedAction is an instantiation/grounding of an Symbol (e.g. motor primitive type). The grounding
- *  is defined by the specific arguments: which objects/body parts does the action refer to; which parameters
- *  does it have. While state literals typically are binary-valued (on(A,B) is true or false); action literals
- *  have a value that denotes the action state: whether it is currently active, queued, failed, etc
- *  The full action state is given as a list of GroundedActions.
- *  For convenience, a grounded action can be annotated by dependencies, telling the ActionMachine how to transition the
- *  action state. */
+/** A GroundedAction is an instantiation/grounding of an Symbol (for example
+ * a motor primitive type.
+ *
+ * The grounding is defined by the specific arguments: which
+ * objects/body parts does the action refer to; which parameters does it have.
+ * While state literals typically are binary-valued (on(A,B) is true or false);
+ * action literals have a value that denotes the action state: whether it is
+ * currently active, queued, failed, etc The full action state is given as
+ * a list of GroundedActions.  For convenience, a grounded action can be
+ * annotated by dependencies, telling the ActionMachine how to transition the
+ * action state.
+ */
 struct GroundedAction : Symbol{
   //-- ActionState of the GroundedAction
   ActionState actionState;
   static const char* GroundActionValueString[7];
   const char* getActionStateString() { return GroundActionValueString[actionState]; };
-  
+
   /// @name dependence & hierarchy
   ActionL dependsOnCompletion;
   ActionL conflictsWith;
 
   //-- not nice: list PDtasks that this action added to the OSC
   PDtaskL tasks;
-
-  virtual Symbol& getSymbol() = 0;
 
   /// @name manage common functions to manage GroundedSymbols
   virtual void initYourself(ActionMachine&) = 0;
