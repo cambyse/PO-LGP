@@ -164,6 +164,17 @@ void ActionMachine::waitForActionCompletion(GroundedAction* a){
   }
 }
 
+void ActionMachine::waitForActionCompletion() {
+  bool cont = true;
+  while (cont) {
+    A.var->waitForNextRevision();
+    A.readAccess();
+    if (A().N == 0 || (A().N == 1 && A()(0)->name == "CoreTasks")) {
+      cont=false;
+    }
+    A.deAccess();
+  }
+}
 //===========================================================================
 // GroundedAction
 //

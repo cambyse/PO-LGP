@@ -116,7 +116,10 @@ struct ActionMachine : Module {
                       ActionState actionState=ActionState::active);
 
   void removeGroundedAction(GroundedAction* a, bool hasLock=false);
+  /// Block till the given action `a` is done
   void waitForActionCompletion(GroundedAction* a);
+  /// Block till all actions (excluding CoreTasks) are done
+  void waitForActionCompletion();
 
   /// @name module implementations
   void open();
