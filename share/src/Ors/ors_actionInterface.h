@@ -46,7 +46,7 @@ typedef unsigned int uint;
 namespace ors {
 struct KinematicWorld;
 }
-class OdeInterface;
+struct OdeInterface;
 struct SwiftInterface;
 struct OpenGL;
 

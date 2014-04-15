@@ -2302,6 +2302,18 @@ template<class T> MT::Array<T> elemWiseMax(const MT::Array<T>& v, const MT::Arra
   return z;
 }
 
+template<class T> MT::Array<T> elemWiseMax(const MT::Array<T>& v, const T& w) {
+  MT::Array<T> z(v.N);
+  for(uint i=0; i<v.N; i++) z(i) = v(i)>w?v(i):w;
+  return z;
+}
+
+template<class T> MT::Array<T> elemWiseMax(const T& v, const MT::Array<T>& w) {
+  MT::Array<T> z(w.N);
+  for(uint i=0; i<w.N; i++) z(i) = v>w(i)?v:w(i);
+  return z;
+}
+
 //===========================================================================
 //
 /// @name tensor operations

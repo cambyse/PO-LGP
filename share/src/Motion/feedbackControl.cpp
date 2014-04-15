@@ -16,8 +16,9 @@ void PDtask::setGains(double pgain, double dgain) {
 
 void PDtask::setGainsAsNatural(double decayTime, double dampingRatio) {
   active=true;
-  Pgain = MT::sqr(1./decayTime);
-  Dgain = 2.*dampingRatio/decayTime;
+  double lambda = -decayTime*dampingRatio/log(.1);
+  Pgain = MT::sqr(1./lambda);
+  Dgain = 2.*dampingRatio/lambda;
   if(!prec) prec=100.;
 }
 
@@ -63,11 +64,12 @@ void ConstraintForceTask::updateConstraintControl(const arr& _g, const double& l
 //===========================================================================
 
 FeedbackMotionControl::FeedbackMotionControl(ors::KinematicWorld& _world, bool useSwift)
-  : MotionProblem(_world, useSwift), nullSpacePD(NULL) {
+  : MotionProblem(_world, useSwift), qitselfPD(NULL) {
   loadTransitionParameters();
-  nullSpacePD.name="nullSpacePD";
-  nullSpacePD.setGainsAsNatural(1.,1.);
-  nullSpacePD.prec=1.;
+  qitselfPD.name="qitselfPD";
+  qitselfPD.setGains(0.,10.);
+//  qitselfPD.setGainsAsNatural(1.,1.);
+  qitselfPD.prec=1.;
 }
 
 PDtask* FeedbackMotionControl::addPDTask(const char* name, double decayTime, double dampingRatio, TaskMap *map){
@@ -98,19 +100,19 @@ PDtask* FeedbackMotionControl::addPDTask(const char* name,
   return t;
 }
 
-void FeedbackMotionControl::getTaskCosts(arr& phi, arr& J, arr& q_ddot){
-  phi.clear();
+void FeedbackMotionControl::getCostCoeffs(arr& c, arr& J){
+  c.clear();
   if(&J) J.clear();
-  arr y, J_y, a_des;
-  for(PDtask* t: tasks){
+  arr y, J_y, yddot_des;
+  for(PDtask* t: tasks) {
     if(t->active) {
       t->map.phi(y, J_y, world);
-      a_des = t->getDesiredAcceleration(y, J_y*world.qdot);
-      phi.append(::sqrt(t->prec)*(J_y*q_ddot - a_des));
+      yddot_des = t->getDesiredAcceleration(y, J_y*world.qdot);
+      c.append(::sqrt(t->prec)*(yddot_des /*-Jdot*qdot*/));
       if(&J) J.append(::sqrt(t->prec)*J_y);
     }
   }
-  if(&J) J.reshape(phi.N, q_ddot.N);
+  if(&J) J.reshape(c.N, world.q.N);
 }
 
 void FeedbackMotionControl::updateConstraintControllers(){
@@ -139,19 +141,29 @@ arr FeedbackMotionControl::getDesiredConstraintForces(){
 }
 
 arr FeedbackMotionControl::operationalSpaceControl(){
-  arr phi, J, q_ddot;
-  q_ddot.resizeAs(world.q).setZero();
-  getTaskCosts(phi, J, q_ddot);
-  if(!phi.N && !nullSpacePD.active) return q_ddot;
+  arr c, J;
+  getCostCoeffs(c, J);
+  if(!c.N && !qitselfPD.active) return zeros(world.q.N,1).reshape(world.q.N);
   arr H = diag(H_rate_diag);
-  arr A=H;
+  arr A = H;
   arr a(H.d0); a.setZero();
-
-  if(phi.N){
-    A += comp_At_A(J);
-    a -= comp_At_x(J, phi);
+  if(qitselfPD.active){
+    a += H_rate_diag % qitselfPD.getDesiredAcceleration(world.q, world.qdot);
   }
-  if(nullSpacePD.active) a += H * nullSpacePD.prec * nullSpacePD.getDesiredAcceleration(world.q, world.qdot);
-  q_ddot = inverse_SymPosDef(A) * a;
+//    if(qitselfPD.active){
+//      A += qitselfPD.prec * eye(H.d0);
+//      a -= qitselfPD.prec * (q_ddot - qitselfPD.getDesiredAcceleration(world.q, world.qdot));
+//    }
+  if(c.N){
+    A += comp_At_A(J);
+    a += comp_At_x(J, c);
+  }
+  arr q_ddot = inverse_SymPosDef(A) * a;
+
+//  if(qitselfPD.active && qitselfPD.prec){
+//    arr Null = eye(a.N) - Ainv * A;
+//    q_ddot += Null * qitselfPD.getDesiredAcceleration(world.q, world.qdot);
+//  }
+
   return q_ddot;
 }

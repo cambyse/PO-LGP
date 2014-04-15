@@ -4,4 +4,4 @@ OBJS = main.o
 
 DEPEND = Core Ors Gui Perception
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

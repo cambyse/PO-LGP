@@ -1694,7 +1694,7 @@ readpara_init (readpara_t *t,
       t->rgcoordist[i] = (inrgcoordist == NULL) ? 0.3 : inrgcoordist[i];
   }
   readpara_SupplementDefaults(t);
-  readpara_WriteToFile(t, "actparcmaes.par", filename);
+  readpara_WriteToFile(t, "z.actparcmaes.par", filename);
 } /* readpara_init */
 /* --------------------------------------------------------- */
 /* --------------------------------------------------------- */
@@ -2068,7 +2068,7 @@ void ERRORMESSAGE( char const *s1, char const *s2,
       sprintf(szBuf, "%f:%f", gen, gen*lambda);
   */
   time_t t = time(NULL);
-  FILE *fp = fopen( "errcmaes.err", "a");
+  FILE *fp = fopen( "z.errcmaes.err", "a");
   if (!fp)
     {
       printf("\n%s\n", s2 ? szCat(s1, s2, s3, s4) : s1);
