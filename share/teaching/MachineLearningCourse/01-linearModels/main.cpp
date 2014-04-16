@@ -12,7 +12,7 @@ void testLinReg() {
   
   rnd.clockSeed();
   artificialData(X, y);
-  makeFeatures(Phi, X, X);
+  makeFeatures(Phi, X);
   ridgeRegression(beta, Phi, y);
   cout <<"estimated beta = "<< beta <<endl;
   if(beta.N==beta_true.N){
@@ -23,7 +23,7 @@ void testLinReg() {
   
   arr X_grid,y_grid;
   X_grid.setGrid(X.d1,-3,3, (X.d1==1?100:30));
-  makeFeatures(Phi,X_grid,X);
+  makeFeatures(Phi, X_grid, readFromCfgFileFT, X);
   y_grid = Phi*beta;
 
   if(X.d1==1){
@@ -45,12 +45,12 @@ void test2Class() {
   //artificialData_HastiesMultiClass(X, y);  y = ~((~y)[1]);  y.reshape(y.N);
   artificialData_Hasties2Class(X, y);
   
-  makeFeatures(Phi,X,X);
+  makeFeatures(Phi,X);
   logisticRegression2Class(beta, Phi, y);
   
   arr X_grid,y_grid,p_grid;
   X_grid.setGrid(2,-2,3,50);
-  makeFeatures(Phi,X_grid,X);
+  makeFeatures(Phi,X_grid,readFromCfgFileFT, X);
   y_grid = Phi*beta;
   
   p_grid=exp(y_grid);
@@ -73,7 +73,7 @@ void testMultiClass() {
   arr beta;
   artificialData_HastiesMultiClass(X, y);
   
-  makeFeatures(Phi,X,X);
+  makeFeatures(Phi,X);
   logisticRegressionMultiClass(beta, Phi, y);
   
   arr p_pred,label(Phi.d0);
@@ -86,7 +86,7 @@ void testMultiClass() {
   
   arr X_grid,p_grid;
   X_grid.setGrid(2,-2,3,50);
-  makeFeatures(Phi,X_grid,X);
+  makeFeatures(Phi,X_grid,readFromCfgFileFT,X);
   p_grid = exp(Phi*beta);
   for(uint i=0; i<p_grid.d0; i++) p_grid[i]() /= sum(p_grid[i]);
   p_grid = ~p_grid;
@@ -122,7 +122,7 @@ void testCV() {
   rnd.clockSeed();
   arr X,Phi,y;
   artificialData(X, y);
-  makeFeatures(Phi,X,X);
+  makeFeatures(Phi,X);
   write(LIST<arr>(X, y), "z.train");
 
   cv.crossValidateMultipleLambdas(Phi, y, ARR(1e-3,1e-2,1e-1,1e0,1e1,1e2,1e3,1e4,1e5), 10, false);
@@ -140,7 +140,7 @@ void exercise1() {
   X.delColumns(X.d1-1);
   
   //compute optimal beta
-  makeFeatures(Phi,X,X);
+  makeFeatures(Phi,X);
   ridgeRegression(beta, Phi, y);
   cout <<"estimated beta = "<< beta <<endl;
 
@@ -151,7 +151,7 @@ void exercise1() {
   //predict on grid
   arr X_grid,y_grid;
   X_grid.setGrid(X.d1,-3,3,30);
-  makeFeatures(Phi,X_grid,X);
+  makeFeatures(Phi,X_grid,readFromCfgFileFT,X);
   y_grid = Phi*beta;
 
   //save and plot
@@ -182,12 +182,7 @@ void exercise2() {
   } cv;
 
   //load the data, split in input and output
-<<<<<<< HEAD:share/teaching/CourseML/01-linearModels/main.cpp
-  ifstream datafile("./dataQuadReg2D_noisy.txt");
-  X.read(datafile);
-=======
   X <<FILE("./dataQuadReg2D_noisy.txt");
->>>>>>> marc:share/teaching/MachineLearningCourse/01-linearModels/main.cpp
   y = (~X)[X.d1-1];    //last row of transposed X
   X.delColumns(X.d1-1);
 
@@ -198,7 +193,7 @@ void exercise2() {
 //  X.resizeCopy(n,X.d1);
 
   //cross valide
-  makeFeatures(Phi,X,X);
+  makeFeatures(Phi,X);
   cv.crossValidateMultipleLambdas(Phi, y,
 				  ARR(1e-3,1e-2,1e-1,1e0,1e1,1e2,1e3,1e4,1e5),
 				  10, false);
