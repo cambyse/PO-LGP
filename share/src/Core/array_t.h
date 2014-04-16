@@ -1493,8 +1493,8 @@ template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP
     os <<std::endl;
   } else {
     if(BRACKETS[0]) os <<BRACKETS[0];
-    if(dimTag || nd>=3) { os <<' '; writeDim(os); os <<' '; }
-    if(nd>=2) os <<'\n';
+    if(dimTag || nd>=3) { os <<' '; writeDim(os); if(nd==2) os <<LINESEP; else os <<' '; }
+    if(nd>=3) os <<LINESEP;
     if(nd==0 && N==1) {
       os <<(const T&)scalar();
     }

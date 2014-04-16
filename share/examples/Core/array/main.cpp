@@ -78,13 +78,9 @@ void TEST(Basics){
   rndInteger(a,1,9,false);
   cout <<"\nbefore save/load:\n " <<a <<endl;
 
-  ofstream of("z.tmp");
-  of <<a;
-  of.close();
+  FILE("z.tmp") <<a;
 
-  ifstream inf("z.tmp");
-  inf >>b;
-  inf.close();
+  FILE("z.tmp") >>b;
 
   cout <<"\nafter saved and loaded from a file: " <<b <<endl;
   CHECK_ZERO(maxDiff(a,b), 1e-4, "non-exact save load");
@@ -605,11 +601,9 @@ void TEST(RowShiftedPackedMatrix){
 
 int MAIN(int argc, char *argv[]){
 
-  //testPCA();
-  //testCheatSheet();
-
   testBasics();
   testCheatSheet();
+  return 0;
   testInitializationList();
   testSimpleIterators();
   testRowsAndColumsAccess();
