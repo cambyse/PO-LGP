@@ -27,7 +27,6 @@ void testJoypad(){
 
   FeedbackMotionControl MP(world, false);
   MP.qitselfPD.y_ref = q;
-  MP.qitselfPD.active=false;
   MP.H_rate_diag = pr2_reasonable_W(world);
   Gamepad2Tasks j2t(MP);
 
@@ -56,7 +55,7 @@ void testJoypad(){
   CtrlMsg refs;
 
   for(uint t=0;;t++){
-//    S.joystickState.var->waitForNextRevision();
+    S.joystickState.var->waitForNextRevision();
     arr joypadState = S.joystickState.get();
 
 //    q    = S.q_obs.get();
@@ -68,13 +67,12 @@ void testJoypad(){
     bool shutdown = j2t.updateTasks(joypadState);
     if(shutdown) engine().shutdown.incrementValue();
 
-    for(uint tt=0;tt<10;tt++){
-      arr a = MP.operationalSpaceControl();
-      q += .001*qdot;
-      qdot += .001*a;
-    }
+    arr a = MP.operationalSpaceControl();
+    q += .01*qdot;
+    qdot += .01*a;
+    MP.reportCurrentState();
     MP.setState(q, qdot);
-    if(!(t%10))
+    if(!(t%4))
       MP.world.gl().update(STRING("local operational space controller state t="<<(double)t/100.), false, false, false);
 
     //-- force task
