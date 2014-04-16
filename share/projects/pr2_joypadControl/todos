@@ -1,0 +1,10 @@
+
+marc_rt_controller -> mlrConfigurationForceController
+marc_controller_ns -> "_ns
+TreeControllerClass -> ConfigurationForceController
+marc_controller_pkg -> mlrConfigurationForceController_pkg
+
+message Name CtrlMsg
+
+
+* POSTPONE: feedback? q_obs -> q?

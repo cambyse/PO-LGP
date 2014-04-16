@@ -1,0 +1,2984 @@
+
+# Read from (null) at Tue Mar 25 15:13:05 2014
+
+ N 1
+ xstart 1
+  0.414 
+ sigma 1
+      2 
+ seed 1
+ maxeval 14400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 4
+ mu 2
+ weights   log
+ ccumsig 0.645996
+ damp 2.54757
+ ccumcov 0.8
+ mucov 1.64965
+ ccov 0.293039
+ updatecov 0.341252
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 15:13:15 2014
+
+ N 2
+ xstart 2
+  0.414  -0.826 
+ sigma 2
+      2       2 
+ seed 1
+ maxeval 22500
+ stopfunval
+ stopfunvaldiff -1
+ lambda 6
+ mu 3
+ weights   log
+ ccumsig 0.586482
+ damp 2.70417
+ ccumcov 0.666667
+ mucov 2.25482
+ ccov 0.183085
+ updatecov 0.273098
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 15:13:38 2014
+
+ N 2
+ xstart 2
+  0.414  -0.826 
+ sigma 2
+      2       2 
+ seed 1
+ maxeval 22500
+ stopfunval
+ stopfunvaldiff -1
+ lambda 6
+ mu 3
+ weights   log
+ ccumsig 0.586482
+ damp 2.70417
+ ccumcov 0.666667
+ mucov 2.25482
+ ccov 0.183085
+ updatecov 0.273098
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 15:13:51 2014
+
+ N 2
+ xstart 2
+  0.414  -0.826 
+ sigma 2
+      2       2 
+ seed 1
+ maxeval 22500
+ stopfunval
+ stopfunvaldiff -1
+ lambda 6
+ mu 3
+ weights   log
+ ccumsig 0.586482
+ damp 2.70417
+ ccumcov 0.666667
+ mucov 2.25482
+ ccov 0.183085
+ updatecov 0.273098
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 15:14:00 2014
+
+ N 1
+ xstart 1
+  0.414 
+ sigma 1
+      2 
+ seed 1
+ maxeval 14400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 4
+ mu 2
+ weights   log
+ ccumsig 0.645996
+ damp 2.54757
+ ccumcov 0.8
+ mucov 1.64965
+ ccov 0.293039
+ updatecov 0.341252
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 15:14:21 2014
+
+ N 1
+ xstart 1
+  0.414 
+ sigma 1
+      2 
+ seed 1
+ maxeval 14400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 4
+ mu 2
+ weights   log
+ ccumsig 0.645996
+ damp 2.54757
+ ccumcov 0.8
+ mucov 1.64965
+ ccov 0.293039
+ updatecov 0.341252
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 15:14:41 2014
+
+ N 1
+ xstart 1
+  0.414 
+ sigma 1
+      2 
+ seed 1
+ maxeval 14400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 4
+ mu 2
+ weights   log
+ ccumsig 0.645996
+ damp 2.54757
+ ccumcov 0.8
+ mucov 1.64965
+ ccov 0.293039
+ updatecov 0.341252
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 15:14:53 2014
+
+ N 1
+ xstart 1
+  0.414 
+ sigma 1
+      2 
+ seed 1
+ maxeval 14400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 4
+ mu 2
+ weights   log
+ ccumsig 0.645996
+ damp 2.54757
+ ccumcov 0.8
+ mucov 1.64965
+ ccov 0.293039
+ updatecov 0.341252
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 15:14:59 2014
+
+ N 1
+ xstart 1
+  0.414 
+ sigma 1
+      2 
+ seed 1
+ maxeval 14400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 4
+ mu 2
+ weights   log
+ ccumsig 0.645996
+ damp 2.54757
+ ccumcov 0.8
+ mucov 1.64965
+ ccov 0.293039
+ updatecov 0.341252
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 15:15:03 2014
+
+ N 1
+ xstart 1
+  0.414 
+ sigma 1
+      2 
+ seed 1
+ maxeval 14400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 4
+ mu 2
+ weights   log
+ ccumsig 0.645996
+ damp 2.54757
+ ccumcov 0.8
+ mucov 1.64965
+ ccov 0.293039
+ updatecov 0.341252
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 15:15:15 2014
+
+ N 1
+ xstart 1
+  0.414 
+ sigma 1
+      2 
+ seed 1
+ maxeval 14400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 4
+ mu 2
+ weights   log
+ ccumsig 0.645996
+ damp 2.54757
+ ccumcov 0.8
+ mucov 1.64965
+ ccov 0.293039
+ updatecov 0.341252
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 15:15:19 2014
+
+ N 1
+ xstart 1
+  0.414 
+ sigma 1
+      2 
+ seed 1
+ maxeval 14400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 4
+ mu 2
+ weights   log
+ ccumsig 0.645996
+ damp 2.54757
+ ccumcov 0.8
+ mucov 1.64965
+ ccov 0.293039
+ updatecov 0.341252
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 15:15:50 2014
+
+ N 1
+ xstart 1
+  0.414 
+ sigma 1
+      2 
+ seed 1
+ maxeval 14400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 4
+ mu 2
+ weights   log
+ ccumsig 0.645996
+ damp 2.54757
+ ccumcov 0.8
+ mucov 1.64965
+ ccov 0.293039
+ updatecov 0.341252
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 15:15:56 2014
+
+ N 1
+ xstart 1
+  0.414 
+ sigma 1
+      2 
+ seed 1
+ maxeval 14400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 4
+ mu 2
+ weights   log
+ ccumsig 0.645996
+ damp 2.54757
+ ccumcov 0.8
+ mucov 1.64965
+ ccov 0.293039
+ updatecov 0.341252
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 15:16:03 2014
+
+ N 1
+ xstart 1
+  0.414 
+ sigma 1
+      2 
+ seed 1
+ maxeval 14400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 4
+ mu 2
+ weights   log
+ ccumsig 0.645996
+ damp 2.54757
+ ccumcov 0.8
+ mucov 1.64965
+ ccov 0.293039
+ updatecov 0.341252
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 15:16:28 2014
+
+ N 1
+ xstart 1
+  0.414 
+ sigma 1
+      2 
+ seed 1
+ maxeval 14400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 4
+ mu 2
+ weights   log
+ ccumsig 0.645996
+ damp 2.54757
+ ccumcov 0.8
+ mucov 1.64965
+ ccov 0.293039
+ updatecov 0.341252
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 15:16:43 2014
+
+ N 1
+ xstart 1
+  0.414 
+ sigma 1
+      2 
+ seed 1
+ maxeval 14400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 4
+ mu 2
+ weights   log
+ ccumsig 0.645996
+ damp 2.54757
+ ccumcov 0.8
+ mucov 1.64965
+ ccov 0.293039
+ updatecov 0.341252
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 15:16:56 2014
+
+ N 1
+ xstart 1
+  0.414 
+ sigma 1
+      2 
+ seed 1
+ maxeval 14400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 4
+ mu 2
+ weights   log
+ ccumsig 0.645996
+ damp 2.54757
+ ccumcov 0.8
+ mucov 1.64965
+ ccov 0.293039
+ updatecov 0.341252
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 15:17:12 2014
+
+ N 1
+ xstart 1
+  0.414 
+ sigma 1
+      2 
+ seed 1
+ maxeval 14400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 4
+ mu 2
+ weights   log
+ ccumsig 0.645996
+ damp 2.54757
+ ccumcov 0.8
+ mucov 1.64965
+ ccov 0.293039
+ updatecov 0.341252
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 15:17:40 2014
+
+ N 1
+ xstart 1
+  0.414 
+ sigma 1
+      2 
+ seed 1
+ maxeval 14400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 4
+ mu 2
+ weights   log
+ ccumsig 0.645996
+ damp 2.54757
+ ccumcov 0.8
+ mucov 1.64965
+ ccov 0.293039
+ updatecov 0.341252
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 15:27:38 2014
+
+ N 10
+ xstart 10
+  0.414  -0.826  -0.492  -0.437   -0.16
+  0.914  -0.825  0.0587  -0.747   -0.63
+
+ sigma 10
+      2       2       2       2       2
+      2       2       2       2       2
+
+ seed 1
+ maxeval 152100
+ stopfunval
+ stopfunvaldiff -1
+ lambda 10
+ mu 5
+ weights   log
+ ccumsig 0.329872
+ damp 4.02949
+ ccumcov 0.285714
+ mucov 3.41477
+ ccov 0.0324601
+ updatecov 0.308071
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 15:37:42 2014
+
+ N 10
+ xstart 10
+  0.414  -0.826  -0.492  -0.437   -0.16
+  0.914  -0.825  0.0587  -0.747   -0.63
+
+ sigma 10
+      2       2       2       2       2
+      2       2       2       2       2
+
+ seed 1
+ maxeval 152100
+ stopfunval
+ stopfunvaldiff -1
+ lambda 10
+ mu 5
+ weights   log
+ ccumsig 0.329872
+ damp 4.02949
+ ccumcov 0.285714
+ mucov 3.41477
+ ccov 0.0324601
+ updatecov 0.308071
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:16:49 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:17:12 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:17:34 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:17:42 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:17:47 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:18:17 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:18:18 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:18:18 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:18:19 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:18:20 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:18:21 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:18:22 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:18:23 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:18:23 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:18:58 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:19:25 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:21:45 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:21:53 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:22:40 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:22:57 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:23:07 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:23:17 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:23:28 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:23:37 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:23:43 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:23:49 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:40:19 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:40:47 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:41:21 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:41:56 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:42:27 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:43:05 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:44:03 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:44:17 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:44:37 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:44:46 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:44:58 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:45:03 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:45:14 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:46:48 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:47:07 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:55:32 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:56:26 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 17:56:45 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 18:00:38 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 18:00:50 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 18:02:36 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 18:18:56 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 18:21:56 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 18:22:07 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 18:22:33 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 18:23:02 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 18:23:17 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 18:23:45 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 18:34:35 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 18:36:14 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Mar 25 18:38:07 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Fri Mar 28 14:25:04 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 13:42:44 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 13:42:57 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 13:43:28 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 13:48:59 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 13:50:13 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 13:51:34 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:05:23 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:25:18 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:27:24 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:28:05 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:28:23 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:28:49 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:28:54 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:29:17 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:30:02 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:30:17 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:31:21 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:33:03 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:33:23 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:33:42 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:34:05 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:34:32 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:35:28 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:36:03 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:36:46 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:36:58 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:37:19 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:38:31 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:38:57 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:39:29 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:39:58 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:40:46 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:42:39 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:43:44 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:45:27 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:46:35 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:47:11 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:47:49 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:51:12 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:52:02 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:52:24 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:53:05 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:53:43 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+
+
+# Read from (null) at Tue Apr  1 14:54:03 2014
+
+ N 3
+ xstart 3
+  0.414  -0.826  -0.492 
+ sigma 3
+      2       2       2 
+ seed 1
+ maxeval 32400
+ stopfunval
+ stopfunvaldiff -1
+ lambda 7
+ mu 3
+ weights   log
+ ccumsig 0.515434
+ damp 2.93885
+ ccumcov 0.571429
+ mucov 2.25482
+ ccov 0.117183
+ updatecov 0.284455
+ updatecovmaxtime 20
+ resume                                                        _no_
+

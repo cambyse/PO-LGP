@@ -113,11 +113,11 @@ joint br_caster_l_wheel_joint (br_caster_rotation_link br_caster_l_wheel_link){ 
 joint br_caster_r_wheel_joint (br_caster_rotation_link br_caster_r_wheel_link){ from=<T 0 -0.049 0 -0.5 -0.5 -0.5 -0.5 >  type=10  ctrl_limits=[ 100 100 ]  }
 
 ## TORS0
-joint torso_lift_joint (base_footprint torso_lift_link){ from=<T -0.05 0 0.790675 0.707107 0 -0.707107 0 >  type=3 q=.1  limits=[ 0 0.33 ]  ctrl_limits=[ 0.013 10000 ]  ctrl_H=3 }
+joint torso_lift_joint (base_footprint torso_lift_link){ from=<T -0.05 0 0.790675 0.707107 0 -0.707107 0 >  type=3 q=.1  limits=[ 0 0.33 ]  ctrl_limits=[ 0.013 10000 ]  ctrl_H=3000  gains=[0 0] gains=[100000 10] }
 
 ## HEAD
 joint head_pan_joint (torso_lift_link head_pan_link){ from=<T 0.38145 0 0.01707 1 0 0 0 >  type=0  limits=[ -3.007 3.007 ]  ctrl_limits=[ 6 2.645 ] gains=[10 2] }
-joint head_tilt_joint (head_pan_link head_tilt_link){ from=<T 1.5099e-17 0 -0.068 -0.5 -0.5 -0.5 -0.5 >  type=0  limits=[ -0.471238 1.39626 ]  ctrl_limits=[ 5 18 ] gains=[10 2] }
+joint head_tilt_joint (head_pan_link head_tilt_link){ from=<T 1.5099e-17 0 -0.068 -0.5 -0.5 -0.5 -0.5 >  type=0  limits=[ -0.471238 1.39626 ]  ctrl_limits=[ 5 18 ] gains=[100 10] }
 joint laser_tilt_mount_joint (torso_lift_link laser_tilt_mount_link){ from=<T 0.227 0 -0.09893 -0.5 -0.5 -0.5 -0.5 >  type=0  limits=[ -0.7854 1.48353 ]  ctrl_limits=[ 10 0.65 ] }
 
 ## RIGHT
@@ -127,7 +127,7 @@ joint r_upper_arm_roll_joint (r_shoulder_lift_link r_upper_arm_roll_link){ from=
 joint r_forearm_roll_joint (r_elbow_flex_link r_forearm_roll_link){ from=<T 0 0 0 -0.707107 0 0 0.707107 >  type=0  q=-1.5 ctrl_limits=[ 3.6 30 ]  gains=[10 2] }
 joint r_elbow_flex_joint (r_upper_arm_roll_link r_elbow_flex_link){ from=<T 0.4 0 0 0.707107 0 0 0.707107 >  type=0 q=-2 limits=[ -2.3213 0 ]  ctrl_limits=[ 3.3 30 ] gains=[30 10] }
 joint r_wrist_flex_joint (r_forearm_roll_link r_wrist_flex_link){ from=<T 0.321 0 0 0.707107 0 0 0.707107 >  type=0  limits=[ -2.18 0 ]  ctrl_limits=[ 3.078 10 ]  gains=[6 2] }
-joint r_wrist_roll_joint (r_wrist_flex_link r_wrist_roll_link){ from=<T 0 0 0 -0.707107 0 0 0.707107 >  type=0  q=-.5 ctrl_limits=[ 3.6 10 ]  gains=[6 2] }
+joint r_wrist_roll_joint (r_wrist_flex_link r_wrist_roll_link){ from=<T 0 0 0 -0.707107 0 0 0.707107 >  type=0  q=-.5 ctrl_limits=[ 3.6 10 ]  gains=[12 2] }
 
 joint r_gripper_l_finger_joint (r_wrist_roll_link r_gripper_l_finger_link){ from=<T 0.07691 0.01 0 0.707107 0 -0.707107 0 >  type=0  limits=[ 0 0.548 ]  ctrl_limits=[ 0.5 1000 ]  }
 joint r_gripper_r_finger_joint (r_wrist_roll_link r_gripper_r_finger_link){ from=<T 0.07691 -0.01 0 0.707107 0 0.707107 0 >  type=0  mimic=r_gripper_l_finger_joint  limits=[ 0 0.548 ]  ctrl_limits=[ 0.5 1000 ]  }
@@ -142,7 +142,7 @@ joint l_upper_arm_roll_joint (l_shoulder_lift_link l_upper_arm_roll_link){ from=
 joint l_forearm_roll_joint (l_elbow_flex_link l_forearm_roll_link){ from=<T 0 0 0 -0.707107 0 0 0.707107 >  type=0  q=1.5 ctrl_limits=[ 3.6 30 ]  gains=[10 2] }
 joint l_elbow_flex_joint (l_upper_arm_roll_link l_elbow_flex_link){ from=<T 0.4 0 0 0.707107 0 0 0.707107 >  type=0 q=-2 limits=[ -2.3213 0 ]  ctrl_limits=[ 3.3 30 ] gains=[30 10] }
 joint l_wrist_flex_joint (l_forearm_roll_link l_wrist_flex_link){ from=<T 0.321 0 0 0.707107 0 0 0.707107 >  type=0  limits=[ -2.18 0 ]  ctrl_limits=[ 3.078 10 ]  gains=[6 2]}
-joint l_wrist_roll_joint (l_wrist_flex_link l_wrist_roll_link){ from=<T 0 0 0 -0.707107 0 0 0.707107 >  type=0 q=.5 ctrl_limits=[ 3.6 10 ]  gains=[6 2]}
+joint l_wrist_roll_joint (l_wrist_flex_link l_wrist_roll_link){ from=<T 0 0 0 -0.707107 0 0 0.707107 >  type=0 q=.5 ctrl_limits=[ 3.6 10 ]  gains=[12 2]}
 
 joint l_gripper_l_finger_joint (l_wrist_roll_link l_gripper_l_finger_link){ from=<T 0.07691 0.01 0 0.707107 0 -0.707107 0 >  type=0  limits=[ 0 0.548 ]  ctrl_limits=[ 0.5 1000 ]  }
 joint l_gripper_r_finger_joint (l_wrist_roll_link l_gripper_r_finger_link){ from=<T 0.07691 -0.01 0 0.707107 0 0.707107 0 >  type=0  mimic=l_gripper_l_finger_joint  limits=[ 0 0.548 ]  ctrl_limits=[ 0.5 1000 ]  }
