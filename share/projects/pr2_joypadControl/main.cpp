@@ -91,6 +91,9 @@ void testJoypad(){
 
     refs.q=q;
     refs.qdot=zero_qdot;
+    refs.qdot(0) = qdot(0);
+    refs.qdot(1) = qdot(1);
+    refs.qdot(2) = qdot(2);
     S.ctrl_ref.set() = refs;
     if(S.ros) S.ros->publishJointReference();
 
