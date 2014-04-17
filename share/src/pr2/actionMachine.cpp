@@ -71,19 +71,13 @@ void ActionMachine::step(){
       cout << a->name << ": " << a->ID << endl;
       for(PDtask *t:a->tasks) t->active=true;
 
-      if(a->name == "MoveEffTo") {
-        cout <<" - MoveEffTo" << endl;
-        //nothing to be done
-        //dynamic_cast<MoveEffTo_ActionSymbol&>(a->symbol).task->y_ref = a->poseArg1;
-      }
       if(a->name == "PushForce") {
         cout <<" - FORCE TASK: " << endl;
-
-        // PushForce* pf = dynamic_cast<PushForce*>(a);
+        PushForce* pf = dynamic_cast<PushForce*>(a);
         // cout << pf->forceVec << endl;
-        // s->refs.fR = pf->forceVec;
-        // s->refs.fR_gainFactor = 1.;
-        // s->refs.Kp_gainFactor = .2;
+        s->refs.fR = pf->forceVec;
+        s->refs.fR_gainFactor = 1.;
+        s->refs.Kp_gainFactor = .2;
       }
     }
     else {

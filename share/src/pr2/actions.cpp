@@ -97,14 +97,13 @@ PushForce::PushForce(const char* effName, arr forceVec, arr poseArg2)
 }
 
 void PushForce::initYourself(ActionMachine& actionMachine) {
-  PDtask* task = actionMachine.s->MP.addPDTask(
-      STRING("PushForce_" << effName),
-      .2, .8, vecTMT, effName, forceVec);
-  task->y_ref = poseArg2;
-  tasks.append(task);
+  // Note that the pushtask is kinda seperate to the normal PDTasks. I does not
+  // add a PDTask to the ActionMachine
 }
 
 bool PushForce::finishedSuccess(ActionMachine& M) {
-  PDtask *task=tasks(0);
-  return (task->y.N==task->y_ref.N && maxDiff(task->y, task->y_ref)<1e-1);
+  return false;
+  // PDtask *task=tasks(0);
+  // return (task->y.N==task->y_ref.N && maxDiff(task->y, task->y_ref)<1e-1);
+  // return false;
 }
