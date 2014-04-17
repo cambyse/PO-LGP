@@ -22,7 +22,7 @@ void JoystickInterface::open(){
       <<"\nerror?   = " <<joy->notWorking()
      <<std::endl;
 
-    if(n>=4) break;
+    if(n>=4 && n<=8) break;
     //iterate and try a new one
     delete joy;
   }

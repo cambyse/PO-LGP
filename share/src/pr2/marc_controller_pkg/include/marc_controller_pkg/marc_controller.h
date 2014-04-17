@@ -35,6 +35,7 @@ private:
   uintA ROS_qIndex;
 
   ros::Publisher jointState_publisher;
+  ros::Publisher baseCommand_publisher;
   ros::Subscriber jointReference_subscriber;
   ros::Subscriber forceSensor_subscriber;
   marc_controller_pkg::JointState jointStateMsg;

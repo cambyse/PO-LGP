@@ -2,6 +2,7 @@
 #include <pluginlib/class_list_macros.h>
 #include <Core/array-vector.h>
 #include <iomanip>
+#include <geometry_msgs/Twist.h>
 
 namespace marc_controller_ns {
 
@@ -43,7 +44,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   for(uint i=0;i<(uint)pr2_tree.size();i++) {
 //    ROS_INFO("Joint Name %d: %s: %f", i, pr2_tree.getJoint(i)->joint_->name.c_str(), jnt_pos_(i));
     ors::Joint *j = world.getJointByName(pr2_tree.getJoint(i)->joint_->name.c_str());
-    if(j){
+    if(j && j->qDim()>0 && ROS_qIndex(j->qIndex)==UINT_MAX){ //only overwrite the association if not associated before
       ROS_qIndex(j->qIndex) = i;
       q(j->qIndex) = jnt_pos_(i);
       arr *info;
@@ -71,6 +72,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   ROS_INFO("*** starting publisher and subscriber");
 
   jointState_publisher = nh.advertise<marc_controller_pkg::JointState>("jointState", 1);
+  baseCommand_publisher = nh.advertise<geometry_msgs::Twist>("/base_controller/command", 1);
   jointReference_subscriber = nh.subscribe("jointReference", 1, &TreeControllerClass::jointReference_subscriber_callback, this);
   forceSensor_subscriber = nh.subscribe("/ft/l_gripper_motor", 1, &TreeControllerClass::forceSensor_subscriber_callback, this);
 
@@ -132,6 +134,15 @@ void TreeControllerClass::update() {
       MT::constrain(u(i), -limits(i,3), limits(i,3));
       pr2_tree.getJoint(ROS_qIndex(i))->commanded_effort_ = u(i);
       pr2_tree.getJoint(ROS_qIndex(i))->enforceLimits();
+    }
+
+    //-- command twist to base
+    {
+      geometry_msgs::Twist base_cmd;
+      base_cmd.linear.x = qdot_ref(0);
+      base_cmd.linear.y = qdot_ref(1);
+      base_cmd.angular.z = qdot_ref(2);
+      baseCommand_publisher.publish(base_cmd);
     }
   }
 }
