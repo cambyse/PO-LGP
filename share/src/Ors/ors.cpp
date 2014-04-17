@@ -950,8 +950,6 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, uint a, ors::Vector *rel
       j_idx=j->qIndex;
       if(j->agent==agent && j_idx>=N) CHECK(j->type==JT_glue || j->type==JT_fixed, "");
       if(j->agent==agent && j_idx<N){
-        //CHECK(j->type!=JT_glue && j->type!=JT_fixed, "resort joints so that fixed and glued are last");
-
         if(j->type==JT_hingeX || j->type==JT_hingeY || j->type==JT_hingeZ) {
           tmp = j->axis ^ (pos_a-j->X.pos);
           J(0, j_idx) += tmp.x;
@@ -1091,8 +1089,6 @@ void ors::KinematicWorld::kinematicsVec(arr& y, arr& J, uint a, ors::Vector *vec
       j_idx=j->qIndex;
       if(j->agent==agent && j_idx>=N) CHECK(j->type==JT_glue || j->type==JT_fixed, "");
       if(j->agent==agent && j_idx<N){
-        //CHECK(j->type!=JT_glue && j->type!=JT_fixed, "resort joints so that fixed and glued are last");
-
         if(j->type>=JT_hingeX && j->type<=JT_hingeZ) {
           tmp = j->axis ^ vec_a;
           J(0, j_idx) += tmp.x;
@@ -1139,8 +1135,6 @@ void ors::KinematicWorld::kinematicsQuat(arr& y, arr& J, uint a, uint agent) con
       j_idx=j->qIndex;
       if(j->agent==agent && j_idx>=N) CHECK(j->type==JT_glue || j->type==JT_fixed, "");
       if(j->agent==agent && j_idx<N){
-        CHECK(j->type!=JT_glue && j->type!=JT_fixed, "resort joints so that fixed and glued are last");
-
         tmp.set(0., 0.5*j->axis.x, 0.5*j->axis.y, 0.5*j->axis.z ); //this is unnormalized!!
         tmp = tmp * rot_a;
 

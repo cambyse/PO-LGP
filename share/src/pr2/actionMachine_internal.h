@@ -1,3 +1,5 @@
+#pragma once
+
 #include <Motion/gamepad2tasks.h>
 #include <Motion/feedbackControl.h>
 #include <System/engine.h>

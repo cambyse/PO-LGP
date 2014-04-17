@@ -68,7 +68,6 @@ FeedbackMotionControl::FeedbackMotionControl(ors::KinematicWorld& _world, bool u
   loadTransitionParameters();
   qitselfPD.name="qitselfPD";
   qitselfPD.setGains(0.,10.);
-//  qitselfPD.setGainsAsNatural(1.,1.);
   qitselfPD.prec=1.;
 }
 
@@ -115,6 +114,18 @@ void FeedbackMotionControl::getCostCoeffs(arr& c, arr& J){
   if(&J) J.reshape(c.N, world.q.N);
 }
 
+void FeedbackMotionControl::reportCurrentState(){
+  for(PDtask* t: tasks) {
+    cout <<"Task " <<t->name;
+    if(t->active) {
+      cout <<": \ty_ref=" <<t->y_ref <<" \ty=" <<t->y
+          <<" \tPterm=(" <<t->Pgain <<'*' <<length(t->y_ref-t->y) <<")  \tDterm=(" <<t->Dgain <<'*' <<length(t->v_ref-t->v) <<')' <<endl;
+    }else{
+      cout <<" -- inactive" <<endl;
+    }
+  }
+}
+
 void FeedbackMotionControl::updateConstraintControllers(){
   arr y;
   for(ConstraintForceTask* t: forceTasks){
@@ -150,20 +161,10 @@ arr FeedbackMotionControl::operationalSpaceControl(){
   if(qitselfPD.active){
     a += H_rate_diag % qitselfPD.getDesiredAcceleration(world.q, world.qdot);
   }
-//    if(qitselfPD.active){
-//      A += qitselfPD.prec * eye(H.d0);
-//      a -= qitselfPD.prec * (q_ddot - qitselfPD.getDesiredAcceleration(world.q, world.qdot));
-//    }
   if(c.N){
     A += comp_At_A(J);
     a += comp_At_x(J, c);
   }
   arr q_ddot = inverse_SymPosDef(A) * a;
-
-//  if(qitselfPD.active && qitselfPD.prec){
-//    arr Null = eye(a.N) - Ainv * A;
-//    q_ddot += Null * qitselfPD.getDesiredAcceleration(world.q, world.qdot);
-//  }
-
   return q_ddot;
 }

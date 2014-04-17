@@ -1,114 +1,110 @@
-#include "actionMachine_internal.h"
+#include "actions.h"
 
-//===========================================================================
+// ============================================================================
+// CoreTasks
+CoreTasks::CoreTasks() {
+  ID=symbols().N;
+  symbols().append(this);
+  name="CoreTasks";
+  nargs=0;
+}
 
-struct MoveEffTo_ActionSymbol:ActionSymbol{
-  MoveEffTo_ActionSymbol(){
-    SymbolL::memMove=true;
-    PDtaskL::memMove=true;
-    ID=symbols().N;
-    symbols().append(this);
-    name="MoveEffTo";
-    nargs=2;
-  }
-  virtual void initYourself(GroundedAction& a, ActionMachine& P) {
-    PDtask *task;
-    task = P.s->MP.addPDTask(STRING("MoveEffTo_" <<a.shapeArg1), 1., .8, posTMT, a.shapeArg1);
-//    task->setGains(200.,0.);
-    task->y_ref = a.poseArg1;
-    a.tasks.append(task);
-  }
-  virtual void deinitYourself(GroundedAction& a, ActionMachine& P) {
-    for(PDtask *t:a.tasks) P.s->MP.tasks.removeValue(t);
-    listDelete(a.tasks);
-  }
-  virtual bool finishedSuccess(GroundedAction& a, ActionMachine& M) {
-    PDtask *task=a.tasks(0);
-    return (task->y.N==task->y_ref.N && maxDiff(task->y, task->y_ref)<1e-2);
-  }
-
-} moveEffTo_;
-ActionSymbol &moveEffTo = moveEffTo_;
-
-//===========================================================================
-
-struct AlignEffTo_ActionSymbol:ActionSymbol{
-  AlignEffTo_ActionSymbol(){
-    ID=symbols().N;
-    symbols().append(this);
-    name="AlignEffTo";
-    nargs=2;
-  }
-  virtual void initYourself(GroundedAction& a, ActionMachine& P) {
-    PDtask *task;
-    task = P.s->MP.addPDTask(STRING("AlignEffTo_" <<a.shapeArg1), 2., .8, vecTMT, a.shapeArg1, ors::Vector(a.poseArg1));
-//    task->setGains(100.,0.);
-    task->y_ref = a.poseArg2;
-    a.tasks.append(task);
-  }
-  virtual void deinitYourself(GroundedAction& a, ActionMachine& P) {
-    for(PDtask *t:a.tasks) P.s->MP.tasks.removeValue(t);
-    listDelete(a.tasks);
-  }
-  virtual bool finishedSuccess(GroundedAction& a, ActionMachine& M) {
-    PDtask *task=a.tasks(0);
-    return (task->y.N==task->y_ref.N && maxDiff(task->y, task->y_ref)<1e-1);
-  }
-} alignEffTo_;
-ActionSymbol &alignEffTo = alignEffTo_;
-
-//===========================================================================
-
-struct CoreTasks_ActionSymbol:ActionSymbol{
-  CoreTasks_ActionSymbol(){
-    ID=symbols().N;
-    symbols().append(this);
-    name="CoreTasks";
-    nargs=0;
-  }
-  virtual void initYourself(GroundedAction& a, ActionMachine& P) {
+void CoreTasks::initYourself(ActionMachine& actionMachine) {
 //    PDtask *qitself;
 //    qitself = P.s->MP.addPDTask("DampMotion_qitself", .1, 1., qLinearTMT, NULL, NoVector, NULL, NoVector, P.s->MP.H_rate_diag);
 //    qitself->setGains(0.,10.);
 //    qitself->y_ref = P.s->MP.qitselfPD.y_ref;
 //    qitself->v_ref.setZero();
 //    qitself->prec=100.;
-//    a.tasks.append(qitself);
+//    tasks.append(qitself);
+  PDtask *limits;
+  limits = actionMachine.s->MP.addPDTask("limits", .1, .8, qLimitsTMT);
+  // limits->setGains(10.,0.);
+  limits->v_ref.setZero();
+  limits->v_ref.setZero();
+  limits->prec=100.;
+  tasks.append(limits);
+}
 
-    PDtask *limits;
-    limits = P.s->MP.addPDTask("limits", .1, .8, qLimitsTMT);
-//    limits->setGains(10.,0.);
-    limits->v_ref.setZero();
-    limits->v_ref.setZero();
-    limits->prec=100.;
-    a.tasks.append(limits);
-  }
-  virtual void deinitYourself(GroundedAction& a, ActionMachine& P) {
-    for(PDtask *t:a.tasks) P.s->MP.tasks.removeValue(t);
-    listDelete(a.tasks);
-  }
-} coreTasks_;
-ActionSymbol &coreTasks = coreTasks_;
+// ============================================================================
+// MoveEffTo
+MoveEffTo::MoveEffTo(const char* effName, const arr& effPos)
+    : effName(effName)
+    , effPos(effPos)
+{
+  SymbolL::memMove=true;
+  PDtaskL::memMove=true;
+  ID=symbols().N;
+  symbols().append(this);
+  name="MoveEffTo";
+  nargs=2;
+}
 
-//===========================================================================
+void MoveEffTo::initYourself(ActionMachine& actionMachine) {
+  PDtask *task;
+  task = actionMachine.s->MP.addPDTask(
+      STRING("MoveEffTo_" << effName),
+      1., .8, posTMT, effName);
+  // task->setGains(200.,0.);
+  task->y_ref = effPos;
+  tasks.append(task);
+}
 
-struct PushForce_ActionSymbol:ActionSymbol{
-  PushForce_ActionSymbol(){
-    ID=symbols().N;
-    symbols().append(this);
-    name="PushForce";
-    nargs=2;
-  }
-  virtual void initYourself(GroundedAction& a, ActionMachine& P) {
-    PDtask *task;
-    task = P.s->MP.addPDTask(STRING("PushForce_" <<a.shapeArg1), .2, .8, vecTMT, a.shapeArg1, ors::Vector(a.poseArg1));
-    task->y_ref = a.poseArg2;
-    a.tasks.append(task);
-  }
-  virtual void deinitYourself(GroundedAction& a, ActionMachine& P) {
-    for(PDtask *t:a.tasks) P.s->MP.tasks.removeValue(t);
-    listDelete(a.tasks);
-  }
-} pushForce_;
-ActionSymbol &pushForce = pushForce_;
+bool MoveEffTo::finishedSuccess(ActionMachine& M) {
+  PDtask *task=tasks(0);
+  return (task->y.N==task->y_ref.N && maxDiff(task->y, task->y_ref)<1e-2);
+}
 
+// ============================================================================
+// AlignEffTo
+AlignEffTo::AlignEffTo(const char* effName, const arr& effPos, const arr& alignPos)
+    : effName(effName)
+    , effPos(effPos)
+    , alginPos(alignPos)
+{
+  ID=symbols().N;
+  symbols().append(this);
+  name="AlignEffTo";
+  nargs=2;
+}
+
+void AlignEffTo::initYourself(ActionMachine& actionMachine) {
+  PDtask *task;
+  task = actionMachine.s->MP.addPDTask(
+      STRING("AlignEffTo_" << effName),
+      2., .8, vecTMT, effName, ors::Vector(effPos));
+  // task->setGains(100.,0.);
+  task->y_ref = alginPos;
+  tasks.append(task);
+}
+
+bool AlignEffTo::finishedSuccess(ActionMachine& M) {
+  PDtask *task=tasks(0);
+  return (task->y.N==task->y_ref.N && maxDiff(task->y, task->y_ref)<1e-1);
+}
+
+// ============================================================================
+// PushForce
+PushForce::PushForce(const char* effName, arr forceVec, arr poseArg2)
+    : effName(effName)
+    , forceVec(forceVec)
+    , poseArg2(poseArg2)
+{
+  ID=symbols().N;
+  symbols().append(this);
+  name="PushForce";
+  nargs=2;
+}
+
+void PushForce::initYourself(ActionMachine& actionMachine) {
+  PDtask* task = actionMachine.s->MP.addPDTask(
+      STRING("PushForce_" << effName),
+      .2, .8, vecTMT, effName, forceVec);
+  task->y_ref = poseArg2;
+  tasks.append(task);
+}
+
+bool PushForce::finishedSuccess(ActionMachine& M) {
+  PDtask *task=tasks(0);
+  return (task->y.N==task->y_ref.N && maxDiff(task->y, task->y_ref)<1e-1);
+}
