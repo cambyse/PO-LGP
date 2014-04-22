@@ -20,7 +20,8 @@ class TemporallyExtendedModel: public HistoryObserver, public Predictor {
 public:
     DISAMBIGUATE_CONFIG_TYPEDEFS(HistoryObserver);
     typedef arma::SpMat<double> f_mat_t; // using double for compatibility to vec_t
-    typedef arma::Col<double> vec_t;
+    typedef arma::Col<double> col_vec_t;
+    typedef arma::Row<double> row_vec_t;
     typedef std::map<f_ptr_t,double> weight_map_t;
     typedef Feature::look_up_map_t basis_feature_map_t;
     //---- members ----//
@@ -44,7 +45,7 @@ private:
     std::vector<int> outcome_indices;
 
     /** \brief Weight for the features. */
-    vec_t weights;
+    col_vec_t weights;
 
     /** \brief Whether the training data changed. */
     bool data_changed = true;
@@ -128,7 +129,7 @@ protected:
     /** \brief Update outcome indices. */
     virtual void update_outcome_indices();
 
-    virtual double neg_log_likelihood(vec_t& grad, const vec_t& weights);
+    virtual double neg_log_likelihood(col_vec_t& grad, const col_vec_t& weights);
     lbfgsfloatval_t LBFGS_objective(const lbfgsfloatval_t*, lbfgsfloatval_t*);
     int LBFGS_progress(const lbfgsfloatval_t *x,
                        const lbfgsfloatval_t *g,
