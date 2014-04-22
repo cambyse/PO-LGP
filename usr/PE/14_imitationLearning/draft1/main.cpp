@@ -7,6 +7,7 @@
 #include <vector>
 #include <future>
 
+
 void createToyDemonstrations(std::vector<arr> &demos,arr &q0) {
   uint trajIter;
   for (trajIter=0;trajIter<10;trajIter++) {
