@@ -30,8 +30,10 @@ namespace Commander {
         CommandAliasList(const char*);
         CommandAliasList(std::initializer_list<QString>);
         virtual ~CommandAliasList() = default;
-        bool contains(const QString& other) const;
-        bool has_common_element(const CommandAliasList& other) const;
+        bool contains_alias_starting_with(const QString& other) const;
+        bool contains_alias_with_substring(const QString& other) const;
+        bool contains_alias(const QString& other) const;
+        bool has_common_alias(const CommandAliasList& other) const;
         bool operator<(const CommandAliasList& other) const { return commands<other.commands; }
         int length() const { return get_string().length(); }
         operator QString() const { return get_string(); }
@@ -69,6 +71,24 @@ namespace Commander {
         }
     };
 
+    /** \brief Specialization for QString-->bool. */
+    template<> class Mapper<QString,std::tuple<bool,bool>> {
+    public:
+        static const bool can_do = true;
+        static std::tuple<bool,bool> map(QString from) {
+            bool ok = false;
+            bool b = false;
+            if(from=="true" || from=="t" || from=="True" || from=="T" || from=="1") {
+                b = true;
+                ok = true;
+            } else if(from=="false" || from=="f" || from=="False" || from=="F" || from=="0") {
+                b = false;
+                ok = true;
+            }
+            return std::make_tuple(ok,b);
+        }
+    };
+
     /** \brief Specialization for QString-->QString. */
     template<> class Mapper<QString,std::tuple<bool,QString>> {
     public:
@@ -77,7 +97,6 @@ namespace Commander {
             return std::make_tuple(true,from);
         }
     };
-
 
     /** \brief Maps to a type description. */
     template<class From, class To> class TypeDescriptor {
@@ -166,7 +185,7 @@ namespace Commander {
             COM_ARGS,
             COM_FUNCTION,
             COM_DESCRIPTION };
-        typedef std::tuple<QString,
+        typedef std::tuple<std::pair<double,QString>,
             CommandAliasList,
             QString,
             std::shared_ptr<AbstractCommandFunction>,
@@ -182,12 +201,14 @@ namespace Commander {
         CommandCenter() = default;
         virtual ~CommandCenter() = default;
         template<class Func>
+            void add_command(const std::pair<double,QString>&, const CommandAliasList&, const Func&, const Description&);
+        template<class Func>
             void add_command(const QString&, const CommandAliasList&, const Func&, const Description&);
         template<class Func>
             void add_command(const CommandAliasList&, const Func&, const Description&);
         QString execute(QString command_string) const;
-        std::vector<QString> get_help(int space = 4) const;
-        QString get_help_string(int space = 4) const;
+        std::vector<QString> get_help(QString filter = "", int space = 4) const;
+        QString get_help_string(QString filter = "", int space = 4) const;
     private:
         QString add_space(int from, int to) const;
     };
@@ -284,7 +305,7 @@ namespace Commander {
     }
 
     template<class Func>
-        void CommandCenter::add_command(const QString& top,
+        void CommandCenter::add_command(const std::pair<double,QString>& top,
                                         const CommandAliasList& com,
                                         const Func& func,
                                         const Description& des) {
@@ -297,7 +318,7 @@ namespace Commander {
         for(auto c : command_set) {
             auto alias = std::get<COM_ALIAS>(c);
             auto args = std::get<COM_ARGS>(c);
-            if(alias.has_common_element(com) && args==f_ptr->arg_description) {
+            if(alias.has_common_alias(com) && args==f_ptr->arg_description) {
                 DEBUG_WARNING("A command with same name and same signature already exists [" << (QString)com << " (" << f_ptr->arg_description << ")]");
                 return;
             }
@@ -307,10 +328,18 @@ namespace Commander {
     }
 
     template<class Func>
+        void CommandCenter::add_command(const QString& top,
+                                        const CommandAliasList& com,
+                                        const Func& func,
+                                        const Description& des) {
+        add_command({0,top},com,func,des);
+    }
+
+    template<class Func>
         void CommandCenter::add_command(const CommandAliasList& com,
                                         const Func& func,
                                         const Description& des) {
-        add_command("",com,func,des);
+        add_command({0,""},com,func,des);
     }
 
 }
