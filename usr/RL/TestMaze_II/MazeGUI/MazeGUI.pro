@@ -23,6 +23,7 @@ HEADERS += \
     ../DelayDistribution.h \
     \
     ../optimization/LBFGS_Optimizer.h \
+    ../optimization/LBFGS_Object.h \
     \
     ../Representation/Feature.h \
     \
@@ -58,6 +59,9 @@ HEADERS += \
     ../Learner/KMarkovCRF.h \
     ../Learner/UTree.h \
     ../Learner/LinearQ.h \
+    ../Learner/TemporallyExtendedModel.h \
+    ../Learner/AdjacencyOperator.h \
+    ../Learner/ConjunctiveAdjacency.h \
     \
     ../BatchMaze.h \
     ../testmaze_ii.h
@@ -78,6 +82,7 @@ SOURCES += \
     ../DelayDistribution.cpp \
     \
     ../optimization/LBFGS_Optimizer.cpp \
+    ../optimization/LBFGS_Object.cpp \
     \
     ../Representation/Feature.cpp \
     \
@@ -109,6 +114,8 @@ SOURCES += \
     ../Learner/KMarkovCRF.cpp \
     ../Learner/UTree.cpp \
     ../Learner/LinearQ.cpp \
+    ../Learner/TemporallyExtendedModel.cpp \
+    ../Learner/ConjunctiveAdjacency.cpp \
     \
     ../BatchMaze.cpp \
     ../testmaze_ii.cpp

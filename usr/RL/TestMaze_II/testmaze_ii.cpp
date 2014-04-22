@@ -37,6 +37,7 @@ using std::max;
 using std::dynamic_pointer_cast;
 using std::shared_ptr;
 using std::make_shared;
+using std::pair;
 
 using util::arg_int;
 using util::arg_double;
@@ -60,6 +61,8 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     crf(new KMarkovCRF()),
     utree(new UTree(discount)),
     linQ(new LinearQ(discount)),
+    N_plus(new ConjunctiveAdjacency()),
+    tem(new TemporallyExtendedModel(N_plus)),
     policy(nullptr),
     max_tree_size(10000),
     prune_search_tree(true),
@@ -110,516 +113,653 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     change_environment(make_shared<Maze>(epsilon,"Markov"));
     // change_environment(make_shared<CheeseMaze>());
 
+    // set some properties of N+
+    N_plus->set_horizon_extension(2);
+    N_plus->set_max_horizon(2);
+    N_plus->combine_features(false);
+
+    // set l1 factor for tem
+    tem->set_l1_factor(l1_factor);
+
     // set all commands
+    initialize_commands();
+}
+
+void TestMaze_II::initialize_commands() {
     typedef Commander::ReturnType ret_t;
-    command_center.add_command({"help","h"},[this]()->ret_t{
-            to_console("");
-            for(QString s : command_center.get_help()) {
-                to_console(s,4);
-            }
-            return{true,""};
-        },"Print help");
-    //---------------------------------General-----------------------------------
-    command_center.add_command("(1) General",{"exit","quit","q"}, [this]()->ret_t{return{true,""};}, "quit application");
-    command_center.add_command("(1) General",{"set record"}, [this]()->ret_t{return{true,""};}, "start recording movements");
-    command_center.add_command("(1) General",{"unset record"}, [this]()->ret_t{return{true,""};}, "stop recording movements");
-    command_center.add_command("(1) General",{"set plot"}, [this]()->ret_t{return{true,""};}, "start writing transitions into data file for plotting");
-    command_center.add_command("(1) General",{"unset plot"}, [this]()->ret_t{return{true,""};}, "stop writing transitions into data file for plotting");
-    command_center.add_command("(1) General",{"set planner o","optimal"}, [this]()->ret_t{return{true,""};}, "use optimal predictions (give by maze)");
-    command_center.add_command("(1) General",{"set planner s","sparse"}, [this]()->ret_t{return{true,""};}, "use sparse predictions (given by CRF)");
-    command_center.add_command("(1) General",{"set planner u","utree"}, [this]()->ret_t{return{true,""};}, "use UTree as predictive model");
-    command_center.add_command("(1) General",{"set planner uv","utree-value"}, [this]()->ret_t{return{true,""};}, "use UTree as value function");
-    command_center.add_command("(1) General",{"set planner lq","linear-q"}, [this]()->ret_t{return{true,""};}, "use linear Q-function approximation");
-    command_center.add_command("(1) General",{"set planner g","goal"}, [this]()->ret_t{return{true,""};}, "use goal-guided value iteration");
-    command_center.add_command("(1) General",{"set planner r","random"}, [this]()->ret_t{return{true,""};}, "use random policy");
-    command_center.add_command("(1) General",{"set goal","s g"}, [this]()->ret_t{return{true,""};}, "activate goal state at current location");
-    command_center.add_command("(1) General",{"set goal random","s g r"}, [this]()->ret_t{return{true,""};}, "activate goal state at random location");
-    command_center.add_command("(1) General",{"set prune tree"}, [this]()->ret_t{return{true,""};}, "prune search tree");
-    command_center.add_command("(1) General",{"unset prune tree"}, [this]()->ret_t{return{true,""};}, "don't prune search tree");
-    command_center.add_command("(1) General",{"set png"}, [this]()->ret_t{return{true,""};}, "save a png image of the maze on transition");
-    command_center.add_command("(1) General",{"unset png"}, [this]()->ret_t{return{true,""};}, "don't save a png image of the maze on transition");
-    command_center.add_command("(1) General",{"set maze"}, [this]()->ret_t{return{true,""};}, "display available maze names");
-    command_center.add_command("(1) General",{"set maze"}, [this](QString)->ret_t{return{true,""};}, "load maze with name <string>");
-    command_center.add_command("(1) General",{"set cheese"}, [this]()->ret_t{return{true,""};}, "load cheese maze");
-    command_center.add_command("(1) General",{"set color"}, [this]()->ret_t{return{true,""};}, "color maze (if applicable)");
-    command_center.add_command("(1) General",{"unset color"}, [this]()->ret_t{return{true,""};}, "don't color maze");
-    //-----------------------------------Maze-----------------------------------
-    command_center.add_command("(2) Maze",{"left","l"}, [this]()->ret_t{return{true,""};}, "move left");
-    command_center.add_command("(2) Maze",{"right","r"}, [this]()->ret_t{return{true,""};}, "move right");
-    command_center.add_command("(2) Maze",{"up","u"}, [this]()->ret_t{return{true,""};}, "move up");
-    command_center.add_command("(2) Maze",{"down","d"}, [this]()->ret_t{return{true,""};}, "move down");
-    command_center.add_command("(2) Maze",{"stay","s"}, [this]()->ret_t{return{true,""};}, "stay-action");
-    command_center.add_command("(2) Maze",{"move"}, [this]()->ret_t{return{true,""};}, "move one step");
-    command_center.add_command("(2) Maze",{"move"}, [this](int)->ret_t{return{true,""};}, "start moving every <int> milliseconds");
-    command_center.add_command("(2) Maze",{"move stop"}, [this]()->ret_t{return{true,""};}, "stop moving");
-    command_center.add_command("(2) Maze",{"epsilon"}, [this]()->ret_t{return{true,""};}, "get random transition probability");
-    command_center.add_command("(2) Maze",{"epsilon"}, [this](double)->ret_t{return{true,""};}, "set random transition probability");
-    command_center.add_command("(2) Maze",{"reward activation","ra"}, [this](int)->ret_t{return{true,""};}, "print mean reward activation probability for length-<int> random walk");
-    command_center.add_command("(2) Maze",{"random distribution","rd"}, [this](int)->ret_t{return{true,""};}, "run <int> random transitions and display relative counts for all states");
-    //------------------------------Model Learning------------------------------
-    command_center.add_command("(3) Model Learning",{"episode","e"}, [this](int)->ret_t{return{true,""};}, "record length <int> episode");
-    command_center.add_command("(3) Model Learning",{"episode clear","e c"}, [this]()->ret_t{return{true,""};}, "clear episode data");
-    //=== CRF ===
-    command_center.add_command("(3.1) Model Learning (CRF)",{"crf optimize","co"}, [this]()->ret_t{return{true,""};}, "optimize CRF");
-    command_center.add_command("(3.1) Model Learning (CRF)",{"crf optimize","co"}, [this](int)->ret_t{return{true,""};}, "optimize CRF with a maximum of <int> iterations");
-    command_center.add_command("(3.1) Model Learning (CRF)",{"crf check"}, [this]()->ret_t{return{true,""};}, "CRF check derivatives");
-    command_center.add_command("(3.1) Model Learning (CRF)",{"score-crf","scrf"}, [this](int)->ret_t{return{true,""};}, "score candidate features with distance <int> by gradient");
-    command_center.add_command("(3.1) Model Learning (CRF)",{"score1D-crf","s1Dcrf"}, [this](int)->ret_t{return{true,""};}, "score candidate features with distance <int> by 1D optimization");
-    command_center.add_command("(3.1) Model Learning (CRF)",{"add-crf"}, [this](int)->ret_t{return{true,""};}, "add <int> highest scored candidate features to active (0 for all non-zero scored)");
-    command_center.add_command("(3.1) Model Learning (CRF)",{"crf-erase","ce"}, [this]()->ret_t{return{true,""};}, "erase features with zero weight");
-    command_center.add_command("(3.1) Model Learning (CRF)",{"l1 "}, [this](double)->ret_t{return{true,""};}, "coefficient for L1 regularization");
-    command_center.add_command("(3.1) Model Learning (CRF)",{"evaluate"}, [this]()->ret_t{return{true,""};}, "evaluate features at current point");
-    command_center.add_command("(3.1) Model Learning (CRF)",{"crf-f"}, [this]()->ret_t{return{true,""};}, "print CRF features and weights");
-    command_center.add_command("(3.1) Model Learning (CRF)",{"apply-old-features","aof"}, [this]()->ret_t{return{true,""};}, "re-apply the old featues stored at the last erase");
-    //=== UTree ===
-    command_center.add_command("(3.2) Model Learning (UTree)",{"expand","ex"}, [this](int)->ret_t{return{true,""};}, "expand <int> leaf nodes");
-    command_center.add_command("(3.2) Model Learning (UTree)",{"expand","ex"}, [this](double)->ret_t{return{true,""};}, "expand leaves until a score of <double> is reached");
-    command_center.add_command("(3.2) Model Learning (UTree)",{"print utree"}, [this]()->ret_t{return{true,""};}, "print the current UTree");
-    command_center.add_command("(3.2) Model Learning (UTree)",{"print leaves"}, [this]()->ret_t{return{true,""};}, "print leaves of the current UTree");
-    command_center.add_command("(3.2) Model Learning (UTree)",{"clear utree"}, [this]()->ret_t{return{true,""};}, "clear UTree");
-    command_center.add_command("(3.2) Model Learning (UTree)",{"v-iteration","vi"}, [this]()->ret_t{return{true,""};}, "run one step of Value-Iteration");
-    command_center.add_command("(3.2) Model Learning (UTree)",{"v-iteration","vi"}, [this](int)->ret_t{return{true,""};}, "run one <int> steps of Value-Iteration");
-    command_center.add_command("(3.2) Model Learning (UTree)",{"ex-type","ext"}, [this]()->ret_t{return{true,""};}, "get expansion type for UTree");
-    command_center.add_command("(3.2) Model Learning (UTree)",{"ex-type-utility","ext u"}, [this]()->ret_t{return{true,""};}, "set expansion type for UTree");
-    command_center.add_command("(3.2) Model Learning (UTree)",{"ex-type-observation","ext o"}, [this]()->ret_t{return{true,""};}, "set expansion type for UTree");
-    command_center.add_command("(3.2) Model Learning (UTree)",{"ex-type-reward","ext r"}, [this]()->ret_t{return{true,""};}, "set expansion type for UTree");
-    command_center.add_command("(3.2) Model Learning (UTree)",{"utree-f"}, [this]()->ret_t{return{true,""};}, "print UTree features");
-    //=== Linear-Q ===
-    command_center.add_command("(3.3) Model Learning (Linear-Q)",{"lq-optimize-ridge","lqor"}, [this](double)->ret_t{return{true,""};}, "optimize Linear-Q (TD Error) with L2-regularization coefficient <double>");
-    command_center.add_command("(3.3) Model Learning (Linear-Q)",{"lq-optimize-l1","lqol1"}, [this](double)->ret_t{return{true,""};}, "optimize Linear-Q (TD Error) with L1-regularization coefficient <double>");
-    command_center.add_command("(3.3) Model Learning (Linear-Q)",{"lq-optimize-l1","lqol1"}, [this](double,int)->ret_t{return{true,""};}, "maximum of <int> iterations");
-    command_center.add_command("(3.3) Model Learning (Linear-Q)",{"lq-optimize-l1-check","lqol1-c"}, [this]()->ret_t{return{true,""};}, "check derivatives");
-    command_center.add_command("(3.3) Model Learning (Linear-Q)",{"lq-optimize","lqo"}, [this](double)->ret_t{return{true,""};}, "optimize Linear-Q (Bellman Error) with L1-regularization coefficient <double>");
-    command_center.add_command("(3.3) Model Learning (Linear-Q)",{"lq-optimize","lqo"}, [this](double,int)->ret_t{return{true,""};}, "maximum of <int> iterations");
-    command_center.add_command("(3.3) Model Learning (Linear-Q)",{"lq-optimize-check","lqo-c"}, [this]()->ret_t{return{true,""};}, "check derivatives");
-    command_center.add_command("(3.3) Model Learning (Linear-Q)",{"construct","con"}, [this](int)->ret_t{return{true,""};}, "construct candidate features with distance <int>");
-    command_center.add_command("(3.3) Model Learning (Linear-Q)",{"score-lq","slq"}, [this](int)->ret_t{return{true,""};}, "score candidate features with distance <int> by gradient");
-    command_center.add_command("(3.3) Model Learning (Linear-Q)",{"add-lq"}, [this](int)->ret_t{return{true,""};}, "add <int> highest scored candidate features to active (0 for all non-zero scored)");
-    command_center.add_command("(3.3) Model Learning (Linear-Q)",{"lq-erase","lqe"}, [this]()->ret_t{return{true,""};}, "erase features with zero weight");
-    command_center.add_command("(3.3) Model Learning (Linear-Q)",{"lq-erase","lqe"}, [this](double)->ret_t{return{true,""};}, "erase features with weight below or equal to <double>");
-    command_center.add_command("(3.3) Model Learning (Linear-Q)",{"lq-alpha"}, [this]()->ret_t{return{true,""};}, "get alpha for Soft-Max");
-    command_center.add_command("(3.3) Model Learning (Linear-Q)",{"lq-alpha"}, [this](double)->ret_t{return{true,""};}, "set alpha for Soft-Max");
-    //---------------------------------Planning----------------------------------
-    command_center.add_command("(4) Planning",{"discount"}, [this]()->ret_t{return{true,""};}, "get discount");
-    command_center.add_command("(4) Planning",{"discount"}, [this](double)->ret_t{return{true,""};}, "set discount");
-    command_center.add_command("(4) Planning",{"print tree"}, [this]()->ret_t{return{true,""};}, "print Look-Ahead-Tree statistics");
-    command_center.add_command("(4) Planning",{"print tree graphic","p t g"}, [this]()->ret_t{return{true,""};}, "print Look-Ahead-Tree statistics with additional graphical output");
-    command_center.add_command("(4) Planning",{"print tree text","p t t"}, [this]()->ret_t{return{true,""};}, "print Look-Ahead-Tree statistics with additional long text output");
-    command_center.add_command("(4) Planning",{"max-tree-size"}, [this](int)->ret_t{return{true,""};}, "set maximum size of Look-Ahead-Tree (zero for infinite)");
-    //---------------------------------New Stuff----------------------------------
-    command_center.add_command("(5) New Stuff",{"col-states"}, [this]()->ret_t{return{true,""};}, "color states (random)");
-    command_center.add_command("(5) New Stuff",{"fixed-dt-dist","fdd"}, [this](int)->ret_t{return{true,""};}, "show probability for a state to occur <int> steps after current state");
-    command_center.add_command("(5) New Stuff",{"pair-delay-dist","pdd"}, [this]()->ret_t{return{true,""};}, "show temporal delay distribution from current state to goal state");
-    command_center.add_command("(5) New Stuff",{"pair-delay-dist","pdd"}, [this](int)->ret_t{return{true,""};}, "restrict to time window of width <int>");
-    command_center.add_command("(5) New Stuff",{"mediator-probability","mp"}, [this](int)->ret_t{return{true,""};}, "show probability for a state to occurr between current state and goal state given a time window of width <int>");
+    pair<double,QString> top_todo(1000,"Not Ported Yet =============================================");
+    {
+        pair<double,QString> top_general(1,"General ================================================");
+        command_center.add_command(top_general,{"help","h"},[this]()->ret_t{
+                to_console("");
+                for(QString s : command_center.get_help()) {
+                    to_console(s,4);
+                }
+                return {true,""};
+            },"Print help");
+        command_center.add_command(top_general,{"help","h"},[this](QString filter)->ret_t{
+                to_console("");
+                for(QString s : command_center.get_help(filter)) {
+                    to_console(s,4);
+                }
+                return {true,""};
+            },"Print help for commands containing <QString>");
+        command_center.add_command(top_general,{"exit","quit","q"}, [this]()->ret_t{
+                QApplication::quit();
+                return {true,""};
+            }, "quit application");
+        command_center.add_command(top_general,{"set record"}, [this]()->ret_t{
+                record = true;
+                start_new_episode = true;
+                return {true,"record on" };
+            }, "start recording movements");
+        command_center.add_command(top_general,{"unset record"}, [this]()->ret_t{
+                record = false;
+                return {true,"record off" };
+            }, "stop recording movements");
+        command_center.add_command(top_general,{"set plot"}, [this]()->ret_t{
+                plot = true;
+                plot_file.open("plot_file.txt");
+                plot_file << "# action observation reward" << endl;
+                return {true,"plot on" };
+            }, "start writing transitions into data file for plotting");
+        command_center.add_command(top_general,{"unset plot"}, [this]()->ret_t{
+                plot = false;
+                plot_file.close();
+                return {true,"plot off" };
+            }, "stop writing transitions into data file for plotting");
+        command_center.add_command(top_todo,{"set png"}, [this]()->ret_t{
+                return {true,"...to be ported"};
+            }, "save a png image of the maze on transition");
+        command_center.add_command(top_todo,{"unset png"}, [this]()->ret_t{
+                return {true,"...to be ported"};
+            }, "don't save a png image of the maze on transition");
+        command_center.add_command(top_general,{"set color"}, [this]()->ret_t{
+                color_maze = true;
+                return {true,"color maze"};
+            }, "color maze (if applicable)");
+        command_center.add_command(top_general,{"unset color"}, [this]()->ret_t{
+                color_maze = false;
+                return {true,"don't color maze" };
+            }, "don't color maze");
+    }
+    {
+        pair<double,QString> top_maze(2,"Maze ===================================================");
+        command_center.add_command(top_maze,{"set maze"}, [this]()->ret_t{
+                to_console("Available mazes:",4);
+                for(QString name : Maze::get_maze_list()) {
+                    to_console(name,8);
+                }
+                return {true,""};
+            }, "display available maze names");
+        command_center.add_command(top_maze,{"set maze"}, [this](QString name)->ret_t{
+                shared_ptr<Maze> maze(new Maze(epsilon));
+                bool success = maze->set_maze(name);
+                change_environment(maze);
+                if(!success) {
+                    command_center.execute("set maze");
+                    return {false,"no maze named '"+name+"'"};
+                } else {
+                    return {true,"set maze '"+name+"'"};
+                }
+            }, "load maze with name <string>");
+        command_center.add_command(top_maze,{"set cheese"}, [this]()->ret_t{
+                change_environment(make_shared<CheeseMaze>());
+                return {true,"set cheese maze"};
+            }, "load cheese maze");
+        command_center.add_command(top_maze,{"move left","l"}, [this]()->ret_t{
+                if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
+                    perform_transition(action_ptr_t(new MazeAction("left")));
+                } else if(dynamic_pointer_cast<CheeseMaze>(environment)!=nullptr) {
+                    perform_transition(action_ptr_t(new CheeseMazeAction("west")));
+                } else {
+                    return {false,"Not defined in current environment"};
+                }
+                return {true,"moved left"};
+            }, "move left");
+        command_center.add_command(top_maze,{"move right","r"}, [this]()->ret_t{
+                if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
+                    perform_transition(action_ptr_t(new MazeAction("right")));
+                } else if(dynamic_pointer_cast<CheeseMaze>(environment)!=nullptr) {
+                    perform_transition(action_ptr_t(new CheeseMazeAction("east")));
+                } else {
+                    return {false,"Not defined in current environment"};
+                }
+                return {true,"moved right"};
+            }, "move right");
+        command_center.add_command(top_maze,{"move up","u"}, [this]()->ret_t{
+                if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
+                    perform_transition(action_ptr_t(new MazeAction("up")));
+                } else if(dynamic_pointer_cast<CheeseMaze>(environment)!=nullptr) {
+                    perform_transition(action_ptr_t(new CheeseMazeAction("north")));
+                } else {
+                    return {false,"Not defined in current environment"};
+                }
+                return {true,"moved up"};
+            }, "move up");
+        command_center.add_command(top_maze,{"move down","d"}, [this]()->ret_t{
+                if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
+                    perform_transition(action_ptr_t(new MazeAction("down")));
+                } else if(dynamic_pointer_cast<CheeseMaze>(environment)!=nullptr) {
+                    perform_transition(action_ptr_t(new CheeseMazeAction("south")));
+                } else {
+                    return {false,"Not defined in current environment"};
+                }
+                return {true,"moved down"};
+            }, "move down");
+        command_center.add_command(top_maze,{"move stay","s"}, [this]()->ret_t{
+                if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
+                    perform_transition(action_ptr_t(new MazeAction("stay")));
+                } else {
+                    return {false,"Not defined in current environment"};
+                }
+                return {true,"stayed"};
+            }, "stay-action");
+        command_center.add_command(top_maze,{"move"}, [this]()->ret_t{
+                choose_action();
+                return {true,"move one step"};
+            }, "move one step");
+        command_center.add_command(top_maze,{"move"}, [this](int n)->ret_t{
+                action_timer->stop();
+                action_timer->start(n);
+                return {true,QString("move every %1 ms").arg(n)};
+            }, "start moving every <int> milliseconds");
+        command_center.add_command(top_maze,{"move stop"}, [this]()->ret_t{
+                action_timer->stop();
+                return {true,"stop moving"};
+            }, "stop moving");
+        command_center.add_command(top_maze,{"epsilon"}, [this]()->ret_t{
+                shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
+                if(maze==nullptr) {
+                    return {false,"Allowed for maze-environments only"};
+                } else {
+                    if(maze->get_epsilon()!=epsilon) {
+                        return {false,QString("Maze epsion (%1) is different from stored one (%2)").arg(maze->get_epsilon()).arg(epsilon)};
+                    }
+                    return {true,QString("epsilon = %1").arg(epsilon)};
+                }
+            }, "get random transition probability");
+        command_center.add_command(top_maze,{"epsilon"}, [this](double d)->ret_t{
+                shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
+                if(maze==nullptr) {
+                    return {false,"Allowed for maze-environments only"};
+                } else {
+                    if(0<=d && d<=1) {
+                        epsilon = d;
+                        maze->set_epsilon(epsilon);
+                    } else {
+                        return {false,"epsilon must be in [0,1]"};
+                    }
+                    return {true,""};
+                }
+            }, "set random transition probability");
+        command_center.add_command(top_maze,{"reward activation"}, [this](int n)->ret_t{
+                shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
+                if(maze==nullptr) {
+                    return {false,"Allowed for maze-environments only"};
+                } else {
+                    maze->print_reward_activation_on_random_walk(n);
+                    maze->render_update();
+                }
+                return {true,""};
+            }, "print mean reward activation probability for length-<int> random walk");
+        command_center.add_command(top_maze,{"random distribution"}, [this](int n)->ret_t{
+                shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
+                if(maze==nullptr) {
+                    return {false,"Allowed for maze-environments only"};
+                } else {
+                    // initialize state counts to zero
+                    map<observation_ptr_t,int> state_counts;
+                    for(observation_ptr_t observation : observation_space) {
+                        state_counts[observation] = 0;
+                    }
+                    // get state counts
+                    int max_count = 1;
+                    for(int idx=0; idx<n; ++idx) {
+                        action_ptr_t action = (action_ptr_t)(action_space->random_element());
+                        observation_ptr_t observation_to;
+                        reward_ptr_t reward;
+                        maze->perform_transition(action,observation_to,reward);
+                        ++state_counts[observation_to];
+                        max_count = max(state_counts[observation_to],max_count);
+                    }
+                    // transform into colors
+                    Maze::color_vector_t cols;
+                    for(observation_ptr_t observation : observation_space) {
+                        double p = state_counts[observation];
+                        DEBUG_OUT(0,"State " << observation << ": p = " << p/max(n,1) );
+                        p /= max_count;
+                        cols.push_back( std::make_tuple(1,1-p,1-p) );
+                    }
+                    maze->set_state_colors(cols);
+                    maze->render_update();
+                }
+                return {true,""};
+            }, "run <int> random transitions and display relative counts for all states");
+    }
+    {
+        pair<double,QString> top_model_learn(3, "Model Learning =========================================");
+        command_center.add_command(top_model_learn,{"l1"}, [this]()->ret_t{
+                return {true,QString("L1 coefficient is %1").arg(l1_factor)};
+            }, "print current coefficient for L1 regularization");
+        command_center.add_command(top_model_learn,{"l1"}, [this](double d)->ret_t{
+                if(d>=0) {
+                    l1_factor = d;
+                    tem->set_l1_factor(l1_factor);
+                    return {true,QString("set L1 coefficient to %1").arg(l1_factor)};
+                } else {
+                    return {false,"L1 coefficient must be non-negative"};
+                }
+            }, "set coefficient for L1 regularization");
+        command_center.add_command(top_model_learn,{"episode","e"}, [this](int n)->ret_t{
+                if(n<0) {
+                    return {false,"Expecting positive integer"};
+                } else {
+                    collect_episode(n);
+                }
+                return {true,QString("collected episode of length %1").arg(n)};
+            }, "record length <int> episode");
+        command_center.add_command(top_model_learn,{"episode clear","ec"}, [this]()->ret_t{
+                clear_data();
+                return {true,"cleared episode data"};
+            }, "clear episode data");
+    }
+    {
+        pair<double,QString> top_model_learn_crf(3.1,"CRF ----------------------------------------------------");
+        command_center.add_command(top_model_learn_crf,{"crf optimize","crfo"}, [this]()->ret_t{
+                crf->optimize_model(l1_factor, 0);
+                return {true,"optimized CRF"};
+            }, "optimize CRF");
+        command_center.add_command(top_model_learn_crf,{"crf optimize","crfo"}, [this](int n)->ret_t{
+                crf->optimize_model(l1_factor, n);
+                return {true,QString("optimized CRF (max %1 iterations)").arg(n)};
+            }, "optimize CRF with a maximum of <int> iterations");
+        command_center.add_command(top_model_learn_crf,{"crf check"}, [this]()->ret_t{
+                crf->check_derivatives(3,10,1e-6,1e-3);
+                return {true,"checked derivatives for CRF"};
+            }, "check derivatives for CRF");
+        command_center.add_command(top_model_learn_crf,{"crf score","crfs"}, [this](int n)->ret_t{
+                if(n>=0) {
+                    crf->construct_candidate_features(n);
+                    crf->score_candidates_by_gradient();
+                    crf->print_scores();
+                    return {true,QString("scored candidate features with distance %1").arg(n)};
+                } else {
+                    return {false,"expecting non-negative integer"};
+                }
+            }, "score candidate features with distance <int> by gradient");
+        command_center.add_command(top_model_learn_crf,{"crf score1D"}, [this](int n)->ret_t{
+                if(n>=0) {
+                    crf->construct_candidate_features(n);
+                    crf->score_candidates_by_1D_optimization();
+                    return {true,QString("scored candidate features with distance %1 (1D optimization)").arg(n)};
+                } else {
+                    return {false,"expecting non-negative integer"};
+                }
+            }, "score candidate features with distance <int> by 1D optimization");
+        command_center.add_command(top_model_learn_crf,{"crf add"}, [this](int n)->ret_t{
+                if(n>=0 ) {
+                    crf->add_candidate_features_to_active(n);
+                    return {true,QString("added top %1 candidates").arg(n)};
+                } else {
+                    return {false,"expecting non-negative integer"};
+                }
+            }, "add <int> highest scored candidate features to active (0 for all non-zero scored)");
+        command_center.add_command(top_model_learn_crf,{"crf erase","crfe"}, [this]()->ret_t{
+                crf->erase_zero_features();
+                return {true,"erased zero-weighted features"};
+            }, "erase features with zero weight");
+        command_center.add_command(top_model_learn_crf,{"crf evaluate"}, [this]()->ret_t{
+                crf->evaluate_features();
+                return {true,"evaluated CRF features"};
+            }, "evaluate features at current point");
+        command_center.add_command(top_model_learn_crf,{"crf features","crff"}, [this]()->ret_t{
+                crf->print_all_features();
+                return {true,"printed all CRF features"};
+            }, "print CRF features and weights");
+        command_center.add_command(top_model_learn_crf,{"crf apply-old","crfao"}, [this]()->ret_t{
+                crf->apply_features();
+                return {true,"applied old CRF featues"};
+            }, "re-apply the old featues stored at the last erase");
+    }
+    {
+        pair<double,QString> top_model_learn_utree(3.2,"UTree --------------------------------------------------");
+        command_center.add_command(top_model_learn_utree,{"expand","ex"}, [this]()->ret_t{
+                double score = utree->expand_leaf_node();
+                return {true, QString("score was %1").arg(score) };
+            }, "expand one leaf node");
+        command_center.add_command(top_model_learn_utree,{"expand","ex"}, [this](int n)->ret_t{
+                if(n<=0 ) {
+                    return {false,"Expecting a positive integer"};
+                } else {
+                    double score = 0;
+                    for(int i=0; i<n; ++i) {
+                        score = utree->expand_leaf_node();
+                    }
+                    return {true,QString("last score was %1").arg(score) };
+                }
+            }, "expand <int> leaf nodes");
+        command_center.add_command(top_model_learn_utree,{"expand","ex"}, [this](double d)->ret_t{
+                double score = DBL_MAX;
+                while(score>d) {
+                    score=utree->expand_leaf_node(d);
+                }
+                return {true,QString("last score was %1").arg(score) };
+            }, "expand leaves until a score of <double> is reached");
+        command_center.add_command(top_model_learn_utree,{"print utree"}, [this]()->ret_t{
+                utree->print_tree();
+                return {true,""};
+            }, "print the current UTree");
+        command_center.add_command(top_model_learn_utree,{"print leaves"}, [this]()->ret_t{
+                utree->print_leaves();
+                return {true,""};
+            }, "print leaves of the current UTree");
+        command_center.add_command(top_model_learn_utree,{"clear utree"}, [this]()->ret_t{
+                utree->clear_tree();
+                return {true,""};
+            }, "clear UTree");
+        command_center.add_command(top_model_learn_utree,{"v-iteration","vi"}, [this]()->ret_t{
+                double max_diff = utree->value_iteration();
+                return {true,QString("ran one iteration, maximum update was %1").arg(max_diff) };
+            }, "run one step of Value-Iteration");
+        command_center.add_command(top_model_learn_utree,{"v-iteration","vi"}, [this](int n)->ret_t{
+                if(n<=0) {
+                    return {false,"Expecting a positive integer"};
+                } else {
+                    double max_diff;
+                    repeat(n) {
+                        max_diff = utree->value_iteration();
+                    }
+                    return {true,QString("ran %1 iteration(s), last maximum update was %2").arg(n).arg(max_diff) };
+                }
+            }, "run one <int> steps of Value-Iteration");
+        command_center.add_command(top_model_learn_utree,{"ex-type","ext"}, [this]()->ret_t{
+                switch(utree->get_expansion_type()) {
+                case UTree::UTILITY_EXPANSION:
+                    return {true,"expansion type: UTILITY_EXPANSION"};
+                    break;
+                case UTree::OBSERVATION_REWARD_EXPANSION:
+                    return {true,"expansion type: OBSERVATION_REWARD_EXPANSION"};
+                    break;
+                default:
+                    return {false,"unkown error"};
+                    DEBUG_DEAD_LINE;
+                }
+            }, "get expansion type for UTree");
+        command_center.add_command(top_model_learn_utree,{"ex-type-utility","ext u"}, [this]()->ret_t{
+                utree->set_expansion_type(UTree::UTILITY_EXPANSION);
+                return {true,"set expansion type to UTILITY_EXPANSION"};
+            }, "set expansion type for UTree");
+        command_center.add_command(top_model_learn_utree,{"ex-type-observation-reward","ext or"}, [this]()->ret_t{
+                utree->set_expansion_type(UTree::OBSERVATION_REWARD_EXPANSION);
+                return {true,"set expansion type to OBSERVATION_REWARD_EXPANSION"};
+            }, "set expansion type for UTree");
+        command_center.add_command(top_model_learn_utree,{"utree-f"}, [this]()->ret_t{
+                utree->print_features();
+                return {true,"printed UTree features"};
+            }, "print UTree features");
+    }
+    {
+        pair<double,QString> top_model_learn_linq(3.3, "Linear-Q -----------------------------------------------");
+        command_center.add_command(top_model_learn_linq,{"lq-optimize-ridge","lqor"}, [this](double d)->ret_t{
+                if(d<0) {
+                    return {false,"Expecting non-negative value"};
+                } else {
+                    linQ->set_optimization_type_TD_RIDGE()
+                        .set_regularization(d)
+                        .optimize();
+                }
+                return {true,QString("Optimized Linear-Q (TD, ridge=%1)").arg(d)};
+            }, "optimize Linear-Q (TD Error) with L2-regularization coefficient <double>");
+        command_center.add_command(top_model_learn_linq,{"lq-optimize-l1","lqol1"}, [this](double d)->ret_t{
+                linQ->set_optimization_type_TD_L1()
+                    .set_regularization(d)
+                    .optimize();
+                return {true,QString("optimized Linear-Q (TD, l1=%1)").arg(d)};
+            }, "optimize Linear-Q (TD Error) with L1-regularization coefficient <double>");
+        command_center.add_command(top_model_learn_linq,{"lq-optimize-l1","lqol1"}, [this](double d, int n)->ret_t{
+                linQ->set_optimization_type_TD_L1()
+                    .set_regularization(d)
+                    .set_maximum_iterations(n)
+                    .optimize();
+                return {true,QString("optimized Linear-Q (TD, l1=%1, max %2 iterations)").arg(d).arg(n)};
+            }, "maximum of <int> iterations");
+        command_center.add_command(top_model_learn_linq,{"lq-optimize-l1-check","lqol1-c"}, [this]()->ret_t{
+                linQ->set_optimization_type_TD_L1()
+                    .check_derivatives(3,10,1e-6,1e-3);
+                return {true,"checked derivatives for Linear-Q (TD)"};
+            }, "check derivatives");
+        command_center.add_command(top_model_learn_linq,{"lq-optimize","lqo"}, [this](double d)->ret_t{
+                linQ->set_optimization_type_BELLMAN()
+                    .set_regularization(d)
+                    .set_maximum_iterations(0)
+                    .optimize();
+                return {true,QString("optimized Linear-Q (Bellman, l1=%1)").arg(d)};
+            }, "optimize Linear-Q (Bellman Error) with L1-regularization coefficient <double>");
+        command_center.add_command(top_model_learn_linq,{"lq-optimize","lqo"}, [this](double d, int n)->ret_t{
+                linQ->set_optimization_type_BELLMAN()
+                    .set_regularization(d)
+                    .set_maximum_iterations(n)
+                    .optimize();
+                return {true,QString("optimized Linear-Q (Bellman, l1=%1, max %2 iterations)").arg(d).arg(n)};
+            }, "maximum of <int> iterations");
+        command_center.add_command(top_model_learn_linq,{"lq-optimize-check","lqo-c"}, [this]()->ret_t{
+                linQ->set_optimization_type_BELLMAN()
+                    .check_derivatives(10,10,1e-6,1e-3);
+                return {true,"checked derivatives for Linear-Q (Bellman)"};
+            }, "check derivatives");
+        command_center.add_command(top_todo,{"construct","con"}, [this](int)->ret_t{return {true,"...to be ported"};}, "construct candidate features with distance <int>");
+        command_center.add_command(top_todo,{"score-lq","slq"}, [this](int)->ret_t{return {true,"...to be ported"};}, "score candidate features with distance <int> by gradient");
+        command_center.add_command(top_todo,{"add-lq"}, [this](int)->ret_t{return {true,"...to be ported"};}, "add <int> highest scored candidate features to active (0 for all non-zero scored)");
+        command_center.add_command(top_model_learn_linq,{"lq-erase","lqe"}, [this]()->ret_t{
+                linQ->erase_features_by_weight();
+                return {true,"erased zero-weight Linear-Q features"};
+            }, "erase features with zero weight");
+        command_center.add_command(top_model_learn_linq,{"lq-erase","lqe"}, [this](double d)->ret_t{
+                linQ->erase_features_by_weight(d);
+                return {true,QString("erased Linear-Q features with weight above %1").arg(d)};
+            }, "erase features with weight below or equal to <double>");
+        command_center.add_command(top_model_learn_linq,{"lq-alpha"}, [this]()->ret_t{
+                return {true,QString("alpha = %1").arg(linQ->get_alpha())};
+            }, "get alpha for Soft-Max");
+        command_center.add_command(top_model_learn_linq,{"lq-alpha"}, [this](double d)->ret_t{
+                linQ->set_alpha(d);
+                return {true,""};
+            }, "set alpha for Soft-Max");
+    }
+    {
+        pair<double,QString> top_model_learn_tem(3.5,"TEM ----------------------------------------------------");
+        command_center.add_command(top_model_learn_tem,{"tem grow","temg"}, [this]()->ret_t{
+                tem->grow_feature_set();
+                return {true,"grew TEM features"};
+            }, "grow TEM features");
+        command_center.add_command(top_model_learn_tem,{"tem optimize","temo"}, [this]()->ret_t{
+                tem->optimize_weights_LBFGS();
+                return {true,"optimized TEM"};
+            }, "optimize TEM");
+        command_center.add_command(top_model_learn_tem,{"tem shrink","tems"}, [this]()->ret_t{
+                tem->shrink_feature_set();
+                return {true,"shrank TEM features"};
+            }, "shrink TEM features");
+        command_center.add_command(top_model_learn_tem,{"tem print","temp"}, [this]()->ret_t{
+                tem->print_features();
+                return {true,"printed TEM features"};
+            }, "print TEM features");
+    }
+    {
+        pair<double,QString> top_planning(4,"Planning ===============================================");
+        command_center.add_command(top_planning,{"set planner o","s p o"}, [this]()->ret_t{
+                planner_type = OPTIMAL_LOOK_AHEAD;
+                set_policy();
+                return {true,"using optimal planner" };
+            }, "use optimal predictions (give by maze)");
+        command_center.add_command(top_planning,{"set planner s","s p s"}, [this]()->ret_t{
+                planner_type = SPARSE_LOOK_AHEAD;
+                set_policy();
+                return {true,"using sparse planner" };
+            }, "use sparse predictions (given by CRF)");
+        command_center.add_command(top_planning,{"set planner mu","s p mu"}, [this]()->ret_t{
+                planner_type = UTREE_LOOK_AHEAD;
+                set_policy();
+                return {true,"using model-based UTree planner" };
+            }, "use UTree as predictive model");
+        command_center.add_command(top_planning,{"set planner vu","s p vu"}, [this]()->ret_t{
+                planner_type = UTREE_VALUE;
+                set_policy();
+                return {true,"using value-based UTree for action selection" };
+            }, "use UTree as value function");
+        command_center.add_command(top_planning,{"set planner lq","s p lq"}, [this]()->ret_t{
+                planner_type = LINEAR_Q_VALUE;
+                set_policy();
+                return {true,"using linear Q-approximation for action selection" };
+            }, "use linear Q-function approximation");
+        command_center.add_command(top_planning,{"set planner g","s p g"}, [this]()->ret_t{
+                planner_type = GOAL_ITERATION;
+                set_policy();
+                return {true,"using goal-guided value iteration" };
+            }, "use goal-guided value iteration");
+        command_center.add_command(top_planning,{"set planner r","s p r"}, [this]()->ret_t{
+                planner_type = RANDOM;
+                set_policy();
+                return {true,"using random policy" };
+            }, "use random policy");
+        command_center.add_command(top_planning,{"set planner tem","s p t"}, [this]()->ret_t{
+                planner_type = TEM_LOOK_AHEAD;
+                set_policy();
+                return {true,"using TEM for planning" };
+            }, "use random policy");
+        command_center.add_command(top_planning,{"set goal","s g"}, [this]()->ret_t{
+                shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
+                if(maze==nullptr) {
+                    return {true,"Allowed for maze-environments only"};
+                } else {
+                    // set flag
+                    goal_activated = true;
+                    // get state
+                    goal_state = current_instance->observation;
+                    // color maze
+                    Maze::color_vector_t cols;
+                    for(auto observation : observation_space) {
+                        if(observation==goal_state) {
+                            cols.push_back( Maze::color_t(0,1,0) );
+                        } else {
+                            cols.push_back( Maze::color_t(1,1,1) );
+                        }
+                    }
+                    maze->set_state_colors(cols);
+                    maze->render_update();
+                    // set goal in GoalIteration policy
+                    shared_ptr<GoalIteration> goal_iteration = dynamic_pointer_cast<GoalIteration>(policy);
+                    if(goal_iteration!=nullptr) {
+                        goal_iteration->set_goal(goal_state);
+                    }
+                    // print message
+                    return {true,"goal set to current state" };
+                }
+            }, "activate goal state at current location");
+        command_center.add_command(top_planning,{"set goal random","s g r"}, [this]()->ret_t{
+                shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
+                if(maze==nullptr) {
+                    return {true,"Allowed for maze-environments only"};
+                } else {
+                    // set flag
+                    goal_activated = true;
+                    // get state
+                    goal_state = observation_space->random_element();
+                    // color maze
+                    Maze::color_vector_t cols;
+                    for(auto observation : observation_space) {
+                        if(observation==goal_state) {
+                            cols.push_back( Maze::color_t(0,1,0) );
+                        } else {
+                            cols.push_back( Maze::color_t(1,1,1) );
+                        }
+                    }
+                    maze->set_state_colors(cols);
+                    maze->render_update();
+                    // set goal in GoalIteration policy
+                    shared_ptr<GoalIteration> goal_iteration = dynamic_pointer_cast<GoalIteration>(policy);
+                    if(goal_iteration!=nullptr) {
+                        goal_iteration->set_goal(goal_state);
+                    }
+                    // print message
+                    return {true,"goal set to random location" };
+                }
+            }, "activate goal state at random location");
+        command_center.add_command(top_planning,{"unset goal"}, [this]()->ret_t{
+                if(!goal_activated) {
+                    return {true,"goal already inactive" };
+                } else {
+                    goal_activated = false;
+                    return {true,"deactivated goal" };
+                }
+            }, "deactivate goal state");
+        command_center.add_command(top_todo,{"set prune tree"}, [this]()->ret_t{
+                return {true,"...to be ported"};
+            }, "prune search tree");
+        command_center.add_command(top_todo,{"unset prune tree"}, [this]()->ret_t{
+                return {true,"...to be ported"};
+            }, "don't prune search tree");
+        command_center.add_command(top_planning,{"discount"}, [this]()->ret_t{
+                return {true,QString("discount is %1").arg(discount)};
+            }, "get discount");
+        command_center.add_command(top_planning,{"discount"}, [this](double d)->ret_t{
+                if(0<=d && d<=1) {
+                    discount = d;
+                    utree->set_discount(discount);
+                    linQ->set_discount(discount);
+                    shared_ptr<LookAheadPolicy> look_ahead_policy = dynamic_pointer_cast<LookAheadPolicy>(policy);
+                    if(look_ahead_policy!=nullptr) {
+                        look_ahead_policy->set_discount(discount);
+                    }
+                    return {true,QString("set discount to %1").arg(discount)};
+                } else {
+                    return {false,"discount must be in [0,1]"};
+                }
+            }, "set discount");
+        command_center.add_command(top_planning,{"print tree"}, [this](bool text = false, bool graphic = false)->ret_t{
+                shared_ptr<LookAheadPolicy> look_ahead_policy = dynamic_pointer_cast<LookAheadPolicy>(policy);
+                if(look_ahead_policy!=nullptr) {
+                    const LookAheadSearch & s = look_ahead_policy->get_look_ahead_search();
+                    s.print_tree_statistics();
+                    s.print_tree(text, graphic);
+                }
+                return {true,"Printed tree statistics"};
+            }, "print Look-Ahead-Tree statistics [optionally with text and graphic output]");
+        command_center.add_command(top_planning,{"max-tree-size"}, [this]()->ret_t{
+                return {true,QString( "max tree size is %1" ).arg(max_tree_size) };
+            }, "get maximum size of Look-Ahead-Tree (zero corresponds to infinite)");
+        command_center.add_command(top_planning,{"max-tree-size"}, [this](int n)->ret_t{
+                if(n<0) {
+                    return {false,"Tree size must be non-negative"};
+                }
+                max_tree_size = n;
+                shared_ptr<LookAheadPolicy> look_ahead_policy = dynamic_pointer_cast<LookAheadPolicy>(policy);
+                if(look_ahead_policy!=nullptr) {
+                    look_ahead_policy->set_max_tree_size(max_tree_size);
+                    return {true,"Set maximum Look-Ahead-Tree size"};
+                } else {
+                    DEBUG_DEAD_LINE;
+                    return {false,"Unknown error"};
+                }
+            }, "set maximum size of Look-Ahead-Tree (zero for infinite)");
+    }
+    {
+        pair<double,QString> top_new_stuff(5,"New Stuff  =============================================");
+        //---------------------------------New Stuff----------------------------------
+        command_center.add_command(top_todo,{"col-states"}, [this]()->ret_t{return {true,"...to be ported"};}, "color states (random)");
+        command_center.add_command(top_todo,{"fixed-dt-dist","fdd"}, [this](int)->ret_t{return {true,"...to be ported"};}, "show probability for a state to occur <int> steps after current state");
+        command_center.add_command(top_todo,{"pair-delay-dist","pdd"}, [this]()->ret_t{return {true,"...to be ported"};}, "show temporal delay distribution from current state to goal state");
+        command_center.add_command(top_todo,{"pair-delay-dist","pdd"}, [this](int)->ret_t{return {true,"...to be ported"};}, "restrict to time window of width <int>");
+        command_center.add_command(top_todo,{"mediator-probability","mp"}, [this](int)->ret_t{return {true,"...to be ported"};}, "show probability for a state to occurr between current state and goal state given a time window of width <int>");
+    }
 
-    // set_s += "\n" + option_1_s;
-    // set_s += "\n" + option_2_s;
-    // set_s += "\n" + option_3_s;
-    // set_s += "\n" + option_3a_s;
-    // set_s += "\n" + option_3b_s;
-    // set_s += "\n" + option_3c_s;
-    // set_s += "\n" + option_3d_s;
-    // set_s += "\n" + option_3e_s;
-    // set_s += "\n" + option_3f_s;
-    // set_s += "\n" + option_3g_s;
-    // set_s += "\n" + option_4_s;
-    // set_s += "\n" + option_5_s;
-    // set_s += "\n" + option_6_s;
-    // set_s += "\n" + option_7_s;
-    // set_s += "\n" + option_8_s;
-    // set_s += "\n" + option_9_s;
+// #########################
 
-    // QString invalid_args_s( "    invalid arguments" );
-
-    // // getting input arguments
-    // vector<QString> str_args;
-    // QString tmp_s;
-    // vector<int> int_args;
-    // vector<bool> int_args_ok;
-    // int tmp_i;
-    // vector<double> double_args;
-    // vector<bool> double_args_ok;
-    // double tmp_d;
-    // for(int arg_idx=0; arg_string(input,arg_idx,tmp_s) && tmp_s!=""; ++arg_idx) {
-
-    //     str_args.push_back(tmp_s);
-
-    //     int_args_ok.push_back( arg_int(input,arg_idx,tmp_i) );
-    //     int_args.push_back( tmp_i );
-
-    //     double_args_ok.push_back( arg_double(input,arg_idx,tmp_d) );
-    //     double_args.push_back( tmp_d );
-    // }
-    // int str_args_n = str_args.size();
-
-    // process input
-//    if(str_args_n>0) {
-//        if(str_args[0]=="help" || str_args[0]=="h") { // help
-//            // Headline
-//            to_console( headline_s );
-//            // General
-//            to_console( general_s );
-//            to_console( help_s );
-//            to_console( exit_s );
-//            to_console( set_s );
-//            to_console( test_s );
-//            // Maze
-//            to_console( maze_s );
-//            to_console( left_s );
-//            to_console( right_s );
-//            to_console( up_s );
-//            to_console( down_s );
-//            to_console( stay_s );
-//            to_console( move_s );
-//            to_console( epsilon_s );
-//            to_console( reward_activation_s );
-//            to_console( random_distribution_s );
-//            // Learning
-//            to_console( learning_s );
-//            to_console( episode_s );
-//            to_console( learning_crf_s ); // CRF
-//            to_console( optimize_crf_s );
-//            to_console( score_crf_s );
-//            to_console( score1D_crf_s );
-//            to_console( add_crf_s );
-//            to_console( crf_erase_s );
-//            to_console( l1_s );
-//            to_console( evaluate_s );
-////            to_console( validate_s );
-//            to_console( examine_crf_features_s );
-//            to_console( apply_old_crf_features_s );
-//            to_console( learning_utree_s ); // UTree
-//            to_console( expand_leaf_nodes_s );
-//            to_console( print_utree_s );
-//            to_console( print_leaves_s );
-//            to_console( clear_utree_s );
-//            to_console( utree_value_iteration_s );
-//            to_console( utree_expansion_type_s );
-//            to_console( examine_utree_features_s );
-//            to_console( learning_linQ_s ); // linear-Q
-//            to_console( optimize_linQ_ridge_s );
-//            to_console( optimize_linQ_l1_s );
-//            to_console( optimize_linQ_s );
-//            to_console( construct_s );
-//            to_console( score_lq_s );
-//            to_console( add_lq_s );
-//            to_console( lq_erase_zero_weight_s );
-//            to_console( lq_alpha_s );
-//            // Planning
-//            to_console( planning_s );
-//            to_console( discount_s );
-//            to_console( print_look_ahead_tree_s );
-//            to_console( max_tree_size_s );
-//            // New
-//            to_console( new_s );
-//            to_console( color_states_s );
-//            to_console( fixed_dt_distribution_s );
-//            to_console( pair_delay_distribution_s );
-//            to_console( mediator_probability_s );
-//        } else if(str_args[0]=="left" || str_args[0]=="l") { // left
-//            if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
-//                perform_transition(action_ptr_t(new MazeAction("left")));
-//            } else if(dynamic_pointer_cast<CheeseMaze>(environment)!=nullptr) {
-//                perform_transition(action_ptr_t(new CheeseMazeAction("west")));
-//            } else {
-//                to_console("    Not defined in current environment");
-//            }
-//        } else if(str_args[0]=="right" || str_args[0]=="r") { // right
-//            if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
-//                perform_transition(action_ptr_t(new MazeAction("right")));
-//            } else if(dynamic_pointer_cast<CheeseMaze>(environment)!=nullptr) {
-//                perform_transition(action_ptr_t(new CheeseMazeAction("east")));
-//            } else {
-//                to_console("    Not defined in current environment");
-//            }
-//        } else if(str_args[0]=="up" || str_args[0]=="u") { // up
-//            if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
-//                perform_transition(action_ptr_t(new MazeAction("up")));
-//            } else if(dynamic_pointer_cast<CheeseMaze>(environment)!=nullptr) {
-//                perform_transition(action_ptr_t(new CheeseMazeAction("north")));
-//            } else {
-//                to_console("    Not defined in current environment");
-//            }
-//        } else if(str_args[0]=="down" || str_args[0]=="d") { // down
-//            if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
-//                perform_transition(action_ptr_t(new MazeAction("down")));
-//            } else if(dynamic_pointer_cast<CheeseMaze>(environment)!=nullptr) {
-//                perform_transition(action_ptr_t(new CheeseMazeAction("south")));
-//            } else {
-//                to_console("    Not defined in current environment");
-//            }
-//        } else if(str_args[0]=="stay" || str_args[0]=="s") { // stay
-//            if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
-//                perform_transition(action_ptr_t(new MazeAction("stay")));
-//            } else {
-//                to_console("    Not defined in current environment");
-//            }
-//        } else if(str_args[0]=="move") { // start/stop moving
-//            if(str_args_n==1) {
-//                choose_action();
-//            } else if(str_args[1]=="stop") {
-//                action_timer->stop();
-//            } else if(int_args_ok[1] && int_args[1]>=0){
-//                action_timer->stop();
-//                action_timer->start(int_args[1]);
-//            } else {
-//                to_console( invalid_args_s );
-//                to_console( move_s );
-//            }
-//        } else if(str_args[0]=="episode" || str_args[0]=="e") { // record episode
-//            if(str_args_n==1) {
-//                to_console( invalid_args_s );
-//                to_console( episode_s );
-//            } else if( str_args[1]=="clear" || str_args[1]=="c" ) {
-//                clear_data();
-//            } else if(int_args_ok[1] && int_args[1]>=0){
-//                collect_episode(int_args[1]);
-//            } else {
-//                to_console( invalid_args_s );
-//                to_console( episode_s );
-//            }
-//        } else if(str_args[0]=="crf-optimize" || str_args[0]=="co") { // optimize CRF
-//            if(str_args_n==1 || int_args_ok[1] ) {
-//                if(int_args_ok[1]) {
-//                    if(str_args_n==4 && double_args_ok[2] && double_args_ok[3] ) {
-//                        crf->optimize_model(l1_factor, int_args[1], nullptr, true, double_args[2], double_args[3]);
-//                    } else {
-//                        crf->optimize_model(l1_factor, int_args[1]);
-//                    }
-//                } else {
-//                    crf->optimize_model(l1_factor, 0);
-//                }
-//            } else if(str_args[1]=="check" || str_args[1]=="c") {
-//                crf->check_derivatives(3,10,1e-6,1e-3);
-//            } else {
-//                to_console( invalid_args_s );
-//                to_console( optimize_crf_s );
-//            }
-//        } else if(str_args[0]=="utree-f") {
-//            utree->print_features();
-//        } else if(str_args[0]=="apply-old-features" || str_args[0]=="aof") {
-//            crf->apply_features();
-//        } else if(str_args[0]=="lq-optimize-ridge" || str_args[0]=="lqor") { // optimize linear-Q
-//            if(str_args_n==1 || double_args_ok[1] ) {
-//                if(double_args_ok[1]) {
-//                    linQ->set_optimization_type_TD_RIDGE()
-//                        .set_regularization(double_args[1])
-//                        .optimize();
-//                } else {
-//                    linQ->set_optimization_type_TD_RIDGE()
-//                        .set_regularization(0)
-//                        .optimize();
-//                }
-//            } else {
-//                to_console( invalid_args_s );
-//                to_console( optimize_linQ_ridge_s );
-//            }
-//        } else if(str_args[0]=="lq-optimize-l1" || str_args[0]=="lqol1") { // optimize linear-Q
-//            if(str_args_n>1 && double_args_ok[1] ) {
-//                if(str_args_n>2 && int_args_ok[2] ) {
-//                    linQ->set_optimization_type_TD_L1()
-//                        .set_regularization(double_args[1])
-//                        .set_maximum_iterations(int_args[2])
-//                        .optimize();
-//                } else {
-//                    linQ->set_optimization_type_TD_L1()
-//                        .set_regularization(double_args[1])
-//                        .optimize();
-//                }
-//            } else if(str_args_n>1 && (str_args[1]=="check" || str_args[1]=="c") ) {
-//                linQ->check_derivatives(3,10,1e-6,1e-3);
-//            } else {
-//                to_console( invalid_args_s );
-//                to_console( optimize_linQ_l1_s );
-//            }
-//        } else if(str_args[0]=="lq-optimize" || str_args[0]=="lqo") { // optimize linear-Q
-//            if(str_args_n>1 && double_args_ok[1] ) {
-//                if(str_args_n>2 && int_args_ok[2] ) {
-//                    linQ->set_optimization_type_BELLMAN()
-//                        .set_regularization(double_args[1])
-//                        .set_maximum_iterations(int_args[2])
-//                        .optimize();
-//                } else {
-//                    linQ->set_optimization_type_BELLMAN()
-//                        .set_regularization(double_args[1])
-//                        .set_maximum_iterations(0)
-//                        .optimize();
-//                }
-//            } else if(str_args_n>1 && (str_args[1]=="check" || str_args[1]=="c") ) {
-//                linQ->check_derivatives(10,10,1e-6,1e-3);
-//            } else {
-//                to_console( invalid_args_s );
-//                to_console( optimize_linQ_s );
-//            }
-//        } else if(str_args[0]=="lq-erase" || str_args[0]=="lqe") {
-//            if(str_args_n==1 || double_args_ok[1]) {
-//                if(str_args_n>1) {
-//                    linQ->erase_features_by_weight(double_args[1]);
-//                } else {
-//                    linQ->erase_features_by_weight();
-//                }
-//            } else {
-//                to_console( invalid_args_s );
-//                to_console( lq_erase_zero_weight_s );
-//            }
-//        } else if(str_args[0]=="lq-alpha") {
-//            if(str_args_n==1 || double_args_ok[1]) {
-//                if(str_args_n>1) {
-//                    linQ->set_alpha(double_args[1]);
-//                } else {
-//                    double alpha = linQ->get_alpha();
-//                    to_console( QString("    alpha = %1").arg(alpha) );
-//                }
-//            } else {
-//                to_console( invalid_args_s );
-//                to_console( lq_alpha_s );
-//            }
-//        } else if(str_args[0]=="epsilon") {
-//            shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
-//            if(maze==nullptr) {
-//                to_console("    Allowed for maze-environments only");
-//            } else {
-//                if(str_args_n==1) {
-//                    if(maze->get_epsilon()!=epsilon) {
-//                        DEBUG_ERROR("Maze epsion (" << maze->get_epsilon() << ") is different from stored one (" << epsilon << ")");
-//                    }
-//                    to_console( QString("    maze epsilon is %1").arg(epsilon) );
-//                } else if(double_args_ok[1] && double_args[1]>=0 && double_args[1]<=1) {
-//                    epsilon = double_args[1];
-//                    maze->set_epsilon(epsilon);
-//                } else {
-//                    to_console( invalid_args_s );
-//                    to_console( epsilon_s );
-//                }
-//            }
-//        } else if(str_args[0]=="reward-activation" || str_args[0]=="ra") {
-//            shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
-//            if(maze==nullptr) {
-//                to_console("    Allowed for maze-environments only");
-//            } else {
-//                if(str_args_n==2 && int_args_ok[1]) {
-//                    maze->print_reward_activation_on_random_walk(int_args[1]);
-//                    maze->render_update();
-//                } else {
-//                    to_console(invalid_args_s);
-//                    to_console(reward_activation_s);
-//                }
-//            }
-//        } else if(str_args[0]=="random-distribution" || str_args[0]=="rd") { // test
-//            shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
-//            if(maze==nullptr) {
-//                to_console("    Allowed for maze-environments only");
-//            } else {
-//                if(str_args_n==2 && int_args_ok[1]) {
-//                    // initialize state counts to zero
-//                    map<observation_ptr_t,int> state_counts;
-//                    for(observation_ptr_t observation : observation_space) {
-//                        state_counts[observation] = 0;
-//                    }
-//                    // get state counts
-//                    int n = int_args[1];
-//                    int max_count = 1;
-//                    for(int idx=0; idx<n; ++idx) {
-//                        action_ptr_t action = (action_ptr_t)(action_space->random_element());
-//                        observation_ptr_t observation_to;
-//                        reward_ptr_t reward;
-//                        maze->perform_transition(action,observation_to,reward);
-//                        ++state_counts[observation_to];
-//                        max_count = max(state_counts[observation_to],max_count);
-//                    }
-//                    // transform into colors
-//                    Maze::color_vector_t cols;
-//                    for(observation_ptr_t observation : observation_space) {
-//                        double p = state_counts[observation];
-//                        DEBUG_OUT(0,"State " << observation << ": p = " << p/max(n,1) );
-//                        p /= max_count;
-//                        cols.push_back( std::make_tuple(1,1-p,1-p) );
-//                    }
-//                    maze->set_state_colors(cols);
-//                    maze->render_update();
-//                } else {
-//                    to_console( invalid_args_s );
-//                    to_console( random_distribution_s );
-//                }
-//            }
-//        } else if(str_args[0]=="expand" || str_args[0]=="ex") {
-//            if(str_args_n==1) {
-//                double score = utree->expand_leaf_node();
-//                to_console( QString("    Score was %1").arg(score) );
-//            } else if(int_args_ok[1] && int_args[1]>=0 ) {
-//                double score = 0;
-//                for(int i=0; i<int_args[1]; ++i) {
-//                    score = utree->expand_leaf_node();
-//                }
-//                to_console( QString("    Last score was %1").arg(score) );
-//            } else if(double_args_ok[1]) {
-//                while( double_args[1] <= utree->expand_leaf_node(double_args[1]) ) {}
-//            } else {
-//                to_console( invalid_args_s );
-//                to_console( expand_leaf_nodes_s );
-//            }
-//        } else if(str_args[0]=="print-utree") {
-//            utree->print_tree();
-//        } else if(str_args[0]=="print-leaves") {
-//            utree->print_leaves();
-//        } else if(str_args[0]=="clear-utree") {
-//            utree->clear_tree();
-//        } else if(str_args[0]=="v-iteration" || str_args[0]=="vi") {
-//            if( str_args_n==1 || (str_args_n>1 && int_args_ok[1] && int_args[1]>0) ) {
-//                double max_diff;
-//                int rep = str_args_n==1 ? 1 : int_args[1];
-//                repeat(rep) {
-//                    max_diff = utree->value_iteration();
-//                }
-//                to_console( QString(    "run %1 iteration(s), last maximum update was %2").arg(rep).arg(max_diff) );
-//            } else {
-//                to_console( invalid_args_s );
-//                to_console( utree_value_iteration_s );
-//            }
-//        } else if(str_args[0]=="ex-type" || str_args[0]=="ext") {
-//            if(str_args_n==1) {
-//                switch(utree->get_expansion_type()) {
-//                case UTree::UTILITY_EXPANSION:
-//                    to_console("    expansion type: UTILITY_EXPANSION");
-//                    break;
-//                case UTree::OBSERVATION_REWARD_EXPANSION:
-//                    to_console("    expansion type: OBSERVATION_REWARD_EXPANSION");
-//                    break;
-//                default:
-//                    DEBUG_DEAD_LINE;
-//                }
-//            } else if(str_args[1]=="utility" || str_args[1]=="u") {
-//                utree->set_expansion_type(UTree::UTILITY_EXPANSION);
-//                to_console("    expansion type: UTILITY_EXPANSION");
-//            } else if(str_args[1]=="observationreward" ||str_args[1]=="or") {
-//                utree->set_expansion_type(UTree::OBSERVATION_REWARD_EXPANSION);
-//                to_console("    expansion type: OBSERVATION_REWARD_EXPANSION");
-//            } else {
-//                to_console( invalid_args_s );
-//                to_console( utree_expansion_type_s );
-//            }
-//        } else if(str_args[0]=="discount") {
-//            if(str_args_n==1) {
-//                to_console( QString("    discount is %1").arg(discount) );
-//            } else if(double_args_ok[1] && double_args[1]>=0 && double_args[1]<=1) {
-//                discount = double_args[1];
-//                utree->set_discount(discount);
-//                linQ->set_discount(discount);
-//                shared_ptr<LookAheadPolicy> look_ahead_policy = dynamic_pointer_cast<LookAheadPolicy>(policy);
-//                if(look_ahead_policy!=nullptr) {
-//                    look_ahead_policy->set_discount(discount);
-//                }
-//            } else {
-//                to_console( invalid_args_s );
-//                to_console( discount_s );
-//            }
-//        } else if(str_args[0]=="evaluate") {
-//            crf->evaluate_features();
 //        // } else if(str_args[0]=="validate" || str_args[0]=="v") {
 //        //     if(str_args_n==1 ) {
-//        //         to_console( invalid_args_s );
-//        //         to_console( validate_s );
+//        //         return {, invalid_args_s };
+//        //         return {, validate_s };
 //        //     } else if(str_args[1]=="crf") {
 //        //         if(str_args[2]=="mc") {
 //        //             if( str_args_n>3 && int_args_ok[3] && int_args[3]>0 ) {
@@ -630,262 +770,56 @@ TestMaze_II::TestMaze_II(QWidget *parent):
 //        //                         &model_l,
 //        //                         &maze_l
 //        //                 );
-//        //                 to_console(QString("    MC KL-Divergence = %1 (%2 samples)").arg(kl).arg(int_args[3]));
-//        //                 to_console(QString("    Mean Likelihood: model = %1, maze = %2").arg(model_l).arg(maze_l));
+//        //                 return {,QString("    MC KL-Divergence = %1 (%2 samples)").arg(kl).arg(int_args[3])};
+//        //                 return {,QString("    Mean Likelihood: model = %1, maze = %2").arg(model_l).arg(maze_l)};
 //        //             } else {
-//        //                 to_console( "    Please specify a valid sample size" );
+//        //                 return {, "    Please specify a valid sample size" };
 //        //             }
 //        //         } else {
-//        //             to_console( invalid_args_s );
-//        //             to_console( validate_s );
+//        //             return {, invalid_args_s };
+//        //             return {, validate_s };
 //        //         }
 //        //     } else if(str_args[1]=="kmdp") {
-//        //         to_console( "    Sorry, not implemented" );
+//        //         return {, "    Sorry, not implemented" };
 //        //     } else {
-//        //         to_console( invalid_args_s );
-//        //         to_console( validate_s );
+//        //         return {, invalid_args_s };
+//        //         return {, validate_s };
 //        //     }
-//        } else if(str_args[0]=="crf-f") {
-//            crf->print_all_features();
-//        } else if(str_args[0]=="l1") {
-//            if(str_args_n==1) {
-//                to_console(QString("    %1").arg(l1_factor));
-//            } else if(double_args_ok[1] && double_args[1]>=0) {
-//                l1_factor = double_args[1];
-//            } else {
-//                to_console( invalid_args_s );
-//                to_console( l1_s );
-//            }
-//        } else if(str_args[0]=="score-crf" || str_args[0]=="scrf") {
-//            if(str_args_n==1) {
-//                to_console(score_crf_s);
-//            } else if(int_args_ok[1] && int_args[1]>=0 ) {
-//                crf->construct_candidate_features(int_args[1]);
-//                crf->score_candidates_by_gradient();
-//                crf->print_scores();
-//            } else {
-//                to_console( invalid_args_s );
-//                to_console( score_crf_s );
-//            }
-//        } else if(str_args[0]=="score1D-crf" || str_args[0]=="s1Dcrf") {
-//            if(str_args_n==1) {
-//                to_console(score1D_crf_s);
-//            } else if(int_args_ok[1] && int_args[1]>=0 ) {
-//                crf->construct_candidate_features(int_args[1]);
-//                crf->score_candidates_by_1D_optimization();
-//            } else {
-//                to_console( invalid_args_s );
-//                to_console( score1D_crf_s );
-//            }
-//        } else if(str_args[0]=="add-crf") {
-//            if(str_args_n==1) {
-//                to_console( invalid_args_s );
-//                to_console( add_crf_s );
-//            } else if(int_args_ok[1] && int_args[1]>=0 ) {
-//                crf->add_candidate_features_to_active(int_args[1]);
-//            } else {
-//                to_console( invalid_args_s );
-//                to_console( add_crf_s );
-//            }
 //        } else if(str_args[0]=="score-lq" || str_args[0]=="slq") {
 //            if(str_args_n==1) {
-//                to_console(score_lq_s);
+//                return {,score_lq_s};
 //            } else if(int_args_ok[1] && int_args[1]>=0 ) {
 //                linQ->construct_candidate_features(int_args[1]);
 //                linQ->score_candidates_by_gradient();
 //            } else {
-//                to_console( invalid_args_s );
-//                to_console( score_lq_s );
+//                return {, invalid_args_s };
+//                return {, score_lq_s };
 //            }
 //        } else if(str_args[0]=="add-lq") {
 //            if(str_args_n==1) {
-//                to_console( invalid_args_s );
-//                to_console( add_lq_s );
+//                return {, invalid_args_s };
+//                return {, add_lq_s };
 //            } else if(int_args_ok[1] && int_args[1]>=0 ) {
 //                linQ->add_candidates_by_score(int_args[1]);
 //            } else {
-//                to_console( invalid_args_s );
-//                to_console( add_lq_s );
+//                return {, invalid_args_s };
+//                return {, add_lq_s };
 //            }
 //        } else if(str_args[0]=="crf-erase" || str_args[0]=="ce") {
-//            crf->erase_zero_features();
+
 //        } else if(str_args[0]=="exit" || str_args[0]=="quit" || str_args[0]=="q") { // quit application
 //            QApplication::quit();
-//        } else if(str_args[0]=="print-tree") { // print tree
-//            bool graphic = false, text = false;
-//            if(str_args_n>1) {
-//                if(str_args[1]=="g" || str_args[1]=="graphic") {
-//                    graphic = true;
-//                } else if(str_args[1]=="t" || str_args[1]=="text") {
-//                    text = true;
-//                } else {
-//                    to_console( invalid_args_s );
-//                    to_console( print_look_ahead_tree_s );
-//                }
-//            }
-//            shared_ptr<LookAheadPolicy> look_ahead_policy = dynamic_pointer_cast<LookAheadPolicy>(policy);
-//            if(look_ahead_policy!=nullptr) {
-//                const LookAheadSearch & s = look_ahead_policy->get_look_ahead_search();
-//                s.print_tree_statistics();
-//                s.print_tree(text, graphic);
-//            }
 //        } else if(str_args[0]=="max-tree-size") { // set tree size
-//            if(str_args_n==1) {
-//                to_console( QString( "    max tree size is %1" ).arg(max_tree_size) );
-//            } else if(int_args_ok[1] && int_args[1]>=0) {
-//                max_tree_size = int_args[1];
-//                shared_ptr<LookAheadPolicy> look_ahead_policy = dynamic_pointer_cast<LookAheadPolicy>(policy);
-//                if(look_ahead_policy!=nullptr) {
-//                    look_ahead_policy->set_max_tree_size(max_tree_size);
-//                }
-//            } else {
-//                to_console( "    Please specify a valid tree size" );
-//            }
+
 //        } else if(str_args[0]=="set" || str_args[0]=="unset") { // set option
-//            if(str_args_n==1) {
-//                to_console( invalid_args_s );
-//                to_console( set_s );
-//            } else if(str_args[1]=="record") {
-//                if(str_args[0]=="set") {
-//                    record = true;
-//                    start_new_episode = true;
-//                    to_console( "    record on" );
-//                } else if(str_args[0]=="unset") {
-//                    record = false;
-//                    to_console( "    record off" );
-//                } else {
-//                    DEBUG_DEAD_LINE;
-//                }
-//            } else if(str_args[1]=="plot") {
-//                plot = str_args[0]=="set";
-//                if(plot) {
-//                    // open plot file
-//                    plot_file.open("plot_file.txt");
-//                    plot_file << "# action observation reward" << endl;
-//                    to_console( "    plot on" );
-//                } else {
-//                    // close plot file
-//                    plot_file.close();
-//                    to_console( "    plot off" );
-//                }
-//            } else if( (str_args[1]=="p" || str_args[1]=="planner") ) {
-//                if(str_args_n>2) {
-//                    // set planner
-//                    if(str_args[0]=="unset") {
-//                        to_console( "    set different planner to unset current" );
-//                    } else if(str_args[2]=="optimal" || str_args[2]=="o") {
-//                        planner_type = OPTIMAL_LOOK_AHEAD;
-//                        to_console( "    using optimal planner" );
-//                    } else if(str_args[2]=="sparse" || str_args[2]=="s") {
-//                        planner_type = SPARSE_LOOK_AHEAD;
-//                        to_console( "    using sparse planner" );
-//                    } else if(str_args[2]=="utree" || str_args[2]=="u") {
-//                        planner_type = UTREE_LOOK_AHEAD;
-//                        to_console( "    using UTree planner" );
-//                    } else if(str_args[2]=="uv" || str_args[2]=="utree-value") {
-//                        planner_type = UTREE_VALUE;
-//                        to_console( "    using UTree-value for action selection" );
-//                    } else if(str_args[2]=="lq" || str_args[2]=="linear-q") {
-//                        planner_type = LINEAR_Q_VALUE;
-//                        to_console( "    using linear Q-approximation for action selection" );
-//                    } else if(str_args[2]=="g" || str_args[2]=="goal") {
-//                        planner_type = GOAL_ITERATION;
-//                        to_console( "    using goal-guided value iteration" );
-//                    } else if(str_args[2]=="r" || str_args[2]=="random") {
-//                        planner_type = RANDOM;
-//                        to_console( "    using random policy" );
-//                    } else {
-//                        to_console( "    unknown planner" );
-//                    }
-//                    set_policy();
-//                } else {
-//                    to_console( "    please supply a planner to use" );
-//                }
-//            } else if(str_args[1]=="maze") {
-//                bool print_list = false;
-//                if(str_args[0]=="unset") {
-//                    to_console( "    set different environment to unset current" );
-//                } else {
-//                    if(str_args_n>2) {
-//                        shared_ptr<Maze> maze(new Maze(epsilon));
-//                        bool success = maze->set_maze(str_args[2]);
-//                        if(!success) {
-//                            to_console("    No maze named '"+str_args[2]+"'");
-//                            print_list = true;
-//                        }
-//                        change_environment(maze);
-//                    } else {
-//                        print_list = true;
-//                    }
-//                }
-//                if(print_list) {
-//                    to_console( "    Available mazes:" );
-//                    for(QString name : Maze::get_maze_list()) {
-//                        to_console("        "+name);
-//                    }
-//                }
-//            } else if(str_args[1]=="cheese") {
-//                if(str_args[0]=="unset") {
-//                    to_console( "    set different environment to unset current" );
-//                } else {
-//                    change_environment(make_shared<CheeseMaze>());
-//                }
-//            } else if(str_args[1]=="c" || str_args[1]=="color") {
-//                if(str_args[0]=="unset") {
-//                    color_maze = false;
-//                    to_console( "    don't color maze" );
-//                } else {
-//                    color_maze = true;
-//                    to_console( "    color maze" );
-//                }
-//            } else if(str_args[1]=="g" || str_args[1]=="goal") {
-//                shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
-//                if(maze==nullptr) {
-//                    to_console("    Allowed for maze-environments only");
-//                } else {
-//                    if(str_args[0]=="set") {
-//                        // set flag
-//                        goal_activated = true;
-//                        // get state
-//                        if(str_args_n>2 && (str_args[2]=="r" || str_args[2]=="random")) {
-//                            goal_state = observation_space->random_element();
-//                        } else {
-//                            goal_state = current_instance->observation;
-//                        }
-//                        // color maze
-//                        Maze::color_vector_t cols;
-//                        for(auto observation : observation_space) {
-//                            if(observation==goal_state) {
-//                                cols.push_back( Maze::color_t(0,1,0) );
-//                            } else {
-//                                cols.push_back( Maze::color_t(1,1,1) );
-//                            }
-//                        }
-//                        maze->set_state_colors(cols);
-//                        maze->render_update();
-//                        // set goal in GoalIteration policy
-//                        shared_ptr<GoalIteration> goal_iteration = dynamic_pointer_cast<GoalIteration>(policy);
-//                        if(goal_iteration!=nullptr) {
-//                            goal_iteration->set_goal(goal_state);
-//                        }
-//                        // print message
-//                        to_console( "    goal set" );
-//                    } else {
-//                        if(!goal_activated) {
-//                            to_console( "    goal already inactive" );
-//                        } else {
-//                            goal_activated = false;
-//                            to_console( "    goal inactive" );
-//                        }
-//                    }
-//                }
+
 //            } else if(str_args[1]=="prune-tree") {
 //                if(str_args[0]=="set") {
 //                    prune_search_tree=true;
-//                    to_console( "    prune search tree" );
+//                    return {, "    prune search tree" };
 //                } else {
 //                    prune_search_tree=false;
-//                    to_console( "    don't prune search tree" );
+//                    return {, "    don't prune search tree" };
 //                }
 //                shared_ptr<LookAheadPolicy> look_ahead_policy = dynamic_pointer_cast<LookAheadPolicy>(policy);
 //                if(look_ahead_policy!=nullptr) {
@@ -895,23 +829,23 @@ TestMaze_II::TestMaze_II(QWidget *parent):
 //            } else if(str_args[1]=="png") {
 //                if(str_args[0]=="set") {
 //                    save_png_on_transition=true;
-//                    to_console( "    save png on transition" );
+//                    return {, "    save png on transition" };
 //                } else {
 //                    save_png_on_transition=false;
-//                    to_console( "    don't save png on transition" );
+//                    return {, "    don't save png on transition" };
 //                }
 //            } else {
-//                to_console( invalid_args_s );
-//                to_console( set_s );
+//                return {, invalid_args_s };
+//                return {, set_s };
 //            }
 //        } else if(str_args[0]=="construct" || str_args[0]=="con") {
 //            if(str_args_n==1) {
-//                to_console(construct_s);
+//                return {,construct_s};
 //            } else if(int_args_ok[1] && int_args[1]>=0 ) {
 //                linQ->add_all_candidates(int_args[1]);
 //            } else {
-//                to_console( invalid_args_s );
-//                to_console( construct_s );
+//                return {, invalid_args_s };
+//                return {, construct_s };
 //            }
 //        } else if(str_args[0]=="test") { // test
 //            // if(str_args_n==2 && int_args_ok[1]) {
@@ -923,13 +857,13 @@ TestMaze_II::TestMaze_II(QWidget *parent):
 //            // utree->print_features();
 //
 //            probability_t like = crf->cross_validation(10);
-//            to_console( QString("    Mean Data Likelihood: %1").arg(like) );
+//            return {, QString("    Mean Data Likelihood: %1").arg(like) };
 //
-//            //to_console( "    currently no test function implemented" );
+//            //return {, "    currently no test function implemented" };
 //        } else if(str_args[0]=="col-states") { // color states
 //            shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
 //            if(maze==nullptr) {
-//                to_console("    Allowed for maze-environments only");
+//                return {,"    Allowed for maze-environments only"};
 //            } else {
 //                Maze::color_vector_t cols;
 //                for(observation_ptr_t observation : observation_space) {
@@ -941,11 +875,11 @@ TestMaze_II::TestMaze_II(QWidget *parent):
 //        } else if(str_args[0]=="fixed-dt-dist" || str_args[0]=="fdd") { // show delay probability
 //            shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
 //            if(maze==nullptr) {
-//                to_console("    Allowed for maze-environments only");
+//                return {,"    Allowed for maze-environments only"};
 //            } else {
 //                if(str_args_n!=2 || !int_args_ok[1]) {
-//                    to_console( invalid_args_s );
-//                    to_console( fixed_dt_distribution_s );
+//                    return {, invalid_args_s };
+//                    return {, fixed_dt_distribution_s };
 //                } else {
 //                    // get probabilites for all states
 //                    observation_ptr_t s1 = current_instance->observation;
@@ -984,11 +918,11 @@ TestMaze_II::TestMaze_II(QWidget *parent):
 //            }
 //        } else if(str_args[0]=="pair-delay-dist" || str_args[0]=="pdd") { // show delay distribution
 //            if(str_args_n>1 && !int_args_ok[1]) {
-//                to_console( invalid_args_s );
-//                to_console( pair_delay_distribution_s );
+//                return {, invalid_args_s };
+//                return {, pair_delay_distribution_s };
 //            } else {
 //                if(!goal_activated) {
-//                    to_console( "    Goal state must be activated to calculate delay distribution" );
+//                    return {, "    Goal state must be activated to calculate delay distribution" };
 //                } else {
 //
 //                    // get distribution
@@ -1055,11 +989,11 @@ TestMaze_II::TestMaze_II(QWidget *parent):
 //        } else if(str_args[0]=="mediator-probability" || str_args[0]=="mp") { // show mediator probability
 //            shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
 //            if(maze==nullptr) {
-//                to_console("    Allowed for maze-environments only");
+//                return {,"    Allowed for maze-environments only"};
 //            } else {
 //                if(str_args_n==2 && int_args_ok[1]) {
 //                    if(!goal_activated) {
-//                        to_console( "    Goal state must be activated to calculate mediator probabilities" );
+//                        return {, "    Goal state must be activated to calculate mediator probabilities" };
 //                    } else {
 //                        // get probabilites for all states
 //                        DEBUG_OUT(2,"Calculating mediator distribution...");
@@ -1096,12 +1030,12 @@ TestMaze_II::TestMaze_II(QWidget *parent):
 //                        maze->render_update();
 //                    }
 //                } else {
-//                    to_console( invalid_args_s );
-//                    to_console( mediator_probability_s );
+//                    return {, invalid_args_s };
+//                    return {, mediator_probability_s };
 //                }
 //            }
 //        } else {
-//            to_console("    unknown command");
+//            return {,"    unknown command"};
 //        }
 //    }
 }
@@ -1156,6 +1090,7 @@ void TestMaze_II::add_action_observation_reward_tripel(
            crf->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
          utree->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
           linQ->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
+          tem->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
     delay_dist.add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
     DEBUG_OUT(1,"Add (" << action << ", " << observation << ", " << reward << ")" <<
               (start_new_episode?" new episode":""));
@@ -1166,6 +1101,7 @@ void TestMaze_II::clear_data() {
     crf->clear_data();
     utree->clear_data();
     linQ->clear_data();
+    tem->clear_data();
     delay_dist.clear_data();
 }
 
@@ -1235,6 +1171,8 @@ void TestMaze_II::change_environment(shared_ptr<Environment> new_environment) {
         crf->set_features(*environment);
         linQ->set_spaces(*environment);
         linQ->set_features(*environment);
+        tem->set_spaces(*environment);
+        N_plus->set_spaces(*environment);
         // set current instance
         current_instance->detach_reachable();
         current_instance = INVALID;
@@ -1253,6 +1191,8 @@ void TestMaze_II::clear_all_learners() {
     crf.reset(new KMarkovCRF());
     utree.reset(new UTree(discount));
     linQ.reset(new LinearQ(discount));
+    tem.reset(new TemporallyExtendedModel(N_plus));
+    tem->set_l1_factor(l1_factor);
 }
 
 void TestMaze_II::set_policy() {
@@ -1280,6 +1220,15 @@ void TestMaze_II::set_policy() {
     }
     case UTREE_LOOK_AHEAD: {
         shared_ptr<Predictor> pred = dynamic_pointer_cast<Predictor>(utree);
+        if(pred!=nullptr) {
+            policy.reset(new LookAheadPolicy(discount,pred,prune_search_tree,max_tree_size));
+        } else {
+            DEBUG_DEAD_LINE;
+        }
+        break;
+    }
+    case TEM_LOOK_AHEAD: {
+        shared_ptr<Predictor> pred = dynamic_pointer_cast<Predictor>(tem);
         if(pred!=nullptr) {
             policy.reset(new LookAheadPolicy(discount,pred,prune_search_tree,max_tree_size));
         } else {
@@ -1366,7 +1315,12 @@ void TestMaze_II::process_console_input() {
     history_file_stream << input << "\n";
 
     // execute command and print response message
-    to_console(command_center.execute(input),4);
+    if(input!="") {
+        QString msg = command_center.execute(input);
+        if(msg!="") {
+            to_console(msg,4);
+        }
+    }
 
     return;
 }

@@ -8,6 +8,8 @@
 #include "Learner/KMarkovCRF.h"
 #include "Learner/UTree.h"
 #include "Learner/LinearQ.h"
+#include "Learner/TemporallyExtendedModel.h"
+#include "Learner/ConjunctiveAdjacency.h"
 #include "Planning/Policy.h"
 #include "DelayDistribution.h"
 #include "util/Commander.h"
@@ -57,6 +59,7 @@ private:
         SPARSE_LOOK_AHEAD,
         KMDP_LOOK_AHEAD,
         UTREE_LOOK_AHEAD,
+        TEM_LOOK_AHEAD,
         UTREE_VALUE,
         LINEAR_Q_VALUE,
         GOAL_ITERATION
@@ -105,14 +108,12 @@ private:
     // L1-regularization
     double l1_factor;
 
-    // CRF
-    std::shared_ptr<KMarkovCRF> crf;
-
-    // UTree
-    std::shared_ptr<UTree> utree;
-
-    // Linear_Q
-    std::shared_ptr<LinearQ> linQ;
+    // Learners
+    std::shared_ptr<KMarkovCRF> crf;               ///< TEF+CRF model
+    std::shared_ptr<UTree> utree;                  ///< UTree
+    std::shared_ptr<LinearQ> linQ;                 ///< Linear-Q
+    std::shared_ptr<ConjunctiveAdjacency> N_plus;  ///< N+ operator for TEM
+    std::shared_ptr<TemporallyExtendedModel> tem;  ///< TEM
 
     //----------//
     // Planners //
@@ -132,6 +133,7 @@ private:
     // Member Functions //
     //==================//
 
+    void initialize_commands();
     void to_console(QString x, int indentation = 0) { ui._wConsoleOutput->appendPlainText(QString(" ").repeated(indentation)+x); }
     void collect_episode(const int& length);
     void update_current_instance(action_ptr_t, observation_ptr_t, reward_ptr_t, bool invalidate_search_tree = true);
