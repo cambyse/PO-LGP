@@ -247,6 +247,7 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   Joint *getJointByName(const char* name) const;
   Joint *getJointByBodyNames(const char* from, const char* to) const;
   bool checkUniqueNames() const;
+  void setShapeNames();
   void prefixNames();
 
   ShapeL getShapesByAgent(const uint agent) const;

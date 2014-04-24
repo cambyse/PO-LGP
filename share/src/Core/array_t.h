@@ -2296,7 +2296,7 @@ MT::Array<T> diagProduct(const MT::Array<T>& y, const MT::Array<T>& z) {
 
 template<class T> MT::Array<T> elemWiseMin(const MT::Array<T>& v, const MT::Array<T>& w) {
   MT::Array<T> z;
-  z.resizeAs(v.N);
+  z.resizeAs(v);
   for(uint i=0; i<v.N; i++) z.elem(i) = v.elem(i)<w.elem(i)?v.elem(i):w.elem(i);
   return z;
 }

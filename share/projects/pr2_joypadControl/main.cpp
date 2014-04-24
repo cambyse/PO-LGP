@@ -23,6 +23,7 @@ struct MySystem:System{
 void testJoypad(){
   ors::KinematicWorld world("model.kvg");
   makeConvexHulls(world.shapes);
+  world >>FILE("z.ors");
   arr q, qdot;
   world.getJointState(q, qdot);
 
@@ -73,6 +74,7 @@ void testJoypad(){
     qdot += .01*a;
     MP.reportCurrentState();
     MP.setState(q, qdot);
+    MP.world.reportProxies();
     if(!(t%4))
       MP.world.gl().update(STRING("local operational space controller state t="<<(double)t/100.), false, false, false);
 

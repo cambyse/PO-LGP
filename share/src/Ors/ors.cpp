@@ -1299,11 +1299,22 @@ double ors::KinematicWorld::getJointErrors() const {
 
 /** @brief checks if all names of the bodies are disjoint */
 bool ors::KinematicWorld::checkUniqueNames() const {
-  for_list(Body,  n,  bodies) for(Body *m: bodies) {
-    if(n==m) break;
-    if(n->name==m->name) return false;
+  for_list(Body,  n,  bodies) for(Body *b: bodies) {
+    if(n==b) break;
+    if(n->name==b->name) return false;
   }
   return true;
+}
+
+/** @brief checks if all names of the bodies are disjoint */
+void ors::KinematicWorld::setShapeNames() {
+  for(Body *b: bodies){
+    uint i=0;
+    for(Shape *s:b->shapes){
+      if(!s->name.N){ s->name = b->name; s->name <<'_' <<i; }
+      i++;
+    }
+  }
 }
 
 /// find body with specific name
@@ -1479,7 +1490,7 @@ void ors::KinematicWorld::read(std::istream& is) {
   KeyValueGraph G;
   
   G.read(is);
-  cout <<"***KVG" <<G <<endl;
+//  cout <<"***KVG" <<G <<endl;
   
   clear();
   

@@ -22,6 +22,7 @@ void TEST(OrsEditor) {
   ors::KinematicWorld G(file);
 
   //some optional manipulations
+  G.setShapeNames();
   G.meldFixedJoints();
   G.removeUselessBodies();
   G.topSort();
