@@ -56,7 +56,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
 
   //-- output info on joints
   ROS_INFO("*** JOINTS");
-  for_list(ors::Joint, j, world.joints){
+  for_list(ors::Joint, j, world.joints) if(j->qDim()>0){
     uint i = j->qIndex;
     if(ROS_qIndex(i)!=UINT_MAX){
       ROS_INFO(STRING("  " <<i <<'\t' <<ROS_qIndex(i)
@@ -68,6 +68,9 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
       ROS_INFO(STRING("  " <<i <<" not matched " <<j->name));
     }
   }
+
+  j_worldTranslationRotation = world.getJointByName("worldTranslationRotation");
+  ROS_INFO(STRING("*** WorldTranslationRotation found?:" <<j));
 
   ROS_INFO("*** starting publisher and subscriber");
 
@@ -137,11 +140,11 @@ void TreeControllerClass::update() {
     }
 
     //-- command twist to base
-    {
+    if(j_worldTranslationRotation && j_worldTranslationRotation->qDim()==3){
       geometry_msgs::Twist base_cmd;
-      base_cmd.linear.x = qdot_ref(0);
-      base_cmd.linear.y = qdot_ref(1);
-      base_cmd.angular.z = qdot_ref(2);
+      base_cmd.linear.x = qdot_ref(j_worldTranslationRotation->qIndex+0);
+      base_cmd.linear.y = qdot_ref(j_worldTranslationRotation->qIndex+1);
+      base_cmd.angular.z = qdot_ref(j_worldTranslationRotation->qIndex+2);
       baseCommand_publisher.publish(base_cmd);
     }
   }

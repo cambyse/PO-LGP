@@ -1,5 +1,5 @@
 joint worldTranslationRotation (world base_footprint){ type=8  ctrl_H=3 }
 
 ## attach a shape to the 'virtual' gripper frame: to prevent it being pruned
-shape l_gripper_frame (l_gripper_l_finger_tip_frame){ type=5 size=[0 0 0 .1] }
-shape r_gripper_frame (r_gripper_l_finger_tip_frame){ type=5 size=[0 0 0 .1] }
+shape l_gripper_frame (l_gripper_l_finger_tip_frame){ type=5 size=[.1 0 0 0] }
+shape r_gripper_frame (r_gripper_l_finger_tip_frame){ type=5 size=[.1 0 0 0] }

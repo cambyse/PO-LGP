@@ -95,21 +95,21 @@ shape l_gripper_l_finger_link_0 (l_gripper_l_finger_link){ type=3 rel=<T -0.0002
 shape l_gripper_r_finger_link_0 (l_gripper_r_finger_link){ type=3 rel=<T -0.000214812 -0.0125558 0.0493868 7.3123e-14 -0.707107 -7.3123e-14 -0.707107 >  mass=0.17389  inertiaTensor=[ 7.73841e-05 -2.09309e-06 -8.36228e-06 0.000198474 2.4611e-06 0.00018107 ]  mesh='gripper_v0/l_finger.stl'  rel_includes_mesh_center=true  }
 shape l_gripper_l_finger_tip_link_0 (l_gripper_l_finger_tip_link){ type=3 rel=<T 0.000126401 0.000750209 0.0081309 -0.707107 0 0.707107 0 >  mass=0.04419  inertiaTensor=[ 8.37047e-06 5.83632e-06 0 9.87067e-06 0 1.54177e-05 ]  mesh='gripper_v0/l_finger_tip.stl'  rel_includes_mesh_center=true  }
 shape l_gripper_r_finger_tip_link_0 (l_gripper_r_finger_tip_link){ type=3 rel=<T 0.000126401 -0.000750209 -0.0081309 7.3123e-14 -0.707107 7.3123e-14 0.707107 >  mass=0.04419  inertiaTensor=[ 8.37047e-06 -5.83632e-06 0 9.87067e-06 0 1.54177e-05 ]  mesh='gripper_v0/l_finger_tip.stl'  rel_includes_mesh_center=true  }
-shape l_gripper_frame (l_gripper_l_finger_tip_frame){ type=5 rel=<T 0 0 0 -0.707107 0 0 0.707107 >  size=[ .1 0 0 0 ]  }
-shape r_gripper_frame (r_gripper_l_finger_tip_frame){ type=5 rel=<T 0 0 0 -0.707107 0 0 0.707107 >  size=[ .1 0 0 0 ]  }
+shape l_gripper_frame (l_gripper_l_finger_tip_frame){ type=5 rel=<T 0 0 0 -0.707107 0 0 0.707107 >  size=[ 0.1 0 0 0 ]  }
+shape r_gripper_frame (r_gripper_l_finger_tip_frame){ type=5 rel=<T 0 0 0 -0.707107 0 0 0.707107 >  size=[ 0.1 0 0 0 ]  }
 
-joint fl_caster_rotation_joint (base_footprint fl_caster_rotation_link){ from=<T 0.2246 0.2246 0.0792 0.707107 0 -0.707107 0 >  type=0  ctrl_limits=[ 100 100 ]  }
-joint fl_caster_l_wheel_joint (fl_caster_rotation_link fl_caster_l_wheel_link){ from=<T 0 0.049 0 -0.5 -0.5 -0.5 -0.5 >  type=0  ctrl_limits=[ 100 100 ]  }
-joint fl_caster_r_wheel_joint (fl_caster_rotation_link fl_caster_r_wheel_link){ from=<T 0 -0.049 0 -0.5 -0.5 -0.5 -0.5 >  type=0  ctrl_limits=[ 100 100 ]  }
-joint fr_caster_rotation_joint (base_footprint fr_caster_rotation_link){ from=<T 0.2246 -0.2246 0.0792 0.707107 0 -0.707107 0 >  type=0  ctrl_limits=[ 100 100 ]  }
-joint fr_caster_l_wheel_joint (fr_caster_rotation_link fr_caster_l_wheel_link){ from=<T 0 0.049 0 -0.5 -0.5 -0.5 -0.5 >  type=0  ctrl_limits=[ 100 100 ]  }
-joint fr_caster_r_wheel_joint (fr_caster_rotation_link fr_caster_r_wheel_link){ from=<T 0 -0.049 0 -0.5 -0.5 -0.5 -0.5 >  type=0  ctrl_limits=[ 100 100 ]  }
-joint bl_caster_rotation_joint (base_footprint bl_caster_rotation_link){ from=<T -0.2246 0.2246 0.0792 0.707107 0 -0.707107 0 >  type=0  ctrl_limits=[ 100 100 ]  }
-joint bl_caster_l_wheel_joint (bl_caster_rotation_link bl_caster_l_wheel_link){ from=<T 0 0.049 0 -0.5 -0.5 -0.5 -0.5 >  type=0  ctrl_limits=[ 100 100 ]  }
-joint bl_caster_r_wheel_joint (bl_caster_rotation_link bl_caster_r_wheel_link){ from=<T 0 -0.049 0 -0.5 -0.5 -0.5 -0.5 >  type=0  ctrl_limits=[ 100 100 ]  }
-joint br_caster_rotation_joint (base_footprint br_caster_rotation_link){ from=<T -0.2246 -0.2246 0.0792 0.707107 0 -0.707107 0 >  type=0  ctrl_limits=[ 100 100 ]  }
-joint br_caster_l_wheel_joint (br_caster_rotation_link br_caster_l_wheel_link){ from=<T 0 0.049 0 -0.5 -0.5 -0.5 -0.5 >  type=0  ctrl_limits=[ 100 100 ]  }
-joint br_caster_r_wheel_joint (br_caster_rotation_link br_caster_r_wheel_link){ from=<T 0 -0.049 0 -0.5 -0.5 -0.5 -0.5 >  type=0  ctrl_limits=[ 100 100 ]  }
+joint fl_caster_rotation_joint (base_footprint fl_caster_rotation_link){ from=<T 0.2246 0.2246 0.0792 0.707107 0 -0.707107 0 >  type=0  ctrl_limits=[ 10 6.5 ]  }
+joint fl_caster_l_wheel_joint (fl_caster_rotation_link fl_caster_l_wheel_link){ from=<T 0 0.049 0 -0.5 -0.5 -0.5 -0.5 >  type=0  ctrl_limits=[ 15 7 ]  }
+joint fl_caster_r_wheel_joint (fl_caster_rotation_link fl_caster_r_wheel_link){ from=<T 0 -0.049 0 -0.5 -0.5 -0.5 -0.5 >  type=0  ctrl_limits=[ 15 7 ]  }
+joint fr_caster_rotation_joint (base_footprint fr_caster_rotation_link){ from=<T 0.2246 -0.2246 0.0792 0.707107 0 -0.707107 0 >  type=0  ctrl_limits=[ 10 6.5 ]  }
+joint fr_caster_l_wheel_joint (fr_caster_rotation_link fr_caster_l_wheel_link){ from=<T 0 0.049 0 -0.5 -0.5 -0.5 -0.5 >  type=0  ctrl_limits=[ 15 7 ]  }
+joint fr_caster_r_wheel_joint (fr_caster_rotation_link fr_caster_r_wheel_link){ from=<T 0 -0.049 0 -0.5 -0.5 -0.5 -0.5 >  type=0  ctrl_limits=[ 15 7 ]  }
+joint bl_caster_rotation_joint (base_footprint bl_caster_rotation_link){ from=<T -0.2246 0.2246 0.0792 0.707107 0 -0.707107 0 >  type=0  ctrl_limits=[ 10 6.5 ]  }
+joint bl_caster_l_wheel_joint (bl_caster_rotation_link bl_caster_l_wheel_link){ from=<T 0 0.049 0 -0.5 -0.5 -0.5 -0.5 >  type=0  ctrl_limits=[ 15 7 ]  }
+joint bl_caster_r_wheel_joint (bl_caster_rotation_link bl_caster_r_wheel_link){ from=<T 0 -0.049 0 -0.5 -0.5 -0.5 -0.5 >  type=0  ctrl_limits=[ 15 7 ]  }
+joint br_caster_rotation_joint (base_footprint br_caster_rotation_link){ from=<T -0.2246 -0.2246 0.0792 0.707107 0 -0.707107 0 >  type=0  ctrl_limits=[ 10 6.5 ]  }
+joint br_caster_l_wheel_joint (br_caster_rotation_link br_caster_l_wheel_link){ from=<T 0 0.049 0 -0.5 -0.5 -0.5 -0.5 >  type=0  ctrl_limits=[ 15 7 ]  }
+joint br_caster_r_wheel_joint (br_caster_rotation_link br_caster_r_wheel_link){ from=<T 0 -0.049 0 -0.5 -0.5 -0.5 -0.5 >  type=0  ctrl_limits=[ 15 7 ]  }
 joint torso_lift_joint (base_footprint torso_lift_link){ from=<T -0.05 0 0.790675 0.707107 0 -0.707107 0 >  type=3  limits=[ 0 0.33 ]  ctrl_limits=[ 0.013 10000 ]  }
 joint head_pan_joint (torso_lift_link head_pan_link){ from=<T 0.38145 0 0.01707 1 0 0 0 >  type=0  limits=[ -3.007 3.007 ]  ctrl_limits=[ 6 2.645 ]  }
 joint head_tilt_joint (head_pan_link head_tilt_link){ from=<T 1.5099e-17 0 -0.068 -0.5 -0.5 -0.5 -0.5 >  type=0  limits=[ -0.471238 1.39626 ]  ctrl_limits=[ 5 18 ]  }

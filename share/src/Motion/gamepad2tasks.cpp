@@ -31,6 +31,8 @@ bool stopButtons(const arr& gamepadState){
 }
 
 bool Gamepad2Tasks::updateTasks(arr& gamepadState){
+  if(stopButtons(gamepadState)) return true;
+
   for(PDtask* pdt:MP.tasks) pdt->active=false;
 
   MP.qitselfPD.setGains(0.,10.); //nullspace qitself is not used for homing by default
@@ -48,8 +50,6 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
   double joyRotate   = -1.*joyRate*joySignalMap(gamepadState(1));
 
   uint mode = uint(gamepadState(0));
-  //cout <<"mode " <<mode <<endl;
-  if(mode&0x10 || mode&0x20 || mode&0x40 || mode&0x80) return true;
 
   enum {none, up, down, downRot, left, right} sel=none;
   if(fabs(gamepadState(5))>.5 || fabs(gamepadState(6))>.5){
