@@ -74,7 +74,7 @@ void testJoypad(){
     qdot += .01*a;
     MP.reportCurrentState();
     MP.setState(q, qdot);
-    MP.world.reportProxies();
+    //MP.world.reportProxies();
     if(!(t%4))
       MP.world.gl().update(STRING("local operational space controller state t="<<(double)t/100.), false, false, false);
 
