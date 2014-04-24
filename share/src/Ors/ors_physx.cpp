@@ -224,18 +224,17 @@ void PhysXInterface::step(double tau) {
     ((PxRigidDynamic*)s->actors(b_COUNT))->setKinematicTarget(OrsTrans2PxTrans(b->X));
   }
 
-  ors::Joint *j;
-  for_list(i,j,world.joints) {
+  for_list(ors::Joint, j, world.joints) {
     bool lock = j->locked_func((void*) j->locked_data);
     if(lock and !j->locked) {
       j->locked = true;
       cout << "Lock joint" << endl;
-      s->lockJoint(s->joints(i), j);
+      s->lockJoint(s->joints(j_COUNT), j);
     }
     else if(!lock and j->locked) {
       j->locked = false;
       cout << "Unlock joint" << endl;
-      s->unlockJoint(s->joints(i), j);  
+      s->unlockJoint(s->joints(j_COUNT), j);  
     }
   }
   
