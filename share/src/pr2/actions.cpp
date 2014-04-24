@@ -10,20 +10,27 @@ CoreTasks::CoreTasks() {
 }
 
 void CoreTasks::initYourself(ActionMachine& actionMachine) {
-//    PDtask *qitself;
-//    qitself = P.s->MP.addPDTask("DampMotion_qitself", .1, 1., qLinearTMT, NULL, NoVector, NULL, NoVector, P.s->MP.H_rate_diag);
-//    qitself->setGains(0.,10.);
-//    qitself->y_ref = P.s->MP.qitselfPD.y_ref;
-//    qitself->v_ref.setZero();
-//    qitself->prec=100.;
-//    tasks.append(qitself);
-  PDtask *limits;
-  limits = actionMachine.s->MP.addPDTask("limits", .1, .8, qLimitsTMT);
+  // PDtask *qitself;
+  // qitself = P.s->MP.addPDTask("DampMotion_qitself", .1, 1., qLinearTMT, NULL, NoVector, NULL, NoVector, P.s->MP.H_rate_diag);
+  // qitself->setGains(0.,10.);
+  // qitself->y_ref = P.s->MP.qitselfPD.y_ref;
+  // qitself->v_ref.setZero();
+  // qitself->prec=100.;
+  // tasks.append(qitself);
+
+  PDtask* limits = actionMachine.s->MP.addPDTask("limits", .1, .8, qLimitsTMT);
   // limits->setGains(10.,0.);
   limits->v_ref.setZero();
   limits->v_ref.setZero();
   limits->prec=100.;
   tasks.append(limits);
+
+  PDtask* coll = actionMachine.s->MP.addPDTask(
+      "collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
+  coll->y_ref.setZero();
+  coll->v_ref.setZero();
+
+  tasks.append(coll);
 }
 
 // ============================================================================
