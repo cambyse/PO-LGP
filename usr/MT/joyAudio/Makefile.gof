@@ -2,4 +2,4 @@ BASE = ../../../share
 
 DEPEND = Core System Hardware Media
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

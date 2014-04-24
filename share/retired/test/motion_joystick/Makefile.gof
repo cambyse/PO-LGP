@@ -2,5 +2,5 @@ BASE = ../..
 
 LIBS += -lmotion -lhardware -lperception -lbiros
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk
 

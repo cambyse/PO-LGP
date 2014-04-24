@@ -3,4 +3,4 @@ BASE = ../../..
 DEPEND = Motion Core Ors Gui Optim devTools
 LIBS += -lgtest
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

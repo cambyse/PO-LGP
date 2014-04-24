@@ -105,7 +105,7 @@ void drawPlanTraj(void* classP){
 }
 
 
-void executeTrajectory(String scene){
+void executeTrajectoryWholeBody(String scene){
   //-----------------------------------------------------//
   //--------------------- optimize reference trajectory //
   //-------------------------------------------------- //
@@ -130,25 +130,29 @@ void executeTrajectory(String scene){
 
   //-- create an optimal trajectory to trainTarget
   TaskCost *c;
-  c = P.addTaskMap("position_right_hand", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, Rgoal, 1e5);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
+  c = P.addTask("position_right_hand_vel", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
+  c->map.order=1;
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
 
-  c = P.addTaskMap("position_left_hand", new DefaultTaskMap(posTMT,world,"endeffL", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position_left_hand", new DefaultTaskMap(posTMT,world,"endeffL", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, Lgoal, 1e5);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
+  c = P.addTask("position_left_hand_vel", new DefaultTaskMap(posTMT,world,"endeffL", ors::Vector(0., 0., 0.)));
+  c->map.order=1;
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
 
-  //  c = P.addTaskMap("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
+  //  c = P.addTask("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
   //  P.setInterpolatingCosts(c, MEotionProblem::finalOnly, ARRAY(-0.5,0.3,0.8), 1e3);
   //  P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
 
-  c = P.addTaskMap("qLimits", new DefaultTaskMap(qLimitsTMT,world));
+  c = P.addTask("qLimits", new DefaultTaskMap(qLimitsTMT,world));
   P.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),1e0);
-  P.setInterpolatingVelCosts(c,MotionProblem::constant,ARRAY(0.),1e1);
+  //P.setInterpolatingVelCosts(c,MotionProblem::constant,ARRAY(0.),1e1);
 
-  c = P.addTaskMap("homing", new DefaultTaskMap(qItselfTMT,world));
+  c = P.addTask("homing", new DefaultTaskMap(qItselfTMT,world));
   P.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),0);
-  P.setInterpolatingVelCosts(c,MotionProblem::constant,ARRAY(0.),1e0);
+  //P.setInterpolatingVelCosts(c,MotionProblem::constant,ARRAY(0.),1e0);
 
 
   //-- create the Optimization problem (of type kOrderMarkov)
@@ -164,7 +168,7 @@ void executeTrajectory(String scene){
   arr x(T+1,n); x.setZero();
   optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
   //  P.costReport();
-//  displayTrajectory(x, 1, world, "planned trajectory", 0.01);
+  //  displayTrajectory(x, 1, world, "planned trajectory", 0.01);
 
   //-- Transform trajectory into task space
   arr kinPos, kinVec, xRefPosR, xRefVecR, xRefPosL, xRefVecL, xRefR, xRefL;
@@ -208,16 +212,16 @@ void executeTrajectory(String scene){
   MObject goalMO_L(&world, MT::String("Lgoal"), MObject::GOAL , 0.0005, dirR);
 
   FeedbackMotionControl MP(world, false);
-  PDtask *taskPosR, *taskVecR, *taskHome, *taskCol, *taskLimits;
+  PDtask *taskPosR, *taskVecR, *taskHome, *taskLimits; //, *taskCol
   PDtask *taskPosL, *taskVecL;
-  double regularization = 1e-2;
+  //double regularization = 1e-2;
 
   // initialize controllers
   AdaptiveMotionExecution* amexL;
   AdaptiveMotionExecution* amexR;
 
-  //  MP.nullSpacePD.prec=0.;
-  MP.nullSpacePD.active=false;
+  //  MP.qitselfPD.prec=0.;
+  MP.qitselfPD.active=false;
   taskPosR = MP.addPDTask("posR", tau_plan*5, 1, posTMT, "endeffR");
   taskVecR = MP.addPDTask("vecR", tau_plan*5, 1, vecTMT, "endeffR",ARR(0.,0.,1.));
   taskPosL = MP.addPDTask("posL", tau_plan*5, 1, posTMT, "endeffL");
@@ -335,6 +339,221 @@ void executeTrajectory(String scene){
   return;
 }
 
+void executeTrajectoryRightArm(String scene){
+  //-----------------------------------------------------//
+  //--------------------- optimize reference trajectory //
+  //-------------------------------------------------- //
+  String folder = STRING("out/"<<scene);
+  cout << scene << endl;
+
+  ors::KinematicWorld world(scene);
+  cout << world.getJointStateDimension() << endl;
+#if VISUALIZE
+  world.gl().resize(800, 800);
+#endif
+
+  arr q0 = {0.,0.,0.,0.,-0.2,-0.2,0.};
+  world.setJointState(q0,0.*q0);
+
+  arr q, qdot;
+  world.getJointState(q, qdot);
+
+
+  // Plan Trajectory
+  makeConvexHulls(world.shapes);
+  MotionProblem P(world);
+  P.loadTransitionParameters();
+
+  arr Rgoal = ARRAY(P.world.getBodyByName("goalRef")->X.pos);
+
+  //-- create an optimal trajectory to trainTarget
+  TaskCost *c;
+  c = P.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly, Rgoal, 1e4);
+  //  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
+
+  //  c = P.addTaskMap("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
+  //  P.setInterpolatingCosts(c, MEotionProblem::finalOnly, ARRAY(-0.5,0.3,0.8), 1e3);
+  //  P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
+
+  c = P.addTask("qLimits", new DefaultTaskMap(qLimitsTMT,world));
+  P.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),1e0,ARRAY(0.),1e0);
+//  P.setInterpolatingVelCosts(c,MotionProblem::constant,ARRAY(0.),1e-1);
+
+  c = P.addTask("homing", new DefaultTaskMap(qItselfTMT,world));
+  P.setInterpolatingCosts(c,MotionProblem::constant,ARRAY(0.),0);
+  //  P.setInterpolatingVelCosts(c,MotionProblem::constant,ARRAY(0.),1e0);
+  //P.setInterpolatingVelCosts(c,MotionProblem::finalOnly,ARRAY(0.),1e2);
+
+
+  //-- create the Optimization problem (of type kOrderMarkov)
+  P.x0 = {0.,0.,0.,0.,-0.3,-0.3,0.};
+
+  MotionProblemFunction F(P);
+  uint T=F.get_T();
+  uint k=F.get_k();
+  uint n=F.dim_x();
+  double dt = P.tau;
+  cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<" # joints=" <<world.getJointStateDimension()<<endl;
+
+  arr x(T+1,n); x.setZero();
+  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+  P.costReport();
+//  displayTrajectory(x, 1, world, "planned trajectory", 0.01);
+
+  //-- Transform trajectory into task space
+  arr kinPos, kinVec, xRefPosR, xRefVecR, xRefPosL, xRefVecL, xRefR, xRefL;
+  // store cartesian coordinates and endeffector orientation
+  for (uint t=0;t<=T;t++) {
+    world.setJointState(x[t]);
+    world.kinematicsPos(kinPos,NoArr,P.world.getBodyByName("endeffR")->index);
+    world.kinematicsVec(kinVec,NoArr,P.world.getBodyByName("endeffR")->index);
+    xRefPosR.append(~kinPos);
+    xRefVecR.append(~kinVec);
+  }
+
+  xRefR = ~cat(~xRefPosR,~xRefVecR);
+
+  // set initial positions
+//  arr q0 = x[0];
+  arr x0_R = xRefR[0];
+  q = P.x0;
+  world.setJointState(q,qdot);
+
+
+  //-----------------------------------------------------//
+  //-------------------------------- execute controller //
+  //-------------------------------------------------- //
+  double tau_plan = 0.01;
+  double tau_control = 0.001;
+  double t = 0.;
+  double t_final = T*dt;
+
+  arr dirR = ARRAY(0.,0.,-1.);
+  arr dirL = ARRAY(0.,0.,0.);
+
+  MObject goalMO(&world, MT::String("goal"), MObject::GOAL , 0.0005, dirL);
+
+  FeedbackMotionControl MP(world, false);
+  PDtask *taskPosR, *taskVecR, *taskHome, *taskCol, *taskLimits, *qitself;
+  double regularization = 1e-2;
+
+  // initialize controllers
+  AdaptiveMotionExecution* amexR;
+
+  //  MP.nullSpacePD.prec=0.;
+  MP.qitselfPD.active=false;
+  taskPosR = MP.addPDTask("posR", tau_plan*5, 1, posTMT, "endeffR");
+  taskVecR = MP.addPDTask("vecR", tau_plan*5, 1, vecTMT, "endeffR",ARR(0.,0.,1.));
+  qitself = MP.addPDTask("qitself", .1, 1., qLinearTMT, NULL, NoVector, NULL, NoVector, 0.01*MP.H_rate_diag);
+  cout << MP.H_rate_diag << endl;
+  double t_PD = tau_plan/4.;
+  double damp_PD = 0.9;
+  taskPosR->setGainsAsNatural(t_PD,damp_PD); taskPosR->prec=1e5;
+  taskVecR->setGainsAsNatural(t_PD,damp_PD); taskVecR->prec=1e3;
+  qitself->setGainsAsNatural(t_PD,damp_PD); qitself->prec=1e2;
+  qitself->Pgain = 0.;
+
+  cout << "taskPosR->Pgain " << taskPosR->Pgain << endl;
+  cout << "taskPosR->Dgain " << taskPosR->Dgain << endl;
+  cout << "taskPosR->prec " << taskPosR->prec << endl;
+  cout << "taskVecR->Pgain " << taskVecR->Pgain << endl;
+  cout << "taskVecR->Dgain " << taskVecR->Dgain << endl;
+  cout << "taskVecR->prec " << taskVecR->prec << endl;
+  cout << "qitself->Pgain " << qitself->Pgain << endl;
+  cout << "qitself->Dgain " << qitself->Dgain << endl;
+  cout << "qitself->prec " << qitself->prec << endl;
+
+  amexR = new AdaptiveMotionExecution(world,xRefR,tau_plan,t_final,x0_R,q0,goalMO,true);
+
+  world.gl().add(drawPoint,&(taskPosR->y_ref));
+  world.gl().add(drawActTraj,&(amexR->traj));
+  world.gl().add(drawPlanTraj,&(amexR->trajRef->points));
+  arr current_dir = ARRAY(1.,1.,1.,0.,0.,0.);
+  world.gl().add(drawCurrentDir,&current_dir);
+  arr des_dir = current_dir;
+  world.gl().add(drawDesiredDir,&(des_dir));
+
+
+  // init bookkeeping
+  q_bk = ~q;
+  x_bk = ~x0_R;
+  goal_bk = ~goalMO.position;
+  ct_bk = ARR(0);
+
+  world.setJointState(q,qdot);
+  arr state,stateVec;
+  // RUN //
+  while (((world.getShapeByName("endeffR")->X.pos - goalMO.position).length() > goalAccuracy) && t < maxDuration*2. && sum(ct_bk)<50.) {
+    if ( (fmod(t,tau_plan-1e-12) < tau_control) ) {
+      // Outer Planning Loop [1/tau_plan Hz]
+      MT::timerStart(true);
+      // Get current task state
+      world.kinematicsPos(state,NoArr,P.world.getBodyByName("endeffR")->index);
+      world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeffR")->index);
+      state.append(stateVec);
+      // Move goal
+      if (t < 0.7*t_final && moveGoal) {
+        goalMO.move();
+      }
+
+      arr yNext, ydNext;
+      amexR->iterate(state);
+      amexR->getNextState(yNext,ydNext);
+      taskPosR->y_ref = yNext.subRange(0,2);
+      taskPosR->v_ref = ydNext.subRange(0,2);
+      taskVecR->y_ref = yNext.subRange(3,5);
+      taskVecR->v_ref = ydNext.subRange(3,5);
+
+//      taskPosR->y_ref = goalMO.position;
+//      taskPosR->v_ref = 0.;//ydNext.subRange(0,2);
+//      taskVecR->y_ref = goalMO.orientation;//yNext.subRange(3,5);
+//      taskVecR->v_ref = 0.;//ydNext.subRange(3,5);
+
+
+#if VISUALIZE
+      current_dir = state;
+      des_dir = yNext;
+      world.watch(false, STRING(t));
+#endif
+      ct_bk.append(MT::timerRead());
+    }
+
+    // Inner Controlling Loop [1/tau_control Hz]
+    MP.setState(q, qdot);
+
+    // world.stepPhysx(tau_control);
+    world.computeProxies();
+
+    arr qddot = MP.operationalSpaceControl();//MP.operationalSpaceControl(regularization);
+    q += tau_control*qdot;
+    qdot += tau_control*qddot;
+    t += tau_control;
+
+    // Bookkeeping
+    q_bk.append(q);
+    x_bk.append(state);
+    goal_bk.append(goalMO.position);
+  }
+
+  // save bookkeeping files
+  write(LIST<arr>(q_bk),STRING(folder<<"q_bk.output"));
+  write(LIST<arr>(x_bk),STRING(folder<<"x_bk.output"));
+  write(LIST<arr>(goal_bk),STRING(folder<<"goal_bk.output"));
+  write(LIST<arr>(ct_bk),STRING(folder<<"ct_bk.output"));
+
+  write(LIST<arr>(xRefR),STRING(folder<<"xRef.output"));
+  write(ARR(tau_control),STRING(folder<<"tau_control.output"));
+  write(ARR(tau_plan),STRING(folder<<"tau_plan.output"));
+  write(ARR(numScenes),STRING(folder<<"numScenes.output"));
+
+  amexR->plotState();
+  world.watch(true,STRING(t));
+
+  return;
+}
+
+
 int main(int argc,char **argv) {
   MT::initCmdLine(argc,argv);
   //-------------// Init Evaluation Parameters //-------------//
@@ -354,8 +573,13 @@ int main(int argc,char **argv) {
   moveObs = MT::getParameter<int>("moveObstacle");
 
 
-  String currScene = STRING("scene");
-  executeTrajectory(currScene);
+  // Whole Body
+  String currScene = STRING("whole_body_scene");
+  //  executeTrajectoryWholeBody(currScene);
+
+  // Right Arm
+  currScene = STRING("right_arm_scene");
+  executeTrajectoryRightArm(currScene);
 
   return 0;
 }

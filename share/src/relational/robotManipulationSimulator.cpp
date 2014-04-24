@@ -24,7 +24,7 @@
 #include <stdlib.h>
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
-#include <relational/utilTL.h>
+#include "utilTL.h"
 #include <Ors/ors_ode.h>
 #include <Ors/ors_swift.h>
 #include <Motion/feedbackControl.h>
@@ -131,7 +131,7 @@ void controlledStep(ors::KinematicWorld *C, FeedbackMotionControl &FM, const cha
   double tau=.01;
   arr q, qdot;
   C->getJointState(q, qdot);
-  FM.nullSpacePD.y_ref = q0;
+  FM.qitselfPD.y_ref = q0;
   arr a = FM.operationalSpaceControl();
   q += tau*qdot;
   qdot += tau*a;
@@ -248,7 +248,7 @@ void RobotManipulationSimulator::simulate(uint t, const char* message) {
   String msg_string(message);
 #ifdef NEW_FEEDBACK_CONTROL
   FeedbackMotionControl MP(*this, false);
-  MP.nullSpacePD.prec=0.;
+  MP.qitselfPD.prec=0.;
   for(; t--;) controlledStep(this, MP, msg_string);
 #else
   arr q;
@@ -282,9 +282,7 @@ void RobotManipulationSimulator::watch() {
 
 void RobotManipulationSimulator::indicateFailure() {
   // drop object
-  ors::Joint* e;
-  uint i;
-  for_list(i,e,getBodyByName("fing1c")->outLinks) {
+  for_list(ors::Joint, e, getBodyByName("fing1c")->outLinks) {
     del_edge(e,bodies,joints,true); //otherwise: no object in hand
   }
   std::cerr << "RobotManipulationSimulator: CONTROL FAILURE" << endl;

@@ -7,9 +7,6 @@
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
 
-#include <devTools/logging.h>
-SET_LOG(rrt_planner, DEBUG)
-
 namespace ors {
   struct sRRTPlanner {
     RRTPlanner *p;

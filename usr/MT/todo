@@ -1,13 +1,24 @@
 LOG in motion.cpp
-double calc Body From Frames
-world copy in  rrt planner?? -> delete copy
 clearly introduce constraint maps as tasks -- feasibility, automatic penalty reduction
 
+** drive the robot:
+http://wiki.ros.org/pr2_controllers/Tutorials/Using%20the%20robot%20base%20controllers%20to%20drive%20the%20robot
 
 ** checkJointDimension is really const (HALT if state was not set)
 getJointDimension is not const
 
-** lock in OpenGL
+** KVG
+
+dot interpretation (dot as 2st key -> color shape everything just copy!)
+
+** Proper ConstrainedTaskMap:
+virtual function g
+can provide also $y=(1+g/m) [g>-m]$ (is consistent with lecture & code)
+bool constraint;
+double margin;
+arr getY()
+arr getFeasible()
+arr getG()
 
 ** Logging:
 

@@ -12,21 +12,18 @@ ProxyTaskMap::ProxyTaskMap(PTMtype _type,
 }
 
 void ProxyTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G){
-  uint i;
-  ors::Proxy *p;
-
   y.resize(1);  y.setZero();
   if(&J){ J.resize(1, G.getJointStateDimension(false));  J.setZero(); }
 
   switch(type) {
     case allPTMT:
-      for_list(i,p,G.proxies)  if(p->d<margin) {
+      for(ors::Proxy *p: G.proxies)  if(p->d<margin) {
         G.kinematicsProxyCost(y, J, p, margin, useCenterDist, true);
         p->colorCode = 1;
       }
       break;
     case listedVsListedPTMT:
-      for_list(i,p,G.proxies)  if(p->d<margin) {
+      for(ors::Proxy *p: G.proxies)  if(p->d<margin) {
         if(shapes.contains(p->a) && shapes.contains(p->b)) {
           G.kinematicsProxyCost(y, J, p, margin, useCenterDist, true);
           p->colorCode = 2;
@@ -34,7 +31,7 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G){
       }
       break;
     case allVersusListedPTMT: {
-      for_list(i,p,G.proxies)  if(p->d<margin) {
+      for(ors::Proxy *p: G.proxies)  if(p->d<margin) {
         if(shapes.contains(p->a) || shapes.contains(p->b)) {
           G.kinematicsProxyCost(y, J, p, margin, useCenterDist, true);
           p->colorCode = 2;
@@ -42,7 +39,7 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G){
       }
     } break;
     case allExceptListedPTMT:
-      for_list(i,p,G.proxies)  if(p->d<margin) {
+      for(ors::Proxy *p: G.proxies)  if(p->d<margin) {
         if(!shapes.contains(p->a) && !shapes.contains(p->b)) {
           G.kinematicsProxyCost(y, J, p, margin, useCenterDist, true);
           p->colorCode = 3;
@@ -50,7 +47,7 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G){
       }
       break;
     case bipartitePTMT:
-      for_list(i,p,G.proxies)  if(p->d<margin) {
+      for(ors::Proxy *p: G.proxies)  if(p->d<margin) {
         if((shapes.contains(p->a) && shapes2.contains(p->b)) ||
             (shapes.contains(p->b) && shapes2.contains(p->a))) {
           G.kinematicsProxyCost(y, J, p, margin, useCenterDist, true);
@@ -62,7 +59,7 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G){
       shapes.reshape(shapes.N/2,2);
       // only explicit paris in 2D array shapes
       uint j;
-      for_list(i,p,G.proxies)  if(p->d<margin) {
+      for(ors::Proxy *p: G.proxies)  if(p->d<margin) {
         for(j=0; j<shapes.d0; j++) {
           if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
             break;
@@ -77,7 +74,7 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G){
       shapes.reshape(shapes.N/2,2);
       // only explicit paris in 2D array shapes
       uint j;
-      for_list(i,p,G.proxies)  if(p->d<margin) {
+      for(ors::Proxy *p: G.proxies)  if(p->d<margin) {
         for(j=0; j<shapes.d0; j++) {
           if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
             break;
@@ -94,7 +91,7 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G){
       y.resize(shapes.d0, 1);  y.setZero();
       if(&J){ J.resize(shapes.d0,J.d1);  J.setZero(); }
       uint j;
-      for_list(i,p,G.proxies)  if(p->d<margin) {
+      for(ors::Proxy *p: G.proxies)  if(p->d<margin) {
         for(j=0; j<shapes.d0; j++) {
           if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
             break;

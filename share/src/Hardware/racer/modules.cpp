@@ -122,6 +122,7 @@ void Motors::step(){
 
 void Motors::close(){
   i2cmutex.lock();
+  s->motor->setMotorSpeedAndAcceleration("", 0, 0, 10);
   s->motor->close();
   i2cmutex.unlock();
   s->fil.close();
@@ -177,7 +178,7 @@ void KalmanFilter::step(){
   s->K.stepObserve(y_true, C, c, W);
 
   //-- write results
-  stateEstimate.set()()=s->K.b_mean;
+  stateEstimate.set()=s->K.b_mean;
 
   s->R.q = s->K.b_mean.sub(0,1);
   s->R.q_dot = s->K.b_mean.sub(2,3);

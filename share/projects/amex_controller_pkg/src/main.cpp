@@ -34,7 +34,6 @@ int main(int argc, char** argv)
   }
 
 
-
   /// Check if tree_controller is loaded
   ros::ServiceClient getInitJointStateClient = nh.serviceClient<tree_controller_pkg::GetJointState>("/tree_rt_controller/get_joint_state");
   if (!getInitJointStateClient.waitForExistence(ros::Duration(3.))) {
@@ -43,13 +42,13 @@ int main(int argc, char** argv)
     return 0;
   }
 
+
   /// Get init position from robot
   tree_controller_pkg::GetJointState getInitJointStateSrv;
   getInitJointStateClient.call(getInitJointStateSrv);
   arr q0(getInitJointStateSrv.response.q.size());
   for(uint i=0;i<q0.d0;i++) q0(i) = getInitJointStateSrv.response.q[i];
-
-
+  cout << q0 << endl;
 
   /// Get goal from AR tag or scene file
   bool useARtag;
@@ -96,12 +95,13 @@ int main(int argc, char** argv)
   AmexController amex(nh, world, to.refPlan, q0, to.TRef, useARtag);
   amex.initRosServices();
   amex.initController();
+  MT::wait();
   amex.startController();
 
 
   /// Stop Logging
   ros::ServiceClient stopLoggingClient = nh.serviceClient<tree_controller_pkg::StopLogging>("/tree_rt_controller/stop_logging");
   tree_controller_pkg::StopLogging stopLoggingSrv;
-  stopLoggingClient.call(stopLoggingSrv);
+//  stopLoggingClient.call(stopLoggingSrv);
   return 0;
 }

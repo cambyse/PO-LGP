@@ -161,7 +161,7 @@ void FGPlots::open(const KeyValueGraph &k) {
   s->data = new KeyValueGraph[s->nplots];
   for(uint i = 0; i < s->nplots; i++) {
     cout << "Opening new plot:" << endl;
-    plot_kvg = plot_list(i)->value<KeyValueGraph>();
+    plot_kvg = plot_list(i)->getValue<KeyValueGraph>();
 
     // title {{{
     str = plot_kvg->getValue<String>("title");
@@ -243,7 +243,7 @@ void FGPlots::open(const KeyValueGraph &k) {
     // data {{{
     s->data[i] = plot_kvg->getItems("data");
     for(auto j: s->data[i])
-      cout << " - data: " << *j->value<String>() << endl;
+      cout << " - data: " << *j->getValue<String>() << endl;
     // }}}
 
     s->plots[i].open();
@@ -256,8 +256,8 @@ void FGPlots::step(uint t) {
   for(uint i = 0; i < s->nplots; i++) {
     if(s->plots[i].isDim3D()) {
       for(auto j: s->data[i]) {
-        str = j->value<String>();
-        data = s->kvg[*str]->value<arr>();
+        str = j->getValue<String>();
+        data = s->kvg[*str]->getValue<arr>();
         ss.clear() << data->operator()(t, 0) << " "
                     << data->operator()(t, 1) << " "
                     << *str << " "
@@ -270,8 +270,8 @@ void FGPlots::step(uint t) {
     else {
       ss.clear() << t;
       for(auto j: s->data[i]) {
-        str = j->value<String>();
-        data = s->kvg[*str]->value<arr>();
+        str = j->getValue<String>();
+        data = s->kvg[*str]->getValue<arr>();
         ss << " " << *str
           << " " << data->elem(t)
           ;

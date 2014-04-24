@@ -3,4 +3,4 @@ BASE = ../..
 DEPEND = Ors Core Algo Gui extern_SWIFT Optim
 LIBS += -lgtest
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

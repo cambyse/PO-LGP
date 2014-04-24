@@ -5,42 +5,49 @@
 // UnconstrainedProblem
 //
 
-double UnconstrainedProblem::fs(arr& df, arr& Hf, const arr& x){
-  arr g, Jg;
-  double f = P.fc(df, Hf, g, (&df||&Hf ? Jg : NoArr), x);
-  CHECK(P.dim_g()==g.N,"this conversion requires phi.N to be m-dimensional");
-
-//  if(&Hf && Hf.special) Hf = unpack(Hf);
-//  if(Jg.special) Jg = unpack(Jg);
-
-  //in log barrier case, check feasibility
-  if(muLB)     for(uint i=0;i<g.N;i++) if(g(i)>0.) return NAN; //CHECK(phi(i)<=0., "log barrier: constraints must be fulfiled!");
-
-  if(muLB)     for(uint i=0;i<g.N;i++) f -= muLB * ::log(-g(i));  //log barrier
-  if(mu)       for(uint i=0;i<g.N;i++) if(g(i)>0. || (lambda.N && lambda(i)>0.)) f += mu * MT::sqr(g(i));  //penalty
-  if(lambda.N) for(uint i=0;i<g.N;i++) if(lambda(i)>0.) f += lambda(i) * g(i);  //augments
-
-  if(&df){
-    arr coeff(Jg.d0); coeff.setZero();
-    if(muLB)     for(uint i=0;i<g.N;i++) coeff(i) -= (muLB/g(i));  //log barrier
-    if(mu)       for(uint i=0;i<g.N;i++) if(g(i)>0. || (lambda.N && lambda(i)>0.)) coeff(i) += (mu*2.*g(i));  //penalty
-    if(lambda.N) for(uint i=0;i<g.N;i++) if(lambda(i)>0.) coeff(i) += lambda(i);  //augments
-    df += comp_At_x(Jg, coeff);
-    df.reshape(x.N);
+double UnconstrainedProblem::fs(arr& dF, arr& HF, const arr& _x){
+  //-- evaluate constrained problem and buffer
+  if(_x!=x){
+    x=_x;
+    f_x = P.fc(df_x, Hf_x, g_x, Jg_x, x);
+    CHECK(P.dim_g()==g_x.N,"this conversion requires phi.N to be m-dimensional");
+  }else{ //we evaluated this before - use buffered values; the meta F is still recomputed as (dual) parameters might have changed
+    if(&dF) CHECK(df_x.N && Jg_x.N,"");
+    if(&HF) CHECK(Hf_x.N && Jg_x.N,"")
   }
 
-  if(&Hf){
-    /// the 2.*Jg^T Jg terms are considered as in Gauss-Newton type; no real Hg used
-    arr coeff(Jg.d0); coeff.setZero();
-    if(muLB)     for(uint i=0;i<g.N;i++) coeff(i) += (muLB/MT::sqr(g(i)));  //log barrier
-    if(mu)       for(uint i=0;i<g.N;i++) if(g(i)>0. || (lambda.N && lambda(i)>0.)) coeff(i) += (mu*2.);  //penalty
-    if(lambda.N) for(uint i=0;i<g.N;i++) if(lambda(i)>0.) coeff(i) += 0.; //augments
-    for(uint i=0;i<g.N;i++) Jg[i]() *= sqrt(coeff(i));
-    Hf += comp_At_A(Jg); //Gauss-Newton type!
-    if(!Hf.special) Hf.reshape(x.N,x.N);
+  //  cout <<"g= " <<g_x <<" lambda= " <<lambda <<endl;
+
+  //-- construct unconstrained problem
+  double F=f_x+f0;
+  if(muLB)     for(uint i=0;i<g_x.N;i++){ if(g_x(i)>0.) return NAN;  F -= muLB * ::log(-g_x(i)); } //log barrier, check feasibility
+  if(mu)       for(uint i=0;i<g_x.N;i++) if(g_x(i)>0. || (lambda.N && lambda(i)>0.)) F += mu * MT::sqr(g_x(i));  //penalty
+  if(lambda.N) for(uint i=0;i<g_x.N;i++) if(lambda(i)>0.) F += lambda(i) * g_x(i);  //augments
+
+  if(&dF){
+    dF=df_x;
+    arr coeff(Jg_x.d0); coeff.setZero();
+    if(muLB)     for(uint i=0;i<g_x.N;i++) coeff(i) -= (muLB/g_x(i));  //log barrier
+    if(mu)       for(uint i=0;i<g_x.N;i++) if(g_x(i)>0. || (lambda.N && lambda(i)>0.)) coeff(i) += (mu*2.*g_x(i));  //penalty
+    if(lambda.N) for(uint i=0;i<g_x.N;i++) if(lambda(i)>0.) coeff(i) += lambda(i);  //augments
+    dF += comp_At_x(Jg_x, coeff);
+    dF.reshape(x.N);
   }
 
-  return f;
+  if(&HF){
+    HF=Hf_x;
+    /// the 2.*Jg_x^T Jg_x terms are considered as in Gauss-Newton type; no real Hg used
+    arr coeff(Jg_x.d0); coeff.setZero();
+    if(muLB)     for(uint i=0;i<g_x.N;i++) coeff(i) += (muLB/MT::sqr(g_x(i)));  //log barrier
+    if(mu)       for(uint i=0;i<g_x.N;i++) if(g_x(i)>0. || (lambda.N && lambda(i)>0.)) coeff(i) += (mu*2.);  //penalty
+    if(lambda.N) for(uint i=0;i<g_x.N;i++) if(lambda(i)>0.) coeff(i) += 0.; //augments
+    arr Jg_dg = Jg_x;
+    for(uint i=0;i<g_x.N;i++) Jg_dg[i]() *= sqrt(coeff(i));
+    HF += comp_At_A(Jg_dg); //Gauss-Newton type!
+    if(!HF.special) HF.reshape(x.N,x.N);
+  }
+
+  return F;
 }
 
 void UnconstrainedProblem::augmentedLagrangian_LambdaUpdate(const arr& x, double lambdaStepsize){
@@ -49,11 +56,50 @@ void UnconstrainedProblem::augmentedLagrangian_LambdaUpdate(const arr& x, double
 
   if(!lambda.N){ lambda.resize(g.N); lambda.setZero(); }
 
-  for(uint i=0;i<g.N;i++) if(g(i)>0. || lambda(i)>0.) lambda(i) += lambdaStepsize * mu * 2.*g(i);
-
-  for(uint i=0;i<g.N;i++) if(lambda(i)<0.) lambda(i)=0.;
+  lambda += (lambdaStepsize * 2.*mu)*g;
+  for(uint i=0;i<lambda.N;i++) if(lambda(i)<0.) lambda(i)=0.;
 
 //  cout <<"Update Lambda: g=" <<g <<" lambda=" <<lambda <<endl;
+}
+
+void UnconstrainedProblem::aula_update(const arr& _x, double lambdaStepsize, arr& dF_x, arr& HF_x){
+  if(_x!=x){ //need to recompute gradients etc
+    x=_x;
+    f_x = P.fc(df_x, Hf_x, g_x, Jg_x, x);
+    fs(dF_x, NoArr, x);
+  }else{
+    //nothing to do: just use buffered gradients
+  }
+
+  if(!lambda.N){ lambda.resize(g_x.N); lambda.setZero(); }
+
+  arr lambdaOld = lambda;
+
+  arr Ilambda_x(g_x.N);
+  for(uint i=0;i<g_x.N;i++) Ilambda_x(i) = (g_x(i)>0. || lambda(i)>0.);
+
+  arr beta = /*Ilambda_x%*/Jg_x;
+//  cout <<"beta=" <<beta <<endl;
+  arr tmp;
+  inverse_SVD(tmp, beta*~beta );
+  beta = ~beta * tmp;
+//  cout <<"beta=" <<beta <<endl;
+
+  lambda += lambdaStepsize * (2.*mu*g_x - ~dF_x*beta);
+//  for(uint i=0;i<g_x.N;i++){
+//    lambda(i) += lambdaStepsize * (2.*mu*g_x(i) - scalarProduct(dF_x, Jg_x[i])/length(Jg_x[i]) );
+//  }
+
+  for(uint i=0;i<g_x.N;i++) if(lambda(i)<0.) lambda(i)=0.;
+
+  f0 -= scalarProduct(lambda - lambdaOld, g_x);
+  for(uint i=0;i<g_x.N;i++){
+    if( lambda(i)>0 && !lambdaOld(i)>0.) f0 -= mu * MT::sqr(g_x(i));
+    if(!lambda(i)>0 &&  lambdaOld(i)>0.) f0 += mu * MT::sqr(g_x(i));
+  }
+  //f0 -= 1e-16;
+
+  if(&dF_x || &HF_x) fs(dF_x, HF_x, x); //reevaluate gradients and hessian (using buffered info)
 }
 
 //==============================================================================

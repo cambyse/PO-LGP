@@ -1,0 +1,4 @@
+LEWINER = 0
+GJK = 0
+PLY = 0
+PHYSX = 0

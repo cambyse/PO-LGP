@@ -60,7 +60,7 @@ namespace RobotManipulationInterface {
   relational::Literal* generateAction_trulyRandom(const relational::SymbolicState& s, uint id_table);
   relational::Literal* generateAction_wellBiased(const relational::SymbolicState& s, uint id_table);
   relational::Literal* generateAction_wellBiased_2Dactions(const relational::SymbolicState& s, uint id_table);
-  relational::StateTransitionL& generateSimulationSequence(RobotManipulationSimulator* sim, uint maxSeqLength, uint id_table);  
+  relational::StateTransitionL generateSimulationSequence(RobotManipulationSimulator* sim, uint maxSeqLength, uint id_table);  
   void generateSimulationSequence_realistic(std::ostream& os, RobotManipulationSimulator* sim, uint maxSeqLength, uint id_table);
 
   

@@ -46,6 +46,7 @@ private:
     TCLAP::SwitchArg pruningOff_arg;
     TCLAP::ValueArg<int> incF_arg;
     TCLAP::ValueArg<double> delta_arg;
+    TCLAP::ValueArg<int> maxLearnIteration_arg;
 
     bool args_ok = false;
 

@@ -35,12 +35,13 @@
 
 struct TaskMap {
   bool constraint;  ///< whether this is a hard constraint (implementing a constraint function g)
+  uint order;       ///< 0=position, 1=vel, etc
+  //Actually, the right way would be to give phi a list of $k+1$ graphs -- and retrieve the velocities/accs from that...
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G) = 0;
   virtual uint dim_phi(const ors::KinematicWorld& G) = 0; //the dimensionality of $y$
 
+  TaskMap():constraint(false),order(0) {}
   virtual ~TaskMap() {};
-
-  TaskMap():constraint(false) {}
 };
 
 
@@ -53,12 +54,10 @@ struct TaskCost {
   TaskMap& map;
   MT::String name;
   bool active;
-  arr y_target, y_prec;  ///< target & precision over a whole trajectory
-  arr v_target, v_prec;  ///< velocity target & precision over a whole trajectory
-
-  double y_threshold, v_threshold; ///< threshold for feasibility checks (e.g. in RRTs)
+  arr target, prec;  ///< target & precision over a whole trajectory
+  double threshold;  ///< threshold for feasibility checks (e.g. in RRTs)
   
-  TaskCost(TaskMap* m):map(*m), active(true) {}
+  TaskCost(TaskMap* m):map(*m), active(true){}
 };
 
 
@@ -76,10 +75,9 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
   //******* the following three sections are parameters that define the problem
 
   //-- task cost descriptions
-  enum TaskCostInterpolationType { constant, finalOnly, final_restConst, early_restConst, final_restLinInterpolated };
   MT::Array<TaskCost*> taskCosts;
   
-  //-- transition cost descriptions //TODO: make own little class
+  //-- transition cost descriptions //TODO: should become a task map just like any other
   enum TransitionType { kinematic=0, pseudoDynamic=1, realDynamic=2 };
   TransitionType transitionType;
   arr H_rate_diag; ///< cost rate
@@ -87,8 +85,9 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
   double tau; ///< duration of single step
   
   //-- start constraints
-  arr x0, v0; ///< fixed start state and velocity
+  arr x0, v0; ///< fixed start state and velocity [[TODO: remove this and replace by prefix only (redundant...)]]
   arr prefix; ///< a set of states PRECEEDING x[0] (having 'negative' time indices) and which influence the control cost on x[0]. NOTE: x[0] is subject to optimization. DEFAULT: constantly equals x0
+  //TODO: add methods to properly set the prefix given x0,v0?
 
   //-- return values of an optimizer
   arr costMatrix;
@@ -96,40 +95,17 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
 
   MotionProblem(ors::KinematicWorld& _world, bool useSwift=true);
   
-  MotionProblem& operator=(const MotionProblem& other) {
-    world = const_cast<ors::KinematicWorld&>(other.world);
-    useSwift = other.useSwift;
-    taskCosts = other.taskCosts;
-    transitionType = other.transitionType;
-    H_rate_diag = other.H_rate_diag;
-    T = other.T;
-    tau = other.tau;
-    x0 = other.x0;
-    v0 = other.v0;
-    prefix = other.prefix;
-    costMatrix = other.costMatrix;
-    dualMatrix = other.dualMatrix;
-    return *this;
-  };
+  MotionProblem& operator=(const MotionProblem& other);
 
   void loadTransitionParameters(); ///< loads transition parameters from cfgFile //TODO: do in constructor of TransitionCost
-  
-  //-- methods for defining the task
-  void setx0(const arr&); //TODO: obsolete
-  void setx0v0(const arr&, const arr&); //TODO: obsolete
 
-  //adding task spaces
-  TaskCost* addTaskMap(const char* name, TaskMap *map); //TODO: rename addTask
-
-  //setting costs in a task space TODO: move to be member of TaskCost
+  //-- setting costs in a task space
+  TaskCost* addTask(const char* name, TaskMap *map);
+  enum TaskCostInterpolationType { constant, finalOnly, final_restConst, early_restConst, final_restLinInterpolated };
   void setInterpolatingCosts(TaskCost *c,
                              TaskCostInterpolationType inType,
                              const arr& y_finalTarget, double y_finalPrec, const arr& y_midTarget=NoArr, double y_midPrec=-1., double earlyFraction=-1.);
-                             
-  void setInterpolatingVelCosts(TaskCost *c,
-                                TaskCostInterpolationType inType,
-                                const arr& v_finalTarget, double v_finalPrec, const arr& v_midTarget=NoArr, double v_midPrec=-1.);
-                                
+
   //-- cost infos
   uint dim_x() { return x0.N; }
   uint dim_phi(uint t);

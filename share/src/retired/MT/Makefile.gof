@@ -13,4 +13,4 @@ OBJS = $(SRCS:%.cpp=%.o)
 
 #OPTIM=fast
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

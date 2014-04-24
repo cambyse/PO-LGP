@@ -4,4 +4,4 @@ OBJS = main.o
 
 CXXFLAGS += -DMT_IMPLEMENT_TEMPLATES
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk
