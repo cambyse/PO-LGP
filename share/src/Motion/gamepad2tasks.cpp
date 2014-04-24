@@ -15,8 +15,8 @@ Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL),
   coll->y_ref.setZero();
   coll->v_ref.setZero();
 
-  gripperL = MP.addPDTask("gripperL", 2., .8, new DefaultTaskMap(qSingleTMT, -MP.world.getJointByName("l_gripper_l_finger_joint")->qIndex));
-  gripperR = MP.addPDTask("gripperR", 2., .8, new DefaultTaskMap(qSingleTMT, -MP.world.getJointByName("r_gripper_l_finger_joint")->qIndex));
+  gripperL = MP.addPDTask("gripperL", 2., .8, new DefaultTaskMap(qSingleTMT, -MP.world.getJointByName("l_gripper_joint")->qIndex));
+  gripperR = MP.addPDTask("gripperR", 2., .8, new DefaultTaskMap(qSingleTMT, -MP.world.getJointByName("r_gripper_joint")->qIndex));
 }
 
 double joySignalMap(double x){
@@ -121,7 +121,7 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
         default:   pdt=NULL;  break;
       }
       if(!pdt) break;
-      if(mode==8) pdt->y_ref={.5}; else pdt->y_ref={.0};
+      if(mode==8) pdt->y_ref={.08}; else pdt->y_ref={.01};
       pdt->active=true;
       break;
     }
