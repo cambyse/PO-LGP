@@ -226,7 +226,7 @@ void ors::Shape::parseAts() {
       mesh.scale(size[0], size[1], size[2]);
       break;
     case ors::sphereST:
-      mesh.setSphere(1);
+      mesh.setSphere();
       mesh.scale(size[3], size[3], size[3]);
       break;
     case ors::cylinderST:
@@ -1755,11 +1755,12 @@ void ors::KinematicWorld::kinematicsProxyCost(arr& y, arr& J, Proxy *p, double m
     }
     return;
   }
-  double ab_radius = margin + 1.5*(a->mesh_radius+b->mesh_radius);
+  double ab_radius = margin + 10.*(a->mesh_radius+b->mesh_radius);
   CHECK(p->d<(1.+1e-6)*margin, "something's really wierd here!");
   CHECK(p->cenD<(1.+1e-6)*ab_radius, "something's really wierd here! You disproved the triangle inequality :-)");
   double d1 = 1.-p->d/margin;
   double d2 = 1.-p->cenD/ab_radius;
+  if(d2<0.) d2=0.;
   if(!useCenterDist) d2=1.;
   y(0) += d1*d2;
  
@@ -1777,7 +1778,7 @@ void ors::KinematicWorld::kinematicsProxyCost(arr& y, arr& J, Proxy *p, double m
       kinematicsPos(NoArr, Jpos, b->body->index, &brel);  J += d2/margin*(normal*Jpos);
     }
         
-    if(useCenterDist){
+    if(useCenterDist && d2>0.){
       arel=a->X.rot/(p->cenA-a->X.pos);
       brel=b->X.rot/(p->cenB-b->X.pos);
       CHECK(p->cenN.isNormalized(), "proxy normal is not normalized");

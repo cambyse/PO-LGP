@@ -21,18 +21,15 @@ int main(int argc,char** argv){
 
   //-- setup the motion problem
   TaskCost *c;
-  c = MP.addTask("position",
-                    new DefaultTaskMap(posTMT, G, "endeff", ors::Vector(0, 0, 0)));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                           ARRAY(MP.world.getShapeByName("target")->X.pos), 1e3);
+  c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "endeff", ors::Vector(0, 0, 0)));
+  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(MP.world.getShapeByName("target")->X.pos), 1e3);
 
   c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, G));
   c->map.order=1; //make this a velocity variable!
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
 
-    c = MP.addTask("collision",
-                   new DefaultTaskMap(collTMT, G, NULL, NoVector, NULL, NoVector, ARR(.1)));
-    MP.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
+  c = MP.addTask("collision", new DefaultTaskMap(collTMT, G, NULL, NoVector, NULL, NoVector, ARR(.1)));
+  MP.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
 
   //  c = P.addDefaultTaskMap("qitself", qItselfTMT, (int)0, Transformation_Id, 0, Transformation_Id, 0);
   //  P.setInterpolatingCosts(   c, MotionProblem::constFinalMid, ARRAY(0.), 1e-4);

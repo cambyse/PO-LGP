@@ -76,6 +76,7 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
 
   //-- task cost descriptions
   MT::Array<TaskCost*> taskCosts;
+  bool makeContactsAttractive;
   
   //-- transition cost descriptions //TODO: should become a task map just like any other
   enum TransitionType { kinematic=0, pseudoDynamic=1, realDynamic=2 };

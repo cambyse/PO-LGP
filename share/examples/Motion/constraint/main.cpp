@@ -28,25 +28,21 @@ int main(int argc,char** argv){
 
   MotionProblem P(G);
   P.loadTransitionParameters();
+  P.makeContactsAttractive=false;
 
   //-- setup the motion problem
   TaskCost *c;
-  c = P.addTask("position",
-                   new DefaultTaskMap(posTMT, G, "endeff", NoVector));
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(P.world.getBodyByName("target")->X.pos), 1e2);
+  c = P.addTask("position", new DefaultTaskMap(posTMT, G, "endeff", NoVector));
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(P.world.getBodyByName("target")->X.pos), 1e3);
 
-  c = P.addTask("position_vel",
-                   new DefaultTaskMap(posTMT, G, "endeff", NoVector));
+  c = P.addTask("position_vel", new DefaultTaskMap(posTMT, G, "endeff", NoVector));
   c->map.order=1;
-  P.setInterpolatingCosts(c, MotionProblem::finalOnly,
-                          ARRAY(0.,0.,0.), 1e1);
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
 
   if(con){
     c = P.addTask("collisionConstraints", new CollisionConstraint());
   }else{
-    c = P.addTask("collision",
-                     new DefaultTaskMap(collTMT, 0, NoVector, 0, NoVector, ARR(.1)));
+    c = P.addTask("collision", new DefaultTaskMap(collTMT, 0, NoVector, 0, NoVector, ARR(.1)));
     P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
   }
 
@@ -55,24 +51,24 @@ int main(int argc,char** argv){
   MotionProblemFunction MF(P);
   Convert CP(MF);
   UnconstrainedProblem UCP(CP);
-  UCP.mu = 10.;
+  UCP.mu = 1.;
 
   arr x(MF.get_T()+1,MF.dim_x());
   x.setZero();
 
   if(con){
-    for(uint k=0;k<10;k++){
+    for(uint k=0;k<20;k++){
 //      checkAll(CP, x, 1e-4);
-      optNewton(x, UCP, OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+      optNewton(x, UCP, OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1., maxStep=1., nonStrict=5));
       P.costReport();
       displayTrajectory(x, 1, G, "planned trajectory");
 //      saveTrajectory(x, G, gl);
 //      UCP.mu *= 10;
-      UCP.aulaUpdate(x, .9);
+      UCP.aulaUpdate(.9);
     }
   }else{
     for(uint k=0;k<10;k++){
-      optNewton(x, CP, OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1., maxStep=1.));
+      optNewton(x, CP, OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1., maxStep=1., nonStrict=5));
       P.costReport();
       displayTrajectory(x, 1, G, "planned trajectory");
     }
