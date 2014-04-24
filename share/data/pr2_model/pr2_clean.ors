@@ -1,3 +1,4 @@
+body world {  }
 body base_footprint { mass=123.551  }
 body fl_caster_rotation_link { pose=<T 0.2246 0.2246 0.0792 0.707107 0 -0.707107 0 > mass=3.47308  }
 body fr_caster_rotation_link { pose=<T 0.2246 -0.2246 0.0792 0.707107 0 -0.707107 0 > mass=3.47308  }
@@ -37,6 +38,8 @@ body r_gripper_l_finger_tip_link { pose=<T 0.93928 -0.17305 0.790675 -0.707107 0
 body r_gripper_r_finger_tip_link { pose=<T 0.93928 -0.20295 0.790675 -0.707107 0 0.707107 0 > mass=0.04419  }
 body l_gripper_l_finger_tip_link { pose=<T 0.93928 0.20295 0.790675 -0.707107 0 -0.707107 0 > mass=0.04419  }
 body l_gripper_r_finger_tip_link { pose=<T 0.93928 0.17305 0.790675 -0.707107 0 0.707107 0 > mass=0.04419  }
+body r_gripper_l_finger_tip_frame { pose=<T 0.93928 -0.20295 0.790675 0.707107 -2.29851e-17 -2.29851e-17 0.707107 >  }
+body l_gripper_l_finger_tip_frame { pose=<T 0.93928 0.17305 0.790675 0.707107 -2.29851e-17 -2.29851e-17 0.707107 >  }
 
 shape base_link_0 (base_footprint){ type=3 rel=<T -0.112036 0.00178614 0.316049 1 0 0 0 >  mass=116  inertiaTensor=[ 5.65223 -0.00971993 1.29399 5.66947 -0.00737958 3.6832 ]  mesh='base_v0/base_L.stl'  rel_includes_mesh_center=true  }
 shape base_footprint (base_footprint){ type=0 rel=<T 0 0 0.071 1 0 0 0 >  mass=1  inertiaTensor=[ 0.01 0 0 0.01 0 0.01 ]  size=[ 0.001 0.001 0.001 0 ]  rel_includes_mesh_center=true  }
@@ -92,6 +95,8 @@ shape l_gripper_l_finger_link_0 (l_gripper_l_finger_link){ type=3 rel=<T -0.0002
 shape l_gripper_r_finger_link_0 (l_gripper_r_finger_link){ type=3 rel=<T -0.000214812 -0.0125558 0.0493868 7.3123e-14 -0.707107 -7.3123e-14 -0.707107 >  mass=0.17389  inertiaTensor=[ 7.73841e-05 -2.09309e-06 -8.36228e-06 0.000198474 2.4611e-06 0.00018107 ]  mesh='gripper_v0/l_finger.stl'  rel_includes_mesh_center=true  }
 shape l_gripper_l_finger_tip_link_0 (l_gripper_l_finger_tip_link){ type=3 rel=<T 0.000126401 0.000750209 0.0081309 -0.707107 0 0.707107 0 >  mass=0.04419  inertiaTensor=[ 8.37047e-06 5.83632e-06 0 9.87067e-06 0 1.54177e-05 ]  mesh='gripper_v0/l_finger_tip.stl'  rel_includes_mesh_center=true  }
 shape l_gripper_r_finger_tip_link_0 (l_gripper_r_finger_tip_link){ type=3 rel=<T 0.000126401 -0.000750209 -0.0081309 7.3123e-14 -0.707107 7.3123e-14 0.707107 >  mass=0.04419  inertiaTensor=[ 8.37047e-06 -5.83632e-06 0 9.87067e-06 0 1.54177e-05 ]  mesh='gripper_v0/l_finger_tip.stl'  rel_includes_mesh_center=true  }
+shape l_gripper_frame (l_gripper_l_finger_tip_frame){ type=5 rel=<T 0 0 0 -0.707107 0 0 0.707107 >  size=[ 0 0 0 0.1 ]  }
+shape r_gripper_frame (r_gripper_l_finger_tip_frame){ type=5 rel=<T 0 0 0 -0.707107 0 0 0.707107 >  size=[ 0 0 0 0.1 ]  }
 
 joint fl_caster_rotation_joint (base_footprint fl_caster_rotation_link){ from=<T 0.2246 0.2246 0.0792 0.707107 0 -0.707107 0 >  type=0  ctrl_limits=[ 100 100 ]  }
 joint fl_caster_l_wheel_joint (fl_caster_rotation_link fl_caster_l_wheel_link){ from=<T 0 0.049 0 -0.5 -0.5 -0.5 -0.5 >  type=0  ctrl_limits=[ 100 100 ]  }
@@ -120,6 +125,7 @@ joint r_gripper_l_finger_joint (r_wrist_roll_link r_gripper_l_finger_link){ from
 joint r_gripper_r_finger_joint (r_wrist_roll_link r_gripper_r_finger_link){ from=<T 0.07691 -0.01 0 0.707107 0 0.707107 0 >  type=0  mimic="r_gripper_l_finger_joint"  limits=[ 0 0.548 ]  ctrl_limits=[ 0.5 1000 ]  }
 joint r_gripper_l_finger_tip_joint (r_gripper_l_finger_link r_gripper_l_finger_tip_link){ from=<T 2.02882e-17 0.00495 -0.09137 -1.5702e-16 0 -1 0 >  type=0  mimic="r_gripper_l_finger_joint"  limits=[ 0 0.548 ]  ctrl_limits=[ 0.5 1000 ]  }
 joint r_gripper_r_finger_tip_joint (r_gripper_r_finger_link r_gripper_r_finger_tip_link){ from=<T 2.02882e-17 -0.00495 0.09137 -1.5702e-16 0 1 0 >  type=0  mimic="r_gripper_l_finger_joint"  limits=[ 0 0.548 ]  ctrl_limits=[ 0.5 1000 ]  }
+joint r_gripper_joint (r_gripper_r_finger_tip_link r_gripper_l_finger_tip_frame){ from=<T 0 0 0 -0.5 -0.5 -0.5 -0.5 >  type=3  limits=[ 0 0.09 ]  ctrl_limits=[ 0.2 1000 ]  }
 joint l_shoulder_pan_joint (torso_lift_link l_shoulder_pan_link){ from=<T 0 0.188 0 1 0 0 0 >  type=0  limits=[ -0.714602 2.2854 ]  ctrl_limits=[ 2.088 30 ]  }
 joint l_shoulder_lift_joint (l_shoulder_pan_link l_shoulder_lift_link){ from=<T 2.22045e-17 0 -0.1 -0.5 -0.5 -0.5 -0.5 >  type=0  limits=[ -0.5236 1.3963 ]  ctrl_limits=[ 2.082 30 ]  }
 joint l_upper_arm_roll_joint (l_shoulder_lift_link l_upper_arm_roll_link){ from=<T 0 0 0 -0.707107 0 0 0.707107 >  type=0  limits=[ -0.8 3.9 ]  ctrl_limits=[ 3.27 30 ]  }
@@ -131,3 +137,5 @@ joint l_gripper_l_finger_joint (l_wrist_roll_link l_gripper_l_finger_link){ from
 joint l_gripper_r_finger_joint (l_wrist_roll_link l_gripper_r_finger_link){ from=<T 0.07691 -0.01 0 0.707107 0 0.707107 0 >  type=0  mimic="l_gripper_l_finger_joint"  limits=[ 0 0.548 ]  ctrl_limits=[ 0.5 1000 ]  }
 joint l_gripper_l_finger_tip_joint (l_gripper_l_finger_link l_gripper_l_finger_tip_link){ from=<T 2.02882e-17 0.00495 -0.09137 -1.5702e-16 0 -1 0 >  type=0  mimic="l_gripper_l_finger_joint"  limits=[ 0 0.548 ]  ctrl_limits=[ 0.5 1000 ]  }
 joint l_gripper_r_finger_tip_joint (l_gripper_r_finger_link l_gripper_r_finger_tip_link){ from=<T 2.02882e-17 -0.00495 0.09137 -1.5702e-16 0 1 0 >  type=0  mimic="l_gripper_l_finger_joint"  limits=[ 0 0.548 ]  ctrl_limits=[ 0.5 1000 ]  }
+joint l_gripper_joint (l_gripper_r_finger_tip_link l_gripper_l_finger_tip_frame){ from=<T 0 0 0 -0.5 -0.5 -0.5 -0.5 >  type=3  limits=[ 0 0.09 ]  ctrl_limits=[ 0.2 1000 ]  }
+joint worldTranslationRotation (world base_footprint){  type=8  ctrl_H=3  }

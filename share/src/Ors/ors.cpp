@@ -1930,14 +1930,20 @@ double ors::KinematicWorld::getEnergy() const {
 }
 
 void ors::KinematicWorld::removeUselessBodies() {
+  //-- remove bodies and their in-joints
   for_list_rev(Body, b, bodies) if(!b->shapes.N && !b->outLinks.N) {
-    for_list_rev(Joint, j, b->inLinks) joints.removeValue(j);
+    cout <<" -- removing useless body " <<b->name <<" with in-joints ( ";
+    for_list_rev(Joint, j, b->inLinks){ j->to=NULL; cout <<j->name <<' '; }
+    cout <<")" <<endl;
     bodies.remove(b_COUNT);
     delete b;
   }
+  for_list_rev(Joint, jj, joints) if(jj->to==NULL) joints.remove(jj_COUNT);
+  //-- reindex
   for_list(Body, bb, bodies) bb->index=bb_COUNT;
   for_list(Joint, j, joints) { j->index=j_COUNT;  j->ifrom = j->from->index;  j->ito = j->to->index;  }
   for(Shape *s: shapes) s->ibody = s->body->index;
+  //-- clear all previous index related things
   qdim.clear();
   q.clear();
   qdot.clear();
@@ -1946,6 +1952,7 @@ void ors::KinematicWorld::removeUselessBodies() {
 
 void ors::KinematicWorld::meldFixedJoints() {
   for(Joint *j: joints) if(j->type==JT_fixed) {
+    cout <<" -- melding fixed joint " <<j->name <<" (" <<j->from->name <<' ' <<j->to->name <<" )" <<endl;
     Body *a = j->from;
     Body *b = j->to;
     Transformation bridge = j->A * j->Q * j->B;
@@ -1957,7 +1964,7 @@ void ors::KinematicWorld::meldFixedJoints() {
       a->shapes.append(s);
     }
     b->shapes.clear();
-    //reassociate out-joints with a
+    //reassociate b-out-joints as a-out-links
     for(Joint *jj: b->outLinks) {
       jj->from=a;
       jj->ifrom=a->index;
@@ -1969,7 +1976,11 @@ void ors::KinematicWorld::meldFixedJoints() {
     a->mass += b->mass;
     a->inertia += b->inertia;
     b->mass = 0.;
+    j->to=NULL;
   }
+  //-- remove fixed joints and reindex
+  for_list_rev(Joint, jj, joints) if(jj->to==NULL) joints.remove(jj_COUNT);
+  for_list(Joint, j, joints) { j->index=j_COUNT;  j->ifrom = j->from->index;  j->ito = j->to->index;  }
 }
 
 // ------------------ end slGraph ---------------------

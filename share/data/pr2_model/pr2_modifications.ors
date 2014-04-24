@@ -1,62 +1,59 @@
-body world {}
-body base_footprint {  }
-joint worldTranslationRotation (world base_footprint){ type=8  ctrl_H=3 }
 
 ## SHAPES
-Merge base_link_0 { contact }
+Merge base_link { contact }
 Merge base_footprint { contact }
 Merge base_bellow_link { contact }
-Merge fl_caster_rotation_link_0 { contact }
+Merge fl_caster_rotation_link { contact }
 Merge fl_caster_l_wheel_link { contact }
 Merge fl_caster_r_wheel_link { contact }
-Merge fr_caster_rotation_link_0 { contact }
+Merge fr_caster_rotation_link { contact }
 Merge fr_caster_l_wheel_link { contact }
 Merge fr_caster_r_wheel_link { contact }
-Merge bl_caster_rotation_link_0 { contact }
+Merge bl_caster_rotation_link { contact }
 Merge bl_caster_l_wheel_link { contact }
 Merge bl_caster_r_wheel_link { contact }
-Merge br_caster_rotation_link_0 { contact }
+Merge br_caster_rotation_link { contact }
 Merge br_caster_l_wheel_link { contact }
 Merge br_caster_r_wheel_link { contact }
-Merge torso_lift_link_0 { contact }
-Merge head_pan_link_0 { contact }
-Merge head_tilt_link_0 { contact }
+Merge torso_lift_link { contact }
+Merge head_pan_link { contact }
+Merge head_tilt_link { contact }
 Merge head_plate_frame { contact }
 Merge head_mount_link { contact }
 Merge head_mount_kinect_ir_link { contact }
 Merge head_mount_kinect_rgb_link { contact }
 Merge head_mount_prosilica_link { contact }
-Merge laser_tilt_mount_link_0 { contact }
-Merge r_shoulder_pan_link_0 { contact }
-Merge r_shoulder_lift_link_0 { contact }
-Merge r_upper_arm_roll_link_0 { contact }
-Merge r_upper_arm_link_0 { contact }
-Merge r_forearm_roll_link_0 { contact }
-Merge r_elbow_flex_link_0 { contact }
-Merge r_forearm_link_0 { contact }
-Merge r_wrist_flex_link_0 { contact }
-Merge r_wrist_roll_link_0 { contact }
-Merge r_gripper_palm_link_0 { contact }
+Merge laser_tilt_mount_link { contact }
+Merge r_shoulder_pan_link { contact }
+Merge r_shoulder_lift_link { contact }
+Merge r_upper_arm_roll_link { contact }
+Merge r_upper_arm_link { contact }
+Merge r_forearm_roll_link { contact }
+Merge r_elbow_flex_link { contact }
+Merge r_forearm_link { contact }
+Merge r_wrist_flex_link { contact }
+Merge r_wrist_roll_link { contact }
+Merge r_gripper_palm_link { contact }
 Merge r_gripper_motor_accelerometer_link { contact }
-Merge r_gripper_l_finger_link_0 { contact }
-Merge r_gripper_r_finger_link_0 { contact }
-Merge r_gripper_l_finger_tip_link_0 { contact }
-Merge r_gripper_r_finger_tip_link_0 { contact }
-Merge l_shoulder_pan_link_0 { contact }
-Merge l_shoulder_lift_link_0 { contact }
-Merge l_upper_arm_roll_link_0 { contact }
-Merge l_upper_arm_link_0 { contact }
-Merge l_forearm_roll_link_0 { contact }
-Merge l_elbow_flex_link_0 { contact }
-Merge l_forearm_link_0 { contact }
-Merge l_wrist_flex_link_0 { contact }
-Merge l_wrist_roll_link_0 { contact }
-Merge l_gripper_palm_link_0 { contact }
+Merge r_gripper_l_finger_link { contact }
+Merge r_gripper_r_finger_link { contact }
+Merge r_gripper_l_finger_tip_link { contact }
+Merge r_gripper_r_finger_tip_link { contact }
+Merge l_shoulder_pan_link { contact }
+Merge l_shoulder_lift_link { contact }
+Merge l_upper_arm_roll_link { contact }
+Merge l_upper_arm_link { contact }
+Merge l_forearm_roll_link { contact }
+Merge l_elbow_flex_link { contact }
+Merge l_forearm_link { contact }
+Merge l_wrist_flex_link { contact }
+Merge l_wrist_roll_link { contact }
+Merge l_gripper_palm_link { contact }
 Merge l_gripper_motor_accelerometer_link { contact }
-Merge l_gripper_l_finger_link_0 { contact }
-Merge l_gripper_r_finger_link_0 { contact }
-Merge l_gripper_l_finger_tip_link_0 { contact }
-Merge l_gripper_r_finger_tip_link_0 { contact }
+Merge l_gripper_l_finger_link { contact }
+Merge l_gripper_r_finger_link { contact }
+Merge l_gripper_l_finger_tip_link { contact }
+Merge l_gripper_r_finger_tip_link { contact }
 
 ## CASTERS
 Merge fl_caster_rotation_joint {   type=10   }
@@ -96,4 +93,3 @@ Merge l_forearm_roll_joint {     q=1.5  gains=[10 2] }
 Merge l_elbow_flex_joint {    q=-2  gains=[30 10] }
 Merge l_wrist_flex_joint {       gains=[6 2]}
 Merge l_wrist_roll_joint {    q=.5  gains=[12 2]}
-
