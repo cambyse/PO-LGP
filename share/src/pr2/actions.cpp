@@ -29,7 +29,6 @@ void CoreTasks::initYourself(ActionMachine& actionMachine) {
       "collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
   coll->y_ref.setZero();
   coll->v_ref.setZero();
-
   tasks.append(coll);
 }
 
