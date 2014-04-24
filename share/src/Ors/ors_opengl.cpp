@@ -540,10 +540,10 @@ void editConfiguration(const char* filename, ors::KinematicWorld& C) {
     }
     C.gl().update();
     cout <<"animating.." <<endl;
-    while(ino.pollForModification());
+    //while(ino.pollForModification());
     animateConfiguration(C, &ino);
     cout <<"watching..." <<endl;
-#if 1
+#if 0
     ino.waitForModification();
 #else
     C.gl().watch();
