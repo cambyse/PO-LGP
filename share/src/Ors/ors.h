@@ -141,6 +141,7 @@ struct Joint {
   Joint *mimic;         ///< if non-NULL, this joint's state is identical to another's
   uint agent;           ///< associate this Joint to a specific agent (0=default robot)
 
+  bool locked;           ///< saves whether a joint is already locked
   bool (*locked_func)(void*);  ///< this function should return true if the joint is locked
   void *locked_data;           ///< this pointer is handed to the locked_func on each call
 
