@@ -228,12 +228,10 @@ void PhysXInterface::step(double tau) {
     bool lock = j->locked_func((void*) j->locked_data);
     if(lock and !j->locked) {
       j->locked = true;
-      cout << "Lock joint" << endl;
       s->lockJoint(s->joints(j_COUNT), j);
     }
     else if(!lock and j->locked) {
       j->locked = false;
-      cout << "Unlock joint" << endl;
       s->unlockJoint(s->joints(j_COUNT), j);  
     }
   }
