@@ -319,14 +319,16 @@ void makeConvexHulls(ShapeL& shapes){
 // Joint implementations
 //
 
+bool always_unlocked(void*) { return false; }
+
 ors::Joint::Joint()
-  : index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0), H(1.) { reset(); }
+  : index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0), locked_func(always_unlocked), locked_data(NULL), H(1.) { reset(); }
 
 ors::Joint::Joint(const Joint& j)
-  : index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0), H(1.) { reset(); *this=j; }
+  : index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0), locked_func(always_unlocked), locked_data(NULL), H(1.) { reset(); *this=j; }
 
 ors::Joint::Joint(KinematicWorld& G, Body *f, Body *t, const Joint* copyJoint)
-  : index(0), qIndex(-1), ifrom(f->index), ito(t->index), from(f), to(t), mimic(NULL), agent(0), H(1.) {
+  : index(0), qIndex(-1), ifrom(f->index), ito(t->index), from(f), to(t), mimic(NULL), agent(0), locked_func(always_unlocked), locked_data(NULL), H(1.) {
   reset();
   if(copyJoint) *this=*copyJoint;
   index=G.joints.N;
@@ -339,6 +341,10 @@ ors::Joint::~Joint() {
   reset();
   if (from) from->outLinks.removeValue(this);
   if (to) to->inLinks.removeValue(this);
+}
+void ors::Joint::reset() { 
+  listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); X.setZero(); axis.setZero(); limits.clear(); H=1.; type=JT_none; 
+  locked_func=always_unlocked; locked_data=NULL;
 }
 
 void ors::Joint::parseAts() {
@@ -1657,7 +1663,7 @@ void ors::KinematicWorld::clearForces() {
 }
 
 /// apply a force on body n 
-void ors::KinematicWorld::addForce(ors::Vector force, Body *n) {
+void ors::KinematicWorld::addForce(ors::Vector force, ors::Body *n) {
   n->force += force;
   if (!s->physx) {
     NIY;
@@ -1669,7 +1675,7 @@ void ors::KinematicWorld::addForce(ors::Vector force, Body *n) {
 }
 
 /// apply a force on body n at position pos (in world coordinates)
-void ors::KinematicWorld::addForce(ors::Vector force, Body *n, ors::Vector pos) {
+void ors::KinematicWorld::addForce(ors::Vector force, ors::Body *n, ors::Vector pos) {
   n->force += force;
   if (!s->physx) {
     NIY;
