@@ -24,10 +24,13 @@
 
 double stickyWeight=1.;
 
-MotionProblem::MotionProblem(ors::KinematicWorld& _world, bool _useSwift)
-  : world(_world) {
-  useSwift=_useSwift;
-  if(useSwift) world.swift().setCutoff(2.*MT::getParameter<double>("swiftCutoff", 0.11));
+MotionProblem::MotionProblem(ors::KinematicWorld& _world, bool useSwift)
+    : world(_world) , useSwift(useSwift)
+{
+  if(useSwift) {
+    makeConvexHulls(world.shapes);
+    world.swift().setCutoff(2.*MT::getParameter<double>("swiftCutoff", 0.11));
+  }
   world.getJointState(x0, v0);
   if(!v0.N){ v0.resizeAs(x0).setZero(); world.setJointState(x0, v0); }
 }
