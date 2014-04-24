@@ -124,6 +124,8 @@ void idle2()
   );
 
   activity.machine->waitForActionCompletion();
+  cout << "actions done" << endl;
+  MT::wait(10);
   engine().close(activity);
 }
 
