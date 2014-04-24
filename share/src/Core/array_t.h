@@ -3473,16 +3473,17 @@ template<class vert, class edge> bool graphTopsort(MT::Array<vert*>& V, MT::Arra
   intA inputs(V.N);
   
   uint count=0;
-  
-  for_list(vert,  v,  V) {
+
+  for_list(vert,  v,  V) v->index = v_COUNT;
+
+  for(vert *v:V) {
     inputs(v->index)=v->inLinks.N;
     if(!inputs(v->index)) noInputs.append(v);
   }
   
   while(noInputs.N) {
     v=noInputs.popFirst();
-    newIndex(v->index)=count;
-    count++;
+    newIndex(v->index)=count++;
     for_list(edge,  e,  v->outLinks) {
       inputs(e->to->index)--;
       if(!inputs(e->to->index)) noInputs.append(e->to);
@@ -3492,17 +3493,22 @@ template<class vert, class edge> bool graphTopsort(MT::Array<vert*>& V, MT::Arra
   if(count!=V.N) return false;
   
   //success!
-  //give each edge and vert new index:
-  for_list(edge,  e,  E) {
-    e->ifrom=newIndex(e->ifrom);
-    e->ito  =newIndex(e->ito);
-  }
-  for(vert *v:  V) {
-    v->index=newIndex(v->index);
-  }
-  //permute vertex array:
   V.permuteInv(newIndex);
-  graphMakeLists(V, E);
+  for_list(vert,  vv,  V) vv->index = vv_COUNT;
+  for(edge *e: E) {
+    e->ifrom=e->from->index;
+    e->ito  =e->to->index;
+  }
+
+  //-- reindex edges as well:
+  newIndex.resize(E.N);
+  count=0;
+  for(vert *v:V) for(edge *e:v->outLinks) newIndex(e->index)=count++;
+  E.permuteInv(newIndex);
+  for_list(edge, e, E) e->index=e_COUNT;
+
+  //permute vertex array:
+  //graphMakeLists(V, E);
   
   return true;
 }
