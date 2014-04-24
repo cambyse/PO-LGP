@@ -93,3 +93,7 @@ Merge l_forearm_roll_joint {     q=1.5  gains=[10 2] }
 Merge l_elbow_flex_joint {    q=-2  gains=[30 10] }
 Merge l_wrist_flex_joint {       gains=[6 2]}
 Merge l_wrist_roll_joint {    q=.5  gains=[12 2]}
+
+## GRIPPERS
+Merge r_gripper_joint { gains=[1000 1] }
+Merge l_gripper_joint { gains=[1000 1] }
