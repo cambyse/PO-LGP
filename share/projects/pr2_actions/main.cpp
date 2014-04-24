@@ -97,6 +97,16 @@ void idle()
   engine().close(activity);
 }
 
+void test_collision()
+{
+  ActionSystem activity;
+  activity.machine->add(new CoreTasks());
+  engine().open(activity);
+  activity.machine->add(new MoveEffTo("endeffR", {.8, .1, .9}));
+  activity.machine->add(new MoveEffTo("endeffL", {.8, -.1, .9}));
+  activity.machine->waitForActionCompletion();
+  engine().close(activity);
+}
 
 void idle2()
 {
@@ -124,7 +134,8 @@ int main(int argc, char** argv)
   MT::initCmdLine(argc, argv);
   // test_push();
   // idle();
-  idle2();
+  // idle2();
+  test_collision();
   // do_the_dance();
   // testActionMachine();
   return 0;
