@@ -105,6 +105,8 @@ void test_collision()
   activity.machine->add(new MoveEffTo("endeffR", {.8, .1, .9}));
   activity.machine->add(new MoveEffTo("endeffL", {.8, -.1, .9}));
   activity.machine->waitForActionCompletion();
+  cout << "actions done" << endl;
+  MT::wait(5);
   engine().close(activity);
 }
 
@@ -124,8 +126,6 @@ void idle2()
   );
 
   activity.machine->waitForActionCompletion();
-  cout << "actions done" << endl;
-  MT::wait(10);
   engine().close(activity);
 }
 
