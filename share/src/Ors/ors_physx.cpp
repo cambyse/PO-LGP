@@ -211,7 +211,7 @@ PhysXInterface::PhysXInterface(ors::KinematicWorld& _world): world(_world), s(NU
   for_list(ors::Body,  b,  world.bodies) s->addBody(b, mMaterial);
 
   /// ADD joints here!
-  for(ors::Joint *jj :  world.joints) s->addJoint(jj);
+  for(ors::Joint *jj : world.joints) s->addJoint(jj);
 }
 
 PhysXInterface::~PhysXInterface() {
@@ -273,6 +273,8 @@ void PhysXInterface::setArticulatedBodiesKinematic(uint agent){
  */
 
 void sPhysXInterface::addJoint(ors::Joint *jj) {
+  if(joints.N <= jj->index)
+    joints.resize(jj->index+1);
   joints(jj->index) = NULL;
   PxTransform A = OrsTrans2PxTrans(jj->A);
   PxTransform B = OrsTrans2PxTrans(jj->B);
