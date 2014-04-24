@@ -48,9 +48,9 @@ cd $SRC_PATH
 unzip -q /tmp/$FILE
 
 ## patch
-echo -n "  * Patching the sources in" $MLR_LIBPATH/src/$SRC_PATH "with" $THIS_PATH/${SRC_PATH}_patch
-read -p " -- [Enter] to continue..." yn
-cd $MLR_LIBPATH/src/$SRC_PATH
+#echo -n "  * Patching the sources in" $MLR_LIBPATH/src/$SRC_PATH "with" $THIS_PATH/${SRC_PATH}_patch
+#read -p " -- [Enter] to continue..." yn
+#cd $MLR_LIBPATH/src/$SRC_PATH
 #patch -p1 < $THIS_PATH/${SRC_PATH}_patch
 
 ## install
