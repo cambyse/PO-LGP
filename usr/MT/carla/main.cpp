@@ -2,6 +2,7 @@
 
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
+#include <iomanip>
 
 
 void displayFunction(ScalarFunction& F){
@@ -36,16 +37,20 @@ void testAula(ConstrainedProblem& p){
 
   UnconstrainedProblem UCP(p);
 
-  UCP.mu=10.;
+  UCP.mu=1.;
 
   uint d=MT::getParameter<uint>("dim", 2);
   arr x(d);
-  rndUniform(x, -1., 1.);
+  //rndUniform(x, -1., 1.);
+  x.setZero();
   cout <<"x0=" <<x <<endl;
+
+  rnd.seed(0);
 
   system("rm -f z.grad_all");
 
-  OptNewton opt(x, UCP, OPT(verbose=1, damping=1., stopTolerance=1e-6, stepInc=1.));
+  OptNewton opt(x, UCP, OPT(verbose=1, damping=1., stopTolerance=1e-4, stepDec=.5));
+  OptNewton::StopCriterion res;
 
   for(uint k=0;k<100;k++){
 //    cout <<"x_start=" <<x <<" mu=" <<UCP.mu <<" lambda=" <<UCP.lambda <<endl;
@@ -62,12 +67,16 @@ void testAula(ConstrainedProblem& p){
     x += 1. * Delta;
 #else
 //    OptNewton(x, UCP, OPT(verbose=1, damping=1., stopTolerance=1e-6, stepInc=1.)).step();
-    opt.step();
-    cout <<"f(x)=" <<opt.fx-UCP.f0 <<endl;//<<" \tx=" <<opt.x <<" \tlambda=" <<UCP.lambda <<" \tf0=" <<UCP.f0 <<endl;
+    for(uint l=0;l<2; l++) res = opt.step();
+    cout <<k <<' ' <<opt.evals <<' ' <<"f(x)=" <<UCP.f_x <<" \tcompl=" <<sum(elemWiseMax(UCP.g_x,zeros(UCP.g_x.N,1))) <<" \tmu=" <<UCP.mu <<" \tmuLB=" <<UCP.muLB;
+    if(x.N<5) cout <<" \tx=" <<x <<" \tlambda=" <<UCP.lambda;
+    cout <<endl;
 #endif
 
-    UCP.aula_update(x, .9, opt.gx, opt.Hx);
+    if(res) break;
+    UCP.anyTimeAulaUpdate(1., 1.0, &opt.fx, opt.gx, opt.Hx);
   }
+  cout <<std::setprecision(6) <<"\nf(x)=" <<UCP.f_x <<"\nx_opt=" <<x <<"\nlambda=" <<UCP.lambda <<endl;
 }
 
 

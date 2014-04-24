@@ -40,19 +40,19 @@ void ConstraintForceTask::updateConstraintControl(const arr& _g, const double& l
 
   if(g<0 && lambda_desired>0.){ //steer towards constraint
     desiredApproach.y_ref=ARR(.05); //set goal to overshoot!
-    desiredApproach.setGainsAsNatural(.1, 1.);
+    desiredApproach.setGainsAsNatural(.3, 1.);
     desiredApproach.prec=1e4;
   }
 
   if(g>-1e-2 && lambda_desired>0.){ //stay in constraint -> constrain dynamics
     desiredApproach.y_ref=ARR(0.);
-    desiredApproach.setGainsAsNatural(.02, .7);
+    desiredApproach.setGainsAsNatural(.05, .7);
     desiredApproach.prec=1e6;
   }
 
   if(g>-0.02 && lambda_desired==0.){ //release constraint -> softly push out
-    desiredApproach.y_ref=ARR(-0.02);
-    desiredApproach.setGainsAsNatural(.1, 1.);
+    desiredApproach.y_ref=ARR(-0.04);
+    desiredApproach.setGainsAsNatural(.3, 1.);
     desiredApproach.prec=1e4;
   }
 

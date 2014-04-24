@@ -67,7 +67,6 @@ void drawOrsActionInterfaceEnv(void*) {
 
 void oneStep(const arr &q, ors::KinematicWorld *C, OdeInterface *ode, SwiftInterface *swift) {
   C->setJointState(q);
-  C->calc_fwdPropagateFrames();
 #ifdef MT_ODE
   if(ode) {
     C->ode().exportStateToOde();
@@ -128,7 +127,6 @@ void ActionInterface::loadConfiguration(const char* ors_filename) {
   if(C) delete C;
   C = new ors::KinematicWorld();
   FILE(ors_filename) >> *C;
-  C->calc_fwdPropagateFrames();
   //C->reconfigureRoot(C->getName("rfoot"));
   
   C->getJointState(q0);

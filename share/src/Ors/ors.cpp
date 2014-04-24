@@ -226,7 +226,7 @@ void ors::Shape::parseAts() {
       mesh.scale(size[0], size[1], size[2]);
       break;
     case ors::sphereST:
-      mesh.setSphere();
+      mesh.setSphere(1);
       mesh.scale(size[3], size[3], size[3]);
       break;
     case ors::cylinderST:
@@ -333,6 +333,7 @@ ors::Joint::Joint(KinematicWorld& G, Body *f, Body *t, const Joint* copyJoint)
   G.joints.append(this);
   f->outLinks.append(this);
   t-> inLinks.append(this);
+  G.qdim.clear();
 }
 
 ors::Joint::~Joint() {
@@ -459,7 +460,6 @@ ors::KinematicWorld::~KinematicWorld() {
 
 void ors::KinematicWorld::init(const char* filename) {
   *this <<FILE(filename);
-  calc_fwdPropagateFrames();
   calc_q_from_Q();
 }
 
@@ -670,6 +670,7 @@ uint ors::KinematicWorld::getJointStateDimension(uint agent) const {
   if(qdim(agent)==UINT_MAX){
     uint qd=0;
     for(Joint *j: joints) if(j->agent==agent){
+      CHECK(j->type!=JT_none,"joint type is uninitialized");
       if(!j->mimic){
         j->qIndex = qd;
         qd += j->qDim();
@@ -1447,7 +1448,6 @@ void ors::KinematicWorld::stepDynamics(const arr& Bu_control, double tau, double
 #endif
 
   setJointState(x1[0], x1[1]);
-  calc_fwdPropagateFrames();
 }
 
 /** @brief prototype for \c operator<< */
@@ -1479,7 +1479,7 @@ void ors::KinematicWorld::read(std::istream& is) {
   KeyValueGraph G;
   
   G.read(is);
-//  cout <<"***MAPGRAPH\n" <<G <<endl;
+  cout <<"***KVG" <<G <<endl;
   
   clear();
   
@@ -1606,17 +1606,17 @@ end_header\n";
 
 /// dump the list of current proximities on the screen
 void ors::KinematicWorld::reportProxies(std::ostream *os) {
-  int a, b;
   (*os) <<"Proximity report: #" <<proxies.N <<endl;
   for_list(Proxy, p, proxies) {
-    a=p->a;
-    b=p->b;
+    ors::Shape *a = shapes(p->a);
+    ors::Shape *b = shapes(p->b);
     (*os)
         <<p_COUNT <<" ("
-        <<a <<':' <<(a!=-1?shapes(a)->body->name.p:"earth") <<")-("
-        <<b <<':' <<(b!=-1?shapes(b)->body->name.p:"earth")
+        <<a <<':' <<a->body->name <<")-("
+        <<b <<':' <<b->body->name
         <<") d=" <<p->d
         <<" |A-B|=" <<(p->posB-p->posA).length()
+        <<" cenD=" <<p->cenD
         <<" d^2=" <<(p->posB-p->posA).lengthSqr()
         <<" normal=" <<p->normal
         <<" posA=" <<p->posA
@@ -1726,15 +1726,27 @@ void ors::KinematicWorld::kinematicsProxyCost(arr& y, arr& J, Proxy *p, double m
   ors::Shape *b = shapes(p->b);
   CHECK(a->mesh_radius>0.,"");
   CHECK(b->mesh_radius>0.,"");
-  double ab_radius = margin + 1.5*(a->mesh_radius+b->mesh_radius);
-  CHECK(p->d<(1.+1e-6)*margin, "something's really wierd here!");
-  CHECK(p->cenD<(1.+1e-6)*ab_radius, "something's really wierd here! You disproved the triangle inequality :-)");
 
   y.resize(1);
   if(&J) J.resize(1, getJointStateDimension());
   if(!addValues){ y.setZero();  if(&J) J.setZero(); }
 
   //costs
+  if(a->type==ors::sphereST && b->type==ors::sphereST){
+    ors::Vector diff=a->X.pos-b->X.pos;
+    double d = diff.length() - a->size[3] - b->size[3];
+    y(0) = 1. - d/margin;
+    if(&J){
+      arr Jpos;
+      arr normal = ARRAY(diff)/diff.length(); normal.reshape(1, 3);
+      kinematicsPos(NoArr, Jpos, a->body->index);  J -= 1./margin*(normal*Jpos);
+      kinematicsPos(NoArr, Jpos, b->body->index);  J += 1./margin*(normal*Jpos);
+    }
+    return;
+  }
+  double ab_radius = margin + 1.5*(a->mesh_radius+b->mesh_radius);
+  CHECK(p->d<(1.+1e-6)*margin, "something's really wierd here!");
+  CHECK(p->cenD<(1.+1e-6)*ab_radius, "something's really wierd here! You disproved the triangle inequality :-)");
   double d1 = 1.-p->d/margin;
   double d2 = 1.-p->cenD/ab_radius;
   if(!useCenterDist) d2=1.;

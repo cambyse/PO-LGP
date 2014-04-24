@@ -18,7 +18,7 @@ int optNewton(arr& x, ScalarFunction& f,  OptOptions o) {
 
 OptNewton::OptNewton(arr& _x, ScalarFunction& _f,  OptOptions _o):
   x(_x), f(_f), o(_o){
-  alpha = 1.;
+  alpha = o.initStep;
   lambda = o.damping;
   it=0;
   evals=0;
@@ -73,7 +73,7 @@ OptNewton::StopCriterion OptNewton::step(){
     if(o.verbose>2) cout <<" \tprobing y=" <<y;
     if(o.verbose>1) cout <<" \tevals=" <<evals <<" \talpha=" <<alpha <<" \tf(y)=" <<fy  <<" \tf(y)-f(x)=" <<fy-fx <<flush;
     //CHECK(fy==fy, "cost seems to be NAN: ly=" <<fy);
-    if(fy==fy && (fy <= fx || o.nonStrict)) { //fy==fy is for NAN?
+    if(fy==fy && (fy <= fx || o.nonStrict==-1 || o.nonStrict>it)) { //fy==fy is for NAN?
       if(o.verbose>1) cout <<" - ACCEPT" <<endl;
       //adopt new point and adapt stepsize|damping
       x_changed=true;
@@ -83,12 +83,13 @@ OptNewton::StopCriterion OptNewton::step(){
       Hx = Hy;
       if(fy<=fx){
         // if(alpha>.9) lambda = .5*lambda;
-        // alpha = pow(alpha, 0.5);
-        lambda = lambda*o.dampingDec;
-        alpha = 1. - (1.-alpha)*(1.-o.stepInc);
+        lambda *= o.dampingDec;
+//        alpha = pow(alpha, o.stepInc);
+//        alpha = 1. - (1.-alpha)*(1.-o.stepInc);
+        alpha *= o.stepInc; if(alpha>1.) alpha=1.;
       }else{
-        lambda = lambda*o.dampingInc;
-        alpha = alpha*o.stepDec;
+        lambda *= o.dampingInc;
+        alpha *= o.stepDec;
       }
       break;
     } else {

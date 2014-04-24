@@ -1,3 +1,27 @@
+** task & constraints
+
+check the consistency of the constraintProcyVariable with squared
+penelty and old task variables
+
+** traj optim
+
+- don't include task with zero prec in $f_t$ terms
+- mix vel and acc penalties for optimization
+
+** ROS msgs
+
+python2 $ROSDIR/lib/gencpp/gen_cpp.py \
+        $MSGFILE \
+        -p $PKGNAME \
+        -e $ROSDIR/share/gencpp \
+        -I "std_msgs:$ROSDIR/share/std_msgs/msg" \
+        -I "geometry_msgs:$ROSDIR/share/geometry_msgs/msg" \
+        -o $OUTPUTDIR
+
+Johannes
+
+**
+
 LOG in motion.cpp
 clearly introduce constraint maps as tasks -- feasibility, automatic penalty reduction
 

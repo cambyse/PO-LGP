@@ -33,7 +33,7 @@ void displayFunction(VectorFunction& F){
 // test standard constrained optimizers
 //
 
-void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=100){
+void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=20){
   enum MethodType { squaredPenalty=1, augmentedLag, logBarrier };
 
   MethodType method = (MethodType)MT::getParameter<int>("method");
@@ -43,7 +43,7 @@ void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=100){
   //-- choose constrained method
   switch(method){
   case squaredPenalty: UCP.mu=10.;  break;
-  case augmentedLag:   UCP.mu=10.;  break;
+  case augmentedLag:   UCP.mu=1.;  break;
   case logBarrier:     UCP.muLB=1.;  break;
   }
 
@@ -51,15 +51,18 @@ void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=100){
   arr x(p.dim_x());
   if(&x_start) x=x_start;
   else{
-    if(method==logBarrier) x.setZero(); //log barrier needs a starting point
+    x.setZero();
+    if(method==logBarrier){ } //log barrier needs a feasible starting point
     else rndUniform(x, -1., 1.);
   }
 //  cout <<std::setprecision(2);
   cout <<"x0=" <<x <<endl;
 
+  rnd.seed(0);
 
   system("rm -f z.grad_all");
 
+  uint evals=0;
   for(uint k=0;k<iters;k++){
 //    cout <<"x_start=" <<x <<flush; //<<" mu=" <<UCP.mu <<" \nlambda=" <<UCP.lambda <<" \ng=" <<elemWiseMax(UCP.g_x,0.) <<endl;
 //    checkGradient(UCP, x, 1e-4);
@@ -69,8 +72,9 @@ void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=100){
 
 //    optRprop(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
     //optGradDescent(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
-    optNewton(x, UCP, OPT(verbose=1, stopTolerance=1e-3, maxStep=1e-1, stopIters=20, damping=1e-3, useAdaptiveDamping=true));
-//    optGaussNewton(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
+    OptNewton opt(x, UCP, OPT(verbose=1, damping=.1, stopTolerance=1e-2));
+    opt.run();
+    evals+=opt.evals;
 
     if(x.N==2){
       displayFunction((ScalarFunction&)UCP);
@@ -89,19 +93,26 @@ void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=100){
     //upate unconstraint problem parameters
     switch(method){
     case squaredPenalty: UCP.mu *= 10;  break;
-    case augmentedLag:   UCP.augmentedLagrangian_LambdaUpdate(x);  break;
-    case logBarrier:     UCP.muLB *=.8;  break;
+    case augmentedLag:
+        UCP.anyTimeAulaUpdate(1., 2.0, &opt.fx, opt.gx, opt.Hx);
+//        UCP.aulaUpdate();   UCP.mu *= 2.;
+        break;
+    case logBarrier:     UCP.muLB *=.5;  break;
     }
 //    cout <<"current g =" <<UCP.g_x <<endl;
 
-    arr zz(lambda_.N); zz.setZero();
-    for(uint i=0;i<z.N;i++) zz(i) = (lambda_(i)<=1e-10 || UCP.lambda(i)>0.)?0.:1.;
-    cout <<" \tremain_active_cond="<< sum(zz) <<" \tlin_indep_cond=" <<sum(z) <<endl;
-    cout <<UCP.f_x <<endl;
+//    if(method==augmentedLag){
+//      arr zz(lambda_.N); zz.setZero();
+//      for(uint i=0;i<z.N;i++) zz(i) = (lambda_(i)<=1e-10 || UCP.lambda(i)>0.)?0.:1.;
+//      cout <<" \tremain_active_cond="<< sum(zz) <<" \tlin_indep_cond=" <<sum(z) <<endl;
+//    }
 
     system("cat z.grad >>z.grad_all");
-//    cout <<"x_opt=" <<x <<" mu=" <<UCP.mu <<" \tlambda=" <<UCP.lambda <<endl;
+    cout <<k <<' ' <<evals <<' ' <<"f(x)=" <<UCP.f_x <<" \tcompl=" <<sum(elemWiseMax(UCP.g_x,zeros(UCP.g_x.N,1))) <<" \tmu=" <<UCP.mu <<" \tmuLB=" <<UCP.muLB;
+    if(x.N<5) cout <<" \tx=" <<x <<" \tlambda=" <<UCP.lambda;
+    cout <<endl;
   }
+  cout <<std::setprecision(6) <<"\nf(x)=" <<UCP.f_x <<"\nx_opt=" <<x <<"\nlambda=" <<UCP.lambda <<endl;
 
   system("mv z.grad_all z.grad");
   if(x.N==2) gnuplot("load 'plt'", false, true);

@@ -22,10 +22,11 @@ struct MySystem:System{
 
 void testJoypad(){
   ors::KinematicWorld world("model.kvg");
+  makeConvexHulls(world.shapes);
   arr q, qdot;
   world.getJointState(q, qdot);
 
-  FeedbackMotionControl MP(world, false);
+  FeedbackMotionControl MP(world, true);
   MP.qitselfPD.y_ref = q;
   MP.H_rate_diag = pr2_reasonable_W(world);
   Gamepad2Tasks j2t(MP);

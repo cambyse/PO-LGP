@@ -30,6 +30,8 @@ void TEST(OrsEditor) {
   G.calc_fwdPropagateFrames();
   G >>FILE("z.ors");
 
+  if(MT::checkParameter<bool>("cleanOnly")) return;
+
   editConfiguration(file, G);
 }
 

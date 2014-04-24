@@ -170,8 +170,6 @@ void MotionProblem::setInterpolatingCosts(
 
 void MotionProblem::setState(const arr& q, const arr& v) {
   world.setJointState(q, v);
-  world.calc_fwdPropagateFrames();
-  world.calc_fwdPropagateFrames();
   if(useSwift) world.computeProxies();
   if(transitionType == realDynamic) {
     NIY;
@@ -187,7 +185,7 @@ uint MotionProblem::dim_phi(uint t) {
     if(c->active) {
       if(c->target.N || c->map.constraint) m += c->map.dim_phi(world);
       //if(transitionType!=kinematic && c->v_target.N)  m += c->map.dim_phi(world);
-#define STICK 1
+//#define STICK 1
 #ifdef STICK
       if(c->active && c->map.constraint)  m += c->map.dim_phi(world);
 #endif
@@ -402,6 +400,12 @@ arr MotionProblemFunction::get_prefix() {
   }
   CHECK(MP.prefix.d0==get_k() && MP.prefix.d1==dim_x(), "the prefix you set has wrong dimension");
   return MP.prefix;
+}
+
+arr MotionProblemFunction::get_postfix() {
+  if(!MP.postfix.N) return arr();
+  CHECK(MP.postfix.d0==get_k() && MP.postfix.d1==dim_x(), "the postfix you set has wrong dimension");
+  return MP.postfix;
 }
 
 void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {

@@ -87,6 +87,7 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
   //-- start constraints
   arr x0, v0; ///< fixed start state and velocity [[TODO: remove this and replace by prefix only (redundant...)]]
   arr prefix; ///< a set of states PRECEEDING x[0] (having 'negative' time indices) and which influence the control cost on x[0]. NOTE: x[0] is subject to optimization. DEFAULT: constantly equals x0
+  arr postfix; ///< fixing the set of statex x[T-k]...x[T]
   //TODO: add methods to properly set the prefix given x0,v0?
 
   //-- return values of an optimizer
@@ -141,6 +142,7 @@ struct MotionProblemFunction:KOrderMarkovFunction {
   virtual uint dim_phi(uint t){ return dim_x() + MP.dim_phi(t); }
   virtual uint dim_g(uint t){ return MP.dim_g(t); }
   virtual arr get_prefix(); //the history states x(-k),..,x(-1)
+  virtual arr get_postfix();
 };
 
 
