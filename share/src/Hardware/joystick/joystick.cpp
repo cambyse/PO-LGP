@@ -15,12 +15,11 @@ void JoystickInterface::open(){
     if(joy->notWorking()) break;
     uint n=joy->getNumAxes();
 
-    std::cout
-        <<"name     = "   <<joy->getName()
-       <<"\n#axis    = " <<joy->getNumAxes()
-         // <<"\n#buttons = " <<joy->getNumButtons()
-      <<"\nerror?   = " <<joy->notWorking()
-     <<std::endl;
+    std::cout << "name     = "   << joy->getName()
+              << "\n#axis    = " << joy->getNumAxes()
+              // << " \n#buttons = " <<joy->getNumButtons()
+              << "\nerror?   = " <<joy->notWorking()
+              << std::endl;
 
     if(n>=4 && n<=8) break;
     //iterate and try a new one
