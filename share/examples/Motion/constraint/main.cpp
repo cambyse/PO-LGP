@@ -68,7 +68,7 @@ int main(int argc,char** argv){
       displayTrajectory(x, 1, G, "planned trajectory");
 //      saveTrajectory(x, G, gl);
 //      UCP.mu *= 10;
-      UCP.augmentedLagrangian_LambdaUpdate(x, .9);
+      UCP.aulaUpdate(x, .9);
     }
   }else{
     for(uint k=0;k<10;k++){

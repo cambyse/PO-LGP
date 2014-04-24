@@ -2295,26 +2295,30 @@ MT::Array<T> diagProduct(const MT::Array<T>& y, const MT::Array<T>& z) {
 }
 
 template<class T> MT::Array<T> elemWiseMin(const MT::Array<T>& v, const MT::Array<T>& w) {
-  MT::Array<T> z(v.N);
-  for(uint i=0; i<v.N; i++) z(i) = v(i)<w(i)?v(i):w(i);
+  MT::Array<T> z;
+  z.resizeAs(v.N);
+  for(uint i=0; i<v.N; i++) z.elem(i) = v.elem(i)<w.elem(i)?v.elem(i):w.elem(i);
   return z;
 }
 
 template<class T> MT::Array<T> elemWiseMax(const MT::Array<T>& v, const MT::Array<T>& w) {
-  MT::Array<T> z(v.N);
-  for(uint i=0; i<v.N; i++) z(i) = v(i)>w(i)?v(i):w(i);
+  MT::Array<T> z;
+  z.resizeAs(v);
+  for(uint i=0; i<v.N; i++) z(i) = v.elem(i)>w.elem(i)?v.elem(i):w.elem(i);
   return z;
 }
 
 template<class T> MT::Array<T> elemWiseMax(const MT::Array<T>& v, const T& w) {
-  MT::Array<T> z(v.N);
-  for(uint i=0; i<v.N; i++) z(i) = v(i)>w?v(i):w;
+  MT::Array<T> z;
+  z.resizeAs(v.N);
+  for(uint i=0; i<v.N; i++) z.elem(i) = v.elem(i)>w?v.elem(i):w;
   return z;
 }
 
 template<class T> MT::Array<T> elemWiseMax(const T& v, const MT::Array<T>& w) {
-  MT::Array<T> z(w.N);
-  for(uint i=0; i<w.N; i++) z(i) = v>w(i)?v:w(i);
+  MT::Array<T> z;
+  z.resizeAs(w.N);
+  for(uint i=0; i<w.N; i++) z.elem(i) = v>w.elem(i)?v:w.elem(i);
   return z;
 }
 

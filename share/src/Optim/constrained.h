@@ -26,8 +26,8 @@ struct UnconstrainedProblem : ScalarFunction{
 
   virtual double fs(arr& dF, arr& HF, const arr& x); ///< the unconstrained meta function F
 
-  void augmentedLagrangian_LambdaUpdate(const arr& x, double lambdaStepsize=1.);
-  void aula_update(const arr& x, double lambdaStepsize=1., double *F_x=NULL, arr &dF_x=NoArr, arr &HF_x=NoArr);
+  void aulaUpdate(double lambdaStepsize=1.);
+  void anyTimeAulaUpdate(double lambdaStepsize=1., double muInc=1., double *F_x=NULL, arr &dF_x=NoArr, arr &HF_x=NoArr);
 };
 
 

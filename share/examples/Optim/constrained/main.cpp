@@ -62,6 +62,7 @@ void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=20){
 
   system("rm -f z.grad_all");
 
+  uint evals=0;
   for(uint k=0;k<iters;k++){
 //    cout <<"x_start=" <<x <<flush; //<<" mu=" <<UCP.mu <<" \nlambda=" <<UCP.lambda <<" \ng=" <<elemWiseMax(UCP.g_x,0.) <<endl;
 //    checkGradient(UCP, x, 1e-4);
@@ -71,8 +72,9 @@ void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=20){
 
 //    optRprop(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
     //optGradDescent(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
-    optNewton(x, UCP, OPT(verbose=1, stopTolerance=1e-3, maxStep=1e-1, stopIters=20, damping=1e-3, useAdaptiveDamping=true));
-//    optGaussNewton(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
+    OptNewton opt(x, UCP, OPT(verbose=1, damping=.1, stopTolerance=1e-2));
+    opt.run();
+    evals+=opt.evals;
 
     if(x.N==2){
       displayFunction((ScalarFunction&)UCP);
@@ -91,19 +93,22 @@ void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=20){
     //upate unconstraint problem parameters
     switch(method){
     case squaredPenalty: UCP.mu *= 10;  break;
-    case augmentedLag:   UCP.augmentedLagrangian_LambdaUpdate(x);  break;
-    case logBarrier:     UCP.muLB *=.3;  break;
+    case augmentedLag:
+        UCP.anyTimeAulaUpdate(1., 2.0, &opt.fx, opt.gx, opt.Hx);
+//        UCP.aulaUpdate();   UCP.mu *= 2.;
+        break;
+    case logBarrier:     UCP.muLB *=.5;  break;
     }
 //    cout <<"current g =" <<UCP.g_x <<endl;
 
-    if(method==augmentedLag){
-      arr zz(lambda_.N); zz.setZero();
-      for(uint i=0;i<z.N;i++) zz(i) = (lambda_(i)<=1e-10 || UCP.lambda(i)>0.)?0.:1.;
-      cout <<" \tremain_active_cond="<< sum(zz) <<" \tlin_indep_cond=" <<sum(z) <<endl;
-    }
+//    if(method==augmentedLag){
+//      arr zz(lambda_.N); zz.setZero();
+//      for(uint i=0;i<z.N;i++) zz(i) = (lambda_(i)<=1e-10 || UCP.lambda(i)>0.)?0.:1.;
+//      cout <<" \tremain_active_cond="<< sum(zz) <<" \tlin_indep_cond=" <<sum(z) <<endl;
+//    }
 
     system("cat z.grad >>z.grad_all");
-    cout <<"f(x)=" <<UCP.f_x <<" \tmu=" <<UCP.mu <<" \tmuLB=" <<UCP.muLB;
+    cout <<k <<' ' <<evals <<' ' <<"f(x)=" <<UCP.f_x <<" \tcompl=" <<sum(elemWiseMax(UCP.g_x,zeros(UCP.g_x.N,1))) <<" \tmu=" <<UCP.mu <<" \tmuLB=" <<UCP.muLB;
     if(x.N<5) cout <<" \tx=" <<x <<" \tlambda=" <<UCP.lambda;
     cout <<endl;
   }

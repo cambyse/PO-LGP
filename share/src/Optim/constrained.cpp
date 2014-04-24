@@ -50,60 +50,55 @@ double UnconstrainedProblem::fs(arr& dF, arr& HF, const arr& _x){
   return F;
 }
 
-void UnconstrainedProblem::augmentedLagrangian_LambdaUpdate(const arr& x, double lambdaStepsize){
-  arr g;
-  P.fc(NoArr, NoArr, g, NoArr, x);
+void UnconstrainedProblem::aulaUpdate(double lambdaStepsize){
+  if(!lambda.N){ lambda.resize(g_x.N); lambda.setZero(); }
 
-  if(!lambda.N){ lambda.resize(g.N); lambda.setZero(); }
-
-  lambda += (lambdaStepsize * 2.*mu)*g;
+  lambda += (lambdaStepsize * 2.*mu)*g_x;
   for(uint i=0;i<lambda.N;i++) if(lambda(i)<0.) lambda(i)=0.;
 
 //  cout <<"Update Lambda: g=" <<g <<" lambda=" <<lambda <<endl;
 }
 
-void UnconstrainedProblem::aula_update(const arr& _x, double lambdaStepsize, double *F_x, arr& dF_x, arr& HF_x){
-  if(_x!=x){ //need to recompute gradients etc
-    x=_x;
-    f_x = P.fc(df_x, Hf_x, g_x, Jg_x, x);
-    fs(dF_x, NoArr, x);
-  }else{
-    //nothing to do: just use buffered gradients
-  }
-
+void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc, double *F_x, arr& dF_x, arr& HF_x){
   if(!lambda.N){ lambda.resize(g_x.N); lambda.setZero(); }
 
   arr lambdaOld = lambda;
 
-  arr Ilambda_x(g_x.N);
-  for(uint i=0;i<g_x.N;i++) Ilambda_x(i) = (g_x(i)>0. || lambda(i)>0.);
+  //collect gradients of active constraints
+  arr A;
+  for(uint i=0;i<g_x.N;i++) if(g_x(i)>0. || lambda(i)>0.){
+    A.append(Jg_x[i]);
+    A.reshape(A.N/x.N,x.N);
+  }
+  arr tmp = A*~A;
+  for(uint i=0;i<tmp.d0;i++) tmp(i,i) += 1e-6;
+  tmp = inverse_SymPosDef(tmp);
+  arr beta = tmp * A;
+  //insert zero rows
+  for(uint i=0;i<g_x.N;i++) if(!(g_x(i)>0. || lambda(i)>0.)){
+    beta.insRows(i);
+    beta[i].setZero();
+  }
 
-  arr beta = /*Ilambda_x%*/Jg_x;
-//  cout <<"beta=" <<beta <<endl;
-  arr tmp;
-  inverse_SVD(tmp, beta*~beta );
-  beta = ~beta * tmp;
-//  cout <<"beta=" <<beta <<endl;
-
-  lambda += lambdaStepsize * (2.*mu*g_x - ~dF_x*beta);
-//  for(uint i=0;i<g_x.N;i++){
-//    lambda(i) += lambdaStepsize * (2.*mu*g_x(i) - scalarProduct(dF_x, Jg_x[i])/length(Jg_x[i]) );
-//  }
+  lambda += lambdaStepsize * (2.*mu*g_x - beta*dF_x);
 
   for(uint i=0;i<g_x.N;i++) if(lambda(i)<0.) lambda(i)=0.;
 
-  //rescale f
-  if(F_x){
-    double f0 = scalarProduct(lambda - lambdaOld, g_x);
-    for(uint i=0;i<g_x.N;i++){
-      if((lambda(i)>0.  && lambdaOld(i)<=0.) && g_x(i)<=0.) f0 += mu * MT::sqr(g_x(i));
-      if((lambda(i)<=0. && lambdaOld(i)>0. ) && g_x(i)<=0.) f0 -= mu * MT::sqr(g_x(i));
-    }
-    *F_x += f0;
-  }
+  if(muInc>1.) mu *= muInc;
 
-  if(&dF_x || &HF_x){
+  //rescale f
+//  if(F_x){
+//    double f0 = scalarProduct(lambda - lambdaOld, g_x);
+//    for(uint i=0;i<g_x.N;i++){
+//      if((lambda(i)>0.  && lambdaOld(i)<=0.) && g_x(i)<=0.) f0 += mu * MT::sqr(g_x(i));
+//      if((lambda(i)<=0. && lambdaOld(i)>0. ) && g_x(i)<=0.) f0 -= mu * MT::sqr(g_x(i));
+//    }
+//    *F_x += f0;
+//  }
+
+  if(F_x || &dF_x || &HF_x){
     double fx = fs(dF_x, HF_x, x); //reevaluate gradients and hessian (using buffered info)
+    if(F_x) *F_x = fx;
     CHECK(fabs(fx-*F_x)<1e-10,"");
   }
 }
@@ -163,7 +158,7 @@ void optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
     //upate unconstraint problem parameters
     switch(opt.constrainedMethod){
       case squaredPenalty: UCP.mu *= 10;  break;
-      case augmentedLag:   UCP.augmentedLagrangian_LambdaUpdate(x);  break;
+      case augmentedLag:   UCP.aulaUpdate();  break;
       case logBarrier:     UCP.muLB /= 2;  break;
       case noMethod: HALT("need to set method before");  break;
     }
