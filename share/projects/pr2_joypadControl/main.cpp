@@ -26,6 +26,7 @@ void testJoypad(){
   world >>FILE("z.ors");
   arr q, qdot;
   world.getJointState(q, qdot);
+  ors::Joint *trans=world.getJointByName("worldTranslationRotation");
 
   FeedbackMotionControl MP(world, true);
   MP.qitselfPD.y_ref = q;
@@ -67,7 +68,9 @@ void testJoypad(){
 //    cout <<S.ctrl_obs.get()->fL <<endl;
 
     bool shutdown = j2t.updateTasks(joypadState);
-    if(shutdown) engine().shutdown.incrementValue();
+    if(t>10 && shutdown){
+      engine().shutdown.incrementValue();
+    }
 
     arr a = MP.operationalSpaceControl();
     q += .01*qdot;
@@ -94,9 +97,11 @@ void testJoypad(){
 
     refs.q=q;
     refs.qdot=zero_qdot;
-    refs.qdot(0) = qdot(0);
-    refs.qdot(1) = qdot(1);
-    refs.qdot(2) = qdot(2);
+    if(trans && trans->qDim()==3){
+      refs.qdot(trans->qIndex+0) = qdot(trans->qIndex+0);
+      refs.qdot(trans->qIndex+1) = qdot(trans->qIndex+1);
+      refs.qdot(trans->qIndex+2) = qdot(trans->qIndex+2);
+    }
     S.ctrl_ref.set() = refs;
     if(S.ros) S.ros->publishJointReference();
 
