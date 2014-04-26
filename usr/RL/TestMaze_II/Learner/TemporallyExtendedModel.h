@@ -53,7 +53,7 @@ private:
     /** \brief Whether the features changed. */
     bool feature_set_changed = true;
 
-    /** \brief Whether the features changed. */
+    /** \brief Whether the basis features changed. */
     bool basis_features_changed = true;
 
     /** \brief The coefficient for L1-regularization. */
@@ -78,7 +78,9 @@ public:
     virtual probability_t get_prediction(const_instance_ptr_t,
                                          const action_ptr_t&,
                                          const observation_ptr_t&,
-                                         const reward_ptr_t&) const;
+                                         const reward_ptr_t&) const override;
+    virtual probability_map_t get_prediction_map(const_instance_ptr_t,
+                                                 const action_ptr_t&) const override;
     virtual void add_action_observation_reward_tripel(
         const action_ptr_t& action,
         const observation_ptr_t& observation,
@@ -102,6 +104,7 @@ public:
                            const double& minimum_gradient = 0,
                            const bool use_current_values = false
         );
+    virtual void clear_data() override;
 protected:
     virtual weight_map_t get_weight_map() const;
     virtual void apply_weight_map(weight_map_t);
@@ -119,8 +122,11 @@ protected:
     virtual bool update_basis_features();
 
     /** \brief Update maps for basis features (needs up-to-date basis
-     * features). */
-    virtual void update_basis_feature_maps();
+     * features).
+     *
+     * @param recompute_all Whether to recompute values for all features (if
+     * e.g. data changed) or only for the missing ones. */
+    virtual void update_basis_feature_maps(bool recompute_all);
 
     /** \brief Updates F-matrices for feature set (needs up-to-date basis
      * feature maps). */

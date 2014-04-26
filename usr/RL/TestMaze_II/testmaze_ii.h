@@ -34,6 +34,8 @@ public:
     TestMaze_II(QWidget *parent = 0);
     ~TestMaze_II();
 
+    USE_CONFIG_TYPEDEFS;
+
 private:
 
     friend class MoveByKeys; // event filter class
@@ -42,7 +44,6 @@ private:
     // Typedefs and Member Variables //
     //===============================//
 
-    USE_CONFIG_TYPEDEFS;
 
     //---------------//
     // Maze GUI etc. //
@@ -150,6 +151,8 @@ private:
     void change_environment(std::shared_ptr<Environment> new_environment);
     void clear_all_learners();
     void set_policy();
+    double validate_predictor_on_random_episode(int n, const Predictor& pred);
+    double validate_predictor_on_training_episode(const Predictor& pred);
 
 private slots:
     void render_update();

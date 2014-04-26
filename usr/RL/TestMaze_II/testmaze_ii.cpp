@@ -38,11 +38,15 @@ using std::dynamic_pointer_cast;
 using std::shared_ptr;
 using std::make_shared;
 using std::pair;
+using std::make_tuple;
 
 using util::arg_int;
 using util::arg_double;
 using util::arg_string;
 using util::INVALID;
+
+static TestMaze_II::instance_ptr_t learning_episode_begin;
+static TestMaze_II::instance_ptr_t learning_episode_end;
 
 TestMaze_II::TestMaze_II(QWidget *parent):
     QWidget(parent),
@@ -115,8 +119,9 @@ TestMaze_II::TestMaze_II(QWidget *parent):
 
     // set some properties of N+
     N_plus->set_horizon_extension(2);
-    N_plus->set_max_horizon(2);
-    N_plus->combine_features(false);
+    N_plus->set_max_horizon(0);
+    N_plus->set_min_horizon(-2);
+    N_plus->set_combine_features(false);
 
     // set l1 factor for tem
     tem->set_l1_factor(l1_factor);
@@ -180,6 +185,11 @@ void TestMaze_II::initialize_commands() {
             }, "color maze (if applicable)");
         command_center.add_command(top_general,{"unset color"}, [this]()->ret_t{
                 color_maze = false;
+                shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
+                if(maze!=nullptr) {
+                    maze->set_state_colors();
+                    maze->render_update();
+                }
                 return {true,"don't color maze" };
             }, "don't color maze");
     }
@@ -363,6 +373,36 @@ void TestMaze_II::initialize_commands() {
                 clear_data();
                 return {true,"cleared episode data"};
             }, "clear episode data");
+        command_center.add_command(top_model_learn,{"validate tem random"}, [this](int n)->ret_t{
+                if(n<=0) {
+                    return {false,"expecting positive integer"};
+                } else {
+                    return {true,QString("random length-%1 episode has mean liklihood of %2").arg(n).arg(validate_predictor_on_random_episode(n,*tem))};
+                }
+            }, "validate TEM on length <int> random episode");
+        command_center.add_command(top_model_learn,{"validate crf random"}, [this](int n)->ret_t{
+                if(n<=0) {
+                    return {false,"expecting positive integer"};
+                } else {
+                    return {true,QString("random length-%1 episode has mean liklihood of %2").arg(n).arg(validate_predictor_on_random_episode(n,*crf))};
+                }
+            }, "validate CRF on length <int> random episode");
+        command_center.add_command(top_model_learn,{"validate utree random"}, [this](int n)->ret_t{
+                if(n<=0) {
+                    return {false,"expecting positive integer"};
+                } else {
+                    return {true,QString("random length-%1 episode has mean liklihood of %2").arg(n).arg(validate_predictor_on_random_episode(n,*utree))};
+                }
+            }, "validate UTree on length <int> random episode");
+        command_center.add_command(top_model_learn,{"validate tem episode"}, [this]()->ret_t{
+                return {true,QString("model assignes a mean liklihood of %1 to training episode").arg(validate_predictor_on_training_episode(*tem))};
+            }, "validate TEM on training episode");
+        command_center.add_command(top_model_learn,{"validate crf episode"}, [this]()->ret_t{
+                return {true,QString("model assignes a mean liklihood of %1 to training episode").arg(validate_predictor_on_training_episode(*crf))};
+            }, "validate CRF on training episode");
+        command_center.add_command(top_model_learn,{"validate utree episode"}, [this]()->ret_t{
+                return {true,QString("model assignes a mean liklihood of %1 to training episode").arg(validate_predictor_on_training_episode(*utree))};
+            }, "validate UTree on training episode");
     }
     {
         pair<double,QString> top_model_learn_crf(3.1,"CRF ----------------------------------------------------");
@@ -397,7 +437,7 @@ void TestMaze_II::initialize_commands() {
                     return {false,"expecting non-negative integer"};
                 }
             }, "score candidate features with distance <int> by 1D optimization");
-        command_center.add_command(top_model_learn_crf,{"crf add"}, [this](int n)->ret_t{
+        command_center.add_command(top_model_learn_crf,{"crf add","crfa"}, [this](int n)->ret_t{
                 if(n>=0 ) {
                     crf->add_candidate_features_to_active(n);
                     return {true,QString("added top %1 candidates").arg(n)};
@@ -417,6 +457,15 @@ void TestMaze_II::initialize_commands() {
                 crf->print_all_features();
                 return {true,"printed all CRF features"};
             }, "print CRF features and weights");
+        command_center.add_command(top_model_learn_crf,{"crf cycle","crfc"}, [this]()->ret_t{
+                crf->construct_candidate_features(1);
+                crf->score_candidates_by_gradient();
+                crf->add_candidate_features_to_active(0);
+                crf->optimize_model(l1_factor, 0);
+                crf->erase_zero_features();
+                crf->print_all_features();
+                return {true,"did one learning cycle of CRF"};
+            }, "do a complete score-add-optimize-erase cycle of CRF and print features afterwards");
         command_center.add_command(top_model_learn_crf,{"crf apply-old","crfao"}, [this]()->ret_t{
                 crf->apply_features();
                 return {true,"applied old CRF featues"};
@@ -585,6 +634,49 @@ void TestMaze_II::initialize_commands() {
                 tem->print_features();
                 return {true,"printed TEM features"};
             }, "print TEM features");
+        command_center.add_command(top_model_learn_tem,{"tem cycle","temc"}, [this]()->ret_t{
+                tem->grow_feature_set();
+                tem->optimize_weights_LBFGS();
+                tem->shrink_feature_set();
+                tem->print_features();
+                return {true,"did one learning cycle of TEM"};
+            }, "do a complete grow-optimize-shrink cycle of TEM and print features afterwards");
+        command_center.add_command(top_model_learn_tem,{"tem max horizon","temmaxh"}, [this]()->ret_t{
+                return {true,QString("TEM maximum horizon is %1").arg(N_plus->get_max_horizon())};
+            }, "get TEM maximum horizon");
+        command_center.add_command(top_model_learn_tem,{"tem max horizon","temmaxh"}, [this](int h)->ret_t{
+                N_plus->set_max_horizon(h);
+                return {true,QString("set TEM maximum horizon to %1").arg(N_plus->get_max_horizon())};
+            }, "set TEM maximum horizon");
+        command_center.add_command(top_model_learn_tem,{"tem min horizon","temminh"}, [this]()->ret_t{
+                return {true,QString("TEM minimum horizon is %1").arg(N_plus->get_min_horizon())};
+            }, "get TEM minimum horizon");
+        command_center.add_command(top_model_learn_tem,{"tem min horizon","temminh"}, [this](int h)->ret_t{
+                N_plus->set_min_horizon(h);
+                return {true,QString("set TEM minimum horizon to %1").arg(N_plus->get_min_horizon())};
+            }, "set TEM maximum horizon");
+        command_center.add_command(top_model_learn_tem,{"tem horizon extension","temhe"}, [this]()->ret_t{
+                return {true,QString("TEM horizon extension is %1").arg(N_plus->get_horizon_extension())};
+            }, "get TEM horizon extension");
+        command_center.add_command(top_model_learn_tem,{"tem horizon extension","temhe"}, [this](int h)->ret_t{
+                N_plus->set_horizon_extension(h);
+                return {true,QString("set TEM horizon extension to %1").arg(N_plus->get_horizon_extension())};
+            }, "set TEM horizon extension");
+        command_center.add_command(top_model_learn_tem,{"tem combine features","temcf"}, [this]()->ret_t{
+                if(N_plus->get_combine_features()) {
+                    return {true,"TEM does combines features"};
+                } else {
+                    return {true,"TEM does not combines features"};
+                }
+            }, "get whether TEM combines existing features");
+        command_center.add_command(top_model_learn_tem,{"tem combine features","temcf"}, [this](bool combine)->ret_t{
+                N_plus->set_combine_features(combine);
+                if(N_plus->get_combine_features()) {
+                    return {true,"set TEM to combine features"};
+                } else {
+                    return {true,"set TEM to not combine features"};
+                }
+            }, "set whether TEM combines existing features");
     }
     {
         pair<double,QString> top_planning(4,"Planning ===============================================");
@@ -747,11 +839,74 @@ void TestMaze_II::initialize_commands() {
     {
         pair<double,QString> top_new_stuff(5,"New Stuff  =============================================");
         //---------------------------------New Stuff----------------------------------
-        command_center.add_command(top_todo,{"col-states"}, [this]()->ret_t{return {true,"...to be ported"};}, "color states (random)");
-        command_center.add_command(top_todo,{"fixed-dt-dist","fdd"}, [this](int)->ret_t{return {true,"...to be ported"};}, "show probability for a state to occur <int> steps after current state");
-        command_center.add_command(top_todo,{"pair-delay-dist","pdd"}, [this]()->ret_t{return {true,"...to be ported"};}, "show temporal delay distribution from current state to goal state");
-        command_center.add_command(top_todo,{"pair-delay-dist","pdd"}, [this](int)->ret_t{return {true,"...to be ported"};}, "restrict to time window of width <int>");
-        command_center.add_command(top_todo,{"mediator-probability","mp"}, [this](int)->ret_t{return {true,"...to be ported"};}, "show probability for a state to occurr between current state and goal state given a time window of width <int>");
+        command_center.add_command(top_new_stuff,{"col-states"}, [this]()->ret_t{
+                shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
+                if(maze==nullptr) {
+                    return {true,"allowed for maze-environments only"};
+                } else {
+                    Maze::color_vector_t cols;
+                    for(observation_ptr_t observation : observation_space) {
+                        cols.push_back( std::make_tuple(drand48(),drand48(),drand48()) );
+                    }
+                    maze->set_state_colors(cols);
+                    maze->render_update();
+                }
+                return {true,"colored states"};
+            }, "color states (random)");
+        command_center.add_command(top_todo,{"fixed-dt-dist","fdd"}, [this](int)->ret_t{
+                return {true,"...to be ported"};
+            }, "show probability for a state to occur <int> steps after current state");
+        command_center.add_command(top_todo,{"pair-delay-dist","pdd"}, [this]()->ret_t{
+                return {true,"...to be ported"};
+            }, "show temporal delay distribution from current state to goal state");
+        command_center.add_command(top_todo,{"pair-delay-dist","pdd"}, [this](int)->ret_t{
+                return {true,"...to be ported"};
+            }, "restrict to time window of width <int>");
+        command_center.add_command(top_todo,{"mediator-probability","mp"}, [this](int)->ret_t{
+                return {true,"...to be ported"};
+            }, "show probability for a state to occurr between current state and goal state given a time window of width <int>");
+        command_center.add_command(top_new_stuff,{"p-distribution","pd"}, [this](QString a)->ret_t{
+                // check action
+                if(a!="u" && a!="d" && a!="l" && a!="r" && a!="s") {
+                    return {false,"expect one of 'u', 'd', 'l', 'r', 's' as action"};
+                }
+                // check if environment is a maze
+                shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
+                if(maze==nullptr) {
+                    return {true,"allowed for maze-environments only"};
+                }
+                // get action
+                action_ptr_t action;
+                if(a=="u") {
+                    action = action_ptr_t(new MazeAction("up"));
+                } else if(a=="d") {
+                    action = action_ptr_t(new MazeAction("down"));
+                } else if(a=="l") {
+                    action = action_ptr_t(new MazeAction("left"));
+                } else if(a=="r") {
+                    action = action_ptr_t(new MazeAction("right"));
+                } else if(a=="s") {
+                    action = action_ptr_t(new MazeAction("stay"));
+                } else {
+                    DEBUG_DEAD_LINE;
+                    action = action_ptr_t(new MazeAction("stay"));
+                }
+                // get probability distribution
+                auto p_map = tem->get_prediction_map(current_instance,action);
+                // set colors
+                Maze::color_vector_t cols;
+                for(observation_ptr_t observation : observation_space) {
+                    double p = 0;
+                    for(reward_ptr_t reward : reward_space) {
+                        p += p_map[make_tuple(observation,reward)];
+                    }
+                    p = sqrt(p);
+                    cols.push_back(std::make_tuple(1,1-p,1-p));
+                }
+                maze->set_state_colors(cols);
+                maze->render_update();
+                return {true,"displayed p-distribution"};
+            }, "color maze according to (sqrt of) probability distribution for TEM and action <QString>");
     }
 
 // #########################
@@ -861,17 +1016,7 @@ void TestMaze_II::initialize_commands() {
 //
 //            //return {, "    currently no test function implemented" };
 //        } else if(str_args[0]=="col-states") { // color states
-//            shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
-//            if(maze==nullptr) {
-//                return {,"    Allowed for maze-environments only"};
-//            } else {
-//                Maze::color_vector_t cols;
-//                for(observation_ptr_t observation : observation_space) {
-//                    cols.push_back( std::make_tuple(drand48(),drand48(),drand48()) );
-//                }
-//                maze->set_state_colors(cols);
-//                maze->render_update();
-//            }
+
 //        } else if(str_args[0]=="fixed-dt-dist" || str_args[0]=="fdd") { // show delay probability
 //            shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
 //            if(maze==nullptr) {
@@ -1051,6 +1196,7 @@ void TestMaze_II::collect_episode(const int& length) {
         to_console("    No policy available");
     } else {
         start_new_episode = true;
+        learning_episode_begin = current_instance;
         for(int idx=0; idx<length; ++idx) {
             action_ptr_t action = policy->get_action(current_instance);
             observation_ptr_t observation_to;
@@ -1059,6 +1205,7 @@ void TestMaze_II::collect_episode(const int& length) {
             update_current_instance(action,observation_to,reward);
             add_action_observation_reward_tripel(action,observation_to,reward);
         }
+        learning_episode_end = current_instance;
         render_update();
     }
 }
@@ -1266,6 +1413,53 @@ void TestMaze_II::set_policy() {
     default:
         policy.reset();
     }
+}
+
+double TestMaze_II::validate_predictor_on_random_episode(int n,  const Predictor& pred) {
+    double log_prob = 0;
+    repeat(n) {
+        action_ptr_t action = action_space->random_element();
+        observation_ptr_t observation;
+        reward_ptr_t reward;
+        perform_transition(action,observation,reward);
+        DEBUG_OUT(3,current_instance->const_prev() << " --> " << current_instance);
+        double p;
+        IF_DEBUG(4) {
+            auto p_map = pred.get_prediction_map(current_instance->const_prev(),action);
+            p = p_map[make_tuple(observation,reward)];
+            for(auto x : p_map) {
+                DEBUG_OUT(0,get<0>(x) << " : " << get<1>(x));
+            }
+        } else {
+            p = pred.get_prediction(current_instance->const_prev(),action,observation,reward);
+        }
+        DEBUG_OUT(3,"   --> p = " << p);
+        log_prob += log(p);
+    }
+    log_prob /= n;
+    return exp(log_prob);
+}
+
+double TestMaze_II::validate_predictor_on_training_episode(const Predictor& pred) {
+    double log_prob = 0;
+    int counter = 0;
+    for(instance_ptr_t ins = learning_episode_begin; ins!=learning_episode_end; ++counter, ++ins) {
+        DEBUG_OUT(3,ins << " --> " << ins->const_next());
+        double p;
+        IF_DEBUG(4) {
+            auto p_map = pred.get_prediction_map(ins,ins->const_next()->action);
+            p = p_map[make_tuple(ins->const_next()->observation,ins->const_next()->reward)];
+            for(auto x : p_map) {
+                DEBUG_OUT(4,get<0>(x) << " : " << get<1>(x));
+            }
+        } else {
+            p = pred.get_prediction(ins,ins->const_next()->action,ins->const_next()->observation,ins->const_next()->reward);
+        }
+        DEBUG_OUT(3,"   --> p = " << p);
+        log_prob += log(p);
+    }
+    log_prob /= counter;
+    return exp(log_prob);
 }
 
 void TestMaze_II::render_update() {

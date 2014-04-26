@@ -26,6 +26,22 @@ void Feature::look_up_map_t::insert_feature(f_ptr_t f, f_ret_t r) {
 #endif
 }
 
+void Feature::look_up_map_t::erase_feature(f_ptr_t f) {
+    erase(f);
+}
+
+std::vector<Feature::f_ptr_t> Feature::look_up_map_t::get_list_of_features() const {
+    std::vector<f_ptr_t> ret;
+    for(auto f : *this) {
+#ifdef LOOK_UP_MAP_IS_SET
+        ret.push_back(f);
+#else
+        ret.push_back(f.first);
+#endif
+    }
+    return ret;
+}
+
 Feature::Feature():
     feature_type(ABSTRACT),
     complexity(0),

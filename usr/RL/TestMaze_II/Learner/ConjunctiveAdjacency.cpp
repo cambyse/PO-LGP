@@ -29,7 +29,7 @@ ConjunctiveAdjacency::f_set_t ConjunctiveAdjacency::expand_with_basis_features(
             DEBUG_OUT(3,"    Built feature: " << *new_feature);
         }
         // combine with other features
-        if(!extend_with_basis_features_only) {
+        if(combine_features) {
             for(f_ptr_t feature_2 : current_features) {
                 new_feature = f_ptr_t(new AndFeature(feature_1,feature_2));
                 extension_feature_set.insert(new_feature);
@@ -59,7 +59,9 @@ ConjunctiveAdjacency::f_set_t ConjunctiveAdjacency::operator()(
         for(int old_delay : *(delays.first)) {
             for(int delay_extension = -horizon_extension; delay_extension<=horizon_extension; ++delay_extension) {
                 int new_delay = old_delay+delay_extension;
-                if(max_horizon>0 && new_delay<=max_horizon) {
+                if((new_delay<=max_horizon &&              // respect max_horizon
+                    new_delay>=min_horizon) ||             // respect min_horizon
+                   (allow_zero_delay && new_delay==0)) {   // allow zero delay?
                     delays.second->insert(new_delay);
                 }
             }
@@ -121,8 +123,12 @@ void ConjunctiveAdjacency::set_max_horizon(int h) {
     max_horizon = h;
 }
 
-void ConjunctiveAdjacency::combine_features(bool b) {
-    extend_with_basis_features_only = !b;
+void ConjunctiveAdjacency::set_min_horizon(int h) {
+    min_horizon = h;
+}
+
+void ConjunctiveAdjacency::set_combine_features(bool b) {
+    combine_features = b;
 }
 
 void ConjunctiveAdjacency::add_delay(f_ptr_t f,

@@ -6,7 +6,7 @@
 #include "../util/ProgressBar.h"
 
 #include <omp.h>
-//#define USE_OMP
+#define USE_OMP
 
 #include <iomanip>
 
@@ -18,6 +18,7 @@ using util::INVALID;
 
 using std::vector;
 using std::map;
+using std::make_tuple;
 using std::dynamic_pointer_cast;
 
 typedef TemporallyExtendedModel TEM;
@@ -28,7 +29,6 @@ TEM::probability_t TEM::get_prediction(const_instance_ptr_t ins,
                                        const action_ptr_t& action,
                                        const observation_ptr_t& observation,
                                        const reward_ptr_t& reward) const {
-#warning todo: return all probabilities as a vector: much faster for planning!
     int outcome_idx = 0;
     int matching_outcome_idx = -1;
     f_mat_t F_matrix(feature_set.size(),observation_space->space_size()*reward_space->space_size());
@@ -36,7 +36,7 @@ TEM::probability_t TEM::get_prediction(const_instance_ptr_t ins,
         for(reward_ptr_t rew : reward_space) {
             int feature_idx = 0;
             for(f_ptr_t feature : feature_set) {
-                if(feature->evaluate(ins->const_prev(),action,obs,rew)!=0) {
+                if(feature->evaluate(ins,action,obs,rew)!=0) {
                     F_matrix(feature_idx,outcome_idx) = 1;
                 }
                 // increment
@@ -55,6 +55,54 @@ TEM::probability_t TEM::get_prediction(const_instance_ptr_t ins,
     const double z = sum(exp_lin);
     const double l = lin(matching_outcome_idx)-log(z);
     return exp(l);
+}
+
+TEM::probability_map_t TEM::get_prediction_map(const_instance_ptr_t ins,
+                                               const action_ptr_t& action) const {
+    // compute feature matrix
+    f_mat_t F_matrix(feature_set.size(),observation_space->space_size()*reward_space->space_size());
+    {
+        int outcome_idx = 0;
+        for(observation_ptr_t obs : observation_space) {
+            for(reward_ptr_t rew : reward_space) {
+                int feature_idx = 0;
+                for(f_ptr_t feature : feature_set) {
+                    if(feature->evaluate(ins,action,obs,rew)!=0) {
+                        F_matrix(feature_idx,outcome_idx) = 1;
+                    }
+                    // increment
+                    ++feature_idx;
+                }
+                // increment
+                ++outcome_idx;
+            }
+        }
+    }
+
+    // compute normalization
+    const row_vec_t lin = weights.t()*F_matrix;
+    const row_vec_t exp_lin = arma::trunc_exp(lin);
+    const double log_z = log(sum(exp_lin));
+
+    // fill probability map
+    DEBUG_OUT(3,"Predictions for " << ins << " / " << action);
+    probability_map_t return_map;
+    {
+        int outcome_idx = 0;
+        for(observation_ptr_t obs : observation_space) {
+            for(reward_ptr_t rew : reward_space) {
+                // compute probability
+                const double l = lin(outcome_idx)-log_z;
+                return_map[make_tuple(obs,rew)] = exp(l);
+                DEBUG_OUT(3,"    p(" << obs << "," << rew << "): " << exp(l));
+                // increment
+                ++outcome_idx;
+            }
+        }
+    }
+
+    // return
+    return return_map;
 }
 
 void TEM::add_action_observation_reward_tripel(
@@ -224,6 +272,11 @@ bool TEM::check_derivatives(const int& number_of_samples,
                                    use_current_values);
 }
 
+void TEM::clear_data() {
+    HistoryObserver::clear_data();
+    data_changed = true;
+}
+
 TEM::weight_map_t TEM::get_weight_map() const {
     weight_map_t weight_map;
     int idx = 0;
@@ -288,7 +341,7 @@ void TEM::update() {
 
         // update basis feature maps
         if(data_changed || basis_features_changed) {
-            update_basis_feature_maps();
+            update_basis_feature_maps(data_changed);
         }
 
         // pick non-const features
@@ -305,7 +358,7 @@ void TEM::update() {
 
             // update basis feature maps
             if(basis_features_changed_again) {
-                update_basis_feature_maps();
+                update_basis_feature_maps(false);
             }
         }
 
@@ -340,77 +393,157 @@ bool TEM::pick_non_const_features() {
     f_ret_map_t f_ret_map;
 
     // set of features that may be const
-    f_set_t maybe_const_set = feature_set;
+    f_set_t maybe_const_set = feature_set; // why f_set_t and not faster f_ptr_set_t?
+
+    // initialize
+    {
+        int data_idx = 1;
+        const_instance_ptr_t ins=instance_data.front()->const_first();
+
+        // non-const features
+        f_set_t non_const_set;
+
+        // for all outcomes
+        int outcome_idx = 0;
+        for(observation_ptr_t obs : observation_space) {
+            for(reward_ptr_t rew : reward_space) {
+
+                // for all features that may be const
+                for(f_ptr_t feature : maybe_const_set) {
+                    // initialize on first data point
+                    f_ret_map[feature] = feature->evaluate(basis_feature_maps[data_idx][outcome_idx]);
+                }
+
+                // increment
+                ++outcome_idx;
+            }
+        }
+
+        // erase non-const features from maybe-const set and return-value
+        // maps
+        for(f_ptr_t feature : non_const_set) {
+            DEBUG_OUT(3,"    non-const: " << *feature);
+            auto it_maybe = maybe_const_set.find(feature);
+            if(it_maybe!=maybe_const_set.end()) {
+                maybe_const_set.erase(it_maybe);
+            } else {
+                DEBUG_DEAD_LINE;
+            }
+            auto it = f_ret_map.find(feature);
+            if(it!=f_ret_map.end()) {
+                f_ret_map.erase(it);
+            } else {
+                DEBUG_DEAD_LINE;
+            }
+        }
+    }
 
     // for all data points
-    bool first_data_point = true;
-    int data_idx = 0;
-    for(const_instance_ptr_t episode : instance_data) {
-        for(const_instance_ptr_t ins=episode->const_first(); ins!=INVALID; ++ins) {
+#ifdef USE_OMP
+    int progress_idx = 0;
+#pragma omp parallel for schedule(static) collapse(1)
+    for(int data_idx = 0; data_idx<(int)number_of_data_points; ++data_idx) {
+#else
+        int data_idx = 0;
+        int& progress_idx = data_idx;
+        for(const_instance_ptr_t episode : instance_data) {
+            for(const_instance_ptr_t ins=episode->const_first(); ins!=INVALID; ++ins) {
+#endif
 
-            // non-const features
-            f_set_t non_const_set;
+                // non-const features
+                f_set_t non_const_set;
 
-            // for all outcomes
-            int outcome_idx = 0;
-            for(observation_ptr_t obs : observation_space) {
-                for(reward_ptr_t rew : reward_space) {
+                // for all outcomes
+                int outcome_idx = 0;
+                for(observation_ptr_t obs : observation_space) {
+                    for(reward_ptr_t rew : reward_space) {
 
-                    // for all features that may be const
-                    for(f_ptr_t feature : maybe_const_set) {
+                        // for all features that may be const
+#ifdef USE_OMP
+                        f_set_t maybe_const_set_copy;
+                        f_ret_map_t f_ret_map_copy;
+#pragma omp critical
+                        {
+                            maybe_const_set_copy = maybe_const_set;
+                            f_ret_map_copy = f_ret_map;
 
-                        // get return-value
-                        f_ret_t f_ret = feature->evaluate(basis_feature_maps[data_idx][outcome_idx]);
+                        } // critical
+                        for(f_ptr_t feature : maybe_const_set_copy) {
+#else
+                            f_set_t& maybe_const_set_copy = maybe_const_set;
+                            f_ret_map_t& f_ret_map_copy = f_ret_map;
+                            for(f_ptr_t feature : maybe_const_set) {
+#endif
 
-                        // initialize on first data point, compare later on
-                        if(first_data_point) {
-                            f_ret_map[feature] = f_ret;
-                        } else {
-                            if(f_ret_map[feature]!=f_ret) {
-                                DEBUG_OUT(4,"    different value (" << f_ret_map[feature] << "/" << f_ret << "): " << *feature);
-                                non_const_set.insert(feature);
-                            } else {
-                                DEBUG_OUT(4,"    same value (" << f_ret << "): " << *feature);
+                                // get return-value
+                                f_ret_t f_ret = feature->evaluate(basis_feature_maps[data_idx][outcome_idx]);
+
+                                // compare
+                                if(f_ret_map_copy[feature]!=f_ret) {
+                                    DEBUG_OUT(4,"    different value (" << f_ret_map_copy[feature] << "/" << f_ret << "): " << *feature);
+                                    non_const_set.insert(feature);
+                                } else {
+                                    DEBUG_OUT(4,"    same value (" << f_ret << "): " << *feature);
+                                }
+#ifdef USE_OMP
                             }
+#else
+                        }
+#endif
+
+                        // increment
+                        ++outcome_idx;
+                    }
+                }
+
+#ifdef USE_OMP
+#pragma omp critical
+#endif
+                {
+                    // erase non-const features from maybe-const set and return-value
+                    // maps
+                    for(f_ptr_t feature : non_const_set) {
+                        DEBUG_OUT(3,"    non-const: " << *feature);
+                        auto it_maybe = maybe_const_set.find(feature);
+                        if(it_maybe!=maybe_const_set.end()) {
+                            maybe_const_set.erase(it_maybe);
+                        } else {
+#ifndef USE_OMP
+                            // in parallel evaluation two differend threads may
+                            // try to remove the same feature so that it cannot
+                            // be found by the second thread, this should not
+                            // happen in non-parallel (same thing below)
+                            DEBUG_DEAD_LINE;
+#endif
+                        }
+                        auto it = f_ret_map.find(feature);
+                        if(it!=f_ret_map.end()) {
+                            f_ret_map.erase(it);
+                        } else {
+#ifndef USE_OMP
+                            // see above for explanation
+                            DEBUG_DEAD_LINE;
+#endif
                         }
                     }
 
-                    // increment
-                    ++outcome_idx;
-                }
+                    // print progress
+                    if(DEBUG_LEVEL>0) {
+                        ProgressBar::msg() << " (" << feature_set.size()-maybe_const_set.size() << ")";
+                        ProgressBar::print(progress_idx,number_of_data_points);
+                    }
+                } // critical
+
+
+#ifndef USE_OMP
+                // increment
+                ++data_idx;
             }
-
-            // first data point processed
-            first_data_point = false;
-
-            // erase non-const features from maybe-const set and return-value
-            // maps
-            for(f_ptr_t feature : non_const_set) {
-                DEBUG_OUT(3,"    non-const: " << *feature);
-                auto it_maybe = maybe_const_set.find(feature);
-                if(it_maybe!=maybe_const_set.end()) {
-                    maybe_const_set.erase(it_maybe);
-                } else {
-                    DEBUG_DEAD_LINE;
-                }
-                auto it = f_ret_map.find(feature);
-                if(it!=f_ret_map.end()) {
-                    f_ret_map.erase(it);
-                } else {
-                    DEBUG_DEAD_LINE;
-                }
-            }
-
-            // print progress
-            if(DEBUG_LEVEL>0) {
-                ProgressBar::msg() << " (" << feature_set.size()-maybe_const_set.size() << ")";
-                ProgressBar::print(data_idx,number_of_data_points);
-            }
-
-            // increment
-            ++data_idx;
         }
+#else
+        ++progress_idx;
     }
+#endif
 
     // feature that still may be const actually ARE const (for the given data)
     weight_map_t old_weights = get_weight_map();
@@ -473,19 +606,77 @@ bool TEM::update_basis_features() {
     }
 }
 
-void TEM::update_basis_feature_maps() {
+void TEM::update_basis_feature_maps(bool recompute_all) {
 
     if(DEBUG_LEVEL>0) {ProgressBar::init("Update basis feature maps: ");}
 
+    // get dimensions
     int data_n = number_of_data_points;
     int outcome_n = observation_space->space_size()*reward_space->space_size();
 
-    basis_feature_maps.assign(data_n,vector<basis_feature_map_t>(outcome_n));
+    // check if for matching dimensions
+    if(basis_feature_maps.size()!=(uint)data_n || basis_feature_maps.front().size()!=(uint)outcome_n) {
+        basis_feature_maps.assign(data_n,vector<basis_feature_map_t>(outcome_n));
+        IF_DEBUG(1) {
+            if(!recompute_all) {
+                DEBUG_WARNING("Dimensions don't match, recomputation forced");
+            }
+        }
+        recompute_all = true;
+    }
+
+    // remove unneeded and remember new basis feature for partial recomputation
+    f_ptr_set_t new_basis_features;
+    if(!recompute_all) {
+        basis_feature_map_t& some_old_map = basis_feature_maps.front().front();
+        // remove old ones
+        {
+            // find old
+            f_ptr_set_t features_to_remove;
+            for(f_ptr_t bf : some_old_map.get_list_of_features()) {
+                if(basis_features.find(bf)==basis_features.end()) {
+                    features_to_remove.insert(bf);
+                }
+            }
+            // remove old
+#ifdef USE_OMP
+#pragma omp parallel for schedule(static) collapse(1)
+#endif
+            for(int data_idx = 0; data_idx<(int)number_of_data_points; ++data_idx) {
+                for(int outcome_idx = 0; outcome_idx<outcome_n; ++outcome_idx) {
+                    basis_feature_map_t& bf_map = basis_feature_maps[data_idx][outcome_idx];
+                    for(f_ptr_t bf : features_to_remove) {
+                        bf_map.erase_feature(bf);
+                    }
+                }
+            }
+        }
+        // remember new ones
+        {
+            for(f_ptr_t bf : basis_features) {
+                if(some_old_map.find(bf)==some_old_map.end()) {
+                    new_basis_features.insert(bf);
+                }
+            }
+        }
+    }
+
+    //-------------------------------------------------------------------//
+    // cannot parallelize this because instance class is not thread-save //
+    //-------------------------------------------------------------------//
 
     // for all data points
+// #ifdef USE_OMP
+// #pragma omp parallel for schedule(dynamic,1) collapse(1)
+//     for(int data_idx = 0; data_idx<(int)number_of_data_points; ++data_idx) {
+//         const_instance_ptr_t ins;
+// #pragma omp critical
+//         ins=instance_data.front()->const_first()->const_next(data_idx);
+// #else
     int data_idx = 0;
     for(const_instance_ptr_t episode : instance_data) {
         for(const_instance_ptr_t ins=episode->const_first(); ins!=INVALID; ++ins) {
+// #endif
 
             // for all outcomes
             int outcome_idx = 0;
@@ -498,9 +689,15 @@ void TEM::update_basis_feature_maps() {
                     //--------------------------//
                     // update basis feature map //
                     //--------------------------//
-                    bf_map.clear();
-                    for(f_ptr_t bf : basis_features) {
-                        bf_map.insert_feature(bf,bf->evaluate(ins->const_prev(),ins->action,obs,rew));
+                    if(recompute_all) {
+                        bf_map.clear();
+                        for(f_ptr_t bf : basis_features) {
+                            bf_map.insert_feature(bf,bf->evaluate(ins->const_prev(),ins->action,obs,rew));
+                        }
+                    } else {
+                        for(f_ptr_t bf : new_basis_features) {
+                            bf_map.insert_feature(bf,bf->evaluate(ins->const_prev(),ins->action,obs,rew));
+                        }
                     }
 
                     // increment
@@ -508,13 +705,22 @@ void TEM::update_basis_feature_maps() {
                 }
             }
 
+// #ifdef USE_OMP
+// #pragma omp critical
+// #endif
+//                 {
             // print progress
             if(DEBUG_LEVEL>0) {ProgressBar::print(data_idx,number_of_data_points);}
+            // }
 
+// #ifndef USE_OMP
             // increment
             ++data_idx;
         }
     }
+// #else
+//     }
+// #endif
 
     // terminate progress
     if(DEBUG_LEVEL>0) {ProgressBar::terminate();}
@@ -533,50 +739,62 @@ void TEM::update_F_matrices() {
     F_matrices.resize(data_n,f_mat_t(feature_n,outcome_n));
 
     // for all data points
-    int data_idx = 0;
-    for(const_instance_ptr_t episode : instance_data) {
-        for(const_instance_ptr_t ins=episode->const_first(); ins!=INVALID; ++ins) {
+#ifdef USE_OMP
+#pragma omp parallel for schedule(dynamic,1) collapse(1)
+    for(int data_idx = 0; data_idx<(int)number_of_data_points; ++data_idx) {
+#else
+        int data_idx = 0;
+        for(const_instance_ptr_t episode : instance_data) {
+            for(const_instance_ptr_t ins=episode->const_first(); ins!=INVALID; ++ins) {
+#endif
 
-            // get F-matrix for this data point
-            f_mat_t& F_matrix = F_matrices[data_idx];
+                // get F-matrix for this data point
+                f_mat_t& F_matrix = F_matrices[data_idx];
 
-            // for all outcomes
-            int outcome_idx = 0;
-            for(observation_ptr_t obs : observation_space) {
-                for(reward_ptr_t rew : reward_space) {
+                // for all outcomes
+                int outcome_idx = 0;
+                for(observation_ptr_t obs : observation_space) {
+                    for(reward_ptr_t rew : reward_space) {
 
-                    // get basis feature map for this data point and outcome
-                    basis_feature_map_t& bf_map = basis_feature_maps[data_idx][outcome_idx];
+                        // get basis feature map for this data point and outcome
+                        basis_feature_map_t& bf_map = basis_feature_maps[data_idx][outcome_idx];
 
-                    //-----------------//
-                    // update F-matrix //
-                    //-----------------//
-                    int feature_idx = 0;
-                    for(f_ptr_t feature : feature_set) {
+                        //-----------------//
+                        // update F-matrix //
+                        //-----------------//
+                        int feature_idx = 0;
+                        for(f_ptr_t feature : feature_set) {
 
-                        // set entry to 1 for non-zero features
-                        //if(feature->evaluate(ins->const_prev(),ins->action,obs,rew)!=0) {
-                        if(feature->evaluate(bf_map)!=0) {
-                            DEBUG_OUT(4,"(" << F_matrix.n_rows << "," << F_matrix.n_cols << ")/(" << feature_idx << "," << outcome_idx << ")");
-                            F_matrix(feature_idx,outcome_idx) = 1;
+                            // set entry to 1 for non-zero features
+                            //if(feature->evaluate(ins->const_prev(),ins->action,obs,rew)!=0) { // directly evaluate feature
+                            if(feature->evaluate(bf_map)!=0) {                                // evaluate feature via basis feature map
+                                DEBUG_OUT(4,"(" << F_matrix.n_rows << "," << F_matrix.n_cols << ")/(" << feature_idx << "," << outcome_idx << ")");
+                                F_matrix(feature_idx,outcome_idx) = 1;
+                            }
+
+                            // increment
+                            ++feature_idx;
                         }
 
                         // increment
-                        ++feature_idx;
+                        ++outcome_idx;
                     }
-
-                    // increment
-                    ++outcome_idx;
                 }
+
+                // print progress
+#ifdef USE_OMP
+#pragma omp critical
+#endif
+                {if(DEBUG_LEVEL>0) {ProgressBar::print(data_idx,number_of_data_points);}}
+
+#ifndef USE_OMP
+                // increment
+                ++data_idx;
             }
-
-            // print progress
-            if(DEBUG_LEVEL>0) {ProgressBar::print(data_idx,number_of_data_points);}
-
-            // increment
-            ++data_idx;
         }
+#else
     }
+#endif
 
     // terminate progress
     if(DEBUG_LEVEL>0) {ProgressBar::terminate();}

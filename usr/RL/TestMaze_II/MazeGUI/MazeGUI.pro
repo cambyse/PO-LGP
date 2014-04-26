@@ -93,6 +93,7 @@ SOURCES += \
     ../Representation/AbstractReward.cpp \
     ../Representation/ListedReward.cpp \
     \
+    ../Predictor.cpp \
     ../PredictiveEnvironment.cpp \
     ../Visualizer.cpp \
     ../HistoryObserver.cpp \

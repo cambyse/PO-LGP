@@ -51,6 +51,10 @@ const vector<Maze::maze_t> Maze::maze_list = {
     ,
 #include "4x4_III.maze"
     ,
+#include "4x4_empty.maze"
+    ,
+#include "5x5_empty.maze"
+    ,
 #include "6x6.maze"
     ,
 #include "10x10.maze"

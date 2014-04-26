@@ -368,7 +368,7 @@ TEST(LearnerTest, TemporallyExtendedModel) {
     N_plus->set_spaces(maze);
     N_plus->set_horizon_extension(2);
     N_plus->set_max_horizon(2);
-    N_plus->combine_features(false);
+    N_plus->set_combine_features(false);
 
     // initialize TEM using N+
     TEM = make_shared<TemporallyExtendedModel>(N_plus);

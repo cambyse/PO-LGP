@@ -177,10 +177,13 @@ void LookAheadSearch::fully_expand_tree(
     if(DEBUG_LEVEL>=1) {
         ProgressBar::init("Building Tree: ");
     }
+    bool max_node_number_exceeded = false;
     if(tree_needs_further_expansion()) {
         while(expand_tree(environment)) {
             if(max_node_counter>0 && number_of_nodes>max_node_counter) {
                 if(DEBUG_LEVEL>0) {
+                    max_node_number_exceeded = true;
+                    ProgressBar::terminate();
                     std::cout << "Abort: Tree has more than " << max_node_counter << " nodes (" << number_of_nodes << ")" << std::endl;
                 }
                 break;
@@ -191,7 +194,7 @@ void LookAheadSearch::fully_expand_tree(
             }
         }
     }
-    if(DEBUG_LEVEL>=1) {
+    if(DEBUG_LEVEL>=1 && !max_node_number_exceeded) {
         ProgressBar::terminate();
     }
 
@@ -1028,13 +1031,15 @@ void LookAheadSearch::expand_action_node(
     action_ptr_t action = node_info_map[action_node].action;
 
     // add all target observations (MDP-observation-reward combinations)
+    probability_map_t prob_map = environment.get_prediction_map(instance_from, action);
     for(observation_ptr_t new_observation : observation_space) {
 
         node_t new_observation_node = lemon::INVALID;
 
         for(reward_ptr_t new_reward : reward_space) {
 
-            probability_t prob = environment.get_prediction(instance_from, action, new_observation, new_reward);
+            //probability_t prob = environment.get_prediction(instance_from, action, new_observation, new_reward);
+            probability_t prob = prob_map[make_tuple(new_observation,new_reward)];
             if(prob>0) {
                 new_observation_node = graph.addNode();
                 ++number_of_nodes;

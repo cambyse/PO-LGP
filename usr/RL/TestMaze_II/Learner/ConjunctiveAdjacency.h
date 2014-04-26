@@ -11,9 +11,11 @@ class ConjunctiveAdjacency: public AdjacencyOperator, public SpaceManager {
 
     //----members----//
 private:
-    bool extend_with_basis_features_only = false;
+    bool combine_features = false;
     int horizon_extension = 0;
     int max_horizon = -1;
+    int min_horizon = -1;
+    bool allow_zero_delay = true;
 
     //----methods----//
 public:
@@ -26,12 +28,17 @@ public:
     virtual f_set_t operator()(
         const f_set_t& current_features = f_set_t()
         ) const;
+    virtual int get_horizon_extension() const { return horizon_extension; }
     virtual void set_horizon_extension(int h = 0);
+    virtual int get_max_horizon() const { return max_horizon; }
     virtual void set_max_horizon(int h = -1);
+    virtual int get_min_horizon() const { return min_horizon; }
+    virtual void set_min_horizon(int h = -1);
 
     /** \brief Whether to also use conjunctions of pairs of existing features or
      * only conjunctions of existing features and basis features. */
-    virtual void combine_features(bool b = false);
+    virtual bool get_combine_features() const { return combine_features; }
+    virtual void set_combine_features(bool b);
 private:
     void add_delay(f_ptr_t,std::set<int>&,std::set<int>&,std::set<int>&) const;
 };
