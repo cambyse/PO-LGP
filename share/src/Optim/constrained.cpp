@@ -1,4 +1,5 @@
 #include "constrained.h"
+#include "opt-newton.h"
 
 //==============================================================================
 //
@@ -134,7 +135,7 @@ double PhaseOneProblem::fc(arr& df, arr& Hf, arr& meta_g, arr& meta_Jg, const ar
 // Solvers
 //
 
-const char* MethodName[]={ "NoMethod", "SquaredPenalty", "AugmentedLagrangian", "LogBarrier" };
+const char* MethodName[]={ "NoMethod", "SquaredPenalty", "AugmentedLagrangian", "LogBarrier", "AnyTimeAugmentedLagrangian" };
 
 void optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
   UnconstrainedProblem UCP(P);
@@ -143,28 +144,51 @@ void optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
   switch(opt.constrainedMethod){
     case squaredPenalty: UCP.mu=1.;  break;
     case augmentedLag:   UCP.mu=1.;  break;
+    case anyTimeAula:    UCP.mu=1.;  break;
     case logBarrier:     UCP.muLB=1.;  break;
     case noMethod: HALT("need to set method before");  break;
   }
 
-  if(opt.verbose>1) cout <<"***** optConstrained: method=" <<MethodName[opt.constrainedMethod] <<endl;
+  if(opt.verbose>0) cout <<"***** optConstrained: method=" <<MethodName[opt.constrainedMethod] <<endl;
+
+  OptNewton newton(x, UCP, opt);
+  OptNewton::StopCriterion res;
 
   for(uint k=0;;k++){
-    if(opt.verbose>1) cout <<"***** optConstrained: iteration=" <<k
-                             <<" mu=" <<UCP.mu <<" lambda=" <<UCP.lambda <<" muLB=" <<UCP.muLB <<endl;
+    if(opt.verbose>0){
+      cout <<"***** optConstrained: iteration=" <<k
+	   <<" mu=" <<UCP.mu <<" muLB=" <<UCP.muLB;
+      if(x.N<5) cout <<" \tlambda=" <<UCP.lambda;
+      cout <<endl;
+    }
+
     arr x_old = x;
-    optNewton(x, UCP, opt);
+    if(opt.constrainedMethod==anyTimeAula)
+      optNewton(x, UCP, opt); //newton.step();
+    else
+      res = newton.run();
+
+    if(opt.verbose>0){
+      cout <<k <<' ' <<newton.evals <<' ' <<"f(x)=" <<UCP.f_x <<" \tcompl=" <<sum(elemWiseMax(UCP.g_x,zeros(UCP.g_x.N,1)));
+      if(x.N<5) cout <<" \tx=" <<x;
+      cout <<endl;
+    }
+
+    //stopping criteron
+    if(k>10 && absMax(x_old-x)<opt.stopTolerance){
+      cout << " --- optConstrained StoppingCriterion Delta<" <<opt.stopTolerance <<endl;
+      break;
+    }
 
     //upate unconstraint problem parameters
     switch(opt.constrainedMethod){
       case squaredPenalty: UCP.mu *= 10;  break;
       case augmentedLag:   UCP.aulaUpdate();  break;
+      case anyTimeAula:    UCP.anyTimeAulaUpdate(1., 1., &newton.fx, newton.gx, newton.Hx);
       case logBarrier:     UCP.muLB /= 2;  break;
       case noMethod: HALT("need to set method before");  break;
     }
 
-    //stopping criteron
-    if(k>10 && absMax(x_old-x)<opt.stopTolerance){ cout << " --- optConstrained StoppingCriterion Delta<" <<opt.stopTolerance <<endl;  break; }
   }
 
   if(&dual) dual=UCP.lambda;
