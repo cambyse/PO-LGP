@@ -152,7 +152,7 @@ void optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
   if(opt.verbose>0) cout <<"***** optConstrained: method=" <<MethodName[opt.constrainedMethod] <<endl;
 
   OptNewton newton(x, UCP, opt);
-  OptNewton::StopCriterion res;
+//  OptNewton::StopCriterion res;
 
   for(uint k=0;;k++){
     if(opt.verbose>0){
@@ -164,9 +164,11 @@ void optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
 
     arr x_old = x;
     if(opt.constrainedMethod==anyTimeAula)
-      optNewton(x, UCP, opt); //newton.step();
-    else
-      res = newton.run();
+      for(uint l=0;l<2; l++) newton.step();
+    else{
+      newton.reinit();
+      newton.run();
+    }
 
     if(opt.verbose>0){
       cout <<k <<' ' <<newton.evals <<' ' <<"f(x)=" <<UCP.f_x <<" \tcompl=" <<sum(elemWiseMax(UCP.g_x,zeros(UCP.g_x.N,1)));
@@ -183,8 +185,9 @@ void optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
     //upate unconstraint problem parameters
     switch(opt.constrainedMethod){
       case squaredPenalty: UCP.mu *= 10;  break;
-      case augmentedLag:   UCP.aulaUpdate();  break;
-      case anyTimeAula:    UCP.anyTimeAulaUpdate(1., 1., &newton.fx, newton.gx, newton.Hx);
+      case augmentedLag:   UCP.aulaUpdate();  UCP.mu *= 1;  break;
+//      case augmentedLag:   UCP.mu *= 1.;
+      case anyTimeAula:    UCP.anyTimeAulaUpdate(1., 1., &newton.fx, newton.gx, newton.Hx);  break;
       case logBarrier:     UCP.muLB /= 2;  break;
       case noMethod: HALT("need to set method before");  break;
     }

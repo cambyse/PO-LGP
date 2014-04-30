@@ -22,4 +22,5 @@ struct OptNewton{
   ~OptNewton();
   StopCriterion step();
   StopCriterion run();
+  void reinit();
 };

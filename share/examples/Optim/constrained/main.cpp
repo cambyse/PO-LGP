@@ -134,14 +134,14 @@ void testConstraint2(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=20){
   if(&x_start) x=x_start;
   else{
     x.setZero();
-    if(method==logBarrier){ } //log barrier needs a feasible starting point
-    else rndUniform(x, -1., 1.);
+//    if(method==logBarrier){ } //log barrier needs a feasible starting point
+//    else rndUniform(x, -1., 1.);
   }
   cout <<"x0=" <<x <<endl;
 
   rnd.seed(0);
 
-  optConstrained(x, NoArr, p, OPT(verbose=1, damping=.1, stopTolerance=1e-2, constrainedMethod=method));
+  optConstrained(x, NoArr, p, OPT(verbose=1, damping=1., stopTolerance=1e-4, stepDec=.5, constrainedMethod=method));
 
   if(&x_start) x_start = x;
 }
@@ -173,7 +173,7 @@ int main(int argc,char** argv){
 
   ChoiceConstraintFunction F;
 //  SimpleConstraintFunction F;
-  //testConstraint(F);
+//  testConstraint(F);
   testConstraint2(F);
 
   return 0;

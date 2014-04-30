@@ -197,7 +197,7 @@ void sConvert::KOrderMarkovFunction_VectorFunction::fv(arr& phi, arr& J, const a
     if(t>=k) {
       if(t>=x.d0) { //x_bar includes the postfix
         x_bar.resize(k+1,n);
-        for(int i=t-k; i<=(int)t; i++) x_bar[i-t+k]() = (i>=x.d0)? x_post[i-x.d0] : x[i];
+        for(int i=t-k; i<=(int)t; i++) x_bar[i-t+k]() = (i>=(int)x.d0)? x_post[i-x.d0] : x[i];
       } else{
         x_bar.referToSubRange(x, t-k, t);
       }
@@ -269,7 +269,7 @@ double sConvert::KOrderMarkovFunction_ConstrainedProblem::fc(arr& df, arr& Hf, a
     if(t>=k) {
       if(t>=x.d0) { //x_bar includes the postfix
         x_bar.resize(k+1,n);
-        for(int i=t-k; i<=(int)t; i++) x_bar[i-t+k]() = (i>=x.d0)? x_post[i-x.d0] : x[i];
+        for(int i=t-k; i<=(int)t; i++) x_bar[i-t+k]() = (i>=(int)x.d0)? x_post[i-x.d0] : x[i];
       } else {
         x_bar.referToSubRange(x, t-k, t);
       }
