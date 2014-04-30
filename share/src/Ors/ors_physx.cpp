@@ -44,6 +44,7 @@
 #pragma GCC diagnostic pop
 
 #include "ors_physx.h"
+#include "ors_locker.h"
 #include <Gui/opengl.h>
 
 using namespace physx;
@@ -225,13 +226,10 @@ void PhysXInterface::step(double tau) {
   }
 
   for_list(ors::Joint, j, world.joints) {
-    bool lock = j->locked_func((void*) j->locked_data);
-    if(lock and !j->locked) {
-      j->locked = true;
+    if(j->locker and j->locker->lock()) {
       s->lockJoint(s->joints(j_COUNT), j);
     }
-    else if(!lock and j->locked) {
-      j->locked = false;
+    else if(j->locker and j->locker->unlock()) {
       s->unlockJoint(s->joints(j_COUNT), j);  
     }
   }
@@ -281,7 +279,7 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
     case ors::JT_hingeY:
     case ors::JT_hingeZ: {
       PxD6Joint *desc = PxD6JointCreate(*mPhysics, actors(jj->ifrom), A, actors(jj->ito), B.getInverse());
-
+      CHECK(desc, "PhysX joint creation failed.");
 
       if(jj->ats.getValue<arr>("drive")) {
         arr drive_values = *jj->ats.getValue<arr>("drive");
@@ -321,6 +319,7 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
     case ors::JT_transZ:
     {
       PxD6Joint *desc = PxD6JointCreate(*mPhysics, actors(jj->ifrom), A, actors(jj->ito), B.getInverse());
+      CHECK(desc, "PhysX joint creation failed.");
 
       if(jj->ats.getValue<arr>("drive")) {
         arr drive_values = *jj->ats.getValue<arr>("drive");
