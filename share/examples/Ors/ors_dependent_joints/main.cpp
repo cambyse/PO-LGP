@@ -1,16 +1,7 @@
 #include <Ors/ors.h>
+#include <Ors/ors_locker.h>
 #include <Ors/ors_physx.h>
 #include <Gui/opengl.h>
-
-bool locked_function(void* data) {
-  double angle = ((ors::Joint*) data)->Q.rot.getDeg();
-  if (angle > 10 && angle < 60.) {
-    return false;
-  }
-  else {
-    return true;
-  }
-}
 
 void TEST(OrsPhysx) {
   ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
@@ -26,8 +17,11 @@ void TEST(OrsPhysx) {
   ors::Joint *locked = G.getJointByName("locked");
   ors::Joint *locking = G.getJointByName("locking");
 
-  locked->locked_func = *(locked_function);
-  locked->locked_data = locking;
+  ors::JointDependentLocker locker;
+  locker.dependent_joint = locking;
+  locker.lower_locked_limit = 10;
+  locker.upper_locked_limit = 50;
+  locked->locker = &locker;
   
   ors::Body *door = G.getBodyByName("door1-door");
   G.addForce(ors::Vector(0, 6600, 0), door);
