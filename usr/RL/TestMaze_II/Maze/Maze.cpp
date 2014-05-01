@@ -45,6 +45,8 @@ const vector<Maze::maze_t> Maze::maze_list = {
     ,
 #include "3x3.maze"
     ,
+#include "3x3_doorway.maze"
+    ,
 #include "4x4_I.maze"
     ,
 #include "4x4_II.maze"
@@ -252,6 +254,26 @@ void Maze::set_state_colors(const color_vector_t colors) {
         DEBUG_ERROR("Number of colors does not match number of states");
         state_colors.resize(state_n, color_t(0.9,0.9,0.9));
     }
+}
+
+void Maze::show_distribution(const std::vector<probability_t> dist, bool scale_as_sqrt) {
+    // set colors
+    probability_t p_sum = 0;
+    color_vector_t cols;
+    for(probability_t p : dist) {
+        p_sum += p;
+        if(scale_as_sqrt) {
+            p = sqrt(p);
+        }
+        cols.push_back(std::make_tuple(1,1-p,1-p));
+    }
+    IF_DEBUG(1) {
+        if(fabs(p_sum-1)>1e-3) {
+            DEBUG_WARNING(QString("Probabilities don't sum to one (sum_p=%1)").arg(p_sum));
+        }
+    }
+    set_state_colors(cols);
+    render_update();
 }
 
 void Maze::perform_transition(const action_ptr_t& action, std::vector<std::pair<int,int> > * reward_vector) {

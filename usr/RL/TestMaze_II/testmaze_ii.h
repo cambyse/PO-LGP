@@ -16,6 +16,9 @@
 
 #include "qcustomplot.h"
 
+//#define ARMA_NO_DEBUG
+#include <armadillo>
+
 #include <QWidget>
 #include <QTimer>
 
@@ -23,6 +26,7 @@
 #include <iostream>
 #include <fstream>
 #include <memory> // for shared_ptr
+#include <map>
 
 class Environment;
 
@@ -44,6 +48,7 @@ private:
     // Typedefs and Member Variables //
     //===============================//
 
+    typedef std::map<std::tuple<observation_ptr_t,reward_ptr_t>,int> o_r_idx_map_t;
 
     //---------------//
     // Maze GUI etc. //
@@ -153,6 +158,8 @@ private:
     void set_policy();
     double validate_predictor_on_random_episode(int n, const Predictor& pred);
     double validate_predictor_on_training_episode(const Predictor& pred);
+    void get_TEM_transition_matrix_and_o_r_index_map(arma::mat& T, o_r_idx_map_t& o_r_idx_map) const;
+    bool get_stationary_distribution(const arma::mat& T, arma::vec& stat_dist) const;
 
 private slots:
     void render_update();

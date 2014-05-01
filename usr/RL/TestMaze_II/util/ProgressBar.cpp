@@ -76,7 +76,7 @@ void ProgressBar::terminate(const char* message) {
 
 void ProgressBar::print() {
     // go to beginning of line and print start marker
-    cout << "\r" << start_msg << "|";
+    cout << "\r" << start_msg << "[";
 
     // print a spinning wheel
     static unsigned short wheel = 0;
@@ -97,11 +97,11 @@ void ProgressBar::print() {
     default:
         cout << '*';
     }
-    cout << "|";
+    cout << "][";
 
     // print processed part
     for(uint idx=0; idx < min(current_progress,bar_width); ++idx) {
-        cout << "-";
+        cout << "=";
     }
 
     if(current_progress<bar_width) {
@@ -117,5 +117,5 @@ void ProgressBar::print() {
     }
 
     // print end marker and message
-    cout << "|" << end_msg.str() << flush;
+    cout << "]" << end_msg.str() << flush;
 }

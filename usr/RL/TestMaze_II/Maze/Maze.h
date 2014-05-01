@@ -46,6 +46,8 @@ public:
 
     void set_state_colors(const color_vector_t colors = color_vector_t());
 
+    void show_distribution(const std::vector<probability_t> dist, bool scale_as_sqrt = false);
+
     /** \brief Perform a transition by executing an action and return which rewards
      * were active. */
     virtual void perform_transition(const action_ptr_t& a, std::vector<std::pair<int,int> > * reward_vector);

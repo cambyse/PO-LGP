@@ -17,7 +17,6 @@
 
 #include <float.h>  // for DBL_MAX
 #include <vector>
-#include <map>
 #include <algorithm> // for min, max
 
 #ifdef BATCH_MODE_QUIET
@@ -38,6 +37,7 @@ using std::dynamic_pointer_cast;
 using std::shared_ptr;
 using std::make_shared;
 using std::pair;
+using std::tuple;
 using std::make_tuple;
 
 using util::arg_int;
@@ -894,22 +894,63 @@ void TestMaze_II::initialize_commands() {
                 // get probability distribution
                 auto p_map = tem->get_prediction_map(current_instance,action);
                 // set colors
-                Maze::color_vector_t cols;
+                vector<double> dist;
                 for(observation_ptr_t observation : observation_space) {
                     double p = 0;
                     for(reward_ptr_t reward : reward_space) {
                         p += p_map[make_tuple(observation,reward)];
                     }
-                    p = sqrt(p);
-                    cols.push_back(std::make_tuple(1,1-p,1-p));
+                    dist.push_back(p);
                 }
-                maze->set_state_colors(cols);
-                maze->render_update();
+                maze->show_distribution(dist,true);
                 return {true,"displayed p-distribution"};
             }, "color maze according to (sqrt of) probability distribution for TEM and action <QString>");
+        command_center.add_command(top_new_stuff,{"stationary-distribution","sd"}, [this]()->ret_t{
+                using namespace arma;
+                // check if environment is a maze
+                shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
+                if(maze==nullptr) {
+                    return {true,"allowed for maze-environments only"};
+                }
+                // get transition matrix and stationary distribution
+                mat T;
+                o_r_idx_map_t o_r_idx_map;
+                get_TEM_transition_matrix_and_o_r_index_map(T,o_r_idx_map);
+                vec stat_dist;
+                bool stat_dist_found = get_stationary_distribution(T,stat_dist);
+                // debug print
+                IF_DEBUG(3) {
+                    cout.precision(3);
+                    cout.setf(std::ios::fixed);
+                    cout.width(10);
+                    cout << "Transition Matrix:" << endl;
+                    for(auto o_r_1 : o_r_idx_map) {
+                        cout << o_r_1.first << "	";
+                        for(auto o_r_2 : o_r_idx_map) {
+                            cout << T(o_r_1.second,o_r_2.second) << "	";
+                        }
+                        cout << endl;
+                    }
+                    cout.unsetf(cout.flags());
+                }
+                // return or show distribution
+                if(!stat_dist_found) {
+                    return {true,"Could not find stationary distribution"};
+                } else {
+                    // set colors
+                    vector<double> dist;
+                    for(observation_ptr_t observation : observation_space) {
+                        double p = 0;
+                        for(reward_ptr_t reward : reward_space) {
+                            p += stat_dist[o_r_idx_map[make_tuple(observation,reward)]];
+                        }
+                        dist.push_back(p);
+                    }
+                    maze->show_distribution(dist,true);
+                    return {true,"showed stationary distribution"};
+                }
+            }, "show stationary distribution (sqrt) of TEM");
     }
-
-// #########################
 
 //        // } else if(str_args[0]=="validate" || str_args[0]=="v") {
 //        //     if(str_args_n==1 ) {
@@ -1460,6 +1501,161 @@ double TestMaze_II::validate_predictor_on_training_episode(const Predictor& pred
     }
     log_prob /= counter;
     return exp(log_prob);
+}
+
+void TestMaze_II::get_TEM_transition_matrix_and_o_r_index_map(arma::mat& T, o_r_idx_map_t& o_r_idx_map) const {
+    using namespace arma;
+    // memory check
+    bool check_memory = AbstractInstance::memory_check_request();
+    int memory_count = 0;
+    if(check_memory) {
+        memory_count = AbstractInstance::memory_check(false);
+    }
+    // get all action-observation-reward triplets
+    vector<tuple<action_ptr_t,observation_ptr_t,reward_ptr_t>> aor_triplets;
+    o_r_idx_map.clear();
+    {
+        int o_r_idx = 0;
+        for(observation_ptr_t observation : observation_space) {
+            for(reward_ptr_t reward : reward_space) {
+                for(action_ptr_t action : action_space) {
+                    aor_triplets.push_back(make_tuple(action,observation,reward));
+                }
+                o_r_idx_map[make_tuple(observation,reward)] = o_r_idx;
+                ++o_r_idx;
+            }
+        }
+    }
+    // initialize transition matrix
+    T.zeros(o_r_idx_map.size(), o_r_idx_map.size());
+    {
+        // construct sequence
+        instance_ptr_t first_instance = DoublyLinkedInstance::create(action_space,observation_space,reward_space); // first instance (time=0) from sequence back to min_h-1
+        auto last_instance = DoublyLinkedInstance::get_shared_ptr(first_instance,true);                            // last instance in sequence (time=min_h-1)
+        {
+            DEBUG_OUT(3,"Constructing sequence:");
+            DEBUG_OUT(3,"    " << *last_instance);
+            for(int t_idx=1; t_idx<N_plus->get_max_horizon(); ++t_idx) {
+                last_instance->set_non_const_predecessor(DoublyLinkedInstance::create(action_space,observation_space,reward_space));
+                last_instance = DoublyLinkedInstance::get_shared_ptr(last_instance->non_const_prev(),true);
+                DEBUG_OUT(3,"    " << *last_instance);
+            }
+        }
+        // compute transition maxtrix
+        IF_DEBUG(1) {ProgressBar::init("Computing T-matrix:");}
+        int progress_idx = 0, max_progress = aor_triplets.size();
+        int n_actions = action_space->space_size();
+        for(auto from_aor_triplet : aor_triplets) { // go through all possible histories (that matter)
+            int col_idx = o_r_idx_map[make_tuple(get<1>(from_aor_triplet),get<2>(from_aor_triplet))];
+            last_instance->set_non_const_predecessor(DoublyLinkedInstance::create(get<0>(from_aor_triplet), get<1>(from_aor_triplet), get<2>(from_aor_triplet)));
+            for(action_ptr_t action : action_space) {
+                auto p_map = tem->get_prediction_map(first_instance->const_prev(),action);
+                for(auto o_r : o_r_idx_map) {
+                    double p = p_map[o_r.first];
+                    int row_idx = o_r.second;
+                    T(row_idx,col_idx) += p/(n_actions*n_actions);
+                    // DEBUG_OUT(4,"Instance: " << make_tuple(action,get<0>(o_r.first),get<1>(o_r.first)) << "			--> " << p);
+                    // for(const_instance_ptr_t ins = first_instance->const_prev(); ins!=INVALID; --ins) {
+                    //     DEBUG_OUT(4,"	" << ins);
+                    // }
+                    IF_DEBUG(1) {
+                        if(p==0) { // cannot happen for log-linear model
+                            DEBUG_WARNING("    p " << from_aor_triplet << " ---> " << make_tuple(action,get<0>(o_r.first),get<1>(o_r.first)) << " = " << p );
+                        }
+                    }
+                }
+            }
+            ++progress_idx;
+            IF_DEBUG(1) {ProgressBar::print(progress_idx,max_progress);}
+        }
+        IF_DEBUG(1) {ProgressBar::terminate();}
+        // make sure memory is freed
+        //first_instance->detach_all(); // not needed, don't know why
+    }
+    if(check_memory) {
+        int memory_count_now = AbstractInstance::memory_check(false);
+        if(memory_count_now!=memory_count) {
+            DEBUG_WARNING(QString("Memory mismatch: was %1, now is %2").arg(memory_count).arg(memory_count_now));
+        }
+    }
+}
+
+bool TestMaze_II::get_stationary_distribution(const arma::mat& T, arma::vec& stat_dist) const {
+    using namespace arma;
+    // compute stationary distribution (via eigenvalues and
+    // eigenvectors)
+    cx_vec eig_vals;
+    cx_mat eig_vecs;
+    eig_gen(eig_vals,eig_vecs,T);
+    int dim = eig_vals.size();
+    vec eig_p_norms(dim);
+    vec eig_L1_norms(dim);
+    mat norm_eig_vecs(dim,dim);
+    for(int i=0; i<dim; ++i) {
+        norm_eig_vecs.col(i) = real(eig_vecs.col(i));
+        eig_p_norms(i) = sum(norm_eig_vecs.col(i));
+        eig_L1_norms(i) = sum(abs(norm_eig_vecs.col(i)));
+        norm_eig_vecs.col(i) = norm_eig_vecs.col(i)/eig_p_norms(i);
+    }
+    IF_DEBUG(3) {
+        // set stream properties
+        cout.precision(3);
+        cout.setf(std::ios::fixed);
+        cout.width(10);
+        // print
+        T.raw_print("Transition Matrix:");
+        cout.unsetf(cout.flags());
+    }
+    // eigenmodes
+    int eig_idx = -1;
+    IF_DEBUG(3) {cout << "Stationary distributions:" << endl;}
+    for(int i=0; i<dim; ++i) {
+        if(fabs(real(eig_vals(i))-1)<1e-3 && fabs(eig_p_norms(i))>1e-3) {
+            IF_DEBUG(3) {
+                cout << "EV = " << real(eig_vals(i)) << endl;
+                norm_eig_vecs.col(i).raw_print();
+            }
+            IF_DEBUG(1) {
+                if(eig_idx!=-1) {
+                    DEBUG_WARNING("Already found multiple eigenvalues of 1");
+                }
+            }
+            eig_idx = i;
+        }
+    }
+    IF_DEBUG(3) {
+        cout.precision(3);
+        cout.setf(std::ios::fixed);
+        cout.width(10);
+        cout << "Orthogonal modes:" << endl;
+        for(int i=0; i<dim; ++i) {
+            if(fabs(eig_p_norms(i))<1e-3) {
+                cout << "EV = " << real(eig_vals(i)) << endl;
+                (real(eig_vecs.col(i))/eig_L1_norms(i)).raw_print();
+            }
+        }
+        cout << "Invalid modes:" << endl;
+        for(int i=0; i<dim; ++i) {
+            if(!(fabs(real(eig_vals(i))-1)<1e-3 && fabs(eig_p_norms(i))>1e-3) && !(fabs(eig_p_norms(i))<1e-3)) {
+                cout << "EV = " << real(eig_vals(i)) << endl;
+                (real(eig_vecs.col(i))/eig_L1_norms(i)).raw_print();
+            }
+        }
+        // eig_vals.raw_print("Eigenvalues:");
+        // eig_vecs.raw_print("Eigenvectors:");
+        // norm_eig_vecs.raw_print("Normalized eigenvectors:");
+        // reset
+        cout.unsetf(cout.flags());
+    }
+    if(eig_idx==-1) { // make sure eigenvalue 1 was found
+        stat_dist.zeros(dim);
+        return false;
+    } else {
+        stat_dist = norm_eig_vecs.col(eig_idx);
+        IF_DEBUG(1) {stat_dist.print("Stationary distribution");}
+        return true;
+    }
+
 }
 
 void TestMaze_II::render_update() {

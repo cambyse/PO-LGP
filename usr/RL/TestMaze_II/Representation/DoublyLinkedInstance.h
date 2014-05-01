@@ -2,6 +2,9 @@
 #define DOUBLYLINKEDINSTANCE_H_
 
 #include "AbstractInstance.h"
+
+#include "../util/debug.h"
+
 class DoublyLinkedInstance: public AbstractInstance {
     //------------------------------------------------------------//
     //                        members                             //
@@ -25,6 +28,13 @@ public:
                         const_ptr_t before,
                         const_ptr_t after);
     static ptr_t create(action_ptr_t a, observation_ptr_t o, reward_ptr_t r);
+    static std::shared_ptr<DoublyLinkedInstance> get_shared_ptr(ptr_t ptr, bool report_error = false) {
+        auto ret = std::dynamic_pointer_cast<DoublyLinkedInstance>((std::shared_ptr<AbstractInstance>)ptr);
+        if(report_error&&ret==nullptr) {
+            DEBUG_ERROR("Conversion failed");
+        }
+        return ret;
+    }
     /* virtual Iterator begin() override; */
     virtual const_ptr_t const_next(const int& n = 1) const override;
     virtual const_ptr_t const_prev(const int& n = 1) const override;
@@ -48,5 +58,7 @@ private:
                          const_ptr_t prev,
                          const_ptr_t next);
 };
+
+#include "../util/debug_exclude.h"
 
 #endif /* DOUBLYLINKEDINSTANCE_H_ */

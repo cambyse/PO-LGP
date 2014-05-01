@@ -143,6 +143,12 @@ void TEM::optimize_weights_LBFGS() {
 
     DEBUG_OUT(2,"Optimize weights using L-BFGS");
 
+    // return if no data available
+    if(number_of_data_points==0) {
+        DEBUG_WARNING("Cannot optimize weights without data");
+        return;
+    }
+
     // make sure data are up to date
     update();
 

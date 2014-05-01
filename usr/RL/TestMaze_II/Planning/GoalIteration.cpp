@@ -2,8 +2,9 @@
 #include "../util/util.h"
 #include <vector>
 #include <algorithm> // for std::max
-#include "../util/debug.h"
 #include "../Representation/DoublyLinkedInstance.h"
+
+#include "../util/debug.h"
 
 using std::vector;
 using std::max;
