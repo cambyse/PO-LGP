@@ -51,13 +51,18 @@ double UnconstrainedProblem::fs(arr& dF, arr& HF, const arr& _x){
   return F;
 }
 
-void UnconstrainedProblem::aulaUpdate(double lambdaStepsize){
+void UnconstrainedProblem::aulaUpdate(double lambdaStepsize, arr& x_reeval){
+  if(&x_reeval){
+    x=x_reeval;
+    f_x = P.fc(df_x, Hf_x, g_x, Jg_x, x);
+  }
+
   if(!lambda.N){ lambda.resize(g_x.N); lambda.setZero(); }
 
   lambda += (lambdaStepsize * 2.*mu)*g_x;
   for(uint i=0;i<lambda.N;i++) if(lambda(i)<0.) lambda(i)=0.;
 
-//  cout <<"Update Lambda: g=" <<g <<" lambda=" <<lambda <<endl;
+  cout <<"Update Lambda: g=" <<g_x <<" lambda=" <<lambda <<endl;
 }
 
 void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc, double *F_x, arr& dF_x, arr& HF_x){
@@ -67,21 +72,36 @@ void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc
 
   //collect gradients of active constraints
   arr A;
-  for(uint i=0;i<g_x.N;i++) if(g_x(i)>0. || lambda(i)>0.){
-    A.append(Jg_x[i]);
-    A.reshape(A.N/x.N,x.N);
-  }
-  arr tmp = A*~A;
-  for(uint i=0;i<tmp.d0;i++) tmp(i,i) += 1e-6;
-  tmp = inverse_SymPosDef(tmp);
-  arr beta = tmp * A;
-  //insert zero rows
-  for(uint i=0;i<g_x.N;i++) if(!(g_x(i)>0. || lambda(i)>0.)){
-    beta.insRows(i);
-    beta[i].setZero();
-  }
+  if(Jg_x.special==arr::RowShiftedPackedMatrixST){
+    A = Jg_x;
+    for(uint i=0;i<g_x.N;i++) if(!(g_x(i)>0. || lambda(i)>0.)) A[i].setZero();
 
-  lambda += lambdaStepsize * (2.*mu*g_x - beta*dF_x);
+    arr tmp = comp_A_At(A);
+    CHECK(castRowShiftedPackedMatrix(tmp).symmetric==true,"");
+    for(uint i=0;i<tmp.d0;i++) tmp(i,0) += 1e-6;
+
+    arr AF = comp_A_x(A, dF_x);
+    arr beta;
+    lapack_Ainv_b_sym(beta, tmp, AF);
+
+    lambda += lambdaStepsize * (2.*mu*g_x - beta);
+  }else{
+    //remove zero rows
+    for(uint i=0;i<g_x.N;i++) if(g_x(i)>0. || lambda(i)>0.){
+      A.append(Jg_x[i]);
+      A.reshape(A.N/x.N,x.N);
+    }
+    arr tmp = A*~A;
+    for(uint i=0;i<tmp.d0;i++) tmp(i,i) += 1e-6;
+    tmp = inverse_SymPosDef(tmp);
+    arr beta = tmp * A;
+    //reinsert zero rows
+    for(uint i=0;i<g_x.N;i++) if(!(g_x(i)>0. || lambda(i)>0.)){
+      beta.insRows(i);
+      beta[i].setZero();
+    }
+    lambda += lambdaStepsize * (2.*mu*g_x - beta*dF_x);
+  }
 
   for(uint i=0;i<g_x.N;i++) if(lambda(i)<0.) lambda(i)=0.;
 

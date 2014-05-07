@@ -49,12 +49,17 @@ int main(int argc,char** argv){
   
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction MF(P);
-  Convert CP(MF);
-  UnconstrainedProblem UCP(CP);
-  UCP.mu = 1.;
-
   arr x(MF.get_T()+1,MF.dim_x());
   x.setZero();
+
+  Convert CP(MF);
+#if 1
+  optConstrained(x, NoArr, CP, OPT(verbose=2, stopIters=100, damping=1., maxStep=1., nonStrict=5, constrainedMethod=anyTimeAula));
+  P.costReport();
+  for(;;) displayTrajectory(x, 1, G, "planned trajectory");
+#else
+  UnconstrainedProblem UCP(CP);
+  UCP.mu = 1.;
 
   if(con){
     for(uint k=0;k<20;k++){
@@ -73,6 +78,7 @@ int main(int argc,char** argv){
       displayTrajectory(x, 1, G, "planned trajectory");
     }
   }
+#endif
 
   return 0;
 }
