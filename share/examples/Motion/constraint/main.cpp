@@ -54,7 +54,8 @@ int main(int argc,char** argv){
 
   Convert CP(MF);
 #if 1
-  optConstrained(x, NoArr, CP, OPT(verbose=2, stopIters=100, damping=1., maxStep=1., nonStrict=5, constrainedMethod=anyTimeAula));
+  ConstrainedMethodType method = (ConstrainedMethodType)MT::getParameter<int>("method");
+  optConstrained(x, NoArr, CP, OPT(verbose=1, stopIters=100, damping=1., maxStep=1., nonStrict=5, constrainedMethod=method));
   P.costReport();
   for(;;) displayTrajectory(x, 1, G, "planned trajectory");
 #else

@@ -187,7 +187,7 @@ void sConvert::KOrderMarkovFunction_VectorFunction::fv(arr& phi, arr& J, const a
   //resizing things:
   phi.resize(M);   phi.setZero();
   RowShiftedPackedMatrix* Jaux;
-  if(&J) Jaux = auxRowShifted(J, M, (k+1)*n, x.N);
+  if(&J){ Jaux = auxRowShifted(J, M, (k+1)*n, x.N); J.setZero(); }
   M=0;
   uint m_t;
   for(uint t=0; t<=T; t++) {
@@ -252,8 +252,8 @@ double sConvert::KOrderMarkovFunction_ConstrainedProblem::fc(arr& df, arr& Hf, a
   RowShiftedPackedMatrix *Jy_aux, *Jg_aux;
   meta_y.resize(meta_yd);
   if(&meta_g) meta_g.resize(meta_gd);
-  if(getJ) Jy_aux = auxRowShifted(meta_Jy, meta_yd, (k+1)*n, x.N);
-  if(&meta_Jg) Jg_aux = auxRowShifted(meta_Jg, meta_gd, (k+1)*n, x.N);
+  if(getJ){ Jy_aux = auxRowShifted(meta_Jy, meta_yd, (k+1)*n, x.N); meta_Jy.setZero(); }
+  if(&meta_Jg){ Jg_aux = auxRowShifted(meta_Jg, meta_gd, (k+1)*n, x.N); meta_Jg.setZero(); }
 
   uint y_count=0;
   uint g_count=0;

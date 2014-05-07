@@ -62,7 +62,7 @@ void UnconstrainedProblem::aulaUpdate(double lambdaStepsize, arr& x_reeval){
   lambda += (lambdaStepsize * 2.*mu)*g_x;
   for(uint i=0;i<lambda.N;i++) if(lambda(i)<0.) lambda(i)=0.;
 
-  cout <<"Update Lambda: g=" <<g_x <<" lambda=" <<lambda <<endl;
+//  cout <<"Update Lambda: g=" <<g_x <<" lambda=" <<lambda <<endl;
 }
 
 void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc, double *F_x, arr& dF_x, arr& HF_x){
@@ -71,9 +71,9 @@ void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc
   arr lambdaOld = lambda;
 
   //collect gradients of active constraints
-  arr A;
   if(Jg_x.special==arr::RowShiftedPackedMatrixST){
-    A = Jg_x;
+#if 0
+    arr A = Jg_x;
     for(uint i=0;i<g_x.N;i++) if(!(g_x(i)>0. || lambda(i)>0.)) A[i].setZero();
 
     arr tmp = comp_A_At(A);
@@ -85,22 +85,49 @@ void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc
     lapack_Ainv_b_sym(beta, tmp, AF);
 
     lambda += lambdaStepsize * (2.*mu*g_x - beta);
+#else
+    arr A;
+    RowShiftedPackedMatrix *Aaux = auxRowShifted(A, 0, Jg_x.d1, x.N);
+    RowShiftedPackedMatrix *Jgaux = &castRowShiftedPackedMatrix(Jg_x);
+    //remove zero rows
+    for(uint i=0;i<g_x.N;i++) if(g_x(i)>0. || lambda(i)>0.){
+      A.append(Jg_x[i]);
+      A.reshape(A.N/Jg_x.d1,Jg_x.d1);
+      Aaux->rowShift.append(Jgaux->rowShift(i));
+    }
+    if(A.d0>0){
+      arr tmp = comp_A_At(A);
+      CHECK(castRowShiftedPackedMatrix(tmp).symmetric==true,"");
+      for(uint i=0;i<tmp.d0;i++) tmp(i,0) += 1e-6;
+
+      arr AF = comp_A_x(A, dF_x);
+      arr beta;
+      lapack_Ainv_b_sym(beta, tmp, AF);
+      //reinsert zero rows
+      for(uint i=0;i<g_x.N;i++) if(!(g_x(i)>0. || lambda(i)>0.)){
+        beta.insert(i,0.);
+      }
+      lambda += lambdaStepsize * (2.*mu*g_x - beta);
+    }else{
+      lambda += lambdaStepsize * (2.*mu*g_x);
+    }
+#endif
   }else{
+    arr A;
     //remove zero rows
     for(uint i=0;i<g_x.N;i++) if(g_x(i)>0. || lambda(i)>0.){
       A.append(Jg_x[i]);
       A.reshape(A.N/x.N,x.N);
     }
-    arr tmp = A*~A;
+    arr tmp = comp_A_At(A);
     for(uint i=0;i<tmp.d0;i++) tmp(i,i) += 1e-6;
-    tmp = inverse_SymPosDef(tmp);
-    arr beta = tmp * A;
+    arr beta;
+    lapack_Ainv_b_sym(beta, tmp, comp_A_x(A, dF_x));
     //reinsert zero rows
     for(uint i=0;i<g_x.N;i++) if(!(g_x(i)>0. || lambda(i)>0.)){
-      beta.insRows(i);
-      beta[i].setZero();
+      beta.insert(i,0.);
     }
-    lambda += lambdaStepsize * (2.*mu*g_x - beta*dF_x);
+    lambda += lambdaStepsize * (2.*mu*g_x - beta);
   }
 
   for(uint i=0;i<g_x.N;i++) if(lambda(i)<0.) lambda(i)=0.;
@@ -158,6 +185,9 @@ double PhaseOneProblem::fc(arr& df, arr& Hf, arr& meta_g, arr& meta_Jg, const ar
 const char* MethodName[]={ "NoMethod", "SquaredPenalty", "AugmentedLagrangian", "LogBarrier", "AnyTimeAugmentedLagrangian" };
 
 void optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
+
+  ofstream fil(STRING("z."<<MethodName[opt.constrainedMethod]));
+
   UnconstrainedProblem UCP(P);
 
   //switch on penalty terms
@@ -165,16 +195,20 @@ void optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
     case squaredPenalty: UCP.mu=1.;  break;
     case augmentedLag:   UCP.mu=1.;  break;
     case anyTimeAula:    UCP.mu=1.;  break;
-    case logBarrier:     UCP.muLB=1.;  break;
+    case logBarrier:     UCP.muLB=.1;  break;
     case noMethod: HALT("need to set method before");  break;
   }
 
   if(opt.verbose>0) cout <<"***** optConstrained: method=" <<MethodName[opt.constrainedMethod] <<endl;
 
   OptNewton newton(x, UCP, opt);
+  newton.o.stopTolerance*=10;
 //  OptNewton::StopCriterion res;
 
+
   for(uint k=0;;k++){
+    fil <<k <<' ' <<newton.evals <<' ' <<UCP.f_x <<' ' <<sum(elemWiseMax(UCP.g_x,zeros(UCP.g_x.N,1))) <<endl;
+
     if(opt.verbose>0){
       cout <<"***** optConstrained: iteration=" <<k
 	   <<" mu=" <<UCP.mu <<" muLB=" <<UCP.muLB;
@@ -183,9 +217,13 @@ void optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
     }
 
     arr x_old = x;
-    if(opt.constrainedMethod==anyTimeAula)
-      for(uint l=0;l<2; l++) newton.step();
-    else{
+    if(opt.constrainedMethod==anyTimeAula){
+      //for(uint l=0;l<10; l++) newton.step();
+      for(uint l=0;l<5; l++){
+        OptNewton::StopCriterion res = newton.step();
+        if(res>=OptNewton::stopCrit1) break;
+      }
+    }else{
       newton.reinit();
       newton.run();
     }
@@ -206,14 +244,14 @@ void optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
     switch(opt.constrainedMethod){
       case squaredPenalty: UCP.mu *= 10;  break;
       case augmentedLag:   UCP.aulaUpdate();  UCP.mu *= 1;  break;
-//      case augmentedLag:   UCP.mu *= 1.;
+//      case augmentedLag:   UCP.anyTimeAulaUpdate(1., 1., &newton.fx, newton.gx, newton.Hx);  UCP.mu *= 1;  break;
       case anyTimeAula:    UCP.anyTimeAulaUpdate(1., 1., &newton.fx, newton.gx, newton.Hx);  break;
       case logBarrier:     UCP.muLB /= 2;  break;
       case noMethod: HALT("need to set method before");  break;
     }
 
   }
-
+  fil.close();
   if(&dual) dual=UCP.lambda;
 }
 
