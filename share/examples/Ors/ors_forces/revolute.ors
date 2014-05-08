@@ -14,7 +14,7 @@ body door1-door {
 joint (door1-frame, door1-door) {
   type=0
   A=<T t(0 0 0) d(90 0 1 0)>
-  limit=[-2.8 2.8 1. 100. .1]
+  limit=[-1.8 1.8 1. 100. .1]
   drive=[0. .4]
   BinvA
   agent = 99
