@@ -163,6 +163,7 @@ uint DefaultTaskMap::dim_phi(const ors::KinematicWorld& G) {
   switch(type) {
     case posTMT: return 3;
     case vecTMT: return 3;
+    case quatTMT: return 4;
     case qItselfTMT: return G.getJointStateDimension();
     case qLinearTMT: return params.d0;
     case qSquaredTMT: return 1;
