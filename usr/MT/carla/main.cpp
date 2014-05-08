@@ -41,14 +41,16 @@ void testAula(ConstrainedProblem& p){
 
   uint d=MT::getParameter<uint>("dim", 2);
   arr x(d);
-  rndUniform(x, -1., 1.);
+  //rndUniform(x, -1., 1.);
+  x.setZero();
   cout <<"x0=" <<x <<endl;
 
   rnd.seed(0);
 
   system("rm -f z.grad_all");
 
-  OptNewton opt(x, UCP, OPT(verbose=2, damping=1., stopTolerance=1e-6, stepInc=1.));
+  OptNewton opt(x, UCP, OPT(verbose=1, damping=1., stopTolerance=1e-4, stepDec=.5));
+  OptNewton::StopCriterion res;
 
   for(uint k=0;k<100;k++){
 //    cout <<"x_start=" <<x <<" mu=" <<UCP.mu <<" lambda=" <<UCP.lambda <<endl;
@@ -65,14 +67,14 @@ void testAula(ConstrainedProblem& p){
     x += 1. * Delta;
 #else
 //    OptNewton(x, UCP, OPT(verbose=1, damping=1., stopTolerance=1e-6, stepInc=1.)).step();
-    OptNewton::StopCriterion res = opt.step();
-    cout <<"f(x)=" <<UCP.f_x <<" \tmu=" <<UCP.mu <<" \tmuLB=" <<UCP.muLB;
+    for(uint l=0;l<2; l++) res = opt.step();
+    cout <<k <<' ' <<opt.evals <<' ' <<"f(x)=" <<UCP.f_x <<" \tcompl=" <<sum(elemWiseMax(UCP.g_x,zeros(UCP.g_x.N,1))) <<" \tmu=" <<UCP.mu <<" \tmuLB=" <<UCP.muLB;
     if(x.N<5) cout <<" \tx=" <<x <<" \tlambda=" <<UCP.lambda;
     cout <<endl;
 #endif
 
     if(res) break;
-    UCP.aula_update(x, .1, &opt.fx, opt.gx, opt.Hx);
+    UCP.anyTimeAulaUpdate(1., 1.0, &opt.fx, opt.gx, opt.Hx);
   }
   cout <<std::setprecision(6) <<"\nf(x)=" <<UCP.f_x <<"\nx_opt=" <<x <<"\nlambda=" <<UCP.lambda <<endl;
 }

@@ -1,17 +1,22 @@
 #include "gamepad2tasks.h"
+#include <Motion/taskMap_default.h>
 
 Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL), endeffL(NULL){
   endeffR = MP.addPDTask("endeffR", .2, .8, posTMT, "endeffR");
   endeffL = MP.addPDTask("endeffL", .2, .8, posTMT, "endeffL");
   base = MP.addPDTask("endeffBase", .2, .8, posTMT, "endeffBase");
   baseQuat = MP.addPDTask("endeffBase", .2, .8, quatTMT, "endeffBase");
-  head = MP.addPDTask("endeffHead", .2, .8, vecTMT, "endeffHead");
+  head = MP.addPDTask("endeffHead", 1., .8, vecTMT, "endeffHead", ors::Vector(1., 0., 0.));
   limits = MP.addPDTask("limits", .2, .8, qLimitsTMT);
-  //limits->setGains(100.,0.);
-  qitself = MP.addPDTask("qitself", .1, 1., qLinearTMT, NULL, NoVector, NULL, NoVector, MP.H_rate_diag);
-  qitself->y_ref = MP.qitselfPD.y_ref;
-//  MP.addPDtask("endeffHead", .1, .8, posTMT, "handR", NoVector, "rightTarget");
-//  MP.addPDtask("endeffBase", .1, .8, posTMT, "handR", NoVector, "rightTarget");
+  limits->y_ref.setZero();
+  limits->v_ref.setZero();
+
+  coll = MP.addPDTask("collisions", .2, .8, collTMT, NULL, NoVector, NULL, NoVector, {.1});
+  coll->y_ref.setZero();
+  coll->v_ref.setZero();
+
+  gripperL = MP.addPDTask("gripperL", 2., .8, new DefaultTaskMap(qSingleTMT, -MP.world.getJointByName("l_gripper_joint")->qIndex));
+  gripperR = MP.addPDTask("gripperR", 2., .8, new DefaultTaskMap(qSingleTMT, -MP.world.getJointByName("r_gripper_joint")->qIndex));
 }
 
 double joySignalMap(double x){
@@ -21,38 +26,32 @@ double joySignalMap(double x){
 bool stopButtons(const arr& gamepadState){
   if(!gamepadState.N) return false;
   uint mode = uint(gamepadState(0));
-//cout <<"mode " <<mode <<endl;
   if(mode&0x10 || mode&0x20 || mode&0x40 || mode&0x80) return true;
   return false;
 }
 
 bool Gamepad2Tasks::updateTasks(arr& gamepadState){
+  if(stopButtons(gamepadState)) return true;
+
   for(PDtask* pdt:MP.tasks) pdt->active=false;
 
-  qitself->active=true;
-  qitself->setGains(0.,100.);
-  qitself->v_ref.setZero();
-  qitself->prec=100.;
+  MP.qitselfPD.setGains(0.,10.); //nullspace qitself is not used for homing by default
 
   limits->active=true;
-  limits->v_ref.setZero();
-  limits->v_ref.setZero();
-  limits->prec=100.;
+  coll->active=true;
 
   if(gamepadState.N<6) return false;
 
-  double joyRate=MT::getParameter<double>("joyRate",.2);
+  double joyRate=MT::getParameter<double>("joyRate",.1);
   for(uint i=1;i<gamepadState.N;i++) if(fabs(gamepadState(i))<0.05) gamepadState(i)=0.;
   double joyLeftRight   = -joyRate*joySignalMap(gamepadState(4));
   double joyForwardBack = -joyRate*joySignalMap(gamepadState(3));
   double joyUpDown      = -joyRate*joySignalMap(gamepadState(2));
-  double joyRotate  = -10.*joyRate*joySignalMap(gamepadState(1));
+  double joyRotate   = -1.*joyRate*joySignalMap(gamepadState(1));
 
   uint mode = uint(gamepadState(0));
-  //cout <<"mode " <<mode <<endl;
-  if(mode&0x10 || mode&0x20 || mode&0x40 || mode&0x80) return true;
 
-  enum {none, up, down, left, right} sel=none;
+  enum {none, up, down, downRot, left, right} sel=none;
   if(fabs(gamepadState(5))>.5 || fabs(gamepadState(6))>.5){
     if(fabs(gamepadState(5))>fabs(gamepadState(6))){
       if(gamepadState(5)>0.) sel=right; else sel=left;
@@ -67,7 +66,7 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
       switch(sel){
         case right:  pdt=endeffR;  break;
         case left:   pdt=endeffL;  break;
-        case up:     pdt=head;    head->setGainsAsNatural(.02, .8);  break;
+        case up:     pdt=head;    break;
         case down:   pdt=base;   break;
         case none:   pdt=NULL;  break;
       }
@@ -77,10 +76,7 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
         pdt->map.phi(pdt->y, NoArr, MP.world);
         pdt->v_ref.resizeAs(pdt->y);
       }
-      ors::Vector vel;
-      vel.x = joyLeftRight;
-      vel.y = joyForwardBack;
-      vel.z = joyUpDown;
+      ors::Vector vel(joyLeftRight, joyForwardBack, joyUpDown);
       vel = MP.world.getShapeByName("endeffBase")->X.rot*vel;
       pdt->y_ref = pdt->y + 0.01*ARRAY(vel);
       pdt->v_ref = ARRAY(vel); //setZero();
@@ -89,7 +85,6 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
       //-- left right: gaze control
       if(sel==left || sel==right){
         head->active=true;
-        head->setGainsAsNatural(.05, .8);
         arr gaze = pdt->y - ARRAY(MP.world.getShapeByName("endeffHead")->X.pos);
         gaze /= length(gaze);
         head->y_ref = gaze;
@@ -106,16 +101,28 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
         }
         ors::Quaternion vel(0., 0., 0., joyRotate);
         vel = vel*ors::Quaternion(pdt_rot->y);
-        pdt_rot->y_ref = pdt_rot->y + 0.5*0.01*ARRAY(vel);
-        //cout <<joyRotate <<endl;
-        pdt_rot->v_ref.setZero();
+        pdt_rot->y_ref = pdt_rot->y + 0.01*ARRAY(vel);
+        pdt_rot->v_ref = ARRAY(vel); //.setZero();
       }
 
       break;
     }
     case 1: { //(1) homing
       cout <<"HOMING" <<endl;
-      qitself->setGainsAsNatural(2.,1.);
+      MP.qitselfPD.setGainsAsNatural(2.,1.);
+      break;
+    }
+    case 4:
+    case 8:{ //open/close hand
+      PDtask *pdt=NULL;
+      switch(sel){
+        case right:  pdt=gripperR;  break;
+        case left:   pdt=gripperL;  break;
+        default:   pdt=NULL;  break;
+      }
+      if(!pdt) break;
+      if(mode==8) pdt->y_ref={.08}; else pdt->y_ref={.01};
+      pdt->active=true;
       break;
     }
 //    case 2: { //(2) CRAZY tactile guiding
@@ -124,19 +131,6 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
 //      skin->y_target=ARR(.0, .0, .0, .0, .0, .0);
 //      //ON SIMULATION: since it is set to (.01, .01, .01) this will always give a repelling force!
 //      break;
-//    }
-//    case 4: { //(3) controlling the rotation rate
-//      eff->active=true;
-//      eff->v_target = 0.;      eff->v_prec = 1e5;
-//      rot->active=true;
-//      rot->v_target(0) = -3.*joyRate*MT::sign(joys(3))*(.25*(exp(MT::sqr(joys(3))/10000.)-1.));
-//      rot->v_target(1) = +3.*joyRate*MT::sign(joys(6))*(.25*(exp(MT::sqr(joys(6))/10000.)-1.));
-//      rot->v_target(2) = -3.*joyRate*MT::sign(joys(1))*(.25*(exp(MT::sqr(joys(1))/10000.)-1.));
-//      break;
-//    }
-//    case 8: { //(4) motion rate without rotation
-//      rot->active=true;
-//      rot->v_target.setZero();
 //    }
 //    case 256: { //(select)close hand
 //      skin->active=true;

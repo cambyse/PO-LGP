@@ -3,7 +3,17 @@
 #include <Core/module.h>
 #include <Core/array.h>
 
+//===========================================================================
+//
+// utils
+//
+
 bool rosOk();
+
+//===========================================================================
+//
+// variable declarations
+//
 
 //-- a basic message type for communication with the PR2 controller
 struct CtrlMsg{
@@ -15,15 +25,38 @@ struct CtrlMsg{
 inline void operator<<(ostream& os, const CtrlMsg& m){ os<<"BLA"; }
 inline void operator>>(istream& os, CtrlMsg& m){  }
 
+//===========================================================================
+//
+// modules
+//
 
-struct RosCom:Module{
+/* Modules:
+- RosSpinner
+- RosCtrlMsg
+- RosForceMsg
+- RosKinectMsg
+- RosCameraMsg
+
+Only the CtrlMsg listens to ctrl_ref and then steps and publishes. All
+others only have a feedback and write into Variables.
+
+The Spinner does only ros::spinOnce() in each step and checks
+initialization on startup.
+
+TODO: allow modules to set default loopWithBeat, listenFirst, etc
+options. (In their constructor?)
+
+*/
+
+
+struct RosCom:Module{ //RosCtrlMsg
   struct sRosCom *s;
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
 
   RosCom();
 
-  void publishJointReference();
+  void publishJointReference(); //-> step()
   void open();
   void step();
   void close();

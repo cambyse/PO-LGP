@@ -24,10 +24,13 @@
 
 double stickyWeight=1.;
 
-MotionProblem::MotionProblem(ors::KinematicWorld& _world, bool _useSwift)
-  : world(_world) {
-  useSwift=_useSwift;
-  if(useSwift) world.swift().setCutoff(2.*MT::getParameter<double>("swiftCutoff", 0.11));
+MotionProblem::MotionProblem(ors::KinematicWorld& _world, bool useSwift)
+    : world(_world) , useSwift(useSwift), makeContactsAttractive(false)
+{
+  if(useSwift) {
+    makeConvexHulls(world.shapes);
+    world.swift().setCutoff(2.*MT::getParameter<double>("swiftCutoff", 0.11));
+  }
   world.getJointState(x0, v0);
   if(!v0.N){ v0.resizeAs(x0).setZero(); world.setJointState(x0, v0); }
 }
@@ -185,10 +188,10 @@ uint MotionProblem::dim_phi(uint t) {
     if(c->active) {
       if(c->target.N || c->map.constraint) m += c->map.dim_phi(world);
       //if(transitionType!=kinematic && c->v_target.N)  m += c->map.dim_phi(world);
-#define STICK 1
-#ifdef STICK
+//#define STICK 1
+if(makeContactsAttractive){
       if(c->active && c->map.constraint)  m += c->map.dim_phi(world);
-#endif
+}
     }
   }
   return m;
@@ -230,7 +233,7 @@ bool MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
       }
       if(phi.last() > c->threshold) feasible = false;
     }
-#ifdef STICK //sticky: push into constraints
+if(makeContactsAttractive){ //push into constraints
     if(c->active && c->map.constraint) {
       CHECK(!c->target.N/* && !c->v_target.N*/,"constraints cannot have targets");
       c->map.phi(y, J, world);
@@ -242,7 +245,7 @@ bool MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
       if(&J_x) J_x.append(stickyWeight*J);
       if(&J_v) J_v.append(0.*J);
     }
-#endif
+}
   }
   for(uint i=0; i<taskCosts.N; i++) {
     TaskCost *c = taskCosts(i);
@@ -295,12 +298,12 @@ void MotionProblem::costReport(bool gnuplt) {
       m += d;
     }
     if(c->map.constraint){
-#ifdef STICK
+if(makeContactsAttractive){
       double tc=sumOfSqr(costMatrix.sub(0,-1,m,m+d-1));
       taskC+=tc;
       cout <<"\t sticky=" <<tc;
       m += d;
-#endif
+}
       double gpos=0.;
       for(uint t=0;t<=T;t++) for(uint j=0;j<d;j++){
         double g=costMatrix(t,m+j);
@@ -328,9 +331,9 @@ void MotionProblem::costReport(bool gnuplt) {
     uint d=c->map.dim_phi(world);
     fil <<c->name <<'[' <<d <<"] ";
     if(c->map.constraint){
-#ifdef STICK
+if(makeContactsAttractive){
       fil <<c->name <<"_stick[" <<d <<"] ";
-#endif
+}
       fil <<c->name <<"_constr[" <<d <<"] ";
       if(dualMatrix.N) fil <<c->name <<"_dual[" <<d <<"] ";
     }
@@ -348,10 +351,10 @@ void MotionProblem::costReport(bool gnuplt) {
         m += d;
       }
       if(c->map.constraint){
-  #ifdef STICK
+  if(makeContactsAttractive){
         fil <<sqrt(sumOfSqr(costMatrix.sub(t,t,m,m+d-1))) <<' ';
         m += d;
-  #endif
+  }
         fil <<sum(costMatrix.sub(t,t,m,m+d-1)) <<' ';
         m += d;
         if(dualMatrix.N){
@@ -371,9 +374,9 @@ void MotionProblem::costReport(bool gnuplt) {
   uint i=1;
   for(auto c:taskCosts){
     i++; fil2 <<"  ,'' u 0:"<<i<<" w l \\" <<endl;
-#ifdef STICK
+if(makeContactsAttractive){
     if(c->map.constraint){ i++; fil2 <<"  ,'' u 0:"<<i<<" w l \\" <<endl; }
-#endif
+}
     if(c->map.constraint){ i++; fil2 <<"  ,'' u 0:"<<i<<" w l \\" <<endl; }
     if(c->map.constraint && dualMatrix.N){ i++; fil2 <<"  ,'' u 0:"<<i<<" w l \\" <<endl; }
   }
@@ -400,6 +403,12 @@ arr MotionProblemFunction::get_prefix() {
   }
   CHECK(MP.prefix.d0==get_k() && MP.prefix.d1==dim_x(), "the prefix you set has wrong dimension");
   return MP.prefix;
+}
+
+arr MotionProblemFunction::get_postfix() {
+  if(!MP.postfix.N) return arr();
+  CHECK(MP.postfix.d0==get_k() && MP.postfix.d1==dim_x(), "the postfix you set has wrong dimension");
+  return MP.postfix;
 }
 
 void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {

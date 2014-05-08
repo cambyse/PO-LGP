@@ -26,7 +26,7 @@
 struct CollisionConstraint:public TaskMap {
   double margin;
 
-  CollisionConstraint():margin(.1){ constraint=true; }
+  CollisionConstraint(double _margin=.1):margin(_margin){ constraint=true; }
 
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }

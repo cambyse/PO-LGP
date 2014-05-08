@@ -23,7 +23,7 @@ void TEST(SqrProblem) {
 //  MT::wait();
 
   x=x0;
-  optNewton(x, Convert(P), OPT(stopEvals=1000, stopTolerance=1e-5, useAdaptiveDamping=0., verbose=2, damping=.1));
+  optNewton(x, Convert(P), OPT(stopEvals=1000, initStep=1., stopTolerance=1e-5, useAdaptiveDamping=0., verbose=2, damping=.1));
   system("cp z.opt z.newton");
 //  MT::wait();
 

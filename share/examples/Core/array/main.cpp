@@ -78,13 +78,9 @@ void TEST(Basics){
   rndInteger(a,1,9,false);
   cout <<"\nbefore save/load:\n " <<a <<endl;
 
-  ofstream of("z.tmp");
-  of <<a;
-  of.close();
+  FILE("z.tmp") <<a;
 
-  ifstream inf("z.tmp");
-  inf >>b;
-  inf.close();
+  FILE("z.tmp") >>b;
 
   cout <<"\nafter saved and loaded from a file: " <<b <<endl;
   CHECK_ZERO(maxDiff(a,b), 1e-4, "non-exact save load");
@@ -566,9 +562,10 @@ void TEST(Tensor){
 
 void write(RowShiftedPackedMatrix& PM){
   cout <<"RowShiftedPackedMatrix: real:" <<PM.Z.d0 <<'x' <<PM.real_d1 <<"  packed:" <<PM.Z.d0 <<'x' <<PM.Z.d1 <<endl;
-  cout <<"packed numbers =";  PM.Z.write(cout);
-  cout <<"unpacked =";  unpack(PM.Z).write(cout);
-  cout <<"\nrowShifts=" <<PM.rowShift <<"\ncolPaches=" <<PM.colPatches <<endl;
+  cout <<"\npacked numbers =" <<PM.Z
+      <<"\nrowShifts=" <<PM.rowShift
+     <<"\ncolPaches=" <<PM.colPatches
+    <<"\nunpacked =" <<unpack(PM.Z) <<endl;
 }
 
 void TEST(RowShiftedPackedMatrix){
@@ -588,16 +585,25 @@ void TEST(RowShiftedPackedMatrix){
   cout <<"-----------------------" <<endl;
 
   //--randomized check
-  for(uint k=0;k<20;k++){
-    arr X(1+rnd(20),1+rnd(20));
+  for(uint k=0;k<100;k++){
+    arr X(1+rnd(5),1+rnd(5));
     rndInteger(X,0,1);
     arr Y = packRowShifted(X);
-    arr x(X.d0);
-    rndInteger(x,0,9);
-    cout <<"unpacking errors = " <<maxDiff(X,unpack(Y)) <<' ' <<maxDiff(~X*X,unpack(comp_At_A(Y))) <<' ' <<maxDiff(~X*x,comp_At_x(Y,x)) <<endl;
+//    write(castRowShiftedPackedMatrix(Y));
+    arr x(X.d0);   rndInteger(x,0,9);
+    arr x2(X.d1);  rndInteger(x2,0,9);
+    cout <<"unpacking errors = " <<maxDiff(X,unpack(Y))
+        <<' ' <<maxDiff(~X*X,unpack(comp_At_A(Y)))
+       <<' ' <<maxDiff(X*~X,unpack(comp_A_At(Y)))
+      <<' ' <<maxDiff(~X*x,comp_At_x(Y,x)) <<endl;
     CHECK_ZERO(maxDiff(X, unpack(Y)), 1e-10, "");
     CHECK_ZERO(maxDiff(~X*X, unpack(comp_At_A(Y))), 1e-10, "");
+//    arr tmp =comp_A_At(Y);
+//    //write(*((RowShiftedPackedMatrix*)tmp.aux));
+//    cout <<X*~X <<endl <<unpack(comp_A_At(Y)) <<endl;
+    CHECK_ZERO(maxDiff(X*~X, unpack(comp_A_At(Y))), 1e-10, "");
     CHECK_ZERO(maxDiff(~X*x, comp_At_x(Y,x)), 1e-10, "");
+    CHECK_ZERO(maxDiff(X*x2, comp_A_x(Y,x2)), 1e-10, "");
   }
 }
 
@@ -605,9 +611,8 @@ void TEST(RowShiftedPackedMatrix){
 
 int MAIN(int argc, char *argv[]){
 
-  //testPCA();
-  //testCheatSheet();
-
+  testRowShiftedPackedMatrix();
+  return 0;
   testBasics();
   testCheatSheet();
   testInitializationList();

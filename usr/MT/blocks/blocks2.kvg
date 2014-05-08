@@ -1,0 +1,29 @@
+
+body world { fixed }
+
+body box1 { type=0 color=[1 0 0] size=[.15 .15 .15 1] }
+
+joint (world box1) { type=7 A=<T t(0 0 1.3)> }
+
+# This is a simple cabinet with a drawer (without handle.
+
+body cabinet_base { X=<T t(0 0 0)> fixed }
+shape (cabinet_base) { type=0 color=[0 .3 .7] rel=<T t(.0 .0 1.6)>  size=[1. 1. .1 .0] }
+shape (cabinet_base) { type=0 color=[0 .3 .7] rel=<T t(.0 .0 1.)>  size=[1. 1. .1 .0] }
+shape (cabinet_base) { type=0 color=[0 .3 .7] rel=<T t(.0 .0 .4)>   size=[1. 1. .1 .0] }
+shape (cabinet_base) { type=0 color=[0 .3 .7] rel=<T t(.0 .55 .8)>  size=[1. .1 1.7 .0] }
+shape (cabinet_base) { type=0 color=[0 .3 .7] rel=<T t(.0 -.55 .8)> size=[1. .1 1.7 .0] }
+
+
+body cabinet_drawer { }
+shape (cabinet_drawer) { type=0 color=[.5 .9 .5] rel=<T t(.0  .0 .025)> size=[.95 .9 .05 .0] }
+shape (cabinet_drawer) { type=0 color=[.5 .9 .5] rel=<T t(.0  .45 .2)> size=[.95 .05 .4 .0] }
+shape (cabinet_drawer) { type=0 color=[.5 .9 .5] rel=<T t(.0 -.45 .2)> size=[.95 .05 .4 .0] }
+shape (cabinet_drawer) { type=0 color=[.5 .9 .5] rel=<T t( .45 .0 .2)> size=[.05 .95 .4 .0] }
+shape (cabinet_drawer) { type=0 color=[.5 .9 .5] rel=<T t(-.45 .0 .2)> size=[.05 .95 .4 .0] }
+
+joint (cabinet_base cabinet_drawer) { type=3 A=<T t(0 0 1.1)> }
+
+body cabinet_door {}
+shape (cabinet_door) { type=0 color=[.5 .5 .9] size=[.05 .95 .5 .0] }
+joint (cabinet_base cabinet_door) { type=0 A=<T t(.45 -.5 .7)> axis=[0 0 1] B=<T t(0 .5 0)> }

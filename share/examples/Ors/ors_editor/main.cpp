@@ -21,14 +21,20 @@ void TEST(OrsEditor) {
 
   ors::KinematicWorld G(file);
 
+    G >>FILE("z.ors");
   //some optional manipulations
+  G.setShapeNames();
   G.meldFixedJoints();
+    G >>FILE("z.ors");
   G.removeUselessBodies();
+    G >>FILE("z.ors");
   G.topSort();
   G.makeLinkTree();
   G.calc_q_from_Q();
   G.calc_fwdPropagateFrames();
   G >>FILE("z.ors");
+
+  if(MT::checkParameter<bool>("cleanOnly")) return;
 
   editConfiguration(file, G);
 }

@@ -81,6 +81,7 @@ struct FeedbackMotionControl : MotionProblem {
   arr getDesiredConstraintForces(); ///< J^T lambda^*
   arr operationalSpaceControl();
   void updateConstraintControllers();
+  void reportCurrentState();
 };
 
 //===========================================================================

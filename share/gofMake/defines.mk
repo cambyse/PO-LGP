@@ -302,23 +302,22 @@ ifeq ($(PHYSX),1)
 CXXFLAGS += -DMT_PHYSX -D_DEBUG -DPX_DISABLE_FLUIDS -DCORELIB -DPX32 -DLINUX
 CPATH := $(CPATH):$(MLR_LIBPATH)/include/physx
 #PhysX/Include:$(MLR_LIBPATH)/PhysX/Include/extensions:$(MLR_LIBPATH)/PhysX/Include/foundation:$(MLR_LIBPATH)/PhysX/Include/deprecated
-#LPATH := $(MLR_LIBPATH)/PhysX/Lib/linux32/:$(LPATH)
+#LPATH := $(MLR_LIBPATH)/PhysX/Lib/linux64/:$(LPATH)
 LIBS += -Wl,--start-group -lpthread -lrt\
--lPhysX3CommonCHECKED \
--lPvdRuntimeCHECKED \
--lSimulationControllerCHECKED \
--lSceneQueryCHECKED \
 -lLowLevelCHECKED \
 -lLowLevelClothCHECKED \
--lPhysX3 \
--lPhysX3VehicleCHECKED \
+-lPhysX3CharacterKinematicCHECKED \
+-lPhysX3CHECKED \
+-lPhysX3CommonCHECKED \
 -lPhysX3CookingCHECKED \
 -lPhysX3ExtensionsCHECKED \
--lPhysX3CharacterKinematicCHECKED \
--lRepX3CHECKED \
--lRepXUpgrader3CHECKED \
+-lPhysX3VehicleCHECKED \
 -lPhysXProfileSDKCHECKED \
--lPxTaskCHECKED -Wl,--end-group
+-lPhysXVisualDebuggerSDKCHECKED \
+-lPvdRuntimeCHECKED \
+-lPxTaskCHECKED \
+-lSceneQueryCHECKED \
+-lSimulationControllerCHECKED 
 endif
 
 ifeq ($(PORTAUDIO),1)

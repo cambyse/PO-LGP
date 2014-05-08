@@ -32,9 +32,12 @@ private:
   arr y_fL, J_fL;
   arr y_fR, J_fR;
 
+  //matching joint indices
   uintA ROS_qIndex;
+  ors::Joint *j_worldTranslationRotation;
 
   ros::Publisher jointState_publisher;
+  ros::Publisher baseCommand_publisher;
   ros::Subscriber jointReference_subscriber;
   ros::Subscriber forceSensor_subscriber;
   marc_controller_pkg::JointState jointStateMsg;

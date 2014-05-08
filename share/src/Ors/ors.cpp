@@ -319,26 +319,33 @@ void makeConvexHulls(ShapeL& shapes){
 // Joint implementations
 //
 
+bool always_unlocked(void*) { return false; }
+
 ors::Joint::Joint()
-  : index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0), H(1.) { reset(); }
+  : index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0), locked_func(always_unlocked), locked_data(NULL), H(1.) { reset(); }
 
 ors::Joint::Joint(const Joint& j)
-  : index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0), H(1.) { reset(); *this=j; }
+  : index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0), locked_func(always_unlocked), locked_data(NULL), H(1.) { reset(); *this=j; }
 
 ors::Joint::Joint(KinematicWorld& G, Body *f, Body *t, const Joint* copyJoint)
-  : index(0), qIndex(-1), ifrom(f->index), ito(t->index), from(f), to(t), mimic(NULL), agent(0), H(1.) {
+  : index(0), qIndex(-1), ifrom(f->index), ito(t->index), from(f), to(t), mimic(NULL), agent(0), locked_func(always_unlocked), locked_data(NULL), H(1.) {
   reset();
   if(copyJoint) *this=*copyJoint;
   index=G.joints.N;
   G.joints.append(this);
   f->outLinks.append(this);
   t-> inLinks.append(this);
+  G.qdim.clear();
 }
 
 ors::Joint::~Joint() {
   reset();
   if (from) from->outLinks.removeValue(this);
   if (to) to->inLinks.removeValue(this);
+}
+void ors::Joint::reset() { 
+  listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); X.setZero(); axis.setZero(); limits.clear(); H=1.; type=JT_none; 
+  locked_func=always_unlocked; locked_data=NULL;
 }
 
 void ors::Joint::parseAts() {
@@ -669,6 +676,7 @@ uint ors::KinematicWorld::getJointStateDimension(uint agent) const {
   if(qdim(agent)==UINT_MAX){
     uint qd=0;
     for(Joint *j: joints) if(j->agent==agent){
+      CHECK(j->type!=JT_none,"joint type is uninitialized");
       if(!j->mimic){
         j->qIndex = qd;
         qd += j->qDim();
@@ -948,8 +956,6 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, uint a, ors::Vector *rel
       j_idx=j->qIndex;
       if(j->agent==agent && j_idx>=N) CHECK(j->type==JT_glue || j->type==JT_fixed, "");
       if(j->agent==agent && j_idx<N){
-        //CHECK(j->type!=JT_glue && j->type!=JT_fixed, "resort joints so that fixed and glued are last");
-
         if(j->type==JT_hingeX || j->type==JT_hingeY || j->type==JT_hingeZ) {
           tmp = j->axis ^ (pos_a-j->X.pos);
           J(0, j_idx) += tmp.x;
@@ -1089,8 +1095,6 @@ void ors::KinematicWorld::kinematicsVec(arr& y, arr& J, uint a, ors::Vector *vec
       j_idx=j->qIndex;
       if(j->agent==agent && j_idx>=N) CHECK(j->type==JT_glue || j->type==JT_fixed, "");
       if(j->agent==agent && j_idx<N){
-        //CHECK(j->type!=JT_glue && j->type!=JT_fixed, "resort joints so that fixed and glued are last");
-
         if(j->type>=JT_hingeX && j->type<=JT_hingeZ) {
           tmp = j->axis ^ vec_a;
           J(0, j_idx) += tmp.x;
@@ -1137,8 +1141,6 @@ void ors::KinematicWorld::kinematicsQuat(arr& y, arr& J, uint a, uint agent) con
       j_idx=j->qIndex;
       if(j->agent==agent && j_idx>=N) CHECK(j->type==JT_glue || j->type==JT_fixed, "");
       if(j->agent==agent && j_idx<N){
-        CHECK(j->type!=JT_glue && j->type!=JT_fixed, "resort joints so that fixed and glued are last");
-
         tmp.set(0., 0.5*j->axis.x, 0.5*j->axis.y, 0.5*j->axis.z ); //this is unnormalized!!
         tmp = tmp * rot_a;
 
@@ -1303,11 +1305,22 @@ double ors::KinematicWorld::getJointErrors() const {
 
 /** @brief checks if all names of the bodies are disjoint */
 bool ors::KinematicWorld::checkUniqueNames() const {
-  for_list(Body,  n,  bodies) for(Body *m: bodies) {
-    if(n==m) break;
-    if(n->name==m->name) return false;
+  for_list(Body,  n,  bodies) for(Body *b: bodies) {
+    if(n==b) break;
+    if(n->name==b->name) return false;
   }
   return true;
+}
+
+/** @brief checks if all names of the bodies are disjoint */
+void ors::KinematicWorld::setShapeNames() {
+  for(Body *b: bodies){
+    uint i=0;
+    for(Shape *s:b->shapes){
+      if(!s->name.N){ s->name = b->name; s->name <<'_' <<i; }
+      i++;
+    }
+  }
 }
 
 /// find body with specific name
@@ -1483,7 +1496,7 @@ void ors::KinematicWorld::read(std::istream& is) {
   KeyValueGraph G;
   
   G.read(is);
-//  cout <<"***MAPGRAPH\n" <<G <<endl;
+//  cout <<"***KVG" <<G <<endl;
   
   clear();
   
@@ -1610,17 +1623,17 @@ end_header\n";
 
 /// dump the list of current proximities on the screen
 void ors::KinematicWorld::reportProxies(std::ostream *os) {
-  int a, b;
   (*os) <<"Proximity report: #" <<proxies.N <<endl;
   for_list(Proxy, p, proxies) {
-    a=p->a;
-    b=p->b;
+    ors::Shape *a = shapes(p->a);
+    ors::Shape *b = shapes(p->b);
     (*os)
         <<p_COUNT <<" ("
-        <<a <<':' <<(a!=-1?shapes(a)->body->name.p:"earth") <<")-("
-        <<b <<':' <<(b!=-1?shapes(b)->body->name.p:"earth")
+        <<a <<':' <<a->body->name <<")-("
+        <<b <<':' <<b->body->name
         <<") d=" <<p->d
         <<" |A-B|=" <<(p->posB-p->posA).length()
+        <<" cenD=" <<p->cenD
         <<" d^2=" <<(p->posB-p->posA).lengthSqr()
         <<" normal=" <<p->normal
         <<" posA=" <<p->posA
@@ -1655,7 +1668,7 @@ void ors::KinematicWorld::clearForces() {
 }
 
 /// apply a force on body n 
-void ors::KinematicWorld::addForce(ors::Vector force, Body *n) {
+void ors::KinematicWorld::addForce(ors::Vector force, ors::Body *n) {
   n->force += force;
   if (!s->physx) {
     NIY;
@@ -1667,7 +1680,7 @@ void ors::KinematicWorld::addForce(ors::Vector force, Body *n) {
 }
 
 /// apply a force on body n at position pos (in world coordinates)
-void ors::KinematicWorld::addForce(ors::Vector force, Body *n, ors::Vector pos) {
+void ors::KinematicWorld::addForce(ors::Vector force, ors::Body *n, ors::Vector pos) {
   n->force += force;
   if (!s->physx) {
     NIY;
@@ -1730,17 +1743,30 @@ void ors::KinematicWorld::kinematicsProxyCost(arr& y, arr& J, Proxy *p, double m
   ors::Shape *b = shapes(p->b);
   CHECK(a->mesh_radius>0.,"");
   CHECK(b->mesh_radius>0.,"");
-  double ab_radius = margin + 1.5*(a->mesh_radius+b->mesh_radius);
-  CHECK(p->d<(1.+1e-6)*margin, "something's really wierd here!");
-  CHECK(p->cenD<(1.+1e-6)*ab_radius, "something's really wierd here! You disproved the triangle inequality :-)");
 
   y.resize(1);
   if(&J) J.resize(1, getJointStateDimension());
   if(!addValues){ y.setZero();  if(&J) J.setZero(); }
 
   //costs
+  if(a->type==ors::sphereST && b->type==ors::sphereST){
+    ors::Vector diff=a->X.pos-b->X.pos;
+    double d = diff.length() - a->size[3] - b->size[3];
+    y(0) = 1. - d/margin;
+    if(&J){
+      arr Jpos;
+      arr normal = ARRAY(diff)/diff.length(); normal.reshape(1, 3);
+      kinematicsPos(NoArr, Jpos, a->body->index);  J -= 1./margin*(normal*Jpos);
+      kinematicsPos(NoArr, Jpos, b->body->index);  J += 1./margin*(normal*Jpos);
+    }
+    return;
+  }
+  double ab_radius = margin + 10.*(a->mesh_radius+b->mesh_radius);
+  CHECK(p->d<(1.+1e-6)*margin, "something's really wierd here!");
+  CHECK(p->cenD<(1.+1e-6)*ab_radius, "something's really wierd here! You disproved the triangle inequality :-)");
   double d1 = 1.-p->d/margin;
   double d2 = 1.-p->cenD/ab_radius;
+  if(d2<0.) d2=0.;
   if(!useCenterDist) d2=1.;
   y(0) += d1*d2;
  
@@ -1758,7 +1784,7 @@ void ors::KinematicWorld::kinematicsProxyCost(arr& y, arr& J, Proxy *p, double m
       kinematicsPos(NoArr, Jpos, b->body->index, &brel);  J += d2/margin*(normal*Jpos);
     }
         
-    if(useCenterDist){
+    if(useCenterDist && d2>0.){
       arel=a->X.rot/(p->cenA-a->X.pos);
       brel=b->X.rot/(p->cenB-b->X.pos);
       CHECK(p->cenN.isNormalized(), "proxy normal is not normalized");
@@ -1911,14 +1937,20 @@ double ors::KinematicWorld::getEnergy() const {
 }
 
 void ors::KinematicWorld::removeUselessBodies() {
+  //-- remove bodies and their in-joints
   for_list_rev(Body, b, bodies) if(!b->shapes.N && !b->outLinks.N) {
-    for_list_rev(Joint, j, b->inLinks) joints.removeValue(j);
+    cout <<" -- removing useless body " <<b->name <<" with in-joints ( ";
+    for_list_rev(Joint, j, b->inLinks){ j->to=NULL; cout <<j->name <<' '; }
+    cout <<")" <<endl;
     bodies.remove(b_COUNT);
     delete b;
   }
+  for_list_rev(Joint, jj, joints) if(jj->to==NULL) joints.remove(jj_COUNT);
+  //-- reindex
   for_list(Body, bb, bodies) bb->index=bb_COUNT;
   for_list(Joint, j, joints) { j->index=j_COUNT;  j->ifrom = j->from->index;  j->ito = j->to->index;  }
   for(Shape *s: shapes) s->ibody = s->body->index;
+  //-- clear all previous index related things
   qdim.clear();
   q.clear();
   qdot.clear();
@@ -1927,6 +1959,7 @@ void ors::KinematicWorld::removeUselessBodies() {
 
 void ors::KinematicWorld::meldFixedJoints() {
   for(Joint *j: joints) if(j->type==JT_fixed) {
+    cout <<" -- melding fixed joint " <<j->name <<" (" <<j->from->name <<' ' <<j->to->name <<" )" <<endl;
     Body *a = j->from;
     Body *b = j->to;
     Transformation bridge = j->A * j->Q * j->B;
@@ -1938,7 +1971,7 @@ void ors::KinematicWorld::meldFixedJoints() {
       a->shapes.append(s);
     }
     b->shapes.clear();
-    //reassociate out-joints with a
+    //reassociate b-out-joints as a-out-links
     for(Joint *jj: b->outLinks) {
       jj->from=a;
       jj->ifrom=a->index;
@@ -1950,7 +1983,11 @@ void ors::KinematicWorld::meldFixedJoints() {
     a->mass += b->mass;
     a->inertia += b->inertia;
     b->mass = 0.;
+    j->to=NULL;
   }
+  //-- remove fixed joints and reindex
+  for_list_rev(Joint, jj, joints) if(jj->to==NULL) joints.remove(jj_COUNT);
+  for_list(Joint, j, joints) { j->index=j_COUNT;  j->ifrom = j->from->index;  j->ito = j->to->index;  }
 }
 
 // ------------------ end slGraph ---------------------

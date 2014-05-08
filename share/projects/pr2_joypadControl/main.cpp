@@ -22,12 +22,14 @@ struct MySystem:System{
 
 void testJoypad(){
   ors::KinematicWorld world("model.kvg");
+  makeConvexHulls(world.shapes);
+  world >>FILE("z.ors");
   arr q, qdot;
   world.getJointState(q, qdot);
+  ors::Joint *trans=world.getJointByName("worldTranslationRotation");
 
-  FeedbackMotionControl MP(world, false);
+  FeedbackMotionControl MP(world, true);
   MP.qitselfPD.y_ref = q;
-  MP.qitselfPD.active=false;
   MP.H_rate_diag = pr2_reasonable_W(world);
   Gamepad2Tasks j2t(MP);
 
@@ -56,7 +58,7 @@ void testJoypad(){
   CtrlMsg refs;
 
   for(uint t=0;;t++){
-//    S.joystickState.var->waitForNextRevision();
+    S.joystickState.var->waitForNextRevision();
     arr joypadState = S.joystickState.get();
 
 //    q    = S.q_obs.get();
@@ -66,15 +68,17 @@ void testJoypad(){
 //    cout <<S.ctrl_obs.get()->fL <<endl;
 
     bool shutdown = j2t.updateTasks(joypadState);
-    if(shutdown) engine().shutdown.incrementValue();
-
-    for(uint tt=0;tt<10;tt++){
-      arr a = MP.operationalSpaceControl();
-      q += .001*qdot;
-      qdot += .001*a;
+    if(t>10 && shutdown){
+      engine().shutdown.incrementValue();
     }
+
+    arr a = MP.operationalSpaceControl();
+    q += .01*qdot;
+    qdot += .01*a;
+    MP.reportCurrentState();
     MP.setState(q, qdot);
-    if(!(t%10))
+    //MP.world.reportProxies();
+    if(!(t%4))
       MP.world.gl().update(STRING("local operational space controller state t="<<(double)t/100.), false, false, false);
 
     //-- force task
@@ -93,6 +97,11 @@ void testJoypad(){
 
     refs.q=q;
     refs.qdot=zero_qdot;
+    if(trans && trans->qDim()==3){
+      refs.qdot(trans->qIndex+0) = qdot(trans->qIndex+0);
+      refs.qdot(trans->qIndex+1) = qdot(trans->qIndex+1);
+      refs.qdot(trans->qIndex+2) = qdot(trans->qIndex+2);
+    }
     S.ctrl_ref.set() = refs;
     if(S.ros) S.ros->publishJointReference();
 

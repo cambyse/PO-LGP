@@ -23,7 +23,10 @@ OptNewton::OptNewton(arr& _x, ScalarFunction& _f,  OptOptions _o):
   it=0;
   evals=0;
   additionalRegularizer=NULL;
+  reinit();
+}
 
+void OptNewton::reinit(){
   fx = f.fs(gx, Hx, x);  evals++;
   if(additionalRegularizer)  fx += scalarProduct(x,(*additionalRegularizer)*vectorShaped(x));
 
@@ -73,7 +76,7 @@ OptNewton::StopCriterion OptNewton::step(){
     if(o.verbose>2) cout <<" \tprobing y=" <<y;
     if(o.verbose>1) cout <<" \tevals=" <<evals <<" \talpha=" <<alpha <<" \tf(y)=" <<fy  <<" \tf(y)-f(x)=" <<fy-fx <<flush;
     //CHECK(fy==fy, "cost seems to be NAN: ly=" <<fy);
-    if(fy==fy && (fy <= fx || o.nonStrict==-1 || o.nonStrict>it)) { //fy==fy is for NAN?
+    if(fy==fy && (fy <= fx || o.nonStrict==-1 || o.nonStrict>(int)it)) { //fy==fy is for NAN?
       if(o.verbose>1) cout <<" - ACCEPT" <<endl;
       //adopt new point and adapt stepsize|damping
       x_changed=true;

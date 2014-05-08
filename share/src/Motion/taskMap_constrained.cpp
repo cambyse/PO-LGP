@@ -3,8 +3,8 @@
 //===========================================================================
 
 void CollisionConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
-  G.kinematicsProxyCost(y, J, 2.*margin, false);
-  y -= .9;
+  G.kinematicsProxyCost(y, J, margin, false);
+  y -= .5;
 }
 
 //===========================================================================
@@ -12,7 +12,7 @@ void CollisionConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
 void LimitsConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
   if(!limits.N) limits = G.getLimits();
   G.kinematicsLimitsCost(y, J, limits, margin);
-  y -= .9;
+  y -= .5;
 }
 
 //===========================================================================

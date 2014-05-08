@@ -11,9 +11,12 @@ rxplot /ft/r_gripper_motor/wrench/force/x:y:z /ft/r_gripper_motor/wrench/torque/
 
 
 ## Record data
+Record a ros bag with the appropriate topics. The easiest way is to use our
+record.sh:
 ```
-rosbag record /ft/r_gripper_motor/ /ft/l_gripper_motor/ /kinect_head/rgb/image_mono/compressed /l_forearm_cam/image_mono/compressed /r_forearm_cam/image_mono/compressed /tf
+sh record.sh
 ```
+
 
 ## Replay
 ```

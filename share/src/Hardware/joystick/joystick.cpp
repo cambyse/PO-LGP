@@ -15,18 +15,17 @@ void JoystickInterface::open(){
     if(joy->notWorking()) break;
     uint n=joy->getNumAxes();
 
-    std::cout
-        <<"name     = "   <<joy->getName()
-       <<"\n#axis    = " <<joy->getNumAxes()
-         // <<"\n#buttons = " <<joy->getNumButtons()
-      <<"\nerror?   = " <<joy->notWorking()
-     <<std::endl;
+    std::cout << "name     = "   << joy->getName()
+              << "\n#axis    = " << joy->getNumAxes()
+              // << " \n#buttons = " <<joy->getNumButtons()
+              << "\nerror?   = " <<joy->notWorking()
+              << std::endl;
 
-    if(n>=4) break;
+    if(n>=4 && n<=8) break;
     //iterate and try a new one
     delete joy;
   }
-  step();
+  step(); //clear the buffers...
 }
 
 void JoystickInterface::close(){
@@ -44,8 +43,6 @@ void JoystickInterface::step(){
   joystickState().resize(n+1);
   joystickState()(0)=B;
   for(uint i=0; i<n; i++) joystickState()(i+1)=(double)A(i)/(1<<15);
-//  MT::arrayElemsep=" \t ";
-//  cout <<"\r joystickState=" <<joystickState() <<std::flush;
   joystickState.deAccess();
 }
 
