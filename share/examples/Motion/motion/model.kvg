@@ -1,5 +1,7 @@
-%include /home/mtoussai/git/mlr/share/data/pr2_model/pr2-3-comfi.ors
-%include /home/mtoussai/git/mlr/share/examples/Ors/ors_editor/regal.ors
+
+%include ../../../data/pr2_model/pr2-3-comfi.ors
+
+%include ../../Ors/ors_editor/regal.ors
 
 #shape endeffL(l_wrist_roll_link){ rel=<T t(.2 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
 shape endeff(r_wrist_roll_link){ rel=<T t(.2 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
