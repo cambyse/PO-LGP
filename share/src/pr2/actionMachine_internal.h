@@ -13,11 +13,8 @@
 struct sActionMachine{
   ors::KinematicWorld world;
   FeedbackMotionControl MP;
-//  Gamepad2Tasks j2t;
+  //  Gamepad2Tasks j2t;
   arr q, qdot, zero_qdot;
   CtrlMsg refs;
-  sActionMachine():world("model.kvg"), MP(world,false)/*, j2t(MP)*/{}
-//  void open();
-//  void step(uint t);
+  sActionMachine() : world("model.kvg"), MP(world, true) {};
 };
-
