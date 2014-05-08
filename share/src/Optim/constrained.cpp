@@ -6,49 +6,59 @@
 // UnconstrainedProblem
 //
 
-double UnconstrainedProblem::fs(arr& dF, arr& HF, const arr& _x){
+double I_lambda_x(uint i, arr& lambda, arr& g){
+  if(g(i)>0. || (lambda.N && lambda(i)>0.)) return 1.;
+  return 0.;
+}
+
+double UnconstrainedProblem::fs(arr& dL, arr& HL, const arr& _x){
   //-- evaluate constrained problem and buffer
   if(_x!=x){
     x=_x;
     f_x = P.fc(df_x, Hf_x, g_x, Jg_x, x);
     CHECK(P.dim_g()==g_x.N,"this conversion requires phi.N to be m-dimensional");
   }else{ //we evaluated this before - use buffered values; the meta F is still recomputed as (dual) parameters might have changed
-    if(&dF) CHECK(df_x.N && Jg_x.N,"");
-    if(&HF) CHECK(Hf_x.N && Jg_x.N,"");
+    if(&dL) CHECK(df_x.N && Jg_x.N,"");
+    if(&HL) CHECK(Hf_x.N && Jg_x.N,"");
   }
 
   //  cout <<"g= " <<g_x <<" lambda= " <<lambda <<endl;
 
   //-- construct unconstrained problem
-  double F=f_x;
-  if(muLB)     for(uint i=0;i<g_x.N;i++){ if(g_x(i)>0.) return NAN;  F -= muLB * ::log(-g_x(i)); } //log barrier, check feasibility
-  if(mu)       for(uint i=0;i<g_x.N;i++) if(g_x(i)>0. || (lambda.N && lambda(i)>0.)) F += mu * MT::sqr(g_x(i));  //penalty
-  if(lambda.N) for(uint i=0;i<g_x.N;i++) if(lambda(i)>0.) F += lambda(i) * g_x(i);  //augments
+  //precompute I_lambda_x
+  boolA I_lambda_x(g_x.N);
+  if(mu)       for(uint i=0;i<g_x.N;i++) I_lambda_x(i) = (g_x(i)>0. || (lambda.N && lambda(i)>0.));
 
-  if(&dF){
-    dF=df_x;
+  //L value
+  double L=f_x;
+  if(muLB)     for(uint i=0;i<g_x.N;i++){ if(g_x(i)>0.) return NAN;  L -= muLB * ::log(-g_x(i)); } //log barrier, check feasibility
+  if(mu)       for(uint i=0;i<g_x.N;i++) if(I_lambda_x(i)) L += mu * MT::sqr(g_x(i));  //penalty
+  if(lambda.N) for(uint i=0;i<g_x.N;i++) if(lambda(i)>0.) L += lambda(i) * g_x(i);  //augments
+
+  if(&dL){ //L gradient
+    dL=df_x;
     arr coeff(Jg_x.d0); coeff.setZero();
     if(muLB)     for(uint i=0;i<g_x.N;i++) coeff(i) -= (muLB/g_x(i));  //log barrier
-    if(mu)       for(uint i=0;i<g_x.N;i++) if(g_x(i)>0. || (lambda.N && lambda(i)>0.)) coeff(i) += (mu*2.*g_x(i));  //penalty
+    if(mu)       for(uint i=0;i<g_x.N;i++) if(I_lambda_x(i)) coeff(i) += 2.*mu*g_x(i);  //penalty
     if(lambda.N) for(uint i=0;i<g_x.N;i++) if(lambda(i)>0.) coeff(i) += lambda(i);  //augments
-    dF += comp_At_x(Jg_x, coeff);
-    dF.reshape(x.N);
+    dL += comp_At_x(Jg_x, coeff);
+    dL.reshape(x.N);
   }
 
-  if(&HF){
-    HF=Hf_x;
+  if(&HL){ //L hessian
+    HL=Hf_x;
     /// the 2.*Jg_x^T Jg_x terms are considered as in Gauss-Newton type; no real Hg used
     arr coeff(Jg_x.d0); coeff.setZero();
     if(muLB)     for(uint i=0;i<g_x.N;i++) coeff(i) += (muLB/MT::sqr(g_x(i)));  //log barrier
-    if(mu)       for(uint i=0;i<g_x.N;i++) if(g_x(i)>0. || (lambda.N && lambda(i)>0.)) coeff(i) += (mu*2.);  //penalty
-    if(lambda.N) for(uint i=0;i<g_x.N;i++) if(lambda(i)>0.) coeff(i) += 0.; //augments
-    arr Jg_dg = Jg_x;
-    for(uint i=0;i<g_x.N;i++) Jg_dg[i]() *= sqrt(coeff(i));
-    HF += comp_At_A(Jg_dg); //Gauss-Newton type!
-    if(!HF.special) HF.reshape(x.N,x.N);
+    if(mu)       for(uint i=0;i<g_x.N;i++) if(I_lambda_x(i)) coeff(i) += 2.*mu;  //penalty
+    //if(lambda.N) for(uint i=0;i<g_x.N;i++) if(lambda(i)>0.) coeff(i) += 0.; //augments -> evaluates to zero
+    arr tmp = Jg_x;
+    for(uint i=0;i<g_x.N;i++) tmp[i]() *= sqrt(coeff(i));
+    HL += comp_At_A(tmp); //Gauss-Newton type!
+    if(!HL.special) HL.reshape(x.N,x.N);
   }
 
-  return F;
+  return L;
 }
 
 void UnconstrainedProblem::aulaUpdate(double lambdaStepsize, arr& x_reeval){
@@ -65,7 +75,7 @@ void UnconstrainedProblem::aulaUpdate(double lambdaStepsize, arr& x_reeval){
 //  cout <<"Update Lambda: g=" <<g_x <<" lambda=" <<lambda <<endl;
 }
 
-void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc, double *F_x, arr& dF_x, arr& HF_x){
+void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc, double *L_x, arr& dL_x, arr& HL_x){
   if(!lambda.N){ lambda.resize(g_x.N); lambda.setZero(); }
 
   arr lambdaOld = lambda;
@@ -100,7 +110,7 @@ void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc
       CHECK(castRowShiftedPackedMatrix(tmp).symmetric==true,"");
       for(uint i=0;i<tmp.d0;i++) tmp(i,0) += 1e-6;
 
-      arr AF = comp_A_x(A, dF_x);
+      arr AF = comp_A_x(A, dL_x);
       arr beta;
       lapack_Ainv_b_sym(beta, tmp, AF);
       //reinsert zero rows
@@ -122,7 +132,7 @@ void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc
     arr tmp = comp_A_At(A);
     for(uint i=0;i<tmp.d0;i++) tmp(i,i) += 1e-6;
     arr beta;
-    lapack_Ainv_b_sym(beta, tmp, comp_A_x(A, dF_x));
+    lapack_Ainv_b_sym(beta, tmp, comp_A_x(A, dL_x));
     //reinsert zero rows
     for(uint i=0;i<g_x.N;i++) if(!(g_x(i)>0. || lambda(i)>0.)){
       beta.insert(i,0.);
@@ -132,23 +142,53 @@ void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc
 
   for(uint i=0;i<g_x.N;i++) if(lambda(i)<0.) lambda(i)=0.;
 
+  //-- adapt mu as well
+  double muOld=mu;
   if(muInc>1.) mu *= muInc;
 
-  //rescale f
-//  if(F_x){
-//    double f0 = scalarProduct(lambda - lambdaOld, g_x);
-//    for(uint i=0;i<g_x.N;i++){
-//      if((lambda(i)>0.  && lambdaOld(i)<=0.) && g_x(i)<=0.) f0 += mu * MT::sqr(g_x(i));
-//      if((lambda(i)<=0. && lambdaOld(i)>0. ) && g_x(i)<=0.) f0 -= mu * MT::sqr(g_x(i));
-//    }
-//    *F_x += f0;
-//  }
-
-  if(F_x || &dF_x || &HF_x){
-    double fx = fs(dF_x, HF_x, x); //reevaluate gradients and hessian (using buffered info)
-    if(F_x) *F_x = fx;
-    CHECK(fabs(fx-*F_x)<1e-10,"");
+#if 0 //this is too inefficient. Simple recomputing the Lagrangian (based on the buffered f df Hf g Jg) is much more efficient
+  //modify the buffered vallues L_x, dL_x, HL_x
+  if(L_x){ //L value
+    double coeff=0.;
+    coeff += scalarProduct(lambda - lambdaOld, g_x);
+    for(uint i=0;i<g_x.N;i++) coeff += (mu*I_lambda_x(i, lambda, g_x) - muOld*I_lambda_x(i, lambdaOld, g_x)) * MT::sqr(g_x(i));
+    *L_x += coeff;
   }
+  if(&dL_x){ //L gradient
+    arr coeff(Jg_x.d0); coeff.setZero();
+    coeff += lambda-lambdaOld;
+    for(uint i=0;i<g_x.N;i++) coeff(i) += 2.*(mu*I_lambda_x(i, lambda, g_x) - muOld*I_lambda_x(i, lambdaOld, g_x)) * g_x(i);
+    dL_x += comp_At_x(Jg_x, coeff);
+  }
+  if(&HL_x){ //L hessian
+    arr coeff(Jg_x.d0); coeff.setZero();
+    for(uint i=0;i<g_x.N;i++) coeff(i) += 2.*(mu*I_lambda_x(i, lambda, g_x) - muOld*I_lambda_x(i, lambdaOld, g_x));
+    arr A, B;
+    RowShiftedPackedMatrix *Aaux = auxRowShifted(A, 0, Jg_x.d1, x.N);
+    RowShiftedPackedMatrix *Baux = auxRowShifted(B, 0, Jg_x.d1, x.N);
+    RowShiftedPackedMatrix *Jgaux = &castRowShiftedPackedMatrix(Jg_x);
+    for(uint i=0;i<g_x.N;i++){
+      if(coeff(i)>0.){ A.append(Jg_x[i]*sqrt(coeff(i)));   A.reshape(A.N/Jg_x.d1,Jg_x.d1);  Aaux->rowShift.append(Jgaux->rowShift(i)); }
+      if(coeff(i)<0.){ B.append(Jg_x[i]*sqrt(-coeff(i)));  B.reshape(B.N/Jg_x.d1,Jg_x.d1);  Baux->rowShift.append(Jgaux->rowShift(i)); }
+    }
+    if(A.d0) HL_x += comp_At_A(A);
+    if(B.d0) HL_x -= comp_At_A(B);
+  }
+
+  //--test!!
+//  if(L_x || &dL_x || &HL_x){
+//    arr dL, HL;
+//    double L = fs(dL, HL, x); //reevaluate gradients and hessian (using buffered info)
+//    if(L_x)   CHECK_ZERO(fabs(L-*L_x), 1e-10, "");
+//    if(&dL_x) CHECK_ZERO(maxDiff(dL,dL_x), 1e-10, "");
+//    if(&HL_x) CHECK_ZERO(maxDiff(HL,HL_x), 1e-10, "");
+//  }
+#else
+  if(L_x || &dL_x || &HL_x){
+    double L = fs(dL_x, HL_x, x); //reevaluate gradients and hessian (using buffered info)
+    if(L_x) *L_x = L;
+  }
+#endif
 }
 
 //==============================================================================

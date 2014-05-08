@@ -24,10 +24,10 @@ struct UnconstrainedProblem : ScalarFunction{
 
   UnconstrainedProblem(ConstrainedProblem &_P):P(_P), muLB(0.), mu(0.) {}
 
-  virtual double fs(arr& dF, arr& HF, const arr& x); ///< the unconstrained meta function F
+  virtual double fs(arr& dL, arr& HL, const arr& x); ///< the unconstrained meta function F
 
   void aulaUpdate(double lambdaStepsize=1., arr &x_reeval=NoArr);
-  void anyTimeAulaUpdate(double lambdaStepsize=1., double muInc=1., double *F_x=NULL, arr &dF_x=NoArr, arr &HF_x=NoArr);
+  void anyTimeAulaUpdate(double lambdaStepsize=1., double muInc=1., double *L_x=NULL, arr &dL_x=NoArr, arr &HL_x=NoArr);
 };
 
 

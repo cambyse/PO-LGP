@@ -2,8 +2,10 @@
 #include <Motion/motion.h>
 #include <Motion/taskMap_default.h>
 #include <Motion/taskMap_proxy.h>
+#include <Motion/taskMap_constrained.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
+#include <Optim/constrained.h>
 #include <Optim/benchmarks.h>
 
 int main(int argc,char** argv){
@@ -28,18 +30,10 @@ int main(int argc,char** argv){
   c->map.order=1; //make this a velocity variable!
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
 
-  c = MP.addTask("collision", new DefaultTaskMap(collTMT, G, NULL, NoVector, NULL, NoVector, ARR(.1)));
+  c = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .1));
   MP.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
 
-  //  c = P.addDefaultTaskMap("qitself", qItselfTMT, (int)0, Transformation_Id, 0, Transformation_Id, 0);
-  //  P.setInterpolatingCosts(   c, MotionProblem::constFinalMid, ARRAY(0.), 1e-4);
-  //  //P.setInterpolatingVelCosts(c, MotionProblem::constFinalMid, ARRAY(0.), 1e4, ARRAY(0.), 1e-2);
-
-  //-- collisions with other objects
-//  uintA shapes = ARRAY<uint>(MP.world.getShapeByName("endeff")->index);
-//  c = MP.addTask("proxyColls",
-//                    new ProxyTaskMap(allVersusListedPTMT, shapes, .2, true));
-//  MP.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e2);
+//  c = MP.addTask("collisionConstraints", new CollisionConstraint(.1));
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction MF(MP);
@@ -81,7 +75,12 @@ int main(int argc,char** argv){
   //-- optimize
   for(uint k=0;k<5;k++){
     MT::timerStart();
+#if 1
     optNewton(x, Convert(MF), OPT(verbose=2, stopIters=20, maxStep=1., stepInc=2., nonStrict=(!k?15:5)));
+#else
+    ConstrainedMethodType method = (ConstrainedMethodType)MT::getParameter<int>("method");
+    optConstrained(x, NoArr, Convert(MF), OPT(verbose=1, stopIters=100, damping=1., maxStep=1., nonStrict=5, constrainedMethod=method));
+#endif
 
     cout <<"** optimization time=" <<MT::timerRead() <<endl;
     //costs.displayRedBlue(~sqr(P.costMatrix), false, 3);
