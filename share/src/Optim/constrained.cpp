@@ -143,7 +143,7 @@ void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc
   for(uint i=0;i<g_x.N;i++) if(lambda(i)<0.) lambda(i)=0.;
 
   //-- adapt mu as well
-  double muOld=mu;
+  //double muOld=mu;
   if(muInc>1.) mu *= muInc;
 
 #if 0 //this is too inefficient. Simple recomputing the Lagrangian (based on the buffered f df Hf g Jg) is much more efficient
