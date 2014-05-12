@@ -82,7 +82,7 @@ void TEST(KOrderMarkov) {
       if(K.N) opt.additionalRegularizer=&K;
       opt.run();
 
-      UCP.augmentedLagrangian_LambdaUpdate(x);
+      UCP.aulaUpdate(1., x);
 //      UCP.mu *= 10;
       write(LIST<arr>(x),"z.output");
       gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", false, true);
