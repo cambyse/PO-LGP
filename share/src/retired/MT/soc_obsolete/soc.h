@@ -12,7 +12,7 @@
     GNU General Public License for more details.
 
     You should have received a COPYING file of the GNU General Public License
-    -----------------------------------------------------------------  */    -----------------------------------------------------------------  */
+    -----------------------------------------------------------------  */
 
 /** @file soc.h
     @brief Stochastic Optimal Control library */
