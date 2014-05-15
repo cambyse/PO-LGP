@@ -2,7 +2,7 @@
 #include <Motion/taskMap_default.h>
 #include <Motion/taskMap_constrained.h>
 #include <Motion/feedbackControl.h>
-#include <Optim/constrained.h>
+#include <Optim/optimization.h>
 
 
 void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){

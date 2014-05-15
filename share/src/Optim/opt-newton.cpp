@@ -65,6 +65,8 @@ OptNewton::StopCriterion OptNewton::step(){
   it++;
   if(o.verbose>1) cout <<"optNewton it=" <<std::setw(3) <<it << " \tlambd=" <<std::setprecision(3) <<lambda <<flush;
 
+  if(!(fx==fx)) HALT("you're calling a newton step with initial function value = NAN");
+
   //compute Delta
   arr R=Hx;
   if(lambda) { //Levenberg Marquardt damping
@@ -94,7 +96,7 @@ OptNewton::StopCriterion OptNewton::step(){
     if(o.verbose>2) cout <<" \tprobing y=" <<y;
     if(o.verbose>1) cout <<" \tevals=" <<evals <<" \talpha=" <<alpha <<" \tf(y)=" <<fy  <<" \tf(y)-f(x)=" <<fy-fx <<flush;
     //CHECK(fy==fy, "cost seems to be NAN: ly=" <<fy);
-    if(fy==fy && (fy <= fx || o.nonStrict==-1 || o.nonStrict>(int)it)) { //fy==fy is for NAN?
+    if(fy==fy && (fy <= fx || o.nonStrictSteps==-1 || o.nonStrictSteps>(int)it)) { //fy==fy is for NAN?
       if(o.verbose>1) cout <<" - ACCEPT" <<endl;
       //adopt new point and adapt stepsize|damping
       x_changed=true;

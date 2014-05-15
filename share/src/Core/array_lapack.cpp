@@ -153,7 +153,11 @@ void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b) {
   arr Acol=A;
   integer N=A.d0, KD=A.d1-1, NRHS=1, LDAB=A.d1, INFO;
   if(A.special!=arr::RowShiftedPackedMatrixST) {
-    dposv_((char*)"L", &N, &NRHS, Acol.p, &N, x.p, &N, &INFO);
+    try{
+      dposv_((char*)"L", &N, &NRHS, Acol.p, &N, x.p, &N, &INFO);
+    }catch(...){
+      HALT("here");
+    }
   } else {
     dpbsv_((char*)"L", &N, &KD, &NRHS, Acol.p, &LDAB, x.p, &N, &INFO);
   }

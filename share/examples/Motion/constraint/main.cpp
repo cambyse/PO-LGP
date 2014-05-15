@@ -3,7 +3,6 @@
 #include <Motion/taskMap_constrained.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
-#include <Optim/constrained.h>
 #include <Perception/videoEncoder.h>
 #include <iomanip>
 
@@ -54,10 +53,9 @@ int main(int argc,char** argv){
 
   Convert CP(MF);
 #if 1
-  ConstrainedMethodType method = (ConstrainedMethodType)MT::getParameter<int>("method");
-  optConstrained(x, NoArr, CP, OPT(verbose=1, stopIters=100, damping=1., maxStep=1., nonStrict=5, constrainedMethod=method));
+  optConstrained(x, NoArr, CP);
   P.costReport();
-//  for(;;) displayTrajectory(x, 1, G, "planned trajectory");
+  for(;;) displayTrajectory(x, 1, G, "planned trajectory");
 #else
   UnconstrainedProblem UCP(CP);
   UCP.mu = 1.;

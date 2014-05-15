@@ -20,7 +20,7 @@
 
 #include "optimization.h"
 
-int optNewton(arr& x, ScalarFunction& f, OptOptions opt);
+int optNewton(arr& x, ScalarFunction& f, OptOptions opt=NOOPT);
 
 struct OptNewton{
   arr& x;
@@ -36,7 +36,7 @@ struct OptNewton{
   bool x_changed;
   ofstream fil;
 
-  OptNewton(arr& x, ScalarFunction& f, OptOptions o);
+  OptNewton(arr& x, ScalarFunction& f, OptOptions o=NOOPT);
   ~OptNewton();
   StopCriterion step();
   StopCriterion run();

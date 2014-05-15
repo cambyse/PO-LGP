@@ -2,7 +2,7 @@
 #include <Motion/taskMap_default.h>
 #include <Motion/taskMap_constrained.h>
 #include <Motion/feedbackControl.h>
-#include <Optim/constrained.h>
+#include <Optim/optimization.h>
 #include <Perception/videoEncoder.h>
 #include <Gui/opengl.h>
 

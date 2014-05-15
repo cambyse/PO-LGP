@@ -248,11 +248,13 @@ void optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
 
   UnconstrainedProblem UCP(P);
 
+  uint stopTolInc;
+
   //switch on penalty terms
   switch(opt.constrainedMethod){
     case squaredPenalty: UCP.mu=1.;  break;
     case augmentedLag:   UCP.mu=1.;  break;
-    case anyTimeAula:    UCP.mu=1.;  break;
+    case anyTimeAula:    UCP.mu=1.;  stopTolInc=MT::getParameter("/opt/optConstrained/anyTimeAulaStopTolInc",10.); break;
     case logBarrier:     UCP.muLB=.1;  break;
     case noMethod: HALT("need to set method before");  break;
   }
@@ -276,11 +278,13 @@ void optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
 
     arr x_old = x;
     if(opt.constrainedMethod==anyTimeAula){
-      //for(uint l=0;l<10; l++) newton.step();
-      for(uint l=0;l<5; l++){
+      double stopTol = newton.o.stopTolerance;
+      for(uint l=0;l<20; l++){
         OptNewton::StopCriterion res = newton.step();
         if(res>=OptNewton::stopCrit1) break;
+        newton.o.stopTolerance*=stopTolInc;
       }
+      newton.o.stopTolerance = stopTol;
     }else{
       newton.reinit();
       newton.run();

@@ -1,6 +1,5 @@
 #include <Core/array.h>
 #include <Gui/plot.h>
-#include <Optim/constrained.h>
 #include <Optim/optimization.h>
 
 static double a=1e-4;

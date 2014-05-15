@@ -55,6 +55,8 @@ reformatSources:
 %.tgz:: force
 	-mv -f gofMake/config.mk gofMake/config.mk.mine
 	cp -f slices/$*.config.mk ./gofMake/config.mk
+	-mv -f ../README.md ../README.mlr.md
+	cp -f slices/$*.README.md ../README.md
 	rm -f $*.tgz;
 	cd ..; \
 	tar cvzf $*.tgz --exclude-vcs \
@@ -63,6 +65,7 @@ reformatSources:
 	--exclude-from $(PWD)/slices/default.excl \
 	--exclude-from $(PWD)/slices/$*.excl
 	cp -f gofMake/config.mk.mine gofMake/config.mk
+	mv -f ../README.mlr.md ../README.md
 
 makePath/%: %
 	+@-$(BASE)/gofMake/make-path.sh $<

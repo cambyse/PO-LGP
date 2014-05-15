@@ -1,3 +1,5 @@
+set style data lines
+
 plot \
 'z.LogBarrier' us 2:3,'' us 2:4,\
 'z.AnyTimeAugmentedLagrangian' us 2:3,'' us 2:4,\

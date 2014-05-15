@@ -3,7 +3,6 @@
 #include <Motion/taskMap_constrained.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
-#include <Optim/constrained.h>
 #include <Core/thread.h>
 
 #include "getTraj.h"
