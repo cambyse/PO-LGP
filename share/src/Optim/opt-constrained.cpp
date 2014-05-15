@@ -1,4 +1,4 @@
-#include "constrained.h"
+#include "opt-constrained.h"
 #include "opt-newton.h"
 
 //==============================================================================

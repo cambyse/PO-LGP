@@ -1,3 +1,5 @@
+#pragma once
+
 #include "optimization.h"
 
 //==============================================================================
@@ -45,8 +47,6 @@ struct PhaseOneProblem:ConstrainedProblem{
   PhaseOneProblem(ConstrainedProblem &_f):f(_f) {}
 
   virtual double fc(arr& df, arr& Hf, arr& g, arr& Jg, const arr& x);
-//  virtual double fs(arr& g, arr& H, const arr& x);
-//  virtual void fv(arr& metaPhi, arr& metaJ, const arr& x);
   virtual uint dim_x(){ return f.dim_x()+1; }
   virtual uint dim_g(){ return f.dim_g()+1; }
 };

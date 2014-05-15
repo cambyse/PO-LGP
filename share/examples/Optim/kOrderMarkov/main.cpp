@@ -2,7 +2,6 @@
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
 #include <Optim/constrained.h>
-#include <Gui/plot.h>
 
 arr buildKernelMatrix(KOrderMarkovFunction& P){
   CHECK(P.hasKernel(),"");
@@ -27,7 +26,7 @@ arr buildKernelMatrix(KOrderMarkovFunction& P){
 
 void TEST(KOrderMarkov) {
   ParticleAroundWalls P;
-  P.k=1;
+  P.k = MT::getParameter<uint>("order");
   P.kern = false; //true;
   P.constrained = true;
 
@@ -69,6 +68,9 @@ void TEST(KOrderMarkov) {
   arr K;
   if(P.hasKernel()) K = buildKernelMatrix(P);
   if(P.isConstrained()){
+    ConstrainedMethodType method = (ConstrainedMethodType)MT::getParameter<int>("method");
+    optConstrained(x, NoArr, Convert(P), OPT(verbose=2, damping=.01, dampingDec=.9, dampingInc=1.1, constrainedMethod=method));
+#if 0
     Convert CP(P);
     UnconstrainedProblem UCP(CP);
     UCP.mu=1.;
@@ -88,8 +90,9 @@ void TEST(KOrderMarkov) {
       gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", false, true);
       MT::wait();
     }
+#endif
   }else{
-    OptNewton opt(x, Convert(P), OPT(verbose=2, useAdaptiveDamping=true));
+    OptNewton opt(x, Convert(P), OPT(verbose=2, damping=.01, dampingDec=.9, dampingInc=1.2));
     if(K.N) opt.additionalRegularizer=&K;
     opt.run();
   }

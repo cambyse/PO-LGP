@@ -14,7 +14,7 @@ if [ ! -d $MLR_LIBPATH ] ; then
 fi
 
 # install ubuntu packages
-sh INSTALL_DEPENDENCIES.sh
+sh INSTALL_ALL_UBUNTU_PACKAGES.sh
 
 #install external libraries
 ./PhysX_install
