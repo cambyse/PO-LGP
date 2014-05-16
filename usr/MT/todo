@@ -3,6 +3,16 @@
 check the consistency of the constraintProcyVariable with squared
 penelty and old task variables
 
+** task map
+* clean up DefaultTaskMap -> spearate in separate classes
+
+** PR2
+* force torqu sensor in regler integrieren
+* low gain turning of handles (don't think as them as parts of the robot,no exact model, just relax and pull somehow)
+* generell: sobald man etwas anfasst: relax, gravity compensation is easier
+* action for pregrasp
+* task variable that allows a target RANGE
+
 ** traj optim
 
 - don't include task with zero prec in $f_t$ terms

@@ -1059,7 +1059,7 @@ template<class T> void MT::Array<T>::setZero(byte zero) {
 /// concatenate 2D matrices (or vectors) column-wise
 template<class T> MT::Array<T> catCol(const MT::Array<MT::Array<T>*>& X) {
   uint d0=X(0)->d0, d1=0;
-  for_list(MT::Array<T>,  x,  X) { CHECK((x->nd==2 || x->nd==1) && x->d0==d0, ""); d1+=x->nd==2?x->d1:1; }
+  for(MT::Array<T> *x:X) { CHECK((x->nd==2 || x->nd==1) && x->d0==d0, ""); d1+=x->nd==2?x->d1:1; }
   MT::Array<T> z(d0, d1);
   d1=0;
   for(MT::Array<T> *x:  X) { z.setMatrixBlock(*x, 0, d1); d1+=x->nd==2?x->d1:1; }

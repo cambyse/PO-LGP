@@ -99,8 +99,8 @@ void plotInitGL(double xl=-1., double xh=1., double yl=-1., double yh=1., double
 void plot(bool wait, const char* txt) {
   switch(plotModule.mode) {
     case gnupl:
-      plotDrawGnuplot(plotModule.s, false);
-      if(wait) MT::wait();
+      plotDrawGnuplot(plotModule.s, wait);
+//      if(wait) MT::wait();
       break;
 #ifdef MT_GL
     case opengl:
@@ -633,11 +633,8 @@ void plotDrawGnuplot(void *_data, bool pauseMouse) {
   MT::IOraw=true;
   //lines
   for(i=0; i<data.lines.N; i++) {
-    FOR1D(data.lines(i), j) {
-      FOR1D(data.lines(i)[j], k) gnuplotdata <<data.lines(i)[j](k) <<" ";
-      gnuplotdata <<std::endl;
-    }
-    gnuplotdata <<std::endl;
+    data.lines(i).write(gnuplotdata," ","\n","  ",false,false);
+    gnuplotdata <<'\n' <<std::endl;
     if(block) gnuplotcmd <<", \\\n";
     if(data.lines(i).d1!=4) {
       PLOTEVERY(block, " with l notitle");
@@ -652,11 +649,8 @@ void plotDrawGnuplot(void *_data, bool pauseMouse) {
   }
   //points
   for(i=0; i<data.points.N; i++) {
-    FOR1D(data.points(i), j) {
-      FOR1D(data.points(i)[j], k) gnuplotdata <<data.points(i)[j](k) <<" ";
-      gnuplotdata <<std::endl;
-    }
-    gnuplotdata <<std::endl;
+    data.points(i).write(gnuplotdata," ","\n","  ",false,false);
+    gnuplotdata <<'\n' <<std::endl;
     if(block) gnuplotcmd <<", \\\n";
     PLOTEVERY(block, " with p notitle");
     block++;
@@ -682,9 +676,7 @@ void plotDrawGnuplot(void *_data, bool pauseMouse) {
   gnuplotdata.close();
   
   //call gnuplot
-  //if(wait) gnuplotcmd <<"\npause mouse" <<std::endl;
-  ofstream gcmd("z.plotcmd"); gcmd <<gnuplotcmd; gcmd.close(); //for debugging...
-  gnuplot(gnuplotcmd, pauseMouse);
+  gnuplot(gnuplotcmd, pauseMouse, true, "z.pdf");
 }
 
 

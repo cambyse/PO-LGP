@@ -22,47 +22,65 @@ void testLinReg(const char *datafile=NULL) {
   arr Phi = makeFeatures(X);
 
   //-- compute optimal parameters
-  arr beta = ridgeRegression(Phi, y);
+  arr Sigma;
+  arr beta = ridgeRegression(Phi, y, -1., Sigma);
   cout <<"estimated beta = "<< beta <<endl;
   if(beta.N==beta_true.N) cout <<"max-norm beta-beta_true = " <<maxDiff(beta, beta_true) <<endl; //beta_true is global and generated during artificialData
+  double sigma = sqrt(sumOfSqr(Phi*beta-y)/(X.d0-1));
+  cout <<"Mean error (sdv) = " <<sigma <<endl;
 
   //-- evaluate model on a grid
   arr X_grid,y_grid;
   X_grid.setGrid(X.d1,-3,3, (X.d1==1?100:30));
   Phi = makeFeatures(X_grid, readFromCfgFileFT, X);
   y_grid = Phi*beta;
+  arr s_grid = sqrt(evaluateBayesianRidgeRegressionSigma(Phi, Sigma)/*+MT::sqr(sigma)*/);
+
+  if(X.d1==1){
+    plotGnuplot();
+    plotFunctionPrecision(X_grid, y_grid, y_grid+s_grid, y_grid-s_grid);
+    plotPoints(X,y);
+    plot(true);
+  }
 
   //-- gnuplot
   MT::arrayBrackets="  ";
-  if(X.d1==1){
-    FILE("z.model") <<catCol(X_grid, y_grid);
-    gnuplot(STRING("plot [-3:3] '" <<datafile <<"' us 1:2 w p,'z.model' us 1:2 w l"), false, true,"z.pdf");
-  }else{
-    y_grid.reshape(31,31);
-    FILE("z.model") <<y_grid;
-    gnuplot(STRING("splot [-3:3][-3:3] '" <<datafile <<"' w p, 'z.model' matrix us ($1/5-3):($2/5-3):3 w l; pause mouse"), false, true, "z.pdf");
+//  if(X.d1==1){
+//    FILE("z.model") <<catCol(X_grid, y_grid);
+//    gnuplot(STRING("plot [-3:3] '" <<datafile <<"' us 1:2 w p,'z.model' us 1:2 w l"), false, true,"z.pdf");
+//  }
+  if(X.d1==2){
+    FILE("z.model") <<y_grid.reshape(31,31);
+    FILE("z.model_s") <<(y_grid+s_grid).reshape(31,31);
+    FILE("z.model__s") <<(y_grid-s_grid).reshape(31,31);
+    gnuplot(STRING("splot [-3:3][-3:3] '" <<datafile <<"' w p ps 2 pt 4,\
+                   'z.model' matrix us ($1/5-3):($2/5-3):3 w l,\
+                   'z.model_s' matrix us ($1/5-3):($2/5-3):3 w l,\
+                   'z.model__s' matrix us ($1/5-3):($2/5-3):3 w l; pause mouse"), false, true, "z.pdf");
   }
 }
 
 //===========================================================================
 
 void test2Class() {
-  rnd.clockSeed();
-  //rnd.seed(1);
+  rnd.seed(1);
 
   arr X,y;
   //artificialData_HastiesMultiClass(X, y);  y = ~((~y)[1]);  y.reshape(y.N);
   artificialData_Hasties2Class(X, y);
   
   arr Phi = makeFeatures(X);
-  arr beta = logisticRegression2Class(Phi, y);
+  arr Sigma;
+  arr beta = logisticRegression2Class(Phi, y, -1., Sigma);
   
-  arr X_grid,y_grid,p_grid;
+  arr X_grid;
   X_grid.setGrid(2,-2,3,50);
   Phi = makeFeatures(X_grid,readFromCfgFileFT, X);
-  y_grid = Phi*beta;
-  
-  p_grid=exp(y_grid);
+  arr y_grid = Phi*beta;
+  arr s_grid = evaluateBayesianRidgeRegressionSigma(Phi, Sigma);
+  y_grid /= sqrt(1.+s_grid*MT_PI/8.); //bayesian logistic regression: downscale discriminative function
+
+  arr p_grid=exp(y_grid);
   for(uint i=0; i<p_grid.N; i++) p_grid(i) = p_grid(i)/(p_grid(i)+1.);
   
   y_grid.reshape(51,51);
@@ -218,7 +236,6 @@ void exercise2() {
 int main(int argc, char *argv[]) {
   MT::initCmdLine(argc,argv);
   
-  system("cat USAGE");
   rnd.clockSeed();
 
   switch(MT::getParameter<uint>("mode",1)) {

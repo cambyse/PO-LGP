@@ -87,7 +87,7 @@ void sLogisticRegression::logisticRegressionMultiClass(arr& beta, const arr& X, 
   int invtime = 0;
   for(uint k=0; k<100; k++){
     f = X*beta;
-    for(uint i=0; i<f.N; i++) MT::constrain(f.elem(i), -100., 100);  //constrain the discriminative values to avoid NANs...
+    for(uint i=0; i<f.N; i++) MT::clip(f.elem(i), -100., 100);  //constrain the discriminative values to avoid NANs...
     p = exp(f);
     logLike=0.;
     for(uint i=0; i<n; i++){
