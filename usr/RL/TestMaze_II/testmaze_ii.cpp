@@ -950,6 +950,198 @@ void TestMaze_II::initialize_commands() {
                     return {true,"showed stationary distribution"};
                 }
             }, "show stationary distribution (sqrt) of TEM");
+        command_center.add_command(top_new_stuff,{"inverse-distribution","id"}, [this]()->ret_t{
+                using namespace arma;
+                // check if environment is a maze
+                shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
+                if(maze==nullptr) {
+                    return {true,"allowed for maze-environments only"};
+                }
+                // get transition matrix and stationary distribution
+                mat T;
+                o_r_idx_map_t o_r_idx_map;
+                get_TEM_transition_matrix_and_o_r_index_map(T,o_r_idx_map);
+                vec stat_dist;
+                bool stat_dist_found = get_stationary_distribution(T,stat_dist);
+                // return if stationary distribution could not be identified
+                if(!stat_dist_found) {
+                    return {true,"Could not find stationary distribution"};
+                }
+                // invert conditional distribution
+                map<observation_ptr_t,probability_t> inv_dist;
+                {
+                    // current observation
+                    observation_ptr_t current_obs = current_instance->observation;
+                    // for normalization check
+                    probability_t normalization_check;
+                    // get marginal stationary observation distributions
+                    normalization_check = 0;
+                    map<observation_ptr_t,probability_t> marg_stat_p_o;
+                    for(observation_ptr_t observation : observation_space) {
+                        probability_t& p_ref = marg_stat_p_o[observation];
+                        for(reward_ptr_t reward : reward_space) {
+                            p_ref += stat_dist[o_r_idx_map[make_tuple(observation,reward)]];
+                        }
+                        normalization_check += p_ref;
+                    }
+                    if(fabs(normalization_check-1)>1e-3) {
+                        DEBUG_WARNING("Marginal stationary distribution over observations not normalized (sum = " << normalization_check << ")");
+                        for(observation_ptr_t observation : observation_space) {
+                            DEBUG_OUT(0,"p(" << observation << ") = " << marg_stat_p_o[observation]);
+                        }
+                    }
+                    // get marginal stationary reward distributions
+                    normalization_check = 0;
+                    map<reward_ptr_t,probability_t> marg_stat_p_r;
+                    for(reward_ptr_t reward : reward_space) {
+                        probability_t& p_ref = marg_stat_p_r[reward];
+                        for(observation_ptr_t observation : observation_space) {
+                            p_ref += stat_dist[o_r_idx_map[make_tuple(observation,reward)]];
+                        }
+                        normalization_check += p_ref;
+                    }
+                    if(fabs(normalization_check-1)>1e-3) {
+                        DEBUG_WARNING("Marginal stationary distribution over rewards not normalized (sum = " << normalization_check << ")");
+                        for(reward_ptr_t reward : reward_space) {
+                            DEBUG_OUT(0,"p(" << reward << ") = " << marg_stat_p_r[reward]);
+                        }
+                    }
+                    // get inverse probability
+                    normalization_check = 0;
+                    for(observation_ptr_t observation_t_Delta_t : observation_space) {
+                        // marginalize out rewards
+                        probability_t marg_conditional = 0;
+                        for(reward_ptr_t reward_t : reward_space) {
+                            for(reward_ptr_t reward_t_Delta_t : reward_space) {
+                                marg_conditional += marg_stat_p_r[reward_t_Delta_t]*T(
+                                    o_r_idx_map[make_tuple(current_obs,reward_t)],
+                                    o_r_idx_map[make_tuple(observation_t_Delta_t,reward_t_Delta_t)]
+                                    );
+                            }
+                        }
+                        // update inverse probability for observation
+                        inv_dist[observation_t_Delta_t] = marg_conditional;
+                        normalization_check += marg_conditional;
+                    }
+                    if(fabs(normalization_check-1)>1e-3) {
+                        DEBUG_WARNING("Marginal conditional distribution over observation not normalized (sum = " << normalization_check << ")");
+                        for(observation_ptr_t observation : observation_space) {
+                            DEBUG_OUT(0,"p(" << observation << ") = " << inv_dist[observation]);
+                        }
+                    }
+
+                    // warning if state space does not match
+                    bool observation_found_in_space = false;
+                    for(observation_ptr_t observation : observation_space) {
+                        if(observation==current_obs) {
+                            observation_found_in_space = true;
+                            break;
+                        }
+                    }
+                    if(!observation_found_in_space) {
+                        DEBUG_WARNING("Current state of agent is not in current state space");
+                    }
+
+                    // observation_ptr_t current_obs = current_instance->observation;
+                    // bool observation_found_in_space = false;
+                    // map<observation_ptr_t,probability_t> p_stat_o_t_Delta_t;
+                    // probability_t p_stat_o_t = 0;
+                    // map<observation_ptr_t,probability_t> T_p_stat;
+                    // probability_t normalization_check_1 = 0;
+                    // probability_t normalization_check_2 = 0;
+                    // // get probability of current observation according to
+                    // // stationary distribution
+                    // for(reward_ptr_t reward : reward_space) {
+                    //     p_stat_o_t += stat_dist[o_r_idx_map[make_tuple(current_obs,reward)]];
+                    // }
+                    // // get stationary probability distribution over past
+                    // // observation (at time t - Delta t)
+                    // normalization_check_1 = 0;
+                    // for(observation_ptr_t observation : observation_space) {
+                    //     probability_t& p_stat_ref = p_stat_o_t_Delta_t[observation];
+                    //     for(reward_ptr_t reward : reward_space) {
+                    //         probability_t tmp_p = stat_dist[o_r_idx_map[make_tuple(observation,reward)]];
+                    //         p_stat_ref += tmp_p;
+                    //         normalization_check_1 += tmp_p;
+                    //     }
+                    // }
+                    // IF_DEBUG(1) {
+                    //     if(fabs(normalization_check_1-1)>1e-3) {
+                    //         DEBUG_WARNING("Stationary distribution over past state not normalized (sum = " << normalization_check_1 << ")");
+                    //         for(observation_ptr_t observation : observation_space) {
+                    //             DEBUG_OUT(0,"p(" << observation << ") = " << p_stat_o_t_Delta_t[observation]);
+                    //         }
+                    //     }
+                    // }
+                    // // get T*p
+                    // normalization_check_1 = 0;
+                    // normalization_check_2 = 0;
+                    // {
+                    //     map<observation_ptr_t,probability_t> T_dist, p_dist;
+                    //     for(observation_ptr_t observation_t_Delta_t : observation_space) {
+                    //         probability_t& Tp_ref = T_p_stat[observation_t_Delta_t];
+                    //         probability_t& T_dist_ref = T_dist[observation_t_Delta_t];
+                    //         probability_t& p_dist_ref = p_dist[observation_t_Delta_t];
+                    //         for(reward_ptr_t reward_t : reward_space) {
+                    //             for(reward_ptr_t reward_t_Delta_t : reward_space) {
+                    //                 probability_t T_tmp = T(
+                    //                     o_r_idx_map[make_tuple(observation_t_Delta_t,reward_t_Delta_t)],
+                    //                     o_r_idx_map[make_tuple(current_obs,reward_t)]
+                    //                     );
+                    //                 T_dist_ref += T_tmp;
+                    //                 probability_t p_tmp = stat_dist[
+                    //                     o_r_idx_map[make_tuple(observation_t_Delta_t,reward_t_Delta_t)]
+                    //                     ];
+                    //                 p_dist_ref += p_tmp;
+                    //                 Tp_ref += T_tmp*p_tmp;
+                    //             }
+                    //         }
+                    //         normalization_check_1 += T_dist_ref;
+                    //         normalization_check_2 += p_dist_ref;
+                    //     }
+                    //     IF_DEBUG(1) {
+                    //         if(fabs(normalization_check_1-1)>1e-3) {
+                    //             DEBUG_WARNING("Transition distribution not normalized (sum = " << normalization_check_1 << ")");
+                    //             for(observation_ptr_t observation : observation_space) {
+                    //                 DEBUG_OUT(0,"p(" << observation << ") = " << T_dist[observation]);
+                    //             }
+                    //         }
+                    //         if(fabs(normalization_check_2-1)>1e-3) {
+                    //             DEBUG_WARNING("Stationary distribution not normalized (sum = " << normalization_check_2 << ")");
+                    //             for(observation_ptr_t observation : observation_space) {
+                    //                 DEBUG_OUT(0,"p(" << observation << ") = " << p_dist[observation]);
+                    //             }
+                    //         }
+                    //     }
+                    // }
+                    // // get inverse
+                    // normalization_check_1 = 0;
+                    // for(observation_ptr_t observation : observation_space) {
+                    //     if(observation==current_obs) {
+                    //         observation_found_in_space = true;
+                    //     }
+                    //     probability_t tmp_p = p_stat_o_t_Delta_t[observation]*T_p_stat[observation]/p_stat_o_t;
+                    //     inv_dist[observation] = tmp_p;
+                    //     normalization_check_1 += tmp_p;
+                    // }
+                    // IF_DEBUG(1) {
+                    //     if(fabs(normalization_check_1-1)>1e-3) {
+                    //         DEBUG_WARNING("Inverse distribution not normalized (sum = " << normalization_check_1 << ")");
+                    //         for(observation_ptr_t observation : observation_space) {
+                    //             DEBUG_OUT(0,"p(" << observation << ") = " << inv_dist[observation]);
+                    //         }
+                    //     }
+                    // }
+
+                }
+                // set colors
+                vector<double> dist;
+                for(observation_ptr_t observation : observation_space) {
+                    dist.push_back(inv_dist[observation]);
+                }
+                maze->show_distribution(dist,true);
+                return {true,"showed inverse distribution"};
+            }, "show inverse observation distribution (sqrt) of TEM");
     }
 
 //        // } else if(str_args[0]=="validate" || str_args[0]=="v") {
