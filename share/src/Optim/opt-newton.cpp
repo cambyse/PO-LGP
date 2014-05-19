@@ -76,9 +76,9 @@ OptNewton::StopCriterion OptNewton::step(){
   if(additionalRegularizer) {
     if(R.special==arr::RowShiftedPackedMatrixST) R = unpack(R);
     //      cout <<*addRegularizer <<R <<endl;
-    lapack_Ainv_b_sym(Delta, R + (*additionalRegularizer), -(gx+(*additionalRegularizer)*vectorShaped(x)));
+    Delta = lapack_Ainv_b_sym(R + (*additionalRegularizer), -(gx+(*additionalRegularizer)*vectorShaped(x)));
   } else {
-    lapack_Ainv_b_sym(Delta, R, -gx);
+    Delta = lapack_Ainv_b_sym(R, -gx);
   }
   if(o.maxStep>0. && absMax(Delta)>o.maxStep)  Delta *= o.maxStep/absMax(Delta);
   if(o.verbose>1) cout <<" \t|Delta|=" <<absMax(Delta) <<flush;

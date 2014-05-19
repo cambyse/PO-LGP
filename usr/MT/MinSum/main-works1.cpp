@@ -86,7 +86,7 @@ void MinSumGaussNewton::go(){
         A  += mu(m).A;
         a  += mu(m).a;
       }
-      lapack_Ainv_b_sym(Delta, A, a);
+      Delta = lapack_Ainv_b_sym(A, a);
       Delta -= x[i];
       VERBOSE(2,cout <<"optimizing over node "<<i <<": x=" <<x[i] <<" f(x)=" <<fx <<" Delta=" <<Delta <<endl);
 

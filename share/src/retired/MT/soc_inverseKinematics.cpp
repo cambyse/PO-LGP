@@ -47,10 +47,10 @@ void soc::bayesianIKControl2(SocSystemAbstraction& sys,
   arr Binv, b;
   if(!v){
     Binv = Sinv + R;
-    lapack_Ainv_b_sym(b, Binv, Sinv*s + r);
+    b = lapack_Ainv_b_sym(Binv, Sinv*s + r);
   }else{
     Binv = Sinv + (*Vinv) + R;
-    lapack_Ainv_b_sym(b, Binv, Sinv*s + (*Vinv)*(*v) + r);
+    b = lapack_Ainv_b_sym(Binv, Sinv*s + (*Vinv)*(*v) + r);
   }
 
   //constraints
@@ -72,7 +72,7 @@ void soc::bayesianIKControl2(SocSystemAbstraction& sys,
 
     //recompute (b, B);
     Binv = Sinv + R;
-    lapack_Ainv_b_sym(b, Binv, Sinv*s + r);
+    b = lapack_Ainv_b_sym(Binv, Sinv*s + r);
   }
   q=b;
 }
@@ -110,17 +110,17 @@ void soc::bayesianDynamicControl(SocSystemAbstraction& sys, arr& x, const arr& x
   arr Binv, b;
   if(!v){
     Binv = Sinv + R;
-    lapack_Ainv_b_sym(b, Binv, Sinv*s + r);
+    b = lapack_Ainv_b_sym(Binv, Sinv*s + r);
   }else{
     if(v->N== x.N){ //bwd msg given as fully dynamic
       Binv = Sinv + (*Vinv) + R;
-      lapack_Ainv_b_sym(b, Binv, Sinv*s + (*Vinv)*(*v) + r);
+      b = lapack_Ainv_b_sym(Binv, Sinv*s + (*Vinv)*(*v) + r);
     }else{
       arr _Vinv(2*n, 2*n), _v(2*n);
       _Vinv.setZero();  _Vinv.setMatrixBlock(*Vinv, 0, 0);
       _v   .setZero();  _v   .setVectorBlock(*v, 0);
       Binv = Sinv + _Vinv + R;
-      lapack_Ainv_b_sym(b, Binv, Sinv*s + _Vinv*_v + r);
+      b = lapack_Ainv_b_sym(Binv, Sinv*s + _Vinv*_v + r);
     }
   }
 

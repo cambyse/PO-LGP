@@ -247,7 +247,7 @@ double soc::LQG::stepGeneral(){
     v[T]() = q_phase[T];
     for(t=0;t<T;t++){
       Vinv[t]() = Vbar[t]-R[t];
-      lapack_Ainv_b_sym(v[t](), Vinv[t]+Eps, vbar[t]-r[t]);
+      v[t]() = lapack_Ainv_b_sym(Vinv[t]+Eps, vbar[t]-r[t]);
     }
   }else{
     Vinv.setZero(); v.setZero();

@@ -110,7 +110,7 @@ void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc
 
     arr AF = comp_A_x(A, dF_x);
     arr beta;
-    lapack_Ainv_b_sym(beta, tmp, AF);
+    beta = lapack_Ainv_b_sym(tmp, AF);
 
     lambda += lambdaStepsize * (2.*mu*g_x - beta);
 #else
@@ -130,7 +130,7 @@ void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc
 
       arr AF = comp_A_x(A, dL_x);
       arr beta;
-      lapack_Ainv_b_sym(beta, tmp, AF);
+      beta = lapack_Ainv_b_sym(tmp, AF);
       //reinsert zero rows
       for(uint i=0;i<g_x.N;i++) if(!(g_x(i)>0. || lambda(i)>0.)){
         beta.insert(i,0.);
@@ -150,7 +150,7 @@ void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc
     arr tmp = comp_A_At(A);
     for(uint i=0;i<tmp.d0;i++) tmp(i,i) += 1e-6;
     arr beta;
-    lapack_Ainv_b_sym(beta, tmp, comp_A_x(A, dL_x));
+    beta = lapack_Ainv_b_sym(tmp, comp_A_x(A, dL_x));
     //reinsert zero rows
     for(uint i=0;i<g_x.N;i++) if(!(g_x(i)>0. || lambda(i)>0.)){
       beta.insert(i,0.);
