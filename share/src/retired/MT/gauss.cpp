@@ -137,11 +137,9 @@ double Gaussian::evaluate(const arr& pos) const {
 
 void Gaussian::gradient(arr& grad, const arr& pos) const {
   if (!useC) makeC();
-  grad = zeros(pos.d0, 1);
-  grad.reshape(pos.d0);
+  grad = zeros(pos.d0);
   for (uint i = 0; i < grad.d0; ++i) {
-    arr diffx = zeros(pos.d0, 1);
-    diffx.reshape(pos.d0);
+    arr diffx = zeros(pos.d0);
     diffx(i) = 1;
     arr invC = inverse(C);
     grad(i) = -evaluate(pos) * (0.5 * ~diffx * invC * (pos-c) + 0.5 * ~(pos-c) * invC * diffx)(0);

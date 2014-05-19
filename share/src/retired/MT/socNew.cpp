@@ -33,7 +33,7 @@ double ControlledSystem::getTaskCosts(arr& R, arr& r, uint t, double* rhat){
   arr phi, J;
   getTaskCosts(phi, J, t);
   //x is the curren state!
-  if(!phi.N){ R=zeros(get_xDim()); r=zeros(TUP(get_xDim())); return 0.; }
+  if(!phi.N){ R=zeros(get_xDim(),get_xDim()); r=zeros(get_xDim()); return 0.; }
   innerProduct(R, ~J, J);
   innerProduct(r, ~J, J*getx() - phi);
   if(rhat) *rhat = sumOfSqr(J*getx() - phi);

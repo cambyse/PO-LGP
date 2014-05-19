@@ -208,16 +208,15 @@ bool MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
   if(&J_x) J_x.clear();
   if(&J_v) J_v.clear();
   arr y,J;
-  for(uint i=0; i<taskCosts.N; i++) {
-    TaskCost *c = taskCosts(i);
-    if(c->active && c->prec(t) && !c->map.constraint) {
+  //-- append task costs
+  for(TaskCost *c: taskCosts) if(c->active && c->prec(t)){
+    if(!c->map.constraint) {
       c->map.phi(y, J, world);
       if(absMax(y)>1e10)  MT_MSG("WARNING y=" <<y);
       CHECK(c->prec.N>t && c->target.N>t, "active task costs "<< c->name <<" have no targets defined");
       CHECK(c->map.order==0 || c->map.order==1,"");
       if(c->map.order==0) { //pose costs
         phi.append(sqrt(c->prec(t))*(y - c->target[t]));
-        if(phi.last() > c->threshold) feasible = false;
         if(&J_x) J_x.append(sqrt(c->prec(t))*J);
         if(&J_v) J_v.append(0.*J);
       }
@@ -226,25 +225,22 @@ bool MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
         if(&J_x) J_x.append(0.*J);
         if(&J_v) J_v.append(sqrt(c->prec(t))*J);
       }
-      if(phi.last() > c->threshold) feasible = false;
     }
-    if(makeContactsAttractive){ //push into constraints
-      if(c->active && c->map.constraint) {
-        CHECK(!c->target.N/* && !c->v_target.N*/,"constraints cannot have targets");
-        c->map.phi(y, J, world);
-        CHECK(y.N==J.d0,"");
-        for(uint j=0;j<y.N;j++) y(j) = -y(j)+.1; //MT::sigmoid(y(j));
-        if(J.N) for(uint j=0;j<J.d0;j++) J[j]() *= -1.; // ( y(j)*(1.-y(j)) );
-        phi.append(stickyWeight*y);
-        if(phi.last() > c->threshold) feasible = false;
-        if(&J_x) J_x.append(stickyWeight*J);
-        if(&J_v) J_v.append(0.*J);
-      }
+    if(phi.N && phi.last() > c->threshold) feasible = false; //TOTAL hack: last(). Please use constraints, or a separate routine
+    //special: constraint attraction costs
+    if(c->map.constraint && makeContactsAttractive) {
+      c->map.phi(y, J, world);
+      CHECK(y.N==J.d0,"");
+      for(uint j=0;j<y.N;j++) y(j) = -y(j)+.1;
+      if(J.N) for(uint j=0;j<J.d0;j++) J[j]() *= -1.;
+      phi.append(stickyWeight*y);
+      if(&J_x) J_x.append(stickyWeight*J);
+      if(&J_v) J_v.append(0.*J);
     }
   }
-  for(uint i=0; i<taskCosts.N; i++) {
-    TaskCost *c = taskCosts(i);
-    if(c->active && c->prec(t) && c->map.constraint) {
+  //-- append constraints
+  for(TaskCost *c: taskCosts) if(c->active && c->prec(t)){
+    if(c->map.constraint) {
       c->map.phi(y, J, world);
       phi.append(y);
       if(phi.last() > c->threshold) feasible = false;
@@ -488,7 +484,7 @@ void MotionProblem_EndPoseFunction::fv(arr& phi, arr& J, const arr& x){
 
   //-- task costs
   arr _phi, J_x;
-  MP.setState(x, zeros(x.N, 1).reshape(x.N));
+  MP.setState(x, zeros(x.N));
   MP.getTaskCosts(_phi, J_x, NoArr, MP.T);
   phi.append(_phi);
   if(&J && _phi.N) {

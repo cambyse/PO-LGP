@@ -103,8 +103,8 @@ ors::RRTPlanner::RRTPlanner(ors::KinematicWorld *G, MotionProblem &problem, doub
    G(G), problem(problem) {
     arr q; G->getJointState(q);
     s = new ors::sRRTPlanner(this, RRT(q, stepsize), verbose);
-    joint_min = zeros(G->getJointStateDimension(), 1);
-    joint_max = ones(G->getJointStateDimension(), 1);
+    joint_min = zeros(G->getJointStateDimension());
+    joint_max = ones(G->getJointStateDimension());
   }
 
 void drawRRT(RRT rrt) {
