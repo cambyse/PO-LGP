@@ -14,40 +14,30 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
   MotionProblem P(world, false);
   P.loadTransitionParameters();
   x = P.getInitialization();
-
-  //-- setup the motion problem
-  TaskCost *pos =
-      P.addTask("position",
-                   new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
-  P.setInterpolatingCosts(pos, MotionProblem::finalOnly,
-                          ARRAY(0.,0.,0.), 1e3);
-//                          ARRAY(P.world.getShapeByName("target")->X.pos), 1e3);
-  TaskCost *q_vel =
-      P.addTask("q_vel",
-                new DefaultTaskMap(qItselfTMT, world));
-  q_vel->map.order=1;
-  P.setInterpolatingCosts(q_vel, MotionProblem::finalOnly, NoArr, 1e1);
-
-  //c = P.addTask("collisionConstraints", new CollisionConstraint());
-  P.addTask("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1,.7)));
+  P.makeContactsAttractive=true;
   stickyWeight=1.;
 
+  //-- setup the motion problem
+  TaskCost *pos = P.addTask("position",
+                            new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
+  P.setInterpolatingCosts(pos, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
+
+  TaskCost *vel = P.addTask("position_vel", new DefaultTaskMap(posTMT, world, "endeff", NoVector));
+  vel->map.order=1;
+  P.setInterpolatingCosts(vel, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
+
+  TaskCost *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1,.7)));
+  P.setInterpolatingCosts(cons, MotionProblem::constant, ARRAY(0.), 1.);
+
+  //-- convert
   MotionProblemFunction MF(P);
   Convert ConstrainedP(MF);
-  UnconstrainedProblem UnConstrainedP(ConstrainedP);
-  UnConstrainedP.mu = 10.;
 
+  //-- optimize
   MT::timerStart();
-  for(uint k=0;k<5;k++){
-    optNewton(x, UnConstrainedP, OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1e-3, stopTolerance=1e-4, maxStep=.5));
-//    optNewton(x, UCP, OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
-    P.costReport();
-//    displayTrajectory(x, 1, G, gl,"planned trajectory");
-    UnConstrainedP.augmentedLagrangian_LambdaUpdate(x, .9);
-    P.dualMatrix = UnConstrainedP.lambda;
-    UnConstrainedP.mu *= 2.;
-  }
+  optConstrained(x, dual, Convert(MF));
   cout <<"** optimization time = " <<MT::timerRead() <<endl;
+  P.dualMatrix = dual;
   P.costReport();
 
   if(&y){
@@ -57,7 +47,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
       pos->map.phi(y[t](), NoArr, world);
     }
   }
-  if(&dual) dual = UnConstrainedP.lambda;
+  if(&dual) dual.reshape(dual.N);
 }
 
 void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWorld& world, int num){
@@ -74,7 +64,7 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
 
   double sin_jitter = MT::getParameter<double>("sin_jitter", 0.);
 
-  FeedbackMotionControl MC(world);
+  FeedbackMotionControl MC(world, false);
   MC.qitselfPD.active=true;
 
   //position PD task

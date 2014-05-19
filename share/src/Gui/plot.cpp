@@ -611,7 +611,7 @@ void plotDrawOpenGL(void *_data) {
 
 void plotDrawGnuplot(void *_data, bool pauseMouse) {
   sPlotModule& data=(*((sPlotModule*)_data));
-  uint i, j, k;
+  uint i;
   
   //openfiles
   MT::String gnuplotcmd;

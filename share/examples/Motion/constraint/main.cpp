@@ -54,7 +54,7 @@ int main(int argc,char** argv){
 
   Convert CP(MF);
 #if 1
-  optConstrained(x, NoArr, CP);
+  optConstrained(x, P.dualMatrix, CP);
   P.costReport();
   for(;;) displayTrajectory(x, 1, G, "planned trajectory");
 #else

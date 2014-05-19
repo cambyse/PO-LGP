@@ -47,7 +47,7 @@ MotionProblem& MotionProblem::operator=(const MotionProblem& other) {
   x0 = other.x0;
   v0 = other.v0;
   prefix = other.prefix;
-  costMatrix = other.costMatrix;
+  phiMatrix = other.phiMatrix;
   dualMatrix = other.dualMatrix;
   return *this;
 }
@@ -184,18 +184,16 @@ void MotionProblem::setState(const arr& q, const arr& v) {
 
 uint MotionProblem::dim_phi(uint t) {
   uint m=0;
-  for(uint i=0; i<taskCosts.N; i++) {
-    TaskCost *c = taskCosts(i);
-    m += c->dim_phi(t, world);
-    if(makeContactsAttractive) m += c->dim_phi(t, world);
+  for(TaskCost *c: taskCosts) {
+    m += c->dim_phi(t, world); //counts also constraints
+    if(c->map.constraint && makeContactsAttractive) m += c->dim_phi(t, world); //..maybe twice
   }
   return m;
 }
 
 uint MotionProblem::dim_g(uint t) {
   uint m=0;
-  for(uint i=0; i<taskCosts.N; i++) {
-    TaskCost *c = taskCosts(i);
+  for(TaskCost *c: taskCosts) {
     if(c->active && c->map.constraint)  m += c->map.dim_phi(world);
   }
   return m;
@@ -266,12 +264,16 @@ void MotionProblem::activateAllTaskCosts(bool active) {
 
 void MotionProblem::costReport(bool gnuplt) {
   cout <<"*** MotionProblem -- CostReport" <<endl;
-  cout <<"Size of cost matrix:" <<costMatrix.getDim() <<endl;
-  uint T=costMatrix.d0-1;
+  cout <<"Size of cost matrix:" <<phiMatrix.getDim() <<endl;
+  uint T=phiMatrix.d0-1;
 
-  double totalT=0.;
+  arr plotData(T+1,taskCosts.N+1); plotData.setZero();
+  double totalT=0., a;
   cout <<" * transition costs:" <<endl;
-  for(uint t=0;t<=T;t++) totalT += sumOfSqr(costMatrix(t).sub(0,dim_psi()-1));
+  for(uint t=0;t<=T;t++){
+    totalT += a = sumOfSqr(phiMatrix(t).sub(0,dim_psi()-1));
+    plotData(t,0) = a;
+  }
   cout <<"\t total=" <<totalT <<endl;
 
   //-- collect all task costs and constraints
@@ -283,32 +285,34 @@ void MotionProblem::costReport(bool gnuplt) {
       TaskCost *c = taskCosts(i);
       uint d=c->dim_phi(t, world);
       if(d && !c->map.constraint){
-        taskC(i) += sumOfSqr(costMatrix(t).sub(m,m+d-1));
+        taskC(i) += a = sumOfSqr(phiMatrix(t).sub(m,m+d-1));
+        plotData(t,i+1) = a;
         m += d;
       }
       if(d && c->map.constraint){
         if(makeContactsAttractive){
-          taskC(i) += sumOfSqr(costMatrix(t).sub(m,m+d-1));
+          taskC(i) += a = sumOfSqr(phiMatrix(t).sub(m,m+d-1));
           m += d;
         }
         double gpos=0.;
         for(uint j=0;j<d;j++){
-          double g=costMatrix(t)(m+j);
+          double g=phiMatrix(t)(m+j);
           if(g>0.) gpos+=g;
         }
         taskG(i) += gpos;
+        plotData(t,i+1) = gpos;
         m += d;
       }
     }
-    CHECK(m == costMatrix(t).N, "");
+    CHECK(m == phiMatrix(t).N, "");
   }
 
   cout <<" * task costs:" <<endl;
   double totalC=0., totalG=0.;
   for(uint i=0; i<taskCosts.N; i++) {
     TaskCost *c = taskCosts(i);
-    cout <<"\t '" <<c->name <<"' order=" <<c->map.order <<" con" <<c->map.constraint;
-    cout <<"costs=" <<taskC(i) <<" constraints=" <<taskG(i) <<endl;
+    cout <<"\t '" <<c->name <<"' order=" <<c->map.order <<" con=" <<c->map.constraint;
+    cout <<" \tcosts=" <<taskC(i) <<" \tconstraints=" <<taskG(i) <<endl;
     totalC += taskC(i);
     totalG += taskG(i);
   }
@@ -318,49 +322,27 @@ void MotionProblem::costReport(bool gnuplt) {
   cout <<"\t total constraints = " <<totalG <<endl;
   cout <<"\t total task+trans  = " <<totalC+totalT <<endl;
 
-  if(dualMatrix.N) dualMatrix.reshape(T+1, dualMatrix.N/(T+1));
 
-#if 0
   //-- write a nice gnuplot file
   ofstream fil("z.costReport");
+  //first line: legend
   fil <<"trans[" <<dim_psi() <<"] ";
   for(auto c:taskCosts){
     uint d=c->map.dim_phi(world);
     fil <<c->name <<'[' <<d <<"] ";
-    if(c->map.constraint){
-if(makeContactsAttractive){
-      fil <<c->name <<"_stick[" <<d <<"] ";
-}
-      fil <<c->name <<"_constr[" <<d <<"] ";
-      if(dualMatrix.N) fil <<c->name <<"_dual[" <<d <<"] ";
+  }
+  for(auto c:taskCosts){
+    if(c->map.constraint && dualMatrix.N){
+      fil <<c->name <<"_dual";
     }
   }
   fil <<endl;
-  for(uint t=0;t<costMatrix.d0;t++){
-    double tc=sumOfSqr(costMatrix.sub(t,t,0,dim_psi()-1));
-    fil <<sqrt(tc) <<' ';
-    m=dim_psi();
-    uint m_dual=0;
-    for(auto c:taskCosts){
-      uint d=c->map.dim_phi(world);
-      if(!c->map.constraint){
-        fil <<sqrt(sumOfSqr(costMatrix.sub(t,t,m,m+d-1))) <<' ';
-        m += d;
-      }
-      if(c->map.constraint){
-  if(makeContactsAttractive){
-        fil <<sqrt(sumOfSqr(costMatrix.sub(t,t,m,m+d-1))) <<' ';
-        m += d;
-  }
-        fil <<sum(costMatrix.sub(t,t,m,m+d-1)) <<' ';
-        m += d;
-        if(dualMatrix.N){
-          fil <<sum(dualMatrix.sub(t,t,m_dual,m_dual+d-1));
-          m_dual += d;
-        }
-      }
-    }
-    fil <<endl;
+  //rest: just the matrix?
+  if(!dualMatrix.N){
+    plotData.write(fil,NULL,NULL,"  ");
+  }else{
+    dualMatrix.reshape(T+1, dualMatrix.N/(T+1));
+    catCol(plotData, dualMatrix).write(fil,NULL,NULL,"  ");
   }
   fil.close();
 
@@ -369,19 +351,12 @@ if(makeContactsAttractive){
   fil2 <<"set title 'costReport ( plotting sqrt(costs) )'" <<endl;
   fil2 <<"plot 'z.costReport' u 0:1 w l \\" <<endl;
   uint i=1;
-  for(auto c:taskCosts){
-    i++; fil2 <<"  ,'' u 0:"<<i<<" w l \\" <<endl;
-if(makeContactsAttractive){
-    if(c->map.constraint){ i++; fil2 <<"  ,'' u 0:"<<i<<" w l \\" <<endl; }
-}
-    if(c->map.constraint){ i++; fil2 <<"  ,'' u 0:"<<i<<" w l \\" <<endl; }
-    if(c->map.constraint && dualMatrix.N){ i++; fil2 <<"  ,'' u 0:"<<i<<" w l \\" <<endl; }
-  }
+  for(auto c:taskCosts){ i++; fil2 <<"  ,'' u 0:"<<i<<" w l \\" <<endl;  }
+  if(dualMatrix.N) for(auto c:taskCosts){  i++; fil2 <<"  ,'' u 0:"<<i<<" w l \\" <<endl;  }
   fil2 <<endl;
   fil2.close();
 
   if(gnuplt) gnuplot("load 'z.costReport.plt'");
-#endif
 }
 
 arr MotionProblem::getInitialization(){
@@ -460,10 +435,10 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
   if(&J) CHECK(J.d0==phi.N,"");
   
   //store in CostMatrix
-  if(!MP.costMatrix.N) {
-    MP.costMatrix.resize(get_T()+1);
+  if(!MP.phiMatrix.N) {
+    MP.phiMatrix.resize(get_T()+1);
   }
-  MP.costMatrix(t) = phi;
+  MP.phiMatrix(t) = phi;
 }
 
 //===========================================================================
@@ -500,9 +475,9 @@ void MotionProblem_EndPoseFunction::fv(arr& phi, arr& J, const arr& x){
   if(&J) CHECK(J.d0==phi.N,"");
 
   //store in CostMatrix
-  MP.costMatrix.resize(MP.T+1,phi.N);
-  MP.costMatrix.setZero();
-  MP.costMatrix[MP.T]() = phi;
+  MP.phiMatrix.resize(MP.T+1,phi.N);
+  MP.phiMatrix.setZero();
+  MP.phiMatrix[MP.T]() = phi;
 }
 
 //===========================================================================

@@ -15,7 +15,6 @@ penelty and old task variables
 
 ** traj optim
 
-- don't include task with zero prec in $f_t$ terms
 - mix vel and acc penalties for optimization
 - have k ors copies in converting kOrderMarkov to sqrfunction
 - have psi (transition costs) as normal task variable
