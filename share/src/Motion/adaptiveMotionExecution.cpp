@@ -107,7 +107,7 @@ void AdaptiveMotionExecution::plotState()
   cout << "Save Path: " << scene << endl;
 
   write(LIST<arr>(joints_bk),STRING(scene<<"/joints_bk.output"));
-  write(ARR(dt),STRING(scene<<"/dt.output"));
+  write(LIST<arr>(ARR(dt)),STRING(scene<<"/dt.output"));
   write(LIST<arr>(goal),STRING(scene<<"/goal.output"));
 
   write(LIST<arr>(trajRef->points), STRING(scene<<"/trajRef.output"));

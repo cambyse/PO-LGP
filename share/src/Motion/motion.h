@@ -57,7 +57,8 @@ struct TaskCost {
   bool active;
   arr target, prec;  ///< target & precision over a whole trajectory
   double threshold;  ///< threshold for feasibility checks (e.g. in RRTs)
-  
+  uint dim_phi(uint t,const ors::KinematicWorld& G){ if(!active || !prec(t)) return 0; return map.dim_phi(G); }
+
   TaskCost(TaskMap* m):map(*m), active(true){}
 };
 
@@ -93,7 +94,7 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
   //TODO: add methods to properly set the prefix given x0,v0?
 
   //-- return values of an optimizer
-  arr costMatrix;
+  MT::Array<arr> costMatrix;
   arr dualMatrix;
 
   MotionProblem(ors::KinematicWorld& _world, bool useSwift=true);

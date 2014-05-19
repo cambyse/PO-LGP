@@ -75,7 +75,7 @@ int main(int argc,char** argv){
   for(uint k=0;k<5;k++){
     MT::timerStart();
 #if 1
-    optNewton(x, Convert(MF), OPT(verbose=2, stopIters=20, maxStep=1., stepInc=2., nonStrict=(!k?15:5)));
+    optNewton(x, Convert(MF), OPT(verbose=2, stopIters=20, maxStep=1., stepInc=2., nonStrictSteps=(!k?15:5)));
 #else
     ConstrainedMethodType method = (ConstrainedMethodType)MT::getParameter<int>("method");
     optConstrained(x, NoArr, Convert(MF), OPT(verbose=1, stopIters=100, damping=1., maxStep=1., nonStrict=5, constrainedMethod=method));

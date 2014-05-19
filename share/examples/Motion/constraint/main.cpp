@@ -40,6 +40,7 @@ int main(int argc,char** argv){
 
   if(con){
     c = P.addTask("collisionConstraints", new CollisionConstraint());
+    P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1.);
   }else{
     c = P.addTask("collision", new DefaultTaskMap(collTMT, 0, NoVector, 0, NoVector, ARR(.1)));
     P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);

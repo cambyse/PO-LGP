@@ -186,14 +186,8 @@ uint MotionProblem::dim_phi(uint t) {
   uint m=0;
   for(uint i=0; i<taskCosts.N; i++) {
     TaskCost *c = taskCosts(i);
-    if(c->active) {
-      if(c->target.N || c->map.constraint) m += c->map.dim_phi(world);
-      //if(transitionType!=kinematic && c->v_target.N)  m += c->map.dim_phi(world);
-//#define STICK 1
-if(makeContactsAttractive){
-      if(c->active && c->map.constraint)  m += c->map.dim_phi(world);
-}
-    }
+    m += c->dim_phi(t, world);
+    if(makeContactsAttractive) m += c->dim_phi(t, world);
   }
   return m;
 }
@@ -216,10 +210,10 @@ bool MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
   arr y,J;
   for(uint i=0; i<taskCosts.N; i++) {
     TaskCost *c = taskCosts(i);
-    if(c->active && !c->map.constraint) {
+    if(c->active && c->prec(t) && !c->map.constraint) {
       c->map.phi(y, J, world);
       if(absMax(y)>1e10)  MT_MSG("WARNING y=" <<y);
-      CHECK(c->target.N, "active task costs "<< c->name <<" have no targets defined");
+      CHECK(c->prec.N>t && c->target.N>t, "active task costs "<< c->name <<" have no targets defined");
       CHECK(c->map.order==0 || c->map.order==1,"");
       if(c->map.order==0) { //pose costs
         phi.append(sqrt(c->prec(t))*(y - c->target[t]));
@@ -234,24 +228,23 @@ bool MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
       }
       if(phi.last() > c->threshold) feasible = false;
     }
-if(makeContactsAttractive){ //push into constraints
-    if(c->active && c->map.constraint) {
-      CHECK(!c->target.N/* && !c->v_target.N*/,"constraints cannot have targets");
-      c->map.phi(y, J, world);
-      CHECK(y.N==J.d0,"");
-      for(uint j=0;j<y.N;j++) y(j) = -y(j)+.1; //MT::sigmoid(y(j));
-      if(J.N) for(uint j=0;j<J.d0;j++) J[j]() *= -1.; // ( y(j)*(1.-y(j)) );
-      phi.append(stickyWeight*y);
-      if(phi.last() > c->threshold) feasible = false;
-      if(&J_x) J_x.append(stickyWeight*J);
-      if(&J_v) J_v.append(0.*J);
+    if(makeContactsAttractive){ //push into constraints
+      if(c->active && c->map.constraint) {
+        CHECK(!c->target.N/* && !c->v_target.N*/,"constraints cannot have targets");
+        c->map.phi(y, J, world);
+        CHECK(y.N==J.d0,"");
+        for(uint j=0;j<y.N;j++) y(j) = -y(j)+.1; //MT::sigmoid(y(j));
+        if(J.N) for(uint j=0;j<J.d0;j++) J[j]() *= -1.; // ( y(j)*(1.-y(j)) );
+        phi.append(stickyWeight*y);
+        if(phi.last() > c->threshold) feasible = false;
+        if(&J_x) J_x.append(stickyWeight*J);
+        if(&J_v) J_v.append(0.*J);
+      }
     }
-}
   }
   for(uint i=0; i<taskCosts.N; i++) {
     TaskCost *c = taskCosts(i);
-    if(c->active && c->map.constraint) {
-      CHECK(!c->target.N/* && !c->v_target.N*/,"constraints cannot have targets");
+    if(c->active && c->prec(t) && c->map.constraint) {
       c->map.phi(y, J, world);
       phi.append(y);
       if(phi.last() > c->threshold) feasible = false;
@@ -261,6 +254,8 @@ if(makeContactsAttractive){ //push into constraints
   }
   if(&J_x) J_x.reshape(phi.N, world.q.N);
   if(&J_v) J_v.reshape(phi.N, world.q.N);
+
+  CHECK(phi.N == dim_phi(t),"");
 
   return feasible;
 }
@@ -274,57 +269,62 @@ void MotionProblem::activateAllTaskCosts(bool active) {
 }
 
 void MotionProblem::costReport(bool gnuplt) {
-  CHECK(costMatrix.d1 == dim_psi() + dim_phi(0),"");
   cout <<"*** MotionProblem -- CostReport" <<endl;
-  
-  double transC=0., taskC=0., constraintViolations=0.;
+  cout <<"Size of cost matrix:" <<costMatrix.getDim() <<endl;
+  uint T=costMatrix.d0-1;
+
+  double totalT=0.;
   cout <<" * transition costs:" <<endl;
-  transC=sumOfSqr(costMatrix.sub(0,-1,0,dim_psi()-1));
-  cout <<"\t total=" <<transC <<endl;
-  
-  uint m=dim_psi();
-  
+  for(uint t=0;t<=T;t++) totalT += sumOfSqr(costMatrix(t).sub(0,dim_psi()-1));
+  cout <<"\t total=" <<totalT <<endl;
+
+  //-- collect all task costs and constraints
+  arr taskC(taskCosts.N); taskC.setZero();
+  arr taskG(taskCosts.N); taskG.setZero();
+  for(uint t=0; t<=T; t++){
+    uint m=dim_psi();
+    for(uint i=0; i<taskCosts.N; i++) {
+      TaskCost *c = taskCosts(i);
+      uint d=c->dim_phi(t, world);
+      if(d && !c->map.constraint){
+        taskC(i) += sumOfSqr(costMatrix(t).sub(m,m+d-1));
+        m += d;
+      }
+      if(d && c->map.constraint){
+        if(makeContactsAttractive){
+          taskC(i) += sumOfSqr(costMatrix(t).sub(m,m+d-1));
+          m += d;
+        }
+        double gpos=0.;
+        for(uint j=0;j<d;j++){
+          double g=costMatrix(t)(m+j);
+          if(g>0.) gpos+=g;
+        }
+        taskG(i) += gpos;
+        m += d;
+      }
+    }
+    CHECK(m == costMatrix(t).N, "");
+  }
+
   cout <<" * task costs:" <<endl;
+  double totalC=0., totalG=0.;
   for(uint i=0; i<taskCosts.N; i++) {
     TaskCost *c = taskCosts(i);
-    uint d=c->map.dim_phi(world);
-    
-    cout <<"\t '" <<c->name <<"' [" <<d <<"] ";
-    
-    if(!c->map.constraint){
-      double tc=sumOfSqr(costMatrix.sub(0,-1,m,m+d-1));
-      taskC+=tc;
-      if(c->map.order==0) cout <<"\t state=" <<tc;
-      if(c->map.order==1) cout <<"\t vel=" <<tc;
-      m += d;
-    }
-    if(c->map.constraint){
-if(makeContactsAttractive){
-      double tc=sumOfSqr(costMatrix.sub(0,-1,m,m+d-1));
-      taskC+=tc;
-      cout <<"\t sticky=" <<tc;
-      m += d;
-}
-      double gpos=0.;
-      for(uint t=0;t<=T;t++) for(uint j=0;j<d;j++){
-        double g=costMatrix(t,m+j);
-        if(g>0.) gpos+=g;
-      }
-      constraintViolations+=gpos;
-      cout <<"\t cons=" <<gpos;
-      m += d;
-    }
-    cout <<endl;
+    cout <<"\t '" <<c->name <<"' order=" <<c->map.order <<" con" <<c->map.constraint;
+    cout <<"costs=" <<taskC(i) <<" constraints=" <<taskG(i) <<endl;
+    totalC += taskC(i);
+    totalG += taskG(i);
   }
-  CHECK(m == costMatrix.d1, "");
 
-  cout <<"\t total task        = " <<taskC <<endl;
-  cout <<"\t total trans       = " <<transC <<endl;
-  cout <<"\t total task+trans  = " <<taskC+transC <<endl;
-  cout <<"\t total constraints = " <<constraintViolations <<endl;
+  cout <<"\t total trans       = " <<totalT <<endl;
+  cout <<"\t total task        = " <<totalC <<endl;
+  cout <<"\t total constraints = " <<totalG <<endl;
+  cout <<"\t total task+trans  = " <<totalC+totalT <<endl;
 
   if(dualMatrix.N) dualMatrix.reshape(T+1, dualMatrix.N/(T+1));
 
+#if 0
   //-- write a nice gnuplot file
   ofstream fil("z.costReport");
   fil <<"trans[" <<dim_psi() <<"] ";
@@ -385,7 +385,7 @@ if(makeContactsAttractive){
   fil2.close();
 
   if(gnuplt) gnuplot("load 'z.costReport.plt'");
-
+#endif
 }
 
 arr MotionProblem::getInitialization(){
@@ -465,12 +465,9 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
   
   //store in CostMatrix
   if(!MP.costMatrix.N) {
-    MP.costMatrix.resize(get_T()+1,phi.N);
-    MP.costMatrix.setZero();
+    MP.costMatrix.resize(get_T()+1);
   }
-  
-  CHECK(MP.costMatrix.d1==phi.N,"");
-  MP.costMatrix[t]() = phi;
+  MP.costMatrix(t) = phi;
 }
 
 //===========================================================================
