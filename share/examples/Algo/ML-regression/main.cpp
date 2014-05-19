@@ -31,7 +31,7 @@ void testLinReg(const char *datafile=NULL) {
 
   //-- evaluate model on a grid
   arr X_grid,y_grid;
-  X_grid.setGrid(X.d1,-3,3, (X.d1==1?100:30));
+  X_grid.setGrid(X.d1,-3,3, (X.d1==1?500:30));
   Phi = makeFeatures(X_grid, readFromCfgFileFT, X);
   y_grid = Phi*beta;
   arr s_grid = sqrt(evaluateBayesianRidgeRegressionSigma(Phi, Sigma)/*+MT::sqr(sigma)*/);
@@ -62,8 +62,59 @@ void testLinReg(const char *datafile=NULL) {
 
 //===========================================================================
 
+void testKernelReg(const char *datafile=NULL) {
+  if(!datafile){ //store artificial data to a file
+    datafile="z.train";
+    arr X,y;
+    artificialData(X, y);
+
+    FILE(datafile) <<catCol(X,y);
+  }
+
+  //-- load data from a file
+  arr X,y;
+  X <<FILE(datafile);
+  y = (~X)[X.d1-1];    //last row of transposed X
+  X.delColumns(X.d1-1);
+
+  KernelRidgeRegression f(X,y);
+  cout <<"Mean error (sdv) = " <<f.sigma <<endl;
+
+  //-- evaluate model on a grid
+  arr X_grid, s_grid;
+  X_grid.setGrid(X.d1,-3,3, (X.d1==1?500:30));
+  arr y_grid = f.evaluate(X_grid, s_grid);
+  s_grid = sqrt(s_grid);
+
+  if(X.d1==1){
+    plotGnuplot();
+    plotFunctionPrecision(X_grid, y_grid, y_grid+s_grid, y_grid-s_grid);
+    plotPoints(X,y);
+    plot(true);
+  }
+
+  //-- gnuplot
+  MT::arrayBrackets="  ";
+//  if(X.d1==1){
+//    FILE("z.model") <<catCol(X_grid, y_grid);
+//    gnuplot(STRING("plot [-3:3] '" <<datafile <<"' us 1:2 w p,'z.model' us 1:2 w l"), false, true,"z.pdf");
+//  }
+  if(X.d1==2){
+    FILE("z.model") <<y_grid.reshape(31,31);
+    FILE("z.model_s") <<(y_grid+s_grid).reshape(31,31);
+    FILE("z.model__s") <<(y_grid-s_grid).reshape(31,31);
+    gnuplot(STRING("splot [-3:3][-3:3] '" <<datafile <<"' w p ps 2 pt 4,\
+                   'z.model' matrix us ($1/5-3):($2/5-3):3 w l,\
+                   'z.model_s' matrix us ($1/5-3):($2/5-3):3 w l,\
+                   'z.model__s' matrix us ($1/5-3):($2/5-3):3 w l;\
+                    pause mouse"), false, true, "z.pdf");
+  }
+}
+
+//===========================================================================
+
 void test2Class() {
-  rnd.seed(1);
+//  rnd.seed(1);
 
   arr X,y;
   //artificialData_HastiesMultiClass(X, y);  y = ~((~y)[1]);  y.reshape(y.N);
@@ -74,23 +125,69 @@ void test2Class() {
   arr beta = logisticRegression2Class(Phi, y, -1., Sigma);
   
   arr X_grid;
-  X_grid.setGrid(2,-2,3,50);
+  X_grid.setGrid(X.d1,-3,3, (X.d1==1?500:50));
   Phi = makeFeatures(X_grid,readFromCfgFileFT, X);
   arr y_grid = Phi*beta;
   arr s_grid = evaluateBayesianRidgeRegressionSigma(Phi, Sigma);
-  y_grid /= sqrt(1.+s_grid*MT_PI/8.); //bayesian logistic regression: downscale discriminative function
+  arr ybay_grid = y_grid/ sqrt(1.+s_grid*MT_PI/8.); //bayesian logistic regression: downscale discriminative function
+  s_grid=sqrt(s_grid);
 
-  arr p_grid=exp(y_grid);
-  for(uint i=0; i<p_grid.N; i++) p_grid(i) = p_grid(i)/(p_grid(i)+1.);
-  
-  y_grid.reshape(51,51);
-  p_grid.reshape(51,51);
-  
+  arr p_grid=exp(y_grid); p_grid /= p_grid+1.;
+  arr pup_grid=exp(y_grid+s_grid); pup_grid /= pup_grid+1.;
+  arr pdn_grid=exp(y_grid-s_grid); pdn_grid /= pdn_grid+1.;
+  arr pba_grid=exp(ybay_grid); pba_grid /= pba_grid+1.;
+
+  if(X.d1==1){
+    plotGnuplot();
+    plotFunctionPrecision(X_grid, p_grid, pup_grid, pdn_grid);
+    plotFunction(X_grid, pba_grid);
+    plotPoints(X,y);
+    plot(true);
+  }
+
   MT::arrayBrackets="  ";
-  FILE("z.train") <<catCol(X, y);
-  FILE("z.model") <<p_grid;
-  gnuplot("load 'plt.contour'; pause mouse", false, true, "z.pdf");
-  gnuplot("load 'plt.contour2'; pause mouse", false, true, "z.pdf");
+//  if(X.d1==1){
+//    FILE("z.train") <<catCol(X, y);
+//    FILE("z.model") <<catCol(X_grid, p_grid);
+//    gnuplot(STRING("plot [-3:3] 'z.train' us 1:2 w p,'z.model' us 1:2 w l"), false, true, "z.pdf");
+//  }
+  if(X.d1==2){
+    FILE("z.train") <<catCol(X, y);
+    FILE("z.model") <<p_grid.reshape(51,51);
+    gnuplot("load 'plt.contour'; pause mouse", false, true, "z.pdf");
+    gnuplot("load 'plt.contour2'; pause mouse", false, true, "z.pdf");
+  }
+}
+
+//===========================================================================
+
+void testKernelLogReg() {
+//  rnd.seed(1);
+
+  arr X,y;
+  artificialData_Hasties2Class(X, y);
+
+  KernelLogisticRegression klr(X,y);
+
+  arr X_grid;
+  X_grid.setGrid(X.d1,-3,3, (X.d1==1?500:50));
+  arr p_ba,p_hi,p_lo;
+  arr p_grid = klr.evaluate(X_grid, p_ba, p_hi, p_lo);
+
+  if(X.d1==1){
+    plotGnuplot();
+    plotFunctionPrecision(X_grid, p_grid, p_hi, p_lo);
+    plotFunction(X_grid, p_ba);
+    plotPoints(X,y);
+    plot(true);
+  }
+  if(X.d1==2){
+    MT::arrayBrackets="  ";
+    FILE("z.train") <<catCol(X, y);
+    FILE("z.model") <<p_grid.reshape(51,51);
+    gnuplot("load 'plt.contour'; pause mouse", false, true, "z.pdf");
+    gnuplot("load 'plt.contour2'; pause mouse", false, true, "z.pdf");
+  }
 }
 
 //===========================================================================
@@ -236,15 +333,15 @@ void exercise2() {
 int main(int argc, char *argv[]) {
   MT::initCmdLine(argc,argv);
   
-  rnd.clockSeed();
+//  rnd.clockSeed();
 
   switch(MT::getParameter<uint>("mode",1)) {
     case 1:  testLinReg();  break;
     case 2:  test2Class();  break;
     case 3:  testMultiClass();  break;
     case 4:  testCV();  break;
-    case 5:  exercise1();  break;
-    case 6:  exercise2();  break;
+    case 5:  testKernelReg();  break;
+    case 6:  testKernelLogReg();  break;
       break;
   }
   

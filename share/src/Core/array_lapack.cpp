@@ -137,13 +137,14 @@ void blas_MsymMsym(arr& X, const arr& A, const arr& B) {
 }
 #endif
 
-void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b) {
+arr lapack_Ainv_b_sym(const arr& A, const arr& b) {
+  arr x;
   if(b.nd==2){ //b is a matrix (unusual) repeat for each col:
     arr bT = ~b;
     x.resizeAs(bT);
-    for(uint i=0;i<bT.d0;i++) lapack_Ainv_b_sym(x[i](), A, bT[i]);
+    for(uint i=0;i<bT.d0;i++) x[i]() = lapack_Ainv_b_sym(A, bT[i]);
     x=~x;
-    return;
+    return x;
   }
   if(A.special==arr::RowShiftedPackedMatrixST) {
     RowShiftedPackedMatrix *Aaux = (RowShiftedPackedMatrix*) A.aux;
@@ -165,11 +166,11 @@ void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b) {
     HALT("lapack_Ainv_b_sym error info = " <<INFO
          <<"\n typically this is because A is not invertible or sym-pos-def,\nA=" <<A <<"\nb=" <<b);
   }
-
 #if 0
   arr y = inverse(A)*b;
   std::cout  <<"lapack_Ainv_b_sym error = " <<sqrDistance(x, y) <<std::endl;
 #endif
+  return x;
 }
 
 uint lapack_SVD(
@@ -341,10 +342,10 @@ void lapack_RQ(arr& R, arr &Q, const arr& A) { NICO };
 void lapack_EigenDecomp(const arr& symmA, arr& Evals, arr& Evecs) { NICO };
 bool lapack_isPositiveSemiDefinite(const arr& symmA) { NICO };
 void lapack_inverseSymPosDef(arr& Ainv, const arr& A) { NICO };
-void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b) {
+arr lapack_Ainv_b_sym(const arr& A, const arr& b) {
   arr invA;
   inverse(invA, A);
-  x = invA*b;
+  return invA*b;
 };
 double lapack_determinantSymPosDef(const arr& A) { NICO };
 void lapack_mldivide(arr& X, const arr& A, const arr& b) { NICO };
