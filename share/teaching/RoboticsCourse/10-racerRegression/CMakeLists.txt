@@ -1,5 +1,5 @@
 get_filename_component(NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 include(.sources.cmake)
-add_executable(${NAME} ${SOURCES})
-target_link_libraries(${NAME} Core Core Core Gui Algo )
+add_executable(x_${NAME} ${SOURCES})
+target_link_libraries(x_${NAME} Core Core Core Gui Algo )
 mlr_example_test(${NAME})

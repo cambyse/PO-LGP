@@ -1,5 +1,5 @@
 get_filename_component(NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 include(.sources.cmake)
-add_executable(${NAME} ${SOURCES})
-target_link_libraries(${NAME} Core opencv_highgui opencv_imgproc opencv_core)
+add_executable(x_${NAME} ${SOURCES})
+target_link_libraries(x_${NAME} Core opencv_highgui opencv_imgproc opencv_core)
 mlr_example_test(${NAME})
