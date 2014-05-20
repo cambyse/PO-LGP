@@ -166,7 +166,7 @@ void executeTrajectoryWholeBody(String scene){
   cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<" # joints=" <<world.getJointStateDimension()<<endl;
 
   arr x(T+1,n); x.setZero();
-  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, damping=1e-3, maxStep=1.));
   //  P.costReport();
   //  displayTrajectory(x, 1, world, "planned trajectory", 0.01);
 
@@ -332,9 +332,9 @@ void executeTrajectoryWholeBody(String scene){
   write(LIST<arr>(ct_bk),STRING(folder<<"ct_bk.output"));
 
   write(LIST<arr>(xRefR),STRING(folder<<"xRef.output"));
-  write(ARR(tau_control),STRING(folder<<"tau_control.output"));
-  write(ARR(tau_plan),STRING(folder<<"tau_plan.output"));
-  write(ARR(numScenes),STRING(folder<<"numScenes.output"));
+  write(LIST<arr>(ARR(tau_control)),STRING(folder<<"tau_control.output"));
+  write(LIST<arr>(ARR(tau_plan)),STRING(folder<<"tau_plan.output"));
+  write(LIST<arr>(ARR(numScenes)),STRING(folder<<"numScenes.output"));
 
   return;
 }
@@ -397,7 +397,7 @@ void executeTrajectoryRightArm(String scene){
   cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<" # joints=" <<world.getJointStateDimension()<<endl;
 
   arr x(T+1,n); x.setZero();
-  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, damping=1e-3, maxStep=1.));
   P.costReport();
 //  displayTrajectory(x, 1, world, "planned trajectory", 0.01);
 
@@ -435,8 +435,8 @@ void executeTrajectoryRightArm(String scene){
   MObject goalMO(&world, MT::String("goal"), MObject::GOAL , 0.0005, dirL);
 
   FeedbackMotionControl MP(world, false);
-  PDtask *taskPosR, *taskVecR, *taskHome, *taskCol, *taskLimits, *qitself;
-  double regularization = 1e-2;
+  PDtask *taskPosR, *taskVecR, *qitself;
+  //double regularization = 1e-2;
 
   // initialize controllers
   AdaptiveMotionExecution* amexR;
@@ -543,9 +543,9 @@ void executeTrajectoryRightArm(String scene){
   write(LIST<arr>(ct_bk),STRING(folder<<"ct_bk.output"));
 
   write(LIST<arr>(xRefR),STRING(folder<<"xRef.output"));
-  write(ARR(tau_control),STRING(folder<<"tau_control.output"));
-  write(ARR(tau_plan),STRING(folder<<"tau_plan.output"));
-  write(ARR(numScenes),STRING(folder<<"numScenes.output"));
+  write(LIST<arr>(ARR(tau_control)),STRING(folder<<"tau_control.output"));
+  write(LIST<arr>(ARR(tau_plan)),STRING(folder<<"tau_plan.output"));
+  write(LIST<arr>(ARR(numScenes)),STRING(folder<<"numScenes.output"));
 
   amexR->plotState();
   world.watch(true,STRING(t));

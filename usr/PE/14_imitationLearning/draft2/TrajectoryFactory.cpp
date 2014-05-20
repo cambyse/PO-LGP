@@ -30,7 +30,7 @@ void createToyDemonstrations1(MT::Array<Demonstration> &demos) {
     cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<" # joints=" <<world.getJointStateDimension()<<endl;
 
     arr x(T+1,n); x.setZero();
-    optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+    optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, damping=1e-3, maxStep=1.));
     //    displayTrajectory(x, 1, world, "planned trajectory", 0.01);
 
     arr kinPos, xRefPos;

@@ -165,7 +165,7 @@ void scenario1() {
   x.setZero();
 
   //-- optimize
-  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, damping=1e-3, maxStep=1.));
 
   plotTraj(x,dt);
 
@@ -204,7 +204,7 @@ void scenario2() {
   xRef.setZero();
 
   //-- optimize
-  optNewton(xRef, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+  optNewton(xRef, Convert(F), OPT(verbose=0, stopIters=20, damping=1e-3, maxStep=1.));
   //  P.costReport();
   plotTraj(xRef,dt);
   MT::wait(2);
@@ -223,7 +223,6 @@ void scenario2() {
 
   // reset costs
   MT::timerStart();
-  P.costMatrix.clear();
   TaskCost *c2;
   c2 = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
@@ -245,7 +244,7 @@ void scenario2() {
   arr x = xRef.rows(i,xRef.d0);
   x.setZero();
 
-  optNewton(x, Convert(F), OPT(verbose=1, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1., stopTolerance=1e-2));
+  optNewton(x, Convert(F), OPT(verbose=1, stopIters=20, damping=1e-3, maxStep=1., stopTolerance=1e-2));
   cout <<"Optimization time: " <<MT::timerRead() <<"sec" <<endl;
 
   plotTraj(x,dt);
@@ -304,7 +303,7 @@ void scenario3() {
 
   arr x(T+1,n);
   x.setZero();
-  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, damping=1e-3, maxStep=1.));
   //  P.costReport();
   //  displayTrajectory(x, 1, world, "planned trajectory", 0.01);
 

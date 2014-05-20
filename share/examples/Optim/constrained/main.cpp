@@ -1,10 +1,9 @@
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
 
-#include <iomanip>
 
-#include "lecture.cpp"
-
+//lecture.cpp:
+void testConstraint(ConstrainedProblem& p, arr& x_start=NoArr, uint iters=20);
 
 //==============================================================================
 //

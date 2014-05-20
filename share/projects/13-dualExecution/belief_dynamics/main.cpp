@@ -131,7 +131,7 @@ void optim(){
   rndUniform(x,-10.,-1.);
   x=1.;
   arr dual;
-  optConstrained(x, dual, Convert(P), OPT(verbose=2, useAdaptiveDamping=false, constrainedMethod=augmentedLag));
+  optConstrained(x, dual, Convert(P), OPT(verbose=2, constrainedMethod=augmentedLag));
 
   for(double& x:dual) if(x>0.) x=1.;
 

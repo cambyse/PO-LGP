@@ -229,13 +229,13 @@ void optim(){
 
 #if 0 //only if you want to see some steps...
   for(uint k=0;k<20;k++){
-    optNewton(x, Convert(P), OPT(stopIters=1, verbose=2, useAdaptiveDamping=.0, maxStep=.1, stopTolerance=1e-2));
+    optNewton(x, Convert(P), OPT(stopIters=1, verbose=2, maxStep=.1, stopTolerance=1e-2));
     plotEffTraj(S, x);
     S.watch();
   }
 #endif
 
-  optNewton(x, Convert(P), OPT(stopIters=1000, verbose=2, useAdaptiveDamping=false, damping=1e-0, maxStep=.1, stopTolerance=1e-4));
+  optNewton(x, Convert(P), OPT(stopIters=1000, verbose=2, damping=1e-0, maxStep=.1, stopTolerance=1e-4));
   x >>FILE("q.optim");
 
   //display

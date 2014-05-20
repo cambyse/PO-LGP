@@ -15,8 +15,8 @@ void linReg() {
   arr modelPred = data.sub(0,-1,8,11);
   arr Phi, beta;
   
-  makeFeatures(Phi, X);
-  ridgeRegression(beta, Phi, Y);
+  Phi = makeFeatures(X);
+  beta = ridgeRegression(Phi, Y);
 
   arr Y_pred = Phi*beta;
   cout <<"MSE = " <<sumOfSqr(Y_pred-Y)/Y.N <<endl;

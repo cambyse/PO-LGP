@@ -1,3 +1,8 @@
+#include <Optim/optimization.h>
+#include <Optim/benchmarks.h>
+
+#include <iomanip>
+
 //this code is only for demo in the lecture -- a bit messy!
 
 void displayFunction(ScalarFunction& F){

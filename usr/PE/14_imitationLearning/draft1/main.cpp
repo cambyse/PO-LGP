@@ -35,7 +35,7 @@ void createToyDemonstrations(std::vector<arr> &demos,arr &q0) {
     cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<" # joints=" <<world.getJointStateDimension()<<endl;
 
     arr x(T+1,n); x.setZero();
-    optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+    optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, damping=1e-3, maxStep=1.));
     //    MP.costReport(true);
 //    displayTrajectory(x, 1, world, "planned trajectory", 0.01);
 
@@ -87,7 +87,7 @@ arr execRun(arr param, arr q0, arr refGoal) {
   arr x(T+1,n); x.setZero();
 
   x = q0;
-  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, damping=1e-3, maxStep=1.));
 //  MP.costReport(true);
   if (vis)
       displayTrajectory(x, 1, world, "planned trajectory", 0.01);

@@ -21,7 +21,7 @@ void TEST(SqrProblem) {
   system("cp z.opt z.grad");
 
   x=x0;
-  optNewton(x, Convert(P), OPT(stopEvals=1000, initStep=1., stopTolerance=1e-5, useAdaptiveDamping=0., verbose=2, damping=.1));
+  optNewton(x, Convert(P), OPT(stopEvals=1000, initStep=1., stopTolerance=1e-5, verbose=2, damping=.1));
   system("cp z.opt z.newton");
 
   gnuplot("set log y; plot 'z.newton' us 1:3 w l,'z.grad' us 1:3 w l,'z.rprop' us 1:3 w l",NULL,true);

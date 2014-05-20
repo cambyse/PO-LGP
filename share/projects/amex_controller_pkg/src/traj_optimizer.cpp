@@ -40,7 +40,7 @@ void TrajOptimizer::optimizeTrajectory(arr &_goal, arr &_q0) {
   cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<" # joints=" <<world.getJointStateDimension()<<endl;
 
   arr x(T+1,n); x.setZero();
-  optNewton(x, Convert(MPF), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+  optNewton(x, Convert(MPF), OPT(verbose=0, stopIters=20, damping=1e-3, maxStep=1.));
   MP.costReport(true);
 
   //-- Transform trajectory into task space
