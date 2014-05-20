@@ -1542,7 +1542,7 @@ double inferPhi(const Rule& grounded_rule, uint rule_id, uint t, const RVL& vars
       //NIY;
 
       uint val;
-      uint id_2D__val1, id_2D__val2;
+      //uint id_2D__val1, id_2D__val2;
       Literal* clit = grounded_rule.context(i);
       // f(x) comp constant
       {

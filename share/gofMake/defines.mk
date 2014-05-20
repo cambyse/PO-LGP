@@ -86,7 +86,7 @@ endif
 
 ifeq ($(GRAPHVIZ),1)
 CXXFLAGS += -DMT_GRAPHVIZ
-LIBS += -lgraph -lcgraph -lgvc
+LIBS += -lcgraph -lgvc
 endif
 
 ifeq ($(WX),1)

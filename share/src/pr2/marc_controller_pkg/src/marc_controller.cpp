@@ -134,7 +134,7 @@ void TreeControllerClass::update() {
       double velM = marginMap(qd(i), -limits(i,2), limits(i,2), .1);
       if(velM<0. && u(i)<0.) u(i)*=(1.+velM); //decrease effort close to velocity margin
       if(velM>0. && u(i)>0.) u(i)*=(1.-velM); //decrease effort close to velocity margin
-      MT::clip(u(i), -limits(i,3), limits(i,3));
+      clip(u(i), -limits(i,3), limits(i,3));
       pr2_tree.getJoint(ROS_qIndex(i))->commanded_effort_ = u(i);
       pr2_tree.getJoint(ROS_qIndex(i))->enforceLimits();
     }
