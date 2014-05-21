@@ -116,7 +116,7 @@ void runAMEX(String scene, bool useOrientation, bool useCollAvoid, bool moveGoal
   x.setZero();
 
   //-- optimize
-  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, damping=1e-3, maxStep=1.));
 
   //  P.costReport();
   displayTrajectory(x, 1, world,"planned trajectory");

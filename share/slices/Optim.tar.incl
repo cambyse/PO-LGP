@@ -1,7 +1,0 @@
-share/src/Core
-share/src/Optim
-
-share/examples/Core
-share/examples/Optim
-
-share/include/lapack

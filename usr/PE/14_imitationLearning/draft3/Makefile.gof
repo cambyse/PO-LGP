@@ -1,0 +1,9 @@
+BASE = ../../../../share
+OBJS = main.o InnerCostFunction.o OuterCostFunction.o Demonstration.o TrajectoryFactory.o Simulator.o
+
+# InnerCostFunction.o : InnerCostFunction.cpp InnerCostFunction.h
+#	g++ -DMT_Core -DMT_Motion -DMT_Gui -DMT_Optim -DMT_Algo -DMT_Ors -g -Wall -fPIC -std=c++0x -DMT_PTHREAD -c InnerCostFunction.cpp
+
+DEPEND = Core Motion Gui Optim Algo Ors
+PTHREAD = 1
+include $(BASE)/gofMake/generic.mk

@@ -226,8 +226,7 @@ void sNaiveBayesClassificator::gradientDescentSampling(arr& nextSample, double& 
     grad2.append(-1);
 
     // we set all x_i, i>1 to 0 and solve Ax=b 
-    arr b = zeros(grad1.d0, 1);
-    b.reshape(b.N);
+    arr b = zeros(grad1.d0);
     b(0) = g1.evaluate(nextSample);
     for (uint i = 0; i < nextSample.d0; ++i) b(0) -= grad1(i)*nextSample(i);
     b(1) = g2.evaluate(nextSample);

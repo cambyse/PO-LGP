@@ -30,7 +30,7 @@ double OneStepKinematic(arr& q, arr& _Binv, uint& counter, soc::SocSystemAbstrac
     if(sys.taskCost(NULL,steps,-1) + sum(~(q-q0)*Winv*(q-q0)) > old_r) alpha=alpha*0.5;
     else alpha=pow(alpha,0.5); 
     Binv = Winv + R;
-    lapack_Ainv_b_sym(q, Binv, Winv*q0 + r);
+    q = lapack_Ainv_b_sym(Binv, Winv*q0 + r);
     q = q_old + alpha*(q-q_old);
     old_r = sys.taskCost(NULL,steps,-1) + sum(~(q-q0)*Winv*(q-q0));
     cout <<"cost=" <<old_r << endl;
@@ -146,7 +146,7 @@ double OneStepDynamicFull(arr& b,arr& Binv, uint& counter,
       double eps=1e-10; arr id; id.setId(dim*2);R= R+eps*id; //Trick against small negative eigenvalues of R
       Binv = sumAinv+ R;
       b_best = b; b_old = b;
-      lapack_Ainv_b_sym(b, Binv,  sumAinv*suma  + r);
+      b = lapack_Ainv_b_sym(Binv,  sumAinv*suma  + r);
       b = b_old + alpha*(b-b_old);
 
       cout <<MT_HERE <<"cost=" <<old_r <<" step_size=" <<alpha <<endl;

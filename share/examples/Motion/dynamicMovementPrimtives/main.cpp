@@ -89,7 +89,7 @@ void scenario2() {
   x.setZero();
 
   //-- optimize
-  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, damping=1e-3, maxStep=1.));
 
   P.costReport();
   //  displayTrajectory(x, 1, G, gl,"planned trajectory");
@@ -168,7 +168,7 @@ void scenario3() {
   x.setZero();
 
   //-- optimize
-  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, damping=1e-3, maxStep=1.));
 
   P.costReport();
   //  displayTrajectory(x, 1, G, gl,"planned trajectory");
@@ -294,7 +294,7 @@ void scenario4() {
   x.setZero();
 
   //-- optimize
-  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, damping=1e-3, maxStep=1.));
 
   P.costReport();
   displayTrajectory(x, 1, G, "planned trajectory");

@@ -465,6 +465,8 @@ void TEST(BlenderImport){
 #endif
 
 int MAIN(int argc,char **argv){
+  
+  //testBlenderImport();
 
   testLoadSave();
   testPlayStateSequence();

@@ -1,3 +1,21 @@
+/*  ---------------------------------------------------------------------
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a COPYING file of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
 #include <iomanip>
 
 #include "opt-newton.h"
@@ -23,7 +41,10 @@ OptNewton::OptNewton(arr& _x, ScalarFunction& _f,  OptOptions _o):
   it=0;
   evals=0;
   additionalRegularizer=NULL;
+  reinit();
+}
 
+void OptNewton::reinit(){
   fx = f.fs(gx, Hx, x);  evals++;
   if(additionalRegularizer)  fx += scalarProduct(x,(*additionalRegularizer)*vectorShaped(x));
 
@@ -44,6 +65,8 @@ OptNewton::StopCriterion OptNewton::step(){
   it++;
   if(o.verbose>1) cout <<"optNewton it=" <<std::setw(3) <<it << " \tlambd=" <<std::setprecision(3) <<lambda <<flush;
 
+  if(!(fx==fx)) HALT("you're calling a newton step with initial function value = NAN");
+
   //compute Delta
   arr R=Hx;
   if(lambda) { //Levenberg Marquardt damping
@@ -53,9 +76,9 @@ OptNewton::StopCriterion OptNewton::step(){
   if(additionalRegularizer) {
     if(R.special==arr::RowShiftedPackedMatrixST) R = unpack(R);
     //      cout <<*addRegularizer <<R <<endl;
-    lapack_Ainv_b_sym(Delta, R + (*additionalRegularizer), -(gx+(*additionalRegularizer)*vectorShaped(x)));
+    Delta = lapack_Ainv_b_sym(R + (*additionalRegularizer), -(gx+(*additionalRegularizer)*vectorShaped(x)));
   } else {
-    lapack_Ainv_b_sym(Delta, R, -gx);
+    Delta = lapack_Ainv_b_sym(R, -gx);
   }
   if(o.maxStep>0. && absMax(Delta)>o.maxStep)  Delta *= o.maxStep/absMax(Delta);
   if(o.verbose>1) cout <<" \t|Delta|=" <<absMax(Delta) <<flush;
@@ -73,7 +96,7 @@ OptNewton::StopCriterion OptNewton::step(){
     if(o.verbose>2) cout <<" \tprobing y=" <<y;
     if(o.verbose>1) cout <<" \tevals=" <<evals <<" \talpha=" <<alpha <<" \tf(y)=" <<fy  <<" \tf(y)-f(x)=" <<fy-fx <<flush;
     //CHECK(fy==fy, "cost seems to be NAN: ly=" <<fy);
-    if(fy==fy && (fy <= fx || o.nonStrict==-1 || o.nonStrict>it)) { //fy==fy is for NAN?
+    if(fy==fy && (fy <= fx || o.nonStrictSteps==-1 || o.nonStrictSteps>(int)it)) { //fy==fy is for NAN?
       if(o.verbose>1) cout <<" - ACCEPT" <<endl;
       //adopt new point and adapt stepsize|damping
       x_changed=true;

@@ -1,0 +1,35 @@
+body door1-frame {
+  type=0
+  X=<T t(.5 .7 1.13)>
+  size=[.05 .05 2.25 0]
+  contact
+  fixed
+}
+body door1-door {
+  type=0
+  rel=<T t(-.5 0 0)>
+  size=[.95 .03 2.25 0] 
+}
+
+body door1-door2 {
+  type=0
+  rel=<T t(-1.45 0 0)>
+  size=[.95 .03 2.25 0] 
+}
+
+joint locking (door1-frame, door1-door) {
+  type=0
+  A=<T t(0 0 0) d(90 0 1 0)>
+#  limit=[-1.8 1.8 1. 100. .1]
+  BinvA
+  agent = 99
+}
+
+joint locked (door1-door, door1-door2) {
+  type=0
+  A=<T t(-.95 0 0) d(90 0 1 0)>
+#  limit=[-1.8 1.8 1. 100. .1]
+  BinvA
+  agent = 99
+}
+

@@ -121,9 +121,8 @@ joint head_pan_joint (torso_lift_link head_pan_link){ from=<T 0.38145 0 0.01707 
 joint head_tilt_joint (head_pan_link head_tilt_link){ from=<T 1.5099e-17 0 -0.068 -0.5 -0.5 -0.5 -0.5 >  type=10}
 
 joint r_gripper_l_finger_joint (r_wrist_roll_link r_gripper_l_finger_link){ from=<T 0.07691 0.01 0 0.707107 0 -0.707107 0 >  type=10 }
-joint r_gripper_r_finger_joint (r_wrist_roll_link r_gripper_r_finger_link){ from=<T 0.07691 -0.01 0 0.707107 0 0.707107 0 >  type=10  mimic='r_gripper_l_finger_joint' }
-joint r_gripper_l_finger_tip_joint (r_gripper_l_finger_link r_gripper_l_finger_tip_link){ from=<T 2.02882e-17 0.00495 -0.09137 -1.5702e-16 0 -1 0 >  type=10  mimic='r_gripper_l_finger_joint' }
-joint r_gripper_r_finger_tip_joint (r_gripper_r_finger_link r_gripper_r_finger_tip_link){ from=<T 2.02882e-17 -0.00495 0.09137 -1.5702e-16 0 1 0 >  type=10  mimic='r_gripper_l_finger_joint'}
-
+joint r_gripper_r_finger_joint (r_wrist_roll_link r_gripper_r_finger_link){ from=<T 0.07691 -0.01 0 0.707107 0 0.707107 0 >  type=10  mimic=r_gripper_l_finger_joint}
+joint r_gripper_l_finger_tip_joint (r_gripper_l_finger_link r_gripper_l_finger_tip_link){ from=<T 2.02882e-17 0.00495 -0.09137 -1.5702e-16 0 -1 0 >  type=10  mimic=r_gripper_l_finger_joint }
+joint r_gripper_r_finger_tip_joint (r_gripper_r_finger_link r_gripper_r_finger_tip_link){ from=<T 2.02882e-17 -0.00495 0.09137 -1.5702e-16 0 1 0 >  type=10  mimic=r_gripper_l_finger_joint }
 
 

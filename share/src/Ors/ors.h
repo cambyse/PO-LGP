@@ -1,20 +1,21 @@
 /*  ---------------------------------------------------------------------
-    Copyright 2013 Marc Toussaint
-    email: mtoussai@cs.tu-berlin.de
-
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
 
 #ifndef MT_ors_h
 #define MT_ors_h
@@ -139,7 +140,11 @@ struct Joint {
   int ifrom, ito;       ///< indices of from and to bodies
   Body *from, *to;      ///< pointers to from and to bodies
   Joint *mimic;         ///< if non-NULL, this joint's state is identical to another's
-  uint agent;            ///< associate this Joint to a specific agent (0=default robot)
+  uint agent;           ///< associate this Joint to a specific agent (0=default robot)
+
+  bool locked;           ///< saves whether a joint is already locked
+  bool (*locked_func)(void*);  ///< this function should return true if the joint is locked
+  void *locked_data;           ///< this pointer is handed to the locked_func on each call
 
   MT::String name;      ///< name
   JointType type;       ///< joint type
@@ -160,8 +165,9 @@ struct Joint {
     index=j.index; qIndex=j.qIndex; ifrom=j.ifrom; ito=j.ito; mimic=reinterpret_cast<Joint*>(j.mimic?1:0); agent=j.agent;
     name=j.name; type=j.type; A=j.A; Q=j.Q; B=j.B; X=j.X; axis=j.axis; limits=j.limits; H=j.H;
     ats=j.ats;
+    locked_func=j.locked_func; locked_data=j.locked_data;
   }
-  void reset() { listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); X.setZero(); axis.setZero(); limits.clear(); H=1.; type=JT_none; }
+  void reset();
   void parseAts();
   uint qDim();
   void write(std::ostream& os) const;

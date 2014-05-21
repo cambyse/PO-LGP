@@ -85,7 +85,7 @@ Merge r_gripper_joint { gains=[1000 1] }
 Merge l_gripper_joint { gains=[1000 1] }
 
 ## FT sensors
-shape r_ft_sensor (r_wrist_roll_link){ rel=<T t(.01 0 0) d(90 0 1 0)> type=4 color=[0 0 0] size=[.0 .0 .03 .02] }
-shape l_ft_sensor (l_wrist_roll_link){ rel=<T t(.01 0 0) d(90 0 1 0)> type=4 color=[0 0 0] size=[.0 .0 .03 .02] }
-Merge r_wrist_roll_joint{ to=<T t(.03 0 0)> }
-Merge l_wrist_roll_joint{ to=<T t(.03 0 0)> }
+shape r_ft_sensor (r_wrist_roll_link){ rel=<T t(.01 0 0) d(90 0 1 0)> type=4 color=[0 0 0] size=[.0 .0 .0356 .02] }
+shape l_ft_sensor (l_wrist_roll_link){ rel=<T t(.01 0 0) d(90 0 1 0)> type=4 color=[0 0 0] size=[.0 .0 .0356 .02] }
+Merge r_wrist_roll_joint{ to=<T t(.0356 0 0)> }
+Merge l_wrist_roll_joint{ to=<T t(.0356 0 0)> }
