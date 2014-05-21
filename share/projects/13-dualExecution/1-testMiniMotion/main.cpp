@@ -21,7 +21,7 @@ c->map.order=1;
   MotionProblemFunction MF(P);
   arr x = P.getInitialization();
 
-  optNewton(x, Convert(MF), OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1e-3, maxStep=.5));
+  optNewton(x, Convert(MF), OPT(verbose=2, stopIters=100, damping=1e-3, maxStep=.5));
   P.costReport();
   return x;
 }

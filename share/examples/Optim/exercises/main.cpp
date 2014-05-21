@@ -1,6 +1,5 @@
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
-#include <Optim/constrained.h>
 #include <stdlib.h>
 
 const char* USE="\n\

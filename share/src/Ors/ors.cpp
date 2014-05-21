@@ -1,20 +1,21 @@
 /*  ---------------------------------------------------------------------
-    Copyright 2013 Marc Toussaint
-    email: mtoussai@cs.tu-berlin.de
-
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
 
 /**
  * @file
@@ -226,7 +227,7 @@ void ors::Shape::parseAts() {
       mesh.scale(size[0], size[1], size[2]);
       break;
     case ors::sphereST:
-      mesh.setSphere(1);
+      mesh.setSphere();
       mesh.scale(size[3], size[3], size[3]);
       break;
     case ors::cylinderST:
@@ -319,14 +320,16 @@ void makeConvexHulls(ShapeL& shapes){
 // Joint implementations
 //
 
+bool always_unlocked(void*) { return false; }
+
 ors::Joint::Joint()
-  : index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0), H(1.) { reset(); }
+  : index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0), locked_func(always_unlocked), locked_data(NULL), H(1.) { reset(); }
 
 ors::Joint::Joint(const Joint& j)
-  : index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0), H(1.) { reset(); *this=j; }
+  : index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0), locked_func(always_unlocked), locked_data(NULL), H(1.) { reset(); *this=j; }
 
 ors::Joint::Joint(KinematicWorld& G, Body *f, Body *t, const Joint* copyJoint)
-  : index(0), qIndex(-1), ifrom(f->index), ito(t->index), from(f), to(t), mimic(NULL), agent(0), H(1.) {
+  : index(0), qIndex(-1), ifrom(f->index), ito(t->index), from(f), to(t), mimic(NULL), agent(0), locked_func(always_unlocked), locked_data(NULL), H(1.) {
   reset();
   if(copyJoint) *this=*copyJoint;
   index=G.joints.N;
@@ -340,6 +343,10 @@ ors::Joint::~Joint() {
   reset();
   if (from) from->outLinks.removeValue(this);
   if (to) to->inLinks.removeValue(this);
+}
+void ors::Joint::reset() { 
+  listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); X.setZero(); axis.setZero(); limits.clear(); H=1.; type=JT_none; 
+  locked_func=always_unlocked; locked_data=NULL;
 }
 
 void ors::Joint::parseAts() {
@@ -1662,7 +1669,7 @@ void ors::KinematicWorld::clearForces() {
 }
 
 /// apply a force on body n 
-void ors::KinematicWorld::addForce(ors::Vector force, Body *n) {
+void ors::KinematicWorld::addForce(ors::Vector force, ors::Body *n) {
   n->force += force;
   if (!s->physx) {
     NIY;
@@ -1674,7 +1681,7 @@ void ors::KinematicWorld::addForce(ors::Vector force, Body *n) {
 }
 
 /// apply a force on body n at position pos (in world coordinates)
-void ors::KinematicWorld::addForce(ors::Vector force, Body *n, ors::Vector pos) {
+void ors::KinematicWorld::addForce(ors::Vector force, ors::Body *n, ors::Vector pos) {
   n->force += force;
   if (!s->physx) {
     NIY;
@@ -1755,11 +1762,12 @@ void ors::KinematicWorld::kinematicsProxyCost(arr& y, arr& J, Proxy *p, double m
     }
     return;
   }
-  double ab_radius = margin + 1.5*(a->mesh_radius+b->mesh_radius);
+  double ab_radius = margin + 10.*(a->mesh_radius+b->mesh_radius);
   CHECK(p->d<(1.+1e-6)*margin, "something's really wierd here!");
   CHECK(p->cenD<(1.+1e-6)*ab_radius, "something's really wierd here! You disproved the triangle inequality :-)");
   double d1 = 1.-p->d/margin;
   double d2 = 1.-p->cenD/ab_radius;
+  if(d2<0.) d2=0.;
   if(!useCenterDist) d2=1.;
   y(0) += d1*d2;
  
@@ -1777,7 +1785,7 @@ void ors::KinematicWorld::kinematicsProxyCost(arr& y, arr& J, Proxy *p, double m
       kinematicsPos(NoArr, Jpos, b->body->index, &brel);  J += d2/margin*(normal*Jpos);
     }
         
-    if(useCenterDist){
+    if(useCenterDist && d2>0.){
       arel=a->X.rot/(p->cenA-a->X.pos);
       brel=b->X.rot/(p->cenB-b->X.pos);
       CHECK(p->cenN.isNormalized(), "proxy normal is not normalized");

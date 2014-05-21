@@ -55,20 +55,6 @@ Merge l_gripper_r_finger_link_0 { contact }
 Merge l_gripper_l_finger_tip_link_0 { contact }
 Merge l_gripper_r_finger_tip_link_0 { contact }
 
-## CASTERS
-Merge fl_caster_rotation_joint {   type=10   }
-Merge fl_caster_l_wheel_joint {   type=10   }
-Merge fl_caster_r_wheel_joint {   type=10   }
-Merge fr_caster_rotation_joint {   type=10   }
-Merge fr_caster_l_wheel_joint {   type=10   }
-Merge fr_caster_r_wheel_joint {   type=10   }
-Merge bl_caster_rotation_joint {   type=10   }
-Merge bl_caster_l_wheel_joint {   type=10   }
-Merge bl_caster_r_wheel_joint {   type=10   }
-Merge br_caster_rotation_joint {   type=10   }
-Merge br_caster_l_wheel_joint {   type=10   }
-Merge br_caster_r_wheel_joint {   type=10   }
-
 ## TORS0
 Merge torso_lift_joint { q=.1    ctrl_H=3000  gains=[0 0] gains=[100000 10] }
 
@@ -97,3 +83,9 @@ Merge l_wrist_roll_joint {    q=.5  gains=[12 2]}
 ## GRIPPERS
 Merge r_gripper_joint { gains=[1000 1] }
 Merge l_gripper_joint { gains=[1000 1] }
+
+## FT sensors
+shape r_ft_sensor (r_wrist_roll_link){ rel=<T t(.01 0 0) d(90 0 1 0)> type=4 color=[0 0 0] size=[.0 .0 .0356 .02] }
+shape l_ft_sensor (l_wrist_roll_link){ rel=<T t(.01 0 0) d(90 0 1 0)> type=4 color=[0 0 0] size=[.0 .0 .0356 .02] }
+Merge r_wrist_roll_joint{ to=<T t(.0356 0 0)> }
+Merge l_wrist_roll_joint{ to=<T t(.0356 0 0)> }

@@ -1,20 +1,21 @@
 /*  ---------------------------------------------------------------------
-    Copyright 2013 Marc Toussaint
-    email: mtoussai@cs.tu-berlin.de
-
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
 
 #ifndef MT_array_t_cpp
 #define MT_array_t_cpp
@@ -1058,7 +1059,7 @@ template<class T> void MT::Array<T>::setZero(byte zero) {
 /// concatenate 2D matrices (or vectors) column-wise
 template<class T> MT::Array<T> catCol(const MT::Array<MT::Array<T>*>& X) {
   uint d0=X(0)->d0, d1=0;
-  for_list(MT::Array<T>,  x,  X) { CHECK((x->nd==2 || x->nd==1) && x->d0==d0, ""); d1+=x->nd==2?x->d1:1; }
+  for(MT::Array<T> *x:X) { CHECK((x->nd==2 || x->nd==1) && x->d0==d0, ""); d1+=x->nd==2?x->d1:1; }
   MT::Array<T> z(d0, d1);
   d1=0;
   for(MT::Array<T> *x:  X) { z.setMatrixBlock(*x, 0, d1); d1+=x->nd==2?x->d1:1; }
@@ -3473,16 +3474,17 @@ template<class vert, class edge> bool graphTopsort(MT::Array<vert*>& V, MT::Arra
   intA inputs(V.N);
   
   uint count=0;
-  
-  for_list(vert,  v,  V) {
+
+  for_list(vert,  v,  V) v->index = v_COUNT;
+
+  for(vert *v:V) {
     inputs(v->index)=v->inLinks.N;
     if(!inputs(v->index)) noInputs.append(v);
   }
   
   while(noInputs.N) {
     v=noInputs.popFirst();
-    newIndex(v->index)=count;
-    count++;
+    newIndex(v->index)=count++;
     for_list(edge,  e,  v->outLinks) {
       inputs(e->to->index)--;
       if(!inputs(e->to->index)) noInputs.append(e->to);
@@ -3492,17 +3494,22 @@ template<class vert, class edge> bool graphTopsort(MT::Array<vert*>& V, MT::Arra
   if(count!=V.N) return false;
   
   //success!
-  //give each edge and vert new index:
-  for_list(edge,  e,  E) {
-    e->ifrom=newIndex(e->ifrom);
-    e->ito  =newIndex(e->ito);
-  }
-  for(vert *v:  V) {
-    v->index=newIndex(v->index);
-  }
-  //permute vertex array:
   V.permuteInv(newIndex);
-  graphMakeLists(V, E);
+  for_list(vert,  vv,  V) vv->index = vv_COUNT;
+  for(edge *e: E) {
+    e->ifrom=e->from->index;
+    e->ito  =e->to->index;
+  }
+
+  //-- reindex edges as well:
+  newIndex.resize(E.N);
+  count=0;
+  for(vert *v:V) for(edge *e:v->outLinks) newIndex(e->index)=count++;
+  E.permuteInv(newIndex);
+  for_list(edge, e, E) e->index=e_COUNT;
+
+  //permute vertex array:
+  //graphMakeLists(V, E);
   
   return true;
 }

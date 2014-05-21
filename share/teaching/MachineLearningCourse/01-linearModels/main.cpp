@@ -1,56 +1,65 @@
-#include <Core/array.h>
-#include <Core/util.h>
-#include <Gui/plot.h>
-#include <stdlib.h>
-using namespace std;
-
 #include <Algo/MLcourse.h>
+#include <Gui/plot.h>
 
-void testLinReg() {
-  arr X,Phi,y;
-  arr beta;
-  
-  rnd.clockSeed();
-  artificialData(X, y);
-  makeFeatures(Phi, X);
-  ridgeRegression(beta, Phi, y);
-  cout <<"estimated beta = "<< beta <<endl;
-  if(beta.N==beta_true.N){
-    cout <<"max-norm beta-beta_true = " <<maxDiff(beta, beta_true) <<endl;
+//===========================================================================
+
+void testLinReg(const char *datafile=NULL) {
+  if(!datafile){ //store artificial data to a file
+    datafile="z.train";
+    arr X,y;
+    artificialData(X, y);
+
+    FILE(datafile) <<catCol(X,y);
   }
 
-  write(LIST<arr>(X, y), "z.train");
-  
+  //-- load data from a file
+  arr X,y;
+  X <<FILE(datafile);
+  y = (~X)[X.d1-1];    //last row of transposed X
+  X.delColumns(X.d1-1);
+
+  //-- generate features
+  arr Phi = makeFeatures(X);
+
+  //-- compute optimal parameters
+  arr beta = ridgeRegression(Phi, y);
+  cout <<"estimated beta = "<< beta <<endl;
+  if(beta.N==beta_true.N) cout <<"max-norm beta-beta_true = " <<maxDiff(beta, beta_true) <<endl; //beta_true is global and generated during artificialData
+
+  //-- evaluate model on a grid
   arr X_grid,y_grid;
   X_grid.setGrid(X.d1,-3,3, (X.d1==1?100:30));
-  makeFeatures(Phi, X_grid, readFromCfgFileFT, X);
+  Phi = makeFeatures(X_grid, readFromCfgFileFT, X);
   y_grid = Phi*beta;
 
+  //-- gnuplot
+  MT::arrayBrackets="  ";
   if(X.d1==1){
-    write(LIST<arr>(X_grid, y_grid), "z.model");
-    gnuplot("plot [-3:3] 'z.train' us 1:2 w p,'z.model' us 1:2 w l", false, true,"z.pdf");
+    FILE("z.model") <<catCol(X_grid, y_grid);
+    gnuplot(STRING("plot [-3:3] '" <<datafile <<"' us 1:2 w p,'z.model' us 1:2 w l"), false, true,"z.pdf");
   }else{
     y_grid.reshape(31,31);
-    write(LIST<arr>(y_grid), "z.model");
-    gnuplot("splot [-3:3][-3:3] 'z.train' w p, 'z.model' matrix us ($1/5-3):($2/5-3):3 w l; pause mouse", false, true, "z.pdf");
+    FILE("z.model") <<y_grid;
+    gnuplot(STRING("splot [-3:3][-3:3] '" <<datafile <<"' w p, 'z.model' matrix us ($1/5-3):($2/5-3):3 w l; pause mouse"), false, true, "z.pdf");
   }
 }
+
+//===========================================================================
 
 void test2Class() {
   rnd.clockSeed();
   //rnd.seed(1);
 
-  arr X,Phi,y;
-  arr beta;
+  arr X,y;
   //artificialData_HastiesMultiClass(X, y);  y = ~((~y)[1]);  y.reshape(y.N);
   artificialData_Hasties2Class(X, y);
   
-  makeFeatures(Phi,X);
-  logisticRegression2Class(beta, Phi, y);
+  arr Phi = makeFeatures(X);
+  arr beta = logisticRegression2Class(Phi, y);
   
   arr X_grid,y_grid,p_grid;
   X_grid.setGrid(2,-2,3,50);
-  makeFeatures(Phi,X_grid,readFromCfgFileFT, X);
+  Phi = makeFeatures(X_grid,readFromCfgFileFT, X);
   y_grid = Phi*beta;
   
   p_grid=exp(y_grid);
@@ -59,22 +68,24 @@ void test2Class() {
   y_grid.reshape(51,51);
   p_grid.reshape(51,51);
   
-  write(LIST<arr>(X, y), "z.train");
-  write(LIST<arr>(p_grid), "z.model");
+  MT::arrayBrackets="  ";
+  FILE("z.train") <<catCol(X, y);
+  FILE("z.model") <<p_grid;
   gnuplot("load 'plt.contour'; pause mouse", false, true, "z.pdf");
   gnuplot("load 'plt.contour2'; pause mouse", false, true, "z.pdf");
 }
+
+//===========================================================================
 
 void testMultiClass() {
   //rnd.seed(1);
   rnd.clockSeed();
 
-  arr X,Phi,y;
-  arr beta;
+  arr X,y;
   artificialData_HastiesMultiClass(X, y);
   
-  makeFeatures(Phi,X);
-  logisticRegressionMultiClass(beta, Phi, y);
+  arr Phi = makeFeatures(X);
+  arr beta = logisticRegressionMultiClass(Phi, y);
   
   arr p_pred,label(Phi.d0);
   p_pred = exp(Phi*beta);
@@ -82,26 +93,27 @@ void testMultiClass() {
     p_pred[i]() /= sum(p_pred[i]);
     label(i) = y[i].maxIndex();
   }
-  write(LIST<arr>(X, label, y, p_pred), "z.train");
+  MT::arrayBrackets="  ";
+  FILE("z.train") <<catCol(X, label, y, p_pred);
   
   arr X_grid,p_grid;
   X_grid.setGrid(2,-2,3,50);
-  makeFeatures(Phi,X_grid,readFromCfgFileFT,X);
+  Phi = makeFeatures(X_grid,readFromCfgFileFT,X);
   p_grid = exp(Phi*beta);
   for(uint i=0; i<p_grid.d0; i++) p_grid[i]() /= sum(p_grid[i]);
   p_grid = ~p_grid;
   p_grid.reshape(p_grid.d0,51,51);
   
-  write(LIST<arr>(p_grid[0]), "z.model1");
-  write(LIST<arr>(p_grid[1]), "z.model2");
+  FILE("z.model1") <<p_grid[0];
+  FILE("z.model2") <<p_grid[1];
   if(y.d1==3){
-    write(LIST<arr>(p_grid[2]), "z.model3");
+    FILE("z.model3") <<p_grid[2];
     gnuplot("load 'plt.contourMulti'; pause mouse", false, true, "z.pdf");
     gnuplot("load 'plt.contourMulti2'; pause mouse", false, true, "z.pdf");
   }
   if(y.d1==4){
-    write(LIST<arr>(p_grid[2]), "z.model3");
-    write(LIST<arr>(p_grid[3]), "z.model4");
+    FILE("z.model3") <<p_grid[2];
+    FILE("z.model4") <<p_grid[3];
     gnuplot("load 'plt.contourM4'; pause mouse", false, true, "z.pdf");
     gnuplot("load 'plt.contourM4_2'; pause mouse", false, true, "z.pdf");
   }
@@ -111,7 +123,7 @@ void testCV() {
 
   struct myCV:public CrossValidation {
     void  train(const arr& X, const arr& y, double param, arr& beta) {
-      ridgeRegression(beta, X,y,param);
+      beta = ridgeRegression(X,y,param);
     };
     double test(const arr& X, const arr& y, const arr& beta) {
       arr y_pred = X*beta;
@@ -120,10 +132,10 @@ void testCV() {
   } cv;
   
   rnd.clockSeed();
-  arr X,Phi,y;
+  arr X,y;
   artificialData(X, y);
-  makeFeatures(Phi,X);
-  write(LIST<arr>(X, y), "z.train");
+  arr Phi = makeFeatures(X);
+  FILE("z.train") <<catCol(X, y);
 
   cv.crossValidateMultipleLambdas(Phi, y, ARR(1e-3,1e-2,1e-1,1e0,1e1,1e2,1e3,1e4,1e5), 10, false);
   cv.plot();
@@ -131,8 +143,7 @@ void testCV() {
 }
 
 void exercise1() {
-  arr X,Phi,y;
-  arr beta;
+  arr X,y;
 
   //load the data, split in input and output
   X <<FILE("./dataQuadReg2D_noisy.txt");
@@ -140,8 +151,8 @@ void exercise1() {
   X.delColumns(X.d1-1);
   
   //compute optimal beta
-  makeFeatures(Phi,X);
-  ridgeRegression(beta, Phi, y);
+  arr Phi = makeFeatures(X);
+  arr beta = ridgeRegression(Phi, y);
   cout <<"estimated beta = "<< beta <<endl;
 
   //compute mean squared error
@@ -151,17 +162,18 @@ void exercise1() {
   //predict on grid
   arr X_grid,y_grid;
   X_grid.setGrid(X.d1,-3,3,30);
-  makeFeatures(Phi,X_grid,readFromCfgFileFT,X);
+  Phi = makeFeatures(X_grid,readFromCfgFileFT,X);
   y_grid = Phi*beta;
 
   //save and plot
-  write(LIST<arr>(X, y), "z.train");
+  MT::arrayBrackets="  ";
+  FILE("z.train") <<catCol(X, y);
   if(X.d1==1) {
-    write(LIST<arr>(X_grid, y_grid), "z.model");
+    FILE("z.model") <<catCol(X_grid, y_grid);
     gnuplot("plot 'z.train' us 1:2 w p,'z.model' us 1:2 w l", false, true, "z.pdf");
   } else {
     y_grid.reshape(31,31);
-    write(LIST<arr>(y_grid), "z.model");
+    FILE("z.model") <<y_grid;
     gnuplot("splot [-3:3][-3:3] 'z.train' w p, 'z.model' matrix us ($1/5-3):($2/5-3):3 w l", false, true, "z.pdf");
   }
 }
@@ -173,7 +185,7 @@ void exercise2() {
   //provide virtual train and test routines for CV
   struct myCV:public CrossValidation {
     void  train(const arr& X, const arr& y, double param, arr& beta) {
-      ridgeRegression(beta, X, y, param); //returns optimal beta for training data
+      beta = ridgeRegression(X, y, param); //returns optimal beta for training data
     };
     double test(const arr& X, const arr& y, const arr& beta) {
       arr y_pred = X*beta;
@@ -193,7 +205,7 @@ void exercise2() {
 //  X.resizeCopy(n,X.d1);
 
   //cross valide
-  makeFeatures(Phi,X);
+  Phi = makeFeatures(X);
   cv.crossValidateMultipleLambdas(Phi, y,
 				  ARR(1e-3,1e-2,1e-1,1e0,1e1,1e2,1e3,1e4,1e5),
 				  10, false);
@@ -201,12 +213,14 @@ void exercise2() {
   cout <<"10-fold CV:\n  costMeans= " <<cv.scoreMeans <<"\n  costSDVs= " <<cv.scoreSDVs <<endl;
 }
 
+//===========================================================================
 
 int main(int argc, char *argv[]) {
   MT::initCmdLine(argc,argv);
   
   system("cat USAGE");
-  
+  rnd.clockSeed();
+
   switch(MT::getParameter<uint>("mode",1)) {
     case 1:  testLinReg();  break;
     case 2:  test2Class();  break;

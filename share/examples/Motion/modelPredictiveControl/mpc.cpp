@@ -24,7 +24,6 @@ x(_x)
 void MPC::replan(arr &_goal, arr &_q) {
   P.T = P.T - 1;
 
-  P.costMatrix.clear();
   P.taskCosts.clear();
 
   x_bk.append(~_q);
@@ -59,7 +58,7 @@ void MPC::replan(arr &_goal, arr &_q) {
 
   x = x.rows(1,x.d0);
   MotionProblemFunction F(P);
-  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, damping=1e-3, maxStep=1.));
 
 
   // transform trajectory in cartesian space for visualization

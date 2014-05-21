@@ -45,14 +45,14 @@ if(WITH_PHYSX)
             set(PHYSX_LINK "LINK_PRIVATE")
         endif()
         # ...and try the rest with these settings
-        foreach(PX_CHECKLIB             SimulationControllerCHECKED
-            SceneQueryCHECKED             LowLevelCHECKED
-            LowLevelClothCHECKED            PhysX3VehicleCHECKED
-            PhysX3CookingCHECKED            PhysX3ExtensionsCHECKED
-            PhysX3CharacterKinematicCHECKED
-            RepX3CHECKED            RepXUpgrader3CHECKED
-            PhysXProfileSDKCHECKED            PxTaskCHECKED
-            PhysX3                    PhysX3CommonCHECKED
+        foreach(PX_CHECKLIB             LowLevelCHECKED 
+            LowLevelClothCHECKED        PhysX3CharacterKinematicCHECKED
+            PhysX3CHECKED               PhysX3CommonCHECKED
+            PhysX3CookingCHECKED        PhysX3ExtensionsCHECKED 
+            PhysX3VehicleCHECKED        PhysXProfileSDKCHECKED
+            PhysXVisualDebuggerSDKCHECKED PvdRuntimeCHECKED 
+            PxTaskCHECKED               SceneQueryCHECKED
+            SimulationControllerCHECKED 
         )
             unset(PHYSX_LIB) 
             find_library(PHYSX_LIB ${PX_CHECKLIB} PATHS ${PHYSX_LIB_HINTS})

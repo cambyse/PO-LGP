@@ -43,7 +43,7 @@ double getTransitionLogLikelihood(soc::SocSystemAbstraction& sys, arr& b0, arr& 
 
 void computeEPmessage(arr& a, arr &Ainv, const arr& b_from, const arr& Binv_from, const arr& b_to, const arr& Binv_to){
   Ainv = Binv_to - Binv_from;
-  lapack_Ainv_b_sym(a, Ainv, Binv_to*b_to - Binv_from*b_from);
+  a = lapack_Ainv_b_sym(Ainv, Binv_to*b_to - Binv_from*b_from);
 }
 
 //===========================================================================
@@ -100,10 +100,10 @@ void soc::bayesianIKControl2(SocSystemAbstraction& sys,
   arr Binv, b;
   if(!v){
     Binv = Sinv + R;
-    lapack_Ainv_b_sym(b, Binv, Sinv*s + r);
+    b = lapack_Ainv_b_sym(Binv, Sinv*s + r);
   }else{
     Binv = Sinv + (*Vinv) + R;
-    lapack_Ainv_b_sym(b, Binv, Sinv*s + (*Vinv)*(*v) + r);
+    b = lapack_Ainv_b_sym(Binv, Sinv*s + (*Vinv)*(*v) + r);
   }
   
   //constraints
@@ -125,7 +125,7 @@ void soc::bayesianIKControl2(SocSystemAbstraction& sys,
 
     //recompute (b, B);
     Binv = Sinv + R;
-    lapack_Ainv_b_sym(b, Binv, Sinv*s + r);
+    b = lapack_Ainv_b_sym(Binv, Sinv*s + r);
   }
   q=b;
 }
@@ -239,17 +239,17 @@ void soc::bayesianDynamicControl(SocSystemAbstraction& sys, arr& x, const arr& x
   arr Binv, b;
   if(!v){
     Binv = Sinv + R;
-    lapack_Ainv_b_sym(b, Binv, Sinv*s + r);
+    b = lapack_Ainv_b_sym(Binv, Sinv*s + r);
   }else{
     if(v->N==x.N){ //bwd msg given as fully dynamic
       Binv = Sinv + (*Vinv) + R;
-      lapack_Ainv_b_sym(b, Binv, Sinv*s + (*Vinv)*(*v) + r);
+      b = lapack_Ainv_b_sym(Binv, Sinv*s + (*Vinv)*(*v) + r);
     }else{
       arr _Vinv(2*n, 2*n), _v(2*n);
       _Vinv.setZero();  _Vinv.setMatrixBlock(*Vinv, 0, 0);
       _v   .setZero();  _v   .setVectorBlock(*v, 0);
       Binv = Sinv + _Vinv + R;
-      lapack_Ainv_b_sym(b, Binv, Sinv*s + _Vinv*_v + r);
+      b = lapack_Ainv_b_sym(Binv, Sinv*s + _Vinv*_v + r);
     }
   }
   
@@ -584,7 +584,7 @@ double soc::AICO::stepKinematic(){
 
       //compute (b, B);
       Binv[t] = Sinv[t] + Vinv[t] + R[t];
-      lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
+      b[t]() = lapack_Ainv_b_sym(Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
       //cout <<"b\n" <<b[t] <<endl <<B[t] <<endl;
 
 #if USE_TRUNCATION //PRELIMINARY - hard constraints handled with truncating Gaussians
@@ -611,7 +611,7 @@ double soc::AICO::stepKinematic(){
 
         //recompute (b, B);
         Binv[t] = Sinv[t] + Vinv[t] + R[t];
-        lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
+        b[t]() = lapack_Ainv_b_sym(Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
         //cout <<"b\n" <<b[t] <<endl <<B[t] <<endl;
 
         //sys->displayState(b[t], &Binv[t], STRING("AICO kinematic (after truncation) t=" <<t));
@@ -870,10 +870,10 @@ double soc::AICO::stepDynamic(){
     //compute (b, B);
     if(damping && dampingReference.N){
       Binv[t] = Sinv[t] + Vinv[t] + R[t] + Dinv;
-      lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t] + Dinv*dampingReference[t]);
+      b[t]() = lapack_Ainv_b_sym(Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t] + Dinv*dampingReference[t]);
     }else{
       Binv[t] = Sinv[t] + Vinv[t] + R[t];
-      lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
+      b[t]() = lapack_Ainv_b_sym(Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
     }
     //cout <<"b\n" <<b[t] <<endl <<B[t] <<endl;
 
@@ -1077,7 +1077,7 @@ double soc::AICO::stepGaussNewton(){
     
     //compute (b, B);
     Binv[t] = Sinv[t] + Vinv[t] + R[t];
-    lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
+    b[t]() = lapack_Ainv_b_sym(Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
     //*/
     
     if(t==T && dt==1){ //go backward again
@@ -1244,7 +1244,7 @@ double soc::AICO::stepMinSum(){
         
         //compute likelihood
         Dinv = Sinv[t] + Vinv[t];
-        lapack_Ainv_b_sym(d, Dinv, Sinv[t]*s[t] + Vinv[t]*v[t]);
+        d = lapack_Ainv_b_sym(Dinv, Sinv[t]*s[t] + Vinv[t]*v[t]);
         like=metricDistance(Dinv, d, b[t]);
         /*cout <<t
           <<" - fwd like=" <<metricDistance(Sinv[t], s[t], b[t])
@@ -1258,7 +1258,7 @@ double soc::AICO::stepMinSum(){
 }
         //compute (b, B);
                      Binv[t] = Sinv[t] + Vinv[t] + R[t];
-                     lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
+                     b[t]() = lapack_Ainv_b_sym(Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
 }while(like>100.);
 #endif
 

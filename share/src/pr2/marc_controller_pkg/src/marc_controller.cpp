@@ -111,7 +111,7 @@ void TreeControllerClass::update() {
   jointStateMsg.fL = VECTOR(fL_obs);
   jointState_publisher.publish(jointStateMsg);
 
-  //-- update ORS
+  //-- update ORS to compute Jacobians used in force controller
   world.setJointState(q, qd);
   world.kinematicsPos(y_fL, J_fL, ftL_shape->body->index, &ftL_shape->rel.pos);
   world.kinematicsPos(y_fR, J_fR, ftR_shape->body->index, &ftR_shape->rel.pos);
@@ -134,7 +134,7 @@ void TreeControllerClass::update() {
       double velM = marginMap(qd(i), -limits(i,2), limits(i,2), .1);
       if(velM<0. && u(i)<0.) u(i)*=(1.+velM); //decrease effort close to velocity margin
       if(velM>0. && u(i)>0.) u(i)*=(1.-velM); //decrease effort close to velocity margin
-      MT::constrain(u(i), -limits(i,3), limits(i,3));
+      clip(u(i), -limits(i,3), limits(i,3));
       pr2_tree.getJoint(ROS_qIndex(i))->commanded_effort_ = u(i);
       pr2_tree.getJoint(ROS_qIndex(i))->enforceLimits();
     }

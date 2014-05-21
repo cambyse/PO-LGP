@@ -231,7 +231,7 @@ void optim(){
   }
 #endif
 
-  optNewton(x, Convert(P), OPT(stopIters=1000, verbose=2, useAdaptiveDamping=false, damping=1e-0, maxStep=.1, stopTolerance=1e-4));
+  optNewton(x, Convert(P), OPT(stopIters=1000, verbose=2, damping=1e-0, maxStep=.1, stopTolerance=1e-4));
   x >>FILE("q.optim");
 
   //display

@@ -1,20 +1,21 @@
 /*  ---------------------------------------------------------------------
-    Copyright 2013 Marc Toussaint
-    email: mtoussai@cs.tu-berlin.de
-
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
 
 
 #include "optimization.h"
@@ -187,7 +188,7 @@ void sConvert::KOrderMarkovFunction_VectorFunction::fv(arr& phi, arr& J, const a
   //resizing things:
   phi.resize(M);   phi.setZero();
   RowShiftedPackedMatrix* Jaux;
-  if(&J) Jaux = auxRowShifted(J, M, (k+1)*n, x.N);
+  if(&J){ Jaux = auxRowShifted(J, M, (k+1)*n, x.N); J.setZero(); }
   M=0;
   uint m_t;
   for(uint t=0; t<=T; t++) {
@@ -197,7 +198,7 @@ void sConvert::KOrderMarkovFunction_VectorFunction::fv(arr& phi, arr& J, const a
     if(t>=k) {
       if(t>=x.d0) { //x_bar includes the postfix
         x_bar.resize(k+1,n);
-        for(int i=t-k; i<=(int)t; i++) x_bar[i-t+k]() = (i>=x.d0)? x_post[i-x.d0] : x[i];
+        for(int i=t-k; i<=(int)t; i++) x_bar[i-t+k]() = (i>=(int)x.d0)? x_post[i-x.d0] : x[i];
       } else{
         x_bar.referToSubRange(x, t-k, t);
       }
@@ -252,8 +253,8 @@ double sConvert::KOrderMarkovFunction_ConstrainedProblem::fc(arr& df, arr& Hf, a
   RowShiftedPackedMatrix *Jy_aux, *Jg_aux;
   meta_y.resize(meta_yd);
   if(&meta_g) meta_g.resize(meta_gd);
-  if(getJ) Jy_aux = auxRowShifted(meta_Jy, meta_yd, (k+1)*n, x.N);
-  if(&meta_Jg) Jg_aux = auxRowShifted(meta_Jg, meta_gd, (k+1)*n, x.N);
+  if(getJ){ Jy_aux = auxRowShifted(meta_Jy, meta_yd, (k+1)*n, x.N); meta_Jy.setZero(); }
+  if(&meta_Jg){ Jg_aux = auxRowShifted(meta_Jg, meta_gd, (k+1)*n, x.N); meta_Jg.setZero(); }
 
   uint y_count=0;
   uint g_count=0;
@@ -269,7 +270,7 @@ double sConvert::KOrderMarkovFunction_ConstrainedProblem::fc(arr& df, arr& Hf, a
     if(t>=k) {
       if(t>=x.d0) { //x_bar includes the postfix
         x_bar.resize(k+1,n);
-        for(int i=t-k; i<=(int)t; i++) x_bar[i-t+k]() = (i>=x.d0)? x_post[i-x.d0] : x[i];
+        for(int i=t-k; i<=(int)t; i++) x_bar[i-t+k]() = (i>=(int)x.d0)? x_post[i-x.d0] : x[i];
       } else {
         x_bar.referToSubRange(x, t-k, t);
       }
