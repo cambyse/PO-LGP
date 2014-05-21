@@ -111,7 +111,7 @@ void TreeControllerClass::update() {
   jointStateMsg.fL = VECTOR(fL_obs);
   jointState_publisher.publish(jointStateMsg);
 
-  //-- update ORS
+  //-- update ORS to compute Jacobians used in force controller
   world.setJointState(q, qd);
   world.kinematicsPos(y_fL, J_fL, ftL_shape->body->index, &ftL_shape->rel.pos);
   world.kinematicsPos(y_fR, J_fR, ftR_shape->body->index, &ftR_shape->rel.pos);
