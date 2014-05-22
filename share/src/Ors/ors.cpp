@@ -322,14 +322,18 @@ void makeConvexHulls(ShapeL& shapes){
 
 bool always_unlocked(void*) { return false; }
 
-ors::Joint::Joint()
-  : index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0), locked_func(always_unlocked), locked_data(NULL), H(1.) { reset(); }
+//ors::Joint::Joint(KinematicWorld& G)
+//  : world(G), index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0), locked_func(always_unlocked), locked_data(NULL), H(1.) {
+//  reset();
+//  index=G.joints.N;
+//  G.joints.append(this);
+//}
 
-ors::Joint::Joint(const Joint& j)
-  : index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0), locked_func(always_unlocked), locked_data(NULL), H(1.) { reset(); *this=j; }
+//ors::Joint::Joint(KinematicWorld& G, const Joint& j)
+//  : world(G), index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0), locked_func(always_unlocked), locked_data(NULL), H(1.) { reset(); *this=j; }
 
 ors::Joint::Joint(KinematicWorld& G, Body *f, Body *t, const Joint* copyJoint)
-  : index(0), qIndex(-1), ifrom(f->index), ito(t->index), from(f), to(t), mimic(NULL), agent(0), locked_func(always_unlocked), locked_data(NULL), H(1.) {
+  : world(G), index(0), qIndex(-1), ifrom(f->index), ito(t->index), from(f), to(t), mimic(NULL), agent(0), locked_func(always_unlocked), locked_data(NULL), H(1.) {
   reset();
   if(copyJoint) *this=*copyJoint;
   index=G.joints.N;
@@ -341,8 +345,10 @@ ors::Joint::Joint(KinematicWorld& G, Body *f, Body *t, const Joint* copyJoint)
 
 ors::Joint::~Joint() {
   reset();
-  if (from) from->outLinks.removeValue(this);
-  if (to) to->inLinks.removeValue(this);
+  if(from) from->outLinks.removeValue(this);
+  if(to)   to->inLinks.removeValue(this);
+  world.joints.removeValue(this);
+  world.qdim.clear();
 }
 void ors::Joint::reset() { 
   listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); X.setZero(); axis.setZero(); limits.clear(); H=1.; type=JT_none; 
@@ -1648,15 +1654,13 @@ bool ProxySortComp(const ors::Proxy *a, const ors::Proxy *b) {
 }
 
 void ors::KinematicWorld::glueBodies(Body *f, Body *t) {
-  Joint *e;
-  e=newEdge(f->index, t->index, joints);
-  graphMakeLists(bodies, joints);
-  e->A.setDifference(f->X, t->X);
-  e->A.vel.setZero();
-  e->A.angvel.setZero();
-  e->type=JT_glue;
-  e->Q.setZero();
-  e->B.setZero();
+  Joint *j = new Joint(*this, f, t);
+  j->A.setDifference(f->X, t->X);
+  j->A.vel.setZero();
+  j->A.angvel.setZero();
+  j->type=JT_fixed;
+  j->Q.setZero();
+  j->B.setZero();
 }
 
 

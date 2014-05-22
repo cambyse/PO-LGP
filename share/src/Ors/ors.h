@@ -135,6 +135,7 @@ struct Body {
 
 /// a joint
 struct Joint {
+  KinematicWorld& world;
   uint index;           ///< unique identifier
   uint qIndex;          ///< index where this joint appears in the q-state-vector
   int ifrom, ito;       ///< indices of from and to bodies
@@ -157,8 +158,8 @@ struct Joint {
   double H;             ///< control cost factor
   KeyValueGraph ats;    ///< list of any-type attributes
   
-  Joint();
-  explicit Joint(const Joint& j);
+//  Joint(KinematicWorld& G);
+//  explicit Joint(KinematicWorld& G, const Joint& j);
   explicit Joint(KinematicWorld& G, Body *f, Body *t, const Joint *copyJoint=NULL); //new Shape, being added to graph and body's joint lists
   ~Joint();
   void operator=(const Joint& j) {

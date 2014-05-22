@@ -160,10 +160,7 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl)
     p=bl.bodies(graph(i, 0));
     n=bl.bodies(graph(i, 1));
     //e=new_edge(p, n, bl.bodies, bl.joints);
-    e=new ors::Joint;
-    e->index=bl.joints.N;
-    bl.joints.append(e);
-    e->ifrom=p->index; e->ito=n->index;
+    e=new ors::Joint(bl, p, n);
     f.pos.set(&frames(graph(i, 1), 3, 0));  f.pos=ROT*f.pos;
     f.rot.setMatrix(frames[graph(i, 1)].sub(0, 2, 0, 2).p);
     f.rot.invert();

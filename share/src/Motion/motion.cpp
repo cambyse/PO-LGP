@@ -86,7 +86,7 @@ void MotionProblem::setInterpolatingCosts(
   setState(x0,v0);
   arr y0;
   c->map.phi(y0, NoArr, world);
-  arr midTarget(m),finTarget(m);
+  arr midTarget=zeros(m),finTarget=zeros(m);
   if(&y_finalTarget){ if(y_finalTarget.N==1) finTarget = y_finalTarget(0); else finTarget=y_finalTarget; }
   if(&y_midTarget){   if(y_midTarget.N==1)   midTarget = y_midTarget(0);   else midTarget=y_midTarget; }
   switch(inType) {
@@ -128,49 +128,6 @@ void MotionProblem::setInterpolatingCosts(
   } break;
   }
 }
-
-//void MotionProblem::setInterpolatingVelCosts(
-//  TaskCost *c,
-//  TaskCostInterpolationType inType,
-//  const arr& v_finalTarget, double v_finalPrec, const arr& v_midTarget, double v_midPrec) {
-//  uint m=c->map.dim_phi(world);
-//  setState(x0,v0);
-//  arr y0,yv0,J;
-//  c->map.phi(y0, J, world);
-//  yv0 = J * v0;
-//  arr midTarget(m), finTarget(m);
-//  if(&v_finalTarget){ if(v_finalTarget.N==1) finTarget = v_finalTarget(0); else finTarget=v_finalTarget; }
-//  if(&v_midTarget){   if(v_midTarget.N==1)   midTarget = v_midTarget(0); else midTarget=v_midTarget; }
-//  switch(inType) {
-//    case constant: {
-//      c->v_target = replicate(finTarget, T+1);
-//      c->v_prec.resize(T+1) = v_finalPrec;
-//    } break;
-//    case finalOnly: {
-//      c->v_target.resize(T+1, m).setZero();
-//      c->v_target[T]() = finTarget;
-//      c->v_prec.resize(T+1).setZero();
-//      c->v_prec(T) = v_finalPrec;
-//    } break;
-//    case final_restConst: {
-//      c->v_target = replicate(midTarget, T+1);
-//      c->v_target[T]() = finTarget;
-//      c->v_prec.resize(T+1) = v_midPrec<=0. ? 0. : v_midPrec;
-//      c->v_prec(T) = v_finalPrec;
-//    } break;
-//    case final_restLinInterpolated: {
-//      c->v_target.resize(T+1, m);
-//      for(uint t=0; t<=T; t++) {
-//        double a = (double)t/T;
-//        c->v_target[t]() = ((double)1.-a)*yv0 + a*finTarget;
-//      }
-//      c->v_prec.resize(T+1);
-//      c->v_prec = v_midPrec<0. ? v_finalPrec : v_midPrec;
-//      c->v_prec(T) = v_finalPrec;
-//    } break;
-//  case early_restConst: NIY;
-//  }
-//}
 
 void MotionProblem::setState(const arr& q, const arr& v) {
   world.setJointState(q, v);
@@ -435,9 +392,7 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
   if(&J) CHECK(J.d0==phi.N,"");
   
   //store in CostMatrix
-  if(!MP.phiMatrix.N) {
-    MP.phiMatrix.resize(get_T()+1);
-  }
+  if(!MP.phiMatrix.N) MP.phiMatrix.resize(get_T()+1);
   MP.phiMatrix(t) = phi;
 }
 
@@ -475,9 +430,7 @@ void MotionProblem_EndPoseFunction::fv(arr& phi, arr& J, const arr& x){
   if(&J) CHECK(J.d0==phi.N,"");
 
   //store in CostMatrix
-  MP.phiMatrix.resize(MP.T+1,phi.N);
-  MP.phiMatrix.setZero();
-  MP.phiMatrix[MP.T]() = phi;
+  MP.phiMatrix = phi;
 }
 
 //===========================================================================

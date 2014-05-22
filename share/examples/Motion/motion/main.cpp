@@ -6,6 +6,12 @@
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
+#include <Ors/ors_swift.h>
+
+void attachHand(ors::KinematicWorld& G){
+  G.glueBodies(G.getBodyByName("r_wrist_roll_link"), G.getBodyByName("HAND"));
+  G.swift().initActivations();
+}
 
 int main(int argc,char** argv){
   MT::initCmdLine(argc,argv);
@@ -15,24 +21,28 @@ int main(int argc,char** argv){
   for(ors::Shape *s:G.shapes) s->cont=true;
   G.getShapeByName("target")->cont=false;
   cout <<"loaded model: n=" <<G.q.N <<endl;
-//  G.gl().watch();
 
   MotionProblem MP(G);
   MP.loadTransitionParameters();
 
   //-- setup the motion problem
   TaskCost *c;
-  c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "endeff", ors::Vector(0, 0, 0)));
+  c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "HAND", ors::Vector(0, 0, 0)));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(MP.world.getShapeByName("target")->X.pos), 1e3);
 
   c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, G));
   c->map.order=1; //make this a velocity variable!
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
 
+//#define CONSTRAINT
+#ifndef CONSTRAINT
   c = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .1));
+#else
+  c = MP.addTask("collisionConstraints", new CollisionConstraint(.1));
+#endif
   MP.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
 
-//  c = MP.addTask("collisionConstraints", new CollisionConstraint(.1));
+  attachHand(G);
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction MF(MP);
@@ -58,33 +68,21 @@ int main(int argc,char** argv){
   }
 
   //initialize trajectory
-//  if(MP.x0.N==3){ //assume 3D ball!
-//    for(uint t=0;t<=T;t++){
-//      double a=(double)t/T;
-//      x[t]() = (1.-a)*MP.x0 + a*ARRAY(MP.world.getBodyByName("target")->X.pos);
-//    }
-//  }else{
     for(uint t=0;t<=T;t++) x[t]() = MP.x0;
-//  }
 
-  //evaluation test
-  //  cout <<"fx = " <<evaluateVF(Convert(MF), x) <<endl;
-
-  //  OpenGL costs(STRING("PHI ("<<F.dim_phi(0)<<" tasks)"), 3*T+10, 3*F.dim_phi(0)+10 );
   //-- optimize
   for(uint k=0;k<5;k++){
     MT::timerStart();
-#if 1
+#ifndef CONSTRAINT
     optNewton(x, Convert(MF), OPT(verbose=2, stopIters=20, maxStep=1., stepInc=2., nonStrictSteps=(!k?15:5)));
 #else
     ConstrainedMethodType method = (ConstrainedMethodType)MT::getParameter<int>("method");
-    optConstrained(x, NoArr, Convert(MF), OPT(verbose=1, stopIters=100, damping=1., maxStep=1., nonStrict=5, constrainedMethod=method));
+    optConstrained(x, NoArr, Convert(MF), OPT(verbose=1, stopIters=100, damping=1., maxStep=1., nonStrictSteps=5, constrainedMethod=method));
 #endif
 
     cout <<"** optimization time=" <<MT::timerRead() <<endl;
-    //costs.displayRedBlue(~sqr(P.costMatrix), false, 3);
     MP.costReport();
-//    checkJacobian(Convert(MF), x, 1e-5);
+    //checkJacobian(Convert(MF), x, 1e-5);
     write(LIST<arr>(x),"z.output");
     //gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", false, true);
     gnuplot("load 'z.costReport.plt'", false, true);

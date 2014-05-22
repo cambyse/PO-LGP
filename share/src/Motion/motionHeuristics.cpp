@@ -264,8 +264,8 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
 
   //-- finger tips close to surface : using ProxyTaskVariable
   uintA shapes = stringListToShapeIndices(
-                   ARRAY<const char*>("tip1",
-                                      "tip2"), MP.world.shapes);
+                   ARRAY<const char*>("l_gripper_l_finger_tip_link_0",
+                                      "l_gripper_r_finger_tip_link_0"), MP.world.shapes);
   shapes.append(shapeId); shapes.append(shapeId);
   shapes.reshape(2,2); shapes = ~shapes;
   c = MP.addTask("graspContacts", new ProxyTaskMap(vectorPTMT, shapes, .1, false));
@@ -283,9 +283,9 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
   //-- collisions with other objects
   shapes = ARRAY<uint>(shapeId);
   c = MP.addTask("otherCollisions",
-                    new ProxyTaskMap(allExceptListedPTMT, shapes, .04, true));
+                 new ProxyTaskMap(allExceptListedPTMT, shapes, .04, true));
   target = ARR(0.);
-  MP.setInterpolatingCosts(c, MotionProblem::constant, target, colPrec);
+  MP.setInterpolatingCosts(c, MotionProblem::constant, NoArr, colPrec);
 //  arr initial;
   c->map.phi(initial, NoArr, MP.world);
   if(initial(0)>0.) { //we are in collision/proximity -> depart slowly
