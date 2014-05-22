@@ -22,19 +22,40 @@
 #include "motion.h"
 #include "taskMap_default.h"
 
-//===========================================================================
+/**
+ * @file
+ * With the feedback control we can define motions for operation space control.
+ *
+ * We simply define a set of motions via PDtasks/ConstraintForceTask and run
+ * them.
+ */
 
+
+//===========================================================================
+/**
+ * A PDtask defines a motion in operational space.
+ */
 struct PDtask{
   TaskMap& map;
   MT::String name;
   bool active;
   double prec;
 
-  arr y_ref, v_ref;      ///< immediate (next step) desired target reference
-  double Pgain, Dgain;   ///< parameters of the PD controller or attractor dynamics
-  arr y, v; ///< the observations when LAST getDesiredAcceleration was called -- use carefully! (in online mode only)
+  /// @{ @name Immediate (next step) desired target reference
+  arr y_ref; ///< position reference
+  arr v_ref; ///< velocity reference
+  /// @}
 
-  PDtask(TaskMap* m):map(*m), active(true), prec(0.), Pgain(0.), Dgain(0.) {}
+  /// @{ @name Parameters of the PD controller or attractor dynamics
+  double Pgain, Dgain;
+  /// @}
+
+  /// @{ @name The observations when LAST getDesiredAcceleration was called
+  /// Use carefully! (in online mode only)
+  arr y, v;
+  /// @}
+
+  PDtask(TaskMap* map) : map(*map), active(true), prec(0.), Pgain(0.), Dgain(0.) {}
 
   void setTarget(const arr& yref, const arr& vref=NoArr);
   void setGains(double Pgain, double Dgain);
@@ -60,7 +81,9 @@ struct ConstraintForceTask{
 
 //===========================================================================
 
-
+/**
+ * FeedbackMotionControl contains all individual motions/PDtasks.
+ */
 struct FeedbackMotionControl : MotionProblem {
   MT::Array<PDtask*> tasks;
   MT::Array<ConstraintForceTask*> forceTasks;
@@ -68,7 +91,7 @@ struct FeedbackMotionControl : MotionProblem {
 
   FeedbackMotionControl(ors::KinematicWorld& _world, bool useSwift=true);
 
-  //adding task spaces
+  /// @{ @name adding tasks
   PDtask* addPDTask(const char* name, double decayTime, double dampingRatio, TaskMap *map);
   PDtask* addPDTask(const char* name,
                     double decayTime, double dampingRatio,
@@ -77,6 +100,7 @@ struct FeedbackMotionControl : MotionProblem {
                     const char* jShapeName=NULL, const ors::Vector& jvec=NoVector,
                     const arr& params=NoArr);
   ConstraintForceTask* addConstraintForceTask(const char* name, TaskMap *map);
+  /// @}
 
   void getCostCoeffs(arr& c, arr& J); ///< the general (`big') task vector and its Jacobian
   arr getDesiredConstraintForces(); ///< J^T lambda^*
