@@ -1620,9 +1620,18 @@ template<class T> const MT::Array<T>& MT::Array<T>::ioraw() const { IOraw=true; 
 /// array must have correct size! simply streams in all elements sequentially
 template<class T> void MT::Array<T>::readRaw(std::istream& is) {
   uint i;
-  for(i=0; i<N; i++) {
-    is >>p[i];
-    if(is.fail()) HALT("could not read " <<i <<"-th element of an array");
+  if(N){
+    for(i=0; i<N; i++) {
+      is >>p[i];
+      if(is.fail()) HALT("could not read " <<i <<"-th element of an array");
+    }
+  }else{
+    T x;
+    for(;;){
+      is >>x;
+      if(!is.good()){ is.clear(); return; }
+      append(x);
+    }
   }
 }
 
@@ -3196,6 +3205,10 @@ template<class T> void listDelete(MT::Array<T*>& L) {
   L.clear();
 }
 
+template<class T> void listReindex(MT::Array<T*>& L) {
+  for(uint i=0;i<L.N;i++) L.elem(i)->index=i;
+}
+
 template<class T> T* listFindByName(const MT::Array<T*>& L, const char* name) {
   for_list(T,  e,  L) if(e->name==name) return e;
   //std::cerr <<"\n*** name '" <<name <<"' not in this list!" <<std::endl;
@@ -3496,10 +3509,10 @@ template<class vert, class edge> bool graphTopsort(MT::Array<vert*>& V, MT::Arra
   //success!
   V.permuteInv(newIndex);
   for_list(vert,  vv,  V) vv->index = vv_COUNT;
-  for(edge *e: E) {
-    e->ifrom=e->from->index;
-    e->ito  =e->to->index;
-  }
+//  for(edge *e: E) {
+//    e->ifrom=e->from->index;
+//    e->ito  =e->to->index;
+//  }
 
   //-- reindex edges as well:
   newIndex.resize(E.N);

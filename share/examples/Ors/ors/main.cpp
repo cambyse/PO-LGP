@@ -30,7 +30,6 @@ void TEST(LoadSave){
 // Jacobian test
 //
 
-
 void TEST(Kinematics){
   struct MyFct:VectorFunction{
     enum Mode {Pos, Vec, Quat} mode;
@@ -50,7 +49,7 @@ void TEST(Kinematics){
   };
 
   //ors::KinematicWorld G("test.ors");
-  ors::KinematicWorld G("../../../data/pr2_model/pr2-3-comfi.ors");
+  ors::KinematicWorld G("../../../data/pr2_model/pr2_model.ors");
   uint n=G.getJointStateDimension();
   arr x(n);
   ors::Vector vec;
@@ -65,6 +64,29 @@ void TEST(Kinematics){
 
     //checkJacobian(Convert(T1::f_hess, NULL), x, 1e-5);
   }
+}
+
+//===========================================================================
+//
+// copy operator test
+//
+
+void TEST(Copy){
+  ors::KinematicWorld G1("../../../data/pr2_model/pr2_model.ors");
+  ors::KinematicWorld G2(G1);
+
+  G1.checkConsistency();
+  G2.checkConsistency();
+
+  G1 >>FILE("z.1");
+  G2 >>FILE("z.2");
+
+  charA g1,g2;
+  g1.readRaw(FILE("z.1"));
+  g2.readRaw(FILE("z.2"));
+
+  CHECK(g1==g2,"copy operator failed!")
+  cout <<"** copy operator success" <<endl;
 }
 
 //===========================================================================
@@ -142,7 +164,7 @@ void TEST(Contacts){
     //G.watch(true);
     G.watch(false, STRING("t=" <<t <<"  movement along negative contact gradient (using SWIFT to get contacts)"));
     //x += inverse(grad)*(-.1*c);
-    x -= 1e-3*grad; //.1 * (invJ * grad);
+    x -= 3e-3*grad; //.1 * (invJ * grad);
 
     checkJacobian(Convert(Ctest::f, NULL), x, 1e10);
   }
@@ -251,11 +273,10 @@ void TEST(MeshShapesInOde){
 
 void TEST(FollowRedundantSequence){  
   ors::KinematicWorld G("arm7.ors");
-  //init();
-  uint N=G.bodies.N-2;
+  uint N=G.bodies.N-1;
 
   uint t,T,n=G.getJointStateDimension();
-  arr x(n),v,z,J,invJ;
+  arr x(n),y,J,invJ;
   x=.8;     //initialize with intermediate joint positions (non-singular positions)
   ors::Vector rel(0,0,.3); //this frame describes the relative position of the endeffector wrt. 7th body
 
@@ -265,8 +286,8 @@ void TEST(FollowRedundantSequence){
   Z *= .8;
   T=Z.d0;
   G.setJointState(x);
-  G.kinematicsPos(z, NoArr, N, &rel);
-  for(t=0;t<T;t++) Z[t]() += z; //adjust coordinates to be inside the arm range
+  G.kinematicsPos(y, NoArr, N, &rel);
+  for(t=0;t<T;t++) Z[t]() += y; //adjust coordinates to be inside the arm range
   plotLine(Z);
   G.gl().add(glDrawPlot,&plotModule);
   G.watch(false);
@@ -274,12 +295,11 @@ void TEST(FollowRedundantSequence){
   for(t=0;t<T;t++){
     //Z[t] is the desired endeffector trajectory
     //x is the full joint state, z the endeffector position, J the Jacobian
-    G.kinematicsPos(z, J, N, &rel);  //get the new endeffector position
-    invJ = inverse(J);       //pseudo inverse
-    v = invJ * (Z[t]-z);     //multiply endeffector velocity with inverse jacobian
-    x += v;                  //simulate a time step (only kinematically)
+    G.kinematicsPos(y, J, N, &rel);  //get the new endeffector position
+    invJ = ~J*inverse_SymPosDef(J*~J);
+    x += invJ * (Z[t]-y);                  //simulate a time step (only kinematically)
     G.setJointState(x);
-    //cout <<J * invJ <<invJ <<v <<endl <<x <<endl <<"tracking error = " <<maxDiff(Z[t],z) <<endl;
+//    cout <<J * invJ <<endl <<x <<endl <<"tracking error = " <<maxDiff(Z[t],y) <<endl;
     G.watch(false, STRING("follow redundant trajectory -- time " <<t));
     //G.gl().timedupdate(.01);
   }
@@ -304,7 +324,7 @@ void TEST(FollowRedundantSequence){
 //---------- test standard dynamic control
 void TEST(Dynamics){
   ors::KinematicWorld G("arm7.ors");
-  //G.makeLinkTree();
+//  G.makeLinkTree();
   cout <<G <<endl;
 
   struct DiffEqn:VectorFunction{
@@ -335,7 +355,10 @@ void TEST(Dynamics){
 
   ofstream z("z.dyn");
   G.clearForces();
+  G.watch();
+//  for(ors::Body *b:G.bodies){ b->mass=1.; b->inertia.setZero(); }
 
+  T=100;
   for(t=0;t<T;t++){
     if(t>=500){ //hold steady
       qdd_ = -1. * qd;
@@ -469,11 +492,12 @@ int MAIN(int argc,char **argv){
   //testBlenderImport();
 
   testLoadSave();
+  testCopy();
   testPlayStateSequence();
   testKinematics();
   testKinematicSpeed();
   testFollowRedundantSequence();
-  testDynamics();
+//  testDynamics();
   testContacts();
   testLimits();
 #ifdef MT_ODE

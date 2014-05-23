@@ -169,7 +169,7 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl)
     e->A.setDifference(p->X, f);
     e->B.setDifference(f, n->X); //p=(h-t)/2;
   }
-  graphMakeLists(bl.bodies, bl.joints);
+  NIY//graphMakeLists(bl.bodies, bl.joints);
   /* GROUPS: retired
   mesh.GF.resize(bl.bodies.N);
   for(i=0; i<bl.bodies.N; i++) {

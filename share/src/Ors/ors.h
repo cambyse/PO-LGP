@@ -138,7 +138,7 @@ struct Joint {
   KinematicWorld& world;
   uint index;           ///< unique identifier
   uint qIndex;          ///< index where this joint appears in the q-state-vector
-  int ifrom, ito;       ///< indices of from and to bodies
+//  int ifrom, ito;       ///< indices of from and to bodies
   Body *from, *to;      ///< pointers to from and to bodies
   Joint *mimic;         ///< if non-NULL, this joint's state is identical to another's
   uint agent;           ///< associate this Joint to a specific agent (0=default robot)
@@ -158,12 +158,10 @@ struct Joint {
   double H;             ///< control cost factor
   KeyValueGraph ats;    ///< list of any-type attributes
   
-//  Joint(KinematicWorld& G);
-//  explicit Joint(KinematicWorld& G, const Joint& j);
-  explicit Joint(KinematicWorld& G, Body *f, Body *t, const Joint *copyJoint=NULL); //new Shape, being added to graph and body's joint lists
+  Joint(KinematicWorld& G, Body *f, Body *t, const Joint *copyJoint=NULL); //new Shape, being added to graph and body's joint lists
   ~Joint();
   void operator=(const Joint& j) {
-    index=j.index; qIndex=j.qIndex; ifrom=j.ifrom; ito=j.ito; mimic=reinterpret_cast<Joint*>(j.mimic?1:0); agent=j.agent;
+    qIndex=j.qIndex; /*ifrom=j.ifrom; ito=j.ito;*/ mimic=reinterpret_cast<Joint*>(j.mimic?1:0); agent=j.agent;
     name=j.name; type=j.type; A=j.A; Q=j.Q; B=j.B; X=j.X; axis=j.axis; limits=j.limits; H=j.H;
     ats=j.ats;
     locked_func=j.locked_func; locked_data=j.locked_data;
@@ -178,8 +176,9 @@ struct Joint {
 
 /// a shape (geometric shape like cylinder/mesh, associated to a body)
 struct Shape {
+  KinematicWorld& world;
   uint index;
-  uint ibody;
+//  uint ibody;
   Body *body;
   
   MT::String name;     ///< name
@@ -193,12 +192,12 @@ struct Shape {
   bool cont;           ///< are contacts registered (or filtered in the callback)
   KeyValueGraph ats;   ///< list of any-type attributes
   
-  Shape();
-  explicit Shape(const Shape& s);
-  explicit Shape(KinematicWorld& G, Body& b, const Shape *copyShape=NULL); //new Shape, being added to graph and body's shape lists
+//  Shape();
+//  explicit Shape(const Shape& s);
+  Shape(KinematicWorld& G, Body& b, const Shape *copyShape=NULL); //new Shape, being added to graph and body's shape lists
   ~Shape();
   void operator=(const Shape& s) {
-    index=s.index; ibody=s.ibody; body=NULL; name=s.name; X=s.X; rel=s.rel; type=s.type;
+    /*ibody=s.ibody;*/ name=s.name; X=s.X; rel=s.rel; type=s.type;
     memmove(size, s.size, 4*sizeof(double)); memmove(color, s.color, 3*sizeof(double));
     mesh=s.mesh; mesh_radius=s.mesh_radius; cont=s.cont;
     ats=s.ats;
@@ -240,7 +239,7 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   
   /// @name constructors
   KinematicWorld();
-  KinematicWorld(const ors::KinematicWorld& other) { *this = other; };
+  KinematicWorld(const ors::KinematicWorld& other);
   KinematicWorld(const char* filename);
   ~KinematicWorld();
   void operator=(const ors::KinematicWorld& G);
@@ -269,10 +268,11 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   void transformJoint(Joint *e, const ors::Transformation &f); ///< A <- A*f, B <- f^{-1}*B
   void zeroGaugeJoints();         ///< A <- A*Q, Q <- Id
   void makeLinkTree();            ///< modify transformations so that B's become identity
-  void topSort(){ graphTopsort(bodies, joints); for(Shape *s: shapes) if(s->body) s->ibody=s->body->index; }
+  void topSort(){ graphTopsort(bodies, joints); /*for(Shape *s: shapes) if(s->body) s->ibody=s->body->index;*/ }
   void glueBodies(Body *a, Body *b);
   void meldFixedJoints();         ///< prune fixed joints; shapes of fixed bodies are reassociated to non-fixed boides
   void removeUselessBodies();     ///< prune non-articulated bodies; they become shapes of other bodies
+  bool checkConsistency();
   
   /// @name computations on the graph
   void calc_Q_from_q(uint agent=0, bool vels=false); ///< from the set (q,qdot) compute the joint's Q transformations

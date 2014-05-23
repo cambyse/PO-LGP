@@ -87,9 +87,12 @@ ors::Body::Body(KinematicWorld& G, const Body* copyBody) {
 
 ors::Body::~Body() {
   reset();
-  listDelete(inLinks);
-  listDelete(outLinks);
-  listDelete(shapes);
+  while(inLinks.N) delete inLinks.last();
+  while(outLinks.N) delete outLinks.last();
+  while(shapes.N) delete shapes.last();
+//  listDelete(inLinks);
+//  listDelete(outLinks);
+//  listDelete(shapes);
 }
 
 void ors::Body::reset() {
@@ -182,13 +185,10 @@ std::ostream& operator<<(std::ostream& os, const Joint& x) { x.write(os); return
 // Shape implementations
 //
 
-ors::Shape::Shape(): ibody(UINT_MAX),body(NULL) { reset(); }
-
-ors::Shape::Shape(const Shape& s): ibody(UINT_MAX),body(NULL){ *this=s; }
-
-ors::Shape::Shape(KinematicWorld& G, Body& b, const Shape *copyShape): ibody(UINT_MAX),body(NULL) {
+ors::Shape::Shape(KinematicWorld& G, Body& b, const Shape *copyShape): world(G), /*ibody(UINT_MAX),*/ body(NULL) {
   reset();
-  if(copyShape) *this = *copyShape;
+  CHECK(&b && &G,"you shouldn't do this!");
+  //TODO: cleanup
   if(&b && !&G) MT_MSG("You're attaching a Shape to a Body, but not to a Graph -- you're not supposed to do that!");
   if(&G){
     index=G.shapes.N;
@@ -197,13 +197,19 @@ ors::Shape::Shape(KinematicWorld& G, Body& b, const Shape *copyShape): ibody(UIN
   if(&b){
     body = &b;
     b.shapes.append(this);
-    ibody=b.index;
+//    ibody=b.index;
   }
+  if(copyShape) *this = *copyShape;
 }
 
 ors::Shape::~Shape() {
   reset();
-  if(body) body->shapes.removeValue(this);
+  if(body){
+    body->shapes.removeValue(this);
+    listReindex(body->shapes);
+  }
+  world.shapes.removeValue(this);
+  listReindex(world.shapes);
 }
 
 void ors::Shape::parseAts() {
@@ -333,7 +339,7 @@ bool always_unlocked(void*) { return false; }
 //  : world(G), index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0), locked_func(always_unlocked), locked_data(NULL), H(1.) { reset(); *this=j; }
 
 ors::Joint::Joint(KinematicWorld& G, Body *f, Body *t, const Joint* copyJoint)
-  : world(G), index(0), qIndex(-1), ifrom(f->index), ito(t->index), from(f), to(t), mimic(NULL), agent(0), locked_func(always_unlocked), locked_data(NULL), H(1.) {
+  : world(G), index(0), qIndex(-1), /*ifrom(f->index), ito(t->index),*/ from(f), to(t), mimic(NULL), agent(0), locked_func(always_unlocked), locked_data(NULL), H(1.) {
   reset();
   if(copyJoint) *this=*copyJoint;
   index=G.joints.N;
@@ -345,9 +351,10 @@ ors::Joint::Joint(KinematicWorld& G, Body *f, Body *t, const Joint* copyJoint)
 
 ors::Joint::~Joint() {
   reset();
-  if(from) from->outLinks.removeValue(this);
-  if(to)   to->inLinks.removeValue(this);
+  if(from){ from->outLinks.removeValue(this); listReindex(from->outLinks); }
+  if(to){   to->inLinks.removeValue(this); listReindex(to->inLinks); }
   world.joints.removeValue(this);
+  listReindex(world.joints);
   world.qdim.clear();
 }
 void ors::Joint::reset() { 
@@ -460,6 +467,12 @@ ors::KinematicWorld::KinematicWorld():s(NULL) {
   s=new sKinematicWorld;
 }
 
+ors::KinematicWorld::KinematicWorld(const ors::KinematicWorld& other):s(NULL) {
+  bodies.memMove=joints.memMove=shapes.memMove=proxies.memMove=true; isLinkTree=false;
+  s=new sKinematicWorld;
+  *this = other;
+}
+
 ors::KinematicWorld::KinematicWorld(const char* filename):s(NULL) {
   bodies.memMove=joints.memMove=shapes.memMove=proxies.memMove=true; isLinkTree=false;
   s=new sKinematicWorld;
@@ -480,20 +493,29 @@ void ors::KinematicWorld::clear() {
   qdim.clear();
   q.clear();
   qdot.clear();
-  listDelete(proxies);
-  listDelete(shapes);
-  listDelete(joints);
-  listDelete(bodies);
+  listDelete(proxies); checkConsistency();
+  while(shapes.N){ delete shapes.last(); checkConsistency(); }
+  while(joints.N){ delete joints.last(); checkConsistency();}
+  listDelete(bodies); checkConsistency();
   isLinkTree=false;
 }
 
 void ors::KinematicWorld::operator=(const ors::KinematicWorld& G) {
   q = G.q;
   qdot = G.qdot;
+#if 1
+  listCopy(proxies, G.proxies);
+  listCopy(bodies, G.bodies);
+  for(Shape *s:G.shapes) new Shape(*this, *bodies(s->body->index), s);
+  for(Joint *j:G.joints){
+    Joint *jj=
+        new Joint(*this, bodies(j->from->index), bodies(j->to->index), j);
+    if(j->mimic) jj->mimic = joints(j->mimic->index);
+  }
+#else
   listCopy(proxies, G.proxies);
   listCopy(joints, G.joints);
-  for(Joint *j: joints) 
-    if(j->mimic){
+  for(Joint *j: joints) if(j->mimic){
     MT::String jointName;
     bool good = j->ats.getValue<MT::String>(jointName, "mimic");
     CHECK(good, "something is wrong");
@@ -510,6 +532,7 @@ void ors::KinematicWorld::operator=(const ors::KinematicWorld& G) {
     s->body=b;
     b->shapes.append(s);
   }
+#endif
 }
 
 /** @brief transforms (e.g., translates or rotates) the joints coordinate system):
@@ -636,17 +659,24 @@ arr ors::KinematicWorld::naturalQmetric(double power, uint agent) const {
 
 /** @brief revert the topological orientation of a joint (edge),
    e.g., when choosing another body as root of a tree */
-void ors::KinematicWorld::revertJoint(ors::Joint *e) {
-  cout <<"reverting edge (" <<e->from->name <<' ' <<e->to->name <<")" <<endl;
+void ors::KinematicWorld::revertJoint(ors::Joint *j) {
+  cout <<"reverting edge (" <<j->from->name <<' ' <<j->to->name <<")" <<endl;
   //revert
-  uint i=e->ifrom;  e->ifrom=e->ito;  e->ito=i;
-  graphMakeLists(bodies, joints);
-  ors::Transformation f;     ///< transformation from parent body to joint (attachment, usually static)
-  f=e->A;
-  e->A.setInverse(e->B);
-  e->B.setInverse(f);
-  f=e->Q;
-  e->Q.setInverse(f);
+  j->from->outLinks.removeValue(j);
+  j->to->inLinks.removeValue(j);
+  Body *b=j->from; j->from=j->to; j->to=b;
+  j->from->outLinks.append(j);
+  j->to->inLinks.append(j);
+  listReindex(j->from->outLinks);
+  listReindex(j->from->inLinks);
+  checkConsistency();
+
+  ors::Transformation f;
+  f=j->A;
+  j->A.setInverse(j->B);
+  j->B.setInverse(f);
+  f=j->Q;
+  j->Q.setInverse(f);
 }
 
 /** @brief re-orient all joints (edges) such that n becomes
@@ -1365,8 +1395,8 @@ ShapeL ors::KinematicWorld::getShapesByAgent(const uint agent) const {
   for(ors::Joint *j : joints) {
     if(j->agent==agent) {
       ShapeL tmp;
-      tmp.append(bodies(j->ifrom)->shapes);
-      tmp.append(bodies(j->ito)->shapes);
+      tmp.append(j->from->shapes);
+      tmp.append(j->to->shapes);
       for(ors::Shape* s : tmp) {
         if (!agent_shapes.contains(s)) agent_shapes.append(s);
       }
@@ -1569,7 +1599,8 @@ void ors::KinematicWorld::read(std::istream& is) {
   }
 
   //-- clean up the graph
-  graphMakeLists(bodies, joints);
+  checkConsistency();
+  //graphMakeLists(bodies, joints);
   topSort();
   makeLinkTree();
   calc_missingAB_from_BodyAndJointFrames();
@@ -1952,14 +1983,23 @@ void ors::KinematicWorld::removeUselessBodies() {
   }
   for_list_rev(Joint, jj, joints) if(jj->to==NULL) joints.remove(jj_COUNT);
   //-- reindex
-  for_list(Body, bb, bodies) bb->index=bb_COUNT;
-  for_list(Joint, j, joints) { j->index=j_COUNT;  j->ifrom = j->from->index;  j->ito = j->to->index;  }
-  for(Shape *s: shapes) s->ibody = s->body->index;
+  listReindex(bodies);
+  listReindex(joints);
+//  for_list(Joint, j, joints) j->index=j_COUNT;  j->ifrom = j->from->index;  j->ito = j->to->index;  }
+//  for(Shape *s: shapes) s->ibody = s->body->index;
   //-- clear all previous index related things
   qdim.clear();
   q.clear();
   qdot.clear();
   proxies.clear();
+}
+
+bool ors::KinematicWorld::checkConsistency(){
+  for(Joint *j: joints){
+    CHECK(&j->world==this,"");
+    CHECK(j==joints(j->index),"");
+  }
+  return true;
 }
 
 void ors::KinematicWorld::meldFixedJoints() {
@@ -1971,7 +2011,7 @@ void ors::KinematicWorld::meldFixedJoints() {
     //reassociate shapes with a
     for(Shape *s: b->shapes) {
       s->body=a;
-      s->ibody = a->index;
+//      s->ibody = a->index;
       s->rel = bridge * s->rel;
       a->shapes.append(s);
     }
@@ -1979,7 +2019,7 @@ void ors::KinematicWorld::meldFixedJoints() {
     //reassociate b-out-joints as a-out-links
     for(Joint *jj: b->outLinks) {
       jj->from=a;
-      jj->ifrom=a->index;
+//      jj->ifrom=a->index;
       jj->A = bridge * jj->A;
       a->outLinks.append(jj);
     }
@@ -1992,7 +2032,8 @@ void ors::KinematicWorld::meldFixedJoints() {
   }
   //-- remove fixed joints and reindex
   for_list_rev(Joint, jj, joints) if(jj->to==NULL) joints.remove(jj_COUNT);
-  for_list(Joint, j, joints) { j->index=j_COUNT;  j->ifrom = j->from->index;  j->ito = j->to->index;  }
+  listReindex(joints);
+  //for_list(Joint, j, joints) { j->index=j_COUNT;  j->ifrom = j->from->index;  j->ito = j->to->index;  }
 }
 
 // ------------------ end slGraph ---------------------

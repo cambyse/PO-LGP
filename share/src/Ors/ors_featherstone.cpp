@@ -303,7 +303,8 @@ void GraphToTree(MT::Array<ors::Link>& tree, const ors::KinematicWorld& C) {
   ors::Transformation f;
   for(i=0; i<tree.N; i++) tree(i).parent=-1;
   iq=0;
-  for(ors::Body *n: C.bodies) {
+  for_list(ors::Body,n,C.bodies) {
+    i=n_COUNT;
     CHECK(i==n->index, "not sorted");
     if(n->inLinks.N) {
       CHECK(n->inLinks.N==1, "this is not a tree");
