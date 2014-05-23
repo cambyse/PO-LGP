@@ -497,7 +497,7 @@ int MAIN(int argc,char **argv){
   testKinematics();
   testKinematicSpeed();
   testFollowRedundantSequence();
-//  testDynamics();
+  testDynamics();
   testContacts();
   testLimits();
 #ifdef MT_ODE

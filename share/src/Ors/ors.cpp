@@ -74,15 +74,15 @@ ors::KinematicWorld& NoGraph = *((ors::KinematicWorld*)NULL);
 // Body implementations
 //
 
-ors::Body::Body() { reset(); }
+//ors::Body::Body() { reset(); }
 
-ors::Body::Body(const Body& b) { reset(); *this=b; }
+//ors::Body::Body(const Body& b) { reset(); *this=b; }
 
-ors::Body::Body(KinematicWorld& G, const Body* copyBody) {
+ors::Body::Body(KinematicWorld& G, const Body* copyBody):world(G) {
   reset();
-  if(copyBody) *this=*copyBody;
   index=G.bodies.N;
   G.bodies.append(this);
+  if(copyBody) *this=*copyBody;
 }
 
 ors::Body::~Body() {
@@ -90,9 +90,8 @@ ors::Body::~Body() {
   while(inLinks.N) delete inLinks.last();
   while(outLinks.N) delete outLinks.last();
   while(shapes.N) delete shapes.last();
-//  listDelete(inLinks);
-//  listDelete(outLinks);
-//  listDelete(shapes);
+  world.bodies.removeValue(this);
+  listReindex(world.bodies);
 }
 
 void ors::Body::reset() {
@@ -496,7 +495,7 @@ void ors::KinematicWorld::clear() {
   listDelete(proxies); checkConsistency();
   while(shapes.N){ delete shapes.last(); checkConsistency(); }
   while(joints.N){ delete joints.last(); checkConsistency();}
-  listDelete(bodies); checkConsistency();
+  while(bodies.N){ delete bodies.last(); checkConsistency();}
   isLinkTree=false;
 }
 
@@ -505,7 +504,7 @@ void ors::KinematicWorld::operator=(const ors::KinematicWorld& G) {
   qdot = G.qdot;
 #if 1
   listCopy(proxies, G.proxies);
-  listCopy(bodies, G.bodies);
+  for(Body *b:G.bodies) new Body(*this, b);
   for(Shape *s:G.shapes) new Shape(*this, *bodies(s->body->index), s);
   for(Joint *j:G.joints){
     Joint *jj=
@@ -1995,9 +1994,23 @@ void ors::KinematicWorld::removeUselessBodies() {
 }
 
 bool ors::KinematicWorld::checkConsistency(){
+  for(Body *b: bodies){
+    CHECK(&b->world==this,"");
+    CHECK(b==bodies(b->index),"");
+    for(Joint *j: b->outLinks) CHECK(j->from==b,"");
+    for(Joint *j: b->inLinks)  CHECK(j->to==b,"");
+    for(Shape *s: b->shapes)   CHECK(s->body==b,"");
+  }
   for(Joint *j: joints){
     CHECK(&j->world==this,"");
     CHECK(j==joints(j->index),"");
+    CHECK(j->from->outLinks.findValue(j)>=0,"");
+    CHECK(j->to->inLinks.findValue(j)>=0,"");
+  }
+  for(Shape *s: shapes){
+    CHECK(&s->world==this,"");
+    CHECK(s==shapes(s->index),"");
+    CHECK(s->body->shapes.findValue(s)>=0,"");
   }
   return true;
 }

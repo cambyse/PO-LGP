@@ -103,6 +103,7 @@ namespace ors {
  */
 /// a rigid body (inertia properties, lists of attached joints & shapes)
 struct Body {
+  KinematicWorld& world;
   uint index;          ///< unique identifier TODO:do we really need index, ifrom, ito, ibody??
   JointL inLinks, outLinks;       ///< lists of in and out joints
   
@@ -119,12 +120,12 @@ struct Body {
   
   ShapeL shapes;
   
-  Body();
-  explicit Body(const Body& b);
-  explicit Body(KinematicWorld& G, const Body *copyBody=NULL);
+//  Body();
+//  explicit Body(const Body& b);
+  Body(KinematicWorld& G, const Body *copyBody=NULL);
   ~Body();
   void operator=(const Body& b) {
-    index=b.index; name=b.name; X=b.X; ats=b.ats;
+    name=b.name; X=b.X; ats=b.ats;
     type=b.type; mass=b.mass; inertia=b.inertia; com=b.com; force=b.force; torque=b.torque;
   }
   void reset();
