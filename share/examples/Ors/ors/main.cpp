@@ -278,7 +278,7 @@ void TEST(FollowRedundantSequence){
   uint t,T,n=G.getJointStateDimension();
   arr x(n),y,J,invJ;
   x=.8;     //initialize with intermediate joint positions (non-singular positions)
-  ors::Vector rel(0,0,.3); //this frame describes the relative position of the endeffector wrt. 7th body
+  ors::Vector rel(0,0,.5); //this frame describes the relative position of the endeffector wrt. 7th body
 
   //-- generate a random endeffector trajectory
   arr Z,Zt; //desired and true endeffector trajectories
@@ -333,7 +333,7 @@ void TEST(Dynamics){
     bool friction;
     DiffEqn(ors::KinematicWorld& _G):G(_G),friction(false){}
     void fv(arr& y,arr&,const arr& x){
-      G.setJointState(x[0],x[1]);
+      G.setJointState(x[0], x[1], 0, true);
       if(!u.N) u.resize(x.d1).setZero();
       if(friction) u = -10. * x[1];
       G.clearForces();
@@ -358,7 +358,6 @@ void TEST(Dynamics){
   G.watch();
 //  for(ors::Body *b:G.bodies){ b->mass=1.; b->inertia.setZero(); }
 
-  T=100;
   for(t=0;t<T;t++){
     if(t>=500){ //hold steady
       qdd_ = -1. * qd;

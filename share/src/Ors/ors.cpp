@@ -759,7 +759,7 @@ void ors::KinematicWorld::zeroGaugeJoints() {
   }
 }
 
-void ors::KinematicWorld::calc_q_from_Q(uint agent, bool vels) {
+void ors::KinematicWorld::calc_q_from_Q(uint agent, bool calcVels) {
   ors::Vector rotv;
   ors::Quaternion rot;
   
@@ -782,7 +782,7 @@ void ors::KinematicWorld::calc_q_from_Q(uint agent, bool vels) {
         if(j->type==JT_hingeY && rotv*Vector_y<0.) q(n)=-q(n);
         if(j->type==JT_hingeZ && rotv*Vector_z<0.) q(n)=-q(n);
         //velocity
-        if(vels){
+        if(calcVels){
           qdot(n)=j->Q.angvel.length();
           if(j->type==JT_hingeX && j->Q.angvel*Vector_x<0.) qdot(n)=-qdot(n);
           if(j->type==JT_hingeY && j->Q.angvel*Vector_y<0.) qdot(n)=-qdot(n);
@@ -802,28 +802,28 @@ void ors::KinematicWorld::calc_q_from_Q(uint agent, bool vels) {
         }
         
         // velocity: need to fix
-        if(vels) NIY;
+        if(calcVels) NIY;
 
         n+=2;
         break;
       case JT_transX:
         q(n)=j->Q.pos.x;
-        if(vels) qdot(n)=j->Q.vel.x;
+        if(calcVels) qdot(n)=j->Q.vel.x;
         n++;
         break;
       case JT_transY:
         q(n)=j->Q.pos.y;
-        if(vels) qdot(n)=j->Q.vel.y;
+        if(calcVels) qdot(n)=j->Q.vel.y;
         n++;
         break;
       case JT_transZ:
         q(n)=j->Q.pos.z;
-        if(vels) qdot(n)=j->Q.vel.z;
+        if(calcVels) qdot(n)=j->Q.vel.z;
         n++;
         break;
       case JT_transXY:
         q(n)=j->Q.pos.x;  q(n+1)=j->Q.pos.y;
-        if(vels){  qdot(n)=j->Q.vel.x;  qdot(n+1)=j->Q.vel.y;  }
+        if(calcVels){  qdot(n)=j->Q.vel.x;  qdot(n+1)=j->Q.vel.y;  }
         n+=2;
         break;
       case JT_transXYPhi:
@@ -832,7 +832,7 @@ void ors::KinematicWorld::calc_q_from_Q(uint agent, bool vels) {
         j->Q.rot.getRad(q(n+2), rotv);
         if(q(n+2)>MT_PI) q(n+2)-=MT_2PI;
         if(rotv*Vector_z<0.) q(n+2)=-q(n+2);
-        if(vels){
+        if(calcVels){
           qdot(n)=j->Q.vel.x;
           qdot(n+1)=j->Q.vel.y;
           qdot(n+2)=j->Q.angvel.length();
@@ -844,7 +844,7 @@ void ors::KinematicWorld::calc_q_from_Q(uint agent, bool vels) {
         q(n)=j->Q.pos.x;
         q(n+1)=j->Q.pos.y;
         q(n+2)=j->Q.pos.z;
-        if(vels) {
+        if(calcVels) {
           qdot(n)=j->Q.vel.x;
           qdot(n+1)=j->Q.vel.y;
           qdot(n+2)=j->Q.vel.z;
@@ -860,7 +860,7 @@ void ors::KinematicWorld::calc_q_from_Q(uint agent, bool vels) {
   CHECK(n==N,"");
 }
 
-void ors::KinematicWorld::calc_Q_from_q(uint agent, bool vels){
+void ors::KinematicWorld::calc_Q_from_q(uint agent, bool calcVels){
   uint n=0;
   for(Joint *j: joints) if(j->agent==agent){
     if(j->mimic){
@@ -870,19 +870,19 @@ void ors::KinematicWorld::calc_Q_from_q(uint agent, bool vels){
       switch(j->type) {
         case JT_hingeX: {
           j->Q.rot.setRadX(q(n));
-          if(vels){  j->Q.angvel.set(qdot(n) ,0., 0.);  j->Q.zeroVels=false;  }
+          if(calcVels){  j->Q.angvel.set(qdot(n) ,0., 0.);  j->Q.zeroVels=false;  }
           n++;
         } break;
 
         case JT_hingeY: {
           j->Q.rot.setRadY(q(n));
-          if(vels){  j->Q.angvel.set(0., qdot(n) ,0.);  j->Q.zeroVels=false;  }
+          if(calcVels){  j->Q.angvel.set(0., qdot(n) ,0.);  j->Q.zeroVels=false;  }
           n++;
         } break;
 
         case JT_hingeZ: {
           j->Q.rot.setRadZ(q(n));
-          if(vels){  j->Q.angvel.set(0., 0., qdot(n));  j->Q.zeroVels=false;  }
+          if(calcVels){  j->Q.angvel.set(0., 0., qdot(n));  j->Q.zeroVels=false;  }
           n++;
         } break;
 
@@ -891,43 +891,43 @@ void ors::KinematicWorld::calc_Q_from_q(uint agent, bool vels){
           rot1.setRadX(q(n));
           rot2.setRadY(q(n+1));
           j->Q.rot = rot1*rot2;
-          if(vels) NIY;
+          if(calcVels) NIY;
           n+=2;
         } break;
         case JT_transX: {
           j->Q.pos = q(n)*Vector_x;
-          if(vels){ j->Q.vel.set(qdot(n), 0., 0.); j->Q.zeroVels=false; }
+          if(calcVels){ j->Q.vel.set(qdot(n), 0., 0.); j->Q.zeroVels=false; }
           n++;
         } break;
 
         case JT_transY: {
           j->Q.pos = q(n)*Vector_y;
-          if(vels){ j->Q.vel.set(0., qdot(n), 0.); j->Q.zeroVels=false; }
+          if(calcVels){ j->Q.vel.set(0., qdot(n), 0.); j->Q.zeroVels=false; }
           n++;
         } break;
 
         case JT_transZ: {
           j->Q.pos = q(n)*Vector_z;
-          if(vels){ j->Q.vel.set(0., 0., qdot(n)); j->Q.zeroVels=false; }
+          if(calcVels){ j->Q.vel.set(0., 0., qdot(n)); j->Q.zeroVels=false; }
           n++;
         } break;
 
         case JT_transXY: {
           j->Q.pos.set(q(n), q(n+1), 0.);
-          if(vels){ j->Q.vel.set(qdot(n), qdot(n+1), 0.); j->Q.zeroVels=false; }
+          if(calcVels){ j->Q.vel.set(qdot(n), qdot(n+1), 0.); j->Q.zeroVels=false; }
           n+=2;
         } break;
 
         case JT_trans3: {
           j->Q.pos.set(q(n), q(n+1), q(n+2));
-          if(vels){ j->Q.vel.set(qdot(n), qdot(n+1), qdot(n+2)); j->Q.zeroVels=false; }
+          if(calcVels){ j->Q.vel.set(qdot(n), qdot(n+1), qdot(n+2)); j->Q.zeroVels=false; }
           n+=3;
         } break;
 
         case JT_transXYPhi: {
           j->Q.pos.set(q(n), q(n+1), 0.);
           j->Q.rot.setRadZ(q(n+2));
-          if(vels){
+          if(calcVels){
             j->Q.vel.set(qdot(n), qdot(n+1), 0.);  j->Q.zeroVels=false;
             j->Q.angvel.set(0., 0., qdot(n+2));  j->Q.zeroVels=false;
           }
@@ -950,13 +950,13 @@ void ors::KinematicWorld::calc_Q_from_q(uint agent, bool vels){
 
 /** @brief sets the joint state vectors separated in positions and
   velocities */
-void ors::KinematicWorld::setJointState(const arr& _q, const arr& _qdot, uint agent) {
+void ors::KinematicWorld::setJointState(const arr& _q, const arr& _qdot, uint agent, bool calcVels) {
   uint N=getJointStateDimension(agent);
   CHECK(_q.N==N && (!(&_qdot) || _qdot.N==N), "wrong joint state dimensionalities");
   if(&_q!=&q) q=_q;
   if(&_qdot){ if(&_qdot!=&qdot) qdot=_qdot; }else qdot.clear();
 
-  calc_Q_from_q(agent, false);
+  calc_Q_from_q(agent, calcVels);
 
   calc_fwdPropagateFrames();
 }
@@ -1292,7 +1292,7 @@ void ors::KinematicWorld::inertia(arr& M) {
 }
 
 void ors::KinematicWorld::equationOfMotion(arr& M, arr& F, bool gravity) {
-  static ors::LinkTree tree;
+  static ors::LinkTree tree; //TODO: HACK!!
   if(!tree.N) GraphToTree(tree, *this);
   else updateGraphToTree(tree, *this);
   if(gravity){
@@ -1964,7 +1964,7 @@ double ors::KinematicWorld::getEnergy() const {
     v=n->X.vel.length();
     w=n->X.angvel;
     E += .5*m*v*v;
-    E += 9.81 * m * n->X.pos.z;
+    E += 9.81 * m * (n->X*n->com).z;
     E += .5*(w*(I*w));
   }
   

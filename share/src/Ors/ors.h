@@ -276,8 +276,8 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   bool checkConsistency();
   
   /// @name computations on the graph
-  void calc_Q_from_q(uint agent=0, bool vels=false); ///< from the set (q,qdot) compute the joint's Q transformations
-  void calc_q_from_Q(uint agent=0, bool vels=false);  ///< updates (q,qdot) based on the joint's Q transformations
+  void calc_Q_from_q(uint agent=0, bool calcVels=false); ///< from the set (q,qdot) compute the joint's Q transformations
+  void calc_q_from_Q(uint agent=0, bool calcVels=false);  ///< updates (q,qdot) based on the joint's Q transformations
   void calc_fwdPropagateFrames();    ///< elementary forward kinematics; also computes all Shape frames
   void calc_fwdPropagateShapeFrames();   ///< same as above, but only shape frames (body frames are assumed up-to-date)
   void calc_Q_from_BodyFrames();    ///< fill in the joint transformations assuming that body poses are known (makes sense when reading files)
@@ -295,7 +295,7 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   arr getJointState() const { return q; }
 
   /// @name set state
-  void setJointState(const arr& _q, const arr& _qdot=NoArr, uint agent=0);
+  void setJointState(const arr& _q, const arr& _qdot=NoArr, uint agent=0, bool calcVels=false);
 
   /// @name kinematics
   void kinematicsPos (arr& y, arr& J, uint a, ors::Vector *rel=0, uint agent=0) const;

@@ -305,7 +305,7 @@ void GraphToTree(MT::Array<ors::Link>& tree, const ors::KinematicWorld& C) {
   iq=0;
   for_list(ors::Body,n,C.bodies) {
     i=n_COUNT;
-    CHECK(i==n->index, "not sorted");
+    CHECK(i==n->index, "not properly indexed!");
     if(n->inLinks.N) {
       CHECK(n->inLinks.N==1, "this is not a tree");
       e=n->inLinks(0);
@@ -315,7 +315,7 @@ void GraphToTree(MT::Array<ors::Link>& tree, const ors::KinematicWorld& C) {
       tree(i).index=iq;
       tree(i).parent=p->index;
       
-      tree(i).com=e->B.pos;
+      tree(i).com=e->B*n->com;
       
       if(p->inLinks.N) f=p->inLinks(0)->B; else f=p->X;
       f.appendTransformation(e->A);
@@ -356,6 +356,7 @@ void updateGraphToTree(MT::Array<ors::Link>& tree, const ors::KinematicWorld& C)
   ors::Transformation f;
   i=0;
   for_list(ors::Body, n, C.bodies) {
+    i=n_COUNT;
     if(n->inLinks.N) {
       e=n->inLinks(0);
       p=e->from;
