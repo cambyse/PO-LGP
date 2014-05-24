@@ -45,7 +45,7 @@ void TEST(PhysxObstacleAvoidance) {
       dir = wGoal*(goal - x)/length(goal - x);
 
       // obstacle avoidance
-      ors.computeProxies();
+      ors.stepSwift();
       dirObs.setZero();
       for (uint j = 0; j < ors.proxies.N; j++) {
         p = ors.proxies(j);

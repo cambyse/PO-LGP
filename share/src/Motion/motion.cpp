@@ -131,7 +131,7 @@ void MotionProblem::setInterpolatingCosts(
 
 void MotionProblem::setState(const arr& q, const arr& v) {
   world.setJointState(q, v);
-  if(useSwift) world.computeProxies();
+  if(useSwift) world.stepSwift();
   if(transitionType == realDynamic) {
     NIY;
     //requires computation of the real dynamics, i.e. of M and F

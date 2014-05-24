@@ -104,7 +104,7 @@ namespace ors {
 /// a rigid body (inertia properties, lists of attached joints & shapes)
 struct Body {
   BodyL& L;
-  uint index;          ///< unique identifier TODO:do we really need index, ifrom, ito, ibody??
+  uint index;          ///< unique identifier TODO:do we really need index??
   JointL inLinks, outLinks;       ///< lists of in and out joints
   
   MT::String name;     ///< name
@@ -139,7 +139,6 @@ struct Joint {
   KinematicWorld& world;
   uint index;           ///< unique identifier
   uint qIndex;          ///< index where this joint appears in the q-state-vector
-//  int ifrom, ito;       ///< indices of from and to bodies
   Body *from, *to;      ///< pointers to from and to bodies
   Joint *mimic;         ///< if non-NULL, this joint's state is identical to another's
   uint agent;           ///< associate this Joint to a specific agent (0=default robot)
@@ -162,7 +161,7 @@ struct Joint {
   Joint(KinematicWorld& G, Body *f, Body *t, const Joint *copyJoint=NULL); //new Shape, being added to graph and body's joint lists
   ~Joint();
   void operator=(const Joint& j) {
-    qIndex=j.qIndex; /*ifrom=j.ifrom; ito=j.ito;*/ mimic=reinterpret_cast<Joint*>(j.mimic?1:0); agent=j.agent;
+    qIndex=j.qIndex; mimic=reinterpret_cast<Joint*>(j.mimic?1:0); agent=j.agent;
     name=j.name; type=j.type; A=j.A; Q=j.Q; B=j.B; X=j.X; axis=j.axis; limits=j.limits; H=j.H;
     ats=j.ats;
     locked_func=j.locked_func; locked_data=j.locked_data;
@@ -179,7 +178,6 @@ struct Joint {
 struct Shape {
   ShapeL& L;
   uint index;
-//  uint ibody;
   Body *body;
   
   MT::String name;     ///< name
@@ -198,7 +196,7 @@ struct Shape {
   Shape(ShapeL& _L, Body& b, const Shape *copyShape=NULL); //new Shape, being added to graph and body's shape lists
   ~Shape();
   void operator=(const Shape& s) {
-    /*ibody=s.ibody;*/ name=s.name; X=s.X; rel=s.rel; type=s.type;
+    name=s.name; X=s.X; rel=s.rel; type=s.type;
     memmove(size, s.size, 4*sizeof(double)); memmove(color, s.color, 3*sizeof(double));
     mesh=s.mesh; mesh_radius=s.mesh_radius; cont=s.cont;
     ats=s.ats;
@@ -211,6 +209,7 @@ struct Shape {
 
 /// proximity information (when two shapes become close)
 struct Proxy {
+  //TODO: have a ProxyL& L as above...
   int a;              ///< index of shape A //TODO: would it be easier if this were ors::Shape* ? YES -> Do it!
   int b;              ///< index of shape B
   Vector posA, cenA;  ///< contact or closest point position on surface of shape A (in world coordinates)
@@ -223,7 +222,7 @@ struct Proxy {
 
 //===========================================================================
 /// data structure to store a whole physical situation (lists of bodies, joints, shapes, proxies)
-struct KinematicWorld { //TODO: rename KinematicWorld
+struct KinematicWorld {
   struct sKinematicWorld *s;
 
   /// @name data fields
@@ -283,9 +282,6 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   void calc_Q_from_BodyFrames();    ///< fill in the joint transformations assuming that body poses are known (makes sense when reading files)
   void calc_missingAB_from_BodyAndJointFrames();    ///< fill in the missing joint relative transforms (A & B) if body and joint world poses are known
   void clearJointErrors();
-  void invertTime();
-  arr naturalQmetric(double power=.5, uint agent=0) const;               ///< returns diagonal of a natural metric in q-space, depending on tree depth
-  arr getLimits(uint agent=0) const;
 
   /// @name get state
   uint getJointStateDimension(uint agent=0) const;
@@ -293,6 +289,8 @@ struct KinematicWorld { //TODO: rename KinematicWorld
     _q=q; if(&_qdot){ _qdot=qdot; if(!_qdot.N) _qdot.resizeAs(q).setZero();  }
   }
   arr getJointState() const { return q; }
+  arr naturalQmetric(double power=.5, uint agent=0) const;               ///< returns diagonal of a natural metric in q-space, depending on tree depth
+  arr getLimits(uint agent=0) const;
 
   /// @name set state
   void setJointState(const arr& _q, const arr& _qdot=NoArr, uint agent=0, bool calcVels=false);
@@ -317,8 +315,6 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   void inertia(arr& M);
 
   /// @name older 'kinematic maps'
-  //void getContactMeasure(arr &x, double margin=.02, bool linear=false) const;
-  //double getContactGradient(arr &grad, double margin=.02, bool linear=false) const;
   double getCenterOfMass(arr& com) const;
   void getComGradient(arr &grad) const;
 
@@ -340,7 +336,7 @@ struct KinematicWorld { //TODO: rename KinematicWorld
   PhysXInterface& physx();
   OdeInterface& ode();
   void watch(bool pause=false, const char* txt=NULL);
-  void computeProxies();
+  void stepSwift();
   void stepPhysx(double tau);
   void stepOde(double tau);
   void stepDynamics(const arr& u_control, double tau, double dynamicNoise);
@@ -433,7 +429,7 @@ void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, const ch
 void editConfiguration(const char* orsfile, ors::KinematicWorld& G);
 void animateConfiguration(ors::KinematicWorld& G);
 //void init(ors::KinematicWorld& G, OpenGL& gl, const char* orsFile);
-void bindOrsToOpenGL(ors::KinematicWorld& graph, OpenGL& gl);
+void bindOrsToOpenGL(ors::KinematicWorld& graph, OpenGL& gl); //TODO: should be outdated!
 /** @} */ // END of group ors_interface_opengl
 
 

@@ -137,7 +137,7 @@ namespace Ctest{
   ors::KinematicWorld *G;
   void f(arr& c, arr *dfdx, const arr &x,void*){
     G->setJointState(x);
-    G->computeProxies();
+    G->stepSwift();
     G->kinematicsProxyCost(c, (dfdx?*dfdx:NoArr), .2);
   }
 }
@@ -155,7 +155,7 @@ void TEST(Contacts){
   x = G.q;
   for(t=0;t<100;t++){
     G.setJointState(x);
-    G.computeProxies();
+    G.stepSwift();
 
     G.reportProxies();
 

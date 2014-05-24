@@ -203,7 +203,7 @@ void runAMEX(String scene, bool useOrientation, bool useCollAvoid, bool moveGoal
     if (moveGoal && amex->s.last()<0.9) {
       goalMO.move();
     }
-    P.world.computeProxies();
+    P.world.stepSwift();
     amex->iterate(state);
 
     arr yNext, ydNext;

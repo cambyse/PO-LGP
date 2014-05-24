@@ -304,7 +304,7 @@ void executeTrajectory(String scene, ControlType cType){
     MP.setState(q, qdot);
 
     // world.stepPhysx(tau_control);
-    world.computeProxies();
+    world.stepSwift();
 
     arr qddot = MP.operationalSpaceControl();//MP.operationalSpaceControl(regularization);
     q += tau_control*qdot;

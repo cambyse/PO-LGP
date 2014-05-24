@@ -615,18 +615,6 @@ void ors::KinematicWorld::clearJointErrors() {
   }
 }
 
-/** @brief invert all velocity variables of all frames */
-void ors::KinematicWorld::invertTime() {
-  for_list(Body,  n,  bodies) {
-    n->X.vel*=-1.;
-    n->X.angvel*=-1.;
-    for_list(Joint,  e,  n->inLinks) {
-      e->Q.vel*=-1.;
-      e->Q.angvel*=-1.;
-    }
-  }
-}
-
 arr ors::KinematicWorld::naturalQmetric(double power, uint agent) const {
 #if 0
   if(!q.N) getJointStateDimension();
@@ -1450,7 +1438,7 @@ void ors::KinematicWorld::watch(bool pause, const char* txt){
   else gl().update(txt);
 }
 
-void ors::KinematicWorld::computeProxies(){
+void ors::KinematicWorld::stepSwift(){
   swift().step(false);
 }
 

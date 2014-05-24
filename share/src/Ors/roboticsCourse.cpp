@@ -108,13 +108,13 @@ uint Simulator::getJointDimension(){
 
 void Simulator::setJointAngles(const arr& q, bool updateDisplay){
   s->G.setJointState(q);
-  s->G.computeProxies();
+  s->G.stepSwift();
   if(updateDisplay) s->G.watch(false);
 }
 
 void Simulator::setJointAnglesAndVels(const arr& q, const arr& qdot, bool updateDisplay){
   s->G.setJointState(q, qdot);
-  s->G.computeProxies();
+  s->G.stepSwift();
   if(updateDisplay) s->G.watch(false);
 }
 
