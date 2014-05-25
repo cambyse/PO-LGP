@@ -145,8 +145,8 @@ void executeTrajectory(String scene, ControlType cType){
   // store cartesian coordinates and endeffector orientation
   for (uint t=0;t<=T;t++) {
     world.setJointState(x[t]);
-    world.kinematicsPos(kinPos,NoArr,P.world.getBodyByName("endeff")->index);
-    world.kinematicsVec(kinVec,NoArr,P.world.getBodyByName("endeff")->index);
+    world.kinematicsPos(kinPos,NoArr,P.world.getBodyByName("endeff"));
+    world.kinematicsVec(kinVec,NoArr,P.world.getBodyByName("endeff"));
     xRefPos.append(~kinPos);
     xRefVec.append(~kinVec);
   }
@@ -248,8 +248,8 @@ void executeTrajectory(String scene, ControlType cType){
       // Outer Planning Loop [1/tau_plan Hz]
       MT::timerStart(true);
       // Get current task state
-      world.kinematicsPos(state,NoArr,P.world.getBodyByName("endeff")->index);
-      world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeff")->index);
+      world.kinematicsPos(state,NoArr,P.world.getBodyByName("endeff"));
+      world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeff"));
       state.append(stateVec);
 
       // Move goal

@@ -295,11 +295,11 @@ struct KinematicWorld {
   void setJointState(const arr& _q, const arr& _qdot=NoArr, uint agent=0, bool calcVels=false);
 
   /// @name kinematics
-  void kinematicsPos (arr& y, arr& J, uint a, ors::Vector *rel=0, uint agent=0) const;
-  void kinematicsVec (arr& y, arr& J, uint a, ors::Vector *vec=0, uint agent=0) const;
-  void kinematicsQuat(arr& y, arr& J, uint a, uint agent=0) const;
-  void hessianPos(arr& H, uint i, ors::Vector *rel=0, uint agent=0) const;
-  void jacobianR(arr& J, uint a, uint agent=0) const;
+  void kinematicsPos (arr& y, arr& J, Body *a, ors::Vector *rel=0, uint agent=0) const;
+  void kinematicsVec (arr& y, arr& J, Body *a, ors::Vector *vec=0, uint agent=0) const;
+  void kinematicsQuat(arr& y, arr& J, Body *a, uint agent=0) const;
+  void hessianPos(arr& H, Body *a, ors::Vector *rel=0, uint agent=0) const;
+  void jacobianR(arr& J, Body *a, uint agent=0) const;
   void kinematicsProxyCost(arr& y, arr& J, Proxy *p, double margin=.02, bool useCenterDist=true, bool addValues=false) const;
   void kinematicsProxyCost(arr& y, arr& J, double margin=.02, bool useCenterDist=true) const;
   void kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, double margin=.02, bool addValues=false) const;

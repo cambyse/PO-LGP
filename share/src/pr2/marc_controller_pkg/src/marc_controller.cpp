@@ -113,8 +113,8 @@ void TreeControllerClass::update() {
 
   //-- update ORS to compute Jacobians used in force controller
   world.setJointState(q, qd);
-  world.kinematicsPos(y_fL, J_fL, ftL_shape->body->index, &ftL_shape->rel.pos);
-  world.kinematicsPos(y_fR, J_fR, ftR_shape->body->index, &ftR_shape->rel.pos);
+  world.kinematicsPos(y_fL, J_fL, ftL_shape->body, &ftL_shape->rel.pos);
+  world.kinematicsPos(y_fR, J_fR, ftR_shape->body, &ftR_shape->rel.pos);
 
   //-- PD on q_ref
   if(q_ref.N!=q.N || qdot_ref.N!=qd.N){

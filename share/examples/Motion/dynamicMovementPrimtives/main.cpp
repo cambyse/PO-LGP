@@ -181,8 +181,8 @@ void scenario3() {
   // store cartesian coordinates and endeffector orientation
   for (uint t=0;t<=T;t++) {
     G.setJointState(x[t]);
-    G.kinematicsPos(kinPos, NoArr, P.world.getBodyByName("endeff")->index);
-    G.kinematicsVec(kinVec, NoArr, P.world.getBodyByName("endeff")->index);
+    G.kinematicsPos(kinPos, NoArr, P.world.getBodyByName("endeff"));
+    G.kinematicsVec(kinVec, NoArr, P.world.getBodyByName("endeff"));
     xRefPos.append(~kinPos);
     xRefVec.append(~kinVec);
   }
@@ -222,7 +222,7 @@ void scenario3() {
     W = W*w_reg;
 
     // Compute current task states
-    G.kinematicsPos(yPos, JPos, G.getBodyByName("endeff")->index);
+    G.kinematicsPos(yPos, JPos, G.getBodyByName("endeff"));
 
     // iterate dmp
     d.iterate();
@@ -307,8 +307,8 @@ void scenario4() {
   // store cartesian coordinates and endeffector orientation
   for (uint t=0;t<=T;t++) {
     G.setJointState(x[t]);
-    G.kinematicsPos(kinPos, NoArr, P.world.getBodyByName("endeff")->index);
-    G.kinematicsVec(kinVec, NoArr, P.world.getBodyByName("endeff")->index);
+    G.kinematicsPos(kinPos, NoArr, P.world.getBodyByName("endeff"));
+    G.kinematicsVec(kinVec, NoArr, P.world.getBodyByName("endeff"));
     xRefPos.append(~kinPos);
     xRefVec.append(~kinVec);
   }
@@ -352,8 +352,8 @@ void scenario4() {
     W = W*w_reg;
 
     // Compute current task states
-    G.kinematicsPos(yPos, JPos, G.getBodyByName("endeff")->index);
-    G.kinematicsVec(yVec, JVec, G.getBodyByName("endeff")->index);
+    G.kinematicsPos(yPos, JPos, G.getBodyByName("endeff"));
+    G.kinematicsVec(yVec, JVec, G.getBodyByName("endeff"));
 
     // iterate dmp
     d.iterate();

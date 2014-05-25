@@ -26,10 +26,10 @@ MObject::MObject(ors::KinematicWorld *_world,MT::String _name, ObjectType _objec
   stepLength = _stepLength;
   cout << "Loaded MObject: " << name << endl;
 
-  world->kinematicsPos(position,NoArr, world->getBodyByName(name)->index);
+  world->kinematicsPos(position,NoArr, world->getBodyByName(name));
   positionHistory.append(~position);
 
-  world->kinematicsVec(orientation,NoArr, world->getBodyByName(name)->index);
+  world->kinematicsVec(orientation,NoArr, world->getBodyByName(name));
   orientationHistory.append(~orientation);
 }
 
@@ -43,7 +43,7 @@ void MObject::predict(uint _T) {
 }
 
 void MObject::setPosition(const arr& _position) {
-  world->kinematicsPos(position,NoArr, world->getBodyByName(name)->index);
+  world->kinematicsPos(position,NoArr, world->getBodyByName(name));
   positionHistory.append(~position);
   world->getBodyByName(name)->X.pos = _position;
   position = _position;
@@ -55,14 +55,14 @@ void MObject::setOrientation(const arr& _orientation) {
 }
 
 void MObject::move() {
-  world->kinematicsPos(position,NoArr, world->getBodyByName(name)->index);
+  world->kinematicsPos(position,NoArr, world->getBodyByName(name));
   positionHistory.append(~position);
   position = position + (direction*stepLength);
   world->getBodyByName(name)->X.pos = position;
 }
 
 void MObject::move(const arr& _offset) {
-  world->kinematicsPos(position,NoArr, world->getBodyByName(name)->index);
+  world->kinematicsPos(position,NoArr, world->getBodyByName(name));
   positionHistory.append(~position);
   position = position + _offset;
   world->getBodyByName(name)->X.pos = position;

@@ -129,8 +129,8 @@ void runAMEX(String scene, bool useOrientation, bool useCollAvoid, bool moveGoal
   // store cartesian coordinates and endeffector orientation
   for (uint t=0;t<=T;t++) {
     world.setJointState(x[t]);
-    world.kinematicsPos(kinPos, NoArr, P.world.getBodyByName("endeff")->index);
-    world.kinematicsVec(kinVec, NoArr, P.world.getBodyByName("endeff")->index);
+    world.kinematicsPos(kinPos, NoArr, P.world.getBodyByName("endeff"));
+    world.kinematicsVec(kinVec, NoArr, P.world.getBodyByName("endeff"));
     xRefPos.append(~kinPos);
     xRefVec.append(~kinVec);
   }
@@ -194,8 +194,8 @@ void runAMEX(String scene, bool useOrientation, bool useCollAvoid, bool moveGoal
       (*moIter)->rotate(axis);
     }
 
-    world.kinematicsPos(yPos,JPos,world.getBodyByName("endeff")->index);
-    world.kinematicsVec(yVec,JVec,world.getBodyByName("endeff")->index);
+    world.kinematicsPos(yPos,JPos,world.getBodyByName("endeff"));
+    world.kinematicsVec(yVec,JVec,world.getBodyByName("endeff"));
     state = yPos;
     state.append(yVec);
 

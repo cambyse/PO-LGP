@@ -48,8 +48,8 @@ void TrajOptimizer::optimizeTrajectory(arr &_goal, arr &_q0) {
   // store cartesian coordinates and endeffector orientation
   for (uint t=0;t<=T;t++) {
     world.setJointState(x[t]);
-    world.kinematicsPos(kinPos,NoArr,MP.world.getBodyByName("endeffR")->index);
-    world.kinematicsVec(kinVec,NoArr,MP.world.getBodyByName("endeffR")->index);
+    world.kinematicsPos(kinPos,NoArr,MP.world.getBodyByName("endeffR"));
+    world.kinematicsVec(kinVec,NoArr,MP.world.getBodyByName("endeffR"));
     xRefPos.append(~kinPos);
     xRefVec.append(~kinVec);
   }

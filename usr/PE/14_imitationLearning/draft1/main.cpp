@@ -43,7 +43,7 @@ void createToyDemonstrations(std::vector<arr> &demos,arr &q0) {
     // store cartesian coordinates and endeffector orientation
     for (uint t=0;t<=T;t++) {
       world.setJointState(x[t]);
-      world.kinematicsPos(kinPos,NoArr,MP.world.getBodyByName("endeff")->index);
+      world.kinematicsPos(kinPos,NoArr,MP.world.getBodyByName("endeff"));
       xRefPos.append(~kinPos);
     }
     // Save trajectory
@@ -96,7 +96,7 @@ arr execRun(arr param, arr q0, arr refGoal) {
   // store cartesian coordinates and endeffector orientation
   for (uint t=0;t<=T;t++) {
     world.setJointState(x[t]);
-    world.kinematicsPos(kinPos,NoArr,MP.world.getBodyByName("endeff")->index);
+    world.kinematicsPos(kinPos,NoArr,MP.world.getBodyByName("endeff"));
     y.append(~kinPos);
   }
   return y;

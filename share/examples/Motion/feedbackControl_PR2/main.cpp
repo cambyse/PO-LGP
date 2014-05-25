@@ -175,13 +175,13 @@ void executeTrajectoryWholeBody(String scene){
   // store cartesian coordinates and endeffector orientation
   for (uint t=0;t<=T;t++) {
     world.setJointState(x[t]);
-    world.kinematicsPos(kinPos,NoArr,P.world.getBodyByName("endeffR")->index);
-    world.kinematicsVec(kinVec,NoArr,P.world.getBodyByName("endeffR")->index);
+    world.kinematicsPos(kinPos,NoArr,P.world.getBodyByName("endeffR"));
+    world.kinematicsVec(kinVec,NoArr,P.world.getBodyByName("endeffR"));
     xRefPosR.append(~kinPos);
     xRefVecR.append(~kinVec);
 
-    world.kinematicsPos(kinPos,NoArr,P.world.getBodyByName("endeffL")->index);
-    world.kinematicsVec(kinVec,NoArr,P.world.getBodyByName("endeffL")->index);
+    world.kinematicsPos(kinPos,NoArr,P.world.getBodyByName("endeffL"));
+    world.kinematicsVec(kinVec,NoArr,P.world.getBodyByName("endeffL"));
     xRefPosL.append(~kinPos);
     xRefVecL.append(~kinVec);
   }
@@ -271,8 +271,8 @@ void executeTrajectoryWholeBody(String scene){
       // Outer Planning Loop [1/tau_plan Hz]
       MT::timerStart(true);
       // Get current task state
-      world.kinematicsPos(state,NoArr,P.world.getBodyByName("endeffL")->index);
-      world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeffL")->index);
+      world.kinematicsPos(state,NoArr,P.world.getBodyByName("endeffL"));
+      world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeffL"));
       state.append(stateVec);
       // Move goal
       if (t < 0.7*t_final && moveGoal) {
@@ -288,8 +288,8 @@ void executeTrajectoryWholeBody(String scene){
       taskVecL->y_ref = yNext.subRange(3,5);
       taskVecL->v_ref = ydNext.subRange(3,5);
 
-      world.kinematicsPos(state,NoArr,P.world.getBodyByName("endeffR")->index);
-      world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeffR")->index);
+      world.kinematicsPos(state,NoArr,P.world.getBodyByName("endeffR"));
+      world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeffR"));
       state.append(stateVec);
 
       amexR->iterate(state);
@@ -406,8 +406,8 @@ void executeTrajectoryRightArm(String scene){
   // store cartesian coordinates and endeffector orientation
   for (uint t=0;t<=T;t++) {
     world.setJointState(x[t]);
-    world.kinematicsPos(kinPos,NoArr,P.world.getBodyByName("endeffR")->index);
-    world.kinematicsVec(kinVec,NoArr,P.world.getBodyByName("endeffR")->index);
+    world.kinematicsPos(kinPos,NoArr,P.world.getBodyByName("endeffR"));
+    world.kinematicsVec(kinVec,NoArr,P.world.getBodyByName("endeffR"));
     xRefPosR.append(~kinPos);
     xRefVecR.append(~kinVec);
   }
@@ -489,8 +489,8 @@ void executeTrajectoryRightArm(String scene){
       // Outer Planning Loop [1/tau_plan Hz]
       MT::timerStart(true);
       // Get current task state
-      world.kinematicsPos(state,NoArr,P.world.getBodyByName("endeffR")->index);
-      world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeffR")->index);
+      world.kinematicsPos(state,NoArr,P.world.getBodyByName("endeffR"));
+      world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeffR"));
       state.append(stateVec);
       // Move goal
       if (t < 0.7*t_final && moveGoal) {

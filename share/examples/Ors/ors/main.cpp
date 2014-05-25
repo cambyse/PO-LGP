@@ -34,15 +34,15 @@ void TEST(Kinematics){
   struct MyFct:VectorFunction{
     enum Mode {Pos, Vec, Quat} mode;
     ors::KinematicWorld& W;
-    uint& i;
+    ors::Body *b;
     ors::Vector& vec;
-    MyFct(Mode _mode, ors::KinematicWorld &_W, uint &_i, ors::Vector &_vec): mode(_mode), W(_W), i(_i), vec(_vec){}
+    MyFct(Mode _mode, ors::KinematicWorld &_W, ors::Body *_b, ors::Vector &_vec): mode(_mode), W(_W), b(_b), vec(_vec){}
     virtual void fv(arr& y, arr& J, const arr& x){
       W.setJointState(x);
       switch(mode){
-        case Pos:  W.kinematicsPos(y,J,i,&vec); break;
-        case Vec:  W.kinematicsVec(y,J,i,&vec); break;
-        case Quat: W.kinematicsQuat(y,J,i); break;
+        case Pos:  W.kinematicsPos(y,J,b,&vec); break;
+        case Vec:  W.kinematicsVec(y,J,b,&vec); break;
+        case Quat: W.kinematicsQuat(y,J,b); break;
       }
     }
     VectorFunction& operator()(){ return *this; }
@@ -54,13 +54,13 @@ void TEST(Kinematics){
   arr x(n);
   ors::Vector vec;
   for(uint k=0;k<100;k++){
-    uint i=rnd.num(0,G.bodies.N-1);
+    ors::Body *b = G.bodies.rndElem();
     vec.setRandom();
     rndUniform(x,-.5,.5,false);
 
-    cout <<"kinematicsPos: "; checkJacobian(MyFct(MyFct::Pos , G, i, vec)(), x, 1e-5);
-    cout <<"kinematicsVec: "; checkJacobian(MyFct(MyFct::Vec , G, i, vec)(), x, 1e-5);
-    cout <<"kinematicsQuat: "; checkJacobian(MyFct(MyFct::Quat, G, i, vec)(), x, 1e-5);
+    cout <<"kinematicsPos: "; checkJacobian(MyFct(MyFct::Pos , G, b, vec)(), x, 1e-5);
+    cout <<"kinematicsVec: "; checkJacobian(MyFct(MyFct::Vec , G, b, vec)(), x, 1e-5);
+    cout <<"kinematicsQuat: "; checkJacobian(MyFct(MyFct::Quat, G, b, vec)(), x, 1e-5);
 
     //checkJacobian(Convert(T1::f_hess, NULL), x, 1e-5);
   }
@@ -273,7 +273,6 @@ void TEST(MeshShapesInOde){
 
 void TEST(FollowRedundantSequence){  
   ors::KinematicWorld G("arm7.ors");
-  uint N=G.bodies.N-1;
 
   uint t,T,n=G.getJointStateDimension();
   arr x(n),y,J,invJ;
@@ -286,7 +285,7 @@ void TEST(FollowRedundantSequence){
   Z *= .8;
   T=Z.d0;
   G.setJointState(x);
-  G.kinematicsPos(y, NoArr, N, &rel);
+  G.kinematicsPos(y, NoArr, G.bodies.last(), &rel);
   for(t=0;t<T;t++) Z[t]() += y; //adjust coordinates to be inside the arm range
   plotLine(Z);
   G.gl().add(glDrawPlot,&plotModule);
@@ -295,7 +294,7 @@ void TEST(FollowRedundantSequence){
   for(t=0;t<T;t++){
     //Z[t] is the desired endeffector trajectory
     //x is the full joint state, z the endeffector position, J the Jacobian
-    G.kinematicsPos(y, J, N, &rel);  //get the new endeffector position
+    G.kinematicsPos(y, J, G.bodies.last(), &rel);  //get the new endeffector position
     invJ = ~J*inverse_SymPosDef(J*~J);
     x += invJ * (Z[t]-y);                  //simulate a time step (only kinematically)
     G.setJointState(x);

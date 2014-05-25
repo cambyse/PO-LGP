@@ -37,7 +37,7 @@ void createToyDemonstrations1(MT::Array<Demonstration> &demos) {
     // store cartesian coordinates and endeffector orientation
     for (uint t=0;t<=T;t++) {
       world.setJointState(x[t]);
-      world.kinematicsPos(kinPos,NoArr,MP.world.getBodyByName("endeff")->index);
+      world.kinematicsPos(kinPos,NoArr,MP.world.getBodyByName("endeff"));
       xRefPos.append(~kinPos);
     }
     Demonstration dem;

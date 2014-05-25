@@ -120,8 +120,8 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   /// Initialize Task Space
   arr state,stateVec;
   world->setJointState(q,qd);
-  world->kinematicsPos(state,NoArr,world->getBodyByName("endeffR")->index);
-  world->kinematicsVec(stateVec,NoArr,world->getBodyByName("endeffR")->index);
+  world->kinematicsPos(state,NoArr,world->getBodyByName("endeffR"));
+  world->kinematicsVec(stateVec,NoArr,world->getBodyByName("endeffR"));
 
   cout << "initial state: " << state << endl;
   cout << "initial stateVec: " << stateVec << endl;
@@ -181,8 +181,8 @@ void TreeControllerClass::starting()
   /// Initialize Task Space
   arr state,stateVec;
   world->setJointState(q,qd);
-  world->kinematicsPos(state,NoArr,world->getBodyByName("endeffR")->index);
-  world->kinematicsVec(stateVec,NoArr,world->getBodyByName("endeffR")->index);
+  world->kinematicsPos(state,NoArr,world->getBodyByName("endeffR"));
+  world->kinematicsVec(stateVec,NoArr,world->getBodyByName("endeffR"));
 
   cout << "initial states: " << state << endl;
   cout << "initial stateVec: " << stateVec << endl;

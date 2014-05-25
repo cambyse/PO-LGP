@@ -49,7 +49,7 @@ void PairCollisionConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
 //===========================================================================
 
 void PlaneConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
-  int body_i = G.shapes(i)->body->index;
+  ors::Body *body_i = G.shapes(i)->body;
   ors::Vector vec_i = G.shapes(i)->rel.pos;
 
   arr y_eff, J_eff;
