@@ -133,8 +133,9 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
 
 struct MotionProblemFunction:KOrderMarkovFunction {
   MotionProblem& MP;
+  MT::Array<ors::KinematicWorld*> configurations;
 
-  MotionProblemFunction(MotionProblem& _P):MP(_P) {};
+  MotionProblemFunction(MotionProblem& _P):MP(_P) { MT::Array<ors::KinematicWorld*>::memMove=true; };
   
   //KOrderMarkovFunction definitions
   virtual void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);

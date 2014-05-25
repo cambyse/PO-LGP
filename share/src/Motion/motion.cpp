@@ -22,6 +22,7 @@
 #include "taskMap_default.h"
 #include <Gui/opengl.h>
 #include <Ors/ors_swift.h>
+#include <climits>
 
 double stickyWeight=1.;
 
@@ -351,6 +352,35 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
   double tau=MP.tau;
   double tau2=tau*tau, tau3=tau2*tau;
   
+#if 0
+  //-- manage configurations
+  if(configurations.N!=k+1){
+    listDelete(configurations);
+    for(uint i=0;i<=k;i++) configurations.append(new ors::KinematicWorld(MP.world));
+  }
+  //find matches
+  uintA match(k+1); match=UINT_MAX;
+  boolA used(k+1); used=false;
+  uintA unused;
+  for(uint i=0;i<=k;i++) for(uint j=0;j<=k;j++){
+    if(!used(j) && x_bar[i]==configurations(j)->q){ //we've found a match
+      match(i)=j;
+      used(j)=true;
+      j=k;
+    }
+  }
+  for(uint i=0;i<=k;i++) if(!used(i)) unused.append(i);
+  for(uint i=0;i<=k;i++) if(match(i)==UINT_MAX) match(i)=unused.popFirst();
+  configurations.permute(match);
+  //set states
+  for(uint i=0;i<=k;i++){
+    if(x_bar[i]!=configurations(i)->q){
+      configurations(i)->setJointState(x_bar[i]);
+      if(MP.useSwift) configurations(i)->stepSwift();
+    }
+  }
+#endif
+
   //-- transition costs
   arr h = sqrt(MP.H_rate_diag)*sqrt(tau);
   if(k==1)  phi = (x_bar[1]-x_bar[0])/tau; //penalize velocity

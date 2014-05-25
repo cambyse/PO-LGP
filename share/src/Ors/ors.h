@@ -234,7 +234,6 @@ struct KinematicWorld {
   ShapeL shapes;
   ProxyL proxies; ///< list of current proximities between bodies
 
-//  uint q_dim; ///< numer of degrees of freedom IN the joints (not counting root body)
   bool isLinkTree;
   
   /// @name constructors

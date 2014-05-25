@@ -363,8 +363,10 @@ template<class T> void MT::Array<T>::resizeMEM(uint n, bool copy) {
       p=new T [Mnew];      //p=(T*)malloc(M*sizeT);
       if(!p) { p=pold; M=Mold; HALT("memory allocation failed! Wanted size = " <<Mnew*sizeT <<"bytes"); }
       M=Mnew;
-      if(copy && memMove==0) for(i=N<n?N:n; i--;) p[i]=pold[i];
-      if(copy && memMove==1) memmove(p, pold, sizeT*(N<n?N:n));
+      if(copy){
+        if(memMove==1) memmove(p, pold, sizeT*(N<n?N:n));
+        else for(i=N<n?N:n; i--;) p[i]=pold[i];
+      }
     } else {
       p=0;
     }
