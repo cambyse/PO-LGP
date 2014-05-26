@@ -94,6 +94,7 @@ typedef MT::Array<ors::Joint*> JointL;
 typedef MT::Array<ors::Shape*> ShapeL;
 typedef MT::Array<ors::Body*>  BodyL;
 typedef MT::Array<ors::Proxy*> ProxyL;
+typedef MT::Array<ors::KinematicWorld*> WorldL;
 
 //===========================================================================
 namespace ors {

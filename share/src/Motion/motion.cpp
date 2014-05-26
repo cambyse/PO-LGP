@@ -26,6 +26,44 @@
 
 double stickyWeight=1.;
 
+//===========================================================================
+
+void TaskMap::phi(arr& y, arr& J, const WorldL& G, double tau){
+  CHECK(G.N>=order+1,"I need at least " <<order+1 <<" configurations to evaluate");
+  uint k=order;
+  if(k==0){// basic case: order=0
+    arr J_bar;
+    phi(y, (&J?J_bar:NoArr), *G.last());
+    J = zeros(G.N, y.N, J_bar.d1);
+    J[G.N-1]() = J_bar;
+    arr tmp(J);
+    tensorPermutation(J, tmp, TUP(1,0,2));
+    J.reshape(y.N, G.N*J_bar.d1);
+    return;
+  }
+  arrA y_bar, J_bar;
+  double tau2=tau*tau, tau3=tau2*tau;
+  y_bar.resize(k+1);
+  J_bar.resize(k+1);
+  //-- read out the task variable from the k+1 configurations
+  for(uint i=0;i<=k;i++)
+    phi(y_bar(i), (&J?J_bar(i):NoArr), *G(G.N-1-i));
+  if(k==1)  y = (y_bar(1)-y_bar(0))/tau; //penalize velocity
+  if(k==2)  y = (y_bar(2)-2.*y_bar(1)+y_bar(0))/tau2; //penalize acceleration
+  if(k==3)  y = (y_bar(3)-3.*y_bar(2)+3.*y_bar(1)-y_bar(0))/tau3; //penalize jerk
+  if(&J) {
+    J = zeros(G.N, y.N, J_bar(0).d1);
+    if(k==1){ J[G.N-1-1]() = J_bar(1);  J[G.N-1-0]() = -J_bar(0);  J/=tau; }
+    if(k==2){ J[G.N-1-2]() = J_bar(2);  J[G.N-1-1]() = -2.*J_bar(1);  J[G.N-1-0]() = J_bar(0);  J/=tau2; }
+    if(k==3){ J[G.N-1-3]() = J_bar(3);  J[G.N-1-2]() = -3.*J_bar(2);  J[G.N-1-1]() = +3.*J_bar(1);  J[G.N-1-0]() = -1.*J_bar(0);  J/=tau3; }
+    arr tmp(J);
+    tensorPermutation(J, tmp, TUP(1,0,2));
+    J.reshape(y.N, G.N*J_bar(0).d1);
+  }
+}
+
+//===========================================================================
+
 MotionProblem::MotionProblem(ors::KinematicWorld& _world, bool useSwift)
     : world(_world) , useSwift(useSwift), makeContactsAttractive(false)
 {
@@ -212,6 +250,43 @@ bool MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
   return feasible;
 }
 
+void MotionProblem::getTaskCosts2(arr& phi, arr& J, uint t, const WorldL &G, double tau) {
+  phi.clear();
+  if(&J) J.clear();
+  arr y,Jy;
+  //-- append task costs
+  for(TaskCost *c: taskCosts) if(c->active && c->prec(t)){
+    if(!c->map.constraint) {
+      c->map.phi(y, Jy, G, tau);
+      if(absMax(y)>1e10)  MT_MSG("WARNING y=" <<y);
+      CHECK(c->prec.N>t && c->target.N>t, "active task costs "<< c->name <<" have no targets defined");
+      CHECK(c->map.order==0 || c->map.order==1,"");
+      phi.append(sqrt(c->prec(t))*(y - c->target[t]));
+      if(&J) J.append(sqrt(c->prec(t))*Jy);
+    }
+    //special: constraint attraction costs
+    if(c->map.constraint && makeContactsAttractive) {
+      c->map.phi(y, Jy, G, tau);
+      CHECK(y.N==Jy.d0,"");
+      for(uint j=0;j<y.N;j++) y(j) = -y(j)+.1;
+      if(Jy.N) for(uint j=0;j<Jy.d0;j++) Jy[j]() *= -1.;
+      phi.append(stickyWeight*y);
+      if(&J) J.append(stickyWeight*Jy);
+    }
+  }
+  //-- append constraints
+  for(TaskCost *c: taskCosts) if(c->active && c->prec(t)){
+    if(c->map.constraint) {
+      c->map.phi(y, Jy, G, tau);
+      phi.append(y);
+      if(&J) J.append(Jy);
+    }
+  }
+  if(&J) J.reshape(phi.N, G.N*world.q.N);
+
+  CHECK(phi.N == dim_phi(t),"");
+}
+
 uint MotionProblem::dim_psi() {
   return x0.N;
 }
@@ -341,6 +416,7 @@ arr MotionProblemFunction::get_postfix() {
   return MP.postfix;
 }
 
+#if 0
 void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
   uint T=get_T(), n=dim_x(), k=get_k();
 
@@ -352,35 +428,6 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
   double tau=MP.tau;
   double tau2=tau*tau, tau3=tau2*tau;
   
-#if 0
-  //-- manage configurations
-  if(configurations.N!=k+1){
-    listDelete(configurations);
-    for(uint i=0;i<=k;i++) configurations.append(new ors::KinematicWorld(MP.world));
-  }
-  //find matches
-  uintA match(k+1); match=UINT_MAX;
-  boolA used(k+1); used=false;
-  uintA unused;
-  for(uint i=0;i<=k;i++) for(uint j=0;j<=k;j++){
-    if(!used(j) && x_bar[i]==configurations(j)->q){ //we've found a match
-      match(i)=j;
-      used(j)=true;
-      j=k;
-    }
-  }
-  for(uint i=0;i<=k;i++) if(!used(i)) unused.append(i);
-  for(uint i=0;i<=k;i++) if(match(i)==UINT_MAX) match(i)=unused.popFirst();
-  configurations.permute(match);
-  //set states
-  for(uint i=0;i<=k;i++){
-    if(x_bar[i]!=configurations(i)->q){
-      configurations(i)->setJointState(x_bar[i]);
-      if(MP.useSwift) configurations(i)->stepSwift();
-    }
-  }
-#endif
-
   //-- transition costs
   arr h = sqrt(MP.H_rate_diag)*sqrt(tau);
   if(k==1)  phi = (x_bar[1]-x_bar[0])/tau; //penalize velocity
@@ -425,6 +472,81 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
   if(!MP.phiMatrix.N) MP.phiMatrix.resize(get_T()+1);
   MP.phiMatrix(t) = phi;
 }
+#else
+
+void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
+  uint T=get_T(), n=dim_x(), k=get_k();
+
+  //assert some dimensions
+  CHECK(x_bar.d0==k+1,"");
+  CHECK(x_bar.d1==n,"");
+  CHECK(t<=T,"");
+
+  //-- manage configurations
+  if(configurations.N!=k+1){
+    listDelete(configurations);
+    for(uint i=0;i<=k;i++) configurations.append(new ors::KinematicWorld(MP.world));
+  }
+  //find matches
+  uintA match(k+1); match=UINT_MAX;
+  boolA used(k+1); used=false;
+  uintA unused;
+  for(uint i=0;i<=k;i++) for(uint j=0;j<=k;j++){
+    if(!used(j) && x_bar[i]==configurations(j)->q){ //we've found a match
+      match(i)=j;
+      used(j)=true;
+      j=k;
+    }
+  }
+  for(uint i=0;i<=k;i++) if(!used(i)) unused.append(i);
+  for(uint i=0;i<=k;i++) if(match(i)==UINT_MAX) match(i)=unused.popFirst();
+  configurations.permute(match);
+  //set states
+  for(uint i=0;i<=k;i++){
+    if(x_bar[i]!=configurations(i)->q){
+      configurations(i)->setJointState(x_bar[i]);
+      if(MP.useSwift) configurations(i)->stepSwift();
+    }
+  }
+
+  //-- transition costs
+  double tau=MP.tau, tau2=tau*tau, tau3=tau2*tau;
+  arr h = sqrt(MP.H_rate_diag)*sqrt(tau);
+  if(k==1)  phi = (x_bar[1]-x_bar[0])/tau; //penalize velocity
+  if(k==2)  phi = (x_bar[2]-2.*x_bar[1]+x_bar[0])/tau2; //penalize acceleration
+  if(k==3)  phi = (x_bar[3]-3.*x_bar[2]+3.*x_bar[1]-x_bar[0])/tau3; //penalize jerk
+  phi = h % phi;
+
+  if(&J) {
+    J.resize(phi.N, k+1, n);
+    J.setZero();
+    for(uint i=0;i<n;i++){
+      if(k==1){ J(i,1,i) = 1.;  J(i,0,i) = -1.; }
+      if(k==2){ J(i,2,i) = 1.;  J(i,1,i) = -2.;  J(i,0,i) = 1.; }
+      if(k==3){ J(i,3,i) = 1.;  J(i,2,i) = -3.;  J(i,1,i) = +3.;  J(i,0,i) = -1.; }
+    }
+    if(k==1) J/=tau;
+    if(k==2) J/=tau2;
+    if(k==3) J/=tau3;
+    J.reshape(phi.N, (k+1)*n);
+    for(uint i=0; i<n; i++) J[i]() *= h(i);
+  }
+
+  if(&J) CHECK(J.d0==phi.N,"");
+
+  //-- task cost (which are taken w.r.t. x_bar[k])
+  arr _phi, _J;
+  MP.getTaskCosts2(_phi, (&J?_J:NoArr), t, configurations, tau);
+  phi.append(_phi);
+  if(&J) J.append(_J);
+
+  if(&J) CHECK(J.d0==phi.N,"");
+
+  //store in CostMatrix
+  if(!MP.phiMatrix.N) MP.phiMatrix.resize(get_T()+1);
+  MP.phiMatrix(t) = phi;
+}
+#endif
 
 //===========================================================================
 

@@ -39,6 +39,7 @@ struct TaskMap {
   uint order;       ///< 0=position, 1=vel, etc
   //Actually, the right way would be to give phi a list of $k+1$ graphs -- and retrieve the velocities/accs from that...
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G) = 0;
+  virtual void phi(arr& y, arr& J, const WorldL& G, double tau);
   virtual uint dim_phi(const ors::KinematicWorld& G) = 0; //the dimensionality of $y$
 
   TaskMap():constraint(false),order(0) {}
@@ -116,6 +117,7 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
   uint dim_g(uint t);
   uint dim_psi();
   bool getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t); ///< the general (`big') task vector and its Jacobian
+  void getTaskCosts2(arr& phi, arr& J, uint t, const WorldL& G, double tau); ///< the general (`big') task vector and its Jacobian
   void costReport(bool gnuplt=true); ///< also computes the costMatrix
   
   void setState(const arr& x, const arr& v=NoArr);
@@ -133,7 +135,7 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
 
 struct MotionProblemFunction:KOrderMarkovFunction {
   MotionProblem& MP;
-  MT::Array<ors::KinematicWorld*> configurations;
+  WorldL configurations;
 
   MotionProblemFunction(MotionProblem& _P):MP(_P) { MT::Array<ors::KinematicWorld*>::memMove=true; };
   
