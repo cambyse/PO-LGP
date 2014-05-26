@@ -53,8 +53,8 @@ SwiftInterface::~SwiftInterface() {
   cout <<" -- SwiftInterface closed" <<endl;
 }
 
-SwiftInterface::SwiftInterface(ors::KinematicWorld& _world)
-  : world(_world), scene(NULL), cutoff(.1) {
+SwiftInterface::SwiftInterface(const ors::KinematicWorld& world)
+  : scene(NULL), cutoff(.1) {
   bool r, add;
   
   if(scene) delete scene;
@@ -108,9 +108,9 @@ SwiftInterface::SwiftInterface(ors::KinematicWorld& _world)
     }
   }
   
-  initActivations();
+  initActivations(world);
   
-  pushToSwift();
+  pushToSwift(world);
   cout <<"...done" <<endl;
 }
 
@@ -131,7 +131,7 @@ void SwiftInterface::reinitShape(const ors::Shape *s) {
   if(s->cont) scene->Activate(sw);
 }
 
-void SwiftInterface::initActivations(uint parentLevelsToDeactivate) {
+void SwiftInterface::initActivations(const ors::KinematicWorld& world, uint parentLevelsToDeactivate) {
   /* deactivate some collision pairs:
     -- no `cont' -> no collisions with this object at all
     -- no collisions between shapes of same object
@@ -197,7 +197,7 @@ void SwiftInterface::deactivate(ors::Shape *s1, ors::Shape *s2) {
   scene->Deactivate(INDEXshape2swift(s1->index), INDEXshape2swift(s2->index));
 }
 
-void SwiftInterface::pushToSwift() {
+void SwiftInterface::pushToSwift(const ors::KinematicWorld& world) {
   CHECK(INDEXshape2swift.N==world.shapes.N,"the number of shapes has changed");
   ors::Matrix rot;
   for_list(ors::Shape,  s,  world.shapes) {
@@ -210,7 +210,7 @@ void SwiftInterface::pushToSwift() {
   }
 }
 
-void SwiftInterface::pullFromSwift(bool dumpReport) {
+void SwiftInterface::pullFromSwift(ors::KinematicWorld& world, bool dumpReport) {
   int i, j, k, np;
   int *oids, *num_contacts;
   SWIFT_Real *dists, *nearest_pts, *normals;
@@ -344,9 +344,9 @@ void SwiftInterface::pullFromSwift(bool dumpReport) {
   }
 }
 
-void SwiftInterface::step(bool dumpReport) {
-  pushToSwift();
-  pullFromSwift(dumpReport);
+void SwiftInterface::step(ors::KinematicWorld& world, bool dumpReport) {
+  pushToSwift(world);
+  pullFromSwift(world, dumpReport);
 }
 
 void SwiftInterface::swiftQueryExactDistance() {
@@ -367,16 +367,16 @@ void SwiftInterface::swiftQueryExactDistance() {
 #include <Core/util.h>
 void setCutoff(double _cutoff){ cutoff=_cutoff; }
 
-  void SwiftInterface::step(bool dumpReport=false){}
+  void SwiftInterface::step(ors::KinematicWorld &world, bool dumpReport=false){}
   void SwiftInterface::pushToSwift() {}
-  void SwiftInterface::pullFromSwift(bool dumpReport) {}
+  void SwiftInterface::pullFromSwift(const KinematicWorld &world, bool dumpReport) {}
 
   void SwiftInterface::reinitShape(const ors::Shape *s) {}
 //  void close();
   void SwiftInterface::deactivate(ors::Shape *s1, ors::Shape *s2) {}
   void SwiftInterface::deactivate(const MT::Array<ors::Shape*>& shapes) {}
   void SwiftInterface::deactivate(const MT::Array<ors::Body*>& bodies) {}
-  void SwiftInterface::initActivations(uint parentLevelsToDeactivate=3) {}
+  void SwiftInterface::initActivations(const KinematicWorld &world, uint parentLevelsToDeactivate=3) {}
   void SwiftInterface::swiftQueryExactDistance() {}
 #endif
 /** @} */

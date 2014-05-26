@@ -184,7 +184,7 @@ std::ostream& operator<<(std::ostream& os, const Joint& x) { x.write(os); return
 // Shape implementations
 //
 
-ors::Shape::Shape(ShapeL &_L, Body& b, const Shape *copyShape): L(_L), /*ibody(UINT_MAX),*/ body(NULL) {
+ors::Shape::Shape(ShapeL &_L, Body& b, const Shape *copyShape, bool referenceMeshOnCopy): L(_L), /*ibody(UINT_MAX),*/ body(NULL) {
   reset();
   CHECK(&b && &L,"you shouldn't do this!");
   //TODO: cleanup
@@ -196,7 +196,7 @@ ors::Shape::Shape(ShapeL &_L, Body& b, const Shape *copyShape): L(_L), /*ibody(U
     b.shapes.append(this);
 //    ibody=b.index;
   }
-  if(copyShape) *this = *copyShape;
+  if(copyShape) copy(*copyShape, referenceMeshOnCopy);
 }
 
 ors::Shape::~Shape() {
@@ -207,6 +207,21 @@ ors::Shape::~Shape() {
   }
   L.removeValue(this);
   listReindex(L);
+}
+
+void ors::Shape::copy(const Shape& s, bool referenceMeshOnCopy){
+  name=s.name; X=s.X; rel=s.rel; type=s.type;
+  memmove(size, s.size, 4*sizeof(double)); memmove(color, s.color, 3*sizeof(double));
+  if(!referenceMeshOnCopy){
+    mesh=s.mesh;
+  }else{
+    mesh.V.referTo(s.mesh.V);
+    mesh.T.referTo(s.mesh.T);
+    mesh.C.referTo(s.mesh.C);
+    mesh.Vn.referTo(s.mesh.Vn);
+  }
+  mesh_radius=s.mesh_radius; cont=s.cont;
+  ats=s.ats;
 }
 
 void ors::Shape::parseAts() {
@@ -497,18 +512,19 @@ void ors::KinematicWorld::clear() {
   isLinkTree=false;
 }
 
-void ors::KinematicWorld::operator=(const ors::KinematicWorld& G) {
+void ors::KinematicWorld::copy(const ors::KinematicWorld& G, bool referenceMeshesAndSwiftOnCopy) {
   q = G.q;
   qdot = G.qdot;
 #if 1
   listCopy(proxies, G.proxies);
   for(Body *b:G.bodies) new Body(bodies, b);
-  for(Shape *s:G.shapes) new Shape(shapes, *bodies(s->body->index), s);
+  for(Shape *s:G.shapes) new Shape(shapes, *bodies(s->body->index), s, referenceMeshesAndSwiftOnCopy);
   for(Joint *j:G.joints){
     Joint *jj=
         new Joint(*this, bodies(j->from->index), bodies(j->to->index), j);
     if(j->mimic) jj->mimic = joints(j->mimic->index);
   }
+  if(referenceMeshesAndSwiftOnCopy) s->swift = G.s->swift;
 #else
   listCopy(proxies, G.proxies);
   listCopy(joints, G.joints);
@@ -1439,7 +1455,7 @@ void ors::KinematicWorld::watch(bool pause, const char* txt){
 }
 
 void ors::KinematicWorld::stepSwift(){
-  swift().step(false);
+  swift().step(*this, false);
 }
 
 void ors::KinematicWorld::stepPhysx(double tau){

@@ -194,14 +194,9 @@ struct Shape {
   
 //  Shape();
 //  explicit Shape(const Shape& s);
-  Shape(ShapeL& _L, Body& b, const Shape *copyShape=NULL); //new Shape, being added to graph and body's shape lists
+  Shape(ShapeL& _L, Body& b, const Shape *copyShape=NULL, bool referenceMeshOnCopy=false); //new Shape, being added to graph and body's shape lists
   ~Shape();
-  void operator=(const Shape& s) {
-    name=s.name; X=s.X; rel=s.rel; type=s.type;
-    memmove(size, s.size, 4*sizeof(double)); memmove(color, s.color, 3*sizeof(double));
-    mesh=s.mesh; mesh_radius=s.mesh_radius; cont=s.cont;
-    ats=s.ats;
-  }
+  void copy(const Shape& s, bool referenceMeshOnCopy=false);
   void reset();
   void parseAts();
   void write(std::ostream& os) const;
@@ -242,7 +237,8 @@ struct KinematicWorld {
   KinematicWorld(const ors::KinematicWorld& other);
   KinematicWorld(const char* filename);
   ~KinematicWorld();
-  void operator=(const ors::KinematicWorld& G);
+  void operator=(const ors::KinematicWorld& G){ copy(G); }
+  void copy(const ors::KinematicWorld& G, bool referenceMeshesAndSwiftOnCopy=false);
   
   /// @name initializations
   void init(const char* filename);

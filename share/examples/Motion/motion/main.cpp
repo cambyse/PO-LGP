@@ -25,8 +25,8 @@ void TEST(PR2reach){
   c = MP.addTask("endeff", new DefaultTaskMap(posTMT, G, "endeff"));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(MP.world.getShapeByName("target")->X.pos), 1e3);
 
-//  c = MP.addTask("endeff_vel", new DefaultTaskMap(posTMT, G, "endeff"));
-  c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, G));
+  c = MP.addTask("endeff_vel", new DefaultTaskMap(posTMT, G, "endeff"));
+//  c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, G));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, 1e1);
   c->map.order=1; //make this a velocity variable!
 
@@ -109,7 +109,7 @@ void TEST(Basics){
 #else
     optConstrained(x, NoArr, Convert(MF), OPT(verbose=1, stopIters=100, damping=1., maxStep=1., nonStrictSteps=5));
 #endif
-
+    return;
     cout <<"** optimization time=" <<MT::timerRead() <<endl;
     MP.costReport();
     checkJacobian(Convert(MF), x, 1e-5);

@@ -485,7 +485,7 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
   //-- manage configurations
   if(configurations.N!=k+1){
     listDelete(configurations);
-    for(uint i=0;i<=k;i++) configurations.append(new ors::KinematicWorld(MP.world));
+    for(uint i=0;i<=k;i++) configurations.append(new ors::KinematicWorld())->copy(MP.world, true);
   }
   //find matches
   uintA match(k+1); match=UINT_MAX;

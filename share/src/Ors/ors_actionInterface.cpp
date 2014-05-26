@@ -78,7 +78,7 @@ void oneStep(const arr &q, ors::KinematicWorld *C, OdeInterface *ode, SwiftInter
   }
 #endif
   if(swift) {
-    swift->step();
+    swift->step(*C);
   } else {
 #ifdef MT_ODE
     C->ode().importProxiesFromOde();

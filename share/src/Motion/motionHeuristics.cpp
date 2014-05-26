@@ -96,7 +96,7 @@ void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, ui
   //activate collision testing with target shape
   ors::Shape *target_shape = MP.world.shapes(shapeId);
   target_shape->cont=true;
-  MP.world.swift().initActivations();
+  MP.world.swift().initActivations(MP.world);
   
   //
   arr target,initial;
@@ -221,7 +221,7 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
   //activate collision testing with target shape
   ors::Shape *target_shape = MP.world.shapes(shapeId);
   target_shape->cont=true;
-  MP.world.swift().initActivations();
+  MP.world.swift().initActivations(MP.world);
 
   //
   arr target,initial;
