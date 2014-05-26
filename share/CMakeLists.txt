@@ -48,6 +48,7 @@ if(WITH_GTEST)
     option(EXAMPLES_AS_TESTS "Should examples be used as tests? (default yes)" OFF)
     include(CheckIncludeFileCXX)
     check_include_file_cxx("gtest/gtest.h" GTEST_H_FOUND)
+    add_definitions(-DGEST_DONT_DEFINE_TEST) # so that we don't get surprises when EXAMPLES_AS_TESTS is on
     if(GTEST_H_FOUND)
         enable_testing()
         add_subdirectory(/usr/src/gtest gtest)

@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 
-TEST(ArrayIO, vector_read_write) {
+GTEST_TEST(ArrayIO, vector_read_write) {
   arr a = randn(5, 1);
   ofstream of("vec.tmp");
   a.write(of);
@@ -18,7 +18,7 @@ TEST(ArrayIO, vector_read_write) {
   }
 }
 
-TEST(ArrayIO, matrix_read_write) {
+GTEST_TEST(ArrayIO, matrix_read_write) {
   arr a = randn(5, 5);
   ofstream of("mat.tmp");
   a.write(of);
@@ -35,7 +35,7 @@ TEST(ArrayIO, matrix_read_write) {
   }
 }
 
-TEST(ArrayIO, tensor_read_write) {
+GTEST_TEST(ArrayIO, tensor_read_write) {
   arr a = randn(5, 25);
   a.reshape(5, 5, 5);
   ofstream of("tensor.tmp");
@@ -56,7 +56,7 @@ TEST(ArrayIO, tensor_read_write) {
   }
 }
 
-TEST(ArrayIO, tensor_high_dim_read_write) {
+GTEST_TEST(ArrayIO, tensor_high_dim_read_write) {
   arr a = randn(5, 125);
   a.reshape(TUP(5, 5, 5, 5));
   ofstream of("tensor_hd.tmp");
