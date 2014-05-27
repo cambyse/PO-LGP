@@ -51,7 +51,7 @@ void TEST(Thread){
     tp[i] = new MyOtherThread(i);
 
   for(int i = 0; i < nThreads; i++)
-    tp[i]->threadLoop();
+    tp[i]->threadLoopWithBeat(.01);
 
   MT::wait(1.);
 

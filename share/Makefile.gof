@@ -48,9 +48,9 @@ tests:
 		-not -name '*py' -not -name 'CMakeFiles'\
 		-exec gofMake/run-path.sh {} \;
 
-	# @find examples -mindepth 2 -maxdepth 2 -type d \
-	# 	-not -name '*py' -not -name 'CMakeFiles'\
-	# 	-exec $(BASE)/gofMake/make-path.sh {} z.test.a \;
+# @find examples -mindepth 2 -maxdepth 2 -type d \
+# 	-not -name '*py' -not -name 'CMakeFiles'\
+# 	-exec $(BASE)/gofMake/make-path.sh {} z.test.a \;
 
 ################################################################################
 
