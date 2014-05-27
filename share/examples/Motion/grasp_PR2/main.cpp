@@ -87,7 +87,7 @@ void testPickAndPlace(){
   G.getShapeByName("target1")->cont=false;
   G.getShapeByName("target2")->cont=false;
   G.getShapeByName("target")->cont=false;
-  G.swift().initActivations();
+  G.swift().initActivations(G);
   listDelete(MF.configurations);
 
 
@@ -120,7 +120,7 @@ void testPickAndPlace(){
   G.getShapeByName("target1")->cont=false;
   G.getShapeByName("target2")->cont=false;
   G.getShapeByName("target")->cont=false;
-  G.swift().initActivations();
+  G.swift().initActivations(G);
 
   //-- setup new motion problem
   MP.prefix.clear();

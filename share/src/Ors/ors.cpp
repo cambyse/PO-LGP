@@ -464,10 +464,11 @@ struct sKinematicWorld{
   SwiftInterface *swift;
   PhysXInterface *physx;
   OdeInterface *ode;
-  sKinematicWorld():gl(NULL), swift(NULL), physx(NULL), ode(NULL){}
+  bool swiftIsReference;
+  sKinematicWorld():gl(NULL), swift(NULL), physx(NULL), ode(NULL), swiftIsReference(false) {}
   ~sKinematicWorld(){
     if(gl) delete gl;
-    if(swift) delete swift;
+    if(swift && !swiftIsReference) delete swift;
     if(physx) delete physx;
     if(ode) delete ode;
   }
@@ -524,7 +525,10 @@ void ors::KinematicWorld::copy(const ors::KinematicWorld& G, bool referenceMeshe
         new Joint(*this, bodies(j->from->index), bodies(j->to->index), j);
     if(j->mimic) jj->mimic = joints(j->mimic->index);
   }
-  if(referenceMeshesAndSwiftOnCopy) s->swift = G.s->swift;
+  if(referenceMeshesAndSwiftOnCopy){
+    s->swift = G.s->swift;
+    s->swiftIsReference=true;
+  }
 #else
   listCopy(proxies, G.proxies);
   listCopy(joints, G.joints);
