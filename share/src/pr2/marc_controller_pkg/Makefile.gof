@@ -1,7 +1,7 @@
 BASE   = ../../..
 MSGFILE = msg/JointState.msg
 ROSDIR = /opt/ros/groovy
-OUTPUTDIR = $(BASE)/include
+OUTPUTDIR = $(BASE)/include/ros_msg
 PKGNAME = marc_controller_pkg
 
 default:

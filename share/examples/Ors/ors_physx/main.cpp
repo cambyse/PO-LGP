@@ -6,30 +6,30 @@ void createScene(ors::KinematicWorld& ors, OpenGL& gl) {
   ors.clear();
   
   for(uint k=0; k<3; k++) {
-    ors::Body *b = new ors::Body(ors);
+    ors::Body *b = new ors::Body(ors.bodies);
     b->X.setRandom();
     b->X.pos.z += 1.;
     b->name <<"rndSphere_" <<k;
-    ors::Shape *s = new ors::Shape(ors, *b);
+    ors::Shape *s = new ors::Shape(ors.shapes, *b);
     s->type=ors::boxST;
     s->size[0]=.1; s->size[1]=.1; s->size[2]=.1; s->size[3]=.1;
   }
   for(uint k=0; k<3; k++) {
-    ors::Body *b = new ors::Body(ors);
+    ors::Body *b = new ors::Body(ors.bodies);
     b->X.setRandom();
     b->X.pos.z += 1.;
     b->name <<"thing_" <<k;
-    ors::Shape *s = new ors::Shape(ors, *b);
+    ors::Shape *s = new ors::Shape(ors.shapes, *b);
     s->type=ors::sphereST;
     s->size[0]=.1; s->size[1]=.1; s->size[2]=.1; s->size[3]=.1;
     //s->mesh.readFile("pin1.off");
   }
   for(uint k=0; k<10; k++) {
-    ors::Body *b = new ors::Body(ors);
+    ors::Body *b = new ors::Body(ors.bodies);
     b->X.pos.setRandom();
     b->X.pos.z += .5;
     b->name <<"thing_" <<k;
-    ors::Shape *s = new ors::Shape(ors, *b);
+    ors::Shape *s = new ors::Shape(ors.shapes, *b);
     s->type=ors::meshST;
     s->mesh.readFile("pin1.off");
   }

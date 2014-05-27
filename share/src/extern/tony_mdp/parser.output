@@ -7,14 +7,14 @@ Grammar
 
     0 $accept: pomdp_file $end
 
-    1 $@1: /* empty */
+    1 $@1: %empty
 
-    2 $@2: /* empty */
+    2 $@2: %empty
 
     3 pomdp_file: preamble $@1 start_state $@2 param_list
 
     4 preamble: preamble param_type
-    5         | /* empty */
+    5         | %empty
 
     6 param_type: discount_param
     7           | value_param
@@ -29,46 +29,46 @@ Grammar
    13 value_tail: REWARDTOK
    14           | COSTTOK
 
-   15 $@3: /* empty */
+   15 $@3: %empty
 
    16 state_param: STATETOK COLONTOK $@3 state_tail
 
    17 state_tail: INTTOK
    18           | ident_list
 
-   19 $@4: /* empty */
+   19 $@4: %empty
 
    20 action_param: ACTIONTOK COLONTOK $@4 action_tail
 
    21 action_tail: INTTOK
    22            | ident_list
 
-   23 $@5: /* empty */
+   23 $@5: %empty
 
    24 obs_param: OBSTOK COLONTOK $@5 obs_param_tail
 
    25 obs_param_tail: INTTOK
    26               | ident_list
 
-   27 $@6: /* empty */
+   27 $@6: %empty
 
    28 start_state: STARTTOK COLONTOK $@6 u_matrix
    29            | STARTTOK COLONTOK STRINGTOK
 
-   30 $@7: /* empty */
+   30 $@7: %empty
 
    31 start_state: STARTTOK INCLUDETOK COLONTOK $@7 start_state_list
 
-   32 $@8: /* empty */
+   32 $@8: %empty
 
    33 start_state: STARTTOK EXCLUDETOK COLONTOK $@8 start_state_list
-   34            | /* empty */
+   34            | %empty
 
    35 start_state_list: start_state_list state
    36                 | state
 
    37 param_list: param_list param_spec
-   38           | /* empty */
+   38           | %empty
 
    39 param_spec: trans_prob_spec
    40           | obs_prob_spec
@@ -76,47 +76,47 @@ Grammar
 
    42 trans_prob_spec: TTOK COLONTOK trans_spec_tail
 
-   43 $@9: /* empty */
+   43 $@9: %empty
 
    44 trans_spec_tail: action COLONTOK state COLONTOK state $@9 prob
 
-   45 $@10: /* empty */
+   45 $@10: %empty
 
    46 trans_spec_tail: action COLONTOK state $@10 u_matrix
 
-   47 $@11: /* empty */
+   47 $@11: %empty
 
    48 trans_spec_tail: action $@11 ui_matrix
 
    49 obs_prob_spec: OTOK COLONTOK obs_spec_tail
 
-   50 $@12: /* empty */
+   50 $@12: %empty
 
    51 obs_spec_tail: action COLONTOK state COLONTOK obs $@12 prob
 
-   52 $@13: /* empty */
+   52 $@13: %empty
 
    53 obs_spec_tail: action COLONTOK state $@13 u_matrix
 
-   54 $@14: /* empty */
+   54 $@14: %empty
 
    55 obs_spec_tail: action $@14 u_matrix
 
    56 reward_spec: RTOK COLONTOK reward_spec_tail
 
-   57 $@15: /* empty */
+   57 $@15: %empty
 
    58 reward_spec_tail: action COLONTOK state COLONTOK state COLONTOK obs $@15 number
 
-   59 $@16: /* empty */
+   59 $@16: %empty
 
    60 reward_spec_tail: action COLONTOK state COLONTOK state $@16 num_matrix
 
-   61 $@17: /* empty */
+   61 $@17: %empty
 
    62 reward_spec_tail: action COLONTOK state $@17 num_matrix
 
-   63 $@18: /* empty */
+   63 $@18: %empty
 
    64 reward_spec_tail: action $@18 num_matrix
 
@@ -157,7 +157,7 @@ Grammar
 
    90 optional_sign: PLUSTOK
    91              | MINUSTOK
-   92              | /* empty */
+   92              | %empty
 
 
 Terminals, with rules where they appear

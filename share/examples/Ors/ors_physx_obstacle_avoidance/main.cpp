@@ -80,7 +80,7 @@ void TEST(PhysxObstacleAvoidance) {
 
     // add collision avoidance for current door again
     (ors.getBodyByName(bname)->shapes(0))->cont = true;
-    ors.swift().initActivations();
+    ors.swift().initActivations(ors);
     ors.swift().setCutoff(1.);
   }
 }

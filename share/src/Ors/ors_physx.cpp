@@ -283,8 +283,7 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
     case ors::JT_hingeX: 
     case ors::JT_hingeY:
     case ors::JT_hingeZ: {
-      PxD6Joint *desc = PxD6JointCreate(*mPhysics, actors(jj->ifrom), A, actors(jj->ito), B.getInverse());
-
+      PxD6Joint *desc = PxD6JointCreate(*mPhysics, actors(jj->from->index), A, actors(jj->to->index), B.getInverse());
 
       if(jj->ats.getValue<arr>("drive")) {
         arr drive_values = *jj->ats.getValue<arr>("drive");
@@ -311,7 +310,7 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
     break;
     case ors::JT_fixed: {
       // PxFixedJoint* desc =
-      PxFixedJointCreate(*mPhysics, actors(jj->ifrom), A, actors(jj->ito), B.getInverse());
+      PxFixedJointCreate(*mPhysics, actors(jj->from->index), A, actors(jj->to->index), B.getInverse());
       // desc->setProjectionLinearTolerance(1e10);
       // desc->setProjectionAngularTolerance(3.14);
     }
@@ -323,7 +322,7 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
     case ors::JT_transY:
     case ors::JT_transZ:
     {
-      PxD6Joint *desc = PxD6JointCreate(*mPhysics, actors(jj->ifrom), A, actors(jj->ito), B.getInverse());
+      PxD6Joint *desc = PxD6JointCreate(*mPhysics, actors(jj->from->index), A, actors(jj->to->index), B.getInverse());
 
       if(jj->ats.getValue<arr>("drive")) {
         arr drive_values = *jj->ats.getValue<arr>("drive");
