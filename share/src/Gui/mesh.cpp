@@ -1124,7 +1124,7 @@ void Mesh::readObjFile(std::istream& is) {
   // open the file
   FILE* file;
   //file = fopen(filename, "r");
-  NIY; //use the is!
+  NIY; //use the is! //rewrite this using getline and sscanf!
   //if(!file) HALT("readObjFile() failed: can't open data file " <<filename);
 
   // we only want to parse the relevant subpart/submesh of the mesh therefore

@@ -324,6 +324,9 @@ $(BASE)/lib/lib%.so: $(BASE)/src/%
 makePath/%: %
 	+@-$(BASE)/gofMake/make-path.sh $<
 
+runPath/%: %
+	+@-$(BASE)/gofMake/run-path.sh $<
+
 makePythonPath/%: %
 	make --directory=$< pywrapper
 

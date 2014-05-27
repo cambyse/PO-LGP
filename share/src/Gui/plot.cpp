@@ -97,6 +97,9 @@ void plotInitGL(double xl=-1., double xh=1., double yl=-1., double yh=1., double
 #endif
 
 void plot(bool wait, const char* txt) {
+#ifndef EXAMPLES_AS_TESTS
+  wait=false;
+#endif
   switch(plotModule.mode) {
     case gnupl:
       plotDrawGnuplot(plotModule.s, wait);

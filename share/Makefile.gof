@@ -18,11 +18,9 @@ all: $(src_paths:%=makePath/%) $(exa_paths:%=makePath/%)
 
 src: $(src_paths:%=makePath/%)
 
-python: $(src_paths:%=makePath/%) $(pysrc_paths:%=makePythonPath/%)
-
-examples: $(exa_paths:%=makePath/%)
-
 depend: $(src_paths:%=dependPath/%)
+
+python: $(src_paths:%=makePath/%) $(pysrc_paths:%=makePythonPath/%)
 
 clean: force
 	@find $(BASE) -type d -name 'Make.lock' -delete -print
@@ -41,6 +39,18 @@ cleanCmake:
 inf:
 	@echo "src_paths =" $(src_paths)
 	@echo "exa_paths =" $(exa_paths)
+
+################################################################################
+
+tests:
+	@rm -f z.test-report
+	@find examples -mindepth 2 -maxdepth 2 -type d \
+		-not -name '*py' -not -name 'CMakeFiles'\
+		-exec $(BASE)/gofMake/make-path.sh {} z.test.a \;
+
+#	@find examples -mindepth 2 -maxdepth 2 -type d \
+#		-not -name '*py' -not -name 'CMakeFiles'\
+#		-exec gofMake/run-path.sh {} \;
 
 ################################################################################
 
@@ -75,6 +85,6 @@ cleanPath/%: %
 	@-rm -f $*/Makefile.dep
 	@-$(MAKE) -C $* -f Makefile.gof clean --no-print-directory
 
-force:	;
+force:
 
 #include gofMake/generic.mk

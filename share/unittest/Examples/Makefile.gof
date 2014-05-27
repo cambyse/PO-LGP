@@ -1,0 +1,7 @@
+BASE = ../..
+
+LIBS += -lgtest
+_LIBS = $(shell find $(BASE)/examples -mindepth 3 -maxdepth 3 -name 'z.test.a' )
+LIBS += $(_LIBS:%=-l:%)
+
+include $(BASE)/gofMake/generic.mk
