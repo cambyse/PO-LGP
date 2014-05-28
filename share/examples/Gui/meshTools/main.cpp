@@ -22,13 +22,11 @@ void drawInit(void*){
 }
 
 void TEST(MeshTools) {
-  if(MT::argc<2){
-    cout <<USAGE <<endl;
-    return;
-  }
+  cout <<USAGE <<endl;
 
-  MT::initCmdLine(MT::argc,MT::argv);
-  MT::String file(MT::argv[1]);
+  MT::String file;
+  if(MT::argc==2 && MT::argv[1][0]!='-') file=MT::argv[1];
+  else file="m494.off";
 
   OpenGL *gl=NULL;
 
@@ -126,8 +124,9 @@ void TEST(MeshTools) {
   cout <<"#vertices = " <<mesh.V.d0 <<" #triangles=" <<mesh.T.d0 <<endl;
 }
 
-int main(int argc, char** argv){
+int MAIN(int argc, char** argv){
   MT::initCmdLine(argc, argv);
+
   testMeshTools();
 
   return 1;

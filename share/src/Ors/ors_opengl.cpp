@@ -549,9 +549,9 @@ void editConfiguration(const char* filename, ors::KinematicWorld& C) {
 #else
     C.gl().watch();
 #endif
-#if EXAMPLES_AS_TESTS
+if(!MT::getInteractivity()){
     exit=true;
-#endif
+}
   }
 }
 

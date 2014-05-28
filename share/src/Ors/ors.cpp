@@ -78,10 +78,10 @@ ors::KinematicWorld& NoGraph = *((ors::KinematicWorld*)NULL);
 
 //ors::Body::Body(const Body& b) { reset(); *this=b; }
 
-ors::Body::Body(BodyL& _L, const Body* copyBody):L(_L) {
+ors::Body::Body(KinematicWorld& _world, const Body* copyBody):world(_world) {
   reset();
-  index=L.N;
-  L.append(this);
+  index=world.bodies.N;
+  world.bodies.append(this);
   if(copyBody) *this=*copyBody;
 }
 
@@ -90,8 +90,8 @@ ors::Body::~Body() {
   while(inLinks.N) delete inLinks.last();
   while(outLinks.N) delete outLinks.last();
   while(shapes.N) delete shapes.last();
-  L.removeValue(this);
-  listReindex(L);
+  world.bodies.removeValue(this);
+  listReindex(world.bodies);
 }
 
 void ors::Body::reset() {
@@ -135,11 +135,11 @@ void ors::Body::parseAts(KinematicWorld& G) {
 
     // if mesh is not .obj we only have one shape
     if(!file->name.endsWith("obj")) {
-      new Shape(G.shapes, *this);
+      new Shape(G, *this);
     }else{  // if .obj file create Shape for all submeshes
       auto subMeshPositions = getSubMeshPositions(file->name);
       for (auto parsing_pos : subMeshPositions) {
-        Shape *s = new Shape(G.shapes, *this);
+        Shape *s = new Shape(G, *this);
         s->mesh.parsing_pos_start = std::get<0>(parsing_pos);
         s->mesh.parsing_pos_end = std::get<1>(parsing_pos);
       }
@@ -148,7 +148,7 @@ void ors::Body::parseAts(KinematicWorld& G) {
 
   // add shape if there is no shape exists yet
   if(ats.getItem("type") && !shapes.N){
-    Shape *s = new Shape(G.shapes, *this);
+    Shape *s = new Shape(G, *this);
     s->name = name;
   }
 
@@ -184,13 +184,13 @@ std::ostream& operator<<(std::ostream& os, const Joint& x) { x.write(os); return
 // Shape implementations
 //
 
-ors::Shape::Shape(ShapeL &_L, Body& b, const Shape *copyShape, bool referenceMeshOnCopy): L(_L), /*ibody(UINT_MAX),*/ body(NULL) {
+ors::Shape::Shape(KinematicWorld &_world, Body& b, const Shape *copyShape, bool referenceMeshOnCopy): world(_world), /*ibody(UINT_MAX),*/ body(NULL) {
   reset();
-  CHECK(&b && &L,"you shouldn't do this!");
+  CHECK(&b && &world,"you shouldn't do this!");
   //TODO: cleanup
-  if(&b && !&L) MT_MSG("You're attaching a Shape to a Body, but not to a Graph -- you're not supposed to do that!");
-  index=L.N;
-  L.append(this);
+  if(&b && !&world) MT_MSG("You're attaching a Shape to a Body, but not to a Graph -- you're not supposed to do that!");
+  index=world.shapes.N;
+  world.shapes.append(this);
   if(&b){
     body = &b;
     b.shapes.append(this);
@@ -205,8 +205,8 @@ ors::Shape::~Shape() {
     body->shapes.removeValue(this);
     listReindex(body->shapes);
   }
-  L.removeValue(this);
-  listReindex(L);
+  world.shapes.removeValue(this);
+  listReindex(world.shapes);
 }
 
 void ors::Shape::copy(const Shape& s, bool referenceMeshOnCopy){
@@ -518,8 +518,8 @@ void ors::KinematicWorld::copy(const ors::KinematicWorld& G, bool referenceMeshe
   qdot = G.qdot;
 #if 1
   listCopy(proxies, G.proxies);
-  for(Body *b:G.bodies) new Body(bodies, b);
-  for(Shape *s:G.shapes) new Shape(shapes, *bodies(s->body->index), s, referenceMeshesAndSwiftOnCopy);
+  for(Body *b:G.bodies) new Body(*this, b);
+  for(Shape *s:G.shapes) new Shape(*this, *bodies(s->body->index), s, referenceMeshesAndSwiftOnCopy);
   for(Joint *j:G.joints){
     Joint *jj=
         new Joint(*this, bodies(j->from->index), bodies(j->to->index), j);
@@ -1547,7 +1547,7 @@ void ors::KinematicWorld::read(std::istream& is) {
     CHECK(it->keys(0)=="body","");
     CHECK(it->getValueType()==typeid(KeyValueGraph), "bodies must have value KeyValueGraph");
     
-    Body *b=new Body(bodies);
+    Body *b=new Body(*this);
     if(it->keys.N>1) b->name=it->keys(1);
     b->ats = *it->getValue<KeyValueGraph>();
     b->parseAts(*this);
@@ -1563,9 +1563,9 @@ void ors::KinematicWorld::read(std::istream& is) {
     if(it->parents.N==1){
       Body *b = listFindByName(bodies, it->parents(0)->keys(1));
       CHECK(b,"");
-      s=new Shape(shapes, *b);
+      s=new Shape(*this, *b);
     }else{
-      s=new Shape(shapes, NoBody);
+      s=new Shape(*this, NoBody);
     }
     if(it->keys.N>1) s->name=it->keys(1);
     s->ats = *it->getValue<KeyValueGraph>();
@@ -2001,7 +2001,7 @@ void ors::KinematicWorld::removeUselessBodies() {
 
 bool ors::KinematicWorld::checkConsistency(){
   for(Body *b: bodies){
-    CHECK(&b->L==&bodies,"");
+    CHECK(&b->world==this,"");
     CHECK(b==bodies(b->index),"");
     for(Joint *j: b->outLinks) CHECK(j->from==b,"");
     for(Joint *j: b->inLinks)  CHECK(j->to==b,"");
@@ -2014,7 +2014,7 @@ bool ors::KinematicWorld::checkConsistency(){
     CHECK(j->to->inLinks.findValue(j)>=0,"");
   }
   for(Shape *s: shapes){
-    CHECK(&s->L==&shapes,"");
+    CHECK(&s->world==this,"");
     CHECK(s==shapes(s->index),"");
     CHECK(s->body->shapes.findValue(s)>=0,"");
   }

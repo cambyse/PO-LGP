@@ -104,7 +104,7 @@ namespace ors {
  */
 /// a rigid body (inertia properties, lists of attached joints & shapes)
 struct Body {
-  BodyL& L;
+  KinematicWorld& world;
   uint index;          ///< unique identifier TODO:do we really need index??
   JointL inLinks, outLinks;       ///< lists of in and out joints
   
@@ -123,7 +123,7 @@ struct Body {
   
 //  Body();
 //  explicit Body(const Body& b);
-  Body(BodyL &_L, const Body *copyBody=NULL);
+  Body(KinematicWorld& _world, const Body *copyBody=NULL);
   ~Body();
   void operator=(const Body& b) {
     name=b.name; X=b.X; ats=b.ats;
@@ -177,7 +177,7 @@ struct Joint {
 
 /// a shape (geometric shape like cylinder/mesh, associated to a body)
 struct Shape {
-  ShapeL& L;
+  KinematicWorld& world;
   uint index;
   Body *body;
   
@@ -194,7 +194,7 @@ struct Shape {
   
 //  Shape();
 //  explicit Shape(const Shape& s);
-  Shape(ShapeL& _L, Body& b, const Shape *copyShape=NULL, bool referenceMeshOnCopy=false); //new Shape, being added to graph and body's shape lists
+  Shape(KinematicWorld& _world, Body& b, const Shape *copyShape=NULL, bool referenceMeshOnCopy=false); //new Shape, being added to graph and body's shape lists
   ~Shape();
   void copy(const Shape& s, bool referenceMeshOnCopy=false);
   void reset();

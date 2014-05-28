@@ -1796,7 +1796,7 @@ void generateOrsFromSample(ors::KinematicWorld& ors, const MT::Array<arr>& sampl
   //}
   //}
   for(uint i = 0; i < sample.N; i+=2) {
-    ors::Body* body = new ors::Body(ors.bodies);
+    ors::Body* body = new ors::Body(ors);
     createCylinder(ors, *body, sample(0,i), ARR(1., 0., 0.), sample(0,i+1));
     MT::String name;
     name << "o7" << i;
@@ -1848,7 +1848,7 @@ void createCylinder(ors::KinematicWorld& G, ors::Body& cyl, const ors::Vector& p
 void createCylinder(ors::KinematicWorld& G, ors::Body& cyl, const ors::Vector& pos, const arr& color, const arr& size) {
   ors::Transformation t;
   t.pos = pos;
-  ors::Shape* s = new ors::Shape(G.shapes, cyl);
+  ors::Shape* s = new ors::Shape(G, cyl);
   for(uint i = 0; i < 4; ++i) { s->size[i] = size(i);}
   s->type = ors::cylinderST;
   for(uint i = 0; i < 3; ++i) s->color[i] = color(i);

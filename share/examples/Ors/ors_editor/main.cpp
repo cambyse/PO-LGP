@@ -16,7 +16,7 @@ void TEST(OrsEditor) {
   cout <<USAGE <<endl;
 
   MT::String file=MT::getParameter<MT::String>("file",STRING("test.ors"));
-  if(MT::argc==2) file=MT::argv[1];
+  if(MT::argc==2 && MT::argv[1][0]!='-') file=MT::argv[1];
   cout <<"opening file `" <<file <<"'" <<endl;
 
   ors::KinematicWorld G(file);

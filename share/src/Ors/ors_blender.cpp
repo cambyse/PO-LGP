@@ -132,8 +132,8 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl)
   ors::Quaternion ROT; ROT.setDeg(90, 1, 0, 0); //rotate the armature
   
   for(i=0; i<frames.d0; i++) {
-    n=new ors::Body(bl.bodies);
-    s=new ors::Shape(bl.shapes, *n); //always create a shape for a body...
+    n=new ors::Body(bl);
+    s=new ors::Shape(bl, *n); //always create a shape for a body...
     MT::skip(is);
     n->name=names(i);
     f.pos.set(&frames(i, 3, 0)); f.pos=ROT*f.pos;

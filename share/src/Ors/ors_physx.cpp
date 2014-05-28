@@ -70,7 +70,7 @@ static PxSimulationFilterShader gDefaultFilterShader=PxDefaultSimulationFilterSh
 void bindOrsToPhysX(ors::KinematicWorld& graph, OpenGL& gl, PhysXInterface& physx) {
 //  physx.create(graph);
   
-  HALT("I don't understand this: why do you need a 2nd opengl window? (This is only for sanity check in the example.)")
+  MT_MSG("I don't understand this: why do you need a 2nd opengl window? (This is only for sanity check in the example.)")
   gl.add(glStandardScene, NULL);
   gl.add(glPhysXInterface, &physx);
   gl.setClearColors(1., 1., 1., 1.);

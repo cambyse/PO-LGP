@@ -107,8 +107,12 @@ void TEST(BSpline){
     checkGradient(splineCost, S.points, 1e-5);
     cost.fs(grad_path, NoArr, path);
     //S.partial(dCdx,dCdt,dCdf,true);
-//    S.partial(grad_X, grad_path);
-    S.points -= .3 * grad_path;
+    if(grad_path.d0==S.points.d0){
+      S.points -= .3 * grad_path;
+    }else{
+      S.partial(grad_X, grad_path);
+      S.points -= .3 * grad_X;
+    }
     if(i>50){
       //S.times  -= .3 * dCdt;
       //S.setBasisAndTimeGradient();
@@ -170,6 +174,8 @@ void testPath(){
 }
 
 int MAIN(int argc,char** argv){
+  MT::initCmdLine(argc, argv);
+
   //testBSpline();
   testPath();
 
