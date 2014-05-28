@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 //=============================================================================
-TEST(Substring, ValidRange) {
+GTEST_TEST(Substring, ValidRange) {
   const char* original  = "this is a long string";
   MT::String fullString(original);
   EXPECT_EQ(fullString.getSubString(0, 4), "this");
@@ -10,41 +10,41 @@ TEST(Substring, ValidRange) {
   EXPECT_EQ(fullString.getSubString(10, 14), "long");
   EXPECT_EQ(fullString.getSubString(0, fullString.N), original);
 }
-TEST(Substring, EndGreaterThanRange) {
+GTEST_TEST(Substring, EndGreaterThanRange) {
   const char* original  = "this is a long string";
   MT::String fullString(original);
   EXPECT_EQ(fullString.getSubString(0, 100000), original);
 }
 
 //=============================================================================
-TEST(StringGetLastN, ValidRange) {
+GTEST_TEST(StringGetLastN, ValidRange) {
   const char* original  = "this is a long string";
   MT::String fullString(original);
   EXPECT_EQ(fullString.getLastN(1), "g");
   EXPECT_EQ(fullString.getLastN(2), "ng");
   EXPECT_EQ(fullString.getLastN(3), "ing");
 }
-TEST(StringGetLastN, RequestTooManyChars) {
+GTEST_TEST(StringGetLastN, RequestTooManyChars) {
   const char* original  = "this is a long string";
   MT::String fullString(original);
   EXPECT_EQ(fullString.getLastN(1000), original);
 }
 
 //=============================================================================
-TEST(StringGetFirstN, ValidRange) {
+GTEST_TEST(StringGetFirstN, ValidRange) {
   const char* original  = "this is a long string";
   MT::String fullString(original);
   EXPECT_EQ(fullString.getFirstN(1), "t");
   EXPECT_EQ(fullString.getFirstN(5), "this ");
 }
-TEST(StringGetFirstN, RequestTooManyChars) {
+GTEST_TEST(StringGetFirstN, RequestTooManyChars) {
   const char* original  = "this is a long string";
   MT::String fullString(original);
   EXPECT_EQ(fullString.getFirstN(1000), original);
 }
 
 //=============================================================================
-TEST(StringStartsWith, PosExamples) {
+GTEST_TEST(StringStartsWith, PosExamples) {
   MT::String fullString("this is a long string");
 
   EXPECT_TRUE(fullString.startsWith("t"));
@@ -57,7 +57,7 @@ TEST(StringStartsWith, PosExamples) {
   EXPECT_TRUE(fullString.startsWith(String("this is")));
 }
 
-TEST(StringStartsWith, NegExamples) {
+GTEST_TEST(StringStartsWith, NegExamples) {
   MT::String fullString("this is a long string");
 
   EXPECT_FALSE(fullString.startsWith(("b")));
@@ -71,7 +71,7 @@ TEST(StringStartsWith, NegExamples) {
 }
 
 //=============================================================================
-TEST(StringEndsWith, PosExamples) {
+GTEST_TEST(StringEndsWith, PosExamples) {
   MT::String fullString("this is a long string");
 
   EXPECT_TRUE(fullString.endsWith("g"));
@@ -81,7 +81,7 @@ TEST(StringEndsWith, PosExamples) {
   EXPECT_TRUE(fullString.endsWith(String("string")));
 }
 
-TEST(StringEndsWith, NegExamples) {
+GTEST_TEST(StringEndsWith, NegExamples) {
   MT::String fullString("this is a long string");
 
   EXPECT_FALSE(fullString.endsWith("somethig"));
