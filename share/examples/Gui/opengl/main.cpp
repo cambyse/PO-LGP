@@ -132,9 +132,9 @@ void TEST(Obj) {
   //mesh.readObjFile(FILE("../../../3dmodel/obj/base-male-nude.obj"));
   mesh.scale(.1,.1,.1);
   mesh.computeNormals();
-  mesh2.readObjFile(FILE("magnolia.obj"));
-  mesh2.scale(.01,.01,.01);
-  mesh2.computeNormals();
+//  mesh2.readObjFile(FILE("magnolia.obj"));
+//  mesh2.scale(.01,.01,.01);
+//  mesh2.computeNormals();
   OpenGL gl;
   gl.text="testing Mesh";
   gl.add(draw2,0);
