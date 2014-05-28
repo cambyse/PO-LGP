@@ -26,7 +26,7 @@ void TEST(MeshTools) {
 
   MT::String file;
   if(MT::argc==2 && MT::argv[1][0]!='-') file=MT::argv[1];
-  else file="m494.off";
+  else file="../opengl/base-male-nude.obj"; //m494.off
 
   OpenGL *gl=NULL;
 
