@@ -225,7 +225,7 @@ double MinSumGaussNewton::updateNode(uint i){
       A  += mu(m).M;
       a  += mu(m).m;
     }
-    lapack_Ainv_b_sym(Delta, A, a);
+    Delta = lapack_Ainv_b_sym(A, a);
     Delta -= x[i];
     VERBOSE(1, cout <<"optimizing over node " <<i <<": x=" <<x[i] <<" f(x)=" <<fx <<" Delta=" <<Delta <<endl);
     

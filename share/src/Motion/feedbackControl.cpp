@@ -1,3 +1,21 @@
+/*  ---------------------------------------------------------------------
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a COPYING file of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
 #include "feedbackControl.h"
 
 //===========================================================================
@@ -79,6 +97,17 @@ PDtask* FeedbackMotionControl::addPDTask(const char* name, double decayTime, dou
   return t;
 }
 
+PDtask* FeedbackMotionControl::addPDTask(const char* name,
+                                         double decayTime, double dampingRatio,
+                                         DefaultTaskMapType type,
+                                         const char* iShapeName, const ors::Vector& ivec,
+                                         const char* jShapeName, const ors::Vector& jvec,
+                                         const arr& params){
+  PDtask *t = addPDTask(name, decayTime, dampingRatio,
+                        new DefaultTaskMap(type, world, iShapeName, ivec, jShapeName, jvec, params));
+  return t;
+}
+
 ConstraintForceTask* FeedbackMotionControl::addConstraintForceTask(const char* name, TaskMap *map){
   ConstraintForceTask *t = new ConstraintForceTask(map);
   t->name=name;
@@ -86,16 +115,6 @@ ConstraintForceTask* FeedbackMotionControl::addConstraintForceTask(const char* n
   t->desiredApproach.active=false;
   forceTasks.append(t);
   tasks.append(&t->desiredApproach);
-  return t;
-}
-
-PDtask* FeedbackMotionControl::addPDTask(const char* name,
-                                         double decayTime, double dampingRatio,
-                                         DefaultTaskMapType type,
-                                         const char* iShapeName, const ors::Vector& ivec,
-                                         const char* jShapeName, const ors::Vector& jvec,
-                                         const arr& params){
-  PDtask *t = addPDTask(name, decayTime, dampingRatio, new DefaultTaskMap(type, world, iShapeName, ivec, jShapeName, jvec, params));
   return t;
 }
 

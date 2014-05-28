@@ -1,20 +1,21 @@
 /*  ---------------------------------------------------------------------
-    Copyright 2013 Marc Toussaint
-    email: mtoussai@cs.tu-berlin.de
-
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
 
 #ifndef _MT_motion_h
 #define _MT_motion_h
@@ -38,6 +39,7 @@ struct TaskMap {
   uint order;       ///< 0=position, 1=vel, etc
   //Actually, the right way would be to give phi a list of $k+1$ graphs -- and retrieve the velocities/accs from that...
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G) = 0;
+  virtual void phi(arr& y, arr& J, const WorldL& G, double tau);
   virtual uint dim_phi(const ors::KinematicWorld& G) = 0; //the dimensionality of $y$
 
   TaskMap():constraint(false),order(0) {}
@@ -56,7 +58,8 @@ struct TaskCost {
   bool active;
   arr target, prec;  ///< target & precision over a whole trajectory
   double threshold;  ///< threshold for feasibility checks (e.g. in RRTs)
-  
+  uint dim_phi(uint t,const ors::KinematicWorld& G){ if(!active || !prec(t)) return 0; return map.dim_phi(G); }
+
   TaskCost(TaskMap* m):map(*m), active(true){}
 };
 
@@ -92,7 +95,7 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
   //TODO: add methods to properly set the prefix given x0,v0?
 
   //-- return values of an optimizer
-  arr costMatrix;
+  MT::Array<arr> phiMatrix;
   arr dualMatrix;
 
   MotionProblem(ors::KinematicWorld& _world, bool useSwift=true);
@@ -114,6 +117,7 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
   uint dim_g(uint t);
   uint dim_psi();
   bool getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t); ///< the general (`big') task vector and its Jacobian
+  void getTaskCosts2(arr& phi, arr& J, uint t, const WorldL& G, double tau); ///< the general (`big') task vector and its Jacobian
   void costReport(bool gnuplt=true); ///< also computes the costMatrix
   
   void setState(const arr& x, const arr& v=NoArr);
@@ -131,8 +135,9 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
 
 struct MotionProblemFunction:KOrderMarkovFunction {
   MotionProblem& MP;
+  WorldL configurations;
 
-  MotionProblemFunction(MotionProblem& _P):MP(_P) {};
+  MotionProblemFunction(MotionProblem& _P):MP(_P) { MT::Array<ors::KinematicWorld*>::memMove=true; };
   
   //KOrderMarkovFunction definitions
   virtual void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);
@@ -140,7 +145,7 @@ struct MotionProblemFunction:KOrderMarkovFunction {
   virtual uint get_T() { return MP.T; }
   virtual uint get_k() { if(MP.transitionType==MotionProblem::kinematic) return 1;  return 2; }
   virtual uint dim_x() { return MP.dim_x(); }
-  virtual uint dim_phi(uint t){ return dim_x() + MP.dim_phi(t); }
+  virtual uint dim_phi(uint t){ return dim_x() + MP.dim_phi(t); } //transitions plus costs (latter include constraints)
   virtual uint dim_g(uint t){ return MP.dim_g(t); }
   virtual arr get_prefix(); //the history states x(-k),..,x(-1)
   virtual arr get_postfix();

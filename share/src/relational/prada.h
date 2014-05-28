@@ -255,9 +255,10 @@ class PRADA_DBN {
 
 //   PRADA rewards  -->  working on beliefs
 class PRADA_Reward {
-  public :
+ public :
     // Random variables --> Reals
-    virtual double evaluate_prada_reward(const PRADA_DBN& net, uint t) = 0;
+  ~PRADA_Reward(){}
+  virtual double evaluate_prada_reward(const PRADA_DBN& net, uint t) = 0;
 };
   
 

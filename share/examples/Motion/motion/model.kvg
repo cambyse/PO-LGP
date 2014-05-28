@@ -1,14 +1,4 @@
 %include /home/mtoussai/git/mlr/share/data/pr2_model/pr2_model.ors
 %include /home/mtoussai/git/mlr/share/examples/Ors/ors_editor/regal.ors
 
-#shape endeffL(l_wrist_roll_link){ rel=<T t(.2 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
 shape endeff(r_wrist_roll_link){ rel=<T t(.2 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
-
-# shape endeffBase(torso_lift_link){ rel=<T d(90 0 1 0) t(.2 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
-# shape endeffHead(head_tilt_link){ rel=<T  d(-90 0 0 1) t(.5 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
-
-# shape endeffForceL(l_wrist_roll_link){ rel=<T t(.5 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
-# shape endeffForceR(r_wrist_roll_link){ rel=<T t(.5 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
-
-#body target { X=<T t(1. -.5 1.)>  type=1 size=[.1 .1 .1 .05] color=[0 .5 0] fixed, }
-#body obstacle { X=<T t(1. -1.5 .8)>  type=1 size=[1. .1 5. .5] color=[1 0 0] contact, fixed, }

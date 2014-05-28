@@ -1,20 +1,21 @@
 /*  ---------------------------------------------------------------------
-    Copyright 2013 Marc Toussaint
-    email: mtoussai@cs.tu-berlin.de
-
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
 
 #include "plot.h"
 #include <Core/array_t.h>
@@ -96,10 +97,13 @@ void plotInitGL(double xl=-1., double xh=1., double yl=-1., double yh=1., double
 #endif
 
 void plot(bool wait, const char* txt) {
+#ifndef EXAMPLES_AS_TESTS
+  wait=false;
+#endif
   switch(plotModule.mode) {
     case gnupl:
-      plotDrawGnuplot(plotModule.s, false);
-      if(wait) MT::wait();
+      plotDrawGnuplot(plotModule.s, wait);
+//      if(wait) MT::wait();
       break;
 #ifdef MT_GL
     case opengl:
@@ -610,7 +614,7 @@ void plotDrawOpenGL(void *_data) {
 
 void plotDrawGnuplot(void *_data, bool pauseMouse) {
   sPlotModule& data=(*((sPlotModule*)_data));
-  uint i, j, k;
+  uint i;
   
   //openfiles
   MT::String gnuplotcmd;
@@ -632,11 +636,8 @@ void plotDrawGnuplot(void *_data, bool pauseMouse) {
   MT::IOraw=true;
   //lines
   for(i=0; i<data.lines.N; i++) {
-    FOR1D(data.lines(i), j) {
-      FOR1D(data.lines(i)[j], k) gnuplotdata <<data.lines(i)[j](k) <<" ";
-      gnuplotdata <<std::endl;
-    }
-    gnuplotdata <<std::endl;
+    data.lines(i).write(gnuplotdata," ","\n","  ",false,false);
+    gnuplotdata <<'\n' <<std::endl;
     if(block) gnuplotcmd <<", \\\n";
     if(data.lines(i).d1!=4) {
       PLOTEVERY(block, " with l notitle");
@@ -651,11 +652,8 @@ void plotDrawGnuplot(void *_data, bool pauseMouse) {
   }
   //points
   for(i=0; i<data.points.N; i++) {
-    FOR1D(data.points(i), j) {
-      FOR1D(data.points(i)[j], k) gnuplotdata <<data.points(i)[j](k) <<" ";
-      gnuplotdata <<std::endl;
-    }
-    gnuplotdata <<std::endl;
+    data.points(i).write(gnuplotdata," ","\n","  ",false,false);
+    gnuplotdata <<'\n' <<std::endl;
     if(block) gnuplotcmd <<", \\\n";
     PLOTEVERY(block, " with p notitle");
     block++;
@@ -681,9 +679,7 @@ void plotDrawGnuplot(void *_data, bool pauseMouse) {
   gnuplotdata.close();
   
   //call gnuplot
-  //if(wait) gnuplotcmd <<"\npause mouse" <<std::endl;
-  ofstream gcmd("z.plotcmd"); gcmd <<gnuplotcmd; gcmd.close(); //for debugging...
-  gnuplot(gnuplotcmd, pauseMouse);
+  gnuplot(gnuplotcmd, pauseMouse, true, "z.pdf");
 }
 
 

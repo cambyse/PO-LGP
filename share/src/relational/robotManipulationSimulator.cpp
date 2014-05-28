@@ -90,7 +90,7 @@ void oneStep(const arr &q, ors::KinematicWorld *C, const char* text) {
   C->ode().exportStateToOde();
   C->ode().step(.01);
   C->ode().importStateFromOde();
-  if(useSwift) C->swift().step();
+  if(useSwift) C->swift().step(*C);
   else C->ode().importProxiesFromOde();
   
   if(useOpengl) {
@@ -282,9 +282,9 @@ void RobotManipulationSimulator::watch() {
 
 void RobotManipulationSimulator::indicateFailure() {
   // drop object
-  for_list(ors::Joint, e, getBodyByName("fing1c")->outLinks) {
-    del_edge(e,bodies,joints,true); //otherwise: no object in hand
-  }
+  JointL& L = getBodyByName("fing1c")->outLinks;
+  while(L.N) delete L.last();
+    //del_edge(e,bodies,joints,true); //otherwise: no object in hand
   std::cerr << "RobotManipulationSimulator: CONTROL FAILURE" << endl;
   relaxPosition();
 }
@@ -1015,8 +1015,8 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
       if(getContact(fingIdx,obj->index)) break;
     }
     if(bodies(id_grabbed)->inLinks.N) {
-      ors::Joint* e=bodies(id_grabbed)->inLinks(0);
-      del_edge(e,bodies,joints,true);
+      delete bodies(id_grabbed)->inLinks(0);
+      //del_edge(e,bodies,joints,true);
     }
   }
 
@@ -1086,8 +1086,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
       if(x.active==1 || getContact(x.i,obj->index)) break;
     }
     if(bodies(id_grabbed)->inLinks.N) {
-      ors::Joint* e=bodies(id_grabbed)->inLinks(0);
-      del_edge(e,bodies,joints,true);
+      delete bodies(id_grabbed)->inLinks(0);
     }
   }
   
@@ -1149,7 +1148,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
   // reset contact of grabbed object
   if(s!=NULL) {
     s->cont = true;
-    swift().initActivations();
+    swift().initActivations(*this);
   }
   if(t==Tabort) { indicateFailure(); return; }
 }
@@ -1429,8 +1428,8 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   
   // Phase 4: let loose
   if(bodies(obj_dropped1_index)->inLinks.N && obj_is_inhand) {
-    ors::Joint* e=bodies(obj_dropped1_index)->inLinks(0);
-    del_edge(e,bodies,joints,true); //otherwise: no object in hand
+    delete bodies(obj_dropped1_index)->inLinks(0);
+    //del_edge(e,bodies,joints,true); //otherwise: no object in hand
   }
 }
 
@@ -1449,7 +1448,8 @@ void RobotManipulationSimulator::dropObject(uint manipulator_id) {
   if(bodies(manipulator_id)->outLinks.N == 0)
     return;
   CHECK(bodies(manipulator_id)->outLinks.N == 1, "too many objects in hand");
-  del_edge(bodies(manipulator_id)->outLinks(0), bodies, joints, true);
+  delete bodies(manipulator_id)->outLinks(0);
+  //del_edge(bodies(manipulator_id)->outLinks(0), bodies, joints, true);
 }
 
 
@@ -1607,7 +1607,7 @@ void RobotManipulationSimulator::relaxPosition(const char* message) {
   // simplification: set on contacts for inhand-object
   if(s!=NULL) {
     s->cont = true;
-    swift().initActivations();
+    swift().initActivations(*this);
   }
   
   if(t==Tabort) { indicateFailure(); return; }
@@ -1702,7 +1702,7 @@ void RobotManipulationSimulator::openBox(uint id, const char* message) {
   // open it
   ors::Shape* s = bodies(id)->shapes.last();
   s->rel.setText("<t(0 0 .075) t(0 -.05 0) d(80 1 0 0) t(0 .05 .0)>");
-  swift().initActivations();
+  swift().initActivations(*this);
 
   ode().pushPoseForShape(s);
 }
@@ -1744,7 +1744,7 @@ void RobotManipulationSimulator::closeBox(uint id, const char* message) {
   // close it
   ors::Shape* s = bodies(id)->shapes.last();
   s->rel.setText("<t(0 0 .075)>");
-  swift().initActivations();
+  swift().initActivations(*this);
   ode().pushPoseForShape(s);
 }
 
@@ -1796,13 +1796,12 @@ void generateOrsFromSample(ors::KinematicWorld& ors, const MT::Array<arr>& sampl
   //}
   //}
   for(uint i = 0; i < sample.N; i+=2) {
-    ors::Body* body = new ors::Body;
-    createCylinder(*body, sample(0,i), ARR(1., 0., 0.), sample(0,i+1));
+    ors::Body* body = new ors::Body(ors.bodies);
+    createCylinder(ors, *body, sample(0,i), ARR(1., 0., 0.), sample(0,i+1));
     MT::String name;
     name << "o7" << i;
     cout << name << endl;
     body->name = name;
-    ors.bodies.append(body);
   }
 }
 
@@ -1840,22 +1839,20 @@ void generateBlocksSample(MT::Array<arr>& sample, const uint numOfBlocks) {
 }
 
 
-void createCylinder(ors::Body& cyl, const ors::Vector& pos, const arr& color) {
+void createCylinder(ors::KinematicWorld& G, ors::Body& cyl, const ors::Vector& pos, const arr& color) {
   arr size = ARR(0.1, 0.1, 0.108, 0.0375);
-  createCylinder(cyl, pos, color, size);
+  createCylinder(G, cyl, pos, color, size);
 }
 
 
-void createCylinder(ors::Body& cyl, const ors::Vector& pos, const arr& color, const arr& size) {
+void createCylinder(ors::KinematicWorld& G, ors::Body& cyl, const ors::Vector& pos, const arr& color, const arr& size) {
   ors::Transformation t;
   t.pos = pos;
-  ors::Shape* s = new ors::Shape();
+  ors::Shape* s = new ors::Shape(G.shapes, cyl);
   for(uint i = 0; i < 4; ++i) { s->size[i] = size(i);}
   s->type = ors::cylinderST;
   for(uint i = 0; i < 3; ++i) s->color[i] = color(i);
-  s->body = &cyl;
   
-  cyl.shapes.append(s);
   cyl.X = t;
 }
 

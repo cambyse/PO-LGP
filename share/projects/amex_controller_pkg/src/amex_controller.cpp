@@ -72,8 +72,8 @@ void AmexController::runAmex(double dtReal) {
   /// Get current task state
   arr stateVec, yNext, ydNext;
   world.setJointState(q,qd);
-  world.kinematicsPos(state,NoArr,world.getBodyByName("endeffR")->index);
-  world.kinematicsVec(stateVec,NoArr,world.getBodyByName("endeffR")->index);
+  world.kinematicsPos(state,NoArr,world.getBodyByName("endeffR"));
+  world.kinematicsVec(stateVec,NoArr,world.getBodyByName("endeffR"));
   state.append(stateVec);
 
 
@@ -130,8 +130,8 @@ void AmexController::initController(){
   world.setJointState(q,qd);
 
   arr stateVec;
-  world.kinematicsPos(state,NoArr,world.getBodyByName("endeffR")->index);
-  world.kinematicsVec(stateVec,NoArr,world.getBodyByName("endeffR")->index);
+  world.kinematicsPos(state,NoArr,world.getBodyByName("endeffR"));
+  world.kinematicsVec(stateVec,NoArr,world.getBodyByName("endeffR"));
   state.append(stateVec);
   cout << "robot initial state: " << state << endl;
   cout << "plan initial state: " << x0 << endl;

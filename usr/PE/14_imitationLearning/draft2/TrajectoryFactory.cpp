@@ -30,14 +30,14 @@ void createToyDemonstrations1(MT::Array<Demonstration> &demos) {
     cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<" # joints=" <<world.getJointStateDimension()<<endl;
 
     arr x(T+1,n); x.setZero();
-    optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+    optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, damping=1e-3, maxStep=1.));
     //    displayTrajectory(x, 1, world, "planned trajectory", 0.01);
 
     arr kinPos, xRefPos;
     // store cartesian coordinates and endeffector orientation
     for (uint t=0;t<=T;t++) {
       world.setJointState(x[t]);
-      world.kinematicsPos(kinPos,NoArr,MP.world.getBodyByName("endeff")->index);
+      world.kinematicsPos(kinPos,NoArr,MP.world.getBodyByName("endeff"));
       xRefPos.append(~kinPos);
     }
     Demonstration dem;

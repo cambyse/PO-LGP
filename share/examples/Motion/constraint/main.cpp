@@ -3,7 +3,6 @@
 #include <Motion/taskMap_constrained.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
-#include <Optim/constrained.h>
 #include <Perception/videoEncoder.h>
 #include <iomanip>
 
@@ -41,6 +40,7 @@ int main(int argc,char** argv){
 
   if(con){
     c = P.addTask("collisionConstraints", new CollisionConstraint());
+    P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1.);
   }else{
     c = P.addTask("collision", new DefaultTaskMap(collTMT, 0, NoVector, 0, NoVector, ARR(.1)));
     P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
@@ -54,10 +54,9 @@ int main(int argc,char** argv){
 
   Convert CP(MF);
 #if 1
-  ConstrainedMethodType method = (ConstrainedMethodType)MT::getParameter<int>("method");
-  optConstrained(x, NoArr, CP, OPT(verbose=1, stopIters=100, damping=1., maxStep=1., nonStrict=5, constrainedMethod=method));
+  optConstrained(x, P.dualMatrix, CP);
   P.costReport();
-//  for(;;) displayTrajectory(x, 1, G, "planned trajectory");
+  for(uint i=0;i<5;i++) displayTrajectory(x, 1, G, "planned trajectory");
 #else
   UnconstrainedProblem UCP(CP);
   UCP.mu = 1.;
@@ -65,7 +64,7 @@ int main(int argc,char** argv){
   if(con){
     for(uint k=0;k<20;k++){
 //      checkAll(CP, x, 1e-4);
-      optNewton(x, UCP, OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1., maxStep=1., nonStrict=5));
+      optNewton(x, UCP, OPT(verbose=2, stopIters=100, damping=1., maxStep=1., nonStrict=5));
       P.costReport();
       displayTrajectory(x, 1, G, "planned trajectory");
 //      saveTrajectory(x, G, gl);
@@ -74,7 +73,7 @@ int main(int argc,char** argv){
     }
   }else{
     for(uint k=0;k<10;k++){
-      optNewton(x, CP, OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1., maxStep=1., nonStrict=5));
+      optNewton(x, CP, OPT(verbose=2, stopIters=100, damping=1., maxStep=1., nonStrict=5));
       P.costReport();
       displayTrajectory(x, 1, G, "planned trajectory");
     }

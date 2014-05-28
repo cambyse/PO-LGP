@@ -24,7 +24,7 @@ void testActionMachine()
   // action = activity.machine->add(
   //     new AlignEffTo("endeffR", ARR(1, 0, 0), ARR(1, 0, 0)));
   GroundedAction* action = activity.machine->add(
-      new PushForce("endeffR", ARR(1, 2, 3), ARR(1, 4, 8))
+      new PushForce("endeffR", ARR(1, 2, 3)/*, ARR(1, 4, 8)*/)
   );
   activity.machine->waitForActionCompletion(action);
 
@@ -71,7 +71,7 @@ void test_push()
   activity.machine->waitForActionCompletion(a_right);
   cout << "waiting" << endl;
   MT::wait(3);
-  GroundedAction* push = activity.machine->add(new PushForce("endeffR", {.0, -.05, 0}, {0., 1., 0.}));
+  GroundedAction* push = activity.machine->add(new PushForce("endeffR", {.0, -.05, 0}/*, {0., 1., 0.}*/));
   activity.machine->waitForActionCompletion(push);
 
   engine().close(activity);
@@ -134,11 +134,11 @@ void idle2()
 int main(int argc, char** argv)
 {
   MT::initCmdLine(argc, argv);
-  // test_push();
+//   test_push();
   // idle();
   // idle2();
-  test_collision();
-  // do_the_dance();
+//  test_collision();
+   do_the_dance();
   // testActionMachine();
   return 0;
 }

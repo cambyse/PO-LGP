@@ -1,3 +1,21 @@
+/*  ---------------------------------------------------------------------
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a COPYING file of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
 #include "motionHeuristics.h"
 #include "taskMap_default.h"
 #include "taskMap_proxy.h"
@@ -78,7 +96,7 @@ void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, ui
   //activate collision testing with target shape
   ors::Shape *target_shape = MP.world.shapes(shapeId);
   target_shape->cont=true;
-  MP.world.swift().initActivations();
+  MP.world.swift().initActivations(MP.world);
   
   //
   arr target,initial;
@@ -203,7 +221,7 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
   //activate collision testing with target shape
   ors::Shape *target_shape = MP.world.shapes(shapeId);
   target_shape->cont=true;
-  MP.world.swift().initActivations();
+  MP.world.swift().initActivations(MP.world);
 
   //
   arr target,initial;
@@ -250,8 +268,8 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
 
   //-- finger tips close to surface : using ProxyTaskVariable
   uintA shapes = stringListToShapeIndices(
-                   ARRAY<const char*>("tip1",
-                                      "tip2"), MP.world.shapes);
+                   ARRAY<const char*>("l_gripper_l_finger_tip_link_0",
+                                      "l_gripper_r_finger_tip_link_0"), MP.world.shapes);
   shapes.append(shapeId); shapes.append(shapeId);
   shapes.reshape(2,2); shapes = ~shapes;
   c = MP.addTask("graspContacts", new ProxyTaskMap(vectorPTMT, shapes, .1, false));
@@ -269,9 +287,9 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
   //-- collisions with other objects
   shapes = ARRAY<uint>(shapeId);
   c = MP.addTask("otherCollisions",
-                    new ProxyTaskMap(allExceptListedPTMT, shapes, .04, true));
+                 new ProxyTaskMap(allExceptListedPTMT, shapes, .04, true));
   target = ARR(0.);
-  MP.setInterpolatingCosts(c, MotionProblem::constant, target, colPrec);
+  MP.setInterpolatingCosts(c, MotionProblem::constant, NoArr, colPrec);
 //  arr initial;
   c->map.phi(initial, NoArr, MP.world);
   if(initial(0)>0.) { //we are in collision/proximity -> depart slowly
@@ -464,7 +482,7 @@ double keyframeOptimizer(arr& x, MotionProblem& MP, bool x_is_initialized, uint 
 
   double cost;
 
-  optNewton(x, Convert(MF), OPT(fmin_return=&cost, verbose=verbose, stopIters=200, useAdaptiveDamping=false, damping=1e-0, maxStep=.5, stopTolerance=1e-2));
+  optNewton(x, Convert(MF), OPT(fmin_return=&cost, verbose=verbose, stopIters=200, damping=1e-0, maxStep=.5, stopTolerance=1e-2));
 
   return cost;
 }

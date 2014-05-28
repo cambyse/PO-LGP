@@ -1,20 +1,21 @@
 /*  ---------------------------------------------------------------------
-    Copyright 2013 Marc Toussaint
-    email: mtoussai@cs.tu-berlin.de
-
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
 
 
 
@@ -131,8 +132,8 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl)
   ors::Quaternion ROT; ROT.setDeg(90, 1, 0, 0); //rotate the armature
   
   for(i=0; i<frames.d0; i++) {
-    n=new ors::Body(bl);
-    s=new ors::Shape(bl, *n); //always create a shape for a body...
+    n=new ors::Body(bl.bodies);
+    s=new ors::Shape(bl.shapes, *n); //always create a shape for a body...
     MT::skip(is);
     n->name=names(i);
     f.pos.set(&frames(i, 3, 0)); f.pos=ROT*f.pos;
@@ -159,10 +160,7 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl)
     p=bl.bodies(graph(i, 0));
     n=bl.bodies(graph(i, 1));
     //e=new_edge(p, n, bl.bodies, bl.joints);
-    e=new ors::Joint;
-    e->index=bl.joints.N;
-    bl.joints.append(e);
-    e->ifrom=p->index; e->ito=n->index;
+    e=new ors::Joint(bl, p, n);
     f.pos.set(&frames(graph(i, 1), 3, 0));  f.pos=ROT*f.pos;
     f.rot.setMatrix(frames[graph(i, 1)].sub(0, 2, 0, 2).p);
     f.rot.invert();
@@ -171,7 +169,7 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl)
     e->A.setDifference(p->X, f);
     e->B.setDifference(f, n->X); //p=(h-t)/2;
   }
-  graphMakeLists(bl.bodies, bl.joints);
+  NIY//graphMakeLists(bl.bodies, bl.joints);
   /* GROUPS: retired
   mesh.GF.resize(bl.bodies.N);
   for(i=0; i<bl.bodies.N; i++) {

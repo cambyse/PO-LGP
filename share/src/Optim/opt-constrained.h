@@ -1,3 +1,23 @@
+/*  ---------------------------------------------------------------------
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a COPYING file of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+#pragma once
+
 #include "optimization.h"
 
 //==============================================================================
@@ -45,8 +65,6 @@ struct PhaseOneProblem:ConstrainedProblem{
   PhaseOneProblem(ConstrainedProblem &_f):f(_f) {}
 
   virtual double fc(arr& df, arr& Hf, arr& g, arr& Jg, const arr& x);
-//  virtual double fs(arr& g, arr& H, const arr& x);
-//  virtual void fv(arr& metaPhi, arr& metaJ, const arr& x);
   virtual uint dim_x(){ return f.dim_x()+1; }
   virtual uint dim_g(){ return f.dim_g()+1; }
 };
@@ -57,4 +75,4 @@ struct PhaseOneProblem:ConstrainedProblem{
 // Solvers
 //
 
-void optConstrained(arr& x, arr &dual, ConstrainedProblem& P, OptOptions opt);
+void optConstrained(arr& x, arr &dual, ConstrainedProblem& P, OptOptions opt=NOOPT);

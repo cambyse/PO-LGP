@@ -3,7 +3,7 @@ case $yn in
      y|Y)
 	git reset --hard
 	git clean -f -d -x
-	cmake .
+	cmake -DWITH_ROS=OFF -DWITH_G4=OFF .
 	make -k -j4
 	;;
     *) ;;

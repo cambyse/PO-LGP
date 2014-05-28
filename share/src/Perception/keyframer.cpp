@@ -208,7 +208,7 @@ void KeyFramer::updateOrs(uint f, bool show) {
     b->X.rot.set(xQuat.p);
   }
   s->kw->calc_fwdPropagateShapeFrames();
-  s->kw->computeProxies();
+  s->kw->stepSwift();
   s->kw->gl().text.clear() << "frame " << f << "/" << s->g4d->getNumFrames();
   if(show) s->kw->gl().update(NULL, false);
 }

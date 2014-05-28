@@ -1,32 +1,34 @@
 ** task & constraints
 
-check the consistency of the constraintProcyVariable with squared
+check the consistency of the constraintProxyVariable with squared
 penelty and old task variables
+
+** task map
+* clean up DefaultTaskMap -> spearate in separate classes
+
+** PR2
+* force torqu sensor in regler integrieren
+* low gain turning of handles (don't think as them as parts of the robot,no exact model, just relax and pull somehow)
+* generell: sobald man etwas anfasst: relax, gravity compensation is easier
+* action for pregrasp
+* task variable that allows a target RANGE
+
+** ORS:
+* in phi_t: have a list of k ors copies
+  * on entry, check which are equal to x_{t-k},..,x_t
+  * permute
+  * set the remaining
 
 ** traj optim
 
-- don't include task with zero prec in $f_t$ terms
 - mix vel and acc penalties for optimization
-
-** ROS msgs
-
-python2 $ROSDIR/lib/gencpp/gen_cpp.py \
-        $MSGFILE \
-        -p $PKGNAME \
-        -e $ROSDIR/share/gencpp \
-        -I "std_msgs:$ROSDIR/share/std_msgs/msg" \
-        -I "geometry_msgs:$ROSDIR/share/geometry_msgs/msg" \
-        -o $OUTPUTDIR
-
-Johannes
+- have k ors copies in converting kOrderMarkov to sqrfunction
+- have psi (transition costs) as normal task variable
 
 **
 
 LOG in motion.cpp
 clearly introduce constraint maps as tasks -- feasibility, automatic penalty reduction
-
-** drive the robot:
-http://wiki.ros.org/pr2_controllers/Tutorials/Using%20the%20robot%20base%20controllers%20to%20drive%20the%20robot
 
 ** checkJointDimension is really const (HALT if state was not set)
 getJointDimension is not const

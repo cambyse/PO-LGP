@@ -77,7 +77,7 @@ arr optimize_trajectory(ors::KinematicWorld& G, const arr& init_trajectory) {
 
   MotionProblemFunction MF(P);
   arr x = init_trajectory;
-  optNewton(x, Convert(MF), OPT(verbose=2, stopIters=40, useAdaptiveDamping=false, damping=1e-0, maxStep=1.));
+  optNewton(x, Convert(MF), OPT(verbose=2, stopIters=40, damping=1e-0, maxStep=1.));
   DEBUG_VAR(main, x);
   return x;
 }

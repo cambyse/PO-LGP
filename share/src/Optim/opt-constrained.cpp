@@ -1,4 +1,22 @@
-#include "constrained.h"
+/*  ---------------------------------------------------------------------
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a COPYING file of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
+#include "opt-constrained.h"
 #include "opt-newton.h"
 
 //==============================================================================
@@ -92,7 +110,7 @@ void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc
 
     arr AF = comp_A_x(A, dF_x);
     arr beta;
-    lapack_Ainv_b_sym(beta, tmp, AF);
+    beta = lapack_Ainv_b_sym(tmp, AF);
 
     lambda += lambdaStepsize * (2.*mu*g_x - beta);
 #else
@@ -112,7 +130,7 @@ void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc
 
       arr AF = comp_A_x(A, dL_x);
       arr beta;
-      lapack_Ainv_b_sym(beta, tmp, AF);
+      beta = lapack_Ainv_b_sym(tmp, AF);
       //reinsert zero rows
       for(uint i=0;i<g_x.N;i++) if(!(g_x(i)>0. || lambda(i)>0.)){
         beta.insert(i,0.);
@@ -132,7 +150,7 @@ void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc
     arr tmp = comp_A_At(A);
     for(uint i=0;i<tmp.d0;i++) tmp(i,i) += 1e-6;
     arr beta;
-    lapack_Ainv_b_sym(beta, tmp, comp_A_x(A, dL_x));
+    beta = lapack_Ainv_b_sym(tmp, comp_A_x(A, dL_x));
     //reinsert zero rows
     for(uint i=0;i<g_x.N;i++) if(!(g_x(i)>0. || lambda(i)>0.)){
       beta.insert(i,0.);
@@ -143,7 +161,7 @@ void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc
   for(uint i=0;i<g_x.N;i++) if(lambda(i)<0.) lambda(i)=0.;
 
   //-- adapt mu as well
-  double muOld=mu;
+  //double muOld=mu;
   if(muInc>1.) mu *= muInc;
 
 #if 0 //this is too inefficient. Simple recomputing the Lagrangian (based on the buffered f df Hf g Jg) is much more efficient
@@ -230,11 +248,13 @@ void optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
 
   UnconstrainedProblem UCP(P);
 
+  uint stopTolInc;
+
   //switch on penalty terms
   switch(opt.constrainedMethod){
     case squaredPenalty: UCP.mu=1.;  break;
     case augmentedLag:   UCP.mu=1.;  break;
-    case anyTimeAula:    UCP.mu=1.;  break;
+    case anyTimeAula:    UCP.mu=1.;  stopTolInc=MT::getParameter("/opt/optConstrained/anyTimeAulaStopTolInc",10.); break;
     case logBarrier:     UCP.muLB=.1;  break;
     case noMethod: HALT("need to set method before");  break;
   }
@@ -258,11 +278,13 @@ void optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
 
     arr x_old = x;
     if(opt.constrainedMethod==anyTimeAula){
-      //for(uint l=0;l<10; l++) newton.step();
-      for(uint l=0;l<5; l++){
+      double stopTol = newton.o.stopTolerance;
+      for(uint l=0;l<20; l++){
         OptNewton::StopCriterion res = newton.step();
         if(res>=OptNewton::stopCrit1) break;
+        newton.o.stopTolerance*=stopTolInc;
       }
+      newton.o.stopTolerance = stopTol;
     }else{
       newton.reinit();
       newton.run();

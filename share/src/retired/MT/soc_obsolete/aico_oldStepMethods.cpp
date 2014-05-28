@@ -159,7 +159,7 @@ double AICO_clean::stepKinematic(){
 
       //compute (b, B);
       Binv[t] = Sinv[t] + Vinv[t] + R[t];
-      lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
+      b[t]() = lapack_Ainv_b_sym(Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
       //cout <<"b\n" <<b[t] <<endl <<B[t] <<endl;
 
 #if USE_TRUNCATION //PRELIMINARY - hard constraints handled with truncating Gaussians
@@ -334,10 +334,10 @@ double AICO_clean::stepClean(){
     //compute (b, B);
     if(damping && dampingReference.N){
       Binv[t] = Sinv[t] + Vinv[t] + R[t] + Dinv;
-      lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t] + Dinv*dampingReference[t]);
+      b[t]() = lapack_Ainv_b_sym(Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t] + Dinv*dampingReference[t]);
     }else{
       Binv[t] = Sinv[t] + Vinv[t] + R[t];
-      lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
+      b[t]() = lapack_Ainv_b_sym(Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
     }
     //cout <<"b\n" <<b[t] <<endl <<B[t] <<endl;
 
@@ -471,10 +471,10 @@ double AICO_clean::stepDynamic(){
     //compute (b, B);
     if(damping && dampingReference.N){
       Binv[t] = Sinv[t] + Vinv[t] + R[t] + Dinv;
-      lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t] + Dinv*dampingReference[t]);
+      b[t]() = lapack_Ainv_b_sym(Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t] + Dinv*dampingReference[t]);
     }else{
       Binv[t] = Sinv[t] + Vinv[t] + R[t];
-      lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
+      b[t]() = lapack_Ainv_b_sym(Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
     }
     //cout <<"b\n" <<b[t] <<endl <<B[t] <<endl;
 
@@ -679,7 +679,7 @@ double AICO_clean::stepGaussNewton(){
     
     //compute (b, B);
     Binv[t] = Sinv[t] + Vinv[t] + R[t];
-    lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
+    b[t]() = lapack_Ainv_b_sym(Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
     //*/
     
     if(t==T && dt==1){ //go backward again

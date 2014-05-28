@@ -31,9 +31,9 @@ LIBS += -lcudart -lcublas -lcutil
 endif
 endif
 
-ifeq ($(GTEST),1)
-CXXFLAGS += -DMT_GTEST
-LIBS += -lgtest
+ifeq ($(MLR_TESTS),1)
+CXXFLAGS += -DMT_GTEST -DEXAMPLES_AS_TESTS
+LIBS += -lgtest -lpthread
 endif
 
 ifeq ($(FREEGLUT),1)
@@ -86,7 +86,7 @@ endif
 
 ifeq ($(GRAPHVIZ),1)
 CXXFLAGS += -DMT_GRAPHVIZ
-LIBS += -lgraph -lcgraph -lgvc
+LIBS += -lcgraph -lgvc
 endif
 
 ifeq ($(WX),1)

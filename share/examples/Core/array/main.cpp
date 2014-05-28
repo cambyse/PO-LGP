@@ -442,7 +442,7 @@ void TEST(Inverse){
   double t_symPosDef = MT::timerRead();
   cout <<"lapack SymDefPos inverse time = " <<t_symPosDef <<flush;
   cout <<" error = " <<maxDiff(A*invA, I) <<std::endl;
-  CHECK_ZERO(maxDiff(A*invA, I), 1e-10, "lapack SymDefPos inverse failed");
+  CHECK_ZERO(maxDiff(A*invA, I), 1e-6, "lapack SymDefPos inverse failed");
 
   CHECK(t_lapack < t_native, "lapack matrix inverse slower than native");
   CHECK(t_symPosDef < t_lapack, "symposdef matrix inverse slower than general");

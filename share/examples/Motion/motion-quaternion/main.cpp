@@ -5,7 +5,6 @@
 #include <Motion/taskMap_constrained.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
-#include <Optim/constrained.h>
 #include <Optim/benchmarks.h>
 
 int main(int argc,char** argv){
@@ -65,7 +64,7 @@ int main(int argc,char** argv){
   //-- optimize
   for(uint k=0;k<5;k++){
     MT::timerStart();
-    optNewton(x, Convert(MF), OPT(verbose=2, stopIters=20, maxStep=1., stepInc=2., nonStrict=(!k?15:5)));
+    optNewton(x, Convert(MF), OPT(verbose=2, stopIters=20, maxStep=1., stepInc=2., nonStrictSteps=(!k?15:5)));
 
     cout <<"** optimization time=" <<MT::timerRead() <<endl;
     MP.costReport();

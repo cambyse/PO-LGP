@@ -91,10 +91,10 @@ bool AlignEffTo::finishedSuccess(ActionMachine& M) {
 
 // ============================================================================
 // PushForce
-PushForce::PushForce(const char* effName, arr forceVec, arr poseArg2)
+PushForce::PushForce(const char* effName, arr forceVec)
     : effName(effName)
     , forceVec(forceVec)
-    , poseArg2(poseArg2)
+//    , poseArg2(poseArg2)
 {
   ID=symbols().N;
   symbols().append(this);

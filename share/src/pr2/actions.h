@@ -39,9 +39,9 @@ struct AlignEffTo : GroundedAction {
 struct PushForce : GroundedAction {
   MT::String effName;
   arr forceVec;
-  arr poseArg2; // TODO what is this? Find a proper name.
+//  arr poseArg2; // TODO what is this? Find a proper name.
 
-  PushForce(const char* effName, arr forceVec, arr poseArg2);
+  PushForce(const char* effName, arr forceVec/*, arr poseArg2*/);
 
   /// @name Inherited stuff
   virtual void initYourself(ActionMachine& actionMachine);

@@ -1,20 +1,21 @@
 /*  ---------------------------------------------------------------------
-    Copyright 2013 Marc Toussaint
-    email: mtoussai@cs.tu-berlin.de
-
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
 
 #ifndef MT_array_t_cpp
 #define MT_array_t_cpp
@@ -362,8 +363,10 @@ template<class T> void MT::Array<T>::resizeMEM(uint n, bool copy) {
       p=new T [Mnew];      //p=(T*)malloc(M*sizeT);
       if(!p) { p=pold; M=Mold; HALT("memory allocation failed! Wanted size = " <<Mnew*sizeT <<"bytes"); }
       M=Mnew;
-      if(copy && memMove==0) for(i=N<n?N:n; i--;) p[i]=pold[i];
-      if(copy && memMove==1) memmove(p, pold, sizeT*(N<n?N:n));
+      if(copy){
+        if(memMove==1) memmove(p, pold, sizeT*(N<n?N:n));
+        else for(i=N<n?N:n; i--;) p[i]=pold[i];
+      }
     } else {
       p=0;
     }
@@ -1058,7 +1061,7 @@ template<class T> void MT::Array<T>::setZero(byte zero) {
 /// concatenate 2D matrices (or vectors) column-wise
 template<class T> MT::Array<T> catCol(const MT::Array<MT::Array<T>*>& X) {
   uint d0=X(0)->d0, d1=0;
-  for_list(MT::Array<T>,  x,  X) { CHECK((x->nd==2 || x->nd==1) && x->d0==d0, ""); d1+=x->nd==2?x->d1:1; }
+  for(MT::Array<T> *x:X) { CHECK((x->nd==2 || x->nd==1) && x->d0==d0, ""); d1+=x->nd==2?x->d1:1; }
   MT::Array<T> z(d0, d1);
   d1=0;
   for(MT::Array<T> *x:  X) { z.setMatrixBlock(*x, 0, d1); d1+=x->nd==2?x->d1:1; }
@@ -1619,9 +1622,18 @@ template<class T> const MT::Array<T>& MT::Array<T>::ioraw() const { IOraw=true; 
 /// array must have correct size! simply streams in all elements sequentially
 template<class T> void MT::Array<T>::readRaw(std::istream& is) {
   uint i;
-  for(i=0; i<N; i++) {
-    is >>p[i];
-    if(is.fail()) HALT("could not read " <<i <<"-th element of an array");
+  if(N){
+    for(i=0; i<N; i++) {
+      is >>p[i];
+      if(is.fail()) HALT("could not read " <<i <<"-th element of an array");
+    }
+  }else{
+    T x;
+    for(;;){
+      is >>x;
+      if(!is.good()){ is.clear(); return; }
+      append(x);
+    }
   }
 }
 
@@ -3195,6 +3207,10 @@ template<class T> void listDelete(MT::Array<T*>& L) {
   L.clear();
 }
 
+template<class T> void listReindex(MT::Array<T*>& L) {
+  for(uint i=0;i<L.N;i++) L.elem(i)->index=i;
+}
+
 template<class T> T* listFindByName(const MT::Array<T*>& L, const char* name) {
   for_list(T,  e,  L) if(e->name==name) return e;
   //std::cerr <<"\n*** name '" <<name <<"' not in this list!" <<std::endl;
@@ -3495,10 +3511,10 @@ template<class vert, class edge> bool graphTopsort(MT::Array<vert*>& V, MT::Arra
   //success!
   V.permuteInv(newIndex);
   for_list(vert,  vv,  V) vv->index = vv_COUNT;
-  for(edge *e: E) {
-    e->ifrom=e->from->index;
-    e->ito  =e->to->index;
-  }
+//  for(edge *e: E) {
+//    e->ifrom=e->from->index;
+//    e->ito  =e->to->index;
+//  }
 
   //-- reindex edges as well:
   newIndex.resize(E.N);

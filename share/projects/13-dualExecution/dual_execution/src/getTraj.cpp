@@ -3,7 +3,6 @@
 #include <Motion/taskMap_constrained.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
-#include <Optim/constrained.h>
 #include <Core/thread.h>
 
 #include "getTraj.h"
@@ -30,8 +29,8 @@ void getTrajectory(arr& x, arr& y, arr& ori, arr& dual, ors::KinematicWorld& wor
   UnConstrainedP.mu = 10.;
 
   for(uint k=0;k<5;k++){
-    optNewton(x, UnConstrainedP, OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1e-3, stopTolerance=1e-4, maxStep=.5));
-//    optNewton(x, UCP, OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+    optNewton(x, UnConstrainedP, OPT(verbose=2, stopIters=100, damping=1e-3, stopTolerance=1e-4, maxStep=.5));
+//    optNewton(x, UCP, OPT(verbose=2, stopIters=100, damping=1e-3, maxStep=1.));
     P.costReport();
 //    displayTrajectory(x, 1, G, gl,"planned trajectory");
     UnConstrainedP.augmentedLagrangian_LambdaUpdate(x, .9);
