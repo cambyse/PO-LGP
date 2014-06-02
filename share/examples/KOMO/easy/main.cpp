@@ -12,6 +12,7 @@ void TEST(Easy){
 //===========================================================================
 
 void TEST(EasyPR2){
+  //NOTE: this uses a 25-DOF whole-body-motion model of the PR2
   ors::KinematicWorld G("model.kvg");
   makeConvexHulls(G.shapes);
   for(ors::Shape *s:G.shapes) s->cont=true;
@@ -42,10 +43,10 @@ void TEST(EasyAlign2){
 int main(int argc,char** argv){
   MT::initCmdLine(argc,argv);
 
-  testEasy();
+//  testEasy();
   testEasyPR2();
-  testEasyAlign();
-  testEasyAlign2();
+//  testEasyAlign();
+//  testEasyAlign2();
 
   return 0;
 }
