@@ -46,6 +46,11 @@ double scalarProduct(const ors::Quaternion& a, const ors::Quaternion& b);
  */
 namespace ors {
 
+double& Vector::operator()(uint i) {
+  CHECK(i<3,"out of range");
+  return (&x)[i];
+}
+
 /// set the vector
 void Vector::set(double _x, double _y, double _z) { x=_x; y=_y; z=_z; isZero=(x==0. && y==0. && z==0.); }
 

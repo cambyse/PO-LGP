@@ -8,21 +8,21 @@
 arr moveTo(ors::KinematicWorld& world,
            ors::Shape &endeff,
            ors::Shape& target,
-//           byte whichAxesToAlign,
+           byte whichAxesToAlign,
            uint iterate){
   //-- parameters
   double posPrec = MT::getParameter<double>("KOMO/moveTo/precision", 1e3);
   double colPrec = MT::getParameter<double>("KOMO/moveTo/collisionPrecision", -1e0);
   double margin = MT::getParameter<double>("KOMO/moveTo/collisionMargin", .1);
   double zeroVelPrec = MT::getParameter<double>("KOMO/moveTo/finalVelocityZeroPrecision", 1e1);
-//  double alignPrec = MT::getParameter<double>("KOMO/moveTo/alignPrecision", 1e2);
+  double alignPrec = MT::getParameter<double>("KOMO/moveTo/alignPrecision", 1e3);
 
   //-- set up the MotionProblem
   target.cont=false;
 
   MotionProblem MP(world);
   MP.loadTransitionParameters();
-//  world.swift().initActivations(world);
+  world.swift().initActivations(world);
 
   TaskCost *c;
   c = MP.addTask("endeff_pos", new DefaultTaskMap(posTMT, endeff.index, NoVector, target.index, NoVector));
@@ -40,10 +40,14 @@ arr moveTo(ors::KinematicWorld& world,
   }
   MP.setInterpolatingCosts(c, MotionProblem::constant, {0.}, colPrec);
 
-//  for(uint i=0;i<3;i++) if(whichAxesToAlign&(1<<i)){
-//    c = MP.addTask(STRING("endeff_align_"<<i), new DefaultTaskMap(vecAlignTMT, endeff.index, NoVector, target.index, NoVector));
-//    MP.setInterpolatingCosts(c, MotionProblem::finalOnly, {1.}, alignPrec);
-//  }
+  for(uint i=0;i<3;i++) if(whichAxesToAlign&(1<<i)){
+    ors::Vector axis;
+    axis.setZero();
+    axis(i)=1.;
+    c = MP.addTask(STRING("endeff_align_"<<i),
+                   new DefaultTaskMap(vecAlignTMT, endeff.index, axis, target.index, axis));
+    MP.setInterpolatingCosts(c, MotionProblem::finalOnly, {1.}, alignPrec);
+  }
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction MF(MP);
@@ -59,6 +63,7 @@ arr moveTo(ors::KinematicWorld& world,
       optNewton(x, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=.5, stepInc=2., nonStrictSteps=(!k?15:5)));
     }
     cout <<"** optimization time=" <<MT::timerRead() <<endl;
+//    checkJacobian(Convert(MF), x, 1e-5);
     MP.costReport();
   }
 
