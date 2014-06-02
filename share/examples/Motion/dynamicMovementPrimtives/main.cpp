@@ -393,6 +393,7 @@ void scenario4() {
 }
 
 int main(int argc,char **argv){
+  MT::initCmdLine(argc, argv);
   switch(MT::getParameter<int>("mode",4)){
   case 1:  scenario1();  break;
   case 2:  scenario2();  break;

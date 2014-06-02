@@ -53,10 +53,10 @@ int main(int argc,char** argv){
   x.setZero();
 
   Convert CP(MF);
-#if 1
+#if 0
   optConstrained(x, P.dualMatrix, CP);
   P.costReport();
-  for(uint i=0;i<5;i++) displayTrajectory(x, 1, G, "planned trajectory");
+  for(uint i=0;i<1;i++) displayTrajectory(x, 1, G, "planned trajectory");
 #else
   UnconstrainedProblem UCP(CP);
   UCP.mu = 1.;

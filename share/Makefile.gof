@@ -42,7 +42,12 @@ inf:
 
 ################################################################################
 
-tests:
+test: setConfigFlag $(exa_paths:%=cleanPath/%) cleanLocks $(exa_paths:%=makePath/%)
+
+setConfigFlag: force
+	echo "MLR_TESTS = 1" > gofMake/z.mk
+
+runTests:
 	@rm -f z.test-report
 	@find examples -mindepth 2 -maxdepth 2 -type d \
 		-not -name '*py' -not -name 'CMakeFiles'\
@@ -55,7 +60,7 @@ tests:
 
 ################################################################################
 
-doc::
+doc:
 	cd doc; doxygen MLR.doxy;
 #	$(MAKE) -w -C doc guide doxy
 
@@ -63,7 +68,7 @@ reformatSources:
 	astyle --options=src/style.astyle "src/MT/*.h" "src/MT/*.cpp" "src/MT/*.cxx"
 	cd src; find MT/ \( -name "*.h" -or -name "*.cpp" -or -name "*.cxx" \) -exec ./style.sed.sh {} \;
 
-%.tgz:: force
+%.tgz: force
 	-mv -f gofMake/config.mk gofMake/config.mk.mine
 	cp -f slices/$*.config.mk ./gofMake/config.mk
 	-mv -f ../README.md ../README.mlr.md
