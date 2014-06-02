@@ -156,6 +156,9 @@ void TEM::optimize_weights_LBFGS() {
     int nr_vars = weights.size();
     vector<lbfgsfloatval_t> values(weights.begin(),weights.end());
 
+    // reset number of objective evaluations
+    objective_evaluations = 0;
+
     // use LBFGS_Object
     LBFGS_Object lbfgs;
     lbfgs.set_objective(get_LBFGS_objective());
@@ -952,6 +955,9 @@ double TEM::neg_log_likelihood(col_vec_t& grad, const col_vec_t& w) {
         }
     }
 
+    // increment counter
+    ++objective_evaluations;
+
     // return
     return obj;
 
@@ -974,7 +980,7 @@ int TEM::LBFGS_progress(const lbfgsfloatval_t */*x*/,
                         int /*nr_variables*/,
                         int iteration_nr,
                         int /*ls*/) const {
-    DEBUG_OUT(1,"Iteration " << iteration_nr << " (Likelihood = " << exp(-fx) << ")" );
+    DEBUG_OUT(1,"Iteration " << iteration_nr << " (" << objective_evaluations << "), Likelihood = " << exp(-fx));
     //for(int x_idx : Range(nr_variables)) {
         //DEBUG_OUT(1, "    x[" << x_idx << "] = " << x[x_idx]);
     //}

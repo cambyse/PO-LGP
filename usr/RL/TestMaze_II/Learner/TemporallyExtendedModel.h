@@ -71,6 +71,12 @@ private:
      * To be updated on changes of the basis feature set or the data. */
     std::vector<std::vector<basis_feature_map_t> > basis_feature_maps;
 
+    /** \brief Counts evaluations of the objective.
+     *
+     * Variable is reset when optization is triggered to report the overall
+     * number of objective evaluations (including e.g. linesearch).*/
+    int objective_evaluations = 0;
+
     //---- methods ----//
 public:
     TemporallyExtendedModel(std::shared_ptr<ConjunctiveAdjacency>);
