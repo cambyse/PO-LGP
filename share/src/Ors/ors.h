@@ -448,7 +448,7 @@ extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawM
 extern uint orsDrawLimit;
 
 void displayState(const arr& x, ors::KinematicWorld& G, const char *tag);
-void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, const char *tag, double delay=0.);
+void displayTrajectory(const arr& x, int steps, const ors::KinematicWorld& G, const char *tag, double delay=0.);
 void editConfiguration(const char* orsfile, ors::KinematicWorld& G);
 void animateConfiguration(ors::KinematicWorld& G);
 //void init(ors::KinematicWorld& G, OpenGL& gl, const char* orsFile);

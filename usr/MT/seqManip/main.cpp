@@ -17,10 +17,10 @@ void testPickAndPlace(){
 
   //setup the problem
   ors::KinematicWorld G("model.kvg");
-  G.watch(false);
+  G.gl().update();
 
   MotionProblem MP(G);
-  MP.loadTransitionParameters();
+//  MP.loadTransitionParameters();
   MotionProblemFunction MF(MP);
 
   arr x = replicate(MP.x0, MP.T+1);
@@ -31,15 +31,16 @@ void testPickAndPlace(){
   op->symbol = ors::GraphOperator::addRigid;
   op->timeOfApplication = 10;
   op->fromId = G.getBodyByName("arm7")->index;
-  op->toId = G.getBodyByName("obj1")->index;
-//  G.operators.append(op);
+  op->toId = G.getBodyByName("obj2")->index;
+  G.operators.append(op);
 
   op = new ors::GraphOperator();
   op->symbol = ors::GraphOperator::deleteJoint;
   op->timeOfApplication = 10;
   op->fromId = G.getBodyByName("table")->index;
-  op->toId = G.getBodyByName("obj1")->index;
+  op->toId = G.getBodyByName("obj2")->index;
   G.operators.append(op);
+
 
   //-- setup new motion problem
   TaskCost *c;
@@ -48,7 +49,7 @@ void testPickAndPlace(){
                  new DefaultTaskMap(posTMT, pair(1), NoVector, pair(0), {0,0,.17}));
   c->setCostSpecs(MP.T/2, MP.T/2+5, {0.}, 1e3);
 
-  c = MP.addTask("pos",
+  c = MP.addTask("pos2",
                  new DefaultTaskMap(posTMT, pair(1), NoVector, pair(0), {0,0,.37}));
   c->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
 
@@ -76,8 +77,9 @@ void testPickAndPlace(){
   }
   MP.costReport();
 
+  G.gl().update();
   for(;;)
-  displayTrajectory(x, 1, G, "planned trajectory", .1);
+    displayTrajectory(x, 1, G, "planned trajectory", -.1);
 
 }
 

@@ -79,7 +79,7 @@ void TaskCost::setCostSpecs(uint fromTime,
 //===========================================================================
 
 MotionProblem::MotionProblem(ors::KinematicWorld& _world, bool useSwift)
-    : world(_world) , useSwift(useSwift), makeContactsAttractive(false)
+    : world(_world) , useSwift(useSwift), makeContactsAttractive(false), transitionType(none), T(0), tau(0.)
 {
   if(useSwift) {
     makeConvexHulls(world.shapes);
@@ -87,6 +87,9 @@ MotionProblem::MotionProblem(ors::KinematicWorld& _world, bool useSwift)
   }
   world.getJointState(x0, v0);
   if(!v0.N){ v0.resizeAs(x0).setZero(); world.setJointState(x0, v0); }
+  double duration = MT::getParameter<double>("duration");
+  T = MT::getParameter<uint>("timeSteps");
+  tau = duration/T;
 }
 
 MotionProblem& MotionProblem::operator=(const MotionProblem& other) {
@@ -272,7 +275,9 @@ void MotionProblem::getTaskCosts2(arr& phi, arr& J, uint t, const WorldL &G, dou
   for(TaskCost *c: taskCosts) if(c->active && c->prec.N>t && c->prec(t)){
     if(!c->map.constraint) {
       c->map.phi(y, (&J?Jy:NoArr), G, tau);
-      if(absMax(y)>1e10)  MT_MSG("WARNING y=" <<y);
+      if(absMax(y)>1e10){
+        MT_MSG("WARNING y=" <<y);
+      }
       if(c->target.N==1) y -= c->target(0);
       else if(c->target.nd==1) y -= c->target;
       else y -= c->target[t];
@@ -303,6 +308,7 @@ void MotionProblem::getTaskCosts2(arr& phi, arr& J, uint t, const WorldL &G, dou
 }
 
 uint MotionProblem::dim_psi() {
+  if(transitionType==none) return 0;
   return x0.N;
 }
 
@@ -318,9 +324,11 @@ void MotionProblem::costReport(bool gnuplt) {
   arr plotData(T+1,taskCosts.N+1); plotData.setZero();
   double totalT=0., a;
   cout <<" * transition costs:" <<endl;
-  for(uint t=0;t<=T;t++){
-    totalT += a = sumOfSqr(phiMatrix(t).sub(0,dim_psi()-1));
-    plotData(t,0) = a;
+  if(dim_psi()){
+    for(uint t=0;t<=T;t++){
+      totalT += a = sumOfSqr(phiMatrix(t).sub(0,dim_psi()-1));
+      plotData(t,0) = a;
+    }
   }
   cout <<"\t total=" <<totalT <<endl;
 
@@ -535,33 +543,35 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
   }
 
   //-- transition costs
-  double tau=MP.tau, tau2=tau*tau, tau3=tau2*tau;
-  arr h = sqrt(MP.H_rate_diag)*sqrt(tau);
-  if(k==1)  phi = (x_bar[1]-x_bar[0])/tau; //penalize velocity
-  if(k==2)  phi = (x_bar[2]-2.*x_bar[1]+x_bar[0])/tau2; //penalize acceleration
-  if(k==3)  phi = (x_bar[3]-3.*x_bar[2]+3.*x_bar[1]-x_bar[0])/tau3; //penalize jerk
-  phi = h % phi;
+  if(MP.transitionType!=MotionProblem::none){
+    double tau=MP.tau, tau2=tau*tau, tau3=tau2*tau;
+    arr h = sqrt(MP.H_rate_diag)*sqrt(tau);
+    if(k==1)  phi = (x_bar[1]-x_bar[0])/tau; //penalize velocity
+    if(k==2)  phi = (x_bar[2]-2.*x_bar[1]+x_bar[0])/tau2; //penalize acceleration
+    if(k==3)  phi = (x_bar[3]-3.*x_bar[2]+3.*x_bar[1]-x_bar[0])/tau3; //penalize jerk
+    phi = h % phi;
 
-  if(&J) {
-    J.resize(phi.N, k+1, n);
-    J.setZero();
-    for(uint i=0;i<n;i++){
-      if(k==1){ J(i,1,i) = 1.;  J(i,0,i) = -1.; }
-      if(k==2){ J(i,2,i) = 1.;  J(i,1,i) = -2.;  J(i,0,i) = 1.; }
-      if(k==3){ J(i,3,i) = 1.;  J(i,2,i) = -3.;  J(i,1,i) = +3.;  J(i,0,i) = -1.; }
+    if(&J) {
+      J.resize(phi.N, k+1, n);
+      J.setZero();
+      for(uint i=0;i<n;i++){
+        if(k==1){ J(i,1,i) = 1.;  J(i,0,i) = -1.; }
+        if(k==2){ J(i,2,i) = 1.;  J(i,1,i) = -2.;  J(i,0,i) = 1.; }
+        if(k==3){ J(i,3,i) = 1.;  J(i,2,i) = -3.;  J(i,1,i) = +3.;  J(i,0,i) = -1.; }
+      }
+      if(k==1) J/=tau;
+      if(k==2) J/=tau2;
+      if(k==3) J/=tau3;
+      J.reshape(phi.N, (k+1)*n);
+      for(uint i=0; i<n; i++) J[i]() *= h(i);
     }
-    if(k==1) J/=tau;
-    if(k==2) J/=tau2;
-    if(k==3) J/=tau3;
-    J.reshape(phi.N, (k+1)*n);
-    for(uint i=0; i<n; i++) J[i]() *= h(i);
-  }
 
-  if(&J) CHECK(J.d0==phi.N,"");
+    if(&J) CHECK(J.d0==phi.N,"");
+  }
 
   //-- task cost (which are taken w.r.t. x_bar[k])
   arr _phi, _J;
-  MP.getTaskCosts2(_phi, (&J?_J:NoArr), t, configurations, tau);
+  MP.getTaskCosts2(_phi, (&J?_J:NoArr), t, configurations, MP.tau);
   phi.append(_phi);
   if(&J) J.append(_J);
 

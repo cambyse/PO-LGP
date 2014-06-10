@@ -576,7 +576,9 @@ void ors::KinematicWorld::makeLinkTree() {
     through trees and testing consistency of loops). */
 void ors::KinematicWorld::calc_fwdPropagateFrames() {
   ors::Transformation f;
-  for_list(Body,  n,  bodies) {
+  BodyL todoBodies = bodies;
+  for(Body *b: todoBodies) {
+#if 0 //this does not work if not topsorted!!
     CHECK(n->inLinks.N<=1,"loopy geometry - body '" <<n->name <<"' has more than 1 input link");
     for_list(Joint,  e,  n->inLinks) {
       f = e->from->X;
@@ -590,15 +592,29 @@ void ors::KinematicWorld::calc_fwdPropagateFrames() {
       if(!isLinkTree) f.appendTransformation(e->B);
       n->X=f;
     }
+#else
+    for(Joint *j:b->outLinks){ //this has no bailout for loopy graphs!
+      f = b->X;
+      f.appendTransformation(j->A);
+      j->X = f;
+      if(j->type==JT_hingeX || j->type==JT_transX)  j->X.rot.getX(j->axis);
+      if(j->type==JT_hingeY || j->type==JT_transY)  j->X.rot.getY(j->axis);
+      if(j->type==JT_hingeZ || j->type==JT_transZ)  j->X.rot.getZ(j->axis);
+      if(j->type==JT_transXYPhi)  j->X.rot.getZ(j->axis);
+      f.appendTransformation(j->Q);
+      if(!isLinkTree) f.appendTransformation(j->B);
+      j->to->X=f;
+      todoBodies.setAppend(j->to);
+    }
+#endif
   }
   calc_fwdPropagateShapeFrames();
 }
 
 void ors::KinematicWorld::calc_fwdPropagateShapeFrames() {
-  ors::Transformation f;
-  for_list(Body,  n,  bodies) {
-    for_list(Shape,  s,  n->shapes) {
-      s->X = n->X;
+  for(Body *b: bodies) {
+    for(Shape *s: b->shapes) {
+      s->X = b->X;
       s->X.appendTransformation(s->rel);
     }
   }
@@ -1706,6 +1722,7 @@ void ors::KinematicWorld::glueBodies(Body *f, Body *t) {
   j->type=JT_fixed;
   j->Q.setZero();
   j->B.setZero();
+  isLinkTree=false;
 }
 
 
@@ -2118,6 +2135,7 @@ void ors::GraphOperator::apply(KinematicWorld& G){
     Joint *j = new Joint(G, from, to);
     j->A.setDifference(from->X, to->X);
     j->type=JT_fixed;
+    G.isLinkTree=false;
     return;
   }
   HALT("shouldn't be here!");
