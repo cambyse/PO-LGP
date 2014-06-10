@@ -864,6 +864,7 @@ Transformation& Transformation::setZero() {
   memset(this, 0, sizeof(Transformation));
   rot.w=1.;
   pos.isZero=rot.isZero=vel.isZero=angvel.isZero=true;
+  zero = true;
   zeroVels = true;
   return *this;
 }
@@ -996,11 +997,11 @@ void Transformation::appendInvTransformation(const Transformation& f) {
 /// this = f^{-1}
 void Transformation::setInverse(const Transformation& f) {
   if(f.zeroVels) {
-    rot = Quaternion_Id / f.rot;
+    rot = -f.rot;
     pos = - (rot * f.pos);
     zeroVels = true;
   } else {
-    rot = Quaternion_Id / f.rot;
+    rot = -f.rot;
     Matrix R = rot.getMatrix();
     pos = - (R * f.pos);
     vel = R * ((f.angvel^f.pos) - f.vel);

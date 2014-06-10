@@ -85,6 +85,7 @@ struct Shape;
 struct Body;
 struct KinematicWorld;
 struct Proxy;
+struct GraphOperator;
 
 /** @} */ // END of group ors_basic_data_structures
 } // END of namespace
@@ -94,6 +95,7 @@ typedef MT::Array<ors::Joint*> JointL;
 typedef MT::Array<ors::Shape*> ShapeL;
 typedef MT::Array<ors::Body*>  BodyL;
 typedef MT::Array<ors::Proxy*> ProxyL;
+typedef MT::Array<ors::GraphOperator*> GraphOperatorL;
 typedef MT::Array<ors::KinematicWorld*> WorldL;
 
 //===========================================================================
@@ -102,6 +104,9 @@ namespace ors {
 /** @addtogroup ors_basic_data_structures
  * @{
  */
+
+//===========================================================================
+
 /// a rigid body (inertia properties, lists of attached joints & shapes)
 struct Body {
   KinematicWorld& world;
@@ -134,6 +139,8 @@ struct Body {
   void write(std::ostream& os) const;
   void read(std::istream& is);
 };
+
+//===========================================================================
 
 /// a joint
 struct Joint {
@@ -175,7 +182,9 @@ struct Joint {
   Joint &data() { return *this; }
 };
 
-/// a shape (geometric shape like cylinder/mesh, associated to a body)
+//===========================================================================
+
+/// a shape (geometric shape like cylinder/mesh or just marker, associated to a body)
 struct Shape {
   KinematicWorld& world;
   uint index;
@@ -203,7 +212,10 @@ struct Shape {
   void read(std::istream& is);
 };
 
-/// proximity information (when two shapes become close)
+//===========================================================================
+
+/// a data structure to store proximity information (when two shapes become close) --
+/// as return value from external collision libs
 struct Proxy {
   //TODO: have a ProxyL& L as above...
   int a;              ///< index of shape A //TODO: would it be easier if this were ors::Shape* ? YES -> Do it!
@@ -217,6 +229,7 @@ struct Proxy {
 };
 
 //===========================================================================
+
 /// data structure to store a whole physical situation (lists of bodies, joints, shapes, proxies)
 struct KinematicWorld {
   struct sKinematicWorld *s;
@@ -229,6 +242,7 @@ struct KinematicWorld {
   JointL joints;
   ShapeL shapes;
   ProxyL proxies; ///< list of current proximities between bodies
+  GraphOperatorL operators;
 
   bool isLinkTree;
   
@@ -247,6 +261,7 @@ struct KinematicWorld {
   Body *getBodyByName(const char* name) const;
   Shape *getShapeByName(const char* name) const;
   Joint *getJointByName(const char* name) const;
+  Joint *getJointByBodies(const Body* from, const Body* to) const;
   Joint *getJointByBodyNames(const char* from, const char* to) const;
   bool checkUniqueNames() const;
   void setShapeNames();
@@ -297,6 +312,7 @@ struct KinematicWorld {
   void kinematicsQuat(arr& y, arr& J, Body *a, uint agent=0) const;
   void hessianPos(arr& H, Body *a, ors::Vector *rel=0, uint agent=0) const;
   void jacobianR(arr& J, Body *a, uint agent=0) const;
+  void kinematicsProxyDist(arr& y, arr& J, Proxy *p, double margin=.02, bool useCenterDist=true, bool addValues=false) const;
   void kinematicsProxyCost(arr& y, arr& J, Proxy *p, double margin=.02, bool useCenterDist=true, bool addValues=false) const;
   void kinematicsProxyCost(arr& y, arr& J, double margin=.02, bool useCenterDist=true) const;
   void kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, double margin=.02, bool addValues=false) const;
@@ -345,9 +361,20 @@ struct KinematicWorld {
   void reportProxies(std::ostream *os=&std::cout);
   void writePlyFile(const char* filename) const; //TODO: move outside
 };
+
+//===========================================================================
+
+struct GraphOperator{
+  enum OperatorSymbol{ none=-1, deleteJoint=0, addRigid };
+  OperatorSymbol symbol;
+  uint timeOfApplication;
+  uint fromId, toId;
+  GraphOperator();
+  void apply(KinematicWorld& G);
+};
+
 /** @} */ // END of group ors_basic_data_structures
 } // END ors namespace
-
 
 //===========================================================================
 //

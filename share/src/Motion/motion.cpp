@@ -34,11 +34,13 @@ void TaskMap::phi(arr& y, arr& J, const WorldL& G, double tau){
   if(k==0){// basic case: order=0
     arr J_bar;
     phi(y, (&J?J_bar:NoArr), *G.last());
-    J = zeros(G.N, y.N, J_bar.d1);
-    J[G.N-1]() = J_bar;
-    arr tmp(J);
-    tensorPermutation(J, tmp, TUP(1,0,2));
-    J.reshape(y.N, G.N*J_bar.d1);
+    if(&J){
+      J = zeros(G.N, y.N, J_bar.d1);
+      J[G.N-1]() = J_bar;
+      arr tmp(J);
+      tensorPermutation(J, tmp, TUP(1,0,2));
+      J.reshape(y.N, G.N*J_bar.d1);
+    }
     return;
   }
   arrA y_bar, J_bar;
@@ -60,6 +62,18 @@ void TaskMap::phi(arr& y, arr& J, const WorldL& G, double tau){
     tensorPermutation(J, tmp, TUP(1,0,2));
     J.reshape(y.N, G.N*J_bar(0).d1);
   }
+}
+
+//===========================================================================
+
+void TaskCost::setCostSpecs(uint fromTime,
+                            uint toTime,
+                            const arr& _target,
+                            double _prec){
+  if(&_target) target = _target; else target = {0.};
+  CHECK(toTime>=fromTime,"");
+  prec.resize(toTime+1).setZero();
+  for(uint t=fromTime;t<=toTime;t++) prec(t) = _prec;
 }
 
 //===========================================================================
@@ -255,18 +269,19 @@ void MotionProblem::getTaskCosts2(arr& phi, arr& J, uint t, const WorldL &G, dou
   if(&J) J.clear();
   arr y,Jy;
   //-- append task costs
-  for(TaskCost *c: taskCosts) if(c->active && c->prec(t)){
+  for(TaskCost *c: taskCosts) if(c->active && c->prec.N>t && c->prec(t)){
     if(!c->map.constraint) {
-      c->map.phi(y, Jy, G, tau);
+      c->map.phi(y, (&J?Jy:NoArr), G, tau);
       if(absMax(y)>1e10)  MT_MSG("WARNING y=" <<y);
-      CHECK(c->prec.N>t && c->target.N>t, "active task costs "<< c->name <<" have no targets defined");
-      CHECK(c->map.order==0 || c->map.order==1,"");
-      phi.append(sqrt(c->prec(t))*(y - c->target[t]));
+      if(c->target.N==1) y -= c->target(0);
+      else if(c->target.nd==1) y -= c->target;
+      else y -= c->target[t];
+      phi.append(sqrt(c->prec(t))*y);
       if(&J) J.append(sqrt(c->prec(t))*Jy);
     }
     //special: constraint attraction costs
     if(c->map.constraint && makeContactsAttractive) {
-      c->map.phi(y, Jy, G, tau);
+      c->map.phi(y, (&J?Jy:NoArr), G, tau);
       CHECK(y.N==Jy.d0,"");
       for(uint j=0;j<y.N;j++) y(j) = -y(j)+.1;
       if(Jy.N) for(uint j=0;j<Jy.d0;j++) Jy[j]() *= -1.;
@@ -275,9 +290,9 @@ void MotionProblem::getTaskCosts2(arr& phi, arr& J, uint t, const WorldL &G, dou
     }
   }
   //-- append constraints
-  for(TaskCost *c: taskCosts) if(c->active && c->prec(t)){
+  for(TaskCost *c: taskCosts) if(c->active && c->prec.N>t && c->prec(t)){
     if(c->map.constraint) {
-      c->map.phi(y, Jy, G, tau);
+      c->map.phi(y, (&J?Jy:NoArr), G, tau);
       phi.append(y);
       if(&J) J.append(Jy);
     }
@@ -483,11 +498,12 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
   CHECK(t<=T,"");
 
   //-- manage configurations
-  if(configurations.N!=k+1){
+  if(configurations.N!=k+1 || t==0){
     listDelete(configurations);
     for(uint i=0;i<=k;i++) configurations.append(new ors::KinematicWorld())->copy(MP.world, true);
   }
   //find matches
+#if 0
   uintA match(k+1); match=UINT_MAX;
   boolA used(k+1); used=false;
   uintA unused;
@@ -501,11 +517,20 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
   for(uint i=0;i<=k;i++) if(!used(i)) unused.append(i);
   for(uint i=0;i<=k;i++) if(match(i)==UINT_MAX) match(i)=unused.popFirst();
   configurations.permute(match);
+#endif
   //set states
   for(uint i=0;i<=k;i++){
     if(x_bar[i]!=configurations(i)->q){
       configurations(i)->setJointState(x_bar[i]);
       if(MP.useSwift) configurations(i)->stepSwift();
+    }
+  }
+  //apply potential graph operators
+  for(ors::GraphOperator *op:MP.world.operators){
+    for(uint i=0;i<=k;i++){
+      if(t+i>=k && op->timeOfApplication==t-k+i){
+        op->apply(*configurations(i));
+      }
     }
   }
 

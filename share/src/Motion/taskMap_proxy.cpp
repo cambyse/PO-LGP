@@ -19,13 +19,15 @@
 #include "taskMap_proxy.h"
 
 ProxyTaskMap::ProxyTaskMap(PTMtype _type,
-             uintA _shapes,
-             double _margin,
-             bool _useCenterDist) {
+                           uintA _shapes,
+                           double _margin,
+                           bool _useCenterDist,
+                           bool _useDistNotCost) {
   type=_type;
   shapes=_shapes;
   margin=_margin;
   useCenterDist=_useCenterDist;
+  useDistNotCost=_useDistNotCost;
   cout <<"creating ProxyTaskMap with shape list" <<shapes <<endl;
 }
 
@@ -77,13 +79,14 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G){
       shapes.reshape(shapes.N/2,2);
       // only explicit paris in 2D array shapes
       uint j;
-      for(ors::Proxy *p: G.proxies)  if(p->d<margin) {
+      for(ors::Proxy *p: G.proxies)  /*if(p->d<margin)*/ {
         for(j=0; j<shapes.d0; j++) {
           if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
             break;
         }
         if(j<shapes.d0) { //if a pair was found
-          G.kinematicsProxyCost(y, J, p, margin, useCenterDist, true);
+          if(useDistNotCost) G.kinematicsProxyDist(y, J, p, margin, useCenterDist, true);
+          else G.kinematicsProxyCost(y, J, p, margin, useCenterDist, true);
           p->colorCode = 5;
         }
       }

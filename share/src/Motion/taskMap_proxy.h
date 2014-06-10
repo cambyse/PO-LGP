@@ -40,11 +40,13 @@ struct ProxyTaskMap:public TaskMap {
   uintA shapes,shapes2;
   double margin;
   bool useCenterDist;
-  
+  bool useDistNotCost;
+
   ProxyTaskMap(PTMtype _type,
                uintA _shapes,
                double _margin=.02,
-               bool _useCenterDist=true);
+               bool _useCenterDist=true,
+               bool _useDistNotCost=false);
   virtual ~ProxyTaskMap() {};
   
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);

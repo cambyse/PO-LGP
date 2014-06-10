@@ -58,9 +58,15 @@ struct TaskCost {
   bool active;
   arr target, prec;  ///< target & precision over a whole trajectory
   double threshold;  ///< threshold for feasibility checks (e.g. in RRTs)
-  uint dim_phi(uint t,const ors::KinematicWorld& G){ if(!active || !prec(t)) return 0; return map.dim_phi(G); }
+  uint dim_phi(uint t,const ors::KinematicWorld& G){ if(!active || prec.N<=t || !prec(t)) return 0; return map.dim_phi(G); }
 
   TaskCost(TaskMap* m):map(*m), active(true){}
+
+  enum TaskCostInterpolationType { atTimeOnly, tillTime, fromTime };
+  void setCostSpecs(uint fromTime, uint toTime,
+                    const arr& _target={0.},
+                    double _prec=1.);
+
 };
 
 

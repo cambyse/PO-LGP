@@ -400,9 +400,12 @@ void ors::Joint::parseAts() {
   if(axis.N) {
     CHECK(axis.N==3,"");
     Vector ax(axis);
-    Quaternion rot;  rot.setDiff(Vector_x, ax);
-    A.rot = A.rot * rot;
-    B.rot = -rot * B.rot;
+//    Quaternion rot;  rot.setDiff(Vector_x, ax);
+    Transformation f;
+    f.setZero();
+    f.rot.setDiff(Vector_x, ax);
+    A = A * f;
+    B = -f * B;
   }
   arr ctrl_limits;
   ats.getValue<arr>(limits, "limits");
@@ -1387,6 +1390,12 @@ ors::Joint* ors::KinematicWorld::getJointByName(const char* name) const {
   return NULL;
 }
 
+/// find joint connecting two bodies
+ors::Joint* ors::KinematicWorld::getJointByBodies(const Body* from, const Body* to) const {
+  for(Joint *j: to->inLinks) if(j->from==from) return j;
+  return NULL;
+}
+
 /// find joint connecting two bodies with specific names
 ors::Joint* ors::KinematicWorld::getJointByBodyNames(const char* from, const char* to) const {
   for_list(Body, f, bodies) if(f->name==from) break;
@@ -1779,6 +1788,42 @@ void ors::KinematicWorld::contactsToForces(double hook, double damp) {
     }
 }
 
+void ors::KinematicWorld::kinematicsProxyDist(arr& y, arr& J, Proxy *p, double margin, bool useCenterDist, bool addValues) const {
+  ors::Shape *a = shapes(p->a);
+  ors::Shape *b = shapes(p->b);
+
+  y.resize(1);
+  if(&J) J.resize(1, getJointStateDimension());
+  if(!addValues){ y.setZero();  if(&J) J.setZero(); }
+
+//  //costs
+//  if(a->type==ors::sphereST && b->type==ors::sphereST){
+//    ors::Vector diff=a->X.pos-b->X.pos;
+//    double d = diff.length() - a->size[3] - b->size[3];
+//    y(0) = d;
+//    if(&J){
+//      arr Jpos;
+//      arr normal = ARRAY(diff)/diff.length(); normal.reshape(1, 3);
+//      kinematicsPos(NoArr, Jpos, a->body);  J += (normal*Jpos);
+//      kinematicsPos(NoArr, Jpos, b->body);  J -= (normal*Jpos);
+//    }
+//    return;
+//  }
+  y(0) = p->d;
+  if(&J){
+    arr Jpos;
+    ors::Vector arel, brel;
+    if(p->d>0.) { //we have a gradient on pos only when outside
+      arel=a->X.rot/(p->posA-a->X.pos);
+      brel=b->X.rot/(p->posB-b->X.pos);
+      CHECK(p->normal.isNormalized(), "proxy normal is not normalized");
+      arr normal; normal.referTo(&p->normal.x, 3); normal.reshape(1, 3);
+      kinematicsPos(NoArr, Jpos, a->body, &arel);  J += (normal*Jpos);
+      kinematicsPos(NoArr, Jpos, b->body, &brel);  J -= (normal*Jpos);
+    }
+  }
+}
+
 void ors::KinematicWorld::kinematicsProxyCost(arr& y, arr& J, Proxy *p, double margin, bool useCenterDist, bool addValues) const {
   ors::Shape *a = shapes(p->a);
   ors::Shape *b = shapes(p->b);
@@ -2055,7 +2100,28 @@ void ors::KinematicWorld::meldFixedJoints() {
   //for_list(Joint, j, joints) { j->index=j_COUNT;  j->ifrom = j->from->index;  j->ito = j->to->index;  }
 }
 
-// ------------------ end slGraph ---------------------
+//===========================================================================
+
+ors::GraphOperator::GraphOperator():
+  symbol(none), timeOfApplication(UINT_MAX), fromId(UINT_MAX), toId(UINT_MAX){
+}
+
+void ors::GraphOperator::apply(KinematicWorld& G){
+  Body *from=G.bodies(fromId), *to=G.bodies(toId);
+  if(symbol==deleteJoint){
+    Joint *j = G.getJointByBodies(from, to);
+    CHECK(j,"can't find joint between '"<<from->name <<"--" <<to->name <<"' Deleted before?");
+    delete j;
+    return;
+  }
+  if(symbol==addRigid){
+    Joint *j = new Joint(G, from, to);
+    j->A.setDifference(from->X, to->X);
+    j->type=JT_fixed;
+    return;
+  }
+  HALT("shouldn't be here!");
+}
 
 
 //===========================================================================

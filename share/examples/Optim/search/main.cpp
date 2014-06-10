@@ -5,7 +5,8 @@
 struct sSearchCMA *s;
 #define MT_IMPLEMENTATION
 
-void test(ScalarFunction& f){
+void TEST(CMA){
+  ChoiceFunction f;
   SearchCMA cma;
   cma.init(2); //,10,30);
   arr samples, values;
@@ -17,9 +18,15 @@ void test(ScalarFunction& f){
   }
 }
 
+void TEST(DisplayBenchmarks){
+  displayFunction(_RosenbrockFunction);
+//  displayFunction(RastriginFunction());
+//  displayFunction(SquareFunction());
+}
+
 int main(int argn,char** argv){
-  ChoiceFunction f;
-  test(f);
+//  testCMA();
+  testDisplayBenchmarks();
 
   return 0;
 }
