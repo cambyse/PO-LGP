@@ -20,7 +20,7 @@ void testPickAndPlace(){
   G.gl().update();
 
   MotionProblem MP(G);
-//  MP.loadTransitionParameters();
+//  MP.loadTransitionParameters(); //->move transition costs to tasks!
   MotionProblemFunction MF(MP);
 
   arr x = replicate(MP.x0, MP.T+1);
@@ -29,16 +29,16 @@ void testPickAndPlace(){
 
   op = new ors::GraphOperator();
   op->symbol = ors::GraphOperator::addRigid;
-  op->timeOfApplication = 10;
+  op->timeOfApplication = MP.T/2+5;
   op->fromId = G.getBodyByName("arm7")->index;
-  op->toId = G.getBodyByName("obj2")->index;
+  op->toId = G.getBodyByName("obj1")->index;
   G.operators.append(op);
 
   op = new ors::GraphOperator();
   op->symbol = ors::GraphOperator::deleteJoint;
-  op->timeOfApplication = 10;
+  op->timeOfApplication = MP.T/2+5;
   op->fromId = G.getBodyByName("table")->index;
-  op->toId = G.getBodyByName("obj2")->index;
+  op->toId = G.getBodyByName("obj1")->index;
   G.operators.append(op);
 
 
@@ -47,10 +47,10 @@ void testPickAndPlace(){
   uintA pair = {G.getShapeByName("obj1")->index, G.getShapeByName("endeff")->index};
   c = MP.addTask("pos",
                  new DefaultTaskMap(posTMT, pair(1), NoVector, pair(0), {0,0,.17}));
-  c->setCostSpecs(MP.T/2, MP.T/2+5, {0.}, 1e3);
+  c->setCostSpecs(MP.T/2, MP.T/2+10, {0.}, 1e3);
 
   c = MP.addTask("pos2",
-                 new DefaultTaskMap(posTMT, pair(1), NoVector, pair(0), {0,0,.37}));
+                 new DefaultTaskMap(posTMT, pair(0), NoVector, G.getShapeByName("target")->index, NoVector));
   c->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
 
   c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, G));
@@ -71,9 +71,9 @@ void testPickAndPlace(){
   checkGradient(Convert(MF), x, 1e-4);
 
   //-- optimize
-  for(uint k=0;k<3;k++){
-//  optNewton(x, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=1., stepInc=2.));
-  optConstrained(x, NoArr, Convert(MF), OPT(verbose=1, stopIters=100, maxStep=.5, stepInc=2., nonStrictSteps=(!k?15:5)));
+  for(uint k=0;k<5;k++){
+//    optNewton(x, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=1., stepInc=2.));
+    optConstrained(x, NoArr, Convert(MF), OPT(verbose=1, stopIters=100, maxStep=.5, stepInc=2., nonStrictSteps=(!k?15:5)));
   }
   MP.costReport();
 
