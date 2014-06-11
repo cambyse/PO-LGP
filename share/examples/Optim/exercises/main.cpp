@@ -1,6 +1,5 @@
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
-#include <Optim/constrained.h>
 #include <stdlib.h>
 
 const char* USE="\n\
@@ -62,7 +61,7 @@ void testGradDescent(ScalarFunction& F){
     MT::wait();
 
     x=x0;
-    optNewton(x, F, OPT(verbose=2, stopTolerance=1e-3));
+    optNewton(x, F, OPT(verbose=3, stopTolerance=1e-3));
     cout <<"x_opt=" <<x <<endl;
     gnuplot("load 'plt'", false, true);
     MT::wait();
@@ -182,7 +181,7 @@ void testConstraint(ConstrainedProblem& f, arr& x_start=NoArr, uint iters=10){
     //upate unconstraint problem parameters
     switch(method){
     case squaredPenalty: F.mu *= 10;  break;
-    case augmentedLag:   F.augmentedLagrangian_LambdaUpdate(x);  break;
+    case augmentedLag:   F.aulaUpdate();  break;
     case logBarrier:     F.muLB /= 2;  break;
     }
 

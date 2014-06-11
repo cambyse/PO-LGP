@@ -1,10 +1,28 @@
+/*  ---------------------------------------------------------------------
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a COPYING file of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
 #include "taskMap_constrained.h"
 
 //===========================================================================
 
 void CollisionConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
-  G.kinematicsProxyCost(y, J, 2.*margin, false);
-  y -= .9;
+  G.kinematicsProxyCost(y, J, margin, false);
+  y -= .5;
 }
 
 //===========================================================================
@@ -12,7 +30,7 @@ void CollisionConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
 void LimitsConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
   if(!limits.N) limits = G.getLimits();
   G.kinematicsLimitsCost(y, J, limits, margin);
-  y -= .9;
+  y -= .5;
 }
 
 //===========================================================================
@@ -31,7 +49,7 @@ void PairCollisionConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
 //===========================================================================
 
 void PlaneConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G){
-  int body_i = G.shapes(i)->body->index;
+  ors::Body *body_i = G.shapes(i)->body;
   ors::Vector vec_i = G.shapes(i)->rel.pos;
 
   arr y_eff, J_eff;

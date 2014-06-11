@@ -1,20 +1,21 @@
 /*  ---------------------------------------------------------------------
-    Copyright 2013 Marc Toussaint
-    email: mtoussai@cs.tu-berlin.de
-
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
 
 
 
@@ -30,6 +31,7 @@
 
 #ifdef MT_PHYSX
 
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 #include <physx/PxPhysicsAPI.h>
 #include <physx/extensions/PxExtensionsAPI.h>
 #include <physx/extensions/PxDefaultErrorCallback.h>
@@ -40,7 +42,7 @@
 #include <physx/foundation/PxMat33.h>
 //#include <PxMat33Legacy.h>
 #include <physx/extensions/PxSimpleFactory.h>
-#include <physx/toolkit/PxTkStream.h>
+#pragma GCC diagnostic pop
 
 #include "ors_physx.h"
 #include <Gui/opengl.h>
@@ -68,7 +70,7 @@ static PxSimulationFilterShader gDefaultFilterShader=PxDefaultSimulationFilterSh
 void bindOrsToPhysX(ors::KinematicWorld& graph, OpenGL& gl, PhysXInterface& physx) {
 //  physx.create(graph);
   
-  HALT("I don't understand this: why do you need a 2nd opengl window? (This is only for sanity check in the example.)")
+  MT_MSG("I don't understand this: why do you need a 2nd opengl window? (This is only for sanity check in the example.)")
   gl.add(glStandardScene, NULL);
   gl.add(glPhysXInterface, &physx);
   gl.setClearColors(1., 1., 1., 1.);
@@ -96,15 +98,57 @@ PxTransform OrsTrans2PxTrans(const ors::Transformation& f) {
 }
 
 // ============================================================================
+//stuff from Samples/PxToolkit
+
+namespace PxToolkit {
+PxConvexMesh* createConvexMesh(PxPhysics& physics, PxCooking& cooking, const PxVec3* verts, PxU32 vertCount, PxConvexFlags flags) {
+  PxConvexMeshDesc convexDesc;
+  convexDesc.points.count     = vertCount;
+  convexDesc.points.stride    = sizeof(PxVec3);
+  convexDesc.points.data      = verts;
+  convexDesc.flags        = flags;
+  
+  PxDefaultMemoryOutputStream buf;
+  if(!cooking.cookConvexMesh(convexDesc, buf))
+    return NULL;
+    
+  PxDefaultMemoryInputData input(buf.getData(), buf.getSize());
+  return physics.createConvexMesh(input);
+}
+
+PxTriangleMesh* createTriangleMesh32(PxPhysics& physics, PxCooking& cooking, const PxVec3* verts, PxU32 vertCount, const PxU32* indices32, PxU32 triCount) {
+  PxTriangleMeshDesc meshDesc;
+  meshDesc.points.count     = vertCount;
+  meshDesc.points.stride      = 3*sizeof(float);
+  meshDesc.points.data      = verts;
+  
+  meshDesc.triangles.count    = triCount;
+  meshDesc.triangles.stride   = 3*sizeof(uint);
+  meshDesc.triangles.data     = indices32;
+  
+  PxDefaultMemoryOutputStream writeBuffer;
+  bool status = cooking.cookTriangleMesh(meshDesc, writeBuffer);
+  if(!status)
+    return NULL;
+    
+  PxDefaultMemoryInputData readBuffer(writeBuffer.getData(), writeBuffer.getSize());
+  return physics.createTriangleMesh(readBuffer);
+}
+}
+// ============================================================================
 
 struct sPhysXInterface {
   PxScene* gScene;
   MT::Array<PxRigidActor*> actors;
+  MT::Array<PxD6Joint*> joints;
   
   sPhysXInterface():gScene(NULL) {}
 
   void addBody(ors::Body *b, physx::PxMaterial *material);
   void addJoint(ors::Joint *jj);
+
+  void lockJoint(PxD6Joint *joint, ors::Joint *ors_joint);
+  void unlockJoint(PxD6Joint *joint, ors::Joint *ors_joint);
 };
 
 // ============================================================================
@@ -115,7 +159,7 @@ PhysXInterface::PhysXInterface(ors::KinematicWorld& _world): world(_world), s(NU
   if(!mFoundation) {
     mFoundation = PxCreateFoundation(PX_PHYSICS_VERSION, gDefaultAllocatorCallback, gDefaultErrorCallback);
     mPhysics = PxCreatePhysics(PX_PHYSICS_VERSION, *mFoundation, PxTolerancesScale());
-    PxCookingParams cookParams;
+    PxCookingParams cookParams(mPhysics->getTolerancesScale());
     cookParams.skinWidth = .001f;
     mCooking = PxCreateCooking(PX_PHYSICS_VERSION, *mFoundation, cookParams);
     if(!mCooking) HALT("PxCreateCooking failed!");
@@ -168,7 +212,7 @@ PhysXInterface::PhysXInterface(ors::KinematicWorld& _world): world(_world), s(NU
   for_list(ors::Body,  b,  world.bodies) s->addBody(b, mMaterial);
 
   /// ADD joints here!
-  for_list(ors::Joint,  jj,  world.joints) s->addJoint(jj);
+  for(ors::Joint *jj : world.joints) s->addJoint(jj);
 }
 
 PhysXInterface::~PhysXInterface() {
@@ -179,6 +223,20 @@ void PhysXInterface::step(double tau) {
   //-- push positions of all kinematic objects
   for_list(ors::Body, b, world.bodies) if(b->type==ors::kinematicBT) {
     ((PxRigidDynamic*)s->actors(b_COUNT))->setKinematicTarget(OrsTrans2PxTrans(b->X));
+  }
+
+  for_list(ors::Joint, j, world.joints) {
+    bool lock = j->locked_func((void*) j->locked_data);
+    if(lock and !j->locked) {
+      j->locked = true;
+      cout << "Lock joint" << endl;
+      s->lockJoint(s->joints(j_COUNT), j);
+    }
+    else if(!lock and j->locked) {
+      j->locked = false;
+      cout << "Unlock joint" << endl;
+      s->unlockJoint(s->joints(j_COUNT), j);  
+    }
   }
   
   //-- dynamic simulation
@@ -216,14 +274,16 @@ void PhysXInterface::setArticulatedBodiesKinematic(uint agent){
  */
 
 void sPhysXInterface::addJoint(ors::Joint *jj) {
+  if(joints.N <= jj->index)
+    joints.resize(jj->index+1);
+  joints(jj->index) = NULL;
   PxTransform A = OrsTrans2PxTrans(jj->A);
   PxTransform B = OrsTrans2PxTrans(jj->B);
   switch(jj->type) {
     case ors::JT_hingeX: 
     case ors::JT_hingeY:
     case ors::JT_hingeZ: {
-      PxD6Joint *desc = PxD6JointCreate(*mPhysics, actors(jj->ifrom), A, actors(jj->ito), B.getInverse());
-
+      PxD6Joint *desc = PxD6JointCreate(*mPhysics, actors(jj->from->index), A, actors(jj->to->index), B.getInverse());
 
       if(jj->ats.getValue<arr>("drive")) {
         arr drive_values = *jj->ats.getValue<arr>("drive");
@@ -235,22 +295,22 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
         desc->setMotion(PxD6Axis::eTWIST, PxD6Motion::eLIMITED);
 
         arr limits = *(jj->ats.getValue<arr>("limit"));
-        PxJointLimitPair limit(limits(0), limits(1), 0.1f);
+        PxJointAngularLimitPair limit(limits(0), limits(1), 0.1f);
         limit.restitution = limits(2);
-        if(limits(3)>0) {
-          limit.spring = limits(3);
-          limit.damping= limits(4);
-        }
+          //limit.spring = limits(3);
+          //limit.damping= limits(4);
+        //}
         desc->setTwistLimit(limit);
       }
       else {
         desc->setMotion(PxD6Axis::eTWIST, PxD6Motion::eFREE);
       }
+      joints(jj->index) = desc;
     }
     break;
     case ors::JT_fixed: {
       // PxFixedJoint* desc =
-      PxFixedJointCreate(*mPhysics, actors(jj->ifrom), A, actors(jj->ito), B.getInverse());
+      PxFixedJointCreate(*mPhysics, actors(jj->from->index), A, actors(jj->to->index), B.getInverse());
       // desc->setProjectionLinearTolerance(1e10);
       // desc->setProjectionAngularTolerance(3.14);
     }
@@ -262,7 +322,7 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
     case ors::JT_transY:
     case ors::JT_transZ:
     {
-      PxD6Joint *desc = PxD6JointCreate(*mPhysics, actors(jj->ifrom), A, actors(jj->ito), B.getInverse());
+      PxD6Joint *desc = PxD6JointCreate(*mPhysics, actors(jj->from->index), A, actors(jj->to->index), B.getInverse());
 
       if(jj->ats.getValue<arr>("drive")) {
         arr drive_values = *jj->ats.getValue<arr>("drive");
@@ -274,21 +334,46 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
         desc->setMotion(PxD6Axis::eX, PxD6Motion::eLIMITED);
 
         arr limits = *(jj->ats.getValue<arr>("limit"));
-        PxJointLimit limit(limits(0), 0.1f);
+        PxJointLinearLimit limit(mPhysics->getTolerancesScale(), limits(0), 0.1f);
         limit.restitution = limits(2);
-        if(limits(3)>0) {
-          limit.spring = limits(3);
-          limit.damping= limits(4);
-        }
+        //if(limits(3)>0) {
+          //limit.spring = limits(3);
+          //limit.damping= limits(4);
+        //}
         desc->setLinearLimit(limit);
       }
       else {
         desc->setMotion(PxD6Axis::eX, PxD6Motion::eFREE);
       }
+      joints(jj->index) = desc;
     }
     break;
     default:
       NIY;
+  }
+}
+void sPhysXInterface::lockJoint(PxD6Joint *joint, ors::Joint *ors_joint) {
+  joint->setMotion(PxD6Axis::eX, PxD6Motion::eLOCKED);
+  joint->setMotion(PxD6Axis::eTWIST, PxD6Motion::eLIMITED);
+  joint->setTwistLimit(PxJointAngularLimitPair(joint->getTwist()-.001, joint->getTwist()+.001));
+}
+void sPhysXInterface::unlockJoint(PxD6Joint *joint, ors::Joint *ors_joint) {
+  switch(ors_joint->type) {
+    case ors::JT_hingeX:
+    case ors::JT_hingeY:
+    case ors::JT_hingeZ:
+      //joint->setMotion(PxD6Axis::eX, PxD6Motion::eLIMITED);
+      //joint->setLinearLimit(PxJointLimit(ors_joint->Q.rot.getRad(), ors_joint->Q.rot.getRad()));
+      joint->setMotion(PxD6Axis::eTWIST, PxD6Motion::eFREE);
+      break;
+    case ors::JT_transX:
+    case ors::JT_transY:
+    case ors::JT_transZ:
+      //joint->setMotion(PxD6Axis::eTWIST, PxD6Motion::eLOCKED);
+      joint->setMotion(PxD6Axis::eX, PxD6Motion::eFREE);
+      break;
+    default:
+      break;
   }
 }
 
@@ -427,7 +512,7 @@ void DrawActor(PxRigidActor* actor, ors::Body *body) {
 
     ors::Transformation f;
     double mat[16];
-    PxTrans2OrsTrans(f, PxShapeExt::getGlobalPose(*shape));
+    PxTrans2OrsTrans(f, PxShapeExt::getGlobalPose(*shape, *actor));
     glLoadMatrixd(f.getAffineMatrixGL(mat));
     //cout <<"drawing shape " <<body->name <<endl;
     switch(shape->getGeometryType()) {
@@ -488,104 +573,6 @@ void PhysXInterface::addForce(ors::Vector& force, ors::Body* b, ors::Vector& pos
   PxVec3 px_pos = PxVec3(pos.x, pos.y, pos.z);
   PxRigidBody *actor = (PxRigidBody*)(s->actors(b->index));
   PxRigidBodyExt::addForceAtPos(*actor, px_force, px_pos);
-}
-///////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////
-
-//stuff from Samples/PxToolkit
-
-using namespace PxToolkit;
-
-PxConvexMesh* PxToolkit::createConvexMesh(PxPhysics& physics, PxCooking& cooking, const PxVec3* verts, PxU32 vertCount, PxConvexFlags flags) {
-  PxConvexMeshDesc convexDesc;
-  convexDesc.points.count     = vertCount;
-  convexDesc.points.stride    = sizeof(PxVec3);
-  convexDesc.points.data      = verts;
-  convexDesc.flags        = flags;
-  
-  MemoryOutputStream buf;
-  if(!cooking.cookConvexMesh(convexDesc, buf))
-    return NULL;
-    
-  PxToolkit::MemoryInputData input(buf.getData(), buf.getSize());
-  return physics.createConvexMesh(input);
-}
-
-PxTriangleMesh* PxToolkit::createTriangleMesh32(PxPhysics& physics, PxCooking& cooking, const PxVec3* verts, PxU32 vertCount, const PxU32* indices32, PxU32 triCount) {
-  PxTriangleMeshDesc meshDesc;
-  meshDesc.points.count     = vertCount;
-  meshDesc.points.stride      = 3*sizeof(float);
-  meshDesc.points.data      = verts;
-  
-  meshDesc.triangles.count    = triCount;
-  meshDesc.triangles.stride   = 3*sizeof(uint);
-  meshDesc.triangles.data     = indices32;
-  
-  PxToolkit::MemoryOutputStream writeBuffer;
-  bool status = cooking.cookTriangleMesh(meshDesc, writeBuffer);
-  if(!status)
-    return NULL;
-    
-  PxToolkit::MemoryInputData readBuffer(writeBuffer.getData(), writeBuffer.getSize());
-  return physics.createTriangleMesh(readBuffer);
-}
-
-MemoryOutputStream::MemoryOutputStream() :
-  mData(NULL),
-  mSize(0),
-  mCapacity(0) {
-}
-
-MemoryOutputStream::~MemoryOutputStream() {
-  if(mData)
-    delete[] mData;
-}
-
-PxU32 MemoryOutputStream::write(const void* src, PxU32 size) {
-  PxU32 expectedSize = mSize + size;
-  if(expectedSize > mCapacity) {
-    mCapacity = expectedSize + 4096;
-    
-    PxU8* newData = new PxU8[mCapacity];
-    PX_ASSERT(newData!=NULL);
-    
-    if(newData) {
-      memcpy(newData, mData, mSize);
-      delete[] mData;
-    }
-    mData = newData;
-  }
-  memcpy(mData+mSize, src, size);
-  mSize += size;
-  return size;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-MemoryInputData::MemoryInputData(PxU8* data, PxU32 length) :
-  mSize(length),
-  mData(data),
-  mPos(0) {
-}
-
-PxU32 MemoryInputData::read(void* dest, PxU32 count) {
-  PxU32 length = PxMin<PxU32>(count, mSize-mPos);
-  memcpy(dest, mData+mPos, length);
-  mPos += length;
-  return length;
-}
-
-PxU32 MemoryInputData::getLength() const {
-  return mSize;
-}
-
-void MemoryInputData::seek(PxU32 offset) {
-  mPos = PxMin<PxU32>(mSize, offset);
-}
-
-PxU32 MemoryInputData::tell() const {
-  return mPos;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

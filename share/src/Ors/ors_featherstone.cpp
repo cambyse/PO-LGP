@@ -1,20 +1,21 @@
 /*  ---------------------------------------------------------------------
-    Copyright 2013 Marc Toussaint
-    email: mtoussai@cs.tu-berlin.de
-
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
 
 
 
@@ -302,8 +303,9 @@ void GraphToTree(MT::Array<ors::Link>& tree, const ors::KinematicWorld& C) {
   ors::Transformation f;
   for(i=0; i<tree.N; i++) tree(i).parent=-1;
   iq=0;
-  for(ors::Body *n: C.bodies) {
-    CHECK(i==n->index, "not sorted");
+  for_list(ors::Body,n,C.bodies) {
+    i=n_COUNT;
+    CHECK(i==n->index, "not properly indexed!");
     if(n->inLinks.N) {
       CHECK(n->inLinks.N==1, "this is not a tree");
       e=n->inLinks(0);
@@ -313,7 +315,7 @@ void GraphToTree(MT::Array<ors::Link>& tree, const ors::KinematicWorld& C) {
       tree(i).index=iq;
       tree(i).parent=p->index;
       
-      tree(i).com=e->B.pos;
+      tree(i).com=e->B*n->com;
       
       if(p->inLinks.N) f=p->inLinks(0)->B; else f=p->X;
       f.appendTransformation(e->A);
@@ -354,6 +356,7 @@ void updateGraphToTree(MT::Array<ors::Link>& tree, const ors::KinematicWorld& C)
   ors::Transformation f;
   i=0;
   for_list(ors::Body, n, C.bodies) {
+    i=n_COUNT;
     if(n->inLinks.N) {
       e=n->inLinks(0);
       p=e->from;

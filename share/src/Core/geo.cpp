@@ -1,20 +1,21 @@
 /*  ---------------------------------------------------------------------
-    Copyright 2013 Marc Toussaint
-    email: mtoussai@cs.tu-berlin.de
-
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
 
 #undef abs
 #include <algorithm>
@@ -44,6 +45,11 @@ double scalarProduct(const ors::Quaternion& a, const ors::Quaternion& b);
  * particular, using ors we can implement a soc::SocSystemAbstraction.
  */
 namespace ors {
+
+double& Vector::operator()(uint i) {
+  CHECK(i<3,"out of range");
+  return (&x)[i];
+}
 
 /// set the vector
 void Vector::set(double _x, double _y, double _z) { x=_x; y=_y; z=_z; isZero=(x==0. && y==0. && z==0.); }

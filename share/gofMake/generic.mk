@@ -14,6 +14,7 @@ BASE_REAL = $(shell realpath $(BASE))
 #
 ################################################################################
 -include $(BASE)/gofMake/config.mk
+-include $(BASE)/gofMake/z.mk
 
 
 ################################################################################
@@ -249,6 +250,9 @@ pywrapper: $(OUTPUT) $(MODULE_NAME)py.so $(MODULE_NAME)py.py
 $(BASE)/lib/$(NAME).so: $(PREOBJS) $(BUILDS) $(OBJS)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) $(SHAREFLAG)
 
+#%_test.so: $(PREOBJS) $(BUILDS) $(OBJS)
+#	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) $(SHAREFLAG)
+
 %.lib: $(PREOBJS) $(BUILDS) $(OBJS)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) -static ### $(SHAREFLAG)
 
@@ -323,6 +327,9 @@ $(BASE)/lib/lib%.so: $(BASE)/src/%
 
 makePath/%: %
 	+@-$(BASE)/gofMake/make-path.sh $<
+
+runPath/%: %
+	+@-$(BASE)/gofMake/run-path.sh $<
 
 makePythonPath/%: %
 	make --directory=$< pywrapper

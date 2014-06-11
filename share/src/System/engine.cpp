@@ -1,6 +1,6 @@
 /*  ---------------------------------------------------------------------
-    Copyright 2013 Marc Toussaint
-    email: mtoussai@cs.tu-berlin.de
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
     
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,6 +15,7 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
 
 #include <sys/syscall.h>
 #include <map>
@@ -282,9 +283,9 @@ KeyValueGraph System::graph() const{
   std::map<Variable*, Item*> vit;
   for(Variable_SharedMemory *v: vars) vit[v] = g.append("Variable", v->name, v);
   for(Module *m: mts){
-    Item *mit = g.append("Module", m->name, m);
+    Item *mit = g.append("Module", m->name, &m);
     for(Access *a: m->accesses){
-      Item *ait = g.append("Access", a->name, a);
+      Item *ait = g.append("Access", a->name, &a);
       ait->parents.append(mit);
       if(a->var) ait->parents.append(vit[a->var]);
     }

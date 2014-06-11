@@ -1,6 +1,6 @@
 /*  ---------------------------------------------------------------------
-    Copyright 2012 Marc Toussaint
-    email: mtoussai@cs.tu-berlin.de
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
     
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,6 +15,7 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
 
 
 #include "roboticsCourse.h"
@@ -66,7 +67,6 @@ Simulator::Simulator(const char* orsFile){
   
   //ORS
   s->G.init(orsFile);
-  s->G.calc_fwdPropagateFrames();
   /*  if(s->G.getBodyByName("rfoot")){
     s->G.reconfigureRoot(s->G.getBodyByName("rfoot"));
     s->G.calcBodyFramesFromJoints();
@@ -108,51 +108,49 @@ uint Simulator::getJointDimension(){
 
 void Simulator::setJointAngles(const arr& q, bool updateDisplay){
   s->G.setJointState(q);
-  s->G.calc_fwdPropagateFrames();
-  s->G.computeProxies();
+  s->G.stepSwift();
   if(updateDisplay) s->G.watch(false);
 }
 
 void Simulator::setJointAnglesAndVels(const arr& q, const arr& qdot, bool updateDisplay){
   s->G.setJointState(q, qdot);
-  s->G.calc_fwdPropagateFrames();
-  s->G.computeProxies();
+  s->G.stepSwift();
   if(updateDisplay) s->G.watch(false);
 }
 
 void Simulator::kinematicsPos(arr& y, const char* shapeName, const arr* rel){
   if(rel){
     ors::Vector v;  v.set(rel->p);
-    s->G.kinematicsPos(y, NoArr, s->G.getShapeByName(shapeName)->body->index, &v);
+    s->G.kinematicsPos(y, NoArr, s->G.getShapeByName(shapeName)->body, &v);
   }else{
-    s->G.kinematicsPos(y, NoArr, s->G.getShapeByName(shapeName)->body->index, NULL);
+    s->G.kinematicsPos(y, NoArr, s->G.getShapeByName(shapeName)->body, NULL);
   }
 }
 
 void Simulator::kinematicsVec(arr& y, const char* shapeName, const arr* vec){
   if(vec){
     ors::Vector v;  v.set(vec->p);
-    s->G.kinematicsVec(y, NoArr, s->G.getShapeByName(shapeName)->body->index, &v);
+    s->G.kinematicsVec(y, NoArr, s->G.getShapeByName(shapeName)->body, &v);
   }else{
-    s->G.kinematicsVec(y, NoArr, s->G.getShapeByName(shapeName)->body->index, NULL);
+    s->G.kinematicsVec(y, NoArr, s->G.getShapeByName(shapeName)->body, NULL);
   }
 }
 
 void Simulator::jacobianPos(arr& J, const char* shapeName, const arr* rel){
   if(rel){
     ors::Vector v;  v.set(rel->p);
-    s->G.kinematicsPos(NoArr, J, s->G.getShapeByName(shapeName)->body->index, &v);
+    s->G.kinematicsPos(NoArr, J, s->G.getShapeByName(shapeName)->body, &v);
   }else{
-    s->G.kinematicsPos(NoArr, J, s->G.getShapeByName(shapeName)->body->index, NULL);
+    s->G.kinematicsPos(NoArr, J, s->G.getShapeByName(shapeName)->body, NULL);
   }
 }
 
 void Simulator::jacobianVec(arr& J, const char* shapeName, const arr* vec){
   if(vec){
     ors::Vector v;  v.set(vec->p);
-    s->G.kinematicsVec(NoArr, J, s->G.getShapeByName(shapeName)->body->index, &v);
+    s->G.kinematicsVec(NoArr, J, s->G.getShapeByName(shapeName)->body, &v);
   }else{
-    s->G.kinematicsVec(NoArr, J, s->G.getShapeByName(shapeName)->body->index, NULL);
+    s->G.kinematicsVec(NoArr, J, s->G.getShapeByName(shapeName)->body, NULL);
   }
 }
 

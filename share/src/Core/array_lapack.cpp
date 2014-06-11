@@ -1,20 +1,21 @@
 /*  ---------------------------------------------------------------------
-    Copyright 2013 Marc Toussaint
-    email: mtoussai@cs.tu-berlin.de
-
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
 
 // file:///usr/share/doc/liblapack-doc/lug/index.html
 
@@ -136,13 +137,14 @@ void blas_MsymMsym(arr& X, const arr& A, const arr& B) {
 }
 #endif
 
-void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b) {
+arr lapack_Ainv_b_sym(const arr& A, const arr& b) {
+  arr x;
   if(b.nd==2){ //b is a matrix (unusual) repeat for each col:
     arr bT = ~b;
     x.resizeAs(bT);
-    for(uint i=0;i<bT.d0;i++) lapack_Ainv_b_sym(x[i](), A, bT[i]);
+    for(uint i=0;i<bT.d0;i++) x[i]() = lapack_Ainv_b_sym(A, bT[i]);
     x=~x;
-    return;
+    return x;
   }
   if(A.special==arr::RowShiftedPackedMatrixST) {
     RowShiftedPackedMatrix *Aaux = (RowShiftedPackedMatrix*) A.aux;
@@ -152,7 +154,11 @@ void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b) {
   arr Acol=A;
   integer N=A.d0, KD=A.d1-1, NRHS=1, LDAB=A.d1, INFO;
   if(A.special!=arr::RowShiftedPackedMatrixST) {
-    dposv_((char*)"L", &N, &NRHS, Acol.p, &N, x.p, &N, &INFO);
+    try{
+      dposv_((char*)"L", &N, &NRHS, Acol.p, &N, x.p, &N, &INFO);
+    }catch(...){
+      HALT("here");
+    }
   } else {
     dpbsv_((char*)"L", &N, &KD, &NRHS, Acol.p, &LDAB, x.p, &N, &INFO);
   }
@@ -160,11 +166,11 @@ void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b) {
     HALT("lapack_Ainv_b_sym error info = " <<INFO
          <<"\n typically this is because A is not invertible or sym-pos-def,\nA=" <<A <<"\nb=" <<b);
   }
-
 #if 0
   arr y = inverse(A)*b;
   std::cout  <<"lapack_Ainv_b_sym error = " <<sqrDistance(x, y) <<std::endl;
 #endif
+  return x;
 }
 
 uint lapack_SVD(
@@ -336,10 +342,10 @@ void lapack_RQ(arr& R, arr &Q, const arr& A) { NICO };
 void lapack_EigenDecomp(const arr& symmA, arr& Evals, arr& Evecs) { NICO };
 bool lapack_isPositiveSemiDefinite(const arr& symmA) { NICO };
 void lapack_inverseSymPosDef(arr& Ainv, const arr& A) { NICO };
-void lapack_Ainv_b_sym(arr& x, const arr& A, const arr& b) {
+arr lapack_Ainv_b_sym(const arr& A, const arr& b) {
   arr invA;
   inverse(invA, A);
-  x = invA*b;
+  return invA*b;
 };
 double lapack_determinantSymPosDef(const arr& A) { NICO };
 void lapack_mldivide(arr& X, const arr& A, const arr& b) { NICO };

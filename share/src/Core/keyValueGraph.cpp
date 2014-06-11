@@ -1,20 +1,21 @@
 /*  ---------------------------------------------------------------------
-    Copyright 2013 Marc Toussaint
-    email: mtoussai@cs.tu-berlin.de
-
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
 
 #include <map>
 
@@ -79,7 +80,7 @@ void Item::write(std::ostream& os) const {
   }
 }
 
-bool readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=false) {
+Item *readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=false) {
   MT::String str;
   StringA keys;
   ItemL parents;
@@ -198,7 +199,7 @@ bool readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=false
         default: { //error
           is.putback(c);
           PARSERR("unknown value indicator '" <<c <<"'");
-          return false;
+          return NULL;
         }
       }
   } else { //no '=' or '{' -> boolean
@@ -227,7 +228,7 @@ bool readItem(KeyValueGraph& containingKvg, std::istream& is, bool verbose=false
   c=MT::getNextChar(is);
   if(c==',' || c==';') {} else is.putback(c);
   
-  return true;
+  return item;
 }
 
 
@@ -273,6 +274,39 @@ KeyValueGraph KeyValueGraph::getItems(const char* key) {
   return ret;
 }
 
+KeyValueGraph KeyValueGraph::getTypedItems(const char* key, const std::type_info& type) {
+  KeyValueGraph ret;
+  for(Item *it: (*this)) if(it->getValueType()==type) {
+    if(!key) ret.append(it);
+    else for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key) {
+          ret.append(it);
+          break;
+        }
+  }
+  return ret;
+}
+
+Item* KeyValueGraph::merge(Item *m){
+  KeyValueGraph KVG = getTypedItems(m->keys(0), m->getValueType());
+  //CHECK(KVG.N<=1, "can't merge into multiple items yet");
+  Item *it=NULL;
+  if(KVG.N) it=KVG.elem(0);
+  bool mIsMember = ItemL::contains(m);
+  if(it){
+    CHECK(m->getValueType()==it->getValueType(), "can't merge items of different types!");
+    if(it->getValueType()==typeid(KeyValueGraph)){ //merge the KVGs
+      it->getValue<KeyValueGraph>()->merge(*m->getValue<KeyValueGraph>());
+    }else{ //overwrite the value
+      it->takeoverValue(m);
+    }
+    if(mIsMember) ItemL::removeValue(m);
+  }else{ //nothing to merge, append
+    if(!mIsMember) return append(m);
+    else return m;
+  }
+  return NULL;
+}
+
 KeyValueGraph& KeyValueGraph::operator=(const KeyValueGraph& G) {
   listDelete(*this);
   this->resize(G.N);
@@ -295,8 +329,19 @@ void KeyValueGraph::read(std::istream& is) {
       }else HALT("don't know special command " <<str);
     }else{
       if(!is.good() || c=='}') { is.clear(); break; }
-      if(!readItem(*this, is)) break;
+      Item *it = readItem(*this, is);
+      if(!it) break;
+      if(it->keys.N && it->keys(0)=="Include"){
+        read(it->getValue<MT::FileToken>()->getIs());
+        ItemL::removeValue(it);
+      }
     }
+  }
+  //-- merge all Merge keys
+  KeyValueGraph merges = getItems("Merge");
+  for(Item *m:merges){
+    m->keys.remove(0);
+    merge(m);
   }
 }
 

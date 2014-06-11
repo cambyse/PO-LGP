@@ -1,3 +1,21 @@
+/*  ---------------------------------------------------------------------
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a COPYING file of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
 #include "keyValueGraph.h"
 
 //////////// taken from http://stackoverflow.com/questions/4532281/how-to-test-whether-class-b-is-derived-from-class-a
@@ -43,6 +61,15 @@ struct Item_typed:Item {
 
   virtual bool hasValue() const {
     return value!=NULL;
+  }
+
+  virtual void takeoverValue(Item *it) {
+    Item_typed<T> *itt = dynamic_cast<Item_typed<T>*>(it);
+    CHECK(itt,"can't assign to wrong type");
+    CHECK(itt->value,"can't assign to nothing");
+    if(value) delete value;
+    value = itt->value;
+    itt->value = NULL;
   }
 
   virtual void writeValue(std::ostream &os) const {
@@ -107,18 +134,6 @@ template<class T> MT::Array<T*> KeyValueGraph::getTypedValues(const char* key) {
       ret.append(it->getValue<T>());
       break;
     }
-  }
-  return ret;
-}
-
-template<class T> KeyValueGraph KeyValueGraph::getTypedItems(const char* key) {
-  KeyValueGraph ret;
-  for(Item *it: (*this)) if(it->getValueType()==typeid(T)) {
-    if(!key) ret.append(it);
-    else for(uint i=0; i<it->keys.N; i++) if(it->keys(i)==key) {
-          ret.append(it);
-          break;
-        }
   }
   return ret;
 }

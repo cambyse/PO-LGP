@@ -166,7 +166,7 @@ void executeTrajectoryWholeBody(String scene){
   cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<" # joints=" <<world.getJointStateDimension()<<endl;
 
   arr x(T+1,n); x.setZero();
-  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, damping=1e-3, maxStep=1.));
   //  P.costReport();
   //  displayTrajectory(x, 1, world, "planned trajectory", 0.01);
 
@@ -175,13 +175,13 @@ void executeTrajectoryWholeBody(String scene){
   // store cartesian coordinates and endeffector orientation
   for (uint t=0;t<=T;t++) {
     world.setJointState(x[t]);
-    world.kinematicsPos(kinPos,NoArr,P.world.getBodyByName("endeffR")->index);
-    world.kinematicsVec(kinVec,NoArr,P.world.getBodyByName("endeffR")->index);
+    world.kinematicsPos(kinPos,NoArr,P.world.getBodyByName("endeffR"));
+    world.kinematicsVec(kinVec,NoArr,P.world.getBodyByName("endeffR"));
     xRefPosR.append(~kinPos);
     xRefVecR.append(~kinVec);
 
-    world.kinematicsPos(kinPos,NoArr,P.world.getBodyByName("endeffL")->index);
-    world.kinematicsVec(kinVec,NoArr,P.world.getBodyByName("endeffL")->index);
+    world.kinematicsPos(kinPos,NoArr,P.world.getBodyByName("endeffL"));
+    world.kinematicsVec(kinVec,NoArr,P.world.getBodyByName("endeffL"));
     xRefPosL.append(~kinPos);
     xRefVecL.append(~kinVec);
   }
@@ -220,8 +220,8 @@ void executeTrajectoryWholeBody(String scene){
   AdaptiveMotionExecution* amexL;
   AdaptiveMotionExecution* amexR;
 
-  //  MP.nullSpacePD.prec=0.;
-  MP.nullSpacePD.active=false;
+  //  MP.qitselfPD.prec=0.;
+  MP.qitselfPD.active=false;
   taskPosR = MP.addPDTask("posR", tau_plan*5, 1, posTMT, "endeffR");
   taskVecR = MP.addPDTask("vecR", tau_plan*5, 1, vecTMT, "endeffR",ARR(0.,0.,1.));
   taskPosL = MP.addPDTask("posL", tau_plan*5, 1, posTMT, "endeffL");
@@ -271,8 +271,8 @@ void executeTrajectoryWholeBody(String scene){
       // Outer Planning Loop [1/tau_plan Hz]
       MT::timerStart(true);
       // Get current task state
-      world.kinematicsPos(state,NoArr,P.world.getBodyByName("endeffL")->index);
-      world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeffL")->index);
+      world.kinematicsPos(state,NoArr,P.world.getBodyByName("endeffL"));
+      world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeffL"));
       state.append(stateVec);
       // Move goal
       if (t < 0.7*t_final && moveGoal) {
@@ -288,8 +288,8 @@ void executeTrajectoryWholeBody(String scene){
       taskVecL->y_ref = yNext.subRange(3,5);
       taskVecL->v_ref = ydNext.subRange(3,5);
 
-      world.kinematicsPos(state,NoArr,P.world.getBodyByName("endeffR")->index);
-      world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeffR")->index);
+      world.kinematicsPos(state,NoArr,P.world.getBodyByName("endeffR"));
+      world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeffR"));
       state.append(stateVec);
 
       amexR->iterate(state);
@@ -311,7 +311,7 @@ void executeTrajectoryWholeBody(String scene){
     MP.setState(q, qdot);
 
     // world.stepPhysx(tau_control);
-    world.computeProxies();
+    world.stepSwift();
 
     arr qddot = MP.operationalSpaceControl();//MP.operationalSpaceControl(regularization);
     q += tau_control*qdot;
@@ -332,9 +332,9 @@ void executeTrajectoryWholeBody(String scene){
   write(LIST<arr>(ct_bk),STRING(folder<<"ct_bk.output"));
 
   write(LIST<arr>(xRefR),STRING(folder<<"xRef.output"));
-  write(ARR(tau_control),STRING(folder<<"tau_control.output"));
-  write(ARR(tau_plan),STRING(folder<<"tau_plan.output"));
-  write(ARR(numScenes),STRING(folder<<"numScenes.output"));
+  write(LIST<arr>(ARR(tau_control)),STRING(folder<<"tau_control.output"));
+  write(LIST<arr>(ARR(tau_plan)),STRING(folder<<"tau_plan.output"));
+  write(LIST<arr>(ARR(numScenes)),STRING(folder<<"numScenes.output"));
 
   return;
 }
@@ -397,7 +397,7 @@ void executeTrajectoryRightArm(String scene){
   cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<" # joints=" <<world.getJointStateDimension()<<endl;
 
   arr x(T+1,n); x.setZero();
-  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, damping=1e-3, maxStep=1.));
   P.costReport();
 //  displayTrajectory(x, 1, world, "planned trajectory", 0.01);
 
@@ -406,8 +406,8 @@ void executeTrajectoryRightArm(String scene){
   // store cartesian coordinates and endeffector orientation
   for (uint t=0;t<=T;t++) {
     world.setJointState(x[t]);
-    world.kinematicsPos(kinPos,NoArr,P.world.getBodyByName("endeffR")->index);
-    world.kinematicsVec(kinVec,NoArr,P.world.getBodyByName("endeffR")->index);
+    world.kinematicsPos(kinPos,NoArr,P.world.getBodyByName("endeffR"));
+    world.kinematicsVec(kinVec,NoArr,P.world.getBodyByName("endeffR"));
     xRefPosR.append(~kinPos);
     xRefVecR.append(~kinVec);
   }
@@ -435,14 +435,14 @@ void executeTrajectoryRightArm(String scene){
   MObject goalMO(&world, MT::String("goal"), MObject::GOAL , 0.0005, dirL);
 
   FeedbackMotionControl MP(world, false);
-  PDtask *taskPosR, *taskVecR, *taskHome, *taskCol, *taskLimits, *qitself;
-  double regularization = 1e-2;
+  PDtask *taskPosR, *taskVecR, *qitself;
+  //double regularization = 1e-2;
 
   // initialize controllers
   AdaptiveMotionExecution* amexR;
 
   //  MP.nullSpacePD.prec=0.;
-  MP.nullSpacePD.active=false;
+  MP.qitselfPD.active=false;
   taskPosR = MP.addPDTask("posR", tau_plan*5, 1, posTMT, "endeffR");
   taskVecR = MP.addPDTask("vecR", tau_plan*5, 1, vecTMT, "endeffR",ARR(0.,0.,1.));
   qitself = MP.addPDTask("qitself", .1, 1., qLinearTMT, NULL, NoVector, NULL, NoVector, 0.01*MP.H_rate_diag);
@@ -489,8 +489,8 @@ void executeTrajectoryRightArm(String scene){
       // Outer Planning Loop [1/tau_plan Hz]
       MT::timerStart(true);
       // Get current task state
-      world.kinematicsPos(state,NoArr,P.world.getBodyByName("endeffR")->index);
-      world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeffR")->index);
+      world.kinematicsPos(state,NoArr,P.world.getBodyByName("endeffR"));
+      world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeffR"));
       state.append(stateVec);
       // Move goal
       if (t < 0.7*t_final && moveGoal) {
@@ -523,7 +523,7 @@ void executeTrajectoryRightArm(String scene){
     MP.setState(q, qdot);
 
     // world.stepPhysx(tau_control);
-    world.computeProxies();
+    world.stepSwift();
 
     arr qddot = MP.operationalSpaceControl();//MP.operationalSpaceControl(regularization);
     q += tau_control*qdot;
@@ -543,9 +543,9 @@ void executeTrajectoryRightArm(String scene){
   write(LIST<arr>(ct_bk),STRING(folder<<"ct_bk.output"));
 
   write(LIST<arr>(xRefR),STRING(folder<<"xRef.output"));
-  write(ARR(tau_control),STRING(folder<<"tau_control.output"));
-  write(ARR(tau_plan),STRING(folder<<"tau_plan.output"));
-  write(ARR(numScenes),STRING(folder<<"numScenes.output"));
+  write(LIST<arr>(ARR(tau_control)),STRING(folder<<"tau_control.output"));
+  write(LIST<arr>(ARR(tau_plan)),STRING(folder<<"tau_plan.output"));
+  write(LIST<arr>(ARR(numScenes)),STRING(folder<<"numScenes.output"));
 
   amexR->plotState();
   world.watch(true,STRING(t));

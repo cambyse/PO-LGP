@@ -62,7 +62,7 @@ RRTPlannerTest::RRTPlannerTest() {
   //gl.watch();
 }
 
-TEST_F(RRTPlannerTest, testRRTEndPoints) {
+GTEST_TEST_F(RRTPlannerTest, testRRTEndPoints) {
 
   // check for correct start point
   EXPECT_TRUE( length(trajectory[0] - start) <= eps);
@@ -71,7 +71,7 @@ TEST_F(RRTPlannerTest, testRRTEndPoints) {
   EXPECT_TRUE( length(trajectory[trajectory.d0-1] - target) <= eps);
 }
 
-TEST_F(RRTPlannerTest, testRRTStepSize) {
+GTEST_TEST_F(RRTPlannerTest, testRRTStepSize) {
   for(uint i=0; i<trajectory.d0; ++i) {
     // check for small enough steps
     if(i>0) {
@@ -80,7 +80,7 @@ TEST_F(RRTPlannerTest, testRRTStepSize) {
   }
 }
 
-TEST_F(RRTPlannerTest, testRRTCollisionFree) {
+GTEST_TEST_F(RRTPlannerTest, testRRTCollisionFree) {
   for(uint i=0; i<trajectory.d0; ++i) {
     // check for no collisions
     G.setJointState(trajectory[i]);

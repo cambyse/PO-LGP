@@ -1,20 +1,21 @@
 /*  ---------------------------------------------------------------------
-    Copyright 2013 Marc Toussaint
-    email: mtoussai@cs.tu-berlin.de
-
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
 
 /// @file
 /// @ingroup group_Core
@@ -50,6 +51,7 @@ struct Item {
   virtual void writeValue(std::ostream &os) const {NIY}
   virtual const std::type_info& getValueType() const {NIY}
   virtual bool is_derived_from_RootType() const {NIY}
+  virtual void takeoverValue(Item*) {NIY}
   virtual Item *newClone() const {NIY}
 };
 stdOutPipe(Item);
@@ -77,7 +79,8 @@ struct KeyValueGraph:ItemL {
   
   //-- get lists of items
   KeyValueGraph getItems(const char* key);
-  template<class T> KeyValueGraph getTypedItems(const char* key);
+  KeyValueGraph getTypedItems(const char* key, const std::type_info& type);
+  template<class T> KeyValueGraph getTypedItems(const char* key){ return getTypedItems(key, typeid(T)); }
   template<class T> ItemL getDerivedItems();
 
   //-- get lists of values
@@ -90,6 +93,10 @@ struct KeyValueGraph:ItemL {
   template<class T> Item *append(const StringA& keys, T *x) { return append(keys, ItemL(), x); }
   template<class T> Item *append(const char *key, T *x) { return append(ARRAY<MT::String>(MT::String(key)), ItemL(), x); }
   template<class T> Item *append(const char *key1, const char* key2, T *x) {  return append(ARRAY<MT::String>(MT::String(key1), MT::String(key2)), ItemL(), x); }
+
+  //-- merging items
+  Item *merge(Item* m); //removes m and deletes, if it is a member of This and merged with another Item
+  void merge(const ItemL& L){ for(Item *m:L) merge(m); }
 
   //-- I/O
   void sortByDotOrder();

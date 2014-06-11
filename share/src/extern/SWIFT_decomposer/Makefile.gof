@@ -5,10 +5,10 @@ OUTPUT := $(BASE)/lib/libextern_$(NAME).a
 MLR_NO_CXX11 = 1
 
 #CXXFLAGS += -DSWIFT_DECOMP -DDECOMP_GRAPHICS -O3 -fPIC -w -IRAPID -I/usr/include/tcl8.5
+#LIBS += -lqhull -lm -ltcl -ltk -lglut -lGLU -lXmu -lX11 -lGL
+
 CXXFLAGS += -DSWIFT_DECOMP -O3 -fPIC -w -IRAPID
-
-
-LIBS += -lqhull -lm -ltcl -ltk -lglut -lGLU -lXmu -lX11 -lGL
+LIBS += -lqhull -lm 
 
 SRCS = $(shell find . -maxdepth 2 -name '*.cpp' -not -name 'togl.cpp')
 OBJS = $(SRCS:%.cpp=%.o)

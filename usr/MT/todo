@@ -1,14 +1,41 @@
+** task & constraints
+
+check the consistency of the constraintProxyVariable with squared
+penelty and old task variables
+
+** task map
+* clean up DefaultTaskMap -> spearate in separate classes
+
+** PR2
+* force torqu sensor in regler integrieren
+* low gain turning of handles (don't think as them as parts of the robot,no exact model, just relax and pull somehow)
+* generell: sobald man etwas anfasst: relax, gravity compensation is easier
+* action for pregrasp
+* task variable that allows a target RANGE
+
+** ORS:
+* in phi_t: have a list of k ors copies
+  * on entry, check which are equal to x_{t-k},..,x_t
+  * permute
+  * set the remaining
+
+** traj optim
+
+- mix vel and acc penalties for optimization
+- have k ors copies in converting kOrderMarkov to sqrfunction
+- have psi (transition costs) as normal task variable
+
+**
+
 LOG in motion.cpp
 clearly introduce constraint maps as tasks -- feasibility, automatic penalty reduction
-
 
 ** checkJointDimension is really const (HALT if state was not set)
 getJointDimension is not const
 
-** lock in OpenGL
-
 ** KVG
-Mod Include special keys
+
+dot interpretation (dot as 2st key -> color shape everything just copy!)
 
 ** Proper ConstrainedTaskMap:
 virtual function g
