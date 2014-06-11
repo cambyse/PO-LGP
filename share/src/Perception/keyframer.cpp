@@ -95,21 +95,21 @@ void KeyFramer::updateOrs(uint f, bool show) {
       sensor_quat.referTo(g4d().query("quat", sensor, f));
       quat = ors::Quaternion(sensor_quat);
 
-      kw().kinematicsPos(y, J, sh->body->index, &sh->rel.pos);
+      kw().kinematicsPos(y, J, sh->body, &sh->rel.pos);
       Phi.append((y - sensor_pos) / PREC_POS);
       PhiJ.append(J / PREC_POS);
         
-      kw().kinematicsVec(y, J, sh->body->index, &x_vec);
+      kw().kinematicsVec(y, J, sh->body, &x_vec);
       y_target.setCarray((quat * x_vec).p(), 3);
       Phi.append((y - y_target) / PREC_ORI);
       PhiJ.append(J / PREC_ORI);
 
-      kw().kinematicsVec(y, J, sh->body->index, &y_vec);
+      kw().kinematicsVec(y, J, sh->body, &y_vec);
       y_target.setCarray((quat * y_vec).p(), 3);
       Phi.append((y - y_target) / PREC_ORI);
       PhiJ.append(J / PREC_ORI);
 
-      kw().kinematicsVec(y, J, sh->body->index, &z_vec);
+      kw().kinematicsVec(y, J, sh->body, &z_vec);
       y_target.setCarray((quat * z_vec).p(), 3);
       Phi.append((y - y_target) / PREC_ORI);
       PhiJ.append(J / PREC_ORI);
@@ -124,7 +124,7 @@ void KeyFramer::updateOrs(uint f, bool show) {
       break;
   }
   // TODO remove computeProxies?
-  kw().computeProxies();
+  /* kw().computeProxies(); */
   if(show) {
     kw().gl().text.clear() << "frame " << f << "/" << g4d().numFrames();
     kw().gl().update(NULL, true);
