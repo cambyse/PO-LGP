@@ -51,8 +51,8 @@ arr moveTo(ors::KinematicWorld& world,
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction MF(MP);
-  arr x(MP.T+1,MP.dim_x());
-  for(uint t=0;t<=MP.T;t++) x[t]() = MP.x0;  //initialize trajectory
+  arr x = replicate(MP.x0, MP.T+1);
+  rndGauss(x,.01,true); //don't initialize at a singular config
 
   //-- optimize
   for(uint k=0;k<iterate;k++){

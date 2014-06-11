@@ -159,82 +159,82 @@ void ors::KinematicWorld::glDraw() {
   
   //bodies
   if(orsDrawBodies) for(Shape *s: shapes) {
-      glDrawShape(s);
-      i++;
-      if(orsDrawLimit && i>=orsDrawLimit) break;
-    }
+    glDrawShape(s);
+    i++;
+    if(orsDrawLimit && i>=orsDrawLimit) break;
+  }
   
   //joints
   if(orsDrawJoints) for(Joint *e: joints) {
-      //set name (for OpenGL selection)
-      glPushName((e->index <<2) | 2);
+    //set name (for OpenGL selection)
+    glPushName((e->index <<2) | 2);
     
-      double s=e->A.pos.length()+e->B.pos.length(); //some scale
-      s*=.25;
+    double s=e->A.pos.length()+e->B.pos.length(); //some scale
+    s*=.25;
     
-      //from body to joint
-      f=e->from->X;
-      f.getAffineMatrixGL(GLmatrix);
-      glLoadMatrixd(GLmatrix);
-      glColor(1, 1, 0);
-      //glDrawSphere(.1*s);
-      glBegin(GL_LINES);
-      glVertex3f(0, 0, 0);
-      glVertex3f(e->A.pos.x, e->A.pos.y, e->A.pos.z);
-      glEnd();
+    //from body to joint
+    f=e->from->X;
+    f.getAffineMatrixGL(GLmatrix);
+    glLoadMatrixd(GLmatrix);
+    glColor(1, 1, 0);
+    //glDrawSphere(.1*s);
+    glBegin(GL_LINES);
+    glVertex3f(0, 0, 0);
+    glVertex3f(e->A.pos.x, e->A.pos.y, e->A.pos.z);
+    glEnd();
     
-      //joint frame A
-      f.appendTransformation(e->A);
-      f.getAffineMatrixGL(GLmatrix);
-      glLoadMatrixd(GLmatrix);
-      glDrawAxes(s);
-      glColor(1, 0, 0);
-      glRotatef(90, 0, 1, 0);  glDrawCylinder(.05*s, .3*s);  glRotatef(-90, 0, 1, 0);
+    //joint frame A
+    f.appendTransformation(e->A);
+    f.getAffineMatrixGL(GLmatrix);
+    glLoadMatrixd(GLmatrix);
+    glDrawAxes(s);
+    glColor(1, 0, 0);
+    glRotatef(90, 0, 1, 0);  glDrawCylinder(.05*s, .3*s);  glRotatef(-90, 0, 1, 0);
     
-      //joint frame B
-      f.appendTransformation(e->Q);
-      f.getAffineMatrixGL(GLmatrix);
-      glLoadMatrixd(GLmatrix);
-      glDrawAxes(s);
+    //joint frame B
+    f.appendTransformation(e->Q);
+    f.getAffineMatrixGL(GLmatrix);
+    glLoadMatrixd(GLmatrix);
+    glDrawAxes(s);
     
-      //from joint to body
-      glColor(1, 0, 1);
-      glBegin(GL_LINES);
-      glVertex3f(0, 0, 0);
-      glVertex3f(e->B.pos.x, e->B.pos.y, e->B.pos.z);
-      glEnd();
-      glTranslatef(e->B.pos.x, e->B.pos.y, e->B.pos.z);
-      //glDrawSphere(.1*s);
+    //from joint to body
+    glColor(1, 0, 1);
+    glBegin(GL_LINES);
+    glVertex3f(0, 0, 0);
+    glVertex3f(e->B.pos.x, e->B.pos.y, e->B.pos.z);
+    glEnd();
+    glTranslatef(e->B.pos.x, e->B.pos.y, e->B.pos.z);
+    //glDrawSphere(.1*s);
     
-      glPopName();
-      i++;
-      if(orsDrawLimit && i>=orsDrawLimit) break;
-    }
- 
+    glPopName();
+    i++;
+    if(orsDrawLimit && i>=orsDrawLimit) break;
+  }
+
   //proxies
   if(orsDrawProxies) for(Proxy *proxy: proxies) {
-      glLoadIdentity();
-      if(!proxy->colorCode) glColor(.75,.75,.75);
-      else glColor(proxy->colorCode);
-      glBegin(GL_LINES);
-      glVertex3dv(proxy->posA.p());
-      glVertex3dv(proxy->posB.p());
-      glEnd();
-      ors::Transformation f;
-      f.pos=proxy->posA;
-      f.rot.setDiff(ors::Vector(0, 0, 1), proxy->posA-proxy->posB);
-      f.getAffineMatrixGL(GLmatrix);
-      glLoadMatrixd(GLmatrix);
-      glDisable(GL_CULL_FACE);
-      glDrawDisk(.02);
-      glEnable(GL_CULL_FACE);
-      
-      f.pos=proxy->posB;
-      f.getAffineMatrixGL(GLmatrix);
-      glLoadMatrixd(GLmatrix);
-      glDrawDisk(.02);
-    }
-    
+    glLoadIdentity();
+    if(!proxy->colorCode) glColor(.75,.75,.75);
+    else glColor(proxy->colorCode);
+    glBegin(GL_LINES);
+    glVertex3dv(proxy->posA.p());
+    glVertex3dv(proxy->posB.p());
+    glEnd();
+    ors::Transformation f;
+    f.pos=proxy->posA;
+    f.rot.setDiff(ors::Vector(0, 0, 1), proxy->posA-proxy->posB);
+    f.getAffineMatrixGL(GLmatrix);
+    glLoadMatrixd(GLmatrix);
+    glDisable(GL_CULL_FACE);
+    glDrawDisk(.02);
+    glEnable(GL_CULL_FACE);
+
+    f.pos=proxy->posB;
+    f.getAffineMatrixGL(GLmatrix);
+    glLoadMatrixd(GLmatrix);
+    glDrawDisk(.02);
+  }
+
   glPopMatrix();
 }
 
@@ -245,8 +245,11 @@ void displayState(const arr& x, ors::KinematicWorld& G, const char *tag){
 
 void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, const char *tag, double delay) {
 //  G.gl().update();
-  ors::KinematicWorld& Gcopy = G;
-//  Gcopy.copy(G,true);
+  for(ors::Shape *s : G.shapes) if(s->mesh.V.d0!=s->mesh.Vn.d0 || s->mesh.T.d0!=s->mesh.Tn.d0) {
+    s->mesh.computeNormals();
+  }
+  ors::KinematicWorld Gcopy;// = G;
+  Gcopy.copy(G,true);
   uint k, t, T=x.d0-1;
   if(!steps) return;
   uint num;

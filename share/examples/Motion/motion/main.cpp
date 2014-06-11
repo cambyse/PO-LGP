@@ -90,12 +90,13 @@ void TEST(Basics){
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction MF(MP);
-  arr x(MP.T+1,MP.dim_x());
+  arr x = replicate(MP.x0, MP.T+1);
+  rndGauss(x,.01,true); //don't initialize at a singular config
 
   //gradient check: will fail in case of collisions
   for(uint k=0;k<0;k++){
-    rndUniform(x,-1.,1.);
     checkJacobian(Convert(MF), x, 1e-4);
+    rndUniform(x,-1.,1.);
   }
 
   //initialize trajectory
@@ -124,8 +125,8 @@ void TEST(Basics){
 int main(int argc,char** argv){
   MT::initCmdLine(argc,argv);
 
-  testPR2reach();
-//  testBasics();
+//  testPR2reach();
+  testBasics();
   
   return 0;
 }

@@ -342,17 +342,17 @@ void makeConvexHulls(ShapeL& shapes){
 bool always_unlocked(void*) { return false; }
 
 //ors::Joint::Joint(KinematicWorld& G)
-//  : world(G), index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0), locked_func(always_unlocked), locked_data(NULL), H(1.) {
+//  : world(G), index(0), qIndex(UINT_MAX), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0), locked_func(always_unlocked), locked_data(NULL), H(1.) {
 //  reset();
 //  index=G.joints.N;
 //  G.joints.append(this);
 //}
 
 //ors::Joint::Joint(KinematicWorld& G, const Joint& j)
-//  : world(G), index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0), locked_func(always_unlocked), locked_data(NULL), H(1.) { reset(); *this=j; }
+//  : world(G), index(0), qIndex(UINT_MAX), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0), locked_func(always_unlocked), locked_data(NULL), H(1.) { reset(); *this=j; }
 
 ors::Joint::Joint(KinematicWorld& G, Body *f, Body *t, const Joint* copyJoint)
-  : world(G), index(0), qIndex(-1), /*ifrom(f->index), ito(t->index),*/ from(f), to(t), mimic(NULL), agent(0), locked_func(always_unlocked), locked_data(NULL), H(1.) {
+  : world(G), index(0), qIndex(UINT_MAX), /*ifrom(f->index), ito(t->index),*/ from(f), to(t), mimic(NULL), agent(0), locked_func(always_unlocked), locked_data(NULL), H(1.) {
   reset();
   if(copyJoint) *this=*copyJoint;
   index=G.joints.N;
@@ -1230,22 +1230,12 @@ void ors::KinematicWorld::kinematicsQuat(arr& y, arr& J, Body *a, uint agent) co
 }
 
 void ors::KinematicWorld::jacobianR(arr& J, Body *a, uint agent) const {
-  uint j_idx;
-  ors::Transformation Xi;
   Joint *j;
-  ors::Vector ti;
+  uint j_idx;
   
   uint N=getJointStateDimension(agent);
   
-  //initialize Jacobian
-  J.resize(3, N);
-  J.setZero();
-  
-  //get reference frame -- in this case we always take
-  //the Z and X-axis of the world system as references
-  // -> don't need to compute explicit reference for object a
-  //  object a is relevant in the sense that only the tree-down
-  //  joints contribute to this rotation
+  J.resize(3, N).setZero();
   
   if(a->inLinks.N) {
     j=a->inLinks(0);
@@ -1253,12 +1243,12 @@ void ors::KinematicWorld::jacobianR(arr& J, Body *a, uint agent) const {
       j_idx=j->qIndex;
       if(j->agent==agent && j_idx>=N) CHECK(j->type==JT_glue || j->type==JT_fixed, "");
       if(j->agent==agent && j_idx<N){
-        Xi = j->X;
-        Xi.rot.getX(ti);
-
-        J(0, j_idx) = ti.x;
-        J(1, j_idx) = ti.y;
-        J(2, j_idx) = ti.z;
+        if((j->type>=JT_hingeX && j->type<=JT_hingeZ) || j->type==JT_transXYPhi) {
+          J(0, j_idx) = j->axis.x;
+          J(1, j_idx) = j->axis.y;
+          J(2, j_idx) = j->axis.z;
+        }
+        //all other joints: J=0 !!
       }
       if(!j->from->inLinks.N) break;
       j=j->from->inLinks(0);

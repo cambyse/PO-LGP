@@ -1,8 +1,8 @@
 #include "taskMap_transition.h"
 
 TransitionTaskMap::TransitionTaskMap(const ors::KinematicWorld& G){
-  velCoeff = MT::getParameter<double>("Motion/TaskMapTransition/vecCoeff",.5);
-  accCoeff = MT::getParameter<double>("Motion/TaskMapTransition/accCoeff",.5);
+  velCoeff = MT::getParameter<double>("Motion/TaskMapTransition/vecCoeff",.0);
+  accCoeff = MT::getParameter<double>("Motion/TaskMapTransition/accCoeff",1.);
 
   //transition cost metric
   arr H_diag;
@@ -27,8 +27,8 @@ void TransitionTaskMap::phi(arr& y, arr& J, const WorldL& G, double tau){
     uint n = G.last()->q.N;
     J.resize(y.N, order+1, n).setZero();
     for(uint i=0;i<n;i++){
-      if(order>=1){ J(i,1,i) += velCoeff/tau;  J(i,0,i) += -velCoeff/tau; }
-      if(order>=2){ J(i,2,i) += accCoeff/tau2;  J(i,1,i) += -2.*accCoeff/tau2;  J(i,0,i) += accCoeff/tau2; }
+      if(order>=1){ J(i,G.N-1-1,i) += velCoeff/tau;  J(i,G.N-1-0,i) += -velCoeff/tau; }
+      if(order>=2){ J(i,G.N-1-2,i) += accCoeff/tau2;  J(i,G.N-1-1,i) += -2.*accCoeff/tau2;  J(i,G.N-1-0,i) += accCoeff/tau2; }
 //      if(order>=3){ J(i,3,i) = 1.;  J(i,2,i) = -3.;  J(i,1,i) = +3.;  J(i,0,i) = -1.; }
     }
     J.reshape(y.N, (order+1)*n);

@@ -511,7 +511,7 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
     for(uint i=0;i<=k;i++) configurations.append(new ors::KinematicWorld())->copy(MP.world, true);
   }
   //find matches
-#if 0
+#if 0 //TODO: make this efficient again!
   uintA match(k+1); match=UINT_MAX;
   boolA used(k+1); used=false;
   uintA unused;
@@ -526,19 +526,19 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
   for(uint i=0;i<=k;i++) if(match(i)==UINT_MAX) match(i)=unused.popFirst();
   configurations.permute(match);
 #endif
-  //set states
-  for(uint i=0;i<=k;i++){
-    if(x_bar[i]!=configurations(i)->q){
-      configurations(i)->setJointState(x_bar[i]);
-      if(MP.useSwift) configurations(i)->stepSwift();
-    }
-  }
   //apply potential graph operators
   for(ors::GraphOperator *op:MP.world.operators){
     for(uint i=0;i<=k;i++){
       if(t+i>=k && op->timeOfApplication==t-k+i){
         op->apply(*configurations(i));
       }
+    }
+  }
+  //set states
+  for(uint i=0;i<=k;i++){
+    if(x_bar[i]!=configurations(i)->q){
+      configurations(i)->setJointState(x_bar[i]);
+      if(MP.useSwift) configurations(i)->stepSwift();
     }
   }
 
