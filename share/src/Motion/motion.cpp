@@ -34,11 +34,13 @@ void TaskMap::phi(arr& y, arr& J, const WorldL& G, double tau){
   if(k==0){// basic case: order=0
     arr J_bar;
     phi(y, (&J?J_bar:NoArr), *G.last());
-    J = zeros(G.N, y.N, J_bar.d1);
-    J[G.N-1]() = J_bar;
-    arr tmp(J);
-    tensorPermutation(J, tmp, TUP(1,0,2));
-    J.reshape(y.N, G.N*J_bar.d1);
+    if(&J){
+      J = zeros(G.N, y.N, J_bar.d1);
+      J[G.N-1]() = J_bar;
+      arr tmp(J);
+      tensorPermutation(J, tmp, TUP(1,0,2));
+      J.reshape(y.N, G.N*J_bar.d1);
+    }
     return;
   }
   arrA y_bar, J_bar;
@@ -64,8 +66,20 @@ void TaskMap::phi(arr& y, arr& J, const WorldL& G, double tau){
 
 //===========================================================================
 
+void TaskCost::setCostSpecs(uint fromTime,
+                            uint toTime,
+                            const arr& _target,
+                            double _prec){
+  if(&_target) target = _target; else target = {0.};
+  CHECK(toTime>=fromTime,"");
+  prec.resize(toTime+1).setZero();
+  for(uint t=fromTime;t<=toTime;t++) prec(t) = _prec;
+}
+
+//===========================================================================
+
 MotionProblem::MotionProblem(ors::KinematicWorld& _world, bool useSwift)
-    : world(_world) , useSwift(useSwift), makeContactsAttractive(false)
+    : world(_world) , useSwift(useSwift), makeContactsAttractive(false), transitionType(none), T(0), tau(0.)
 {
   if(useSwift) {
     makeConvexHulls(world.shapes);
@@ -73,6 +87,9 @@ MotionProblem::MotionProblem(ors::KinematicWorld& _world, bool useSwift)
   }
   world.getJointState(x0, v0);
   if(!v0.N){ v0.resizeAs(x0).setZero(); world.setJointState(x0, v0); }
+  double duration = MT::getParameter<double>("duration");
+  T = MT::getParameter<uint>("timeSteps");
+  tau = duration/T;
 }
 
 MotionProblem& MotionProblem::operator=(const MotionProblem& other) {
@@ -255,18 +272,21 @@ void MotionProblem::getTaskCosts2(arr& phi, arr& J, uint t, const WorldL &G, dou
   if(&J) J.clear();
   arr y,Jy;
   //-- append task costs
-  for(TaskCost *c: taskCosts) if(c->active && c->prec(t)){
+  for(TaskCost *c: taskCosts) if(c->active && c->prec.N>t && c->prec(t)){
     if(!c->map.constraint) {
-      c->map.phi(y, Jy, G, tau);
-      if(absMax(y)>1e10)  MT_MSG("WARNING y=" <<y);
-      CHECK(c->prec.N>t && c->target.N>t, "active task costs "<< c->name <<" have no targets defined");
-      CHECK(c->map.order==0 || c->map.order==1,"");
-      phi.append(sqrt(c->prec(t))*(y - c->target[t]));
+      c->map.phi(y, (&J?Jy:NoArr), G, tau);
+      if(absMax(y)>1e10){
+        MT_MSG("WARNING y=" <<y);
+      }
+      if(c->target.N==1) y -= c->target(0);
+      else if(c->target.nd==1) y -= c->target;
+      else y -= c->target[t];
+      phi.append(sqrt(c->prec(t))*y);
       if(&J) J.append(sqrt(c->prec(t))*Jy);
     }
     //special: constraint attraction costs
     if(c->map.constraint && makeContactsAttractive) {
-      c->map.phi(y, Jy, G, tau);
+      c->map.phi(y, (&J?Jy:NoArr), G, tau);
       CHECK(y.N==Jy.d0,"");
       for(uint j=0;j<y.N;j++) y(j) = -y(j)+.1;
       if(Jy.N) for(uint j=0;j<Jy.d0;j++) Jy[j]() *= -1.;
@@ -275,9 +295,9 @@ void MotionProblem::getTaskCosts2(arr& phi, arr& J, uint t, const WorldL &G, dou
     }
   }
   //-- append constraints
-  for(TaskCost *c: taskCosts) if(c->active && c->prec(t)){
+  for(TaskCost *c: taskCosts) if(c->active && c->prec.N>t && c->prec(t)){
     if(c->map.constraint) {
-      c->map.phi(y, Jy, G, tau);
+      c->map.phi(y, (&J?Jy:NoArr), G, tau);
       phi.append(y);
       if(&J) J.append(Jy);
     }
@@ -288,6 +308,7 @@ void MotionProblem::getTaskCosts2(arr& phi, arr& J, uint t, const WorldL &G, dou
 }
 
 uint MotionProblem::dim_psi() {
+  if(transitionType==none) return 0;
   return x0.N;
 }
 
@@ -303,9 +324,11 @@ void MotionProblem::costReport(bool gnuplt) {
   arr plotData(T+1,taskCosts.N+1); plotData.setZero();
   double totalT=0., a;
   cout <<" * transition costs:" <<endl;
-  for(uint t=0;t<=T;t++){
-    totalT += a = sumOfSqr(phiMatrix(t).sub(0,dim_psi()-1));
-    plotData(t,0) = a;
+  if(dim_psi()){
+    for(uint t=0;t<=T;t++){
+      totalT += a = sumOfSqr(phiMatrix(t).sub(0,dim_psi()-1));
+      plotData(t,0) = a;
+    }
   }
   cout <<"\t total=" <<totalT <<endl;
 
@@ -483,11 +506,12 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
   CHECK(t<=T,"");
 
   //-- manage configurations
-  if(configurations.N!=k+1){
+  if(configurations.N!=k+1 || t==0){
     listDelete(configurations);
     for(uint i=0;i<=k;i++) configurations.append(new ors::KinematicWorld())->copy(MP.world, true);
   }
   //find matches
+#if 0
   uintA match(k+1); match=UINT_MAX;
   boolA used(k+1); used=false;
   uintA unused;
@@ -501,6 +525,7 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
   for(uint i=0;i<=k;i++) if(!used(i)) unused.append(i);
   for(uint i=0;i<=k;i++) if(match(i)==UINT_MAX) match(i)=unused.popFirst();
   configurations.permute(match);
+#endif
   //set states
   for(uint i=0;i<=k;i++){
     if(x_bar[i]!=configurations(i)->q){
@@ -508,35 +533,45 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
       if(MP.useSwift) configurations(i)->stepSwift();
     }
   }
-
-  //-- transition costs
-  double tau=MP.tau, tau2=tau*tau, tau3=tau2*tau;
-  arr h = sqrt(MP.H_rate_diag)*sqrt(tau);
-  if(k==1)  phi = (x_bar[1]-x_bar[0])/tau; //penalize velocity
-  if(k==2)  phi = (x_bar[2]-2.*x_bar[1]+x_bar[0])/tau2; //penalize acceleration
-  if(k==3)  phi = (x_bar[3]-3.*x_bar[2]+3.*x_bar[1]-x_bar[0])/tau3; //penalize jerk
-  phi = h % phi;
-
-  if(&J) {
-    J.resize(phi.N, k+1, n);
-    J.setZero();
-    for(uint i=0;i<n;i++){
-      if(k==1){ J(i,1,i) = 1.;  J(i,0,i) = -1.; }
-      if(k==2){ J(i,2,i) = 1.;  J(i,1,i) = -2.;  J(i,0,i) = 1.; }
-      if(k==3){ J(i,3,i) = 1.;  J(i,2,i) = -3.;  J(i,1,i) = +3.;  J(i,0,i) = -1.; }
+  //apply potential graph operators
+  for(ors::GraphOperator *op:MP.world.operators){
+    for(uint i=0;i<=k;i++){
+      if(t+i>=k && op->timeOfApplication==t-k+i){
+        op->apply(*configurations(i));
+      }
     }
-    if(k==1) J/=tau;
-    if(k==2) J/=tau2;
-    if(k==3) J/=tau3;
-    J.reshape(phi.N, (k+1)*n);
-    for(uint i=0; i<n; i++) J[i]() *= h(i);
   }
 
-  if(&J) CHECK(J.d0==phi.N,"");
+  //-- transition costs
+  if(MP.transitionType!=MotionProblem::none){
+    double tau=MP.tau, tau2=tau*tau, tau3=tau2*tau;
+    arr h = sqrt(MP.H_rate_diag)*sqrt(tau);
+    if(k==1)  phi = (x_bar[1]-x_bar[0])/tau; //penalize velocity
+    if(k==2)  phi = (x_bar[2]-2.*x_bar[1]+x_bar[0])/tau2; //penalize acceleration
+    if(k==3)  phi = (x_bar[3]-3.*x_bar[2]+3.*x_bar[1]-x_bar[0])/tau3; //penalize jerk
+    phi = h % phi;
+
+    if(&J) {
+      J.resize(phi.N, k+1, n);
+      J.setZero();
+      for(uint i=0;i<n;i++){
+        if(k==1){ J(i,1,i) = 1.;  J(i,0,i) = -1.; }
+        if(k==2){ J(i,2,i) = 1.;  J(i,1,i) = -2.;  J(i,0,i) = 1.; }
+        if(k==3){ J(i,3,i) = 1.;  J(i,2,i) = -3.;  J(i,1,i) = +3.;  J(i,0,i) = -1.; }
+      }
+      if(k==1) J/=tau;
+      if(k==2) J/=tau2;
+      if(k==3) J/=tau3;
+      J.reshape(phi.N, (k+1)*n);
+      for(uint i=0; i<n; i++) J[i]() *= h(i);
+    }
+
+    if(&J) CHECK(J.d0==phi.N,"");
+  }
 
   //-- task cost (which are taken w.r.t. x_bar[k])
   arr _phi, _J;
-  MP.getTaskCosts2(_phi, (&J?_J:NoArr), t, configurations, tau);
+  MP.getTaskCosts2(_phi, (&J?_J:NoArr), t, configurations, MP.tau);
   phi.append(_phi);
   if(&J) J.append(_J);
 

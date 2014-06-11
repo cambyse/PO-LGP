@@ -22,7 +22,7 @@ void TEST(PR2reach){
 
   //-- setup the motion problem
   TaskCost *c;
-  c = MP.addTask("endeff", new DefaultTaskMap(posTMT, G, "endeff"));
+  c = MP.addTask("endeff_pos", new DefaultTaskMap(posTMT, G, "endeff"));
   MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(MP.world.getShapeByName("target")->X.pos), 1e3);
 
   c = MP.addTask("endeff_vel", new DefaultTaskMap(posTMT, G, "endeff"));
@@ -49,7 +49,7 @@ void TEST(PR2reach){
   for(uint k=0;k<5;k++){
     MT::timerStart();
 #ifndef CONSTRAINT
-    optNewton(x, Convert(MF), OPT(verbose=2, stopIters=20, maxStep=.5, stepInc=2., nonStrictSteps=(!k?15:5)));
+    optNewton(x, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=.5, stepInc=2., nonStrictSteps=(!k?15:5)));
 #else
     optConstrained(x, NoArr, Convert(MF), OPT(verbose=1, stopIters=100, damping=1., maxStep=1., nonStrictSteps=5));
 #endif
@@ -81,19 +81,19 @@ void TEST(Basics){
   c->map.order=1; //make this a velocity variable!
 
 //#define CONSTRAINT
-//#ifndef CONSTRAINT
-//  c = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .1));
-//#else
-//  c = MP.addTask("collisionConstraints", new CollisionConstraint(.1));
-//#endif
-//  MP.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
+#ifndef CONSTRAINT
+  c = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .1));
+#else
+  c = MP.addTask("collisionConstraints", new CollisionConstraint(.1));
+#endif
+  MP.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e-0);
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction MF(MP);
   arr x(MP.T+1,MP.dim_x());
 
   //gradient check: will fail in case of collisions
-  for(uint k=0;k<1;k++){
+  for(uint k=0;k<0;k++){
     rndUniform(x,-1.,1.);
     checkJacobian(Convert(MF), x, 1e-4);
   }
@@ -109,10 +109,9 @@ void TEST(Basics){
 #else
     optConstrained(x, NoArr, Convert(MF), OPT(verbose=1, stopIters=100, damping=1., maxStep=1., nonStrictSteps=5));
 #endif
-    return;
     cout <<"** optimization time=" <<MT::timerRead() <<endl;
     MP.costReport();
-    checkJacobian(Convert(MF), x, 1e-5);
+//    checkJacobian(Convert(MF), x, 1e-5);
     write(LIST<arr>(x),"z.output");
     gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", false, true);
     gnuplot("load 'z.costReport.plt'", false, true);

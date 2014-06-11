@@ -243,19 +243,30 @@ void displayState(const arr& x, ors::KinematicWorld& G, const char *tag){
   G.gl().watch(tag);
 }
 
-void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, const char *tag, double delay) {
+void displayTrajectory(const arr& x, int steps, const ors::KinematicWorld& G, const char *tag, double delay) {
+  ors::KinematicWorld Gcopy;
+  Gcopy.copy(G,true);
   uint k, t, T=x.d0-1;
   if(!steps) return;
   uint num;
   if(steps==1 || steps==-1) num=T; else num=steps;
   for(k=0; k<=(uint)num; k++) {
     t = k*T/num;
-    G.setJointState(x[t]);
-    G.gl().update(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
-    if(delay) MT::wait(delay);
+    Gcopy.setJointState(x[t]);
+    if(G.operators.N){
+      for(ors::GraphOperator *op: G.operators)
+        if(op->timeOfApplication==t)
+          op->apply(Gcopy);
+    }
+    if(delay<0.){
+      Gcopy.gl().watch(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
+    }else{
+      Gcopy.gl().update(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
+      if(delay) MT::wait(delay);
+    }
   }
   if(steps==1)
-    G.gl().watch(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
+    Gcopy.gl().watch(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
 }
 
 /* please don't remove yet: code for displaying edges might be useful...
@@ -549,9 +560,9 @@ void editConfiguration(const char* filename, ors::KinematicWorld& C) {
 #else
     C.gl().watch();
 #endif
-#if EXAMPLES_AS_TESTS
+if(!MT::getInteractivity()){
     exit=true;
-#endif
+}
   }
 }
 

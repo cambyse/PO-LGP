@@ -4,7 +4,7 @@
 
 using namespace MLR;
 
-TEST(mt_guess_format, test_std_formats) {
+GTEST_TEST(mt_guess_format, test_std_formats) {
     register_libav();
     AVOutputFormat *fmt = mt_guess_format("test.wav", nullptr);
     ASSERT_NE(nullptr, fmt);

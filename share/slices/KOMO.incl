@@ -5,13 +5,11 @@ share/src/Ors
 share/src/Optim
 share/src/Motion
 
-share/examples/Core
-share/examples/Algo
-share/examples/Gui
-share/examples/Ors
-share/examples/Optim
-share/examples/Motion
+share/examples/KOMO
+share/examples/Ors/ors_editor
 
 share/include/lapack
 share/src/extern/SWIFT
 share/src/extern/SWIFT_decomposer
+
+share/data/pr2_model

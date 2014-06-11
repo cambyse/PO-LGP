@@ -3246,7 +3246,7 @@ template<class vert, class edge> void graphDelete(MT::Array<vert*>& V, MT::Array
 }
 
 template<class vert, class edge> edge* graphGetEdge(vert *from, vert *to) {
-  for_list(edge,  e,  from->outLinks) if(e->from==to) return e;
+  for_list(edge,  e,  to->inLinks) if(e->from==from) return e;
   return NULL;
 }
 

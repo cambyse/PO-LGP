@@ -58,9 +58,15 @@ struct TaskCost {
   bool active;
   arr target, prec;  ///< target & precision over a whole trajectory
   double threshold;  ///< threshold for feasibility checks (e.g. in RRTs)
-  uint dim_phi(uint t,const ors::KinematicWorld& G){ if(!active || !prec(t)) return 0; return map.dim_phi(G); }
+  uint dim_phi(uint t,const ors::KinematicWorld& G){ if(!active || prec.N<=t || !prec(t)) return 0; return map.dim_phi(G); }
 
   TaskCost(TaskMap* m):map(*m), active(true){}
+
+  enum TaskCostInterpolationType { atTimeOnly, tillTime, fromTime };
+  void setCostSpecs(uint fromTime, uint toTime,
+                    const arr& _target={0.},
+                    double _prec=1.);
+
 };
 
 
@@ -82,7 +88,7 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
   bool makeContactsAttractive;
   
   //-- transition cost descriptions //TODO: should become a task map just like any other
-  enum TransitionType { kinematic=0, pseudoDynamic=1, realDynamic=2 };
+  enum TransitionType { none=-1, kinematic=0, pseudoDynamic=1, realDynamic=2 };
   TransitionType transitionType;
   arr H_rate_diag; ///< cost rate
   uint T; ///< number of time steps
@@ -145,7 +151,7 @@ struct MotionProblemFunction:KOrderMarkovFunction {
   virtual uint get_T() { return MP.T; }
   virtual uint get_k() { if(MP.transitionType==MotionProblem::kinematic) return 1;  return 2; }
   virtual uint dim_x() { return MP.dim_x(); }
-  virtual uint dim_phi(uint t){ return dim_x() + MP.dim_phi(t); } //transitions plus costs (latter include constraints)
+  virtual uint dim_phi(uint t){ return MP.dim_psi() + MP.dim_phi(t); } //transitions plus costs (latter include constraints)
   virtual uint dim_g(uint t){ return MP.dim_g(t); }
   virtual arr get_prefix(); //the history states x(-k),..,x(-1)
   virtual arr get_postfix();

@@ -1,0 +1,7 @@
+*exercises
+cmake_install.cmake
+CMakeLists.txt
+CTestTestfile.cmake
+robotManipulation*
+symbolGrounding*
+decisionMakingModule*

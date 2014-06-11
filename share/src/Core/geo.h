@@ -41,6 +41,7 @@ struct Vector {
   Vector(const arr& x) { CHECK(x.N==3, "");  set(x.p); }
   double *p() { return &x; }
   
+  double& operator()(uint i);
   void set(double, double, double);
   void set(double*);
   void setZero();

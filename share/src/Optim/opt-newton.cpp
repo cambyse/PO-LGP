@@ -63,7 +63,7 @@ OptNewton::StopCriterion OptNewton::step(){
   x_changed=false;
 
   it++;
-  if(o.verbose>1) cout <<"optNewton it=" <<std::setw(3) <<it << " \tlambd=" <<std::setprecision(3) <<lambda <<flush;
+  if(o.verbose>1) cout <<"optNewton it=" <<std::setw(3) <<it << " \tlambd=" <</*std::setprecision(3) <<*/lambda <<flush;
 
   if(!(fx==fx)) HALT("you're calling a newton step with initial function value = NAN");
 
@@ -94,7 +94,7 @@ OptNewton::StopCriterion OptNewton::step(){
     fy = f.fs(gy, Hy, y);  evals++;
     if(additionalRegularizer) fy += scalarProduct(y,(*additionalRegularizer)*vectorShaped(y));
     if(o.verbose>2) cout <<" \tprobing y=" <<y;
-    if(o.verbose>1) cout <<" \tevals=" <<evals <<" \talpha=" <<alpha <<" \tf(y)=" <<fy  <<" \tf(y)-f(x)=" <<fy-fx <<flush;
+    if(o.verbose>1) cout <<" \tevals=" <<evals <<" \talpha=" <<alpha <<" \tf(y)=" <<fy  /*<<" \tf(y)-f(x)=" <<fy-fx */<<flush;
     //CHECK(fy==fy, "cost seems to be NAN: ly=" <<fy);
     if(fy==fy && (fy <= fx || o.nonStrictSteps==-1 || o.nonStrictSteps>(int)it)) { //fy==fy is for NAN?
       if(o.verbose>1) cout <<" - ACCEPT" <<endl;

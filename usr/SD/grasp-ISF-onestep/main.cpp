@@ -351,7 +351,7 @@ void problem5(){
 
   if (!o->m.V.N)  o->buildMesh();
   ors.init(MT::getParameter<MT::String>("orsFile"));
-  ors::Shape *pc = new ors::Shape(ors.shapes, ors.getBodyByName("OBJECTS"));
+  ors::Shape *pc = new ors::Shape(ors, ors.getBodyByName("OBJECTS"));
   pc->mesh = o->m; /* add point cloud to ors */
   pc->type = ors::pointCloudST; 
   gl.add(glDrawMeshObject, o);

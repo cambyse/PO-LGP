@@ -302,6 +302,7 @@ void Mesh::makeConvexHull() {
   if(!V.N) return;
 #ifndef  MT_ORS_ONLY_BASICS
   getTriangulatedHull(T, V);
+//  getTriangulatedHull(T, V); //TODO: somehow this makes a difference! (with PR2)
 #else
   NICO
 #endif
@@ -1112,6 +1113,14 @@ uint& Tni(uint, uint) { static uint dummy; return dummy; } //normal index
 uint& Tti(uint, uint) { static uint dummy; return dummy; } //texture index
 
 
+MT::String str;
+
+char *strn(std::istream& is){
+  str.read(is," \n\t"," \n\t",true);
+  CHECK(is.good(),"could not read line");
+  return str.p;
+}
+
 /** initialises the ascii-obj file "filename"*/
 void Mesh::readObjFile(std::istream& is) {
   // make a first pass through the file to get a count of the number
@@ -1119,70 +1128,66 @@ void Mesh::readObjFile(std::istream& is) {
   uint nV, nN, nTex, nT;
   nV = nN = nTex = nT = 0;
   int v, n, t;
-  char buf[128];
-  
-  // open the file
-  FILE* file;
-  //file = fopen(filename, "r");
-  NIY; //use the is! //rewrite this using getline and sscanf!
-  //if(!file) HALT("readObjFile() failed: can't open data file " <<filename);
 
   // we only want to parse the relevant subpart/submesh of the mesh therefore
   // jump to the right position and stop parsing at the right positon.
   // if (parsing_pos_start > -1) {
-  fseek(file, parsing_pos_start, SEEK_SET);
+//  fseek(file, parsing_pos_start, SEEK_SET);
 
-  while ((fscanf(file, "%s", buf) != EOF) && (ftell(file) < parsing_pos_end)) {
-    switch(buf[0]) {
-      case '#':  CHECK(fgets(buf, sizeof(buf), file), "fgets failed");  break;  // comment
-      case 'v':
-        switch(buf[1]) {
-          case '\0': nV++;    CHECK(fgets(buf, sizeof(buf), file), "fgets failed");  break;  // vertex
-          case 'n':  nN++;    CHECK(fgets(buf, sizeof(buf), file), "fgets failed");  break;  // normal
-          case 't':  nTex++;  CHECK(fgets(buf, sizeof(buf), file), "fgets failed");  break;  // texcoord
-          default: HALT("firstPass(): Unknown token '" <<buf <<"'");  break;
-        }
+//  while ((sscanf(strn(is), "%s", str.p) != EOF) && (ftell(file) < parsing_pos_end)) {
+  strn(is);
+  for(bool ex=false;!ex;){
+    switch(str.p[0]) {
+      case '\0':
+        is.clear();
+        ex=true;
+        break; //EOF
+      case '#':
+        MT::skipRestOfLine(is);
+        strn(is);
         break;
-        //case 'm':  CHECK(fgets(buf, sizeof(buf), file), "fgets failed");  sscanf(buf, "%s %s", buf, buf);  break;
-        //mtllibname = strdup(buf);  glmReadMTL(model, buf);
-        //case 'u':  CHECK(fgets(buf, sizeof(buf), file), "fgets failed");  break;
-        //case 'g':  CHECK(fgets(buf, sizeof(buf), file), "fgets failed");  sscanf(buf, "%s", buf);  break;
+      case 'v':
+        switch(str.p[1]) {
+          case '\0': nV++;    MT::skipRestOfLine(is); break;  // vertex
+          case 'n':  nN++;    MT::skipRestOfLine(is); break;  // normal
+          case 't':  nTex++;  MT::skipRestOfLine(is); break;  // texcoord
+          default: HALT("firstPass(): Unknown token '" <<str.p <<"'");  break;
+        }
+        strn(is);
+        break;
       case 'f':               // face
         v = n = t = 0;
-        CHECK(fscanf(file, "%s", buf), "fscan failed");
+        strn(is);
         // can be one of %d, %d//%d, %d/%d, %d/%d/%d %d//%d
-        if(strstr(buf, "//")) {
+        if(strstr(str.p, "//")) {
           // v//n
-          sscanf(buf, "%d//%d", &v, &n);
-          CHECK(fscanf(file, "%d//%d", &v, &n), "fscan failed");
-          CHECK(fscanf(file, "%d//%d", &v, &n), "fscan failed");
+          CHECK(sscanf(str.p   , "%d//%d", &v, &n), "fscan failed");
+          CHECK(sscanf(strn(is), "%d//%d", &v, &n), "fscan failed");
+          CHECK(sscanf(strn(is), "%d//%d", &v, &n), "fscan failed");
           nT++;
-          //// group->numtriangles++;
-          while(fscanf(file, "%d//%d", &v, &n) > 0) nT++;
-        } else if(sscanf(buf, "%d/%d/%d", &v, &t, &n) == 3) {
+          while(sscanf(strn(is), "%d//%d", &v, &n) > 0) nT++;
+        } else if(sscanf(str.p, "%d/%d/%d", &v, &t, &n) == 3) {
           // v/t/n
-          CHECK(fscanf(file, "%d/%d/%d", &v, &t, &n), "fscan failed");
-          CHECK(fscanf(file, "%d/%d/%d", &v, &t, &n), "fscan failed");
+          CHECK(sscanf(strn(is), "%d/%d/%d", &v, &t, &n), "fscan failed");
+          CHECK(sscanf(strn(is), "%d/%d/%d", &v, &t, &n), "fscan failed");
           nT++;
-          //// group->numtriangles++;
-          while(fscanf(file, "%d/%d/%d", &v, &t, &n) > 0) nT++;
-        } else if(sscanf(buf, "%d/%d", &v, &t) == 2) {
+          while(sscanf(strn(is), "%d/%d/%d", &v, &t, &n) > 0) nT++;
+        } else if(sscanf(str.p, "%d/%d", &v, &t) == 2) {
           // v/t
-          CHECK(fscanf(file, "%d/%d", &v, &t), "fscan failed");
-          CHECK(fscanf(file, "%d/%d", &v, &t), "fscan failed");
+          CHECK(sscanf(strn(is), "%d/%d", &v, &t), "fscan failed");
+          CHECK(sscanf(strn(is), "%d/%d", &v, &t), "fscan failed");
           nT++;
-          ////group->numtriangles++;
-          while(fscanf(file, "%d/%d", &v, &t) > 0) nT++;
+          while(sscanf(strn(is), "%d/%d", &v, &t) > 0) nT++;
         } else {
           // v
-          CHECK(fscanf(file, "%d", &v), "fscan failed");
-          CHECK(fscanf(file, "%d", &v), "fscan failed");
+          CHECK(sscanf(strn(is), "%d", &v), "fscan failed");
+          CHECK(sscanf(strn(is), "%d", &v), "fscan failed");
           nT++;
-          while(fscanf(file, "%d", &v) > 0) nT++;
+          while(sscanf(strn(is), "%d", &v) > 0) nT++;
         }
         break;
         
-      default:  MT_MSG("unsupported .obj file tag '" <<buf[0] <<"'");  CHECK(fgets(buf, sizeof(buf), file), "fgets failed");  break;
+      default:  MT_MSG("unsupported .obj file tag '" <<str <<"'");  MT::skipRestOfLine(is);  strn(is);  break;
     }
   }
   
@@ -1194,53 +1199,55 @@ void Mesh::readObjFile(std::istream& is) {
   //if(nVN) N.resize(nVN, 3);
   //if(nTex) Tex.tesize(nTex, 2);
   
-  
   // rewind to beginning of file and read in the data this pass
-  rewind(file);
+  is.seekg(0);
+  is.clear();
   // again, jump to the correct position
-  fseek(file, parsing_pos_start, SEEK_SET);
+//  fseek(file, parsing_pos_start, SEEK_SET);
   
   /* on the second pass through the file, read all the data into the
      allocated arrays */
   nV = nN = nTex = nT = 0;
   ////_material = 0;
   
-  while ((fscanf(file, "%s", buf) != EOF) &&
-         (ftell(file) < parsing_pos_end)) {
-
-    switch(buf[0]) {
-      case '#':  CHECK(fgets(buf, sizeof(buf), file), "fgets failed");  break;  //comment
+//  while ((sscanf(strn(is), "%s", str.p) != EOF) && (ftell(file) < parsing_pos_end)) {
+  strn(is);
+  for(bool ex=false;!ex;){
+    switch(str.p[0]) {
+      case '\0':
+        is.clear();
+        ex=true;
+        break; //EOF
+      case '#':
+        MT::skipRestOfLine(is);
+        strn(is);
+        break;  //comment
       case 'v':               // v, vn, vt
-        switch(buf[1]) {
-          case '\0': CHECK(fscanf(file, "%lf %lf %lf", &V(nV, 0), &V(nV, 1), &V(nV, 2)), "fscan failed");  nV++;  break;  //vertex
-          case 'n':  CHECK(fscanf(file, "%lf %lf %lf", &Vn(nN, 0), &Vn(nN, 1), &Vn(nN, 2)), "fscan failed");  nN++;  break;  //normal
-          case 't':  /*CHECK(fscanf(file, "%f %f", &Tex(nTex, 0), &Tex(nTex, 1)), "fscan failed");  nTex++;*/  break;  //texcoord
+        switch(str.p[1]) {
+          case '\0': is >>V(nV, 0) >>V(nV, 1) >> V(nV, 2);  nV++;  break;  //vertex
+          case 'n':  is >>Vn(nN, 0) >>Vn(nN, 1) >>Vn(nN, 2);  nN++;  break;  //normal
+          case 't':  /*CHECK(sscanf(strn(is), "%f %f", &Tex(nTex, 0), &Tex(nTex, 1)), "fscan failed");  nTex++;*/  break;  //texcoord
         }
+        strn(is);
         break;
-        //case 'u':  CHECK(fgets(buf, sizeof(buf), file), "fgets failed");  sscanf(buf, "%s %s", buf, buf);  break;
-        //group->material = material = glmFindMaterial(model, buf);*/
-        //case 'g':  CHECK(fgets(buf, sizeof(buf), file), "fgets failed");  sscanf(buf, "%s", buf);  break;
-        //  group = glmFindGroup(model, buf);
-        //  group->material = material;
       case 'f':               // face
         v = n = t = 0;
-        CHECK(fscanf(file, "%s", buf), "fscan failed");
-        //can be one of %d, %d//%d, %d/%d, %d/%d/%d %d//%d
-        if(strstr(buf, "//")) {
+        strn(is);
+        if(strstr(str.p, "//")) {
           // v//n
-          sscanf(buf, "%d//%d", &v, &n);
+          sscanf(str.p, "%d//%d", &v, &n);
           
           T(nT, 0) = v < 0 ? v + nV : v;
           Tni(nT, 0) = n < 0 ? n + nN : n;
-          CHECK(fscanf(file, "%d//%d", &v, &n), "fscan failed");
+          CHECK(sscanf(strn(is), "%d//%d", &v, &n), "fscan failed");
           T(nT, 1) = v < 0 ? v + nV : v;
           Tni(nT, 1) = n < 0 ? n + nN : n;
-          CHECK(fscanf(file, "%d//%d", &v, &n), "fscan failed");
+          CHECK(sscanf(strn(is), "%d//%d", &v, &n), "fscan failed");
           T(nT, 2) = v < 0 ? v + nV : v;
           Tni(nT, 2) = n < 0 ? n + nN : n;
           //// group->triangles[group->nT++] = nT;
           nT++;
-          while(fscanf(file, "%d//%d", &v, &n) > 0) {
+          while(sscanf(strn(is), "%d//%d", &v, &n) > 0) {
             T(nT, 0) = T(nT-1, 0);
             Tni(nT, 0) = Tni(nT-1, 0);
             T(nT, 1) = T(nT-1, 2);
@@ -1250,22 +1257,22 @@ void Mesh::readObjFile(std::istream& is) {
             //// group->triangles[group->numtriangles++] = numtriangles;
             nT++;
           }
-        } else if(sscanf(buf, "%d/%d/%d", &v, &t, &n) == 3) {
+        } else if(sscanf(str.p, "%d/%d/%d", &v, &t, &n) == 3) {
           // v/t/n
           T(nT, 0) = v < 0 ? v + nV : v;
           Tti(nT, 0) = t < 0 ? t + nTex : t;
           Tni(nT, 0) = n < 0 ? n + nN : n;
-          CHECK(fscanf(file, "%d/%d/%d", &v, &t, &n), "fscan failed");
+          CHECK(sscanf(strn(is), "%d/%d/%d", &v, &t, &n), "fscan failed");
           T(nT, 1) = v < 0 ? v + nV : v;
           Tti(nT, 1) = t < 0 ? t + nTex : t;
           Tni(nT, 1) = n < 0 ? n + nN : n;
-          CHECK(fscanf(file, "%d/%d/%d", &v, &t, &n), "fscan failed");
+          CHECK(sscanf(strn(is), "%d/%d/%d", &v, &t, &n), "fscan failed");
           T(nT, 2) = v < 0 ? v + nV : v;
           Tti(nT, 2) = t < 0 ? t + nTex : t;
           Tni(nT, 2) = n < 0 ? n + nN : n;
           //// group->triangles[group->numtriangles++] = numtriangles;
           nT++;
-          while(fscanf(file, "%d/%d/%d", &v, &t, &n) > 0) {
+          while(sscanf(strn(is), "%d/%d/%d", &v, &t, &n) > 0) {
             T(nT, 0) = T(nT-1, 0);
             Tti(nT, 0) = Tti(nT-1, 0);
             Tni(nT, 0) = Tni(nT-1, 0);
@@ -1278,20 +1285,20 @@ void Mesh::readObjFile(std::istream& is) {
             //// group->triangles[group->numtriangles++] = numtriangles;
             nT++;
           }
-        } else if(sscanf(buf, "%d/%d", &v, &t) == 2) {
+        } else if(sscanf(str.p, "%d/%d", &v, &t) == 2) {
           // v/t
           
           T(nT, 0) = v < 0 ? v + nV : v;
           Tti(nT, 0) = t < 0 ? t + nTex : t;
-          CHECK(fscanf(file, "%d/%d", &v, &t), "fscan failed");
+          CHECK(sscanf(strn(is), "%d/%d", &v, &t), "fscan failed");
           T(nT, 1) = v < 0 ? v + nV : v;
           Tti(nT, 1) = t < 0 ? t + nTex : t;
-          CHECK(fscanf(file, "%d/%d", &v, &t), "fscan failed");
+          CHECK(sscanf(strn(is), "%d/%d", &v, &t), "fscan failed");
           T(nT, 2) = v < 0 ? v + nV : v;
           Tti(nT, 2) = t < 0 ? t + nTex : t;
           //// group->triangles[group->numtriangles++] = numtriangles;
           nT++;
-          while(fscanf(file, "%d/%d", &v, &t) > 0) {
+          while(sscanf(strn(is), "%d/%d", &v, &t) > 0) {
             T(nT, 0) = T(nT-1, 0);
             Tti(nT, 0) = Tti(nT-1, 0);
             T(nT, 1) = T(nT-1, 2);
@@ -1303,15 +1310,15 @@ void Mesh::readObjFile(std::istream& is) {
           }
         } else {
           // v
-          sscanf(buf, "%d", &v);
+          sscanf(str.p, "%d", &v);
           T(nT, 0) = v < 0 ? v + nV : v;
-          CHECK(fscanf(file, "%d", &v), "fscan failed");
+          CHECK(sscanf(strn(is), "%d", &v), "fscan failed");
           T(nT, 1) = v < 0 ? v + nV : v;
-          CHECK(fscanf(file, "%d", &v), "fscan failed");
+          CHECK(sscanf(strn(is), "%d", &v), "fscan failed");
           T(nT, 2) = v < 0 ? v + nV : v;
           //// group->triangles[group->numtriangles++] = nT;
           nT++;
-          while(fscanf(file, "%d", &v) > 0) {
+          while(sscanf(strn(is), "%d", &v) > 0) {
             T(nT, 0) = T(nT-1, 0);
             T(nT, 1) = T(nT-1, 2);
             T(nT, 2) = v < 0 ? v + nV : v;
@@ -1321,15 +1328,12 @@ void Mesh::readObjFile(std::istream& is) {
         }
         break;
         
-      default:  CHECK(fgets(buf, sizeof(buf), file), "fgets failed");  break;
+      default:  MT::skipRestOfLine(is);  strn(is);  break;
     }
   }
   
   //CONVENTION!: start counting vertex indices from 0!!
   T -= T.min();
-  
-  // close the file
-  fclose(file);
 }
 
 #ifdef MT_GL

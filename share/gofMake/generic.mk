@@ -14,6 +14,7 @@ BASE_REAL = $(shell realpath $(BASE))
 #
 ################################################################################
 -include $(BASE)/gofMake/config.mk
+-include $(BASE)/gofMake/z.mk
 
 
 ################################################################################
@@ -248,6 +249,9 @@ pywrapper: $(OUTPUT) $(MODULE_NAME)py.so $(MODULE_NAME)py.py
 ## other %.so files are created by calling make in their directory
 $(BASE)/lib/$(NAME).so: $(PREOBJS) $(BUILDS) $(OBJS)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) $(SHAREFLAG)
+
+#%_test.so: $(PREOBJS) $(BUILDS) $(OBJS)
+#	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) $(SHAREFLAG)
 
 %.lib: $(PREOBJS) $(BUILDS) $(OBJS)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) -static ### $(SHAREFLAG)
