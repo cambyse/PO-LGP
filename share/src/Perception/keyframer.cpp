@@ -1,22 +1,24 @@
-#include "keyframer.h"
+#include <extern/SWIFT/SWIFT.h>
 #include <Gui/opengl.h>
 #include <Ors/ors_swift.h>
 #include <Algo/gaussianProcess.h>
+#include <Perception/videoEncoder.h>
+#include "keyframer.h"
 
 // TODO replace with appropriate tensor function
-arr my_sum(const arr &v, uint d) {
-  arr x, S;
-  uintA I;
-  x.referTo(v);
-  x.reshape(x.N);
-  S.resize(v.dim(d));
-  S.setZero();
-  for(uint i = 0; i < x.N; i++) {
-    v.getIndexTuple(I, i);
-    S(I(d)) += x(i);
-  }
-  return S;
-}
+//arr my_sum(const arr &v, uint d) {
+  //arr x, S;
+  //uintA I;
+  //x.referTo(v);
+  //x.reshape(x.N);
+  //S.resize(v.dim(d));
+  //S.setZero();
+  //for(uint i = 0; i < x.N; i++) {
+    //v.getIndexTuple(I, i);
+    //S(I(d)) += x(i);
+  //}
+  //return S;
+//}
 
 struct KeyFramer::sKeyFramer {
   ors::KinematicWorld *kw;
@@ -30,328 +32,103 @@ struct KeyFramer::sKeyFramer {
   arr state;
   arr ood, dird, indd; // distance matrices
 
-  sKeyFramer(ors::KinematicWorld *_kw, G4Data *_g4d);
+  sKeyFramer();
   ~sKeyFramer();
-
-  void clear();
-  void clearState();
-  void clearFrames();
-
-  void init();
-  void addBody(String &name, uint body_ndof);
-
-  void addState();
-  void addState(arr st);
-  void setState(uint b, arr st, uint f);
-  void setState(String n, arr st, uint f);
-  void setState(arr st, uint f);
-  void setupWindows(MT::Array<arr> &wins, uint wlen);
 };
 
 // ============================================================================
 // sKeyFramer
 //
 
-KeyFramer::sKeyFramer::sKeyFramer(ors::KinematicWorld *_kw, G4Data *_g4d): kw(_kw), g4d(_g4d) {
-  clear();
-  //init();
-}
-
-KeyFramer::sKeyFramer::~sKeyFramer() {}
-
-// clear {{{
-void KeyFramer::sKeyFramer::clear() {
-  clearState();
-}
-// }}}
-// clearState {{{
-void KeyFramer::sKeyFramer::clearState() {
-  nbodies = 0;
-  ndofs = 0;
-  clearFrames();
-}
-// }}}
-// clearFrames {{{
-void KeyFramer::sKeyFramer::clearFrames() {
-  state.clear();
-  nframes = 0;
-}
-// }}}
-
-// init {{{
-void KeyFramer::sKeyFramer::init() {
-  StringA posNames;
-  StringA oriNames;
-  String name, pname, oname;
-
-  // set up kf bodies and entities
-  for(String name: g4d->getNames()) {
-    pname.clear() << name << ":pos";
-    oname.clear() << name << ":ori";
-
-    posNames.append(pname);
-    oriNames.append(oname);
-
-    addBody(pname, 3);
-    addBody(oname, 4);
-    addBody(name, 7);
-  }
-
-  uint F = g4d->getNumFrames();
-  for(uint f = 0; f < F; f++) {
-    addState();
-    for(uint i = 0; i < posNames.N; i++) {
-      name = g4d->getName(i);
-      pname = posNames(i);
-      oname = oriNames(i);
-
-      setState(pname, g4d->query("pos", name, f), f);
-      setState(oname, g4d->query("quat", name, f), f);
-      setState(name, g4d->query("pose", name, f), f);
-    }
-  }
-}
-// }}}
-// addBody {{{
-void KeyFramer::sKeyFramer::addBody(String &name, uint body_ndofs) {
-  CHECK(body_ndofs > 0, "Number of Dofs for a body must be positive.");
-  CHECK(!names.contains(name), "Body name already exists.");
-
-  nbodies++;
-  ndofs += body_ndofs;
-
-  cumdofs.append(nbodies == 1? 0: cumdofs.last()+dofs.last());
-  dofs.append(body_ndofs);
-  names.append(name);
-}
-// }}}
-
-// addState {{{
-void KeyFramer::sKeyFramer::addState(arr st) {
-  CHECK(st.N == ndofs, "Wrong number of dofs.");
-  nframes++;
-  state.append(st);
-  state.reshape(nframes, ndofs);
-}
-// }}}
-// addState {{{
-void KeyFramer::sKeyFramer::addState() {
-  arr st(ndofs);
-  st.setZero();
-  addState(st);
-}
-// }}}
-// setState {{{
-void KeyFramer::sKeyFramer::setState(uint b, arr st, uint f) {
-  CHECK(b < nbodies, "Invalid body index.");
-  CHECK(dofs(b) == st.N, "Wrong number of dofs.");
-  CHECK(f <= nframes, "Frame number out of bounds.");
-  //for(uint i = 0; i < st.N; i++)
-    //s->state(f, s->cumdofs(b)+i) = st(i);
-  // TODO does this work?
-  state[f]().replace(cumdofs(b), st.N, st);
-}
-// }}}
-// setState {{{
-void KeyFramer::sKeyFramer::setState(String n, arr st, uint f) {
-  int b = names.findValue(n);
-  CHECK(b >= 0, "Invalid name.");
-  setState(b, st, f);
-}
-// }}}
-// setState {{{
-void KeyFramer::sKeyFramer::setState(arr st, uint f) {
-  CHECK(st.N == ndofs, "Wrong number of dofs.");
-  CHECK(f < nframes, "Frame number out of bounds.");
-  state[f]() = st;
-}
-// }}}
-
-// setupWindows {{{
-void KeyFramer::sKeyFramer::setupWindows(MT::Array<arr> &wins, uint wlen) {
-  //uint nwins = getNWindows(wlen);
-  uint nwins = nframes>=wlen? nframes-wlen+1: 0;
-
-  CHECK(wlen>0, "Window length has to be positive.");
-  CHECK(nwins>0, "Not enough frames to have at least one whole window.");
-
-  wins.resize(nwins);
-  for(uint wi = 0; wi < nwins; wi++)
-    wins(wi).referToSubRange(state, wi, wi+wlen-1);
-}
-// }}}
+KeyFramer::sKeyFramer::sKeyFramer(): kw(NULL), g4d(NULL) { }
+KeyFramer::sKeyFramer::~sKeyFramer() { if(kw) delete kw; if(g4d) delete g4d; }
 
 // ============================================================================
 // KeyFramer
 //
 
-KeyFramer::KeyFramer(ors::KinematicWorld &kw, G4Data &g4d) {
-  s = new sKeyFramer(&kw, &g4d);
+KeyFramer::KeyFramer() {
+  s = new sKeyFramer();
 }
 
 KeyFramer::~KeyFramer() {
   delete s;
 }
 
+ors::KinematicWorld& KeyFramer::kw() {
+  if(!s->kw) s->kw = new ors::KinematicWorld;
+  return *s->kw;
+}
+
+G4Data& KeyFramer::g4d() {
+  if(!s->g4d) s->g4d = new G4Data;
+  return *s->g4d;
+}
+
 // updateOrs {{{
+#define PREC_POS 1e-2
+#define PREC_ORI 1e-1
 void KeyFramer::updateOrs(uint f, bool show) {
-  arr xPos, xQuat;
-  ors::Body *b;
-  for(String &name: s->g4d->getNames()) {
-    b = s->kw->getBodyByName(name);
-    xPos = s->g4d->query("pos", name, f);
-    xQuat = s->g4d->query("quat", name, f);
-    //xPos.flatten();
-    //xQuat.flatten();
+  arr sensor_pos, sensor_quat;
+  ors::Quaternion quat;
+  ors::Vector x_vec(1, 0, 0),
+              y_vec(0, 1, 0),
+              z_vec(0, 0, 1);
+  ors::Shape *sh;
 
-    b->X.pos.set(xPos.p);
-    b->X.rot.set(xQuat.p);
+  arr y, J, yVec, JVec;
+  arr Phi, PhiJ, PhiJT;
+  arr q, dq;
+  arr y_target, W;
+
+  uint n = kw().getJointStateDimension();
+  W.setDiag(1e-4, n);
+  for(;;) {
+    Phi.resize(0);
+    PhiJ.resize(0);
+    kw().getJointState(q);
+
+    for(const String &sensor: g4d().sensors()) {
+      sh = kw().getShapeByName(STRING("sh:task:" << sensor));
+
+      sensor_pos.referTo(g4d().query("pos", sensor, f));
+      sensor_quat.referTo(g4d().query("quat", sensor, f));
+      quat = ors::Quaternion(sensor_quat);
+
+      kw().kinematicsPos(y, J, sh->body->index, &sh->rel.pos);
+      Phi.append((y - sensor_pos) / PREC_POS);
+      PhiJ.append(J / PREC_POS);
+        
+      kw().kinematicsVec(y, J, sh->body->index, &x_vec);
+      y_target.setCarray((quat * x_vec).p(), 3);
+      Phi.append((y - y_target) / PREC_ORI);
+      PhiJ.append(J / PREC_ORI);
+
+      kw().kinematicsVec(y, J, sh->body->index, &y_vec);
+      y_target.setCarray((quat * y_vec).p(), 3);
+      Phi.append((y - y_target) / PREC_ORI);
+      PhiJ.append(J / PREC_ORI);
+
+      kw().kinematicsVec(y, J, sh->body->index, &z_vec);
+      y_target.setCarray((quat * z_vec).p(), 3);
+      Phi.append((y - y_target) / PREC_ORI);
+      PhiJ.append(J / PREC_ORI);
+    }
+    PhiJT = ~PhiJ;
+    dq = inverse(PhiJT * PhiJ + W) * PhiJT * Phi;
+
+    q -= dq;
+    kw().setJointState(q);
+    kw().calc_fwdPropagateShapeFrames();
+    if(absMax(dq) < 1e-2)
+      break;
   }
-  s->kw->calc_fwdPropagateShapeFrames();
-  s->kw->computeProxies();
-  s->kw->gl().text.clear() << "frame " << f << "/" << s->g4d->getNumFrames();
-  if(show) s->kw->gl().update(NULL, false);
-}
-// }}}
-
-// getCorrPCA {{{
-arr KeyFramer::getCorrPCA(uint b1, uint b2, uint wlen, uint npc) {
-  // TODO this still has to be fixed, in terms of the wlen offset
-  //HALT("STILL HAVE TO FIX WLEN OFFSET")
-  CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
-  CHECK(npc > 0 && npc <= 3, "Number of principal components must be positive but <=4.");
-
-  MT::Array<arr> wins;
-  s->setupWindows(wins, wlen);
-
-  uint dofs = s->dofs(b1);
-  uint cumdofs1 = s->cumdofs(b1);
-  uint cumdofs2 = s->cumdofs(b2);
-
-  arr corr(s->nframes, npc);
-  corr = -1;
-
-  arr x, y, xx, yy, xy;
-  arr sx, sy, sxx, syy, sxy;
-  arr w, t;
-  //double sx, sy, sxx, syy, sxy;
-  double dwlen = wlen;
-  uint ff = wlen / 2;
-  uint ft = s->nframes - ff;
-  corr.subRange(0, ff - 1).setZero();
-  corr.subRange(ft, -1).setZero();
-  for(uint fi = ff; fi < ft; fi++) {
-    uint wi = fi - ff;
-
-    x = wins(wi).cols(cumdofs1, cumdofs1+dofs);
-    y = wins(wi).cols(cumdofs2, cumdofs2+dofs);
-
-    // run pca on x and then y
-    pca(x, t, w, x, npc);
-    y = y * w;
-
-    xx = x % x;
-    yy = y % y;
-    xy = x % y;
-
-    sx = sum(x, 0);
-    sy = sum(y, 0);
-    sxx = sum(xx, 0);
-    syy = sum(yy, 0);
-    sxy = sum(xy, 0);
-
-    corr[fi]() = (dwlen*sxy - sx % sy) / 
-                  sqrt(
-                      (dwlen*sxx - sx % sx) %
-                      (dwlen*syy - sy % sy)
-                  );
-
-    //sx = sum(x);
-    //sy = sum(y);
-    //sxx = (~x*x).elem(0); // or even sum(elemWiseProd(x, x));
-    //sxy = (~x*y).elem(0);
-    //syy = (~y*y).elem(0);
-
-    //corr(fi) = (sxy*wlen - sx*sy) / sqrt(fabs((sxx*wlen - sx*sx)*(syy*wlen - sy*sy)));
+  // TODO remove computeProxies?
+  kw().computeProxies();
+  if(show) {
+    kw().gl().text.clear() << "frame " << f << "/" << g4d().numFrames();
+    kw().gl().update(NULL, true);
   }
-
-  return corr;
-}
-// }}}
-// getCorrPCA {{{
-arr KeyFramer::getCorrPCA(const String &n1, const String &n2, uint wlen, uint npc) {
-  int b1 = s->names.findValue(n1);
-  CHECK(b1 >= 0, "Invalid name.");
-  int b2 = s->names.findValue(n2);
-  CHECK(b2 >= 0, "Invalid name.");
-
-  return getCorrPCA(b1, b2, wlen, npc);
-}
-// }}}
-// getCorr {{{
-arr KeyFramer::getCorr(uint b1, uint b2, uint wlen) {
-  CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
-
-  MT::Array<arr> wins;
-  s->setupWindows(wins, wlen);
-  //uint nwins = wins.N;
-
-  uint dofs = s->dofs(b1);
-  uint cumdofs1 = s->cumdofs(b1);
-  uint cumdofs2 = s->cumdofs(b2);
-
-  arr corr(s->nframes, dofs);
-
-  arr x, y, xx, yy, xy;
-  arr sx, sy, sxx, syy, sxy;
-  double dwlen = wlen;
-  uint ff = wlen / 2;
-  uint ft = s->nframes - ff;
-  corr.subRange(0, ff - 1).setZero();
-  corr.subRange(ft, -1).setZero();
-  for(uint fi = ff; fi < ft; fi++) {
-    uint wi = fi - ff;
-
-    x = wins(wi).cols(cumdofs1, cumdofs1+dofs);
-    y = wins(wi).cols(cumdofs2, cumdofs2+dofs);
-    xx = x % x;
-    yy = y % y;
-    xy = x % y;
-
-    sx = sum(x, 0);
-    sy = sum(y, 0);
-    sxx = sum(xx, 0);
-    syy = sum(yy, 0);
-    sxy = sum(xy, 0);
-
-    //t1 = elemWiseProd(sx, sy);
-    //t2 = elemWiseProd(sx, sx);
-    //t3 = elemWiseProd(sy, sy);
-    //t4a = dwlen*sxx - t2;
-    //t4b = dwlen*syy - t3;
-    //t4 = elemWiseProd(t4a, t4b);
-    //t5 = sqrt(t4);
-    //t6a = dwlen*sxy - t1;
-    //t6 = elemWiseDiv(t6a, t5);
-    //corr[wi]() = t6;
-    corr[fi]() = (dwlen * sxy - sx % sy) /
-                  sqrt(
-                      (dwlen * sxx - sx % sx) %
-                      (dwlen * syy - sy % sy
-                  ));
-  }
-
-  return corr;
-}
-// }}}
-// getCorr {{{
-arr KeyFramer::getCorr(const String &n1, const String &n2, uint wlen) {
-  int b1 = s->names.findValue(n1);
-  CHECK(b1 >= 0, "Invalid name.");
-  int b2 = s->names.findValue(n2);
-  CHECK(b2 >= 0, "Invalid name.");
-
-  return getCorr(b1, b2, wlen);
 }
 // }}}
 
@@ -365,19 +142,19 @@ void KeyFramer::computeVar(const StringA &types, uint wlen, bool force) {
 void KeyFramer::computeVar(const String &type, uint wlen, bool force) {
   String typeVar = STRING(type << "Var");
   cout << " * computing " << typeVar << endl;
-  if(!force && s->g4d->hasBAM(typeVar)) {
+  if(!force && g4d().hasBAM(typeVar)) {
     cout << " * " << typeVar << " already computed (force = 0). Skipping." << endl;
     return;
   }
 
   arr x, y, win, m;
 
-  x = s->g4d->query(type);
+  x = g4d().query(type);
   y.resize(x.d0, x.d1);
   y.setZero();
 
   uint ff = wlen / 2;
-  uint ft = s->g4d->getNumFrames() - ff;
+  uint ft = g4d().numFrames() - ff;
   for(uint i = 0; i < x.d0; i++) {
     for(uint fi = ff; fi < ft; fi++) {
       uint wi = fi - ff;
@@ -389,7 +166,7 @@ void KeyFramer::computeVar(const String &type, uint wlen, bool force) {
   }
   y /= (double)wlen;
 
-  s->g4d->appendBam(typeVar, y);
+  g4d().appendBam(typeVar, y);
 }
 // }}}
 // computeFilter {{{
@@ -403,18 +180,18 @@ void KeyFramer::computeFilter(const String &type, double alpha, bool force) {
   CHECK(alpha >= 0. && alpha <= 1., "Parameter alpha (" << alpha << ") must be 0 <= alpha <= 1.");
   String typeFilter = STRING(type << "Filter");
   cout << " * computing " << typeFilter << endl;
-  if(!force && s->g4d->hasBAM(typeFilter)) {
+  if(!force && g4d().hasBAM(typeFilter)) {
     cout << " * " << typeFilter << " already computed (force = 0). Skipping." <<
       endl;
     return;
   }
-  uint numS = s->g4d->getNumSensors();
-  uint numF = s->g4d->getNumFrames();
-  uint numD = s->g4d->getNumDim(type);
+  uint numS = g4d().sensors().N;
+  uint numF = g4d().numFrames();
+  uint numD = g4d().numDim(type);
   double beta = 1-alpha;
 
   arr x, y, es;
-  x = s->g4d->query(type);
+  x = g4d().query(type);
   y.resizeAs(x);
   y.setZero();
 
@@ -428,7 +205,7 @@ void KeyFramer::computeFilter(const String &type, double alpha, bool force) {
     }
   }
 
-  s->g4d->appendBam(typeFilter, y);
+  g4d().appendBam(typeFilter, y);
 }
 // }}}
 // computeSmooth {{{
@@ -442,18 +219,18 @@ void KeyFramer::computeSmooth(const String &type, double alpha, bool force) {
   CHECK(alpha >= 0. && alpha <= 1., "Parameter alpha (" << alpha << ") must be 0 <= alpha <= 1.");
   String typeSmooth = STRING(type << "Smooth");
   cout << " * computing " << typeSmooth << endl;
-  if(!force && s->g4d->hasBAM(typeSmooth)) {
+  if(!force && g4d().hasBAM(typeSmooth)) {
     cout << " * " << typeSmooth << " already computed (force = 0). Skipping." <<
       endl;
     return;
   }
-  uint numS = s->g4d->getNumSensors();
-  uint numF = s->g4d->getNumFrames();
-  uint numD = s->g4d->getNumDim(type);
+  uint numS = g4d().sensors().N;
+  uint numF = g4d().numFrames();
+  uint numD = g4d().numDim(type);
   double beta = 1-alpha;
 
   arr x, y, es;
-  x = s->g4d->query(type);
+  x = g4d().query(type);
   y.resizeAs(x);
   y.setZero();
 
@@ -469,7 +246,7 @@ void KeyFramer::computeSmooth(const String &type, double alpha, bool force) {
     }
   }
 
-  s->g4d->appendBam(typeSmooth, y);
+  g4d().appendBam(typeSmooth, y);
 }
 // }}}
 // computeSpline {{{
@@ -484,18 +261,18 @@ void KeyFramer::computeSpline(const String &type, double lambda, bool force) {
   CHECK(lambda >= 0., "Parameter lambda (" << lambda << ") must be non-negative.");
   String typeSpline = STRING(type << "Spline");
   cout << " * computing " << typeSpline << endl;
-  if(!force && s->g4d->hasBAM(typeSpline)) {
+  if(!force && g4d().hasBAM(typeSpline)) {
     cout << " * " << typeSpline << " already computed (force = 0). Skipping." <<
       endl;
     return;
   }
-  uint numS = s->g4d->getNumSensors();
-  uint numF = s->g4d->getNumFrames();
-  uint numD = s->g4d->getNumDim(type);
+  uint numS = g4d().sensors().N;
+  uint numF = g4d().numFrames();
+  uint numD = g4d().numDim(type);
 
   arr x, y, tx, ty;
 
-  x = s->g4d->query(type);
+  x = g4d().query(type);
   y.resizeAs(x);
   y.setZero();
 
@@ -510,7 +287,7 @@ void KeyFramer::computeSpline(const String &type, double lambda, bool force) {
     }
   }
 
-  s->g4d->appendBam(typeSpline, y);
+  g4d().appendBam(typeSpline, y);
 }
 // }}}
 // computeSpeed {{{
@@ -523,26 +300,26 @@ void KeyFramer::computeSpeed(const StringA &types, bool force) {
 void KeyFramer::computeSpeed(const String &type, bool force) {
   String typeSpeed = STRING(type << "Speed");
   cout << " * computing " << typeSpeed << endl;
-  if(!force && s->g4d->hasBAM(typeSpeed)) {
+  if(!force && g4d().hasBAM(typeSpeed)) {
     cout << " * " << typeSpeed << " already computed (force = 0). Skipping." << endl;
     return;
   }
 
   arr x, y;
 
-  x = s->g4d->query(type);
+  x = g4d().query(type);
   y.resize(x.d0, x.d1);
   y.setZero();
 
-  uint numS = s->g4d->getNumSensors();
-  uint numF = s->g4d->getNumFrames();
+  uint numS = g4d().sensors().N;
+  uint numF = g4d().numFrames();
   for(uint i = 0; i < numS; i++) {
     for(uint f = 1; f < numF; f++)
       // speed in cm/s (measurements in 100cm, and at 120/s)
       y(i, f) = 12000. * sqrt(sumOfSqr(x[i][f] - x[i][f-1]));
   }
 
-  s->g4d->appendBam(typeSpeed, y);
+  g4d().appendBam(typeSpeed, y);
 }
 // }}}
 // computeGP {{{
@@ -555,16 +332,16 @@ void KeyFramer::computeGP(const StringA &types, bool force) {
 void KeyFramer::computeGP(const String &type, bool force) {
   String typeGP = STRING(type << "GP");
   cout << " * computing " << typeGP << endl;
-  if(!force && s->g4d->hasBAM(typeGP)) {
+  if(!force && g4d().hasBAM(typeGP)) {
     cout << " * " << typeGP << " already computed (force = 0). Skipping." << endl;
     return;
   }
-  uint numS = s->g4d->getNumSensors();
-  uint numF = s->g4d->getNumFrames();
-  uint numD = s->g4d->getNumDim(type);
+  uint numS = g4d().sensors().N;
+  uint numF = g4d().numFrames();
+  uint numD = g4d().numDim(type);
 
   arr x, y;
-  x = s->g4d->query(type);
+  x = g4d().query(type);
   y.resize(numS, numF, numD);
   y.setZero();
 
@@ -585,7 +362,7 @@ void KeyFramer::computeGP(const String &type, bool force) {
     }
   }
 
-  s->g4d->appendBam(typeGP, y);
+  g4d().appendBam(typeGP, y);
 }
 // }}}
 // computeDPos {{{
@@ -593,21 +370,21 @@ void KeyFramer::computeDPos(const String &b, bool force) {
   String typeDPos;
   typeDPos << b << "_dPos";
   cout << " * computing " << typeDPos << endl;
-  if(!force && s->g4d->hasBAM(typeDPos)) {
+  if(!force && g4d().hasBAM(typeDPos)) {
     cout << " * " << typeDPos << " already computed (force = 0). Skipping." << endl;
     return;
   }
-  uint numS = s->g4d->getNumSensors();
-  uint numF = s->g4d->getNumFrames();
-  uint numD = s->g4d->getNumDim("pos");
+  uint numS = g4d().sensors().N;
+  uint numF = g4d().numFrames();
+  uint numD = g4d().numDim("pos");
 
   arr y(numS, numF, numD);
   y.setZero();
 
   arr posX, quatX, posY;
-  posX = s->g4d->query("pos", b);
-  posY = s->g4d->query("pos");
-  quatX = s->g4d->query("quat", b);
+  posX = g4d().query("pos", b);
+  posY = g4d().query("pos");
+  quatX = g4d().query("quat", b);
   ors::Vector v1, v2, v, A;
   ors::Quaternion q1;
   for(uint j = 0; j < numS; j++) {
@@ -622,7 +399,7 @@ void KeyFramer::computeDPos(const String &b, bool force) {
     }
   }
 
-  s->g4d->appendBam(typeDPos, y);
+  g4d().appendBam(typeDPos, y);
 }
 // }}}
 // computeDQuat {{{
@@ -630,20 +407,20 @@ void KeyFramer::computeDQuat(const String &b, bool force) {
   String typeDQuat;
   typeDQuat << b << "_dQuat";
   cout << " * computing " << typeDQuat << endl;
-  if(!force && s->g4d->hasBAM(typeDQuat)) {
+  if(!force && g4d().hasBAM(typeDQuat)) {
     cout << " * " << typeDQuat << " already computed (force = 0). Skipping." << endl;
     return;
   }
-  uint numS = s->g4d->getNumSensors();
-  uint numF = s->g4d->getNumFrames();
-  uint numD = s->g4d->getNumDim("quat");
+  uint numS = g4d().sensors().N;
+  uint numF = g4d().numFrames();
+  uint numD = g4d().numDim("quat");
 
   arr y(numS, numF, numD);
   y.setZero();
 
   arr quatX, quatY;
-  quatX = s->g4d->query("quat", b);
-  quatY = s->g4d->query("quat");
+  quatX = g4d().query("quat", b);
+  quatY = g4d().query("quat");
   ors::Quaternion q1, q2, q, A;
   for(uint j = 0; j < numS; j++) {
     for(uint f = 0; f < numF; f++) {
@@ -656,49 +433,55 @@ void KeyFramer::computeDQuat(const String &b, bool force) {
     }
   }
 
-  s->g4d->appendBam(typeDQuat, y);
+  g4d().appendBam(typeDQuat, y);
 }
 // }}}
 
 // computeDist {{{
 void KeyFramer::computeDist(uint f) {
-  uint numA = s->g4d->getNumAgents();
-  uint numO = s->g4d->getNumObjects();
+  kw().swift();
+  uint numA = g4d().digits().N;
+  uint numO = g4d().objects().N;
 
   updateOrs(f, false);
   // direct agent-object and object-object distances
   uint idsa, idsb, ida, idb;
+  double d;
   bool aa, ab;
+  ors::Shape *sa, *sb;
   ors::Body *ba, *bb;
-  for(ors::Proxy *proxy: s->kw->proxies) {
-    idsa = s->kw->swift().INDEXswift2shape(proxy->a);
-    idsb = s->kw->swift().INDEXswift2shape(proxy->b);
-    ba = s->kw->shapes(idsa)->body;
-    bb = s->kw->shapes(idsb)->body;
-    aa = s->g4d->isAgent(ba->name);
-    ab = s->g4d->isAgent(bb->name);
-    ida = aa? s->g4d->getAgentIndex(ba->name): s->g4d->getObjectIndex(ba->name);
-    idb = ab? s->g4d->getAgentIndex(bb->name): s->g4d->getObjectIndex(bb->name);
-    if(aa && !ab)
-      s->dird(f, ida, idb) = proxy->d;
-    if(ab && !aa)
-      s->dird(f, idb, ida) = proxy->d;
-    if(!aa && !ab)
-      s->ood(f, ida, idb) = s->ood(f, ida, idb) = proxy->d;
+
+  // MY SWIFT STUFF FOR DISTANCES
+  int np, *oids;
+  SWIFT_Real *dists;
+  kw().swift().scene->Query_Exact_Distance(false, SWIFT_INFINITY, np, &oids, &dists);
+  //CHECK(np == (int)numO*(2*numA+numO-1)/2, STRING("number of distances (" << np << ") not right (" << numO*(2*numA+numO-1)/2 << ")."));
+  for(int i = 0; i < np; i++) {
+    idsa = oids[i<<1];
+    idsb = oids[(i<<1)+1];
+    d = dists[i]>=0? dists[i]: 0;
+
+    sa = kw().shapes(idsa);
+    sb = kw().shapes(idsb);
+    ba = sa->body;
+    bb = sb->body;
+    aa = g4d().digits().contains(ba->name);
+    ab = g4d().digits().contains(bb->name);
+    ida = aa? g4d().digits().findValue(ba->name): g4d().objects().findValue(ba->name);
+    idb = ab? g4d().digits().findValue(bb->name): g4d().objects().findValue(bb->name);
+    if(aa && !ab && d < s->dird(f, ida, idb)) s->dird(f, ida, idb) = d;
+    if(ab && !aa && d < s->dird(f, idb, ida)) s->dird(f, idb, ida) = d;
+    if(!aa && !ab && d < s->ood(f, ida, idb)) s->ood(f, ida, idb) = s->ood(f, idb, ida) = d;
   }
-  //for(uint o = 0; o < numO; o++) {
-    //for(uint a = 0; a < numA; a++)
-      //s->dird(f, a, o) = s->kw->getContact(); // TODO convert s, o to object ids..
-    //for(uint o2 = 1; o2 < o; o2++)
-      //s->ood(f, o, o2) = s->ood(f, o2, o) = s->kw->getContact(); // TODO convert
-  //}
+  for(uint o = 0; o < numO; o++)
+    s->ood(f, o, o) = 0;
   // object-object indirect distances
   arr tmpd;
   for(bool done = false; !done; ) {
     tmpd = s->ood[f];
     for(uint o = 0; o < numO; o++)
       for(uint o2 = 0; o2 < numO; o2++)
-        tmpd(o, o2) = (s->ood[o] + s->ood[o2]).min();
+        tmpd(o, o2) = (s->ood[f][o] + s->ood[f][o2]).min();
     if(s->ood[f] == tmpd)
       done = true;
     s->ood[f]() = tmpd;
@@ -706,19 +489,33 @@ void KeyFramer::computeDist(uint f) {
   // agent-object indirect distances
   for(uint a = 0; a < numA; a++)
     for(uint o = 0; o < numO; o++)
-      s->indd(f, a, o) = (s->dird[f][a] + s->ood[o]).min();
+      s->indd(f, a, o) = (s->dird[f][a] + s->ood[f][o]).min();
 }
 // }}}
 // computeDist {{{
 void KeyFramer::computeDist() {
-  uint numF = s->g4d->getNumFrames();
-  uint numA = s->g4d->getNumAgents();
-  uint numO = s->g4d->getNumObjects();
+  uint numF = g4d().numFrames();
+  uint numA = g4d().digits().N;
+  uint numO = g4d().objects().N;
 
-  s->ood.resize(numF, numO, numO); s->ood.setZero();
-  s->dird.resize(numF, numA, numO); s->dird.setZero(-1); // can remove this?
-  s->indd.resize(numF, numA, numO);
+  s->ood.resize(numF, numO, numO); s->ood.setZero(100);
+  s->dird.resize(numF, numA, numO); s->dird.setZero(100); // can remove this?
+  s->indd.resize(numF, numA, numO); s->indd.setZero(100);
 
+  // swift preparations
+  cout << " * deactivating proxies within bodies:" << endl;
+  for(ors::Body *b: kw().bodies) {
+    cout << " *** " << b->name << endl;
+    kw().swift().deactivate(b->shapes);
+  }
+  BodyL agents;
+  cout << " * deactivating proxies between agents :" << endl;
+  for(const String &a: g4d().digits()) {
+    cout << " *** " << a << endl;
+    agents.append(kw().getBodyByName(a));
+  }
+  kw().swift().deactivate(agents);
+  //kw().swift().setCutoff(100.);
   for(uint f = 0; f < numF; f++)
     computeDist(f);
 }
@@ -726,457 +523,70 @@ void KeyFramer::computeDist() {
 // testDist {{{
 void KeyFramer::testDist(KeyValueGraph &kvg, const String &a, const String &o) {
   KeyValueGraph *plot;
-  arr dist;
+  arr dir_d, ind_d;
 
   computeDist();
 
-  uint numF = s->g4d->getNumFrames();
-  uint ia = s->g4d->getAgentIndex(a);
-  uint io = s->g4d->getObjectIndex(o);
-  dist.resize(numF);
-  for(uint f = 0; f < numF; f++)
-    dist(f) = s->indd(f, ia, io);
-
-  kvg.append("data", "dist", new arr(dist));
+  uint numF = g4d().numFrames();
+  uint ia = g4d().digits().findValue(a);
+  uint io = g4d().objects().findValue(o);
+  dir_d.resize(numF);
+  ind_d.resize(numF);
+  for(uint f = 0; f < numF; f++) {
+    dir_d(f) = s->dird(f, ia, io);
+    ind_d(f) = s->indd(f, ia, io);
+  }
+  kvg.append("data", "dird", new arr(dir_d));
+  kvg.append("data", "indd", new arr(ind_d));
   plot = new KeyValueGraph();
   plot->append("title", new String(STRING("Dist " << a << "-" << o)));
   plot->append("dataid", new bool(true));
   plot->append("autolegend", new bool(true));
   plot->append("stream", new double(.75));
-  plot->append("data", new String("dist"));
+  plot->append("data", new String("dird"));
+  plot->append("data", new String("indd"));
   kvg.append("plot", plot);
 }
 // }}}
 
-// getState {{{
-arr KeyFramer::getState(uint b) {
-  uint dofs = s->dofs(b);
-  uint cumdofs = s->cumdofs(b);
-  return s->state.cols(cumdofs, cumdofs + dofs);
+// getVitSeq {{{
+void KeyFramer::getVitSeq(arr &vit, const String &a, const String &o) {
+  KeyValueGraph data_kvg;
+  EM_z_with_c(data_kvg, a, o);
+  vit = *data_kvg.getValue<arr>("vit");
 }
 // }}}
-// getState {{{
-arr KeyFramer::getState(const String &n) {
-  int b = s->names.findValue(n);
-  CHECK(b >= 0, "Invalid name.");
+// getVitSeq {{{
+void KeyFramer::getVitSeq(arr &vit, const StringA &as, const String &o) {
+  uint N = as.N;
+  uint T = g4d().numFrames();
 
-  return getState(b);
+  vit.resize(N, T);
+  for(uint i = 0; i < N; i++)
+    getVitSeq(vit[i](), as(i), o);
 }
 // }}}
-// getStateVar {{{
-arr KeyFramer::getStateVar(uint b, uint wlen) {
-  arr var(s->nframes);
-  arr win, m;
-  arr state = getState(b);
+// vitLogicMachine {{{
+void KeyFramer::vitLogicMachine(KeyValueGraph &kvg, arr &vit2, const arr &vit) {
+  uint N = vit.d0;
+  uint T = vit.d1;
 
-  uint ff = wlen / 2;
-  uint ft = s->nframes - ff;
-  var.subRange(0, ff - 1).setZero();
-  var.subRange(ft, -1).setZero();
-  for(uint fi = ff; fi < ft; fi++) {
-    uint wi = fi - ff;
-    win.referToSubRange(state, wi, wi + wlen - 1);
-    m = sum(win, 0) / (double)win.d0;
-    m = ~repmat(m, 1, win.d0);
-    var(fi) = sumOfSqr(win - m); // TODO is this right?
-  }
-  return var / (double) wlen;
-}
-// }}}
-// getStateVar {{{
-arr KeyFramer::getStateVar(const String &n, uint wlen) {
-  int b = s->names.findValue(n);
-  CHECK(b >= 0, "Invalid name.");
-
-  return getStateVar(b, wlen);
-}
-// }}}
-// getStateSpeed {{{
-arr KeyFramer::getStateSpeed(uint b) {
-  arr speed(s->nframes);
-  arr state = getState(b);
-
-  speed(0) = 0;
-  for(uint t = 1; t < s->nframes; t++)
-    speed(t) = 120. * 100. * sqrt(sumOfSqr((state[t] - state[t-1])));
-  return speed;
-}
-// }}}
-// getStateSpeed {{{
-arr KeyFramer::getStateSpeed(const String &n) {
-  int b = s->names.findValue(n);
-  CHECK(b >= 0, "Invalid name.");
-
-  return getStateSpeed(b);
-}
-// }}}
-
-// getAngle {{{
-arr KeyFramer::getAngle(uint b1, uint b2) {
-  CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
-
-  uint dofs = s->dofs(b1);
-  uint cumdofs1 = s->cumdofs(b1);
-  uint cumdofs2 = s->cumdofs(b2);
-
-  arr angle(s->nframes);
-
-  arr s1, s2;
-  s1 = s->state.cols(cumdofs1, cumdofs1+dofs);
-  s2 = s->state.cols(cumdofs2, cumdofs2+dofs);
-  ors::Quaternion q1, q2, q;
-  for(uint f = 0; f < s->nframes; f++) {
-    q1.set(s1[f].p);
-    q2.set(s2[f].p);
-    q = q1 / q2;
-    angle(f) = q.getRad();
-    if(angle(f) > M_PI)
-      angle(f) = 2*M_PI - angle(f);
-  }
-
-  return angle;
-}
-// }}}
-// getAngle {{{
-arr KeyFramer::getAngle(const String &n1, const String &n2) {
-  int b1 = s->names.findValue(n1);
-  CHECK(b1 >= 0, "Invalid name.");
-  int b2 = s->names.findValue(n2);
-  CHECK(b2 >= 0, "Invalid name.");
-
-  return getAngle(b1, b2);
-}
-// }}}
-// getAngleVar {{{
-arr KeyFramer::getAngleVar(uint b1, uint b2, uint wlen) {
-  CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
-
-  arr var(s->nframes);
-  arr win;
-  arr angle = getAngle(b1, b2);
-
-  uint ff = wlen / 2;
-  uint ft = s->nframes - ff;
-  var.subRange(0, ff - 1).setZero();
-  var.subRange(ft, -1).setZero();
-  for(uint fi = ff; fi < ft; fi++) {
-    uint wi = fi - ff;
-    win.referToSubRange(angle, wi, wi + wlen - 1);
-    var(fi) = sumOfSqr(win - sum(win) / win.N);
-  }
-
-  return var / (double)wlen;
-}
-// }}}
-// getAngleVar {{{
-arr KeyFramer::getAngleVar(const String &n1, const String &n2, uint wlen) {
-  int b1 = s->names.findValue(n1);
-  CHECK(b1 >= 0, "Invalid name.");
-  int b2 = s->names.findValue(n2);
-  CHECK(b2 >= 0, "Invalid name.");
-
-  return getAngleVar(b1, b2, wlen);
-}
-// }}}
-
-// getQuat {{{
-arr KeyFramer::getQuat(uint b1, uint b2) {
-  CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
-
-  uint dofs = s->dofs(b1);
-  uint cumdofs1 = s->cumdofs(b1);
-  uint cumdofs2 = s->cumdofs(b2);
-
-  arr quat(s->nframes, 4);
-
-  arr s1, s2;
-  s1 = s->state.cols(cumdofs1, cumdofs1+dofs);
-  s2 = s->state.cols(cumdofs2, cumdofs2+dofs);
-  ors::Quaternion q1, q2, q, A;
-  for(uint f = 0; f < s->nframes; f++) {
-    q1.set(s1[f].p);
-    q2.set(s2[f].p);
-    if(f == 0)
-      A = q1 / q2;
-    q = q1 / (A * q2);
-    quat[f]() = {q.w, q.x, q.y, q.z};
-  }
-
-  return quat;
-}
-// }}}
-// getQuat {{{
-arr KeyFramer::getQuat(const String &n1, const String &n2) {
-  int b1 = s->names.findValue(n1);
-  CHECK(b1 >= 0, "Invalid name.");
-  int b2 = s->names.findValue(n2);
-  CHECK(b2 >= 0, "Invalid name.");
-
-  return getQuat(b1, b2);
-}
-// }}}
-// getQuatVar {{{
-arr KeyFramer::getQuatVar(uint b1, uint b2, uint wlen) {
-  CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
-
-  arr var(s->nframes);
-  arr win, m;
-  arr quat = getQuat(b1, b2);
-
-  uint ff = wlen / 2;
-  uint ft = s->nframes - ff;
-  var.subRange(0, ff - 1).setZero();
-  var.subRange(ft, -1).setZero();
-  for(uint fi = ff; fi < ft; fi++) {
-    uint wi = fi - ff;
-    win.referToSubRange(quat, wi, wi + wlen - 1);
-    m = sum(win, 0) / (double)win.d0;
-    m = ~repmat(m, 1, win.d0);
-    var(fi) = sumOfSqr(win - m);
-  }
-
-  return var / (double) wlen;
-}
-// }}}
-// getQuatVar {{{
-arr KeyFramer::getQuatVar(const String &n1, const String &n2, uint wlen) {
-  int b1 = s->names.findValue(n1);
-  CHECK(b1 >= 0, "Invalid name.");
-  int b2 = s->names.findValue(n2);
-  CHECK(b2 >= 0, "Invalid name.");
-
-  return getQuatVar(b1, b2, wlen);
-}
-// }}}
-
-// getPos {{{
-arr KeyFramer::getPos(uint b1, uint b2) {
-  CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
-
-  uint dofs = s->dofs(b1);
-  uint cumdofs1 = s->cumdofs(b1);
-  uint cumdofs2 = s->cumdofs(b2);
-
-  arr pos(s->nframes, 3);
-
-  arr s1, s2, s3;
-  s1 = s->state.cols(cumdofs1+3, cumdofs1+dofs);
-  s2 = s->state.cols(cumdofs2+3, cumdofs2+dofs);
-  s3 = s->state.cols(cumdofs1, cumdofs1+3);
-  ors::Vector v1, v2, v, A;
-  ors::Quaternion q1;
-  for(uint f = 0; f < s->nframes; f++) {
-    v1.set(s1[f].p);
-    v2.set(s2[f].p);
-    q1.set(s3[f].p);
-    
-    if(f == 0)
-      A = q1 * (v2 - v1);
-    v = q1 * (v2 - v1) - A;
-    pos[f]() = {v.x, v.y, v.z};
-  }
-
-  return pos;
-}
-// }}}
-// getPos {{{
-arr KeyFramer::getPos(const String &n1, const String &n2) {
-  int b1 = s->names.findValue(n1);
-  CHECK(b1 >= 0, "Invalid name.");
-  int b2 = s->names.findValue(n2);
-  CHECK(b2 >= 0, "Invalid name.");
-
-  return getPos(b1, b2);
-}
-// }}}
-// getPosVar {{{
-arr KeyFramer::getPosVar(uint b1, uint b2, uint wlen) {
-  CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
-
-  arr var(s->nframes);
-  arr win, m;
-  arr pos = getPos(b1, b2);
-
-  uint ff = wlen / 2;
-  uint ft = s->nframes - ff;
-  var.subRange(0, ff - 1).setZero();
-  var.subRange(ft, -1).setZero();
-  for(uint fi = ff; fi < ft; fi++) {
-    uint wi = fi - ff;
-    win.referToSubRange(pos, wi, wi + wlen - 1);
-    m = sum(win, 0) / (double)win.d0;
-    m = ~repmat(m, 1, win.d0);
-    var(fi) = sumOfSqr(win - m);
-  }
-
-  return var / (double) wlen;
-}
-// }}}
-// getPosVar {{{
-arr KeyFramer::getPosVar(const String &n1, const String &n2, uint wlen) {
-  int b1 = s->names.findValue(n1);
-  CHECK(b1 >= 0, "Invalid name.");
-  int b2 = s->names.findValue(n2);
-  CHECK(b2 >= 0, "Invalid name.");
-
-  return getPosVar(b1, b2, wlen);
-}
-// }}}
-
-// getDiff {{{
-arr KeyFramer::getDiff(uint b1, uint b2) {
-  CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
-
-  uint dofs = s->dofs(b1);
-  uint cumdofs1 = s->cumdofs(b1);
-  uint cumdofs2 = s->cumdofs(b2);
-
-  arr s1, s2;
-  s1 = s->state.cols(cumdofs1, cumdofs1+dofs);
-  s2 = s->state.cols(cumdofs2, cumdofs2+dofs);
-
-  return s2 - s1;
-}
-// }}}
-// getDiff {{{
-arr KeyFramer::getDiff(const String &n1, const String &n2) {
-  
-  int b1 = s->names.findValue(n1);
-  CHECK(b1 >= 0, "Invalid name.");
-  int b2 = s->names.findValue(n2);
-  CHECK(b2 >= 0, "Invalid name.");
-
-  return getDiff(b1, b2);
-}
-// }}}
-// getDiffVar {{{
-arr KeyFramer::getDiffVar(uint b1, uint b2, uint wlen) {
-  CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
-
-  arr var(s->nframes);
-  arr win, m;
-  arr diff = getDiff(b1, b2);
-
-  uint ff = wlen / 2;
-  uint ft = s->nframes - ff;
-  var.subRange(0, ff - 1).setZero();
-  var.subRange(ft, -1).setZero();
-  for(uint fi = ff; fi < ft; fi++) {
-    uint wi = fi - ff;
-    win.referToSubRange(diff, wi, wi + wlen - 1);
-    m = sum(win, 0) / (double)win.d0;
-    m = ~repmat(m, 1, win.d0);
-    var(fi) = sumOfSqr(win - m);
-  }
-
-  return var / (double)wlen;
-}
-// }}}
-// getDiffVar {{{
-arr KeyFramer::getDiffVar(const String &n1, const String &n2, uint wlen) {
-  int b1 = s->names.findValue(n1);
-  CHECK(b1 >= 0, "Invalid name.");
-  int b2 = s->names.findValue(n2);
-  CHECK(b2 >= 0, "Invalid name.");
-
-  return getDiffVar(b1, b2, wlen);
-}
-// }}}
-
-// getPosLen {{{
-arr KeyFramer::getPosLen(uint b1, uint b2) {
-  CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
-
-  arr posDiff = getDiff(b1, b2);
-  arr posLen(s->nframes);
-  for(uint f = 0; f < s->nframes; f++)
-    posLen(f) = ors::Vector(posDiff[f]).length();
-
-  return posLen;
-}
-// }}}
-// getPosLen {{{
-arr KeyFramer::getPosLen(const String &n1, const String &n2) {
-  int b1 = s->names.findValue(n1);
-  CHECK(b1 >= 0, "Invalid name.");
-  int b2 = s->names.findValue(n2);
-  CHECK(b2 >= 0, "Invalid name.");
-
-  return getPosLen(b1, b2);
-}
-// }}}
-// getPosLenVar {{{
-arr KeyFramer::getPosLenVar(uint b1, uint b2, uint wlen) {
-  CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
-
-  arr var(s->nframes);
-  arr win;
-  arr posLen = getPosLen(b1, b2);
-
-  uint ff = wlen / 2;
-  uint ft = s->nframes - ff;
-  var.subRange(0, ff - 1).setZero();
-  var.subRange(ft, -1).setZero();
-  for(uint fi = ff; fi < ft; fi++) {
-    uint wi = fi - ff;
-    win.referToSubRange(posLen, wi, wi + wlen - 1);
-    var(fi) = sumOfSqr(win - (sum(win)/win.N));
-  }
-
-  return var / (double) wlen;
-}
-// }}}
-// getPosLenVar {{{
-arr KeyFramer::getPosLenVar(const String &n1, const String &n2, uint wlen) {
-  int b1 = s->names.findValue(n1);
-  CHECK(b1 >= 0, "Invalid name.");
-  int b2 = s->names.findValue(n2);
-  CHECK(b2 >= 0, "Invalid name.");
-
-  return getPosLenVar(b1, b2, wlen);
-}
-// }}}
-
-// getTransfVar {{{
-arr KeyFramer::getTransfVar(uint b1, uint b2, uint wlen) {
-  CHECK(s->dofs(b1)==s->dofs(b2), "Doesn't support bodies with different number of dofs.");
-
-  arr var(s->nframes);
-  var.setZero();
-
-  double l;
-  arr win, mean;
-  arr transf = getDiff(b1, b2);
-  uint ff = wlen / 2;
-  uint ft = s->nframes - ff;
-  for(uint fi = ff; fi < ft; fi++) {
-    uint wi = fi  - ff;
-    win.referToSubRange(transf, wi, wi + wlen - 1);
-    mean = sum(win, 0) / (double)win.d0;
-    for(uint t = 0; t < win.d0; t++) {
-      l = length(win[t] - mean);
-      var(fi) += l*l;
+  vit2.resize(vit.d1);
+  for(uint t = 0; t < T; t++) {
+    vit2(t) = 0;
+    for(uint a = 0; a < N; a++) {
+      if(vit(a, t)) {
+        vit2(t) = 1;
+        break;
+      }
     }
   }
-
-  return var;
 }
 // }}}
-// getTransfVar {{{
-arr KeyFramer::getTransfVar(const String &n1, const String &n2, uint wlen) {
-  int b1 = s->names.findValue(n1);
-  CHECK(b1 >= 0, "Invalid name.");
-  int b2 = s->names.findValue(n2);
-  CHECK(b2 >= 0, "Invalid name.");
-
-  return getTransfVar(b1, b2, wlen);
-}
-// }}}
-
-// getCtrlSeq {{{
-void KeyFramer::getCtrlSeq(kvgL &ctrls, const String &a, const String &o) {
+// getCtrlSeq_old {{{
+void KeyFramer::getCtrlSeq_old(kvgL &ctrls, const String &a, const String &o) {
   KeyValueGraph data_kvg;
-  EM_c(data_kvg, a, o);
+  EM_z_with_c(data_kvg, a, o);
   arr *vit = data_kvg.getValue<arr>("vit");
 
   KeyValueGraph *kf, *feats;
@@ -1199,15 +609,68 @@ void KeyFramer::getCtrlSeq(kvgL &ctrls, const String &a, const String &o) {
   }
 }
 // }}}
+// getCtrlSeq {{{
+void KeyFramer::getCtrlSeq(kvgL &ctrls, const String &a, const String &o) {
+  KeyValueGraph data_kvg;
+  EM_z_with_c(data_kvg, a, o);
+  arr *vit = data_kvg.getValue<arr>("vit");
+
+  KeyValueGraph *kf;
+  bool kf_flag = false;
+  for(uint f = 0; f < vit->d0; f++) {
+    if(!kf_flag && vit->elem(f)) { // inset
+      kf = new KeyValueGraph();
+      kf->append("fnum", new double(f));
+      kf->append("type", "on");
+      // TODO agents
+      // TODO objects
+      ctrls.append(kf);
+      kf_flag = true;
+    }
+    else if(kf_flag && !vit->elem(f)) { // offset
+      kf = new KeyValueGraph();
+      kf->append("fnum", new double(f));
+      kf->append("type", "off");
+      // TODO agents
+      // TODO objects
+      ctrls.append(kf);
+      kf_flag = false;
+    }
+  }
+}
+// }}}
 // getDeltaSeq {{{
 void KeyFramer::getDeltaSeq(kvgL &deltas, kvgL ctrls) {
   KeyValueGraph *inset, *offset, *delta;
   arr *posi, *poso;
   uint fi, fo;
 
-  cout << "N: " << ctrls.N << endl;
   for(auto ctrl: ctrls) {
-    cout << "in" << endl;
+    inset = ctrl->getValue<KeyValueGraph>("inset");
+    offset = ctrl->getValue<KeyValueGraph>("offset");
+
+    fi = *inset->getValue<double>("fnum");
+    posi = inset->getValue<arr>("f_pos");
+
+    fo = *offset->getValue<double>("fnum");
+    poso = offset->getValue<arr>("f_pos");
+
+    delta = new KeyValueGraph();
+    delta->append("fi", new double(fi));
+    delta->append("fo", new double(fo));
+    delta->append("f_dpos", new arr(*poso - *posi));
+    deltas.append(delta);
+  }
+}
+// }}}
+// getDeltaCluster {{{
+void KeyFramer::getDeltaCluster(kvgL &deltas, kvgL ctrls) {
+  KeyValueGraph *inset, *offset, *delta;
+  arr *posi, *poso;
+  uint fi, fo;
+
+  cout << "#ctrls: " << ctrls.N << endl;
+  for(auto ctrl: ctrls) {
     inset = ctrl->getValue<KeyValueGraph>("inset");
     offset = ctrl->getValue<KeyValueGraph>("offset");
 
@@ -1268,14 +731,10 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &bA, const String &bB, uint 
   //String bp1(STRING(b1 << ":pos")), bp2(STRING(b2 << ":pos"));
   //String bo1(STRING(b1 << ":ori")), bo2(STRING(b2 << ":ori"));
   // TODO CHECK IF THIS WORKS
-  //arr pAVar = getStateVar(bp1, wlen);
-  //arr qAVar = getStateVar(bo1, wlen);
-  //arr dpVar = getPosVar(b1, b2, wlen);
-  //arr dqVar = getQuatVar(bo1, bo2, wlen);
-  arr pAVar = s->g4d->query("posVar", bA);
-  arr qAVar = s->g4d->query("quatVar", bA);
-  arr dpVar = s->g4d->query(bA_posDeltaVar, bB);
-  arr dqVar = s->g4d->query(bA_quatDeltaVar, bB);
+  arr pAVar = g4d().query("posVar", bA);
+  arr qAVar = g4d().query("quatVar", bA);
+  arr dpVar = g4d().query(bA_posDeltaVar, bB);
+  arr dqVar = g4d().query(bA_quatDeltaVar, bB);
   // }}}
   //Parameters & other {{{
   double mu_H, sigma_S, sigma_L;
@@ -1569,18 +1028,12 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &bA, const String &bB, uint 
 
   // TODO compute this using the new data structure..
   arr c = getCorrPCA(bp1, bp2, wlen, 1).flatten();
-  //arr pAVar = getStateVar(bp1, wlen);
-  //arr pBVar = getStateVar(bp2, wlen);
-  //arr qAVar = getStateVar(bo1, wlen);
-  //arr qBVar = getStateVar(bo2, wlen);
-  //arr dp = getPos(b1, b2);
-  //arr dq = getQuat(bo1, bo2);
-  arr pAVar = s->g4d->query("posVar", bA);
-  arr qAVar = s->g4d->query("quatVar", bA);
-  arr pBVar = s->g4d->query("posVar", bB);
-  arr qBVar = s->g4d->query("quatVar", bB);
-  arr dp = s->g4d->query(bA_posDelta, bB);
-  arr dq = s->g4d->query(bA_quatDelta, bB);
+  arr pAVar = g4d().query("posVar", bA);
+  arr qAVar = g4d().query("quatVar", bA);
+  arr pBVar = g4d().query("posVar", bB);
+  arr qBVar = g4d().query("quatVar", bB);
+  arr dp = g4d().query(bA_posDelta, bB);
+  arr dq = g4d().query(bA_quatDelta, bB);
 
   arr pVarMean = (pAVar + pBVar) / 2.;
   arr qVarMean = (qAVar + qBVar) / 2.;
@@ -1729,7 +1182,8 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &bA, const String &bB, uint 
     for(uint t = 0; t < T; t++) {
       qz[t]() = a[t] % rho_z_cpq[t] % b[t];
       qzy[t]() = repmat(a[t] % b[t], 1, J) % ~rho_z_cypq[t];
-      qy[t]() = my_sum(qzy[t], 1);
+      //qy[t]() = my_sum(qzy[t], 1);
+      tensorMarginal(qy[y](), qzy[t], TUP(1));
       normalizeDist(qz[t]());
       normalizeDist(qzy[t]());
       normalizeDist(qy[t]());
@@ -2007,7 +1461,8 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &b1, const String &b2, uint 
       for(uint k = 0; k < K; k++)
         qzy[t][k]() = a(t, k) * b(t, k) * (~rho_z_cypq[t])[k];
       //qzy[t]() = repmat(a[t] % b[t], 1, J) % ~rho_z_cypq[t];
-      qy[t]() = my_sum(qzy[t], 1);
+      //qy[t]() = my_sum(qzy[t], 1);
+      tensorMarginal(qy[t](), qzy[t], TUP(1));
       normalizeDist(qz[t]());
       normalizeDist(qzy[t]());
       normalizeDist(qy[t]());
@@ -2150,10 +1605,8 @@ void KeyFramer::EM(KeyValueGraph &kvg, const String &bb, uint wlen) {
   // Observations {{{
   //String bp(STRING(bb << ":pos"));
   //String bo(STRING(bb << ":ori"));
-  //arr pVar = getStateVar(bp, wlen);
-  //arr qVar = getStateVar(bo, wlen);
-  arr pVar = s->g4d->query("posVar", bb);
-  arr qVar = s->g4d->query("quatVar", bb);
+  arr pVar = g4d().query("posVar", bb);
+  arr qVar = g4d().query("quatVar", bb);
   // }}}
   // Parameters & other {{{
   uint T, K, J;
@@ -2368,8 +1821,8 @@ void KeyFramer::EM_m(KeyValueGraph &kvg, const String &bb) {
   computeSpeed(STRING("quatGP"));
   // }}}
   // Observations {{{
-  arr pSpeedGP = s->g4d->query("posGPSpeed", bb);
-  arr qSpeedGP = s->g4d->query("quatGPSpeed", bb);
+  arr pSpeedGP = g4d().query("posGPSpeed", bb);
+  arr qSpeedGP = g4d().query("quatGPSpeed", bb);
   uint T = pSpeedGP.d0;
   // }}}
   // Parameters & other {{{
@@ -2394,7 +1847,8 @@ void KeyFramer::EM_m(KeyValueGraph &kvg, const String &bb) {
             9, 50 };
   p_zmm.reshape(2, 2, 2);
   normalizeDist(p_zmm);
-  p_z = my_sum(p_zmm, 0);
+  //p_z = my_sum(p_zmm, 0);
+  tensorMarginal(p_z, p_zmm, TUP(0));
 
   sigma_L = 50;
   sigma_H = 50;
@@ -2482,10 +1936,12 @@ void KeyFramer::EM_m(KeyValueGraph &kvg, const String &bb) {
         qzmm[t][k]() = a(t, k) * b(t, k) * p_zmm[k] % ( rho_mp[t] ^ rho_mq[t] );
       normalizeDist(qzmm[t]());
 
-      qmp[t]() = my_sum(qzmm[t], 1);
+      //qmp[t]() = my_sum(qzmm[t], 1);
+      tensorMarginal(qmp[t](), qzmm[t], TUP(1));
       normalizeDist(qmp[t]());
 
-      qmq[t]() = my_sum(qzmm[t], 2);
+      //qmq[t]() = my_sum(qzmm[t], 2);
+      tensorMarginal(qmq[t](), qzmm[t], TUP(2));
       normalizeDist(qmq[t]());
     }
 
@@ -2635,8 +2091,8 @@ void KeyFramer::EM_r(KeyValueGraph &kvg, const String &bA, const String &bB) {
   computeSpeed(bA_dQuatGP);
   // }}}
   // Observations {{{
-  arr dpSpeedGP = s->g4d->query(bA_dPosGPSpeed, bB);
-  arr dqSpeedGP = s->g4d->query(bA_dQuatGPSpeed, bB);
+  arr dpSpeedGP = g4d().query(bA_dPosGPSpeed, bB);
+  arr dqSpeedGP = g4d().query(bA_dQuatGPSpeed, bB);
   uint T = dpSpeedGP.d0;
   // }}}
   // Parameters & other {{{
@@ -2661,7 +2117,8 @@ void KeyFramer::EM_r(KeyValueGraph &kvg, const String &bA, const String &bB) {
             1, 50 };
   p_zmm.reshape(2, 2, 2);
   normalizeDist(p_zmm);
-  p_z = my_sum(p_zmm, 0);
+  //p_z = my_sum(p_zmm, 0);
+  tensorMarginal(p_z, p_zmm, TUP(0));
 
   sigma_L = 50;
   sigma_H = 50;
@@ -2749,10 +2206,12 @@ void KeyFramer::EM_r(KeyValueGraph &kvg, const String &bA, const String &bB) {
         qzmm[t][k]() = a(t, k) * b(t, k) * p_zmm[k] % ( rho_mp[t] ^ rho_mq[t] );
       normalizeDist(qzmm[t]());
 
-      qmp[t]() = my_sum(qzmm[t], 1);
+      //qmp[t]() = my_sum(qzmm[t], 1);
+      tensorMarginal(qmp[t](), qzmm[t], TUP(1));
       normalizeDist(qmp[t]());
 
-      qmq[t]() = my_sum(qzmm[t], 2);
+      //qmq[t]() = my_sum(qzmm[t], 2);
+      tensorMarginal(qmq[t](), qzmm[t], TUP(2));
       normalizeDist(qmq[t]());
     }
 
@@ -2816,7 +2275,7 @@ void KeyFramer::EM_r(KeyValueGraph &kvg, const String &bA, const String &bB) {
     temp = log(A) + ~repmat(wz[t-1], 1, K); // TODO is this necessary? test
     wz[t]() = log(rho_z[t]);
     for(uint k = 0; k < K; k++) {
-      mi =temp[k].maxIndex();
+      mi = temp[k].maxIndex();
       wz(t, k) += temp(k, mi);
       wzind(t, k) = mi;
     }
@@ -2858,7 +2317,662 @@ void KeyFramer::EM_r(KeyValueGraph &kvg, const String &bA, const String &bB) {
 #undef update_mu_dqSpeedGP
 #undef update_sigma_dqSpeedGP
 // }}}
-// EM_c (single-agent) {{{
+// EM_c {{{
+//#define update_mu_dist
+//#define update_sigma_dist
+void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
+  CHECK(g4d().digits().contains(bA), "First body must be agent.");
+  CHECK(g4d().objects().contains(bB), "First body must be object.");
+  // Computing other BAMS {{{
+  computeDist();
+  // }}}
+  // Observations {{{
+  uint T = g4d().numFrames();
+  uint ia = g4d().digits().findValue(bA);
+  uint io = g4d().objects().findValue(bB);
+  arr dist = s->indd.sub(0, -1, ia, ia, io, io).flatten();
+  // }}}
+  // Parameters & other {{{
+  arr pi, P;
+  arr mu_dist, sigma_dist;
+  arr rho_z;
+  arr qz, qzz;
+  arr a, b;
+  arr pz, pzz, pmd, psd;
+
+  pi = { 1, 0 };
+  P = { .95, .05,
+        .05, .95 };
+  P.reshape(2, 2);
+
+  mu_dist = { .05, 0 };
+  sigma_dist = { .02, .02 };
+
+  uint K = 2;
+  rho_z.resize(T, K);
+
+  qz.resize(T, K);
+  qzz.resize(T-1, K, K);
+
+  a.resize(T, K);
+  b.resize(T, K);
+
+  pz.resize(K);
+  pzz.resize(K, K);
+  pmd.resize(K);
+  psd.resize(K);
+  // }}}
+
+  arr prev_qz;
+  for(uint i = 0; ; i++) {
+    // Cout Parameters {{{
+    cout << endl;
+    cout << "---------------------------" << endl;
+    cout << "step: " << i << endl;
+    cout << "pi: " << pi << endl;
+    cout << "P: " << P << endl;
+    cout << "mu_dist: " << mu_dist << endl;
+    cout << "sigma_dist: " << sigma_dist << endl;
+    // }}}
+    //COMPUTE EVIDENCES {{{
+    for(uint t = 0; t < T; t++)
+      for(uint k = 0; k < K; k++)
+        rho_z(t, k) = ::exp(
+            -.5 * MT::sqr(dist(t) - mu_dist(k)) / MT::sqr(sigma_dist(k))
+          );
+    // }}}
+    // E-STEP {{{
+    a[0]() = pi;   //initialization of alpha
+    b[T-1]() = 1; //initialization of beta
+    //--- fwd and bwd iterations:
+    for(uint t = 1; t < T; t++) {
+      a[t]() =  P * (rho_z[t-1] % a[t-1]);
+      normalizeDist(a[t]());
+    }
+    for(uint t = T-1; t--; ) {
+      b[t]() = ~P * (rho_z[t+1] % b[t+1]);
+      normalizeDist(b[t]());
+    }
+
+    for(uint t = 0; t < T; t++) {
+      qz[t]() = a[t] % rho_z[t] % b[t];
+      normalizeDist(qz[t]());
+      if(t < T-1) {
+        qzz[t]() = P % ( (rho_z[t+1] % b[t+1]) ^ (a[t] % rho_z[t]) );
+        normalizeDist(qzz[t]());
+      }
+    }
+    // }}}
+    // M-STEP {{{
+    pz.setZero();
+    pzz.setZero();
+    pmd.setZero();
+    psd.setZero();
+    for(uint t = 0; t < T; t++) {
+      pz += qz[t];
+      if(t < T-1)
+        pzz += qzz[t];
+      pmd += dist(t) * qz[t];
+      psd += sqr(dist(t) - mu_dist) % qz[t];
+    }
+
+    pi = qz[0];
+    for(uint k = 0; k < K; k++)
+      for(uint l = 0; l < K; l++)
+        P(k, l) = pzz(k, l) / pz(l);
+    // I almost find it absurd that I have to normalize here too..
+    arr tmp = sum(P, 0);
+    for(uint k = 0; k < K; k++)
+        P[k]() /= tmp;
+
+#ifdef update_mu_dist
+    mu_dist = pmd / pz;
+#endif
+#ifdef update_sigma_dist
+    sigma_dist = sqrt(psd / pz);
+#endif
+    // }}}
+    
+    if(i && sumOfSqr(qz-prev_qz) < 1e-10) break;
+    prev_qz = qz;
+  }
+  cout << endl;
+  cout << "DONE!" << endl;
+
+  // Viterbi {{{
+  uint mi;
+  arr wz(T, K), wzind(T, K), temp;
+
+  wz[0]() = pi + log(rho_z[0]);
+  for(uint t = 1; t < T; t++) {
+    temp = log(P) + ~repmat(wz[t-1], 1, K); // TODO is this necessary? test
+    wz[t]() = log(rho_z[t]);
+    for(uint k = 0; k < K; k++) {
+      mi = temp[k].maxIndex();
+      wz(t, k) += temp(k, mi);
+      wzind(t, k) = mi;
+    }
+  }
+
+  arr vit(T);
+  vit(T-1) = (wz(T-1, 0) > wz(T-1, 1))? 0: 1;
+  for(uint t = T-1; t > 0; t--)
+    vit(t-1) = wzind(t, vit(t));
+  // }}}
+  // Return results as KVG {{{
+  kvg.append("data", "vit", new arr(vit));
+  kvg.append("data", "dist", new arr(dist));
+  KeyValueGraph *plot;
+  
+  plot = new KeyValueGraph();
+  plot->append("title", new String("Contact: Viterbi"));
+  plot->append("dataid", new bool(true));
+  plot->append("autolegend", new bool(true));
+  plot->append("stream", new double(.75));
+  plot->append("ymin", new double(-.1));
+  plot->append("ymax", new double(1.1));
+  plot->append("data", new String("vit"));
+  kvg.append("plot", plot);
+
+  plot = new KeyValueGraph();
+  plot->append("title", new String("Observations"));
+  plot->append("dataid", new bool(true));
+  plot->append("autolegend", new bool(true));
+  plot->append("stream", new double(.75));
+  plot->append("data", new String("dist"));
+  kvg.append("plot", plot);
+  // }}}
+}
+#undef update_mu_dist
+#undef update_sigma_dist
+// }}}
+// EM_z_with_c (single-agent, with contact) {{{
+//#define with_object_emission
+//#define update_mu_c
+//#define update_sigma_c
+//#define update_mu_p
+//#define update_sigma_p
+//#define update_mu_q
+//#define updage_sigma_q
+//#define update_mu_dp
+//#define update_sigma_dp
+//#define update_mu_dq
+//#define update_sigma_dq
+void KeyFramer::EM_z_with_c(KeyValueGraph &kvg, const String &subj, const String &obj) {
+  CHECK(g4d().digits().contains(subj), "First body must be agent.");
+  CHECK(g4d().objects().contains(obj), "First body must be object.");
+  // Computing other BAMS {{{
+  double alpha = .3;
+  bool force = false;
+  computeSmooth(STRINGS("pos", "quat"), alpha, force);
+  computeSpeed(STRINGS("posSmooth", "quatSmooth"), force);
+
+  String subj_dPos = STRING(subj << "_dPos");
+  String subj_dQuat = STRING(subj << "_dQuat");
+  String subj_dPosSmooth = STRING(subj_dPos << "Smooth");
+  String subj_dQuatSmooth = STRING(subj_dQuat << "Smooth");
+  String subj_dPosSmoothSpeed = STRING(subj_dPosSmooth << "Speed");
+  String subj_dQuatSmoothSpeed = STRING(subj_dQuatSmooth << "Speed");
+
+  computeDPos(subj, force);
+  computeDQuat(subj, force);
+  computeSmooth(subj_dPos, alpha, force);
+  computeSmooth(subj_dQuat, alpha, force);
+  computeSpeed(subj_dPosSmooth, force);
+  computeSpeed(subj_dQuatSmooth, force);
+
+  computeDist();
+  // }}}
+  // Observations {{{
+  uint T = g4d().numFrames();
+  uint ia = g4d().digits().findValue(subj);
+  uint io = g4d().objects().findValue(obj);
+  arr dist = s->indd.sub(0, -1, ia, ia, io, io).flatten();
+  arr pSpeed = g4d().query("posSmoothSpeed", subj);
+  arr qSpeed = g4d().query("quatSmoothSpeed", subj);
+#ifdef with_object_emission
+  arr pBSpeed = g4d().query("posSmoothSpeed", obj);
+  arr qBSpeed = g4d().query("quatSmoothSpeed", obj);
+#endif
+  arr dpSpeed = g4d().query(subj_dPosSmoothSpeed, obj);
+  arr dqSpeed = g4d().query(subj_dQuatSmoothSpeed, obj);
+  // }}}
+  // Parameters & other {{{
+  uint K = 2;
+  uint C = 2;
+  uint R = 2, Rp = 2, Rq = 2;
+  uint M = 2, Mp = 2, Mq = 2;
+
+  double mu_c_OFF, sigma_c_OFF, mu_c_ON, sigma_c_ON;
+  double mu_r_OFF, sigma_r_OFF, mu_r_ON, sigma_r_ON;
+  double mu_m_OFF, sigma_m_OFF, mu_m_ON, sigma_m_ON;
+
+  arr pi, P;
+  arr p_zmm, p_z;
+  arr mu_c, sigma_c;
+  arr mu_dp, sigma_dp;
+  arr mu_dq, sigma_dq;
+  arr mu_p, sigma_p;
+  arr mu_q, sigma_q;
+  arr rho_z, rho_cr, rho_crm, rho_crmm;
+  arr rho_c;
+  arr rho_r, rho_rdp, rho_rdq, rho_rdpdq;
+  arr rho_m, rho_mp, rho_mq, rho_mpq;
+  arr rho_mB, rho_mpB, rho_mqB, rho_mpqB;
+  arr qz, qzz, qmp, qmq, qzmm;
+  arr a, b;
+  arr pz, pzz, pmp, pmq;
+  arr pmpmp, pmpsp, pmqmq, pmqsq;
+  arr pmpmdp, pmpsdp, pmqmdq, pmqsdq;
+  //arr phi_zmr, phi_mpq, phi_rpq;
+  arr phi_zcrm, phi_rpq, phi_mpq;
+
+  pi = { 1, 0 };
+  P = { .5, .5,
+        .5, .5 };
+  P.reshape(2, 2);
+#ifdef with_object_emission
+  // TODO add c here..
+  phi_zmr = { 50, 9,
+              9, 9,
+
+              9, 9,
+              9, 1,
+
+              1, 1,
+              1, 1,
+
+              1, 1,
+              1, 50 };
+  phi_zmr.reshape(TUP(2, 2, 2, 2));
+#else
+  phi_zcrm = {  99, 9,
+                9, 6,
+
+                6, 3,
+                3, 1,
+
+                1, 3,
+                3, 6,
+
+                6, 9,
+                9, 99 };
+  phi_zcrm.reshape(TUP(K, C, R, M));
+#endif
+  normalizeDist(phi_zcrm);
+  //p_z = my_sum(p_zmm, 0);
+  //tensorMarginal(p_z, p_zmm, TUP(0));
+  
+  phi_mpq = { 50, 1,
+              1, 1,
+
+              1, 9,
+              9, 50 };
+  phi_mpq.reshape(M, Mp, Mq);
+  normalizeDist(phi_mpq);
+
+  phi_rpq = { 50, 9,
+              9, 1,
+
+              1, 1,
+              1, 50 };
+  phi_rpq.reshape(R, Rp, Rq);
+  normalizeDist(phi_rpq);
+
+  mu_c_OFF = .03; sigma_c_OFF = .02;
+  mu_c_ON = 0;    sigma_c_ON = .02;
+  mu_c = { mu_c_OFF, mu_c_ON };
+  sigma_c = { sigma_c_OFF, sigma_c_ON };
+
+  mu_r_OFF = 100; sigma_r_OFF = 50;
+  mu_r_ON = 0;    sigma_r_ON = 50;
+  mu_dp= { mu_r_OFF, mu_r_ON };
+  sigma_dp= { sigma_r_OFF, sigma_r_ON };
+  mu_dq= { 2*mu_r_OFF, 2*mu_r_ON };
+  sigma_dq= { 2*sigma_r_OFF, 2*sigma_r_ON };
+
+  mu_m_OFF = 0;   sigma_m_OFF = 50;
+  mu_m_ON = 100;  sigma_m_ON = 50;
+  mu_p = { mu_m_OFF, mu_m_ON };
+  sigma_p = { sigma_m_OFF, sigma_m_ON };
+  mu_q = { mu_m_OFF, mu_m_ON };
+  sigma_q = { sigma_m_OFF, sigma_m_ON };
+
+  rho_z.resize(T, K);
+  rho_cr.resize(T, C, R);
+  rho_crm.resize(TUP(T, C, R, M));
+  rho_crmm.resize(TUP(T, C, R, M, M));
+  // C
+  rho_c.resize(T, C);
+  // R
+  rho_r.resize(T, R);
+  rho_rdp.resize(T, Rp);
+  rho_rdq.resize(T, Rq);
+  rho_rdpdq.resize(T, Rp, Rq);
+  // M
+  rho_m.resize(T, M);
+  rho_mp.resize(T, Mp);
+  rho_mq.resize(T, Mq);
+  rho_mpq.resize(T, Mp, Mq);
+  // Mo
+#ifdef with_object_emission
+  rho_mB.resize(T, M);
+  rho_mpB.resize(T, Mp);
+  rho_mqB.resize(T, Mq);
+  rho_mpqB.resize(T, Mp, Mq);
+#endif
+
+  // TODO change Mb -> mo
+  qz.resize(T, K);
+  qzz.resize(T-1, K, K);
+  //qmp.resize(T, K);
+  //qmq.resize(T, K);
+  //qzmm.resize({T, K, K, K});
+
+  a.resize(T, K);
+  b.resize(T, K);
+
+  pz.resize(K);
+  pzz.resize(K, K);
+  //pmp.resize(K);
+  //pmq.resize(K);
+  //pmpmdp.resize(K);
+  //pmpsdp.resize(K);
+  //pmqmdq.resize(K);
+  //pmqsdq.resize(K);
+  // }}}
+
+  arr prev_qz;
+  for(uint i = 0; ; i++) {
+    // Cout Parameters {{{
+    cout << endl;
+    cout << "---------------------------" << endl;
+    cout << "step: " << i << endl;
+    cout << "pi: " << pi << endl;
+    cout << "P: " << P << endl;
+    cout << "mu_c: " << mu_c << endl;
+    cout << "sigma_c: " << sigma_c << endl;
+    cout << "mu_dp: " << mu_dp << endl;
+    cout << "sigma_dp: " << sigma_dp << endl;
+    cout << "mu_dq: " << mu_dq << endl;
+    cout << "sigma_dq: " << sigma_dq << endl;
+    cout << "mu_p: " << mu_p << endl;
+    cout << "sigma_p: " << sigma_p << endl;
+    cout << "mu_q: " << mu_q << endl;
+    cout << "sigma_q: " << sigma_q << endl;
+    // }}}
+    // COMPUTE EVIDENCES {{{
+    for(uint t = 0; t < T; t++) {
+      for(uint k = 0; k < K; k++) {
+        rho_c(t, k) = ::exp(
+            -.5 * MT::sqr(dist(t) - mu_c(k)) / MT::sqr(sigma_c(k))
+          );
+        rho_rdp(t, k) = ::exp(
+            -.5 * MT::sqr(dpSpeed(t) - mu_dp(k)) / MT::sqr(sigma_dp(k))
+          );
+        rho_rdq(t, k) = ::exp(
+            -.5 * MT::sqr(dqSpeed(t) - mu_dq(k)) / MT::sqr(sigma_dq(k))
+          );
+        rho_mp(t, k) = ::exp(
+            -.5 * MT::sqr(pSpeed(t) - mu_p(k)) / MT::sqr(sigma_p(k))
+          );
+        rho_mq(t, k) = ::exp(
+            -.5 * MT::sqr(qSpeed(t) - mu_q(k)) / MT::sqr(sigma_q(k))
+          );
+#ifdef with_object_emission
+        rho_mpB(t, k) = ::exp(
+            -.5 * MT::sqr(pBSpeed(t) - mu_p(k)) / MT::sqr(sigma_p(k))
+          );
+        rho_mqB(t, k) = ::exp(
+            -.5 * MT::sqr(qBSpeed(t) - mu_q(k)) / MT::sqr(sigma_q(k))
+          );
+#endif
+      }
+    }
+    // R
+    tensorEquation(rho_rdpdq, rho_rdp, TUP(0, 1), rho_rdq, TUP(0, 2), 0);
+    tensorEquation(rho_r, phi_rpq, TUP(1, 2, 3), rho_rdpdq, TUP(0, 2, 3), 2);
+    // M
+    tensorEquation(rho_mpq, rho_mp, TUP(0, 1), rho_mq, TUP(0, 2), 0);
+    tensorEquation(rho_m, phi_mpq, TUP(1, 2, 3), rho_mpq, TUP(0, 2, 3), 2);
+    // CRM
+    //tensorEquation(rho_mr, rho_m, TUP(0, 1), rho_r, TUP(0, 2), 0);
+    tensorEquation(rho_cr, rho_c, TUP(0, 1), rho_r, TUP(0, 2), 0);
+    tensorEquation(rho_crm, rho_cr, TUP(0, 1, 2), rho_m, TUP(0, 3), 0);
+#ifndef with_object_emission
+    tensorEquation(rho_z, phi_zcrm, TUP(1, 2, 3, 4), rho_crm, TUP(0, 2, 3, 4), 3);
+#else
+    // TODO
+    tensorEquation(rho_mpqB, rho_mpB, TUP(0, 1), rho_mqB, TUP(0, 2), 0);
+    tensorEquation(rho_mB, phi_mpq, TUP(1, 2, 3), rho_mpqB, TUP(0, 2, 3), 2);
+    tensorEquation(rho_mmr, rho_mr, TUP(0, 1, 3), rho_mB, TUP(0, 2), 0);
+    tensorEquation(rho_z, phi_zmr, TUP(1, 2, 3, 4), rho_mmr, TUP(0, 2, 3, 4), 3);
+#endif
+    // }}}
+    // E-STEP {{{
+    a[0]() = pi;   //initialization of alpha
+    b[T-1]() = 1; //initialization of beta
+    //--- fwd and bwd iterations:
+    for(uint t = 1; t < T; t++) {
+      a[t]() =  P * (rho_z[t-1] % a[t-1]);
+      normalizeDist(a[t]());
+    }
+    for(uint t = T-1; t--; ) {
+      b[t]() = ~P * (rho_z[t+1] % b[t+1]);
+      normalizeDist(b[t]());
+    }
+
+    for(uint t = 0; t < T; t++) {
+      qz[t]() = a[t] % rho_z[t] % b[t];
+      normalizeDist(qz[t]());
+
+      if(t < T-1) {
+        qzz[t]() = P % ( (rho_z[t+1] % b[t+1]) ^ (a[t] % rho_z[t]) );
+        normalizeDist(qzz[t]());
+      }
+
+      //for(uint k = 0; k < K; k++)
+        //qzmm[t][k]() = a(t, k) * b(t, k) * p_zmm[k] % ( rho_mp[t] ^ rho_mq[t] );
+      //normalizeDist(qzmm[t]());
+
+      //qmp[t]() = my_sum(qzmm[t], 1);
+      //tensorMarginal(qmp[t](), qzmm[t], TUP(1));
+      //normalizeDist(qmp[t]());
+
+      //qmq[t]() = my_sum(qzmm[t], 2);
+      //tensorMarginal(qmq[t](), qzmm[t], TUP(2));
+      //normalizeDist(qmq[t]());
+    }
+
+    // }}}
+    // M-STEP {{{
+    pz.setZero();
+    pzz.setZero();
+    //pmp.setZero();
+    //pmq.setZero();
+    //pmpmp.setZero();
+    //pmpsp.setZero();
+    //pmqmq.setZero();
+    //pmqsq.setZero();
+    //pmpmdp.setZero();
+    //pmpsdp.setZero();
+    //pmqmdq.setZero();
+    //pmqsdq.setZero();
+    for(uint t = 0; t < T; t++) {
+      pz += qz[t];
+      if(t < T-1)
+        pzz += qzz[t];
+      //pmp += qmp[t];
+      //pmq += qmq[t];
+      //pmpmp+= pSpeed(t) * qz[t];
+      //pmpsp+= sqr(pSpeed(t) - mu_p) % qz[t];
+      //pmqmq+= qSpeed(t) * qz[t];
+      //pmqsq+= sqr(qSpeed(t) - mu_q) % qz[t];
+      //pmpmdp+= dpSpeed(t) * qz[t];
+      //pmpsdp+= sqr(dpSpeed(t) - mu_dp) % qz[t];
+      //pmqmdq+= dqSpeed(t) * qz[t];
+      //pmqsdq+= sqr(dqSpeed(t) - mu_dq) % qz[t];
+    }
+
+    pi = qz[0];
+    for(uint k = 0; k < K; k++)
+      for(uint l = 0; l < K; l++)
+        P(k, l) = pzz(k, l) / pz(l);
+    arr tmp = sum(P, 0);
+    for(uint k = 0; k < K; k++)
+      P[k]() /= tmp;
+
+#ifdef update_mu_c
+    NIY;
+#endif
+#ifdef update_sigma_c
+    NIY;
+#endif
+#ifdef update_mu_dp
+    NIY;
+    //mu_dp = pmpmdp/ pz;
+#endif
+#ifdef update_sigma_dp
+    NIY;
+    //sigma_dp = sqrt(pmpsdp/ pz);
+#endif
+#ifdef update_mu_dq
+    NIY;
+    //mu_dq = pmqmdq/ pz;
+#endif
+#ifdef update_sigma_dq
+    NIY;
+    //sigma_dq = sqrt(pmqsdq/ pz);
+#endif
+#ifdef update_mu_p
+    NIY;
+    //mu_p = pmpmp/ pz;
+#endif
+#ifdef update_sigma_p
+    NIY;
+    //sigma_p = sqrt(pmpsp/ pz);
+#endif
+#ifdef update_mu_q
+    NIY;
+    //mu_q = pmqmq/ pz;
+#endif
+#ifdef update_sigma_q
+    NIY;
+    //sigma_q = sqrt(pmqsq/ pz);
+#endif
+    // }}}
+    
+    if(i && sumOfSqr(qz-prev_qz) < 1e-10) break;
+    prev_qz = qz;
+  }
+  cout << endl;
+  cout << "DONE!" << endl;
+
+  // Viterbi {{{
+  uint mi;
+  arr wz(T, K), wzind(T, K), temp;
+
+  wz[0]() = pi + log(rho_z[0]);
+  for(uint t = 1; t < T; t++) {
+    temp = log(P) + ~repmat(wz[t-1], 1, K); // TODO is this necessary? test
+    wz[t]() = log(rho_z[t]);
+    for(uint k = 0; k < K; k++) {
+      mi = temp[k].maxIndex();
+      wz(t, k) += temp(k, mi);
+      wzind(t, k) = mi;
+    }
+  }
+
+  arr vit(T);
+  vit(T-1) = (wz(T-1, 0) > wz(T-1, 1))? 0: 1;
+  for(uint t = T-1; t > 0; t--)
+    vit(t-1) = wzind(t, vit(t));
+  // }}}
+  // Return results as KVG {{{
+  if(!kvg["vit"]) {
+    arr *p_vit = new arr(g4d().subjects().N, g4d().objects().N, g4d().numFrames());
+    kvg.append("vit", p_vit);
+  }
+
+  int ind_subj, ind_obj;
+  ind_subj = g4d().subjects().findValue(subj);
+  ind_obj = g4d().objects().findValue(obj);
+  kvg.getValue<arr>("vit")->subDim(ind_subj, ind_obj)() = vit;
+
+  KeyValueGraph *hmm, *plot;
+  
+  hmm = new KeyValueGraph;
+  hmm->append("data", "vit", new arr(vit));
+  hmm->append("data", "dist", new arr(dist));
+  hmm->append("data", "dpSpeed", new arr(dpSpeed));
+  hmm->append("data", "dqSpeed", new arr(dqSpeed));
+  hmm->append("data", "pSpeed", new arr(pSpeed));
+  hmm->append("data", "qSpeed", new arr(qSpeed));
+  
+  plot = new KeyValueGraph();
+  plot->append("title", new String("Full System: Viterbi"));
+  plot->append("dataid", new bool(true));
+  plot->append("autolegend", new bool(true));
+  plot->append("stream", new double(.75));
+  plot->append("ymin", new double(-.1));
+  plot->append("ymax", new double(1.1));
+  plot->append("data", new String("vit"));
+  hmm->append("plot", plot);
+
+  plot = new KeyValueGraph();
+  plot->append("title", new String("dist"));
+  plot->append("dataid", new bool(true));
+  plot->append("autolegend", new bool(true));
+  plot->append("stream", new double(.75));
+  plot->append("data", new String("dist"));
+  hmm->append("plot", plot);
+
+  plot = new KeyValueGraph();
+  plot->append("title", new String("dp, dq"));
+  plot->append("dataid", new bool(true));
+  plot->append("autolegend", new bool(true));
+  plot->append("stream", new double(.75));
+  plot->append("data", new String("dpSpeed"));
+  plot->append("data", new String("dqSpeed"));
+  hmm->append("plot", plot);
+
+  plot = new KeyValueGraph();
+  plot->append("title", new String("p, q"));
+  plot->append("dataid", new bool(true));
+  plot->append("autolegend", new bool(true));
+  plot->append("stream", new double(.75));
+  plot->append("data", new String("pSpeed"));
+  plot->append("data", new String("qSpeed"));
+  hmm->append("plot", plot);
+
+#ifdef with_object_emission
+  hmm->append("data", "pBSpeed", new arr(pBSpeed));
+  hmm->append("data", "qBSpeed", new arr(qBSpeed));
+
+  plot = new KeyValueGraph();
+  plot->append("title", new String("pBSpeed, qBSpeed"));
+  plot->append("dataid", new bool(true));
+  plot->append("autolegend", new bool(true));
+  plot->append("stream", new double(.75));
+  plot->append("data", new String("pBSpeed"));
+  plot->append("data", new String("qBSpeed"));
+  kvg.append("plot", plot);
+#endif
+
+  kvg.append(STRINGS("hmm", subj, obj), hmm);
+  // }}}
+}
+#undef with_object_emission
+#undef update_mu_p
+#undef update_sigma_p
+#undef update_mu_q
+#undef updage_sigma_q
+#undef update_mu_dp
+#undef update_sigma_dp
+#undef update_mu_dq
+#undef update_sigma_dq
+// }}}
+// EM_z (single-agent) {{{
 //#define with_object_emission
 //#define update_mu_p
 //#define update_sigma_p
@@ -2868,7 +2982,7 @@ void KeyFramer::EM_r(KeyValueGraph &kvg, const String &bA, const String &bB) {
 //#define update_sigma_dp
 //#define update_mu_dq
 //#define update_sigma_dq
-void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
+void KeyFramer::EM_z(KeyValueGraph &kvg, const String &bA, const String &bB) {
   // Computing other BAMS {{{
   double alpha = .3;
   bool force = false;
@@ -2890,14 +3004,14 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
   computeSpeed(bA_dQuatSmooth, force);
   // }}}
   // Observations {{{
-  arr pSpeed = s->g4d->query("posSmoothSpeed", bA);
-  arr qSpeed = s->g4d->query("quatSmoothSpeed", bA);
+  arr pSpeed = g4d().query("posSmoothSpeed", bA);
+  arr qSpeed = g4d().query("quatSmoothSpeed", bA);
 #ifdef with_object_emission
-  arr pBSpeed = s->g4d->query("posSmoothSpeed", bB);
-  arr qBSpeed = s->g4d->query("quatSmoothSpeed", bB);
+  arr pBSpeed = g4d().query("posSmoothSpeed", bB);
+  arr qBSpeed = g4d().query("quatSmoothSpeed", bB);
 #endif
-  arr dpSpeed = s->g4d->query(bA_dPosSmoothSpeed, bB);
-  arr dqSpeed = s->g4d->query(bA_dQuatSmoothSpeed, bB);
+  arr dpSpeed = g4d().query(bA_dPosSmoothSpeed, bB);
+  arr dqSpeed = g4d().query(bA_dQuatSmoothSpeed, bB);
   uint T = pSpeed.d0;
   // }}}
   // Parameters & other {{{
@@ -2949,6 +3063,7 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
 #endif
   normalizeDist(phi_zmr);
   //p_z = my_sum(p_zmm, 0);
+  //tensorEquation(p_z, p_zmm, TUP(0));
   
   phi_mpq = { 50, 1,
               1, 1,
@@ -3112,9 +3227,11 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
       //normalizeDist(qzmm[t]());
 
       //qmp[t]() = my_sum(qzmm[t], 1);
+      //tensorMarginal(qmp[t](), qzmm[t], TUP(1));
       //normalizeDist(qmp[t]());
 
       //qmq[t]() = my_sum(qzmm[t], 2);
+      //tensorMarginal(qmq[t](), qzmm[t], TUP(2));
       //normalizeDist(qmq[t]());
     }
 
@@ -3270,7 +3387,7 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
 #undef update_mu_dq
 #undef update_sigma_dq
 // }}}
-// EM_c (multi-agent) {{{
+// EM_z (multi-agent) {{{
 #define with_object_emission
 //#define update_mu_p
 //#define update_sigma_p
@@ -3280,7 +3397,7 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
 //#define update_sigma_dp
 //#define update_mu_dq
 //#define update_sigma_dq
-void KeyFramer::EM_c(KeyValueGraph &kvg, const StringA &bA, const String &bB) {
+void KeyFramer::EM_z(KeyValueGraph &kvg, const StringA &bA, const String &bB) {
   // Computing other BAMS {{{
   double alpha = .3;
   bool force = false;
@@ -3307,19 +3424,19 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const StringA &bA, const String &bB) {
   }
   // }}}
   // Observations {{{
-  uint T = s->g4d->getNumFrames();
+  uint T = g4d().numFrames();
   arr pSpeed(A, T), qSpeed(A, T);
   arr dpSpeed(A, T), dqSpeed(A, T);
   
   for(uint a = 0; a < A; a++) {
-    pSpeed[a]() = s->g4d->query("posSmoothSpeed", bA(a));
-    qSpeed[a]() = s->g4d->query("quatSmoothSpeed", bA(a));
-    dpSpeed[a]() = s->g4d->query(bA_dPosSmoothSpeed(a), bB);
-    dqSpeed[a]() = s->g4d->query(bA_dQuatSmoothSpeed(a), bB);
+    pSpeed[a]() = g4d().query("posSmoothSpeed", bA(a));
+    qSpeed[a]() = g4d().query("quatSmoothSpeed", bA(a));
+    dpSpeed[a]() = g4d().query(bA_dPosSmoothSpeed(a), bB);
+    dqSpeed[a]() = g4d().query(bA_dQuatSmoothSpeed(a), bB);
   }
 #ifdef with_object_emission
-  arr pBSpeed = s->g4d->query("posSmoothSpeed", bB);
-  arr qBSpeed = s->g4d->query("quatSmoothSpeed", bB);
+  arr pBSpeed = g4d().query("posSmoothSpeed", bB);
+  arr qBSpeed = g4d().query("quatSmoothSpeed", bB);
 #endif
   // }}}
   // Parameters & other {{{
@@ -3371,6 +3488,7 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const StringA &bA, const String &bB) {
 #endif
   normalizeDist(phi_zmr);
   //p_z = my_sum(p_zmm, 0);
+  //tensorMarginal(p_z, p_zmm, TUP(0));
   
   phi_mpq = { 50, 1,
               1, 1,
@@ -3549,9 +3667,11 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const StringA &bA, const String &bB) {
       //normalizeDist(qzmm[t]());
 
       //qmp[t]() = my_sum(qzmm[t], 1);
+      //tensorMarginal(qmp[t](), qzmm[t], TUP(1));
       //normalizeDist(qmp[t]());
 
       //qmq[t]() = my_sum(qzmm[t], 2);
+      //tensorMarginal(qmq[t](), qzmm[t], TUP(2));
       //normalizeDist(qmq[t]());
     }
 
@@ -3708,88 +3828,13 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const StringA &bA, const String &bB) {
 #undef update_sigma_dq
 // }}}
 
-// playScene (single-agent) {{{
-void KeyFramer::playScene(const String &b) {
-  KeyValueGraph kvg;
-  arrL vits;
-  for(String bO: s->g4d->getNames()) {
-    if(s->g4d->isObject(bO)) {
-      kvg.clear();
-      EM_c(kvg, b, bO);
-      vits.append(kvg.getItem("data", "vit")->getValue<arr>());
-    }
-  }
-
-  uint numF = vits(0)->N;
-  for(uint f = 0; f < numF; f++) {
-    uint i = 0;
-    for(String bO: s->g4d->getNames()) {
-      if(s->g4d->isObject(bO)) {
-        ors::Body *body = s->kw->getBodyByName(bO);
-        for(ors::Shape *shape: body->shapes) {
-          if(vits(i)->operator()(f)) {
-            shape->color[0] = 1;
-            shape->color[1] = .5;
-            shape->color[2] = .5;
-          }
-          else {
-            shape->color[0] = 1;
-            shape->color[1] = 1;
-            shape->color[2] = 1;
-          }
-        }
-        i++;
-      }
-    }
-    updateOrs(f, true);
-  }
-}
-// }}}
-// playScene (multi-agent) {{{
-void KeyFramer::playScene(const StringA &bb) {
-  KeyValueGraph kvg;
-  arrL vits;
-  for(String bO: s->g4d->getNames()) {
-    if(s->g4d->isObject(bO)) {
-      kvg.clear();
-      EM_c(kvg, bb, bO);
-      vits.append(kvg.getItem("data", "vit")->getValue<arr>());
-    }
-  }
-
-  uint numF = vits(0)->N;
-  for(uint f = 0; f < numF; f++) {
-    uint i = 0;
-    for(String bO: s->g4d->getNames()) {
-      if(s->g4d->isObject(bO)) {
-        ors::Body *body = s->kw->getBodyByName(bO);
-        for(ors::Shape *shape: body->shapes) {
-          if(vits(i)->operator()(f)) {
-            shape->color[0] = 1;
-            shape->color[1] = .5;
-            shape->color[2] = .5;
-          }
-          else {
-            shape->color[0] = 1;
-            shape->color[1] = 1;
-            shape->color[2] = 1;
-          }
-        }
-        i++;
-      }
-    }
-    updateOrs(f, true);
-  }
-}
-// }}}
-
 void KeyFramer::testSmoothing(KeyValueGraph &kvg, const String &bA, double alpha) {
   computeFilter(STRING("pos"), alpha, true);
   computeSmooth(STRING("pos"), alpha, true);
   computeSpeed(STRINGS("pos", "posFilter", "posSmooth"), true);
-  arr pSpeed_orig = s->g4d->query("posSpeed", bA);
-  arr pSpeed_smooth = s->g4d->query("posSmoothSpeed", bA);
-  arr pSpeed_filter = s->g4d->query("posFilterSpeed", bA);
+  arr pSpeed_orig = g4d().query("posSpeed", bA);
+  arr pSpeed_smooth = g4d().query("posSmoothSpeed", bA);
+  arr pSpeed_filter = g4d().query("posFilterSpeed", bA);
   kvg.append("data", "pSpeed_orig", new arr(pSpeed_orig));
   kvg.append("data", "pSpeed_smooth", new arr(pSpeed_smooth));
   kvg.append("data", "pSpeed_filter", new arr(pSpeed_filter));
@@ -3809,7 +3854,118 @@ void KeyFramer::objFeatures(KeyValueGraph &feats, const String &b, uint fnum) {
 
   feats.append("fnum", new double(fnum));
   // TODO only xy features for now.
-  arr pos = s->g4d->query("pos", b, fnum);
+  arr pos = g4d().query("pos", b, fnum);
   feats.append("f_pos", new arr(pos.sub(0, 1)));
+}
+
+void KeyFramer::process(KeyValueGraph &kvg, const StringA &name_subjs, const StringA &name_objs) {
+  for(auto name_subj: name_subjs)
+    for(auto name_obj: name_objs)
+      process(kvg, name_subj, name_obj);
+}
+
+// process {{{
+void KeyFramer::process(KeyValueGraph &kvg, const String &name_subj, const String &name_obj) {
+  if(g4d().digits().contains(name_subj)) {
+    EM_z_with_c(kvg, name_subj, name_obj);
+    return;
+  }
+  const StringA &sublimbs = g4d().sublimbs(name_subj);
+
+  uint ind_subj, ind_obj, ind_sublimb;
+  ind_subj = g4d().subjects().findValue(name_subj);
+  ind_obj = g4d().objects().findValue(name_obj);
+
+  arr *p_vit = NULL;
+  for(const String &sublimb: sublimbs) {
+    ind_sublimb = g4d().subjects().findValue(sublimb);
+    process(kvg, sublimb, name_obj);
+    if(!p_vit)
+      p_vit = kvg.getValue<arr>("vit");
+    for(uint f = 0; f < g4d().numFrames(); f++)
+      if((*p_vit)(ind_subj, ind_obj, f) == 0)
+        (*p_vit)(ind_subj, ind_obj, f) = (*p_vit)(ind_sublimb, ind_obj, f);
+  }
+}
+// }}}
+
+void KeyFramer::playScene(KeyValueGraph &kvg, const StringA &name_subjs, bool video) {
+  CHECK(name_subjs.N <= 6, "Not done yet this many colors");
+  VideoEncoder_x264_simple *vid;
+  if(video)
+   vid = new VideoEncoder_x264_simple(STRING("z.video.h264"), 80, 0, true);
+
+  double gray[3] = { 1, 1, 1 };
+  double col_subj[6][3] = {
+    { 1, 0, 0 },
+    { 0, 1, 0 },
+    { 0, 0, 1 },
+    { 1, 1, 0 },
+    { 1, 0, 1 },
+    { 0, 1, 1 }
+  };
+  double col_obj[6][3] = {
+    { 1, .2, .2 },
+    { .2, 1, .2 },
+    { .2, .2, 1 },
+    { 1, 1, .2 },
+    { 1, .2, 1 },
+    { .2, 1, 1 }
+  };
+
+  arr *p_vit = kvg.getValue<arr>("vit");
+
+  for(uint f = 0; f < g4d().numFrames(); f++) {
+    for(uint ind_obj = 0; ind_obj < g4d().objects().N; ind_obj++)
+      for(ors::Shape *shape: kw().getBodyByName(g4d().objects().elem(ind_obj))->shapes)
+          memcpy(shape->color, gray, 3*sizeof(double));
+
+    for(uint ns = 0; ns < name_subjs.N; ns++) {
+      auto name_subj = name_subjs(ns);
+      int ind_subj = g4d().subjects().findValue(name_subj);
+      for(const String &digit: g4d().digitsof(name_subj))
+        for(ors::Shape *shape: kw().getBodyByName(digit)->shapes)
+          memcpy(shape->color, col_subj[ns], 3*sizeof(double));
+      for(uint ind_obj = 0; ind_obj < g4d().objects().N; ind_obj++)
+        for(ors::Shape *shape: kw().getBodyByName(g4d().objects().elem(ind_obj))->shapes)
+          if((*p_vit)(ind_subj, ind_obj, f))
+            memcpy(shape->color, col_obj[ns], 3*sizeof(double));
+    }
+    updateOrs(f, true);
+    flip_image(kw().gl().captureImage);
+    if(video)
+      vid->addFrame(kw().gl().captureImage);
+  }
+  if(video)
+    vid->close();
+}
+
+void KeyFramer::playScene(KeyValueGraph &kvg, const String &name_subj, bool video) {
+  VideoEncoder_x264_simple *vid;
+  if(video) vid = new VideoEncoder_x264_simple(STRING("z.video.h264"), 80, 0, true);
+
+  double gray[3] = { 1, 1, 1 };
+  double col_subj[3] = { 1, 0, 0 };
+  double col_obj[3] = { 1, .5, .5 };
+
+  for(const String &digit: g4d().digitsof(name_subj))
+    for(ors::Shape *shape: kw().getBodyByName(digit)->shapes)
+      memcpy(shape->color, col_subj, 3*sizeof(double));
+
+  int ind_subj = g4d().subjects().findValue(name_subj);
+  arr *p_vit = kvg.getValue<arr>("vit");
+  for(uint f = 0; f < g4d().numFrames(); f++) {
+    for(uint ind_obj = 0; ind_obj < g4d().objects().N; ind_obj++)
+      for(ors::Shape *shape: kw().getBodyByName(g4d().objects().elem(ind_obj))->shapes)
+        if((*p_vit)(ind_subj, ind_obj, f))
+          memcpy(shape->color, col_obj, 3*sizeof(double));
+        else
+          memcpy(shape->color, gray, 3*sizeof(double));
+    updateOrs(f, true);
+    if(video)
+      vid->addFrame(kw().gl().captureImage);
+  }
+  if(video)
+    vid->close();
 }
 

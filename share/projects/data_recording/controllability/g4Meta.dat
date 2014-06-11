@@ -1,5 +1,0 @@
-sensor rh rh:thumb { name = "rh:thumb", hid = 0, sid = 0, agent }
-sensor rh rh:index { name = "rh:index", hid = 0, sid = 1, agent }
-sensor rh rh:middle { name = "rh:middle", hid = 0 , sid = 2, agent }
-sensor rh rh:back { name = "rh:back", hid = 1, sid = 1, agent }
-sensor sbox { name = "sbox", hid = 2, sid = 0, object }

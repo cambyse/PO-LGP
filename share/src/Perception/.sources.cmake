@@ -1,7 +1,6 @@
 set(SOURCES ./audio.h
 ./pointcloud.cpp
 ./opencv.h
-./g4data_t.h
 ./avutil.cpp
 ./libcolorseg.cpp
 ./shapeFitter.cpp
