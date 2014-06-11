@@ -128,7 +128,7 @@ void ors::Body::parseAts(KinematicWorld& G) {
   Item* item;
   // a mesh which consists of multiple convex sub meshes creates multiple
   // shapes that belong to the same body
-  item = ats.getItem("mesh");
+  item = ats.getItem("meshes");
   if(item){
     MT::FileToken *file = item->getValue<MT::FileToken>();
     CHECK(file,"somethings wrong");
@@ -138,10 +138,14 @@ void ors::Body::parseAts(KinematicWorld& G) {
       new Shape(G, *this);
     }else{  // if .obj file create Shape for all submeshes
       auto subMeshPositions = getSubMeshPositions(file->name);
-      for (auto parsing_pos : subMeshPositions) {
+      for(uint i=0;i<subMeshPositions.d0;i++){
+        auto parsing_pos = subMeshPositions[i];
         Shape *s = new Shape(G, *this);
-        s->mesh.parsing_pos_start = std::get<0>(parsing_pos);
-        s->mesh.parsing_pos_end = std::get<1>(parsing_pos);
+        s->mesh.parsing_pos_start = parsing_pos(0);
+        s->mesh.parsing_pos_end = parsing_pos(1);
+        s->mesh.readObjFile(file->getIs());
+        s->mesh.makeConvexHull();
+        s->type=meshST;
       }
     }
   }
@@ -1544,7 +1548,7 @@ void ors::KinematicWorld::write(std::ostream& os) const {
   for(Shape *s: shapes) {
     os <<"shape ";
     if(s->name.N) os <<s->name <<' ';
-    os <<"(" <<(s->body?s->body->name:"") <<"){ ";
+    os <<"(" <<(s->body?(char*)s->body->name:"") <<"){ ";
     s->write(os);  os <<" }\n";
   }
   os <<std::endl;
@@ -2174,49 +2178,6 @@ double forceClosureFromProxies(ors::KinematicWorld& ORS, uint bodyIndex, double 
   return fc;
 }
 
-//===========================================================================
-// Util
-/**
- * @brief Return the position of the submesh in the obj file in bytes (can be
- * used by fseek).
- *
- * @param filename file to parse.
- */
-MT::Array<std::tuple<long, long> > getSubMeshPositions(const char* filename) {
-  CHECK(MT::String(filename).endsWith("obj"),
-        "getSubMeshPositions parses only obj files.");
-  FILE* file;
-  char buf[128];
-  file = fopen(filename, "r");
-  CHECK(file,
-        "can't open data file " << filename << "; cwd is " << getcwd_string());
-
-  int flag = 0;
-  long start_pos = 0;
-  long end_pos = 0;
-
-  MT::Array<std::tuple<long, long> > result;
-  while(fscanf(file, "%s", buf) != EOF) {
-    switch(buf[0]) {
-      case 'v': {
-        if (flag > 0) {
-          end_pos = ftell(file) - 1;
-          auto tmp = std::make_tuple(start_pos, end_pos);
-          result.append(tmp);
-          start_pos = end_pos;
-          flag =0; }
-      } break;
-      case 'f': {
-        flag=1;
-      } break;
-    }
-  }
-
-  end_pos = ftell(file) - 1;
-  auto tmp = std::make_tuple(start_pos, end_pos);
-  result.append(tmp);
-  return result;
-}
 
 //===========================================================================
 //-- template instantiations

@@ -105,6 +105,8 @@ struct Mesh {
 //
 
 stdOutPipe(Mesh);
+uintA getSubMeshPositions(const char* filename);
+
 
 
 //===========================================================================

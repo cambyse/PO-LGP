@@ -256,6 +256,9 @@ void test_Loading_submeshes()
 {
     ors::Mesh mesh;
     mesh.readObjFile(FILE("chair_back_decomposed.obj"));
+    OpenGL gl;
+    gl.add(ors::glDrawMesh, &mesh);
+    gl.watch();
 }
 
 void AssembleChair(){
@@ -411,12 +414,9 @@ for (uint i=0;i<5;i++)  {
 int main(int argc,char **argv){
   MT::initCmdLine(argc,argv);
 
-  //testGraspHeuristic();
- // inhand();
-//  pickandplace(ARRAY(1.0,-1.0,0.5));
-//testPickAndPlace("leg4",ARRAY(0.0,-1.0,0.8));
-  //AssembleChair();
-  test_Loading_submeshes();
+// testPickAndPlace("leg4",ARRAY(0.0,-1.0,0.8));
+  AssembleChair();
+// test_Loading_submeshes();
 //testPickAndPlace("leg4",ARRAY(1.0,-1.0,0.5));
  // pickandplace(ARRAY(1.0,1.0,0.5));
   return 0;

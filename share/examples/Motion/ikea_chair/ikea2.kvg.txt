@@ -11,7 +11,7 @@ body  leg2 { X=<T t(.5 .6  1.0) > glue rel_includes_mesh_center=false}
 body  leg3 { X=<T t(.5 .8  1.0) > glue rel_includes_mesh_center=false}
 body  leg4 { X=<T t(.5 1.0  1.0) > glue rel_includes_mesh_center=false}
 
-body  chair_back { X=<T t(.5 1.4  1.0)> glue }
+body  chair_back { X=<T t(.5 1.4  1.0)> meshes='chair_back_decomposed.obj' color=[.3 .9 .1] glue }
 body  chair_sitting { X=<T t(0. -1. 1.0) d(00 1 0 0)> glue }
 
 #body target2{ contact, type=0, X=<T t(.5 .2 .7) t( .0 .1 0) d(50 0 0 1) d(30 0 1 0)>, size=[.1 .1 .15 .02], color=[.3 .9 .1] }
@@ -24,7 +24,7 @@ shape leg3(leg3){ contact, type=3, mesh='chair_leg_scaled.off', color=[.3 .9 .1]
 shape leg4(leg4){ contact, type=3, mesh='chair_leg_scaled.off', color=[.3 .9 .1] }
 
 #shape chair_back_main(chair_back){ type=3,rel=<T t(0 0 0)> mesh='chair_back_scaled.off', color=[.3 .9 .1] } #-0.05
-shape chair_back_main(chair_back){ type=3,rel=<T t(0 0 0)> mesh='chair_back_decomposed.obj', color=[.3 .9 .1] } #-0.05
+#shape chair_back_main(chair_back){ type=3,rel=<T t(0 0 0)> ,  } #-0.05
 #shape chair_back(chair_back){  contact, type=4, rel=<T t(0 0.075 0.015) d(90 0 1 0)>, size = [0.1 0.1 0.15 0.015]  , color=[.3 .9 .1] }
 shape chair_back(chair_back){  contact, type=4,rel=<T t(0.01 0.0 -0.08) d(90 1 0 0)>, size = [0.1 0.1 0.15 0.015]  , color=[.3 .9 .1] }
 
