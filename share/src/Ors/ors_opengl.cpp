@@ -243,9 +243,10 @@ void displayState(const arr& x, ors::KinematicWorld& G, const char *tag){
   G.gl().watch(tag);
 }
 
-void displayTrajectory(const arr& x, int steps, const ors::KinematicWorld& G, const char *tag, double delay) {
-  ors::KinematicWorld Gcopy;
-  Gcopy.copy(G,true);
+void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, const char *tag, double delay) {
+//  G.gl().update();
+  ors::KinematicWorld& Gcopy = G;
+//  Gcopy.copy(G,true);
   uint k, t, T=x.d0-1;
   if(!steps) return;
   uint num;
