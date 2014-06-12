@@ -15,7 +15,7 @@ if(WITH_FLYCAP)
     add_definitions(-DFLYCAP_INSTALLED)
     add_library(${TARGET} SHARED ${SOURCES})
     target_link_libraries(${TARGET} 
-            LINK_PRIVATE Core flycapture)
+            LINK_PRIVATE Core devTools flycapture)
 
   else()
     message(STATUS "FlyCapture camera support not built because libflycapture or headers not found (checked in ${FLYCAP_ROOT})")

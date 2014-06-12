@@ -2,6 +2,7 @@
 #include <Core/util.h>
 #include <flycapture/FlyCapture2.h>
 #include "flycap.h"
+#include <devTools/logging.h>
 
 REGISTER_MODULE(FlycapPoller)
 
@@ -18,6 +19,9 @@ const unsigned int c_flycap_size = c_flycap_width * c_flycap_height * c_flycap_b
 
 using namespace FlyCapture2;
 using namespace MLR;
+using namespace MT;
+
+SET_LOG(flycap, LogLevel::INFO)
 
 //===========================================================================
 //
@@ -62,7 +66,7 @@ struct sFlycapInterface {
 			timestamp = (double)ts.cycleSeconds + (((double)ts.microSeconds) / 1e6);
 			return true;
 		} else {
-			tout << "Could not grab image: " << e;
+			ERROR(flycap, STRING("Could not grab image: " << e.GetDescription()));
 			return false;
 		}
 	}
