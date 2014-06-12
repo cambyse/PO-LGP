@@ -20,6 +20,7 @@ const unsigned int c_flycap_size = c_flycap_width * c_flycap_height * c_flycap_b
 using namespace FlyCapture2;
 using namespace MLR;
 using namespace MT;
+using namespace std;
 
 SET_LOG(flycap, LogLevel::INFO)
 
@@ -37,14 +38,16 @@ namespace {
 	}
 }
 
+namespace MLR {
+
 struct sFlycapInterface {
 	Camera cam;
 
 	sFlycapInterface(int cameraID) {
 		BusManager bm;
-		PGRGuid *id;
-		CHECK_ERROR(bm.GetCameraFromIndex(cameraID, id));
-		CHECK_ERROR(cam.Connect(id));
+		PGRGuid id;
+		CHECK_ERROR(bm.GetCameraFromSerialNumber(cameraID, &id));
+		CHECK_ERROR(cam.Connect(&id));
 	}
 	~sFlycapInterface() {
 		cam.Disconnect();
@@ -58,9 +61,11 @@ struct sFlycapInterface {
 	}
 
 	bool grab(byteA& image, double& timestamp, unsigned int timeout=1<<31) {
-		Image img(image.p, c_flycap_size);
+		Image img;
 		Error e = cam.RetrieveBuffer(&img);
 		if(e == PGRERROR_OK) {
+			image.resize(img.GetRows(), img.GetCols(), img.GetBitsPerPixel() / 8);
+			memcpy(image.p, img.GetData(), img.GetRows() * img.GetCols() * img.GetBitsPerPixel() / 8);
 			// TODO: use more accurate embedded timestamp
 			TimeStamp ts(img.GetTimeStamp());
 			timestamp = (double)ts.cycleSeconds + (((double)ts.microSeconds) / 1e6);
@@ -70,10 +75,44 @@ struct sFlycapInterface {
 			return false;
 		}
 	}
-
 };
 
+vector<uint32_t> get_flycap_ids() {
+	BusManager bus;
+	unsigned int num_cams;
+	CHECK_ERROR(bus.GetNumOfCameras(&num_cams));
+	
+	vector<uint32_t> result;
+	for(unsigned int i = 0; i < num_cams; ++i) {
+		unsigned int serial;
+		CHECK_ERROR(bus.GetCameraSerialNumberFromIndex(i, &serial));
+		result.push_back(serial); 
+	}
+	return result;
+}
 
+
+
+Mutex start_lock;
+
+FlycapInterface::FlycapInterface(int cameraID) : s(new sFlycapInterface(cameraID)), streaming(false) {
+
+}
+FlycapInterface::~FlycapInterface() {
+	s->stop();
+	delete s;
+}
+void FlycapInterface::startStreaming() {
+	if(!streaming) {
+		s->start();
+		streaming = true;
+	}
+}
+bool FlycapInterface::grab(byteA& image, double& timestamp, unsigned int timeout) {
+	startStreaming();	
+	return s->grab(image, timestamp, timeout);
+}
+}
 
 //===========================================================================
 //
@@ -99,20 +138,3 @@ void FlycapPoller::close() {
   tout(this) << "closed successfully" << endl;
 }
 
-namespace MLR {
-	Mutex start_lock;
-
-	FlycapInterface::FlycapInterface(int cameraID) : s(new ::sFlycapInterface(cameraID)), streaming(false) {
-
-	}
-	FlycapInterface::~FlycapInterface() {
-
-		delete s;
-	}
-	void FlycapInterface::startStreaming() {
-
-	}
-	bool FlycapInterface::grab(byteA& image, double& timestamp, unsigned int timeout) {
-		return s->grab(image, timestamp, timeout);
-	}
-}

@@ -10,16 +10,23 @@ using namespace MLR;
 
 int main(int argc, char* argv[])
 {
+	int serial = 0;
+	if(argc > 1) {
+		serial = strtol(argv[1], NULL, 10);
+	}
+
+	cout << "Opening camera with serial number " << serial << endl;
+
 	try {
 		OpenGL gl;
-		FlycapInterface flycap(0);
+		FlycapInterface flycap(serial);
 		flycap.startStreaming();
 	
-		byteA rgb;
 		while(true) {
 			double timestamp;
-			flycap.grab(rgb, timestamp);
-			gl.update();
+			if(flycap.grab(gl.background, timestamp)) {
+				gl.update();
+			}
 		}
 	} catch(const std::exception& ex) {
 		cerr << ex.what() << endl;

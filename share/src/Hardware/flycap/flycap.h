@@ -3,10 +3,12 @@
 #include <sys/time.h>
 #include <Core/module.h>
 #include <exception>
+#include <vector>
+
+namespace MLR {
 
 struct sFlycapInterface;
 
-namespace MLR {
 class FlycapInterface {
 private:
 	struct sFlycapInterface *s;
@@ -30,10 +32,12 @@ public:
 	}
 };
 
+std::vector<uint32_t> get_flycap_ids();
+
 } // MLR
 
 struct FlycapPoller: Module {
-  struct sFlycapInterface *s;
+  struct MLR::sFlycapInterface *s;
 
   ACCESS(byteA, rgb);
 
