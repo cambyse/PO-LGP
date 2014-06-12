@@ -6,8 +6,10 @@ if(FLYCAPTURE_LIBRARY)
 
 	include(.sources.cmake)
 	add_executable(x_${NAME} ${SOURCES})
+	add_executable(flycap_serials flycap_serials.cpp)
 	
 	target_link_libraries(x_${NAME} Hardware_flycap Gui)
+	target_link_libraries(flycap_serials Hardware_flycap)
 	
 	mlr_example_test(${NAME})
 
