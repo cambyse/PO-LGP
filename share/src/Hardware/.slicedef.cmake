@@ -3,4 +3,5 @@ set(CURRENT_SLICE
 kinect
 racer
 ueyecamera
+flycap
  )

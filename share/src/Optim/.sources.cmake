@@ -1,1 +1,1 @@
-set(SOURCES ./cmaes.c ./benchmarks.cpp ./opt-rprop.cpp ./search_CMA.cpp ./opt-convert.cpp ./cmaes.h ./cmaes_interface.h ./opt-newton.h ./benchmarks.h ./opt-constrained.h ./optimization.cpp ./search.h ./optimization.h ./opt-constrained.cpp ./opt-newton.cpp ./opt-rprop.h)
+set(SOURCES ./opt-rprop.h ./search_CMA.cpp ./benchmarks.cpp ./cmaes_interface.h ./cmaes.h ./opt-convert.cpp ./cmaes.c ./opt-constrained.h ./opt-newton.cpp ./opt-constrained.cpp ./optimization.h ./search.h ./opt-newton.h ./optimization.cpp ./opt-rprop.cpp ./benchmarks.h)

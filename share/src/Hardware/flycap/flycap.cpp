@@ -16,6 +16,9 @@ const unsigned int c_flycap_bpp = 24;
 const unsigned int c_flycap_bypp = c_flycap_bpp / 8;
 const unsigned int c_flycap_size = c_flycap_width * c_flycap_height * c_flycap_bypp;
 
+using namespace FlyCapture2;
+using namespace MLR;
+
 //===========================================================================
 //
 // C++ interface to flycap
@@ -23,15 +26,45 @@ const unsigned int c_flycap_size = c_flycap_width * c_flycap_height * c_flycap_b
 
 TStream tout(cout);
 
-struct sFlycapInterface {
-	sFlycapInterface(int cameraID) {
+namespace {
+	void CHECK_ERROR(const Error e) {
+		if(e != PGRERROR_OK)
+			throw FlycapException(e.GetDescription());
+	}
+}
 
+struct sFlycapInterface {
+	Camera cam;
+
+	sFlycapInterface(int cameraID) {
+		BusManager bm;
+		PGRGuid *id;
+		CHECK_ERROR(bm.GetCameraFromIndex(cameraID, id));
+		CHECK_ERROR(cam.Connect(id));
 	}
 	~sFlycapInterface() {
-
+		cam.Disconnect();
 	}
+
+	void start() {
+		cam.StartCapture();
+	}
+	void stop() {
+		cam.StopCapture();
+	}
+
 	bool grab(byteA& image, double& timestamp, unsigned int timeout=1<<31) {
-		return true;
+		Image img(image.p, c_flycap_size);
+		Error e = cam.RetrieveBuffer(&img);
+		if(e == PGRERROR_OK) {
+			// TODO: use more accurate embedded timestamp
+			TimeStamp ts(img.GetTimeStamp());
+			timestamp = (double)ts.cycleSeconds + (((double)ts.microSeconds) / 1e6);
+			return true;
+		} else {
+			tout << "Could not grab image: " << e;
+			return false;
+		}
 	}
 
 };
