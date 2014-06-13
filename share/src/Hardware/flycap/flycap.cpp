@@ -48,6 +48,21 @@ struct sFlycapInterface {
 		PGRGuid id;
 		CHECK_ERROR(bm.GetCameraFromSerialNumber(cameraID, &id));
 		CHECK_ERROR(cam.Connect(&id));
+		// configure camera
+		FC2Config conf;
+		conf.grabMode = BUFFER_FRAMES;
+		conf.highPerformanceRetrieveBuffer = true;
+		conf.numBuffers = 50;
+		conf.isochBusSpeed = BUSSPEED_S_FASTEST;
+		CHECK_ERROR(cam.SetConfiguration(&conf));
+		Format7ImageSettings settings;
+		settings.mode = MODE_7;
+		settings.width = 1280;
+		settings.height = 1024;
+		settings.pixelFormat = PIXEL_FORMAT_RAW8;
+		CHECK_ERROR(cam.SetFormat7Configuration(&settings, 100.0f));
+		//CHECK_ERROR(cam.SetVideoModeAndFrameRate(VIDEOMODE_FORMAT7, FRAMERATE_FORMAT7));
+		//Image::SetDefaultColorProcessing(IPP);
 	}
 	~sFlycapInterface() {
 		cam.Disconnect();
@@ -61,13 +76,17 @@ struct sFlycapInterface {
 	}
 
 	bool grab(byteA& image, double& timestamp, unsigned int timeout=1<<31) {
-		Image img;
-		Error e = cam.RetrieveBuffer(&img);
+		Image buf;
+		Error e = cam.RetrieveBuffer(&buf);
 		if(e == PGRERROR_OK) {
-			image.resize(img.GetRows(), img.GetCols(), img.GetBitsPerPixel() / 8);
-			memcpy(image.p, img.GetData(), img.GetRows() * img.GetCols() * img.GetBitsPerPixel() / 8);
+			image.resize(c_flycap_height, c_flycap_width, 3);
+			Image target(image.p, c_flycap_size);
+			target.SetDimensions(c_flycap_height, c_flycap_width, 0, PIXEL_FORMAT_444YUV8, NONE);
+			buf.Convert(&target);
+
+			//memcpy(image.p, img.GetData(), img.GetRows() * img.GetCols() * img.GetBitsPerPixel() / 8);
 			// TODO: use more accurate embedded timestamp
-			TimeStamp ts(img.GetTimeStamp());
+			TimeStamp ts(buf.GetTimeStamp());
 			timestamp = (double)ts.cycleSeconds + (((double)ts.microSeconds) / 1e6);
 			return true;
 		} else {
