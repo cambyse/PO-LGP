@@ -22,10 +22,20 @@ int main(int argc, char* argv[])
 		FlycapInterface flycap(serial);
 		flycap.startStreaming();
 	
+		double start;
+		start = MT::clockTime();
+		unsigned int count = 0;
 		while(true) {
 			double timestamp;
 			if(flycap.grab(gl.background, timestamp)) {
 				gl.update();
+				++count;
+			}
+			if((count % 100) == 0) {
+				double now = MT::clockTime();
+				double per_frame = ((now - start) / 100.0);
+				clog << "Frame time: " << per_frame << " -- fps: " << (1.0/per_frame) << endl;
+				start = now;
 			}
 		}
 	} catch(const std::exception& ex) {
