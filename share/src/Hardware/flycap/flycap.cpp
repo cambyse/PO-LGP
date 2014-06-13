@@ -3,6 +3,7 @@
 #include <flycapture/FlyCapture2.h>
 #include "flycap.h"
 #include <devTools/logging.h>
+#include <iomanip>
 
 REGISTER_MODULE(FlycapPoller)
 
@@ -35,15 +36,35 @@ namespace {
 	void CHECK_ERROR(const Error e) {
 		if(e != PGRERROR_OK)
 			throw FlycapException(e.GetDescription());
+
+	}
+
+	FlyCapture2::PixelFormat mlr2fc(MLR::PixelFormat format) {
+		switch(format) {
+		case MLR::PIXEL_FORMAT_BGR8:
+			return FlyCapture2::PIXEL_FORMAT_BGR;
+		case MLR::PIXEL_FORMAT_RGB8:
+			return FlyCapture2::PIXEL_FORMAT_RGB8;
+		case MLR::PIXEL_FORMAT_YUV444_8:
+			throw FlycapException("Pixel format yuv444_8 not natively supported by Flycap 2");
+		case MLR::PIXEL_FORMAT_UYV444:
+			return FlyCapture2::PIXEL_FORMAT_444YUV8;
+		case MLR::PIXEL_FORMAT_UYV422:
+			return FlyCapture2::PIXEL_FORMAT_422YUV8;
+		default:
+			throw FlycapException("Specified pixel format not supported (no equivalent in flycap?)");
+		}
 	}
 }
 
 namespace MLR {
 
 struct sFlycapInterface {
-	Camera cam;
+	GigECamera cam;
+	Image targetImage;
+	FlyCapture2::PixelFormat output_format;
 
-	sFlycapInterface(int cameraID) {
+	sFlycapInterface(int cameraID, MLR::PixelFormat capture_fmt, MLR::PixelFormat output_fmt) {
 		BusManager bm;
 		PGRGuid id;
 		CHECK_ERROR(bm.GetCameraFromSerialNumber(cameraID, &id));
@@ -52,16 +73,25 @@ struct sFlycapInterface {
 		FC2Config conf;
 		conf.grabMode = BUFFER_FRAMES;
 		conf.highPerformanceRetrieveBuffer = true;
-		conf.numBuffers = 50;
+		conf.numBuffers = 1;
 		conf.isochBusSpeed = BUSSPEED_S_FASTEST;
 		CHECK_ERROR(cam.SetConfiguration(&conf));
-		Format7ImageSettings settings;
-		settings.mode = MODE_7;
+
+		GigEImageSettings settings;
 		settings.width = 1280;
 		settings.height = 1024;
-		settings.pixelFormat = PIXEL_FORMAT_RAW8;
-		CHECK_ERROR(cam.SetFormat7Configuration(&settings, 100.0f));
-		//CHECK_ERROR(cam.SetVideoModeAndFrameRate(VIDEOMODE_FORMAT7, FRAMERATE_FORMAT7));
+		settings.pixelFormat = mlr2fc(capture_fmt);
+
+		output_format = mlr2fc(output_fmt);
+		targetImage.SetDimensions(1024, 1280, 0, output_format, NONE);
+		CHECK_ERROR(cam.SetGigEImageSettings(&settings));
+
+		GigEStreamChannel cinfo;
+		cam.GetGigEStreamChannelInfo(0, &cinfo);
+		cinfo.packetSize = 9000;
+		cinfo.interPacketDelay = 0;
+		cam.SetGigEStreamChannelInfo(0, &cinfo);
+
 		//Image::SetDefaultColorProcessing(IPP);
 	}
 	~sFlycapInterface() {
@@ -80,14 +110,14 @@ struct sFlycapInterface {
 		Error e = cam.RetrieveBuffer(&buf);
 		if(e == PGRERROR_OK) {
 			image.resize(c_flycap_height, c_flycap_width, 3);
-			Image target(image.p, c_flycap_size);
-			target.SetDimensions(c_flycap_height, c_flycap_width, 0, PIXEL_FORMAT_444YUV8, NONE);
-			buf.Convert(&target);
+			targetImage.SetData(image.p, c_flycap_size);
+			buf.Convert(output_format, &targetImage);
 
 			//memcpy(image.p, img.GetData(), img.GetRows() * img.GetCols() * img.GetBitsPerPixel() / 8);
 			// TODO: use more accurate embedded timestamp
-			TimeStamp ts(buf.GetTimeStamp());
-			timestamp = (double)ts.cycleSeconds + (((double)ts.microSeconds) / 1e6);
+			/*TimeStamp ts(buf.GetTimeStamp());
+			timestamp = (double)ts.cycleSeconds + (((double)ts.microSeconds) / 1e6);*/
+			timestamp = clockTime();
 			return true;
 		} else {
 			ERROR(flycap, STRING("Could not grab image: " << e.GetDescription()));
@@ -114,7 +144,8 @@ vector<uint32_t> get_flycap_ids() {
 
 Mutex start_lock;
 
-FlycapInterface::FlycapInterface(int cameraID) : s(new sFlycapInterface(cameraID)), streaming(false) {
+FlycapInterface::FlycapInterface(int cameraID, MLR::PixelFormat capture_fmt, MLR::PixelFormat output_fmt) :
+		s(new sFlycapInterface(cameraID, capture_fmt, output_fmt)), streaming(false) {
 
 }
 FlycapInterface::~FlycapInterface() {

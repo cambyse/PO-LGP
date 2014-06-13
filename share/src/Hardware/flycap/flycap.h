@@ -4,6 +4,7 @@
 #include <Core/module.h>
 #include <exception>
 #include <vector>
+#include <Perception/pixel_format.h>
 
 namespace MLR {
 
@@ -14,7 +15,7 @@ private:
 	struct sFlycapInterface *s;
 	bool streaming;
 public:
-	FlycapInterface(int cameraID);
+	FlycapInterface(int cameraID, MLR::PixelFormat capture_format = MLR::PIXEL_FORMAT_BGR8, MLR::PixelFormat output_fmt = MLR::PIXEL_FORMAT_BGR8);
 	~FlycapInterface();
 
 	void startStreaming();
