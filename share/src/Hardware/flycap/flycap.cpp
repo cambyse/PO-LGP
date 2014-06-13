@@ -4,6 +4,8 @@
 #include "flycap.h"
 #include <devTools/logging.h>
 #include <iomanip>
+#include <deque>
+#include <condition_variable>
 
 REGISTER_MODULE(FlycapPoller)
 
@@ -59,10 +61,15 @@ namespace {
 
 namespace MLR {
 
+void image_callback(Image *pImage, const void* callbackData);
+
 struct sFlycapInterface {
 	GigECamera cam;
 	Image targetImage;
 	FlyCapture2::PixelFormat output_format;
+	deque<Image> captured_images;
+	mutex list_access;
+	condition_variable cv;
 
 	sFlycapInterface(int cameraID, MLR::PixelFormat capture_fmt, MLR::PixelFormat output_fmt) {
 		BusManager bm;
@@ -98,8 +105,18 @@ struct sFlycapInterface {
 		cam.Disconnect();
 	}
 
+	void add_image(Image* pImage) {
+		unique_lock<mutex> lck(list_access);
+		captured_images.push_back(*pImage);
+		if(captured_images.size() > 25) {
+			WARN(flycap, STRING("Capture queue growing, currently size " << captured_images.size()));
+		}
+
+		cv.notify_one();
+	}
+
 	void start() {
-		cam.StartCapture();
+		cam.StartCapture(&image_callback, this);
 	}
 	void stop() {
 		cam.StopCapture();
@@ -107,24 +124,32 @@ struct sFlycapInterface {
 
 	bool grab(byteA& image, double& timestamp, unsigned int timeout=1<<31) {
 		Image buf;
-		Error e = cam.RetrieveBuffer(&buf);
-		if(e == PGRERROR_OK) {
-			image.resize(c_flycap_height, c_flycap_width, 3);
-			targetImage.SetData(image.p, c_flycap_size);
-			buf.Convert(output_format, &targetImage);
+		{
+			unique_lock<mutex> lck(list_access);
+			if(captured_images.size() < 1) {
+				cv.wait(lck);
+			}
 
-			//memcpy(image.p, img.GetData(), img.GetRows() * img.GetCols() * img.GetBitsPerPixel() / 8);
-			// TODO: use more accurate embedded timestamp
-			/*TimeStamp ts(buf.GetTimeStamp());
-			timestamp = (double)ts.cycleSeconds + (((double)ts.microSeconds) / 1e6);*/
-			timestamp = clockTime();
-			return true;
-		} else {
-			ERROR(flycap, STRING("Could not grab image: " << e.GetDescription()));
-			return false;
+			buf = captured_images.front();
+			captured_images.pop_front();
 		}
+		image.resize(c_flycap_height, c_flycap_width, 3);
+		targetImage.SetData(image.p, c_flycap_size);
+		buf.Convert(output_format, &targetImage);
+
+		//memcpy(image.p, img.GetData(), img.GetRows() * img.GetCols() * img.GetBitsPerPixel() / 8);
+		// TODO: use more accurate embedded timestamp
+		/*TimeStamp ts(buf.GetTimeStamp());
+		timestamp = (double)ts.cycleSeconds + (((double)ts.microSeconds) / 1e6);*/
+		timestamp = clockTime();
+		return true;
 	}
 };
+
+void image_callback(Image *pImage, const void* callbackData) {
+	sFlycapInterface* cap = const_cast<sFlycapInterface*>((sFlycapInterface*)callbackData);
+	cap->add_image(pImage);
+}
 
 vector<uint32_t> get_flycap_ids() {
 	BusManager bus;
