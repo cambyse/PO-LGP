@@ -43,6 +43,8 @@ namespace {
 
 	FlyCapture2::PixelFormat mlr2fc(MLR::PixelFormat format) {
 		switch(format) {
+		case MLR::PIXEL_FORMAT_RAW8:
+			return FlyCapture2::PIXEL_FORMAT_RAW8;
 		case MLR::PIXEL_FORMAT_BGR8:
 			return FlyCapture2::PIXEL_FORMAT_BGR;
 		case MLR::PIXEL_FORMAT_RGB8:
@@ -133,11 +135,12 @@ struct sFlycapInterface {
 			buf = captured_images.front();
 			captured_images.pop_front();
 		}
+
+
 		image.resize(c_flycap_height, c_flycap_width, 3);
 		targetImage.SetData(image.p, c_flycap_size);
 		buf.Convert(output_format, &targetImage);
 
-		//memcpy(image.p, img.GetData(), img.GetRows() * img.GetCols() * img.GetBitsPerPixel() / 8);
 		// TODO: use more accurate embedded timestamp
 		/*TimeStamp ts(buf.GetTimeStamp());
 		timestamp = (double)ts.cycleSeconds + (((double)ts.microSeconds) / 1e6);*/

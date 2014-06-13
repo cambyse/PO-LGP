@@ -56,8 +56,8 @@ private:
 public:
 	GrabAndSave(int camID, const char* name, const MT::String& created, const bool& terminated) :
 		terminated(terminated), ready(false), id(camID), name(name),
-		cam(id, MLR::PIXEL_FORMAT_UYV444, MLR::PIXEL_FORMAT_UYV444),
-		enc(STRING("z." << name << "." << created << ".264"), 60, 0, MLR::PIXEL_FORMAT_UYV444),
+		cam(id, MLR::PIXEL_FORMAT_RAW8, MLR::PIXEL_FORMAT_RAW8),
+		enc(STRING("z." << name << "." << created << ".264"), 60, 0, MLR::PIXEL_FORMAT_RAW8),
 		times(enc.name()), start_time(ULONG_MAX) {
 	}
 
