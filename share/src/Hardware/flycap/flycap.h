@@ -39,7 +39,7 @@ std::vector<uint32_t> get_flycap_ids();
 struct FlycapPoller: Module {
   struct MLR::sFlycapInterface *s;
 
-  ACCESS(byteA, rgb);
+  ACCESS(byteA, image);
 
   FlycapPoller();
   virtual ~FlycapPoller();

@@ -148,8 +148,8 @@ void FlycapPoller::open() {
 }
 
 void FlycapPoller::step() {
-	Access_typed<byteA>::WriteToken token(&rgb);
-	s->grab(rgb(), rgb.tstamp());
+	Access_typed<byteA>::WriteToken token(&image);
+	s->grab(image(), image.tstamp());
 }
 
 void FlycapPoller::close() {
