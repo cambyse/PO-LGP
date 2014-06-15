@@ -447,6 +447,7 @@ void Quaternion::normalize() {
   double n=w*w + x*x + y*y + z*z;
   n=sqrt(n);
   w/=n; x/=n; y/=n; z/=n;
+  isZero=(w==1. || w==-1.);
 }
 
 /** @brief roughly, removes all ``components'' of the rotation that are not

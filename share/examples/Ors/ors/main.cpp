@@ -49,17 +49,19 @@ void TEST(Kinematics){
   };
 
   //ors::KinematicWorld G("test.ors");
-  ors::KinematicWorld G("../../../data/pr2_model/pr2_model.ors");
-  uint n=G.getJointStateDimension();
-  arr x(n);
-  ors::Vector vec;
+  ors::KinematicWorld G("kinematicTests.kvg");
+  //ors::KinematicWorld G("../../../data/pr2_model/pr2_model.ors");
+
   for(uint k=0;k<100;k++){
     ors::Body *b = G.bodies.rndElem();
+    ors::Vector vec;
     vec.setRandom();
+    arr x(G.getJointStateDimension());
     rndUniform(x,-.5,.5,false);
+//    x/=sqrt(sumOfSqr(x.subRange(0,3)));
 
-    cout <<"kinematicsPos: "; checkJacobian(MyFct(MyFct::Pos , G, b, vec)(), x, 1e-5);
-    cout <<"kinematicsVec: "; checkJacobian(MyFct(MyFct::Vec , G, b, vec)(), x, 1e-5);
+    cout <<"kinematicsPos:  "; checkJacobian(MyFct(MyFct::Pos , G, b, vec)(), x, 1e-5);
+    cout <<"kinematicsVec:  "; checkJacobian(MyFct(MyFct::Vec , G, b, vec)(), x, 1e-5);
     cout <<"kinematicsQuat: "; checkJacobian(MyFct(MyFct::Quat, G, b, vec)(), x, 1e-5);
 
     //checkJacobian(Convert(T1::f_hess, NULL), x, 1e-5);
@@ -487,7 +489,8 @@ void TEST(BlenderImport){
 
 int MAIN(int argc,char **argv){
   
-  //testBlenderImport();
+  testKinematics();
+  return 0;
 
   testLoadSave();
   testCopy();

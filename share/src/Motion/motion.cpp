@@ -511,21 +511,21 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
     for(uint i=0;i<=k;i++) configurations.append(new ors::KinematicWorld())->copy(MP.world, true);
   }
   //find matches
-#if 0 //TODO: make this efficient again!
-  uintA match(k+1); match=UINT_MAX;
-  boolA used(k+1); used=false;
-  uintA unused;
-  for(uint i=0;i<=k;i++) for(uint j=0;j<=k;j++){
-    if(!used(j) && x_bar[i]==configurations(j)->q){ //we've found a match
-      match(i)=j;
-      used(j)=true;
-      j=k;
+  if(!MP.world.operators.N){ //this efficiency gain only works without operators yet...
+    uintA match(k+1); match=UINT_MAX;
+    boolA used(k+1); used=false;
+    uintA unused;
+    for(uint i=0;i<=k;i++) for(uint j=0;j<=k;j++){
+      if(!used(j) && x_bar[i]==configurations(j)->q){ //we've found a match
+        match(i)=j;
+        used(j)=true;
+        j=k;
+      }
     }
+    for(uint i=0;i<=k;i++) if(!used(i)) unused.append(i);
+    for(uint i=0;i<=k;i++) if(match(i)==UINT_MAX) match(i)=unused.popFirst();
+    configurations.permute(match);
   }
-  for(uint i=0;i<=k;i++) if(!used(i)) unused.append(i);
-  for(uint i=0;i<=k;i++) if(match(i)==UINT_MAX) match(i)=unused.popFirst();
-  configurations.permute(match);
-#endif
   //apply potential graph operators
   for(ors::GraphOperator *op:MP.world.operators){
     for(uint i=0;i<=k;i++){

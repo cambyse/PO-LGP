@@ -40,7 +40,7 @@ SearchCMA::~SearchCMA(){
   delete s;
 }
 
-void SearchCMA::init(uint D, int mu, int lambda, arr &startPoint, double _startDev){
+void SearchCMA::init(uint D, int mu, int lambda, const arr &startPoint, double _startDev){
   CHECK(startPoint.N==D,"");
   arr startDev(D);
   startDev=_startDev;

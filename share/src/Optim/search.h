@@ -32,7 +32,7 @@ struct SearchCMA{
   void init(uint D, int mu=-1, int lambda=-1, double lo=-1., double hi=1.);
 
   /// instead of lo and hi, explicitly give a start point and standard deviation around this point
-  void init(uint D, int mu, int lambda, arr &startPoint, double _startDev);
+  void init(uint D, int mu, int lambda, const arr &startPoint, double _startDev);
 
   /// first call: generate initial random samples
   /// further calls: costs needs to contain the cost function values for all elements in samples; returns a new set of samples
