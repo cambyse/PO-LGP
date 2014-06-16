@@ -59,6 +59,13 @@ namespace {
 			throw FlycapException("Specified pixel format not supported (no equivalent in flycap?)");
 		}
 	}
+
+	struct ImageCapture {
+		Image image;
+		double timestamp;
+		ImageCapture(Image im, double timestamp) : image(image), timestamp(timestamp) {}
+		ImageCapture() : timestamp(0) {};
+	};
 }
 
 namespace MLR {
@@ -69,7 +76,7 @@ struct sFlycapInterface {
 	GigECamera cam;
 	Image targetImage;
 	FlyCapture2::PixelFormat output_format;
-	deque<Image> captured_images;
+	deque<ImageCapture> captured_images;
 	mutex list_access;
 	condition_variable cv;
 
@@ -87,6 +94,7 @@ struct sFlycapInterface {
 		CHECK_ERROR(cam.SetConfiguration(&conf));
 
 		GigEImageSettings settings;
+
 		settings.width = 1280;
 		settings.height = 1024;
 		settings.pixelFormat = mlr2fc(capture_fmt);
@@ -101,6 +109,10 @@ struct sFlycapInterface {
 		cinfo.interPacketDelay = 0;
 		cam.SetGigEStreamChannelInfo(0, &cinfo);
 
+		EmbeddedImageInfo info;
+		info.timestamp.onOff = true;
+		CHECK_ERROR(cam.SetEmbeddedImageInfo(&info));
+
 		Image::SetDefaultColorProcessing(IPP);
 	}
 	~sFlycapInterface() {
@@ -108,8 +120,9 @@ struct sFlycapInterface {
 	}
 
 	void add_image(Image* pImage) {
+		double timestamp = clockTime();
 		unique_lock<mutex> lck(list_access);
-		captured_images.push_back(*pImage);
+		captured_images.push_back(ImageCapture(*pImage, timestamp));
 		if(captured_images.size() > 25) {
 			WARN(flycap, STRING("Capture queue growing, currently size " << captured_images.size()));
 		}
@@ -125,26 +138,24 @@ struct sFlycapInterface {
 	}
 
 	bool grab(byteA& image, double& timestamp, unsigned int timeout=1<<31) {
-		Image buf;
+		ImageCapture ic;
 		{
 			unique_lock<mutex> lck(list_access);
 			if(captured_images.size() < 1) {
 				cv.wait(lck);
 			}
 
-			buf = captured_images.front();
+			ic = captured_images.front();
 			captured_images.pop_front();
 		}
 
 
 		image.resize(c_flycap_height, c_flycap_width, 3);
 		targetImage.SetData(image.p, c_flycap_size);
-		buf.Convert(output_format, &targetImage);
+		ic.image.Convert(output_format, &targetImage);
 
-		// TODO: use more accurate embedded timestamp
-		/*TimeStamp ts(buf.GetTimeStamp());
-		timestamp = (double)ts.cycleSeconds + (((double)ts.microSeconds) / 1e6);*/
-		timestamp = clockTime();
+		// TODO: figure out how to use the timestamp synchronization method of PtGrey TAN2014003 (ticket currently open) */
+		timestamp = ic.timestamp;
 		return true;
 	}
 };
