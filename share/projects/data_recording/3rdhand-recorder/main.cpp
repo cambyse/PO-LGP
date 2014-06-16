@@ -84,7 +84,7 @@ public:
 class RecordingSystem {
 private:
 	MT::String created;
-	GrabAndSave cam1, cam2;//, cam3;
+	GrabAndSave cam1, cam2, cam3;
 	VideoEncoder_x264_simple kinect_video, kinect_depth;
 	TimeTagFile kinect_video_times, kinect_depth_times;
 	AudioWriter_libav audio_writer;
@@ -109,9 +109,9 @@ protected:
 #pragma omp section
 			while(!terminated)
 				cam2.step();
-/*#pragma omp section
+#pragma omp section
 			while(!terminated)
-				cam3.step();*/
+				cam3.step();
 #pragma omp section
 			while(!terminated) {
 				audio_poller.read(audio_buf);
@@ -121,11 +121,11 @@ protected:
 			}
 #pragma omp section
 			while(!terminated && !ready) {
-				if(cam1.isReady() && cam2.isReady() /*&& cam3.isReady()*/) {
+				if(cam1.isReady() && cam2.isReady() && cam3.isReady()) {
 					start_time = MT::clockTime();
 					cam1.setActiveTime(start_time);
 					cam2.setActiveTime(start_time);
-					/*cam3.setActiveTime(start_time);*/
+					cam3.setActiveTime(start_time);
 					ready = true;
 				}
 			}
@@ -149,7 +149,7 @@ protected:
 public:
 	RecordingSystem(int id1, int id2, int id3) :
 		created(MT::getNowString()), cam1(id1, "cam1", created, terminated),
-		cam2(id2, "cam2", created, terminated), /*cam3(id3, "cam3", created, terminated),*/
+		cam2(id2, "cam2", created, terminated), cam3(id3, "cam3", created, terminated),
 		kinect_video(STRING("z.kinect_rgb." << created <<".264"), 30, 0, MLR::PIXEL_FORMAT_RGB8),
 		kinect_depth(STRING("z.kinect_depthRgb." << created <<".264"), 30, 0, MLR::PIXEL_FORMAT_RGB8),
 		kinect_video_times(kinect_video.name()), kinect_depth_times(kinect_depth.name()),
@@ -202,7 +202,7 @@ int main(int argc,char **argv){
 	try {
 		RecordingSystem s(MT::getParameter<int>("camID1"),
 			MT::getParameter<int>("camID2"),
-			MT::getParameter<int>("camID1"));
+			MT::getParameter<int>("camID3"));
 		s.run();
 	} catch(const std::exception& ex) {
 		cerr << ex.what() << endl;
