@@ -1081,7 +1081,6 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, ors::Vector *re
             J(2, j_idx+i) += tmp.z;
           }
         }
-        else NIY;
       }
       if(!j->from->inLinks.N) break;
       j=j->from->inLinks(0);

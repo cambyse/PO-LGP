@@ -146,7 +146,7 @@ struct MotionProblemFunction:KOrderMarkovFunction {
   MotionProblemFunction(MotionProblem& _P):MP(_P) { MT::Array<ors::KinematicWorld*>::memMove=true; };
   
   //KOrderMarkovFunction definitions
-  virtual void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);
+  virtual void phi_t(arr& phi, arr& J, uint t, const arr& x_bar, const arr& z=NoArr, const arr& J_z=NoArr);
   //functions to get the parameters $T$, $k$ and $n$ of the $k$-order Markov Process
   virtual uint get_T() { return MP.T; }
   virtual uint get_k() { if(MP.transitionType==MotionProblem::kinematic) return 1;  return 2; }

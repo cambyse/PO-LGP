@@ -440,7 +440,7 @@ arr MotionProblemFunction::get_postfix() {
 }
 
 #if 0
-void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
+void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar, const arr& z, const arr& J_z) {
   uint T=get_T(), n=dim_x(), k=get_k();
 
   //assert some dimensions
@@ -497,7 +497,7 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
 }
 #else
 
-void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
+void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar, const arr& z, const arr& J_z) {
   uint T=get_T(), n=dim_x(), k=get_k();
 
   //assert some dimensions

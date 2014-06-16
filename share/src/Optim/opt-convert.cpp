@@ -177,24 +177,31 @@ void sConvert::KOrderMarkovFunction_VectorFunction::fv(arr& phi, arr& J, const a
   uint T=f->get_T();
   uint k=f->get_k();
   uint n=f->dim_x();
-  uint M=0;
+  uint dim_z=f->dim_z();
+  uint dim_Phi=0;
   arr x_pre=f->get_prefix();
   arr x_post=f->get_postfix();
-  for(uint t=0; t<=T; t++) M+=f->dim_phi(t);
+  arr z;
+  if(dim_z) z=x.subRange(-dim_z,-1);
+  for(uint t=0; t<=T; t++) dim_Phi+=f->dim_phi(t);
   CHECK(x.nd==2 && x.d1==n && x.d0==(T+1)-x_post.d0,"");
   CHECK(x_pre.nd==2 && x_pre.d1==n && x_pre.d0==k,"prefix is of wrong dim");
 
-
   //resizing things:
-  phi.resize(M);   phi.setZero();
+  phi.resize(dim_Phi);   phi.setZero();
   RowShiftedPackedMatrix* Jaux;
-  if(&J){ Jaux = auxRowShifted(J, M, (k+1)*n, x.N); J.setZero(); }
-  M=0;
+  if(&J){
+    if(!dim_z) Jaux = auxRowShifted(J, dim_Phi, (k+1)*n, x.N);
+    else       Jaux = auxRowShifted(J, 2*dim_Phi, (k+1)*n, x.N+dim_z);
+    J.setZero();
+  }
+  uint M=0;
   uint m_t;
   for(uint t=0; t<=T; t++) {
     m_t = f->dim_phi(t);
     if(!m_t) continue;
-    arr x_bar, phi_t, J_t;
+    arr x_bar, phi_t, J_t, J_z;
+    //construct x_bar
     if(t>=k) {
       if(t>=x.d0) { //x_bar includes the postfix
         x_bar.resize(k+1,n);
@@ -206,24 +213,33 @@ void sConvert::KOrderMarkovFunction_VectorFunction::fv(arr& phi, arr& J, const a
       x_bar.resize(k+1,n);
       for(int i=t-k; i<=(int)t; i++) x_bar[i-t+k]() = (i<0)? x_pre[k+i] : x[i];
     }
-    f->phi_t(phi_t, (&J?J_t:NoArr), t, x_bar);
+    //query
+    f->phi_t(phi_t, (&J?J_t:NoArr), t, x_bar, z, (&J && dim_z?J_z:NoArr));
     CHECK(phi_t.N==m_t,"");
+    //extract phi
     phi.setVectorBlock(phi_t, M);
+    //extract J
     if(&J) {
       if(J_t.nd==3) J_t.reshape(J_t.d0,J_t.d1*J_t.d2);
       CHECK(J_t.d0==m_t && J_t.d1==(k+1)*n,"");
       if(t>=k) {
         J.setMatrixBlock(J_t, M, 0);
-        for(uint i=0; i<J_t.d0; i++) Jaux->rowShift(M+i) = (t-k)*n;
+        for(uint i=0; i<m_t; i++) Jaux->rowShift(M+i) = (t-k)*n;
       } else { //cut away the Jacobian w.r.t. the prefix
         J_t.delColumns(0,(k-t)*n);
         J.setMatrixBlock(J_t, M, 0);
-        for(uint i=0; i<J_t.d0; i++) Jaux->rowShift(M+i) = 0;
+        for(uint i=0; i<m_t; i++) Jaux->rowShift(M+i) = 0;
+      }
+      if(dim_z){
+        CHECK(J_z.d0==m_t && J_z.d1==dim_z,"");
+        J.setMatrixBlock(J_z, dim_Phi+M, 0);
+        for(uint i=0; i<m_t; i++) Jaux->rowShift(M+i) = x.N;
       }
     }
     M += m_t;
   }
-  CHECK(M==phi.N,"");
+
+  CHECK(M==dim_Phi,"");
   if(&J) Jaux->computeColPatches(true);
   //if(&J) J=Jaux->unpack();
 #endif
