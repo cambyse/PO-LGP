@@ -100,6 +100,9 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
   arr postfix; ///< fixing the set of statex x[T-k]...x[T]
   //TODO: add methods to properly set the prefix given x0,v0?
 
+  //-- stationary parameters
+  arr z0; ///< an initialization of the stationary parameters of the motion problem
+
   //-- return values of an optimizer
   MT::Array<arr> phiMatrix;
   arr dualMatrix;
@@ -118,7 +121,6 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
                              const arr& y_finalTarget, double y_finalPrec, const arr& y_midTarget=NoArr, double y_midPrec=-1., double earlyFraction=-1.);
 
   //-- cost infos
-  uint dim_x() { return x0.N; }
   uint dim_phi(uint t);
   uint dim_g(uint t);
   uint dim_psi();
@@ -150,7 +152,8 @@ struct MotionProblemFunction:KOrderMarkovFunction {
   //functions to get the parameters $T$, $k$ and $n$ of the $k$-order Markov Process
   virtual uint get_T() { return MP.T; }
   virtual uint get_k() { if(MP.transitionType==MotionProblem::kinematic) return 1;  return 2; }
-  virtual uint dim_x() { return MP.dim_x(); }
+  virtual uint dim_x() { return MP.x0.N; }
+  virtual uint dim_z() { return MP.z0.N; }
   virtual uint dim_phi(uint t){ return MP.dim_psi() + MP.dim_phi(t); } //transitions plus costs (latter include constraints)
   virtual uint dim_g(uint t){ return MP.dim_g(t); }
   virtual arr get_prefix(); //the history states x(-k),..,x(-1)

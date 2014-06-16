@@ -145,7 +145,7 @@ double sConvert::VectorFunction_ScalarFunction::fs(arr& grad, arr& H, const arr&
   return sumOfSqr(y);
 }
 
-void sConvert::KOrderMarkovFunction_VectorFunction::fv(arr& phi, arr& J, const arr& x) {
+void sConvert::KOrderMarkovFunction_VectorFunction::fv(arr& phi, arr& J, const arr& _x) {
 #if 0 //non-packed Jacobian
   //probing dimensionality
   uint T=f->get_T();
@@ -181,10 +181,19 @@ void sConvert::KOrderMarkovFunction_VectorFunction::fv(arr& phi, arr& J, const a
   uint dim_Phi=0;
   arr x_pre=f->get_prefix();
   arr x_post=f->get_postfix();
-  arr z;
-  if(dim_z) z=x.subRange(-dim_z,-1);
+  arr x,z;
+  if(dim_z){
+    x.referTo(_x);
+    x.reshape((T+1-x_post.d0)*n + dim_z);
+    z.referToSubRange(x, -(int)dim_z, -1);
+    x.referToSubRange(_x, 0, -(int)dim_z-1);
+    x.reshape(T+1-x_post.d0, n);
+  }else{
+    x.referTo(_x);
+    x.reshape(T+1-x_post.d0, n);
+  }
   for(uint t=0; t<=T; t++) dim_Phi+=f->dim_phi(t);
-  CHECK(x.nd==2 && x.d1==n && x.d0==(T+1)-x_post.d0,"");
+  CHECK(x.nd==2 && x.d1==n && x.d0==T+1-x_post.d0,"");
   CHECK(x_pre.nd==2 && x_pre.d1==n && x_pre.d0==k,"prefix is of wrong dim");
 
   //resizing things:

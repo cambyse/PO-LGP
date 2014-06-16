@@ -106,13 +106,17 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
 #ifdef USE_DUAL
     //recalibrate the target based on touch
     double d=0.;
-    if(pd_c->desiredApproach.y.N){
-      d = pd_c->desiredApproach.y(0); //d = distance measured by constraint task
-      if(pd_c->desiredApproach.y_ref(0)==0. && d<1e-2){
+    if(pd_c->desiredApproach.y.N){ //the constraint-task tries to approach the constrained
+      d = pd_c->desiredApproach.y(0); //d = true distance measured from the simulator via the constraint task map
+      if(pd_c->desiredApproach.y_ref(0)==0. && d<1e-2){ //on contact
+        est_target->X.pos.z = endeff->X.pos.z+0.1; //est_target position update; 0.1=known distance above table
+      }
+      if(est_target->X.pos.z > endeff->X.pos.z+0.1){ //also on non-contact
         est_target->X.pos.z = endeff->X.pos.z+0.1; //est_target position update
       }
     }
 #endif
+
     //external sinus on the table height
     table->X.pos.z = mean_table_height+sin_jitter*::sin(double(t)/15);
 #ifdef USE_DUAL
@@ -128,10 +132,10 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
     }
 
     //display and record video
-//    world.watch(false, STRING(t));
+    //world.watch(false, STRING(t));
     world.gl().update(STRING(t), true, false, true);
-    //    flip_image(world.gl().captureImage);
-    //    vid->addFrame(world.gl().captureImage);
+    //flip_image(world.gl().captureImage);
+    //vid->addFrame(world.gl().captureImage);
 
     //write data
     MT::arrayBrackets="  ";

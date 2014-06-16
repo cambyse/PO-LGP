@@ -2171,7 +2171,7 @@ ors::GraphOperator::GraphOperator():
   symbol(none), timeOfApplication(UINT_MAX), fromId(UINT_MAX), toId(UINT_MAX){
 }
 
-void ors::GraphOperator::apply(KinematicWorld& G){
+void ors::GraphOperator::apply(KinematicWorld& G, const arr& z){
   Body *from=G.bodies(fromId), *to=G.bodies(toId);
   if(symbol==deleteJoint){
     Joint *j = G.getJointByBodies(from, to);
@@ -2181,7 +2181,12 @@ void ors::GraphOperator::apply(KinematicWorld& G){
   }
   if(symbol==addRigid){
     Joint *j = new Joint(G, from, to);
-    j->A.setDifference(from->X, to->X);
+    if(&z){
+      CHECK(z.N==4,"");
+      j->A.rot.set(z.p);
+    }else{
+      j->A.setDifference(from->X, to->X);
+    }
     j->type=JT_fixed;
     G.isLinkTree=false;
     return;

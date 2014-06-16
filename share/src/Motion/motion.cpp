@@ -416,10 +416,7 @@ void MotionProblem::costReport(bool gnuplt) {
 }
 
 arr MotionProblem::getInitialization(){
-  arr x;
-  x.resize(T+1, dim_x());
-  for(uint i=0;i<x.d0;i++) x[i]() = x0;
-  return x;
+  return replicate(x0, T+1);
 }
 
 //===========================================================================
@@ -530,7 +527,7 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar, co
   for(ors::GraphOperator *op:MP.world.operators){
     for(uint i=0;i<=k;i++){
       if(t+i>=k && op->timeOfApplication==t-k+i){
-        op->apply(*configurations(i));
+        op->apply(*configurations(i), z);
       }
     }
   }

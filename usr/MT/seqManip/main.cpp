@@ -1,6 +1,7 @@
 #include <Core/util_t.h>
 #include <Gui/opengl.h>
 
+#include <Motion/motion.h>
 #include <Motion/motionHeuristics.h>
 #include <Motion/taskMap_default.h>
 #include <Motion/taskMap_proxy.h>
@@ -24,6 +25,8 @@ void testPickAndPlace(){
   MotionProblemFunction MF(MP);
   arr x = replicate(MP.x0, MP.T+1);
   rndGauss(x,.01,true); //don't initialize at a singular config
+  MP.z0 = {1., 0., 0., 0.};
+  x.append(MP.z0);
 
   ors::GraphOperator *op1 = new ors::GraphOperator();
   op1->symbol = ors::GraphOperator::addRigid;

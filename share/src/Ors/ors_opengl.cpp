@@ -260,7 +260,7 @@ void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, const ch
     if(G.operators.N){
       for(ors::GraphOperator *op: G.operators)
         if(op->timeOfApplication==t)
-          op->apply(Gcopy);
+          op->apply(Gcopy, NoArr);
     }
     if(delay<0.){
       Gcopy.gl().watch(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
