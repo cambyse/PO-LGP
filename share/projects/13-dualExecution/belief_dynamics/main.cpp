@@ -69,7 +69,7 @@ void MiniBeliefProblem::phi_t(arr& phi, arr& J, uint t, const arr& x_bar, const 
   phi.clear();
 
   //-- pos transition costs
-  double H=1.;
+  double H=100.;
   phi.append(H*(x_bar(0,0)-2.*x_bar(1,0)+x_bar(2,0))); //penalize acceleration
 
   //-- belief transition costs
