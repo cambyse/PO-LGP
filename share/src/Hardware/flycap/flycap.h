@@ -15,6 +15,10 @@ private:
 	struct sFlycapInterface *s;
 	bool streaming;
 public:
+	/**
+	 * Creates flycap-based if for the given camera. If you don't know the camera ids,
+	 * use the "flycap_serials" example, or call get_flycap_ids yourself.
+	 */
 	FlycapInterface(int cameraID, MLR::PixelFormat capture_format = MLR::PIXEL_FORMAT_BGR8, MLR::PixelFormat output_fmt = MLR::PIXEL_FORMAT_BGR8);
 	~FlycapInterface();
 
