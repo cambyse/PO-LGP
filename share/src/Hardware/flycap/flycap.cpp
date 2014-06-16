@@ -101,7 +101,7 @@ struct sFlycapInterface {
 		cinfo.interPacketDelay = 0;
 		cam.SetGigEStreamChannelInfo(0, &cinfo);
 
-		//Image::SetDefaultColorProcessing(IPP);
+		Image::SetDefaultColorProcessing(IPP);
 	}
 	~sFlycapInterface() {
 		cam.Disconnect();
