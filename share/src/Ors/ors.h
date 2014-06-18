@@ -198,7 +198,7 @@ struct KinematicWorld {
   /// @name data fields
   uintA qdim;  ///< dimensionality depending on the agent number
   arr q, qdot; ///< the current joint configuration vector and velocities
-  int q_agent; ///< the agent index of the current q,qdot
+  uint q_agent; ///< the agent index of the current q,qdot
   BodyL  bodies;
   JointL joints;
   ShapeL shapes;
@@ -247,8 +247,8 @@ struct KinematicWorld {
   bool checkConsistency();
   
   /// @name computations on the graph
-  void calc_Q_from_q(uint agent=0, bool calcVels=false); ///< from the set (q,qdot) compute the joint's Q transformations
-  void calc_q_from_Q(uint agent=0, bool calcVels=false);  ///< updates (q,qdot) based on the joint's Q transformations
+  void calc_Q_from_q(bool calcVels=false); ///< from the set (q,qdot) compute the joint's Q transformations
+  void calc_q_from_Q(bool calcVels=false);  ///< updates (q,qdot) based on the joint's Q transformations
   void calc_fwdPropagateFrames();    ///< elementary forward kinematics; also computes all Shape frames
   void calc_fwdPropagateShapeFrames();   ///< same as above, but only shape frames (body frames are assumed up-to-date)
   void calc_Q_from_BodyFrames();    ///< fill in the joint transformations assuming that body poses are known (makes sense when reading files)
@@ -256,28 +256,29 @@ struct KinematicWorld {
   void clearJointErrors();
 
   /// @name get state
-  uint getJointStateDimension(uint agent=0) const;
+  uint getJointStateDimension(int agent=-1) const;
   void getJointState(arr &_q, arr& _qdot=NoArr) const {
     _q=q; if(&_qdot){ _qdot=qdot; if(!_qdot.N) _qdot.resizeAs(q).setZero();  }
   }
   arr getJointState() const { return q; }
-  arr naturalQmetric(double power=.5, uint agent=0) const;               ///< returns diagonal of a natural metric in q-space, depending on tree depth
-  arr getLimits(uint agent=0) const;
+  arr naturalQmetric(double power=.5) const;               ///< returns diagonal of a natural metric in q-space, depending on tree depth
+  arr getLimits() const;
 
   /// @name set state
-  void setJointState(const arr& _q, const arr& _qdot=NoArr, uint agent=0, bool calcVels=false);
+  void setJointState(const arr& _q, const arr& _qdot=NoArr, bool calcVels=false);
+  void setAgent(uint agent, bool calcVels=false);
 
   /// @name kinematics
-  void kinematicsPos (arr& y, arr& J, Body *b, ors::Vector *rel=0, uint agent=0) const;
-  void kinematicsVec (arr& y, arr& J, Body *b, ors::Vector *vec=0, uint agent=0) const;
-  void kinematicsQuat(arr& y, arr& J, Body *b, uint agent=0) const;
-  void hessianPos(arr& H, Body *b, ors::Vector *rel=0, uint agent=0) const;
-  void jacobianR(arr& J, Body *b, uint agent=0) const;
+  void kinematicsPos (arr& y, arr& J, Body *b, ors::Vector *rel=0) const;
+  void kinematicsVec (arr& y, arr& J, Body *b, ors::Vector *vec=0) const;
+  void kinematicsQuat(arr& y, arr& J, Body *b) const;
+  void hessianPos(arr& H, Body *b, ors::Vector *rel=0) const;
+  void jacobianR(arr& J, Body *b) const;
   void kinematicsProxyDist(arr& y, arr& J, Proxy *p, double margin=.02, bool useCenterDist=true, bool addValues=false) const;
   void kinematicsProxyCost(arr& y, arr& J, Proxy *p, double margin=.02, bool useCenterDist=true, bool addValues=false) const;
   void kinematicsProxyCost(arr& y, arr& J, double margin=.02, bool useCenterDist=true) const;
   void kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, double margin=.02, bool addValues=false) const;
-  void kinematicsContactConstraints(arr& y, arr &J) const; //TODO: should depend on agent...
+  void kinematicsContactConstraints(arr& y, arr &J) const;
   void getLimitsMeasure(arr &x, const arr& limits, double margin=.1) const;
   void kinematicsLimitsCost(arr& y, arr& J, const arr& limits, double margin=.1) const;
 

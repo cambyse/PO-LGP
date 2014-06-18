@@ -334,7 +334,7 @@ void TEST(Dynamics){
     bool friction;
     DiffEqn(ors::KinematicWorld& _G):G(_G),friction(false){}
     void fv(arr& y,arr&,const arr& x){
-      G.setJointState(x[0], x[1], 0, true);
+      G.setJointState(x[0], x[1], true);
       if(!u.N) u.resize(x.d1).setZero();
       if(friction) u = -10. * x[1];
       G.clearForces();
@@ -489,9 +489,6 @@ void TEST(BlenderImport){
 
 int MAIN(int argc,char **argv){
   
-  testKinematics();
-  return 0;
-
   testLoadSave();
   testCopy();
   testPlayStateSequence();

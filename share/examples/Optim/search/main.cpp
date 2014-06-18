@@ -8,7 +8,7 @@ void TEST(CMA){
   SearchCMA cma;
   uint n = MT::getParameter<uint>("dim", 2);
   arr start(n);
-  start=1.; start(0)=0.;
+  start=10.; start(0)=1.;
   cma.init(n, -1, -1, start, .1); //,10,30);
   arr samples, values;
 
@@ -22,7 +22,7 @@ void TEST(CMA){
 }
 
 void TEST(DisplayBenchmarks){
-  displayFunction(RosenbrockFunction);
+  displayFunction(RosenbrockFunction, true, -10., 10.);
 //  displayFunction(RastriginFunction());
 //  displayFunction(SquareFunction());
 }

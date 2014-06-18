@@ -571,6 +571,11 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar, co
   MP.getTaskCosts2(_phi, (&J?_J:NoArr), t, configurations, MP.tau);
   phi.append(_phi);
   if(&J) J.append(_J);
+  if(&J_z){
+    for(auto& c:configurations) c->setAgent(1);
+    MP.getTaskCosts2(NoArr, J_z, t, configurations, MP.tau);
+    for(auto& c:configurations) c->setAgent(0);
+  }
 
   if(&J) CHECK(J.d0==phi.N,"");
 
