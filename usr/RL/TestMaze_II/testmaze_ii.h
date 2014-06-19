@@ -8,6 +8,7 @@
 #include "Learner/KMarkovCRF.h"
 #include "Learner/UTree.h"
 #include "Learner/LinearQ.h"
+#include "Learner/TemporallyExtendedLinearQ.h"
 #include "Learner/TemporallyExtendedModel.h"
 #include "Learner/ConjunctiveAdjacency.h"
 #include "Planning/Policy.h"
@@ -68,6 +69,7 @@ private:
         TEM_LOOK_AHEAD,
         UTREE_VALUE,
         LINEAR_Q_VALUE,
+        TELQ_VALUE,
         GOAL_ITERATION
     } planner_type;
 
@@ -115,11 +117,12 @@ private:
     double l1_factor;
 
     // Learners
-    std::shared_ptr<KMarkovCRF> crf;               ///< TEF+CRF model
-    std::shared_ptr<UTree> utree;                  ///< UTree
-    std::shared_ptr<LinearQ> linQ;                 ///< Linear-Q
-    std::shared_ptr<ConjunctiveAdjacency> N_plus;  ///< N+ operator for TEM
-    std::shared_ptr<TemporallyExtendedModel> tem;  ///< TEM
+    std::shared_ptr<KMarkovCRF> crf;                 ///< TEF+CRF model
+    std::shared_ptr<UTree> utree;                    ///< UTree
+    std::shared_ptr<LinearQ> linQ;                   ///< Linear-Q
+    std::shared_ptr<ConjunctiveAdjacency> N_plus;    ///< N+ operator for TEM and TELQ
+    std::shared_ptr<TemporallyExtendedLinearQ> telQ; ///< Linear-Q with TEFs
+    std::shared_ptr<TemporallyExtendedModel> tem;    ///< TEM
 
     //----------//
     // Planners //

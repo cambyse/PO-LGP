@@ -66,6 +66,7 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     utree(new UTree(discount)),
     linQ(new LinearQ(discount)),
     N_plus(new ConjunctiveAdjacency()),
+    telQ(new TemporallyExtendedLinearQ(N_plus,discount)),
     tem(new TemporallyExtendedModel(N_plus)),
     policy(nullptr),
     max_tree_size(10000),
@@ -706,6 +707,11 @@ void TestMaze_II::initialize_commands() {
                 set_policy();
                 return {true,"using linear Q-approximation for action selection" };
             }, "use linear Q-function approximation");
+        command_center.add_command(top_planning,{"set planner TELQ","s p l"}, [this]()->ret_t{
+                planner_type = TELQ_VALUE;
+                set_policy();
+                return {true,"using linear combined TEFs for Q-approximation (TELQ)" };
+            }, "use TELQ");
         command_center.add_command(top_planning,{"set planner g","s p g"}, [this]()->ret_t{
                 planner_type = GOAL_ITERATION;
                 set_policy();
@@ -801,6 +807,7 @@ void TestMaze_II::initialize_commands() {
                     discount = d;
                     utree->set_discount(discount);
                     linQ->set_discount(discount);
+                    telQ->set_discount(discount);
                     shared_ptr<LookAheadPolicy> look_ahead_policy = dynamic_pointer_cast<LookAheadPolicy>(policy);
                     if(look_ahead_policy!=nullptr) {
                         look_ahead_policy->set_discount(discount);
@@ -1470,6 +1477,7 @@ void TestMaze_II::add_action_observation_reward_tripel(
            crf->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
          utree->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
           linQ->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
+          telQ->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
           tem->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
     delay_dist.add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
     DEBUG_OUT(1,"Add (" << action << ", " << observation << ", " << reward << ")" <<
@@ -1481,6 +1489,7 @@ void TestMaze_II::clear_data() {
     crf->clear_data();
     utree->clear_data();
     linQ->clear_data();
+    telQ->clear_data();
     tem->clear_data();
     delay_dist.clear_data();
 }
@@ -1551,6 +1560,7 @@ void TestMaze_II::change_environment(shared_ptr<Environment> new_environment) {
         crf->set_features(*environment);
         linQ->set_spaces(*environment);
         linQ->set_features(*environment);
+        telQ->set_spaces(*environment);
         tem->set_spaces(*environment);
         N_plus->set_spaces(*environment);
         // set current instance
@@ -1571,6 +1581,7 @@ void TestMaze_II::clear_all_learners() {
     crf.reset(new KMarkovCRF());
     utree.reset(new UTree(discount));
     linQ.reset(new LinearQ(discount));
+    telQ.reset(new TemporallyExtendedLinearQ(N_plus,discount));
     tem.reset(new TemporallyExtendedModel(N_plus));
     tem->set_l1_factor(l1_factor);
 }
@@ -1624,6 +1635,12 @@ void TestMaze_II::set_policy() {
     }
     case LINEAR_Q_VALUE: {
         shared_ptr<Policy> p = dynamic_pointer_cast<Policy>(linQ);
+        if(p==nullptr) { DEBUG_DEAD_LINE; }
+        policy = p;
+        break;
+    }
+    case TELQ_VALUE: {
+        shared_ptr<Policy> p = dynamic_pointer_cast<Policy>(telQ);
         if(p==nullptr) { DEBUG_DEAD_LINE; }
         policy = p;
         break;

@@ -14,29 +14,27 @@ public:
 
     //----members----//
 
+private:
+
+    double discount;
+
     //----methods----//
 
 public:
 
-    TemporallyExtendedLinearQ(std::shared_ptr<ConjunctiveAdjacency>);
+    TemporallyExtendedLinearQ(std::shared_ptr<ConjunctiveAdjacency>,double);
 
     virtual ~TemporallyExtendedLinearQ() = default;
 
     virtual action_ptr_t get_action(const_instance_ptr_t) override;
 
+    virtual void set_discount(double d) { discount = d; }
+
+    virtual double get_discount() const { return discount; }
+
 protected:
 
-    virtual double neg_log_likelihood(col_vec_t& grad, const col_vec_t& weights);
-    lbfgsfloatval_t LBFGS_objective(const lbfgsfloatval_t*, lbfgsfloatval_t*) override;
-    int LBFGS_progress(const lbfgsfloatval_t *x,
-                       const lbfgsfloatval_t *g,
-                       const lbfgsfloatval_t fx,
-                       const lbfgsfloatval_t xnorm,
-                       const lbfgsfloatval_t gnorm,
-                       const lbfgsfloatval_t step,
-                       int nr_variables,
-                       int iteration_nr,
-                       int ls) const override;
+
 
 };
 
