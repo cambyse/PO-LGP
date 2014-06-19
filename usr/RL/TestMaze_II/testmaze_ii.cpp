@@ -114,7 +114,8 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     ui.graphicsView->installEventFilter(moveByKeys);
 
     // select environment
-    change_environment(make_shared<Maze>(epsilon,"Markov"));
+    change_environment(make_shared<Maze>(epsilon,"Default"));
+    // change_environment(make_shared<Maze>(epsilon,"Markov"));
     // change_environment(make_shared<CheeseMaze>());
 
     // set some properties of N+
@@ -719,7 +720,7 @@ void TestMaze_II::initialize_commands() {
                 planner_type = TEM_LOOK_AHEAD;
                 set_policy();
                 return {true,"using TEM for planning" };
-            }, "use random policy");
+            }, "use TEM predictions for planning");
         command_center.add_command(top_planning,{"set goal","s g"}, [this]()->ret_t{
                 shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
                 if(maze==nullptr) {
@@ -831,8 +832,7 @@ void TestMaze_II::initialize_commands() {
                     look_ahead_policy->set_max_tree_size(max_tree_size);
                     return {true,"Set maximum Look-Ahead-Tree size"};
                 } else {
-                    DEBUG_DEAD_LINE;
-                    return {false,"Unknown error"};
+                    return {false,"Current policy is not look-ahead-search"};
                 }
             }, "set maximum size of Look-Ahead-Tree (zero for infinite)");
     }

@@ -15,6 +15,8 @@ HEADERS += \
     ../util/lbfgs_codes.h \
     ../util/KolmogorovSmirnovDist.h \
     ../util/KolmogorovSmirnovTest.h \
+    ../util/debug.h \
+    ../util/debug_exclude.h \
     ../util/Commander.h \
     ../util/function_signature.h \
     \
@@ -39,7 +41,6 @@ HEADERS += \
     ../PredictiveEnvironment.h \
     ../Visualizer.h \
     ../HistoryObserver.h \
-    ../Learner/FeatureLearner.h \
     ../SpaceManager.h \
     \
     ../Maze/Maze.h \
@@ -56,10 +57,13 @@ HEADERS += \
     ../Planning/LookAheadPolicy.h \
     ../Planning/GoalIteration.h \
     \
+    ../Learner/FeatureLearner.h \
     ../Learner/KMarkovCRF.h \
     ../Learner/UTree.h \
     ../Learner/LinearQ.h \
     ../Learner/TemporallyExtendedModel.h \
+    ../Learner/TemporallyExtendedFeatureLearner.h \
+    ../Learner/TemporallyExtendedLinearQ.h \
     ../Learner/AdjacencyOperator.h \
     ../Learner/ConjunctiveAdjacency.h \
     \
@@ -97,7 +101,6 @@ SOURCES += \
     ../PredictiveEnvironment.cpp \
     ../Visualizer.cpp \
     ../HistoryObserver.cpp \
-    ../Learner/FeatureLearner.cpp \
     ../SpaceManager.cpp \
     \
     ../Maze/Maze.cpp \
@@ -112,10 +115,13 @@ SOURCES += \
     ../Planning/LookAheadPolicy.cpp \
     ../Planning/GoalIteration.cpp \
     \
+    ../Learner/FeatureLearner.cpp \
     ../Learner/KMarkovCRF.cpp \
     ../Learner/UTree.cpp \
     ../Learner/LinearQ.cpp \
     ../Learner/TemporallyExtendedModel.cpp \
+    ../Learner/TemporallyExtendedFeatureLearner.cpp \
+    ../Learner/TemporallyExtendedLinearQ.cpp \
     ../Learner/ConjunctiveAdjacency.cpp \
     \
     ../BatchMaze.cpp \

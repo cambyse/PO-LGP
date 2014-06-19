@@ -35,6 +35,9 @@ HEADERS += \
     ../Environment.h \
     ../PredictiveEnvironment.h \
     ../Visualizer.h \
+    ../HistoryObserver.h \
+    ../SpaceManager.h \
+    \
     ../Maze/Maze.h \
     ../Maze/MazeAction.h \
     ../Maze/AugmentedMazeAction.h \
@@ -47,14 +50,13 @@ HEADERS += \
     ../Planning/LookAheadSearch.h \
     ../Planning/LookAheadPolicy.h \
     \
-    ../HistoryObserver.h \
-    ../SpaceManager.h \
-    \
     ../Learner/FeatureLearner.h \
     ../Learner/KMarkovCRF.h \
     ../Learner/UTree.h \
     ../Learner/LinearQ.h \
     ../Learner/TemporallyExtendedModel.h \
+    ../Learner/TemporallyExtendedFeatureLearner.h \
+    ../Learner/TemporallyExtendedLinearQ.h \
     ../Learner/AdjacencyOperator.h \
     ../Learner/ConjunctiveAdjacency.h \
     \
@@ -87,8 +89,12 @@ SOURCES += \
     ../Representation/AbstractReward.cpp \
     ../Representation/ListedReward.cpp \
     \
+    ../Predictor.cpp \
     ../PredictiveEnvironment.cpp \
     ../Visualizer.cpp \
+    ../HistoryObserver.cpp \
+    ../SpaceManager.cpp \
+    \
     ../Maze/Maze.cpp \
     ../Maze/MazeAction.cpp \
     ../Maze/AugmentedMazeAction.cpp \
@@ -100,14 +106,13 @@ SOURCES += \
     ../Planning/LookAheadSearch.cpp \
     ../Planning/LookAheadPolicy.cpp \
     \
-    ../HistoryObserver.cpp \
-    ../SpaceManager.cpp \
-    \
     ../Learner/FeatureLearner.cpp \
     ../Learner/KMarkovCRF.cpp \
     ../Learner/UTree.cpp \
     ../Learner/LinearQ.cpp \
     ../Learner/TemporallyExtendedModel.cpp \
+    ../Learner/TemporallyExtendedFeatureLearner.cpp \
+    ../Learner/TemporallyExtendedLinearQ.cpp \
     ../Learner/ConjunctiveAdjacency.cpp \
     \
     MinimalEnvironmentExample/MinimalAction.cpp \
