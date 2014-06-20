@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
 		while(true) {
 			double timestamp;
 			if(flycap.grab(gl.background, timestamp)) {
-				gl.update();
+				gl.update(NULL, false, false, false);
 				++count;
 			}
 			if((count % 100) == 0) {
