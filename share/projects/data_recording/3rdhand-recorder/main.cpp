@@ -76,7 +76,10 @@ public:
 				enc.addFrame(gl.background);
 				times.add_stamp(timestamp);
 			}
-			gl.update();
+			double w_ratio = (double)gl.width / (double)gl.background.d0;
+			double h_ratio = (double)gl.height / (double)gl.background.d1;
+			gl.backgroundZoom = min(w_ratio, h_ratio);
+			gl.update(NULL, false, false, false);
 		} else {
 			cerr << "grab " << id << " failed" << endl;
 		}
