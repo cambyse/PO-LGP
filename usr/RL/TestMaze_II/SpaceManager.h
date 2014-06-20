@@ -14,7 +14,7 @@ public:
     virtual void set_spaces(const action_ptr_t & a,
                             const observation_ptr_t & o,
                             const reward_ptr_t & r);
-    virtual void set_spaces(const SpaceManager & s) final;
+    virtual void adopt_spaces(const SpaceManager & s) final;
 protected:
     action_ptr_t action_space;           ///< Action space.
     observation_ptr_t observation_space; ///< State space.

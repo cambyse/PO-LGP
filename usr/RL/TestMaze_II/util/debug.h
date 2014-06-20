@@ -11,7 +11,10 @@
 #ifndef DEBUG_H_
 #define DEBUG_H_
 
+//#define NDEBUG // to turn of asserts
+
 #include <iostream>
+#include <assert.h>
 #include "ColorOutput.h"
 
 #ifndef DEBUG_STRING

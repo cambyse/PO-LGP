@@ -7,7 +7,9 @@
 class ConjunctiveAdjacency: public AdjacencyOperator, public SpaceManager {
 
     //----typedefs/classes----//
+public:
     DISAMBIGUATE_CONFIG_TYPEDEFS(AdjacencyOperator);
+    enum T_ZERO_FEATURES { NONE, ACTION, ACTION_OBSERVATION_REWARD };
 
     //----members----//
 private:
@@ -16,6 +18,7 @@ private:
     int max_horizon = -1;
     int min_horizon = -1;
     bool allow_zero_delay = true;
+    T_ZERO_FEATURES t_zero_features = ACTION_OBSERVATION_REWARD;
 
     //----methods----//
 public:
@@ -39,6 +42,7 @@ public:
      * only conjunctions of existing features and basis features. */
     virtual bool get_combine_features() const { return combine_features; }
     virtual void set_combine_features(bool b);
+    virtual void set_t_zero_features(T_ZERO_FEATURES f) { t_zero_features = f; }
 private:
     void add_delay(f_ptr_t,std::set<int>&,std::set<int>&,std::set<int>&) const;
 };

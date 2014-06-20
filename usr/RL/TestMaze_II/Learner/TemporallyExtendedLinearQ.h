@@ -17,6 +17,11 @@ public:
 private:
 
     double discount;
+    double c;
+    col_vec_t rho;
+    f_mat_t L;
+    std::vector<action_ptr_t> policy;
+    std::vector<idx_t> policy_indices;
 
     //----methods----//
 
@@ -34,7 +39,19 @@ public:
 
 protected:
 
+    void update_policy();
+    void update_objective_components();
 
+    lbfgsfloatval_t LBFGS_objective(const lbfgsfloatval_t*, lbfgsfloatval_t*) override;
+    int LBFGS_progress(const lbfgsfloatval_t *x,
+                       const lbfgsfloatval_t *g,
+                       const lbfgsfloatval_t fx,
+                       const lbfgsfloatval_t xnorm,
+                       const lbfgsfloatval_t gnorm,
+                       const lbfgsfloatval_t step,
+                       int nr_variables,
+                       int iteration_nr,
+                       int ls) const override;
 
 };
 

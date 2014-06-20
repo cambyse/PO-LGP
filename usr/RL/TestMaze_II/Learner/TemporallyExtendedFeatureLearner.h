@@ -24,60 +24,78 @@ public:
     typedef arma::Row<double> row_vec_t;
     typedef std::map<f_ptr_t,double> weight_map_t;
     typedef Feature::look_up_map_t basis_feature_map_t;
+    enum class OUTCOME_TYPE { ACTION, OBSERVATION_REWARD };
 
     //----members----//
 
+private:
+
+    /**  Whether "outcome" means "action" (value based) or "observation-reward"
+     * (model based). This affects the dimensionality of the F-matrices. Use
+     * TemporallyExtendedFeatureLearner::set_outcome_type to change. */
+    OUTCOME_TYPE outcome_type = OUTCOME_TYPE::OBSERVATION_REWARD;
+
 protected:
 
-    /** \brief The set of features used by the method. */
+    /** The set of features used by the method. */
     f_set_t feature_set;
 
-    /** \brief Adjacency operator used to grow the feature set. */
+    /** Adjacency operator used to grow the feature set. */
     std::shared_ptr<ConjunctiveAdjacency> N_plus;
 
-    /** \brief Contains for every data point a matrix with all feature values
-     * for all possible outcomes.
+    /**Contains for every data point a matrix with all feature values for all
+     * possible outcomes. \f$F_{ij}\f$ is the i-th feature for the j-th
+     * outcome. To be updated on changes of the data or the feature set.
      *
-     * To be updated on changes of the data or the feature set. */
+     * If outcome_type is OBSERVATION_REWARD (model based), the matrix with
+     * (time) index t holds features evaluated on
+     * \f$\{\ldots,(a_{t-1},o_{t-1},r_{t-1}),(a_{t},O,R)\}\f$ where O and R are
+     * the outcome.
+     *
+     * If outcome_type is ACTION (value based), the matrix with (time) index t
+     * holds features evaluated on
+     * \f$\{\ldots,(a_{t-1},o_{t-1},r_{t-1}),(A,O^*,R^*)\}\f$ where A is the
+     * outcome and O* and R* are the default elements of the observation and
+     * reward space. A value based method should ensure that featues don't
+     * depend on observations or rewards with time index of zero since these are
+     * considered to represent the immediate future. */
     std::vector<f_mat_t> F_matrices;
 
-    /** \brief Contains for every data point the index of the column in of the
-     * F-matrix that was actually observed.
-     *
-     * To be updated on changes of the data. */
+    /** Number of outcomes (action or observation-reward pairs). */
+    int outcome_n = 0;
+
+    /** Contains for every data point the index of the column in of the F-matrix
+     * that was actually observed. To be updated on changes of the data. */
     std::vector<int> outcome_indices;
 
-    /** \brief Weight for the features. */
+    /** Weight for the features. */
     col_vec_t weights;
 
-    /** \brief Whether the training data changed. */
+    /** Whether the training data changed. */
     bool data_changed = true;
 
-    /** \brief Whether the features changed. */
+    /** Whether the features changed. */
     bool feature_set_changed = true;
 
-    /** \brief Whether the basis features changed. */
+    /** Whether the basis features changed. */
     bool basis_features_changed = true;
 
-    /** \brief The coefficient for L1-regularization. */
+    /** The coefficient for L1-regularization. */
     double l1_factor = 0;
 
-    /** \brief Set of basis features.
+    /** Set of basis features.
      *
      * To be updated on changes of the feature set. */
     f_ptr_set_t basis_features;
 
-    /** \brief Contains for all data points and all possible outcomes a map with
-     * values of all basis features (to compute the F-matrices more
-     * efficiently).
-     *
-     * To be updated on changes of the basis feature set or the data. */
+    /** Contains for all data points and all possible outcomes a map with values
+     * of all basis features (to compute the F-matrices more efficiently). To be
+     * updated on changes of the basis feature set or the data. */
     std::vector<std::vector<basis_feature_map_t> > basis_feature_maps;
 
-    /** \brief Counts evaluations of the objective.
-     *
-     * Variable is reset when optization is triggered to report the overall
-     * number of objective evaluations (including e.g. linesearch).*/
+    /** Counts evaluations of the objective. Variable is reset when optization
+     * is triggered to report the overall number of objective evaluations
+     * (including e.g. linesearch).*/
     int objective_evaluations = 0;
 
     //----methods----//
@@ -98,8 +116,7 @@ public:
         const bool& new_episode
         ) override;
     virtual void optimize_weights_LBFGS();
-    /** \brief Directly uses LBFGS_Object::check_derivatives (see there for
-     * docu). */
+    /** Directly uses LBFGS_Object::check_derivatives (see there for docu). */
     bool check_derivatives(const int& number_of_samples,
                            const double& range,
                            const double& delta = 1e-5,
@@ -108,34 +125,43 @@ public:
                            const bool use_current_values = false
         );
     virtual void clear_data() override;
+    virtual void set_spaces(const action_ptr_t & a,
+                            const observation_ptr_t & o,
+                            const reward_ptr_t & r) override;
+
 protected:
+
+    /** Set the outcome type. */
+    void set_outcome_type(OUTCOME_TYPE);
+
+    /** Update number of outcomes. */
+    void update_outcome_n();
+
     virtual weight_map_t get_weight_map() const;
     virtual void apply_weight_map(weight_map_t);
+
+    /** Update all data. */
     virtual void update();
 
-    /** \brief Update basis features from current feature set and returns
-     * whether they changed. */
+    /** Update basis features from current feature set and returns whether they
+     * changed. */
     virtual bool update_basis_features();
 
-    /** \brief Update maps for basis features (needs up-to-date basis
-     * features).
-     *
+    /** Update maps for basis features (needs up-to-date basis features).
      * @param recompute_all Whether to recompute values for all features (if
      * e.g. data changed) or only for the missing ones. */
     virtual void update_basis_feature_maps(bool recompute_all);
 
-    /** \brief Updates F-matrices for feature set (needs up-to-date basis
-     * feature maps). */
+    /** Updates F-matrices for feature set (needs up-to-date basis feature
+     * maps). */
     virtual void update_F_matrices();
 
-    /** \brief Update outcome indices. */
+    /** Update outcome indices. */
     virtual void update_outcome_indices();
 
-    /** \brief Pick only features that are non-constant for all data points and
-     * outcomes.
-     *
-     * Caution: For efficiency basis_feature_maps are used and must be up to
-     * date! */
+    /** Pick only features that are non-constant for all data points and
+     * outcomes. Caution: For efficiency basis_feature_maps are used and must be
+     * up to date! */
     virtual bool pick_non_const_features();
     virtual lbfgsfloatval_t LBFGS_objective(const lbfgsfloatval_t*, lbfgsfloatval_t*) = 0;
     virtual int LBFGS_progress(const lbfgsfloatval_t *x,

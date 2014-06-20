@@ -67,14 +67,16 @@ ConjunctiveAdjacency::f_set_t ConjunctiveAdjacency::operator()(
             }
         }
     }
-    // construct basis features (always include zero order)
+    // construct basis features (include zero order according to settings)
     DEBUG_OUT(2,"Constructing basis features");
     f_set_t basis_features;
     f_ptr_t new_feature;
     for(action_ptr_t action : action_space) {
-        new_feature = ActionFeature::create(action,0);
-        basis_features.insert(new_feature);
-        DEBUG_OUT(3,"Added " << *new_feature);
+        if(t_zero_features!=NONE) {
+            new_feature = ActionFeature::create(action,0);
+            basis_features.insert(new_feature);
+            DEBUG_OUT(3,"Added " << *new_feature);
+        }
         for(int delay : new_action_delays) {
             new_feature = ActionFeature::create(action,delay);
             basis_features.insert(new_feature);
@@ -82,9 +84,11 @@ ConjunctiveAdjacency::f_set_t ConjunctiveAdjacency::operator()(
         }
     }
     for(observation_ptr_t observation : observation_space) {
-        new_feature = ObservationFeature::create(observation,0);
-        basis_features.insert(new_feature);
-        DEBUG_OUT(3,"Added " << *new_feature);
+        if(t_zero_features==ACTION_OBSERVATION_REWARD) {
+            new_feature = ObservationFeature::create(observation,0);
+            basis_features.insert(new_feature);
+            DEBUG_OUT(3,"Added " << *new_feature);
+        }
         for(int delay : new_observation_delays) {
             new_feature = ObservationFeature::create(observation,delay);
             basis_features.insert(new_feature);
@@ -92,9 +96,11 @@ ConjunctiveAdjacency::f_set_t ConjunctiveAdjacency::operator()(
         }
     }
     for(reward_ptr_t reward : reward_space) {
-        new_feature = RewardFeature::create(reward,0);
-        basis_features.insert(new_feature);
-        DEBUG_OUT(3,"Added " << *new_feature);
+        if(t_zero_features==ACTION_OBSERVATION_REWARD) {
+            new_feature = RewardFeature::create(reward,0);
+            basis_features.insert(new_feature);
+            DEBUG_OUT(3,"Added " << *new_feature);
+        }
         for(int delay : new_reward_delays) {
             new_feature = RewardFeature::create(reward,delay);
             basis_features.insert(new_feature);

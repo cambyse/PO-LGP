@@ -16,6 +16,6 @@ void SpaceManager::set_spaces(const action_ptr_t & a,
     reward_space = r;
 }
 
-void SpaceManager::set_spaces(const SpaceManager & s) {
+void SpaceManager::adopt_spaces(const SpaceManager & s) {
     set_spaces(s.action_space, s.observation_space, s.reward_space);
 }

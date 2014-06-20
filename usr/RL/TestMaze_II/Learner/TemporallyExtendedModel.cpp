@@ -25,7 +25,12 @@ typedef TemporallyExtendedModel TEM;
 
 TEM::TemporallyExtendedModel(std::shared_ptr<ConjunctiveAdjacency> N):
     TemporallyExtendedFeatureLearner(N)
-{}
+{
+    // include only action features for t=0
+    N_plus->set_t_zero_features(ConjunctiveAdjacency::ACTION_OBSERVATION_REWARD);
+    // set outcome to "observation-reward"
+    set_outcome_type(OUTCOME_TYPE::OBSERVATION_REWARD);
+}
 
 TEM::probability_t TEM::get_prediction(const_instance_ptr_t ins,
                                        const action_ptr_t& action,

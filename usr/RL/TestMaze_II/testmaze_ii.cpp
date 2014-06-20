@@ -1554,15 +1554,15 @@ void TestMaze_II::change_environment(shared_ptr<Environment> new_environment) {
         }
         // get/set all spaces
         environment->get_spaces(action_space,observation_space,reward_space);
-        utree->set_spaces(*environment);
+        utree->adopt_spaces(*environment);
         utree->set_features(*environment);
-        crf->set_spaces(*environment);
+        crf->adopt_spaces(*environment);
         crf->set_features(*environment);
-        linQ->set_spaces(*environment);
+        linQ->adopt_spaces(*environment);
         linQ->set_features(*environment);
-        telQ->set_spaces(*environment);
-        tem->set_spaces(*environment);
-        N_plus->set_spaces(*environment);
+        telQ->adopt_spaces(*environment);
+        tem->adopt_spaces(*environment);
+        N_plus->adopt_spaces(*environment);
         // set current instance
         current_instance->detach_reachable();
         current_instance = INVALID;

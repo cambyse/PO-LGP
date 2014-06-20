@@ -182,6 +182,28 @@ void TEFL::clear_data() {
     data_changed = true;
 }
 
+void TEFL::set_spaces(const action_ptr_t & a,
+                      const observation_ptr_t & o,
+                      const reward_ptr_t & r) {
+    SpaceManager::set_spaces(a,o,r);
+    update_outcome_n();
+}
+
+void TEFL::set_outcome_type(OUTCOME_TYPE t) {
+    outcome_type = t;
+    update_outcome_n();
+}
+
+void TEFL::update_outcome_n() {
+    if(outcome_type==OUTCOME_TYPE::ACTION) {
+        outcome_n = action_space->space_size();
+    } else if(outcome_type==OUTCOME_TYPE::OBSERVATION_REWARD) {
+        outcome_n = observation_space->space_size()*reward_space->space_size();
+    } else {
+        DEBUG_DEAD_LINE;
+    }
+}
+
 TEFL::weight_map_t TEFL::get_weight_map() const {
     weight_map_t weight_map;
     int idx = 0;
@@ -322,9 +344,8 @@ void TEFL::update_basis_feature_maps(bool recompute_all) {
 
     // get dimensions
     int data_n = number_of_data_points;
-    int outcome_n = observation_space->space_size()*reward_space->space_size();
 
-    // check if for matching dimensions
+    // check for matching dimensions
     if(basis_feature_maps.size()!=(uint)data_n || basis_feature_maps.front().size()!=(uint)outcome_n) {
         basis_feature_maps.assign(data_n,vector<basis_feature_map_t>(outcome_n));
         IF_DEBUG(1) {
@@ -390,30 +411,52 @@ void TEFL::update_basis_feature_maps(bool recompute_all) {
 
             // for all outcomes
             int outcome_idx = 0;
-            for(observation_ptr_t obs : observation_space) {
-                for(reward_ptr_t rew : reward_space) {
-
+            if(outcome_type==OUTCOME_TYPE::ACTION) {
+                for(action_ptr_t act : action_space) {
                     // get basis feature map for this data point and outcome
                     basis_feature_map_t& bf_map = basis_feature_maps[data_idx][outcome_idx];
-
                     //--------------------------//
                     // update basis feature map //
                     //--------------------------//
                     if(recompute_all) {
                         bf_map.clear();
                         for(f_ptr_t bf : basis_features) {
-                            bf_map.insert_feature(bf,bf->evaluate(ins->const_prev(),ins->action,obs,rew));
+                            bf_map.insert_feature(bf,bf->evaluate(ins->const_prev(),act,observation_space,reward_space));
                         }
                     } else {
                         for(f_ptr_t bf : new_basis_features) {
-                            bf_map.insert_feature(bf,bf->evaluate(ins->const_prev(),ins->action,obs,rew));
+                            bf_map.insert_feature(bf,bf->evaluate(ins->const_prev(),act,observation_space,reward_space));
                         }
                     }
-
                     // increment
                     ++outcome_idx;
                 }
+            } else if(outcome_type==OUTCOME_TYPE::OBSERVATION_REWARD) {
+                for(observation_ptr_t obs : observation_space) {
+                    for(reward_ptr_t rew : reward_space) {
+                        // get basis feature map for this data point and outcome
+                        basis_feature_map_t& bf_map = basis_feature_maps[data_idx][outcome_idx];
+                        //--------------------------//
+                        // update basis feature map //
+                        //--------------------------//
+                        if(recompute_all) {
+                            bf_map.clear();
+                            for(f_ptr_t bf : basis_features) {
+                                bf_map.insert_feature(bf,bf->evaluate(ins->const_prev(),ins->action,obs,rew));
+                            }
+                        } else {
+                            for(f_ptr_t bf : new_basis_features) {
+                                bf_map.insert_feature(bf,bf->evaluate(ins->const_prev(),ins->action,obs,rew));
+                            }
+                        }
+                        // increment
+                        ++outcome_idx;
+                    }
+                }
+            } else {
+                DEBUG_DEAD_LINE;
             }
+
 
 // #ifdef USE_OMP
 // #pragma omp critical
@@ -440,7 +483,6 @@ void TEFL::update_F_matrices() {
 
     int data_n = number_of_data_points;
     int feature_n = feature_set.size();
-    int outcome_n = observation_space->space_size()*reward_space->space_size();
 
     if(DEBUG_LEVEL>0) {ProgressBar::init("Update F-matrices:         ");}
 
@@ -536,19 +578,32 @@ void TEFL::update_outcome_indices() {
 
             // for all outcomes
             int outcome_idx = 0;
-            for(observation_ptr_t obs : observation_space) {
-                for(reward_ptr_t rew : reward_space) {
-
+            if(outcome_type==OUTCOME_TYPE::ACTION) {
+                for(action_ptr_t act : action_space) {
                     //----------------------//
                     // update outcome index //
                     //----------------------//
-                    if(obs==ins->observation && rew==ins->reward) {
+                    if(act==ins->action) {
                         outcome_indices[data_idx] = outcome_idx;
                     }
-
                     // increment
                     ++outcome_idx;
                 }
+            } else if(outcome_type==OUTCOME_TYPE::OBSERVATION_REWARD) {
+                for(observation_ptr_t obs : observation_space) {
+                    for(reward_ptr_t rew : reward_space) {
+                        //----------------------//
+                        // update outcome index //
+                        //----------------------//
+                        if(obs==ins->observation && rew==ins->reward) {
+                            outcome_indices[data_idx] = outcome_idx;
+                        }
+                        // increment
+                        ++outcome_idx;
+                    }
+                }
+            } else {
+                DEBUG_DEAD_LINE;
             }
 
             // check if outcome index was set
@@ -594,18 +649,11 @@ bool TEFL::pick_non_const_features() {
         f_set_t non_const_set;
 
         // for all outcomes
-        int outcome_idx = 0;
-        for(observation_ptr_t obs : observation_space) {
-            for(reward_ptr_t rew : reward_space) {
-
-                // for all features that may be const
-                for(f_ptr_t feature : maybe_const_set) {
-                    // initialize on first data point
-                    f_ret_map[feature] = feature->evaluate(basis_feature_maps[data_idx][outcome_idx]);
-                }
-
-                // increment
-                ++outcome_idx;
+        for(int outcome_idx : Range(outcome_n)) {
+            // for all features that may be const
+            for(f_ptr_t feature : maybe_const_set) {
+                // initialize on first data point
+                f_ret_map[feature] = feature->evaluate(basis_feature_maps[data_idx][outcome_idx]);
             }
         }
 
@@ -644,46 +692,39 @@ bool TEFL::pick_non_const_features() {
                 f_set_t non_const_set;
 
                 // for all outcomes
-                int outcome_idx = 0;
-                for(observation_ptr_t obs : observation_space) {
-                    for(reward_ptr_t rew : reward_space) {
-
-                        // for all features that may be const
+                for(int outcome_idx : Range(outcome_n)) {
+                    // for all features that may be const
 #ifdef USE_OMP
-                        f_set_t maybe_const_set_copy;
-                        f_ret_map_t f_ret_map_copy;
+                    f_set_t maybe_const_set_copy;
+                    f_ret_map_t f_ret_map_copy;
 #pragma omp critical
-                        {
-                            maybe_const_set_copy = maybe_const_set;
-                            f_ret_map_copy = f_ret_map;
+                    {
+                        maybe_const_set_copy = maybe_const_set;
+                        f_ret_map_copy = f_ret_map;
 
-                        } // critical
-                        for(f_ptr_t feature : maybe_const_set_copy) {
+                    } // critical
+                    for(f_ptr_t feature : maybe_const_set_copy) {
 #else
-                            f_set_t& maybe_const_set_copy = maybe_const_set;
-                            f_ret_map_t& f_ret_map_copy = f_ret_map;
-                            for(f_ptr_t feature : maybe_const_set) {
+                        f_set_t& maybe_const_set_copy = maybe_const_set;
+                        f_ret_map_t& f_ret_map_copy = f_ret_map;
+                        for(f_ptr_t feature : maybe_const_set) {
 #endif
 
-                                // get return-value
-                                f_ret_t f_ret = feature->evaluate(basis_feature_maps[data_idx][outcome_idx]);
+                            // get return-value
+                            f_ret_t f_ret = feature->evaluate(basis_feature_maps[data_idx][outcome_idx]);
 
-                                // compare
-                                if(f_ret_map_copy[feature]!=f_ret) {
-                                    DEBUG_OUT(4,"    different value (" << f_ret_map_copy[feature] << "/" << f_ret << "): " << *feature);
-                                    non_const_set.insert(feature);
-                                } else {
-                                    DEBUG_OUT(4,"    same value (" << f_ret << "): " << *feature);
-                                }
-#ifdef USE_OMP
+                            // compare
+                            if(f_ret_map_copy[feature]!=f_ret) {
+                                DEBUG_OUT(4,"    different value (" << f_ret_map_copy[feature] << "/" << f_ret << "): " << *feature);
+                                non_const_set.insert(feature);
+                            } else {
+                                DEBUG_OUT(4,"    same value (" << f_ret << "): " << *feature);
                             }
-#else
+#ifdef USE_OMP
                         }
-#endif
-
-                        // increment
-                        ++outcome_idx;
+#else
                     }
+#endif
                 }
 
 #ifdef USE_OMP

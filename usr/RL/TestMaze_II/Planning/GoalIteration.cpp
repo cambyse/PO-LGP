@@ -16,7 +16,7 @@ GoalIteration::GoalIteration(const double & d, const Predictor & predictor, bool
     discount(d), auto_iterate(auto_it)
 {
     // set spaces and initialize vectors/matrices
-    set_spaces(predictor);
+    adopt_spaces(predictor);
     int o_size = observation_space->space_size();
     int a_size = action_space->space_size();
     Q = zeros(o_size*a_size);
