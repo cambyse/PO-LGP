@@ -11,10 +11,6 @@ if(FLYCAPTURE_LIBRARY)
 	target_link_libraries(x_${NAME} Hardware_flycap Gui Core)
 	target_link_libraries(flycap_serials Hardware_flycap)
 	
-	include_directories(${FLYCAPTURE_INCLUDE_PATH})
-	add_executable(flycap_info flycap_info.cpp)
-	target_link_libraries(flycap_info ${FLYCAPTURE_LIBRARY})
-	
 	mlr_example_test(${NAME})
 
 endif()	
