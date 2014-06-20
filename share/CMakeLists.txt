@@ -66,7 +66,9 @@ else(WITH_GTEST)
 endif(WITH_GTEST)
 macro(mlr_example_test NAME)
 if(TESTING_ENABLED AND EXAMPLES_AS_TESTS)
-	add_test(x_${NAME}_test ${NAME} --gtest-output=xml:${NAME}-unit-xml)
+	add_test(NAME x_${NAME}_test 
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} 
+		COMMAND x_${NAME} --gtest-output=xml:${NAME}-unit-xml)
 endif()
 endmacro()
 
