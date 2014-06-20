@@ -50,7 +50,8 @@ private:
 	FlycapInterface cam;
 	VideoEncoder_x264_simple enc;
 	TimeTagFile times;
-	byteA buffer;
+	//byteA buffer;
+	OpenGL gl;
 	double start_time;
 
 public:
@@ -70,11 +71,12 @@ public:
 
 	void step() {
 		double timestamp;
-		if((ready = cam.grab(buffer, timestamp, 500))) {
+		if((ready = cam.grab(gl.background, timestamp, 500))) {
 			if(timestamp >= start_time) {
-				enc.addFrame(buffer);
+				enc.addFrame(gl.background);
 				times.add_stamp(timestamp);
 			}
+			gl.update();
 		} else {
 			cerr << "grab " << id << " failed" << endl;
 		}
