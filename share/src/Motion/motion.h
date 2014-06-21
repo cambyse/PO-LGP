@@ -58,7 +58,7 @@ struct TaskCost {
   bool active;
   arr target, prec;  ///< target & precision over a whole trajectory
   double threshold;  ///< threshold for feasibility checks (e.g. in RRTs)
-  uint dim_phi(uint t,const ors::KinematicWorld& G){ if(!active || prec.N<=t || !prec(t)) return 0; return map.dim_phi(G); }
+  uint dim_phi(const ors::KinematicWorld& G, uint t){ if(!active || prec.N<=t || !prec(t)) return 0; return map.dim_phi(G); }
 
   TaskCost(TaskMap* m):map(*m), active(true){}
 
@@ -121,8 +121,8 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
                              const arr& y_finalTarget, double y_finalPrec, const arr& y_midTarget=NoArr, double y_midPrec=-1., double earlyFraction=-1.);
 
   //-- cost infos
-  uint dim_phi(uint t);
-  uint dim_g(uint t);
+  uint dim_phi(const ors::KinematicWorld& G, uint t);
+  uint dim_g(const ors::KinematicWorld& G, uint t);
   uint dim_psi();
   bool getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t); ///< the general (`big') task vector and its Jacobian
   void getTaskCosts2(arr& phi, arr& J, uint t, const WorldL& G, double tau); ///< the general (`big') task vector and its Jacobian
@@ -148,14 +148,14 @@ struct MotionProblemFunction:KOrderMarkovFunction {
   MotionProblemFunction(MotionProblem& _P):MP(_P) { MT::Array<ors::KinematicWorld*>::memMove=true; };
   
   //KOrderMarkovFunction definitions
-  virtual void phi_t(arr& phi, arr& J, uint t, const arr& x_bar, const arr& z=NoArr, const arr& J_z=NoArr);
+  virtual void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);
   //functions to get the parameters $T$, $k$ and $n$ of the $k$-order Markov Process
   virtual uint get_T() { return MP.T; }
   virtual uint get_k() { if(MP.transitionType==MotionProblem::kinematic) return 1;  return 2; }
   virtual uint dim_x() { return MP.x0.N; }
   virtual uint dim_z() { return MP.z0.N; }
-  virtual uint dim_phi(uint t){ return MP.dim_psi() + MP.dim_phi(t); } //transitions plus costs (latter include constraints)
-  virtual uint dim_g(uint t){ return MP.dim_g(t); }
+  virtual uint dim_phi(uint t){ return MP.dim_psi() + MP.dim_phi(MP.world, t); } //transitions plus costs (latter include constraints)
+  virtual uint dim_g(uint t){ return MP.dim_g(MP.world, t); }
   virtual arr get_prefix(); //the history states x(-k),..,x(-1)
   virtual arr get_postfix();
 };

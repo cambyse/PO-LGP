@@ -195,19 +195,19 @@ void MotionProblem::setState(const arr& q, const arr& v) {
 }
 
 
-uint MotionProblem::dim_phi(uint t) {
+uint MotionProblem::dim_phi(const ors::KinematicWorld &G, uint t) {
   uint m=0;
   for(TaskCost *c: taskCosts) {
-    m += c->dim_phi(t, world); //counts also constraints
-    if(c->map.constraint && makeContactsAttractive) m += c->dim_phi(t, world); //..maybe twice
+    m += c->dim_phi(G, t); //counts also constraints
+    if(c->map.constraint && makeContactsAttractive) m += c->dim_phi(G, t); //..maybe twice
   }
   return m;
 }
 
-uint MotionProblem::dim_g(uint t) {
+uint MotionProblem::dim_g(const ors::KinematicWorld &G, uint t) {
   uint m=0;
   for(TaskCost *c: taskCosts) {
-    if(c->active && c->map.constraint)  m += c->map.dim_phi(world);
+    if(c->active && c->map.constraint)  m += c->map.dim_phi(G);
   }
   return m;
 }
@@ -262,7 +262,7 @@ bool MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
   if(&J_x) J_x.reshape(phi.N, world.q.N);
   if(&J_v) J_v.reshape(phi.N, world.q.N);
 
-  CHECK(phi.N == dim_phi(t),"");
+  CHECK(phi.N == dim_phi(world, t),"");
 
   return feasible;
 }
@@ -270,7 +270,7 @@ bool MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
 void MotionProblem::getTaskCosts2(arr& phi, arr& J, uint t, const WorldL &G, double tau) {
   phi.clear();
   if(&J) J.clear();
-  arr y,Jy;
+  arr y, Jy;
   //-- append task costs
   for(TaskCost *c: taskCosts) if(c->active && c->prec.N>t && c->prec(t)){
     if(!c->map.constraint) {
@@ -302,9 +302,9 @@ void MotionProblem::getTaskCosts2(arr& phi, arr& J, uint t, const WorldL &G, dou
       if(&J) J.append(Jy);
     }
   }
-  if(&J) J.reshape(phi.N, G.N*world.q.N);
+  if(&J) J.reshape(phi.N, G.N*G.last()->getJointStateDimension());
 
-  CHECK(phi.N == dim_phi(t),"");
+  CHECK(phi.N == dim_phi(*G.last(), t),"");
 }
 
 uint MotionProblem::dim_psi() {
@@ -339,7 +339,7 @@ void MotionProblem::costReport(bool gnuplt) {
     uint m=dim_psi();
     for(uint i=0; i<taskCosts.N; i++) {
       TaskCost *c = taskCosts(i);
-      uint d=c->dim_phi(t, world);
+      uint d=c->dim_phi(world, t);
       if(d && !c->map.constraint){
         taskC(i) += a = sumOfSqr(phiMatrix(t).sub(m,m+d-1));
         plotData(t,i+1) = a;
@@ -407,8 +407,8 @@ void MotionProblem::costReport(bool gnuplt) {
   fil2 <<"set title 'costReport ( plotting sqrt(costs) )'" <<endl;
   fil2 <<"plot 'z.costReport' u 0:1 w l \\" <<endl;
   uint i=1;
-  for(auto c:taskCosts){ i++; fil2 <<"  ,'' u 0:"<<i<<" w l \\" <<endl;  }
-  if(dualMatrix.N) for(auto c:taskCosts){  i++; fil2 <<"  ,'' u 0:"<<i<<" w l \\" <<endl;  }
+  for(uint tmp=0;tmp<taskCosts.N;tmp++){ i++; fil2 <<"  ,'' u 0:"<<i<<" w l \\" <<endl;  }
+  if(dualMatrix.N) for(uint tmp=0;tmp<taskCosts.N;tmp++){  i++; fil2 <<"  ,'' u 0:"<<i<<" w l \\" <<endl;  }
   fil2 <<endl;
   fil2.close();
 
@@ -494,8 +494,8 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar, co
 }
 #else
 
-void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar, const arr& z, const arr& J_z) {
-  uint T=get_T(), n=dim_x(), k=get_k();
+void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
+  uint T=get_T(), n=dim_x()+dim_z(), k=get_k();
 
   //assert some dimensions
   CHECK(x_bar.d0==k+1,"");
@@ -527,7 +527,7 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar, co
   for(ors::GraphOperator *op:MP.world.operators){
     for(uint i=0;i<=k;i++){
       if(t+i>=k && op->timeOfApplication==t-k+i){
-        op->apply(*configurations(i), z);
+        op->apply(*configurations(i));
       }
     }
   }
@@ -571,13 +571,14 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar, co
   MP.getTaskCosts2(_phi, (&J?_J:NoArr), t, configurations, MP.tau);
   phi.append(_phi);
   if(&J) J.append(_J);
-  if(&J_z){
-    for(auto& c:configurations) c->setAgent(1);
-    MP.getTaskCosts2(NoArr, J_z, t, configurations, MP.tau);
-    for(auto& c:configurations) c->setAgent(0);
-  }
+//  if(&J_z){
+//    for(auto& c:configurations) c->setAgent(1);
+//    MP.getTaskCosts2(_phi, J_z, t, configurations, MP.tau);
+//    for(auto& c:configurations) c->setAgent(0);
+//  }
 
   if(&J) CHECK(J.d0==phi.N,"");
+//  if(&J_z) CHECK(J.d0==phi.N,"");
 
   //store in CostMatrix
   if(!MP.phiMatrix.N) MP.phiMatrix.resize(get_T()+1);

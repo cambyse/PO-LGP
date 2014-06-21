@@ -1308,7 +1308,22 @@ void ors::KinematicWorld::jacobianR(arr& J, Body *b) const {
           J(2, j_idx) = j->axis.z;
         }
         else if(j->type==JT_quatBall) {
-          NIY;
+          ors::Quaternion e;
+          ors::Vector axis;
+          for(uint i=0;i<4;i++){
+            if(i==0) e.set(1.,0.,0.,0.);
+            if(i==1) e.set(0.,1.,0.,0.);
+            if(i==2) e.set(0.,0.,1.,0.);
+            if(i==3) e.set(0.,0.,0.,1.);//TODO: the following could be simplified/compressed/made more efficient
+            e = e / j->Q.rot;
+            axis.set(e.x, e.y, e.z);
+            axis = j->X.rot*axis;
+            axis *= -2.;
+            axis /= sqrt(sumOfSqr(q.subRange(j->qIndex,j->qIndex+3))); //account for the potential non-normalization of q
+            J(0, j_idx+i) += axis.x;
+            J(1, j_idx+i) += axis.y;
+            J(2, j_idx+i) += axis.z;
+          }
         }
         //all other joints: J=0 !!
       }
@@ -2178,7 +2193,7 @@ ors::GraphOperator::GraphOperator():
   symbol(none), timeOfApplication(UINT_MAX), fromId(UINT_MAX), toId(UINT_MAX){
 }
 
-void ors::GraphOperator::apply(KinematicWorld& G, const arr& z){
+void ors::GraphOperator::apply(KinematicWorld& G){
   Body *from=G.bodies(fromId), *to=G.bodies(toId);
   if(symbol==deleteJoint){
     Joint *j = G.getJointByBodies(from, to);
@@ -2188,14 +2203,9 @@ void ors::GraphOperator::apply(KinematicWorld& G, const arr& z){
   }
   if(symbol==addRigid){
     Joint *j = new Joint(G, from, to);
-    if(&z){
-      CHECK(z.N==4,"");
-      j->A.rot.set(z.p);
-    }else{
-      j->A.setDifference(from->X, to->X);
-    }
-    j->type=JT_quatBall;
-    j->agent=1;
+    j->A.setDifference(from->X, to->X);
+    j->type=JT_fixed;
+//    j->agent=1;
     G.isLinkTree=false;
     return;
   }

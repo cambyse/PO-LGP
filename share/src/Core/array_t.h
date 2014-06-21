@@ -2073,7 +2073,7 @@ template<class T> T absMin(const MT::Array<T>& x) {
 
 /// get absolute maximum (using fabs)
 template<class T> T absMax(const MT::Array<T>& x) {
-  CHECK(x.N, "");
+  if(!x.N) return (T)0;
   uint i;
   T t((T)::fabs((double)x.p[0]));
   for(i=1; i<x.N; i++) if(fabs((double)x.p[i])>t) t=(T)::fabs((double)x.p[i]);

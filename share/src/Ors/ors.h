@@ -332,7 +332,7 @@ struct GraphOperator{
   uint timeOfApplication;
   uint fromId, toId;
   GraphOperator();
-  void apply(KinematicWorld& G, const arr &z);
+  void apply(KinematicWorld& G);
 };
 
 /// @} // END of group ors_basic_data_structures

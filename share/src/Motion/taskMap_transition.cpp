@@ -15,6 +15,14 @@ TransitionTaskMap::TransitionTaskMap(const ors::KinematicWorld& G){
 }
 
 void TransitionTaskMap::phi(arr& y, arr& J, const WorldL& G, double tau){
+  if(G.last()->q_agent!=0){ //we're referring to a graph set to non-zero agent!
+    uint n=G.last()->getJointStateDimension();
+    CHECK(n!=H_rate_diag.N,"just checking...");
+    y.resize(n).setZero();
+    if(&J) J.resize(y.N, order+1, n).setZero();
+    return;
+  }
+
   //-- transition costs
   double tau2=tau*tau;
   arr h = sqrt(H_rate_diag)*sqrt(tau);

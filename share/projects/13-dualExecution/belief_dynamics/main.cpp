@@ -43,7 +43,7 @@ struct MiniBeliefProblem:KOrderMarkovFunction {
     beliefGoalPrec =  MT::getParameter<double>("belGoalPrec", 10.);
     posGoalPrec =  MT::getParameter<double>("posGoalPrec", 10.);
   }
-  void phi_t(arr& phi, arr& J, uint t, const arr& x_bar, const arr& z=NoArr, const arr& J_z=NoArr);
+  void phi_t(arr& phi, arr& J, uint t, const arr& x_bar, const arr& z=NoArr, arr &J_z=NoArr);
 
   uint get_T(){ return 400; }
   uint get_k(){ return 2; }
@@ -64,7 +64,7 @@ uint MiniBeliefProblem::dim_phi(uint t){
   return 3;
 }
 
-void MiniBeliefProblem::phi_t(arr& phi, arr& J, uint t, const arr& x_bar, const arr& z, const arr& J_z){
+void MiniBeliefProblem::phi_t(arr& phi, arr& J, uint t, const arr& x_bar, const arr& z, arr& J_z){
   uint T=get_T(), n=dim_x(), k=get_k();
   phi.clear();
 

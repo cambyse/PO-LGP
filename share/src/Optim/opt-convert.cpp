@@ -199,37 +199,58 @@ void sConvert::KOrderMarkovFunction_VectorFunction::fv(arr& phi, arr& J, const a
   //resizing things:
   phi.resize(dim_Phi);   phi.setZero();
   RowShiftedPackedMatrix* Jaux;
+  arr *Jz;
+  RowShiftedPackedMatrix* Jzaux;
   if(&J){
-    if(!dim_z) Jaux = auxRowShifted(J, dim_Phi, (k+1)*n, x.N);
-    else       Jaux = auxRowShifted(J, 2*dim_Phi, (k+1)*n, x.N+dim_z);
+    Jaux = auxRowShifted(J, dim_Phi, (k+1)*n, _x.N);
     J.setZero();
+    if(dim_z){
+      Jz = new arr(dim_Phi, dim_z);
+      Jz->setZero();
+      Jaux->nextInSum = Jz;
+      Jzaux = auxRowShifted(*Jz, dim_Phi, dim_z, _x.N);
+    }
   }
   uint M=0;
   uint m_t;
   for(uint t=0; t<=T; t++) {
     m_t = f->dim_phi(t);
     if(!m_t) continue;
-    arr x_bar, phi_t, J_t, J_z;
+    arr x_bar, phi_t, J_t, Jz_t;
     //construct x_bar
     if(t>=k) {
       if(t>=x.d0) { //x_bar includes the postfix
         x_bar.resize(k+1,n);
         for(int i=t-k; i<=(int)t; i++) x_bar[i-t+k]() = (i>=(int)x.d0)? x_post[i-x.d0] : x[i];
       } else{
-        x_bar.referToSubRange(x, t-k, t);
+        if(!dim_z) x_bar.referToSubRange(x, t-k, t);
+        else x_bar = x.sub(t-k, t, 0, -1); //need to copy as we will augment
       }
     } else { //x_bar includes the prefix
       x_bar.resize(k+1,n);
       for(int i=t-k; i<=(int)t; i++) x_bar[i-t+k]() = (i<0)? x_pre[k+i] : x[i];
     }
+    if(dim_z){ //append the constant variable to x_bar
+      x_bar.insColumns(x_bar.d1, dim_z);
+      for(uint i=0;i<=k;i++) x_bar[i].subRange(-dim_z, -1)=z;
+    }
     //query
-    f->phi_t(phi_t, (&J?J_t:NoArr), t, x_bar, z, (&J && dim_z?J_z:NoArr));
+    f->phi_t(phi_t, (&J?J_t:NoArr), t, x_bar);
     CHECK(phi_t.N==m_t,"");
     //extract phi
     phi.setVectorBlock(phi_t, M);
     //extract J
     if(&J) {
       if(J_t.nd==3) J_t.reshape(J_t.d0,J_t.d1*J_t.d2);
+      if(dim_z){//decompose J_t
+        Jz_t.resize(J_t.d0, dim_z).setZero();
+        J_t.reshape(J_t.d0, (k+1)*(n+dim_z));
+        for(uint i=0;i<=k;i++){
+          J_t.setMatrixBlock(J_t.sub(0, -1, i*x_bar.d1, i*x_bar.d1+n-1), 0, i*n);
+          Jz_t += J_t.sub(0, -1, i*x_bar.d1+n, i*x_bar.d1+n+dim_z-1); //we add up the Jacobians
+        }
+        J_t.resizeCopy(J_t.d0,(k+1)*n);
+      }
       CHECK(J_t.d0==m_t && J_t.d1==(k+1)*n,"");
       if(t>=k) {
         J.setMatrixBlock(J_t, M, 0);
@@ -240,8 +261,8 @@ void sConvert::KOrderMarkovFunction_VectorFunction::fv(arr& phi, arr& J, const a
         for(uint i=0; i<m_t; i++) Jaux->rowShift(M+i) = 0;
       }
       if(dim_z){
-        CHECK(J_z.d0==m_t && J_z.d1==dim_z,"");
-        J.setMatrixBlock(J_z, dim_Phi+M, 0);
+        CHECK(!Jz_t.N || (Jz_t.d0==m_t && Jz_t.d1==dim_z),"");
+        Jz->setMatrixBlock(Jz_t, M, 0);
         for(uint i=0; i<m_t; i++) Jaux->rowShift(M+i) = x.N;
       }
     }
