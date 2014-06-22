@@ -230,3 +230,7 @@ int TEM::LBFGS_progress(const lbfgsfloatval_t */*x*/,
     //DEBUG_OUT(1,"Iteration " << iteration_nr << " (Likelihood = " << exp(-fx) << ")" );
     return 0;
 }
+
+void TEM::LBFGS_final_message(double obj_val) const {
+    DEBUG_OUT(0,"Likelihood = " << exp(-obj_val));
+}

@@ -9,12 +9,13 @@
 
 #include "../Config.h"
 #include "../util/ProgressBar.h"
+#include "../SpaceManager.h"
 
 #include "../Predictor.h"
 
 class Environment;
 
-class LookAheadSearch {
+class LookAheadSearch: public SpaceManager {
 
 public:
 
@@ -61,12 +62,6 @@ public:
 
     LookAheadSearch(const double& d);
     virtual ~LookAheadSearch();
-
-    /** \brief Initialize action, observation, and reward spaces. */
-    virtual void set_spaces(const Environment & environment);
-
-    /** \brief Set the spaces used for planning. */
-    void set_spaces(const action_ptr_t & a, const observation_ptr_t & o, const reward_ptr_t & r);
 
     /*! \brief Clears the search tree. */
     void clear_tree();
@@ -131,10 +126,6 @@ protected:
     double discount;
     large_size_t number_of_nodes;
     static const bool random_tie_break;
-
-    action_ptr_t action_space;
-    observation_ptr_t observation_space;
-    reward_ptr_t reward_space;
 
     /*! \brief Sets the way the upper and lower bounds
      * are used for node selection and back-propagation. */

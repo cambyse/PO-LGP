@@ -44,6 +44,7 @@ protected:
                        int nr_variables,
                        int iteration_nr,
                        int ls) const override;
+    virtual void LBFGS_final_message(double) const override;
 };
 
 #endif /* TEMPORALLYEXTENDEDMODEL_H_ */

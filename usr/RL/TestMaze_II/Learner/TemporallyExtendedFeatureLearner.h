@@ -173,6 +173,7 @@ protected:
                                int nr_variables,
                                int iteration_nr,
                                int ls) const = 0;
+    virtual void LBFGS_final_message(double) const = 0;
     virtual LBFGS_Object::objective_t get_LBFGS_objective();
     virtual LBFGS_Object::progress_t get_LBFGS_progress() const;
 };

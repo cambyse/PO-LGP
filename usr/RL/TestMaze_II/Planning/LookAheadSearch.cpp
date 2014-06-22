@@ -94,16 +94,6 @@ LookAheadSearch::LookAheadSearch(const double& d):
 
 LookAheadSearch::~LookAheadSearch() {}
 
-void LookAheadSearch::set_spaces(const Environment & environment) {
-    environment.get_spaces(action_space,observation_space,reward_space);
-}
-
-void LookAheadSearch::set_spaces(const action_ptr_t & a, const observation_ptr_t & o, const reward_ptr_t & r) {
-    action_space = a;
-    observation_space = o;
-    reward_space = r;
-}
-
 void LookAheadSearch::clear_tree() {
     graph.clear();
     number_of_nodes = 0;

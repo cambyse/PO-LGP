@@ -9,6 +9,7 @@
 #include "../Learner/UTree.h"
 #include "../Learner/LinearQ.h"
 #include "../Learner/TemporallyExtendedModel.h"
+#include "../Learner/TemporallyExtendedLinearQ.h"
 #include "../Learner/ConjunctiveAdjacency.h"
 #include "../Representation/DoublyLinkedInstance.h"
 
@@ -37,7 +38,7 @@ TEST(LearnerTest, KMarkovCRF) {
     observation_ptr_t observation_space;
     reward_ptr_t reward_space;
     maze.get_spaces(action_space,observation_space,reward_space);
-    crf.set_spaces(maze);
+    crf.adopt_spaces(maze);
     crf.set_features(maze);
 
     // get all actions for random selection
@@ -76,7 +77,7 @@ TEST(LearnerTest, KMarkovCRF) {
     // initialize planner
     // TODO: This should be done using LookAheadPolicy as in PlannerTest.cpp
     LookAheadSearch planner(0.5);
-    planner.set_spaces(action_space, observation_space, reward_space);
+    planner.adopt_spaces(maze);
 
     // start at current state
     const_instance_ptr_t maze_instance = maze.get_current_instance();
@@ -135,7 +136,7 @@ TEST(LearnerTest, UTree) {
     observation_ptr_t observation_space;
     reward_ptr_t reward_space;
     maze.get_spaces(action_space,observation_space,reward_space);
-    utree.set_spaces(maze);
+    utree.adopt_spaces(maze);
     utree.set_features(maze);
 
     // get all actions for random selection
@@ -208,7 +209,7 @@ TEST(LearnerTest, UTree) {
 
         // initialize planner
         LookAheadSearch planner(0.5);
-        planner.set_spaces(action_space, observation_space, reward_space);
+        planner.adopt_spaces(maze);
 
         // start at current state
         const_instance_ptr_t maze_instance = maze.get_current_instance();
@@ -270,7 +271,7 @@ TEST(LearnerTest, LinearQ) {
     observation_ptr_t observation_space;
     reward_ptr_t reward_space;
     maze.get_spaces(action_space,observation_space,reward_space);
-    linQ.set_spaces(maze);
+    linQ.adopt_spaces(maze);
     linQ.set_features(maze);
 
     // get all actions for random selection
@@ -365,14 +366,14 @@ TEST(LearnerTest, TemporallyExtendedModel) {
 
     // initialize N+, set horizon extension
     N_plus = make_shared<ConjunctiveAdjacency>();
-    N_plus->set_spaces(maze);
+    N_plus->adopt_spaces(maze);
     N_plus->set_horizon_extension(2);
     N_plus->set_max_horizon(2);
     N_plus->set_combine_features(false);
 
     // initialize TEM using N+
     TEM = make_shared<TemporallyExtendedModel>(N_plus);
-    TEM->set_spaces(maze);
+    TEM->adopt_spaces(maze);
     TEM->set_l1_factor(0.001);
 
     // get all actions for random selection
@@ -403,4 +404,70 @@ TEST(LearnerTest, TemporallyExtendedModel) {
     TEM->set_l1_factor(0);
     TEM->optimize_weights_LBFGS();
     TEM->print_features();
+}
+
+TEST(LearnerTest, TemporallyExtendedLinearQ) {
+    USE_CONFIG_TYPEDEFS;
+
+    // initialize environment and learner
+    Maze maze;
+    shared_ptr<TemporallyExtendedLinearQ> TELQ;
+    shared_ptr<ConjunctiveAdjacency> N_plus;
+
+    // use the minimal maze
+    maze.set_maze("Minimal");
+
+    // get spaces
+    action_ptr_t action_space;
+    observation_ptr_t observation_space;
+    reward_ptr_t reward_space;
+    maze.get_spaces(action_space,observation_space,reward_space);
+
+    // initialize N+, set horizon extension
+    N_plus = make_shared<ConjunctiveAdjacency>();
+    N_plus->adopt_spaces(maze);
+    N_plus->set_horizon_extension(2);
+    N_plus->set_max_horizon(2);
+    N_plus->set_combine_features(false);
+
+    // initialize TELQ using N+
+    TELQ = make_shared<TemporallyExtendedLinearQ>(N_plus, 0.9);
+    TELQ->adopt_spaces(maze);
+    TELQ->set_l1_factor(0.001);
+
+    // get all actions for random selection
+    vector<action_ptr_t> action_vector;
+    for(action_ptr_t a : action_space) {
+        action_vector.push_back(a);
+    }
+
+    // do some random actions to collect data
+    repeat(1000) {
+        action_ptr_t action = util::random_select(action_vector);
+        observation_ptr_t observation_to;
+        reward_ptr_t reward;
+        maze.perform_transition(action,observation_to,reward);
+        TELQ->add_action_observation_reward_tripel(action,observation_to,reward,false);
+    }
+
+    // try to learn something
+    repeat(2) {
+        TELQ->grow_feature_set();
+        TELQ->run_policy_iteration();
+        TELQ->shrink_feature_set();
+        TELQ->print_features();
+    }
+
+    // make some moves
+    instance_ptr_t ins = maze.get_current_instance();
+    repeat(10) {
+        maze.perform_transition(TELQ->get_action(ins));
+        ins = maze.get_current_instance();
+    }
+
+    //EXPECT_TRUE(TELQ->check_derivatives(10,1));
+
+    // TELQ->set_l1_factor(0);
+    // TELQ->optimize_weights_LBFGS();
+    // TELQ->print_features();
 }

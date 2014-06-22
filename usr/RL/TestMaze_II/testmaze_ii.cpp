@@ -66,7 +66,7 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     utree(new UTree(discount)),
     linQ(new LinearQ(discount)),
     N_plus(new ConjunctiveAdjacency()),
-    telQ(new TemporallyExtendedLinearQ(N_plus,discount)),
+    telq(new TemporallyExtendedLinearQ(N_plus,discount)),
     tem(new TemporallyExtendedModel(N_plus)),
     policy(nullptr),
     max_tree_size(10000),
@@ -358,6 +358,7 @@ void TestMaze_II::initialize_commands() {
                 if(d>=0) {
                     l1_factor = d;
                     tem->set_l1_factor(l1_factor);
+                    telq->set_l1_factor(l1_factor);
                     return {true,QString("set L1 coefficient to %1").arg(l1_factor)};
                 } else {
                     return {false,"L1 coefficient must be non-negative"};
@@ -681,6 +682,68 @@ void TestMaze_II::initialize_commands() {
             }, "set whether TEM combines existing features");
     }
     {
+        pair<double,QString> top_model_learn_telq(3.6,"TELQ ---------------------------------------------------");
+        command_center.add_command(top_model_learn_telq,{"telq grow","telqg"}, [this]()->ret_t{
+                telq->grow_feature_set();
+                return {true,"grew TELQ features"};
+            }, "grow TELQ features");
+        command_center.add_command(top_model_learn_telq,{"telq optimize","telqo"}, [this]()->ret_t{
+                telq->run_policy_iteration();
+                return {true,"optimized TELQ"};
+            }, "optimize TELQ");
+        command_center.add_command(top_model_learn_telq,{"telq shrink","telqs"}, [this]()->ret_t{
+                telq->shrink_feature_set();
+                return {true,"shrank TELQ features"};
+            }, "shrink TELQ features");
+        command_center.add_command(top_model_learn_telq,{"telq print","telqp"}, [this]()->ret_t{
+                telq->print_features();
+                return {true,"printed TELQ features"};
+            }, "print TELQ features");
+        command_center.add_command(top_model_learn_telq,{"telq cycle","telqc"}, [this]()->ret_t{
+                telq->grow_feature_set();
+                telq->run_policy_iteration();
+                telq->shrink_feature_set();
+                telq->print_features();
+                return {true,"did one learning cycle of TELQ"};
+            }, "do a complete grow-optimize-shrink cycle of TELQ and print features afterwards");
+        command_center.add_command(top_model_learn_telq,{"telq max horizon","telqmaxh"}, [this]()->ret_t{
+                return {true,QString("TELQ maximum horizon is %1").arg(N_plus->get_max_horizon())};
+            }, "get TELQ maximum horizon");
+        command_center.add_command(top_model_learn_telq,{"telq max horizon","telqmaxh"}, [this](int h)->ret_t{
+                N_plus->set_max_horizon(h);
+                return {true,QString("set TELQ maximum horizon to %1").arg(N_plus->get_max_horizon())};
+            }, "set TELQ maximum horizon");
+        command_center.add_command(top_model_learn_telq,{"telq min horizon","telqminh"}, [this]()->ret_t{
+                return {true,QString("TELQ minimum horizon is %1").arg(N_plus->get_min_horizon())};
+            }, "get TELQ minimum horizon");
+        command_center.add_command(top_model_learn_telq,{"telq min horizon","telqminh"}, [this](int h)->ret_t{
+                N_plus->set_min_horizon(h);
+                return {true,QString("set TELQ minimum horizon to %1").arg(N_plus->get_min_horizon())};
+            }, "set TELQ maximum horizon");
+        command_center.add_command(top_model_learn_telq,{"telq horizon extension","telqhe"}, [this]()->ret_t{
+                return {true,QString("TELQ horizon extension is %1").arg(N_plus->get_horizon_extension())};
+            }, "get TELQ horizon extension");
+        command_center.add_command(top_model_learn_telq,{"telq horizon extension","telqhe"}, [this](int h)->ret_t{
+                N_plus->set_horizon_extension(h);
+                return {true,QString("set TELQ horizon extension to %1").arg(N_plus->get_horizon_extension())};
+            }, "set TELQ horizon extension");
+        command_center.add_command(top_model_learn_telq,{"telq combine features","telqcf"}, [this]()->ret_t{
+                if(N_plus->get_combine_features()) {
+                    return {true,"TELQ does combines features"};
+                } else {
+                    return {true,"TELQ does not combines features"};
+                }
+            }, "get whether TELQ combines existing features");
+        command_center.add_command(top_model_learn_telq,{"telq combine features","telqcf"}, [this](bool combine)->ret_t{
+                N_plus->set_combine_features(combine);
+                if(N_plus->get_combine_features()) {
+                    return {true,"set TELQ to combine features"};
+                } else {
+                    return {true,"set TELQ to not combine features"};
+                }
+            }, "set whether TELQ combines existing features");
+    }
+    {
         pair<double,QString> top_planning(4,"Planning ===============================================");
         command_center.add_command(top_planning,{"set planner o","s p o"}, [this]()->ret_t{
                 planner_type = OPTIMAL_LOOK_AHEAD;
@@ -807,7 +870,7 @@ void TestMaze_II::initialize_commands() {
                     discount = d;
                     utree->set_discount(discount);
                     linQ->set_discount(discount);
-                    telQ->set_discount(discount);
+                    telq->set_discount(discount);
                     shared_ptr<LookAheadPolicy> look_ahead_policy = dynamic_pointer_cast<LookAheadPolicy>(policy);
                     if(look_ahead_policy!=nullptr) {
                         look_ahead_policy->set_discount(discount);
@@ -1477,7 +1540,7 @@ void TestMaze_II::add_action_observation_reward_tripel(
            crf->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
          utree->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
           linQ->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
-          telQ->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
+          telq->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
           tem->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
     delay_dist.add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
     DEBUG_OUT(1,"Add (" << action << ", " << observation << ", " << reward << ")" <<
@@ -1489,7 +1552,7 @@ void TestMaze_II::clear_data() {
     crf->clear_data();
     utree->clear_data();
     linQ->clear_data();
-    telQ->clear_data();
+    telq->clear_data();
     tem->clear_data();
     delay_dist.clear_data();
 }
@@ -1560,7 +1623,7 @@ void TestMaze_II::change_environment(shared_ptr<Environment> new_environment) {
         crf->set_features(*environment);
         linQ->adopt_spaces(*environment);
         linQ->set_features(*environment);
-        telQ->adopt_spaces(*environment);
+        telq->adopt_spaces(*environment);
         tem->adopt_spaces(*environment);
         N_plus->adopt_spaces(*environment);
         // set current instance
@@ -1581,7 +1644,7 @@ void TestMaze_II::clear_all_learners() {
     crf.reset(new KMarkovCRF());
     utree.reset(new UTree(discount));
     linQ.reset(new LinearQ(discount));
-    telQ.reset(new TemporallyExtendedLinearQ(N_plus,discount));
+    telq.reset(new TemporallyExtendedLinearQ(N_plus,discount));
     tem.reset(new TemporallyExtendedModel(N_plus));
     tem->set_l1_factor(l1_factor);
 }
@@ -1640,7 +1703,7 @@ void TestMaze_II::set_policy() {
         break;
     }
     case TELQ_VALUE: {
-        shared_ptr<Policy> p = dynamic_pointer_cast<Policy>(telQ);
+        shared_ptr<Policy> p = dynamic_pointer_cast<Policy>(telq);
         if(p==nullptr) { DEBUG_DEAD_LINE; }
         policy = p;
         break;

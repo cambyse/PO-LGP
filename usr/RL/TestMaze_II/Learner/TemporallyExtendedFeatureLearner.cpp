@@ -141,7 +141,9 @@ void TEFL::optimize_weights_LBFGS() {
     lbfgs.set_variables(values);
     lbfgs.set_l1_factor(l1_factor);
     double neg_log_like = lbfgs.optimize(values);
-    DEBUG_OUT(1,"Likelihood = " << exp(-neg_log_like));
+    IF_DEBUG(1) {
+        LBFGS_final_message(neg_log_like);
+    }
 
     // set weights
     weights = values;
@@ -505,32 +507,52 @@ void TEFL::update_F_matrices() {
 
                 // for all outcomes
                 int outcome_idx = 0;
-                for(observation_ptr_t obs : observation_space) {
-                    for(reward_ptr_t rew : reward_space) {
-
+                if(outcome_type==OUTCOME_TYPE::ACTION) {
+                    for(action_ptr_t act : action_space) {
                         // get basis feature map for this data point and outcome
                         basis_feature_map_t& bf_map = basis_feature_maps[data_idx][outcome_idx];
-
                         //-----------------//
                         // update F-matrix //
                         //-----------------//
                         int feature_idx = 0;
                         for(f_ptr_t feature : feature_set) {
-
                             // set entry to 1 for non-zero features
-                            //if(feature->evaluate(ins->const_prev(),ins->action,obs,rew)!=0) { // directly evaluate feature
+                            //if(feature->evaluate(ins->const_prev(),act,observation_space,reward_space)!=0) { // directly evaluate feature
                             if(feature->evaluate(bf_map)!=0) {                                // evaluate feature via basis feature map
                                 DEBUG_OUT(4,"(" << F_matrix.n_rows << "," << F_matrix.n_cols << ")/(" << feature_idx << "," << outcome_idx << ")");
                                 F_matrix(feature_idx,outcome_idx) = 1;
                             }
-
                             // increment
                             ++feature_idx;
                         }
-
                         // increment
                         ++outcome_idx;
                     }
+                } else if(outcome_type==OUTCOME_TYPE::OBSERVATION_REWARD) {
+                    for(observation_ptr_t obs : observation_space) {
+                        for(reward_ptr_t rew : reward_space) {
+                            // get basis feature map for this data point and outcome
+                            basis_feature_map_t& bf_map = basis_feature_maps[data_idx][outcome_idx];
+                            //-----------------//
+                            // update F-matrix //
+                            //-----------------//
+                            int feature_idx = 0;
+                            for(f_ptr_t feature : feature_set) {
+                                // set entry to 1 for non-zero features
+                                //if(feature->evaluate(ins->const_prev(),ins->action,obs,rew)!=0) { // directly evaluate feature
+                                if(feature->evaluate(bf_map)!=0) {                                // evaluate feature via basis feature map
+                                    DEBUG_OUT(4,"(" << F_matrix.n_rows << "," << F_matrix.n_cols << ")/(" << feature_idx << "," << outcome_idx << ")");
+                                    F_matrix(feature_idx,outcome_idx) = 1;
+                                }
+                                // increment
+                                ++feature_idx;
+                            }
+                            // increment
+                            ++outcome_idx;
+                        }
+                    }
+                } else {
+                    DEBUG_DEAD_LINE;
                 }
 
                 // print progress

@@ -121,7 +121,7 @@ private:
     std::shared_ptr<UTree> utree;                    ///< UTree
     std::shared_ptr<LinearQ> linQ;                   ///< Linear-Q
     std::shared_ptr<ConjunctiveAdjacency> N_plus;    ///< N+ operator for TEM and TELQ
-    std::shared_ptr<TemporallyExtendedLinearQ> telQ; ///< Linear-Q with TEFs
+    std::shared_ptr<TemporallyExtendedLinearQ> telq; ///< Linear-Q with TEFs
     std::shared_ptr<TemporallyExtendedModel> tem;    ///< TEM
 
     //----------//

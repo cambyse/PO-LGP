@@ -33,8 +33,76 @@ TemporallyExtendedLinearQ::TemporallyExtendedLinearQ(std::shared_ptr<Conjunctive
     set_outcome_type(OUTCOME_TYPE::ACTION);
 }
 
-TELQ::action_ptr_t TELQ::get_action(const_instance_ptr_t) {
-    return action_space;
+TELQ::action_ptr_t TELQ::get_action(const_instance_ptr_t ins) {
+    // print random action if values cannot be computed
+    if(feature_set.size()==0) {
+        DEBUG_WARNING("Cannot compute action (no features)");
+        return action_space->random_element();
+    }
+    vector<action_ptr_t> optimal_actions;
+    double max_action_value = -DBL_MAX;
+    for(action_ptr_t act : action_space) {
+        // get feature values
+        row_vec_t feature_values(feature_set.size());
+        int feature_idx = 0;
+        for(f_ptr_t feature : feature_set) {
+            feature_values(feature_idx) = feature->evaluate(ins,act,observation_space,reward_space);
+            ++feature_idx;
+        }
+        // compute action value
+        double action_value = arma::as_scalar(feature_values*weights);
+        // update optimal actions
+        if(action_value>max_action_value) {
+            max_action_value = action_value;
+            optimal_actions.resize(1,act);
+        } else if(action_value==max_action_value) {
+            optimal_actions.push_back(act);
+        }
+    }
+    assert(optimal_actions.size()>0);
+    int random_idx = rand()%optimal_actions.size();
+    return optimal_actions[random_idx];
+}
+
+double TELQ::run_policy_iteration() {
+    int counter = 0;
+    double old_TD_error = DBL_MAX;
+    update_policy();
+    update_c_rho_L();
+    enum MODE { ANALYTICALLY, L1 };
+    MODE mode = ANALYTICALLY;
+    if(DEBUG_LEVEL>0) {ProgressBar::init("Policy Iteration:          ");}
+    while(true) {
+        update_c_rho_L();
+        switch(mode) {
+        case ANALYTICALLY: optimize_weights_analytically();
+            break;
+        case L1: optimize_weights_L1();
+            break;
+        }
+        update_policy();
+        double TD_error = arma::as_scalar(c + 2*rho.t()*weights + weights.t()*L*weights);
+        ++counter;
+        IF_DEBUG(1) {
+            if(mode==ANALYTICALLY) {
+                ProgressBar::msg() << " (" << counter << "/" << TD_error << ")";
+                ProgressBar::print(counter%2,1);
+            } else {
+                DEBUG_OUT(0,"Iteration: " << counter << " / TD-error: " << TD_error);
+            }
+        }
+        if(old_TD_error!=TD_error) {
+            old_TD_error = TD_error;
+        } else {
+            if(mode==ANALYTICALLY) {
+                if(DEBUG_LEVEL>0) ProgressBar::terminate();
+                mode = L1;
+            } else {
+                break;
+            }
+        }
+    }
+    return old_TD_error;
 }
 
 void TELQ::update_policy() {
@@ -64,22 +132,27 @@ void TELQ::update_policy() {
         row_vec_t action_values = weights.t()*F_matrices[data_idx];
         int outcome_idx = 0;
         vector<action_ptr_t> optimal_actions;
+        vector<int> optimal_action_indices;
         double max_action_value = -DBL_MAX;
         for(action_ptr_t act : action_space) {
             if(action_values(outcome_idx)>max_action_value) {
                 max_action_value = action_values(outcome_idx);
                 optimal_actions.resize(1,act);
+                optimal_action_indices.resize(1,outcome_idx);
             } else if(action_values(outcome_idx)==max_action_value) {
                 optimal_actions.push_back(act);
+                optimal_action_indices.push_back(outcome_idx);
             }
             ++outcome_idx;
         }
         assert(optimal_actions.size()>0);
-        policy[data_idx] = util::random_select(optimal_actions);
+        int random_idx = rand()%optimal_actions.size();
+        policy[data_idx] = optimal_actions[random_idx];
+        policy_indices[data_idx] = optimal_action_indices[random_idx];
     }
 }
 
-void TELQ::update_objective_components() {
+void TELQ::update_c_rho_L() {
     c = 0;
     rho.zeros(feature_set.size());
     L.zeros(feature_set.size(),feature_set.size());
@@ -88,29 +161,44 @@ void TELQ::update_objective_components() {
     for(const_instance_ptr_t episode : instance_data) {
         for(const_instance_ptr_t ins=episode->const_first(); ins->const_next()!=INVALID; ++ins) {
             double r_t = ins->reward->get_value();
-            col_vec_t vec1 = F_matrices[data_idx+1].col(policy_indices[data_idx+1]);
-            col_vec_t vec2 = F_matrices[data_idx  ].col(outcome_indices[data_idx]);
+            col_vec_t vec1 = (col_vec_t)F_matrices[data_idx+1].col(policy_indices[data_idx+1]);
+            col_vec_t vec2 = (col_vec_t)F_matrices[data_idx  ].col(outcome_indices[data_idx]);
             col_vec_t vec3 = discount * vec1 - vec2;
-            c += pow(r_t,2);
-            rho += r_t * vec3;
-            L += arma::kron(vec3,vec3.t());
+            c = c + pow(r_t,2);
+            rho = rho + r_t * vec3;
+            L = L + arma::kron(vec3,vec3.t());
             ++data_idx;
             ++normalization;
         }
         ++data_idx; // last instance is skipped in inner loop
     }
-    assert(data_idx==number_of_data_points);
+    assert(data_idx==(int)number_of_data_points);
     c /= normalization;
     rho /= normalization;
     L /= normalization;
 }
 
+void TELQ::optimize_weights_analytically() {
+    // use small regularization to make solution unique
+    L = L + 1e-10*arma::eye(L.n_rows,L.n_cols);
+    weights = arma::solve((arma::mat)L,-1*rho);
+    L = L - 1e-10*arma::eye(L.n_rows,L.n_cols);
+}
+
+double TELQ::objective_and_gradient(col_vec_t& grad, const col_vec_t& weights) {
+    grad = 2*rho + 2*L*weights;
+    return arma::as_scalar(c + 2*rho.t()*weights + weights.t()*L*weights);
+}
+
 lbfgsfloatval_t TELQ::LBFGS_objective(const lbfgsfloatval_t* par, lbfgsfloatval_t* grad) {
+    update();
+    update_c_rho_L();
     int nr_vars = weights.size();
     col_vec_t w(par,nr_vars);
     col_vec_t g(grad,nr_vars,false);
-    double neg_log_like;// = neg_log_likelihood(g,w);
-    return neg_log_like;
+    double TD_error = objective_and_gradient(g,w);
+    ++objective_evaluations;
+    return TD_error;
 }
 
 int TELQ::LBFGS_progress(const lbfgsfloatval_t */*x*/,
@@ -122,6 +210,10 @@ int TELQ::LBFGS_progress(const lbfgsfloatval_t */*x*/,
                         int /*nr_variables*/,
                         int iteration_nr,
                         int /*ls*/) const {
-    DEBUG_OUT(1,"Iteration " << iteration_nr << " (" << objective_evaluations << "), Likelihood = " << exp(-fx));
+    DEBUG_OUT(1,"Iteration " << iteration_nr << " (" << objective_evaluations << "), TD-error+L1 = " << fx);
     return 0;
+}
+
+void TELQ::LBFGS_final_message(double obj_val) const {
+    DEBUG_OUT(0,"TD-error+L1 = " << obj_val);
 }
