@@ -263,6 +263,7 @@ void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, const ch
           op->apply(Gcopy);
     }
     if(delay<0.){
+      if(delay<-10.) FILE("z.graph") <<Gcopy;
       Gcopy.gl().watch(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
     }else{
       Gcopy.gl().update(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);

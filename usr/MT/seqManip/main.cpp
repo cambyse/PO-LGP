@@ -32,7 +32,7 @@ void testPickAndPlace(){
   ors::GraphOperator *op1 = new ors::GraphOperator();
   op1->symbol = ors::GraphOperator::addRigid;
   op1->timeOfApplication = MP.T/2+2;
-  op1->fromId = G.getBodyByName("arm7")->index;
+  op1->fromId = G.getBodyByName("graspRef")->index;
   op1->toId = G.getBodyByName("obj1")->index;
   G.operators.append(op1);
 
@@ -45,9 +45,9 @@ void testPickAndPlace(){
 
   //-- setup new motion problem
   TaskCost *c;
-  uintA pair = {G.getShapeByName("obj1")->index, G.getShapeByName("endeff")->index};
+  uintA pair = {G.getShapeByName("obj1")->index, G.getShapeByName("graspRef")->index};
   c = MP.addTask("pos",
-                 new DefaultTaskMap(posTMT, pair(1), NoVector, pair(0), {0,0,.17}));
+                 new DefaultTaskMap(posTMT, pair(0), NoVector, pair(1)));
   c->setCostSpecs(MP.T/2, MP.T/2+4, {0.}, 1e3);
 
   c = MP.addTask("pos2",
@@ -76,7 +76,7 @@ void testPickAndPlace(){
   MP.costReport();
 
   for(;;)
-    displayTrajectory(x, 1, G, "planned trajectory", 0.);
+    displayTrajectory(x, 1, G, "planned trajectory", -100.);
 
 }
 

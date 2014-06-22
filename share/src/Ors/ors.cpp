@@ -437,6 +437,7 @@ uint ors::Joint::qDim() {
 }
 
 void ors::Joint::write(std::ostream& os) const {
+  os <<"type=" <<type <<' ';
   if(!A.isZero()) os <<"from=<T " <<A <<" > ";
   if(!B.isZero()) os <<"to=<T " <<B <<" > ";
   if(!Q.isZero()) os <<"Q=<T " <<Q <<" > ";
@@ -444,7 +445,8 @@ void ors::Joint::write(std::ostream& os) const {
   if(a->keys(0)!="A" && a->keys(0)!="from"
       && a->keys(0)!="axis" //because this was subsumed in A during read
       && a->keys(0)!="B" && a->keys(0)!="to"
-      && a->keys(0)!="Q" && a->keys(0)!="q") os <<*a <<' ';
+      && a->keys(0)!="Q" && a->keys(0)!="q"
+      && a->keys(0)!="type") os <<*a <<' ';
 }
 
 void ors::Joint::read(std::istream& is) {
@@ -1701,9 +1703,8 @@ void ors::KinematicWorld::read(std::istream& is) {
 
   //-- clean up the graph
   checkConsistency();
-  //graphMakeLists(bodies, joints);
   topSort();
-  makeLinkTree();
+  //makeLinkTree();
   calc_missingAB_from_BodyAndJointFrames();
   getJointStateDimension();
   calc_q_from_Q();
@@ -2204,6 +2205,8 @@ void ors::GraphOperator::apply(KinematicWorld& G){
   if(symbol==addRigid){
     Joint *j = new Joint(G, from, to);
     j->A.setDifference(from->X, to->X);
+    j->A.setZero();
+    j->B.setZero();
     j->type=JT_fixed;
 //    j->agent=1;
     G.isLinkTree=false;
