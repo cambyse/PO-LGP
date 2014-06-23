@@ -97,7 +97,7 @@ namespace {
 		return out;
 	}
 	ostream& operator<<(ostream& out, AVDictionary& dict) {
-		out << "dictionary with " << av_dict_count(&dict) << " entries" << endl;
+		out << "dictionary " << endl; // av_dict_count is not always available with " << av_dict_count(&dict) << " entries" << endl;
 		AVDictionaryEntry *t = NULL;
 		while ((t = av_dict_get(&dict, "", t, AV_DICT_IGNORE_SUFFIX)) != NULL) {
 		     out << t->key << " -> " << t->value << endl;
