@@ -5,4 +5,5 @@ videoEncoder
 videoEncoder_threaded
 vision-modules
 vision-opencvRaw
+rewrite-times
  )
