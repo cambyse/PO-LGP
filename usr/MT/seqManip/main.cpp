@@ -18,9 +18,11 @@ void testPickAndPlace(){
 
   //setup the problem
   ors::KinematicWorld G("model.kvg");
+  G.joints.last()->Q.rot.setDeg(60,1,0,0);
+  G.calc_q_from_Q();
   G.gl().update();
 
-  MotionProblem MP(G, false);
+  MotionProblem MP(G);
 //  MP.loadTransitionParameters(); //->move transition costs to tasks!
   MotionProblemFunction MF(MP);
   MP.z0 = MP.x0.subRange(-4,-1);
@@ -31,43 +33,49 @@ void testPickAndPlace(){
 
   ors::GraphOperator *op1 = new ors::GraphOperator();
   op1->symbol = ors::GraphOperator::addRigid;
-  op1->timeOfApplication = MP.T/2+2;
+  op1->timeOfApplication = MP.T/2+1;
   op1->fromId = G.getBodyByName("graspRef")->index;
   op1->toId = G.getBodyByName("obj1")->index;
   G.operators.append(op1);
 
   ors::GraphOperator *op2 = new ors::GraphOperator();
   op2->symbol = ors::GraphOperator::deleteJoint;
-  op2->timeOfApplication = MP.T/2+2;
+  op2->timeOfApplication = MP.T/2+1;
   op2->fromId = G.getBodyByName("table")->index;
   op2->toId = G.getBodyByName("obj1")->index;
   G.operators.append(op2);
 
   //-- setup new motion problem
+  ors::Shape *grasp = G.getShapeByName("graspRef");
+  ors::Shape *obj = G.getShapeByName("obj1");
+  ors::Shape *tar = G.getShapeByName("target");
   TaskCost *c;
-  uintA pair = {G.getShapeByName("obj1")->index, G.getShapeByName("graspRef")->index};
   c = MP.addTask("pos",
-                 new DefaultTaskMap(posTMT, pair(0), NoVector, pair(1)));
-  c->setCostSpecs(MP.T/2, MP.T/2+4, {0.}, 1e3);
+                 new DefaultTaskMap(posTMT, grasp->index, NoVector, obj->index) );
+  c->setCostSpecs(MP.T/2, MP.T/2+1, {0.}, 1e3);
   c = MP.addTask("quat",
-                 new DefaultTaskMap(quatTMT, pair(1)));
-  c->setCostSpecs(MP.T/2, MP.T/2+4, ARRAY(G.getShapeByName("obj1")->X.rot), 1e3);
+                 new DefaultTaskMap(quatTMT, grasp->index) );
+  c->setCostSpecs(MP.T/2, MP.T/2+1, ARRAY(obj->X.rot), 1e3);
 
   c = MP.addTask("pos2",
-                 new DefaultTaskMap(posTMT, pair(0), NoVector, G.getShapeByName("target")->index, NoVector));
+                 new DefaultTaskMap(posTMT, obj->index, NoVector, tar->index, NoVector));
   c->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
 
-//  c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, G));
-//  c->map.order=1; //make this a velocity variable!
-//  c->setCostSpecs(MP.T, MP.T, {0.}, 1e1);
+  c = MP.addTask("q_vel2", new DefaultTaskMap(qItselfTMT, G));
+  c->map.order=1; //make this a velocity variable!
+  c->setCostSpecs(MP.T/2, MP.T/2, {0.}, 1e1);
+
+  c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, G));
+  c->map.order=1; //make this a velocity variable!
+  c->setCostSpecs(MP.T, MP.T, {0.}, 1e1);
 
   c = MP.addTask("transitions", new TransitionTaskMap(G));
   c->map.order=2;
   c->setCostSpecs(0, MP.T, {0.}, 1e0);
 
-//  c = MP.addTask("collision", new ProxyTaskMap(allPTMT, pair, .05));
+  c = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .05));
 //  c = MP.addTask("collisionConstraints", new CollisionConstraint(.05));
-//  c->setCostSpecs(0, MP.T, {0.}, 1e1);
+  c->setCostSpecs(0, MP.T, {0.}, 1e0);
 
 //  for(;;)
 //    displayTrajectory(x, 1, G, "planned trajectory", -100., MP.z0.N);
@@ -77,10 +85,11 @@ void testPickAndPlace(){
 
   //-- optimize
   for(uint k=0;k<5;k++){
-    optNewton(x, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=1., stepInc=2., damping=1));
+    optNewton(x, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=1., stepInc=1.1, stepDec=0.7 , damping=1., allowOverstep=true));
 //    optConstrained(x, NoArr, Convert(MF), OPT(verbose=1, stopIters=100, maxStep=.5, stepInc=2., nonStrictSteps=(!k?15:5)));
   }
   MP.costReport();
+  cout <<"z-solution=" <<x.subRange(-4,-1) <<endl;
 
   for(;;)
     displayTrajectory(x, 1, G, "planned trajectory", -100., MF.dim_z());

@@ -1,6 +1,6 @@
 Include = 'arm7.kvg'
 
-shape endeff(arm7){ type=1 rel=<T t(0 0 .4)> size=[0 0 0 .02] color=[1 1 0] contact}
+shape endeff(arm7){ type=1 rel=<T t(0 0 .4)> size=[0 0 0 .02] color=[1 1 0] }
 shape target(){ type=5 rel=<T t(.5 .5 1.)> size=[.3 0 0 0] color=[1 1 0]}
 
 

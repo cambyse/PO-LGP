@@ -109,7 +109,8 @@ OptNewton::StopCriterion OptNewton::step(){
         lambda *= o.dampingDec;
 //        alpha = pow(alpha, o.stepInc);
 //        alpha = 1. - (1.-alpha)*(1.-o.stepInc);
-        alpha *= o.stepInc; if(alpha>1.) alpha=1.;
+        alpha *= o.stepInc;
+        if(!o.allowOverstep) if(alpha>1.) alpha=1.;
       }else{
         lambda *= o.dampingInc;
         alpha *= o.stepDec;

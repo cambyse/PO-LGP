@@ -2205,6 +2205,7 @@ void ors::GraphOperator::apply(KinematicWorld& G){
   }
   if(symbol==addRigid){
     Joint *j = new Joint(G, from, to);
+//    j->A.setDifference(from->X, to->X);
     j->type=JT_fixed;
 //    j->agent=1;
     G.isLinkTree=false;
