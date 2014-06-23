@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>InteractiveMaze</class>
+ <widget class="QMainWindow" name="InteractiveMaze">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>606</width>
+    <height>373</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>InteractiveMaze</string>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="4" column="1">
+     <widget class="QLabel" name="label_4">
+      <property name="text">
+       <string>Animation Speed</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="2">
+     <widget class="QDoubleSpinBox" name="_value_scale">
+      <property name="value">
+       <double>10.000000000000000</double>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="1">
+     <widget class="QLabel" name="label_3">
+      <property name="text">
+       <string>Value Scale</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="1" rowspan="2" colspan="2">
+     <widget class="QGroupBox" name="groupBox">
+      <property name="title">
+       <string>Maze Dimensions</string>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="2" column="1">
+        <widget class="QPushButton" name="_initialize_maze">
+         <property name="text">
+          <string>Initialize</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QSpinBox" name="_horizontal_size">
+         <property name="value">
+          <number>5</number>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QSpinBox" name="_vertical_size">
+         <property name="value">
+          <number>5</number>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Horizontal</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Vertical</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item row="0" column="0" rowspan="7">
+     <widget class="QGraphicsView" name="_graphics_view"/>
+    </item>
+    <item row="6" column="1">
+     <widget class="QLabel" name="label_6">
+      <property name="text">
+       <string>Agent Speed</string>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="2">
+     <widget class="QSpinBox" name="_value_update_speed">
+      <property name="maximum">
+       <number>10000</number>
+      </property>
+      <property name="value">
+       <number>50</number>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="2">
+     <widget class="QSpinBox" name="_animation_speed">
+      <property name="maximum">
+       <number>1000</number>
+      </property>
+      <property name="value">
+       <number>20</number>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="1">
+     <widget class="QLabel" name="label_5">
+      <property name="text">
+       <string>Value Update Speed</string>
+      </property>
+     </widget>
+    </item>
+    <item row="6" column="2">
+     <widget class="QSpinBox" name="_agent_speed">
+      <property name="maximum">
+       <number>10000</number>
+      </property>
+      <property name="value">
+       <number>300</number>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="2">
+     <spacer name="verticalSpacer">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>40</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>_initialize_maze</sender>
+   <signal>clicked()</signal>
+   <receiver>InteractiveMaze</receiver>
+   <slot>init_maze()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>527</x>
+     <y>117</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>548</x>
+     <y>136</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>_animation_speed</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>InteractiveMaze</receiver>
+   <slot>init_timers()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>526</x>
+     <y>267</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>381</x>
+     <y>201</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>_value_update_speed</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>InteractiveMaze</receiver>
+   <slot>init_timers()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>526</x>
+     <y>299</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>419</x>
+     <y>219</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>_agent_speed</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>InteractiveMaze</receiver>
+   <slot>init_timers()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>526</x>
+     <y>331</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>439</x>
+     <y>166</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>init_maze()</slot>
+  <slot>init_timers()</slot>
+ </slots>
+</ui>
