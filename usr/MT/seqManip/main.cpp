@@ -20,11 +20,11 @@ void testPickAndPlace(){
   ors::KinematicWorld G("model.kvg");
   G.gl().update();
 
-  MotionProblem MP(G);
+  MotionProblem MP(G, false);
 //  MP.loadTransitionParameters(); //->move transition costs to tasks!
   MotionProblemFunction MF(MP);
-//  MP.z0 = MP.x0.subRange(-4,-1);
-//  MP.x0 = MP.x0.subRange(0,-5);
+  MP.z0 = MP.x0.subRange(-4,-1);
+  MP.x0 = MP.x0.subRange(0,-5);
   arr x = replicate(MP.x0, MP.T+1);
   rndGauss(x,.01,true); //don't initialize at a singular config
   x.append(MP.z0);
@@ -49,14 +49,17 @@ void testPickAndPlace(){
   c = MP.addTask("pos",
                  new DefaultTaskMap(posTMT, pair(0), NoVector, pair(1)));
   c->setCostSpecs(MP.T/2, MP.T/2+4, {0.}, 1e3);
+  c = MP.addTask("quat",
+                 new DefaultTaskMap(quatTMT, pair(1)));
+  c->setCostSpecs(MP.T/2, MP.T/2+4, ARRAY(G.getShapeByName("obj1")->X.rot), 1e3);
 
   c = MP.addTask("pos2",
                  new DefaultTaskMap(posTMT, pair(0), NoVector, G.getShapeByName("target")->index, NoVector));
   c->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
 
-  c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, G));
-  c->map.order=1; //make this a velocity variable!
-  c->setCostSpecs(MP.T, MP.T, {0.}, 1e1);
+//  c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, G));
+//  c->map.order=1; //make this a velocity variable!
+//  c->setCostSpecs(MP.T, MP.T, {0.}, 1e1);
 
   c = MP.addTask("transitions", new TransitionTaskMap(G));
   c->map.order=2;
@@ -66,7 +69,11 @@ void testPickAndPlace(){
 //  c = MP.addTask("collisionConstraints", new CollisionConstraint(.05));
 //  c->setCostSpecs(0, MP.T, {0.}, 1e1);
 
+//  for(;;)
+//    displayTrajectory(x, 1, G, "planned trajectory", -100., MP.z0.N);
+
 //  checkJacobian(Convert(MF), x, 1e-4); return;
+//  checkGradient(Convert(MF), x, 1e-2); return;
 
   //-- optimize
   for(uint k=0;k<5;k++){
@@ -76,7 +83,7 @@ void testPickAndPlace(){
   MP.costReport();
 
   for(;;)
-    displayTrajectory(x, 1, G, "planned trajectory", -100.);
+    displayTrajectory(x, 1, G, "planned trajectory", -100., MF.dim_z());
 
 }
 

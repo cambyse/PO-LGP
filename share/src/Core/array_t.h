@@ -1507,6 +1507,10 @@ template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP
     }
     if(nd==2) for(j=0; j<d0; j++) {
         if(j) os <<LINESEP;
+        if(special==RowShiftedPackedMatrixST){
+          RowShiftedPackedMatrix *rs = (RowShiftedPackedMatrix*)aux;
+          cout <<"[row-shift=" <<rs->rowShift(j) <<"] ";
+        }
         for(i=0; i<d1; i++) os <<ELEMSEP <<operator()(j, i);
       }
     if(nd==3) for(k=0; k<d0; k++) {

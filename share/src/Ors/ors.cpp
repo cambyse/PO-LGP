@@ -939,6 +939,7 @@ void ors::KinematicWorld::calc_Q_from_q(bool calcVels){
         case JT_quatBall:{
           j->Q.rot.set(q.p+n);
           j->Q.rot.normalize();
+          j->Q.rot.isZero=false; //TODO: WHY???? (gradient check fails without!)
           if(calcVels) NIY;
           n+=4;
         } break;
@@ -2204,9 +2205,6 @@ void ors::GraphOperator::apply(KinematicWorld& G){
   }
   if(symbol==addRigid){
     Joint *j = new Joint(G, from, to);
-    j->A.setDifference(from->X, to->X);
-    j->A.setZero();
-    j->B.setZero();
     j->type=JT_fixed;
 //    j->agent=1;
     G.isLinkTree=false;

@@ -240,16 +240,19 @@ void sConvert::KOrderMarkovFunction_VectorFunction::fv(arr& phi, arr& J, const a
     //extract phi
     phi.setVectorBlock(phi_t, M);
     //extract J
-    if(&J) {
+    if(&J) { //TODO: inefficient
       if(J_t.nd==3) J_t.reshape(J_t.d0,J_t.d1*J_t.d2);
+//      cout <<"J full" <<J_t <<endl;
       if(dim_z){//decompose J_t
         Jz_t.resize(J_t.d0, dim_z).setZero();
         J_t.reshape(J_t.d0, (k+1)*(n+dim_z));
         for(uint i=0;i<=k;i++){
-          J_t.setMatrixBlock(J_t.sub(0, -1, i*x_bar.d1, i*x_bar.d1+n-1), 0, i*n);
-          Jz_t += J_t.sub(0, -1, i*x_bar.d1+n, i*x_bar.d1+n+dim_z-1); //we add up the Jacobians
+          J_t.setMatrixBlock(J_t.sub(0, -1, i*(n+dim_z), i*(n+dim_z)+n-1), 0, i*n);
+          Jz_t += J_t.sub(0, -1, i*(n+dim_z)+n, i*(n+dim_z)+n+dim_z-1); //we add up the Jacobians
         }
-        J_t.resizeCopy(J_t.d0,(k+1)*n);
+        J_t.delColumns((k+1)*n, (k+1)*dim_z);
+//        cout <<"J n" <<J_t <<endl;
+//        cout <<"J z" <<Jz_t <<endl;
       }
       CHECK(J_t.d0==m_t && J_t.d1==(k+1)*n,"");
       if(t>=k) {
@@ -263,14 +266,21 @@ void sConvert::KOrderMarkovFunction_VectorFunction::fv(arr& phi, arr& J, const a
       if(dim_z){
         CHECK(!Jz_t.N || (Jz_t.d0==m_t && Jz_t.d1==dim_z),"");
         Jz->setMatrixBlock(Jz_t, M, 0);
-        for(uint i=0; i<m_t; i++) Jaux->rowShift(M+i) = x.N;
+        for(uint i=0; i<m_t; i++) Jzaux->rowShift(M+i) = x.N;
       }
     }
     M += m_t;
   }
 
   CHECK(M==dim_Phi,"");
-  if(&J) Jaux->computeColPatches(true);
+  if(&J){
+    Jaux->computeColPatches(true);
+    if(dim_z) Jzaux->computeColPatches(false);
+  }
+//  if(&J){
+//    cout <<"J=" <<J.getDim() <<'\n' <<J <<endl;
+//    if(dim_z) cout <<"Jz=" <<Jz->getDim() <<'\n' <<*Jz <<endl;
+//  }
   //if(&J) J=Jaux->unpack();
 #endif
 }
