@@ -1,4 +1,0 @@
-float64[3] pos_gains
-float64[3] vel_gains
-float64[3] precision
----

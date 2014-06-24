@@ -282,9 +282,9 @@ KeyValueGraph System::graph() const{
   std::map<Variable*, Item*> vit;
   for(Variable_SharedMemory *v: vars) vit[v] = g.append("Variable", v->name, v);
   for(Module *m: mts){
-    Item *mit = g.append("Module", m->name, m);
+    Item *mit = g.append("Module", m->name, &m);
     for(Access *a: m->accesses){
-      Item *ait = g.append("Access", a->name, a);
+      Item *ait = g.append("Access", a->name, &a);
       ait->parents.append(mit);
       if(a->var) ait->parents.append(vit[a->var]);
     }

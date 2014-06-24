@@ -1,10 +1,8 @@
 
 ## a trivial graph
-a    	     # key=a, value=true, parents=none
-b	     # key=b, value=true, parents=none
-(a b)	     # key=none, value=true, parents=a b
-
-%include example_include.kvg
+x    	     # key=x, value=true, parents=none
+y	     # key=y, value=true, parents=none
+(x y)	     # key=none, value=true, parents=x y
 
 ## a bit more verbose graph
 node A{ color=blue }		# keys=node A, value=<KVG>, parents=none
@@ -14,7 +12,7 @@ hyperedge(B C) = 5   		# keys=hyperedge, value=5, parents=B C
 
 ## standard value types
 a=string	# MT::String (except for keywords 'true' and 'false' and 'Mod' and 'Include')
-b="string"	# MT::String
+b="STRING"	# MT::String
 c='file.txt'	# MT::FileToken
 d=-0.1234	# double
 e=[1 2 3 0.5]	# MT::arr
@@ -22,13 +20,22 @@ f=(c d e)	# MT::Array<*Item> (list of other items in the KVG)
 g      		# bool (default: true)
 h=true		# bool
 i=false		# bool
-j={ a=0 }	# KeyValueGraph (special: does not require a =)
+j={ a=0 }	# KeyValueGraph (special: does not require a '=')
 
 ## parsing: = {..} (..) , and \n are separators for parsing key-value-pairs
 b0=false b1 b2, b3() b4   # 4 booleans with keys 'b0', 'b1 b2', 'b3', 'b4'
 k={ a, b=0.2 x="hallo"	  # KeyValueGraph with 6 items
   y
   z()=filename.org x }
+
+## special Item Keys
+
+## merging: after reading all items, the KVG takes all Merge items, deletes the Merge tag, and calls a merge()
+## this example will modify/append the respective attributes of k
+Merge k { y=false, z=otherString, b=7, c=newAttribute }
+
+## including
+Include = 'example_include.kvg'   # first creates a normal FileToken item (see below) then opens and includes the file directly
 
 ## referring to items (constants/macros)
 macro = 5

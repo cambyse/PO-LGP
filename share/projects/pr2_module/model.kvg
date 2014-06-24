@@ -1,8 +1,0 @@
-%include /home/pr2admin/git/mlr/share/data/pr2_model/pr2-3-comfi.ors
-
-shape endeffL(l_wrist_roll_link){ rel=<T t(.2 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
-shape endeffR(r_wrist_roll_link){ rel=<T t(.2 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
-shape endeffBase(torso_lift_link){ rel=<T d(90 0 1 0) t(.2 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
-shape endeffHead(head_tilt_link){ rel=<T  d(-90 0 0 1) t(.5 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
-
-shape mymarker(world){ type=5 color=[1 1 0] size=[.2 0 0 0]}

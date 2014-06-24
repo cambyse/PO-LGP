@@ -30,6 +30,7 @@
 
 #ifdef MT_PHYSX
 
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 #include <physx/PxPhysicsAPI.h>
 #include <physx/extensions/PxExtensionsAPI.h>
 #include <physx/extensions/PxDefaultErrorCallback.h>
@@ -41,6 +42,7 @@
 //#include <PxMat33Legacy.h>
 #include <physx/extensions/PxSimpleFactory.h>
 #include <physx/toolkit/PxTkStream.h>
+#pragma GCC diagnostic pop
 
 #include "ors_physx.h"
 #include <Gui/opengl.h>

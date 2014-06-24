@@ -37,7 +37,7 @@ struct PDtask{
 
   void setTarget(const arr& yref, const arr& vref=NoArr);
   void setGains(double Pgain, double Dgain);
-  void setGainsAsNatural(double decayTime, double dampingRatio);
+  void setGainsAsNatural(double decayTime, double dampingRatio); ///< the decayTime is the to decay to 10% of the initial offset/error
 
   arr getDesiredAcceleration(const arr& y, const arr& ydot);
 };
@@ -63,7 +63,7 @@ struct ConstraintForceTask{
 struct FeedbackMotionControl : MotionProblem {
   MT::Array<PDtask*> tasks;
   MT::Array<ConstraintForceTask*> forceTasks;
-  PDtask nullSpacePD;
+  PDtask qitselfPD;
 
   FeedbackMotionControl(ors::KinematicWorld& _world, bool useSwift=true);
 
@@ -77,7 +77,7 @@ struct FeedbackMotionControl : MotionProblem {
                     const arr& params=NoArr);
   ConstraintForceTask* addConstraintForceTask(const char* name, TaskMap *map);
 
-  void getTaskCosts(arr& phi, arr& J, arr& q_ddot); ///< the general (`big') task vector and its Jacobian
+  void getCostCoeffs(arr& c, arr& J); ///< the general (`big') task vector and its Jacobian
   arr getDesiredConstraintForces(); ///< J^T lambda^*
   arr operationalSpaceControl();
   void updateConstraintControllers();

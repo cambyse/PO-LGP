@@ -23,7 +23,7 @@
 #define RELATIONAL_literals_h
 
 #include <Core/util.h>
-#include <relational/symbols.h>
+#include "symbols.h"
 
 
 

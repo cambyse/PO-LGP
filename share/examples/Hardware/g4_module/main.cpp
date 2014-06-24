@@ -18,7 +18,7 @@ void miniTest(){
 struct G4System:System{
   ACCESS(floatA, currentPoses);
   G4System(){
-    addModule("G4Poller", "G4Poller", ModuleThread::loopWithBeat, .001);
+    addModule("G4Poller", "G4Poller", Module_Thread::loopWithBeat, .001);
     connect();
   }
 };
@@ -41,7 +41,7 @@ void threadedRun(){
 
   engine().open(S);
   for(uint i=0;i<10;i++){
-    S.currentPoses.var->waitForNextWriteAccess();
+    S.currentPoses.var->waitForNextRevision();
     cout <<i <<' ' <<S.currentPoses.get()() <<endl;
   }
   engine().close(S);

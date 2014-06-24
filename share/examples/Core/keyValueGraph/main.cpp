@@ -11,6 +11,10 @@ void TEST(Read){
   cout <<"\ndone" <<endl;
   cout <<"read kvg=\n--------------------\n" <<G <<"\n--------------------" <<endl;
 
+//  Item *m = G.getItem("modify");
+//  G.merge(m);
+//  cout <<"'k modify' merged with 'k':" <<*G["k"] <<endl;
+
   if(filename) return; //below only for "example.kvg"
   cout <<"\n** access to individual items:" <<endl;
   cout <<*G["k"] <<endl;
