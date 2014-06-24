@@ -19,7 +19,7 @@ LookAheadPolicy::LookAheadPolicy(const double& discount,
     look_ahead_search.set_spaces(action_space, observation_space, reward_space);
 }
 
-LookAheadPolicy::action_ptr_t LookAheadPolicy::get_action(const instance_t * instance) {
+LookAheadPolicy::action_ptr_t LookAheadPolicy::get_action(const_instance_ptr_t instance) {
 
     // debug output
     if(DEBUG_LEVEL>2) {

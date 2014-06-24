@@ -9,12 +9,13 @@
 
 #include "../Config.h"
 #include "../util/ProgressBar.h"
+#include "../SpaceManager.h"
 
 #include "../Predictor.h"
 
 class Environment;
 
-class LookAheadSearch {
+class LookAheadSearch: public SpaceManager {
 
 public:
 
@@ -29,7 +30,7 @@ public:
         NodeInfo(
                 const NODE_TYPE&,
                 const EXPANSION_TYPE&,
-                instance_t *,
+                instance_ptr_t,
                 const action_ptr_t&,
                 const value_t&,
                 const value_t&
@@ -39,7 +40,7 @@ public:
         NodeInfo& operator=(const NodeInfo&);
         NODE_TYPE type;
         EXPANSION_TYPE expansion;
-        instance_t * instance; // !!!Needs to be set and deleted manually!!!
+        instance_ptr_t instance; // !!!Needs to be set and deleted manually!!!
         action_ptr_t action;
         value_t upper_value_bound, lower_value_bound;
     };
@@ -62,20 +63,14 @@ public:
     LookAheadSearch(const double& d);
     virtual ~LookAheadSearch();
 
-    /** \brief Initialize action, observation, and reward spaces. */
-    virtual void set_spaces(const Environment & environment);
-
-    /** \brief Set the spaces used for planning. */
-    void set_spaces(const action_ptr_t & a, const observation_ptr_t & o, const reward_ptr_t & r);
-
     /*! \brief Clears the search tree. */
     void clear_tree();
 
     /*! \brief Build a search tree from the root observation. */
     void build_tree(
-            const instance_t * root,
+            const_instance_ptr_t root,
             const Predictor& environment,
-            const size_t& max_node_counter = 0
+            const large_size_t& max_node_counter = 0
     );
 
     /*! \brief Expand current tree by expanding one leaf
@@ -87,7 +82,7 @@ public:
      *  unambiguous or the maximum tree size is reached. */
     void fully_expand_tree(
             const Predictor& environment,
-            const size_t& max_node_counter = 0
+            const large_size_t& max_node_counter = 0
     );
 
     /*! \brief Returns the best action for the root observation. */
@@ -103,7 +98,7 @@ public:
 
     /*! \brief Prune obsolete branches after performing action a into observation s
      *  and reset root node. */
-    void prune_tree(const action_ptr_t& a, const instance_t * new_root_instance, const Predictor& environment);
+    void prune_tree(const action_ptr_t& a, const_instance_ptr_t new_root_instance, const Predictor& environment);
 
     /*! \brief Set the discount rate used for computing observation and action values. */
     void set_discount(const double& d) { discount = d; }
@@ -118,7 +113,7 @@ public:
     /*! \brief Print the tree statistics to console. */
     void print_tree_statistics() const;
 
-    size_t get_number_of_nodes() const { return number_of_nodes; }
+    large_size_t get_number_of_nodes() const { return number_of_nodes; }
 
 protected:
 
@@ -129,12 +124,8 @@ protected:
     node_info_map_t node_info_map;
     arc_info_map_t arc_info_map;
     double discount;
-    size_t number_of_nodes;
+    large_size_t number_of_nodes;
     static const bool random_tie_break;
-
-    action_ptr_t action_space;
-    observation_ptr_t observation_space;
-    reward_ptr_t reward_space;
 
     /*! \brief Sets the way the upper and lower bounds
      * are used for node selection and back-propagation. */
