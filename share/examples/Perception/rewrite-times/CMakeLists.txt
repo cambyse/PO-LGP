@@ -8,8 +8,12 @@ if(WITH_LIBAV)
 		include(.sources.cmake)
 		add_definitions(-DHAVE_LIBAV)
         include_directories(${LIBAV_INCLUDE_DIRS})
+		link_directories(${LIBAV_LIBRARY_DIRS})
 		add_executable(${NAME} ${SOURCES})
 		
-		target_link_libraries(${NAME} Core Perception ${LIBAV_AVFORMAT_LIBRARIES} ${LIBAV_AVCODEC_LIBRARIES} ${LIBAV_AVUTIL_LIBRARIES})
+		target_link_libraries(${NAME} 
+			${LIBAV_AVFORMAT_LIBRARY} 
+			${LIBAV_AVCODEC_LIBRARY} 
+			${LIBAV_AVUTIL_LIBRARY})
 	endif()
 endif()
