@@ -10,8 +10,13 @@ if(WITH_LIBAV)
         include_directories(${LIBAV_INCLUDE_DIRS})
 		link_directories(${LIBAV_LIBRARY_DIRS})
 		add_executable(${NAME} ${SOURCES})
+		add_executable(av_info avinfo.cpp av_out.cpp)
 		
 		target_link_libraries(${NAME} 
+			${LIBAV_AVFORMAT_LIBRARY} 
+			${LIBAV_AVCODEC_LIBRARY} 
+			${LIBAV_AVUTIL_LIBRARY})
+		target_link_libraries(av_info 
 			${LIBAV_AVFORMAT_LIBRARY} 
 			${LIBAV_AVCODEC_LIBRARY} 
 			${LIBAV_AVUTIL_LIBRARY})
