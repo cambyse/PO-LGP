@@ -41,7 +41,7 @@ void check_ge_0(int result, int line) {
 }
 
 ostream& operator<<(ostream& out, const AVRational& ar) {
-	out << ar.num << "/" << ar.den;
+	out << (double)ar.num /(double) ar.den;
 	return out;
 }
 ostream& operator<<(ostream& out, const AVCodec& c) {
