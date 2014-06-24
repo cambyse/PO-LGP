@@ -28,8 +28,6 @@ public:
 
 private:
     enum ACTION { NORTH, EST, SOUTH, WEST, STAY, ACTION_N };
-//    enum FIELD_WALL { FIELD, H_WALL, V_WALL };
-//    enum WALL_TYPE { HORIZONTAL, VERTICAL };
 
     Ui::InteractiveMaze *ui;
     QTimer *animation_timer, *value_timer, *agent_timer;
@@ -42,7 +40,7 @@ private:
     std::vector<std::vector<QGraphicsLineItem*> > v_walls;
     std::vector<std::vector<bool> > h_walls_bool;
     std::vector<std::vector<bool> > v_walls_bool;
-    QGraphicsEllipseItem * agent;
+    QGraphicsEllipseItem *agent, *point;
     int agent_x_pos, agent_y_pos;
     double discount = 0.9;
     arma::vec Q, R, V;
@@ -54,21 +52,18 @@ private:
     int state_action_idx(int x, int y, int a) const { return state_idx(x,y)*ACTION_N+a; }
     QColor color_from_value(double) const;
     ACTION get_action(int x, int y) const;
-//    void get_field_wall(int x_in, int y_in, FIELD_WALL& field_wall, int& x_out, int& y_out, bool& ok) const;
-//    void get_field(int x_in, int y_in, int& x_out, int& y_out, bool& ok) const;
-//    void get_wall(int x_in, int y_in, WALL_TYPE& wall_type, int& x_out, int& y_out, bool& ok) const;
     void set_h_wall(int x_idx, int y_idx, bool set);
     void set_v_wall(int x_idx, int y_idx, bool set);
     void change_reward(int x_idx, int y_idx, double delta_reward);
-    bool floating_index_and_relative_coords(int x_in, int y_in, double & x_idx, double & y_idx, double & x_rel, double & y_rel) const;
+    void floating_index_and_relative_coords(double x_in, double y_in, double & x_idx, double & y_idx, double & x_rel, double & y_rel) const;
 
 private slots:
-    void right_click(int x_in, int y_in) { right_mouse_move(x_in,y_in); }
-    void left_click(int x_in, int y_in) { left_mouse_move(x_in,y_in); }
-    void scroll_up(int x_in, int y_in);
-    void scroll_down(int x_in, int y_in);
-    void right_mouse_move(int x_in, int y_in);
-    void left_mouse_move(int x_in, int y_in);
+    void right_click(double x_in, double y_in);
+    void left_click(double x_in, double y_in);
+    void scroll_up(double x_in, double y_in);
+    void scroll_down(double x_in, double y_in);
+//    void right_mouse_move(double x_in, double y_in);
+//    void left_mouse_move(double x_in, double y_in);
     void init_maze();
     void animate();
     double value_update();

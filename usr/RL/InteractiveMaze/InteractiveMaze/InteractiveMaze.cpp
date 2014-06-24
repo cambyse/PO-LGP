@@ -5,14 +5,14 @@
 #include <iostream>
 #include <assert.h>
 #include <float.h>
+#include <math.h>
 
 using namespace std;
 
 static double alpha = 1e-1;             ///< Fraction of convergence per time step in animation.
 static double field_size = 50;          ///< Nominal size of maze fields.
 static double field_down_scale = 0.95;  ///< Factor to scale nominal size to et effective size.
-//static double field_activation = 0.2;   ///< Percentage where a click is considered to lie within a field (not in between).
-static double wall_activation = 0.3;    ///< Percentage of a field that activates a wall.
+static double wall_activation = 0.25;   ///< Percentage of a field that activates a wall.
 static double reward_scale = 10;        ///< Factor to scale reward-discs with.
 static double wall_width = 6;           ///< Line width of walls.
 static double agent_size = 20;          ///< Size of the agent.
@@ -33,12 +33,12 @@ InteractiveMaze::InteractiveMaze(QWidget *parent) :
     ui->_graphics_view->setRenderHint(QPainter::Antialiasing);
     ui->_graphics_view->setMouseTracking(true);
     ui->_graphics_view->scene()->installEventFilter(mouse_filter);
-    connect(mouse_filter,SIGNAL(right_click(int,int)),this,SLOT(right_click(int,int)));
-    connect(mouse_filter,SIGNAL(left_click(int,int)),this,SLOT(left_click(int,int)));
-    connect(mouse_filter,SIGNAL(scroll_up(int,int)),this,SLOT(scroll_up(int,int)));
-    connect(mouse_filter,SIGNAL(scroll_down(int,int)),this,SLOT(scroll_down(int,int)));
-    connect(mouse_filter,SIGNAL(right_mouse_move(int,int)),this,SLOT(right_mouse_move(int,int)));
-    connect(mouse_filter,SIGNAL(left_mouse_move(int,int)),this,SLOT(left_mouse_move(int,int)));
+    connect(mouse_filter,SIGNAL(right_click(double,double)),this,SLOT(right_click(double,double)));
+    connect(mouse_filter,SIGNAL(left_click(double,double)),this,SLOT(left_click(double,double)));
+    connect(mouse_filter,SIGNAL(scroll_up(double,double)),this,SLOT(scroll_up(double,double)));
+    connect(mouse_filter,SIGNAL(scroll_down(double,double)),this,SLOT(scroll_down(double,double)));
+//    connect(mouse_filter,SIGNAL(right_mouse_move(double,double)),this,SLOT(right_mouse_move(double,double)));
+//    connect(mouse_filter,SIGNAL(left_mouse_move(double,double)),this,SLOT(left_mouse_move(double,double)));
     // maze
     init_maze();
     // start timers
@@ -216,66 +216,6 @@ InteractiveMaze::ACTION InteractiveMaze::get_action(int x, int y) const
     return optimal_actions[rand()%optimal_actions.size()];
 }
 
-//void InteractiveMaze::get_field_wall(int x_in, int y_in, InteractiveMaze::FIELD_WALL &field_wall, int &x_out, int &y_out, bool &ok) const
-//{
-//    ok = true;
-//    double x = (double)x_in/field_size;
-//    double y = (double)y_in/field_size;
-//    double x_active = fabs(x-round(x));
-//    double y_active = fabs(y-round(y));
-//    if(round(x)>=0 && round(x)<x_dim && round(y)>=0 && round(y)<y_dim &&
-//            x_active<=field_activation && y_active<=field_activation) {
-//        x_out = round(x);
-//        y_out = round(y);
-//        field_wall = FIELD;
-//    } else if(ceil(x)>0 && ceil(x)<x_dim && ceil(y)>0 && ceil(y)<y_dim &&
-//              x_active<field_activation && y_active>field_activation) {
-//        x_out = round(x);
-//        y_out = ceil(y);
-//        field_wall = H_WALL;
-//    } else if(ceil(x)>0 && ceil(x)<x_dim && ceil(y)>0 && ceil(y)<y_dim &&
-//              x_active>field_activation && y_active<field_activation) {
-//        x_out = ceil(x);
-//        y_out = round(y);
-//        field_wall = V_WALL;
-//    } else {
-//        ok = false;
-//    }
-//}
-
-//void InteractiveMaze::get_field(int x_in, int y_in, int &x_out, int &y_out, bool &ok) const
-//{
-//    ok = true;
-//    double x = (double)x_in/field_size;
-//    double y = (double)y_in/field_size;
-//    if(round(x)>=0 && round(x)<x_dim && round(y)>=0 && round(y)<y_dim) {
-//        x_out = round(x);
-//        y_out = round(y);
-//    } else {
-//        ok = false;
-//    }
-//}
-
-//void InteractiveMaze::get_wall(int x_in, int y_in, WALL_TYPE &wall_type, int &x_out, int &y_out, bool &ok) const
-//{
-//    ok = true;
-//    double x = (double)x_in/field_size;
-//    double y = (double)y_in/field_size;
-//    double x_active = fabs(x-round(x));
-//    double y_active = fabs(y-round(y));
-//    if(ceil(x)>0 && ceil(x)<x_dim && ceil(y)>0 && ceil(y)<y_dim && x_active<y_active && x_active<field_activation) {
-//        x_out = round(x);
-//        y_out = ceil(y);
-//        wall_type = HORIZONTAL;
-//    } else if(ceil(x)>0 && ceil(x)<x_dim && ceil(y)>0 && ceil(y)<y_dim && x_active>y_active && y_active<field_activation) {
-//        x_out = ceil(x);
-//        y_out = round(y);
-//        wall_type = VERTICAL;
-//    } else {
-//        ok = false;
-//    }
-//}
-
 void InteractiveMaze::set_h_wall(int x_idx, int y_idx, bool set)
 {
     if(!set) {
@@ -309,138 +249,60 @@ void InteractiveMaze::change_reward(int x_idx, int y_idx, double delta_reward)
     init_model();
 }
 
-bool InteractiveMaze::floating_index_and_relative_coords(int x_in, int y_in, double &x_idx, double &y_idx, double &x_rel, double &y_rel) const
+void InteractiveMaze::floating_index_and_relative_coords(double x_in, double y_in, double &x_idx, double &y_idx, double &x_rel, double &y_rel) const
 {
     x_idx = x_in;
     y_idx = y_in;
     x_idx /= field_size;
     y_idx /= field_size;
-    x_rel = fabs(x_idx-round(x_idx));
-    y_rel = fabs(y_idx-round(y_idx));
-    if(ceil(x_idx)>0 && ceil(x_idx)<x_dim && ceil(y_idx)>0 && ceil(y_idx)<y_dim) {
-        return true;
-    } else {
-        return false;
-    }
+    x_rel = x_idx-round(x_idx);
+    y_rel = y_idx-round(y_idx);
 }
 
-//void InteractiveMaze::right_click(int x_in, int y_in)
-//{
-//    int x_idx, y_idx;
-//    WALL_TYPE wall_type;
-//    bool ok;
-//    get_wall(x_in,y_in,wall_type,x_idx,y_idx,ok);
-//    if(!ok) return;
-//    switch (wall_type) {
-//    case HORIZONTAL:
-//        set_h_wall(x_idx,y_idx,false);
-//        break;
-//    case VERTICAL:
-//        set_v_wall(x_idx,y_idx,false);
-//        break;
-//    default:
-//        break;
-//    }
-//}
-
-//void InteractiveMaze::left_click(int x_in, int y_in)
-//{
-//    int x_idx, y_idx;
-//    WALL_TYPE wall_type;
-//    bool ok;
-//    get_wall(x_in,y_in,wall_type,x_idx,y_idx,ok);
-//    if(!ok) return;
-//    switch (wall_type) {
-//    case HORIZONTAL:
-//        set_h_wall(x_idx,y_idx,true);
-//        break;
-//    case VERTICAL:
-//        set_v_wall(x_idx,y_idx,true);
-//        break;
-//    default:
-//        break;
-//    }
-//}
-
-void InteractiveMaze::scroll_up(int x_in, int y_in)
+void InteractiveMaze::right_click(double x_in, double y_in)
 {
-//    int x_idx, y_idx;
-//    FIELD_WALL fw;
-//    bool ok;
-//    get_field_wall(x_in,y_in,fw,x_idx,y_idx,ok);
-//    if(!ok) return;
-//    switch (fw) {
-//    case FIELD:
-//        change_reward(x_idx,y_idx,1);
-//        break;
-//    default:
-//        break;
-//    }
+
 }
 
-void InteractiveMaze::scroll_down(int x_in, int y_in)
+void InteractiveMaze::left_click(double x_in, double y_in)
 {
-//    int x_idx, y_idx;
-//    FIELD_WALL fw;
-//    bool ok;
-//    get_field_wall(x_in,y_in,fw,x_idx,y_idx,ok);
-//    if(!ok) return;
-//    switch (fw) {
-//    case FIELD:
-//        change_reward(x_idx,y_idx,-1);
-//        break;
-//    default:
-//        break;
-//    }
-}
-
-void InteractiveMaze::right_mouse_move(int x_in, int y_in)
-{
-//    int x_idx, y_idx;
-//    FIELD_WALL fw;
-//    bool ok;
-//    get_field_wall(x_in,y_in,fw,x_idx,y_idx,ok);
-//    if(!ok) return;
-//    switch (fw) {
-//    case H_WALL:
-//        set_h_wall(x_idx,y_idx,false);
-//        break;
-//    case V_WALL:
-//        set_v_wall(x_idx,y_idx,false);
-//        break;
-//    default:
-//        break;
-//    }
-}
-
-void InteractiveMaze::left_mouse_move(int x_in, int y_in)
-{
+    cout << "left click" << endl;
     double x_idx, y_idx, x_rel, y_rel;
-    if(floating_index_and_relative_coords(x_in,y_in,x_idx,y_idx,x_rel,y_rel)) {
-        if(x_rel>wall_activation && y_rel<wall_activation) { // vertical
-            set_v_wall(ceil(x_idx),round(y_idx),true);
+    floating_index_and_relative_coords(x_in,y_in,x_idx,y_idx,x_rel,y_rel);
+    if(fabs(x_rel)>wall_activation && fabs(y_rel)<wall_activation) {
+        int x = ceil(x_idx);
+        int y = round(y_idx);
+        if(x>0&&x<x_dim-1&&y>=0&&y<y_dim-1) {
+        set_v_wall(x,y,true);
         }
-        if(x_rel<wall_activation && y_rel>wall_activation) { // horizontal
-            set_h_wall(round(x_idx),ceil(y_idx),true);
-        }
-        cout << x_idx << "," << y_idx << "," << x_rel << "," << y_rel << endl;
     }
-//    int x_idx, y_idx;
-//    FIELD_WALL fw;
-//    bool ok;
-//    get_field_wall(x_in,y_in,fw,x_idx,y_idx,ok);
-//    if(!ok) return;
-//    switch (fw) {
-//    case H_WALL:
-//        set_h_wall(x_idx,y_idx,true);
-//        break;
-//    case V_WALL:
-//        set_v_wall(x_idx,y_idx,true);
-//        break;
-//    default:
-//        break;
-//    }
 }
+
+void InteractiveMaze::scroll_up(double x_in, double y_in)
+{
+}
+
+void InteractiveMaze::scroll_down(double x_in, double y_in)
+{
+}
+
+//void InteractiveMaze::right_mouse_move(double x_in, double y_in)
+//{
+//}
+
+//void InteractiveMaze::left_mouse_move(double x_in, double y_in)
+//{
+//    const double x_idx = x_in/field_size;
+//    const double y_idx = y_in/field_size;
+//    const double x_rel = x_idx-round(x_idx);
+//    const double y_rel = y_idx-round(y_idx);
+//    //if(fabs(x_rel)>wall_activation && fabs(y_rel)>wall_activation) return;
+//    //if(fabs(x_rel)<wall_activation && fabs(y_rel)<wall_activation) return;
+//    //point->setPos(ceil(x_idx)*field_size,round(y_idx)*field_size);
+//    if(drand48()<wall_activation && drand48()>wall_activation) {
+//        point->setPos(x_idx*field_size,y_idx*field_size);
+//    }
+//}
 
 void InteractiveMaze::init_maze()
 {
@@ -490,6 +352,7 @@ void InteractiveMaze::init_maze()
     }
     // agent
     agent = ui->_graphics_view->scene()->addEllipse(-agent_size/2,-agent_size/2,agent_size,agent_size,QPen(Qt::transparent),QBrush(Qt::black));
+    point = ui->_graphics_view->scene()->addEllipse(-agent_size/2,-agent_size/2,agent_size,agent_size,QPen(Qt::red),QBrush(Qt::black));
     agent_x_pos = 0;
     agent_y_pos = 0;
     // initialize model

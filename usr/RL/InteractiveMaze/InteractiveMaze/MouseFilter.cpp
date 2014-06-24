@@ -33,17 +33,31 @@ bool MouseFilter::eventFilter(QObject * obj, QEvent * event)
         }
         return true;
     }
-    case QEvent::GraphicsSceneMouseMove:
-    {
-        QGraphicsSceneMouseEvent* mouse_event = static_cast<QGraphicsSceneMouseEvent*>(event);
-        if(mouse_event==nullptr) {
-            cout << "event is nullptr" << endl;
-            return true;
-        } else if(mouse_event->buttons()!=Qt::NoButton) {
-            emit left_click(mouse_event->scenePos().x(),mouse_event->scenePos().y());
-        }
-        return true;
-    }
+//    case QEvent::GraphicsSceneMouseMove:
+//    {
+//        QGraphicsSceneMouseEvent* mouse_event = static_cast<QGraphicsSceneMouseEvent*>(event);
+//        if(mouse_event==nullptr) {
+//            cout << "event is nullptr" << endl;
+//            return true;
+//        }
+//        if(mouse_event->scenePos().x()==round(mouse_event->scenePos().x()) || mouse_event->scenePos().y()==round(mouse_event->scenePos().y())) {
+//#warning This is a hack to get rid of the integer coordinate events (two different floating point events remain but are similar)
+//            return true;
+//        }
+//        switch(mouse_event->buttons()) {
+//        case Qt::LeftButton:
+//            emit left_mouse_move(mouse_event->scenePos().x(),mouse_event->scenePos().y());
+//            cout << mouse_event->scenePos().x() << ", " << mouse_event->scenePos().y() << ", " << event << "," << obj << endl;
+//            break;
+//        case Qt::RightButton:
+//            emit right_mouse_move(mouse_event->scenePos().x(),mouse_event->scenePos().y());
+//            cout << mouse_event->scenePos().x() << ", " << mouse_event->scenePos().y() << ", " << event << "," << obj << endl;
+//            break;
+//        default:
+//            break;
+//        }
+//        return true;
+//    }
     case QEvent::GraphicsSceneWheel:
     {
         QGraphicsSceneWheelEvent* wheel_event = static_cast<QGraphicsSceneWheelEvent*>(event);
@@ -56,6 +70,7 @@ bool MouseFilter::eventFilter(QObject * obj, QEvent * event)
         } else {
             emit scroll_down(wheel_event->scenePos().x(),wheel_event->scenePos().y());
         }
+        return true;
     }
     default:
         break;

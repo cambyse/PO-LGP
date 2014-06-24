@@ -12,12 +12,12 @@ public:
     explicit MouseFilter(QObject *parent = 0);
 
 signals:
-    void right_click(int x, int y);
-    void left_click(int x, int y);
-    void scroll_up(int x, int y);
-    void scroll_down(int x, int y);
-    void right_mouse_move(int x, int y);
-    void left_mouse_move(int x, int y);
+    void right_click(double x, double y);
+    void left_click(double x, double y);
+    void scroll_up(double x, double y);
+    void scroll_down(double x, double y);
+//    void right_mouse_move(double x, double y);
+//    void left_mouse_move(double x, double y);
 
 protected:
     bool eventFilter(QObject *, QEvent *);
