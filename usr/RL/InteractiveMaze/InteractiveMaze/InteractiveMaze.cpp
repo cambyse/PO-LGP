@@ -52,6 +52,7 @@ InteractiveMaze::InteractiveMaze(QWidget *parent) :
     x_dim_changed(ui->_horizontal_size->value(), false);
     y_dim_changed(ui->_vertical_size->value(), false);
     agent_check_box_changed(ui->_agent_check_box->isChecked(), false);
+    display_value_plus_reward_changed(ui->_col_val_rew->isChecked());
     init_maze();
     init_model();
     // connect start timers
@@ -75,8 +76,8 @@ double InteractiveMaze::value_update()
     Q = p * (R + discount*V);
     // update V
     double max_diff = 0;
-    double min_val = DBL_MAX;
-    double max_val = -DBL_MAX;
+    double min_disp_val = DBL_MAX;
+    double max_disp_val = -DBL_MAX;
     for(int x=0; x<x_dim; ++x) {
         for(int y=0; y<y_dim; ++y) {
             double old_value = V(state_idx(x,y));
@@ -86,13 +87,25 @@ double InteractiveMaze::value_update()
                 new_val = max(new_val,Q(state_action_idx(x,y,action_idx)));
             }
             max_diff = max(max_diff,fabs(old_value-new_val));
-            max_val = max(max_val,new_val);
-            min_val = min(min_val,new_val);
+            if(display_value_plus_reward) {
+                double r = R(state_idx(x,y));
+                max_disp_val = max(max_disp_val,r+discount*new_val);
+                min_disp_val = min(min_disp_val,r+discount*new_val);
+            } else {
+                max_disp_val = max(max_disp_val,new_val);
+                min_disp_val = min(min_disp_val,new_val);
+            }
         }
     }
     for(int x=0; x<x_dim; ++x) {
         for(int y=0; y<y_dim; ++y) {
-            fields[x][y]->setBrush(color_from_value(V(state_idx(x,y)),min_val,max_val));
+            double display_value;
+            if(display_value_plus_reward) {
+                display_value = R(state_idx(x,y)) + discount*V(state_idx(x,y));
+            } else {
+                display_value = V(state_idx(x,y));
+            }
+            fields[x][y]->setBrush(color_from_value(display_value,min_disp_val,max_disp_val));
         }
     }
     return max_diff;
@@ -361,6 +374,11 @@ void InteractiveMaze::execute_action(InteractiveMaze::ACTION a)
     if(prob>=0) {
         tran_prob.print("probs:");
     }
+}
+
+void InteractiveMaze::display_value_plus_reward_changed(bool val)
+{
+    display_value_plus_reward = val;
 }
 
 void InteractiveMaze::random_changed(int val, bool init)

@@ -42,7 +42,7 @@ private:
     std::vector<std::vector<bool> > v_walls_bool;
     QGraphicsEllipseItem *agent;
     double alpha;
-    bool move_agent_automatically;
+    bool move_agent_automatically, display_value_plus_reward;
     int agent_x_pos, agent_y_pos;
     double discount, epsilon;
     arma::vec Q, R, V;
@@ -61,6 +61,7 @@ private:
     void execute_action(ACTION);
 
 private slots:
+    void display_value_plus_reward_changed(bool);
     void random_changed(int, bool init = true);
     void agent_check_box_changed(bool, bool init = true);
     void discount_changed(int, bool init = true);
