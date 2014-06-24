@@ -33,13 +33,9 @@ int main(int argc, char* argv[])
 	// open input and scan it
 	CHECK_GE_0(avformat_open_input(&in_context, argv[1], NULL, NULL));
 	CHECK_GE_0(avformat_find_stream_info(in_context, NULL));
-	if(in_context->nb_streams != 1) {
-		cerr << "Expected one input video stream, but got " << in_context->nb_streams << ", aborting" << endl;
-		return -1;
+	for(unsigned int i = 0; i < in_context->nb_streams; ++i) {
+		clog << *(in_context->streams[i]) << endl;
 	}
-	ins = in_context->streams[0];
-
-	clog << *ins << endl;
 
 	avformat_close_input(&in_context);
 }
