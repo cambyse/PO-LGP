@@ -6,139 +6,297 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>606</width>
-    <height>373</height>
+    <width>1095</width>
+    <height>899</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>InteractiveMaze</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="4" column="1">
-     <widget class="QLabel" name="label_4">
-      <property name="text">
-       <string>Animation Speed</string>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="2">
-     <widget class="QDoubleSpinBox" name="_value_scale">
-      <property name="value">
-       <double>10.000000000000000</double>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="1">
-     <widget class="QLabel" name="label_3">
-      <property name="text">
-       <string>Value Scale</string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="1" rowspan="2" colspan="2">
-     <widget class="QGroupBox" name="groupBox">
-      <property name="title">
-       <string>Maze Dimensions</string>
-      </property>
-      <layout class="QGridLayout" name="gridLayout_2">
-       <item row="2" column="1">
-        <widget class="QPushButton" name="_initialize_maze">
-         <property name="text">
-          <string>Initialize</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QSpinBox" name="_horizontal_size">
-         <property name="value">
-          <number>5</number>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QSpinBox" name="_vertical_size">
-         <property name="value">
-          <number>5</number>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>Horizontal</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_2">
-         <property name="text">
-          <string>Vertical</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-    </item>
-    <item row="0" column="0" rowspan="7">
-     <widget class="QGraphicsView" name="_graphics_view"/>
-    </item>
-    <item row="6" column="1">
-     <widget class="QLabel" name="label_6">
-      <property name="text">
-       <string>Agent Speed</string>
-      </property>
-     </widget>
-    </item>
-    <item row="5" column="2">
-     <widget class="QSpinBox" name="_value_update_speed">
-      <property name="maximum">
-       <number>10000</number>
-      </property>
-      <property name="value">
-       <number>50</number>
-      </property>
-     </widget>
-    </item>
-    <item row="4" column="2">
-     <widget class="QSpinBox" name="_animation_speed">
-      <property name="maximum">
-       <number>1000</number>
-      </property>
-      <property name="value">
-       <number>20</number>
-      </property>
-     </widget>
-    </item>
-    <item row="5" column="1">
-     <widget class="QLabel" name="label_5">
-      <property name="text">
-       <string>Value Update Speed</string>
-      </property>
-     </widget>
-    </item>
-    <item row="6" column="2">
-     <widget class="QSpinBox" name="_agent_speed">
-      <property name="maximum">
-       <number>10000</number>
-      </property>
-      <property name="value">
-       <number>300</number>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="2">
-     <spacer name="verticalSpacer">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>20</width>
-        <height>40</height>
-       </size>
-      </property>
-     </spacer>
+   <layout class="QGridLayout" name="gridLayout_6">
+    <item row="0" column="0">
+     <layout class="QGridLayout" name="gridLayout" columnstretch="1,3,0">
+      <item row="3" column="2">
+       <widget class="QGroupBox" name="groupBox_4">
+        <property name="title">
+         <string>Discounting</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_5">
+         <item row="0" column="0">
+          <widget class="QLineEdit" name="_discount_value">
+           <property name="minimumSize">
+            <size>
+             <width>45</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>45</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>10%</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QScrollBar" name="_discount_slider">
+           <property name="minimum">
+            <number>1</number>
+           </property>
+           <property name="maximum">
+            <number>100</number>
+           </property>
+           <property name="value">
+            <number>10</number>
+           </property>
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="invertedControls">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QGroupBox" name="groupBox_3">
+        <property name="title">
+         <string>Chance / Randomness</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_4">
+         <item row="0" column="1">
+          <widget class="QScrollBar" name="_random_slider">
+           <property name="maximum">
+            <number>100</number>
+           </property>
+           <property name="value">
+            <number>10</number>
+           </property>
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="invertedControls">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLineEdit" name="_random_value">
+           <property name="minimumSize">
+            <size>
+             <width>45</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>45</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>10%</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QGroupBox" name="groupBox">
+        <property name="title">
+         <string>Maze Dimensions</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_2">
+         <item row="0" column="1">
+          <widget class="QSpinBox" name="_horizontal_size">
+           <property name="minimum">
+            <number>1</number>
+           </property>
+           <property name="maximum">
+            <number>100</number>
+           </property>
+           <property name="value">
+            <number>5</number>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Horizontal</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QSpinBox" name="_vertical_size">
+           <property name="minimum">
+            <number>1</number>
+           </property>
+           <property name="maximum">
+            <number>100</number>
+           </property>
+           <property name="value">
+            <number>5</number>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Vertical</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="4" column="2">
+       <spacer name="verticalSpacer">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="1" column="2">
+       <widget class="QGroupBox" name="groupBox_2">
+        <property name="title">
+         <string>Speed &amp;&amp; Timing</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_3">
+         <item row="0" column="3">
+          <widget class="QLabel" name="label_7">
+           <property name="text">
+            <string>ms</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QSpinBox" name="_agent_speed">
+           <property name="maximum">
+            <number>10000</number>
+           </property>
+           <property name="value">
+            <number>300</number>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="3">
+          <widget class="QLabel" name="label_8">
+           <property name="text">
+            <string>ms</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QSpinBox" name="_value_update_speed">
+           <property name="maximum">
+            <number>10000</number>
+           </property>
+           <property name="value">
+            <number>50</number>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QCheckBox" name="_agent_check_box">
+           <property name="maximumSize">
+            <size>
+             <width>18</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0" colspan="2">
+          <widget class="QLabel" name="label_5">
+           <property name="text">
+            <string>Value Update</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>Agent</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+        <zorder>label_5</zorder>
+        <zorder>_value_update_speed</zorder>
+        <zorder>label_6</zorder>
+        <zorder>_agent_speed</zorder>
+        <zorder>label_7</zorder>
+        <zorder>label_8</zorder>
+        <zorder>_agent_check_box</zorder>
+       </widget>
+      </item>
+      <item row="0" column="0" rowspan="5">
+       <widget class="QTextBrowser" name="textBrowser_2">
+        <property name="html">
+         <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:16pt; font-weight:600; text-decoration: underline;&quot;&gt;Description&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;The agent (black disc) can choose to move in any direction or to stay at it's current location. It tries to maximize the sum of rewards and minimize the sum of punishments over time. Walls block the agent so that it stays at it's current location if it tries to move through them. To maximize rewards the agent computes a value for each location, which is indicated by the color. The agent always chooses the action towards the field with a maximum value.&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:11pt; font-weight:600; text-decoration: underline;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:16pt; font-weight:600; text-decoration: underline;&quot;&gt;Controls&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:11pt; font-weight:600; text-decoration: underline;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:11pt; font-weight:600; text-decoration: underline;&quot;&gt;Walls&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Click with right/left mouse button to set/unset walls.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:11pt; font-weight:600; text-decoration: underline;&quot;&gt;Rewards / Punishments&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Use scroll wheel to change &lt;span style=&quot; font-weight:600; color:#c80000;&quot;&gt;reward &lt;/span&gt;/ &lt;span style=&quot; font-weight:600; color:#0000c8;&quot;&gt;punishment&lt;/span&gt; for a field. Punishments are just negative rewards.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:11pt; font-weight:600; text-decoration: underline;&quot;&gt;Maze Dimensions&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Change the horizontal and/or vertical size of the maze. Rewards and walls will be deleted.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:11pt; font-weight:600; text-decoration: underline;&quot;&gt;Speed &amp;amp; Timing&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;These values give the time (in milliseconds) for an update cycle, the higher the value the slower the updates.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Value Update Speed:&lt;/span&gt; How oft an update of the value function is performed.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Agent Speed:&lt;/span&gt; How often the agent performs a step. Uncheck to move the agent by arrow keys and space (for staying) only.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:11pt; font-weight:600; text-decoration: underline;&quot;&gt;Chance / Randomness&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The agent does not always perform the action it actually intended to but some random action instead. This is the percentage of random actions.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:11pt; font-weight:600; text-decoration: underline;&quot;&gt;Discounting&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rewards / punishments become less important as they lie farther in the future. This is the percentage that they become less important in every time step.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1" rowspan="5">
+       <widget class="QGraphicsView" name="_graphics_view"/>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>
@@ -148,50 +306,18 @@
  <resources/>
  <connections>
   <connection>
-   <sender>_initialize_maze</sender>
-   <signal>clicked()</signal>
-   <receiver>InteractiveMaze</receiver>
-   <slot>init_maze()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>527</x>
-     <y>117</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>548</x>
-     <y>136</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>_animation_speed</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>InteractiveMaze</receiver>
-   <slot>init_timers()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>526</x>
-     <y>267</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>381</x>
-     <y>201</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>_value_update_speed</sender>
    <signal>valueChanged(int)</signal>
    <receiver>InteractiveMaze</receiver>
    <slot>init_timers()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>526</x>
-     <y>299</y>
+     <x>1023</x>
+     <y>154</y>
     </hint>
     <hint type="destinationlabel">
-     <x>419</x>
-     <y>219</y>
+     <x>518</x>
+     <y>332</y>
     </hint>
    </hints>
   </connection>
@@ -202,12 +328,92 @@
    <slot>init_timers()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>526</x>
-     <y>331</y>
+     <x>1048</x>
+     <y>189</y>
     </hint>
     <hint type="destinationlabel">
-     <x>439</x>
-     <y>166</y>
+     <x>521</x>
+     <y>294</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>_random_slider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>InteractiveMaze</receiver>
+   <slot>random_changed(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>966</x>
+     <y>247</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>860</x>
+     <y>446</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>_discount_slider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>InteractiveMaze</receiver>
+   <slot>discount_changed(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>939</x>
+     <y>316</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>859</x>
+     <y>504</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>_horizontal_size</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>InteractiveMaze</receiver>
+   <slot>x_dim_changed(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1047</x>
+     <y>52</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>940</x>
+     <y>560</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>_vertical_size</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>InteractiveMaze</receiver>
+   <slot>y_dim_changed(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1048</x>
+     <y>82</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>837</x>
+     <y>597</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>_agent_check_box</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>InteractiveMaze</receiver>
+   <slot>agent_check_box_changed(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>955</x>
+     <y>180</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>993</x>
+     <y>488</y>
     </hint>
    </hints>
   </connection>
@@ -215,5 +421,10 @@
  <slots>
   <slot>init_maze()</slot>
   <slot>init_timers()</slot>
+  <slot>random_changed(int)</slot>
+  <slot>discount_changed(int)</slot>
+  <slot>x_dim_changed(int)</slot>
+  <slot>y_dim_changed(int)</slot>
+  <slot>agent_check_box_changed(bool)</slot>
  </slots>
 </ui>

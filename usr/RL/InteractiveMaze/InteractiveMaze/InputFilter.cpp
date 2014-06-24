@@ -1,18 +1,18 @@
-#include "MouseFilter.h"
+#include "InputFilter.h"
 #include <QDebug>
 #include <QGraphicsSceneMouseEvent>
+#include <QKeyEvent>
 
 #include <iostream>
 using namespace std;
 
-MouseFilter::MouseFilter(QObject *parent) :
+InputFilter::InputFilter(QObject *parent) :
     QObject(parent)
 {
 }
 
-bool MouseFilter::eventFilter(QObject * obj, QEvent * event)
+bool InputFilter::eventFilter(QObject * obj, QEvent * event)
 {
-    // process mouse event
     switch(event->type()) {
     case QEvent::GraphicsSceneMousePress:
     {
@@ -33,31 +33,6 @@ bool MouseFilter::eventFilter(QObject * obj, QEvent * event)
         }
         return true;
     }
-//    case QEvent::GraphicsSceneMouseMove:
-//    {
-//        QGraphicsSceneMouseEvent* mouse_event = static_cast<QGraphicsSceneMouseEvent*>(event);
-//        if(mouse_event==nullptr) {
-//            cout << "event is nullptr" << endl;
-//            return true;
-//        }
-//        if(mouse_event->scenePos().x()==round(mouse_event->scenePos().x()) || mouse_event->scenePos().y()==round(mouse_event->scenePos().y())) {
-//#warning This is a hack to get rid of the integer coordinate events (two different floating point events remain but are similar)
-//            return true;
-//        }
-//        switch(mouse_event->buttons()) {
-//        case Qt::LeftButton:
-//            emit left_mouse_move(mouse_event->scenePos().x(),mouse_event->scenePos().y());
-//            cout << mouse_event->scenePos().x() << ", " << mouse_event->scenePos().y() << ", " << event << "," << obj << endl;
-//            break;
-//        case Qt::RightButton:
-//            emit right_mouse_move(mouse_event->scenePos().x(),mouse_event->scenePos().y());
-//            cout << mouse_event->scenePos().x() << ", " << mouse_event->scenePos().y() << ", " << event << "," << obj << endl;
-//            break;
-//        default:
-//            break;
-//        }
-//        return true;
-//    }
     case QEvent::GraphicsSceneWheel:
     {
         QGraphicsSceneWheelEvent* wheel_event = static_cast<QGraphicsSceneWheelEvent*>(event);
@@ -71,6 +46,29 @@ bool MouseFilter::eventFilter(QObject * obj, QEvent * event)
             emit scroll_down(wheel_event->scenePos().x(),wheel_event->scenePos().y());
         }
         return true;
+    }
+    case QEvent::KeyPress:
+    {
+        QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+        switch(keyEvent->key()) {
+        case Qt::Key_Up:
+            emit north_key();
+            return true;
+        case Qt::Key_Right:
+            emit east_key();
+            return true;
+        case Qt::Key_Down:
+            emit south_key();
+            return true;
+        case Qt::Key_Left:
+            emit west_key();
+            return true;
+        case Qt::Key_Space:
+            emit stay_key();
+            return true;
+        default:
+            break;
+        }
     }
     default:
         break;

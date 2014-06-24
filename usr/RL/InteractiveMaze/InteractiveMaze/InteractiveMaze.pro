@@ -14,10 +14,10 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         InteractiveMaze.cpp \
-    MouseFilter.cpp
+    InputFilter.cpp
 
 HEADERS  += InteractiveMaze.h \
-    MouseFilter.h
+    InputFilter.h
 
 FORMS    += InteractiveMaze.ui
 

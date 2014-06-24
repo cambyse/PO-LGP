@@ -5,19 +5,22 @@
 #include <QtCore>
 #include <QEvent>
 
-class MouseFilter : public QObject
+class InputFilter : public QObject
 {
     Q_OBJECT
 public:
-    explicit MouseFilter(QObject *parent = 0);
+    explicit InputFilter(QObject *parent = 0);
 
 signals:
     void right_click(double x, double y);
     void left_click(double x, double y);
     void scroll_up(double x, double y);
     void scroll_down(double x, double y);
-//    void right_mouse_move(double x, double y);
-//    void left_mouse_move(double x, double y);
+    void north_key();
+    void east_key();
+    void south_key();
+    void west_key();
+    void stay_key();
 
 protected:
     bool eventFilter(QObject *, QEvent *);
