@@ -12,7 +12,7 @@ public:
 
     PredictiveEnvironment(action_ptr_t as, observation_ptr_t os, reward_ptr_t rs);
 
-    virtual ~PredictiveEnvironment() override = default;
+    virtual ~PredictiveEnvironment() override;
 
     /** \brief Perform a transition by executing an action. */
     virtual void perform_transition(const action_ptr_t & action) override;
@@ -21,7 +21,7 @@ public:
      * observation and reward by reference. */
     virtual void perform_transition(const action_ptr_t & a, observation_ptr_t & o, reward_ptr_t & r ) override;
 
-    virtual const instance_t * get_current_instance() const { return current_instance; }
+    virtual const instance_ptr_t get_current_instance() const { return current_instance; }
 
 protected:
 
@@ -29,7 +29,7 @@ protected:
      *
      * This instance is used to perform a transition based on the predicted
      * distribution defined by Predictor::get_prediction. */
-    instance_t * current_instance;
+    instance_ptr_t current_instance;
 
 };
 

@@ -23,7 +23,7 @@ public:
     GoalIteration(const double &, const Predictor &, bool auto_it = true);
     virtual ~GoalIteration() = default;
 
-    virtual action_ptr_t get_action(const instance_t*);
+    virtual action_ptr_t get_action(const_instance_ptr_t);
     void set_goal(observation_ptr_t);
     void print_matrices() const;
     void iterate(const double & threshold = DBL_MAX);
