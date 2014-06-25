@@ -21,7 +21,6 @@ using namespace std;
 int main(int argc, char* argv[])
 {
 	AVFormatContext *in_context = NULL;
-	AVStream *ins = NULL;
 
 	register_libav();
 
@@ -34,7 +33,11 @@ int main(int argc, char* argv[])
 	CHECK_GE_0(avformat_open_input(&in_context, argv[1], NULL, NULL));
 	CHECK_GE_0(avformat_find_stream_info(in_context, NULL));
 	for(unsigned int i = 0; i < in_context->nb_streams; ++i) {
-		clog << *(in_context->streams[i]) << endl;
+		cout << *(in_context->streams[i]) << endl;
+	}
+
+	if(in_context->metadata) {
+		cout << "Container metadata " << *(in_context->metadata) << endl;
 	}
 
 	avformat_close_input(&in_context);
