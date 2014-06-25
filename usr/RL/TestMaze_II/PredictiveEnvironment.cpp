@@ -4,9 +4,13 @@
 #include "util/debug.h"
 
 PredictiveEnvironment::PredictiveEnvironment(action_ptr_t as, observation_ptr_t os, reward_ptr_t rs):
-    current_instance(nullptr)
+    current_instance(util::INVALID)
 {
     set_spaces(as, os, rs);
+}
+
+PredictiveEnvironment::~PredictiveEnvironment() {
+    current_instance->detach_reachable();
 }
 
 void PredictiveEnvironment::perform_transition(const action_ptr_t & action) {
@@ -27,7 +31,7 @@ void PredictiveEnvironment::perform_transition(const action_ptr_t & action) {
             DEBUG_OUT(2,"observation(" << observation_to << "), reward(" << reward << ") --> prob=" << prob);
             prob_accum += prob;
             if(prob_accum>prob_threshold) {
-                current_instance = current_instance->append_instance(action, observation_to, reward);
+                current_instance = current_instance->append(action, observation_to, reward);
                 was_set = true;
                 DEBUG_OUT(2,"CHOOSE");
             }

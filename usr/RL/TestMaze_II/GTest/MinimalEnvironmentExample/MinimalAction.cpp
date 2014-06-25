@@ -1,7 +1,5 @@
 #include "MinimalAction.h"
 
-#include "../../util/Macro.h"
-
 #include "../../util/debug.h"
 
 MinimalAction::MinimalAction(ACTION a) {

@@ -140,8 +140,11 @@ int LBFGS_Object::static_progress(
     } else {
         DEBUG_OUT(1,"Iteration " << iteration_nr << " (fx = " << fx << ", xnorm = " << xnorm << ")" );
         for(int x_idx : Range(nr_variables)) {
-            DEBUG_OUT(1, "    x[" << x_idx << "] = " << x[x_idx]);
-            DEBUG_OUT(2, "    g[" << x_idx << "] = " << g[x_idx]);
+            if(DEBUG_LEVEL<2) {
+                DEBUG_OUT(1, "    x[" << x_idx << "] = " << x[x_idx]);
+            } else {
+                DEBUG_OUT(2, "    x[" << x_idx << "] = " << x[x_idx] << "	g[" << x_idx << "] = " << g[x_idx]);
+            }
         }
         DEBUG_OUT(1,"Iteration " << iteration_nr << " (fx = " << fx << ", xnorm = " << xnorm << ")" );
         return 0;
@@ -257,6 +260,17 @@ bool LBFGS_Object::check_derivatives(
 
 LBFGS_Object& LBFGS_Object::set_objective(objective_t obj) {
     objective = obj;
+    return *this;
+}
+
+LBFGS_Object& LBFGS_Object::set_variables(const std::vector<lbfgsfloatval_t> & values) {
+    if(values.size()!=number_of_variables) {
+        DEBUG_ERROR("Number of values does not match number of variables");
+    } else {
+        for(int idx=0; idx<(int)number_of_variables; ++idx) {
+            variables[idx] = values[idx];
+        }
+    }
     return *this;
 }
 

@@ -110,7 +110,7 @@ void LinearQ::clear_data() {
     loss_terms_up_to_date = false;
 }
 
-LinearQ::action_ptr_t LinearQ::get_max_value_action(const instance_t * i) {
+LinearQ::action_ptr_t LinearQ::get_max_value_action(const_instance_ptr_t i) {
     vector<action_ptr_t> max_actions;
     double max_value = -DBL_MAX;
     for(action_ptr_t action : action_space) {
@@ -147,8 +147,8 @@ void LinearQ::score_candidates_by_gradient() {
         candidate_features.begin(),
         candidate_features.end()
         );
-    size_t old_active_n = old_active_features.size();
-    size_t new_active_n = active_features.size();
+    large_size_t old_active_n = old_active_features.size();
+    large_size_t new_active_n = active_features.size();
 
     // adjust number of variables and transfer weights
     set_number_of_variables_to_active();
@@ -159,7 +159,7 @@ void LinearQ::score_candidates_by_gradient() {
 
     // transfer (absolute value of) gradient to scores
     candidate_scores.resize(candidate_features.size());
-    for(size_t f_idx : Range(new_active_n)) {
+    for(large_size_t f_idx : Range(new_active_n)) {
         if(f_idx<old_active_n) {
             continue;
         } else {
@@ -190,7 +190,7 @@ void LinearQ::add_candidates_by_score(int n) {
 
     // add features
     int included = 0;
-    for(size_t f_idx : iRange(candidate_features.size())) {
+    for(large_size_t f_idx : iRange(candidate_features.size())) {
         if(candidate_scores[f_idx]==0 || included>=n) {
             DEBUG_OUT(1,"   ignore (" << candidate_scores[f_idx] << "):" << candidate_features[f_idx]);
         } else {
@@ -306,10 +306,10 @@ void LinearQ::erase_inactive_features(
     // find activated features
     idx_t feature_n = feature_vector->size();
     vector<bool> is_non_zero(feature_n,false);
-    for(instance_t * current_episode : instance_data) {
-        for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=util::INVALID; ++insIt) {
+    for(instance_ptr_t current_episode : instance_data) {
+        for(const_instance_ptr_t ins=current_episode->const_first(); ins!=util::INVALID; ++ins) {
             for(idx_t f_idx=0; f_idx<feature_n; ++f_idx) {
-                if(is_non_zero[f_idx]==false && (*feature_vector)[f_idx].evaluate(insIt)!=0) {
+                if(is_non_zero[f_idx]==false && (*feature_vector)[f_idx].evaluate(ins)!=0) {
                     is_non_zero[f_idx] = true;
                 }
             }
@@ -455,8 +455,8 @@ lbfgsfloatval_t LinearQ::bellman_objective(
     // iterate through data
     idx_t instance_idx = 1;
     idx_t data_idx = 0;
-    for(instance_t * current_episode : instance_data) {
-        for(const_instanceIt_t insIt=current_episode->const_first(); insIt!=INVALID; ++insIt, ++instance_idx) {
+    for(instance_ptr_t current_episode : instance_data) {
+        for(const_instance_ptr_t ins=current_episode->const_first(); ins!=INVALID; ++ins, ++instance_idx) {
 
             // print progress information
             if(DEBUG_LEVEL>0) {
@@ -464,12 +464,12 @@ lbfgsfloatval_t LinearQ::bellman_objective(
             }
 
             // ignore last instance
-            if(insIt+1==INVALID) {
+            if(ins->const_next()==INVALID) {
                 break;
             }
             ++data_idx;
-            action_ptr_t action_tp1 = (insIt+1)->action;
-            reward_ptr_t reward_tp1 = (insIt+1)->reward;
+            action_ptr_t action_tp1 = ins->const_next()->action;
+            reward_ptr_t reward_tp1 = ins->const_next()->reward;
 
             //-------------------------------//
             //          variables            //
@@ -479,7 +479,7 @@ lbfgsfloatval_t LinearQ::bellman_objective(
             vector<f_ret_t> f_it_atp1(n);
 
             // f(i_t+1,a): features for time t+1 for all actions a
-            vector<vector<f_ret_t> > f_itp1_a(action_space->space_size(),vector<double>(n));
+            vector<vector<f_ret_t> > f_itp1_a(action_space->space_size(),vector<f_ret_t>(n));
 
             // Q(i_t,a_t+1): Q-function for time t
             double Q_it_atp1 = 0;
@@ -500,7 +500,7 @@ lbfgsfloatval_t LinearQ::bellman_objective(
             // evaluate feature and calculate Q-functions
             for(uint f_idx : Range(n)) { // iterate through features
                 // evaluate feature
-                f_ret_t f_ret = active_features[f_idx].evaluate(insIt,action_tp1,observation_ptr_t(),reward_ptr_t());
+                f_ret_t f_ret = active_features[f_idx].evaluate(ins,action_tp1,observation_ptr_t(),reward_ptr_t());
                 f_it_atp1[f_idx] = f_ret;
                 // increment Q-function
                 double f_weight = x[f_idx];
@@ -508,7 +508,7 @@ lbfgsfloatval_t LinearQ::bellman_objective(
                 idx_t action_idx = 0;
                 for(action_ptr_t action : action_space) {
                     // evaluate feature
-                    f_ret_t f_ret_a = active_features[f_idx].evaluate(insIt,action,observation_ptr_t(),reward_ptr_t());
+                    f_ret_t f_ret_a = active_features[f_idx].evaluate(ins,action,observation_ptr_t(),reward_ptr_t());
                     f_itp1_a[action_idx][f_idx] = f_ret_a;
                     // increment Q-function
                     Q_itp1_a[action_idx] += f_weight*f_ret_a;
@@ -660,7 +660,7 @@ void LinearQ::update_loss_terms() {
     //-----------------------//
     // prepare for computing //
     //-----------------------//
-    size_t data_idx = 0;
+    large_size_t data_idx = 0;
     vector<f_ret_t> * f_ret_t0 = new vector<f_ret_t>(feature_n);
     vector<f_ret_t> * f_ret_t1 = new vector<f_ret_t>(feature_n);
 
@@ -670,11 +670,11 @@ void LinearQ::update_loss_terms() {
     if(DEBUG_LEVEL>0) {
         ProgressBar::init("Updating Loss Terms: ");
     }
-    for(instance_t * current_episode : instance_data) {
+    for(instance_ptr_t current_episode : instance_data) {
 
         // iterators with delay of one
-        const_instanceIt_t ins_t0 = current_episode->const_first();
-        const_instanceIt_t ins_t1 = ins_t0 + 1;
+        const_instance_ptr_t ins_t0 = current_episode->const_first();
+        const_instance_ptr_t ins_t1 = ins_t0->const_next();
 
         // precompute feature values
         idx_t f_idx = 0;
@@ -847,7 +847,7 @@ LinearQ::probability_t LinearQ::prior_probability(const observation_ptr_t&, cons
 }
 
 void LinearQ::set_number_of_variables_to_active() {
-    size_t feature_n = active_features.size();
+    large_size_t feature_n = active_features.size();
     // call parent class function
     LBFGS_Optimizer::set_number_of_variables(feature_n);
     feature_weights.resize(feature_n,0);

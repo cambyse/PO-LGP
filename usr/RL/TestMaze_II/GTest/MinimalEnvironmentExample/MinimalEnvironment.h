@@ -2,6 +2,7 @@
 #define MINIMALENVIRONMENT_H_
 
 #include "../../PredictiveEnvironment.h"
+#include "../../Representation/DoublyLinkedInstance.h"
 #include "MinimalAction.h"
 #include "MinimalObservation.h"
 #include "MinimalReward.h"
@@ -15,14 +16,14 @@ public:
                           observation_ptr_t(new MinimalObservation(MinimalObservation::OBSERVATION::RED)),
                           reward_ptr_t(new MinimalReward(MinimalReward::REWARD::NO_REWARD)))
     {
-        current_instance = instance_t::create(action_space, observation_space, reward_space);
+        current_instance = DoublyLinkedInstance::create(action_space, observation_space, reward_space);
         action_space = action_ptr_t(new MinimalAction());
         observation_space = observation_ptr_t(new MinimalObservation());
         reward_space = reward_ptr_t(new MinimalReward());
     }
     virtual ~MinimalEnvironment() = default;
 
-    virtual probability_t get_prediction(const instance_t* i, const action_ptr_t& a, const observation_ptr_t& o, const reward_ptr_t& r) const override {
+    virtual probability_t get_prediction(const_instance_ptr_t i, const action_ptr_t& a, const observation_ptr_t& o, const reward_ptr_t& r) const override {
         bool same_observation = i->observation==o;
         bool stay_action = a==MinimalAction(MinimalAction::ACTION::STAY);
         bool no_reward = r==MinimalReward(MinimalReward::REWARD::NO_REWARD);

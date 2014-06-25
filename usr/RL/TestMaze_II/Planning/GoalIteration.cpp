@@ -2,6 +2,8 @@
 #include "../util/util.h"
 #include <vector>
 #include <algorithm> // for std::max
+#include "../Representation/DoublyLinkedInstance.h"
+
 #include "../util/debug.h"
 
 using std::vector;
@@ -14,7 +16,7 @@ GoalIteration::GoalIteration(const double & d, const Predictor & predictor, bool
     discount(d), auto_iterate(auto_it)
 {
     // set spaces and initialize vectors/matrices
-    set_spaces(predictor);
+    adopt_spaces(predictor);
     int o_size = observation_space->space_size();
     int a_size = action_space->space_size();
     Q = zeros(o_size*a_size);
@@ -29,7 +31,7 @@ GoalIteration::GoalIteration(const double & d, const Predictor & predictor, bool
             for(auto to_observation : observation_space) {
                 probability_t prob = 0;
                 for(auto to_reward : reward_space) {
-                    instance_t * i = instance_t::create(action_space,from_observation,reward_space);
+                    instance_ptr_t i = DoublyLinkedInstance::create(action_space,from_observation,reward_space);
                     prob += predictor.get_prediction(i, performed_action, to_observation, to_reward);
                 }
                 p(a_o_idx,to_o_idx) = prob;
@@ -41,7 +43,7 @@ GoalIteration::GoalIteration(const double & d, const Predictor & predictor, bool
     }
 }
 
-GoalIteration::action_ptr_t GoalIteration::get_action(const instance_t* i) {
+GoalIteration::action_ptr_t GoalIteration::get_action(const_instance_ptr_t i) {
     // auto iterate
     if(auto_iterate) {
         iterate(pow(discount,observation_space->space_size()));

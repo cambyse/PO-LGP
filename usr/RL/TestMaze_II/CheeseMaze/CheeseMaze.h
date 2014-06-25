@@ -18,7 +18,6 @@ class CheeseMaze: public Environment, public Visualizer {
 public:
 
     USE_CONFIG_TYPEDEFS;
-    typedef Feature::const_feature_ptr_t f_ptr_t;
     typedef CheeseMazeAction action_t;
     typedef CheeseMazeObservation observation_t;
     typedef ListedReward reward_t;
