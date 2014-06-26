@@ -73,8 +73,8 @@ void testPickAndPlace(){
   c->map.order=2;
   c->setCostSpecs(0, MP.T, {0.}, 1e0);
 
-  c = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .05));
-//  c = MP.addTask("collisionConstraints", new CollisionConstraint(.05));
+//  c = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .05));
+  c = MP.addTask("collisionConstraints", new CollisionConstraint(.02));
   c->setCostSpecs(0, MP.T, {0.}, 1e0);
 
 //  for(;;)
@@ -85,8 +85,8 @@ void testPickAndPlace(){
 
   //-- optimize
   for(uint k=0;k<5;k++){
-    optNewton(x, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=1., stepInc=1.1, stepDec=0.7 , damping=1., allowOverstep=true));
-//    optConstrained(x, NoArr, Convert(MF), OPT(verbose=1, stopIters=100, maxStep=.5, stepInc=2., nonStrictSteps=(!k?15:5)));
+//    optNewton(x, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=1., stepInc=1.1, stepDec=0.7 , damping=1., allowOverstep=true));
+    optConstrained(x, NoArr, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=1., stepInc=1.1, stepDec=0.7 , damping=1., allowOverstep=true));
   }
   MP.costReport();
   cout <<"z-solution=" <<x.subRange(-4,-1) <<endl;

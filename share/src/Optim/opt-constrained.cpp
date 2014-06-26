@@ -242,7 +242,7 @@ double PhaseOneProblem::fc(arr& df, arr& Hf, arr& meta_g, arr& meta_Jg, const ar
 
 const char* MethodName[]={ "NoMethod", "SquaredPenalty", "AugmentedLagrangian", "LogBarrier", "AnyTimeAugmentedLagrangian" };
 
-void optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
+uint optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
 
   ofstream fil(STRING("z."<<MethodName[opt.constrainedMethod]));
 
@@ -262,9 +262,7 @@ void optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
   if(opt.verbose>0) cout <<"***** optConstrained: method=" <<MethodName[opt.constrainedMethod] <<endl;
 
   OptNewton newton(x, UCP, opt);
-  newton.o.stopTolerance*=10;
-//  OptNewton::StopCriterion res;
-
+  newton.o.stopTolerance*=10.;
 
   for(uint k=0;;k++){
     fil <<k <<' ' <<newton.evals <<' ' <<UCP.f_x <<' ' <<sum(elemWiseMax(UCP.g_x,zeros(UCP.g_x.N,1))) <<endl;
@@ -298,7 +296,7 @@ void optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
 
     //stopping criteron
     if(k>10 && absMax(x_old-x)<opt.stopTolerance){
-      cout << " --- optConstrained StoppingCriterion Delta<" <<opt.stopTolerance <<endl;
+      if(opt.verbose>0) cout << " --- optConstrained StoppingCriterion Delta<" <<opt.stopTolerance <<endl;
       break;
     }
 
@@ -315,5 +313,7 @@ void optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
   }
   fil.close();
   if(&dual) dual=UCP.lambda;
+
+  return newton.evals;
 }
 

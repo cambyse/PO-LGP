@@ -44,7 +44,7 @@ void TEST(KOrderMarkov) {
   arr x(T+1,n);
   for(uint k=0;k<0;k++){
     rndUniform(x,-1.,1.);
-    checkJacobian(Convert(P), x, 1e-4);
+    checkAllGradients(Convert(P),  x, 1e-3);
   }
   
   //-- optimize
