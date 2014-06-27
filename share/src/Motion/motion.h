@@ -64,7 +64,7 @@ struct TaskCost {
 
   enum TaskCostInterpolationType { atTimeOnly, tillTime, fromTime };
   void setCostSpecs(uint fromTime, uint toTime,
-                    const arr& _target={0.},
+                    const arr& _target=ARR(0.),
                     double _prec=1.);
 
 };
