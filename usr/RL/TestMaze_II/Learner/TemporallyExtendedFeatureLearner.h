@@ -105,6 +105,7 @@ public:
     virtual ~TemporallyExtendedFeatureLearner() = default;
     virtual void grow_feature_set();
     virtual void shrink_feature_set();
+    virtual f_set_t get_feature_set();
     virtual void set_feature_set(const f_set_t&);
     virtual void set_l1_factor(const double& l1);
     virtual void print_features() const;
@@ -128,6 +129,10 @@ public:
     virtual void set_spaces(const action_ptr_t & a,
                             const observation_ptr_t & o,
                             const reward_ptr_t & r) override;
+    /** Print feature matrices. That is, print values of all feature for all
+     * outcomes for all training data. @param n gives the number of previous
+     * action-observation-reward triplets to be printed. */
+    virtual void print_F_matrices(int n = 0);
 
 protected:
 
@@ -139,9 +144,10 @@ protected:
 
     virtual weight_map_t get_weight_map() const;
     virtual void apply_weight_map(weight_map_t);
-
+#warning should be protected (remove again!!)
+public:
     /** Update all data. */
-    virtual void update();
+    virtual bool update();
 
     /** Update basis features from current feature set and returns whether they
      * changed. */

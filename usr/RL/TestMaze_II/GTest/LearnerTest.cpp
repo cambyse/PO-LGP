@@ -19,6 +19,8 @@
 using std::vector;
 using std::shared_ptr;
 using std::make_shared;
+using std::cout;
+using std::endl;
 
 using ColorOutput::bold;
 using ColorOutput::reset_all;
@@ -407,11 +409,13 @@ TEST(LearnerTest, TemporallyExtendedModel) {
 }
 
 TEST(LearnerTest, TemporallyExtendedLinearQ) {
+
     USE_CONFIG_TYPEDEFS;
+    typedef TemporallyExtendedLinearQ TELQ;
 
     // initialize environment and learner
     Maze maze;
-    shared_ptr<TemporallyExtendedLinearQ> TELQ;
+    shared_ptr<TELQ> telq;
     shared_ptr<ConjunctiveAdjacency> N_plus;
 
     // use the minimal maze
@@ -427,13 +431,14 @@ TEST(LearnerTest, TemporallyExtendedLinearQ) {
     N_plus = make_shared<ConjunctiveAdjacency>();
     N_plus->adopt_spaces(maze);
     N_plus->set_horizon_extension(2);
-    N_plus->set_max_horizon(2);
+    N_plus->set_min_horizon(-2);
+    N_plus->set_max_horizon(0);
     N_plus->set_combine_features(false);
 
     // initialize TELQ using N+
-    TELQ = make_shared<TemporallyExtendedLinearQ>(N_plus, 0.9);
-    TELQ->adopt_spaces(maze);
-    TELQ->set_l1_factor(0.001);
+    telq = make_shared<TELQ>(N_plus, 0.1);
+    telq->adopt_spaces(maze);
+    telq->set_l1_factor(0.001);
 
     // get all actions for random selection
     vector<action_ptr_t> action_vector;
@@ -442,32 +447,66 @@ TEST(LearnerTest, TemporallyExtendedLinearQ) {
     }
 
     // do some random actions to collect data
-    repeat(1000) {
+    double rew_sum = 0;
+    for(int step=0; step<1000; ++step) {
+        // start new episode every 100 steps
+        bool new_episode = step%100==0;
+        // get action
         action_ptr_t action = util::random_select(action_vector);
         observation_ptr_t observation_to;
         reward_ptr_t reward;
+        // --------- optimal actions --------//
+        // const_instance_ptr_t ins = maze.get_current_instance();
+        // action = telq->optimal_2x2_policy(ins);
+        // ----------------------------------//
+        // perform transition
         maze.perform_transition(action,observation_to,reward);
-        TELQ->add_action_observation_reward_tripel(action,observation_to,reward,false);
+        telq->add_action_observation_reward_tripel(action,observation_to,reward,new_episode);
+        //cout << maze.get_current_instance() << endl;
+        rew_sum += reward->get_value();
+    }
+    cout << "Sum of rewards: " << rew_sum << endl;
+
+    // // try to learn something
+    // repeat(2) {
+    //     telq->grow_feature_set();
+    //     telq->run_policy_iteration();
+    //     telq->shrink_feature_set();
+    //     telq->print_features();
+    //     //telq->check_derivatives(10,1.);
+    // }
+
+    // construct features explicitly
+    TELQ::f_set_t feature_set;
+    for(observation_ptr_t obs_2 : observation_space) {
+        for(observation_ptr_t obs_1 : observation_space) {
+            for(action_ptr_t act : action_space) {
+                feature_set.insert(f_ptr_t(new AndFeature(ObservationFeature::create(obs_2,-2),
+                                                          ObservationFeature::create(obs_1,-1),
+                                                          ActionFeature::create(act,0))));
+            }
+        }
     }
 
-    // try to learn something
-    repeat(2) {
-        TELQ->grow_feature_set();
-        TELQ->run_policy_iteration();
-        TELQ->shrink_feature_set();
-        TELQ->print_features();
-    }
+    telq->set_feature_set(feature_set);
+    telq->set_optimal_2x2_policy();
+    cout << "TD-error = " << telq->get_TD_error() << endl;
+    telq->optimize_weights_Bellman_residual_error();
+    telq->print_features();
+    cout << "TD-error = " << telq->get_TD_error() << endl;
+
 
     // make some moves
-    instance_ptr_t ins = maze.get_current_instance();
-    repeat(10) {
-        maze.perform_transition(TELQ->get_action(ins));
-        ins = maze.get_current_instance();
-    }
+    // instance_ptr_t ins = maze.get_current_instance();
+    // repeat(10) {
+    //     maze.perform_transition(telq->get_action(ins));
+    //     ins = maze.get_current_instance();
+    // }
 
-    //EXPECT_TRUE(TELQ->check_derivatives(10,1));
+    //EXPECT_TRUE(telq->check_derivatives(10,1));
 
-    // TELQ->set_l1_factor(0);
-    // TELQ->optimize_weights_LBFGS();
-    // TELQ->print_features();
+    // telq->set_l1_factor(0);
+    // telq->optimize_weights_LBFGS();
+    // telq->print_features();
 }
+

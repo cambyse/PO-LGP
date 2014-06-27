@@ -206,6 +206,7 @@ namespace Commander {
             void add_command(const QString&, const CommandAliasList&, const Func&, const Description&);
         template<class Func>
             void add_command(const CommandAliasList&, const Func&, const Description&);
+        QString execute(QString command_string, bool & ok) const;
         QString execute(QString command_string) const;
         std::vector<QString> get_help(QString filter = "", int space = 4) const;
         QString get_help_string(QString filter = "", int space = 4) const;

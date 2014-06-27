@@ -69,9 +69,16 @@ private:
         TEM_LOOK_AHEAD,
         UTREE_VALUE,
         LINEAR_Q_VALUE,
-        TELQ_VALUE,
+        TEL_VALUE,
         GOAL_ITERATION
     } planner_type;
+
+    enum TEXT_STYLE {
+        INPUT_STYLE,
+        OK_RESPONSE_STYLE,
+        ERROR_RESPONSE_STYLE,
+        NORMAL_STYLE
+    };
 
     // the user interface
     Ui::TestMaze_IIClass ui;
@@ -120,8 +127,8 @@ private:
     std::shared_ptr<KMarkovCRF> crf;                 ///< TEF+CRF model
     std::shared_ptr<UTree> utree;                    ///< UTree
     std::shared_ptr<LinearQ> linQ;                   ///< Linear-Q
-    std::shared_ptr<ConjunctiveAdjacency> N_plus;    ///< N+ operator for TEM and TELQ
-    std::shared_ptr<TemporallyExtendedLinearQ> telq; ///< Linear-Q with TEFs
+    std::shared_ptr<ConjunctiveAdjacency> N_plus;    ///< N+ operator for TEM and TEL
+    std::shared_ptr<TemporallyExtendedLinearQ> tel;  ///< Linear-Q with TEFs
     std::shared_ptr<TemporallyExtendedModel> tem;    ///< TEM
 
     //----------//
@@ -143,7 +150,7 @@ private:
     //==================//
 
     void initialize_commands();
-    void to_console(QString x, int indentation = 0) { ui._wConsoleOutput->appendPlainText(QString(" ").repeated(indentation)+x); }
+    void to_console(QString x, TEXT_STYLE = NORMAL_STYLE, int indentation = 0);
     void collect_episode(const int& length);
     void update_current_instance(action_ptr_t, observation_ptr_t, reward_ptr_t, bool invalidate_search_tree = true);
     void add_action_observation_reward_tripel(
