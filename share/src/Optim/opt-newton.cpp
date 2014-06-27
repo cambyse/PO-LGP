@@ -117,7 +117,7 @@ OptNewton::StopCriterion OptNewton::step(){
       }
       break;
     } else {
-      if(o.verbose>1) cout <<" - reject" <<std::endl <<"\t\t\t\t\t\t";
+      if(o.verbose>1) cout <<" - reject" <<std::endl <<"\t\t\t\t";
       //reject new points and adapte stepsize|damping
       if(alpha*absMax(Delta)<1e-3*o.stopTolerance || evals>o.stopEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
       lambda = lambda*o.dampingInc;

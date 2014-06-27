@@ -407,11 +407,11 @@ double sConvert::KOrderMarkovFunction_ConstrainedProblem::fc(arr& df, arr& Hf, a
   uint dimz = f->dim_z();
   arr *Jz, *Jzy, *Jzg;
   RowShiftedPackedMatrix *Jz_aux, *Jzy_aux, *Jzg_aux;
-  if(dimz){
+  if(dimz && getJ){
     Jz = J_aux->nextInSum;
     Jz_aux = (RowShiftedPackedMatrix*)Jz->aux;
-    Jzy = new arr(dimy, dimz);  Jy_aux->nextInSum = Jzy;  Jzy_aux = auxRowShifted(*Jzy, dimy, Jz->d1, Jz_aux->real_d1);
-    Jzg = new arr(dimg, dimz);  Jg_aux->nextInSum = Jzg;  Jzg_aux = auxRowShifted(*Jzg, dimg, Jz->d1, Jz_aux->real_d1);
+            { Jzy = new arr(dimy, dimz);  Jy_aux->nextInSum = Jzy;  Jzy_aux = auxRowShifted(*Jzy, dimy, Jz->d1, Jz_aux->real_d1); }
+    if(&Jg) { Jzg = new arr(dimg, dimz);  Jg_aux->nextInSum = Jzg;  Jzg_aux = auxRowShifted(*Jzg, dimg, Jz->d1, Jz_aux->real_d1); }
   }
 
   //loop over time t
@@ -435,8 +435,8 @@ double sConvert::KOrderMarkovFunction_ConstrainedProblem::fc(arr& df, arr& Hf, a
     M += dimf_t;
     y_count += dimf_t;
 
-    if(&g) g.setVectorBlock(phi.subRange(M, M+dimg_t-1), g_count);
-    if(&Jg) {
+    if(&g && dimg) g.setVectorBlock(phi.subRange(M, M+dimg_t-1), g_count);
+    if(&Jg && dimg) {
       Jg.setMatrixBlock(J.subRange(M, M+dimg_t-1), g_count, 0);
       for(uint i=0; i<dimg_t; i++) Jg_aux->rowShift(g_count+i) = J_aux->rowShift(M+i);
       if(dimz){

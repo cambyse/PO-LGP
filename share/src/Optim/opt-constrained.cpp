@@ -36,8 +36,8 @@ double UnconstrainedProblem::fs(arr& dL, arr& HL, const arr& _x){
     f_x = P.fc(df_x, Hf_x, g_x, Jg_x, x);
     CHECK(P.dim_g()==g_x.N,"this conversion requires phi.N to be m-dimensional");
   }else{ //we evaluated this before - use buffered values; the meta F is still recomputed as (dual) parameters might have changed
-    if(&dL) CHECK(df_x.N && Jg_x.N,"");
-    if(&HL) CHECK(Hf_x.N && Jg_x.N,"");
+    if(&dL) CHECK(df_x.N && Jg_x.nd,"");
+    if(&HL) CHECK(Hf_x.N && Jg_x.nd,"");
   }
 
   //  cout <<"g= " <<g_x <<" lambda= " <<lambda <<endl;
@@ -284,7 +284,7 @@ uint optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
       }
       newton.o.stopTolerance = stopTol;
     }else{
-      newton.reinit();
+      if(k) newton.reinit();
       newton.run();
     }
 

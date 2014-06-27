@@ -151,7 +151,7 @@ struct MotionProblemFunction:KOrderMarkovFunction {
   virtual void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);
   //functions to get the parameters $T$, $k$ and $n$ of the $k$-order Markov Process
   virtual uint get_T() { return MP.T; }
-  virtual uint get_k() { if(MP.transitionType==MotionProblem::kinematic) return 1;  return 2; }
+  virtual uint get_k() { return 2; }
   virtual uint dim_x() { return MP.x0.N; }
   virtual uint dim_z() { return MP.z0.N; }
   virtual uint dim_phi(uint t){ return MP.dim_psi() + MP.dim_phi(MP.world, t); } //transitions plus costs (latter include constraints)
