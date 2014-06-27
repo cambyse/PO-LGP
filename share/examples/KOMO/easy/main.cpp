@@ -44,9 +44,9 @@ int main(int argc,char** argv){
   MT::initCmdLine(argc,argv);
 
 //  testEasy();
-  testEasyPR2();
 //  testEasyAlign();
 //  testEasyAlign2();
+  testEasyPR2();
 
   return 0;
 }

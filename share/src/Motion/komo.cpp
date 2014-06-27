@@ -26,11 +26,11 @@ arr moveTo(ors::KinematicWorld& world,
 
   TaskCost *c;
   c = MP.addTask("endeff_pos", new DefaultTaskMap(posTMT, endeff.index, NoVector, target.index, NoVector));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, posPrec);
+  c->setCostSpecs(MP.T, MP.T, {0.}, posPrec);
 
   c = MP.addTask("endeff_vel", new DefaultTaskMap(posTMT, world, "endeff")); //endeff.index));
 //  c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, world));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, NoArr, zeroVelPrec);
+  c->setCostSpecs(MP.T, MP.T, {0.}, zeroVelPrec);
   c->map.order=1; //make this a velocity variable!
 
   if(colPrec<0){ //interpreted as hard constraint
@@ -38,7 +38,7 @@ arr moveTo(ors::KinematicWorld& world,
   }else{ //cost term
     c = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, margin));
   }
-  MP.setInterpolatingCosts(c, MotionProblem::constant, {0.}, colPrec);
+  c->setCostSpecs(0, MP.T, {0.}, colPrec);
 
   for(uint i=0;i<3;i++) if(whichAxesToAlign&(1<<i)){
     ors::Vector axis;
@@ -46,7 +46,7 @@ arr moveTo(ors::KinematicWorld& world,
     axis(i)=1.;
     c = MP.addTask(STRING("endeff_align_"<<i),
                    new DefaultTaskMap(vecAlignTMT, endeff.index, axis, target.index, axis));
-    MP.setInterpolatingCosts(c, MotionProblem::finalOnly, {1.}, alignPrec);
+    c->setCostSpecs(MP.T, MP.T, {1.}, alignPrec);
   }
 
   //-- create the Optimization problem (of type kOrderMarkov)
