@@ -4,6 +4,7 @@
 #include <Motion/taskMap_default.h>
 #include <Motion/taskMap_proxy.h>
 #include <Motion/taskMap_constrained.h>
+#include <Motion/taskMap_transition.h>
 
 arr moveTo(ors::KinematicWorld& world,
            ors::Shape &endeff,
@@ -21,8 +22,9 @@ arr moveTo(ors::KinematicWorld& world,
   target.cont=false;
 
   MotionProblem MP(world);
-  MP.loadTransitionParameters();
+  //  MP.loadTransitionParameters(); //->move transition costs to tasks!
   world.swift().initActivations(world);
+  MP.world.watch(true);
 
   TaskCost *c;
   c = MP.addTask("endeff_pos", new DefaultTaskMap(posTMT, endeff.index, NoVector, target.index, NoVector));
@@ -40,6 +42,10 @@ arr moveTo(ors::KinematicWorld& world,
   }
   c->setCostSpecs(0, MP.T, {0.}, colPrec);
 
+  c = MP.addTask("transitions", new TransitionTaskMap(world));
+  c->map.order=2;
+  c->setCostSpecs(0, MP.T, {0.}, 1e0);
+
   for(uint i=0;i<3;i++) if(whichAxesToAlign&(1<<i)){
     ors::Vector axis;
     axis.setZero();
@@ -55,14 +61,17 @@ arr moveTo(ors::KinematicWorld& world,
   rndGauss(x,.01,true); //don't initialize at a singular config
 
   //-- optimize
+  ors::KinematicWorld::setJointStateCount=0;
   for(uint k=0;k<iterate;k++){
     MT::timerStart();
     if(colPrec<0){
-      optConstrained(x, NoArr, Convert(MF), OPT(verbose=1, stopIters=100, maxStep=.5, stepInc=2., nonStrictSteps=(!k?15:5)));
+      optConstrained(x, NoArr, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=.5, stepInc=2., allowOverstep=false));
+      //verbose=1, stopIters=100, maxStep=.5, stepInc=2./*, nonStrictSteps=(!k?15:5)*/));
     }else{
       optNewton(x, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=.5, stepInc=2., nonStrictSteps=(!k?15:5)));
     }
-    cout <<"** optimization time=" <<MT::timerRead() <<endl;
+    cout <<"** optimization time=" <<MT::timerRead()
+        <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
 //    checkJacobian(Convert(MF), x, 1e-5);
     MP.costReport();
   }
