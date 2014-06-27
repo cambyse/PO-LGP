@@ -124,8 +124,8 @@ struct MotionProblem { //TODO: rename MotionPlanningProblem
   uint dim_phi(const ors::KinematicWorld& G, uint t);
   uint dim_g(const ors::KinematicWorld& G, uint t);
   uint dim_psi();
-  bool getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t); ///< the general (`big') task vector and its Jacobian
-  void getTaskCosts2(arr& phi, arr& J, uint t, const WorldL& G, double tau); ///< the general (`big') task vector and its Jacobian
+//  bool getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t); ///< the general (`big') task vector and its Jacobian
+  bool getTaskCosts2(arr& phi, arr& J, uint t, const WorldL& G, double tau); ///< the general (`big') task vector and its Jacobian
   void costReport(bool gnuplt=true); ///< also computes the costMatrix
   
   void setState(const arr& x, const arr& v=NoArr);

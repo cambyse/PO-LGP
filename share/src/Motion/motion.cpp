@@ -24,8 +24,6 @@
 #include <Ors/ors_swift.h>
 #include <climits>
 
-double stickyWeight=1.;
-
 //===========================================================================
 
 void TaskMap::phi(arr& y, arr& J, const WorldL& G, double tau){
@@ -79,7 +77,7 @@ void TaskCost::setCostSpecs(uint fromTime,
 //===========================================================================
 
 MotionProblem::MotionProblem(ors::KinematicWorld& _world, bool useSwift)
-    : world(_world) , useSwift(useSwift), makeContactsAttractive(false), transitionType(none), T(0), tau(0.)
+    : world(_world) , useSwift(useSwift), transitionType(none), T(0), tau(0.)
 {
   if(useSwift) {
     makeConvexHulls(world.shapes);
@@ -199,7 +197,6 @@ uint MotionProblem::dim_phi(const ors::KinematicWorld &G, uint t) {
   uint m=0;
   for(TaskCost *c: taskCosts) {
     m += c->dim_phi(G, t); //counts also constraints
-    if(c->map.constraint && makeContactsAttractive) m += c->dim_phi(G, t); //..maybe twice
   }
   return m;
 }
@@ -213,85 +210,65 @@ uint MotionProblem::dim_g(const ors::KinematicWorld &G, uint t) {
 }
 
 
-bool MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
-  phi.clear();
-  bool feasible = true;
-  if(&J_x) J_x.clear();
-  if(&J_v) J_v.clear();
-  arr y,J;
-  //-- append task costs
-  for(TaskCost *c: taskCosts) if(c->active && c->prec(t)){
-    if(!c->map.constraint) {
-      c->map.phi(y, J, world);
-      if(absMax(y)>1e10)  MT_MSG("WARNING y=" <<y);
-      CHECK(c->prec.N>t && c->target.N>t, "active task costs "<< c->name <<" have no targets defined");
-      CHECK(c->map.order==0 || c->map.order==1,"");
-      if(c->map.order==0) { //pose costs
-        phi.append(sqrt(c->prec(t))*(y - c->target[t]));
-        if(&J_x) J_x.append(sqrt(c->prec(t))*J);
-        if(&J_v) J_v.append(0.*J);
-      }
-      if(c->map.order==1) { //velocity costs
-        phi.append(sqrt(c->prec(t))*(J*world.qdot - c->target[t]));
-        if(&J_x) J_x.append(0.*J);
-        if(&J_v) J_v.append(sqrt(c->prec(t))*J);
-      }
-    }
-    if(phi.N && phi.last() > c->threshold) feasible = false; //TOTAL hack: last(). Please use constraints, or a separate routine
-    //special: constraint attraction costs
-    if(c->map.constraint && makeContactsAttractive) {
-      c->map.phi(y, J, world);
-      CHECK(y.N==J.d0,"");
-      for(uint j=0;j<y.N;j++) y(j) = -y(j)+.1;
-      if(J.N) for(uint j=0;j<J.d0;j++) J[j]() *= -1.;
-      phi.append(stickyWeight*y);
-      if(&J_x) J_x.append(stickyWeight*J);
-      if(&J_v) J_v.append(0.*J);
-    }
-  }
-  //-- append constraints
-  for(TaskCost *c: taskCosts) if(c->active && c->prec(t)){
-    if(c->map.constraint) {
-      c->map.phi(y, J, world);
-      phi.append(y);
-      if(phi.last() > c->threshold) feasible = false;
-      if(&J_x) J_x.append(J);
-      if(&J_v) J_v.append(0.*J);
-    }
-  }
-  if(&J_x) J_x.reshape(phi.N, world.q.N);
-  if(&J_v) J_v.reshape(phi.N, world.q.N);
+//bool MotionProblem::getTaskCosts(arr& phi, arr& J_x, arr& J_v, uint t) {
+//  phi.clear();
+//  bool feasible = true;
+//  if(&J_x) J_x.clear();
+//  if(&J_v) J_v.clear();
+//  arr y,J;
+//  //-- append task costs
+//  for(TaskCost *c: taskCosts) if(c->active && c->prec(t)){
+//    if(!c->map.constraint) {
+//      c->map.phi(y, J, world);
+//      if(absMax(y)>1e10)  MT_MSG("WARNING y=" <<y);
+//      CHECK(c->prec.N>t && c->target.N>t, "active task costs "<< c->name <<" have no targets defined");
+//      CHECK(c->map.order==0 || c->map.order==1,"");
+//      if(c->map.order==0) { //pose costs
+//        phi.append(sqrt(c->prec(t))*(y - c->target[t]));
+//        if(&J_x) J_x.append(sqrt(c->prec(t))*J);
+//        if(&J_v) J_v.append(0.*J);
+//      }
+//      if(c->map.order==1) { //velocity costs
+//        phi.append(sqrt(c->prec(t))*(J*world.qdot - c->target[t]));
+//        if(&J_x) J_x.append(0.*J);
+//        if(&J_v) J_v.append(sqrt(c->prec(t))*J);
+//      }
+//    }
+//    if(phi.N && phi.last() > c->threshold) feasible = false; //TOTAL hack: last(). Please use constraints, or a separate routine
+//  }
+//  //-- append constraints
+//  for(TaskCost *c: taskCosts) if(c->active && c->prec(t)){
+//    if(c->map.constraint) {
+//      c->map.phi(y, J, world);
+//      phi.append(y);
+//      if(phi.last() > c->threshold) feasible = false;
+//      if(&J_x) J_x.append(J);
+//      if(&J_v) J_v.append(0.*J);
+//    }
+//  }
+//  if(&J_x) J_x.reshape(phi.N, world.q.N);
+//  if(&J_v) J_v.reshape(phi.N, world.q.N);
 
-  CHECK(phi.N == dim_phi(world, t),"");
+//  CHECK(phi.N == dim_phi(world, t),"");
 
-  return feasible;
-}
+//  return feasible;
+//}
 
-void MotionProblem::getTaskCosts2(arr& phi, arr& J, uint t, const WorldL &G, double tau) {
+bool MotionProblem::getTaskCosts2(arr& phi, arr& J, uint t, const WorldL &G, double tau) {
   phi.clear();
   if(&J) J.clear();
   arr y, Jy;
+  bool constraintsHold=true;
   //-- append task costs
   for(TaskCost *c: taskCosts) if(c->active && c->prec.N>t && c->prec(t)){
     if(!c->map.constraint) {
       c->map.phi(y, (&J?Jy:NoArr), G, tau);
-      if(absMax(y)>1e10){
-        MT_MSG("WARNING y=" <<y);
-      }
+      if(absMax(y)>1e10) MT_MSG("WARNING y=" <<y);
       if(c->target.N==1) y -= c->target(0);
       else if(c->target.nd==1) y -= c->target;
       else y -= c->target[t];
       phi.append(sqrt(c->prec(t))*y);
       if(&J) J.append(sqrt(c->prec(t))*Jy);
-    }
-    //special: constraint attraction costs
-    if(c->map.constraint && makeContactsAttractive) {
-      c->map.phi(y, (&J?Jy:NoArr), G, tau);
-      CHECK(y.N==Jy.d0,"");
-      for(uint j=0;j<y.N;j++) y(j) = -y(j)+.1;
-      if(Jy.N) for(uint j=0;j<Jy.d0;j++) Jy[j]() *= -1.;
-      phi.append(stickyWeight*y);
-      if(&J) J.append(stickyWeight*Jy);
     }
   }
   //-- append constraints
@@ -300,11 +277,13 @@ void MotionProblem::getTaskCosts2(arr& phi, arr& J, uint t, const WorldL &G, dou
       c->map.phi(y, (&J?Jy:NoArr), G, tau);
       phi.append(y);
       if(&J) J.append(Jy);
+      if(max(y)>0.) constraintsHold=false;
     }
   }
   if(&J) J.reshape(phi.N, G.N*G.last()->getJointStateDimension());
 
   CHECK(phi.N == dim_phi(*G.last(), t),"");
+  return constraintsHold;
 }
 
 uint MotionProblem::dim_psi() {
@@ -346,10 +325,6 @@ void MotionProblem::costReport(bool gnuplt) {
         m += d;
       }
       if(d && c->map.constraint){
-        if(makeContactsAttractive){
-          taskC(i) += a = sumOfSqr(phiMatrix(t).sub(m,m+d-1));
-          m += d;
-        }
         double gpos=0.;
         for(uint j=0;j<d;j++){
           double g=phiMatrix(t)(m+j);
@@ -605,7 +580,7 @@ void MotionProblem_EndPoseFunction::fv(arr& phi, arr& J, const arr& x){
   //-- task costs
   arr _phi, J_x;
   MP.setState(x, zeros(x.N));
-  MP.getTaskCosts(_phi, J_x, NoArr, MP.T);
+  MP.getTaskCosts2(_phi, J_x, MP.T, LIST(MP.world), MP.tau);
   phi.append(_phi);
   if(&J && _phi.N) {
     J.append(J_x);
@@ -614,7 +589,7 @@ void MotionProblem_EndPoseFunction::fv(arr& phi, arr& J, const arr& x){
   if(absMax(phi)>1e10){
     MT_MSG("\nx=" <<x <<"\nphi=" <<phi <<"\nJ=" <<J);
     MP.setState(x, NoArr);
-    MP.getTaskCosts(_phi, J_x, NoArr, MP.T);
+    MP.getTaskCosts2(_phi, J_x, MP.T, LIST(MP.world), MP.tau);
   }
 
   if(&J) CHECK(J.d0==phi.N,"");
