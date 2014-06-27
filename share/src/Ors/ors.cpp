@@ -1544,7 +1544,7 @@ void ors::KinematicWorld::write(std::ostream& os) const {
   for(Shape *s: shapes) {
     os <<"shape ";
     if(s->name.N) os <<s->name <<' ';
-    os <<"(" <<(s->body?s->body->name:"") <<"){ ";
+    os <<"(" <<(s->body?s->body->name:STRING("")) <<"){ ";
     s->write(os);  os <<" }\n";
   }
   os <<std::endl;
