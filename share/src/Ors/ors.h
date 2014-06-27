@@ -206,6 +206,7 @@ struct KinematicWorld {
   GraphOperatorL operators;
 
   bool isLinkTree;
+  static uint setJointStateCount;
   
   /// @name constructors
   KinematicWorld();

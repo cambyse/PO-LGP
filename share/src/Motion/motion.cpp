@@ -508,7 +508,7 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, uint t, const arr& x_bar) {
     for(uint i=0;i<=k;i++) configurations.append(new ors::KinematicWorld())->copy(MP.world, true);
   }
   //find matches
-  if(false && !MP.world.operators.N){ //this efficiency gain only works without operators yet...
+  if(!MP.world.operators.N){ //this efficiency gain only works without operators yet...
     uintA match(k+1); match=UINT_MAX;
     boolA used(k+1); used=false;
     uintA unused;

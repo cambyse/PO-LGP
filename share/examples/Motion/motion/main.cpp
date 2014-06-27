@@ -40,21 +40,20 @@ void TEST(PR2reach){
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction MF(MP);
-  arr x(MP.T+1,MP.dim_x());
-
-  //initialize trajectory
-  for(uint t=0;t<=MP.T;t++) x[t]() = MP.x0;
+  arr x = replicate(MP.x0, MP.T+1);
 
   //-- optimize
   for(uint k=0;k<5;k++){
     MT::timerStart();
+    ors::KinematicWorld::setJointStateCount=0;
 #ifndef CONSTRAINT
     optNewton(x, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=.5, stepInc=2., nonStrictSteps=(!k?15:5)));
 #else
     optConstrained(x, NoArr, Convert(MF), OPT(verbose=1, stopIters=100, damping=1., maxStep=1., nonStrictSteps=5));
 #endif
 
-    cout <<"** optimization time=" <<MT::timerRead() <<endl;
+    cout <<"** optimization time=" <<MT::timerRead()
+        <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
     MP.costReport();
     write(LIST<arr>(x),"z.output");
     gnuplot("load 'z.costReport.plt'", false, true);
@@ -125,8 +124,8 @@ void TEST(Basics){
 int main(int argc,char** argv){
   MT::initCmdLine(argc,argv);
 
-//  testPR2reach();
-  testBasics();
+  testPR2reach();
+//  testBasics();
   
   return 0;
 }

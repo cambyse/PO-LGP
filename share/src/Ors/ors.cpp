@@ -59,6 +59,8 @@ void lib_ors(){ cout <<"force loading lib/ors" <<endl; }
 
 #ifndef MT_ORS_ONLY_BASICS
 
+uint ors::KinematicWorld::setJointStateCount = 0;
+
 //===========================================================================
 //
 // contants
@@ -1001,6 +1003,8 @@ void ors::KinematicWorld::calc_Q_from_q(bool calcVels){
 /** @brief sets the joint state vectors separated in positions and
   velocities */
 void ors::KinematicWorld::setJointState(const arr& _q, const arr& _qdot, bool calcVels) {
+  setJointStateCount++; //global counter
+
   uint N=getJointStateDimension();
   CHECK(_q.N==N && (!(&_qdot) || _qdot.N==N), "wrong joint state dimensionalities");
   if(&_q!=&q) q=_q;
