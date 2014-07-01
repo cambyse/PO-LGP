@@ -3,7 +3,6 @@ get_filename_component(NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
 set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
 
-if(WITH_FREENECT)
 if(LIBFREENECT_FOUND)
 	include(.sources.cmake)
 
@@ -21,4 +20,3 @@ if(LIBFREENECT_FOUND)
 else()
 	message(STATUS "Kinect support not built because libfreenect not found")
 endif()
-endif(WITH_FREENECT) 
