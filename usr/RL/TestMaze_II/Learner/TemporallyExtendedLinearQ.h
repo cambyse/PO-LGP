@@ -39,6 +39,8 @@ public:
 
     virtual ~TemporallyExtendedLinearQ() = default;
 
+    virtual double get_action_value(const_instance_ptr_t, action_ptr_t) const;
+
     virtual action_ptr_t get_action(const_instance_ptr_t) override;
 
     virtual void set_discount(double d) { discount = d; }
@@ -49,13 +51,15 @@ public:
 
     virtual double get_TD_error();
 
+    virtual void print_training_data() const override;
+
 protected:
+#warning should be protected (remove again!!)
+public:
 
     virtual bool update() override;
     virtual void update_policy();
     virtual void update_rewards_and_data_indices();
-#warning should be protected (remove again!!)
-public:
     virtual action_ptr_t optimal_2x2_policy(const_instance_ptr_t) const;
     virtual void set_optimal_2x2_policy();
     virtual void update_c_rho_L();

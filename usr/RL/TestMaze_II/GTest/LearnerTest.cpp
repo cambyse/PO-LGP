@@ -448,9 +448,10 @@ TEST(LearnerTest, TemporallyExtendedLinearQ) {
 
     // do some random actions to collect data
     double rew_sum = 0;
-    for(int step=0; step<1000; ++step) {
+    for(int step=0; step<50000; ++step) {
         // start new episode every 100 steps
         bool new_episode = step%100==0;
+        new_episode = false;
         // get action
         action_ptr_t action = util::random_select(action_vector);
         observation_ptr_t observation_to;
@@ -489,19 +490,30 @@ TEST(LearnerTest, TemporallyExtendedLinearQ) {
     }
 
     telq->set_feature_set(feature_set);
-    telq->set_optimal_2x2_policy();
-    cout << "TD-error = " << telq->get_TD_error() << endl;
-    telq->optimize_weights_Bellman_residual_error();
-    telq->print_features();
-    cout << "TD-error = " << telq->get_TD_error() << endl;
+    // telq->set_optimal_2x2_policy();
+    // cout << "TD-error = " << telq->get_TD_error() << endl;
+    // telq->optimize_weights_Bellman_residual_error();
+    // telq->print_features();
+    // cout << "TD-error = " << telq->get_TD_error() << endl;
+    // telq->print_training_data();
+    // telq->update_policy();
+    // telq->run_policy_iteration();
 
+    repeat(10) {
+        telq->update_policy();
+        telq->optimize_weights_Bellman_residual_error();
+        cout << "TD-error = " << telq->get_TD_error() << endl;
+        telq->print_features();
+    }
 
     // make some moves
-    // instance_ptr_t ins = maze.get_current_instance();
-    // repeat(10) {
-    //     maze.perform_transition(telq->get_action(ins));
-    //     ins = maze.get_current_instance();
-    // }
+    instance_ptr_t ins = maze.get_current_instance();
+    repeat(50) {
+        action_ptr_t act = telq->get_action(ins);
+        maze.perform_transition(act);
+        ins = maze.get_current_instance();
+        DEBUG_OUT(0,ins << " --> " << act);
+    }
 
     //EXPECT_TRUE(telq->check_derivatives(10,1));
 
@@ -509,4 +521,3 @@ TEST(LearnerTest, TemporallyExtendedLinearQ) {
     // telq->optimize_weights_LBFGS();
     // telq->print_features();
 }
-

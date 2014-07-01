@@ -48,29 +48,38 @@ TemporallyExtendedLinearQ::TemporallyExtendedLinearQ(std::shared_ptr<Conjunctive
     set_outcome_type(OUTCOME_TYPE::ACTION);
 }
 
-TELQ::action_ptr_t TELQ::get_action(const_instance_ptr_t ins) {
-    // print random action if values cannot be computed
+double TELQ::get_action_value(const_instance_ptr_t ins, action_ptr_t act) const {
+    // return zero if value cannot be computed
     if(feature_set.size()==0) {
         DEBUG_WARNING("Cannot compute action (no features)");
-        return action_space->random_element();
+        return 0;
     }
+    // get feature values
+    row_vec_t feature_values(feature_set.size());
+    int feature_idx = 0;
+    for(f_ptr_t feature : feature_set) {
+        feature_values(feature_idx) = feature->evaluate(ins,act,observation_space,reward_space);
+        ++feature_idx;
+    }
+    // compute action value
+    return as_scalar(feature_values*weights);
+}
+
+TELQ::action_ptr_t TELQ::get_action(const_instance_ptr_t ins) {
     vector<action_ptr_t> optimal_actions;
     double max_action_value = -DBL_MAX;
+    DEBUG_OUT(4,"Instance " << ins);
     for(action_ptr_t act : action_space) {
-        // get feature values
-        row_vec_t feature_values(feature_set.size());
-        int feature_idx = 0;
-        for(f_ptr_t feature : feature_set) {
-            feature_values(feature_idx) = feature->evaluate(ins,act,observation_space,reward_space);
-            ++feature_idx;
-        }
         // compute action value
-        double action_value = as_scalar(feature_values*weights);
+        double action_value = get_action_value(ins,act);
+        DEBUG_OUT(4,"    " << act << " --> " << action_value);
         // update optimal actions
         if(action_value>max_action_value) {
+            DEBUG_OUT(4,"    is optimal action");
             max_action_value = action_value;
-            optimal_actions.resize(1,act);
+            optimal_actions.assign(1,act);
         } else if(action_value==max_action_value) {
+            DEBUG_OUT(4,"    added to optimal action");
             optimal_actions.push_back(act);
         }
     }
@@ -126,6 +135,22 @@ double TELQ::get_TD_error() {
     return as_scalar(c + 2*rho.t()*weights + weights.t()*L*weights);
 }
 
+void TELQ::print_training_data() const {
+    int data_idx = 0;
+    int episode_idx = 0;
+    for(const_instance_ptr_t episode : instance_data) {
+        cout << "Episode " << episode_idx << endl;
+        for(const_instance_ptr_t ins=episode->const_first(); ins!=INVALID; ++ins) {
+            cout << ins << endl;
+            for(action_ptr_t act : action_space) {
+                cout << "    " << act << " --> " << get_action_value(ins,act) << endl;
+            }
+            ++data_idx;
+        }
+        ++episode_idx;
+    }
+}
+
 bool TELQ::update() {
     if(data_changed) {
         update_rewards_and_data_indices();
@@ -163,7 +188,8 @@ void TELQ::update_policy() {
 
         // make sure all data are up-to-date
         update();
-        // choose maximum value action
+
+        // choose maximum value action efficiently using precomputed values
         for(int data_idx : Range(number_of_data_points)) {
             row_vec_t action_values = weights.t()*F_matrices[data_idx];
             int outcome_idx = 0;
@@ -173,7 +199,7 @@ void TELQ::update_policy() {
             for(action_ptr_t act : action_space) {
                 if(action_values(outcome_idx)>max_action_value) {
                     max_action_value = action_values(outcome_idx);
-                    optimal_actions.resize(1,act);
+                    optimal_actions.assign(1,act);
                     optimal_action_indices.resize(1,outcome_idx);
                 } else if(action_values(outcome_idx)==max_action_value) {
                     optimal_actions.push_back(act);
@@ -190,6 +216,26 @@ void TELQ::update_policy() {
             policy[data_idx] = optimal_actions[random_idx];
             policy_indices[data_idx] = optimal_action_indices[random_idx];
         }
+
+        // choose maximum value action the stupid costly way
+        // int data_idx = 0;
+        // for(const_instance_ptr_t episode : instance_data) {
+        //     for(const_instance_ptr_t ins_t=episode->const_first(); ins_t!=INVALID; ++ins_t) {
+        //         action_ptr_t action = get_action(ins_t);
+        //         policy[data_idx] = action;
+        //         policy_indices[data_idx] = action->index();
+        //         IF_DEBUG(3) {
+        //             DEBUG_OUT(0,ins_t);
+        //             for(action_ptr_t act : action_space) {
+        //                 DEBUG_OUT(0,"    " << act << " --> " << get_action_value(ins_t,act));
+        //             }
+        //             DEBUG_OUT(0,"    ==> " << action);
+        //             DEBUG_OUT(0,"");
+        //         }
+        //         ++data_idx;
+        //     }
+        // }
+
     }
 
     // set flag if changed
@@ -210,6 +256,9 @@ void TELQ::update_policy() {
 }
 
 void TELQ::update_rewards_and_data_indices() {
+    IF_DEBUG(1) {
+        cout << "Update rewards and data-indices" << endl;
+    }
     rewards_and_data_indices.clear();
     int data_idx = 0;
     for(const_instance_ptr_t episode : instance_data) {
@@ -340,6 +389,7 @@ void TELQ::update_c_rho_L() {
     for(auto reward_and_idx : rewards_and_data_indices) {
         double r_t = get<0>(reward_and_idx);
         int t_idx = get<1>(reward_and_idx);
+        //DEBUG_OUT(0,"T-idx: " << t_idx << " (" << policy_indices.size() << "/" << outcome_indices.size() << "/" << F_matrices.size() << ")");
         col_vec_t phi = (col_vec_t)(discount * F_matrices[t_idx+1].col(policy_indices[t_idx]) -
                                     F_matrices[t_idx].col(outcome_indices[t_idx]));
         c = c + pow(r_t,2);
