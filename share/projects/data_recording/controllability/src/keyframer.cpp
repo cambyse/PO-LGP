@@ -5,6 +5,8 @@
 #include <Perception/videoEncoder.h>
 #include "keyframer.h"
 
+#include <sys/time.h>
+
 // TODO replace with appropriate tensor function
 //arr my_sum(const arr &v, uint d) {
   //arr x, S;
@@ -20,6 +22,13 @@
   //return S;
 //}
 
+#include <dlib/svm_threaded.h>
+using namespace dlib;
+typedef matrix<double, 6, 1> node_vector_type;
+typedef matrix<double, 1, 1> edge_vector_type;
+typedef graph<node_vector_type, edge_vector_type>::kernel_1a_c graph_type;
+typedef matrix<double,0,1> vector_type;
+
 struct KeyFramer::sKeyFramer {
   ors::KinematicWorld *kw;
   G4Data *g4d;
@@ -28,9 +37,12 @@ struct KeyFramer::sKeyFramer {
   uintA dofs, cumdofs;
   StringA names;
 
-  uint nframes;
-  arr state;
   arr ood, dird, indd; // distance matrices
+
+  KeyValueGraph ann_kvg;
+  arr ann;
+
+  graph_labeler<vector_type> labeler;
 
   sKeyFramer();
   ~sKeyFramer();
@@ -74,6 +86,7 @@ void KeyFramer::updateOrs(uint f, bool show) {
   ors::Vector x_vec(1, 0, 0),
               y_vec(0, 1, 0),
               z_vec(0, 0, 1);
+  ors::Body *b;
   ors::Shape *sh;
 
   arr y, J, yVec, JVec;
@@ -83,12 +96,17 @@ void KeyFramer::updateOrs(uint f, bool show) {
 
   uint n = kw().getJointStateDimension();
   W.setDiag(1e-4, n);
+  for(const String &sensor: g4d().id().unstruct_sensors()) {
+    b = kw().getBodyByName(sensor);
+    b->X.pos.set(g4d().query("pos", sensor, f).p);
+    b->X.rot.set(g4d().query("quat", sensor, f).p);
+  }
   for(;;) {
     Phi.resize(0);
     PhiJ.resize(0);
     kw().getJointState(q);
 
-    for(const String &sensor: g4d().sensors()) {
+    for(const String &sensor: g4d().id().struct_sensors()) {
       sh = kw().getShapeByName(STRING("sh:task:" << sensor));
 
       sensor_pos.referTo(g4d().query("pos", sensor, f));
@@ -142,7 +160,7 @@ void KeyFramer::computeVar(const StringA &types, uint wlen, bool force) {
 void KeyFramer::computeVar(const String &type, uint wlen, bool force) {
   String typeVar = STRING(type << "Var");
   cout << " * computing " << typeVar << endl;
-  if(!force && g4d().hasBAM(typeVar)) {
+  if(!force && g4d().hasBam(typeVar)) {
     cout << " * " << typeVar << " already computed (force = 0). Skipping." << endl;
     return;
   }
@@ -180,14 +198,14 @@ void KeyFramer::computeFilter(const String &type, double alpha, bool force) {
   CHECK(alpha >= 0. && alpha <= 1., "Parameter alpha (" << alpha << ") must be 0 <= alpha <= 1.");
   String typeFilter = STRING(type << "Filter");
   cout << " * computing " << typeFilter << endl;
-  if(!force && g4d().hasBAM(typeFilter)) {
+  if(!force && g4d().hasBam(typeFilter)) {
     cout << " * " << typeFilter << " already computed (force = 0). Skipping." <<
       endl;
     return;
   }
-  uint numS = g4d().sensors().N;
-  uint numF = g4d().numFrames();
-  uint numD = g4d().numDim(type);
+  uint nsensors = g4d().id().sensors().N;
+  uint nframes = g4d().numFrames();
+  uint ndims = g4d().numDim(type);
   double beta = 1-alpha;
 
   arr x, y, es;
@@ -195,12 +213,12 @@ void KeyFramer::computeFilter(const String &type, double alpha, bool force) {
   y.resizeAs(x);
   y.setZero();
 
-  for(uint i = 0; i < numS; i++) {
-    for(uint d = 0; d < numD; d++) {
+  for(uint i = 0; i < nsensors; i++) {
+    for(uint d = 0; d < ndims; d++) {
       es = (~x[i])[d];
-      for(uint f = 1; f < numF; f++)
+      for(uint f = 1; f < nframes; f++)
         es(f) = es(f) * alpha + es(f-1) * beta;
-      for(uint f = 0; f < numF; f++)
+      for(uint f = 0; f < nframes; f++)
         y(i, f, d) = es(f);
     }
   }
@@ -219,14 +237,14 @@ void KeyFramer::computeSmooth(const String &type, double alpha, bool force) {
   CHECK(alpha >= 0. && alpha <= 1., "Parameter alpha (" << alpha << ") must be 0 <= alpha <= 1.");
   String typeSmooth = STRING(type << "Smooth");
   cout << " * computing " << typeSmooth << endl;
-  if(!force && g4d().hasBAM(typeSmooth)) {
+  if(!force && g4d().hasBam(typeSmooth)) {
     cout << " * " << typeSmooth << " already computed (force = 0). Skipping." <<
       endl;
     return;
   }
-  uint numS = g4d().sensors().N;
-  uint numF = g4d().numFrames();
-  uint numD = g4d().numDim(type);
+  uint nsensors = g4d().id().sensors().N;
+  uint nframes = g4d().numFrames();
+  uint ndims = g4d().numDim(type);
   double beta = 1-alpha;
 
   arr x, y, es;
@@ -234,14 +252,14 @@ void KeyFramer::computeSmooth(const String &type, double alpha, bool force) {
   y.resizeAs(x);
   y.setZero();
 
-  for(uint i = 0; i < numS; i++) {
-    for(uint d = 0; d < numD; d++) {
+  for(uint i = 0; i < nsensors; i++) {
+    for(uint d = 0; d < ndims; d++) {
       es = (~x[i])[d];
-      for(uint f = numF-2; f-- > 0;)
+      for(uint f = nframes-2; f-- > 0;)
         es(f) = es(f) * alpha + es(f+1) * beta;
-      for(uint f = 1; f < numF; f++)
+      for(uint f = 1; f < nframes; f++)
         es(f) = es(f) * alpha + es(f-1) * beta;
-      for(uint f = 0; f < numF; f++)
+      for(uint f = 0; f < nframes; f++)
         y(i, f, d) = es(f);
     }
   }
@@ -261,14 +279,14 @@ void KeyFramer::computeSpline(const String &type, double lambda, bool force) {
   CHECK(lambda >= 0., "Parameter lambda (" << lambda << ") must be non-negative.");
   String typeSpline = STRING(type << "Spline");
   cout << " * computing " << typeSpline << endl;
-  if(!force && g4d().hasBAM(typeSpline)) {
+  if(!force && g4d().hasBam(typeSpline)) {
     cout << " * " << typeSpline << " already computed (force = 0). Skipping." <<
       endl;
     return;
   }
-  uint numS = g4d().sensors().N;
-  uint numF = g4d().numFrames();
-  uint numD = g4d().numDim(type);
+  uint nsensors = g4d().id().sensors().N;
+  uint nframes = g4d().numFrames();
+  uint ndims = g4d().numDim(type);
 
   arr x, y, tx, ty;
 
@@ -276,13 +294,13 @@ void KeyFramer::computeSpline(const String &type, double lambda, bool force) {
   y.resizeAs(x);
   y.setZero();
 
-  for(uint i = 0; i < numS; i++) {
-    for(uint d = 0; d < numD; d++) {
+  for(uint i = 0; i < nsensors; i++) {
+    for(uint d = 0; d < ndims; d++) {
       cout << " * computing " << typeSpline << " for sensor " << i << ", dim " << d << endl;
       tx = (~x[i])[d];
-      MT::Spline spl(numF, tx);
+      MT::Spline spl(nframes, tx);
       ty = spl.smooth(lambda);
-      for(uint f = 0; f < numF; f++)
+      for(uint f = 0; f < nframes; f++)
         y(i, f, d) = ty(f);
     }
   }
@@ -300,7 +318,7 @@ void KeyFramer::computeSpeed(const StringA &types, bool force) {
 void KeyFramer::computeSpeed(const String &type, bool force) {
   String typeSpeed = STRING(type << "Speed");
   cout << " * computing " << typeSpeed << endl;
-  if(!force && g4d().hasBAM(typeSpeed)) {
+  if(!force && g4d().hasBam(typeSpeed)) {
     cout << " * " << typeSpeed << " already computed (force = 0). Skipping." << endl;
     return;
   }
@@ -311,10 +329,10 @@ void KeyFramer::computeSpeed(const String &type, bool force) {
   y.resize(x.d0, x.d1);
   y.setZero();
 
-  uint numS = g4d().sensors().N;
-  uint numF = g4d().numFrames();
-  for(uint i = 0; i < numS; i++) {
-    for(uint f = 1; f < numF; f++)
+  uint nsensors = g4d().id().sensors().N;
+  uint nframes = g4d().numFrames();
+  for(uint i = 0; i < nsensors; i++) {
+    for(uint f = 1; f < nframes; f++)
       // speed in cm/s (measurements in 100cm, and at 120/s)
       y(i, f) = 12000. * sqrt(sumOfSqr(x[i][f] - x[i][f-1]));
   }
@@ -332,17 +350,17 @@ void KeyFramer::computeGP(const StringA &types, bool force) {
 void KeyFramer::computeGP(const String &type, bool force) {
   String typeGP = STRING(type << "GP");
   cout << " * computing " << typeGP << endl;
-  if(!force && g4d().hasBAM(typeGP)) {
+  if(!force && g4d().hasBam(typeGP)) {
     cout << " * " << typeGP << " already computed (force = 0). Skipping." << endl;
     return;
   }
-  uint numS = g4d().sensors().N;
-  uint numF = g4d().numFrames();
-  uint numD = g4d().numDim(type);
+  uint nsensors = g4d().id().sensors().N;
+  uint nframes = g4d().numFrames();
+  uint ndims = g4d().numDim(type);
 
   arr x, y;
   x = g4d().query(type);
-  y.resize(numS, numF, numD);
+  y.resize(nsensors, nframes, ndims);
   y.setZero();
 
   GaussianProcess gp;
@@ -350,14 +368,14 @@ void KeyFramer::computeGP(const String &type, bool force) {
   gp.obsVar = .05;
   gp.setKernel(GaussKernel, &gpp);
   arr mm, ss, tt;
-  tt = linspace(0, numF-1, numF-1);
+  tt = linspace(0, nframes-1, nframes-1);
 
-  for(uint i = 0; i < numS; i++) {
-    for(uint d = 0; d < numD; d++) {
+  for(uint i = 0; i < nsensors; i++) {
+    for(uint d = 0; d < ndims; d++) {
       cout << " * computing " << typeGP << " for sensor " << i << ", dim " << d << endl;
       gp.recompute(tt, (~x[i])[d]);
       gp.evaluate(tt, mm, ss);
-      for(uint f = 0; f < numF; f++)
+      for(uint f = 0; f < nframes; f++)
         y(i, f, d) = mm(f);
     }
   }
@@ -370,15 +388,17 @@ void KeyFramer::computeDPos(const String &b, bool force) {
   String typeDPos;
   typeDPos << b << "_dPos";
   cout << " * computing " << typeDPos << endl;
-  if(!force && g4d().hasBAM(typeDPos)) {
+  if(!force && g4d().hasBam(typeDPos)) {
     cout << " * " << typeDPos << " already computed (force = 0). Skipping." << endl;
     return;
   }
-  uint numS = g4d().sensors().N;
-  uint numF = g4d().numFrames();
-  uint numD = g4d().numDim("pos");
+  uint nsensors = g4d().id().sensors().N;
+  uint nframes = g4d().numFrames();
+  uint ndims = g4d().numDim("pos");
 
-  arr y(numS, numF, numD);
+  // TODO FIXME some better format?
+
+  arr y(nsensors, nframes, ndims);
   y.setZero();
 
   arr posX, quatX, posY;
@@ -387,8 +407,8 @@ void KeyFramer::computeDPos(const String &b, bool force) {
   quatX = g4d().query("quat", b);
   ors::Vector v1, v2, v, A;
   ors::Quaternion q1;
-  for(uint j = 0; j < numS; j++) {
-    for(uint f = 0; f < numF; f++) {
+  for(uint j = 0; j < nsensors; j++) {
+    for(uint f = 0; f < nframes; f++) {
       v1.set(posX[f].p);
       v2.set(posY[j][f].p);
       q1.set(quatX[f].p);
@@ -407,23 +427,23 @@ void KeyFramer::computeDQuat(const String &b, bool force) {
   String typeDQuat;
   typeDQuat << b << "_dQuat";
   cout << " * computing " << typeDQuat << endl;
-  if(!force && g4d().hasBAM(typeDQuat)) {
+  if(!force && g4d().hasBam(typeDQuat)) {
     cout << " * " << typeDQuat << " already computed (force = 0). Skipping." << endl;
     return;
   }
-  uint numS = g4d().sensors().N;
-  uint numF = g4d().numFrames();
-  uint numD = g4d().numDim("quat");
+  uint nsensors = g4d().id().sensors().N;
+  uint nframes = g4d().numFrames();
+  uint ndims = g4d().numDim("quat");
 
-  arr y(numS, numF, numD);
+  arr y(nsensors, nframes, ndims);
   y.setZero();
 
   arr quatX, quatY;
   quatX = g4d().query("quat", b);
   quatY = g4d().query("quat");
   ors::Quaternion q1, q2, q, A;
-  for(uint j = 0; j < numS; j++) {
-    for(uint f = 0; f < numF; f++) {
+  for(uint j = 0; j < nsensors; j++) {
+    for(uint f = 0; f < nframes; f++) {
       q1.set(quatX[f].p);
       q2.set(quatY[j][f].p);
       if(f == 0)
@@ -440,8 +460,8 @@ void KeyFramer::computeDQuat(const String &b, bool force) {
 // computeDist {{{
 void KeyFramer::computeDist(uint f) {
   kw().swift();
-  uint numA = g4d().digits().N;
-  uint numO = g4d().objects().N;
+  uint numA = g4d().id().digits().N;
+  uint numO = g4d().id().objects().N;
 
   updateOrs(f, false);
   // direct agent-object and object-object distances
@@ -465,10 +485,10 @@ void KeyFramer::computeDist(uint f) {
     sb = kw().shapes(idsb);
     ba = sa->body;
     bb = sb->body;
-    aa = g4d().digits().contains(ba->name);
-    ab = g4d().digits().contains(bb->name);
-    ida = aa? g4d().digits().findValue(ba->name): g4d().objects().findValue(ba->name);
-    idb = ab? g4d().digits().findValue(bb->name): g4d().objects().findValue(bb->name);
+    aa = g4d().id().digits().contains(ba->name);
+    ab = g4d().id().digits().contains(bb->name);
+    ida = aa? g4d().id().digits().findValue(ba->name): g4d().id().objects().findValue(ba->name);
+    idb = ab? g4d().id().digits().findValue(bb->name): g4d().id().objects().findValue(bb->name);
     if(aa && !ab && d < s->dird(f, ida, idb)) s->dird(f, ida, idb) = d;
     if(ab && !aa && d < s->dird(f, idb, ida)) s->dird(f, idb, ida) = d;
     if(!aa && !ab && d < s->ood(f, ida, idb)) s->ood(f, ida, idb) = s->ood(f, idb, ida) = d;
@@ -494,13 +514,13 @@ void KeyFramer::computeDist(uint f) {
 // }}}
 // computeDist {{{
 void KeyFramer::computeDist() {
-  uint numF = g4d().numFrames();
-  uint numA = g4d().digits().N;
-  uint numO = g4d().objects().N;
+  uint nframes = g4d().numFrames();
+  uint numA = g4d().id().digits().N;
+  uint numO = g4d().id().objects().N;
 
-  s->ood.resize(numF, numO, numO); s->ood.setZero(100);
-  s->dird.resize(numF, numA, numO); s->dird.setZero(100); // can remove this?
-  s->indd.resize(numF, numA, numO); s->indd.setZero(100);
+  s->ood.resize(nframes, numO, numO); s->ood.setZero(100);
+  s->dird.resize(nframes, numA, numO); s->dird.setZero(100); // can remove this?
+  s->indd.resize(nframes, numA, numO); s->indd.setZero(100);
 
   // swift preparations
   cout << " * deactivating proxies within bodies:" << endl;
@@ -510,13 +530,13 @@ void KeyFramer::computeDist() {
   }
   BodyL agents;
   cout << " * deactivating proxies between agents :" << endl;
-  for(const String &a: g4d().digits()) {
+  for(const String &a: g4d().id().digits()) {
     cout << " *** " << a << endl;
     agents.append(kw().getBodyByName(a));
   }
   kw().swift().deactivate(agents);
   //kw().swift().setCutoff(100.);
-  for(uint f = 0; f < numF; f++)
+  for(uint f = 0; f < nframes; f++)
     computeDist(f);
 }
 // }}}
@@ -527,12 +547,12 @@ void KeyFramer::testDist(KeyValueGraph &kvg, const String &a, const String &o) {
 
   computeDist();
 
-  uint numF = g4d().numFrames();
-  uint ia = g4d().digits().findValue(a);
-  uint io = g4d().objects().findValue(o);
-  dir_d.resize(numF);
-  ind_d.resize(numF);
-  for(uint f = 0; f < numF; f++) {
+  uint nframes = g4d().numFrames();
+  uint ia = g4d().id().digits().findValue(a);
+  uint io = g4d().id().objects().findValue(o);
+  dir_d.resize(nframes);
+  ind_d.resize(nframes);
+  for(uint f = 0; f < nframes; f++) {
     dir_d(f) = s->dird(f, ia, io);
     ind_d(f) = s->indd(f, ia, io);
   }
@@ -2321,15 +2341,15 @@ void KeyFramer::EM_r(KeyValueGraph &kvg, const String &bA, const String &bB) {
 //#define update_mu_dist
 //#define update_sigma_dist
 void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
-  CHECK(g4d().digits().contains(bA), "First body must be agent.");
-  CHECK(g4d().objects().contains(bB), "First body must be object.");
+  CHECK(g4d().id().digits().contains(bA), "First body must be agent.");
+  CHECK(g4d().id().objects().contains(bB), "First body must be object.");
   // Computing other BAMS {{{
   computeDist();
   // }}}
   // Observations {{{
   uint T = g4d().numFrames();
-  uint ia = g4d().digits().findValue(bA);
-  uint io = g4d().objects().findValue(bB);
+  uint ia = g4d().id().digits().findValue(bA);
+  uint io = g4d().id().objects().findValue(bB);
   arr dist = s->indd.sub(0, -1, ia, ia, io, io).flatten();
   // }}}
   // Parameters & other {{{
@@ -2499,8 +2519,8 @@ void KeyFramer::EM_c(KeyValueGraph &kvg, const String &bA, const String &bB) {
 //#define update_mu_dq
 //#define update_sigma_dq
 void KeyFramer::EM_z_with_c(KeyValueGraph &kvg, const String &subj, const String &obj) {
-  CHECK(g4d().digits().contains(subj), "First body must be agent.");
-  CHECK(g4d().objects().contains(obj), "First body must be object.");
+  CHECK(g4d().id().digits().contains(subj), "First body must be agent.");
+  CHECK(g4d().id().objects().contains(obj), "First body must be object.");
   // Computing other BAMS {{{
   double alpha = .3;
   bool force = false;
@@ -2525,8 +2545,8 @@ void KeyFramer::EM_z_with_c(KeyValueGraph &kvg, const String &subj, const String
   // }}}
   // Observations {{{
   uint T = g4d().numFrames();
-  uint ia = g4d().digits().findValue(subj);
-  uint io = g4d().objects().findValue(obj);
+  uint ia = g4d().id().digits().findValue(subj);
+  uint io = g4d().id().objects().findValue(obj);
   arr dist = s->indd.sub(0, -1, ia, ia, io, io).flatten();
   arr pSpeed = g4d().query("posSmoothSpeed", subj);
   arr qSpeed = g4d().query("quatSmoothSpeed", subj);
@@ -2890,13 +2910,13 @@ void KeyFramer::EM_z_with_c(KeyValueGraph &kvg, const String &subj, const String
   // }}}
   // Return results as KVG {{{
   if(!kvg["vit"]) {
-    arr *p_vit = new arr(g4d().subjects().N, g4d().objects().N, g4d().numFrames());
+    arr *p_vit = new arr(g4d().id().subjects().N, g4d().id().objects().N, g4d().numFrames());
     kvg.append("vit", p_vit);
   }
 
   int ind_subj, ind_obj;
-  ind_subj = g4d().subjects().findValue(subj);
-  ind_obj = g4d().objects().findValue(obj);
+  ind_subj = g4d().id().subjects().findValue(subj);
+  ind_obj = g4d().id().objects().findValue(obj);
   kvg.getValue<arr>("vit")->subDim(ind_subj, ind_obj)() = vit;
 
   KeyValueGraph *hmm, *plot;
@@ -3866,19 +3886,19 @@ void KeyFramer::process(KeyValueGraph &kvg, const StringA &name_subjs, const Str
 
 // process {{{
 void KeyFramer::process(KeyValueGraph &kvg, const String &name_subj, const String &name_obj) {
-  if(g4d().digits().contains(name_subj)) {
+  if(g4d().id().digits().contains(name_subj)) {
     EM_z_with_c(kvg, name_subj, name_obj);
     return;
   }
-  const StringA &sublimbs = g4d().sublimbs(name_subj);
+  const StringA &sublimbs = g4d().id().sublimbs(name_subj);
 
   uint ind_subj, ind_obj, ind_sublimb;
-  ind_subj = g4d().subjects().findValue(name_subj);
-  ind_obj = g4d().objects().findValue(name_obj);
+  ind_subj = g4d().id().subjects().findValue(name_subj);
+  ind_obj = g4d().id().objects().findValue(name_obj);
 
   arr *p_vit = NULL;
   for(const String &sublimb: sublimbs) {
-    ind_sublimb = g4d().subjects().findValue(sublimb);
+    ind_sublimb = g4d().id().subjects().findValue(sublimb);
     process(kvg, sublimb, name_obj);
     if(!p_vit)
       p_vit = kvg.getValue<arr>("vit");
@@ -3889,10 +3909,33 @@ void KeyFramer::process(KeyValueGraph &kvg, const String &name_subj, const Strin
 }
 // }}}
 
-void KeyFramer::playScene(KeyValueGraph &kvg, const StringA &name_subjs, bool video) {
+void KeyFramer::play() {
+  double col_on[3] = { 1, 0, 0 };
+  double col_off[3] = { 1, 1, 1 };
+
+  for(uint f = 0; f < g4d().numFrames(); f++) {
+    for(ors::Shape *sh: kw().shapes)
+      memcpy(sh->color, col_off, 3*sizeof(double));
+    for(uint i1 = 0; i1 < g4d().id().sensors().N; i1++) {
+      for(uint i2 = i1+1; i2 < g4d().id().sensors().N; i2++) {
+        String &s1 = g4d().id().sensors().elem(i1);
+        String &s2 = g4d().id().sensors().elem(i2);
+        if(annOf(s1, s2).elem(f) == 1) {
+          for(ors::Shape *sh: kw().getBodyByName(s1)->shapes)
+            memcpy(sh->color, col_on, 3*sizeof(double));
+          for(ors::Shape *sh: kw().getBodyByName(s2)->shapes)
+            memcpy(sh->color, col_on, 3*sizeof(double));
+        }
+      }
+    }
+    updateOrs(f, true);
+  }
+}
+
+void KeyFramer::playScene(KeyValueGraph &kvg, const StringA &name_subjs, bool record) {
   CHECK(name_subjs.N <= 6, "Not done yet this many colors");
   VideoEncoder_x264_simple *vid;
-  if(video)
+  if(record)
    vid = new VideoEncoder_x264_simple(STRING("z.video.h264"), 80, 0, true);
 
   double gray[3] = { 1, 1, 1 };
@@ -3916,56 +3959,289 @@ void KeyFramer::playScene(KeyValueGraph &kvg, const StringA &name_subjs, bool vi
   arr *p_vit = kvg.getValue<arr>("vit");
 
   for(uint f = 0; f < g4d().numFrames(); f++) {
-    for(uint ind_obj = 0; ind_obj < g4d().objects().N; ind_obj++)
-      for(ors::Shape *shape: kw().getBodyByName(g4d().objects().elem(ind_obj))->shapes)
+    for(uint ind_obj = 0; ind_obj < g4d().id().objects().N; ind_obj++)
+      for(ors::Shape *shape: kw().getBodyByName(g4d().id().objects().elem(ind_obj))->shapes)
           memcpy(shape->color, gray, 3*sizeof(double));
 
     for(uint ns = 0; ns < name_subjs.N; ns++) {
       auto name_subj = name_subjs(ns);
-      int ind_subj = g4d().subjects().findValue(name_subj);
-      for(const String &digit: g4d().digitsof(name_subj))
+      int ind_subj = g4d().id().subjects().findValue(name_subj);
+      for(const String &digit: g4d().id().digitsof(name_subj))
         for(ors::Shape *shape: kw().getBodyByName(digit)->shapes)
           memcpy(shape->color, col_subj[ns], 3*sizeof(double));
-      for(uint ind_obj = 0; ind_obj < g4d().objects().N; ind_obj++)
-        for(ors::Shape *shape: kw().getBodyByName(g4d().objects().elem(ind_obj))->shapes)
+      for(uint ind_obj = 0; ind_obj < g4d().id().objects().N; ind_obj++)
+        for(ors::Shape *shape: kw().getBodyByName(g4d().id().objects().elem(ind_obj))->shapes)
           if((*p_vit)(ind_subj, ind_obj, f))
             memcpy(shape->color, col_obj[ns], 3*sizeof(double));
     }
     updateOrs(f, true);
     flip_image(kw().gl().captureImage);
-    if(video)
+    if(record)
       vid->addFrame(kw().gl().captureImage);
   }
-  if(video)
+  if(record)
     vid->close();
 }
 
-void KeyFramer::playScene(KeyValueGraph &kvg, const String &name_subj, bool video) {
+void KeyFramer::playScene(KeyValueGraph &kvg, const String &name_subj, bool record) {
   VideoEncoder_x264_simple *vid;
-  if(video) vid = new VideoEncoder_x264_simple(STRING("z.video.h264"), 80, 0, true);
+  if(record) vid = new VideoEncoder_x264_simple(STRING("z.video.h264"), 80, 0, true);
 
   double gray[3] = { 1, 1, 1 };
   double col_subj[3] = { 1, 0, 0 };
   double col_obj[3] = { 1, .5, .5 };
 
-  for(const String &digit: g4d().digitsof(name_subj))
+  for(const String &digit: g4d().id().digitsof(name_subj))
     for(ors::Shape *shape: kw().getBodyByName(digit)->shapes)
       memcpy(shape->color, col_subj, 3*sizeof(double));
 
-  int ind_subj = g4d().subjects().findValue(name_subj);
+  int ind_subj = g4d().id().subjects().findValue(name_subj);
   arr *p_vit = kvg.getValue<arr>("vit");
   for(uint f = 0; f < g4d().numFrames(); f++) {
-    for(uint ind_obj = 0; ind_obj < g4d().objects().N; ind_obj++)
-      for(ors::Shape *shape: kw().getBodyByName(g4d().objects().elem(ind_obj))->shapes)
+    for(uint ind_obj = 0; ind_obj < g4d().id().objects().N; ind_obj++)
+      for(ors::Shape *shape: kw().getBodyByName(g4d().id().objects().elem(ind_obj))->shapes)
         if((*p_vit)(ind_subj, ind_obj, f))
           memcpy(shape->color, col_obj, 3*sizeof(double));
         else
           memcpy(shape->color, gray, 3*sizeof(double));
     updateOrs(f, true);
-    if(video)
+    if(record)
       vid->addFrame(kw().gl().captureImage);
   }
-  if(video)
+  if(record)
     vid->close();
 }
 
+#include <sstream>
+void KeyFramer::dlib_train(const String &basedir, const String &traindirlist, uint wlen) {
+  dlib::array<graph_type> samples;
+  std::vector<std::vector<bool> > labels;
+
+  graph_type g;
+  std::vector<bool> label;
+  uint nframes;
+  arr ann_ref;
+
+  String obj1, obj2;
+
+  std::stringstream traindirstream(traindirlist.p);
+  for(;;) {
+    std::string traindir;
+    traindirstream >> traindir;
+    if(!traindirstream) break;
+
+    g4d().clear();
+    g4d().load(STRING(basedir << traindir));
+    load_ann(STRING(basedir << traindir));
+
+    // simple observations
+    computeVar(STRING("pos"), wlen);
+    computeVar(STRING("quat"), wlen);
+
+    // looping through pairs of annotated objects
+    for(Item *pair: s->ann_kvg) {
+      obj1 = pair->keys(0);
+      obj2 = pair->keys(1);
+
+      for(String part1: g4d().id().sensorsof(obj1)) {
+        for(String part2: g4d().id().sensorsof(obj2)) {
+
+          // annotations / labels
+          ann_ref.referTo(annOf(part1, part2));
+
+          // more complex observations
+          // TODO FIXME fix this... don't distinguish between subject and object when making observations..
+          String name_subj = part1;
+          String name_obj = part2;
+
+          String subj_dPos = STRING(name_subj << "_dPos");
+          String subj_dQuat = STRING(name_subj << "_dQuat");
+          String subj_dPosVar = STRING(subj_dPos << "Var");
+          String subj_dQuatVar = STRING(subj_dQuat << "Var");
+
+          computeDPos(name_subj);
+          computeDQuat(name_subj);
+          computeVar(subj_dPos, wlen);
+          computeVar(subj_dQuat, wlen);
+
+          // model observations
+          arr subj_posVar = g4d().query("posVar", name_subj);
+          arr subj_quatVar = g4d().query("quatVar", name_subj);
+          arr obj_posVar = g4d().query("posVar", name_obj);
+          arr obj_quatVar = g4d().query("quatVar", name_obj);
+          arr delta_posVar = g4d().query(subj_dPosVar, name_obj);
+          arr delta_quatVar = g4d().query(subj_dQuatVar, name_obj);
+
+          nframes = g4d().numFrames();
+          g.set_number_of_nodes(nframes);
+          label.resize(nframes);
+
+          for(uint f = 0; f < nframes; f++) {
+            g.node(f).data = subj_posVar(f),
+                              subj_quatVar(f),
+                              obj_posVar(f),
+                              obj_quatVar(f),
+                              delta_posVar(f),
+                              delta_quatVar(f);
+            label[f] = ann_ref(f);
+          }
+          cout << "example: " << sum(ann_ref) << endl;
+          for(uint f = 0; f < nframes-1; f++)
+            g.add_edge(f, f+1);
+          for(uint f = 0; f < nframes-1; f++)
+            edge(g, f, f+1) = 1;
+          samples.push_back(g);
+          labels.push_back(label);
+        }
+      }
+    }
+  }
+
+  structural_graph_labeling_trainer<vector_type> trainer;
+  /* trainer.be_verbose(); */
+  arr c_params = { 1, 10, 1000000, 10000000000 };
+  double best_c;
+  timespec begin, end, diff;
+  for(double c: c_params) {
+    trainer.set_num_threads(8);
+    trainer.set_c(c);
+    uint nfolds = 5;
+    clock_gettime(CLOCK_REALTIME, &begin);
+    cout << "c: " << c << " " << nfolds << "-fold cross-validation: " << cross_validate_graph_labeling_trainer(trainer, samples, labels, nfolds) << endl;
+    clock_gettime(CLOCK_REALTIME, &end);
+    diff.tv_sec = end.tv_sec - begin.tv_sec;
+    if(end.tv_nsec - begin.tv_nsec >= 0) {
+      diff.tv_nsec = end.tv_nsec - begin.tv_nsec;
+    }
+    else {
+      diff.tv_sec--;
+      diff.tv_nsec = 1e9 - end.tv_nsec + begin.tv_nsec;
+    }
+    cout << "time: " << diff.tv_sec << "s" << endl;
+  }
+  trainer.set_c(10);
+  s->labeler = trainer.train(samples, labels);
+
+  g4d().clear();
+}
+
+void KeyFramer::load_ann(const String &dir) {
+  // loading annotations
+  uint nsensors, npairs, nframes;
+
+  nsensors = g4d().id().sensors().N;
+  npairs = nsensors * (nsensors - 1) / 2;
+  nframes = g4d().numFrames();
+
+  s->ann.resize(npairs, nframes);
+  s->ann.setZero();
+  s->ann_kvg.clear();
+  try {
+    FILE(STRING(dir << "ann_kvg.kvg")) >> s->ann_kvg;
+    String obj1, obj2;
+    uint from, to;
+
+    arr ann_ref;
+    for(Item *pair: s->ann_kvg) {
+      obj1 = pair->keys(0);
+      obj2 = pair->keys(1);
+
+      for(String part1: g4d().id().sensorsof(obj1)) {
+        for(String part2: g4d().id().sensorsof(obj2)) {
+          ann_ref.referTo(annOf(part1, part2));
+          for(Item *lock: *pair->getValue<KeyValueGraph>()) {
+            from = (uint)*lock->getValue<KeyValueGraph>()->getValue<double>("from");
+            to = (uint)*lock->getValue<KeyValueGraph>()->getValue<double>("to");
+            ann_ref.subRange(from, to) = 1;
+          }
+        }
+      }
+    }
+  }
+  catch(const char *e) {
+    cout << " * Annotation file does not exist." << endl;
+  }
+}
+
+arr KeyFramer::annOf(const String &sensor1, const String &sensor2) {
+  uint i, imi, ima, i1, i2;
+  i1 = g4d().id().sensors().findValue(sensor1);
+  i2 = g4d().id().sensors().findValue(sensor2);
+
+  if(i1 > i2) { ima = i1; imi = i2; }
+  else { ima = i2; imi = i1; }
+  i = imi + ima * (ima - 1) / 2;
+  return s->ann[i];
+}
+
+void KeyFramer::dlib_test(KeyValueGraph &kvg, const String &name_subj, const String &name_obj, uint wlen) {
+  // observations
+  computeVar(STRING("pos"), wlen);
+  computeVar(STRING("quat"), wlen);
+
+  String subj_dPos = STRING(name_subj << "_dPos");
+  String subj_dQuat = STRING(name_subj << "_dQuat");
+  String subj_dPosVar = STRING(subj_dPos << "Var");
+  String subj_dQuatVar = STRING(subj_dQuat << "Var");
+
+  computeDPos(name_subj);
+  computeDQuat(name_subj);
+  computeVar(subj_dPos, wlen);
+  computeVar(subj_dQuat, wlen);
+
+  arr subj_posVar = g4d().query("posVar", name_subj);
+  arr subj_quatVar = g4d().query("quatVar", name_subj);
+  arr obj_posVar = g4d().query("posVar", name_obj);
+  arr obj_quatVar = g4d().query("quatVar", name_obj);
+  arr delta_posVar = g4d().query(subj_dPosVar, name_obj);
+  arr delta_quatVar = g4d().query(subj_dQuatVar, name_obj);
+
+  cout << "numFrames: " << g4d().numFrames() << endl;
+  cout << "subj_posVar: " << subj_posVar.getDim() << endl;
+  cout << "subj_quatVar: " << subj_quatVar.getDim() << endl;
+  cout << "obj_posVar: " << obj_posVar.getDim() << endl;
+  cout << "obj_quatVar: " << obj_quatVar.getDim() << endl;
+  cout << "delta_posVar: " << delta_posVar.getDim() << endl;
+  cout << "delta_quatVar: " << delta_quatVar.getDim() << endl;
+
+  // annotations / labels
+  arr ann_ref;
+  ann_ref.referTo(annOf(name_subj, name_obj));
+
+  // graph
+  uint nframes = g4d().numFrames();
+
+  graph_type g;
+  g.set_number_of_nodes(nframes);
+
+  for(uint f = 0; f < nframes; f++) {
+    g.node(f).data = subj_posVar(f),
+                      subj_quatVar(f),
+                      obj_posVar(f),
+                      obj_quatVar(f),
+                      delta_posVar(f),
+                      delta_quatVar(f);
+  }
+  for(uint f = 0; f < nframes-1; f++)
+    g.add_edge(f, f+1);
+  for(uint f = 0; f < nframes-1; f++)
+    edge(g, f, f+1) = 1;
+
+  // The output of this shows all the nodes are correctly labeled.
+  uint e = 0;
+  uint t = 0;
+  cout << "Predicted labels: " << endl;
+  std::vector<bool> temp = s->labeler(g);
+  for(uint i = 0; i < temp.size(); i++) {
+    /* cout << " " << i << ": " << temp[i] << endl; */
+    if(temp[i]) t++;
+    else {
+      if(t != 0)
+        cout << "t: " << t << endl;
+      t = 0;
+    }
+    if(temp[i] != annOf(name_subj, name_obj).elem(i))
+      e++;
+  }
+  cout << "errors: " << e << endl;
+}

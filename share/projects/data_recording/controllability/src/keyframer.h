@@ -61,7 +61,15 @@ struct KeyFramer {
   // High-level methods: can be invoked on any level of subject
   void process(KeyValueGraph &kvg, const String &subj, const String &obj);
   void process(KeyValueGraph &kvg, const StringA &subj, const StringA &objs);
-  void playScene(KeyValueGraph &kvg, const String &name_subj, bool video = false);
-  void playScene(KeyValueGraph &kvg, const StringA &name_subj, bool video = false);
+  void play();
+  void playScene(KeyValueGraph &kvg, const String &name_subj, bool record = false);
+  void playScene(KeyValueGraph &kvg, const StringA &name_subj, bool record = false);
+
+  arr annOf(const String &sensor1, const String &sensor2);
+  void load_ann(const String &dir);
+
+  void dlib_train(const String &basedir, const String &traindir, uint wlen);
+  void dlib_test(KeyValueGraph &kvg, const String &name_subj, const String &name_obj, uint wlen);
+
 };
 
