@@ -13,18 +13,6 @@ penelty and old task variables
 * action for pregrasp
 * task variable that allows a target RANGE
 
-** ORS:
-* in phi_t: have a list of k ors copies
-  * on entry, check which are equal to x_{t-k},..,x_t
-  * permute
-  * set the remaining
-
-** traj optim
-
-- mix vel and acc penalties for optimization
-- have k ors copies in converting kOrderMarkov to sqrfunction
-- have psi (transition costs) as normal task variable
-
 **
 
 LOG in motion.cpp

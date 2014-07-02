@@ -259,6 +259,9 @@ void ors::Shape::parseAts() {
       CHECK(size[3]>1e-10,"");
       mesh.setCappedCylinder(size[3], size[2]);
       break;
+    case ors::SSBoxST:
+      mesh.setSSBox(size[0], size[1], size[2], size[3]);
+      break;
     case ors::markerST:
       break;
     case ors::meshST:

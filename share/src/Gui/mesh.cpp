@@ -201,11 +201,21 @@ void Mesh::setCylinder(double r, double l, uint fineness) {
   }
 }
 
+void Mesh::setSSBox(double x, double y, double z, double r, uint fineness){
+  setSphere(fineness);
+  scale(r);
+  for(uint i=0;i<V.d0;i++){
+    V(i,0) += MT::sign(V(i,0))*x;
+    V(i,1) += MT::sign(V(i,1))*y;
+    V(i,2) += MT::sign(V(i,2))*z;
+  }
+}
+
 void Mesh::setCappedCylinder(double r, double l, uint fineness) {
   uint i;
   setSphere(fineness);
-  scale(r, r, r);
-  for(i=0; i<V.d0; i++) if(V(i, 2)>0.) V(i, 2)+=l;
+  scale(r);
+  for(i=0; i<V.d0; i++) V(i, 2) += MT::sign(V(i, 2))*l;
   translate(0, 0, -.5*l);
 }
 

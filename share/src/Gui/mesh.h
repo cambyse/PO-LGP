@@ -55,6 +55,7 @@ struct Mesh {
   void setHalfSphere(uint fineness=3);
   void setCylinder(double r, double l, uint fineness=3);
   void setCappedCylinder(double r, double l, uint fineness=3);
+  void setSSBox(double x, double y, double z, double r, uint fineness=3);
   void setGrid(uint X, uint Y);
   void setImplicitSurface(ScalarFunction& f, double lo=-10., double hi=+10., uint res=100);
   void setRandom(uint vertices=10);

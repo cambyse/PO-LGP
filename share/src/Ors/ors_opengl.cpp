@@ -119,6 +119,12 @@ void glDrawShape(ors::Shape *s) {
         if(orsDrawMeshes && s->mesh.V.N) s->mesh.glDraw();
         else glDrawCappedCylinder(s->size[3], s->size[2]);
         break;
+      case ors::SSBoxST:
+        if(orsDrawMeshes){
+          if(!s->mesh.V.N) s->mesh.setSSBox(s->size[0], s->size[1], s->size[2], s->size[3]);
+          s->mesh.glDraw();
+        }else NIY;
+        break;
       case ors::markerST:
         if(orsDrawMarkers){
           glDrawDiamond(s->size[0]/5., s->size[0]/5., s->size[0]/5.); glDrawAxes(s->size[0]);
@@ -132,6 +138,7 @@ void glDrawShape(ors::Shape *s) {
         CHECK(s->mesh.V.N, "mesh needs to be loaded to draw point cloud object");
         glDrawPointCloud(s->mesh.V, NoArr);
         break;
+
       default: HALT("can't draw that geom yet");
     }
   }
