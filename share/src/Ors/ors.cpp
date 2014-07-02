@@ -338,20 +338,11 @@ void makeConvexHulls(ShapeL& shapes){
 // Joint implementations
 //
 
-bool always_unlocked(void*) { return false; }
-
-//ors::Joint::Joint(KinematicWorld& G)
-//  : world(G), index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0), locked_func(always_unlocked), locked_data(NULL), H(1.) {
-//  reset();
-//  index=G.joints.N;
-//  G.joints.append(this);
-//}
-
-//ors::Joint::Joint(KinematicWorld& G, const Joint& j)
-//  : world(G), index(0), qIndex(-1), ifrom(0), ito(0), from(NULL), to(NULL), mimic(NULL), agent(0), locked_func(always_unlocked), locked_data(NULL), H(1.) { reset(); *this=j; }
+ors::Joint::Joint(const ors::Joint& j)
+  : world(j.world), index(0), qIndex(-1), from(NULL), to(NULL), mimic(NULL), agent(0), locker(NULL), H(1.) { reset(); *this=j; }
 
 ors::Joint::Joint(KinematicWorld& G, Body *f, Body *t, const Joint* copyJoint)
-  : world(G), index(0), qIndex(-1), /*ifrom(f->index), ito(t->index),*/ from(f), to(t), mimic(NULL), agent(0), locked_func(always_unlocked), locked_data(NULL), H(1.) {
+  : world(G), index(0), qIndex(-1), from(f), to(t), mimic(NULL), agent(0), locker(NULL), H(1.) {
   reset();
   if(copyJoint) *this=*copyJoint;
   index=G.joints.N;
@@ -371,7 +362,7 @@ ors::Joint::~Joint() {
 }
 void ors::Joint::reset() { 
   listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); X.setZero(); axis.setZero(); limits.clear(); H=1.; type=JT_none; 
-  locked_func=always_unlocked; locked_data=NULL;
+  locker=NULL;
 }
 
 void ors::Joint::parseAts() {
