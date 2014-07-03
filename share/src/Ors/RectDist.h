@@ -169,10 +169,10 @@ InVoronoi(const double &a,
   double t, u, v;
  
   u = -Anorm_dot_T / Anorm_dot_B; 
-  ClipToRange(u,0,b); 
+  ClipToRange(u,0,b);
   
   t = u*A_dot_B + A_dot_T; 
-  ClipToRange(t,0,a); 
+  ClipToRange(t,0,a);
   
   v = t*A_dot_B - B_dot_T; 
   
@@ -279,19 +279,19 @@ RectDist(double Rab[9], double Tab[3],
   {
     if (((UA1_lx > b[0]) || 
           InVoronoi(b[1],a[1],A1_dot_B0,aA0_dot_B0 - b[0] - Tba[0],
-		                A1_dot_B1, aA0_dot_B1 - Tba[1], 
+                                A1_dot_B1, aA0_dot_B1 - Tba[1],
                     -Tab[1] - bA1_dot_B0))
         &&
 	
         ((UB1_lx > a[0]) || 
           InVoronoi(a[1],b[1],A0_dot_B1,Tab[0] + bA0_dot_B0 - a[0],
                     A1_dot_B1,Tab[1] + bA1_dot_B0,Tba[1] - aA0_dot_B1)))
-    {            
+    {
       SegCoords(t,u,a[1],b[1],A1_dot_B1,Tab[1] + bA1_dot_B0,
                 Tba[1] - aA0_dot_B1);
       
-      Pb[0] = Tab[0] + Rab[0]*b[0] + Rab[1]*u;  Pa[0] = - a[0];
-      Pb[1] = Tab[1] + Rab[3]*b[0] + Rab[4]*u;  Pa[1] =  - t;
+      Pb[0] = Tab[0] + Rab[0]*b[0] + Rab[1]*u;  Pa[0] = a[0];
+      Pb[1] = Tab[1] + Rab[3]*b[0] + Rab[4]*u;  Pa[1] = t;
       Pb[2] = Tab[2] + Rab[6]*b[0] + Rab[7]*u;  Pa[2] = 0.;
       S[0] = Pb[0]-Pa[0];  S[1] = Pb[1]-Pa[1];  S[2] = Pb[2]-Pa[2];
       return sqrt(VdotV(S,S));
@@ -314,8 +314,8 @@ RectDist(double Rab[9], double Tab[3],
     {
       SegCoords(t,u,a[1],b[1],A1_dot_B1,Tab[1],Tba[1] - aA0_dot_B1);
 
-      Pb[0] = Tab[0] + Rab[1]*u;  Pa[0] = - a[0];
-      Pb[1] = Tab[1] + Rab[4]*u;  Pa[1] = - t;
+      Pb[0] = Tab[0] + Rab[1]*u;  Pa[0] = a[0];
+      Pb[1] = Tab[1] + Rab[4]*u;  Pa[1] = t;
       Pb[2] = Tab[2] + Rab[7]*u;  Pa[2] = 0.;
       S[0] = Pb[0]-Pa[0];  S[1] = Pb[1]-Pa[1];  S[2] = Pb[2]-Pa[2];
       return sqrt(VdotV(S,S));
@@ -331,7 +331,7 @@ RectDist(double Rab[9], double Tab[3],
                     A1_dot_B1,-Tba[1], -Tab[1] - bA1_dot_B0))
           &&
 	
-        ((UB1_ux < 0) || 
+	((UB1_ux < 0) ||
           InVoronoi(a[1],b[1],-A0_dot_B1, -Tab[0] - bA0_dot_B0,
                     A1_dot_B1, Tab[1] + bA1_dot_B0,Tba[1])))
     {
@@ -339,7 +339,7 @@ RectDist(double Rab[9], double Tab[3],
       SegCoords(t,u,a[1],b[1],A1_dot_B1,Tab[1] + bA1_dot_B0,Tba[1]);
 
       Pb[0] = Tab[0] + Rab[0]*b[0] + Rab[1]*u;  Pa[0] = 0.;
-      Pb[1] = Tab[1] + Rab[3]*b[0] + Rab[4]*u;  Pa[1] = - t;
+      Pb[1] = Tab[1] + Rab[3]*b[0] + Rab[4]*u;  Pa[1] = t;
       Pb[2] = Tab[2] + Rab[6]*b[0] + Rab[7]*u;  Pa[2] = 0.;
       S[0] = Pb[0]-Pa[0];  S[1] = Pb[1]-Pa[1];  S[2] = Pb[2]-Pa[2];
       return sqrt(VdotV(S,S));
@@ -350,19 +350,19 @@ RectDist(double Rab[9], double Tab[3],
 
   if ((LA1_lx < 0) && (LB1_lx < 0))
   {   
-    if (((LA1_ux < 0) || 
+    if (((LA1_ux < 0) ||
           InVoronoi(b[1],a[1],-A1_dot_B0,Tba[0],A1_dot_B1,
                     -Tba[1],-Tab[1]))
           &&
 
-        ((LB1_ux < 0) || 
+        ((LB1_ux < 0) ||
           InVoronoi(a[1],b[1],-A0_dot_B1,-Tab[0],A1_dot_B1,
                     Tab[1], Tba[1])))
     {
       SegCoords(t,u,a[1],b[1],A1_dot_B1,Tab[1],Tba[1]);    
 
       Pb[0] = Tab[0] + Rab[1]*u;  Pa[0] = 0.;
-      Pb[1] = Tab[1] + Rab[4]*u;  Pa[1] = - t;
+      Pb[1] = Tab[1] + Rab[4]*u;  Pa[1] = t;
       Pb[2] = Tab[2] + Rab[7]*u;  Pa[2] = 0.;
       S[0] = Pb[0]-Pa[0];  S[1] = Pb[1]-Pa[1];  S[2] = Pb[2]-Pa[2];
       return sqrt(VdotV(S,S));
@@ -424,8 +424,8 @@ RectDist(double Rab[9], double Tab[3],
       SegCoords(t,u,a[1],b[0],A1_dot_B0,Tab[1] + bA1_dot_B1,
                 Tba[0] - aA0_dot_B0);
 
-      Pb[0] = Tab[0] + Rab[1]*b[1] + Rab[0]*u;  Pa[0] = - a[0] ;
-      Pb[1] = Tab[1] + Rab[4]*b[1] + Rab[3]*u;  Pa[1] = - t;
+      Pb[0] = Tab[0] + Rab[1]*b[1] + Rab[0]*u;  Pa[0] = a[0] ;
+      Pb[1] = Tab[1] + Rab[4]*b[1] + Rab[3]*u;  Pa[1] = t;
       Pb[2] = Tab[2] + Rab[7]*b[1] + Rab[6]*u;  Pa[2] = 0.;
       S[0] = Pb[0]-Pa[0];  S[1] = Pb[1]-Pa[1];  S[2] = Pb[2]-Pa[2];
       return sqrt(VdotV(S,S));
@@ -436,7 +436,7 @@ RectDist(double Rab[9], double Tab[3],
 
   if ((UA1_ly < 0) && (LB0_ux > a[0]))
   {
-    if (((UA1_uy < 0) || 
+    if (((UA1_uy < 0) ||
           InVoronoi(b[0],a[1],-A1_dot_B1, Tba[1] - aA0_dot_B1,A1_dot_B0,
                     aA0_dot_B0 - Tba[0], -Tab[1]))
           &&
@@ -447,8 +447,8 @@ RectDist(double Rab[9], double Tab[3],
     {
       SegCoords(t,u,a[1],b[0],A1_dot_B0,Tab[1],Tba[0] - aA0_dot_B0);
 
-      Pb[0] = Tab[0] + Rab[0]*u;  Pa[0] = - a[0];
-      Pb[1] = Tab[1] + Rab[3]*u;  Pa[1] = - t;
+      Pb[0] = Tab[0] + Rab[0]*u;  Pa[0] = a[0];
+      Pb[1] = Tab[1] + Rab[3]*u;  Pa[1] = t;
       Pb[2] = Tab[2] + Rab[6]*u;  Pa[2] = 0.;
       S[0] = Pb[0]-Pa[0];  S[1] = Pb[1]-Pa[1];  S[2] = Pb[2]-Pa[2];
       return sqrt(VdotV(S,S));
@@ -464,14 +464,14 @@ RectDist(double Rab[9], double Tab[3],
                   A1_dot_B0, -Tba[0], -Tab[1] - bA1_dot_B1))     
         &&
 
-        ((UB0_ux < 0) ||             
+        ((UB0_ux < 0) ||
           InVoronoi(a[1],b[0],-A0_dot_B0, -Tab[0] - bA0_dot_B1,A1_dot_B0,
                     Tab[1] + bA1_dot_B1,Tba[0])))
     {
       SegCoords(t,u,a[1],b[0],A1_dot_B0,Tab[1] + bA1_dot_B1,Tba[0]);
 
       Pb[0] = Tab[0] + Rab[1]*b[1] + Rab[0]*u;  Pa[0] = 0.;
-      Pb[1] = Tab[1] + Rab[4]*b[1] + Rab[3]*u;  Pa[1] = - t;
+      Pb[1] = Tab[1] + Rab[4]*b[1] + Rab[3]*u;  Pa[1] = t;
       Pb[2] = Tab[2] + Rab[7]*b[1] + Rab[6]*u;  Pa[2] = 0.;
       S[0] = Pb[0]-Pa[0];  S[1] = Pb[1]-Pa[1];  S[2] = Pb[2]-Pa[2];
       return sqrt(VdotV(S,S));
@@ -482,19 +482,19 @@ RectDist(double Rab[9], double Tab[3],
 
   if ((LA1_ly < 0) && (LB0_lx < 0))
   {
-    if (((LA1_uy < 0) || 
+    if (((LA1_uy < 0) ||
           InVoronoi(b[0],a[1],-A1_dot_B1,Tba[1],A1_dot_B0,
                     -Tba[0],-Tab[1]))
         && 
 
-        ((LB0_ux < 0) || 
+        ((LB0_ux < 0) ||
           InVoronoi(a[1],b[0],-A0_dot_B0,-Tab[0],A1_dot_B0,
                     Tab[1],Tba[0])))
     {
       SegCoords(t,u,a[1],b[0],A1_dot_B0,Tab[1],Tba[0]);
 	
       Pb[0] = Tab[0] + Rab[0]*u;  Pa[0] = 0.;
-      Pb[1] = Tab[1] + Rab[3]*u;  Pa[1] = - t;
+      Pb[1] = Tab[1] + Rab[3]*u;  Pa[1] = t;
       Pb[2] = Tab[2] + Rab[6]*u;  Pa[2] = 0.;
       S[0] = Pb[0]-Pa[0];  S[1] = Pb[1]-Pa[1];  S[2] = Pb[2]-Pa[2];
       return sqrt(VdotV(S,S));
@@ -549,15 +549,15 @@ RectDist(double Rab[9], double Tab[3],
                     A0_dot_B1,aA1_dot_B1 - Tba[1], -Tab[0] - bA0_dot_B0))
         &&
 	
-        ((UB1_ly > a[1]) || 
+        ((UB1_ly > a[1]) ||
           InVoronoi(a[0],b[1],A1_dot_B1, Tab[1] - a[1] + bA1_dot_B0,
                     A0_dot_B1,Tab[0] + bA0_dot_B0, Tba[1] - aA1_dot_B1)))
     {
       SegCoords(t,u,a[0],b[1],A0_dot_B1,Tab[0] + bA0_dot_B0,
                 Tba[1] - aA1_dot_B1);
     
-      Pb[0] = Tab[0] + Rab[0]*b[0] + Rab[1]*u;  Pa[0] = - t;
-      Pb[1] = Tab[1] + Rab[3]*b[0] + Rab[4]*u;  Pa[1] = - a[1];
+      Pb[0] = Tab[0] + Rab[0]*b[0] + Rab[1]*u;  Pa[0] = t;
+      Pb[1] = Tab[1] + Rab[3]*b[0] + Rab[4]*u;  Pa[1] = a[1];
       Pb[2] = Tab[2] + Rab[6]*b[0] + Rab[7]*u;  Pa[2] = 0.;
       S[0] = Pb[0]-Pa[0];  S[1] = Pb[1]-Pa[1];  S[2] = Pb[2]-Pa[2];
       return sqrt(VdotV(S,S));
@@ -568,7 +568,7 @@ RectDist(double Rab[9], double Tab[3],
 
   if ((UA0_lx < 0) && (LB1_uy > a[1]))
   {
-    if (((UA0_ux < 0) || 
+    if (((UA0_ux < 0) ||
           InVoronoi(b[1],a[0],-A0_dot_B0, Tba[0] - aA1_dot_B0,A0_dot_B1,
                     aA1_dot_B1 - Tba[1],-Tab[0]))
         &&
@@ -579,8 +579,8 @@ RectDist(double Rab[9], double Tab[3],
     {
       SegCoords(t,u,a[0],b[1],A0_dot_B1,Tab[0],Tba[1] - aA1_dot_B1);
 
-      Pb[0] = Tab[0] + Rab[1]*u;  Pa[0] = - t;
-      Pb[1] = Tab[1] + Rab[4]*u;  Pa[1] = - a[1];
+      Pb[0] = Tab[0] + Rab[1]*u;  Pa[0] = t;
+      Pb[1] = Tab[1] + Rab[4]*u;  Pa[1] = a[1];
       Pb[2] = Tab[2] + Rab[7]*u;  Pa[2] = 0.;
       S[0] = Pb[0]-Pa[0];  S[1] = Pb[1]-Pa[1];  S[2] = Pb[2]-Pa[2];
       return sqrt(VdotV(S,S));
@@ -596,13 +596,13 @@ RectDist(double Rab[9], double Tab[3],
                     -bA0_dot_B0 - Tab[0]))
         &&
 
-        ((UB1_uy < 0) || 
+        ((UB1_uy < 0) ||
           InVoronoi(a[0],b[1],-A1_dot_B1, -Tab[1] - bA1_dot_B0,A0_dot_B1,
                     Tab[0] + bA0_dot_B0,Tba[1])))
     {
       SegCoords(t,u,a[0],b[1],A0_dot_B1,Tab[0] + bA0_dot_B0,Tba[1]);
 
-      Pb[0] = Tab[0] + Rab[0]*b[0] + Rab[1]*u;  Pa[0] = - t;
+      Pb[0] = Tab[0] + Rab[0]*b[0] + Rab[1]*u;  Pa[0] = t;
       Pb[1] = Tab[1] + Rab[3]*b[0] + Rab[4]*u;  Pa[1] = 0.;
       Pb[2] = Tab[2] + Rab[6]*b[0] + Rab[7]*u;  Pa[2] = 0.;
       S[0] = Pb[0]-Pa[0];  S[1] = Pb[1]-Pa[1];  S[2] = Pb[2]-Pa[2];
@@ -614,18 +614,18 @@ RectDist(double Rab[9], double Tab[3],
 
   if ((LA0_lx < 0) && (LB1_ly < 0))
   {
-    if (((LA0_ux < 0) || 
+    if (((LA0_ux < 0) ||
           InVoronoi(b[1],a[0],-A0_dot_B0,Tba[0],A0_dot_B1,-Tba[1],
                     -Tab[0]))
         &&
 	
-        ((LB1_uy < 0) || 
+	((LB1_uy < 0) ||
           InVoronoi(a[0],b[1],-A1_dot_B1,-Tab[1],A0_dot_B1,
                     Tab[0],Tba[1])))
     {
       SegCoords(t,u,a[0],b[1],A0_dot_B1,Tab[0],Tba[1]);
 
-      Pb[0] = Tab[0] + Rab[1]*u;  Pa[0] = - t;
+      Pb[0] = Tab[0] + Rab[1]*u;  Pa[0] = t;
       Pb[1] = Tab[1] + Rab[4]*u;  Pa[1] = 0.;
       Pb[2] = Tab[2] + Rab[7]*u;  Pa[2] = 0.;
       S[0] = Pb[0]-Pa[0];  S[1] = Pb[1]-Pa[1];  S[2] = Pb[2]-Pa[2];
@@ -681,8 +681,8 @@ RectDist(double Rab[9], double Tab[3],
       SegCoords(t,u,a[0],b[0],A0_dot_B0,Tab[0] + bA0_dot_B1,
                 Tba[0] - aA1_dot_B0);
       
-      Pb[0] = Tab[0] + Rab[1]*b[1] + Rab[0]*u;  Pa[0] = - t;
-      Pb[1] = Tab[1] + Rab[4]*b[1] + Rab[3]*u;  Pa[1] = - a[1];
+      Pb[0] = Tab[0] + Rab[1]*b[1] + Rab[0]*u;  Pa[0] = t;
+      Pb[1] = Tab[1] + Rab[4]*b[1] + Rab[3]*u;  Pa[1] = a[1];
       Pb[2] = Tab[2] + Rab[7]*b[1] + Rab[6]*u;  Pa[2] = 0.;
       S[0] = Pb[0]-Pa[0];  S[1] = Pb[1]-Pa[1];  S[2] = Pb[2]-Pa[2];
       return sqrt(VdotV(S,S));
@@ -693,7 +693,7 @@ RectDist(double Rab[9], double Tab[3],
 
   if ((UA0_ly < 0) && (LB0_uy > a[1]))
   {
-    if (((UA0_uy < 0) || 
+    if (((UA0_uy < 0) ||
           InVoronoi(b[0],a[0],-A0_dot_B1,Tba[1] - aA1_dot_B1,A0_dot_B0,
                     aA1_dot_B0 - Tba[0],-Tab[0]))
         &&      
@@ -704,8 +704,8 @@ RectDist(double Rab[9], double Tab[3],
     {
       SegCoords(t,u,a[0],b[0],A0_dot_B0,Tab[0],Tba[0] - aA1_dot_B0);
 
-      Pb[0] = Tab[0] + Rab[0]*u;  Pa[0] = - t;
-      Pb[1] = Tab[1] + Rab[3]*u;  Pa[1] = - a[1];
+      Pb[0] = Tab[0] + Rab[0]*u;  Pa[0] = t;
+      Pb[1] = Tab[1] + Rab[3]*u;  Pa[1] = a[1];
       Pb[2] = Tab[2] + Rab[6]*u;  Pa[2] = 0.;
       S[0] = Pb[0]-Pa[0];  S[1] = Pb[1]-Pa[1];  S[2] = Pb[2]-Pa[2];
       return sqrt(VdotV(S,S));
@@ -721,13 +721,13 @@ RectDist(double Rab[9], double Tab[3],
                     -Tab[0] - bA0_dot_B1))
         &&
 	
-        ((UB0_uy < 0) ||
+	((UB0_uy < 0) ||
           InVoronoi(a[0],b[0],-A1_dot_B0, -Tab[1] - bA1_dot_B1, A0_dot_B0,
                     Tab[0] + bA0_dot_B1,Tba[0])))
     {
       SegCoords(t,u,a[0],b[0],A0_dot_B0,Tab[0] + bA0_dot_B1,Tba[0]);
       
-      Pb[0] = Tab[0] + Rab[1]*b[1] + Rab[0]*u;  Pa[0] = - t;
+      Pb[0] = Tab[0] + Rab[1]*b[1] + Rab[0]*u;  Pa[0] = t;
       Pb[1] = Tab[1] + Rab[4]*b[1] + Rab[3]*u;  Pa[1] = 0.;
       Pb[2] = Tab[2] + Rab[7]*b[1] + Rab[6]*u;  Pa[2] = 0.;
       S[0] = Pb[0]-Pa[0];  S[1] = Pb[1]-Pa[1];  S[2] = Pb[2]-Pa[2];
@@ -739,18 +739,18 @@ RectDist(double Rab[9], double Tab[3],
 
   if ((LA0_ly < 0) && (LB0_ly < 0))
   {   
-    if (((LA0_uy < 0) || 
+    if (((LA0_uy < 0) ||
           InVoronoi(b[0],a[0],-A0_dot_B1,Tba[1],A0_dot_B0,
                     -Tba[0],-Tab[0]))
         &&
 	
-        ((LB0_uy < 0) || 
+	((LB0_uy < 0) ||
           InVoronoi(a[0],b[0],-A1_dot_B0,-Tab[1],A0_dot_B0,
                     Tab[0],Tba[0])))
     {
       SegCoords(t,u,a[0],b[0],A0_dot_B0,Tab[0],Tba[0]);
 
-      Pb[0] = Tab[0] + Rab[0]*u;  Pa[0] = - t;
+      Pb[0] = Tab[0] + Rab[0]*u;  Pa[0] = t;
       Pb[1] = Tab[1] + Rab[3]*u;  Pa[1] = 0.;
       Pb[2] = Tab[2] + Rab[6]*u;  Pa[2] = 0.;
       S[0] = Pb[0]-Pa[0];  S[1] = Pb[1]-Pa[1];  S[2] = Pb[2]-Pa[2];
