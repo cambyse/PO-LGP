@@ -219,11 +219,11 @@ int AbstractInstance::detach_all() {
     int detached = 0;
     if(p!=INVALID) {
         set_non_const_predecessor(INVALID);
-        detached = 1;
+        detached += 1;
     }
     if(n!=INVALID) {
         set_non_const_successor(INVALID);
-        detached = 1;
+        detached += 1;
     }
     if(detached>0) {
         if(p!=INVALID) {
