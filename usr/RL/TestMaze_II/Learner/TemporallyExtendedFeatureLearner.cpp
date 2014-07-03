@@ -390,6 +390,8 @@ bool TEFL::update_basis_features() {
 
 void TEFL::update_basis_feature_maps(bool recompute_all) {
 
+#warning this function is called (and it does work) more often than necessary (even when no new features were added) -- why?
+
     if(DEBUG_LEVEL>0) {ProgressBar::init("Update basis feature maps: ");}
 
     // get dimensions

@@ -200,7 +200,7 @@ void TELQ::update_policy() {
                 if(action_values(outcome_idx)>max_action_value) {
                     max_action_value = action_values(outcome_idx);
                     optimal_actions.assign(1,act);
-                    optimal_action_indices.resize(1,outcome_idx);
+                    optimal_action_indices.assign(1,outcome_idx);
                 } else if(action_values(outcome_idx)==max_action_value) {
                     optimal_actions.push_back(act);
                     optimal_action_indices.push_back(outcome_idx);

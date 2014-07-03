@@ -448,7 +448,7 @@ TEST(LearnerTest, TemporallyExtendedLinearQ) {
 
     // do some random actions to collect data
     double rew_sum = 0;
-    for(int step=0; step<50000; ++step) {
+    for(int step=0; step<10000; ++step) {
         // start new episode every 100 steps
         bool new_episode = step%100==0;
         new_episode = false;
