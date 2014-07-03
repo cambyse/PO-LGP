@@ -44,7 +44,9 @@ private:
     TCLAP::ValueArg<int> tree_arg;
     TCLAP::ValueArg<double> l1_arg;
     TCLAP::SwitchArg pruningOff_arg;
-    TCLAP::ValueArg<int> incF_arg;
+    TCLAP::ValueArg<int> minH_arg;
+    TCLAP::ValueArg<int> maxH_arg;
+    TCLAP::ValueArg<int> extH_arg;
     TCLAP::ValueArg<double> delta_arg;
     TCLAP::ValueArg<int> maxLearnIteration_arg;
 
@@ -58,7 +60,7 @@ private:
         const int& length,
         instance_ptr_t i);
 
-    void train_CRF(std::shared_ptr<FeatureLearner> learner, double& likelihood, int& features);
+    void train_TEM(std::shared_ptr<FeatureLearner> learner, double& likelihood, int& features);
     void train_value_based_UTree(std::shared_ptr<FeatureLearner> learner, int& size, double& score);
     void train_model_based_UTree(std::shared_ptr<FeatureLearner> learner, int& size, double& score);
 
