@@ -1,3 +1,4 @@
+#include <Core/util.h>
 #include <Ors/ors.h>
 #include <Ors/RectDist.h>
 #include <Gui/opengl.h>
@@ -72,17 +73,19 @@ void TEST(Distance){
   ors::KinematicWorld W;
   ors::Shape A(W, NoBody), B(W, NoBody);
   A.type = B.type = ors::SSBoxST;
-  memmove(A.size, ARR(.5, .2, .0, .01).p, 4*sizeof(double));
-  memmove(B.size, ARR(.5, .2, .0, .01).p, 4*sizeof(double));
-  for(uint k=0;k<10;k++){
-    A.X.setRandom(); A.X.pos(2) += 1.;
-    B.X.setRandom(); B.X.pos(2) += 1.;
+  memmove(A.size, ARR(1.5, 1.2, .0, .001).p, 4*sizeof(double));
+  memmove(B.size, ARR(1.5, 1.2, .0, .001).p, 4*sizeof(double));
+  for(uint k=0;k<200;k++){
+    A.X.setRandom(); A.X.pos(2) += 2.;
+    B.X.setRandom(); B.X.pos(2) += 2.;
     double d=distance(A, B, Pa, Pb);
-    cout <<"d=" <<d <<' ' <<(Pa-Pb).length() <<' ' <<Pa <<Pb <<endl;
+    double d2=(Pa-Pb).length();
+    cout <<"d=" <<d <<' ' <<d2 <<' ' <<Pa <<Pb <<endl;
+    if(d>0.) CHECK_ZERO(d-d2, 1e-4, "NOT EQUAL!");
     ors::Proxy p; p.posA=Pa; p.posB=Pb; p.colorCode=1;
     W.proxies.append( &p );
-    //  W.gl().add(draw, NULL);
-    W.watch(true);
+    W.watch(false); MT::wait(.1);
+    W.proxies.clear();
   }
 }
 
