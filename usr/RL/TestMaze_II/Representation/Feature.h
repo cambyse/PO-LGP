@@ -164,6 +164,7 @@ protected:
 
 class AndFeature: public Feature {
 public:
+    typedef f_set_t subfeature_set_t;
     using Feature::evaluate; // so the compiler finds them
     AndFeature();
     AndFeature(const_feature_ptr_t f);
@@ -176,9 +177,9 @@ public:
     virtual bool operator==(const Feature& other) const override;
     virtual bool operator<(const Feature& other) const override;
     virtual bool operator<(const AndFeature& other) const;
-    virtual const f_ptr_set_t& get_subfeatures() const final { return subfeatures; }
+    virtual const subfeature_set_t& get_subfeatures() const final { return subfeatures; }
 protected:
-    f_ptr_set_t subfeatures;
+    subfeature_set_t subfeatures;
     virtual void add_feature(const_feature_ptr_t f) final;
     virtual void finalize_construction() final;
     virtual void check_for_contradicting_subfeatures() final;
