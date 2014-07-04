@@ -10,7 +10,7 @@
 
 class HistoryObserver;
 class Environment;
-class FeatureLearner;
+class HistoryObserver;
 
 class BatchWorker {
 
@@ -48,7 +48,7 @@ private:
     TCLAP::ValueArg<int> maxH_arg;
     TCLAP::ValueArg<int> extH_arg;
     TCLAP::ValueArg<double> delta_arg;
-    TCLAP::ValueArg<int> maxLearnIteration_arg;
+    TCLAP::ValueArg<int> maxCycles_arg;
 
     bool args_ok = false;
 
@@ -60,9 +60,10 @@ private:
         const int& length,
         instance_ptr_t i);
 
-    void train_TEM(std::shared_ptr<FeatureLearner> learner, double& likelihood, int& features);
-    void train_value_based_UTree(std::shared_ptr<FeatureLearner> learner, int& size, double& score);
-    void train_model_based_UTree(std::shared_ptr<FeatureLearner> learner, int& size, double& score);
+    void train_TEM(std::shared_ptr<HistoryObserver> learner, double& likelihood, int& features);
+    void train_TEL(std::shared_ptr<HistoryObserver> learner, double& TD_error, int& features);
+    void train_value_based_UTree(std::shared_ptr<HistoryObserver> learner, int& size, double& score);
+    void train_model_based_UTree(std::shared_ptr<HistoryObserver> learner, int& size, double& score);
 
     /** \brief Set the log file name and write the header with general information. */
     void initialize_log_file(std::ofstream& log_file);

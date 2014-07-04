@@ -5,10 +5,11 @@
 #include "../Predictor.h"
 #include "../HistoryObserver.h"
 #include "../CheeseMaze/CheeseMaze.h"
-#include "../Learner/FeatureLearner.h"
+#include "../HistoryObserver.h"
 #include "../Learner/TemporallyExtendedModel.h"
 #include "../Learner/TemporallyExtendedLinearQ.h"
 #include "../Learner/UTree.h"
+#include "../Learner/ConjunctiveAdjacency.h"
 #include "../Planning/LookAheadSearch.h"
 #include "../Representation/DoublyLinkedInstance.h"
 
@@ -65,13 +66,13 @@ BatchWorker::BatchWorker(int argc, char ** argv):
     minH_arg(           "", "minH"         , "minimum horizon"                              ,false,         0,     "int"),
     maxH_arg(           "", "maxH"         , "maximum horizon"                              ,false,        -1,     "int"),
     extH_arg(           "", "extH"         , "horizon extension"                            ,false,         1,     "int"),
-    delta_arg(         "D", "delta"        , "minimum change of data likelihood"            ,false,     0.001,  "double"),
-    maxLearnIteration_arg("","maxLearnIteration","maximum number of iterations for learning",false,         0,     "int")
+    delta_arg(         "D", "delta"        , "minimum change of data likelihood/TD-error"   ,false,     0.001,  "double"),
+    maxCycles_arg(     "C", "maxCycles"    , "maximum number of grow-shrinc cycles"         ,false,         0,     "int")
 {
     try {
 	TCLAP::CmdLine cmd("This program is BatchWorker. It collects data.", ' ', "");
 
-        cmd.add(maxLearnIteration_arg);
+        cmd.add(maxCycles_arg);
         cmd.add(delta_arg);
         cmd.add(extH_arg);
         cmd.add(maxH_arg);
@@ -180,8 +181,10 @@ void BatchWorker::collect_data() {
 
             // environment
             shared_ptr<Environment> environment;
+            // adjacency operator for TEM and TEL
+            shared_ptr<ConjunctiveAdjacency> N_plus;
             // learner
-            shared_ptr<FeatureLearner> learner;
+            shared_ptr<HistoryObserver> learner;
             // spaces
             action_ptr_t action_space;
             observation_ptr_t observation_space;
@@ -191,7 +194,8 @@ void BatchWorker::collect_data() {
             // data
             double mean_reward = 0;  // for all
             double data_likelihood;  // for TEM
-            int nr_features;         // for TEM
+            double TD_error;         // for TEL
+            int nr_features;         // for TEM/TEL
             int utree_size;          // for UTree
             double utree_score;      // for UTree
 
@@ -206,15 +210,28 @@ void BatchWorker::collect_data() {
                 environment = make_shared<CheeseMaze>();
                 environment->get_spaces(action_space,observation_space,reward_space);
 
+                // initialize adjacency
+                if(mode=="TEM" || mode=="TEL") {
+                    N_plus = make_shared<ConjunctiveAdjacency>();
+                    N_plus->set_horizon_extension(extH_arg.getValue());
+                    N_plus->set_max_horizon(maxH_arg.getValue());
+                    N_plus->set_min_horizon(minH_arg.getValue());
+                    N_plus->set_combine_features(false);
+                    N_plus->adopt_spaces(*environment);
+                }
+
                 // initialize learner
                 if(mode=="DRY" || mode=="RANDOM") {
                     // no learner
                 } else if(mode=="TEM") {
-                    learner = make_shared<TEM>();
-                } else if(mode=="MODEL_BASED_UTREE") {
-                    learner = make_shared<UTree>(discount_arg.getValue());
-                } else if(mode=="VALUE_BASED_UTREE") {
-                    learner = make_shared<UTree>(discount_arg.getValue());
+                    learner = make_shared<TEM>(N_plus);
+                } else if(mode=="TEL") {
+                    learner = make_shared<TEL>(N_plus,discount_arg.getValue());
+                } else if(mode=="MODEL_BASED_UTREE" || mode=="VALUE_BASED_UTREE") {
+                    auto utree = make_shared<UTree>(discount_arg.getValue());
+                    utree->adopt_spaces(*environment);
+                    utree->set_features(*environment);
+                    learner = utree;
                 } else {
                     DEBUG_DEAD_LINE;
                 }
@@ -224,10 +241,7 @@ void BatchWorker::collect_data() {
             // collect data and train learner
             if(mode=="DRY" || mode=="RANDOM") {
                 // no data to collect, nothing to learn
-            } else if(mode=="TEM" || mode=="MODEL_BASED_UTREE" || mode=="VALUE_BASED_UTREE"){
-                // get features and spaces
-                learner->adopt_spaces(*environment);
-                learner->set_features(*environment);
+            } else if(mode=="TEM" || mode=="TEL" || mode=="MODEL_BASED_UTREE" || mode=="VALUE_BASED_UTREE"){
                 // collect data
                 auto observer = dynamic_pointer_cast<HistoryObserver>(learner);
                 if(observer==nullptr) {
@@ -238,6 +252,8 @@ void BatchWorker::collect_data() {
                 // train learner
                 if(mode=="TEM") {
                     train_TEM(learner, data_likelihood, nr_features);
+                } else if(mode=="TEL") {
+                    train_TEL(learner, TD_error, nr_features);
                 } else if(mode=="MODEL_BASED_UTREE") {
                     train_model_based_UTree(learner, utree_size, utree_score);
                 } else if(mode=="VALUE_BASED_UTREE") {
@@ -369,7 +385,7 @@ void BatchWorker::collect_random_data(std::shared_ptr<Environment> env,
     }
 }
 
-void BatchWorker::train_TEM(std::shared_ptr<FeatureLearner> learner, double& likelihood, int& features) {
+void BatchWorker::train_TEM(std::shared_ptr<HistoryObserver> learner, double& likelihood, int& features) {
     // cast to correct type
     auto tem = dynamic_pointer_cast<TEM>(learner);
     // check for cast failure
@@ -379,24 +395,53 @@ void BatchWorker::train_TEM(std::shared_ptr<FeatureLearner> learner, double& lik
     }
     // optimize tem
     double old_likelihood = -DBL_MAX, new_likelihood = 0;
-    int iteration_counter = 0, max_iterations = maxLearnIteration_arg.getValue();
+    int iteration_counter = 0, max_iterations = maxCycles_arg.getValue();
+    tem->set_l1_factor(l1_arg.getValue());
     while(new_likelihood-old_likelihood>delta_arg.getValue()) {
         old_likelihood = new_likelihood;
         tem->grow_feature_set();
-        tem->optimize_weights_LBFGS();
+        double neg_log_like = tem->optimize_weights_LBFGS();
+        new_likelihood = exp(-neg_log_like);
         tem->shrink_feature_set();
         if(max_iterations>0 && ++iteration_counter>=max_iterations) {
             break;
         }
     }
     tem->set_l1_factor(0);
-#warning max iterations (100)? likelihood?
-    tem->optimize_weights_LBFGS();
+    double neg_log_like = tem->optimize_weights_LBFGS();
+    likelihood = exp(-neg_log_like);
     // get number of features
     features = tem->get_feature_set().size();
 }
 
-void BatchWorker::train_value_based_UTree(std::shared_ptr<FeatureLearner> learner, int& size, double& score) {
+void BatchWorker::train_TEL(std::shared_ptr<HistoryObserver> learner, double& TD_error, int& features) {
+    // cast to correct type
+    auto tel = dynamic_pointer_cast<TEL>(learner);
+    // check for cast failure
+    if(tel==nullptr) {
+        DEBUG_DEAD_LINE;
+        return;
+    }
+    // optimize tel
+    double old_TD_error = -DBL_MAX, new_TD_error = 0;
+    int iteration_counter = 0, max_iterations = maxCycles_arg.getValue();
+    tel->set_l1_factor(l1_arg.getValue());
+    while(new_TD_error-old_TD_error>delta_arg.getValue()) {
+        old_TD_error = new_TD_error;
+        tel->grow_feature_set();
+        new_TD_error = tel->optimize_weights_LBFGS();
+        tel->shrink_feature_set();
+        if(max_iterations>0 && ++iteration_counter>=max_iterations) {
+            break;
+        }
+    }
+    tel->set_l1_factor(0);
+    TD_error = tel->optimize_weights_LBFGS();
+    // get number of features
+    features = tel->get_feature_set().size();
+}
+
+void BatchWorker::train_value_based_UTree(std::shared_ptr<HistoryObserver> learner, int& size, double& score) {
     // cast to correct type
     auto utree = dynamic_pointer_cast<UTree>(learner);
     // check for cast failure
@@ -415,7 +460,7 @@ void BatchWorker::train_value_based_UTree(std::shared_ptr<FeatureLearner> learne
     size = utree->get_tree_size();
 }
 
-void BatchWorker::train_model_based_UTree(std::shared_ptr<FeatureLearner> learner, int& size, double& score) {
+void BatchWorker::train_model_based_UTree(std::shared_ptr<HistoryObserver> learner, int& size, double& score) {
     // cast to correct type
     auto utree = dynamic_pointer_cast<UTree>(learner);
     // check for cast failure
@@ -452,9 +497,11 @@ void BatchWorker::initialize_log_file(std::ofstream& log_file) {
     }
     if(mode=="TEM") {
         LOG_COMMENT("L1-factor: " << l1_arg.getValue());
-        LOG_COMMENT("Feature Increment: " << incF_arg.getValue());
+        LOG_COMMENT("Minimum Horizon: " << minH_arg.getValue());
+        LOG_COMMENT("Maximum Horizon: " << maxH_arg.getValue());
+        LOG_COMMENT("Horizon Extension: " << extH_arg.getValue());
         LOG_COMMENT("Likelihood Delta: " << delta_arg.getValue());
-        LOG_COMMENT("Max Learn Iterations: " << maxLearnIteration_arg.getValue());
+        LOG_COMMENT("Max Cycles: " << maxCycles_arg.getValue());
     }
 
     LOG_COMMENT("");
