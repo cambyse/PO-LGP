@@ -1,0 +1,10 @@
+BASE = ../../../../share
+
+OBJS = main.o
+DEPEND = Core Motion Gui Optim Algo Ors
+GL = 1
+PHYSX = 0
+PTHREAD = 0
+CXXFLAGS += -fPIC
+
+include $(BASE)/gofMake/make-generic
