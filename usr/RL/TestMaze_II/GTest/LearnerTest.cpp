@@ -490,14 +490,20 @@ TEST(LearnerTest, TemporallyExtendedLinearQ) {
     }
 
     telq->set_feature_set(feature_set);
-    // telq->set_optimal_2x2_policy();
-    // cout << "TD-error = " << telq->get_TD_error() << endl;
-    // telq->optimize_weights_Bellman_residual_error();
-    // telq->print_features();
-    // cout << "TD-error = " << telq->get_TD_error() << endl;
-    // telq->print_training_data();
-    // telq->update_policy();
-    // telq->run_policy_iteration();
+    telq->set_optimal_2x2_policy();
+    //cout << "TD-error = " << telq->get_TD_error() << endl;
+    telq->optimize_weights_Bellman_residual_error();
+    telq->print_features();
+    //cout << "TD-error = " << telq->get_TD_error() << endl;
+    //telq->print_training_data();
+    bool changed = telq->update_policy();
+    if(changed) {
+        cout << "policy changed" << endl;
+    } else {
+        cout << "policy did not change" << endl;
+    }
+    //telq->run_policy_iteration();
+    return;
 
     repeat(10) {
         telq->update_policy();

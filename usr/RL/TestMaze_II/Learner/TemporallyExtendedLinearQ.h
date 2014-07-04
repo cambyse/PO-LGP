@@ -53,16 +53,19 @@ public:
 
     virtual void print_training_data() const override;
 
-    virtual void update_policy();
+    virtual bool update_policy();
 
     virtual void optimize_weights_Bellman_residual_error();
+
+    /** Just for debugging. */
+    virtual void set_optimal_2x2_policy();
 
 protected:
 
     virtual bool update() override;
     virtual void update_rewards_and_data_indices();
+    /** Just for debugging. */
     virtual action_ptr_t optimal_2x2_policy(const_instance_ptr_t) const;
-    virtual void set_optimal_2x2_policy();
     virtual void update_c_rho_L();
     virtual double objective_and_gradient(col_vec_t& grad, const col_vec_t& weights);
 

@@ -116,7 +116,7 @@ public:
         const reward_ptr_t& reward,
         const bool& new_episode
         ) override;
-    virtual void optimize_weights_LBFGS();
+    virtual double optimize_weights_LBFGS();
     /** Directly uses LBFGS_Object::check_derivatives (see there for docu). */
     bool check_derivatives(const int& number_of_samples,
                            const double& range,

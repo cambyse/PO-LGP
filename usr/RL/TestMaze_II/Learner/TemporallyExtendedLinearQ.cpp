@@ -162,7 +162,7 @@ bool TELQ::update() {
     return performed_update;
 }
 
-void TELQ::update_policy() {
+bool TELQ::update_policy() {
 
     // resize but remember old
     auto old_policy = policy;
@@ -246,12 +246,14 @@ void TELQ::update_policy() {
             }
         }
         need_to_update_c_rho_L = true;
+        return true;
     } else {
         IF_DEBUG(1) {
             if(policy!=old_policy) {
                 DEBUG_DEAD_LINE;
             }
         }
+        return false;
     }
 }
 

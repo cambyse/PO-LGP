@@ -119,14 +119,14 @@ void TEFL::add_action_observation_reward_tripel(
     data_changed = true;
 }
 
-void TEFL::optimize_weights_LBFGS() {
+double TEFL::optimize_weights_LBFGS() {
 
     DEBUG_OUT(2,"Optimize weights using L-BFGS");
 
     // return if no data available
     if(number_of_data_points==0) {
         DEBUG_WARNING("Cannot optimize weights without data");
-        return;
+        return 0;
     }
 
     // make sure data are up to date
@@ -146,13 +146,16 @@ void TEFL::optimize_weights_LBFGS() {
     lbfgs.set_number_of_variables(nr_vars);
     lbfgs.set_variables(values);
     lbfgs.set_l1_factor(l1_factor);
-    double neg_log_like = lbfgs.optimize(values);
+    double obj_value = lbfgs.optimize(values);
     IF_DEBUG(1) {
-        LBFGS_final_message(neg_log_like);
+        LBFGS_final_message(obj_value);
     }
 
     // set weights
     weights = values;
+
+    // return objective value
+    return obj_value;
 }
 
 bool TEFL::check_derivatives(const int& number_of_samples,
