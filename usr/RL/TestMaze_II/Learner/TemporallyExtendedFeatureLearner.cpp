@@ -88,7 +88,8 @@ void TEFL::print_features() const {
     for(f_ptr_t f : feature_set) {
         cout << QString("    %1: [%2]	")
             .arg(f_idx,4)
-            .arg(weights(f_idx),7,'f',3) <<
+#warning remove exponential format
+            .arg(weights(f_idx),7,'e',2) <<
             *f << endl;
         ++f_idx;
     }

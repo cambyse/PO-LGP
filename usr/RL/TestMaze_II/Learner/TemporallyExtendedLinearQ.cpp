@@ -218,6 +218,7 @@ bool TELQ::update_policy() {
         }
 
         // choose maximum value action the stupid costly way
+//#define FORCE_DEBUG_LEVEL 0
         // int data_idx = 0;
         // for(const_instance_ptr_t episode : instance_data) {
         //     for(const_instance_ptr_t ins_t=episode->const_first(); ins_t!=INVALID; ++ins_t) {
@@ -225,13 +226,15 @@ bool TELQ::update_policy() {
         //         policy[data_idx] = action;
         //         policy_indices[data_idx] = action->index();
         //         IF_DEBUG(3) {
-        //             DEBUG_OUT(0,ins_t);
+        //             cout << ins_t << endl;
         //             for(action_ptr_t act : action_space) {
-        //                 DEBUG_OUT(0,"    " << act << " --> " << get_action_value(ins_t,act));
+        //                 cout << "    " << act << " --> " << get_action_value(ins_t,act) << endl;
         //             }
-        //             DEBUG_OUT(0,"    ==> " << action);
-        //             DEBUG_OUT(0,"");
+        //             cout << "            ==> " << action << endl;
+        //             cout << "    old policy: " << old_policy[data_idx] << endl;
+        //             cout << "" << endl;
         //         }
+//#define FORCE_DEBUG_LEVEL 0
         //         ++data_idx;
         //     }
         // }
@@ -243,6 +246,18 @@ bool TELQ::update_policy() {
         IF_DEBUG(1) {
             if(policy==old_policy) {
                 DEBUG_DEAD_LINE;
+            }
+        }
+        IF_DEBUG(5) {
+            int data_idx = 0;
+            for(const_instance_ptr_t episode : instance_data) {
+                for(const_instance_ptr_t ins_t=episode->const_first(); ins_t!=INVALID; ++ins_t) {
+                    if(old_policy[data_idx]!=policy[data_idx]) {
+                        cout << "(" << data_idx << ") : " << ins_t << endl;
+                        cout << "    " << old_policy[data_idx] << " --> " << policy[data_idx] << endl;
+                    }
+                    ++data_idx;
+                }
             }
         }
         need_to_update_c_rho_L = true;
