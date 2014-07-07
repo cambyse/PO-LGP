@@ -60,21 +60,20 @@ struct Dfdw:ScalarFunction {
     Dwdx.append(~tmp*0.);
     Dwdx = ~Dwdx;
     Dwdx(Dwdx.d0-3,3)=Dwdx(Dwdx.d0-2,3)=Dwdx(Dwdx.d0-1,3)=1.;
-    cout << Dwdx << endl;
+//    cout << Dwdx << endl;
 
     arr f1;
     for (uint i=0;i<x0.N;i++) {
       f1.append(~(J.col(i))*(PHI%w)*2.);
     }
 
-
     arr Jw = J%(repmat(sqrt(w),1,J.d1));
-    arr Hdxdx = 2.*~Jw*Jw;
+    arr Hdxdx = 2.*~Jw*Jw;// +eye(Jw.d1)*100.;
     double detHdxdx = lapack_determinantSymPosDef(Hdxdx);
 //    cout << lapack_determinantSymPosDef(Hdxdx) << endl;
-//    cout << Hdxdx << endl;
-
-    arr f2 = ~f1*f1;// + log(detHdxdx);// + sumOfSqr(x); //sumOfAbs(w)
+    cout << detHdxdx << endl;
+    cout << ~x << endl;
+    arr f2 = ~f1*f1 - log(detHdxdx);// + sumOfSqr(x); //sumOfAbs(w)
     if (&g) {
       arr h(w.N);h.setZero();
 
@@ -91,11 +90,9 @@ struct Dfdw:ScalarFunction {
       g = ~h*Dwdx ;//+ 2.*x;
       arr HdxdxInv;
       lapack_inverseSymPosDef(HdxdxInv,Hdxdx);
-      arr tmp3 = (J*~HdxdxInv*(~J));
-//      g = g;
-//      g = g ;
-      //      g2 = ~g2*Dwdx;
-//      cout << "g"<< g << endl;
+      arr tmp3 = 2.*(J*~HdxdxInv*(~J));
+      tmp3 = ~getDiag(tmp3)*Dwdx;
+      g = g-tmp3;
       g.flatten();
 
     }
@@ -105,8 +102,12 @@ struct Dfdw:ScalarFunction {
       for (uint i=0;i<x0.N;i++) {
         K = K + (8.*~((~J.col(i))%PHI))*((~J.col(i))%PHI);
       }
-
+      arr HdxdxInv;
+      lapack_inverseSymPosDef(HdxdxInv,Hdxdx);
       H = ~Dwdx*K*Dwdx ;//+ 2.*eye(x.d0);
+      arr K2 = 2.*J*HdxdxInv*~J;
+      H = H - ~Dwdx*(-K2%K2)*Dwdx;
+//      H = H+eye(H.d0)*100.;
 //      cout << H << endl;
     }
 
@@ -173,16 +174,17 @@ void simpleMotion(){
   w = randn(4,1)+2.;
   w.reshape(w.N);
   cout << w << endl;
+  w = ARR(2.25127, 1.0321, 1.90551, 1.13059);
 
   //  cout << dfdw.fs(gi,Hi,w+0.01) << endl;
   //  cout << gi << endl;
   checkGradient(dfdw,w,1e-3);
   checkHessian(dfdw,w,1e-3);
 
-//  optNewton(w,dfdw,OPT(verbose=0,stopTolerance=1e-6, maxStep=1.));
+  optNewton(w,dfdw,OPT(verbose=2,stopTolerance=1e-3, maxStep=1.,stopIters = 20000,stopEvals=20000));
 
-//  cout << w/sqrt(sumOfSqr(w)) << endl;
-//  cout << wOpt/sqrt(sumOfSqr(wOpt)) << endl;
+  cout << w/sqrt(sumOfSqr(w)) << endl;
+  cout << wOpt/sqrt(sumOfSqr(wOpt)) << endl;
 }
 
 
