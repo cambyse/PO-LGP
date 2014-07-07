@@ -54,10 +54,10 @@ protected:
      *
      * If outcome_type is ACTION (value based), the matrix with (time) index t
      * holds features evaluated on
-     * \f$\{\ldots,(a_{t-1},o_{t-1},r_{t-1}),(A,O^*,R^*)\}\f$ where A is the
-     * outcome and O* and R* are the default elements of the observation and
-     * reward space. A value based method should ensure that featues don't
-     * depend on observations or rewards with time index of zero since these are
+     * \f$\{\ldots,(a_{t},o_{t},r_{t}),(A,O^*,R^*)\}\f$ where A is the outcome
+     * and O* and R* are the default elements of the observation and reward
+     * space. A value based method should ensure that featues don't depend on
+     * observations or rewards with time index of zero since these are
      * considered to represent the immediate future. */
     std::vector<f_mat_t> F_matrices;
 
@@ -144,8 +144,7 @@ protected:
 
     virtual weight_map_t get_weight_map() const;
     virtual void apply_weight_map(weight_map_t);
-#warning should be protected (remove again!!)
-public:
+
     /** Update all data. */
     virtual bool update();
 

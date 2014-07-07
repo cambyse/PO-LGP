@@ -88,8 +88,7 @@ void TEFL::print_features() const {
     for(f_ptr_t f : feature_set) {
         cout << QString("    %1: [%2]	")
             .arg(f_idx,4)
-#warning remove exponential format
-            .arg(weights(f_idx),7,'e',2) <<
+            .arg(weights(f_idx),7,'f',4) <<
             *f << endl;
         ++f_idx;
     }
@@ -477,11 +476,11 @@ void TEFL::update_basis_feature_maps(bool recompute_all) {
                     if(recompute_all) {
                         bf_map.clear();
                         for(f_ptr_t bf : basis_features) {
-                            bf_map.insert_feature(bf,bf->evaluate(ins->const_prev(),act,ins->observation,ins->reward));
+                            bf_map.insert_feature(bf,bf->evaluate(ins,act,ins->observation,ins->reward));
                         }
                     } else {
                         for(f_ptr_t bf : new_basis_features) {
-                            bf_map.insert_feature(bf,bf->evaluate(ins->const_prev(),act,ins->observation,ins->reward));
+                            bf_map.insert_feature(bf,bf->evaluate(ins,act,ins->observation,ins->reward));
                         }
                     }
                     // increment

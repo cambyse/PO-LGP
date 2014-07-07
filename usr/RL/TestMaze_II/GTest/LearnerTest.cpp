@@ -372,6 +372,7 @@ TEST(LearnerTest, TemporallyExtendedModel) {
     N_plus->set_horizon_extension(2);
     N_plus->set_max_horizon(2);
     N_plus->set_combine_features(false);
+    N_plus->set_t_zero_features(ConjunctiveAdjacency::ACTION_OBSERVATION_REWARD);
 
     // initialize TEM using N+
     TEM = make_shared<TemporallyExtendedModel>(N_plus);
@@ -434,11 +435,11 @@ TEST(LearnerTest, TemporallyExtendedLinearQ) {
     N_plus->set_min_horizon(-2);
     N_plus->set_max_horizon(0);
     N_plus->set_combine_features(false);
+    N_plus->set_t_zero_features(ConjunctiveAdjacency::ACTION);
 
     // initialize TELQ using N+
     telq = make_shared<TELQ>(N_plus, 0.1);
     telq->adopt_spaces(maze);
-    telq->set_l1_factor(0.001);
 
     // get all actions for random selection
     vector<action_ptr_t> action_vector;
@@ -447,79 +448,74 @@ TEST(LearnerTest, TemporallyExtendedLinearQ) {
     }
 
     // do some random actions to collect data
-    double rew_sum = 0;
-    for(int step=0; step<1000; ++step) {
-        // start new episode every 100 steps
-        bool new_episode = step%100==0;
-        new_episode = false;
-        // get action
-        action_ptr_t action = util::random_select(action_vector);
-        observation_ptr_t observation_to;
-        reward_ptr_t reward;
-        // --------- optimal actions --------//
-        // const_instance_ptr_t ins = maze.get_current_instance();
-        // action = telq->optimal_2x2_policy(ins);
-        // ----------------------------------//
-        // perform transition
-        maze.perform_transition(action,observation_to,reward);
-        telq->add_action_observation_reward_tripel(action,observation_to,reward,new_episode);
-        //cout << maze.get_current_instance() << endl;
-        rew_sum += reward->get_value();
+    {
+        double rew_sum = 0;
+        for(int step=0; step<10000; ++step) {
+            // start new episode every 100 steps
+            bool new_episode = step%100==0;
+            new_episode = false;
+            // get action
+            action_ptr_t action = util::random_select(action_vector);
+            observation_ptr_t observation_to;
+            reward_ptr_t reward;
+            // --------- optimal actions --------//
+            // const_instance_ptr_t ins = maze.get_current_instance();
+            // action = telq->optimal_2x2_policy(ins);
+            // ----------------------------------//
+            // perform transition
+            maze.perform_transition(action,observation_to,reward);
+            telq->add_action_observation_reward_tripel(action,observation_to,reward,new_episode);
+            //cout << maze.get_current_instance() << endl;
+            rew_sum += reward->get_value();
+        }
+        cout << "Sum of rewards: " << rew_sum << endl;
     }
-    cout << "Sum of rewards: " << rew_sum << endl;
-
-    // // try to learn something
-    // repeat(2) {
-    //     telq->grow_feature_set();
-    //     telq->run_policy_iteration();
-    //     telq->shrink_feature_set();
-    //     telq->print_features();
-    //     //telq->check_derivatives(10,1.);
-    // }
 
     // construct features explicitly
-    TELQ::f_set_t feature_set;
-    for(observation_ptr_t obs_2 : observation_space) {
-        for(observation_ptr_t obs_1 : observation_space) {
-            for(action_ptr_t act : action_space) {
-                feature_set.insert(f_ptr_t(new AndFeature(ObservationFeature::create(obs_2,-2),
-                                                          ObservationFeature::create(obs_1,-1),
-                                                          ActionFeature::create(act,0))));
+    {
+        TELQ::f_set_t feature_set;
+        for(observation_ptr_t obs_2 : observation_space) {
+            for(observation_ptr_t obs_1 : observation_space) {
+                for(action_ptr_t act : action_space) {
+                    feature_set.insert(f_ptr_t(new AndFeature(ObservationFeature::create(obs_2,-2),
+                                                              ObservationFeature::create(obs_1,-1),
+                                                              ActionFeature::create(act,0))));
+                }
             }
         }
+        telq->set_feature_set(feature_set);
     }
 
-    telq->set_feature_set(feature_set);
+    // use optimal policy
     telq->set_optimal_2x2_policy();
-    //cout << "TD-error = " << telq->get_TD_error() << endl;
-    repeat(5) {
-        telq->optimize_weights_Bellman_residual_error();
-        telq->print_features();
-        //telq->print_training_data();
-        bool changed = telq->update_policy();
-        if(changed) {
-            cout << "policy changed" << endl;
-        } else {
-            cout << "policy did not change" << endl;
-        }
-    }
-    //telq->run_policy_iteration();
-    return;
 
-    repeat(10) {
-        telq->update_policy();
-        telq->optimize_weights_Bellman_residual_error();
-        cout << "TD-error = " << telq->get_TD_error() << endl;
-        telq->print_features();
-    }
+
+    // try to learn something
+    telq->set_l1_factor(1e-5);
+    // do {
+    //     telq->optimize_weights_Bellman_residual_error();
+    //     telq->print_features();
+    // } while(telq->update_policy());
+    telq->run_policy_iteration();
+    telq->shrink_feature_set();
+    telq->print_features();
+    telq->set_l1_factor(0);
+    telq->optimize_weights_Bellman_residual_error();
 
     // make some moves
-    instance_ptr_t ins = maze.get_current_instance();
-    repeat(50) {
-        action_ptr_t act = telq->get_action(ins);
-        maze.perform_transition(act);
-        ins = maze.get_current_instance();
-        DEBUG_OUT(0,ins << " --> " << act);
+    {
+        instance_ptr_t ins = maze.get_current_instance();
+        double rew_sum = 0;
+        int counter = 0;
+        repeat(50) {
+            action_ptr_t act = telq->get_action(ins);
+            maze.perform_transition(act);
+            ins = maze.get_current_instance();
+            DEBUG_OUT(0,ins << " --> " << act);
+            rew_sum += ins->reward->get_value();
+            ++counter;
+        }
+        DEBUG_OUT(1,"mean reward = " << rew_sum/counter);
     }
 
     //EXPECT_TRUE(telq->check_derivatives(10,1));

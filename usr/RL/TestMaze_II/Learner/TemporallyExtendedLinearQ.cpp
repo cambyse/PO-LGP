@@ -48,86 +48,83 @@ TemporallyExtendedLinearQ::TemporallyExtendedLinearQ(std::shared_ptr<Conjunctive
     set_outcome_type(OUTCOME_TYPE::ACTION);
 }
 
-double TELQ::get_action_value(const_instance_ptr_t ins, action_ptr_t act) const {
-    // return zero if value cannot be computed
+TELQ::row_vec_t TELQ::get_action_values(const_instance_ptr_t ins) const {
+    int action_n = action_space->space_size();
+    // return zero vector if value cannot be computed
     if(feature_set.size()==0) {
         DEBUG_WARNING("Cannot compute action (no features)");
-        return 0;
+        return zeros<row_vec_t>(action_n);
     }
-    // get feature values
-    row_vec_t feature_values(feature_set.size());
+    // get feature matrix
+    f_mat_t feature_matrix(feature_set.size(),action_n);
     int feature_idx = 0;
     for(f_ptr_t feature : feature_set) {
-        feature_values(feature_idx) = feature->evaluate(ins,act,observation_space,reward_space);
+        int action_idx = 0;
+        for(action_ptr_t action : action_space) {
+            feature_matrix(feature_idx,action_idx) = feature->evaluate(ins,action,observation_space,reward_space);
+            ++action_idx;
+        }
         ++feature_idx;
     }
-    // compute action value
-    return as_scalar(feature_values*weights);
+    return weights.t()*feature_matrix;
 }
 
+// double TELQ::get_action_value(const_instance_ptr_t ins, action_ptr_t act) const {
+//     // return zero if value cannot be computed
+//     if(feature_set.size()==0) {
+//         DEBUG_WARNING("Cannot compute action (no features)");
+//         return 0;
+//     }
+//     // get feature values
+//     row_vec_t feature_values(feature_set.size());
+//     int feature_idx = 0;
+//     for(f_ptr_t feature : feature_set) {
+//         feature_values(feature_idx) = feature->evaluate(ins,act,observation_space,reward_space);
+//         ++feature_idx;
+//     }
+//     // compute action value
+//     return as_scalar(feature_values*weights);
+// }
+
 TELQ::action_ptr_t TELQ::get_action(const_instance_ptr_t ins) {
-    vector<action_ptr_t> optimal_actions;
-    double max_action_value = -DBL_MAX;
-    DEBUG_OUT(4,"Instance " << ins);
-    for(action_ptr_t act : action_space) {
-        // compute action value
-        double action_value = get_action_value(ins,act);
-        DEBUG_OUT(4,"    " << act << " --> " << action_value);
-        // update optimal actions
-        if(action_value>max_action_value) {
-            DEBUG_OUT(4,"    is optimal action");
-            max_action_value = action_value;
-            optimal_actions.assign(1,act);
-        } else if(action_value==max_action_value) {
-            DEBUG_OUT(4,"    added to optimal action");
-            optimal_actions.push_back(act);
+    row_vec_t action_values = get_action_values(ins);
+    col_vec_t policy = util::soft_max((col_vec_t)action_values.t(), soft_max_temperature);
+    int idx = util::draw_idx(policy);
+    for(action_ptr_t action : action_space) {
+        --idx;
+        if(idx<0) {
+            return action;
         }
     }
-    assert(optimal_actions.size()>0);
-    int random_idx = rand()%optimal_actions.size();
-    return optimal_actions[random_idx];
+    DEBUG_DEAD_LINE;
+    return action_space;
 }
 
 double TELQ::run_policy_iteration() {
-    int counter = 0;
-    double old_TD_error = DBL_MAX;
-    enum MODE { ANALYTICALLY, L1 };
-    MODE mode = ANALYTICALLY;
+    int counter = 1;
+    update_policy();
+    double old_TD_error = get_TD_error();
     IF_DEBUG(1) { cout << "------------------------------BEGIN: Policy Iteration-----------------------------" << endl;}
     while(true) {
-        update_policy();
-        switch(mode) {
-        case ANALYTICALLY:
-            optimize_weights_Bellman_residual_error();
-            break;
-        case L1:
-            optimize_weights_LBFGS();
-            break;
-        }
+        // update weights
+        optimize_weights_Bellman_residual_error();
+        // get TD-error (and print message)
         double TD_error = get_TD_error();
-        ++counter;
         IF_DEBUG(1) {
             cout << "    Iteration: " << counter << ", TD-error: " << TD_error << " ( delta = " << old_TD_error-TD_error << ")" << endl;
         }
-        if(old_TD_error-TD_error>0) {
-            old_TD_error = TD_error;
-        } else {
-            if(mode==ANALYTICALLY) {
-                mode = L1;
-                //------------------------//
-#warning just one L1 step, no iteration
-                optimize_weights_LBFGS();
-                break;
-                //-----------------------//
-            } else {
-                break;
-            }
+        // update policy (and break?)
+        if(!update_policy() || old_TD_error<TD_error) {
+            break;
         }
+        // remember old TD-error
+        old_TD_error = TD_error;
+        ++counter;
     }
-#warning update policy based on L1-regularized optimization??
-    //update_policy();
+    // final L1-regularized optimization
+    optimize_weights_LBFGS();
     IF_DEBUG(1) { cout << "------------------------------END: Policy Iteration-------------------------------" << endl;}
-    return old_TD_error;
+    return get_TD_error();
 }
 
 double TELQ::get_TD_error() {
@@ -142,8 +139,10 @@ void TELQ::print_training_data() const {
         cout << "Episode " << episode_idx << endl;
         for(const_instance_ptr_t ins=episode->const_first(); ins!=INVALID; ++ins) {
             cout << ins << endl;
+            int action_idx = 0;
             for(action_ptr_t act : action_space) {
-                cout << "    " << act << " --> " << get_action_value(ins,act) << endl;
+                cout << "    " << act << " --> " << get_action_values(ins)(action_idx) << endl;
+                ++action_idx;
             }
             ++data_idx;
         }
@@ -165,26 +164,19 @@ bool TELQ::update() {
 bool TELQ::update_policy() {
 
     // resize but remember old
-    auto old_policy = policy;
-    auto old_policy_indices = policy_indices;
-    policy.resize(number_of_data_points);
-    policy_indices.resize(number_of_data_points);
+    vector<col_vec_t> old_policy = policy;
+    int action_n = action_space->space_size();
+
 
     // random policy if value function cannot be computed
     if(weights.size()==0) {
-        for(int data_idx : Range(number_of_data_points)) {
-            policy[data_idx] = action_space->random_element();
-            unsigned int action_idx = 0;
-            for(action_ptr_t act_compare : action_space) {
-                if(act_compare==policy[data_idx]) {
-                    policy_indices[data_idx] = action_idx;
-                    break;
-                }
-                ++action_idx;
-            }
-            assert(action_idx<action_space->space_size());
-        }
+        col_vec_t random(action_n);
+        random.fill(1./action_n);
+        policy.assign(number_of_data_points,random);
     } else {
+
+        // initialize to correct dimensions and set to zero
+        policy.assign(number_of_data_points,zeros<col_vec_t>(action_n));
 
         // make sure all data are up-to-date
         update();
@@ -192,83 +184,79 @@ bool TELQ::update_policy() {
         // choose maximum value action efficiently using precomputed values
         for(int data_idx : Range(number_of_data_points)) {
             row_vec_t action_values = weights.t()*F_matrices[data_idx];
-            int outcome_idx = 0;
-            vector<action_ptr_t> optimal_actions;
-            vector<int> optimal_action_indices;
-            double max_action_value = -DBL_MAX;
-            for(action_ptr_t act : action_space) {
-                if(action_values(outcome_idx)>max_action_value) {
-                    max_action_value = action_values(outcome_idx);
-                    optimal_actions.assign(1,act);
-                    optimal_action_indices.assign(1,outcome_idx);
-                } else if(action_values(outcome_idx)==max_action_value) {
-                    optimal_actions.push_back(act);
-                    optimal_action_indices.push_back(outcome_idx);
-                }
-                ++outcome_idx;
-            }
-            assert(optimal_actions.size()>0);
-
-#warning this is not settled
-            // randomization might counteract convergence of policy iteration, could
-            // use fixed tie-breaking instead
-            int random_idx = rand()%optimal_actions.size();
-            policy[data_idx] = optimal_actions[random_idx];
-            policy_indices[data_idx] = optimal_action_indices[random_idx];
+            policy[data_idx] = util::soft_max((col_vec_t)action_values.t(), soft_max_temperature);
         }
 
-        // choose maximum value action the stupid costly way
-//#define FORCE_DEBUG_LEVEL 0
+        // iterate through data
+//#define FORCE_DEBUG_LEVEL 5
         // int data_idx = 0;
         // for(const_instance_ptr_t episode : instance_data) {
         //     for(const_instance_ptr_t ins_t=episode->const_first(); ins_t!=INVALID; ++ins_t) {
-        //         action_ptr_t action = get_action(ins_t);
-        //         policy[data_idx] = action;
-        //         policy_indices[data_idx] = action->index();
-        //         IF_DEBUG(3) {
-        //             cout << ins_t << endl;
-        //             for(action_ptr_t act : action_space) {
-        //                 cout << "    " << act << " --> " << get_action_value(ins_t,act) << endl;
+        //         row_vec_t action_values = weights.t()*F_matrices[data_idx];
+        //         policy[data_idx] = util::soft_max((col_vec_t)action_values.t(), soft_max_temperature);
+        //         IF_DEBUG(1) {
+        //             bool finite = true;
+        //             for(auto p : policy[data_idx]) {
+        //                 if(!util::is_finite_number(p)) {
+        //                     finite = false;
+        //                 }
         //             }
-        //             cout << "            ==> " << action << endl;
-        //             cout << "    old policy: " << old_policy[data_idx] << endl;
-        //             cout << "" << endl;
+        //             if(!finite) {
+        //                 DEBUG_WARNING("Data idx (" << data_idx << ")");
+        //                 policy[data_idx].t().print("policy");
+        //                 action_values.print("values");
+        //             }
         //         }
-//#define FORCE_DEBUG_LEVEL 0
+        //         IF_DEBUG(5) {
+        //             cout << "(" << data_idx << ")" << ins_t << endl;
+        //             cout << "            actions: ";
+        //             for(auto a : action_space) {
+        //                 cout << "	" << a;
+        //             }
+        //             cout << endl;
+        //             cout << "       values (mat): ";
+        //             action_values.print();
+        //             cout << "    values (direct): ";
+        //             get_action_values(ins_t).print();
+        //             if(old_policy.size()==policy.size()) {
+        //                 cout << "         old policy: ";
+        //                 old_policy[data_idx].t().print();
+        //             } else {
+        //                 cout << "--- old policy not available ---" << endl;
+        //             }
+        //             cout << "         new policy: ";
+        //             policy[data_idx].t().print();
+        //             cout << endl;
+        //         }
         //         ++data_idx;
         //     }
         // }
+//#define FORCE_DEBUG_LEVEL 0
 
     }
 
     // set flag if changed
-    if(policy_indices!=old_policy_indices) {
-        IF_DEBUG(1) {
-            if(policy==old_policy) {
-                DEBUG_DEAD_LINE;
-            }
-        }
+    if(policy_approx_equal(policy,old_policy)) {
+        return false;
+    } else {
+//#define FORCE_DEBUG_LEVEL 5
         IF_DEBUG(5) {
             int data_idx = 0;
             for(const_instance_ptr_t episode : instance_data) {
                 for(const_instance_ptr_t ins_t=episode->const_first(); ins_t!=INVALID; ++ins_t) {
-                    if(old_policy[data_idx]!=policy[data_idx]) {
+                    if(!policy_approx_equal(old_policy[data_idx],policy[data_idx])) {
                         cout << "(" << data_idx << ") : " << ins_t << endl;
-                        cout << "    " << old_policy[data_idx] << " --> " << policy[data_idx] << endl;
+                        old_policy[data_idx].t().print("old policy");
+                        (weights.t()*F_matrices[data_idx]).print("values");
+                        policy[data_idx].t().print("new policy");
                     }
                     ++data_idx;
                 }
             }
         }
+//#define FORCE_DEBUG_LEVEL 0
         need_to_update_c_rho_L = true;
         return true;
-    } else {
-        IF_DEBUG(1) {
-            if(policy!=old_policy) {
-                DEBUG_DEAD_LINE;
-            }
-        }
-        return false;
     }
 }
 
@@ -279,39 +267,56 @@ void TELQ::update_rewards_and_data_indices() {
     rewards_and_data_indices.clear();
     int data_idx = 0;
     for(const_instance_ptr_t episode : instance_data) {
-        for(const_instance_ptr_t ins_t=episode->const_first(); ins_t->const_next()!=INVALID; ++ins_t) {
+        // first instance in each episode is skipped
+        ++data_idx;
+        for(const_instance_ptr_t ins_t=episode->const_first()->const_next(); ins_t!=INVALID; ++ins_t) {
             rewards_and_data_indices.push_back(tuple<double,int>(ins_t->reward->get_value(),data_idx));
             ++data_idx;
         }
-        // last instance in each episode is skipped
-        ++data_idx;
+        // take invalid episodes (zero or one instances) into account
+        if(episode->const_first()->const_next()==INVALID) {
+            --data_idx;
+        }
     }
     assert(number_of_data_points=rewards_and_data_indices.size()+instance_data.size());
 }
 
-TELQ::action_ptr_t TELQ::optimal_2x2_policy(const_instance_ptr_t ins) const {
-    action_ptr_t action;
+TELQ::col_vec_t TELQ::optimal_2x2_policy(const_instance_ptr_t ins) const {
+    vector<action_ptr_t> optimal_actions;
     if(ins->observation==MazeObservation(2,2,0,0)) {
-        action = action_ptr_t(new MazeAction("d"));
+        optimal_actions.push_back(action_ptr_t(new MazeAction("d")));
+        optimal_actions.push_back(action_ptr_t(new MazeAction("r")));
     } else if(ins->observation==MazeObservation(2,2,1,1)) {
-        action = action_ptr_t(new MazeAction("u"));
+        optimal_actions.push_back(action_ptr_t(new MazeAction("u")));
+        optimal_actions.push_back(action_ptr_t(new MazeAction("l")));
     } else if(ins->observation==MazeObservation(2,2,0,1)) {
         if(ins->const_prev()->observation==MazeObservation(2,2,0,0)) {
-            action = action_ptr_t(new MazeAction("r"));
+            optimal_actions.push_back(action_ptr_t(new MazeAction("r")));
         } else {
-            action = action_ptr_t(new MazeAction("u"));
+            optimal_actions.push_back(action_ptr_t(new MazeAction("u")));
         }
     } else if(ins->observation==MazeObservation(2,2,1,0)) {
         if(ins->const_prev()->observation==MazeObservation(2,2,0,0)) {
-            action = action_ptr_t(new MazeAction("d"));
+            optimal_actions.push_back(action_ptr_t(new MazeAction("d")));
         } else {
-            action = action_ptr_t(new MazeAction("l"));
+            optimal_actions.push_back(action_ptr_t(new MazeAction("l")));
         }
     } else {
         DEBUG_ERROR("Unexpected observation unsing default action 'stay'");
-        action = action_ptr_t(new MazeAction("s"));
+        optimal_actions.push_back(action_ptr_t(new MazeAction("s")));
     }
-    return action;
+    col_vec_t pol(action_space->space_size());
+    pol.fill(0);
+    int action_idx = 0;
+    for(action_ptr_t a_elem : action_space) {
+        for(action_ptr_t a_opt : optimal_actions) {
+            if(a_elem==a_opt) {
+                pol(action_idx) = 1./optimal_actions.size();
+            }
+        }
+        ++action_idx;
+    }
+    return pol;
 }
 
 void TELQ::set_optimal_2x2_policy() {
@@ -319,45 +324,24 @@ void TELQ::set_optimal_2x2_policy() {
     need_to_update_c_rho_L = true;
     // resize
     policy.resize(number_of_data_points);
-    policy_indices.resize(number_of_data_points);
     // set optimal policy
     int data_idx = 0;
     for(const_instance_ptr_t episode : instance_data) {
         for(const_instance_ptr_t ins=episode->const_first(); ins!=INVALID; ++ins) {
-            action_ptr_t action = optimal_2x2_policy(ins);
-            int outcome_idx = 0;
-            bool found = false;
-            for(action_ptr_t act : action_space) {
-                if(act==action) {
-                    found = true;
-                    policy[data_idx] = action;
-                    policy_indices[data_idx] = outcome_idx;
-                    break;
-                }
-                ++outcome_idx;
-            }
-            if(!found) {
-                DEBUG_ERROR("Unexpected action using 'stay' and idx=0");
-                policy[data_idx] = action_ptr_t(new MazeAction("s"));
-                policy_indices[data_idx] = 0;
-            }
+            policy[data_idx] = optimal_2x2_policy(ins);
             ++data_idx;
-            // print
-            // cout << "Instance: " << ins->observation << endl;
-            // cout << "          " << ins->const_prev()->observation << endl;
-            // cout << "          --> " << action << endl;
         }
     }
 }
 
 void TELQ::update_c_rho_L() {
+    // first update everything else
+    update();
+
     // only update if necessary
     if(!need_to_update_c_rho_L) {
         return;
     }
-
-    // first update everything else
-    update();
 
     // update
     int feature_n = feature_set.size();
@@ -368,19 +352,32 @@ void TELQ::update_c_rho_L() {
     IF_DEBUG(1) { ProgressBar::init("Updating c-rho-L:          "); }
 
 #ifdef USE_OMP
+    vector<double> c_update;
+    vector<col_vec_t> rho_update;
+    vector<f_mat_t> L_update;
 #pragma omp parallel
     {
+        // compute updates in multiple threads
         int nr_threads = omp_get_num_threads();
-        vector<double> c_update(nr_threads,0);
-        vector<col_vec_t> rho_update(nr_threads, zeros<col_vec_t>(rho.size()));
-        vector<f_mat_t> L_update(nr_threads,zeros<f_mat_t>(L.n_rows,L.n_cols));
-#pragma omp for schedule(static) collapse(1)
+#pragma omp critical
+        {
+            c_update.resize(nr_threads,0);
+            rho_update.resize(nr_threads,zeros<col_vec_t>(rho.size()));
+            L_update.resize(nr_threads,zeros<f_mat_t>(L.n_rows,L.n_cols));
+        } // end OMP critical
+#pragma omp barrier // wait so initialization is done before work starts
+
+#pragma omp for
         for(unsigned int idx = 0; idx<rewards_and_data_indices.size(); ++idx) {
+
+            // precompute all values
             tuple<double,int> reward_and_data_index = rewards_and_data_indices[idx];
             double r_t = get<0>(reward_and_data_index);
             int t_idx = get<1>(reward_and_data_index);
-            col_vec_t phi = (col_vec_t)(discount * F_matrices[t_idx+1].col(policy_indices[t_idx]) -
-                                        F_matrices[t_idx].col(outcome_indices[t_idx]));
+            col_vec_t phi = (col_vec_t)(discount * F_matrices[t_idx]*policy[t_idx] -
+                                        F_matrices[t_idx-1].col(outcome_indices[t_idx]));
+
+            // perform update
             int thread_nr = omp_get_thread_num();
             c_update[thread_nr] = c_update[thread_nr] + pow(r_t,2);
             rho_update[thread_nr] = rho_update[thread_nr] + r_t * phi;
@@ -389,17 +386,22 @@ void TELQ::update_c_rho_L() {
             {
                 ++progress_counter;
                 IF_DEBUG(1) { ProgressBar::print(progress_counter,number_of_data_points); }
-            }
+            } // end OMP critical
+
         } // end OMP for
-#pragma omp critical
-        {
-            for(int thread_idx=0; thread_idx<nr_threads; ++thread_idx) {
-                c = c + c_update[thread_idx];
-                rho = rho + rho_update[thread_idx];
-                L = L + L_update[thread_idx];
-            }
-        }
+
     } // end OMP parallel
+
+    // joint updates
+    for(auto& c_ : c_update) {
+        c = c + c_;
+    }
+    for(auto& rho_ : rho_update) {
+        rho = rho + rho_;
+    }
+    for(auto& L_ : L_update) {
+        L = L + L_;
+    }
 
 #else
 
@@ -407,8 +409,8 @@ void TELQ::update_c_rho_L() {
         double r_t = get<0>(reward_and_idx);
         int t_idx = get<1>(reward_and_idx);
         //DEBUG_OUT(0,"T-idx: " << t_idx << " (" << policy_indices.size() << "/" << outcome_indices.size() << "/" << F_matrices.size() << ")");
-        col_vec_t phi = (col_vec_t)(discount * F_matrices[t_idx+1].col(policy_indices[t_idx]) -
-                                    F_matrices[t_idx].col(outcome_indices[t_idx]));
+        col_vec_t phi = (col_vec_t)(discount * F_matrices[t_idx].col(policy_indices[t_idx]) -
+                                    F_matrices[t_idx-1].col(outcome_indices[t_idx]));
         c = c + pow(r_t,2);
         rho = rho + r_t * phi;
         L = L + kron(phi,phi.t());
@@ -443,6 +445,25 @@ double TELQ::objective_and_gradient(col_vec_t& grad, const col_vec_t& weights) {
     return as_scalar(c + 2*rho.t()*weights + weights.t()*L*weights);
 }
 
+bool TELQ::policy_approx_equal(std::vector<col_vec_t> & p1, std::vector<col_vec_t> & p2) const {
+    if(p1.size()!=p2.size()) {
+        return false;
+    } else {
+        for(int idx=0; idx<(int)p1.size(); ++idx) {
+            if(!policy_approx_equal(p1[idx],p2[idx])) return false;
+        }
+    }
+    return true;
+}
+
+bool TELQ::policy_approx_equal(col_vec_t & p1, col_vec_t & p2) const {
+    if(p1.size()!=p2.size()) {
+        return false;
+    } else {
+        return arma::norm(p1-p2,"inf")<1e-3;
+    }
+}
+
 lbfgsfloatval_t TELQ::LBFGS_objective(const lbfgsfloatval_t* par, lbfgsfloatval_t* grad) {
     int nr_vars = weights.size();
     col_vec_t w(par,nr_vars);
@@ -455,16 +476,27 @@ lbfgsfloatval_t TELQ::LBFGS_objective(const lbfgsfloatval_t* par, lbfgsfloatval_
 int TELQ::LBFGS_progress(const lbfgsfloatval_t */*x*/,
                         const lbfgsfloatval_t */*g*/,
                         const lbfgsfloatval_t fx,
-                        const lbfgsfloatval_t /*xnorm*/,
+                        const lbfgsfloatval_t xnorm,
                         const lbfgsfloatval_t /*gnorm*/,
                         const lbfgsfloatval_t /*step*/,
                         int /*nr_variables*/,
                         int iteration_nr,
                         int /*ls*/) const {
-    IF_DEBUG(1) { cout << "    Iteration " << iteration_nr << " (" << objective_evaluations << "), TD-error+L1 = " << fx << endl; }
+    IF_DEBUG(1) { cout <<
+            QString("    Iteration %1 (%2), TD-error + L1 = %3 + %4")
+            .arg(iteration_nr)
+            .arg(objective_evaluations)
+            .arg(fx-xnorm*l1_factor,11,'e',5)
+            .arg(xnorm*l1_factor,11,'e',5)
+                       << endl; }
     return 0;
 }
 
 void TELQ::LBFGS_final_message(double obj_val) const {
-    IF_DEBUG(1) { cout << "    TD-error+L1 = " << obj_val << endl; }
+    double xnorm = arma::sum(arma::abs(weights));
+    IF_DEBUG(1) { cout <<
+            QString("    TD-error + L1 = %1 + %2")
+            .arg(obj_val-xnorm*l1_factor)
+            .arg(xnorm*l1_factor)
+                       << endl; }
 }

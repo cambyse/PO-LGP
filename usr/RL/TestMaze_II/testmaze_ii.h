@@ -124,12 +124,13 @@ private:
     double l1_factor;
 
     // Learners
-    std::shared_ptr<KMarkovCRF> crf;                 ///< TEF+CRF model
-    std::shared_ptr<UTree> utree;                    ///< UTree
-    std::shared_ptr<LinearQ> linQ;                   ///< Linear-Q
-    std::shared_ptr<ConjunctiveAdjacency> N_plus;    ///< N+ operator for TEM and TEL
-    std::shared_ptr<TemporallyExtendedLinearQ> tel;  ///< Linear-Q with TEFs
-    std::shared_ptr<TemporallyExtendedModel> tem;    ///< TEM
+    std::shared_ptr<KMarkovCRF> crf;                  ///< TEF+CRF model
+    std::shared_ptr<UTree> utree;                     ///< UTree
+    std::shared_ptr<LinearQ> linQ;                    ///< Linear-Q
+    std::shared_ptr<ConjunctiveAdjacency> N_plus_TEL; ///< N+ operator for TEL
+    std::shared_ptr<TemporallyExtendedLinearQ> tel;   ///< Linear-Q with TEFs
+    std::shared_ptr<ConjunctiveAdjacency> N_plus_TEM; ///< N+ operator for TEM
+    std::shared_ptr<TemporallyExtendedModel> tem;     ///< TEM
 
     //----------//
     // Planners //

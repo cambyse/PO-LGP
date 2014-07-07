@@ -65,9 +65,10 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     crf(new KMarkovCRF()),
     utree(new UTree(discount)),
     linQ(new LinearQ(discount)),
-    N_plus(new ConjunctiveAdjacency()),
-    tel(new TemporallyExtendedLinearQ(N_plus,discount)),
-    tem(new TemporallyExtendedModel(N_plus)),
+    N_plus_TEL(new ConjunctiveAdjacency()),
+    tel(new TemporallyExtendedLinearQ(N_plus_TEL,discount)),
+    N_plus_TEM(new ConjunctiveAdjacency()),
+    tem(new TemporallyExtendedModel(N_plus_TEM)),
     policy(nullptr),
     max_tree_size(10000),
     prune_search_tree(true),
@@ -119,14 +120,22 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     // change_environment(make_shared<Maze>(epsilon,"Markov"));
     // change_environment(make_shared<CheeseMaze>());
 
-    // set some properties of N+
-    N_plus->set_horizon_extension(2);
-    N_plus->set_max_horizon(0);
-    N_plus->set_min_horizon(-2);
-    N_plus->set_combine_features(false);
+    // set some properties of N+ (TEL)
+    N_plus_TEL->set_horizon_extension(2);
+    N_plus_TEL->set_max_horizon(-1);
+    N_plus_TEL->set_min_horizon(-2);
+    N_plus_TEL->set_combine_features(false);
+    N_plus_TEL->set_t_zero_features(ConjunctiveAdjacency::ACTION);
+    // set some properties of N+ (TEM)
+    N_plus_TEM->set_horizon_extension(2);
+    N_plus_TEM->set_max_horizon(-1);
+    N_plus_TEM->set_min_horizon(-2);
+    N_plus_TEM->set_combine_features(false);
+    N_plus_TEM->set_t_zero_features(ConjunctiveAdjacency::ACTION_OBSERVATION_REWARD);
 
     // set l1 factor for tem
     tem->set_l1_factor(l1_factor);
+    tel->set_l1_factor(l1_factor);
 
     // set all commands
     initialize_commands();
@@ -645,36 +654,36 @@ void TestMaze_II::initialize_commands() {
                 return {true,"did one learning cycle of TEM"};
             }, "do a complete grow-optimize-shrink cycle of TEM and print features afterwards");
         command_center.add_command(top_model_learn_tem,{"tem max horizon","temmaxh"}, [this]()->ret_t{
-                return {true,QString("TEM maximum horizon is %1").arg(N_plus->get_max_horizon())};
+                return {true,QString("TEM maximum horizon is %1").arg(N_plus_TEM->get_max_horizon())};
             }, "get TEM maximum horizon");
         command_center.add_command(top_model_learn_tem,{"tem max horizon","temmaxh"}, [this](int h)->ret_t{
-                N_plus->set_max_horizon(h);
-                return {true,QString("set TEM maximum horizon to %1").arg(N_plus->get_max_horizon())};
+                N_plus_TEM->set_max_horizon(h);
+                return {true,QString("set TEM maximum horizon to %1").arg(N_plus_TEM->get_max_horizon())};
             }, "set TEM maximum horizon");
         command_center.add_command(top_model_learn_tem,{"tem min horizon","temminh"}, [this]()->ret_t{
-                return {true,QString("TEM minimum horizon is %1").arg(N_plus->get_min_horizon())};
+                return {true,QString("TEM minimum horizon is %1").arg(N_plus_TEM->get_min_horizon())};
             }, "get TEM minimum horizon");
         command_center.add_command(top_model_learn_tem,{"tem min horizon","temminh"}, [this](int h)->ret_t{
-                N_plus->set_min_horizon(h);
-                return {true,QString("set TEM minimum horizon to %1").arg(N_plus->get_min_horizon())};
+                N_plus_TEM->set_min_horizon(h);
+                return {true,QString("set TEM minimum horizon to %1").arg(N_plus_TEM->get_min_horizon())};
             }, "set TEM maximum horizon");
         command_center.add_command(top_model_learn_tem,{"tem horizon extension","temhe"}, [this]()->ret_t{
-                return {true,QString("TEM horizon extension is %1").arg(N_plus->get_horizon_extension())};
+                return {true,QString("TEM horizon extension is %1").arg(N_plus_TEM->get_horizon_extension())};
             }, "get TEM horizon extension");
         command_center.add_command(top_model_learn_tem,{"tem horizon extension","temhe"}, [this](int h)->ret_t{
-                N_plus->set_horizon_extension(h);
-                return {true,QString("set TEM horizon extension to %1").arg(N_plus->get_horizon_extension())};
+                N_plus_TEM->set_horizon_extension(h);
+                return {true,QString("set TEM horizon extension to %1").arg(N_plus_TEM->get_horizon_extension())};
             }, "set TEM horizon extension");
         command_center.add_command(top_model_learn_tem,{"tem combine features","temcf"}, [this]()->ret_t{
-                if(N_plus->get_combine_features()) {
+                if(N_plus_TEM->get_combine_features()) {
                     return {true,"TEM does combines features"};
                 } else {
                     return {true,"TEM does not combines features"};
                 }
             }, "get whether TEM combines existing features");
         command_center.add_command(top_model_learn_tem,{"tem combine features","temcf"}, [this](bool combine)->ret_t{
-                N_plus->set_combine_features(combine);
-                if(N_plus->get_combine_features()) {
+                N_plus_TEM->set_combine_features(combine);
+                if(N_plus_TEM->get_combine_features()) {
                     return {true,"set TEM to combine features"};
                 } else {
                     return {true,"set TEM to not combine features"};
@@ -707,36 +716,36 @@ void TestMaze_II::initialize_commands() {
                 return {true,"did one learning cycle of TEL"};
             }, "do a complete grow-optimize-shrink cycle of TEL and print features afterwards");
         command_center.add_command(top_model_learn_tel,{"tel max horizon","telmaxh"}, [this]()->ret_t{
-                return {true,QString("TEL maximum horizon is %1").arg(N_plus->get_max_horizon())};
+                return {true,QString("TEL maximum horizon is %1").arg(N_plus_TEL->get_max_horizon())};
             }, "get TEL maximum horizon");
         command_center.add_command(top_model_learn_tel,{"tel max horizon","telmaxh"}, [this](int h)->ret_t{
-                N_plus->set_max_horizon(h);
-                return {true,QString("set TEL maximum horizon to %1").arg(N_plus->get_max_horizon())};
+                N_plus_TEL->set_max_horizon(h);
+                return {true,QString("set TEL maximum horizon to %1").arg(N_plus_TEL->get_max_horizon())};
             }, "set TEL maximum horizon");
         command_center.add_command(top_model_learn_tel,{"tel min horizon","telminh"}, [this]()->ret_t{
-                return {true,QString("TEL minimum horizon is %1").arg(N_plus->get_min_horizon())};
+                return {true,QString("TEL minimum horizon is %1").arg(N_plus_TEL->get_min_horizon())};
             }, "get TEL minimum horizon");
         command_center.add_command(top_model_learn_tel,{"tel min horizon","telminh"}, [this](int h)->ret_t{
-                N_plus->set_min_horizon(h);
-                return {true,QString("set TEL minimum horizon to %1").arg(N_plus->get_min_horizon())};
+                N_plus_TEL->set_min_horizon(h);
+                return {true,QString("set TEL minimum horizon to %1").arg(N_plus_TEL->get_min_horizon())};
             }, "set TEL maximum horizon");
         command_center.add_command(top_model_learn_tel,{"tel horizon extension","telhe"}, [this]()->ret_t{
-                return {true,QString("TEL horizon extension is %1").arg(N_plus->get_horizon_extension())};
+                return {true,QString("TEL horizon extension is %1").arg(N_plus_TEL->get_horizon_extension())};
             }, "get TEL horizon extension");
         command_center.add_command(top_model_learn_tel,{"tel horizon extension","telhe"}, [this](int h)->ret_t{
-                N_plus->set_horizon_extension(h);
-                return {true,QString("set TEL horizon extension to %1").arg(N_plus->get_horizon_extension())};
+                N_plus_TEL->set_horizon_extension(h);
+                return {true,QString("set TEL horizon extension to %1").arg(N_plus_TEL->get_horizon_extension())};
             }, "set TEL horizon extension");
         command_center.add_command(top_model_learn_tel,{"tel combine features","telcf"}, [this]()->ret_t{
-                if(N_plus->get_combine_features()) {
+                if(N_plus_TEL->get_combine_features()) {
                     return {true,"TEL does combines features"};
                 } else {
                     return {true,"TEL does not combines features"};
                 }
             }, "get whether TEL combines existing features");
         command_center.add_command(top_model_learn_tel,{"tel combine features","telcf"}, [this](bool combine)->ret_t{
-                N_plus->set_combine_features(combine);
-                if(N_plus->get_combine_features()) {
+                N_plus_TEL->set_combine_features(combine);
+                if(N_plus_TEL->get_combine_features()) {
                     return {true,"set TEL to combine features"};
                 } else {
                     return {true,"set TEL to not combine features"};
@@ -1677,8 +1686,9 @@ void TestMaze_II::change_environment(shared_ptr<Environment> new_environment) {
         linQ->adopt_spaces(*environment);
         linQ->set_features(*environment);
         tel->adopt_spaces(*environment);
+        N_plus_TEL->adopt_spaces(*environment);
         tem->adopt_spaces(*environment);
-        N_plus->adopt_spaces(*environment);
+        N_plus_TEM->adopt_spaces(*environment);
         // set current instance
         current_instance->detach_reachable();
         current_instance = INVALID;
@@ -1697,9 +1707,10 @@ void TestMaze_II::clear_all_learners() {
     crf.reset(new KMarkovCRF());
     utree.reset(new UTree(discount));
     linQ.reset(new LinearQ(discount));
-    tel.reset(new TemporallyExtendedLinearQ(N_plus,discount));
-    tem.reset(new TemporallyExtendedModel(N_plus));
+    tel.reset(new TemporallyExtendedLinearQ(N_plus_TEL,discount));
+    tem.reset(new TemporallyExtendedModel(N_plus_TEM));
     tem->set_l1_factor(l1_factor);
+    tel->set_l1_factor(l1_factor);
 }
 
 void TestMaze_II::set_policy() {
@@ -1860,7 +1871,7 @@ void TestMaze_II::get_TEM_transition_matrix_and_o_r_index_map(arma::mat& T, o_r_
         {
             DEBUG_OUT(3,"Constructing sequence:");
             DEBUG_OUT(3,"    " << *last_instance);
-            for(int t_idx=1; t_idx<N_plus->get_max_horizon(); ++t_idx) {
+            for(int t_idx=1; t_idx<N_plus_TEM->get_max_horizon(); ++t_idx) {
                 last_instance->set_non_const_predecessor(DoublyLinkedInstance::create(action_space,observation_space,reward_space));
                 last_instance = DoublyLinkedInstance::get_shared_ptr(last_instance->non_const_prev(),true);
                 DEBUG_OUT(3,"    " << *last_instance);
