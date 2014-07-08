@@ -30,6 +30,7 @@ struct Dfdw:ScalarFunction {
   ScalarFunction& s;
   VectorFunction& v;
   arr x0;
+  arr Dwdx;
 
   Dfdw(ScalarFunction& _fs,VectorFunction& _fv,arr &_x0):s(_fs),v(_fv),x0(_x0) {
 
@@ -42,77 +43,57 @@ struct Dfdw:ScalarFunction {
     J.special = arr::noneST;
 
     // compute w vector
-    arr w(PHI.d0);
-    w=repmat(x.subRange(0,2),x0.d0,1.);
+    arr w=repmat(x.subRange(0,2),x0.d0,1.);
     w.append(repmat(ARR(x(3)),3,1));
-//    cout << ~w%PHI << endl;
+    w.flatten();
 
     // compute matrix dWdx
-    arr Dwdx(w.d0,x.d0); Dwdx.setZero();
-    arr tmp = ARRAY(1.,0.,0.);
-    tmp = repmat(tmp,x0.d0,1);
-    tmp.append(repmat(ARR(0.),3,1));
-    Dwdx = ~tmp;
-    tmp.shift(1,false);
-    Dwdx.append(~tmp);
-    tmp.shift(1,false);
-    Dwdx.append(~tmp);
-    Dwdx.append(~tmp*0.);
-    Dwdx = ~Dwdx;
-    Dwdx(Dwdx.d0-3,3)=Dwdx(Dwdx.d0-2,3)=Dwdx(Dwdx.d0-1,3)=1.;
-//    cout << Dwdx << endl;
-
-    arr f1;
-    for (uint i=0;i<x0.N;i++) {
-      f1.append(~(J.col(i))*(PHI%w)*2.);
+    if (Dwdx.d0<1.) {
+      arr tmp = ARRAY(1.,0.,0.);
+      tmp = repmat(tmp,x0.d0,1);
+      tmp.append(repmat(ARR(0.),3,1));
+      Dwdx = ~tmp;
+      tmp.shift(1,false);
+      Dwdx.append(~tmp);
+      tmp.shift(1,false);
+      Dwdx.append(~tmp);
+      Dwdx.append(~tmp*0.);
+      Dwdx = ~Dwdx;
+      Dwdx(Dwdx.d0-3,3)=Dwdx(Dwdx.d0-2,3)=Dwdx(Dwdx.d0-1,3)=1.;
     }
 
+    arr PHIw = PHI%w;
     arr Jw = J%(repmat(sqrt(w),1,J.d1));
-    arr Hdxdx = 2.*~Jw*Jw;// +eye(Jw.d1)*100.;
+    arr f = 4.*(~PHIw)*J*(~J)*PHIw;
+
+    arr Hdxdx = 2.*~Jw*Jw;
     double detHdxdx = lapack_determinantSymPosDef(Hdxdx);
-//    cout << lapack_determinantSymPosDef(Hdxdx) << endl;
-    cout << detHdxdx << endl;
-    cout << ~x << endl;
-    arr f2 = ~f1*f1 - log(detHdxdx);// + sumOfSqr(x); //sumOfAbs(w)
-    if (&g) {
-      arr h(w.N);h.setZero();
+    double y = f(0) - log(detHdxdx);
 
-      //      arr g2;g2.resize(w.N);g2.setZero();
-      for (uint i=0;i<x0.N;i++) {
-        h = h + (4.*(f1(i,0))*((~J.col(i))%PHI));
-        //        g2 = g2 + (4.*(~(J.col(i))*(PHI%w))*(J.col(i)%(PHI)));
-      }
-      //      for (uint j=0;j<w.N;j++){
-      //        for (uint i=0;i<x0.N;i++) {
-      //          g(j) = g(j)+(4.*f1(i)*J(j,i)*PHI(j));
-      //        }
-      //      }
-      g = ~h*Dwdx ;//+ 2.*x;
-      arr HdxdxInv;
+    arr HdxdxInv;
+    if ((&g) || (&H)) {
       lapack_inverseSymPosDef(HdxdxInv,Hdxdx);
-      arr tmp3 = 2.*(J*~HdxdxInv*(~J));
-      tmp3 = ~getDiag(tmp3)*Dwdx;
-      g = g-tmp3;
-      g.flatten();
+    }
 
+    if (&g) {
+      arr h = 8.*(PHI%(J*~J*PHIw));
+      g = ~h*Dwdx ;
+
+      arr g2 = getDiag(2.*(J*~HdxdxInv*(~J)));
+      g2 = ~g2*Dwdx;
+      g = g - g2;
+      g.flatten();
     }
 
     if (&H) {
-      arr K(w.d0,w.d0);K.setZero();
-      for (uint i=0;i<x0.N;i++) {
-        K = K + (8.*~((~J.col(i))%PHI))*((~J.col(i))%PHI);
-      }
-      arr HdxdxInv;
-      lapack_inverseSymPosDef(HdxdxInv,Hdxdx);
-      H = ~Dwdx*K*Dwdx ;//+ 2.*eye(x.d0);
-      arr K2 = 2.*J*HdxdxInv*~J;
-      H = H - ~Dwdx*(-K2%K2)*Dwdx;
-//      H = H+eye(H.d0)*100.;
-//      cout << H << endl;
+      H = 8.*(diag(PHI)*J*~J*diag(PHI));
+      H = ~Dwdx*H*Dwdx ;
+
+      arr K = 2.*J*HdxdxInv*~J;
+      H = H - ~Dwdx*(-K%K)*Dwdx;
     }
 
-//    cout << "f2 "<<f2 << endl;
-    return f2(0,0);
+    return y;
   }
 };
 
@@ -170,7 +151,7 @@ void simpleMotion(){
   arr w = sqr(PHI/(PHIo+1e-12));
   //  checkGradient(dfdw,x,1e-3);
   w = w.subRange(w.d0-6,w.d0-3);
-//  w=ARRAY(1.,2.,3.,4.);
+  //  w=ARRAY(1.,2.,3.,4.);
   w = randn(4,1)+2.;
   w.reshape(w.N);
   cout << w << endl;
@@ -181,7 +162,7 @@ void simpleMotion(){
   checkGradient(dfdw,w,1e-3);
   checkHessian(dfdw,w,1e-3);
 
-  optNewton(w,dfdw,OPT(verbose=2,stopTolerance=1e-3, maxStep=1.,stopIters = 20000,stopEvals=20000));
+  optNewton(w,dfdw,OPT(verbose=0,stopTolerance=1e-3, maxStep=1.,stopIters = 20000,stopEvals=20000));
 
   cout << w/sqrt(sumOfSqr(w)) << endl;
   cout << wOpt/sqrt(sumOfSqr(wOpt)) << endl;
