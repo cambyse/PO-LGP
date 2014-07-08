@@ -48,6 +48,7 @@
 #define PQP_RECTDIST_H
 
 #include <math.h>
+#include <stdio.h>
 
 #define PQP_REAL double
 #define DBG_PRINT(x) //printf(x)
@@ -201,7 +202,6 @@ InVoronoi(const PQP_REAL &a,
 // 
 // a[2] are the side lengths of A, b[2] are the side lengths of B
 
-inline
 PQP_REAL
 RectDist(PQP_REAL Rab[9], PQP_REAL Tab[3],
           PQP_REAL a[2], PQP_REAL b[2], PQP_REAL Pa[3], PQP_REAL Pb[3])

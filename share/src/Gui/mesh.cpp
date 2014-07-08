@@ -205,9 +205,9 @@ void Mesh::setSSBox(double x, double y, double z, double r, uint fineness){
   setSphere(fineness);
   scale(r);
   for(uint i=0;i<V.d0;i++){
-    V(i,0) += MT::indicate(V(i,0)>0.)*x;
-    V(i,1) += MT::indicate(V(i,1)>0.)*y;
-    V(i,2) += MT::indicate(V(i,2)>0.)*z;
+    V(i,0) += MT::sign(V(i,0))*x;
+    V(i,1) += MT::sign(V(i,1))*y;
+    V(i,2) += MT::sign(V(i,2))*z;
   }
 }
 
