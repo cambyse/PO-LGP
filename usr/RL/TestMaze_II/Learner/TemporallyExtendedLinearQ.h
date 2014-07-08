@@ -49,7 +49,7 @@ public:
 
     virtual double get_discount() const { return discount; }
 
-    virtual double run_policy_iteration();
+    virtual double run_policy_iteration(bool final_L1 = true);
 
     virtual double get_TD_error();
 

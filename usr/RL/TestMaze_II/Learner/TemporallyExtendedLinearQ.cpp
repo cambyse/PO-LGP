@@ -100,7 +100,7 @@ TELQ::action_ptr_t TELQ::get_action(const_instance_ptr_t ins) {
     return action_space;
 }
 
-double TELQ::run_policy_iteration() {
+double TELQ::run_policy_iteration(bool final_L1) {
     int counter = 1;
     update_policy();
     double old_TD_error = get_TD_error();
@@ -122,7 +122,9 @@ double TELQ::run_policy_iteration() {
         ++counter;
     }
     // final L1-regularized optimization
-    optimize_weights_LBFGS();
+    if(final_L1) {
+        optimize_weights_LBFGS();
+    }
     IF_DEBUG(1) { cout << "------------------------------END: Policy Iteration-------------------------------" << endl;}
     return get_TD_error();
 }

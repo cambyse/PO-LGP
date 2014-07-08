@@ -306,6 +306,12 @@ bool TEFL::update() {
             DEBUG_DEAD_LINE;
             feature_set_changed = true;
         }
+        // check if spaces are set
+        if(action_space==action_ptr_t() ||
+           observation_space==observation_ptr_t() ||
+           reward_space==reward_ptr_t()) {
+            DEBUG_WARNING("spaces are not correctly initialized");
+        }
     }
 
     // check if anything needs to be updated
@@ -381,7 +387,10 @@ bool TEFL::update_basis_features() {
     }
 
     // terminate progress
-    if(DEBUG_LEVEL>0) {ProgressBar::terminate();}
+    if(DEBUG_LEVEL>0) {
+        ProgressBar::msg() << " (" << basis_features.size() << " --> " << new_basis_features.size() << ")";
+        ProgressBar::terminate();
+    }
 
     if(new_basis_features!=basis_features) {
         basis_features = new_basis_features;
@@ -401,6 +410,13 @@ void TEFL::update_basis_feature_maps(bool recompute_all) {
     int data_n = number_of_data_points;
 
     // check for matching dimensions
+    if(basis_features.size()==0) {
+        IF_DEBUG(1) {
+            ProgressBar::msg() << " (empty basis-feature set)";
+            ProgressBar::terminate();
+        }
+        return;
+    }
     if(basis_feature_maps.size()!=(uint)data_n || basis_feature_maps.front().size()!=(uint)outcome_n) {
         basis_feature_maps.assign(data_n,vector<basis_feature_map_t>(outcome_n));
         IF_DEBUG(1) {

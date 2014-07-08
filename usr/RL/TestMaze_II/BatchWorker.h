@@ -58,7 +58,7 @@ private:
         std::shared_ptr<Environment> env,
         std::shared_ptr<HistoryObserver> obs,
         const int& length,
-        instance_ptr_t i);
+        instance_ptr_t& i);
 
     void train_TEM(std::shared_ptr<HistoryObserver> learner, double& likelihood, int& features);
     void train_TEL(std::shared_ptr<HistoryObserver> learner, double& TD_error, int& features);
