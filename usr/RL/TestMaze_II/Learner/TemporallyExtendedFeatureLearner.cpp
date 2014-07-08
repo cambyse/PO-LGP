@@ -8,7 +8,11 @@
 #include <omp.h>
 #define USE_OMP
 
+#ifdef BATCH_MODE_QUIET
+#define DEBUG_LEVEL 0
+#else
 #define DEBUG_LEVEL 1
+#endif
 #include "../util/debug.h"
 
 using util::Range;
