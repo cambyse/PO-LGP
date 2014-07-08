@@ -75,6 +75,7 @@ struct KeyValueGraph:ItemL {
   //-- get items
   Item* getItem(const char *key);
   Item* getItem(const char *key1, const char *key2);
+  Item* getItem(const StringA &keys);
   Item* operator[](const char *key) { return getItem(key); }
   
   //-- get lists of items
