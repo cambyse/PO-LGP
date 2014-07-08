@@ -1,6 +1,7 @@
 #include <Ors/ors.h>
 #include <Optim/benchmarks.h>
 #include <Motion/motion.h>
+#include <Optim/optimization.h>
 #include <Motion/taskMap_default.h>
 #include <Motion/taskMap_proxy.h>
 #include <Motion/taskMap_constrained.h>
@@ -25,18 +26,22 @@ void gradCheckExample(){
 }
 
 
-struct Dfdw:ScalarFunction {
+struct Dfdw:ConstrainedProblem {
   //  MotionProblem MPF;
   ScalarFunction& s;
   VectorFunction& v;
   arr x0;
   arr Dwdx;
+  bool useDetH;
+  bool useHNorm;
 
-  Dfdw(ScalarFunction& _fs,VectorFunction& _fv,arr &_x0):s(_fs),v(_fv),x0(_x0) {
+  virtual uint dim_x() { return 4;}
+  virtual uint dim_g() { return 1;}
 
+  Dfdw(ScalarFunction& _fs,VectorFunction& _fv,arr &_x0,bool _useDetH, bool _useHNorm):s(_fs),v(_fv),x0(_x0),useDetH(_useDetH),useHNorm(_useHNorm) {
   }
-  virtual double fs(arr& g, arr& H, const arr& x) {
-    //    double y = s.fs(g,H,x);
+
+  virtual double fc(arr& df, arr& Hf, arr& g, arr& Jg, const arr& x) {
     arr PHI,J;
     v.fv(PHI,J,x0);
     J = unpack(J);
@@ -64,35 +69,65 @@ struct Dfdw:ScalarFunction {
 
     arr PHIw = PHI%w;
     arr Jw = J%(repmat(sqrt(w),1,J.d1));
-    arr f = 4.*(~PHIw)*J*(~J)*PHIw;
 
     arr Hdxdx = 2.*~Jw*Jw;
-    double detHdxdx = lapack_determinantSymPosDef(Hdxdx);
-    double y = f(0) - log(detHdxdx);
-
     arr HdxdxInv;
-    if ((&g) || (&H)) {
-      lapack_inverseSymPosDef(HdxdxInv,Hdxdx);
+    lapack_inverseSymPosDef(HdxdxInv,Hdxdx);
+
+    arr f;
+    if (useHNorm) {
+      f = 4.*(~PHIw)*J*HdxdxInv*(~J)*PHIw;
+    } else {
+      f = 4.*(~PHIw)*J*(~J)*PHIw;
+    }
+
+    double detHdxdx = lapack_determinantSymPosDef(Hdxdx);
+    double y = f(0);
+
+    if (useDetH)
+      y = y - log(detHdxdx);
+
+    if (&df) {
+
+      arr h;
+      if (useHNorm) {
+        h = 8.*(PHI%(J*HdxdxInv*~J*PHIw)- (J*HdxdxInv*~J*PHIw)%(J*HdxdxInv*~J*PHIw));
+      } else {
+        h = 8.*(PHI%(J*~J*PHIw));
+      }
+
+      df = ~h*Dwdx ;
+      arr g2 = getDiag(2.*(J*~HdxdxInv*(~J)));
+      g2 = ~g2*Dwdx;
+      if (useDetH)
+        df = df - g2;
+      df.flatten();
+    }
+
+    if (&Hf) {
+      if (useHNorm) {
+        Hf = -16.*diag(J*HdxdxInv*~J*PHIw)*(J*HdxdxInv*~J*(-2.*diag(J*HdxdxInv*~J*PHIw) + diag(PHI)));
+        Hf = Hf + 8.*diag(PHI)*J*HdxdxInv*~J*(-2.*diag(J*HdxdxInv*~J*PHIw) + diag(PHI));
+      } else {
+        Hf = 8.*(diag(PHI)*J*~J*diag(PHI));
+      }
+
+      Hf = ~Dwdx*Hf*Dwdx ;
+
+      arr K = 2.*J*HdxdxInv*~J;
+      if (useDetH)
+        Hf = Hf - ~Dwdx*(-K%K)*Dwdx;
     }
 
     if (&g) {
-      arr h = 8.*(PHI%(J*~J*PHIw));
-      g = ~h*Dwdx ;
-
-      arr g2 = getDiag(2.*(J*~HdxdxInv*(~J)));
-      g2 = ~g2*Dwdx;
-      g = g - g2;
-      g.flatten();
+      g.resize(dim_g());g.setZero();
+      g(0) = (sumOfSqr(x)-1.)*(sumOfSqr(x)-1.);
     }
 
-    if (&H) {
-      H = 8.*(diag(PHI)*J*~J*diag(PHI));
-      H = ~Dwdx*H*Dwdx ;
-
-      arr K = 2.*J*HdxdxInv*~J;
-      H = H - ~Dwdx*(-K%K)*Dwdx;
+    if (&Jg) {
+      Jg.resize(dim_g(),dim_x());Jg.setZero();
+      Jg=4.*~x*(sumOfSqr(x)-1.);
     }
-
     return y;
   }
 };
@@ -145,7 +180,7 @@ void simpleMotion(){
   fv.fv(PHIo,Jo,x);
   cout << PHIo << endl << PHI << endl;
 
-  Dfdw dfdw(f,fv,x);
+  Dfdw dfdw(f,fv,x,false,false);
 
   arr gi,Hi,PHIi,Ji;
   arr w = sqr(PHI/(PHIo+1e-12));
@@ -154,32 +189,22 @@ void simpleMotion(){
   //  w=ARRAY(1.,2.,3.,4.);
   w = randn(4,1)+2.;
   w.reshape(w.N);
-  cout << w << endl;
   w = ARR(2.25127, 1.0321, 1.90551, 1.13059);
 
-  //  cout << dfdw.fs(gi,Hi,w+0.01) << endl;
-  //  cout << gi << endl;
-  checkGradient(dfdw,w,1e-3);
-  checkHessian(dfdw,w,1e-3);
-
-  optNewton(w,dfdw,OPT(verbose=0,stopTolerance=1e-3, maxStep=1.,stopIters = 20000,stopEvals=20000));
-
+  checkAllGradients(dfdw,w,1e-3);
   cout << w/sqrt(sumOfSqr(w)) << endl;
-  cout << wOpt/sqrt(sumOfSqr(wOpt)) << endl;
+  arr dual;
+  optConstrained(w,dual,dfdw,OPT(verbose=2,stopTolerance=1e-6, maxStep=1.,stopIters = 5000,stopEvals=5000,constrainedMethod=squaredPenalty));
+
+  cout << "Found Solution: " << w << endl;
+  cout << "Opt Solution: " << wOpt/sqrt(sumOfSqr(wOpt)) << endl;
 }
-
-
-
 
 
 int main(int argc,char **argv) {
   MT::initCmdLine(argc,argv);
-
   //    gradCheckExample();
   simpleMotion();
-
-
-
 
   return 0;
 }
