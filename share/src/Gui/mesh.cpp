@@ -205,9 +205,9 @@ void Mesh::setSSBox(double x, double y, double z, double r, uint fineness){
   setSphere(fineness);
   scale(r);
   for(uint i=0;i<V.d0;i++){
-    V(i,0) += MT::sign(V(i,0))*x;
-    V(i,1) += MT::sign(V(i,1))*y;
-    V(i,2) += MT::sign(V(i,2))*z;
+    V(i,0) += .5*MT::sign(V(i,0))*x;
+    V(i,1) += .5*MT::sign(V(i,1))*y;
+    V(i,2) += .5*MT::sign(V(i,2))*z;
   }
 }
 
@@ -215,8 +215,7 @@ void Mesh::setCappedCylinder(double r, double l, uint fineness) {
   uint i;
   setSphere(fineness);
   scale(r);
-  for(i=0; i<V.d0; i++) V(i, 2) += MT::sign(V(i, 2))*l;
-  translate(0, 0, -.5*l);
+  for(i=0; i<V.d0; i++) V(i, 2) += .5*MT::sign(V(i, 2))*l;
 }
 
 /** @brief add triangles according to the given grid; grid has to be a 2D

@@ -428,6 +428,9 @@ Matrix& operator+=(Matrix& a, const Matrix& b) {
 /// inverts the current rotation
 Quaternion& Quaternion::invert() { w=-w; return *this; }
 
+/// flips the sign of the quaterion -- which still represents the same rotation
+void Quaternion::flipSign() { w=-w; x=-x; y=-y; z=-z; }
+
 /// multiplies the rotation by a factor f (i.e., makes f-times the rotation)
 void Quaternion::multiply(double f) {
   if(w==1. || f==1.) return;

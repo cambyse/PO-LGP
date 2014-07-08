@@ -121,6 +121,7 @@ struct Quaternion {
   void setDiff(const Vector& from, const Vector& to);
   void setInterpolate(double t, const Quaternion& a, const Quaternion b);
   Quaternion& invert();
+  void flipSign();
   void normalize();
   void multiply(double f);
   void alignWith(const Vector& v);

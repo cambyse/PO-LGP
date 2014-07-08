@@ -70,6 +70,32 @@ void TEST(Kinematics){
 
 //===========================================================================
 //
+// Jacobian test
+//
+
+void TEST(QuaternionKinematics){
+  ors::KinematicWorld G("kinematicTestQuat.kvg");
+
+  for(uint k=0;k<10;k++){
+    ors::Quaternion target;
+    target.setRandom();
+    G.getShapeByName("ref")->rel.rot = target;
+    arr x;
+    G.getJointState(x);
+    for(uint t=0;t<100;t++){
+      arr y,J;
+      G.kinematicsQuat(y, J, G.bodies.last());  //get the new endeffector position
+      arr Jinv = pseudoInverse(J, NoArr, 1e-4); //~J*inverse_SymPosDef(J*~J);
+      if(scalarProduct(ARRAY(target),y)<0.) target.flipSign();
+      x += 0.05 * Jinv * (ARRAY(target)-y);                  //simulate a time step (only kinematically)
+      G.setJointState(x);
+      G.watch(false, STRING("follow redundant trajectory -- time " <<t));
+    }
+  }
+}
+
+//===========================================================================
+//
 // copy operator test
 //
 
@@ -279,7 +305,7 @@ void TEST(FollowRedundantSequence){
   uint t,T,n=G.getJointStateDimension();
   arr x(n),y,J,invJ;
   x=.8;     //initialize with intermediate joint positions (non-singular positions)
-  ors::Vector rel(0,0,.5); //this frame describes the relative position of the endeffector wrt. 7th body
+  ors::Vector rel = G.getShapeByName("endeff")->rel.pos; //this frame describes the relative position of the endeffector wrt. 7th body
 
   //-- generate a random endeffector trajectory
   arr Z,Zt; //desired and true endeffector trajectories
@@ -489,6 +515,9 @@ void TEST(BlenderImport){
 
 int MAIN(int argc,char **argv){
   
+  testQuaternionKinematics();
+  return 0;
+
   testLoadSave();
   testCopy();
   testPlayStateSequence();
