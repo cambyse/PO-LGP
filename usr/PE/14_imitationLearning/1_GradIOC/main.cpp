@@ -91,7 +91,7 @@ struct Dfdw:ConstrainedProblem {
 
       arr h;
       if (useHNorm) {
-        h = 8.*(PHI%(J*HdxdxInv*~J*PHIw)- (J*HdxdxInv*~J*PHIw)%(J*HdxdxInv*~J*PHIw));
+        h = 8.*(PHI-(J*HdxdxInv*~J*PHIw)) % (J*HdxdxInv*~J*PHIw);
       } else {
         h = 8.*(PHI%(J*~J*PHIw));
       }
@@ -114,9 +114,10 @@ struct Dfdw:ConstrainedProblem {
 
       Hf = ~Dwdx*Hf*Dwdx ;
 
-      arr K = 2.*J*HdxdxInv*~J;
-      if (useDetH)
+      if (useDetH){
+        arr K = 2.*J*HdxdxInv*~J;
         Hf = Hf - ~Dwdx*(-K%K)*Dwdx;
+      }
     }
 
     if (&g) {
@@ -180,7 +181,7 @@ void simpleMotion(){
   fv.fv(PHIo,Jo,x);
   cout << PHIo << endl << PHI << endl;
 
-  Dfdw dfdw(f,fv,x,false,false);
+  Dfdw dfdw(f,fv,x,true,true);
 
   arr gi,Hi,PHIi,Ji;
   arr w = sqr(PHI/(PHIo+1e-12));
