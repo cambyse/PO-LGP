@@ -35,18 +35,22 @@ struct Dfdw:ConstrainedProblem {
   bool useDetH;
   bool useHNorm;
 
+  arr J_Jt,J_PHI,PHI,J,Jp;
+  arr dPHI_J_Jt_dPHI;
+
   virtual uint dim_x() { return 4;}
   virtual uint dim_g() { return 1;}
 
   Dfdw(ScalarFunction& _fs,VectorFunction& _fv,arr &_x0,bool _useDetH, bool _useHNorm):s(_fs),v(_fv),x0(_x0),useDetH(_useDetH),useHNorm(_useHNorm) {
+    // precompute some terms
+    v.fv(PHI,Jp,x0);
+    J_Jt = unpack(comp_A_At(Jp));
+    J = unpack(Jp); J.special = arr::noneST;
+    dPHI_J_Jt_dPHI = diag(PHI)*J*~J*diag(PHI);
   }
 
   virtual double fc(arr& df, arr& Hf, arr& g, arr& Jg, const arr& x) {
-    arr PHI,J;
-    v.fv(PHI,J,x0);
-    J = unpack(J);
-    J.special = arr::noneST;
-
+//    MT::timerStart(true);
     // compute w vector
     arr w=repmat(x.subRange(0,2),x0.d0,1.);
     w.append(repmat(ARR(x(3)),3,1));
@@ -68,24 +72,29 @@ struct Dfdw:ConstrainedProblem {
     }
 
     arr PHIw = PHI%w;
-    arr Jw = J%(repmat(sqrt(w),1,J.d1));
+    arr J_Jt_PHIw = comp_A_x(Jp,comp_At_x(Jp,PHIw));
 
-    arr Hdxdx = 2.*~Jw*Jw;
-    arr HdxdxInv;
-    lapack_inverseSymPosDef(HdxdxInv,Hdxdx);
+    arr Hdxdx,HdxdxInv,Jw;
+
+    if (useHNorm || useDetH) {
+      Jw = J%(repmat(sqrt(w),1,J.d1));
+      Hdxdx = 2.*~Jw*Jw;
+      lapack_inverseSymPosDef(HdxdxInv,Hdxdx);
+    }
 
     arr f;
     if (useHNorm) {
       f = 4.*(~PHIw)*J*HdxdxInv*(~J)*PHIw;
     } else {
-      f = 4.*(~PHIw)*J*(~J)*PHIw;
+      f = 4.*(~PHIw)*J_Jt_PHIw;
     }
 
-    double detHdxdx = lapack_determinantSymPosDef(Hdxdx);
     double y = f(0);
 
-    if (useDetH)
+    if (useDetH){
+      double detHdxdx = lapack_determinantSymPosDef(Hdxdx);
       y = y - log(detHdxdx);
+    }
 
     if (&df) {
 
@@ -93,14 +102,16 @@ struct Dfdw:ConstrainedProblem {
       if (useHNorm) {
         h = 8.*(PHI-(J*HdxdxInv*~J*PHIw)) % (J*HdxdxInv*~J*PHIw);
       } else {
-        h = 8.*(PHI%(J*~J*PHIw));
+        h = 8.*(PHI%(J_Jt_PHIw));
       }
 
       df = ~h*Dwdx ;
-      arr g2 = getDiag(2.*(J*~HdxdxInv*(~J)));
-      g2 = ~g2*Dwdx;
-      if (useDetH)
+
+      if (useDetH) {
+        arr g2 = getDiag(2.*(J*~HdxdxInv*(~J)));
+        g2 = ~g2*Dwdx;
         df = df - g2;
+      }
       df.flatten();
     }
 
@@ -109,7 +120,7 @@ struct Dfdw:ConstrainedProblem {
         Hf = -16.*diag(J*HdxdxInv*~J*PHIw)*(J*HdxdxInv*~J*(-2.*diag(J*HdxdxInv*~J*PHIw) + diag(PHI)));
         Hf = Hf + 8.*diag(PHI)*J*HdxdxInv*~J*(-2.*diag(J*HdxdxInv*~J*PHIw) + diag(PHI));
       } else {
-        Hf = 8.*(diag(PHI)*J*~J*diag(PHI));
+        Hf = 8.*(dPHI_J_Jt_dPHI);
       }
 
       Hf = ~Dwdx*Hf*Dwdx ;
@@ -129,8 +140,11 @@ struct Dfdw:ConstrainedProblem {
       Jg.resize(dim_g(),dim_x());Jg.setZero();
       Jg=4.*~x*(sumOfSqr(x)-1.);
     }
+//    cout << "4: "  << MT::timerRead(true) << endl;
+
     return y;
   }
+
 };
 
 void simpleMotion(){
@@ -181,7 +195,7 @@ void simpleMotion(){
   fv.fv(PHIo,Jo,x);
   cout << PHIo << endl << PHI << endl;
 
-  Dfdw dfdw(f,fv,x,true,true);
+  Dfdw dfdw(f,fv,x,false,false);
 
   arr gi,Hi,PHIi,Ji;
   arr w = sqr(PHI/(PHIo+1e-12));
@@ -194,11 +208,12 @@ void simpleMotion(){
 
   checkAllGradients(dfdw,w,1e-3);
   cout << w/sqrt(sumOfSqr(w)) << endl;
-  arr dual;
-  optConstrained(w,dual,dfdw,OPT(verbose=2,stopTolerance=1e-6, maxStep=1.,stopIters = 5000,stopEvals=5000,constrainedMethod=squaredPenalty));
 
-  cout << "Found Solution: " << w << endl;
-  cout << "Opt Solution: " << wOpt/sqrt(sumOfSqr(wOpt)) << endl;
+
+//  arr dual;
+//  optConstrained(w,dual,dfdw,OPT(verbose=2,stopTolerance=1e-6, maxStep=1.,stopIters = 5000,stopEvals=5000,constrainedMethod=squaredPenalty));
+//  cout << "Found Solution: " << w << endl;
+//  cout << "Opt Solution: " << wOpt/sqrt(sumOfSqr(wOpt)) << endl;
 }
 
 
