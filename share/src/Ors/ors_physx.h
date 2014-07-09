@@ -43,7 +43,7 @@ struct PhysXInterface {
   void step(double tau=1./60.);
   
   void pushToPhysx();
-  void pullFromPhysx();
+  void pullFromPhysx(double tau = 1./60.);
 
   void setArticulatedBodiesKinematic(uint agent=0);
   void ShutdownPhysX();
