@@ -8,11 +8,10 @@
 
 // Define MEMORY_CHECK to use memory_check() function (is automatically defined
 // for DEBUG_LEVEL > 0).
-#define MEMORY_CHECK
 #if DEBUG_LEVEL > 0
-#ifndef MEMORY_CHECK
-#define MEMORY_CHECK
-#endif
+    #ifndef MEMORY_CHECK
+        #define MEMORY_CHECK
+    #endif
 #endif
 
 using std::string;

@@ -14,7 +14,12 @@
 
 #include <iomanip>
 
+#ifdef BATCH_MODE_QUIET
+#define DEBUG_LEVEL 0
+#else
 #define DEBUG_LEVEL 1
+#endif
+#define DEBUG_STRING "TEF: "
 #include "../util/debug.h"
 
 using util::Range;
@@ -52,7 +57,7 @@ TELQ::row_vec_t TELQ::get_action_values(const_instance_ptr_t ins) const {
     int action_n = action_space->space_size();
     // return zero vector if value cannot be computed
     if(feature_set.size()==0) {
-        DEBUG_WARNING("Cannot compute action (no features)");
+        DEBUG_OUT(1,"Cannot compute action (no features)");
         return zeros<row_vec_t>(action_n);
     }
     // get feature matrix
