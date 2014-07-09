@@ -1,4 +1,6 @@
 #include "roscom.h"
+
+#ifdef MT_ROS
 #include <ros/ros.h>
 #include <Core/array-vector.h>
 #include <ros_msg/JointState.h>
@@ -56,3 +58,5 @@ void RosCom::step(){
 
 void RosCom::close(){}
 
+#else //MT_ROS
+#endif

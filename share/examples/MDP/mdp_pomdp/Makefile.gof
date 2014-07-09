@@ -2,15 +2,11 @@ BASE = $(shell pwd)/../../..
 
 DEPEND = Core MDP
 
-OBJS = main.o
-
-LAPACK = 1
-QT = 1## comment this line if you don't want to compile the GUI
-
+ifeq ($(QT),1)
 default: mdp.exe
-
-OBJS := gui_moc.o $(OBJS)
+OBJS := gui_moc.o main.o
 gui_moc.o: gui_ui.h gui_moc.cpp
+endif
 
 CLEAN = *_moc.cpp *_ui.h MT.log
 

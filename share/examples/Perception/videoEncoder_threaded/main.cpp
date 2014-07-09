@@ -14,9 +14,13 @@ void draw(void*){
 struct EncodingExampleSystem:System{
   ACCESS(byteA, rgb);
   EncodingExampleSystem(){
+#ifdef MT_OPENCV
     addModule<OpencvCamera>(NULL, Module_Thread::loopFull);
     addModule<ImageViewer>(NULL, STRINGS("rgb"), Module_Thread::listenFirst);
     addModule<VideoEncoder>(NULL, STRINGS("rgb"), Module_Thread::listenFirst);
+#else
+    NICO
+#endif
     connect();
   }
 };

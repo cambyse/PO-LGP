@@ -325,7 +325,13 @@ CXXFLAGS  += -DMT_PORTAUDIO
 LIBS += -lportaudio
 endif
 
+ifeq ($(G4),1)
+CXXFLAGS += -DG4_INSTALLED
+LIBS += -lG4Track -lusb-1.0
+endif
+
 ifeq ($(ROS),1)
+CXXFLAGS  += -DMT_ROS
 ROSP=pr2_mechanism/pr2_controller_interface\
 pr2_mechanism/pr2_mechanism_model\
 pr2_mechanism/pr2_hardware_interface\
