@@ -480,30 +480,40 @@ lbfgsfloatval_t TELQ::LBFGS_objective(const lbfgsfloatval_t* par, lbfgsfloatval_
     return TD_error;
 }
 
-int TELQ::LBFGS_progress(const lbfgsfloatval_t */*x*/,
-                        const lbfgsfloatval_t */*g*/,
-                        const lbfgsfloatval_t fx,
-                        const lbfgsfloatval_t xnorm,
-                        const lbfgsfloatval_t /*gnorm*/,
-                        const lbfgsfloatval_t /*step*/,
-                        int /*nr_variables*/,
-                        int iteration_nr,
-                        int /*ls*/) const {
-    IF_DEBUG(1) { cout <<
+int TELQ::LBFGS_progress(const lbfgsfloatval_t * x,
+                         const lbfgsfloatval_t */*g*/,
+                         const lbfgsfloatval_t fx,
+                         const lbfgsfloatval_t /*xnorm*/,
+                         const lbfgsfloatval_t /*gnorm*/,
+                         const lbfgsfloatval_t /*step*/,
+                         int nr_variables,
+                         int iteration_nr,
+                         int /*ls*/) const {
+    IF_DEBUG(1) {
+        // L1 norm //
+        double xnorm = 0;
+        for(int idx=0; idx<nr_variables; ++idx) {
+            xnorm += fabs(x[idx]);
+        }
+        cout <<
             QString("    Iteration %1 (%2), TD-error + L1 = %3 + %4")
             .arg(iteration_nr)
             .arg(objective_evaluations)
             .arg(fx-xnorm*l1_factor,11,'e',5)
             .arg(xnorm*l1_factor,11,'e',5)
-                       << endl; }
+             << endl;
+    }
     return 0;
 }
 
 void TELQ::LBFGS_final_message(double obj_val) const {
-    double xnorm = arma::as_scalar(arma::sum(arma::abs(weights)));
-    IF_DEBUG(1) { cout <<
+    IF_DEBUG(1) {
+        // L1 norm //
+        double xnorm = arma::as_scalar(arma::sum(arma::abs(weights)));
+        cout <<
             QString("    TD-error + L1 = %1 + %2")
-            .arg(obj_val-xnorm*l1_factor)
-            .arg(xnorm*l1_factor)
-                       << endl; }
+            .arg(obj_val-xnorm*l1_factor,11,'e',5)
+            .arg(xnorm*l1_factor,11,'e',5)
+             << endl;
+    }
 }
