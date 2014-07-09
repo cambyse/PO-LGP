@@ -56,7 +56,7 @@ private:
         std::shared_ptr<Environment> env,
         std::shared_ptr<HistoryObserver> obs,
         const int& length,
-        instance_t*& i);
+        instance_ptr_t i);
 
     void train_CRF(std::shared_ptr<FeatureLearner> learner, double& likelihood, int& features);
     void train_value_based_UTree(std::shared_ptr<FeatureLearner> learner, int& size, double& score);

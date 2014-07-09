@@ -1,0 +1,21 @@
+body ball {}
+shape sh:task:ball (ball) {
+  #type = -1
+  type = 5
+  size = [ .01 0 0 0 ]
+  color = [ 0 0 0 ]
+}
+shape sh:ball (ball) {
+  type = 1
+  rel = <T t(0 0 .075) t(0 0 .008)>
+  size = [ 0 0 0 .075 ]
+  contact
+}
+
+body ball:pos {}
+body ball:orX {}
+body ball:orY {}
+joint (world ball:pos) { type = 7 }
+joint (ball:pos ball:orX) { type = 0 }
+joint (ball:orX ball:orY) { type = 1 }
+joint (ball:orY ball) { type = 2 }

@@ -378,7 +378,7 @@ ors::Joint::~Joint() {
 }
 void ors::Joint::reset() { 
   listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); X.setZero(); axis.setZero(); limits.clear(); H=1.; type=JT_none; 
-  locked_func=always_unlocked; locked_data=NULL;
+  locker=NULL;
 }
 
 void ors::Joint::parseAts() {

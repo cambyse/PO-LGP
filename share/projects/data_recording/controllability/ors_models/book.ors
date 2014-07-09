@@ -1,0 +1,39 @@
+body book:body {}
+shape sh:task:book:body (book:body) {
+  #type = -1
+  type = 5
+  size = [ .01 0 0 0 ]
+  color = [ 0 0 0 ]
+}
+shape sh:book:body (book:body) {
+  type = 0
+  rel = <T t(-.05 .0435 .008) t(0 0 -.15)>
+  size = [ .15 .197 .002  0 ]
+  contact
+}
+
+body book:cover {}
+shape sh:task:book:cover (book:cover) {
+  #type = -1
+  type = 5
+  size = [ .01 0 0 0 ]
+  color = [ 0 0 0 ]
+}
+shape sh:book:body (book:body) {
+  type = 0
+  rel = <T t(-.05 .0435 .008) t(0 0 -.15)>
+  size = [ .15 .197 .002  0 ]
+  contact
+}
+
+body book:pos {}
+body book:orX {}
+body book:orY {}
+joint (world book:pos) { type = 7 }
+joint (book:pos book:orX) { type = 0 }
+joint (book:orX book:orY) { type = 1 }
+joint (book:orY book:body) { type = 2 }
+joint (book:body book:cover) {
+  from=<T t(.03 0 .05) d(90 0 0 1) d(10 1 0 0)>
+  to=<T d(-90 0 0 1)>
+}

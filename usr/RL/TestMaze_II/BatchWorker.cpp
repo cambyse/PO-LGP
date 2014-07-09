@@ -9,6 +9,7 @@
 #include "../Learner/KMarkovCRF.h"
 #include "../Learner/UTree.h"
 #include "../Planning/LookAheadSearch.h"
+#include "../Representation/DoublyLinkedInstance.h"
 
 #include <QDateTime>
 
@@ -32,6 +33,8 @@ using std::vector;
 using std::shared_ptr;
 using std::make_shared;
 using std::dynamic_pointer_cast;
+
+using util::INVALID;
 
 const vector<string> BatchWorker::mode_vector = {"DRY",
                                                  "RANDOM",
@@ -177,7 +180,7 @@ void BatchWorker::collect_data() {
             observation_ptr_t observation_space;
             reward_ptr_t reward_space;
             // current instance
-            instance_t * current_instance = nullptr;
+            instance_ptr_t current_instance;
             // data
             double mean_reward = 0;  // for all
             double data_likelihood;  // for CRF
@@ -281,7 +284,7 @@ void BatchWorker::collect_data() {
                     reward_ptr_t reward;
                     environment->perform_transition(action, observation, reward);
                     mean_reward += reward->get_value();
-                    current_instance = current_instance->append_instance(action, observation, reward);
+                    current_instance = current_instance->append(action, observation, reward);
                     DEBUG_OUT(2,"    " << action << "	" << observation << "	" << reward);
                     // prune tree
                     if(!pruningOff_arg.getValue()) {
@@ -301,7 +304,7 @@ void BatchWorker::collect_data() {
                     reward_ptr_t reward;
                     environment->perform_transition(action, observation, reward);
                     mean_reward += reward->get_value();
-                    current_instance = current_instance->append_instance(action, observation, reward);
+                    current_instance = current_instance->append(action, observation, reward);
                     DEBUG_OUT(2,"    " << action << "	" << observation << "	" << reward);
                 }
             } else {
@@ -327,7 +330,7 @@ void BatchWorker::collect_data() {
                 }
             }
 
-            delete current_instance;
+            current_instance->detach_reachable();
         }
     } // end omp parallel for
 }
@@ -335,7 +338,7 @@ void BatchWorker::collect_data() {
 void BatchWorker::collect_random_data(std::shared_ptr<Environment> env,
                                       std::shared_ptr<HistoryObserver> obs,
                                       const int& length,
-                                      instance_t*& i) {
+                                      instance_ptr_t ins) {
     // get spaces
     action_ptr_t action_space;
     observation_ptr_t observation_space;
@@ -351,10 +354,10 @@ void BatchWorker::collect_random_data(std::shared_ptr<Environment> env,
         env->perform_transition(action, observation, reward);
         obs->add_action_observation_reward_tripel(action, observation, reward, false);
         DEBUG_OUT(2,"    " << action << "	" << observation << "	" << reward);
-        if(i==nullptr) {
-            i = instance_t::create(action, observation, reward);
+        if(ins==INVALID) {
+            ins = DoublyLinkedInstance::create(action, observation, reward);
         } else {
-            i = i->append_instance(action, observation, reward);
+            ins = ins->append(action, observation, reward);
         }
     }
 }

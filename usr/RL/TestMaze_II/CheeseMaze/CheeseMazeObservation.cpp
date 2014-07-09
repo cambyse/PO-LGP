@@ -1,7 +1,5 @@
 #include "CheeseMazeObservation.h"
 
-#include "../util/Macro.h"
-
 #include "../util/debug.h"
 
 using std::string;

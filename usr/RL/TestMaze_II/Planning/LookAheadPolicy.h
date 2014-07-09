@@ -14,7 +14,7 @@ public:
                     const int& max_tree_size = 10000
         );
     virtual ~LookAheadPolicy() = default;
-    virtual action_ptr_t get_action(const instance_t*);
+    virtual action_ptr_t get_action(const_instance_ptr_t) override;
     virtual void set_pruning(bool prune) { prune_tree = prune; }
     virtual void set_max_tree_size(int max) { max_tree_size = max; }
     virtual void invalidate_search_tree() { valid_tree_exists = false; }

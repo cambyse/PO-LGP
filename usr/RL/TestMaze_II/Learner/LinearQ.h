@@ -23,9 +23,7 @@ class LinearQ: public HistoryObserver, public LBFGS_Optimizer, public FeatureLea
 public:
 
     USE_CONFIG_TYPEDEFS;
-    typedef Feature::feature_return_value    f_ret_t;
-    typedef Feature::const_feature_ptr_t     f_ptr_t;
-    typedef std::vector<const instance_t *>  instance_vector_t;
+    typedef std::vector<const_instance_ptr_t>  instance_vector_t;
 
     /** \brief What strategy to use for optimizting the features weights. */
     enum class OPTIMIZATION_TYPE {
@@ -48,9 +46,9 @@ public:
     /** \brief Clears all data (all instances). */
     virtual void clear_data();
 
-    action_ptr_t get_max_value_action(const instance_t *);
+    action_ptr_t get_max_value_action(const_instance_ptr_t);
 
-    virtual action_ptr_t get_action(const instance_t* i) { return get_max_value_action(i); }
+    virtual action_ptr_t get_action(const_instance_ptr_t i) { return get_max_value_action(i); }
 
     /*! \brief Set the discount rate used for computing observation and action values. */
     void set_discount(const double& d) { discount = d; }

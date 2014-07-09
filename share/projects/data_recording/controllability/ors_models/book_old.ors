@@ -1,0 +1,21 @@
+body book_old { }
+shape sh:task:book_old (book_old) {
+  #type = -1
+  type = 5
+  size = [ .01 0 0 0 ]
+  color = [ 0 0 0 ]
+}
+shape sh:book_old (book_old) {
+  type = 0
+  rel = <T t(-.0925 0 .0255)>
+  size = [ .21 .235 .035  0 ]
+  contact
+}
+
+body book_old:pos {}
+body book_old:orX {}
+body book_old:orY {}
+joint (world book_old:pos) { tpye = 7 }
+joint (book_old:pos book_old:orX) { type = 0 }
+joint (book_old:orX book_old:orY) { type = 1 }
+joint (book_old:orY book_old) { type = 2 }

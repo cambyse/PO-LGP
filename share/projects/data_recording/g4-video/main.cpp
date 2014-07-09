@@ -22,8 +22,8 @@ void setup_opengl_for_g4(ors::KinematicWorld& ors, OpenGL& gl, uint hubs){
 }
 
 void display(G4Data &g4d) {
-  uint numF = g4d.getNumFrames();
-  uint numS = g4d.getNumSensors();
+  uint numF = g4d.numFrames();
+  uint numS = g4d.sensors().N;
 
   arr pos = g4d.query("pos");
   arr quat = g4d.query("quat");

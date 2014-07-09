@@ -24,16 +24,15 @@
 /** \brief Shortcut to replace for loop where the index does not play a role. */
 #define repeat(n) for(unsigned long int repeat_index=0; repeat_index<(unsigned long int)n; ++repeat_index)
 
-/** \brief Shortcut to define a print() function for a class that has defined
- * the outstream operator <<.
- *
- * Use this macro inside the cpp file to prevent inlining the function (which
- * prevents it being used in a debugger). */
-#define PRINT_FROM_OSTREAM                      \
-    {                                           \
-        std::stringstream s;                    \
-        s << *this;                             \
-        return s.str().c_str();                 \
+/** \brief Simplify comparison in hierarchies of abstract classes. */
+#define COMPARE_ABSTRACT_TYPE_AND_CAST(comp,type_getter,type_for_cast)  \
+    auto ptr = dynamic_cast<type_for_cast>(&other);                     \
+    if(this->type_getter()!=other.type_getter()) {                      \
+        return this->type_getter() comp other.type_getter();            \
+    }                                                                   \
+    if(ptr==nullptr) {                                                  \
+        DEBUG_ERROR("Dynamic cast failed");                             \
+        return true;                                                    \
     }
 
 /** All utility functions etc are included in the util namespace. */
@@ -71,9 +70,37 @@ namespace util {
         return (x <= DBL_MAX && x >= -DBL_MAX);
     }
 
+    /** \brief Get a std::string if operator<< is defined. */
+    template<class T>
+    std::string string_from_ostream(const T& t) {
+        std::stringstream s;
+        s << t;
+        return s.str();
+    }
+
     //========================================================//
     //                      Classes                           //
     //========================================================//
+
+    /** \brief Comparison of pointers via their pointed-to objects. */
+    template<class A, class B = A>
+        class deref_less {
+    public:
+        bool operator()(const A& a, const B& b) { return *a<*b; }
+    };
+    template<>
+        template<class P>
+        class deref_less<std::weak_ptr<P> > {
+    public:
+        bool operator()(const std::weak_ptr<P>& a, const std::weak_ptr<P>& b) {
+            if(a.expired() || b.expired()) {
+                DEBUG_ERROR("Pointer expired");
+                return false;
+            } else {
+                return *(a.lock())<*(b.lock());
+            }
+        }
+    };
 
     /** \brief Base class for polymorphic iteratable spaces.
      *
@@ -395,6 +422,8 @@ namespace util {
     InvalidBase(const bool& b = true): invalid(b) {}
         /** \brief Returns whether the object is invalid. */
         bool is_invalid() const { return invalid; }
+        bool operator!=(const InvalidBase& other) const { return invalid!=other.invalid; }
+        bool operator==(const InvalidBase& other) const { return !(*this!=other); }
     protected:
         /** \brief Holds whether the object is invalid. */
         bool invalid;
@@ -568,6 +597,36 @@ namespace util {
      * util::approx_equal_tolerance(). */
     template < class C >
         bool operator<<(const C& c1, const C& c2) { return c1>c2-approx_equal_tolerance(); }
+
+    //=======================================================================//
+    // Define << operator for tuples (this is just copy pasted from the web) //
+
+    namespace aux{
+        template<std::size_t...> struct seq{};
+
+        template<std::size_t N, std::size_t... Is>
+            struct gen_seq : gen_seq<N-1, N-1, Is...>{};
+
+        template<std::size_t... Is>
+            struct gen_seq<0, Is...> : seq<Is...>{};
+
+        template<class Ch, class Tr, class Tuple, std::size_t... Is>
+            void print_tuple(std::basic_ostream<Ch,Tr>& os, Tuple const& t, seq<Is...>){
+            using swallow = int[];
+            (void)swallow{0, (void(os << (Is == 0? "" : ", ") << std::get<Is>(t)), 0)...};
+        }
+    } // aux::
+
+    template<class Ch, class Tr, class... Args>
+        auto operator<<(std::basic_ostream<Ch, Tr>& os, std::tuple<Args...> const& t)
+        -> std::basic_ostream<Ch, Tr>&
+    {
+        os << "(";
+        aux::print_tuple(os, t, aux::gen_seq<sizeof...(Args)>());
+        return os << ")";
+    }
+
+    //=======================================================================//
 
 } // end namespace util
 
