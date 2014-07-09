@@ -68,7 +68,8 @@ HEADERS += \
     ../Learner/ConjunctiveAdjacency.h \
     \
     ../BatchMaze.h \
-    ../testmaze_ii.h
+    ../testmaze_ii.h \
+    ../ui_testmaze_ii.h
 SOURCES += \
     main.cpp \
     \

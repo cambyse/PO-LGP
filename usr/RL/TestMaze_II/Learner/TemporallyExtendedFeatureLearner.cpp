@@ -152,7 +152,7 @@ double TEFL::optimize_weights_LBFGS() {
     }
 
     // set weights
-    weights = values;
+    weights = arma::conv_to<col_vec_t>::from(values);
 
     // return objective value
     return obj_value;

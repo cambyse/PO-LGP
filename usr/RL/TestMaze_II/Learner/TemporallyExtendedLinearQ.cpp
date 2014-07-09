@@ -495,7 +495,7 @@ int TELQ::LBFGS_progress(const lbfgsfloatval_t */*x*/,
 }
 
 void TELQ::LBFGS_final_message(double obj_val) const {
-    double xnorm = arma::sum(arma::abs(weights));
+    double xnorm = arma::as_scalar(arma::sum(arma::abs(weights)));
     IF_DEBUG(1) { cout <<
             QString("    TD-error + L1 = %1 + %2")
             .arg(obj_val-xnorm*l1_factor)

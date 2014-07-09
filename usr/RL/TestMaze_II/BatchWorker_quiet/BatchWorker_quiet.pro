@@ -118,6 +118,7 @@ SOURCES += \
 LIBS += -llbfgs \
     -lemon \
     -larmadillo \
+    -llapack \
     -lgomp
 INCLUDEPATH +=
 LIBPATH += /usr/share/lib

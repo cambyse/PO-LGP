@@ -19,7 +19,7 @@ class TemporallyExtendedFeatureLearner: public HistoryObserver, public virtual S
     //----typedefs/classes----//
 public:
     DISAMBIGUATE_CONFIG_TYPEDEFS(HistoryObserver);
-    typedef arma::SpMat<double> f_mat_t; // using double for compatibility to vec_t
+    typedef arma::Mat<double> f_mat_t; // using double for compatibility to vec_t
     typedef arma::Col<double> col_vec_t;
     typedef arma::Row<double> row_vec_t;
     typedef std::map<f_ptr_t,double> weight_map_t;
