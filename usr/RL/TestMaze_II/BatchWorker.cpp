@@ -148,7 +148,7 @@ bool BatchWorker::post_process_args() {
         maxT = maxT_arg.getValue();
         maxT = maxT==-1?minT:maxT;
     }
-    if(incT_arg.getValue()!=-1 && incT_arg.getValue()<=0) {
+    if(incT_arg.getValue()!=-1 && incT_arg.getValue()<0) {
         DEBUG_OUT(0,"Argument '" << incT_arg.getName() << "' requires a value greater that zero");
         samples_ok = false;
     } else {
@@ -505,7 +505,7 @@ void BatchWorker::train_TEL(std::shared_ptr<HistoryObserver> learner, double& TD
     double old_TD_error = -DBL_MAX, new_TD_error = 0;
     int cycle_counter = 0, max_cycles = maxCycles_arg.getValue();
     tel->set_l1_factor(l1_arg.getValue());
-    while(new_TD_error-old_TD_error>delta_arg.getValue() || minCycles_arg.getValue()>cycle_counter) {
+    while(old_TD_error-new_TD_error>delta_arg.getValue() || minCycles_arg.getValue()>cycle_counter) {
         old_TD_error = new_TD_error;
         tel->grow_feature_set();
         new_TD_error = tel->run_policy_iteration();
