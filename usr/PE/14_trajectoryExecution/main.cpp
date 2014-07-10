@@ -113,15 +113,15 @@ void executeTrajectory(String scene, ControlType cType){
 
   //-- create an optimal trajectory to trainTarget
   TaskCost *c;
-  c = P.addTaskMap("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, goal, 1e4);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
 
-  c = P.addTaskMap("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
+  c = P.addTask("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(1.,0.,0.), 1e4);
   P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
 
-//  c = P.addTaskMap("contact", new DefaultTaskMap(collTMT,-1,NoVector,-1,NoVector,ARR(0.1)));
+//  c = P.addTask("contact", new DefaultTaskMap(collTMT,-1,NoVector,-1,NoVector,ARR(0.1)));
 //  P.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1e0);
 
 
@@ -136,7 +136,7 @@ void executeTrajectory(String scene, ControlType cType){
   cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<" # joints=" <<world.getJointStateDimension()<<endl;
 
   arr x(T+1,n); x.setZero();
-  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, damping=1e-3, maxStep=1.));
   //  P.costReport();
   //  displayTrajectory(x, 1, world, "planned trajectory", 0.01);
 
@@ -145,8 +145,8 @@ void executeTrajectory(String scene, ControlType cType){
   // store cartesian coordinates and endeffector orientation
   for (uint t=0;t<=T;t++) {
     world.setJointState(x[t]);
-    world.kinematicsPos(kinPos,NoArr,P.world.getBodyByName("endeff")->index);
-    world.kinematicsVec(kinVec,NoArr,P.world.getBodyByName("endeff")->index);
+    world.kinematicsPos(kinPos,NoArr,P.world.getBodyByName("endeff"));
+    world.kinematicsVec(kinVec,NoArr,P.world.getBodyByName("endeff"));
     xRefPos.append(~kinPos);
     xRefVec.append(~kinVec);
   }
@@ -248,8 +248,8 @@ void executeTrajectory(String scene, ControlType cType){
       // Outer Planning Loop [1/tau_plan Hz]
       MT::timerStart(true);
       // Get current task state
-      world.kinematicsPos(state,NoArr,P.world.getBodyByName("endeff")->index);
-      world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeff")->index);
+      world.kinematicsPos(state,NoArr,P.world.getBodyByName("endeff"));
+      world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeff"));
       state.append(stateVec);
 
       // Move goal
@@ -304,7 +304,7 @@ void executeTrajectory(String scene, ControlType cType){
     MP.setState(q, qdot);
 
     // world.stepPhysx(tau_control);
-    world.computeProxies();
+    world.stepSwift();
 
     arr qddot = MP.operationalSpaceControl();//MP.operationalSpaceControl(regularization);
     q += tau_control*qdot;

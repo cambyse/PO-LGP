@@ -1,20 +1,21 @@
 /*  ---------------------------------------------------------------------
-    Copyright 2013 Marc Toussaint
-    email: mtoussai@cs.tu-berlin.de
-
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
 
 
 
@@ -337,7 +338,9 @@ void DefaultTaskVariable::updateState(const ors::KinematicWorld& ors, double tau
   ors::Transformation f, fi, fj;
   ors::Vector vi, vj, r, jk;
   uint k,l;
-  
+  ors::Body *bi = ors.bodies(i);
+  ors::Body *bj = ors.bodies(j);
+
   v_old=v;
   y_old=y;
   
@@ -345,42 +348,42 @@ void DefaultTaskVariable::updateState(const ors::KinematicWorld& ors, double tau
   switch(type) {
     case posTVT:
       if(j==-1) {
-        ors.kinematicsPos(y, J, i, &irel.pos);
+        ors.kinematicsPos(y, J, bi, &irel.pos);
         break;
       }
-      pi = ors.bodies(i)->X.pos + ors.bodies(i)->X.rot * irel.pos;
-      pj = ors.bodies(j)->X.pos + ors.bodies(j)->X.rot * jrel.pos;
-      c = ors.bodies(j)->X.rot / (pi-pj);
+      pi = bi->X.pos + bi->X.rot * irel.pos;
+      pj = bj->X.pos + bj->X.rot * jrel.pos;
+      c = bj->X.rot / (pi-pj);
       y = ARRAY(c);
-      ors.kinematicsPos(NoArr, Ji, i, &irel.pos);
-      ors.kinematicsPos(NoArr, Jj, j, &jrel.pos);
-      ors.jacobianR(JRj, j);
+      ors.kinematicsPos(NoArr, Ji, bi, &irel.pos);
+      ors.kinematicsPos(NoArr, Jj, bj, &jrel.pos);
+      ors.jacobianR(JRj, bj);
       J.resize(3, Jj.d1);
       for(k=0; k<Jj.d1; k++) {
         vi.set(Ji(0, k), Ji(1, k), Ji(2, k));
         vj.set(Jj(0, k), Jj(1, k), Jj(2, k));
         r .set(JRj(0, k), JRj(1, k), JRj(2, k));
-        jk =  ors.bodies(j)->X.rot / (vi - vj);
-        jk -= ors.bodies(j)->X.rot / (r ^(pi - pj));
+        jk =  bj->X.rot / (vi - vj);
+        jk -= bj->X.rot / (r ^(pi - pj));
         J(0, k)=jk.x; J(1, k)=jk.y; J(2, k)=jk.z;
       }
       
       break;
     case zoriTVT:
       if(j==-1) {
-        ors.kinematicsVec(y, J, i, &irel.rot.getZ(vi));
+        ors.kinematicsVec(y, J, bi, &irel.rot.getZ(vi));
         break;
       }
       //relative
       MT_MSG("warning - don't have a correct Jacobian for this TVType yet");
-      fi = ors.bodies(i)->X; fi.appendTransformation(irel);
-      fj = ors.bodies(j)->X; fj.appendTransformation(jrel);
+      fi = bi->X; fi.appendTransformation(irel);
+      fj = bj->X; fj.appendTransformation(jrel);
       f.setDifference(fi, fj);
       f.rot.getZ(c);
       y = ARRAY(c);
       NIY; //TODO: Jacobian?
       break;
-    case rotTVT:       y.resize(3);  ors.jacobianR(J, i);  y.setZero(); break; //the _STATE_ of rot is always zero... the Jacobian not... (hack)
+    case rotTVT:       y.resize(3);  ors.jacobianR(J, bi);  y.setZero(); break; //the _STATE_ of rot is always zero... the Jacobian not... (hack)
     case qItselfTVT:   ors.getJointState(q, qd);    y = q;   J.setId(q.N);  break;
     case qLinearTVT:   ors.getJointState(q, qd);    y = params * q;   J=params;  break;
     case qSquaredTVT:
@@ -407,7 +410,7 @@ void DefaultTaskVariable::updateState(const ors::KinematicWorld& ors, double tau
       J.clear();
       for(k=0; k<params.N; k++) {
         l=(uint)params(k);
-        ors.kinematicsPos(NoArr, Ji, l, NULL);
+        ors.kinematicsPos(NoArr, Ji, ors.bodies(l), NULL);
         ors.bodies(l)->X.rot.getY(vi);
         vi *= -1.;
         zi = ARRAY(vi);
@@ -416,7 +419,7 @@ void DefaultTaskVariable::updateState(const ors::KinematicWorld& ors, double tau
       J.reshape(params.N, J.N/params.N);
       break;
     case zalignTVT:
-      ors.kinematicsVec(zi, Ji, i, &irel.rot.getZ(vi));
+      ors.kinematicsVec(zi, Ji, bi, &irel.rot.getZ(vi));
       if(j==-1) {
         ors::Vector world_z;
         if(params.N==3) world_z.set(params.p); else world_z=Vector_z;
@@ -424,7 +427,7 @@ void DefaultTaskVariable::updateState(const ors::KinematicWorld& ors, double tau
         Jj.resizeAs(Ji);
         Jj.setZero();
       } else {
-        ors.kinematicsVec(zj, Jj, j, &jrel.rot.getZ(vj));
+        ors.kinematicsVec(zj, Jj, bj, &jrel.rot.getZ(vj));
       }
       y.resize(1);
       y(0) = scalarProduct(zi, zj);
@@ -456,7 +459,7 @@ void DefaultTaskVariable::updateState(const ors::KinematicWorld& ors, double tau
 void DefaultTaskVariable::getHessian(const ors::KinematicWorld& ors, arr& H) {
   switch(type) {
     case posTVT:
-      if(j==-1) { ors.hessianPos(H, i, &irel.pos); break; }
+      if(j==-1) { ors.hessianPos(H, ors.bodies(i), &irel.pos); break; }
     default:  NIY;
   }
 }
@@ -543,11 +546,12 @@ void TaskVariable::write(ostream &os, const ors::KinematicWorld& ors) const {
 void DefaultTaskVariable::write(ostream &os, const ors::KinematicWorld& ors) const {
   TaskVariable::write(os);
   return;
+  ors::Body *bi = ors.bodies(i);
   switch(type) {
-    case posTVT:     os <<"  (pos " <<ors.bodies(i)->name <<")"; break;
-      //case relPosTVT:  os <<"  (relPos " <<ors.bodies(i)->name <<'-' <<ors.bodies(j)->name <<")"; break;
-    case zoriTVT:    os <<"  (zori " <<ors.bodies(i)->name <<")"; break;
-    case rotTVT:     os <<"  (rot " <<ors.bodies(i)->name <<")"; break;
+    case posTVT:     os <<"  (pos " <<bi->name <<")"; break;
+      //case relPosTVT:  os <<"  (relPos " <<bi->name <<'-' <<bj->name <<")"; break;
+    case zoriTVT:    os <<"  (zori " <<bi->name <<")"; break;
+    case rotTVT:     os <<"  (rot " <<bi->name <<")"; break;
     case qLinearTVT: os <<"  (qLinear " <<sum(params) <<")"; break;
     case qSquaredTVT:os <<"  (qSquared " <<sum(params) <<")"; break;
     case qSingleTVT: os <<"  (qSingle " <<ors.joints(-i)->from->name <<'-' <<ors.joints(-i)->to->name <<")"; break;
@@ -613,28 +617,25 @@ void ProxyTaskVariable::updateState(const ors::KinematicWorld& ors, double tau) 
   v_old=v;
   y_old=y;
   
-  uint i;
-  ors::Proxy *p;
-  
   y.resize(1);  y.setZero();
   J.resize(1, ors.getJointStateDimension());  J.setZero();
   
   switch(type) {
     case allCTVT:
-      for_list(i,p,ors.proxies)  if(p->d<margin) {
+      for(ors::Proxy *p: ors.proxies)  if(p->d<margin) {
         ors.kinematicsProxyCost(y, J, p, margin, linear, true);
         p->colorCode = 1;
       }
       break;
     case allListedCTVT:
-      for_list(i,p,ors.proxies)  if(p->d<margin) {
+      for(ors::Proxy *p: ors.proxies)  if(p->d<margin) {
         if(shapes.contains(p->a) && shapes.contains(p->b)) {
           ors.kinematicsProxyCost(y, J, p, margin, linear, true);
           p->colorCode = 2;
         }
       }
     case allExceptListedCTVT:
-      for_list(i,p,ors.proxies)  if(p->d<margin) {
+      for(ors::Proxy *p: ors.proxies)  if(p->d<margin) {
         if(!shapes.contains(p->a) && !shapes.contains(p->b)) {
           ors.kinematicsProxyCost(y, J, p, margin, linear, true);
           p->colorCode = 3;
@@ -642,7 +643,7 @@ void ProxyTaskVariable::updateState(const ors::KinematicWorld& ors, double tau) 
       }
       break;
     case bipartiteCTVT:
-      for_list(i,p,ors.proxies)  if(p->d<margin) {
+      for(ors::Proxy *p: ors.proxies)  if(p->d<margin) {
         if((shapes.contains(p->a) && shapes2.contains(p->b)) ||
             (shapes.contains(p->b) && shapes2.contains(p->a))) {
           ors.kinematicsProxyCost(y, J, p, margin, linear, true);
@@ -653,7 +654,7 @@ void ProxyTaskVariable::updateState(const ors::KinematicWorld& ors, double tau) 
       shapes.reshape(shapes.N/2,2);
       // only explicit paris in 2D array shapes
       uint j;
-      for_list(i,p,ors.proxies)  if(p->d<margin) {
+      for(ors::Proxy *p: ors.proxies)  if(p->d<margin) {
         for(j=0; j<shapes.d0; j++) {
           if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
             break;
@@ -668,7 +669,7 @@ void ProxyTaskVariable::updateState(const ors::KinematicWorld& ors, double tau) 
       shapes.reshape(shapes.N/2,2);
       // only explicit paris in 2D array shapes
       uint j;
-      for_list(i,p,ors.proxies)  if(p->d<margin) {
+      for(ors::Proxy *p: ors.proxies)  if(p->d<margin) {
         for(j=0; j<shapes.d0; j++) {
           if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
             break;
@@ -685,7 +686,7 @@ void ProxyTaskVariable::updateState(const ors::KinematicWorld& ors, double tau) 
       y.resize(shapes.d0,1).setZero();
       J.resize(shapes.d0,J.d1).setZero();
       uint j;
-      for_list(i,p,ors.proxies)  if(p->d<margin) {
+      for(ors::Proxy *p: ors.proxies)  if(p->d<margin) {
         for(j=0; j<shapes.d0; j++) {
           if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
             break;
@@ -823,9 +824,8 @@ void bayesianControl(TaskVariableList& CS, arr& dq, const arr& W) {
 
 void TaskVariableTable::init(const ors::KinematicWorld& ors) {
   uint i,j,k,m=0,T=0,t,qdim;
-  TaskVariable *v;
   //count the total task dimension, q-d
-  for_list(i,v,list) {
+  for_list(TaskVariable, v, list) {
     v->updateState(ors);
     if(v->active) {
       m+=y.N;
@@ -846,8 +846,7 @@ void TaskVariableTable::init(const ors::KinematicWorld& ors) {
 //recompute all phi in time slice t using the pose in ors
 void TaskVariableTable::updateTimeSlice(uint t, const ors::KinematicWorld& ors, bool alsoTargets) {
   uint i,j,k,m=0;
-  TaskVariable *v;
-  for_list(i,v,list) {
+  for_list(TaskVariable, v, list) {
     v->updateState(ors);
     if(v->active) {
       for(j=0; j<v->y.N; j++) {

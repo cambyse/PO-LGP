@@ -31,9 +31,9 @@ LIBS += -lcudart -lcublas -lcutil
 endif
 endif
 
-ifeq ($(GTEST),1)
-CXXFLAGS += -DMT_GTEST
-LIBS += -lgtest
+ifeq ($(MLR_TESTS),1)
+CXXFLAGS += -DMT_GTEST -DEXAMPLES_AS_TESTS
+LIBS += -lgtest -lpthread
 endif
 
 ifeq ($(FREEGLUT),1)
@@ -86,7 +86,7 @@ endif
 
 ifeq ($(GRAPHVIZ),1)
 CXXFLAGS += -DMT_GRAPHVIZ
-LIBS += -lgraph -lcgraph -lgvc
+LIBS += -lcgraph -lgvc
 endif
 
 ifeq ($(WX),1)
@@ -107,15 +107,16 @@ LIBS += -lSWIFT++
 QHULL := 1
 endif
 
+ifeq ($(GJK),1)
+DEPEND +=  extern_GJK
+endif
+
 ifeq ($(LEWINER),1)
-CXXFLAGS += -DMT_Lewiner
-CPATH := $(CPATH):$(BASE)/extern/Lewiner
-LIBS += -llewiner
+DEPEND += extern_Lewiner
 endif
 
 ifeq ($(PLY),1)
-CXXFLAGS += -DMT_PLY
-LIBS += -lply
+DEPEND += extern_ply
 endif
 
 ifeq ($(SOLID),1)
@@ -301,21 +302,39 @@ ifeq ($(PHYSX),1)
 CXXFLAGS += -DMT_PHYSX -D_DEBUG -DPX_DISABLE_FLUIDS -DCORELIB -DPX32 -DLINUX
 CPATH := $(CPATH):$(MLR_LIBPATH)/include/physx
 #PhysX/Include:$(MLR_LIBPATH)/PhysX/Include/extensions:$(MLR_LIBPATH)/PhysX/Include/foundation:$(MLR_LIBPATH)/PhysX/Include/deprecated
-#LPATH := $(MLR_LIBPATH)/PhysX/Lib/linux32/:$(LPATH)
+#LPATH := $(MLR_LIBPATH)/PhysX/Lib/linux64/:$(LPATH)
 LIBS += -Wl,--start-group -lpthread -lrt\
--lPhysX3CommonCHECKED \
--lPvdRuntimeCHECKED \
--lSimulationControllerCHECKED \
--lSceneQueryCHECKED \
 -lLowLevelCHECKED \
 -lLowLevelClothCHECKED \
--lPhysX3 \
--lPhysX3VehicleCHECKED \
+-lPhysX3CharacterKinematicCHECKED \
+-lPhysX3CHECKED \
+-lPhysX3CommonCHECKED \
 -lPhysX3CookingCHECKED \
 -lPhysX3ExtensionsCHECKED \
--lPhysX3CharacterKinematicCHECKED \
--lRepX3CHECKED \
--lRepXUpgrader3CHECKED \
+-lPhysX3VehicleCHECKED \
 -lPhysXProfileSDKCHECKED \
--lPxTaskCHECKED -Wl,--end-group
+-lPhysXVisualDebuggerSDKCHECKED \
+-lPvdRuntimeCHECKED \
+-lPxTaskCHECKED \
+-lSceneQueryCHECKED \
+-lSimulationControllerCHECKED 
+endif
+
+ifeq ($(PORTAUDIO),1)
+CXXFLAGS  += -DMT_PORTAUDIO
+LIBS += -lportaudio
+endif
+
+ifeq ($(ROS),1)
+ROSP=pr2_mechanism/pr2_controller_interface\
+pr2_mechanism/pr2_mechanism_model\
+pr2_mechanism/pr2_hardware_interface\
+ros_control/hardware_interface\
+ros_control/controller_interface
+
+CPATHS += /opt/ros/groovy/include $(ROSP:%=/opt/ros/groovy/stacks/%/include)
+
+LPATHS += /opt/ros/groovy/lib $(ROSP:%=/opt/ros/groovy/stacks/%/lib)
+
+LIBS += -rdynamic -lpr2_mechanism_model -lkdl_parser -lurdf -lurdfdom_model -lurdfdom_model_state -lurdfdom_sensor -lurdfdom_world -lcollada_parser -lrosconsole_bridge -lroscpp -lboost_signals-mt -lxmlrpcpp -ltinyxml -lboost_filesystem-mt -lclass_loader -lPocoFoundation -ldl -lrosconsole -lboost_regex-mt -llog4cxx -lroslib -lconsole_bridge -lroscpp_serialization -lrostime -lboost_date_time-mt -lboost_system-mt -lboost_thread-mt -lpthread -lcpp_common -lorocos-kdl
 endif

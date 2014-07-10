@@ -1,5 +1,5 @@
 get_filename_component(NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 include(.sources.cmake)
-add_executable(${NAME} ${SOURCES})
-target_link_libraries(${NAME} Core Core )
-add_test(${NAME}_test ${NAME} --gtest_output=xml:${NAME}-unit.xml)
+add_executable(x_${NAME} ${SOURCES})
+target_link_libraries(x_${NAME} Core Core )
+add_test(${NAME}_test x_${NAME} --gtest_output=xml:${NAME}-unit.xml)

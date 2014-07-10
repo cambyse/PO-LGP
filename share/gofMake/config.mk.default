@@ -6,4 +6,5 @@
 # etc
 #
 
+ODE = 0
 PHYSX = 0

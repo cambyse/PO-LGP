@@ -55,7 +55,7 @@ target_link_libraries(Gui LINK_PRIVATE Core
         ${GTKGL_LIBRARY_DIRS} 
         ${GTKGL_LIBRARIES} 
         ${GTK2_LIBRARIES} 
-        graph cgraph gvc 
+        cgraph gvc 
         ${QHULL_LIBRARIES}
         LINK_PUBLIC
         ${GL_LIBRARIES}

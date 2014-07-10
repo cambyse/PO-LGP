@@ -1,20 +1,21 @@
 /*  ---------------------------------------------------------------------
-    Copyright 2013 Marc Toussaint
-    email: mtoussai@cs.tu-berlin.de
-
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
 
 
 
@@ -83,8 +84,6 @@ OdeInterface::OdeInterface(ors::KinematicWorld &_C):C(_C) {
   if(!ODEinitialized) {  dInitODE();  ODEinitialized=true; }
   clear();
 
-  ors::Body *n;
-  ors::Joint *e;
   dBodyID b;
   dMass odeMass;
   dGeomID geom, trans;
@@ -98,7 +97,6 @@ OdeInterface::OdeInterface(ors::KinematicWorld &_C):C(_C) {
   ors::Vector a;
   //double *mass, *shape, *type, *fixed, *cont, typeD=cappedCylinderST;
   //, *inertiaTensor, *realMass, *centerOfMass;
-  uint i, j;
 
   clear();
 
@@ -107,7 +105,7 @@ OdeInterface::OdeInterface(ors::KinematicWorld &_C):C(_C) {
   joints.resize(C.joints.N); joints=0;
   motors.resize(C.joints.N); motors=0;
 
-  for_list(j, n, C.bodies) {
+  for_list(ors::Body,  n,  C.bodies) {
     b=dBodyCreate(world);
 
     bodies(n->index)=b;
@@ -121,8 +119,7 @@ OdeInterface::OdeInterface(ors::KinematicWorld &_C):C(_C) {
     CP3(b->avel, n->X.angvel.p());
 
     // need to fix: "mass" is not a mass but a density (in dMassSetBox)
-    ors::Shape *s;
-    for_list(i, s, n->shapes) {
+    for_list(ors::Shape,  s,  n->shapes) {
       if(!(s->rel.rot.isZero) || !(s->rel.pos.isZero)) { //we need a relative transformation
         trans = dCreateGeomTransform(space);
         myspace = NULL; //the object is added to no space, but (below) associated with the transform
@@ -233,8 +230,8 @@ OdeInterface::OdeInterface(ors::KinematicWorld &_C):C(_C) {
     }
   }
 #ifndef MT_ode_nojoints
-  for_list(j, n, C.bodies) {
-    for_list(i, e, n->inLinks) {
+  for(ors::Body *n: C.bodies) {
+    for_list(ors::Joint,  e,  n->inLinks) {
       switch(e->type) {
         case ors::JT_fixed:
           jointF=(dxJointFixed*)dJointCreateFixed(world, 0);
@@ -543,12 +540,9 @@ void OdeInterface::contactForces() {
 //
 
 void OdeInterface::exportStateToOde() {
-  ors::Body *n;
-  ors::Joint *e;
-  uint j, i;
   dBodyID b;
   
-  for_list(i, n, C.bodies) {
+  for_list(ors::Body,  n,  C.bodies) {
     CHECK(n->X.rot.isNormalized(), "quaternion is not normalized!");
     b = bodies(n->index);
     CP3(b->posr.pos, n->X.pos.p());                // dxBody changed in ode-0.6 ! 14. Jun 06 (hh)
@@ -557,7 +551,7 @@ void OdeInterface::exportStateToOde() {
     CP3(b->avel, n->X.angvel.p());
     //n->copyFrameToOde();
 #ifndef MT_ode_nojoints
-    for_list(j, e, n->inLinks) if(e->type!=ors::JT_glue) {
+    for_list(ors::Joint,  e,  n->inLinks) if(e->type!=ors::JT_glue) {
       dxJointHinge* hj=(dxJointHinge*)joints(e->index);
       dxJointUniversal* uj=(dxJointUniversal*)joints(e->index);
       dxJointSlider* sj=(dxJointSlider*)joints(e->index);
@@ -599,10 +593,8 @@ void OdeInterface::pushPoseForShape(ors::Shape *s){
 }
 
 void OdeInterface::exportForcesToOde() {
-  ors::Body *n;
-  uint j;
   dBodyID b;
-  for_list(j, n, C.bodies) {
+  for_list(ors::Body,  n,  C.bodies) {
     b=bodies(n->index);
     CP3(b->facc, n->force.p());
     CP3(b->tacc, n->torque.p());
@@ -610,10 +602,8 @@ void OdeInterface::exportForcesToOde() {
 }
 
 void OdeInterface::importStateFromOde() {
-  ors::Body *n;
-  uint j;
   dBodyID b;
-  for_list(j, n, C.bodies) {
+  for_list(ors::Body,  n,  C.bodies) {
     //n->getFrameFromOde();
     b=bodies(n->index);
     CP3(n->X.pos.p(), b->posr.pos);
@@ -644,10 +634,9 @@ void OdeInterface::addJointForce(ors::Joint *e, double f1, double f2) {
 }
 
 void OdeInterface::addJointForce(doubleA& x) {
-  ors::Joint *e;
-  uint i=0, n=0;
+  uint n=0;
   
-  for_list(i, e, C.joints) { // loop over edges, 16. Mar 06 (hh)
+  for_list(ors::Joint,  e,  C.joints) { // loop over edges, 16. Mar 06 (hh)
     switch(e->type) { //  3. Apr 06 (hh)
       case ors::JT_hingeX:
         dJointAddHingeTorque(joints(e->index), -x(n));
@@ -670,13 +659,12 @@ void OdeInterface::addJointForce(doubleA& x) {
 }
 
 void OdeInterface::setMotorVel(const arr& qdot, double maxF) {
-  ors::Joint *e;
-  uint i=0, n=0;
+  uint n=0;
   
-  for_list(i, e, C.joints) {
+  for_list(ors::Joint,  e,  C.joints) {
     switch(e->type) {
       case ors::JT_hingeX:
-        dJointSetAMotorParam(motors(e->index), dParamVel, -qdot(i));
+        dJointSetAMotorParam(motors(e->index), dParamVel, -qdot(e->qIndex));
         dJointSetAMotorParam(motors(e->index), dParamFMax, maxF);
         n++;
         break;
@@ -696,10 +684,9 @@ void OdeInterface::setMotorVel(const arr& qdot, double maxF) {
 
 uint OdeInterface::getJointMotorDimension() {
   NIY;
-  ors::Body *n; ors::Joint *e;
-  uint i=0, j, k;
-  for_list(k, n, C.bodies) {
-    for_list(j, e, n->inLinks) { // if(!e->fixed && e->motor){ // 16. Mar 06 (hh)
+  uint i=0;
+  for_list(ors::Body,  n,  C.bodies) {
+    for_list(ors::Joint,  e,  n->inLinks) { // if(!e->fixed && e->motor){ // 16. Mar 06 (hh)
       if(e->type==ors::JT_universal) i+=2;
       else i++;
     }
@@ -720,11 +707,9 @@ void OdeInterface::setJointMotorVel(ors::Joint *e, double v0, double maxF) {
 void OdeInterface::setJointMotorPos(doubleA& x, double maxF, double tau) {
   //CHECK(x.N==E, "given joint state has wrong dimension, " <<x.N <<"=" <<E);
   NIY;
-  ors::Body *n;
-  ors::Joint *e;
-  uint i=0, j, k;
-  for_list(k, n, C.bodies) {
-    for_list(j, e, n->inLinks) { // if(e->motor)
+  uint i=0;
+  for_list(ors::Body,  n,  C.bodies) {
+    for_list(ors::Joint,  e,  n->inLinks) { // if(e->motor)
       setJointMotorPos(e, x(i), maxF, tau);
       i++;
       break;
@@ -736,11 +721,9 @@ void OdeInterface::setJointMotorPos(doubleA& x, double maxF, double tau) {
 void OdeInterface::setJointMotorVel(doubleA& x, double maxF) {
   //CHECK(x.N==E, "given joint state has wrong dimension, " <<x.N <<"=" <<E);
   NIY;
-  ors::Body *n;
-  ors::Joint *e;
-  uint i=0, j, k;
-  for_list(k, n, C.bodies) {
-    for_list(j, e, n->inLinks) { // if(e->motor){
+  uint i=0;
+  for_list(ors::Body,  n,  C.bodies) {
+    for_list(ors::Joint,  e,  n->inLinks) { // if(e->motor){
       setJointMotorVel(e, x(i), maxF);
       i++;
       break;
@@ -751,10 +734,7 @@ void OdeInterface::setJointMotorVel(doubleA& x, double maxF) {
 
 void OdeInterface::unsetJointMotors() {
   NIY;
-  ors::Body *n;
-  ors::Joint *e;
-  uint i, j;
-  for_list(j, n, C.bodies) for_list(i, e, n->inLinks) { // if(e->motor){
+  for_list(ors::Body,  n,  C.bodies) for(ors::Joint *e: n->inLinks) { // if(e->motor){
     unsetJointMotor(e);
     break;
   }
@@ -775,11 +755,9 @@ void OdeInterface::getJointMotorForce(ors::Joint *e, double& f) {
 
 void OdeInterface::getJointMotorForce(doubleA& f) {
   NIY;
-  ors::Body *n;
-  ors::Joint *e;
-  uint i=0, j, k;
-  for_list(k, n, C.bodies) {
-    for_list(j, e, n->inLinks) { // if(!e->fixed && e->motor){
+  uint i=0;
+  for_list(ors::Body,  n,  C.bodies) {
+    for_list(ors::Joint,  e,  n->inLinks) { // if(!e->fixed && e->motor){
       getJointMotorForce(e, f(i));
       i++;
       break;

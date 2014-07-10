@@ -2,7 +2,7 @@
 #include <Motion/taskMap_default.h>
 #include <Motion/taskMap_constrained.h>
 #include <Motion/feedbackControl.h>
-#include <Optim/constrained.h>
+#include <Optim/optimization.h>
 #include <Perception/videoEncoder.h>
 #include <Gui/opengl.h>
 
@@ -14,34 +14,30 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
   MotionProblem P(world, false);
   P.loadTransitionParameters();
   x = P.getInitialization();
-
-  //-- setup the motion problem
-  TaskCost *pos =
-      P.addTaskMap("position",
-                   new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
-  P.setInterpolatingCosts(pos, MotionProblem::finalOnly,
-                          ARRAY(0.,0.,0.), 1e3);
-//                          ARRAY(P.world.getShapeByName("target")->X.pos), 1e3);
-  P.setInterpolatingVelCosts(pos, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e1);
-
-  //c = P.addTaskMap("collisionConstraints", new CollisionConstraint());
-  P.addTaskMap("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1,.7)));
+  P.makeContactsAttractive=true;
   stickyWeight=1.;
 
+  //-- setup the motion problem
+  TaskCost *pos = P.addTask("position",
+                            new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
+  P.setInterpolatingCosts(pos, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
+
+  TaskCost *vel = P.addTask("position_vel", new DefaultTaskMap(posTMT, world, "endeff", NoVector));
+  vel->map.order=1;
+  P.setInterpolatingCosts(vel, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
+
+  TaskCost *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1,.7)));
+  P.setInterpolatingCosts(cons, MotionProblem::constant, ARRAY(0.), 1.);
+
+  //-- convert
   MotionProblemFunction MF(P);
   Convert ConstrainedP(MF);
-  UnconstrainedProblem UnConstrainedP(ConstrainedP);
-  UnConstrainedP.mu = 10.;
 
-  for(uint k=0;k<5;k++){
-    optNewton(x, UnConstrainedP, OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1e-3, stopTolerance=1e-4, maxStep=.5));
-//    optNewton(x, UCP, OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
-    P.costReport();
-//    displayTrajectory(x, 1, G, gl,"planned trajectory");
-    UnConstrainedP.augmentedLagrangian_LambdaUpdate(x, .9);
-    P.dualMatrix = UnConstrainedP.lambda;
-    UnConstrainedP.mu *= 2.;
-  }
+  //-- optimize
+  MT::timerStart();
+  optConstrained(x, dual, Convert(MF));
+  cout <<"** optimization time = " <<MT::timerRead() <<endl;
+  P.dualMatrix = dual;
   P.costReport();
 
   if(&y){
@@ -51,7 +47,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
       pos->map.phi(y[t](), NoArr, world);
     }
   }
-  if(&dual) dual = UnConstrainedP.lambda;
+  if(&dual) dual.reshape(dual.N);
 }
 
 void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWorld& world, int num){
@@ -68,8 +64,8 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
 
   double sin_jitter = MT::getParameter<double>("sin_jitter", 0.);
 
-  FeedbackMotionControl MC(world);
-  MC.nullSpacePD.active=false;
+  FeedbackMotionControl MC(world, false);
+  MC.qitselfPD.active=true;
 
   //position PD task
   PDtask *pd_y=
@@ -79,7 +75,7 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
 
   //joint space PD task
   PDtask *pd_x=
-      MC.addPDTask("pose", .1, .8,
+      MC.addPDTask("pose", 1., .8,
                     new DefaultTaskMap(qItselfTMT, world));
   pd_x->prec = .1;
 
@@ -104,7 +100,7 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
       pd_x->y_ref = x[t];
 #ifdef USE_DUAL
       pd_c->desiredForce=dual(t);
- #endif
+#endif
     }
 
 #ifdef USE_DUAL
@@ -162,8 +158,7 @@ int main(int argc,char** argv){
 
 //  arr x2 = reverseTrajectory(x);
 //  x.append(x2);
-//  for(uint i=0;i<2;i++)
-//    displayTrajectory(x, 1, world, "planned trajectory");
+  for(uint i=0;i<1;i++) displayTrajectory(x, 1, world, "planned trajectory");
 //  return 0;
 
 //  world.getBodyByName("table")->X.pos.z -= .1;
@@ -171,13 +166,13 @@ int main(int argc,char** argv){
   world.setJointState(x[0]);
   world.gl().watch();
 
-  vid = new VideoEncoder_libav_simple("data.avi", 200./4.);
+//  vid = new VideoEncoder_libav_simple("data.avi", 200./4.);
   for(uint i=0;i<10;i++){
     world.getBodyByName("table")->X.pos.z = .6 + .1*rnd.gauss();
     testExecution(x, y, dual, world, i);
   }
-  vid -> close();
-  delete vid;
+//  vid -> close();
+//  delete vid;
 
   return 0;
 }

@@ -90,8 +90,7 @@ G4Poller::G4Poller():Module("G4Tracker"){
 }
 
 void G4Poller::open(){
-  // TODO put this in the MT.cfg file
-  const char *src_cfg_file = "../../../configurations/g4_source_configuration.g4c";
+  String src_cfg_file = MT::getParameter<String>("g4_srcCfg");
   uint numHubs = MT::getParameter<int>("g4_numHubs");
   G4_CMD_STRUCT cs;
   int res;

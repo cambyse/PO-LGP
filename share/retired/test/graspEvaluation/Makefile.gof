@@ -6,5 +6,5 @@ OBJS = main.o graspEvaluation.o
 
 DEPEND = Gui Core Ors MT
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk
 

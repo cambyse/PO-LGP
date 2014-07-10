@@ -14,7 +14,7 @@ void compareModules(){
   for(t=0;t<1000;t++){
     if(!(t%1)){ q = q0;  rndGauss(q,.1,true); }
     G.setJointState(q);
-    G.computeProxies();
+    G.stepSwift();
 //    G.reportProxies();
 //    G.watch(false);
 //    G.watch(true);

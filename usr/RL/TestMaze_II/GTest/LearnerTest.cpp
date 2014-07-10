@@ -1,30 +1,32 @@
 #include <gtest/gtest.h>
 
+#include "../Config.h"
 #include "../util/ColorOutput.h"
-
 #include "../Maze/Maze.h"
-#include "../KMarkovCRF.h"
-#include "../UTree.h"
 #include "../PredictiveEnvironment.h"
-#include "../LookAheadSearch.h"
-#include "../LinearQ.h"
+#include "../Planning/LookAheadSearch.h"
+#include "../Learner/KMarkovCRF.h"
+#include "../Learner/UTree.h"
+#include "../Learner/LinearQ.h"
+#include "../Learner/TemporallyExtendedModel.h"
+#include "../Learner/TemporallyExtendedLinearQ.h"
+#include "../Learner/ConjunctiveAdjacency.h"
+#include "../Representation/DoublyLinkedInstance.h"
 
 #define DEBUG_LEVEL 1
-#include "../debug.h"
+#include "../util/debug.h"
 
 using std::vector;
 using std::shared_ptr;
+using std::make_shared;
+using std::cout;
+using std::endl;
 
 using ColorOutput::bold;
 using ColorOutput::reset_all;
 
 TEST(LearnerTest, KMarkovCRF) {
-
-    // use standard typedefs
-    typedef AbstractAction::ptr_t      action_ptr_t;
-    typedef AbstractObservation::ptr_t observation_ptr_t;
-    typedef AbstractReward::ptr_t      reward_ptr_t;
-    typedef Instance                   instance_t;
+    USE_CONFIG_TYPEDEFS;
 
     // initialize environment and learner
     Maze maze;
@@ -38,7 +40,7 @@ TEST(LearnerTest, KMarkovCRF) {
     observation_ptr_t observation_space;
     reward_ptr_t reward_space;
     maze.get_spaces(action_space,observation_space,reward_space);
-    crf.set_spaces(maze);
+    crf.adopt_spaces(maze);
     crf.set_features(maze);
 
     // get all actions for random selection
@@ -75,12 +77,13 @@ TEST(LearnerTest, KMarkovCRF) {
     //-----------------------------//
 
     // initialize planner
+    // TODO: This should be done using LookAheadPolicy as in PlannerTest.cpp
     LookAheadSearch planner(0.5);
-    planner.set_spaces(action_space, observation_space, reward_space);
+    planner.adopt_spaces(maze);
 
     // start at current state
-    const instance_t * maze_instance = maze.get_current_instance();
-    instance_t * current_instance = instance_t::create(
+    const_instance_ptr_t maze_instance = maze.get_current_instance();
+    instance_ptr_t current_instance = DoublyLinkedInstance::create(
         maze_instance->action,
         maze_instance->observation,
         maze_instance->reward
@@ -105,7 +108,7 @@ TEST(LearnerTest, KMarkovCRF) {
         observation_ptr_t observation_to;
         reward_ptr_t reward;
         maze.perform_transition(action,observation_to,reward);
-        current_instance = current_instance->append_instance(action, observation_to, reward);
+        current_instance = current_instance->append(action, observation_to, reward);
         if(DEBUG_LEVEL>0) {
             maze.print_transition(action,observation_to,reward);
         }
@@ -123,12 +126,7 @@ TEST(LearnerTest, KMarkovCRF) {
 }
 
 TEST(LearnerTest, UTree) {
-
-    // use standard typedefs
-    typedef AbstractAction::ptr_t      action_ptr_t;
-    typedef AbstractObservation::ptr_t observation_ptr_t;
-    typedef AbstractReward::ptr_t      reward_ptr_t;
-    typedef Instance                   instance_t;
+    USE_CONFIG_TYPEDEFS;
 
     // initialize environment and learner
     Maze maze;
@@ -140,7 +138,7 @@ TEST(LearnerTest, UTree) {
     observation_ptr_t observation_space;
     reward_ptr_t reward_space;
     maze.get_spaces(action_space,observation_space,reward_space);
-    utree.set_spaces(maze);
+    utree.adopt_spaces(maze);
     utree.set_features(maze);
 
     // get all actions for random selection
@@ -173,8 +171,8 @@ TEST(LearnerTest, UTree) {
         }
 
         // do some optimal transition
-        const instance_t * maze_instance = maze.get_current_instance();
-        instance_t * current_instance = instance_t::create(
+        const_instance_ptr_t maze_instance = maze.get_current_instance();
+        instance_ptr_t current_instance = DoublyLinkedInstance::create(
             maze_instance->action,
             maze_instance->observation,
             maze_instance->reward
@@ -186,7 +184,7 @@ TEST(LearnerTest, UTree) {
             observation_ptr_t observation_to;
             reward_ptr_t reward;
             maze.perform_transition(action, observation_to, reward);
-            current_instance = current_instance->append_instance(action, observation_to, reward);
+            current_instance = current_instance->append(action, observation_to, reward);
             reward_sum += reward->get_value();
             if(DEBUG_LEVEL>0) {
                 maze.print_transition(action, observation_to, reward);
@@ -213,11 +211,11 @@ TEST(LearnerTest, UTree) {
 
         // initialize planner
         LookAheadSearch planner(0.5);
-        planner.set_spaces(action_space, observation_space, reward_space);
+        planner.adopt_spaces(maze);
 
         // start at current state
-        const instance_t * maze_instance = maze.get_current_instance();
-        instance_t * current_instance = instance_t::create(
+        const_instance_ptr_t maze_instance = maze.get_current_instance();
+        instance_ptr_t current_instance = DoublyLinkedInstance::create(
             maze_instance->action,
             maze_instance->observation,
             maze_instance->reward
@@ -242,7 +240,7 @@ TEST(LearnerTest, UTree) {
             observation_ptr_t observation_to;
             reward_ptr_t reward;
             maze.perform_transition(action,observation_to,reward);
-            current_instance = current_instance->append_instance(action, observation_to, reward);
+            current_instance = current_instance->append(action, observation_to, reward);
             if(DEBUG_LEVEL>0) {
                 maze.print_transition(action,observation_to,reward);
             }
@@ -261,12 +259,7 @@ TEST(LearnerTest, UTree) {
 }
 
 TEST(LearnerTest, LinearQ) {
-
-    // use standard typedefs
-    typedef AbstractAction::ptr_t      action_ptr_t;
-    typedef AbstractObservation::ptr_t observation_ptr_t;
-    typedef AbstractReward::ptr_t      reward_ptr_t;
-    typedef Instance                   instance_t;
+    USE_CONFIG_TYPEDEFS;
 
     // initialize environment and learner
     Maze maze;
@@ -280,7 +273,7 @@ TEST(LearnerTest, LinearQ) {
     observation_ptr_t observation_space;
     reward_ptr_t reward_space;
     maze.get_spaces(action_space,observation_space,reward_space);
-    linQ.set_spaces(maze);
+    linQ.adopt_spaces(maze);
     linQ.set_features(maze);
 
     // get all actions for random selection
@@ -290,7 +283,7 @@ TEST(LearnerTest, LinearQ) {
     }
 
     // do some random actions to collect data
-    repeat(500) {
+    repeat(1000) {
         action_ptr_t action = util::random_select(action_vector);
         observation_ptr_t observation_to;
         reward_ptr_t reward;
@@ -329,8 +322,8 @@ TEST(LearnerTest, LinearQ) {
     }
 
     // do some optimal transition
-    const instance_t * maze_instance = maze.get_current_instance();
-    instance_t * current_instance = instance_t::create(
+    const_instance_ptr_t maze_instance = maze.get_current_instance();
+    instance_ptr_t current_instance = DoublyLinkedInstance::create(
         maze_instance->action,
         maze_instance->observation,
         maze_instance->reward
@@ -342,7 +335,7 @@ TEST(LearnerTest, LinearQ) {
         observation_ptr_t observation_to;
         reward_ptr_t reward;
         maze.perform_transition(action, observation_to, reward);
-        current_instance = current_instance->append_instance(action, observation_to, reward);
+        current_instance = current_instance->append(action, observation_to, reward);
         reward_sum += reward->get_value();
         if(DEBUG_LEVEL>0) {
             maze.print_transition(action, observation_to, reward);
@@ -354,4 +347,180 @@ TEST(LearnerTest, LinearQ) {
     } else {
         DEBUG_OUT(1,"Performance (mean reward) of value based Linear-Q: " << reward_sum/steps);
     }
+}
+
+TEST(LearnerTest, TemporallyExtendedModel) {
+    USE_CONFIG_TYPEDEFS;
+
+    // initialize environment and learner
+    Maze maze;
+    shared_ptr<TemporallyExtendedModel> TEM;
+    shared_ptr<ConjunctiveAdjacency> N_plus;
+
+    // use the minimal maze
+    maze.set_maze("Minimal");
+
+    // get spaces
+    action_ptr_t action_space;
+    observation_ptr_t observation_space;
+    reward_ptr_t reward_space;
+    maze.get_spaces(action_space,observation_space,reward_space);
+
+    // initialize N+, set horizon extension
+    N_plus = make_shared<ConjunctiveAdjacency>();
+    N_plus->adopt_spaces(maze);
+    N_plus->set_horizon_extension(2);
+    N_plus->set_max_horizon(2);
+    N_plus->set_combine_features(false);
+    N_plus->set_t_zero_features(ConjunctiveAdjacency::ACTION_OBSERVATION_REWARD);
+
+    // initialize TEM using N+
+    TEM = make_shared<TemporallyExtendedModel>(N_plus);
+    TEM->adopt_spaces(maze);
+    TEM->set_l1_factor(0.001);
+
+    // get all actions for random selection
+    vector<action_ptr_t> action_vector;
+    for(action_ptr_t a : action_space) {
+        action_vector.push_back(a);
+    }
+
+    // do some random actions to collect data
+    repeat(1000) {
+        action_ptr_t action = util::random_select(action_vector);
+        observation_ptr_t observation_to;
+        reward_ptr_t reward;
+        maze.perform_transition(action,observation_to,reward);
+        TEM->add_action_observation_reward_tripel(action,observation_to,reward,false);
+    }
+
+    //EXPECT_TRUE(TEM->check_derivatives(10,1));
+
+    // try to learn something
+    repeat(2) {
+        TEM->grow_feature_set();
+        TEM->optimize_weights_LBFGS();
+        TEM->shrink_feature_set();
+        TEM->print_features();
+    }
+
+    TEM->set_l1_factor(0);
+    TEM->optimize_weights_LBFGS();
+    TEM->print_features();
+}
+
+TEST(LearnerTest, TemporallyExtendedLinearQ) {
+
+    USE_CONFIG_TYPEDEFS;
+    typedef TemporallyExtendedLinearQ TELQ;
+
+    // initialize environment and learner
+    Maze maze;
+    shared_ptr<TELQ> telq;
+    shared_ptr<ConjunctiveAdjacency> N_plus;
+
+    // use the minimal maze
+    maze.set_maze("Minimal");
+
+    // get spaces
+    action_ptr_t action_space;
+    observation_ptr_t observation_space;
+    reward_ptr_t reward_space;
+    maze.get_spaces(action_space,observation_space,reward_space);
+
+    // initialize N+, set horizon extension
+    N_plus = make_shared<ConjunctiveAdjacency>();
+    N_plus->adopt_spaces(maze);
+    N_plus->set_horizon_extension(2);
+    N_plus->set_min_horizon(-2);
+    N_plus->set_max_horizon(0);
+    N_plus->set_combine_features(false);
+    N_plus->set_t_zero_features(ConjunctiveAdjacency::ACTION);
+
+    // initialize TELQ using N+
+    telq = make_shared<TELQ>(N_plus, 0.1);
+    telq->adopt_spaces(maze);
+
+    // get all actions for random selection
+    vector<action_ptr_t> action_vector;
+    for(action_ptr_t a : action_space) {
+        action_vector.push_back(a);
+    }
+
+    // do some random actions to collect data
+    {
+        double rew_sum = 0;
+        for(int step=0; step<10000; ++step) {
+            // start new episode every 100 steps
+            bool new_episode = step%100==0;
+            new_episode = false;
+            // get action
+            action_ptr_t action = util::random_select(action_vector);
+            observation_ptr_t observation_to;
+            reward_ptr_t reward;
+            // --------- optimal actions --------//
+            // const_instance_ptr_t ins = maze.get_current_instance();
+            // action = telq->optimal_2x2_policy(ins);
+            // ----------------------------------//
+            // perform transition
+            maze.perform_transition(action,observation_to,reward);
+            telq->add_action_observation_reward_tripel(action,observation_to,reward,new_episode);
+            //cout << maze.get_current_instance() << endl;
+            rew_sum += reward->get_value();
+        }
+        cout << "Sum of rewards: " << rew_sum << endl;
+    }
+
+    // construct features explicitly
+    {
+        TELQ::f_set_t feature_set;
+        for(observation_ptr_t obs_2 : observation_space) {
+            for(observation_ptr_t obs_1 : observation_space) {
+                for(action_ptr_t act : action_space) {
+                    feature_set.insert(f_ptr_t(new AndFeature(ObservationFeature::create(obs_2,-2),
+                                                              ObservationFeature::create(obs_1,-1),
+                                                              ActionFeature::create(act,0))));
+                }
+            }
+        }
+        telq->set_feature_set(feature_set);
+    }
+
+    // use optimal policy
+    telq->set_optimal_2x2_policy();
+
+
+    // try to learn something
+    telq->set_l1_factor(1e-5);
+    // do {
+    //     telq->optimize_weights_Bellman_residual_error();
+    //     telq->print_features();
+    // } while(telq->update_policy());
+    telq->run_policy_iteration();
+    telq->shrink_feature_set();
+    telq->print_features();
+    telq->set_l1_factor(0);
+    telq->optimize_weights_Bellman_residual_error();
+
+    // make some moves
+    {
+        instance_ptr_t ins = maze.get_current_instance();
+        double rew_sum = 0;
+        int counter = 0;
+        repeat(50) {
+            action_ptr_t act = telq->get_action(ins);
+            maze.perform_transition(act);
+            ins = maze.get_current_instance();
+            DEBUG_OUT(0,ins << " --> " << act);
+            rew_sum += ins->reward->get_value();
+            ++counter;
+        }
+        DEBUG_OUT(1,"mean reward = " << rew_sum/counter);
+    }
+
+    //EXPECT_TRUE(telq->check_derivatives(10,1));
+
+    // telq->set_l1_factor(0);
+    // telq->optimize_weights_LBFGS();
+    // telq->print_features();
 }

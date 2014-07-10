@@ -1,4 +1,5 @@
 #include <Core/thread.h>
+#include <Core/util.h>
 #include <ueye.h>
 #include "ueyecamera.h"
 
@@ -24,8 +25,6 @@ TStream tout(cout);
 
 struct sUEyeInterface {
   public:
-    UEyePoller *module;
-
     HIDS camID;
     SENSORINFO camInfo;
     String name;
@@ -50,14 +49,14 @@ struct sUEyeInterface {
 
     bool setup_flag, init_flag, open_flag, err_flag; // TODO err_flag?
 
-    sUEyeInterface(UEyePoller *m);
+    sUEyeInterface(int cameraID);
     ~sUEyeInterface();
 
     // NB very important, never call these if process is underway
     void camSetup();
     void camInit();
     void camOpen();
-    void camGrab();
+    bool camGrab(byteA& image, double& timestamp, unsigned int timeout=1<<31);
     void camClose();
     void camExit();
 
@@ -86,7 +85,7 @@ struct sUEyeInterface {
     void InitImageQueue_wr();
     void ExitImageQueue_wr();
 
-    void WaitForNextImage_wr();
+    bool WaitForNextImage_wr(unsigned int timeout=1<<31);
     void CaptureStatus_wr(UINT nCommand);
     void GetImageInfo_wr();
     void UnlockSeqBuf_wr(INT buffID, char *buff);
@@ -102,9 +101,9 @@ struct sUEyeInterface {
     void handleCaptStatus();
 };
 
-sUEyeInterface::sUEyeInterface(UEyePoller *m): module(m), img(NULL), setup_flag(false), init_flag(false), open_flag(false), err_flag(false) {
-  camID = MT::getParameter<int>(STRING(m->name << "_camID"));
-  tout.reg(this) << "UEyeCamera(" << camID << "): ";
+sUEyeInterface::sUEyeInterface(int cameraID): camID(cameraID), img(NULL), setup_flag(false), init_flag(false), open_flag(false), err_flag(false) {
+	//camID = MT::getParameter<int>(STRING(m->name << "_camID"));
+	tout.reg(this) << "UEyeCamera(" << camID << "): ";
 }
 
 sUEyeInterface::~sUEyeInterface() {
@@ -122,17 +121,16 @@ void sUEyeInterface::camSetup() {
   int ret;
   switch((ret = is_Configuration(IS_CONFIG_OPEN_MP_CMD_SET_ENABLE, &enable, 4))) {
       case IS_SUCCESS:
-      std::clog << "Using OpenMP for uEYE color conversion" << endl;
+      tout(this) << "Using OpenMP for uEYE color conversion" << endl;
       break;
     case IS_NOT_SUPPORTED:
-      std::clog << "OpenMP for uEYE color conversion not supported" << endl;
+      tout(this) << "OpenMP for uEYE color conversion not supported" << endl;
       break;
   default:
-      std::clog << "Error configuring OpenMP: " << ret << endl;
+      tout(this) << "Error configuring OpenMP: " << ret << endl;
   }
 
   tout(this) << "camSetup()" << endl;
-  module->ueye_rgb.set()().resize(c_ueye_height, c_ueye_width, c_ueye_bypp);
   setup_flag = true;
   frame_count = 0;
 }
@@ -239,7 +237,7 @@ void sUEyeInterface::camOpen() {
   }
 
   tout(this) << "camOpen()" << endl;
-  CaptureVideo_wr(IS_WAIT);
+  CaptureVideo_wr(IS_DONT_WAIT);
   if(err_flag) return;
 
   InitImageQueue_wr();
@@ -248,29 +246,35 @@ void sUEyeInterface::camOpen() {
   open_flag = true;
 }
 
-void sUEyeInterface::camGrab() {
+bool sUEyeInterface::camGrab(byteA& image, double& timestamp, unsigned int timeout) {
   if(!setup_flag || !init_flag || !open_flag) {
     err_flag = true;
-    return;
+    tout(this) << "bad prep before grab: setup="
+    		<< setup_flag << ", init=" << init_flag << ", open=" << open_flag << endl;
+    return false;
   }
 
   img = NULL;
   imgBuffNum = 0;
-  WaitForNextImage_wr();
-  updateTimestamp();
-  int r = module->ueye_rgb.writeAccess();
-  memcpy(module->ueye_rgb().p, img, c_ueye_size);
-  module->ueye_rgb.tstamp() = tstamp;
-  module->ueye_rgb.deAccess();
-  
-  UnlockSeqBuf_wr(imgBuffNum, img);
+  if(WaitForNextImage_wr(timeout)) {
+	  updateTimestamp();
+	  // make sure receiver is large enough
+	  image.resize(c_ueye_height, c_ueye_width, c_ueye_bypp);
+	  memcpy(image.p, img, c_ueye_size);
+	  timestamp = tstamp;
 
-  // TODO do we even want this?
-  frame_count++;
-  if(frame_count % 1000 == 0) {
-      GetFramesPerSecond_wr();
-      tout(this) << "current fps: " << live_fps << endl;
-      //module->ueye_fps.set() = live_fps;
+	  UnlockSeqBuf_wr(imgBuffNum, img);
+
+	  // TODO do we even want this?
+	  frame_count++;
+	  if(frame_count % 1000 == 0) {
+		  GetFramesPerSecond_wr();
+		  tout(this) << "current fps: " << live_fps << endl;
+		  //module->ueye_fps.set() = live_fps;
+	  }
+	  return true;
+  } else {
+	  return false;
   }
 }
 
@@ -468,19 +472,26 @@ void sUEyeInterface::ExitImageQueue_wr() {
   handleCamStatus();
 }
 
-void sUEyeInterface::WaitForNextImage_wr() {
-  camStatus = is_WaitForNextImage(camID, 1<<31, &img, &imgBuffNum);
-  switch(camStatus) {
-    case IS_CAPTURE_STATUS:
-      CaptureStatus_wr(IS_CAPTURE_STATUS_INFO_CMD_GET);
-      handleCaptStatus();
-      CaptureStatus_wr(IS_CAPTURE_STATUS_INFO_CMD_RESET);
-      WaitForNextImage_wr();
-    case IS_SUCCESS:
-      return;
-  }
+bool sUEyeInterface::WaitForNextImage_wr(unsigned int timeout) {
+	unsigned int attempt = 0;
+	while(attempt++ < 3) {
+	  camStatus = is_WaitForNextImage(camID, timeout, &img, &imgBuffNum);
+	  switch(camStatus) {
+		case IS_CAPTURE_STATUS:
+		  CaptureStatus_wr(IS_CAPTURE_STATUS_INFO_CMD_GET);
+		  handleCaptStatus();
+		  CaptureStatus_wr(IS_CAPTURE_STATUS_INFO_CMD_RESET);
+		  break;
+		case IS_TIMED_OUT:
+			tout(this) << "timeout waiting for image" << endl;
+			return false;
+		case IS_SUCCESS:
+		  return true;
+	  }
+	}
   tout(this) << "WaitForNextImage() failed" << endl;
   handleCamStatus();
+  return false;
 }
 
 void sUEyeInterface::CaptureStatus_wr(UINT nCommand) {
@@ -601,7 +612,6 @@ void sUEyeInterface::handleCamStatus() {
       tout(this) << "error - unhandled camStatus: " << camStatus << endl;
   }
   err_flag = true;
-  HALT("FIND THAT ERROR!");
 }
 
 #define UEYE_ERR_IF(X) if(captInfo.adwCapStatusCnt_Detail[X]) \
@@ -638,7 +648,7 @@ UEyePoller::~UEyePoller() {
 void UEyePoller::open() {
   tout(this) << "opening" << endl;
 
-  s = new sUEyeInterface(this);
+  s = new sUEyeInterface(MT::getParameter<int>(STRING(name << "_camID")));
 
   s->camSetup();
   s->camInit();
@@ -648,7 +658,8 @@ void UEyePoller::open() {
 }
 
 void UEyePoller::step() {
-  s->camGrab();
+	Access_typed<byteA>::WriteToken token(&ueye_rgb);
+	s->camGrab(ueye_rgb(), ueye_rgb.tstamp());
 }
 
 void UEyePoller::close() {
@@ -659,3 +670,34 @@ void UEyePoller::close() {
   tout(this) << "closed successfully" << endl;
 }
 
+namespace MLR {
+	Mutex start_lock;
+
+	UEyeInterface::UEyeInterface(int cameraID) : s(new ::sUEyeInterface(cameraID)), streaming(false) {
+		s->camSetup();
+		s->camInit();
+		if(s->err_flag) {
+			throw UEyeException("Could not initialize camera");
+		}
+	}
+	UEyeInterface::~UEyeInterface() {
+		cout << "Closing camera " << s->camID << endl;
+		s->camClose();
+		s->camExit();
+		cout << "Closed camera " << s->camID << endl;
+		delete s;
+	}
+	void UEyeInterface::startStreaming() {
+		if(!streaming) {
+			{
+				Lock l(start_lock);
+				s->camOpen();
+			}
+			streaming = true;
+		}
+	}
+	bool UEyeInterface::grab(byteA& image, double& timestamp, unsigned int timeout) {
+		startStreaming();
+		return s->camGrab(image, timestamp, timeout);
+	}
+}

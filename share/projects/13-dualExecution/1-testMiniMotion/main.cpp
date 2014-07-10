@@ -9,16 +9,19 @@ arr getSimpleTrajectory(ors::KinematicWorld& G){
 
   //-- setup the motion problem
   TaskCost *c;
-  c = P.addTaskMap("position",
+  c = P.addTask("position",
                    new DefaultTaskMap(posTMT, G, "endeff", NoVector));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                           ARRAY(P.world.getShapeByName("miniTarget")->X.pos), 1e2);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e1);
+  c = P.addTask("position",
+                   new DefaultTaskMap(posTMT, G, "endeff", NoVector));
+c->map.order=1;
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e1);
 
   MotionProblemFunction MF(P);
   arr x = P.getInitialization();
 
-  optNewton(x, Convert(MF), OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1e-3, maxStep=.5));
+  optNewton(x, Convert(MF), OPT(verbose=2, stopIters=100, damping=1e-3, maxStep=.5));
   P.costReport();
   return x;
 }

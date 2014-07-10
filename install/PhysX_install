@@ -4,9 +4,9 @@
 set -e
 
 ## parameters for this install
-FILE=PhysX-3.2_LINUX_SDK_Core.zip
+FILE=physx-3.3.1_linux_sdk_core.zip
 SRC_PATH=PhysX
-URL='https://mlr-owncloud.informatik.uni-stuttgart.de/public.php?service=files&t=f7f8d476b96f0d21f6f41bfb01e2b272&download'
+URL='https://mlr-owncloud.informatik.uni-stuttgart.de/public.php?service=files&t=8051f144890cabcf26e7bd5f38e96705&download'
 THIS_PATH=$PWD
 
 [ -z $MLR_LIBPATH ] && MLR_LIBPATH=/home/lib

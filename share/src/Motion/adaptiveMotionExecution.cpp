@@ -1,3 +1,21 @@
+/*  ---------------------------------------------------------------------
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a COPYING file of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>
+    -----------------------------------------------------------------  */
+
 #include "adaptiveMotionExecution.h"
 
 AdaptiveMotionExecution::AdaptiveMotionExecution(ors::KinematicWorld &_world, arr& _trajRef, double _dt, double _TRef, arr &_x0, arr &_q0, MObject &_goalMO, \
@@ -5,10 +23,10 @@ AdaptiveMotionExecution::AdaptiveMotionExecution(ors::KinematicWorld &_world, ar
   world(&_world),
   dt(_dt),
   TRef(_TRef),
-  x0(_x0),
-  q0(_q0),
+  useOrientation(_useOrientation),
   goalMO(&_goalMO),
-  useOrientation(_useOrientation)
+  x0(_x0),
+  q0(_q0)
 {
   goalRef = _trajRef[_trajRef.d0-1];
   dsRef = dt/TRef;
@@ -89,7 +107,7 @@ void AdaptiveMotionExecution::plotState()
   cout << "Save Path: " << scene << endl;
 
   write(LIST<arr>(joints_bk),STRING(scene<<"/joints_bk.output"));
-  write(ARR(dt),STRING(scene<<"/dt.output"));
+  write(LIST<arr>(ARR(dt)),STRING(scene<<"/dt.output"));
   write(LIST<arr>(goal),STRING(scene<<"/goal.output"));
 
   write(LIST<arr>(trajRef->points), STRING(scene<<"/trajRef.output"));

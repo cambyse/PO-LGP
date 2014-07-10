@@ -9,6 +9,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "")
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -DNDEBUG" CACHE STRING "Default flags including -DNDEBUG" FORCE)
 endif(CMAKE_BUILD_TYPE STREQUAL "")
 
+# always warn
+set(CMAKE_CXX_FLAGS "-Wall ${CMAKE_CXX_FLAGS}")
+
 # path for find macros
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
@@ -19,12 +22,13 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 find_package (Threads REQUIRED)
 option(WITH_LAPACK "Enable use of lapack (default: if found)" ON)
 if(WITH_LAPACK)
-find_package(LAPACK)
-if(LAPACK_FOUND)
-add_definitions(-DMT_LAPACK)
-endif(LAPACK_FOUND)
+  find_package(LAPACK)
+  if(LAPACK_FOUND)
+    add_definitions(-DMT_LAPACK)
+  endif(LAPACK_FOUND)
 else(WITH_LAPACK)
-message(STATUS "Use of LAPACK disabled by user (option WITH_LAPACK)")
+  message(STATUS "Use of LAPACK disabled by user (option WITH_LAPACK)")
+  unset(LAPACK_FOUND CACHE)
 endif(WITH_LAPACK)
 
 include(FindPkgConfig)
@@ -37,6 +41,7 @@ if(WITH_OPENCV)
   endif(OPENCV_FOUND)
 else(WITH_OPENCV)
   message(STATUS "Use of OpenCV disabled by user (option WITH_OPENCV)")
+  unset(OPENCV_FOUND CACHE)
 endif(WITH_OPENCV)
 
 # allow users to switch off compilation of unit-tests
@@ -45,6 +50,7 @@ if(WITH_GTEST)
     option(EXAMPLES_AS_TESTS "Should examples be used as tests? (default yes)" OFF)
     include(CheckIncludeFileCXX)
     check_include_file_cxx("gtest/gtest.h" GTEST_H_FOUND)
+    add_definitions(-DGEST_DONT_DEFINE_TEST) # so that we don't get surprises when EXAMPLES_AS_TESTS is on
     if(GTEST_H_FOUND)
         enable_testing()
         add_subdirectory(/usr/src/gtest gtest)
@@ -59,15 +65,18 @@ if(WITH_GTEST)
     endif(GTEST_H_FOUND)
 else(WITH_GTEST)
 	set(EXAMPLES_AS_TESTS OFF)
+	unset(GTEST_H_FOUND CACHE)
 endif(WITH_GTEST)
 macro(mlr_example_test NAME)
 if(TESTING_ENABLED AND EXAMPLES_AS_TESTS)
-	add_test(x_${NAME}_test ${NAME} --gtest-output=xml:${NAME}-unit-xml)
+	add_test(NAME x_${NAME}_test 
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} 
+		COMMAND x_${NAME} --gtest-output=xml:${NAME}-unit-xml)
 endif()
 endmacro()
 
 # configure Python
-option(WITH_PYTHON "Build python bindings using SWIG. Will be omitted of swig or NumPy are not found" ON)
+option(WITH_PYTHON "Build python bindings using SWIG. Will be omitted if swig or NumPy are not found" ON)
 if(WITH_PYTHON)
   find_package(SWIG 2.0)
   if(SWIG_FOUND)
@@ -106,8 +115,11 @@ if(WITH_ROS)
   if(ROSBUILD)
     message(STATUS "rosbuild found at ${ROSBUILD}")
   else(ROSBUILD)
+    unset(ROSBUILD CACHE)
     message(STATUS "rosbuild not found, not compiling anything that requires it")
   endif(ROSBUILD)
+else(WITH_ROS)
+  unset(ROSBUILD CACHE)
 endif(WITH_ROS)
 
 #find_package(DOXYGEN)
@@ -140,6 +152,8 @@ if(WITH_OPENMP)
     else()
         message(STATUS "OpenMP not found, compiling without it")
     endif()
+else()
+    unset(OPENMP_FOUND CACHE)
 endif()
 
 # our code uses C++ 10x stuff by now
@@ -158,11 +172,11 @@ find_file(SLICE_EXTERN .slicedef.cmake
   PATHS ${CMAKE_SOURCE_DIR}/src/extern
   NO_DEFAULT_PATH)
 if(SLICE_EXTERN)
-include(${SLICE_EXTERN})
-message(STATUS "External libs available: ${CURRENT_SLICE}")
-foreach(DIR ${CURRENT_SLICE})
-add_definitions(-DMT_extern_${DIR})
-endforeach(DIR ${CURRENT_SLICE})
+  include(${SLICE_EXTERN})
+  message(STATUS "External libs available: ${CURRENT_SLICE}")
+  foreach(DIR ${CURRENT_SLICE})
+    add_definitions(-DMT_extern_${DIR})
+  endforeach(DIR ${CURRENT_SLICE})
 endif(SLICE_EXTERN)
 
 # select what to compile

@@ -14,10 +14,9 @@ if(LIBFREENECT_FOUND)
 
 	add_library(${TARGET} SHARED ${SOURCES})
 	target_link_libraries(${TARGET}
-		LINK_PRIVATE Core ${LIBFREENECT_LIBRARIES})
+		LINK_PRIVATE Core ${LIBFREENECT_LIBRARIES} -lfreenect_sync)
 
 
-else(LIBFREENECT_FOUND)
+else()
 	message(STATUS "Kinect support not built because libfreenect not found")
-endif(LIBFREENECT_FOUND)
-
+endif()

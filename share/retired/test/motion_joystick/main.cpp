@@ -42,7 +42,7 @@ int main(int argc,char** argv){
 
   joystickState.waitForRevisionGreaterThan(10);
   for(;;){
-    joystickState.waitForNextWriteAccess();
+    joystickState.waitForNextRevision();
     if(joystickState.get_exitSignal(NULL)) break;
   }
   close(P);

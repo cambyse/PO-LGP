@@ -64,7 +64,7 @@ void sThreadInfoWin::draw() {
   if((len=sprintf(outputbuf, form, val))){ fl_draw(outputbuf, x, y); }
 #define TEXTTIME(dt) \
   if((len=sprintf(outputbuf, "%5.2f|%5.2f|%5.2f", dt, dt##Mean, dt##Max))){ fl_draw(outputbuf, x, y); }
-  for_list(i, proc, globalProcesses) {
+  for_list(Type,  proc,  globalProcesses) {
     th = proc->s;
     int state=th->threadCondition.state;
     x=5;
@@ -86,7 +86,7 @@ void sThreadInfoWin::draw() {
     y+=20;
   }
   y+=10;
-  for_list(i, ct, globalCycleTimers) {
+  for_list(Type,  ct,  globalCycleTimers) {
     x=5;
     TEXT("%2i", i); x+=25;
     TEXT("%s", ct->name); x+=100;
@@ -166,7 +166,7 @@ void ThreadInfoWin::step() {
 #define TEXTTIME(dt) \
   if((len=sprintf(s->outputbuf, "%5.2f|%5.2f|%5.2f", dt, dt##Mean, dt##Max))){ XDrawString(s->display, s->window, s->gc, x, y, s->outputbuf, len); }
   biros().readAccess(this);
-  for_list(i, pr, biros().processes) {
+  for_list(Type,  pr,  biros().processes) {
     th = pr->s;
     int state=th->threadCondition.state;
     x=5;
@@ -187,7 +187,7 @@ void ThreadInfoWin::step() {
   }
   biros().deAccess(this);
   y+=10;
-  for_list(i, ct, globalCycleTimers) {
+  for_list(Type,  ct,  globalCycleTimers) {
     x=5;
     TEXT("%2i", i); x+=25;
     TEXT("%s", ct->name); x+=100;
@@ -201,8 +201,8 @@ void ThreadInfoWin::step() {
   XFlush(s->display);
 
   //-- log file
-  //for_list(i, th, globalThreads)     s->log <<th->threadName <<' ' <<th->timer.busyDt <<' ' <<th->timer.cyclDt <<' ';
-  //for_list(i, ct, globalCycleTimers) s->log <<ct->name <<' ' <<ct->busyDt <<' ' <<ct->cyclDt <<' ';
+  //for_list(Type,  th,  globalThreads)     s->log <<th->threadName <<' ' <<th->timer.busyDt <<' ' <<th->timer.cyclDt <<' ';
+  //for_list(Type,  ct,  globalCycleTimers) s->log <<ct->name <<' ' <<ct->busyDt <<' ' <<ct->cyclDt <<' ';
   //s->log <<endl;
 
   //timer.cycleDone();

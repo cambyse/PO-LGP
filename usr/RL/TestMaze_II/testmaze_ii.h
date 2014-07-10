@@ -5,13 +5,20 @@
 
 #include "Config.h"
 
-#include "KMarkovCRF.h"
-#include "UTree.h"
-#include "LinearQ.h"
-#include "LookAheadSearch.h"
+#include "Learner/KMarkovCRF.h"
+#include "Learner/UTree.h"
+#include "Learner/LinearQ.h"
+#include "Learner/TemporallyExtendedLinearQ.h"
+#include "Learner/TemporallyExtendedModel.h"
+#include "Learner/ConjunctiveAdjacency.h"
+#include "Planning/Policy.h"
 #include "DelayDistribution.h"
+#include "util/Commander.h"
 
 #include "qcustomplot.h"
+
+//#define ARMA_NO_DEBUG
+#include <armadillo>
 
 #include <QWidget>
 #include <QTimer>
@@ -20,6 +27,7 @@
 #include <iostream>
 #include <fstream>
 #include <memory> // for shared_ptr
+#include <map>
 
 class Environment;
 
@@ -31,6 +39,8 @@ public:
     TestMaze_II(QWidget *parent = 0);
     ~TestMaze_II();
 
+    USE_CONFIG_TYPEDEFS;
+
 private:
 
     friend class MoveByKeys; // event filter class
@@ -39,7 +49,7 @@ private:
     // Typedefs and Member Variables //
     //===============================//
 
-    USE_CONFIG_TYPEDEFS;
+    typedef std::map<std::tuple<observation_ptr_t,reward_ptr_t>,int> o_r_idx_map_t;
 
     //---------------//
     // Maze GUI etc. //
@@ -51,16 +61,28 @@ private:
     // for setting the different planners
     enum PLANNER_TYPE {
         NONE,
-        OPTIMAL_PLANNER,
-        SPARSE_PLANNER,
-        KMDP_PLANNER,
-        UTREE_PLANNER,
+        RANDOM,
+        OPTIMAL_LOOK_AHEAD,
+        SPARSE_LOOK_AHEAD,
+        KMDP_LOOK_AHEAD,
+        UTREE_LOOK_AHEAD,
+        TEM_LOOK_AHEAD,
         UTREE_VALUE,
-        LINEAR_Q_VALUE
+        LINEAR_Q_VALUE,
+        TEL_VALUE,
+        GOAL_ITERATION
     } planner_type;
+
+    enum TEXT_STYLE {
+        INPUT_STYLE,
+        OK_RESPONSE_STYLE,
+        ERROR_RESPONSE_STYLE,
+        NORMAL_STYLE
+    };
 
     // the user interface
     Ui::TestMaze_IIClass ui;
+    Commander::CommandCenter command_center;
 
     // the environment
     std::shared_ptr<Environment> environment;
@@ -69,10 +91,10 @@ private:
     reward_ptr_t reward_space;             ///< Reward space to be used.
 
     // current instance (essentially the same as the maze instance)
-    instance_t * current_instance;
+    instance_ptr_t current_instance;
 
     // state flags
-    bool record, plot, start_new_episode, search_tree_invalid, save_png_on_transition;
+    bool record, plot, start_new_episode, search_tree_invalid, save_png_on_transition, color_maze;
 
     // file for writing out transitions
     std::ofstream plot_file;
@@ -81,17 +103,17 @@ private:
     unsigned int png_counter;
 
     // time for repeated execution of actions
-    QTimer * random_timer, * action_timer;
+    QTimer * action_timer;
 
     // stuff for a persistent console history
     std::vector<QString> console_history;
-    size_t history_position;
+    large_size_t history_position;
     QFile history_file;
 
     // discout that is used
     double discount;
 
-    // epsion (randomness) that is used
+    // epsilon (randomness) that is used
     double epsilon;
 
     //--------//
@@ -101,33 +123,35 @@ private:
     // L1-regularization
     double l1_factor;
 
-    // CRF
-    std::shared_ptr<KMarkovCRF> crf;
-
-    // UTree
-    std::shared_ptr<UTree> utree;
-
-    // Linear_Q
-    std::shared_ptr<LinearQ> linQ;
+    // Learners
+    std::shared_ptr<KMarkovCRF> crf;                  ///< TEF+CRF model
+    std::shared_ptr<UTree> utree;                     ///< UTree
+    std::shared_ptr<LinearQ> linQ;                    ///< Linear-Q
+    std::shared_ptr<ConjunctiveAdjacency> N_plus_TEL; ///< N+ operator for TEL
+    std::shared_ptr<TemporallyExtendedLinearQ> tel;   ///< Linear-Q with TEFs
+    std::shared_ptr<ConjunctiveAdjacency> N_plus_TEM; ///< N+ operator for TEM
+    std::shared_ptr<TemporallyExtendedModel> tem;     ///< TEM
 
     //----------//
     // Planners //
     //----------//
-    std::shared_ptr<LookAheadSearch> look_ahead_search;
-    size_t max_tree_size;
+    std::shared_ptr<Policy> policy;
+    large_size_t max_tree_size;
     bool prune_search_tree;
 
     //-------//
     // Other //
     //-------//
     DelayDistribution delay_dist;
-    bool target_activated;
-    observation_ptr_t target_state;
+    bool goal_activated;
+    observation_ptr_t goal_state;
 
     //==================//
     // Member Functions //
     //==================//
 
+    void initialize_commands();
+    void to_console(QString x, TEXT_STYLE = NORMAL_STYLE, int indentation = 0);
     void collect_episode(const int& length);
     void update_current_instance(action_ptr_t, observation_ptr_t, reward_ptr_t, bool invalidate_search_tree = true);
     void add_action_observation_reward_tripel(
@@ -142,12 +166,16 @@ private:
     void perform_transition(const action_ptr_t& action, observation_ptr_t& observation_to, reward_ptr_t& reward);
     void change_environment(std::shared_ptr<Environment> new_environment);
     void clear_all_learners();
+    void set_policy();
+    double validate_predictor_on_random_episode(int n, const Predictor& pred);
+    double validate_predictor_on_training_episode(const Predictor& pred);
+    void get_TEM_transition_matrix_and_o_r_index_map(arma::mat& T, o_r_idx_map_t& o_r_idx_map) const;
+    bool get_stationary_distribution(const arma::mat& T, arma::vec& stat_dist) const;
 
 private slots:
     void render_update();
-    void random_action();
     void choose_action();
-    void process_console_input(QString sequence_input = QString(), bool sequence = false);
+    void process_console_input();
     void back_in_history();
     void forward_in_history();
 };

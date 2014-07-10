@@ -1,7 +1,7 @@
 #ifndef MINIMALACTION_H_
 #define MINIMALACTION_H_
 
-#include "../../AbstractAction.h"
+#include "../../Representation/AbstractAction.h"
 
 class MinimalAction: public AbstractAction {
 public:

@@ -1,7 +1,7 @@
 
-start_string="-m MODEL_BASED_UTREE --minT 100 --maxT 100 --incT 25 -e 1 -r 1000 -p"
-#start_string="-m VALUE_BASED_UTREE --minT 250 --maxT 1000 --incT 250 -e 100 -r 100"
-#start_string="-m CRF --minT 25 --maxT 100 --incT 25 -e 100 -r 100 --l1 0.001 --incF 50 --delta 0.001"
+#start_string="-m MODEL_BASED_UTREE --minT 175 --maxT 175 --incT 25 -e 100 -r 100 -p"
+#start_string="-m VALUE_BASED_UTREE --minT 175 --maxT 175 --incT 25 -e 100 -r 100"
+start_string="-m TEL --minT 100 --maxT 1000 --minH -2 --maxH -1 --extH 2 --incT 300 -e 32 -r 100 --l1 1e-5 --delta 0.001"
 
 ## print kind of help if no arguments are given
 if [ $# -lt 1 ]; then

@@ -38,7 +38,7 @@ void RulesToFactorGraph(infer::VariableList& vars, infer::FactorList& facs,
   infer::Variable *v_pre,*v_mod,*v_post;
   MT::String txt;
   uint totalIndicators=0;
-  for_list(i, s, S){
+  for_list(Type,  s,  S){
     if(s->dim==2){
       //-- for each binary variable: an indicator, a modification indicator, and a next-time-step indicate
       indName(0, );
@@ -68,7 +68,7 @@ void RulesToFactorGraph(infer::VariableList& vars, infer::FactorList& facs,
   Rule *r;
   infer::Variable *rule_var,*v;
   infer::VariableList lhsVars;
-  for_list(i, r, R){
+  for_list(Type,  r,  R){
     //-- for each rule: a binary firing variable
     rule_var=new infer::Variable(2, STRING("rule"<<i));
     vars.append(rule_var);
@@ -76,7 +76,7 @@ void RulesToFactorGraph(infer::VariableList& vars, infer::FactorList& facs,
     //-- for each rule: a factor taking AND of all LHS indicators and coupling with the rule
     //collect LHS indicators
     lhsVars.clear();
-    for_list(j, s, r->vars){
+    for_list(Type,  s,  r->vars){
       if(j>=r->arrow) break; //we're on the RHS already
       //construct the name for this indicator
       indName(r->values(j),);
@@ -100,7 +100,7 @@ void RulesToFactorGraph(infer::VariableList& vars, infer::FactorList& facs,
   }
 
   infer::VariableList ruleVars;
-  for_list(i, s, S){
+  for_list(Type,  s,  S){
     if(s->dim==2){
       indName(0,<<"_mod");
       v=listFindByName(vars, txt);
@@ -121,36 +121,36 @@ void RulesToFactorGraph(infer::VariableList& vars, infer::FactorList& facs,
   
   //=== dot order: append an attribute to each element which gives strict dot ordering
   uint dot_order=0;
-  for_list(i, s, S){
+  for_list(Type,  s,  S){
     if(s->dim==2){
       indName(0,);  v=listFindByName(vars, txt);  v->ats.append(anyNew<uint>("dot_order", dot_order++));
     }else for(j=0; j<s->dim; j++){
       indName(j,);  v=listFindByName(vars, txt);  v->ats.append(anyNew<uint>("dot_order", dot_order++));
     }
   }
-  for_list(i, f, facs){
+  for_list(Type,  f,  facs){
     if(f->name=="AND") f->ats.append(anyNew<uint>("dot_order", dot_order++));
   }
-  for_list(i, r, R){
+  for_list(Type,  r,  R){
     v=listFindByName(vars, STRING("rule"<<i));  v->ats.append(anyNew<uint>("dot_order", dot_order++));
   }
-  for_list(i, f, facs){
+  for_list(Type,  f,  facs){
     if(f->name=="OR") f->ats.append(anyNew<uint>("dot_order", dot_order++));
   }
-  for_list(i, s, S){
+  for_list(Type,  s,  S){
     if(s->dim==2){
       indName(0,<<"_mod");  v=listFindByName(vars, txt);  v->ats.append(anyNew<uint>("dot_order", dot_order++));
     }else for(j=0; j<s->dim; j++){
       indName(j,<<"_mod");  v=listFindByName(vars, txt);  v->ats.append(anyNew<uint>("dot_order", dot_order++));
     }
   }
-  for_list(i, f, facs){
+  for_list(Type,  f,  facs){
     if(f->name=="CHANGE") f->ats.append(anyNew<uint>("dot_order", dot_order++));
   }
-  for_list(i, f, facs){
+  for_list(Type,  f,  facs){
     if(f->name=="rule_out") f->ats.append(anyNew<uint>("dot_order", dot_order++));
   }
-  for_list(i, s, S){
+  for_list(Type,  s,  S){
     if(s->dim==2){
       indName(0,<<'\'');  v=listFindByName(vars, txt);  v->ats.append(anyNew<uint>("dot_order", dot_order++));
     }else for(j=0; j<s->dim; j++){

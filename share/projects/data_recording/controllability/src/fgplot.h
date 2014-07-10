@@ -27,7 +27,7 @@ StreamCollector& StreamCollector::operator<<(const T &t) {
 struct FGPlot {
   FILE *f;
 
-  bool lines, points, domain, dim3d, dataid, autolegend, ymin_b, ymax_b;
+  bool lines, points, domain, dim3d, dataid, autolegend, ymin_b, ymax_b, dump;
   const char *title, *hardcopy;
   double stream;
   double ymin, ymax;
@@ -47,6 +47,7 @@ struct FGPlot {
   void setStream(double s);
   void setYMin(double min);
   void setYMax(double max);
+  void setDump(bool d);
 
   bool isDim3D();
 
@@ -66,5 +67,7 @@ struct FGPlots {
 
   void open(const KeyValueGraph &kvg);
   void step(uint t);
+  void replot();
+  void exit();
 };
 

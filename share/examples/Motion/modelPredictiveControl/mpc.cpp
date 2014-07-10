@@ -3,8 +3,8 @@
 #define VISUALIZE 1
 
 MPC::MPC(MotionProblem &_P, arr &_x):
-x(_x),
-P(_P)
+  P(_P),
+x(_x)
 {
 //  P = &_P;
 //  MotionProblem c = _P;
@@ -15,7 +15,7 @@ P(_P)
   // store cartesian coordinates and endeffector orientation
   for (uint j=0;j<x.d0-1;j++) {
     P.world.setJointState(x[j]);
-    P.world.kinematicsPos(kinPos,NoArr, P.world.getBodyByName("endeff")->index);
+    P.world.kinematicsPos(kinPos,NoArr, P.world.getBodyByName("endeff"));
     x_cart.append(~kinPos);
   }
 
@@ -24,7 +24,6 @@ P(_P)
 void MPC::replan(arr &_goal, arr &_q) {
   P.T = P.T - 1;
 
-  P.costMatrix.clear();
   P.taskCosts.clear();
 
   x_bk.append(~_q);
@@ -42,20 +41,24 @@ void MPC::replan(arr &_goal, arr &_q) {
   }
 
   TaskCost *c2;
-  c2 = P.addTaskMap("position", new DefaultTaskMap(posTMT,P.world,"endeff", ors::Vector(0., 0., 0.)));
+  c2 = P.addTask("position", new DefaultTaskMap(posTMT,P.world,"endeff", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c2, MotionProblem::finalOnly, _goal, 1e4);
-  P.setInterpolatingVelCosts(c2, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
+  c2 = P.addTask("position", new DefaultTaskMap(posTMT,P.world,"endeff", ors::Vector(0., 0., 0.)));
+  c2->map.order=1;
+  P.setInterpolatingCosts(c2, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
 
-  c2 = P.addTaskMap("orientation", new DefaultTaskMap(vecTMT,P.world,"endeff",ors::Vector(0., 0., 1.)));
+  c2 = P.addTask("orientation", new DefaultTaskMap(vecTMT,P.world,"endeff",ors::Vector(0., 0., 1.)));
   P.setInterpolatingCosts(c2, MotionProblem::finalOnly, ARRAY(1.,0.,0.), 1e4);
-  P.setInterpolatingVelCosts(c2,MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
+  c2 = P.addTask("orientation", new DefaultTaskMap(vecTMT,P.world,"endeff",ors::Vector(0., 0., 1.)));
+  c2->map.order=1;
+  P.setInterpolatingCosts(c2,MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
 
-  c2 = P.addTaskMap("contact", new DefaultTaskMap(collTMT,-1,NoVector,-1,NoVector,ARR(0.1)));
+  c2 = P.addTask("contact", new DefaultTaskMap(collTMT,-1,NoVector,-1,NoVector,ARR(0.1)));
   P.setInterpolatingCosts(c2, MotionProblem::constant, ARRAY(0.), 1e0);
 
   x = x.rows(1,x.d0);
   MotionProblemFunction F(P);
-  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, damping=1e-3, maxStep=1.));
 
 
   // transform trajectory in cartesian space for visualization
@@ -64,7 +67,7 @@ void MPC::replan(arr &_goal, arr &_q) {
   // store cartesian coordinates and endeffector orientation
   for (uint j=0;j<x.d0-1;j++) {
     P.world.setJointState(x[j]);
-    P.world.kinematicsPos(kinPos,NoArr, P.world.getBodyByName("endeff")->index);
+    P.world.kinematicsPos(kinPos,NoArr, P.world.getBodyByName("endeff"));
     x_cart.append(~kinPos);
   }
 }

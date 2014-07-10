@@ -133,12 +133,13 @@ void scenario1() {
   cout << "Loaded scene: " << endl;
 
   TaskCost *c;
-  c = P.addTaskMap("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
-
+  c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                           ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           ARRAY(0.,0.,0.), 1e-3);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
+  c = P.addTask("position_vel", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
+  c->map.order=1;
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                              ARRAY(0.,0.,0.), 1e3,
                              ARRAY(0.,0.,0.), 0.);
 
@@ -164,7 +165,7 @@ void scenario1() {
   x.setZero();
 
   //-- optimize
-  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, damping=1e-3, maxStep=1.));
 
   plotTraj(x,dt);
 
@@ -183,12 +184,13 @@ void scenario2() {
   cout << "Loaded scene: " << endl;
 
   TaskCost *c;
-  c = P.addTaskMap("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
-
+  c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                           ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           ARRAY(0.,0.,0.), 1e-3);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
+  c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
+  c->map.order=1;
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                              ARRAY(0.,0.,0.), 1e3,
                              ARRAY(0.,0.,0.), 0.);
 
@@ -202,7 +204,7 @@ void scenario2() {
   xRef.setZero();
 
   //-- optimize
-  optNewton(xRef, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+  optNewton(xRef, Convert(F), OPT(verbose=0, stopIters=20, damping=1e-3, maxStep=1.));
   //  P.costReport();
   plotTraj(xRef,dt);
   MT::wait(2);
@@ -221,14 +223,15 @@ void scenario2() {
 
   // reset costs
   MT::timerStart();
-  P.costMatrix.clear();
   TaskCost *c2;
-  c2 = P.addTaskMap("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
+  c2 = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c2, MotionProblem::finalOnly,
                           ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           ARRAY(0.,0.,0.), 1e-3);
-  P.setInterpolatingVelCosts(c2, MotionProblem::finalOnly,
+  c2 = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
+  c2->map.order=1;
+  P.setInterpolatingCosts(c2, MotionProblem::finalOnly,
                              ARRAY(0.,0.,0.), 1e3,
                              ARRAY(0.,0.,0.), 0);
 
@@ -241,7 +244,7 @@ void scenario2() {
   arr x = xRef.rows(i,xRef.d0);
   x.setZero();
 
-  optNewton(x, Convert(F), OPT(verbose=1, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1., stopTolerance=1e-2));
+  optNewton(x, Convert(F), OPT(verbose=1, stopIters=20, damping=1e-3, maxStep=1., stopTolerance=1e-2));
   cout <<"Optimization time: " <<MT::timerRead() <<"sec" <<endl;
 
   plotTraj(x,dt);
@@ -277,13 +280,17 @@ void scenario3() {
 
   //-- create an optimal trajectory to trainTarget
   TaskCost *c;
-  c = P.addTaskMap("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, goalRef, 1e4);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
+  c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c->map.order=1;
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
 
-  c = P.addTaskMap("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
+  c = P.addTask("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(1.,0.,0.), 1e4);
-  P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
+  c = P.addTask("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
+  c->map.order=1;
+  P.setInterpolatingCosts(c,MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e3);
 
   P.x0 = 0.1;
 
@@ -296,7 +303,7 @@ void scenario3() {
 
   arr x(T+1,n);
   x.setZero();
-  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, damping=1e-3, maxStep=1.));
   //  P.costReport();
   //  displayTrajectory(x, 1, world, "planned trajectory", 0.01);
 

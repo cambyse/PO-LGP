@@ -1,0 +1,20 @@
+symbolic links to config files in ~/.ros
+
+echo $ROS_PACKAGE_PATH
+
+robot claim
+RUNSTOP -> green botton
+robot start
+rosrun pr2_dashboard pr2_dashboard 
+
+roslaunch startPR2sim.launch
+
+rosrun pr2_controller_manager pr2_controller_manager list
+rosrun pr2_controller_manager pr2_controller_manager stop r_arm_controller
+rosrun pr2_controller_manager pr2_controller_manager stop l_arm_controller
+rosrun pr2_controller_manager pr2_controller_manager stop head_traj_controller
+rosrun pr2_controller_manager pr2_controller_manager stop r_gripper_controller
+rosrun pr2_controller_manager pr2_controller_manager stop l_gripper_controller
+rosrun pr2_controller_manager pr2_controller_manager stop torso_controller
+
+roslaunch marc_rt_controller.launch

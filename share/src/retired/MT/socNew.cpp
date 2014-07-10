@@ -33,7 +33,7 @@ double ControlledSystem::getTaskCosts(arr& R, arr& r, uint t, double* rhat){
   arr phi, J;
   getTaskCosts(phi, J, t);
   //x is the curren state!
-  if(!phi.N){ R=zeros(get_xDim()); r=zeros(TUP(get_xDim())); return 0.; }
+  if(!phi.N){ R=zeros(get_xDim(),get_xDim()); r=zeros(get_xDim()); return 0.; }
   innerProduct(R, ~J, J);
   innerProduct(r, ~J, J*getx() - phi);
   if(rhat) *rhat = sumOfSqr(J*getx() - phi);
@@ -213,17 +213,17 @@ void dynamicControl(ControlledSystem& sys, arr& x, const arr& x0, uint t, arr *v
   arr Binv, b;
   if(!v){
     Binv = Sinv + R;
-    lapack_Ainv_b_sym(b, Binv, Sinv*s + r);
+    b = lapack_Ainv_b_sym(Binv, Sinv*s + r);
   }else{
     if(v->N== x.N){ //bwd msg given as fully dynamic
       Binv = Sinv + (*Vinv) + R;
-      lapack_Ainv_b_sym(b, Binv, Sinv*s + (*Vinv)*(*v) + r);
+      b = lapack_Ainv_b_sym(Binv, Sinv*s + (*Vinv)*(*v) + r);
     }else{
       arr _Vinv(n, n), _v(n);
       _Vinv.setZero();  _Vinv.setMatrixBlock(*Vinv, 0, 0);
       _v   .setZero();  _v   .setVectorBlock(*v, 0);
       Binv = Sinv + _Vinv + R;
-      lapack_Ainv_b_sym(b, Binv, Sinv*s + _Vinv*_v + r);
+      b = lapack_Ainv_b_sym(Binv, Sinv*s + _Vinv*_v + r);
     }
   }
 

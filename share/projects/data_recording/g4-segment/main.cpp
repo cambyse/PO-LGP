@@ -6,30 +6,56 @@
 int main(int argc, char ** argv) {
   MT::initCmdLine(argc, argv);
 
-  String in;
-  double tf, tt;
-  in = MT::getParameter<String>("in");
-  MT::getParameter(tf, "f", 0.);
-  MT::getParameter(tt, "t", -1.);
+  String in, out;
+  int ff, ft;
+  MT::getParameter(in, "i");
+  MT::getParameter(out, "o");
+  MT::getParameter(ff, "f");
+  MT::getParameter(ft, "t");
 
-  ifstream is;
-  MT::open(is, in);
+  ifstream datafin, tstampfin;
+  MT::open(datafin, in);
+  MT::open(tstampfin, STRING(in << ".times"));
+
+  ofstream datafout, tstampfout;
+  MT::open(datafout, out);
+  MT::open(tstampfout, STRING(out << ".times"));
 
   uint fnum;
+  int first_fnum = -1;
   char tag[30];
   double tstamp;
+  int tstampsec, tstampusec;
+  bool pad_before = false, pad_after = false;
   arr data;
-  while(is.good()) {
-    is >> fnum >> tstamp >> data;
+  while(datafin.good()) {
+    datafin >> data;
+    tstampfin >> fnum >> tstamp;
 
-    if(tstamp >= tf) {
-      if(tt > 0. && tstamp > tt)
-        break;
-      sprintf(tag, "%6i %13.6f", fnum, tstamp);
-      cout << tag << " " << data << endl;
+    if(fnum < ff) {
+      pad_before = true;
+      continue;
     }
-  }
+    if(fnum > ft) {
+      pad_after = true;
+      break;
+    }
+    if(first_fnum == -1)
+      first_fnum = fnum;
 
-  is.close();
+    tstampsec = tstamp;
+    tstampusec = (tstamp - tstampsec) * 1e6;
+    sprintf(tag, "%6i %13d.%06d", fnum - first_fnum + 1, tstampsec, tstampusec);
+    datafout << data << endl;
+    tstampfout << tag << endl;
+  }
+  datafin.close();
+  tstampfin.close();
+  datafout.close();
+  tstampfout.close();
+
+  if(!pad_before || !pad_after)
+    return 1;
+  return 0;
 }
 

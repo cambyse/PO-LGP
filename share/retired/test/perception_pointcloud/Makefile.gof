@@ -5,4 +5,4 @@ MAKEMODE=app
 
 PCL = 1
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

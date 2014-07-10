@@ -2,7 +2,7 @@
 #include <Motion/taskMap_default.h>
 #include <Motion/taskMap_constrained.h>
 #include <Motion/feedbackControl.h>
-#include <Optim/constrained.h>
+#include <Optim/optimization.h>
 
 
 void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
@@ -12,14 +12,14 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
 
   //-- setup the motion problem
   TaskCost *pos =
-      P.addTaskMap("position",
+      P.addTask("position",
                    new DefaultTaskMap(posTMT, world, "endeff", NoVector));
   P.setInterpolatingCosts(pos, MotionProblem::finalOnly,
                           ARRAY(P.world.getShapeByName("target")->X.pos), 1e2);
   P.setInterpolatingVelCosts(pos, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e1);
 
-  //c = P.addTaskMap("collisionConstraints", new CollisionConstraint());
-  TaskCost *cont = P.addTaskMap("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1,.7)));
+  //c = P.addTask("collisionConstraints", new CollisionConstraint());
+  TaskCost *cont = P.addTask("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1,.7)));
 
   MotionProblemFunction MF(P);
   Convert ConstrainedP(MF);
@@ -27,8 +27,8 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
   UnConstrainedP.mu = 10.;
 
   for(uint k=0;k<5;k++){
-    optNewton(x, UnConstrainedP, OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1e-3, stopTolerance=1e-4, maxStep=.5));
-//    optNewton(x, UCP, OPT(verbose=2, stopIters=100, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+    optNewton(x, UnConstrainedP, OPT(verbose=2, stopIters=100, damping=1e-3, stopTolerance=1e-4, maxStep=.5));
+//    optNewton(x, UCP, OPT(verbose=2, stopIters=100, damping=1e-3, maxStep=1.));
     P.costReport();
 //    displayTrajectory(x, 1, G, gl,"planned trajectory");
     UnConstrainedP.augmentedLagrangian_LambdaUpdate(x, .9);
@@ -52,7 +52,7 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
   world.getJointState(q, qdot);
 
   FeedbackMotionControl MC(world);
-  MC.nullSpacePD.active=false;
+  MC.qitselfPD.active=false;
 
   PDtask *pd_y=
       MC.addPDTask("position", .1, .8,

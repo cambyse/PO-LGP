@@ -1,8 +1,0 @@
-share/lib/.force
-share/Makefile
-share/make-generic
-share/make-config
-share/make-locked.sh
-README.md
-COPYING
-install/INSTALL_DEPENDENCIES.sh

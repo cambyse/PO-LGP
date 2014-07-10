@@ -7,7 +7,7 @@ set -e
 TMP='/tmp/g4'
 FILE=g4track_lib_dist-0.0.2.tar.gz
 SRC_PATH=g4track_lib_dist-0.0.2
-URL='/usr/local/mlr/www/G4g37djs77/'
+URL='/usr/local.nfs/mlr/www/G4g37djs77/'
 THIS_PATH=$PWD
 
 [ -z $MLR_LIBPATH ] && MLR_LIBPATH=/home/lib
@@ -19,10 +19,10 @@ echo
 echo -n "  * Checking for directory " $TMP "-> download"
 read -p " -- [Enter] to continue..." yn
 if [ ! -d $TMP ] ; then
-  scp ipvs:$URL $TMP
+  scp -r baiseraa@ipvslogin:$URL $TMP
   if [ ! -d $TMP ]; then
-    echo "Automatic Download failed. You need to download " ipvs:$URL " and store it
-    in " $TMP
+    echo "Automatic Download failed. You need to download ipvslogin:$URL and store it
+    in $TMP"
     exit
   fi
 fi
@@ -64,30 +64,24 @@ sudo make install sysconfdir=/etc
 ## TODO this still doesn't work.
 ## source config
 FILE=createcfgfile-1.0.0
-#scp ipvs:$URL$FILE.tar.gz /tmp/$FILE.tar.gz
-#wget -O /tmp/$FILE.tar.gz ftp://ftp.polhemus.com/pub/G4/G4_Linux/$FILE.tar.gz
 cd $MLR_LIBPATH/src
 tar xvzf $TMP/$FILE.tar.gz
 cd $FILE
-./configure LDFLAGS=-L$MLR_LIBPATH/lib --prefix=$MLR_LIBPATH
+./configure LDFLAGS=-L$MLR_LIBPATH/lib CFLAGS=-I$MLR_LIBPATH/include --prefix=$MLR_LIBPATH
 make
 sudo make install
 
 ## dongle config
 FILE=g4devcfg
-#scp ipvs:$URL$FILE.tar.gz /tmp/$FILE.tar.gz
-#wget -O /tmp/$FILE.tar.gz ftp://ftp.polhemus.com/pub/G4/G4_Linux/$FILE.tar.gz
 cd $MLR_LIBPATH/src
 tar xvzf $TMP/$FILE.tar.gz
 cd $FILE
 cp -f * $MLR_LIBPATH/bin
 
 ## 32bit version
-if [[ $(uname -m) != x86_64 ]]
+if [ $(uname -m) != 'x86_64' ]
 then
   FILE=libG4Track_32.so.0.0.2
-  #scp ipvs:$URL$FILE /tmp/$FILE
-  #wget -O /tmp/$FILE ftp://ftp.polhemus.com/pub/G4/G4_Linux/$FILE
   cd $MLR_LIBPATH/lib
   cp -f $TMP/$FILE .
   ln -s -f $FILE libG4Track.so

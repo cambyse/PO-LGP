@@ -7,4 +7,4 @@ DEPEND = Core Infer Gui
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS = $(SRCS:%.cpp=%.o)
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

@@ -1,0 +1,5 @@
+<library path="lib/libmarc_controller_lib">
+  <class name="marc_controller_pkg/TreeControllerPlugin" 
+         type="marc_controller_ns::TreeControllerClass"           
+         base_class_type="pr2_controller_interface::Controller"/>
+</library>

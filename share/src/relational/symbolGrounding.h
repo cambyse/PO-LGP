@@ -1,8 +1,8 @@
 #ifndef RELATIONAL_symbolGrounding_h
 #define RELATIONAL_symbolGrounding_h
 
-#include <relational/symbols.h>
-#include <relational/literals.h>
+#include "symbols.h"
+#include "literals.h"
 #include <Ors/ors.h>
 
 

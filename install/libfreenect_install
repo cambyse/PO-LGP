@@ -12,7 +12,10 @@
 set -e
 
 echo "Downloading..."
-cd /home/lib/src
+SRCDIR=$MLR_LIBPATH/src
+[ -d $SRCDIR ] || mkdir $MLR_LIBPATH/src
+cd $MLR_LIBPATH/src
+rm -rf libfreenect
 git clone git://github.com/OpenKinect/libfreenect.git
 cd libfreenect
 

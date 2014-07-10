@@ -27,14 +27,14 @@ void testGraspHeuristic(){
   for(uint k=0;k<10;k++){
 
 #if 1
-    arr x, xT, x0=P.x0;
-    threeStepGraspHeuristic(xT, P, x0, s->index, 2);
+    arr x, xT;
+    threeStepGraspHeuristic(xT, P, s->index, 2);
 
     MotionProblemFunction F(P);
 
-    sineProfile(x, x0, xT, P.T);
+    sineProfile(x, P.x0, xT, P.T);
 
-    optNewton(x, Convert(F), OPT(verbose=2, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+    optNewton(x, Convert(F), OPT(verbose=2, stopIters=20, damping=1e-3, maxStep=1.));
     //costs.displayRedBlue(~sqr(P.costMatrix), false, 3);
     P.costReport();
     write(LIST<arr>(x),"z.output");
@@ -57,7 +57,7 @@ void testGraspHeuristic(){
     s->size[3] = rnd.uni(.02,.07);
     s->mesh.clear();
 
-    P.setx0(P.world.q);
+    P.x0 = P.world.q;
     G.gl().watch();
   }
   

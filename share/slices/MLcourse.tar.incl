@@ -1,0 +1,16 @@
+
+share/src/Core/array.h
+share/src/Core/array_t.h
+share/src/Core/array.cpp
+share/src/Core/array-vector.h
+share/src/Core/array_lapack.cpp
+share/src/Core/array_instantiate.cxx
+share/src/Core/util.h
+share/src/Core/util_t.h
+share/src/Core/util.cpp
+share/src/Core/Makefile.gof
+share/src/Core/makefile
+
+share/examples/Core/array
+
+share/include/lapack

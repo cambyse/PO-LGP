@@ -14,7 +14,7 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.48.4 r9939"
-   sodipodi:docname="Maze_4x4_III.pdf">
+   sodipodi:docname="Maze_4x4_III.svg">
   <sodipodi:namedview
      id="base"
      pagecolor="#ffffff"
@@ -22,17 +22,17 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="2"
-     inkscape:cx="100.95398"
-     inkscape:cy="142.46727"
+     inkscape:zoom="1.4142136"
+     inkscape:cx="386.79279"
+     inkscape:cy="23.036408"
      inkscape:document-units="px"
-     inkscape:current-layer="layer3"
+     inkscape:current-layer="layer5"
      showgrid="false"
      inkscape:snap-bbox="true"
      inkscape:window-width="1916"
-     inkscape:window-height="1177"
-     inkscape:window-x="1024"
-     inkscape:window-y="19"
+     inkscape:window-height="1174"
+     inkscape:window-x="0"
+     inkscape:window-y="22"
      inkscape:window-maximized="1"
      inkscape:snap-bbox-midpoints="true"
      inkscape:snap-global="true"
@@ -1882,7 +1882,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>

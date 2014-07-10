@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 //=============================================================================
-TEST(Ors, getSubMeshPos_numberOfParts) {
+GTEST_TEST(Ors, getSubMeshPos_numberOfParts) {
   const char* filename = "example.obj";
   auto positions = getSubMeshPositions(filename);
 
@@ -28,12 +28,11 @@ TEST(Ors, getSubMeshPos_numberOfParts) {
 }
 
 //=============================================================================
-TEST(Ors, ParseObjFirstPart) {
+GTEST_TEST(Ors, ParseObjFirstPart) {
   ors::Mesh mesh;
   mesh.parsing_pos_start = 0;
   mesh.parsing_pos_end = 50;
-  const char* filename = "example.obj";
-  mesh.readObjFile(filename);
+  mesh.readObjFile(FILE("example.obj"));
 
   // check V dimensions
   EXPECT_EQ(mesh.V.d0, 3);
@@ -50,12 +49,11 @@ TEST(Ors, ParseObjFirstPart) {
   EXPECT_EQ(mesh.T, T_correct);
 }
 
-TEST(Ors, ParseObjSecondPart) {
+GTEST_TEST(Ors, ParseObjSecondPart) {
   ors::Mesh mesh;
   mesh.parsing_pos_start = 50;
   mesh.parsing_pos_end = 100;
-  const char* filename = "example.obj";
-  mesh.readObjFile(filename);
+  mesh.readObjFile(FILE("example.obj"));
 
   // check V dimensions
   EXPECT_EQ(mesh.V.d0, 3);

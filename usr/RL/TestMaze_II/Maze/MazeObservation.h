@@ -1,7 +1,7 @@
 #ifndef MAZEOBSERVATION_H_
 #define MAZEOBSERVATION_H_
 
-#include "../AbstractObservation.h"
+#include "../Representation/AbstractObservation.h"
 
 class MazeObservation: public AbstractObservation {
 public:

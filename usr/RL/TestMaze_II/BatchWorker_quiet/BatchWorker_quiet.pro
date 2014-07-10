@@ -9,34 +9,34 @@ QT += core \
 HEADERS += \
     ../Config.h \
     \
-    ../util.h \
-    ../util/Macro.h \
+    ../util/util.h \
     ../util/ProgressBar.h \
     ../util/ColorOutput.h \
     ../util/QtUtil.h \
     ../util/lbfgs_codes.h \
     ../util/KolmogorovSmirnovDist.h \
     ../util/KolmogorovSmirnovTest.h \
-    \
-    ../SmoothingKernelSigmoid.h \
-    ../qcustomplot.h \
-    ../DelayDistribution.h \
+    ../util/debug.h \
+    ../util/debug_exclude.h \
     \
     ../optimization/LBFGS_Optimizer.h \
+    ../optimization/LBFGS_Object.h \
     \
-    ../Feature.h \
-    ../Instance.h \
-    ../AbstractAction.h \
-    ../AbstractObservation.h \
-    ../AbstractReward.h \
-    ../ListedReward.h \
+    ../Representation/Feature.h \
+    \
+    ../Representation/AbstractInstance.h \
+    ../Representation/DoublyLinkedInstance.h \
+    ../Representation/AbstractAction.h \
+    ../Representation/AbstractObservation.h \
+    ../Representation/AbstractReward.h \
+    ../Representation/ListedReward.h \
     \
     ../Predictor.h \
     ../Environment.h \
     ../PredictiveEnvironment.h \
     ../Visualizer.h \
     ../HistoryObserver.h \
-    ../FeatureLearner.h \
+    ../SpaceManager.h \
     \
     ../Maze/Maze.h \
     ../Maze/MazeAction.h \
@@ -46,42 +46,52 @@ HEADERS += \
     ../CheeseMaze/CheeseMazeAction.h \
     ../CheeseMaze/CheeseMazeObservation.h \
     \
-    ../LookAheadSearch.h \
+    ../Planning/Policy.h \
+    ../Planning/RandomPolicy.h \
+    ../Planning/LookAheadSearch.h \
+    ../Planning/LookAheadPolicy.h \
+    ../Planning/GoalIteration.h \
     \
-    ../KMarkovCRF.h \
-    ../UTree.h \
-    ../LinearQ.h \
+    ../Learner/FeatureLearner.h \
+    ../Learner/KMarkovCRF.h \
+    ../Learner/UTree.h \
+    ../Learner/LinearQ.h \
+    ../Learner/TemporallyExtendedModel.h \
+    ../Learner/TemporallyExtendedFeatureLearner.h \
+    ../Learner/TemporallyExtendedLinearQ.h \
+    ../Learner/AdjacencyOperator.h \
+    ../Learner/ConjunctiveAdjacency.h \
     \
     ../BatchWorker.h
 SOURCES += \
     main.cpp \
     \
-    ../util.cpp \
+    ../util/util.cpp \
     ../util/ProgressBar.cpp \
     ../util/ColorOutput.cpp \
     ../util/QtUtil.cpp \
     ../util/lbfgs_codes.cpp \
     ../util/KolmogorovSmirnovDist.cpp \
     ../util/KolmogorovSmirnovTest.cpp \
-    \
-    ../SmoothingKernelSigmoid.cpp \
-    ../qcustomplot.cpp \
-    ../DelayDistribution.cpp \
+    ../util/Commander.cpp \
     \
     ../optimization/LBFGS_Optimizer.cpp \
+    ../optimization/LBFGS_Object.cpp \
     \
-    ../Feature.cpp \
-    ../Instance.cpp \
-    ../AbstractAction.cpp \
-    ../AbstractObservation.cpp \
-    ../AbstractReward.cpp \
-    ../ListedReward.cpp \
+    ../Representation/Feature.cpp \
     \
-    ../Environment.cpp \
+    ../Representation/AbstractInstance.cpp \
+    ../Representation/DoublyLinkedInstance.cpp \
+    ../Representation/AbstractAction.cpp \
+    ../Representation/AbstractObservation.cpp \
+    ../Representation/AbstractReward.cpp \
+    ../Representation/ListedReward.cpp \
+    \
+    ../Predictor.cpp \
     ../PredictiveEnvironment.cpp \
     ../Visualizer.cpp \
     ../HistoryObserver.cpp \
-    ../FeatureLearner.cpp \
+    ../SpaceManager.cpp \
     \
     ../Maze/Maze.cpp \
     ../Maze/MazeAction.cpp \
@@ -91,11 +101,18 @@ SOURCES += \
     ../CheeseMaze/CheeseMazeAction.cpp \
     ../CheeseMaze/CheeseMazeObservation.cpp \
     \
-    ../LookAheadSearch.cpp \
+    ../Planning/LookAheadSearch.cpp \
+    ../Planning/LookAheadPolicy.cpp \
+    ../Planning/GoalIteration.cpp \
     \
-    ../KMarkovCRF.cpp \
-    ../UTree.cpp \
-    ../LinearQ.cpp \
+    ../Learner/FeatureLearner.cpp \
+    ../Learner/KMarkovCRF.cpp \
+    ../Learner/UTree.cpp \
+    ../Learner/LinearQ.cpp \
+    ../Learner/TemporallyExtendedModel.cpp \
+    ../Learner/TemporallyExtendedFeatureLearner.cpp \
+    ../Learner/TemporallyExtendedLinearQ.cpp \
+    ../Learner/ConjunctiveAdjacency.cpp \
     \
     ../BatchWorker.cpp
 LIBS += -llbfgs \

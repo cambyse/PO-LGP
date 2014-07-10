@@ -256,7 +256,7 @@ GraspISFTask::updateTaskVariables(ControllerProcess *ctrl){
 #if 0
   TaskVariable *v;
   cout <<"*******************" <<endl;
-  for_list(i,v,TVs_all) if(v->active){
+  for_list(Type, v, TVs_all) if(v->active){
     if(v->y_prec) cout <<"TV '" <<v->name<<"' y=" <<v->y <<" y_target=" <<v->y_target <<" y_prec=" <<v->y_prec <<" y_err=" <<v->err <<endl;
     if(v->v_prec) cout <<"TV '" <<v->name<<"' v=" <<v->v <<" v_target=" <<v->v_target <<" v_prec=" <<v->v_prec <<endl;
   }

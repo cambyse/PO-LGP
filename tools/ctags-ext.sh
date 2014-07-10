@@ -13,5 +13,6 @@ done |\
 	--regex-C++="/FIELD\(.*, *([^)]*)\)/\1/" \
 	--regex-C++="/FIELD\(.*, *([^)]*)\)/set_\1/" \
 	--regex-C++="/FIELD\(.*, *([^)]*)\)/get_\1/" \
-	--regex-C++="/FIELD\(.*, *([^)]*)\)/reg_\1/"
+	--regex-C++="/FIELD\(.*, *([^)]*)\)/reg_\1/" \
+  --fields=+l
 

@@ -12,29 +12,29 @@ viewing the model in the OpenGL window (after pressing ENTER).\n\
 Use the number keys 1 2 3 4 5 to toggle display options.\n\
 ";
 
-void drawBase(void*){
-  glStandardLight(NULL);
-  glDrawFloor(10,.8,.8,.8);
-  glColor(1.,.5,0.);
-}
-
 void TEST(OrsEditor) {
   cout <<USAGE <<endl;
 
   MT::String file=MT::getParameter<MT::String>("file",STRING("test.ors"));
-  if(MT::argc==2) file=MT::argv[1];
+  if(MT::argc==2 && MT::argv[1][0]!='-') file=MT::argv[1];
   cout <<"opening file `" <<file <<"'" <<endl;
 
   ors::KinematicWorld G(file);
 
+    G >>FILE("z.ors");
   //some optional manipulations
+  G.setShapeNames();
   G.meldFixedJoints();
+    G >>FILE("z.ors");
   G.removeUselessBodies();
+    G >>FILE("z.ors");
   G.topSort();
   G.makeLinkTree();
   G.calc_q_from_Q();
   G.calc_fwdPropagateFrames();
   G >>FILE("z.ors");
+
+  if(MT::checkParameter<bool>("cleanOnly")) return;
 
   editConfiguration(file, G);
 }

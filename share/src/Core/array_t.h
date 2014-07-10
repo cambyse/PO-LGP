@@ -1,20 +1,21 @@
 /*  ---------------------------------------------------------------------
-    Copyright 2013 Marc Toussaint
-    email: mtoussai@cs.tu-berlin.de
-
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
 
 #ifndef MT_array_t_cpp
 #define MT_array_t_cpp
@@ -362,8 +363,10 @@ template<class T> void MT::Array<T>::resizeMEM(uint n, bool copy) {
       p=new T [Mnew];      //p=(T*)malloc(M*sizeT);
       if(!p) { p=pold; M=Mold; HALT("memory allocation failed! Wanted size = " <<Mnew*sizeT <<"bytes"); }
       M=Mnew;
-      if(copy && memMove==0) for(i=N<n?N:n; i--;) p[i]=pold[i];
-      if(copy && memMove==1) memmove(p, pold, sizeT*(N<n?N:n));
+      if(copy){
+        if(memMove==1) memmove(p, pold, sizeT*(N<n?N:n));
+        else for(i=N<n?N:n; i--;) p[i]=pold[i];
+      }
     } else {
       p=0;
     }
@@ -1057,12 +1060,11 @@ template<class T> void MT::Array<T>::setZero(byte zero) {
 
 /// concatenate 2D matrices (or vectors) column-wise
 template<class T> MT::Array<T> catCol(const MT::Array<MT::Array<T>*>& X) {
-  uint i, d0=X(0)->d0, d1=0;
-  MT::Array<T>* x;
-  for_list(i, x, X) { CHECK((x->nd==2 || x->nd==1) && x->d0==d0, ""); d1+=x->nd==2?x->d1:1; }
+  uint d0=X(0)->d0, d1=0;
+  for(MT::Array<T> *x:X) { CHECK((x->nd==2 || x->nd==1) && x->d0==d0, ""); d1+=x->nd==2?x->d1:1; }
   MT::Array<T> z(d0, d1);
   d1=0;
-  for_list(i, x, X) { z.setMatrixBlock(*x, 0, d1); d1+=x->nd==2?x->d1:1; }
+  for(MT::Array<T> *x:  X) { z.setMatrixBlock(*x, 0, d1); d1+=x->nd==2?x->d1:1; }
   return z;
 }
 
@@ -1142,7 +1144,11 @@ template<class T> void MT::Array<T>::setMatrixBlock(const MT::Array<T>& B, uint 
   if(B.nd==2) {
     CHECK(nd==2 && lo0+B.d0<=d0 && lo1+B.d1<=d1, "");
     uint i, j;
-    for(i=0; i<B.d0; i++) for(j=0; j<B.d1; j++) p[(lo0+i)*d1+lo1+j] = B.p[i*B.d1+j];   // operator()(lo0+i, lo1+j)=B(i, j);
+    if(memMove){
+      for(i=0; i<B.d0; i++) memmove(p+(lo0+i)*d1+lo1, B.p+i*B.d1, B.d1*sizeT);
+    }else{
+      for(i=0; i<B.d0; i++) for(j=0; j<B.d1; j++) p[(lo0+i)*d1+lo1+j] = B.p[i*B.d1+j];   // operator()(lo0+i, lo1+j)=B(i, j);
+    }
   } else {
     CHECK(nd==2 && lo0+B.d0<=d0 && lo1+1<=d1, "");
     uint i;
@@ -1490,10 +1496,10 @@ template<class T> void MT::Array<T>::write(std::ostream& os, const char *ELEMSEP
     os <<std::endl;
   } else {
     if(BRACKETS[0]) os <<BRACKETS[0];
-    if(dimTag || nd>=3) { os <<' '; writeDim(os); os <<' '; }
-    if(nd>=2) os <<'\n';
+    if(dimTag || nd>=3) { os <<' '; writeDim(os); if(nd==2) os <<LINESEP; else os <<' '; }
+    if(nd>=3) os <<LINESEP;
     if(nd==0 && N==1) {
-      os <<scalar();
+      os <<(const T&)scalar();
     }
     if(nd==1) {
       for(i=0; i<N; i++) os <<ELEMSEP  <<operator()(i);
@@ -1616,9 +1622,18 @@ template<class T> const MT::Array<T>& MT::Array<T>::ioraw() const { IOraw=true; 
 /// array must have correct size! simply streams in all elements sequentially
 template<class T> void MT::Array<T>::readRaw(std::istream& is) {
   uint i;
-  for(i=0; i<N; i++) {
-    is >>p[i];
-    if(is.fail()) HALT("could not read " <<i <<"-th element of an array");
+  if(N){
+    for(i=0; i<N; i++) {
+      is >>p[i];
+      if(is.fail()) HALT("could not read " <<i <<"-th element of an array");
+    }
+  }else{
+    T x;
+    for(;;){
+      is >>x;
+      if(!is.good()){ is.clear(); return; }
+      append(x);
+    }
   }
 }
 
@@ -2211,6 +2226,38 @@ void outerProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z)
   HALT("outer product - not yet implemented for these dimensions");
 }
 
+/** @brief index wise (element-wise for vectors and matrices) product (also ordinary matrix or scalar product).:
+  \f$\forall_{ik}:~ x_{ik} = \sum_j v_{ij}\, w_{jk}\f$ but also:
+  \f$\forall_{i}:~ x_{i} = \sum_j v_{ij}\, w_{j}\f$
+  \f$\forall_{i}:~ x_{ij} = v_{ij} w_{ij}\f$*/
+template<class T>
+void indexWiseProduct(MT::Array<T>& x, const MT::Array<T>& y, const MT::Array<T>& z) {
+  if(y.nd==1 && z.nd==1) {  //vector x vector -> element wise
+    x=y;
+    x*=z;
+    return;
+  }
+  if(y.nd==1 && z.nd==2) {  //vector x matrix -> index-wise
+    CHECK(y.N==z.d0,"wrong dims for indexWiseProduct:" <<y.N <<"!=" <<z.d0);
+    x=z;
+    for(uint i=0;i<x.d0;i++) x[i]() *= y(i);
+    return;
+  }
+  if(y.nd==2 && z.nd==1) {  //matrix x vector -> index-wise
+    CHECK(y.d1==z.N,"wrong dims for indexWiseProduct:" <<y.d1 <<"!=" <<z.N);
+    x=y;
+    for(uint i=0;i<x.d0;i++) for(uint j=0;j<x.d1;j++) x(i,j) *= z(j);
+    return;
+  }
+  if(y.getDim() == z.getDim()) { //matrix x matrix -> element-wise
+    x = y;
+    for(uint i = 0; i < x.N; i++)
+      x.elem(i) *= z.elem(i);
+    return;
+  }
+  HALT("operator% not implemented for "<<y.getDim() <<"%" <<z.getDim() <<" [I would like to change convention on the interpretation of operator% - contact Marc!")
+}
+
 /// \f$\sum_i v_i\, w_i\f$, or \f$\sum_{ij} v_{ij}\, w_{ij}\f$, etc.
 template<class T>
 T scalarProduct(const MT::Array<T>& v, const MT::Array<T>& w) {
@@ -2260,14 +2307,30 @@ MT::Array<T> diagProduct(const MT::Array<T>& y, const MT::Array<T>& z) {
 }
 
 template<class T> MT::Array<T> elemWiseMin(const MT::Array<T>& v, const MT::Array<T>& w) {
-  MT::Array<T> z(v.N);
-  for(uint i=0; i<v.N; i++) z(i) = v(i)<w(i)?v(i):w(i);
+  MT::Array<T> z;
+  z.resizeAs(v);
+  for(uint i=0; i<v.N; i++) z.elem(i) = v.elem(i)<w.elem(i)?v.elem(i):w.elem(i);
   return z;
 }
 
 template<class T> MT::Array<T> elemWiseMax(const MT::Array<T>& v, const MT::Array<T>& w) {
-  MT::Array<T> z(v.N);
-  for(uint i=0; i<v.N; i++) z(i) = v(i)>w(i)?v(i):w(i);
+  MT::Array<T> z;
+  z.resizeAs(v);
+  for(uint i=0; i<v.N; i++) z(i) = v.elem(i)>w.elem(i)?v.elem(i):w.elem(i);
+  return z;
+}
+
+template<class T> MT::Array<T> elemWiseMax(const MT::Array<T>& v, const T& w) {
+  MT::Array<T> z;
+  z.resizeAs(v.N);
+  for(uint i=0; i<v.N; i++) z.elem(i) = v.elem(i)>w?v.elem(i):w;
+  return z;
+}
+
+template<class T> MT::Array<T> elemWiseMax(const T& v, const MT::Array<T>& w) {
+  MT::Array<T> z;
+  z.resizeAs(w.N);
+  for(uint i=0; i<w.N; i++) z.elem(i) = v>w.elem(i)?v:w.elem(i);
   return z;
 }
 
@@ -2854,12 +2917,6 @@ template<class T> uint softMax(const MT::Array<T>& a, arr& soft, double beta) {
 //
 
 
-
-
-
-
-
-
 namespace MT {
 /// transpose
 template<class T> Array<T> operator~(const Array<T>& y) { Array<T> x; transpose(x, y); return x; }
@@ -2875,6 +2932,8 @@ template<class T> Array<T> operator*(const Array<T>& y, T z) {             Array
 /// scalar multiplication
 template<class T> Array<T> operator*(T y, const Array<T>& z) {             Array<T> x(z); x*=y; return x; }
 
+/// index-wise (elem-wise) product (x_i = y_i z_i   or  X_{ij} = y_i Z_{ij}  or  X_{ijk} = Y_{ij} Z_{jk}   etc)
+template<class T> Array<T> operator%(const Array<T>& y, const Array<T>& z) { Array<T> x; indexWiseProduct(x, y, z); return x; }
 
 #define UpdateOperator( op )        \
   template<class T> Array<T>& operator op (Array<T>& x, const Array<T>& y){ \
@@ -2909,7 +2968,7 @@ UpdateOperator(%=)
 
 BinaryOperator(+ , +=);
 BinaryOperator(- , -=);
-BinaryOperator(% , *=);
+//BinaryOperator(% , *=);
 BinaryOperator(/ , /=);
 #undef BinaryOperator
 
@@ -3148,26 +3207,24 @@ template<class T> void listDelete(MT::Array<T*>& L) {
   L.clear();
 }
 
+template<class T> void listReindex(MT::Array<T*>& L) {
+  for(uint i=0;i<L.N;i++) L.elem(i)->index=i;
+}
+
 template<class T> T* listFindByName(const MT::Array<T*>& L, const char* name) {
-  uint i;
-  T *e;
-  for_list(i, e, L) if(e->name==name) return e;
+  for_list(T,  e,  L) if(e->name==name) return e;
   //std::cerr <<"\n*** name '" <<name <<"' not in this list!" <<std::endl;
   return NULL;
 }
 
 template<class T> T* listFindByType(const MT::Array<T*>& L, const char* type) {
-  uint i;
-  T *e;
-  for_list(i, e, L) if(!strcmp(e->type, type)) return e;
+  for_list(T,  e,  L) if(!strcmp(e->type, type)) return e;
   //std::cerr <<"type '" <<type <<"' not in this list!" <<std::endl;
   return NULL;
 }
 
 template<class T> T* listFindValue(const MT::Array<T*>& L, const T& x) {
-  uint i;
-  T *e;
-  for_list(i, e, L) if(*e==x) return e;
+  for_list(T,  e,  L) if(*e==x) return e;
   //std::cerr <<"value '" <<x <<"' not in this list!" <<std::endl;
   return NULL;
 }
@@ -3189,9 +3246,7 @@ template<class vert, class edge> void graphDelete(MT::Array<vert*>& V, MT::Array
 }
 
 template<class vert, class edge> edge* graphGetEdge(vert *from, vert *to) {
-  edge *e;
-  uint i;
-  for_list(i, e, from->outLinks) if(e->from==to) return e;
+  for_list(edge,  e,  from->outLinks) if(e->from==to) return e;
   return NULL;
 }
 
@@ -3277,7 +3332,6 @@ template<class vert, class edge> void graphRandomFixedDegree(MT::Array<vert*>& V
   CHECK((N*d)%2==0, "");
   
   uint i, j;
-  edge *e;
   for(i=0; i<N; i++) V.append(new vert);
   
   bool ready = false;
@@ -3318,7 +3372,7 @@ template<class vert, class edge> void graphRandomFixedDegree(MT::Array<vert*>& V
       // If G is d-regular, output, otherwise return to Step 1.
       uintA degrees(N);
       degrees.setZero();
-      for_list(j, e, E) {
+      for_list(edge,  e,  E) {
         degrees(e->ifrom)++;
         degrees(e->ito)  ++;
       }
@@ -3354,14 +3408,11 @@ template<class vert, class edge> void graphLayered(MT::Array<vert*>& V, MT::Arra
 }
 
 template<class vert, class edge> void graphMakeLists(MT::Array<vert*>& V, MT::Array<edge*>& E) {
-  vert *v;
-  edge *e;
-  uint i;
-  for_list(i, v, V) {
+  for_list(vert,  v,  V) {
     v->outLinks.clear();
     v-> inLinks.clear();
   }
-  for_list(i, e, E) {
+  for_list(edge,  e,  E) {
     e->from = V(e->ifrom);
     e->to   = V(e->ito);
     e->from->outLinks.append(e);
@@ -3370,11 +3421,8 @@ template<class vert, class edge> void graphMakeLists(MT::Array<vert*>& V, MT::Ar
 }
 
 template<class vert, class edge> void graphConnectUndirected(MT::Array<vert*>& V, MT::Array<edge*>& E) {
-  vert *v;
-  edge *e;
-  uint i;
-  for_list(i, v, V) v->edges.clear();
-  for_list(i, e, E) {
+  for_list(vert,  v,  V) v->edges.clear();
+  for_list(edge,  e,  E) {
     e->from = V(e->ifrom);
     e->to   = V(e->ito);
     e->from->edges.append(e);
@@ -3414,30 +3462,24 @@ template<class vert, class edge> edge *del_edge(edge *e, MT::Array<vert*>& V, MT
 
 
 template<class vert, class edge> void graphWriteDirected(std::ostream& os, const MT::Array<vert*>& V, const MT::Array<edge*>& E) {
-  vert *v;
-  edge *e;
-  uint i, j;
-  for_list(j, v, V) {
-    for_list(i, e, v->inLinks) os <<e->ifrom <<' ';
+  for_list(vert,  v,  V) {
+    for_list(edge,  e,  v->inLinks) os <<e->ifrom <<' ';
     os <<"-> ";
-    os <<j <<" -> ";
-    for_list(i, e, v->outLinks) os <<e->ito <<' ';
+    os <<v_COUNT <<" -> ";
+    for_list(edge,  e2,  v->outLinks) os <<e2->ito <<' ';
     os <<'\n';
   }
-  for_list(j, e, E) os <<e->ifrom <<"->" <<e->ito <<'\n';
-  //for_list(j, e, E) os <<e->from->name <<"->" <<e->to->name <<'\n';
+  for_list(edge,  e,  E) os <<e->ifrom <<"->" <<e->ito <<'\n';
+  //for_list(Type,  e,  E) os <<e->from->name <<"->" <<e->to->name <<'\n';
 }
 
 template<class vert, class edge> void graphWriteUndirected(std::ostream& os, const MT::Array<vert*>& V, const MT::Array<edge*>& E) {
-  vert *v;
-  edge *e;
-  uint i, j;
-  for_list(i, v, V) {
-    os <<i <<": ";
-    for_list(j, e, v->edges) if(e->ifrom==i) os <<e->ito <<' '; else os <<e->ifrom <<' ';
+  for_list(vert,  v,  V) {
+    os <<v_COUNT <<": ";
+    for_list(edge,  e,  v->edges) if(e->ifrom==v_COUNT) os <<e->ito <<' '; else os <<e->ifrom <<' ';
     os <<'\n';
   }
-  for_list(j, e, E) os <<e->ifrom <<"-" <<e->ito <<'\n';
+  for_list(edge,  e,  E) os <<e->ifrom <<"-" <<e->ito <<'\n';
 }
 
 template<class vert, class edge> bool graphTopsort(MT::Array<vert*>& V, MT::Array<edge*>& E) {
@@ -3447,20 +3489,18 @@ template<class vert, class edge> bool graphTopsort(MT::Array<vert*>& V, MT::Arra
   intA inputs(V.N);
   
   uint count=0;
-  vert *v;
-  edge *e;
-  uint i;
-  
-  for_list(i, v, V) {
+
+  for_list(vert,  v,  V) v->index = v_COUNT;
+
+  for(vert *v:V) {
     inputs(v->index)=v->inLinks.N;
     if(!inputs(v->index)) noInputs.append(v);
   }
   
   while(noInputs.N) {
     v=noInputs.popFirst();
-    newIndex(v->index)=count;
-    count++;
-    for_list(i, e, v->outLinks) {
+    newIndex(v->index)=count++;
+    for_list(edge,  e,  v->outLinks) {
       inputs(e->to->index)--;
       if(!inputs(e->to->index)) noInputs.append(e->to);
     }
@@ -3469,17 +3509,22 @@ template<class vert, class edge> bool graphTopsort(MT::Array<vert*>& V, MT::Arra
   if(count!=V.N) return false;
   
   //success!
-  //give each edge and vert new index:
-  for_list(i, e, E) {
-    e->ifrom=newIndex(e->ifrom);
-    e->ito  =newIndex(e->ito);
-  }
-  for_list(i, v, V) {
-    v->index=newIndex(v->index);
-  }
-  //permute vertex array:
   V.permuteInv(newIndex);
-  graphMakeLists(V, E);
+  for_list(vert,  vv,  V) vv->index = vv_COUNT;
+//  for(edge *e: E) {
+//    e->ifrom=e->from->index;
+//    e->ito  =e->to->index;
+//  }
+
+  //-- reindex edges as well:
+  newIndex.resize(E.N);
+  count=0;
+  for(vert *v:V) for(edge *e:v->outLinks) newIndex(e->index)=count++;
+  E.permuteInv(newIndex);
+  for_list(edge, e, E) e->index=e_COUNT;
+
+  //permute vertex array:
+  //graphMakeLists(V, E);
   
   return true;
 }
@@ -3492,9 +3537,8 @@ void graphRevertEdge(MT::Array<vert*>& V, MT::Array<edge*>& E, edge *e) {
 
 template<class vert, class edge, class CompareOp>
 void maximumSpanningTree(MT::Array<vert*>& V, MT::Array<edge*>& E, const CompareOp& cmp) {
-  uint i;
   vert *n;
-  edge *e, *m;  uint ei;
+  edge *m;
   boolA nodeAdded(V.N);  nodeAdded=false;
   boolA edgeAdded(E.N);  edgeAdded=false;
   uintA addedNodes;
@@ -3505,10 +3549,10 @@ void maximumSpanningTree(MT::Array<vert*>& V, MT::Array<edge*>& E, const Compare
   addedNodes.append(n->index); nodeAdded(n->index)=true;
   while(addedNodes.N<V.N) {
     m=0;
-    for(i=0; i<addedNodes.N; i++) {
+    for(uint i=0; i<addedNodes.N; i++) {
       n=V(addedNodes(i));
-      for_list(ei, e, n->outLinks) if(!nodeAdded(e->to  ->index) && (!m || cmp(e, m))) m=e;
-      for_list(ei, e, n->inLinks) if(!nodeAdded(e->from->index) && (!m || cmp(e, m))) m=e;
+      for_list(edge,  e,  n->outLinks) if(!nodeAdded(e->to  ->index) && (!m || cmp(e, m))) m=e;
+      for(edge *e: n->inLinks) if(!nodeAdded(e->from->index) && (!m || cmp(e, m))) m=e;
     }
     CHECK(m, "graph is not connected!");
     edgeAdded(m->index)=true;
@@ -3517,14 +3561,12 @@ void maximumSpanningTree(MT::Array<vert*>& V, MT::Array<edge*>& E, const Compare
     nodeAdded(m->to->index)=true;
     addedNodes.append(m->to->index);
   }
-  for_list_rev(ei, e, E) if(!edgeAdded(ei)) del_edge(e, V, E, true);
+  for_list_rev(edge, e, E) if(!edgeAdded(e_COUNT)) del_edge(e, V, E, true);
   graphMakeLists(V, E);
 }
 
 /*template<class T> MT::Array<T> get(const AnyList& L, const char* tag){
-  uint i;
-  Any *a;
-  for_list(i, a, L) if(!strcmp(a->tag, tag)) break;
+  for_list(Any,  a,  L) if(!strcmp(a->tag, tag)) break;
   if(i==L.N) HALT("tag '" <<tag <<"' is not in this AnyList");
   if(!a->n) return MT::Array<T>((T*)a->p, 1);
   return MT::Array<T>((T*)a->p, a->n);

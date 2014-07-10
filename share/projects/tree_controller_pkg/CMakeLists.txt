@@ -28,3 +28,4 @@ ${MLR_PATH}/share/lib/libOrs.so
 ${MLR_PATH}/share/lib/libCore.so)
 
 rosbuild_gensrv()
+rosbuild_genmsg()

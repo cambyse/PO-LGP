@@ -1,8 +1,6 @@
 #include "CheeseMazeObservation.h"
 
-#include "../util/Macro.h"
-
-#include "../debug.h"
+#include "../util/debug.h"
 
 using std::string;
 
@@ -54,7 +52,10 @@ bool CheeseMazeObservation::operator<(const AbstractObservation &other) const {
 }
 
 const std::string CheeseMazeObservation::print() const {
-    string ret("CheeseMazeObservation(");
+    string ret;
+    if(!print_short_name) {
+        ret += "CheeseMazeObservation(";
+    }
     switch(observation) {
 #ifdef USE_UTF8
     case OBSERVATION::N:
@@ -100,6 +101,8 @@ const std::string CheeseMazeObservation::print() const {
         ret+="INVALID";
         break;
     }
-    ret+=")";
+    if(!print_short_name) {
+        ret+=")";
+    }
     return ret;
 }

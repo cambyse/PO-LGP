@@ -1,20 +1,21 @@
 /*  ---------------------------------------------------------------------
-    Copyright 2013 Marc Toussaint
-    email: mtoussai@cs.tu-berlin.de
-
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
 
 
 
@@ -52,10 +53,8 @@ SwiftInterface::~SwiftInterface() {
   cout <<" -- SwiftInterface closed" <<endl;
 }
 
-SwiftInterface::SwiftInterface(ors::KinematicWorld& _world)
-  : world(_world), scene(NULL), cutoff(.1) {
-  ors::Shape *s;
-  uint k;
+SwiftInterface::SwiftInterface(const ors::KinematicWorld& world)
+  : scene(NULL), cutoff(.1) {
   bool r, add;
   
   if(scene) delete scene;
@@ -65,7 +64,7 @@ SwiftInterface::SwiftInterface(ors::KinematicWorld& _world)
   INDEXshape2swift.resize(world.shapes.N);  INDEXshape2swift=-1;
   
   cout <<" -- SwiftInterface init";
-  for_list(k, s, world.shapes) {
+  for_list(ors::Shape, s,  world.shapes) {
     cout <<'.' <<flush;
     add=true;
     switch(s->type) {
@@ -109,9 +108,9 @@ SwiftInterface::SwiftInterface(ors::KinematicWorld& _world)
     }
   }
   
-  initActivations();
+  initActivations(world);
   
-  pushToSwift();
+  pushToSwift(world);
   cout <<"...done" <<endl;
 }
 
@@ -132,12 +131,7 @@ void SwiftInterface::reinitShape(const ors::Shape *s) {
   if(s->cont) scene->Activate(sw);
 }
 
-void SwiftInterface::initActivations(uint parentLevelsToDeactivate) {
-  ors::Shape *s;
-  ors::Body *b, *b2;
-  ors::Joint *e;
-  uint j, k, k2;
-  
+void SwiftInterface::initActivations(const ors::KinematicWorld& world, uint parentLevelsToDeactivate) {
   /* deactivate some collision pairs:
     -- no `cont' -> no collisions with this object at all
     -- no collisions between shapes of same object
@@ -146,9 +140,9 @@ void SwiftInterface::initActivations(uint parentLevelsToDeactivate) {
   */
   
   //cout <<"collision active shapes: ";
-  //for_list(k, s, world.shapes) if(s->cont) cout <<s->name <<' ';
+  //for_list(Type,  s,  world.shapes) if(s->cont) cout <<s->name <<' ';
   
-  for_list(k, s, world.shapes) {
+  for_list(ors::Shape, s, world.shapes) {
     if(!s->cont) {
       if(INDEXshape2swift(s->index)!=-1) scene->Deactivate(INDEXshape2swift(s->index));
     } else {
@@ -156,21 +150,21 @@ void SwiftInterface::initActivations(uint parentLevelsToDeactivate) {
     }
   }
   //shapes within a body
-  for_list(j, b, world.bodies) deactivate(b->shapes);
+  for(ors::Body *b: world.bodies) deactivate(b->shapes);
   //deactivate along edges...
-  for_list(j, e, world.joints) {
+  for_list(ors::Joint, e, world.joints) {
     //cout <<"deactivating edge pair"; listWriteNames(ARRAY(e->from, e->to), cout); cout <<endl;
     deactivate(ARRAY(e->from, e->to));
   }
   //deactivate along trees...
-  for_list(k, b, world.bodies) {
+  for_list(ors::Body,  b,  world.bodies) {
     MT::Array<ors::Body*> group, children;
     group.append(b);
     for(uint l=0; l<parentLevelsToDeactivate; l++) {
       //listWriteNames(group, cout);
       children.clear();
-      for_list(k2, b2, group) {
-        for_list(j, e, b2->outLinks) {
+      for_list(ors::Body,  b2,  group) {
+        for_list(ors::Joint,  e,  b2->outLinks) {
           children.setAppend(e->to);
           //listWriteNames(children, cout);
         }
@@ -184,17 +178,16 @@ void SwiftInterface::initActivations(uint parentLevelsToDeactivate) {
 void SwiftInterface::deactivate(const MT::Array<ors::Body*>& bodies) {
   //cout <<"deactivating body group "; listWriteNames(bodies, cout); cout <<endl;
   MT::Array<ors::Shape*> shapes;
-  uint i;  ors::Body *b;
-  for_list(i,b,bodies) shapes.setAppend(b->shapes);
+  for_list(ors::Body, b, bodies) shapes.setAppend(b->shapes);
   deactivate(shapes);
 }
 
 void SwiftInterface::deactivate(const MT::Array<ors::Shape*>& shapes) {
   //cout <<"deactivating shape group "; listWriteNames(shapes, cout); cout <<endl;
-  uint k1, k2;
-  ors::Shape *s1, *s2;
-  for_list(k1, s1, shapes) for_list(k2, s2, shapes) {
-    if(k1>k2) deactivate(s1, s2);
+  for_list(ors::Shape, s1, shapes){
+    for_list(ors::Shape, s2, shapes) {
+      if(s1_COUNT>s2_COUNT) deactivate(s1, s2);
+    }
   }
 }
 
@@ -204,12 +197,10 @@ void SwiftInterface::deactivate(ors::Shape *s1, ors::Shape *s2) {
   scene->Deactivate(INDEXshape2swift(s1->index), INDEXshape2swift(s2->index));
 }
 
-void SwiftInterface::pushToSwift() {
+void SwiftInterface::pushToSwift(const ors::KinematicWorld& world) {
   CHECK(INDEXshape2swift.N==world.shapes.N,"the number of shapes has changed");
-  ors::Shape *s;
-  uint k;
   ors::Matrix rot;
-  for_list(k, s, world.shapes) {
+  for_list(ors::Shape,  s,  world.shapes) {
     rot = s->X.rot.getMatrix();
     if(INDEXshape2swift(s->index)!=-1) {
       scene->Set_Object_Transformation(INDEXshape2swift(s->index), rot.p(), s->X.pos.p());
@@ -219,7 +210,7 @@ void SwiftInterface::pushToSwift() {
   }
 }
 
-void SwiftInterface::pullFromSwift(bool dumpReport) {
+void SwiftInterface::pullFromSwift(ors::KinematicWorld& world, bool dumpReport) {
   int i, j, k, np;
   int *oids, *num_contacts;
   SWIFT_Real *dists, *nearest_pts, *normals;
@@ -232,6 +223,7 @@ void SwiftInterface::pullFromSwift(bool dumpReport) {
       &nearest_pts,
       &normals);
   } catch(const char *msg) {
+    listResize(world.proxies, 0);
     cout <<"... catching error '" <<msg <<"' -- SWIFT failed! .. no proxies for this posture!!..." <<endl;
     return;
   }
@@ -307,17 +299,19 @@ void SwiftInterface::pullFromSwift(bool dumpReport) {
 //      proxy->d += -1.+(proxy->posA-proxy->posB).length();
       k++;
     }
+
+    double ab_radius = MT::MAX(proxy->d,0.) + 1.1*(world.shapes(a)->mesh_radius + world.shapes(b)->mesh_radius);
+    if(proxy->cenD>ab_radius) MT_MSG("shit");
   }
   CHECK(k == (int)world.proxies.N, "");
   
   //add pointClound stuff to list
   if(global_ANN) {
-    ors::Shape *s;
-    uint i, k, _i;
+    uint i, _i;
     arr R(3, 3), t(3);
     arr v, dists, _dists;
     intA idx, _idx;
-    for_list(k, s, world.shapes) {
+    for_list(ors::Shape,  s,  world.shapes) {
       if(!s->cont || s==global_ANN_shape) continue;
       
       //relative rotation and translation of shapes
@@ -350,9 +344,9 @@ void SwiftInterface::pullFromSwift(bool dumpReport) {
   }
 }
 
-void SwiftInterface::step(bool dumpReport) {
-  pushToSwift();
-  pullFromSwift(dumpReport);
+void SwiftInterface::step(ors::KinematicWorld& world, bool dumpReport) {
+  pushToSwift(world);
+  pullFromSwift(world, dumpReport);
 }
 
 void SwiftInterface::swiftQueryExactDistance() {
@@ -373,16 +367,16 @@ void SwiftInterface::swiftQueryExactDistance() {
 #include <Core/util.h>
 void setCutoff(double _cutoff){ cutoff=_cutoff; }
 
-  void SwiftInterface::step(bool dumpReport=false){}
+  void SwiftInterface::step(ors::KinematicWorld &world, bool dumpReport=false){}
   void SwiftInterface::pushToSwift() {}
-  void SwiftInterface::pullFromSwift(bool dumpReport) {}
+  void SwiftInterface::pullFromSwift(const KinematicWorld &world, bool dumpReport) {}
 
   void SwiftInterface::reinitShape(const ors::Shape *s) {}
 //  void close();
   void SwiftInterface::deactivate(ors::Shape *s1, ors::Shape *s2) {}
   void SwiftInterface::deactivate(const MT::Array<ors::Shape*>& shapes) {}
   void SwiftInterface::deactivate(const MT::Array<ors::Body*>& bodies) {}
-  void SwiftInterface::initActivations(uint parentLevelsToDeactivate=3) {}
+  void SwiftInterface::initActivations(const KinematicWorld &world, uint parentLevelsToDeactivate=3) {}
   void SwiftInterface::swiftQueryExactDistance() {}
 #endif
 /** @} */

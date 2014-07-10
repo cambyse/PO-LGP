@@ -1,12 +1,10 @@
 #include "MazeObservation.h"
 
-#include "../util/Macro.h"
-
 #include <sstream>
 #include <tuple> // for std::tie
 
 #define DEBUG_LEVEL 1
-#include "../debug.h"
+#include "../util/debug.h"
 
 using std::string;
 
@@ -90,7 +88,11 @@ const string MazeObservation::print() const {
     if(DEBUG_LEVEL>1) {
         ret << "MazeObservation(" << "(" << x_dimensions << "," << y_dimensions << "), " <<  x_position << "," << y_position << ")";
     } else {
-        ret << "MazeObservation(" << x_position << "," << y_position << ")";
+        if(print_short_name) {
+            ret << "(" << x_position << "," << y_position << ")";
+        } else {
+            ret << "MazeObservation(" << x_position << "," << y_position << ")";
+        }
     }
     return ret.str();
 }

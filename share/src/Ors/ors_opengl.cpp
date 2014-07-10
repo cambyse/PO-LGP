@@ -1,20 +1,21 @@
 /*  ---------------------------------------------------------------------
-    Copyright 2013 Marc Toussaint
-    email: mtoussai@cs.tu-berlin.de
-
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
 
 /**
  * @file
@@ -150,72 +151,68 @@ void glDrawShape(ors::Shape *s) {
 
 /// GL routine to draw a ors::KinematicWorld
 void ors::KinematicWorld::glDraw() {
-  ors::Joint *e;
-  ors::Shape *s;
-  ors::Proxy *proxy;
-  uint i=0, j, k;
+  uint i=0;
   ors::Transformation f;
   double GLmatrix[16];
   
   glPushMatrix();
   
   //bodies
-  if(orsDrawBodies) for_list(k, s, shapes) {
-    glDrawShape(s);
-    i++;
-    if(orsDrawLimit && i>=orsDrawLimit) break;
-  }
+  if(orsDrawBodies) for(Shape *s: shapes) {
+      glDrawShape(s);
+      i++;
+      if(orsDrawLimit && i>=orsDrawLimit) break;
+    }
   
   //joints
-  if(orsDrawJoints) for_list(j, e, joints) {
-    //set name (for OpenGL selection)
-    glPushName((e->index <<2) | 2);
+  if(orsDrawJoints) for(Joint *e: joints) {
+      //set name (for OpenGL selection)
+      glPushName((e->index <<2) | 2);
     
-    double s=e->A.pos.length()+e->B.pos.length(); //some scale
-    s*=.25;
+      double s=e->A.pos.length()+e->B.pos.length(); //some scale
+      s*=.25;
     
-    //from body to joint
-    f=e->from->X;
-    f.getAffineMatrixGL(GLmatrix);
-    glLoadMatrixd(GLmatrix);
-    glColor(1, 1, 0);
-    //glDrawSphere(.1*s);
-    glBegin(GL_LINES);
-    glVertex3f(0, 0, 0);
-    glVertex3f(e->A.pos.x, e->A.pos.y, e->A.pos.z);
-    glEnd();
+      //from body to joint
+      f=e->from->X;
+      f.getAffineMatrixGL(GLmatrix);
+      glLoadMatrixd(GLmatrix);
+      glColor(1, 1, 0);
+      //glDrawSphere(.1*s);
+      glBegin(GL_LINES);
+      glVertex3f(0, 0, 0);
+      glVertex3f(e->A.pos.x, e->A.pos.y, e->A.pos.z);
+      glEnd();
     
-    //joint frame A
-    f.appendTransformation(e->A);
-    f.getAffineMatrixGL(GLmatrix);
-    glLoadMatrixd(GLmatrix);
-    glDrawAxes(s);
-    glColor(1, 0, 0);
-    glRotatef(90, 0, 1, 0);  glDrawCylinder(.05*s, .3*s);  glRotatef(-90, 0, 1, 0);
+      //joint frame A
+      f.appendTransformation(e->A);
+      f.getAffineMatrixGL(GLmatrix);
+      glLoadMatrixd(GLmatrix);
+      glDrawAxes(s);
+      glColor(1, 0, 0);
+      glRotatef(90, 0, 1, 0);  glDrawCylinder(.05*s, .3*s);  glRotatef(-90, 0, 1, 0);
     
-    //joint frame B
-    f.appendTransformation(e->Q);
-    f.getAffineMatrixGL(GLmatrix);
-    glLoadMatrixd(GLmatrix);
-    glDrawAxes(s);
+      //joint frame B
+      f.appendTransformation(e->Q);
+      f.getAffineMatrixGL(GLmatrix);
+      glLoadMatrixd(GLmatrix);
+      glDrawAxes(s);
     
-    //from joint to body
-    glColor(1, 0, 1);
-    glBegin(GL_LINES);
-    glVertex3f(0, 0, 0);
-    glVertex3f(e->B.pos.x, e->B.pos.y, e->B.pos.z);
-    glEnd();
-    glTranslatef(e->B.pos.x, e->B.pos.y, e->B.pos.z);
-    //glDrawSphere(.1*s);
+      //from joint to body
+      glColor(1, 0, 1);
+      glBegin(GL_LINES);
+      glVertex3f(0, 0, 0);
+      glVertex3f(e->B.pos.x, e->B.pos.y, e->B.pos.z);
+      glEnd();
+      glTranslatef(e->B.pos.x, e->B.pos.y, e->B.pos.z);
+      //glDrawSphere(.1*s);
     
-    glPopName();
-    i++;
-    if(orsDrawLimit && i>=orsDrawLimit) break;
-  }
-  
+      glPopName();
+      i++;
+      if(orsDrawLimit && i>=orsDrawLimit) break;
+    }
+ 
   //proxies
-  if(orsDrawProxies) for(i=0; i<proxies.N; i++) {
-      proxy = proxies(i);
+  if(orsDrawProxies) for(Proxy *proxy: proxies) {
       glLoadIdentity();
       if(!proxy->colorCode) glColor(.75,.75,.75);
       else glColor(proxy->colorCode);
@@ -396,7 +393,7 @@ void _glDrawOdeWorld(dWorldID world)
 }
 */
 
-void animateConfiguration(ors::KinematicWorld& C) {
+void animateConfiguration(ors::KinematicWorld& C, Inotify *ino) {
   arr x, x0;
   uint t, i;
   C.getJointState(x0);
@@ -405,6 +402,7 @@ void animateConfiguration(ors::KinematicWorld& C) {
     x=x0;
     for(t=0; t<20; t++) {
       if(C.gl().pressedkey==13 || C.gl().pressedkey==27) return;
+      if(ino && ino->pollForModification()) return;
       x(i)=x0(i) + .5*sin(MT_2PI*t/20);
       C.setJointState(x);
       C.gl().update(STRING("joint = " <<i), false, false, true);
@@ -528,6 +526,7 @@ void editConfiguration(const char* filename, ors::KinematicWorld& C) {
   bool exit=false;
   C.gl().addHoverCall(new EditConfigurationHoverCall(C));
   C.gl().addKeyCall(new EditConfigurationKeyCall(C,exit));
+  Inotify ino(filename);
   for(;!exit;) {
     cout <<"reloading `" <<filename <<"' ... " <<std::endl;
     try {
@@ -540,10 +539,19 @@ void editConfiguration(const char* filename, ors::KinematicWorld& C) {
       C.gl().watch();
       continue;
     }
+    C.gl().update();
     cout <<"animating.." <<endl;
-    animateConfiguration(C);
+    //while(ino.pollForModification());
+    animateConfiguration(C, &ino);
     cout <<"watching..." <<endl;
+#if 0
+    ino.waitForModification();
+#else
     C.gl().watch();
+#endif
+if(!MT::getInteractivity()){
+    exit=true;
+}
   }
 }
 

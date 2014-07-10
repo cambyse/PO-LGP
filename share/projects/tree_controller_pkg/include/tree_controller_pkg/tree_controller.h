@@ -5,6 +5,7 @@
 #include <pr2_mechanism_model/tree.h>
 #include <Ors/ors.h>
 #include <Motion/feedbackControl.h>
+#include <Algo/MLcourse.h>
 #include <tree_controller_pkg/SetVecTarget.h>
 #include <tree_controller_pkg/GetVecTarget.h>
 #include <tree_controller_pkg/SetPosTarget.h>
@@ -19,6 +20,10 @@
 #include <tree_controller_pkg/SetTaskGains.h>
 #include <tree_controller_pkg/StartLogging.h>
 #include <tree_controller_pkg/StopLogging.h>
+#include <tree_controller_pkg/JointState.h>
+#include <tree_controller_pkg/SetNaturalGains.h>
+#include <tree_controller_pkg/SetControlParam.h>
+#include <tree_controller_pkg/GetControlParam.h>
 
 namespace tree_controller_ns{
 
@@ -44,25 +49,32 @@ private:
   PDtask *taskPos, *taskVec, *taskHome, *taskLimits;
   arr u;
   double tau_control, tau_plan;
-  arr Kd,Kp;
+  arr Kp,Ki,Kd;
+  arr i_claim, integral;
   arr q, qd, qdd;
   arr des_q, des_qd;
   arr controlIdx;
-  arr p_effort,d_effort,i_effort;
+  arr p_effort,i_effort, d_effort;
   arr y,yd,yVec,ydVec;
   arr state,stateVec;
+  arr measured_effort;
+
+  ros::Publisher joint_pub;
+  tree_controller_pkg::JointState joint_pub_state;
 
   // Limits
   arr lowerEffortLimits, upperEffortLimits;
-  arr lowerJointLimits, upperJointLimits;
 
   // Logging
   volatile int storage_index_;
   bool LOGGING;
 
   // Filter
-  double q_filt;
-  double qd_filt;
+  arr q_filt;
+  arr qd_filt;
+  arr gram, q_hist, beta;
+  uint filter_range;
+  double delta;
 
   // Service for communication
   ros::ServiceServer setPosTargetSrv_;    ros::ServiceServer getPosTargetSrv_;
@@ -73,20 +85,28 @@ private:
   ros::ServiceServer startLoggingSrv_;    ros::ServiceServer stopLoggingSrv_;
   ros::ServiceServer getJointStateSrv_;
   ros::ServiceServer getTaskStateSrv_;
+  ros::ServiceServer setNaturalGainsSrv_;
+  ros::ServiceServer setControlParamSrv_;    ros::ServiceServer getControlParamSrv_;
 
   // Bookkeeping variables
   arr q_bk;
   arr qd_bk;
+  arr q_filt_bk;
+  arr qd_filt_bk;
   arr des_q_bk;
   arr des_qd_bk;
+  arr des_qdd_bk;
   arr u_bk;
   arr p_effort_bk;
+  arr i_effort_bk;
   arr d_effort_bk;
   arr dt_bk;
   arr taskPos_y_bk;
   arr taskPos_yRef_bk;
   arr taskVec_y_bk;
   arr taskVec_yRef_bk;
+  arr measured_effort_bk;
+
 
 public:
   virtual bool init(pr2_mechanism_model::RobotState *robot, ros::NodeHandle &n);
@@ -108,5 +128,8 @@ public:
   bool setTaskGains(tree_controller_pkg::SetTaskGains::Request &req, tree_controller_pkg::SetTaskGains::Response &resp);
   bool startLogging(tree_controller_pkg::StartLogging::Request &req, tree_controller_pkg::StartLogging::Response &resp);
   bool stopLogging(tree_controller_pkg::StopLogging::Request &req, tree_controller_pkg::StopLogging::Response &resp);
+  bool setNaturalGains(tree_controller_pkg::SetNaturalGains::Request &req, tree_controller_pkg::SetNaturalGains::Response &resp);
+  bool setControlParam(tree_controller_pkg::SetControlParam::Request &req, tree_controller_pkg::SetControlParam::Response &resp);
+  bool getControlParam(tree_controller_pkg::GetControlParam::Request &req, tree_controller_pkg::GetControlParam::Response &resp);
 };
 }

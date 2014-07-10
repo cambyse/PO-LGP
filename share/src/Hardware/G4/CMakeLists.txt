@@ -10,7 +10,7 @@ if(WITH_G4)
     include_directories(${G4ROOT}/include ${G4ROOT}/Inc)
     add_definitions(-DG4_INSTALLED)
     target_link_libraries(${TARGET} 
-        LINK_PRIVATE Core LINK_PUBLIC ${G4TRACK})
+        LINK_PRIVATE Core Gui Ors LINK_PUBLIC ${G4TRACK})
 
   else(G4TRACK)
     message(STATUS "G4 tracker support not built because libG4Track not found (checked in ${G4PATH})")

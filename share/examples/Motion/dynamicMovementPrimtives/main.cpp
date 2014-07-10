@@ -65,12 +65,14 @@ void scenario2() {
 
   //-- create an optimal trajectory to trainTarget
   TaskCost *c;
-  c = P.addTaskMap("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                           ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           ARRAY(0.,0.,0.), 1e-3);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
+  c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c->map.order=1;
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                              ARRAY(0.,0.,0.), 1e3,
                              ARRAY(0.,0.,0.), 0.);
 
@@ -87,7 +89,7 @@ void scenario2() {
   x.setZero();
 
   //-- optimize
-  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, damping=1e-3, maxStep=1.));
 
   P.costReport();
   //  displayTrajectory(x, 1, G, gl,"planned trajectory");
@@ -142,12 +144,14 @@ void scenario3() {
 
   //-- create an optimal trajectory to trainTarget
   TaskCost *c;
-  c = P.addTaskMap("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                           ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           ARRAY(0.,0.,0.), 1e-3);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
+  c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
+  c->map.order=1;
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                              ARRAY(0.,0.,0.), 1e3,
                              ARRAY(0.,0.,0.), 0.);
 
@@ -164,7 +168,7 @@ void scenario3() {
   x.setZero();
 
   //-- optimize
-  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, damping=1e-3, maxStep=1.));
 
   P.costReport();
   //  displayTrajectory(x, 1, G, gl,"planned trajectory");
@@ -177,8 +181,8 @@ void scenario3() {
   // store cartesian coordinates and endeffector orientation
   for (uint t=0;t<=T;t++) {
     G.setJointState(x[t]);
-    G.kinematicsPos(kinPos, NoArr, P.world.getBodyByName("endeff")->index);
-    G.kinematicsVec(kinVec, NoArr, P.world.getBodyByName("endeff")->index);
+    G.kinematicsPos(kinPos, NoArr, P.world.getBodyByName("endeff"));
+    G.kinematicsVec(kinVec, NoArr, P.world.getBodyByName("endeff"));
     xRefPos.append(~kinPos);
     xRefVec.append(~kinVec);
   }
@@ -218,7 +222,7 @@ void scenario3() {
     W = W*w_reg;
 
     // Compute current task states
-    G.kinematicsPos(yPos, JPos, G.getBodyByName("endeff")->index);
+    G.kinematicsPos(yPos, JPos, G.getBodyByName("endeff"));
 
     // iterate dmp
     d.iterate();
@@ -259,17 +263,19 @@ void scenario4() {
 
   //-- create an optimal trajectory to trainTarget
   TaskCost *c;
-  c = P.addTaskMap("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
   P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                           ARRAY(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           ARRAY(0.,0.,0.), 1e-3);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
+  c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
+  c->map.order=1;
+  P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                              ARRAY(0.,0.,0.), 1e3,
                              ARRAY(0.,0.,0.), 0.);
 
   if (useOrientation) {
-    c = P.addTaskMap("orientation", new DefaultTaskMap(vecTMT,G,"endeff",ors::Vector(0., 1., 0.)));
+    c = P.addTask("orientation", new DefaultTaskMap(vecTMT,G,"endeff",ors::Vector(0., 1., 0.)));
     P.setInterpolatingCosts(c, MotionProblem::finalOnly,
                             ARRAY(1.,0.,0.), 1e3,
                             ARRAY(0.,0.,0.), 1e-3);
@@ -288,7 +294,7 @@ void scenario4() {
   x.setZero();
 
   //-- optimize
-  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, useAdaptiveDamping=false, damping=1e-3, maxStep=1.));
+  optNewton(x, Convert(F), OPT(verbose=0, stopIters=20, damping=1e-3, maxStep=1.));
 
   P.costReport();
   displayTrajectory(x, 1, G, "planned trajectory");
@@ -301,8 +307,8 @@ void scenario4() {
   // store cartesian coordinates and endeffector orientation
   for (uint t=0;t<=T;t++) {
     G.setJointState(x[t]);
-    G.kinematicsPos(kinPos, NoArr, P.world.getBodyByName("endeff")->index);
-    G.kinematicsVec(kinVec, NoArr, P.world.getBodyByName("endeff")->index);
+    G.kinematicsPos(kinPos, NoArr, P.world.getBodyByName("endeff"));
+    G.kinematicsVec(kinVec, NoArr, P.world.getBodyByName("endeff"));
     xRefPos.append(~kinPos);
     xRefVec.append(~kinVec);
   }
@@ -346,8 +352,8 @@ void scenario4() {
     W = W*w_reg;
 
     // Compute current task states
-    G.kinematicsPos(yPos, JPos, G.getBodyByName("endeff")->index);
-    G.kinematicsVec(yVec, JVec, G.getBodyByName("endeff")->index);
+    G.kinematicsPos(yPos, JPos, G.getBodyByName("endeff"));
+    G.kinematicsVec(yVec, JVec, G.getBodyByName("endeff"));
 
     // iterate dmp
     d.iterate();
@@ -387,6 +393,7 @@ void scenario4() {
 }
 
 int main(int argc,char **argv){
+  MT::initCmdLine(argc, argv);
   switch(MT::getParameter<int>("mode",4)){
   case 1:  scenario1();  break;
   case 2:  scenario2();  break;

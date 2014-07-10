@@ -15,11 +15,11 @@ void test_ann(uint num) {
   }
 }
 
-TEST(AlgosTest, testANNBig) {
+GTEST_TEST(AlgosTest, testANNBig) {
   test_ann(10000);
 }
 
-TEST(AlgosTest, testANNSmall) {
+GTEST_TEST(AlgosTest, testANNSmall) {
   test_ann(100);
 }
 

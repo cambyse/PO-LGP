@@ -1,9 +1,8 @@
 #include <Core/util.h>
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
-#include <Optim/constrained.h>
-#include <Gui/plot.h>
 
+// the kernel stuff is preliminary -- please igore everything related to kernels so far
 arr buildKernelMatrix(KOrderMarkovFunction& P){
   CHECK(P.hasKernel(),"");
   uint T = P.get_T();
@@ -25,11 +24,11 @@ arr buildKernelMatrix(KOrderMarkovFunction& P){
   return Kinv;
 }
 
+
+
 void TEST(KOrderMarkov) {
+  //see the implemention of ParticleAroundWalls::phi_t for an example on how to specify constrained k-order-Markov optimization problems
   ParticleAroundWalls P;
-  P.k=1;
-  P.kern = false; //true;
-  P.constrained = true;
 
   //-- print some info on the P
   uint T=P.get_T();
@@ -41,54 +40,25 @@ void TEST(KOrderMarkov) {
        <<"\n n=" <<n
        <<endl;
 
-  //-- gradient check
+  //-- gradient check: this is slow!
   arr x(T+1,n);
   for(uint k=0;k<0;k++){
     rndUniform(x,-1.,1.);
     checkJacobian(Convert(P), x, 1e-4);
   }
   
-#if 0
-  //-- print some example output
-  arr phi,J;
-  P.fv(phi, J, x);
-  cout <<"x=" <<x <<"\nphi=" <<phi <<"\nJ=" <<J <<endl;
-  return 0.;
-#endif
-  
-#if 0
-  //-- test cost on a simple deterministic trajectory
-  for(uint t=0;t<x.d0;t++){ x(t,0) = double(t)/T; x(t,1)=1.; }
-  for(uint t=0;t<x.d0;t++){ double tt=double(t)/T;  x(t,1) = 2.*tt; x(t,0) = tt*tt; }
-  //analyzeTrajectory(sys, x, true, &cout);
-  //return 0;
-#endif
-
   //-- optimize
-  rndUniform(x,-10.,-1.);
+  rndUniform(x,-1.,1.);
   arr K;
   if(P.hasKernel()) K = buildKernelMatrix(P);
   if(P.isConstrained()){
-    Convert CP(P);
-    UnconstrainedProblem UCP(CP);
-    UCP.mu=1.;
-    for(uint k=0;k<10;k++){
-//      checkJacobian(CP, x, 1e-4);
-//      checkAll(CP, x, 1e-4);
-      //checkGradient(UCP, x, 1e-4);
-      cout <<" mu=" <<UCP.mu <<" lambda=" <<UCP.lambda <<endl;
-      optNewton(x, UCP, OPT(verbose=2, useAdaptiveDamping=false, damping=1., stopIters=20), (K.N? &K : NULL));
-      UCP.augmentedLagrangian_LambdaUpdate(x);
-//      UCP.mu *= 10;
-      write(LIST<arr>(x),"z.output");
-      gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", false, true);
-      MT::wait();
-    }
+    optConstrained(x, NoArr, Convert(P) );
   }else{
-    optNewton(x, Convert(P), OPT(verbose=2, useAdaptiveDamping=true), (K.N? &K : NULL));
+    OptNewton opt(x, Convert(P));
+    if(K.N) opt.additionalRegularizer=&K;
+    opt.run();
   }
 
-  //analyzeTrajectory(sys, x, true, &cout);
   write(LIST<arr>(x),"z.output");
   gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", true, true);
 }

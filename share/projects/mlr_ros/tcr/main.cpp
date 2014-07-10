@@ -26,10 +26,10 @@ arr create_endpose(ors::KinematicWorld& G, double col_prec, double pos_prec, arr
 
   // add a collision cost with threshold 0 to avoid collisions
   uintA shapes = MT::getParameter<uintA>("agent_shapes");
-  TaskCost *c = P.addTaskMap("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .01, true));
+  TaskCost *c = P.addTask("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .01, true));
   P.setInterpolatingCosts(c, MotionProblem::constant, {0.}, col_prec);
 
-  c = P.addTaskMap("position", new DefaultTaskMap(posTMT, G, "tip1", ors::Vector(0, 0, .0)));
+  c = P.addTask("position", new DefaultTaskMap(posTMT, G, "tip1", ors::Vector(0, 0, .0)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(P.world.getBodyByName("target")->X.pos), pos_prec);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e1);
 
@@ -47,9 +47,9 @@ arr create_rrt_trajectory(ors::KinematicWorld& G, arr& target) {
 
   // add a collision cost with threshold 0 to avoid collisions
   uintA shapes = MT::getParameter<uintA>("agent_shapes");
-  TaskCost *c = P.addTaskMap("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .01, true));
+  TaskCost *c = P.addTask("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .01, true));
   P.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1e-0);
-  c->y_threshold = 0;
+  c->threshold = 0;
 
   ors::RRTPlanner planner(&G, P, stepsize);
   planner.joint_max = MT::getParameter<arr>("joint_max");
@@ -68,16 +68,16 @@ arr optimize_trajectory(ors::KinematicWorld& G, const arr& init_trajectory) {
 
   // add a collision cost with threshold 0 to avoid collisions
   uintA shapes = pr2_get_shapes(G);
-  TaskCost *c = P.addTaskMap("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .01, true));
+  TaskCost *c = P.addTask("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .01, true));
   P.setInterpolatingCosts(c, MotionProblem::constant, {0.}, 1e1);
 
-  c = P.addTaskMap("position", new DefaultTaskMap(posTMT, G, "tip1", ors::Vector(0, 0, .0)));
+  c = P.addTask("position", new DefaultTaskMap(posTMT, G, "tip1", ors::Vector(0, 0, .0)));
   P.setInterpolatingCosts(c, MotionProblem::finalOnly, ARRAY(P.world.getBodyByName("target")->X.pos), 1e2);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, ARRAY(0.,0.,0.), 1e2);
 
   MotionProblemFunction MF(P);
   arr x = init_trajectory;
-  optNewton(x, Convert(MF), OPT(verbose=2, stopIters=40, useAdaptiveDamping=false, damping=1e-0, maxStep=1.));
+  optNewton(x, Convert(MF), OPT(verbose=2, stopIters=40, damping=1e-0, maxStep=1.));
   DEBUG_VAR(main, x);
   return x;
 }

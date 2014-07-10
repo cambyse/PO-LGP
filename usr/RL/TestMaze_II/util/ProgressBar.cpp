@@ -1,11 +1,10 @@
 #include "ProgressBar.h"
-#include "../util.h"
-
-#include <iostream>
+#include "../util/util.h"
 
 #include <algorithm>
 
 using std::string;
+using std::stringstream;
 using std::cout;
 using std::endl;
 using std::flush;
@@ -13,12 +12,13 @@ using std::min;
 
 uint ProgressBar::bar_width = DEFAULT_PROGRESS_BAR_WIDTH;
 uint ProgressBar::current_progress = 0;
-string ProgressBar::progress_label = "Progress";
+string ProgressBar::start_msg = "Progress";
+stringstream ProgressBar::end_msg;
 
-void ProgressBar::init(const char* label, const uint& width, const double& progress) {
-    // set label if provided
-    if(label!=nullptr) {
-        progress_label = std::string(label);
+void ProgressBar::init(const char* message, const uint& width, const double& progress) {
+    // set message if provided
+    if(message!=nullptr) {
+        start_msg = std::string(message);
     }
 
     // set width
@@ -29,6 +29,9 @@ void ProgressBar::init(const char* label, const uint& width, const double& progr
 
     // // open new line for writing progress bar
     // cout << endl;
+
+    // clear end_msg
+    end_msg.str("");
 
     // print bar
     print();
@@ -50,17 +53,30 @@ void ProgressBar::print(const int& progress, const int& max_progress) {
     }
 }
 
-void ProgressBar::terminate() {
+stringstream& ProgressBar::msg() {
+    end_msg.str("");
+    return end_msg;
+}
+
+stringstream& ProgressBar::msg_append() {
+    return end_msg;
+}
+
+void ProgressBar::terminate(const char* message) {
     // print a full bar
-    // current_progress = bar_width;
-    // print();
+    current_progress = bar_width;
+    print();
+
+    // append message
+    end_msg << message;
+
     // open new line for further output
     cout << endl;
 }
 
 void ProgressBar::print() {
     // go to beginning of line and print start marker
-    cout << "\r" << progress_label << "|";
+    cout << "\r" << start_msg << "[";
 
     // print a spinning wheel
     static unsigned short wheel = 0;
@@ -81,11 +97,11 @@ void ProgressBar::print() {
     default:
         cout << '*';
     }
-    cout << "|";
+    cout << "][";
 
     // print processed part
     for(uint idx=0; idx < min(current_progress,bar_width); ++idx) {
-        cout << "-";
+        cout << "=";
     }
 
     if(current_progress<bar_width) {
@@ -100,6 +116,6 @@ void ProgressBar::print() {
 
     }
 
-    // print end marker
-    cout << "|" << flush;
+    // print end marker and message
+    cout << "]" << end_msg.str() << flush;
 }

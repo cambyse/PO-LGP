@@ -65,7 +65,6 @@ void drawEnv(void*){
 
 void oneStep(const arr &q,ors::KinematicWorld *C,OdeModule *ode,SwiftInterface *swift){
   C->setJointState(q);
-  C->calc_fwdPropagateFrames();
 #ifdef MT_ODE
   if(ode){
     ode->exportStateToOde(*C);
@@ -126,7 +125,6 @@ void ActionInterface::loadConfiguration(const char* ors_filename){
   if(C) delete C;
   C = new ors::KinematicWorld();
   *C <<FILE(name);
-  C->calc_fwdPropagateFrames();
   //C->reconfigureRoot(C->getName("rfoot"));
 
   chdir(cwd);
@@ -314,7 +312,7 @@ void ActionInterface::grab(const char *man_id,const char *obj_id){
   // (1) drop object if one is in hand
   ors::Joint *e;
   uint i;
-  for_list(i,e,C->bodies(x.i)->outLinks){
+  for_list(Type, e, C->bodies(x.i)->outLinks){
     NIY;
     //C->del_edge(e);
   }
@@ -767,7 +765,7 @@ void ActionInterface::indicateFailure(){
   // drop object
   ors::Joint *e;
   uint i;
-  for_list(i,e,C->getBodyByName("fing1c")->outLinks){
+  for_list(Type, e, C->getBodyByName("fing1c")->outLinks){
     NIY;
     //C->del_edge(e); //otherwise: no object in hand
   }

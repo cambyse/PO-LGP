@@ -37,9 +37,10 @@ void FGPlot::setDefault() {
   dataid = false;
   title = NULL;
   hardcopy = NULL;
-  stream = .5;
+  stream = -1;
   ymin_b = false;
   ymax_b = false;
+  dump = false;
 }
 
 void FGPlot::setLines(bool l) {
@@ -88,6 +89,10 @@ void FGPlot::setYMax(double max) {
   ymax = max;
 }
 
+void FGPlot::setDump(bool d) {
+  dump = d;
+}
+
 bool FGPlot::isDim3D() {
   return dim3d;
 }
@@ -107,12 +112,16 @@ void FGPlot::open() {
     cmd << " --title '" << title << "'";
   if(hardcopy)
     cmd << " --hardcopy " << hardcopy;
-  if(stream>0)
+  if(stream>=0)
     cmd << " --stream " << stream;
   if(ymin_b)
     cmd << " --ymin " << ymin;
   if(ymax_b)
     cmd << " --ymax " << ymax;
+  if(dump)
+    cmd << " --dump";
+  //cmd << " --exit ";
+  cmd << " &2>/dev/null"; // TODO does this actually work?
 
   f = popen(cmd.str().c_str(), "w");
   CHECK(f, "popen() failed to connect to feedgnuplot.");
@@ -127,7 +136,7 @@ struct FGPlots::sFGPlots {
   ~sFGPlots();
 };
 
-FGPlots::sFGPlots::sFGPlots(): nplots(0), plots(NULL) {
+FGPlots::sFGPlots::sFGPlots(): data(NULL), nplots(0), plots(NULL) {
 }
 
 FGPlots::sFGPlots::~sFGPlots() {
@@ -142,6 +151,7 @@ FGPlots::FGPlots() {
 }
 
 FGPlots::~FGPlots() {
+  cout << "DELETING" << endl;
   delete s;
 }
 
@@ -161,7 +171,7 @@ void FGPlots::open(const KeyValueGraph &k) {
   s->data = new KeyValueGraph[s->nplots];
   for(uint i = 0; i < s->nplots; i++) {
     cout << "Opening new plot:" << endl;
-    plot_kvg = plot_list(i)->value<KeyValueGraph>();
+    plot_kvg = plot_list(i)->getValue<KeyValueGraph>();
 
     // title {{{
     str = plot_kvg->getValue<String>("title");
@@ -240,10 +250,17 @@ void FGPlots::open(const KeyValueGraph &k) {
       s->plots[i].setYMax(*d);
     }
     // }}}
+    // {{{
+    b = plot_kvg->getValue<bool>("dump");
+    if(b) {
+      cout << " - dump: " << *b << endl;
+      s->plots[i].setDump(*b);
+    }
+    // }}}
     // data {{{
     s->data[i] = plot_kvg->getItems("data");
     for(auto j: s->data[i])
-      cout << " - data: " << *j->value<String>() << endl;
+      cout << " - data: " << *j->getValue<String>() << endl;
     // }}}
 
     s->plots[i].open();
@@ -256,8 +273,8 @@ void FGPlots::step(uint t) {
   for(uint i = 0; i < s->nplots; i++) {
     if(s->plots[i].isDim3D()) {
       for(auto j: s->data[i]) {
-        str = j->value<String>();
-        data = s->kvg[*str]->value<arr>();
+        str = j->getValue<String>();
+        data = s->kvg[*str]->getValue<arr>();
         ss.clear() << data->operator()(t, 0) << " "
                     << data->operator()(t, 1) << " "
                     << *str << " "
@@ -270,15 +287,27 @@ void FGPlots::step(uint t) {
     else {
       ss.clear() << t;
       for(auto j: s->data[i]) {
-        str = j->value<String>();
-        data = s->kvg[*str]->value<arr>();
-        ss << " " << *str
-          << " " << data->elem(t)
-          ;
+        str = j->getValue<String>();
+        data = s->kvg[*str]->getValue<arr>();
+        if(t < data->N)
+          ss << " " << *str << " " << data->elem(t) ;
       }
-      //cout << "cmd: " << ss << endl;
+      cout << "cmd: " << ss << endl;
       s->plots[i]() << ss;
     }
   }
 }
 
+void FGPlots::replot() {
+  for(uint i = 0; i < s->nplots; i++) {
+    s->plots[i]() << "replot";
+    cout << "cmd: replot" << endl;
+  }
+}
+
+void FGPlots::exit() {
+  for(uint i = 0; i < s->nplots; i++) {
+    s->plots[i]() << "exit";
+    cout << "cmd: exit" << endl;
+  }
+}

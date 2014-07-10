@@ -1,0 +1,21 @@
+body bottle { }
+shape sh:task:bottle (bottle) {
+  #type = -1
+  type = 5
+  size = [ .01 0 0 0 ]
+  color = [ 0 0 0 ]
+}
+shape sh:bottle (bottle) {
+  type = 4
+  rel = <T t(-.03 0 .06) t(0 0 .008) d(90 0 1 0)>
+  size = [ 0 0 .23 .06 ]
+  contact
+}
+
+body bottle:pos {}
+body bottle:orX {}
+body bottle:orY {}
+joint (world bottle:pos) { type = 7 }
+joint (bottle:pos bottle:orX) { type = 0 }
+joint (bottle:orX bottle:orY) { type = 1 }
+joint (bottle:orY bottle) { type = 2 }

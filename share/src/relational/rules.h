@@ -23,9 +23,9 @@
 #define RELATIONAL_rules_h
 
 #include <Core/util.h>
-#include <relational/utilTL.h>
-#include <relational/symbols.h>
-#include <relational/literals.h>
+#include "utilTL.h"
+#include "symbols.h"
+#include "literals.h"
 
 #define FOR1D_(x,i)   for(i=0;i<x.num();i++)
 #define FOR1D_DOWN_(x,i)  for(i=x.num();i--;)

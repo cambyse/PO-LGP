@@ -11,4 +11,4 @@ CXXFLAGS += -D MT_IMPLEMENT_TEMPLATES
 BUILDS += buildComponent/views
 LIBS += -lviews
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk
