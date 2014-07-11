@@ -135,6 +135,7 @@ struct Body {
   void read(std::istream& is);
 };
 
+struct JointLocker;
 /// a joint
 struct Joint {
   KinematicWorld& world;
@@ -144,9 +145,7 @@ struct Joint {
   Joint *mimic;         ///< if non-NULL, this joint's state is identical to another's
   uint agent;           ///< associate this Joint to a specific agent (0=default robot)
 
-  bool locked;           ///< saves whether a joint is already locked
-  bool (*locked_func)(void*);  ///< this function should return true if the joint is locked
-  void *locked_data;           ///< this pointer is handed to the locked_func on each call
+  JointLocker *locker;  ///< object toi abstract the dynamic locking of joints
 
   MT::String name;      ///< name
   JointType type;       ///< joint type
@@ -161,11 +160,12 @@ struct Joint {
   
   Joint(KinematicWorld& G, Body *f, Body *t, const Joint *copyJoint=NULL); //new Shape, being added to graph and body's joint lists
   ~Joint();
+  Joint(const Joint &j);
   void operator=(const Joint& j) {
     qIndex=j.qIndex; mimic=reinterpret_cast<Joint*>(j.mimic?1:0); agent=j.agent;
     name=j.name; type=j.type; A=j.A; Q=j.Q; B=j.B; X=j.X; axis=j.axis; limits=j.limits; H=j.H;
     ats=j.ats;
-    locked_func=j.locked_func; locked_data=j.locked_data;
+    locker=j.locker;
   }
   void reset();
   void parseAts();

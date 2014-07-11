@@ -7,10 +7,12 @@
 #define UTIL_H_
 
 #include <math.h>
-#include <float.h> // DBL_MAX
+#include <float.h> // for DBL_MAX
+#include <limits> // e.g. std::numeric_limits<double>::max()
 #include <QString>
 #include <vector>
 #include <sstream>
+#include <algorithm> // for std::max
 #include <memory> // for shared_ptr
 
 #define DEBUG_LEVEL 0
@@ -59,16 +61,6 @@ namespace util {
 
     /** \brief Tolerance for approximate comparison. */
     double approx_equal_tolerance();
-
-    /** \brief Return true if x compares equal to itself. */
-    inline bool is_number(double x) {
-        return (x == x);
-    }
-
-    /** \brief Return true if x<=DBL_MAX and x>=-DBL_MAX. */
-    inline bool is_finite_number(double x) {
-        return (x <= DBL_MAX && x >= -DBL_MAX);
-    }
 
     /** \brief Get a std::string if operator<< is defined. */
     template<class T>
@@ -568,6 +560,96 @@ namespace util {
             DEBUG_ERROR("Cannot draw from an empty vector");
         }
         return vec[rand()%vec.size()];
+    }
+
+    /** \brief Return index draw from normalized (or unnormalized) vector. */
+    template < typename T >
+        int draw_idx(const T& vec, bool normalized = true) {
+        if(vec.size()==0) {
+            DEBUG_ERROR("Cannot draw from an empty vector");
+            return -1;
+        }
+        if(!normalized) {
+            double sum = 0;
+            for(auto& elem : vec) {
+                sum += elem;
+            }
+            double prob = drand48();
+            int idx = 0;
+            for(auto& elem : vec) {
+                prob -= elem/sum;
+                if(prob<0) {
+                    return idx;
+                }
+                ++idx;
+            }
+            DEBUG_DEAD_LINE;
+        } else {
+            double prob = drand48();
+            int idx = 0;
+            for(auto& elem : vec) {
+                prob -= elem;
+                if(prob<0) {
+                    return idx;
+                }
+                ++idx;
+            }
+            DEBUG_DEAD_LINE;
+        }
+        return -1;
+    }
+
+    /** Add numbers in logarithmic scale while avoiding over flow. Computes
+     * \f$ \log ( \exp t_{1} + \exp t_{2} ) \f$ by decomposing it as
+     * \f$ t^{*} + \log [ \exp (t_{1}-t^{*}) + \exp (t_{2}-t^{*}) ] \f$ with
+     * \f$ t^{*} = \max(t_{1},t_{2}) \f$.*/
+    template < typename T >
+        T log_add_exp(const T & t1, const T & t2) {
+        // get max of t1 and t2
+        T t_max = std::max(t1,t2);
+        // argument of one exp is ==0 the other is <=0, so the sum is between 1
+        // and 2
+        T sum = exp(t1 - t_max) + exp(t2 - t_max);
+        // log(sum) is between 0 and log(2)
+        return t_max + log(sum);
+    }
+
+    /** Implements the SoftMax function. Given input vector \f$u\f$ and
+     * temperature \f$T\f$ the return vector \f$v\f$ is computed as \f$v_{i} =
+     * \frac{\exp\left[u_{i}/T\right]}{\sum_{j}\exp\left[u_{j}/T\right]}\f$. */
+    template < typename Vec >
+        Vec soft_max(const Vec& vec, double temperature = 1) {
+        if(vec.size()==0) {
+            Vec ret = vec;
+            return ret;
+        }
+        //---------------//
+        // Use log scale //
+        //---------------//
+        double log_sum = vec[0]/temperature; // cannot initialize to log(0)
+        for(int idx=1; idx<(int)vec.size(); ++idx) {
+            log_sum = log_add_exp(log_sum,vec[idx]/temperature);
+        }
+        Vec ret = vec;
+        for(int idx=0; idx<(int)vec.size(); ++idx) {
+            ret[idx] = exp(vec[idx]/temperature - log_sum);
+        }
+        return ret;
+    }
+
+    /** \brief Return true if t compares equal to itself. */
+    template < typename T >
+    inline bool is_number(T t) {
+        return (t == t);
+    }
+
+    /** \brief Return true if t is finit. More specifically return true if
+     * @code
+     * t <= std::numeric_limits<T>::max() && t >= std::numeric_limits<T>::lowest()
+     * @endcode. */
+    template < typename T >
+    inline bool is_finite_number(T t) {
+        return (t <= std::numeric_limits<T>::max() && t >= std::numeric_limits<T>::lowest());
     }
 
     /** \brief Generic sign function.

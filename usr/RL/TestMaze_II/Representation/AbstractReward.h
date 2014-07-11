@@ -28,6 +28,7 @@ public:
     virtual value_t max_reward() const;
 
 protected:
+    bool print_short_name = true;
     virtual void set_type(REWARD_TYPE t);
 private:
     REWARD_TYPE reward_type;

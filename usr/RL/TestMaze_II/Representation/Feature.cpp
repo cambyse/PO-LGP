@@ -272,8 +272,8 @@ bool ActionFeature::operator<(const Feature& other) const {
             DEBUG_DEAD_LINE;
             return false;
         } else {
-            return this->action<f_ptr->action ||
-                ( this->action==f_ptr->action && this->delay<f_ptr->delay);
+            return this->delay<f_ptr->delay ||
+                ( this->delay==f_ptr->delay && this->action<f_ptr->action);
         }
     }
 }
@@ -332,8 +332,8 @@ bool ObservationFeature::operator<(const Feature& other) const {
             DEBUG_WARNING(*this << " // " << other);
             return false;
         } else {
-            return this->observation<f_ptr->observation ||
-                ( this->observation==f_ptr->observation && this->delay<f_ptr->delay);
+            return this->delay<f_ptr->delay ||
+                ( this->delay==f_ptr->delay && this->observation<f_ptr->observation);
         }
     }
 }
@@ -390,8 +390,8 @@ bool RewardFeature::operator<(const Feature& other) const {
             DEBUG_DEAD_LINE;
             return false;
         } else {
-            return this->reward<f_ptr->reward ||
-                ( this->reward==f_ptr->reward && this->delay<f_ptr->delay);
+            return this->delay<f_ptr->delay ||
+                ( this->delay==f_ptr->delay && this->reward<f_ptr->reward);
         }
     }
 }

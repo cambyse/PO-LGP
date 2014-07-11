@@ -65,9 +65,10 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     crf(new KMarkovCRF()),
     utree(new UTree(discount)),
     linQ(new LinearQ(discount)),
-    N_plus(new ConjunctiveAdjacency()),
-    telq(new TemporallyExtendedLinearQ(N_plus,discount)),
-    tem(new TemporallyExtendedModel(N_plus)),
+    N_plus_TEL(new ConjunctiveAdjacency()),
+    tel(new TemporallyExtendedLinearQ(N_plus_TEL,discount)),
+    N_plus_TEM(new ConjunctiveAdjacency()),
+    tem(new TemporallyExtendedModel(N_plus_TEM)),
     policy(nullptr),
     max_tree_size(10000),
     prune_search_tree(true),
@@ -100,8 +101,8 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     // focus on command line
     ui._wConsoleInput->setFocus();
 
-    // set console welcome message
-    ui._wConsoleOutput->setPlainText("    Please enter your commands (type 'help' for an overview)");
+    // print console welcome message
+    to_console("----Please enter your commands (type 'help' for an overview)----");
 
     // initialize timers
     action_timer = new QTimer(this);
@@ -119,14 +120,22 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     // change_environment(make_shared<Maze>(epsilon,"Markov"));
     // change_environment(make_shared<CheeseMaze>());
 
-    // set some properties of N+
-    N_plus->set_horizon_extension(2);
-    N_plus->set_max_horizon(0);
-    N_plus->set_min_horizon(-2);
-    N_plus->set_combine_features(false);
+    // set some properties of N+ (TEL)
+    N_plus_TEL->set_horizon_extension(2);
+    N_plus_TEL->set_max_horizon(-1);
+    N_plus_TEL->set_min_horizon(-2);
+    N_plus_TEL->set_combine_features(false);
+    N_plus_TEL->set_t_zero_features(ConjunctiveAdjacency::ACTION);
+    // set some properties of N+ (TEM)
+    N_plus_TEM->set_horizon_extension(2);
+    N_plus_TEM->set_max_horizon(-1);
+    N_plus_TEM->set_min_horizon(-2);
+    N_plus_TEM->set_combine_features(false);
+    N_plus_TEM->set_t_zero_features(ConjunctiveAdjacency::ACTION_OBSERVATION_REWARD);
 
     // set l1 factor for tem
     tem->set_l1_factor(l1_factor);
+    tel->set_l1_factor(l1_factor);
 
     // set all commands
     initialize_commands();
@@ -140,14 +149,14 @@ void TestMaze_II::initialize_commands() {
         command_center.add_command(top_general,{"help","h"},[this]()->ret_t{
                 to_console("");
                 for(QString s : command_center.get_help()) {
-                    to_console(s,4);
+                    to_console(s,NORMAL_STYLE,4);
                 }
                 return {true,""};
             },"Print help");
         command_center.add_command(top_general,{"help","h"},[this](QString filter)->ret_t{
                 to_console("");
                 for(QString s : command_center.get_help(filter)) {
-                    to_console(s,4);
+                    to_console(s,NORMAL_STYLE,4);
                 }
                 return {true,""};
             },"Print help for commands containing <QString>");
@@ -198,9 +207,9 @@ void TestMaze_II::initialize_commands() {
     {
         pair<double,QString> top_maze(2,"Maze ===================================================");
         command_center.add_command(top_maze,{"set maze"}, [this]()->ret_t{
-                to_console("Available mazes:",4);
+                to_console("Available mazes:",NORMAL_STYLE,4);
                 for(QString name : Maze::get_maze_list()) {
-                    to_console(name,8);
+                    to_console(name,NORMAL_STYLE,8);
                 }
                 return {true,""};
             }, "display available maze names");
@@ -358,7 +367,7 @@ void TestMaze_II::initialize_commands() {
                 if(d>=0) {
                     l1_factor = d;
                     tem->set_l1_factor(l1_factor);
-                    telq->set_l1_factor(l1_factor);
+                    tel->set_l1_factor(l1_factor);
                     return {true,QString("set L1 coefficient to %1").arg(l1_factor)};
                 } else {
                     return {false,"L1 coefficient must be non-negative"};
@@ -645,36 +654,36 @@ void TestMaze_II::initialize_commands() {
                 return {true,"did one learning cycle of TEM"};
             }, "do a complete grow-optimize-shrink cycle of TEM and print features afterwards");
         command_center.add_command(top_model_learn_tem,{"tem max horizon","temmaxh"}, [this]()->ret_t{
-                return {true,QString("TEM maximum horizon is %1").arg(N_plus->get_max_horizon())};
+                return {true,QString("TEM maximum horizon is %1").arg(N_plus_TEM->get_max_horizon())};
             }, "get TEM maximum horizon");
         command_center.add_command(top_model_learn_tem,{"tem max horizon","temmaxh"}, [this](int h)->ret_t{
-                N_plus->set_max_horizon(h);
-                return {true,QString("set TEM maximum horizon to %1").arg(N_plus->get_max_horizon())};
+                N_plus_TEM->set_max_horizon(h);
+                return {true,QString("set TEM maximum horizon to %1").arg(N_plus_TEM->get_max_horizon())};
             }, "set TEM maximum horizon");
         command_center.add_command(top_model_learn_tem,{"tem min horizon","temminh"}, [this]()->ret_t{
-                return {true,QString("TEM minimum horizon is %1").arg(N_plus->get_min_horizon())};
+                return {true,QString("TEM minimum horizon is %1").arg(N_plus_TEM->get_min_horizon())};
             }, "get TEM minimum horizon");
         command_center.add_command(top_model_learn_tem,{"tem min horizon","temminh"}, [this](int h)->ret_t{
-                N_plus->set_min_horizon(h);
-                return {true,QString("set TEM minimum horizon to %1").arg(N_plus->get_min_horizon())};
+                N_plus_TEM->set_min_horizon(h);
+                return {true,QString("set TEM minimum horizon to %1").arg(N_plus_TEM->get_min_horizon())};
             }, "set TEM maximum horizon");
         command_center.add_command(top_model_learn_tem,{"tem horizon extension","temhe"}, [this]()->ret_t{
-                return {true,QString("TEM horizon extension is %1").arg(N_plus->get_horizon_extension())};
+                return {true,QString("TEM horizon extension is %1").arg(N_plus_TEM->get_horizon_extension())};
             }, "get TEM horizon extension");
         command_center.add_command(top_model_learn_tem,{"tem horizon extension","temhe"}, [this](int h)->ret_t{
-                N_plus->set_horizon_extension(h);
-                return {true,QString("set TEM horizon extension to %1").arg(N_plus->get_horizon_extension())};
+                N_plus_TEM->set_horizon_extension(h);
+                return {true,QString("set TEM horizon extension to %1").arg(N_plus_TEM->get_horizon_extension())};
             }, "set TEM horizon extension");
         command_center.add_command(top_model_learn_tem,{"tem combine features","temcf"}, [this]()->ret_t{
-                if(N_plus->get_combine_features()) {
+                if(N_plus_TEM->get_combine_features()) {
                     return {true,"TEM does combines features"};
                 } else {
                     return {true,"TEM does not combines features"};
                 }
             }, "get whether TEM combines existing features");
         command_center.add_command(top_model_learn_tem,{"tem combine features","temcf"}, [this](bool combine)->ret_t{
-                N_plus->set_combine_features(combine);
-                if(N_plus->get_combine_features()) {
+                N_plus_TEM->set_combine_features(combine);
+                if(N_plus_TEM->get_combine_features()) {
                     return {true,"set TEM to combine features"};
                 } else {
                     return {true,"set TEM to not combine features"};
@@ -682,66 +691,66 @@ void TestMaze_II::initialize_commands() {
             }, "set whether TEM combines existing features");
     }
     {
-        pair<double,QString> top_model_learn_telq(3.6,"TELQ ---------------------------------------------------");
-        command_center.add_command(top_model_learn_telq,{"telq grow","telqg"}, [this]()->ret_t{
-                telq->grow_feature_set();
-                return {true,"grew TELQ features"};
-            }, "grow TELQ features");
-        command_center.add_command(top_model_learn_telq,{"telq optimize","telqo"}, [this]()->ret_t{
-                telq->run_policy_iteration();
-                return {true,"optimized TELQ"};
-            }, "optimize TELQ");
-        command_center.add_command(top_model_learn_telq,{"telq shrink","telqs"}, [this]()->ret_t{
-                telq->shrink_feature_set();
-                return {true,"shrank TELQ features"};
-            }, "shrink TELQ features");
-        command_center.add_command(top_model_learn_telq,{"telq print","telqp"}, [this]()->ret_t{
-                telq->print_features();
-                return {true,"printed TELQ features"};
-            }, "print TELQ features");
-        command_center.add_command(top_model_learn_telq,{"telq cycle","telqc"}, [this]()->ret_t{
-                telq->grow_feature_set();
-                telq->run_policy_iteration();
-                telq->shrink_feature_set();
-                telq->print_features();
-                return {true,"did one learning cycle of TELQ"};
-            }, "do a complete grow-optimize-shrink cycle of TELQ and print features afterwards");
-        command_center.add_command(top_model_learn_telq,{"telq max horizon","telqmaxh"}, [this]()->ret_t{
-                return {true,QString("TELQ maximum horizon is %1").arg(N_plus->get_max_horizon())};
-            }, "get TELQ maximum horizon");
-        command_center.add_command(top_model_learn_telq,{"telq max horizon","telqmaxh"}, [this](int h)->ret_t{
-                N_plus->set_max_horizon(h);
-                return {true,QString("set TELQ maximum horizon to %1").arg(N_plus->get_max_horizon())};
-            }, "set TELQ maximum horizon");
-        command_center.add_command(top_model_learn_telq,{"telq min horizon","telqminh"}, [this]()->ret_t{
-                return {true,QString("TELQ minimum horizon is %1").arg(N_plus->get_min_horizon())};
-            }, "get TELQ minimum horizon");
-        command_center.add_command(top_model_learn_telq,{"telq min horizon","telqminh"}, [this](int h)->ret_t{
-                N_plus->set_min_horizon(h);
-                return {true,QString("set TELQ minimum horizon to %1").arg(N_plus->get_min_horizon())};
-            }, "set TELQ maximum horizon");
-        command_center.add_command(top_model_learn_telq,{"telq horizon extension","telqhe"}, [this]()->ret_t{
-                return {true,QString("TELQ horizon extension is %1").arg(N_plus->get_horizon_extension())};
-            }, "get TELQ horizon extension");
-        command_center.add_command(top_model_learn_telq,{"telq horizon extension","telqhe"}, [this](int h)->ret_t{
-                N_plus->set_horizon_extension(h);
-                return {true,QString("set TELQ horizon extension to %1").arg(N_plus->get_horizon_extension())};
-            }, "set TELQ horizon extension");
-        command_center.add_command(top_model_learn_telq,{"telq combine features","telqcf"}, [this]()->ret_t{
-                if(N_plus->get_combine_features()) {
-                    return {true,"TELQ does combines features"};
+        pair<double,QString> top_model_learn_tel(3.6,"TEL ----------------------------------------------------");
+        command_center.add_command(top_model_learn_tel,{"tel grow","telg"}, [this]()->ret_t{
+                tel->grow_feature_set();
+                return {true,"grew TEL features"};
+            }, "grow TEL features");
+        command_center.add_command(top_model_learn_tel,{"tel optimize","telo"}, [this]()->ret_t{
+                tel->run_policy_iteration();
+                return {true,"optimized TEL"};
+            }, "optimize TEL");
+        command_center.add_command(top_model_learn_tel,{"tel shrink","tels"}, [this]()->ret_t{
+                tel->shrink_feature_set();
+                return {true,"shrank TEL features"};
+            }, "shrink TEL features");
+        command_center.add_command(top_model_learn_tel,{"tel print","telp"}, [this]()->ret_t{
+                tel->print_features();
+                return {true,"printed TEL features"};
+            }, "print TEL features");
+        command_center.add_command(top_model_learn_tel,{"tel cycle","telc"}, [this]()->ret_t{
+                tel->grow_feature_set();
+                tel->run_policy_iteration();
+                tel->shrink_feature_set();
+                tel->print_features();
+                return {true,"did one learning cycle of TEL"};
+            }, "do a complete grow-optimize-shrink cycle of TEL and print features afterwards");
+        command_center.add_command(top_model_learn_tel,{"tel max horizon","telmaxh"}, [this]()->ret_t{
+                return {true,QString("TEL maximum horizon is %1").arg(N_plus_TEL->get_max_horizon())};
+            }, "get TEL maximum horizon");
+        command_center.add_command(top_model_learn_tel,{"tel max horizon","telmaxh"}, [this](int h)->ret_t{
+                N_plus_TEL->set_max_horizon(h);
+                return {true,QString("set TEL maximum horizon to %1").arg(N_plus_TEL->get_max_horizon())};
+            }, "set TEL maximum horizon");
+        command_center.add_command(top_model_learn_tel,{"tel min horizon","telminh"}, [this]()->ret_t{
+                return {true,QString("TEL minimum horizon is %1").arg(N_plus_TEL->get_min_horizon())};
+            }, "get TEL minimum horizon");
+        command_center.add_command(top_model_learn_tel,{"tel min horizon","telminh"}, [this](int h)->ret_t{
+                N_plus_TEL->set_min_horizon(h);
+                return {true,QString("set TEL minimum horizon to %1").arg(N_plus_TEL->get_min_horizon())};
+            }, "set TEL maximum horizon");
+        command_center.add_command(top_model_learn_tel,{"tel horizon extension","telhe"}, [this]()->ret_t{
+                return {true,QString("TEL horizon extension is %1").arg(N_plus_TEL->get_horizon_extension())};
+            }, "get TEL horizon extension");
+        command_center.add_command(top_model_learn_tel,{"tel horizon extension","telhe"}, [this](int h)->ret_t{
+                N_plus_TEL->set_horizon_extension(h);
+                return {true,QString("set TEL horizon extension to %1").arg(N_plus_TEL->get_horizon_extension())};
+            }, "set TEL horizon extension");
+        command_center.add_command(top_model_learn_tel,{"tel combine features","telcf"}, [this]()->ret_t{
+                if(N_plus_TEL->get_combine_features()) {
+                    return {true,"TEL does combines features"};
                 } else {
-                    return {true,"TELQ does not combines features"};
+                    return {true,"TEL does not combines features"};
                 }
-            }, "get whether TELQ combines existing features");
-        command_center.add_command(top_model_learn_telq,{"telq combine features","telqcf"}, [this](bool combine)->ret_t{
-                N_plus->set_combine_features(combine);
-                if(N_plus->get_combine_features()) {
-                    return {true,"set TELQ to combine features"};
+            }, "get whether TEL combines existing features");
+        command_center.add_command(top_model_learn_tel,{"tel combine features","telcf"}, [this](bool combine)->ret_t{
+                N_plus_TEL->set_combine_features(combine);
+                if(N_plus_TEL->get_combine_features()) {
+                    return {true,"set TEL to combine features"};
                 } else {
-                    return {true,"set TELQ to not combine features"};
+                    return {true,"set TEL to not combine features"};
                 }
-            }, "set whether TELQ combines existing features");
+            }, "set whether TEL combines existing features");
     }
     {
         pair<double,QString> top_planning(4,"Planning ===============================================");
@@ -770,11 +779,11 @@ void TestMaze_II::initialize_commands() {
                 set_policy();
                 return {true,"using linear Q-approximation for action selection" };
             }, "use linear Q-function approximation");
-        command_center.add_command(top_planning,{"set planner TELQ","s p l"}, [this]()->ret_t{
-                planner_type = TELQ_VALUE;
+        command_center.add_command(top_planning,{"set planner tel","s p l"}, [this]()->ret_t{
+                planner_type = TEL_VALUE;
                 set_policy();
-                return {true,"using linear combined TEFs for Q-approximation (TELQ)" };
-            }, "use TELQ");
+                return {true,"using linear combined TEFs for Q-approximation (TEL)" };
+            }, "use TEL");
         command_center.add_command(top_planning,{"set planner g","s p g"}, [this]()->ret_t{
                 planner_type = GOAL_ITERATION;
                 set_policy();
@@ -870,7 +879,7 @@ void TestMaze_II::initialize_commands() {
                     discount = d;
                     utree->set_discount(discount);
                     linQ->set_discount(discount);
-                    telq->set_discount(discount);
+                    tel->set_discount(discount);
                     shared_ptr<LookAheadPolicy> look_ahead_policy = dynamic_pointer_cast<LookAheadPolicy>(policy);
                     if(look_ahead_policy!=nullptr) {
                         look_ahead_policy->set_discount(discount);
@@ -1488,6 +1497,59 @@ void TestMaze_II::initialize_commands() {
 //    }
 }
 
+void TestMaze_II::to_console(QString x, TEXT_STYLE style, int indentation) {
+    // set cursor to the end
+    ui._wConsoleOutput->moveCursor(QTextCursor::End);
+    // construct HTML line
+    QString line;
+    {
+        // indentation string
+        QString indent_str = QString("&nbsp;").repeated(indentation);
+        // escape special characters
+        x = x.toHtmlEscaped();
+        // replace spaces
+        x.replace(" ","&nbsp;");
+        // replace new lines with correct html plus indentation
+        x.replace("\n","<br>"+indent_str);
+        // opening
+        switch(style) {
+        case INPUT_STYLE:
+            line = line + "<font color=\"#00a\">";
+            break;
+        case OK_RESPONSE_STYLE:
+            line = line + "<font color=\"#0a0\">";
+            break;
+        case ERROR_RESPONSE_STYLE:
+            line = line + "<font color=\"#a00\">";
+            break;
+        case NORMAL_STYLE:
+        default:
+            line = line + "<font color=\"#000\">";
+            break;
+        }
+        // actual text
+        line = line + indent_str + x;
+        // closing
+        switch(style) {
+        case INPUT_STYLE:
+            line = line + "</font><br>";
+            break;
+        case OK_RESPONSE_STYLE:
+            line = line + "</font><br>";
+            break;
+        case ERROR_RESPONSE_STYLE:
+            line = line + "</font><br>";
+            break;
+        case NORMAL_STYLE:
+        default:
+            line = line + "</font><br>";
+            break;
+        }
+    }
+    // insert line
+    ui._wConsoleOutput->insertHtml(line);
+}
+
 TestMaze_II::~TestMaze_II() {
     delete action_timer;
     current_instance->detach_reachable();
@@ -1540,7 +1602,7 @@ void TestMaze_II::add_action_observation_reward_tripel(
            crf->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
          utree->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
           linQ->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
-          telq->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
+          tel->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
           tem->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
     delay_dist.add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
     DEBUG_OUT(1,"Add (" << action << ", " << observation << ", " << reward << ")" <<
@@ -1552,7 +1614,7 @@ void TestMaze_II::clear_data() {
     crf->clear_data();
     utree->clear_data();
     linQ->clear_data();
-    telq->clear_data();
+    tel->clear_data();
     tem->clear_data();
     delay_dist.clear_data();
 }
@@ -1623,9 +1685,10 @@ void TestMaze_II::change_environment(shared_ptr<Environment> new_environment) {
         crf->set_features(*environment);
         linQ->adopt_spaces(*environment);
         linQ->set_features(*environment);
-        telq->adopt_spaces(*environment);
+        tel->adopt_spaces(*environment);
+        N_plus_TEL->adopt_spaces(*environment);
         tem->adopt_spaces(*environment);
-        N_plus->adopt_spaces(*environment);
+        N_plus_TEM->adopt_spaces(*environment);
         // set current instance
         current_instance->detach_reachable();
         current_instance = INVALID;
@@ -1644,9 +1707,10 @@ void TestMaze_II::clear_all_learners() {
     crf.reset(new KMarkovCRF());
     utree.reset(new UTree(discount));
     linQ.reset(new LinearQ(discount));
-    telq.reset(new TemporallyExtendedLinearQ(N_plus,discount));
-    tem.reset(new TemporallyExtendedModel(N_plus));
+    tel.reset(new TemporallyExtendedLinearQ(N_plus_TEL,discount));
+    tem.reset(new TemporallyExtendedModel(N_plus_TEM));
     tem->set_l1_factor(l1_factor);
+    tel->set_l1_factor(l1_factor);
 }
 
 void TestMaze_II::set_policy() {
@@ -1702,8 +1766,8 @@ void TestMaze_II::set_policy() {
         policy = p;
         break;
     }
-    case TELQ_VALUE: {
-        shared_ptr<Policy> p = dynamic_pointer_cast<Policy>(telq);
+    case TEL_VALUE: {
+        shared_ptr<Policy> p = dynamic_pointer_cast<Policy>(tel);
         if(p==nullptr) { DEBUG_DEAD_LINE; }
         policy = p;
         break;
@@ -1807,7 +1871,7 @@ void TestMaze_II::get_TEM_transition_matrix_and_o_r_index_map(arma::mat& T, o_r_
         {
             DEBUG_OUT(3,"Constructing sequence:");
             DEBUG_OUT(3,"    " << *last_instance);
-            for(int t_idx=1; t_idx<N_plus->get_max_horizon(); ++t_idx) {
+            for(int t_idx=1; t_idx<N_plus_TEM->get_max_horizon(); ++t_idx) {
                 last_instance->set_non_const_predecessor(DoublyLinkedInstance::create(action_space,observation_space,reward_space));
                 last_instance = DoublyLinkedInstance::get_shared_ptr(last_instance->non_const_prev(),true);
                 DEBUG_OUT(3,"    " << *last_instance);
@@ -1970,7 +2034,7 @@ void TestMaze_II::process_console_input() {
     // get input from console and process
     QString input = ui._wConsoleInput->text();
     ui._wConsoleInput->setText("");
-    to_console(input);
+    to_console(input,INPUT_STYLE);
     console_history.push_back(input);
     history_position = console_history.size();
     QTextStream history_file_stream(&history_file);
@@ -1978,9 +2042,14 @@ void TestMaze_II::process_console_input() {
 
     // execute command and print response message
     if(input!="") {
-        QString msg = command_center.execute(input);
+        bool ok;
+        QString msg = command_center.execute(input,ok);
         if(msg!="") {
-            to_console(msg,4);
+            if(ok) {
+                to_console(msg,OK_RESPONSE_STYLE,4);
+            } else {
+                to_console(msg,ERROR_RESPONSE_STYLE,4);
+            }
         }
     }
 

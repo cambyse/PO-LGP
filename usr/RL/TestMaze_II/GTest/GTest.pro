@@ -128,6 +128,7 @@ SOURCES += \
     LearnerTest.cpp \
     LBFGSTest.cpp \
     CommanderTest.cpp \
+    UtilTest.cpp \
     TemplateTest.cpp \
     SandBox.cpp
 LIBS += -llbfgs \

@@ -50,7 +50,10 @@ bool MazeAction::operator<(const AbstractAction &other) const {
 }
 
 const string MazeAction::print() const {
-    string ret("MazeAction(");
+    string ret;
+    if(!print_short_name) {
+        ret += "MazeAction(";
+    }
     switch(action) {
     case ACTION::UP:
         ret+="   UP";
@@ -72,7 +75,9 @@ const string MazeAction::print() const {
         ret+="INVALID";
         break;
     }
-    ret+=")";
+    if(!print_short_name) {
+        ret+=")";
+    }
     return ret;
 }
 

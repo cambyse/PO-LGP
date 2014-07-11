@@ -54,10 +54,10 @@ protected:
      *
      * If outcome_type is ACTION (value based), the matrix with (time) index t
      * holds features evaluated on
-     * \f$\{\ldots,(a_{t-1},o_{t-1},r_{t-1}),(A,O^*,R^*)\}\f$ where A is the
-     * outcome and O* and R* are the default elements of the observation and
-     * reward space. A value based method should ensure that featues don't
-     * depend on observations or rewards with time index of zero since these are
+     * \f$\{\ldots,(a_{t},o_{t},r_{t}),(A,O^*,R^*)\}\f$ where A is the outcome
+     * and O* and R* are the default elements of the observation and reward
+     * space. A value based method should ensure that featues don't depend on
+     * observations or rewards with time index of zero since these are
      * considered to represent the immediate future. */
     std::vector<f_mat_t> F_matrices;
 
@@ -105,6 +105,7 @@ public:
     virtual ~TemporallyExtendedFeatureLearner() = default;
     virtual void grow_feature_set();
     virtual void shrink_feature_set();
+    virtual f_set_t get_feature_set();
     virtual void set_feature_set(const f_set_t&);
     virtual void set_l1_factor(const double& l1);
     virtual void print_features() const;
@@ -115,7 +116,7 @@ public:
         const reward_ptr_t& reward,
         const bool& new_episode
         ) override;
-    virtual void optimize_weights_LBFGS();
+    virtual double optimize_weights_LBFGS();
     /** Directly uses LBFGS_Object::check_derivatives (see there for docu). */
     bool check_derivatives(const int& number_of_samples,
                            const double& range,
@@ -128,6 +129,10 @@ public:
     virtual void set_spaces(const action_ptr_t & a,
                             const observation_ptr_t & o,
                             const reward_ptr_t & r) override;
+    /** Print feature matrices. That is, print values of all feature for all
+     * outcomes for all training data. @param n gives the number of previous
+     * action-observation-reward triplets to be printed. */
+    virtual void print_F_matrices(int n = 0);
 
 protected:
 
@@ -141,7 +146,7 @@ protected:
     virtual void apply_weight_map(weight_map_t);
 
     /** Update all data. */
-    virtual void update();
+    virtual bool update();
 
     /** Update basis features from current feature set and returns whether they
      * changed. */
