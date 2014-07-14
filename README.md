@@ -62,7 +62,8 @@ Everything else is equal to ubuntu.
   handle SIGINT pass
 
 * append source directory to all "*.files" files:
-echo "echo '/home/mtoussai/git/mlr/share/src' >> $1" > nogit_append_path
+echo "echo '/home/mtoussai/git/mlr/share/src' >> \$1" > nogit_append_path
+chmod a+x nogit_append_path
 find . -name '\.*\.includes' -exec ./nogit_append_path {} \;
 
 ## Getting started

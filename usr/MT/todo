@@ -1,3 +1,16 @@
+** PR2 controller
+
+* make everything linear
+* have data stuctures
+  * JointConfigInfo { map index-to-name } ? (Necessary?)
+  * JointControllerRefs { q_ref, Kq_matrix, Kd_factor, u_bias, fL_ref, fR_ref, KfL, KfR }
+  * JointControllerState { q_real, qdot_real, u_cmd, u_real, fL_real, fR_real }
+
+** relative quaterion task variables
+
+* scalar product issues with quaternion distance/difference
+* implement correctly within DefaultTaskMap
+
 ** task & constraints
 
 check the consistency of the constraintProxyVariable with squared
