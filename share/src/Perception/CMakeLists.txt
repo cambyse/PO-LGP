@@ -47,7 +47,7 @@ endif(WITH_LIBPULSE)
 
 # optionally put in some ROS deps, if available and enabled
 if(ROSBUILD)
-	pkg_check_modules(ROS_IMG_TRANS image_transport sensor_msgs roscpp)
+	pkg_check_modules(ROS_IMG_TRANS image_transport camera_info_manager sensor_msgs roscpp)
 	if(ROS_IMG_TRANS_FOUND)
 		message(STATUS "Building ROS image transport for libPerception")
 		add_definitions(-DHAVE_ROS_IMAGE_TRANSPORT ${ROS_IMG_TRANS_CFLAGS_OTHER})

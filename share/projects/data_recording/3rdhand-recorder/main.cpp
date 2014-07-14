@@ -12,6 +12,7 @@
 #include <Perception/audio.h>
 #include <Perception/perception.h>
 #include <Perception/videoEncoder.h>
+#include <Perception/image_pub.h>
 #include <Hardware/kinect/kinect.h>
 #include <Hardware/flycap/flycap.h>
 
@@ -53,13 +54,14 @@ private:
 	//byteA buffer;
 	OpenGL gl;
 	double start_time;
+	ImagePublisher pub;
 
 public:
 	GrabAndSave(int camID, const char* name, const MT::String& created, const bool& terminated) :
 		terminated(terminated), ready(false), id(camID), name(name),
 		cam(id, MLR::PIXEL_FORMAT_RAW8, MLR::PIXEL_FORMAT_RGB8),
 		enc(STRING("z." << name << "." << created << ".264"), 60, 0, MLR::PIXEL_FORMAT_RGB8),
-		times(enc.name()), start_time(ULONG_MAX) {
+		times(enc.name()), start_time(ULONG_MAX), pub(name, STRING("id" << camID).p, MLR::PIXEL_FORMAT_RGB8) {
 	}
 
 	bool isReady() const {
@@ -80,6 +82,7 @@ public:
 			double h_ratio = (double)gl.height / (double)gl.background.d1;
 			gl.backgroundZoom = min(w_ratio, h_ratio);
 			gl.update(NULL, false, false, false);
+			pub.publish(gl.background, timestamp);
 		} else {
 			cerr << "grab " << id << " failed" << endl;
 		}
@@ -97,6 +100,7 @@ private:
 	byteA audio_buf, kinect_depth_repack;
 	KinectCallbackReceiver kinect;
 	int kin_video_count, kin_depth_count;
+	OpenGL kinect_gl;
 	double start_time;
 
 protected:
@@ -141,6 +145,8 @@ protected:
 		if(!terminated && (timestamp > start_time || (start_time - timestamp < .016))) {
 			kinect_video.addFrame(rgb);
 			kinect_video_times.add_stamp(timestamp);
+			kinect_gl.background = rgb;
+			kinect_gl.update(NULL, false, false, false);
 		}
 	}
 	void kinect_depth_cb(const MT::Array<uint16_t>& depth, double timestamp) {
@@ -191,6 +197,8 @@ void test_openmp() {
 }
 
 int main(int argc,char **argv){
+	init_image_publishers(argc, argv, "third_hand_recorder");
+
 	struct sigaction sa;
 	memset( &sa, 0, sizeof(sa) );
 	sa.sa_handler = got_signal;

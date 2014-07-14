@@ -10,9 +10,11 @@
 #ifdef HAVE_ROS_IMAGE_TRANSPORT
 #include <ros/node_handle.h>
 #include <image_transport/image_transport.h>
+#include <camera_info_manager/camera_info_manager.h>
 #include <sensor_msgs/image_encodings.h>
 #include <sensor_msgs/fill_image.h>
 using namespace image_transport;
+using namespace camera_info_manager;
 #endif
 
 #include <Core/array.h>
@@ -25,6 +27,7 @@ struct sImagePublisher {
 	ros::NodeHandle n;
 	ImageTransport t;
 	Publisher p;
+	CameraInfoManager cim;
 	sensor_msgs::Image msg;
 #endif
 	uint32_t seq, bypp;
@@ -34,7 +37,7 @@ struct sImagePublisher {
 
 	sImagePublisher(const std::string& base_topic, const std::string& camera_name, PixelFormat pix_fmt) :
 #ifdef HAVE_ROS_IMAGE_TRANSPORT
-		t(n), p(t.advertise(base_topic, 1)),
+		n(base_topic), t(n), p(t.advertise(camera_name, 1)), cim(n, camera_name),
 #endif
 		seq(0), camera_name(camera_name), pix_fmt(pix_fmt)
 	{
