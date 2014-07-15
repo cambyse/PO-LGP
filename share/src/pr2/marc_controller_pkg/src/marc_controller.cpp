@@ -31,8 +31,6 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   ROS_INFO("*** trying to load ORS model... (failure means that model.kvg was not found)");
   world <<FILE("model.kvg");
   ROS_INFO("*** ORS model loaded");
-  ftL_shape = world.getShapeByName("endeffForceL");
-  ftR_shape = world.getShapeByName("endeffForceR");
   ROS_qIndex.resize(world.q.N) = UINT_MAX;
   q.resize(world.q.N).setZero();
   qd.resize(world.q.N).setZero();
@@ -111,23 +109,12 @@ void TreeControllerClass::update() {
   jointStateMsg.fL = VECTOR(fL_obs);
   jointState_publisher.publish(jointStateMsg);
 
-  //-- update ORS to compute Jacobians used in force controller
-  world.setJointState(q, qd);
-  world.kinematicsPos(y_fL, J_fL, ftL_shape->body, &ftL_shape->rel.pos);
-  world.kinematicsPos(y_fR, J_fR, ftR_shape->body, &ftR_shape->rel.pos);
-
   //-- PD on q_ref
-  if(q_ref.N!=q.N || qdot_ref.N!=qd.N){
+  if(q_ref.N!=q.N || qdot_ref.N!=qd.N || u_bias.N!=q.N){
     cout <<'#' <<flush; //hashes indicate that q_ref has wrong size...
   }else{
     u = Kp_gainFactor*(Kp % (q_ref - q)) + Kd_gainFactor*(Kd % (qdot_ref - qd));
-
-    if(fL_ref.N==3){
-      u += fL_gainFactor*(~J_fL * fL_ref);
-    }
-    if(fR_ref.N==3){
-      u += fR_gainFactor*(~J_fR * fR_ref);
-    }
+    u += u_bias;
 
     //-- command efforts to KDL
     for (uint i=0;i<q.N;i++) if(ROS_qIndex(i)!=UINT_MAX){
@@ -159,6 +146,7 @@ void TreeControllerClass::jointReference_subscriber_callback(const marc_controll
   qdot_ref = ARRAY(msg->qdot);
   fL_ref = ARRAY(msg->fL);
   fR_ref = ARRAY(msg->fR);
+  u_bias = ARRAY(msg->u_bias);
 #define CP(x) x=msg->x;  if(x>1.) x=1.;  if(x<0.) x=0.;
   CP(Kp_gainFactor);
   CP(Kd_gainFactor);

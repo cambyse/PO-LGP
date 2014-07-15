@@ -22,15 +22,12 @@ private:
   arr u, Kd, Kp;
   arr q, qd;
   arr q_ref, qdot_ref;
+  arr fL_ref, fR_ref;
   double Kp_gainFactor, Kd_gainFactor, fL_gainFactor, fR_gainFactor;
-
+  arr u_bias;
 
   //force related things
-  ors::Shape *ftL_shape, *ftR_shape;
-  arr fL_obs;
-  arr fL_ref, fR_ref;
-  arr y_fL, J_fL;
-  arr y_fR, J_fR;
+  arr fL_obs, fR_obs;
 
   //matching joint indices
   uintA ROS_qIndex;
