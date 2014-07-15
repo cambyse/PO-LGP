@@ -17,10 +17,10 @@ bool rosOk();
 
 //-- a basic message type for communication with the PR2 controller
 struct CtrlMsg{
-  arr q, qdot, fL, fR;
+  arr q, qdot, fL, fR, u_bias;
   double Kp_gainFactor, Kd_gainFactor, fL_gainFactor, fR_gainFactor;
   CtrlMsg():Kp_gainFactor(1.), Kd_gainFactor(1.), fL_gainFactor(0.), fR_gainFactor(0.){}
-  CtrlMsg(const arr& _q, const arr& _qdot, const arr& _fL, const arr& _fR):q(_q), qdot(_qdot), fL(_fL), fR(_fR){}
+  CtrlMsg(const arr& _q, const arr& _qdot, const arr& _fL, const arr& _fR, const arr& u_bias):q(_q), qdot(_qdot), fL(_fL), fR(_fR), u_bias(u_bias){}
 };
 inline void operator<<(ostream& os, const CtrlMsg& m){ os<<"BLA"; }
 inline void operator>>(istream& os, CtrlMsg& m){  }
