@@ -1,5 +1,4 @@
-#include <Core/array.h>
-#include <Hardware/kinect/kinect.h>
+#include "depth_packing.h"
 
 REGISTER_MODULE(KinectDepthPacking)
 

@@ -11,11 +11,14 @@ struct MySystem:System{
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
   ACCESS(arr, joystickState);
-  RosCom *ros;
+  RosCom_ControllerSync *ros;
   MySystem():ros(NULL){
     addModule<JoystickInterface>(NULL, Module_Thread::loopWithBeat, .01);
-    if(MT::getParameter<bool>("useRos", false))
-      ros = addModule<RosCom>(NULL, Module_Thread::loopWithBeat, .001);
+    if(MT::getParameter<bool>("useRos", false)){
+//      ros = addModule<RosCom>(NULL, Module_Thread::loopWithBeat, .001);
+      addModule<RosCom_Spinner>(NULL, Module_Thread::loopWithBeat, .001);
+      ros = addModule<RosCom_ControllerSync>(NULL, Module_Thread::listenFirst);
+    }
     connect();
   }
 };
@@ -101,9 +104,14 @@ void testJoypad(){
       refs.qdot(trans->qIndex+0) = qdot(trans->qIndex+0);
       refs.qdot(trans->qIndex+1) = qdot(trans->qIndex+1);
       refs.qdot(trans->qIndex+2) = qdot(trans->qIndex+2);
+      if(true){ //no translations!
+        refs.qdot(trans->qIndex+0) = 0.;
+        refs.qdot(trans->qIndex+1) = 0.;
+        refs.qdot(trans->qIndex+2) = 0.;
+      }
     }
     S.ctrl_ref.set() = refs;
-    if(S.ros) S.ros->publishJointReference();
+//    if(S.ros) S.ros->publishJointReference();
 
     if(engine().shutdown.getValue()/* || !rosOk()*/) break;
   }

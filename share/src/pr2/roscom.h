@@ -45,17 +45,6 @@ inline void operator<<(ostream& os, const JointControllerStateMsg& m){ os<<"Join
 inline void operator>>(istream& os, JointControllerStateMsg& m){  }
 
 //===========================================================================
-
-//-- a generic message for cams
-struct CameraDataMsg{
-  byteA rgb;
-  MT::Array<uint16_t> depth;
-  arr pose;
-};
-inline void operator<<(ostream& os, const CameraDataMsg& m){ os<<"CameraDataMsg - NIY"; }
-inline void operator>>(istream& os, CameraDataMsg& m){  }
-
-//===========================================================================
 //
 // modules
 //
@@ -67,30 +56,10 @@ inline void operator>>(istream& os, CameraDataMsg& m){  }
 - RosKinectMsg
 - RosCameraMsg
 
-Only the CtrlMsg listens to ctrl_ref and then steps and publishes. All
-others only have a feedback and write into Variables.
-
-The Spinner does only ros::spinOnce() in each step and checks
-initialization on startup.
-
 TODO: allow modules to set default loopWithBeat, listenFirst, etc
 options. (In their constructor?)
 
 */
-
-
-struct RosCom:Module{ //RosCtrlMsg
-  struct sRosCom *s;
-  ACCESS(CtrlMsg, ctrl_ref);
-  ACCESS(CtrlMsg, ctrl_obs);
-
-  RosCom();
-
-  void publishJointReference(); //-> When Spinner and CtrlMst are seperated, this should automatically be called/done by step() (and triggered by every write access to ctrl_ref)
-  void open();
-  void step();
-  void close();
-};
 
 
 //===========================================================================
@@ -103,31 +72,41 @@ END_MODULE()
 
 /// This module syncs the controller state and refs with the real time hardware controller (marc_controller_...)
 BEGIN_MODULE(RosCom_ControllerSync)
-  ACCESS(JointControllerRefsMsg, ctrl_refs)
-  ACCESS(JointControllerStateMsg, ctrl_state)
+  ACCESS(CtrlMsg, ctrl_ref)
+  ACCESS(CtrlMsg, ctrl_obs)
+//  ACCESS(JointControllerRefsMsg, ctrl_refs)
+//  ACCESS(JointControllerStateMsg, ctrl_state)
 END_MODULE()
 
 //===========================================================================
 
 /// This module syncs the kinect
 BEGIN_MODULE(RosCom_KinectSync)
-  ACCESS(CameraDataMsg, kinect_data)
+  ACCESS(byteA, kinect_rgb)
+  ACCESS(MT::Array<uint16_t>, kinect_depth)
 END_MODULE()
 
 //===========================================================================
 
 /// This module syncs the left & right eye
-BEGIN_MODULE(RosCom_HeadCamsSync)
-  ACCESS(CameraDataMsg, rgb_leftEye)
-  ACCESS(CameraDataMsg, rgb_rightEye)
+BEGIN_MODULE(RosCom_CamsSync)
+  ACCESS(byteA, rgb_leftEye)
+  ACCESS(byteA, rgb_rightEye)
 END_MODULE()
 
 //===========================================================================
 
 /// This module syncs the left & right arm cams
 BEGIN_MODULE(RosCom_ArmCamsSync)
-  ACCESS(CameraDataMsg, rgb_leftArm)
-  ACCESS(CameraDataMsg, rgb_rightArm)
+  ACCESS(byteA, rgb_leftArm)
+  ACCESS(byteA, rgb_rightArm)
+END_MODULE()
+
+//===========================================================================
+
+BEGIN_MODULE(RosCom_ForceSensorSync)
+  ACCESS(arr, wrenchL)
+  ACCESS(arr, wrenchR)
 END_MODULE()
 
 //===========================================================================
