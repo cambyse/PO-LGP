@@ -15,6 +15,7 @@
 struct IOC_DemoCost {
   arr x0; // Demonstrated joint space
   arr lambda0; // Demonstrated constrains
+  arr lambda; // Current lambda estimate
   arr Dwdx; // Matrix mapping x to w
   uint numParam; // number of x parameter
   bool useDetH;
@@ -23,10 +24,12 @@ struct IOC_DemoCost {
   // task vars
   arr J_Jt,PHI,J,JP;
   // constrain vars
-  arr Jg,g, JgP;
-  arr dPHI_J_G_Jt_dPHI;
+  arr Jg,g, JgP,Jg_Jgt,Jg_JgtP;
+  arr J_Jgt;
+  arr dWdx_dPHI_J_G_Jt_dPHI_dWdx;
   arr Jgt_JgJgtI_Jg;
-
+  arr dPHI_J_Jt_dPHI;
+  arr JgJgtI_Jg_J_dPHI;
 
   IOC_DemoCost(MotionProblem &_MP,arr &_x0,arr &_lambda0, arr &_Dwdx,uint _numParam,bool _useDetH, bool _useHNorm):x0(_x0),lambda0(_lambda0),Dwdx(_Dwdx),numParam(_numParam),useDetH(_useDetH),useHNorm(_useHNorm) {
     // precompute some terms
@@ -38,36 +41,50 @@ struct IOC_DemoCost {
     MT::Array<uint> idx;
     lambda0.findValues(idx,0.);
     lambda0.removeAllValues(0.);
-
     Jg = unpack(JgP);
     arr Jgr;
+    uint j = 0;
     for (uint i =0;i<Jg.d0;i++) {
       if(!idx.contains(i)) {
         Jgr.append(~Jg[i]);
       }
+      if(idx.contains(i)) {
+        JgP.delRows(j);
+        ((RowShiftedPackedMatrix*)JgP.aux)->rowShift.remove(j);
+        j--;
+      }
+      j++;
     }
     Jg = Jgr;
 
+
+    Jg_Jgt = unpack(comp_A_At(JgP));
+    Jg_JgtP = comp_A_At(JgP);
     Jgt_JgJgtI_Jg = ~Jg*inverse(Jg*~Jg)*Jg;
     PHI = v.y;
     JP = v.Jy;
     J_Jt = unpack(comp_A_At(JP));
     J = unpack(JP); J.special = arr::noneST;
-    dPHI_J_G_Jt_dPHI = diag(PHI)*J*(eye(Jgt_JgJgtI_Jg.d0) - Jgt_JgJgtI_Jg)*~J*diag(PHI);
+    dPHI_J_Jt_dPHI = diag(PHI)*J*~J*diag(PHI);
+    dWdx_dPHI_J_G_Jt_dPHI_dWdx = dPHI_J_Jt_dPHI - (diag(PHI)*J*Jgt_JgJgtI_Jg*~J*diag(PHI));
+    dWdx_dPHI_J_G_Jt_dPHI_dWdx =  ~Dwdx*dWdx_dPHI_J_G_Jt_dPHI_dWdx*Dwdx;
+    JgJgtI_Jg_J_dPHI = inverse_SymPosDef(Jg_Jgt)*Jg*~J*diag(PHI);
+    J_Jgt = J*~Jg;
   }
 
   double eval(arr& df, arr& Hf,arr& gLambda, arr& JgLambda, const arr& x) {
-    //    MT::timerStart(true);
     // compute w vector
     arr w;
-
     w = Dwdx*x;
     arr PHIw = PHI%w;
-    //    arr J_Jt_PHIw = comp_A_x(JP,comp_At_x(JP,PHIw));
-    arr J_G_Jt_PHIw = J*(eye(Jgt_JgJgtI_Jg.d0)-Jgt_JgJgtI_Jg)*~J*PHIw;
-
+    arr JP_PHIw = comp_At_x(JP,PHIw);
+    arr J_Jt_PHIw = comp_A_x(JP,JP_PHIw);
+    arr JgJgtI_Jg_Jt_PHIw = lapack_Ainv_b_sym(Jg_JgtP,comp_A_x(JgP,JP_PHIw));
+    arr J_G_Jt_PHIw = J_Jt_PHIw - comp_A_x(J_Jgt,JgJgtI_Jg_Jt_PHIw);
     arr Hdxdx,HdxdxInv,Jw;
 
+    lambda = -JgJgtI_Jg_Jt_PHIw;
+    cout << lambda << endl;
     if (useHNorm || useDetH) {
       Jw = J%(repmat(sqrt(w),1,J.d1));
       Hdxdx = 2.*~Jw*Jw;
@@ -87,9 +104,7 @@ struct IOC_DemoCost {
       double detHdxdx = lapack_determinantSymPosDef(Hdxdx);
       y = y - log(detHdxdx);
     }
-
     if (&df) {
-
       arr h;
       if (useHNorm) {
         h = 8.*(PHI-(J*HdxdxInv*~J*PHIw)) % (J*HdxdxInv*~J*PHIw);
@@ -106,33 +121,28 @@ struct IOC_DemoCost {
       }
       df.flatten();
     }
-
     if (&Hf) {
       if (useHNorm) {
         Hf = -16.*diag(J*HdxdxInv*~J*PHIw)*(J*HdxdxInv*~J*(-2.*diag(J*HdxdxInv*~J*PHIw) + diag(PHI)));
         Hf = Hf + 8.*diag(PHI)*J*HdxdxInv*~J*(-2.*diag(J*HdxdxInv*~J*PHIw) + diag(PHI));
       } else {
-        Hf = 8.*(dPHI_J_G_Jt_dPHI);
+        Hf = 8.*(dWdx_dPHI_J_G_Jt_dPHI_dWdx);
       }
-
-      Hf = ~Dwdx*Hf*Dwdx ;
 
       if (useDetH){
         arr K = 2.*J*HdxdxInv*~J;
         Hf = Hf - ~Dwdx*(-K%K)*Dwdx;
       }
     }
-
     if (&gLambda) {
-      gLambda = 2.*inverse(Jg*~Jg)*Jg*~J*PHIw;
+      //      gLambda = 2.*inverse(Jg*~Jg)*Jg*~J*PHIw;
+      gLambda = 2.*JgJgtI_Jg_Jt_PHIw;
     }
 
     if (&JgLambda) {
-      JgLambda = 2.*inverse(Jg*~Jg)*Jg*~J*diag(PHI);
+      JgLambda = 2.*JgJgtI_Jg_J_dPHI ;
     }
 
-
-    //    cout << "4: "  << MT::timerRead(true) << endl;
     return y;
   }
 };
@@ -140,7 +150,7 @@ struct IOC_DemoCost {
 struct Demonstration {
   MotionProblem& MP; // MP containing the world state,
   arr x;             // joint trajectory
-  arr lambda;        // joint trajectory
+  arr lambda;        // constraint trajectory
   IOC_DemoCost* cost;// cost function for this demonstrations
 
   Demonstration (MotionProblem &_MP):MP(_MP) {
@@ -150,15 +160,12 @@ struct Demonstration {
 
 struct IOC:ConstrainedProblem {
   MT::Array<Demonstration*> &demos;
-
+  arr xOpt;
   uint numParam;
   uint numLambda;
   arr Dwdx;
   uint n;
   uint T;
-
-
-
 
   virtual uint dim_x() { return numParam;}
   virtual uint dim_g() { return numParam+numLambda+1;}
@@ -195,6 +202,7 @@ struct IOC:ConstrainedProblem {
 
 
   virtual double fc(arr& df, arr& Hf, arr& g, arr& Jg, const arr& x) {
+    xOpt = x;
 
     double y = 0.;
     if (&df) {
@@ -240,6 +248,15 @@ struct IOC:ConstrainedProblem {
 
     return y;
   }
+
+  void printOptSolution() {
+    cout << "Opt Solution: " <<xOpt << endl;
+    for (uint i=0;i<demos.d0;i++) {
+      cout << "Demonstration " << i << endl;
+      cout << "Costs: " << demos(i)->cost->eval(NoArr,NoArr,NoArr,NoArr,xOpt) << endl;
+      cout << "Lambda: " << demos(i)->cost->lambda/sqrt(sumOfSqr(demos(i)->cost->lambda)) << endl;
+    }
+  }
 };
 
 
@@ -271,7 +288,7 @@ void simpleMotion(){
   optConstrained(x,lambda,Convert(MPF),OPT(verbose=0,stopTolerance=1e-7, maxStep=1.));
 
   //  displayTrajectory(x,T,world,"optTraj");
-  cout << lambda << endl;
+
 
   // save optimal solution for evaluation
   arr wOpt;
@@ -291,14 +308,16 @@ void simpleMotion(){
   IOC ioc(demos,numParam,false,false);
 
   arr w = ones(numParam,1);w.flatten();
+//  w=wOpt/sqrt(sumOfSqr(wOpt));
   //w = fabs(randn(numParam,1)); w.flatten();
 
-  checkAllGradients(ioc,w,1e-3);
-  return;
+//  checkAllGradients(ioc,w,1e-3);
+
   arr dual;
-  optConstrained(w,dual,ioc,OPT(verbose=2,stopTolerance=1e-5,constrainedMethod=augmentedLag));
-  cout << "Found Solution: " << w << endl;
-  cout << "Opt Solution: " << wOpt/sqrt(sumOfSqr(wOpt)) << endl;
+  optConstrained(w,dual,ioc,OPT(verbose=2,stopTolerance=1e-6,constrainedMethod=augmentedLag));
+  cout << "Ground Truth theta: " << wOpt/sqrt(sumOfSqr(wOpt)) << endl;
+  ioc.printOptSolution();
+  cout << "Ground Truth lambda: " << lambda/sqrt(sumOfSqr(lambda)) << endl;
 }
 
 
