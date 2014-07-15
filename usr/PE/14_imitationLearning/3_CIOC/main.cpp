@@ -84,7 +84,7 @@ struct IOC_DemoCost {
     arr Hdxdx,HdxdxInv,Jw;
 
     lambda = -JgJgtI_Jg_Jt_PHIw;
-    cout << lambda << endl;
+
     if (useHNorm || useDetH) {
       Jw = J%(repmat(sqrt(w),1,J.d1));
       Hdxdx = 2.*~Jw*Jw;
@@ -135,7 +135,6 @@ struct IOC_DemoCost {
       }
     }
     if (&gLambda) {
-      //      gLambda = 2.*inverse(Jg*~Jg)*Jg*~J*PHIw;
       gLambda = 2.*JgJgtI_Jg_Jt_PHIw;
     }
 
@@ -227,7 +226,7 @@ struct IOC:ConstrainedProblem {
     // iterate over demonstrations
     for (uint i=0;i<demos.d0;i++) {
       arr dfi,Hfi,gi,Jgi;
-      y += demos(i)->cost->eval(dfi,Hfi,gi,Jgi,x);
+      y += demos(i)->cost->eval(dfi, Hfi, &g?gi:NoArr, &Jg?Jgi:NoArr, x);
 
       if (&df) {
         df = df + dfi;
@@ -250,11 +249,12 @@ struct IOC:ConstrainedProblem {
   }
 
   void printOptSolution() {
-    cout << "Opt Solution: " <<xOpt << endl;
+    cout << "\n \n The solution is " <<xOpt << endl;
     for (uint i=0;i<demos.d0;i++) {
-      cout << "Demonstration " << i << endl;
+      cout << "\nDemonstration " << i << endl;
       cout << "Costs: " << demos(i)->cost->eval(NoArr,NoArr,NoArr,NoArr,xOpt) << endl;
       cout << "Lambda: " << demos(i)->cost->lambda/sqrt(sumOfSqr(demos(i)->cost->lambda)) << endl;
+      cout << "Lambda GT: " << demos(i)->cost->lambda0/sqrt(sumOfSqr(demos(i)->cost->lambda0)) << endl;
     }
   }
 };
@@ -286,23 +286,55 @@ void simpleMotion(){
   cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<" # joints=" <<world.getJointStateDimension()<<endl;
   arr x(T+1,n); x.setZero();arr lambda(T+1); lambda.setZero();
   optConstrained(x,lambda,Convert(MPF),OPT(verbose=0,stopTolerance=1e-7, maxStep=1.));
+  cout << "lambda: "<< lambda << endl;
 
   //  displayTrajectory(x,T,world,"optTraj");
-
-
   // save optimal solution for evaluation
-  arr wOpt;
-  wOpt.append(MP.H_rate_diag);
-  wOpt.append(MP.taskCosts(0)->prec(T));
-
+  arr wGT;
+  wGT.append(MP.H_rate_diag);
+  wGT.append(MP.taskCosts(0)->prec(T));
 
   MP.taskCosts(0)->prec(T) = 1;
   MP.H_rate_diag = MP.H_rate_diag/MP.H_rate_diag;
-
   Demonstration* d = new Demonstration(MP);
   d->x = x;
   d->lambda = lambda;
   demos.append(d);
+
+
+
+
+  // define toy demonstration 2
+  ors::KinematicWorld world2("scene");
+  world2.getJointState(q, qdot);
+  MotionProblem MP2(world2,true);
+  MP2.loadTransitionParameters();
+
+  MP2.makeContactsAttractive=false;
+  MP2.world.getBodyByName("goal")->X.pos += ARR(0.,0.,0.1);
+  arr refGoal2 = ARRAY(MP2.world.getBodyByName("goal")->X.pos);
+  TaskCost *c2;
+  c2 = MP2.addTask("position_right_hand",new DefaultTaskMap(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
+  MP2.setInterpolatingCosts(c2, MotionProblem::finalOnly, refGoal2, 1e4);
+  c2 = MP2.addTask("collisionConstraints", new PairCollisionConstraint(MP2.world,"endeff","obstacle",0.1));
+  MP2.setInterpolatingCosts(c2, MotionProblem::constant, ARRAY(0.), 1.);
+
+  MP2.x0 = {0.,0.,0.};
+  MotionProblemFunction MPF2(MP2);
+  arr x2(T+1,n); x2.setZero();arr lambda2(T+1); lambda2.setZero();
+  optConstrained(x2,lambda2,Convert(MPF2),OPT(verbose=0,stopTolerance=1e-8, maxStep=1.));
+//  displayTrajectory(x2,T,world2,"optTraj");
+  cout << "lambda2: "<< lambda2 << endl;
+
+  MP2.taskCosts(0)->prec(T) = 1;
+  MP2.H_rate_diag = MP2.H_rate_diag/MP2.H_rate_diag;
+
+  Demonstration* d2 = new Demonstration(MP2);
+  d2->x = x2;
+  d2->lambda = lambda2;
+
+  demos.append(d2);
+
 
   uint numParam = 4;
   IOC ioc(demos,numParam,false,false);
@@ -311,13 +343,12 @@ void simpleMotion(){
 //  w=wOpt/sqrt(sumOfSqr(wOpt));
   //w = fabs(randn(numParam,1)); w.flatten();
 
-//  checkAllGradients(ioc,w,1e-3);
+  checkAllGradients(ioc,w,1e-3);
 
   arr dual;
-  optConstrained(w,dual,ioc,OPT(verbose=2,stopTolerance=1e-6,constrainedMethod=augmentedLag));
-  cout << "Ground Truth theta: " << wOpt/sqrt(sumOfSqr(wOpt)) << endl;
+  optConstrained(w,dual,ioc,OPT(verbose=2,stopTolerance=1e-5,constrainedMethod=augmentedLag));
+  cout << "Ground Truth theta: " << wGT/sqrt(sumOfSqr(wGT)) << endl;
   ioc.printOptSolution();
-  cout << "Ground Truth lambda: " << lambda/sqrt(sumOfSqr(lambda)) << endl;
 }
 
 
