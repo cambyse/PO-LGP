@@ -1,10 +1,9 @@
-#include <Core/array.h>
-#include <Hardware/kinect/kinect.h>
+#include "depth_packing.h"
 
 REGISTER_MODULE(KinectDepthPacking)
 
 namespace MLR {
-	void pack_kindepth2rgb(const MT::Array<uint16_t>& depth, byteA& buffer) {
+	void pack_kindepth2rgb(const uint16A& depth, byteA& buffer) {
 		buffer.resize(depth.N, 3);
 
 		uint16_t d;

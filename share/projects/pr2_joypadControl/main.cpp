@@ -11,11 +11,13 @@ struct MySystem:System{
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
   ACCESS(arr, joystickState);
-  RosCom *ros;
-  MySystem():ros(NULL){
+  MySystem(){
     addModule<JoystickInterface>(NULL, Module_Thread::loopWithBeat, .01);
-    if(MT::getParameter<bool>("useRos", false))
-      ros = addModule<RosCom>(NULL, Module_Thread::loopWithBeat, .001);
+    if(MT::getParameter<bool>("useRos", false)){
+      addModule<RosCom_Spinner>(NULL, Module_Thread::loopWithBeat, .001);
+      addModule<RosCom_ControllerSync>(NULL, Module_Thread::listenFirst);
+      addModule<RosCom_ForceSensorSync>(NULL, Module_Thread::loopWithBeat, 1.);
+    }
     connect();
   }
 };
@@ -27,6 +29,9 @@ void testJoypad(){
   arr q, qdot;
   world.getJointState(q, qdot);
   ors::Joint *trans=world.getJointByName("worldTranslationRotation");
+  ors::Shape *ftL_shape=world.getShapeByName("endeffForceL");
+
+  ors::KinematicWorld worldCopy = world;
 
   FeedbackMotionControl MP(world, true);
   MP.qitselfPD.y_ref = q;
@@ -36,7 +41,7 @@ void testJoypad(){
   MySystem S;
   engine().open(S);
 
-  if(S.ros){
+  if(MT::getParameter<bool>("useRos", false)){
     //-- wait for first q observation!
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
     for(;;){
@@ -60,17 +65,13 @@ void testJoypad(){
   for(uint t=0;;t++){
     S.joystickState.var->waitForNextRevision();
     arr joypadState = S.joystickState.get();
-
-//    q    = S.q_obs.get();
-//    qdot = S.qdot_obs.get();
-//    MP.setState(q,qdot);
-
-//    cout <<S.ctrl_obs.get()->fL <<endl;
-
     bool shutdown = j2t.updateTasks(joypadState);
-    if(t>10 && shutdown){
-      engine().shutdown.incrementValue();
-    }
+    if(t>10 && shutdown) engine().shutdown.incrementValue();
+
+    // joint state
+    worldCopy.setJointState(S.ctrl_obs.get()->q, S.ctrl_obs.get()->qdot);
+    if(!(t%4))
+      worldCopy.gl().update(STRING("real robot state"));
 
     arr a = MP.operationalSpaceControl();
     q += .01*qdot;
@@ -85,25 +86,34 @@ void testJoypad(){
     uint mode = 0;
     if(joypadState.N) mode = uint(joypadState(0));
     if(mode==2){
+      arr y_fL, J_fL;
+      MP.world.kinematicsPos(y_fL, J_fL, ftL_shape->body, &ftL_shape->rel.pos);
       cout <<"FORCE TASK" <<endl;
       refs.fL = ARR(10., 0., 0.);
       refs.fL_gainFactor = 1.;
       refs.Kp_gainFactor = .3;
+      refs.u_bias = refs.fL_gainFactor*(~J_fL * refs.fL);
     }else{
       refs.fL = ARR(0., 0., 0.);
       refs.fL_gainFactor = 0.;
       refs.Kp_gainFactor = 1.;
+      refs.u_bias = zeros(q.N);
     }
 
     refs.q=q;
     refs.qdot=zero_qdot;
+//    refs.u_bias=zero_qdot;
     if(trans && trans->qDim()==3){
       refs.qdot(trans->qIndex+0) = qdot(trans->qIndex+0);
       refs.qdot(trans->qIndex+1) = qdot(trans->qIndex+1);
       refs.qdot(trans->qIndex+2) = qdot(trans->qIndex+2);
+      if(true){ //no translations!
+        refs.qdot(trans->qIndex+0) = 0.;
+        refs.qdot(trans->qIndex+1) = 0.;
+        refs.qdot(trans->qIndex+2) = 0.;
+      }
     }
     S.ctrl_ref.set() = refs;
-    if(S.ros) S.ros->publishJointReference();
 
     if(engine().shutdown.getValue()/* || !rosOk()*/) break;
   }

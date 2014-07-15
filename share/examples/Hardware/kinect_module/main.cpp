@@ -35,7 +35,7 @@ void TEST(KinectRaw) {
   OpenGL gl;
   KinectPoller kin;
   byteA kinect_rgb;
-  MT::Array<uint16_t> kinect_depth;
+  uint16A kinect_depth;
   connect(kin.kinect_rgb, kinect_rgb);
   connect(kin.kinect_depth, kinect_depth);
 
