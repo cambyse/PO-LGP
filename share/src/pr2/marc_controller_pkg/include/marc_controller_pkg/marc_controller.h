@@ -23,7 +23,7 @@ private:
   arr q, qd;
   arr q_ref, qdot_ref;
   arr fL_ref, fR_ref;
-  double Kp_gainFactor, Kd_gainFactor, fL_gainFactor, fR_gainFactor;
+  arr Kq_gainFactor, Kd_gainFactor, Kf_gainFactor;
   arr u_bias;
 
   //force related things

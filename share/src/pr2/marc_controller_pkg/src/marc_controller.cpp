@@ -36,8 +36,8 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   qd.resize(world.q.N).setZero();
   Kp.resize(world.q.N).setZero();
   Kd.resize(world.q.N).setZero();
-  Kp_gainFactor=Kd_gainFactor=1.;
-  fL_gainFactor=fR_gainFactor=0.;
+  Kq_gainFactor=Kd_gainFactor=ARR(1.);
+  Kf_gainFactor=ARR(0.);
   limits.resize(world.q.N,4).setZero();
   for(uint i=0;i<(uint)pr2_tree.size();i++) {
 //    ROS_INFO("Joint Name %d: %s: %f", i, pr2_tree.getJoint(i)->joint_->name.c_str(), jnt_pos_(i));
@@ -113,7 +113,14 @@ void TreeControllerClass::update() {
   if(q_ref.N!=q.N || qdot_ref.N!=qd.N || u_bias.N!=q.N){
     cout <<'#' <<flush; //hashes indicate that q_ref has wrong size...
   }else{
-    u = Kp_gainFactor*(Kp % (q_ref - q)) + Kd_gainFactor*(Kd % (qdot_ref - qd));
+    u = zeros(q.N);
+    if(Kq_gainFactor.N==1 && Kd_gainFactor.N==1){
+      u += Kq_gainFactor.scalar()*(Kp % (q_ref - q));
+      u += Kd_gainFactor.scalar()*(Kd % (qdot_ref - qd));
+    }else{
+      u += Kp % (Kq_gainFactor*(q_ref - q)); //matrix multiplication!
+      u += Kd % (Kd_gainFactor*(qdot_ref - qd));
+    }
     u += u_bias;
 
     //-- command efforts to KDL
@@ -147,11 +154,10 @@ void TreeControllerClass::jointReference_subscriber_callback(const marc_controll
   fL_ref = ARRAY(msg->fL);
   fR_ref = ARRAY(msg->fR);
   u_bias = ARRAY(msg->u_bias);
-#define CP(x) x=msg->x;  if(x>1.) x=1.;  if(x<0.) x=0.;
-  CP(Kp_gainFactor);
+#define CP(x) x=ARRAY(msg->x);
+  CP(Kq_gainFactor);
   CP(Kd_gainFactor);
-  CP(fL_gainFactor);
-  CP(fR_gainFactor);
+  CP(Kf_gainFactor);
 #undef CP
 }
 
