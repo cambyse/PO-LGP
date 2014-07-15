@@ -13,34 +13,58 @@
 #include <Ors/ors_physx.h>
 
 struct IOC_DemoCost {
-  arr x0;
-  arr Dwdx;
-  uint numParam;
+  arr x0; // Demonstrated joint space
+  arr lambda0; // Demonstrated constrains
+  arr Dwdx; // Matrix mapping x to w
+  uint numParam; // number of x parameter
   bool useDetH;
   bool useHNorm;
 
-  arr J_Jt,PHI,J,Jp;
-  arr dPHI_J_Jt_dPHI;
+  // task vars
+  arr J_Jt,PHI,J,JP;
+  // constrain vars
+  arr Jg,g, JgP;
+  arr dPHI_J_G_Jt_dPHI;
+  arr Jgt_JgJgtI_Jg;
 
 
-  IOC_DemoCost(MotionProblem &_MP,arr &_x0,arr &_Dwdx,uint _numParam,bool _useDetH, bool _useHNorm):x0(_x0),Dwdx(_Dwdx),numParam(_numParam),useDetH(_useDetH),useHNorm(_useHNorm) {
+  IOC_DemoCost(MotionProblem &_MP,arr &_x0,arr &_lambda0, arr &_Dwdx,uint _numParam,bool _useDetH, bool _useHNorm):x0(_x0),lambda0(_lambda0),Dwdx(_Dwdx),numParam(_numParam),useDetH(_useDetH),useHNorm(_useHNorm) {
     // precompute some terms
     MotionProblemFunction MPF(_MP);
-    VectorFunction & v = Convert(MPF);
-    v.fv(PHI,Jp,x0);
-    J_Jt = unpack(comp_A_At(Jp));
-    J = unpack(Jp); J.special = arr::noneST;
-    dPHI_J_Jt_dPHI = diag(PHI)*J*~J*diag(PHI);
+    ConstrainedProblem & v = Convert(MPF);
+    v.fc(NoArr,NoArr,g,JgP,_x0);
+
+    // reduce Jg to only active part (lambda !=0)
+    MT::Array<uint> idx;
+    lambda0.findValues(idx,0.);
+    lambda0.removeAllValues(0.);
+
+    Jg = unpack(JgP);
+    arr Jgr;
+    for (uint i =0;i<Jg.d0;i++) {
+      if(!idx.contains(i)) {
+        Jgr.append(~Jg[i]);
+      }
+    }
+    Jg = Jgr;
+
+    Jgt_JgJgtI_Jg = ~Jg*inverse(Jg*~Jg)*Jg;
+    PHI = v.y;
+    JP = v.Jy;
+    J_Jt = unpack(comp_A_At(JP));
+    J = unpack(JP); J.special = arr::noneST;
+    dPHI_J_G_Jt_dPHI = diag(PHI)*J*(eye(Jgt_JgJgtI_Jg.d0) - Jgt_JgJgtI_Jg)*~J*diag(PHI);
   }
 
-  double eval(arr& df, arr& Hf, const arr& x) {
+  double eval(arr& df, arr& Hf,arr& gLambda, arr& JgLambda, const arr& x) {
     //    MT::timerStart(true);
     // compute w vector
     arr w;
 
     w = Dwdx*x;
     arr PHIw = PHI%w;
-    arr J_Jt_PHIw = comp_A_x(Jp,comp_At_x(Jp,PHIw));
+    //    arr J_Jt_PHIw = comp_A_x(JP,comp_At_x(JP,PHIw));
+    arr J_G_Jt_PHIw = J*(eye(Jgt_JgJgtI_Jg.d0)-Jgt_JgJgtI_Jg)*~J*PHIw;
 
     arr Hdxdx,HdxdxInv,Jw;
 
@@ -54,7 +78,7 @@ struct IOC_DemoCost {
     if (useHNorm) {
       f = 4.*(~PHIw)*J*HdxdxInv*(~J)*PHIw;
     } else {
-      f = 4.*(~PHIw)*J_Jt_PHIw;
+      f = 4.*(~PHIw)*J_G_Jt_PHIw;
     }
 
     double y = f(0);
@@ -70,7 +94,7 @@ struct IOC_DemoCost {
       if (useHNorm) {
         h = 8.*(PHI-(J*HdxdxInv*~J*PHIw)) % (J*HdxdxInv*~J*PHIw);
       } else {
-        h = 8.*(PHI%(J_Jt_PHIw));
+        h = 8.*(PHI%(J_G_Jt_PHIw));
       }
 
       df = ~h*Dwdx ;
@@ -88,7 +112,7 @@ struct IOC_DemoCost {
         Hf = -16.*diag(J*HdxdxInv*~J*PHIw)*(J*HdxdxInv*~J*(-2.*diag(J*HdxdxInv*~J*PHIw) + diag(PHI)));
         Hf = Hf + 8.*diag(PHI)*J*HdxdxInv*~J*(-2.*diag(J*HdxdxInv*~J*PHIw) + diag(PHI));
       } else {
-        Hf = 8.*(dPHI_J_Jt_dPHI);
+        Hf = 8.*(dPHI_J_G_Jt_dPHI);
       }
 
       Hf = ~Dwdx*Hf*Dwdx ;
@@ -99,6 +123,15 @@ struct IOC_DemoCost {
       }
     }
 
+    if (&gLambda) {
+      gLambda = 2.*inverse(Jg*~Jg)*Jg*~J*PHIw;
+    }
+
+    if (&JgLambda) {
+      JgLambda = 2.*inverse(Jg*~Jg)*Jg*~J*diag(PHI);
+    }
+
+
     //    cout << "4: "  << MT::timerRead(true) << endl;
     return y;
   }
@@ -107,6 +140,7 @@ struct IOC_DemoCost {
 struct Demonstration {
   MotionProblem& MP; // MP containing the world state,
   arr x;             // joint trajectory
+  arr lambda;        // joint trajectory
   IOC_DemoCost* cost;// cost function for this demonstrations
 
   Demonstration (MotionProblem &_MP):MP(_MP) {
@@ -115,15 +149,19 @@ struct Demonstration {
 };
 
 struct IOC:ConstrainedProblem {
+  MT::Array<Demonstration*> &demos;
+
   uint numParam;
+  uint numLambda;
   arr Dwdx;
   uint n;
   uint T;
 
-  MT::Array<Demonstration*> &demos;
+
+
 
   virtual uint dim_x() { return numParam;}
-  virtual uint dim_g() { return numParam+1;}
+  virtual uint dim_g() { return numParam+numLambda+1;}
 
   IOC(MT::Array<Demonstration*> &_demos,uint _numParam,bool _useDetH, bool _useHNorm):demos(_demos),numParam(_numParam) {
     n = demos(0)->MP.world.getJointStateDimension();
@@ -136,7 +174,7 @@ struct IOC:ConstrainedProblem {
 
       // add task cost elements
       for (uint c=0;c<demos(0)->MP.taskCosts.d0;c++) {
-        if ( (demos(0)->MP.taskCosts(c)->prec(t) > 0) && demos(0)->MP.taskCosts(c)->active) {
+        if ( (demos(0)->MP.taskCosts(c)->prec(t) > 0) && demos(0)->MP.taskCosts(c)->active && !demos(0)->MP.taskCosts(c)->map.constraint) {
           arr tmp = zeros(demos(0)->MP.taskCosts(c)->target.d1,n);
           tmp = catCol(tmp,zeros(demos(0)->MP.taskCosts(c)->target.d1,c));
           tmp = catCol(tmp,ones(demos(0)->MP.taskCosts(c)->target.d1,1));
@@ -147,9 +185,11 @@ struct IOC:ConstrainedProblem {
     }
     cout << "Dwdx: " << Dwdx << endl;
 
+    numLambda = 0;
     // initialize cost functions for demonstrations
     for (uint i=0;i<demos.d0;i++) {
-      demos(i)->cost = new IOC_DemoCost(demos(i)->MP,demos(i)->x,Dwdx,numParam,_useDetH,_useHNorm);
+      demos(i)->cost = new IOC_DemoCost(demos(i)->MP,demos(i)->x,demos(i)->lambda,Dwdx,numParam,_useDetH,_useHNorm);
+      numLambda += demos(i)->cost->lambda0.d0;
     }
   }
 
@@ -158,16 +198,28 @@ struct IOC:ConstrainedProblem {
 
     double y = 0.;
     if (&df) {
-    df.resize(numParam);df.setZero();
+      df.resize(numParam);df.setZero();
     }
     if (&Hf) {
       Hf.resize(numParam,numParam);Hf.setZero();
     }
 
+
+    if (&g) {
+      g.clear();
+      g.append((sumOfSqr(x)-1.)*(sumOfSqr(x)-1.)); // ||w|| = 1
+      g.append(-x); // w > 0
+    }
+    if (&Jg) {
+      Jg.clear();
+      Jg=4.*~x*(sumOfSqr(x)-1.);
+      Jg.append(-eye(numParam));
+    }
+
     // iterate over demonstrations
     for (uint i=0;i<demos.d0;i++) {
-      arr dfi,Hfi;
-      y += demos(i)->cost->eval(dfi,Hfi,x);
+      arr dfi,Hfi,gi,Jgi;
+      y += demos(i)->cost->eval(dfi,Hfi,gi,Jgi,x);
 
       if (&df) {
         df = df + dfi;
@@ -176,19 +228,16 @@ struct IOC:ConstrainedProblem {
       if (&Hf) {
         Hf += Hfi;
       }
+
+      if (&g) {
+        g.append(gi);
+      }
+
+      if (&Jg) {
+        Jg.append(Jgi*Dwdx);
+      }
     }
 
-    if (&g) {
-      g.clear();
-      g.append((sumOfSqr(x)-1.)*(sumOfSqr(x)-1.)); // ||w|| = 1
-      g.append(-x); // w > 0
-    }
-
-    if (&Jg) {
-      Jg.clear();
-      Jg=4.*~x*(sumOfSqr(x)-1.);
-      Jg.append(-eye(numParam));
-    }
     return y;
   }
 };
@@ -202,94 +251,50 @@ void simpleMotion(){
   ors::KinematicWorld world("scene");
   arr q, qdot;
   world.getJointState(q, qdot);
-  MotionProblem MP(world);
-  MP.useSwift = false;
+  MotionProblem MP(world,true);
   MP.loadTransitionParameters();
+  MP.makeContactsAttractive=false;
+
   arr refGoal = ARRAY(MP.world.getBodyByName("goal")->X.pos);
   TaskCost *c;
   c = MP.addTask("position_right_hand",new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, refGoal, 25);
-  c = MP.addTask("vec_right_hand", new DefaultTaskMap(vecAlignTMT,world,"endeff", ors::Vector(0., 0., 1.),"goal",ors::Vector(0.,0.,-1.)));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, ARR(1.), 25);
-  c = MP.addTask("qItselfTMT", new DefaultTaskMap(qItselfTMT,world));
-  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, zeros(MP.world.getJointStateDimension(),1), 1);
-  c->map.order=1;
-  c = MP.addTask("position_right_hand2", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
-  MP.setInterpolatingCosts(c, MotionProblem::constant, refGoal, 0);
+  MP.setInterpolatingCosts(c, MotionProblem::finalOnly, refGoal, 1e4);
+  c = MP.addTask("collisionConstraints", new PairCollisionConstraint(MP.world,"endeff","obstacle",0.1));
+  MP.setInterpolatingCosts(c, MotionProblem::constant, ARRAY(0.), 1.);
 
   MP.x0 = {0.,0.,0.};
+
   MotionProblemFunction MPF(MP);
   uint T=MPF.get_T(); uint k=MPF.get_k(); uint n=MPF.dim_x(); double dt = MP.tau;
   cout <<"Problem parameters:"<<" T=" <<T<<" k=" <<k<<" n=" <<n << " dt=" << dt <<" # joints=" <<world.getJointStateDimension()<<endl;
-  arr x(T+1,n); x.setZero();
-  optNewton(x,Convert(MPF),OPT(verbose=0,stopTolerance=1e-4, maxStep=1.));
-//  displayTrajectory(x,T,world,"optTraj");
+  arr x(T+1,n); x.setZero();arr lambda(T+1); lambda.setZero();
+  optConstrained(x,lambda,Convert(MPF),OPT(verbose=0,stopTolerance=1e-7, maxStep=1.));
+
+  //  displayTrajectory(x,T,world,"optTraj");
+  cout << lambda << endl;
 
   // save optimal solution for evaluation
   arr wOpt;
   wOpt.append(MP.H_rate_diag);
   wOpt.append(MP.taskCosts(0)->prec(T));
-  wOpt.append(MP.taskCosts(1)->prec(T));
-  wOpt.append(MP.taskCosts(2)->prec(T));
 
 
   MP.taskCosts(0)->prec(T) = 1;
-  MP.taskCosts(1)->prec(T) = 1;
-  MP.taskCosts(2)->prec(T) = 1;
-  MP.taskCosts(3)->prec(round(T*0.5)) = 1;
   MP.H_rate_diag = MP.H_rate_diag/MP.H_rate_diag;
 
   Demonstration* d = new Demonstration(MP);
   d->x = x;
+  d->lambda = lambda;
   demos.append(d);
 
-
-
-
-
-  // define toy demonstration 2
-  ors::KinematicWorld world2("scene");
-  world.getJointState(q, qdot);
-  MotionProblem MP2(world2);
-  MP2.useSwift = false;
-  MP2.loadTransitionParameters();
-  MP2.world.getBodyByName("goal")->X.pos += ARR(0.,0.2,0.);
-  arr refGoal2 = ARRAY(MP2.world.getBodyByName("goal")->X.pos);
-  TaskCost *c2;
-  c2 = MP2.addTask("position_right_hand",new DefaultTaskMap(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
-  MP2.setInterpolatingCosts(c2, MotionProblem::finalOnly, refGoal2, 20);
-  c2 = MP2.addTask("vec_right_hand", new DefaultTaskMap(vecAlignTMT,world2,"endeff", ors::Vector(0., 0., 1.),"goal",ors::Vector(0.,0.,-1.)));
-  MP2.setInterpolatingCosts(c2, MotionProblem::finalOnly, ARR(1.), 25);
-  c2 = MP2.addTask("qItselfTMT", new DefaultTaskMap(qItselfTMT,world));
-  MP2.setInterpolatingCosts(c2, MotionProblem::finalOnly, zeros(MP2.world.getJointStateDimension(),1), 1);
-  c2->map.order=1;
-  c2 = MP2.addTask("position_right_hand2", new DefaultTaskMap(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
-  MP2.setInterpolatingCosts(c2, MotionProblem::constant, refGoal2, 0);
-  MP2.x0 = {0.,0.,0.};
-  MotionProblemFunction MPF2(MP2);
-  arr x2(T+1,n); x.setZero();
-  optNewton(x2,Convert(MPF2),OPT(verbose=0,stopTolerance=1e-4, maxStep=1.));
-//  displayTrajectory(x2,T,world2,"optTraj");
-
-  MP2.taskCosts(0)->prec(T) = 1;
-  MP2.taskCosts(1)->prec(T) = 1;
-  MP2.taskCosts(2)->prec(T) = 1;
-  MP2.taskCosts(3)->prec(round(T*0.5)) = 1;
-
-  MP2.H_rate_diag = MP2.H_rate_diag/MP2.H_rate_diag;
-
-  Demonstration* d2 = new Demonstration(MP2);
-  d2->x = x2;
-  demos.append(d2);
-
-  uint numParam = 7;
+  uint numParam = 4;
   IOC ioc(demos,numParam,false,false);
 
+  arr w = ones(numParam,1);w.flatten();
+  //w = fabs(randn(numParam,1)); w.flatten();
 
-  arr w = ones(numParam,1);w.flatten();//fabs(randn(numParam,1)); w.flatten();
-
-//  checkAllGradients(ioc,w,1e-3);
-  //  //  return;
+  checkAllGradients(ioc,w,1e-3);
+  return;
   arr dual;
   optConstrained(w,dual,ioc,OPT(verbose=2,stopTolerance=1e-5,constrainedMethod=augmentedLag));
   cout << "Found Solution: " << w << endl;

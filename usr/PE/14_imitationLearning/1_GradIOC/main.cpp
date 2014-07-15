@@ -195,7 +195,7 @@ void simpleMotion(){
   fv.fv(PHIo,Jo,x);
   cout << PHIo << endl << PHI << endl;
 
-  Dfdw dfdw(f,fv,x,false,false);
+  Dfdw dfdw(f,fv,x,true,false);
 
   arr gi,Hi,PHIi,Ji;
   arr w = sqr(PHI/(PHIo+1e-12));
@@ -210,10 +210,10 @@ void simpleMotion(){
   cout << w/sqrt(sumOfSqr(w)) << endl;
 
 
-//  arr dual;
-//  optConstrained(w,dual,dfdw,OPT(verbose=2,stopTolerance=1e-6, maxStep=1.,stopIters = 5000,stopEvals=5000,constrainedMethod=squaredPenalty));
-//  cout << "Found Solution: " << w << endl;
-//  cout << "Opt Solution: " << wOpt/sqrt(sumOfSqr(wOpt)) << endl;
+  arr dual;
+  optConstrained(w,dual,dfdw,OPT(verbose=2,stopTolerance=1e-6, maxStep=1.,stopIters = 5000,stopEvals=5000,constrainedMethod=squaredPenalty));
+  cout << "Found Solution: " << w << endl;
+  cout << "Opt Solution: " << wOpt/sqrt(sumOfSqr(wOpt)) << endl;
 }
 
 
