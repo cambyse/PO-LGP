@@ -8,7 +8,7 @@
 #define Kinect_image_height 480
 
 struct KinectPoller : Module {
-  struct sKinectInterface *s;
+  struct sKinectPoller *s;
 
   ACCESS(byteA, kinect_rgb)
   ACCESS(MT::Array<uint16_t>, kinect_depth)
@@ -25,19 +25,19 @@ struct Kinect2PointCloud: Module {
   ACCESS(byteA, kinect_rgb)
   ACCESS(MT::Array<uint16_t>, kinect_depth)
 
-  ACCESS(arr, kinect_points);
-  ACCESS(arr, kinect_pointColors);
+  ACCESS(arr, kinect_points)
+  ACCESS(arr, kinect_pointColors)
 
   arr pts,cols;
   floatA depth;
   byteA rgb; //helpers
 
-  Kinect2PointCloud():Module("Kinect2PointCloud"){};
-  virtual ~Kinect2PointCloud(){};
+  Kinect2PointCloud():Module("Kinect2PointCloud"){}
+  virtual ~Kinect2PointCloud(){}
 
-  void open(){};
+  void open(){}
   void step();
-  void close(){};
+  void close(){}
 };
 
 namespace MLR {

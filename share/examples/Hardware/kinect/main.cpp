@@ -23,8 +23,8 @@ int main(int argc, char* argv[])
 			[&gl](const byteA& video, double){ gl.watchImage(video, false, 1.0); }, 0);
 
 	receiver.startStreaming();
-
-	gl.watch();
+	MT::wait(5.);
+	receiver.stopStreaming();
 
 	return 0;
 }
