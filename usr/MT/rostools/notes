@@ -10,6 +10,7 @@ robot start
 
 on client:
 rosrun pr2_dashboard pr2_dashboard &
+rosrun rqt_robot_monitor rqt_robot_monitor &
 
 roslaunch startPR2sim.launch
 
