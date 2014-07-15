@@ -54,8 +54,7 @@ void ActionMachine::step(){
 
   //defaults
   s->refs.fR = ARR(0., 0., 0.);
-  s->refs.fR_gainFactor = 0.;
-  s->refs.Kp_gainFactor = 1.;
+  s->refs.Kq_gainFactor = ARR(1.);
 
   arr joypadState = joystickState.get();
   if(stopButtons(joypadState)) engine().shutdown.incrementValue();
@@ -76,8 +75,9 @@ void ActionMachine::step(){
         PushForce* pf = dynamic_cast<PushForce*>(a);
         // cout << pf->forceVec << endl;
         s->refs.fR = pf->forceVec;
-        s->refs.fR_gainFactor = 1.;
-        s->refs.Kp_gainFactor = .2;
+        NIY;
+//        s->refs.fR_gainFactor = 1.;
+//        s->refs.Kp_gainFactor = .2;
       }
     }
     else {

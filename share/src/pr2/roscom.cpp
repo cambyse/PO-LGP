@@ -65,10 +65,9 @@ void RosCom_ControllerSync::step(){
   jointRef.fL = VECTOR(m.fL);
   jointRef.fR = VECTOR(m.fR);
   jointRef.u_bias = VECTOR(m.u_bias);
-  jointRef.Kp_gainFactor = m.Kp_gainFactor;
-  jointRef.Kd_gainFactor = m.Kd_gainFactor;
-  jointRef.fL_gainFactor = m.fL_gainFactor;
-  jointRef.fR_gainFactor = m.fR_gainFactor;
+  jointRef.Kq_gainFactor = VECTOR(m.Kq_gainFactor);
+  jointRef.Kd_gainFactor = VECTOR(m.Kd_gainFactor);
+  jointRef.Kf_gainFactor = VECTOR(m.Kf_gainFactor);
   s->pub_jointReference.publish(jointRef);
 }
 

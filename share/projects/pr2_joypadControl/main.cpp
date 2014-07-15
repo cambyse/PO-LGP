@@ -32,6 +32,7 @@ void testJoypad(){
   ors::Shape *ftL_shape=world.getShapeByName("endeffForceL");
 
   ors::KinematicWorld worldCopy = world;
+  world.gl().add(ors::glDrawGraph, &worldCopy);
 
   FeedbackMotionControl MP(world, true);
   MP.qitselfPD.y_ref = q;
@@ -70,8 +71,6 @@ void testJoypad(){
 
     // joint state
     worldCopy.setJointState(S.ctrl_obs.get()->q, S.ctrl_obs.get()->qdot);
-    if(!(t%4))
-      worldCopy.gl().update(STRING("real robot state"));
 
     arr a = MP.operationalSpaceControl();
     q += .01*qdot;
@@ -90,19 +89,21 @@ void testJoypad(){
       MP.world.kinematicsPos(y_fL, J_fL, ftL_shape->body, &ftL_shape->rel.pos);
       cout <<"FORCE TASK" <<endl;
       refs.fL = ARR(10., 0., 0.);
-      refs.fL_gainFactor = 1.;
-      refs.Kp_gainFactor = .3;
-      refs.u_bias = refs.fL_gainFactor*(~J_fL * refs.fL);
+//      arr gain = lapack_inverseSymPosDef(.001*(~J_fL*J_fL) + 3.*eye(q.N));
+//      cout <<gain <<endl;
+//      refs.Kq_gainFactor = lapack_inverseSymPosDef(.1*(~J_fL*J_fL) + 3.*eye(q.N));
+//      refs.u_bias = 1.*(~J_fL * refs.fL);
+      refs.Kq_gainFactor = ARR(.3);
+      refs.u_bias = zeros(q.N);
     }else{
       refs.fL = ARR(0., 0., 0.);
-      refs.fL_gainFactor = 0.;
-      refs.Kp_gainFactor = 1.;
+      refs.Kq_gainFactor = ARR(1.);
       refs.u_bias = zeros(q.N);
     }
 
+    refs.Kd_gainFactor = ARR(1.);
     refs.q=q;
     refs.qdot=zero_qdot;
-//    refs.u_bias=zero_qdot;
     if(trans && trans->qDim()==3){
       refs.qdot(trans->qIndex+0) = qdot(trans->qIndex+0);
       refs.qdot(trans->qIndex+1) = qdot(trans->qIndex+1);
