@@ -90,7 +90,7 @@ struct sRosCom_KinectSync{
   void cb_depth(const sensor_msgs::Image::ConstPtr& msg){
     //  cout <<"** sRosCom_KinectSync callback" <<endl;
     byteA data = ARRAY<byte>(msg->data);
-    MT::Array<uint16_t> ref((const uint16_t*)data.p, data.N/2);
+    uint16A ref((const uint16_t*)data.p, data.N/2);
     ref.reshape(msg->height, msg->width);
     base->kinect_depth.set() = ref;
   }
@@ -113,6 +113,36 @@ void RosCom_KinectSync::close(){
 
 //===========================================================================
 
+struct sRosCom_CamsSync{
+  RosCom_CamsSync *base;
+  ros::NodeHandle nh;
+  ros::Subscriber sub_left;
+  ros::Subscriber sub_right;
+  void cb_left(const sensor_msgs::Image::ConstPtr& msg){
+    base->rgb_leftEye.set() = ARRAY<byte>(msg->data).reshape(msg->height, msg->width, 3);
+  }
+  void cb_right(const sensor_msgs::Image::ConstPtr& msg){
+    base->rgb_rightEye.set() = ARRAY<byte>(msg->data).reshape(msg->height, msg->width, 3);
+  }
+};
+
+void RosCom_CamsSync::open(){
+  rosCheckInit();
+  s = new sRosCom_CamsSync;
+  s->base = this;
+  s->sub_left  = s->nh.subscribe("/wide_stereo/left/image_rect_color", 1, &sRosCom_CamsSync::cb_left, s);
+  s->sub_right = s->nh.subscribe("/wide_stereo/right/image_rect_color", 1, &sRosCom_CamsSync::cb_right, s);
+}
+
+void RosCom_CamsSync::step(){
+}
+
+void RosCom_CamsSync::close(){
+  s->nh.shutdown();
+}
+
+//===========================================================================
+
 struct sRosCom_ArmCamsSync{
   RosCom_ArmCamsSync *base;
   ros::NodeHandle nh;
@@ -130,8 +160,8 @@ void RosCom_ArmCamsSync::open(){
   rosCheckInit();
   s = new sRosCom_ArmCamsSync;
   s->base = this;
-  s->sub_left  = s->nh.subscribe("/l_forearm_cam/image_color", 1, &sRosCom_ArmCamsSync::cb_left, s);
-  s->sub_right = s->nh.subscribe("/r_forearm_cam/image_color", 1, &sRosCom_ArmCamsSync::cb_right, s);
+  s->sub_left  = s->nh.subscribe("/l_forearm_cam/image_rect_color", 1, &sRosCom_ArmCamsSync::cb_left, s);
+  s->sub_right = s->nh.subscribe("/r_forearm_cam/image_rect_color", 1, &sRosCom_ArmCamsSync::cb_right, s);
 }
 
 void RosCom_ArmCamsSync::step(){
@@ -140,7 +170,6 @@ void RosCom_ArmCamsSync::step(){
 void RosCom_ArmCamsSync::close(){
   s->nh.shutdown();
 }
-
 
 //===========================================================================
 

@@ -83,7 +83,7 @@ END_MODULE()
 /// This module syncs the kinect
 BEGIN_MODULE(RosCom_KinectSync)
   ACCESS(byteA, kinect_rgb)
-  ACCESS(MT::Array<uint16_t>, kinect_depth)
+  ACCESS(uint16A, kinect_depth)
 END_MODULE()
 
 //===========================================================================

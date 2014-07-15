@@ -11,7 +11,7 @@ struct KinectPoller : Module {
   struct sKinectPoller *s;
 
   ACCESS(byteA, kinect_rgb)
-  ACCESS(MT::Array<uint16_t>, kinect_depth)
+  ACCESS(uint16A, kinect_depth)
 
   KinectPoller();
   virtual ~KinectPoller();
@@ -23,10 +23,10 @@ struct KinectPoller : Module {
 
 namespace MLR {
 	// pack 16bit depth image into 3 8-bit channels
-	void pack_kindepth2rgb(const MT::Array<uint16_t>& depth, byteA& buffer);
+	void pack_kindepth2rgb(const uint16A& depth, byteA& buffer);
 
 	/// Typedef for depth image received event callbacks
-	typedef std::function<void(const MT::Array<uint16_t>&, double)> kinect_depth_cb;
+	typedef std::function<void(const uint16A&, double)> kinect_depth_cb;
 	/// Typedef for video image received event callbacks
 	typedef std::function<void(const byteA&, double)> kinect_video_cb;
 
