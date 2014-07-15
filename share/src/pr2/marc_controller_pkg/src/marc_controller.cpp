@@ -117,9 +117,12 @@ void TreeControllerClass::update() {
     if(Kq_gainFactor.N==1 && Kd_gainFactor.N==1){
       u += Kq_gainFactor.scalar()*(Kp % (q_ref - q));
       u += Kd_gainFactor.scalar()*(Kd % (qdot_ref - qd));
-    }else{
+    }else if(Kq_gainFactor.d0==q.N && Kq_gainFactor.d1==q.N && Kd_gainFactor.N==1){
+      ROS_INFO("*** NEW 1");
       u += Kp % (Kq_gainFactor*(q_ref - q)); //matrix multiplication!
-      u += Kd % (Kd_gainFactor*(qdot_ref - qd));
+      ROS_INFO("*** NEW 2");
+      u += Kd_gainFactor.scalar()*(Kd % (qdot_ref - qd));
+      ROS_INFO("*** NEW 3");
     }
     u += u_bias;
 
@@ -154,7 +157,7 @@ void TreeControllerClass::jointReference_subscriber_callback(const marc_controll
   fL_ref = ARRAY(msg->fL);
   fR_ref = ARRAY(msg->fR);
   u_bias = ARRAY(msg->u_bias);
-#define CP(x) x=ARRAY(msg->x);
+#define CP(x) x=ARRAY(msg->x); if(x.N>q_ref.N) x.reshape(q_ref.N, q_ref.N);
   CP(Kq_gainFactor);
   CP(Kd_gainFactor);
   CP(Kf_gainFactor);
