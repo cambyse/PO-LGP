@@ -38,7 +38,8 @@ struct sImagePublisher {
 
 	sImagePublisher(const std::string& base_topic, const std::string& camera_name, PixelFormat pix_fmt) :
 #ifdef HAVE_ROS_IMAGE_TRANSPORT
-		n(base_topic), t(n), p(t.advertise(STRING(camera_name << "/image_raw").p, 1)), cim(n, camera_name),
+		n(base_topic), t(n), p(t.advertise(STRING(camera_name << "/image_raw").p, 1)), 
+		cim(n, STRING(camera_name << "/image_raw").p),
 #endif
 		seq(0), camera_name(camera_name), pix_fmt(pix_fmt)
 	{
