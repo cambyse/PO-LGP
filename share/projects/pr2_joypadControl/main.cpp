@@ -29,7 +29,7 @@ void testJoypad(){
   arr q, qdot;
   world.getJointState(q, qdot);
   ors::Joint *trans=world.getJointByName("worldTranslationRotation");
-  ors::Shape *ftL_shape=world.getShapeByName("endeffForceL");
+  ors::Shape *ftL_shape=world.getShapeByName("endeffL");
 
   ors::KinematicWorld worldCopy = world;
   world.gl().add(ors::glDrawGraph, &worldCopy);
@@ -75,7 +75,7 @@ void testJoypad(){
     arr a = MP.operationalSpaceControl();
     q += .01*qdot;
     qdot += .01*a;
-    MP.reportCurrentState();
+//    MP.reportCurrentState();
     MP.setState(q, qdot);
     //MP.world.reportProxies();
     if(!(t%4))
@@ -89,11 +89,12 @@ void testJoypad(){
       MP.world.kinematicsPos(y_fL, J_fL, ftL_shape->body, &ftL_shape->rel.pos);
       cout <<"FORCE TASK" <<endl;
       refs.fL = ARR(10., 0., 0.);
-//      arr gain = lapack_inverseSymPosDef(.001*(~J_fL*J_fL) + 3.*eye(q.N));
-//      cout <<gain <<endl;
-//      refs.Kq_gainFactor = lapack_inverseSymPosDef(.1*(~J_fL*J_fL) + 3.*eye(q.N));
+      J_fL = J_fL.sub(0,1,0,-1);
+      arr gain = 10.*(~J_fL*J_fL) + .3*eye(q.N);
+      cout <<J_fL <<gain <<endl;
 //      refs.u_bias = 1.*(~J_fL * refs.fL);
-      refs.Kq_gainFactor = ARR(.3);
+      refs.Kq_gainFactor = gain;
+//      refs.Kq_gainFactor = ARR(.3);
       refs.u_bias = zeros(q.N);
     }else{
       refs.fL = ARR(0., 0., 0.);
