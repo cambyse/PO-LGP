@@ -61,7 +61,7 @@ public:
 		terminated(terminated), ready(false), id(camID), name(name),
 		cam(id, MLR::PIXEL_FORMAT_RAW8, MLR::PIXEL_FORMAT_RGB8),
 		enc(STRING("z." << name << "." << created << ".264"), 60, 0, MLR::PIXEL_FORMAT_RGB8),
-		times(enc.name()), start_time(ULONG_MAX), pub(name, STRING("id" << camID).p, MLR::PIXEL_FORMAT_RGB8) {
+		times(enc.name()), start_time(ULONG_MAX), pub(STRING(name << "/id" << camID).p, "image_raw", MLR::PIXEL_FORMAT_RGB8) {
 	}
 
 	bool isReady() const {
