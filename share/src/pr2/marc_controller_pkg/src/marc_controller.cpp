@@ -109,6 +109,8 @@ void TreeControllerClass::update() {
   jointStateMsg.fL = VECTOR(fL_obs);
   jointState_publisher.publish(jointStateMsg);
 
+  mutex.lock(); //only inside here we use the msg values...
+
   //-- PD on q_ref
   if(q_ref.N!=q.N || qdot_ref.N!=qd.N || u_bias.N!=q.N){
     cout <<'#' <<flush; //hashes indicate that q_ref has wrong size...
@@ -118,11 +120,8 @@ void TreeControllerClass::update() {
       u += Kq_gainFactor.scalar()*(Kp % (q_ref - q));
       u += Kd_gainFactor.scalar()*(Kd % (qdot_ref - qd));
     }else if(Kq_gainFactor.d0==q.N && Kq_gainFactor.d1==q.N && Kd_gainFactor.N==1){
-      ROS_INFO("*** NEW 1");
       u += Kp % (Kq_gainFactor*(q_ref - q)); //matrix multiplication!
-      ROS_INFO("*** NEW 2");
       u += Kd_gainFactor.scalar()*(Kd % (qdot_ref - qd));
-      ROS_INFO("*** NEW 3");
     }
     u += u_bias;
 
@@ -145,12 +144,15 @@ void TreeControllerClass::update() {
       baseCommand_publisher.publish(base_cmd);
     }
   }
+
+  mutex.unlock();
 }
 
 /// Controller stopping in realtime
 void TreeControllerClass::stopping() {}
 
 void TreeControllerClass::jointReference_subscriber_callback(const marc_controller_pkg::JointState::ConstPtr& msg){
+  mutex.lock();
 //  cout <<"subscriber callback" <<endl;
   q_ref = ARRAY(msg->q);
   qdot_ref = ARRAY(msg->qdot);
@@ -162,6 +164,7 @@ void TreeControllerClass::jointReference_subscriber_callback(const marc_controll
   CP(Kd_gainFactor);
   CP(Kf_gainFactor);
 #undef CP
+  mutex.unlock();
 }
 
 void TreeControllerClass::forceSensor_subscriber_callback(const geometry_msgs::WrenchStamped::ConstPtr& msg){

@@ -11,6 +11,7 @@ namespace marc_controller_ns{
 class TreeControllerClass: public pr2_controller_interface::Controller
 {
 private:
+  Mutex mutex; //callbacks are not thread safe!!!!!!!!!!!!!
   ors::KinematicWorld world;
   pr2_mechanism_model::Tree pr2_tree;
 
