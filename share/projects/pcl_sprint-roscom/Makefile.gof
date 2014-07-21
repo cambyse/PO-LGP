@@ -1,10 +1,8 @@
 BASE = ../..
 
-OBJS = main.o plane.o
+OBJS = main.o
 
 PCL = 1
-DEPEND = Core System Hardware_joystick Motion Ors Gui pr2 Perception
-
-LPATHS += /opt/ros/groovy/lib
+DEPEND = Core System Hardware_kinect Perception Gui Ors
 
 include $(BASE)/gofMake/generic.mk
