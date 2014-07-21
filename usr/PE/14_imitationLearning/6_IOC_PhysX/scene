@@ -1,0 +1,17 @@
+body stem { X=<T t(0 0 1)>  type=4 size=[0.1 0.1 2 .1] static }
+body arm1 { type=4 size=[0.1 0.1 .4 .1] dynamic  }
+body arm2 { type=4 size=[0.1 0.1 .4 .1] dynamic }
+body arm3 { type=4 size=[0.1 0.1 .4 .1] dynamic }
+body arm4 { type=4 size=[0.1 0.1 .4 .1] dynamic }
+body arm5 { type=4 size=[0.1 0.1 .4 .1] dynamic }
+body endeff { type=1 size=[0 0 0 .03] color=[0 1 1] dynamic contact }
+
+joint j1(stem arm1) { A=<T t(0 0 1) d(90 1 0 0)> B=<T t(0 0 .2)>  Q=<T d(1 0 0 0)> limits=[ -2.9671 2.9671]}
+joint j2(arm1 arm2) { A=<T t(0 0 0.2) d(45 0 0 1)> B=<T t(0 0 .2)>  Q=<T d(1 0 0 0)> limits=[ -2.9671 2.9671]}
+joint j3(arm2 arm3) { A=<T t(0 0 0.2) d(45 0 0 1)> B=<T t(0 0 .2)>  Q=<T d(1 0 0 0)> limits=[ -2.9671 2.9671]}
+joint j4(arm3 arm4) { A=<T t(0 0 0.2) d(45 0 0 1)> B=<T t(0 0 .2)>  Q=<T d(1 0 0 0)> limits=[ -2.9671 2.9671]}
+joint j5(arm4 arm5) { A=<T t(0 0 0.2) d(45 0 0 1)> B=<T t(0 0 .2)>  Q=<T d(1 0 0 0)> limits=[ -2.9671 2.9671]}
+joint j6(arm5 endeff) { A=<T t(0 0 0.3) d(0 0 0 0)> B=<T t(0 0 0)>  Q=<T d(1 0 0 0)> type=10}
+
+body box { type=0 size=[0.4 0.4 .4 .02] X=<T t(0.6 0 1.1) > color=[0 0 1] contact, dynamic}
+body table { type=0 size=[1.6 2.8 1. 0] X=<T t(1 0. .4) > color=[.3 .3 .3] static }
