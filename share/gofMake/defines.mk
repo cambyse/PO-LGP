@@ -244,9 +244,9 @@ endif
 
 ifeq ($(PCL),1)
 QHULL = 1
-CXXFLAGS  +=  -DPCL -DEIGEN_USE_NEW_STDVECTOR -DEIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET  `pkg-config --cflags pcl_apps-1.6 pcl_io-1.6 pcl_segmentation-1.6 pcl_common-1.6 pcl_kdtree-1.6 pcl_registration-1.6 pcl_surface-1.6 pcl_features-1.6 pcl_keypoints-1.6 pcl_sample_consensus-1.6 pcl_tracking-1.6 pcl_filters-1.6 pcl_octree-1.6 pcl_search-1.6 pcl_visualization-1.6` -I/usr/include/vtk-5.8
-LIBS += `pkg-config --libs pcl_apps-1.6 pcl_io-1.6 pcl_segmentation-1.6 pcl_common-1.6 pcl_kdtree-1.6 pcl_registration-1.6 pcl_surface-1.6 pcl_features-1.6 pcl_keypoints-1.6 pcl_sample_consensus-1.6 pcl_tracking-1.6 pcl_filters-1.6 pcl_octree-1.6 pcl_search-1.6 pcl_visualization-1.6`  -lvtkCommon -lvtkFiltering -lvtkRendering
-CPATH := $(CPATH):/usr/include/pcl-1.6
+CXXFLAGS  +=  -DPCL -DEIGEN_USE_NEW_STDVECTOR -DEIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET  `pkg-config --cflags libopenni pcl_apps-1.7 pcl_io-1.7 pcl_segmentation-1.7 pcl_common-1.7 pcl_kdtree-1.7 pcl_registration-1.7 pcl_surface-1.7 pcl_features-1.7 pcl_keypoints-1.7 pcl_sample_consensus-1.7 pcl_tracking-1.7 pcl_filters-1.7 pcl_octree-1.7 pcl_search-1.7 pcl_visualization-1.7` -I/usr/include/vtk-5.8
+LIBS += -lpcl_apps -lpcl_keypoints -lpcl_outofcore -lpcl_people -lpcl_recognition -lpcl_registration -lpcl_segmentation -lpcl_features -lpcl_surface -lpcl_tracking -lpcl_filters -lpcl_sample_consensus -lpcl_visualization -lpcl_io -lpcl_search -lOpenNI -lpcl_kdtree -lpcl_octree -lpcl_common -lboost_thread -lboost_system
+CPATH := $(CPATH):/usr/include/pcl-1.7:/usr/include/eigen3:/usr/include/ni:/usr/include/vtk-5.8
 FREENECT = 1
 endif
 

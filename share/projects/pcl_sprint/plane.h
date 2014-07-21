@@ -1,4 +1,3 @@
-
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
