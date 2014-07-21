@@ -1,4 +1,4 @@
-//#define USE_SL
+#define USE_SL
 
 #include <ros/ros.h>
 
@@ -17,10 +17,10 @@
 #include <Optim/optimization.h>
 #include <Optim/constrained.h>
 #include <Core/thread.h>
-#include "execution.h"
+//#include "execution.h"
 
 arr getSimpleTrajectory(ors::KinematicWorld& G){
-  MotionProblem P(&G, NULL, false);
+  MotionProblem P(G, false);
   P.loadTransitionParameters();
 
   //-- setup the motion problem
@@ -40,7 +40,7 @@ arr getSimpleTrajectory(ors::KinematicWorld& G){
 }
 
 arr getKindOfSimpleTrajectory(ors::KinematicWorld& G){
-  MotionProblem P(&G, NULL, false);
+  MotionProblem P(G, false);
   P.loadTransitionParameters();
   arr x = P.getInitialization();
 
@@ -113,9 +113,7 @@ int main(int argc, char** argv){
   //testLudos();
 
 
-  OpenGL gl;
-  ors::KinematicWorld G;
-  init(G, gl, MT::getParameter<MT::String>("orsFile"));
+  ors::KinematicWorld G(MT::getParameter<MT::String>("orsFile"));
 
   arr x = getKindOfSimpleTrajectory(G);
   arr x2 = reverseTrajectory(x);
@@ -134,7 +132,7 @@ int main(int argc, char** argv){
   ros::AsyncSpinner spinner(4);
   spinner.start();
 
-#if USE_SL
+#ifdef USE_SL
   sl_controller_interface::init();
 
 
