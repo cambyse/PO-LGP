@@ -402,10 +402,10 @@ void sAICO::updateTaskMessage(uint t, arr& xhat_t){
 void sAICO::updateBelief(uint t){
   if(damping && dampingReference.N){
     Binv[t] = Sinv[t] + Vinv[t] + R[t] + damping*eye(R.d1);
-    lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t] + damping*dampingReference[t]);
+    b[t]() = lapack_Ainv_b_sym(Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t] + damping*dampingReference[t]);
   }else{
     Binv[t] = Sinv[t] + Vinv[t] + R[t];
-    lapack_Ainv_b_sym(b[t](), Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
+    b[t]() = lapack_Ainv_b_sym(Binv[t], Sinv[t]*s[t] + Vinv[t]*v[t] + r[t]);
   }
 }
 
@@ -709,13 +709,13 @@ inline void getController(arr& G, arr& g, const AICO& aico){
     if(aico.sys->isKinematic()){
       //controller model u_mean = G*x+g
       Vstar = aico.Vinv[t+1] + aico.R[t+1];
-      lapack_Ainv_b_sym(barv, Vstar, aico.Vinv[t+1]*aico.v[t+1] + aico.r[t+1]);
+      barv = lapack_Ainv_b_sym(Vstar, aico.Vinv[t+1]*aico.v[t+1] + aico.r[t+1]);
       inverse_SymPosDef(VstarH, Vstar + H);
       G[t] = - VstarH * Vstar; // * aico.A[t];
       g[t] = VstarH * Vstar * (barv); // - aico.a[t]);
     }else{
       Vstar = aico.Vinv[t+1] + aico.R[t+1];
-      lapack_Ainv_b_sym(barv, Vstar, aico.Vinv[t+1]*aico.v[t+1] + aico.r[t+1]);
+      barv = lapack_Ainv_b_sym(Vstar, aico.Vinv[t+1]*aico.v[t+1] + aico.r[t+1]);
       inverse_SymPosDef(VstarH, aico.tB[t]*Vstar*aico.B[t] + H);
       G[t] = - VstarH * aico.tB[t] * Vstar * aico.A[t];
       g[t] = VstarH * aico.tB[t] * Vstar * (barv - aico.a[t]);

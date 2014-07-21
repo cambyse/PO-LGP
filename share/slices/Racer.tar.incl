@@ -1,0 +1,15 @@
+share/src/Core
+share/src/Algo
+share/src/Gui
+share/src/Ors
+share/src/System
+share/src/Hardware/racer
+share/src/Hardware/joystick
+
+share/projects/racer
+share/examples/Hardware/joystick
+share/examples/Core
+
+share/include/lapack
+share/src/extern/SWIFT
+share/src/extern/SWIFT_decomposer

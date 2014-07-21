@@ -1,20 +1,21 @@
 /*  ---------------------------------------------------------------------
-    Copyright 2013 Marc Toussaint
-    email: mtoussai@cs.tu-berlin.de
-
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
 
 
 /** @file
@@ -67,7 +68,6 @@ void drawOrsActionInterfaceEnv(void*) {
 
 void oneStep(const arr &q, ors::KinematicWorld *C, OdeInterface *ode, SwiftInterface *swift) {
   C->setJointState(q);
-  C->calc_fwdPropagateFrames();
 #ifdef MT_ODE
   if(ode) {
     C->ode().exportStateToOde();
@@ -78,7 +78,7 @@ void oneStep(const arr &q, ors::KinematicWorld *C, OdeInterface *ode, SwiftInter
   }
 #endif
   if(swift) {
-    swift->step();
+    swift->step(*C);
   } else {
 #ifdef MT_ODE
     C->ode().importProxiesFromOde();
@@ -128,7 +128,6 @@ void ActionInterface::loadConfiguration(const char* ors_filename) {
   if(C) delete C;
   C = new ors::KinematicWorld();
   FILE(ors_filename) >> *C;
-  C->calc_fwdPropagateFrames();
   //C->reconfigureRoot(C->getName("rfoot"));
   
   C->getJointState(q0);
@@ -309,9 +308,7 @@ void ActionInterface::grab(const char *man_id, const char *obj_id) {
 //   if(!swift) c.active=false;
 
   // (1) drop object if one is in hand
-  ors::Joint *e;
-  uint i;
-  for_list(i, e, C->bodies(x.i)->outLinks) {
+  for_list(ors::Joint,  e,  C->bodies(x.i)->outLinks) {
     NIY;
     //C->del_edge(e);
   }
@@ -749,9 +746,7 @@ void ActionInterface::printObjectInfo() {
 
 void ActionInterface::indicateFailure() {
   // drop object
-  ors::Joint *e;
-  uint i;
-  for_list(i, e, C->getBodyByName("fing1c")->outLinks) {
+  for_list(ors::Joint,  e,  C->getBodyByName("fing1c")->outLinks) {
     NIY;
     //C->del_edge(e); //otherwise: no object in hand
   }

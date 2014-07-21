@@ -12,7 +12,7 @@ void TEST(Swift) {
   ors::KinematicWorld G("swift_test.ors");
 
   G.swift().setCutoff(2.);
-  G.computeProxies();
+  G.stepSwift();
 
   uint t;
   for(t=0;t<50;t++){
@@ -20,7 +20,7 @@ void TEST(Swift) {
     G.bodies(0)->X.addRelativeRotationDeg(10,1,0,0);
     G.calc_fwdPropagateFrames();
 
-    G.computeProxies();
+    G.stepSwift();
 
     G.reportProxies();
 
@@ -53,15 +53,15 @@ void TEST(Sphere) {
 void TEST(Meshes) {
   OpenGL gl;
   ors::Mesh mesh;
-  mesh.readStlFile("~/share/data/3dmodel/schunk-hand.stl");
+  mesh.readStlFile(FILE("../../../data/pr2_model/head_v0/head_pan.stl"));
   mesh.scale(.001);
-  mesh.writeTriFile("~/share/data/3dmodel/schunk-hand-full.tri");
+  mesh.writeTriFile(("z.full.tri"));
+  mesh.fuseNearVertices(1e-6);
+  mesh.writeTriFile(("z.e4.tri"));
+  mesh.fuseNearVertices(1e-5);
+  mesh.writeTriFile(("z.e3.tri"));
   mesh.fuseNearVertices(1e-4);
-  mesh.writeTriFile("~/share/data/3dmodel/schunk-hand-e4.tri");
-  mesh.fuseNearVertices(1e-3);
-  mesh.writeTriFile("~/share/data/3dmodel/schunk-hand-e3.tri");
-  mesh.fuseNearVertices(1e-2);
-  mesh.writeTriFile("~/share/data/3dmodel/schunk-hand-e2.tri");
+  mesh.writeTriFile(("z.e2.tri"));
   gl.add(drawInit,0);
   gl.add(ors::glDrawMesh,&mesh);
   gl.watch();
@@ -72,14 +72,14 @@ void TEST(Meshes2) {
   OpenGL gl;
   gl.add(drawInit,0);
   gl.add(ors::glDrawMesh,&mesh1);
-  mesh1.readTriFile("~/share/data/3dmodel/schunk-arm-e3.tri");
-  mesh2.readTriFile("~/share/data/3dmodel/schunk-hand-e3.tri");
+  mesh1.readTriFile(FILE("z.e3.tri"));
+  mesh2.readTriFile(FILE("z.e3.tri"));
   uint i,m=0; double my=mesh1.V(m,1);
   for(i=0;i<mesh1.V.d0;i++) if(mesh1.V(i,1)>mesh1.V(m,1)){ m=i; my=mesh1.V(m,1); }
   mesh2.translate(0,my,0);
   mesh1.addMesh(mesh2);
-  //mesh1.writeTriFile("~/share/data/3dmodel/schunk-e3.tri");
-  //mesh1.writeOffFile("~/share/data/3dmodel/schunk-e3.off");
+  //mesh1.writeTriFile(("z.e3.tri"));
+  //mesh1.writeOffFile(("z.e3.off"));
   gl.watch();
 }
 
@@ -89,7 +89,7 @@ void TEST(Meshes3) {
   gl.add(drawInit,0);
   gl.add(ors::glDrawMesh,&mesh);
   //MeshSetSphere(mesh,0);
-  mesh.readTriFile("~/share/data/3dmodel/schunk-hand-e4.tri");
+  mesh.readTriFile(FILE("z.e4.tri"));
   gl.reportSelects=true;
   gl.watch();
   cout <<gl.topSelection->name <<endl;

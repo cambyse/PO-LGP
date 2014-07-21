@@ -1,20 +1,21 @@
 /*  ---------------------------------------------------------------------
-    Copyright 2013 Marc Toussaint
-    email: mtoussai@cs.tu-berlin.de
-
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
 
 #ifndef MT_mesh_h
 #define MT_mesh_h
@@ -54,6 +55,7 @@ struct Mesh {
   void setHalfSphere(uint fineness=3);
   void setCylinder(double r, double l, uint fineness=3);
   void setCappedCylinder(double r, double l, uint fineness=3);
+  void setSSBox(double x, double y, double z, double r, uint fineness=3);
   void setGrid(uint X, uint Y);
   void setImplicitSurface(ScalarFunction& f, double lo=-10., double hi=+10., uint res=100);
   void setRandom(uint vertices=10);
@@ -82,12 +84,13 @@ struct Mesh {
   
   /// @name IO
   void write(std::ostream&) const; ///< only writes generic info
+  void read(std::istream&, const char* fileExtension);
   void readFile(const char* filename);
-  void readTriFile(const char* filename);
-  void readObjFile(const char* filename);
-  void readOffFile(const char* filename);
-  void readPlyFile(const char* filename);
-  void readStlFile(const char* filename);
+  void readTriFile(std::istream& is);
+  void readObjFile(std::istream& is);
+  void readOffFile(std::istream& is);
+  void readPlyFile(std::istream& is);
+  void readStlFile(std::istream& is);
   void writeTriFile(const char* filename);
   void writeOffFile(const char* filename);
   void writePLY(const char *fn, bool bin);
@@ -103,6 +106,8 @@ struct Mesh {
 //
 
 stdOutPipe(Mesh);
+uintA getSubMeshPositions(const char* filename);
+
 
 
 //===========================================================================

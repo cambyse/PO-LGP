@@ -1,20 +1,21 @@
 /*  ---------------------------------------------------------------------
-    Copyright 2013 Marc Toussaint
-    email: mtoussai@cs.tu-berlin.de
-
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
 
 
 
@@ -35,11 +36,7 @@
 #include "plot.h"
 
 extern "C" {
-#ifdef ARCH_LINUX
-  #include <libqhull/qhull_a.h>
-#else
   #include <qhull/qhull_a.h>
-#endif
 }
 #undef dX
 #undef dY
@@ -336,13 +333,8 @@ void getTriangulatedHull(uintA& T, arr& V) {
   uint f, i, v;
   
   arr Vnew;
-#ifdef ARCH_LINUX
-  Vnew.resize(qh_qh.num_vertices, 3);
-  T.resize(qh_qh.num_facets, 3);
-#else
-  Vnew.resize(qh_qh->num_vertices, 3);
-  T.resize(qh_qh->num_facets, 3);
-#endif
+  Vnew.resize(qh num_vertices, 3);
+  T.resize(qh num_facets, 3);
   i=0;
   FORALLvertices {
     vertex->id = i;

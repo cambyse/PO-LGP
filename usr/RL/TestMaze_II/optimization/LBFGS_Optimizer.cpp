@@ -1,6 +1,6 @@
 #include "LBFGS_Optimizer.h"
 #include "../util/lbfgs_codes.h"
-#include "../util.h"
+#include "../util/util.h"
 #include "../Config.h"
 
 #include <math.h> // for fabs()
@@ -13,7 +13,7 @@
 #define DEBUG_LEVEL 1
 #endif
 #define DEBUG_STRING "LBFGS: "
-#include "../debug.h"
+#include "../util/debug.h"
 
 using std::min;
 using std::max;

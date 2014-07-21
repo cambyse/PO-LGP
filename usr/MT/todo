@@ -1,13 +1,51 @@
-LOG in motion.cpp
-double calc Body From Frames
-world copy in  rrt planner?? -> delete copy
-clearly introduce constraint maps as tasks -- feasibility, automatic penalty reduction
+** PR2 controller
 
+* make everything linear
+* have data stuctures
+  * JointConfigInfo { map index-to-name } ? (Necessary?)
+  * JointControllerRefs { q_ref, Kq_matrix, Kd_factor, u_bias, fL_ref, fR_ref, KfL, KfR }
+  * JointControllerState { q_real, qdot_real, u_cmd, u_real, fL_real, fR_real }
+
+** relative quaterion task variables
+
+* scalar product issues with quaternion distance/difference
+* implement correctly within DefaultTaskMap
+
+** task & constraints
+
+check the consistency of the constraintProxyVariable with squared
+penelty and old task variables
+
+** task map
+* clean up DefaultTaskMap -> spearate in separate classes
+
+** PR2
+* force torqu sensor in regler integrieren
+* low gain turning of handles (don't think as them as parts of the robot,no exact model, just relax and pull somehow)
+* generell: sobald man etwas anfasst: relax, gravity compensation is easier
+* action for pregrasp
+* task variable that allows a target RANGE
+
+**
+
+LOG in motion.cpp
+clearly introduce constraint maps as tasks -- feasibility, automatic penalty reduction
 
 ** checkJointDimension is really const (HALT if state was not set)
 getJointDimension is not const
 
-** lock in OpenGL
+** KVG
+
+dot interpretation (dot as 2st key -> color shape everything just copy!)
+
+** Proper ConstrainedTaskMap:
+virtual function g
+can provide also $y=(1+g/m) [g>-m]$ (is consistent with lecture & code)
+bool constraint;
+double margin;
+arr getY()
+arr getFeasible()
+arr getG()
 
 ** Logging:
 

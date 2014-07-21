@@ -1,0 +1,25 @@
+symbolic links to config files in ~/.ros
+model.kvg -> /home/mtoussai/git/mlr/share/projects/pr2_joypadControl/model.kvg
+pr2_model -> /home/mtoussai/git/mlr/share/data/pr2_model/
+
+echo $ROS_PACKAGE_PATH
+
+robot claim
+RUNSTOP -> green botton
+robot start
+
+on client:
+rosrun pr2_dashboard pr2_dashboard &
+rosrun rqt_robot_monitor rqt_robot_monitor &
+
+roslaunch startPR2sim.launch
+
+rosrun pr2_controller_manager pr2_controller_manager list
+rosrun pr2_controller_manager pr2_controller_manager stop r_arm_controller
+rosrun pr2_controller_manager pr2_controller_manager stop l_arm_controller
+rosrun pr2_controller_manager pr2_controller_manager stop head_traj_controller
+rosrun pr2_controller_manager pr2_controller_manager stop r_gripper_controller
+rosrun pr2_controller_manager pr2_controller_manager stop l_gripper_controller
+rosrun pr2_controller_manager pr2_controller_manager stop torso_controller
+
+roslaunch marc_rt_controller.launch

@@ -1,7 +1,7 @@
 #ifndef MINIMALOBSERVATION_H_
 #define MINIMALOBSERVATION_H_
 
-#include "../../AbstractObservation.h"
+#include "../../Representation/AbstractObservation.h"
 
 
 class MinimalObservation: public AbstractObservation {
@@ -16,6 +16,6 @@ public:
     virtual const std::string print() const override;
 };
 
-#include "../../debug_exclude.h"
+#include "../../util/debug_exclude.h"
 
 #endif /* MINIMALOBSERVATION_H_ */

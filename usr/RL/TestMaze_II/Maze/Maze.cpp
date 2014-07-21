@@ -3,8 +3,10 @@
 #include "../util/QtUtil.h"
 #include "../util/ColorOutput.h"
 
+#include "../Representation/DoublyLinkedInstance.h"
+
 #define DEBUG_LEVEL 0
-#include "../debug.h"
+#include "../util/debug.h"
 
 #include <algorithm>
 
@@ -37,357 +39,33 @@ static const double action_point_size_factor = 0.5;               // How large t
 static const bool draw_text = false;                              // Whether to draw texts.
 
 const vector<Maze::maze_t> Maze::maze_list = {
-    /* === Default Maze === */
-    maze_t(
-        QString("Default"),
-        2,
-        action_ptr_t(new action_t("stay")),
-        observation_ptr_t(new observation_t(2,2,0,0)),
-        reward_ptr_t(new reward_t({0,1},0)),
-        vector<wall_t>({
-                { 0, 1}
-            }),
-        vector<maze_reward_t>({
-                { 0, 3, 2, 1, EACH_TIME_NO_PUNISH,   0,   0,   0},
-                { 0, 1, 1, 1, EACH_TIME_NO_PUNISH,   0,   0,   0}
-            }),
-        vector<door_t>({
-                door_t(observation_t(2,2,0,0), observation_t(2,2,1,0), observation_t(2,2,0,0), LEFT_BUTTON, -1, color_t(0.0,0.8,0.0) )
-                    })
-        ),
-    /* === Minimal Maze === */
-    maze_t(
-        QString("Minimal"),
-        2,
-        action_ptr_t(new action_t("stay")),
-        observation_ptr_t(new observation_t(2,2,0,0)),
-        reward_ptr_t(new reward_t({0,1},0)),
-        vector<wall_t>({}),
-        vector<maze_reward_t>({
-                { 0, 3, 2, 1, EACH_TIME_NO_PUNISH,   0,   0,   0}
-            }),
-        vector<door_t>({})
-        ),
-    /* === 3x3 Maze === */
-    maze_t(
-        QString("3x3"),
-        6,
-        action_ptr_t(new action_t("stay")),
-        observation_ptr_t(new observation_t(3,3,1,1)),
-        reward_ptr_t(new reward_t({0,1,3,8},0)),
-        vector<wall_t>({
-                { 0, 1},
-                { 0, 3},
-                { 2, 1},
-                { 2, 5},
-                { 6, 3},
-                { 6, 7},
-                { 8, 7},
-                { 8, 5}
-            }),
-        vector<maze_reward_t>({
-                { 3, 5, 4, 8, ON_RELEASE_NO_PUNISH,   0, 200,   0},
-                { 5, 3, 6, 8, ON_RELEASE_NO_PUNISH,   0, 200, 200},
-                { 4, 1, 1, 1, ON_RELEASE_NO_PUNISH, 200, 200,   0},
-                { 4, 7, 3, 3, ON_RELEASE_NO_PUNISH, 200,   0,   0}
-            }),
-        vector<door_t>({})
-        ),
-    /* === 4x4 Maze I === */
-    maze_t(
-        QString("4x4_I"),
-        4,
-        action_ptr_t(new action_t("stay")),
-        observation_ptr_t(new observation_t(4,4,1,1)),
-        reward_ptr_t(new reward_t({0,1},0)),
-        vector<wall_t>({
-                { 4, 8},
-                { 5, 9},
-                { 6,10},
-                { 7,11},
-                { 1, 2},
-                { 5, 6},
-                { 9,10},
-                {13,14},
-                { 8, 9},
-                { 2, 3},
-                { 6, 7},
-                {14,15},
-                {11,15},
-                { 3, 7}
-            }),
-        vector<maze_reward_t>({
-                { 0,  4, 3, 1, ON_RELEASE_NO_PUNISH, 255, 120,  0},
-                { 5,  0, 2, 1, ON_RELEASE_NO_PUNISH, 200,   0,  0},
-                { 1,  5, 3, 1, ON_RELEASE_NO_PUNISH, 255, 120,  0},
-                { 2,  1, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,  0},
-                { 7,  6, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,  0},
-                {11,  7, 4, 1,  EACH_TIME_NO_PUNISH, 255, 200,  0},
-                {10, 15, 3, 1,  EACH_TIME_NO_PUNISH, 255, 120,  0},
-                {13, 14, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,  0},
-                { 8,  9, 4, 1,  EACH_TIME_NO_PUNISH, 255, 200,  0},
-                { 4,  8, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,  0}
-            }),
-        vector<door_t>({
-                door_t(observation_t(4,4, 4), observation_t(4,4, 8), observation_t(4,4, 4),  DOWN_BUTTON,  0, color_t(0.6,0.0,1.0) ),
-                door_t(observation_t(4,4, 8), observation_t(4,4, 9), observation_t(4,4, 8),  LEFT_BUTTON, -3, color_t(0.0,0.5,0.0) ),
-                door_t(observation_t(4,4,13), observation_t(4,4,14), observation_t(4,4,13), RIGHT_BUTTON,  0, color_t(0.6,0.0,1.0) ),
-                door_t(observation_t(4,4,14), observation_t(4,4,15), observation_t(4,4,10),    UP_BUTTON, -3, color_t(0.0,0.5,0.0) ),
-                door_t(observation_t(4,4,15), observation_t(4,4,11), observation_t(4,4,15), RIGHT_BUTTON, -3, color_t(0.0,0.0,1.0) ),
-                door_t(observation_t(4,4,11), observation_t(4,4, 7), observation_t(4,4,11),    UP_BUTTON,  0, color_t(0.6,0.0,1.0) ),
-                door_t(observation_t(4,4, 7), observation_t(4,4, 3), observation_t(4,4, 7), RIGHT_BUTTON, -3, color_t(0.0,0.5,0.0) ),
-                door_t(observation_t(4,4, 3), observation_t(4,4, 7), observation_t(4,4, 3), RIGHT_BUTTON, -3, color_t(0.0,0.5,0.0) ),
-                door_t(observation_t(4,4, 7), observation_t(4,4, 6), observation_t(4,4, 3),  LEFT_BUTTON, -3, color_t(0.0,0.0,1.0) ),
-                door_t(observation_t(4,4, 2), observation_t(4,4, 1), observation_t(4,4, 2),  LEFT_BUTTON,  0, color_t(0.6,0.0,1.0) )
-                })
-        ),
-    /* === 4x4 Maze II === */
-    maze_t(
-        QString("4x4_II"),
-        4,
-        action_ptr_t(new action_t("stay")),
-        observation_ptr_t(new observation_t(4,4,1,1)),
-        reward_ptr_t(new reward_t({0,1},0)),
-        vector<wall_t>({
-                {0,4},
-                {4,5},
-                {8,12},
-                {14,15},
-                {5,6},
-                {2,3}
-            }),
-        vector<maze_reward_t>({
-                { 0, 8, 3, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0},
-                { 1, 4, 3, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0},
-                { 8,13, 3, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0},
-                {12,14, 3, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0},
-                {14,11, 3, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0},
-                {15,10, 3, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0},
-                {11, 9, 3, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0},
-                { 9, 6, 3, 1, ON_RELEASE_NO_PUNISH, 255,   0,   0},
-                { 5, 7, 3, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0},
-                { 7, 3, 3, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0},
-                { 7, 2, 3, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0},
-                { 2, 1, 3, 1,  EACH_TIME_NO_PUNISH, 255,   0,   0}
-            }),
-        vector<door_t>({
-                door_t(observation_t(4,4, 0),observation_t(4,4, 4),observation_t(4,4, 1),    UP_BUTTON, -3, color_t(0.0,0.0,1.0) ),
-                door_t(observation_t(4,4, 8),observation_t(4,4,12),observation_t(4,4, 4), RIGHT_BUTTON, -3, color_t(0.0,0.0,1.0) ),
-                door_t(observation_t(4,4,14),observation_t(4,4,15),observation_t(4,4,14),  DOWN_BUTTON, -3, color_t(0.0,0.0,1.0) ),
-                door_t(observation_t(4,4, 5),observation_t(4,4, 6),observation_t(4,4, 5),  LEFT_BUTTON, -3, color_t(0.0,0.0,1.0) ),
-                door_t(observation_t(4,4, 3),observation_t(4,4, 2),observation_t(4,4, 3), RIGHT_BUTTON, -3, color_t(0.0,0.0,1.0) )
-                    })
-        ),
-    /* === 4x4 Maze III === */
-    maze_t(
-        QString("4x4_III"),
-        3,
-        action_ptr_t(new action_t("stay")),
-        observation_ptr_t(new observation_t(4,4,1,1)),
-        reward_ptr_t(new reward_t({0,1},0)),
-        vector<wall_t>({
-                { 5, 9},
-                {12,13},
-                {11,15},
-                { 5, 1},
-                { 5, 4},
-                { 2, 6},
-                { 3, 7},
-                { 9,10},
-                {10,14}
-            }),
-        vector<maze_reward_t>({
-                { 0, 8, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-                { 8,13, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-                { 9,12, 3, 1,  EACH_TIME_NO_PUNISH, 255, 100,   0},
-                {12,14, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-                {13,15, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-                {11, 6, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-                {10, 5, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-                { 5, 2, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-                { 1, 3, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-                { 2, 0, 2, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0}
-            }),
-        vector<door_t>({
-                door_t(observation_t(4,4,12),observation_t(4,4,13),observation_t(4,4,13),  DOWN_BUTTON, -2, color_t(0.0,1.0,0.0) ),
-                door_t(observation_t(4,4,15),observation_t(4,4,11),observation_t(4,4,15), RIGHT_BUTTON, -2, color_t(0.0,1.0,0.0) ),
-                door_t(observation_t(4,4, 5),observation_t(4,4, 1),observation_t(4,4, 5),  DOWN_BUTTON, -2, color_t(0.0,1.0,0.0) )
-            })
-        ),
-    /* === 6x6 Maze === */
-    maze_t(
-        QString("6x6"),
-        5,
-        action_ptr_t(new action_t("stay")),
-        observation_ptr_t(new observation_t(6,6,2,2)),
-        reward_ptr_t(new reward_t({0,1},0)),
-        vector<wall_t>({
-                {12, 18},
-                {13, 19},
-                {14, 20},
-                {15, 21},
-                {16, 22},
-                {17, 23},
-                { 2,  3},
-                { 8,  9},
-                {14, 15},
-                {20, 21},
-                {26, 27},
-                {32, 33},
-                {19, 25},
-                {25, 26},
-                {24, 30},
-                {25, 31},
-                {27, 33},
-                {28, 34},
-                {29, 35},
-                {27, 28},
-                {33, 34},
-                {28, 29},
-                {34, 35},
-                {22, 28},
-                {23, 29},
-                { 3,  9},
-                { 4, 10},
-                { 5, 11}
-            }),
-        vector<maze_reward_t>({
-                {25, 31, 2, 1,  EACH_TIME_NO_PUNISH, 100,   0,   0},
-                {19, 25, 3, 1,  EACH_TIME_NO_PUNISH,  50,   0,   0},
-                {13, 19, 1, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-                {26, 27, 1, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-                {28, 29, 1, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-                {29, 35, 1, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-                {35, 34, 1, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-                {33, 21, 2, 1,  EACH_TIME_NO_PUNISH, 100,   0,   0},
-                {34, 33, 1, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-                {21, 23, 2, 1,  EACH_TIME_NO_PUNISH, 100,   0,   0},
-                {22, 16, 3, 1,  EACH_TIME_NO_PUNISH,  50,   0,   0},
-                {17, 11, 3, 1, ON_RELEASE_NO_PUNISH,  50,   0,   0},
-                { 4, 10, 1, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-                {11,  4, 3, 1,  EACH_TIME_NO_PUNISH,  50,   0,   0},
-                { 9,  8, 1, 1,  EACH_TIME_NO_PUNISH, 200,   0,   0},
-                { 7,  6, 3, 1, ON_RELEASE_NO_PUNISH,  50,   0,   0},
-                { 2,  7, 2, 1,  EACH_TIME_NO_PUNISH, 100,   0,   0},
-                { 0, 12, 2, 1,  EACH_TIME_NO_PUNISH, 100,   0,   0},
-                { 1,  0, 3, 1, ON_RELEASE_NO_PUNISH,  50,   0,   0}
-            }),
-        vector<door_t>({
-                door_t(observation_t(6,6,13), observation_t(6,6,19), observation_t(6,6,13),  DOWN_BUTTON,-0, color_t(0.0,0.8,0.0) ),
-                door_t(observation_t(6,6,19), observation_t(6,6,25), observation_t(6,6,19),    UP_BUTTON,-1, color_t(0.0,0.4,0.0) ),
-                door_t(observation_t(6,6,25), observation_t(6,6,31), observation_t(6,6,25),  DOWN_BUTTON,-0, color_t(0.0,0.8,0.0) ),
-                door_t(observation_t(6,6,26), observation_t(6,6,27), observation_t(6,6,26), RIGHT_BUTTON,-0, color_t(0.0,0.8,0.0) ),
-                door_t(observation_t(6,6,27), observation_t(6,6,28), observation_t(6,6,27), RIGHT_BUTTON,-0, color_t(0.0,0.8,0.0) ),
-                door_t(observation_t(6,6,28), observation_t(6,6,29), observation_t(6,6,28), RIGHT_BUTTON,-0, color_t(0.0,0.8,0.0) ),
-                door_t(observation_t(6,6,29), observation_t(6,6,35), observation_t(6,6,29),    UP_BUTTON,-1, color_t(0.0,0.4,0.0) ),
-                door_t(observation_t(6,6,35), observation_t(6,6,34), observation_t(6,6,35),  DOWN_BUTTON,-1, color_t(0.0,0.4,0.0) ),
-                door_t(observation_t(6,6,34), observation_t(6,6,33), observation_t(6,6,34),    UP_BUTTON,-1, color_t(0.0,0.4,0.0) ),
-                door_t(observation_t(6,6,33), observation_t(6,6,27), observation_t(6,6,33),  LEFT_BUTTON,-1, color_t(0.0,0.4,0.0) ),
-                door_t(observation_t(6,6,22), observation_t(6,6,16), observation_t(6,6,22),    UP_BUTTON,-0, color_t(0.0,0.8,0.0) ),
-                door_t(observation_t(6,6,10), observation_t(6,6, 4), observation_t(6,6,11), RIGHT_BUTTON,-4, color_t(0.0,0.2,0.8) ),
-                door_t(observation_t(6,6, 5), observation_t(6,6,11), observation_t(6,6, 3),  LEFT_BUTTON,-4, color_t(0.6,0.0,0.8) ),
-                door_t(observation_t(6,6, 9), observation_t(6,6, 8), observation_t(6,6, 9),  LEFT_BUTTON,-0, color_t(0.0,0.8,0.0) )
-            })
-        ),
-    /* === 10x10 Maze === */
-    maze_t(
-        QString("10x10"),
-        6,
-        action_ptr_t(new action_t("stay")),
-        observation_ptr_t(new observation_t(10,10,4,4)),
-        reward_ptr_t(new reward_t({-1,0,1},1)),
-        vector<wall_t>({
-                {  2,  3},
-                { 12, 13},
-                { 22, 23},
-                { 32, 33},
-                { 30, 40},
-                { 31, 41},
-                { 33, 34},
-                { 43, 44},
-                { 53, 54},
-                { 63, 64},
-                { 73, 74},
-                { 83, 84},
-                { 61, 71},
-                { 62, 72},
-                { 63, 73},
-                { 44, 45},
-                { 54, 55},
-                { 74, 75},
-                { 84, 85},
-                { 75, 85},
-                { 76, 86},
-                { 77, 87},
-                { 23, 24},
-                { 25, 35},
-                { 26, 36},
-                { 27, 37},
-                { 28, 38},
-                {  6,  7},
-                { 16, 17},
-                { 78, 88},
-                { 59, 69},
-                { 58, 68},
-                { 57, 67},
-                { 56, 66}
-            }),
-        vector<maze_reward_t>({
-                {  0, 21,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
-                { 30, 43,  4, 1, ON_RELEASE_NO_PUNISH,   0, 200,   0},
-                { 43, 62,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
-                { 61, 92, -4, 1, ON_RELEASE_NO_PUNISH,   0, 200,   0},
-                { 94, 86,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
-                { 87, 66,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
-                { 67, 59,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
-                { 48, 56,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
-                { 55, 36,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
-                { 59, 38,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
-                { 28,  9,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
-                { 18, 37,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
-                { 25, 33,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
-                { 33,  3,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
-                {  4,  1,  3, 1, ON_RELEASE_NO_PUNISH, 200,   0,   0},
-                {  8, 17,  2, 1, ON_RELEASE_NO_PUNISH,   0,   0, 200},
-                { 40, 50,  2, 1, ON_RELEASE_NO_PUNISH,   0, 200, 200}, // test
-                { 41, 51,  2, 1,  EACH_TIME_NO_PUNISH,   0, 200, 200}, // test
-                { 60, 70,  2, 1, ON_RELEASE_PUNISH_FAILURE,   0, 200, 200}, // test
-                { 80, 90,  2, 1,  EACH_TIME_PUNISH_FAILURE,   0, 200, 200}  // test
-            }),
-        vector<door_t>({
-                door_t(observation_t(10,10,0,3), observation_t(10,10,0,4), observation_t(10,10,0,4),  PASS_BUTTON, 0, color_t(1.0,0.5,0.0) ),
-                door_t(observation_t(10,10,1,3), observation_t(10,10,1,4), observation_t(10,10,1,5),  STAY_BUTTON, 2, color_t(0.0,1.0,0.0) ),
-                door_t(observation_t(10,10,2,2), observation_t(10,10,3,2), observation_t(10,10,2,3),    UP_BUTTON, 2, color_t(0.0,1.0,0.0) ),
-                door_t(observation_t(10,10,3,3), observation_t(10,10,4,3), observation_t(10,10,3,3),  DOWN_BUTTON, 3, color_t(0.0,0.5,0.5) ),
-                door_t(observation_t(10,10,4,5), observation_t(10,10,5,5), observation_t(10,10,4,6),  LEFT_BUTTON,-5, color_t(0.0,0.0,1.0) ),
-                door_t(observation_t(10,10,6,5), observation_t(10,10,6,6), observation_t(10,10,4,7), RIGHT_BUTTON, 5, color_t(1.0,0.0,1.0) )
-            })
-        )// ,
-//     /* === Wrong maze for testing unit tests === */
-//     maze_t(
-//         QString("Wrong"),
-//         1,
-//         action_ptr_t(new action_t("stay")),
-//         observation_ptr_t(new observation_t(2,2,0,0)),
-//         reward_ptr_t(new reward_t({-1,0,1,2},1)),
-//         vector<wall_t>({
-// //                { 0, 3},
-// //                { 3, 4}
-//             }),
-//         vector<maze_reward_t>({
-// //                { 0, 1, 1,  3, ON_RELEASE_NO_PUNISH,   0, 200, 200},
-//                 { 0, 1, 1,  2, EACH_TIME_NO_PUNISH,   0, 200, 200},
-//                 { 0, 1, 1, -1, ON_RELEASE_PUNISH_FAILURE,   0, 200, 200},
-// //                { 0, 1, 1,  2, EACH_TIME_PUNISH_FAILURE,   0, 200, 200}
-//             }),
-//         vector<door_t>({
-// //                door_t(observation_t(2,2,0,0), observation_t(2,2,1,1), observation_t(2,2,0,0),  PASS_BUTTON, 0, color_t(1.0,0.5,0.0) ),
-// //                door_t(observation_t(2,3,0,0), observation_t(2,2,0,1), observation_t(2,2,0,0), RIGHT_BUTTON, 5, color_t(1.0,0.0,1.0) )
-//             })
-//         )
+#include "Default.maze"
+    ,
+#include "Minimal.maze"
+    ,
+#include "3x3.maze"
+    ,
+#include "3x3_doorway.maze"
+    ,
+#include "4x4_I.maze"
+    ,
+#include "4x4_II.maze"
+    ,
+#include "4x4_III.maze"
+    ,
+#include "4x4_empty.maze"
+    ,
+#include "5x5_empty.maze"
+    ,
+#include "6x6.maze"
+    ,
+#include "10x10.maze"
+    ,
+#include "Markov.maze"
+//     ,
+// #include "Wrong.maze" // for testing unit tests
 };
-
-Maze::Maze(const double& eps):
+Maze::Maze(const double& eps, const QString& s):
     PredictiveEnvironment(action_ptr_t(), observation_ptr_t(), reward_ptr_t()), // set by calling set_maze in body
     current_observation(*(maze_list[0].observation_space.get_derived<observation_t>())),
     epsilon(eps),
@@ -395,13 +73,11 @@ Maze::Maze(const double& eps):
     current_maze(maze_list[0])
 {
     // set a maze
-    set_maze("Default");
+    set_maze(s);
 }
-
 
 Maze::~Maze() {
     delete agent;
-    delete current_instance;
 }
 
 bool Maze::set_maze(const QString& s) {
@@ -509,7 +185,7 @@ void Maze::render_update() {
     agent->setElementId(agent->elementId()=="normal" ? "mirrored" : "normal");
 
     // set action line and circle
-    observation_t last_state(*((current_instance->const_it()-1)->observation.get_derived<observation_t>()));
+    observation_t last_state(*(current_instance->const_prev()->observation.get_derived<observation_t>()));
     double al_length = state_size*action_line_length_factor;
     double ap_size = state_size*action_point_size_factor;
     action_point->setRect(last_state.get_x_pos()-ap_size/2,last_state.get_y_pos()-ap_size/2,ap_size,ap_size);
@@ -580,16 +256,36 @@ void Maze::set_state_colors(const color_vector_t colors) {
     }
 }
 
+void Maze::show_distribution(const std::vector<probability_t> dist, bool scale_as_sqrt) {
+    // set colors
+    probability_t p_sum = 0;
+    color_vector_t cols;
+    for(probability_t p : dist) {
+        p_sum += p;
+        if(scale_as_sqrt) {
+            p = sqrt(p);
+        }
+        cols.push_back(std::make_tuple(1,1-p,1-p));
+    }
+    IF_DEBUG(1) {
+        if(fabs(p_sum-1)>1e-3) {
+            DEBUG_WARNING(QString("Probabilities don't sum to one (sum_p=%1)").arg(p_sum));
+        }
+    }
+    set_state_colors(cols);
+    render_update();
+}
+
 void Maze::perform_transition(const action_ptr_t& action, std::vector<std::pair<int,int> > * reward_vector) {
 
     observation_t old_state = current_observation; // remember current (old) state
 
     if(DEBUG_LEVEL>=1) {
         DEBUG_OUT(1,"Current instance: ");
-        const_instanceIt_t insIt = current_instance->it();
+        const_instance_ptr_t ins = current_instance;
         for(idx_t k_idx=0; k_idx<k; ++k_idx) {
-            DEBUG_OUT(1,"    " << (*insIt) );
-            --insIt;
+            DEBUG_OUT(1,"    " << ins );
+            --ins;
         }
     }
 
@@ -611,7 +307,7 @@ void Maze::perform_transition(const action_ptr_t& action, std::vector<std::pair<
             prob_accum += prob;
             if(prob_accum>prob_threshold) {
                 current_observation = *(observation_to.get_derived<observation_t>());
-                current_instance = current_instance->append_instance(action, observation_to, reward);
+                current_instance = current_instance->append(action, observation_to, reward);
                 was_set = true;
                 DEBUG_OUT(2,"CHOOSE");
             }
@@ -635,7 +331,7 @@ void Maze::perform_transition(const action_ptr_t& action) {
 }
 
 Maze::probability_t Maze::get_prediction(
-    const instance_t*        instance_from,
+    const_instance_ptr_t     instance_from,
     const action_ptr_t&      action,
     const observation_ptr_t& observation_to,
     const reward_ptr_t&      reward
@@ -644,7 +340,7 @@ Maze::probability_t Maze::get_prediction(
 }
 
 Maze::probability_t Maze::get_prediction(
-    const instance_t*        instance_from,
+    const_instance_ptr_t     instance_from,
     const action_ptr_t&      action,
     const observation_ptr_t& observation_to,
     const reward_ptr_t&      reward,
@@ -716,15 +412,15 @@ Maze::probability_t Maze::get_prediction(
 
                 // check if key was activated
                 idx_t steps_in_past = 0;
-                for(const_instanceIt_t insIt = instance_from->const_it();
-                    insIt!=INVALID && steps_in_past<=abs(delay);
-                    past_action=*(insIt->action.get_derived<action_t>()), --insIt, ++steps_in_past) {
+                for(const_instance_ptr_t ins = instance_from;
+                    ins!=INVALID && steps_in_past<=abs(delay);
+                    past_action=*(ins->action.get_derived<action_t>()), --ins, ++steps_in_past) {
 
                     // check if delay matches
                     if(delay<0 || steps_in_past==delay) { // exact match for positve delay less-equal match for negative
 
                         // check if key state was visited at that time
-                        if(insIt->observation==s3) {
+                        if(ins->observation==s3) {
 
                             // check action
                             switch(kt) {
@@ -853,7 +549,7 @@ Maze::probability_t Maze::get_prediction(
         if(receive_reward || rat==EACH_TIME_PUNISH_FAILURE || rat==ON_RELEASE_PUNISH_FAILURE) {
             idx_t steps_in_past = 1;
             bool reward_invalidated = false;
-            for( const_instanceIt_t insIt = instance_from->const_it(); insIt!=INVALID && steps_in_past<=abs(delay); --insIt, ++steps_in_past) {
+            for(const_instance_ptr_t ins = instance_from; ins!=INVALID && steps_in_past<=abs(delay); --ins, ++steps_in_past) {
 
                 // check if delay matches
                 bool delay_matches = false;
@@ -864,7 +560,7 @@ Maze::probability_t Maze::get_prediction(
 
                 // check if agent was on activation state
                 bool activation_state = false;
-                if(insIt->observation==activate_state) {
+                if(ins->observation==activate_state) {
                     activation_state = true;
                 }
 
@@ -1045,10 +741,10 @@ void Maze::set_current_observation(const observation_ptr_t& observation) {
         DEBUG_ERROR("Cast failed. Please provide an observation of correct type");
     } else {
         current_observation = *o;
-        delete current_instance;
-        current_instance = instance_t::create(action_space, observation_space, reward_space);
+        current_instance->detach_reachable();
+        current_instance = DoublyLinkedInstance::create(action_space, observation_space, reward_space);
         for(idx_t k_idx=0; k_idx<k; ++k_idx) {
-            current_instance = current_instance->append_instance(action_space, observation_space, reward_space);
+            current_instance = current_instance->append(action_space, observation_space, reward_space);
         }
         DEBUG_OUT(1,"Set current state to " << current_observation);
     }
@@ -1215,6 +911,9 @@ void Maze::frame_maze() {
         max_reward = max(max_reward,r->get_value());
     }
     double reward_magnitude = max_reward - min_reward;
+    if(reward_magnitude==0) {
+        reward_magnitude = 1;
+    }
 
     // create frames for different reward values
     for(reward_ptr_t r : reward_space) {

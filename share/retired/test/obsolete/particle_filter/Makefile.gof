@@ -6,4 +6,4 @@ LIBS += -ljk -lrelational -lbiros
 CXXFLAGS := -pg
 LDFLAGS := -pg
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

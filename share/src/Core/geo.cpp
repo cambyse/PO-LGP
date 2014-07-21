@@ -1,20 +1,21 @@
 /*  ---------------------------------------------------------------------
-    Copyright 2013 Marc Toussaint
-    email: mtoussai@cs.tu-berlin.de
-
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
 
 #undef abs
 #include <algorithm>
@@ -44,6 +45,11 @@ double scalarProduct(const ors::Quaternion& a, const ors::Quaternion& b);
  * particular, using ors we can implement a soc::SocSystemAbstraction.
  */
 namespace ors {
+
+double& Vector::operator()(uint i) {
+  CHECK(i<3,"out of range");
+  return (&x)[i];
+}
 
 /// set the vector
 void Vector::set(double _x, double _y, double _z) { x=_x; y=_y; z=_z; isZero=(x==0. && y==0. && z==0.); }
@@ -422,6 +428,9 @@ Matrix& operator+=(Matrix& a, const Matrix& b) {
 /// inverts the current rotation
 Quaternion& Quaternion::invert() { w=-w; return *this; }
 
+/// flips the sign of the quaterion -- which still represents the same rotation
+void Quaternion::flipSign() { w=-w; x=-x; y=-y; z=-z; }
+
 /// multiplies the rotation by a factor f (i.e., makes f-times the rotation)
 void Quaternion::multiply(double f) {
   if(w==1. || f==1.) return;
@@ -441,6 +450,7 @@ void Quaternion::normalize() {
   double n=w*w + x*x + y*y + z*z;
   n=sqrt(n);
   w/=n; x/=n; y/=n; z/=n;
+  isZero=(w==1. || w==-1.);
 }
 
 /** @brief roughly, removes all ``components'' of the rotation that are not
@@ -463,7 +473,7 @@ void Quaternion::set(double* p) { w=p[0]; x=p[1]; y=p[2]; z=p[3]; isZero=(w==1. 
 void Quaternion::set(double _w, double _x, double _y, double _z) { w=_w; x=_x; y=_y; z=_z; isZero=(w==1. || w==-1.); }
 
 /// reset the rotation to identity
-void Quaternion::setZero() { memset(this, 0, sizeof(Quaternion));  w=1; isZero=true; }
+void Quaternion::setZero() { memset(this, 0, sizeof(Quaternion));  w=1.; isZero=true; }
 
 /// samples the rotation uniformly from the whole SO(3)
 void Quaternion::setRandom() {
@@ -856,9 +866,9 @@ Transformation& Transformation::setText(const char* txt) { read(MT::String(txt)(
 /// resets the position to origin, rotation to identity, velocities to zero, scale to unit
 Transformation& Transformation::setZero() {
   memset(this, 0, sizeof(Transformation));
-  rot.w=1.;
-  pos.isZero=rot.isZero=vel.isZero=angvel.isZero=true;
-  zeroVels = true;
+  rot.w = 1.;
+  pos.isZero = rot.isZero = vel.isZero = angvel.isZero = true;
+  zero = zeroVels = true;
   return *this;
 }
 
@@ -990,11 +1000,11 @@ void Transformation::appendInvTransformation(const Transformation& f) {
 /// this = f^{-1}
 void Transformation::setInverse(const Transformation& f) {
   if(f.zeroVels) {
-    rot = Quaternion_Id / f.rot;
+    rot = -f.rot;
     pos = - (rot * f.pos);
     zeroVels = true;
   } else {
-    rot = Quaternion_Id / f.rot;
+    rot = -f.rot;
     Matrix R = rot.getMatrix();
     pos = - (R * f.pos);
     vel = R * ((f.angvel^f.pos) - f.vel);

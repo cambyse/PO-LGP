@@ -1,20 +1,21 @@
 /*  ---------------------------------------------------------------------
-    Copyright 2013 Marc Toussaint
-    email: mtoussai@cs.tu-berlin.de
-
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
+    
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
+    
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
 
 /// @file
 /// @ingroup group_Core
@@ -38,8 +39,10 @@ struct Vector {
   Vector(double x, double y, double z) { set(x, y, z); }
   Vector(const Vector& v) { set(v.x, v.y, v.z); }
   Vector(const arr& x) { CHECK(x.N==3, "");  set(x.p); }
+  Vector(const arrf& x) { CHECK(x.N==3, "");  set(x(0), x(1), x(2)); }
   double *p() { return &x; }
   
+  double& operator()(uint i);
   void set(double, double, double);
   void set(double*);
   void setZero();
@@ -119,6 +122,7 @@ struct Quaternion {
   void setDiff(const Vector& from, const Vector& to);
   void setInterpolate(double t, const Quaternion& a, const Quaternion b);
   Quaternion& invert();
+  void flipSign();
   void normalize();
   void multiply(double f);
   void alignWith(const Vector& v);

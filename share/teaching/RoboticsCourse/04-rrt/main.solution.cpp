@@ -11,7 +11,7 @@ struct TrajectoryOptimizationProblem:KOrderMarkovFunction {
   Simulator *S;
   uint T;
   arr x0, xT;
-  void phi_t(arr& phi, arr& J, uint t, const arr& x_bar);
+  void phi_t(arr& phi, arr& J, uint t, const arr& x_bar, const arr& z=NoArr);
 
   uint get_T(){ return T; }
   uint get_k(){ return 2; }
@@ -231,7 +231,7 @@ void optim(){
   }
 #endif
 
-  optNewton(x, Convert(P), OPT(stopIters=1000, verbose=2, useAdaptiveDamping=false, damping=1e-0, maxStep=.1, stopTolerance=1e-4));
+  optNewton(x, Convert(P), OPT(stopIters=1000, verbose=2, damping=1e-0, maxStep=.1, stopTolerance=1e-4));
   x >>FILE("q.optim");
 
   //display
@@ -254,7 +254,7 @@ int main(int argc,char **argv){
 }
 
 
-void TrajectoryOptimizationProblem::phi_t(arr& phi, arr& J, uint t, const arr& x_bar){
+void TrajectoryOptimizationProblem::phi_t(arr& phi, arr& J, uint t, const arr& x_bar, const arr& z){
   uint T=get_T(), n=dim_x(), k=get_k(), m=dim_phi(t);
 
   double col_prec=1e-1;

@@ -51,11 +51,11 @@ void test_rrt(long num) {
   }
 }
 
-TEST(AlgosTest, testRRTSmall) {
+GTEST_TEST(AlgosTest, testRRTSmall) {
   test_rrt(3);  
 }
 
-TEST(AlgosTest, testRRTBig) {
+GTEST_TEST(AlgosTest, testRRTBig) {
   test_rrt(50000);
 }
 

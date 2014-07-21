@@ -1,0 +1,16 @@
+<package>
+  <description brief="goal_publisher">
+
+     goal_publisher
+
+  </description>
+  <author>englerpr</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/goal_publisher</url>
+  <depend package="roscpp"/>
+  <depend package="ar_track_alvar"/>
+
+</package>
+
+

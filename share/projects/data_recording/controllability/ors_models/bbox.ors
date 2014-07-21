@@ -1,0 +1,72 @@
+body bbox:body {}
+shape sh:task:bbox:body (bbox:body) {
+  #type = -1
+  type = 5
+  size = [ .01 0 0 0 ]
+  color = [ 0 0 0 ]
+}
+shape sh:bbox:body:back (bbox:body) {
+  type = 0
+  rel = <T t(-.0553 .04325 .008)>
+  size = [ .15 .196 .002  0 ]
+  contact
+}
+shape sh:bbox:body:front (bbox:body) {
+  type = 0
+  rel = <T t(-.0553 .04325 .008) t(0 0 -.15)>
+  size = [ .15 .196 .002  0 ]
+  contact
+}
+shape sh:bbox:body:left (bbox:body) {
+  type = 0
+  rel = <T t(-.0553 .04325 .008) t(.075 0 0) d(90 0 1 0) t(.075 0 0)>
+  size = [ .15 .196 .002  0 ]
+  contact
+}
+shape sh:bbox:body:right (bbox:body) {
+  type = 0
+  rel = <T t(-.0553 .04325 .008) t(-.075 0 0) d(90 0 1 0) t(.075 0 0)>
+  size = [ .15 .196 .002  0 ]
+  contact
+}
+shape sh:bbox:body:down (bbox:body) {
+  type = 0
+  rel = <T t(-.0553 .04325 .008) t(0 0 -.075) d(90 1 0 0) t(0 0 -.098)>
+  size = [ .15 .15 .002  0 ]
+  contact
+}
+
+body bbox:lid {}
+shape sh:task:bbox:lid (bbox:lid) {
+  #type = -1
+  type = 5
+  size = [ .01 0 0 0 ]
+  color = [ 0 0 0 ]
+}
+shape sh:bbox:lid (bbox:lid) {
+  type = 0
+  rel = <T t(-.0513 .0385 .008)>
+  size = [ .15 .15 .002  0 ]
+  contact
+}
+
+body bbox:body:pos {}
+body bbox:body:orX {}
+body bbox:body:orY {}
+joint (world bbox:body:pos) { type = 7 }
+joint (bbox:body:pos bbox:body:orX) { type = 0 }
+joint (bbox:body:orX bbox:body:orY) { type = 1 }
+joint (bbox:body:orY bbox:body) { type = 2 }
+
+joint (bbox:body bbox:lid) {
+  type = 0
+  A = <T t(0 -.05475 .008) d(90 1 0 0)>
+  B = <T t(-.004 -.1135 -.008)>
+}
+# body bbox:lid:pos {}
+# body bbox:lid:orX {}
+# body bbox:lid:orY {}
+# joint (world bbox:lid:pos) { type = 7 }
+# joint (bbox:lid:pos bbox:lid:orX) { type = 0 }
+# joint (bbox:lid:orX bbox:lid:orY) { type = 1 }
+# joint (bbox:lid:orY bbox:lid) { type = 2 }

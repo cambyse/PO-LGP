@@ -2,13 +2,13 @@
 #include <System/engine.h>
 
 #include <Hardware/racer/modules.h>
-#include <Hardware/joystick.h>
+#include <Hardware/joystick/joystick.h>
 
 void testJoystick(){
   struct MySystem:System{
     ACCESS(arr, joystickState);
     MySystem(){
-      addModule<JoystickInterface>("JoystickInterface", ModuleThread::loopWithBeat, 0.01);
+      addModule<JoystickInterface>("JoystickInterface", Module_Thread::loopWithBeat, 0.01);
       connect();
     }
   } S;
@@ -16,7 +16,7 @@ void testJoystick(){
   engine().open(S);
 
   for(int i = 0;; ++i){
-    S.joystickState.var->waitForNextWriteAccess();
+    S.joystickState.var->waitForNextRevision();
     arr J = S.joystickState.get();
     cout <<"\r joy=" <<J <<std::flush;
     if(engine().shutdown.getValue()) break;
@@ -36,11 +36,11 @@ void run(){
     ACCESS(arr, controls);
     ACCESS(arr, joystickState);
     MySystem(){
-      addModule<IMU_Poller>("IMU_Poller", ModuleThread::loopFull);
-      addModule<KalmanFilter>("KalmanFilter", ModuleThread::listenFirst);
-      //addModule<RacerDisplay>("RacerDisplay", ModuleThread::loopWithBeat, 0.1);
-      addModule<Motors>("Motors", ModuleThread::loopFull);
-      addModule<JoystickInterface>("JoystickInterface", ModuleThread::loopWithBeat, 0.01);
+      addModule<IMU_Poller>("IMU_Poller", Module_Thread::loopFull);
+      addModule<KalmanFilter>("KalmanFilter", Module_Thread::listenFirst);
+      //addModule<RacerDisplay>("RacerDisplay", Module_Thread::loopWithBeat, 0.1);
+      addModule<Motors>("Motors", Module_Thread::loopFull);
+      addModule<JoystickInterface>("JoystickInterface", Module_Thread::loopWithBeat, 0.01);
       connect();
     }
   } S;
@@ -58,7 +58,7 @@ void run(){
   double x_ref = 0.;
 
   for(int i = 0;; ++i){
-    S.stateEstimate.var->waitForNextWriteAccess();
+    S.stateEstimate.var->waitForNextRevision();
     arr x = S.stateEstimate.get();
     arr J = S.joystickState.get();
 
@@ -76,7 +76,7 @@ void run(){
     uint mode = uint(J(0));
     if(mode&0x10 || mode&0x20 || mode&0x40 || mode&0x80){
       S.controls.set()() = ARR(0, 0, 10.);
-      S.encoderData.var->waitForNextWriteAccess();
+      S.encoderData.var->waitForNextRevision();
       break;
     }
 

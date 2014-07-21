@@ -8,9 +8,9 @@ void testIMU(){
     ACCESS(arr, imuData);
     ACCESS(arr, stateEstimate);
     MySystem(){
-      addModule<IMU_Poller>("IMU_Poller", ModuleThread::loopFull);
-      addModule<KalmanFilter>("KalmanFilter", ModuleThread::listenFirst);
-      addModule<RacerDisplay>("RacerDisplay", ModuleThread::loopWithBeat, 0.1);
+      addModule<IMU_Poller>("IMU_Poller", Module_Thread::loopFull);
+      addModule<KalmanFilter>("KalmanFilter", Module_Thread::listenFirst);
+      addModule<RacerDisplay>("RacerDisplay", Module_Thread::loopWithBeat, 0.1);
       connect();
     }
   } S;
@@ -22,12 +22,12 @@ void testIMU(){
 
 
   for(;;){
-    S.stateEstimate.var->waitForNextWriteAccess();
+    S.stateEstimate.var->waitForNextRevision();
     arr x = S.stateEstimate.get();
 //    arr enc = S.encoderData.get();
     cout <<"\r state = " <<x <<std::flush;
     if(engine().shutdown.getValue()) break;
-//    if(S.imuData.get()()(0)>10.) break;
+//    if(S.imuData.get()->(0)>10.) break;
   }
 
   //    engine().shutdown.waitForSignal();
@@ -41,7 +41,7 @@ void testMotors(){
   struct MySystem:System{
     ACCESS(arr, controls)
     MySystem(){
-      addModule<Motors>("Motors", ModuleThread::loopFull);
+      addModule<Motors>("Motors", Module_Thread::loopFull);
       connect();
     }
   } S;
@@ -50,15 +50,15 @@ void testMotors(){
 
   engine().open(S);
 
-  S.controls.set()() = ARR(5.,5.,10.);
+  S.controls.set() = ARR(5.,5.,10.);
   MT::wait(3);
-  S.controls.set()() = ARR(128.,128.,10.);
+  S.controls.set() = ARR(128.,128.,10.);
   MT::wait(3);
-  S.controls.set()() = ARR(0.,0.,10.);
+  S.controls.set() = ARR(0.,0.,10.);
   MT::wait(3);
-  S.controls.set()() = ARR(128.,128.,1.);
+  S.controls.set() = ARR(128.,128.,1.);
   MT::wait(3);
-  S.controls.set()() = ARR(0.,0.,1.);
+  S.controls.set() = ARR(0.,0.,1.);
   MT::wait(3);
 
   engine().close(S);
@@ -73,10 +73,10 @@ void testBalance(){
     ACCESS(arr, encoderData)
     ACCESS(arr, controls)
     MySystem(){
-      addModule<IMU_Poller>("IMU_Poller", ModuleThread::loopFull);
-      addModule<KalmanFilter>("KalmanFilter", ModuleThread::listenFirst);
-      //      addModule<RacerDisplay>("RacerDisplay", ModuleThread::loopWithBeat, 0.1);
-      addModule<Motors>("Motors", ModuleThread::loopFull);
+      addModule<IMU_Poller>("IMU_Poller", Module_Thread::loopFull);
+      addModule<KalmanFilter>("KalmanFilter", Module_Thread::listenFirst);
+      //      addModule<RacerDisplay>("RacerDisplay", Module_Thread::loopWithBeat, 0.1);
+      addModule<Motors>("Motors", Module_Thread::loopFull);
       connect();
     }
   } S;
@@ -93,7 +93,7 @@ void testBalance(){
   double motor_vel=0.;
 
   for(int i = 0;; ++i){
-    S.stateEstimate.var->waitForNextWriteAccess();
+    S.stateEstimate.var->waitForNextRevision();
     arr x = S.stateEstimate.get();
     arr enc = S.encoderData.get();
 
@@ -105,7 +105,7 @@ void testBalance(){
 //    cout <<"\r state = " <<x <<std::flush;
 //    cout <<"enc= " <<enc/MT_2PI <<std::endl;
 
-    S.controls.set()() = ARR(motor_vel, motor_vel, 10.);
+    S.controls.set() = ARR(motor_vel, motor_vel, 10.);
 
     if(engine().shutdown.getValue()) break;
   }

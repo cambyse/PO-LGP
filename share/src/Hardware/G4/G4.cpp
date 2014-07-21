@@ -1,12 +1,13 @@
-#ifdef G4_INSTALLED
 
 #include "G4.h"
-#include <G4TrackIncl.h>
 #include <string>
 #include <iostream>
 #include <time.h>
 
 REGISTER_MODULE(G4Poller)
+
+#ifdef G4_INSTALLED
+#include <G4TrackIncl.h>
 
 void lib_hardware_G4(){ cout <<"force loading lib/hardware/G4" <<endl; }
 
@@ -90,8 +91,7 @@ G4Poller::G4Poller():Module("G4Tracker"){
 }
 
 void G4Poller::open(){
-  // TODO put this in the MT.cfg file
-  const char *src_cfg_file = "../../../configurations/g4_source_configuration.g4c";
+  String src_cfg_file = MT::getParameter<String>("g4_srcCfg");
   uint numHubs = MT::getParameter<int>("g4_numHubs");
   G4_CMD_STRUCT cs;
   int res;
@@ -265,7 +265,8 @@ void G4Poller::step(){
   //cout << "currentPoses: " << currentPoses.get() << endl;
   poses.writeAccess();
   poses() = s->poses;
-  poses.tstamp() = s->tstamp.tv_sec + s->tstamp.tv_nsec / 1000000000.;
+  // modulo today
+  poses.tstamp() = s->tstamp.tv_sec % 86400 + s->tstamp.tv_nsec / 1000000000.;
   poses.deAccess();
   //cout << "currentPoses: " << currentPoses.get() << endl;
 }
@@ -289,5 +290,12 @@ void G4Poller::close(){
   usleep(1000000l);
 }
 
-#endif // ifdef G4_INSTALLED
+#else // ifdef G4_INSTALLED
 
+
+G4Poller::G4Poller():Module("G4Tracker"){ NICO }
+void G4Poller::open(){ NICO }
+void G4Poller::step(){ NICO }
+void G4Poller::close(){ NICO }
+
+#endif

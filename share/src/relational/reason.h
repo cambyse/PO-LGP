@@ -23,7 +23,7 @@
 #ifndef RELATIONAL_reason_h
 #define RELATIONAL_reason_h
 
-#include <relational/rules.h>
+#include "rules.h"
 
 
 namespace relational {

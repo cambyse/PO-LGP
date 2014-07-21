@@ -12,7 +12,7 @@
     GNU General Public License for more details.
 
     You should have received a COPYING file of the GNU General Public License
-    -----------------------------------------------------------------  */    -----------------------------------------------------------------  */
+    -----------------------------------------------------------------  */
 
 /** @file soc.h
     @brief Stochastic Optimal Control library */
@@ -350,13 +350,13 @@ inline void getController(arr& G, arr& g, const soc::AICO& aico){
     if(!aico.sys->dynamic){
       //controller model u_mean = G*x+g
       Vstar = aico.Vinv[t+1] + aico.R[t+1];
-      lapack_Ainv_b_sym(barv, Vstar, aico.Vinv[t+1]*aico.v[t+1] + aico.r[t+1]);
+      barv = lapack_Ainv_b_sym(Vstar, aico.Vinv[t+1]*aico.v[t+1] + aico.r[t+1]);
       inverse_SymPosDef(VstarH, Vstar + H);
       G[t] = - VstarH * Vstar; // * aico.A[t];
       g[t] = VstarH * Vstar * (barv); // - aico.a[t]);
     }else{
       Vstar = aico.Vinv[t+1] + aico.R[t+1];
-      lapack_Ainv_b_sym(barv, Vstar, aico.Vinv[t+1]*aico.v[t+1] + aico.r[t+1]);
+      barv = lapack_Ainv_b_sym(Vstar, aico.Vinv[t+1]*aico.v[t+1] + aico.r[t+1]);
       inverse_SymPosDef(VstarH, aico.tB[t]*Vstar*aico.B[t] + H);
       G[t] = - VstarH * aico.tB[t] * Vstar * aico.A[t];
       g[t] = VstarH * aico.tB[t] * Vstar * (barv - aico.a[t]);

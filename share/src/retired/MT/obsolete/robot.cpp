@@ -139,7 +139,7 @@ void ControllerProcess::step(){
   //check if a colition and limit variable are active
   bool colActive=false, limActive=false;
   uint i; TaskVariable *v;
-  for_list(i, v, sys.vars) if(v->active){
+  for_list(Type,  v,  sys.vars) if(v->active){
     if(v->type==collTVT) colActive=true;
     if(v->type==qLimitsTVT) limActive=true;
   }

@@ -21,4 +21,4 @@ OBJS  = $(shell find . \( -name '*.cpp' -and -not -name '*_t.cpp' -and -not -nam
 OBJS := $(OBJS:%.cpp=%.o)
 endif
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

@@ -464,7 +464,7 @@ void MarcsRobotTask::reactivateCollisions(const MT::Array<const char*>& shapes){
   if(signalStop) return;
   const char *s;
   uint i;
-  for_list(i, s, shapes) ctrl.ors.getShapeByName(s)->cont=true;
+  for_list(Type,  s,  shapes) ctrl.ors.getShapeByName(s)->cont=true;
   ctrl.swift.initActivations(ctrl.ors);
 }
 
@@ -472,13 +472,13 @@ void MarcsRobotTask::reactivateCollisions(const MT::Array<ors::Shape*>& shapes){
   if(signalStop) return;
   ors::Shape *s;
   uint i;
-  for_list(i, s, shapes) s->cont=true;
+  for_list(Type,  s,  shapes) s->cont=true;
   ctrl.swift.initActivations(ctrl.ors);
 }
 
 /*void MarcsRobotTask::deactivateInterCollisions(const MT::Array<const char*>& shapes){
   ors::BodyList L;
-  for_list(i, s, shapes) L->setAppend(ors.getShapeByName(s)->body);
+  for_list(Type,  s,  shapes) L->setAppend(ors.getShapeByName(s)->body);
   swift.deactivate(L);
 }*/
 

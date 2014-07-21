@@ -37,7 +37,7 @@ void testEvidenceDiscounting(){
 
     // test perturbation
     double eps=1e-6;
-    for_list(i,n,net.nodes){
+    for_list(Type, n, net.nodes){
       n->evidence += eps;
       for(t=0;t<100;t++) net.stepBP();
       net.getNodeBeliefs(b);
@@ -67,7 +67,7 @@ void testEvidenceDiscounting(){
 #else
     gamma /= grad;
 #endif
-    for_list(i,n,net.nodes) n->discount=gamma(i);
+    for_list(Type, n, net.nodes) n->discount=gamma(i);
     cout <<"gamma= " <<gamma <<endl;
   }
 

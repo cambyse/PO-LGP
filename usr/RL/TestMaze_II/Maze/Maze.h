@@ -11,25 +11,24 @@
 #include <sstream>
 
 #include "../Config.h"
-#include "../util.h"
-#include "../Feature.h"
+#include "../util/util.h"
+#include "../Representation/Feature.h"
 
 #include "MazeObservation.h"
 #include "MazeAction.h"
-#include "../ListedReward.h"
+#include "../Representation/ListedReward.h"
 
 class Maze: public PredictiveEnvironment, public Visualizer {
 public:
 
     USE_CONFIG_TYPEDEFS;
-    typedef Feature::const_feature_ptr_t f_ptr_t;
     typedef MazeAction action_t;
     typedef MazeObservation observation_t;
     typedef ListedReward reward_t;
 
     using PredictiveEnvironment::perform_transition; // so that lookup works
 
-    Maze(const double& eps = 0);
+    Maze(const double& eps = 0, const QString& s = "Default");
     virtual ~Maze() override;
 
     /** \brief Set a maze by name. */
@@ -47,6 +46,8 @@ public:
 
     void set_state_colors(const color_vector_t colors = color_vector_t());
 
+    void show_distribution(const std::vector<probability_t> dist, bool scale_as_sqrt = false);
+
     /** \brief Perform a transition by executing an action and return which rewards
      * were active. */
     virtual void perform_transition(const action_ptr_t& a, std::vector<std::pair<int,int> > * reward_vector);
@@ -55,13 +56,13 @@ public:
     virtual void perform_transition(const action_ptr_t& action) override;
 
     /** \brief Returns the transition probability. */
-    probability_t get_prediction(const instance_t*, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&) const override;
+    probability_t get_prediction(const_instance_ptr_t, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&) const override;
 
     /** \brief Returns the transition probability and which rewards were active.
      *
      * The first counter in each pair counts positive rewards, the second
      * punishments (for not collecting an activated reward). */
-    probability_t get_prediction(const instance_t*, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&, std::vector<std::pair<int,int> > * reward_vector) const;
+    probability_t get_prediction(const_instance_ptr_t, const action_ptr_t&, const observation_ptr_t&, const reward_ptr_t&, std::vector<std::pair<int,int> > * reward_vector) const;
 
     virtual void get_features(std::vector<f_ptr_t> & basis_features, FeatureLearner::LEARNER_TYPE type) const override;
 

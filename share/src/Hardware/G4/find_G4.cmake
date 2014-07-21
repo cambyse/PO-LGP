@@ -20,6 +20,8 @@ if(WITH_G4)
         message(STATUS "G4Track not found, giving up")
     endif(G4TRACK_FOUND)
   endif(G4TRACK)
+else(WITH_G4)
+  unset(G4TRACK_FOUND CACHE)
 endif(WITH_G4)
 
 

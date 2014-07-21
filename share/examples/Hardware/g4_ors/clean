@@ -1,1 +1,0 @@
-find . -maxdepth 1 - name 'z.*' -size 0c -exec rm {} \+

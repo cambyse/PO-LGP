@@ -1,8 +1,10 @@
-
 #include "HistoryObserver.h"
+
+#include "Representation/DoublyLinkedInstance.h"
+
 #define DEBUG_STRING "HistoryObserver: "
 #define DEBUG_LEVEL 1
-#include "debug.h"
+#include "util/debug.h"
 
 HistoryObserver::HistoryObserver():
     number_of_data_points(0)
@@ -17,13 +19,12 @@ void HistoryObserver::add_action_observation_reward_tripel(
 
     if(instance_data.size()==0 || new_episode) {
         // start new episode
-        instance_t * new_instance = instance_t::create(action,observation,reward);
-        new_instance->set_container();
+        instance_ptr_t new_instance = DoublyLinkedInstance::create(action,observation,reward);
         instance_data.push_back(new_instance);
     } else {
         // add to existing episode
-        instance_t * current_instance = instance_data.back();
-        instance_t * new_instance = current_instance->append_instance(action,observation,reward);
+        instance_ptr_t current_instance = instance_data.back();
+        instance_ptr_t new_instance = current_instance->append(action,observation,reward);
         instance_data.back() = new_instance;
     }
 
@@ -38,7 +39,7 @@ void HistoryObserver::add_action_observation_reward_tripel(
 
 void HistoryObserver::clear_data() {
     for(auto ins : instance_data) {
-        delete ins;
+        ins->detach_all();
     }
     instance_data.clear();
     number_of_data_points = 0;

@@ -11,4 +11,4 @@ LIBS += -lXIMEA_GenTL
 #CXXFLAGS += -D__STDC_CONSTANT_MACROS
 #LIBS += -lavutil -lavcodec -lavformat -lavdedice -lswscale
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

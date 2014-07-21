@@ -7,4 +7,4 @@ makeAll: $(ALL:%=makePath/%) makeSubpaths/test makeSubpaths/course
 
 cleanAll: $(ALL:%=cleanPath/%) cleanSubpaths/test cleanSubpaths/course
 
-include gofMake/make-generic
+include gofMake/generic.mk

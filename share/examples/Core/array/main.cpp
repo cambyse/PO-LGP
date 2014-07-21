@@ -2,6 +2,7 @@
 #include <Core/util.h>
 #include <Core/array.h>
 #include "array_cheatsheet.h"
+#include <Core/array-vector.h>
 
 using namespace std;
 
@@ -15,13 +16,13 @@ void TEST(Basics){
   a.resize(7,5);
   double *ap=a.p, *astop=ap+a.N;
   for(; ap!=astop; ap++) *ap=ap-a.p; //assign pointer offsets to entries
-  cout <<"\narray filled with pointer offsets (-> memory is linear):" <<a <<endl;
-  cout <<"\nsubarray (of the original) [2:4,:] (in MATLAB notation)" <<a.sub(2,4,0,-1) <<endl;
+  cout <<"\narray filled with pointer offsets (-> memory is linear):\n" <<a <<endl;
+  cout <<"\nsubarray (of the original) [2:4,:] (in MATLAB notation)\n" <<a.sub(2,4,0,-1) <<endl;
   CHECK(a.last()==a.N-1,"");
 
   //easier looping:
-  cout <<"\neasier looping:";
-  for_(double, e, a) (*e)++;
+  cout <<"\neasier looping:\n";
+  for(double& e: a) e++;
   cout <<a <<endl;
 
   //fancy writing:
@@ -30,28 +31,28 @@ void TEST(Basics){
   
   //deleting rows/columns
   a.delRows(1);
-  cout <<"\n\nrow 1 deleted:" <<a <<endl;
+  cout <<"\n\nrow 1 deleted:\n" <<a <<endl;
   a.delColumns(1,2);
-  cout <<"\n2 columns deleted at 1:" <<a <<endl;
+  cout <<"\n2 columns deleted at 1:\n" <<a <<endl;
   a.insColumns(1,3);
-  cout <<"\n3 columns inserted at 1:" <<a <<endl;
+  cout <<"\n3 columns inserted at 1:\n" <<a <<endl;
   CHECK(a.d1==6,"");
   CHECK(a(0,1)==0,"non-zeros inserted");
 
   //access:
-  cout <<"\n3rd line:" <<a[2] <<endl; //gets a const-version of the []-subarray
+  cout <<"\n3rd line:\n" <<a[2] <<endl; //gets a const-version of the []-subarray
   a[2](1)=7.; //same as a(2,1)=7 (but much slower)
   a[3]()+=1.; //use operator() to get a non-const &-version of the []-subarray 
   a[1]()=a[2];
-  cout <<"\nrows manipulated:" <<a <<endl;
+  cout <<"\nrows manipulated:\n" <<a <<endl;
   CHECK(a(2,1)==7.,"");
   CHECK(a[1]==a[2],"");
 
   //setting arrays ``by hand''
   a = ARR(0, 1, 2, 3, 4); //ARR() is equivalent to ARRAY<double>()
-  cout <<"\nset by hand: " <<a <<endl;
+  cout <<"\nset by hand:\n" <<a <<endl;
   ints = ARRAY<int>(0, -1, -2, -3, -4);
-  cout <<"\nset by hand: " <<ints <<endl;
+  cout <<"\nset by hand:\n" <<ints <<endl;
   copy(a, ints); //copying between different types
   CHECK(a(2)==-2,"");
 
@@ -75,18 +76,24 @@ void TEST(Basics){
   a.resize(3,7,2);
   arr b;
   rndInteger(a,1,9,false);
-  cout <<"\nbefore save/load: " <<a <<endl;
+  cout <<"\nbefore save/load:\n " <<a <<endl;
 
-  ofstream of("z.tmp");
-  of <<a;
-  of.close();
+  FILE("z.tmp") <<a;
 
-  ifstream inf("z.tmp");
-  inf >>b;
-  inf.close();
+  FILE("z.tmp") >>b;
 
   cout <<"\nafter saved and loaded from a file: " <<b <<endl;
   CHECK_ZERO(maxDiff(a,b), 1e-4, "non-exact save load");
+}
+
+void TEST(StdVectorCompat) {
+  std::vector<double> x(3);
+  x[0]=1.;
+  cout <<"std::vector to arr:" <<ARRAY(x) <<endl;
+  arr y(10);
+  y.setStraightPerm(10);
+  x=VECTOR(y);
+  cout <<"arr -> std::vector -> arr = " <<ARRAY(x) <<endl;
 }
 
 void TEST(SimpleIterators) {
@@ -378,7 +385,8 @@ void TEST(PCA) {
   y.reshape(4, 2);
   cout << "y = " << y << endl;
 
-  cout << "yp = " << w*y << endl;
+  arr yp = y * w;
+  cout << "yp = " << yp << endl;
 }
 
 void TEST(Inverse){
@@ -434,7 +442,7 @@ void TEST(Inverse){
   double t_symPosDef = MT::timerRead();
   cout <<"lapack SymDefPos inverse time = " <<t_symPosDef <<flush;
   cout <<" error = " <<maxDiff(A*invA, I) <<std::endl;
-  CHECK_ZERO(maxDiff(A*invA, I), 1e-10, "lapack SymDefPos inverse failed");
+  CHECK_ZERO(maxDiff(A*invA, I), 1e-6, "lapack SymDefPos inverse failed");
 
   CHECK(t_lapack < t_native, "lapack matrix inverse slower than native");
   CHECK(t_symPosDef < t_lapack, "symposdef matrix inverse slower than general");
@@ -554,9 +562,10 @@ void TEST(Tensor){
 
 void write(RowShiftedPackedMatrix& PM){
   cout <<"RowShiftedPackedMatrix: real:" <<PM.Z.d0 <<'x' <<PM.real_d1 <<"  packed:" <<PM.Z.d0 <<'x' <<PM.Z.d1 <<endl;
-  cout <<"packed numbers =";  PM.Z.write(cout);
-  cout <<"unpacked =";  unpack(PM.Z).write(cout);
-  cout <<"\nrowShifts=" <<PM.rowShift <<"\ncolPaches=" <<PM.colPatches <<endl;
+  cout <<"\npacked numbers =" <<PM.Z
+      <<"\nrowShifts=" <<PM.rowShift
+     <<"\ncolPaches=" <<PM.colPatches
+    <<"\nunpacked =" <<unpack(PM.Z) <<endl;
 }
 
 void TEST(RowShiftedPackedMatrix){
@@ -576,16 +585,25 @@ void TEST(RowShiftedPackedMatrix){
   cout <<"-----------------------" <<endl;
 
   //--randomized check
-  for(uint k=0;k<20;k++){
-    arr X(1+rnd(20),1+rnd(20));
+  for(uint k=0;k<100;k++){
+    arr X(1+rnd(5),1+rnd(5));
     rndInteger(X,0,1);
     arr Y = packRowShifted(X);
-    arr x(X.d0);
-    rndInteger(x,0,9);
-    cout <<"unpacking errors = " <<maxDiff(X,unpack(Y)) <<' ' <<maxDiff(~X*X,unpack(comp_At_A(Y))) <<' ' <<maxDiff(~X*x,comp_At_x(Y,x)) <<endl;
+//    write(castRowShiftedPackedMatrix(Y));
+    arr x(X.d0);   rndInteger(x,0,9);
+    arr x2(X.d1);  rndInteger(x2,0,9);
+    cout <<"unpacking errors = " <<maxDiff(X,unpack(Y))
+        <<' ' <<maxDiff(~X*X,unpack(comp_At_A(Y)))
+       <<' ' <<maxDiff(X*~X,unpack(comp_A_At(Y)))
+      <<' ' <<maxDiff(~X*x,comp_At_x(Y,x)) <<endl;
     CHECK_ZERO(maxDiff(X, unpack(Y)), 1e-10, "");
     CHECK_ZERO(maxDiff(~X*X, unpack(comp_At_A(Y))), 1e-10, "");
+//    arr tmp =comp_A_At(Y);
+//    //write(*((RowShiftedPackedMatrix*)tmp.aux));
+//    cout <<X*~X <<endl <<unpack(comp_A_At(Y)) <<endl;
+    CHECK_ZERO(maxDiff(X*~X, unpack(comp_A_At(Y))), 1e-10, "");
     CHECK_ZERO(maxDiff(~X*x, comp_At_x(Y,x)), 1e-10, "");
+    CHECK_ZERO(maxDiff(X*x2, comp_A_x(Y,x2)), 1e-10, "");
   }
 }
 
@@ -593,14 +611,14 @@ void TEST(RowShiftedPackedMatrix){
 
 int MAIN(int argc, char *argv[]){
 
-  //testPCA();
-  //testCheatSheet();
-
+  testRowShiftedPackedMatrix();
+  return 0;
   testBasics();
   testCheatSheet();
   testInitializationList();
   testSimpleIterators();
   testRowsAndColumsAccess();
+  testStdVectorCompat();
   testMatlab();
   testException();
   testMemoryBound();

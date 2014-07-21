@@ -3,7 +3,7 @@
 from lxml import etree
 
 #inFile = "pr2-with-ft-sensors.urdf" #misses the mimic entries!?
-inFile = "pr2.urdf"
+inFile = "z.urdf"
 xmlData = etree.parse(inFile)
 
 links = xmlData.findall("/link")
@@ -46,9 +46,9 @@ for link in links:
     elem = link.find("collision/geometry/mesh")
     if elem is not None:
         meshfile = elem.attrib['filename']
-        meshfile = meshfile.replace("package://pr2_description/meshes",
-                                    "pr2_model")
-        print ' type=3 mesh="%s"' % meshfile,
+        meshfile = meshfile.replace("package://pr2_description/meshes/",
+                                    "")
+        print ' type=3 mesh=\'%s\'' % meshfile,
 
     print '}\n',
 

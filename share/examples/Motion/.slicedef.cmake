@@ -1,11 +1,11 @@
 set(CURRENT_SLICE 
- constraint
-dmp
+ adaptiveMotionExecution
+constraint
+dynamicMovementPrimtives
+feedbackControl_PR2
 grasp
 grasp_PR2
+modelPredictiveControl
 motion
-mpc
-pfc
 RRT-PR2
-splines
  )

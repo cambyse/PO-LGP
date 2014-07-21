@@ -1,7 +1,7 @@
 #include "testmaze_ii.h"
 
 #include "Config.h"
-#include "util.h"
+#include "util/util.h"
 #include "util/QtUtil.h"
 
 #include "SmoothingKernelSigmoid.h"
@@ -10,10 +10,13 @@
 #include "PredictiveEnvironment.h"
 #include "Maze/Maze.h"
 #include "CheeseMaze/CheeseMaze.h"
+#include "Planning/LookAheadPolicy.h"
+#include "Planning/RandomPolicy.h"
+#include "Planning/GoalIteration.h"
+#include "Representation/DoublyLinkedInstance.h"
 
 #include <float.h>  // for DBL_MAX
 #include <vector>
-#include <map>
 #include <algorithm> // for min, max
 
 #ifdef BATCH_MODE_QUIET
@@ -21,7 +24,7 @@
 #else
 #define DEBUG_LEVEL 1
 #endif
-#include "debug.h"
+#include "util/debug.h"
 
 using std::vector;
 using std::map;
@@ -33,22 +36,26 @@ using std::max;
 using std::dynamic_pointer_cast;
 using std::shared_ptr;
 using std::make_shared;
+using std::pair;
+using std::tuple;
+using std::make_tuple;
 
 using util::arg_int;
 using util::arg_double;
 using util::arg_string;
+using util::INVALID;
 
-
-#define TO_CONSOLE(x) { ui._wConsoleOutput->appendPlainText(x); }
+static TestMaze_II::instance_ptr_t learning_episode_begin;
+static TestMaze_II::instance_ptr_t learning_episode_end;
 
 TestMaze_II::TestMaze_II(QWidget *parent):
     QWidget(parent),
-    planner_type(OPTIMAL_PLANNER),
+    planner_type(GOAL_ITERATION),
     environment(nullptr),
-    current_instance(nullptr),
-    record(false), plot(false), start_new_episode(false), search_tree_invalid(false), save_png_on_transition(false),
+    current_instance(INVALID),
+    record(false), plot(false), start_new_episode(false), save_png_on_transition(false), color_maze(true),
     png_counter(0),
-    random_timer(nullptr), action_timer(nullptr),
+    action_timer(nullptr),
     console_history(1,"END OF HISTORY"),
     history_position(0),
     history_file("console_history.txt"),
@@ -58,10 +65,13 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     crf(new KMarkovCRF()),
     utree(new UTree(discount)),
     linQ(new LinearQ(discount)),
-    look_ahead_search(new LookAheadSearch(discount)),
+    N_plus(new ConjunctiveAdjacency()),
+    telq(new TemporallyExtendedLinearQ(N_plus,discount)),
+    tem(new TemporallyExtendedModel(N_plus)),
+    policy(nullptr),
     max_tree_size(10000),
     prune_search_tree(true),
-    target_activated(false)
+    goal_activated(false)
 {
 
     // initialize UI
@@ -94,8 +104,6 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     ui._wConsoleOutput->setPlainText("    Please enter your commands (type 'help' for an overview)");
 
     // initialize timers
-    random_timer = new QTimer(this);
-    connect(random_timer, SIGNAL(timeout()), this, SLOT(random_action()));
     action_timer = new QTimer(this);
     connect(action_timer, SIGNAL(timeout()), this, SLOT(choose_action()));
 
@@ -107,40 +115,1421 @@ TestMaze_II::TestMaze_II(QWidget *parent):
     ui.graphicsView->installEventFilter(moveByKeys);
 
     // select environment
-    //change_environment(make_shared<Maze>(epsilon));
-    change_environment(make_shared<CheeseMaze>());
+    change_environment(make_shared<Maze>(epsilon,"Default"));
+    // change_environment(make_shared<Maze>(epsilon,"Markov"));
+    // change_environment(make_shared<CheeseMaze>());
+
+    // set some properties of N+
+    N_plus->set_horizon_extension(2);
+    N_plus->set_max_horizon(0);
+    N_plus->set_min_horizon(-2);
+    N_plus->set_combine_features(false);
+
+    // set l1 factor for tem
+    tem->set_l1_factor(l1_factor);
+
+    // set all commands
+    initialize_commands();
+}
+
+void TestMaze_II::initialize_commands() {
+    typedef Commander::ReturnType ret_t;
+    pair<double,QString> top_todo(1000,"Not Ported Yet =============================================");
+    {
+        pair<double,QString> top_general(1,"General ================================================");
+        command_center.add_command(top_general,{"help","h"},[this]()->ret_t{
+                to_console("");
+                for(QString s : command_center.get_help()) {
+                    to_console(s,4);
+                }
+                return {true,""};
+            },"Print help");
+        command_center.add_command(top_general,{"help","h"},[this](QString filter)->ret_t{
+                to_console("");
+                for(QString s : command_center.get_help(filter)) {
+                    to_console(s,4);
+                }
+                return {true,""};
+            },"Print help for commands containing <QString>");
+        command_center.add_command(top_general,{"exit","quit","q"}, [this]()->ret_t{
+                QApplication::quit();
+                return {true,""};
+            }, "quit application");
+        command_center.add_command(top_general,{"set record"}, [this]()->ret_t{
+                record = true;
+                start_new_episode = true;
+                return {true,"record on" };
+            }, "start recording movements");
+        command_center.add_command(top_general,{"unset record"}, [this]()->ret_t{
+                record = false;
+                return {true,"record off" };
+            }, "stop recording movements");
+        command_center.add_command(top_general,{"set plot"}, [this]()->ret_t{
+                plot = true;
+                plot_file.open("plot_file.txt");
+                plot_file << "# action observation reward" << endl;
+                return {true,"plot on" };
+            }, "start writing transitions into data file for plotting");
+        command_center.add_command(top_general,{"unset plot"}, [this]()->ret_t{
+                plot = false;
+                plot_file.close();
+                return {true,"plot off" };
+            }, "stop writing transitions into data file for plotting");
+        command_center.add_command(top_todo,{"set png"}, [this]()->ret_t{
+                return {true,"...to be ported"};
+            }, "save a png image of the maze on transition");
+        command_center.add_command(top_todo,{"unset png"}, [this]()->ret_t{
+                return {true,"...to be ported"};
+            }, "don't save a png image of the maze on transition");
+        command_center.add_command(top_general,{"set color"}, [this]()->ret_t{
+                color_maze = true;
+                return {true,"color maze"};
+            }, "color maze (if applicable)");
+        command_center.add_command(top_general,{"unset color"}, [this]()->ret_t{
+                color_maze = false;
+                shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
+                if(maze!=nullptr) {
+                    maze->set_state_colors();
+                    maze->render_update();
+                }
+                return {true,"don't color maze" };
+            }, "don't color maze");
+    }
+    {
+        pair<double,QString> top_maze(2,"Maze ===================================================");
+        command_center.add_command(top_maze,{"set maze"}, [this]()->ret_t{
+                to_console("Available mazes:",4);
+                for(QString name : Maze::get_maze_list()) {
+                    to_console(name,8);
+                }
+                return {true,""};
+            }, "display available maze names");
+        command_center.add_command(top_maze,{"set maze"}, [this](QString name)->ret_t{
+                shared_ptr<Maze> maze(new Maze(epsilon));
+                bool success = maze->set_maze(name);
+                change_environment(maze);
+                if(!success) {
+                    command_center.execute("set maze");
+                    return {false,"no maze named '"+name+"'"};
+                } else {
+                    return {true,"set maze '"+name+"'"};
+                }
+            }, "load maze with name <string>");
+        command_center.add_command(top_maze,{"set cheese"}, [this]()->ret_t{
+                change_environment(make_shared<CheeseMaze>());
+                return {true,"set cheese maze"};
+            }, "load cheese maze");
+        command_center.add_command(top_maze,{"move left","l"}, [this]()->ret_t{
+                if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
+                    perform_transition(action_ptr_t(new MazeAction("left")));
+                } else if(dynamic_pointer_cast<CheeseMaze>(environment)!=nullptr) {
+                    perform_transition(action_ptr_t(new CheeseMazeAction("west")));
+                } else {
+                    return {false,"Not defined in current environment"};
+                }
+                return {true,"moved left"};
+            }, "move left");
+        command_center.add_command(top_maze,{"move right","r"}, [this]()->ret_t{
+                if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
+                    perform_transition(action_ptr_t(new MazeAction("right")));
+                } else if(dynamic_pointer_cast<CheeseMaze>(environment)!=nullptr) {
+                    perform_transition(action_ptr_t(new CheeseMazeAction("east")));
+                } else {
+                    return {false,"Not defined in current environment"};
+                }
+                return {true,"moved right"};
+            }, "move right");
+        command_center.add_command(top_maze,{"move up","u"}, [this]()->ret_t{
+                if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
+                    perform_transition(action_ptr_t(new MazeAction("up")));
+                } else if(dynamic_pointer_cast<CheeseMaze>(environment)!=nullptr) {
+                    perform_transition(action_ptr_t(new CheeseMazeAction("north")));
+                } else {
+                    return {false,"Not defined in current environment"};
+                }
+                return {true,"moved up"};
+            }, "move up");
+        command_center.add_command(top_maze,{"move down","d"}, [this]()->ret_t{
+                if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
+                    perform_transition(action_ptr_t(new MazeAction("down")));
+                } else if(dynamic_pointer_cast<CheeseMaze>(environment)!=nullptr) {
+                    perform_transition(action_ptr_t(new CheeseMazeAction("south")));
+                } else {
+                    return {false,"Not defined in current environment"};
+                }
+                return {true,"moved down"};
+            }, "move down");
+        command_center.add_command(top_maze,{"move stay","s"}, [this]()->ret_t{
+                if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
+                    perform_transition(action_ptr_t(new MazeAction("stay")));
+                } else {
+                    return {false,"Not defined in current environment"};
+                }
+                return {true,"stayed"};
+            }, "stay-action");
+        command_center.add_command(top_maze,{"move"}, [this]()->ret_t{
+                choose_action();
+                return {true,"move one step"};
+            }, "move one step");
+        command_center.add_command(top_maze,{"move"}, [this](int n)->ret_t{
+                action_timer->stop();
+                action_timer->start(n);
+                return {true,QString("move every %1 ms").arg(n)};
+            }, "start moving every <int> milliseconds");
+        command_center.add_command(top_maze,{"move stop"}, [this]()->ret_t{
+                action_timer->stop();
+                return {true,"stop moving"};
+            }, "stop moving");
+        command_center.add_command(top_maze,{"epsilon"}, [this]()->ret_t{
+                shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
+                if(maze==nullptr) {
+                    return {false,"Allowed for maze-environments only"};
+                } else {
+                    if(maze->get_epsilon()!=epsilon) {
+                        return {false,QString("Maze epsion (%1) is different from stored one (%2)").arg(maze->get_epsilon()).arg(epsilon)};
+                    }
+                    return {true,QString("epsilon = %1").arg(epsilon)};
+                }
+            }, "get random transition probability");
+        command_center.add_command(top_maze,{"epsilon"}, [this](double d)->ret_t{
+                shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
+                if(maze==nullptr) {
+                    return {false,"Allowed for maze-environments only"};
+                } else {
+                    if(0<=d && d<=1) {
+                        epsilon = d;
+                        maze->set_epsilon(epsilon);
+                    } else {
+                        return {false,"epsilon must be in [0,1]"};
+                    }
+                    return {true,""};
+                }
+            }, "set random transition probability");
+        command_center.add_command(top_maze,{"reward activation"}, [this](int n)->ret_t{
+                shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
+                if(maze==nullptr) {
+                    return {false,"Allowed for maze-environments only"};
+                } else {
+                    maze->print_reward_activation_on_random_walk(n);
+                    maze->render_update();
+                }
+                return {true,""};
+            }, "print mean reward activation probability for length-<int> random walk");
+        command_center.add_command(top_maze,{"random distribution"}, [this](int n)->ret_t{
+                shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
+                if(maze==nullptr) {
+                    return {false,"Allowed for maze-environments only"};
+                } else {
+                    // initialize state counts to zero
+                    map<observation_ptr_t,int> state_counts;
+                    for(observation_ptr_t observation : observation_space) {
+                        state_counts[observation] = 0;
+                    }
+                    // get state counts
+                    int max_count = 1;
+                    for(int idx=0; idx<n; ++idx) {
+                        action_ptr_t action = (action_ptr_t)(action_space->random_element());
+                        observation_ptr_t observation_to;
+                        reward_ptr_t reward;
+                        maze->perform_transition(action,observation_to,reward);
+                        ++state_counts[observation_to];
+                        max_count = max(state_counts[observation_to],max_count);
+                    }
+                    // transform into colors
+                    Maze::color_vector_t cols;
+                    for(observation_ptr_t observation : observation_space) {
+                        double p = state_counts[observation];
+                        DEBUG_OUT(0,"State " << observation << ": p = " << p/max(n,1) );
+                        p /= max_count;
+                        cols.push_back( std::make_tuple(1,1-p,1-p) );
+                    }
+                    maze->set_state_colors(cols);
+                    maze->render_update();
+                }
+                return {true,""};
+            }, "run <int> random transitions and display relative counts for all states");
+    }
+    {
+        pair<double,QString> top_model_learn(3, "Model Learning =========================================");
+        command_center.add_command(top_model_learn,{"l1"}, [this]()->ret_t{
+                return {true,QString("L1 coefficient is %1").arg(l1_factor)};
+            }, "print current coefficient for L1 regularization");
+        command_center.add_command(top_model_learn,{"l1"}, [this](double d)->ret_t{
+                if(d>=0) {
+                    l1_factor = d;
+                    tem->set_l1_factor(l1_factor);
+                    telq->set_l1_factor(l1_factor);
+                    return {true,QString("set L1 coefficient to %1").arg(l1_factor)};
+                } else {
+                    return {false,"L1 coefficient must be non-negative"};
+                }
+            }, "set coefficient for L1 regularization");
+        command_center.add_command(top_model_learn,{"episode","e"}, [this](int n)->ret_t{
+                if(n<0) {
+                    return {false,"Expecting positive integer"};
+                } else {
+                    collect_episode(n);
+                }
+                return {true,QString("collected episode of length %1").arg(n)};
+            }, "record length <int> episode");
+        command_center.add_command(top_model_learn,{"episode clear","ec"}, [this]()->ret_t{
+                clear_data();
+                return {true,"cleared episode data"};
+            }, "clear episode data");
+        command_center.add_command(top_model_learn,{"validate tem random"}, [this](int n)->ret_t{
+                if(n<=0) {
+                    return {false,"expecting positive integer"};
+                } else {
+                    return {true,QString("random length-%1 episode has mean liklihood of %2").arg(n).arg(validate_predictor_on_random_episode(n,*tem))};
+                }
+            }, "validate TEM on length <int> random episode");
+        command_center.add_command(top_model_learn,{"validate crf random"}, [this](int n)->ret_t{
+                if(n<=0) {
+                    return {false,"expecting positive integer"};
+                } else {
+                    return {true,QString("random length-%1 episode has mean liklihood of %2").arg(n).arg(validate_predictor_on_random_episode(n,*crf))};
+                }
+            }, "validate CRF on length <int> random episode");
+        command_center.add_command(top_model_learn,{"validate utree random"}, [this](int n)->ret_t{
+                if(n<=0) {
+                    return {false,"expecting positive integer"};
+                } else {
+                    return {true,QString("random length-%1 episode has mean liklihood of %2").arg(n).arg(validate_predictor_on_random_episode(n,*utree))};
+                }
+            }, "validate UTree on length <int> random episode");
+        command_center.add_command(top_model_learn,{"validate tem episode"}, [this]()->ret_t{
+                return {true,QString("model assignes a mean liklihood of %1 to training episode").arg(validate_predictor_on_training_episode(*tem))};
+            }, "validate TEM on training episode");
+        command_center.add_command(top_model_learn,{"validate crf episode"}, [this]()->ret_t{
+                return {true,QString("model assignes a mean liklihood of %1 to training episode").arg(validate_predictor_on_training_episode(*crf))};
+            }, "validate CRF on training episode");
+        command_center.add_command(top_model_learn,{"validate utree episode"}, [this]()->ret_t{
+                return {true,QString("model assignes a mean liklihood of %1 to training episode").arg(validate_predictor_on_training_episode(*utree))};
+            }, "validate UTree on training episode");
+    }
+    {
+        pair<double,QString> top_model_learn_crf(3.1,"CRF ----------------------------------------------------");
+        command_center.add_command(top_model_learn_crf,{"crf optimize","crfo"}, [this]()->ret_t{
+                crf->optimize_model(l1_factor, 0);
+                return {true,"optimized CRF"};
+            }, "optimize CRF");
+        command_center.add_command(top_model_learn_crf,{"crf optimize","crfo"}, [this](int n)->ret_t{
+                crf->optimize_model(l1_factor, n);
+                return {true,QString("optimized CRF (max %1 iterations)").arg(n)};
+            }, "optimize CRF with a maximum of <int> iterations");
+        command_center.add_command(top_model_learn_crf,{"crf check"}, [this]()->ret_t{
+                crf->check_derivatives(3,10,1e-6,1e-3);
+                return {true,"checked derivatives for CRF"};
+            }, "check derivatives for CRF");
+        command_center.add_command(top_model_learn_crf,{"crf score","crfs"}, [this](int n)->ret_t{
+                if(n>=0) {
+                    crf->construct_candidate_features(n);
+                    crf->score_candidates_by_gradient();
+                    crf->print_scores();
+                    return {true,QString("scored candidate features with distance %1").arg(n)};
+                } else {
+                    return {false,"expecting non-negative integer"};
+                }
+            }, "score candidate features with distance <int> by gradient");
+        command_center.add_command(top_model_learn_crf,{"crf score1D"}, [this](int n)->ret_t{
+                if(n>=0) {
+                    crf->construct_candidate_features(n);
+                    crf->score_candidates_by_1D_optimization();
+                    return {true,QString("scored candidate features with distance %1 (1D optimization)").arg(n)};
+                } else {
+                    return {false,"expecting non-negative integer"};
+                }
+            }, "score candidate features with distance <int> by 1D optimization");
+        command_center.add_command(top_model_learn_crf,{"crf add","crfa"}, [this](int n)->ret_t{
+                if(n>=0 ) {
+                    crf->add_candidate_features_to_active(n);
+                    return {true,QString("added top %1 candidates").arg(n)};
+                } else {
+                    return {false,"expecting non-negative integer"};
+                }
+            }, "add <int> highest scored candidate features to active (0 for all non-zero scored)");
+        command_center.add_command(top_model_learn_crf,{"crf erase","crfe"}, [this]()->ret_t{
+                crf->erase_zero_features();
+                return {true,"erased zero-weighted features"};
+            }, "erase features with zero weight");
+        command_center.add_command(top_model_learn_crf,{"crf evaluate"}, [this]()->ret_t{
+                crf->evaluate_features();
+                return {true,"evaluated CRF features"};
+            }, "evaluate features at current point");
+        command_center.add_command(top_model_learn_crf,{"crf features","crff"}, [this]()->ret_t{
+                crf->print_all_features();
+                return {true,"printed all CRF features"};
+            }, "print CRF features and weights");
+        command_center.add_command(top_model_learn_crf,{"crf cycle","crfc"}, [this]()->ret_t{
+                crf->construct_candidate_features(1);
+                crf->score_candidates_by_gradient();
+                crf->add_candidate_features_to_active(0);
+                crf->optimize_model(l1_factor, 0);
+                crf->erase_zero_features();
+                crf->print_all_features();
+                return {true,"did one learning cycle of CRF"};
+            }, "do a complete score-add-optimize-erase cycle of CRF and print features afterwards");
+        command_center.add_command(top_model_learn_crf,{"crf apply-old","crfao"}, [this]()->ret_t{
+                crf->apply_features();
+                return {true,"applied old CRF featues"};
+            }, "re-apply the old featues stored at the last erase");
+    }
+    {
+        pair<double,QString> top_model_learn_utree(3.2,"UTree --------------------------------------------------");
+        command_center.add_command(top_model_learn_utree,{"expand","ex"}, [this]()->ret_t{
+                double score = utree->expand_leaf_node();
+                return {true, QString("score was %1").arg(score) };
+            }, "expand one leaf node");
+        command_center.add_command(top_model_learn_utree,{"expand","ex"}, [this](int n)->ret_t{
+                if(n<=0 ) {
+                    return {false,"Expecting a positive integer"};
+                } else {
+                    double score = 0;
+                    for(int i=0; i<n; ++i) {
+                        score = utree->expand_leaf_node();
+                    }
+                    return {true,QString("last score was %1").arg(score) };
+                }
+            }, "expand <int> leaf nodes");
+        command_center.add_command(top_model_learn_utree,{"expand","ex"}, [this](double d)->ret_t{
+                double score = DBL_MAX;
+                while(score>d) {
+                    score=utree->expand_leaf_node(d);
+                }
+                return {true,QString("last score was %1").arg(score) };
+            }, "expand leaves until a score of <double> is reached");
+        command_center.add_command(top_model_learn_utree,{"print utree"}, [this]()->ret_t{
+                utree->print_tree();
+                return {true,""};
+            }, "print the current UTree");
+        command_center.add_command(top_model_learn_utree,{"print leaves"}, [this]()->ret_t{
+                utree->print_leaves();
+                return {true,""};
+            }, "print leaves of the current UTree");
+        command_center.add_command(top_model_learn_utree,{"clear utree"}, [this]()->ret_t{
+                utree->clear_tree();
+                return {true,""};
+            }, "clear UTree");
+        command_center.add_command(top_model_learn_utree,{"v-iteration","vi"}, [this]()->ret_t{
+                double max_diff = utree->value_iteration();
+                return {true,QString("ran one iteration, maximum update was %1").arg(max_diff) };
+            }, "run one step of Value-Iteration");
+        command_center.add_command(top_model_learn_utree,{"v-iteration","vi"}, [this](int n)->ret_t{
+                if(n<=0) {
+                    return {false,"Expecting a positive integer"};
+                } else {
+                    double max_diff;
+                    repeat(n) {
+                        max_diff = utree->value_iteration();
+                    }
+                    return {true,QString("ran %1 iteration(s), last maximum update was %2").arg(n).arg(max_diff) };
+                }
+            }, "run one <int> steps of Value-Iteration");
+        command_center.add_command(top_model_learn_utree,{"ex-type","ext"}, [this]()->ret_t{
+                switch(utree->get_expansion_type()) {
+                case UTree::UTILITY_EXPANSION:
+                    return {true,"expansion type: UTILITY_EXPANSION"};
+                    break;
+                case UTree::OBSERVATION_REWARD_EXPANSION:
+                    return {true,"expansion type: OBSERVATION_REWARD_EXPANSION"};
+                    break;
+                default:
+                    return {false,"unkown error"};
+                    DEBUG_DEAD_LINE;
+                }
+            }, "get expansion type for UTree");
+        command_center.add_command(top_model_learn_utree,{"ex-type-utility","ext u"}, [this]()->ret_t{
+                utree->set_expansion_type(UTree::UTILITY_EXPANSION);
+                return {true,"set expansion type to UTILITY_EXPANSION"};
+            }, "set expansion type for UTree");
+        command_center.add_command(top_model_learn_utree,{"ex-type-observation-reward","ext or"}, [this]()->ret_t{
+                utree->set_expansion_type(UTree::OBSERVATION_REWARD_EXPANSION);
+                return {true,"set expansion type to OBSERVATION_REWARD_EXPANSION"};
+            }, "set expansion type for UTree");
+        command_center.add_command(top_model_learn_utree,{"utree-f"}, [this]()->ret_t{
+                utree->print_features();
+                return {true,"printed UTree features"};
+            }, "print UTree features");
+    }
+    {
+        pair<double,QString> top_model_learn_linq(3.3, "Linear-Q -----------------------------------------------");
+        command_center.add_command(top_model_learn_linq,{"lq-optimize-ridge","lqor"}, [this](double d)->ret_t{
+                if(d<0) {
+                    return {false,"Expecting non-negative value"};
+                } else {
+                    linQ->set_optimization_type_TD_RIDGE()
+                        .set_regularization(d)
+                        .optimize();
+                }
+                return {true,QString("Optimized Linear-Q (TD, ridge=%1)").arg(d)};
+            }, "optimize Linear-Q (TD Error) with L2-regularization coefficient <double>");
+        command_center.add_command(top_model_learn_linq,{"lq-optimize-l1","lqol1"}, [this](double d)->ret_t{
+                linQ->set_optimization_type_TD_L1()
+                    .set_regularization(d)
+                    .optimize();
+                return {true,QString("optimized Linear-Q (TD, l1=%1)").arg(d)};
+            }, "optimize Linear-Q (TD Error) with L1-regularization coefficient <double>");
+        command_center.add_command(top_model_learn_linq,{"lq-optimize-l1","lqol1"}, [this](double d, int n)->ret_t{
+                linQ->set_optimization_type_TD_L1()
+                    .set_regularization(d)
+                    .set_maximum_iterations(n)
+                    .optimize();
+                return {true,QString("optimized Linear-Q (TD, l1=%1, max %2 iterations)").arg(d).arg(n)};
+            }, "maximum of <int> iterations");
+        command_center.add_command(top_model_learn_linq,{"lq-optimize-l1-check","lqol1-c"}, [this]()->ret_t{
+                linQ->set_optimization_type_TD_L1()
+                    .check_derivatives(3,10,1e-6,1e-3);
+                return {true,"checked derivatives for Linear-Q (TD)"};
+            }, "check derivatives");
+        command_center.add_command(top_model_learn_linq,{"lq-optimize","lqo"}, [this](double d)->ret_t{
+                linQ->set_optimization_type_BELLMAN()
+                    .set_regularization(d)
+                    .set_maximum_iterations(0)
+                    .optimize();
+                return {true,QString("optimized Linear-Q (Bellman, l1=%1)").arg(d)};
+            }, "optimize Linear-Q (Bellman Error) with L1-regularization coefficient <double>");
+        command_center.add_command(top_model_learn_linq,{"lq-optimize","lqo"}, [this](double d, int n)->ret_t{
+                linQ->set_optimization_type_BELLMAN()
+                    .set_regularization(d)
+                    .set_maximum_iterations(n)
+                    .optimize();
+                return {true,QString("optimized Linear-Q (Bellman, l1=%1, max %2 iterations)").arg(d).arg(n)};
+            }, "maximum of <int> iterations");
+        command_center.add_command(top_model_learn_linq,{"lq-optimize-check","lqo-c"}, [this]()->ret_t{
+                linQ->set_optimization_type_BELLMAN()
+                    .check_derivatives(10,10,1e-6,1e-3);
+                return {true,"checked derivatives for Linear-Q (Bellman)"};
+            }, "check derivatives");
+        command_center.add_command(top_todo,{"construct","con"}, [this](int)->ret_t{return {true,"...to be ported"};}, "construct candidate features with distance <int>");
+        command_center.add_command(top_todo,{"score-lq","slq"}, [this](int)->ret_t{return {true,"...to be ported"};}, "score candidate features with distance <int> by gradient");
+        command_center.add_command(top_todo,{"add-lq"}, [this](int)->ret_t{return {true,"...to be ported"};}, "add <int> highest scored candidate features to active (0 for all non-zero scored)");
+        command_center.add_command(top_model_learn_linq,{"lq-erase","lqe"}, [this]()->ret_t{
+                linQ->erase_features_by_weight();
+                return {true,"erased zero-weight Linear-Q features"};
+            }, "erase features with zero weight");
+        command_center.add_command(top_model_learn_linq,{"lq-erase","lqe"}, [this](double d)->ret_t{
+                linQ->erase_features_by_weight(d);
+                return {true,QString("erased Linear-Q features with weight above %1").arg(d)};
+            }, "erase features with weight below or equal to <double>");
+        command_center.add_command(top_model_learn_linq,{"lq-alpha"}, [this]()->ret_t{
+                return {true,QString("alpha = %1").arg(linQ->get_alpha())};
+            }, "get alpha for Soft-Max");
+        command_center.add_command(top_model_learn_linq,{"lq-alpha"}, [this](double d)->ret_t{
+                linQ->set_alpha(d);
+                return {true,""};
+            }, "set alpha for Soft-Max");
+    }
+    {
+        pair<double,QString> top_model_learn_tem(3.5,"TEM ----------------------------------------------------");
+        command_center.add_command(top_model_learn_tem,{"tem grow","temg"}, [this]()->ret_t{
+                tem->grow_feature_set();
+                return {true,"grew TEM features"};
+            }, "grow TEM features");
+        command_center.add_command(top_model_learn_tem,{"tem optimize","temo"}, [this]()->ret_t{
+                tem->optimize_weights_LBFGS();
+                return {true,"optimized TEM"};
+            }, "optimize TEM");
+        command_center.add_command(top_model_learn_tem,{"tem shrink","tems"}, [this]()->ret_t{
+                tem->shrink_feature_set();
+                return {true,"shrank TEM features"};
+            }, "shrink TEM features");
+        command_center.add_command(top_model_learn_tem,{"tem print","temp"}, [this]()->ret_t{
+                tem->print_features();
+                return {true,"printed TEM features"};
+            }, "print TEM features");
+        command_center.add_command(top_model_learn_tem,{"tem cycle","temc"}, [this]()->ret_t{
+                tem->grow_feature_set();
+                tem->optimize_weights_LBFGS();
+                tem->shrink_feature_set();
+                tem->print_features();
+                return {true,"did one learning cycle of TEM"};
+            }, "do a complete grow-optimize-shrink cycle of TEM and print features afterwards");
+        command_center.add_command(top_model_learn_tem,{"tem max horizon","temmaxh"}, [this]()->ret_t{
+                return {true,QString("TEM maximum horizon is %1").arg(N_plus->get_max_horizon())};
+            }, "get TEM maximum horizon");
+        command_center.add_command(top_model_learn_tem,{"tem max horizon","temmaxh"}, [this](int h)->ret_t{
+                N_plus->set_max_horizon(h);
+                return {true,QString("set TEM maximum horizon to %1").arg(N_plus->get_max_horizon())};
+            }, "set TEM maximum horizon");
+        command_center.add_command(top_model_learn_tem,{"tem min horizon","temminh"}, [this]()->ret_t{
+                return {true,QString("TEM minimum horizon is %1").arg(N_plus->get_min_horizon())};
+            }, "get TEM minimum horizon");
+        command_center.add_command(top_model_learn_tem,{"tem min horizon","temminh"}, [this](int h)->ret_t{
+                N_plus->set_min_horizon(h);
+                return {true,QString("set TEM minimum horizon to %1").arg(N_plus->get_min_horizon())};
+            }, "set TEM maximum horizon");
+        command_center.add_command(top_model_learn_tem,{"tem horizon extension","temhe"}, [this]()->ret_t{
+                return {true,QString("TEM horizon extension is %1").arg(N_plus->get_horizon_extension())};
+            }, "get TEM horizon extension");
+        command_center.add_command(top_model_learn_tem,{"tem horizon extension","temhe"}, [this](int h)->ret_t{
+                N_plus->set_horizon_extension(h);
+                return {true,QString("set TEM horizon extension to %1").arg(N_plus->get_horizon_extension())};
+            }, "set TEM horizon extension");
+        command_center.add_command(top_model_learn_tem,{"tem combine features","temcf"}, [this]()->ret_t{
+                if(N_plus->get_combine_features()) {
+                    return {true,"TEM does combines features"};
+                } else {
+                    return {true,"TEM does not combines features"};
+                }
+            }, "get whether TEM combines existing features");
+        command_center.add_command(top_model_learn_tem,{"tem combine features","temcf"}, [this](bool combine)->ret_t{
+                N_plus->set_combine_features(combine);
+                if(N_plus->get_combine_features()) {
+                    return {true,"set TEM to combine features"};
+                } else {
+                    return {true,"set TEM to not combine features"};
+                }
+            }, "set whether TEM combines existing features");
+    }
+    {
+        pair<double,QString> top_model_learn_telq(3.6,"TELQ ---------------------------------------------------");
+        command_center.add_command(top_model_learn_telq,{"telq grow","telqg"}, [this]()->ret_t{
+                telq->grow_feature_set();
+                return {true,"grew TELQ features"};
+            }, "grow TELQ features");
+        command_center.add_command(top_model_learn_telq,{"telq optimize","telqo"}, [this]()->ret_t{
+                telq->run_policy_iteration();
+                return {true,"optimized TELQ"};
+            }, "optimize TELQ");
+        command_center.add_command(top_model_learn_telq,{"telq shrink","telqs"}, [this]()->ret_t{
+                telq->shrink_feature_set();
+                return {true,"shrank TELQ features"};
+            }, "shrink TELQ features");
+        command_center.add_command(top_model_learn_telq,{"telq print","telqp"}, [this]()->ret_t{
+                telq->print_features();
+                return {true,"printed TELQ features"};
+            }, "print TELQ features");
+        command_center.add_command(top_model_learn_telq,{"telq cycle","telqc"}, [this]()->ret_t{
+                telq->grow_feature_set();
+                telq->run_policy_iteration();
+                telq->shrink_feature_set();
+                telq->print_features();
+                return {true,"did one learning cycle of TELQ"};
+            }, "do a complete grow-optimize-shrink cycle of TELQ and print features afterwards");
+        command_center.add_command(top_model_learn_telq,{"telq max horizon","telqmaxh"}, [this]()->ret_t{
+                return {true,QString("TELQ maximum horizon is %1").arg(N_plus->get_max_horizon())};
+            }, "get TELQ maximum horizon");
+        command_center.add_command(top_model_learn_telq,{"telq max horizon","telqmaxh"}, [this](int h)->ret_t{
+                N_plus->set_max_horizon(h);
+                return {true,QString("set TELQ maximum horizon to %1").arg(N_plus->get_max_horizon())};
+            }, "set TELQ maximum horizon");
+        command_center.add_command(top_model_learn_telq,{"telq min horizon","telqminh"}, [this]()->ret_t{
+                return {true,QString("TELQ minimum horizon is %1").arg(N_plus->get_min_horizon())};
+            }, "get TELQ minimum horizon");
+        command_center.add_command(top_model_learn_telq,{"telq min horizon","telqminh"}, [this](int h)->ret_t{
+                N_plus->set_min_horizon(h);
+                return {true,QString("set TELQ minimum horizon to %1").arg(N_plus->get_min_horizon())};
+            }, "set TELQ maximum horizon");
+        command_center.add_command(top_model_learn_telq,{"telq horizon extension","telqhe"}, [this]()->ret_t{
+                return {true,QString("TELQ horizon extension is %1").arg(N_plus->get_horizon_extension())};
+            }, "get TELQ horizon extension");
+        command_center.add_command(top_model_learn_telq,{"telq horizon extension","telqhe"}, [this](int h)->ret_t{
+                N_plus->set_horizon_extension(h);
+                return {true,QString("set TELQ horizon extension to %1").arg(N_plus->get_horizon_extension())};
+            }, "set TELQ horizon extension");
+        command_center.add_command(top_model_learn_telq,{"telq combine features","telqcf"}, [this]()->ret_t{
+                if(N_plus->get_combine_features()) {
+                    return {true,"TELQ does combines features"};
+                } else {
+                    return {true,"TELQ does not combines features"};
+                }
+            }, "get whether TELQ combines existing features");
+        command_center.add_command(top_model_learn_telq,{"telq combine features","telqcf"}, [this](bool combine)->ret_t{
+                N_plus->set_combine_features(combine);
+                if(N_plus->get_combine_features()) {
+                    return {true,"set TELQ to combine features"};
+                } else {
+                    return {true,"set TELQ to not combine features"};
+                }
+            }, "set whether TELQ combines existing features");
+    }
+    {
+        pair<double,QString> top_planning(4,"Planning ===============================================");
+        command_center.add_command(top_planning,{"set planner o","s p o"}, [this]()->ret_t{
+                planner_type = OPTIMAL_LOOK_AHEAD;
+                set_policy();
+                return {true,"using optimal planner" };
+            }, "use optimal predictions (give by maze)");
+        command_center.add_command(top_planning,{"set planner s","s p s"}, [this]()->ret_t{
+                planner_type = SPARSE_LOOK_AHEAD;
+                set_policy();
+                return {true,"using sparse planner" };
+            }, "use sparse predictions (given by CRF)");
+        command_center.add_command(top_planning,{"set planner mu","s p mu"}, [this]()->ret_t{
+                planner_type = UTREE_LOOK_AHEAD;
+                set_policy();
+                return {true,"using model-based UTree planner" };
+            }, "use UTree as predictive model");
+        command_center.add_command(top_planning,{"set planner vu","s p vu"}, [this]()->ret_t{
+                planner_type = UTREE_VALUE;
+                set_policy();
+                return {true,"using value-based UTree for action selection" };
+            }, "use UTree as value function");
+        command_center.add_command(top_planning,{"set planner lq","s p lq"}, [this]()->ret_t{
+                planner_type = LINEAR_Q_VALUE;
+                set_policy();
+                return {true,"using linear Q-approximation for action selection" };
+            }, "use linear Q-function approximation");
+        command_center.add_command(top_planning,{"set planner TELQ","s p l"}, [this]()->ret_t{
+                planner_type = TELQ_VALUE;
+                set_policy();
+                return {true,"using linear combined TEFs for Q-approximation (TELQ)" };
+            }, "use TELQ");
+        command_center.add_command(top_planning,{"set planner g","s p g"}, [this]()->ret_t{
+                planner_type = GOAL_ITERATION;
+                set_policy();
+                return {true,"using goal-guided value iteration" };
+            }, "use goal-guided value iteration");
+        command_center.add_command(top_planning,{"set planner r","s p r"}, [this]()->ret_t{
+                planner_type = RANDOM;
+                set_policy();
+                return {true,"using random policy" };
+            }, "use random policy");
+        command_center.add_command(top_planning,{"set planner tem","s p t"}, [this]()->ret_t{
+                planner_type = TEM_LOOK_AHEAD;
+                set_policy();
+                return {true,"using TEM for planning" };
+            }, "use TEM predictions for planning");
+        command_center.add_command(top_planning,{"set goal","s g"}, [this]()->ret_t{
+                shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
+                if(maze==nullptr) {
+                    return {true,"Allowed for maze-environments only"};
+                } else {
+                    // set flag
+                    goal_activated = true;
+                    // get state
+                    goal_state = current_instance->observation;
+                    // color maze
+                    Maze::color_vector_t cols;
+                    for(auto observation : observation_space) {
+                        if(observation==goal_state) {
+                            cols.push_back( Maze::color_t(0,1,0) );
+                        } else {
+                            cols.push_back( Maze::color_t(1,1,1) );
+                        }
+                    }
+                    maze->set_state_colors(cols);
+                    maze->render_update();
+                    // set goal in GoalIteration policy
+                    shared_ptr<GoalIteration> goal_iteration = dynamic_pointer_cast<GoalIteration>(policy);
+                    if(goal_iteration!=nullptr) {
+                        goal_iteration->set_goal(goal_state);
+                    }
+                    // print message
+                    return {true,"goal set to current state" };
+                }
+            }, "activate goal state at current location");
+        command_center.add_command(top_planning,{"set goal random","s g r"}, [this]()->ret_t{
+                shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
+                if(maze==nullptr) {
+                    return {true,"Allowed for maze-environments only"};
+                } else {
+                    // set flag
+                    goal_activated = true;
+                    // get state
+                    goal_state = observation_space->random_element();
+                    // color maze
+                    Maze::color_vector_t cols;
+                    for(auto observation : observation_space) {
+                        if(observation==goal_state) {
+                            cols.push_back( Maze::color_t(0,1,0) );
+                        } else {
+                            cols.push_back( Maze::color_t(1,1,1) );
+                        }
+                    }
+                    maze->set_state_colors(cols);
+                    maze->render_update();
+                    // set goal in GoalIteration policy
+                    shared_ptr<GoalIteration> goal_iteration = dynamic_pointer_cast<GoalIteration>(policy);
+                    if(goal_iteration!=nullptr) {
+                        goal_iteration->set_goal(goal_state);
+                    }
+                    // print message
+                    return {true,"goal set to random location" };
+                }
+            }, "activate goal state at random location");
+        command_center.add_command(top_planning,{"unset goal"}, [this]()->ret_t{
+                if(!goal_activated) {
+                    return {true,"goal already inactive" };
+                } else {
+                    goal_activated = false;
+                    return {true,"deactivated goal" };
+                }
+            }, "deactivate goal state");
+        command_center.add_command(top_todo,{"set prune tree"}, [this]()->ret_t{
+                return {true,"...to be ported"};
+            }, "prune search tree");
+        command_center.add_command(top_todo,{"unset prune tree"}, [this]()->ret_t{
+                return {true,"...to be ported"};
+            }, "don't prune search tree");
+        command_center.add_command(top_planning,{"discount"}, [this]()->ret_t{
+                return {true,QString("discount is %1").arg(discount)};
+            }, "get discount");
+        command_center.add_command(top_planning,{"discount"}, [this](double d)->ret_t{
+                if(0<=d && d<=1) {
+                    discount = d;
+                    utree->set_discount(discount);
+                    linQ->set_discount(discount);
+                    telq->set_discount(discount);
+                    shared_ptr<LookAheadPolicy> look_ahead_policy = dynamic_pointer_cast<LookAheadPolicy>(policy);
+                    if(look_ahead_policy!=nullptr) {
+                        look_ahead_policy->set_discount(discount);
+                    }
+                    return {true,QString("set discount to %1").arg(discount)};
+                } else {
+                    return {false,"discount must be in [0,1]"};
+                }
+            }, "set discount");
+        command_center.add_command(top_planning,{"print tree"}, [this](bool text = false, bool graphic = false)->ret_t{
+                shared_ptr<LookAheadPolicy> look_ahead_policy = dynamic_pointer_cast<LookAheadPolicy>(policy);
+                if(look_ahead_policy!=nullptr) {
+                    const LookAheadSearch & s = look_ahead_policy->get_look_ahead_search();
+                    s.print_tree_statistics();
+                    s.print_tree(text, graphic);
+                }
+                return {true,"Printed tree statistics"};
+            }, "print Look-Ahead-Tree statistics [optionally with text and graphic output]");
+        command_center.add_command(top_planning,{"max-tree-size"}, [this]()->ret_t{
+                return {true,QString( "max tree size is %1" ).arg(max_tree_size) };
+            }, "get maximum size of Look-Ahead-Tree (zero corresponds to infinite)");
+        command_center.add_command(top_planning,{"max-tree-size"}, [this](int n)->ret_t{
+                if(n<0) {
+                    return {false,"Tree size must be non-negative"};
+                }
+                max_tree_size = n;
+                shared_ptr<LookAheadPolicy> look_ahead_policy = dynamic_pointer_cast<LookAheadPolicy>(policy);
+                if(look_ahead_policy!=nullptr) {
+                    look_ahead_policy->set_max_tree_size(max_tree_size);
+                    return {true,"Set maximum Look-Ahead-Tree size"};
+                } else {
+                    return {false,"Current policy is not look-ahead-search"};
+                }
+            }, "set maximum size of Look-Ahead-Tree (zero for infinite)");
+    }
+    {
+        pair<double,QString> top_new_stuff(5,"New Stuff  =============================================");
+        //---------------------------------New Stuff----------------------------------
+        command_center.add_command(top_new_stuff,{"col-states"}, [this]()->ret_t{
+                shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
+                if(maze==nullptr) {
+                    return {true,"allowed for maze-environments only"};
+                } else {
+                    Maze::color_vector_t cols;
+                    for(observation_ptr_t observation : observation_space) {
+                        cols.push_back( std::make_tuple(drand48(),drand48(),drand48()) );
+                    }
+                    maze->set_state_colors(cols);
+                    maze->render_update();
+                }
+                return {true,"colored states"};
+            }, "color states (random)");
+        command_center.add_command(top_todo,{"fixed-dt-dist","fdd"}, [this](int)->ret_t{
+                return {true,"...to be ported"};
+            }, "show probability for a state to occur <int> steps after current state");
+        command_center.add_command(top_todo,{"pair-delay-dist","pdd"}, [this]()->ret_t{
+                return {true,"...to be ported"};
+            }, "show temporal delay distribution from current state to goal state");
+        command_center.add_command(top_todo,{"pair-delay-dist","pdd"}, [this](int)->ret_t{
+                return {true,"...to be ported"};
+            }, "restrict to time window of width <int>");
+        command_center.add_command(top_todo,{"mediator-probability","mp"}, [this](int)->ret_t{
+                return {true,"...to be ported"};
+            }, "show probability for a state to occurr between current state and goal state given a time window of width <int>");
+        command_center.add_command(top_new_stuff,{"p-distribution","pd"}, [this](QString a)->ret_t{
+                // check action
+                if(a!="u" && a!="d" && a!="l" && a!="r" && a!="s") {
+                    return {false,"expect one of 'u', 'd', 'l', 'r', 's' as action"};
+                }
+                // check if environment is a maze
+                shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
+                if(maze==nullptr) {
+                    return {true,"allowed for maze-environments only"};
+                }
+                // get action
+                action_ptr_t action;
+                if(a=="u") {
+                    action = action_ptr_t(new MazeAction("up"));
+                } else if(a=="d") {
+                    action = action_ptr_t(new MazeAction("down"));
+                } else if(a=="l") {
+                    action = action_ptr_t(new MazeAction("left"));
+                } else if(a=="r") {
+                    action = action_ptr_t(new MazeAction("right"));
+                } else if(a=="s") {
+                    action = action_ptr_t(new MazeAction("stay"));
+                } else {
+                    DEBUG_DEAD_LINE;
+                    action = action_ptr_t(new MazeAction("stay"));
+                }
+                // get probability distribution
+                auto p_map = tem->get_prediction_map(current_instance,action);
+                // set colors
+                vector<double> dist;
+                for(observation_ptr_t observation : observation_space) {
+                    double p = 0;
+                    for(reward_ptr_t reward : reward_space) {
+                        p += p_map[make_tuple(observation,reward)];
+                    }
+                    dist.push_back(p);
+                }
+                maze->show_distribution(dist,true);
+                return {true,"displayed p-distribution"};
+            }, "color maze according to (sqrt of) probability distribution for TEM and action <QString>");
+        command_center.add_command(top_new_stuff,{"stationary-distribution","sd"}, [this]()->ret_t{
+                using namespace arma;
+                // check if environment is a maze
+                shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
+                if(maze==nullptr) {
+                    return {true,"allowed for maze-environments only"};
+                }
+                // get transition matrix and stationary distribution
+                mat T;
+                o_r_idx_map_t o_r_idx_map;
+                get_TEM_transition_matrix_and_o_r_index_map(T,o_r_idx_map);
+                vec stat_dist;
+                bool stat_dist_found = get_stationary_distribution(T,stat_dist);
+                // debug print
+                IF_DEBUG(3) {
+                    cout.precision(3);
+                    cout.setf(std::ios::fixed);
+                    cout.width(10);
+                    cout << "Transition Matrix:" << endl;
+                    for(auto o_r_1 : o_r_idx_map) {
+                        cout << o_r_1.first << "	";
+                        for(auto o_r_2 : o_r_idx_map) {
+                            cout << T(o_r_1.second,o_r_2.second) << "	";
+                        }
+                        cout << endl;
+                    }
+                    cout.unsetf(cout.flags());
+                }
+                // return or show distribution
+                if(!stat_dist_found) {
+                    return {true,"Could not find stationary distribution"};
+                } else {
+                    // set colors
+                    vector<double> dist;
+                    for(observation_ptr_t observation : observation_space) {
+                        double p = 0;
+                        for(reward_ptr_t reward : reward_space) {
+                            p += stat_dist[o_r_idx_map[make_tuple(observation,reward)]];
+                        }
+                        dist.push_back(p);
+                    }
+                    maze->show_distribution(dist,true);
+                    return {true,"showed stationary distribution"};
+                }
+            }, "show stationary distribution (sqrt) of TEM");
+        command_center.add_command(top_new_stuff,{"inverse-distribution","id"}, [this]()->ret_t{
+                using namespace arma;
+                // check if environment is a maze
+                shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
+                if(maze==nullptr) {
+                    return {true,"allowed for maze-environments only"};
+                }
+                // get transition matrix and stationary distribution
+                mat T;
+                o_r_idx_map_t o_r_idx_map;
+                get_TEM_transition_matrix_and_o_r_index_map(T,o_r_idx_map);
+                vec stat_dist;
+                bool stat_dist_found = get_stationary_distribution(T,stat_dist);
+                // return if stationary distribution could not be identified
+                if(!stat_dist_found) {
+                    return {true,"Could not find stationary distribution"};
+                }
+                // invert conditional distribution
+                map<observation_ptr_t,probability_t> inv_dist;
+                {
+                    // current observation
+                    observation_ptr_t current_obs = current_instance->observation;
+                    // for normalization check
+                    probability_t normalization_check;
+                    // get marginal stationary observation distributions
+                    normalization_check = 0;
+                    map<observation_ptr_t,probability_t> marg_stat_p_o;
+                    for(observation_ptr_t observation : observation_space) {
+                        probability_t& p_ref = marg_stat_p_o[observation];
+                        for(reward_ptr_t reward : reward_space) {
+                            p_ref += stat_dist[o_r_idx_map[make_tuple(observation,reward)]];
+                        }
+                        normalization_check += p_ref;
+                    }
+                    if(fabs(normalization_check-1)>1e-3) {
+                        DEBUG_WARNING("Marginal stationary distribution over observations not normalized (sum = " << normalization_check << ")");
+                        for(observation_ptr_t observation : observation_space) {
+                            DEBUG_OUT(0,"p(" << observation << ") = " << marg_stat_p_o[observation]);
+                        }
+                    }
+                    // get marginal stationary reward distributions
+                    normalization_check = 0;
+                    map<reward_ptr_t,probability_t> marg_stat_p_r;
+                    for(reward_ptr_t reward : reward_space) {
+                        probability_t& p_ref = marg_stat_p_r[reward];
+                        for(observation_ptr_t observation : observation_space) {
+                            p_ref += stat_dist[o_r_idx_map[make_tuple(observation,reward)]];
+                        }
+                        normalization_check += p_ref;
+                    }
+                    if(fabs(normalization_check-1)>1e-3) {
+                        DEBUG_WARNING("Marginal stationary distribution over rewards not normalized (sum = " << normalization_check << ")");
+                        for(reward_ptr_t reward : reward_space) {
+                            DEBUG_OUT(0,"p(" << reward << ") = " << marg_stat_p_r[reward]);
+                        }
+                    }
+                    // get inverse probability
+                    normalization_check = 0;
+                    for(observation_ptr_t observation_t_Delta_t : observation_space) {
+                        // marginalize out rewards
+                        probability_t marg_conditional = 0;
+                        for(reward_ptr_t reward_t : reward_space) {
+                            for(reward_ptr_t reward_t_Delta_t : reward_space) {
+                                marg_conditional += marg_stat_p_r[reward_t_Delta_t]*T(
+                                    o_r_idx_map[make_tuple(current_obs,reward_t)],
+                                    o_r_idx_map[make_tuple(observation_t_Delta_t,reward_t_Delta_t)]
+                                    );
+                            }
+                        }
+                        // update inverse probability for observation
+                        inv_dist[observation_t_Delta_t] = marg_conditional;
+                        normalization_check += marg_conditional;
+                    }
+                    if(fabs(normalization_check-1)>1e-3) {
+                        DEBUG_WARNING("Marginal conditional distribution over observation not normalized (sum = " << normalization_check << ")");
+                        for(observation_ptr_t observation : observation_space) {
+                            DEBUG_OUT(0,"p(" << observation << ") = " << inv_dist[observation]);
+                        }
+                    }
+
+                    // warning if state space does not match
+                    bool observation_found_in_space = false;
+                    for(observation_ptr_t observation : observation_space) {
+                        if(observation==current_obs) {
+                            observation_found_in_space = true;
+                            break;
+                        }
+                    }
+                    if(!observation_found_in_space) {
+                        DEBUG_WARNING("Current state of agent is not in current state space");
+                    }
+
+                    // observation_ptr_t current_obs = current_instance->observation;
+                    // bool observation_found_in_space = false;
+                    // map<observation_ptr_t,probability_t> p_stat_o_t_Delta_t;
+                    // probability_t p_stat_o_t = 0;
+                    // map<observation_ptr_t,probability_t> T_p_stat;
+                    // probability_t normalization_check_1 = 0;
+                    // probability_t normalization_check_2 = 0;
+                    // // get probability of current observation according to
+                    // // stationary distribution
+                    // for(reward_ptr_t reward : reward_space) {
+                    //     p_stat_o_t += stat_dist[o_r_idx_map[make_tuple(current_obs,reward)]];
+                    // }
+                    // // get stationary probability distribution over past
+                    // // observation (at time t - Delta t)
+                    // normalization_check_1 = 0;
+                    // for(observation_ptr_t observation : observation_space) {
+                    //     probability_t& p_stat_ref = p_stat_o_t_Delta_t[observation];
+                    //     for(reward_ptr_t reward : reward_space) {
+                    //         probability_t tmp_p = stat_dist[o_r_idx_map[make_tuple(observation,reward)]];
+                    //         p_stat_ref += tmp_p;
+                    //         normalization_check_1 += tmp_p;
+                    //     }
+                    // }
+                    // IF_DEBUG(1) {
+                    //     if(fabs(normalization_check_1-1)>1e-3) {
+                    //         DEBUG_WARNING("Stationary distribution over past state not normalized (sum = " << normalization_check_1 << ")");
+                    //         for(observation_ptr_t observation : observation_space) {
+                    //             DEBUG_OUT(0,"p(" << observation << ") = " << p_stat_o_t_Delta_t[observation]);
+                    //         }
+                    //     }
+                    // }
+                    // // get T*p
+                    // normalization_check_1 = 0;
+                    // normalization_check_2 = 0;
+                    // {
+                    //     map<observation_ptr_t,probability_t> T_dist, p_dist;
+                    //     for(observation_ptr_t observation_t_Delta_t : observation_space) {
+                    //         probability_t& Tp_ref = T_p_stat[observation_t_Delta_t];
+                    //         probability_t& T_dist_ref = T_dist[observation_t_Delta_t];
+                    //         probability_t& p_dist_ref = p_dist[observation_t_Delta_t];
+                    //         for(reward_ptr_t reward_t : reward_space) {
+                    //             for(reward_ptr_t reward_t_Delta_t : reward_space) {
+                    //                 probability_t T_tmp = T(
+                    //                     o_r_idx_map[make_tuple(observation_t_Delta_t,reward_t_Delta_t)],
+                    //                     o_r_idx_map[make_tuple(current_obs,reward_t)]
+                    //                     );
+                    //                 T_dist_ref += T_tmp;
+                    //                 probability_t p_tmp = stat_dist[
+                    //                     o_r_idx_map[make_tuple(observation_t_Delta_t,reward_t_Delta_t)]
+                    //                     ];
+                    //                 p_dist_ref += p_tmp;
+                    //                 Tp_ref += T_tmp*p_tmp;
+                    //             }
+                    //         }
+                    //         normalization_check_1 += T_dist_ref;
+                    //         normalization_check_2 += p_dist_ref;
+                    //     }
+                    //     IF_DEBUG(1) {
+                    //         if(fabs(normalization_check_1-1)>1e-3) {
+                    //             DEBUG_WARNING("Transition distribution not normalized (sum = " << normalization_check_1 << ")");
+                    //             for(observation_ptr_t observation : observation_space) {
+                    //                 DEBUG_OUT(0,"p(" << observation << ") = " << T_dist[observation]);
+                    //             }
+                    //         }
+                    //         if(fabs(normalization_check_2-1)>1e-3) {
+                    //             DEBUG_WARNING("Stationary distribution not normalized (sum = " << normalization_check_2 << ")");
+                    //             for(observation_ptr_t observation : observation_space) {
+                    //                 DEBUG_OUT(0,"p(" << observation << ") = " << p_dist[observation]);
+                    //             }
+                    //         }
+                    //     }
+                    // }
+                    // // get inverse
+                    // normalization_check_1 = 0;
+                    // for(observation_ptr_t observation : observation_space) {
+                    //     if(observation==current_obs) {
+                    //         observation_found_in_space = true;
+                    //     }
+                    //     probability_t tmp_p = p_stat_o_t_Delta_t[observation]*T_p_stat[observation]/p_stat_o_t;
+                    //     inv_dist[observation] = tmp_p;
+                    //     normalization_check_1 += tmp_p;
+                    // }
+                    // IF_DEBUG(1) {
+                    //     if(fabs(normalization_check_1-1)>1e-3) {
+                    //         DEBUG_WARNING("Inverse distribution not normalized (sum = " << normalization_check_1 << ")");
+                    //         for(observation_ptr_t observation : observation_space) {
+                    //             DEBUG_OUT(0,"p(" << observation << ") = " << inv_dist[observation]);
+                    //         }
+                    //     }
+                    // }
+
+                }
+                // set colors
+                vector<double> dist;
+                for(observation_ptr_t observation : observation_space) {
+                    dist.push_back(inv_dist[observation]);
+                }
+                maze->show_distribution(dist,true);
+                return {true,"showed inverse distribution"};
+            }, "show inverse observation distribution (sqrt) of TEM");
+    }
+
+//        // } else if(str_args[0]=="validate" || str_args[0]=="v") {
+//        //     if(str_args_n==1 ) {
+//        //         return {, invalid_args_s };
+//        //         return {, validate_s };
+//        //     } else if(str_args[1]=="crf") {
+//        //         if(str_args[2]=="mc") {
+//        //             if( str_args_n>3 && int_args_ok[3] && int_args[3]>0 ) {
+//        //                 probability_t model_l, maze_l;
+//        //                 probability_t kl = maze.validate_model(
+//        //                         crf,
+//        //                         int_args[3],
+//        //                         &model_l,
+//        //                         &maze_l
+//        //                 );
+//        //                 return {,QString("    MC KL-Divergence = %1 (%2 samples)").arg(kl).arg(int_args[3])};
+//        //                 return {,QString("    Mean Likelihood: model = %1, maze = %2").arg(model_l).arg(maze_l)};
+//        //             } else {
+//        //                 return {, "    Please specify a valid sample size" };
+//        //             }
+//        //         } else {
+//        //             return {, invalid_args_s };
+//        //             return {, validate_s };
+//        //         }
+//        //     } else if(str_args[1]=="kmdp") {
+//        //         return {, "    Sorry, not implemented" };
+//        //     } else {
+//        //         return {, invalid_args_s };
+//        //         return {, validate_s };
+//        //     }
+//        } else if(str_args[0]=="score-lq" || str_args[0]=="slq") {
+//            if(str_args_n==1) {
+//                return {,score_lq_s};
+//            } else if(int_args_ok[1] && int_args[1]>=0 ) {
+//                linQ->construct_candidate_features(int_args[1]);
+//                linQ->score_candidates_by_gradient();
+//            } else {
+//                return {, invalid_args_s };
+//                return {, score_lq_s };
+//            }
+//        } else if(str_args[0]=="add-lq") {
+//            if(str_args_n==1) {
+//                return {, invalid_args_s };
+//                return {, add_lq_s };
+//            } else if(int_args_ok[1] && int_args[1]>=0 ) {
+//                linQ->add_candidates_by_score(int_args[1]);
+//            } else {
+//                return {, invalid_args_s };
+//                return {, add_lq_s };
+//            }
+//        } else if(str_args[0]=="crf-erase" || str_args[0]=="ce") {
+
+//        } else if(str_args[0]=="exit" || str_args[0]=="quit" || str_args[0]=="q") { // quit application
+//            QApplication::quit();
+//        } else if(str_args[0]=="max-tree-size") { // set tree size
+
+//        } else if(str_args[0]=="set" || str_args[0]=="unset") { // set option
+
+//            } else if(str_args[1]=="prune-tree") {
+//                if(str_args[0]=="set") {
+//                    prune_search_tree=true;
+//                    return {, "    prune search tree" };
+//                } else {
+//                    prune_search_tree=false;
+//                    return {, "    don't prune search tree" };
+//                }
+//                shared_ptr<LookAheadPolicy> look_ahead_policy = dynamic_pointer_cast<LookAheadPolicy>(policy);
+//                if(look_ahead_policy!=nullptr) {
+//                    look_ahead_policy->set_pruning(prune_search_tree);
+//                    look_ahead_policy->invalidate_search_tree();
+//                }
+//            } else if(str_args[1]=="png") {
+//                if(str_args[0]=="set") {
+//                    save_png_on_transition=true;
+//                    return {, "    save png on transition" };
+//                } else {
+//                    save_png_on_transition=false;
+//                    return {, "    don't save png on transition" };
+//                }
+//            } else {
+//                return {, invalid_args_s };
+//                return {, set_s };
+//            }
+//        } else if(str_args[0]=="construct" || str_args[0]=="con") {
+//            if(str_args_n==1) {
+//                return {,construct_s};
+//            } else if(int_args_ok[1] && int_args[1]>=0 ) {
+//                linQ->add_all_candidates(int_args[1]);
+//            } else {
+//                return {, invalid_args_s };
+//                return {, construct_s };
+//            }
+//        } else if(str_args[0]=="test") { // test
+//            // if(str_args_n==2 && int_args_ok[1]) {
+//            //     maze.print_reward_activation_on_random_walk(int_args[1]);
+//            //     maze.render_update();
+//            // }
+//
+//            // crf->print_all_features();
+//            // utree->print_features();
+//
+//            probability_t like = crf->cross_validation(10);
+//            return {, QString("    Mean Data Likelihood: %1").arg(like) };
+//
+//            //return {, "    currently no test function implemented" };
+//        } else if(str_args[0]=="col-states") { // color states
+
+//        } else if(str_args[0]=="fixed-dt-dist" || str_args[0]=="fdd") { // show delay probability
+//            shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
+//            if(maze==nullptr) {
+//                return {,"    Allowed for maze-environments only"};
+//            } else {
+//                if(str_args_n!=2 || !int_args_ok[1]) {
+//                    return {, invalid_args_s };
+//                    return {, fixed_dt_distribution_s };
+//                } else {
+//                    // get probabilites for all states
+//                    observation_ptr_t s1 = current_instance->observation;
+//                    idx_t delay = int_args[1];
+//                    vector<probability_t> probs = delay_dist.get_fixed_delay_probability_distribution(s1,delay);
+//
+//                    // get maximum probability for rescaling and goal state idx
+//                    double max_prob = -DBL_MAX;
+//                    idx_t goal_idx = 0, state_idx = 0;
+//                    for(observation_ptr_t observation : observation_space) {
+//                        if(probs[state_idx]>max_prob) {
+//                            max_prob = probs[state_idx];
+//                        }
+//                        if(observation==goal_state) {
+//                            goal_idx=state_idx;
+//                        }
+//                    }
+//
+//                    // rescale and define colors
+//                    Maze::color_vector_t cols;
+//                    for( double p : probs ) {
+//                        if(max_prob!=0) {
+//                            cols.push_back( std::make_tuple(1,1-p/max_prob,1-p/max_prob) );
+//                        } else {
+//                            cols.push_back( std::make_tuple(1,1,1) );
+//                        }
+//                    }
+//                    if(goal_activated) {
+//                        cols[goal_idx]=std::make_tuple(0,1,0);
+//                    }
+//
+//                    // render
+//                    maze->set_state_colors(cols);
+//                    maze->render_update();
+//                }
+//            }
+//        } else if(str_args[0]=="pair-delay-dist" || str_args[0]=="pdd") { // show delay distribution
+//            if(str_args_n>1 && !int_args_ok[1]) {
+//                return {, invalid_args_s };
+//                return {, pair_delay_distribution_s };
+//            } else {
+//                if(!goal_activated) {
+//                    return {, "    Goal state must be activated to calculate delay distribution" };
+//                } else {
+//
+//                    // get distribution
+//                    int time_window = -1;
+//                    if(int_args_ok[1]) {
+//                        time_window = int_args[1];
+//                    }
+//                    DelayDistribution::pair_dist_map_t dist_map;
+//                    delay_dist.get_pairwise_delay_distribution(dist_map,time_window);
+//
+//                    // apply to current states
+//                    observation_ptr_t s1 = current_instance->observation;
+//                    observation_ptr_t s2 = goal_state;
+//                    vector<double> forward;
+//                    vector<double> backward;
+//                    for( auto el : dist_map ) {
+//                        observation_ptr_t s1_map = get<0>(el.first);
+//                        observation_ptr_t s2_map = get<1>(el.first);
+//                        int dt = get<2>(el.first);
+//                        if(dt==0) {
+//                            continue;
+//                        }
+//                        if(s1_map==s1 && s2_map==s2) {
+//                            if(dt>(int)forward.size()-1) {
+//                                forward.resize(dt+1,0);
+//                            }
+//                            forward[dt]=el.second;
+//                            DEBUG_OUT(3,s1_map << " --> " << s2_map << " (" << dt << ") : " << el.second);
+//                        }
+//                        if(s1_map==s2 && s2_map==s1) {
+//                             if(dt>(int)backward.size()-1) {
+//                                backward.resize(dt+1,0);
+//                            }
+//                            backward[dt]=el.second;
+//                            DEBUG_OUT(3,s1_map << " --> " << s1_map << " (" << dt << ") : " << el.second);
+//                        }
+//                    }
+//
+//                    // prepare for plotting
+//                    large_size_t back_size = backward.size();
+//                    large_size_t forw_size = forward.size();
+//                    large_size_t point_n = forw_size + back_size - 1;
+//                    QVector<double> x(point_n), y(point_n);
+//                    probability_t max_y = -DBL_MAX;
+//                    for (int i=0; i<(int)point_n; ++i) {
+//                        x[i] = i - back_size + 1;
+//                        y[i] = i<(int)back_size ? backward[back_size-i-1] : forward[i-back_size];
+//                        if(y[i]>max_y) {
+//                            max_y = y[i];
+//                        }
+//                    }
+//                    // assign data to graph
+//                    plotter->graph(0)->setData(x, y);
+//                    // give the axes some labels:
+//                    plotter->xAxis->setLabel("delay/steps");
+//                    plotter->yAxis->setLabel("probability");
+//                    // set axes ranges, so we see all data:
+//                    plotter->xAxis->setRange(-(int)backward.size(),forward.size());
+//                    plotter->yAxis->setRange(0,max_y);
+//                    DEBUG_OUT(3,"Ranges: [" << -(int)backward.size() << ":" << forward.size() << "][" << 0 << ":" << max_y << "]");
+//                    plotter->replot();
+//                }
+//            }
+//        } else if(str_args[0]=="mediator-probability" || str_args[0]=="mp") { // show mediator probability
+//            shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
+//            if(maze==nullptr) {
+//                return {,"    Allowed for maze-environments only"};
+//            } else {
+//                if(str_args_n==2 && int_args_ok[1]) {
+//                    if(!goal_activated) {
+//                        return {, "    Goal state must be activated to calculate mediator probabilities" };
+//                    } else {
+//                        // get probabilites for all states
+//                        DEBUG_OUT(2,"Calculating mediator distribution...");
+//                        observation_ptr_t s1 = current_instance->observation;
+//                        observation_ptr_t s3 = goal_state;
+//                        vector<double> probs;
+//                        double max_prob = -DBL_MAX;
+//                        idx_t goal_idx = 0, state_idx = 0;
+//                        for(observation_ptr_t observation : observation_space) {
+//                            probability_t prob = delay_dist.get_mediator_probability(s1,observation,s3,int_args[1]);
+//                            probs.push_back(prob);
+//                            if(prob>max_prob) {
+//                                max_prob = prob;
+//                            }
+//                            if(observation==goal_state) {
+//                                goal_idx=state_idx;
+//                            }
+//                            DEBUG_OUT(3,"    " << s1 << " --> " << observation << " --> " << s3 << " : " << prob);
+//                            ++state_idx;
+//                        }
+//                        DEBUG_OUT(2,"DONE");
+//                        // rescale and define colors
+//                        Maze::color_vector_t cols;
+//                        for( double prob : probs ) {
+//                            if(max_prob!=0) {
+//                                cols.push_back( std::make_tuple(1,1-prob/max_prob,1-prob/max_prob) );
+//                            } else {
+//                                cols.push_back( std::make_tuple(1,1,1) );
+//                            }
+//                        }
+//                        cols[goal_idx]=std::make_tuple(0,1,0);
+//                        // render
+//                        maze->set_state_colors(cols);
+//                        maze->render_update();
+//                    }
+//                } else {
+//                    return {, invalid_args_s };
+//                    return {, mediator_probability_s };
+//                }
+//            }
+//        } else {
+//            return {,"    unknown command"};
+//        }
+//    }
 }
 
 TestMaze_II::~TestMaze_II() {
-    delete random_timer;
     delete action_timer;
-    delete current_instance;
+    current_instance->detach_reachable();
     plot_file.close();
 }
 
 void TestMaze_II::collect_episode(const int& length) {
-    start_new_episode = true;
-    for(int idx=0; idx<length; ++idx) {
-        action_ptr_t action = action_space->random_element();
-        observation_ptr_t observation_to;
-        reward_ptr_t reward;
-        environment->perform_transition(action,observation_to,reward);
-        update_current_instance(action,observation_to,reward);
-        add_action_observation_reward_tripel(action,observation_to,reward);
+    if(policy==nullptr) {
+        to_console("    No policy available");
+    } else {
+        start_new_episode = true;
+        learning_episode_begin = current_instance;
+        for(int idx=0; idx<length; ++idx) {
+            action_ptr_t action = policy->get_action(current_instance);
+            observation_ptr_t observation_to;
+            reward_ptr_t reward;
+            environment->perform_transition(action,observation_to,reward);
+            update_current_instance(action,observation_to,reward);
+            add_action_observation_reward_tripel(action,observation_to,reward);
+        }
+        learning_episode_end = current_instance;
+        render_update();
     }
-    render_update();
 }
 
 void TestMaze_II::update_current_instance(action_ptr_t action, observation_ptr_t observation, reward_ptr_t reward, bool invalidate_search_tree) {
-    if(current_instance==nullptr) {
-        current_instance = instance_t::create(action,observation,reward);
+    if(current_instance==INVALID) {
+        DEBUG_OUT(3,"Current instance INVALID. Creating.");
+        current_instance = DoublyLinkedInstance::create(action,observation,reward);
     } else {
-        current_instance = current_instance->append_instance(action,observation,reward);
+        DEBUG_OUT(3,"Current instance is " << current_instance << ". Appending.");
+        current_instance = current_instance->append(action,observation,reward);
     }
     if(plot) {
         plot_file << action << " " << observation << " " << reward << endl;
     }
-    search_tree_invalid = invalidate_search_tree;
+    if(invalidate_search_tree) {
+        shared_ptr<LookAheadPolicy> look_ahead_policy = dynamic_pointer_cast<LookAheadPolicy>(policy);
+        if(look_ahead_policy!=nullptr) {
+            look_ahead_policy->invalidate_search_tree();
+        }
+    }
 }
 
 void TestMaze_II::add_action_observation_reward_tripel(
@@ -151,6 +1540,8 @@ void TestMaze_II::add_action_observation_reward_tripel(
            crf->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
          utree->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
           linQ->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
+          telq->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
+          tem->add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
     delay_dist.add_action_observation_reward_tripel(action,observation,reward,start_new_episode);
     DEBUG_OUT(1,"Add (" << action << ", " << observation << ", " << reward << ")" <<
               (start_new_episode?" new episode":""));
@@ -161,6 +1552,8 @@ void TestMaze_II::clear_data() {
     crf->clear_data();
     utree->clear_data();
     linQ->clear_data();
+    telq->clear_data();
+    tem->clear_data();
     delay_dist.clear_data();
 }
 
@@ -197,6 +1590,7 @@ void TestMaze_II::perform_transition(const action_ptr_t& action, observation_ptr
 }
 
 void TestMaze_II::change_environment(shared_ptr<Environment> new_environment) {
+
     // clear old environment
     if(environment!=nullptr) {
         // tear down visualization
@@ -207,8 +1601,10 @@ void TestMaze_II::change_environment(shared_ptr<Environment> new_environment) {
         // destroy current environment
         environment.reset();
     }
+
     // clear learners
     clear_all_learners();
+
     // set new environment
     if(new_environment!=nullptr) {
         // set new environment
@@ -219,31 +1615,319 @@ void TestMaze_II::change_environment(shared_ptr<Environment> new_environment) {
             vis->render_initialize(ui.graphicsView);
             vis->render_update();
         }
-        // get all spaces
+        // get/set all spaces
         environment->get_spaces(action_space,observation_space,reward_space);
-        utree->set_spaces(*environment);
+        utree->adopt_spaces(*environment);
         utree->set_features(*environment);
-        crf->set_spaces(*environment);
+        crf->adopt_spaces(*environment);
         crf->set_features(*environment);
-        linQ->set_spaces(*environment);
+        linQ->adopt_spaces(*environment);
         linQ->set_features(*environment);
-        look_ahead_search->set_spaces(*environment);
+        telq->adopt_spaces(*environment);
+        tem->adopt_spaces(*environment);
+        N_plus->adopt_spaces(*environment);
         // set current instance
-        delete current_instance;
-        current_instance = nullptr;
+        current_instance->detach_reachable();
+        current_instance = INVALID;
         shared_ptr<PredictiveEnvironment> pred = dynamic_pointer_cast<PredictiveEnvironment>(environment);
         if(pred!=nullptr) {
-            const_instanceIt_t env_instance(pred->get_current_instance());
-            current_instance = instance_t::create(env_instance->action,env_instance->observation,env_instance->reward,env_instance-1);
+            const_instance_ptr_t env_instance = pred->get_current_instance();
+            current_instance = DoublyLinkedInstance::create(env_instance->action,env_instance->observation,env_instance->reward,env_instance->const_prev(),INVALID);
         }
     }
+
+    // set policy
+    set_policy();
 }
 
 void TestMaze_II::clear_all_learners() {
     crf.reset(new KMarkovCRF());
     utree.reset(new UTree(discount));
     linQ.reset(new LinearQ(discount));
-    look_ahead_search.reset(new LookAheadSearch(discount));
+    telq.reset(new TemporallyExtendedLinearQ(N_plus,discount));
+    tem.reset(new TemporallyExtendedModel(N_plus));
+    tem->set_l1_factor(l1_factor);
+}
+
+void TestMaze_II::set_policy() {
+    switch(planner_type) {
+    case RANDOM:
+        policy.reset(new RandomPolicy(action_space));
+        break;
+    case OPTIMAL_LOOK_AHEAD: {
+        shared_ptr<Predictor> pred = dynamic_pointer_cast<Predictor>(environment);
+        if(pred!=nullptr) {
+            policy.reset(new LookAheadPolicy(discount,pred,prune_search_tree,max_tree_size));
+        } else {
+            DEBUG_ERROR("No optimal look-ahead planning possible because environment does not provide predictions.");
+        }
+        break;
+    }
+    case SPARSE_LOOK_AHEAD: {
+        shared_ptr<Predictor> pred = dynamic_pointer_cast<Predictor>(crf);
+        if(pred!=nullptr) {
+            policy.reset(new LookAheadPolicy(discount,pred,prune_search_tree,max_tree_size));
+        } else {
+            DEBUG_DEAD_LINE;
+        }
+        break;
+    }
+    case UTREE_LOOK_AHEAD: {
+        shared_ptr<Predictor> pred = dynamic_pointer_cast<Predictor>(utree);
+        if(pred!=nullptr) {
+            policy.reset(new LookAheadPolicy(discount,pred,prune_search_tree,max_tree_size));
+        } else {
+            DEBUG_DEAD_LINE;
+        }
+        break;
+    }
+    case TEM_LOOK_AHEAD: {
+        shared_ptr<Predictor> pred = dynamic_pointer_cast<Predictor>(tem);
+        if(pred!=nullptr) {
+            policy.reset(new LookAheadPolicy(discount,pred,prune_search_tree,max_tree_size));
+        } else {
+            DEBUG_DEAD_LINE;
+        }
+        break;
+    }
+    case UTREE_VALUE: {
+        shared_ptr<Policy> p = dynamic_pointer_cast<Policy>(utree);
+        if(p==nullptr) { DEBUG_DEAD_LINE; }
+        policy = p;
+        break;
+    }
+    case LINEAR_Q_VALUE: {
+        shared_ptr<Policy> p = dynamic_pointer_cast<Policy>(linQ);
+        if(p==nullptr) { DEBUG_DEAD_LINE; }
+        policy = p;
+        break;
+    }
+    case TELQ_VALUE: {
+        shared_ptr<Policy> p = dynamic_pointer_cast<Policy>(telq);
+        if(p==nullptr) { DEBUG_DEAD_LINE; }
+        policy = p;
+        break;
+    }
+    case GOAL_ITERATION: {
+        shared_ptr<Predictor> pred = dynamic_pointer_cast<Predictor>(environment);
+        if(pred!=nullptr) {
+            GoalIteration * p = new GoalIteration(discount,*pred);
+            if(goal_activated) {
+                p->set_goal(goal_state);
+            }
+            policy.reset(p);
+        } else {
+            DEBUG_ERROR("No goal iteration possible because environment does not provide predictions.");
+        }
+        break;
+    }
+    case NONE:
+    case KMDP_LOOK_AHEAD:
+    default:
+        policy.reset();
+    }
+}
+
+double TestMaze_II::validate_predictor_on_random_episode(int n,  const Predictor& pred) {
+    double log_prob = 0;
+    repeat(n) {
+        action_ptr_t action = action_space->random_element();
+        observation_ptr_t observation;
+        reward_ptr_t reward;
+        perform_transition(action,observation,reward);
+        DEBUG_OUT(3,current_instance->const_prev() << " --> " << current_instance);
+        double p;
+        IF_DEBUG(4) {
+            auto p_map = pred.get_prediction_map(current_instance->const_prev(),action);
+            p = p_map[make_tuple(observation,reward)];
+            for(auto x : p_map) {
+                DEBUG_OUT(0,get<0>(x) << " : " << get<1>(x));
+            }
+        } else {
+            p = pred.get_prediction(current_instance->const_prev(),action,observation,reward);
+        }
+        DEBUG_OUT(3,"   --> p = " << p);
+        log_prob += log(p);
+    }
+    log_prob /= n;
+    return exp(log_prob);
+}
+
+double TestMaze_II::validate_predictor_on_training_episode(const Predictor& pred) {
+    double log_prob = 0;
+    int counter = 0;
+    for(instance_ptr_t ins = learning_episode_begin; ins!=learning_episode_end; ++counter, ++ins) {
+        DEBUG_OUT(3,ins << " --> " << ins->const_next());
+        double p;
+        IF_DEBUG(4) {
+            auto p_map = pred.get_prediction_map(ins,ins->const_next()->action);
+            p = p_map[make_tuple(ins->const_next()->observation,ins->const_next()->reward)];
+            for(auto x : p_map) {
+                DEBUG_OUT(4,get<0>(x) << " : " << get<1>(x));
+            }
+        } else {
+            p = pred.get_prediction(ins,ins->const_next()->action,ins->const_next()->observation,ins->const_next()->reward);
+        }
+        DEBUG_OUT(3,"   --> p = " << p);
+        log_prob += log(p);
+    }
+    log_prob /= counter;
+    return exp(log_prob);
+}
+
+void TestMaze_II::get_TEM_transition_matrix_and_o_r_index_map(arma::mat& T, o_r_idx_map_t& o_r_idx_map) const {
+    using namespace arma;
+    // memory check
+    bool check_memory = AbstractInstance::memory_check_request();
+    int memory_count = 0;
+    if(check_memory) {
+        memory_count = AbstractInstance::memory_check(false);
+    }
+    // get all action-observation-reward triplets
+    vector<tuple<action_ptr_t,observation_ptr_t,reward_ptr_t>> aor_triplets;
+    o_r_idx_map.clear();
+    {
+        int o_r_idx = 0;
+        for(observation_ptr_t observation : observation_space) {
+            for(reward_ptr_t reward : reward_space) {
+                for(action_ptr_t action : action_space) {
+                    aor_triplets.push_back(make_tuple(action,observation,reward));
+                }
+                o_r_idx_map[make_tuple(observation,reward)] = o_r_idx;
+                ++o_r_idx;
+            }
+        }
+    }
+    // initialize transition matrix
+    T.zeros(o_r_idx_map.size(), o_r_idx_map.size());
+    {
+        // construct sequence
+        instance_ptr_t first_instance = DoublyLinkedInstance::create(action_space,observation_space,reward_space); // first instance (time=0) from sequence back to min_h-1
+        auto last_instance = DoublyLinkedInstance::get_shared_ptr(first_instance,true);                            // last instance in sequence (time=min_h-1)
+        {
+            DEBUG_OUT(3,"Constructing sequence:");
+            DEBUG_OUT(3,"    " << *last_instance);
+            for(int t_idx=1; t_idx<N_plus->get_max_horizon(); ++t_idx) {
+                last_instance->set_non_const_predecessor(DoublyLinkedInstance::create(action_space,observation_space,reward_space));
+                last_instance = DoublyLinkedInstance::get_shared_ptr(last_instance->non_const_prev(),true);
+                DEBUG_OUT(3,"    " << *last_instance);
+            }
+        }
+        // compute transition maxtrix
+        IF_DEBUG(1) {ProgressBar::init("Computing T-matrix:");}
+        int progress_idx = 0, max_progress = aor_triplets.size();
+        int n_actions = action_space->space_size();
+        for(auto from_aor_triplet : aor_triplets) { // go through all possible histories (that matter)
+            int col_idx = o_r_idx_map[make_tuple(get<1>(from_aor_triplet),get<2>(from_aor_triplet))];
+            last_instance->set_non_const_predecessor(DoublyLinkedInstance::create(get<0>(from_aor_triplet), get<1>(from_aor_triplet), get<2>(from_aor_triplet)));
+            for(action_ptr_t action : action_space) {
+                auto p_map = tem->get_prediction_map(first_instance->const_prev(),action);
+                for(auto o_r : o_r_idx_map) {
+                    double p = p_map[o_r.first];
+                    int row_idx = o_r.second;
+                    T(row_idx,col_idx) += p/(n_actions*n_actions);
+                    // DEBUG_OUT(4,"Instance: " << make_tuple(action,get<0>(o_r.first),get<1>(o_r.first)) << "			--> " << p);
+                    // for(const_instance_ptr_t ins = first_instance->const_prev(); ins!=INVALID; --ins) {
+                    //     DEBUG_OUT(4,"	" << ins);
+                    // }
+                    IF_DEBUG(1) {
+                        if(p==0) { // cannot happen for log-linear model
+                            DEBUG_WARNING("    p " << from_aor_triplet << " ---> " << make_tuple(action,get<0>(o_r.first),get<1>(o_r.first)) << " = " << p );
+                        }
+                    }
+                }
+            }
+            ++progress_idx;
+            IF_DEBUG(1) {ProgressBar::print(progress_idx,max_progress);}
+        }
+        IF_DEBUG(1) {ProgressBar::terminate();}
+        // make sure memory is freed
+        //first_instance->detach_all(); // not needed, don't know why
+    }
+    if(check_memory) {
+        int memory_count_now = AbstractInstance::memory_check(false);
+        if(memory_count_now!=memory_count) {
+            DEBUG_WARNING(QString("Memory mismatch: was %1, now is %2").arg(memory_count).arg(memory_count_now));
+        }
+    }
+}
+
+bool TestMaze_II::get_stationary_distribution(const arma::mat& T, arma::vec& stat_dist) const {
+    using namespace arma;
+    // compute stationary distribution (via eigenvalues and
+    // eigenvectors)
+    cx_vec eig_vals;
+    cx_mat eig_vecs;
+    eig_gen(eig_vals,eig_vecs,T);
+    int dim = eig_vals.size();
+    vec eig_p_norms(dim);
+    vec eig_L1_norms(dim);
+    mat norm_eig_vecs(dim,dim);
+    for(int i=0; i<dim; ++i) {
+        norm_eig_vecs.col(i) = real(eig_vecs.col(i));
+        eig_p_norms(i) = sum(norm_eig_vecs.col(i));
+        eig_L1_norms(i) = sum(abs(norm_eig_vecs.col(i)));
+        norm_eig_vecs.col(i) = norm_eig_vecs.col(i)/eig_p_norms(i);
+    }
+    IF_DEBUG(3) {
+        // set stream properties
+        cout.precision(3);
+        cout.setf(std::ios::fixed);
+        cout.width(10);
+        // print
+        T.raw_print("Transition Matrix:");
+        cout.unsetf(cout.flags());
+    }
+    // eigenmodes
+    int eig_idx = -1;
+    IF_DEBUG(3) {cout << "Stationary distributions:" << endl;}
+    for(int i=0; i<dim; ++i) {
+        if(fabs(real(eig_vals(i))-1)<1e-3 && fabs(eig_p_norms(i))>1e-3) {
+            IF_DEBUG(3) {
+                cout << "EV = " << real(eig_vals(i)) << endl;
+                norm_eig_vecs.col(i).raw_print();
+            }
+            IF_DEBUG(1) {
+                if(eig_idx!=-1) {
+                    DEBUG_WARNING("Already found multiple eigenvalues of 1");
+                }
+            }
+            eig_idx = i;
+        }
+    }
+    IF_DEBUG(3) {
+        cout.precision(3);
+        cout.setf(std::ios::fixed);
+        cout.width(10);
+        cout << "Orthogonal modes:" << endl;
+        for(int i=0; i<dim; ++i) {
+            if(fabs(eig_p_norms(i))<1e-3) {
+                cout << "EV = " << real(eig_vals(i)) << endl;
+                (real(eig_vecs.col(i))/eig_L1_norms(i)).raw_print();
+            }
+        }
+        cout << "Invalid modes:" << endl;
+        for(int i=0; i<dim; ++i) {
+            if(!(fabs(real(eig_vals(i))-1)<1e-3 && fabs(eig_p_norms(i))>1e-3) && !(fabs(eig_p_norms(i))<1e-3)) {
+                cout << "EV = " << real(eig_vals(i)) << endl;
+                (real(eig_vecs.col(i))/eig_L1_norms(i)).raw_print();
+            }
+        }
+        // eig_vals.raw_print("Eigenvalues:");
+        // eig_vecs.raw_print("Eigenvectors:");
+        // norm_eig_vecs.raw_print("Normalized eigenvectors:");
+        // reset
+        cout.unsetf(cout.flags());
+    }
+    if(eig_idx==-1) { // make sure eigenvalue 1 was found
+        stat_dist.zeros(dim);
+        return false;
+    } else {
+        stat_dist = norm_eig_vecs.col(eig_idx);
+        IF_DEBUG(1) {stat_dist.print("Stationary distribution");}
+        return true;
+    }
+
 }
 
 void TestMaze_II::render_update() {
@@ -253,1133 +1937,54 @@ void TestMaze_II::render_update() {
     }
 }
 
-void TestMaze_II::random_action() {
-    perform_transition(action_space->random_element());
-}
-
 void TestMaze_II::choose_action() {
-
-    if(DEBUG_LEVEL>2) {
-        DEBUG_OUT(0,"Before planning:");
-        look_ahead_search->print_tree_statistics();
-    }
-
+    // get action
     action_ptr_t action;
-    bool clear_seach_tree = (look_ahead_search->get_number_of_nodes()==0 || !prune_search_tree || search_tree_invalid);
-    switch(planner_type) {
-    case OPTIMAL_PLANNER: {
-        shared_ptr<PredictiveEnvironment> pred = dynamic_pointer_cast<PredictiveEnvironment>(environment);
-        if(pred!=nullptr) {
-            if(clear_seach_tree) {
-                look_ahead_search->clear_tree();
-                look_ahead_search->build_tree(
-                    current_instance,
-                    *pred,
-                    max_tree_size
-                    );
-                search_tree_invalid = false;
-            } else {
-                look_ahead_search->fully_expand_tree(
-                    *pred,
-                    max_tree_size
-                    );
-            }
-            action = look_ahead_search->get_optimal_action();
-        } else {
-            action = action_space;
-            TO_CONSOLE("    Environment does not provide predictions for planning. Choosing default action");
-        }
-    }
-        break;
-    case SPARSE_PLANNER:
-        if(clear_seach_tree) {
-            look_ahead_search->clear_tree();
-            look_ahead_search->build_tree(
-                current_instance,
-                *crf,
-                max_tree_size
-                );
-            search_tree_invalid = false;
-        } else {
-            look_ahead_search->fully_expand_tree(
-                *crf,
-                max_tree_size
-                );
-        }
-        action = look_ahead_search->get_optimal_action();
-        break;
-    case UTREE_PLANNER:
-        if(clear_seach_tree) {
-            look_ahead_search->clear_tree();
-            look_ahead_search->build_tree(
-                current_instance,
-                *utree,
-                max_tree_size
-                );
-            search_tree_invalid = false;
-        } else {
-            look_ahead_search->fully_expand_tree(
-                *utree,
-                max_tree_size
-                );
-        }
-        action = look_ahead_search->get_optimal_action();
-        break;
-    case UTREE_VALUE:
-        action = utree->get_max_value_action(current_instance);
-        break;
-    case LINEAR_Q_VALUE:
-        action = linQ->get_max_value_action(current_instance);
-        break;
-    default:
+    if(policy==nullptr) {
         action = action_space;
-        DEBUG_ERROR("undefined planner type --> choosing " << action);
-        break;
+        to_console("    No policy available");
+    } else {
+        action = policy->get_action(current_instance);
     }
+    // color maze
+    if(color_maze) {
+        shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
+        shared_ptr<GoalIteration> gi = dynamic_pointer_cast<GoalIteration>(policy);
+        if(maze!=nullptr && gi!=nullptr) {
+            maze->set_state_colors(gi->get_value_as_color());
+        }
+    } else {
+        shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
+        if(maze!=nullptr) {
+            maze->set_state_colors();
+        }
+    }
+    // perform action
     observation_ptr_t observation_to;
     reward_ptr_t reward;
     perform_transition(action,observation_to,reward);
-
-    // debugging
-    switch(planner_type) {
-    case OPTIMAL_PLANNER:
-    case SPARSE_PLANNER:
-    case UTREE_PLANNER:
-        if(DEBUG_LEVEL>2) {
-            DEBUG_OUT(0,"After planning, before pruning:");
-            look_ahead_search->print_tree_statistics();
-        }
-        // sanity check
-        if(DEBUG_LEVEL>=1) {
-            shared_ptr<PredictiveEnvironment> pred = dynamic_pointer_cast<PredictiveEnvironment>(environment);
-            if(pred!=nullptr) {
-                probability_t prob = look_ahead_search->get_predicted_transition_probability(action, observation_to, reward, *pred);
-                if(prob==0) {
-                    probability_t prob_maze = pred->get_prediction(current_instance->const_it()-1, action, observation_to, reward);
-                    DEBUG_OUT(0,"Warning: Transition with predicted probability of zero for (" << action << "," << observation_to << "," << reward << ") (Maze predicts " << prob_maze << ")" );
-                }
-            }
-        }
-        break;
-    case UTREE_VALUE:
-    case LINEAR_Q_VALUE:
-        // no search tree
-        break;
-    default:
-        DEBUG_DEAD_LINE;
-    }
-
-    // prune tree
-    if(prune_search_tree) {
-        switch(planner_type) {
-        case OPTIMAL_PLANNER: {
-            shared_ptr<PredictiveEnvironment> pred = dynamic_pointer_cast<PredictiveEnvironment>(environment);
-            if(pred!=nullptr) {
-                look_ahead_search->prune_tree(action,current_instance,*pred);
-            }
-        }
-            break;
-        case SPARSE_PLANNER:
-            look_ahead_search->prune_tree(action,current_instance,*crf);
-            break;
-        case UTREE_PLANNER:
-            look_ahead_search->prune_tree(action,current_instance,*utree);
-            break;
-        case UTREE_VALUE:
-        case LINEAR_Q_VALUE:
-            // no search tree
-            break;
-        default:
-            DEBUG_DEAD_LINE;
-        }
-    }
-
-    if(DEBUG_LEVEL>2) {
-        DEBUG_OUT(0,"After pruning:");
-        look_ahead_search->print_tree_statistics();
-    }
 }
 
-void TestMaze_II::process_console_input(QString sequence_input, bool sequence) {
+void TestMaze_II::process_console_input() {
 
-    QString input;
+    // get input from console and process
+    QString input = ui._wConsoleInput->text();
+    ui._wConsoleInput->setText("");
+    to_console(input);
+    console_history.push_back(input);
+    history_position = console_history.size();
+    QTextStream history_file_stream(&history_file);
+    history_file_stream << input << "\n";
 
-    // deal with sequences
-    if(sequence) {
-        input = sequence_input;
-    } else {
-        input = ui._wConsoleInput->text();
-        ui._wConsoleInput->setText("");
-        TO_CONSOLE(input);
-        console_history.push_back(input);
-        history_position = console_history.size();
-        QTextStream history_file_stream(&history_file);
-        history_file_stream << input << "\n";
-
-        // check for sequence
-        QStringList command_list = input.split(";");
-        if(command_list.length()==0) {
-            DEBUG_ERROR("Empty command list");
-            return;
-        } else if(command_list.length()>1) {
-            for(int command_idx=0; command_idx<command_list.length(); ++command_idx) {
-                process_console_input(command_list.at(command_idx),true);
-            }
-            return;
-        } else {
-            input = command_list.at(0);
+    // execute command and print response message
+    if(input!="") {
+        QString msg = command_center.execute(input);
+        if(msg!="") {
+            to_console(msg,4);
         }
     }
 
-    // remove leading and trailing space
-    while(input.startsWith(' ')) {
-        input.remove(0,1);
-    }
-    while(input.endsWith(' ')) {
-        input.chop(1);
-    }
-
-    // help strings
-    QString headline_s( "Available commands:\n    COMMAND . . . . ARGUMENTS. . . . . . . . . . . . . . . . . . . . .-> ACTION");
-
-    QString general_s(                     "\n    ---------------------------------General-----------------------------------");
-    QString help_s(                          "    help  / h. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> this help");
-    QString exit_s(                          "    exit/quit/q. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> quit application");
-    QString set_s(                           "    set/unset. . . . . . . . . <string>. . . . . . . . . . . . . . . . . .-> set/unset options:");
-    QString option_1_s(                      "                               record. . . . . . . . . . . . . . . . . . .-> start/stop recording movements");
-    QString option_2_s(                      "                               plot. . . . . . . . . . . . . . . . . . . .-> write transitions into data file for plotting");
-    QString option_3_s(                      "                               p/planner .<string> . . . . . . . . . . . .-> set planner to use");
-    QString option_3a_s(                     "                                          o/optimal. . . . . . . . . . . .-> use optimal predictions (give by maze)");
-    QString option_3b_s(                     "                                          s/sparse . . . . . . . . . . . .-> use sparse predictions (given by CRF)");
-    QString option_3c_s(                     "                                          u/utree. . . . . . . . . . . . .-> use UTree as predictive model");
-    QString option_3d_s(                     "                                          uv/utree-value . . . . . . . . .-> use UTree as value function");
-    QString option_3e_s(                     "                                          lq/linear-q. . . . . . . . . . .-> use linear Q-function approximation");
-    QString option_4_s(                      "                               target. . . . . . . . . . . . . . . . . . .-> activate a target state");
-    QString option_5_s(                      "                               prune-tree. . . . . . . . . . . . . . . . .-> prune search tree");
-    QString option_6_s(                      "                               png . . . . . . . . . . . . . . . . . . . .-> save a png image of the maze on transition");
-    QString option_7_s(                      "                               maze [<string>] . . . . . . . . . . . . . .-> display available maze names [load maze with name <string>]");
-    QString option_8_s(                      "                               cheese. . . . . . . . . . . . . . . . . . .-> load cheese maze");
-    QString test_s(                          "    test . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> test");
-
-    QString maze_s(                        "\n    -----------------------------------Maze-----------------------------------");
-    QString left_s(                          "    left  / l. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> move left");
-    QString right_s(                         "    right / r. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> move right");
-    QString up_s(                            "    up    / u. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> move up");
-    QString down_s(                          "    down  / d. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> move down");
-    QString stay_s(                          "    stay  / s. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> stay-action");
-    QString move_s(                          "    move . . . . . . . . . . . [<int>|stop]. . . . . . . . . . . . . . . .-> start/stop moving using planner");
-    QString random_s(                        "    random . . . . . . . . . . [<int>|stop]. . . . . . . . . . . . . . . .-> start/stop moving randomly");
-    QString epsilon_s(                       "    epsilon. . . . . . . . . . [<double>]. . . . . . . . . . . . . . . . .-> get [set] random transition probability");
-    QString reward_activation_s(             "    reward-activation / ra . . <int> . . . . . . . . . . . . . . . . . . .-> print mean reward activation probability for length-<int> random walk");
-    QString random_distribution_s(           "    random-distribution / rd . <int> . . . . . . . . . . . . . . . . . . .-> run <int> random transitions and display relative counts for all states");
-
-    QString learning_s(                    "\n    ------------------------------Model Learning------------------------------");
-    QString episode_s(                       "    episode / e. . . . . . . . [<int>|clear,c] . . . . . . . . . . . . . .-> record length <int> episode or clear data");
-    QString learning_crf_s(                  "    === CRF ===");
-    QString optimize_crf_s(                  "    crf-optimize / co. . . . . [<int> [<d> <d>]|check, c]. . . . . . . . .-> optimize CRF [max_iterations [ alpha beta ] | check derivatives]");
-    QString score_crf_s(                     "    score-crf / scrf . . . . . <int> . . . . . . . . . . . . . . . . . . .-> score candidate features with distance <int> by gradient");
-    QString score1D_crf_s(                   "    score1D-crf / s1Dcrf . . . <int> . . . . . . . . . . . . . . . . . . .-> score candidate features with distance <int> by 1D optimization");
-    QString add_crf_s(                       "    add-crf. . . . . . . . . . <int> . . . . . . . . . . . . . . . . . . .-> add <int> highest scored candidate features to active (0 for all non-zero scored)");
-    QString crf_erase_s(                     "    crf-erase / ce . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> erase features with zero weight");
-    QString l1_s(                            "    l1 . . . . . . . . . . . . <double>. . . . . . . . . . . . . . . . . .-> coefficient for L1 regularization");
-    QString evaluate_s(                      "    evaluate . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> evaluate features at current point");
-//    QString validate_s(                      "    validate / v . . . . . . . {crf,kmdp}[exact|mc <int>]. . . . . . . . .-> validate CRF or k-MDP model using exact (default) or Monte Carlo (with <int> samples) computation of the KL-divergence");
-    QString examine_crf_features_s(          "    crf-f. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> print CRF features and weights");
-    QString apply_old_crf_features_s(        "    apply-old-features / aof . . . . . . . . . . . . . . . . . . . . . . .-> re-apply the old featues stored at the last erase");
-    QString learning_utree_s(                "    === UTree ===");
-    QString expand_leaf_nodes_s(             "    expand / ex. . . . . . . . [<int>|<double] . . . . . . . . . . . . . .-> expand <int> leaf nodes / expand leaves until a score of <double> is reached");
-    QString print_utree_s(                   "    print-utree. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> print the current UTree");
-    QString print_leaves_s(                  "    print-leaves . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> print leaves of the current UTree");
-    QString clear_utree_s(                   "    clear-utree. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> clear UTree");
-    QString utree_value_iteration_s(         "    v-iteration / vi . . . . . [<int>] . . . . . . . . . . . . . . . . . .-> run one [<int>] iteration(s) of Value-Iteration");
-    QString utree_expansion_type_s(          "    ex-type / ext. . . . . . . [u(tility)|o(bservation)r(eward)] . . . . .-> get/set expansion type for UTree");
-    QString examine_utree_features_s(        "    utree-f. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> print UTree features");
-    QString learning_linQ_s(                 "    === Linear-Q ===");
-    QString optimize_linQ_ridge_s(           "    lq-optimize-ridge / lqor . [<double>]. . . . . . . . . . . . . . . . .-> optimize Linear-Q (TD Error) [ with L2-regularization coefficient <double> ]");
-    QString optimize_linQ_l1_s(              "    lq-optimize-l1 / lqol1 . . [<double> [<int>] | check | c ] . . . . . .-> optimize Linear-Q (TD Error) with L1-regularization coefficient <double> [ and max <int> iterations ] or check derivatives");
-    QString optimize_linQ_s(                 "    lq-optimize / lqo. . . . . [<double> [<int>] | check | c ] . . . . . .-> optimize Linear-Q (Bellman Error) with L1-regularization coefficient <double> [ and max <int> iterations ] or check derivatives");
-    QString construct_s(                     "    construct / con. . . . . . <int> . . . . . . . . . . . . . . . . . . .-> construct candidate features with distance <int>");
-    QString score_lq_s(                      "    score-lq / slq . . . . . . <int> . . . . . . . . . . . . . . . . . . .-> score candidate features with distance <int> by gradient");
-    QString add_lq_s(                        "    add-lq . . . . . . . . . . <int> . . . . . . . . . . . . . . . . . . .-> add <int> highest scored candidate features to active (0 for all non-zero scored)");
-    QString lq_erase_zero_weight_s(          "    lq-erase / lqe . . . . . . [<double>]. . . . . . . . . . . . . . . . .-> erase features with zero weight [ weight below or equal to <double> ]");
-    QString lq_alpha_s(                      "    lq-alpha . . . . . . . . . [<double>]. . . . . . . . . . . . . . . . .-> get [set] alpha for Soft-Max");
-
-    QString planning_s(                    "\n    ---------------------------------Planning----------------------------------");
-    QString discount_s(                      "    discount . . . . . . . . . [<double>]. . . . . . . . . . . . . . . . .-> get [set] discount");
-    QString print_look_ahead_tree_s(         "    print-tree . . . . . . . . [g|graphic|t|text]. . . . . . . . . . . . .-> print Look-Ahead-Tree statistics [with additional graphical or long text output]");
-    QString max_tree_size_s(                 "    max-tree-size. . . . . . . <int> . . . . . . . . . . . . . . . . . . .-> set maximum size of Look-Ahead-Tree (zero for infinite)");
-
-    QString new_s(                         "\n    ---------------------------------New Stuff----------------------------------");
-    QString color_states_s(                  "    col-states . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-> color states (random)");
-    QString fixed_dt_distribution_s(         "    fixed-dt-dist / fdd. . . . <int> . . . . . . . . . . . . . . . . . . .-> show probability for a state to occur <int> steps after current state");
-    QString pair_delay_distribution_s(       "    pair-delay-dist / pdd. . . [<int>] . . . . . . . . . . . . . . . . . .-> show temporal delay distribution from current state to target state (restrict to time window of width <int>");
-    QString mediator_probability_s(          "    mediator-probability / mp. <int> . . . . . . . . . . . . . . . . . . .-> show probability for a state to occurr between current state and target state given a time window of width <int>");
-
-    set_s += "\n" + option_1_s;
-    set_s += "\n" + option_2_s;
-    set_s += "\n" + option_3_s;
-    set_s += "\n" + option_3a_s;
-    set_s += "\n" + option_3b_s;
-    set_s += "\n" + option_3c_s;
-    set_s += "\n" + option_3d_s;
-    set_s += "\n" + option_3e_s;
-    set_s += "\n" + option_4_s;
-    set_s += "\n" + option_5_s;
-    set_s += "\n" + option_6_s;
-    set_s += "\n" + option_7_s;
-    set_s += "\n" + option_8_s;
-
-    QString invalid_args_s( "    invalid arguments" );
-
-    // getting input arguments
-    vector<QString> str_args;
-    QString tmp_s;
-    vector<int> int_args;
-    vector<bool> int_args_ok;
-    int tmp_i;
-    vector<double> double_args;
-    vector<bool> double_args_ok;
-    double tmp_d;
-    for(int arg_idx=0; arg_string(input,arg_idx,tmp_s) && tmp_s!=""; ++arg_idx) {
-
-        str_args.push_back(tmp_s);
-
-        int_args_ok.push_back( arg_int(input,arg_idx,tmp_i) );
-        int_args.push_back( tmp_i );
-
-        double_args_ok.push_back( arg_double(input,arg_idx,tmp_d) );
-        double_args.push_back( tmp_d );
-    }
-    int str_args_n = str_args.size();
-
-    // process input
-    if(str_args_n>0) {
-        if(str_args[0]=="help" || str_args[0]=="h") { // help
-            // Headline
-            TO_CONSOLE( headline_s );
-            // General
-            TO_CONSOLE( general_s );
-            TO_CONSOLE( help_s );
-            TO_CONSOLE( exit_s );
-            TO_CONSOLE( set_s );
-            TO_CONSOLE( test_s );
-            // Maze
-            TO_CONSOLE( maze_s );
-            TO_CONSOLE( left_s );
-            TO_CONSOLE( right_s );
-            TO_CONSOLE( up_s );
-            TO_CONSOLE( down_s );
-            TO_CONSOLE( stay_s );
-            TO_CONSOLE( move_s );
-            TO_CONSOLE( random_s );
-            TO_CONSOLE( epsilon_s );
-            TO_CONSOLE( reward_activation_s );
-            TO_CONSOLE( random_distribution_s );
-            // Learning
-            TO_CONSOLE( learning_s );
-            TO_CONSOLE( episode_s );
-            TO_CONSOLE( learning_crf_s ); // CRF
-            TO_CONSOLE( optimize_crf_s );
-            TO_CONSOLE( score_crf_s );
-            TO_CONSOLE( score1D_crf_s );
-            TO_CONSOLE( add_crf_s );
-            TO_CONSOLE( crf_erase_s );
-            TO_CONSOLE( l1_s );
-            TO_CONSOLE( evaluate_s );
-//            TO_CONSOLE( validate_s );
-            TO_CONSOLE( examine_crf_features_s );
-            TO_CONSOLE( apply_old_crf_features_s );
-            TO_CONSOLE( learning_utree_s ); // UTree
-            TO_CONSOLE( expand_leaf_nodes_s );
-            TO_CONSOLE( print_utree_s );
-            TO_CONSOLE( print_leaves_s );
-            TO_CONSOLE( clear_utree_s );
-            TO_CONSOLE( utree_value_iteration_s );
-            TO_CONSOLE( utree_expansion_type_s );
-            TO_CONSOLE( examine_utree_features_s );
-            TO_CONSOLE( learning_linQ_s ); // linear-Q
-            TO_CONSOLE( optimize_linQ_ridge_s );
-            TO_CONSOLE( optimize_linQ_l1_s );
-            TO_CONSOLE( optimize_linQ_s );
-            TO_CONSOLE( construct_s );
-            TO_CONSOLE( score_lq_s );
-            TO_CONSOLE( add_lq_s );
-            TO_CONSOLE( lq_erase_zero_weight_s );
-            TO_CONSOLE( lq_alpha_s );
-            // Planning
-            TO_CONSOLE( planning_s );
-            TO_CONSOLE( discount_s );
-            TO_CONSOLE( print_look_ahead_tree_s );
-            TO_CONSOLE( max_tree_size_s );
-            // New
-            TO_CONSOLE( new_s );
-            TO_CONSOLE( color_states_s );
-            TO_CONSOLE( fixed_dt_distribution_s );
-            TO_CONSOLE( pair_delay_distribution_s );
-            TO_CONSOLE( mediator_probability_s );
-        } else if(str_args[0]=="left" || str_args[0]=="l") { // left
-            if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
-                perform_transition(action_ptr_t(new MazeAction("left")));
-            } else if(dynamic_pointer_cast<CheeseMaze>(environment)!=nullptr) {
-                perform_transition(action_ptr_t(new CheeseMazeAction("west")));
-            } else {
-                TO_CONSOLE("    Not defined in current environment");
-            }
-        } else if(str_args[0]=="right" || str_args[0]=="r") { // right
-            if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
-                perform_transition(action_ptr_t(new MazeAction("right")));
-            } else if(dynamic_pointer_cast<CheeseMaze>(environment)!=nullptr) {
-                perform_transition(action_ptr_t(new CheeseMazeAction("east")));
-            } else {
-                TO_CONSOLE("    Not defined in current environment");
-            }
-        } else if(str_args[0]=="up" || str_args[0]=="u") { // up
-            if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
-                perform_transition(action_ptr_t(new MazeAction("up")));
-            } else if(dynamic_pointer_cast<CheeseMaze>(environment)!=nullptr) {
-                perform_transition(action_ptr_t(new CheeseMazeAction("north")));
-            } else {
-                TO_CONSOLE("    Not defined in current environment");
-            }
-        } else if(str_args[0]=="down" || str_args[0]=="d") { // down
-            if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
-                perform_transition(action_ptr_t(new MazeAction("down")));
-            } else if(dynamic_pointer_cast<CheeseMaze>(environment)!=nullptr) {
-                perform_transition(action_ptr_t(new CheeseMazeAction("south")));
-            } else {
-                TO_CONSOLE("    Not defined in current environment");
-            }
-        } else if(str_args[0]=="stay" || str_args[0]=="s") { // stay
-            if(dynamic_pointer_cast<Maze>(environment)!=nullptr) {
-                perform_transition(action_ptr_t(new MazeAction("stay")));
-            } else {
-                TO_CONSOLE("    Not defined in current environment");
-            }
-        } else if(str_args[0]=="move") { // start/stop moving
-            if(str_args_n==1) {
-                choose_action();
-            } else if(str_args[1]=="stop") {
-                action_timer->stop();
-            } else if(int_args_ok[1] && int_args[1]>=0){
-                action_timer->stop();
-                action_timer->start(int_args[1]);
-            } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( move_s );
-            }
-        } else if(str_args[0]=="random") { // start/stop moving
-            if(str_args_n==1) {
-                random_action();
-            } else if(str_args[1]=="stop") {
-                random_timer->stop();
-            } else if(int_args_ok[1] && int_args[1]>=0){
-                random_timer->stop();
-                random_timer->start(int_args[1]);
-            } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( random_s );
-            }
-        } else if(str_args[0]=="episode" || str_args[0]=="e") { // record episode
-            if(str_args_n==1) {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( episode_s );
-            } else if( str_args[1]=="clear" || str_args[1]=="c" ) {
-                clear_data();
-            } else if(int_args_ok[1] && int_args[1]>=0){
-                collect_episode(int_args[1]);
-            } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( episode_s );
-            }
-        } else if(str_args[0]=="crf-optimize" || str_args[0]=="co") { // optimize CRF
-            if(str_args_n==1 || int_args_ok[1] ) {
-                if(int_args_ok[1]) {
-                    if(str_args_n==4 && double_args_ok[2] && double_args_ok[3] ) {
-                        crf->optimize_model(l1_factor, int_args[1], nullptr, true, double_args[2], double_args[3]);
-                    } else {
-                        crf->optimize_model(l1_factor, int_args[1]);
-                    }
-                } else {
-                    crf->optimize_model(l1_factor, 0);
-                }
-            } else if(str_args[1]=="check" || str_args[1]=="c") {
-                crf->check_derivatives(3,10,1e-6,1e-3);
-            } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( optimize_crf_s );
-            }
-        } else if(str_args[0]=="utree-f") {
-            utree->print_features();
-        } else if(str_args[0]=="apply-old-features" || str_args[0]=="aof") {
-            crf->apply_features();
-        } else if(str_args[0]=="lq-optimize-ridge" || str_args[0]=="lqor") { // optimize linear-Q
-            if(str_args_n==1 || double_args_ok[1] ) {
-                if(double_args_ok[1]) {
-                    linQ->set_optimization_type_TD_RIDGE()
-                        .set_regularization(double_args[1])
-                        .optimize();
-                } else {
-                    linQ->set_optimization_type_TD_RIDGE()
-                        .set_regularization(0)
-                        .optimize();
-                }
-            } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( optimize_linQ_ridge_s );
-            }
-        } else if(str_args[0]=="lq-optimize-l1" || str_args[0]=="lqol1") { // optimize linear-Q
-            if(str_args_n>1 && double_args_ok[1] ) {
-                if(str_args_n>2 && int_args_ok[2] ) {
-                    linQ->set_optimization_type_TD_L1()
-                        .set_regularization(double_args[1])
-                        .set_maximum_iterations(int_args[2])
-                        .optimize();
-                } else {
-                    linQ->set_optimization_type_TD_L1()
-                        .set_regularization(double_args[1])
-                        .optimize();
-                }
-            } else if(str_args_n>1 && (str_args[1]=="check" || str_args[1]=="c") ) {
-                linQ->check_derivatives(3,10,1e-6,1e-3);
-            } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( optimize_linQ_l1_s );
-            }
-        } else if(str_args[0]=="lq-optimize" || str_args[0]=="lqo") { // optimize linear-Q
-            if(str_args_n>1 && double_args_ok[1] ) {
-                if(str_args_n>2 && int_args_ok[2] ) {
-                    linQ->set_optimization_type_BELLMAN()
-                        .set_regularization(double_args[1])
-                        .set_maximum_iterations(int_args[2])
-                        .optimize();
-                } else {
-                    linQ->set_optimization_type_BELLMAN()
-                        .set_regularization(double_args[1])
-                        .set_maximum_iterations(0)
-                        .optimize();
-                }
-            } else if(str_args_n>1 && (str_args[1]=="check" || str_args[1]=="c") ) {
-                linQ->check_derivatives(10,10,1e-6,1e-3);
-            } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( optimize_linQ_s );
-            }
-        } else if(str_args[0]=="lq-erase" || str_args[0]=="lqe") {
-            if(str_args_n==1 || double_args_ok[1]) {
-                if(str_args_n>1) {
-                    linQ->erase_features_by_weight(double_args[1]);
-                } else {
-                    linQ->erase_features_by_weight();
-                }
-            } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( lq_erase_zero_weight_s );
-            }
-        } else if(str_args[0]=="lq-alpha") {
-            if(str_args_n==1 || double_args_ok[1]) {
-                if(str_args_n>1) {
-                    linQ->set_alpha(double_args[1]);
-                } else {
-                    double alpha = linQ->get_alpha();
-                    TO_CONSOLE( QString("    alpha = %1").arg(alpha) );
-                }
-            } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( lq_alpha_s );
-            }
-        } else if(str_args[0]=="epsilon") {
-            shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
-            if(maze==nullptr) {
-                TO_CONSOLE("    Allowed for maze-environments only");
-            } else {
-                if(str_args_n==1) {
-                    if(maze->get_epsilon()!=epsilon) {
-                        DEBUG_ERROR("Maze epsion (" << maze->get_epsilon() << ") is different from stored one (" << epsilon << ")");
-                    }
-                    TO_CONSOLE( QString("    maze epsilon is %1").arg(epsilon) );
-                } else if(double_args_ok[1] && double_args[1]>=0 && double_args[1]<=1) {
-                    epsilon = double_args[1];
-                    maze->set_epsilon(epsilon);
-                } else {
-                    TO_CONSOLE( invalid_args_s );
-                    TO_CONSOLE( epsilon_s );
-                }
-            }
-        } else if(str_args[0]=="reward-activation" || str_args[0]=="ra") {
-            shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
-            if(maze==nullptr) {
-                TO_CONSOLE("    Allowed for maze-environments only");
-            } else {
-                if(str_args_n==2 && int_args_ok[1]) {
-                    maze->print_reward_activation_on_random_walk(int_args[1]);
-                    maze->render_update();
-                } else {
-                    TO_CONSOLE(invalid_args_s);
-                    TO_CONSOLE(reward_activation_s);
-                }
-            }
-        } else if(str_args[0]=="random-distribution" || str_args[0]=="rd") { // test
-            shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
-            if(maze==nullptr) {
-                TO_CONSOLE("    Allowed for maze-environments only");
-            } else {
-                if(str_args_n==2 && int_args_ok[1]) {
-                    // initialize state counts to zero
-                    map<observation_ptr_t,int> state_counts;
-                    for(observation_ptr_t observation : observation_space) {
-                        state_counts[observation] = 0;
-                    }
-                    // get state counts
-                    int n = int_args[1];
-                    int max_count = 1;
-                    for(int idx=0; idx<n; ++idx) {
-                        action_ptr_t action = (action_ptr_t)(action_space->random_element());
-                        observation_ptr_t observation_to;
-                        reward_ptr_t reward;
-                        maze->perform_transition(action,observation_to,reward);
-                        ++state_counts[observation_to];
-                        max_count = max(state_counts[observation_to],max_count);
-                    }
-                    // transform into colors
-                    Maze::color_vector_t cols;
-                    for(observation_ptr_t observation : observation_space) {
-                        double p = state_counts[observation];
-                        DEBUG_OUT(0,"State " << observation << ": p = " << p/max(n,1) );
-                        p /= max_count;
-                        cols.push_back( std::make_tuple(1,1-p,1-p) );
-                    }
-                    maze->set_state_colors(cols);
-                    maze->render_update();
-                } else {
-                    TO_CONSOLE( invalid_args_s );
-                    TO_CONSOLE( random_distribution_s );
-                }
-            }
-        } else if(str_args[0]=="expand" || str_args[0]=="ex") {
-            if(str_args_n==1) {
-                double score = utree->expand_leaf_node();
-                TO_CONSOLE( QString("    Score was %1").arg(score) );
-            } else if(int_args_ok[1] && int_args[1]>=0 ) {
-                double score = 0;
-                for(int i=0; i<int_args[1]; ++i) {
-                    score = utree->expand_leaf_node();
-                }
-                TO_CONSOLE( QString("    Last score was %1").arg(score) );
-            } else if(double_args_ok[1]) {
-                while( double_args[1] <= utree->expand_leaf_node(double_args[1]) ) {}
-            } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( expand_leaf_nodes_s );
-            }
-        } else if(str_args[0]=="print-utree") {
-            utree->print_tree();
-        } else if(str_args[0]=="print-leaves") {
-            utree->print_leaves();
-        } else if(str_args[0]=="clear-utree") {
-            utree->clear_tree();
-        } else if(str_args[0]=="v-iteration" || str_args[0]=="vi") {
-            if( str_args_n==1 || (str_args_n>1 && int_args_ok[1] && int_args[1]>0) ) {
-                double max_diff;
-                int rep = str_args_n==1 ? 1 : int_args[1];
-                repeat(rep) {
-                    max_diff = utree->value_iteration();
-                }
-                TO_CONSOLE( QString(    "run %1 iteration(s), last maximum update was %2").arg(rep).arg(max_diff) );
-            } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( utree_value_iteration_s );
-            }
-        } else if(str_args[0]=="ex-type" || str_args[0]=="ext") {
-            if(str_args_n==1) {
-                switch(utree->get_expansion_type()) {
-                case UTree::UTILITY_EXPANSION:
-                    TO_CONSOLE("    expansion type: UTILITY_EXPANSION");
-                    break;
-                case UTree::OBSERVATION_REWARD_EXPANSION:
-                    TO_CONSOLE("    expansion type: OBSERVATION_REWARD_EXPANSION");
-                    break;
-                default:
-                    DEBUG_DEAD_LINE;
-                }
-            } else if(str_args[1]=="utility" || str_args[1]=="u") {
-                utree->set_expansion_type(UTree::UTILITY_EXPANSION);
-                TO_CONSOLE("    expansion type: UTILITY_EXPANSION");
-            } else if(str_args[1]=="observationreward" ||str_args[1]=="or") {
-                utree->set_expansion_type(UTree::OBSERVATION_REWARD_EXPANSION);
-                TO_CONSOLE("    expansion type: OBSERVATION_REWARD_EXPANSION");
-            } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( utree_expansion_type_s );
-            }
-        } else if(str_args[0]=="discount") {
-            if(str_args_n==1) {
-                TO_CONSOLE( QString("    discount is %1").arg(discount) );
-            } else if(double_args_ok[1] && double_args[1]>=0 && double_args[1]<=1) {
-                discount = double_args[1];
-                look_ahead_search->set_discount(discount);
-                utree->set_discount(discount);
-                linQ->set_discount(discount);
-            } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( discount_s );
-            }
-        } else if(str_args[0]=="evaluate") {
-            crf->evaluate_features();
-        // } else if(str_args[0]=="validate" || str_args[0]=="v") {
-        //     if(str_args_n==1 ) {
-        //         TO_CONSOLE( invalid_args_s );
-        //         TO_CONSOLE( validate_s );
-        //     } else if(str_args[1]=="crf") {
-        //         if(str_args[2]=="mc") {
-        //             if( str_args_n>3 && int_args_ok[3] && int_args[3]>0 ) {
-        //                 probability_t model_l, maze_l;
-        //                 probability_t kl = maze.validate_model(
-        //                         crf,
-        //                         int_args[3],
-        //                         &model_l,
-        //                         &maze_l
-        //                 );
-        //                 TO_CONSOLE(QString("    MC KL-Divergence = %1 (%2 samples)").arg(kl).arg(int_args[3]));
-        //                 TO_CONSOLE(QString("    Mean Likelihood: model = %1, maze = %2").arg(model_l).arg(maze_l));
-        //             } else {
-        //                 TO_CONSOLE( "    Please specify a valid sample size" );
-        //             }
-        //         } else {
-        //             TO_CONSOLE( invalid_args_s );
-        //             TO_CONSOLE( validate_s );
-        //         }
-        //     } else if(str_args[1]=="kmdp") {
-        //         TO_CONSOLE( "    Sorry, not implemented" );
-        //     } else {
-        //         TO_CONSOLE( invalid_args_s );
-        //         TO_CONSOLE( validate_s );
-        //     }
-        } else if(str_args[0]=="crf-f") {
-            crf->print_all_features();
-        } else if(str_args[0]=="l1") {
-            if(str_args_n==1) {
-                TO_CONSOLE(QString("    %1").arg(l1_factor));
-            } else if(double_args_ok[1] && double_args[1]>=0) {
-                l1_factor = double_args[1];
-            } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( l1_s );
-            }
-        } else if(str_args[0]=="score-crf" || str_args[0]=="scrf") {
-            if(str_args_n==1) {
-                TO_CONSOLE(score_crf_s);
-            } else if(int_args_ok[1] && int_args[1]>=0 ) {
-                crf->construct_candidate_features(int_args[1]);
-                crf->score_candidates_by_gradient();
-                crf->print_scores();
-            } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( score_crf_s );
-            }
-        } else if(str_args[0]=="score1D-crf" || str_args[0]=="s1Dcrf") {
-            if(str_args_n==1) {
-                TO_CONSOLE(score1D_crf_s);
-            } else if(int_args_ok[1] && int_args[1]>=0 ) {
-                crf->construct_candidate_features(int_args[1]);
-                crf->score_candidates_by_1D_optimization();
-            } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( score1D_crf_s );
-            }
-        } else if(str_args[0]=="add-crf") {
-            if(str_args_n==1) {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( add_crf_s );
-            } else if(int_args_ok[1] && int_args[1]>=0 ) {
-                crf->add_candidate_features_to_active(int_args[1]);
-            } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( add_crf_s );
-            }
-        } else if(str_args[0]=="score-lq" || str_args[0]=="slq") {
-            if(str_args_n==1) {
-                TO_CONSOLE(score_lq_s);
-            } else if(int_args_ok[1] && int_args[1]>=0 ) {
-                linQ->construct_candidate_features(int_args[1]);
-                linQ->score_candidates_by_gradient();
-            } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( score_lq_s );
-            }
-        } else if(str_args[0]=="add-lq") {
-            if(str_args_n==1) {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( add_lq_s );
-            } else if(int_args_ok[1] && int_args[1]>=0 ) {
-                linQ->add_candidates_by_score(int_args[1]);
-            } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( add_lq_s );
-            }
-        } else if(str_args[0]=="crf-erase" || str_args[0]=="ce") {
-            crf->erase_zero_features();
-        } else if(str_args[0]=="exit" || str_args[0]=="quit" || str_args[0]=="q") { // quit application
-            QApplication::quit();
-        } else if(str_args[0]=="print-tree") { // print tree
-            bool graphic = false, text = false;
-            if(str_args_n>1) {
-                if(str_args[1]=="g" || str_args[1]=="graphic") {
-                    graphic = true;
-                } else if(str_args[1]=="t" || str_args[1]=="text") {
-                    text = true;
-                } else {
-                    TO_CONSOLE( invalid_args_s );
-                    TO_CONSOLE( print_look_ahead_tree_s );
-                }
-            }
-            look_ahead_search->print_tree_statistics();
-            look_ahead_search->print_tree(text, graphic);
-        } else if(str_args[0]=="max-tree-size") { // set tree size
-            if(str_args_n==1) {
-                TO_CONSOLE( QString( "    max tree size is %1" ).arg(max_tree_size) );
-            } else if(int_args_ok[1] && int_args[1]>=0) {
-                max_tree_size = int_args[1];
-            } else {
-                TO_CONSOLE( "    Please specify a valid tree size" );
-            }
-        } else if(str_args[0]=="set" || str_args[0]=="unset") { // set option
-            if(str_args_n==1) {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( set_s );
-            } else if(str_args[1]=="record") {
-                if(str_args[0]=="set") {
-                    record = true;
-                    start_new_episode = true;
-                    TO_CONSOLE( "    record on" );
-                } else if(str_args[0]=="unset") {
-                    record = false;
-                    TO_CONSOLE( "    record off" );
-                } else {
-                    DEBUG_DEAD_LINE;
-                }
-            } else if(str_args[1]=="plot") {
-                plot = str_args[0]=="set";
-                if(plot) {
-                    // open plot file
-                    plot_file.open("plot_file.txt");
-                    plot_file << "# action observation reward" << endl;
-                    TO_CONSOLE( "    plot on" );
-                } else {
-                    // close plot file
-                    plot_file.close();
-                    TO_CONSOLE( "    plot off" );
-                }
-            } else if( (str_args[1]=="p" || str_args[1]=="planner") ) {
-                if(str_args_n>2) {
-                    if(str_args[0]=="unset") {
-                        TO_CONSOLE( "    set different planner to unset current" );
-                    } else if(str_args[2]=="optimal" || str_args[2]=="o") {
-                        planner_type = OPTIMAL_PLANNER;
-                        search_tree_invalid = true;
-                        TO_CONSOLE( "    using optimal planner" );
-                    } else if(str_args[2]=="sparse" || str_args[2]=="s") {
-                        planner_type = SPARSE_PLANNER;
-                        search_tree_invalid = true;
-                        TO_CONSOLE( "    using sparse planner" );
-                    } else if(str_args[2]=="utree" || str_args[2]=="u") {
-                        planner_type = UTREE_PLANNER;
-                        search_tree_invalid = true;
-                        TO_CONSOLE( "    using UTree planner" );
-                    } else if(str_args[2]=="uv" || str_args[2]=="utree-value") {
-                        planner_type = UTREE_VALUE;
-                        TO_CONSOLE( "    using UTree-value for action selection" );
-                    } else if(str_args[2]=="lq" || str_args[2]=="linear-q") {
-                        planner_type = LINEAR_Q_VALUE;
-                        TO_CONSOLE( "    using linear Q-approximation for action selection" );
-                    } else {
-                        TO_CONSOLE( "    unknown planner" );
-                    }
-                } else {
-                    TO_CONSOLE( "    please supply a planner to use" );
-                }
-            } else if(str_args[1]=="maze") {
-                bool print_list = false;
-                if(str_args[0]=="unset") {
-                    TO_CONSOLE( "    set different environment to unset current" );
-                } else {
-                    if(str_args_n>2) {
-                        shared_ptr<Maze> maze(new Maze(epsilon));
-                        bool success = maze->set_maze(str_args[2]);
-                        if(!success) {
-                            TO_CONSOLE("    No maze named '"+str_args[2]+"'");
-                            print_list = true;
-                        }
-                        change_environment(maze);
-                    } else {
-                        print_list = true;
-                    }
-                }
-                if(print_list) {
-                    TO_CONSOLE( "    Available mazes:" );
-                    for(QString name : Maze::get_maze_list()) {
-                        TO_CONSOLE("        "+name);
-                    }
-                }
-            } else if(str_args[1]=="cheese") {
-                if(str_args[0]=="unset") {
-                    TO_CONSOLE( "    set different environment to unset current" );
-                } else {
-                    change_environment(make_shared<CheeseMaze>());
-                }
-            } else if(str_args[1]=="target") {
-                shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
-                if(maze==nullptr) {
-                    TO_CONSOLE("    Allowed for maze-environments only");
-                } else {
-                    if(str_args[0]=="set") {
-                        if(target_activated) {
-                            TO_CONSOLE( "    target already active" );
-                        } else {
-                            target_activated = true;
-                            target_state = current_instance->observation;
-                            Maze::color_vector_t cols;
-                            for(auto observation : observation_space) {
-                                if(observation==target_state) {
-                                    cols.push_back( Maze::color_t(0,1,0) );
-                                } else {
-                                    cols.push_back( Maze::color_t(1,1,1) );
-                                }
-                            }
-                            maze->set_state_colors(cols);
-                            maze->render_update();
-                            TO_CONSOLE( "    target active" );
-                        }
-                    } else {
-                        if(!target_activated) {
-                            TO_CONSOLE( "    target already inactive" );
-                        } else {
-                            target_activated = false;
-                            TO_CONSOLE( "    target inactive" );
-                        }
-                    }
-                }
-            } else if(str_args[1]=="prune-tree") {
-                if(str_args[0]=="set") {
-                    prune_search_tree=true;
-                    search_tree_invalid = true;
-                    TO_CONSOLE( "    prune search tree" );
-                } else {
-                    prune_search_tree=false;
-                    search_tree_invalid = true;
-                    TO_CONSOLE( "    don't prune search tree" );
-                }
-            } else if(str_args[1]=="png") {
-                if(str_args[0]=="set") {
-                    save_png_on_transition=true;
-                    TO_CONSOLE( "    save png on transition" );
-                } else {
-                    save_png_on_transition=false;
-                    TO_CONSOLE( "    don't save png on transition" );
-                }
-            } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( set_s );
-            }
-        } else if(str_args[0]=="construct" || str_args[0]=="con") {
-            if(str_args_n==1) {
-                TO_CONSOLE(construct_s);
-            } else if(int_args_ok[1] && int_args[1]>=0 ) {
-                linQ->add_all_candidates(int_args[1]);
-            } else {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( construct_s );
-            }
-        } else if(str_args[0]=="test") { // test
-            // if(str_args_n==2 && int_args_ok[1]) {
-            //     maze.print_reward_activation_on_random_walk(int_args[1]);
-            //     maze.render_update();
-            // }
-
-            // crf->print_all_features();
-            // utree->print_features();
-
-            probability_t like = crf->cross_validation(10);
-            TO_CONSOLE( QString("    Mean Data Likelihood: %1").arg(like) );
-
-            //TO_CONSOLE( "    currently no test function implemented" );
-        } else if(str_args[0]=="col-states") { // color states
-            shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
-            if(maze==nullptr) {
-                TO_CONSOLE("    Allowed for maze-environments only");
-            } else {
-                Maze::color_vector_t cols;
-                for(observation_ptr_t observation : observation_space) {
-                    cols.push_back( std::make_tuple(drand48(),drand48(),drand48()) );
-                }
-                maze->set_state_colors(cols);
-                maze->render_update();
-            }
-        } else if(str_args[0]=="fixed-dt-dist" || str_args[0]=="fdd") { // show delay probability
-            shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
-            if(maze==nullptr) {
-                TO_CONSOLE("    Allowed for maze-environments only");
-            } else {
-                if(str_args_n!=2 || !int_args_ok[1]) {
-                    TO_CONSOLE( invalid_args_s );
-                    TO_CONSOLE( fixed_dt_distribution_s );
-                } else {
-                    // get probabilites for all states
-                    observation_ptr_t s1 = current_instance->observation;
-                    idx_t delay = int_args[1];
-                    vector<probability_t> probs = delay_dist.get_fixed_delay_probability_distribution(s1,delay);
-
-                    // get maximum probability for rescaling and target state idx
-                    double max_prob = -DBL_MAX;
-                    idx_t target_idx = 0, state_idx = 0;
-                    for(observation_ptr_t observation : observation_space) {
-                        if(probs[state_idx]>max_prob) {
-                            max_prob = probs[state_idx];
-                        }
-                        if(observation==target_state) {
-                            target_idx=state_idx;
-                        }
-                    }
-
-                    // rescale and define colors
-                    Maze::color_vector_t cols;
-                    for( double p : probs ) {
-                        if(max_prob!=0) {
-                            cols.push_back( std::make_tuple(1,1-p/max_prob,1-p/max_prob) );
-                        } else {
-                            cols.push_back( std::make_tuple(1,1,1) );
-                        }
-                    }
-                    if(target_activated) {
-                        cols[target_idx]=std::make_tuple(0,1,0);
-                    }
-
-                    // render
-                    maze->set_state_colors(cols);
-                    maze->render_update();
-                }
-            }
-        } else if(str_args[0]=="pair-delay-dist" || str_args[0]=="pdd") { // show delay distribution
-            if(str_args_n>1 && !int_args_ok[1]) {
-                TO_CONSOLE( invalid_args_s );
-                TO_CONSOLE( pair_delay_distribution_s );
-            } else {
-                if(!target_activated) {
-                    TO_CONSOLE( "    Target state must be activated to calculate delay distribution" );
-                } else {
-
-                    // get distribution
-                    int time_window = -1;
-                    if(int_args_ok[1]) {
-                        time_window = int_args[1];
-                    }
-                    DelayDistribution::pair_dist_map_t dist_map;
-                    delay_dist.get_pairwise_delay_distribution(dist_map,time_window);
-
-                    // apply to current states
-                    observation_ptr_t s1 = current_instance->observation;
-                    observation_ptr_t s2 = target_state;
-                    vector<double> forward;
-                    vector<double> backward;
-                    for( auto el : dist_map ) {
-                        observation_ptr_t s1_map = get<0>(el.first);
-                        observation_ptr_t s2_map = get<1>(el.first);
-                        int dt = get<2>(el.first);
-                        if(dt==0) {
-                            continue;
-                        }
-                        if(s1_map==s1 && s2_map==s2) {
-                            if(dt>(int)forward.size()-1) {
-                                forward.resize(dt+1,0);
-                            }
-                            forward[dt]=el.second;
-                            DEBUG_OUT(3,s1_map << " --> " << s2_map << " (" << dt << ") : " << el.second);
-                        }
-                        if(s1_map==s2 && s2_map==s1) {
-                             if(dt>(int)backward.size()-1) {
-                                backward.resize(dt+1,0);
-                            }
-                            backward[dt]=el.second;
-                            DEBUG_OUT(3,s1_map << " --> " << s1_map << " (" << dt << ") : " << el.second);
-                        }
-                    }
-
-                    // prepare for plotting
-                    size_t back_size = backward.size();
-                    size_t forw_size = forward.size();
-                    size_t point_n = forw_size + back_size - 1;
-                    QVector<double> x(point_n), y(point_n);
-                    probability_t max_y = -DBL_MAX;
-                    for (int i=0; i<(int)point_n; ++i) {
-                        x[i] = i - back_size + 1;
-                        y[i] = i<(int)back_size ? backward[back_size-i-1] : forward[i-back_size];
-                        if(y[i]>max_y) {
-                            max_y = y[i];
-                        }
-                    }
-                    // assign data to graph
-                    plotter->graph(0)->setData(x, y);
-                    // give the axes some labels:
-                    plotter->xAxis->setLabel("delay/steps");
-                    plotter->yAxis->setLabel("probability");
-                    // set axes ranges, so we see all data:
-                    plotter->xAxis->setRange(-(int)backward.size(),forward.size());
-                    plotter->yAxis->setRange(0,max_y);
-                    DEBUG_OUT(3,"Ranges: [" << -(int)backward.size() << ":" << forward.size() << "][" << 0 << ":" << max_y << "]");
-                    plotter->replot();
-                }
-            }
-        } else if(str_args[0]=="mediator-probability" || str_args[0]=="mp") { // show mediator probability
-            shared_ptr<Maze> maze = dynamic_pointer_cast<Maze>(environment);
-            if(maze==nullptr) {
-                TO_CONSOLE("    Allowed for maze-environments only");
-            } else {
-                if(str_args_n==2 && int_args_ok[1]) {
-                    if(!target_activated) {
-                        TO_CONSOLE( "    Target state must be activated to calculate mediator probabilities" );
-                    } else {
-                        // get probabilites for all states
-                        DEBUG_OUT(2,"Calculating mediator distribution...");
-                        observation_ptr_t s1 = current_instance->observation;
-                        observation_ptr_t s3 = target_state;
-                        vector<double> probs;
-                        double max_prob = -DBL_MAX;
-                        idx_t target_idx = 0, state_idx = 0;
-                        for(observation_ptr_t observation : observation_space) {
-                            probability_t prob = delay_dist.get_mediator_probability(s1,observation,s3,int_args[1]);
-                            probs.push_back(prob);
-                            if(prob>max_prob) {
-                                max_prob = prob;
-                            }
-                            if(observation==target_state) {
-                                target_idx=state_idx;
-                            }
-                            DEBUG_OUT(3,"    " << s1 << " --> " << observation << " --> " << s3 << " : " << prob);
-                            ++state_idx;
-                        }
-                        DEBUG_OUT(2,"DONE");
-                        // rescale and define colors
-                        Maze::color_vector_t cols;
-                        for( double prob : probs ) {
-                            if(max_prob!=0) {
-                                cols.push_back( std::make_tuple(1,1-prob/max_prob,1-prob/max_prob) );
-                            } else {
-                                cols.push_back( std::make_tuple(1,1,1) );
-                            }
-                        }
-                        cols[target_idx]=std::make_tuple(0,1,0);
-                        // render
-                        maze->set_state_colors(cols);
-                        maze->render_update();
-                    }
-                } else {
-                    TO_CONSOLE( invalid_args_s );
-                    TO_CONSOLE( mediator_probability_s );
-                }
-            }
-        } else {
-            TO_CONSOLE("    unknown command");
-        }
-    }
+    return;
 }
 
 void TestMaze_II::back_in_history() {
@@ -1405,19 +2010,19 @@ bool MoveByKeys::eventFilter(QObject *obj, QEvent *event)
         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
 	switch(keyEvent->key()) {
 	case Qt::Key_Left: // left
-            maze->process_console_input(QString('l'), true);
+            maze->command_center.execute(QString('l'));
             return true;
 	case Qt::Key_Right: // right
-            maze->process_console_input(QString('r'), true);
+            maze->command_center.execute(QString('r'));
             return true;
 	case Qt::Key_Up: // up
-            maze->process_console_input(QString('u'), true);
+            maze->command_center.execute(QString('u'));
             return true;
 	case Qt::Key_Down: // down
-            maze->process_console_input(QString('d'), true);
+            maze->command_center.execute(QString('d'));
             return true;
 	case Qt::Key_Space: // space
-            maze->process_console_input(QString('s'), true);
+            maze->command_center.execute(QString('s'));
             return true;
 	case Qt::Key_Return:
 	case Qt::Key_Enter:

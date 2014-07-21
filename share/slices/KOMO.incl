@@ -1,0 +1,15 @@
+share/src/Core
+share/src/Algo
+share/src/Gui
+share/src/Ors
+share/src/Optim
+share/src/Motion
+
+share/examples/KOMO
+share/examples/Ors/ors_editor
+
+share/include/lapack
+share/src/extern/SWIFT
+share/src/extern/SWIFT_decomposer
+
+share/data/pr2_model

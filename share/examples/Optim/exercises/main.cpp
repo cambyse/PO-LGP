@@ -1,6 +1,5 @@
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
-#include <Optim/constrained.h>
 #include <stdlib.h>
 
 const char* USE="\n\
@@ -13,26 +12,6 @@ in the MT.cfg (or command line)\n\
 \n\
 The constraint is always as in exercise 3\n";
 
-void displayFunction(ScalarFunction& F){
-  arr X, Y;
-  X.setGrid(2,-1.2,1.2,100);
-  Y.resize(X.d0);
-  for(uint i=0;i<X.d0;i++) Y(i) = F.fs(NoArr, NoArr, X[i]);
-  Y.reshape(101,101);
-  write(LIST<arr>(Y),"z.fct");
-  gnuplot("reset; splot [-1:1][-1:1] 'z.fct' matrix us (1.2*($1/50-1)):(1.2*($2/50-1)):3 w l", false, true);
-}
-
-void displayFunction(VectorFunction& F){
-  arr phi;
-  arr X, Y;
-  X.setGrid(2,-1.2,1.2,100);
-  Y.resize(X.d0);
-  for(uint i=0;i<X.d0;i++){ F.fv(phi, NoArr, X[i]); Y(i) = sumOfSqr(phi); } //phi(0); }
-  Y.reshape(101,101);
-  write(LIST<arr>(Y),"z.fct");
-  gnuplot("reset; splot [-1:1][-1:1] 'z.fct' matrix us (1.2*($1/50-1)):(1.2*($2/50-1)):3 w l", false, true);
-}
 
 //==============================================================================
 //
@@ -62,7 +41,7 @@ void testGradDescent(ScalarFunction& F){
     MT::wait();
 
     x=x0;
-    optNewton(x, F, OPT(verbose=2, stopTolerance=1e-3));
+    optNewton(x, F, OPT(verbose=3, stopTolerance=1e-3));
     cout <<"x_opt=" <<x <<endl;
     gnuplot("load 'plt'", false, true);
     MT::wait();
@@ -182,7 +161,7 @@ void testConstraint(ConstrainedProblem& f, arr& x_start=NoArr, uint iters=10){
     //upate unconstraint problem parameters
     switch(method){
     case squaredPenalty: F.mu *= 10;  break;
-    case augmentedLag:   F.augmentedLagrangian_LambdaUpdate(x);  break;
+    case augmentedLag:   F.aulaUpdate();  break;
     case logBarrier:     F.muLB /= 2;  break;
     }
 
@@ -280,10 +259,9 @@ int main(int argc,char** argv){
 
   switch((TestType)MT::getParameter<int>("exercise")){
   case unconstrained: {
-    ChoiceFunction F;
-    displayFunction(F);
+    displayFunction(ChoiceFunction);
     MT::wait();
-    testGradDescent(F);
+    testGradDescent(ChoiceFunction);
   } break;
   case constrained: {
     ChoiceConstraintFunction F;
@@ -295,7 +273,7 @@ int main(int argc,char** argv){
   } break;
   case gaussNewton: {
     SinusesFunction F;
-    displayFunction(F);
+    displayFunction(Convert(F));
     MT::wait();
     testGaussNewton(F);
   }

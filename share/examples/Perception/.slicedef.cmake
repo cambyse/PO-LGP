@@ -1,7 +1,9 @@
 set(CURRENT_SLICE 
- libav_raw
+ audioEncoder
+bench_rgb2yuv
 videoEncoder
 videoEncoder_threaded
 vision-modules
 vision-opencvRaw
+rewrite-times
  )

@@ -16,7 +16,7 @@ void TEST(CheatSheet) {
   cout << "\n##### MATLAB FUNCTIONS" << endl;
   A = randn(2);
   A = zeros(3, 5);
-  A = ones(3);
+  A = ones(3,3);
   arr I = eye(4);
   // or fill the matrix manually with an initialization list
   A = {1, 3, 7, 8};
@@ -40,10 +40,10 @@ void TEST(CheatSheet) {
   std::cout << "A(0, 0) = " << A(0, 0) << std::endl;
   // access rows
   cout <<"I.row(0): " <<I.row(0) <<endl;
-  cout <<"I.rows(0, 2): " <<I.rows(0, 2) <<endl;
+  cout <<"I.rows(0, 2):\n" <<I.rows(0, 2) <<endl;
   // access columns
   cout <<"I.col(3): " <<I.col(3) <<endl;
-  cout <<"I.rows(1, 4): " <<I.rows(1, 4) <<endl;
+  cout <<"I.rows(1, 4):\n" <<I.rows(1, 4) <<endl;
   // iterate through all elements
   for (const auto& elem : A) std::cout << elem << std::endl;
   for (auto& elem : A) elem += 4.;
@@ -58,13 +58,13 @@ void TEST(CheatSheet) {
   // transpose
   CHECK(A == ~(~A), "A = A^T^T");
   // inplace transpose
-  cout <<"before inplace transpose: " <<A <<endl;
+  cout <<"before inplace transpose:\n" <<A <<endl;
   transpose(A);
-  cout <<"after inplace transpose:" <<A <<endl;
+  cout <<"after inplace transpose:\n" <<A <<endl;
   transpose(A);
-  cout <<"back to normal/after second inplace transpose: " <<A <<endl;
+  cout <<"back to normal/after second inplace transpose:\n" <<A <<endl;
   // inverse
-  cout <<"\nA * A.I: " <<A * inverse(A) <<endl;
-  cout <<"\nA.I * A: " <<inverse(A) * A <<endl;
+  cout <<"\nA * A.I:\n" <<A * inverse(A) <<endl;
+  cout <<"\nA.I * A:\n" <<inverse(A) * A <<endl;
   CHECK_ZERO(maxDiff(A * inverse(A),I),1e-6, "");
 }

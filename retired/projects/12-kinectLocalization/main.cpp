@@ -528,8 +528,8 @@ void computeMode() {
 
   X = ~X;
   Y = ~Y;
-  X.append(ones(X.d1, 1));
-  Y.append(ones(Y.d1, 1));
+  X.append(ones(X.d1,X.d1));
+  Y.append(ones(Y.d1,Y.d1));
   X = ~X;
   Y = ~Y;
 

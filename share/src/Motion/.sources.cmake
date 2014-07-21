@@ -1,16 +1,1 @@
-set(SOURCES ./taskMap_constrained.h
-./motion.cpp
-./taskMap_proxy.h
-./feedbackControl.h
-./motionHeuristics.h
-./taskMap_constrained.cpp
-./taskMap_proxy.cpp
-./motionHeuristics.cpp
-./feedbackControl.cpp
-./taskMap_default.h
-./taskMap_default.cpp
-./pr2_heuristics.h
-./pr2_heuristics.cpp
-./rrt_planner.cpp
-./rrt_planner.h
-./motion.h)
+set(SOURCES ./gamepad2tasks.cpp ./komo.cpp ./mobject.cpp ./feedbackControl.h ./rrt_planner.cpp ./taskMap_constrained.cpp ./taskMap_proxy.cpp ./pr2_heuristics.h ./rrt_planner.h ./komo.h ./adaptiveMotionExecution.cpp ./taskMap_default.h ./motionHeuristics.h ./pr2_heuristics.cpp ./dynamicMovementPrimitives.cpp ./mobject.h ./taskMap_constrained.h ./dynamicMovementPrimitives.h ./motion.cpp ./motion.h ./gamepad2tasks.h ./taskMap_default.cpp ./motionHeuristics.cpp ./feedbackControl.cpp ./adaptiveMotionExecution.h ./taskMap_proxy.h)

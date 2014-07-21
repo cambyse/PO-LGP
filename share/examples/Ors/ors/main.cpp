@@ -15,9 +15,7 @@
 
 void TEST(LoadSave){
   ors::KinematicWorld G;
-  ifstream fil("arm7.ors");
-  fil >>G;
-  G.calc_fwdPropagateFrames();
+  FILE("arm7.ors") >>G;
   cout <<G <<endl;
 
   for(uint i=0;i<0;i++){
@@ -32,35 +30,91 @@ void TEST(LoadSave){
 // Jacobian test
 //
 
-namespace T1{
-  uint i,j;
-  ors::KinematicWorld *G;
-  ors::Vector rel;
-  ors::Vector axis;
-  static void f_pos (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->kinematicsPos(y,*J,i,&rel); }
-  //static void f_hess (arr &J, arr *H, const arr &x,void*){  G->setJointState(x);  G->jacobianPos(J,i,&rel);  if(H) G->hessianPos (*H,i,&rel); }
-  static void f_vec (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->kinematicsVec(y,*J,i,&axis); }
-  //static void f3 (arr &y,const arr &x,void*){  G->setJointState(x);  G->kinematicsOri2(y,i,axis); }
-  //static void df3(arr &J,const arr &x,void*){  G->setJointState(x);  G->jacobianOri2(J,i,axis); }
+void TEST(Kinematics){
+  struct MyFct:VectorFunction{
+    enum Mode {Pos, Vec, Quat} mode;
+    ors::KinematicWorld& W;
+    ors::Body *b;
+    ors::Vector& vec;
+    MyFct(Mode _mode, ors::KinematicWorld &_W, ors::Body *_b, ors::Vector &_vec): mode(_mode), W(_W), b(_b), vec(_vec){}
+    virtual void fv(arr& y, arr& J, const arr& x){
+      W.setJointState(x);
+      switch(mode){
+        case Pos:  W.kinematicsPos(y,J,b,&vec); break;
+        case Vec:  W.kinematicsVec(y,J,b,&vec); break;
+        case Quat: W.kinematicsQuat(y,J,b); break;
+      }
+    }
+    VectorFunction& operator()(){ return *this; }
+  };
+
+  //ors::KinematicWorld G("test.ors");
+  ors::KinematicWorld G("kinematicTests.kvg");
+  //ors::KinematicWorld G("../../../data/pr2_model/pr2_model.ors");
+
+  for(uint k=0;k<100;k++){
+    ors::Body *b = G.bodies.rndElem();
+    ors::Vector vec;
+    vec.setRandom();
+    arr x(G.getJointStateDimension());
+    rndUniform(x,-.5,.5,false);
+//    x/=sqrt(sumOfSqr(x.subRange(0,3)));
+
+    cout <<"kinematicsPos:  "; checkJacobian(MyFct(MyFct::Pos , G, b, vec)(), x, 1e-5);
+    cout <<"kinematicsVec:  "; checkJacobian(MyFct(MyFct::Vec , G, b, vec)(), x, 1e-5);
+    cout <<"kinematicsQuat: "; checkJacobian(MyFct(MyFct::Quat, G, b, vec)(), x, 1e-5);
+
+    //checkJacobian(Convert(T1::f_hess, NULL), x, 1e-5);
+  }
 }
 
-void TEST(Kinematics){
-  //ors::KinematicWorld G("test.ors");
-  ors::KinematicWorld G("../../../data/pr2_model/pr2_clean_comfi.ors");
-  uint n=G.getJointStateDimension();
-  arr x(n);
-  T1::axis.set(1,0,0);
-  T1::G = &G;
-  for(uint k=0;k<100;k++){
-    T1::i=rnd.num(0,G.bodies.N-1);
-    T1::rel.setRandom();
-    rndUniform(x,-.5,.5,false);
-    //G.gl().text.clear() <<"k=" <<k <<"  gradient checks of kinematics on random postures";
-    //G.watch(false);
-    checkJacobian(Convert(T1::f_pos, NULL), x, 1e-5);
-    //checkJacobian(Convert(T1::f_hess, NULL), x, 1e-5);
-    checkJacobian(Convert(T1::f_vec, NULL), x, 1e-5);
+//===========================================================================
+//
+// Jacobian test
+//
+
+void TEST(QuaternionKinematics){
+  ors::KinematicWorld G("kinematicTestQuat.kvg");
+
+  for(uint k=0;k<10;k++){
+    ors::Quaternion target;
+    target.setRandom();
+    G.getShapeByName("ref")->rel.rot = target;
+    arr x;
+    G.getJointState(x);
+    for(uint t=0;t<100;t++){
+      arr y,J;
+      G.kinematicsQuat(y, J, G.bodies.last());  //get the new endeffector position
+      arr Jinv = pseudoInverse(J, NoArr, 1e-4); //~J*inverse_SymPosDef(J*~J);
+      if(scalarProduct(ARRAY(target),y)<0.) target.flipSign();
+      x += 0.05 * Jinv * (ARRAY(target)-y);                  //simulate a time step (only kinematically)
+      G.setJointState(x);
+      G.watch(false, STRING("follow redundant trajectory -- time " <<t));
+    }
   }
+}
+
+//===========================================================================
+//
+// copy operator test
+//
+
+void TEST(Copy){
+  ors::KinematicWorld G1("../../../data/pr2_model/pr2_model.ors");
+  ors::KinematicWorld G2(G1);
+
+  G1.checkConsistency();
+  G2.checkConsistency();
+
+  G1 >>FILE("z.1");
+  G2 >>FILE("z.2");
+
+  charA g1,g2;
+  g1.readRaw(FILE("z.1"));
+  g2.readRaw(FILE("z.2"));
+
+  CHECK(g1==g2,"copy operator failed!")
+  cout <<"** copy operator success" <<endl;
 }
 
 //===========================================================================
@@ -79,7 +133,6 @@ void TEST(KinematicSpeed){
   for(uint k=0;k<NUM;k++){
     rndUniform(x,-.5,.5,false);
     G.setJointState(x);
-    G.calc_fwdPropagateFrames();
   }
   cout <<"kinematics timing: "<< MT::timerRead() <<"sec" <<endl;
 #endif
@@ -111,8 +164,8 @@ void TEST(KinematicSpeed){
 namespace Ctest{
   ors::KinematicWorld *G;
   void f(arr& c, arr *dfdx, const arr &x,void*){
-    G->setJointState(x); G->calc_fwdPropagateFrames();
-    G->computeProxies();
+    G->setJointState(x);
+    G->stepSwift();
     G->kinematicsProxyCost(c, (dfdx?*dfdx:NoArr), .2);
   }
 }
@@ -130,8 +183,7 @@ void TEST(Contacts){
   x = G.q;
   for(t=0;t<100;t++){
     G.setJointState(x);
-    G.calc_fwdPropagateFrames();
-    G.computeProxies();
+    G.stepSwift();
 
     G.reportProxies();
 
@@ -140,7 +192,7 @@ void TEST(Contacts){
     //G.watch(true);
     G.watch(false, STRING("t=" <<t <<"  movement along negative contact gradient (using SWIFT to get contacts)"));
     //x += inverse(grad)*(-.1*c);
-    x -= 1e-3*grad; //.1 * (invJ * grad);
+    x -= 3e-3*grad; //.1 * (invJ * grad);
 
     checkJacobian(Convert(Ctest::f, NULL), x, 1e10);
   }
@@ -201,7 +253,6 @@ void TEST(PlayStateSequence){
   arr v(X.d1); v=0.;
   for(uint t=0;t<X.d0;t++){
     G.setJointState(X[t](),v);
-    G.calc_fwdPropagateFrames();
     G.watch(false, STRING("replay of a state sequence -- time " <<t));
   }
 }
@@ -250,13 +301,11 @@ void TEST(MeshShapesInOde){
 
 void TEST(FollowRedundantSequence){  
   ors::KinematicWorld G("arm7.ors");
-  //init();
-  uint N=G.bodies.N-2;
 
   uint t,T,n=G.getJointStateDimension();
-  arr x(n),v,z,J,invJ;
+  arr x(n),y,J,invJ;
   x=.8;     //initialize with intermediate joint positions (non-singular positions)
-  ors::Vector rel(0,0,.3); //this frame describes the relative position of the endeffector wrt. 7th body
+  ors::Vector rel = G.getShapeByName("endeff")->rel.pos; //this frame describes the relative position of the endeffector wrt. 7th body
 
   //-- generate a random endeffector trajectory
   arr Z,Zt; //desired and true endeffector trajectories
@@ -264,9 +313,8 @@ void TEST(FollowRedundantSequence){
   Z *= .8;
   T=Z.d0;
   G.setJointState(x);
-  G.calc_fwdPropagateFrames();
-  G.kinematicsPos(z, NoArr, N, &rel);
-  for(t=0;t<T;t++) Z[t]() += z; //adjust coordinates to be inside the arm range
+  G.kinematicsPos(y, NoArr, G.bodies.last(), &rel);
+  for(t=0;t<T;t++) Z[t]() += y; //adjust coordinates to be inside the arm range
   plotLine(Z);
   G.gl().add(glDrawPlot,&plotModule);
   G.watch(false);
@@ -274,13 +322,11 @@ void TEST(FollowRedundantSequence){
   for(t=0;t<T;t++){
     //Z[t] is the desired endeffector trajectory
     //x is the full joint state, z the endeffector position, J the Jacobian
-    G.kinematicsPos(z, J, N, &rel);  //get the new endeffector position
-    invJ = inverse(J);       //pseudo inverse
-    v = invJ * (Z[t]-z);     //multiply endeffector velocity with inverse jacobian
-    x += v;                  //simulate a time step (only kinematically)
+    G.kinematicsPos(y, J, G.bodies.last(), &rel);  //get the new endeffector position
+    invJ = ~J*inverse_SymPosDef(J*~J);
+    x += invJ * (Z[t]-y);                  //simulate a time step (only kinematically)
     G.setJointState(x);
-    G.calc_fwdPropagateFrames();
-    //cout <<J * invJ <<invJ <<v <<endl <<x <<endl <<"tracking error = " <<maxDiff(Z[t],z) <<endl;
+//    cout <<J * invJ <<endl <<x <<endl <<"tracking error = " <<maxDiff(Z[t],y) <<endl;
     G.watch(false, STRING("follow redundant trajectory -- time " <<t));
     //G.gl().timedupdate(.01);
   }
@@ -305,7 +351,7 @@ void TEST(FollowRedundantSequence){
 //---------- test standard dynamic control
 void TEST(Dynamics){
   ors::KinematicWorld G("arm7.ors");
-  //G.makeLinkTree();
+//  G.makeLinkTree();
   cout <<G <<endl;
 
   struct DiffEqn:VectorFunction{
@@ -314,8 +360,7 @@ void TEST(Dynamics){
     bool friction;
     DiffEqn(ors::KinematicWorld& _G):G(_G),friction(false){}
     void fv(arr& y,arr&,const arr& x){
-      G.setJointState(x[0],x[1]);
-      G.calc_fwdPropagateFrames();
+      G.setJointState(x[0], x[1], true);
       if(!u.N) u.resize(x.d1).setZero();
       if(friction) u = -10. * x[1];
       G.clearForces();
@@ -337,6 +382,8 @@ void TEST(Dynamics){
 
   ofstream z("z.dyn");
   G.clearForces();
+  G.watch();
+//  for(ors::Body *b:G.bodies){ b->mass=1.; b->inertia.setZero(); }
 
   for(t=0;t<T;t++){
     if(t>=500){ //hold steady
@@ -353,7 +400,6 @@ void TEST(Dynamics){
       qd +=    dt*qdd;
       q  += .5*dt*qd;
       G.setJointState(q,qd);
-      G.calc_fwdPropagateFrames();
       //cout <<q <<qd <<qdd <<endl;
       G.gl().text.clear() <<"t=" <<t <<"  torque controlled damping (acc = - vel)\n(checking consistency of forward and inverse dynamics),  energy=" <<G.getEnergy();
     }else{
@@ -414,8 +460,7 @@ void TEST(ContactDynamics){
   for(t=0;t<T;t++){
     if(!(t%1)){
       G.setJointState(q,qd);
-      G.zeroGaugeJoints();
-      G.calc_fwdPropagateFrames();
+      //G.zeroGaugeJoints();
       G.getJointState(q,qd);
     }
     z <<q <<qd <<qdd <<endl;
@@ -469,10 +514,12 @@ void TEST(BlenderImport){
 #endif
 
 int MAIN(int argc,char **argv){
-  testLimits();
+  
+  testQuaternionKinematics();
   return 0;
 
   testLoadSave();
+  testCopy();
   testPlayStateSequence();
   testKinematics();
   testKinematicSpeed();

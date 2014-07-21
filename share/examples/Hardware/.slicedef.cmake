@@ -1,9 +1,6 @@
 set(CURRENT_SLICE 
- g4_data
-g4_module
-g4_ors
-g4_player
+ flycap
 g4_raw
 kinect
-ueyecamera
+kinect_module
  )

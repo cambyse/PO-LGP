@@ -1,12 +1,13 @@
 #include "BatchMaze.h"
 
-#include "util.h"
+#include "util/util.h"
 #include "Maze/Maze.h"
-#include "KMarkovCRF.h"
-#include "LookAheadSearch.h"
-#include "UTree.h"
-#include "LinearQ.h"
+#include "Learner/KMarkovCRF.h"
+#include "Planning/LookAheadSearch.h"
+#include "Learner/UTree.h"
+#include "Learner/LinearQ.h"
 #include "SmoothingKernelSigmoid.h"
+#include "Representation/DoublyLinkedInstance.h"
 
 #include <omp.h>
 
@@ -29,7 +30,7 @@
 #else
 #define DEBUG_LEVEL 1
 #endif
-#include "debug.h"
+#include "util/debug.h"
 
 #define LOG_COMMENT(x) DEBUG_OUT(2,x); log_file << "# " << x << std::endl;
 #define LOG(x) DEBUG_OUT(2,x); log_file << x << std::endl;
@@ -45,6 +46,7 @@ using std::min;
 using std::max;
 
 using util::clamp;
+using util::INVALID;
 
 const vector<QString> BatchMaze::mode_vector = {
     "RANDOM",
@@ -363,7 +365,7 @@ int BatchMaze::run_active() {
 
         // use pointers to serialize initialization
         Maze                   * maze                 = nullptr;
-        instance_t             * current_instance     = nullptr;
+        instance_ptr_t           current_instance;
         LookAheadSearch        * look_ahead_search    = nullptr;
         KMarkovCRF             * crf                  = nullptr;
         UTree                  * utree                = nullptr;
@@ -386,10 +388,11 @@ int BatchMaze::run_active() {
             observation_ptr_t start_observation = observation_space->random_element();
             maze = new Maze(switch_double("-e"));
             maze->set_current_observation(start_observation);
-            const_instanceIt_t maze_instance = maze->get_current_instance()->const_last();
-            current_instance = instance_t::create(maze_instance->action,maze_instance->observation,maze_instance->reward,maze_instance-1);
+            const_instance_ptr_t maze_instance = maze->get_current_instance()->const_last();
+            current_instance = DoublyLinkedInstance::create(maze_instance->action,maze_instance->observation,maze_instance->reward,maze_instance->const_prev(),INVALID);
 
             // initialize look ahead search
+            // TODO: This should be done using LookAheadPolicy as in PlannerTest.cpp
             look_ahead_search = new LookAheadSearch(switch_double("-d"));
 
             // initialize learners
@@ -470,7 +473,7 @@ int BatchMaze::run_active() {
                 action = action_space->random_element();
 	    }
 	    maze->perform_transition(action,observation,reward);
-	    current_instance = current_instance->append_instance(action,observation,reward);
+	    current_instance = current_instance->append(action,observation,reward);
 	    if(mode=="SPARSE") {
 	      crf->add_action_observation_reward_tripel(action,observation,reward,false);
 	    } else if(mode=="UTREE_VALUE" || mode=="UTREE_PROB") {
@@ -690,7 +693,7 @@ int BatchMaze::run_active() {
 
                 // perform transition
                 maze->perform_transition(action,observation,reward);
-                current_instance = current_instance->append_instance(action,observation,reward);
+                current_instance = current_instance->append(action,observation,reward);
 
                 // prune search tree
                 if(switch_bool("-pruneTree")) {
@@ -881,7 +884,7 @@ int BatchMaze::run_active() {
 
             // delete pointers
             delete maze;
-            delete current_instance;
+            current_instance->detach_reachable();
             delete look_ahead_search;
             delete crf;
             delete utree;

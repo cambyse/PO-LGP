@@ -1,12 +1,10 @@
 #include "MazeObservation.h"
 
-#include "../util/Macro.h"
-
 #include <sstream>
 #include <tuple> // for std::tie
 
 #define DEBUG_LEVEL 1
-#include "../debug.h"
+#include "../util/debug.h"
 
 using std::string;
 

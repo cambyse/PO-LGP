@@ -1,0 +1,8 @@
+option(WITH_FREENECT "Use libfreenect for Kinect" ON)
+if(WITH_FREENECT)
+    include(FindPkgConfig)
+    pkg_check_modules(LIBFREENECT libfreenect)
+else(WITH_FREENECT)
+    message(STATUS "Kinect support disabled")
+    unset(LIBFREENECT_FOUND CACHE)
+endif(WITH_FREENECT)

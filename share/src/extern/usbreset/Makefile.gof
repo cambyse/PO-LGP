@@ -5,4 +5,4 @@ OUTPUT := $(BASE)/bin/$(NAME).exe
 SRCS = $(shell find . -maxdepth 1 -name '*.c' )
 OBJS = $(SRCS:%.c=%.o)
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

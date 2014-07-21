@@ -74,14 +74,14 @@ double sum_of_dkl(const model_list_t& models, const arr& x_s) {
   arr means(models.N);
   arr var(models.N);
 	uint i=0; ams_model* m;
-  for_list(i, m, models) 
+  for_list(Type,  m,  models) 
     m->modes(means(i), var(i), x_s);
 
   // precompute likelihoods (for they don't change in y)
   arr log_likelihood(models.N);
   arr likelihood(models.N);
 	i=0;
-  for_list(i, m, models) {
+  for_list(Type,  m,  models) {
     log_likelihood(i) = m->log_likelihood();  
 
     // this is unfortunately numerical unstable, but I don't know how to fix it
@@ -90,7 +90,7 @@ double sum_of_dkl(const model_list_t& models, const arr& x_s) {
 
   double sum_dkl=0; 
   i=0;
-  for_list(i, m, models) { 
+  for_list(Type,  m,  models) { 
     arr sigma1 = ARR(var(i));
     sigma1.reshape(1,1);
     for_array(j, mm, models) {

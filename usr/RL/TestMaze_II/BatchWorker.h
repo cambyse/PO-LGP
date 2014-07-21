@@ -46,6 +46,7 @@ private:
     TCLAP::SwitchArg pruningOff_arg;
     TCLAP::ValueArg<int> incF_arg;
     TCLAP::ValueArg<double> delta_arg;
+    TCLAP::ValueArg<int> maxLearnIteration_arg;
 
     bool args_ok = false;
 
@@ -55,7 +56,7 @@ private:
         std::shared_ptr<Environment> env,
         std::shared_ptr<HistoryObserver> obs,
         const int& length,
-        instance_t*& i);
+        instance_ptr_t i);
 
     void train_CRF(std::shared_ptr<FeatureLearner> learner, double& likelihood, int& features);
     void train_value_based_UTree(std::shared_ptr<FeatureLearner> learner, int& size, double& score);

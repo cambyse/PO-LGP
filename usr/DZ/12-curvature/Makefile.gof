@@ -5,5 +5,5 @@ STANIMIR = 1
 DMITRY = 1
 TRIM64 =1
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk
 

@@ -126,15 +126,15 @@ void TEST(Mesh) {
 void TEST(Obj) {
   ors::Mesh mesh,mesh2;
 
-  //mesh.readObjFile("../../external/3dmodel/obj/gipshand2-273k.obj");
-  mesh.readObjFile("base-male-nude.obj");
-  //mesh.readObjFile("../../../3dmodel/obj/gipshand2-273k.obj");
-  //mesh.readObjFile("../../../3dmodel/obj/base-male-nude.obj");
+  //mesh.readObjFile(FILE("../../external/3dmodel/obj/gipshand2-273k.obj"));
+  mesh.readObjFile(FILE("base-male-nude.obj"));
+  //mesh.readObjFile(FILE("../../../3dmodel/obj/gipshand2-273k.obj"));
+  //mesh.readObjFile(FILE("../../../3dmodel/obj/base-male-nude.obj"));
   mesh.scale(.1,.1,.1);
   mesh.computeNormals();
-  mesh2.readObjFile("magnolia.obj");
-  mesh2.scale(.01,.01,.01);
-  mesh2.computeNormals();
+//  mesh2.readObjFile(FILE("magnolia.obj"));
+//  mesh2.scale(.01,.01,.01);
+//  mesh2.computeNormals();
   OpenGL gl;
   gl.text="testing Mesh";
   gl.add(draw2,0);
@@ -231,6 +231,20 @@ void TEST(Texture) {
   gl.watch();
 }
 
+//===========================================================================
+
+void TEST(OfflineRendering){
+  OpenGL gl;
+  gl.update();
+  gl.add(draw1,0);
+  gl.renderInBack(20, 22);
+
+  write_ppm(gl.captureImage,"z.ppm");
+  OpenGL gl2;
+  gl2.watchImage(gl.captureImage, true, 1);
+  cout <<"returned from watch - watch again" <<endl;
+}
+
 /************ test clicking on and identifying objects in the scene ************/
 
 void draw3(void*){
@@ -277,8 +291,9 @@ void TEST(Image) {
 int MAIN(int argc,char **argv){
   MT::initCmdLine(argc,argv);
 
-  //qtCheckInitialized();
-  
+  testOfflineRendering();
+  return 0;
+
   testTeapot();
   testGrab();
   testMultipleViews();

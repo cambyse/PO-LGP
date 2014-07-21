@@ -9,8 +9,7 @@ QT += core \
 HEADERS += \
     ../Config.h \
     \
-    ../util.h \
-    ../util/Macro.h \
+    ../util/util.h \
     ../util/ProgressBar.h \
     ../util/ColorOutput.h \
     ../util/QtUtil.h \
@@ -24,19 +23,22 @@ HEADERS += \
     \
     ../optimization/LBFGS_Optimizer.h \
     \
-    ../Feature.h \
-    ../Instance.h \
-    ../AbstractAction.h \
-    ../AbstractObservation.h \
-    ../AbstractReward.h \
-    ../ListedReward.h \
+    ../Representation/Feature.h \
+    \
+    ../Representation/AbstractInstance.h \
+    ../Representation/DoublyLinkedInstance.h \
+    ../Representation/AbstractAction.h \
+    ../Representation/AbstractObservation.h \
+    ../Representation/AbstractReward.h \
+    ../Representation/ListedReward.h \
     \
     ../Predictor.h \
     ../Environment.h \
     ../PredictiveEnvironment.h \
     ../Visualizer.h \
     ../HistoryObserver.h \
-    ../FeatureLearner.h \
+    ../Learner/FeatureLearner.h \
+    ../SpaceManager.h \
     \
     ../Maze/Maze.h \
     ../Maze/MazeAction.h \
@@ -46,17 +48,19 @@ HEADERS += \
     ../CheeseMaze/CheeseMazeAction.h \
     ../CheeseMaze/CheeseMazeObservation.h \
     \
-    ../LookAheadSearch.h \
+    ../Planning/Policy.h \
+    ../Planning/LookAheadSearch.h \
+    ../Planning/LookAheadPolicy.h \
     \
-    ../KMarkovCRF.h \
-    ../UTree.h \
-    ../LinearQ.h \
+    ../Learner/KMarkovCRF.h \
+    ../Learner/UTree.h \
+    ../Learner/LinearQ.h \
     \
     ../BatchWorker.h
 SOURCES += \
     main.cpp \
     \
-    ../util.cpp \
+    ../util/util.cpp \
     ../util/ProgressBar.cpp \
     ../util/ColorOutput.cpp \
     ../util/QtUtil.cpp \
@@ -70,18 +74,20 @@ SOURCES += \
     \
     ../optimization/LBFGS_Optimizer.cpp \
     \
-    ../Feature.cpp \
-    ../Instance.cpp \
-    ../AbstractAction.cpp \
-    ../AbstractObservation.cpp \
-    ../AbstractReward.cpp \
-    ../ListedReward.cpp \
+    ../Representation/Feature.cpp \
     \
-    ../Environment.cpp \
+    ../Representation/AbstractInstance.cpp \
+    ../Representation/DoublyLinkedInstance.cpp \
+    ../Representation/AbstractAction.cpp \
+    ../Representation/AbstractObservation.cpp \
+    ../Representation/AbstractReward.cpp \
+    ../Representation/ListedReward.cpp \
+    \
     ../PredictiveEnvironment.cpp \
     ../Visualizer.cpp \
     ../HistoryObserver.cpp \
-    ../FeatureLearner.cpp \
+    ../Learner/FeatureLearner.cpp \
+    ../SpaceManager.cpp \
     \
     ../Maze/Maze.cpp \
     ../Maze/MazeAction.cpp \
@@ -91,11 +97,12 @@ SOURCES += \
     ../CheeseMaze/CheeseMazeAction.cpp \
     ../CheeseMaze/CheeseMazeObservation.cpp \
     \
-    ../LookAheadSearch.cpp \
+    ../Planning/LookAheadSearch.cpp \
+    ../Planning/LookAheadPolicy.cpp \
     \
-    ../KMarkovCRF.cpp \
-    ../UTree.cpp \
-    ../LinearQ.cpp \
+    ../Learner/KMarkovCRF.cpp \
+    ../Learner/UTree.cpp \
+    ../Learner/LinearQ.cpp \
     \
     ../BatchWorker.cpp
 LIBS += -llbfgs \

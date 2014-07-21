@@ -2,10 +2,10 @@ BASE = ../..
 NAME   = lib$(shell basename `pwd`)
 OUTPUT := $(BASE)/lib/$(NAME).so
 
-LIBS += -lportaudio
+#PORTAUDIO = 1 #please set this in your local gofMake/config.mk...
 DEPEND = Core
 
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS = $(SRCS:%.cpp=%.o)
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk

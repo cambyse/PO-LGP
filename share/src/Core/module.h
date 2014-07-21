@@ -1,6 +1,6 @@
 /*  ---------------------------------------------------------------------
-    Copyright 2013 Marc Toussaint
-    email: mtoussai@cs.tu-berlin.de
+    Copyright 2014 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
     
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,6 +15,7 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
+
 
 /** The purpose of the 'Module' package is to provide a most minimal
     interface for method-programmers to DEFINE Modules. This interface
@@ -39,26 +40,25 @@ typedef MT::Array<Access*> AccessL;
 
 //===========================================================================
 //
-/** VariableAccess is an abstraction of how a module may access
-    variables. Its implementation is engine dependent. Currently a
+/** Variable is an abstraction of how a module may access
+    variables (data). Its implementation is engine dependent. Currently a
     shared memory (mutexed and revisioned) is used. ROS topics could
     equally be used. */
 
-struct VariableAccess{
+struct Variable{
   MT::String name;  ///< Variable name
   Type *type;       ///< Variable type
-  void *data;       ///< pointer to data struct; Access_typed knows how to cast it
-  double data_time; ///< time of origin of the data
-  VariableAccess(const char* _name):name(_name), type(NULL), data(NULL){}
+  void *data;       ///< pointer to data struct; Access_typed knows how to cast it [alternative 'virtual template' not possible]
+  double data_time; ///< time of origin of the data  --- MT: this is redundant to the revision_time?? or have virtual dataTime()
+  Variable(const char* _name):name(_name), type(NULL), data(NULL)/*, data_time(0.)*/{}
   virtual int writeAccess(Module*) = 0; ///< tell the engine that a module accesses -> mutex or publish
   virtual int readAccess(Module*) = 0;  ///< tell the engine that a module accesses
   virtual int deAccess(Module*) = 0;    ///< tell the engine that the module de-accesses
   virtual double revisionTime() = 0;
   virtual int revisionNumber() = 0;
-  virtual int waitForNextWriteAccess() = 0;
+  virtual int waitForNextRevision() = 0;
   virtual int waitForRevisionGreaterThan(int rev) = 0; //returns the revision
 };
-
 
 extern Module *currentlyCreating;
 
@@ -67,14 +67,14 @@ extern Module *currentlyCreating;
 /** This is the core abstraction for users to code modules: derive
     from this class (and perhaps REGISTER_MODULE(...)) to enable the
     engine to instantiate your module and run/schedule it. The
-    accesses stores all accesses of this module; the engine can
+    accesses store all accesses of this module; the engine can
     automatically analyze them and instantiate respective variables if
     necessary */
 
 struct Module{
   MT::String name;
   AccessL accesses;
-  struct ModuleThread *thread;
+  struct Module_Thread *thread;
 
   /** DON'T open drivers/devices/files or so here in the constructor,
       but in open(). Sometimes a module might be created only to see
@@ -113,11 +113,11 @@ struct Access{
   MT::String name; ///< name; by default the access' name; redefine to a variable's name to autoconnect
   Type *type;      ///< type; must be the same as the variable's type
   Module *module;  ///< which module is this a member of
-  VariableAccess *var; ///< which variable does it access
-  Access(const char* _name):name(_name), type(NULL), module(NULL), var(NULL){}
-  int readAccess(){  CHECK(var,""); return var->readAccess(module); }
-  int writeAccess(){ CHECK(var,""); return var->writeAccess(module); }
-  int deAccess(){    CHECK(var,""); return var->deAccess(module); }
+  Variable *var;   ///< which variable does it access
+  Access(const char* _name, Type *_type, Module *_module, Variable *_var):name(_name), type(_type), module(_module), var(_var){}
+  int readAccess(){  CHECK(var,"This Access has not been associated to any Variable"); return var->readAccess(module); }
+  int writeAccess(){ CHECK(var,"This Access has not been associated to any Variable"); return var->writeAccess(module); }
+  int deAccess(){    CHECK(var,"This Access has not been associated to any Variable"); return var->deAccess(module); }
 };
 
 
@@ -130,19 +130,26 @@ struct Access_typed:Access{
     Access_typed<T> *a;
     ReadToken(Access_typed<T> *_a):a(_a){ a->readAccess(); }
     ~ReadToken(){ a->deAccess(); }
-    operator const T&(){ return (*a)(); }
-    const T& operator()(){ return (*a)(); }
+    const T* operator->(){ return a->object(); }
+    operator const T&(){ return *a->object(); }
+    const T& operator()(){ return *a->object(); }
   };
   struct WriteToken{
     Access_typed<T> *a;
     WriteToken(Access_typed<T> *_a):a(_a){ a->writeAccess(); }
     ~WriteToken(){ a->deAccess(); }
-    WriteToken& operator=(const T& x){ (*a)() = x; return *this; }
-    T& operator()(){ return (*a)(); }
+    WriteToken& operator=(const T& x){ (*a->object()) = x; return *this; }
+    T* operator->(){ return a->object(); }
+    operator T&(){ return *a->object(); }
+    T& operator()(){ return *a->object(); }
   };
 
-  Access_typed(const char* name, Module *m=NULL, VariableAccess *d=NULL):Access(name){ type=new Type_typed<T, void>();  module=currentlyCreating; var=d; if(module) module->accesses.append(this); }
-  T& operator()(){ CHECK(var && var->data,""); return *((T*)var->data); }
+  Access_typed(const char* name, Variable *v=NULL):Access(name, new Type_typed<T, void>(), currentlyCreating, v){
+    if(module) module->accesses.append(this);
+  }
+  ~Access_typed(){ delete type; }
+  T* object(){ CHECK(var && var->data,""); return ((T*)var->data); }
+  T& operator()(){ return *object(); }
   ReadToken get(){ return ReadToken(this); } ///< read access to the variable's data
   WriteToken set(){ return WriteToken(this); } ///< write access to the variable's data
   double& tstamp(){ CHECK(var,""); return var->data_time; } ///< reference to the data's time. Variable should be locked while accessing this.
@@ -158,7 +165,7 @@ struct Access_typed:Access{
 #define ACCESS(type, name)\
 struct __##name##__Access:Access_typed<type>{ \
   __##name##__Access():Access_typed<type>(#name){} \
-} name; \
+} name;
 
 
 //===========================================================================

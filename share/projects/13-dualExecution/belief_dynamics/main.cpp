@@ -1,9 +1,8 @@
 #include <Core/array.h>
 #include <Gui/plot.h>
-#include <Optim/constrained.h>
 #include <Optim/optimization.h>
 
-static double a=1e-4;
+//static double a=1e-4;
 static double b0=.1;
 
 double xi(double b, bool touch){
@@ -33,8 +32,9 @@ void integrate(){
 
 struct MiniBeliefProblem:KOrderMarkovFunction {
   double tau;
-  enum BeliefRewardModel { none, beliefGoal, sticky } mode;
+  enum BeliefRewardModel { none=0, beliefGoal, sticky } mode;
   double margin, alpha, stickyPrec, beliefDynPrec, beliefGoalPrec, posGoalPrec;
+
   MiniBeliefProblem(){
     margin = MT::getParameter<double>("margin", .01);
     alpha = MT::getParameter<double>("alpha", 10.);
@@ -49,9 +49,11 @@ struct MiniBeliefProblem:KOrderMarkovFunction {
   uint get_k(){ return 2; }
   uint dim_x(){ return 2; }
   uint dim_phi(uint t);
-  uint dim_g(uint t){ return 1; }
-  arr get_prefix(){ arr x(2,2); x=1.; return x; }
+  uint dim_g(uint t){ return 1; } //1
+  arr get_prefix(){ arr x(2,dim_x()); x=1.; return x; }
 };
+
+//===========================================================================
 
 uint MiniBeliefProblem::dim_phi(uint t){
   if(t==get_T()){
@@ -64,14 +66,16 @@ uint MiniBeliefProblem::dim_phi(uint t){
 
 void MiniBeliefProblem::phi_t(arr& phi, arr& J, uint t, const arr& x_bar){
   uint T=get_T(), n=dim_x(), k=get_k();
+  phi.clear();
 
   //-- pos transition costs
-  double H=10.;
-  phi.append(H*(x_bar(2,0)-2.*x_bar(1,0)+x_bar(0,0))); //penalize acceleration
+  double H=100.;
+  phi.append(H*(x_bar(0,0)-2.*x_bar(1,0)+x_bar(2,0))); //penalize acceleration
 
   //-- belief transition costs
   double xi = MT::sigmoid(-x_bar(1,0)/margin+1);
   phi.append(beliefDynPrec*(x_bar(2,1) - (1.-tau*alpha*xi)*x_bar(1,1) - tau*b0)); //penalize acceleration
+//  phi.append(0.);
 
   //-- final pos cost
   if(t==T) phi.append(posGoalPrec*(x_bar(2,0)-.1));
@@ -91,7 +95,7 @@ void MiniBeliefProblem::phi_t(arr& phi, arr& J, uint t, const arr& x_bar){
     J.resize(phi.N, k+1, n).setZero();
 
     //-- pos transition costs
-    J(0,2,0) = H*1.;  J(0,1,0) = -H*2.;  J(0,0,0) = H*1.;
+    J(0,0,0) = H*1.;  J(0,1,0) = -H*2.;  J(0,2,0) = H*1.;
 
     //-- belief transition costs
     J(1,2,1) = beliefDynPrec;  J(1,1,1) = -beliefDynPrec*(1.-tau*alpha*xi);
@@ -129,15 +133,21 @@ void optim(){
   }
 
   //-- optimize
-  rndUniform(x,-10.,-1.);
+  rndUniform(x,-1.,1.);
   x=1.;
   arr dual;
-  optConstrained(x, dual, Convert(P), OPT(verbose=2, useAdaptiveDamping=false, constrainedMethod=augmentedLag));
+  if(P.dim_g(0)>0){
+    optConstrained(x, dual, Convert(P));
+  }else{
+    optNewton(x, Convert(P), OPT(verbose=2, stopTolerance=1e-3, constrainedMethod=augmentedLag));
+  }
 
   for(double& x:dual) if(x>0.) x=1.;
 
   write(LIST<arr>(x, dual),"z.output");
   gnuplot("plot [:][-.1:] 'z.output' us 1 t 'position','' us 2 t 'uncertainty', '' us 3 t 'dual>0'", true, true);
+//  write(LIST<arr>(x, dual),"z.output");
+//  gnuplot("plot [:][-.1:] 'z.output' us 1 t 'position','' us 2 t 'uncertainty', '' us 3 t 'dual>0'", true, true);
 }
 
 //===========================================================================

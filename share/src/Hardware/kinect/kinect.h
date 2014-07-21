@@ -2,15 +2,16 @@
 #define _KINECT_H_
 
 #include <Core/module.h>
+#include <functional>
 
 #define Kinect_image_width 640
 #define Kinect_image_height 480
 
 struct KinectPoller : Module {
-  struct sKinectInterface *s;
+  struct sKinectPoller *s;
 
   ACCESS(byteA, kinect_rgb)
-  ACCESS(MT::Array<uint16_t>, kinect_depth)
+  ACCESS(uint16A, kinect_depth)
 
   KinectPoller();
   virtual ~KinectPoller();
@@ -20,23 +21,26 @@ struct KinectPoller : Module {
   void close();
 };
 
-struct Kinect2PointCloud: Module {
-  ACCESS(byteA, kinect_rgb)
-  ACCESS(MT::Array<uint16_t>, kinect_depth)
+namespace MLR {
+	// pack 16bit depth image into 3 8-bit channels
+	void pack_kindepth2rgb(const uint16A& depth, byteA& buffer);
 
-  ACCESS(arr, kinect_points);
-  ACCESS(arr, kinect_pointColors);
+	/// Typedef for depth image received event callbacks
+	typedef std::function<void(const uint16A&, double)> kinect_depth_cb;
+	/// Typedef for video image received event callbacks
+	typedef std::function<void(const byteA&, double)> kinect_video_cb;
 
-  arr pts,cols;
-  floatA depth;
-  byteA rgb; //helpers
+	class KinectCallbackReceiver {
+	private:
+		struct sKinectCallbackReceiver *s;
+		int cameraNum;
+	public:
+		KinectCallbackReceiver(kinect_depth_cb depth_cb, kinect_video_cb video_cb, int cameraNum=0);
+		virtual ~KinectCallbackReceiver();
 
-  Kinect2PointCloud():Module("Kinect2PointCloud"){};
-  virtual ~Kinect2PointCloud(){};
-
-  void open(){};
-  void step();
-  void close(){};
-};
+		void startStreaming();
+		void stopStreaming();
+	};
+}
 
 #endif

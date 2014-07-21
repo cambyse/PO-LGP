@@ -5,5 +5,5 @@ DEPEND = Gui Perception Core System
 
 CLEAN = z.*
 
-include $(BASE)/gofMake/make-generic
+include $(BASE)/gofMake/generic.mk
 

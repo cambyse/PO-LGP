@@ -1,8 +1,6 @@
 #include "AugmentedMazeAction.h"
 
-#include "../util/Macro.h"
-
-#include "../debug.h"
+#include "../util/debug.h"
 
 using std::string;
 
