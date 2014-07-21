@@ -14,7 +14,12 @@
 
 #include <iomanip>
 
+#ifdef BATCH_MODE_QUIET
+#define DEBUG_LEVEL 0
+#else
 #define DEBUG_LEVEL 1
+#endif
+#define DEBUG_STRING "TEF: "
 #include "../util/debug.h"
 
 using util::Range;
@@ -52,7 +57,7 @@ TELQ::row_vec_t TELQ::get_action_values(const_instance_ptr_t ins) const {
     int action_n = action_space->space_size();
     // return zero vector if value cannot be computed
     if(feature_set.size()==0) {
-        DEBUG_WARNING("Cannot compute action (no features)");
+        DEBUG_OUT(1,"Cannot compute action (no features)");
         return zeros<row_vec_t>(action_n);
     }
     // get feature matrix
@@ -475,30 +480,40 @@ lbfgsfloatval_t TELQ::LBFGS_objective(const lbfgsfloatval_t* par, lbfgsfloatval_
     return TD_error;
 }
 
-int TELQ::LBFGS_progress(const lbfgsfloatval_t */*x*/,
-                        const lbfgsfloatval_t */*g*/,
-                        const lbfgsfloatval_t fx,
-                        const lbfgsfloatval_t xnorm,
-                        const lbfgsfloatval_t /*gnorm*/,
-                        const lbfgsfloatval_t /*step*/,
-                        int /*nr_variables*/,
-                        int iteration_nr,
-                        int /*ls*/) const {
-    IF_DEBUG(1) { cout <<
+int TELQ::LBFGS_progress(const lbfgsfloatval_t * x,
+                         const lbfgsfloatval_t */*g*/,
+                         const lbfgsfloatval_t fx,
+                         const lbfgsfloatval_t /*xnorm*/,
+                         const lbfgsfloatval_t /*gnorm*/,
+                         const lbfgsfloatval_t /*step*/,
+                         int nr_variables,
+                         int iteration_nr,
+                         int /*ls*/) const {
+    IF_DEBUG(1) {
+        // L1 norm //
+        double xnorm = 0;
+        for(int idx=0; idx<nr_variables; ++idx) {
+            xnorm += fabs(x[idx]);
+        }
+        cout <<
             QString("    Iteration %1 (%2), TD-error + L1 = %3 + %4")
             .arg(iteration_nr)
             .arg(objective_evaluations)
             .arg(fx-xnorm*l1_factor,11,'e',5)
             .arg(xnorm*l1_factor,11,'e',5)
-                       << endl; }
+             << endl;
+    }
     return 0;
 }
 
 void TELQ::LBFGS_final_message(double obj_val) const {
-    double xnorm = arma::sum(arma::abs(weights));
-    IF_DEBUG(1) { cout <<
+    IF_DEBUG(1) {
+        // L1 norm //
+        double xnorm = arma::as_scalar(arma::sum(arma::abs(weights)));
+        cout <<
             QString("    TD-error + L1 = %1 + %2")
-            .arg(obj_val-xnorm*l1_factor)
-            .arg(xnorm*l1_factor)
-                       << endl; }
+            .arg(obj_val-xnorm*l1_factor,11,'e',5)
+            .arg(xnorm*l1_factor,11,'e',5)
+             << endl;
+    }
 }

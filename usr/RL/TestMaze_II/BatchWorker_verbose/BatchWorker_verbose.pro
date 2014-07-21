@@ -49,12 +49,9 @@ HEADERS += \
     ../Planning/RandomPolicy.h \
     ../Planning/LookAheadSearch.h \
     ../Planning/LookAheadPolicy.h \
-    ../Planning/GoalIteration.h \
     \
     ../Learner/FeatureLearner.h \
-    ../Learner/KMarkovCRF.h \
     ../Learner/UTree.h \
-    ../Learner/LinearQ.h \
     ../Learner/TemporallyExtendedModel.h \
     ../Learner/TemporallyExtendedFeatureLearner.h \
     ../Learner/TemporallyExtendedLinearQ.h \
@@ -102,12 +99,9 @@ SOURCES += \
     \
     ../Planning/LookAheadSearch.cpp \
     ../Planning/LookAheadPolicy.cpp \
-    ../Planning/GoalIteration.cpp \
     \
     ../Learner/FeatureLearner.cpp \
-    ../Learner/KMarkovCRF.cpp \
     ../Learner/UTree.cpp \
-    ../Learner/LinearQ.cpp \
     ../Learner/TemporallyExtendedModel.cpp \
     ../Learner/TemporallyExtendedFeatureLearner.cpp \
     ../Learner/TemporallyExtendedLinearQ.cpp \
@@ -117,6 +111,7 @@ SOURCES += \
 LIBS += -llbfgs \
     -lemon \
     -larmadillo \
+    -llapack \
     -lgomp
 INCLUDEPATH +=
 LIBPATH += /usr/share/lib

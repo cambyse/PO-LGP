@@ -1,10 +1,12 @@
 #include "BatchWorker.h"
 
 #include "../util/util.h"
+#include "../util/QtUtil.h"
 #include "../Environment.h"
 #include "../Predictor.h"
 #include "../HistoryObserver.h"
 #include "../CheeseMaze/CheeseMaze.h"
+#include "../Maze/Maze.h"
 #include "../HistoryObserver.h"
 #include "../Learner/TemporallyExtendedModel.h"
 #include "../Learner/TemporallyExtendedLinearQ.h"
@@ -53,7 +55,7 @@ const vector<string> BatchWorker::mode_vector = {"DRY",
 
 BatchWorker::BatchWorker(int argc, char ** argv):
     mode_arg(          "m", "mode"         , "mode to use"                                  , true,        "",  "string"),
-//    environment_arg(   "e", "environment"  , "environment to use"                           , true,        "",  "string"),
+    environment_arg(    "", "env"          , "environment to use"                           ,false, "Minimal",  "string"),
     minT_arg(           "", "minT"         , "minimum number of training samples"           , true,        10,     "int"),
     maxT_arg(           "", "maxT"         , "maximum number of training samples"           ,false,        -1,     "int"),
     incT_arg(           "", "incT"         , "increment of training samples"                ,false,        -1,     "int"),
@@ -67,11 +69,16 @@ BatchWorker::BatchWorker(int argc, char ** argv):
     maxH_arg(           "", "maxH"         , "maximum horizon"                              ,false,        -1,     "int"),
     extH_arg(           "", "extH"         , "horizon extension"                            ,false,         1,     "int"),
     delta_arg(         "D", "delta"        , "minimum change of data likelihood/TD-error"   ,false,     0.001,  "double"),
-    maxCycles_arg(     "C", "maxCycles"    , "maximum number of grow-shrinc cycles"         ,false,         0,     "int")
+    maxCycles_arg(      "", "maxCycles"    , "maximum number of grow-shrinc cycles"         ,false,         0,     "int"),
+    minCycles_arg(      "", "minCycles"    , "minimum number of grow-shrinc cycles"         ,false,         0,     "int"),
+    epsilon_arg(        "", "eps"          , "epsilon / randomness of transitions"          ,false,         0,  "double")
+
 {
     try {
 	TCLAP::CmdLine cmd("This program is BatchWorker. It collects data.", ' ', "");
 
+        cmd.add(epsilon_arg);
+        cmd.add(minCycles_arg);
         cmd.add(maxCycles_arg);
         cmd.add(delta_arg);
         cmd.add(extH_arg);
@@ -86,6 +93,7 @@ BatchWorker::BatchWorker(int argc, char ** argv):
         cmd.add(incT_arg);
         cmd.add(maxT_arg);
         cmd.add(minT_arg);
+        cmd.add(environment_arg);
         cmd.add(mode_arg);
 
 	// TCLAP::ValueArg<std::string> nameArg("n","name","Name to print",false,"homer","string");
@@ -140,7 +148,7 @@ bool BatchWorker::post_process_args() {
         maxT = maxT_arg.getValue();
         maxT = maxT==-1?minT:maxT;
     }
-    if(incT_arg.getValue()!=-1 && incT_arg.getValue()<=0) {
+    if(incT_arg.getValue()!=-1 && incT_arg.getValue()<0) {
         DEBUG_OUT(0,"Argument '" << incT_arg.getName() << "' requires a value greater that zero");
         samples_ok = false;
     } else {
@@ -156,7 +164,25 @@ bool BatchWorker::post_process_args() {
         eval_ok = false;
     }
 
-    return (mode_ok && samples_ok && eval_ok);
+    // check environment
+    bool environment_ok = true;
+    if(environment_arg.getValue()=="cheese") {
+        // ok
+    } else {
+        auto maze = make_shared<Maze>();
+        if(!maze->set_maze(QString(environment_arg.getValue().c_str()))) {
+            DEBUG_OUT(0,"Argument value for '" << environment_arg.getName() << "' must be one of:");
+            DEBUG_OUT(0,"--- Cheese Maze ---");
+            DEBUG_OUT(0,"    cheese");
+            DEBUG_OUT(0,"--- Other Mazes ---");
+            for(auto s : maze->get_maze_list()) {
+                DEBUG_OUT(0,"    " << s);
+            }
+            environment_ok = false;
+        }
+    }
+
+    return (mode_ok && samples_ok && eval_ok && environment_ok);
 }
 
 void BatchWorker::collect_data() {
@@ -200,6 +226,7 @@ void BatchWorker::collect_data() {
             double data_likelihood;  // for TEM
             double TD_error;         // for TEL
             int nr_features;         // for TEM/TEL
+            int cycles;              // for TEM/TEL
             int utree_size;          // for UTree
             double utree_score;      // for UTree
 
@@ -215,7 +242,11 @@ void BatchWorker::collect_data() {
 
 
                 // initialize environment and get spaces
-                environment = make_shared<CheeseMaze>();
+                if(environment_arg.getValue()=="cheese") {
+                    environment = make_shared<CheeseMaze>();
+                } else {
+                    environment = make_shared<Maze>(epsilon_arg.getValue(),environment_arg.getValue().c_str());
+                }
                 environment->get_spaces(action_space,observation_space,reward_space);
 
                 // initialize adjacency
@@ -273,9 +304,9 @@ void BatchWorker::collect_data() {
                 }
                 // train learner
                 if(mode=="TEM") {
-                    train_TEM(learner, data_likelihood, nr_features);
+                    train_TEM(learner, data_likelihood, nr_features, cycles);
                 } else if(mode=="TEL") {
-                    train_TEL(learner, TD_error, nr_features);
+                    train_TEL(learner, TD_error, nr_features, cycles);
                 } else if(mode=="MODEL_BASED_UTREE") {
                     train_model_based_UTree(learner, utree_size, utree_score);
                 } else if(mode=="VALUE_BASED_UTREE") {
@@ -387,9 +418,9 @@ void BatchWorker::collect_data() {
 #endif
             {
                 if(mode=="TEM") {
-                    LOG(this_episode_counter << "	" << training_length << "	" << eval_arg.getValue() << "	" << mean_reward << "	" << data_likelihood << "	" << nr_features << "	" << l1_arg.getValue());
+                    LOG(this_episode_counter << "	" << training_length << "	" << eval_arg.getValue() << "	" << mean_reward << "	" << data_likelihood << "	" << nr_features << "	" << l1_arg.getValue() << "	" << cycles);
                 } else if(mode=="TEL") {
-                    LOG(this_episode_counter << "	" << training_length << "	" << eval_arg.getValue() << "	" << mean_reward << "	" << TD_error << "	" << nr_features << "	" << l1_arg.getValue());
+                    LOG(this_episode_counter << "	" << training_length << "	" << eval_arg.getValue() << "	" << mean_reward << "	" << TD_error << "	" << nr_features << "	" << l1_arg.getValue() << "	" << cycles);
                 } else if(mode=="MODEL_BASED_UTREE" || mode=="VALUE_BASED_UTREE") {
                     LOG(this_episode_counter << "	" << training_length << "	" << eval_arg.getValue() << "	" << mean_reward << "	" << utree_score << "	" << utree_size);
                 } else if(mode=="DRY" || mode=="RANDOM") {
@@ -431,7 +462,7 @@ void BatchWorker::collect_random_data(std::shared_ptr<Environment> env,
     }
 }
 
-void BatchWorker::train_TEM(std::shared_ptr<HistoryObserver> learner, double& likelihood, int& features) {
+void BatchWorker::train_TEM(std::shared_ptr<HistoryObserver> learner, double& likelihood, int& features, int& cycles) {
     // cast to correct type
     auto tem = dynamic_pointer_cast<TEM>(learner);
     // check for cast failure
@@ -441,26 +472,28 @@ void BatchWorker::train_TEM(std::shared_ptr<HistoryObserver> learner, double& li
     }
     // optimize tem
     double old_likelihood = -DBL_MAX, new_likelihood = 0;
-    int iteration_counter = 0, max_iterations = maxCycles_arg.getValue();
+    int cycle_counter = 0, max_cycles = maxCycles_arg.getValue();
     tem->set_l1_factor(l1_arg.getValue());
-    while(new_likelihood-old_likelihood>delta_arg.getValue()) {
+    while(new_likelihood-old_likelihood>delta_arg.getValue() || minCycles_arg.getValue()>cycle_counter) {
         old_likelihood = new_likelihood;
         tem->grow_feature_set();
         double neg_log_like = tem->optimize_weights_LBFGS();
         new_likelihood = exp(-neg_log_like);
         tem->shrink_feature_set();
-        if(max_iterations>0 && ++iteration_counter>=max_iterations) {
+        ++cycle_counter;
+        if(max_cycles>0 && cycle_counter>=max_cycles) {
             break;
         }
     }
     tem->set_l1_factor(0);
     double neg_log_like = tem->optimize_weights_LBFGS();
+    // set outputs
     likelihood = exp(-neg_log_like);
-    // get number of features
+    cycles = cycle_counter;
     features = tem->get_feature_set().size();
 }
 
-void BatchWorker::train_TEL(std::shared_ptr<HistoryObserver> learner, double& TD_error, int& features) {
+void BatchWorker::train_TEL(std::shared_ptr<HistoryObserver> learner, double& TD_error, int& features, int& cycles) {
     // cast to correct type
     auto tel = dynamic_pointer_cast<TEL>(learner);
     // check for cast failure
@@ -470,19 +503,21 @@ void BatchWorker::train_TEL(std::shared_ptr<HistoryObserver> learner, double& TD
     }
     // optimize tel
     double old_TD_error = -DBL_MAX, new_TD_error = 0;
-    int iteration_counter = 0, max_iterations = maxCycles_arg.getValue();
+    int cycle_counter = 0, max_cycles = maxCycles_arg.getValue();
     tel->set_l1_factor(l1_arg.getValue());
-    while(new_TD_error-old_TD_error>delta_arg.getValue()) {
+    while(old_TD_error-new_TD_error>delta_arg.getValue() || minCycles_arg.getValue()>cycle_counter) {
         old_TD_error = new_TD_error;
         tel->grow_feature_set();
         new_TD_error = tel->run_policy_iteration();
         tel->shrink_feature_set();
-        if(max_iterations>0 && ++iteration_counter>=max_iterations) {
+        ++cycle_counter;
+        if(max_cycles>0 && cycle_counter>=max_cycles) {
             break;
         }
     }
+    // set outputs
     TD_error = tel->run_policy_iteration(false);
-    // get number of features
+    cycles = cycle_counter;
     features = tel->get_feature_set().size();
 }
 
@@ -532,6 +567,7 @@ void BatchWorker::initialize_log_file(std::ofstream& log_file) {
     log_file.open((const char*)log_file_name.toLatin1());
 
     LOG_COMMENT("Mode: " << mode);
+    LOG_COMMENT("Environment: " << environment_arg.getValue());
     LOG_COMMENT("Training Length: " << minT << "--" << maxT << " (step size: " << incT << ")");
     LOG_COMMENT("Evaluation Length: " << eval_arg.getValue());
     LOG_COMMENT("Repetitions: " << repeat_arg.getValue());
@@ -546,6 +582,7 @@ void BatchWorker::initialize_log_file(std::ofstream& log_file) {
         LOG_COMMENT("Maximum Horizon: " << maxH_arg.getValue());
         LOG_COMMENT("Horizon Extension: " << extH_arg.getValue());
         LOG_COMMENT("Max Cycles: " << maxCycles_arg.getValue());
+        LOG_COMMENT("Min Cycles: " << minCycles_arg.getValue());
     }
     if(mode=="TEM") {
         LOG_COMMENT("Likelihood Delta: " << delta_arg.getValue());
@@ -557,9 +594,9 @@ void BatchWorker::initialize_log_file(std::ofstream& log_file) {
     LOG_COMMENT("");
 
     if(mode=="TEM") {
-        LOG_COMMENT("Episode	training_length	evaluation_length	mean_reward	data_likelihood	nr_features	l1_factor");
+        LOG_COMMENT("Episode	training_length	evaluation_length	mean_reward	data_likelihood	nr_features	l1_factor	cycles");
     } else if(mode=="TEL") {
-        LOG_COMMENT("Episode	training_length	evaluation_length	mean_reward	TD-error	nr_features	l1_factor");
+        LOG_COMMENT("Episode	training_length	evaluation_length	mean_reward	TD-error	nr_features	l1_factor	cycles");
     } else if(mode=="MODEL_BASED_UTREE" || mode=="VALUE_BASED_UTREE") {
         LOG_COMMENT("Episode	training_length	evaluation_length	mean_reward	utree_score	utree_size");
     } else if(mode=="DRY" || mode=="RANDOM") {

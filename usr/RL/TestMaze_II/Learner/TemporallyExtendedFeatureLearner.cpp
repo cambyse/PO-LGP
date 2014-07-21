@@ -8,7 +8,11 @@
 #include <omp.h>
 #define USE_OMP
 
+#ifdef BATCH_MODE_QUIET
+#define DEBUG_LEVEL 0
+#else
 #define DEBUG_LEVEL 1
+#endif
 #include "../util/debug.h"
 
 using util::Range;
@@ -147,12 +151,14 @@ double TEFL::optimize_weights_LBFGS() {
     lbfgs.set_variables(values);
     lbfgs.set_l1_factor(l1_factor);
     double obj_value = lbfgs.optimize(values);
+
+    // transfer result / set weights
+    weights = arma::conv_to<col_vec_t>::from(values);
+
+    // print final message
     IF_DEBUG(1) {
         LBFGS_final_message(obj_value);
     }
-
-    // set weights
-    weights = values;
 
     // return objective value
     return obj_value;

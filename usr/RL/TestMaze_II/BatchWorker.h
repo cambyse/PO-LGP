@@ -32,6 +32,7 @@ private:
     // the command line arguments
     std::string mode;
     TCLAP::ValueArg<std::string> mode_arg;
+    TCLAP::ValueArg<std::string> environment_arg;
     int minT;
     TCLAP::ValueArg<int> minT_arg;
     int maxT;
@@ -49,6 +50,8 @@ private:
     TCLAP::ValueArg<int> extH_arg;
     TCLAP::ValueArg<double> delta_arg;
     TCLAP::ValueArg<int> maxCycles_arg;
+    TCLAP::ValueArg<int> minCycles_arg;
+    TCLAP::ValueArg<double> epsilon_arg;
 
     bool args_ok = false;
 
@@ -60,8 +63,8 @@ private:
         const int& length,
         instance_ptr_t& i);
 
-    void train_TEM(std::shared_ptr<HistoryObserver> learner, double& likelihood, int& features);
-    void train_TEL(std::shared_ptr<HistoryObserver> learner, double& TD_error, int& features);
+    void train_TEM(std::shared_ptr<HistoryObserver> learner, double& likelihood, int& features, int& cycles);
+    void train_TEL(std::shared_ptr<HistoryObserver> learner, double& TD_error, int& features, int& cycles);
     void train_value_based_UTree(std::shared_ptr<HistoryObserver> learner, int& size, double& score);
     void train_model_based_UTree(std::shared_ptr<HistoryObserver> learner, int& size, double& score);
 
