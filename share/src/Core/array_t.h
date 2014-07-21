@@ -38,7 +38,7 @@
 // Array class
 //
 
-template<class T> char MT::Array<T>::memMove=-1;
+template<class T> char MT::Array<T>::memMove=(char)-1;
 template<class T> int MT::Array<T>::sizeT=-1;
 
 /** @brief Simple array container to store arbitrary-dimensional arrays
@@ -56,7 +56,7 @@ template<class T> int MT::Array<T>::sizeT=-1;
 template<class T> void MT::Array<T>::init() {
   reference=false;
   if(sizeT==-1) sizeT=sizeof(T);
-  if(memMove==-1) {
+  if(memMove==(char)-1) {
     memMove=0;
     if(typeid(T)==typeid(bool) ||
         typeid(T)==typeid(char) ||
@@ -101,19 +101,6 @@ template<class T> MT::Array<T>::Array(uint i, uint j) { init(); resize(i, j); }
 /// constructor with resize
 template<class T> MT::Array<T>::Array(uint i, uint j, uint k) { init(); resize(i, j, k); }
 
-/*  OBSOLETE
-/// constructor with resize
-template<class T> MT::Array<T>::Array(uint i, uint j, uint k, uint l){ init(); resize(i, j, k, l); }
-*/
-
-/*OBSOLETE! Use Array x = a[8] instead!
-/// this becomes a reference on a subdimension of \c a
-template<class T> MT::Array<T>::Array(const MT::Array<T>& a, uint i){ init(); referToSubDim(a, i); }
-
-/// this becomes a reference on a subdimension of \c a
-template<class T> MT::Array<T>::Array(const MT::Array<T>& a, uint i, uint j){ init(); referToSubDim(a, i, j); }
-*/
-
 /// this becomes a reference on the C-array \c p
 template<class T> MT::Array<T>::Array(const T* p, uint size) { init(); referTo(p, size); }
 
@@ -129,10 +116,14 @@ arr a = { 1.1, 2, 25.7, 12 };
  *
  * @param list the list used to initialize the array.
  */
-template<class T>
-MT::Array<T>::Array(std::initializer_list<T> list) {
+template<class T> MT::Array<T>::Array(std::initializer_list<T> list) {
   init();
   for(T t : list) append(t);
+}
+
+template<class T> MT::Array<T>::Array(MT::FileToken& f) {
+  init();
+  read(f.getIs());
 }
 
 template<class T> MT::Array<T>::~Array() {
@@ -242,6 +233,11 @@ template<class T> MT::Array<T>& MT::Array<T>::reshapeAs(const MT::Array<T>& a) {
   CHECK(N==a.N, "reshape must preserve total memory size");
   nd=a.nd; d0=a.d0; d1=a.d1; d2=a.d2; resetD();
   if(nd>3) { d=new uint[nd];  memmove(d, a.d, nd*sizeof(uint)); }
+  return *this;
+}
+
+template<class T> MT::Array<T>& MT::Array<T>::flatten() {
+  reshape(N);
   return *this;
 }
 
@@ -1995,36 +1991,6 @@ template<class T> MT::Array<T> sum(const MT::Array<T>& v, uint d) {
   NIY;
 }
 
-/// \f$\sum_i x_i\f$
-template<class T> MT::Array<T> mean(const MT::Array<T>& v, uint d) {
-  CHECK(v.nd>d, "array doesn't have this dimension");
-  MT::Array<T> x;
-  x.referTo(v);
-  MT::Array<T> S;
-  uint i, j;
-  if(d==v.nd-1) {  //sum over last index - contiguous in memory
-    x.reshape(x.N/x.dim(x.nd-1), x.dim(x.nd-1));
-    S.resize(x.d0);  S.setZero();
-    for(i=0; i<x.d0; i++) {
-      for(j=0; j<x.d1; j++)
-        S(i) += x(i, j);
-      S(i) *= 1./x.d1;
-    }
-    return S;
-  }
-  if(d==0) {  //sum over first index
-    x.reshape(x.d0, x.N/x.d0);
-    S.resize(x.d1);  S.setZero();
-    for(j=0; j<x.d1; j++) {
-      for(i=0; i<x.d0; i++)
-        S(j) += x(i, j);
-      S(j) *= 1./x.d0;
-    }
-    return S;
-  }
-  NIY;
-}
-
 /// \f$\sum_i |x_i|\f$
 template<class T> T sumOfAbs(const MT::Array<T>& v) {
   T t(0);
@@ -2042,10 +2008,7 @@ template<class T> T sumOfSqr(const MT::Array<T>& v) {
 /// \f$\sqrt{\sum_i x_i^2}\f$
 template<class T> T length(const MT::Array<T>& v) { return (T)::sqrt((double)sumOfSqr(v)); }
 
-/// \f$\sqrt{\sum_i x_i^2}\f$
-template<class T> T mean(const MT::Array<T>& v) { return sum(v)/v.N; }
-
-template<class T> T var(const MT::Array<T>& v) { T m=mean(v); return sumOfSqr(v)/v.N-m*m; }
+template<class T> T var(const MT::Array<T>& v) { T m=sum(v)/v.N; return sumOfSqr(v)/v.N-m*m; }
 
 /// \f$\sum_i x_{ii}\f$
 template<class T> T trace(const MT::Array<T>& v) {
@@ -2284,25 +2247,6 @@ template<class T> MT::Array<T> elemWiseMin(const MT::Array<T>& v, const MT::Arra
 template<class T> MT::Array<T> elemWiseMax(const MT::Array<T>& v, const MT::Array<T>& w) {
   MT::Array<T> z(v.N);
   for(uint i=0; i<v.N; i++) z(i) = v(i)>w(i)?v(i):w(i);
-  return z;
-}
-
-template<class T> MT::Array<T> elemWiseProd(const MT::Array<T>& v, const MT::Array<T>& w) {
-  // also valid for non-linear arrays (tensors)
-  CHECK(v.getDim()==w.getDim(), "Arrays must have same dimension.");
-  MT::Array<T> z(v.N);
-  for(uint i = 0; i<v.N; i++) z.p[i] = v.p[i]*w.p[i];
-  z.reshapeAs(v);
-  return z;
-}
-
-template<class T> MT::Array<T> elemWiseDiv(const MT::Array<T>& v, const MT::Array<T>& w) {
-  // also valid for non-linear arrays (tensors)
-  CHECK(v.getDim()==w.getDim(), "Arrays must have same dimension.");
-  CHECK(w.findValue(0) == -1, "Array w should not contain 0");
-  MT::Array<T> z(v.N);
-  for(uint i = 0; i<v.N; i++) z.p[i] = v.p[i]/w.p[i];
-  z.reshapeAs(v);
   return z;
 }
 

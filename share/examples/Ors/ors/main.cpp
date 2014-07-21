@@ -17,7 +17,7 @@ void TEST(LoadSave){
   ors::KinematicWorld G;
   ifstream fil("arm7.ors");
   fil >>G;
-  G.calcBodyFramesFromJoints();
+  G.calc_fwdPropagateFrames();
   cout <<G <<endl;
 
   for(uint i=0;i<0;i++){
@@ -37,15 +37,16 @@ namespace T1{
   ors::KinematicWorld *G;
   ors::Vector rel;
   ors::Vector axis;
-  static void f  (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsPos(y,*J,i,&rel); }
-  //static void f_hess (arr &J, arr *H, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->jacobianPos(J,i,&rel);  if(H) G->hessianPos (*H,i,&rel); }
-  static void f_vec (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsVec(y,*J,i,&axis); }
-  //static void f3 (arr &y,const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->kinematicsOri2(y,i,axis); }
-  //static void df3(arr &J,const arr &x,void*){  G->setJointState(x);  G->calcBodyFramesFromJoints();  G->jacobianOri2(J,i,axis); }
+  static void f_pos (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->kinematicsPos(y,*J,i,&rel); }
+  //static void f_hess (arr &J, arr *H, const arr &x,void*){  G->setJointState(x);  G->jacobianPos(J,i,&rel);  if(H) G->hessianPos (*H,i,&rel); }
+  static void f_vec (arr &y, arr *J, const arr &x,void*){  G->setJointState(x);  G->kinematicsVec(y,*J,i,&axis); }
+  //static void f3 (arr &y,const arr &x,void*){  G->setJointState(x);  G->kinematicsOri2(y,i,axis); }
+  //static void df3(arr &J,const arr &x,void*){  G->setJointState(x);  G->jacobianOri2(J,i,axis); }
 }
 
 void TEST(Kinematics){
-  ors::KinematicWorld G("arm3.ors");
+  //ors::KinematicWorld G("test.ors");
+  ors::KinematicWorld G("../../../data/pr2_model/pr2_clean_comfi.ors");
   uint n=G.getJointStateDimension();
   arr x(n);
   T1::axis.set(1,0,0);
@@ -56,7 +57,7 @@ void TEST(Kinematics){
     rndUniform(x,-.5,.5,false);
     //G.gl().text.clear() <<"k=" <<k <<"  gradient checks of kinematics on random postures";
     //G.watch(false);
-    checkJacobian(Convert(T1::f, NULL), x, 1e-5);
+    checkJacobian(Convert(T1::f_pos, NULL), x, 1e-5);
     //checkJacobian(Convert(T1::f_hess, NULL), x, 1e-5);
     checkJacobian(Convert(T1::f_vec, NULL), x, 1e-5);
   }
@@ -78,7 +79,7 @@ void TEST(KinematicSpeed){
   for(uint k=0;k<NUM;k++){
     rndUniform(x,-.5,.5,false);
     G.setJointState(x);
-    G.calcBodyFramesFromJoints();
+    G.calc_fwdPropagateFrames();
   }
   cout <<"kinematics timing: "<< MT::timerRead() <<"sec" <<endl;
 #endif
@@ -110,7 +111,7 @@ void TEST(KinematicSpeed){
 namespace Ctest{
   ors::KinematicWorld *G;
   void f(arr& c, arr *dfdx, const arr &x,void*){
-    G->setJointState(x); G->calcBodyFramesFromJoints();
+    G->setJointState(x); G->calc_fwdPropagateFrames();
     G->computeProxies();
     G->kinematicsProxyCost(c, (dfdx?*dfdx:NoArr), .2);
   }
@@ -129,7 +130,7 @@ void TEST(Contacts){
   x = G.q;
   for(t=0;t<100;t++){
     G.setJointState(x);
-    G.calcBodyFramesFromJoints();
+    G.calc_fwdPropagateFrames();
     G.computeProxies();
 
     G.reportProxies();
@@ -145,6 +146,35 @@ void TEST(Contacts){
   }
 }
 
+//===========================================================================
+
+void TEST(Limits){
+  ors::KinematicWorld G("arm7.ors");
+  struct MyFct:VectorFunction{
+    ors::KinematicWorld& world;
+    arr limits;
+    MyFct(ors::KinematicWorld& _world):world(_world),limits(world.getLimits()){}
+    void fv(arr& y, arr& J, const arr& x){
+      world.setJointState(x);
+      world.kinematicsLimitsCost(y,J,limits);
+    }
+  } F(G);
+
+  uint n=G.getJointStateDimension();
+  arr x(n),y,J;
+  for(uint k=0;k<10;k++){
+    rndUniform(x,-2.,2.,false);
+    checkJacobian(F,x,1e-4);
+    for(uint t=0;t<10;t++){
+      F.fv(y,J,x);
+      cout <<"y=" <<y <<"  " <<flush;
+      x -= .1 * J.reshape(n);
+      checkJacobian(F,x,1e-4);
+      G.setJointState(x);
+      G.gl().update();
+    }
+  }
+}
 
 //===========================================================================
 //
@@ -171,7 +201,7 @@ void TEST(PlayStateSequence){
   arr v(X.d1); v=0.;
   for(uint t=0;t<X.d0;t++){
     G.setJointState(X[t](),v);
-    G.calcBodyFramesFromJoints();
+    G.calc_fwdPropagateFrames();
     G.watch(false, STRING("replay of a state sequence -- time " <<t));
   }
 }
@@ -234,7 +264,7 @@ void TEST(FollowRedundantSequence){
   Z *= .8;
   T=Z.d0;
   G.setJointState(x);
-  G.calcBodyFramesFromJoints();
+  G.calc_fwdPropagateFrames();
   G.kinematicsPos(z, NoArr, N, &rel);
   for(t=0;t<T;t++) Z[t]() += z; //adjust coordinates to be inside the arm range
   plotLine(Z);
@@ -249,7 +279,7 @@ void TEST(FollowRedundantSequence){
     v = invJ * (Z[t]-z);     //multiply endeffector velocity with inverse jacobian
     x += v;                  //simulate a time step (only kinematically)
     G.setJointState(x);
-    G.calcBodyFramesFromJoints();
+    G.calc_fwdPropagateFrames();
     //cout <<J * invJ <<invJ <<v <<endl <<x <<endl <<"tracking error = " <<maxDiff(Z[t],z) <<endl;
     G.watch(false, STRING("follow redundant trajectory -- time " <<t));
     //G.gl().timedupdate(.01);
@@ -285,7 +315,7 @@ void TEST(Dynamics){
     DiffEqn(ors::KinematicWorld& _G):G(_G),friction(false){}
     void fv(arr& y,arr&,const arr& x){
       G.setJointState(x[0],x[1]);
-      G.calcBodyFramesFromJoints();
+      G.calc_fwdPropagateFrames();
       if(!u.N) u.resize(x.d1).setZero();
       if(friction) u = -10. * x[1];
       G.clearForces();
@@ -323,7 +353,7 @@ void TEST(Dynamics){
       qd +=    dt*qdd;
       q  += .5*dt*qd;
       G.setJointState(q,qd);
-      G.calcBodyFramesFromJoints();
+      G.calc_fwdPropagateFrames();
       //cout <<q <<qd <<qdd <<endl;
       G.gl().text.clear() <<"t=" <<t <<"  torque controlled damping (acc = - vel)\n(checking consistency of forward and inverse dynamics),  energy=" <<G.getEnergy();
     }else{
@@ -345,7 +375,6 @@ void TEST(Dynamics){
 
 /*void switchfunction(arr& s,const arr& x,const arr& v){
   G.setJointState(x,v);
-  G.calcBodyFramesFromJoints();
   slGetProxies(C,ode);
   s.resize(G.bodies.N); s=.01;
   boolA c; c.resize(G.bodies.N);  c=false;
@@ -385,9 +414,8 @@ void TEST(ContactDynamics){
   for(t=0;t<T;t++){
     if(!(t%1)){
       G.setJointState(q,qd);
-      G.calcBodyFramesFromJoints();
       G.zeroGaugeJoints();
-      G.calcBodyFramesFromJoints();
+      G.calc_fwdPropagateFrames();
       G.getJointState(q,qd);
     }
     z <<q <<qd <<qdd <<endl;
@@ -441,6 +469,8 @@ void TEST(BlenderImport){
 #endif
 
 int MAIN(int argc,char **argv){
+  testLimits();
+  return 0;
 
   testLoadSave();
   testPlayStateSequence();
@@ -449,8 +479,9 @@ int MAIN(int argc,char **argv){
   testFollowRedundantSequence();
   testDynamics();
   testContacts();
+  testLimits();
 #ifdef MT_ODE
-  testMeshShapesInOde();
+//  testMeshShapesInOde();
   testPlayTorqueSequenceInOde();
 #endif
   //testBlenderImport();

@@ -28,7 +28,7 @@ void display(const arr& X){
   ors::KinematicWorld ors;
   setup_opengl_for_g4(ors, gl, X.d1);
 
-  CHECK(X.nd==3 && X.d0==7,"wrong sized g4 data set");
+  CHECK(X.nd==3 && X.d2==7,"wrong sized g4 data set");
 
   for(uint t=0;t<X.d0;t++){
     for(uint b=0; b+1<ors.shapes.N && b<X.d1; b++){

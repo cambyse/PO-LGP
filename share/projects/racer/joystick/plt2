@@ -1,0 +1,9 @@
+set style data lines
+set key autotitle columnhead
+
+plot 'nogit-data/Motors.dat' \
+   us 1:'vel0',\
+'' us 1:'acc',\
+'' us 1:'denc0'
+
+#plot 'nogit-data/Motors.dat' us 0:1

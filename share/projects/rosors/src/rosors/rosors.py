@@ -17,10 +17,8 @@ class RosOrs(object):
     RosOrs represents a ors graph and provides ORS services to query the
     state of the graph.
 
-    TODO should we transport subtypes, e.g. transport shapes and meshes for
-    a given body? maybe a flag?
-
     Supported information:
+        - Graph
         - Body
         - Shape
     """
@@ -45,7 +43,6 @@ class RosOrs(object):
     #########################################################################
     # HANDLE SERVICES
     def handle_graph_request(self, req):
-        rospy.logdebug("handling graph request")
         res = srv.GraphResponse()
         res.graph = parser.ors_graph_to_msg(self.graph)
         return res
@@ -56,7 +53,6 @@ class RosOrs(object):
         else:
             parse = parser.ors_body_to_msg
 
-        rospy.logdebug("handling bodies request")
         res = srv.BodiesResponse()
         # special body requested
         if req.name:
@@ -69,22 +65,26 @@ class RosOrs(object):
         return res
 
     def handle_shapes_request(self, req):
-        rospy.logdebug("handling shapes request")
         res = srv.ShapesResponse()
         # special shape requested
         if req.index:
             ors_shape = self.graph.shapes[req.index]
-            res.shapes.append(parser.ors_shape_to_msg(ors_shape))
+            res.shapes.append(parser.ors_shape_to_msg(ors_shape,
+                                                      req.with_mesh))
             return res
         if req.index_body:
             for ors_shape in self.graph.bodies[req.index_body].shapes:
-                res.shapes.append(parser.ors_shape_to_msg(ors_shape))
+                res.shapes.append(parser.ors_shape_to_msg(ors_shape,
+                                                          req.with_mesh))
             return res
-        elif req.name:
+
+        if req.name:
             ors_shape = self.graph.getShapeByName(req.name)
-            res.shapes.append(parser.ors_shape_to_msg(ors_shape))
+            res.shapes.append(parser.ors_shape_to_msg(ors_shape,
+                                                      req.with_mesh))
             return res
         # all shapes requested
         for ors_shape in self.graph.shapes:
-            res.shapes.append(parser.ors_shape_to_msg(ors_shape))
+            res.shapes.append(parser.ors_shape_to_msg(ors_shape,
+                                                      req.with_mesh))
         return res

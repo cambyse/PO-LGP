@@ -1,9 +1,16 @@
-%% C++/IDEs
+%% C++
 *.o
 *.a
 *.so
-*.exe
 *.swp
+parser.tab.h
+parser.tab.cpp
+parser.tab.hpp
+lex.yy.c
+
+%% EXECUTABLE
+*.exe
+x_*
 
 tags
 .cccc
@@ -17,26 +24,23 @@ vc60.idb
 .*.files
 .*.includes
 
-*.config
-*.creator
-*.creator.user
-*.files
-*.includes
-
 .cproject
 .project
 *eclipse*
-Makefile.dep
 *_moc.cpp
 *_ui.h
+CTestTestfile.cmake
+makefile
 
+
+# PYTHON
 *.pyc
+_*.py
 
 
 # EXECUTION
 core
 CORE
-*.log
 
 
 %% BACKUP/temporary files
@@ -47,6 +51,12 @@ z/
 MT.log
 .#*#
 .#*
+
+
+%% MAKE
+Makefile.dep
+Make.lock
+.lastMake
 
 
 %% CMAKE
@@ -74,8 +84,7 @@ orspy.py
 
 
 %% SPECIAL for git/mlr:
-share/make-config
-share/make-config.mine
+share/gofMake/config.mk*
 share/extern/tony_mdp/parser.tab.cpp
 share/extern/ODE_0.11/download
 share/extern/ODE_0.11/ode-0.11

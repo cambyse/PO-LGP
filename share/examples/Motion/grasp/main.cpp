@@ -47,7 +47,7 @@ void testGraspHeuristic(){
     for(;;) sys.displayTrajectory(solver.q,NULL,1,"solution");
 #endif
 
-    MT::save(G,"z.ors");
+    G >>FILE("z.ors");
 
     if(k%2) s=G.getShapeByName("target1");
     else  s=G.getShapeByName("target2");

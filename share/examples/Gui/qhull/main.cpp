@@ -130,7 +130,7 @@ void drawInit(void*){
 /*
 void testFCinOrs(){
   ors::KinematicWorld C;
-  MT::load(C,"../../configurations/forceClosureTest.ors");
+  C <<FILE("../../configurations/forceClosureTest.ors");
 
   OpenGL gl;
   gl.add(drawInit,0);
@@ -147,7 +147,6 @@ void testFCinOrs(){
   C.getJointState(x,v);
   for(t=0;t<100;t++){
     C.setJointState(x);
-    C.calcBodyFramesFromJoints();
     swift.computeProxies(C,false);
     C.sortProxies(true);
 

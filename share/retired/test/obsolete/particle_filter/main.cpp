@@ -62,11 +62,11 @@ int main(int argc, char **argv) {
     p.readAccess(NULL);
     arr mean = sum(p.particles, 0)*(1./p.particles.d0);
     MT::IOraw=true;
-    MT::save(p.particles, "z.pltX");
+    p.particles >>FILE("z.pltX");
     p.deAccess(NULL);
-    MT::save(mean, "sum");
-    MT::save(pos, "pos");
-    MT::save(z, "z");
+    mean >>FILE("sum");
+    pos >>FILE("pos");
+    z >>FILE("z");
     //gnuplot("plot 'pos' us 2:3 with points, 'z' us 2:3 with points, 'sum' us 2:3 with points");
     gnuplot("plot 'z.pltX' us 1:2 with points lc rgb '#AAAAAA', 'pos' us 2:3 with points, 'z' us 2:3 with points, 'sum' us 2:3 with points");
     MT::IOraw=false;

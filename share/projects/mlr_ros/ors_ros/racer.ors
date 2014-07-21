@@ -1,0 +1,19 @@
+#shape { type=5 size=[.5 0 0 0] }
+
+body world { fixed }
+body transX {}
+body transY {}
+body transPhi {}
+
+body base { type=0 size=[.15 .02 .6 0] color=[.1 .1 .1] }
+
+joint (world transX) { type=3 }
+joint (transX transY) { type=4 }
+joint (transY transPhi) { type=2 }
+joint (transPhi base) { A=<T t(0 0 .05) > B=<T t(0 0 .3) >  Q=<T d(10 1 0 0)> }
+
+body wheelL{ type=4 size=[0 0 .02 .05] }
+body wheelR{ type=4 size=[0 0 .02 .05] }
+joint (base wheelL) { from=<T t(-.1 0 -.3)> to=<T d(90 0 1 0)> }
+joint (base wheelR) { from=<T t(.1 0 -.3)> to=<T d(90 0 1 0)> }
+

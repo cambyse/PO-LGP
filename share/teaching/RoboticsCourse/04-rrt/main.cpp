@@ -194,7 +194,7 @@ void RTTplan(){
     S.setJointAngles(q[t], true);
   }
 
-  MT::save(q,"q.rrt");
+  q >>FILE("q.rrt");
 }
 
 void optim(){
@@ -202,7 +202,7 @@ void optim(){
   S.setContactMargin(.02); //this is 2 cm (all units are in meter)
   
   arr x;
-  MT::load(x,"q.rrt");
+  x <<FILE("q.rrt");
   uint T=x.d0-1;
   //S.watch();
   if(false){
@@ -236,7 +236,7 @@ void optim(){
 #endif
 
   optNewton(x, Convert(P), OPT(stopIters=1000, verbose=2, useAdaptiveDamping=false, damping=1e-0, maxStep=.1, stopTolerance=1e-4));
-  MT::save(x,"q.optim");
+  x >>FILE("q.optim");
 
   //display
   plotEffTraj(S, x);

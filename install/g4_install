@@ -4,9 +4,10 @@
 set -e
 
 ## parameters for this install
+TMP='/tmp/g4'
 FILE=g4track_lib_dist-0.0.2.tar.gz
 SRC_PATH=g4track_lib_dist-0.0.2
-URL='https://mlr-owncloud.informatik.uni-stuttgart.de/public.php?service=files&t=e6b1fb741ce10462a7f7154296399bc9&download'
+URL='/usr/local/mlr/www/G4g37djs77/'
 THIS_PATH=$PWD
 
 [ -z $MLR_LIBPATH ] && MLR_LIBPATH=/home/lib
@@ -15,12 +16,13 @@ echo "*** Installing" $SRC_PATH "into" $MLR_LIBPATH
 echo
 
 ## download
-echo -n "  * Checking for file" /tmp/$FILE "-> download"
+echo -n "  * Checking for directory " $TMP "-> download"
 read -p " -- [Enter] to continue..." yn
-if [ ! -f /tmp/$FILE ] ; then
-  wget -O /tmp/$FILE $URL --no-check-certificate
-  if [ ! -f /tmp/$FILE ] ; then
-    echo "Automatic Download failed. You need to download " $URL " and store it in " /tmp/$FILE
+if [ ! -d $TMP ] ; then
+  scp ipvs:$URL $TMP
+  if [ ! -d $TMP ]; then
+    echo "Automatic Download failed. You need to download " ipvs:$URL " and store it
+    in " $TMP
     exit
   fi
 fi
@@ -38,14 +40,14 @@ if [ ! -d $MLR_LIBPATH ] ; then
 fi
 
 ## delete & unpack
-echo -n "  * Delete" $MLR_LIBPATH/src/$SRC_PATH "and unpack" /tmp/$FILE "?"
+echo -n "  * Delete" $MLR_LIBPATH/src/$SRC_PATH "and unpack" $TMP/$FILE "?"
 read -p " -- y/[n]? " yn
 case $yn in
     y|Y)
 	mkdir -p $MLR_LIBPATH/src
 	cd $MLR_LIBPATH/src
-	rm -Rf $SRC_PATH
-	tar xvzf /tmp/$FILE
+	sudo rm -Rf $SRC_PATH
+	tar xvzf $TMP/$FILE
 	;;
     *) ;;
 esac
@@ -59,31 +61,36 @@ cd $MLR_LIBPATH/src/$SRC_PATH
 sudo make install sysconfdir=/etc
 #export MANPATH=$MANPATH:$MLR_LIBPATH/share
 
-
+## TODO this still doesn't work.
 ## source config
 FILE=createcfgfile-1.0.0
-wget -O /tmp/$FILE.tar.gz ftp://ftp.polhemus.com/pub/G4/G4_Linux/$FILE.tar.gz
+#scp ipvs:$URL$FILE.tar.gz /tmp/$FILE.tar.gz
+#wget -O /tmp/$FILE.tar.gz ftp://ftp.polhemus.com/pub/G4/G4_Linux/$FILE.tar.gz
 cd $MLR_LIBPATH/src
-tar xvzf /tmp/$FILE.tar.gz
+tar xvzf $TMP/$FILE.tar.gz
 cd $FILE
-./configure --prefix=$MLR_LIBPATH
+./configure LDFLAGS=-L$MLR_LIBPATH/lib --prefix=$MLR_LIBPATH
 make
 sudo make install
 
 ## dongle config
-MLR_LIBPATH=/home/lib
 FILE=g4devcfg
-wget -O /tmp/$FILE.tgz ftp://ftp.polhemus.com/pub/G4/G4_Linux/$FILE.tar.gz
+#scp ipvs:$URL$FILE.tar.gz /tmp/$FILE.tar.gz
+#wget -O /tmp/$FILE.tar.gz ftp://ftp.polhemus.com/pub/G4/G4_Linux/$FILE.tar.gz
 cd $MLR_LIBPATH/src
-tar xvzf /tmp/$FILE.tgz
+tar xvzf $TMP/$FILE.tar.gz
 cd $FILE
 cp -f * $MLR_LIBPATH/bin
 
 ## 32bit version
-MLR_LIBPATH=/home/lib
-FILE=libG4Track_32.so.0.0.2
-wget -O /tmp/$FILE ftp://ftp.polhemus.com/pub/G4/G4_Linux/$FILE
-cd $MLR_LIBPATH/lib
-cp -f /tmp/$FILE .
-ln -s -f $FILE libG4Track.so
-ln -s -f $FILE libG4Track_arm.so.0
+if [[ $(uname -m) != x86_64 ]]
+then
+  FILE=libG4Track_32.so.0.0.2
+  #scp ipvs:$URL$FILE /tmp/$FILE
+  #wget -O /tmp/$FILE ftp://ftp.polhemus.com/pub/G4/G4_Linux/$FILE
+  cd $MLR_LIBPATH/lib
+  cp -f $TMP/$FILE .
+  ln -s -f $FILE libG4Track.so
+  ln -s -f $FILE libG4Track_arm.so.0
+fi
+

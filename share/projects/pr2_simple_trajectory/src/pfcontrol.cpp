@@ -114,7 +114,6 @@ public:
     // store cartesian coordinates and endeffector orientation
     for (uint t=0;t<=T;t++) {
       G.setJointState(x[t]);
-      G.calcBodyFramesFromJoints();
       G.kinematicsPos(kinPos,P.world.getBodyByName("endeff")->index);
       G.kinematicsVec(kinVec,P.world.getBodyByName("endeff")->index);
       xRefPos.append(~kinPos);
@@ -195,7 +194,6 @@ public:
     joints.append(msg->position[23]);
 
     G.setJointState(joints);
-    G.calcBodyFramesFromJoints();
     gl.update();
 
   }

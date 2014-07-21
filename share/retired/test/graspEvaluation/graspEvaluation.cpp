@@ -27,7 +27,6 @@ void GraspEvaluation::closeFingers(){
     for(uint t=0;t<100;t++){
       q(i) += step;
       grasp.setJointState(q);
-      grasp.calcBodyFramesFromJoints();
       s->swift.computeProxies(grasp, false);
       //grasp.reportProxies();
       gl.update();
@@ -40,12 +39,10 @@ void GraspEvaluation::closeFingers(){
     }
   }
   grasp.setJointState(q);
-  grasp.calcBodyFramesFromJoints();
   s->swift.computeProxies(grasp, false);
   //grasp.reportProxies();
 //   for(uint i=3;i<q.N;i++) q(i) += step;
 //   grasp.setJointState(q);
-//   grasp.calcBodyFramesFromJoints();
   //s->swift.computeProxies(grasp, false);
   //grasp.reportProxies();
 }
@@ -135,7 +132,7 @@ void GraspEvaluation::copyGraspFromOrs(const ors::KinematicWorld& all,
 
   grasp.calcBodyFramesFromJoints();
   init(grasp,gl,NULL);
-  MT::save(grasp, "grasp.ors");
+  grasp >>FILE("grasp.ors");
 }
   
 void GraspEvaluation::simulateInPhysX(){

@@ -26,13 +26,13 @@
  **/
 
 
-#include <Gui/opengl.h>
-#include <Gui/plot.h>
 #include "ors.h"
 #include "ors_oldTaskVariables.h"
 #include "ors_swift.h"
 #include "ors_ode.h"
 #include "ors_actionInterface.h"
+#include <Gui/opengl.h>
+#include <Gui/plot.h>
 #include <sstream>
 #include <limits.h>
 #include <unistd.h>
@@ -67,7 +67,7 @@ void drawOrsActionInterfaceEnv(void*) {
 
 void oneStep(const arr &q, ors::KinematicWorld *C, OdeInterface *ode, SwiftInterface *swift) {
   C->setJointState(q);
-  C->calcBodyFramesFromJoints();
+  C->calc_fwdPropagateFrames();
 #ifdef MT_ODE
   if(ode) {
     C->ode().exportStateToOde();
@@ -120,18 +120,16 @@ void ActionInterface::shutdownAll() {
 
 void ActionInterface::loadConfiguration(const char* ors_filename) {
 
-  char *path, *name, cwd[200];
-  MT::decomposeFilename(path, name, ors_filename);
-  getcwd(cwd, 200);
-  chdir(path);
+//  char *path, *name, cwd[200];
+//  MT::decomposeFilename(path, name, ors_filename);
+//  getcwd(cwd, 200);
+//  chdir(path);
   
   if(C) delete C;
   C = new ors::KinematicWorld();
-  MT::load(*C, name);
-  C->calcBodyFramesFromJoints();
+  FILE(ors_filename) >> *C;
+  C->calc_fwdPropagateFrames();
   //C->reconfigureRoot(C->getName("rfoot"));
-  
-  chdir(cwd);
   
   C->getJointState(q0);
   

@@ -11,7 +11,6 @@ void saveTrajectory(const arr& x, ors::KinematicWorld& G, OpenGL& gl) {
   VideoEncoder_libav_simple vid;
   for(uint t=0; t<x.d0; t++) {
     G.setJointState(x[t]);
-    G.calcBodyFramesFromJoints();
     gl.update(STRING("step " <<std::setw(3) <<t <<'/' <<x.d0-1).p, true, false);
     flip_image(gl.captureImage);
     vid.addFrame(gl.captureImage);

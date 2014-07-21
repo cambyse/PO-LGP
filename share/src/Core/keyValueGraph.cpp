@@ -274,10 +274,7 @@ void KeyValueGraph::read(std::istream& is) {
       str.read(is,""," \n\r\t",true);
       if(str=="%include"){
         is >>str;
-        std::ifstream is2;
-        MT::open(is2, str);
-        read(is2);
-        is2.close();
+        read(FILE(str).getIs());
       }else HALT("don't know special command " <<str);
     }else{
       if(!is.good() || c=='}') { is.clear(); break; }
@@ -340,10 +337,3 @@ void KeyValueGraph::sortByDotOrder() {
   for_list_(Item, it2, list()) it2->index=it2_COUNT;
 }
 
-
-//===========================================================================
-//
-// explicit instantiations
-//
-
-template void MT::load<KeyValueGraph>(KeyValueGraph&, const char*, bool);

@@ -13,34 +13,18 @@
 
 
 struct MPC {
-  MPC(uint _plan_time_factor, ors::KinematicWorld &_orsG);
+  MPC(MotionProblem &_P, arr &_x);
   ~MPC();
 
-  arr iterate(double _t, arr &_state, arr &_goal, double _simRate);
-  void replanTrajectory(arr& _state,arr& _goal, double _t);
 
-  double control_time;
-  double plan_time;
-  uint plan_time_factor;
+  void replan(arr& _goal, arr &_q);
 
-  MotionProblem *P;
-  MotionProblemFunction *F;
-  ors::KinematicWorld *orsG;
-
-  Spline *s;
-
-  arr y;
-  arr yRef;
-
-  uint T,n;
-  double dt;
-  double t_prev;
-  double t_plan_prev;
+  MotionProblem P;
+  arr x;
 
   // bookkeeping
-  arr y_bk;
-
-  arr y_cart;
+  arr x_bk;
+  arr x_cart;
 
 };
 

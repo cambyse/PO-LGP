@@ -1,0 +1,189 @@
+body base_link {  mass=116.0  inertiaTensor=[5.652232699207 -0.009719934438 1.293988226423 5.669473158652 -0.007379583694 3.683196351726]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/base_v0/base_L.stl" }
+body base_footprint {  mass=1.0  inertiaTensor=[0.01 0.0 0.0 0.01 0.0 0.01]  rel=<T t(0 0 0.071) E(0 0 0)>  type=0 size=[0.001 0.001 0.001 0] }
+body base_bellow_link {  mass=1.0  inertiaTensor=[0.01 0.0 0.0 0.01 0.0 0.01]  rel=<T t(0 0 0) E(0 0 0)>  type=0 size=[0.05 0.37 0.3 0] }
+body base_laser_link {  mass=0.001  inertiaTensor=[0.0001 0 0 0.000001 0 0.0001] }
+body fl_caster_rotation_link {  mass=3.473082  inertiaTensor=[0.012411765597 -0.000711733678 0.00050272983 0.015218160428 -0.000004273467 0.011763977943]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/base_v0/caster_L.stl" }
+body fl_caster_l_wheel_link {  mass=0.44036  inertiaTensor=[0.012411765597 -0.000711733678 0.00050272983 0.015218160428 -0.000004273467 0.011763977943]  rel=<T t(0 0 0) E(1.57079632679 0 0)>  type=2 size=[0 0 0.034 0.074792] }
+body fl_caster_r_wheel_link {  mass=0.44036  inertiaTensor=[0.012411765597 -0.000711733678 0.00050272983 0.015218160428 -0.000004273467 0.011763977943]  rel=<T t(0 0 0) E(1.57079632679 0 0)>  type=2 size=[0 0 0.034 0.074792] }
+body fr_caster_rotation_link {  mass=3.473082  inertiaTensor=[0.012411765597 -0.000711733678 0.00050272983 0.015218160428 -0.000004273467 0.011763977943]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/base_v0/caster_L.stl" }
+body fr_caster_l_wheel_link {  mass=0.44036  inertiaTensor=[0.012411765597 -0.000711733678 0.00050272983 0.015218160428 -0.000004273467 0.011763977943]  rel=<T t(0 0 0) E(1.57079632679 0 0)>  type=2 size=[0 0 0.034 0.074792] }
+body fr_caster_r_wheel_link {  mass=0.44036  inertiaTensor=[0.012411765597 -0.000711733678 0.00050272983 0.015218160428 -0.000004273467 0.011763977943]  rel=<T t(0 0 0) E(1.57079632679 0 0)>  type=2 size=[0 0 0.034 0.074792] }
+body bl_caster_rotation_link {  mass=3.473082  inertiaTensor=[0.012411765597 -0.000711733678 0.00050272983 0.015218160428 -0.000004273467 0.011763977943]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/base_v0/caster_L.stl" }
+body bl_caster_l_wheel_link {  mass=0.44036  inertiaTensor=[0.012411765597 -0.000711733678 0.00050272983 0.015218160428 -0.000004273467 0.011763977943]  rel=<T t(0 0 0) E(1.57079632679 0 0)>  type=2 size=[0 0 0.034 0.074792] }
+body bl_caster_r_wheel_link {  mass=0.44036  inertiaTensor=[0.012411765597 -0.000711733678 0.00050272983 0.015218160428 -0.000004273467 0.011763977943]  rel=<T t(0 0 0) E(1.57079632679 0 0)>  type=2 size=[0 0 0.034 0.074792] }
+body br_caster_rotation_link {  mass=3.473082  inertiaTensor=[0.012411765597 -0.000711733678 0.00050272983 0.015218160428 -0.000004273467 0.011763977943]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/base_v0/caster_L.stl" }
+body br_caster_l_wheel_link {  mass=0.44036  inertiaTensor=[0.012411765597 -0.000711733678 0.00050272983 0.015218160428 -0.000004273467 0.011763977943]  rel=<T t(0 0 0) E(1.57079632679 0 0)>  type=2 size=[0 0 0.034 0.074792] }
+body br_caster_r_wheel_link {  mass=0.44036  inertiaTensor=[0.012411765597 -0.000711733678 0.00050272983 0.015218160428 -0.000004273467 0.011763977943]  rel=<T t(0 0 0) E(1.57079632679 0 0)>  type=2 size=[0 0 0.034 0.074792] }
+body torso_lift_link {  mass=36.248046  inertiaTensor=[2.771653750257 0.004284522609 -0.160418504506 2.510019507959 0.029664468704 0.526432355569]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/torso_v0/torso_lift_L.stl" }
+body l_torso_lift_side_plate_link {  mass=0.1  inertiaTensor=[0.001 0.0 0.0 0.001 0.0 0.001] }
+body r_torso_lift_side_plate_link {  mass=0.1  inertiaTensor=[0.001 0.0 0.0 0.001 0.0 0.001] }
+body torso_lift_motor_screw_link {  mass=1.0  inertiaTensor=[0.001 0.0 0.0 0.001 0.0 0.001] }
+body imu_link {  mass=0.001  inertiaTensor=[0.0001 0 0 0.000001 0 0.0001] }
+body head_pan_link {  mass=6.339  inertiaTensor=[0.032497592 0.00063604088 0.0025851534 0.046545627 -0.0024534295 0.057652724]  type=3 mesh="meshes/head_v0/head_pan_L.stl" }
+body head_tilt_link {  mass=4.479  inertiaTensor=[0.024223222 0.00062063507 -0.000096909696 0.054723086 0.00279702400 0.067306377]  rel=<T t(0 0 0) E(0.0 0.0 0.0)>  type=3 mesh="meshes/head_v0/head_tilt_L.stl" }
+body head_plate_frame {  mass=0.01  inertiaTensor=[0.001 0.0 0.0 0.001 0.0 0.001]  rel=<T t(0 0 0) E(0 0 0)>  type=0 size=[0.01 0.01 0.01 0] }
+body sensor_mount_link {  mass=0.05  inertiaTensor=[0.001 0.0 0.0 0.001 0.0 0.01] }
+body high_def_frame {  mass=0.01  inertiaTensor=[0.001 0.0 0.0 0.001 0.0 0.001] }
+body high_def_optical_frame {  mass=0.01  inertiaTensor=[0.001 0.0 0.0 0.001 0.0 0.001] }
+body double_stereo_link {  mass=0.1  inertiaTensor=[0.001 0.0 0.0 0.001 0.0 0.01] }
+body wide_stereo_link {  mass=0.1  inertiaTensor=[0.01 0 0 0.01 0 0.01] }
+body wide_stereo_optical_frame { }
+body wide_stereo_gazebo_l_stereo_camera_frame {  mass=0.01  inertiaTensor=[0.001 0.0 0.0 0.001 0.0 0.001] }
+body wide_stereo_gazebo_l_stereo_camera_optical_frame { }
+body wide_stereo_gazebo_r_stereo_camera_frame {  mass=0.01  inertiaTensor=[0.001 0.0 0.0 0.001 0.0 0.001] }
+body wide_stereo_gazebo_r_stereo_camera_optical_frame { }
+body narrow_stereo_link {  mass=0.1  inertiaTensor=[0.01 0 0 0.01 0 0.01] }
+body narrow_stereo_optical_frame { }
+body narrow_stereo_gazebo_l_stereo_camera_frame {  mass=0.01  inertiaTensor=[0.001 0.0 0.0 0.001 0.0 0.001] }
+body narrow_stereo_gazebo_l_stereo_camera_optical_frame { }
+body narrow_stereo_gazebo_r_stereo_camera_frame {  mass=0.01  inertiaTensor=[0.001 0.0 0.0 0.001 0.0 0.001] }
+body narrow_stereo_gazebo_r_stereo_camera_optical_frame { }
+body projector_wg6802418_frame {  mass=0.01  inertiaTensor=[0.001 0.0 0.0 0.001 0.0 0.001] }
+body projector_wg6802418_child_frame {  mass=0.01  inertiaTensor=[0.001 0.0 0.0 0.001 0.0 0.001] }
+body head_mount_link {  mass=0.1  inertiaTensor=[0.01 0.0 0.0 0.01 0.0 0.01]  rel=<T t(0.0 0.0 0) E(0 0 0)>  type=1 size=[0 0 0 0.0005] }
+body head_mount_kinect_ir_link {  mass=0.1  inertiaTensor=[0.01 0.0 0.0 0.01 0.0 0.01]  rel=<T t(0.0 0.0 0) E(0 0 0)>  type=1 size=[0 0 0 0.0005] }
+body head_mount_kinect_ir_optical_frame { }
+body head_mount_kinect_rgb_link {  mass=0.1  inertiaTensor=[0.01 0.0 0.0 0.01 0.0 0.01]  rel=<T t(0.0 0.0 0) E(0 0 0)>  type=1 size=[0 0 0 0.0005] }
+body head_mount_kinect_rgb_optical_frame { }
+body head_mount_prosilica_link {  mass=0.1  inertiaTensor=[0.01 0.0 0.0 0.01 0.0 0.01]  rel=<T t(0.0 0.0 0) E(0 0 0)>  type=1 size=[0 0 0 0.0005] }
+body head_mount_prosilica_optical_frame { }
+body laser_tilt_mount_link {  mass=0.591  inertiaTensor=[0.001195273 0.000023087 0.000037467 0.001083956 0.000034906 0.000795014]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/tilting_laser_v0/tilting_hokuyo_L.stl" }
+body laser_tilt_link {  mass=0.001  inertiaTensor=[0.0001 0 0 0.000001 0 0.0001] }
+body r_shoulder_pan_link {  mass=25.799322  inertiaTensor=[0.866179142480 -0.06086507933 -0.12118061183 0.87421714893 -0.05886609911 0.27353821674]  rel=<T t(0.0 0 0.0) E(0 0 0)>  type=3 mesh="meshes/shoulder_v0/shoulder_pan.stl" }
+body r_shoulder_lift_link {  mass=2.74988  inertiaTensor=[0.02105584615 0.00496704022 -0.00194808955 0.02127223737 0.00110425490 0.01975753814]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/shoulder_v0/shoulder_lift.stl" }
+body r_upper_arm_roll_link {  mass=0.1  inertiaTensor=[0.01 0.00 0.00 0.01 0.00 0.01]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/shoulder_v0/upper_arm_roll_L.stl" }
+body r_upper_arm_link {  mass=6.01769  inertiaTensor=[0.01537748957 0.00375711247 -0.00070852914 0.0747367044 -0.0001793645 0.07608763307]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/upper_arm_v0/upper_arm.stl" }
+body r_forearm_roll_link {  mass=0.1  inertiaTensor=[0.01 0.00 0.00 0.01 0.00 0.01]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/upper_arm_v0/forearm_roll_L.stl" }
+body r_elbow_flex_link {  mass=1.90327  inertiaTensor=[0.00346541989 0.00004066825 0.00043171614 0.00441606455 -0.00003968914 0.00359156824]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/upper_arm_v0/elbow_flex.stl" }
+body r_forearm_link {  mass=2.57968  inertiaTensor=[0.00364857222 0.00005215877 0.00071534842 0.01507736897 -0.00001310770 0.01659310749]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/forearm_v0/forearm.stl" }
+body r_wrist_flex_link {  mass=0.61402  inertiaTensor=[0.00065165722 0.00000028864 0.00000303477 0.00019824443 -0.00000022645 0.00064450498]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/forearm_v0/wrist_flex.stl" }
+body r_wrist_roll_link {  mass=0.1  inertiaTensor=[0.01 0 0 0.01 0 0.01]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/forearm_v0/wrist_roll_L.stl" }
+body r_gripper_palm_link {  mass=0.58007  inertiaTensor=[0.00035223921 -0.00001580476 -0.00000091750 0.00067741312 -0.00000059554 0.00086563316]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/gripper_v0/gripper_palm.stl" }
+body r_gripper_led_frame { }
+body r_gripper_motor_accelerometer_link {  mass=0.001  inertiaTensor=[0.001 0.0 0.0 0.001 0.0 0.001]  rel=<T t(0 0 0) E(0 0 0)>  type=0 size=[0.001 0.001 0.001 0] }
+body r_gripper_tool_frame { }
+body r_gripper_motor_slider_link {  mass=0.01  inertiaTensor=[0.001 0.0 0.0 0.001 0.0 0.001] }
+body r_gripper_motor_screw_link {  mass=0.01  inertiaTensor=[0.0001 0.0 0.0 0.0001 0.0 0.0001] }
+body r_gripper_l_finger_link {  mass=0.17126  inertiaTensor=[0.00007756198 0.00000149095 -0.00000983385 0.00019708305 -0.00000306125 0.00018105446]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/gripper_v0/l_finger.stl" }
+body r_gripper_r_finger_link {  mass=0.17389  inertiaTensor=[0.00007738410 -0.00000209309 -0.00000836228 0.00019847383 0.00000246110 0.00018106988]  rel=<T t(0 0 0) E(3.14159265359 0 0)>  type=3 mesh="meshes/gripper_v0/l_finger.stl" }
+body r_gripper_l_finger_tip_link {  mass=0.04419  inertiaTensor=[0.00000837047 0.00000583632 0.0 0.00000987067 0.0 0.00001541768]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/gripper_v0/l_finger_tip.stl" }
+body r_gripper_r_finger_tip_link {  mass=0.04419  inertiaTensor=[0.00000837047 -0.00000583632 0.0 0.00000987067 0.0 0.00001541768]  rel=<T t(0 0 0) E(3.14159265359 0 0)>  type=3 mesh="meshes/gripper_v0/l_finger_tip.stl" }
+body r_gripper_l_finger_tip_frame { }
+body l_shoulder_pan_link {  mass=25.799322  inertiaTensor=[0.866179142480 -0.06086507933 -0.12118061183 0.87421714893 -0.05886609911 0.27353821674]  rel=<T t(0.0 0 0.0) E(0 0 0)>  type=3 mesh="meshes/shoulder_v0/shoulder_pan.stl" }
+body l_shoulder_lift_link {  mass=2.74988  inertiaTensor=[0.02105584615 0.00496704022 -0.00194808955 0.02127223737 0.00110425490 0.01975753814]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/shoulder_v0/shoulder_lift.stl" }
+body l_upper_arm_roll_link {  mass=0.1  inertiaTensor=[0.01 0.00 0.00 0.01 0.00 0.01]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/shoulder_v0/upper_arm_roll_L.stl" }
+body l_upper_arm_link {  mass=6.01769  inertiaTensor=[0.01530603856 -0.00339324862 0.00060765455 0.07473694455 -0.00019953729 0.07601594191]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/upper_arm_v0/upper_arm.stl" }
+body l_forearm_roll_link {  mass=0.1  inertiaTensor=[0.01 0.00 0.00 0.01 0.00 0.01]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/upper_arm_v0/forearm_roll_L.stl" }
+body l_elbow_flex_link {  mass=1.90327  inertiaTensor=[0.00346541989 0.00004066825 0.00043171614 0.00441606455 -0.00003968914 0.00359156824]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/upper_arm_v0/elbow_flex.stl" }
+body l_forearm_link {  mass=2.57968  inertiaTensor=[0.00364857222 0.00005215877 0.00071534842 0.01507736897 -0.00001310770 0.01659310749]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/forearm_v0/forearm.stl" }
+body l_wrist_flex_link {  mass=0.61402  inertiaTensor=[0.00065165722 0.00000028864 0.00000303477 0.00019824443 -0.00000022645 0.00064450498]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/forearm_v0/wrist_flex.stl" }
+body l_wrist_roll_link {  mass=0.1  inertiaTensor=[0.01 0 0 0.01 0 0.01]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/forearm_v0/wrist_roll_L.stl" }
+body l_gripper_palm_link {  mass=0.58007  inertiaTensor=[0.00035223921 -0.00001580476 -0.00000091750 0.00067741312 -0.00000059554 0.00086563316]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/gripper_v0/gripper_palm.stl" }
+body l_gripper_led_frame { }
+body l_gripper_motor_accelerometer_link {  mass=0.001  inertiaTensor=[0.001 0.0 0.0 0.001 0.0 0.001]  rel=<T t(0 0 0) E(0 0 0)>  type=0 size=[0.001 0.001 0.001 0] }
+body l_gripper_tool_frame { }
+body l_gripper_motor_slider_link {  mass=0.01  inertiaTensor=[0.001 0.0 0.0 0.001 0.0 0.001] }
+body l_gripper_motor_screw_link {  mass=0.01  inertiaTensor=[0.0001 0.0 0.0 0.0001 0.0 0.0001] }
+body l_gripper_l_finger_link {  mass=0.17126  inertiaTensor=[0.00007756198 0.00000149095 -0.00000983385 0.00019708305 -0.00000306125 0.00018105446]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/gripper_v0/l_finger.stl" }
+body l_gripper_r_finger_link {  mass=0.17389  inertiaTensor=[0.00007738410 -0.00000209309 -0.00000836228 0.00019847383 0.00000246110 0.00018106988]  rel=<T t(0 0 0) E(3.14159265359 0 0)>  type=3 mesh="meshes/gripper_v0/l_finger.stl" }
+body l_gripper_l_finger_tip_link {  mass=0.04419  inertiaTensor=[0.00000837047 0.00000583632 0.0 0.00000987067 0.0 0.00001541768]  rel=<T t(0 0 0) E(0 0 0)>  type=3 mesh="meshes/gripper_v0/l_finger_tip.stl" }
+body l_gripper_r_finger_tip_link {  mass=0.04419  inertiaTensor=[0.00000837047 -0.00000583632 0.0 0.00000987067 0.0 0.00001541768]  rel=<T t(0 0 0) E(3.14159265359 0 0)>  type=3 mesh="meshes/gripper_v0/l_finger_tip.stl" }
+body l_gripper_l_finger_tip_frame { }
+body l_forearm_cam_frame {  mass=0.01  inertiaTensor=[0.001 0.0 0.0 0.001 0.0 0.001] }
+body l_forearm_cam_optical_frame { }
+body r_forearm_cam_frame {  mass=0.01  inertiaTensor=[0.001 0.0 0.0 0.001 0.0 0.001] }
+body r_forearm_cam_optical_frame { }
+joint base_footprint_joint (base_footprint base_link) {  type=10  A=<T t(0 0 0.051) E(0 0 0)> }
+joint base_bellow_joint (base_link base_bellow_link) {  type=10  A=<T t(-0.29 0 0.8) E(0 0 0)> }
+joint base_laser_joint (base_link base_laser_link) {  type=10  axis=[0 1 0]  A=<T t(0.275 0.0 0.252) E(0 0 0)> }
+joint fl_caster_rotation_joint (base_link fl_caster_rotation_link) {  type=0  axis=[0 0 1]  A=<T t(0.2246 0.2246 0.0282) E(0 0 0)>  ctrl_limits=[100 100] }
+joint fl_caster_l_wheel_joint (fl_caster_rotation_link fl_caster_l_wheel_link) {  type=0  axis=[0 1 0]  A=<T t(0 0.049 0) E(0 0 0)>  ctrl_limits=[100 100] }
+joint fl_caster_r_wheel_joint (fl_caster_rotation_link fl_caster_r_wheel_link) {  type=0  axis=[0 1 0]  A=<T t(0 -0.049 0) E(0 0 0)>  ctrl_limits=[100 100] }
+joint fr_caster_rotation_joint (base_link fr_caster_rotation_link) {  type=0  axis=[0 0 1]  A=<T t(0.2246 -0.2246 0.0282) E(0 0 0)>  ctrl_limits=[100 100] }
+joint fr_caster_l_wheel_joint (fr_caster_rotation_link fr_caster_l_wheel_link) {  type=0  axis=[0 1 0]  A=<T t(0 0.049 0) E(0 0 0)>  ctrl_limits=[100 100] }
+joint fr_caster_r_wheel_joint (fr_caster_rotation_link fr_caster_r_wheel_link) {  type=0  axis=[0 1 0]  A=<T t(0 -0.049 0) E(0 0 0)>  ctrl_limits=[100 100] }
+joint bl_caster_rotation_joint (base_link bl_caster_rotation_link) {  type=0  axis=[0 0 1]  A=<T t(-0.2246 0.2246 0.0282) E(0 0 0)>  ctrl_limits=[100 100] }
+joint bl_caster_l_wheel_joint (bl_caster_rotation_link bl_caster_l_wheel_link) {  type=0  axis=[0 1 0]  A=<T t(0 0.049 0) E(0 0 0)>  ctrl_limits=[100 100] }
+joint bl_caster_r_wheel_joint (bl_caster_rotation_link bl_caster_r_wheel_link) {  type=0  axis=[0 1 0]  A=<T t(0 -0.049 0) E(0 0 0)>  ctrl_limits=[100 100] }
+joint br_caster_rotation_joint (base_link br_caster_rotation_link) {  type=0  axis=[0 0 1]  A=<T t(-0.2246 -0.2246 0.0282) E(0 0 0)>  ctrl_limits=[100 100] }
+joint br_caster_l_wheel_joint (br_caster_rotation_link br_caster_l_wheel_link) {  type=0  axis=[0 1 0]  A=<T t(0 0.049 0) E(0 0 0)>  ctrl_limits=[100 100] }
+joint br_caster_r_wheel_joint (br_caster_rotation_link br_caster_r_wheel_link) {  type=0  axis=[0 1 0]  A=<T t(0 -0.049 0) E(0 0 0)>  ctrl_limits=[100 100] }
+joint torso_lift_joint (base_link torso_lift_link) {  type=3  axis=[0 0 1]  A=<T t(-0.05 0 0.739675) E(0 0 0)>  limits=[0.0 0.33]  ctrl_limits=[0.013 10000] }
+joint l_torso_lift_side_plate_joint (torso_lift_link l_torso_lift_side_plate_link) {  type=10  A=<T t(0.0535 0.209285 0.176625)> }
+joint r_torso_lift_side_plate_joint (torso_lift_link r_torso_lift_side_plate_link) {  type=10  A=<T t(0.0535  -0.209285 0.176625)> }
+joint torso_lift_motor_screw_joint (base_link torso_lift_motor_screw_link) {  type=0  axis=[0 0 1]  A=<T t(-0.15 0.0 0.7)> }
+joint imu_joint (torso_lift_link imu_link) {  type=10  axis=[0 1 0]  A=<T t(-0.02977 -0.1497 0.164) E(0 3.14159265359 0)> }
+joint head_pan_joint (torso_lift_link head_pan_link) {  type=0  axis=[0 0 1]  A=<T t(-0.01707 0.0 0.38145) E(0.0 0.0 0.0)>  limits=[-3.007 3.007]  ctrl_limits=[6 2.645] }
+joint head_tilt_joint (head_pan_link head_tilt_link) {  type=0  axis=[0 1 0]  A=<T t(0.068 0 0) E(0 0 0)>  limits=[-0.471238 1.39626]  ctrl_limits=[5 18] }
+joint head_plate_frame_joint (head_tilt_link head_plate_frame) {  type=10  A=<T t(0.0232 0 0.0645) E(0 0 0)> }
+joint sensor_mount_frame_joint (head_plate_frame sensor_mount_link) {  type=10  A=<T t(0.0 0.0 0.0) E(0 0 0)> }
+joint high_def_frame_joint (sensor_mount_link high_def_frame) {  type=10  A=<T t(0.046457 -0.110 0.054600) E(0 0 0)> }
+joint high_def_optical_frame_joint (high_def_frame high_def_optical_frame) {  type=10  A=<T t(0.0            0.0         0.0) E(-1.57079632679 0.0 -1.57079632679)> }
+joint double_stereo_frame_joint (sensor_mount_link double_stereo_link) {  type=10  A=<T t(0.0 0.0 0.0) E(0 0 0)> }
+joint wide_stereo_frame_joint (double_stereo_link wide_stereo_link) {  type=10  A=<T t(0.045 0.03 0.0501) E(0.0   0.0   0.0)> }
+joint wide_stereo_optical_frame_joint (wide_stereo_link wide_stereo_optical_frame) {  type=10  A=<T t(0 0 0) E(-1.57079632679 0.0 -1.57079632679)> }
+joint wide_stereo_gazebo_l_stereo_camera_frame_joint (wide_stereo_link wide_stereo_gazebo_l_stereo_camera_frame) {  type=10  A=<T t(0 0 0) E(0 0 0)> }
+joint wide_stereo_gazebo_l_stereo_camera_optical_frame_joint (wide_stereo_gazebo_l_stereo_camera_frame wide_stereo_gazebo_l_stereo_camera_optical_frame) {  type=10  A=<T t(0 0 0) E(-1.57079632679 0.0 -1.57079632679)> }
+joint wide_stereo_gazebo_r_stereo_camera_frame_joint (wide_stereo_gazebo_l_stereo_camera_frame wide_stereo_gazebo_r_stereo_camera_frame) {  type=10  A=<T t(0.0 -0.09 0.0) E(0.0 0.0 0.0)> }
+joint wide_stereo_gazebo_r_stereo_camera_optical_frame_joint (wide_stereo_gazebo_r_stereo_camera_frame wide_stereo_gazebo_r_stereo_camera_optical_frame) {  type=10  A=<T t(0 0 0) E(-1.57079632679 0.0 -1.57079632679)> }
+joint narrow_stereo_frame_joint (double_stereo_link narrow_stereo_link) {  type=10  A=<T t(0.045 0.06 0.0501) E(0.0   0.0   0.0)> }
+joint narrow_stereo_optical_frame_joint (narrow_stereo_link narrow_stereo_optical_frame) {  type=10  A=<T t(0 0 0) E(-1.57079632679 0.0 -1.57079632679)> }
+joint narrow_stereo_gazebo_l_stereo_camera_frame_joint (narrow_stereo_link narrow_stereo_gazebo_l_stereo_camera_frame) {  type=10  A=<T t(0 0 0) E(0 0 0)> }
+joint narrow_stereo_gazebo_l_stereo_camera_optical_frame_joint (narrow_stereo_gazebo_l_stereo_camera_frame narrow_stereo_gazebo_l_stereo_camera_optical_frame) {  type=10  A=<T t(0 0 0) E(-1.57079632679 0.0 -1.57079632679)> }
+joint narrow_stereo_gazebo_r_stereo_camera_frame_joint (narrow_stereo_gazebo_l_stereo_camera_frame narrow_stereo_gazebo_r_stereo_camera_frame) {  type=10  A=<T t(0.0 -0.09 0.0) E(0.0 0.0 0.0)> }
+joint narrow_stereo_gazebo_r_stereo_camera_optical_frame_joint (narrow_stereo_gazebo_r_stereo_camera_frame narrow_stereo_gazebo_r_stereo_camera_optical_frame) {  type=10  A=<T t(0 0 0) E(-1.57079632679 0.0 -1.57079632679)> }
+joint projector_wg6802418_frame_joint (head_plate_frame projector_wg6802418_frame) {  type=10  A=<T t(0 0.110 0.0546) E(0 0 0)> }
+joint projector_wg6802418_child_frame_joint (projector_wg6802418_frame projector_wg6802418_child_frame) {  type=10  A=<T t(0 0 0) E(0 -1.57079632679 0)> }
+joint head_mount_joint (head_plate_frame head_mount_link) {  type=10  A=<T t(-0.138 0 0.091) E(0 0 0)> }
+joint head_mount_kinect_ir_joint (head_mount_link head_mount_kinect_ir_link) {  type=10  A=<T t(-0.032267 0.0125 0.136453) E(0 0 0)> }
+joint head_mount_kinect_ir_optical_frame_joint (head_mount_kinect_ir_link head_mount_kinect_ir_optical_frame) {  type=10  A=<T t(0.0            0.0         0.0) E(-1.57079632679 0.0 -1.57079632679)> }
+joint head_mount_kinect_rgb_joint (head_mount_kinect_ir_link head_mount_kinect_rgb_link) {  type=10  A=<T t(0 -0.03 0) E(0 0 0)> }
+joint head_mount_kinect_rgb_optical_frame_joint (head_mount_kinect_rgb_link head_mount_kinect_rgb_optical_frame) {  type=10  A=<T t(0.0            0.0         0.0) E(-1.57079632679 0.0 -1.57079632679)> }
+joint head_mount_prosilica_joint (head_mount_link head_mount_prosilica_link) {  type=10  A=<T t(-0.046457 0.0125 0.088921) E(0 0 0)> }
+joint head_mount_prosilica_optical_frame_joint (head_mount_prosilica_link head_mount_prosilica_optical_frame) {  type=10  A=<T t(0.0            0.0         0.0) E(-1.57079632679 0.0 -1.57079632679)> }
+joint laser_tilt_mount_joint (torso_lift_link laser_tilt_mount_link) {  type=0  axis=[0 1 0]  A=<T t(0.09893 0 0.227) E(0 0 0)>  limits=[-0.7854 1.48353]  ctrl_limits=[10.0 0.65] }
+joint laser_tilt_joint (laser_tilt_mount_link laser_tilt_link) {  type=10  axis=[0 1 0]  A=<T t(0 0 0.03) E(0 0 0)> }
+joint r_shoulder_pan_joint (torso_lift_link r_shoulder_pan_link) {  type=0  axis=[0 0 1]  A=<T t(0.0 -0.188 0.0) E(0 0 0)>  limits=[-2.2853981634 0.714601836603]  ctrl_limits=[2.088 30] }
+joint r_shoulder_lift_joint (r_shoulder_pan_link r_shoulder_lift_link) {  type=0  axis=[0 1 0]  A=<T t(0.1 0 0) E(0 0 0)>  limits=[-0.5236 1.3963]  ctrl_limits=[2.082 30] }
+joint r_upper_arm_roll_joint (r_shoulder_lift_link r_upper_arm_roll_link) {  type=0  axis=[1 0 0]  A=<T t(0 0 0) E(0 0 0)>  limits=[-3.9 0.8]  ctrl_limits=[3.27 30] }
+joint r_upper_arm_joint (r_upper_arm_roll_link r_upper_arm_link) {  type=10  A=<T t(0 0 0) E(0 0 0)> }
+joint r_forearm_roll_joint (r_elbow_flex_link r_forearm_roll_link) {  type=0  axis=[1 0 0]  A=<T t(0 0 0) E(0 0 0)>  ctrl_limits=[3.6 30] }
+joint r_elbow_flex_joint (r_upper_arm_link r_elbow_flex_link) {  type=0  axis=[0 1 0]  A=<T t(0.4 0 0) E(0 0 0)>  limits=[-2.3213 0.00]  ctrl_limits=[3.3 30] }
+joint r_forearm_joint (r_forearm_roll_link r_forearm_link) {  type=10  A=<T t(0 0 0) E(0 0 0)> }
+joint r_wrist_flex_joint (r_forearm_link r_wrist_flex_link) {  type=0  axis=[0 1 0]  A=<T t(0.321 0 0) E(0 0 0)>  limits=[-2.18 0.0]  ctrl_limits=[3.078 10] }
+joint r_wrist_roll_joint (r_wrist_flex_link r_wrist_roll_link) {  type=0  axis=[1 0 0]  A=<T t(0 0 0) E(0 0 0)>  ctrl_limits=[3.6 10] }
+joint r_gripper_palm_joint (r_wrist_roll_link r_gripper_palm_link) {  type=10  A=<T t(0 0 0) E(0 0 0)> }
+joint r_gripper_led_joint (r_gripper_palm_link r_gripper_led_frame) {  type=10  A=<T t(0.0513 0.0 .0244)> }
+joint r_gripper_motor_accelerometer_joint (r_gripper_palm_link r_gripper_motor_accelerometer_link) {  type=10  A=<T t(0 0 0) E(0 0 0)> }
+joint r_gripper_tool_joint (r_gripper_palm_link r_gripper_tool_frame) {  type=10  A=<T t(0.18 0 0) E(0 0 0)> }
+joint r_gripper_motor_slider_joint (r_gripper_palm_link r_gripper_motor_slider_link) {  type=3  axis=[1 0 0]  A=<T t(0.16828 0 0) E(0 0 0)>  limits=[-0.1 0.1]  ctrl_limits=[0.2 1000.0] }
+joint r_gripper_motor_screw_joint (r_gripper_motor_slider_link r_gripper_motor_screw_link) {  type=0  axis=[0 1 0]  A=<T t(0.0 0 0) E(0 0 0)> }
+joint r_gripper_l_finger_joint (r_gripper_palm_link r_gripper_l_finger_link) {  type=0  axis=[0 0 1]  A=<T t(0.07691 0.01 0) E(0 0 0)>  limits=[0.0 0.548]  ctrl_limits=[0.5 1000.0] }
+joint r_gripper_r_finger_joint (r_gripper_palm_link r_gripper_r_finger_link) {  type=0  mimic=r_gripper_l_finger_joint  axis=[0 0 -1]  A=<T t(0.07691 -0.01 0) E(0 0 0)>  limits=[0.0 0.548]  ctrl_limits=[0.5 1000.0] }
+joint r_gripper_l_finger_tip_joint (r_gripper_l_finger_link r_gripper_l_finger_tip_link) {  type=0  mimic=r_gripper_l_finger_joint  axis=[0 0 -1]  A=<T t(0.09137 0.00495 0) E(0 0 0)>  limits=[0.0 0.548]  ctrl_limits=[0.5 1000.0] }
+joint r_gripper_r_finger_tip_joint (r_gripper_r_finger_link r_gripper_r_finger_tip_link) {  type=0  mimic=r_gripper_l_finger_joint  axis=[0 0 1]  A=<T t(0.09137 -0.00495 0) E(0 0 0)>  limits=[0.0 0.548]  ctrl_limits=[0.5 1000.0] }
+joint r_gripper_joint (r_gripper_r_finger_tip_link r_gripper_l_finger_tip_frame) {  type=3  axis=[0 1 0]  limits=[0.0 0.09]  ctrl_limits=[0.2 1000.0] }
+joint l_shoulder_pan_joint (torso_lift_link l_shoulder_pan_link) {  type=0  axis=[0 0 1]  A=<T t(0.0 0.188 0.0) E(0 0 0)>  limits=[-0.714601836603 2.2853981634]  ctrl_limits=[2.088 30] }
+joint l_shoulder_lift_joint (l_shoulder_pan_link l_shoulder_lift_link) {  type=0  axis=[0 1 0]  A=<T t(0.1 0 0) E(0 0 0)>  limits=[-0.5236 1.3963]  ctrl_limits=[2.082 30] }
+joint l_upper_arm_roll_joint (l_shoulder_lift_link l_upper_arm_roll_link) {  type=0  axis=[1 0 0]  A=<T t(0 0 0) E(0 0 0)>  limits=[-0.8 3.9]  ctrl_limits=[3.27 30] }
+joint l_upper_arm_joint (l_upper_arm_roll_link l_upper_arm_link) {  type=10  A=<T t(0 0 0) E(0 0 0)> }
+joint l_forearm_roll_joint (l_elbow_flex_link l_forearm_roll_link) {  type=0  axis=[1 0 0]  A=<T t(0 0 0) E(0 0 0)>  ctrl_limits=[3.6 30] }
+joint l_elbow_flex_joint (l_upper_arm_link l_elbow_flex_link) {  type=0  axis=[0 1 0]  A=<T t(0.4 0 0) E(0 0 0)>  limits=[-2.3213 0.00]  ctrl_limits=[3.3 30] }
+joint l_forearm_joint (l_forearm_roll_link l_forearm_link) {  type=10  A=<T t(0 0 0) E(0 0 0)> }
+joint l_wrist_flex_joint (l_forearm_link l_wrist_flex_link) {  type=0  axis=[0 1 0]  A=<T t(0.321 0 0) E(0 0 0)>  limits=[-2.18 0.0]  ctrl_limits=[3.078 10] }
+joint l_wrist_roll_joint (l_wrist_flex_link l_wrist_roll_link) {  type=0  axis=[1 0 0]  A=<T t(0 0 0) E(0 0 0)>  ctrl_limits=[3.6 10] }
+joint l_gripper_palm_joint (l_wrist_roll_link l_gripper_palm_link) {  type=10  A=<T t(0 0 0) E(0 0 0)> }
+joint l_gripper_led_joint (l_gripper_palm_link l_gripper_led_frame) {  type=10  A=<T t(0.0513 0.0 .0244)> }
+joint l_gripper_motor_accelerometer_joint (l_gripper_palm_link l_gripper_motor_accelerometer_link) {  type=10  A=<T t(0 0 0) E(0 0 0)> }
+joint l_gripper_tool_joint (l_gripper_palm_link l_gripper_tool_frame) {  type=10  A=<T t(0.18 0 0) E(0 0 0)> }
+joint l_gripper_motor_slider_joint (l_gripper_palm_link l_gripper_motor_slider_link) {  type=3  axis=[1 0 0]  A=<T t(0.16828 0 0) E(0 0 0)>  limits=[-0.1 0.1]  ctrl_limits=[0.2 1000.0] }
+joint l_gripper_motor_screw_joint (l_gripper_motor_slider_link l_gripper_motor_screw_link) {  type=0  axis=[0 1 0]  A=<T t(0.0 0 0) E(0 0 0)> }
+joint l_gripper_l_finger_joint (l_gripper_palm_link l_gripper_l_finger_link) {  type=0  axis=[0 0 1]  A=<T t(0.07691 0.01 0) E(0 0 0)>  limits=[0.0 0.548]  ctrl_limits=[0.5 1000.0] }
+joint l_gripper_r_finger_joint (l_gripper_palm_link l_gripper_r_finger_link) {  type=0  mimic=l_gripper_l_finger_joint  axis=[0 0 -1]  A=<T t(0.07691 -0.01 0) E(0 0 0)>  limits=[0.0 0.548]  ctrl_limits=[0.5 1000.0] }
+joint l_gripper_l_finger_tip_joint (l_gripper_l_finger_link l_gripper_l_finger_tip_link) {  type=0  mimic=l_gripper_l_finger_joint  axis=[0 0 -1]  A=<T t(0.09137 0.00495 0) E(0 0 0)>  limits=[0.0 0.548]  ctrl_limits=[0.5 1000.0] }
+joint l_gripper_r_finger_tip_joint (l_gripper_r_finger_link l_gripper_r_finger_tip_link) {  type=0  mimic=l_gripper_l_finger_joint  axis=[0 0 1]  A=<T t(0.09137 -0.00495 0) E(0 0 0)>  limits=[0.0 0.548]  ctrl_limits=[0.5 1000.0] }
+joint l_gripper_joint (l_gripper_r_finger_tip_link l_gripper_l_finger_tip_frame) {  type=3  axis=[0 1 0]  limits=[0.0 0.09]  ctrl_limits=[0.2 1000.0] }
+joint l_forearm_cam_frame_joint (l_forearm_roll_link l_forearm_cam_frame) {  type=10  A=<T t(.135 0 .044) E(-1.57079632679 -0.562868683768 0)> }
+joint l_forearm_cam_optical_frame_joint (l_forearm_cam_frame l_forearm_cam_optical_frame) {  type=10  A=<T t(0 0 0) E(-1.57079632679 0.0 -1.57079632679)> }
+joint r_forearm_cam_frame_joint (r_forearm_roll_link r_forearm_cam_frame) {  type=10  A=<T t(.135 0 .044) E(1.57079632679 -0.562868683768 0)> }
+joint r_forearm_cam_optical_frame_joint (r_forearm_cam_frame r_forearm_cam_optical_frame) {  type=10  A=<T t(0 0 0) E(-1.57079632679 0.0 -1.57079632679)> }

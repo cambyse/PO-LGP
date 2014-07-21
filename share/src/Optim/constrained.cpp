@@ -53,7 +53,7 @@ void UnconstrainedProblem::augmentedLagrangian_LambdaUpdate(const arr& x, double
 
   for(uint i=0;i<g.N;i++) if(lambda(i)<0.) lambda(i)=0.;
 
-  cout <<"Update Lambda: g=" <<g <<" lambda=" <<lambda <<endl;
+//  cout <<"Update Lambda: g=" <<g <<" lambda=" <<lambda <<endl;
 }
 
 //==============================================================================
@@ -79,5 +79,47 @@ double PhaseOneProblem::fc(arr& df, arr& Hf, arr& meta_g, arr& meta_Jg, const ar
     for(uint i=0;i<g.N;i++) meta_Jg(i,x.N-1) = -1.;
     meta_Jg(g.N, x.N-1) = -1.;
   }
+}
+
+
+//==============================================================================
+//
+// Solvers
+//
+
+const char* MethodName[]={ "NoMethod", "SquaredPenalty", "AugmentedLagrangian", "LogBarrier" };
+
+void optConstrained(arr& x, arr& dual, ConstrainedProblem& P, OptOptions opt){
+  UnconstrainedProblem UCP(P);
+
+  //switch on penalty terms
+  switch(opt.constrainedMethod){
+    case squaredPenalty: UCP.mu=1.;  break;
+    case augmentedLag:   UCP.mu=1.;  break;
+    case logBarrier:     UCP.muLB=1.;  break;
+    case noMethod: HALT("need to set method before");  break;
+  }
+
+  if(opt.verbose>1) cout <<"***** optConstrained: method=" <<MethodName[opt.constrainedMethod] <<endl;
+
+  for(uint k=0;;k++){
+    if(opt.verbose>1) cout <<"***** optConstrained: iteration=" <<k
+                             <<" mu=" <<UCP.mu <<" lambda=" <<UCP.lambda <<" muLB=" <<UCP.muLB <<endl;
+    arr x_old = x;
+    optNewton(x, UCP, opt);
+
+    //upate unconstraint problem parameters
+    switch(opt.constrainedMethod){
+      case squaredPenalty: UCP.mu *= 10;  break;
+      case augmentedLag:   UCP.augmentedLagrangian_LambdaUpdate(x);  break;
+      case logBarrier:     UCP.muLB /= 2;  break;
+      case noMethod: HALT("need to set method before");  break;
+    }
+
+    //stopping criteron
+    if(k>10 && absMax(x_old-x)<opt.stopTolerance){ cout << " --- optConstrained StoppingCriterion Delta<" <<opt.stopTolerance <<endl;  break; }
+  }
+
+  if(&dual) dual=UCP.lambda;
 }
 

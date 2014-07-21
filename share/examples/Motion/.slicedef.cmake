@@ -1,0 +1,11 @@
+set(CURRENT_SLICE 
+ constraint
+dmp
+grasp
+grasp_PR2
+motion
+mpc
+pfc
+RRT-PR2
+splines
+ )

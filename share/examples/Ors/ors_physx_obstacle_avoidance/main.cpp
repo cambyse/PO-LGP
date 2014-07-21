@@ -10,7 +10,6 @@ void TEST(PhysxObstacleAvoidance) {
   ors::KinematicWorld ors;
   ors.init("doorComplex.ors");
   ors::Body* robot = ors.getBodyByName("robot");
-  ors.calcBodyFramesFromJoints();
 
   OpenGL glPh("PhysX");
   //bindOrsToPhysX(ors, glPh, physx);

@@ -49,8 +49,7 @@ void loadOrsFile(ors::KinematicWorld& C, OpenGL& gl,const char *file="../../conf
   gl.camera.setPosition(7.,-0.,2.);
   gl.camera.focus(0,0,.8);
 
-  MT::load(C,name);
-  C.calcBodyFramesFromJoints();
+  C <<FILE(name);
 
   chdir(cwd);
 }

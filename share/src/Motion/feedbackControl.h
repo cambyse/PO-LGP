@@ -16,6 +16,8 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
+#pragma once
+
 #include "motion.h"
 #include "taskMap_default.h"
 
@@ -29,7 +31,7 @@ struct PDtask{
 
   arr y_ref, v_ref;      ///< immediate (next step) desired target reference
   double Pgain, Dgain;   ///< parameters of the PD controller or attractor dynamics
-  arr Perr, Derr;
+  arr y, v; ///< the observations when LAST getDesiredAcceleration was called -- use carefully! (in online mode only)
 
   PDtask(TaskMap* m):map(*m), active(true), prec(0.), Pgain(0.), Dgain(0.) {}
 
@@ -42,23 +44,43 @@ struct PDtask{
 
 //===========================================================================
 
+struct ConstraintForceTask{
+  TaskMap& map;
+  MT::String name;
+  bool active;
+
+  double desiredForce;
+  PDtask desiredApproach;
+
+  ConstraintForceTask(TaskMap* m):map(*m), active(true), desiredForce(0.), desiredApproach(m){}
+
+  void updateConstraintControl(const arr& g, const double& lambda_desired);
+};
+
+//===========================================================================
+
+
 struct FeedbackMotionControl : MotionProblem {
   MT::Array<PDtask*> tasks;
+  MT::Array<ConstraintForceTask*> forceTasks;
   PDtask nullSpacePD;
 
   FeedbackMotionControl(ors::KinematicWorld& _world, bool useSwift=true);
 
   //adding task spaces
-  PDtask* addTask(const char* name, TaskMap *map);
+  PDtask* addPDTask(const char* name, double decayTime, double dampingRatio, TaskMap *map);
   PDtask* addPDTask(const char* name,
                     double decayTime, double dampingRatio,
                     DefaultTaskMapType type,
                     const char* iShapeName=NULL, const ors::Vector& ivec=NoVector,
                     const char* jShapeName=NULL, const ors::Vector& jvec=NoVector,
                     const arr& params=NoArr);
+  ConstraintForceTask* addConstraintForceTask(const char* name, TaskMap *map);
 
-  void getTaskCosts(arr& phi, arr& J, arr& a); ///< the general (`big') task vector and its Jacobian
+  void getTaskCosts(arr& phi, arr& J, arr& q_ddot); ///< the general (`big') task vector and its Jacobian
+  arr getDesiredConstraintForces(); ///< J^T lambda^*
   arr operationalSpaceControl();
+  void updateConstraintControllers();
 };
 
 //===========================================================================

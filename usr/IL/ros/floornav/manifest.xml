@@ -1,0 +1,19 @@
+<package>
+  <description brief="floornav">
+
+     floornav
+
+  </description>
+  <author>Ingo Lütkebohle</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/floornav</url>
+  <depend package="move_base_msgs"/>
+  <depend package="move_base"/>
+  <depend package="actionlib"/>
+  <depend package="map_server"/>
+  <depend package="rospy"/>
+  <depend package="robot_state_publisher"/>
+</package>
+
+

@@ -43,7 +43,7 @@ struct sSimulator {
 
 void Simulator::anchorKinematicChainIn(const char* bodyName){
   s->G.reconfigureRoot(s->G.getBodyByName(bodyName));
-  s->G.calcBodyFramesFromJoints();
+  s->G.calc_fwdPropagateFrames();
   
   NIY;
 //  if(s->G.swift().isOpen){
@@ -66,7 +66,7 @@ Simulator::Simulator(const char* orsFile){
   
   //ORS
   s->G.init(orsFile);
-  s->G.calcBodyFramesFromJoints();
+  s->G.calc_fwdPropagateFrames();
   /*  if(s->G.getBodyByName("rfoot")){
     s->G.reconfigureRoot(s->G.getBodyByName("rfoot"));
     s->G.calcBodyFramesFromJoints();
@@ -80,11 +80,6 @@ Simulator::Simulator(const char* orsFile){
   
   //SWIFT
   s->G.swift().setCutoff(.5);
-  
-  //ODE
-#ifdef MT_ODE
-  s->G.ode();
-#endif
 }
 
 Simulator::~Simulator(){
@@ -113,14 +108,14 @@ uint Simulator::getJointDimension(){
 
 void Simulator::setJointAngles(const arr& q, bool updateDisplay){
   s->G.setJointState(q);
-  s->G.calcBodyFramesFromJoints();
+  s->G.calc_fwdPropagateFrames();
   s->G.computeProxies();
   if(updateDisplay) s->G.watch(false);
 }
 
 void Simulator::setJointAnglesAndVels(const arr& q, const arr& qdot, bool updateDisplay){
   s->G.setJointState(q, qdot);
-  s->G.calcBodyFramesFromJoints();
+  s->G.calc_fwdPropagateFrames();
   s->G.computeProxies();
   if(updateDisplay) s->G.watch(false);
 }
@@ -200,6 +195,14 @@ void Simulator::setDynamicSimulationNoise(double noise){
 
 void Simulator::setDynamicGravity(bool gravity){
   s->gravity = gravity;
+}
+
+void Simulator::getDynamics(arr& M, arr& F){
+  s->G.equationOfMotion(M, F);
+}
+
+void Simulator::stepDynamics(const arr& Bu, double tau){
+  s->G.stepDynamics(Bu, tau, s->dynamicNoise);
 }
 
 void Simulator::stepOde(const arr& qdot, double tau){

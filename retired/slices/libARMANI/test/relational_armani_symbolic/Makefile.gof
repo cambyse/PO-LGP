@@ -1,0 +1,5 @@
+BASE = ../..
+
+LIBS += -lARMANI
+
+include $(BASE)/gofMake/make-generic

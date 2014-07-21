@@ -1,0 +1,5 @@
+set style data lines
+set title '(Gui/plot.h -> gnuplot pipe)'
+plot [:][-.1:] 'z.output' us 1 t 'position','' us 2 t 'uncertainty', '' us 3 t 'dual>0'
+
+ pause mouse

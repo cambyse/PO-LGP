@@ -116,14 +116,12 @@ void scenario2() {
   arr q0,dq0,q;
   q0 = x[0]; dq0 = 0.*q0;
   G.setJointState(q0,dq0);
-  G.calcBodyFramesFromJoints();
   G.getJointState(q);
 
   // apply DMP on robot
   while(d.X>1e-3) {
 
     G.setJointState(d.Y);
-    G.calcBodyFramesFromJoints();
 
     d.iterate();
     G.gl().update();
@@ -179,7 +177,6 @@ void scenario3() {
   // store cartesian coordinates and endeffector orientation
   for (uint t=0;t<=T;t++) {
     G.setJointState(x[t]);
-    G.calcBodyFramesFromJoints();
     G.kinematicsPos(kinPos, NoArr, P.world.getBodyByName("endeff")->index);
     G.kinematicsVec(kinVec, NoArr, P.world.getBodyByName("endeff")->index);
     xRefPos.append(~kinPos);
@@ -208,7 +205,6 @@ void scenario3() {
   arr q0,dq0,q,qd;
   q0 = x[0]; dq0 = 0.*q0;
   G.setJointState(q0,dq0);
-  G.calcBodyFramesFromJoints();
   G.getJointState(q);
 
   double fPos_deviation = 1e-2;
@@ -242,7 +238,6 @@ void scenario3() {
     q -= qd;
 
     G.setJointState(q);
-    G.calcBodyFramesFromJoints();
 
     G.gl().update();
   }
@@ -306,7 +301,6 @@ void scenario4() {
   // store cartesian coordinates and endeffector orientation
   for (uint t=0;t<=T;t++) {
     G.setJointState(x[t]);
-    G.calcBodyFramesFromJoints();
     G.kinematicsPos(kinPos, NoArr, P.world.getBodyByName("endeff")->index);
     G.kinematicsVec(kinVec, NoArr, P.world.getBodyByName("endeff")->index);
     xRefPos.append(~kinPos);
@@ -338,7 +332,6 @@ void scenario4() {
   arr q0,dq0,q,qd;
   q0 = x[0]; dq0 = 0.*q0;
   G.setJointState(q0,dq0);
-  G.calcBodyFramesFromJoints();
   G.getJointState(q);
 
   double fPos_deviation = 1e-2;
@@ -387,7 +380,6 @@ void scenario4() {
     q -= qd;
 
     G.setJointState(q);
-    G.calcBodyFramesFromJoints();
 
     G.gl().update();
   }

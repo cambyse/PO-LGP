@@ -42,7 +42,10 @@ include_directories( ${MLR_PATH}/share/src )
 #rosbuild_add_boost_directories()
 #rosbuild_link_boost(${PROJECT_NAME} thread)
 
-rosbuild_add_executable(test_mini_motion.exe src/testMiniMotion.cpp)
+rosbuild_add_executable(test_mini_motion.exe
+  src/testMiniMotion.cpp
+  src/execution.cpp
+  src/getTraj.cpp)
 
 target_link_libraries(test_mini_motion.exe
   ${MLR_PATH}/share/lib/libAlgo.so

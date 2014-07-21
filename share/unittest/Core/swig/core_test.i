@@ -11,9 +11,21 @@
 struct ListTest {
   double d;
   ~ListTest() {};
+  ListTest(double d) : d(d) {};
+  ListTest() {};
 };
 
 %}
+
+%extend ListTest {
+%pythoncode %{
+def __str__(self):
+    return "ListTest: d = " + str(self.d)
+
+def __repr__(self):
+    return "<swig_wrapped ListTest: d = " + str(self.d) + ">"
+%}
+}
 
 %List_Typemap(ListTest)
 
@@ -143,6 +155,21 @@ MT::Array<ListTest*> id_list_test(MT::Array<ListTest*> a) {
   return a;  
 }
 
+void argout_list_test(MT::Array<ListTest*> &l) {
+  ListTest* t1 = new ListTest(10);
+  ListTest* t2 = new ListTest(20);
+  l.resize(2);
+  l(0) = t1;
+  l(1) = t2;
+}
+
+void argout_inplace_list_test(MT::Array<ListTest*> &l) {
+  if(l.N != 2) { return; }
+  ListTest *tmp = l(0);
+  l(0) = l(1);
+  l(1) = tmp;
+}
+
 void argout_test(MT::Array<double>& io) {
   io = {1.2, 3.4};
 }
@@ -162,6 +189,7 @@ int argout_test_mixed(double d, MT::Array<double>& io1, int a, MT::Array<double>
   io2 = {5.6, 7.8};
   return 1;
 }
+
 
 %}  
 

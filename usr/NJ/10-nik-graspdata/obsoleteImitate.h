@@ -48,8 +48,8 @@ arr GetDynFeatures(const MT::Array<ors::Shape*> & landmarks,const arr & q, const
 		}
 
 	if(meaN.N == 0){//load arrays
-		MT::load(meaN, "discriminant3/mean.txt");
-		MT::load(prN, "discriminant3/pr.txt");
+		meaN <<FILE("discriminant3/mean.txt");
+		prN <<FILE("discriminant3/pr.txt");
 	}
 	TD2 -=meaN;//mean and scale with projection PCA
 	TD2 = TD2*prN;
@@ -91,8 +91,8 @@ arr MLPa(const arr & feat,const arr & w1,const arr & w2){
 
 double MLPMix(const arr & feat,arr & grad){
 	if(w0.N == 0){
-		MT::load(w0, "w0.txt");arr tmp = w0.resizeCopy(w0.d0);w0 = tmp;
-		MT::load(w12, "w12.txt");
+		w0 <<FILE("w0.txt");arr tmp = w0.resizeCopy(w0.d0);w0 = tmp;
+		w12 <<FILE("w12.txt");
 	}
 	arr temp = w0.sub(0, (feat.d0+1)*(4+1)-1);
 	arr w0a = ColumnResize(temp,feat.d0+1,4+1);
@@ -193,8 +193,8 @@ arr GetFeatures(const MT::Array<ors::Shape*> & landmarks, const arr & q,ors::Kin
 		TD(i+br) = q(i);
 	arr TD2 = TD;
 	if(meaN.N == 0){//load arrays
-		MT::load(meaN, "mean.txt");
-		MT::load(prN, "pr.txt");
+		meaN <<FILE("mean.txt");
+		prN <<FILE("pr.txt");
 	}
 	TD2 -=meaN;//mean and scale with projection PCA
 	TD2 = TD2*prN;
@@ -271,8 +271,8 @@ arr GetFinalFeatures(const arr& f1,const arr& f2,const arr & alfa){
 	}
 	arr concat = f1;
 	if(meaN.N == 0){//load arrays
-		MT::load(meaN, "mean.txt");
-		MT::load(prN, "pr.txt");
+		meaN <<FILE("mean.txt");
+		prN <<FILE("pr.txt");
 	}
 	concat -=meaN;//mean and scale with projection PCA
 	concat = concat*prN;
@@ -296,7 +296,7 @@ double EnergyCost(const arr & feat, arr & alfa){
 	return MLPMix(feat);
 	return feat(12);
 	if(w.N == 0){
-		MT::load(w, "w.txt");
+		w <<FILE("w.txt");
 	}
 	uint K = w.d1;
 	uint s = (feat.d0 -K-1)/2;

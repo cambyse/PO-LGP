@@ -21,6 +21,8 @@
 
 #include "motion.h"
 
+//===========================================================================
+
 struct CollisionConstraint:public TaskMap {
   double margin;
 
@@ -29,6 +31,39 @@ struct CollisionConstraint:public TaskMap {
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
 };
+
+//===========================================================================
+
+struct LimitsConstraint:public TaskMap {
+  double margin;
+  arr limits;
+
+  LimitsConstraint():margin(.05){ constraint=true; }
+
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
+  virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
+};
+
+//===========================================================================
+
+struct PairCollisionConstraint:public TaskMap {
+  int i;       ///< which shapes does it refer to?
+  int j;       ///< which shapes does it refer to?
+  double margin;
+
+  PairCollisionConstraint(const ors::KinematicWorld& G, const char* iShapeName, const char* jShapeName):
+    i(G.getShapeByName(iShapeName)->index),
+    j(G.getShapeByName(jShapeName)->index),
+    margin(.02)
+  {
+    constraint=true;
+  }
+
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
+  virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
+};
+
+//===========================================================================
 
 struct PlaneConstraint:public TaskMap {
   int i;       ///< which shapes does it refer to?
@@ -40,5 +75,7 @@ struct PlaneConstraint:public TaskMap {
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
 };
+
+//===========================================================================
 
 #endif

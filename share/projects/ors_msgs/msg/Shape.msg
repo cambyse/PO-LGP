@@ -11,6 +11,5 @@ int8 shape_type
 bool contact
 shape_msgs/Mesh mesh
 
-# ShapeType type;
-# double size[4];  //TODO: obsolete: directly translate to mesh?
+float32[4] size
 # double color[3]; //TODO: obsolete: directly translate to mesh?

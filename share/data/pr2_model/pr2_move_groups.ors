@@ -38,60 +38,60 @@ body l_gripper_r_finger_link { pose=<T 0.84791 0.178 0.790675 1 1.62545e-57 0 2.
 body l_gripper_l_finger_tip_link { pose=<T 0.93928 0.20295 0.790675 -1 -1.62545e-57 0 -2.75667e-74 >  }
 body l_gripper_r_finger_tip_link { pose=<T 0.93928 0.17305 0.790675 -1 -1.62545e-57 0 2.75667e-74 >  }
 
-shape (base_footprint){ type=3 rel=<T -0.112036 0.00178614 0.316049 1 0 -1.77788e-41 0 >  mass=116  mesh='pr2_model/base_v0/base_L.stl'  rel_includes_mesh_center=true  }
+shape (base_footprint){ type=3 rel=<T -0.112036 0.00178614 0.316049 1 0 -1.77788e-41 0 >  mass=116  mesh='base_v0/base_L.stl'  rel_includes_mesh_center=true  }
 shape base_footprint (base_footprint){ type=0 rel=<T 0 0 0.071 1 0 -1.77788e-41 0 >  mass=1  size=[ 0.001 0.001 0.001 0 ]  rel_includes_mesh_center=true  }
 shape base_bellow_link (base_footprint){ type=0 rel=<T -0.29 0 0.851 1 0 -1.77788e-41 0 >  mass=1  size=[ 0.05 0.37 0.3 0 ]  rel_includes_mesh_center=true  }
-shape (fl_caster_rotation_link){ type=3 rel=<T 0.112797 -0.000220955 0.0084202 -0.707107 0 -0.707107 0 >  mass=3.47308  mesh='pr2_model/base_v0/caster_L.stl'  rel_includes_mesh_center=true  }
+shape (fl_caster_rotation_link){ type=3 rel=<T 0.112797 -0.000220955 0.0084202 -0.707107 0 -0.707107 0 >  mass=3.47308  mesh='base_v0/caster_L.stl'  rel_includes_mesh_center=true  }
 shape fl_caster_l_wheel_link (fl_caster_l_wheel_link){ type=2 rel=<T 0.002 1.03253e-18 -9.79344e-15 -0.5 -0.5 0.5 0.5 >  mass=0.44036  size=[ 0 0 0.034 0.074792 ]  rel_includes_mesh_center=true  }
 shape fl_caster_r_wheel_link (fl_caster_r_wheel_link){ type=2 rel=<T 0.002 1.03253e-18 -9.79344e-15 -0.5 -0.5 0.5 0.5 >  mass=0.44036  size=[ 0 0 0.034 0.074792 ]  rel_includes_mesh_center=true  }
-shape (fr_caster_rotation_link){ type=3 rel=<T 0.112797 -0.000220955 0.0084202 -0.707107 0 -0.707107 0 >  mass=3.47308  mesh='pr2_model/base_v0/caster_L.stl'  rel_includes_mesh_center=true  }
+shape (fr_caster_rotation_link){ type=3 rel=<T 0.112797 -0.000220955 0.0084202 -0.707107 0 -0.707107 0 >  mass=3.47308  mesh='base_v0/caster_L.stl'  rel_includes_mesh_center=true  }
 shape fr_caster_l_wheel_link (fr_caster_l_wheel_link){ type=2 rel=<T 0.002 1.03253e-18 -9.79344e-15 -0.5 -0.5 0.5 0.5 >  mass=0.44036  size=[ 0 0 0.034 0.074792 ]  rel_includes_mesh_center=true  }
 shape fr_caster_r_wheel_link (fr_caster_r_wheel_link){ type=2 rel=<T 0.002 1.03253e-18 -9.79344e-15 -0.5 -0.5 0.5 0.5 >  mass=0.44036  size=[ 0 0 0.034 0.074792 ]  rel_includes_mesh_center=true  }
-shape (bl_caster_rotation_link){ type=3 rel=<T 0.112797 -0.000220955 0.0084202 -0.707107 0 -0.707107 0 >  mass=3.47308  mesh='pr2_model/base_v0/caster_L.stl'  rel_includes_mesh_center=true  }
+shape (bl_caster_rotation_link){ type=3 rel=<T 0.112797 -0.000220955 0.0084202 -0.707107 0 -0.707107 0 >  mass=3.47308  mesh='base_v0/caster_L.stl'  rel_includes_mesh_center=true  }
 shape bl_caster_l_wheel_link (bl_caster_l_wheel_link){ type=2 rel=<T 0.002 1.03253e-18 -9.79344e-15 -0.5 -0.5 0.5 0.5 >  mass=0.44036  size=[ 0 0 0.034 0.074792 ]  rel_includes_mesh_center=true  }
 shape bl_caster_r_wheel_link (bl_caster_r_wheel_link){ type=2 rel=<T 0.002 1.03253e-18 -9.79344e-15 -0.5 -0.5 0.5 0.5 >  mass=0.44036  size=[ 0 0 0.034 0.074792 ]  rel_includes_mesh_center=true  }
-shape (br_caster_rotation_link){ type=3 rel=<T 0.112797 -0.000220955 0.0084202 -0.707107 0 -0.707107 0 >  mass=3.47308  mesh='pr2_model/base_v0/caster_L.stl'  rel_includes_mesh_center=true  }
+shape (br_caster_rotation_link){ type=3 rel=<T 0.112797 -0.000220955 0.0084202 -0.707107 0 -0.707107 0 >  mass=3.47308  mesh='base_v0/caster_L.stl'  rel_includes_mesh_center=true  }
 shape br_caster_l_wheel_link (br_caster_l_wheel_link){ type=2 rel=<T 0.002 1.03253e-18 -9.79344e-15 -0.5 -0.5 0.5 0.5 >  mass=0.44036  size=[ 0 0 0.034 0.074792 ]  rel_includes_mesh_center=true  }
 shape br_caster_r_wheel_link (br_caster_r_wheel_link){ type=2 rel=<T 0.002 1.03253e-18 -9.79344e-15 -0.5 -0.5 0.5 0.5 >  mass=0.44036  size=[ 0 0 0.034 0.074792 ]  rel_includes_mesh_center=true  }
-shape (torso_lift_link){ type=3 rel=<T 0.150599 5.2794e-06 0.0889493 -0.707107 0 -0.707107 0 >  mass=36.248  mesh='pr2_model/torso_v0/torso_lift_L.stl'  rel_includes_mesh_center=true  }
-shape (head_pan_link){ type=3 rel=<T -0.0254868 0.00822588 -0.0481743 -0.707107 0 -0.707107 0 >  mass=6.339  mesh='pr2_model/head_v0/head_pan_L.stl'  rel_includes_mesh_center=true  }
-shape (head_tilt_link){ type=3 rel=<T 0.00537009 0.0380311 0.104252 -0.707107 0 0 0.707107 >  mass=4.479  mesh='pr2_model/head_v0/head_tilt_L.stl'  rel_includes_mesh_center=true  }
+shape (torso_lift_link){ type=3 rel=<T 0.150599 5.2794e-06 0.0889493 -0.707107 0 -0.707107 0 >  mass=36.248  mesh='torso_v0/torso_lift_L.stl'  rel_includes_mesh_center=true  }
+shape (head_pan_link){ type=3 rel=<T -0.0254868 0.00822588 -0.0481743 -0.707107 0 -0.707107 0 >  mass=6.339  mesh='head_v0/head_pan_L.stl'  rel_includes_mesh_center=true  }
+shape (head_tilt_link){ type=3 rel=<T 0.00537009 0.0380311 0.104252 -0.707107 0 0 0.707107 >  mass=4.479  mesh='head_v0/head_tilt_L.stl'  rel_includes_mesh_center=true  }
 shape head_plate_frame (head_tilt_link){ type=0 rel=<T 5.15143e-18 -0.0232 0.0645 -0.707107 0 0 0.707107 >  mass=0.01  size=[ 0.01 0.01 0.01 0 ]  rel_includes_mesh_center=true  }
 shape head_mount_link (head_tilt_link){ type=1 rel=<T -2.54733e-17 0.1148 0.1555 -0.707107 0 0 0.707107 >  mass=0.1  size=[ 0 0 0 0.0005 ]  rel_includes_mesh_center=true  }
 shape head_mount_kinect_ir_link (head_tilt_link){ type=1 rel=<T 0.0125 0.147067 0.291953 -0.707107 0 0 0.707107 >  mass=0.1  size=[ 0 0 0 0.0005 ]  rel_includes_mesh_center=true  }
 shape head_mount_kinect_rgb_link (head_tilt_link){ type=1 rel=<T -0.0175 0.147067 0.291953 -0.707107 0 0 0.707107 >  mass=0.1  size=[ 0 0 0 0.0005 ]  rel_includes_mesh_center=true  }
 shape head_mount_prosilica_link (head_tilt_link){ type=1 rel=<T 0.0125 0.161257 0.244421 -0.707107 0 0 0.707107 >  mass=0.1  size=[ 0 0 0 0.0005 ]  rel_includes_mesh_center=true  }
-shape (laser_tilt_mount_link){ type=3 rel=<T -0.000704906 -0.00694473 0.0210439 -0.707107 0 0 0.707107 >  mass=0.591  mesh='pr2_model/tilting_laser_v0/tilting_hokuyo_L.stl'  rel_includes_mesh_center=true  }
-shape (r_shoulder_pan_link){ type=3 rel=<T -0.16813 0.00258043 -0.00550141 -0.707107 0 -0.707107 0 >  mass=25.7993  mesh='pr2_model/shoulder_v0/shoulder_pan.stl'  rel_includes_mesh_center=true  }
-shape (r_shoulder_lift_link){ type=3 rel=<T -0.00127619 -0.0563251 0.0161388 -0.707107 0 0 0.707107 >  mass=2.74988  mesh='pr2_model/shoulder_v0/shoulder_lift.stl'  rel_includes_mesh_center=true  }
-shape (r_upper_arm_roll_link){ type=3 rel=<T 0.1227 -0.000740356 -0.00122582 -1 0 0 0 >  mass=0.1  mesh='pr2_model/shoulder_v0/upper_arm_roll_L.stl'  rel_includes_mesh_center=true  }
-shape (r_upper_arm_roll_link){ type=3 rel=<T 0.303332 -0.00060982 -0.0039943 -1 0 0 0 >  mass=6.01769  mesh='pr2_model/upper_arm_v0/upper_arm.stl'  rel_includes_mesh_center=true  }
-shape (r_forearm_roll_link){ type=3 rel=<T 0.093559 -0.000960901 0.00709914 -1 0 0 0 >  mass=0.1  mesh='pr2_model/upper_arm_v0/forearm_roll_L.stl'  rel_includes_mesh_center=true  }
-shape (r_elbow_flex_link){ type=3 rel=<T -0.00060554 -0.0250394 -0.00341596 -0.707107 0 0 0.707107 >  mass=1.90327  mesh='pr2_model/upper_arm_v0/elbow_flex.stl'  rel_includes_mesh_center=true  }
-shape (r_forearm_roll_link){ type=3 rel=<T 0.216445 0.000691519 0.00300974 -1 0 0 0 >  mass=2.57968  mesh='pr2_model/forearm_v0/forearm.stl'  rel_includes_mesh_center=true  }
-shape (r_wrist_flex_link){ type=3 rel=<T -0.000233081 0.00258595 -0.00218093 -0.707107 0 0 0.707107 >  mass=0.61402  mesh='pr2_model/forearm_v0/wrist_flex.stl'  rel_includes_mesh_center=true  }
-shape (r_wrist_roll_link){ type=3 rel=<T 0.0315162 -0.000282852 -0.000286107 -1 0 0 0 >  mass=0.1  mesh='pr2_model/forearm_v0/wrist_roll_L.stl'  rel_includes_mesh_center=true  }
-shape (r_wrist_roll_link){ type=3 rel=<T 0.0883957 0.000221324 -2.62985e-05 -1 0 0 0 >  mass=0.58007  mesh='pr2_model/gripper_v0/gripper_palm.stl'  rel_includes_mesh_center=true  }
+shape (laser_tilt_mount_link){ type=3 rel=<T -0.000704906 -0.00694473 0.0210439 -0.707107 0 0 0.707107 >  mass=0.591  mesh='tilting_laser_v0/tilting_hokuyo_L.stl'  rel_includes_mesh_center=true  }
+shape (r_shoulder_pan_link){ type=3 rel=<T -0.16813 0.00258043 -0.00550141 -0.707107 0 -0.707107 0 >  mass=25.7993  mesh='shoulder_v0/shoulder_pan.stl'  rel_includes_mesh_center=true  }
+shape (r_shoulder_lift_link){ type=3 rel=<T -0.00127619 -0.0563251 0.0161388 -0.707107 0 0 0.707107 >  mass=2.74988  mesh='shoulder_v0/shoulder_lift.stl'  rel_includes_mesh_center=true  }
+shape (r_upper_arm_roll_link){ type=3 rel=<T 0.1227 -0.000740356 -0.00122582 -1 0 0 0 >  mass=0.1  mesh='shoulder_v0/upper_arm_roll_L.stl'  rel_includes_mesh_center=true  }
+shape (r_upper_arm_roll_link){ type=3 rel=<T 0.303332 -0.00060982 -0.0039943 -1 0 0 0 >  mass=6.01769  mesh='upper_arm_v0/upper_arm.stl'  rel_includes_mesh_center=true  }
+shape (r_forearm_roll_link){ type=3 rel=<T 0.093559 -0.000960901 0.00709914 -1 0 0 0 >  mass=0.1  mesh='upper_arm_v0/forearm_roll_L.stl'  rel_includes_mesh_center=true  }
+shape (r_elbow_flex_link){ type=3 rel=<T -0.00060554 -0.0250394 -0.00341596 -0.707107 0 0 0.707107 >  mass=1.90327  mesh='upper_arm_v0/elbow_flex.stl'  rel_includes_mesh_center=true  }
+shape (r_forearm_roll_link){ type=3 rel=<T 0.216445 0.000691519 0.00300974 -1 0 0 0 >  mass=2.57968  mesh='forearm_v0/forearm.stl'  rel_includes_mesh_center=true  }
+shape (r_wrist_flex_link){ type=3 rel=<T -0.000233081 0.00258595 -0.00218093 -0.707107 0 0 0.707107 >  mass=0.61402  mesh='forearm_v0/wrist_flex.stl'  rel_includes_mesh_center=true  }
+shape (r_wrist_roll_link){ type=3 rel=<T 0.0315162 -0.000282852 -0.000286107 -1 0 0 0 >  mass=0.1  mesh='forearm_v0/wrist_roll_L.stl'  rel_includes_mesh_center=true  }
+shape (r_wrist_roll_link){ type=3 rel=<T 0.0883957 0.000221324 -2.62985e-05 -1 0 0 0 >  mass=0.58007  mesh='gripper_v0/gripper_palm.stl'  rel_includes_mesh_center=true  }
 shape r_gripper_motor_accelerometer_link (r_wrist_roll_link){ type=0  mass=0.001  size=[ 0.001 0.001 0.001 0 ]  rel_includes_mesh_center=true  }
-shape (r_gripper_l_finger_link){ type=3 rel=<T -0.000214812 0.0125558 -0.0493868 -0.707107 0 -0.707107 0 >  mass=0.17126  mesh='pr2_model/gripper_v0/l_finger.stl'  rel_includes_mesh_center=true  }
-shape (r_gripper_r_finger_link){ type=3 rel=<T -0.000214812 -0.0125558 0.0493868 7.3123e-14 -0.707107 -7.3123e-14 -0.707107 >  mass=0.17389  mesh='pr2_model/gripper_v0/l_finger.stl'  rel_includes_mesh_center=true  }
-shape (r_gripper_l_finger_tip_link){ type=3 rel=<T 0.000126401 0.000750209 0.0081309 -0.707107 0 0.707107 0 >  mass=0.04419  mesh='pr2_model/gripper_v0/l_finger_tip.stl'  rel_includes_mesh_center=true  }
-shape (r_gripper_r_finger_tip_link){ type=3 rel=<T 0.000126401 -0.000750209 -0.0081309 7.3123e-14 -0.707107 7.3123e-14 0.707107 >  mass=0.04419  mesh='pr2_model/gripper_v0/l_finger_tip.stl'  rel_includes_mesh_center=true  }
-shape (l_shoulder_pan_link){ type=3 rel=<T -0.16813 0.00258043 -0.00550141 -0.707107 0 -0.707107 0 >  mass=25.7993  mesh='pr2_model/shoulder_v0/shoulder_pan.stl'  rel_includes_mesh_center=true  }
-shape (l_shoulder_lift_link){ type=3 rel=<T -0.00127619 -0.0563251 0.0161388 -0.707107 0 0 0.707107 >  mass=2.74988  mesh='pr2_model/shoulder_v0/shoulder_lift.stl'  rel_includes_mesh_center=true  }
-shape (l_upper_arm_roll_link){ type=3 rel=<T 0.1227 -0.000740356 -0.00122582 -1 0 0 0 >  mass=0.1  mesh='pr2_model/shoulder_v0/upper_arm_roll_L.stl'  rel_includes_mesh_center=true  }
-shape (l_upper_arm_roll_link){ type=3 rel=<T 0.303332 -0.00060982 -0.0039943 -1 0 0 0 >  mass=6.01769  mesh='pr2_model/upper_arm_v0/upper_arm.stl'  rel_includes_mesh_center=true  }
-shape (l_forearm_roll_link){ type=3 rel=<T 0.093559 -0.000960901 0.00709914 -1 0 0 0 >  mass=0.1  mesh='pr2_model/upper_arm_v0/forearm_roll_L.stl'  rel_includes_mesh_center=true  }
-shape (l_elbow_flex_link){ type=3 rel=<T -0.00060554 -0.0250394 -0.00341596 -0.707107 0 0 0.707107 >  mass=1.90327  mesh='pr2_model/upper_arm_v0/elbow_flex.stl'  rel_includes_mesh_center=true  }
-shape (l_forearm_roll_link){ type=3 rel=<T 0.216445 0.000691519 0.00300974 -1 0 0 0 >  mass=2.57968  mesh='pr2_model/forearm_v0/forearm.stl'  rel_includes_mesh_center=true  }
-shape (l_wrist_flex_link){ type=3 rel=<T -0.000233081 0.00258595 -0.00218093 -0.707107 0 0 0.707107 >  mass=0.61402  mesh='pr2_model/forearm_v0/wrist_flex.stl'  rel_includes_mesh_center=true  }
-shape (l_wrist_roll_link){ type=3 rel=<T 0.0315162 -0.000282852 -0.000286107 -1 0 0 0 >  mass=0.1  mesh='pr2_model/forearm_v0/wrist_roll_L.stl'  rel_includes_mesh_center=true  }
-shape (l_wrist_roll_link){ type=3 rel=<T 0.0883957 0.000221324 -2.62985e-05 -1 0 0 0 >  mass=0.58007  mesh='pr2_model/gripper_v0/gripper_palm.stl'  rel_includes_mesh_center=true  }
+shape (r_gripper_l_finger_link){ type=3 rel=<T -0.000214812 0.0125558 -0.0493868 -0.707107 0 -0.707107 0 >  mass=0.17126  mesh='gripper_v0/l_finger.stl'  rel_includes_mesh_center=true  }
+shape (r_gripper_r_finger_link){ type=3 rel=<T -0.000214812 -0.0125558 0.0493868 7.3123e-14 -0.707107 -7.3123e-14 -0.707107 >  mass=0.17389  mesh='gripper_v0/l_finger.stl'  rel_includes_mesh_center=true  }
+shape (r_gripper_l_finger_tip_link){ type=3 rel=<T 0.000126401 0.000750209 0.0081309 -0.707107 0 0.707107 0 >  mass=0.04419  mesh='gripper_v0/l_finger_tip.stl'  rel_includes_mesh_center=true  }
+shape (r_gripper_r_finger_tip_link){ type=3 rel=<T 0.000126401 -0.000750209 -0.0081309 7.3123e-14 -0.707107 7.3123e-14 0.707107 >  mass=0.04419  mesh='gripper_v0/l_finger_tip.stl'  rel_includes_mesh_center=true  }
+shape (l_shoulder_pan_link){ type=3 rel=<T -0.16813 0.00258043 -0.00550141 -0.707107 0 -0.707107 0 >  mass=25.7993  mesh='shoulder_v0/shoulder_pan.stl'  rel_includes_mesh_center=true  }
+shape (l_shoulder_lift_link){ type=3 rel=<T -0.00127619 -0.0563251 0.0161388 -0.707107 0 0 0.707107 >  mass=2.74988  mesh='shoulder_v0/shoulder_lift.stl'  rel_includes_mesh_center=true  }
+shape (l_upper_arm_roll_link){ type=3 rel=<T 0.1227 -0.000740356 -0.00122582 -1 0 0 0 >  mass=0.1  mesh='shoulder_v0/upper_arm_roll_L.stl'  rel_includes_mesh_center=true  }
+shape (l_upper_arm_roll_link){ type=3 rel=<T 0.303332 -0.00060982 -0.0039943 -1 0 0 0 >  mass=6.01769  mesh='upper_arm_v0/upper_arm.stl'  rel_includes_mesh_center=true  }
+shape (l_forearm_roll_link){ type=3 rel=<T 0.093559 -0.000960901 0.00709914 -1 0 0 0 >  mass=0.1  mesh='upper_arm_v0/forearm_roll_L.stl'  rel_includes_mesh_center=true  }
+shape (l_elbow_flex_link){ type=3 rel=<T -0.00060554 -0.0250394 -0.00341596 -0.707107 0 0 0.707107 >  mass=1.90327  mesh='upper_arm_v0/elbow_flex.stl'  rel_includes_mesh_center=true  }
+shape (l_forearm_roll_link){ type=3 rel=<T 0.216445 0.000691519 0.00300974 -1 0 0 0 >  mass=2.57968  mesh='forearm_v0/forearm.stl'  rel_includes_mesh_center=true  }
+shape (l_wrist_flex_link){ type=3 rel=<T -0.000233081 0.00258595 -0.00218093 -0.707107 0 0 0.707107 >  mass=0.61402  mesh='forearm_v0/wrist_flex.stl'  rel_includes_mesh_center=true  }
+shape (l_wrist_roll_link){ type=3 rel=<T 0.0315162 -0.000282852 -0.000286107 -1 0 0 0 >  mass=0.1  mesh='forearm_v0/wrist_roll_L.stl'  rel_includes_mesh_center=true  }
+shape (l_wrist_roll_link){ type=3 rel=<T 0.0883957 0.000221324 -2.62985e-05 -1 0 0 0 >  mass=0.58007  mesh='gripper_v0/gripper_palm.stl'  rel_includes_mesh_center=true  }
 shape l_gripper_motor_accelerometer_link (l_wrist_roll_link){ type=0  mass=0.001  size=[ 0.001 0.001 0.001 0 ]  rel_includes_mesh_center=true  }
-shape (l_gripper_l_finger_link){ type=3 rel=<T -0.000214812 0.0125558 -0.0493868 -0.707107 0 -0.707107 0 >  mass=0.17126  mesh='pr2_model/gripper_v0/l_finger.stl'  rel_includes_mesh_center=true  }
-shape (l_gripper_r_finger_link){ type=3 rel=<T -0.000214812 -0.0125558 0.0493868 7.3123e-14 -0.707107 -7.3123e-14 -0.707107 >  mass=0.17389  mesh='pr2_model/gripper_v0/l_finger.stl'  rel_includes_mesh_center=true  }
-shape (l_gripper_l_finger_tip_link){ type=3 rel=<T 0.000126401 0.000750209 0.0081309 -0.707107 0 0.707107 0 >  mass=0.04419  mesh='pr2_model/gripper_v0/l_finger_tip.stl'  rel_includes_mesh_center=true  }
-shape (l_gripper_r_finger_tip_link){ type=3 rel=<T 0.000126401 -0.000750209 -0.0081309 7.3123e-14 -0.707107 7.3123e-14 0.707107 >  mass=0.04419  mesh='pr2_model/gripper_v0/l_finger_tip.stl'  rel_includes_mesh_center=true  }
+shape (l_gripper_l_finger_link){ type=3 rel=<T -0.000214812 0.0125558 -0.0493868 -0.707107 0 -0.707107 0 >  mass=0.17126  mesh='gripper_v0/l_finger.stl'  rel_includes_mesh_center=true  }
+shape (l_gripper_r_finger_link){ type=3 rel=<T -0.000214812 -0.0125558 0.0493868 7.3123e-14 -0.707107 -7.3123e-14 -0.707107 >  mass=0.17389  mesh='gripper_v0/l_finger.stl'  rel_includes_mesh_center=true  }
+shape (l_gripper_l_finger_tip_link){ type=3 rel=<T 0.000126401 0.000750209 0.0081309 -0.707107 0 0.707107 0 >  mass=0.04419  mesh='gripper_v0/l_finger_tip.stl'  rel_includes_mesh_center=true  }
+shape (l_gripper_r_finger_tip_link){ type=3 rel=<T 0.000126401 -0.000750209 -0.0081309 7.3123e-14 -0.707107 7.3123e-14 0.707107 >  mass=0.04419  mesh='gripper_v0/l_finger_tip.stl'  rel_includes_mesh_center=true  }
 
 joint fl_caster_rotation_joint (base_footprint fl_caster_rotation_link){ from=<T 0.2246 0.2246 0.0792 0.707107 0 -0.707107 0 >  type=0 agent=4  }
 joint fl_caster_l_wheel_joint (fl_caster_rotation_link fl_caster_l_wheel_link){ from=<T 0 0.049 0 -0.5 -0.5 -0.5 -0.5 >  type=0 agent=4  }

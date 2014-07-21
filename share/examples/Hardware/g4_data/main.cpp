@@ -9,22 +9,22 @@ void loadData(G4Data &g4d) {
 }
 
 void testData(G4Data &g4d) {
-  uint checkT              = 10;
+  uint checkF              = 10;
   uint checkN              = 14;
   uint checkNrh            = 4;
   uint checkNrhthumb       = 1;
   uint checkNbook          = 1;
   uintA checkD9            = {         checkN,        7 };
-  uintA checkDbook         = { checkT, checkNbook,    7 };
+  uintA checkDbook         = { checkF, checkNbook,    7 };
   uintA checkD9book        = {         checkNbook,    7 };
-  uintA checkDrh           = { checkT, checkNrh,      7 };
+  uintA checkDrh           = { checkF, checkNrh,      7 };
   uintA checkD9rh          = {         checkNrh,      7 };
-  uintA checkDrhthumb      = { checkT, checkNrhthumb, 7 };
+  uintA checkDrhthumb      = { checkF, checkNrhthumb, 7 };
   uintA checkD9rhthumb     = {         checkNrhthumb, 7 };
-  uintA checkDPosrhthumb   = { checkT, checkNrhthumb, 3 };
+  uintA checkDPosrhthumb   = { checkF, checkNrhthumb, 3 };
   uintA checkDPos9rhthumb  = {         checkNrhthumb, 3 };
 
-  uint T, N, v;
+  uint F, N, v;
   arr data;
   MT::Array<uint> dim;
 
@@ -32,9 +32,9 @@ void testData(G4Data &g4d) {
   cout << "========================================" << endl;
   cout << "frames" << endl;
   cout << "========================================" << endl;
-  T = g4d.getNumTimesteps();
-  cout << "T              = " << T << endl;
-  CHECK(T == checkT, "wrong value of T");
+  F = g4d.getNumFrames();
+  cout << "F              = " << F << endl;
+  CHECK(F == checkF, "wrong value of F");
 
   cout << endl;
   cout << "========================================" << endl;
@@ -265,7 +265,7 @@ void testData(G4Data &g4d) {
   cout << "========================================" << endl;
   cout << "missingt" << endl;
   cout << "========================================" << endl;
-  cout << g4d.getMissingT() << endl;
+  cout << g4d.getMissingF() << endl;
 }
 
 int main(int argc, char **argv) {

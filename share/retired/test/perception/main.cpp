@@ -20,7 +20,7 @@ int main(int argc,char** argv) {
   signal(SIGINT,shutdown);
   
   ors::KinematicWorld G;
-  MT::load(G,"schunk.ors", true);
+  G <<FILE("schunk.ors");
   //ors::Body * o = G.getBodyByName("OBJECTS");
   //o->X.p(0) = 100;
   

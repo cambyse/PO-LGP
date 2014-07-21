@@ -35,7 +35,7 @@
 #include "parse_err.h"     /* Routines to keep track of parsing errors */
 #include "parse_hash.h"    /* Routines to hold temporary symbols and strings */
 #include "parse_constant.h"
-#include "parser.tab.h"         /* token values */
+#include "parser.tab.hpp"         /* token values */
 
 #define NUM_LETTERS		26
 #define MAX_IDENT_LENGTH        32

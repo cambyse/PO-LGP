@@ -48,7 +48,7 @@ void GuiModule::open(){
 // #endif
   
   /*//-- ors
-  MT::load(ors, "../../../share/configurations/schunk.ors", true);
+  ors <<FILE("../../../share/configurations/schunk.ors");
   ors.calcNodeFramesFromEdges();
   */
   
@@ -150,7 +150,6 @@ void GuiModule::step(){
   //display the current state
   if(ors && q_reference.N){
     ors->setJointState(q_reference);
-    ors->calcBodyFramesFromJoints();
   }
   
   //display a certain step of the trajectory
@@ -163,7 +162,6 @@ void GuiModule::step(){
     t=T;
     ors2->setJointState(q_trajectory[t]);
     //if(q_external.N)  ors2->setExternalState(q_external[t]);
-    ors2->calcBodyFramesFromJoints();
     gl->text.clear() <<"t=" <<t;
   }
   

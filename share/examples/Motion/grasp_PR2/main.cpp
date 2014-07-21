@@ -36,7 +36,7 @@ void testGraspHeuristic(){
     displayTrajectory(x, 1, G, "planned trajectory");
     displayTrajectory(x, 1, G, "planned trajectory");
 
-    MT::save(G,"z.ors");
+    G >>FILE("z.ors");
 
     if(k%2) s=G.getShapeByName("target1");
     else    s=G.getShapeByName("target2");
