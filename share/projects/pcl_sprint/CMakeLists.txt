@@ -33,8 +33,8 @@ if(PCL_FOUND)
     add_executable(pcl_p_test main.cpp)
     target_link_libraries(pcl_p_test mlr_pcl)
 
-    add_executable(viewer viewer.cpp test_method.cpp)
-    target_link_libraries(viewer ${PCL_LIBRARIES})
+    add_executable(viewer.exe viewer.cpp test_method.cpp)
+    target_link_libraries(viewer.exe ${PCL_LIBRARIES})
 endif()
 
 
