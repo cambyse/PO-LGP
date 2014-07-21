@@ -1,6 +1,6 @@
 set(CMAKE_CXX_FLAGS "${MLR_CXX_FLAGS} ${CMAKE_CXX_FLAGS} -std=c++0x")
 
-find_package(PCL 1.3 COMPONENTS common io visualization)
+find_package(PCL 1.3 COMPONENTS common io visualization segmentation sample_consensus features filters)
 if(PCL_FOUND)
     include_directories(${PCL_INCLUDE_DIRS})
     link_directories(${PCL_LIBRARY_DIRS})
@@ -24,6 +24,10 @@ if(PCL_FOUND)
         ${PCL_IO_LIBRARIES}
         ${PCL_VISUALIZATION_LIBRARIES}
         ${ROS_PCL_LIBRARIES}
+        ${PCL_SEGMENTATION_LIBRARY}
+        ${PCL_FEATURES_LIBRARY}
+        ${PCL_FILTERS_LIBRARY}
+        ${PCL_SAMPLE_CONSENSUS_LIBRARY}
     )
 
     add_executable(pcl_p_test main.cpp)
