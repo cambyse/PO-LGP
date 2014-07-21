@@ -7,7 +7,7 @@ struct sViewer {
 	pcl::visualization::CloudViewer viewer;
 	sViewer() : viewer("PCL OpenNI Viewer") {};
 
-    void cloud_cb_ (const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &cloud)
+    void cloud_cb_ (const pcl::PointCloud<pcl::PointXYZRGBA>::ConstPtr &cloud)
     {
       if (!viewer.wasStopped())
         viewer.showCloud (cloud);
@@ -16,7 +16,7 @@ struct sViewer {
     {
       pcl::Grabber* interface = new pcl::OpenNIGrabber();
 
-      boost::function<void (const pcl::PointCloud<pcl::PointXYZ>::ConstPtr&)> f =
+      boost::function<void (const pcl::PointCloud<pcl::PointXYZRGBA>::ConstPtr&)> f =
         boost::bind (&sViewer::cloud_cb_, this, _1);
 
       interface->registerCallback (f);
