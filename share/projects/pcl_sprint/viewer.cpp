@@ -2,11 +2,12 @@
 
 #include <vector>
 
-
 #include <boost/thread/thread.hpp>
 #include <pcl/common/common_headers.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/visualization/pcl_visualizer.h>
+
+#include "test_method.h"
 
 void keyboardEventOccurred (const pcl::visualization::KeyboardEvent &event, void* viewer_void) {
     boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer = *static_cast<boost::shared_ptr<pcl::visualization::PCLVisualizer> *> (viewer_void);
@@ -34,9 +35,9 @@ using std::endl;
 // the command line arguments
 ValueArg<string> input_arg(  "i", "input" , "the source of point clouds"                                , false, "default" , "string");
 ValueArg<string> file_arg(   "f", "file"  , "file to read input from (only for input method 'file')"    , false, ""        , "string");
-ValueArg<string> method_arg( "m", "method", "method to use for processing point clounds"                , false, "display" , "string");
-vector<string> input_vector = { "default", "file" };
-vector<string> method_vector = { "display" };
+ValueArg<string> method_arg( "m", "method", "method to use for processing point clounds"                , false, "none"    , "string");
+vector<string> input_vector = { "default", "file"};
+vector<string> method_vector = { "none", "test" };
 
 // check if argument value is within given vector and print messessage
 template < typename T>
@@ -92,13 +93,11 @@ int main(int argn, char ** args) {
     //------------------//
     //  get point cloud //
     //------------------//
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr point_cloud_ptr (new pcl::PointCloud<pcl::PointXYZRGB>);
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_cloud (new pcl::PointCloud<pcl::PointXYZRGB>);
     if(input_arg.getValue()=="default") {
         uint8_t r(255), g(15), b(15);
-        for (float z(-1.0); z <= 1.0; z += 0.05)
-        {
-            for (float angle(0.0); angle <= 360.0; angle += 5.0)
-            {
+        for (float z(-1.0); z <= 1.0; z += 0.05) {
+            for (float angle(0.0); angle <= 360.0; angle += 5.0) {
                 pcl::PointXYZ basic_point;
                 basic_point.x = 0.5 * cosf (pcl::deg2rad(angle));
                 basic_point.y = sinf (pcl::deg2rad(angle));
@@ -111,23 +110,20 @@ int main(int argn, char ** args) {
                 uint32_t rgb = (static_cast<uint32_t>(r) << 16 |
                                 static_cast<uint32_t>(g) << 8 | static_cast<uint32_t>(b));
                 point.rgb = *reinterpret_cast<float*>(&rgb);
-                point_cloud_ptr->points.push_back (point);
+                input_cloud->points.push_back(point);
             }
-            if (z < 0.0)
-            {
+            if(z < 0.0) {
                 r -= 12;
                 g += 12;
-            }
-            else
-            {
+            } else {
                 g -= 12;
                 b += 12;
             }
         }
-        point_cloud_ptr->width = (int) point_cloud_ptr->points.size ();
-        point_cloud_ptr->height = 1;
+        input_cloud->width = (int)input_cloud->points.size();
+        input_cloud->height = 1;
     } else if(input_arg.getValue()=="file") {
-        if(pcl::io::loadPCDFile<pcl::PointXYZRGB>(file_arg.getValue(), *point_cloud_ptr) == -1) {
+        if(pcl::io::loadPCDFile<pcl::PointXYZRGB>(file_arg.getValue(), *input_cloud) == -1) {
             std::cout << "Could not read file '" << file_arg.getValue() << "'" << std::endl;
             return(-1);
         }
@@ -140,26 +136,34 @@ int main(int argn, char ** args) {
     //----------------//
     //  apply method  //
     //----------------//
-    if(method_arg.getValue()=="display") {
-        boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
-        // add point cloud
-        pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> rgb(point_cloud_ptr);
-        viewer->addPointCloud<pcl::PointXYZRGB> (point_cloud_ptr, rgb, "sample cloud");
-        viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "sample cloud");
-        viewer->addCoordinateSystem (1.0);
-        viewer->initCameraParameters ();
-        viewer->setBackgroundColor (0, 0, 0);
-        // callbacks
-        viewer->registerKeyboardCallback(keyboardEventOccurred, (void*)&viewer);
-        viewer->registerMouseCallback(mouseEventOccurred, (void*)&viewer);
-        // main loop
-        while(!viewer->wasStopped()) {
-            viewer->spinOnce (100);
-            boost::this_thread::sleep (boost::posix_time::microseconds (100000));
-        }
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr output_cloud (new pcl::PointCloud<pcl::PointXYZRGB>);
+    if(method_arg.getValue()=="none") {
+        output_cloud = input_cloud;
+    } else if(method_arg.getValue()=="test") {
+        TestMethod::process(input_cloud,output_cloud);
     } else {
         cout << "method '" << method_arg.getValue() << "' not implemented" << endl;
         return(-1);
+    }
+
+    //-----------//
+    //  display  //
+    //-----------//
+    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
+    // add point cloud
+    pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> rgb(output_cloud);
+    viewer->addPointCloud<pcl::PointXYZRGB> (output_cloud, rgb, "sample cloud");
+    viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "sample cloud");
+    viewer->addCoordinateSystem (1.0);
+    viewer->initCameraParameters ();
+    viewer->setBackgroundColor (0, 0, 0);
+    // callbacks
+    viewer->registerKeyboardCallback(keyboardEventOccurred, (void*)&viewer);
+    viewer->registerMouseCallback(mouseEventOccurred, (void*)&viewer);
+    // main loop
+    while(!viewer->wasStopped()) {
+        viewer->spinOnce (100);
+        boost::this_thread::sleep (boost::posix_time::microseconds (100000));
     }
 
     return 0;
