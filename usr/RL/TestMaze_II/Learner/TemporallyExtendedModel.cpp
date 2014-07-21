@@ -10,7 +10,12 @@
 
 #include <iomanip>
 
+#ifdef BATCH_MODE_QUIET
+#define DEBUG_LEVEL 0
+#else
 #define DEBUG_LEVEL 1
+#endif
+#define DEBUG_STRING "TEM: "
 #include "../util/debug.h"
 
 using util::Range;

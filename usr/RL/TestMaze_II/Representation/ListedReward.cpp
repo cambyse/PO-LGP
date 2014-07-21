@@ -74,7 +74,11 @@ const string ListedReward::print() const {
         }
         ret << "}," << reward_list[reward_index] << ")";
     } else {
-        ret << "ListedReward(" << reward_list[reward_index] << ")";
+        if(print_short_name) {
+            ret << reward_list[reward_index];
+        } else {
+            ret << "ListedReward(" << reward_list[reward_index] << ")";
+        }
     }
     return ret.str();
 }

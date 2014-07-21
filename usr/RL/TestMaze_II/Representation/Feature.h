@@ -28,8 +28,17 @@ public:
     //----methods----//
     Feature();
     virtual ~Feature();
-    virtual feature_return_t evaluate(const_instance_ptr_t) const;
-    virtual feature_return_t evaluate(const_instance_ptr_t, action_ptr_t, observation_ptr_t, reward_ptr_t) const;
+    /** Evaluate feature on instance. @param ins Instance to evaluate feature
+     * on. */
+    virtual feature_return_t evaluate(const_instance_ptr_t ins) const;
+    /** Evaluate feature on instance with appended action-observation-reward
+     * triplet. If the basis-instance is
+     * \f$(\ldots,(a_{-1},o_{-1},r_{-1}),(a_{0},o_{0},r_{0}))\f$ the feature is
+     * effectively evaluated on
+     * \f$(\ldots,(a_{-1},o_{-1},r_{-1}),(a_{0},o_{0},r_{0}),(a,o,r))\f$ @param
+     * ins Basis-instance the new triplet is appended to @param a action @param
+     * o observation @param r reward.  */
+    virtual feature_return_t evaluate(const_instance_ptr_t ins, action_ptr_t a, observation_ptr_t o, reward_ptr_t r) const;
     virtual feature_return_t evaluate(const look_up_map_t&) const;
     virtual std::string identifier() const;
     friend std::ostream& operator<<(std::ostream&, const Feature&);
@@ -155,6 +164,7 @@ protected:
 
 class AndFeature: public Feature {
 public:
+    typedef f_set_t subfeature_set_t;
     using Feature::evaluate; // so the compiler finds them
     AndFeature();
     AndFeature(const_feature_ptr_t f);
@@ -167,9 +177,9 @@ public:
     virtual bool operator==(const Feature& other) const override;
     virtual bool operator<(const Feature& other) const override;
     virtual bool operator<(const AndFeature& other) const;
-    virtual const f_ptr_set_t& get_subfeatures() const final { return subfeatures; }
+    virtual const subfeature_set_t& get_subfeatures() const final { return subfeatures; }
 protected:
-    f_ptr_set_t subfeatures;
+    subfeature_set_t subfeatures;
     virtual void add_feature(const_feature_ptr_t f) final;
     virtual void finalize_construction() final;
     virtual void check_for_contradicting_subfeatures() final;

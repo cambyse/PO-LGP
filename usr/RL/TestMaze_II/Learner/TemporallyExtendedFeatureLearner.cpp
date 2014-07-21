@@ -8,7 +8,11 @@
 #include <omp.h>
 #define USE_OMP
 
+#ifdef BATCH_MODE_QUIET
+#define DEBUG_LEVEL 0
+#else
 #define DEBUG_LEVEL 1
+#endif
 #include "../util/debug.h"
 
 using util::Range;
@@ -18,6 +22,8 @@ using std::vector;
 using std::map;
 using std::make_tuple;
 using std::dynamic_pointer_cast;
+using std::cout;
+using std::endl;
 
 typedef TemporallyExtendedFeatureLearner TEFL;
 
@@ -65,6 +71,11 @@ void TEFL::shrink_feature_set() {
     }
 }
 
+TEFL::f_set_t TEFL::get_feature_set() {
+    return feature_set;
+}
+
+
 void TEFL::set_feature_set(const f_set_t& new_set) {
     feature_set = new_set;
     weights.zeros(feature_set.size());
@@ -76,14 +87,13 @@ void TEFL::set_l1_factor(const double& l1) {
 }
 
 void TEFL::print_features() const {
-    DEBUG_OUT(0,"Feature Set:");
+    cout << "Feature Set:" << endl;
     int f_idx = 0;
     for(f_ptr_t f : feature_set) {
-        DEBUG_OUT(0,QString("    %1: [%2]	")
-                  .arg(f_idx,4)
-                  .arg(weights(f_idx),7,'f',3) <<
-                  *f
-            );
+        cout << QString("    %1: [%2]	")
+            .arg(f_idx,4)
+            .arg(weights(f_idx),7,'f',4) <<
+            *f << endl;
         ++f_idx;
     }
 }
@@ -113,14 +123,14 @@ void TEFL::add_action_observation_reward_tripel(
     data_changed = true;
 }
 
-void TEFL::optimize_weights_LBFGS() {
+double TEFL::optimize_weights_LBFGS() {
 
     DEBUG_OUT(2,"Optimize weights using L-BFGS");
 
     // return if no data available
     if(number_of_data_points==0) {
         DEBUG_WARNING("Cannot optimize weights without data");
-        return;
+        return 0;
     }
 
     // make sure data are up to date
@@ -140,13 +150,18 @@ void TEFL::optimize_weights_LBFGS() {
     lbfgs.set_number_of_variables(nr_vars);
     lbfgs.set_variables(values);
     lbfgs.set_l1_factor(l1_factor);
-    double neg_log_like = lbfgs.optimize(values);
+    double obj_value = lbfgs.optimize(values);
+
+    // transfer result / set weights
+    weights = arma::conv_to<col_vec_t>::from(values);
+
+    // print final message
     IF_DEBUG(1) {
-        LBFGS_final_message(neg_log_like);
+        LBFGS_final_message(obj_value);
     }
 
-    // set weights
-    weights = values;
+    // return objective value
+    return obj_value;
 }
 
 bool TEFL::check_derivatives(const int& number_of_samples,
@@ -191,6 +206,48 @@ void TEFL::set_spaces(const action_ptr_t & a,
     update_outcome_n();
 }
 
+void TEFL::print_F_matrices(int n) {
+    update();
+    int data_idx = 0;
+    for(const_instance_ptr_t episode : instance_data) {
+        for(const_instance_ptr_t ins=episode->const_first(); ins!=INVALID; ++ins) {
+            // print instances
+            {
+                const_instance_ptr_t this_ins = ins;
+                for(int i=0;i<=n; ++i) {
+                    cout << "ins(t=" << i << "): " << this_ins << endl;
+                    this_ins = this_ins->const_prev();
+                }
+            }
+            // print features
+            {
+                int feature_idx = 0;
+                for(f_ptr_t f : feature_set) {
+                    cout << "    Feature: " << *f << endl;
+                    int outcome_idx = 0;
+                    if(outcome_type==OUTCOME_TYPE::ACTION) {
+                        for(action_ptr_t act : action_space) {
+                            cout << "        " << act << " --> " << F_matrices[data_idx](feature_idx,outcome_idx) << endl;
+                            ++outcome_idx;
+                        }
+                    } else if(outcome_type==OUTCOME_TYPE::OBSERVATION_REWARD) {
+                        for(observation_ptr_t obs : observation_space) {
+                            for(reward_ptr_t rew : reward_space) {
+                                cout << "        " << obs << "/" << rew << " --> " << F_matrices[data_idx](feature_idx,outcome_idx) << endl;
+                                ++outcome_idx;
+                            }
+                        }
+                    } else {
+                        DEBUG_DEAD_LINE;
+                    }
+                    ++feature_idx;
+                }
+            }
+            ++data_idx;
+        }
+    }
+}
+
 void TEFL::set_outcome_type(OUTCOME_TYPE t) {
     outcome_type = t;
     update_outcome_n();
@@ -230,7 +287,7 @@ void TEFL::apply_weight_map(weight_map_t weight_map) {
     }
 }
 
-void TEFL::update() {
+bool TEFL::update() {
 
     DEBUG_OUT(3,"Check if everything is up to date");
 
@@ -240,10 +297,8 @@ void TEFL::update() {
     if(DEBUG_LEVEL>0) {
         // check size of weight vector
         if(weights.size()!=feature_set.size()) {
-            DEBUG_DEAD_LINE;
-            weight_map_t old_weights = get_weight_map();
-            weights.set_size(feature_set.size());
-            apply_weight_map(old_weights);
+            DEBUG_ERROR("Weights and feature set have different size (" << weights.size() << "/" << feature_set.size() << ")");
+            weights.zeros(feature_set.size());
         }
         // check matching number of data points
         if(!data_changed &&
@@ -256,6 +311,12 @@ void TEFL::update() {
            F_matrices.back().n_rows!=feature_set.size()) {
             DEBUG_DEAD_LINE;
             feature_set_changed = true;
+        }
+        // check if spaces are set
+        if(action_space==action_ptr_t() ||
+           observation_space==observation_ptr_t() ||
+           reward_space==reward_ptr_t()) {
+            DEBUG_WARNING("spaces are not correctly initialized");
         }
     }
 
@@ -304,7 +365,9 @@ void TEFL::update() {
         // data and features are up to date now
         data_changed = false;
         feature_set_changed = false;
+        return true; // update was performed
     }
+    return false; // no update was performed
 }
 
 bool TEFL::update_basis_features() {
@@ -330,7 +393,10 @@ bool TEFL::update_basis_features() {
     }
 
     // terminate progress
-    if(DEBUG_LEVEL>0) {ProgressBar::terminate();}
+    if(DEBUG_LEVEL>0) {
+        ProgressBar::msg() << " (" << basis_features.size() << " --> " << new_basis_features.size() << ")";
+        ProgressBar::terminate();
+    }
 
     if(new_basis_features!=basis_features) {
         basis_features = new_basis_features;
@@ -342,12 +408,21 @@ bool TEFL::update_basis_features() {
 
 void TEFL::update_basis_feature_maps(bool recompute_all) {
 
+#warning this function is called (and it does work) more often than necessary (even when no new features were added) -- why?
+
     if(DEBUG_LEVEL>0) {ProgressBar::init("Update basis feature maps: ");}
 
     // get dimensions
     int data_n = number_of_data_points;
 
     // check for matching dimensions
+    if(basis_features.size()==0) {
+        IF_DEBUG(1) {
+            ProgressBar::msg() << " (empty basis-feature set)";
+            ProgressBar::terminate();
+        }
+        return;
+    }
     if(basis_feature_maps.size()!=(uint)data_n || basis_feature_maps.front().size()!=(uint)outcome_n) {
         basis_feature_maps.assign(data_n,vector<basis_feature_map_t>(outcome_n));
         IF_DEBUG(1) {
@@ -423,11 +498,11 @@ void TEFL::update_basis_feature_maps(bool recompute_all) {
                     if(recompute_all) {
                         bf_map.clear();
                         for(f_ptr_t bf : basis_features) {
-                            bf_map.insert_feature(bf,bf->evaluate(ins->const_prev(),act,observation_space,reward_space));
+                            bf_map.insert_feature(bf,bf->evaluate(ins,act,ins->observation,ins->reward));
                         }
                     } else {
                         for(f_ptr_t bf : new_basis_features) {
-                            bf_map.insert_feature(bf,bf->evaluate(ins->const_prev(),act,observation_space,reward_space));
+                            bf_map.insert_feature(bf,bf->evaluate(ins,act,ins->observation,ins->reward));
                         }
                     }
                     // increment
@@ -517,7 +592,7 @@ void TEFL::update_F_matrices() {
                         int feature_idx = 0;
                         for(f_ptr_t feature : feature_set) {
                             // set entry to 1 for non-zero features
-                            //if(feature->evaluate(ins->const_prev(),act,observation_space,reward_space)!=0) { // directly evaluate feature
+                            //if(feature->evaluate(ins->const_prev(),act,ins->observation,ins->reward)!=0) { // directly evaluate feature
                             if(feature->evaluate(bf_map)!=0) {                                // evaluate feature via basis feature map
                                 DEBUG_OUT(4,"(" << F_matrix.n_rows << "," << F_matrix.n_cols << ")/(" << feature_idx << "," << outcome_idx << ")");
                                 F_matrix(feature_idx,outcome_idx) = 1;

@@ -8,11 +8,10 @@
 
 // Define MEMORY_CHECK to use memory_check() function (is automatically defined
 // for DEBUG_LEVEL > 0).
-#define MEMORY_CHECK
 #if DEBUG_LEVEL > 0
-#ifndef MEMORY_CHECK
-#define MEMORY_CHECK
-#endif
+    #ifndef MEMORY_CHECK
+        #define MEMORY_CHECK
+    #endif
 #endif
 
 using std::string;
@@ -219,11 +218,11 @@ int AbstractInstance::detach_all() {
     int detached = 0;
     if(p!=INVALID) {
         set_non_const_predecessor(INVALID);
-        detached = 1;
+        detached += 1;
     }
     if(n!=INVALID) {
         set_non_const_successor(INVALID);
-        detached = 1;
+        detached += 1;
     }
     if(detached>0) {
         if(p!=INVALID) {

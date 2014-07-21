@@ -88,7 +88,11 @@ const string MazeObservation::print() const {
     if(DEBUG_LEVEL>1) {
         ret << "MazeObservation(" << "(" << x_dimensions << "," << y_dimensions << "), " <<  x_position << "," << y_position << ")";
     } else {
-        ret << "MazeObservation(" << x_position << "," << y_position << ")";
+        if(print_short_name) {
+            ret << "(" << x_position << "," << y_position << ")";
+        } else {
+            ret << "MazeObservation(" << x_position << "," << y_position << ")";
+        }
     }
     return ret.str();
 }

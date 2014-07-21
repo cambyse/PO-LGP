@@ -63,7 +63,7 @@ namespace {
 	struct ImageCapture {
 		Image image;
 		double timestamp;
-		ImageCapture(Image im, double timestamp) : image(image), timestamp(timestamp) {}
+		ImageCapture(Image im, double timestamp) : image(im), timestamp(timestamp) {}
 		ImageCapture() : timestamp(0) {};
 	};
 }

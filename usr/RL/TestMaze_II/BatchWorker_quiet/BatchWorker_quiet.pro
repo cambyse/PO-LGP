@@ -16,12 +16,11 @@ HEADERS += \
     ../util/lbfgs_codes.h \
     ../util/KolmogorovSmirnovDist.h \
     ../util/KolmogorovSmirnovTest.h \
-    \
-    ../SmoothingKernelSigmoid.h \
-    ../qcustomplot.h \
-    ../DelayDistribution.h \
+    ../util/debug.h \
+    ../util/debug_exclude.h \
     \
     ../optimization/LBFGS_Optimizer.h \
+    ../optimization/LBFGS_Object.h \
     \
     ../Representation/Feature.h \
     \
@@ -37,7 +36,6 @@ HEADERS += \
     ../PredictiveEnvironment.h \
     ../Visualizer.h \
     ../HistoryObserver.h \
-    ../Learner/FeatureLearner.h \
     ../SpaceManager.h \
     \
     ../Maze/Maze.h \
@@ -49,12 +47,17 @@ HEADERS += \
     ../CheeseMaze/CheeseMazeObservation.h \
     \
     ../Planning/Policy.h \
+    ../Planning/RandomPolicy.h \
     ../Planning/LookAheadSearch.h \
     ../Planning/LookAheadPolicy.h \
     \
-    ../Learner/KMarkovCRF.h \
+    ../Learner/FeatureLearner.h \
     ../Learner/UTree.h \
-    ../Learner/LinearQ.h \
+    ../Learner/TemporallyExtendedModel.h \
+    ../Learner/TemporallyExtendedFeatureLearner.h \
+    ../Learner/TemporallyExtendedLinearQ.h \
+    ../Learner/AdjacencyOperator.h \
+    ../Learner/ConjunctiveAdjacency.h \
     \
     ../BatchWorker.h
 SOURCES += \
@@ -67,12 +70,10 @@ SOURCES += \
     ../util/lbfgs_codes.cpp \
     ../util/KolmogorovSmirnovDist.cpp \
     ../util/KolmogorovSmirnovTest.cpp \
-    \
-    ../SmoothingKernelSigmoid.cpp \
-    ../qcustomplot.cpp \
-    ../DelayDistribution.cpp \
+    ../util/Commander.cpp \
     \
     ../optimization/LBFGS_Optimizer.cpp \
+    ../optimization/LBFGS_Object.cpp \
     \
     ../Representation/Feature.cpp \
     \
@@ -83,10 +84,10 @@ SOURCES += \
     ../Representation/AbstractReward.cpp \
     ../Representation/ListedReward.cpp \
     \
+    ../Predictor.cpp \
     ../PredictiveEnvironment.cpp \
     ../Visualizer.cpp \
     ../HistoryObserver.cpp \
-    ../Learner/FeatureLearner.cpp \
     ../SpaceManager.cpp \
     \
     ../Maze/Maze.cpp \
@@ -100,14 +101,18 @@ SOURCES += \
     ../Planning/LookAheadSearch.cpp \
     ../Planning/LookAheadPolicy.cpp \
     \
-    ../Learner/KMarkovCRF.cpp \
+    ../Learner/FeatureLearner.cpp \
     ../Learner/UTree.cpp \
-    ../Learner/LinearQ.cpp \
+    ../Learner/TemporallyExtendedModel.cpp \
+    ../Learner/TemporallyExtendedFeatureLearner.cpp \
+    ../Learner/TemporallyExtendedLinearQ.cpp \
+    ../Learner/ConjunctiveAdjacency.cpp \
     \
     ../BatchWorker.cpp
 LIBS += -llbfgs \
     -lemon \
     -larmadillo \
+    -llapack \
     -lgomp
 INCLUDEPATH +=
 LIBPATH += /usr/share/lib

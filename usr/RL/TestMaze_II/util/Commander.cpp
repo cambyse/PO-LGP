@@ -201,7 +201,10 @@ namespace Commander {
         return ret;
     }
 
-    QString CommandCenter::execute(QString command_string) const {
+    QString CommandCenter::execute(QString command_string, bool & ok) const {
+
+        // assume no errors initially
+        ok = true;
 
         // remove leading and trailing whitespace
         command_string = command_string.simplified();
@@ -213,15 +216,17 @@ namespace Commander {
             // empty command_string
             return "";
         } else if(command_string_list.size()>1) {
-            QString ret("");
+            QString ret("    ");
             bool first = true;
             for(QString com : command_string_list) {
                 if(first) {
                     first = false;
                 } else {
-                    ret += "\n";
+                    ret += "\n    ";
                 }
-                ret += this->execute(com);
+                bool this_ok;
+                ret += this->execute(com,this_ok);
+                ok = ok && this_ok;
             }
             return ret;
         } else {
@@ -276,9 +281,17 @@ namespace Commander {
                     ret += QString("\n%1").arg((QString)com_alias);
                 }
             }
+            ok = false;
             return ret;
         } else {
+            ok = res.first;
             return res.second;
         }
     }
+
+    QString CommandCenter::execute(QString command_string) const {
+        bool ok; // dummy
+        return execute(command_string,ok);
+    }
+
 }

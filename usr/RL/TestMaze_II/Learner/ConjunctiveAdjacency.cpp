@@ -50,6 +50,18 @@ ConjunctiveAdjacency::f_set_t ConjunctiveAdjacency::operator()(
     for(f_ptr_t f : current_features) {
         add_delay(f,action_delays,observation_delays,reward_delays);
     }
+    // use common delay
+    if(common_delay) {
+        // collect delays
+        set<int> common_delays;
+        common_delays.insert(action_delays.begin(),action_delays.end());
+        common_delays.insert(observation_delays.begin(),observation_delays.end());
+        common_delays.insert(reward_delays.begin(),reward_delays.end());
+        // redistribute delays
+        action_delays.insert(common_delays.begin(),common_delays.end());
+        observation_delays.insert(common_delays.begin(),common_delays.end());
+        reward_delays.insert(common_delays.begin(),common_delays.end());
+    }
     // extend delays by horizon extension
     DEBUG_OUT(2,"Extending delays");
     set<int> new_action_delays, new_observation_delays, new_reward_delays;
@@ -59,9 +71,8 @@ ConjunctiveAdjacency::f_set_t ConjunctiveAdjacency::operator()(
         for(int old_delay : *(delays.first)) {
             for(int delay_extension = -horizon_extension; delay_extension<=horizon_extension; ++delay_extension) {
                 int new_delay = old_delay+delay_extension;
-                if((new_delay<=max_horizon &&              // respect max_horizon
-                    new_delay>=min_horizon) ||             // respect min_horizon
-                   (allow_zero_delay && new_delay==0)) {   // allow zero delay?
+                if(new_delay<=max_horizon && // respect max_horizon
+                   new_delay>=min_horizon) { // respect min_horizon
                     delays.second->insert(new_delay);
                 }
             }
@@ -72,7 +83,12 @@ ConjunctiveAdjacency::f_set_t ConjunctiveAdjacency::operator()(
     f_set_t basis_features;
     f_ptr_t new_feature;
     for(action_ptr_t action : action_space) {
-        if(t_zero_features!=NONE) {
+        switch(t_zero_features) {
+        case NONE:
+            break;
+        case ACTION:
+        case ACTION_OBSERVATION_REWARD:
+        default:
             new_feature = ActionFeature::create(action,0);
             basis_features.insert(new_feature);
             DEBUG_OUT(3,"Added " << *new_feature);
@@ -84,7 +100,12 @@ ConjunctiveAdjacency::f_set_t ConjunctiveAdjacency::operator()(
         }
     }
     for(observation_ptr_t observation : observation_space) {
-        if(t_zero_features==ACTION_OBSERVATION_REWARD) {
+        switch(t_zero_features) {
+        case NONE:
+        case ACTION:
+            break;
+        case ACTION_OBSERVATION_REWARD:
+        default:
             new_feature = ObservationFeature::create(observation,0);
             basis_features.insert(new_feature);
             DEBUG_OUT(3,"Added " << *new_feature);
@@ -96,7 +117,12 @@ ConjunctiveAdjacency::f_set_t ConjunctiveAdjacency::operator()(
         }
     }
     for(reward_ptr_t reward : reward_space) {
-        if(t_zero_features==ACTION_OBSERVATION_REWARD) {
+        switch(t_zero_features) {
+        case NONE:
+        case ACTION:
+            break;
+        case ACTION_OBSERVATION_REWARD:
+        default:
             new_feature = RewardFeature::create(reward,0);
             basis_features.insert(new_feature);
             DEBUG_OUT(3,"Added " << *new_feature);
@@ -131,10 +157,6 @@ void ConjunctiveAdjacency::set_max_horizon(int h) {
 
 void ConjunctiveAdjacency::set_min_horizon(int h) {
     min_horizon = h;
-}
-
-void ConjunctiveAdjacency::set_combine_features(bool b) {
-    combine_features = b;
 }
 
 void ConjunctiveAdjacency::add_delay(f_ptr_t f,

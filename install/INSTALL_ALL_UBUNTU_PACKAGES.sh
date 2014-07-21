@@ -45,6 +45,10 @@ libfreenect-dev \
 libavcodec-extra-54 \
 libqt4-dev-bin \
 libusb-dev
+libavcodec-extra-53 \
+libavdevice-dev \
+libavfilter-dev \
+libx264-dev
 
 # install google test
 cd /usr/src/gtest
