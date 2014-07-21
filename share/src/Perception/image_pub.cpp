@@ -49,6 +49,7 @@ struct sImagePublisher {
 
 		epoch_offset = 0; // FIXME
 
+#ifdef HAVE_ROS_IMAGE_TRANSPORT
 		switch(pix_fmt) {
 		case PIXEL_FORMAT_RAW8:
 			// TODO need to define more informative RAW format, to also give bayer info, if available
@@ -70,6 +71,7 @@ struct sImagePublisher {
 		default:
 			throw "Unsupported pixel format";
 		}
+#endif
 	}
 
 	void publish(const byteA& image, double timestamp) {
