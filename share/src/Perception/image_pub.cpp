@@ -18,6 +18,7 @@ using namespace camera_info_manager;
 #endif
 
 #include <Core/array.h>
+#include <Core/util.h>
 #include <sstream>
 
 namespace MLR {
@@ -37,7 +38,8 @@ struct sImagePublisher {
 
 	sImagePublisher(const std::string& base_topic, const std::string& camera_name, PixelFormat pix_fmt) :
 #ifdef HAVE_ROS_IMAGE_TRANSPORT
-		n(base_topic), t(n), p(t.advertise(camera_name, 1)), cim(n, camera_name),
+		n(base_topic), t(n), p(t.advertise(camera_name, 1)), 
+		cim(n, camera_name),
 #endif
 		seq(0), camera_name(camera_name), pix_fmt(pix_fmt)
 	{
