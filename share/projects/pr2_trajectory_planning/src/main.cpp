@@ -121,8 +121,8 @@ arr create_rrt_trajectory(ors::KinematicWorld& G, arr& target) {
 
   ors::RRTPlanner planner(&G, P, stepsize);
   arr q = { 0.999998, 0.500003, 0.999998, 1.5, -2, 0, 0.500003 };
-  planner.joint_max = q + ones(q.N);
-  planner.joint_min = q - ones(q.N);
+  planner.joint_max = q + ones(q.N,q.N);
+  planner.joint_min = q - ones(q.N,q.N);
   std::cout << "Planner initialized" <<std::endl;
   
   return planner.getTrajectoryTo(target);

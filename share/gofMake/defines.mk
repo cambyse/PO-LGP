@@ -66,7 +66,7 @@ endif
 
 ifeq ($(GL),1)
 CXXFLAGS  += -DMT_GL
-LIBS += -lglut -lGLU -lGL -lX11
+LIBS += -lGLEW -lglut -lGLU -lGL -lX11
 endif
 
 ifeq ($(QT),1)
