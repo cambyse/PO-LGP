@@ -1,1 +1,1 @@
-set(SOURCES ./imconv.h ./filter.h ./imutil.cpp ./misc.h ./imutil.h ./image.h ./disjoint-set.cpp ./segment-image.h ./segment-image.cpp ./pnmfile.h ./pnmfile.cpp ./image.cpp ./convolve.h ./segment-graph.h ./disjoint-set.h ./convolve.cpp ./imconv.cpp ./filter.cpp ./segment-graph.cpp)
+set(SOURCES ./segment-graph.cpp ./segment-image.cpp ./filter.cpp ./imutil.h ./imconv.cpp ./convolve.cpp ./disjoint-set.cpp ./disjoint-set.h ./segment-image.h ./image.cpp ./misc.h ./convolve.h ./pnmfile.h ./imconv.h ./pnmfile.cpp ./filter.h ./image.h ./imutil.cpp ./segment-graph.h)

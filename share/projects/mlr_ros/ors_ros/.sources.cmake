@@ -1,1 +1,1 @@
-set(SOURCES ./ros_private.h ./tf_module.cpp ./ros_module.h ./main.cpp)
+set(SOURCES ./tf_module.cpp ./main.cpp ./ros_module.h ./ros_private.h)

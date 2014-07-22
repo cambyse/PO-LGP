@@ -1,1 +1,1 @@
-set(SOURCES ./av_out.cpp ./avinfo.cpp ./main.cpp)
+set(SOURCES ./main.cpp ./av_out.cpp ./avinfo.cpp)
