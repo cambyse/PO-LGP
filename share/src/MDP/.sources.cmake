@@ -1,1 +1,1 @@
-set(SOURCES ./mdp_opengl.cpp ./mstep.cpp ./mdp_pomdpEM_lev1.cpp ./mstep.h ./mdp.h ./mdp_tony.cpp ./mdp.cpp ./mdp_pomdpEM_lev2.cpp ./mdp_solvers.cpp ./mdp_EMSolver.h ./mdp_pomdpEM_structured.cpp ./mdp_pomdpEM_generic.cpp ./mdp_EMSolver.cpp)
+set(SOURCES ./mdp_tony.cpp ./mdp_pomdpEM_lev2.cpp ./mdp_pomdpEM_generic.cpp ./mdp_solvers.cpp ./mstep.h ./mdp_EMSolver.h ./mdp_opengl.cpp ./mdp.cpp ./mstep.cpp ./mdp_pomdpEM_structured.cpp ./mdp_EMSolver.cpp ./mdp_pomdpEM_lev1.cpp ./mdp.h)

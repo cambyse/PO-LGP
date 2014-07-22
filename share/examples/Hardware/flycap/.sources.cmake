@@ -1,1 +1,1 @@
-set(SOURCES ./flycap_serials.cpp ./main.cpp)
+set(SOURCES ./main.cpp ./flycap_serials.cpp)

@@ -1,1 +1,1 @@
-set(SOURCES ./ComputeSum_Module.h ./ComputeSum_Module.cpp ./main.cpp)
+set(SOURCES ./ComputeSum_Module.cpp ./main.cpp ./ComputeSum_Module.h)
