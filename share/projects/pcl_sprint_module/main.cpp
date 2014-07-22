@@ -2,6 +2,8 @@
 typedef pcl::PointXYZRGB PointT;
 #include "../pcl_sprint/system.h"
 
+#include "plane.h"
+
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/visualization/pcl_visualizer.h>
