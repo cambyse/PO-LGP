@@ -1,5 +1,5 @@
 #include "pointcloudsubscriber.h"
 
-PointCloudSubscriber::PointCloudSubscriber()
+PointCloudSubscriber::PointCloudSubscriber(const std::string& topic_name)
 {
 }
