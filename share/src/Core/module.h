@@ -56,8 +56,8 @@ struct Variable{
   virtual int deAccess(Module*) = 0;    ///< tell the engine that the module de-accesses
   virtual double revisionTime() = 0;
   virtual int revisionNumber() = 0;
-  virtual int waitForNextRevision() = 0;
-  virtual int waitForRevisionGreaterThan(int rev) = 0; //returns the revision
+  virtual int waitForNextRevision() = 0; ///< the calling process will wait for the next revision; returns the new revision
+  virtual int waitForRevisionGreaterThan(int rev) = 0; ///< the calling process will wait for the desired or greater revision; returns the new revision
 };
 
 extern Module *currentlyCreating;
@@ -118,6 +118,8 @@ struct Access{
   int readAccess(){  CHECK(var,"This Access has not been associated to any Variable"); return var->readAccess(module); }
   int writeAccess(){ CHECK(var,"This Access has not been associated to any Variable"); return var->writeAccess(module); }
   int deAccess(){    CHECK(var,"This Access has not been associated to any Variable"); return var->deAccess(module); }
+  int waitForNextRevision(){    CHECK(var,"This Access has not been associated to any Variable"); return var->waitForNextRevision(); }
+  int waitForRevisionGreaterThan(int rev){    CHECK(var,"This Access has not been associated to any Variable"); return var->waitForRevisionGreaterThan(rev)); }
 };
 
 
@@ -130,26 +132,26 @@ struct Access_typed:Access{
     Access_typed<T> *a;
     ReadToken(Access_typed<T> *_a):a(_a){ a->readAccess(); }
     ~ReadToken(){ a->deAccess(); }
-    const T* operator->(){ return a->object(); }
-    operator const T&(){ return *a->object(); }
-    const T& operator()(){ return *a->object(); }
+    const T* operator->(){ return a->data(); }
+    operator const T&(){ return *a->data(); }
+    const T& operator()(){ return *a->data(); }
   };
   struct WriteToken{
     Access_typed<T> *a;
     WriteToken(Access_typed<T> *_a):a(_a){ a->writeAccess(); }
     ~WriteToken(){ a->deAccess(); }
-    WriteToken& operator=(const T& x){ (*a->object()) = x; return *this; }
-    T* operator->(){ return a->object(); }
-    operator T&(){ return *a->object(); }
-    T& operator()(){ return *a->object(); }
+    WriteToken& operator=(const T& x){ (*a->data()) = x; return *this; }
+    T* operator->(){ return a->data(); }
+    operator T&(){ return *a->data(); }
+    T& operator()(){ return *a->data(); }
   };
 
   Access_typed(const char* name, Variable *v=NULL):Access(name, new Type_typed<T, void>(), currentlyCreating, v){
     if(module) module->accesses.append(this);
   }
   ~Access_typed(){ delete type; }
-  T* object(){ CHECK(var && var->data,""); return ((T*)var->data); }
-  T& operator()(){ return *object(); }
+  T* data(){ CHECK(var && var->data,""); return ((T*)var->data); }
+  T& operator()(){ return *data(); }
   ReadToken get(){ return ReadToken(this); } ///< read access to the variable's data
   WriteToken set(){ return WriteToken(this); } ///< write access to the variable's data
   double& tstamp(){ CHECK(var,""); return var->data_time; } ///< reference to the data's time. Variable should be locked while accessing this.
