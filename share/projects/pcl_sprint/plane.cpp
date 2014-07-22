@@ -41,3 +41,10 @@ void planeDetector(pcl::PointCloud<PoinT2>::Ptr inCloud,pcl::PointCloud<pcl::Nor
   std::cerr << "Plane coefficients: " << *outCoefficients << std::endl;
 }
 
+void substractPlane(pcl::PointCloud<PoinT2>::Ptr inCloud,pcl::PointIndices::Ptr inInliersPlane, pcl::PointCloud<PoinT2>::Ptr outCloud) {
+  pcl::ExtractIndices<PoinT2> extract;
+  extract.setInputCloud (inCloud);
+  extract.setIndices (inInliersPlane);
+  extract.setNegative (true);
+  extract.filter (*outCloud);
+}
