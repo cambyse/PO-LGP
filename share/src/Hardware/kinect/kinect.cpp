@@ -11,7 +11,7 @@ const unsigned int image_width = 640; //kinect resolution
 const unsigned int image_height = 480; //kinect resolution
 const unsigned int depth_size = image_width*image_height;
 
-namespace {
+namespace MLR {
 void images2pointcloud(byteA& rgb, MT::Array<uint16_t>& depth, arr& pts, arr& cols) {
     if(depth.N!=image_width*image_height || rgb.N!=3*image_width*image_height){
         MT_MSG("here" <<rgb.getDim() <<' ' <<depth.getDim());
@@ -44,10 +44,9 @@ void images2pointcloud(byteA& rgb, MT::Array<uint16_t>& depth, arr& pts, arr& co
         }
     }
 }
-}
 
-namespace MLR {
-	Freenect::Freenect receiver_freenect;
+
+    Freenect::Freenect receiver_freenect;
 
 	class sKinectCallbackReceiver : public Freenect::FreenectDevice {
 	private:
@@ -186,7 +185,7 @@ void KinectPoller::close() {
 //
 
 void Kinect2PointCloud::step(){
-    images2pointcloud(kinect_rgb.set(), kinect_depth.set(), kinect_points.set(), kinect_pointColors.set());
+    MLR::images2pointcloud(kinect_rgb.set(), kinect_depth.set(), kinect_points.set(), kinect_pointColors.set());
 /*  copy(depth, kinect_depth.get()());
   rgb = kinect_rgb.get();
 
