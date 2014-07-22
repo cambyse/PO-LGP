@@ -8,6 +8,7 @@
 #include <pcl/visualization/pcl_visualizer.h>
 
 #include "test_method.h"
+#include "generate_cylinder_on_table.h"
 
 void keyboardEventOccurred (const pcl::visualization::KeyboardEvent &event, void* viewer_void) {
     boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer = *static_cast<boost::shared_ptr<pcl::visualization::PCLVisualizer> *> (viewer_void);
@@ -36,7 +37,7 @@ using std::endl;
 ValueArg<string> input_arg(  "i", "input" , "the source of point clouds"                                , false, "default" , "string");
 ValueArg<string> file_arg(   "f", "file"  , "file to read input from (only for input method 'file')"    , false, ""        , "string");
 ValueArg<string> method_arg( "m", "method", "method to use for processing point clounds"                , false, "none"    , "string");
-vector<string> input_vector = { "default", "file"};
+vector<string> input_vector = { "default", "file", "cyl_on_table"};
 vector<string> method_vector = { "none", "test" };
 
 // check if argument value is within given vector and print messessage
@@ -59,10 +60,9 @@ bool check_args(ValueArg<T> & argument, vector<T> & argument_value_vector) {
     return argument_ok;
 }
 
-
-// --------------
-// -----Main-----
-// --------------
+//--------//
+//  main  //
+//--------//
 int main(int argn, char ** args) {
 
     //------------------------//
@@ -122,6 +122,8 @@ int main(int argn, char ** args) {
         }
         input_cloud->width = (int)input_cloud->points.size();
         input_cloud->height = 1;
+    } else if(input_arg.getValue()=="cyl_on_table") {
+        input_cloud = generate_cylinder_on_table::get_point_cloud();
     } else if(input_arg.getValue()=="file") {
         if(pcl::io::loadPCDFile<pcl::PointXYZRGB>(file_arg.getValue(), *input_cloud) == -1) {
             std::cout << "Could not read file '" << file_arg.getValue() << "'" << std::endl;

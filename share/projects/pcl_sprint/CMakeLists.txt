@@ -33,7 +33,7 @@ if(PCL_FOUND)
     add_executable(pcl_p_test main.cpp)
     target_link_libraries(pcl_p_test mlr_pcl)
 
-    add_executable(viewer.exe viewer.cpp test_method.cpp)
+    add_executable(viewer.exe viewer.cpp test_method.cpp generate_cylinder_on_table.cpp)
     target_link_libraries(viewer.exe ${PCL_LIBRARIES})
 endif()
 
