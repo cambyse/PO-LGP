@@ -14,7 +14,7 @@ class TestMethod {
     //----methods----//
 public:
     TestMethod() = default;
-    virtual ~TestMethod() = default;
+    virtual ~TestMethod() {};
     static void process(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr & input, pcl::PointCloud<pcl::PointXYZRGB>::Ptr & output);
 };
 
