@@ -28,5 +28,4 @@ target_link_libraries(pr2
 	Motion
 	Gui 
 	Ors 
-	${ROS_LDFLAGS}
 )

@@ -239,10 +239,12 @@ void sOpenGL::init(OpenGL *_gl, void *_container){
 
 sOpenGL::~sOpenGL(){
 //  MT_MSG("destructing sOpenGL sOpenGL=" <<this <<" glArea="<<glArea);
+#if 0
   if(gl->fbo || gl->render_buf){ //need to destroy offscreen rendering buffers
     glDeleteFramebuffers(1,&gl->fbo);
     glDeleteRenderbuffers(1,&gl->render_buf);
   }
+#endif
 
   gtkLock();
   gtk_widget_destroy(glArea);
