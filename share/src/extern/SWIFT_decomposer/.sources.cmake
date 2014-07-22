@@ -1,1 +1,1 @@
-set(SOURCES ./cvxutils.h ./guidraw.cpp ./viewer.cpp ./gui.h ./io.h ./gui.cpp ./io.cpp ./convex.h ./cvxutils.cpp ./togl.cpp ./viewer.h ./tk8.4a3.h ./togl.h ./guidraw.h ./convex.cpp)
+set(SOURCES ./cvxutils.h ./cvxutils.cpp ./gui.h ./viewer.h ./guidraw.cpp ./togl.cpp ./viewer.cpp ./io.cpp ./tk8.4a3.h ./convex.h ./guidraw.h ./io.h ./togl.h ./convex.cpp ./gui.cpp)

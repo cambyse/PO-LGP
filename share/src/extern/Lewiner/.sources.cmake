@@ -1,1 +1,1 @@
-set(SOURCES ./LookUpTable.h ./MarchingCubes.h ./MarchingCubes.cpp)
+set(SOURCES ./MarchingCubes.h ./LookUpTable.h ./MarchingCubes.cpp)
